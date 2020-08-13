@@ -141,6 +141,13 @@ json渲染表单以及是否需要编辑数据回填的功能以下为例
 ## admin项目超级管理员
 admin 123456
 
+## 帮助文档
+[帮助文档](http://help.crmeb.net/crmeb_java/1748037)
+
+## 演示站
+1. [移动端](https://java.crmeb.net)
+2. [后台](https://admin.java.crmeb.net)
+
 ## 参与开发
 
 请参阅 [CRMEB](https://github.com/crmeb/crmeb_java)。
