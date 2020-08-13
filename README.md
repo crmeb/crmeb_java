@@ -86,6 +86,58 @@ Excel数据导出,导出表格更加美观可视；
 3. admin.xx.com
 
 
+## Java项目说明
+# 环境
+1. Java Jdk1.8
+2. Redis 5+
+3. Mysql 5.7+
+
+# Java项目框架
+1. SpringBoot 2.2.6.RELEASE
+2. Maven 3.6.1
+3. Swagger 2.9.2
+4. Mybatis Plus 3.3.1
+
+
+# 部署
+1. 拿到jar包，上传到web目录下，（宝塔配置的域名指向的web目录下即可）
+2. 在 jar包同级目录下运行 `start.sh (运行命令为 ./start.sh )` 脚本即可启动项目
+3. shell脚本会自动运行 `tail -f crmeb_out.file` 命令输出当前启动日志
+4. 看到 `Completed 200 OK` 表示启动成功
+5. 默认启动 `20000` 端口号
+
+# 注意事项
+1. web端口号不可以设置为`20000`
+2. 反向代理地址: `http://127.0.0.1:20000` 【外网域名指向这个地址】
+
+
+# 产品复制
+1. 设置 [99api](https://www.99api.com "99api") 对应的api到配置表eb_system_config 
+2. 配置baseUrl和key 实际的key可以根据自己的定义修改
+3. 目前支持天猫，京东，淘宝，苏宁，拼多多
+
+# 打印机
+1. [易联云文档](http://doc2.10ss.net/337744 "易联云文档")
+2. [易联云JAVA SDK](http://doc2.10ss.net/337744 "易联云JAVA SDK gitee文档")
+3. [如何导入第三方JAVA SDK包](https://blog.csdn.net/weixin_46028577/article/details/106342938?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase "如何导入第三方JAVA SDK包")
+
+
+## admin项目说明
+公用组件
+无限极分类组件 src/components/Category
+使用范围：菜单，文章等各种分类配置数据
+
+表单生成组件
+https://github.com/JakHuang/form-generator
+
+json渲染表单以及是否需要编辑数据回填的功能以下为例
+示例：src/views/maintain/devconfig/combineEdit.vue
+
+<parser v-if="formConf.fields.length > 0" :isEdit="isCreate === 1"
+              :form-conf="formConf" :formEditData="editData"
+              @submit="handlerSubmit" />
+注意：设置单选按钮的值时需要带上单引号，要不渲染待编辑数据时不会自动选中
+
 ## admin项目超级管理员
 admin 123456
 
