@@ -1,0 +1,109 @@
+package com.zbkj.crmeb.config;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import redis.clients.jedis.JedisPoolConfig;
+
+@Configuration
+@EnableCaching
+public class RedisConfig {
+
+    @Value("${spring.redis.host}")
+    private String redisHost;
+
+    @Value("${spring.redis.port}")
+    private int redisPort;
+
+    @Value("${spring.redis.password}")
+    private String redisPass;
+
+    @Value("${spring.redis.database}")
+    private int redisDb;
+
+    @Value("${spring.redis.timeout}")
+    private String timeout;
+
+    @Value("${spring.redis.jedis.pool.max-active}")
+    private int maxTotal;
+
+    @Value("${spring.redis.jedis.pool.max-idle}")
+    private int maxIdle;
+
+    @Value("${spring.redis.jedis.pool.max-wait}")
+    private int maxWaitMillis;
+
+//    @Value("${redis.task.config.minEvictableIdleTimeMillis}")
+//    private String minEvictableIdleTimeMillis;
+
+//    @Value("${redis.task.config.numTestsPerEvictionRun}")
+//    private int numTestsPerEvictionRun;
+
+    @Value("${spring.redis.jedis.pool.time-between-eviction-runs}")
+    private String timeBetweenEvictionRunsMillis;
+
+//    @Value("${redis.task.config.testOnBorrow}")
+//    private Boolean testOnBorrow;
+
+//    @Value("${redis.task.config.testWhileIdle}")
+//    private Boolean testWhileIdle;
+
+    @Bean
+    @Primary
+    public RedisConnectionFactory taskConnectionFactory() {
+        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+        jedisPoolConfig.setMaxIdle(maxIdle);
+        jedisPoolConfig.setMaxTotal(maxTotal);
+        jedisPoolConfig.setMaxWaitMillis(maxWaitMillis);
+
+//        jedisPoolConfig.setMinEvictableIdleTimeMillis(Integer.parseInt(minEvictableIdleTimeMillis));
+//        jedisPoolConfig.setNumTestsPerEvictionRun(numTestsPerEvictionRun);
+        jedisPoolConfig.setTimeBetweenEvictionRunsMillis(Integer.parseInt(timeBetweenEvictionRunsMillis));
+//        jedisPoolConfig.setTestOnBorrow(testOnBorrow);
+//        jedisPoolConfig.setTestWhileIdle(testWhileIdle);
+        JedisConnectionFactory connectionFactory = new JedisConnectionFactory(jedisPoolConfig);
+        connectionFactory.setPort(redisPort);
+        connectionFactory.setHostName(redisHost);
+        connectionFactory.setDatabase(redisDb);
+        connectionFactory.setPassword(redisPass);
+        //配置连接池属性
+        connectionFactory.setTimeout(Integer.parseInt(timeout));
+
+
+        return connectionFactory;
+    }
+
+    @Bean
+    public RedisTemplate<Object,Object> redisTemplate(){
+        RedisTemplate<Object, Object> template = new RedisTemplate<Object, Object>();
+        template.setConnectionFactory(taskConnectionFactory());
+
+        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer =
+                new Jackson2JsonRedisSerializer(Object.class);
+        ObjectMapper om = new ObjectMapper();
+        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        jackson2JsonRedisSerializer.setObjectMapper(om);
+
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(jackson2JsonRedisSerializer);
+
+        template.afterPropertiesSet();
+        return template;
+    }
+
+}
+
+

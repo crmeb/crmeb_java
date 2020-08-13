@@ -1,0 +1,344 @@
+@charset "UTF-8";
+.el-dialog__body{
+  padding: 20px !important;
+}
+.acea-row {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-lines: multiple;
+  -moz-box-lines: multiple;
+  -o-box-lines: multiple;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  /* 辅助类 */
+}
+.acea-row.row-bottom {
+  -webkit-box-align: end;
+  -moz-box-align: end;
+  -o-box-align: end;
+  -ms-flex-align: end;
+  -webkit-align-items: flex-end;
+  align-items: flex-end;
+}
+.acea-row.row-between {
+  -webkit-box-pack: justify;
+  -moz-box-pack: justify;
+  -o-box-pack: justify;
+  -ms-flex-pack: justify;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+}
+/* 上下左右垂直居中 */
+.acea-row.row-center-wrapper {
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  -o-box-align: center;
+  -ms-flex-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -moz-box-pack: center;
+  -o-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+}
+.acea-row.row-middle {
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  -o-box-align: center;
+  -ms-flex-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+}
+/* 上下两边居中对齐 */
+.acea-row.row-between-wrapper {
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  -o-box-align: center;
+  -ms-flex-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-box-pack: justify;
+  -moz-box-pack: justify;
+  -o-box-pack: justify;
+  -ms-flex-pack: justify;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+}
+.divBox{
+  padding: 20px;
+  box-sizing: border-box;
+  .el-pagination{
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 25px;
+  }
+}
+.seachTiele{
+  font-size: 12px;
+  line-height: 29px;
+}
+.seachWidth{
+  //width: 219px !important;
+}
+.el-divider--horizontal{
+  margin: 19px 0;
+}
+.suibian-modal{
+  .el-dialog__footer{
+    display: none !important;
+  }
+}
+.el-message-box__wrapper{
+  overflow: auto;
+}
+.el-message-box{
+  overflow: auto!important;
+}
+.modal-form{
+  width: 700px;
+}
+table .el-image{
+  width: 30px !important;
+  height: 30px !important;
+}
+.upload-form{
+  min-width: 1000px;
+  max-height:620px;
+}
+.upload-form-temp{
+  min-width: 1000px;
+  max-height:700px;
+}
+.listPic{
+  .image-slot{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+.switchTable{
+  .el-switch.is-disabled {
+    opacity: 1;
+  }
+  .el-switch.is-disabled .el-switch__core, .el-switch.is-disabled .el-switch__label {
+    cursor: pointer !important;;
+  }
+}
+/**
+ * 上传图片的照相机
+ */
+.upLoadPicBox{
+  display: inline-block;
+  cursor: pointer;
+  .pictrue {
+    width: 60px;
+    height: 60px;
+    border: 1px dotted rgba(0, 0, 0, 0.1);
+    margin-right: 10px;
+    img {
+      width: 100%;
+      height: 100%;
+    }
+  }
+  .upLoad {
+    width: 58px;
+    height: 58px;
+    line-height: 58px;
+    border: 1px dotted rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.02);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+/**
+ * 标题带下划线
+ */
+.dividerTitle{
+  .title{
+    border-bottom: 2px solid #1890FF;
+    padding: 0 8px 18px 5px;
+    color: #000;
+    font-size: 14px;
+  }
+}
+.cameraIconfont{
+  color: #898989;
+  font-size: 26px;
+}
+.ml10{
+  margin-left: 10px;
+}
+.mr10{
+  margin-right: 10px !important;
+}
+.mr15{
+  margin-right: 15px;
+}
+.mt20{
+  margin-top: 20px;
+}
+.mb15{
+  margin-bottom: 15px;
+}
+.mb20{
+  margin-bottom: 20px;
+}
+.mt20{
+  margin-top: 20px;
+}
+.mr50 {
+  margin-right: 50px;
+}
+.mr20{
+  margin-right: 20px;
+}
+.ml40 {
+  margin-left: 40px !important;
+}
+.mr5{
+  margin-right: 5px;
+}
+.font14{
+  font-size: 14px;
+}
+//表格图片宽度
+.tabBox_img{
+  width: 36px;
+  height: 36px;
+  border-radius:4px;
+  display: table-cell;
+  vertical-align: middle;
+}
+.tabBox_img img{
+  width: 100%;
+  height: 100%;
+}
+.picMiddle{
+  display: table;
+}
+.spBlock{
+  display: block;
+}
+//表格头部颜色
+.el-table thead{
+  color: #333!important;
+}
+// 模态框
+.creatformModel{
+  min-width: 700px;
+  max-height: 620px;
+}
+.width100{
+  width: 100%;
+}
+//dialog头部加线条
+.el-dialog__header{
+  border-bottom:1px solid #dcdfe6;
+  padding-bottom: 20px !important;
+}
+//点击上传图样式（弹窗）
+.publicPicBox{
+  display: inline-block;
+  cursor: pointer;
+}
+.publicPicBox .upLoad{
+  width: 58px;
+  height: 58px;
+  line-height: 58px;
+  border: 1px dotted rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.02);
+}
+.publicPicBox .pictrue{
+  width: 60px;
+  height: 60px;
+  border: 1px dotted rgba(0, 0, 0, 0.1);
+  margin-right: 10px;
+}
+.publicPicBox .pictrue img{
+  width: 100%;
+  height: 100%;
+}
+.publicPicBox .iconfont{
+  color: #898989;
+  font-size: 18px;
+}
+//全局弹窗宽度；
+.dialogWidth{width: 80%;}
+
+/**
+ * 表格下拉内容
+ */
+.demo-table-expand {
+  font-size: 0;
+}
+.demo-table-expand label {
+  width: 111px;
+  color: #99a9bf;
+}
+.demo-table-expand .el-form-item {
+  margin-right: 0;
+  margin-bottom: 0;
+  width: 33.33%;
+}
+
+/*switch样式*/
+.el-switch__label {
+  position: absolute;
+  display: none;
+  color: #fff;
+  font-size: 12px !important;
+}
+/*打开时文字位置设置*/
+.el-switch__label--right {
+  z-index: 1;
+  font-size: 12px !important;
+}
+/*关闭时文字位置设置*/
+.el-switch__label--left {
+  z-index: 1;
+  left: 19px;
+  font-size: 12px !important;
+}
+/*显示文字*/
+.el-switch__label.is-active {
+  display: block;
+  color: #fff;
+  font-size: 12px !important;
+}
+.el-switch .el-switch__core,
+.el-switch .el-switch__label {
+  width: 60px !important;
+  font-size: 12px !important;
+}
+.el-switch__label * {
+  font-size: 12px !important;
+}
+.selWidth{
+  width: 350px;
+}
+//表格字体
+//.el-table--mini{
+//  font-size: 13px !important;
+//}
+
+//富文本编辑器弹框
+.edui-shadow{
+  z-index: -1 !important;
+}
+.edui-default{
+  z-index: 4000;
+}
+.edui-dialog{
+  z-index: 4009 !important;
+}
