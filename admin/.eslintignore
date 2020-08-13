@@ -1,0 +1,7 @@
+build/*.js
+src/assets
+public
+dist
+src/components/FormGenerator
+src/directive
+src/
