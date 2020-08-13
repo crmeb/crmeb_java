@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.crmeb.user.dao.UserDao">
+    <update id="updateFounds" parameterType="map">
+        update eb_user set ${foundsType} = ${foundsType}+${value} where uid = #{uid, jdbcType=INTEGER}
+    </update>
+
+    <select id="getSpreadPeopleList" resultType="com.zbkj.crmeb.front.response.UserSpreadPeopleItemResponse" parameterType="map">
+        SELECT u.nickname, u.avatar, u.create_time AS `time`, u.spread_count AS childCount, u.pay_count AS orderCount, p.numberCount AS numberCount FROM eb_user AS u
+        LEFT JOIN (
+            SELECT IF((sum(pay_price) = NULL), 0.00, sum(pay_price)) AS numberCount, o.uid as o_uid FROM eb_store_order as o WHERE is_del = 0 AND is_system_del = 0
+            <if test="userIdList != null and userIdList !='' ">
+                 and uid in (${userIdList})
+            </if>
+        group by uid )AS p ON u.uid = p.o_uid
+         where 1 = 1
+        <if test="userIdList != null and userIdList !='' ">
+            and u.uid in (${userIdList})
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and ( u.real_name like #{keywords, jdbcType=VARCHAR} or u.nickname like #{keywords, jdbcType=VARCHAR})
+        </if>
+        ORDER BY ${sortKey} ${sortValue}
+    </select>
+</mapper>
