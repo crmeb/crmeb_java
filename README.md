@@ -138,8 +138,7 @@ json渲染表单以及是否需要编辑数据回填的功能以下为例
               @submit="handlerSubmit" />
 注意：设置单选按钮的值时需要带上单引号，要不渲染待编辑数据时不会自动选中
 
-## admin项目超级管理员
-admin 123456
+## 自己安装项目admin项目超级管理员 admin 123456
 
 ## 帮助文档
 [帮助文档](http://help.crmeb.net/crmeb_java/1748037)
