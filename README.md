@@ -146,7 +146,10 @@ admin 123456
 
 ## 演示站
 1. [移动端](https://java.crmeb.net)
-2. [后台](https://admin.java.crmeb.net)
+2. [后台](https://admin.java.crmeb.net)   
+ 
+## 后台账号 demo  密码 crmeb.com， 请大家不要随意改密码！
+#### 请大家不要随意改密码！请大家不要随意改密码！请大家不要随意改密码！
 
 ## 参与开发
 
