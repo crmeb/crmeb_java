@@ -28,8 +28,9 @@ CRMEB商城PHP版：https://gitee.com/ZhongBangKeJi/CRMEB-H5
 CRMEB微信小程序商城：https://gitee.com/ZhongBangKeJi/CRMEB_WechatApplet
 
 
-CRMEB JAVA
-> 运行环境要求JAVA1.8
+### 运行环境
+
+运行环境要求JAVA1.8
 
 注意：请尽量遵循阿里巴巴开发规范，可以减少在开发过程中出现不必要的错误
 项目内包含三个子项目
