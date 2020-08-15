@@ -1,12 +1,38 @@
-CRMEB JAVA
-===============
+<h1 align="center"> CRMEB客户管理+电商营销系统Java版</h1> 
+<p align="center">
+    <a href="http://www.crmeb.com">
+    </p>
+<p align="center">    
+    <b>如果对您有帮助，您可以点右上角 "Star" 支持一下 谢谢！</b>
+</p>
 
-> 运行环境要求JAVA1.8。
+## 项目介绍
+   CRMEB JAVA版商城系统是基于Java+uniapp开发的一套新零售移动电商系统，CRMEB系统就是集客户关系管理+营销电商系统，能够快速积累客户、会员数据分析、智能转化客户、
+   有效提高销售、会员维护、网络营销的一款企业应用，更适合企业二次开发；
+
+### 导航栏目
+
+ | [使用手册](http://help.crmeb.net/crmeb_java/1748037t)
+ | [论坛地址](http://bbs.crmeb.net)
+ | [官网地址](https://www.crmeb.com)
+ | [服务器](https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=dligum2z)
+ | [授权价格](https://s.click.taobao.com/W7hVkLw)
+- - -
+
+### 推荐项目
+
+CRMEB知识付费项目：https://gitee.com/ZhongBangKeJi/crmeb_zzff_class
+
+CRMEB商城PHP版：https://gitee.com/ZhongBangKeJi/CRMEB-H5
+
+CRMEB微信小程序商城：https://gitee.com/ZhongBangKeJi/CRMEB_WechatApplet
+
+
+CRMEB JAVA
+> 运行环境要求JAVA1.8
 
 注意：请尽量遵循阿里巴巴开发规范，可以减少在开发过程中出现不必要的错误
-
 项目内包含三个子项目
-
 ## crmeb项目结构详细说明， 此处主要是Api
 ~~~
     crmeb
