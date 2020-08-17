@@ -384,13 +384,13 @@ export const asyncRoutes = [
   },
 
   {
-    path: '/error-log',
+    path: '/error-integralLog',
     component: 'layout/Layout',
     redirect: 'noRedirect',
     children: [
       {
         path: 'log',
-        component: 'views/error-log/index',
+        component: 'views/error-integralLog/index',
         name: 'ErrorLog',
         meta: { title: 'Error Log', icon: 'bug' }
       }

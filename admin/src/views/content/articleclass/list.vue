@@ -1,6 +1,6 @@
 <template>
   <div class="components-container">
-    <category-list :biztype="constants.categoryType[2]" />
+    <category-list :biztype="constants.categoryType[2]" :pid="0"/>
   </div>
 </template>
 

@@ -122,7 +122,7 @@ const marketingRouter = {
         },
         {
           path: 'integrallog',
-          component: () => import('@/views/marketing/integral/log/index'),
+          component: () => import('@/views/marketing/integral/integralLog/index'),
           name: 'integralLog',
           meta: { title: '积分日志', icon: '' }
         }
