@@ -133,4 +133,16 @@ public class UserCenterResponse implements Serializable {
 
     @ApiModelProperty(value = "订单状态数量")
     private UserCenterOrderStatusNumResponse orderStatusNum;
+
+    @ApiModelProperty(value = "用户优惠券数量")
+    private Integer couponCount;
+
+    @ApiModelProperty(value = "是否会员")
+    private boolean vip;
+
+    @ApiModelProperty(value = "会员图标")
+    private String vipIcon;
+
+    @ApiModelProperty(value = "会员名称")
+    private String vipName;
 }

@@ -77,10 +77,11 @@ export function couponUserListApi(params) {
  * 积分日志 列表
  * @param pram
  */
-export function integralListApi(data) {
+export function integralListApi(params, data) {
   return request({
     url: '/admin/user/bill/list',
     method: 'post',
+    params,
     data
   })
 }

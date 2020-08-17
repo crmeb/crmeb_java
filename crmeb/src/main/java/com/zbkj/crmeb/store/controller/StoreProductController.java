@@ -82,7 +82,8 @@ public class StoreProductController {
     @ApiOperation(value = "删除")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     public CommonResult<String> delete(@RequestBody @PathVariable Integer id){
-        if(storeProductService.removeById(id)){
+        if(storeProductService.deleteProduct(id)){
+//        if(storeProductService.removeById(id)){
             storeCartService.productStatusNotEnable(id);
             return CommonResult.success();
         }else{

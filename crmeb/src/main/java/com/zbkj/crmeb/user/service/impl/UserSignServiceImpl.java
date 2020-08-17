@@ -64,6 +64,7 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         LambdaQueryWrapper<UserSign> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(UserSign::getType, 1);
+        lambdaQueryWrapper.eq(UserSign::getUid, userService.getUserIdException());
         lambdaQueryWrapper.orderByDesc(UserSign::getId);
         List<UserSign> userSignList = dao.selectList(lambdaQueryWrapper);
 
@@ -178,6 +179,7 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         LambdaQueryWrapper<UserSign> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(UserSign::getType, 1);
+        lambdaQueryWrapper.eq(UserSign::getUid, userService.getUserIdException());
         lambdaQueryWrapper.orderByDesc(UserSign::getCreateDay);
         List<UserSign> userSignList = dao.selectList(lambdaQueryWrapper);
 
@@ -316,7 +318,7 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
         //获取签到数据
         List<SystemGroupDataSignConfigVo> config = config();
         for (SystemGroupDataSignConfigVo systemSignConfigVo : config) {
-            if(user.getSignNum() + 1 >= systemSignConfigVo.getDay()){
+            if(user.getSignNum() + 1 <= systemSignConfigVo.getDay()){
                 return systemSignConfigVo;
             }
         }

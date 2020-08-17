@@ -4,9 +4,19 @@
       <div slot="header" class="clearfix">
         <div class="container">
           <el-form ref="form" inline :model="form">
-            <el-form-item label="搜索：">
-              <el-input v-model="form.name" placeholder="请输入内容" class="selWidth"  size="small">
-                <el-button slot="append" size="small" icon="el-icon-search" @click="getExpressList" />
+            <el-form-item label="状态">
+              <el-select v-model="form.isShow" placeholder="状态" clearable @change="handlerSearch" class="selWidth">
+                <el-option
+                  v-for="item in constants.switchStatus"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="关键字：">
+              <el-input v-model="form.keywords" placeholder="请输入关键字" class="selWidth"  size="small">
+                <el-button slot="append" size="small" icon="el-icon-search" @click="handlerSearch" />
               </el-input>
             </el-form-item>
           </el-form>
@@ -67,7 +77,7 @@
       </el-table>
       <div class="block-pagination">
         <el-pagination
-          :page-sizes="[12, 20, 40, 60]"
+          :page-sizes="[20, 40, 60, 80]"
           :page-size="tableData.limit"
           :current-page="tableData.page"
           layout="total, sizes, prev, pager, next, jumper"
@@ -78,7 +88,7 @@
       </div>
     </el-card>
     <el-dialog
-      title="提示"
+      title="添加物流公司"
       :visible.sync="dialogVisible"
       width="700px"
       :before-close="handleClose"
@@ -92,19 +102,22 @@
 import parser from '@/components/FormGenerator/components/parser/Parser'
 import * as systemFormConfigApi from '@/api/systemFormConfig.js'
 import * as logistics from '@/api/logistics.js'
+import * as constants from '@/utils/constants.js'
 export default {
   name: 'CompanyList',
   components: { parser },
   data() {
     return {
+      constants,
       // 表单
       formConf: { fields: [] },
       form: {
-        name: ''
+        keywords: '',
+        isShow: null
       },
       tableData: {},
       page: 1,
-      limit: 12,
+      limit: 20,
       loading: false,
       dialogVisible: false,
       fromType: 'add',
@@ -118,13 +131,18 @@ export default {
     this.getExpressList()
   },
   methods: {
+    handlerSearch() {
+      this.page = 1
+      this.getExpressList()
+    },
     //  获取物流公司列表
     getExpressList() {
       this.loading = true
       logistics.expressList({
         page: this.page,
         limit: this.limit,
-        keywords: this.form.name
+        keywords: this.form.keywords,
+        isShow: this.form.isShow
       }).then(res => {
         this.loading = false
         this.tableData = res
@@ -182,7 +200,6 @@ export default {
         })
       } else {
         data.id = this.editId
-        console.log(data)
         logistics.expressUpdate(data).then(res => {
           this.handleClose()
           this.getExpressList()

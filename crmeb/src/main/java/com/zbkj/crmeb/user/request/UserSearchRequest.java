@@ -1,7 +1,5 @@
 package com.zbkj.crmeb.user.request;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -9,11 +7,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 /**
  * <p>
@@ -47,7 +43,7 @@ public class UserSearchRequest implements Serializable {
 
     @ApiModelProperty(value = "用户登陆类型，h5 = h5， wechat = wechat，routine = routine", allowableValues = "range[h5,wechat,routine]")
     @NotBlank(message = "请选择用户登录类型")
-    private String loginType;
+    private String userType;
 
     @ApiModelProperty(value = "状态是否正常， 0 = 禁止， 1 = 正常")
     private Boolean status = null;

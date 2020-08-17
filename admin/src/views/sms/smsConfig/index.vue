@@ -1,43 +1,41 @@
 <template>
   <div class="divBox">
     <el-card v-if="isShowList" v-loading="fullscreenLoading" class="box-card">
-      <div slot="header" class="clearfix">
-        <div class="content acea-row row-middle">
-          <div class="demo-basic--circle acea-row row-middle">
-            <el-avatar :size="50" :src="circleUrl" class="mr20" />
-            <div class="dashboard-workplace-header-tip">
-              <div class="dashboard-workplace-header-tip-title">{{ smsAccount }}，祝您每一天开心！</div>
-              <div class="dashboard-workplace-header-tip-desc">
-                <span class="mr10">修改密码</span>
-                <span @click="signOut">退出登录</span>
-              </div>
+      <div class="content acea-row row-middle">
+        <div class="demo-basic--circle acea-row row-middle">
+          <el-avatar :size="50" :src="circleUrl" class="mr20" />
+          <div class="dashboard-workplace-header-tip">
+            <div class="dashboard-workplace-header-tip-title">{{ smsAccount }}，祝您每一天开心！</div>
+            <div class="dashboard-workplace-header-tip-desc">
+              <span class="mr10">修改密码</span>
+              <span @click="signOut">退出登录</span>
             </div>
           </div>
-          <div class="dashboard-workplace-header-extra">
-            <el-row type="flex" justify="center" align="middle" :gutter="12">
-              <el-col :span="8">
+        </div>
+        <div class="dashboard-workplace-header-extra">
+          <el-row type="flex" justify="center" align="middle" :gutter="12">
+            <el-col :span="8">
                 <span class="pfont acea-row row-middle">
                   <el-avatar icon="el-icon-user-solid" size="small" class="mr10" />
                   <span>剩余条数</span>
                 </span>
-                <span class="rR" v-text="numbers" />
-              </el-col>
-              <el-col :span="8">
+              <span class="rR" v-text="numbers" />
+            </el-col>
+            <el-col :span="8">
                 <span class="pfont acea-row row-middle">
                   <el-avatar icon="el-icon-user-solid" size="small" class="mr10" />
                   <span>已发送</span>
                 </span>
-                <span class="rR" v-text="sendTotal" />
-              </el-col>
-              <el-col :span="8">
+              <span class="rR" v-text="sendTotal" />
+            </el-col>
+            <el-col :span="8">
                 <span class="pfont acea-row row-middle">
                   <el-avatar icon="el-icon-user-solid" size="small" class="mr10" />
                   <span>总条数</span>
                 </span>
-                <span class="rR" v-text="amount" />
-              </el-col>
-            </el-row>
-          </div>
+              <span class="rR" v-text="amount" />
+            </el-col>
+          </el-row>
         </div>
       </div>
     </el-card>

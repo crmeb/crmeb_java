@@ -292,7 +292,8 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             if (!attrAddResult) throw new CrmebException("新增属性名失败");
             StoreProductAttrValue singleAttrValue = new StoreProductAttrValue();
             singleAttrValue.setProductId(storeProduct.getId()).setStock(storeProduct.getStock()).setSuk("默认")
-                    .setSales(storeProduct.getSales()).setPrice(storeProduct.getPrice()).setImage(storeProduct.getImage())
+                    .setSales(storeProduct.getSales()).setPrice(storeProduct.getPrice())
+                    .setImage(systemAttachmentService.clearPrefix(storeProduct.getImage()))
                     .setCost(storeProduct.getCost()).setBarCode(storeProduct.getBarCode()).setOtPrice(storeProduct.getOtPrice());
             boolean saveOrUpdateResult = storeProductAttrValueService.save(singleAttrValue);
             if(!saveOrUpdateResult) throw new CrmebException("新增属性详情失败");
@@ -326,7 +327,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                 StoreProductAttrResult attrResult = new StoreProductAttrResult(
                         0,
                         storeProduct.getId(),
-                        JSON.toJSONString(storeProductRequest.getAttrValue()),
+                        systemAttachmentService.clearPrefix(JSON.toJSONString(storeProductRequest.getAttrValue())),
                         DateUtil.getNowTime(),Constants.PRODUCT_TYPE_NORMAL);
                 storeProductAttrResultService.save(attrResult);
                 if(!saveOrUpdateResult) throw new CrmebException("新增属性详情失败");
@@ -403,7 +404,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                 StoreProductAttrResult attrResult = new StoreProductAttrResult(
                         0,
                         storeProduct.getId(),
-                        JSON.toJSONString(storeProductRequest.getAttrValue()),
+                        systemAttachmentService.clearPrefix(JSON.toJSONString(storeProductRequest.getAttrValue())),
                         DateUtil.getNowTime(),Constants.PRODUCT_TYPE_NORMAL);
                 storeProductAttrResultService.save(attrResult);
                 if(!saveOrUpdateResult) throw new CrmebException("编辑属性详情失败");
@@ -420,6 +421,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             BeanUtils.copyProperties(attrValueRequest,singleAttrValue);
             singleAttrValue.setProductId(storeProduct.getId());
             singleAttrValue.setSuk("默认");
+            singleAttrValue.setImage(systemAttachmentService.clearPrefix(singleAttrValue.getImage()));
             boolean saveOrUpdateResult = storeProductAttrValueService.save(singleAttrValue);
             if(!saveOrUpdateResult) throw new CrmebException("新增属性详情失败");
         }
@@ -463,11 +465,11 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         if(null == storeProduct) throw new CrmebException("未找到对应商品信息");
         StoreProductResponse storeProductResponse = new StoreProductResponse();
         BeanUtils.copyProperties(storeProduct, storeProductResponse);
-        if(storeProduct.getSpecType()){
+//        if(storeProduct.getSpecType()){
             storeProductResponse.setAttr(attrService.getByProductId(storeProduct.getId()));
-        }else{
-            storeProductResponse.setAttr(new ArrayList<>());
-        }
+//        }else{
+//            storeProductResponse.setAttr(new ArrayList<>());
+//        }
         List<StoreProductAttrValue> storeProductAttrValues = storeProductAttrValueService.getListByProductId(storeProduct.getId());
         // 根据attrValue生成前端所需的数据
         List<HashMap<String, Object>> attrValues = new ArrayList<>();
@@ -591,7 +593,15 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         }
 
         if(StringUtils.isNotBlank(request.getKeywords())){
-            lambdaQueryWrapper.like(StoreProduct::getStoreName, request.getKeywords());
+            if(CrmebUtil.isString2Num(request.getKeywords())){
+                Integer productId = Integer.valueOf(request.getKeywords());
+                lambdaQueryWrapper.like(StoreProduct::getId, productId);
+            }else{
+                lambdaQueryWrapper
+                        .like(StoreProduct::getStoreName, request.getKeywords())
+                        .or().like(StoreProduct::getStoreInfo, request.getKeywords())
+                        .or().like(StoreProduct::getBarCode, request.getKeywords());
+            }
         }
 
         lambdaQueryWrapper.orderByDesc(StoreProduct::getId);
@@ -641,7 +651,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                     break;
                 case 5:
                     //回收站
-                    lambdaQueryWrapper.eq(StoreProduct::getIsDel, true);
+                    lambdaQueryWrapper.or().eq(StoreProduct::getIsDel, true);
                     break;
                 default:
                     break;
@@ -1223,6 +1233,19 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         lambdaQueryWrapper.eq(StoreProduct::getIsGood,false);
         lambdaQueryWrapper.orderByDesc(StoreProduct::getSort).orderByDesc(StoreProduct::getId);
         return dao.selectList(lambdaQueryWrapper);
+    }
+
+    /**
+     *
+     * @param productId 商品id
+     * @return
+     */
+    @Override
+    public boolean deleteProduct(Integer productId) {
+        LambdaUpdateWrapper<StoreProduct> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper.eq(StoreProduct::getId, productId);
+        lambdaUpdateWrapper.set(StoreProduct::getIsDel, true);
+        return update(lambdaUpdateWrapper);
     }
 
     ///////////////////////////////////////////自定义方法

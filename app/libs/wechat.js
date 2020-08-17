@@ -37,10 +37,11 @@ class AuthWechat {
 	
 	signLink() {
 		if (typeof window.entryUrl === 'undefined' || window.entryUrl === '') {
-			  	window.entryUrl = document.location.href
+			  	window.entryUrl = location.href.split('#')[0]
 			}
-		return  /(Android)/i.test(navigator.userAgent) ? document.location.href : window.entryUrl;
+		return  /(Android)/i.test(navigator.userAgent) ? location.href.split('#')[0] : window.entryUrl;
 	}
+
 
 	/**
 	 * 初始化wechat(分享配置)

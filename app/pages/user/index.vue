@@ -15,8 +15,8 @@
 						<view class="name" v-if="userInfo.uid">
 							{{userInfo.nickname}}
 							<view class="vip" v-if="userInfo.vip">
-								<image :src="userInfo.vip_icon" alt="">
-								<view style="margin-left: 10rpx;" class="vip-txt">{{userInfo.vip_name}}</view>
+								<image :src="userInfo.vipIcon" alt="">
+								<view style="margin-left: 10rpx;" class="vip-txt">{{userInfo.vipName}}</view>
 							</view>
 						</view>
 						<view class="num" v-if="userInfo.phone" @click="goEdit()">
@@ -388,6 +388,7 @@
 								border-radius: 18px;
 								font-size: 20rpx;
 								margin-left: 12rpx;
+								margin-top: 2rpx;
 
 								image {
 									width: 27rpx;

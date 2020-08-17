@@ -3,18 +3,20 @@
   <div class="divBox" v-if="isLogin">
     <el-card v-loading="fullscreenLoading" class="box-card">
       <div slot="header" class="clearfix">
-        <div class="filter-container">
-          <div class="demo-input-suffix acea-row">
-            <span class="seachTiele">模板状态：</span>
-            <el-select v-model="tableFrom.status" placeholder="请选择" clearable class="filter-item selWidth mr20" @change="userSearchs">
-              <el-option value="1">可用</el-option>
-              <el-option value="0">不可用</el-option>
-            </el-select>
-            <span class="seachTiele">模板名称：</span>
-            <el-input v-model="tableFrom.title" placeholder="请输入商品名称，关键字，产品编号" class="selWidth">
-              <el-button slot="append" icon="el-icon-search" @change="userSearchs" />
-            </el-input>
-          </div>
+        <div class="container">
+          <el-form :inline="true">
+            <el-form-item label="模板状态：" class="mr10">
+              <el-select v-model="tableFrom.status" placeholder="请选择" clearable class="filter-item selWidth mr20" @change="userSearchs">
+                <el-option value="1" label="可用"></el-option>
+                <el-option value="0" label="不可用"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="模板名称：" class="mr10">
+              <el-input v-model="tableFrom.title" placeholder="请输入模板名称" class="selWidth">
+                <el-button slot="append" icon="el-icon-search" @click="userSearchs" />
+              </el-input>
+            </el-form-item>
+          </el-form>
         </div>
         <el-button size="mini" type="primary" @click="add">添加短信模板</el-button>
       </div>
@@ -105,8 +107,8 @@ export default {
   filters: {
     statusFilter(status) {
       const statusMap = {
-        0: '没有',
-        1: '有'
+        0: '不可用',
+        1: '可用'
       }
       return statusMap[status]
     },

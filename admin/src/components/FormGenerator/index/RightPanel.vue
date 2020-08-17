@@ -219,14 +219,16 @@
           <el-form-item v-if="activeData.name !== undefined" label="文件字段名">
             <el-input v-model="activeData.name" placeholder="请输入上传文件字段名" />
           </el-form-item>
-          <el-form-item v-if="activeData.accept !== undefined" label="文件类型">
+          <el-form-item v-if="activeData.accept === 'image'" label="文件类型">
+            <span>图片</span>
+          </el-form-item>
+          <el-form-item v-if="activeData.accept !== undefined && activeData.accept !== 'image'" label="文件类型">
             <el-select
               v-model="activeData.accept"
               placeholder="请选择文件类型"
               :style="{ width: '100%' }"
               clearable
             >
-              <el-option label="图片" value="image/*" />
               <el-option label="视频" value="video/*" />
               <el-option label="音频" value="audio/*" />
               <el-option label="excel" value=".xls,.xlsx" />
@@ -619,6 +621,7 @@ import {
   inputComponents, selectComponents, layoutComponents
 } from '@/components/FormGenerator/components/generator/config'
 import { saveFormConf } from '../utils/db'
+import Templates from "../../../views/appSetting/wxAccount/wxTemplate/index";
 
 const dateTimeFormat = {
   date: 'yyyy-MM-dd',
@@ -633,6 +636,7 @@ const dateTimeFormat = {
 
 export default {
   components: {
+    Templates,
     TreeNodeDialog,
     IconsDialog
   },

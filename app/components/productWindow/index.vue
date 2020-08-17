@@ -110,7 +110,6 @@
 				this.$emit('ChangeCartNum', true);
 			},
 			tapAttr: function(indexw, indexn) {
-				console.log('45454555');
 				let that = this;
 				that.$emit("attrVal", {
 					indexw: indexw,
@@ -119,7 +118,7 @@
 				this.$set(this.attr.productAttr[indexw], 'index', this.attr.productAttr[indexw].attrValues[indexn]);
 				let value = that
 					.getCheckedValue()
-					.sort()
+					// .sort()
 					.join(",");
 				that.$emit("ChangeAttr", value);
 

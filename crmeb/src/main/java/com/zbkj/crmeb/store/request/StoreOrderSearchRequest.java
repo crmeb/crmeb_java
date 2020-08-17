@@ -30,7 +30,7 @@ public class StoreOrderSearchRequest {
     private Integer uid;
 
     @ApiModelProperty(value = "创建时间区间")
-    private String timeRage;
+    private String dateLimit;
 
     @ApiModelProperty(value = "订单状态（all 总数； 未支付 unPaid； 未发货 notShipped；待收货 spike；待评价 bargain；已完成 complete；待核销 toBeWrittenOff；退款中:refunding；已退款:refunded；已删除:deleted")
     private String status;

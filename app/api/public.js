@@ -5,21 +5,17 @@ import wechat from "@/libs/wechat.js";
  * 获取微信公众号js配置
  * @returns {*}
  */
+export function getWechatConfig() {
+  return request.get("wechat/config",{ url: encodeURIComponent(wechat.signLink()) },{ noAuth: true });
+}
+
 // export function getWechatConfig() {
 //   return request.get(
-//     "wechat/config?t="+ Date.parse(new Date()),
-//     { url: encodeURIComponent(wechat.signLink()) },
+//     "wechat/config",
+//     { url: encodeURIComponent(location.href.split('#')[0]) },
 //     { noAuth: true }
 //   );
 // }
-
-export function getWechatConfig() {
-  return request.get(
-    "wechat/config",
-    { url: encodeURIComponent(location.href.split('#')[0]) },
-    { noAuth: true }
-  );
-}
 
 /**
  * 获取微信sdk配置
@@ -71,7 +67,7 @@ export function follow() {
  * @retins {*}
  * */
 export function imageBase64(image) {
-  return request.post("qrcode/base64",image,{},1);
+  return request.post("qrcode/base64",image,{ noAuth: true },1);
 }
 
 /**

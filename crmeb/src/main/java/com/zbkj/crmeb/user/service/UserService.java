@@ -72,7 +72,11 @@ public interface UserService extends IService<User> {
 
     User getInfo();
 
+    User getUserPromoter();
+
     User getInfoException();
+
+    User getInfoEmpty();
 
     Object getInfoByCondition(Integer userId,Integer type,PageParamRequest pageParamRequest);
 
@@ -128,4 +132,6 @@ public interface UserService extends IService<User> {
     List<User> getTopSpreadPeopleListByDate(String type, PageParamRequest pageParamRequest);
 
     Integer getCountByPayCount(int minPayCount, int maxPayCount);
+
+    List<User> getUserByEntity(User user);
 }

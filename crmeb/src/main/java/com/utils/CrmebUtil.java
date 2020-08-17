@@ -16,6 +16,7 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.Security;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -738,5 +739,16 @@ public class CrmebUtil {
     public static String getSign(Map<String, Object> map, String signKey){
         String result = CrmebUtil.mapToStringUrl(map) + "&key=" + signKey;
         return DigestUtils.md5Hex(result).toUpperCase();
+    }
+
+    /**
+     * 检查是否可以转换int
+     * @param str
+     * @return
+     */
+    public static boolean isString2Num(String str){
+        Pattern pattern = Pattern.compile("^[0-9]*$");
+        Matcher matcher = pattern.matcher(str);
+        return matcher.matches();
     }
 }

@@ -12,6 +12,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * <p>
@@ -91,7 +92,7 @@ public class StoreProductAttrValueRequest implements Serializable {
     private Date updateTime;
 
     @ApiModelProperty(value = "attrValue字段，前端传递后用作sku字段")
-    private HashMap<String,String> attrValue;
+    private LinkedHashMap<String,String> attrValue;
 
 
 }

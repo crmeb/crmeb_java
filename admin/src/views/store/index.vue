@@ -98,6 +98,7 @@
         >
           <template slot-scope="scope">
             <el-switch
+              :disabled="tableFrom.type === '5'"
               v-model="scope.row.isShow"
               :active-value="true"
               :inactive-value="false"
@@ -120,7 +121,8 @@
             <router-link :to="{path: '/store/list/creatProduct/' + scope.row.id}">
               <el-button type="text" size="small" class="mr10">编辑</el-button>
             </router-link>
-            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)">删除</el-button>
+            <el-button  v-if="tableFrom.type === '5'" type="text" size="small" @click="handleRestore(scope.row.id, scope.$index)">恢复商品</el-button>
+            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)">{{ tableFrom.type === '5' ? '删除' : '加入回收站' }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -148,7 +150,7 @@
 </template>
 
 <script>
-import { productLstApi, productDeleteApi, categoryApi, putOnShellApi, offShellApi, productHeadersApi, productExportApi } from '@/api/store'
+import { productLstApi, productDeleteApi, categoryApi, putOnShellApi, offShellApi, productHeadersApi, productExportApi, restoreApi } from '@/api/store'
 import { getToken } from '@/utils/auth'
 import taoBao from './taoBao'
 export default {
@@ -188,6 +190,16 @@ export default {
     this.getCategorySelect()
   },
   methods: {
+    handleRestore(id) {
+      this.$modalSure("恢复商品").then(() => {
+        restoreApi(id)
+          .then((res) => {
+            this.$message.success('操作成功');
+            this.goodHeade();
+            this.getList();
+          })
+      });
+    },
     seachList() {
       this.tableFrom.page = 1
       this.getList()
