@@ -154,14 +154,10 @@ public class IndexServiceImpl implements IndexService {
 
         indexInfoResponse.setLogoUrl(systemConfigService.getValueByKey(Constants.CONFIG_KEY_SITE_LOGO));
 
-        Integer userId = userService.getUserId();
-
-        if(userId > 0){
-            User user = userService.getById(userId);
+        User user = userService.getInfo();
+        if(null != user){
             indexInfoResponse.setSubscribe(user.getSubscribe());
-
         }
-
         return indexInfoResponse;
     }
 

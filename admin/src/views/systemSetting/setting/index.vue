@@ -1,8 +1,7 @@
 <template>
   <div class="divBox">
     <el-card class="box-card">
-      {{activeNamel1}}
-      <el-tabs v-model="activeNamel1" @tab-click="handleTabClick">
+      <el-tabs v-model="activeNamel1" @tab-click="handleTabClick"  v-loading="loading">
         <el-tab-pane
           v-for="tab,index in treeList"
           :key="index"
@@ -26,7 +25,6 @@
           </template>
           <!--        正常配置渲染-->
           <template v-else>
-            {{activeNamel2}}
             <el-tabs v-if="tab.child.length > 0" v-model="activeNamel2"
                      type="border-card" @tab-click="handleItemTabClick">
               <el-tab-pane
@@ -75,6 +73,7 @@ export default {
   components: {Template, parser },
   data() {
     return {
+      loading: false,
       formConf: { content: { fields: [] }, id: null, render: false, isEdit: false },
       formConfChild: { content: { fields: [] }, id: null, render: false, isEdit: false },
       activeNamel1: null,
@@ -88,7 +87,6 @@ export default {
     }
   },
   mounted() {
-    console.log(this.$route.path.split("/")[1])
     this.handlerGetTreeList()
     this.getCurrentUploadSelectedFlag()
   },
@@ -137,11 +135,15 @@ export default {
       this.currentEditId = id
       this.formConf.content = { fields: [] }
       this.formConf.render = false
+      this.loading = true
       systemFormConfigApi.getFormConfigInfo(formPram).then(data => {
         const { id, name, info, content } = data
         this.formConf.content = JSON.parse(content)
         this.formConf.id = id
         this.handlerGetSettingInfo(id, 1)
+        this.loading = false
+      }).catch(() =>{
+        this.loading = false
       })
     },
     handleItemTabClick(tab, event) { //这里对tabs=tab.name和radio=id做了兼容
@@ -154,11 +156,15 @@ export default {
       this.currentEditId = id
       this.formConfChild.content = { fields: [] }
       this.formConfChild.render = false
+      this.loading = true
       systemFormConfigApi.getFormConfigInfo(formPram).then(data => {
         const { id, name, info, content } = data
         this.formConfChild.content = JSON.parse(content)
         this.formConfChild.id = id
         this.handlerGetSettingInfo(id, 2)
+        this.loading = false
+      }).catch(() =>{
+        this.loading = false
       })
     },
     handlerGetSettingInfo(id, level) {
@@ -203,6 +209,7 @@ export default {
     },
     handlerGetTreeList() {
       const _pram = { type: constants.categoryType[5].value, status: -1 }
+      this.loading = true
       categoryApi.treeCategroy(_pram).then(data => {
         this.treeList = this.handleAddArrt(data)
         if (this.treeList.length > 0) this.activeNamel1 = this.treeList[0].extra
@@ -214,6 +221,9 @@ export default {
         } else {
           this.handlerGetLevel1FormConfig(this.treeList[0].extra)
         }
+        this.loading = false
+      }).catch(() =>{
+        this.loading = false
       })
     },
     handleAddArrt(treeData) {

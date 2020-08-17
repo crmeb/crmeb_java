@@ -347,12 +347,12 @@ public class OrderUtils {
         ComputeOrderResponse result = new ComputeOrderResponse();
         // 组装返回数据
         result.setTotalPrice(cor.getPriceGroup().getTotalPrice());
-        result.setPayPrice(payPrice);
-        result.setPayPostage(payPostage);
-        result.setCouponPrice(couponPrice);
-        result.setDeductionPrice(deductionPrice);
-        result.setUsedIntegral(usedIntegral);
-        result.setSurplusIntegral(surPlusIntegral);
+        result.setPayPrice(payPrice.setScale(2, BigDecimal.ROUND_CEILING));
+        result.setPayPostage(payPostage.setScale(2, BigDecimal.ROUND_CEILING));
+        result.setCouponPrice(couponPrice.setScale(2, BigDecimal.ROUND_CEILING));
+        result.setDeductionPrice(deductionPrice.setScale(2, BigDecimal.ROUND_CEILING));
+        result.setUsedIntegral(usedIntegral.setScale(2, BigDecimal.ROUND_CEILING));
+        result.setSurplusIntegral(surPlusIntegral.setScale(2, BigDecimal.ROUND_CEILING));
         return result;
     }
 

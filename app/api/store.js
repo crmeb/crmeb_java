@@ -131,7 +131,9 @@ export function getCollectUserList(data) {
  * 
  */
 export function getReplyList(id, data) {
-	return request.get('reply/list/' + id, data)
+	return request.get('reply/list/' + id, data,{
+		noAuth: true
+	})
 }
 
 /**
@@ -139,7 +141,9 @@ export function getReplyList(id, data) {
  * @param int id
  */
 export function getReplyConfig(id) {
-	return request.get('reply/config/' + id);
+	return request.get('reply/config/' + id,{},{
+		noAuth: true
+	});
 }
 
 /**

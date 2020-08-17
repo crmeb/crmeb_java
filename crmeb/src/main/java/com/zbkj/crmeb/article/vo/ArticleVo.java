@@ -46,8 +46,11 @@ public class ArticleVo implements Serializable {
     @ApiModelProperty(value = "文章作者")
     private String author;
 
-    @ApiModelProperty(value = "文章图片")
+    @ApiModelProperty(value = "文章图片 前端用")
     private List<String> imageInput = new ArrayList<>();
+
+    @ApiModelProperty(value = "文章图片 后端用")
+    private String imageInputs;
 
     @ApiModelProperty(value = "文章简介")
     private String synopsis;

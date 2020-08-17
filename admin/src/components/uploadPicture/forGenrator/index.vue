@@ -1,6 +1,5 @@
 <template>
   <div>
-    {{multiple}}
     <div class="acea-row" v-if="multiple">
       <div
         v-for="(item,index) in imageList"

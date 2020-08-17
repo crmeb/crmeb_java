@@ -214,33 +214,11 @@
 										tab: 5,
 										url: '/pages/users/user_money/index'
 									});
+								}).catch(err=>{
+									return that.$util.Tips({
+										title: err
+									});
 								})
-								// // #ifdef MP || APP-PLUS
-								// rechargeRoutine({
-								// 	price: parseFloat(value),
-								// 	type: 1
-								// })
-								// // #endif
-								// // #ifdef H5
-								// rechargeWechat({
-								// 		price: parseFloat(value),
-								// 		from: that.from,
-								// 		type: 1
-								// 	})
-								// 	// #endif
-								// 	.then(res => {
-								// 		return that.$util.Tips({
-								// 			title: '转入成功',
-								// 			icon: 'success'
-								// 		}, {
-								// 			tab: 5,
-								// 			url: '/pages/users/user_money/index'
-								// 		});
-								// 	}).catch(err => {
-								// 		return that.$util.Tips({
-								// 			title: err
-								// 		})
-								// 	});
 							} else if (res.cancel) {
 								return that.$util.Tips({
 									title: '已取消'
@@ -252,7 +230,6 @@
 					uni.showLoading({
 						title: '正在支付',
 					})
-					// #ifdef MP || APP-PLUS
 					let money = parseFloat(this.money);
 					if (this.rechar_id == 0) {
 						if (Number.isNaN(money)) {
@@ -268,7 +245,7 @@
 					} else {
 						money = this.numberPic
 					}
-
+					// #ifdef MP || APP-PLUS
 					rechargeRoutine({
 						price: money,
 						type: 0,
@@ -294,7 +271,6 @@
 								});
 							},
 							fail: function(err) {
-								console.log(err);
 								return that.$util.Tips({
 									title: '支付失败'
 								});
@@ -314,7 +290,7 @@
 					// #endif
 					// #ifdef H5 
 					rechargeWechat({
-						price: that.rechar_id == 0 ? that.money : that.numberPic,
+						price: money,
 						from: that.from,
 						rechar_id: that.rechar_id,
 						payType: 0
@@ -353,12 +329,16 @@
 									});
 								})
 								.catch(function(err) {
-									console.log(err);
 									return that.$util.Tips({
 										title: '支付失败'
 									});
 								});
 						}
+					}).catch(res=>{
+						uni.hideLoading();
+						return that.$util.Tips({
+							title: res
+						});
 					})
 					// #endif
 				}

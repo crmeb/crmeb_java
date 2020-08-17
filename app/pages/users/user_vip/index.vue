@@ -29,7 +29,7 @@
 						</view>
 					</view>
 					<view class="numList acea-row row-around row-middle">
-						<view class="item" :class="current >=item.experience?'past':''" v-for="(item,index) in levelList">{{item.experience}}</view>
+						<view class="item" :class="current >=item.experience?'past':''" v-for="(item,index) in levelList" :key="index">{{item.experience}}</view>
 					</view>
 				</view>
 				<view class="vipList acea-row">
@@ -108,7 +108,7 @@
 				<view class="icons"></view>经验值明细
 			</view>
 			<view class="list">
-				<view class="item acea-row row-between-wrapper" v-for="(item,index) in expList">
+				<view class="item acea-row row-between-wrapper" v-for="(item,index) in expList" :key="index">
 					<view class="text">
 						<view class="name">{{item.title}}</view>
 						<view class="data">{{item.add_time}}</view>

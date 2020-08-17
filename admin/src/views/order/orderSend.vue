@@ -12,7 +12,7 @@
                 <el-form-item label="快递公司：" prop="expressId"
                               :rules="[{ required: true, message: '请选择快递公司', trigger: 'change' }]">
                     <el-select v-model="formItem.expressId" style="width:80%;">
-                        <el-option v-for="(item,i) in express" :value="item.id" :key="i">{{ item.name }}</el-option>
+                        <el-option v-for="(item,i) in express" :value="item.id" :key="i" :label="item.name"></el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item label="快递单号：" prop="expressCode"
@@ -69,7 +69,7 @@
             },
             // 物流公司列表
             getList () {
-              expressList({ page: 1, limit: 999}).then(async res => {
+              expressList({ page: 1, limit: 999, isShow:true }).then(async res => {
                     this.express = res.list
                 })
             },

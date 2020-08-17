@@ -4,7 +4,7 @@
  */
 
 export const page = {
-  limit: [10, 15, 20, 50, 100],
+  limit: [20, 40, 60, 80, 100],
   page: 1,
   layout: 'total, sizes, prev, pager, next, jumper'
 }

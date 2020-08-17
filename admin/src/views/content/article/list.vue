@@ -81,7 +81,9 @@
       top="1vh"
       width="80%"
       destroy-on-close
+      :modal="false"
       :close-on-click-modal="false"
+      class="articleModal"
     >
       <edit
         v-if="editDialogConfig.visible"
@@ -187,6 +189,8 @@ export default {
 }
 </script>
 
-<style scoped>
-
+<style scoped lang="scss">
+.articleModal{
+  z-index: 333 !important;
+}
 </style>

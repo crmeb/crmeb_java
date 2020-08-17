@@ -1,7 +1,6 @@
 package com.zbkj.crmeb.upload.service.impl;
 
 import com.aliyun.oss.OSS;
-import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.PutObjectRequest;
 import com.aliyun.oss.model.PutObjectResult;
 import com.exception.CrmebException;
@@ -65,7 +64,7 @@ public class OssServiceImpl implements OssService {
             //更新数据库
             systemAttachmentService.updateCloudType(id, 3);
             //删除
-            file.delete();
+//            file.delete();
         } catch (Exception e){
             throw new CrmebException(e.getMessage());
         }

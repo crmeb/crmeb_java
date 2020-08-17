@@ -15,6 +15,7 @@ import com.zbkj.crmeb.system.request.SystemAdminAddRequest;
 import com.zbkj.crmeb.system.request.SystemAdminRequest;
 import com.zbkj.crmeb.system.response.SystemAdminResponse;
 import com.zbkj.crmeb.system.service.SystemAdminService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -44,7 +45,41 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         LambdaQueryWrapper<SystemAdmin> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         SystemAdmin systemAdmin = new SystemAdmin();
         BeanUtils.copyProperties(request,systemAdmin);
-        lambdaQueryWrapper.setEntity(systemAdmin);
+//        lambdaQueryWrapper.setEntity(systemAdmin);
+        if(StringUtils.isNotBlank(systemAdmin.getAccount())){
+            lambdaQueryWrapper.eq(SystemAdmin::getAccount, systemAdmin.getAccount());
+        }
+        if(null != systemAdmin.getAddTime()){
+            lambdaQueryWrapper.eq(SystemAdmin::getAddTime, systemAdmin.getAddTime());
+        }
+        if(null != systemAdmin.getId()){
+            lambdaQueryWrapper.eq(SystemAdmin::getId, systemAdmin.getId());
+        }
+        if(null != systemAdmin.getIsDel()){
+            lambdaQueryWrapper.eq(SystemAdmin::getIsDel, systemAdmin.getIsDel());
+        }
+        if(StringUtils.isNotBlank(systemAdmin.getLastIp())){
+            lambdaQueryWrapper.eq(SystemAdmin::getLastIp, systemAdmin.getLastIp());
+        }
+        if(null != systemAdmin.getLastTime()){
+            lambdaQueryWrapper.eq(SystemAdmin::getLastTime, systemAdmin.getLastTime());
+        }
+        if(null != systemAdmin.getLevel()){
+            lambdaQueryWrapper.eq(SystemAdmin::getLevel, systemAdmin.getLevel());
+        }
+        if(null != systemAdmin.getLoginCount()){
+            lambdaQueryWrapper.eq(SystemAdmin::getLoginCount, systemAdmin.getLoginCount());
+        }
+        if(StringUtils.isNotBlank(systemAdmin.getRealName())){
+            lambdaQueryWrapper.like(SystemAdmin::getRealName, systemAdmin.getRealName());
+            lambdaQueryWrapper.or().like(SystemAdmin::getAccount, systemAdmin.getRealName());
+        }
+        if(StringUtils.isNotBlank(systemAdmin.getRoles())){
+            lambdaQueryWrapper.eq(SystemAdmin::getRoles, systemAdmin.getRoles());
+        }
+        if(null != systemAdmin.getStatus()){
+            lambdaQueryWrapper.eq(SystemAdmin::getStatus, systemAdmin.getStatus());
+        }
         return dao.selectList(lambdaQueryWrapper);
     }
 

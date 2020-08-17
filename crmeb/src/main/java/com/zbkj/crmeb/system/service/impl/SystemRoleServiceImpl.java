@@ -73,6 +73,9 @@ public class SystemRoleServiceImpl extends ServiceImpl<SystemRoleDao, SystemRole
     @Override
     public Boolean checkAuth(String uri) {
         List<Integer> categoryIdList = getRoleListInRoleId();
+        if(categoryIdList.size() < 1){
+            return false;
+        }
 
         //查询分类，根据in id和 路由
         return categoryService.checkAuth(categoryIdList, uri);
@@ -92,7 +95,7 @@ public class SystemRoleServiceImpl extends ServiceImpl<SystemRoleDao, SystemRole
     private List<Integer> getRoleListInRoleId(){
         //获取当前用户的所有权限
         SystemAdmin systemAdmin = systemAdminService.getInfo();
-        if(StringUtils.isBlank(systemAdmin.getRoles())){
+        if(null == systemAdmin || StringUtils.isBlank(systemAdmin.getRoles())){
             throw new CrmebException("没有权限访问！");
         }
 

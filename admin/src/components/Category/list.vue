@@ -16,7 +16,6 @@
         <el-card class="box-card">
           <div slot="header" class="clearfix">
             <div class="container">
-              {{biztype}}
               <el-form inline size="small">
                 <el-form-item>
                   <el-select v-model="listPram.status" placeholder="状态" clearable class="selWidth">
@@ -87,7 +86,6 @@
                 </template>
               </el-table-column>
               <el-table-column label="操作" min-width="200" fixed="right">
-                {{biztype}}
                 <template slot-scope="scope">
                   <el-button
                     v-if="biztype.value!==3"

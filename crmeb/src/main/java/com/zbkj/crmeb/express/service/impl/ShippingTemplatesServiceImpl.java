@@ -51,8 +51,8 @@ public class ShippingTemplatesServiceImpl extends ServiceImpl<ShippingTemplatesD
     public List<ShippingTemplates> getList(ShippingTemplatesSearchRequest request, PageParamRequest pageParamRequest) {
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         LambdaQueryWrapper<ShippingTemplates> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        if(!StringUtils.isBlank(request.getName())){
-            lambdaQueryWrapper.eq(ShippingTemplates::getName, request.getName());
+        if(!StringUtils.isBlank(request.getKeywords())){
+            lambdaQueryWrapper.like(ShippingTemplates::getName, request.getKeywords());
         }
         lambdaQueryWrapper.orderByDesc(ShippingTemplates::getSort).orderByDesc(ShippingTemplates::getId);
         return dao.selectList(lambdaQueryWrapper);

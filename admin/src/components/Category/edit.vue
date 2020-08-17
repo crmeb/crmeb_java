@@ -1,7 +1,6 @@
 <template>
   <div>
     <el-form ref="editPram" :model="editPram" label-width="130px">
-      {{biztype}}
       <el-form-item
         label="分类名称"
         prop="name"
@@ -34,16 +33,6 @@
       <el-form-item label="状态">
         <el-switch v-model="editPram.status" :active-value="true" :inactive-value="false" />
       </el-form-item>
-      <el-form-item label="类型" prop="type" :rules="[{required:true,message:'请选择类型',trigger:['blur']}]">
-        <el-select v-model="editPram.type" disabled>
-          <el-option
-            v-for="item in constants.categoryType"
-            :key="item.value"
-            :label="item.name"
-            :value="item.value"
-          />
-        </el-select>
-      </el-form-item>
       <el-form-item label="扩展字段" v-if="biztype.value !== 1 && biztype.value !== 3 && biztype.value !== 5">
         <el-input v-model="editPram.extra" type="textarea" placeholder="扩展字段" />
       </el-form-item>
@@ -52,8 +41,6 @@
         <el-button @click="close">取消</el-button>
       </el-form-item>
     </el-form>
-    <!--      {{// editPram}}-->
-    <!--      {{prent}}-->
   </div>
 </template>
 <!--创建和编辑公用一个组件-->

@@ -50,7 +50,7 @@ export function fileFileApi(data, params) {
  */
 export function fileImageApi(data, params) {
   return request({
-    url: '/admin/wechat/media/upload',
+    url: '/admin/upload/image',
     method: 'POST',
     params,
     data
@@ -89,5 +89,19 @@ export function attachmentMoveApi(data) {
     url: `/admin/system/attachment/move`,
     method: 'post',
     data
+  })
+}
+
+
+/**
+ * 微信上传图片
+ * @param data
+ */
+export function wechatUploadApi(data, params) {
+  return request({
+    url: `/admin/wechat/media/upload`,
+    method: 'post',
+    data,
+    params
   })
 }

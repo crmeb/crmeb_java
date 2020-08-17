@@ -3,6 +3,7 @@ package com.interceptor;
 import com.alibaba.fastjson.JSONObject;
 import com.common.CheckFrontToken;
 import com.common.CommonResult;
+import com.utils.RequestUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -22,11 +23,17 @@ public class FrontTokenInterceptor implements HandlerInterceptor {
         String token = checkFrontToken.getTokenFormRequest(request);
 
         if(token == null || token.isEmpty()){
+            //判断路由，部分路由不管用户是否登录都可以访问
+            boolean result = checkFrontToken.checkRouter(RequestUtil.getUri(request));
+            if(result){
+                return true;
+            }
+
             response.getWriter().write(JSONObject.toJSONString(CommonResult.unauthorized()));
             return false;
         }
 
-        Boolean result = checkFrontToken.check(token);
+        Boolean result = checkFrontToken.check(token, request);
         if(!result){
             response.getWriter().write(JSONObject.toJSONString(CommonResult.unauthorized()));
             return false;

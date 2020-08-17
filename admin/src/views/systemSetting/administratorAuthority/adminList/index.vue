@@ -3,7 +3,7 @@
     <el-card class="box-card">
       <el-form inline size="small">
         <el-form-item>
-          <el-select v-model="listPram.realName" placeholder="身份" clearable class="selWidth">
+          <el-select v-model="listPram.roles" placeholder="身份" clearable class="selWidth">
             <el-option
               v-for="item in roleList.list"
               :key="item.id"
@@ -33,10 +33,10 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-input v-model="listPram.roleName" placeholder="姓名或者账号" clearable class="selWidth"/>
+          <el-input v-model="listPram.realName" placeholder="姓名或者账号" clearable class="selWidth"/>
         </el-form-item>
         <el-form-item>
-          <el-button size="mini" type="primary" @click.native="handleGetAdminList">查询</el-button>
+          <el-button size="mini" type="primary" @click="handleSearch">查询</el-button>
         </el-form-item>
       </el-form>
       <el-form inline>
@@ -136,7 +136,7 @@ export default {
         roles: null,
         status: null,
         page: 1,
-        limit: constants.page.limit[1]
+        limit: constants.page.limit[0]
       },
       roleList: [],
       menuList: [],
@@ -152,12 +152,18 @@ export default {
     this.handleGetRoleList()
   },
   methods: {
+    handleSearch() {
+      this.listPram.page = 1
+      this.handleGetAdminList()
+    },
     handleSizeChange(val) {
       this.listPram.limit = val
+      this.handleGetAdminList()
       this.handleGetRoleList(this.listPram)
     },
     handleCurrentChange(val) {
       this.listPram.page = val
+      this.handleGetAdminList()
       this.handleGetRoleList(this.listPram)
     },
     handleGetRoleList() {
@@ -171,15 +177,15 @@ export default {
     },
     handlerOpenDel(rowData) {
       this.$confirm('确认删除当前数据').then(() => {
-        const _pram = { id: rowData.id, isDel: 1, roles: Array.of(rowData.roles) }
-        systemAdminApi.adminUpdate(_pram).then(data => {
+        const _pram = { id: rowData.id}
+        systemAdminApi.adminDel(_pram).then(data => {
           this.$message.success('删除数据成功')
           this.handleGetAdminList()
         })
       })
     },
     handleGetAdminList() {
-      systemAdminApi.adminList(this.listPram).then(data => {
+      systemAdminApi.adminList( this.listPram ).then(data => {
         this.listData = data
         // this.handlerGetMenuList()
       })

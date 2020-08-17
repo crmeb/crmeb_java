@@ -220,5 +220,5 @@ export function getLiveList(page,limit) {
  * 获取小程序二维码
  */
 export function getQrcode(data) {
-  return request.post('qrcode/get',data);
+  return request.post('qrcode/get',data,{ noAuth: true });
 }

@@ -10,12 +10,9 @@ import com.qiniu.storage.Configuration;
 import com.qiniu.storage.Region;
 import com.qiniu.storage.UploadManager;
 import com.qiniu.util.Auth;
-import com.utils.CrmebUtil;
-import com.utils.RequestUtil;
 import com.zbkj.crmeb.system.model.SystemAttachment;
 import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.upload.service.AsyncService;
-
 import com.zbkj.crmeb.upload.service.CosService;
 import com.zbkj.crmeb.upload.service.OssService;
 import com.zbkj.crmeb.upload.service.QiNiuService;
@@ -219,7 +216,7 @@ public class AsyncServiceImpl implements AsyncService {
         String uploadType = systemConfigService.getValueByKeyException("uploadType");
         //获取配置信息
         int type = Integer.parseInt(uploadType);
-        String pre = null;
+        String pre = "local";
         switch (type){
             case 2:
                 pre = "qn";
@@ -231,15 +228,10 @@ public class AsyncServiceImpl implements AsyncService {
                 pre = "tx";
                 break;
             default:
-
                 break;
         }
-        if(type == 1){
-            leftBase = RequestUtil.getDomain();;
-        }else{
-            leftBase = systemConfigService.getValueByKeyException(pre+"UploadUrl");
-        }
-        return leftBase;
+
+        return systemConfigService.getValueByKeyException(pre+"UploadUrl");
     }
 }
 

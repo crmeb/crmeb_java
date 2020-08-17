@@ -145,12 +145,12 @@ export default {
     },
     hadlerInitEditData() {
       if (this.isEdit !== 1) return
-      const { author, cid, content, imageInput,
+      const { author, cid, content, imageInputs,
         isBanner, isHot, shareSynopsis, shareTitle, sort, synopsis, title, url, id } = this.editData
       this.pram.author = author
       this.pram.cid = Number.parseInt(cid)
       this.pram.content = content
-      this.pram.imageInput = imageInput
+      this.pram.imageInput = imageInputs
       this.pram.isBanner = isBanner
       this.pram.isHot = isHot
       this.pram.shareSynopsis = shareSynopsis

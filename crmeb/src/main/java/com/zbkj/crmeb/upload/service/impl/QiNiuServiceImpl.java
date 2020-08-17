@@ -1,6 +1,5 @@
 package com.zbkj.crmeb.upload.service.impl;
 
-import com.aliyun.oss.OSS;
 import com.exception.CrmebException;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
@@ -56,7 +55,7 @@ public class QiNiuServiceImpl implements QiNiuService {
             //更新数据库
             systemAttachmentService.updateCloudType(id, 2);
             //删除
-            file.delete();
+//            file.delete();
         } catch (QiniuException ex) {
             //TODO
             throw new CrmebException(ex.getMessage());

@@ -7,7 +7,7 @@
         </el-form-item>
         <el-form-item label="优惠劵类型">
           <el-radio-group v-model="ruleForm.useType">
-            <el-radio :label="1">通用卷</el-radio>
+            <el-radio :label="1">通用券</el-radio>
             <el-radio :label="2">商品券</el-radio>
             <el-radio :label="3">品类券</el-radio>
           </el-radio-group>
@@ -84,8 +84,8 @@
         <el-form-item label="领取方式" prop="resource">
           <el-radio-group v-model="ruleForm.type">
             <el-radio :label="1">手动领取</el-radio>
-            <el-radio :label="2">新人卷</el-radio>
-            <el-radio :label="3">赠送卷</el-radio>
+            <el-radio :label="2">新人券</el-radio>
+            <el-radio :label="3">赠送券</el-radio>
             <!--<el-radio :label="4">付费会员卷</el-radio>-->
           </el-radio-group>
         </el-form-item>

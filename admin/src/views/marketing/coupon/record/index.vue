@@ -5,19 +5,30 @@
         <div class="filter-container">
           <el-form :inline="true">
             <el-form-item label="使用状态：" class="mr10">
-              <el-select v-model="tableFromIssue.status" placeholder="请选择评价状态" clearable  class="selWidth" @change="seachList">
+              <el-select v-model="tableFromIssue.status" placeholder="请选择使用状态" clearable  class="selWidth" @change="seachList">
                 <el-option label="已使用" value="1" />
                 <el-option label="未使用" value="0" />
                 <el-option label="已过期" value="2" />
               </el-select>
             </el-form-item>
-            <el-form-item label="领取人：" class="mr10">
-              <el-input v-model="tableFromIssue.coupon_id" placeholder="请输入领取人" class="selWidth">
-                <el-button size="mini" slot="append" icon="el-icon-search" @click="seachList"/>
-              </el-input>
+            <el-form-item label="领取人：">
+              <el-select v-model="tableFromIssue.uid" class="selWidth" reserve-keyword remote filterable
+                         :remote-method="remoteMethod" :loading="loading" placeholder="请输入用户名称" clearable @change="seachList">
+                <el-option
+                  v-for="item in options"
+                  :key="item.uid"
+                  :label="item.nickname"
+                  :value="item.uid">
+                </el-option>
+              </el-select>
             </el-form-item>
+            <!--<el-form-item label="领取人：" class="mr10">-->
+              <!--<el-input v-model="tableFromIssue.uid" placeholder="请输入领取人" class="selWidth">-->
+                <!--<el-button size="mini" slot="append" icon="el-icon-search" @click="seachList"/>-->
+              <!--</el-input>-->
+            <!--</el-form-item>-->
             <el-form-item label="优惠劵：" class="mr10">
-              <el-input v-model="tableFromIssue.name" placeholder="请输入优惠劵" class="selWidth">
+              <el-input v-model="tableFromIssue.name" placeholder="请输入优惠劵" class="selWidth" clearable>
                 <el-button slot="append" icon="el-icon-search"  @click="seachList"/>
               </el-input>
             </el-form-item>
@@ -109,6 +120,7 @@
 <script>
   import { couponUserListApi } from '@/api/marketing'
   import { roterPre } from '@/settings'
+  import { userListApi } from '@/api/user'
   export default {
     name: 'CouponUser',
     filters: {
@@ -139,19 +151,35 @@
         tableFromIssue: {
           page: 1,
           limit: 20,
+          uid: '',
           name: '',
           status: ''
         },
         issueData: {
           data: [],
           total: 0
-        }
+        },
+        loading: false,
+        options: []
       }
     },
     mounted() {
       this.getIssueList()
     },
     methods: {
+      remoteMethod(query) {
+        if (query !== '') {
+          this.loading = true;
+          setTimeout(() => {
+            this.loading = false;
+            userListApi({keywords: query, page: 1, limit: 10}).then(res => {
+              this.options = res.list
+            })
+          }, 200);
+        } else {
+          this.options = [];
+        }
+      },
       seachList() {
         this.tableFromIssue.page = 1
         this.getIssueList()
