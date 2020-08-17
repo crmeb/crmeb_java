@@ -29,25 +29,11 @@ export function adminInfo(pram) {
   })
 }
 
-export function adminList(pram) {
-  const data = {
-    account: pram.account,
-    addTime: pram.addTime,
-    isDel: pram.isDel,
-    lastIp: pram.lastIp,
-    lastTime: pram.lastTime,
-    level: pram.level,
-    loginCount: pram.loginCount,
-    page: pram.page,
-    limit: pram.limit,
-    realName: pram.realName,
-    roles: pram.roles,
-    status: pram.status
-  }
+export function adminList(params) {
   return request({
     url: '/admin/system/admin/list',
     method: 'GET',
-    params: data
+    params
   })
 }
 

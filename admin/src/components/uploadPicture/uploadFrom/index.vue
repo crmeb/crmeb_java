@@ -4,6 +4,7 @@
       title="上传图片"
       :visible.sync="visible"
       width="896px"
+      :modal="false"
       :before-close="handleClose"
     >
       <upload-index v-if="visible" :isMore="isMore" :modelName="modelName" @getImage="getImage" />

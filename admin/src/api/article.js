@@ -90,7 +90,7 @@ export function AddArticle(pram) {
   return request({
     url: '/admin/article/save',
     method: 'post',
-    params: data
+    data: data
   })
 }
 
@@ -101,7 +101,6 @@ export function AddArticle(pram) {
  */
 export function UpdateArticle(pram) {
   const data = {
-    id: pram.id,
     author: pram.author,
     cid: pram.cid,
     content: pram.content,
@@ -118,6 +117,7 @@ export function UpdateArticle(pram) {
   return request({
     url: '/admin/article/update',
     method: 'post',
-    params: data
+    params: { id: pram.id },
+    data: data
   })
 }

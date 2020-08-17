@@ -7,7 +7,7 @@
       <el-form-item label="管理员密码" prop="pwd">
         <el-input
           v-model="pram.pwd"
-          placeholder="管理员密码,不更改可以不填写"
+          placeholder="管理员密码"
           clearable
           @input="handlerPwdInput"
           @clear="handlerPwdInput"
@@ -77,7 +77,7 @@ export default {
         pwd: null,
         repwd: null,
         realName: null,
-        roles: null,
+        roles: [],
         status: null,
         id: null
       },
@@ -88,7 +88,7 @@ export default {
         pwd: [{ required: true, message: '请填管理员密码', trigger: ['blur', 'change'] }],
         repwd: [{ required: true, message: '确认密码密码', validator: validatePass, trigger: ['blur', 'change'] }],
         realName: [{ required: true, message: '管理员姓名', trigger: ['blur', 'change'] }],
-        roles: [{ required: true, message: '管理员身份', trigger: ['blur', 'change'] }]
+        roles: [{ required: true, message: '管理员身份', type: 'array', trigger: ['blur', 'change'] }]
       }
     }
   },
@@ -103,7 +103,8 @@ export default {
     handleGetRoleList() {
       const _pram = {
         page: 1,
-        limit: constants.page.limit[4]
+        limit: constants.page.limit[4],
+        status: 1
       }
       roleApi.getRoleList(_pram).then(data => {
         this.roleList = data

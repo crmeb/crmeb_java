@@ -115,7 +115,10 @@ public class WeChatMessageServiceImpl implements WeChatMessageService {
      * @return String
      */
     private String setXml() {
-        String type = wechatReply.getType().toLowerCase();
+        if(StringUtils.isBlank(getWechatReply().getType())){
+            return "";
+        }
+        String type = getWechatReply().getType().toLowerCase();
         MessageReplyDataVo messageReplyDataVo = JSONObject.toJavaObject(JSONObject.parseObject(wechatReply.getData()), MessageReplyDataVo.class);
 
         switch (type){

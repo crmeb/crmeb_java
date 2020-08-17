@@ -17,7 +17,6 @@
     </el-upload>
   </div>
 </template>
-
 <script>
   import { fileFileApi } from '@/api/systemSetting'
   import { getToken } from '@/utils/auth'

@@ -17,15 +17,27 @@
               </el-select>
             </el-form-item>
             <el-form-item label="商品搜索：" class="mr10">
-              <el-input v-model="tableFrom.productId" placeholder="请输入商品名称，关键字，产品编号" class="selWidth" size="small">
+              <el-input v-model="tableFrom.productSearch" placeholder="请输入商品名称，商品id" class="selWidth" size="small">
                 <el-button slot="append" icon="el-icon-search"  @click="seachList" size="small"/>
               </el-input>
             </el-form-item>
             <el-form-item label="用户名称：">
-              <el-input v-model="tableFrom.nickname" placeholder="请输入用户名称" class="selWidth" size="small">
-                <el-button slot="append" icon="el-icon-search"  @click="seachList" size="small"/>
-              </el-input>
+              {{uids}}
+              <el-select v-model="uids" style="width: 500px" reserve-keyword multiple remote filterable
+                         :remote-method="remoteMethod" :loading="loading" placeholder="请输入用户名称" clearable @change="seachList">
+                <el-option
+                  v-for="item in options"
+                  :key="item.uid"
+                  :label="item.nickname"
+                  :value="item.uid">
+                </el-option>
+              </el-select>
             </el-form-item>
+            <!--<el-form-item label="用户名称：">-->
+              <!--<el-input v-model="tableFrom.nickname" placeholder="请输入用户名称" class="selWidth" size="small">-->
+                <!--<el-button slot="append" icon="el-icon-search"  @click="seachList" size="small"/>-->
+              <!--</el-input>-->
+            <!--</el-form-item>-->
           </el-form>
         </div>
         <el-button size="small" type="primary" @click="add">添加虚拟评论</el-button>
@@ -120,6 +132,7 @@
 import creatComment from './creatComment.vue'
 import { categoryApi, replyListApi, replyDeleteApi, replyCommentApi } from '@/api/store'
 import { formatDates } from '@/utils/index';
+import { userListApi } from '@/api/user'
 export default {
   name: 'StoreComment',
   filters: {
@@ -163,11 +176,14 @@ export default {
         limit: 20,
         isReply: '',
         dateLimit: '',
-        nickname: '',
-        productId:'',
+        uid: '',
+        productSearch:'',
         isDel: false
       },
-      timeVal: []
+      timeVal: [],
+      loading: false,
+      uids: [],
+      options: []
     }
   },
   mounted() {
@@ -176,6 +192,19 @@ export default {
     this.getCategorySelect()
   },
   methods:{
+    remoteMethod(query) {
+      if (query !== '') {
+        this.loading = true;
+        setTimeout(() => {
+          this.loading = false;
+          userListApi({keywords: query, page: 1, limit: 10}).then(res => {
+            this.options = res.list
+          })
+        }, 200);
+      } else {
+        this.options = [];
+      }
+    },
     seachList() {
       this.tableFrom.page = 1
       this.getList()
@@ -278,6 +307,7 @@ export default {
     // 列表
     getList() {
       this.listLoading = true
+      this.tableFrom.uid = this.uids.join(',')
       replyListApi(this.tableFrom).then(res => {
         this.tableData.data = res.list
         this.tableData.total = res.total

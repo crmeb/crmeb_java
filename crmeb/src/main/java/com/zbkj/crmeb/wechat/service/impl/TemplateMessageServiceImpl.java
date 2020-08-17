@@ -120,6 +120,10 @@ public class TemplateMessageServiceImpl extends ServiceImpl<TemplateMessageDao, 
         }
         UserToken UserToken = userTokenService.getTokenByUserId(userId, openIdType);
 
+        if(null == UserToken || StringUtils.isBlank(UserToken.getToken())){
+            return;
+        }
+
         templateMessageVo.setTouser(UserToken.getToken());
 
         redisUtil.lPush(redisKey, JSONObject.toJSONString(templateMessageVo));

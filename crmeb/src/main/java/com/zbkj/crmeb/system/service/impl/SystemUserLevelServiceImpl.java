@@ -125,5 +125,13 @@ public class SystemUserLevelServiceImpl extends ServiceImpl<SystemUserLevelDao, 
         systemUserLevel.setIcon(systemAttachmentService.clearPrefix(systemUserLevel.getIcon()));
     }
 
+    @Override
+    public SystemUserLevel getByLevelId(Integer levelId) {
+        LambdaQueryWrapper<SystemUserLevel> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(SystemUserLevel::getIsShow, 1);
+        lambdaQueryWrapper.eq(SystemUserLevel::getIsDel, 0);
+        lambdaQueryWrapper.eq(SystemUserLevel::getId, levelId);
+        return dao.selectOne(lambdaQueryWrapper);
+    }
 }
 

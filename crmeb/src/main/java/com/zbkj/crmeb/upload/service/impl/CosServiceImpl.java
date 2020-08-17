@@ -72,7 +72,7 @@ public class CosServiceImpl implements CosService {
             //更新数据库
             systemAttachmentService.updateCloudType(id, 4);
             //删除
-            file.delete();
+//            file.delete();
         } catch (Exception e) {
             throw new CrmebException(e.getMessage());
         }

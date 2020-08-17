@@ -88,7 +88,7 @@ export default {
         updateTime: null,
         level: null,
         page: 1,
-        limit: constants.page.limit[1],
+        limit: constants.page.limit[0],
         roleName: null,
         rules: null,
         status: null

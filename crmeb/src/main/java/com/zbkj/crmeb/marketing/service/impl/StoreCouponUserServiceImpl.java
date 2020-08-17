@@ -181,6 +181,7 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
             storeCouponUser.setMinPrice(storeCoupon.getMinPrice());
             storeCouponUser.setStartTime(storeCoupon.getUseStartTime());
             storeCouponUser.setEndTime(storeCoupon.getUseEndTime());
+            storeCouponUser.setUseType(storeCoupon.getUseType());
             storeCouponUserList.add(storeCouponUser);
         }
 
@@ -332,6 +333,7 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
             storeCouponUser.setType(type);
             storeCouponUser.setStartTime(storeCoupon.getUseStartTime());
             storeCouponUser.setEndTime(storeCoupon.getUseEndTime());
+            storeCouponUser.setUseType(storeCoupon.getUseType());
             storeCouponUserList.add(storeCouponUser);
         }
 
@@ -428,7 +430,7 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
         request.setUid(userId);
         PageInfo<StoreCouponUserResponse> list = getList(request, pageParamRequest);
 
-        if(list.getList().size() < 1){
+        if(null == list.getList() || list.getList().size() < 1){
             return null;
         }
         Date date = DateUtil.nowDateTime();

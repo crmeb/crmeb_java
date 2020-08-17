@@ -488,8 +488,8 @@ public class OrderServiceImpl implements OrderService {
         StoreOrder storeOrderPram = new StoreOrder();
 //        storeOrderPram.setStatus(status);
         storeOrderPram.setUid(currentUser.getUid());
-        storeOrderPram.setIsDel(false);
-        storeOrderPram.setIsSystemDel(false);
+//        storeOrderPram.setIsDel(false);
+//        storeOrderPram.setIsSystemDel(false);
         storeOrderPram.setStatus(status);
 
         List<StoreOrder> orderList = storeOrderService.getUserOrderList(storeOrderPram, pageRequest);

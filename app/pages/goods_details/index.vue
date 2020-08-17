@@ -221,7 +221,6 @@
 	 } from '@/config/app.js';
 	import {
 		getProductDetail,
-		getProductCode,
 		collectAdd,
 		collectDel,
 		postCartAdd,
@@ -229,8 +228,7 @@
 		getReplyConfig
 	} from '@/api/store.js';
 	import {
-		getUserInfo,
-		userShare
+		getUserInfo
 	} from '@/api/user.js';
 	import {
 		getCoupons
@@ -653,8 +651,8 @@
 					that.$set(that, 'storeImage', that.storeInfo.image);
 					if (that.isLogin) {
 						that.getCartCount();
+						that.ShareInfo();
 					};
-					this.ShareInfo();
 					// #endif
 					if (that.isLogin) {
 						that.getUserInfo();
@@ -762,7 +760,7 @@
 					this.$set(productAttr[i], "index", value[i]);
 				}
 				//sort();排序函数:数字-英文-汉字；
-				let productSelect = this.productValue[value.sort().join(",")];
+				let productSelect = this.productValue[value.join(",")];
 				if (productSelect && productAttr.length) {
 					this.$set(
 						this.attr.productSelect,
@@ -774,7 +772,7 @@
 					this.$set(this.attr.productSelect, "stock", productSelect.stock);
 					this.$set(this.attr.productSelect, "unique", productSelect.id);
 					this.$set(this.attr.productSelect, "cart_num", 1);
-					this.$set(this, "attrValue", value.sort().join(","));
+					this.$set(this, "attrValue", value.join(","));
 					this.$set(this, "attrTxt", "已选择");
 				} else if (!productSelect && productAttr.length) {
 					this.$set(

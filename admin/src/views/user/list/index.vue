@@ -6,7 +6,7 @@
           <el-tab-pane :label="item.name" :name="item.type.toString()" v-for="(item,index) in headeNum" :key="index"/>
         </el-tabs>
         <div class="container">
-          <el-form inline size="small" :label-position="labelPosition"  label-width="100px">
+          <el-form inline size="small" :model="userFrom" ref="userFrom" :label-position="labelPosition"  label-width="100px">
             <el-row>
               <el-col :xs="24" :sm="24" :md="24" :lg="18" :xl="18">
                 <el-col v-bind="grid">
@@ -27,7 +27,6 @@
                   <el-col v-bind="grid">
                     <el-form-item label="用户等级：">
                       <el-select v-model="levelData" placeholder="请选择"  class="selWidth" clearable filterable multiple>
-                        <el-option value="">全部</el-option>
                         <el-option :value="item.id" v-for="(item, index) in levelList" :key="index" :label="item.name"></el-option>
                       </el-select>
                     </el-form-item>
@@ -35,7 +34,6 @@
                   <el-col v-bind="grid">
                     <el-form-item label="用户分组：">
                       <el-select v-model="groupData" placeholder="请选择"  class="selWidth" clearable filterable multiple>
-                        <el-option value="">全部</el-option>
                         <el-option :value="item.id" v-for="(item, index) in groupList" :key="index" :label="item.groupName"></el-option>
                       </el-select>
                     </el-form-item>
@@ -43,7 +41,6 @@
                   <el-col v-bind="grid">
                     <el-form-item label="用户标签：">
                       <el-select v-model="labelData" placeholder="请选择"  class="selWidth" clearable filterable multiple>
-                        <el-option value="">全部</el-option>
                         <el-option :value="item.id" v-for="(item, index) in labelLists" :key="index" :label="item.name"></el-option>
                       </el-select>
                     </el-form-item>
@@ -104,23 +101,23 @@
                   <el-col v-bind="grid">
                     <el-form-item label="访问情况：">
                       <el-select v-model="userFrom.accessType" placeholder="请选择"  class="selWidth" clearable>
-                        <el-option value="">全部</el-option>
-                        <el-option value="visitno">时间段未访问</el-option>
-                        <el-option value="visit">时间段访问过</el-option>
-                        <el-option value="add_time">首次访问</el-option>
+                        <el-option value="" label="全部"></el-option>
+                        <el-option value="visitno" label="时间段未访问"></el-option>
+                        <el-option value="visit" label="时间段访问过"></el-option>
+                        <el-option value="add_time" label="首次访问"></el-option>
                       </el-select>
                     </el-form-item>
                   </el-col>
                   <el-col v-bind="grid">
                     <el-form-item label="消费情况：">
                       <el-select v-model="userFrom.payCount" placeholder="请选择"  class="selWidth" clearable>
-                        <el-option value="">全部</el-option>
-                        <el-option value="-1">0</el-option>
-                        <el-option value="0">1+</el-option>
-                        <el-option value="1">2+</el-option>
-                        <el-option value="2">3+</el-option>
-                        <el-option value="3">4+</el-option>
-                        <el-option value="4">5+</el-option>
+                        <el-option value="" label="全部"></el-option>
+                        <el-option value="-1" label="0"></el-option>
+                        <el-option value="0" label="1+"></el-option>
+                        <el-option value="1" label="2+"></el-option>
+                        <el-option value="2" label="3+"></el-option>
+                        <el-option value="3" label="4+"></el-option>
+                        <el-option value="4" label="5+"></el-option>
                       </el-select>
                     </el-form-item>
                   </el-col>
@@ -216,7 +213,7 @@
         <el-table-column
           prop="uid"
           label="ID"
-          min-width="50"
+          min-width="80"
         />
         <el-table-column label="头像" min-width="80">
           <template slot-scope="scope">
@@ -230,10 +227,15 @@
           </template>
         </el-table-column>
         <el-table-column
-          prop="nickname"
           label="姓名"
           min-width="150"
-        />
+        >
+          <template slot-scope="scope">
+            <span>{{scope.row.nickname | filterEmpty}}</span>
+            <span></span>
+            <span></span>
+          </template>
+        </el-table-column>
         <el-table-column
           label="用户等级"
           min-width="100"
@@ -263,6 +265,11 @@
         <el-table-column
           prop="nowMoney"
           label="余额"
+          min-width="100"
+        />
+        <el-table-column
+          prop="integral"
+          label="积分"
           min-width="100"
         />
         <el-table-column label="操作" min-width="200" fixed="right" align="center">
@@ -493,9 +500,9 @@
         },
         headeNum: [
           { 'type': '', 'name': '全部用户' },
-          { 'type': 'wechat', 'name': '微信公众号' },
-          { 'type': 'routine', 'name': '微信小程序' },
-          { 'type': 'h5', 'name': 'H5' }
+          { 'type': 'wechat', 'name': '微信公众号用户' },
+          { 'type': 'routine', 'name': '微信小程序用户' },
+          { 'type': 'h5', 'name': 'H5用户' }
         ],
         listLoading: true,
         tableData: {
@@ -505,8 +512,7 @@
         loginType: '',
         userFrom: {
           labelId: '',
-          loginType: '',
-          status: true,
+          userType: '',
           sex: '',
           isPromoter: '',
           country: '',
@@ -569,6 +575,29 @@
       this.getCityList()
     },
     methods: {
+      reset(formName) {
+        this.userFrom = {
+            labelId: '',
+            userType: '',
+            sex: '',
+            isPromoter: '',
+            country: '',
+            payCount: '',
+            accessType: '',
+            dateLimit: '',
+            keywords: '',
+            province: '',
+            city: '',
+            page: 1,
+            limit: 15,
+            level: '',
+            groupId: ''
+        }
+        this.levelData = []
+        this.groupData = []
+        this.labelData = []
+        this.getList()
+      },
       // 列表
       getCityList() {
         logistics.cityListTree().then(res => {
@@ -624,6 +653,7 @@
               this.$message.success('设置成功')
               this.loadingBtn = false
               this.handlePointClose()
+              this.getList()
             }).catch(() => {
               this.loadingBtn = false
             })
@@ -741,8 +771,8 @@
       // 列表
       getList() {
         this.listLoading = true
-        if(this.loginType == 0) this.loginType =''
-        this.userFrom.loginType = this.loginType
+        this.userFrom.userType = this.loginType
+        if(this.loginType == 0) this.userFrom.userType =''
         this.userFrom.level = this.levelData.join(',')
         this.userFrom.groupId = this.groupData.join(',')
         this.userFrom.labelId = this.labelData.join(',')

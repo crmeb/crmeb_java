@@ -92,22 +92,22 @@
         />
         <el-table-column
           label="商品信息"
-          min-width="330"
+          min-width="400"
         >
-          <!--<template slot-scope="scope">-->
-            <!--<div v-if="scope.row.productList.length">-->
-              <!--<div v-for="(val, i ) in scope.row.productList" :key="i" class="tabBox acea-row row-middle">-->
-                <!--<div class="demo-image__preview">-->
-                  <!--<el-image-->
-                    <!--:src="val.info.productInfo.image"-->
-                    <!--:preview-src-list="imgList"-->
-                  <!--/>-->
-                <!--</div>-->
-                <!--&lt;!&ndash;<span class="tabBox_tit">{{ val.info.productInfo.store_name + ' | ' }}{{ val.info.productInfo.attrInfo.suk ? val.info.productInfo.attrInfo.suk:'-' }}</span>&ndash;&gt;-->
-                <!--&lt;!&ndash;<span class="tabBox_pice">{{ '￥'+ val.info.productInfo.attrInfo.price ? val.info.productInfo.attrInfo.price:'-' + ' x '+ val.info.cart_num }}</span>&ndash;&gt;-->
-              <!--</div>-->
-            <!--</div>-->
-          <!--</template>-->
+          <template slot-scope="scope">
+            <div v-if="scope.row.productList.length">
+              <div v-for="(val, i ) in scope.row.productList" :key="i" class="tabBox acea-row row-middle">
+                <div class="demo-image__preview">
+                  <el-image
+                    :src="val.info.productInfo.image"
+                    :preview-src-list="imgList"
+                  />
+                </div>
+                <span class="tabBox_tit mr10">{{ val.info.productInfo.storeName + ' | ' }}{{ val.info.productInfo.attrInfo.suk ? val.info.productInfo.attrInfo.suk:'-' }}</span>
+                <span class="tabBox_pice">{{ '￥'+ val.info.productInfo.attrInfo.price ? val.info.productInfo.attrInfo.price + ' x '+ val.info.cartNum : '-' }}</span>
+              </div>
+            </div>
+          </template>
         </el-table-column>
         <el-table-column
           prop="payPrice"
