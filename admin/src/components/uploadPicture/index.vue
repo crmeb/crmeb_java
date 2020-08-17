@@ -282,9 +282,9 @@ export default {
       reader.readAsDataURL(this.localFile);// 这里也可以直接写参数event.raw
 
       // 转换成功后的操作，reader.result即为转换后的DataURL ，
-      // 它不需要自己定义，你可以console.log(reader.result)看一下
+      // 它不需要自己定义，你可以console.integralLog(reader.result)看一下
       reader.onload=()=>{
-        // console.log(reader.result)
+        // console.integralLog(reader.result)
       }
 
       /* 另外一种本地预览方法 */

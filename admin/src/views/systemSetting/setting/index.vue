@@ -99,7 +99,7 @@ export default {
         // if(tab.$children[0].panes){ // todo 优化。。。
         //   this.activeNamel2 = tab.$children[0].panes[0].name
         // }else{
-        //   conaole.log()
+        //   conaole.integralLog()
         // }
         let _selected = tab.$children[0].panes[0]
         // 设置特殊处理的文件长传表单默认选中第一个tab
