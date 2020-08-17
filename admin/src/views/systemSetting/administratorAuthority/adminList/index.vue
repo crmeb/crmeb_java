@@ -57,7 +57,7 @@
         </el-table-column>
         <el-table-column label="最后登录时间" prop="lastTime">
           <template slot-scope="scope">
-            <span>{{ scope.row.lastTime | filterEmpty }}</span>
+            <span>{{ scope.row.updateTime | filterEmpty }}</span>
           </template>
         </el-table-column>
         <el-table-column label="最后登录IP" prop="lastIp">

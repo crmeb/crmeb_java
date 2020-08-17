@@ -30,7 +30,7 @@ public class StoreOrderRefundRequest {
     private Integer orderId;
 
     @ApiModelProperty(value = "退款金额")
-    @DecimalMin(value = "0.01", message = "退款金额不能少于0.01")
+    @DecimalMin(value = "0.00", message = "退款金额不能少于0.00")
     private BigDecimal amount;
 
     @ApiModelProperty(value = "status 1 = 直接退款, 2 = 退款后,返回原状态", allowableValues = "range[1,2]")

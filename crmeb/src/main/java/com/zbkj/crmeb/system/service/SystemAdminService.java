@@ -2,7 +2,6 @@ package com.zbkj.crmeb.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.common.PageParamRequest;
-import com.zbkj.crmeb.category.vo.CategoryTreeVo;
 import com.zbkj.crmeb.system.model.SystemAdmin;
 import com.zbkj.crmeb.system.request.SystemAdminAddRequest;
 import com.zbkj.crmeb.system.request.SystemAdminRequest;
@@ -20,7 +19,7 @@ public interface SystemAdminService extends IService<SystemAdmin> {
 
     SystemAdminResponse getInfo(SystemAdminRequest request) throws Exception;
 
-    SystemAdminResponse login(SystemAdminRequest request) throws Exception;
+    SystemAdminResponse login(SystemAdminRequest request, String ip) throws Exception;
 
     /**
      * 根据Token获取对应用户信息
