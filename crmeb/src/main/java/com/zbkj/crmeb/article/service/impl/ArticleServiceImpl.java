@@ -134,6 +134,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
     @Override
     public ArticleVo getVoByFront(Integer id) {
         Article article = getById(id);
+        if(null == article){
+            return null;
+        }
 
         if(article.getStatus()){
             return null;
@@ -147,7 +150,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
 
         //分类名称
         Category category = categoryService.getById(article.getCid());
-        articleVo.setCategoryName(category.getName());
+        if(null != category){
+            articleVo.setCategoryName(category.getName());
+        }
         return articleVo;
     }
 }
