@@ -8,7 +8,7 @@ package com.constants;
  * @since 2020/4/1415:46
  */
 public class Constants {
-    public static final long TOKEN_EXPRESS_MINUTES = (60 * 24);
+    public static final long TOKEN_EXPRESS_MINUTES = (60 * 1); //1小时
 
     public static final int NUM_ZERO = 0;
     public static final int NUM_ONE = 1;

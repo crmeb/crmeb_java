@@ -99,6 +99,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
             BeanUtils.copyProperties(article, articleVo);
             if(!StringUtils.isBlank(article.getImageInput()) ){
                 articleVo.setImageInput(CrmebUtil.jsonToListString(article.getImageInput()));
+                articleVo.setImageInputs(article.getImageInput());
             }
             articleVoArrayList.add(articleVo);
         }

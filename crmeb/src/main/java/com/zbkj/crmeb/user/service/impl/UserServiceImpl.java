@@ -26,6 +26,7 @@ import com.zbkj.crmeb.front.request.UserBindingRequest;
 import com.zbkj.crmeb.front.response.*;
 import com.zbkj.crmeb.marketing.request.StoreCouponUserSearchRequest;
 import com.zbkj.crmeb.marketing.response.StoreCouponUserResponse;
+import com.zbkj.crmeb.marketing.service.StoreCouponService;
 import com.zbkj.crmeb.marketing.service.StoreCouponUserService;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.request.RetailShopStairUserRequest;
@@ -38,6 +39,7 @@ import com.zbkj.crmeb.system.service.SystemUserLevelService;
 import com.zbkj.crmeb.user.dao.UserDao;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserBill;
+import com.zbkj.crmeb.user.model.UserLevel;
 import com.zbkj.crmeb.user.model.UserSign;
 import com.zbkj.crmeb.user.request.UserOperateFundsRequest;
 import com.zbkj.crmeb.user.request.UserOperateIntegralMoneyRequest;
@@ -105,6 +107,9 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     @Autowired
     private StoreCouponUserService storeCouponUserService;
 
+    @Autowired
+    private StoreCouponService storeCouponService;
+
     /**
      * 分页显示用户表
      * @param request 搜索条件
@@ -134,8 +139,8 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             lambdaQueryWrapper.in(User::getLevel, CrmebUtil.stringToArray(request.getLevel()));
         }
 
-        if(request.getLoginType() != null){
-            lambdaQueryWrapper.eq(User::getLoginType, request.getLoginType());
+        if(StringUtils.isNotBlank(request.getUserType())){
+            lambdaQueryWrapper.eq(User::getUserType, request.getUserType());
         }
 
         if(request.getStatus() != null){
@@ -231,6 +236,14 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
      */
     @Override
     public boolean updateIntegralMoney(UserOperateIntegralMoneyRequest request) {
+        if(null == request.getMoneyValue() || null == request.getIntegralValue()){
+            throw new CrmebException("至少输入一个金额");
+        }
+
+        if(request.getMoneyValue().compareTo(BigDecimal.ZERO) < 1 && request.getIntegralValue().compareTo(BigDecimal.ZERO) < 1){
+            throw new CrmebException("最小值为0.01");
+        }
+
         UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
         if(request.getMoneyType() == 1){
             userOperateFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_SYSTEM_ADD);
@@ -254,7 +267,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             //需要处理
             userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_MONEY);
             userOperateFundsRequest.setUid(request.getUid());
-            userOperateFundsRequest.setValue(request.getIntegralValue());
+            userOperateFundsRequest.setValue(request.getMoneyValue());
             updateFounds(userOperateFundsRequest, true);
         }
 
@@ -446,6 +459,10 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         LoginResponse loginResponse = new LoginResponse();
         loginResponse.setToken(token(user));
         user.setPwd(null);
+
+        //TODO 看分销类型
+
+
         loginResponse.setUser(user);
 
         return loginResponse;
@@ -494,7 +511,22 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         if(getUserId() == 0){
             return null;
         }
-        User user = getById(getUserId());
+        return getById(getUserId());
+    }
+
+    /**
+     * 获取个人资料
+     * @author Mr.Zhang
+     * @since 2020-04-28
+     * @return User
+     */
+    @Override
+    public User getUserPromoter() {
+        User user = getInfo();
+        if(null == user){
+            return null;
+        }
+
         if(!user.getStatus()){
             user.setIsPromoter(false);
             return user;
@@ -514,7 +546,6 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         }
         return user;
     }
-
     /**
      * 获取个人资料
      * @author Mr.Zhang
@@ -531,6 +562,19 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         if(!user.getStatus()){
             throw new CrmebException("用户已经被禁用！");
         }
+        return user;
+    }
+
+    @Override
+    public User getInfoEmpty() {
+        User user = getInfo();
+        if(user == null){
+            user = new User();
+        }
+
+//        if(!user.getStatus()){
+//            throw new CrmebException("用户已经被禁用！");
+//        }
         return user;
     }
 
@@ -629,6 +673,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         //查询手机号信息
         User bindUser = getInfoException();
         bindUser.setAccount(request.getPhone());
+        bindUser.setPhone(request.getPhone());
 
         return updateById(bindUser);
     }
@@ -643,6 +688,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     public UserCenterResponse getUserCenter() {
         UserCenterResponse userCenterResponse = new UserCenterResponse();
         BeanUtils.copyProperties(getInfo(), userCenterResponse);
+        User currentUser = getInfo();
         UserCenterOrderStatusNumResponse userCenterOrderStatusNumResponse = new UserCenterOrderStatusNumResponse();
         userCenterOrderStatusNumResponse.setNoBuy(0);
         userCenterOrderStatusNumResponse.setNoPink(0);
@@ -651,6 +697,25 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         userCenterOrderStatusNumResponse.setNoReply(0);
         userCenterOrderStatusNumResponse.setNoTake(0);
         userCenterResponse.setOrderStatusNum(userCenterOrderStatusNumResponse);
+        PageParamRequest pageParamRequest = new PageParamRequest();
+        pageParamRequest.setPage(1); pageParamRequest.setLimit(999);
+        List<StoreCouponUserResponse> storeCoupons = storeCouponUserService.getListFront(getUserIdException(), pageParamRequest);
+        userCenterResponse.setCouponCount(null != storeCoupons ? storeCoupons.size():0);
+        userCenterResponse.setLevel(currentUser.getLevel());
+
+        // 判断是否开启会员功能
+        Integer memberFuncStatus = Integer.valueOf(systemConfigService.getValueByKey("member_func_status"));
+        if(memberFuncStatus == 0){
+            userCenterResponse.setVip(false);
+        }else{
+            userCenterResponse.setVip(userCenterResponse.getLevel() > 0);
+            UserLevel userLevel = userLevelService.getUserLevelByUserId(currentUser.getUid());
+            if(null != userLevel){
+                SystemUserLevel systemUserLevel = systemUserLevelService.getByLevelId(userLevel.getLevelId());
+                userCenterResponse.setVipIcon(systemUserLevel.getIcon());
+                userCenterResponse.setVipName(systemUserLevel.getName());
+            }
+        }
         return userCenterResponse;
     }
 
@@ -1321,5 +1386,12 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.between(User::getPayCount, minPayCount, maxPayCount);
         return userDao.selectCount(lambdaQueryWrapper);
+    }
+
+    @Override
+    public List<User> getUserByEntity(User user) {
+        LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper.setEntity(user);
+        return userDao.selectList(lambdaUpdateWrapper);
     }
 }

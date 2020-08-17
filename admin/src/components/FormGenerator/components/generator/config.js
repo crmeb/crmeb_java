@@ -498,6 +498,7 @@ export const selectComponents = [
     __slot__: {
       'list-type': true
     },
+    accept: '',
     // headers: { 'Authori-zation': getToken() },
     // data: { model: 'product', pid: 0 },
     // action: SettingMer.apiBaseURL + 'admin/upload/image?model=product&pid=0',
@@ -520,22 +521,22 @@ export const selectComponents = [
       required: true,
       span: 24,
       showTip: false,
-      buttonText: '点击上传',
+      buttonText: '',
       regList: [],
       changeTag: true,
-      fileSize: 2,
-      sizeUnit: 'MB',
+      // fileSize: 2,
+      // sizeUnit: 'MB',
       document: 'https://element.eleme.cn/#/zh-CN/component/upload'
     },
     __slot__: {
       'list-type': true
     },
-    action: 'https://jsonplaceholder.typicode.com/posts/',
+    // action: 'https://jsonplaceholder.typicode.com/posts/',
     disabled: true,
-    accept: '',
+    accept: 'image',
     name: 'file',
-    'auto-upload': true,
-    'list-type': 'text',
+    // 'auto-upload': true,
+    // 'list-type': 'text',
     multiple: false
   },
   {

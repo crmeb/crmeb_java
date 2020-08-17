@@ -4,8 +4,8 @@
       <div slot="header" class="clearfix">
         <div class="container">
           <el-form ref="form" inline :model="form">
-            <el-form-item label="搜索：">
-              <el-input v-model="form.name" placeholder="请输入内容" class="selWidth" size="small">
+            <el-form-item label="模板名称：">
+              <el-input v-model="form.keywords" placeholder="请输入模板名称" class="selWidth" size="small">
                 <el-button slot="append" icon="el-icon-search" @click="handleSearch" />
               </el-input>
             </el-form-item>
@@ -26,7 +26,7 @@
         />
         <el-table-column
           label="模板名称"
-          min-width="150"
+          min-width="180"
           prop="name"
         />
         <el-table-column
@@ -47,11 +47,11 @@
             <p>{{ row.appoint | statusFilter }}</p>
           </template>
         </el-table-column>
-        <el-table-column
-          min-width="120"
-          label="指定区域不配送"
-          prop="type"
-        />
+        <!--<el-table-column-->
+          <!--min-width="120"-->
+          <!--label="指定区域不配送"-->
+          <!--prop="type"-->
+        <!--/>-->
         <el-table-column
           label="排序"
           min-width="100"
@@ -76,7 +76,7 @@
       </el-table>
       <div class="block-pagination">
         <el-pagination
-          :page-sizes="[12, 20, 40, 60]"
+          :page-sizes="[20, 40, 60, 80]"
           :page-size="tableData.limit"
           :current-page="tableData.page"
           layout="total, sizes, prev, pager, next, jumper"
@@ -117,11 +117,11 @@ export default {
     return {
       dialogVisible: false,
       form: {
-        name: ''
+        keywords: ''
       },
       tableData: '',
       page: 1,
-      limit: 12,
+      limit: 20,
       loading: false
     }
   },
@@ -136,6 +136,7 @@ export default {
       this.$refs.addTemplates.changType(0, this.te)
     },
     handleSearch() {
+      this.page = 1
       this.getDataList()
     },
     // 分页
@@ -151,7 +152,7 @@ export default {
     getDataList() {
       this.loading = true
       logistics.shippingTemplatesList({
-        name: this.form.name,
+        keywords: this.form.keywords,
         page: this.page,
         limit: this.limit
       }).then(res => {

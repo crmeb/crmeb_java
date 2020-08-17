@@ -231,9 +231,9 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         if(null != storeOrder.getPaid()){
             lqw.eq(StoreOrder::getPaid, storeOrder.getPaid());
         }
-        if(null != storeOrder.getStatus()){
-            lqw.eq(StoreOrder::getStatus, storeOrder.getStatus());
-        }
+//        if(null != storeOrder.getStatus()){
+//            lqw.eq(StoreOrder::getStatus, storeOrder.getStatus());
+//        }
         if(null != storeOrder.getStoreId()){
             lqw.eq(StoreOrder::getStoreId, storeOrder.getStoreId());
         }
@@ -450,7 +450,6 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         userBill.setMark("余额支付" + storeOrder.getPayPrice() + "元购买商品");
         boolean saveUserBillResult = userBillService.save(userBill);
         boolean paySuccessResult = paySuccess(storeOrder,currentUser,formId);
-//        orderPayService.success(storeOrder.getOrderId(),currentUser.getUid(),storeOrder.getPayType());
         return updateUserResult && saveUserBillResult && paySuccessResult;
 //        return updateUserResult;
     }
@@ -821,7 +820,6 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
             return true;
         }catch (Exception e){
             //发货失败！
-            e.printStackTrace();
             throw new CrmebException(e.getMessage());
         }
     }
@@ -1270,8 +1268,8 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
      * @since 2020-06-12
      */
     private void getRequestTimeWhere(QueryWrapper<StoreOrder> queryWrapper, StoreOrderSearchRequest request) {
-        if(StringUtils.isNotBlank(request.getTimeRage())){
-            dateLimitUtilVo dateLimitUtilVo = DateUtil.getDateLimit(request.getTimeRage());
+        if(StringUtils.isNotBlank(request.getDateLimit())){
+            dateLimitUtilVo dateLimitUtilVo = DateUtil.getDateLimit(request.getDateLimit());
             queryWrapper.between("create_time",dateLimitUtilVo.getStartTime(),dateLimitUtilVo.getEndTime());
         }
     }

@@ -946,6 +946,7 @@
       // 提交
       handleSubmit (name) {
         this.onChangeGroup()
+        if( this.formValidate.specType && this.formValidate.attr.length < 1 ) return this.$message.warning("请填写多规格属性！");
         this.formValidate.cateId = this.formValidate.cateIds.join(',')
         this.formValidate.sliderImage = JSON.stringify(this.formValidate.sliderImages)
         if(this.formValidate.specType){

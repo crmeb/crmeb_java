@@ -7,9 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.hibernate.validator.constraints.Range;
 
-import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -41,8 +39,6 @@ public class UserOperateIntegralMoneyRequest implements Serializable {
     private int integralType;
 
     @ApiModelProperty(value = "积分")
-    @NotNull
-    @DecimalMin(value = "0.01", message = "请输入正确的金额")
     private BigDecimal integralValue;
 
     @ApiModelProperty(value = "余额类型， 1 = 增加， 2 = 减少")
@@ -51,8 +47,6 @@ public class UserOperateIntegralMoneyRequest implements Serializable {
     private int moneyType;
 
     @ApiModelProperty(value = "余额")
-    @NotNull
-    @DecimalMin(value = "0.01", message = "请输入正确的金额")
     private BigDecimal moneyValue;
 
 }

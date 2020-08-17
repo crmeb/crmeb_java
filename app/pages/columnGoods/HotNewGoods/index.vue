@@ -6,7 +6,7 @@
 				 indicator-color="rgba(255,255,255,0.6)" indicator-active-color="#fff">
 					<block v-for="(item,index) in imgUrls" :key="index">
 						<swiper-item>
-							<image :src="item.img" class="slide-image"></image>
+							<image :src="item.pic" class="slide-image"></image>
 						</swiper-item>
 					</block>
 				</swiper>

@@ -1,6 +1,8 @@
 package com.zbkj.crmeb.store.model;
 
 import java.math.BigDecimal;
+
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -105,6 +107,7 @@ public class StoreProduct implements Serializable {
     @ApiModelProperty(value = "是否包邮")
     private Boolean isPostage;
 
+//    @TableLogic
     @ApiModelProperty(value = "是否删除")
     private Boolean isDel;
 

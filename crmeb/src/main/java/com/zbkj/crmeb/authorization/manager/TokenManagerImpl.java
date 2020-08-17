@@ -6,6 +6,7 @@ import com.exception.CrmebException;
 import com.utils.RedisUtil;
 import com.utils.ThreadLocalUtil;
 import com.zbkj.crmeb.authorization.model.TokenModel;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -81,7 +82,10 @@ public class TokenManagerImpl implements TokenManager {
      */
     @Override
     public Object getLocalInfo(String key) {
-        return ThreadLocalUtil.get(key);
+        if(StringUtils.isNotBlank(key)){
+            return ThreadLocalUtil.get(key);
+        }
+        return null;
     }
 
     /**

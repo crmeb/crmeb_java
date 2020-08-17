@@ -3,22 +3,20 @@ package com.zbkj.crmeb.user.controller;
 
 import com.common.CommonPage;
 import com.common.CommonResult;
-
 import com.common.PageParamRequest;
-import com.github.pagehelper.PageInfo;
-import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.user.model.User;
-import com.zbkj.crmeb.user.request.UserOperateFundsRequest;
 import com.zbkj.crmeb.user.request.UserOperateIntegralMoneyRequest;
 import com.zbkj.crmeb.user.request.UserRequest;
 import com.zbkj.crmeb.user.request.UserSearchRequest;
 import com.zbkj.crmeb.user.response.TopDetail;
 import com.zbkj.crmeb.user.response.UserResponse;
 import com.zbkj.crmeb.user.service.UserService;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
-import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;

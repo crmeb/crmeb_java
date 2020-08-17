@@ -154,7 +154,7 @@
 <script>
 import { getToken } from '@/utils/auth'
 import { replySaveApi, replyEditApi, replyInfoApi, replyListApi, keywordsInfoApi, replyUpdateApi } from '@/api/wxApi'
-import { fileImageApi } from '@/api/systemSetting'
+import { wechatUploadApi } from '@/api/systemSetting'
 export default {
   name: 'Index',
   components: { },
@@ -278,7 +278,7 @@ export default {
         spinner: 'el-icon-loading',
         background: 'rgba(0, 0, 0, 0.7)'
       })
-      fileImageApi(formData, {type: this.formValidate.type === 'image'?'image':'voice'}).then(res => {
+      wechatUploadApi(formData, {type: this.formValidate.type === 'image'?'image':'voice'}).then(res => {
         loading.close()
         this.formValidate.contents.mediaId = res.mediaId
         this.formValidate.contents.srcUrl = res.url

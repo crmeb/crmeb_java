@@ -139,6 +139,7 @@ public class StoreProductReplyController {
            lup.eq(StoreProductReply::getId, id);
            lup.set(StoreProductReply::getMerchantReplyContent, request.getMerchantReplyContent());
            lup.set(StoreProductReply::getMerchantReplyTime, DateUtil.getNowTime());
+           lup.set(StoreProductReply::getIsReply, true);
            storeProductReplyService.update(lup);
        }
         return CommonResult.success();

@@ -22,4 +22,6 @@ public interface SystemUserLevelService extends IService<SystemUserLevel> {
     boolean create(SystemUserLevelRequest request);
 
     boolean update(Integer id, SystemUserLevelRequest request);
+
+    SystemUserLevel getByLevelId(Integer levelId);
 }

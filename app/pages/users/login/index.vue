@@ -221,8 +221,8 @@
 						});
 						const backUrl = that.$Cache.get(BACK_URL) || "/pages/index/index";
 						that.$Cache.clear(BACK_URL);
-						getUserInfo().then(res => {
-							that.$store.commit("SETUID", res.data.uid);
+						// getUserInfo().then(res => {
+							that.$store.commit("SETUID", res.data.user.uid);
 							if (backUrl === '/pages/index/index' || backUrl === '/pages/order_addcart/order_addcart' || backUrl ===
 								'/pages/user/index') {
 
@@ -235,7 +235,7 @@
 									url: '/pages/index/index'
 								});
 							}
-						})
+						// })
 					})
 					.catch(res => {
 						that.$util.Tips({

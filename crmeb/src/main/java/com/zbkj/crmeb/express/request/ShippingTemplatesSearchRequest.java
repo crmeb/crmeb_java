@@ -1,7 +1,5 @@
 package com.zbkj.crmeb.express.request;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -30,5 +28,5 @@ public class ShippingTemplatesSearchRequest implements Serializable {
 
 
     @ApiModelProperty(value = "模板名称")
-    private String name;
+    private String keywords;
 }

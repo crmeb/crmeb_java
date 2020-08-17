@@ -131,7 +131,7 @@
 							let data = res.data;
 							if (data.status == "WECHAT_H5_PAY") {
 								uni.hideLoading();
-								location.replace(data.result.jsConfig.mweb_url);
+								location.replace(data.result.jsConfig.h5PayUrl);
 								return that.$util.Tips({
 									title: "支付成功",
 									icon: 'success'

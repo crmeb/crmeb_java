@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Classname RetailShopServiceImpl
@@ -59,7 +60,8 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
     @Override
     public PageInfo<RetailShopUserResponse> getList(String keywords, String dateLimit, PageParamRequest pageRequest) {
         Page<User> pageUserPage = PageHelper.startPage(pageRequest.getPage(), pageRequest.getLimit());
-        User currentUser = userService.getInfo();
+
+//        User currentUser = userService.getUserByEntity();
         UserSearchRequest userSearchRequest = new UserSearchRequest();
         userSearchRequest.setStatus(true);
         userSearchRequest.setIsPromoter(true);
@@ -80,8 +82,12 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
 
         for (RetailShopUserResponse rShopUser:retailShopUserResponses) {
             // 推广用户数量
-            List<Integer> userIds = new ArrayList<>();
-            userIds.add(currentUser.getUid());
+//            List<Integer> userIds = new ArrayList<>();
+            List<Integer> userIds = userResponses.getList().stream().map(e -> {
+                return e.getUid();
+            }).collect(Collectors.toList());
+//            userIds.add(currentUser.getUid());
+//            rShopUser.setSpreadPeopleCount(userService.getSpreadPeopleIdList(userIds).size());
             rShopUser.setSpreadPeopleCount(userService.getSpreadPeopleIdList(userIds).size());
             // 获取提现数据
             rShopUser.setUserExtractResponse(userExtractService.getUserExtractByUserId(rShopUser.getUid()));

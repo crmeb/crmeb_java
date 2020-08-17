@@ -11,7 +11,7 @@
               <el-date-picker v-model="timeVal" value-format="yyyy/MM/dd" format="yyyy/MM/dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTime" />
             </el-form-item>
             <el-form-item label="关键字：">
-              <el-input v-model="tableFrom.keyword" placeholder="请输入请输入姓名、电话、UID" class="selWidth" size="small">
+              <el-input v-model="tableFrom.keywords" placeholder="请输入请输入姓名、电话、UID" class="selWidth" size="small">
                 <el-button slot="append" icon="el-icon-search" size="small" @click="seachList" />
               </el-input>
             </el-form-item>
@@ -283,7 +283,7 @@
         listLoading: true,
         tableFrom: {
           dateLimit: '',
-          keyword: '',
+          keywords: '',
           page: 1,
           limit: 20
         },
@@ -357,7 +357,7 @@
       // 具体日期
       onchangeTimeSpread(e) {
         this.timeValSpread = e
-        this.tableFrom.dateLimit = e ? this.timeValSpread.join('-') : ''
+        this.tableFrom.dateLimit = e ? this.timeValSpread.join(',') : ''
         this.onName === 'man' ? this.getListSpread() : this.getSpreadOrderList()
       },
       onChanges() {
@@ -416,7 +416,7 @@
       // 具体日期
       onchangeTime(e) {
         this.timeVal = e
-        this.tableFrom.dateLimit = e ? this.timeVal.join('-') : ''
+        this.tableFrom.dateLimit = e ? this.timeVal.join(',') : ''
         this.tableFrom.page = 1
         this.getList()
       },

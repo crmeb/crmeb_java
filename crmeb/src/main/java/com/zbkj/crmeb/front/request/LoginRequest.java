@@ -36,5 +36,7 @@ public class LoginRequest implements Serializable {
     @Pattern(regexp = RegularConstants.PASSWORD, message = "密码格式错误，密码必须以字母开头，长度在6~18之间，只能包含字符、数字和下划线")
     private String password;
 
-
+    @ApiModelProperty(value = "推广人id")
+    @JsonProperty(value = "spread_spid")
+    private Integer spreadPid = 0;
 }
