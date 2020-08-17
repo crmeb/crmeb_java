@@ -114,7 +114,7 @@ public class SystemAttachmentController {
     @RequestMapping(value = "/move", method = RequestMethod.POST)
     public CommonResult<String> updateAttrId(@RequestBody @Validated SystemAttachmentMoveRequest move){
         LambdaUpdateWrapper<SystemAttachment> lup = new LambdaUpdateWrapper<>();
-        lup.eq(SystemAttachment::getAttId,move.getAttrId());
+        lup.in(SystemAttachment::getAttId, CrmebUtil.stringToArray(move.getAttrId()));
         lup.set(SystemAttachment::getPid, move.getPid());
         if(systemAttachmentService.update(lup)){
             return CommonResult.success();

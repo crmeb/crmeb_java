@@ -86,7 +86,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
         }
 
 
-        lambdaQueryWrapper.orderByDesc(Article::getSort).orderByDesc(Article::getVisit);
+        lambdaQueryWrapper.orderByDesc(Article::getSort).orderByDesc(Article::getVisit).orderByDesc(Article::getCreateTime);
         List<Article> articleList = dao.selectList(lambdaQueryWrapper);
 
         ArrayList<ArticleVo> articleVoArrayList = new ArrayList<>();

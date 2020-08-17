@@ -8,8 +8,14 @@
         <el-input v-model="pram.author" placeholder="作者" maxlength="20"/>
       </el-form-item>
       <el-form-item label="文章分类">
-        <!--          prop="cid" :rules="[{required:true, message:'请选择文章分类', trigger:['blur','change']}]"-->
-        <el-cascader v-model="pram.cid" :options="categoryTreeData" :props="categoryProps" style="width:100%;" />
+        <el-select v-model="pram.cid" placeholder="请选择" style="width:100%;">
+          <el-option
+            v-for="item in categoryTreeData"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id">
+          </el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="图文封面" prop="imageInput" :rules="[{ required: true, message: '请上传图文封面', trigger: 'change' }]">
         <div class="upLoadPicBox" @click="modalPicTap('1')">
@@ -94,7 +100,7 @@ export default {
       },
       pram: {
         author: null,
-        cid: 0,
+        cid: null,
         content: null,
         imageInput: '',
         isBanner: false,
@@ -163,9 +169,9 @@ export default {
       // this.pram.mediaId = mediaId
     },
     handlerGetCategoryTreeData() {
-      const _pram = { type: constants.categoryType[2].value, status: 1 }
+      const _pram = { type: constants.categoryType[2].value, status: 1, pid: 0 }
       categoryApi.treeCategroy(_pram).then(data => {
-        this.categoryTreeData = selfUtil.addTreeListLabelForCasCard(data)
+        this.categoryTreeData = data
       })
     },
     handerSubmit(form) {

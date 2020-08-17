@@ -22153,8 +22153,8 @@ CREATE TABLE `eb_system_admin` (
   `real_name` varchar(16) NOT NULL COMMENT '后台管理员姓名',
   `roles` varchar(128) NOT NULL COMMENT '后台管理员权限(menus_id)',
   `last_ip` varchar(16) DEFAULT NULL COMMENT '后台管理员最后一次登录ip',
-  `last_time` int(10) unsigned DEFAULT NULL COMMENT '后台管理员最后一次登录时间',
-  `add_time` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '后台管理员添加时间',
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `login_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '登录次数',
   `level` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '后台管理员级别',
   `status` tinyint(1) unsigned NOT NULL DEFAULT '1' COMMENT '后台管理员状态 1有效0无效',
@@ -22167,7 +22167,7 @@ CREATE TABLE `eb_system_admin` (
 LOCK TABLES `eb_system_admin` WRITE;
 /*!40000 ALTER TABLE `eb_system_admin` DISABLE KEYS */;
 
-INSERT INTO `eb_system_admin` (`id`, `account`, `pwd`, `real_name`, `roles`, `last_ip`, `last_time`, `add_time`, `login_count`, `level`, `status`, `is_del`)
+INSERT INTO `eb_system_admin` (`id`, `account`, `pwd`, `real_name`, `roles`, `last_ip`, `update_time`, `create_time`, `login_count`, `level`, `status`, `is_del`)
 VALUES
 	(1,'admin','L8qdg72wbeQ=','admin','1','127.0.0.1',0,0,0,0,1,0),
 	(2,'testadmin','sdIqelBleuI=','testadmin','2',NULL,NULL,0,0,111,1,1),
