@@ -3,16 +3,14 @@ package com.zbkj.crmeb.system.request;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * <p>
@@ -51,10 +49,10 @@ public class SystemAdminRequest implements Serializable {
     private String lastIp;
 
     @ApiModelProperty(value = "后台管理员最后一次登录时间")
-    private Integer lastTime;
+    private Date updateTime;
 
     @ApiModelProperty(value = "后台管理员添加时间")
-    private Integer addTime;
+    private Date createTime;
 
     @ApiModelProperty(value = "登录次数")
     private Integer loginCount;

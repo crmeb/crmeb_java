@@ -9,9 +9,7 @@ import lombok.experimental.Accessors;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * <p>
@@ -44,11 +42,11 @@ public class StoreProductReplyAddRequest implements Serializable {
     private String unique;
 
     @ApiModelProperty(value = "商品分数", example = "5", required = true)
-    @Min(1)
+    @Min(value = 1, message = "商品分数必须大于1")
     private Integer productScore;
 
     @ApiModelProperty(value = "服务分数", example = "5", required = true)
-    @Min(1)
+    @Min(value = 1, message = "服务分数必须大于1")
     private Integer serviceScore;
 
     @ApiModelProperty(value = "评论内容", required = true)

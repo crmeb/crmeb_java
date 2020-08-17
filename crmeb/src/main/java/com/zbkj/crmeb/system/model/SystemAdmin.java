@@ -1,16 +1,16 @@
 package com.zbkj.crmeb.system.model;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import java.io.Serializable;
-
-import com.zbkj.crmeb.system.response.SystemAdminResponse;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * <p>
@@ -49,13 +49,10 @@ public class SystemAdmin implements Serializable {
     private String lastIp;
 
     @ApiModelProperty(value = "后台管理员最后一次登录时间")
-    private Integer lastTime;
+    private Date updateTime;
 
     @ApiModelProperty(value = "后台管理员添加时间")
-    private Integer addTime;
-
-    @ApiModelProperty(value = "登录次数")
-    private Integer loginCount;
+    private Date createTime;
 
     @ApiModelProperty(value = "后台管理员级别")
     private Integer level;
@@ -63,7 +60,10 @@ public class SystemAdmin implements Serializable {
     @ApiModelProperty(value = "后台管理员状态 1有效0无效")
     private Boolean status;
 
+    @ApiModelProperty(value = "是否删除 1是0否")
     private Boolean isDel;
 
+    @ApiModelProperty(value = "登录次数")
+    private Integer loginCount;
 
 }

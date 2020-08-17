@@ -94,7 +94,7 @@ export function getArticleBannerList(){
  * 
 */
 export function getArticleDetails(id){
-  return request.get('article/info',id,{},{noAuth:true});
+  return request.get('article/info',id,{noAuth:true});
 }
 
 /**

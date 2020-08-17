@@ -49,9 +49,7 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         if(StringUtils.isNotBlank(systemAdmin.getAccount())){
             lambdaQueryWrapper.eq(SystemAdmin::getAccount, systemAdmin.getAccount());
         }
-        if(null != systemAdmin.getAddTime()){
-            lambdaQueryWrapper.eq(SystemAdmin::getAddTime, systemAdmin.getAddTime());
-        }
+
         if(null != systemAdmin.getId()){
             lambdaQueryWrapper.eq(SystemAdmin::getId, systemAdmin.getId());
         }
@@ -61,9 +59,7 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         if(StringUtils.isNotBlank(systemAdmin.getLastIp())){
             lambdaQueryWrapper.eq(SystemAdmin::getLastIp, systemAdmin.getLastIp());
         }
-        if(null != systemAdmin.getLastTime()){
-            lambdaQueryWrapper.eq(SystemAdmin::getLastTime, systemAdmin.getLastTime());
-        }
+
         if(null != systemAdmin.getLevel()){
             lambdaQueryWrapper.eq(SystemAdmin::getLevel, systemAdmin.getLevel());
         }
@@ -84,7 +80,7 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
     }
 
     @Override
-    public SystemAdminResponse login(SystemAdminRequest request) throws Exception {
+    public SystemAdminResponse login(SystemAdminRequest request, String ip) {
         LambdaQueryWrapper<SystemAdmin> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(SystemAdmin::getAccount, request.getAccount());
         SystemAdmin systemAdmin = dao.selectOne(lambdaQueryWrapper);
@@ -93,6 +89,15 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         if(null == systemAdmin){
             throw new CrmebException("用户不存在");
         }
+
+        if(!systemAdmin.getStatus()){
+            throw new CrmebException("用户已经被禁用");
+        }
+
+        if(systemAdmin.getIsDel()){
+            throw new CrmebException("用户已经被删除");
+        }
+
         if(!systemAdmin.getPwd().equals(encryptPassword)){
             throw new CrmebException("账号或者密码不正确");
         }
@@ -100,6 +105,12 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         SystemAdminResponse systemAdminResponse = new SystemAdminResponse();
         systemAdminResponse.setToken(tokenModel.getToken());
         BeanUtils.copyProperties(systemAdmin, systemAdminResponse);
+
+        //更新最后登录信息
+        systemAdmin.setLoginCount(systemAdmin.getLoginCount() + 1);
+        systemAdmin.setLastIp(ip);
+        updateById(systemAdmin);
+
         return systemAdminResponse;
     }
 
@@ -137,26 +148,37 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
      * @return
      */
     @Override
-    public SystemAdminResponse saveAdmin(SystemAdminAddRequest systemAdminAddRequest) throws Exception {
-        // 管理员名称唯一校验
-        SystemAdminRequest systemAdminRequest = new SystemAdminRequest();
-        BeanUtils.copyProperties(systemAdminAddRequest, systemAdminRequest);
-        SystemAdminResponse systemAdminResponseExsit = getInfo(systemAdminRequest);
-        if(null != systemAdminResponseExsit){
-            throw new CrmebException("管理员已存在");
-        }
-        // 执行新增管理员操作
-        String pwd = CrmebUtil.encryptPassword(systemAdminAddRequest.getPwd(), systemAdminAddRequest.getAccount());
-        systemAdminAddRequest.setPwd(pwd);
-        SystemAdmin systemAdmin = new SystemAdmin();
-        BeanUtils.copyProperties(systemAdminAddRequest, systemAdmin);
-        if(dao.insert(systemAdmin) > 0){
+    public SystemAdminResponse saveAdmin(SystemAdminAddRequest systemAdminAddRequest) {
+        try {
+            // 管理员名称唯一校验
+            Integer result = checkAccount(systemAdminAddRequest.getAccount());
+            if (result > 0) {
+                throw new CrmebException("管理员已存在");
+            }
+
+            SystemAdminRequest systemAdminRequest = new SystemAdminRequest();
+            BeanUtils.copyProperties(systemAdminAddRequest, systemAdminRequest);
+
+            // 执行新增管理员操作
+            String pwd = CrmebUtil.encryptPassword(systemAdminAddRequest.getPwd(), systemAdminAddRequest.getAccount());
+            systemAdminAddRequest.setPwd(pwd);
+            SystemAdmin systemAdmin = new SystemAdmin();
+            BeanUtils.copyProperties(systemAdminAddRequest, systemAdmin);
             SystemAdminResponse systemAdminResponse = new SystemAdminResponse();
             BeanUtils.copyProperties(systemAdminAddRequest, systemAdminResponse);
             return systemAdminResponse;
+
+        }catch (Exception e){
+            throw new CrmebException("新增管理员异常 " + e.getMessage());
         }
 
-        throw new CrmebException("新增管理员异常");
+    }
+
+    private Integer checkAccount(String account) {
+        LambdaQueryWrapper<SystemAdmin> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(SystemAdmin::getAccount, account);
+        return dao.selectCount(lambdaQueryWrapper);
+
     }
 
     @Override
