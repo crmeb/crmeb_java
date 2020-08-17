@@ -35,6 +35,9 @@ public class StoreProductReplySearchRequest implements Serializable {
     @ApiModelProperty(value = "商品id, 多个逗号分割")
     private String productId;
 
+    @ApiModelProperty(value = "商品名称, 关键字，产品编号")
+    private String productSearch;
+
     @ApiModelProperty(value = "0未删除1已删除")
     private Boolean isDel;
 

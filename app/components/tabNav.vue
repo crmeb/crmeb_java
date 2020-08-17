@@ -11,7 +11,7 @@
 		<view class="child-box" v-if="tabClick>0 && tabTitle[tabClick].child?tabTitle[tabClick].child.length>0:0">
 			<scroll-view scroll-x="true" style="white-space: nowrap; display: flex;align-items: center; height: 100%;" scroll-with-animation :scroll-left="tabLeft" show-scrollbar="false">
 				<view class="wrapper">
-					<view v-for="(item,index) in tabTitle[tabClick].child?tabTitle[tabClick].child:[]" class="child-item" :class="{on:index == childIndex}" @click="childTab(tabClick,index)">
+					<view v-for="(item,index) in tabTitle[tabClick].child?tabTitle[tabClick].child:[]" :key="index" class="child-item" :class="{on:index == childIndex}" @click="childTab(tabClick,index)">
 						<image :src="item.url" mode=""></image>
 						<view class="txt line1">{{item.name}}</view>
 					</view>

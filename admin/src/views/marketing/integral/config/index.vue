@@ -2,7 +2,7 @@
   <div class="divBox">
     <el-card class="box-card">
       <zb-parser
-        :form-id="109"
+        :form-id="formId"
         :is-create="isCreate"
         :edit-data="editData"
         @submit="handlerSubmit"
@@ -13,21 +13,51 @@
 
 <script>
   import zbParser from '@/components/FormGenerator/components/parser/ZBParser'
-  import { smsSaveApi } from '@/api/sms'
+  import { configSaveForm, configInfo } from '@/api/systemConfig.js'
   export default {
     name: "integralconfig",
     components: { zbParser },
     data() {
       return {
         isCreate: 0,
-        editData: {}
+        editData: {},
+        formId: 109
       }
     },
+    mounted() {
+      this.getFormInfo()
+    },
     methods: {
-      handlerSubmit(formValue) {
-        smsSaveApi(formValue).then(data => {
-          this.$message.success('新增成功')
-          this.editData = {}
+      handlerSubmit(data) {
+        const tempArr = []
+        for (var key in data) {
+          const obj = {}
+          obj.name = key
+          obj.title = key
+          obj.value = data[key]
+          tempArr.push(obj)
+        }
+        const _pram = {
+          'fields': tempArr,
+          'id': this.formId,
+          'sort': 0,
+          'status': true
+        }
+        console.log(_pram)
+        configSaveForm(_pram).then(res => {
+          this.getFormInfo()
+          this.$message.success('操作成功')
+        })
+      },
+      // 获取表单详情
+      getFormInfo() {
+        configInfo({ id: this.formId }).then(res => {
+          this.isShow = false
+          this.editData = res
+          this.isCreate = 1
+          setTimeout(() => { // 让表单重复渲染待编辑数据
+            this.isShow = true
+          }, 80)
         })
       }
     }

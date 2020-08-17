@@ -114,4 +114,11 @@ public interface StoreProductService extends IService<StoreProduct> {
     boolean decProductStock(Integer productId, Integer num, Integer attrValueId, Integer type);
 
     List<Integer> getSecondaryCategoryByProductId(String productId);
+
+    /**
+     * 删除商品
+     * @param productId 商品id
+     * @return 删除结果
+     */
+    boolean deleteProduct(Integer productId);
 }

@@ -164,7 +164,7 @@
 				</view>
 				<view class='wrapper' v-else-if='orderInfo.deliveryType=="send"'>
 					<view class='item acea-row row-between'>
-						<view>配送方式：：</view>
+						<view>配送方式：</view>
 						<view class='conter'>送货</view>
 					</view>
 					<view class='item acea-row row-between'>

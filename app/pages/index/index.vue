@@ -144,7 +144,7 @@
 			<!-- 首页推荐 -->
 			<view class="index-product-wrapper" :class="iSshowH?'on':''">
 				<view class="nav-bd">
-					<view class="item" v-for="(item,index) in explosiveMoney" :index="item.id" :class="{active:index == ProductNavindex}"
+					<view class="item" v-for="(item,index) in explosiveMoney" :key="index" :index="item.id" :class="{active:index == ProductNavindex}"
 					 @click="ProductNavTab(item,index)">
 						<view class="txt">{{item.title}}</view>
 						<view class="label">{{item.info}}</view>

@@ -15,6 +15,7 @@ import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.utils.RedisUtil;
 import com.utils.vo.dateLimitUtilVo;
+import com.zbkj.crmeb.front.request.IndexStoreProductSearchRequest;
 import com.zbkj.crmeb.store.dao.StoreProductReplyDao;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.model.StoreProduct;
@@ -24,6 +25,7 @@ import com.zbkj.crmeb.store.request.StoreProductReplySearchRequest;
 import com.zbkj.crmeb.store.response.StoreProductReplyResponse;
 import com.zbkj.crmeb.store.service.*;
 import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
+import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.service.UserService;
 import org.apache.commons.lang3.ArrayUtils;
@@ -37,6 +39,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
 * @author Mr.Zhang
@@ -63,7 +66,7 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
     private UserService userService;
 
     @Autowired
-    private StoreOrderStatusService storeOrderStatusService;
+    private SystemAttachmentService systemAttachmentService;
 
     @Autowired
     private RedisUtil redisUtil;
@@ -94,6 +97,13 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
         }
         if(!StringUtils.isBlank(request.getProductId())){
             lambdaQueryWrapper.in(StoreProductReply::getProductId, CrmebUtil.stringToArray(request.getProductId()));
+        }
+        if(null != request.getProductSearch()){
+            IndexStoreProductSearchRequest storeProductPram = new IndexStoreProductSearchRequest();
+            storeProductPram.setKeywords(request.getProductSearch());
+            List<StoreProduct> storeProducts = storeProductService.getList(storeProductPram, new PageParamRequest());
+            List<Integer> productIds = storeProducts.stream().map(StoreProduct::getId).collect(Collectors.toList());
+            lambdaQueryWrapper.in(StoreProductReply::getProductId, productIds);
         }
         if(!StringUtils.isBlank(request.getUid())){
             lambdaQueryWrapper.in(StoreProductReply::getUid, CrmebUtil.stringToArray(request.getUid()));
@@ -131,7 +141,7 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
             dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
             Date ds = DateUtil.strToDate(dateLimit.getStartTime(), Constants.DATE_FORMAT_DATE);
             Date de = DateUtil.strToDate(dateLimit.getEndTime(), Constants.DATE_FORMAT_DATE);
-            lambdaQueryWrapper.between(StoreProductReply::getCreateTime,
+            lambdaQueryWrapper.between(StoreProductReply::getMerchantReplyTime,
                     DateUtil.getSecondTimestamp(ds),
                     DateUtil.getSecondTimestamp(de));
         }
@@ -144,7 +154,6 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
             StoreProduct storeProduct = storeProductService.getById(productReply.getProductId());
             productReplyResponse.setStoreProduct(storeProduct);
             productReplyResponse.setPics(CrmebUtil.stringToArrayStr(productReply.getPics()));
-
             dataResList.add(productReplyResponse);
         }
         return CommonPage.copyPageInfo(pageStoreReply, dataResList);
@@ -187,13 +196,11 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
             User user = userService.getInfo();
             storeProductReply.setAvatar(user.getAvatar());
             storeProductReply.setNickname(user.getNickname());
-//            String picValue = null;
-//            if(null == request.getPics()) picValue = "[]";
-//            else if(request.getPics().size() > 0 ){
-//                picValue = request.getPics().toString();
-//            }else{
-//                picValue = "[]";
-//            }
+            if(StringUtils.isNotBlank(request.getPics())){
+                String pics = request.getPics().replace("[\"","").replace("\"]","")
+                        .replace("\"","");
+                storeProductReply.setPics(systemAttachmentService.clearPrefix(ArrayUtils.toString(pics)));
+            }
 //            storeProductReply.setPics( ArrayUtils.toString(request.getPics()));
             boolean result = save(storeProductReply);
 

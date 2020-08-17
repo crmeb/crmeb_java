@@ -3,6 +3,7 @@ package com.zbkj.crmeb.front.service.impl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
 import com.constants.Constants;
+import com.exception.CrmebException;
 import com.github.pagehelper.PageInfo;
 import com.utils.CrmebUtil;
 import com.zbkj.crmeb.category.model.Category;
@@ -143,49 +144,55 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDetailResponse getDetail(Integer id) {
         ProductDetailResponse productDetailResponse = new ProductDetailResponse();
-        StoreProductResponse productResponse = storeProductService.getByProductId(id);
-        StoreProductStoreInfoResponse storeInfo = new StoreProductStoreInfoResponse();
+        try {
+            StoreProductResponse productResponse = storeProductService.getByProductId(id);
+            StoreProductStoreInfoResponse storeInfo = new StoreProductStoreInfoResponse();
 
-        BeanUtils.copyProperties(productResponse,storeInfo);
+            BeanUtils.copyProperties(productResponse,storeInfo);
 
-        // 设置点赞和收藏
-        User current = userService.getInfo();
-        if(null != current){
-            storeInfo.setUserLike(storeProductRelationService.getLikeOrCollectByUser(current.getUid(),id,true).size() > 0);
-            storeInfo.setUserCollect(storeProductRelationService.getLikeOrCollectByUser(current.getUid(),id,false).size() > 0);
-        }
-        productDetailResponse.setStoreInfo(storeInfo);
+            // 设置点赞和收藏
+            User user = userService.getInfo();
+            if(null != user){
+                if(null != user.getUid()){
+                    storeInfo.setUserLike(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),id,true).size() > 0);
+                    storeInfo.setUserCollect(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),id,false).size() > 0);
+                    user = userService.updateForPromoter(user);
+                    productDetailResponse.setPriceName(getPacketPriceRange(productResponse,user.getIsPromoter()));
+                }
+            }
+        storeInfo.setUserLike(false);
+        storeInfo.setUserCollect(false);
+            productDetailResponse.setPriceName("0");
+            productDetailResponse.setStoreInfo(storeInfo);
 
-        // 根据制式设置attr属性
-        setSkuAttr(id, productDetailResponse, productResponse);
-        // 根据制式设置sku属性
-        HashMap<String,Object> skuMap = new HashMap<>();
-        for (StoreProductAttrValueResponse attrValue : productResponse.getAttrValue()) {
-            skuMap.put(attrValue.getSuk(),attrValue);
-        }
+            // 根据制式设置attr属性
+            setSkuAttr(id, productDetailResponse, productResponse);
+            // 根据制式设置sku属性
+            HashMap<String,Object> skuMap = new HashMap<>();
+            for (StoreProductAttrValueResponse attrValue : productResponse.getAttrValue()) {
+                skuMap.put(attrValue.getSuk(),attrValue);
+            }
 //        for (HashMap<String, Object> attrValue : productResponse.getAttrValues()) {
 //            System.out.println("attrValue:"+attrValue);
 //            skuMap.putAll(attrValue);
 //        }
-        productDetailResponse.setProductValue(skuMap);
-        // 优品推荐
-        List<StoreProduct> storeProducts = storeProductService.getRecommendStoreProduct(18);
-        List<StoreProductRecommendResponse> storeProductRecommendResponses = new ArrayList<>();
-        for (StoreProduct product:storeProducts) {
-            StoreProductRecommendResponse sPRecommendResponse = new StoreProductRecommendResponse();
-            BeanUtils.copyProperties(product,sPRecommendResponse);
-            sPRecommendResponse.setActivity(null); // todo 暂放 设置优品推荐中的拼团砍价秒杀属性
+            productDetailResponse.setProductValue(skuMap);
+            // 优品推荐
+            List<StoreProduct> storeProducts = storeProductService.getRecommendStoreProduct(18);
+            List<StoreProductRecommendResponse> storeProductRecommendResponses = new ArrayList<>();
+            for (StoreProduct product:storeProducts) {
+                StoreProductRecommendResponse sPRecommendResponse = new StoreProductRecommendResponse();
+                BeanUtils.copyProperties(product,sPRecommendResponse);
+                sPRecommendResponse.setActivity(null); // todo 暂放 设置优品推荐中的拼团砍价秒杀属性
 //            sPRecommendResponse.setCheckCoupon(storeCouponService.getListByUser(product.getId()).size() > 0);
-            storeProductRecommendResponses.add(sPRecommendResponse);
-        }
-        productDetailResponse.setGoodList(storeProductRecommendResponses);
+                storeProductRecommendResponses.add(sPRecommendResponse);
+            }
+            productDetailResponse.setGoodList(storeProductRecommendResponses);
 
-
-        // 当前商品的佣金区间
-        if(null != current){
-            current = userService.updateForPromoter(current);
-            productDetailResponse.setPriceName(getPacketPriceRange(productResponse,current.getIsPromoter()));
+        }catch (Exception e){
+            throw new CrmebException(e.getMessage());
         }
+
         return productDetailResponse;
     }
 

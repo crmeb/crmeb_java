@@ -17,10 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 /**
@@ -62,7 +59,7 @@ public class ArticleController {
      */
     @ApiOperation(value = "新增")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
-    public CommonResult<String> save(@Validated ArticleRequest articleRequest){
+    public CommonResult<String> save(@RequestBody @Validated ArticleRequest articleRequest){
         Article article = new Article();
         BeanUtils.copyProperties(articleRequest, article);
         article.setImageInput(systemAttachmentService.clearPrefix(article.getImageInput()));
@@ -124,7 +121,7 @@ public class ArticleController {
     @ApiOperation(value = "修改")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     @ApiImplicitParam(name="id", value="文章ID")
-    public CommonResult<String> update(@RequestParam Integer id, @Validated ArticleRequest articleRequest){
+    public CommonResult<String> update(@RequestParam Integer id, @RequestBody @Validated ArticleRequest articleRequest){
         Article article = new Article();
         BeanUtils.copyProperties(articleRequest, article);
         article.setId(id);

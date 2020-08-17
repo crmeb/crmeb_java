@@ -241,3 +241,15 @@ export function importProductApi(params) {
     params
   })
 }
+
+/**
+ * 恢复
+ * @param pram
+ */
+export function restoreApi(params) {
+  return request({
+    url: `/admin/store/product/importProduct`,
+    method: 'post',
+    params
+  })
+}

@@ -61,7 +61,7 @@
 				</view>
 				<view class='item acea-row row-between-wrapper' v-if='shippingType==0'>
 					<view>快递费用</view>
-					<view class='discount' v-if='priceGroup.storePostage > 0'>+￥{{priceGroup.storePostage}}</view>
+					<view class='discount' v-if='parseFloat(priceGroup.storePostage) > 0'>+￥{{priceGroup.storePostage}}</view>
 					<view class='discount' v-else>免运费</view>
 				</view>
 				<view v-else>
@@ -293,8 +293,6 @@
 			this.cartId = options.cartId;
 			this.is_address = options.is_address ? true : false;
 			this.news = options.new || true;
-			console.log('options.new');
-			console.log(options.new);
 			this.again = options.again || false;
 			if (this.isLogin) {
 				this.getaddressInfo();
@@ -572,16 +570,14 @@
 				let that = this;
 				if (that.addressId) {
 					getAddressDetail(that.addressId).then(res => {
-						// res.data.isDefault = parseInt(res.data.isDefault);
+						res.data.isDefault = parseInt(res.data.isDefault);
 						that.addressInfo = res.data || {};
 						that.addressId = res.data.id || 0;
 						that.address.addressId = res.data.id || 0;
 					})
 				} else {
 					getAddressDefault().then(res => {
-						// res.data.isDefault = parseInt(res.data.isDefault);
-						console.log('大家发挥绝代风华');
-						console.log(res.data.id);
+						res.data.isDefault = parseInt(res.data.isDefault);
 						that.addressInfo = res.data || {};
 						that.addressId = res.data.id || 0;
 						that.address.addressId = res.data.id || 0;
@@ -779,7 +775,16 @@
 						break;
 					case "WECHAT_H5_PAY": //网页版公众号支付
 						setTimeout(() => {
-							location.href = jsConfig.mweb_url;
+							let domain = encodeURIComponent(location.href);
+							let urls = jsConfigAgain.h5PayUrl + '&redirect_url='+ domain;
+							location.href = urls;
+							return that.$util.Tips({
+								title: '支付成功',
+								icon: 'success'
+							}, {
+								tab: 5,
+								url: goPages
+							});
 						}, 100);
 						break;
 				}

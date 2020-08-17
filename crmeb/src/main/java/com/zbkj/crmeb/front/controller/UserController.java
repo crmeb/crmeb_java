@@ -97,7 +97,7 @@ public class UserController {
     @ApiOperation(value = "当前登录用户信息")
     @RequestMapping(value = "/userinfo", method = RequestMethod.GET)
     public CommonResult<User> getInfo(){
-        return CommonResult.success(userService.getInfo());
+        return CommonResult.success(userService.getUserPromoter());
     }
 
     /**

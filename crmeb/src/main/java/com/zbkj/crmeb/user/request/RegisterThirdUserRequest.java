@@ -43,7 +43,7 @@ public class RegisterThirdUserRequest implements Serializable {
     @ApiModelProperty(value = "用户头像", required = true)
     private String avatar;
 
-    @ApiModelProperty(value = "推广人id", required = true)
+    @ApiModelProperty(value = "推广人id")
     @JsonProperty(value = "spread_spid")
-    private Integer spreadPid;
+    private Integer spreadPid = 0;
 }

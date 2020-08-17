@@ -51,11 +51,8 @@
         <el-table-column
           label="发送时间"
           min-width="150"
-        >
-          <template slot-scope="scope">
-            <span>{{scope.row.creatTime}}</span>
-          </template>
-        </el-table-column>
+          prop="createTime"
+        />
         <el-table-column
           prop="resultcode"
           label="状态码"
