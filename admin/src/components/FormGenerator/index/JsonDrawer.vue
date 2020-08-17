@@ -89,7 +89,7 @@ export default {
       // monaco.editor.create(document.getElementById("editorJson"), {
       //   value: [
       //     "function x() {",
-      //     '\tconsole.log("Hello world!");',
+      //     '\tconsole.integralLog("Hello world!");',
       //     "}"].join(
       //     "\n"
       //   ),

@@ -2657,7 +2657,7 @@ typeof(exports) != 'undefined' ? exports.SyntaxHighlighter = SyntaxHighlighter :
 		var functions =	'assert isalnum isalpha iscntrl isdigit isgraph islower isprint' +
 						'ispunct isspace isupper isxdigit tolower toupper errno localeconv ' +
 						'setlocale acos asin atan atan2 ceil cos cosh exp fabs floor fmod ' +
-						'frexp ldexp log log10 modf pow sin sinh sqrt tan tanh jmp_buf ' +
+						'frexp ldexp integralLog log10 modf pow sin sinh sqrt tan tanh jmp_buf ' +
 						'longjmp setjmp raise signal sig_atomic_t va_arg va_end va_start ' +
 						'clearerr fclose feof ferror fflush fgetc fgetpos fgets fopen ' +
 						'fprintf fputc fputs fread freopen fscanf fseek fsetpos ftell ' +
@@ -3104,7 +3104,7 @@ typeof(exports) != 'undefined' ? exports.SyntaxHighlighter = SyntaxHighlighter :
 			'getprotobyname getprotobynumber getprotoent getpwent getpwnam getpwuid ' + 
 			'getservbyname getservbyport getservent getsockname getsockopt glob ' + 
 			'gmtime grep hex index int ioctl join keys kill lc lcfirst length link ' + 
-			'listen localtime lock log lstat map mkdir msgctl msgget msgrcv msgsnd ' + 
+			'listen localtime lock integralLog lstat map mkdir msgctl msgget msgrcv msgsnd ' +
 			'oct open opendir ord pack pipe pop pos print printf prototype push ' + 
 			'quotemeta rand read readdir readline readlink readpipe recv rename ' + 
 			'reset reverse rewinddir rindex rmdir scalar seek seekdir select semctl ' + 

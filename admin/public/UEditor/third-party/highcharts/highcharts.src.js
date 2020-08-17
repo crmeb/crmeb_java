@@ -7013,13 +7013,13 @@ Axis.prototype = {
 			val = val * sign + cvsOffset;
 			val -= minPixelPadding;
 			returnValue = val / localA + localMin; // from chart pixel to value
-			if (postTranslate) { // log and ordinal axes
+			if (postTranslate) { // integralLog and ordinal axes
 				returnValue = axis.lin2val(returnValue);
 			}
 
 		// From value to pixels
 		} else {
-			if (postTranslate) { // log and ordinal axes
+			if (postTranslate) { // integralLog and ordinal axes
 				val = axis.val2lin(val);
 			}
 			if (pointPlacement === 'between') {
@@ -7487,7 +7487,7 @@ Axis.prototype = {
 
 		if (isLog) {
 			if (!secondPass && mathMin(axis.min, pick(axis.dataMin, axis.min)) <= 0) { // #978
-				error(10, 1); // Can't plot negative values on log axis
+				error(10, 1); // Can't plot negative values on integralLog axis
 			}
 			axis.min = correctFloat(log2lin(axis.min)); // correctFloat cures #934
 			axis.max = correctFloat(log2lin(axis.max));
@@ -8039,7 +8039,7 @@ Axis.prototype = {
 						lineNo = i % autoStaggerLines;
 						
 						if (w) {
-							x = axis.translate(pos); // don't handle log
+							x = axis.translate(pos); // don't handle integralLog
 							if (lastRight[lineNo] !== UNDEFINED && x < lastRight[lineNo]) {
 								overlap = true;
 							}
@@ -13596,7 +13596,7 @@ Series.prototype = {
 			yDataLength = yData.length,
 			activeYData = [],
 			activeCounter = 0,
-			xExtremes = xAxis.getExtremes(), // #2117, need to compensate for log X axis
+			xExtremes = xAxis.getExtremes(), // #2117, need to compensate for integralLog X axis
 			xMin = xExtremes.min,
 			xMax = xExtremes.max,
 			validValue,
@@ -13671,7 +13671,7 @@ Series.prototype = {
 				pointStack,
 				stackValues;
 
-			// Discard disallowed y values for log axes
+			// Discard disallowed y values for integralLog axes
 			if (yAxis.isLog && yValue <= 0) {
 				point.y = yValue = null;
 			}
