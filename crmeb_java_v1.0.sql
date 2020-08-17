@@ -26660,7 +26660,6 @@ VALUES
 	(243,'vip_open','',0,'1',0,'2020-05-14 15:20:25','2020-05-14 16:37:47'),
 	(244,'new_order_audio_link','',0,'\\/public\\/uploads\\/config\\/file\\/5cedd83eedba2.mp3',0,'2020-05-14 15:20:25','2020-05-14 16:37:47'),
 	(245,'system_delivery_time','',0,'1',0,'2020-05-14 15:20:25','2020-05-14 16:37:47'),
-	(248,'h5_avatar','',0,'http:\\/\\/kaifa.crmeb.net\\/uploads\\/attach\\/2019\\/08\\/20190807\\/723adbdd4e49a0f9394dfc700ab5dba3.png',0,'2020-05-14 15:20:25','2020-05-14 16:37:47'),
 	(249,'offline_pay_status','',0,'2',0,'2020-05-14 15:20:25','2020-08-12 22:12:56'),
 	(250,'news_slides_limit','',0,'5',0,'2020-05-14 15:20:25','2020-05-14 16:37:47'),
 	(251,'recharge_switch','',0,'1',0,'2020-05-14 15:20:25','2020-05-14 16:37:47'),
@@ -26894,7 +26893,6 @@ VALUES
 	(245,'system_delivery_time','',0,'1',0,'2020-05-14 15:20:25','2020-05-14 16:37:47'),
 	(246,'sms_account','',0,'',0,'2020-05-14 15:20:25','2020-05-14 16:37:47'),
 	(247,'sms_token','',0,'',0,'2020-05-14 15:20:25','2020-05-14 16:37:47'),
-	(248,'h5_avatar','',0,'http:\\/\\/kaifa.crmeb.net\\/uploads\\/attach\\/2019\\/08\\/20190807\\/723adbdd4e49a0f9394dfc700ab5dba3.png',0,'2020-05-14 15:20:25','2020-05-14 16:37:47'),
 	(249,'offline_pay_status','',0,'2',0,'2020-05-14 15:20:25','2020-05-14 16:37:47'),
 	(250,'news_slides_limit','',0,'5',0,'2020-05-14 15:20:25','2020-05-14 16:37:47'),
 	(251,'recharge_switch','',0,'1',0,'2020-05-14 15:20:25','2020-05-14 16:37:47'),
@@ -27026,8 +27024,8 @@ DROP TABLE IF EXISTS `eb_system_form_temp`;
 
 CREATE TABLE `eb_system_form_temp` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '表单模板id',
-  `name` varchar(50) NOT NULL DEFAULT '' COMMENT '表单名称',
-  `info` varchar(256) NOT NULL DEFAULT '' COMMENT '表单简介',
+  `name` varchar(500) NOT NULL DEFAULT '' COMMENT '表单名称',
+  `info` varchar(500) NOT NULL DEFAULT '' COMMENT '表单简介',
   `content` text NOT NULL COMMENT '表单内容',
   `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
