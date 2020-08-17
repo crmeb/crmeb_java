@@ -5,6 +5,7 @@ import com.common.CommonResult;
 import com.constants.Constants;
 import com.exception.CrmebException;
 import com.exception.ExceptionCodeEnum;
+import com.utils.CrmebUtil;
 import com.zbkj.crmeb.authorization.manager.TokenManager;
 import com.zbkj.crmeb.system.request.SystemAdminLoginRequest;
 import com.zbkj.crmeb.system.request.SystemAdminRequest;
@@ -60,7 +61,7 @@ public class adminUser {
 
     @ApiOperation(value="AdminUserLogin")
     @PostMapping(value = "/login", produces = "application/json")
-    public CommonResult<SystemAdminResponse> SystemAdminLogin(@RequestBody @Validated SystemAdminLoginRequest systemAdminLoginRequest) throws Exception {
+    public CommonResult<SystemAdminResponse> SystemAdminLogin(@RequestBody @Validated SystemAdminLoginRequest systemAdminLoginRequest, HttpServletRequest request) throws Exception {
         // 判断验证码
         ValidateCode validateCode = new ValidateCode(systemAdminLoginRequest.getKey(),systemAdminLoginRequest.getCode());
         boolean codeCheckResult = validateCodeService.check(validateCode);
@@ -69,7 +70,7 @@ public class adminUser {
         SystemAdminRequest systemAdminRequest = new SystemAdminRequest();
         systemAdminRequest.setAccount(systemAdminLoginRequest.getAccount());
         systemAdminRequest.setPwd(systemAdminLoginRequest.getPwd());
-        SystemAdminResponse systemAdminResponse = systemAdminService.login(systemAdminRequest);
+        SystemAdminResponse systemAdminResponse = systemAdminService.login(systemAdminRequest, CrmebUtil.getClientIp(request));
         if(null == systemAdminResponse){
             return CommonResult.failed(ExceptionCodeEnum.FAILED, "login failed");
         }

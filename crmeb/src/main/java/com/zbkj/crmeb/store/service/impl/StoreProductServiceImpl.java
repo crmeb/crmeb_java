@@ -193,7 +193,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         if(StringUtils.isNotBlank(request.getCateId())){
             lambdaQueryWrapper.eq(StoreProduct::getCateId, request.getCateId());
         }
-
+        lambdaQueryWrapper.orderByDesc(StoreProduct::getSort).orderByDesc(StoreProduct::getId);
         List<StoreProduct> storeProducts = dao.selectList(lambdaQueryWrapper);
         List<StoreProductResponse> storeProductResponses = new ArrayList<>();
         for (StoreProduct product : storeProducts) {

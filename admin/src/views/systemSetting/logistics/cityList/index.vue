@@ -35,20 +35,20 @@
             <el-link :underline="false" @click="cityDetail(scope.row)">{{ scope.row.name }}</el-link>
           </template>
         </el-table-column>
-        <el-table-column
-          label="状态"
-          min-width="100"
-        >
-          <template slot-scope="scope">
-            <el-switch
-              v-model="scope.row.isShow"
-              class="demo"
-              active-text="开启"
-              inactive-text="关闭"
-              @change="cityStatus(scope.row)"
-            />
-          </template>
-        </el-table-column>
+        <!--<el-table-column-->
+          <!--label="状态"-->
+          <!--min-width="100"-->
+        <!--&gt;-->
+          <!--<template slot-scope="scope">-->
+            <!--<el-switch-->
+              <!--v-model="scope.row.isShow"-->
+              <!--class="demo"-->
+              <!--active-text="开启"-->
+              <!--inactive-text="关闭"-->
+              <!--@change="cityStatus(scope.row)"-->
+            <!--/>-->
+          <!--</template>-->
+        <!--</el-table-column>-->
         <el-table-column
           fixed="right"
           min-width="80"
@@ -128,7 +128,8 @@ export default {
     // 状态
     cityStatus(e) {
       logistics.updateStatus({
-        id: e.cityId,
+        id: e.id,
+        cityId: e.cityId,
         status: e.isShow
       }).then(res => {
         this.$message.success('操作成功')
