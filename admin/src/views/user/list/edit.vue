@@ -27,19 +27,16 @@
       </el-form-item>
       <el-form-item label="用户等级：">
         <el-select v-model="ruleForm.level" placeholder="请选择"  class="selWidth" clearable filterable>
-          <el-option value="" label="全部"></el-option>
           <el-option :value="item.id" v-for="(item, index) in levelList" :key="index" :label="item.name"></el-option>
         </el-select>
       </el-form-item>
       <el-form-item label="用户分组：">
         <el-select v-model="ruleForm.groupId" placeholder="请选择"  class="selWidth" clearable filterable>
-          <el-option value="" label="全部"></el-option>
           <el-option :value="item.id" v-for="(item, index) in groupList" :key="index" :label="item.groupName"></el-option>
         </el-select>
       </el-form-item>
       <el-form-item label="用户标签：">
         <el-select v-model="labelData" placeholder="请选择"  class="selWidth" clearable filterable multiple >
-          <el-option value="" label="全部"></el-option>
           <el-option :value="item.id" v-for="(item, index) in labelLists" :key="index" :label="item.name"></el-option>
         </el-select>
       </el-form-item>
@@ -138,7 +135,7 @@
       },
       // 等级列表
       levelLists () {
-        levelListApi({ page: 1, limit: 9999}).then(async res => {
+        levelListApi({ page: 1, limit: 9999, isShow: 1, isDel: 0}).then(async res => {
           this.levelList = res.list
         })
       },
