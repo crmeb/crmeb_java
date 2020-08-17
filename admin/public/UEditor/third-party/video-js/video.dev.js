@@ -1247,7 +1247,7 @@ vjs.getAbsoluteURL = function(url){
   return url;
 };
 
-// usage: log('inside coolFunc',this,arguments);
+// usage: integralLog('inside coolFunc',this,arguments);
 // http://paulirish.com/2009/log-a-lightweight-wrapper-for-consolelog/
 vjs.log = function(){
   vjs.log.history = vjs.log.history || [];   // store logs to an array for reference
@@ -1312,7 +1312,7 @@ vjs.findPosition = function(el) {
  * Components are also event emitters.
  *
  *     button.on('click', function(){
- *       console.log('Button Clicked!');
+ *       console.integralLog('Button Clicked!');
  *     });
  *
  *     button.trigger('customevent');
@@ -2984,13 +2984,13 @@ vjs.Player.prototype.unloadTech = function(){
 // Then with the new fullscreen API, Mozilla and webkit browsers will reload the flash object after going to fullscreen.
 // To get around this, we're unloading the tech, caching source and currentTime values, and reloading the tech once the plugin is resized.
 // reloadTech: function(betweenFn){
-//   vjs.log('unloadingTech')
+//   vjs.integralLog('unloadingTech')
 //   this.unloadTech();
-//   vjs.log('unloadedTech')
+//   vjs.integralLog('unloadedTech')
 //   if (betweenFn) { betweenFn.call(); }
-//   vjs.log('LoadingTech')
+//   vjs.integralLog('LoadingTech')
 //   this.loadTech(this.techName, { src: this.cache_.src })
-//   vjs.log('loadedTech')
+//   vjs.integralLog('loadedTech')
 // },
 
 /* Fallbacks for unsupported event types
@@ -3026,7 +3026,7 @@ vjs.Player.prototype.trackProgress = function(){
 
   this.progressInterval = setInterval(vjs.bind(this, function(){
     // Don't trigger unless buffered amount is greater than last time
-    // log(this.cache_.bufferEnd, this.buffered().end(0), this.duration())
+    // integralLog(this.cache_.bufferEnd, this.buffered().end(0), this.duration())
     /* TODO: update for multiple buffered regions */
     if (this.cache_.bufferEnd < this.buffered().end(0)) {
       this.trigger('progress');
@@ -6941,7 +6941,7 @@ vjs.ChaptersTrackMenuItem.prototype.update = function(){
   var cue = this.cue,
       currentTime = this.player_.currentTime();
 
-  // vjs.log(currentTime, cue.startTime);
+  // vjs.integralLog(currentTime, cue.startTime);
   this.selected(cue.startTime <= currentTime && currentTime < cue.endTime);
 };
 

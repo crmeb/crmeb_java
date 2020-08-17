@@ -181,7 +181,7 @@ export default {
         status: null,
         name: null,
         page: constants.page.page,
-        limit: constants.page.limit[1]
+        limit: constants.page.limit[0]
       },
       viewInfoConfig: {
         data: null,
@@ -201,7 +201,6 @@ export default {
     handleEditMenu(rowData) {
       this.editDialogConfig.isCreate = 1
       this.editDialogConfig.data = rowData
-      console.log(this.editDialogConfig.data)
       this.editDialogConfig.prent = rowData
       this.editDialogConfig.visible = true
     },
@@ -229,7 +228,7 @@ export default {
       const _pram = { type: this.biztype.value, status: this.selectModel ? 1 : -1 }
       this.biztype.value!==3 ? categoryApi.treeCategroy(_pram).then(data => {
         this.treeList = this.handleAddArrt(data)
-      }) : categoryApi.listCategroy({ type: 3, status: '' }).then(data => {
+      }) : categoryApi.listCategroy({ type: 3, status: '', pid: this.listPram.pid}).then(data => {
         this.treeList = data.list
       })
     },

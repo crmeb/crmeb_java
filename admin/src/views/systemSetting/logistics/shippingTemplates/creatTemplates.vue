@@ -264,7 +264,7 @@ export default {
       this.$refs['ruleForm'].resetFields()
     },
     changeRegion(value) {
-      // console.log(value)
+      // console.integralLog(value)
     },
     changeRadio(num) {
       this.columns = Object.assign({}, statusMap[num - 1])
@@ -316,7 +316,7 @@ export default {
           this.shippingFree()
         }
       }).catch(res => {
-        // console.log(res)
+        // console.integralLog(res)
         this.$message.error(res.message)
         this.$nextTick(() => {
           loadingInstance.close()
@@ -348,7 +348,7 @@ export default {
     // 列表
     getCityList() {
       logistics.cityListTree().then(res => {
-        // console.log(res, 'getCityList')
+        // console.integralLog(res, 'getCityList')
         res.forEach((el, index) => {
           el.child.forEach((cel, j) => {
             delete cel.child

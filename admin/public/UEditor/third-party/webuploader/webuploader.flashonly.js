@@ -306,15 +306,15 @@
              * @return {Class} 返回子类。
              * @example
              * function Person() {
-             *     console.log( 'Super' );
+             *     console.integralLog( 'Super' );
              * }
              * Person.prototype.hello = function() {
-             *     console.log( 'hello' );
+             *     console.integralLog( 'hello' );
              * };
              *
              * var Manager = Base.inherits( Person, {
              *     world: function() {
-             *         console.log( 'World' );
+             *         console.integralLog( 'World' );
              *     }
              * });
              *
@@ -326,7 +326,7 @@
              * instance.world();    // => World
              *
              * // 子类的__super__属性指向父类
-             * console.log( Manager.__super__ === Person );    // => true
+             * console.integralLog( Manager.__super__ === Person );    // => true
              */
             inherits: function( Super, protos, staticProtos ) {
                 var child;
@@ -370,7 +370,7 @@
              * @method bindFn
              * @example
              * var doSomething = function() {
-             *         console.log( this.name );
+             *         console.integralLog( this.name );
              *     },
              *     obj = {
              *         name: 'Object Name'
@@ -383,9 +383,9 @@
             bindFn: bindFn,
     
             /**
-             * 引用Console.log如果存在的话，否则引用一个[空函数loop](#WebUploader:Base.log)。
-             * @grammar Base.log( args... ) => undefined
-             * @method log
+             * 引用Console.log如果存在的话，否则引用一个[空函数loop](#WebUploader:Base.integralLog)。
+             * @grammar Base.integralLog( args... ) => undefined
+             * @method integralLog
              */
             log: (function() {
                 if ( window.console ) {
@@ -420,7 +420,7 @@
              * @example
              * function doSomthing() {
              *     var args = Base.slice( arguments, 1 );
-             *     console.log( args );
+             *     console.integralLog( args );
              * }
              *
              * doSomthing( 'ignored', 'arg2', 'arg3' );    // => Array ["arg2", "arg3"]
@@ -458,12 +458,12 @@
              * @param {Number} [pointLength=2] 精确到的小数点数。
              * @param {Array} [units=[ 'B', 'K', 'M', 'G', 'TB' ]] 单位数组。从字节，到千字节，一直往上指定。如果单位数组里面只指定了到了K(千字节)，同时文件大小大于M, 此方法的输出将还是显示成多少K.
              * @example
-             * console.log( Base.formatSize( 100 ) );    // => 100B
-             * console.log( Base.formatSize( 1024 ) );    // => 1.00K
-             * console.log( Base.formatSize( 1024, 0 ) );    // => 1K
-             * console.log( Base.formatSize( 1024 * 1024 ) );    // => 1.00M
-             * console.log( Base.formatSize( 1024 * 1024 * 1024 ) );    // => 1.00G
-             * console.log( Base.formatSize( 1024 * 1024 * 1024, 0, ['B', 'KB', 'MB'] ) );    // => 1024MB
+             * console.integralLog( Base.formatSize( 100 ) );    // => 100B
+             * console.integralLog( Base.formatSize( 1024 ) );    // => 1.00K
+             * console.integralLog( Base.formatSize( 1024, 0 ) );    // => 1K
+             * console.integralLog( Base.formatSize( 1024 * 1024 ) );    // => 1.00M
+             * console.integralLog( Base.formatSize( 1024 * 1024 * 1024 ) );    // => 1.00G
+             * console.integralLog( Base.formatSize( 1024 * 1024 * 1024, 0, ['B', 'KB', 'MB'] ) );    // => 1024MB
              */
             formatSize: function( size, pointLength, units ) {
                 var unit;
@@ -540,7 +540,7 @@
              * Mediator.installTo( obj );
              *
              * obj.on( 'testa', function( arg1, arg2 ) {
-             *     console.log( arg1, arg2 ); // => 'arg1', 'arg2'
+             *     console.integralLog( arg1, arg2 ); // => 'arg1', 'arg2'
              * });
              *
              * obj.trigger( 'testa', 'arg1', 'arg2' );
@@ -553,7 +553,7 @@
              * 就是第一个参数为`type`，记录当前是什么事件在触发。此类`callback`的优先级比脚低，会再正常`callback`执行完后触发。
              * ```javascript
              * obj.on( 'all', function( type, arg1, arg2 ) {
-             *     console.log( type, arg1, arg2 ); // => 'testa', 'arg1', 'arg2'
+             *     console.integralLog( type, arg1, arg2 ); // => 'testa', 'arg1', 'arg2'
              * });
              * ```
              *
@@ -2625,8 +2625,8 @@
              * @description 返回指定状态的文件集合，不传参数将返回所有状态的文件。
              * @for  Uploader
              * @example
-             * console.log( uploader.getFiles() );    // => all files
-             * console.log( uploader.getFiles('error') )    // => all error files.
+             * console.integralLog( uploader.getFiles() );    // => all files
+             * console.integralLog( uploader.getFiles('error') )    // => all error files.
              */
             getFiles: function() {
                 return this.queue.getFiles.apply( this.queue, arguments );
@@ -3853,7 +3853,7 @@
                 uid = parts[ 0 ];
                 type = parts[ 1 ];
     
-                // console.log.apply( console, arguments );
+                // console.integralLog.apply( console, arguments );
     
                 if ( type === 'Ready' && uid === me.uid ) {
                     me.trigger('ready');
@@ -3861,7 +3861,7 @@
                     clients[ uid ].trigger( type.toLowerCase(), evt, obj );
                 }
     
-                // Base.log( evt, obj );
+                // Base.integralLog( evt, obj );
             }
     
             // flash的接受器。
