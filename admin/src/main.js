@@ -36,7 +36,7 @@ import { loadScriptQueue } from '@/components/FormGenerator/utils/loadScript'
 
 import './icons' // icon
 import './permission' // permission control
-import './utils/error-log' // error log
+import './utils/error-log' // error integralLog
 import * as filters from './filters' // global filters
 
 Vue.use(VueLazyload, {

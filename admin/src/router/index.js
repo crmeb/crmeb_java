@@ -168,7 +168,7 @@ export const constantRoutes = [
           },
           {
             path: 'integrallog',
-            component: () => import('@/views/marketing/integral/log/index'),
+            component: () => import('@/views/marketing/integral/integralLog/index'),
             name: 'DatasIntegralLog',
             meta: { title: '积分日志', icon: '' }
           }

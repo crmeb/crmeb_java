@@ -1217,7 +1217,7 @@ baidu.sio.callByServer = /**@function*/function(url, callback, opt_options) {
 /**
  * 通过请求一个图片的方式令服务器存储一条日志
  * @function
- * @grammar baidu.sio.log(url)
+ * @grammar baidu.sio.integralLog(url)
  * @param {string} url 要发送的地址.
  * @author: int08h,leeight
  */
