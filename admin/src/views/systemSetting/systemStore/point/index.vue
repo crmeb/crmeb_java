@@ -7,7 +7,7 @@
            <el-tab-pane :label="'隐藏中的提货点('+ headerCount.hide +')'" name="0"></el-tab-pane>
            <el-tab-pane :label="'回收站的提货点('+ headerCount.recycle +')'" name="2"></el-tab-pane>
          </el-tabs>
-         <el-form ref="form" inline :model="artFrom">
+         <el-form ref="form" inline :model="artFrom" @submit.native.prevent>
            <el-form-item label="关键字：">
              <el-input v-model="artFrom.keywords" placeholder="请输入提货点名称/电话" class="selWidth" size="small">
                <el-button slot="append" icon="el-icon-search" @click="search" />

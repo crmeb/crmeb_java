@@ -57,6 +57,7 @@
             <el-switch
               v-model="scope.row.isShow"
               class="demo"
+              :active-value="1" :inactive-value="0"
               active-text="开启"
               inactive-text="关闭"
               @change="bindStatus(scope.row)"
@@ -158,6 +159,7 @@ export default {
         sort: item.sort
       }).then(res => {
         this.$message.success('操作成功')
+        this.getExpressList()
       }).catch(() => {
         item.isShow = !item.isShow
       })

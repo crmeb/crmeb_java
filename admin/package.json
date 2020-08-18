@@ -2,7 +2,7 @@
   "name": "vue-element-admin",
   "version": "4.2.1",
   "description": "A magical vue admin. An out-of-box UI solution for enterprise applications. Newest development stack of vue. Lots of awesome features",
-  "author": "Pan <panfree23@gmail.com>",
+  "author": "CRMEB",
   "license": "MIT",
   "scripts": {
     "dev": "vue-cli-service serve",

@@ -12,11 +12,9 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.Security;
-import java.text.DecimalFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -539,37 +537,41 @@ public class CrmebUtil {
 
     /**
      * 同比率计算 //同比增长率= ((当前周期 - 上一个周期) ÷ 上一个周期 ) *100%
-     * @param now 当前周期
-     * @param last 上一个周期
+     * @param i1 当前周期
+     * @param i2 上一个周期
      * @author Mr.Zhang
      * @since 2020-05-06
      * @
      */
-    public static String getRate(Integer now, Integer last){
-        int diff = now - last;
-        if(diff == 0){
-            return "0%";
-        }
-
-        return (((now - last) / last) * 100) + "%";
+    public static int getRate(Integer i1, Integer i2){
+        BigDecimal b1 = new BigDecimal(i1);
+        BigDecimal b2 = new BigDecimal(i2);
+        return getRate(b1, b2);
     }
 
     /**
      * 同比率计算 //同比增长率= ((当前周期 - 上一个周期) ÷ 上一个周期 ) *100%
-     * @param now 当前周期
-     * @param last 上一个周期
+     * @param b1 当前周期
+     * @param b2 上一个周期
      * @author Mr.Zhang
      * @since 2020-05-06
      * @
      */
-    public static String getRate(BigDecimal now, BigDecimal last){
+    public static int getRate(BigDecimal b1, BigDecimal b2){
         //计算差值
-        BigDecimal subtract = now.subtract(now);
-        BigDecimal zero = new BigDecimal(BigInteger.ZERO);
-        if(subtract.equals(zero)){
+
+        if(b2.equals(b1)){
             //数值一样，说明没有增长
-            return "0%";
+            return Constants.NUM_ZERO;
         }
+
+        if(b2.equals(BigDecimal.ZERO)){
+            //b2是0
+            return Constants.NUM_ONE_HUNDRED;
+        }
+
+        return (b1.subtract(b2)).divide(b2, 2, BigDecimal.ROUND_UP).multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue();
+
 
 //        BigDecimal.setScale();//用于格式化小数点
 //        setScale(1);//表示保留以为小数，默认用四舍五入方式
@@ -577,9 +579,6 @@ public class CrmebUtil {
 //        setScale(1,BigDecimal.ROUND_UP);//进位处理，2.35变成2.4
 //        setScale(1,BigDecimal.ROUND_HALF_UP);//四舍五入，2.35变成2.4
 //        setScaler(1,BigDecimal.ROUND_HALF_DOWN);//四舍五入，2.35变成2.3，如果是5则向下舍
-
-
-        return subtract.divide(last, 0, BigDecimal.ROUND_UP).multiply(new BigDecimal(100)) + "%";
     }
 
     /**

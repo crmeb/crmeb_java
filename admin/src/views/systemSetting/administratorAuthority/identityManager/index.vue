@@ -1,7 +1,7 @@
 <template>
   <div class="divBox">
     <el-card class="box-card">
-      <el-form inline size="small">
+      <el-form inline size="small" @submit.native.prevent>
         <el-form-item>
           <el-select v-model="listPram.status" placeholder="状态" clearable class="selWidth">
             <el-option
@@ -19,7 +19,7 @@
           <el-button size="mini" type="primary" @click.native="handleGetRoleList">查询</el-button>
         </el-form-item>
       </el-form>
-      <el-form inline>
+      <el-form inline @submit.native.prevent>
         <el-form-item>
           <el-button size="mini" type="primary" @click="handlerOpenEdit(0)">添加身份</el-button>
         </el-form-item>

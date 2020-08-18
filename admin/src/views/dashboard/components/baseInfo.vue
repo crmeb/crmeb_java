@@ -155,7 +155,7 @@
   .down, .el-icon-caret-bottom {
     color: #39C15B;
     font-size: 12px;
-    opacity: 100% !important;
+    /*opacity: 100% !important;*/
   }
 
   .baseInfo {

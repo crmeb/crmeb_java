@@ -638,14 +638,14 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             dateLimitUtilVo dateLimit = DateUtil.getDateLimit(date);
             queryWrapper.between("create_time", dateLimit.getStartTime(), dateLimit.getEndTime());
         }
-        queryWrapper.groupBy("create_time").orderByAsc("create_time");
+        queryWrapper.groupBy("left(create_time, 10)").orderByAsc("create_time");
         List<User> list = userDao.selectList(queryWrapper);
         if(list.size() < 1){
             return map;
         }
 
         for (User user : list) {
-            map.put(user.getCreateTime(), user.getUid());
+            map.put(DateUtil.dateToStr(user.getCreateTime(), Constants.DATE_FORMAT_DATE), user.getUid());
         }
         return map;
     }

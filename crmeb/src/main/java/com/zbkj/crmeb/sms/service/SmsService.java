@@ -7,6 +7,7 @@ import com.zbkj.crmeb.sms.request.*;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 
 /**
 * @author Mr.Zhang
@@ -44,6 +45,11 @@ public interface SmsService{
     boolean pushCodeToList(String phone, Integer tag,HashMap<String, Object> pram);
 
     void push(String phone,String tempKey,Integer msgTempId,boolean valid, HashMap<String,Object> mapPram);
+    /**
+     * 根据发送id同步发送短信结果
+     * @param recordIds 短信发送id
+     */
+    void pushByAsyncStatus(List<Integer> recordIds);
 
     void consume();
 
