@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-form ref="pram" :model="pram" :rules="rules" label-width="100px">
+    <el-form ref="pram" :model="pram" :rules="rules" label-width="100px" @submit.native.prevent>
       <el-form-item label="管理员账号" prop="account">
         <el-input v-model="pram.account" placeholder="管理员账号" />
       </el-form-item>

@@ -42,9 +42,9 @@ public class ExpressRequest implements Serializable {
     @NotNull(message = "排序数字必须填写")
     private Integer sort;
 
-    @ApiModelProperty(value = "是否显示", required = true)
+    @ApiModelProperty(value = "是否显示 0=否 1=是", required = true)
     @NotNull(message = "请选择是否弃用")
-    private Boolean isShow;
+    private Integer isShow;
 
 
 }

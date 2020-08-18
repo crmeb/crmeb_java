@@ -608,7 +608,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         QueryWrapper<StoreOrder> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("sum(pay_price) as pay_price").
                 eq("paid", 1).
-                eq("is_del", 1);
+                eq("is_del", 0);
         if(null != userId){
             queryWrapper.eq("uid", userId);
         }
@@ -659,7 +659,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     public int getOrderCount(Integer userId, String date) {
         LambdaQueryWrapper<StoreOrder> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(StoreOrder::getPaid,1)
-                .eq(StoreOrder::getIsDel, 1);
+                .eq(StoreOrder::getIsDel, 0);
 
         if(null != userId){
             lambdaQueryWrapper.eq(StoreOrder::getUid, userId);

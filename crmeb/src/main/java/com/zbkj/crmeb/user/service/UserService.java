@@ -88,7 +88,6 @@ public interface UserService extends IService<User> {
 
     Map<Object, Object> getAddUserCountGroupDate(String date);
 
-
     boolean bind(UserBindingRequest request);
 
     UserCenterResponse getUserCenter();

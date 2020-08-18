@@ -3,7 +3,7 @@
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <div class="container">
-          <el-form inline size="small">
+          <el-form inline size="small" @submit.native.prevent>
             <el-form-item label="关键字">
               <el-input v-model="listPram.keywords" placeholder="请输入id，名称，描述" clearable class="selWidth" size="small">
                 <el-button slot="append" icon="el-icon-search" size="small" @click="handlerSearch" />

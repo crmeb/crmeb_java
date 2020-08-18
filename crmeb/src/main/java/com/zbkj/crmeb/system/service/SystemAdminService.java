@@ -15,7 +15,7 @@ import java.util.List;
 * @since 2020-04-13
 */
 public interface SystemAdminService extends IService<SystemAdmin> {
-    List<SystemAdmin> getList(SystemAdminRequest request, PageParamRequest pageParamRequest);
+    List<SystemAdminResponse> getList(SystemAdminRequest request, PageParamRequest pageParamRequest);
 
     SystemAdminResponse getInfo(SystemAdminRequest request) throws Exception;
 

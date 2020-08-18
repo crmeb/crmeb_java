@@ -41,7 +41,7 @@ public class Express implements Serializable {
     private Integer sort;
 
     @ApiModelProperty(value = "是否显示")
-    private Boolean isShow;
+    private Integer isShow;
 
 
 }
