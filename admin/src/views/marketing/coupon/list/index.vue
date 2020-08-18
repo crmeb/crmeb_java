@@ -33,7 +33,7 @@
         <el-table-column
           prop="name"
           label="名称"
-          min-width="120"
+          min-width="180"
         />
         <el-table-column
           label="类型"

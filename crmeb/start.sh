@@ -3,14 +3,22 @@
 #开始时间 时间戳
 startTime=`date +'%Y-%m-%d %H:%M:%S'`
 
-#jar包文件路径及名称（目录按照各自配置）
-APP_NAME=/www/wwwroot/api.java.crmeb.net/Crmeb.jar
+#接口项目站点路径（目录按照各自配置）
+#APP_PATH=/www/wwwroot/api.java.crmeb.net/
+APP_PATH=/Library/WebServer/Documents/zhongbang/java/crmeb
 
-#日志文件路径及名称（目录按照各自配置）
-LOG_FILE=/www/wwwroot/api.java.crmeb.net/crmeb_out.log
+#jar包文件名称
+APP_NAME=$APP_PATH/target/Crmeb.jar
+
+#日志文件名称
+LOG_FILE=$APP_PATH/crmeb_out.log
+
+#安装文件
+INSTALL_FILE=$APP_PATH/install.txt
 
 #启动环境   # 如果需要配置数据和redis，请在 application-prod.yml中修改, 用jar命令修改即可
-APP_YML=--spring.profiles.active=prod    #prod代表 读取 application-prod.yml 配置文件
+APP_YML=--spring.profiles.active=prod
+
 
 #数据库配置
 
@@ -65,17 +73,6 @@ if test -e $APP_NAME;then
           sleep 1s
       fi
 
-      fail=`grep "Error" $LOG_FILE`
-      if [[ "$fail" != "" ]]
-      then
-          echo "项目启动失败"
-          tail -f $LOG_FILE
-          break
-      else
-#          echo "Crmeb Running ......."
-          sleep 1s
-      fi
-
   done
   echo "Crmeb Started Success"
 
@@ -90,7 +87,7 @@ echo "本次运行时间： "$total"s"
 echo "当前时间："$endTime
 
 
-  #消息推送到企业微信群， 可根据自己的情况配置
+  #消息推送到企业微信群
 #  curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=4f7df494-cece-49c2-8e04-60610c937b4a' \
 #   -H 'Content-Type: application/json' \
 #   -d '
@@ -101,6 +98,28 @@ echo "当前时间："$endTime
 #        "mentioned_list":["@all"]
 #    }
 #  }'
+
+host="www.xx.net"; #此处填写自己的前端访问域名
+domain="https://www.xx.com"; #此处填写自己的前端访问域名 带http/https
+version="crmeb_java_1.0"; #版本号, 此处不需要修改
+ip="111.111.111.111"; #您当前服务器的IP
+
+if test -e $INSTALL_FILE;then
+  echo '已经统计过首次安装'
+else
+  #开源不易，首次安装统计
+  curl 'http://shop.crmeb.net/index.php/admin/server.upgrade_api/updatewebinfo' \
+   -H 'Content-Type: application/json' \
+   -d '
+   {
+    "host": "'$host'",
+    "https": "'$domain'",
+    "version": "'$version'",
+    "ip": "'$ip'"
+  }'
+  touch $INSTALL_FILE
+  echo "install" > $INSTALL_FILE
+fi
 
 ##实时查看启动日志
 #  #tail -f $LOG_FILE

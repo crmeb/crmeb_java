@@ -1,6 +1,6 @@
 <template>
   <el-dialog v-model="dialogFormVisible" :title="id?'修改提货点':'添加提货点'" :visible.sync="dialogFormVisible" width="750px" @close="cancel">
-    <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="150px" class="demo-ruleForm">
+    <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="150px" class="demo-ruleForm" @submit.native.prevent>
       <el-form-item label="提货点名称：" prop="name">
         <el-input v-model="ruleForm.name" placeholder="请输入提货点名称" class="dialogWidth"></el-input>
       </el-form-item>

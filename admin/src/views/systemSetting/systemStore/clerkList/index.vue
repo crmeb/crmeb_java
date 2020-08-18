@@ -3,7 +3,7 @@
     <el-card  class="box-card">
       <div slot="header" class="clearfix">
         <div class="container">
-          <el-form ref="form" inline :model="artFrom" size="small">
+          <el-form ref="form" inline :model="artFrom" size="small" @submit.native.prevent>
             <el-form-item label="提货点名称：">
               <el-select v-model="artFrom.storeId" placeholder="请选择" class="selWidth" clearable @change="search">
                 <el-option

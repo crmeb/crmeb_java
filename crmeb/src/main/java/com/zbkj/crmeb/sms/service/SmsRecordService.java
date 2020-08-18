@@ -30,4 +30,12 @@ public interface SmsRecordService extends IService<SmsRecord> {
      * @return 保存结果
      */
     boolean save(SmsRecord smsRecord);
+
+
+    // 短信状态同步
+    void consumeSmsStatus();
+
+    // 更新短信实际发送状态嘛
+    void updateSmsStatus(List<Integer> recordIds);
+
 }

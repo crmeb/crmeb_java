@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.system.response;
 
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -24,6 +25,8 @@ public class SystemAdminResponse implements Serializable {
     private String realName;
 
     private String roles;
+
+    private String roleNames;
 
     private String lastIp;
 

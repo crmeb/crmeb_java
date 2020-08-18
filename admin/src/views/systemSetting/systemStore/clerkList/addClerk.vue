@@ -1,6 +1,6 @@
 <template>
   <el-dialog v-model="dialogFormVisible" :title="id?'修改核销员':'添加核销员'"  :visible.sync="dialogFormVisible" width="750px" @close="cancel">
-    <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="150px" class="demo-ruleForm">
+    <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="150px" class="demo-ruleForm" @submit.native.prevent>
       <el-form-item label="商城用户：" prop="avatar">
         <div class="publicPicBox" @click="upImg">
           {{ruleForm.avatar}}

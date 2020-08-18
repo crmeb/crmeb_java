@@ -7,6 +7,8 @@
             <el-cascader v-model="tableFrom.cateId" :options="merCateList" :props="props" clearable class="selWidth mr20" @change="getList"/>
           </el-form-item>
           <el-form-item label="商品搜索：">
+            <!--<el-input v-model="tableFrom.keywords" placeholder="请输入内容"></el-input>-->
+
             <el-input v-model="tableFrom.keywords" @input="onInput()" placeholder="请输入商品名称，关键字，产品编号" class="selWidth">
               <el-button slot="append" icon="el-icon-search" @click="getList"/>
             </el-input>
@@ -50,7 +52,7 @@
         label="ID"
         min-width="50"
       />
-      <el-table-column label="商品图" min-width="80">
+      <el-table-column label="商品图" width="80">
         <template slot-scope="scope">
           <div class="demo-image__preview">
             <el-image
@@ -64,17 +66,20 @@
       <el-table-column
         prop="storeName"
         label="商品名称"
-        min-width="250"
+        min-width="180"
       />
       <el-table-column
-      prop="cateId"
       label="商品分类"
-      min-width="90"
-      />
+      min-width="150"
+      >
+        <template slot-scope="scope">
+          <span v-for="(item, index) in scope.row.cateValues.split(',')" :key="index" class="mr10">{{ item }}</span>
+        </template>
+      </el-table-column>
     </el-table>
     <div class="block mb20">
       <el-pagination
-        :page-sizes="[5, 10, 20, 30]"
+        :page-sizes="[10, 20, 30, 40]"
         :page-size="tableFrom.limit"
         :current-page="tableFrom.page"
         layout="total, sizes, prev, pager, next, jumper"
@@ -120,7 +125,7 @@ export default {
       },
       tableFrom: {
         page: 1,
-        limit: 5,
+        limit: 10,
         cateId: '',
         keywords: '',
         type: '1'

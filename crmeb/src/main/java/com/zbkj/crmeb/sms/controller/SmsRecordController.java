@@ -92,8 +92,6 @@ public class SmsRecordController {
     @RequestMapping(value = "/record/list", method = RequestMethod.GET)
     public CommonResult<CommonPage<SmsRecord>>  getList(@ModelAttribute SmsRecordRequest smsRecordRequest,
                                                         @ModelAttribute PageParamRequest pageParamRequest){
-        SmsRecord smsRecord = new SmsRecord();
-        BeanUtils.copyProperties(smsRecordRequest, smsRecord);
         CommonPage<SmsRecord> smsRecordCommonPage =
                 CommonPage.restPage(smsRecordService.getList(smsRecordRequest, pageParamRequest));
         return CommonResult.success(smsRecordCommonPage);

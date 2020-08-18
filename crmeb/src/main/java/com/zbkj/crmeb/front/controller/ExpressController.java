@@ -40,7 +40,7 @@ public class ExpressController {
         pageParamRequest.setLimit(Constants.EXPORT_MAX_LIMIT);
 
         ExpressSearchRequest expressSearchRequest = new ExpressSearchRequest();
-        expressSearchRequest.setIsShow(true);
+        expressSearchRequest.setIsShow(1);
         return CommonResult.success(CommonPage.restPage(expressService.getList(expressSearchRequest, pageParamRequest)));
     }
 }
