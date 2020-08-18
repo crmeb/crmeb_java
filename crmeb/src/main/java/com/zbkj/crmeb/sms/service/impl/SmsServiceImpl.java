@@ -29,7 +29,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -438,11 +440,21 @@ public class SmsServiceImpl implements SmsService {
         JSONObject data = joResult.getJSONObject("data");
         String smsRecodeId = (data.containsKey("id") ? data.getString("id") : "0");
 
-        SmsRecord smsRecord = new SmsRecord(0,sendSmsVo.getUid(), sendSmsVo.getMobile(),sendSmsVo.getParam(), "", sendSmsVo.getTemplate().toString() ,resultCode,Integer.parseInt(smsRecodeId), message);
+        // 注意这里的状态仅仅是调用是否成功的状态 需要等待5分钟一周另外一个任务去查询发送状态后再更新status数据
+        SmsRecord smsRecord = new SmsRecord(0,sendSmsVo.getUid(), sendSmsVo.getMobile(),sendSmsVo.getContent(),
+                "", sendSmsVo.getTemplate().toString(),
+                resultCode,Integer.parseInt(smsRecodeId), message);
         smsRecordService.save(smsRecord);
-
+        // 添加到短信实际发送状态队列
+        if(smsRecodeId.length() > 0){
+            List<Integer> recordsIds = new ArrayList<>();
+            recordsIds.add(Integer.parseInt(smsRecodeId));
+            pushByAsyncStatus(recordsIds);
+        }
         return true;
     }
+
+
 
     /**
      * 短信队列消费者
@@ -534,6 +546,16 @@ public class SmsServiceImpl implements SmsService {
         if(value.equals("1")){
             redisUtil.lPush(SmsConstants.SMS_SEND_KEY, JSONObject.toJSONString(mParam));
         }
+    }
+
+    /**
+     * 添加短信发送状态同步队列
+     * @param recordIds 短信发送id
+     */
+    @Override
+    public void pushByAsyncStatus(List<Integer> recordIds) {
+        if(null == recordIds) return;
+        redisUtil.lPush(SmsConstants.SMS_SEND_RESULT_KEY, JSONObject.toJSONString(recordIds));
     }
 
     /**

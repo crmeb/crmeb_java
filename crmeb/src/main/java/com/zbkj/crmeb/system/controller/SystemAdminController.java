@@ -55,10 +55,10 @@ public class SystemAdminController {
     @ApiOperation(value = "分页列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ResponseBody
-    public CommonResult<CommonPage<SystemAdmin>>  getList(@Validated SystemAdminRequest systemAdminRequest, PageParamRequest pageParamRequest){
+    public CommonResult<CommonPage<SystemAdminResponse>>  getList(@Validated SystemAdminRequest systemAdminRequest, PageParamRequest pageParamRequest){
         SystemAdmin systemAdmin = new SystemAdmin();
         BeanUtils.copyProperties(systemAdminRequest, systemAdmin);
-        CommonPage<SystemAdmin> systemAdminCommonPage = CommonPage.restPage(systemAdminService.getList(systemAdminRequest, pageParamRequest));
+        CommonPage<SystemAdminResponse> systemAdminCommonPage = CommonPage.restPage(systemAdminService.getList(systemAdminRequest, pageParamRequest));
         return CommonResult.success(systemAdminCommonPage);
     }
 

@@ -9,7 +9,6 @@
         :default-checked-keys="selectModelKeys"
         @check="handleSelectionChange"
       />
-      <!--        {{biztype}}-->
     </template>
     <template v-else>
       <div class="divBox">
@@ -88,7 +87,7 @@
               <el-table-column label="操作" min-width="200" fixed="right">
                 <template slot-scope="scope">
                   <el-button
-                    v-if="biztype.value!==3"
+                    v-if="biztype.value!==3 && scope.row.pid === 0"
                     type="text"
                     size="small"
                     @click="handleAddMenu(scope.row)"

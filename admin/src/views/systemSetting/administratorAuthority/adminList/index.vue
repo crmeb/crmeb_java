@@ -1,7 +1,7 @@
 <template>
   <div class="divBox">
     <el-card class="box-card">
-      <el-form inline size="small">
+      <el-form inline size="small" @submit.native.prevent>
         <el-form-item>
           <el-select v-model="listPram.roles" placeholder="身份" clearable class="selWidth">
             <el-option
@@ -39,43 +39,45 @@
           <el-button size="mini" type="primary" @click="handleSearch">查询</el-button>
         </el-form-item>
       </el-form>
-      <el-form inline>
+      <el-form inline @submit.native.prevent>
         <el-form-item>
           <el-button size="mini" type="primary" @click="handlerOpenEdit(0)">添加管理员</el-button>
         </el-form-item>
       </el-form>
       <el-table :data="listData.list" size="mini">
-        <el-table-column label="姓名" prop="realName" />
-        <el-table-column label="账号" prop="account" />
-        <el-table-column label="身份" prop="realName">
+        <el-table-column
+          prop="id"
+          label="ID"
+          width="50"
+        />
+        <el-table-column label="姓名" prop="realName" min-width="120"/>
+        <el-table-column label="账号" prop="account" min-width="120"/>
+        <el-table-column label="身份" prop="realName" min-width="230">
           <template slot-scope="scope">
-          <span v-for="item in roleList.list" :key="item.id">
-            <el-tag v-if="scope.row.roles.includes(item.id)" type="info">{{ item.roleName }}</el-tag>
-            <!--              <span>{{ scope.row }}</span>-->
-          </span>
+            <el-tag size="small" type="info" v-for="(item, index) in scope.row.roleNames.split(',')" class="mr5">{{ item }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="最后登录时间" prop="lastTime">
+        <el-table-column label="最后登录时间" prop="lastTime" min-width="180">
           <template slot-scope="scope">
             <span>{{ scope.row.updateTime | filterEmpty }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="最后登录IP" prop="lastIp">
+        <el-table-column label="最后登录IP" prop="lastIp" min-width="150">
           <template slot-scope="scope">
             <span>{{ scope.row.lastIp | filterEmpty }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="状态" prop="status" width="100">
+        <el-table-column label="状态" prop="status" min-width="100">
           <template slot-scope="scope">
             <span>{{ scope.row.status | filterShowOrHide }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="删除标记" prop="status" width="100">
+        <el-table-column label="删除标记" prop="status" min-width="100">
           <template slot-scope="scope">
             <span>{{ scope.row.isDel | filterYesOrNo }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作">
+        <el-table-column label="操作" min-width="130"  fixed="right">
           <template slot-scope="scope">
             <template v-if="scope.row.isDel">
               <span>-</span>

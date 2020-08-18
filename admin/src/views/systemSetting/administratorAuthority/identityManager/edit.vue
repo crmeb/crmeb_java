@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-form ref="pram" :model="pram" label-width="100px">
+    <el-form ref="pram" :model="pram" label-width="100px" @submit.native.prevent>
       <el-form-item label="身份名称" prop="roleName" :rules="[{required:true,message:'请填写身份名称', trigger:['blur','change']}]">
         <el-input v-model="pram.roleName" placeholder="身份名称" />
       </el-form-item>
