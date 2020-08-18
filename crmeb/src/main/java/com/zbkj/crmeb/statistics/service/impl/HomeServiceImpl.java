@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.statistics.service.impl;
 
 import com.constants.Constants;
+import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.zbkj.crmeb.statistics.response.HomeRateResponse;
 import com.zbkj.crmeb.statistics.service.HomeService;
@@ -57,22 +58,11 @@ public class HomeServiceImpl implements HomeService {
 
 
         //日同比
-        int dayRate = Constants.NUM_ZERO;
-        if(!today.equals(BigDecimal.ZERO)){
-            dayRate = Constants.NUM_ONE_HUNDRED;
-        }
-        if(!yesterday.equals(BigDecimal.ZERO)){
-            dayRate = today.subtract(yesterday).divide(yesterday).multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue();
-        }
+        int dayRate = CrmebUtil.getRate(today, yesterday);
 
         //周同比
-        int weekRate = Constants.NUM_ZERO;
-        if(!week.equals(BigDecimal.ZERO)){
-            weekRate = Constants.NUM_ONE_HUNDRED;
-        }
-        if(!preWeek.equals(BigDecimal.ZERO)){
-            weekRate = week.subtract(preWeek).divide(preWeek).multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue();
-        }
+        int weekRate = CrmebUtil.getRate(week, preWeek);
+
 
         return new HomeRateResponse(yesterday, dayRate, weekRate, all);
     }
@@ -104,22 +94,11 @@ public class HomeServiceImpl implements HomeService {
 
 
         //日同比
-        int dayRate = Constants.NUM_ZERO;
-        if(today != Constants.NUM_ZERO){
-            dayRate = Constants.NUM_ONE_HUNDRED;
-        }
-        if(yesterday != Constants.NUM_ZERO){
-            dayRate = ((today - yesterday) / yesterday) * Constants.NUM_ONE_HUNDRED;
-        }
+        int dayRate = CrmebUtil.getRate(today, yesterday);
 
         //周同比
-        int weekRate = Constants.NUM_ZERO;
-        if(week != Constants.NUM_ZERO){
-            weekRate = Constants.NUM_ONE_HUNDRED;
-        }
-        if(preWeek != Constants.NUM_ZERO){
-            weekRate = ((weekRate - preWeek) / preWeek) * Constants.NUM_ONE_HUNDRED;
-        }
+        int weekRate = CrmebUtil.getRate(week, preWeek);
+
 
         return new HomeRateResponse(yesterday, dayRate, weekRate, all);
     }
@@ -151,22 +130,11 @@ public class HomeServiceImpl implements HomeService {
 
 
         //日同比
-        int dayRate = Constants.NUM_ZERO;
-        if(today != Constants.NUM_ZERO){
-            dayRate = Constants.NUM_ONE_HUNDRED;
-        }
-        if(yesterday != Constants.NUM_ZERO){
-            dayRate = ((today - yesterday) / yesterday) * Constants.NUM_ONE_HUNDRED;
-        }
+        int dayRate = CrmebUtil.getRate(today, yesterday);
 
         //周同比
-        int weekRate = Constants.NUM_ZERO;
-        if(week != Constants.NUM_ZERO){
-            weekRate = Constants.NUM_ONE_HUNDRED;
-        }
-        if(preWeek != Constants.NUM_ZERO){
-            weekRate = ((weekRate - preWeek) / preWeek) * Constants.NUM_ONE_HUNDRED;
-        }
+        int weekRate = CrmebUtil.getRate(week, preWeek);
+
 
         return new HomeRateResponse(yesterday, dayRate, weekRate, all);
     }

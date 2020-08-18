@@ -11,16 +11,23 @@ import com.zbkj.crmeb.authorization.manager.TokenManager;
 import com.zbkj.crmeb.authorization.model.TokenModel;
 import com.zbkj.crmeb.system.dao.SystemAdminDao;
 import com.zbkj.crmeb.system.model.SystemAdmin;
+import com.zbkj.crmeb.system.model.SystemRole;
 import com.zbkj.crmeb.system.request.SystemAdminAddRequest;
 import com.zbkj.crmeb.system.request.SystemAdminRequest;
+import com.zbkj.crmeb.system.request.SystemRoleSearchRequest;
 import com.zbkj.crmeb.system.response.SystemAdminResponse;
 import com.zbkj.crmeb.system.service.SystemAdminService;
+import com.zbkj.crmeb.system.service.SystemRoleService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
 * @author Mr.Zhang
@@ -33,12 +40,15 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
     @Resource
     private SystemAdminDao dao;
 
+    @Autowired
+    private SystemRoleService systemRoleService;
+
     @Resource
     private TokenManager tokenManager;
 
 
     @Override
-    public List<SystemAdmin> getList(SystemAdminRequest request, PageParamRequest pageParamRequest){
+    public List<SystemAdminResponse> getList(SystemAdminRequest request, PageParamRequest pageParamRequest){
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
 
         //带SystemAdminRequest类的多条件查询
@@ -76,7 +86,29 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         if(null != systemAdmin.getStatus()){
             lambdaQueryWrapper.eq(SystemAdmin::getStatus, systemAdmin.getStatus());
         }
-        return dao.selectList(lambdaQueryWrapper);
+        List<SystemAdmin> systemAdmins = dao.selectList(lambdaQueryWrapper);
+        List<SystemAdminResponse> systemAdminResponses = new ArrayList<>();
+        PageParamRequest pageRole = new PageParamRequest();
+        pageRole.setLimit(999);
+        List<SystemRole> roleList = systemRoleService.getList(new SystemRoleSearchRequest(), pageRole);
+//        for (SystemRole systemRole : roleList) {
+            for (SystemAdmin admin : systemAdmins) {
+                SystemAdminResponse sar = new SystemAdminResponse();
+                BeanUtils.copyProperties(admin, sar);
+                if(StringUtils.isBlank(admin.getRoles())) break;
+                List<Integer> roleIds = CrmebUtil.stringToArrayInt(admin.getRoles());
+                List<String> roleNames = new ArrayList<>();
+                for (Integer roleId : roleIds) {
+                    List<SystemRole> hasRoles = roleList.stream().filter(e -> e.getId() == roleId).collect(Collectors.toList());
+                    if(hasRoles.size()> 0){
+                        roleNames.add(hasRoles.stream().map(SystemRole::getRoleName).collect(Collectors.joining(",")));
+                    }
+                }
+                sar.setRoleNames(StringUtils.join(roleNames,","));
+                systemAdminResponses.add(sar);
+            }
+//        }
+        return systemAdminResponses;
     }
 
     @Override
@@ -156,16 +188,17 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
                 throw new CrmebException("管理员已存在");
             }
 
-            SystemAdminRequest systemAdminRequest = new SystemAdminRequest();
-            BeanUtils.copyProperties(systemAdminAddRequest, systemAdminRequest);
-
-            // 执行新增管理员操作
-            String pwd = CrmebUtil.encryptPassword(systemAdminAddRequest.getPwd(), systemAdminAddRequest.getAccount());
-            systemAdminAddRequest.setPwd(pwd);
             SystemAdmin systemAdmin = new SystemAdmin();
             BeanUtils.copyProperties(systemAdminAddRequest, systemAdmin);
+
+            // 执行新增管理员操作
+            String pwd = CrmebUtil.encryptPassword(systemAdmin.getPwd(), systemAdmin.getAccount());
+            systemAdminAddRequest.setPwd(pwd); // 设置为加密后的密码
             SystemAdminResponse systemAdminResponse = new SystemAdminResponse();
             BeanUtils.copyProperties(systemAdminAddRequest, systemAdminResponse);
+            if(dao.insert(systemAdmin) <= 0){
+                throw new CrmebException("新增管理员失败");
+            }
             return systemAdminResponse;
 
         }catch (Exception e){

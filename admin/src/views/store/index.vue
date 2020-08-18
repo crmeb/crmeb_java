@@ -277,6 +277,16 @@ export default {
 </script>
 
 <style scoped lang="scss">
+  .demo-table-expand{
+    /deep/ label{
+      width: 82px;
+    }
+  }
+  .demo-table-expand{
+    /deep/ .el-form-item__content{
+      width: 77%;
+    }
+  }
   .selWidth{
     width: 350px !important;
   }

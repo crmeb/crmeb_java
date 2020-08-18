@@ -31,12 +31,16 @@ public class SmsConstants {
     public static final String SMS_API_TEMP_LIST_URI = "sms/template";
     // 发送短信
     public static final String SMS_API_SEND_URI = "sms/send";
+    // 获取发送状态
+    public static final String SMS_API_SEND_STATUS = "sms/status";
 
     //接口异常错误码
     public static final Integer SMS_ERROR_CODE = 400;
 
     //短信发送队列key
     public static final String SMS_SEND_KEY = "sms_send_list";
+    // 发送短信后状态同步key
+    public static final String SMS_SEND_RESULT_KEY = "sms_send_result_list";
 
     // 短信模版配置开关常量
     public static final String SMS_CONFIG_VERIFICATION_CODE = "verificationCode";// 验证码
