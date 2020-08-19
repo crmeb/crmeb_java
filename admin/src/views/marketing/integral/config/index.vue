@@ -6,6 +6,7 @@
         :is-create="isCreate"
         :edit-data="editData"
         @submit="handlerSubmit"
+        v-if="isShow"
       />
     </el-card>
   </div>
@@ -19,6 +20,7 @@
     components: { zbParser },
     data() {
       return {
+        isShow: false,
         isCreate: 0,
         editData: {},
         formId: 109
@@ -43,7 +45,6 @@
           'sort': 0,
           'status': true
         }
-        console.log(_pram)
         configSaveForm(_pram).then(res => {
           this.getFormInfo()
           this.$message.success('操作成功')

@@ -177,6 +177,9 @@ public class Constants {
     public static final String CONFIG_KEY_ADMIN_LOGIN_LOGO = "login_logo"; //登录页LOGO
     public static final String CONFIG_KEY_ADMIN_LOGIN_BACKGROUND_IMAGE = "admin_login_bg_pic"; //登录页背景图
 
+    //分销
+    public static final String CONFIG_KEY_DISTRIBUTION_TYPE = "brokerageBindind";
+
 
     //config配置的formId
     public static final int CONFIG_FORM_ID_INDEX = 69; //首页配置
@@ -254,8 +257,13 @@ public class Constants {
     public static final int INDEX_HOT_BANNER = 2; //热门榜单推荐Banner图片
     public static final int INDEX_NEW_BANNER = 3; //首页首发新品推荐Banner图片
     public static final int INDEX_BENEFIT_BANNER = 4; //首页促销单品推荐Banner图片
-
     public static final int INDEX_LIMIT_DEFAULT = 3; //首页默认list分页条数
+
+    public static final String INDEX_BAST_LIMIT = "bastNumber"; //精品推荐个数
+    public static final String INDEX_FIRST_LIMIT = "firstNumber"; //首发新品个数
+    public static final String INDEX_SALES_LIMIT = "promotionNumber"; //促销单品个数
+    public static final String INDEX_HOT_LIMIT = "hotNumber"; //热门推荐个数
+
 
     //用户资金
     public static final String USER_BILL_CATEGORY_MONEY = "now_money"; //用户余额
@@ -275,9 +283,11 @@ public class Constants {
     public static final String USER_BILL_TYPE_PAY_PRODUCT_INTEGRAL_BACK = "pay_product_integral_back"; //商品退积分
     public static final String USER_BILL_TYPE_PAY_PRODUCT_REFUND = "pay_product_refund"; //商品退款
     public static final String USER_BILL_TYPE_RECHARGE = "recharge"; //佣金转入
+    public static final String USER_BILL_TYPE_PAY_RECHARGE = "pay_recharge"; //充值
     public static final String USER_BILL_TYPE_SHARE = "share"; //用户分享记录
     public static final String USER_BILL_TYPE_SIGN = "sign"; //签到
     public static final String USER_BILL_TYPE_ORDER = "order"; //订单
+    public static final String USER_BILL_TYPE_PAY_ORDER = "pay_order"; //订单支付
     public static final String USER_BILL_TYPE_SYSTEM_ADD = "system_add"; //系统增加
     public static final String USER_BILL_TYPE_SYSTEM_SUB = "system_sub"; //系统减少
 

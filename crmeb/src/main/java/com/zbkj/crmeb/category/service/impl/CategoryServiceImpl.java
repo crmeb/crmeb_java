@@ -341,5 +341,21 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
         objectQueryWrapper.like("path", "/"+pid+"/");
         return dao.selectList(objectQueryWrapper);
     }
+
+    /**
+     * 检测分类码是否存在
+     * @param name String 分类名
+     * @param type int 类型
+     * @author Mr.Zhang
+     * @since 2020-04-16
+     * @return int
+     */
+    @Override
+    public int checkName(String name, Integer type) {
+        LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(Category::getName, name)
+                .eq(Category::getType, type);
+        return dao.selectCount(lambdaQueryWrapper);
+    }
 }
 

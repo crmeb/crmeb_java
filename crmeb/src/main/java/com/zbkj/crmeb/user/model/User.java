@@ -72,6 +72,12 @@ public class User implements Serializable {
     @ApiModelProperty(value = "手机号码")
     private String phone;
 
+    @ApiModelProperty(value = "性别")
+    private int sex;
+
+    @ApiModelProperty(value = "国家")
+    private String country;
+
     @ApiModelProperty(value = "添加ip")
     private String addIp;
 

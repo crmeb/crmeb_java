@@ -65,7 +65,7 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
      */
     @Override
     public void async() {
-        String uploadType = systemConfigService.getValueByKeyException("upload_type");
+        String uploadType = systemConfigService.getValueByKeyException("uploadType");
         if(Integer.parseInt(uploadType) <= 1){
             //本地存储
             return;

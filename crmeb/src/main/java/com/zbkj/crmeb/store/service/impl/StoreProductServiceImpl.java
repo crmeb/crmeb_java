@@ -185,13 +185,14 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         //关键字搜索
         if(!StringUtils.isBlank(request.getKeywords())){
             lambdaQueryWrapper.and(i -> i
+                    .or().eq(StoreProduct::getId, request.getKeywords())
                     .or().like(StoreProduct::getStoreName, request.getKeywords())
                     .or().like(StoreProduct::getStoreInfo, request.getKeywords())
                     .or().like(StoreProduct::getKeyword, request.getKeywords())
                     .or().like(StoreProduct::getBarCode, request.getKeywords()));
         }
         if(StringUtils.isNotBlank(request.getCateId())){
-            lambdaQueryWrapper.eq(StoreProduct::getCateId, request.getCateId());
+            lambdaQueryWrapper.apply(CrmebUtil.getFindInSetSql("cate_id", request.getCateId()));
         }
         lambdaQueryWrapper.orderByDesc(StoreProduct::getSort).orderByDesc(StoreProduct::getId);
         List<StoreProduct> storeProducts = dao.selectList(lambdaQueryWrapper);

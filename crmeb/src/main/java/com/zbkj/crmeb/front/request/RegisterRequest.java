@@ -44,7 +44,8 @@ public class RegisterRequest implements Serializable {
     private String validateCode;
 
     @ApiModelProperty(value = "推广人id")
-    private Integer spread;
+    @JsonProperty(value = "spread_spid")
+    private Integer spread = 0;
 
 
 

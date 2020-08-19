@@ -65,7 +65,7 @@ public class UserBill implements Serializable {
     private String mark;
 
     @ApiModelProperty(value = "0 = 带确定 1 = 有效 -1 = 无效")
-    private int status;
+    private Integer status;
 
     @ApiModelProperty(value = "创建时间")
     private Date updateTime;

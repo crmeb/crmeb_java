@@ -3,8 +3,8 @@ package com.zbkj.crmeb.front.controller;
 import com.common.CommonResult;
 import com.zbkj.crmeb.front.response.LoginResponse;
 import com.zbkj.crmeb.front.service.UserCenterService;
+import com.zbkj.crmeb.user.request.RegisterThirdUserRequest;
 import com.zbkj.crmeb.wechat.model.TemplateMessage;
-import com.zbkj.crmeb.wechat.response.RegisterThirdUserRequest;
 import com.zbkj.crmeb.wechat.service.TemplateMessageService;
 import com.zbkj.crmeb.wechat.service.WeChatService;
 import io.swagger.annotations.Api;
@@ -55,8 +55,9 @@ public class WeChatController {
      */
     @ApiOperation(value = "微信登录公共号授权登录")
     @RequestMapping(value = "/authorize/login", method = RequestMethod.GET)
-    public CommonResult<LoginResponse> login(@RequestParam String code){
-        return CommonResult.success(userCenterService.weChatAuthorizeLogin(code));
+    public CommonResult<LoginResponse> login(@RequestParam(value = "spread_spid", defaultValue = "0", required = false) Integer spreadUid,
+                                             @RequestParam(value = "code") String code){
+        return CommonResult.success(userCenterService.weChatAuthorizeLogin(code, spreadUid));
     }
 
     /**
