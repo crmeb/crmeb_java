@@ -51,12 +51,12 @@
                     <el-form-item label="国家：">
                       <el-select v-model="userFrom.country" placeholder="请选择"  class="selWidth" clearable @on-change="changeCountry">
                         <el-option value="" label="全部"></el-option>
-                        <el-option value="domestic" label="中国"></el-option>
-                        <el-option value="abroad" label="外国"></el-option>
+                        <el-option value="CN" label="中国"></el-option>
+                        <el-option value="OTHER" label="其他"></el-option>
                       </el-select>
                     </el-form-item>
                   </el-col>
-                  <el-col v-bind="grid" v-if="userFrom.country ==='domestic'">
+                  <el-col v-bind="grid" v-if="userFrom.country ==='CN'">
                     <el-form-item label="省份：">
                       <el-cascader :options="addresData" :props="propsCity" v-model="address" @change="handleChange"  class="selWidth"></el-cascader>
                     </el-form-item>
@@ -69,13 +69,16 @@
                         <el-radio-button label="">
                           <span>全部</span>
                         </el-radio-button>
+                        <el-radio-button label="0">
+                          <span>未知</span>
+                        </el-radio-button>
                         <el-radio-button label="1">
                           <span>男</span>
                         </el-radio-button>
                         <el-radio-button label="2">
                           <span>女</span>
                         </el-radio-button>
-                        <el-radio-button label="0">
+                        <el-radio-button label="3">
                           <span>保密</span>
                         </el-radio-button>
                       </el-radio-group>
@@ -101,10 +104,10 @@
                   <el-col v-bind="grid">
                     <el-form-item label="访问情况：">
                       <el-select v-model="userFrom.accessType" placeholder="请选择"  class="selWidth" clearable>
-                        <el-option value="" label="全部"></el-option>
-                        <el-option value="visitno" label="时间段未访问"></el-option>
-                        <el-option value="visit" label="时间段访问过"></el-option>
-                        <el-option value="add_time" label="首次访问"></el-option>
+                        <el-option :value="0" label="全部"></el-option>
+                        <el-option :value="1" label="首次访问"></el-option>
+                        <el-option :value="2" label="时间段访问过"></el-option>
+                        <el-option :value="3" label="时间段未访问"></el-option>
                       </el-select>
                     </el-form-item>
                   </el-col>
@@ -180,7 +183,7 @@
                 <span>{{ props.row.createTime | filterEmpty }}</span>
               </el-form-item>
               <el-form-item label="近次访问：">
-                <span>{{ props.row.lastLoginTime | filterEmpty }}</span>
+                <span>{{ props.row.updateTime | filterEmpty }}</span>
               </el-form-item>
               <el-form-item label="身份证号：">
                 <span>{{ props.row.cardId | filterEmpty }}</span>
@@ -232,8 +235,14 @@
         >
           <template slot-scope="scope">
             <span>{{scope.row.nickname | filterEmpty}}</span>
-            <span></span>
-            <span></span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="性别"
+          min-width="60"
+        >
+          <template slot-scope="scope">
+            <span>{{scope.row.sex | sexFilter}}</span>
           </template>
         </el-table-column>
         <el-table-column
@@ -397,16 +406,17 @@
   export default {
     name: 'UserIndex',
     components:{ editFrom, userDetails },
-    // filters: {
-    //   typeFilter(status) {
-    //     const statusMap = {
-    //       'wechat': '微信用户',
-    //       'routine': '小程序用户',
-    //       'h5': 'H5用户'
-    //     }
-    //     return statusMap[status]
-    //   }
-    // },
+    filters: {
+      sexFilter(status) {
+        const statusMap = {
+          0: '未知',
+          1: '男',
+          2: '女',
+          3: '保密'
+        }
+        return statusMap[status]
+      }
+    },
     data() {
       return {
         pickerOptions: {
@@ -517,7 +527,7 @@
           isPromoter: '',
           country: '',
           payCount: '',
-          accessType: '',
+          accessType: 0,
           dateLimit: '',
           keywords: '',
           province: '',
@@ -583,7 +593,7 @@
             isPromoter: '',
             country: '',
             payCount: '',
-            accessType: '',
+            accessType: 0,
             dateLimit: '',
             keywords: '',
             province: '',
@@ -731,7 +741,7 @@
       },
       // 选择国家
       changeCountry () {
-        if (this.userFrom.country === 'abroad' || !this.userFrom.country) {
+        if (this.userFrom.country === 'OTHER' || !this.userFrom.country) {
           this.selectedData = [];
           this.userFrom.province = '';
           this.userFrom.city = '';

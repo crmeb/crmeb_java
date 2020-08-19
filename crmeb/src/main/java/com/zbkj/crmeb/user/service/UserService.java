@@ -14,12 +14,12 @@ import com.zbkj.crmeb.front.response.UserSpreadPeopleItemResponse;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.request.RetailShopStairUserRequest;
 import com.zbkj.crmeb.user.model.User;
+import com.zbkj.crmeb.user.request.RegisterThirdUserRequest;
 import com.zbkj.crmeb.user.request.UserOperateFundsRequest;
 import com.zbkj.crmeb.user.request.UserOperateIntegralMoneyRequest;
 import com.zbkj.crmeb.user.request.UserSearchRequest;
 import com.zbkj.crmeb.user.response.TopDetail;
 import com.zbkj.crmeb.user.response.UserResponse;
-import com.zbkj.crmeb.wechat.response.RegisterThirdUserRequest;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -133,4 +133,8 @@ public interface UserService extends IService<User> {
     Integer getCountByPayCount(int minPayCount, int maxPayCount);
 
     List<User> getUserByEntity(User user);
+
+    void consumeAfterUpdateUserFounds(Integer uid, BigDecimal price, String type);
+
+    void bindSpread(User user, Integer spreadPid);
 }

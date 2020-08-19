@@ -384,6 +384,7 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
     public List<UserSign> getListByCondition(UserSign sign, PageParamRequest pageParamRequest) {
         LambdaQueryWrapper<UserSign> lqw = new LambdaQueryWrapper<>();
         lqw.setEntity(sign);
+        lqw.orderByDesc(UserSign::getCreateTime);
         return dao.selectList(lqw);
     }
 }

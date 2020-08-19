@@ -31,12 +31,12 @@ import com.zbkj.crmeb.user.dao.UserDao;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserBill;
 import com.zbkj.crmeb.user.model.UserToken;
+import com.zbkj.crmeb.user.request.RegisterThirdUserRequest;
 import com.zbkj.crmeb.user.request.UserOperateFundsRequest;
 import com.zbkj.crmeb.user.service.UserAddressService;
 import com.zbkj.crmeb.user.service.UserBillService;
 import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.user.service.UserTokenService;
-import com.zbkj.crmeb.wechat.response.RegisterThirdUserRequest;
 import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginGetOpenIdResponse;
 import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginUserInfoResponse;
 import com.zbkj.crmeb.wechat.response.WeChatProgramAuthorizeLoginGetOpenIdResponse;
@@ -434,7 +434,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
      */
     @Override
     @Transactional(rollbackFor = {RuntimeException.class, Error.class, CrmebException.class})
-    public LoginResponse weChatAuthorizeLogin(String code) {
+    public LoginResponse weChatAuthorizeLogin(String code, Integer spreadUid) {
         try{
             WeChatAuthorizeLoginGetOpenIdResponse response = weChatService.authorizeLogin(code);
             User user = publicLogin(response.getOpenId(), response.getAccessToken());
@@ -442,6 +442,8 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             LoginResponse loginResponse = new LoginResponse();
             loginResponse.setToken(userService.token(user));
             user.setPwd(null);
+            //绑定推广关系
+            userService.bindSpread(user, spreadUid);
             loginResponse.setUser(user);
 
             return loginResponse;
@@ -482,6 +484,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
             //TODO 是否需要强制注册用户，1 强制注册，2 需要返回数据给前端，让其输入手机号和验证码
             User user = userService.registerByThird(registerThirdUserRequest, Constants.USER_LOGIN_TYPE_PUBLIC);
+
             userTokenService.bind(openId, Constants.THIRD_LOGIN_TOKEN_TYPE_PUBLIC, user.getUid());
             if(StringUtils.isNotBlank(unionId)) {
                 //有就绑定
@@ -526,6 +529,8 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             LoginResponse loginResponse = new LoginResponse();
             loginResponse.setToken(userService.token(user));
             user.setPwd(null);
+            //绑定推广关系
+            userService.bindSpread(user, request.getSpreadPid());
             loginResponse.setUser(user);
 
             return loginResponse;
@@ -705,6 +710,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
             //TODO 是否需要强制注册用户，1 强制注册，2 需要返回数据给前端，让其输入手机号和验证码
             User user = userService.registerByThird(request, Constants.USER_LOGIN_TYPE_PROGRAM);
+
             userTokenService.bind(openId, Constants.THIRD_LOGIN_TOKEN_TYPE_PROGRAM, user.getUid());
             if(StringUtils.isNotBlank(unionId)) {
                 //有就绑定

@@ -62,15 +62,9 @@ public class UserSearchRequest implements Serializable {
     @NotNull(message = "访问情况不能为空")
     private Integer accessType = 0;
 
-    @ApiModelProperty(value = "国家")
+    @ApiModelProperty(value = "国家，中国CN，其他OTHER")
     private String country;
 
-    @ApiModelProperty(value = "省份")
-    private String province;
-
-    @ApiModelProperty(value = "城市")
-    private String city;
-
-    @ApiModelProperty(value = "性别")
+    @ApiModelProperty(value = "性别，0未知，1男，2女，3保密")
     private String sex;
 }
