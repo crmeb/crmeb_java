@@ -46,7 +46,7 @@
               <i class="el-icon-warning-outline" />
             </el-tooltip>
           </span>
-          <el-input-number v-model="promoterForm.storeBrokerageRatio" :precision="2" :step="0.1" class="selWidth" placeholder="订单交易成功后给上级返佣的比例0 - 100,例:5 = 反订单金额的5%"></el-input-number>
+          <el-input-number v-model="promoterForm.storeBrokerageRatio" class="selWidth" placeholder="订单交易成功后给上级返佣的比例0 - 100,例:5 = 反订单金额的5%"></el-input-number>
           <span>%</span>
         </el-form-item>
         <el-form-item prop="storeBrokerageTwo">
@@ -56,7 +56,7 @@
               <i class="el-icon-warning-outline" />
             </el-tooltip>
           </span>
-          <el-input-number v-model="promoterForm.storeBrokerageTwo" :precision="2" :step="0.1" class="selWidth" placeholder="订单交易成功后给上级返佣的比例0 ~ 100,例:5 = 反订单金额的5%"></el-input-number>
+          <el-input-number v-model="promoterForm.storeBrokerageTwo" class="selWidth" placeholder="订单交易成功后给上级返佣的比例0 ~ 100,例:5 = 反订单金额的5%"></el-input-number>
           <span>%</span>
         </el-form-item>
         <el-form-item prop="userExtractMinPrice">
@@ -91,14 +91,14 @@
           </span>
           <el-input-number v-model="promoterForm.extractTime" :precision="2" :step="0.1" class="selWidth" placeholder="佣金冻结时间(天)"></el-input-number>
         </el-form-item>
-        <el-form-item prop="extension_two_rate">
+        <el-form-item prop="storeBrokeragePrice">
           <span slot="label">
             <span>满额分销最低金额：</span>
             <el-tooltip class="item" effect="dark" content="满额分销满足金额开通分销权限" placement="top-start">
               <i class="el-icon-warning-outline" />
             </el-tooltip>
           </span>
-          <el-input-number v-model="promoterForm.extension_two_rate" placeholder="满额分销满足金额开通分销权限" :precision="2" :step="0.1" class="selWidth"></el-input-number>
+          <el-input-number v-model="promoterForm.storeBrokeragePrice" placeholder="满额分销满足金额开通分销权限" :precision="2" :step="0.1" class="selWidth"></el-input-number>
         </el-form-item>
         <el-form-item>
           <el-button size="mini" type="primary" :loading="loading" @click="submitForm('promoterForm')">立即创建</el-button>
@@ -146,13 +146,14 @@
             this.loading = true
             configUpdateApi(this.promoterForm).then(res => {
               this.loading = false
-              this.$modalSure('提交成功，是否自动下架商户低于此佣金比例的商品').then(() => {
-                productCheckApi().then(({ message }) => {
-                  this.$message.success(message)
-                }).catch(({ message }) => {
-                  this.$message.error(message)
-                })
-              })
+              this.$message.success('提交成功')
+              // this.$modalSure('提交成功，是否自动下架商户低于此佣金比例的商品').then(() => {
+              //   productCheckApi().then(({ message }) => {
+              //     this.$message.success(message)
+              //   }).catch(({ message }) => {
+              //     this.$message.error(message)
+              //   })
+              // })
             }).catch((res) => {
               this.$message.error(res.message)
               this.loading = false

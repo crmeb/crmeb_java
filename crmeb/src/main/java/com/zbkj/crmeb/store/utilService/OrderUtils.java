@@ -254,6 +254,9 @@ public class OrderUtils {
         User currentUser = userService.getInfo();
 
         Integer offliePayStatus = Integer.valueOf(systemConfigService.getValueByKey("offline_pay_status"));
+
+        PriceGroupResponse currentOrderPriceGroup = getOrderPriceGroup(cor.getCartInfo(), null);
+
         List<String> exsitPayType = getPayType().stream().filter(e->{
             if(offliePayStatus == 2 && e == Constants.PAY_TYPE_OFFLINE){
                 return false;
@@ -276,7 +279,7 @@ public class OrderUtils {
             ua.setUid(currentUser.getUid());
             ua.setId(request.getAddressId());
             UserAddress currentUserAddress = userAddressService.getUserAddress(ua);
-            PriceGroupResponse currentOrderPriceGroup = getOrderPriceGroup(cor.getCartInfo(), currentUserAddress);
+            currentOrderPriceGroup = getOrderPriceGroup(cor.getCartInfo(), currentUserAddress);
             payPostage = currentOrderPriceGroup.getStorePostage();
         }
 
@@ -319,17 +322,22 @@ public class OrderUtils {
         // 积分
         if(null != request.getUseIntegral() && currentUser.getIntegral().compareTo(BigDecimal.ZERO) > 0){
             deductionPrice = currentUser.getIntegral().multiply(BigDecimal.valueOf(Double.valueOf(cor.getOther().get("integralRatio").toString())));
-            if(deductionPrice.compareTo(payPrice) < 0){
-                payPrice = payPrice.subtract(deductionPrice);
-                usedIntegral = currentUser.getIntegral();
-            }else{
-                deductionPrice = payPrice;
-                if(payPrice.compareTo(BigDecimal.ZERO) > 0 && usedIntegral.compareTo(BigDecimal.ZERO) > 0){
-                    usedIntegral = payPrice.divide(usedIntegral);
-                    surPlusIntegral = currentUser.getIntegral().subtract(usedIntegral);
+            if(request.getUseIntegral()){
+                if(deductionPrice.compareTo(payPrice) < 0){
+                    payPrice = payPrice.subtract(deductionPrice);
+                    usedIntegral = currentUser.getIntegral();
+                }else{
+                    deductionPrice = payPrice;
+                    if(payPrice.compareTo(BigDecimal.ZERO) > 0 && usedIntegral.compareTo(BigDecimal.ZERO) > 0){
+                        usedIntegral = payPrice.divide(usedIntegral);
+                        surPlusIntegral = currentUser.getIntegral().subtract(usedIntegral);
+                    }
+                    payPrice = BigDecimal.ZERO;
                 }
-                payPrice = BigDecimal.ZERO;
+            }else{
+                payPrice = currentOrderPriceGroup.getPayPrice();
             }
+
         }else{
             deductionPrice = BigDecimal.ZERO;
             usedIntegral = BigDecimal.ZERO;

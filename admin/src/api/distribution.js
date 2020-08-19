@@ -14,18 +14,7 @@ export function configApi() {
 /**
  * @description 分销设置 -- 表单提交
  */
-export function configUpdateApi(params) {
-  return request({
-    url: '/admin/marketing/coupon/list',
-    method: 'get',
-    params
-  })
-}
-
-/**
- * @description 分销设置 -- 表单提交
- */
-export function productCheckApi(data) {
+export function configUpdateApi(data) {
   return request({
     url: '/admin/store/retail/spread/manage/set',
     method: 'post',

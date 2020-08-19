@@ -750,4 +750,16 @@ public class CrmebUtil {
         Matcher matcher = pattern.matcher(str);
         return matcher.matches();
     }
+
+    //数组去重
+    public static List<Integer> arrayUnique(Integer[] arr){
+        List<Integer> list = new ArrayList<>();
+        for (Integer integer : arr) {
+            if (!list.contains(integer)) {
+                list.add(integer);
+            }
+        }
+
+        return list;
+    }
 }

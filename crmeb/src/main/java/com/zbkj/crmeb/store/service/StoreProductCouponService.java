@@ -1,9 +1,7 @@
 package com.zbkj.crmeb.store.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.common.PageParamRequest;
 import com.zbkj.crmeb.store.model.StoreProductCoupon;
-import com.zbkj.crmeb.store.request.StoreProductCouponSearchRequest;
 
 import java.util.List;
 
@@ -13,9 +11,6 @@ import java.util.List;
 * @date 2020-08-07
 */
 public interface StoreProductCouponService extends IService<StoreProductCoupon> {
-
-    List<StoreProductCoupon> getList(StoreProductCouponSearchRequest request, PageParamRequest pageParamRequest);
-
     /**
      * 根据产品id删除 优惠券关联信息
      * @param productId 产品id

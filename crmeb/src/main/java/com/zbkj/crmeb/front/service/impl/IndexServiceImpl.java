@@ -54,26 +54,39 @@ public class IndexServiceImpl implements IndexService {
 
         IndexProductBannerResponse indexProductBannerResponse = new IndexProductBannerResponse();
         IndexStoreProductSearchRequest request = new IndexStoreProductSearchRequest();
-        int gid = 0;
+        int gid;
+        String key;
         switch (type){
             case Constants.INDEX_RECOMMEND_BANNER: //精品推荐
                 gid = Constants.GROUP_DATA_ID_INDEX_RECOMMEND_BANNER;
+                key = Constants.INDEX_BAST_LIMIT;
                 request.setIsBest(true);
                 break;
             case Constants.INDEX_HOT_BANNER: //热门榜单
                 gid = Constants.GROUP_DATA_ID_INDEX_HOT_BANNER;
+                key = Constants.INDEX_HOT_LIMIT;
                 request.setIsHot(true);
                 break;
             case Constants.INDEX_NEW_BANNER: //首发新品
                 gid = Constants.GROUP_DATA_ID_INDEX_NEW_BANNER;
+                key = Constants.INDEX_FIRST_LIMIT;
                 request.setIsNew(true);
                 break;
             case Constants.INDEX_BENEFIT_BANNER: //促销单品
                 gid = Constants.GROUP_DATA_ID_INDEX_BENEFIT_BANNER;
+                key = Constants.INDEX_SALES_LIMIT;
                 request.setIsBenefit(true);
                 break;
             default:
                 return null;
+        }
+
+        if(StringUtils.isNotBlank(key)){
+            String num = systemConfigService.getValueByKey(Constants.INDEX_BAST_LIMIT);
+            if(pageParamRequest.getLimit() == 0){
+                //首页limit传0，则读取默认数据， 否则后台设置的首页配置不起作用
+                pageParamRequest.setLimit(Integer.parseInt(num));
+            }
         }
 
         indexProductBannerResponse.setBanner(systemGroupDataService.getListMapByGid(gid));

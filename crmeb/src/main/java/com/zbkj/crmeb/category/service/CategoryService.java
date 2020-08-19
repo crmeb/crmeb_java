@@ -36,4 +36,6 @@ public interface CategoryService extends IService<Category> {
     boolean update(CategoryRequest request, Integer id);
 
     List<Category> getChildVoListByPid(Integer pid);
+
+    int checkName(String name, Integer type);
 }
