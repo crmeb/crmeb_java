@@ -208,7 +208,7 @@ export default {
       })
     },
     handlerGetTreeList() {
-      const _pram = { type: constants.categoryType[5].value, status: -1 }
+      const _pram = { type: constants.categoryType[5].value, status: 1 }
       this.loading = true
       categoryApi.treeCategroy(_pram).then(data => {
         this.treeList = this.handleAddArrt(data)

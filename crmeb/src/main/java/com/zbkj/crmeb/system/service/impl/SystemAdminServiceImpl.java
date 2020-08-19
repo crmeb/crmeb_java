@@ -22,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -91,23 +90,21 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         PageParamRequest pageRole = new PageParamRequest();
         pageRole.setLimit(999);
         List<SystemRole> roleList = systemRoleService.getList(new SystemRoleSearchRequest(), pageRole);
-//        for (SystemRole systemRole : roleList) {
-            for (SystemAdmin admin : systemAdmins) {
-                SystemAdminResponse sar = new SystemAdminResponse();
-                BeanUtils.copyProperties(admin, sar);
-                if(StringUtils.isBlank(admin.getRoles())) break;
-                List<Integer> roleIds = CrmebUtil.stringToArrayInt(admin.getRoles());
-                List<String> roleNames = new ArrayList<>();
-                for (Integer roleId : roleIds) {
-                    List<SystemRole> hasRoles = roleList.stream().filter(e -> e.getId() == roleId).collect(Collectors.toList());
-                    if(hasRoles.size()> 0){
-                        roleNames.add(hasRoles.stream().map(SystemRole::getRoleName).collect(Collectors.joining(",")));
-                    }
+        for (SystemAdmin admin : systemAdmins) {
+            SystemAdminResponse sar = new SystemAdminResponse();
+            BeanUtils.copyProperties(admin, sar);
+            if(StringUtils.isBlank(admin.getRoles())) continue;
+            List<Integer> roleIds = CrmebUtil.stringToArrayInt(admin.getRoles());
+            List<String> roleNames = new ArrayList<>();
+            for (Integer roleId : roleIds) {
+                List<SystemRole> hasRoles = roleList.stream().filter(e -> e.getId().equals(roleId)).collect(Collectors.toList());
+                if(hasRoles.size()> 0){
+                    roleNames.add(hasRoles.stream().map(SystemRole::getRoleName).collect(Collectors.joining(",")));
                 }
-                sar.setRoleNames(StringUtils.join(roleNames,","));
-                systemAdminResponses.add(sar);
             }
-//        }
+            sar.setRoleNames(StringUtils.join(roleNames,","));
+            systemAdminResponses.add(sar);
+        }
         return systemAdminResponses;
     }
 

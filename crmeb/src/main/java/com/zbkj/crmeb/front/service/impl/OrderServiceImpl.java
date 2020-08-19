@@ -37,7 +37,6 @@ import com.zbkj.crmeb.user.model.UserAddress;
 import com.zbkj.crmeb.user.service.UserAddressService;
 import com.zbkj.crmeb.user.service.UserService;
 import org.apache.commons.lang3.StringUtils;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.STPageOrder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -139,7 +138,7 @@ public class OrderServiceImpl implements OrderService {
         // other
         HashMap<String, Object> otherMap = new HashMap<>();
         otherMap.put("offlinePostage",systemConfigService.getValueByKey("offline_postage"));
-        otherMap.put("integralRatio",systemConfigService.getValueByKey("integralRatio"));
+        otherMap.put("integralRatio",systemConfigService.getValueByKey("integral_ratio"));
 
         // 获取有效优惠券
         List<StoreCouponUserResponse> canUseUseCouponList = orderUtils.getCanUseCouponList(storeCartResponse);
@@ -358,8 +357,8 @@ public class OrderServiceImpl implements OrderService {
         existStoreOrder.setRefundReasonTime(DateUtil.nowDateTime());
         existStoreOrder.setRefundReasonWap(request.getText());
         existStoreOrder.setRefundReasonWapExplain(request.getRefund_reason_wap_explain());
-        existStoreOrder.setRefundReasonWapImg(request.getRefund_reason_wap_img());
-        boolean updateOrderResult = storeOrderService.updateByEntity(existStoreOrder);
+        existStoreOrder.setRefundReasonWapImg(systemAttachmentService.clearPrefix(request.getRefund_reason_wap_img()));
+        boolean updateOrderResult = storeOrderService.updateById(existStoreOrder);
         if(!updateOrderResult) throw new CrmebException("申请退款失败");
 
         HashMap<String, Object> smsInfo = new HashMap<>();
@@ -455,21 +454,21 @@ public class OrderServiceImpl implements OrderService {
         }
         // todo 营销活动 二期
         // if(existStoreOrder.getPinkId()>0)
-        if(request.getFrom().equals(Constants.PAY_TYPE_WE_CHAT)){
-            if(existStoreOrder.getIsChannel() == 1 || existStoreOrder.getIsChannel() == 2){
-                existStoreOrder.setOrderId(CrmebUtil.randomCount(100,999)+existStoreOrder.getOrderId());
-            }
-        }
-        if(request.getFrom().equals(Constants.PAY_TYPE_WE_CHAT_FROM_H5)){
-            if(existStoreOrder.getIsChannel() == 0 || existStoreOrder.getIsChannel() == 1){
-                existStoreOrder.setOrderId(CrmebUtil.randomCount(100,999)+existStoreOrder.getOrderId());
-            }
-        }
-        if(request.getFrom().equals(Constants.PAY_TYPE_WE_CHAT_FROM_PROGRAM)){
-            if(existStoreOrder.getIsChannel() == 0 || existStoreOrder.getIsChannel() == 2){
-                existStoreOrder.setOrderId(CrmebUtil.randomCount(100,999)+existStoreOrder.getOrderId());
-            }
-        }
+//        if(request.getFrom().equals(Constants.PAY_TYPE_WE_CHAT)){
+//            if(existStoreOrder.getIsChannel() == 1 || existStoreOrder.getIsChannel() == 2){
+//                existStoreOrder.setOrderId(CrmebUtil.randomCount(100,999)+existStoreOrder.getOrderId());
+//            }
+//        }
+//        if(request.getFrom().equals(Constants.PAY_TYPE_WE_CHAT_FROM_H5)){
+//            if(existStoreOrder.getIsChannel() == 0 || existStoreOrder.getIsChannel() == 1){
+//                existStoreOrder.setOrderId(CrmebUtil.randomCount(100,999)+existStoreOrder.getOrderId());
+//            }
+//        }
+//        if(request.getFrom().equals(Constants.PAY_TYPE_WE_CHAT_FROM_PROGRAM)){
+//            if(existStoreOrder.getIsChannel() == 0 || existStoreOrder.getIsChannel() == 2){
+//                existStoreOrder.setOrderId(CrmebUtil.randomCount(100,999)+existStoreOrder.getOrderId());
+//            }
+//        }
         // 支付
         if (doPayOrder(request, ip, resultMap, existStoreOrder)) return resultMap;
         throw new CrmebException("支付方式错误");
@@ -616,12 +615,10 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public List<String> getRefundReason(){
-        List<String> result = new ArrayList<>();
         String reasonString = systemConfigService.getValueByKey("stor_reason");
         reasonString = CrmebUtil.UnicodeToCN(reasonString);
         reasonString = reasonString.replace("rn", "n");
-        result.addAll(Arrays.asList(reasonString.split("n")));
-        return result;
+        return Arrays.asList(reasonString.split("\\n"));
     }
 
     /**
@@ -744,7 +741,7 @@ public class OrderServiceImpl implements OrderService {
         StoreOrder existOrder = storeOrderService.getByEntityOne(storeOrderPram);
         if(null == existOrder) throw new CrmebException("未找到订单信息");
         existOrder.setPayType(payType);
-        return storeOrderService.updateByEntity(existOrder);
+        return storeOrderService.updateById(existOrder);
     }
 
     ///////////////////////////////////////////////////////////////////// 自定义方法

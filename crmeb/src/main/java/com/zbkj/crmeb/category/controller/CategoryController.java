@@ -64,6 +64,12 @@ import java.util.List;
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     public CommonResult<String> save(@Validated CategoryRequest categoryRequest){
         Category category = new Category();
+
+        //检测标题是否存在
+        if(categoryService.checkName(categoryRequest.getName(), category.getType()) > 0){
+            throw new CrmebException("此分类已存在");
+        }
+
         BeanUtils.copyProperties(categoryRequest, category);
         category.setPath(categoryService.getPathByPId(category.getPid()));
         category.setExtra(systemAttachmentService.clearPrefix(category.getExtra()));

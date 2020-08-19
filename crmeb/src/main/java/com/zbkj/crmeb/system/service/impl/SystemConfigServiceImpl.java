@@ -2,17 +2,16 @@ package com.zbkj.crmeb.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
-import com.constants.Constants;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
-import com.zbkj.crmeb.system.model.SystemConfig;
 import com.zbkj.crmeb.system.dao.SystemConfigDao;
+import com.zbkj.crmeb.system.model.SystemConfig;
 import com.zbkj.crmeb.system.request.SystemFormCheckRequest;
 import com.zbkj.crmeb.system.request.SystemFormItemCheckRequest;
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import com.zbkj.crmeb.system.service.SystemConfigService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.crmeb.system.service.SystemFormTempService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,8 +129,24 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
                 eq(SystemConfig::getName, name);
 
         SystemConfig systemConfig = dao.selectOne(lambdaQueryWrapper);
+        if(null == systemConfig){
+            throw new CrmebException("没有找到"+ name +"数据");
+        }
+
         if(StringUtils.isBlank(systemConfig.getValue())){
             throw new CrmebException("配置项 " + systemConfig.getTitle() + " 没有配置， 请配置！");
+        }
+        return systemConfig.getValue();
+    }
+
+    @Override
+    public String getValueByKeyNotStatus(String key) {
+        LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.select(SystemConfig::getValue).eq(SystemConfig::getName, key);
+
+        SystemConfig systemConfig = dao.selectOne(lambdaQueryWrapper);
+        if(StringUtils.isBlank(systemConfig.getValue())){
+            systemConfig.setValue(null);
         }
         return systemConfig.getValue();
     }
@@ -151,11 +166,18 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         //修改之前的数据
         updateStatusByFormId(systemFormCheckRequest.getId());
         List<SystemConfig> systemConfigList = new ArrayList<>();
+
         //批量添加
         for (SystemFormItemCheckRequest systemFormItemCheckRequest : systemFormCheckRequest.getFields()) {
             SystemConfig systemConfig = new SystemConfig();
             systemConfig.setName(systemFormItemCheckRequest.getName());
-            systemConfig.setValue(systemAttachmentService.clearPrefix(systemFormItemCheckRequest.getValue()));
+
+            String value = systemAttachmentService.clearPrefix(systemFormItemCheckRequest.getValue());
+            if(StringUtils.isBlank(value)){
+                //去掉图片域名之后没有数据则说明当前数据就是图片域名
+                value = systemFormItemCheckRequest.getValue();
+            }
+            systemConfig.setValue(value);
             systemConfig.setFormId(systemFormCheckRequest.getId());
             systemConfig.setTitle(systemFormItemCheckRequest.getTitle());
             systemConfigList.add(systemConfig);

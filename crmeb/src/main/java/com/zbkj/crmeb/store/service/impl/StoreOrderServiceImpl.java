@@ -1157,7 +1157,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         storeOrderUpdate.setPaid(true);
         storeOrderUpdate.setPayType(storeOrder.getPayType());
         storeOrderUpdate.setPayTime(new Date());
-        boolean orderUpdate2PayResult = updateByEntity(storeOrderUpdate);
+        boolean orderUpdate2PayResult = updateById(storeOrderUpdate);
         StoreOrderStatus storeOrderStatus = new StoreOrderStatus();
         storeOrderStatus.setOid(storeOrderUpdate.getId());
         storeOrderStatus.setChangeType(Constants.ORDER_LOG_PAY_SUCCESS);
@@ -1166,13 +1166,13 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         UserBill userBill = new UserBill();
         userBill.setTitle("购买商品");
         userBill.setUid(currentUser.getUid());
-        userBill.setCategory("nowMoney");
+        userBill.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
         userBill.setType(Constants.USER_BILL_TYPE_PAY_MONEY);
         userBill.setNumber(storeOrder.getPayPrice());
         userBill.setLinkId(storeOrder.getId()+"");
         userBill.setBalance(currentUser.getNowMoney());
         userBill.setMark("支付" + storeOrder.getPayPrice() + "元购买商品");
-        boolean saveUserbillResult = userBillService.save(userBill);
+        userBillService.save(userBill);
         userService.userPayCountPlus(currentUser);
         return orderUpdate2PayResult;
     }

@@ -41,6 +41,7 @@ import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserBill;
 import com.zbkj.crmeb.user.model.UserLevel;
 import com.zbkj.crmeb.user.model.UserSign;
+import com.zbkj.crmeb.user.request.RegisterThirdUserRequest;
 import com.zbkj.crmeb.user.request.UserOperateFundsRequest;
 import com.zbkj.crmeb.user.request.UserOperateIntegralMoneyRequest;
 import com.zbkj.crmeb.user.request.UserSearchRequest;
@@ -48,7 +49,6 @@ import com.zbkj.crmeb.user.response.TopDetail;
 import com.zbkj.crmeb.user.response.UserResponse;
 import com.zbkj.crmeb.user.service.*;
 import com.zbkj.crmeb.user.vo.UserOperateFundsVo;
-import com.zbkj.crmeb.wechat.response.RegisterThirdUserRequest;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -143,10 +143,17 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             lambdaQueryWrapper.eq(User::getUserType, request.getUserType());
         }
 
+        if(StringUtils.isNotBlank(request.getSex())){
+            lambdaQueryWrapper.eq(User::getSex, request.getSex());
+        }
+
+        if(StringUtils.isNotBlank(request.getCountry())){
+            lambdaQueryWrapper.eq(User::getCountry, request.getCountry());
+        }
+
         if(request.getStatus() != null){
             lambdaQueryWrapper.eq(User::getStatus, request.getStatus());
         }
-
 
         dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getData());
 
@@ -427,6 +434,10 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         //生成token
         LoginResponse loginResponse = new LoginResponse();
         loginResponse.setToken(token(user));
+
+        //绑定推广关系
+        bindSpread(user, request.getSpread());
+
         loginResponse.setUser(user);
         long time = Constants.TOKEN_EXPRESS_MINUTES * 60;
 
@@ -460,8 +471,8 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         loginResponse.setToken(token(user));
         user.setPwd(null);
 
-        //TODO 看分销类型
-
+        //绑定推广关系
+        bindSpread(user, request.getSpreadPid());
 
         loginResponse.setUser(user);
 
@@ -801,7 +812,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
                 tagIdValue = user.getTagId() + tagIdValue;
             }
             //清除已经删除或者去掉的id
-            tagIdValue = userGroupService.clean(tagIdValue);
+            tagIdValue = userTagService.clean(tagIdValue);
             if(StringUtils.isBlank(tagIdValue)){
                 continue;
             }
@@ -980,7 +991,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
                 break;
         }
 
-        return Constants.USER_BILL_OPERATE_LOG_TITLE.replace("{title}", request.getTitle()).replace("{$operate}", operate).replace("{$founds}", founds);
+        return Constants.USER_BILL_OPERATE_LOG_TITLE.replace("{$title}", request.getTitle()).replace("{$operate}", operate).replace("{$founds}", founds);
     }
 
 
@@ -1162,6 +1173,8 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         user.setNickname(thirdUserRequest.getNickName());
         user.setAvatar(thirdUserRequest.getAvatar());
         user.setSpreadUid(thirdUserRequest.getSpreadPid());
+        user.setSpreadTime(DateUtil.nowDateTime());
+        user.setSex(Integer.parseInt(thirdUserRequest.getSex()));
         user.setAddres(thirdUserRequest.getCountry() + "," + thirdUserRequest.getProvince() + "," + thirdUserRequest.getCity());
         save(user);
         return user;
@@ -1393,5 +1406,65 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.setEntity(user);
         return userDao.selectList(lambdaUpdateWrapper);
+    }
+
+    /**
+     * 消费金钱之后增加经验和积分
+     * @param uid Integer 用户id
+     * @param price BigDecimal 实际支付金额
+     * @return void
+     */
+    @Override
+    public void consumeAfterUpdateUserFounds(Integer uid, BigDecimal price, String type) {
+        //赠送积分比例
+        String integralStr = systemConfigService.getValueByKey(Constants.CONFIG_KEY_INTEGRAL_RATE);
+        BigDecimal integral = new BigDecimal(integralStr);
+
+        //更新用户积分信息
+        UserOperateFundsRequest founds = new UserOperateFundsRequest();
+        founds.setFoundsType(type);
+        founds.setTitle(Constants.ORDER_LOG_MESSAGE_PAY_SUCCESS);
+
+        founds.setUid(uid);
+        founds.setFoundsCategory(Constants.USER_BILL_CATEGORY_INTEGRAL);
+        founds.setType(1);
+
+        //参考 CrmebUtil getRate说明
+        founds.setValue(integral.multiply(price).setScale(0, BigDecimal.ROUND_DOWN));
+        updateFounds(founds, true);
+
+        //更新用户经验信息
+        founds.setUid(uid);
+        founds.setFoundsCategory(Constants.USER_BILL_CATEGORY_EXPERIENCE);
+        founds.setType(1);
+        founds.setValue(price.setScale(0, BigDecimal.ROUND_DOWN));
+        updateFounds(founds, true);
+    }
+
+    /**
+     * 绑定分销关系
+     * @param user User 用户user类
+     * @param spreadUid Integer 推广人id
+     * @return void
+     */
+    @Override
+    public void bindSpread(User user, Integer spreadUid) {
+        //新用户会在注册的时候单独绑定，此处只处理登录用户
+        if(spreadUid == 0){
+            return;
+        }
+        //如果当前用户没有绑定，并且后台配置人人分销，那么需要邦迪
+        if(user.getSpreadUid() > 0){
+            return;
+        }
+
+        String distribution = systemConfigService.getValueByKey(Constants.CONFIG_KEY_DISTRIBUTION_TYPE);
+
+        //人人分销 + 当前已绑定的id和推广人id不一样
+        if(distribution.equals("0") && !user.getSpreadUid().equals(spreadUid)){
+            user.setSpreadUid(spreadUid);
+            user.setSpreadTime(DateUtil.nowDateTime());
+        }
+        updateById(user);
     }
 }

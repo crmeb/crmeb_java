@@ -36,7 +36,9 @@ public interface SystemConfigService extends IService<SystemConfig> {
 
     boolean updateOrSaveValueByName(String name, String value);
 
-    String getValueByKeyException(String uploadUrl);
+    String getValueByKeyException(String key);
+
+    String getValueByKeyNotStatus(String key);
 
     boolean saveForm(SystemFormCheckRequest systemFormCheckRequest);
 
