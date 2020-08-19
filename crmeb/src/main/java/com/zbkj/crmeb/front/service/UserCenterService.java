@@ -10,7 +10,7 @@ import com.zbkj.crmeb.front.response.*;
 import com.zbkj.crmeb.system.model.SystemUserLevel;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserBill;
-import com.zbkj.crmeb.wechat.response.RegisterThirdUserRequest;
+import com.zbkj.crmeb.user.request.RegisterThirdUserRequest;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -48,7 +48,7 @@ public interface UserCenterService extends IService<User> {
 
     UserRechargePaymentResponse recharge(UserRechargeRequest request);
 
-    LoginResponse weChatAuthorizeLogin(String code);
+    LoginResponse weChatAuthorizeLogin(String code, Integer spreadUid);
 
     String getLogo();
 

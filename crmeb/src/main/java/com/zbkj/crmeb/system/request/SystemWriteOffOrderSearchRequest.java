@@ -1,6 +1,5 @@
 package com.zbkj.crmeb.system.request;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -11,12 +10,11 @@ import java.io.Serializable;
 
 /**
  * <p>
- * 微信用户表
+ * 核销
  * </p>
  *
  * @author Mr.Zhang
- * @since 2020-04-11
- */
+ * @since 2020-*/
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)

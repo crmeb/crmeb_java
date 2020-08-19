@@ -89,6 +89,7 @@ public class AsyncServiceImpl implements AsyncService {
                     setConf(type);
                     cos(systemAttachmentList);
                 default:
+                    pre = "local";
                     break;
             }
         }catch (Exception e){
@@ -97,14 +98,13 @@ public class AsyncServiceImpl implements AsyncService {
     }
 
     private void setConf(Integer uploadType) {
-
-//        if(uploadType > 1){
-            cloudVo.setDomain(systemConfigService.getValueByKeyException(pre+"UploadUrl"));
+        cloudVo.setDomain(systemConfigService.getValueByKeyException(pre+"UploadUrl"));
+        if(uploadType > 1){
             cloudVo.setAccessKey(systemConfigService.getValueByKeyException(pre+"AccessKey"));
             cloudVo.setSecretKey(systemConfigService.getValueByKeyException(pre+"SecretKey"));
             cloudVo.setBucketName(systemConfigService.getValueByKeyException(pre+"StorageName"));
             cloudVo.setRegion(systemConfigService.getValueByKeyException(pre+"StorageRegion"));
-//        }
+        }
     }
 
     /**
@@ -231,7 +231,7 @@ public class AsyncServiceImpl implements AsyncService {
                 break;
         }
 
-        return systemConfigService.getValueByKeyException(pre+"UploadUrl");
+        return systemConfigService.getValueByKeyNotStatus(pre+"UploadUrl");
     }
 }
 

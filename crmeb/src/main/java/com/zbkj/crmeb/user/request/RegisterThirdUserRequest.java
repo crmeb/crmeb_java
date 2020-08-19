@@ -1,4 +1,4 @@
-package com.zbkj.crmeb.wechat.response;
+package com.zbkj.crmeb.user.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;

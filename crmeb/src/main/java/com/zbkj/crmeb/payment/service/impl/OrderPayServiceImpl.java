@@ -218,6 +218,17 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
 
         // 更新用户下单数量
         updateUserPayCount();
+
+        //增加经验、积分
+        updateFounds();
+
+    }
+
+    /**
+     * 更新用户积分经验
+     */
+    private void updateFounds() {
+        userService.consumeAfterUpdateUserFounds(getOrder().getUid(), getOrder().getPayPrice(), Constants.USER_BILL_TYPE_PAY_ORDER);
     }
 
     /**

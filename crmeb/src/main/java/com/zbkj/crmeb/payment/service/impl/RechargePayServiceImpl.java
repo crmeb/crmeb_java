@@ -167,6 +167,9 @@ public class RechargePayServiceImpl extends PayService implements RechargePaySer
             getUserRecharge().setPayTime(DateUtil.nowDateTime());
             userRechargeService.updateById(getUserRecharge());
 
+            //增加经验、积分
+            userService.consumeAfterUpdateUserFounds(getUserRecharge().getUid(), getUserRecharge().getPrice(), Constants.USER_BILL_TYPE_PAY_RECHARGE);
+
             //下发模板通知
             pushTempMessage();
 

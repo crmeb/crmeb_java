@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.exception.CrmebException;
+import com.utils.CrmebUtil;
 import com.zbkj.crmeb.front.request.UserCollectAllRequest;
 import com.zbkj.crmeb.front.request.UserCollectRequest;
 import com.zbkj.crmeb.store.dao.StoreProductRelationDao;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -118,15 +120,18 @@ public class StoreProductRelationServiceImpl extends ServiceImpl<StoreProductRel
      */
     @Override
     public boolean all(UserCollectAllRequest request) {
-        if(request.getProductId().length < 1){
+        Integer[] arr = request.getProductId();
+        if(arr.length < 1){
             throw new CrmebException("请选择产品");
         }
 
+        List<Integer> list = CrmebUtil.arrayUnique(arr);
+
         Integer uid = userService.getUserIdException();
-        deleteAll(request);  //先删除所有已存在的
+        deleteAll(request, uid, "collect");  //先删除所有已存在的
 
         ArrayList<StoreProductRelation> storeProductRelationList = new ArrayList<>();
-        for (Integer productId: request.getProductId()) {
+        for (Integer productId: list) {
             StoreProductRelation storeProductRelation = new StoreProductRelation();
             storeProductRelation.setUid(uid);
             storeProductRelation.setType("collect");
@@ -158,10 +163,12 @@ public class StoreProductRelationServiceImpl extends ServiceImpl<StoreProductRel
      * @author Mr.Zhang
      * @since 2020-05-06
      */
-    private void deleteAll(UserCollectAllRequest request) {
+    private void deleteAll(UserCollectAllRequest request, Integer uid, String type) {
         LambdaQueryWrapper<StoreProductRelation> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.in(StoreProductRelation::getProductId, (Object) request.getProductId()).
-                eq(StoreProductRelation::getCategory, request.getCategory());
+        lambdaQueryWrapper.in(StoreProductRelation::getProductId, Arrays.asList(request.getProductId()))
+                .eq(StoreProductRelation::getCategory, request.getCategory())
+                .eq(StoreProductRelation::getUid, uid)
+                .eq(StoreProductRelation::getType, type);
         dao.delete(lambdaQueryWrapper);
     }
 

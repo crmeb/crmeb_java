@@ -52,6 +52,12 @@ public class UserResponse {
     @ApiModelProperty(value = "用户头像")
     private String avatar;
 
+    @ApiModelProperty(value = "性别")
+    private int sex;
+
+    @ApiModelProperty(value = "国家")
+    private String country;
+
     @ApiModelProperty(value = "手机号码")
     private String phone;
 
@@ -112,7 +118,7 @@ public class UserResponse {
     @ApiModelProperty(value = "用户登陆类型，h5,wechat,routine")
     private String loginType;
 
-    @ApiModelProperty(value = "创建时间")
+    @ApiModelProperty(value = "更新时间")
     private Date updateTime;
 
     @ApiModelProperty(value = "创建时间")
