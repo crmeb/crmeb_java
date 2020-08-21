@@ -177,6 +177,11 @@ json渲染表单以及是否需要编辑数据回填的功能以下为例
 ## 后台账号 demo  密码 crmeb.com， 请大家不要随意改密码！
 #### 请大家不要随意改密码！请大家不要随意改密码！请大家不要随意改密码！
 
+请关注我们
+
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0821/181709_88924490_2012975.png "屏幕截图.png")
+
+
 ## 参与开发
 
 请参阅 [CRMEB](https://github.com/crmeb/crmeb_java)。

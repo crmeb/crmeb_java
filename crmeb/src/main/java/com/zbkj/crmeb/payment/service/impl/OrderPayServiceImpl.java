@@ -222,7 +222,6 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
 
         //增加经验、积分
         updateFounds();
-
     }
 
     /**

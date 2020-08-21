@@ -55,4 +55,10 @@ public class StoreProductReplyAddRequest implements Serializable {
 
     @ApiModelProperty(value = "评论图片", required = true)
     private String pics;
+
+    @ApiModelProperty(value = "评论人头像 [虚拟评论参数]")
+    private String avatar;
+
+    @ApiModelProperty(value = "评论人昵称 [虚拟评论参数]")
+    private String nickname;
 }
