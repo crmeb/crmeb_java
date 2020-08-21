@@ -69,7 +69,7 @@
             },
             // 物流公司列表
             getList () {
-              expressList({ page: 1, limit: 999, isShow:true }).then(async res => {
+              expressList({ page: 1, limit: 999, isShow:1 }).then(async res => {
                     this.express = res.list
                 })
             },

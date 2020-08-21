@@ -1172,7 +1172,12 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         userBill.setLinkId(storeOrder.getId()+"");
         userBill.setBalance(currentUser.getNowMoney());
         userBill.setMark("支付" + storeOrder.getPayPrice() + "元购买商品");
-        userBillService.save(userBill);
+        boolean saveUserbillResult = userBillService.save(userBill);
+        if(storeOrder.getUseIntegral() > 0){
+            BigDecimal useIntegral = BigDecimal.valueOf(storeOrder.getUseIntegral(),0);
+            currentUser.setIntegral(currentUser.getIntegral().subtract(useIntegral));
+            userService.updateBase(currentUser);
+        }
         userService.userPayCountPlus(currentUser);
         return orderUpdate2PayResult;
     }

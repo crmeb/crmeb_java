@@ -76,11 +76,14 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         lambdaQueryWrapper.eq(SystemConfig::getStatus, false);
 
         SystemConfig systemConfig = dao.selectOne(lambdaQueryWrapper);
-        if(StringUtils.isBlank(systemConfig.getValue())){
-            systemConfig.setValue(null);
+
+        String value = null;
+        if(null != systemConfig && StringUtils.isNotBlank(systemConfig.getValue())){
+            value = systemConfig.getValue();
         }
-        return systemConfig.getValue();
+        return value;
     }
+
 
     /**
      * 根据key更新值

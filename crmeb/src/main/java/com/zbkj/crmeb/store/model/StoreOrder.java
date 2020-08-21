@@ -126,13 +126,13 @@ public class StoreOrder implements Serializable {
     private String deliveryId;
 
     @ApiModelProperty(value = "消费赚取积分")
-    private BigDecimal gainIntegral;
+    private Integer gainIntegral;
 
     @ApiModelProperty(value = "使用积分")
-    private BigDecimal useIntegral;
+    private Integer useIntegral;
 
     @ApiModelProperty(value = "给用户退了多少积分")
-    private BigDecimal backIntegral;
+    private Integer backIntegral;
 
     @ApiModelProperty(value = "备注")
     private String mark;

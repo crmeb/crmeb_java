@@ -6,6 +6,7 @@ import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.zbkj.crmeb.marketing.service.StoreCouponUserService;
 import com.zbkj.crmeb.store.model.StoreOrder;
+import com.zbkj.crmeb.store.model.StoreProduct;
 import com.zbkj.crmeb.store.request.StoreProductStockRequest;
 import com.zbkj.crmeb.store.service.*;
 import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
 * @author Mr.Zhang
@@ -78,10 +80,8 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             //回滚优惠券
             rollbackCoupon(storeOrder);
 
-            //回滚库存
+            // 回滚积分
             rollbackIntegral(storeOrder);
-
-            //回滚积分
             setIntegral(storeOrder, 1); //单独回滚使用积分
 
             return rollbackStock(storeOrder);
@@ -118,6 +118,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
 
             //回滚经验
             rollbackExp(storeOrder);
+            rollbackStock(storeOrder);
             return true;
         }catch (Exception e){
             return false;
@@ -169,6 +170,9 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             //获得赠送积分
             setIntegral(storeOrder, 1);
 
+            // 获取商品额外赠送的积分
+            setGiveIntegral(storeOrder);
+
             //获得赠送经验
             setExp(storeOrder, 1);
 
@@ -209,11 +213,11 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
      */
     private void setIntegral(StoreOrder storeOrder, int type) {
         try {
-            if(storeOrder.getUseIntegral().compareTo(BigDecimal.ZERO) < 1){
+            if(storeOrder.getUseIntegral() < 1){
                 return;
             }
             UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
-            userOperateFundsRequest.setValue(storeOrder.getUseIntegral());
+            userOperateFundsRequest.setValue(BigDecimal.valueOf(storeOrder.getUseIntegral()));
             userOperateFundsRequest.setFoundsType(Constants.ORDER_STATUS_STR_BARGAIN);
             userOperateFundsRequest.setUid(storeOrder.getUid());
             userOperateFundsRequest.setTitle(Constants.ORDER_STATUS_STR_TAKE);
@@ -222,6 +226,25 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             userService.updateFounds(userOperateFundsRequest, true);
         }catch (Exception e){
             throw new CrmebException("更新积分失败" + e.getMessage());
+        }
+    }
+
+    // 获取额外赠送积分
+    private void setGiveIntegral(StoreOrder storeOrder){
+        // 获取商品额外赠送积分
+        List<StoreOrderInfoVo> orderInfoList = storeOrderInfoService.getOrderListByOrderId(storeOrder.getId());
+        List<Integer> productIds = orderInfoList.stream().map(StoreOrderInfoVo::getProductId).collect(Collectors.toList());
+        if(productIds.size() > 0){
+            List<StoreProduct> products = storeProductService.getListInIds(productIds);
+            int sumIntegral = products.stream().mapToInt(e -> e.getGiveIntegral().intValue()).sum();
+            UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
+            userOperateFundsRequest.setValue(BigDecimal.valueOf(sumIntegral));
+            userOperateFundsRequest.setFoundsType(Constants.ORDER_STATUS_STR_BARGAIN);
+            userOperateFundsRequest.setUid(storeOrder.getUid());
+            userOperateFundsRequest.setTitle(Constants.ORDER_STATUS_STR_TAKE);
+            userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_INTEGRAL);
+            userOperateFundsRequest.setType(1);
+            userService.updateFounds(userOperateFundsRequest, true);
         }
     }
 
@@ -237,7 +260,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
                 rate = "1";
             }
             BigDecimal rateBigDecimal = CrmebUtil.getBigDecimalRate(rate);
-            return rateBigDecimal.multiply(payPrice).setScale(BigDecimal.ROUND_DOWN);
+            return rateBigDecimal.multiply(payPrice).setScale(BigDecimal.ROUND_HALF_DOWN);
         }catch (Exception e){
             throw new CrmebException("计算积分失败" + e.getMessage());
         }
@@ -495,8 +518,9 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
 
             for (StoreOrderInfoVo orderInfoVo : orderInfoVoList) {
                 StoreProductStockRequest stockRequest = new StoreProductStockRequest();
-                stockRequest.setIdList(orderInfoVo.getProductId().toString());
-                stockRequest.setType("diff");
+                stockRequest.setProductId(orderInfoVo.getProductId());
+                stockRequest.setAttrId(Integer.valueOf(orderInfoVo.getInfo().getProductAttrUnique()));
+                stockRequest.setType("add");
 //                if(orderInfoVo.getInfo().getInteger("cart_num") < 1){
                 if(orderInfoVo.getInfo().getCartNum() < 1){
                     //如果取不到值，则跳过
@@ -522,9 +546,10 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
     private void rollbackIntegral(StoreOrder storeOrder) {
 
         //回滚使用积分
-        if(storeOrder.getBackIntegral().compareTo(BigDecimal.ZERO) > 0){
+        if(storeOrder.getUseIntegral() > 0){
             //有退积分操作， 那么用户使用的积分会减少
-            storeOrder.setUseIntegral(storeOrder.getUseIntegral().subtract(storeOrder.getBackIntegral()));
+//            storeOrder.setUseIntegral(storeOrder.getUseIntegral()- (storeOrder.getBackIntegral()));
+            storeOrder.setBackIntegral(storeOrder.getUseIntegral());
         }
         setIntegral(storeOrder, 1);
 

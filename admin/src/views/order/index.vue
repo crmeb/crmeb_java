@@ -95,12 +95,12 @@
           min-width="400"
         >
           <template slot-scope="scope">
-            <div v-if="scope.row.productList.length">
+            <div v-if=" scope.row.productList && scope.row.productList.length">
               <div v-for="(val, i ) in scope.row.productList" :key="i" class="tabBox acea-row row-middle">
                 <div class="demo-image__preview">
                   <el-image
                     :src="val.info.productInfo.image"
-                    :preview-src-list="imgList"
+                    :preview-src-list="[val.info.productInfo.image]"
                   />
                 </div>
                 <span class="tabBox_tit mr10">{{ val.info.productInfo.storeName + ' | ' }}{{ val.info.productInfo.attrInfo.suk ? val.info.productInfo.attrInfo.suk:'-' }}</span>
@@ -308,7 +308,6 @@
           isCreate: 1,
           editData: null,
           dialogVisible: false,
-          imgList: [],
           tableData: {
             data: [],
             total: 0
@@ -508,11 +507,6 @@
           this.tableData.data = res.list.list || []
           this.tableData.total = res.list.total
           this.orderChartType = res.status
-          this.tableData.data.map((item) => {
-            item.productList.map((i) => {
-              this.imgList.push(i.info.productInfo.image)
-            })
-          })
           const stat = res.top
           this.cardLists = [
             { name: '订单数量', count: stat.count },
