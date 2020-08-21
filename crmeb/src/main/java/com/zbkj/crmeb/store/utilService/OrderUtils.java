@@ -169,7 +169,7 @@ public class OrderUtils {
             status = new OrderAgainItemVo(1,"未发货","商家未发货,请耐心等待");
         }else if(storeOrder.getStatus() == 1){ // 待收货处理
             // 待收货
-            if(storeOrder.getDeliveryType().equals(Constants.ORDER_STATUS_STR_SPIKE_KEY)){ // 送货
+            if(null != storeOrder.getDeliveryType() && storeOrder.getDeliveryType().equals(Constants.ORDER_STATUS_STR_SPIKE_KEY)){ // 送货
                 StoreOrderStatus storeOrderStatus = new StoreOrderStatus();
                 storeOrderStatus.setOid(storeOrder.getId());
                 storeOrderStatus.setChangeType(Constants.ORDER_LOG_DELIVERY);
@@ -178,7 +178,7 @@ public class OrderUtils {
                     String DateStr = DateUtil.dateToStr(sOrderStatusResults.get(sOrderStatusResults.size()-1).getCreateTime(), Constants.DATE_FORMAT);
                     status = new OrderAgainItemVo(2,"待收货",DateStr+"服务商已送货");
                 }
-            }else if(storeOrder.getDeliveryType().equals(Constants.ORDER_LOG_EXPRESS)) {
+            }else if(null != storeOrder.getDeliveryType() && storeOrder.getDeliveryType().equals(Constants.ORDER_LOG_EXPRESS)) {
                 StoreOrderStatus storeOrderStatus = new StoreOrderStatus();
                 storeOrderStatus.setOid(storeOrder.getId());
                 storeOrderStatus.setChangeType(Constants.ORDER_LOG_EXPRESS);

@@ -214,6 +214,26 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
     }
 
     /**
+     * 添加虚拟评论
+     * @param request 评论参数
+     * @return 评论结果
+     */
+    @Override
+    public boolean virtualCreate(StoreProductReplyAddRequest request) {
+        StoreProductReply storeProductReply = new StoreProductReply();
+        BeanUtils.copyProperties(request, storeProductReply);
+        if(StringUtils.isNotBlank(request.getPics())){
+            String pics = request.getPics()
+                    .replace("[","")
+                    .replace("]","")
+                    .replace("\"","");
+            storeProductReply.setPics(systemAttachmentService.clearPrefix(ArrayUtils.toString(pics)));
+        }
+        storeProductReply.setUnique(CrmebUtil.randomCount(11111,9999)+"");
+        return save(storeProductReply);
+    }
+
+    /**
      * 订单是否已回复
      * @param unique 订单id
      * @param replayType 类型

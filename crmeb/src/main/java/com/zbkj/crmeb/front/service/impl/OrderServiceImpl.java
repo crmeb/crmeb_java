@@ -354,6 +354,7 @@ public class OrderServiceImpl implements OrderService {
         storeOrderStatusService.createLog(existStoreOrder.getId(), Constants.ORDER_LOG_REFUND_APPLY,"用户申请退款原因：" + request.getRefund_reason_wap_explain());
 
         existStoreOrder.setRefundStatus(1);
+        existStoreOrder.setStatus(-1);
         existStoreOrder.setRefundReasonTime(DateUtil.nowDateTime());
         existStoreOrder.setRefundReasonWap(request.getText());
         existStoreOrder.setRefundReasonWapExplain(request.getRefund_reason_wap_explain());
@@ -367,7 +368,7 @@ public class OrderServiceImpl implements OrderService {
         boolean codeResult = smsService.pushCodeToList(currentUser.getPhone(),1, smsInfo);
         if(!codeResult) throw new CrmebException("短信加入发送队列失败");
 
-        redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER, existStoreOrder.getId());
+//        redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER, existStoreOrder.getId());
         return true;
     }
 
