@@ -9,7 +9,6 @@ import com.github.pagehelper.PageHelper;
 import com.utils.DateUtil;
 import com.zbkj.crmeb.system.model.SystemUserLevel;
 import com.zbkj.crmeb.system.service.SystemUserLevelService;
-import com.zbkj.crmeb.system.service.SystemUserTaskService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserLevel;
 import com.zbkj.crmeb.user.dao.UserLevelDao;
@@ -17,7 +16,6 @@ import com.zbkj.crmeb.user.request.UserLevelSearchRequest;
 import com.zbkj.crmeb.user.service.UserLevelService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.crmeb.user.service.UserService;
-import com.zbkj.crmeb.user.service.UserTaskFinishService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -42,11 +40,6 @@ public class UserLevelServiceImpl extends ServiceImpl<UserLevelDao, UserLevel> i
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private SystemUserTaskService systemUserTaskService;
-
-    @Autowired
-    private UserTaskFinishService userTaskFinishService;
 
     /**
     * 列表
@@ -99,48 +92,10 @@ public class UserLevelServiceImpl extends ServiceImpl<UserLevelDao, UserLevel> i
             updateById(userLevel);
         }
 
-
-        //提取等级任务并记录完成情况
-        systemUserTaskService.complete(userId, levelId);
-
         //更新会员等级
         user.setLevel(systemUserLevel.getGrade());
         userService.updateById(user);
         return true;
-    }
-
-    /**
-     * 清除会员等级
-     * @param userId integer id
-     * @author Mr.Zhang
-     * @since 2020-04-29
-     * @return boolean
-     */
-    @Override
-    public boolean clean(Integer userId) {
-        //删除当前会员信息
-        deleteByUserId(userId);
-        //删除任务
-        userTaskFinishService.deleteByUser(userId);
-        //更新user表
-        return userService.cleanLevel(userId);
-    }
-
-
-    /**
-     * 清除userLevel
-     * @param userId integer id
-     * @author Mr.Zhang
-     * @since 2020-04-29
-     */
-    private void deleteByUserId(Integer userId) {
-        //删除当前会员信息
-        UserLevel userLevel = new UserLevel();
-        userLevel.setIsDel(true);
-
-        LambdaQueryWrapper<UserLevel> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(UserLevel::getUid, userId);
-        update(userLevel, lambdaQueryWrapper);
     }
 
 

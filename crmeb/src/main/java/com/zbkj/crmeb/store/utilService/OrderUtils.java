@@ -246,9 +246,9 @@ public class OrderUtils {
 
         // 需要return的自定义变量
         BigDecimal couponPrice = BigDecimal.ZERO;
-        BigDecimal surPlusIntegral = BigDecimal.ZERO;
+        Integer surPlusIntegral = 0;
         BigDecimal deductionPrice = BigDecimal.ZERO;
-        BigDecimal usedIntegral = BigDecimal.ZERO;
+        Integer usedIntegral = 0;
         BigDecimal payPrice = cor.getPriceGroup().getTotalPrice();
 
         User currentUser = userService.getInfo();
@@ -323,16 +323,18 @@ public class OrderUtils {
         if(null != request.getUseIntegral() && currentUser.getIntegral().compareTo(BigDecimal.ZERO) > 0){
             deductionPrice = currentUser.getIntegral().multiply(BigDecimal.valueOf(Double.valueOf(cor.getOther().get("integralRatio").toString())));
             if(request.getUseIntegral()){
+                // 积分兑换金额小于实际支付金额
                 if(deductionPrice.compareTo(payPrice) < 0){
                     payPrice = payPrice.subtract(deductionPrice);
-                    usedIntegral = currentUser.getIntegral();
+                    usedIntegral = currentUser.getIntegral().intValue();
                 }else{
                     deductionPrice = payPrice;
-                    if(payPrice.compareTo(BigDecimal.ZERO) > 0 && usedIntegral.compareTo(BigDecimal.ZERO) > 0){
-                        usedIntegral = payPrice.divide(usedIntegral);
-                        surPlusIntegral = currentUser.getIntegral().subtract(usedIntegral);
+                    if(payPrice.compareTo(BigDecimal.ZERO) > 0 && usedIntegral > 0){
+                        usedIntegral = payPrice.divide(BigDecimal.valueOf(usedIntegral.doubleValue())).intValue();
+                        surPlusIntegral = currentUser.getIntegral().intValue() - usedIntegral;
                     }
                     payPrice = BigDecimal.ZERO;
+                    usedIntegral = currentUser.getIntegral().intValue();
                 }
             }else{
                 payPrice = currentOrderPriceGroup.getPayPrice();
@@ -340,7 +342,7 @@ public class OrderUtils {
 
         }else{
             deductionPrice = BigDecimal.ZERO;
-            usedIntegral = BigDecimal.ZERO;
+            usedIntegral = 0;
         }
         if(payPrice.compareTo(BigDecimal.ZERO) <= 0) payPrice = BigDecimal.ZERO;
 
@@ -358,9 +360,18 @@ public class OrderUtils {
         result.setPayPrice(payPrice.setScale(2, BigDecimal.ROUND_CEILING));
         result.setPayPostage(payPostage.setScale(2, BigDecimal.ROUND_CEILING));
         result.setCouponPrice(couponPrice.setScale(2, BigDecimal.ROUND_CEILING));
-        result.setDeductionPrice(deductionPrice.setScale(2, BigDecimal.ROUND_CEILING));
-        result.setUsedIntegral(usedIntegral.setScale(2, BigDecimal.ROUND_CEILING));
-        result.setSurplusIntegral(surPlusIntegral.setScale(2, BigDecimal.ROUND_CEILING));
+        result.setDeductionPrice(request.getUseIntegral() ? deductionPrice.setScale(2, BigDecimal.ROUND_CEILING) : BigDecimal.ZERO);
+        result.setUsedIntegral(usedIntegral);
+        result.setSurplusIntegral(surPlusIntegral);
+        // 更新计算后的数据到订单缓存
+        cor.getPriceGroup().setTotalPrice(result.getTotalPrice());
+        cor.getPriceGroup().setPayPrice(result.getPayPrice());
+        cor.getPriceGroup().setPayPostage(result.getPayPostage());
+        cor.getPriceGroup().setCouponPrice(result.getCouponPrice());
+        cor.getPriceGroup().setDeductionPrice(result.getDeductionPrice());
+        cor.getPriceGroup().setUsedIntegral(result.getUsedIntegral());
+//        cacheDeleteOrderInfo(currentUser.getUid(), orderKey);
+        cacheRepliceOrderInfo(orderKey, currentUser.getUid(), cor);
         return result;
     }
 
@@ -376,7 +387,7 @@ public class OrderUtils {
         UserAddress currentUserAddress = new UserAddress();
         List<Integer> cartIds = new ArrayList<>();
         Integer totalNum = 0;
-        BigDecimal gainIntegral = BigDecimal.ZERO;
+        Integer gainIntegral = 0;
 
         // todo 开启事务
 
@@ -400,11 +411,11 @@ public class OrderUtils {
             totalNum += cartResponse.getCartNum();
             // todo 秒杀拼团砍价 二期
 
-            BigDecimal cartInfoGainIntegral =
-                    cartResponse.getProductInfo().getGiveIntegral().compareTo(BigDecimal.ZERO) > 0 ?
-                            cartResponse.getProductInfo().getGiveIntegral().multiply(BigDecimal.valueOf(cartResponse.getCartNum().doubleValue()))
-                            :BigDecimal.ZERO;
-            gainIntegral = gainIntegral.add(cartInfoGainIntegral);
+            Integer cartInfoGainIntegral =
+                    (cartResponse.getProductInfo().getGiveIntegral() != null && cartResponse.getProductInfo().getGiveIntegral() > 0 )?
+                            cartResponse.getProductInfo().getGiveIntegral() * cartResponse.getCartNum()
+                            : 0;
+            gainIntegral = gainIntegral + cartInfoGainIntegral;
         }
         // todo 检测营销产品状态
         // 发快递还是门店自提
@@ -435,7 +446,7 @@ public class OrderUtils {
         BigDecimal mapPayPrice = cor.getPriceGroup().getPayPrice();
         BigDecimal mapPayPostage = cor.getPriceGroup().getPayPostage();
         BigDecimal mapDeductionPrice = cor.getPriceGroup().getDeductionPrice();
-        BigDecimal mapUsedIntegral = cor.getPriceGroup().getUsedIntegral();
+        Integer mapUsedIntegral = cor.getPriceGroup().getUsedIntegral();
         BigDecimal mapCostPrice = cor.getPriceGroup().getCostPrice();
 
         int couponId = null == cor.getUsableCoupon() ? 0: cor.getUsableCoupon().getId();
@@ -483,8 +494,8 @@ public class OrderUtils {
         if(request.getUseIntegral() && currentUser.getIntegral().compareTo(BigDecimal.ZERO) > 0){
             BigDecimal deductionPrice = BigDecimal.ZERO;
             if(null != cor.getPriceGroup().getUsedIntegral()){
-                deductionPrice = cor.getPriceGroup().getUsedIntegral();
-                if(cor.getPriceGroup().getUsedIntegral().compareTo(BigDecimal.ZERO) > 0){
+                deductionPrice = BigDecimal.valueOf(cor.getPriceGroup().getUsedIntegral(),2);
+                if(cor.getPriceGroup().getUsedIntegral() > 0){
                     currentUser.setIntegral(BigDecimal.ZERO);
                     disIntegle = userService.updateBase(currentUser);
                 }else{
@@ -538,7 +549,7 @@ public class OrderUtils {
         storeCartService.deleteCartByIds(idsInt);
 
         // 删除缓存订单
-        cacheDeleteOrderInfo(currentUser.getUid(),storeOrder.getId());
+        cacheDeleteOrderInfo(currentUser.getUid(), orderKey);
         // 检查缺省的默认地址设置
         UserAddress defaultAddress = userAddressService.getDefault();
         if(null != defaultAddress){
@@ -783,7 +794,7 @@ public class OrderUtils {
      * @param confirmOrderResponse 确认订单对象
      * @return 缓存结果
      */
-    public String cacheOrderInfo(Integer userId,ConfirmOrderResponse confirmOrderResponse){
+    public String cacheSetOrderInfo(Integer userId,ConfirmOrderResponse confirmOrderResponse){
         String key = DigestUtils.md5Hex(DateUtil.getNowTime().toString());
         redisUtil.set("user_order_" + userId + key, JSONObject.toJSONString(confirmOrderResponse),Constants.ORDER_CASH_CONFIRM, TimeUnit.MINUTES);
         return key;
@@ -807,11 +818,25 @@ public class OrderUtils {
      * @param userId 用户id
      * @param cacheKey 缓存key
      */
-    public void cacheDeleteOrderInfo(Integer userId, Integer cacheKey){
+    public void cacheDeleteOrderInfo(Integer userId, String cacheKey){
         String key = "user_order_" + userId + cacheKey;
         boolean exists = redisUtil.exists(key);
         if(!exists) return;
         redisUtil.remove(key);
+    }
+
+    /**
+     * 更新当前订单结算信息 切换收货地址以及积分抵扣后支付金额可能会变动
+     * @param orderKey
+     * @param userId
+     * @param confirmOrderResponse
+     */
+    public void cacheRepliceOrderInfo(String orderKey,Integer userId, ConfirmOrderResponse confirmOrderResponse){
+        String key = "user_order_" + userId + orderKey;
+        if(redisUtil.exists(key)){
+            redisUtil.remove(key);
+        }
+        redisUtil.set(key, JSONObject.toJSONString(confirmOrderResponse),Constants.ORDER_CASH_CONFIRM, TimeUnit.MINUTES);
     }
 
     /**

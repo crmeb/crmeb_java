@@ -237,12 +237,12 @@
                 <template v-if="formValidate.isSub">
                   <el-table-column align="center" label="一级返佣(元)" min-width="120">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.extension_one" type="number" :min="0" class="priceBox" />
+                      <el-input v-model="scope.row.brokerage" type="number" :min="0" class="priceBox" />
                     </template>
                   </el-table-column>
                   <el-table-column align="center" label="二级返佣(元)" min-width="120">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.extension_two" type="number" :min="0" class="priceBox" />
+                      <el-input v-model="scope.row.brokerageTwo" type="number" :min="0" class="priceBox" />
                     </template>
                   </el-table-column>
                 </template>
@@ -276,12 +276,12 @@
                 <template v-if="formValidate.isSub">
                   <el-table-column align="center" label="一级返佣(元)" min-width="120">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.extension_one" type="number" :min="0" class="priceBox" />
+                      <el-input v-model="scope.row.brokerage" type="number" :min="0" class="priceBox" />
                     </template>
                   </el-table-column>
                   <el-table-column align="center" label="二级返佣(元)" min-width="120">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.extension_two" type="number" :min="0" class="priceBox" />
+                      <el-input v-model="scope.row.brokerageTwo" type="number" :min="0" class="priceBox" />
                     </template>
                   </el-table-column>
                 </template>
@@ -315,12 +315,12 @@
                 <template v-if="formValidate.isSub">
                   <el-table-column align="center" label="一级返佣(元)" min-width="120">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.extension_one" type="number" :min="0" class="priceBox" />
+                      <el-input v-model="scope.row.brokerage" type="number" :min="0" class="priceBox" />
                     </template>
                   </el-table-column>
                   <el-table-column align="center" label="二级返佣(元)" min-width="120">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.extension_two" type="number" :min="0" class="priceBox" />
+                      <el-input v-model="scope.row.brokerageTwo" type="number" :min="0" class="priceBox" />
                     </template>
                   </el-table-column>
                 </template>
@@ -735,23 +735,23 @@
       onChangetype(item) {
         if (item === 1) {
           this.OneattrValue.map(item => {
-            this.$set(item, 'extension_one', null)
-            this.$set(item, 'extension_two', null)
+            this.$set(item, 'brokerage', null)
+            this.$set(item, 'brokerageTwo', null)
           })
           this.ManyAttrValue.map(item => {
-            this.$set(item, 'extension_one', null)
-            this.$set(item, 'extension_two', null)
+            this.$set(item, 'brokerage', null)
+            this.$set(item, 'brokerageTwo', null)
           })
         } else {
           this.OneattrValue.map(item => {
-            delete item.extension_one
-            delete item.extension_two
-            this.$set(item, 'extension_one', null)
-            this.$set(item, 'extension_two', null)
+            delete item.brokerage
+            delete item.brokerageTwo
+            this.$set(item, 'brokerage', null)
+            this.$set(item, 'brokerageTwo', null)
           })
           this.ManyAttrValue.map(item => {
-            delete item.extension_one
-            delete item.extension_two
+            delete item.brokerage
+            delete item.brokerageTwo
           })
         }
       },
@@ -772,8 +772,8 @@
           this.$set(val, 'barCode', this.oneFormBatch[0].barCode)
           this.$set(val, 'weight', this.oneFormBatch[0].weight)
           this.$set(val, 'volume', this.oneFormBatch[0].volume)
-          this.$set(val, 'extension_one', this.oneFormBatch[0].extension_one)
-          this.$set(val, 'extension_two', this.oneFormBatch[0].extension_two)
+          this.$set(val, 'brokerage', this.oneFormBatch[0].brokerage)
+          this.$set(val, 'brokerageTwo', this.oneFormBatch[0].brokerageTwo)
         }
       },
       // 添加按钮

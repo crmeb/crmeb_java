@@ -163,7 +163,7 @@ public class OrderServiceImpl implements OrderService {
         response.setStoreSelfMention(systemConfigService.getValueByKey("store_self_mention"));
         response.setOther(otherMap);
         response.setSystemStore(null);
-        response.setOrderKey(orderUtils.cacheOrderInfo(currentUserInfo.getUid(), response));
+        response.setOrderKey(orderUtils.cacheSetOrderInfo(currentUserInfo.getUid(), response));
         return response;
     }
 
@@ -366,6 +366,8 @@ public class OrderServiceImpl implements OrderService {
         smsInfo.put("adminName", currentUser.getNickname());
         boolean codeResult = smsService.pushCodeToList(currentUser.getPhone(),1, smsInfo);
         if(!codeResult) throw new CrmebException("短信加入发送队列失败");
+
+        redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER, existStoreOrder.getId());
         return true;
     }
 
@@ -646,7 +648,6 @@ public class OrderServiceImpl implements OrderService {
         OrderCreateRequest orderCreateRequest = new OrderCreateRequest();
         BeanUtils.copyProperties(request,orderCreateRequest);
         ComputeOrderResponse priceGroup = orderUtils.computedOrder(orderCreateRequest, cor, orderKey);
-
         if(null == priceGroup){
             throw new CrmebException("计算失败");
         }else{

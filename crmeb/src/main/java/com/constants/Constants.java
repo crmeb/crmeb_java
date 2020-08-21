@@ -171,7 +171,7 @@ public class Constants {
 
     //积分
     public static final String CONFIG_KEY_INTEGRAL_RATE = "integral_ratio"; //积分抵用比例(1积分抵多少金额
-    public static final String CONFIG_KEY_INTEGRAL_RATE_ORDER_GIVE = "integral_order_give"; //下单支付金额按比例赠送积分（实际支付1元赠送多少积分
+    public static final String CONFIG_KEY_INTEGRAL_RATE_ORDER_GIVE = "order_give_integral"; //下单支付金额按比例赠送积分（实际支付1元赠送多少积分
 
     //后台首页登录图片
     public static final String CONFIG_KEY_ADMIN_LOGIN_LOGO = "login_logo"; //登录页LOGO
