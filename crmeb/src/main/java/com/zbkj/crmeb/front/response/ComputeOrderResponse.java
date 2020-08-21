@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.front.response;
 
+import io.swagger.models.auth.In;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -18,6 +19,6 @@ public class ComputeOrderResponse {
         private BigDecimal payPostage;
         private BigDecimal couponPrice;
         private BigDecimal deductionPrice;
-        private BigDecimal usedIntegral;
-        private BigDecimal SurplusIntegral;
+        private Integer usedIntegral;
+        private Integer SurplusIntegral;
 }

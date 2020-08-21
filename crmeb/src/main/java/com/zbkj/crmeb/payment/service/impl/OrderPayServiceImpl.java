@@ -131,6 +131,7 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
             // 清除缓存的订单信息
 
         }catch (Exception e){
+            e.printStackTrace();
             throw new CrmebException("订单支付失败！");
         }
         return responseVo;

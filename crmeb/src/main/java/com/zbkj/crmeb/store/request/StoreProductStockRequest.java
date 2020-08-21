@@ -8,7 +8,9 @@ import lombok.experimental.Accessors;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * <p>
@@ -26,11 +28,15 @@ public class StoreProductStockRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 
-    @ApiModelProperty(value = "商品ID, 多个逗号分割，如果是修改所有的，参数值为 all", required = true)
-    @NotBlank(message = "请选择商品")
-    private String idList;
+    @ApiModelProperty(value = "商品ID", required = true)
+    @NotEmpty(message = "请选择商品")
+    private Integer productId;
 
-    @ApiModelProperty(value = "类型， 增加 add | 修改 update | 减少 diff", required = true)
+    @ApiModelProperty(value = "商品属性ID集合", required = true)
+    @NotEmpty(message = "请选择商品属性id集合")
+    private Integer attrId;
+
+    @ApiModelProperty(value = "类型， 增加 add | 减少 diff", required = true)
     @NotBlank(message = "请选择类型")
     private String type;
 

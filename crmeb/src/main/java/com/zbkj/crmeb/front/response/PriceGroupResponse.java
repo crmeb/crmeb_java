@@ -22,5 +22,5 @@ public class PriceGroupResponse {
     private BigDecimal payPrice;
     private BigDecimal payPostage;
     private BigDecimal deductionPrice;
-    private BigDecimal usedIntegral;
+    private Integer usedIntegral;
 }
