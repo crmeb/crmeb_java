@@ -309,10 +309,20 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             boolean attrAddResult = attrService.save(singleAttr);
             if (!attrAddResult) throw new CrmebException("新增属性名失败");
             StoreProductAttrValue singleAttrValue = new StoreProductAttrValue();
+            BigDecimal commissionL1= BigDecimal.ZERO;
+            BigDecimal commissionL2= BigDecimal.ZERO;
+            if(storeProductRequest.getAttrValue().size()>0){
+                commissionL1 = null != storeProductRequest.getAttrValue().get(0).getBrokerage() ?
+                        storeProductRequest.getAttrValue().get(0).getBrokerage():BigDecimal.ZERO;
+                commissionL2 = null != storeProductRequest.getAttrValue().get(0).getBrokerageTwo() ?
+                        storeProductRequest.getAttrValue().get(0).getBrokerageTwo():BigDecimal.ZERO;
+            }
+
             singleAttrValue.setProductId(storeProduct.getId()).setStock(storeProduct.getStock()).setSuk("默认")
                     .setSales(storeProduct.getSales()).setPrice(storeProduct.getPrice())
                     .setImage(systemAttachmentService.clearPrefix(storeProduct.getImage()))
-                    .setCost(storeProduct.getCost()).setBarCode(storeProduct.getBarCode()).setOtPrice(storeProduct.getOtPrice());
+                    .setCost(storeProduct.getCost()).setBarCode(storeProduct.getBarCode())
+                    .setOtPrice(storeProduct.getOtPrice()).setBrokerage(commissionL1).setBrokerageTwo(commissionL2);
             boolean saveOrUpdateResult = storeProductAttrValueService.save(singleAttrValue);
             if(!saveOrUpdateResult) throw new CrmebException("新增属性详情失败");
         }
