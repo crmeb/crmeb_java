@@ -65,7 +65,7 @@ public class StoreProductReplyController {
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     public CommonResult<String> save(
             @RequestBody @Validated StoreProductReplyAddRequest request){
-        if(storeProductReplyService.create(request)){
+        if(storeProductReplyService.virtualCreate(request)){
             return CommonResult.success();
         }else{
             return CommonResult.failed();
