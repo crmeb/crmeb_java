@@ -49,6 +49,12 @@ public interface StoreProductService extends IService<StoreProduct> {
     List<StoreProduct> getList(IndexStoreProductSearchRequest request, PageParamRequest pageParamRequest);
 
     /**
+     * 根据id集合获取商品信息
+     * @param productIds id集合
+     * @return 商品信息
+     */
+    List<StoreProduct> getListInIds(List<Integer> productIds);
+    /**
      * 基本参数获取
      * @param storeProduct 产品参数
      * @return 商品结果
@@ -121,4 +127,9 @@ public interface StoreProductService extends IService<StoreProduct> {
      * @return 删除结果
      */
     boolean deleteProduct(Integer productId);
+
+    /**
+     * 后台任务批量操作
+     */
+    public void consumeProductStock();
 }

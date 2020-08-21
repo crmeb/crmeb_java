@@ -108,7 +108,7 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
     @Override
     public boolean decProductAttrStock(Integer productId, Integer attrValueId, Integer num, Integer type) {
         List<StoreProductAttrValue> existAttrValues = getListByProductIdAndAttrId(productId, attrValueId+"");
-        if(existAttrValues.size() == 0) throw new CrmebException("商品部存在");
+        if(existAttrValues.size() == 0) throw new CrmebException("商品不存在");
 
         StoreProductAttrValue attrValue = existAttrValues.get(0);
         boolean result = false;

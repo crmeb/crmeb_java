@@ -49,6 +49,18 @@ service.interceptors.response.use(
   response => {
     const res = response.data
     // if the custom code is not 20000, it is judged as an error.
+    if (res.code === 401) {
+      // to re-login
+      MessageBox.confirm('您已经登出，您可以取消停留在这个页面，或重新登录', '退出', {
+        confirmButtonText: '或重新登录',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        store.dispatch('user/resetToken').then(() => {
+          location.reload()
+        })
+      })
+    }
     if (res.code !== 200) {
       Message({
         message: res.message || 'Error',
@@ -57,19 +69,7 @@ service.interceptors.response.use(
       })
 
       // 50008: Illegal token; 50012: Other clients logged in; 50014: Token expired;
-      if (res.code === 401) {
-        // to re-login
-        MessageBox.confirm('您已经登出，您可以取消停留在这个页面，或重新登录', '退出', {
-          confirmButtonText: '或重新登录',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          store.dispatch('user/resetToken').then(() => {
-            location.reload()
-          })
-        })
-      }
-      return Promise.reject(new Error(res.message || 'Error'))
+      // return Promise.reject(new Error(res.message || 'Error'))
     } else {
       return res.data
     }
