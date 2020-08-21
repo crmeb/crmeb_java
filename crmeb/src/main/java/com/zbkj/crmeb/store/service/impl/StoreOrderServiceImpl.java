@@ -228,12 +228,6 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         if(null != storeOrder.getPayTime()){
             lqw.eq(StoreOrder::getPayTime, storeOrder.getPayTime());
         }
-        if(null != storeOrder.getPaid()){
-            lqw.eq(StoreOrder::getPaid, storeOrder.getPaid());
-        }
-//        if(null != storeOrder.getStatus()){
-//            lqw.eq(StoreOrder::getStatus, storeOrder.getStatus());
-//        }
         if(null != storeOrder.getStoreId()){
             lqw.eq(StoreOrder::getStoreId, storeOrder.getStoreId());
         }
@@ -851,7 +845,8 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     public boolean refundRefuse(Integer id, String reason) {
         StoreOrder storeOrder = getInfoException(id);
         storeOrder.setRefundReason(reason);
-        storeOrder.setRefundStatus(4);
+        storeOrder.setRefundStatus(0);
+        storeOrder.setStatus(1);
         updateById(storeOrder);
 
         storeOrderStatusService.createLog(storeOrder.getId(), Constants.ORDER_LOG_REFUND_REFUSE, Constants.ORDER_LOG_MESSAGE_REFUND_REFUSE.replace("{reason}", reason));
@@ -1321,7 +1316,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
                 break;
             case Constants.ORDER_STATUS_H5_REFUND: // 退款
                 queryWrapper.eq(StoreOrder::getPaid, true);
-                queryWrapper.gt(StoreOrder::getRefundStatus, 0); //大于0
+                queryWrapper.in(StoreOrder::getRefundStatus, "1,2"); //大于0
                 break;
         }
         queryWrapper.eq(StoreOrder::getIsDel, false);
@@ -1530,6 +1525,29 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
                 && !storeOrder.getIsSystemDel()){
             map.put("key", Constants.ORDER_STATUS_REFUNDED);
             map.put("value", Constants.ORDER_STATUS_STR_REFUNDED);
+        }
+
+        if(storeOrder.getPaid()
+                && storeOrder.getStatus() == 0
+                && !storeOrder.getIsDel()
+                && !storeOrder.getIsSystemDel()){
+            map.put("key", Constants.ORDER_STATUS_NOT_SHIPPED);
+            map.put("value", Constants.ORDER_STATUS_STR_NOT_SHIPPED);
+        }
+
+        if(storeOrder.getPaid()
+                && storeOrder.getStatus() == 1
+                && !storeOrder.getIsDel()
+                && !storeOrder.getIsSystemDel()){
+            map.put("key", Constants.ORDER_STATUS_SPIKE);
+            map.put("value", Constants.ORDER_STATUS_STR_SPIKE);
+        }
+        if(storeOrder.getPaid()
+                && storeOrder.getStatus() == 2
+                && !storeOrder.getIsDel()
+                && !storeOrder.getIsSystemDel()){
+            map.put("key", Constants.ORDER_STATUS_COMPLETE);
+            map.put("value", Constants.ORDER_STATUS_STR_TAKE);
         }
 
 

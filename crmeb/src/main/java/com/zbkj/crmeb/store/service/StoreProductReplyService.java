@@ -24,6 +24,13 @@ public interface StoreProductReplyService extends IService<StoreProductReply> {
     boolean create(StoreProductReplyAddRequest request);
 
     /**
+     * 添加虚拟评论
+     * @param request 评论参数
+     * @return 评论结果
+     */
+    boolean virtualCreate(StoreProductReplyAddRequest request);
+
+    /**
      * 查询是否已经回复
      * @param unique
      * @param replayType
