@@ -32,10 +32,13 @@ import com.zbkj.crmeb.store.response.StoreProductTabsHeader;
 import com.zbkj.crmeb.store.service.*;
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import com.zbkj.crmeb.system.service.SystemConfigService;
+import com.zbkj.crmeb.task.order.OrderRefundByUser;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -96,6 +99,8 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
 
     @Autowired
     private StoreCouponService storeCouponService;
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderRefundByUser.class);
 
     /**
      * H5端使用
@@ -240,6 +245,18 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         }
         // 多条sql查询处理分页正确
         return CommonPage.copyPageInfo(storeProductPage, storeProductResponses);
+    }
+
+    /**
+     * 根据商品id集合获取
+     * @param productIds id集合
+     * @return
+     */
+    @Override
+    public List<StoreProduct> getListInIds(List<Integer> productIds) {
+        LambdaQueryWrapper<StoreProduct> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.in(StoreProduct::getId,productIds);
+        return dao.selectList(lambdaQueryWrapper);
     }
 
     /**
@@ -673,10 +690,36 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
      */
     @Override
     public boolean stockAddRedis(StoreProductStockRequest request) {
-        redisUtil.lPush(Constants.PRODUCT_STOCK_UPDATE, request);
+        redisUtil.lPush(Constants.PRODUCT_STOCK_UPDATE, JSON.toJSONString(request));
         return true;
     }
 
+    @Override
+    public void consumeProductStock() {
+        String redisKey = Constants.PRODUCT_STOCK_UPDATE;
+        Long size = redisUtil.getListSize(redisKey);
+        logger.info("StoreProductServiceImpl.doProductStock | size:" + size);
+        if(size < 1){
+            return;
+        }
+        for (int i = 0; i < size; i++) {
+            //如果10秒钟拿不到一个数据，那么退出循环
+            Object data = redisUtil.getRightPop(redisKey, 10L);
+            if(null == data){
+                continue;
+            }
+            try{
+                StoreProductStockRequest storeProductStockRequest =
+                        com.alibaba.fastjson.JSONObject.toJavaObject(com.alibaba.fastjson.JSONObject.parseObject(data.toString()), StoreProductStockRequest.class);
+                boolean result = doProductStock(storeProductStockRequest);
+                if(!result){
+                    redisUtil.lPush(redisKey, data);
+                }
+            }catch (Exception e){
+                redisUtil.lPush(redisKey, data);
+            }
+        }
+    }
 
     /**
      * 扣减库存添加销量
@@ -691,14 +734,15 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         // 不存在=但属性 存在则是多属性
         StoreProductAttrValue productsInAttrValue =
                 storeProductAttrValueService.getById(attrValueId);
+        StoreProduct storeProduct = getById(productId);
         boolean result = false;
         if(null != productsInAttrValue){
             result = storeProductAttrValueService.decProductAttrStock(productId,attrValueId,num,type);
         }
         LambdaUpdateWrapper<StoreProduct> lqwuper = new LambdaUpdateWrapper<>();
         lqwuper.eq(StoreProduct::getId, productId);
-        lqwuper.set(StoreProduct::getStock, productsInAttrValue.getStock()-num);
-        lqwuper.set(StoreProduct::getSales, productsInAttrValue.getStock()+num);
+        lqwuper.set(StoreProduct::getStock, storeProduct.getStock()-num);
+        lqwuper.set(StoreProduct::getSales, storeProduct.getSales()+num);
         result = update(lqwuper);
         if(result){ //判断库存警戒值
             Integer alterNumI=0;
@@ -1251,6 +1295,26 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
 
     ///////////////////////////////////////////自定义方法
 
+    // 操作库存
+    private boolean doProductStock(StoreProductStockRequest storeProductStockRequest){
+        StoreProduct existProduct = getById(storeProductStockRequest.getProductId());
+        List<StoreProductAttrValue> existAttr =
+                storeProductAttrValueService.getListByProductIdAndAttrId(storeProductStockRequest.getProductId(), storeProductStockRequest.getAttrId().toString());
+        if(null == existProduct || null == existAttr){ // 为找到商品
+            logger.info("库存修改任务未获取到商品信息"+JSON.toJSONString(storeProductStockRequest));
+            return true;
+        }
+        boolean isPlus = storeProductStockRequest.getType().equals("add");
+        int productStock = isPlus ? existProduct.getStock() + storeProductStockRequest.getNum() : existProduct.getStock() - storeProductStockRequest.getNum();
+        existProduct.setStock(productStock);
+        updateById(existProduct);
+        for (StoreProductAttrValue attrValue : existAttr) {
+            int productAttrStock = isPlus ? attrValue.getStock() + storeProductStockRequest.getNum() : attrValue.getStock() - storeProductStockRequest.getNum();
+            attrValue.setStock(productAttrStock);
+            storeProductAttrValueService.updateById(attrValue);
+        }
+        return true;
+    }
 
 
     /**

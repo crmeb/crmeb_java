@@ -320,7 +320,93 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     @Override
     public boolean updateBase(User user) {
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        lambdaUpdateWrapper.setEntity(user);
+//        lambdaUpdateWrapper.setEntity(user);
+        if(null == user.getUid()) return false;
+        lambdaUpdateWrapper.eq(User::getUid,user.getUid());
+        if(StringUtils.isNotBlank(user.getNickname())){
+            lambdaUpdateWrapper.set(User::getNickname, user.getNickname());
+        }
+        if(StringUtils.isNotBlank(user.getAccount())){
+            lambdaUpdateWrapper.set(User::getAccount, user.getAccount());
+        }
+        if(StringUtils.isNotBlank(user.getPwd())){
+            lambdaUpdateWrapper.set(User::getPwd, user.getPwd());
+        }
+        if(StringUtils.isNotBlank(user.getRealName())){
+            lambdaUpdateWrapper.set(User::getRealName, user.getRealName());
+        }
+        if(StringUtils.isNotBlank(user.getBirthday())){
+            lambdaUpdateWrapper.set(User::getBirthday, user.getBirthday());
+        }
+        if(StringUtils.isNotBlank(user.getCardId())){
+            lambdaUpdateWrapper.set(User::getCardId, user.getCardId());
+        }
+        if(StringUtils.isNotBlank(user.getMark())){
+            lambdaUpdateWrapper.set(User::getMark, user.getMark());
+        }
+        if(null != user.getPartnerId()){
+            lambdaUpdateWrapper.set(User::getPartnerId, user.getPartnerId());
+        }
+        if(StringUtils.isNotBlank(user.getGroupId())){
+            lambdaUpdateWrapper.set(User::getGroupId, user.getGroupId());
+        }
+        if(StringUtils.isNotBlank(user.getTagId())){
+            lambdaUpdateWrapper.set(User::getTagId, user.getTagId());
+        }
+        if(StringUtils.isNotBlank(user.getAvatar())){
+            lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
+        }
+        if(StringUtils.isNotBlank(user.getPhone())){
+            lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
+        }
+        if(StringUtils.isNotBlank(user.getAddIp())){
+            lambdaUpdateWrapper.set(User::getAddIp, user.getAddIp());
+        }
+        if(StringUtils.isNotBlank(user.getLastIp())){
+            lambdaUpdateWrapper.set(User::getLastIp, user.getLastIp());
+        }
+        if(null != user.getNowMoney() && user.getNowMoney().compareTo(BigDecimal.ZERO) > 0){
+            lambdaUpdateWrapper.set(User::getNowMoney, user.getNowMoney());
+        }
+        if(null != user.getBrokeragePrice() && user.getBrokeragePrice().compareTo(BigDecimal.ZERO) > 0){
+            lambdaUpdateWrapper.set(User::getBrokeragePrice, user.getBrokeragePrice());
+        }
+        if(null != user.getIntegral() && user.getIntegral().compareTo(BigDecimal.ZERO) >= 0){
+            lambdaUpdateWrapper.set(User::getIntegral, user.getIntegral());
+        }
+        if(null != user.getExperience() && user.getExperience() > 0){
+            lambdaUpdateWrapper.set(User::getExperience, user.getExperience());
+        }
+        if(null != user.getSignNum() && user.getSignNum() > 0){
+            lambdaUpdateWrapper.set(User::getSignNum, user.getSignNum());
+        }
+        if(null != user.getStatus()){
+            lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
+        }
+        if(null != user.getLevel() && user.getLevel() > 0){
+            lambdaUpdateWrapper.set(User::getLevel, user.getLevel());
+        }
+        if(null != user.getSpreadUid() && user.getSpreadUid() > 0){
+            lambdaUpdateWrapper.set(User::getSpreadUid, user.getSpreadUid());
+        }
+        if(null != user.getSpreadTime()){
+            lambdaUpdateWrapper.set(User::getSpreadTime, user.getSpreadTime());
+        }
+        if(StringUtils.isNotBlank(user.getUserType())){
+            lambdaUpdateWrapper.set(User::getUserType, user.getUserType());
+        }
+        if(null != user.getIsPromoter()){
+            lambdaUpdateWrapper.set(User::getIsPromoter, user.getIsPromoter());
+        }
+        if(null != user.getPayCount()){
+            lambdaUpdateWrapper.set(User::getPayCount, user.getPayCount());
+        }
+        if(null != user.getSpreadCount()){
+            lambdaUpdateWrapper.set(User::getSpreadCount, user.getSpreadCount());
+        }
+        if(StringUtils.isNotBlank(user.getAddres())){
+            lambdaUpdateWrapper.set(User::getAddres, user.getAddres());
+        }
         return update(lambdaUpdateWrapper);
     }
 
@@ -698,8 +784,9 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     @Override
     public UserCenterResponse getUserCenter() {
         UserCenterResponse userCenterResponse = new UserCenterResponse();
-        BeanUtils.copyProperties(getInfo(), userCenterResponse);
         User currentUser = getInfo();
+        BeanUtils.copyProperties(currentUser, userCenterResponse);
+        userCenterResponse.setIntegral(currentUser.getIntegral().intValue());
         UserCenterOrderStatusNumResponse userCenterOrderStatusNumResponse = new UserCenterOrderStatusNumResponse();
         userCenterOrderStatusNumResponse.setNoBuy(0);
         userCenterOrderStatusNumResponse.setNoPink(0);

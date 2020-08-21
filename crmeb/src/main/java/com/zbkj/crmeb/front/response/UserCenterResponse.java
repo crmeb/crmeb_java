@@ -78,7 +78,7 @@ public class UserCenterResponse implements Serializable {
     private BigDecimal brokeragePrice;
 
     @ApiModelProperty(value = "用户剩余积分")
-    private BigDecimal integral;
+    private Integer integral;
 
     @ApiModelProperty(value = "用户剩余经验")
     private Integer experience;

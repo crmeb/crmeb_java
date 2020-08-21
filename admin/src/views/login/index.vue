@@ -121,7 +121,7 @@ export default {
       },
       loginForm: {
         account: 'demo', // admin
-        pwd: '123456',
+        pwd: 'crmeb.com',
         key: '',
         code: ''
       },

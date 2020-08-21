@@ -6,6 +6,7 @@ import com.constants.Constants;
 import com.utils.RedisUtil;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.service.OrderTaskService;
+import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.store.service.StoreOrderTaskService;
 import com.zbkj.crmeb.task.order.OrderRefundByUser;
 import org.slf4j.Logger;
@@ -29,6 +30,9 @@ public class OrderTaskServiceImpl implements OrderTaskService {
     @Autowired
     private StoreOrderTaskService storeOrderTaskService;
 
+    @Autowired
+    private StoreOrderService storeOrderService;
+
     /**
      * 用户取消订单
      * @author Mr.Zhang
@@ -49,7 +53,8 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                 continue;
             }
             try{
-                StoreOrder storeOrder = getJavaBeanStoreOrder(data);
+//                StoreOrder storeOrder = getJavaBeanStoreOrder(data);
+                StoreOrder storeOrder = storeOrderService.getById(Integer.valueOf(data.toString()));
                 boolean result = storeOrderTaskService.cancelByUser(storeOrder);
                 if(!result){
                     redisUtil.lPush(redisKey, data);
@@ -79,18 +84,18 @@ public class OrderTaskServiceImpl implements OrderTaskService {
         }
         for (int i = 0; i < size; i++) {
             //如果10秒钟拿不到一个数据，那么退出循环
-            Object data = redisUtil.getRightPop(redisKey, 10L);
-            if(null == data){
+            Object orderId = redisUtil.getRightPop(redisKey, 10L);
+            if(null == orderId){
                 continue;
             }
             try{
-                StoreOrder storeOrder = getJavaBeanStoreOrder(data);
+                StoreOrder storeOrder = storeOrderService.getById(Integer.valueOf(orderId.toString()));
                 boolean result = storeOrderTaskService.refundApply(storeOrder);
                 if(!result){
-                    redisUtil.lPush(redisKey, data);
+                    redisUtil.lPush(redisKey, orderId);
                 }
             }catch (Exception e){
-                redisUtil.lPush(redisKey, data);
+                redisUtil.lPush(redisKey, orderId);
             }
         }
     }
@@ -141,18 +146,18 @@ public class OrderTaskServiceImpl implements OrderTaskService {
         }
         for (int i = 0; i < size; i++) {
             //如果10秒钟拿不到一个数据，那么退出循环
-            Object data = redisUtil.getRightPop(redisKey, 10L);
-            if(null == data){
+            Object id = redisUtil.getRightPop(redisKey, 10L);
+            if(null == id){
                 continue;
             }
             try{
-                StoreOrder storeOrder = getJavaBeanStoreOrder(data);
+                StoreOrder storeOrder = storeOrderService.getByEntityOne(new StoreOrder().setId(Integer.valueOf(id.toString())));
                 boolean result = storeOrderTaskService.takeByUser(storeOrder);
                 if(!result){
-                    redisUtil.lPush(redisKey, data);
+                    redisUtil.lPush(redisKey, id);
                 }
             }catch (Exception e){
-                redisUtil.lPush(redisKey, data);
+                redisUtil.lPush(redisKey, id);
             }
         }
     }
