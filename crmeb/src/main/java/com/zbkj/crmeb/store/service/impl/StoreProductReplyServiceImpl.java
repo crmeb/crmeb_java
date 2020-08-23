@@ -103,7 +103,7 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
             storeProductPram.setKeywords(request.getProductSearch());
             List<StoreProduct> storeProducts = storeProductService.getList(storeProductPram, new PageParamRequest());
             List<Integer> productIds = storeProducts.stream().map(StoreProduct::getId).collect(Collectors.toList());
-            lambdaQueryWrapper.in(StoreProductReply::getProductId, productIds);
+            lambdaQueryWrapper.in(!productIds.isEmpty(), StoreProductReply::getProductId, productIds);
         }
         if(!StringUtils.isBlank(request.getUid())){
             lambdaQueryWrapper.in(StoreProductReply::getUid, CrmebUtil.stringToArray(request.getUid()));
