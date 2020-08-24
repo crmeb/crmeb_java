@@ -204,8 +204,8 @@ public class OrderUtils {
         }
         // 支付方式
         if(status != null){
-            if(null == storeOrder.getStatus()){
-                status.setPayType(StringUtils.isNotBlank(storeOrder.getPayType()) ? storeOrder.getPayType() : "其他方式");
+            if(null != storeOrder.getStatus()){
+                status.setPayType(getOrderPayTypeStr(storeOrder.getPayType()));
             }
             if(StringUtils.isNotBlank(storeOrder.getDeliveryType())){
                 status.setDeliveryType(StringUtils.isNotBlank(storeOrder.getDeliveryType()) ? storeOrder.getDeliveryType():"其他方式");
@@ -891,6 +891,33 @@ public class OrderUtils {
     public List<StoreCartResponse> getCacheOrderAgain(String cacheKey){
         if(!redisUtil.exists(cacheKey)) return null;
         return JSONObject.parseArray(redisUtil.get(cacheKey).toString(),StoreCartResponse.class);
+    }
+
+    /**
+     * 翻译支付方式给前端
+     * @param payType
+     * @return
+     */
+    private String getOrderPayTypeStr(String payType){
+        String payTypeStr = null;
+        switch (payType){
+            case Constants.PAY_TYPE_WE_CHAT:
+                payTypeStr = "微信支付";
+                break;
+            case Constants.PAY_TYPE_YUE:
+                payTypeStr = "余额支付";
+                break;
+            case Constants.PAY_TYPE_OFFLINE:
+                payTypeStr = "线下支付";
+                break;
+            case Constants.PAY_TYPE_ALI_PAY:
+                payTypeStr = "支付宝支付";
+                break;
+            default:
+                payTypeStr = "其他支付方式";
+                break;
+        }
+        return payTypeStr;
     }
 
 }
