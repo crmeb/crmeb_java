@@ -97,7 +97,8 @@ export default {
         total: 0
       },
       listLoading: true,
-      selectionList: []
+      selectionList: [],
+      keyNum: 0
     }
   },
   mounted() {
@@ -120,7 +121,7 @@ export default {
       const _this = this
       this.$modalAttr(Object.assign({}, this.formDynamic), function() {
         _this.getList()
-      })
+      }, this.keyNum += 1)
     },
     // 列表
     getList() {

@@ -45,12 +45,9 @@
             row-key="id"
             :tree-props="{children: 'child', hasChildren: 'hasChildren'}"
           >
-            <!--          <el-table-column type="selection"-->
-            <!--                           width="55">-->
-            <!--          </el-table-column>-->
             <el-table-column prop="name" label="名称" min-width="200">
               <template slot-scope="scope">
-                {{ scope.row.name }}|{{ scope.row.id }}
+                {{ scope.row.name }} | {{ scope.row.id }}
               </template>
             </el-table-column>
             <template v-if="!selectModel">
