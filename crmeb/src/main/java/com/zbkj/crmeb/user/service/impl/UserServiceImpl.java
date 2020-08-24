@@ -1537,7 +1537,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     @Override
     public void bindSpread(User user, Integer spreadUid) {
         //新用户会在注册的时候单独绑定，此处只处理登录用户
-        if(spreadUid == 0){
+        if(null == spreadUid || spreadUid == 0){
             return;
         }
         //如果当前用户没有绑定，并且后台配置人人分销，那么需要邦迪
