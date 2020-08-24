@@ -169,6 +169,16 @@ json渲染表单以及是否需要编辑数据回填的功能以下为例
 
 ## 帮助文档
 [帮助文档](http://help.crmeb.net/crmeb_java/1748037)
+![详细的安装流程](https://images.gitee.com/uploads/images/2020/0824/153018_a0d52767_2012975.png "屏幕截图.png")
+![目录结构](https://images.gitee.com/uploads/images/2020/0824/153257_9b80e21b_2012975.png "屏幕截图.png")
+![数据字典](https://images.gitee.com/uploads/images/2020/0824/153317_abb02860_2012975.png "屏幕截图.png")
+![任务](https://images.gitee.com/uploads/images/2020/0824/153342_96cb48f6_2012975.png "屏幕截图.png")
+![系统配置](https://images.gitee.com/uploads/images/2020/0824/153403_a3aa12c7_2012975.png "屏幕截图.png")
+![组合数据](https://images.gitee.com/uploads/images/2020/0824/153420_18c99224_2012975.png "屏幕截图.png")
+![form表单拖拉拽](https://images.gitee.com/uploads/images/2020/0824/153433_3a83ffe2_2012975.png "屏幕截图.png")
+![拦截器](https://images.gitee.com/uploads/images/2020/0824/153505_126970b4_2012975.png "屏幕截图.png")
+![过滤器](https://images.gitee.com/uploads/images/2020/0824/153521_be33bd82_2012975.png "屏幕截图.png")
+![无限级分类](https://images.gitee.com/uploads/images/2020/0824/153546_4b28e184_2012975.png "屏幕截图.png")
 
 ## 演示站
 1. [移动端](https://java.crmeb.net)
@@ -176,6 +186,34 @@ json渲染表单以及是否需要编辑数据回填的功能以下为例
  
 ## 后台账号 demo  密码 crmeb.com， 请大家不要随意改密码！
 #### 请大家不要随意改密码！请大家不要随意改密码！请大家不要随意改密码！
+
+后台界面
+![登录界面](https://images.gitee.com/uploads/images/2020/0824/153756_35878cdb_2012975.png "屏幕截图.png")
+![控制台](https://images.gitee.com/uploads/images/2020/0824/153848_442b3527_2012975.png "屏幕截图.png")
+![商品列表](https://images.gitee.com/uploads/images/2020/0824/153920_877f7cba_2012975.png "屏幕截图.png")
+![复制第三方平台商品](https://images.gitee.com/uploads/images/2020/0824/153945_60d9ef79_2012975.png "屏幕截图.png")
+![添加商品](https://images.gitee.com/uploads/images/2020/0824/154012_3f1fa586_2012975.png "屏幕截图.png")
+![商品规格](https://images.gitee.com/uploads/images/2020/0824/154034_745ba403_2012975.png "屏幕截图.png")
+![商品分类](https://images.gitee.com/uploads/images/2020/0824/154123_b4b0adf8_2012975.png "屏幕截图.png")
+![订单管理](https://images.gitee.com/uploads/images/2020/0824/154210_e4c821ed_2012975.png "屏幕截图.png")
+![用户管理](https://images.gitee.com/uploads/images/2020/0824/154353_c5e5f618_2012975.png "屏幕截图.png")
+![用户等级](https://images.gitee.com/uploads/images/2020/0824/154427_77f4e80d_2012975.png "屏幕截图.png")
+![文章管理](https://images.gitee.com/uploads/images/2020/0824/154443_cd6c6a90_2012975.png "屏幕截图.png")
+![微信](https://images.gitee.com/uploads/images/2020/0824/154515_9db27282_2012975.png "屏幕截图.png")
+![优惠券](https://images.gitee.com/uploads/images/2020/0824/154536_8d1d2db2_2012975.png "屏幕截图.png")
+![分销](https://images.gitee.com/uploads/images/2020/0824/154553_0b9f66a4_2012975.png "屏幕截图.png")
+![身份](https://images.gitee.com/uploads/images/2020/0824/154609_e9616963_2012975.png "屏幕截图.png")
+![权限](https://images.gitee.com/uploads/images/2020/0824/154647_f7fb8c69_2012975.png "屏幕截图.png")
+![账号](https://images.gitee.com/uploads/images/2020/0824/154709_db94d36a_2012975.png "屏幕截图.png")
+![系统设置](https://images.gitee.com/uploads/images/2020/0824/154727_fc2e4f49_2012975.png "屏幕截图.png")
+![短信](https://images.gitee.com/uploads/images/2020/0824/154752_5552a5d0_2012975.png "屏幕截图.png")
+![系统设置分类](https://images.gitee.com/uploads/images/2020/0824/154816_db8139fd_2012975.png "屏幕截图.png")
+
+
+
+
+
+
 
 请关注我们
 
