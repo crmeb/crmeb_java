@@ -74,209 +74,184 @@ utils 自定义工具js 独立命名，一般不用新建文件夹
 │   ├── api                        # 所有请求
 │   │    └──user.js                # 有关登录/用户的接口
 │   │    └──article.js             # 有关内容的接口
-│   │    └──categoryApi.js         # 有关分类的接口 
-│   │    └──configApi.js           # 有关配置分类的接口
-
-
-
-│   │    └──cms.js            # 有关内容（文章管理、分类）的接口
-│   │    └──common.js         # 表格删除、获取消息提醒的接口
-│   │    └──finance.js        # 有关财务的接口
-│   │    └──index.js          # 有关首页的接口
-│   │    └──marketing.js      # 有关营销的接口
-│   │    └──order.js          # 有关订单的接口
-│   │    └──product.js        # 有关商品的接口
-│   │    └──setting.js        # 有关设置的接口
-│   │    └──system.js         # 有关维护（开发配置、安全维护）的接口
-│   │    └──systemAdmin.js    # 有关管理员的接口（设置--管理权限--管理员列表）
-│   │    └──systemMenus.js    # 有关权限规则的接口（设置--管理权限--权限规则）
-│   │    └──uploadPictures.js # 有关上传图片附件的接口
-│   │    └──user.js           # 有关会员的接口
+│   │    └──categoryApi.js         # 有关配置的接口 
+│   │    └──configTabApi.js        # 有关配置分类的接口
+│   │    └──dashboard.js           # 有关统计的接口
+│   │    └──distribution.js        # 有关分销的接口
+│   │    └──logistics.js           # 有关城市数据、物流配置的接口
+│   │    └──marketing.js           # 有关优惠券的接口
+│   │    └──order.js               # 有关订单的接口
+│   │    └──role.js                # 有关权限的接口
+│   │    └──roleApi.js             # 有关菜单的接口
+│   │    └──sms.js                 # 有关短信的接口
+│   │    └──store.js               # 有关商品的接口
+│   │    └──storePoint.js          # 有关提货点的接口
+│   │    └──productCreateApi.js    # 有关附件上传的接口
+│   │    └──systemadmin.js         # 有关管理员的接口
+│   │    └──systemConfig.js        # 有关系统配置的接口
+│   │    └──systemFormConfig.js    # 有关表单配置的接口
+│   │    └──systemGroup.js         # 有关组合数据的接口
+│   │    └──systemSetting.js       # 有关上传文件的接口
+│   │    └──user.js                # 有关用户的接口
+│   │    └──wxApi.js               # 有关微信的接口
 │   ├── assets                 # 图片、svg 等静态资源
-│   ├── components             # 公共组件
-│   │    └──cards             # 统计
-│   │    └──copyright         # 页面footer的底部声明
-│   │    └──customerInfo      # 选择用户
+│   ├── components            # 公共组件
+│   │    └──articleList       # 文章列表
+│   │    └──attrFrom          # 商品规格
+│   │    └──Breadcrumb        # 头部标题标签
+│   │    └──cards             # 统计小方块
 │   │    └──echarts           # 统计图
-│   │    └──freightTemplate   # 运费模板
-│   │    └──from              # 生成表单
+│   │    └──Category          # 分类 
+│   │    └──customerInfo      # 用户列表
+│   │    └──FormGenerator     # 表单配置
+│   │    └──couponList        # 优惠劵列表
 │   │    └──goodsList         # 商品列表
+│   │    └──Hamburger         # 导航收缩组件
+│   │    └──HeaderSearch      # 导航搜索组件
 │   │    └──iconFrom          # 导航添加图标
-│   │    └──link              # a连接
-│   │    └──mde               # 多文本框
-│   │    └──modelSure         # 确认模态框
-│   │    └──newsCategory      # 图文管理页
-│   │    └──publicSearchFrom  # 头部搜索（没用到）
-│   │    └──quill             # 编辑器（没用到）
-│   │    └──referrerInfo      # 推荐人信息
-│   │    └──searchFrom        # 订单页的搜索
-│   │    └──sendCoupons       # 发送优惠券
-│   │    └──systemStore       # 添加提货点
-│   │    └──ueditorFrom       # 编辑器组件（供参考，没用到，主要用安装组件--vue-ueditor-wrap）
-│   │    └──uploadPictures    # 上传图片
-│   │    └──uploadVideo       # 上传视频（用于商品编辑器里面）
-│   ├── i18n                   # 多语言
-│   ├── layouts                # 布局
-│   │    └──header-breadcrumb # 头部面包屑样式
-│   │    └──header-collapse   # 头部控制折叠面板的图标
-│   │    └──header-fullscreen # 头部控制是否全屏的图标
-│   │    └──header-i18n       # 头部控制多语言
-│   │    └──header-log        # 头部控制日志异常图标
-│   │    └──header-logo       # 头部logo
-│   │    └──header-notice     # 头部提示消息
-│   │    └──header-reload     # 头部控制刷新的图标
-│   │    └──header-search     # 头部搜索
-│   │    └──header-setting    # 设置页面风格
-│   │    └──header-user       # 我的（个人中心、退出登录）
-│   │    └──menu-head         # 
-│   │    └──menu-side         # 侧边导航栏
-│   │    └──tabs              # 头部的横向导航标签
-│   │    └──mixins            # 用于横向滚动获取title的一个js
-│   ├── libs                   # 公共方法
-│   ├── menu                   # 菜单配置
-│   ├── mixins                 # 通用混合
-│   ├── mock                   # 数据模拟
-│   ├── pages                  # 所有页面
-│   │    └──account           # 有关登录页
-│   │         └──login        # 登录
-│   │         └──register     # 注册
-│   │    └──agent             # 分销
-│   │         └──agentManage  # 分销员管理
-│   │    └──app               # 应用
-│   │         └──routine      # 小程序模板消息
-│   │         └──wechat       # 公众号
-│   │              └──menus   # 微信菜单
-│   │              └──newsCategory   # 图文管理
-│   │                   └──save      # 图文添加
-│   │              └──reply          # 自动回复
-│   │                   └──follow    # 微信关注回复/无效关键词回复
-│   │                   └──keyword   # 关键字回复
-│   │              └──user           # 用户
-│   │                   └──tag       # 用户标签
-│   │                   └──user      # 微信用户
-│   │                   └──message   # 用户行为记录
-│   │    └──cms                      # 内容
-│   │         └──addArticle          # 添加文章/编辑文章
-│   │         └──article             # 文章管理
-│   │         └──articleCategory     # 文章分类
-│   │    └──finance                  # 财务
-│   │         └──commission          # 佣金记录
-│   │         └──financialRecords    # 财务记录
-│   │              └──bill           # 资金记录
-│   │              └──recharge       # 充值记录
-│   │         └──userExtract         # 提现申请
-│   │    └──index                    # 主页
-│   │    └──marketing                # 营销
-│   │         └──storeBargain        # 砍价商品
-│   │         └──storeCombination    # 拼团管理
-│   │              └──combinaList    # 拼团列表
-│   │              └──create         # 添加拼团商品
-│   │              └──index          # 拼团商品
-│   │         └──storeCoupon         # 优惠券制作
-│   │         └──storeCouponIssue    # 优惠券列表
-│   │         └──storeCouponUser     # 会员领取记录
-│   │         └──storeSeckill        # 秒杀管理
-│   │              └──index          # 秒杀商品
-│   │              └──create         # 添加秒杀商品
-│   │         └──userPoint           # 积分日志
-│   │    └──notify                   # 短信设置
-│   │         └──smsConfig           # 短信账户
-│   │         └──smsPay              # 短信购买
-│   │         └──smsTemplateApply    # 短信模板
+│   │    └──RightPanel        # 右侧设置按钮，设置导航相关
+│   │    └──Screenfull        # 全屏
+│   │    └──SvgIcon           # svg图标 
+│   │    └──Tinymce           # 颜色选择
+│   │    └──ThemePicker       # 右侧设置按钮，设置组题颜色
+│   │    └──templatesFrom     # 运费模板
+│   │    └──ueditorFrom       # 富文本编辑器
+│   │    └──uploadPicture     # 上传图片组件
+│   │    └──Upload            # 上传文件组件
+│   │    └──UploadExcel       # 下载Excel
+│   │    └──userList          # 用户列表
+│   ├── layouts               # 导航布局
+│   │    ├──index             # 主页面
+│   │    ├──components        # 导航组件
+│   │        └──Settings      # 右边小按钮，设置导航等
+│   │        └──Sidebar       # 侧边导航
+│   │        └──TagsView      # tab标签页导航
+│   │        └──Navbar        # 头部导航
+│   │        └──AppMain       # 导航路由
+│   │        └──index.js      # 组件引用
+│   │    └──mixins            # 自适应大小
+│   ├── libs                  # 公共js方法
+│   │    └──settingMer        # 配置请求地址
+│   ├── views                 # 所有页面
+│   │    └──login                    # 登录
+│   │         └──index               # 登录
+│   │    └──dashboard                # 首页
+│   │    └──store                    # 商品
+│   │         └──creatStore          # 添加商品
+│   │         └──storeAttr           # 商品规格
+│   │         └──sort                # 商品分类
+│   │         └──taoBao              # 复制商品
+│   │         └──storeComment        # 商品评论
 │   │    └──order                    # 订单管理
-│   │    └──product                  # 商品
-│   │         └──productAdd          # 添加商品
-│   │         └──productAttr         # 商品规格
-│   │         └──productClassify     # 商品分类
-│   │         └──productList         # 商品管理
-│   │         └──productReply        # 商品评论管理
-│   │    └──setting                  # 设置
-│   │         └──cityDada            # 城市数据
-│   │         └──clerkList           # 核销员管理
-│   │         └──freight             # 物流公司
-│   │         └──setSystem           # 系统设置
-│   │         └──shippingTemplates   # 运费模板
-│   │         └──storeList           # 提货点列表
-│   │         └──storeService        # 客服管理
-│   │         └──systemAdmin         # 管理员列表
-│   │         └──systemMenus         # 权限规则
-│   │         └──systemRole          # 身份管理
-│   │         └──systemStore         # 门店设置
-│   │         └──user                # 个人中心
-│   │         └──verifyOrder         # 核销订单
-│   │    └──system                   # 维护
-│   │         └──auth                # 商业授权
-│   │         └──clear               # 刷新缓存
-│   │         └──configTab           # 配置
-│   │              └──index          # 配置分类
-│   │              └──list           # 配置列表
-│   │         └──error               # 错误页
-│   │              └──403            # 403
-│   │              └──404            # 404
-│   │              └──500            # 500
-│   │         └──group               # 组合数据
-│   │         └──maintain              
-│   │              └──systemCleardata    # 清除数据
-│   │              └──systemDatabackup   # 数据备份
-│   │              └──systemFile         # 文件校验
-│   │                   └──opendir       # 文件管理
-│   │              └──systemLog          # 系统日志
-│   │    └──user                         # 会员
-│   │         └──group                   # 会员分组
-│   │         └──label                   # 会员标签
-│   │         └──level                   # 会员等级
-│   │         └──list                    # 会员管理
-│   ├── plugins                           # 插件
-│   ├── router                            # 路由配置
-│   │    └──modules                      # 页面路由模块
-│   │         └──agent.js                     # 有关分销
-│   │         └──app.js                       # 有关应用（小程序、公众号）
-│   │         └──cms.js                       # 有关内容（文章管理、文章分类）
-│   │         └──echarts.js                   # 有关统计
-│   │         └──finance.js                   # 有关财务
-│   │         └──index.js                     # 有关主页
-│   │         └──marketing.js                 # 有关营销
-│   │         └──order.js                     # 有关订单
-│   │         └──product.js                   # 有关商品
-│   │         └──setting.js                   # 有关设置
-│   │         └──system.js                    # 有关维护
-│   │         └──user.js                      # 有关会员
-│   │    └──index.js                          # 路由的导出以及拦截处理
-│   │    └──routes.js                         # 路由的汇总
-│   ├── store                                  # Vuex 状态管理
-│   ├── utils                                  # js工具
-│   │    └──authLapse.js                      # 授权提示框
-│   │    └──modalForm.js                      # 表单模态框
-│   │    └──videoCloud.js                     # 上传云储存视频（七牛、腾讯、阿里）
-│   │    └──validate.js                       # 将时间戳转化成时间；
-│   │    └──public.js                         # 询问模态框；
-│   ├── styles            # 样式管理
-│   ├── setting.env.js    # 开发配置文件
-│   ├── setting.js        # 业务配置文件
-│   ├── main.js           # 入口文件 加载组件 初始化等
-│   └── App.vue           # 入口页面
-├── tests                  # 测试管理
-├── alias.config.js        # 别名，仅用于配置 WebStorm 识别别名，无实际用处
-├── babel.config.js        # babel 配置
-├── jest.config.js         # jest 配置
-├── package.json           # package.json
-└── vue.config.js          # Vue CLI 3 配置
+│   │    └──marketing                # 营销
+│   │         └──coupon              # 优惠劵
+│   │    └──systemSetting            # 设置
+│   │         └──administratorAuthority     # 管理权限
+│   │              └──adminList      # 管理员列表
+│   │              └──identityManager# 身份管理
+│   │              └──permissionRules# 权限规则
+│   │         └──logistics           # 物流设置
+│   │              └──cityList       # 城市数据
+│   │              └──companyList    # 物流公司
+│   │              └──config         # 物流配置
+│   │              └──shippingTemplates      # 运费模板 
+│   │         └──setting             # 系统设置
+│   │         └──systemStore         # 提货点设置
+│   │    └──appSetting               # 应用 小程序 公众号设置
+│   │    └──content                  # 内容
+│   │         └──article             # 文章管理
+│   │         └──articleclass        # 文章分类
+│   │    └──datas                    # 统计数据
+│   │    └──user                     # 用户
+│   │         └──list                # 用户管理
+│   │         └──grade               # 用户等级/标签
+│   │         └──group               # 用户分组
+│   │    └──distribution             # 分销设置
+│   │    └──maintain                 # 维护 
+│   │         └──devconfig           # 组合数据 
+│   │         └──formConfig          # 表单配置 
+│   │    └──financial                # 财务
+│   │    └──error-page               # 错误页
+│   │         └──404                 # 错误页404
+│   │         └──403                 # 错误页403
+│   ├── filters                      # 过滤器
+│   ├── router                       # 路由配置
+│   │    └──modules                  # 页面路由模块
+│   │         └──content.js          # 有关内容 文章
+│   │         └──user.js             # 有关用户
+│   │         └──appSetting.js       # 有关应用
+│   │         └──marketing.js        # 有关优惠券
+│   │         └──distribution.js     # 有关分销
+│   │         └──order.js            # 有关订单
+│   │         └──financial.js        # 有关财务
+│   │         └──store.js            # 有关商品
+│   │         └──maintain.js         # 有关维护
+│   │         └──operation.js        # 有关设置
+│   │    └──index.js                 # 路由的汇总
+│   ├── store                        # Vuex 状态管理
+│   ├── utils                        # 全局公用方法
+│   │    └──request.js               # 请求封装
+│   │    └──settingMer.js            # 请求地址配置
+│   ├── styles                       # 样式管理
+│   ├── permission.js                # 路由拦截
+│   ├── main.js                      # 入口文件 加载组件 初始化等
+│   └── App.vue                      # 入口页面
+├── tests                      # 测试
+├── .env.xxx                   # 环境变量配置
+├── .eslintrc.js               # eslint 配置项
+├── .babelrc                   # babel-loader 配置
+├── .travis.yml                # 自动化CI配置
+├── vue.config.js              # vue-cli 配置
+├── postcss.config.js          # postcss 配置
+└── package.json               # package.json
+
+
 ~~~
-## 开发打包项目
-~~~
+## 开发
+
+```bash
+# 克隆项目
+git clone https://gitee.com/ZhongBangKeJi/crmeb_java/
+
 # 进入项目目录
-$ cd admin-iView
+cd ##
 
 # 安装依赖
-$ npm install
+npm install
 
-# 启动项目(本地开发环境)
-$ npm run dev
+# 建议不要直接使用 cnpm 安装依赖，会有各种诡异的 bug。可以通过如下操作解决 npm 下载速度慢的问题
+npm install --registry=https://registry.npm.taobao.org
 
-# 打包项目
-$ npm run build
-~~~
+# 启动服务
+npm run dev
+```
 
-## 配置
+浏览器访问 http://localhost:9527
+
+## 发布
+
+```bash
+# 构建测试环境
+npm run build:stage
+
+# 构建生产环境
+npm run build:prod
+```
+
+## 其它
+
+```bash
+# 预览发布环境效果
+npm run preview
+
+# 预览发布环境效果 + 静态资源分析
+npm run preview -- --report
+
+# 代码格式检查
+npm run lint
+
+# 代码格式检查并自动修复
+npm run lint -- --fix
+```
 
 

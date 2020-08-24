@@ -1,16 +1,4 @@
 import request from '@/utils/request'
-
-/**
- * 新增商品
- * @param pram
- */
-export function productCreateApi(data) {
-  return request({
-    url: '/admin/product/save',
-    method: 'POST',
-    data
-  })
-}
 /**
  * @description 附件分类 -- 所有分类
  */
