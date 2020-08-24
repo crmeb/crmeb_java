@@ -313,7 +313,8 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
                 storeCartResponse.setProductInfo(spcpInfo);
                 storeCartResponse.setTrueStock(storeCartResponse.getProductInfo().getAttrInfo().getStock());
                 storeCartResponse.setCostPrice(storeCartResponse.getProductInfo().getAttrInfo().getCost());
-                storeCartResponse.setTruePrice(BigDecimal.ZERO);
+//                storeCartResponse.setTruePrice(BigDecimal.ZERO);
+                storeCartResponse.setTruePrice(existSPAttrValue.getPrice());
                 storeCartResponse.setVipTruePrice(BigDecimal.ZERO);
                 orderAgainCache.add(storeCartResponse);
             }
