@@ -1,4 +1,4 @@
-export default function modalAttr(val, callback) {
+export default function modalAttr(val, callback, keyNum) {
   const h = this.$createElement
   return new Promise((resolve, reject) => {
     this.$msgbox({
@@ -9,7 +9,8 @@ export default function modalAttr(val, callback) {
       message: h('div', { class: 'common-form-upload' }, [
         h('attrFrom', {
           props: {
-            currentRow: val
+            currentRow: val,
+            keyNum: keyNum
           },
           on: {
             getList() {

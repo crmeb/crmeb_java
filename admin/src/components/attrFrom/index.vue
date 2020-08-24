@@ -1,10 +1,4 @@
 <template>
-  <!--<el-dialog-->
-  <!--title="属性规则"-->
-  <!--:visible.sync="dialogVisible"-->
-  <!--width="800px"-->
-  <!--:before-close="handleCloseModel"-->
-  <!--&gt;-->
   <div>
     <el-form ref="formDynamic" size="small" :model="formDynamic" v-loading="loading"  :rules="rules" class="attrFrom mb20" label-width="100px" @submit.native.prevent>
       <el-row :gutter="24">
@@ -80,6 +74,10 @@ export default {
     currentRow: {
       type: Object,
       default: null
+    },
+    keyNum: {
+      type: Number,
+      default: 0
     }
   },
   data() {
@@ -110,9 +108,7 @@ export default {
       },
       attrsName: '',
       attrsVal: '',
-      formDynamicNameData: [],
       isBtn: false,
-      formDynamicName: [],
       results: [],
       result: [],
       ids: 0
@@ -124,6 +120,12 @@ export default {
         this.formDynamic = val
       },
       immediate: true
+    },
+    keyNum: {
+      deep: true,
+      handler(val) {
+        if( val>0 ) this.clear()
+      }
     }
   },
   mounted() {
@@ -215,11 +217,17 @@ export default {
                 this.$emit('getList');
                 this.loading = false
                 this.loadingBtn = false
+              }).catch(() => {
+                this.loading = false
+                this.loadingBtn = false
               }):attrCreatApi(data).then(res => {
                 this.$message.success('提交成功');
                 this.$msgbox.close()
                 this.$emit('getList');
                 this.clear();
+                this.loading = false
+                this.loadingBtn = false
+              }).catch(() => {
                 this.loading = false
                 this.loadingBtn = false
               })
