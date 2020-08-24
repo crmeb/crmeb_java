@@ -1,166 +1,220 @@
-<p align="center">
-  <img width="320" src="https://wpimg.wallstcn.com/ecc53a42-d79b-42e2-8852-5126b810a4c8.svg">
-</p>
+# CRMEB Admin
+## 开发规范
+统一使用ES6 语法
+方法注释
+/*
+* th => 表头
+* data => 数据
+* fileName => 文件名
+* fileType => 文件类型
+* sheetName => sheet页名
+*/
+export default function toExcel ({ th, data, fileName, fileType, sheetName }) 
+行注释 //
 
-<p align="center">
-  <a href="https://github.com/vuejs/vue">
-    <img src="https://img.shields.io/badge/vue-2.6.10-brightgreen.svg" alt="vue">
-  </a>
-  <a href="https://github.com/ElemeFE/element">
-    <img src="https://img.shields.io/badge/element--ui-2.7.0-brightgreen.svg" alt="element-ui">
-  </a>
-  <a href="https://travis-ci.org/PanJiaChen/vue-element-admin" rel="nofollow">
-    <img src="https://travis-ci.org/PanJiaChen/vue-element-admin.svg?branch=master" alt="Build Status">
-  </a>
-  <a href="https://github.com/PanJiaChen/vue-element-admin/blob/master/LICENSE">
-    <img src="https://img.shields.io/github/license/mashape/apistatus.svg" alt="license">
-  </a>
-  <a href="https://github.com/PanJiaChen/vue-element-admin/releases">
-    <img src="https://img.shields.io/github/release/PanJiaChen/vue-element-admin.svg" alt="GitHub release">
-  </a>
-  <a href="https://gitter.im/vue-element-admin/discuss">
-    <img src="https://badges.gitter.im/Join%20Chat.svg" alt="gitter">
-  </a>
-  <a href="https://panjiachen.gitee.io/vue-element-admin-site/zh/donate">
-    <img src="https://img.shields.io/badge/%24-donate-ff69b4.svg" alt="donate">
-  </a>
-</p>
+### 命名
 
-简体中文 | [English](./README.md) | [日本語](./README.ja.md) | [Spanish](./README.es.md)
+页面目录 文件夹命名格式骆驼式命名法,例如：用户列表 userList 
+例如：商品模块
+store 商品
+    ├─ store 商品管理
+        ├─index.vue 首页
+        ├─ creatStore  新建商品
+            ├─ index.vue
+        ├─ sort 商品分类
+            ├─ index.vue
+        ├─storeAttr 商品规格
+            ├─ index.vue
+        ├─storeComment 商品评论
+            ├─ index.vue    
 
-## 简介
+页面命名、组建、文件夹 命名格式小驼峰命名法,例如：用户列表 userList
 
-[vue-element-admin](https://panjiachen.github.io/vue-element-admin) 是一个后台前端解决方案，它基于 [vue](https://github.com/vuejs/vue) 和 [element-ui](https://github.com/ElemeFE/element)实现。它使用了最新的前端技术栈，内置了 i18n 国际化解决方案，动态路由，权限验证，提炼了典型的业务模型，提供了丰富的功能组件，它可以帮助你快速搭建企业级中后台产品原型。相信不管你的需求是什么，本项目都能帮助到你。
+类名函数命名 大驼峰式 例如：addUser
+变量命名 小驼峰式 例如：user 或者 userInfo
+常量 采用全大些下划线命名 例如：VUE_APP_API_URl
 
-- [在线预览](https://panjiachen.github.io/vue-element-admin)
+### 文件管理规范
+views 页面模块必须件文件夹区分
+api 接口一个模块一个文件
+组建 一个组建一个文件夹
+plugins 插件一个插件一个文件夹
+vuex 路由状态管理，一个模块在modules 中建一个文件夹
+router 一个模块一个模块在modules 中建一个文件夹
+style 样式尽量采用iView自带组建，common.less 系统通用样式不要轻易动
+自定义通用样式 style.less,每次添加必须加注释，页面独立样式在在页面内写，后缀less 格式
+组建样式 styles 中添加文件夹 composents 对应components 目录新建样式文件
+utils 自定义工具js 独立命名，一般不用新建文件夹
 
-- [使用文档](https://panjiachen.github.io/vue-element-admin-site/zh/)
+## 模块命名
+~~~
+├─ login 登录
+├─ dashboard 首页
+├─ store 商品管理
+├─ order 系统订单管理
+├─ distribution 分销
+├─ user 用户管理
+├─ content 内容管理
+├─ appSetting 各个应用模块功能管理公众号、小程序、支付宝、百度小程序、今日头条小程序 
+├─ marketing 营销管理 优惠劵 积分
+├─ sms 设置 短信设置
+├─ systemSetting 设置 管理员权限 系统设置 物流设置
+├─ maintain 维护 配置分类 组合数据 表单配置
+├─ error-page 错误页
 
-- [Gitter 讨论组](https://gitter.im/vue-element-admin/discuss)
+~~~
+## 目录结构
+主要目录结构及说明：
+~~~
+├── public                         # 静态资源
+│   ├── favicon.ico                # favicon图标
+│   └── index.html                 # html 模板
+│   └── UEditor                    # 富文本编辑器插件
+├── src                            # 源代码
+│   ├── api                        # 所有请求
+│   │    └──user.js                # 有关登录/用户的接口
+│   │    └──article.js             # 有关内容的接口
+│   │    └──categoryApi.js         # 有关配置的接口 
+│   │    └──configTabApi.js        # 有关配置分类的接口
+│   │    └──dashboard.js           # 有关统计的接口
+│   │    └──distribution.js        # 有关分销的接口
+│   │    └──logistics.js           # 有关城市数据、物流配置的接口
+│   │    └──marketing.js           # 有关优惠券的接口
+│   │    └──order.js               # 有关订单的接口
+│   │    └──role.js                # 有关权限的接口
+│   │    └──roleApi.js             # 有关菜单的接口
+│   │    └──sms.js                 # 有关短信的接口
+│   │    └──store.js               # 有关商品的接口
+│   │    └──storePoint.js          # 有关提货点的接口
+│   │    └──productCreateApi.js    # 有关附件上传的接口
+│   │    └──systemadmin.js         # 有关管理员的接口
+│   │    └──systemConfig.js        # 有关系统配置的接口
+│   │    └──systemFormConfig.js    # 有关表单配置的接口
+│   │    └──systemGroup.js         # 有关组合数据的接口
+│   │    └──systemSetting.js       # 有关上传文件的接口
+│   │    └──user.js                # 有关用户的接口
+│   │    └──wxApi.js               # 有关微信的接口
+│   ├── assets                 # 图片、svg 等静态资源
+│   ├── components            # 公共组件
+│   │    └──articleList       # 文章列表
+│   │    └──attrFrom          # 商品规格
+│   │    └──Breadcrumb        # 头部标题标签
+│   │    └──cards             # 统计小方块
+│   │    └──echarts           # 统计图
+│   │    └──Category          # 分类 
+│   │    └──customerInfo      # 用户列表
+│   │    └──FormGenerator     # 表单配置
+│   │    └──couponList        # 优惠劵列表
+│   │    └──goodsList         # 商品列表
+│   │    └──Hamburger         # 导航收缩组件
+│   │    └──HeaderSearch      # 导航搜索组件
+│   │    └──iconFrom          # 导航添加图标
+│   │    └──RightPanel        # 右侧设置按钮，设置导航相关
+│   │    └──Screenfull        # 全屏
+│   │    └──SvgIcon           # svg图标 
+│   │    └──Tinymce           # 颜色选择
+│   │    └──ThemePicker       # 右侧设置按钮，设置组题颜色
+│   │    └──templatesFrom     # 运费模板
+│   │    └──ueditorFrom       # 富文本编辑器
+│   │    └──uploadPicture     # 上传图片组件
+│   │    └──Upload            # 上传文件组件
+│   │    └──UploadExcel       # 下载Excel
+│   │    └──userList          # 用户列表
+│   ├── layouts               # 导航布局
+│   │    ├──index             # 主页面
+│   │    ├──components        # 导航组件
+│   │        └──Settings      # 右边小按钮，设置导航等
+│   │        └──Sidebar       # 侧边导航
+│   │        └──TagsView      # tab标签页导航
+│   │        └──Navbar        # 头部导航
+│   │        └──AppMain       # 导航路由
+│   │        └──index.js      # 组件引用
+│   │    └──mixins            # 自适应大小
+│   ├── libs                  # 公共js方法
+│   │    └──settingMer        # 配置请求地址
+│   ├── views                 # 所有页面
+│   │    └──login                    # 登录
+│   │         └──index               # 登录
+│   │    └──dashboard                # 首页
+│   │    └──store                    # 商品
+│   │         └──creatStore          # 添加商品
+│   │         └──storeAttr           # 商品规格
+│   │         └──sort                # 商品分类
+│   │         └──taoBao              # 复制商品
+│   │         └──storeComment        # 商品评论
+│   │    └──order                    # 订单管理
+│   │    └──marketing                # 营销
+│   │         └──coupon              # 优惠劵
+│   │    └──systemSetting            # 设置
+│   │         └──administratorAuthority     # 管理权限
+│   │              └──adminList      # 管理员列表
+│   │              └──identityManager# 身份管理
+│   │              └──permissionRules# 权限规则
+│   │         └──logistics           # 物流设置
+│   │              └──cityList       # 城市数据
+│   │              └──companyList    # 物流公司
+│   │              └──config         # 物流配置
+│   │              └──shippingTemplates      # 运费模板 
+│   │         └──setting             # 系统设置
+│   │         └──systemStore         # 提货点设置
+│   │    └──appSetting               # 应用 小程序 公众号设置
+│   │    └──content                  # 内容
+│   │         └──article             # 文章管理
+│   │         └──articleclass        # 文章分类
+│   │    └──datas                    # 统计数据
+│   │    └──user                     # 用户
+│   │         └──list                # 用户管理
+│   │         └──grade               # 用户等级/标签
+│   │         └──group               # 用户分组
+│   │    └──distribution             # 分销设置
+│   │    └──maintain                 # 维护 
+│   │         └──devconfig           # 组合数据 
+│   │         └──formConfig          # 表单配置 
+│   │    └──financial                # 财务
+│   │    └──error-page               # 错误页
+│   │         └──404                 # 错误页404
+│   │         └──403                 # 错误页403
+│   ├── filters                      # 过滤器
+│   ├── router                       # 路由配置
+│   │    └──modules                  # 页面路由模块
+│   │         └──content.js          # 有关内容 文章
+│   │         └──user.js             # 有关用户
+│   │         └──appSetting.js       # 有关应用
+│   │         └──marketing.js        # 有关优惠券
+│   │         └──distribution.js     # 有关分销
+│   │         └──order.js            # 有关订单
+│   │         └──financial.js        # 有关财务
+│   │         └──store.js            # 有关商品
+│   │         └──maintain.js         # 有关维护
+│   │         └──operation.js        # 有关设置
+│   │    └──index.js                 # 路由的汇总
+│   ├── store                        # Vuex 状态管理
+│   ├── utils                        # 全局公用方法
+│   │    └──request.js               # 请求封装
+│   │    └──settingMer.js            # 请求地址配置
+│   ├── styles                       # 样式管理
+│   ├── permission.js                # 路由拦截
+│   ├── main.js                      # 入口文件 加载组件 初始化等
+│   └── App.vue                      # 入口页面
+├── tests                      # 测试
+├── .env.xxx                   # 环境变量配置
+├── .eslintrc.js               # eslint 配置项
+├── .babelrc                   # babel-loader 配置
+├── .travis.yml                # 自动化CI配置
+├── vue.config.js              # vue-cli 配置
+├── postcss.config.js          # postcss 配置
+└── package.json               # package.json
 
-- [Donate](https://panjiachen.gitee.io/vue-element-admin-site/zh/donate)
 
-- [Wiki](https://github.com/PanJiaChen/vue-element-admin/wiki)
-
-- [Gitee](https://panjiachen.gitee.io/vue-element-admin/) 在线预览（国内用户可访问该地址）
-
-- [国内访问文档](https://panjiachen.gitee.io/vue-element-admin-site/zh/) 文档（方便没翻墙的用户查看）
-
-- 基础模板建议使用: [vue-admin-template](https://github.com/PanJiaChen/vue-admin-template)
-- 桌面端: [electron-vue-admin](https://github.com/PanJiaChen/electron-vue-admin)
-- Typescript 版: [vue-typescript-admin-template](https://github.com/Armour/vue-typescript-admin-template) (鸣谢: [@Armour](https://github.com/Armour))
-- [awesome-project](https://github.com/PanJiaChen/vue-element-admin/issues/2312)
-
-**`v4.1.0+`版本之后默认 master 分支将不支持国际化，有需要的请使用[i18n](https://github.com/PanJiaChen/vue-element-admin/tree/i18n)分支，它会和 master 保持同步更新**
-
-**该项目不支持低版本浏览器(如 ie)，有需求请自行添加 polyfill [详情](https://github.com/PanJiaChen/vue-element-admin/wiki#babel-polyfill)**
-
-**目前版本为 `v4.0+` 基于 `vue-cli` 进行构建，若发现问题，欢迎提[issue](https://github.com/PanJiaChen/vue-element-admin/issues/new)。若你想使用旧版本，可以切换分支到[tag/3.11.0](https://github.com/PanJiaChen/vue-element-admin/tree/tag/3.11.0)，它不依赖 `vue-cli`**
-
-群主 **[圈子](https://jianshiapp.com/circles/1209)** 群主会经常分享一些技术相关的东西，或者加入 [qq 群](https://github.com/PanJiaChen/vue-element-admin/issues/602) 或者关注 [微博](https://weibo.com/u/3423485724?is_all=1)
-
-## 前序准备
-
-你需要在本地安装 [node](http://nodejs.org/) 和 [git](https://git-scm.com/)。本项目技术栈基于 [ES2015+](http://es6.ruanyifeng.com/)、[vue](https://cn.vuejs.org/index.html)、[vuex](https://vuex.vuejs.org/zh-cn/)、[vue-router](https://router.vuejs.org/zh-cn/) 、[vue-cli](https://github.com/vuejs/vue-cli) 、[axios](https://github.com/axios/axios) 和 [element-ui](https://github.com/ElemeFE/element)，所有的请求数据都使用[Mock.js](https://github.com/nuysoft/Mock)进行模拟，提前了解和学习这些知识会对使用本项目有很大的帮助。
-
-同时配套了系列教程文章，如何从零构建后一个完整的后台项目，建议大家先看完这些文章再来实践本项目
-
-- [手摸手，带你用 vue 撸后台 系列一(基础篇)](https://juejin.im/post/59097cd7a22b9d0065fb61d2)
-- [手摸手，带你用 vue 撸后台 系列二(登录权限篇)](https://juejin.im/post/591aa14f570c35006961acac)
-- [手摸手，带你用 vue 撸后台 系列三 (实战篇)](https://juejin.im/post/593121aa0ce4630057f70d35)
-- [手摸手，带你用 vue 撸后台 系列四(vueAdmin 一个极简的后台基础模板)](https://juejin.im/post/595b4d776fb9a06bbe7dba56)
-- [手摸手，带你用vue撸后台 系列五(v4.0新版本)](https://juejin.im/post/5c92ff94f265da6128275a85)
-- [手摸手，带你封装一个 vue component](https://segmentfault.com/a/1190000009090836)
-- [手摸手，带你优雅的使用 icon](https://juejin.im/post/59bb864b5188257e7a427c09)
-- [手摸手，带你用合理的姿势使用 webpack4（上）](https://juejin.im/post/5b56909a518825195f499806)
-- [手摸手，带你用合理的姿势使用 webpack4（下）](https://juejin.im/post/5b5d6d6f6fb9a04fea58aabc)
-
-**如有问题请先看上述使用文档和文章，若不能满足，欢迎 issue 和 pr**
-
- <p align="center">
-  <img width="900" src="https://wpimg.wallstcn.com/a5894c1b-f6af-456e-82df-1151da0839bf.png">
-</p>
-
-## Sponsors
-
-Become a sponsor and get your logo on our README on GitHub with a link to your site. [[Become a sponsor]](https://www.patreon.com/panjiachen)
-
-<a href="https://flatlogic.com/admin-dashboards?from=vue-element-admin"><img width="150px" src="https://wpimg.wallstcn.com/9c0b719b-5551-4c1e-b776-63994632d94a.png" /></a><p>Admin Dashboard Templates made with Vue, React and Angular.</p>
-
-## 功能
-
-```
-- 登录 / 注销
-
-- 权限验证
-  - 页面权限
-  - 指令权限
-  - 权限配置
-  - 二步登录
-
-- 多环境发布
-  - dev sit stage prod
-
-- 全局功能
-  - 国际化多语言
-  - 多种动态换肤
-  - 动态侧边栏（支持多级路由嵌套）
-  - 动态面包屑
-  - 快捷导航(标签页)
-  - Svg Sprite 图标
-  - 本地/后端 mock 数据
-  - Screenfull全屏
-  - 自适应收缩侧边栏
-
-- 编辑器
-  - 富文本
-  - Markdown
-  - JSON 等多格式
-
-- Excel
-  - 导出excel
-  - 导入excel
-  - 前端可视化excel
-  - 导出zip
-
-- 表格
-  - 动态表格
-  - 拖拽表格
-  - 内联编辑
-
-- 错误页面
-  - 401
-  - 404
-
-- 組件
-  - 头像上传
-  - 返回顶部
-  - 拖拽Dialog
-  - 拖拽Select
-  - 拖拽看板
-  - 列表拖拽
-  - SplitPane
-  - Dropzone
-  - Sticky
-  - CountTo
-
-- 综合实例
-- 错误日志
-- Dashboard
-- 引导页
-- ECharts 图表
-- Clipboard(剪贴复制)
-- Markdown2html
-```
-
+~~~
 ## 开发
 
 ```bash
 # 克隆项目
-git clone https://github.com/PanJiaChen/vue-element-admin.git
+git clone https://gitee.com/ZhongBangKeJi/crmeb_java/
 
 # 进入项目目录
-cd vue-element-admin
+cd ##
 
 # 安装依赖
 npm install
@@ -199,42 +253,3 @@ npm run lint
 # 代码格式检查并自动修复
 npm run lint -- --fix
 ```
-
-更多信息请参考 [使用文档](https://panjiachen.github.io/vue-element-admin-site/zh/)
-
-## Changelog
-
-Detailed changes for each release are documented in the [release notes](https://github.com/PanJiaChen/vue-element-admin/releases).
-
-## Online Demo
-
-[在线 Demo](https://panjiachen.github.io/vue-element-admin)
-
-## Donate
-
-如果你觉得这个项目帮助到了你，你可以帮作者买一杯果汁表示鼓励 :tropical_drink:
-![donate](https://panjiachen.github.io/donate/donation.png)
-
-[更多捐赠方式](https://panjiachen.gitee.io/vue-element-admin-site/zh/donate)
-
-[Paypal Me](https://www.paypal.me/panfree23)
-
-[Buy me a coffee](https://www.buymeacoffee.com/Pan)
-
-## 购买贴纸
-
-你也可以通过 购买[官方授权的贴纸](https://smallsticker.com/product/vue-element-admin) 的方式来支持 vue-element-admin - 每售出一张贴纸，本项目将获得 2 元的捐赠。
-
-## Browsers support
-
-Modern browsers and Internet Explorer 10+.
-
-| [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="IE / Edge" width="24px" height="24px" />](https://godban.github.io/browsers-support-badges/)</br>IE / Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png" alt="Firefox" width="24px" height="24px" />](https://godban.github.io/browsers-support-badges/)</br>Firefox | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](https://godban.github.io/browsers-support-badges/)</br>Chrome | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png" alt="Safari" width="24px" height="24px" />](https://godban.github.io/browsers-support-badges/)</br>Safari |
-| --------- | --------- | --------- | --------- |
-| IE10, IE11, Edge| last 2 versions| last 2 versions| last 2 versions
-
-## License
-
-[MIT](https://github.com/PanJiaChen/vue-element-admin/blob/master/LICENSE)
-
-Copyright (c) 2017-present PanJiaChen
