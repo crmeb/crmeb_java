@@ -137,7 +137,7 @@ public class Constants {
     //config配置的key
     public static final String CONFIG_KEY_SITE_URL = "site_url"; //域名
     public static final String CONFIG_KEY_API_URL = "api_url"; //接口地址
-    public static final String CONFIG_KEY_SITE_LOGO = "site_logo"; //logo地址
+    public static final String CONFIG_KEY_SITE_LOGO = "routine_index_logo"; //logo地址
     public static final String CONFIG_KEY_SITE_NAME = "site_name"; //网站名称
     public static final String CONFIG_SITE_TENG_XUN_MAP_KEY = "tengxun_map_key"; //腾讯地图key
     public static final String CONFIG_BANK_LIST = "user_extract_bank"; //可提现银行
