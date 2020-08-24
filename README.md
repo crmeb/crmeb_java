@@ -7,6 +7,7 @@
 </p>
 
 ## 项目介绍
+
    CRMEB JAVA版商城系统是基于Java+uniapp开发的一套新零售移动电商系统，CRMEB系统就是集客户关系管理+营销电商系统，能够快速积累客户、会员数据分析、智能转化客户、
    有效提高销售、会员维护、网络营销的一款企业应用，更适合企业二次开发；
 
@@ -38,7 +39,7 @@ CRMEB微信小程序商城：https://gitee.com/ZhongBangKeJi/CRMEB_WechatApplet
 ~~~
     crmeb
     │    ├─ crmeb_log 日志
-    │    ├─ image图片临时文件夹
+    │    ├─ image 图片临时文件夹
     │    ├─ /src/main/
     │        ├─ java/com
     │          ├─ aop 切片
