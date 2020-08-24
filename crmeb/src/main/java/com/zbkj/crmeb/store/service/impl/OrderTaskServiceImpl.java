@@ -132,7 +132,7 @@ public class OrderTaskServiceImpl implements OrderTaskService {
     }
 
     /**
-     * 用户完成订单
+     * 用户已收货
      * @author Mr.Zhang
      * @since 2020-07-09
      */

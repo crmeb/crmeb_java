@@ -55,9 +55,7 @@ public class StoreProductRuleController {
     @ApiOperation(value = "新增")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     public CommonResult<String> save(@RequestBody @Validated StoreProductRuleRequest storeProductRuleRequest){
-        StoreProductRule storeProductRule = new StoreProductRule();
-        BeanUtils.copyProperties(storeProductRuleRequest, storeProductRule);
-        if(storeProductRuleService.save(storeProductRule)){
+        if(storeProductRuleService.save(storeProductRuleRequest)){
             return CommonResult.success();
         }else{
             return CommonResult.failed();
