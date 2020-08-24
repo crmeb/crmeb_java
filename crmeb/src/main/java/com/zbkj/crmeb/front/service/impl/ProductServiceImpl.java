@@ -162,8 +162,7 @@ public class ProductServiceImpl implements ProductService {
             }
         storeInfo.setUserLike(false);
         storeInfo.setUserCollect(false);
-            productDetailResponse.setPriceName("0");
-            productDetailResponse.setStoreInfo(storeInfo);
+        productDetailResponse.setStoreInfo(storeInfo);
 
             // 根据制式设置attr属性
             setSkuAttr(id, productDetailResponse, productResponse);
@@ -310,28 +309,28 @@ public class ProductServiceImpl implements ProductService {
         BigDecimal maxPrice = null;
         BigDecimal minPrice = null;
         // 获取佣金比例区间 todo 这里的对象更换为map后需要重新计算
-//        if(storeProductResponse.getIsSub()){ // 是否单独分拥
-//            maxPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::max);
-//            minPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::min);
-//
+        if(storeProductResponse.getIsSub()){ // 是否单独分拥
+            maxPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::max);
+            minPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::min);
+
 //            storeProductResponse.getAttrValues().
-//        }else{
-//            BigDecimal _maxPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::max);
-//            BigDecimal _minPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::min);
-//            maxPrice = BrokerRatio.multiply(_maxPrice);
-//            minPrice = BrokerRatio.multiply((_minPrice));
-//        }
-//        if(minPrice.compareTo(BigDecimal.ZERO) == 0 && maxPrice.compareTo(BigDecimal.ZERO) == 0){
-//            priceName = "0";
-//        }else if(minPrice.compareTo(BigDecimal.ZERO) == 0 && maxPrice.compareTo(BigDecimal.ZERO) == 1){
-//            priceName = maxPrice.toString();
-//        }else if(minPrice.compareTo(BigDecimal.ZERO) == 1 && maxPrice.compareTo(BigDecimal.ZERO) == 1){
-//            priceName = minPrice.toString();
-//        }else if(minPrice.compareTo(maxPrice) == 0 && minPrice.compareTo(BigDecimal.ZERO) == 0){
-//            priceName = maxPrice.toString();
-//        }else{
-//            priceName = minPrice.toString() + "~" + maxPrice.toString();
-//        }
+        }else{
+            BigDecimal _maxPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::max);
+            BigDecimal _minPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::min);
+            maxPrice = BrokerRatio.multiply(_maxPrice);
+            minPrice = BrokerRatio.multiply((_minPrice));
+        }
+        if(minPrice.compareTo(BigDecimal.ZERO) == 0 && maxPrice.compareTo(BigDecimal.ZERO) == 0){
+            priceName = "0";
+        }else if(minPrice.compareTo(BigDecimal.ZERO) == 0 && maxPrice.compareTo(BigDecimal.ZERO) == 1){
+            priceName = maxPrice.toString();
+        }else if(minPrice.compareTo(BigDecimal.ZERO) == 1 && maxPrice.compareTo(BigDecimal.ZERO) == 1){
+            priceName = minPrice.toString();
+        }else if(minPrice.compareTo(maxPrice) == 0 && minPrice.compareTo(BigDecimal.ZERO) == 0){
+            priceName = maxPrice.toString();
+        }else{
+            priceName = minPrice.toString() + "~" + maxPrice.toString();
+        }
         return priceName;
     }
 }

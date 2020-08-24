@@ -1,18 +1,22 @@
 package com.zbkj.crmeb.store.service.impl;
 
 import com.common.PageParamRequest;
+import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.crmeb.store.dao.StoreProductRuleDao;
 import com.zbkj.crmeb.store.model.StoreProductRule;
+import com.zbkj.crmeb.store.request.StoreProductRuleRequest;
 import com.zbkj.crmeb.store.request.StoreProductRuleSearchRequest;
 import com.zbkj.crmeb.store.service.StoreProductRuleService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -45,8 +49,37 @@ public class StoreProductRuleServiceImpl extends ServiceImpl<StoreProductRuleDao
             lambdaQueryWrapper.like(StoreProductRule::getRuleName, request.getKeywords());
             lambdaQueryWrapper.or().like(StoreProductRule::getRuleValue, request.getKeywords());
         }
+        lambdaQueryWrapper.orderByDesc(StoreProductRule::getId);
         return dao.selectList(lambdaQueryWrapper);
     }
 
+    /**
+     * 新增商品规格
+     * @param storeProductRuleRequest 规格参数
+     * @return 新增结果
+     */
+    @Override
+    public boolean save(StoreProductRuleRequest storeProductRuleRequest) {
+        if(getListByRuleName(storeProductRuleRequest.getRuleName()).size() > 0){
+            throw new CrmebException("此规格值已经存在");
+        }
+        StoreProductRule storeProductRule = new StoreProductRule();
+        BeanUtils.copyProperties(storeProductRuleRequest, storeProductRule);
+        return save(storeProductRule);
+    }
+
+    /**
+     * 根据规格名称查询同名规格
+     * @param ruleName 规格名称
+     * @return 查询到的数据
+     */
+    private List<StoreProductRule> getListByRuleName(String ruleName){
+        LambdaQueryWrapper<StoreProductRule> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if(StringUtils.isBlank(ruleName)){
+            return new ArrayList<>();
+        }
+            lambdaQueryWrapper.eq(StoreProductRule::getRuleName, ruleName);
+        return dao.selectList(lambdaQueryWrapper);
+    }
 }
 

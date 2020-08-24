@@ -121,7 +121,6 @@ public class OrderUtils {
 
     // 组装数据给前端使用
     public OrderAgainVo tidyOrder(StoreOrder storeOrder, boolean detail, boolean isPic){
-//        User currentUser = userService.getInfo();
         OrderAgainVo orderAgainVoResult = new OrderAgainVo();
         orderAgainVoResult.setStoreOrder(storeOrder);
         List<StoreOrderInfoVo> existOrderList = null;
