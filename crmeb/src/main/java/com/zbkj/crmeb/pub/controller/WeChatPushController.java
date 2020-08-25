@@ -47,7 +47,7 @@ public class WeChatPushController {
             @ApiImplicitParam(name="message", value="推送消息内容"),
             @ApiImplicitParam(name="token", value="企业微信群token"),
     })
-    public CommonResult<Object> gitlab(@RequestBody(required = true) String message,
+    public CommonResult<Object> gitlab(@RequestBody String message,
                                        @RequestParam(name = "token", required = true) String token){
 
         Map<String, Object> map = new HashMap<>();
