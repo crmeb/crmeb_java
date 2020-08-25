@@ -112,7 +112,7 @@ public class UserController {
      * @since 2020-04-10
      */
     @ApiOperation(value="会员详情")
-    @RequestMapping(value = "infobycondition", method = RequestMethod.GET)
+    @RequestMapping(value = "/infobycondition", method = RequestMethod.GET)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userId",example = "1", required = true),
             @ApiImplicitParam(name = "type", value="0=消费记录，1=积分明细，2=签到记录，3=持有优惠券，4=余额变动，5=好友关系", example = "0"
