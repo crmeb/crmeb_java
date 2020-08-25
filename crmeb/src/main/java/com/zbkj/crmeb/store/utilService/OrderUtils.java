@@ -660,6 +660,7 @@ public class OrderUtils {
 
     /**
      * 计算价格集合
+     * 计算逻辑说明，先从最小的逻辑找，1：是否指定包邮，2：按照区域计算邮费，3：默认缺省模版中的计算方式
      * @param storeCartResponse 购物车参数
      * @param userAddress 用户收货地址
      * @return 计算后的价格集合
@@ -672,13 +673,14 @@ public class OrderUtils {
                 costPrice = BigDecimal.ZERO, // 订单成本价
                 vipPrice = BigDecimal.ZERO; // 订单会员优惠价
 
-        String storeFreePostageString = systemConfigService.getValueByKey("store_free_postage");
         for (StoreCartResponse cartResponse : storeCartResponse) {
-            totalPrice = totalPrice.add(cartResponse.getTruePrice().multiply(BigDecimal.valueOf(cartResponse.getCartNum())));
-            costPrice = costPrice.add(cartResponse.getCostPrice().multiply(BigDecimal.valueOf(cartResponse.getCartNum())));
-            vipPrice = vipPrice.add(cartResponse.getVipTruePrice().multiply(BigDecimal.valueOf(cartResponse.getCartNum())));
+            totalPrice = (totalPrice.add(cartResponse.getTruePrice().multiply(BigDecimal.valueOf(cartResponse.getCartNum()))));
+            costPrice = (costPrice.add(cartResponse.getCostPrice().multiply(BigDecimal.valueOf(cartResponse.getCartNum()))));
+            vipPrice = (vipPrice.add(cartResponse.getVipTruePrice().multiply(BigDecimal.valueOf(cartResponse.getCartNum()))));
         }
-        if(storeFreePostageString.equals("0")){ // 包邮
+        // 判断是否满额包邮 type=1按件数 2按重量 3按体积
+        Integer storeFreePostageString = Integer.valueOf(systemConfigService.getValueByKey("store_free_postage"));
+        if(storeFreePostageString <= 0){ // 包邮
             storeFreePostage = BigDecimal.ZERO;
         }else{
             if(null != userAddress && userAddress.getCityId() > 0){
@@ -686,104 +688,40 @@ public class OrderUtils {
                 List<StoreProductCartProductInfoResponse> spcpInfo =
                         storeCartResponse.stream().map(StoreCartResponse::getProductInfo).distinct().collect(Collectors.toList());
                 List<Integer> tempIds = spcpInfo.stream().map(StoreProductCartProductInfoResponse::getTempId).distinct().collect(Collectors.toList());
+                // 查询运费模版
                 List<ShippingTemplates> shippingTemplates = shippingTemplatesService.getListInIds(tempIds);
-                List<ShippingTemplatesRegion> shippingTemplateRegions = shippingTemplatesRegionService.getListInIdsAndCityId(tempIds, cityId);
-                List<Integer> shippingTemplateRids = shippingTemplateRegions.stream().map(ShippingTemplatesRegion::getTempId).distinct().collect(Collectors.toList());
 
-//                LinkedHashMap<Integer,HashMap<String,Object>> templateNumMap = new LinkedHashMap<>();
-                List<PriceGroup> priceGroups = new ArrayList<>();
-                PriceGroup priceGroup = new PriceGroup();
-                for (StoreCartResponse cartResponse : storeCartResponse) {
-                    Integer tempId = cartResponse.getProductInfo().getTempId() > 0 ? cartResponse.getProductInfo().getTempId() : 0;
-                    List<ShippingTemplates> findHas = shippingTemplates.stream().filter(e -> e.getId() == tempId).distinct().collect(Collectors.toList());
-                    Integer type = findHas.size() > 0 ? findHas.get(0).getType() : shippingTemplates.get(0).getType();
-                    BigDecimal num;
+                // 包邮
+                List<ShippingTemplatesFree> shippingTempFree = shippingTemplatesFreeService.getListByTempIds(tempIds);
 
-                    switch (type){
-                        case 1:
-                            num = BigDecimal.valueOf(cartResponse.getCartNum());
-                            break;
-                        case 2:
-                            num = cartResponse.getProductInfo().getAttrInfo().getWeight().multiply(BigDecimal.valueOf(cartResponse.getCartNum()));
-                            break;
-                        default:
-                            num = cartResponse.getProductInfo().getAttrInfo().getVolume().multiply(BigDecimal.valueOf(cartResponse.getCartNum()));
-                            break;
-                    }
-                    List<ShippingTemplatesRegion> hasTempRegions = shippingTemplateRegions.stream().filter(e -> e.getTempId() == tempId).distinct().collect(Collectors.toList());
-                    ShippingTemplatesRegion region = hasTempRegions.size() > 0 ? hasTempRegions.get(0) : shippingTemplateRegions.get(0);
-                    Integer tempTempId = cartResponse.getProductInfo().getTempId();
-
-                    if(priceGroups.size() == 0){
-                        PriceItem priceItem = new PriceItem(
-                                num,cartResponse.getTruePrice().multiply(BigDecimal.valueOf(cartResponse.getCartNum())),
-                                region.getFirst(),region.getFirstPrice(),region.getRenewal(),region.getRenewalPrice(),
-                                cartResponse.getProductInfo().getTempId(),userAddress.getCityId()
-                        );
-                        priceGroup.setTempId(tempTempId);
-                        priceGroup.setPriceItem(priceItem);
-                    }else{
-                        BigDecimal priceValue = cartResponse.getTruePrice().multiply(BigDecimal.valueOf(cartResponse.getCartNum()));
-
-                        priceGroup.getPriceItem().setNum(priceGroup.getPriceItem().getNum().add(BigDecimal.valueOf(cartResponse.getCartNum())));
-                        priceGroup.getPriceItem().setPrice(priceGroup.getPriceItem().getPrice().add(priceValue));
-                    }
-                    priceGroups.add(priceGroup);
+                // 指定区域包邮费用
+                List<ShippingTemplatesRegion> shippingTemplateRegions = shippingTemplatesRegionService.listByIds(tempIds);
+                BigDecimal postPrice = BigDecimal.ZERO;
+                if(!shippingTemplates.get(0).getAppoint() && shippingTemplateRegions.size() > 0){
+                    postPrice = shippingTemplateRegions.get(0).getFirstPrice();
+                }else if(shippingTemplates.get(0).getAppoint()){ // 正常配送和运费
+                    //todo 首重等计算
+                    List<ShippingTemplatesRegion> shippingTemplateRegionsHasCity = shippingTemplatesRegionService.getListInIdsAndCityId(tempIds, cityId);
+                    postPrice = shippingTemplateRegionsHasCity.size() > 0 ?
+                            shippingTemplateRegionsHasCity.get(0).getFirstPrice() : shippingTemplateRegions.get(0).getFirstPrice();
+                }else{
+                    postPrice = shippingTempFree.get(0).getPrice();
                 }
-                // 首重排序
-                priceGroups.sort((p1, p2) -> p1.getPriceItem().getPrice().compareTo(p2.getPriceItem().getFirst()));
-
-                Integer type = 0;
-                storePostage = BigDecimal.ZERO;
-                for (int i = 0; i < priceGroups.size(); i++) {
-                    PriceGroup priceg = priceGroups.get(i);
-                    ShippingTemplatesFree shippingTemplatesFree = new ShippingTemplatesFree();
-                    shippingTemplatesFree.setTempId(priceg.getTempId());
-                    shippingTemplatesFree.setCityId(priceg.getPriceItem().getCityId());
-                    shippingTemplatesFree.setNumber(priceg.getPriceItem().getNum().intValue());
-                    shippingTemplatesFree.setPrice(priceg.getPriceItem().getPrice());
-                    List<ShippingTemplatesFree> listByConditionForCalcOrderPrice = shippingTemplatesFreeService.getListByConditionForCalcOrderPrice(shippingTemplatesFree);
-                    if(listByConditionForCalcOrderPrice.size() == 0) priceGroups.remove(i);
-                }
-                for (PriceGroup priceg : priceGroups) {
-                    if(type == 0){
-                        BigDecimal number = priceg.getPriceItem().getNum();
-                        BigDecimal first = priceg.getPriceItem().getFirst();
-                        BigDecimal firstPrice = priceg.getPriceItem().getFirstPrice();
-                        if(first.compareTo(number) >= 1){
-                            storePostage.add(firstPrice);
-                        }else{
-                            BigDecimal renewal = priceg.getPriceItem().getRenewal();
-                            if(renewal.compareTo(BigDecimal.ZERO) > 0){
-                                BigDecimal fistPrice = priceg.getPriceItem().getNum().subtract(priceg.getPriceItem().getFirst());
-                                Integer renwal = priceg.getPriceItem().getRenewal().compareTo(BigDecimal.ZERO) > -1 ? 0:2;
-                                BigDecimal divPrice = BigDecimal.valueOf(renwal).divide(fistPrice);
-                                BigDecimal mulPrice = divPrice.multiply(priceg.getPriceItem().getRenewalPrice());
-                                BigDecimal addPrice = storePostage.add(priceg.getPriceItem().getFirstPrice());
-                                storePostage = mulPrice.add(addPrice);
-                            }
-                        }
-                        type = 1;
-                    }else{
-                        if(priceg.getPriceItem().getRenewal().compareTo(BigDecimal.ZERO) > 0){
-                            Integer renwal = priceg.getPriceItem().getRenewal().compareTo(BigDecimal.ZERO) > -1 ? 0:2;
-                            BigDecimal divPrice = priceg.getPriceItem().getNum().divide(BigDecimal.valueOf(renwal));
-                            BigDecimal mulPrice = divPrice.multiply(BigDecimal.valueOf(2));
-                            storePostage = storePostage.add(mulPrice);
-                        }
-                    }
-                }
+                storePostage = postPrice;
             }else{
                 storePostage = BigDecimal.ZERO;
             }
-            if(storeFreePostage.compareTo(totalPrice) <= -1) storePostage = BigDecimal.ZERO;
+            // 判断价格是否超出满额包邮价格
+//            if(storeFreePostage.compareTo(totalPrice) <= -1) storePostage = BigDecimal.ZERO;
         }
+//        storePostage = BigDecimal.TEN;
+//        storeFreePostage = BigDecimal.ONE;
         priceGroupResponse.setStorePostage(storePostage);
         priceGroupResponse.setStoreFreePostage(storeFreePostage);
         priceGroupResponse.setTotalPrice(totalPrice);
         priceGroupResponse.setCostPrice(costPrice);
         priceGroupResponse.setVipPrice(vipPrice);
-        priceGroupResponse.setPayPrice(storeFreePostage.add(totalPrice));
+        priceGroupResponse.setPayPrice(storePostage.add(totalPrice));
         return priceGroupResponse;
     }
 
