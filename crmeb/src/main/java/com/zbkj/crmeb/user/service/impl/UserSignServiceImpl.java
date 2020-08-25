@@ -229,6 +229,12 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
         User user = userService.getInfo();
         BeanUtils.copyProperties(user, userSignInfoResponse);
 
+        //当前用户已经签到完一个周期，那么重置
+        if(user.getSignNum().equals(config().size())){
+            userSignInfoResponse.setSignNum(0);
+            userService.repeatSignNum(user.getUid());
+        }
+
         //签到
         if(request.getAll() || request.getSign()){
             userSignInfoResponse.setSumSignDay(getCount(user.getUid()));
@@ -317,11 +323,19 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
 
         //获取签到数据
         List<SystemGroupDataSignConfigVo> config = config();
+
+        //如果已经签到一个周期，那么再次签到的时候直接从第一天重新开始
+        if(user.getSignNum().equals(config.size())){
+            user.setSignNum(0);
+            userService.repeatSignNum(userId);
+        }
+
         for (SystemGroupDataSignConfigVo systemSignConfigVo : config) {
             if(user.getSignNum() + 1 <= systemSignConfigVo.getDay()){
                 return systemSignConfigVo;
             }
         }
+
         return null;
     }
 
