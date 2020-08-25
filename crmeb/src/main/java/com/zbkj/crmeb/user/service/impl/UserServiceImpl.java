@@ -1097,7 +1097,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         userBill.setLinkId(request.getLinkId());  //链接id
         userBill.setMark(getTitle(request).replace("{$value}", request.getValue().toString()));
         userBill.setPm(request.getType());
-        userBill.setBalance(balance);
+        userBill.setBalance(balance.add(request.getValue()));
         userBillService.save(userBill);
     }
 
@@ -1141,7 +1141,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
      * @since 2020-04-10
      */
     private BigDecimal getUserBalance(UserOperateFundsRequest request) {
-        //获取用户资金
+        //获取用户信息
         User user = getById(request.getUid());
 
         BigDecimal value = null;
@@ -1204,6 +1204,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             case 1:
                 FundsMonitorSearchRequest fmsq = new FundsMonitorSearchRequest();
                 fmsq.setUid(userId);
+                fmsq.setCategory(Constants.USER_BILL_CATEGORY_INTEGRAL);
                 return userBillService.getList(fmsq,pageParamRequest);
             case 2:
                 UserSign userSign = new UserSign();

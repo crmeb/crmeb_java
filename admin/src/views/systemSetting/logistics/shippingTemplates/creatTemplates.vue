@@ -169,7 +169,6 @@ const defaultRole = {
     firstPrice: 1,
     renewal: 1,
     renewalPrice: 1,
-    city_id: [],
     city_ids: []
   }],
   undelivery: 0,
@@ -276,7 +275,6 @@ export default {
         firstPrice: 1,
         renewal: 1,
         renewalPrice: 1,
-        city_id: [],
         city_ids: []
       }))
     },
@@ -328,7 +326,6 @@ export default {
       logistics.shippingRegion({ tempId: this.tempId }).then(res => {
         res.forEach((item, index) => {
           item.title = JSON.parse(item.title)
-          item.city_id = item.title
           item.city_ids = item.title
         })
         this.ruleForm.region = res
@@ -339,7 +336,6 @@ export default {
       logistics.shippingFree({ tempId: this.tempId }).then(res => {
         res.forEach((item, index) => {
           item.title = JSON.parse(item.title)
-          item.city_id = item.title
           item.city_ids = item.title
         })
         this.ruleForm.free = res
@@ -387,13 +383,11 @@ export default {
             sort: this.ruleForm.sort,
             type: this.ruleForm.type,
             // 配送区域及运费
-            shippingTemplatesRegionRequestList: [],
-            // 指定包邮设置
-            shippingTemplatesFreeRequestList: []
+            // shippingTemplatesRegionRequestList: [],
+            // // 指定包邮设置
+            // shippingTemplatesFreeRequestList: []
           }
-          console.log(this.ruleForm.region)
           this.ruleForm.region.forEach((el, index) => {
-            console.log(el)
             el.title = el.city_ids.length > 0 ? JSON.stringify(el.city_ids) : JSON.stringify([[0, 0]])
             for (var i = 0; i < el.city_ids.length; i++) {
               el.city_ids[i].shift()
@@ -426,10 +420,10 @@ export default {
               this.$nextTick(() => {
                 this.dialogVisible = false
                 this.$refs[formName].resetFields()
+                this.clear()
               })
               setTimeout(() => {
                 this.$emit('getList')
-                console.log(this.$refs, 'this.$refs[formName]')
               }, 600)
             })
           } else {
@@ -437,8 +431,8 @@ export default {
               this.$message.success('操作成功')
               setTimeout(() => {
                 this.$emit('getList')
-                // this.$refs[formName].resetFields()
-                // this.clear()
+                this.$refs[formName].resetFields()
+                this.clear()
               }, 600)
               this.$nextTick(() => {
                 this.dialogVisible = false
@@ -450,6 +444,10 @@ export default {
           return false
         }
       })
+    },
+    clear() {
+      this.ruleForm.name = ''
+      this.ruleForm.sort = 0
     }
   }
 }

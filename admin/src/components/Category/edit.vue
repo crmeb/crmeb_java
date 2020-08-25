@@ -6,7 +6,7 @@
         prop="name"
         :rules="[{ required:true,message:'请输入分类名称',trigger:['blur','change'] }]"
       >
-        <el-input v-model="editPram.name"  maxlength="20" placeholder="分类名称" />
+        <el-input v-model="editPram.name"  :maxlength="biztype.value === 1 ? 5 : 20" placeholder="分类名称" />
       </el-form-item>
       <el-form-item label="URL">
         <el-input v-model="editPram.url" placeholder="URL" />
