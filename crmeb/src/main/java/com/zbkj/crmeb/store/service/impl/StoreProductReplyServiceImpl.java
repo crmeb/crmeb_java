@@ -141,11 +141,9 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
 
         if(StringUtils.isNotBlank(request.getDateLimit())){
             dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
-            Date ds = DateUtil.strToDate(dateLimit.getStartTime(), Constants.DATE_FORMAT_DATE);
-            Date de = DateUtil.strToDate(dateLimit.getEndTime(), Constants.DATE_FORMAT_DATE);
-            lambdaQueryWrapper.between(StoreProductReply::getMerchantReplyTime,
-                    DateUtil.getSecondTimestamp(ds),
-                    DateUtil.getSecondTimestamp(de));
+            Date ds = DateUtil.strToDate(dateLimit.getStartTime(), Constants.DATE_FORMAT);
+            Date de = DateUtil.strToDate(dateLimit.getEndTime(), Constants.DATE_FORMAT);
+            lambdaQueryWrapper.between(StoreProductReply::getCreateTime, ds, de);
         }
         lambdaQueryWrapper.orderByDesc(StoreProductReply::getId);
         List<StoreProductReply> dataList = dao.selectList(lambdaQueryWrapper);
