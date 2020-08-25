@@ -218,11 +218,11 @@ json渲染表单以及是否需要编辑数据回填的功能以下为例
 
 
 
-请关注我们
-![输入图片说明](https://images.gitee.com/uploads/images/2020/0821/181709_88924490_2012975.png "屏幕截图.png")
+关注我们 ![请关注我们](https://images.gitee.com/uploads/images/2020/0825/172059_4959822b_2012975.png "屏幕截图.png")
+加技术交流群![微信技术交流群](https://images.gitee.com/uploads/images/2020/0825/172016_e4d77fa4_2012975.png "屏幕截图.png")
 
-微信技术交流群
-![微信技术交流群](https://images.gitee.com/uploads/images/2020/0825/165925_3af7d60f_2012975.jpeg "企业微信.jpeg")
+
+
 
 ## 参与开发
 
