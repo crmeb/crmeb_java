@@ -17,7 +17,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -47,6 +49,14 @@ public class ShippingTemplatesRegionServiceImpl extends ServiceImpl<ShippingTemp
     public List<ShippingTemplatesRegion> getList(PageParamRequest pageParamRequest) {
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         return dao.selectList(null);
+    }
+
+    @Override
+    public List<ShippingTemplatesRegion> listByIds(Collection<? extends Serializable> idList) {
+        LambdaQueryWrapper<ShippingTemplatesRegion> lqw = new LambdaQueryWrapper<>();
+        lqw.in(ShippingTemplatesRegion::getTempId, idList);
+        lqw.orderByAsc(ShippingTemplatesRegion::getCityId);
+        return dao.selectList(lqw);
     }
 
     /**

@@ -59,7 +59,7 @@ public class ShippingTemplatesRegion implements Serializable {
     @ApiModelProperty(value = "续件运费")
     private BigDecimal renewalPrice;
 
-    @ApiModelProperty(value = "计费方式")
+    @ApiModelProperty(value = "计费方式 1按件数 2按重量 3按体积")
     private Integer type;
 
     @ApiModelProperty(value = "分组唯一值")
