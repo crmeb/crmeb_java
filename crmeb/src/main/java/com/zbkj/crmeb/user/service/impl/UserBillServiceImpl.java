@@ -76,6 +76,11 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
             }
         }
 
+        // 查询类型
+        if(StringUtils.isNotBlank(request.getCategory())){
+            queryWrapper.eq("category", request.getCategory());
+        }
+
         return dao.selectList(queryWrapper);
     }
 

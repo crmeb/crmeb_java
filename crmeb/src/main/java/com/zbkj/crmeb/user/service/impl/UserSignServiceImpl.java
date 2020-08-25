@@ -124,6 +124,9 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
 
             //更新用户签到天数
             user.setSignNum(user.getSignNum()+1);
+
+            //更新用户积分
+            user.setIntegral(user.getIntegral().add(userOperateFundsRequest.getValue()));
             userService.updateById(user);
 
             return configVo;
