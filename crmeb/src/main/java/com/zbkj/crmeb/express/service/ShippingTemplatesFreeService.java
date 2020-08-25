@@ -17,6 +17,13 @@ public interface ShippingTemplatesFreeService extends IService<ShippingTemplates
     List<ShippingTemplatesFree> getList(PageParamRequest pageParamRequest);
 
     /**
+     * 根据模版id查询包邮信息
+     * @param tempIds 模版id
+     * @return 包邮信息集合
+     */
+    List<ShippingTemplatesFree> getListByTempIds(List<Integer> tempIds);
+
+    /**
      * 根据条件查询
      * @param templatesFree 模版参数
      * @return 模版集合

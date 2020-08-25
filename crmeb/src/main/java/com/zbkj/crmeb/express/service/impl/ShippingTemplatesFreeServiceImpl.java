@@ -52,6 +52,18 @@ public class ShippingTemplatesFreeServiceImpl extends ServiceImpl<ShippingTempla
     }
 
     /**
+     * 根据模版id查询包邮信息
+     * @param tempIds 模版id
+     * @return 包邮信息集合
+     */
+    @Override
+    public List<ShippingTemplatesFree> getListByTempIds(List<Integer> tempIds) {
+        LambdaQueryWrapper<ShippingTemplatesFree> lqw = new LambdaQueryWrapper<>();
+        lqw.in(ShippingTemplatesFree::getTempId, tempIds);
+        return dao.selectList(lqw);
+    }
+
+    /**
      *  根据模版参数查询 H5 计算订单价格使用
      * @param templatesFree 模版参数
      * @return 模版集合
