@@ -122,7 +122,7 @@ export function userActivity(){
 }
 
 /*
- * 资金明细（types|0=全部,1=消费,2=充值,3=返佣,4=提现）
+ * 余额明细（types|2=全部,1=支出,2=收入）
  * */
 export function getCommissionInfo(q, types) {
   return request.get("spread/commission/" + types, q);

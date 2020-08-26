@@ -18,11 +18,11 @@
 						</view>
 						<view class='cumulative acea-row row-top'>
 							<view class='item'>
-								<view>累计充值(元)</view>
+								<view>累计收入(元)</view>
 								<view class='money'>{{statistics.recharge || 0}}</view>
 							</view>
 							<view class='item'>
-								<view>累计消费(元)</view>
+								<view>累计支出(元)</view>
 								<view class='money'>{{statistics.orderStatusSum || 0}}</view>
 							</view>
 						</view>
@@ -39,7 +39,7 @@
 						<view class='pictrue'>
 							<image src='../../../static/images/record2.png'></image>
 						</view>
-						<view>消费记录</view>
+						<view>支出记录</view>
 					</navigator>
 					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=2' v-if="recharge_switch">
 						<view class='pictrue'>

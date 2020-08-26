@@ -3,8 +3,8 @@
 		<view class='bill-details'>
 			<view class='nav acea-row'>
 				<view class='item' :class='type==0 ? "on":""' @click='changeType(0)'>全部</view>
-				<view class='item' :class='type==1 ? "on":""' @click='changeType(1)'>消费</view>
-				<view class='item' :class='type==2 ? "on":""' @click='changeType(2)'>充值</view>
+				<view class='item' :class='type==1 ? "on":""' @click='changeType(1)'>支出</view>
+				<view class='item' :class='type==2 ? "on":""' @click='changeType(2)'>收入</view>
 			</view>
 			<view class='sign-record'>
 				<view class='list' v-for="(item,index) in userBillList" :key="index">
