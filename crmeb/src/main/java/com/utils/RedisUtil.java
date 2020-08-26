@@ -1,17 +1,13 @@
 package com.utils;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.*;
+import org.springframework.stereotype.Component;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.ListOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SetOperations;
-import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.data.redis.core.ZSetOperations;
-import org.springframework.stereotype.Component;
 
 /**
  * redis工具类
@@ -182,6 +178,16 @@ public class RedisUtil {
         return hash.get(key, hashKey);
     }
 
+    /**
+     * 哈希数量
+     * @param key string key
+     * @author Mr.Zhang
+     * @return Object
+     * @since 2020-04-13
+     */
+    public Long getHashSize(String key) {
+        return redisTemplate.opsForHash().size(key);
+    }
 
     /**
      * 列表添加左边添加
