@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.7.23)
 # Database: crmeb_java
-# Generation Time: 2020-08-26 02:12:51 +0000
+# Generation Time: 2020-08-26 02:49:50 +0000
 # ************************************************************
 
 
@@ -5869,6 +5869,8 @@ CREATE TABLE `eb_user` (
   `path` varchar(255) NOT NULL DEFAULT '/0/' COMMENT '推广等级记录',
   `subscribe` tinyint(3) DEFAULT '0' COMMENT '是否关注公众号',
   `subscribe_time` timestamp NULL DEFAULT NULL COMMENT '关注公众号时间',
+  `sex` tinyint(1) DEFAULT '1' COMMENT '性别，0未知，1男，2女，3保密',
+  `country` varchar(20) DEFAULT 'CN' COMMENT '国家，中国CN，其他OTHER',
   PRIMARY KEY (`uid`) USING BTREE,
   UNIQUE KEY `account` (`account`),
   KEY `spreaduid` (`spread_uid`) USING BTREE,
