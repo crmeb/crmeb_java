@@ -66,7 +66,6 @@
       handleSetVisitChart() {
         this.myChart = echarts.init(document.getElementById(this.echarts))
         let option = null
-        console.log(this.echartsTitle)
         if (this.echartsTitle === 'circle') {
           option = {
             tooltip: {
