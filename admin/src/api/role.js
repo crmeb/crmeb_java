@@ -27,7 +27,7 @@ export function delRole(pram) {
 
 export function getInfo(pram) {
   const data = {
-    id: pram.id
+    ids: pram.id
   }
   return request({
     url: '/admin/system/role/info',

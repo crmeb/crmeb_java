@@ -93,6 +93,7 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         for (SystemAdmin admin : systemAdmins) {
             SystemAdminResponse sar = new SystemAdminResponse();
             BeanUtils.copyProperties(admin, sar);
+            sar.setLastTime(admin.getUpdateTime());
             if(StringUtils.isBlank(admin.getRoles())) continue;
             List<Integer> roleIds = CrmebUtil.stringToArrayInt(admin.getRoles());
             List<String> roleNames = new ArrayList<>();

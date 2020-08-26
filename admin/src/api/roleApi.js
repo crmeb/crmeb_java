@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 
 export function getRoleById(pram) {
-  const data = { id: pram.id }
+  const data = { ids: pram.roles }
   return request({
     url: '/admin/system/role/info',
     method: 'GET',

@@ -13,16 +13,6 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-select v-model="listPram.isDel" placeholder="删除状态" clearable class="selWidth">
-            <el-option
-              v-for="item in constants.deletedOrNormal"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
           <el-select v-model="listPram.status" placeholder="状态" clearable class="selWidth">
             <el-option
               v-for="item in constants.roleListStatus"
@@ -59,7 +49,7 @@
         </el-table-column>
         <el-table-column label="最后登录时间" prop="lastTime" min-width="180">
           <template slot-scope="scope">
-            <span>{{ scope.row.updateTime | filterEmpty }}</span>
+            <span>{{ scope.row.lastTime | filterEmpty }}</span>
           </template>
         </el-table-column>
         <el-table-column label="最后登录IP" prop="lastIp" min-width="150">
@@ -129,7 +119,6 @@ export default {
       listPram: {
         account: null,
         addTime: null,
-        isDel: null, // false=正常，true=已删除，数据库逻辑删除
         lastIp: null,
         lastTime: null,
         level: null,

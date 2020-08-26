@@ -3,6 +3,7 @@ package com.zbkj.crmeb.system.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
+import com.utils.CrmebUtil;
 import com.zbkj.crmeb.category.vo.CategoryTreeVo;
 import com.zbkj.crmeb.system.model.SystemRole;
 import com.zbkj.crmeb.system.request.SystemRoleRequest;
@@ -112,14 +113,15 @@ public class SystemRoleController {
 
     /**
      * 查询身份管理表信息
-     * @param id Integer
+     * @param ids String
      * @author Mr.Zhang
      * @since 2020-04-18
      */
     @ApiOperation(value = "详情")
     @RequestMapping(value = "/info", method = RequestMethod.GET)
-    public CommonResult<SystemRole> info(@RequestParam(value = "id") Integer id){
-        SystemRole systemRole = systemRoleService.getById(id);
+    public CommonResult<List<SystemRole>> info(@RequestParam(value = "ids") String ids){
+//        SystemRole systemRole = systemRoleService.getById(CrmebUtil.stringToArray(ids));
+        List<SystemRole> systemRole = systemRoleService.getListInIds(CrmebUtil.stringToArray(ids));
         return CommonResult.success(systemRole);
    }
 

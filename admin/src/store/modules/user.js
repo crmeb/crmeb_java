@@ -79,13 +79,12 @@ const actions = {
           reject('getInfo: roles must be a non-null array!')
         }
 
-        // commit('SET_ROLES', roles)
-        commit('SET_ROLES', ['admin'])
+        commit('SET_ROLES', roles)
+        // commit('SET_ROLES', ['admin'])
         commit('SET_NAME', account)
         // commit('SET_AVATAR', avatar)
         commit('SET_AVATAR', 'http://kaifa.crmeb.net/system/images/admin_logo.png')
         commit('SET_INTRODUCTION', 'CRMEB admin')
-        data.roles = 'admin'
         resolve(data)
       }).catch(error => {
         reject(error)
