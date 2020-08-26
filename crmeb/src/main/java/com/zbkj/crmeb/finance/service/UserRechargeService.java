@@ -27,4 +27,6 @@ public interface UserRechargeService extends IService<UserRecharge> {
     UserRecharge create(UserRechargeRequest request);
 
     Boolean complete(UserRecharge userRecharge);
+
+    BigDecimal getSumBigDecimal(Integer uid);
 }
