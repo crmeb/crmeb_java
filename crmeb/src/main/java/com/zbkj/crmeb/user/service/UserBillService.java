@@ -28,7 +28,7 @@ public interface UserBillService extends IService<UserBill> {
 
     BigDecimal getSumBigDecimal(Integer pm, Integer userId, String category, String date, String type);
 
-    PageInfo<UserSpreadCommissionResponse> getListGroupByMonth(Integer userId, int type, PageParamRequest pageParamRequest);
+    PageInfo<UserSpreadCommissionResponse> getListGroupByMonth(Integer userId, Integer type, PageParamRequest pageParamRequest, String category);
 
     boolean saveRefundBill(StoreOrderRefundRequest request, User user);
 
