@@ -299,21 +299,20 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
     }
 
     /**
-     * 按照月份分组
+     * 按照月份分组, 余额
      * @author Mr.Zhang
      * @since 2020-06-08
      * @return CommonPage<UserBill>
      */
     @Override
-    public PageInfo<UserSpreadCommissionResponse> getListGroupByMonth(Integer userId, int type, PageParamRequest pageParamRequest) {
+    public PageInfo<UserSpreadCommissionResponse> getListGroupByMonth(Integer userId, Integer pm, PageParamRequest pageParamRequest, String category) {
         Page<UserBill> userBillPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         ArrayList<UserSpreadCommissionResponse> userSpreadCommissionResponseList = new ArrayList<>();
 
         QueryWrapper<UserBill> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("uid", userId).eq("status", 1);
-        ArrayList<String> typeList = getTypeList(type);
-        if(typeList.size() > 0){
-            queryWrapper.in("type", typeList);
+        queryWrapper.eq("uid", userId).eq("status", 1).eq("category", category);
+        if(null != pm){
+            queryWrapper.eq("pm", pm);
         }
 
         queryWrapper.groupBy("left(create_time, 7)");
@@ -325,7 +324,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
 
         for (UserBill userBill : list) {
             String date = DateUtil.dateToStr(userBill.getCreateTime(), Constants.DATE_FORMAT_MONTH);
-            userSpreadCommissionResponseList.add(new UserSpreadCommissionResponse(date, getListByMonth(userId, type, date)));
+            userSpreadCommissionResponseList.add(new UserSpreadCommissionResponse(date, getListByMonth(userId, pm, date, category)));
         }
 
        return CommonPage.copyPageInfo(userBillPage, userSpreadCommissionResponseList);
@@ -409,13 +408,13 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
      * @since 2020-06-08
      * @return List<UserBill>
      */
-    private List<UserBill> getListByMonth(Integer userId, int type, String month) {
+    private List<UserBill> getListByMonth(Integer userId, Integer pm, String month, String category) {
         QueryWrapper<UserBill> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("pm,title,number,create_time").eq("uid", userId). eq("status", 1).eq("left(create_time, 7)", month);
-        ArrayList<String> typeList = getTypeList(type);
-        if(typeList.size() > 0){
-            queryWrapper.in("type", typeList);
+        queryWrapper.select("pm,title,number,create_time").eq("uid", userId). eq("status", 1).eq("left(create_time, 7)", month).eq("category", category);
+        if(null != pm){
+            queryWrapper.eq("pm", pm);
         }
+
         queryWrapper.orderByDesc("create_time");
         return dao.selectList(queryWrapper);
     }

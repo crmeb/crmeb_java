@@ -154,7 +154,7 @@ public class RechargePayServiceImpl extends PayService implements RechargePaySer
             //余额变动
             UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
             userOperateFundsRequest.setValue(getUserRecharge().getPrice().add(getUserRecharge().getGivePrice()));
-            userOperateFundsRequest.setFoundsType(Constants.ORDER_LOG_PAY_SUCCESS);
+            userOperateFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_PAY_RECHARGE);
             userOperateFundsRequest.setUid(getUserRecharge().getUid());
             userOperateFundsRequest.setTitle("充值支付");
             userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_MONEY);

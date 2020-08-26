@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.finance.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.constants.Constants;
@@ -146,5 +147,26 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
         }
     }
 
+    /**
+     * 充值总金额
+     * @param userId Integer 用户uid
+     * @author Mr.Zhang
+     * @since 2020-05-29
+     * @return UserBill
+     */
+    @Override
+    public BigDecimal getSumBigDecimal(Integer userId) {
+        QueryWrapper<UserRecharge> queryWrapper = new QueryWrapper<>();
+
+
+        queryWrapper.select("sum(price) as price").
+                eq("uid", userId).
+                eq("paid", 1);
+        UserRecharge userRecharge = dao.selectOne(queryWrapper);
+        if(null == userRecharge || null == userRecharge.getPrice()){
+            return BigDecimal.ZERO;
+        }
+        return userRecharge.getPrice();
+    }
 }
 

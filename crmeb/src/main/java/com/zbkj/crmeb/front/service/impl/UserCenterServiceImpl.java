@@ -33,7 +33,6 @@ import com.zbkj.crmeb.user.model.UserBill;
 import com.zbkj.crmeb.user.model.UserToken;
 import com.zbkj.crmeb.user.request.RegisterThirdUserRequest;
 import com.zbkj.crmeb.user.request.UserOperateFundsRequest;
-import com.zbkj.crmeb.user.service.UserAddressService;
 import com.zbkj.crmeb.user.service.UserBillService;
 import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.user.service.UserTokenService;
@@ -99,8 +98,6 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     @Autowired
     private WeChatService weChatService;
 
-    @Autowired
-    private UserAddressService userAddressService;
 
 
     /**
@@ -112,8 +109,10 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     public UserCommissionResponse getCommission() {
         UserCommissionResponse userCommissionResponse = new UserCommissionResponse();
         //昨天的佣金
-        userCommissionResponse.setLastDayCount(userBillService.getSumBigDecimal(0, userService.getUserIdException(), Constants.USER_BILL_CATEGORY_MONEY, Constants.SEARCH_DATE_YESTERDAY, null));
-        userCommissionResponse.setExtractCount(userBillService.getSumBigDecimal(0, userService.getUserIdException(), Constants.USER_BILL_CATEGORY_MONEY, null, Constants.USER_BILL_TYPE_EXTRACT));
+        userCommissionResponse.setLastDayCount(userBillService.getSumBigDecimal(0, userService.getUserIdException(), Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE, Constants.SEARCH_DATE_YESTERDAY, null));
+
+        userCommissionResponse.setExtractCount(userBillService.getSumBigDecimal(0, userService.getUserIdException(), Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE, null, Constants.USER_BILL_TYPE_EXTRACT));
+
         userCommissionResponse.setCommissionCount(userService.getInfo().getBrokeragePrice());
         return userCommissionResponse;
     }
@@ -126,7 +125,25 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
      */
     @Override
     public PageInfo<UserSpreadCommissionResponse> getSpreadCommissionByType(int type, PageParamRequest pageParamRequest) {
-        return userBillService.getListGroupByMonth(userService.getUserIdException(), type, pageParamRequest);
+        Integer pm = null;
+        String category = Constants.USER_BILL_CATEGORY_MONEY;
+        switch (type){
+            case 1:
+                pm = 0;
+                break;
+            case 2:
+                pm = 1;
+                break;
+            case 3:
+                category = Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE;
+                break;
+            case 4:
+                return null;
+            default:
+                break;
+
+        }
+        return userBillService.getListGroupByMonth(userService.getUserIdException(), pm, pageParamRequest, category);
     }
 
     /**
@@ -275,7 +292,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     @Override
     public UserBalanceResponse getUserBalance() {
         User info = userService.getInfo();
-        BigDecimal recharge = userBillService.getSumBigDecimal(1, info.getUid(), Constants.USER_BILL_CATEGORY_MONEY, null, Constants.USER_BILL_TYPE_RECHARGE);
+        BigDecimal recharge = userBillService.getSumBigDecimal(1, info.getUid(), Constants.USER_BILL_CATEGORY_MONEY, null, null);
         BigDecimal orderStatusSum = storeOrderService.getSumBigDecimal(info.getUid(), null);
         return new UserBalanceResponse(info.getBrokeragePrice(), recharge, orderStatusSum);
     }
