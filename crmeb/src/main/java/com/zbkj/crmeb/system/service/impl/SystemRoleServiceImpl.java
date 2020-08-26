@@ -64,6 +64,18 @@ public class SystemRoleServiceImpl extends ServiceImpl<SystemRoleDao, SystemRole
     }
 
     /**
+     * 根据id集合获取对应权限列表
+     * @param ids id集合
+     * @return 对应的权限列表
+     */
+    @Override
+    public List<SystemRole> getListInIds(List<Integer> ids) {
+//        LambdaQueryWrapper<SystemRole> lqw = new LambdaQueryWrapper<>();
+//        lqw.in(SystemRole::getId, ids);
+        return dao.selectBatchIds(ids);
+    }
+
+    /**
      * 检测是否有访问菜单接口取的权限
      * @param uri String 请求参数
      * @author Mr.Zhang
