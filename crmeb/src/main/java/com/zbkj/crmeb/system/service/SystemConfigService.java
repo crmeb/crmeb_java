@@ -19,26 +19,15 @@ public interface SystemConfigService extends IService<SystemConfig> {
     String getValueByKey(String key);
 
     /**
-     * 根据key更新值
-     * @param key key
-     * @return 更新结果
-     */
-    boolean setValueByKey(String key, String value);
-
-    /**
      * 同时获取多个配置
      * @param keys 多个配置key
      * @return 查询到的多个结果
      */
     List<String> getValuesByKes(List<String> keys);
 
-    boolean updateValueByName(String name, String value);
-
     boolean updateOrSaveValueByName(String name, String value);
 
     String getValueByKeyException(String key);
-
-    String getValueByKeyNotStatus(String key);
 
     boolean saveForm(SystemFormCheckRequest systemFormCheckRequest);
 

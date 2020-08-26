@@ -131,6 +131,10 @@ public class Constants {
     public static final String WE_CHAT_MESSAGE_KEY_PROGRAM = "we_chat_program_message_list";
     public static final String WE_CHAT_MESSAGE_INDUSTRY_KEY = "we_chat_message_industry";
 
+    //config表数据redis
+    public static final String CONFIG_LIST = "config_list"; //配置列表
+
+
     //快递信息缓存
     public static final String LOGISTICS_KEY = "logistics_";
 

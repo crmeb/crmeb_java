@@ -231,7 +231,7 @@ public class AsyncServiceImpl implements AsyncService {
                 break;
         }
 
-        return systemConfigService.getValueByKeyNotStatus(pre+"UploadUrl");
+        return systemConfigService.getValueByKey(pre+"UploadUrl");
     }
 }
 
