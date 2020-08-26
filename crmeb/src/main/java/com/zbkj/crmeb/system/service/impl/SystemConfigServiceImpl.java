@@ -1,11 +1,12 @@
 package com.zbkj.crmeb.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
+import com.constants.Constants;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
+import com.utils.RedisUtil;
 import com.zbkj.crmeb.system.dao.SystemConfigDao;
 import com.zbkj.crmeb.system.model.SystemConfig;
 import com.zbkj.crmeb.system.request.SystemFormCheckRequest;
@@ -39,6 +40,11 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
     @Autowired
     private SystemAttachmentService systemAttachmentService;
 
+    @Autowired
+    private RedisUtil redisUtil;
+
+    private static final String redisKey = Constants.CONFIG_LIST;
+
     /**
      * 搜索列表
      * @param pageParamRequest PageParamRequest 分页参数
@@ -71,37 +77,9 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      */
     @Override
     public String getValueByKey(String name) {
-        LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.select(SystemConfig::getValue).eq(SystemConfig::getName, name);
-        lambdaQueryWrapper.eq(SystemConfig::getStatus, false);
-
-        SystemConfig systemConfig = dao.selectOne(lambdaQueryWrapper);
-
-        String value = null;
-        if(null != systemConfig && StringUtils.isNotBlank(systemConfig.getValue())){
-            value = systemConfig.getValue();
-        }
-        return value;
+        return get(name);
     }
 
-
-    /**
-     * 根据key更新值
-     * @param key key
-     * @return 更新结果
-     */
-    @Override
-    public boolean setValueByKey(String key, String value) {
-        LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(SystemConfig::getValue, value);
-        lambdaQueryWrapper.eq(SystemConfig::getStatus, false);
-        SystemConfig systemConfig = dao.selectOne(lambdaQueryWrapper);
-        systemConfig.setValue(value);
-        LambdaUpdateWrapper<SystemConfig> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        lambdaUpdateWrapper.set(SystemConfig::getValue, value);
-        lambdaUpdateWrapper.eq(SystemConfig::getName, key);
-        return dao.update(systemConfig, lambdaUpdateWrapper) > 0;
-    }
 
     /**
      * 同时获取多个配置
@@ -126,32 +104,12 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      */
     @Override
     public String getValueByKeyException(String name) {
-        LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.select(SystemConfig::getValue, SystemConfig::getTitle).
-                eq(SystemConfig::getStatus, false).
-                eq(SystemConfig::getName, name);
-
-        SystemConfig systemConfig = dao.selectOne(lambdaQueryWrapper);
-        if(null == systemConfig){
+        String value = get(name);
+        if(null == value){
             throw new CrmebException("没有找到"+ name +"数据");
         }
 
-        if(StringUtils.isBlank(systemConfig.getValue())){
-            throw new CrmebException("配置项 " + systemConfig.getTitle() + " 没有配置， 请配置！");
-        }
-        return systemConfig.getValue();
-    }
-
-    @Override
-    public String getValueByKeyNotStatus(String key) {
-        LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.select(SystemConfig::getValue).eq(SystemConfig::getName, key);
-
-        SystemConfig systemConfig = dao.selectOne(lambdaQueryWrapper);
-        if(StringUtils.isBlank(systemConfig.getValue())){
-            systemConfig.setValue(null);
-        }
-        return systemConfig.getValue();
+        return value;
     }
 
     /**
@@ -190,6 +148,8 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         //删除之前隐藏的数据
         deleteStatusByFormId(systemFormCheckRequest.getId());
 
+        async(systemConfigList);
+
         return true;
     }
 
@@ -208,6 +168,7 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         SystemConfig systemConfig = new SystemConfig();
         systemConfig.setStatus(true);
         update(systemConfig, lambdaQueryWrapper);
+
     }
 
     /**
@@ -220,32 +181,11 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         //删除已经隐藏的数据
         lambdaQueryWrapper.eq(SystemConfig::getFormId, formId).eq(SystemConfig::getStatus, true);
+        List<SystemConfig> systemConfigList = dao.selectList(lambdaQueryWrapper);
         dao.delete(lambdaQueryWrapper);
+        async(systemConfigList);
     }
 
-    /**
-     * 根据menu name更新 value
-     * @param name menu name
-     * @param value 值
-     * @author Mr.Zhang
-     * @since 2020-04-16
-     * @return JSONObject
-     */
-    @Override
-    public boolean updateValueByName(String name, String value){
-        value = systemAttachmentService.clearPrefix(value);
-
-        LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(SystemConfig::getName, name).eq(SystemConfig::getValue, value);
-        SystemConfig systemConfig = dao.selectOne(lambdaQueryWrapper);
-        if(systemConfig != null){
-            systemConfig.setValue(systemAttachmentService.clearPrefix(value));
-            updateById(systemConfig);
-            return true;
-        }
-
-        return false;
-    }
 
     /**
      * 保存或更新配置数据
@@ -265,33 +205,18 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         }else if(systemConfigs.size() == 1){
             systemConfigs.get(0).setValue(value);
             updateById(systemConfigs.get(0));
+            asyncRedis(name);
             return true;
         }else {
             save(new SystemConfig().setName(name).setValue(value));
+            asyncRedis(name);
             return true;
         }
     }
 
-    /**
-     * 根据name查询数据
-     * @param id Integer id
-     * @author Mr.Zhang
-     * @since 2020-04-16
-     * @return JSONObject
-     */
-    private SystemConfig getVoByIdException(Integer id){
-        LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(SystemConfig::getStatus, false).eq(SystemConfig::getId, id);
-        SystemConfig systemConfig = dao.selectOne(lambdaQueryWrapper);
-        if(systemConfig == null){
-            throw new CrmebException("没有找到相对应的数据！");
-        }
-
-        return systemConfig;
-    }
 
     /**
-     * 根据id查询数据
+     * 根据formId查询数据
      * @param formId Integer id
      * @author Mr.Zhang
      * @since 2020-04-16
@@ -322,10 +247,99 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      */
     @Override
     public boolean checkName(String name){
+        String value = get(name);
+        return value == null;
+    }
+
+
+
+    /**
+     * 把数据同步到redis
+     * @param name name
+     * @author Mr.Zhang
+     * @since 2020-04-16
+     * @return JSONObject
+     */
+    private void asyncRedis(String name){
         LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(SystemConfig::getName, name);
-        SystemConfig systemConfig = dao.selectOne(lambdaQueryWrapper);
-        return systemConfig == null;
+        List<SystemConfig> systemConfigList = dao.selectList(lambdaQueryWrapper);
+        if(systemConfigList.size() == 0){
+            //说明数据已经被删除了
+            deleteRedis(name);
+            return;
+        }
+
+        async(systemConfigList);
+    }
+
+    /**
+     * 把数据同步到redis
+     * @param systemConfigList List<SystemConfig> 需要同步的数据
+     * @author Mr.Zhang
+     * @since 2020-04-16
+     * @return JSONObject
+     */
+    private void async(List<SystemConfig> systemConfigList){
+        for (SystemConfig systemConfig : systemConfigList) {
+            if(systemConfig.getStatus()){
+                //隐藏之后，删除redis的数据
+                deleteRedis(systemConfig.getName());
+                continue;
+            }
+            redisUtil.hmSet(redisKey, systemConfig.getName(), systemConfig.getValue());
+        }
+    }
+
+    /**
+     * 把数据同步到redis
+     * @param name String
+     * @author Mr.Zhang
+     * @since 2020-04-16
+     * @return JSONObject
+     */
+    private void deleteRedis(String name){
+        redisUtil.hmDelete(redisKey, name);
+    }
+
+    /**
+     * 把数据同步到redis
+     * @param name String
+     * @author Mr.Zhang
+     * @since 2020-04-16
+     * @return JSONObject
+     */
+    private String get(String name){
+        setRedisByVoList();
+        Object data = redisUtil.hmGet(redisKey, name);
+        if(null == data || StringUtils.isBlank(data.toString())){
+            //没有找到数据
+            return null;
+        }
+
+        //去数据库查找，然后写入redis
+
+
+        return data.toString();
+    }
+
+    /**
+     * 把数据同步到redis, 此方法适用于redis为空的时候进行一次批量输入
+     * @author Mr.Zhang
+     * @since 2020-04-16
+     * @return JSONObject
+     */
+    private void setRedisByVoList(){
+        //检测redis是否为空
+        Long size = redisUtil.getHashSize(redisKey);
+        if(size > 0){
+            return;
+        }
+
+        LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(SystemConfig::getStatus, false);
+        List<SystemConfig> systemConfigList = dao.selectList(lambdaQueryWrapper);
+        async(systemConfigList);
     }
 }
 
