@@ -17,6 +17,13 @@ public interface SystemRoleService extends IService<SystemRole> {
 
     List<SystemRole> getList(SystemRoleSearchRequest request, PageParamRequest pageParamRequest);
 
+    /**
+     * 根据id集合获取对应权限列表
+     * @param ids id集合
+     * @return 对应的权限列表
+     */
+    List<SystemRole> getListInIds(List<Integer> ids);
+
     Boolean checkAuth(String uri);
 
     List<CategoryTreeVo> menu();
