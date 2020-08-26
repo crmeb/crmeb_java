@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.7.23)
 # Database: crmeb_java
-# Generation Time: 2020-08-25 08:42:53 +0000
+# Generation Time: 2020-08-26 01:07:39 +0000
 # ************************************************************
 
 
@@ -1241,7 +1241,7 @@ LOCK TABLES `eb_system_admin` WRITE;
 
 INSERT INTO `eb_system_admin` (`id`, `account`, `pwd`, `real_name`, `roles`, `last_ip`, `create_time`, `update_time`, `login_count`, `level`, `status`, `is_del`)
 VALUES
-	(1,'admin','L8qdg72wbeQ=','admin','1','127.0.0.1','0000-00-00 00:00:00','0000-00-00 00:00:00',0,0,1,0);
+	(1,'admin','L8qdg72wbeQ=','admin','1','127.0.0.1','2020-08-26 09:06:43','2020-08-26 09:06:46',0,0,1,0);
 
 /*!40000 ALTER TABLE `eb_system_admin` ENABLE KEYS */;
 UNLOCK TABLES;
