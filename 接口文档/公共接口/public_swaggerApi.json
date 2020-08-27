@@ -1,0 +1,483 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "crmeb_java_public",
+    "version": "last",
+    "description": "crmeb_java_public"
+  },
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Admin管理员 密码操作",
+      "description": "Authorization Admin"
+    },
+    {
+      "name": "Redis测试操作",
+      "description": "Redis Test Controller"
+    },
+    {
+      "name": "企业微信消息推送",
+      "description": "We Chat Push Controller"
+    },
+    {
+      "name": "图片操作",
+      "description": "Image Merge Controller"
+    },
+    {
+      "name": "微信开放平台 -- 消息",
+      "description": "We Chat Message Controller"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/api/public/auth/test/account/encode": {
+      "post": {
+        "tags": [
+          "Admin管理员 密码操作"
+        ],
+        "summary": "密码加密",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "query",
+            "required": false,
+            "description": "账号",
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "in": "query",
+            "required": false,
+            "description": "密码",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "data": {
+                  "type": "object"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "title": "CommonResult«Map»",
+              "$$ref": "#/definitions/CommonResult«Map»"
+            }
+          }
+        }
+      }
+    },
+    "/api/public/auth/test/account/decode": {
+      "post": {
+        "tags": [
+          "Admin管理员 密码操作"
+        ],
+        "summary": "破解密码",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "account",
+            "in": "query",
+            "required": false,
+            "description": "账号",
+            "type": "string"
+          },
+          {
+            "name": "encodeString",
+            "in": "query",
+            "required": false,
+            "description": "加密字符串",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "data": {
+                  "type": "object"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "title": "CommonResult«Map»",
+              "$$ref": "#/definitions/CommonResult«Map»"
+            }
+          }
+        }
+      }
+    },
+    "/api/public/test/redis/delete": {
+      "get": {
+        "tags": [
+          "Redis测试操作"
+        ],
+        "summary": "删除",
+        "consumes": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": false,
+            "description": "redis key",
+            "type": "string"
+          },
+          {
+            "name": "raw",
+            "in": "body",
+            "description": "raw paramter",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "data": {
+                  "type": "object"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "title": "CommonResult«object»",
+              "$$ref": "#/definitions/CommonResult«object»"
+            }
+          }
+        }
+      }
+    },
+    "/api/public/test/redis/set": {
+      "post": {
+        "tags": [
+          "Redis测试操作"
+        ],
+        "summary": "新增",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": false,
+            "description": "redis key",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": false,
+            "description": "内容",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "data": {
+                  "type": "object"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "title": "CommonResult«object»",
+              "$$ref": "#/definitions/CommonResult«object»"
+            }
+          }
+        }
+      }
+    },
+    "/api/public/test/redis/get": {
+      "get": {
+        "tags": [
+          "Redis测试操作"
+        ],
+        "summary": "查询",
+        "consumes": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": false,
+            "description": "redis key",
+            "type": "string"
+          },
+          {
+            "name": "raw",
+            "in": "body",
+            "description": "raw paramter",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "data": {
+                  "type": "object"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "title": "CommonResult«object»",
+              "$$ref": "#/definitions/CommonResult«object»"
+            }
+          }
+        }
+      }
+    },
+    "/api/public/wechat/gitlab": {
+      "post": {
+        "tags": [
+          "企业微信消息推送"
+        ],
+        "summary": "gitlab钩子",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "description": "企业微信群token",
+            "type": "string"
+          },
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "data": {
+                  "type": "object"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "title": "CommonResult«object»",
+              "$$ref": "#/definitions/CommonResult«object»"
+            }
+          }
+        }
+      }
+    },
+    "/api/public/wechat/push": {
+      "get": {
+        "tags": [
+          "企业微信消息推送"
+        ],
+        "summary": "消息推送",
+        "consumes": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "message",
+            "in": "query",
+            "required": false,
+            "description": "推送消息内容",
+            "type": "string"
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "description": "企业微信群token",
+            "type": "string"
+          },
+          {
+            "name": "raw",
+            "in": "body",
+            "description": "raw paramter",
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "data": {
+                  "type": "object"
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "title": "CommonResult«object»",
+              "$$ref": "#/definitions/CommonResult«object»"
+            }
+          }
+        }
+      }
+    },
+    "/api/public/qrcode/mergeList": {
+      "post": {
+        "tags": [
+          "图片操作"
+        ],
+        "summary": "合并图片返回文件",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "path",
+                  "x",
+                  "y"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "图片地址"
+                  },
+                  "x": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "x轴"
+                  },
+                  "y": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "y轴"
+                  }
+                },
+                "title": "ImageMergeUtilVo",
+                "$$ref": "#/definitions/ImageMergeUtilVo"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "data": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "title": "CommonResult«Map«string,string»»",
+              "$$ref": "#/definitions/CommonResult«Map«string,string»»"
+            }
+          }
+        }
+      }
+    },
+    "/api/public/wechat/message/webHook": {
+      "post": {
+        "tags": [
+          "微信开放平台 -- 消息"
+        ],
+        "summary": "接受微信推送过来的消息",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}
