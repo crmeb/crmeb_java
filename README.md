@@ -30,6 +30,10 @@ CRMEB商城PHP版：https://gitee.com/ZhongBangKeJi/CRMEB-H5
 
 CRMEB微信小程序商城：https://gitee.com/ZhongBangKeJi/CRMEB_WechatApplet
 
+### Swagger接口文档
+演示站接口地址: https://api.java.crmeb.net/swagger-ui.html#
+自己部署站点接口地址：域名/swagger-ui.html#
+本地启动Java Api项目接口地址：http://localhost:8080/swagger-ui.html#    8080为配置文件里配置的 server/port
 
 ### 运行环境
 
