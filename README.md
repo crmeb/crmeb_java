@@ -19,21 +19,35 @@
  | [服务器](https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=dligum2z)
  | [授权价格](http://crmeb.com/web/index/price.html)
  | [GitHub地址](https://github.com/crmeb/crmeb_java)
- | [帮助文档](https://www.kancloud.cn/crmeb/crmeb_java/1748037)
 - - -
+
+### 加技术交流群
+
+![微信技术交流群](https://images.gitee.com/uploads/images/2020/0825/173218_34346bc9_2012975.png "屏幕截图.png")
+
+如果群二维码过期请加开发者微信拉你进群
+
+![开发者微信](https://images.gitee.com/uploads/images/2020/0825/172016_e4d77fa4_2012975.png "屏幕截图.png")
+
+### 演示站
+1. 移动端：[https://java.crmeb.net](https://java.crmeb.net)
+2. 后台：[https://admin.java.crmeb.net](https://admin.java.crmeb.net)   
+## 后台账号 demo  密码 crmeb.com， 请大家不要随意改密码！
+#### 请大家不要随意改密码！请大家不要随意改密码！请大家不要随意改密码！
 
 ### 推荐项目
 
 CRMEB知识付费项目：https://gitee.com/ZhongBangKeJi/crmeb_zzff_class
 
-CRMEB商城PHP版：https://gitee.com/ZhongBangKeJi/CRMEB-H5
-
-CRMEB微信小程序商城：https://gitee.com/ZhongBangKeJi/CRMEB_WechatApplet
+CRMEB打通版：https://gitee.com/ZhongBangKeJi/CRMEB
 
 ### Swagger接口文档
-演示站接口: 项目包里 "接口文档" 文件夹
+演示站接口: 
+1. 移动端：http://app.beta.java.crmeb.net/api_html/app_api.html
+2. 后台：http://app.beta.java.crmeb.net/api_html/admin_api.html
 
 自己部署站点接口地址：域名/swagger-ui.html#
+
 本地启动Java Api项目接口地址：http://localhost:8080/swagger-ui.html#    8080为配置文件里配置的 server/port
 
 ### 运行环境
@@ -188,14 +202,9 @@ json渲染表单以及是否需要编辑数据回填的功能以下为例
 ![过滤器](https://images.gitee.com/uploads/images/2020/0824/153521_be33bd82_2012975.png "屏幕截图.png")
 ![无限级分类](https://images.gitee.com/uploads/images/2020/0824/153546_4b28e184_2012975.png "屏幕截图.png")
 
-## 演示站
-1. [移动端](https://java.crmeb.net)
-2. [后台](https://admin.java.crmeb.net)   
- 
-## 后台账号 demo  密码 crmeb.com， 请大家不要随意改密码！
-#### 请大家不要随意改密码！请大家不要随意改密码！请大家不要随意改密码！
 
-后台界面
+
+###后台界面
 ![登录界面](https://images.gitee.com/uploads/images/2020/0824/153756_35878cdb_2012975.png "屏幕截图.png")
 ![控制台](https://images.gitee.com/uploads/images/2020/0824/153848_442b3527_2012975.png "屏幕截图.png")
 ![商品列表](https://images.gitee.com/uploads/images/2020/0824/153920_877f7cba_2012975.png "屏幕截图.png")
@@ -216,20 +225,6 @@ json渲染表单以及是否需要编辑数据回填的功能以下为例
 ![系统设置](https://images.gitee.com/uploads/images/2020/0824/154727_fc2e4f49_2012975.png "屏幕截图.png")
 ![短信](https://images.gitee.com/uploads/images/2020/0824/154752_5552a5d0_2012975.png "屏幕截图.png")
 ![系统设置分类](https://images.gitee.com/uploads/images/2020/0824/154816_db8139fd_2012975.png "屏幕截图.png")
-
-
-
-
-
-
-
-关注我们 ![请关注我们](https://images.gitee.com/uploads/images/2020/0825/172059_4959822b_2012975.png "屏幕截图.png")
-加技术交流群![微信技术交流群](https://images.gitee.com/uploads/images/2020/0825/173218_34346bc9_2012975.png "屏幕截图.png")
-
-如果群二维码过期请加开发者微信拉你进群![开发者微信](https://images.gitee.com/uploads/images/2020/0825/172016_e4d77fa4_2012975.png "屏幕截图.png")
-
-
-
 
 
 ## 参与开发
