@@ -1,0 +1,443 @@
+[
+  {
+    "index": 0,
+    "name": "Admin管理员 密码操作",
+    "desc": "Authorization Admin",
+    "add_time": 1597369015,
+    "up_time": 1597369015,
+    "list": [
+      {
+        "query_path": {
+          "path": "/api/public/auth/test/account/encode",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 0,
+        "tag": [],
+        "_id": 7178,
+        "method": "POST",
+        "title": "密码加密",
+        "path": "/api/public/auth/test/account/encode",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [
+          {
+            "required": "1",
+            "_id": "5f35eab7bc7e8e560914fbe9",
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "req_query": [
+          {
+            "required": "0",
+            "_id": "5f35eab7bc7e8e560914fbeb",
+            "name": "account",
+            "desc": "账号"
+          },
+          {
+            "required": "0",
+            "_id": "5f35eab7bc7e8e560914fbea",
+            "name": "password",
+            "desc": "密码"
+          }
+        ],
+        "req_body_type": "json",
+        "res_body_type": "json",
+        "res_body": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"integer\",\n      \"format\": \"int64\"\n    },\n    \"data\": {\n      \"type\": \"object\"\n    },\n    \"message\": {\n      \"type\": \"string\"\n    }\n  },\n  \"title\": \"CommonResult«Map»\",\n  \"$$ref\": \"#/definitions/CommonResult«Map»\"\n}",
+        "project_id": 55,
+        "catid": 4838,
+        "uid": 93,
+        "add_time": 1597369015,
+        "up_time": 1597369015,
+        "__v": 0
+      },
+      {
+        "query_path": {
+          "path": "/api/public/auth/test/account/decode",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 0,
+        "tag": [],
+        "_id": 7176,
+        "method": "POST",
+        "title": "破解密码",
+        "path": "/api/public/auth/test/account/decode",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [
+          {
+            "required": "1",
+            "_id": "5f35eab7bc7e8e560914fbe6",
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "req_query": [
+          {
+            "required": "0",
+            "_id": "5f35eab7bc7e8e560914fbe8",
+            "name": "account",
+            "desc": "账号"
+          },
+          {
+            "required": "0",
+            "_id": "5f35eab7bc7e8e560914fbe7",
+            "name": "encodeString",
+            "desc": "加密字符串"
+          }
+        ],
+        "req_body_type": "json",
+        "res_body_type": "json",
+        "res_body": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"integer\",\n      \"format\": \"int64\"\n    },\n    \"data\": {\n      \"type\": \"object\"\n    },\n    \"message\": {\n      \"type\": \"string\"\n    }\n  },\n  \"title\": \"CommonResult«Map»\",\n  \"$$ref\": \"#/definitions/CommonResult«Map»\"\n}",
+        "project_id": 55,
+        "catid": 4838,
+        "uid": 93,
+        "add_time": 1597369015,
+        "up_time": 1597369015,
+        "__v": 0
+      }
+    ]
+  },
+  {
+    "index": 0,
+    "name": "Redis测试操作",
+    "desc": "Redis Test Controller",
+    "add_time": 1597369015,
+    "up_time": 1597369015,
+    "list": [
+      {
+        "query_path": {
+          "path": "/api/public/test/redis/delete",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": false,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 0,
+        "tag": [],
+        "_id": 7182,
+        "method": "GET",
+        "title": "删除",
+        "path": "/api/public/test/redis/delete",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [],
+        "req_query": [
+          {
+            "required": "0",
+            "_id": "5f35eab8bc7e8e560914fbed",
+            "name": "key",
+            "desc": "redis key"
+          }
+        ],
+        "req_body_type": "raw",
+        "res_body_type": "json",
+        "res_body": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"integer\",\n      \"format\": \"int64\"\n    },\n    \"data\": {\n      \"type\": \"object\"\n    },\n    \"message\": {\n      \"type\": \"string\"\n    }\n  },\n  \"title\": \"CommonResult«object»\",\n  \"$$ref\": \"#/definitions/CommonResult«object»\"\n}",
+        "project_id": 55,
+        "catid": 4847,
+        "uid": 93,
+        "add_time": 1597369016,
+        "up_time": 1597369016,
+        "__v": 0
+      },
+      {
+        "query_path": {
+          "path": "/api/public/test/redis/set",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 0,
+        "tag": [],
+        "_id": 7186,
+        "method": "POST",
+        "title": "新增",
+        "path": "/api/public/test/redis/set",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [
+          {
+            "required": "1",
+            "_id": "5f35eab8bc7e8e560914fbef",
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "req_query": [
+          {
+            "required": "0",
+            "_id": "5f35eab8bc7e8e560914fbf1",
+            "name": "key",
+            "desc": "redis key"
+          },
+          {
+            "required": "0",
+            "_id": "5f35eab8bc7e8e560914fbf0",
+            "name": "value",
+            "desc": "内容"
+          }
+        ],
+        "req_body_type": "json",
+        "res_body_type": "json",
+        "res_body": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"integer\",\n      \"format\": \"int64\"\n    },\n    \"data\": {\n      \"type\": \"object\"\n    },\n    \"message\": {\n      \"type\": \"string\"\n    }\n  },\n  \"title\": \"CommonResult«object»\",\n  \"$$ref\": \"#/definitions/CommonResult«object»\"\n}",
+        "project_id": 55,
+        "catid": 4847,
+        "uid": 93,
+        "add_time": 1597369016,
+        "up_time": 1597369016,
+        "__v": 0
+      },
+      {
+        "query_path": {
+          "path": "/api/public/test/redis/get",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": false,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 0,
+        "tag": [],
+        "_id": 7184,
+        "method": "GET",
+        "title": "查询",
+        "path": "/api/public/test/redis/get",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [],
+        "req_query": [
+          {
+            "required": "0",
+            "_id": "5f35eab8bc7e8e560914fbee",
+            "name": "key",
+            "desc": "redis key"
+          }
+        ],
+        "req_body_type": "raw",
+        "res_body_type": "json",
+        "res_body": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"integer\",\n      \"format\": \"int64\"\n    },\n    \"data\": {\n      \"type\": \"object\"\n    },\n    \"message\": {\n      \"type\": \"string\"\n    }\n  },\n  \"title\": \"CommonResult«object»\",\n  \"$$ref\": \"#/definitions/CommonResult«object»\"\n}",
+        "project_id": 55,
+        "catid": 4847,
+        "uid": 93,
+        "add_time": 1597369016,
+        "up_time": 1597369016,
+        "__v": 0
+      }
+    ]
+  },
+  {
+    "index": 0,
+    "name": "企业微信消息推送",
+    "desc": "We Chat Push Controller",
+    "add_time": 1597369015,
+    "up_time": 1597369015,
+    "list": [
+      {
+        "query_path": {
+          "path": "/api/public/wechat/gitlab",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 0,
+        "tag": [],
+        "_id": 7188,
+        "method": "POST",
+        "title": "gitlab钩子",
+        "path": "/api/public/wechat/gitlab",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [
+          {
+            "required": "1",
+            "_id": "5f35eab8bc7e8e560914fbf2",
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "req_query": [
+          {
+            "required": "0",
+            "_id": "5f35eab8bc7e8e560914fbf3",
+            "name": "token",
+            "desc": "企业微信群token"
+          }
+        ],
+        "req_body_type": "json",
+        "res_body_type": "json",
+        "res_body": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"integer\",\n      \"format\": \"int64\"\n    },\n    \"data\": {\n      \"type\": \"object\"\n    },\n    \"message\": {\n      \"type\": \"string\"\n    }\n  },\n  \"title\": \"CommonResult«object»\",\n  \"$$ref\": \"#/definitions/CommonResult«object»\"\n}",
+        "req_body_other": "{\n  \"type\": \"string\"\n}",
+        "project_id": 55,
+        "catid": 4856,
+        "uid": 93,
+        "add_time": 1597369016,
+        "up_time": 1597369016,
+        "__v": 0
+      },
+      {
+        "query_path": {
+          "path": "/api/public/wechat/push",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": false,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 0,
+        "tag": [],
+        "_id": 7192,
+        "method": "GET",
+        "title": "消息推送",
+        "path": "/api/public/wechat/push",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [],
+        "req_query": [
+          {
+            "required": "0",
+            "_id": "5f35eab8bc7e8e560914fbf6",
+            "name": "message",
+            "desc": "推送消息内容"
+          },
+          {
+            "required": "0",
+            "_id": "5f35eab8bc7e8e560914fbf5",
+            "name": "token",
+            "desc": "企业微信群token"
+          }
+        ],
+        "req_body_type": "raw",
+        "res_body_type": "json",
+        "res_body": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"integer\",\n      \"format\": \"int64\"\n    },\n    \"data\": {\n      \"type\": \"object\"\n    },\n    \"message\": {\n      \"type\": \"string\"\n    }\n  },\n  \"title\": \"CommonResult«object»\",\n  \"$$ref\": \"#/definitions/CommonResult«object»\"\n}",
+        "project_id": 55,
+        "catid": 4856,
+        "uid": 93,
+        "add_time": 1597369016,
+        "up_time": 1597369016,
+        "__v": 0
+      }
+    ]
+  },
+  {
+    "index": 0,
+    "name": "图片操作",
+    "desc": "Image Merge Controller",
+    "add_time": 1597369015,
+    "up_time": 1597369015,
+    "list": [
+      {
+        "query_path": {
+          "path": "/api/public/qrcode/mergeList",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 0,
+        "tag": [],
+        "_id": 7180,
+        "method": "POST",
+        "title": "合并图片返回文件",
+        "path": "/api/public/qrcode/mergeList",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [
+          {
+            "required": "1",
+            "_id": "5f35eab7bc7e8e560914fbec",
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "req_query": [],
+        "req_body_type": "json",
+        "res_body_type": "json",
+        "res_body": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"integer\",\n      \"format\": \"int64\"\n    },\n    \"data\": {\n      \"type\": \"object\",\n      \"additionalProperties\": {\n        \"type\": \"string\"\n      }\n    },\n    \"message\": {\n      \"type\": \"string\"\n    }\n  },\n  \"title\": \"CommonResult«Map«string,string»»\",\n  \"$$ref\": \"#/definitions/CommonResult«Map«string,string»»\"\n}",
+        "req_body_other": "{\n  \"type\": \"array\",\n  \"items\": {\n    \"type\": \"object\",\n    \"required\": [\n      \"path\",\n      \"x\",\n      \"y\"\n    ],\n    \"properties\": {\n      \"path\": {\n        \"type\": \"string\",\n        \"description\": \"图片地址\"\n      },\n      \"x\": {\n        \"type\": \"integer\",\n        \"format\": \"int32\",\n        \"description\": \"x轴\"\n      },\n      \"y\": {\n        \"type\": \"integer\",\n        \"format\": \"int32\",\n        \"description\": \"y轴\"\n      }\n    },\n    \"title\": \"ImageMergeUtilVo\",\n    \"$$ref\": \"#/definitions/ImageMergeUtilVo\"\n  }\n}",
+        "project_id": 55,
+        "catid": 4865,
+        "uid": 93,
+        "add_time": 1597369015,
+        "up_time": 1597369015,
+        "__v": 0
+      }
+    ]
+  },
+  {
+    "index": 0,
+    "name": "微信开放平台 -- 消息",
+    "desc": "We Chat Message Controller",
+    "add_time": 1597369015,
+    "up_time": 1597369015,
+    "list": [
+      {
+        "query_path": {
+          "path": "/api/public/wechat/message/webHook",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 0,
+        "tag": [],
+        "_id": 7190,
+        "method": "POST",
+        "title": "接受微信推送过来的消息",
+        "path": "/api/public/wechat/message/webHook",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [
+          {
+            "required": "1",
+            "_id": "5f35eab8bc7e8e560914fbf4",
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "req_query": [],
+        "req_body_type": "json",
+        "res_body_type": "json",
+        "res_body": "{\n  \"type\": \"string\"\n}",
+        "project_id": 55,
+        "catid": 4874,
+        "uid": 93,
+        "add_time": 1597369016,
+        "up_time": 1597369016,
+        "__v": 0
+      }
+    ]
+  }
+]
