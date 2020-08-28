@@ -3,8 +3,10 @@ package com.zbkj.crmeb.sms.service.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.common.PageParamRequest;
+import com.constants.Constants;
 import com.constants.SmsConstants;
 import com.exception.CrmebException;
+import com.exception.ExceptionCodeEnum;
 import com.utils.CrmebUtil;
 import com.utils.RedisUtil;
 import com.utils.RestTemplateUtil;
@@ -19,6 +21,7 @@ import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.user.service.UserService;
 import lombok.Data;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -439,21 +442,24 @@ public class SmsServiceImpl implements SmsService {
         String message = joResult.getString("msg");
         JSONObject data = joResult.getJSONObject("data");
         String smsRecodeId = (data.containsKey("id") ? data.getString("id") : "0");
+        sendSmsVo.setContent(data.getString("content"));
 
-        try{
-            // 注意这里的状态仅仅是调用是否成功的状态 需要等待5分钟一周另外一个任务去查询发送状态后再更新status数据
-            SmsRecord smsRecord = new SmsRecord(0,sendSmsVo.getUid(), sendSmsVo.getMobile(),sendSmsVo.getContent(),
-                    "", sendSmsVo.getTemplate().toString(),
-                    resultCode,Integer.parseInt(smsRecodeId), message);
-            smsRecordService.save(smsRecord);
-        }catch (Exception e){
-            return true;
-        }
-        // 添加到短信实际发送状态队列
-        if(smsRecodeId.length() > 0){
-            List<Integer> recordsIds = new ArrayList<>();
-            recordsIds.add(Integer.parseInt(smsRecodeId));
-            pushByAsyncStatus(recordsIds);
+        if(resultCode == Constants.HTTPSTATUS_CODE_SUCCESS){
+            try{
+                // 注意这里的状态仅仅是调用是否成功的状态 需要等待5分钟一周另外一个任务去查询发送状态后再更新status数据
+                SmsRecord smsRecord = new SmsRecord(0,sendSmsVo.getUid(), sendSmsVo.getMobile(),sendSmsVo.getContent(),
+                        "", sendSmsVo.getTemplate().toString(),
+                        resultCode,Integer.parseInt(smsRecodeId), message);
+                smsRecordService.save(smsRecord);
+            }catch (Exception e){
+                return true;
+            }
+            // 添加到短信实际发送状态队列
+            if(smsRecodeId.length() > 0){
+                List<Integer> recordsIds = new ArrayList<>();
+                recordsIds.add(Integer.parseInt(smsRecodeId));
+                pushByAsyncStatus(StringUtils.join(recordsIds,","));
+            }
         }
         return true;
     }
@@ -557,9 +563,9 @@ public class SmsServiceImpl implements SmsService {
      * @param recordIds 短信发送id
      */
     @Override
-    public void pushByAsyncStatus(List<Integer> recordIds) {
+    public void pushByAsyncStatus(String recordIds) {
         if(null == recordIds) return;
-        redisUtil.lPush(SmsConstants.SMS_SEND_RESULT_KEY, JSONObject.toJSONString(recordIds));
+        redisUtil.lPush(SmsConstants.SMS_SEND_RESULT_KEY, recordIds);
     }
 
     /**

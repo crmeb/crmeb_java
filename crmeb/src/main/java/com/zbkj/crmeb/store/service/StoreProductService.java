@@ -129,6 +129,13 @@ public interface StoreProductService extends IService<StoreProduct> {
     boolean deleteProduct(Integer productId);
 
     /**
+     * 恢复已删除商品
+     * @param productId 商品id
+     * @return 恢复结果
+     */
+    boolean reStoreProduct(Integer productId);
+
+    /**
      * 后台任务批量操作
      */
     public void consumeProductStock();

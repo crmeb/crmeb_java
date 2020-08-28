@@ -49,7 +49,7 @@ public interface SmsService{
      * 根据发送id同步发送短信结果
      * @param recordIds 短信发送id
      */
-    void pushByAsyncStatus(List<Integer> recordIds);
+    void pushByAsyncStatus(String recordIds);
 
     void consume();
 
