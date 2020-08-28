@@ -15,11 +15,11 @@ import javax.validation.constraints.NotEmpty;
  */
 @Data
 public class SystemAdminLoginRequest {
-    @ApiModelProperty(value = "后台管理员账号", example = "admin")
+    @ApiModelProperty(value = "后台管理员账号", example = "userName")
     @NotEmpty(message = "账号 不能为空")
     private String account;
 
-    @ApiModelProperty(value = "后台管理员密码", example = "123456")
+    @ApiModelProperty(value = "后台管理员密码", example = "userPassword")
     @NotEmpty(message = "密码 不能为空")
     private String pwd;
 

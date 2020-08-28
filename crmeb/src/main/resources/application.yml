@@ -2,9 +2,10 @@
 server:
   port: 8080
   domain:
-  wechat-api-url: 微信消息转发服务器http地址
+  wechat-api-url: #微信消息转发服务器http地址
   wechat-js-api-debug: true
   wechat-js-api-beta: true
+  asyncConfig: false
 
 spring:
   profiles:

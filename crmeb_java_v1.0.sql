@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.7.23)
 # Database: crmeb_java
-# Generation Time: 2020-08-26 02:49:50 +0000
+# Generation Time: 2020-08-28 05:02:57 +0000
 # ************************************************************
 
 
@@ -754,12 +754,12 @@ CREATE TABLE `eb_sms_record` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '短信发送记录编号',
   `uid` varchar(255) NOT NULL COMMENT '短信平台账号',
   `phone` char(11) NOT NULL COMMENT '接受短信的手机号',
-  `content` text NOT NULL COMMENT '短信内容',
+  `content` text COMMENT '短信内容',
   `add_ip` varchar(30) DEFAULT NULL COMMENT '添加记录ip',
   `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `template` varchar(255) NOT NULL COMMENT '短信模板ID',
-  `resultcode` int(6) unsigned NOT NULL COMMENT '状态码 100=成功,130=失败,131=空号,132=停机,133=关机,134=无状态',
-  `record_id` int(11) unsigned NOT NULL COMMENT '发送记录id',
+  `template` varchar(255) DEFAULT '' COMMENT '短信模板ID',
+  `resultcode` int(6) unsigned DEFAULT NULL COMMENT '状态码 100=成功,130=失败,131=空号,132=停机,133=关机,134=无状态',
+  `record_id` int(11) unsigned DEFAULT NULL COMMENT '发送记录id',
   `memo` text COMMENT '短信平台返回信息',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='短信发送记录表';
