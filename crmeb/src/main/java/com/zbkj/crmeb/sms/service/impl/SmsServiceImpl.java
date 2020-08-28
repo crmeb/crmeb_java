@@ -440,11 +440,15 @@ public class SmsServiceImpl implements SmsService {
         JSONObject data = joResult.getJSONObject("data");
         String smsRecodeId = (data.containsKey("id") ? data.getString("id") : "0");
 
-        // 注意这里的状态仅仅是调用是否成功的状态 需要等待5分钟一周另外一个任务去查询发送状态后再更新status数据
-        SmsRecord smsRecord = new SmsRecord(0,sendSmsVo.getUid(), sendSmsVo.getMobile(),sendSmsVo.getContent(),
-                "", sendSmsVo.getTemplate().toString(),
-                resultCode,Integer.parseInt(smsRecodeId), message);
-        smsRecordService.save(smsRecord);
+        try{
+            // 注意这里的状态仅仅是调用是否成功的状态 需要等待5分钟一周另外一个任务去查询发送状态后再更新status数据
+            SmsRecord smsRecord = new SmsRecord(0,sendSmsVo.getUid(), sendSmsVo.getMobile(),sendSmsVo.getContent(),
+                    "", sendSmsVo.getTemplate().toString(),
+                    resultCode,Integer.parseInt(smsRecodeId), message);
+            smsRecordService.save(smsRecord);
+        }catch (Exception e){
+            return true;
+        }
         // 添加到短信实际发送状态队列
         if(smsRecodeId.length() > 0){
             List<Integer> recordsIds = new ArrayList<>();

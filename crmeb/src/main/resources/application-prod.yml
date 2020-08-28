@@ -5,6 +5,8 @@ server:
   wechat-api-url:
   wechat-js-api-debug: false
   wechat-js-api-beta: false
+  asyncConfig: true
+
 spring:
   profiles:
     #  配置的环境
