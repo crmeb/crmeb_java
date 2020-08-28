@@ -27,12 +27,12 @@ public class LoginRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 
-    @ApiModelProperty(value = "手机号", required = true, example = "18991352728")
+    @ApiModelProperty(value = "手机号", required = true, example = "18888888")
     @Pattern(regexp = RegularConstants.PHONE, message = "手机号码格式错误")
     @JsonProperty(value = "account")
     private String phone;
 
-    @ApiModelProperty(value = "密码", required = true, example = "Abc123")
+    @ApiModelProperty(value = "密码", required = true, example = "1~[6,18]")
     @Pattern(regexp = RegularConstants.PASSWORD, message = "密码格式错误，密码必须以字母开头，长度在6~18之间，只能包含字符、数字和下划线")
     private String password;
 
