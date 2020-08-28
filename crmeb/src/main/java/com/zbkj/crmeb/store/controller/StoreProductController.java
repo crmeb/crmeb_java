@@ -92,6 +92,23 @@ public class StoreProductController {
     }
 
     /**
+     * 恢复已删除商品表
+     * @param id Integer
+     * @author Stivepeim
+     * @since 2020-08-28
+     */
+    @ApiOperation(value = "恢复商品")
+    @RequestMapping(value = "/restore/{id}", method = RequestMethod.GET)
+    public CommonResult<String> restore(@RequestBody @PathVariable Integer id){
+        if(storeProductService.reStoreProduct(id)){
+//            storeCartService.productStatusNotEnable(id);
+            return CommonResult.success();
+        }else{
+            return CommonResult.failed();
+        }
+    }
+
+    /**
      * 修改商品表
      * @param storeProductRequest 修改参数
      * @author Mr.Zhang

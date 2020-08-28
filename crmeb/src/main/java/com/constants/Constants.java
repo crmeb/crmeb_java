@@ -10,6 +10,8 @@ package com.constants;
 public class Constants {
     public static final long TOKEN_EXPRESS_MINUTES = (60 * 1); //1小时
 
+    public static final int HTTPSTATUS_CODE_SUCCESS = 200;
+
     public static final int NUM_ZERO = 0;
     public static final int NUM_ONE = 1;
     public static final int NUM_TWO = 2;
