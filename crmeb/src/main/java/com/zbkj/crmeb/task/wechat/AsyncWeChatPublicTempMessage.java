@@ -1,4 +1,4 @@
-package com.zbkj.crmeb.task;
+package com.zbkj.crmeb.task.wechat;
 
 import com.utils.DateUtil;
 import com.zbkj.crmeb.wechat.service.TemplateMessageService;
@@ -14,22 +14,22 @@ import org.springframework.stereotype.Component;
 @Configuration //读取配置
 @EnableScheduling // 2.开启定时任务
 
-public class AsyncWeChatProgramTempMessage {
+public class AsyncWeChatPublicTempMessage {
     //日志
-    private static final Logger logger = LoggerFactory.getLogger(AsyncWeChatProgramTempMessage.class);
+    private static final Logger logger = LoggerFactory.getLogger(AsyncWeChatPublicTempMessage.class);
 
     @Autowired
     private TemplateMessageService templateMessageService;
 
     @Scheduled(fixedDelay = 1000 * 60L) //1分钟同步一次数据
     public void init(){
-        logger.info("---AsyncWeChatProgramTempMessage task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDate());
+        logger.info("---AsyncWeChatPublicTempMessage task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDate());
         try {
-            templateMessageService.consumeProgram();
+            templateMessageService.consumePublic();
 
         }catch (Exception e){
             e.printStackTrace();
-            logger.error("AsyncWeChatProgramTempMessage.task" + " | msg : " + e.getMessage());
+            logger.error("AsyncWeChatPublicTempMessage.task" + " | msg : " + e.getMessage());
         }
 
     }
