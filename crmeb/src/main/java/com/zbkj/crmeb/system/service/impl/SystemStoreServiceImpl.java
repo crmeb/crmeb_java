@@ -54,10 +54,12 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
     public List<SystemStore> getList(String keywords, int status, PageParamRequest pageParamRequest) {
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         LambdaQueryWrapper<SystemStore> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        if(status == 2){
+        if(status == 1){ // 显示中
+            lambdaQueryWrapper.eq(SystemStore::getIsShow, true).eq(SystemStore::getIsDel, false);
+        }else if(status == 2){ // 回收站中
             lambdaQueryWrapper.eq(SystemStore::getIsDel, true);
-        }else{
-            lambdaQueryWrapper.eq(SystemStore::getIsShow, status).eq(SystemStore::getIsDel, false);
+        }else{ // 隐藏中的
+            lambdaQueryWrapper.eq(SystemStore::getIsShow, false).eq(SystemStore::getIsDel, false);;
         }
         if(!StringUtils.isBlank(keywords)){
             lambdaQueryWrapper.and(i -> i.or().like(SystemStore::getName, keywords)

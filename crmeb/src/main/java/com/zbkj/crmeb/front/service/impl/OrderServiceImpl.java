@@ -557,15 +557,6 @@ public class OrderServiceImpl implements OrderService {
             SystemAttachment systemAttachmentPram = new SystemAttachment();
             systemAttachmentPram.setName(name);
             // todo 二维码前端生成
-//            List<SystemAttachment> sysAttachments = systemAttachmentService.getByEntity(systemAttachmentPram);
-//            String siteUrl = systemConfigService.getValueByKey("");
-//            if(sysAttachments.size() == 0){
-//                // todo 二维码
-//                String qrCode = "";
-//
-//            }else{
-//
-//            }
         }
         storeOrderDetailResponse.setMapKey(systemConfigService.getValueByKey("tengxun_map_key"));
 //        StoreOrder storeOrder = new StoreOrder();

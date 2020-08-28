@@ -1,14 +1,19 @@
 package com.zbkj.crmeb.sms.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.common.PageParamRequest;
+import com.constants.Constants;
 import com.constants.SmsConstants;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
+import com.utils.CrmebUtil;
 import com.utils.RedisUtil;
 import com.utils.RestTemplateUtil;
+import com.zbkj.crmeb.sms.SmsResultVo;
 import com.zbkj.crmeb.sms.model.SmsRecord;
 import com.zbkj.crmeb.sms.dao.SmsRecordDao;
 import com.zbkj.crmeb.sms.request.SmsRecordRequest;
@@ -22,6 +27,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -89,10 +95,25 @@ public class SmsRecordServiceImpl extends ServiceImpl<SmsRecordDao, SmsRecord> i
         }
 
         int resultCode = joResult.getInteger("status");
-        String message = joResult.getString("msg");
-        JSONObject data = joResult.getJSONObject("data");
-        String smsRecodeId = (data.containsKey("id") ? data.getString("id") : "0");
+        if(resultCode == Constants.HTTPSTATUS_CODE_SUCCESS){
+            List<SmsRecord> smsRecords = new ArrayList<>();
+            for (Object data : joResult.getJSONArray("data")) {
+                JSONObject resultJo = JSONObject.parseObject(data.toString());
+                SmsRecord smsRecord = new SmsRecord().setRecordId(resultJo.getInteger("id"))
+                        .setResultcode(resultJo.getInteger("resultcode"));
+                smsRecords.add(smsRecord);
+            }
+            updateSendSmsStatus(smsRecords);
+        }
+    }
 
+    private void updateSendSmsStatus(List<SmsRecord> smsRecords){
+        for (SmsRecord smsRecord : smsRecords) {
+            LambdaUpdateWrapper<SmsRecord> lup = new LambdaUpdateWrapper<>();
+            lup.eq(SmsRecord::getRecordId, smsRecord.getRecordId())
+            .set(SmsRecord::getResultcode,smsRecord.getResultcode());
+            update(lup);
+        }
     }
 
     // 短信发送状态同步队列消费者
@@ -108,8 +129,9 @@ public class SmsRecordServiceImpl extends ServiceImpl<SmsRecordDao, SmsRecord> i
                     continue;
                 }
                 try{
-                    List<Integer> recordIds = (List<Integer>) JSONObject.parseObject(data.toString());
+                    List<Integer> recordIds = CrmebUtil.stringToArray(data.toString());
                     updateSmsStatus(recordIds);
+
                 }catch (Exception e){
                     redisUtil.lPush(SmsConstants.SMS_SEND_RESULT_KEY, data);
                 }
