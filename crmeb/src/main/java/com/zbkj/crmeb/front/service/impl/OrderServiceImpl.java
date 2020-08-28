@@ -185,9 +185,9 @@ public class OrderServiceImpl implements OrderService {
         // 检测支付方式
         if(!orderUtils.checkPayType(request.getPayType())) throw new CrmebException("暂不支持该支付方式，请刷新页面或者联系管理员");
 
-        Integer isChannel = 1;
-        if(request.getFrom() == "weixin") isChannel = 0;
-        if(request.getFrom() == "weixinh5") isChannel = 2;
+//        Integer isChannel = 1;
+//        if(request.getFrom() == "weixin") isChannel = 0;
+//        if(request.getFrom() == "weixinh5") isChannel = 2;
         String existCacheOrder = orderUtils.cacheGetOrderInfo(userService.getUserIdException(), orderKey);
         ConfirmOrderResponse cor = JSONObject.parseObject(existCacheOrder,ConfirmOrderResponse.class);
         if(null == existCacheOrder) throw new CrmebException("订单已过期,请刷新当前页面!");

@@ -16,12 +16,14 @@ import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.system.service.SystemFormTempService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
 * @author Mr.Zhang
@@ -44,6 +46,9 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
     private RedisUtil redisUtil;
 
     private static final String redisKey = Constants.CONFIG_LIST;
+
+    @Value("${server.asyncConfig}")
+    private Boolean asyncConfig;
 
     /**
      * 搜索列表
@@ -148,7 +153,11 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         //删除之前隐藏的数据
         deleteStatusByFormId(systemFormCheckRequest.getId());
 
-        async(systemConfigList);
+        List<SystemConfig> forAsyncPram = systemConfigList.stream().map(e -> {
+            e.setStatus(true);
+            return e;
+        }).collect(Collectors.toList());
+        async(forAsyncPram);
 
         return true;
     }
@@ -225,7 +234,8 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
     @Override
     public HashMap<String, String> info(Integer formId){
         LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper1 = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper1.eq(SystemConfig::getStatus, false).eq(SystemConfig::getFormId, formId);
+//        lambdaQueryWrapper1.eq(SystemConfig::getStatus, false).eq(SystemConfig::getFormId, formId);
+        lambdaQueryWrapper1.eq(SystemConfig::getFormId, formId);
         List<SystemConfig> systemConfigList = dao.selectList(lambdaQueryWrapper1);
         if(systemConfigList.size() < 1){
             return null;
@@ -281,6 +291,11 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * @return JSONObject
      */
     private void async(List<SystemConfig> systemConfigList){
+        if (!asyncConfig) {
+            //如果配置没有开启
+            return;
+        }
+
         for (SystemConfig systemConfig : systemConfigList) {
             if(systemConfig.getStatus()){
                 //隐藏之后，删除redis的数据
@@ -299,6 +314,10 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * @return JSONObject
      */
     private void deleteRedis(String name){
+        if (!asyncConfig) {
+            //如果配置没有开启
+            return;
+        }
         redisUtil.hmDelete(redisKey, name);
     }
 
@@ -310,6 +329,18 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * @return JSONObject
      */
     private String get(String name){
+        if (!asyncConfig) {
+            //如果配置没有开启
+            LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+            lambdaQueryWrapper.eq(SystemConfig::getStatus, false).eq(SystemConfig::getName, name);
+            SystemConfig systemConfig = dao.selectOne(lambdaQueryWrapper);
+            if(null == systemConfig || StringUtils.isBlank(systemConfig.getValue())){
+                return null;
+            }
+
+            return systemConfig.getValue();
+
+        }
         setRedisByVoList();
         Object data = redisUtil.hmGet(redisKey, name);
         if(null == data || StringUtils.isBlank(data.toString())){
@@ -318,8 +349,6 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         }
 
         //去数据库查找，然后写入redis
-
-
         return data.toString();
     }
 
@@ -332,7 +361,7 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
     private void setRedisByVoList(){
         //检测redis是否为空
         Long size = redisUtil.getHashSize(redisKey);
-        if(size > 0){
+        if(size > 0 || !asyncConfig){
             return;
         }
 
