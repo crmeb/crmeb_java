@@ -819,7 +819,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
 
     /**
      * 根据其他平台url导入产品信息
-     * @param url
+     * @param url 待导入平台url
      * @param tag 1=淘宝，2=京东，3=苏宁，4=拼多多， 5=天猫
      * @return
      */
@@ -845,7 +845,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                     break;
             }
         }catch (Exception e){
-            throw new CrmebException("确认URL和平台是否正确");
+            throw new CrmebException("确认URL和平台是否正确，以及平台费用是否足额"+e.getMessage());
         }
         return productRequest;
     }
@@ -958,17 +958,18 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             StoreProductAttr spattr = new StoreProductAttr();
             String stepkey = saleProps.next();
             String stepValue = props.getString(stepkey);
-            if(stepValue.length() > 0){
+            String stepValueValidLength = stepValue.replace("[","").replace("]","").replace("\"","");
+            if(stepValueValidLength.length() > 0){
                 com.alibaba.fastjson.JSONArray stepValues = JSON.parseArray(stepValue);
                 int c = stepValues.get(0).toString().length();
                 attrValueIsNullCount += c == 0 ? 1 : 0;
+                spattr.setAttrName(saleJson.getString(stepkey));
+                spattr.setAttrValues(props.getString(stepkey));
+                spaAttes.add(spattr);
+                productRequest.setAttr(spaAttes);
             }else{
                 attrValueIsNullCount += 1;
             }
-            spattr.setAttrName(saleJson.getString(stepkey));
-            spattr.setAttrValues(props.getString(stepkey));
-            spaAttes.add(spattr);
-            productRequest.setAttr(spaAttes);
         }
         // 判断是否单属性
         productRequest.setSpecType(spaAttes.size() != attrValueIsNullCount);
@@ -1300,6 +1301,19 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         LambdaUpdateWrapper<StoreProduct> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(StoreProduct::getId, productId);
         lambdaUpdateWrapper.set(StoreProduct::getIsDel, true);
+        return update(lambdaUpdateWrapper);
+    }
+
+    /**
+     * 恢复已删除的商品
+     * @param productId 商品id
+     * @return 恢复结果
+     */
+    @Override
+    public boolean reStoreProduct(Integer productId) {
+        LambdaUpdateWrapper<StoreProduct> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper.eq(StoreProduct::getId, productId);
+        lambdaUpdateWrapper.set(StoreProduct::getIsDel, false);
         return update(lambdaUpdateWrapper);
     }
 
