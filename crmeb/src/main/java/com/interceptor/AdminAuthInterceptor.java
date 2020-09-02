@@ -28,11 +28,10 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
 
         Boolean result = systemRoleService.checkAuth(uri);
 
-        //TODO 此处暂时放开
-//        if(!result){
-//            response.getWriter().write(JSONObject.toJSONString(CommonResult.forbidden()));
-//            return false;
-//        }
+        if(!result){
+            response.getWriter().write(JSONObject.toJSONString(CommonResult.forbidden()));
+            return false;
+        }
         return true;
     }
 
