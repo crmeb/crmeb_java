@@ -128,7 +128,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
     @Override
     public Boolean checkAuth(List<Integer> pathIdList, String uri) {
         LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.in(Category::getId, pathIdList).eq(Category::getStatus, 1).eq(Category::getUrl, uri);
+        lambdaQueryWrapper.in(Category::getId, pathIdList).eq(Category::getUrl, uri);
         List<Category> categoryList = dao.selectList(lambdaQueryWrapper);
         if(categoryList.size() < 1){
             return false;
@@ -343,7 +343,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
     }
 
     /**
-     * 检测分类码是否存在
+     * 检测分类名称是否存在
      * @param name String 分类名
      * @param type int 类型
      * @author Mr.Zhang
@@ -356,6 +356,20 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
         lambdaQueryWrapper.eq(Category::getName, name)
                 .eq(Category::getType, type);
         return dao.selectCount(lambdaQueryWrapper);
+    }
+
+    /**
+     * 检测url是否存在
+     * @param uri String url
+     * @author Mr.Zhang
+     * @since 2020-04-16
+     * @return int
+     */
+    @Override
+    public boolean checkUrl(String uri) {
+        LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(Category::getUrl, uri);
+        return dao.selectCount(lambdaQueryWrapper) > 0;
     }
 }
 

@@ -286,6 +286,11 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
             if(null != couponUserMap && couponUserMap.containsKey(storeCoupon.getId())){
                 response.setIsUse(true);
             }
+
+            if(response.getReceiveEndTime() == null){
+                response.setReceiveStartTime(null);
+            }
+
             storeCouponFrontResponseArrayList.add(response);
         }
 
@@ -320,9 +325,8 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
                 .eq(StoreCoupon::getStatus, 1)
                 //剩余数量大于0 或者不设置上限
                 .and(i -> i.gt(StoreCoupon::getLastTotal, 0).or().eq(StoreCoupon::getIsLimited, false))
-                //领取时间范围
-                .lt(StoreCoupon::getReceiveStartTime, date)
-                .gt(StoreCoupon::getReceiveEndTime, date);
+                //领取时间范围, 结束时间为null则是不限时
+                .and(i -> i.isNull(StoreCoupon::getReceiveEndTime).or( p -> p.lt(StoreCoupon::getReceiveStartTime, date).gt(StoreCoupon::getReceiveEndTime, date)));
         if(productId > 0){
             //有商品id  通用券可以领取，商品券可以领取，分类券可以领取
             getPrimaryKeySql(lambdaQueryWrapper, productId.toString());
