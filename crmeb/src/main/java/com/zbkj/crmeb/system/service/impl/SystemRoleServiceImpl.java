@@ -84,6 +84,11 @@ public class SystemRoleServiceImpl extends ServiceImpl<SystemRoleDao, SystemRole
      */
     @Override
     public Boolean checkAuth(String uri) {
+        //查询当前路由是否配置了权限，如果没有配置则直接通过
+        if(!categoryService.checkUrl(uri)){
+            return true;
+        }
+
         List<Integer> categoryIdList = getRoleListInRoleId();
         if(categoryIdList.size() < 1){
             return false;
