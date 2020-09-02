@@ -122,7 +122,7 @@ public class RestTemplateUtil {
 
     public String postFormData(String url, MultiValueMap<String, String> map) {
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+//        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         HttpEntity<MultiValueMap<String, String>> requests = new HttpEntity<MultiValueMap<String, String>>(map, headers);
         String body = restTemplate.postForEntity(url, requests, String.class).getBody();
         return body;

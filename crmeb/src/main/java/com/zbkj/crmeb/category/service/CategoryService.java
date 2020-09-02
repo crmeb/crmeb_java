@@ -38,4 +38,6 @@ public interface CategoryService extends IService<Category> {
     List<Category> getChildVoListByPid(Integer pid);
 
     int checkName(String name, Integer type);
+
+    boolean checkUrl(String uri);
 }
