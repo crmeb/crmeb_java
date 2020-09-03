@@ -25,7 +25,7 @@
 
 ### 加技术交流群
 
-![微信技术交流群](https://images.gitee.com/uploads/images/2020/0825/173218_34346bc9_2012975.png "屏幕截图.png")
+![微信技术交流群](https://images.gitee.com/uploads/images/2020/0903/172257_a8d4a5fc_2012975.png "微信技术交流群.png)
 
 如果群二维码过期请加开发者微信拉你进群
 
