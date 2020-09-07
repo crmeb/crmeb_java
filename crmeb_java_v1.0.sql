@@ -5423,7 +5423,10 @@ VALUES
 	(1631,'news_slides_limit','news_slides_limit',64,'5',0,'2020-08-13 14:46:06','2020-08-13 14:46:06'),
 	(1632,'store_user_min_recharge','store_user_min_recharge',78,'0',0,'2020-08-13 15:43:21','2020-08-13 15:43:21'),
 	(1633,'recharge_switch','recharge_switch',78,'true',0,'2020-08-13 15:43:21','2020-08-13 15:43:21'),
-	(1634,'recharge_attention','recharge_attention',78,'测试\n测试1\n测试2\n测试3',0,'2020-08-13 15:43:21','2020-08-13 15:43:21');
+	(1634,'recharge_attention','recharge_attention',78,'测试\n测试1\n测试2\n测试3',0,'2020-08-13 15:43:21','2020-08-13 15:43:21'),
+	(1635,'order_give_integral', 'order_give_integral', 109, '1', 0, '2020-08-20 14:19:06', '2020-08-20 14:19:06'),
+	(1636,'integral_ratio', 'integral_ratio', 109, '1', 0, '2020-08-20 14:19:06', '2020-08-20 14:19:06');
+
 
 /*!40000 ALTER TABLE `eb_system_config` ENABLE KEYS */;
 UNLOCK TABLES;
