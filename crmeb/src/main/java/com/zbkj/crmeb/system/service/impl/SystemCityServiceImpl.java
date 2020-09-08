@@ -48,12 +48,31 @@ public class SystemCityServiceImpl extends ServiceImpl<SystemCityDao, SystemCity
      */
     @Override
     public Object getList(SystemCitySearchRequest request) {
-        if(redisUtil.hmGet(Constants.CITY_LIST, request.getParentId()) == null){
+        if(redisUtil.hmGet(Constants.CITY_LIST, request.getParentId().toString()) == null){
             asyncRedis(request.getParentId());
         }
-        return redisUtil.hmGet(Constants.CITY_LIST, request.getParentId());
+        Object list = redisUtil.hmGet(Constants.CITY_LIST, request.getParentId().toString());
+        if(null == list){
+            //城市数据，异步同步到redis，第一次拿不到数据，去数据库读取
+            list = getList(request.getParentId());
+        }
+
+        return list;
     }
 
+    /**
+     * 根据父级id获取数据
+     * @param parentId integer parentId
+     * @author Mr.Zhang
+     * @since 2020-04-17
+     * @return Object
+     */
+    private Object getList(Integer parentId) {
+        LambdaQueryWrapper<SystemCity> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(SystemCity::getParentId, parentId);
+        lambdaQueryWrapper.in(SystemCity::getIsShow, true);
+        return dao.selectList(lambdaQueryWrapper);
+    }
     /**
      * 修改状态
      * @param id integer id

@@ -91,7 +91,7 @@ public class SystemCityAsyncServiceImpl extends ServiceImpl<SystemCityDao, Syste
         lambdaQueryWrapper.in(SystemCity::getIsShow, true);
         List<SystemCity> systemCityList = dao.selectList(lambdaQueryWrapper);
         if(systemCityList != null && systemCityList.size() > 0){
-            redisUtil.hmSet(Constants.CITY_LIST, pid, systemCityList);
+            redisUtil.hmSet(Constants.CITY_LIST, pid.toString(), systemCityList);
         }
     }
 
