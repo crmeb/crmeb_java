@@ -129,8 +129,6 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         //检测form表单，并且返回需要添加的数据
         systemFormTempService.checkForm(systemFormCheckRequest);
 
-        //修改之前的数据
-        updateStatusByFormId(systemFormCheckRequest.getId());
         List<SystemConfig> systemConfigList = new ArrayList<>();
 
         //批量添加
@@ -148,6 +146,10 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
             systemConfig.setTitle(systemFormItemCheckRequest.getTitle());
             systemConfigList.add(systemConfig);
         }
+
+        //修改之前的数据
+        updateStatusByFormId(systemFormCheckRequest.getId());
+
         saveBatch(systemConfigList);
 
         //删除之前隐藏的数据

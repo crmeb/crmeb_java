@@ -52,6 +52,8 @@ CRMEB打通版：https://gitee.com/ZhongBangKeJi/CRMEB
 
 本地启动Java Api项目接口地址：http://localhost:8080/swagger-ui.html#    8080为配置文件里配置的 server/port
 
+prod环境swagger默认账号密码在 prod.yml配置里
+
 ### 运行环境
 
 运行环境要求JAVA1.8
