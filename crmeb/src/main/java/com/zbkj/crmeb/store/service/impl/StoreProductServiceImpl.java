@@ -346,6 +346,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                     spav.setSuk(String.join(",",skuList));
 //                    HashMap<String, Object> attrValues = setAttrValueByRequest(storeProductRequest);
                 }
+                spav.setImage(systemAttachmentService.clearPrefix(spav.getImage()));
                 spav.setAttrValue(JSON.toJSONString(attrValuesRequest.getAttrValue()));
                 storeProductAttrValues.add(spav);
             }
