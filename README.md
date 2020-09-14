@@ -55,6 +55,10 @@ CRMEB打通版：https://gitee.com/ZhongBangKeJi/CRMEB
 
 prod环境swagger默认账号密码在 prod.yml配置里
 
+ # **自己安装项目后台管理员**
+## 超级管理员：admin
+## 密码：123456
+
 ### 运行环境
 
 运行环境要求JAVA1.8
@@ -192,7 +196,6 @@ json渲染表单以及是否需要编辑数据回填的功能以下为例
               @submit="handlerSubmit" />
 注意：设置单选按钮的值时需要带上单引号，要不渲染待编辑数据时不会自动选中
 
-## 自己安装项目admin项目超级管理员 admin 123456
 
 ## 帮助文档
 [帮助文档](http://help.crmeb.net/crmeb_java/1748037)
