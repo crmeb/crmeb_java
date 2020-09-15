@@ -26,7 +26,7 @@ export function silenceBindingSpread()
 	}
 	if(puid){
 		//#ifdef H5
-		 Cache.set('spread', 0);
+		 Cache.clear('spread');
 		//#endif
 		
 		//#ifdef MP
