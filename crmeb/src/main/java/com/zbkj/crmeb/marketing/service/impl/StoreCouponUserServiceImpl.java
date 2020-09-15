@@ -197,7 +197,10 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
      */
     private void filterReceiveUserInUid(Integer couponId, List<Integer> uidList) {
         LambdaQueryWrapper<StoreCouponUser> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(StoreCouponUser::getCouponId, couponId).in(StoreCouponUser::getUid, uidList);
+        lambdaQueryWrapper
+                .eq(StoreCouponUser::getCouponId, couponId)
+                .in(StoreCouponUser::getUid, uidList)
+                .eq(StoreCouponUser::getStatus,0);
         List<StoreCouponUser> storeCouponUserList = dao.selectList(lambdaQueryWrapper);
         if(storeCouponUserList != null){
             List<Integer> receiveUidList = storeCouponUserList.stream().map(StoreCouponUser::getUid).distinct().collect(Collectors.toList());
@@ -283,6 +286,67 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
         storeCouponUser.setStatus(1);
         storeCouponUser.setUseTime(DateUtil.nowDateTime());
         return updateById(storeCouponUser);
+    }
+
+    /**
+     * 检测优惠券是否可用，计算订单价格时使用
+     *
+     * @param id            优惠券id
+     * @param productIdList 商品id集合
+     * @param price         价格
+     * @return 可用状态
+     */
+    @Override
+    public boolean canUse(Integer id, List<Integer> productIdList, BigDecimal price) {
+        StoreCouponUser storeCouponUser = getById(id);
+        if(storeCouponUser == null || !storeCouponUser.getUid().equals(userService.getUserIdException())){
+            throw new CrmebException("领取记录不存在！");
+        }
+
+        if(storeCouponUser.getStatus() == 1){
+            throw new CrmebException("此优惠券已使用！");
+        }
+
+        if(storeCouponUser.getStatus() == 2){
+            throw new CrmebException("此优惠券已失效！");
+        }
+
+        //判断是否在使用时间内
+        Date date = DateUtil.nowDateTime();
+        if(storeCouponUser.getStartTime().compareTo(date) > 0){
+            throw new CrmebException("此优惠券还未到达使用时间范围之内！");
+        }
+
+        if(date.compareTo(storeCouponUser.getEndTime()) > 0){
+            throw new CrmebException("此优惠券已经失效了");
+        }
+
+        if(storeCouponUser.getMinPrice().compareTo(price) > 0){
+            throw new CrmebException("总金额小于优惠券最小使用金额");
+        }
+
+        //检测优惠券信息
+        if(storeCouponUser.getUseType() > 1){
+            if(productIdList.size() < 1){
+                throw new CrmebException("没有找到商品");
+            }
+
+            //拿出需要使用优惠券的商品分类集合
+            List<Integer> categoryIdList = storeProductService.getSecondaryCategoryByProductId(StringUtils.join(productIdList, ","));
+
+            //设置优惠券所提供的集合
+            List<Integer> primaryKeyIdList = CrmebUtil.stringToArray(storeCouponUser.getPrimaryKey());
+
+            //取两个集合的交集，如果是false则证明没有相同的值
+            if(storeCouponUser.getUseType() == 2 && !primaryKeyIdList.retainAll(productIdList)){
+                throw new CrmebException("此优惠券为商品券，请购买相关商品之后再使用！");
+            }
+
+            if(storeCouponUser.getUseType() == 3 && !primaryKeyIdList.retainAll(categoryIdList)){
+                throw new CrmebException("此优惠券为分类券，请购买相关分类下的商品之后再使用！");
+            }
+        }
+        return true;
     }
 
     /**
@@ -393,7 +457,7 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
     public List<StoreCouponUserOrder> getListByCartIds(List<Integer> cartIds) {
 
         //购物车产品集合
-        List<StoreCartResponse> storeCartResponseList = storeCartService.getListByUserIdAndCartIds(userService.getUserIdException(), cartIds);
+        List<StoreCartResponse> storeCartResponseList = storeCartService.getListByUserIdAndCartIds(userService.getUserIdException(), cartIds,1);
 
         //产品id集合
         List<Integer> productIds = storeCartResponseList.stream().map(StoreCartResponse::getProductId).distinct().collect(Collectors.toList());
@@ -424,6 +488,12 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
         return storeCouponUserOrderArrayList;
     }
 
+    /**
+     * H5 优惠券列表
+     * @param userId            用户id
+     * @param pageParamRequest  分页参数
+     * @return  优惠券列表
+     */
     @Override
     public List<StoreCouponUserResponse> getListFront(Integer userId, PageParamRequest pageParamRequest) {
         StoreCouponUserSearchRequest request = new StoreCouponUserSearchRequest();
@@ -446,7 +516,7 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
                     type = false;
                 }
 
-                if(date.compareTo(storeCouponUserResponse.getEndTime()) > 0){
+                if(date.compareTo(storeCouponUserResponse.getEndTime()) >= 0){
                     type = false;
                 }
             }

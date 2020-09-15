@@ -71,9 +71,14 @@ public class CallbackServiceImpl implements CallbackService {
             AttachVo attachVo = JSONObject.toJavaObject(JSONObject.parseObject(callbackVo.getAttach()), AttachVo.class);
 
             //判断openid
-            UserToken userToken = userTokenService.getUserIdByOpenId(callbackVo.getOpenid());
+            UserToken userToken = userTokenService.getUserIdByOpenId(callbackVo.getOpenid(), Constants.THIRD_LOGIN_TOKEN_TYPE_PUBLIC); //公众号
             if(null == userToken || !userToken.getUid().equals(attachVo.getUserId())){
-                //用户信息错误
+                //继续找小程序，找不到说明没有
+                userToken = userTokenService.getUserIdByOpenId(callbackVo.getOpenid(), Constants.THIRD_LOGIN_TOKEN_TYPE_PROGRAM); //小程序
+            }
+
+            if(null == userToken || !userToken.getUid().equals(attachVo.getUserId())){
+               //用户信息错误
                 throw new CrmebException("用户信息错误！");
             }
 

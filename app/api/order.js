@@ -168,10 +168,11 @@ export function orderRefundVerify(data) {
  * 订单确认获取订单详细信息
  * @param string cartId
  */
-export function orderConfirm(cartId, isNew) {
+export function orderConfirm(cartId, isNew, addAgain) {
 	return request.post('order/confirm', {
 		cartIds: cartId,
-		isNew: isNew
+		isNew: isNew,
+		addAgain: addAgain
 	}, {}, 1);
 }
 
@@ -202,4 +203,12 @@ export function orderCreate(key, data) {
  */
 export function postOrderComputed(key, data) {
 	return request.post("order/computed/" + key, data);
+}
+
+/**
+ * 将字符串 转base64
+ * @param object data
+ */
+export function qrcodeApi(data) {
+	return request.post('qrcode/str2base64', data, {}, 1);
 }

@@ -234,22 +234,22 @@ public final class DateUtil {
     /**
      * convert long to date
      *
-     * @param dateLong
-     * @return
+     * @param date 待转换时间戳
+     * @return 转换后时间
      */
-    public static Date longToDate(long dateLong) {
-        return new Date(dateLong);
+    public static Date timeStamp11ToDate(Integer date) {
+        return new Date(date);
     }
 
     /**
      * convert long to date string
      *
-     * @param dateLong
-     * @param DATE_FORMAT
-     * @return
+     * @param date 待转换时间戳
+     * @param DATE_FORMAT 格式化时间
+     * @return 格式化后的时间
      */
-    public static String longToDate(long dateLong, String DATE_FORMAT) {
-        return dateToStr(new Date(dateLong), DATE_FORMAT);
+    public static String timeStamp11ToDate(Integer date, String DATE_FORMAT) {
+        return dateToStr(new Date(date), DATE_FORMAT);
     }
 
     /**
@@ -517,5 +517,29 @@ public final class DateUtil {
         }
 
         return date;
+    }
+
+    /**
+     *  两个日期之前的相差天数
+     * @param starDate 开始日期
+     * @param endDate 结束日期
+     * @return 相差天数
+     */
+    public static int daysBetween(Date starDate,Date endDate){
+
+        Calendar cal = Calendar.getInstance();
+
+        cal.setTime(starDate);
+
+        long time1 = cal.getTimeInMillis();
+
+        cal.setTime(endDate);
+
+        long time2 = cal.getTimeInMillis();
+
+        long between_days=(time2-time1)/(1000*3600*24);
+
+        return Integer.parseInt(String.valueOf(between_days));
+
     }
 }

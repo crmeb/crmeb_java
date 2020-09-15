@@ -1,3 +1,4 @@
+import Cookies from 'js-cookie'
 /**
  * Created by PanJiaChen on 16/11/18.
  */
@@ -31,7 +32,7 @@ function padLeftZero (str) {
 }
 
 /**
- * Parse the time to string
+ * 更改时间格式成2010-01-10格式
  * @param {(Object|string|number)} time
  * @param {string} cFormat
  * @returns {string | null}
@@ -47,15 +48,11 @@ export function parseTime(time, cFormat) {
   } else {
     if ((typeof time === 'string')) {
       if ((/^[0-9]+$/.test(time))) {
-        // support "1548221490638"
         time = parseInt(time)
       } else {
-        // support safari
-        // https://stackoverflow.com/questions/4310953/invalid-date-in-safari
         time = time.replace(new RegExp(/-/gm), '/')
       }
     }
-
     if ((typeof time === 'number') && (time.toString().length === 10)) {
       time = time * 1000
     }
@@ -379,5 +376,47 @@ export function removeClass(ele, cls) {
   if (hasClass(ele, cls)) {
     const reg = new RegExp('(\\s|^)' + cls + '(\\s|$)')
     ele.className = ele.className.replace(reg, ' ')
+  }
+}
+
+/**
+ * 判断地址
+ */
+export function parseQuery() {
+  const res = {};
+
+  const query = (location.href.split("?")[1] || "")
+    .trim()
+    .replace(/^(\?|#|&)/, "");
+
+  if (!query) {
+    return res;
+  }
+
+  query.split("&").forEach(param => {
+    const parts = param.replace(/\+/g, " ").split("=");
+    const key = decodeURIComponent(parts.shift());
+    const val = parts.length > 0 ? decodeURIComponent(parts.join("=")) : null;
+
+    if (res[key] === undefined) {
+      res[key] = val;
+    } else if (Array.isArray(res[key])) {
+      res[key].push(val);
+    } else {
+      res[key] = [res[key], val];
+    }
+  });
+
+  return res;
+}
+
+/**
+ * 是否是核销员
+ */
+export function isWriteOff() {
+  if(localStorage.getItem('storeStaffList')){
+    let JavaInfo = JSON.parse(Cookies.get('JavaInfo'))
+    let staff = JSON.parse(localStorage.getItem('storeStaffList'))
+    return staff.some(item => item.avatar === JavaInfo.account)
   }
 }

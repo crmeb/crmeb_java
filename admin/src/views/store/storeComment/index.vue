@@ -22,7 +22,7 @@
               </el-input>
             </el-form-item>
             <el-form-item label="用户名称：">
-              <el-select v-model="uids" style="width: 500px" reserve-keyword multiple remote filterable
+              <el-select v-model="uids" class="selWidth" reserve-keyword multiple remote filterable
                          :remote-method="remoteMethod" :loading="loading" placeholder="请输入用户名称" clearable @change="seachList">
                 <el-option
                   v-for="item in options"

@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 public class OrderDataResponse {
     private int completeCount;
     private int evaluatedCount;
+    private int verificationCount;
     private int orderCount;
     private int receivedCount;
     private int refundCount;

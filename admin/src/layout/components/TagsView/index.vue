@@ -1,5 +1,5 @@
 <template>
-  <div id="tags-view-container" class="tags-view-container">
+  <div id="tags-view-container" class="tags-view-container" v-if="!isPhone">
     <scroll-pane ref="scrollPane" class="tags-view-wrapper">
       <router-link
         v-for="tag in visitedViews"
@@ -17,10 +17,10 @@
       </router-link>
     </scroll-pane>
     <ul v-show="visible" :style="{left:left+'px',top:top+'px'}" class="contextmenu">
-      <li @click="refreshSelectedTag(selectedTag)">Refresh</li>
-      <li v-if="!isAffix(selectedTag)" @click="closeSelectedTag(selectedTag)">Close</li>
-      <li @click="closeOthersTags">Close Others</li>
-      <li @click="closeAllTags(selectedTag)">Close All</li>
+      <li @click="refreshSelectedTag(selectedTag)">刷新</li>
+      <li v-if="!isAffix(selectedTag)" @click="closeSelectedTag(selectedTag)">关闭</li>
+      <li @click="closeOthersTags">关闭其他</li>
+      <li @click="closeAllTags(selectedTag)">关闭所有</li>
     </ul>
   </div>
 </template>
@@ -33,11 +33,13 @@ export default {
   components: { ScrollPane },
   data() {
     return {
+      fullWidth: document.body.clientWidth,
       visible: false,
       top: 0,
       left: 0,
       selectedTag: {},
-      affixTags: []
+      affixTags: [],
+      isPhone: this.$wechat.isPhone()
     }
   },
   computed: {
@@ -51,7 +53,7 @@ export default {
   watch: {
     $route() {
       this.addTags()
-      this.moveToCurrentTag()
+      if( !this.isPhone ) this.moveToCurrentTag()
     },
     visible(value) {
       if (value) {
@@ -62,10 +64,14 @@ export default {
     }
   },
   mounted() {
+    window.addEventListener('resize', this.handleResize)
     this.initTags()
     this.addTags()
   },
   methods: {
+    handleResize(event) {
+      this.fullWidth = document.body.clientWidth
+    },
     isActive(route) {
       return route.path === this.$route.path
     },
@@ -262,7 +268,7 @@ export default {
 }
 </style>
 
-<style lang="scss">
+<style lang="scss" scoped>
 //reset element css of el-icon-close
 .tags-view-wrapper {
   .tags-view-item {

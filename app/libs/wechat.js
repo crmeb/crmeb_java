@@ -153,13 +153,14 @@ class AuthWechat {
 	}
 
 	/**
-	 * 授权登陆获取token
+	 * 授权登录获取token
 	 * @param {Object} code
 	 */
 	auth(code) {
 		return new Promise((resolve, reject) => {
 			let loginType = Cache.get(LOGINTYPE);
-			wechatAuth(code, parseInt(Cache.get("spread")), loginType)
+			alert(Cache.get("spread"))
+			wechatAuth(code, Cache.get("spread"), loginType)
 				.then(({
 					data
 				}) => {
@@ -173,6 +174,7 @@ class AuthWechat {
 					});
 					Cache.set(WX_AUTH, code);
 					Cache.clear(STATE_KEY);
+					// Cache.clear('spread');
 					loginType && Cache.clear(LOGINTYPE);
 					resolve();
 				})
@@ -204,7 +206,7 @@ class AuthWechat {
 	}
 
 	/**
-	 * 跳转自动登陆
+	 * 跳转自动登录
 	 */
 	toAuth() {
 		let that = this;
@@ -223,10 +225,6 @@ class AuthWechat {
 		return new Promise((resolve, reject) => {
 			let configDefault = {
 				fail(res) {
-					console.log('前解放后的金凤凰3');
-					console.log(res);
-					console.log(that.instance);
-					console.log('前解放后的金凤凰2');
 					if (that.instance) return reject({
 						is_ready: true,
 						wx: that.instance
@@ -236,9 +234,6 @@ class AuthWechat {
 							is_ready: true,
 							wx: wx
 						});
-						console.log('么么么么1');
-						console.log(wx);
-						console.log('么么么么2');
 					})
 				},
 				success(res) {

@@ -3,6 +3,7 @@ package com.zbkj.crmeb.front.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.exception.CrmebException;
 import com.utils.CrmebUtil;
+import com.utils.QRCodeUtil;
 import com.utils.RestTemplateUtil;
 import com.zbkj.crmeb.front.service.QrCodeService;
 import com.zbkj.crmeb.wechat.service.WeChatService;
@@ -67,6 +68,25 @@ public class QrCodeServiceImpl implements QrCodeService {
     public Map<String, Object> base64(String url) {
         byte[] bytes = restTemplateUtil.getBuffer(url);
         String base64Image = CrmebUtil.getBase64Image(Base64.encodeBase64String(bytes));
+        Map<String, Object> map = new HashMap<>();
+        map.put("code", base64Image);
+        return map;
+    }
+
+    /**
+     * 讲字符串转为QRcode
+     * @param text 待转换字符串
+     * @return QRcode base64格式
+     */
+    @Override
+    public Map<String, Object> base64String(String text,int width, int height) {
+
+        String base64Image = null;
+        try {
+            base64Image = QRCodeUtil.crateQRCode(text,width,height);
+        }catch (Exception e){
+            throw new CrmebException("生成二维码异常");
+        }
         Map<String, Object> map = new HashMap<>();
         map.put("code", base64Image);
         return map;

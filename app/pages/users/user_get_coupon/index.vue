@@ -108,8 +108,8 @@
 					  that.$set(that,'couponsList',list);
 				      that.$util.Tips({ title: '领取成功' });
 				    },function(res){
-				      return that.$util.Tips({title:res.msg});
-				    });
+				      return that.$util.Tips({title:res});
+				    })
 				  },
 				   /**
 				     * 获取领取优惠券列表

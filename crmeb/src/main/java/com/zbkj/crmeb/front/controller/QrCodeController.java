@@ -2,6 +2,8 @@ package com.zbkj.crmeb.front.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.common.CommonResult;
+import com.constants.Constants;
+import com.exception.CrmebException;
 import com.zbkj.crmeb.front.service.QrCodeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -47,6 +49,24 @@ public class QrCodeController {
     @RequestMapping(value = "/base64", method = RequestMethod.POST)
     public CommonResult<Map<String, Object>> get(@RequestParam String url) {
         return CommonResult.success(qrCodeService.base64(url));
+    }
+
+    /**
+     * 远程图片转base64
+     * @author Mr.Zhang
+     * @since 2020-04-16
+     * @return CommonResult
+     */
+    @ApiOperation(value="将字符串 转base64")
+    @RequestMapping(value = "/str2base64", method = RequestMethod.POST)
+    public CommonResult<Map<String, Object>> getQrcodeByString(
+            @RequestParam String text,
+            @RequestParam int width,
+            @RequestParam int height) {
+        if((width < 50 || height < 50) && (width > 500 || height > 500) && text.length() >= 999){
+            throw new CrmebException(Constants.RESULT_QRCODE_PRAMERROR);
+        }
+        return CommonResult.success(qrCodeService.base64String(text, width,height));
     }
 }
 

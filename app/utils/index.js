@@ -2,7 +2,7 @@ import { spread } from "@/api/user";
 import Cache from "@/utils/cache";
 
 /**
- * 绑定用户授权
+ * 静默授权绑定上下级，使用在已经登录后扫描了别人的推广二维码
  * @param {Object} puid
  */
 export function silenceBindingSpread()
@@ -25,20 +25,21 @@ export function silenceBindingSpread()
 		puid = 0;
 	}
 	if(puid){
-		spread(puid).then(res=>{
-			console.log(res);
-			//#ifdef H5
-			 Cache.clear('spread');
-			//#endif
-			
-			//#ifdef MP
-			 getApp().globalData.spid = 0;
-			 getApp().globalData.code = 0;
-			//#endif
-			
-		}).catch(res=>{
-			console.log(res);
-		});
+		//#ifdef H5
+		 Cache.set('spread', 0);
+		//#endif
+		
+		//#ifdef MP
+		 getApp().globalData.spid = 0;
+		 getApp().globalData.code = 0;
+		//#endif
+		// spread(puid).then(res=>{
+		// 	console.log(res);		
+		// }).catch(res=>{
+		// 	console.log(res);
+		// });
+	}else{
+		 Cache.set('spread', 0);
 	}
 }
 

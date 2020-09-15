@@ -1,19 +1,16 @@
 package com.utils;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import cn.hutool.core.util.RandomUtil;
+import com.alibaba.druid.util.Base64;
+import org.springframework.stereotype.Component;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Random;
-import javax.imageio.ImageIO;
-
-import cn.hutool.core.util.RandomUtil;
-import com.alibaba.druid.util.Base64;
-import org.springframework.stereotype.Component;
 
 /**
  * 验证码生成工具类
@@ -24,7 +21,7 @@ import org.springframework.stereotype.Component;
 public class ValidateCodeUtil {
     private static Validate validate = null;                  //验证码类，用于最后返回此对象，包含验证码图片base64和真值
     private static Random random = new Random();              //随机类，用于生成随机参数
-    private static String randString = "0123456789abcdefghijkmnpqrtyABCDEFGHIJLMNQRTY";//随机生成字符串的取值范围
+    private static String randString = "0123456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";//随机生成字符串的取值范围
 
     private static int width = 80;     //图片宽度
     private static int height = 34;    //图片高度
@@ -103,9 +100,9 @@ public class ValidateCodeUtil {
         Graphics2D g2d = (Graphics2D) graphics;
         g2d.setFont(getFont());   //设置字体
         g2d.setColor(new Color(random.nextFloat(), random.nextFloat(), random.nextFloat()));//设置颜色
-        String randChar = String.valueOf(getRandomChar(random.nextInt(randString.length())));
+        String randChar = getRandomChar(random.nextInt(randString.length()));
         randomString += randChar;   //组装
-        int rot = getRandomNum(5,10);
+        int rot = getRandomNum(1,10);
         g2d.translate(random.nextInt(3), random.nextInt(3));
         g2d.rotate(rot * Math.PI / 180);
         g2d.drawString(randChar, 13*i, 20);

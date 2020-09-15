@@ -327,7 +327,6 @@ export default {
       const clone = this.cloneComponent(item)
       this.drawingList.push(clone)
       this.activeFormItem(clone)
-      console.log(this.drawingList)
     },
     cloneComponent(origin) {
       const clone = JSON.parse(JSON.stringify(origin))

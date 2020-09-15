@@ -4,13 +4,14 @@ export function addRole(pram) {
   const data = {
     level: pram.level,
     roleName: pram.roleName,
-    status: pram.status
+    status: pram.status,
+    rules: pram.rules.join(',')
   }
-  data.rules = pram.rules.join(',')
+  // data.rules = pram.rules.join(',')
   return request({
     url: '/admin/system/role/save',
     method: 'POST',
-    params: data
+    data: data
   })
 }
 
@@ -54,6 +55,7 @@ export function getRoleList(pram) {
   })
 }
 
+
 export function updateRole(pram) {
   const data = {
     id: pram.id,
@@ -65,6 +67,7 @@ export function updateRole(pram) {
   return request({
     url: '/admin/system/role/update',
     method: 'post',
-    params: data
+    params: {id: pram.id},
+    data: data
   })
 }

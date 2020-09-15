@@ -3,12 +3,17 @@ package com.zbkj.crmeb.store.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.constants.Constants;
+import com.utils.DateUtil;
 import com.utils.RedisUtil;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.service.OrderTaskService;
 import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.store.service.StoreOrderTaskService;
+import com.zbkj.crmeb.store.utilService.OrderUtils;
 import com.zbkj.crmeb.task.order.OrderRefundByUser;
+import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
+import com.zbkj.crmeb.wechat.vo.WechatSendMessageForGetPackage;
+import com.zbkj.crmeb.wechat.vo.WechatSendMessageForOrderCancel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +37,12 @@ public class OrderTaskServiceImpl implements OrderTaskService {
 
     @Autowired
     private StoreOrderService storeOrderService;
+
+    @Autowired
+    private WechatSendMessageForMinService wechatSendMessageForMinService;
+
+    @Autowired
+    private OrderUtils orderUtils;
 
     /**
      * 用户取消订单
@@ -58,6 +69,14 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                 boolean result = storeOrderTaskService.cancelByUser(storeOrder);
                 if(!result){
                     redisUtil.lPush(redisKey, data);
+                }else{
+                    WechatSendMessageForOrderCancel orderCancel = new WechatSendMessageForOrderCancel(
+                            "暂无",DateUtil.nowDateTimeStr(),"","暂无",orderUtils.getPayTypeStrByOrder(storeOrder),
+                            orderUtils.getStoreNameAndCarNumString(storeOrder.getId()),storeOrder.getOrderId(),
+                            storeOrder.getStatus()+"",storeOrder.getPayPrice()+"",storeOrder.getCreateTime()+"",
+                            "CRMEB","暂无",storeOrder.getOrderId(),"CRMEB","暂无"
+                    );
+                    wechatSendMessageForMinService.sendOrderCancelMessage(orderCancel,storeOrder.getUid());
                 }
             }catch (Exception e){
                 redisUtil.lPush(redisKey, data);
@@ -155,6 +174,13 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                 boolean result = storeOrderTaskService.takeByUser(storeOrder);
                 if(!result){
                     redisUtil.lPush(redisKey, id);
+                }else{
+                    // 微信小程序订阅消息通知 确认收货
+                    WechatSendMessageForGetPackage getPackage = new WechatSendMessageForGetPackage(
+                            orderUtils.getPayTypeStrByOrder(storeOrder),orderUtils.getStoreNameAndCarNumString(storeOrder.getId()),
+                            "CRMEB",storeOrder.getUserAddress(), DateUtil.nowDateTimeStr(),storeOrder.getOrderId()
+                    );
+                    wechatSendMessageForMinService.sendGetPackageMessage(getPackage, storeOrder.getUid());
                 }
             }catch (Exception e){
                 redisUtil.lPush(redisKey, id);

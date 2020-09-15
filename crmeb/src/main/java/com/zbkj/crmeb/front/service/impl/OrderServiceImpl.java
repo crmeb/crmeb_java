@@ -36,6 +36,9 @@ import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserAddress;
 import com.zbkj.crmeb.user.service.UserAddressService;
 import com.zbkj.crmeb.user.service.UserService;
+import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
+import com.zbkj.crmeb.wechat.vo.WechatSendMessageForCreateOrder;
+import com.zbkj.crmeb.wechat.vo.WechatSendMessageForReFundNotify;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,6 +106,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private LogisticService logisticsService;
 
+    @Autowired
+    private WechatSendMessageForMinService wechatSendMessageForMinService;
+
     /**
      * 确认订单
      * @param cartIds 购物车id集合
@@ -110,7 +116,7 @@ public class OrderServiceImpl implements OrderService {
      * @return 确认订单response
      */
     @Override
-    public ConfirmOrderResponse confirmOrder(List<Integer> cartIds, boolean isNew) {
+    public ConfirmOrderResponse confirmOrder(List<Integer> cartIds, boolean isNew, boolean addAgain) {
         ConfirmOrderResponse response = new ConfirmOrderResponse();
         // 获取运费默认模版
         ShippingTemplates template = shippingTemplatesService.getById(69);// todo 这里的默认模版写死
@@ -119,11 +125,12 @@ public class OrderServiceImpl implements OrderService {
 
         List<StoreCartResponse> storeCartResponse = new ArrayList<>();
         // isNew=false 从购物车获取 isNew=true 从缓存中获取=再次下单
-        if(isNew){
+        if(addAgain){ // 获取重新购买数据
             storeCartResponse= orderUtils.getCacheOrderAgain(cartIds.get(0)+""); // todo 按照存储规格这里应该只会有一个值
-
-        }else {
-            storeCartResponse = storeCartService.getListByUserIdAndCartIds(currentUserInfo.getUid(),cartIds);
+        }else if(isNew){// 获取立即购买数据
+            storeCartResponse = storeCartService.getListByUserIdAndCartIds(currentUserInfo.getUid(),cartIds,1);
+        }else{ // 获取购物车数据
+            storeCartResponse = storeCartService.getListByUserIdAndCartIds(currentUserInfo.getUid(),cartIds,null);
         }
 
         // todo 跳过拼团秒杀和砍价
@@ -244,6 +251,12 @@ public class OrderServiceImpl implements OrderService {
             orderPayResponse.setResult(itemResponse);
         }
 
+        // 小程序消息订阅发送
+        WechatSendMessageForCreateOrder createOrder = new WechatSendMessageForCreateOrder(
+                orderUtils.getPayTypeStrByOrder(orderCreated),orderUtils.getStoreNameAndCarNumString(orderCreated.getId()),
+                orderCreated.getPayPrice()+"",orderCreated.getId()+"","CRMEB",orderCreated.getCreateTime()+"","创建订单成功","暂无地址",
+                orderUtils.getPayTypeStrByOrder(orderCreated),orderCreated.getUserAddress());
+        wechatSendMessageForMinService.sendCreateOrderMessage(createOrder, userService.getUserIdException());
 
         return orderPayResponse;
     }
@@ -367,8 +380,6 @@ public class OrderServiceImpl implements OrderService {
         smsInfo.put("adminName", currentUser.getNickname());
         boolean codeResult = smsService.pushCodeToList(currentUser.getPhone(),1, smsInfo);
         if(!codeResult) throw new CrmebException("短信加入发送队列失败");
-
-//        redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER, existStoreOrder.getId());
         return true;
     }
 
@@ -396,6 +407,17 @@ public class OrderServiceImpl implements OrderService {
         storeOrder.setRefundReason(request.getText());
         storeOrder.setRefundPrice(storeOrder.getPayPrice());
         storeOrder.setRefundReasonTime(DateUtil.nowDateTime());
+
+        // 发送微信小程序订阅消息
+        String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
+        if(StringUtils.isNotBlank(storeNameAndCarNumString)){
+            WechatSendMessageForReFundNotify notify = new WechatSendMessageForReFundNotify(
+                    storeNameAndCarNumString,storeOrder.getPayPrice().toString(),
+                    storeOrder.getCreateTime().toString(),storeOrder.getOrderId()+"",DateUtil.nowDateTimeStr(),
+                    "CRMEB","发起申请",request.getExplain(),storeOrder.getPayPrice()+"",
+                    request.getText(),storeOrder.getUserPhone(),"CRMEB");
+            wechatSendMessageForMinService.sendReFundNotifyMessage(notify, userService.getUserId());
+        }
         return storeOrderService.updateById(storeOrder);
     }
 
@@ -533,7 +555,7 @@ public class OrderServiceImpl implements OrderService {
         BeanUtils.copyProperties(storeOrderResult, storeOrderDetailResponse);
         // 是否开启门店自提
         String storeSelfMention = systemConfigService.getValueByKey("store_self_mention");
-        if(Boolean.valueOf(storeSelfMention)) storeOrderResult.setShippingType(1);
+        if(!Boolean.valueOf(storeSelfMention)) storeOrderResult.setShippingType(1);
         if(storeOrderResult.getVerifyCode().length()>0){
             String verifyCode = storeOrderResult.getVerifyCode();
             List<String> verifyCodeList = new ArrayList<>();
@@ -547,8 +569,8 @@ public class OrderServiceImpl implements OrderService {
         storeOrderDetailResponse.setAddTimeH(dateY);
         storeOrderDetailResponse.setAddTimeH(dateH);
         SystemStore systemStorePram = new SystemStore();
-        systemStorePram.setIsShow(true);
-        systemStorePram.setIsDel(false);
+//        systemStorePram.setIsShow(true);
+//        systemStorePram.setIsDel(false);
         systemStorePram.setId(storeOrderResult.getStoreId());
         storeOrderDetailResponse.setSystemStore(systemStoreService.getByCondition(systemStorePram));
 
@@ -594,8 +616,8 @@ public class OrderServiceImpl implements OrderService {
         result.setUnShippedCount(storeOrderService.getTopDataUtil(Constants.ORDER_STATUS_H5_NOT_SHIPPED, currentUser.getUid()).size());
         // 待收货
         result.setReceivedCount(storeOrderService.getTopDataUtil(Constants.ORDER_STATUS_H5_SPIKE, currentUser.getUid()).size());
-        // 待评价
-        result.setEvaluatedCount(storeOrderService.getTopDataUtil(Constants.ORDER_STATUS_H5_BARGAIN, currentUser.getUid()).size());
+        // 待核销
+        result.setEvaluatedCount(storeOrderService.getTopDataUtil(Constants.ORDER_STATUS_H5_VERF, currentUser.getUid()).size());
         // 已完成
         result.setCompleteCount(storeOrderService.getTopDataUtil(Constants.ORDER_STATUS_H5_COMPLETE, currentUser.getUid()).size());
         // 退款中
@@ -743,11 +765,11 @@ public class OrderServiceImpl implements OrderService {
      * 仅仅支付
      * 订单支付完之后给出状态值 以便前端使用， 后期这里也可以抽出对象
      * ORDEREEXIST, EXTENDORDER, PAYERROR, SUCCESS, WECHATPAY, PAYDEFICIENCY, WECHATH5PAY
-     * @param request
-     * @param ip
-     * @param resultMap
-     * @param existStoreOrder
-     * @return
+     * @param request           支付订单参数
+     * @param ip                发起支付IP
+     * @param resultMap         计算订单时价格集合
+     * @param existStoreOrder   当前订单
+     * @return                  支付状态
      */
     @Transactional(rollbackFor = {RuntimeException.class, Error.class, CrmebException.class})
     public boolean doPayOrder(OrderPayRequest request, String ip, HashMap<String, Object> resultMap, StoreOrder existStoreOrder) {

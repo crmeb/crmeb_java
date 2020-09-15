@@ -27,7 +27,7 @@ function baseRequest(url, method, data, {
 		if (!store.state.app.token && !checkLogin()) {
 			toLogin();
 			return Promise.reject({
-				msg: '未登陆'
+				msg: '未登录'
 			});
 		}
 	}

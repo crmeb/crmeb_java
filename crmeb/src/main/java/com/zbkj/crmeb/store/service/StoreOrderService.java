@@ -7,9 +7,7 @@ import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.request.StoreOrderRefundRequest;
 import com.zbkj.crmeb.store.request.StoreOrderSearchRequest;
 import com.zbkj.crmeb.store.request.StoreOrderSendRequest;
-import com.zbkj.crmeb.store.response.RetailShopOrderDataResponse;
-import com.zbkj.crmeb.store.response.StoreOrderInfoResponse;
-import com.zbkj.crmeb.store.response.StoreOrderResponse;
+import com.zbkj.crmeb.store.response.*;
 import com.zbkj.crmeb.system.request.SystemWriteOffOrderSearchRequest;
 import com.zbkj.crmeb.system.response.SystemWriteOffOrderResponse;
 import com.zbkj.crmeb.user.model.User;
@@ -132,4 +130,34 @@ public interface StoreOrderService extends IService<StoreOrder> {
     LogisticsResultVo getLogisticsInfo(Integer id);
 
     Map<String, String> getStatus(StoreOrder storeOrder);
+
+    /**
+     * 更改订单价格
+     * @param orderId 订单id wx开头
+     * @param price 待更改价格
+     * @return 更改结果
+     */
+    boolean editPrice(String orderId,BigDecimal price);
+
+    /**
+     *  确认付款
+     * @param orderId 订单号
+     * @return 确认付款结果
+     */
+    boolean confirmPayed(String orderId);
+
+    /**
+     * 线下付款
+     * @param orderId 待付款订单id
+     * @return 付款结果
+     */
+    boolean payOrderOffLine(Integer orderId);
+
+    /**
+     * 根据时间参数统计订单价格
+     * @param dateLimit 时间区间
+     * @param type 1=price 2=订单量
+     * @return 统计订单信息
+     */
+    StoreOrderStatisticsResponse orderStatisticsByTime(String dateLimit,Integer type);
 }

@@ -210,7 +210,6 @@ export function replyDeleteApi(id) {
  * @param pram
  */
 export function replyCommentApi(data) {
-  console.log(data)
   return request({
     url: `/admin/store/product/reply/comment`,
     method: 'post',

@@ -11,6 +11,13 @@
                 <el-option value="0" label="不可用"></el-option>
               </el-select>
             </el-form-item>
+            <el-form-item label="模板类型：" class="mr10">
+              <el-select v-model="tableFrom.type" placeholder="请选择" clearable class="filter-item selWidth mr20" @change="userSearchs">
+                <el-option value="1" label="验证码"></el-option>
+                <el-option value="2" label="通知"></el-option>
+                <el-option value="3" label="推广"></el-option>
+              </el-select>
+            </el-form-item>
             <el-form-item label="模板名称：" class="mr10">
               <el-input v-model="tableFrom.title" placeholder="请输入模板名称" class="selWidth">
                 <el-button slot="append" icon="el-icon-search" @click="userSearchs" />
@@ -136,7 +143,8 @@ export default {
         page: 1,
         limit: 20,
         status: '',
-        title: ''
+        title: '',
+        type: ''
       }
     }
   },

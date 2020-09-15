@@ -194,7 +194,7 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
         if(StringUtils.isNotBlank(request.getLatitude()) && StringUtils.isNotBlank(request.getLongitude())){
             storeNearVoArrayList = dao.getNearList(request);
         }else{
-            List<SystemStore> list = getList(null, 2, pageParamRequest);
+            List<SystemStore> list = getList(null, 1, pageParamRequest);
             for (SystemStore systemStore : list) {
                 SystemStoreNearVo systemStoreNearVo = new SystemStoreNearVo();
                 BeanUtils.copyProperties(systemStore, systemStoreNearVo);

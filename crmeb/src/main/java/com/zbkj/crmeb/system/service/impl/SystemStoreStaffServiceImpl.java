@@ -1,9 +1,12 @@
 package com.zbkj.crmeb.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
+import com.constants.Constants;
+import com.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -11,6 +14,7 @@ import com.zbkj.crmeb.system.dao.SystemStoreStaffDao;
 import com.zbkj.crmeb.system.model.SystemStore;
 import com.zbkj.crmeb.system.model.SystemStoreStaff;
 import com.zbkj.crmeb.system.model.SystemStoreStaffResponse;
+import com.zbkj.crmeb.system.request.SystemStoreStaffRequest;
 import com.zbkj.crmeb.system.service.SystemStoreService;
 import com.zbkj.crmeb.system.service.SystemStoreStaffService;
 import com.zbkj.crmeb.user.model.User;
@@ -67,14 +71,14 @@ public class SystemStoreStaffServiceImpl extends ServiceImpl<SystemStoreStaffDao
         //用户信息
         List<Integer> userIdList = systemStoreStaffList.stream().map(SystemStoreStaff::getUid).collect(Collectors.toList());
         HashMap<Integer, User> userList = null;
-        if(userIdList.size() > 1){
+        if(userIdList.size() >= 1){
             userList = userService.getMapListInUid(userIdList);
         }
 
         //门店信息
         List<Integer> storeIdList = systemStoreStaffList.stream().map(SystemStoreStaff::getStoreId).collect(Collectors.toList());
         HashMap<Integer, SystemStore> storeList = null;
-        if(storeIdList.size() > 1){
+        if(storeIdList.size() >= 1){
             storeList = systemStoreService.getMapInId(storeIdList);
         }
 
@@ -109,7 +113,7 @@ public class SystemStoreStaffServiceImpl extends ServiceImpl<SystemStoreStaffDao
         if(clerkIdList.size() < 1){
             return map;
         }
-        LambdaQueryWrapper<SystemStoreStaff> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<SystemStoreStaff> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.in(SystemStoreStaff::getId, clerkIdList);
         List<SystemStoreStaff> systemStoreStaffList = dao.selectList(lambdaQueryWrapper);
         if(systemStoreStaffList.size() < 1){
@@ -121,5 +125,35 @@ public class SystemStoreStaffServiceImpl extends ServiceImpl<SystemStoreStaffDao
         return map;
     }
 
+    /**
+     * 根据用户id获取核销信息
+     *
+     * @param userIds 用户id集合
+     * @return 核销人员id集合
+     */
+    @Override
+    public List<SystemStoreStaff> getByAdminUserIds(List<Integer> userIds) {
+        LambdaQueryWrapper<SystemStoreStaff> lambdaQueryWrapper = Wrappers.lambdaQuery();
+        lambdaQueryWrapper.in(SystemStoreStaff::getUid, userIds);
+        List<SystemStoreStaff> existStaffs = dao.selectList(lambdaQueryWrapper);
+        return existStaffs.stream().distinct().collect(Collectors.toList());
+    }
+
+    /**
+     * 添加核销员 唯一验证
+     *
+     * @param request 当前添加参数
+     * @return 添加结果
+     */
+    @Override
+    public boolean saveUnique(SystemStoreStaffRequest request) {
+        List<Integer> userIds = new ArrayList<>();
+        userIds.add(request.getUid());
+        List<SystemStoreStaff> existStaffs = getByAdminUserIds(userIds);
+        if(null != existStaffs && existStaffs.size() > 0) throw new CrmebException(Constants.RESULT_VERIFICATION_USER_EXIST);
+        SystemStoreStaff systemStoreStaff = new SystemStoreStaff();
+        BeanUtils.copyProperties(request, systemStoreStaff);
+        return dao.insert(systemStoreStaff) > 0;
+    }
 }
 

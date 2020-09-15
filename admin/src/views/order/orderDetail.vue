@@ -8,10 +8,10 @@
     <div class="description" v-loading="loading">
       <div class="title">用户信息</div>
       <div class="acea-row">
-        <div class="description-term">用户昵称：{{orderDatalist.realName}}</div>
+        <div class="description-term">用户昵称：{{orderDatalist.user?orderDatalist.user.nickname:orderDatalist.realName}}</div>
         <div class="description-term">收货人：{{orderDatalist.realName}}</div>
         <div class="description-term">联系电话：{{orderDatalist.userPhone}}</div>
-        <div class="description-term">收货地址：{{orderDatalist.userAddress}}</div>
+        <div class="description-term" v-if="orderDatalist.statusStr.key !== 'toBeWrittenOff'">收货地址：{{orderDatalist.userAddress}}</div>
       </div>
       <el-divider></el-divider>
       <div class="title">收货信息</div>
@@ -32,6 +32,7 @@
         <div class="description-term" v-if="orderDatalist.shippingType === 2 && orderDatalist.statusStr.key === 'notShipped'">门店名称：{{orderDatalist.storeName}}</div>
         <div class="description-term" v-if="orderDatalist.shippingType === 2 && orderDatalist.statusStr.key === 'notShipped'">核销码：{{orderDatalist.user_phone}}</div>
         <div class="description-term">商家备注：{{orderDatalist.remark}}</div>
+        <div class="description-term" v-if="orderDatalist.statusStr.key === 'toBeWrittenOff'">提货码：{{orderDatalist.verifyCode}}</div>
       </div>
       <template v-if="orderDatalist.deliveryType === 'express'">
         <el-divider></el-divider>

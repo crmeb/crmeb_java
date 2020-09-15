@@ -45,7 +45,6 @@ export default {
         'sort': 0,
         'status': true
       }
-      console.log(_pram)
       configSaveForm(_pram).then(res => {
         this.getFormInfo()
         this.$message.success('操作成功')

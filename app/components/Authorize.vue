@@ -98,7 +98,7 @@
 				})
 			},
 			setUserInfo(){
-				uni.showLoading({title:'正在登陆中'});
+				uni.showLoading({title:'正在登录中'});
 				Routine.getCode().then(code=>{
 					this.getUserInfo(code);
 				}).catch(res=>{

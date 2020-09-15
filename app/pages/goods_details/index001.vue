@@ -464,6 +464,12 @@
 			 *去商品详情页 
 			 */
 			goDetail(item) {
+				if(!item.activity){
+					uni.redirectTo({
+						url: '/pages/goods_details/index?id=' + item.id
+					})
+					return
+				}
 				if (item.activity.length == 0) {
 					uni.redirectTo({
 						url: '/pages/goods_details/index?id=' + item.id

@@ -18,7 +18,7 @@ import contentRouter from './modules/content'
 import operationRouter from './modules/operation'
 import appSettingRouter from './modules/appSetting'
 import maintainRouter from './modules/maintain'
-
+import mobileRouter from './modules/mobile'
 
 
 /**
@@ -68,6 +68,8 @@ export const constantRoutes = [
   appSettingRouter,
   // 维护
   maintainRouter,
+  //移动端管理
+  mobileRouter,
   // 数据
   {
     path: '/datas',
@@ -191,6 +193,11 @@ export const constantRoutes = [
         component: () => import('@/views/redirect/index')
       }
     ]
+  },
+  {
+    path: '/auth-send',
+    component: () => import('@/views/mobile/auth-send'),
+    hidden: true
   },
   {
     path: '/login',

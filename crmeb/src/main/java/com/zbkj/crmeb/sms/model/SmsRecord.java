@@ -33,8 +33,7 @@ public class SmsRecord implements Serializable {
 
     }
 
-    public SmsRecord(Integer id, String uid, String phone, String content, String addIp, String template, Integer resultcode, Integer recordId, String message) {
-        this.id = id;
+    public SmsRecord(String uid, String phone, String content, String addIp, String template, Integer resultcode, Integer recordId, String message) {
         this.uid = uid;
         this.phone = phone;
         this.content = content;
