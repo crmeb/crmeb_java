@@ -1,12 +1,12 @@
 # 配置端口
 server:
   port: 8080
-    domain:
-    wechat-api-url: http://121.196.17.222:20003/ #请求微信接口中专服务器
-    wechat-js-api-debug: true #微信js api系列是否开启调试模式
-    wechat-js-api-beta: true #微信js api是否是beta版本
-    asyncConfig: false #是否同步config表数据到redis
-    asyncWeChatProgramTempList: false #是否同步小程序公共模板库
+  domain:
+  wechat-api-url: http://121.196.17.222:20003/ #请求微信接口中专服务器
+  wechat-js-api-debug: true #微信js api系列是否开启调试模式
+  wechat-js-api-beta: true #微信js api是否是beta版本
+  asyncConfig: false #是否同步config表数据到redis
+  asyncWeChatProgramTempList: false #是否同步小程序公共模板库
 
 spring:
   profiles:
