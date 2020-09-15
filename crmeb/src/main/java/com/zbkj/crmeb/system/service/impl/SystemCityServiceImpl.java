@@ -73,6 +73,7 @@ public class SystemCityServiceImpl extends ServiceImpl<SystemCityDao, SystemCity
         lambdaQueryWrapper.in(SystemCity::getIsShow, true);
         return dao.selectList(lambdaQueryWrapper);
     }
+
     /**
      * 修改状态
      * @param id integer id
