@@ -159,7 +159,7 @@ class AuthWechat {
 	auth(code) {
 		return new Promise((resolve, reject) => {
 			let loginType = Cache.get(LOGINTYPE);
-			alert(Cache.get("spread"))
+			console.log('spread', Cache.get("spread"))
 			wechatAuth(code, Cache.get("spread"), loginType)
 				.then(({
 					data

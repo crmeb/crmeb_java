@@ -398,7 +398,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         // 对attr表做全量更新，删除原有数据保存现有数据
         attrService.removeByProductId(storeProduct.getId());
         storeProductAttrValueService.removeByProductId(storeProduct.getId());
-        if(storeProductRequest.getSpecType()) { // todo 确认单属性商品的attr参数
+        if(storeProductRequest.getSpecType()) {
             storeProductRequest.getAttr().forEach(e->{
                 e.setProductId(storeProductRequest.getId());
                 e.setAttrValues(StringUtils.strip(e.getAttrValues().replace("\"",""),"[]"));
@@ -421,9 +421,8 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                         }
                         spav.setSuk(String.join(",",skuList));
                     }
-//                    HashMap<String, Object> attrValues = setAttrValueByRequest(storeProductRequest);
-                spav.setAttrValue(JSON.toJSONString(attrValuesRequest.getAttrValue()));
-//                    spav.setAttrValue(JSON.toJSONString(attrValues));
+                    spav.setAttrValue(JSON.toJSONString(attrValuesRequest.getAttrValue()));
+                    spav.setImage(systemAttachmentService.clearPrefix(spav.getImage()));
                     storeProductAttrValues.add(spav);
                 }
                 boolean saveOrUpdateResult = storeProductAttrValueService.saveOrUpdateBatch(storeProductAttrValues);
