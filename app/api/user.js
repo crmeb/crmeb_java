@@ -325,7 +325,7 @@ export function getRechargeApi() {
 }
 
 /**
- * 登陆记录
+ * 登录记录
  */
 export function setVisit(data)
 {

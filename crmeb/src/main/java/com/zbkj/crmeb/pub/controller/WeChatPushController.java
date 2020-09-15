@@ -3,6 +3,7 @@ package com.zbkj.crmeb.pub.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.common.CommonResult;
 import com.utils.RestTemplateUtil;
+import com.zbkj.crmeb.system.service.SystemAdminService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -33,6 +34,9 @@ public class WeChatPushController {
 
     @Resource
     private RestTemplateUtil restTemplateUtil;
+
+    @Resource
+    private SystemAdminService systemAdminService;
 
 
     /**

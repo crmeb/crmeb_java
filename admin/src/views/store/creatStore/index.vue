@@ -54,7 +54,7 @@
                   v-for="(item,index) in formValidate.sliderImages"
                   :key="index"
                   class="pictrue"
-                  draggable="false"
+                  draggable="true"
                   @dragstart="handleDragStart($event, item)"
                   @dragover.prevent="handleDragOver($event, item)"
                   @dragenter="handleDragEnter($event, item)"

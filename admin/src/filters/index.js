@@ -4,6 +4,7 @@ export { parseTime, formatTime } from '@/utils'
 export * from '../filters/commFilter'
 export * from '../filters/user'
 export * from '../filters/order'
+export * from '../filters/wx'
 
 /**
  * Show plural label if time is plural number

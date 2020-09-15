@@ -162,7 +162,7 @@ export function switchH5Login(){
 // #endif
 
 /*
- * h5切换公众号登陆
+ * h5切换公众号登录
  * */
 // #ifdef H5
 export function switchH5Login() {
@@ -189,9 +189,9 @@ export function logout(){
 /**
  * 获取订阅消息id
  */
-export function getTemlIds()
+export function getTemlIds(data)
 {
-  return request.get('wechat/teml_ids', {}, { noAuth:true});
+  return request.post('wechat/program/my/temp/list?limit=3&page=1', data , { noAuth:true});
 }
 
 /**

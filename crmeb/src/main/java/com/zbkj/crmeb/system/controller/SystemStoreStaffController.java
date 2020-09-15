@@ -38,7 +38,8 @@ public class SystemStoreStaffController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public CommonResult<CommonPage<SystemStoreStaffResponse>>  getList(@RequestParam(name = "storeId", required = false, defaultValue = "0") Integer storeId,
                                                                        @ModelAttribute PageParamRequest pageParamRequest){
-        CommonPage<SystemStoreStaffResponse> systemStoreStaffCommonPage = CommonPage.restPage(systemStoreStaffService.getList(storeId, pageParamRequest));
+        CommonPage<SystemStoreStaffResponse> systemStoreStaffCommonPage =
+                CommonPage.restPage(systemStoreStaffService.getList(storeId, pageParamRequest));
         return CommonResult.success(systemStoreStaffCommonPage);
     }
 
@@ -51,10 +52,7 @@ public class SystemStoreStaffController {
     @ApiOperation(value = "新增")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     public CommonResult<String> save(@RequestBody @ModelAttribute SystemStoreStaffRequest systemStoreStaffRequest){
-        SystemStoreStaff systemStoreStaff = new SystemStoreStaff();
-        BeanUtils.copyProperties(systemStoreStaffRequest, systemStoreStaff);
-
-        if(systemStoreStaffService.save(systemStoreStaff)){
+        if(systemStoreStaffService.saveUnique(systemStoreStaffRequest)){
             return CommonResult.success();
         }else{
             return CommonResult.failed();

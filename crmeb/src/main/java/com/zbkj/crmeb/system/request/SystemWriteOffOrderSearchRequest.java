@@ -27,7 +27,7 @@ public class SystemWriteOffOrderSearchRequest implements Serializable {
     private Integer storeId;
 
     @ApiModelProperty(value = "时间")
-    private String data;
+    private String dateLimit;
 
     @ApiModelProperty(value = "关键字")
     private String keywords;

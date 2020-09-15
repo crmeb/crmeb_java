@@ -1,6 +1,7 @@
 import { asyncRoutes, constantRoutes } from '@/router'
 import * as categoryApi from '@/api/categoryApi.js'
 import * as roleApi from '@/api/roleApi.js'
+import * as Auth from '@/libs/wechat';
 
 /**
  * Use meta.role to determine if the current user has permission
@@ -61,12 +62,13 @@ const actions = {
   generateRoutes({ commit }, roleid) {
     return new Promise(async resolve => {
       let accessedRoutes = []
+      let menus= []
       const { rules } = await roleApi.getRoleById(roleid)
       // const menus = await categoryApi.categroyByIds({ ids: rules })
-      const menus = await roleApi.menuListApi()
+      const menusAll = await roleApi.menuListApi()
+      !Auth.isPhone() ? menus = menusAll.filter(item => item.url !== '/javaMobile') : menus = menusAll.filter(item => item.url === '/javaMobile')
       const _routerResult = comRouter(menus, asyncRoutes)
       accessedRoutes = filterAsyncRoutes(_routerResult, rules)
-      console.log(accessedRoutes)
       // todo 这里控制是否过滤路由，经测试有些菜单不能予以设置，比如系统设置等等
       commit('SET_ROUTES', menus)
       // resolve(menus)

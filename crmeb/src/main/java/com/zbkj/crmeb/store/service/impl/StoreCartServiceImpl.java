@@ -121,13 +121,15 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
      * 根据用户id和购物车id查询
      * @param userId 用户id
      * @param cartIds 购物车id集合
+     * @param isNew     是否立即购买
      * @return 购物车列表
      */
     @Override
-    public List<StoreCartResponse> getListByUserIdAndCartIds(Integer userId, List<Integer> cartIds) {
+    public List<StoreCartResponse> getListByUserIdAndCartIds(Integer userId, List<Integer> cartIds,Integer isNew) {
         LambdaQueryWrapper<StoreCart> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.in(StoreCart::getId,cartIds);
         lambdaQueryWrapper.eq(StoreCart::getUid, userId);
+        if(null != isNew) lambdaQueryWrapper.eq(StoreCart::getIsNew, isNew);
         lambdaQueryWrapper.orderByDesc(StoreCart::getCreateTime);
         List<StoreCart> storeCarts = dao.selectList(lambdaQueryWrapper);
         List<StoreCartResponse> response = new ArrayList<>();
@@ -205,9 +207,10 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         storeCartPram.setProductAttrUnique(storeCart.getProductAttrUnique());
         storeCartPram.setUid(userService.getUserId());
         List<StoreCart> existCarts = getByEntity(storeCartPram); // todo 这里仅仅能获取一条以信息
-        if(existCarts.size() > 0){
+        if(existCarts.size() > 0 && !storeCart.getIsNew()){
             StoreCart forUpdateStoreCart = existCarts.get(0);
             forUpdateStoreCart.setCartNum(forUpdateStoreCart.getCartNum()+storeCart.getCartNum());
+            storeCart.setIsNew(false);
             boolean updateResult = updateById(forUpdateStoreCart);
             storeCart.setId(forUpdateStoreCart.getId());
             return updateResult;
@@ -215,6 +218,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
             User currentUser = userService.getInfo();
             storeCart.setUid(currentUser.getUid());
             storeCart.setType("product");
+            storeCart.setIsNew(true);
             return dao.insert(storeCart) > 0;
         }
     }
@@ -339,7 +343,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         queryWrapper.select("sum(cart_num) as cart_num")
                 .eq("uid", userId)
                 .eq("type", type)
-                .eq("is_new", false);
+                .eq("is_new", true);
         StoreCart storeCart = dao.selectOne(queryWrapper);
         if(null == storeCart || null == storeCart.getCartNum()){
             return 0;

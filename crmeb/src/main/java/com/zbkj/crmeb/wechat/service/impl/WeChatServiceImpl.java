@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.wechat.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.constants.Constants;
 import com.constants.WeChatConstants;
@@ -15,10 +16,11 @@ import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginGetOpenIdResponse;
 import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginUserInfoResponse;
 import com.zbkj.crmeb.wechat.response.WeChatProgramAuthorizeLoginGetOpenIdResponse;
 import com.zbkj.crmeb.wechat.service.WeChatService;
-import com.zbkj.crmeb.wechat.vo.MediaCountVo;
-import com.zbkj.crmeb.wechat.vo.TemplateMessageVo;
+import com.zbkj.crmeb.wechat.vo.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -32,16 +34,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 
 /**
-* @author Mr.Zhang
-* @Description WeChatPublicServiceImpl 接口实现
-* @since 2020-04-22
-*/
+ * @author Mr.Zhang
+ * @Description WeChatPublicServiceImpl 接口实现
+ * @since 2020-04-22
+ */
 @Service
 public class WeChatServiceImpl implements WeChatService {
 
+    private static final Logger logger = LoggerFactory.getLogger(WeChatServiceImpl.class);
     @Autowired
     private RedisUtil redisUtil;
 
@@ -146,9 +150,7 @@ public class WeChatServiceImpl implements WeChatService {
             //不存在， 去获取
             getToken();
             //存入redis
-            if(StringUtils.isBlank(weChartApiUrl)){
-                redisUtil.set(WeChatConstants.REDIS_TOKEN_KEY, this.token, this.expires - 100, TimeUnit.SECONDS);
-            }
+            redisUtil.set(WeChatConstants.REDIS_TOKEN_KEY, this.token, this.expires - 100, TimeUnit.SECONDS);
         }else{
             this.token = token;
         }
@@ -156,10 +158,10 @@ public class WeChatServiceImpl implements WeChatService {
 
 
     /**
-    * 获取token
-    * @author Mr.Zhang
-    * @since 2020-04-22
-    */
+     * 获取token
+     * @author Mr.Zhang
+     * @since 2020-04-22
+     */
     private void getToken(){
         getAppInfo();
         String url = getUrl() + WeChatConstants.API_TOKEN_URI + "&appid=" + this.appId + "&secret=" + this.secret;
@@ -184,9 +186,7 @@ public class WeChatServiceImpl implements WeChatService {
             //不存在， 去获取
             getProgramToken();
             //存入redis
-            if(StringUtils.isBlank(weChartApiUrl)){
-                redisUtil.set(WeChatConstants.REDIS_PROGRAM_TOKEN_KEY, this.programToken, this.programExpires - 100, TimeUnit.SECONDS);
-            }
+            redisUtil.set(WeChatConstants.REDIS_PROGRAM_TOKEN_KEY, this.programToken, this.programExpires - 100, TimeUnit.SECONDS);
         }else{
             this.programToken = token;
         }
@@ -290,8 +290,10 @@ public class WeChatServiceImpl implements WeChatService {
      * @return JSONObject
      */
     private JSONObject post(String url, String data){
+        logger.info("WeChatServiceImpl.post | url:" + url + " | data:" +data);
         JSONObject jsonData = JSONObject.parseObject(data);
         String result = restTemplateUtil.postJsonData(url, jsonData);
+        logger.info("微信消息发送结果:" + result);
         JSONObject jsonObject = JSONObject.parseObject(result);
         return checkResult(jsonObject);
     }
@@ -679,6 +681,98 @@ public class WeChatServiceImpl implements WeChatService {
         return response;
     }
 
+    /**
+     * 小程序行业信息
+     * @author Mr.Zhang
+     * @since 2020-06-03
+     */
+    @Override
+    public List<ProgramCategoryVo> getProgramCategory() {
+        setProgramUrl(WeChatConstants.PUBLIC_API_PROGRAM_CATEGORY);
+        JSONObject jsonObject = get(this.url);
+        JSONArray data = jsonObject.getJSONArray("data");
+        if(null == data || data.size() < 1){
+            throw new CrmebException("请先设置小程序行业信息");
+        }
+
+        return CrmebUtil.jsonToListClass(data.toJSONString(), ProgramCategoryVo.class);
+    }
+
+    /**
+     * 小程序公共模板库
+     * @param page int 页码
+     * @author Mr.Zhang
+     * @since 2020-06-01
+     * @return List<ProgramTempVo>
+     */
+    @Override
+    public List<ProgramTempVo> getProgramPublicTempList(int page) {
+
+        List<ProgramCategoryVo> programCategory = getProgramCategory();
+        String ids = programCategory.stream().map(s -> s.getId().toString()).distinct().collect(Collectors.joining(","));
+        setProgramUrl(WeChatConstants.PUBLIC_API_PROGRAM_PUBLIC_TEMP);
+        int limit = 30;
+        int start = (page - Constants.NUM_ONE) * limit;
+        JSONObject jsonObject = get(this.url + "&ids=" + ids + "&start=" + start + "&limit=" + limit);
+        JSONArray data = jsonObject.getJSONArray("data");
+        if(null == data || data.size() < Constants.NUM_ONE){
+            return null;
+        }
+
+        return CrmebUtil.jsonToListClass(data.toJSONString(), ProgramTempVo.class);
+    }
+
+    /**
+     * 小程序公共模板关键词库
+     * @param tid 公共模板id
+     * @author Mr.Zhang
+     * @since 2020-06-01
+     * @return List<ProgramTempVo>
+     */
+    @Override
+    public List<ProgramTempKeywordsVo> getWeChatKeywordsByTid(Integer tid) {
+        setProgramUrl(WeChatConstants.PUBLIC_API_PROGRAM_PUBLIC_TEMP_KEYWORDS);
+        JSONObject jsonObject = get(this.url + "&tid=" + tid);
+        JSONArray data = jsonObject.getJSONArray("data");
+        if(null == data || data.size() < 1){
+            throw new CrmebException("微信没有返回关键词数据");
+        }
+
+        return CrmebUtil.jsonToListClass(data.toJSONString(), ProgramTempKeywordsVo.class);
+    }
+
+    /**
+     * 小程序我的模板添加
+     * @param programAddMyTempVo ProgramAddMyTempVo 添加我的模板参数
+     * @author Mr.Zhang
+     * @since 2020-06-01
+     * @return String 添加至帐号下的模板id，发送小程序订阅消息时所需
+     */
+    @Override
+    public String programAddMyTemp(ProgramAddMyTempVo programAddMyTempVo) {
+        setProgramUrl(WeChatConstants.PUBLIC_API_ADD_PROGRAM_TEMPLATE);
+        JSONObject data = post(this.url, JSONObject.toJSONString(programAddMyTempVo));
+        if(StringUtils.isBlank(data.getString("priTmplId"))){
+            throw new CrmebException("微信没有返回模板id");
+        }
+
+        return data.getString("priTmplId");
+    }
+
+    /**
+     * 小程序我的模板删除
+     * @param myTempId String 我的模板id
+     * @author Mr.Zhang
+     * @since 2020-06-01
+     */
+    @Override
+    public void programDeleteMyTemp(String myTempId) {
+        setProgramUrl(WeChatConstants.PUBLIC_API_DELETE_PROGRAM_TEMPLATE);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("priTmplId", myTempId);
+        post(this.url, map);
+    }
+
 
     /**
      * 获取微信用户个人信息
@@ -724,6 +818,7 @@ public class WeChatServiceImpl implements WeChatService {
         map.put("jsApiList", getJsApiList());
         map.put("debug", debug);
         map.put("beta", beta);
+        map.put("yzfUrl", systemConfigService.getValueByKey(Constants.CONFIG_KEY_YZF_H5_URL));
         return map;
     }
 
@@ -796,7 +891,7 @@ public class WeChatServiceImpl implements WeChatService {
      */
     public boolean sendPublicTempMessage(TemplateMessageVo templateMessageVo) {
         try{
-            setUrl(WeChatConstants.PUBLIC_API__PUBLIC_TEMPLATE_MESSAGE_SEND);
+            setUrl(WeChatConstants.PUBLIC_API_PUBLIC_TEMPLATE_MESSAGE_SEND);
             post(this.url, JSONObject.toJSONString(templateMessageVo));
             return true;
         }catch (Exception e){
@@ -805,14 +900,14 @@ public class WeChatServiceImpl implements WeChatService {
     }
 
     /**
-     * 模板消息发送
+     * 订阅消息发送
      * @author Mr.Zhang
      * @since 2020-06-03
      * @return List<String>
      */
     public boolean sendProgramTempMessage(TemplateMessageVo templateMessageVo) {
         try{
-            setUrl(WeChatConstants.PUBLIC_API__PROGRAM_TEMPLATE_MESSAGE_SEND);
+            setProgramUrl(WeChatConstants.PUBLIC_API_PROGRAM_TEMPLATE_MESSAGE_SEND);
             post(this.url, JSONObject.toJSONString(templateMessageVo));
             return true;
         }catch (Exception e){

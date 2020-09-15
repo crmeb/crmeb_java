@@ -68,6 +68,13 @@
                 "desc" : "你的位置信息将用于和门店的距离长度"
             }
         },
+        // "plugins" : {
+        //     "chat" : {
+        //         "version" : "1.0.8",
+        //         "provider" : "wx738958e0f4c894f9"
+        //     }
+        // },
+        // "sitemapLocation" : "sitemap.json",
         "usingComponents" : true
     },
     "mp-alipay" : {

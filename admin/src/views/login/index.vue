@@ -70,13 +70,20 @@
               <div class="imgs" @click="getCaptcha()"><img :src="captchatImg"></div>
             </div>
           </el-form-item>
-          <el-button
-            :loading="loading"
-            type="primary"
-            style="width:100%;margin-bottom:30px;"
-            @click.native.prevent="handleLogin"
-          >登录
-          </el-button>
+
+          <div class="acea-row">
+            <el-button
+              :loading="loading"
+              type="primary"
+              style="width:100%;margin-bottom:30px;"
+              @click.native.prevent="handleLogin"
+            >登录
+            </el-button>
+            <!--<div class="acea-row footer" @click="onWechat">-->
+              <!--<div class="wechat mr10"><img src="../../assets/imgs/weixin.png"></div>-->
+              <!--<span>微信</span>-->
+            <!--</div>-->
+          </div>
         </el-form>
       </div>
     </div>
@@ -86,6 +93,11 @@
 <script>
 import { validUsername } from '@/utils/validate'
 import { getLoginPicApi, captchaApi, codeCheckApi } from '@/api/user'
+import { getStoreStaff } from '@/libs/public'
+import { getWXCodeByUrl, loginByWxCode } from "@/libs/wechat";
+import { getWechatConfig } from "@/api/wxApi";
+import { getToken, removeToken, setToken } from '@/utils/auth'
+import Cookies from 'js-cookie'
 export default {
   name: 'Login',
   data() {
@@ -123,7 +135,8 @@ export default {
         account: 'demo', // admin
         pwd: 'crmeb.com',
         key: '',
-        code: ''
+        code: '',
+        wxCode: ''
       },
       loginRules: {
         account: [{ required: true, trigger: 'blur' }], // validator: validateUsername
@@ -183,6 +196,7 @@ export default {
       this.$refs.pwd.focus()
     }
     this.getCaptcha()
+    this.agentWeiXinLogin()
   },
   destroyed() {
     // window.removeEventListener('storage', this.afterQRScan)
@@ -191,6 +205,35 @@ export default {
     window.removeEventListener('resize', this.handleResize)
   },
   methods: {
+    agentWeiXinLogin(){ // 判断是否需要微信公众号登陆
+      const _isWechat = this.$wechat.isWeixin();
+      if (_isWechat) {
+        let code = this.$route.query.code
+        let state = this.$route.query.state
+        let wxAuthPath = location.origin + '/login';
+        //  如果没有code 去获取
+        if(null == code){
+          getWXCodeByUrl(wxAuthPath,'step1');
+        }
+        // 如果有state=step1 根据code去登陆
+        if(state === 'step1'){
+          loginByWxCode(code).then(res => {
+            sessionStorage.setItem('token',res.token)
+            this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+          }).catch(err => {
+            // 如果登陆失败，那么输入账号登陆，重新获取code传递给后端做绑定
+            getWXCodeByUrl(wxAuthPath,'step2');
+          })
+        }else if(state === 'step2'){
+          this.loginForm.wxCode = code
+        }
+
+      }
+      },
+    onWechat(){
+      let url = this.$route.query.redirect ? this.$route.query.redirect : '/dashboard'
+      this.$wechat.oAuth(url, 'login')
+    },
     handleResize(event) {
       this.fullWidth = document.body.clientWidth
     },
@@ -217,19 +260,25 @@ export default {
       })
     },
     handleLogin() {
+      const code = this.$route.query.code;
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
+          if(this.$wechat.isWeixin()){
+            this.loginForm.wxCode = code
+          }
           this.$store.dispatch('user/login', this.loginForm)
             .then(() => {
               this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+              console.log('lalaalalala')
+              getStoreStaff()
               this.loading = false
-            }).catch(() => {
+            }).catch((err) => {
             this.loading = false
+            if(this.$wechat.isPhone()) this.$dialog.error(err.message);
             this.getCaptcha()
           })
         } else {
-          console.log('error submit!!')
           return false
         }
       })
@@ -262,6 +311,21 @@ export default {
   $transition-time        : .2s;
   $ease-in-out            : ease-in-out;
   $subsidiary-color       : #808695;
+  .footer{
+    align-items: center;
+    justify-content: center;
+    width: 50%;
+    height: 36px;
+    cursor: pointer;
+  }
+  .wechat{
+    width: 26px;
+    height: 26px;
+    img{
+      width: 100%;
+      height: 100%;
+    }
+  }
   .page-account{
     display: flex;
     flex-direction: column;

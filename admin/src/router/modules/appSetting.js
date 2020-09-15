@@ -84,9 +84,22 @@ const appSettingRouter = {
       children: [
         {
           path: 'routineTemplate',
-          component: () => import('@/views/appSetting/wxAccount/wxTemplate'),
+          component: () => import('@/views/appSetting/routine/myTemplate'),
           name: 'RoutineTemplate',
-          meta: { title: '小程序订阅消息', icon: '' }
+          meta: { title: '我的模板', icon: '' }
+        },
+        {
+          path: 'publicRoutineTemplate',
+          component: () => import('@/views/appSetting/routine/publicTemplate/index.vue'),
+          name: 'PublicRoutineTemplate',
+          meta: { title: '公共模板', icon: '' }
+        },
+        {
+          path: 'creatPublicTemplate/:tid/:id/:myId?',
+          component: () => import('@/views/appSetting/routine/publicTemplate/creatPublicTemplate.vue'),
+          name: 'CreatPublicTemplate',
+          meta: { title: '添加公共模板', icon: '', activeMenu: `/appSetting/publicRoutine/publicRoutineTemplate` },
+          hidden: true
         }
       ]
     }

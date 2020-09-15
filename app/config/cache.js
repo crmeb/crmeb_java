@@ -20,7 +20,7 @@ module.exports = {
 	//��ȨlogoС����
 	LOGO_URL: 'LOGO_URL',
 	//模板缓存
-	SUBSCRIBE_MESSAGE: 'SUBSCRIBE_MESSAGE',
+	// SUBSCRIBE_MESSAGE: 'SUBSCRIBE_MESSAGE',
 
 	TIPS_KEY: 'TIPS_KEY',
 

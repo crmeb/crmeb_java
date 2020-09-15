@@ -69,7 +69,7 @@ public class StoreOrderItemResponse implements Serializable {
     private Date createTime;
 
     @ApiModelProperty(value = "订单状态（-1 : 申请退款 -2 : 退货成功 0：待发货；1：待收货；2：已收货；3：待评价；-1：已退款）")
-    private Boolean status;
+    private Integer status;
 
     @ApiModelProperty(value = "门店名称")
     private String storeName;
@@ -130,6 +130,18 @@ public class StoreOrderItemResponse implements Serializable {
 
     @ApiModelProperty(value = "退款金额")
     private BigDecimal refundPrice;
+
+    @ApiModelProperty(value = "0 未退款 1 申请中 2 已退款")
+    private Integer refundStatus;
+
+    @ApiModelProperty(value = "订单商品总数")
+    private Integer totalNum;
+
+    @ApiModelProperty(value = "配送方式 1=快递 ，2=门店自提")
+    private Integer shippingType;
+
+    @ApiModelProperty(value = "核销码")
+    private String verifyCode;
 
     @ApiModelProperty(value = "推广人信息")
     private StoreOrderSpreadInfoResponse spreadInfo = new StoreOrderSpreadInfoResponse();

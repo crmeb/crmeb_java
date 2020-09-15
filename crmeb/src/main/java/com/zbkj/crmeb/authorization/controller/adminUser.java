@@ -6,7 +6,6 @@ import com.constants.Constants;
 import com.exception.CrmebException;
 import com.exception.ExceptionCodeEnum;
 import com.utils.CrmebUtil;
-import com.zbkj.crmeb.authorization.manager.TokenManager;
 import com.zbkj.crmeb.system.request.SystemAdminLoginRequest;
 import com.zbkj.crmeb.system.request.SystemAdminRequest;
 import com.zbkj.crmeb.system.response.SystemAdminResponse;
@@ -19,6 +18,7 @@ import com.zbkj.crmeb.validatecode.service.ValidateCodeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -54,9 +54,6 @@ public class adminUser {
     private SystemGroupDataService systemGroupDataService;
 
     @Autowired
-    private TokenManager tokenManager;
-
-    @Autowired
     private ValidateCodeService validateCodeService;
 
     @ApiOperation(value="AdminUserLogin")
@@ -75,6 +72,9 @@ public class adminUser {
             return CommonResult.failed(ExceptionCodeEnum.FAILED, "login failed");
         }
 
+        if(StringUtils.isNotBlank(systemAdminLoginRequest.getWxCode())){
+            systemAdminService.bind(systemAdminLoginRequest.getWxCode(), systemAdminResponse.getId());
+        }
         return CommonResult.success(systemAdminResponse, "login success");
     }
 
@@ -115,5 +115,27 @@ public class adminUser {
         List<SystemGroupDataAdminLoginBannerResponse> bannerList = systemGroupDataService.getListByGid(Constants.GROUP_DATA_ID_ADMIN_LOGIN_BANNER_IMAGE_LIST, SystemGroupDataAdminLoginBannerResponse.class);
         map.put("banner", bannerList);
         return CommonResult.success(map);
+    }
+
+    /**
+     * 微信登录公共号授权登录
+     * @author Mr.Zhang
+     * @since 2020-05-25
+     */
+    @ApiOperation(value = "微信登录公共号授权登录")
+    @RequestMapping(value = "/authorize/login", method = RequestMethod.GET)
+    public CommonResult<SystemAdminResponse> login(@RequestParam(value = "code") String code, HttpServletRequest request){
+        return CommonResult.success(systemAdminService.weChatAuthorizeLogin(code, CrmebUtil.getClientIp(request)));
+    }
+
+    /**
+     * 解绑微信
+     * @author Mr.Zhang
+     * @since 2020-05-25
+     */
+    @ApiOperation(value = "解绑微信")
+    @RequestMapping(value = "/unbind", method = RequestMethod.GET)
+    public CommonResult<Boolean> bind(){
+        return CommonResult.success(systemAdminService.unBind());
     }
 }

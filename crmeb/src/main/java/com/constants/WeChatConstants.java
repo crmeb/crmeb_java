@@ -46,9 +46,7 @@ public class WeChatConstants {
     //获取 JsApiTicket
     public static final String PUBLIC_API_JS_API_TICKET = "cgi-bin/ticket/getticket";
     //发送公众号模板消息
-    public static final String PUBLIC_API__PUBLIC_TEMPLATE_MESSAGE_SEND = "cgi-bin/message/template/send";
-    //发送小程序模板消息
-    public static final String PUBLIC_API__PROGRAM_TEMPLATE_MESSAGE_SEND = "cgi-bin/message/subscribe/send";
+    public static final String PUBLIC_API_PUBLIC_TEMPLATE_MESSAGE_SEND = "cgi-bin/message/template/send";
     //获取设置的行业信息
     public static final String PUBLIC_API_TEMPLATE_MESSAGE_INDUSTRY = "cgi-bin/template/get_industry";
     //新增其他类型永久素材
@@ -59,6 +57,20 @@ public class WeChatConstants {
     public static final String PUBLIC_API_MEDIA_COUNT = "cgi-bin/material/get_materialcount";
     //发送客服消息
     public static final String PUBLIC_API_KF_MESSAGE_SEND = "cgi-bin/message/custom/send";
+
+
+    //小程序行业消息
+    public static final String PUBLIC_API_PROGRAM_CATEGORY = "wxaapi/newtmpl/getcategory";
+    //小程序公共模板库
+    public static final String PUBLIC_API_PROGRAM_PUBLIC_TEMP = "wxaapi/newtmpl/getpubtemplatetitles";
+    //小程序模板关键词列表
+    public static final String PUBLIC_API_PROGRAM_PUBLIC_TEMP_KEYWORDS = "wxaapi/newtmpl/getpubtemplatekeywords";
+    //添加小程序订阅消息
+    public static final String PUBLIC_API_ADD_PROGRAM_TEMPLATE = "wxaapi/newtmpl/addtemplate";
+    //删除小程序订阅消息
+    public static final String PUBLIC_API_DELETE_PROGRAM_TEMPLATE = "wxaapi/newtmpl/deltemplate";
+    //发送小程序模板消息
+    public static final String PUBLIC_API_PROGRAM_TEMPLATE_MESSAGE_SEND = "cgi-bin/message/subscribe/send";
 
     //授权登录
 
