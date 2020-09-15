@@ -150,6 +150,7 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         //修改之前的数据
         updateStatusByFormId(systemFormCheckRequest.getId());
 
+        //批量插入
         saveBatch(systemConfigList);
 
         //删除之前隐藏的数据

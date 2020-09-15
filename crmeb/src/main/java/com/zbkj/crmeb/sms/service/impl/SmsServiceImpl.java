@@ -369,7 +369,6 @@ public class SmsServiceImpl implements SmsService {
                 Integer code = CrmebUtil.randomCount(111111, 999999);
                 HashMap<String, Object> justPram = new HashMap<>();
                 justPram.put("code", code);
-                justPram.put("time", codeExpireStr);
                 push(phone,SmsConstants.SMS_CONFIG_VERIFICATION_CODE,
                         SmsConstants.SMS_CONFIG_VERIFICATION_CODE_TEMP_ID,false,justPram);
 
