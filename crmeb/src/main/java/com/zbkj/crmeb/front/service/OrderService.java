@@ -29,7 +29,7 @@ public interface OrderService {
      * @param cartIds 购物车id集合
      * @return 确认订单信息
      */
-    ConfirmOrderResponse confirmOrder(List<Integer> cartIds, boolean isNew);
+    ConfirmOrderResponse confirmOrder(List<Integer> cartIds, boolean isNew, boolean addAgain);
 
 
     /**

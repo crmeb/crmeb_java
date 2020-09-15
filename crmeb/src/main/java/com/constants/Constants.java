@@ -16,6 +16,7 @@ public class Constants {
     public static final int NUM_ONE = 1;
     public static final int NUM_TWO = 2;
     public static final int NUM_THREE = 3;
+    public static final int NUM_FIVE = 5;
     public static final int NUM_SEVEN = 7;
     public static final int NUM_TEN = 10;
     public static final int NUM_ONE_HUNDRED = 100;
@@ -166,6 +167,11 @@ public class Constants {
 
     public static final String CONFIG_KEY_LOGISTICS_APP_CODE = "system_express_app_code"; //快递查询密钥
 
+    //云智服 小程序插件
+    public static final String CONFIG_KEY_YZF_H5_URL = "yzf_h5_url"; //云智服H5 url
+
+
+
     //分销
     public static final String CONFIG_KEY_STORE_BROKERAGE_LEVEL = "store_brokerage_rate_num"; //返佣比例前缀
     public static final String CONFIG_KEY_STORE_BROKERAGE_USER_EXTRACT_MIN_PRICE = "user_extract_min_price"; //提现最低金额
@@ -184,7 +190,10 @@ public class Constants {
     public static final String CONFIG_KEY_ADMIN_LOGIN_BACKGROUND_IMAGE = "admin_login_bg_pic"; //登录页背景图
 
     //分销
-    public static final String CONFIG_KEY_DISTRIBUTION_TYPE = "brokerageBindind";
+    public static final String CONFIG_KEY_DISTRIBUTION_TYPE = "brokerage_bindind";
+
+    //验证码过期时间
+    public static final String CONFIG_KEY_SMS_CODE_EXPIRE = "sms_code_expire";
 
 
     //config配置的formId
@@ -196,6 +205,7 @@ public class Constants {
     public static final int THIRD_LOGIN_TOKEN_TYPE_PUBLIC  = 1; //公众号
     public static final int THIRD_LOGIN_TOKEN_TYPE_PROGRAM  = 2; //小程序
     public static final int THIRD_LOGIN_TOKEN_TYPE_UNION_ID  = 3; //unionid
+    public static final int THIRD_ADMIN_LOGIN_TOKEN_TYPE_PUBLIC  = 4; //后台登录公众号
 
 
     // 商品类型 活动类型 0=商品，1=秒杀，2=砍价，3=拼团 attrResult表用到
@@ -324,7 +334,7 @@ public class Constants {
     public static final int ORDER_STATUS_H5_UNPAID = 0; // 未支付
     public static final int ORDER_STATUS_H5_NOT_SHIPPED = 1; // 待发货
     public static final int ORDER_STATUS_H5_SPIKE = 2; // 待收货
-    public static final int ORDER_STATUS_H5_BARGAIN = 3; // 待评价
+    public static final int ORDER_STATUS_H5_VERF = 3; // 待核销
     public static final int ORDER_STATUS_H5_COMPLETE = 4; // 已完成
     public static final int ORDER_STATUS_H5_REFUNDING = -1; // 退款中
     public static final int ORDER_STATUS_H5_REFUNDED = -2; // 已退款
@@ -356,6 +366,10 @@ public class Constants {
     public static final String PAY_TYPE_WE_CHAT_FROM_PUBLIC = "public"; //公众号
     public static final String PAY_TYPE_WE_CHAT_FROM_PROGRAM = "routine"; //小程序
 
+    //后台微信登录类型
+    public static final String ADMIN_LOGIN_TYPE_WE_CHAT_FROM_PUBLIC = "admin_public"; //公众号
+
+
 
     //支付方式
     public static final String PAY_TYPE_STR_WE_CHAT = "微信支付"; //微信支付
@@ -380,6 +394,8 @@ public class Constants {
     public static final String ORDER_LOG_REFUND_APPLY = "apply_refund"; //
     public static final String ORDER_LOG_PAY_SUCCESS = "pay_success"; //支付成功
     public static final String ORDER_LOG_DELIVERY_VI = "delivery_fictitious"; //虚拟发货
+    public static final String ORDER_LOG_EDIT = "order_edit"; //编辑订单
+    public static final String ORDER_LOG_PAY_OFFLINE = "offline"; //线下付款订单
 
 
     // 订单缓存
@@ -416,5 +432,26 @@ public class Constants {
 
     //物流  https://market.aliyun.com/products/56928004/cmapi021863.html#sku=yuncode15863000015
     public static String LOGISTICS_API_URL = "https://wuliu.market.alicloudapi.com/kdi";
+
+    // 订单 基本 操作字样
+    public static String RESULT_ORDER_NOTFOUND = "订单号 ${orderCode} 未找到";
+    public static String RESULT_ORDER_NOTFOUND_IN_ID = "订单id ${orderId} 未找到";
+    public static String RESULT_ORDER_PAYED = "订单号 ${orderCode} 已支付";
+    public static String RESULT_ORDER_EDIT_PRICE_SAME = "修改价格不能和支付价格相同 原价 ${oldPrice} 修改价 ${editPrice}";
+    public static String RESULT_ORDER_EDIT_PRICE_SUCCESS = "订单号 ${orderNo} 修改价格 ${price} 成功";
+    public static String RESULT_ORDER_EDIT_PRICE_LOGS = "订单价格 ${orderPrice} 修改实际支付金额为 ${price} 元";
+
+    // 订单 支付 操作字样
+    public static String RESULT_ORDER_PAY_OFFLINE = "订单号 ${orderNo} 现在付款 ${price} 成功";
+
+    // 订单核销 返回字样 Order response text info
+    public static String RESULT_VERIFICATION_ORDER_NOT_FUND = "核销码 ${vCode} 的订单未找到";
+    public static String RESULT_VERIFICATION_ORDER_VED = "核销码 ${vCode} 的订单已核销";
+    public static String RESULT_VERIFICATION_NOTAUTH = "没有核销权限";
+    public static String RESULT_VERIFICATION_USER_EXIST = "当前用户已经是核销员";
+
+
+    // QRcode Response text info
+    public static String RESULT_QRCODE_PRAMERROR = "生成二维码参数不合法";
 
 }

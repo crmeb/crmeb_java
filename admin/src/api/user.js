@@ -295,7 +295,6 @@ export function groupSaveApi(data) {
  * @param pram
  */
 export function groupUpdateApi(params, data) {
-  console.log(params, data)
   return request({
     url: `/admin/user/group/update`,
     method: 'post',

@@ -103,7 +103,7 @@
 			setUserInfo(e){
 				console.log('78878787');
 				console.log(e);
-				uni.showLoading({title:'正在登陆中'});
+				uni.showLoading({title:'正在登录中'});
 				if(e.detail.errMsg == "getPhoneNumber:ok"){
 					console.log('授权成功');
 					Routine.getCode().then(code=>{

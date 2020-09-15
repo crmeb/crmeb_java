@@ -7,7 +7,7 @@
           <div class="dashboard-workplace-header-tip">
             <div class="dashboard-workplace-header-tip-title">{{ smsAccount }}，祝您每一天开心！</div>
             <div class="dashboard-workplace-header-tip-desc">
-              <span class="mr10">修改密码</span>
+              <!--<span class="mr10">修改密码</span>-->
               <span @click="signOut">退出登录</span>
             </div>
           </div>

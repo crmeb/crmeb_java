@@ -109,7 +109,7 @@
 				// #endif
 			}
 		}
-	],
+    ],
 	 "subPackages": [
 	    {
 	      "root": "pages/users",

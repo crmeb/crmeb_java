@@ -2,18 +2,24 @@ package com.zbkj.crmeb.store.utilService;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.common.PageParamRequest;
 import com.constants.Constants;
 import com.exception.CrmebException;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.utils.RedisUtil;
+import com.utils.ValidateFormUtil;
+import com.utils.vo.dateLimitUtilVo;
+import com.zbkj.crmeb.express.model.Express;
 import com.zbkj.crmeb.express.model.ShippingTemplates;
 import com.zbkj.crmeb.express.model.ShippingTemplatesFree;
 import com.zbkj.crmeb.express.model.ShippingTemplatesRegion;
 import com.zbkj.crmeb.express.service.ShippingTemplatesFreeService;
 import com.zbkj.crmeb.express.service.ShippingTemplatesRegionService;
 import com.zbkj.crmeb.express.service.ShippingTemplatesService;
+import com.zbkj.crmeb.finance.request.FundsMonitorSearchRequest;
 import com.zbkj.crmeb.front.request.OrderCreateRequest;
 import com.zbkj.crmeb.front.response.ComputeOrderResponse;
 import com.zbkj.crmeb.front.response.ConfirmOrderResponse;
@@ -30,7 +36,9 @@ import com.zbkj.crmeb.marketing.service.StoreCouponUserService;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.model.StoreOrderInfo;
 import com.zbkj.crmeb.store.model.StoreOrderStatus;
+import com.zbkj.crmeb.store.request.StoreOrderRefundRequest;
 import com.zbkj.crmeb.store.request.StoreOrderSearchRequest;
+import com.zbkj.crmeb.store.request.StoreOrderSendRequest;
 import com.zbkj.crmeb.store.request.StoreProductRequest;
 import com.zbkj.crmeb.store.response.StoreCartResponse;
 import com.zbkj.crmeb.store.response.StoreProductCartProductInfoResponse;
@@ -45,14 +53,20 @@ import com.zbkj.crmeb.system.service.SystemStoreService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserAddress;
 import com.zbkj.crmeb.user.model.UserBill;
+import com.zbkj.crmeb.user.request.UserOperateFundsRequest;
 import com.zbkj.crmeb.user.service.UserAddressService;
 import com.zbkj.crmeb.user.service.UserBillService;
 import com.zbkj.crmeb.user.service.UserService;
+import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
+import com.zbkj.crmeb.wechat.vo.WechatSendMessageForDistrbution;
+import com.zbkj.crmeb.wechat.vo.WechatSendMessageForPackage;
+import com.zbkj.crmeb.wechat.vo.WechatSendMessageForPaySuccess;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -118,6 +132,9 @@ public class OrderUtils {
 
     @Autowired
     private SystemGroupDataService systemGroupDataService;
+
+    @Autowired
+    private WechatSendMessageForMinService wechatSendMessageForMinService;
 
     // 组装数据给前端使用
     public OrderAgainVo tidyOrder(StoreOrder storeOrder, boolean detail, boolean isPic){
@@ -293,7 +310,7 @@ public class OrderUtils {
                 //此处拿到所有的商品id
                 primaryKey = cor.getCartInfo().stream().map(StoreCartResponse::getProductId).distinct().collect(Collectors.toList());
             }
-            boolean couponUseResult = storeCouponUserService.use(couponId, primaryKey, payPrice);
+            boolean couponUseResult = storeCouponUserService.canUse(couponId, primaryKey, payPrice);
             if(!couponUseResult) throw new CrmebException("使用优惠券失败");
 
             // 减去优惠券金额  后使用优惠券
@@ -382,28 +399,28 @@ public class OrderUtils {
      * @param orderId 订单id
      * @return 订单信息
      */
+    @Transactional(rollbackFor = {RuntimeException.class, Error.class, CrmebException.class})
     public StoreOrder createOrder(OrderCreateRequest request,ConfirmOrderResponse cor, Integer isChannel,Integer orderId, String orderKey){
         UserAddress currentUserAddress = new UserAddress();
         List<Integer> cartIds = new ArrayList<>();
         Integer totalNum = 0;
         Integer gainIntegral = 0;
 
-        // todo 开启事务
-
         if(request.getShippingType() == 1){ // 是否包邮
             if(request.getAddressId() <= 0) throw new CrmebException("请选择收货地址");
             UserAddress userAddress = new UserAddress();
             userAddress.setId(request.getAddressId());
             userAddress.setIsDel(false);
-            if(null == userAddressService.getUserAddress(userAddress)){
+            currentUserAddress = userAddressService.getUserAddress(userAddress);
+            if(null == currentUserAddress){
                 throw new CrmebException("收货地址有误");
             }
-        }else{ // 到店自提
-            if(StringUtils.isBlank(cor.getAddressInfo().getRealName()) || StringUtils.isBlank(cor.getAddressInfo().getRealName()))
+        }else if(request.getShippingType() == 2){ // 到店自提
+            if(StringUtils.isBlank(request.getRealName()) || StringUtils.isBlank(request.getPhone()))
                 throw new CrmebException("请填写姓名和电话");
 
-            currentUserAddress.setRealName(cor.getAddressInfo().getRealName());
-            currentUserAddress.setPhone(cor.getAddressInfo().getRealName());
+            currentUserAddress.setRealName(request.getRealName());
+            currentUserAddress.setPhone(request.getPhone());
         }
         for (StoreCartResponse cartResponse : cor.getCartInfo()) {
             cartIds.add(cartResponse.getSeckillId());
@@ -419,7 +436,7 @@ public class OrderUtils {
         // todo 检测营销产品状态
         // 发快递还是门店自提
         String storeSelfMention = systemConfigService.getValueByKey("store_self_mention");
-        if(Boolean.valueOf(storeSelfMention)) request.setShippingType(1);
+        if(!Boolean.valueOf(storeSelfMention)) request.setShippingType(1);
 
         StoreOrder storeOrder = new StoreOrder();
         storeOrder.setUid(cor.getUserInfo().getUid());
@@ -431,8 +448,8 @@ public class OrderUtils {
             cor.setAddressInfo(selectUserAddress);
         }
 
-        storeOrder.setRealName(cor.getAddressInfo().getRealName());
-        storeOrder.setUserPhone(cor.getAddressInfo().getPhone());
+        storeOrder.setRealName(currentUserAddress.getRealName());
+        storeOrder.setUserPhone(currentUserAddress.getPhone());
         storeOrder.setUserAddress(cor.getAddressInfo().getProvince()
                 + cor.getAddressInfo().getCity()
                 + cor.getAddressInfo().getDistrict()
@@ -801,9 +818,12 @@ public class OrderUtils {
     public void checkDeleteStatus(String orderStatus) {
         //退款状态，持可以添加
 
+//        String [] deleteStatusList = {
+//                Constants.ORDER_STATUS_UNPAID,
+//                Constants.ORDER_STATUS_REFUNDED
+//        };
         String [] deleteStatusList = {
-                Constants.ORDER_STATUS_UNPAID,
-                Constants.ORDER_STATUS_REFUNDED
+                Constants.ORDER_STATUS_COMPLETE
         };
 
         if(!Arrays.asList(deleteStatusList).contains(orderStatus)){
@@ -856,6 +876,119 @@ public class OrderUtils {
                 break;
         }
         return payTypeStr;
+    }
+
+    /**
+     * h5 订单查询 where status 封装
+     * @param queryWrapper 查询条件
+     * @param status 状态
+     */
+    public void statusApiByWhere(LambdaQueryWrapper<StoreOrder> queryWrapper, int status){
+        switch (status){
+            case Constants.ORDER_STATUS_H5_UNPAID: // 未支付
+                queryWrapper.eq(StoreOrder::getPaid, false);
+                queryWrapper.eq(StoreOrder::getStatus, 0);
+                queryWrapper.eq(StoreOrder::getRefundStatus, 0);
+                break;
+            case Constants.ORDER_STATUS_H5_NOT_SHIPPED: // 待发货
+                queryWrapper.eq(StoreOrder::getPaid, true);
+                queryWrapper.eq(StoreOrder::getStatus, 0);
+                queryWrapper.eq(StoreOrder::getRefundStatus, 0);
+                queryWrapper.eq(StoreOrder::getShippingType, 1);
+                break;
+            case Constants.ORDER_STATUS_H5_SPIKE: // 待收货
+                queryWrapper.eq(StoreOrder::getPaid, true);
+                queryWrapper.eq(StoreOrder::getStatus, 1);
+                queryWrapper.eq(StoreOrder::getRefundStatus, 0);
+                break;
+            case Constants.ORDER_STATUS_H5_VERF: //  待核销
+                queryWrapper.eq(StoreOrder::getPaid, true);
+                queryWrapper.eq(StoreOrder::getStatus, 0);
+                queryWrapper.eq(StoreOrder::getRefundStatus, 0);
+                queryWrapper.eq(StoreOrder::getShippingType, 2);
+                break;
+            case Constants.ORDER_STATUS_H5_COMPLETE: // 已完成
+                queryWrapper.eq(StoreOrder::getPaid, true);
+                queryWrapper.eq(StoreOrder::getStatus, 3);
+                queryWrapper.eq(StoreOrder::getRefundStatus, 0);
+                break;
+            case Constants.ORDER_STATUS_H5_REFUNDING: // 退款中
+                queryWrapper.eq(StoreOrder::getPaid, true);
+                queryWrapper.eq(StoreOrder::getRefundStatus, 1);
+                break;
+            case Constants.ORDER_STATUS_H5_REFUNDED: // 已退款
+                queryWrapper.eq(StoreOrder::getPaid, true);
+                queryWrapper.eq(StoreOrder::getStatus, 2);
+                break;
+            case Constants.ORDER_STATUS_H5_REFUND: // 退款
+                queryWrapper.eq(StoreOrder::getPaid, true);
+                queryWrapper.in(StoreOrder::getRefundStatus, "1,2"); //大于0
+                break;
+        }
+        queryWrapper.eq(StoreOrder::getIsDel, false);
+        queryWrapper.eq(StoreOrder::getIsSystemDel, false);
+    }
+
+    /**
+     * 根据订单id获取订单中商品和名称和购买数量字符串
+     * @param orderId   订单id
+     * @return          商品名称*购买数量
+     */
+    public String getStoreNameAndCarNumString(int orderId){
+        List<StoreOrderInfoVo> currentOrderInfo = storeOrderInfoService.getOrderListByOrderId(orderId);
+        if(currentOrderInfo.size() > 0) {
+            StringBuilder sbOrderProduct = new StringBuilder();
+            for (StoreOrderInfoVo storeOrderInfoVo : currentOrderInfo) {
+                sbOrderProduct.append(storeOrderInfoVo.getInfo().getProductInfo().getStoreName() + "*"
+                        + storeOrderInfoVo.getInfo().getCartNum());
+            }
+            return sbOrderProduct.toString();
+        }
+        return null;
+    }
+
+    /**
+     * 根据订单对象获取订单配送中文
+     * @param order 订单对象
+     * @return      配送方式中文字符串
+     */
+    public String getPayTypeStrByOrder(StoreOrder order){
+        return order.getShippingType() == 1 ? "快递":"自提";
+    }
+
+    /** 这里的方法完全是为了订单中调用而封装 订单支付成功有余额支付和微信支付成功回调中
+     * 微信小程序发送付款成功订阅消息
+     * @param paySuccess    付款成功订阅消息
+     * @param userId        用户Id
+     */
+    public void sendWeiChatMiniMessageForPaySuccess(WechatSendMessageForPaySuccess paySuccess, int userId){
+        wechatSendMessageForMinService.sendPaySuccessMessage(paySuccess,userId);
+    }
+
+    /**
+     * 微信小程序发送发货快递通知订阅消息
+     * @param storeOrder 发送快递
+     * @param userId    接收消息的用户id
+     */
+    public void sendWeiChatMiniMessageForPackageExpress(StoreOrder storeOrder, int userId){
+        WechatSendMessageForPackage toPackage = new WechatSendMessageForPackage(
+                getOrderPayTypeStr(storeOrder.getPayType()),storeOrder.getOrderId(),storeOrder.getUserAddress(),
+                storeOrder.getUserPhone(),storeOrder.getRealName()
+        );
+        wechatSendMessageForMinService.sendRePackageMessage(toPackage,userId);
+    }
+
+    /**
+     * 微信小程序发送 配送通知订阅消息
+     * @param storeOrder    配送订单信息
+     * @param userId        接收消息的用户id
+     */
+    public void senWeiChatMiniMessageForDeliver(StoreOrder storeOrder, int userId){
+        WechatSendMessageForDistrbution distrbution = new WechatSendMessageForDistrbution(
+                storeOrder.getId()+"",storeOrder.getDeliveryName(),storeOrder.getDeliveryId()+"",
+                "商家已经开始配送", "暂无",getStoreNameAndCarNumString(storeOrder.getId()),"暂无"
+        );
+        wechatSendMessageForMinService.sendDistrbutionMessage(distrbution,userId);
     }
 
 }

@@ -144,7 +144,6 @@
       modalPicTap (tit) {
         const _this = this
         _this.$modalUpload(function(img) {
-          console.log(img)
           tit==='1' ? _this.formValidate.avatar = img[0].sattDir : img.map((item) => {
             _this.pics.push( item.sattDir)
           })
@@ -166,7 +165,6 @@
               }, 600);
             })
           } else {
-            console.log('error submit!!');
             return false;
           }
         });

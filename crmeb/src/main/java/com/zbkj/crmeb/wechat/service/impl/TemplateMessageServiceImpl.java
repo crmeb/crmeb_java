@@ -15,6 +15,7 @@ import com.zbkj.crmeb.wechat.model.TemplateMessage;
 import com.zbkj.crmeb.wechat.request.TemplateMessageSearchRequest;
 import com.zbkj.crmeb.wechat.service.TemplateMessageService;
 import com.zbkj.crmeb.wechat.service.WeChatService;
+import com.zbkj.crmeb.wechat.service.WechatProgramMyTempService;
 import com.zbkj.crmeb.wechat.vo.SendTemplateMessageItemVo;
 import com.zbkj.crmeb.wechat.vo.TemplateMessageIndustryVo;
 import com.zbkj.crmeb.wechat.vo.TemplateMessageVo;
@@ -49,6 +50,9 @@ public class TemplateMessageServiceImpl extends ServiceImpl<TemplateMessageDao, 
 
     @Autowired
     private UserTokenService userTokenService;
+
+    @Autowired
+    private WechatProgramMyTempService wechatProgramMyTempService;
 
 
     /**
@@ -97,6 +101,29 @@ public class TemplateMessageServiceImpl extends ServiceImpl<TemplateMessageDao, 
      * @since 2020-06-03
      */
     public void push(String tempKey, HashMap<String, String> map, Integer userId, String type){
+
+        switch (type){
+            case Constants.PAY_TYPE_WE_CHAT_FROM_PUBLIC:
+                pushPublicTempMessage(tempKey, map, userId, type);
+                break;
+            case Constants.PAY_TYPE_WE_CHAT_FROM_PROGRAM:
+                wechatProgramMyTempService.push(Integer.parseInt(tempKey), map, userId);
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * 发送给微信消息进入队列
+     * @param tempKey String 模板消息key
+     * @param map 需要替换的数据
+     * @param userId Integer 用户id
+     * @param type String 类型， public 公众号；program 小程序
+     * @author Mr.Zhang
+     * @since 2020-06-03
+     */
+    public void pushPublicTempMessage(String tempKey, HashMap<String, String> map, Integer userId, String type){
         TemplateMessageVo templateMessageVo = new TemplateMessageVo();
 
         TemplateMessage templateMessage = getInfoByTempKey(tempKey);
@@ -109,24 +136,23 @@ public class TemplateMessageServiceImpl extends ServiceImpl<TemplateMessageDao, 
         for (Map.Entry<String, String> entry : map.entrySet()){
             hashMap.put(entry.getKey(), new SendTemplateMessageItemVo(entry.getValue()));
         }
-        //用户信息  TODO 公众号和小程序取的OPENID 不一样， 从token表取，需要重新处理
+        //token 类型
         int openIdType = Constants.THIRD_LOGIN_TOKEN_TYPE_PUBLIC;
-        templateMessageVo.setData(hashMap);
-        String redisKey = Constants.WE_CHAT_MESSAGE_KEY_PUBLIC;
-        if(Constants.PAY_TYPE_WE_CHAT_FROM_PROGRAM.equals(type)){
-            redisKey = Constants.WE_CHAT_MESSAGE_KEY_PROGRAM;
-            openIdType = Constants.THIRD_LOGIN_TOKEN_TYPE_PROGRAM;
+        if(Constants.ADMIN_LOGIN_TYPE_WE_CHAT_FROM_PUBLIC.equals(type)){
+            openIdType = Constants.THIRD_ADMIN_LOGIN_TOKEN_TYPE_PUBLIC;
 
         }
+
+        //拿到三方登录绑定的token
         UserToken UserToken = userTokenService.getTokenByUserId(userId, openIdType);
 
         if(null == UserToken || StringUtils.isBlank(UserToken.getToken())){
             return;
         }
 
+        templateMessageVo.setData(hashMap);
         templateMessageVo.setTouser(UserToken.getToken());
-
-        redisUtil.lPush(redisKey, JSONObject.toJSONString(templateMessageVo));
+        redisUtil.lPush(Constants.WE_CHAT_MESSAGE_KEY_PUBLIC, JSONObject.toJSONString(templateMessageVo));
     }
 
     /**

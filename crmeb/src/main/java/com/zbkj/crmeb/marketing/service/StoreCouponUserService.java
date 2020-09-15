@@ -35,6 +35,15 @@ public interface StoreCouponUserService extends IService<StoreCouponUser> {
 
     boolean use(Integer id, List<Integer> productIdList, BigDecimal price);
 
+    /**
+     * 检测优惠券是否可用，计算订单价格时使用
+     * @param id            优惠券id
+     * @param productIdList 商品id集合
+     * @param price 价格
+     * @return  可用状态
+     */
+    boolean canUse(Integer id, List<Integer> productIdList, BigDecimal price);
+
     boolean receiveAll(UserCouponReceiveRequest request, Integer userId, String type);
 
     boolean rollbackByCancelOrder(StoreOrder storeOrder);

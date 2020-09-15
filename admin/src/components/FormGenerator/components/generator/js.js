@@ -181,7 +181,6 @@ function buildProps(scheme, propsList) {
 
 // el-upload的BeforeUpload
 function buildBeforeUpload(scheme) {
-  console.log(scheme)
   const config = scheme.__config__
   const unitNum = units[config.sizeUnit]; let rightSizeCode = ''; let acceptCode = ''; const
     returnList = []

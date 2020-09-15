@@ -14,7 +14,9 @@ public interface UserTokenService extends IService<UserToken> {
 
     UserToken checkToken(String token, int type);
 
-    void bind(String openId, int thirdLoginTokenTypeUnionId, Integer uid);
+    void bind(String openId, int type, Integer uid);
+
+    Boolean unBind(int type, Integer uid);
 
     UserToken getTokenByUserId(Integer userId, int type);
 
@@ -22,5 +24,5 @@ public interface UserTokenService extends IService<UserToken> {
 
     List<UserToken> getList(List<Integer> userIdList);
 
-    UserToken getUserIdByOpenId(String openid);
+    UserToken getUserIdByOpenId(String openid, int type);
 }

@@ -118,7 +118,6 @@
             tagId: res.tagId
           }
           this.labelData = res.tagId.split(',').map(Number)
-          console.log(this.labelData)
         })
       },
       // 分组列表
