@@ -620,8 +620,8 @@ public class OrderServiceImpl implements OrderService {
         result.setEvaluatedCount(storeOrderService.getTopDataUtil(Constants.ORDER_STATUS_H5_VERF, currentUser.getUid()).size());
         // 已完成
         result.setCompleteCount(storeOrderService.getTopDataUtil(Constants.ORDER_STATUS_H5_COMPLETE, currentUser.getUid()).size());
-        // 退款中
-        result.setRefundCount(storeOrderService.getTopDataUtil(Constants.ORDER_STATUS_H5_REFUNDING, currentUser.getUid()).size());
+        // 退款中和已退款
+        result.setRefundCount(storeOrderService.getTopDataUtil(Constants.ORDER_STATUS_H5_REFUND, currentUser.getUid()).size());
         return result;
     }
 

@@ -920,9 +920,10 @@ public class OrderUtils {
                 queryWrapper.eq(StoreOrder::getPaid, true);
                 queryWrapper.eq(StoreOrder::getStatus, 2);
                 break;
-            case Constants.ORDER_STATUS_H5_REFUND: // 退款
+            case Constants.ORDER_STATUS_H5_REFUND: // 包含已退款和退款中
                 queryWrapper.eq(StoreOrder::getPaid, true);
-                queryWrapper.in(StoreOrder::getRefundStatus, "1,2"); //大于0
+                queryWrapper.in(StoreOrder::getStatus,-1,-2);
+                queryWrapper.in(StoreOrder::getRefundStatus, 1,2);
                 break;
         }
         queryWrapper.eq(StoreOrder::getIsDel, false);
