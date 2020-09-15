@@ -19,6 +19,7 @@ import com.zbkj.crmeb.store.service.StoreOrderInfoService;
 import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.store.service.StoreOrderStatusService;
 import com.zbkj.crmeb.store.service.StoreProductCouponService;
+import com.zbkj.crmeb.store.utilService.OrderUtils;
 import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserBill;
@@ -26,8 +27,10 @@ import com.zbkj.crmeb.user.service.UserBillService;
 import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.wechat.service.TemplateMessageService;
 import com.zbkj.crmeb.wechat.service.WeChatService;
+import com.zbkj.crmeb.wechat.vo.WechatSendMessageForPaySuccess;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,6 +91,9 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
     @Autowired
     private WeChatService weChatService;
 
+    @Autowired
+    private OrderUtils orderUtils;
+
     //订单类
     private StoreOrder order;
 
@@ -105,7 +111,6 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
      */
     @Override
     public CreateOrderResponseVo payOrder(Integer orderId, String fromType, String clientIp) {
-        // todo 这里需要根据 fromType 参数直接替换当前支付方式，
         CreateOrderResponseVo responseVo = new CreateOrderResponseVo();
         StoreOrder storeOrder = storeOrderService.getById(orderId);
         setOrder(storeOrder);
@@ -299,20 +304,28 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
      * @since 2020-07-01
      */
     private void pushTempMessage() {
-        String tempKey = Constants.WE_CHAT_PUBLIC_TEMP_KEY_ORDER_PAY_SUCCESS;
-        String type = Constants.PAY_TYPE_WE_CHAT_FROM_PUBLIC;
-        if(Constants.ORDER_PAY_CHANNEL_PROGRAM == getOrder().getIsChannel()){
-            tempKey = Constants.WE_CHAT_PROGRAM_TEMP_KEY_ORDER_PAY_SUCCESS;
-            type = Constants.PAY_TYPE_WE_CHAT_FROM_PROGRAM;
-        }
-
-        HashMap<String, String> map = new HashMap<>();
-        map.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "订单支付成功");
-        map.put("orderId", getOrder().getOrderId());
-        map.put("payAmount", getOrder().getPayPrice().toString());
-        map.put(Constants.WE_CHAT_TEMP_KEY_END, "感谢购买！");
+//        String tempKey = Constants.WE_CHAT_PUBLIC_TEMP_KEY_ORDER_PAY_SUCCESS;
+//        String type = Constants.PAY_TYPE_WE_CHAT_FROM_PUBLIC;
+//        if(Constants.ORDER_PAY_CHANNEL_PROGRAM == getOrder().getIsChannel()){
+//            tempKey = Constants.WE_CHAT_PROGRAM_TEMP_KEY_ORDER_PAY_SUCCESS;
+//            type = Constants.PAY_TYPE_WE_CHAT_FROM_PROGRAM;
+//        }
+//
+//        HashMap<String, String> map = new HashMap<>();
+//        map.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "订单支付成功");
+//        map.put("orderId", getOrder().getOrderId());
+//        map.put("payAmount", getOrder().getPayPrice().toString());
+//        map.put(Constants.WE_CHAT_TEMP_KEY_END, "感谢购买！");
 
 //        templateMessageService.push(tempKey, map, getOrder().getUid(), type);
+        // 小程序发送订阅消息
+        String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(getOrder().getId());
+        if(StringUtils.isNotBlank(storeNameAndCarNumString)){
+            WechatSendMessageForPaySuccess paySuccess = new WechatSendMessageForPaySuccess(
+                    getOrder().getId()+"",getOrder().getPayPrice()+"",getOrder().getPayTime()+"","暂无",
+                    getOrder().getTotalPrice()+"",storeNameAndCarNumString);
+            orderUtils.sendWeiChatMiniMessageForPaySuccess(paySuccess, userService.getById(getOrder()).getUid());
+        }
     }
 
 

@@ -143,6 +143,8 @@
       title="复制淘宝、天猫、拼多多、京东、苏宁"
       :visible.sync="dialogVisible"
       width="1200px"
+      :modal="false"
+      class="taoBaoModal"
       :before-close="handleClose">
       <tao-bao v-if="dialogVisible"></tao-bao>
     </el-dialog>
@@ -218,7 +220,6 @@ export default {
     // 获取商品表单头数量
     goodHeade () {
       productHeadersApi().then(res => {
-        console.log(res)
         this.headeNum = res
       }).catch(res => {
         this.$message.error(res.message);
@@ -227,7 +228,6 @@ export default {
     // 商户分类；
     getCategorySelect() {
       categoryApi({ status: -1, type: 1 }).then(res => {
-        console.log(res)
         this.merCateList = res
       }).catch(res => {
         this.$message.error(res.message)
@@ -277,6 +277,9 @@ export default {
 </script>
 
 <style scoped lang="scss">
+  .taoBaoModal{
+    z-index: 333 !important;
+  }
   .demo-table-expand{
     /deep/ label{
       width: 82px;

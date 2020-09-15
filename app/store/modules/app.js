@@ -16,6 +16,7 @@ const state = {
 	userInfo: null,
 	uid: Cache.get(UID) || null,
 	homeActive: false,
+	chatUrl: Cache.get('chatUrl') || '',
 };
 
 const mutations = {
@@ -49,6 +50,9 @@ const mutations = {
 	CLOSE_HOME(state) {
 		state.homeActive = false;
 	},
+	SET_CHATURL(state, chatUrl){
+		state.chatUrl = chatUrl;
+	}
 };
 
 const actions = {

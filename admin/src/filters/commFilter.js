@@ -13,8 +13,10 @@ export function filterEmpty(val) {
 
 // 时间过滤器
 export function formatDate(time) {
+  console.log(time)
   if (time !== 0) {
     const date = new Date(time * 1000);
+    console.log(date)
     return formatDates(date, 'yyyy-MM-dd hh:mm');
   }
 }
@@ -93,3 +95,4 @@ export function articleTypeFilter(status) {
   }
   return arrayList.filter(item => Number(status) === Number(item.id))[0].name
 }
+

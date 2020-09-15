@@ -3,7 +3,6 @@ package com.zbkj.crmeb.system.request;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 
 /**
@@ -30,4 +29,7 @@ public class SystemAdminLoginRequest {
     @ApiModelProperty(value = "code", required = true)
     @NotEmpty(message = "验证码 不能为空")
     private String code;
+
+    @ApiModelProperty(value = "微信授权code")
+    private String wxCode;
 }

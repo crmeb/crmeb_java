@@ -1,9 +1,10 @@
 package com.zbkj.crmeb.sms.service;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.common.PageParamRequest;
-import com.zbkj.crmeb.sms.request.*;
+import com.zbkj.crmeb.sms.request.RegisterRequest;
+import com.zbkj.crmeb.sms.request.SendSmsVo;
+import com.zbkj.crmeb.sms.request.SmsLoginRequest;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -36,11 +37,7 @@ public interface SmsService{
 
     JSONObject applyTempMessage(String title, String content, Integer type);
 
-    JSONObject tempList(String title, Integer status, PageParamRequest pageParamRequest);
-
-    boolean configSave(SmsConfigRequest request);
-
-    SmsConfigRequest configList();
+    JSONObject tempList(String title, Integer status, String type, PageParamRequest pageParamRequest);
 
     boolean pushCodeToList(String phone, Integer tag,HashMap<String, Object> pram);
 

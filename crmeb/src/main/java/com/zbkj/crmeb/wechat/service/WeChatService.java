@@ -6,9 +6,10 @@ import com.zbkj.crmeb.payment.vo.wechat.CreateOrderResponseVo;
 import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginGetOpenIdResponse;
 import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginUserInfoResponse;
 import com.zbkj.crmeb.wechat.response.WeChatProgramAuthorizeLoginGetOpenIdResponse;
-import com.zbkj.crmeb.wechat.vo.TemplateMessageVo;
+import com.zbkj.crmeb.wechat.vo.*;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
 * @author Mr.Zhang
@@ -74,4 +75,14 @@ public interface WeChatService {
     String qrCode(String page, String uri);
 
     UserRechargePaymentResponse response(CreateOrderResponseVo responseVo);
+
+    List<ProgramCategoryVo> getProgramCategory();
+
+    List<ProgramTempVo> getProgramPublicTempList(int page);
+
+    List<ProgramTempKeywordsVo> getWeChatKeywordsByTid(Integer tid);
+
+    String programAddMyTemp(ProgramAddMyTempVo programAddMyTempVo);
+
+    void programDeleteMyTemp(String myTempId);
 }

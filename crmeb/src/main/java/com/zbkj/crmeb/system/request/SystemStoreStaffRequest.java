@@ -29,18 +29,18 @@ public class SystemStoreStaffRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 
-    @ApiModelProperty(value = "微信用户id")
-    @Min(value = 1, message = "请选择用户")
+    @ApiModelProperty(value = "管理员 id")
+    @Min(value = 1, message = "请选择管理员")
     private Integer uid;
 
-    @ApiModelProperty(value = "店员头像")
+    @ApiModelProperty(value = "管理员头像")
     private String avatar;
 
     @ApiModelProperty(value = "提货点id")
     @Min(value = 1, message = "请选择提货点")
     private Integer storeId;
 
-    @ApiModelProperty(value = "店员名称")
+    @ApiModelProperty(value = "核销员 名称 [昵称]")
     private String staffName;
 
     @ApiModelProperty(value = "手机号码")

@@ -60,6 +60,24 @@ public class UserTokenServiceImpl extends ServiceImpl<UserTokenDao, UserToken> i
         save(userToken);
     }
 
+    /**
+     * 解绑微信
+     * @author Mr.Zhang
+     * @since 2020-04-28
+     * @return Boolean
+     */
+    @Override
+    public Boolean unBind(int type, Integer uid) {
+        try{
+            LambdaQueryWrapper<UserToken> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+            lambdaQueryWrapper.eq(UserToken::getUid, uid).eq(UserToken::getType, type);
+            dao.delete(lambdaQueryWrapper);
+            return true;
+        }catch (Exception e){
+            return false;
+        }
+    }
+
     @Override
     public UserToken getTokenByUserId(Integer userId, int type) {
         LambdaQueryWrapper<UserToken> lambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -91,9 +109,10 @@ public class UserTokenServiceImpl extends ServiceImpl<UserTokenDao, UserToken> i
     }
 
     @Override
-    public UserToken getUserIdByOpenId(String openid) {
+    public UserToken getUserIdByOpenId(String openid, int type) {
         LambdaQueryWrapper<UserToken> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(UserToken::getToken, openid);
+        lambdaQueryWrapper.eq(UserToken::getType, type);
         return dao.selectOne(lambdaQueryWrapper);
     }
 

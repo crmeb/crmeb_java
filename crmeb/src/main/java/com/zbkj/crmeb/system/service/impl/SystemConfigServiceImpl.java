@@ -55,7 +55,7 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * @param pageParamRequest PageParamRequest 分页参数
      * @author Mr.Zhang
      * @since 2020-04-16
-     * @return String
+     * @return List<SystemConfig>
      */
     @Override
     public List<SystemConfig> getList(PageParamRequest pageParamRequest) {
@@ -89,7 +89,7 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
     /**
      * 同时获取多个配置
      * @param keys 多个配置key
-     * @return 查询到的数据集合
+     * @return List<String>
      */
     @Override
     public List<String> getValuesByKes(List<String> keys) {
@@ -122,7 +122,7 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * @param systemFormCheckRequest SystemFormCheckRequest 数据保存
      * @author Mr.Zhang
      * @since 2020-04-13
-     * @return bool
+     * @return boolean
      */
     @Override
     public boolean saveForm(SystemFormCheckRequest systemFormCheckRequest) {
@@ -202,7 +202,7 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * 保存或更新配置数据
      * @param name 菜单名称
      * @param value 菜单值
-     * @return 更新或者保存的状态
+     * @return boolean
      */
     @Override
     public boolean updateOrSaveValueByName(String name, String value) {
@@ -231,7 +231,7 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * @param formId Integer id
      * @author Mr.Zhang
      * @since 2020-04-16
-     * @return JSONObject
+     * @return HashMap<String, String>
      */
     @Override
     public HashMap<String, String> info(Integer formId){
@@ -255,7 +255,7 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * @param name name
      * @author Mr.Zhang
      * @since 2020-04-16
-     * @return JSONObject
+     * @return boolean
      */
     @Override
     public boolean checkName(String name){
@@ -270,7 +270,6 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * @param name name
      * @author Mr.Zhang
      * @since 2020-04-16
-     * @return JSONObject
      */
     private void asyncRedis(String name){
         LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -290,7 +289,6 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * @param systemConfigList List<SystemConfig> 需要同步的数据
      * @author Mr.Zhang
      * @since 2020-04-16
-     * @return JSONObject
      */
     private void async(List<SystemConfig> systemConfigList){
         if (!asyncConfig) {
@@ -313,7 +311,6 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * @param name String
      * @author Mr.Zhang
      * @since 2020-04-16
-     * @return JSONObject
      */
     private void deleteRedis(String name){
         if (!asyncConfig) {
@@ -328,7 +325,7 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * @param name String
      * @author Mr.Zhang
      * @since 2020-04-16
-     * @return JSONObject
+     * @return String
      */
     private String get(String name){
         if (!asyncConfig) {
@@ -358,7 +355,6 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * 把数据同步到redis, 此方法适用于redis为空的时候进行一次批量输入
      * @author Mr.Zhang
      * @since 2020-04-16
-     * @return JSONObject
      */
     private void setRedisByVoList(){
         //检测redis是否为空

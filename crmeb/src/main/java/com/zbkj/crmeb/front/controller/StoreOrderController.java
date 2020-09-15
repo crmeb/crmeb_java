@@ -43,8 +43,9 @@ public class StoreOrderController {
     @ApiOperation(value = "确认订单")
     @RequestMapping(value = "/confirm", method = RequestMethod.POST)
     public CommonResult<ConfirmOrderResponse> OrderConForm(@RequestParam String cartIds,
-                                                           @RequestParam boolean isNew){
-        return CommonResult.success(orderService.confirmOrder(CrmebUtil.stringToArrayInt(cartIds),isNew));
+                                                           @RequestParam(value = "boolean", defaultValue = "false") boolean isNew,
+                                                           @RequestParam(value = "addAgain", defaultValue = "false") boolean addAgain){
+        return CommonResult.success(orderService.confirmOrder(CrmebUtil.stringToArrayInt(cartIds),isNew,addAgain));
     }
 
     /**
@@ -105,7 +106,7 @@ public class StoreOrderController {
     @ApiOperation(value = "订单列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ApiImplicitParams ({
-        @ApiImplicitParam(name = "type", value = "评价等级|0=未支付,1=待发货,2=待收货,3=待评价,4=已完成", required = true)
+        @ApiImplicitParam(name = "type", value = "评价等级|0=未支付,1=待发货,2=待收货,3=待评价,4=已完成,-3=售后/退款", required = true)
     })
     public CommonResult<List<OrderAgainVo>> orderList(
             @RequestParam(name = "type") Integer type,

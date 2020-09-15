@@ -62,6 +62,9 @@ public class StoreOrderCountItemResponse implements Serializable {
     @ApiModelProperty(value = "已退款")
     private Integer refunded;
 
+    @ApiModelProperty(value = "0 未退款 1 申请中 2 已退款")
+    private Integer refundStatus;
+
     @ApiModelProperty(value = "已删除")
     private Integer deleted;
 }

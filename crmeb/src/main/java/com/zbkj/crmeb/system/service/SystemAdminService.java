@@ -60,4 +60,10 @@ public interface SystemAdminService extends IService<SystemAdmin> {
     SystemAdmin getInfo(Integer adminId);
 
     SystemAdmin getInfo();
+
+    SystemAdminResponse weChatAuthorizeLogin(String code, String ip);
+
+    Boolean unBind();
+
+    void bind(String wxCode, Integer adminId);
 }

@@ -624,7 +624,6 @@
         if (this.selectionList.length === 0) return this.$message.warning('请先选择用户')
         const _this = this
         this.$modalArticle(function(row) {
-          console.log(row)
         },'send')
       },
       // 发送优惠劵
@@ -756,7 +755,6 @@
       // 具体日期
       onchangeTime (e) {
         this.timeVal = e;
-        console.log(e)
         this.userFrom.dateLimit = e.join(',');
       },
       // 分组列表

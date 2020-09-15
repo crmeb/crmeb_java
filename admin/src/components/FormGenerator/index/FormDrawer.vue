@@ -245,7 +245,6 @@ export default {
         }
       } catch (err) {
         this.$message.error(`js错误：${err}`)
-        console.error(err)
       }
     },
     generateCode() {

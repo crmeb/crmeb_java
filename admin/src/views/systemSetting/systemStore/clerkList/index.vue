@@ -35,49 +35,45 @@
           <!--min-width="150">-->
         <!--</el-table-column>-->
         <el-table-column
-          prop="avatar"
-          label="头像"
-          min-width="100">
-          <template slot-scope="{ row, index }" class="picMiddle">
-            <div class="demo-image__preview">
-              <el-image
-                style="width: 36px; height: 36px"
-                :src="row.avatar"
-                :preview-src-list="[row.avatar]"
-              />
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column
           prop="staffName"
           label="核销员名称"
           min-width="150">
         </el-table-column>
         <el-table-column
+          prop="avatar"
+          label="账号"
+          min-width="150">
+        </el-table-column>
+        <el-table-column
+          prop="phone"
+          label="手机号码"
+          min-width="100">
+        </el-table-column>
+        <el-table-column
           prop="systemStore.detailedAddress"
           label="所属提货点"
-          min-width="150">
+          min-width="200">
         </el-table-column>
         <el-table-column
           prop="createTime"
           label="添加时间"
           min-width="180">
         </el-table-column>
-        <el-table-column
-          prop="status"
-          label="状态"
-          min-width="100">
-          <template slot-scope="{ row, index }">
-            <el-switch
-              v-model="row.status"
-              :active-value="1"
-              :inactive-value="0"
-              active-text="显示"
-              inactive-text="隐藏"
-              @change="onchangeIsShow(row.id,row.status)">
-            </el-switch>
-          </template>
-        </el-table-column>
+        <!--<el-table-column-->
+          <!--prop="status"-->
+          <!--label="状态"-->
+          <!--min-width="100">-->
+          <!--<template slot-scope="{ row, index }">-->
+            <!--<el-switch-->
+              <!--v-model="row.status"-->
+              <!--:active-value="1"-->
+              <!--:inactive-value="0"-->
+              <!--active-text="显示"-->
+              <!--inactive-text="隐藏"-->
+              <!--@change="onchangeIsShow(row.id,row.status)">-->
+            <!--</el-switch>-->
+          <!--</template>-->
+        <!--</el-table-column>-->
         <el-table-column
           fixed="right"
           label="操作"

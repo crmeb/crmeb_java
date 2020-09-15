@@ -35,8 +35,8 @@ public class UserCenterResponse implements Serializable {
     @ApiModelProperty(value = "用户账号")
     private String account;
 
-    @ApiModelProperty(value = "用户密码")
-    private String pwd;
+//    @ApiModelProperty(value = "用户密码")
+//    private String pwd;
 
     @ApiModelProperty(value = "真实姓名")
     private String realName;

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
+import com.constants.Constants;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
 import com.utils.CrmebUtil;
@@ -18,6 +19,10 @@ import com.zbkj.crmeb.system.request.SystemRoleSearchRequest;
 import com.zbkj.crmeb.system.response.SystemAdminResponse;
 import com.zbkj.crmeb.system.service.SystemAdminService;
 import com.zbkj.crmeb.system.service.SystemRoleService;
+import com.zbkj.crmeb.user.model.UserToken;
+import com.zbkj.crmeb.user.service.UserTokenService;
+import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginGetOpenIdResponse;
+import com.zbkj.crmeb.wechat.service.WeChatService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +49,12 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
 
     @Resource
     private TokenManager tokenManager;
+
+    @Autowired
+    private UserTokenService userTokenService;
+
+    @Autowired
+    private WeChatService weChatService;
 
 
     @Override
@@ -277,5 +288,78 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
     public SystemAdmin getInfo(Integer adminId) {
         return getById(adminId);
     }
+
+    /**
+     * 微信扫码登录
+     * @author Mr.Zhang
+     * @since 2020-04-28
+     * @return SystemAdmin
+     */
+    @Override
+    public SystemAdminResponse weChatAuthorizeLogin(String code, String ip) {
+        //通过code获取用户信息
+        WeChatAuthorizeLoginGetOpenIdResponse response = weChatService.authorizeLogin(code);
+        UserToken userToken = userTokenService.getUserIdByOpenId(response.getOpenId(), Constants.THIRD_ADMIN_LOGIN_TOKEN_TYPE_PUBLIC);
+        if(null == userToken){
+            throw new CrmebException("当前微信账号没有绑定后台账户，请用账号密码登录之后在个人中心扫码绑定");
+        }
+
+        SystemAdmin systemAdmin = getInfo(userToken.getUid());
+
+        if(null == systemAdmin){
+            throw new CrmebException("用户不存在");
+        }
+
+        if(!systemAdmin.getStatus()){
+            throw new CrmebException("用户已经被禁用");
+        }
+
+        if(systemAdmin.getIsDel()){
+            throw new CrmebException("用户已经被删除");
+        }
+
+        TokenModel tokenModel = tokenManager.createToken(systemAdmin.getAccount(), systemAdmin.getId().toString(), TokenModel.TOKEN_REDIS);
+        SystemAdminResponse systemAdminResponse = new SystemAdminResponse();
+        systemAdminResponse.setToken(tokenModel.getToken());
+        BeanUtils.copyProperties(systemAdmin, systemAdminResponse);
+
+        //更新最后登录信息
+        systemAdmin.setLoginCount(systemAdmin.getLoginCount() + 1);
+        systemAdmin.setLastIp(ip);
+        updateById(systemAdmin);
+
+        return systemAdminResponse;
+    }
+
+    /**
+     * 绑定微信
+     * @author Mr.Zhang
+     * @since 2020-04-28
+     * @return SystemAdmin
+     */
+    public void bind(String code, Integer adminId) {
+        try{
+            //通过code获取用户信息
+            WeChatAuthorizeLoginGetOpenIdResponse response = weChatService.authorizeLogin(code);
+            UserToken userToken = userTokenService.checkToken(response.getOpenId(), Constants.THIRD_ADMIN_LOGIN_TOKEN_TYPE_PUBLIC);
+            if(null == userToken){
+                userTokenService.bind(response.getOpenId(), Constants.THIRD_ADMIN_LOGIN_TOKEN_TYPE_PUBLIC, adminId);
+            }
+        }catch (Exception e){
+            throw new CrmebException("绑定失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 解绑微信
+     * @author Mr.Zhang
+     * @since 2020-04-28
+     * @return Boolean
+     */
+    @Override
+    public Boolean unBind() {
+        return userTokenService.unBind(Constants.THIRD_ADMIN_LOGIN_TOKEN_TYPE_PUBLIC, tokenManager.getLocalUserId());
+    }
+
 }
 

@@ -1,23 +1,18 @@
 <template>
-  <el-dialog v-model="dialogFormVisible" title="请选择商城用户" append-to-body :visible.sync="dialogFormVisible" width="1000px" @close="cancel">
+  <el-dialog v-model="dialogFormVisible" title="请选择管理员" append-to-body :visible.sync="dialogFormVisible" width="1200px" @close="cancel">
     <el-form ref="form" inline :model="artFrom">
-      <el-form-item label="搜索日期：">
-        <el-radio-group v-model="artFrom.data" size="small" @change="search">
-          <el-radio-button :label="item.val" v-for="(item,index) in fromData" :key="index" >{{item.text}}</el-radio-button>
-        </el-radio-group>
-        <el-date-picker
-          v-model="timeVal"
-          size="small"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          value-format="yyyy:MM:dd"
-          @change="onchangeTime">
-        </el-date-picker>
+      <el-form-item label="身份：">
+        <el-select v-model="artFrom.roles" placeholder="请输入身份" clearable class="selWidth">
+          <el-option
+            v-for="item in roleList.list"
+            :key="item.id"
+            :label="item.roleName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
-      <el-form-item label="用户名称：">
-        <el-input v-model="artFrom.keywords" size="small" placeholder="请输入用户名称" style="width:100%">
+      <el-form-item label="姓名：">
+        <el-input v-model="artFrom.realName" size="small" placeholder="请输入姓名或者账号" class="selWidth">
           <el-button slot="append" icon="el-icon-search" @click="search" class="">搜索</el-button>
         </el-input>
       </el-form-item>
@@ -33,56 +28,59 @@
         label=""
         width="55">
         <template slot-scope="{ row, index }">
-          <el-radio v-model="templateRadio" :label="row.uid" @change.native="getTemplateRow(row.uid,row.avatar)">&nbsp;</el-radio>
+          <el-radio v-model="templateRadio" :label="row.uid" @change.native="getTemplateRow(row)">&nbsp;</el-radio>
         </template>
       </el-table-column>
       <el-table-column
-        prop="uid"
+        prop="id"
         label="ID"
         sortable
         width="80">
       </el-table-column>
       <el-table-column
-        prop="nickname"
-        label="微信用户名称"
-        min-Width="100">
+        prop="realName"
+        label="姓名"
+        min-Width="120">
       </el-table-column>
+      <!--<el-table-column-->
+        <!--label="客服头像"-->
+        <!--min-Width="100">-->
+        <!--<template slot-scope="{ row, index }" class="picMiddle">-->
+          <!--<div class="demo-image__preview">-->
+            <!--<el-image-->
+              <!--:src="row.avatar"-->
+              <!--:preview-src-list="[row.avatar]"-->
+            <!--/>-->
+          <!--</div>-->
+        <!--</template>-->
+      <!--</el-table-column>-->
       <el-table-column
-        label="客服头像"
-        min-Width="100">
-        <template slot-scope="{ row, index }" class="picMiddle">
-          <div class="demo-image__preview">
-            <el-image
-              :src="row.avatar"
-              :preview-src-list="[row.avatar]"
-            />
-          </div>
+        prop="account"
+        label="账号"
+        min-Width="120"/>
+      <el-table-column label="身份" prop="realName" min-width="230">
+        <template slot-scope="scope">
+          <el-tag size="small" type="info" v-for="(item, index) in scope.row.roleNames.split(',')" class="mr5">{{ item }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column
-        prop="sex"
-        label="性别"
-        min-Width="60">
-        <template slot-scope="{ row, index }">
-          <span v-show="row.sex ===1">男</span>
-          <span v-show="row.sex ===2">女</span>
-          <span v-show="row.sex ===0">保密</span>
+      <el-table-column label="最后登录时间" prop="lastTime" min-width="180">
+        <template slot-scope="scope">
+          <span>{{ scope.row.lastTime | filterEmpty }}</span>
         </template>
       </el-table-column>
-      <el-table-column
-        prop="country"
-        label="地区"
-        min-Width="100">
-        <template slot-scope="{ row, index }">
-          {{row.country}}{{row.province}}{{row.city}}
+      <el-table-column label="最后登录IP" prop="lastIp" min-width="150">
+        <template slot-scope="scope">
+          <span>{{ scope.row.lastIp | filterEmpty }}</span>
         </template>
       </el-table-column>
-      <el-table-column
-        prop="subscribe"
-        label="是否关注公众号"
-        min-Width="100">
-        <template slot-scope="{ row, index }">
-          {{row.subscribe?'关注':'未关注'}}
+      <el-table-column label="状态" prop="status" min-width="100">
+        <template slot-scope="scope">
+          <span>{{ scope.row.status | filterShowOrHide }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="删除标记" prop="status" min-width="100">
+        <template slot-scope="scope">
+          <span>{{ scope.row.isDel | filterYesOrNo }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -102,11 +100,14 @@
 </template>
 
 <script>
-  import { userListApi } from '@/api/user';
+  import * as systemAdminApi from '@/api/systemadmin.js'
+  import * as roleApi from '@/api/role.js'
+  import * as constants from '@/utils/constants.js'
     export default {
       name: "index",
       data(){
-          return{
+          return {
+            constants,
             loading:false,
             templateRadio:'',
             dialogFormVisible:false,
@@ -114,37 +115,48 @@
             artFrom: {
               page: 1,
               limit: 20,
-              data: '',
-              keywords: ''
+              status: 1,
+              realName: '',
+              roles: ''
             },
             total:0,
             timeVal:'',
-            fromData: [
-              { text: '全部', val: '' },
-              { text: '今天', val: 'today' },
-              { text: '昨天', val: 'yesterday' },
-              { text: '最近7天', val: 'lately7' },
-              { text: '最近30天', val: 'lately30' },
-              { text: '本月', val: 'month' },
-              { text: '本年', val: 'year' }
-            ]
+            roleList: []
           }
       },
       created(){
+        this.handleGetRoleList()
       },
       methods:{
-        getTemplateRow(id,img){
+        handleGetRoleList() {
+          const _pram = {
+            page: 1,
+            limit: 9999
+          }
+          roleApi.getRoleList(_pram).then(data => {
+            this.roleList = data
+          })
+        },
+        getTemplateRow(row){
           this.dialogFormVisible = false;
-          this.$emit("upImgUid",id,img);
+          this.$emit("upImgUid", row);
         },
         tableList(){
-          let that = this;
-          that.loading = true;
-          userListApi(that.artFrom).then(res=>{
-            that.loading = false;
-            that.tableData = res.list;
-            that.total = res.total
+          this.loading = true;
+          systemAdminApi.adminList( this.artFrom ).then(data => {
+            this.tableData = data.list
+            this.total = data.total
+            this.loading = false;
+          }).catch(() => {
+            this.loading = false;
           })
+          // let that = this;
+          // that.loading = true;
+          // userListApi(that.artFrom).then(res=>{
+          //   that.loading = false;
+          //   that.tableData = res.list;
+          //   that.total = res.total
+          // })
         },
         //切换显示条数
         sizeChange(index){
@@ -175,7 +187,7 @@
               page: 1,
               limit: 20,
               data: '',
-              keywords: ''
+              realName: ''
           };
           this.timeVal = '';
           this.templateRadio = ''

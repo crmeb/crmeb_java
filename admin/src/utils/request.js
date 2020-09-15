@@ -3,7 +3,7 @@ import { MessageBox, Message } from 'element-ui'
 import store from '@/store'
 import { getToken } from '@/utils/auth'
 import SettingMer from '@/utils/settingMer'
-
+import { isPhone } from "@/libs/wechat";
 // create an axios instance
 const service = axios.create({
   baseURL: SettingMer.apiBaseURL, // url = base url + request url
@@ -15,12 +15,12 @@ const service = axios.create({
 service.interceptors.request.use(
   config => {
     // do something before request is sent
-
-    if (store.getters.token) {
+    const token = !store.getters.token?sessionStorage.getItem('token'):store.getters.token;
+    if (token) {
       // let each request carry token
       // ['X-Token'] is a custom headers key
       // please modify it according to the actual situationf
-      config.headers['Authori-zation'] = getToken()
+      config.headers['Authori-zation'] = token
     }
     if(/get/i.test(config.method)){
       config.params = config.params || {}
@@ -62,6 +62,9 @@ service.interceptors.response.use(
       })
     }
     if (res.code !== 200) {
+      if (isPhone()) { //移动端
+        return Promise.reject(res || 'Error')
+      }
       Message({
         message: res.message || 'Error',
         type: 'error',

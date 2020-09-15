@@ -1,67 +1,69 @@
 <template>
   <el-dialog v-model="dialogFormVisible" :title="id?'修改提货点':'添加提货点'" :visible.sync="dialogFormVisible" width="750px" @close="cancel">
-    <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="150px" class="demo-ruleForm" @submit.native.prevent>
-      <el-form-item label="提货点名称：" prop="name">
-        <el-input v-model="ruleForm.name" placeholder="请输入提货点名称" class="dialogWidth"></el-input>
-      </el-form-item>
-      <el-form-item label="提货点简介：">
-        <el-input v-model="ruleForm.introduction" placeholder="请输入提货点简介" class="dialogWidth"></el-input>
-      </el-form-item>
-      <el-form-item label="提货点手机号：" prop="phone">
-        <el-input v-model="ruleForm.phone" placeholder="请输入提货点手机号" class="dialogWidth"></el-input>
-      </el-form-item>
-      <el-form-item label="提货点地址：" prop="address">
-        <el-cascader
-          class="cascaderW"
-          clearable
-          v-model="ruleForm.address"
-          :options="addresData"
-          :props="{ value: 'label' }"
-          @change="handleChange"></el-cascader>
-      </el-form-item>
-      <el-form-item label="详细地址：" prop="detailedAddress">
-        <el-input v-model="ruleForm.detailedAddress" placeholder="请输入详细地址" class="dialogWidth"></el-input>
-      </el-form-item>
-      <el-form-item label="提货点营业：">
-        <el-time-picker
-          is-range
-          v-model="dayTime"
-          range-separator="至"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
-          placeholder="请选择时间营业时间"
-          value-format="HH:mm:ss"
-          @change="onchangeTime">
-        </el-time-picker>
-      </el-form-item>
-      <!-- prop="image"-->
-      <el-form-item label="提货点logo：">
-        <div class="upLoadPicBox" @click="modalPicTap('1')">
-          <div class="pictrue" v-if="ruleForm.image"><img :src="ruleForm.image"></div>
-          <div v-else class="upLoad">
-            <i class="el-icon-camera cameraIconfont" />
+    <template v-if="dialogFormVisible">
+      <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="150px" class="demo-ruleForm" @submit.native.prevent v-loading="loading">
+        <el-form-item label="提货点名称：" prop="name">
+          <el-input v-model="ruleForm.name" maxlength="40" placeholder="请输入提货点名称" class="dialogWidth"></el-input>
+        </el-form-item>
+        <el-form-item label="提货点简介：">
+          <el-input v-model="ruleForm.introduction" maxlength="100"  placeholder="请输入提货点简介" class="dialogWidth"></el-input>
+        </el-form-item>
+        <el-form-item label="提货点手机号：" prop="phone">
+          <el-input v-model="ruleForm.phone" placeholder="请输入提货点手机号" class="dialogWidth"></el-input>
+        </el-form-item>
+        <el-form-item label="提货点地址：" prop="address">
+          <el-cascader
+            class="dialogWidth"
+            clearable
+            v-model="ruleForm.address"
+            :options="addresData"
+            :props="{ value: 'label' }"
+            @change="handleChange"></el-cascader>
+        </el-form-item>
+        <el-form-item label="详细地址：" prop="detailedAddress">
+          <el-input v-model="ruleForm.detailedAddress" placeholder="请输入详细地址" class="dialogWidth"></el-input>
+        </el-form-item>
+        <el-form-item label="提货点营业：">
+          <el-time-picker
+            is-range
+            v-model="dayTime"
+            range-separator="至"
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+            placeholder="请选择时间营业时间"
+            value-format="HH:mm:ss"
+            @change="onchangeTime">
+          </el-time-picker>
+        </el-form-item>
+        <!-- prop="image"-->
+        <el-form-item label="提货点logo：">
+          <div class="upLoadPicBox" @click="modalPicTap('1')">
+            <div class="pictrue" v-if="ruleForm.image"><img :src="ruleForm.image"></div>
+            <div v-else class="upLoad">
+              <i class="el-icon-camera cameraIconfont" />
+            </div>
           </div>
-        </div>
-      </el-form-item>
-      <el-form-item label="经纬度：" prop="latitude">
-        <el-tooltip content="请点击查找位置选择位置">
-          <el-input v-model="ruleForm.latitude" placeholder="请查找位置" class="dialogWidth">
-            <el-button slot="append" @click="onSearch">查找位置</el-button>
-          </el-input>
-        </el-tooltip>
-      </el-form-item>
-    </el-form>
-    <div slot="footer" class="dialog-footer">
-      <el-button @click="cancel">取 消</el-button>
-      <el-button type="primary" @click="editForm('ruleForm')" v-if="id">修改</el-button>
-      <el-button type="primary" @click="submitForm('ruleForm')" v-else>提交</el-button>
-    </div>
-    <el-dialog v-model="modalMap" title='上传经纬度' :visible.sync="modalMap" append-to-body class="mapBox" width="500px">
-      <iframe
-        id="mapPage" width="100%" height="100%" frameborder=0
-        v-bind:src="keyUrl"
-      ></iframe>
-    </el-dialog>
+        </el-form-item>
+        <el-form-item label="经纬度：" prop="latitude">
+          <el-tooltip content="请点击查找位置选择位置">
+            <el-input v-model="ruleForm.latitude" placeholder="请查找位置" class="dialogWidth" readOnly>
+              <el-button slot="append" @click="onSearch">查找位置</el-button>
+            </el-input>
+          </el-tooltip>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancel">取 消</el-button>
+        <el-button type="primary" @click="editForm('ruleForm')" v-if="id">修改</el-button>
+        <el-button type="primary" @click="submitForm('ruleForm')" v-else>提交</el-button>
+      </div>
+      <el-dialog v-model="modalMap" title='上传经纬度' :visible.sync="modalMap" append-to-body class="mapBox" width="500px">
+        <iframe
+          id="mapPage" width="100%" height="100%" frameborder=0
+          v-bind:src="keyUrl"
+        ></iframe>
+      </el-dialog>
+    </template>
   </el-dialog>
 </template>
 
@@ -70,9 +72,10 @@
   import { cityListTree } from '@/api/logistics';
   import { configInfo } from '@/api/systemConfig';
   import city from '@/utils/city';
+  import Templates from "../../../appSetting/wxAccount/wxTemplate/index";
   export default {
     name: "index",
-    components: {},
+    components: {Templates},
     // props: {
     //   children: 'child',
     //   label: 'name',
@@ -96,6 +99,7 @@
         }
       };
       return {
+        loading: false,
         dialogFormVisible: false,
         modalMap: false,
         keyUrl: '',
@@ -107,7 +111,7 @@
           address: '',
           detailedAddress: '',
           dayTime: '',
-          image:'http://admin.crmeb.net/uploads/attach/2020/05/20200515/d8dd47952e638c58c25633fa1009db1c.png',
+          image:'',
           latitude: ''
         },
         id:0,
@@ -138,6 +142,7 @@
       }
     },
     created(){
+      this.ruleForm.image = '';
       this.addresData = city;
       this.getKey();
     },
@@ -156,18 +161,19 @@
       getInfo (id) {
         let that = this;
         that.id = id;
+        this.loading = true;
         storeInfoApi({id:id}).then(res=>{
           that.ruleForm = res;
           that.ruleForm.address = res.address.split(",");
           that.dayTime = res.dayTime.split("-")
-        }).catch(res=>{
-          this.$message.error(res.message);
+          this.loading = false;
         })
       },
       //取消
       cancel (){
         this.dialogFormVisible = false;
         this.clearFrom();
+        this.ruleForm.image = '';
         this.resetForm('ruleForm');
         this.id = 0
       },
@@ -187,8 +193,6 @@
               this.clearFrom();
               this.resetForm(name);
               this.id = 0;
-            }).catch(res => {
-              this.$message.error(res.message);
             })
           } else {
             return false;
@@ -207,8 +211,6 @@
               this.clearFrom();
               this.resetForm(name);
               this.id = 0;
-            }).catch(res => {
-              this.$message.error(res.message);
             })
           } else {
             return false;
@@ -233,9 +235,7 @@
       },
       //营业时间
       onchangeTime(e){
-        let start = e[0];
-        let end = e[1];
-        this.ruleForm.dayTime = start + '-' + end;
+        this.ruleForm.dayTime = e ? e.join(',','-') : '';
       },
       //上传图片
       modalPicTap (tit) {
@@ -259,8 +259,6 @@
         configInfo(_pram).then(async res => {
           let keys = res.tengxun_map_key;
           this.keyUrl = `https://apis.map.qq.com/tools/locpicker?type=1&key=${keys}&referer=myapp`;
-        }).catch(res => {
-          this.$Message.error(res.message);
         })
       },
     }

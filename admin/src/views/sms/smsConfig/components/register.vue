@@ -168,7 +168,6 @@ export default {
       this.$refs[name].validate((valid) => {
         if (valid) {
           registerApi(this.formInline).then(async res => {
-            console.log(res)
             this.$message.success('注册成功')
             setTimeout(() => {
               this.changelogo()

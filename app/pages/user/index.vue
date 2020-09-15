@@ -190,7 +190,8 @@
 				isShowAuth: false, //是否隐藏授权
 				orderStatusNum: {},
 				userInfo: {},
-				MyMenus: []
+				MyMenus: [],
+				wechatUrl: []
 			}
 		},
 		onLoad() {
@@ -220,9 +221,10 @@
 			// 	}).then(res=>{})
 			// },
 			kefuClick(){
-				return this.$util.Tips({
-					title: '客服功能正在开发中......'
-				});
+				location.href = this.wechatUrl[0].wap_url
+				// return this.$util.Tips({
+				// 	title: '客服功能正在开发中......'
+				// });
 			},
 			getOrderData(){
 				let that = this;
@@ -297,6 +299,14 @@
 				if (this.MyMenus.length) return;
 				getMenuList().then(res => {
 					that.$set(that, 'MyMenus', res.data.routine_my_menus);
+					// location.pathname.indexOf('auth') !== -1
+					// console.log( res.data.routine_my_menus.filter( item => {
+					// 	if( item.url.indexOf('service') !== -1 ) return item.wap_url
+					// }))
+					this.wechatUrl = res.data.routine_my_menus.filter((item) => {
+						return item.url.indexOf('service') !== -1
+					})
+					console.log(this.wechatUrl)
 					this.imgUrls = res.data.routine_my_banner
 				});
 			},

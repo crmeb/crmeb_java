@@ -6,14 +6,12 @@ import com.common.PageParamRequest;
 import com.constants.Constants;
 import com.constants.SmsConstants;
 import com.exception.CrmebException;
-import com.exception.ExceptionCodeEnum;
 import com.utils.CrmebUtil;
 import com.utils.RedisUtil;
 import com.utils.RestTemplateUtil;
 import com.zbkj.crmeb.sms.model.SmsRecord;
 import com.zbkj.crmeb.sms.request.RegisterRequest;
 import com.zbkj.crmeb.sms.request.SendSmsVo;
-import com.zbkj.crmeb.sms.request.SmsConfigRequest;
 import com.zbkj.crmeb.sms.request.SmsLoginRequest;
 import com.zbkj.crmeb.sms.service.SmsRecordService;
 import com.zbkj.crmeb.sms.service.SmsService;
@@ -21,7 +19,6 @@ import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.user.service.UserService;
 import lombok.Data;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -341,11 +338,12 @@ public class SmsServiceImpl implements SmsService {
      * @return JSONObject
      */
     @Override
-    public JSONObject tempList(String title, Integer status, PageParamRequest pageParamRequest) {
+    public JSONObject tempList(String title, Integer status, String type, PageParamRequest pageParamRequest) {
         init();
         Map<String, Object> map = mergeToken(CrmebUtil.objectToMap(pageParamRequest));
         map.put("title", title);
         map.put("status", status);
+        map.put("temp_type", type);
         return post(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_TEMP_LIST_URI, map);
     }
 
@@ -363,12 +361,19 @@ public class SmsServiceImpl implements SmsService {
         //发送手机验证码， 记录到redis  sms_validate_code_手机号
         switch (tag){
             case SmsConstants.SMS_CONFIG_TYPE_VERIFICATION_CODE : // 验证码 特殊处理 code
+                //获取短信验证码过期时间
+                String codeExpireStr = systemConfigService.getValueByKey(Constants.CONFIG_KEY_SMS_CODE_EXPIRE);
+                if(StringUtils.isBlank(codeExpireStr) || Integer.parseInt(codeExpireStr) == 0){
+                    codeExpireStr = Constants.NUM_FIVE + "";
+                }
                 Integer code = CrmebUtil.randomCount(111111, 999999);
                 HashMap<String, Object> justPram = new HashMap<>();
                 justPram.put("code", code);
+                justPram.put("time", codeExpireStr);
                 push(phone,SmsConstants.SMS_CONFIG_VERIFICATION_CODE,
                         SmsConstants.SMS_CONFIG_VERIFICATION_CODE_TEMP_ID,false,justPram);
-                redisUtil.set(userService.getValidateCodeRedisKey(phone), code, 5L, TimeUnit.MINUTES);//5分钟过期
+
+                redisUtil.set(userService.getValidateCodeRedisKey(phone), code, Long.valueOf(codeExpireStr), TimeUnit.MINUTES);//5分钟过期
 
                 break;
             case SmsConstants.SMS_CONFIG_TYPE_LOWER_ORDER_SWITCH : // 支付成功短信提醒 pay_price order_id
@@ -448,7 +453,7 @@ public class SmsServiceImpl implements SmsService {
         if(resultCode == Constants.HTTPSTATUS_CODE_SUCCESS){
             try{
                 // 注意这里的状态仅仅是调用是否成功的状态 需要等待5分钟一周另外一个任务去查询发送状态后再更新status数据
-                SmsRecord smsRecord = new SmsRecord(0,sendSmsVo.getUid(), sendSmsVo.getMobile(),sendSmsVo.getContent(),
+                SmsRecord smsRecord = new SmsRecord(sendSmsVo.getUid(), sendSmsVo.getMobile(),sendSmsVo.getContent(),
                         "", sendSmsVo.getTemplate().toString(),
                         resultCode,Integer.parseInt(smsRecodeId), message);
                 smsRecordService.save(smsRecord);
@@ -496,42 +501,6 @@ public class SmsServiceImpl implements SmsService {
     }
 
     /**
-     * 短信发送开关配置
-     * @param request 开关配置项
-     * @return 配置结果
-     */
-    @Override
-    public boolean configSave(SmsConfigRequest request) {
-        systemConfigService.updateOrSaveValueByName(SmsConstants.SMS_CONFIG_LOWER_ORDER_SWITCH,request.getLowerOrderSwitch());
-        systemConfigService.updateOrSaveValueByName(SmsConstants.SMS_CONFIG_DELIVER_GOODS_SWITCH,request.getDeliverGoodsSwitch());
-        systemConfigService.updateOrSaveValueByName(SmsConstants.SMS_CONFIG_CONFIRM_TAKE_OVER_SWITCH,request.getConfirmTakeOverSwitch());
-        systemConfigService.updateOrSaveValueByName(SmsConstants.SMS_CONFIG_ADMIN_LOWER_ORDER_SWITCH,request.getAdminLowerOrderSwitch());
-        systemConfigService.updateOrSaveValueByName(SmsConstants.SMS_CONFIG_ADMIN_PAY_SUCCESS_SWITCH,request.getAdminPaySuccessSwitch());
-        systemConfigService.updateOrSaveValueByName(SmsConstants.SMS_CONFIG_ADMIN_REFUND_SWITCH,request.getAdminRefundSwitch());
-        systemConfigService.updateOrSaveValueByName(SmsConstants.SMS_CONFIG_ADMIN_CONFIRM_TAKE_OVER_SWITCH,request.getAdminConfirmTakeOverSwitch());
-        systemConfigService.updateOrSaveValueByName(SmsConstants.SMS_CONFIG_PRICE_REVISION_SWITCH,request.getPriceRevisionSwitch());
-        return true;
-    }
-
-    /**
-     * 获取短信配置
-     * @return
-     */
-    @Override
-    public SmsConfigRequest configList() {
-        SmsConfigRequest config = new SmsConfigRequest();
-        config.setLowerOrderSwitch(systemConfigService.getValueByKey(SmsConstants.SMS_CONFIG_LOWER_ORDER_SWITCH));
-        config.setDeliverGoodsSwitch(systemConfigService.getValueByKey(SmsConstants.SMS_CONFIG_DELIVER_GOODS_SWITCH));
-        config.setConfirmTakeOverSwitch(systemConfigService.getValueByKey(SmsConstants.SMS_CONFIG_CONFIRM_TAKE_OVER_SWITCH));
-        config.setAdminLowerOrderSwitch(systemConfigService.getValueByKey(SmsConstants.SMS_CONFIG_ADMIN_LOWER_ORDER_SWITCH));
-        config.setAdminPaySuccessSwitch(systemConfigService.getValueByKey(SmsConstants.SMS_CONFIG_ADMIN_PAY_SUCCESS_SWITCH));
-        config.setAdminRefundSwitch(systemConfigService.getValueByKey(SmsConstants.SMS_CONFIG_ADMIN_REFUND_SWITCH));
-        config.setAdminConfirmTakeOverSwitch(systemConfigService.getValueByKey(SmsConstants.SMS_CONFIG_ADMIN_CONFIRM_TAKE_OVER_SWITCH));
-        config.setPriceRevisionSwitch(systemConfigService.getValueByKey(SmsConstants.SMS_CONFIG_PRICE_REVISION_SWITCH));
-        return config;
-    }
-
-    /**
      * 添加待发送消息到redis队列
      * @param phone
      */
@@ -549,6 +518,7 @@ public class SmsServiceImpl implements SmsService {
         mParam.put("mobile", phone);
         mParam.put("template", msgTempId);
         mParam.put("param", JSONObject.toJSONString(mapPram));
+
         if(!valid){
             redisUtil.lPush(SmsConstants.SMS_SEND_KEY, JSONObject.toJSONString(mParam));
             return;
@@ -566,7 +536,7 @@ public class SmsServiceImpl implements SmsService {
     @Override
     public void pushByAsyncStatus(String recordIds) {
         if(null == recordIds) return;
-        redisUtil.lPush(SmsConstants.SMS_SEND_RESULT_KEY, recordIds);
+        redisUtil.lPush(SmsConstants.SMS_SEND_RESULT_KEY, JSONObject.toJSONString(recordIds));
     }
 
     /**
@@ -714,4 +684,3 @@ public class SmsServiceImpl implements SmsService {
         }
     }
 }
-

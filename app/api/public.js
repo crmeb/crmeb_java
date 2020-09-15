@@ -24,7 +24,7 @@ export function getWechatConfig() {
 export function wechatAuth(code, spread, login_type) {
   return request.get(
     "wechat/authorize/login",
-    { code, spread, login_type },
+    { code, spread_spid:spread, login_type },
     { noAuth: true }
   );
 }
@@ -41,7 +41,7 @@ export function getLogo()
 
 /**
  * 小程序用户登录
- * @param data object 小程序用户登陆信息
+ * @param data object 小程序用户登录信息
  */
 export function login(code,data) {
   return request.post("wechat/authorize/program/login?code="+code, data, { noAuth : true });

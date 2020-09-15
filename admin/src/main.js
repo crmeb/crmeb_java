@@ -9,8 +9,12 @@ import './styles/element-variables.scss'
 
 import '@/styles/index.scss' // global css
 
+import "@/assets/iconfont/iconfont";
+import "@/assets/iconfont/iconfont.css";
+
 import VueAwesomeSwiper from 'vue-awesome-swiper'
 import 'swiper/dist/css/swiper.css'
+import "vue-ydui/dist/ydui.base.css";
 // 懒加载
 import VueLazyload from 'vue-lazyload'
 
@@ -27,6 +31,9 @@ import UploadFile from '@/components/Upload/uploadFile.vue'
 import ueditorFrom from '@/components/ueditorFrom'
 import VueUeditorWrap from 'vue-ueditor-wrap'
 import iconFrom from './components/iconFrom'
+import dialog from "@/libs/dialog";
+import scroll from "@/libs/loading";
+import schema from "async-validator";
 // 切勿更改 此组件为表单生成中使用的图片上传组件
 import SelfUpload from '@/components/uploadPicture/forGenrator/index.vue'
 import modalAttr from '@/libs/modal-attr'
@@ -38,7 +45,8 @@ import './icons' // icon
 import './permission' // permission control
 import './utils/error-log' // error integralLog
 import * as filters from './filters' // global filters
-
+import { parseQuery } from "@/utils";
+import * as Auth from '@/libs/wechat';
 Vue.use(VueLazyload, {
   preLoad: 1.3,
   error: require('./assets/imgs/no.png'),
@@ -58,10 +66,37 @@ Vue.component('UploadIndex', UploadIndex)
 Vue.component('SelfUpload', SelfUpload)
 Vue.component('iconFrom', iconFrom)
 Vue.component('ueditorFrom', ueditorFrom)
-Vue.component('UploadFile', UploadFile)
+Vue.component('uploadFile', UploadFile)
 Vue.prototype.$modalSure = modalSure
 Vue.prototype.$modalAttr = modalAttr
 Vue.prototype.$modalIcon = modalIcon
+Vue.prototype.$dialog = dialog
+Vue.prototype.$scroll = scroll;
+Vue.prototype.$wechat = Auth;
+Vue.prototype.$validator = function(rule) {
+  return new schema(rule);
+};
+
+let cookieName = "VCONSOLE";
+let query = parseQuery();
+let urlSpread = query["spread"];
+let vconsole = query[cookieName.toLowerCase()];
+let md5Crmeb = "b14d1e9baeced9bb7525ab19ee35f2d2"; //CRMEB MD5 加密开启vconsole模式
+let md5UnCrmeb = "3dca2162c4e101b7656793a1af20295c"; //UN_CREMB MD5 加密关闭vconsole模式
+
+
+if (vconsole !== undefined) {
+  if (vconsole === md5UnCrmeb && Cookies.has(cookieName))
+    Cookies.remove(cookieName);
+} else vconsole = Cookies.get(cookieName);
+
+if (vconsole !== undefined && vconsole === md5Crmeb) {
+  Cookies.set(cookieName, md5Crmeb, 3600);
+  const module = () => import("vconsole");
+  module().then(Module => {
+    new Module.default();
+  });
+}
 // Vue.prototype.$modalCoupon = modalCoupon
 /**
  * If you don't want to use mock-server

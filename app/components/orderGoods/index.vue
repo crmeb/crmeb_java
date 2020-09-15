@@ -96,4 +96,7 @@
 		line-height: 86rpx;
 		box-sizing: border-box;
 	}
+	.pictrue image{
+		background: #f4f4f4;
+	}
 </style>

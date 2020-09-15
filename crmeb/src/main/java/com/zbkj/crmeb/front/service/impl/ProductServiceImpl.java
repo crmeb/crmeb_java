@@ -152,16 +152,15 @@ public class ProductServiceImpl implements ProductService {
 
             // 设置点赞和收藏
             User user = userService.getInfo();
-            if(null != user){
-                if(null != user.getUid()){
-                    storeInfo.setUserLike(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),id,true).size() > 0);
-                    storeInfo.setUserCollect(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),id,false).size() > 0);
-                    user = userService.updateForPromoter(user);
-                    productDetailResponse.setPriceName(getPacketPriceRange(productResponse,user.getIsPromoter()));
-                }
+            if(null != user && null != user.getUid()){
+                storeInfo.setUserLike(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),id,true).size() > 0);
+                storeInfo.setUserCollect(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),id,false).size() > 0);
+//                user = userService.updateForPromoter(user);
+                productDetailResponse.setPriceName(getPacketPriceRange(productResponse,user.getIsPromoter()));
+            }else{
+                storeInfo.setUserLike(false);
+                storeInfo.setUserCollect(false);
             }
-        storeInfo.setUserLike(false);
-        storeInfo.setUserCollect(false);
         productDetailResponse.setStoreInfo(storeInfo);
 
             // 根据制式设置attr属性

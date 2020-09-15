@@ -126,7 +126,6 @@
     },
     methods: {
       remoteMethod(query) {
-        console.log(query)
         if (query !== '') {
           this.loading = true;
           setTimeout(() => {

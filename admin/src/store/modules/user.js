@@ -3,6 +3,7 @@ import { getToken, setToken, removeToken } from '@/utils/auth'
 import router, { resetRouter } from '@/router'
 import { isLoginApi } from '@/api/sms'
 import Cookies from 'js-cookie'
+import { oAuth, getQueryString } from "@/libs/wechat";
 
 const state = {
   token: getToken(),
@@ -38,7 +39,7 @@ const mutations = {
 const actions = {
   // user login
   login({ commit }, userInfo) {
-    const { account, pwd,  key, code } = userInfo
+    const { account, pwd,  key, code, wxCode } = userInfo
     return new Promise((resolve, reject) => {
       login( userInfo ).then(data => {
         commit('SET_TOKEN', data.token)
@@ -100,7 +101,10 @@ const actions = {
         commit('SET_ROLES', [])
         removeToken()
         resetRouter()
-
+        localStorage.clear();
+        Cookies.remove('storeStaffList')
+        Cookies.remove('JavaInfo')
+        sessionStorage.removeItem('token')
         // reset visited views and cached views
         // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2485
         dispatch('tagsView/delAllViews', null, { root: true })
@@ -118,6 +122,15 @@ const actions = {
       commit('SET_TOKEN', '')
       commit('SET_ROLES', [])
       removeToken()
+      resolve()
+    })
+  },
+  // 设置token
+  setToken({commit},state) {
+    return new Promise(resolve => {
+      commit('SET_TOKEN', state.token)
+      Cookies.set('JavaInfo', JSON.stringify(state))
+      setToken(data.token)
       resolve()
     })
   },

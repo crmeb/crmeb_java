@@ -1,5 +1,7 @@
+import { storeStaffListApi } from '@/api/storePoint'
+import Cookies from 'js-cookie'
+
 export function modalSure(title) {
-  console.log(title)
   return new Promise((resolve, reject) => {
     this.$confirm(`确定${title || '永久删除该文件'}?`, '提示', {
       confirmButtonText: '确定',
@@ -17,7 +19,6 @@ export function modalSure(title) {
   })
 }
 
-
 /**
  * @description 短信是否登录
  */
@@ -27,6 +28,17 @@ export function isLogin() {
       resolve(res)
     }).catch(res => {
       reject(res)
+    })
+  })
+}
+
+/**
+ * @description 核销员列表
+ */
+export function getStoreStaff() {
+  return new Promise((resolve, reject) => {
+    storeStaffListApi({page: 1, limit: 9999}).then(async res => {
+      localStorage.setItem('storeStaffList', res.list ? JSON.stringify(res.list) : [])
     })
   })
 }

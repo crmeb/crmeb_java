@@ -126,10 +126,8 @@ export default {
       this.$emit('hideEditDialog')
     },
     initEditData() {
-      console.log(this.editData)
       this.addTreeListLabelForCasCard(this.allTreeList, 'child')
       this.parentOptions = this.allTreeList
-        console.log(this.parentOptions)
       if (this.isCreate !== 1) {
         const { id } = this.prent
         this.editPram.pid = id
@@ -143,7 +141,6 @@ export default {
         this.editPram.type = type
         this.editPram.url = url
         this.editPram.id = id
-        console.log(this.editPram.id)
       }
     },
     addTreeListLabelForCasCard(arr, child) {

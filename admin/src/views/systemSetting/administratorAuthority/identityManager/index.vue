@@ -120,9 +120,7 @@ export default {
       })
     },
     handlerOpenEdit(isCreate, editDate) {
-      if (isCreate === 1) { editDate.rules = editDate.rules.split(',') }
-
-      this.editDialogConfig.editData = editDate
+      isCreate === 1 ? this.editDialogConfig.editData = editDate : this.editDialogConfig.editData = {}
       this.editDialogConfig.isCreate = isCreate
       this.editDialogConfig.visible = true
     },

@@ -14,4 +14,7 @@ public interface QrCodeService {
     Map<String, Object> get(JSONObject data) throws IOException;
 
     Map<String, Object> base64(String url);
+
+    Map<String, Object> base64String(String text,int width, int height);
+
 }

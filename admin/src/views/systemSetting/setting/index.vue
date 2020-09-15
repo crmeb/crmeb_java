@@ -9,22 +9,22 @@
           :name="tab.extra"
         >
           <!--      文件上传特殊处理-->
-          <template v-if="activeNamel1 == 4">
-            <el-radio-group v-model="activeNamel2" class="mb10">
-              <el-radio v-for="tabItem,itemIndex in tab.child"
-                        :key="itemIndex"
-                        :label="tabItem.name" @change="()=>handleItemTabClick(tabItem.extra)">{{tabItem.name}}</el-radio>
-            </el-radio-group>
-            <parser
-              v-if="formConfChild.render"
-              :is-edit="formConfChild.isEdit"
-              :form-conf="formConfChild.content"
-              :form-edit-data="currentEditData"
-              @submit="handlerSubmit"
-            />
-          </template>
+<!--          <template v-if="activeNamel1 == 4">-->
+<!--            <el-radio-group v-model="activeNamel2" class="mb10">-->
+<!--              <el-radio v-for="tabItem,itemIndex in tab.child"-->
+<!--                        :key="itemIndex"-->
+<!--                        :label="tabItem.name" @change="()=>handleItemTabClick(tabItem.extra)">{{tabItem.name}}</el-radio>-->
+<!--            </el-radio-group>-->
+<!--            <parser-->
+<!--              v-if="formConfChild.render"-->
+<!--              :is-edit="formConfChild.isEdit"-->
+<!--              :form-conf="formConfChild.content"-->
+<!--              :form-edit-data="currentEditData"-->
+<!--              @submit="handlerSubmit"-->
+<!--            />-->
+<!--          </template>-->
           <!--        正常配置渲染-->
-          <template v-else>
+          <template>
             <el-tabs v-if="tab.child.length > 0" v-model="activeNamel2"
                      type="border-card" @tab-click="handleItemTabClick">
               <el-tab-pane
@@ -92,7 +92,6 @@ export default {
   },
   methods: {
     handleTabClick(tab, event) {
-      console.log(tab)
       if (tab.name) {
         this.handlerGetLevel1FormConfig(tab.name)
       } else if (tab.$children.length > 0 ) { // 初次加载第二层的第一个Tab数据
@@ -104,7 +103,6 @@ export default {
         let _selected = tab.$children[0].panes[0]
         // 设置特殊处理的文件长传表单默认选中第一个tab
         this.activeNamel2 = _selected.name != 72 ? _selected.name : _selected.label
-        console.log(this.activeNamel2)
         if(this.activeNamel2 == 108){
           switch (this.currentSelectedUploadFlag) {
             case 1:
@@ -229,7 +227,6 @@ export default {
     handleAddArrt(treeData) {
       // let _result = this.addTreeListLabel(treeData)
       const _result = selfUtil.addTreeListLabel(treeData)
-      console.log(_result)
       return _result
     },
     buildFormPram(formValue) {

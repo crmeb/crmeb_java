@@ -344,7 +344,6 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                 for(Map.Entry<String,String> vo: attrValuesRequest.getAttrValue().entrySet()){
                     skuList.add(vo.getValue());
                     spav.setSuk(String.join(",",skuList));
-//                    HashMap<String, Object> attrValues = setAttrValueByRequest(storeProductRequest);
                 }
                 spav.setImage(systemAttachmentService.clearPrefix(spav.getImage()));
                 spav.setAttrValue(JSON.toJSONString(attrValuesRequest.getAttrValue()));
@@ -1156,15 +1155,15 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         String rightEndUrl = "&itemid=";
         switch (tag){ // 导入平台1=淘宝，2=京东，3=苏宁，4=拼多多， 5=天猫
             case 1:
-                baseUrl = systemConfigService.getValueByKey("inportProductTB");
+                baseUrl = systemConfigService.getValueByKey("importProductTB");
                 rightEndUrl += UrlUtil.getParamsByKey(url, "id");
                 break;
             case 2:
-                baseUrl = systemConfigService.getValueByKey("inportProductJD");
+                baseUrl = systemConfigService.getValueByKey("importProductJD");
                 rightEndUrl += url.substring(url.lastIndexOf("/")+1).replace(".html","");
                 break;
             case 3:
-                baseUrl = systemConfigService.getValueByKey("inportProductSN");
+                baseUrl = systemConfigService.getValueByKey("importProductSN");
                 int start = url.indexOf(".com/") + 5;
                 int end = url.indexOf(".html");
                 String sp = url.substring(start,end);
@@ -1173,11 +1172,11 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                 break;
             case 4:
                 rightEndUrl += UrlUtil.getParamsByKey(url, "goods_id");
-                baseUrl = systemConfigService.getValueByKey("inportProductPDD");
+                baseUrl = systemConfigService.getValueByKey("importProductPDD");
                 break;
             case 5:
                 rightEndUrl += UrlUtil.getParamsByKey(url, "id");
-                baseUrl = systemConfigService.getValueByKey("inportProductTM");
+                baseUrl = systemConfigService.getValueByKey("importProductTM");
                 break;
         }
         String token = systemConfigService.getValueByKey("importProductToken");
@@ -1260,21 +1259,28 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
      * @param storeProduct 当前操作的产品
      */
     private void calcPriceForAttrValues(StoreProductRequest storeProductRequest, StoreProduct storeProduct) {
-        // 设置商品成本价和市场价，成本价=sku配置的最低价，商品价格=sku配置的最高价格
+        // 设置商品成本价和市场价，2020-8-28日更 商品本身价钱取sku列表中最低的价格
 //        BigDecimal costPrice = storeProductRequest.getAttrValue()
 //                    .stream().map(e->e.getCost()).reduce(BigDecimal.ZERO,BigDecimal::add);
-        int costPrice = storeProductRequest.getAttrValue()
-                .stream().mapToInt(e->e.getCost().intValue()).max().getAsInt();
-//        BigDecimal sellPrice = storeProductRequest.getAttrValue()
-//                    .stream().map(e->e.getOtPrice()).reduce(BigDecimal.ZERO,BigDecimal::add);
-        int sellPrice = storeProductRequest.getAttrValue()
-                .stream().mapToInt(e->e.getOtPrice().intValue()).min().getAsInt();
+        List<StoreProductAttrValueRequest> attrValuesSortAsc = storeProductRequest.getAttrValue().stream()
+                .sorted(Comparator.comparing(StoreProductAttrValueRequest::getPrice))
+                .collect(Collectors.toList());
 
-        int stock = storeProductRequest.getAttrValue()
-                    .stream().mapToInt(e->e.getStock()).sum();
-        storeProduct.setPrice(BigDecimal.valueOf(costPrice));
-        storeProduct.setOtPrice(BigDecimal.valueOf(sellPrice));
-        storeProduct.setStock(stock);
+//        int costPrice = storeProductRequest.getAttrValue()
+//                .stream().mapToInt(e->e.getCost().intValue()).min().getAsInt();
+////        BigDecimal sellPrice = storeProductRequest.getAttrValue()
+////                    .stream().map(e->e.getOtPrice()).reduce(BigDecimal.ZERO,BigDecimal::add);
+//        int sellPrice = storeProductRequest.getAttrValue()
+//                .stream().mapToInt(e->e.getOtPrice().intValue()).min().getAsInt();
+
+//        int stock = storeProductRequest.getAttrValue()
+//                    .stream().mapToInt(e->e.getStock()).sum();
+        if(attrValuesSortAsc.size() == 0){
+            return;
+        }
+        storeProduct.setPrice(attrValuesSortAsc.get(0).getPrice());
+        storeProduct.setOtPrice(attrValuesSortAsc.get(0).getOtPrice());
+        storeProduct.setStock(attrValuesSortAsc.get(0).getStock());
     }
 
 
