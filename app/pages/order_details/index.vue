@@ -45,14 +45,16 @@
 					<view class="title">核销信息</view>
 					<view class="grayBg">
 						<view class="pictrue">
-							<image :src="orderInfo.code"></image>
+							<!-- <div class="qrcode" ref="qrcode"></div> -->
+							<!-- <canvas canvas-id="qrcode" :style="{width: `${qrcodeSize}100%`, height: `${qrcodeSize}100%`}"/> -->
+							<image :src="codeImg"></image>
 						</view>
 					</view>
 					<view class="gear">
 						<image src="../../static/images/writeOff.jpg"></image>
 					</view>
 					<view class="num">{{orderInfo.verifyCode}}</view>
-					<view class="rules">
+					<view class="rules" v-if='orderInfo.systemStore'>
 						<view class="item">
 							<view class="rulesTitle acea-row row-middle">
 								<text class="iconfont icon-shijian"></text>核销时间
@@ -589,7 +591,8 @@
 		orderAgain,
 		orderTake,
 		orderDel,
-		orderCancel
+		orderCancel,
+		qrcodeApi
 	} from '@/api/order.js';
 	import {
 		openOrderRefundSubscribe
@@ -609,6 +612,7 @@
 	} from "vuex";
 	// #ifdef MP
 	import authorize from '@/components/Authorize';
+	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
 	// #endif
 	export default {
 		components: {
@@ -621,6 +625,8 @@
 		},
 		data() {
 			return {
+				codeImg: '',
+				qrcodeSize: 100,
 				order_id: '',
 				evaluate: 0,
 				cartInfo: [], //购物车产品
@@ -655,7 +661,7 @@
 				uniId:''
 			};
 		},
-		computed: mapGetters(['isLogin']),
+		computed: mapGetters(['isLogin', 'chatUrl']),
 		onLoad: function(options) {
 			if (!options.order_id && !options.uniId) return this.$util.Tips({title:'缺少参数'},{tab:3,url:1});
 			   this.$set(this, 'order_id', options.order_id);
@@ -691,9 +697,7 @@
 		},
 		methods: {
 			kefuClick(){
-				return this.$util.Tips({
-					title: '客服功能正在开发中......'
-				});
+               location.href = this.chatUrl;
 			},
 			goGoodCall() {
 				let self = this
@@ -829,11 +833,21 @@
 						that.isGoodsReturn = true;
 					};
 					that.getOrderStatus();
+					that.markCode(res.data.verifyCode);
 				}).catch(err => {
 					uni.hideLoading();
 					that.$util.Tips({
 						title: err
 					}, '/pages/users/order_list/index');
+				});
+			},
+			/**
+			 * 
+			 * 生成二维码
+			 */
+			markCode(text) {
+				qrcodeApi({ height: '145', text: text, width: '145' }).then(res => {
+					this.codeImg = res.data.code
 				});
 			},
 			/**
@@ -899,7 +913,7 @@
 				let that = this;
 				orderAgain(that.orderInfo.unique).then(res => {
 					return uni.navigateTo({
-						url: '/pages/users/order_confirm/index?cartId=' + res.data.cateId + '&again=true&new=true'
+						url: '/pages/users/order_confirm/index?cartId=' + res.data.cateId + '&again=true&new=true&addAgain=true'
 					});
 				});
 			},

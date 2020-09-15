@@ -216,6 +216,8 @@
 
 <script>
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
+	// import yzf_chat from '@/plugin/chat/yzf_chat.js'
+	import store from '@/store';
 	import {
 		HTTP_REQUEST_URL
 	 } from '@/config/app.js';
@@ -303,7 +305,7 @@
 				sharePacket: {
 					isState: true, //默认不显示
 				}, //分销商详细
-				uid: 0, //用户uid
+				// uid: 0, //用户uid
 				circular: false,
 				autoplay: false,
 				interval: 3000,
@@ -346,8 +348,9 @@
 				imgTop:''
 			};
 		},
-		computed: mapGetters(['isLogin']),
+		computed: mapGetters(['isLogin', 'uid', 'chatUrl']),
 		onLoad(options) {
+			// this.getChat(this.uid || '');
 			let that = this
 			var pages = getCurrentPages();
 			if (pages.length <= 1) {
@@ -384,7 +387,7 @@
 			} else {
 				this.id = options.id
 			}
-			//记录推广人uid
+			//记录推广人
 			if (options.spid) app.globalData.spid = options.spid;
 			// #endif
 			this.getGoodsDetails();
@@ -414,10 +417,32 @@
 		},
 		// #endif
 		methods: {
+			getChat(uid){
+				console.log(this.uid)
+				window.yzf && window.yzf.init({
+				      sign: '37ef9b97872756ce2a1596ec4fe9b66b0b4cbeec7b36239a65924fa6cbd5c29ac6b013c274511b2eee929e72312baeeeb97aae86',
+				      token: '', //非必填
+				      userAvator:'', //非必填，用户头像
+				      userNick:'', //非必填，用户昵称
+				      uid: uid,   //用户唯一标识，如果没有则不填写，默认为空,（字符串格式）
+				      title: '', //非必填，如果未填写，默认获取配置标题
+				      isRMB: '', //商品是否显示人民币￥,默认显示，false不显示
+				      data: {
+				        c1: '',
+				        c2: '',
+				        c3: '',
+				        c4: '',
+				        c5: ''
+				      },
+				      selector: 'chat-btn',
+				      callback: function(type, data){}
+				    })
+			},
 			kefuClick(){
-				return this.$util.Tips({
-					title: '客服功能正在开发中......'
-				});
+				location.href = this.chatUrl;
+				// return this.$util.Tips({
+				// 	title: '客服功能正在开发中......'
+				// });
 			},
 			closeChange: function() {
 				this.$set(this.sharePacket, 'isState', true);
@@ -483,6 +508,12 @@
 			 *去商品详情页 
 			 */
 			goDetail(item) {
+				if(!item.activity){
+					uni.redirectTo({
+						url: '/pages/goods_details/index?id=' + item.id
+					})
+					return
+				}
 				if (item.activity.length == 0) {
 					uni.redirectTo({
 						url: '/pages/goods_details/index?id=' + item.id
@@ -526,7 +557,8 @@
 				let that = this;
 				getUserInfo().then(res => {
 					that.$set(that.sharePacket, 'isState', that.sharePacket.priceName != 0 ? false : true);
-					that.$set(that, 'uid', res.data.uid);
+					store.commit('SETUID', res.data.uid);
+					// that.$set(that, 'uid', res.data.uid);
 					// #ifdef H5
 					that.make(res.data.uid);
 					// #endif
@@ -636,6 +668,7 @@
 					that.$set(that.attr, 'productAttr', res.data.productAttr);
 					that.$set(that, 'productValue', res.data.productValue);
 					that.$set(that.sharePacket, 'priceName', res.data.priceName);
+					console.log(that.sharePacket)
 					that.$set(that, 'systemStore', res.data.system_store);
 					that.$set(that, 'good_list', goodArray);
 					that.$set(that, 'activity', res.data.activity ? res.data.activity : []);
@@ -947,7 +980,7 @@
 						that.attr.cartAttr = false;
 						if (news) {
 							uni.navigateTo({
-								url: '/pages/users/order_confirm/index?new=true&cartId=' + res.data.cartId
+								url: '/pages/users/order_confirm/index?new=true&cartId=' + res.data.cartId 
 							});
 						} else {
 							that.$util.Tips({
@@ -1209,6 +1242,9 @@
 </script>
 
 <style scoped lang="scss">
+	.chat-btn{
+		background-color: antiquewhite !important;
+	}
 	.activity_pin {
 		width: auto;
 		height: 44rpx;

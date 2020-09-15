@@ -26,9 +26,10 @@
           <router-link to="/">
             <el-dropdown-item>控制台</el-dropdown-item>
           </router-link>
-          <router-link :to=" { path: '/maintain/user' } ">
+          <router-link :to=" { path: '/maintain/user' } " v-if="!isPhone">
             <el-dropdown-item>个人中心</el-dropdown-item>
           </router-link>
+          <el-dropdown-item @click.native="onUnbundling">解绑账号</el-dropdown-item>
           <!--          <a target="_blank" href="https://github.com/PanJiaChen/vue-element-admin/">-->
           <!--            <el-dropdown-item>Github</el-dropdown-item>-->
           <!--          </a>-->
@@ -51,6 +52,7 @@ import Hamburger from '@/components/Hamburger'
 import ErrorLog from '@/components/ErrorLog'
 import Screenfull from '@/components/Screenfull'
 import Search from '@/components/HeaderSearch'
+import { unbindApi } from '@/api/wxApi'
 
 export default {
   components: {
@@ -60,6 +62,11 @@ export default {
     Screenfull,
     Search
   },
+  data() {
+    return {
+      isPhone: this.$wechat.isPhone()
+    }
+  },
   computed: {
     ...mapGetters([
       'sidebar',
@@ -68,6 +75,13 @@ export default {
     ])
   },
   methods: {
+    onUnbundling() {
+      this.$modalSure('解绑微信吗').then(() => {
+        unbindApi().then(() => {
+          this.$message.success('解绑成功')
+        })
+      })
+    },
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
     },

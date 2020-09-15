@@ -40,6 +40,8 @@ import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginGetOpenIdResponse;
 import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginUserInfoResponse;
 import com.zbkj.crmeb.wechat.response.WeChatProgramAuthorizeLoginGetOpenIdResponse;
 import com.zbkj.crmeb.wechat.service.WeChatService;
+import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
+import com.zbkj.crmeb.wechat.vo.WechatSendMessageForTopped;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,6 +99,9 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     @Autowired
     private WeChatService weChatService;
+
+    @Autowired
+    private WechatSendMessageForMinService wechatSendMessageForMinService;
 
 
 
@@ -425,8 +430,9 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             request.setGivePrice(systemGroupData.getGiveMoney());
 
         }
+        User currentUser = userService.getInfoException();
         //生成系统订单
-        request.setUserId(userService.getUserIdException());
+        request.setUserId(currentUser.getUid());
 
         UserRecharge userRecharge = userRechargeService.create(request);
 
@@ -436,6 +442,13 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             if(null == responseVo){
                 throw new CrmebException("下单失败！");
             }
+            // 小程序订阅通知 充值成功通知
+            WechatSendMessageForTopped topped = new WechatSendMessageForTopped(
+                    userRecharge.getOrderId(),userRecharge.getOrderId(),userRecharge.getPrice()+"",
+                    currentUser.getNowMoney()+"",userRecharge.getCreateTime()+"", userRecharge.getGivePrice()+"",
+                    "暂无",userRecharge.getPrice()+"","CRMEB","微信"
+            );
+            wechatSendMessageForMinService.sendToppedMessage(topped, currentUser.getUid());
 
             return weChatService.response(responseVo);
         }catch (Exception e){

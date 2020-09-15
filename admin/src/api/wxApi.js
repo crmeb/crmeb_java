@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+
 // TODO 微信沟通难度大暂放 呵呵
 
 export function menuCreate(data) {
@@ -57,7 +58,6 @@ export function wechatTemplateSaveApi(data) {
  * @param pram
  */
 export function wechatTemplateUpdateApi(id, data) {
-  console.log(id)
   return request({
     url: `/admin/wechat/template/update/${id}`,
     method: 'post',
@@ -193,5 +193,160 @@ export function wechatMenuAddApi(data) {
     url: `/admin/wechat/menu/public/create`,
     method: 'post',
     data
+  })
+}
+
+/**
+ * 小程序 公共模板列表
+ */
+export function publicTempListApi(params) {
+  return request({
+    url: `/admin/wechat/program/public/temp/list`,
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 小程序 模版所属类目
+ */
+export function categoryApi() {
+  return request({
+    url: `/admin/wechat/program/category`,
+    method: 'get'
+  })
+}
+
+/**
+ * 小程序 通过微信模板tid获取关键字列表
+ */
+export function getWeChatKeywordsByTidApi(params) {
+  return request({
+    url: `/admin/wechat/program/getWeChatKeywordsByTid`,
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 小程序 模板详情，主要是获取左侧标题
+ */
+export function publicTempInfoApi(params) {
+  return request({
+    url: `/admin/wechat/program/public/temp/info`,
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 小程序 我的模板列表
+ */
+export function myTempListApi(params) {
+  return request({
+    url: `/admin/wechat/program/my/temp/list`,
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 小程序 我的模板详情
+ */
+export function myTempInfoApi(params) {
+  return request({
+    url: `/admin/wechat/program/my/temp/info`,
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 小程序 模板新增
+ */
+export function myTempSaveApi(data) {
+  return request({
+    url: `/admin/wechat/program/my/temp/save`,
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * 小程序 模板修改
+ */
+export function myTempUpdateApi(params, data) {
+  return request({
+    url: `/admin/wechat/program/my/temp/update`,
+    method: 'post',
+    params,
+    data
+  })
+}
+
+/**
+ * 小程序 我的模板修改状态
+ */
+export function myTempStatusApi(params) {
+  return request({
+    url: `/admin/wechat/program/my/temp/update/status`,
+    method: 'get',
+    params
+  })
+}
+
+
+/**
+ * 小程序 我的模板修改应用场景
+ */
+export function myTempTypeApi(params) {
+  return request({
+    url: `/admin/wechat/program/my/temp/update/type`,
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 获取微信sdk配置
+ * @returns {*}
+ */
+export function getWechatConfig() {
+  return request({
+    url: `/admin/wechat/config`,
+    method: 'get',
+    params:{ url: encodeURIComponent(location.href.split('#')[0]) } // for Test
+  })
+}
+
+/**
+ * 微信授权登录
+ * @returns {*}
+ */
+export function wechatAuth(code) {
+  return request({
+    url: `/admin/authorize/login`,
+    method: 'get',
+    params: { code }
+  })
+}
+
+/**
+ * 与微信解绑账号
+ */
+export function unbindApi() {
+  return request({
+    url: `/admin/unbind`,
+    method: 'get'
+  })
+}
+
+/**
+ * 一键同步我的模板到小程序
+ */
+export function tempAsyncApi() {
+  return request({
+    url: `/admin/wechat/program/my/temp/async`,
+    method: 'get'
   })
 }

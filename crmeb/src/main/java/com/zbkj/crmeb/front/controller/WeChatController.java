@@ -1,12 +1,16 @@
 package com.zbkj.crmeb.front.controller;
 
 import com.common.CommonResult;
+import com.common.PageParamRequest;
 import com.zbkj.crmeb.front.response.LoginResponse;
 import com.zbkj.crmeb.front.service.UserCenterService;
 import com.zbkj.crmeb.user.request.RegisterThirdUserRequest;
 import com.zbkj.crmeb.wechat.model.TemplateMessage;
+import com.zbkj.crmeb.wechat.model.WechatProgramMyTemp;
+import com.zbkj.crmeb.wechat.request.WechatProgramMyTempSearchRequest;
 import com.zbkj.crmeb.wechat.service.TemplateMessageService;
 import com.zbkj.crmeb.wechat.service.WeChatService;
+import com.zbkj.crmeb.wechat.service.WechatProgramMyTempService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -16,6 +20,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -36,6 +41,9 @@ public class WeChatController {
 
     @Autowired
     private TemplateMessageService templateMessageService;
+
+    @Autowired
+    private WechatProgramMyTempService wechatProgramMyTempService;
 
     /**
      * 获取授权页面跳转地址
@@ -109,6 +117,17 @@ public class WeChatController {
     public CommonResult<TemplateMessage> info(@PathVariable Integer id){
         TemplateMessage templateMessage = templateMessageService.infoException(id);
         return CommonResult.success(templateMessage);
+    }
+
+    /**
+     * 订阅消息模板列表
+     * @author Mr.Zhang
+     * @since 2020-06-03
+     */
+    @ApiOperation(value = "订阅消息模板列表")
+    @RequestMapping(value = "/program/my/temp/list", method = RequestMethod.POST)
+    public CommonResult<List<WechatProgramMyTemp>> programMyTempList(@RequestBody @Validated WechatProgramMyTempSearchRequest request, PageParamRequest pageParamRequest){
+        return CommonResult.success(wechatProgramMyTempService.getList(request, pageParamRequest));
     }
 }
 

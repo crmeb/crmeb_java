@@ -67,7 +67,6 @@ export default {
     iconChange(n) {
       this.$emit('getIcon', n)
       this.$msgbox.close()
-      console.log(n)
       }
     }
   }

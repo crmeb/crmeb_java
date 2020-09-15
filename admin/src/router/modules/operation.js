@@ -156,6 +156,30 @@ const operationRouter = {
         }
       ]
     },
+    {
+      path: 'storeService',
+      component: () => import('@/views/systemSetting/storeService'),
+      name: 'StoreService',
+      meta: {
+        title: '客服管理',
+        icon: 'clipboard',
+        roles: ['admin']
+      },
+      children: [
+        {
+          path: 'list',
+          component: () => import('@/views/systemSetting/storeService/chatRoom'),
+          name: 'StoreServiceList',
+          meta: { title: '客服列表', noCache: true }
+        },
+        {
+          path: 'chatRoom',
+          component: () => import('@/views/systemSetting/storeService/list'),
+          name: 'ChatRoom',
+          meta: { title: '聊天室', noCache: true }
+        }
+      ]
+    },
   ]
 }
 

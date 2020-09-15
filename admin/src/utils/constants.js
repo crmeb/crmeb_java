@@ -71,6 +71,7 @@ export const fromList = {
   title: '选择时间',
   custom: true,
   fromTxt: [
+    { text: '全部', val: '' },
     { text: '今天', val: 'today' },
     { text: '昨天', val: 'yesterday' },
     { text: '最近7天', val: 'lately7' },

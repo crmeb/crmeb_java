@@ -449,7 +449,7 @@
               isBest: 0,
               tempId: info.tempId,
               attrValue: info.attrValue,
-              attr: info.attr,
+              attr: info.attr || [],
               selectRule: info.selectRule,
               isSub: false,
               content: info.content,
@@ -458,8 +458,10 @@
               giveIntegral: info.giveIntegral,
               ficti: info.ficti
             }
-            for (var i = 0; i < this.formValidate.attr.length; i++) {
-              this.formValidate.attr[i].attrValue = JSON.parse(info.attr[i].attrValues)
+            if(this.formValidate.attr){
+              for (var i = 0; i < this.formValidate.attr.length; i++) {
+                this.formValidate.attr[i].attrValue = JSON.parse(info.attr[i].attrValues)
+              }
             }
             this.loading = false;
           }).catch(() => {

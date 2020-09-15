@@ -1,6 +1,13 @@
 /**
  * Created by PanJiaChen on 16/11/18.
  */
+const baseAttr = {
+  min: "%s最小长度为:min",
+  max: "%s最大长度为:max",
+  length: "%s长度必须为:length",
+  range: "%s长度为:range",
+  pattern: "$s格式错误"
+};
 
 /**
  * @param {string} path
@@ -86,3 +93,52 @@ export function isArray(arg) {
   }
   return Array.isArray(arg)
 }
+
+const bindMessage = (fn, message) => {
+  fn.message = field => message.replace("%s", field || "");
+};
+
+export function required(message, opt = {}) {
+  return {
+    required: true,
+    message,
+    type: "string",
+    ...opt
+  };
+}
+bindMessage(required, "请输入%s");
+
+/**
+ * 正确的金额
+ *
+ * @param message
+ * @returns {*}
+ */
+export function num(message) {
+  return attrs.pattern(
+    /(^[1-9]([0-9]+)?(\.[0-9]{1,2})?$)|(^(0){1}$)|(^[0-9]\.[0-9]([0-9])?$)/,
+    message
+  );
+}
+bindMessage(num, "%s格式不正确");
+
+
+const attrs = Object.keys(baseAttr).reduce((attrs, key) => {
+  attrs[key] = (attr, message = "", opt = {}) => {
+    const _attr =
+      key === "range" ? { min: attr[0], max: attr[1] } : { [key]: attr };
+
+    return {
+      message: message.replace(
+        `:${key}`,
+        key === "range" ? `${attr[0]}-${attr[1]}` : attr
+      ),
+      type: "string",
+      ..._attr,
+      ...opt
+    };
+  };
+  bindMessage(attrs[key], baseAttr[key]);
+  return attrs;
+}, {});
+export default attrs;

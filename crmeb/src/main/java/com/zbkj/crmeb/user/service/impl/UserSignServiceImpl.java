@@ -20,6 +20,9 @@ import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.user.service.UserSignService;
 import com.zbkj.crmeb.user.vo.UserSignMonthVo;
 import com.zbkj.crmeb.user.vo.UserSignVo;
+import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
+import com.zbkj.crmeb.wechat.vo.WechatSendMessageForIntegral;
+import io.swagger.models.auth.In;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,6 +54,8 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
     @Autowired
     private UserBillService userBillService;
 
+    @Autowired
+    private WechatSendMessageForMinService wechatSendMessageForMinService;
 
     /**
     * 列表
@@ -113,6 +118,14 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
             userOperateFundsRequest.setType(1);
             userOperateFundsRequest.setValue(new BigDecimal(configVo.getIntegral()));
             userService.updateFounds(userOperateFundsRequest, true);
+
+            // 小程序消息积分变动通知
+            WechatSendMessageForIntegral integralPram = new WechatSendMessageForIntegral(
+                    "您的积分变动如下","签到获得积分","签到","0",configVo.getIntegral()+"",
+                    (user.getIntegral().add(BigDecimal.valueOf(configVo.getIntegral())))+"",
+                    DateUtil.nowDateTimeStr(),"暂无","暂无","签到赠送积分"
+            );
+            wechatSendMessageForMinService.sendIntegralMessage(integralPram,user.getUid());
 
             //更新用户经验信息
             userOperateFundsRequest.setUid(user.getUid());

@@ -5,25 +5,19 @@ import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
 import com.constants.SmsConstants;
-import com.exception.CrmebException;
-import com.utils.ValidateCodeUtil;
 import com.utils.ValidateFormUtil;
+import com.zbkj.crmeb.sms.model.SmsRecord;
 import com.zbkj.crmeb.sms.request.RegisterRequest;
-import com.zbkj.crmeb.sms.request.SmsConfigRequest;
 import com.zbkj.crmeb.sms.request.SmsLoginRequest;
 import com.zbkj.crmeb.sms.request.SmsRecordRequest;
+import com.zbkj.crmeb.sms.service.SmsRecordService;
 import com.zbkj.crmeb.sms.service.SmsService;
-import com.zbkj.crmeb.validatecode.model.ValidateCode;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
-import com.zbkj.crmeb.sms.service.SmsRecordService;
-import com.zbkj.crmeb.sms.model.SmsRecord;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 
 
 /**
@@ -247,34 +241,14 @@ public class SmsRecordController {
     @ApiImplicitParams({
             @ApiImplicitParam(name="title", value="名称"),
             @ApiImplicitParam(name="status", value="状态"),
+            @ApiImplicitParam(name="type", value="type (1=验证码 2=通知 3=推广)"),
     })
     public CommonResult<JSONObject> tempList(@RequestParam(name = "status", required = false) Integer status,
                                              @RequestParam(name = "title", required = false) String title,
+                                             @RequestParam(name = "type", required = false) String type,
                                              @ModelAttribute PageParamRequest pageParamRequest){
-        JSONObject result = smsService.tempList(title, status, pageParamRequest);
+        JSONObject result = smsService.tempList(title, status, type, pageParamRequest);
         return CommonResult.success(getDataByResult(result));
-    }
-
-    /**
-     * 短信提醒开关
-     * @param request
-     * @return
-     */
-    @ApiOperation(value = "短信提醒开关保存")
-    @RequestMapping(value = "/config/save", method = RequestMethod.POST)
-    public CommonResult<Object> saveConfig(@ModelAttribute SmsConfigRequest request){
-        smsService.configSave(request);
-        return CommonResult.success();
-    }
-
-    /**
-     * 短信提醒开关
-     * @return
-     */
-    @ApiOperation(value = "短信提醒开关列表")
-    @RequestMapping(value = "/config/list", method = RequestMethod.POST)
-    public CommonResult<Object> configList(){
-        return CommonResult.success(smsService.configList());
     }
 
     /**

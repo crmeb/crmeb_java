@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.zbkj.crmeb.store.model.StoreOrderInfo;
+import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
+import com.zbkj.crmeb.system.model.SystemStore;
 import com.zbkj.crmeb.user.model.User;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -15,6 +18,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -198,4 +202,10 @@ public class StoreOrderInfoResponse implements Serializable {
 
     @ApiModelProperty(value = "用户信息")
     private User user;
+
+    @ApiModelProperty(value = "订单商品详情")
+    List<StoreOrderInfoVo> orderInfo;
+
+    @ApiModelProperty(value = "提货点")
+    private SystemStore systemStore;
 }

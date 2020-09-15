@@ -1,18 +1,9 @@
 <template>
   <el-dialog v-model="dialogFormVisible" :title="id?'修改核销员':'添加核销员'"  :visible.sync="dialogFormVisible" width="750px" @close="cancel">
-    <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="150px" class="demo-ruleForm" @submit.native.prevent>
-      <el-form-item label="商城用户：" prop="avatar">
-        <div class="publicPicBox" @click="upImg">
-          {{ruleForm.avatar}}
-          <div class="pictrue" v-if="ruleForm.avatar">
-            <el-image
-              :src="ruleForm.avatar"
-              fit="cover"></el-image>
-          </div>
-          <div class="upLoad acea-row row-center-wrapper" v-else>
-            <i class="el-icon-camera iconfont"></i>
-          </div>
-        </div>
+    <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="150px" class="demo-ruleForm" @submit.native.prevent v-loading="loading">
+      <el-form-item label="管理员：" prop="uid">
+        <span v-text="ruleForm.avatar"></span>
+        <el-button type="primary" size="small" @click="upImg">选择管理员</el-button>
       </el-form-item>
       <el-form-item label="所属提货点：" prop="storeId">
         <el-select v-model="ruleForm.storeId" placeholder="请选择" style="width:50%" clearable>
@@ -25,22 +16,10 @@
         </el-select>
       </el-form-item>
       <el-form-item label="核销员名称：">
-        <el-input v-model="ruleForm.staffName" placeholder="请输入提货点简介" class="dialogWidth"></el-input>
+        <el-input v-model="ruleForm.staffName" placeholder="请输入核销员名称" class="dialogWidth"></el-input>
       </el-form-item>
       <el-form-item label="手机号码：">
-        <el-input v-model="ruleForm.phone" placeholder="请输入提货点简介" class="dialogWidth"></el-input>
-      </el-form-item>
-      <el-form-item label="核销开关：">
-        <el-radio-group v-model="ruleForm.verifyStatus">
-          <el-radio :label="1">开启</el-radio>
-          <el-radio :label="0">关闭</el-radio>
-        </el-radio-group>
-      </el-form-item>
-      <el-form-item label="状态：">
-        <el-radio-group v-model="ruleForm.status">
-          <el-radio :label="1">开启</el-radio>
-          <el-radio :label="0">关闭</el-radio>
-        </el-radio-group>
+        <el-input v-model="ruleForm.phone" placeholder="请输入手机号码" class="dialogWidth"></el-input>
       </el-form-item>
     </el-form>
     <div slot="footer" class="dialog-footer">
@@ -55,6 +34,7 @@
 <script>
   import customerInfo from '@/components/customerInfo';
   import { storeStaffSaveApi, storeStaffUpdateApi, storeStaffInfoApi, storeListApi } from '@/api/storePoint';
+  import { getStoreStaff } from '@/libs/public'
     export default {
       name: "addClerk",
       components: { customerInfo },
@@ -70,20 +50,19 @@
           }
         };
         return{
+          loading: false,
           dialogFormVisible: false,
           id:0,
           ruleForm:{
-            avatar:'',
             phone:'',
-            staffName:'',
-            status:1,
             storeId:'',
-            verifyStatus:1,
-            uid:''
+            uid:'',
+            avatar: ''
           },
+          name: '',
           rules: {
-            avatar: [
-              { required: true, validator: validateUpload, trigger: 'change' }
+            uid: [
+              { required: true, message: '请选择管理员', trigger: 'change' }
             ],
             storeId: [
               { required: true, message: '请选择提货点地址', trigger: 'change' }
@@ -99,9 +78,9 @@
       },
       methods:{
         //接收来自子集的值；
-        upImgUid(id,img){
-          this.ruleForm.avatar = img;
-          this.ruleForm.uid = id;
+        upImgUid(row){
+          this.ruleForm.avatar = row.account
+          this.ruleForm.uid = row.id;
         },
         upImg(){
           this.$refs.customer.dialogFormVisible = true;
@@ -109,12 +88,13 @@
         },
         //详情
         getInfo (id) {
-          let that = this;
-          that.id = id;
+          this.id = id;
+          this.loading = true
           storeStaffInfoApi({id:id}).then(res=>{
-            that.ruleForm = res;
+            this.ruleForm = res;
+            this.loading = false
           }).catch(res=>{
-            this.$message.error(res.message);
+            this.loading = false
           })
         },
         //取消
@@ -122,14 +102,13 @@
           this.dialogFormVisible = false;
           this.clearFrom();
           this.resetForm('ruleForm');
+          this.ruleForm.avatar = '';
           this.id = 0
         },
         //数据归为初始状态
         clearFrom(){
           this.ruleForm.phone = '';
           this.ruleForm.staffName = '';
-          this.ruleForm.status = 1;
-          this.ruleForm.verifyStatus = 1;
         },
         //重置
         resetForm (name) {
@@ -152,8 +131,7 @@
                 this.clearFrom();
                 this.resetForm(name);
                 this.id = 0;
-              }).catch(res => {
-                this.$message.error(res.message);
+                getStoreStaff()
               })
             } else {
               return false;
@@ -177,8 +155,7 @@
                 this.clearFrom();
                 this.resetForm(name);
                 this.id = 0;
-              }).catch(res => {
-                this.$message.error(res.message);
+                getStoreStaff()
               })
             } else {
               return false;

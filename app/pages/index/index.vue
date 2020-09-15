@@ -40,7 +40,7 @@
 					<block v-for="(item,index) in imgUrls" :key="index">
 						<swiper-item>
 							<navigator :url='item.url' class='slide-navigator acea-row row-between-wrapper' hover-class='none'>
-								<image :src="item.pic" class="slide-image"></image>
+								<image :src="item.pic" class="slide-image" lazy-load></image>
 							</navigator>
 						</swiper-item>
 					</block>
@@ -224,6 +224,7 @@
 
 <script>
 	import Auth from '@/libs/wechat';
+	import Cache from '../../utils/cache';
 	var statusBarHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
 	let app = getApp();
 	import {
@@ -235,10 +236,10 @@
 		getTemlIds
 		// getLiveList
 	} from '@/api/api.js';
-	import {
-		SUBSCRIBE_MESSAGE,
-		TIPS_KEY
-	} from '@/config/cache';
+	// import {
+	// 	SUBSCRIBE_MESSAGE,
+	// 	TIPS_KEY
+	// } from '@/config/cache';
 	// #endif
 	// #ifdef H5  
 	import {
@@ -280,6 +281,7 @@
 	import {
 		getWechatConfig
 	} from "@/api/public";
+	const arrTemp = ["paySubscribe","orderSubscribe","extrctSubscribe", "orderRefundSubscribe", "rechargeSubscribe"];
 	export default {
 		computed: mapGetters(['isLogin', 'uid']),
 		components: {
@@ -413,13 +415,20 @@
 		methods: {
 			// #ifdef MP
 			getTemlIds() {
-				let messageTmplIds = wx.getStorageSync(SUBSCRIBE_MESSAGE);
-				if (!messageTmplIds) {
-					getTemlIds().then(res => {
-						if (res.data)
-							wx.setStorageSync(SUBSCRIBE_MESSAGE, JSON.stringify(res.data));
-					})
+				for (var i in arrTemp) {
+				   this.getTem(arrTemp[i]);
 				}
+			},
+			getTem(data){
+				getTemlIds({status:true,type:data}).then(res => {
+					if (res.data) {
+						let arr = res.data.map((item) => {
+							return item.tempId
+						})
+						//console.log(arr)
+						wx.setStorageSync('tempID'+ data, arr);
+					}
+				})
 			},
 			// #endif
 			// 关闭优惠券弹窗
@@ -608,6 +617,14 @@
 					// #endif
 				})
 			},
+			getChatUrL() {
+				getWechatConfig().then(res => {
+					let data = res.data;
+					this.$store.commit("SET_CHATURL", data.yzfUrl);
+					Cache.set('chatUrl', data.yzfUrl);
+					console.log(data)
+				})
+			},
 			// setOpenShare:function(mss){
 			// 	getWechatConfig()
 			// 		.then(res => {
@@ -685,7 +702,7 @@
 					// #ifdef H5
 					uni.showModal({
 						title: '提示',
-						content: '您未登陆，请登陆！',
+						content: '您未登录，请登录！',
 						success: function(res) {
 							if (res.confirm) {
 								uni.navigateTo({
@@ -746,6 +763,7 @@
 		mounted() {
 			let self = this
 			// #ifdef H5
+			this.getChatUrL();
 			// 获取H5 搜索框高度
 			let appSearchH = uni.createSelectorQuery().select(".serch-wrapper");
 			appSearchH.boundingClientRect(function(data) {

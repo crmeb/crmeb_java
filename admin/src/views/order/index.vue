@@ -64,6 +64,9 @@
               <el-form-item label="商家备注：">
                 <span>{{ props.row.remark }}</span>
               </el-form-item>
+              <el-form-item label="核销码：" v-if="props.row.shippingType === 2">
+                <span>{{ props.row.verifyCode }}</span>
+              </el-form-item>
             </el-form>
           </template>
         </el-table-column>
@@ -132,9 +135,15 @@
               <span>退款原因：{{scope.row.refundReasonWap}}</span>
               <span>备注说明：{{scope.row.refundReasonWapExplain}}</span>
               <span>退款时间：{{scope.row.refundReasonTime}}</span>
-              <span>
+              <span class="acea-row">
                 退款凭证：
-                <img :src="scope.row.refundReasonWapImg" v-if="scope.row.refundReasonWapImg">
+                <div class="demo-image__preview" v-if="scope.row.refundReasonWapImg" style="width: 35px;height: auto;display: inline-block;">
+                  <el-image
+                    :src="scope.row.refundReasonWapImg"
+                    :preview-src-list="[scope.row.refundReasonWapImg]"
+                  />
+                </div>
+                <!--<img :src="scope.row.refundReasonWapImg" v-if="scope.row.refundReasonWapImg" >-->
                 <span v-else style="display: inline-block">无</span>
               </span>
             </div>
@@ -149,7 +158,8 @@
         <el-table-column label="操作" min-width="150" fixed="right" align="center">
           <template slot-scope="scope">
             <el-button v-if="scope.row.paid === false" type="text" size="small" @click="edit(scope.row)" class="mr10">编辑</el-button>
-            <el-button v-if="scope.row.statusStr.key === 'notShipped'" type="text" size="small" class="mr10" @click="sendOrder(scope.row)">发送货</el-button>
+            <el-button v-if="scope.row.statusStr.key === 'notShipped' && scope.row.shippingType === 1 && scope.row.refundStatus !==2" type="text" size="small" class="mr10" @click="sendOrder(scope.row)">发送货</el-button>
+            <el-button v-if="scope.row.shippingType === 2 && scope.row.statusStr.key === 'toBeWrittenOff'  && scope.row.paid == true && scope.row.refundStatus === 0 && isWriteOff" type="text" size="small" class="mr10" @click="onWriteOff(scope.row)">立即核销</el-button>
             <el-dropdown trigger="click">
               <span class="el-dropdown-link">
                 更多<i class="el-icon-arrow-down el-icon--right" />
@@ -158,8 +168,8 @@
                 <el-dropdown-item @click.native="onOrderDetails(scope.row.id)">订单详情</el-dropdown-item>
                 <el-dropdown-item @click.native="onOrderLog(scope.row.id)">订单记录</el-dropdown-item>
                 <el-dropdown-item @click.native="onOrderMark(scope.row)">订单备注</el-dropdown-item>
-                <el-dropdown-item v-show="scope.row.statusStr.key === 'refunding'" @click.native="onOrderRefuse(scope.row)">拒绝退款</el-dropdown-item>
-                <el-dropdown-item v-show="scope.row.statusStr.key === 'refunding'" @click.native="onOrderRefund(scope.row)">立即退款</el-dropdown-item>
+                <el-dropdown-item v-show="scope.row.status === -1" @click.native="onOrderRefuse(scope.row)">拒绝退款</el-dropdown-item>
+                <el-dropdown-item v-show="scope.row.statusStr.key === 'refunding' && ((parseFloat(scope.row.payPrice) > parseFloat(scope.row.refundPrice) || (scope.row.payPrice == 0 && [0,1].indexOf(scope.row.refundStatus) !== -1)))" @click.native="onOrderRefund(scope.row)">立即退款</el-dropdown-item>
                 <el-dropdown-item @click.native="handleDelete(scope.row, scope.$index)">删除订单</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
@@ -274,11 +284,15 @@
 </template>
 
 <script>
-  import { orderListApi, orderUpdateApi, orderLogApi, orderMarkApi, orderDeleteApi, orderRefuseApi, orderRefundApi } from '@/api/order'
+  import { writeUpdateApi, orderListApi, orderUpdateApi, orderLogApi, orderMarkApi, orderDeleteApi, orderRefuseApi, orderRefundApi } from '@/api/order'
   import cardsData from '@/components/cards/index'
   import zbParser from '@/components/FormGenerator/components/parser/ZBParser'
   import detailsFrom from './orderDetail'
   import orderSend from './orderSend'
+  import { storeStaffListApi } from '@/api/storePoint'
+  import Cookies from 'js-cookie'
+  import { fromList } from '@/utils/constants.js'
+  import { isWriteOff } from "@/utils";
   export default {
     name: 'orderlistDetails',
     components: {
@@ -322,29 +336,29 @@
           },
           orderChartType: {},
           timeVal: [],
-          fromList: {
-            title: '选择时间',
-            custom: true,
-            fromTxt: [
-              { text: '全部', val: '' },
-              { text: '今天', val: 'today' },
-              { text: '昨天', val: 'yesterday' },
-              { text: '最近7天', val: 'lately7' },
-              { text: '最近30天', val: 'lately30' },
-              { text: '本月', val: 'month' },
-              { text: '本年', val: 'year' }
-            ]
-          },
+          fromList: fromList,
           selectionList: [],
           ids: '',
           orderids: '',
-          cardLists: []
+          cardLists: [],
+          isWriteOff: isWriteOff()
         }
       },
     mounted() {
       this.getList()
     },
     methods: {
+      // 核销订单
+      onWriteOff(row) {
+        this.$modalSure('核销订单吗').then(() => {
+          writeUpdateApi(row.verifyCode).then(() => {
+            this.$message.success('核销成功')
+            this.tableFrom.status = 'toBeWrittenOff'
+            this.tableFrom.page = 1
+            this.getList()
+          })
+        })
+      },
       seachList() {
         this.tableFrom.page = 1
         this.getList()
@@ -532,6 +546,11 @@
 </script>
 
 <style lang="scss" scoped>
+  .demo-table-expand{
+    /deep/label{
+      width: 83px !important;
+    }
+  }
   .refunding{
     span{
       display: block;

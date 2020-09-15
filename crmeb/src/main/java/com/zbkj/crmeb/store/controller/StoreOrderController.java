@@ -5,15 +5,15 @@ import com.common.PageParamRequest;
 import com.exception.CrmebException;
 import com.zbkj.crmeb.express.vo.LogisticsResultVo;
 import com.zbkj.crmeb.store.model.StoreOrder;
-import com.zbkj.crmeb.store.request.StoreOrderRefundRequest;
-import com.zbkj.crmeb.store.request.StoreOrderRequest;
-import com.zbkj.crmeb.store.request.StoreOrderSearchRequest;
-import com.zbkj.crmeb.store.request.StoreOrderSendRequest;
+import com.zbkj.crmeb.store.request.*;
 import com.zbkj.crmeb.store.response.StoreOrderInfoResponse;
 import com.zbkj.crmeb.store.response.StoreOrderResponse;
+import com.zbkj.crmeb.store.response.StoreStaffDetail;
+import com.zbkj.crmeb.store.response.StoreStaffTopDetail;
 import com.zbkj.crmeb.store.service.StoreOrderService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import com.zbkj.crmeb.store.service.StoreOrderVerification;
+import io.swagger.annotations.*;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.List;
 
 
 /**
@@ -35,6 +37,9 @@ public class StoreOrderController {
 
     @Autowired
     private StoreOrderService storeOrderService;
+
+    @Autowired
+    private StoreOrderVerification storeOrderVerification;
 
     /**
      * 分页显示订单表
@@ -186,6 +191,88 @@ public class StoreOrderController {
     public CommonResult<LogisticsResultVo> getLogisticsInfo(@RequestParam(value = "id") Integer id){
         return CommonResult.success(storeOrderService.getLogisticsInfo(id));
     }
+
+    /**
+     * 核销订单头部数据
+     * @author stivepeim
+     * @since 2020-08-29
+     */
+    @ApiOperation(value = "核销订单头部数据")
+    @RequestMapping(value = "/statistics", method = RequestMethod.GET)
+    public CommonResult<StoreStaffTopDetail> getStatistics(){
+        return CommonResult.success(storeOrderVerification.getOrderVerificationData());
+    }
+
+    /**
+     * 核销订单头部数据
+     * @author stivepeim
+     * @since 2020-08-29
+     */
+    @ApiOperation(value = "核销订单 月列表数据")
+    @RequestMapping(value = "/statisticsData", method = RequestMethod.GET)
+    public CommonResult<List<StoreStaffDetail>> getStaffDetail(StoreOrderStaticsticsRequest request){
+        return CommonResult.success(storeOrderVerification.getOrderVerificationDetail(request));
+    }
+
+
+    /**
+     * 核销码核销订单
+     * @author stivepeim
+     * @since 2020-09-01
+     */
+    @ApiOperation(value = "核销码核销订单")
+    @RequestMapping(value = "/writeUpdate/{vCode}", method = RequestMethod.GET)
+    public CommonResult<Object> verificationOrder(
+            @PathVariable String vCode){
+        return CommonResult.success(storeOrderVerification.verificationOrderByCode(vCode));
+    }
+
+    /**
+     * 核销码核销订单
+     * @author stivepeim
+     * @since 2020-09-01
+     */
+    @ApiOperation(value = "核销码查询待核销订单")
+    @RequestMapping(value = "/writeConfirm/{vCode}", method = RequestMethod.GET)
+    public CommonResult<Object> verificationConfirmOrder(
+            @PathVariable String vCode){
+        return CommonResult.success(storeOrderVerification.getVerificationOrderByCode(vCode));
+    }
+
+    /**
+     *  一键改价
+     * @author stivepeim
+     * @since 2020-09-01
+     */
+    @ApiOperation(value = "一键改价")
+    @RequestMapping(value = "/editPrice", method = RequestMethod.GET)
+    public CommonResult<Object> editOrderPrice(
+            @RequestParam String orderId, @RequestParam(required = true,defaultValue = "0") BigDecimal price){
+        try {
+            if(price.compareTo(BigDecimal.ZERO) < 0) throw new CrmebException("请输入合法参数");
+        }catch (Exception e){
+            throw new CrmebException("价格参数错误");
+        }
+        return CommonResult.success(storeOrderService.editPrice(orderId,price));
+    }
+
+    /**
+     *  订单统计详情
+     * @author stivepeim
+     * @since 2020-09-01
+     */
+    @ApiOperation(value = "订单统计详情")
+    @RequestMapping(value = "/time", method = RequestMethod.GET)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "dateLimit", value = "today,yesterday,lately7,lately30,month,year,/yyyy-MM-dd hh:mm:ss,yyyy-MM-dd hh:mm:ss/",
+                    dataType = "String",  required = true),
+            @ApiImplicitParam(name = "type", value="1=price 2=order",  required = true)
+    })
+    public CommonResult<Object> statisticsOrderTime(@RequestParam String dateLimit,
+                                                    @RequestParam Integer type){
+        return CommonResult.success(storeOrderService.orderStatisticsByTime(dateLimit,type));
+    }
+
 }
 
 

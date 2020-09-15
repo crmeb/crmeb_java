@@ -3,12 +3,12 @@
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <div class="container">
-          <el-form size="small" label-width="100px">
+          <el-form size="small" label-width="100px" :inline="true" >
             <el-form-item label="时间选择：" class="width100">
               <el-radio-group v-model="tableFrom.dateLimit" type="button" class="mr20" size="small" @change="selectChange(tableFrom.dateLimit)">
                 <el-radio-button v-for="(item,i) in fromList.fromTxt" :key="i" :label="item.val">{{ item.text }}</el-radio-button>
               </el-radio-group>
-              <el-date-picker v-model="timeVal" value-format="yyyy/MM/dd" format="yyyy/MM/dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTime" />
+              <el-date-picker v-model="timeVal" value-format="yyyy-MM-dd" format="yyyy-MM-dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTime" />
             </el-form-item>
             <el-form-item label="选择门店：">
               <el-select v-model="tableFrom.storeId" clearable filterable placeholder="请选择" class="selWidth" clearable @change="seachList">
@@ -20,7 +20,7 @@
                 </el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="关键字：" class="width100">
+            <el-form-item label="关键字：">
               <el-input v-model="tableFrom.keywords" placeholder="请输入姓名、电话、订单ID" class="selWidth" size="small">
                 <el-button slot="append" icon="el-icon-search" size="small" @click="seachList" />
               </el-input>
@@ -59,18 +59,20 @@
           label="商品信息"
           min-width="330"
         >
-          <!--<template slot-scope="scope">-->
-            <!--<div v-for="(val, i ) in scope.row.productList" :key="i" class="tabBox acea-row row-middle">-->
-              <!--<div class="demo-image__preview">-->
-                <!--<el-image-->
-                  <!--:src="val.info.productInfo.image"-->
-                  <!--:preview-src-list="[val.info.productInfo.image]"-->
-                <!--/>-->
-              <!--</div>-->
-              <!--<span class="tabBox_tit">{{ val.info.productInfo.storeName + ' | ' }}{{ val.info.productInfo.attrInfo.sku }}</span>-->
-              <!--<span class="tabBox_pice">{{ '￥'+ val.info.productInfo.price + ' x '+ val.info }}</span>-->
-            <!--</div>-->
-          <!--</template>-->
+          <template slot-scope="scope">
+            <div v-if=" scope.row.productList && scope.row.productList.length">
+              <div v-for="(val, i ) in scope.row.productList" :key="i" class="tabBox acea-row row-middle">
+                <div class="demo-image__preview">
+                  <el-image
+                    :src="val.info.productInfo.image"
+                    :preview-src-list="[val.info.productInfo.image]"
+                  />
+                </div>
+                <span class="tabBox_tit mr10">{{ val.info.productInfo.storeName + ' | ' }}{{ val.info.productInfo.attrInfo.suk ? val.info.productInfo.attrInfo.suk:'-' }}</span>
+                <span class="tabBox_pice">{{ '￥'+ val.info.productInfo.attrInfo.price ? val.info.productInfo.attrInfo.price + ' x '+ val.info.cartNum : '-' }}</span>
+              </div>
+            </div>
+          </template>
         </el-table-column>
         <el-table-column
           prop="payPrice"
@@ -100,7 +102,7 @@
           min-width="100"
         >
           <template slot-scope="scope">
-            <span>{{ scope.row.status | orderStatusFilter }}</span>
+            <span>{{ scope.row.statusStr.value}}</span>
           </template>
         </el-table-column>
         <el-table-column
@@ -190,7 +192,7 @@
       // 具体日期
       onchangeTime(e) {
         this.timeVal = e
-        this.tableFrom.dateLimit = e ? this.timeVal.join('-') : ''
+        this.tableFrom.dateLimit = e ? this.timeVal.join(',') : ''
         this.tableFrom.page = 1
         this.getList()
       },
@@ -231,7 +233,7 @@
     }
   }
   .selWidth{
-    width: 350px;
+    width: 300px;
   }
   .el-dropdown-link {
     cursor: pointer;

@@ -203,7 +203,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             }
 
             //获取推广人信息
-            if(user.getSpreadUid() == 0){
+            if(null == user.getSpreadUid() || user.getSpreadUid() == 0){
                 userResponse.setSpreadNickname("无");
             }else{
                 userResponse.setSpreadNickname(userDao.selectById(user.getSpreadUid()).getNickname());
@@ -1268,9 +1268,10 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         return user;
     }
 
-     /** 根据用户id集合获取对应用户集合
-     * @param userIds 用户id集合
-     * @return 用户集合
+     /**
+      * 根据用户id集合获取对应用户集合
+      * @param userIds 用户id集合
+      * @return 用户集合
      */
     @Override
     public List<User> getSpreadPeopleList(List<Integer> userIds) {
@@ -1541,7 +1542,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         if(null == spreadUid || spreadUid == 0){
             return;
         }
-        //如果当前用户没有绑定，并且后台配置人人分销，那么需要邦迪
+        //如果当前用户没有绑定，并且后台配置人人分销，那么需要绑定
         if(user.getSpreadUid() > 0){
             return;
         }
@@ -1549,7 +1550,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         String distribution = systemConfigService.getValueByKey(Constants.CONFIG_KEY_DISTRIBUTION_TYPE);
 
         //人人分销 + 当前已绑定的id和推广人id不一样
-        if(distribution.equals("0") && !user.getSpreadUid().equals(spreadUid)){
+        if(StringUtils.isNotBlank(distribution) && distribution.equals("0") && !user.getSpreadUid().equals(spreadUid)){
             user.setSpreadUid(spreadUid);
             user.setSpreadTime(DateUtil.nowDateTime());
         }

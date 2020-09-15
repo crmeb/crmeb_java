@@ -1,25 +1,19 @@
 package com.zbkj.crmeb.system.controller;
 
-import com.common.CommonPage;
 import com.common.CommonResult;
-import com.common.PageParamRequest;
-import com.zbkj.crmeb.category.vo.CategoryTreeVo;
+import com.zbkj.crmeb.system.model.SystemCity;
 import com.zbkj.crmeb.system.request.SystemCityRequest;
 import com.zbkj.crmeb.system.request.SystemCitySearchRequest;
-import com.zbkj.crmeb.system.vo.SystemCityTreeVo;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.zbkj.crmeb.system.service.SystemCityService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.BeanUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-import com.zbkj.crmeb.system.service.SystemCityService;
-import com.zbkj.crmeb.system.model.SystemCity;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 
 /**
@@ -107,7 +101,7 @@ public class SystemCityController {
      */
     @ApiOperation(value = "修改状态")
     @RequestMapping(value = "/update/status", method = RequestMethod.POST)
-    public CommonResult<String> update(@RequestParam Integer id, @RequestParam Boolean status){
+    public CommonResult<String> updateStatus(@RequestParam Integer id, @RequestParam Boolean status){
         if(systemCityService.updateStatus(id, status)){
             return CommonResult.success();
         }else{

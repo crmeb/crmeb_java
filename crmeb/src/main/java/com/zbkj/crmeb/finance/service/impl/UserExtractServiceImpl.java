@@ -18,6 +18,8 @@ import com.zbkj.crmeb.finance.service.UserExtractService;
 import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.user.service.UserBillService;
 import com.zbkj.crmeb.user.service.UserService;
+import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
+import com.zbkj.crmeb.wechat.vo.WechatSendMessageForCash;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +50,9 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     @Autowired
     private SystemConfigService systemConfigService;
+
+    @Autowired
+    private WechatSendMessageForMinService wechatSendMessageForMinService;
 
 
     /**
@@ -164,6 +169,14 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
         userExtract.setUid(userId);
         BeanUtils.copyProperties(request, userExtract);
         userExtract.setBalance(toBeWithdrawn.subtract(request.getExtractPrice()));
+
+        // 微信小程序订阅提现通知
+        WechatSendMessageForCash cash = new WechatSendMessageForCash(
+                "提现申请成功",request.getExtractPrice()+"",request.getBankname()+request.getBankCode(),
+                DateUtil.nowDateTimeStr(),"暂无",request.getRealName(),"0",request.getExtractType(),"提现",
+                "暂无",request.getExtractType(),"暂无",request.getRealName()
+        );
+        wechatSendMessageForMinService.sendCashMessage(cash,userId);
         return save(userExtract);
     }
 

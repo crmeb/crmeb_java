@@ -3,8 +3,11 @@ import App from './App'
 import store from './store'
 import Cache from './utils/cache'
 import util from 'utils/util'
+import configs from './config/app.js'
+
 
 Vue.prototype.$util = util;
+Vue.prototype.$config = configs;
 Vue.prototype.$Cache = Cache;
 Vue.prototype.$eventHub = new Vue();
 Vue.config.productionTip = false

@@ -2,13 +2,15 @@
   <div>
     <template v-if="selectModel">
       <el-tree
-        node-key="id"
-        :props="treeProps"
+        ref="tree"
         :data="treeList"
         show-checkbox
-        :default-checked-keys="selectModelKeys"
-        @check="handleSelectionChange"
-      />
+        check-strictly
+        node-key="id"
+        @check="getCurrentNode"
+        :default-checked-keys="selectModelKeysNew"
+        :props="treeProps">
+      </el-tree>
     </template>
     <template v-else>
       <div class="divBox">
@@ -84,7 +86,7 @@
               <el-table-column label="操作" min-width="200" fixed="right">
                 <template slot-scope="scope">
                   <el-button
-                    v-if="biztype.value!==3 && scope.row.pid === 0"
+                    v-if="(biztype.value === 1 && scope.row.pid === 0) || (biztype.value !== 1)"
                     type="text"
                     size="small"
                     @click="handleAddMenu(scope.row)"
@@ -145,6 +147,9 @@ export default {
       type: Boolean,
       default: false
     },
+    // selectModelKeys: {
+    //   type: String
+    // },
     selectModelKeys: {
       type: Array
     },
@@ -152,6 +157,8 @@ export default {
   },
   data() {
     return {
+      selectModelKeysNew: this.selectModelKeys,
+      loading: false,
       constants,
       treeProps: {
         label: 'name',
@@ -207,6 +214,37 @@ export default {
       this.editDialogConfig.biztype = this.biztype
       this.editDialogConfig.visible = true
     },
+    getCurrentNode(data) {
+      let node = this.$refs.tree.getNode(data);
+      this.childNodes(node);
+      this.parentNodes(node);
+      //是否编辑的表示
+      // this.ruleForm.isEditorFlag = true;
+      //编辑时候使用
+      this.$emit('rulesSelect', this.$refs.tree.getCheckedKeys());
+      // this.selectModelKeys = this.$refs.tree.getCheckedKeys();
+      //无论编辑和新增点击了就传到后台这个值
+      // this.$emit('rulesSelect', this.$refs.tree.getCheckedKeys().concat(this.$refs.tree.getHalfCheckedKeys()));
+      // this.ruleForm.menuIdsisEditor = this.$refs.tree.getCheckedKeys().concat(this.$refs.tree.getHalfCheckedKeys());
+    },
+    //具体方法可以看element官网api
+    childNodes(node){
+      let len = node.childNodes.length;
+      for(let i = 0; i < len; i++){
+        node.childNodes[i].checked = node.checked;
+        this.childNodes(node.childNodes[i]);
+      }
+    },
+    parentNodes(node){
+      if(node.parent){
+        for(let key in node){
+          if(key == "parent"){
+            node[key].checked = true;
+            this.parentNodes(node[key]);
+          }
+        }
+      }
+    },
     handleDelMenu(rowData) {
       this.$confirm('确定删除当前数据?').then(() => {
         categoryApi.deleteCategroy(rowData).then(data => {
@@ -221,9 +259,14 @@ export default {
       })
     },
     handlerGetTreeList() {
-      const _pram = { type: this.biztype.value, status: this.selectModel ? 1 : -1 }
+      // this.biztype.value === 5 && !this.selectModel) ?  -1 : 1
+      const _pram = { type: this.biztype.value, status: !this.selectModel ? -1 : (this.biztype.value === 5 ? -1 : 1) }
+      this.loading = true
       this.biztype.value!==3 ? categoryApi.treeCategroy(_pram).then(data => {
         this.treeList = this.handleAddArrt(data)
+        this.loading = false
+      }).catch(()=>{
+        this.loading = false
       }) : categoryApi.listCategroy({ type: 3, status: '', pid: this.listPram.pid}).then(data => {
         this.treeList = data.list
       })

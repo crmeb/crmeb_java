@@ -270,7 +270,8 @@
 				isShowAuth: false, //是否隐藏授权
 				from: '',
 				news: true,
-				again: false
+				again: false,
+				addAgain: false
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -294,6 +295,7 @@
 			this.is_address = options.is_address ? true : false;
 			this.news = options.new || true;
 			this.again = options.again || false;
+			this.addAgain = options.addAgain || false;
 			if (this.isLogin) {
 				this.getaddressInfo();
 				this.getConfirm();
@@ -361,8 +363,8 @@
 			 * 获取门店列表数据
 			 */
 			getList: function() {
-				let longitude = uni.getStorageSync("CACHE_LONGITUDE"); //经度
-				let latitude = uni.getStorageSync("CACHE_LATITUDE"); //纬度
+				let longitude = uni.getStorageSync("user_longitude"); //经度
+				let latitude = uni.getStorageSync("user_latitude"); //纬度
 				let data = {
 					latitude: latitude, //纬度
 					longitude: longitude, //经度
@@ -400,6 +402,7 @@
 					shippingType: parseInt(shippingType) + 1,
 					payType: this.payType
 				}).then(res => {
+					console.log(res)
 					let result = res.data.result.result;
 					if (result) {
 						this.totalPrice = result.orderId.payPrice;
@@ -408,7 +411,11 @@
 						this.integral = this.useIntegral ? result.orderId.surplusIntegral : this.userInfo.integral;
 						this.$set(this.priceGroup, 'storePostage', shippingType == 1 ? 0 : result.orderId.payPostage);
 					}
-				})
+				}).catch(err => {
+					return this.$util.Tips({
+						title: err
+					});
+				});
 			},
 			addressType: function(e) {
 				let index = e;
@@ -494,7 +501,7 @@
 			 */
 			getConfirm: function() {
 				let that = this;
-				orderConfirm(that.cartId,that.again).then(res => {
+				orderConfirm(that.cartId,that.news,this.addAgain).then(res => {
 					that.$set(that, 'userInfo', res.data.userInfo);
 					that.$set(that, 'integral', res.data.userInfo.integral);
 					that.$set(that, 'cartInfo', res.data.cartInfo);
@@ -570,17 +577,21 @@
 				let that = this;
 				if (that.addressId) {
 					getAddressDetail(that.addressId).then(res => {
-						res.data.isDefault = parseInt(res.data.isDefault);
-						that.addressInfo = res.data || {};
-						that.addressId = res.data.id || 0;
-						that.address.addressId = res.data.id || 0;
+						if(res.data){
+							res.data.isDefault = parseInt(res.data.isDefault);
+							that.addressInfo = res.data || {};
+							that.addressId = res.data.id || 0;
+							that.address.addressId = res.data.id || 0;
+						}
 					})
 				} else {
 					getAddressDefault().then(res => {
-						res.data.isDefault = parseInt(res.data.isDefault);
-						that.addressInfo = res.data || {};
-						that.addressId = res.data.id || 0;
-						that.address.addressId = res.data.id || 0;
+						if(res.data){
+							res.data.isDefault = parseInt(res.data.isDefault);
+							that.addressInfo = res.data || {};
+							that.addressId = res.data.id || 0;
+							that.address.addressId = res.data.id || 0;
+						}
 					})
 				}
 			},
@@ -820,8 +831,6 @@
 						title: '暂无门店,请选择其他方式'
 					});
 				}
-				console.log('坎坎坷坷扩');
-				console.log(that.news);
 				data = {
 					realName: that.contacts,
 					phone: that.contactsTel,

@@ -12,7 +12,7 @@
           :biztype="constants.categoryType[4]"
           :select-model="true"
           :row-select="pram.rules"
-          :select-model-keys="editData.rules"
+          :select-model-keys="editData.rules ? editData.rules.split(',') : []"
           @rulesSelect="rulesSelect"
         />
       </el-form-item>
@@ -38,16 +38,14 @@ export default {
     },
     editData: {
       type: Object,
-      default: () => {
-        return { rules: [] }
-      }
+      default: null
     }
   },
   data() {
     return {
       constants,
       pram: {
-        level: 0,
+        level: 1,
         roleName: null,
         rules: [],
         status: null,
@@ -65,7 +63,7 @@ export default {
     initEditData() {
       if (this.isCreate !== 1) return
       const { level, roleName, rules, status, id } = this.editData
-      this.pram.rules = rules
+      this.pram.rules = rules.split(',')
       this.pram.level = level
       this.pram.roleName = roleName
       this.pram.status = status
@@ -94,11 +92,6 @@ export default {
       })
     },
     rulesSelect(selectKeys) {
-      // let _ids = []
-      // select.map(item => {
-      //   _ids.push(item.id)
-      // })
-      // this.pram.rules = _ids.join(',')
       this.pram.rules = selectKeys
     }
   }
