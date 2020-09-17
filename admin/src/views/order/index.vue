@@ -168,7 +168,7 @@
                 <el-dropdown-item @click.native="onOrderDetails(scope.row.id)">订单详情</el-dropdown-item>
                 <el-dropdown-item @click.native="onOrderLog(scope.row.id)">订单记录</el-dropdown-item>
                 <el-dropdown-item @click.native="onOrderMark(scope.row)">订单备注</el-dropdown-item>
-                <el-dropdown-item v-show="scope.row.status === -1" @click.native="onOrderRefuse(scope.row)">拒绝退款</el-dropdown-item>
+                <el-dropdown-item v-show="scope.row.statusStr.key === 'refunding'" @click.native="onOrderRefuse(scope.row)">拒绝退款</el-dropdown-item>
                 <el-dropdown-item v-show="scope.row.statusStr.key === 'refunding' && ((parseFloat(scope.row.payPrice) > parseFloat(scope.row.refundPrice) || (scope.row.payPrice == 0 && [0,1].indexOf(scope.row.refundStatus) !== -1)))" @click.native="onOrderRefund(scope.row)">立即退款</el-dropdown-item>
                 <el-dropdown-item @click.native="handleDelete(scope.row, scope.$index)">删除订单</el-dropdown-item>
               </el-dropdown-menu>
