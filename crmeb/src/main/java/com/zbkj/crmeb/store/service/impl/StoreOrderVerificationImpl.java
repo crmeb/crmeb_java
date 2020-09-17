@@ -115,6 +115,8 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
         // 获取今日，昨日，本月，订单金额
         String dayStart = DateUtil.nowDateTime(Constants.DATE_FORMAT_START);
         String dayEnd = DateUtil.nowDateTime(Constants.DATE_FORMAT_END);
+        String yesterdayStart = DateUtil.addDay(dayStart,-1,Constants.DATE_FORMAT_START);
+        String yesterdayEnd = DateUtil.addDay(dayEnd,-1,Constants.DATE_FORMAT_END);
         String monthStart = DateUtil.nowDateTime(Constants.DATE_FORMAT_MONTH_START);
         String monthEnd = DateUtil.getMonthEndDay();
 
@@ -132,7 +134,7 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
 
         // 昨日订单数
         LambdaQueryWrapper<StoreOrder> lqwPro = Wrappers.lambdaQuery();
-        lqwPro.eq(StoreOrder::getIsDel,false).between(StoreOrder::getPayTime,dayStart,dayEnd)
+        lqwPro.eq(StoreOrder::getIsDel,false).between(StoreOrder::getCreateTime,yesterdayStart,yesterdayEnd)
                 .eq(StoreOrder::getPaid, true).eq(StoreOrder::getRefundStatus,0);
         List<StoreOrder> storeOrdersPro = dao.selectList(lqwPro);
         if(null == storeOrdersPro) storeOrdersPro = new ArrayList<>();

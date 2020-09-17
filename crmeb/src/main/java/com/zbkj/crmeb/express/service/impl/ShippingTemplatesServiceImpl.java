@@ -97,7 +97,7 @@ public class ShippingTemplatesServiceImpl extends ServiceImpl<ShippingTemplatesD
 
 
         List<ShippingTemplatesFreeRequest> shippingTemplatesFreeRequestList = request.getShippingTemplatesFreeRequestList();
-        if(shippingTemplatesFreeRequestList.size() > 0 && request.getAppoint()){
+        if(null != shippingTemplatesFreeRequestList && shippingTemplatesFreeRequestList.size() > 0 && request.getAppoint()){
             shippingTemplatesFreeService.saveAll(shippingTemplatesFreeRequestList, request.getType(), shippingTemplates.getId());
         }
 
