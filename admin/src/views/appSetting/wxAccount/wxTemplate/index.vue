@@ -102,7 +102,7 @@
 
     <!--编辑-->
     <el-dialog
-      title="编辑订单"
+      :title="isCreate===0 ? '添加模板' : '编辑模板'"
       :visible.sync="dialogVisible"
       width="500px"
       :before-close="handleClose">
