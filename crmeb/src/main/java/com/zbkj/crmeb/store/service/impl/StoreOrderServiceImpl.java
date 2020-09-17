@@ -914,12 +914,11 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     public StoreOrder getInfoJustOrderInfo(StoreOrder storeOrder) {
         LambdaQueryWrapper<StoreOrder> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         if(null != storeOrder.getUnique()){
-            lambdaQueryWrapper.or().eq(StoreOrder::getOrderId, storeOrder.getUnique())
-                    .or().eq(StoreOrder::getUnique,storeOrder.getUnique());
+            lambdaQueryWrapper.eq(StoreOrder::getOrderId, storeOrder.getUnique());
         }
-        if(null != storeOrder.getUid()){
+//        if(null != storeOrder.getUid()){
             lambdaQueryWrapper.eq(StoreOrder::getUid, storeOrder.getUid());
-        }
+//        }
         if(null != storeOrder.getIsDel()){
             lambdaQueryWrapper.eq(StoreOrder::getIsDel, storeOrder.getIsDel());
         }
@@ -1071,16 +1070,17 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         String dateStartD = dateRange.getStartTime();
         String dateEndD = dateRange.getEndTime();
         int days = DateUtil.daysBetween(
-                DateUtil.strToDate(dateStartD,Constants.DATE_FORMAT),
-                DateUtil.strToDate(dateEndD,Constants.DATE_FORMAT)
+                DateUtil.strToDate(dateStartD,Constants.DATE_FORMAT_DATE),
+                DateUtil.strToDate(dateEndD,Constants.DATE_FORMAT_DATE)
         );
         // 同时间区间的上一个时间起点
-        String perDateStart = DateUtil.addDay(dateStartD, -days, Constants.DATE_FORMAT_START);
+        String perDateStart = DateUtil.addDay(
+                DateUtil.strToDate(dateStartD,Constants.DATE_FORMAT_DATE), -days, Constants.DATE_FORMAT_START);
         // 当前时间区间
-        String dateStart = DateUtil.dateToStr(
-                DateUtil.strToDate(dateStartD,Constants.DATE_FORMAT),Constants.DATE_FORMAT_START);
-        String dateEnd = DateUtil.dateToStr(
-                DateUtil.strToDate(dateEndD,Constants.DATE_FORMAT),Constants.DATE_FORMAT_END);
+        String dateStart = DateUtil.addDay(
+                DateUtil.strToDate(dateStartD,Constants.DATE_FORMAT_DATE),0,Constants.DATE_FORMAT_START);
+        String dateEnd = DateUtil.addDay(
+                DateUtil.strToDate(dateEndD,Constants.DATE_FORMAT_DATE),0,Constants.DATE_FORMAT_END);
 
         // 上一个时间段查询
         List<StoreOrder> orderPerList = getOrderPayedByDateLimit(perDateStart,dateStart);
@@ -1097,7 +1097,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
             // 当前营业额和上一个同比营业额增长区间
             increasePrice = currentSumPrice - perSumPrice;
             if(increasePrice <= 0) response.setGrowthRate(0);
-            else if(perSumPrice == 0) response.setGrowthRate((int) increasePrice);
+            else if(perSumPrice == 0) response.setGrowthRate((int) increasePrice * 100);
             else response.setGrowthRate((int)((increasePrice * perSumPrice) * 100));
         }else if(type ==2){
             response.setChart(dao.getOrderStatisticsOrderCountDetail(new StoreDateRangeSqlPram(dateStart,dateEnd)));
@@ -1105,7 +1105,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
             increasePrice = orderCurrentList.size() - orderPerList.size();
             if(increasePrice <= 0) response.setGrowthRate(0);
             else if(orderPerList.size() == 0) response.setGrowthRate((int) increasePrice);
-            else response.setGrowthRate((int)((increasePrice * orderPerList.size()) * 100));
+            else response.setGrowthRate((int)((increasePrice / orderPerList.size()) * 100));
         }
         response.setIncreaseTime(increasePrice+"");
         response.setIncreaseTimeStatus(increasePrice >= 0 ? 1:2);
