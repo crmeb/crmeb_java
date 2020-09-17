@@ -12,7 +12,7 @@
         <el-input v-model="editPram.url" placeholder="URL" />
       </el-form-item>
       <el-form-item label="父级" v-if="biztype.value!==3">
-        <el-cascader v-model="editPram.pid" :options="parentOptions" :props="categoryProps" style="width:100%" />
+        <el-cascader v-model="editPram.pid" :options="biztype.value === 5 ? allTreeList : parentOptions" :props="categoryProps" style="width:100%" />
       </el-form-item>
       <el-form-item label="菜单图标" v-if="biztype.value===5">
         <el-input placeholder="请选择菜单图标" v-model="editPram.extra">
@@ -126,8 +126,8 @@ export default {
       this.$emit('hideEditDialog')
     },
     initEditData() {
-      this.addTreeListLabelForCasCard(this.allTreeList, 'child')
-      this.parentOptions = this.allTreeList
+      this.parentOptions = [...this.allTreeList]
+      this.addTreeListLabelForCasCard(this.parentOptions, 'child')
       if (this.isCreate !== 1) {
         const { id } = this.prent
         this.editPram.pid = id
@@ -146,7 +146,7 @@ export default {
     addTreeListLabelForCasCard(arr, child) {
       arr.forEach((o,i) => {
         if (o.child && o.child.length) {
-          o.disabled = true
+          // o.disabled = true
           o.child.forEach((j) => {
             j.disabled = true
           })
