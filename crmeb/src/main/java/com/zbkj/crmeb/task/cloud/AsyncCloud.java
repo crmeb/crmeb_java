@@ -1,6 +1,5 @@
 package com.zbkj.crmeb.task.cloud;
 
-import com.utils.DateUtil;
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +22,7 @@ public class AsyncCloud {
 
     @Scheduled(fixedDelay = 1000 * 5L) //5秒钟同步一次数据
     public void init(){
-        logger.info("---AsyncCloud task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDateTime());
+//        logger.info("---AsyncCloud task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDateTime());
         try {
             systemAttachmentService.async();
 
