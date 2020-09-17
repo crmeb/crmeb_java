@@ -134,7 +134,18 @@ export default {
   data() {
     if (this.isEdit) { // 初始化待编辑数据
       this.formConf.fields.forEach(conf => {
-        conf.__config__.defaultValue = this.formEditData[conf.__vModel__]
+        // 设置现有的数据
+        const hasValueForEdit = this.formEditData[conf.__vModel__]
+        if(hasValueForEdit){
+          conf.__config__.defaultValue = hasValueForEdit
+        }
+        // 如果是el-select标签 判断数据后改变实现默认选中效果
+        if(conf.__config__.tag === 'el-select' || conf.__config__.tag === 'el-radio-group'){
+          const perValue = conf.__slot__.options.filter(option => option.value == this.formEditData[conf.__vModel__])
+          if(perValue.length > 0){ // 有表单数据
+            conf.__config__.defaultValue = perValue[0].value
+          }
+        }
       })
     }
     const data = {
