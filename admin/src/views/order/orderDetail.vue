@@ -9,7 +9,7 @@
       <div class="title">用户信息</div>
       <div class="acea-row">
         <div class="description-term">用户昵称：{{orderDatalist.user?orderDatalist.user.nickname:orderDatalist.realName}}</div>
-        <div class="description-term">绑定电话：{{orderDatalist.user.phone}}</div>
+        <div class="description-term">绑定电话：{{orderDatalist.user.phone ? orderDatalist.user.phone : '无'}}</div>
       </div>
       <el-divider></el-divider>
       <div class="title">{{orderDatalist.statusStr.key === 'toBeWrittenOff'?'提货信息': '收货信息'}}</div>

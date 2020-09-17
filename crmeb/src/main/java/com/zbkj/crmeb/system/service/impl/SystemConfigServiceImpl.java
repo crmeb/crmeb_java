@@ -129,7 +129,9 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         //检测form表单，并且返回需要添加的数据
         systemFormTempService.checkForm(systemFormCheckRequest);
 
-        List<SystemConfig> systemConfigList = new ArrayList<>();
+        List<SystemConfig> systemConfigSaveList = new ArrayList<>();
+        List<SystemConfig> systemConfigUpdateList = new ArrayList<>();
+        List<SystemConfig> systemConfigDeleteList = new ArrayList<>();
 
         //批量添加
         for (SystemFormItemCheckRequest systemFormItemCheckRequest : systemFormCheckRequest.getFields()) {
@@ -141,29 +143,65 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
                 //去掉图片域名之后没有数据则说明当前数据就是图片域名
                 value = systemFormItemCheckRequest.getValue();
             }
+
+            SystemConfig data = selectByName(systemFormItemCheckRequest.getName());
+
             systemConfig.setValue(value);
             systemConfig.setFormId(systemFormCheckRequest.getId());
             systemConfig.setTitle(systemFormItemCheckRequest.getTitle());
-            systemConfigList.add(systemConfig);
+
+            if(null == data){
+                systemConfigSaveList.add(systemConfig);
+            }else{
+                systemConfig.setId(data.getId());
+                systemConfigUpdateList.add(systemConfig);
+            }
         }
 
-        //修改之前的数据
-        updateStatusByFormId(systemFormCheckRequest.getId());
+        //拿到之前form下的所有数据
+        List<SystemConfig> formDataList = selectByFormId(systemFormCheckRequest.getId());
 
-        saveBatch(systemConfigList);
+        //添加或者更新数据
+        saveBatch(systemConfigSaveList);
+        saveOrUpdateBatch(systemConfigUpdateList);
 
-        //删除之前隐藏的数据
-        deleteStatusByFormId(systemFormCheckRequest.getId());
 
-        List<SystemConfig> forAsyncPram = systemConfigList.stream().map(e -> {
-            e.setStatus(true);
-            return e;
-        }).collect(Collectors.toList());
-        async(forAsyncPram);
+        //所有需要修改的数据
+        systemConfigSaveList.addAll(systemConfigUpdateList);
+
+        List<String> collectNameList = systemConfigSaveList.stream().map(SystemConfig::getName).collect(Collectors.toList());
+
+        //删除老的数据且不在新form提交的数据
+        if(null != formDataList && formDataList.size() > 0){
+            for (SystemConfig systemConfig : formDataList) {
+                if(!collectNameList.contains(systemConfig.getName())){
+                    systemConfig.setStatus(true);
+                    systemConfigDeleteList.add(systemConfig);
+                }
+            }
+        }
+        if(systemConfigDeleteList.size() > 0){
+            dao.deleteBatchIds(systemConfigDeleteList.stream().map(SystemConfig::getId).collect(Collectors.toList()));
+
+        }
+
+        systemConfigDeleteList.addAll(systemConfigSaveList);
+        async(systemConfigDeleteList);
 
         return true;
     }
 
+    private List<SystemConfig> selectByFormId(Integer formId) {
+        LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(SystemConfig::getFormId, formId);
+        return dao.selectList(lambdaQueryWrapper);
+    }
+
+    private SystemConfig selectByName(String value) {
+        LambdaQueryWrapper<SystemConfig> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(SystemConfig::getName, value).eq(SystemConfig::getStatus, false);
+        return dao.selectOne(lambdaQueryWrapper);
+    }
 
 
     /**
@@ -291,13 +329,13 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
      * @since 2020-04-16
      */
     private void async(List<SystemConfig> systemConfigList){
-        if (!asyncConfig) {
+        if (!asyncConfig && systemConfigList.size() < 1) {
             //如果配置没有开启
             return;
         }
 
         for (SystemConfig systemConfig : systemConfigList) {
-            if(systemConfig.getStatus()){
+            if(null != systemConfig.getStatus() && systemConfig.getStatus()){
                 //隐藏之后，删除redis的数据
                 deleteRedis(systemConfig.getName());
                 continue;
