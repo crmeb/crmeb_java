@@ -1,6 +1,5 @@
 package com.zbkj.crmeb.task.sms;
 
-import com.utils.DateUtil;
 import com.zbkj.crmeb.sms.service.SmsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +27,7 @@ public class AsyncSmsSend {
 
     @Scheduled(fixedDelay = 1000 * 5L) //5秒同步一次数据
     public void init(){
-        logger.info("---AsyncSmsSend task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDate());
+//        logger.info("---AsyncSmsSend task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDate());
         try {
             smsService.consume();
 

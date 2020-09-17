@@ -24,7 +24,7 @@ public class OrderCancelByUser {
 
     @Scheduled(fixedDelay = 1000 * 60L) //1分钟同步一次数据
     public void init(){
-        logger.info("---OrderRefundByUser task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDateTime());
+//        logger.info("---OrderRefundByUser task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDateTime());
         try {
             orderTaskService.cancelByUser();
 
