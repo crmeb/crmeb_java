@@ -1,6 +1,5 @@
 package com.zbkj.crmeb.task.order;
 
-import com.utils.DateUtil;
 import com.zbkj.crmeb.store.service.OrderTaskService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +22,7 @@ public class OrderRefundByUser {
 
     @Scheduled(fixedDelay = 1000 * 60L) //1分钟同步一次数据
     public void init(){
-        logger.info("---OrderRefundByUser task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDateTime());
+//        logger.info("---OrderRefundByUser task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDateTime());
         try {
             orderTaskService.refundApply();
 

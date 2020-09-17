@@ -1,8 +1,5 @@
 package com.zbkj.crmeb.task.sms;
-import com.utils.DateUtil;
-import com.zbkj.crmeb.sms.model.SmsRecord;
 import com.zbkj.crmeb.sms.service.SmsRecordService;
-import com.zbkj.crmeb.sms.service.SmsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +26,7 @@ public class AsyncSmsSendResult {
 
     @Scheduled(fixedDelay = 1000 * 60L) // todo 后面更改为 一分钟同步一次数据
     public void init(){
-        logger.info("---AsyncSmsResult task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDate());
+//        logger.info("---AsyncSmsResult task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDate());
         try {
             smsRecordsService.consumeSmsStatus();
 
