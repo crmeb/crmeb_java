@@ -914,7 +914,8 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     public StoreOrder getInfoJustOrderInfo(StoreOrder storeOrder) {
         LambdaQueryWrapper<StoreOrder> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         if(null != storeOrder.getUnique()){
-            lambdaQueryWrapper.eq(StoreOrder::getOrderId, storeOrder.getUnique());
+            lambdaQueryWrapper.or().eq(StoreOrder::getOrderId, storeOrder.getUnique())
+                    .or().eq(StoreOrder::getUnique, storeOrder.getUnique());
         }
 //        if(null != storeOrder.getUid()){
             lambdaQueryWrapper.eq(StoreOrder::getUid, storeOrder.getUid());
