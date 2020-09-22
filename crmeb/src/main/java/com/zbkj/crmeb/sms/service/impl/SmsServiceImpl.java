@@ -155,6 +155,7 @@ public class SmsServiceImpl implements SmsService {
 //        init();
         registerRequest.setPassword(DigestUtils.md5Hex(registerRequest.getPassword()));
         Map<String, Object> map = CrmebUtil.objectToMap(registerRequest);
+        map.put("url", registerRequest.getDomain());
         JSONObject post = post(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_REGISTER_URI, map);
         //更新配置
         setConfigSmsInfo(registerRequest.getAccount(), registerRequest.getPassword());
