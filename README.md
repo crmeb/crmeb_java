@@ -30,8 +30,7 @@
 
 如果群二维码过期请加开发者微信拉你进群
 
-![开发者微信](https://images.gitee.com/uploads/images/2020/0825/172016_e4d77fa4_2012975.png "屏幕截图.png")
-
+![开发者微信](https://images.gitee.com/uploads/images/2020/0925/100611_30564d53_1491977.png "屏幕截图.png")
 
 ### 演示站
 1. 移动端：[https://java.crmeb.net](https://java.crmeb.net)
