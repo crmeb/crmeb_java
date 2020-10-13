@@ -31,7 +31,7 @@
 
 如果群二维码过期请加开发者微信拉你进群
 
-![开发者微信](https://stivepeim.gitee.io/my-images/iShot2020-10-13.png "屏幕截图.png")
+![开发者微信](https://stivepeim.gitee.io/my-images/stivepeim_qywx_qrcode.png "屏幕截图.png")
 
 ### 演示站
 1. 移动端：[https://java.crmeb.net](https://java.crmeb.net)
