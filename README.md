@@ -26,7 +26,7 @@
 ### 加技术交流群
 
 <!-- ![加技术交流群](https://images.gitee.com/uploads/images/2020/0922/092152_8b623f8b_2012975.png "屏幕截图.png") -->
-![加技术交流群](https://stivepeim.gitee.io/my-images/2020-10-21.jpg "屏幕截图.png")
+![加技术交流群](https://stivepeim.gitee.io/my-images/2020-10-21-1.jpg "屏幕截图.png")
 
 
 如果群二维码过期请加开发者微信拉你进群
