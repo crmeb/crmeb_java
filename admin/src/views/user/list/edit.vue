@@ -153,8 +153,8 @@
         });
       },
       resetForm(formName) {
-        this.$refs[formName].resetFields()
-        this.$parent.visible = false
+        this.$refs[formName].resetFields();
+        this.$emit('resetForm');
       }
     }
   }

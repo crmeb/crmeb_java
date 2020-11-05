@@ -4,13 +4,11 @@
       <div class="container">
         <el-form inline>
           <el-form-item label="商品分类：">
-            <el-cascader v-model="tableFrom.cateId" :options="merCateList" :props="props" clearable class="selWidth mr20" @change="getList"/>
+            <el-cascader v-model="tableFrom.cateId" :options="merCateList" :props="props" clearable class="selWidth mr20" @change="getList(1)"/>
           </el-form-item>
           <el-form-item label="商品搜索：">
-            <!--<el-input v-model="tableFrom.keywords" placeholder="请输入内容"></el-input>-->
-
-            <el-input v-model="tableFrom.keywords" @input="onInput()" placeholder="请输入商品名称，关键字，产品编号" class="selWidth">
-              <el-button slot="append" icon="el-icon-search" @click="getList"/>
+            <el-input v-model="tableFrom.keywords" @input="onInput($event)" placeholder="请输入商品名称，关键字，产品编号" class="selWidth">
+              <el-button slot="append" icon="el-icon-search" @click="getList(1)"/>
             </el-input>
           </el-form-item>
         </el-form>
@@ -151,7 +149,7 @@ export default {
     this.getCategorySelect()
   },
   methods: {
-    onInput(){
+    onInput(e){
       this.$forceUpdate();
     },
     changeType(v) {
@@ -221,8 +219,9 @@ export default {
         this.$message.error(res.message)
       })
     },
-    getList() {
+    getList(num) {
       this.listLoading = true
+      this.tableFrom.page = num ? num : this.tableFrom.page;
       productLstApi(this.tableFrom).then(res => {
         this.tableData.data = res.list
         this.tableData.total = res.total

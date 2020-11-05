@@ -1,9 +1,8 @@
 package com.zbkj.crmeb.task.product;
 
 import com.utils.DateUtil;
-import com.zbkj.crmeb.store.service.OrderTaskService;
+import com.zbkj.crmeb.seckill.service.StoreSeckillService;
 import com.zbkj.crmeb.store.service.StoreProductService;
-import com.zbkj.crmeb.task.order.OrderTakeByUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +11,16 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-/**
- * @author stivepeim
- * @title: ProductStock
- * @projectName crmeb
- * @description: 操作商品库存
- * @date 2020/8/2017:04
+/** 操作商品库存
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 
 @Component
@@ -30,11 +33,15 @@ public class ProductStock {
     @Autowired
     private StoreProductService storeProductService;
 
+    @Autowired
+    private StoreSeckillService storeSeckillService;
+
     @Scheduled(fixedDelay = 1000 * 60L) //1分钟同步一次数据
     public void init(){
-//        logger.info("---OrderTakeByUser task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDateTime());
+        logger.info("---OrderTakeByUser task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDateTime());
         try {
-            storeProductService.consumeProductStock();
+            storeProductService.consumeProductStock(); // 商品本身库存任务
+            storeSeckillService.consumeProductStock(); // 秒杀本身库存任务
 
         }catch (Exception e){
             e.printStackTrace();

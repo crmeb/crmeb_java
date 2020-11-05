@@ -6,6 +6,7 @@
       :is-create="isCreate"
       :edit-data="editData"
       @submit="handlerSubmit"
+      @resetForm="resetForm"
     />
     <!--      {{ editData }}-->
   </div>
@@ -47,6 +48,9 @@ export default {
     this.handlerInitEditData()
   },
   methods: {
+    resetForm(formValue) {
+      this.dialogVisible = false
+    },
     handlerInitEditData() {
       const { sort, status } = this.editData
       this.selfForm.sort = sort

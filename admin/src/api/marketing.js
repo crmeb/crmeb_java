@@ -85,3 +85,148 @@ export function integralListApi(params, data) {
     data
   })
 }
+
+/**
+ * 秒杀配置 列表
+ * @param pram
+ */
+export function seckillListApi(params) {
+  return request({
+    url: '/admin/store/seckill/manger/list',
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 秒杀配置 详情
+ * @param pram
+ */
+export function seckillInfoApi(params) {
+  return request({
+    url: '/admin/store/seckill/manger/info',
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 秒杀配置 新增
+ * @param pram
+ */
+export function seckillSaveApi(data) {
+  return request({
+    url: '/admin/store/seckill/manger/save',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * 秒杀配置 修改
+ * @param pram
+ */
+export function seckillUpdateApi(params, data) {
+  return request({
+    url: '/admin/store/seckill/manger/update',
+    method: 'post',
+    params,
+    data
+  })
+}
+
+/**
+ * 秒杀配置 删除
+ * @param pram
+ */
+export function seckillDeleteApi(params) {
+  return request({
+    url: '/admin/store/seckill/manger/delete',
+    method: 'get',
+    params
+  })
+}
+
+
+/**
+ * 秒杀商品 列表
+ * @param pram
+ */
+export function seckillStoreListApi(params) {
+  return request({
+    url: '/admin/store/seckill/list',
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 秒杀商品 详情
+ * @param pram
+ */
+export function seckillStoreInfoApi(params) {
+  return request({
+    url: '/admin/store/seckill/info',
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 秒杀商品 新增
+ * @param pram
+ */
+export function seckillStoreSaveApi(data) {
+  return request({
+    url: '/admin/store/seckill/save',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * 秒杀商品 修改
+ * @param pram
+ */
+export function seckillStoreUpdateApi(params, data) {
+  return request({
+    url: '/admin/store/seckill/update',
+    method: 'post',
+    params,
+    data
+  })
+}
+
+/**
+ * 秒杀商品 删除
+ * @param pram
+ */
+export function seckillStoreDeleteApi(params) {
+  return request({
+    url: '/admin/store/seckill/delete',
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 秒杀商品 修改状态
+ */
+export function seckillStoreStatusApi(params) {
+  return request({
+    url: '/admin/store/seckill/update/status',
+    method: 'post',
+    params
+  })
+}
+
+/**
+ * 秒杀配置 修改状态
+ */
+export function seckillConfigStatusApi(id,params) {
+  return request({
+    url: `/admin/store/seckill/manger/update/status/${id}`,
+    method: 'post',
+    params
+  })
+}

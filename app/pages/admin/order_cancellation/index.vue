@@ -128,7 +128,7 @@
 						self.verify_code = ''
 						self.iShidden = false
 						self.$util.Tips({
-							title: res.msg
+							title: res
 						});
 					})
 					.catch(res => {

@@ -46,6 +46,7 @@ public class SmsRecordController {
     public CommonResult<Object> sendCodeForRegister(@PathVariable String phone){
         return CommonResult.success(smsService.sendCodeForRegister(phone));
     }
+
     /**
      * 发送短信
      * @param phone 手机号码

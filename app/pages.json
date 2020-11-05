@@ -497,7 +497,10 @@
 		"navigationBarTitleText": "crmeb",
 		"navigationBarBackgroundColor": "#fff",
 		"backgroundColor": "#F8F8F8",
-		"titleNView": false
+		"titleNView": false,
+		  "rpxCalcMaxDeviceWidth": 960,
+		        "rpxCalcBaseDeviceWidth": 375,
+		        "rpxCalcIncludeWidth": 750
 	},
 	"tabBar": {
 		"color": "#282828",

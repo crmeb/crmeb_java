@@ -13,6 +13,7 @@ import com.zbkj.crmeb.user.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -25,13 +26,21 @@ import java.util.Map;
 
 
 /**
- * 购物车表 前端控制器
+ * 购物车 前端控制器
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Slf4j
 @RestController
 @RequestMapping("api/front/cart")
 @Api(tags = "商品 -- 购物车") //配合swagger使用
-
 public class CartController {
 
     @Autowired
@@ -64,13 +73,13 @@ public class CartController {
      */
     @ApiOperation(value = "新增")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
-    public CommonResult<HashMap<String,String>> save(@Validated CartRequest storeCartRequest){
+    public CommonResult<HashMap<String,String>> save(@RequestBody @Validated CartRequest storeCartRequest){
         StoreCart storeCart = new StoreCart();
         BeanUtils.copyProperties(storeCartRequest, storeCart);
-
-        if(storeCartService.saveCate(storeCart)){
+        String cartId = storeCartService.saveCate(storeCart);
+        if(StringUtils.isNotBlank(cartId)){
             HashMap<String,String> result = new HashMap<>();
-            result.put("cartId",storeCart.getId()+"");
+            result.put("cartId", cartId);
             return CommonResult.success(result);
         }else{
             return CommonResult.failed();

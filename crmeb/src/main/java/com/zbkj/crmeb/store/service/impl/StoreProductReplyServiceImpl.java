@@ -194,7 +194,7 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
 
             //获取用户信息
             User user = userService.getInfo();
-            storeProductReply.setAvatar(user.getAvatar());
+            storeProductReply.setAvatar(systemAttachmentService.clearPrefix(user.getAvatar()));
             storeProductReply.setNickname(user.getNickname());
             if(StringUtils.isNotBlank(request.getPics())){
                 String pics = request.getPics().replace("[\"","").replace("\"]","")
@@ -229,6 +229,7 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
                     .replace("\"","");
             storeProductReply.setPics(systemAttachmentService.clearPrefix(ArrayUtils.toString(pics)));
         }
+        storeProductReply.setAvatar(systemAttachmentService.clearPrefix(storeProductReply.getAvatar()));
         storeProductReply.setUnique(CrmebUtil.randomCount(11111,9999)+"");
         return save(storeProductReply);
     }

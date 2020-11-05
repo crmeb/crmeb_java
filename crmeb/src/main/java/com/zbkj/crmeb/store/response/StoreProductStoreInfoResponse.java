@@ -1,11 +1,13 @@
 package com.zbkj.crmeb.store.response;
 
+import com.zbkj.crmeb.front.response.ProductActivityItemResponse;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * <p>
@@ -139,8 +141,17 @@ public class StoreProductStoreInfoResponse implements Serializable {
     @ApiModelProperty(value = "规格 0单 1多")
     private Boolean specType;
 
-    @ApiModelProperty(value = "活动显示排序1=秒杀，2=砍价，3=拼团")
+    @ApiModelProperty(value = "活动显示排序 0=默认, 1=秒杀，2=砍价，3=拼团")
     private String activity;
+
+    @ApiModelProperty(value = "活动显示排序 0=默认，1=秒杀，2=砍价，3=拼团")
+    private String activityStr;
+
+    @ApiModelProperty(value = "为移动端特定参数")
+    private ProductActivityItemResponse activityH5;
+
+    @ApiModelProperty(value = "为移动端特定参数 所有参与的活动")
+    private List<ProductActivityItemResponse> activityAllH5;
 
     private Integer[] cateIds;
 

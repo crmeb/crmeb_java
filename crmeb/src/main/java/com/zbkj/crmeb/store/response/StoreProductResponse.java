@@ -4,6 +4,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.constants.Constants;
+import com.utils.CrmebUtil;
+import com.zbkj.crmeb.front.response.ProductActivityItemResponse;
 import com.zbkj.crmeb.marketing.model.StoreCoupon;
 import com.zbkj.crmeb.store.model.StoreProductAttr;
 import com.zbkj.crmeb.store.model.StoreProductAttrValue;
@@ -13,11 +16,15 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -33,6 +40,36 @@ import java.util.List;
 @TableName("eb_store_product")
 @ApiModel(value="StoreProduct对象", description="商品表")
 public class StoreProductResponse implements Serializable {
+
+
+    public String getActivity() {
+        List<String> _activity = new ArrayList<>();
+        if(StringUtils.isBlank(activity)){
+            this.setActivityStr(String.join(",",_activity));
+            return activity;
+        }else{
+            List<Integer> activityValue = CrmebUtil.stringToArrayInt(activity);
+            activityValue.stream().map(e->{
+                switch (e){
+                    case Constants.PRODUCT_TYPE_NORMAL:
+                        _activity.add(Constants.PRODUCT_TYPE_NORMAL_STR);
+                        break;
+                    case Constants.PRODUCT_TYPE_SECKILL:
+                        _activity.add(Constants.PRODUCT_TYPE_SECKILL_STR);
+                        break;
+                    case Constants.PRODUCT_TYPE_BARGIN:
+                        _activity.add(Constants.PRODUCT_TYPE_BARGIN_STR);
+                        break;
+                    case Constants.PRODUCT_TYPE_PINGTUAN:
+                        _activity.add(Constants.PRODUCT_TYPE_PINGTUAN_STR);
+                        break;
+                }
+                return e;
+            }).collect(Collectors.toList());
+        }
+        this.setActivityStr(String.join(",",_activity));
+        return activity;
+    }
 
     @ApiModelProperty(value = "商品id")
     @TableId(value = "id", type = IdType.AUTO)
@@ -155,8 +192,17 @@ public class StoreProductResponse implements Serializable {
     @ApiModelProperty(value = "规格 0单 1多")
     private Boolean specType;
 
-    @ApiModelProperty(value = "活动显示排序1=秒杀，2=砍价，3=拼团")
+    @ApiModelProperty(value = "活动显示排序 0=默认，1=秒杀，2=砍价，3=拼团")
     private String activity;
+
+    @ApiModelProperty(value = "活动显示排序 0=默认，1=秒杀，2=砍价，3=拼团")
+    private String activityStr;
+
+    @ApiModelProperty(value = "为移动端特定参数")
+    private ProductActivityItemResponse activityH5;
+
+    @ApiModelProperty(value = "为移动端特定参数 所有参与的活动")
+    private List<ProductActivityItemResponse> activityAllH5;
 
     @ApiModelProperty(value = "商品属性")
     private List<StoreProductAttr> attr;
@@ -180,5 +226,39 @@ public class StoreProductResponse implements Serializable {
 
     @ApiModelProperty(value = "优惠券Ids")
     private List<Integer> couponIds;
+
+    // 秒杀用到
+    @ApiModelProperty(value = "活动标题")
+    private String title;
+
+    @ApiModelProperty(value = "简介")
+    private String info;
+
+    @ApiModelProperty(value = "时间段ID")
+    private Integer timeId;
+
+    @ApiModelProperty(value = "最多秒杀几个")
+    private Integer num;
+
+    @ApiModelProperty(value = "开始时间")
+    private Date startTime;
+
+    @ApiModelProperty(value = "结束时间")
+    private Date stopTime;
+
+    @ApiModelProperty(value = "秒杀状态 0=关闭 1=开启")
+    private Integer status;
+
+    @ApiModelProperty(value = "商品id")
+    private Integer productId;
+
+    @ApiModelProperty(value = "秒杀轮播图")
+    private String images;
+
+    @ApiModelProperty(value = "限购数量 - 销量")
+    private Integer quota;
+
+    @ApiModelProperty(value = "限购总数")
+    private Integer quotaShow;
 
 }

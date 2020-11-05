@@ -13,7 +13,7 @@ import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.system.dao.SystemStoreStaffDao;
 import com.zbkj.crmeb.system.model.SystemStore;
 import com.zbkj.crmeb.system.model.SystemStoreStaff;
-import com.zbkj.crmeb.system.model.SystemStoreStaffResponse;
+import com.zbkj.crmeb.system.response.SystemStoreStaffResponse;
 import com.zbkj.crmeb.system.request.SystemStoreStaffRequest;
 import com.zbkj.crmeb.system.service.SystemStoreService;
 import com.zbkj.crmeb.system.service.SystemStoreStaffService;

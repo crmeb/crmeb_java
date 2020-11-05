@@ -137,4 +137,8 @@ public interface UserService extends IService<User> {
     void consumeAfterUpdateUserFounds(Integer uid, BigDecimal price, String type);
 
     void bindSpread(User user, Integer spreadPid);
+
+    boolean upadteBrokeragePrice(User user, BigDecimal newBrokeragePrice);
+
+    BigDecimal getUnCommissionPrice();
 }

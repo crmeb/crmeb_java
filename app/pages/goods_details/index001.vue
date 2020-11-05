@@ -99,9 +99,9 @@
 									<view class="item" v-for="(val,indexn) in item.list" :key="indexn" @click="goDetail(val)">
 										<view class="pictrue">
 											<image :src="val.image"></image>
-											<span class="pictrue_log pictrue_log_class" v-if="val.activity && val.activity.type === '1'">秒杀</span>
-											<span class="pictrue_log pictrue_log_class" v-if="val.activity && val.activity.type === '2'">砍价</span>
-											<span class="pictrue_log pictrue_log_class" v-if="val.activity && val.activity.type === '3'">拼团</span>
+											<span class="pictrue_log pictrue_log_class" v-if="val.activityH5 && val.activityH5.type === '1'">秒杀</span>
+											<span class="pictrue_log pictrue_log_class" v-if="val.activityH5 && val.activityH5.type === '2'">砍价</span>
+											<span class="pictrue_log pictrue_log_class" v-if="val.activityH5 && val.activityH5.type === '3'">拼团</span>
 										</view>
 										<view class="name line1">{{val.storeName}}</view>
 										<view class="money font-color">¥{{val.price}}</view>
@@ -948,7 +948,7 @@
 					.catch(res => {
 						that.isOpen = false;
 						return that.$util.Tips({
-							title: res.msg
+							title: res
 						});
 					});
 			},

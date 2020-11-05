@@ -7,18 +7,18 @@ import com.zbkj.crmeb.finance.model.UserFundsMonitor;
 import com.zbkj.crmeb.finance.request.FundsMonitorSearchRequest;
 import com.zbkj.crmeb.finance.request.FundsMonitorUserSearchRequest;
 import com.zbkj.crmeb.finance.service.UserFundsMonitorService;
-import com.zbkj.crmeb.user.model.User;
-import com.zbkj.crmeb.user.model.UserBill;
+import com.zbkj.crmeb.user.request.UserBillDetailListRequest;
+import com.zbkj.crmeb.user.response.BillType;
+import com.zbkj.crmeb.user.response.UserBillResponse;
 import com.zbkj.crmeb.user.service.UserBillService;
-import com.zbkj.crmeb.user.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -26,6 +26,15 @@ import java.util.List;
 
 /**
  * 用户提现表 前端控制器
+ *  +----------------------------------------------------------------------
+ *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ *  +----------------------------------------------------------------------
+ *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  +----------------------------------------------------------------------
+ *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ *  +----------------------------------------------------------------------
+ *  | Author: CRMEB Team <admin@crmeb.com>
+ *  +----------------------------------------------------------------------
  */
 @Slf4j
 @RestController
@@ -49,9 +58,19 @@ public class FundsMonitorController {
      */
     @ApiOperation(value = "资金监控")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<UserBill>>  getList(@Validated FundsMonitorSearchRequest request, @Validated PageParamRequest pageParamRequest){
-        CommonPage<UserBill> userExtractCommonPage = CommonPage.restPage(userBillService.getList(request, pageParamRequest));
+    public CommonResult<CommonPage<UserBillResponse>>  getList(@Validated FundsMonitorSearchRequest request, @Validated PageParamRequest pageParamRequest){
+        CommonPage<UserBillResponse> userExtractCommonPage = CommonPage.restPage(userBillService.getListAdmin(request, pageParamRequest));
         return CommonResult.success(userExtractCommonPage);
+    }
+
+    /**
+     * 资金监控查询参数
+     * @return 资金监控查询参数集合
+     */
+    @ApiOperation(value = "资金监控--明细类型查询数据")
+    @RequestMapping(value = "/list/option", method = RequestMethod.GET)
+    public CommonResult<Object>  getList(){
+        return CommonResult.success(userBillService.getSearchOption());
     }
 
     /**
@@ -64,8 +83,36 @@ public class FundsMonitorController {
     @ApiOperation(value = "佣金记录")
     @RequestMapping(value = "/list/user", method = RequestMethod.GET)
     public CommonResult<CommonPage<UserFundsMonitor>>  user(@Validated FundsMonitorUserSearchRequest request, @Validated PageParamRequest pageParamRequest){
-        CommonPage<UserFundsMonitor> userFundsMonitorCommonPage = CommonPage.restPage(userFundsMonitorService.getFundsMonitor(request, pageParamRequest));
+        CommonPage<UserFundsMonitor> userFundsMonitorCommonPage =
+                CommonPage.restPage(userFundsMonitorService.getFundsMonitor(request, pageParamRequest));
         return CommonResult.success(userFundsMonitorCommonPage);
+    }
+
+    /**
+     * 佣金详细记录
+     * @param request   查询基本参数
+     * @param pageParamRequest  分页参数
+     * @param userId    被查询的用户id
+     * @return  佣金查询结果
+     */
+    @ApiOperation(value = "佣金详细记录")
+    @RequestMapping(value = "/list/user/detail/{userId}", method = RequestMethod.GET)
+    public CommonResult<CommonPage<UserBillResponse>> userDetail(UserBillDetailListRequest request,
+                                                         PageParamRequest pageParamRequest,
+                                                         @PathVariable Integer userId){
+        CommonPage<UserBillResponse> ub = CommonPage.restPage(userBillService.getByBaseSearch(userId,request,pageParamRequest));
+        return CommonResult.success(ub);
+    }
+
+
+    /**
+     * 获取资金操作类型列表
+     * @return 查询结果
+     */
+    @ApiOperation(value="资金操作类型")
+    @RequestMapping(value = "/list/billtype", method = RequestMethod.GET)
+    public CommonResult<List<BillType>> getBillTypeList(){
+        return CommonResult.success(userBillService.getBillType());
     }
 }
 

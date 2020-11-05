@@ -6,6 +6,7 @@
       :form-conf="formConf"
       :form-edit-data="editData"
       @submit="handlerSubmit"
+      @resetForm="resetForm"
     />
     <!--    editData:{{ editData }}-->
     <!--    formConf:{{ formConf }}-->
@@ -54,6 +55,9 @@ export default {
     },
     handlerSubmit(formValue) {
       this.$emit('submit', formValue)
+    },
+    resetForm(formValue){
+      this.$emit('resetForm', formValue)
     }
   }
 }

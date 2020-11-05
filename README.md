@@ -26,7 +26,7 @@
 ### 加技术交流群
 
 <!-- ![加技术交流群](https://images.gitee.com/uploads/images/2020/0922/092152_8b623f8b_2012975.png "屏幕截图.png") -->
-![加技术交流群](https://stivepeim.gitee.io/my-images/crmeb_group2_2020-10-29.jpg "屏幕截图.png")
+![加技术交流群](https://stivepeim.gitee.io/my-images/2020_11_5.jpg "开发技术2群二维码.png")
 
 
 如果群二维码过期请加开发者微信拉你进群
@@ -128,7 +128,7 @@ Excel数据导出,导出表格更加美观可视；
 ### 强大的后台权限管理
 后台多种角色、多重身份权限管理，权限可以控制到每一步操作
 ### 强大的表单生成控件
-可以自由配置开发表单，减少前端工作量，后端接口统一调用
+可以自由配置开发表单，减少前端工作量，后端接口统一调
 
 
 ## 安装
@@ -179,6 +179,29 @@ Excel数据导出,导出表格更加美观可视；
 1. [易联云文档](http://doc2.10ss.net/337744 "易联云文档")
 2. [易联云JAVA SDK](http://doc2.10ss.net/337744 "易联云JAVA SDK gitee文档")
 3. [如何导入第三方JAVA SDK包](https://blog.csdn.net/weixin_46028577/article/details/106342938?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase "如何导入第三方JAVA SDK包")
+#
+
+# v1.2 功能更新列表
+### 更新Note
+## 修复内容列表
+	1. 修复购物车,订单和退单后后置任务正确执行
+	2. 修复佣金记录金额和详情
+	3. 修复管理端 移动应用界面下订单管理数据统计不准确的问题
+	4. 修复短信API升级-后台使用一号通
+	5. 修复用户管理相关问题
+	6. 修复核销点核销后核销地址不准确
+	7. 修复资源同步云服务的问题
+## 新增功能
+	1. 秒杀
+		a. 秒杀时段配置
+		b. 秒杀商品维护
+	2. 财务管理
+		a. 申请提现
+		b. 财务记录
+			i. 充值记录
+			ii. 资金监控
+		c. 佣金记录
+普通商品显示该商品正在参加的活动信息[秒杀]
 
 
 ## admin项目说明
