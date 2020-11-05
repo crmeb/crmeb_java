@@ -30,13 +30,13 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://数据库IP:3306/crmeb_java?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
-    username: 数据库名称
-    password: 数据库密码
+    url: jdbc:mysql://127.0.0.1:3306/crmeb_java_test?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
+    username: youMysqlAccount
+    password: youMysqlPwd
   redis:
-    host: redis地址 #地址
+    host:  redisPath #地址
     port: 6379 #端口
-    password: redis密码
+    password: #密码
     timeout: 30000 # 连接超时时间（毫秒）
     database: 0 #默认数据库
     jedis:
@@ -60,7 +60,7 @@ logging:
 # mybatis 配置
 mybatis-plus:
   mapper-locations: classpath*:mapper/*/*Mapper.xml #xml扫描，多个目录用逗号或者分号分隔（告诉 Mapper 所对应的 XML 文件位置）
-  # 配置slq打印日志
+  # 配置sql打印日志
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:

@@ -18,6 +18,7 @@ import "vue-ydui/dist/ydui.base.css";
 // 懒加载
 import VueLazyload from 'vue-lazyload'
 
+Vue.config.devtools=true
 import App from './App'
 import store from './store'
 import router from './router'
@@ -31,6 +32,7 @@ import UploadFile from '@/components/Upload/uploadFile.vue'
 import ueditorFrom from '@/components/ueditorFrom'
 import VueUeditorWrap from 'vue-ueditor-wrap'
 import iconFrom from './components/iconFrom'
+import TimeSelect from '@/components/TimeSelect'
 import dialog from "@/libs/dialog";
 import scroll from "@/libs/loading";
 import schema from "async-validator";
@@ -67,6 +69,7 @@ Vue.component('SelfUpload', SelfUpload)
 Vue.component('iconFrom', iconFrom)
 Vue.component('ueditorFrom', ueditorFrom)
 Vue.component('uploadFile', UploadFile)
+Vue.component('timeSelect', TimeSelect)
 Vue.prototype.$modalSure = modalSure
 Vue.prototype.$modalAttr = modalAttr
 Vue.prototype.$modalIcon = modalIcon

@@ -19,7 +19,7 @@
             <div class="container">
               <el-form inline size="small">
                 <el-form-item>
-                  <el-select v-model="listPram.status" placeholder="状态" clearable class="selWidth">
+                  <el-select v-model="listPram.status" placeholder="状态" class="selWidth">
                     <el-option
                       v-for="item in constants.roleListStatus"
                       :key="item.value"
@@ -86,7 +86,7 @@
               <el-table-column label="操作" min-width="200" fixed="right">
                 <template slot-scope="scope">
                   <el-button
-                    v-if="(biztype.value === 1 && scope.row.pid === 0) || (biztype.value !== 1)"
+                    v-if="(biztype.value === 1 && scope.row.pid === 0) || biztype.value === 5"
                     type="text"
                     size="small"
                     @click="handleAddMenu(scope.row)"
@@ -179,10 +179,10 @@ export default {
       dataList: [],
       treeList: [],
       listPram: {
-        pid: this.pid,
+       pid: this.pid,
         type: this.biztype.value,
-        status: null,
-        name: null,
+        status: -1,
+        name: '',
         page: constants.page.page,
         limit: constants.page.limit[0]
       },
@@ -193,10 +193,10 @@ export default {
     }
   },
   mounted() {
-    // if(this.biztype.value === 3){
-    //   this.listPram.pageSize = constants.page.pageSize[4]
-    //   this.handlerGetList()
-    // }else{
+   /* if(this.biztype.value === 3){
+      this.listPram.pageSize = constants.page.pageSize[4]
+      this.handlerGetList()
+    }else{*/
     this.handlerGetTreeList()
     // }
   },
@@ -254,13 +254,15 @@ export default {
       })
     },
     handlerGetList() {
-      categoryApi.listCategroy(this.listPram).then(data => {
-        this.treeList = data.list
-      })
+      this.handlerGetTreeList();
+      // categoryApi.listCategroy({status:this.listPram.status, type: 1 }).then(data => {
+      //   this.treeList = data.list
+      // })
     },
     handlerGetTreeList() {
       // this.biztype.value === 5 && !this.selectModel) ?  -1 : 1
-      const _pram = { type: this.biztype.value, status: !this.selectModel ? -1 : (this.biztype.value === 5 ? -1 : 1) }
+      // const _pram = { type: this.biztype.value, status: !this.selectModel ? -1 : (this.biztype.value === 5 ? -1 : 1) }
+      const _pram = { type: this.biztype.value, status: this.listPram.status, name: this.listPram.name  }
       this.loading = true
       this.biztype.value!==3 ? categoryApi.treeCategroy(_pram).then(data => {
         this.treeList = this.handleAddArrt(data)
@@ -279,7 +281,6 @@ export default {
       console.log('data:', data)
     },
     handleAddArrt(treeData) {
-      // let _result = this.addTreeListLabel(treeData)
       const _result = selfUtil.addTreeListLabel(treeData)
       return _result
     },

@@ -39,7 +39,8 @@ public class SystemCityAsyncServiceImpl extends ServiceImpl<SystemCityDao, Syste
      * @author Mr.Zhang
      * @since 2020-04-16
      */
-    private void setListTree() {
+    @Override
+    public void setListTree() {
         //循环数据，把数据对象变成带list结构的vo
         List<SystemCityTreeVo> treeList = new ArrayList<>();
 

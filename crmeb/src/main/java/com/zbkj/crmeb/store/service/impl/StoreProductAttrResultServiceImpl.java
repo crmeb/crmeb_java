@@ -18,10 +18,17 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
-* @author Mr.Zhang
-* @description StoreProductAttrResultServiceImpl 接口实现
-* @date 2020-05-27
-*/
+ * StoreProductAttrResultService实现类
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class StoreProductAttrResultServiceImpl extends ServiceImpl<StoreProductAttrResultDao, StoreProductAttrResult>
         implements StoreProductAttrResultService {
@@ -43,7 +50,7 @@ public class StoreProductAttrResultServiceImpl extends ServiceImpl<StoreProductA
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
 
         //带 StoreProductAttrResult 类的多条件查询
-        LambdaQueryWrapper<StoreProductAttrResult> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<StoreProductAttrResult> lambdaQueryWrapper = Wrappers.lambdaQuery();
         StoreProductAttrResult model = new StoreProductAttrResult();
         BeanUtils.copyProperties(request, model);
         lambdaQueryWrapper.setEntity(model);
@@ -52,7 +59,7 @@ public class StoreProductAttrResultServiceImpl extends ServiceImpl<StoreProductA
 
     @Override
     public StoreProductAttrResult getByProductId(int productId) {
-        LambdaQueryWrapper<StoreProductAttrResult> lw = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<StoreProductAttrResult> lw = Wrappers.lambdaQuery();
         lw.eq(StoreProductAttrResult::getProductId, productId);
         List<StoreProductAttrResult> results = dao.selectList(lw);
         if(results.size() > 1){
@@ -77,10 +84,23 @@ public class StoreProductAttrResultServiceImpl extends ServiceImpl<StoreProductA
     }
 
     @Override
-    public void deleteByProductId(int productId) {
-        LambdaQueryWrapper<StoreProductAttrResult> lmdQ = new LambdaQueryWrapper<>();
-        lmdQ.eq(StoreProductAttrResult::getProductId, productId);
+    public void deleteByProductId(int productId, int type) {
+        LambdaQueryWrapper<StoreProductAttrResult> lmdQ = Wrappers.lambdaQuery();
+        lmdQ.eq(StoreProductAttrResult::getProductId, productId).eq(StoreProductAttrResult::getType,type);
         dao.delete(lmdQ);
+    }
+
+    /**
+     * 根据商品属性值集合查询
+     *
+     * @param storeProductAttrResult 查询参数
+     * @return 查询结果
+     */
+    @Override
+    public List<StoreProductAttrResult> getByEntity(StoreProductAttrResult storeProductAttrResult) {
+        LambdaQueryWrapper<StoreProductAttrResult> lqw = Wrappers.lambdaQuery();
+        lqw.setEntity(storeProductAttrResult);
+        return dao.selectList(lqw);
     }
 }
 

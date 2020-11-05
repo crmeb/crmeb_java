@@ -970,12 +970,15 @@
 							orderCancel(self.orderInfo.id)
 								.then((data) => {
 									self.$util.Tips({
-										title: '删除成功'
+										title: '取消成功'
 									}, {
 										tab: 3
 									})
 								})
 								.catch(() => {
+									self.$util.Tips({
+										title: err
+									})
 									self.getDetail();
 								});
 						} else if (res.cancel) {

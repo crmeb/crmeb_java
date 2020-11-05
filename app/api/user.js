@@ -129,6 +129,20 @@ export function getCommissionInfo(q, types) {
 }
 
 /*
+ * 提现记录 getCountApi
+ * */
+export function getRecordApi(q) {
+  return request.get("extract/record", q);
+}
+
+/*
+ * 提现总金额 
+ * */
+export function getCountApi() {
+  return request.get("extract/totalMoney");
+}
+
+/*
  * 积分记录
  * */
 export function getIntegralList(q) {

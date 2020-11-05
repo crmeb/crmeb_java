@@ -116,6 +116,10 @@ public class SystemCityServiceImpl extends ServiceImpl<SystemCityDao, SystemCity
      */
     @Override
     public Object getListTree() {
+        Object cityList = redisUtil.get(Constants.CITY_LIST_TREE);
+        if(null == cityList){
+            systemCityAsyncService.setListTree();
+        }
         return redisUtil.get(Constants.CITY_LIST_TREE);
     }
 

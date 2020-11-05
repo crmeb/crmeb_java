@@ -154,9 +154,9 @@
 				<view class="list-box animated" :class='tempArr.length > 0?"fadeIn on":""'>
 					<view class="item" v-for="(item,index) in tempArr" :key="index" @click="goDetail(item)">
 						<view class="pictrue">
-							<span class="pictrue_log pictrue_log_class" v-if="item.activity && item.activity.type === '1'">秒杀</span>
-							<span class="pictrue_log pictrue_log_class" v-if="item.activity && item.activity.type === '2'">砍价</span>
-							<span class="pictrue_log pictrue_log_class" v-if="item.activity && item.activity.type === '3'">拼团</span>
+							<span class="pictrue_log pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '1'">秒杀</span>
+							<span class="pictrue_log pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '2'">砍价</span>
+							<span class="pictrue_log pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '3'">拼团</span>
 							<image :src="item.image" mode=""></image>
 						</view>
 						<view class="text-info">
@@ -177,6 +177,40 @@
 				</view>
 			</view>
 		</view>
+		<!-- 秒杀 -->
+		<view class="spike-box" :style="" v-if="spikeList.length>0">
+			<view class="hd">
+				<view class="left">
+					<image :src="imgUrl" class="icon" v-if="imgUrl"></image>
+					<image src="/static/images/spike-icon-002.gif" class="icon" v-else></image>
+					
+					<view class="name">限时秒杀</view>
+					<!-- <image src="/static/images/spike-icon-001.png" class="title"></image> -->
+					<countDown :is-day="false" :tip-text="' '" :day-text="' '" :hour-text="' : '" :minute-text="' : '" :second-text="' '"
+					 :datatime="datatime" :bgColor="countDownColor" :colors="themeColor"></countDown>
+				</view>
+				<navigator class="more" url="/pages/activity/goods_seckill/index">更多 <text class="iconfont icon-jiantou"
+					 hover-class='none'></text></navigator>
+			</view>
+			<view class="spike-wrapper">
+				<scroll-view scroll-x="true" style="white-space: nowrap; display: flex" show-scrollbar="false">
+					<navigator class="spike-item" :style="'margin-right:'+ lrConfig +'rpx;'" v-for="(item,index) in spikeList" :key="index" :url="'/pages/activity/goods_seckill_details/index?id='+item.id+'&time='+datatime+'&status=1'"
+					 hover-class='none'>
+						<view class="img-box">
+							<image :src="item.image" mode=""></image>
+							<view class="msg flex-aj-center" :style="'color:'+ themeColor +';border-color:'+ themeColor +';'">{{item.discountNum}}折起</view>
+						</view>
+						<view class="info">
+							<view class="name line1">{{item.title}}</view>
+							<view class="price-box">
+								<text class="tips" :style="'background-color:'+ themeColor +';'">抢</text>
+								<text class="price" :style="'color:'+themeColor+';'"><text>￥</text>{{item.price}}</text>
+							</view>
+						</view>
+					</navigator>
+				</scroll-view>
+			</view>
+		</view>
 		<!-- 分类页 -->
 		<view class="productList" v-if="navIndex>0" :style="'margin-top:'+prodeuctTop+'px'">
 			<block v-if="sortProduct.length>0">
@@ -185,18 +219,18 @@
 					 @click="godDetail(item)">
 						<view class='pictrue' :class='is_switch==true?"":"on"'>
 							<image :src='item.image' :class='is_switch==true?"":"on"'></image>
-							<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activity && item.activity.type === '1'">秒杀</span>
-							<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activity && item.activity.type === '2'">砍价</span>
-							<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activity && item.activity.type === '3'">拼团</span>
+							<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activityH5 && item.activityH5.type === '1'">秒杀</span>
+							<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activityH5 && item.activityH5.type === '2'">砍价</span>
+							<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activityH5 && item.activityH5.type === '3'">拼团</span>
 						</view>
 						<view class='text' :class='is_switch==true?"":"on"'>
-							<view class='name line1'>{{item.store_name}}</view>
+							<view class='name line1'>{{item.storeName}}</view>
 							<view class='money font-color' :class='is_switch==true?"":"on"'>￥<text class='num'>{{item.price}}</text></view>
 							<view class='vip acea-row row-between-wrapper' :class='is_switch==true?"":"on"'>
-								<view class='vip-money' v-if="item.vip_price && item.vip_price > 0">￥{{item.vip_price}}
+								<view class='vip-money' v-if="item.vipPrice && item.vipPrice > 0">￥{{item.vipPrice}}
 									<image src='../../static/images/vip.png'></image>
 								</view>
-								<view>已售{{item.sales}}件</view>
+								<view>已售{{Number(item.sales) + Number(item.ficti) || 0}}{{item.unitName}</view>
 							</view>
 						</view>
 					</view>
@@ -231,6 +265,10 @@
 		getIndexData,
 		getCoupons
 	} from '@/api/api.js';
+	import {
+		getSeckillHeaderApi,
+		getSeckillList
+	} from '@/api/activity.js';
 	// #ifdef MP-WEIXIN
 	import {
 		getTemlIds
@@ -372,7 +410,8 @@
 				pageInfo: '', // 精品推荐全数据
 				site_name: '', //首页title
 				iSshowH: false,
-				configApi: {} //分享类容配置
+				configApi: {} ,//分享类容配置
+				spikeList: [], // 秒杀
 			}
 		},
 		onLoad() {
@@ -385,6 +424,7 @@
 					} catch {}
 				}
 			});
+			this.getSeckillIndexTime();
 			let self = this
 			// #ifdef MP
 			// 获取小程序头部高度
@@ -413,6 +453,30 @@
 			})
 		},
 		methods: {
+			getSeckillIndexTime() {
+				let limit = this.$config.LIMIT;
+				let params = {
+					page: 1,
+					limit: limit,
+					type: 'index'
+				}
+				getSeckillHeaderApi().then(res => {
+					this.datatime = res.data.seckillTime[res.data.seckillTimeIndex].timeSwap
+					let id = res.data.seckillTime[res.data.seckillTimeIndex].id
+					getSeckillList(id, params).then(({
+						data
+					}) => {
+						console.log(data)
+						data.list.forEach((item) => {
+							let num = 0
+							if (item.price > 0 && item.otPrice > 0) num = ((parseFloat(item.price) / parseFloat(item.otPrice)).toFixed(
+								2))
+							item.discountNum = this.$util.$h.Mul(num, 10)
+						})
+						this.spikeList = data
+					})
+				})
+			},
 			// #ifdef MP
 			getTemlIds() {
 				for (var i in arrTemp) {
@@ -698,7 +762,7 @@
 			},
 			// 首发新品详情
 			goDetail(item) {
-				if (item.activity && item.activity.type === "2" && !this.isLogin) {
+				if (item.activityH5 && item.activityH5.type === "2" && !this.isLogin) {
 					// #ifdef H5
 					uni.showModal({
 						title: '提示',

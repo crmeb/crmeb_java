@@ -117,7 +117,7 @@
           <el-col :span="24">
             <el-col v-bind="grid">
               <el-form-item label="排序：">
-                <el-input-number v-model="formValidate.sort" placeholder="请输入排序" />
+                <el-input-number v-model="formValidate.sort" :max="9999" placeholder="请输入排序" />
               </el-form-item>
             </el-col>
             <el-col v-bind="grid">
@@ -136,6 +136,23 @@
               <el-checkbox-group v-model="checkboxGroup" size="small" @change="onChangeGroup">
                 <el-checkbox v-for="(item, index) in recommend" :key="index" :label="item.value">{{ item.name }}</el-checkbox>
               </el-checkbox-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="活动优先级：">
+              <div class="color-list acea-row row-middle">
+                <div
+                  class="color-item" :class="activity[item]"
+                  v-for="item in formValidate.activity"
+                  :key="item"
+                  draggable="true"
+                  @dragstart="handleDragStart($event, item)"
+                  @dragover.prevent="handleDragOver($event, item)"
+                  @dragenter="handleDragEnterFont($event, item)"
+                  @dragend="handleDragEnd($event, item)"
+                >{{item}}</div>
+                <div class="tip">可拖动按钮调整活动的优先展示顺序</div>
+              </div>
             </el-form-item>
           </el-col>
         </el-row>
@@ -386,7 +403,8 @@
     specType: false,
     id: 0,
     couponIds: [],
-    coupons: []
+    coupons: [],
+    activity: ['默认','秒杀','砍价','拼团']
   }
   const objTitle = {
     price: {
@@ -417,6 +435,7 @@
     components: { CreatTemplates },
     data() {
       return {
+        activity: { '默认': 'red', '秒杀': 'blue', '砍价': 'green', '拼团': 'yellow' },
         props2: {
           children: 'child',
           label: 'name',
@@ -867,7 +886,8 @@
             id: info.id,
             giveIntegral: info.giveIntegral,
             ficti: info.ficti,
-            coupons: info.coupons
+            coupons: info.coupons,
+            activity: info.activityStr ? info.activityStr.split(',') : ['默认','秒杀','砍价','拼团']
           }
           if(info.isHot) this.checkboxGroup.push('isHot')
           if(info.isGood) this.checkboxGroup.push('isGood')
@@ -1012,11 +1032,41 @@
         const dst = newItems.indexOf(item)
         newItems.splice(dst, 0, ...newItems.splice(src, 1))
         this.formValidate.sliderImages = newItems;
+      },
+      handleDragEnterFont(e, item) {
+        e.dataTransfer.effectAllowed = 'move'
+        if (item === this.dragging) {
+          return
+        }
+        const newItems = [...this.formValidate.activity]
+        const src = newItems.indexOf(this.dragging)
+        const dst = newItems.indexOf(item)
+        newItems.splice(dst, 0, ...newItems.splice(src, 1))
+        this.formValidate.activity = newItems;
       }
     }
   }
 </script>
 <style scoped lang="scss">
+  .color-item{
+    height: 30px;
+    line-height: 30px;
+    padding: 0 10px;
+    color:#fff;
+    margin-right :10px;
+  }
+  .color-list .color-item.blue{
+    background-color: #1E9FFF;
+  }
+  .color-list .color-item.yellow{
+    background-color: rgb(254, 185, 0);
+  }
+  .color-list .color-item.green{
+    background-color: #009688;
+  }
+  .color-list .color-item.red{
+    background-color: #ed4014;
+  }
   .proCoupon{
     /deep/.el-form-item__content{
       margin-top: 5px;

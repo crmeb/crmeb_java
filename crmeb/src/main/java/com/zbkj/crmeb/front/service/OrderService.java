@@ -18,18 +18,27 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 
 /**
- * @Classname StoreOrderService
- * @Description H5端订单操作
- * @Date 2020/7/4 11:16 上午
- * @Created by stivepeim
+ * H5端订单操作
+ *  +----------------------------------------------------------------------
+ *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ *  +----------------------------------------------------------------------
+ *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  +----------------------------------------------------------------------
+ *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ *  +----------------------------------------------------------------------
+ *  | Author: CRMEB Team <admin@crmeb.com>
+ *  +----------------------------------------------------------------------
  */
 public interface OrderService {
     /**
      * 订单确认
-     * @param cartIds 购物车id集合
-     * @return 确认订单信息
+     * @param cartIds   购物车id集合
+     * @param isNew     立即购买
+     * @param addAgain  重复下单
+     * @param seckill   秒杀
+     * @return  确认订单信息
      */
-    ConfirmOrderResponse confirmOrder(List<Integer> cartIds, boolean isNew, boolean addAgain);
+    ConfirmOrderResponse confirmOrder(List<String> cartIds, boolean isNew, boolean addAgain,boolean seckill);
 
 
     /**

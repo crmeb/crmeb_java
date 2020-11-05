@@ -218,7 +218,7 @@
 						that.showLineA("canvasLineA", that.LineA);
 					},
 					error => {
-						that.$dialog.error(error.msg);
+						that.$dialog.error(error);
 					}
 				);
 			},
@@ -316,7 +316,7 @@
 						that.filter.page = that.filter.page + 1;
 					},
 					error => {
-						that.$dialog.message(error.msg);
+						that.$dialog.message(error);
 					}
 				);
 			},

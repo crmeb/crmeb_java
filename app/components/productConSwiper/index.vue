@@ -61,7 +61,7 @@
 			};
 		},
 		mounted(){
-			this.videoContext = uni.createVideoContext('myVideo',this);
+			//this.videoContext = uni.createVideoContext('myVideo',this);
 		},
 		methods: {
 			 bindPause:function(){

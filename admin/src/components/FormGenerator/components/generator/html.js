@@ -57,7 +57,7 @@ function buildFromBtns(scheme, type) {
   if (scheme.formBtns && type === 'file') {
     str = `<el-form-item size="large">
           <el-button type="primary" @click="submitForm">提交</el-button>
-          <el-button @click="resetForm">重置</el-button>
+          <el-button @click="resetForm">取消</el-button>
         </el-form-item>`
     if (someSpanIsNot24) {
       str = `<el-col :span="24">
@@ -300,6 +300,11 @@ const tags = {
     return `<${tag} ${vModel}${height} >`
   },
   'upload-file': el => {
+    const { tag, vModel } = attrBuilder(el)
+    const height = el.height ? `:height="${el.height}"` : ''
+    return `<${tag} ${vModel}${height} >`
+  },
+  'time-select': el => {
     const { tag, vModel } = attrBuilder(el)
     const height = el.height ? `:height="${el.height}"` : ''
     return `<${tag} ${vModel}${height} >`

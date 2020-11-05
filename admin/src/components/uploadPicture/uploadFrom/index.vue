@@ -3,8 +3,9 @@
     <el-dialog
       title="上传图片"
       :visible.sync="visible"
-      width="896px"
+      width="950px"
       :modal="false"
+      append-to-body
       :before-close="handleClose"
     >
       <upload-index v-if="visible" :isMore="isMore" :modelName="modelName" @getImage="getImage" />
@@ -22,7 +23,8 @@ export default {
       visible: false,
       callback: function() {},
       isMore: '',
-      modelName: ''
+      modelName: '',
+      ISmodal: false
     }
   },
   watch: {

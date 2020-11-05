@@ -2,9 +2,23 @@
 	<div>
 		<view class='flash-sale'>
 			<view class="saleBox"></view>
-			<view class='header' v-if="timeList.length>0">
-				<image :src='timeList[active].slide'></image>
+			<!-- banner -->
+			<view class="header" v-if="timeList.length">
+				<swiper indicator-dots="true" autoplay="true" :circular="circular" interval="3000" duration="1500"
+				 indicator-color="rgba(255,255,255,0.6)" indicator-active-color="#fff">
+					<block v-for="(item,index) in JSON.parse(timeList[active].slide)" :key="index">
+						<swiper-item>
+							<image :src="item.sattDir" class="slide-image" lazy-load></image>
+							<!-- <navigator :url='item.url' class='slide-navigator acea-row row-between-wrapper' hover-class='none'>
+								<image :src="item.pic" class="slide-image" lazy-load></image>
+							</navigator> -->
+						</swiper-item>
+					</block>
+				</swiper>
 			</view>
+			<!-- <view class='header' v-if="timeList.length>0">
+				<image :src='timeList[active].slide'></image>
+			</view> -->
 			<view class="seckillList acea-row row-between-wrapper">
 				<view class="priceTag">
 					<image src="/static/images/priceTag.png"></image>
@@ -13,14 +27,14 @@
 					<scroll-view class="scroll-view_x" scroll-x scroll-with-animation :scroll-left="scrollLeft" style="width:auto;overflow:hidden;height:106rpx;">
 						<block v-for="(item,index) in timeList" :key='index'>
 							<view @tap='settimeList(item,index)' class='item' :class="active == index?'on':''">
-								<view class='time'>{{item.time}}</view>
-								<view class="state">{{item.state}}</view>
+								<view class='time'>{{item.time.split(',')[0]}}</view>
+								<view class="state">{{item.statusName}}</view>
 							</view>
 						</block>
 					</scroll-view>
 				</view>
 			</view>
-			<view class='list'>
+			<view class='list' v-if='seckillList.length>0'>
 				<block v-for="(item,index) in seckillList" :key='index'>
 					<view class='item acea-row row-between-wrapper' @tap='goDetails(item)'>
 						<view class='pictrue'>
@@ -30,16 +44,16 @@
 							<view class='name line1'>{{item.title}}</view>
 							<view class='money'>￥
 								<text class='num font-color'>{{item.price}}</text>
-								<text class="y_money">￥{{item.ot_price}}</text>
+								<text class="y_money">￥{{item.otPrice}}</text>
 							</view>
-							<view class="limit">限量 <text class="limitPrice">{{item.quota}}件</text></view>
+							<view class="limit">限量 <text class="limitPrice">{{item.quotaShow}} {{item.unitName}}</text></view>
 							<view class="progress">
 								<view class='bg-reds' :style="'width:'+item.percent+'%;'"></view>
 								<view class='piece'>已抢{{item.percent}}%</view>
 							</view>
 						</view>
-						<view class='grab bg-color' v-if="status == 1">马上抢</view>
-						<view class='grab bg-color' v-else-if="status == 2">未开始</view>
+						<view class='grab bg-color' v-if="status == 2">马上抢</view>
+						<view class='grab bg-color' v-else-if="status == 1">未开始</view>
 						<view class='grab bg-color-hui' v-else>已结束</view>
 					</view>
 				</block>
@@ -56,7 +70,7 @@
 
 <script>
 	import {
-		getSeckillIndexTime,
+		getSeckillHeaderApi,
 		getSeckillList
 	} from '../../../api/activity.js';
 	import home from '@/components/home/index.vue'
@@ -66,6 +80,10 @@
 		},
 		data() {
 			return {
+				circular: true,
+				autoplay: true,
+				interval: 500,
+				// duration: 500,
 				topImage: '',
 				seckillList: [],
 				timeList: [],
@@ -81,6 +99,7 @@
 				loading: false,
 				loadend: false,
 				pageloading: false,
+				seckillHeader: [],
 			}
 		},
 		onLoad() {
@@ -89,8 +108,7 @@
 		methods: {
 			getSeckillConfig: function() {
 				let that = this;
-				getSeckillIndexTime().then(res => {
-					that.topImage = res.data.lovely;
+				getSeckillHeaderApi().then(res => {
 					that.timeList = res.data.seckillTime;
 					that.active = res.data.seckillTimeIndex;
 					if (that.timeList.length) {
@@ -116,7 +134,7 @@
 				if (that.pageloading) return;
 				this.pageloading = true
 				getSeckillList(that.timeList[that.active].id, data).then(res => {
-					var seckillList = res.data;
+					var seckillList = res.data.list;
 					var loadend = seckillList.length < that.limit;
 					that.page++;
 					that.seckillList = that.seckillList.concat(seckillList),
@@ -147,7 +165,7 @@
 			},
 			goDetails(item){
 				uni.navigateTo({
-					url: '/pages/activity/goods_seckill_details/index?id=' + item.id + '&time=' + this.timeList[this.active].stop + '&status=' + this.status
+					url: '/pages/activity/goods_seckill_details/index?id=' + item.id + '&time=' + this.timeList[this.active].timeSwap + '&status=' + this.status + '&productId=' + item.productId
 				})
 			}
 		},
@@ -263,6 +281,7 @@
 		width: 180rpx;
 		height: 180rpx;
 		border-radius: 10rpx;
+		background-color: #F5F5F5;
 	}
 
 	.flash-sale .list .item .pictrue image {

@@ -137,12 +137,14 @@
               <span>退款时间：{{scope.row.refundReasonTime}}</span>
               <span class="acea-row">
                 退款凭证：
-                <div class="demo-image__preview" v-if="scope.row.refundReasonWapImg" style="width: 35px;height: auto;display: inline-block;">
+                <template v-if="scope.row.refundReasonWapImg">
+                  <div v-for="(item, index) in scope.row.refundReasonWapImg.split(',')" :key="index" class="demo-image__preview" style="width: 35px;height: auto;display: inline-block;">
                   <el-image
-                    :src="scope.row.refundReasonWapImg"
-                    :preview-src-list="[scope.row.refundReasonWapImg]"
+                    :src="item"
+                    :preview-src-list="[item]"
                   />
                 </div>
+                </template>
                 <!--<img :src="scope.row.refundReasonWapImg" v-if="scope.row.refundReasonWapImg" >-->
                 <span v-else style="display: inline-block">无</span>
               </span>
@@ -264,6 +266,7 @@
         :is-create="1"
         :edit-data="RefuseData"
         @submit="RefusehandlerSubmit"
+        @resetForm="resetFormRefusehand"
       />
     </el-dialog>
 
@@ -278,6 +281,7 @@
         :is-create="1"
         :edit-data="refundData"
         @submit="refundhandlerSubmit"
+        @resetForm="resetFormRefundhandler"
       />
     </el-dialog>
   </div>
@@ -348,6 +352,15 @@
       this.getList()
     },
     methods: {
+      resetFormRefundhandler(){
+        this.refundVisible = false
+      },
+      resetFormRefusehand(){
+        this.RefuseVisible = false
+      },
+      resetForm(formValue) {
+        this.dialogVisible = false
+      },
       // 核销订单
       onWriteOff(row) {
         this.$modalSure('核销订单吗').then(() => {

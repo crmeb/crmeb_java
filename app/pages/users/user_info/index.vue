@@ -198,7 +198,7 @@
 					});
 				}).catch(msg => {
 					return that.$util.Tips({	
-						title: msg.message || '保存失败，您并没有修改'
+						title: msg || '保存失败，您并没有修改'
 					}, {
 						tab: 3,
 						url: 1

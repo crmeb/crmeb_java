@@ -26,4 +26,6 @@ module.exports = {
 	TOKENNAME: 'Authori-zation',
 	// 缓存时间 0 永久
 	EXPIRE:0,
+	//分页最多显示条数
+	LIMIT: 10
 };

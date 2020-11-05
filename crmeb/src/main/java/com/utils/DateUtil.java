@@ -14,10 +14,17 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-/** excel操作类
- * @author Mr.zhang
- * @Description 日期时间类
- * @since 2020-04-17
+/**
+ *  Date工具类
+ *  +----------------------------------------------------------------------
+ *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ *  +----------------------------------------------------------------------
+ *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  +----------------------------------------------------------------------
+ *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ *  +----------------------------------------------------------------------
+ *  | Author: CRMEB Team <admin@crmeb.com>
+ *  +----------------------------------------------------------------------
  **/
 public final class DateUtil {
 
@@ -298,7 +305,12 @@ public final class DateUtil {
         }
     }
 
-
+    /**
+     * 计算两个时间之间的天数差
+     * @param beforeDay 开始时间
+     * @param afterDay  结束时间
+     * @return  相差天数
+     */
     public static long getTwoDateDays(Date beforeDay, Date afterDay) {
         SimpleDateFormat sm = new SimpleDateFormat(Constants.DATE_FORMAT_NUM);
         long days = -1;
@@ -484,6 +496,11 @@ public final class DateUtil {
                     }
                     startTime = list.get(0);
                     endTime = list.get(1);
+
+                    if (startTime.equals(endTime)) {
+                        startTime = DateUtil.appointedDayStrToFormatStr(startTime, Constants.DATE_FORMAT_DATE, Constants.DATE_FORMAT_START);
+                        endTime = DateUtil.appointedDayStrToFormatStr(endTime, Constants.DATE_FORMAT_DATE, Constants.DATE_FORMAT_END);
+                    }
                     break;
             }
         }
@@ -541,5 +558,27 @@ public final class DateUtil {
 
         return Integer.parseInt(String.valueOf(between_days));
 
+    }
+
+    /**
+     * 获取指定日期指定格式字符串
+     *
+     * @param dateStr
+     * @param DATE_FORMAT
+     * @return
+     * @throws ParseException
+     */
+    public static String appointedDayStrToFormatStr(String dateStr, String STR_DATE_FORMAT, String DATE_FORMAT) {
+        Date date = DateUtil.strToDate(dateStr, STR_DATE_FORMAT);
+        return DateUtil.dateToStr(date, DATE_FORMAT);
+    }
+
+    /**
+     * 获取当前时间小时
+     * @return 当前时间小时 默认24小时
+     */
+    public static int getCurrentHour(){
+        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        return hour;
     }
 }

@@ -24,7 +24,7 @@
 							<view class='name'>{{system_store.name}}
 								<text class='phone'>{{system_store.phone}}</text>
 							</view>
-							<view> {{system_store.address}}{{", " + system_store.detailedAddress}}</view>
+							<view class="line1"> {{system_store.address}}{{", " + system_store.detailedAddress}}</view>
 						</view>
 						<view class='iconfont icon-jiantou'></view>
 					</block>
@@ -271,7 +271,8 @@
 				from: '',
 				news: true,
 				again: false,
-				addAgain: false
+				addAgain: false,
+				secKill: false //是否是秒杀
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -296,6 +297,7 @@
 			this.news = options.new || true;
 			this.again = options.again || false;
 			this.addAgain = options.addAgain || false;
+			this.secKill = options.secKill || false;
 			if (this.isLogin) {
 				this.getaddressInfo();
 				this.getConfirm();
@@ -375,7 +377,11 @@
 					let list = res.data.list || [];
 					this.$set(this, 'storeList', list);
 					this.$set(this, 'system_store', list[0]);
-				}).catch(err => {})
+				}).catch(err => {
+					return this.$util.Tips({
+						title: err
+					});
+				})
 			},
 			// 关闭地址弹窗；
 			changeClose: function() {
@@ -501,7 +507,7 @@
 			 */
 			getConfirm: function() {
 				let that = this;
-				orderConfirm(that.cartId,that.news,this.addAgain).then(res => {
+				orderConfirm(that.cartId,that.news,this.addAgain,this.secKill).then(res => {
 					that.$set(that, 'userInfo', res.data.userInfo);
 					that.$set(that, 'integral', res.data.userInfo.integral);
 					that.$set(that, 'cartInfo', res.data.cartInfo);
@@ -512,7 +518,7 @@
 					that.$set(that, 'priceGroup', res.data.priceGroup);
 					that.$set(that, 'totalPrice', that.$util.$h.Add(parseFloat(res.data.priceGroup.totalPrice), parseFloat(res.data
 						.priceGroup.storePostage)));
-					that.$set(that, 'seckillId', parseInt(res.data.seckill_id));
+					that.$set(that, 'seckillId', parseInt(res.data.secKillId));
 					that.$set(that, 'store_self_mention', res.data.storeSelfMention == 'true'?true:false);
 					that.cartArr[1].title = '可用余额:' + res.data.userInfo.nowMoney;
 					that.cartArr[0].payStatus = res.data.payWeixinOpen || 0
@@ -526,15 +532,14 @@
 					// that.$set(that, 'cartArr', that.cartArr);
 					that.$set(that, 'ChangePrice', that.totalPrice);
 					that.getBargainId();
-					that.getCouponList();
+					if(!that.secKill) that.getCouponList();
 				}).catch(err => {
-					console.log(err, 'err')
-					// return this.$util.Tips({
-					// 	title: err
-					// }, {
-					// 	tab: 3,
-					// 	url: 1
-					// });
+					return this.$util.Tips({
+						title: err
+					}, {
+						tab: 3,
+						url: 1
+					});
 				});
 			},
 			/*

@@ -1,5 +1,6 @@
 package com.utils;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -10,14 +11,22 @@ import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 
 /**
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  * httpClient 工具类
- * @author Mr.Zhang
- * @since 2020-04-13
  */
 
 @Component
@@ -313,5 +322,26 @@ public class RestTemplateUtil {
 
     public byte[] getBuffer(String url) {
         return restTemplate.getForEntity(url, byte[].class).getBody();
+    }
+
+    /**
+     * post——from-urlencoded格式请求
+     */
+    public String postFromUrlencoded(String url, MultiValueMap<String, Object> params, Map<String, String> header) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        if (CollUtil.isNotEmpty(header)) {
+            for (Map.Entry<String, String> entry : header.entrySet()) {
+                headers.add(entry.getKey(), entry.getValue());
+            }
+        }
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity =
+                new HttpEntity<>(params, headers);
+
+        String body = restTemplate.postForEntity( url, requestEntity, String.class).getBody();
+        return  body;
     }
 }

@@ -30,7 +30,7 @@
 				</view>
 				<view class="num-wrapper">
 					<view class="num-item" @click="goMenuPage('/pages/users/user_money/index')">
-						<text class="num">{{Number(userInfo.nowMoney).toFixed(2) || 0}}</text>
+						<text class="num">{{userInfo.nowMoney?Number(userInfo.nowMoney).toFixed(2):0}}</text>
 						<view class="txt">余额</view>
 					</view>
 					<view class="num-item" @click="goMenuPage('/pages/users/user_integral/index')">

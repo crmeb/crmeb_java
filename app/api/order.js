@@ -168,11 +168,12 @@ export function orderRefundVerify(data) {
  * 订单确认获取订单详细信息
  * @param string cartId
  */
-export function orderConfirm(cartId, isNew, addAgain) {
+export function orderConfirm(cartId, isNew, addAgain,secKill) {
 	return request.post('order/confirm', {
 		cartIds: cartId,
 		isNew: isNew,
-		addAgain: addAgain
+		addAgain: addAgain,
+		secKill: secKill
 	}, {}, 1);
 }
 

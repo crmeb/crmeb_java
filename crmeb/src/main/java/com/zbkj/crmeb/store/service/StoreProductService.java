@@ -136,7 +136,14 @@ public interface StoreProductService extends IService<StoreProduct> {
     boolean reStoreProduct(Integer productId);
 
     /**
-     * 后台任务批量操作
+     * 后台任务批量操作库存
      */
-    public void consumeProductStock();
+    void consumeProductStock();
+
+    /**
+     * 扣减库存任务操作
+     * @param storeProductStockRequest 扣减库存参数
+     * @return 执行结果
+     */
+    boolean doProductStock(StoreProductStockRequest storeProductStockRequest);
 }

@@ -1,6 +1,10 @@
 import { storeStaffListApi } from '@/api/storePoint'
+import {  seckillListApi } from '@/api/marketing'
 import Cookies from 'js-cookie'
 
+/**
+ * @description 确定操作弹框
+ */
 export function modalSure(title) {
   return new Promise((resolve, reject) => {
     this.$confirm(`确定${title || '永久删除该文件'}?`, '提示', {
@@ -39,6 +43,17 @@ export function getStoreStaff() {
   return new Promise((resolve, reject) => {
     storeStaffListApi({page: 1, limit: 9999}).then(async res => {
       localStorage.setItem('storeStaffList', res.list ? JSON.stringify(res.list) : [])
+    })
+  })
+}
+
+/**
+ * @description 秒杀配置列表
+ */
+export function getSeckillList(status) {
+  return new Promise((resolve, reject) => {
+    seckillListApi({page: 1, limit: 9999, isDel: false, status: status || null}).then(async res => {
+      resolve(res)
     })
   })
 }

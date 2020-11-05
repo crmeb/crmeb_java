@@ -1,7 +1,5 @@
 package com.zbkj.crmeb.express.request;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -14,12 +12,16 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
- * <p>
- * 快递公司表
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-04-17
+ * 快递公司 Request
+ *  +----------------------------------------------------------------------
+ *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ *  +----------------------------------------------------------------------
+ *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  +----------------------------------------------------------------------
+ *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ *  +----------------------------------------------------------------------
+ *  | Author: CRMEB Team <admin@crmeb.com>
+ *  +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)

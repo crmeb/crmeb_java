@@ -94,5 +94,8 @@ public class StoreProductAttrValueRequest implements Serializable {
     @ApiModelProperty(value = "attrValue字段，前端传递后用作sku字段")
     private LinkedHashMap<String,String> attrValue;
 
+    @ApiModelProperty(value = "是否选中-秒杀用")
+    private Boolean checked;
+
 
 }

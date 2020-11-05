@@ -131,7 +131,7 @@
               </el-table>
             </el-form-item>
           </el-col>
-          <el-col :span="24" v-if="formValidate.specType">
+          <el-col :span="24">
             <el-form-item label="商品规格：" props="spec_type" label-for="spec_type">
               <el-table :data="ManyAttrValue" border class="tabNumWidth" size="mini">
                 <template v-if="manyTabDate">
@@ -453,12 +453,12 @@
               selectRule: info.selectRule,
               isSub: false,
               content: info.content,
-              specType: info.specType,
+              specType: info.specType || false,
               id: info.id,
               giveIntegral: info.giveIntegral,
               ficti: info.ficti
             }
-            if(this.formValidate.attr){
+            if(this.formValidate.attr.length){
               for (var i = 0; i < this.formValidate.attr.length; i++) {
                 this.formValidate.attr[i].attrValue = JSON.parse(info.attr[i].attrValues)
               }

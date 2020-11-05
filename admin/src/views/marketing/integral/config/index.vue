@@ -6,6 +6,7 @@
         :is-create="isCreate"
         :edit-data="editData"
         @submit="handlerSubmit"
+        @resetForm="resetForm"
         v-if="isShow"
       />
     </el-card>
@@ -30,6 +31,9 @@
       this.getFormInfo()
     },
     methods: {
+      resetForm(formValue) {
+        this.isShow = false
+      },
       handlerSubmit(data) {
         const tempArr = []
         for (var key in data) {

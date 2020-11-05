@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.task.wechat;
 
+import com.utils.DateUtil;
 import com.zbkj.crmeb.wechat.service.TemplateMessageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,7 @@ public class AsyncWeChatPublicTempMessage {
 
     @Scheduled(fixedDelay = 1000 * 60L) //1分钟同步一次数据
     public void init(){
-//        logger.info("---AsyncWeChatPublicTempMessage task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDate());
+        logger.info("---AsyncWeChatPublicTempMessage task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDate());
         try {
             templateMessageService.consumePublic();
 

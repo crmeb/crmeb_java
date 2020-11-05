@@ -55,13 +55,13 @@
 		 */
 		onLoad: function(options) {
 			let that = this;
-			if (!options.product_id) return that.$util.Tips({
+			if (!options.productId) return that.$util.Tips({
 				title: '缺少参数'
 			}, {
 				tab: 3,
 				url: 1
 			});
-			that.product_id = options.product_id;
+			that.productId = options.productId;
 		},
 		onShow: function() {
 			this.getProductReplyCount();
@@ -74,7 +74,7 @@
 			 */
 			getProductReplyCount: function() {
 				let that = this;
-				getReplyConfig(that.product_id).then(res => {
+				getReplyConfig(that.productId).then(res => {
 					that.$set(that,'replyData',res.data);
 				});
 			},
@@ -87,7 +87,7 @@
 				if (that.loading) return;
 				that.loading = true;
 				that.loadTitle = '';
-				getReplyList(that.product_id, {
+				getReplyList(that.productId, {
 					page: that.page,
 					limit: that.limit,
 					type: that.type,

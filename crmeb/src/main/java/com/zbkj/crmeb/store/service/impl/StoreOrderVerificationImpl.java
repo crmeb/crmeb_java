@@ -196,7 +196,7 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
         BeanUtils.copyProperties(existOrder,storeOrder);
         storeOrder.setStatus(Constants.ORDER_STATUS_INT_BARGAIN);
         storeOrder.setClerkId(currentStaffs.get(0).getId());
-        storeOrder.setStoreId(currentStaffs.get(0).getStoreId());
+//        storeOrder.setStoreId(currentStaffs.get(0).getStoreId());
         boolean saveStatus = dao.updateById(storeOrder) > 0;
 
         // 小程序订阅消息发送

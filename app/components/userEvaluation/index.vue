@@ -12,7 +12,7 @@
 			</view>
 			<view class="time">{{ item.createTime }} {{ item.suk }}</view>
 			<view class="evaluate-infor">{{ item.comment }}</view>
-			<view class="imgList acea-row">
+			<view class="imgList acea-row" v-if="item.pics.length && item.pics[0]">
 				<view class="pictrue" v-for="(itemn, indexn) in item.pics" :key="indexn">
 					<image :src="itemn" class="image" @click='getpreviewImage(indexw, indexn)'></image>
 				</view>

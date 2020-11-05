@@ -65,14 +65,14 @@ public class UserBillResponse implements Serializable {
     @ApiModelProperty(value = "0 = 带确定 1 = 有效 -1 = 无效")
     private int status;
 
-    @ApiModelProperty(value = "创建时间")
+    @ApiModelProperty(value = "更新时间")
     private Date updateTime;
 
     @JsonProperty(value = "createTime")
     @ApiModelProperty(value = "创建时间")
     private Date createTime;
 
-    @ApiModelProperty(value = "用户呢成")
+    @ApiModelProperty(value = "用户昵称")
     private String nickName;
 
 }

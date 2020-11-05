@@ -1,7 +1,5 @@
 package com.zbkj.crmeb.upload.service.impl;
 
-import com.aliyun.oss.OSS;
-import com.aliyun.oss.OSSClientBuilder;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
@@ -27,10 +25,10 @@ import java.util.List;
 
 
 /**
-* @author Mr.Zhang
-* @Description AsyncServiceImpl 同步到云服务
-* @since 2020-05-06
-*/
+ * @author Mr.Zhang
+ * @Description AsyncServiceImpl 同步到云服务
+ * @since 2020-05-06
+ */
 @Service
 @Data
 public class AsyncServiceImpl implements AsyncService {
@@ -193,18 +191,14 @@ public class AsyncServiceImpl implements AsyncService {
         if(systemAttachmentList.size() < 1){
             return;
         }
-        OSS ossClient = new OSSClientBuilder().build(cloudVo.getRegion(), cloudVo.getAccessKey(), cloudVo.getSecretKey());
-
         try{
             for (SystemAttachment systemAttachment : systemAttachmentList) {
                 logger.info("AsyncServiceImpl.oss.id " + systemAttachment.getAttId());
                 ossService.upload(cloudVo, systemAttachment.getSattDir(), systemAttachment.getAttDir(),
-                        systemAttachment.getAttId(), ossClient); //异步处理
+                        systemAttachment.getAttId()); //异步处理
             }
         }catch (Exception e){
             logger.error("AsyncServiceImpl.oss fail " + e.getMessage());
-        }finally {
-            ossClient.shutdown();
         }
     }
 

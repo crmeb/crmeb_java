@@ -16,5 +16,10 @@ public interface StoreProductDescriptionService extends IService<StoreProductDes
 
     List<StoreProductDescription> getList(StoreProductDescriptionSearchRequest request, PageParamRequest pageParamRequest);
 
-    void deleteByProductId(int productId);
+    /**
+     * 根据商品id和type删除对应描述
+     * @param productId 商品id
+     * @param type      类型
+     */
+    void deleteByProductId(int productId,int type);
 }

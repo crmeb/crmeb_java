@@ -115,7 +115,7 @@
 					},
 					err => {
 						that.$util.Tips({
-							title: error.msg
+							title: error
 						})
 					}
 				);
@@ -133,7 +133,7 @@
 					},
 					error => {
 						that.$util.Tips({
-							title: error.msg
+							title: error
 						})
 					},
 					300
