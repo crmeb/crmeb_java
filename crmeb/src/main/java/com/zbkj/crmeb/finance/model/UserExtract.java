@@ -1,6 +1,8 @@
 package com.zbkj.crmeb.finance.model;
 
 import java.math.BigDecimal;
+
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -12,14 +14,19 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Transient;
 
 /**
- * <p>
- * 用户提现表
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-05-11
+ * 用户 提现表
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -38,7 +45,7 @@ public class UserExtract implements Serializable {
     @ApiModelProperty(value = "名称")
     private String realName;
 
-    @ApiModelProperty(value = "bank = 银行卡 alipay = 支付宝wx=微信")
+    @ApiModelProperty(value = "bank = 银行卡 alipay = 支付宝 weixin=微信")
     private String extractType;
 
     @ApiModelProperty(value = "银行卡")
@@ -77,5 +84,13 @@ public class UserExtract implements Serializable {
     @ApiModelProperty(value = "失败时间")
     private Date failTime;
 
+    @ApiModelProperty(value = "银行名称")
+    private String bankName;
 
+    @ApiModelProperty(value = "银行名称")
+    private String qrcodeUrl;
+
+    @Transient
+    @TableField(exist = false)
+    private String nickName;
 }

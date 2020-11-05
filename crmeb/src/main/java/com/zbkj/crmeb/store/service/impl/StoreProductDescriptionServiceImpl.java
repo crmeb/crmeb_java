@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.store.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageHelper;
 
@@ -47,10 +48,15 @@ public class StoreProductDescriptionServiceImpl extends ServiceImpl<StoreProduct
         return dao.selectList(lambdaQueryWrapper);
     }
 
+    /**
+     * 根据商品id和type删除对应描述
+     * @param productId 商品id
+     * @param type      类型
+     */
     @Override
-    public void deleteByProductId(int productId) {
-        LambdaQueryWrapper<StoreProductDescription> lmq = new LambdaQueryWrapper<>();
-        lmq.eq(StoreProductDescription::getProductId, productId);
+    public void deleteByProductId(int productId,int type) {
+        LambdaQueryWrapper<StoreProductDescription> lmq = Wrappers.lambdaQuery();
+        lmq.eq(StoreProductDescription::getProductId, productId).eq(StoreProductDescription::getType,type);
         dao.delete(lmq);
     }
 }

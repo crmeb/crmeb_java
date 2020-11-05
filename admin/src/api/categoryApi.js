@@ -79,7 +79,8 @@ export function listCategroy(pram) {
 export function treeCategroy(pram) {
   const data = {
     type: pram.type,
-    status: pram.status
+    status: pram.status,
+    name: pram.name
   }
   return request({
     url: '/admin/category/list/tree',

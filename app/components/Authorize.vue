@@ -88,7 +88,7 @@
 					}).catch(res=>{
 						uni.hideLoading();
 						uni.showToast({
-							title:res.msg,
+							title:res.message,
 							icon:'none',
 							duration:2000
 						});

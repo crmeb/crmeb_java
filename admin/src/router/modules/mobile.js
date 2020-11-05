@@ -44,7 +44,7 @@ const mobileRouter = {
     {
       path: 'orderStatisticsDetail/:type/:time?',
       component: () => import('@/views/mobile/orderStatistics/Statistics.vue'),
-      name: 'OrderStatistics',
+      name: 'OrderStatisticsDetail',
       meta: { title: '订单数据统计' }
     }
   ]

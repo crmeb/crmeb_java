@@ -155,7 +155,7 @@
 						that.where.page = that.where.page + 1;
 					},
 					err => {
-						that.$dialog.error(err.msg);
+						that.$dialog.error(err);
 					}
 				);
 			},
@@ -224,7 +224,7 @@
 					setOrderRefund(data).then(
 						res => {
 							that.change = false;
-							that.$util.Tips({title: res.msg});
+							that.$util.Tips({title: res});
 							that.init();
 						},
 						err => {
@@ -245,7 +245,7 @@
 						res => {
 							that.change = false;
 							this.$util.Tips({
-								title:res.msg,
+								title:res,
 								icon:'success'
 							})
 							that.init();

@@ -1,6 +1,8 @@
 package com.zbkj.crmeb.upload.service.impl;
 
 import com.aliyun.oss.OSS;
+import com.aliyun.oss.OSSClient;
+import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.PutObjectRequest;
 import com.aliyun.oss.model.PutObjectResult;
 import com.exception.CrmebException;
@@ -18,10 +20,10 @@ import java.io.File;
 
 
 /**
-* @author Mr.Zhang
-* @Description  AsyncServiceImpl 同步到云服务
-* @since  2020-05-06
-*/
+ * @author Mr.Zhang
+ * @Description  AsyncServiceImpl 同步到云服务
+ * @since  2020-05-06
+ */
 @Service
 public class OssServiceImpl implements OssService {
 
@@ -42,10 +44,10 @@ public class OssServiceImpl implements OssService {
      */
     @Async  //多线程不可传递对象模式，后面的赋值会覆盖前面的数据
     @Override
-    public void upload(CloudVo cloudVo, String webPth, String localFile, Integer id, OSS ossClient ){
+    public void upload(CloudVo cloudVo, String webPth, String localFile, Integer id){
         logger.info("上传文件" + id + "开始：" + localFile);
+        OSS ossClient = new OSSClientBuilder().build(cloudVo.getRegion(), cloudVo.getAccessKey(), cloudVo.getSecretKey());
         try {
-
             //判断bucket是否存在
             if (!ossClient.doesBucketExist(cloudVo.getBucketName())){
                 ossClient.createBucket(cloudVo.getBucketName());
@@ -67,6 +69,8 @@ public class OssServiceImpl implements OssService {
 //            file.delete();
         } catch (Exception e){
             throw new CrmebException(e.getMessage());
+        } finally {
+            ossClient.shutdown();
         }
     }
 

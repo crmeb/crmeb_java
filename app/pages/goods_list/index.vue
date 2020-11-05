@@ -29,9 +29,9 @@
 				<view class='item' :class='is_switch==true?"":"on"' hover-class='none' v-for="(item,index) in productList" :key="index" @click="godDetail(item)">
 					<view class='pictrue' :class='is_switch==true?"":"on"'>
 						<image :src='item.image' :class='is_switch==true?"":"on"'></image>
-						<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activity && item.activity.type === '1'">秒杀</span>
-						<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activity && item.activity.type === '2'">砍价</span>
-						<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activity && item.activity.type === '3'">拼团</span>
+						<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activityH5 && item.activityH5.type === '1'">秒杀</span>
+						<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activityH5 && item.activityH5.type === '2'">砍价</span>
+						<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activityH5 && item.activityH5.type === '3'">拼团</span>
 					</view>
 					<view class='text' :class='is_switch==true?"":"on"'>
 						<view class='name line1'>{{item.storeName}}</view>
@@ -40,7 +40,7 @@
 							<view class='vip-money' v-if="item.vip_price && item.vip_price > 0">￥{{item.vip_price}}
 								<image src='../../static/images/vip.png'></image>
 							</view>
-							<view>已售{{item.sales}}{{item.unitName}}</view>
+							<view>已售{{Number(item.sales) + Number(item.ficti) || 0}}{{item.unitName}}</view>
 						</view>
 					</view>
 				</view>

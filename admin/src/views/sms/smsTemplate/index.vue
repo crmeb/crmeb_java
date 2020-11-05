@@ -98,6 +98,7 @@
         :is-create="isCreate"
         :edit-data="editData"
         @submit="handlerSubmit"
+        @resetForm="resetForm"
       />
     </el-dialog>
   </div>
@@ -161,6 +162,9 @@ export default {
     }
   },
   methods: {
+    resetForm(formValue) {
+      this.handleClose();
+    },
     handleClose() {
       this.dialogVisible = false
       this.editData = {}

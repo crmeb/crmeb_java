@@ -386,6 +386,28 @@ export const selectComponents = [
   },
   {
     __config__: {
+      label: '固定时间范围',
+      tag: 'time-select',
+      tagIcon: 'time-select',
+      span: 24,
+      showLabel: true,
+      labelWidth: null,
+      layout: 'colFormItem',
+      defaultValue: null,
+      required: true,
+      regList: [],
+      changeTag: true,
+      document: 'https://element.eleme.cn/#/zh-CN/component/time-picker'
+    },
+    style: { width: '100%' },
+    disabled: false,
+    clearable: true,
+    placeholder: '请选择',
+    format: 'HH:mm',
+    'value-format': 'HH:mm'
+  },
+  {
+    __config__: {
       label: '日期选择',
       tag: 'el-date-picker',
       tagIcon: 'date',

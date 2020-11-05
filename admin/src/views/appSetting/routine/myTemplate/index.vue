@@ -128,6 +128,7 @@
         :is-create="isCreate"
         :edit-data="editData"
         @submit="handlerSubmit"
+        @resetForm="resetForm"
       />
     </el-dialog>
   </div>
@@ -183,6 +184,9 @@
       this.getList()
     },
     methods: {
+      resetForm(formValue) {
+        this.dialogVisible = false
+      },
       checkTemp() {
         this.$modalSure('同步我的模板到小程序').then(() => {
           tempAsyncApi().then(() => {

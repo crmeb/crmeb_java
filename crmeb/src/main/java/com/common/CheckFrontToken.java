@@ -14,9 +14,16 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  * 检测token是否过期
- * Created on 2019/11/23
- * @author zhangle
  */
 @Component
 public class CheckFrontToken {

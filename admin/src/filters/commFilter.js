@@ -13,10 +13,8 @@ export function filterEmpty(val) {
 
 // 时间过滤器
 export function formatDate(time) {
-  console.log(time)
   if (time !== 0) {
     const date = new Date(time * 1000);
-    console.log(date)
     return formatDates(date, 'yyyy-MM-dd hh:mm');
   }
 }
@@ -96,3 +94,50 @@ export function articleTypeFilter(status) {
   return arrayList.filter(item => Number(status) === Number(item.id))[0].name
 }
 
+
+/**
+ * @description 支付状态
+ */
+export function payStatusFilter(status) {
+  const statusMap = {
+    false: '未支付',
+    true: '已支付'
+  }
+  return statusMap[status]
+}
+
+/**
+ * @description 提现方式
+ */
+export function extractTypeFilter(status) {
+  const statusMap = {
+    'bank': '银行卡',
+    'alipay': '支付宝',
+    'weixin': '微信'
+  }
+  return statusMap[status]
+}
+
+/**
+ * @description 充值类型
+ */
+export function rechargeTypeFilter(status) {
+  const statusMap = {
+    'public': '微信公众号',
+    'weixinh5': '微信H5支付',
+    'routine': '小程序'
+  }
+  return statusMap[status]
+}
+
+/**
+ * @description 财务审核状态
+ */
+export function extractStatusFilter(status) {
+  const statusMap = {
+    '-1': '已拒绝',
+    '0': '审核中',
+    '1': '已提现'
+  }
+  return statusMap[status]
+}

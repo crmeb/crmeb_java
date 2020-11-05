@@ -3,25 +3,34 @@ package com.zbkj.crmeb.store.request;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.constants.Constants;
+import com.utils.CrmebUtil;
 import com.zbkj.crmeb.store.model.StoreProductAttr;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * <p>
  * 商品表
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-05-06
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -155,8 +164,8 @@ public class StoreProductRequest implements Serializable {
     @ApiModelProperty(value = "规格 0单 1多")
     private Boolean specType;
 
-    @ApiModelProperty(value = "活动显示排序1=秒杀，2=砍价，3=拼团")
-    private String activity;
+    @ApiModelProperty(value = "活动显示排序 0=默认，1=秒杀，2=砍价，3=拼团")
+    private List<String> activity;
 
     @ApiModelProperty(value = "商品属性")
     private List<StoreProductAttr> attr;

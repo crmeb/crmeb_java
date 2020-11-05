@@ -1,23 +1,25 @@
 package com.zbkj.crmeb.finance.request;
 
-import java.math.BigDecimal;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import java.io.Serializable;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
+import java.io.Serializable;
+
 /**
- * <p>
  * 用户充值表
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-05-11
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -28,20 +30,15 @@ public class UserRechargeSearchRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 
-    @ApiModelProperty(value = "是否充值")
+    @ApiModelProperty(value = "是否充值 不传=全部 0=未支付 1=已支付")
     private Boolean paid;
 
     @ApiModelProperty(value = "搜索关键字")
     private String keywords;
 
-    @ApiModelProperty(value = "-1 未通过 0 审核中 1 已提现")
-    private Integer status;
 
-    @ApiModelProperty(value = "添加时间")
-    private String startTime;
-
-    @ApiModelProperty(value = "结束时间")
-    private String endTime;
+    @ApiModelProperty(value = "today,yesterday,lately7,lately30,month,year,/yyyy-MM-dd hh:mm:ss,yyyy-MM-dd hh:mm:ss/")
+    private String dateLimit;
 
 
 }

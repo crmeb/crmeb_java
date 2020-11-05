@@ -13,12 +13,16 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * <p>
  * 商品表
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-05-06
+ *  +----------------------------------------------------------------------
+ *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ *  +----------------------------------------------------------------------
+ *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  +----------------------------------------------------------------------
+ *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ *  +----------------------------------------------------------------------
+ *  | Author: CRMEB Team <admin@crmeb.com>
+ *  +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -55,6 +59,15 @@ public class ProductResponse implements Serializable {
     @ApiModelProperty(value = "销量")
     private Integer sales;
 
+    @ApiModelProperty(value = "虚拟销量")
+    private Integer ficti;
+
     @ApiModelProperty(value = "库存")
     private Integer stock;
+
+    @ApiModelProperty(value = "活动显示排序0=默认，1=秒杀，2=砍价，3=拼团")
+    private String activity;
+
+    @ApiModelProperty(value = "为移动端特定参数")
+    private ProductActivityItemResponse activityH5;
 }

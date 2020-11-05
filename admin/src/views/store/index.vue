@@ -142,7 +142,7 @@
     <el-dialog
       title="复制淘宝、天猫、拼多多、京东、苏宁"
       :visible.sync="dialogVisible"
-      width="1200px"
+      width="1000px"
       :modal="false"
       class="taoBaoModal"
       :before-close="handleClose">
@@ -259,6 +259,7 @@ export default {
         productDeleteApi(id).then(() => {
           this.$message.success('删除成功')
           this.getList()
+          this.goodHeade();
         })
       })
     },
@@ -267,9 +268,11 @@ export default {
         ? putOnShellApi( row.id ).then(() => {
           this.$message.success('上架成功')
           this.getList()
+          this.goodHeade();
         }) : offShellApi(row.id).then(() => {
           this.$message.success('下架成功')
           this.getList()
+          this.goodHeade();
         })
     }
   }

@@ -57,7 +57,7 @@ export function collectDel(id, category) {
  * 
  */
 export function postCartAdd(data) {
-	return request.post('cart/save', data, {},1);
+	return request.post('cart/save', data, {});
 }
 
 /**

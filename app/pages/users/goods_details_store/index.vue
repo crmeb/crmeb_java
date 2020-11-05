@@ -151,7 +151,7 @@
 						this.page = this.page + 1;
 					})
 					.catch(err => {
-						this.$dialog.error(err.msg);
+						this.$dialog.error(err);
 					});
 			}
 		},

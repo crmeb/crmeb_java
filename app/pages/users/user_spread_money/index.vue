@@ -11,7 +11,31 @@
 					<view class='iconfont icon-jinbi1'></view>
 				</view>
 			</view>
-			<view class='sign-record'>
+			<view class='sign-record' v-if="recordType == 4">
+				<block v-for="(item,index) in recordList" :key="index" v-if="recordList.length>0">
+					<view class='list'>
+						<view class='item'>
+							<view class='data'>{{item.date}}</view>
+							<view class='listn'>
+								<block v-for="(child,indexn) in item.list" :key="indexn">
+									<view class='itemn acea-row row-between-wrapper'>
+										<view>
+											<view class='name line1'>{{child.status === -1 ? '提现失败' : '提现成功'}}<span v-show="child.status === -1" style="font-size: 12px;color: red;">{{'('+child.failMsg+')'}}</span></view>
+											<view>{{child.createTime}}</view>
+										</view>
+										<view class='num font-color' v-if="child.status == -1">+{{child.extractPrice}}</view>
+										<view class='num' v-else>-{{child.extractPrice}}</view>
+									</view>
+								</block>
+							</view>
+						</view>
+					</view>
+				</block>
+				<view v-if="recordList.length == 0">
+					<emptyPage title='暂无提现记录~'></emptyPage>
+				</view>
+			</view>
+			<view class='sign-record' v-else>
 				<block v-for="(item,index) in recordList" :key="index" v-if="recordList.length>0">
 					<view class='list'>
 						<view class='item'>
@@ -46,7 +70,9 @@
 <script>
 	import {
 		getCommissionInfo,
-		getSpreadInfo
+		getSpreadInfo,
+		getRecordApi,
+		getCountApi
 	} from '@/api/user.js';
 	import {
 		toLogin
@@ -104,8 +130,8 @@
 				});
 				this.name = '提现总额';
 				this.recordType = 4;
-				this.getRecordList();
-				this.getRecordListCount();
+				this.getList();
+				this.getCount();
 			} else if (type == 2) {
 				uni.setNavigationBarTitle({
 					title: "佣金记录"
@@ -145,6 +171,35 @@
 			// 授权关闭
 			authColse: function(e) {
 				this.isShowAuth = e
+			},
+			getList: function() {
+				let that = this;
+				let recordList = that.recordList;
+				let recordListNew = [];
+				if (that.status == true) return;
+				getRecordApi({
+					page: that.page,
+					limit: that.limit
+				}).then(res => {
+					console.log(res)
+					let len = res.data.list.length;
+					let recordListData = res.data.list;
+					recordListNew = recordList.concat(recordListData);
+					that.status = that.limit > len;
+					that.page = that.page + 1;
+					that.$set(that, 'recordList', recordListNew);
+					console.log(that.recordList)
+				});
+			},
+			getCount: function() {
+				let that = this;
+				if (status == true) return;
+				getCountApi({
+					page: that.page,
+					limit: that.limit
+				}).then(res => {
+					that.extractCount = res.data.count;
+				});
 			},
 			getRecordList: function() {
 				let that = this;

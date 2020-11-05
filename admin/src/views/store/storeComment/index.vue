@@ -82,14 +82,16 @@
         >
           <template slot-scope="scope">
             <div class="mb5 content_font">{{scope.row.comment}}</div>
-            <div class="demo-image__preview">
-              <el-image
-                :src="item"
-                class='mr5'
-                :preview-src-list="[item]"
-                v-for="(item,index) in scope.row.pics" :key="index"
-              />
-            </div>
+            <template v-if="scope.row.pics.length && scope.row.pics[0]">
+              <div class="demo-image__preview">
+                <el-image
+                  :src="item"
+                  class='mr5'
+                  :preview-src-list="[item]"
+                  v-for="(item,index) in scope.row.pics" :key="index"
+                />
+              </div>
+            </template>
           </template>
         </el-table-column>
         <el-table-column
@@ -123,6 +125,14 @@
           @current-change="pageChange"
         />
       </div>
+      <el-dialog
+        title="提示"
+        :visible.sync="dialogVisible"
+        width="700px"
+        z-index="4"
+        :before-close="handleClose">
+        <creat-comment :key="timer" @getList="seachList"></creat-comment>
+      </el-dialog>
     </el-card>
   </div>
 </template>
@@ -182,7 +192,9 @@ export default {
       timeVal: [],
       loading: false,
       uids: [],
-      options: []
+      options: [],
+      dialogVisible: false,
+      timer: ''
     }
   },
   mounted() {
@@ -205,6 +217,7 @@ export default {
       }
     },
     seachList() {
+      this.dialogVisible = false
       this.tableFrom.page = 1
       this.getList()
     },
@@ -254,38 +267,11 @@ export default {
       })
     },
     add() {
-      const timer = new Date().getTime()
-      const _this = this
-      this.modalFrom(timer,null,function() {
-        _this.getList()
-      })
+      this.dialogVisible = true
+      this.timer = new Date().getTime()
     },
-    modalFrom(timer, callback){
-      const h = this.$createElement
-      this.$msgbox({
-        title: '虚拟评论',
-        customClass: 'creatformModel',
-        message: h('div', { class: 'common-form-upload' }, [
-          h('creatComment', {
-            props: {
-              num: timer
-            },
-            on: {
-              getList() {
-                callback()
-              }
-            }
-          })
-        ]),
-        showCancelButton: false,
-        showConfirmButton: false
-      }).then(() => {
-      }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: '已取消'
-        })
-      })
+    handleClose(){
+      this.dialogVisible = false
     },
     // 具体日期
     onchangeTime (e) {

@@ -112,8 +112,9 @@
                 :key="index"
                 class="gridPic"
               >
-                <img v-if="index === 0" v-lazy="item.localImg?item.localImg:item.sattDir" :class="item.isSelect ? 'on': '' " @click="changImage(item, index, pictrueList.list)" />
-                <img v-else v-lazy="item.sattDir?item.sattDir:localImg" :class="item.isSelect ? 'on': '' " @click="changImage(item, index, pictrueList.list)" />
+                <img v-lazy="item.sattDir?item.sattDir:localImg" :class="item.isSelect ? 'on': '' " @click="changImage(item, index, pictrueList.list)" />
+                <!--<img v-if="index === 0" v-lazy="item.localImg?item.localImg:item.sattDir" :class="item.isSelect ? 'on': '' " @click="changImage(item, index, pictrueList.list)" />-->
+                <!--<img v-else v-lazy="item.sattDir?item.sattDir:localImg" :class="item.isSelect ? 'on': '' " @click="changImage(item, index, pictrueList.list)" />-->
               </div>
             </div>
           </div>
@@ -123,6 +124,7 @@
             :page-sizes="[12, 24, 48, 60]"
             :page-size="tableData.limit"
             :current-page="tableData.page"
+            :pager-count="5"
             layout="total, sizes, prev, pager, next, jumper"
             :total="pictrueList.total"
             @size-change="handleSizeChange"

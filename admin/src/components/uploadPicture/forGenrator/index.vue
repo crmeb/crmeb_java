@@ -14,7 +14,7 @@
         <img :src="item.sattDir">
         <i class="el-icon-error btndel" @click="handleRemove(index)" />
       </div>
-      <div class="upLoadPicBox" @click="modalPicTap('2')">
+      <div class="upLoadPicBox" @click="modalPicTap('2')" v-show="imageList.length<20">
         <div class="upLoad">
           <i class="el-icon-camera cameraIconfont" />
         </div>
@@ -31,7 +31,7 @@
       :visible.sync="visible"
       width="896px"
       :before-close="handleClose"
-      z-index="3004"
+       :modal="false"
     >
       <upload-index v-if="visible" :checkedMore="imageList" :isMore="isMore" @getImage="getImage" />
     </el-dialog>
@@ -98,7 +98,7 @@ export default {
     },
     handleRemove (i) {
       this.imageList.splice(i, 1)
-      this.$emit('input', this.imageList.join(','))
+      this.$emit('input', JSON.stringify(this.imageList))
     },
     // 移动
     handleDragStart (e, item) {

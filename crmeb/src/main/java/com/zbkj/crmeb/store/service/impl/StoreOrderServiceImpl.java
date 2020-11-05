@@ -13,6 +13,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.utils.DateUtil;
+import com.utils.RedisUtil;
 import com.utils.ValidateFormUtil;
 import com.utils.vo.dateLimitUtilVo;
 import com.zbkj.crmeb.express.model.Express;
@@ -52,6 +53,7 @@ import com.zbkj.crmeb.wechat.service.TemplateMessageService;
 import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForPaySuccess;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForReFundEd;
+import org.apache.catalina.Store;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,7 +124,8 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     @Autowired
     private SystemAdminService systemAdminService;
 
-
+    @Autowired
+    private RedisUtil redisUtil;
 
     /**
     * 列表
@@ -278,7 +281,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         StoreOrder existOrder = getByEntityOne(storeOrderPram);
         if(null == existOrder) throw new CrmebException("订单不存在");
         OrderAgainVo orderAgainVo = orderUtils.tidyOrder(existOrder, true, false);
-        Long cacheKey = DateUtil.getTime()+userId;
+//        Long cacheKey = DateUtil.getTime()+userId;
         List<StoreCartResponse> orderAgainCache = new ArrayList<>();
         for (StoreOrderInfoVo so : orderAgainVo.getCartInfo()) {
             // 判断商品是否有效
@@ -294,14 +297,15 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
             apAttrValuePram.setProductId(productId);
             apAttrValuePram.setId(Integer.valueOf(so.getUnique()));
             apAttrValuePram.setType(0);
-            StoreProductAttrValue existSPAttrValue = storeProductAttrValueService.getByEntity(apAttrValuePram);
+            List<StoreProductAttrValue> byEntity = storeProductAttrValueService.getByEntity(apAttrValuePram);
+            StoreProductAttrValue existSPAttrValue = new StoreProductAttrValue();
+            if(null != byEntity && byEntity.size() > 0) existSPAttrValue = byEntity.get(0);
             if(null == existSPAttrValue) throw new CrmebException("请选择有效的商品属性");
             if(existSPAttrValue.getStock() < cartNum) throw new CrmebException("该商品库存不足");
             // 添加有效商品至缓存 缓存为购物车对象
             if(isNew){
                 StoreCartResponse storeCartResponse = new StoreCartResponse();
-                cacheIdsResult.add(cacheKey+"");
-                storeCartResponse.setId(cacheKey);
+//                storeCartResponse.setId(cacheKey);
                 storeCartResponse.setType(type);
                 storeCartResponse.setProductId(productId);
                 storeCartResponse.setProductAttrUnique(so.getUnique());
@@ -318,24 +322,9 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
                 orderAgainCache.add(storeCartResponse);
             }
         }
-        orderUtils.setCacheOrderAgain(cacheKey+"", orderAgainCache);
+        cacheIdsResult.add(orderUtils.setCacheOrderData(userService.getInfo(), orderAgainCache)+"");
 
         return cacheIdsResult;
-//        else{ // else 中的逻辑暂时未使用到
-//         StoreCart storeCartNewPram = new StoreCart();
-//         storeCartNewPram.setUid(userId);
-//         storeCartNewPram.setProductId(productId);
-//         storeCartNewPram.setCartNum(cartNum);
-//         storeCartNewPram.setProductAttrUnique(productAttrUnique);
-//         storeCartNewPram.setIsNew(isNew);
-//         storeCartNewPram.setType(type);
-//         storeCartNewPram.setCombinationId(combinationId);
-//         storeCartNewPram.setCreateTime(DateUtil.nowDateTime());
-//         storeCartNewPram.setBargainId(bargainId);
-//         storeCartNewPram.setSeckillId(skillId);
-//         saveCate(storeCartNewPram);
-//         return storeCartNewPram;
-//        }
     }
 
     /**
@@ -436,7 +425,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         UserBill userBill = new UserBill();
         userBill.setTitle("购买商品");
         userBill.setUid(currentUser.getUid());
-        userBill.setCategory("nowMoney");
+        userBill.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
         userBill.setType(Constants.USER_BILL_TYPE_PAY_PRODUCT);
         userBill.setNumber(storeOrder.getPayPrice());
         userBill.setLinkId(storeOrder.getId()+"");
@@ -755,17 +744,19 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
                 storeOrderStatusService.saveRefund(request.getOrderId(), request.getAmount(), "失败");
                 throw new CrmebException("订单更新失败");
             }
-            //TODO 发送模板消息, 异步
-
-
             //退款成功
             storeOrderStatusService.saveRefund(request.getOrderId(), request.getAmount(), null);
 
             //佣金
-            subtractBill(request, Constants.USER_BILL_CATEGORY_MONEY, Constants.USER_BILL_TYPE_BROKERAGE, Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE);
+            subtractBill(request, Constants.USER_BILL_CATEGORY_MONEY,
+                    Constants.USER_BILL_TYPE_BROKERAGE, Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE);
 
             //积分
-            subtractBill(request, Constants.USER_BILL_CATEGORY_INTEGRAL, Constants.USER_BILL_TYPE_GAIN, Constants.USER_BILL_CATEGORY_INTEGRAL);
+            subtractBill(request, Constants.USER_BILL_CATEGORY_INTEGRAL,
+                    Constants.USER_BILL_TYPE_GAIN, Constants.USER_BILL_CATEGORY_INTEGRAL);
+
+            // 回滚库存 后续操作放入redis
+            redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER, storeOrder.getId());
 
             // 小程序订阅消息 退款成功
             String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
@@ -915,7 +906,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         LambdaQueryWrapper<StoreOrder> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         if(null != storeOrder.getUnique()){
             lambdaQueryWrapper.or().eq(StoreOrder::getOrderId, storeOrder.getUnique())
-                    .or().eq(StoreOrder::getUnique, storeOrder.getUnique());
+            .or().eq(StoreOrder::getUnique, storeOrder.getUnique());
         }
 //        if(null != storeOrder.getUid()){
             lambdaQueryWrapper.eq(StoreOrder::getUid, storeOrder.getUid());
@@ -1113,7 +1104,23 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         return response;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////// 以下为自定义方法
+    /**
+     * 获取用户当天的秒杀数量
+     *
+     * @param storeOrder 订单查询参数
+     * @return 用户当天的秒杀商品订单数量
+     */
+    @Override
+    public List<StoreOrder> getUserCurrentDaySecKillOrders(StoreOrder storeOrder) {
+        String dayStart = DateUtil.nowDateTime(Constants.DATE_FORMAT_START);
+        String dayEnd = DateUtil.nowDateTime(Constants.DATE_FORMAT_END);
+        LambdaQueryWrapper<StoreOrder> lqw = Wrappers.lambdaQuery();
+        lqw.eq(StoreOrder::getUid,storeOrder.getUid()).eq(StoreOrder::getSeckillId,storeOrder.getSeckillId())
+                .between(StoreOrder::getCreateTime,dayStart,dayEnd);
+        return dao.selectList(lqw);
+    }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////// 以下为自定义方法
 
     /**
      * 根据时间参数获取有效订单
@@ -1315,7 +1322,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
      * @return 成功处理结果
      */
     public boolean paySuccess(StoreOrder storeOrder,User currentUser, String formId){
-        // todo 秒杀团购拼团
+        // todo 拼团砍价未处理
         // 更新订单为已支付状态
         StoreOrder storeOrderUpdate = new StoreOrder();
         storeOrderUpdate.setOrderId(storeOrder.getOrderId());
@@ -1544,12 +1551,20 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         }
 
         if(deleteStatus != null){
-            if(deleteStatus == 1 && systemDeleteStatus == 1){
-                queryWrapper.and(i -> i.or().eq("is_del", 1).or().eq("is_system_del", 1));
+            if(deleteStatus == 1){
+                queryWrapper.eq("is_del", 1);
             }else{
                 queryWrapper.eq("is_del", deleteStatus);
             }
         }
+        queryWrapper.eq("is_system_del", 0);
+//        if(systemDeleteStatus != null){
+//            if(deleteStatus == 1 && systemDeleteStatus == 1){
+//                queryWrapper.and(i -> i.or().eq("is_del", 1).or().eq("is_system_del", 1));
+//            }else{
+//                queryWrapper.eq("is_del", deleteStatus);
+//            }
+//        }
 
 
 

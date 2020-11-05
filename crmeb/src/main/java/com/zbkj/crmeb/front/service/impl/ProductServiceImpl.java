@@ -6,16 +6,20 @@ import com.constants.Constants;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageInfo;
 import com.utils.CrmebUtil;
+import com.utils.DateUtil;
 import com.zbkj.crmeb.category.model.Category;
 import com.zbkj.crmeb.category.service.CategoryService;
 import com.zbkj.crmeb.category.vo.CategoryTreeVo;
 import com.zbkj.crmeb.front.request.IndexStoreProductSearchRequest;
 import com.zbkj.crmeb.front.request.ProductRequest;
+import com.zbkj.crmeb.front.response.ProductActivityItemResponse;
 import com.zbkj.crmeb.front.response.ProductDetailResponse;
 import com.zbkj.crmeb.front.response.ProductResponse;
 import com.zbkj.crmeb.front.response.StoreProductReplayCountResponse;
 import com.zbkj.crmeb.front.service.ProductService;
 import com.zbkj.crmeb.marketing.service.StoreCouponService;
+import com.zbkj.crmeb.seckill.model.StoreSeckill;
+import com.zbkj.crmeb.seckill.service.StoreSeckillService;
 import com.zbkj.crmeb.store.model.StoreProduct;
 import com.zbkj.crmeb.store.model.StoreProductAttr;
 import com.zbkj.crmeb.store.request.StoreProductReplySearchRequest;
@@ -23,10 +27,12 @@ import com.zbkj.crmeb.store.response.*;
 import com.zbkj.crmeb.store.service.StoreProductRelationService;
 import com.zbkj.crmeb.store.service.StoreProductReplyService;
 import com.zbkj.crmeb.store.service.StoreProductService;
+import com.zbkj.crmeb.store.utilService.ProductUtils;
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.service.UserService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,9 +45,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
-* @author Mr.Zhang
-* @Description IndexServiceImpl 接口实现
-* @since 2020-04-13
+* IndexServiceImpl 接口实现
+*  +----------------------------------------------------------------------
+ *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ *  +----------------------------------------------------------------------
+ *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  +----------------------------------------------------------------------
+ *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ *  +----------------------------------------------------------------------
+ *  | Author: CRMEB Team <admin@crmeb.com>
+ *  +----------------------------------------------------------------------
 */
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -56,9 +69,6 @@ public class ProductServiceImpl implements ProductService {
     private StoreProductReplyService storeProductReplyService;
 
     @Autowired
-    private StoreCouponService storeCouponService;
-
-    @Autowired
     private UserService userService;
 
     @Autowired
@@ -68,7 +78,7 @@ public class ProductServiceImpl implements ProductService {
     private SystemConfigService systemConfigService;
 
     @Autowired
-    private SystemAttachmentService systemAttachmentService;
+    private ProductUtils productUtils;
 
     /**
      * 首页产品的轮播图和产品信息
@@ -88,9 +98,21 @@ public class ProductServiceImpl implements ProductService {
         List<ProductResponse> productResponseArrayList = new ArrayList<>();
         for (StoreProduct storeProduct : storeProductList) {
             ProductResponse productResponse = new ProductResponse();
-            BeanUtils.copyProperties(storeProduct, productResponse);
-            productResponse.setCateId(CrmebUtil.stringToArray(storeProduct.getCateId()));
+            // 根据参与活动添加对应商品活动标示
+            if(StringUtils.isNotBlank(storeProduct.getActivity())){
+                HashMap<Integer,ProductActivityItemResponse> activityByProduct =
+                        productUtils.getActivityByProduct(storeProduct.getId(), storeProduct.getActivity());
+                List<Integer> activityList = CrmebUtil.stringToArrayInt(storeProduct.getActivity());
+                if(activityList.size() > 0 ){
+                    if(activityList.get(0) == Constants.PRODUCT_TYPE_SECKILL){
+                        productResponse.setActivityH5(activityByProduct.get(Constants.PRODUCT_TYPE_SECKILL));
+                    }
+                }
+            }
 
+            BeanUtils.copyProperties(storeProduct, productResponse);
+
+            productResponse.setCateId(CrmebUtil.stringToArray(storeProduct.getCateId()));
             productResponseArrayList.add(productResponse);
         }
         CommonPage<ProductResponse> productResponseCommonPage = CommonPage.restPage(productResponseArrayList);
@@ -107,7 +129,7 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public List<CategoryTreeVo> getCategory() {
-        return categoryService.getListTree(Constants.CATEGORY_TYPE_PRODUCT, 1);
+        return categoryService.getListTree(Constants.CATEGORY_TYPE_PRODUCT, 1,"");
     }
 
     /**
@@ -149,6 +171,8 @@ public class ProductServiceImpl implements ProductService {
             StoreProductStoreInfoResponse storeInfo = new StoreProductStoreInfoResponse();
 
             BeanUtils.copyProperties(productResponse,storeInfo);
+            storeInfo.setActivityAllH5(productUtils.getProductAllActivity(
+                    new StoreProduct().setId(productResponse.getId()).setActivity(productResponse.getActivity())));
 
             // 设置点赞和收藏
             User user = userService.getInfo();
@@ -181,7 +205,6 @@ public class ProductServiceImpl implements ProductService {
             for (StoreProduct product:storeProducts) {
                 StoreProductRecommendResponse sPRecommendResponse = new StoreProductRecommendResponse();
                 BeanUtils.copyProperties(product,sPRecommendResponse);
-                sPRecommendResponse.setActivity(null); // todo 暂放 设置优品推荐中的拼团砍价秒杀属性
 //            sPRecommendResponse.setCheckCoupon(storeCouponService.getListByUser(product.getId()).size() > 0);
                 storeProductRecommendResponses.add(sPRecommendResponse);
             }
@@ -254,44 +277,6 @@ public class ProductServiceImpl implements ProductService {
         return new StoreProductReplayCountResponse(sumCount, goodCount, inCount, poorCount, replyChance, replyStar);
     }
 
-
-    /**
-     * 设置制式结构给attr属性
-     * @param id 产品id
-     * @param productDetailResponse 商品详情
-     * @param productResponse 商品本身
-     */
-    private void setSkuAttr(Integer id, ProductDetailResponse productDetailResponse, StoreProductResponse productResponse) {
-        List<HashMap<String,Object>> attrMapList = new ArrayList<>();
-        for (StoreProductAttr attr : productResponse.getAttr()) {
-            HashMap<String, Object> attrMap = new HashMap<>();
-            attrMap.put("productId",attr.getProductId());
-            attrMap.put("attrName",attr.getAttrName());
-            attrMap.put("type",attr.getType());
-            List<String> attrValues = new ArrayList<>();
-            String trimAttr = attr.getAttrValues()
-                    .replace("[","")
-                    .replace("]","");
-            if(attr.getAttrValues().contains(",")){
-                attrValues = Arrays.asList(trimAttr.split(","));
-            }else{
-                attrValues.add(trimAttr);
-            }
-            attrMap.put("attrValues",attrValues);
-            // 设置带有优惠券标识的sku集合
-            List<HashMap<String,Object>> attrValueMapList = new ArrayList<>();
-            for (String attrValue : attrValues) {
-                HashMap<String,Object> attrValueMap = new HashMap<>();
-                attrValueMap.put("attr",attrValue);
-//                attrValueMap.put("check",storeCouponService.getListByProductCanUse(id).size()>0);
-                attrValueMapList.add(attrValueMap);
-            }
-            attrMap.put("attrValue",attrValueMapList);
-            attrMapList.add(attrMap);
-        }
-        productDetailResponse.setProductAttr(attrMapList);
-    }
-
     /**
      * 获取商品佣金区间
      * @param storeProductResponse 商品属性
@@ -331,6 +316,44 @@ public class ProductServiceImpl implements ProductService {
             priceName = minPrice.toString() + "~" + maxPrice.toString();
         }
         return priceName;
+    }
+
+    ///////////////////////////////////////////////////////// 自定义方法
+    /**
+     * 设置制式结构给attr属性
+     * @param id 产品id
+     * @param productDetailResponse 商品详情
+     * @param productResponse 商品本身
+     */
+    private void setSkuAttr(Integer id, ProductDetailResponse productDetailResponse, StoreProductResponse productResponse) {
+        List<HashMap<String,Object>> attrMapList = new ArrayList<>();
+        for (StoreProductAttr attr : productResponse.getAttr()) {
+            HashMap<String, Object> attrMap = new HashMap<>();
+            attrMap.put("productId",attr.getProductId());
+            attrMap.put("attrName",attr.getAttrName());
+            attrMap.put("type",attr.getType());
+            List<String> attrValues = new ArrayList<>();
+            String trimAttr = attr.getAttrValues()
+                    .replace("[","")
+                    .replace("]","");
+            if(attr.getAttrValues().contains(",")){
+                attrValues = Arrays.asList(trimAttr.split(","));
+            }else{
+                attrValues.add(trimAttr);
+            }
+            attrMap.put("attrValues",attrValues);
+            // 设置带有优惠券标识的sku集合
+            List<HashMap<String,Object>> attrValueMapList = new ArrayList<>();
+            for (String attrValue : attrValues) {
+                HashMap<String,Object> attrValueMap = new HashMap<>();
+                attrValueMap.put("attr",attrValue);
+//                attrValueMap.put("check",storeCouponService.getListByProductCanUse(id).size()>0);
+                attrValueMapList.add(attrValueMap);
+            }
+            attrMap.put("attrValue",attrValueMapList);
+            attrMapList.add(attrMap);
+        }
+        productDetailResponse.setProductAttr(attrMapList);
     }
 }
 

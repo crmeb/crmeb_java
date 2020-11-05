@@ -79,7 +79,7 @@ public class StoreProductAttrValueResponse implements Serializable {
     private BigDecimal brokerageTwo;
 
     @ApiModelProperty(value = "活动类型 0=商品，1=秒杀，2=砍价，3=拼团")
-    private Boolean type;
+    private Integer type;
 
     @ApiModelProperty(value = "活动限购数量")
     private Integer quota;

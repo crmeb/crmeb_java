@@ -8,10 +8,10 @@
               <el-radio-group v-model="tableFrom.dateLimit" type="button" class="mr20" size="small" @change="selectChange(tableFrom.dateLimit)">
                 <el-radio-button v-for="(item,i) in fromList.fromTxt" :key="i" :label="item.val">{{ item.text }}</el-radio-button>
               </el-radio-group>
-              <el-date-picker v-model="timeVal" value-format="yyyy/MM/dd" format="yyyy/MM/dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTime" />
+              <el-date-picker v-model="timeVal" value-format="yyyy-MM-dd" format="yyyy-MM-dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTime" />
             </el-form-item>
             <el-form-item label="关键字：">
-              <el-input v-model="tableFrom.keywords" placeholder="请输入请输入姓名、电话、UID" class="selWidth" size="small">
+              <el-input v-model="tableFrom.keywords" placeholder="请输入姓名、电话、UID" class="selWidth" size="small">
                 <el-button slot="append" icon="el-icon-search" size="small" @click="seachList" />
               </el-input>
             </el-form-item>
@@ -139,7 +139,7 @@
             <el-radio-group v-model="spreadFrom.dateLimit" type="button" class="mr20" size="small" @change="selectChangeSpread(spreadFrom.dateLimit)">
               <el-radio-button v-for="(item,i) in fromList.fromTxt" :key="i" :label="item.val">{{ item.text }}</el-radio-button>
             </el-radio-group>
-            <el-date-picker v-model="timeValSpread" value-format="yyyy/MM/dd" format="yyyy/MM/dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTimeSpread" />
+            <el-date-picker v-model="timeValSpread" value-format="yyyy-MM-dd" format="yyyy-MM-dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTimeSpread" />
           </el-form-item>
           <el-form-item label="用户类型：">
             <el-radio-group v-model="spreadFrom.type" size="small" @change="onChanges">
@@ -352,15 +352,18 @@
       selectChangeSpread(tab) {
         this.timeValSpread = []
         this.spreadFrom.dateLimit = tab
+        this.spreadFrom.page = 1
         this.onName === 'man' ? this.getListSpread() : this.getSpreadOrderList()
       },
       // 具体日期
       onchangeTimeSpread(e) {
         this.timeValSpread = e
         this.tableFrom.dateLimit = e ? this.timeValSpread.join(',') : ''
+        this.spreadFrom.page = 1
         this.onName === 'man' ? this.getListSpread() : this.getSpreadOrderList()
       },
       onChanges() {
+        this.spreadFrom.page = 1
         this.onName === 'man' ? this.getListSpread() : this.getSpreadOrderList()
       },
       // 推广人列表

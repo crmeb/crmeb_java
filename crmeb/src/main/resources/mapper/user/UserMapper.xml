@@ -6,7 +6,7 @@
     </update>
 
     <select id="getSpreadPeopleList" resultType="com.zbkj.crmeb.front.response.UserSpreadPeopleItemResponse" parameterType="map">
-        SELECT u.nickname, u.avatar, u.create_time AS `time`, u.spread_count AS childCount, u.pay_count AS orderCount, p.numberCount AS numberCount FROM eb_user AS u
+        SELECT u.nickname, u.avatar, DATE_FORMAT(u.create_time, '%Y-%m-%d %H:%i:%s') AS `time`, u.spread_count AS childCount, u.pay_count AS orderCount, p.numberCount AS numberCount FROM eb_user AS u
         LEFT JOIN (
             SELECT IF((sum(pay_price) = NULL), 0.00, sum(pay_price)) AS numberCount, o.uid as o_uid FROM eb_store_order as o WHERE is_del = 0 AND is_system_del = 0
             <if test="userIdList != null and userIdList !='' ">

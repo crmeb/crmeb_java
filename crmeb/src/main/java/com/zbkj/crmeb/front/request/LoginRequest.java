@@ -12,12 +12,16 @@ import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 
 /**
- * <p>
  * 手机快速登录
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-04-28
+ *  +----------------------------------------------------------------------
+ *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ *  +----------------------------------------------------------------------
+ *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  +----------------------------------------------------------------------
+ *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ *  +----------------------------------------------------------------------
+ *  | Author: CRMEB Team <admin@crmeb.com>
+ *  +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -33,7 +37,7 @@ public class LoginRequest implements Serializable {
     private String phone;
 
     @ApiModelProperty(value = "密码", required = true, example = "1~[6,18]")
-    @Pattern(regexp = RegularConstants.PASSWORD, message = "密码格式错误，密码必须以字母开头，长度在6~18之间，只能包含字符、数字和下划线")
+//    @Pattern(regexp = RegularConstants.PASSWORD, message = "密码格式错误，密码必须以字母开头，长度在6~18之间，只能包含字符、数字和下划线")
     private String password;
 
     @ApiModelProperty(value = "推广人id")

@@ -1,12 +1,12 @@
 # 配置端口
 server:
-  port: 8080
-  domain:
-  wechat-api-url: http://121.196.17.222:20003/ #请求微信接口中专服务器
-  wechat-js-api-debug: false #微信js api系列是否开启调试模式
-  wechat-js-api-beta: false #微信js api是否是beta版本
-  asyncConfig: false #是否同步config表数据到redis
-  asyncWeChatProgramTempList: false #是否同步小程序公共模板库
+  port: 20000
+  domain: youDomain #配合swagger使用
+  wechat-api-url:
+  wechat-js-api-debug: false
+  wechat-js-api-beta: false
+  asyncConfig: true
+  asyncWeChatProgramTempList: true
 
 spring:
   profiles:
@@ -16,13 +16,13 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://数据库IP:3306/crmeb_java?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
-    username: 数据库名称
-    password: 数据库密码
+    url: jdbc:mysql://127.0.0.1:3306/crmeb_java_test?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
+    username: youMysqlAccount
+    password: youMysqlPwd
   redis:
-    host: redis地址 #地址
+    host:  redisPath #地址
     port: 6379 #端口
-    password: redis密码
+    password: #密码
     timeout: 30000 # 连接超时时间（毫秒）
     database: 0 #默认数据库
     jedis:
@@ -55,4 +55,4 @@ swagger:
     enable: true #是否开启界面
     check: true #是否打开验证
     username: crmeb #访问swagger的账号
-    password: crmeb.com #访问swagger的密码
+    password: ZeypRDYBfM #访问swagger的密码
