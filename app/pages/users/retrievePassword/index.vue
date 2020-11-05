@@ -111,7 +111,7 @@
 					})
 					.then(res => {
 						that.$util.Tips({
-							title: res.msg
+							title: res.message
 						}, {
 							tab: 3
 						})
@@ -138,7 +138,7 @@
 						code: that.codeVal
 					})
 					.then(res => {
-						that.$dialog.success(res.msg);
+						that.$dialog.success(res.message);
 						that.sendCode();
 					})
 					.catch(res => {

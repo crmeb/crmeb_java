@@ -593,7 +593,7 @@
 					})
 					.then(res => {
 						that.$util.Tips({
-							title:res.msg
+							title:res
 						},{
 							tab: 3,
 						})

@@ -61,7 +61,7 @@ service.interceptors.response.use(
         })
       })
     }
-    if (res.code !== 200) {
+    if (res.code !== 200  && res.code !== 401) {
       if (isPhone()) { //移动端
         return Promise.reject(res || 'Error')
       }

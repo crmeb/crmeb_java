@@ -262,7 +262,9 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
         if(request.getAll() || request.getSign()){
             userSignInfoResponse.setSumIntegral(userBillService.getSumInteger(1, user.getUid(), Constants.USER_BILL_CATEGORY_INTEGRAL, null, null));
             userSignInfoResponse.setDeductionIntegral(userBillService.getSumInteger(0, user.getUid(), Constants.USER_BILL_CATEGORY_INTEGRAL, null, null));
-            userSignInfoResponse.setYesterdayIntegral(userBillService.getSumInteger(1, user.getUid(), Constants.USER_BILL_CATEGORY_INTEGRAL, Constants.SEARCH_DATE_YESTERDAY, null));
+//            userSignInfoResponse.setYesterdayIntegral(userBillService.getSumInteger(1, user.getUid(), Constants.USER_BILL_CATEGORY_INTEGRAL, Constants.SEARCH_DATE_YESTERDAY, null));
+            //实际上是今日获得积分
+            userSignInfoResponse.setYesterdayIntegral(userBillService.getSumInteger(1, user.getUid(), Constants.USER_BILL_CATEGORY_INTEGRAL, Constants.SEARCH_DATE_DAY, null));
         }
 
         return userSignInfoResponse;

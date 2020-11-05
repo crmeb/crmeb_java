@@ -122,7 +122,7 @@
 						that.delivery = res.data;
 					},
 					error => {
-						that.$dialog.error(error.msg);
+						that.$dialog.error(error);
 					}
 				);
 			},
@@ -133,7 +133,7 @@
 						that.logistics = res.data;
 					},
 					error => {
-						that.$dialog.error(error.msg);
+						that.$dialog.error(error);
 					}
 				);
 			},
@@ -183,7 +183,7 @@
 				setAdminOrderDelivery(item).then(
 					res => {
 						that.$util.Tips({
-							title:res.msg,
+							title:res,
 							icon:'success',
 							mask:true
 						})
@@ -192,7 +192,7 @@
 						},2000)
 					},
 					error => {
-						that.$dialog.error(error.msg);
+						that.$dialog.error(error);
 					}
 				);
 			},

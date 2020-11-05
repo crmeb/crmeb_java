@@ -1,0 +1,60 @@
+package com.zbkj.crmeb.seckill.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.common.PageParamRequest;
+import com.zbkj.crmeb.seckill.model.StoreSeckillManger;
+import com.zbkj.crmeb.seckill.response.StoreSeckillManagerResponse;
+
+import java.util.List;
+
+/**
+* @author Stivepeim
+* @description StoreSeckillMangerService 接口
+* @date 2020-09-18
+*/
+public interface StoreSeckillMangerService extends IService<StoreSeckillManger> {
+
+    List<StoreSeckillManagerResponse> getList(StoreSeckillManger request, PageParamRequest pageParamRequest);
+
+    /**
+     * 删除秒杀配置 逻辑删除
+     * @param id 待删除id
+     * @return  删除结果
+     */
+    boolean deleteLogicById(int id);
+
+    /**
+     * 检查时间段是否已经存在
+     * @param storeSeckillManger    查询秒杀配置
+     * @return  查询结果
+     */
+    List<StoreSeckillManger> checkTimeRangeUnique(StoreSeckillManger storeSeckillManger);
+
+    /**
+     * 更新秒杀配置
+     * @param storeSeckillManger 待更新秒杀配置
+     * @return  更新结果
+     */
+    boolean updateByCondition(StoreSeckillManger storeSeckillManger);
+
+    /**
+     * 详情
+     * @param id 配置id
+     * @return  查询到的结果
+     */
+    StoreSeckillManagerResponse detail(int id);
+
+    /**
+     * 获取正在秒杀的时间段
+     * @return 正在秒杀的时间段
+     */
+    List<StoreSeckillManger> getCurrentSeckillManager();
+
+    /**
+     * 更新秒杀配置状态
+     * @param id id
+     * @param status 待更新状态
+     * @return 结果
+     */
+    boolean updateStatus(int id, boolean status);
+}

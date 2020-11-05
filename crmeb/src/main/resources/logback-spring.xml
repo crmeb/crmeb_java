@@ -224,9 +224,9 @@
     <!-- 日志输出级别 -->
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
-        <appender-ref ref="DEBUG_FILE" />
-        <appender-ref ref="INFO_FILE" />
-        <appender-ref ref="WARN_FILE" />
+<!--        <appender-ref ref="DEBUG_FILE" />-->
+<!--        <appender-ref ref="INFO_FILE" />-->
+<!--        <appender-ref ref="WARN_FILE" />-->
         <appender-ref ref="ERROR_FILE" />
         <!--<appender-ref ref="LOGSTASH"/>-->
     </root>

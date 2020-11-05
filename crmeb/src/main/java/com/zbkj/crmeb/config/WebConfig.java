@@ -16,8 +16,18 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.handler.MappedInterceptor;
 
-//token验证拦截器
-
+/**
+ * token验证拦截器
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
@@ -101,6 +111,9 @@ public class WebConfig implements WebMvcConfigurer {
                 excludePathPatterns("/api/front/groom/list/**").
                 excludePathPatterns("/api/front/index").
                 excludePathPatterns("/api/front/category").
+                excludePathPatterns("/api/front/seckill/*").
+                excludePathPatterns("/api/front/seckill/list/*").
+                excludePathPatterns("/api/front/seckill/detail/*").
 //                excludePathPatterns("/api/front/cart/count").
                 excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**");
     }

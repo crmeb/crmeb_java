@@ -35,6 +35,15 @@ import java.util.Map;
 
 /**
  * 用户 -- 用户中心
+ *  +----------------------------------------------------------------------
+ *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ *  +----------------------------------------------------------------------
+ *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  +----------------------------------------------------------------------
+ *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ *  +----------------------------------------------------------------------
+ *  | Author: CRMEB Team <admin@crmeb.com>
+ *  +----------------------------------------------------------------------
  */
 @Slf4j
 @RestController("FrontUserController")
@@ -178,7 +187,7 @@ public class UserController {
                 }
                 request.setAlipayCode(null);
                 request.setBankCode(null);
-                request.setBankname(null);
+                request.setBankName(null);
                 break;
             case "alipay":
                 if(StringUtils.isBlank(request.getAlipayCode())){
@@ -186,10 +195,10 @@ public class UserController {
                 }
                 request.setWechat(null);
                 request.setBankCode(null);
-                request.setBankname(null);
+                request.setBankName(null);
                 break;
             case "bank":
-                if(StringUtils.isBlank(request.getBankname())){
+                if(StringUtils.isBlank(request.getBankName())){
                     throw new  CrmebException("请填写银行名称！");
                 }
                 if(StringUtils.isBlank(request.getBankCode())){
@@ -202,6 +211,32 @@ public class UserController {
                throw new  CrmebException("请选择支付方式");
         }
         return CommonResult.success(userCenterService.extractCash(request));
+    }
+
+    /**
+     * 提现记录
+     * @author HZW
+     * @since 2020-10-27
+     * @return
+     */
+    @ApiOperation(value = "提现记录")
+    @RequestMapping(value = "/extract/record", method = RequestMethod.GET)
+    public CommonResult<CommonPage<UserExtractRecordResponse>> getExtractRecord(@Validated PageParamRequest pageParamRequest){
+        return CommonResult.success(CommonPage.restPage(userCenterService.getExtractRecord(pageParamRequest)));
+    }
+
+    /**
+     * 提现总金额
+     * @author HZW
+     * @since 2020-10-27
+     * @return
+     */
+    @ApiOperation(value = "提现总金额")
+    @RequestMapping(value = "/extract/totalMoney", method = RequestMethod.GET)
+    public CommonResult<Map<String, BigDecimal>> getTotalMoney(){
+        Map<String, BigDecimal> map = new HashMap<>();
+        map.put("count", userCenterService.getExtractTotalMoney());
+        return CommonResult.success(map);
     }
 
     /**

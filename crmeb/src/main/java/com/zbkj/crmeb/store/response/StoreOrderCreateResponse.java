@@ -15,10 +15,16 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @Classname StoreOrderCreateResponse
- * @Description 创建订单Response
- * @Date 2020/7/10 2:25 下午
- * @Created by stivepeim
+ * 创建订单Response
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)

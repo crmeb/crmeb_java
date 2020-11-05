@@ -399,7 +399,7 @@
 				this.$dialog.error("连接失败");
 			});
 			this.$on("err_tip", data => {
-				this.$dialog.error(data.msg);
+				this.$dialog.error(data);
 			});
 			this.$on("socket_open", () => {
 				this.socket.send({
@@ -486,8 +486,7 @@
 			},
 			imageuploaded(res) {
 				console.log(res)
-				if (res.status !== 200)
-					return this.$dialog.error(res.msg || "上传图片失败");
+				if (res.status !== 200) return this.$dialog.error(res || "上传图片失败");
 				this.sendMsg(res.data.url, 3);
 			},
 			getHistory() {
@@ -513,7 +512,7 @@
 					})
 					.catch(err => {
 						console.log(err);
-						this.$dialog.error(err.msg || "加载失败");
+						this.$dialog.error(err || "加载失败");
 					});
 			},
 			focus: function() {

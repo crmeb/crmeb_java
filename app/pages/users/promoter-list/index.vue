@@ -147,8 +147,6 @@
 				let that = this;
 				that.isAsc = isAsc;
 				that.sort = sortKey+isAsc;
-				console.log('ppppppp');
-				console.log(sortKey+isAsc);
 				that.sortKey = sortKey;
 				that.page = 1;
 				that.limit = 20;
@@ -202,10 +200,10 @@
 					recordListNew = recordList.concat(recordListData);
 					that.total = res.data.total;
 					that.totalLevel = res.data.totalLevel;
-					that.teamCount = that.$util.$h.Add(Number(res.data.total), Number(res.data.totalLevel));
+					that.teamCount = res.data.count;
 					that.status = limit > len;
 					that.page = page + 1;
-					that.$set(that, 'recordList', recordListNew);
+					that.$set(that, 'recordList', recordListNew || []);
 				});
 			}
 		},

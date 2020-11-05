@@ -33,16 +33,17 @@ public interface StoreProductAttrValueService extends IService<StoreProductAttrV
      * 根据商品id和attrId获取列表集合
      * @param productId 商品id
      * @param attrId 属性id
+     * @param type 商品类型
      * @return 商品属性集合
      */
-    List<StoreProductAttrValue> getListByProductIdAndAttrId(Integer productId, String attrId);
+    List<StoreProductAttrValue> getListByProductIdAndAttrId(Integer productId, String attrId, Integer type);
 
     /**
      * 根据商品属性查询
      * @param storeProductAttrValue 商品属性参数
      * @return 商品属性结果
      */
-    StoreProductAttrValue getByEntity(StoreProductAttrValue storeProductAttrValue);
+    List<StoreProductAttrValue> getByEntity(StoreProductAttrValue storeProductAttrValue);
 
     /**
      * 加销量，减库存
@@ -56,8 +57,9 @@ public interface StoreProductAttrValueService extends IService<StoreProductAttrV
 
     /**
      * 根据商品删除attrValue
-     * @param productId
-     * @return
+     * @param productId 商品id
+     * @param type 类型区分是是否添加营销
+     * @return 删除结果
      */
-    boolean removeByProductId(Integer productId);
+    boolean removeByProductId(Integer productId,int type);
 }

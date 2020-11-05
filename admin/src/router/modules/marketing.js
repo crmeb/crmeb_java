@@ -5,7 +5,7 @@ import Layout from '@/layout'
 const marketingRouter = {
   path: '/marketing',
   component: Layout,
-  redirect: '/marketing/coupon/list',
+  redirect: '/coupon/list',
   name: 'Marketing',
   meta: {
     title: '营销',
@@ -88,23 +88,30 @@ const marketingRouter = {
       ]
     },
     {
-      path: 'spike',
-      component: () => import('@/views/marketing/spike/index'),
-      name: 'Spike',
+      path: 'seckill',
+      component: () => import('@/views/marketing/seckill/index'),
+      name: 'Seckill',
       meta: { title: '秒杀管理', icon: '' },
-      hidden: true,
       children: [
         {
-          path: 'spikeconfig',
-          component: () => import('@/views/marketing/spike/config/index'),
-          name: 'spikeConfig',
+          path: 'config',
+          component: () => import('@/views/marketing/seckill/seckillConfig/index'),
+          name: 'SeckillConfig',
           meta: { title: '秒杀配置', icon: '' }
         },
         {
-          path: 'bargainList',
-          component: () => import('@/views/marketing/spike/googs/index'),
-          name: 'bargainList',
-          meta: { title: '秒杀商品', icon: '' }
+          path: 'list/:timeId?',
+          component: () => import('@/views/marketing/seckill/seckillList/index'),
+          name: 'SeckillList',
+          meta: { title: '秒杀商品', icon: '',noCache: true,
+            activeMenu: `/marketing/seckill/list` }
+        },
+        {
+          path: 'creatSeckill/:name?/:timeId?/:id?',
+          component: () => import('@/views/marketing/seckill/seckillList/creatSeckill'),
+          name: 'CreatSeckill',
+          meta: { title: '添加秒杀商品', icon: '', noCache: true,
+            activeMenu: `/marketing/seckill/list` }
         }
       ]
     },

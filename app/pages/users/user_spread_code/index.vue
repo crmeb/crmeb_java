@@ -243,7 +243,7 @@
 													},
 													fail: function(res) {
 														return that.$util.Tips({
-															title: res.errMsg
+															title: res
 														});
 													},
 													complete: function(res) {},
@@ -279,7 +279,7 @@
 											},
 											fail: function(res) {
 												return that.$util.Tips({
-													title: res.errMsg
+													title: res
 												});
 											},
 											complete: function(res) {},
@@ -292,13 +292,13 @@
 							})
 						} else {
 							return that.$util.Tips({
-								title: resFile.errMsg
+								title: resFile
 							});
 						}
 					},
 					fail(res) {
 						return that.$util.Tips({
-							title: res.errMsg
+							title: res
 						});
 					}
 				})

@@ -1,0 +1,42 @@
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**
+!**/src/test/**
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+### VS Code ###
+.vscode/
+/crmeb_log/log_debug.log
+/crmeb_log/log_error.log
+/crmeb_log/log_info.log
+/crmeb_log/log_warn.log
+/crmeb_log/
+/.idea/
+src/main/java/com/zbkj/.DS_Store
+src/main/java/com/.DS_Store
+src/main/java/.DS_Store
+src/main/.DS_Store
+.DS_Store

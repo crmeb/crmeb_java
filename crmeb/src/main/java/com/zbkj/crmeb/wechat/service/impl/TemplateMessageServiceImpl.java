@@ -115,7 +115,7 @@ public class TemplateMessageServiceImpl extends ServiceImpl<TemplateMessageDao, 
     }
 
     /**
-     * 发送给微信消息进入队列
+     * 发送公众号消息
      * @param tempKey String 模板消息key
      * @param map 需要替换的数据
      * @param userId Integer 用户id
@@ -175,7 +175,7 @@ public class TemplateMessageServiceImpl extends ServiceImpl<TemplateMessageDao, 
     }
 
     /**
-     * 公众号消费队列
+     * 公众号消费队列消费
      * @author Mr.Zhang
      * @since 2020-06-03
      */
@@ -206,7 +206,7 @@ public class TemplateMessageServiceImpl extends ServiceImpl<TemplateMessageDao, 
     }
 
     /**
-     * 小程序消费队列
+     * 小程序消费队列消费
      * @author Mr.Zhang
      * @since 2020-06-03
      */

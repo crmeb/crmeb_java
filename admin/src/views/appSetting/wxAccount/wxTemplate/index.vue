@@ -112,6 +112,7 @@
         :is-create="isCreate"
         :edit-data="editData"
         @submit="handlerSubmit"
+        @resetForm="resetForm"
       />
     </el-dialog>
   </div>
@@ -151,6 +152,9 @@
         this.getList()
       },
       methods: {
+        resetForm(formValue) {
+          this.dialogVisible = false
+        },
         seachList() {
           this.tableFrom.page = 1
           this.getList()
