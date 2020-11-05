@@ -158,7 +158,6 @@
           if (valid) {
             replyCreatApi(this.formValidate).then(() => {
               this.$message.success("新增成功")
-              this.$msgbox.close()
               setTimeout(() => {
                 // this.clear();
                 this.$emit('getList');

@@ -2,6 +2,7 @@ package com.zbkj.crmeb.store.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageHelper;
 
@@ -74,7 +75,7 @@ public class StoreOrderInfoServiceImpl extends ServiceImpl<StoreOrderInfoDao, St
         if(orderList.size() < 1){
             return map;
         }
-        LambdaQueryWrapper<StoreOrderInfo> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<StoreOrderInfo> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.in(StoreOrderInfo::getOrderId, orderList);
         List<StoreOrderInfo> systemStoreStaffList = dao.selectList(lambdaQueryWrapper);
         if(systemStoreStaffList.size() < 1){

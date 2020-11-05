@@ -160,4 +160,11 @@ public interface StoreOrderService extends IService<StoreOrder> {
      * @return 统计订单信息
      */
     StoreOrderStatisticsResponse orderStatisticsByTime(String dateLimit,Integer type);
+
+    /**
+     * 获取用户当天的秒杀数量
+     * @param storeOrder    订单查询参数
+     * @return  用户当天的秒杀商品订单数量
+     */
+    List<StoreOrder> getUserCurrentDaySecKillOrders(StoreOrder storeOrder);
 }

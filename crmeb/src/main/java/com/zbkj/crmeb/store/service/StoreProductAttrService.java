@@ -20,8 +20,25 @@ public interface StoreProductAttrService extends IService<StoreProductAttr> {
 
     Boolean batchUpdate(List<StoreProductAttr> storeProductAttrs);
 
+    /**
+     * 根据基本属性查询商品属性详情
+     * @param storeProductAttr 商品属性
+     * @return 查询商品属性集合
+     */
+    List<StoreProductAttr> getByEntity(StoreProductAttr storeProductAttr);
+
+    /**
+     * 根据id查询商品属性详情
+     * @param productId 商品id
+     * @return 查询结果
+     */
     List<StoreProductAttr> getByProductId(int productId);
 
-    void removeByProductId(Integer productId);
+    /**
+     * 根据id删除商品
+     * @param productId 待删除商品id
+     * @param type 类型区分是是否添加营销
+     */
+    void removeByProductId(Integer productId,int type);
 
 }

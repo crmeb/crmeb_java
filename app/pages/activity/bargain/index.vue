@@ -110,7 +110,7 @@
 						that.loadingList = false;
 					})
 					.catch(res => {
-						that.$dialog.error(res.msg);
+						that.$dialog.error(res);
 					});
 			},
 			getBargainUserCancel: function(bargainId) {
@@ -125,7 +125,7 @@
 						that.bargain = [];
 						that.getBargainUserList();
 						that.$util.Tips({
-							title: res.msg
+							title: res
 						})
 					})
 					.catch(res => {

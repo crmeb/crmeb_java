@@ -180,3 +180,11 @@ export function seckillCode(id,data) {
 export function scombinationCode(id) {
   return request.get("combination/code/"+id);
 }
+
+/**
+ * 秒杀产品时间区间
+ * @param int id
+*/
+export function getSeckillHeaderApi(){
+  return request.get('seckill/index',{},{noAuth:true});
+}

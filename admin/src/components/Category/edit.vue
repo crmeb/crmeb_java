@@ -6,13 +6,13 @@
         prop="name"
         :rules="[{ required:true,message:'请输入分类名称',trigger:['blur','change'] }]"
       >
-        <el-input v-model="editPram.name"  :maxlength="biztype.value === 1 ? 5 : 20" placeholder="分类名称" />
+        <el-input v-model="editPram.name"  :maxlength="biztype.value === 1 ? 8 : 20" placeholder="分类名称" />
       </el-form-item>
       <el-form-item label="URL">
         <el-input v-model="editPram.url" placeholder="URL" />
       </el-form-item>
       <el-form-item label="父级" v-if="biztype.value!==3">
-        <el-cascader v-model="editPram.pid" :options="biztype.value === 5 ? allTreeList : parentOptions" :props="categoryProps" style="width:100%" />
+        <el-cascader v-model="editPram.pid" :disabled="isCreate ===1 && editPram.pid ===0" :options="biztype.value === 5 ? allTreeList : parentOptions" :props="categoryProps" style="width:100%" />
       </el-form-item>
       <el-form-item label="菜单图标" v-if="biztype.value===5">
         <el-input placeholder="请选择菜单图标" v-model="editPram.extra">
@@ -128,11 +128,8 @@ export default {
     initEditData() {
       this.parentOptions = [...this.allTreeList]
       this.addTreeListLabelForCasCard(this.parentOptions, 'child')
-      if (this.isCreate !== 1) {
-        const { id } = this.prent
-        this.editPram.pid = id
-      } else {
-        const { extra, name, pid, sort, status, type, id, url } = this.editData
+      const { extra, name, pid, sort, status, type, id, url } = this.editData
+      if(this.isCreate === 1){
         this.editPram.extra = extra
         this.editPram.name = name
         this.editPram.pid = pid
@@ -141,6 +138,9 @@ export default {
         this.editPram.type = type
         this.editPram.url = url
         this.editPram.id = id
+      }else{
+        this.editPram.pid = this.prent.id
+        this.editPram.type = this.biztype.value
       }
     },
     addTreeListLabelForCasCard(arr, child) {
@@ -161,11 +161,13 @@ export default {
     },
     handlerSaveOrUpdate(isSave) {
       if (isSave) {
-        this.editPram.pid = this.prent.id
+       // this.editPram.pid = this.prent.id
         this.loadingBtn = true
         categoryApi.addCategroy(this.editPram).then(data => {
           this.$emit('hideEditDialog')
           this.$message.success('创建目录成功')
+          this.loadingBtn = false
+        }).catch(() => {
           this.loadingBtn = false
         })
       } else {
@@ -174,6 +176,8 @@ export default {
         categoryApi.updateCategroy(this.editPram).then(data => {
           this.$emit('hideEditDialog')
           this.$message.success('更新目录成功')
+          this.loadingBtn = false
+        }).catch(() => {
           this.loadingBtn = false
         })
       }

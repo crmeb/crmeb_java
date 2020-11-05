@@ -1,8 +1,9 @@
-package com.zbkj.crmeb.system.model;
+package com.zbkj.crmeb.system.response;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.zbkj.crmeb.system.model.SystemStore;
 import com.zbkj.crmeb.user.model.User;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

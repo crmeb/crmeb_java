@@ -1,5 +1,5 @@
 <template>
-  <div class="page-account">
+  <div class="page-account" :style="backgroundImages ? { backgroundImage: 'url(' + backgroundImages + ')'} : { backgroundImage: 'url(' + backgroundImageMo + ')'}">
     <div class="container" :class="[ fullWidth > 768 ? 'containerSamll':'containerBig']">
       <template v-if="fullWidth>768">
         <swiper :options="swiperOption" class="swiperPross">
@@ -119,7 +119,8 @@ export default {
       captchatImg: '',
       swiperList: [],
       loginLogo: '',
-      backgroundImage: '',
+      backgroundImages: '',
+      backgroundImageMo: require("@/assets/imgs/bg.jpg"),
       fullWidth: document.body.clientWidth,
       swiperOption: {
         pagination: {
@@ -241,7 +242,7 @@ export default {
       getLoginPicApi().then(res => {
         this.swiperList = res.banner
         this.loginLogo = res.logo
-        this.backgroundImage = res.backgroundImage
+        this.backgroundImages = res.backgroundImage
         // Cookies.set('MerInfo', JSON.stringify(data))
       })
     },
@@ -270,7 +271,6 @@ export default {
           this.$store.dispatch('user/login', this.loginForm)
             .then(() => {
               this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
-              console.log('lalaalalala')
               getStoreStaff()
               this.loading = false
             }).catch((err) => {
@@ -435,7 +435,6 @@ export default {
   }
   @media (min-width: $screen-md) {
     .page-account {
-      background-image: url('../../assets/imgs/bg.jpg');
       background-repeat: no-repeat;
       background-position: center;
       background-size: cover;

@@ -1,8 +1,6 @@
 package com.im;
 
 import com.alibaba.fastjson.JSONObject;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +12,18 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
+/**
+ * socket客户端1
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 public class SocketClient1 {
     public static final int port = SocketServer.port;
     public static final String address = SocketServer.address;

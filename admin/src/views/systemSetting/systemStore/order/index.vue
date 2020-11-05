@@ -11,7 +11,7 @@
               <el-date-picker v-model="timeVal" value-format="yyyy-MM-dd" format="yyyy-MM-dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTime" />
             </el-form-item>
             <el-form-item label="选择门店：">
-              <el-select v-model="tableFrom.storeId" clearable filterable placeholder="请选择" class="selWidth" clearable @change="seachList">
+              <el-select v-model="tableFrom.storeId" clearable filterable placeholder="请选择" class="selWidth" clearable @change="getList(1)">
                 <el-option
                   v-for="item in storeSelectList"
                   :key="item.id"
@@ -22,7 +22,7 @@
             </el-form-item>
             <el-form-item label="关键字：">
               <el-input v-model="tableFrom.keywords" placeholder="请输入姓名、电话、订单ID" class="selWidth" size="small">
-                <el-button slot="append" icon="el-icon-search" size="small" @click="seachList" />
+                <el-button slot="append" icon="el-icon-search" size="small" @click="getList(1)" />
               </el-input>
             </el-form-item>
           </el-form>
@@ -159,10 +159,6 @@
       this.getList()
     },
     methods: {
-      seachList() {
-        this.tableFrom.page = 1
-        this.getList()
-      },
       storeList() {
         let artFrom =  {
           page: 1,
@@ -197,8 +193,9 @@
         this.getList()
       },
       // 列表
-      getList() {
+      getList(num) {
         this.listLoading = true
+        this.tableFrom.page = num ? num : this.tableFrom.page
         orderListApi(this.tableFrom).then(res => {
           this.tableData.data = res.list.list
           this.tableData.total = res.list.total

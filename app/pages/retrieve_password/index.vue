@@ -79,7 +79,7 @@
 		        })
 		          .then(res => {
 					  that.$util.Tips({
-					    title: res.msg,
+					    title: res,
 					    success: () => {
 							uni.navigateTo({
 							    url: '/pages/login/index'
@@ -88,9 +88,8 @@
 					  });
 		          })
 		          .catch(res => {
-					  console.log(res);
 					  that.$util.Tips({
-					  	title: res.msg
+					  	title: res
 					  });
 		          });
 	    },
@@ -105,7 +104,7 @@
 	         registerVerify({ phone: that.account })
 	           .then(res => {
 	             that.$util.Tips({
-	             	title: res.msg
+	             	title: res
 	             });
 	             that.sendCode();
 	           })

@@ -31,7 +31,7 @@
 						<view class='label acea-row row-between-wrapper'>
 							<view>原价:￥{{storeInfo.otPrice}}</view>
 							<view>库存:{{storeInfo.stock}}{{storeInfo.unitName}}</view>
-							<view>销量:{{storeInfo.sales}}{{storeInfo.unitName}}</view>
+							<view>销量:{{Number(storeInfo.sales) + Number(storeInfo.ficti) || 0}}{{storeInfo.unitName}}</view>
 						</view>
 						<!-- <view class='coupon acea-row row-between-wrapper' v-if="storeInfo.give_integral > 0">
 							<view class='hide line1 acea-row'>
@@ -46,10 +46,10 @@
 							</view>
 							<view class='iconfont icon-jiantou'></view>
 						</view>
-						<view class="coupon acea-row row-between-wrapper" v-if="activity.length">
+						<view class="coupon acea-row row-between-wrapper" v-if="activityH5.length">
 							<view class="line1 acea-row">
 								<text>活&nbsp;&nbsp;&nbsp;动：</text>
-								<view v-for='(item,index) in activity' :key='index' @click="goActivity(item)">
+								<view v-for='(item,index) in activityH5' :key='index' @click="goActivity(item)">
 									<view v-if="item.type === '1'" :class="index==0?'activity_pin':'' || index==1?'activity_miao':'' || index==2?'activity_kan':''">
 										<text class="iconfonts iconfont icon-pintuan"></text>
 										<text class="activity_title"> 参与秒杀</text>
@@ -76,7 +76,7 @@
 				<view class='userEvaluation' id="past1">
 					<view class='title acea-row row-between-wrapper'>
 						<view>用户评价({{replyCount}})</view>
-						<navigator class='praise' hover-class='none' :url='"/pages/users/goods_comment_list/index?product_id="+id'>
+						<navigator class='praise' hover-class='none' :url='"/pages/users/goods_comment_list/index?productId="+id'>
 							<text class='font-color'>{{replyChance}}%</text>好评率
 							<text class='iconfont icon-jiantou'></text>
 						</navigator>
@@ -100,9 +100,9 @@
 									<view class="item" v-for="(val,indexn) in item.list" :key="indexn" @click="goDetail(val)">
 										<view class="pictrue">
 											<image :src="val.image"></image>
-											<span class="pictrue_log pictrue_log_class" v-if="val.activity && val.activity.type === '1'">秒杀</span>
-											<span class="pictrue_log pictrue_log_class" v-if="val.activity && val.activity.type === '2'">砍价</span>
-											<span class="pictrue_log pictrue_log_class" v-if="val.activity && val.activity.type === '3'">拼团</span>
+											<span class="pictrue_log pictrue_log_class" v-if="val.activityH5 && val.activityH5.type === '1'">秒杀</span>
+											<span class="pictrue_log pictrue_log_class" v-if="val.activityH5 && val.activityH5.type === '2'">砍价</span>
+											<span class="pictrue_log pictrue_log_class" v-if="val.activityH5 && val.activityH5.type === '3'">拼团</span>
 										</view>
 										<view class="name line1">{{val.storeName}}</view>
 										<view class="money font-color">¥{{val.price}}</view>
@@ -326,7 +326,7 @@
 				description: '',
 				navActive: 0,
 				H5ShareBox: false, //公众号分享图片
-				activity: [],
+				activityH5: [],
 				retunTop: true, //顶部返回
 				navH: "",
 				navList: [],
@@ -451,7 +451,7 @@
 				let item = e;
 				if (item.type === "1") {
 					uni.navigateTo({
-						url: `/pages/activity/goods_seckill_details/index?id=${item.id}&time=${item.time}&status=1`
+						url: `/pages/activity/goods_seckill_details/index?id=${item.id}&time=${item.time}&status=2`
 					});
 				} else if (item.type === "2") {
 					uni.navigateTo({
@@ -508,36 +508,36 @@
 			 *去商品详情页 
 			 */
 			goDetail(item) {
-				if(!item.activity){
+				if(!item.activityH5){
 					uni.redirectTo({
 						url: '/pages/goods_details/index?id=' + item.id
 					})
 					return
 				}
-				if (item.activity.length == 0) {
+				if (item.activityH5.length == 0) {
 					uni.redirectTo({
 						url: '/pages/goods_details/index?id=' + item.id
 					})
 					return
 				}
 				// 砍价
-				if (item.activity && item.activity.type == 2) {
+				if (item.activityH5 && item.activityH5.type == 2) {
 					uni.redirectTo({
-						url: `/pages/activity/goods_bargain_details/index?id=${item.activity.id}&bargain=${this.uid}`
+						url: `/pages/activity/goods_bargain_details/index?id=${item.activityH5.id}&bargain=${this.uid}`
 					})
 					return
 				}
 				// 拼团
-				if (item.activity && item.activity.type == 3) {
+				if (item.activityH5 && item.activityH5.type == 3) {
 					uni.redirectTo({
-						url: `/pages/activity/goods_combination_details/index?id=${item.activity.id}`
+						url: `/pages/activity/goods_combination_details/index?id=${item.activityH5.id}`
 					})
 					return
 				}
 				// 秒杀
-				if (item.activity && item.activity.type == 1) {
+				if (item.activityH5 && item.activityH5.type == 1) {
 					uni.redirectTo({
-						url: `/pages/activity/goods_seckill_details/index?id=${item.activity.id}&time=${item.activity.time}&status=1`
+						url: `/pages/activity/goods_seckill_details/index?id=${item.activityH5.id}&time=${item.activityH5.time}&status=2`
 					})
 					return
 				}
@@ -668,10 +668,9 @@
 					that.$set(that.attr, 'productAttr', res.data.productAttr);
 					that.$set(that, 'productValue', res.data.productValue);
 					that.$set(that.sharePacket, 'priceName', res.data.priceName);
-					console.log(that.sharePacket)
 					that.$set(that, 'systemStore', res.data.system_store);
 					that.$set(that, 'good_list', goodArray);
-					that.$set(that, 'activity', res.data.activity ? res.data.activity : []);
+					that.$set(that, 'activityH5', res.data.storeInfo.activityAllH5 ? res.data.storeInfo.activityAllH5 : []);
 					uni.setNavigationBarTitle({
 						title: storeInfo.storeName.substring(0, 7) + "..."
 					})
@@ -783,6 +782,7 @@
 			DefaultSelect: function() {
 				let productAttr = this.attr.productAttr;
 				let value = [];
+				console.log(this.productValue)
 				for (let key in this.productValue) {
 					if (this.productValue[key].stock > 0) {
 						value = this.attr.productAttr.length ? key.split(",") : [];
@@ -994,7 +994,7 @@
 					.catch(res => {
 						that.isOpen = false;
 						return that.$util.Tips({
-							title: res.msg
+							title: res
 						});
 					});
 			},
@@ -1117,6 +1117,7 @@
 				let that = this;
 				let href = location.href;
 				href = href.indexOf("?") === -1 ? href + "?spread=" + uid : href + "&spread=" + uid;
+				console.log(href)
 				uQRCode.make({
 					canvasId: 'qrcode',
 					text: href,

@@ -296,7 +296,7 @@
 						res => {
 							that.change = false;
 							that.$util.Tips({
-								title: res.msg
+								title: res
 							});
 							that.getIndex();
 						},
@@ -319,7 +319,7 @@
 						res => {
 							that.change = false;
 							this.$util.Tips({
-								title: res.msg,
+								title: res,
 								icon: 'success'
 							})
 							that.getIndex();
@@ -339,7 +339,7 @@
 				}).then(
 					res => {
 						this.$util.Tips({
-							title: res.msg,
+							title: res,
 							icon: 'success'
 						});
 						this.getIndex();

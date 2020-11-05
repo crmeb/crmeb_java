@@ -5,7 +5,7 @@
         <el-form inline size="small">
           <el-form-item label="优惠劵名称：">
             <el-input v-model="tableFrom.name" placeholder="请输入优惠券名称" class="selWidth" size="small">
-              <el-button slot="append" icon="el-icon-search" size="small" @click="getList" />
+              <el-button slot="append" icon="el-icon-search" size="small" @click="getList(1)" />
             </el-input>
           </el-form-item>
         </el-form>
@@ -228,8 +228,9 @@ export default {
       }
     },
     // 列表
-    getList() {
+    getList(num) {
       this.listLoading = true
+      this.tableFrom.page = num ? num : this.tableFrom.page
       marketingListApi(this.tableFrom).then(res => {
         this.tableData.data = res.list
         this.tableData.total = res.total

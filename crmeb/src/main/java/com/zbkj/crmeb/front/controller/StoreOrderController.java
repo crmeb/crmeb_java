@@ -21,10 +21,16 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
- * @Classname StoreOrderController
- * @Description H5端订单操作
- * @Date 2020/7/4 10:59 上午
- * @Created by stivepeim
+ * H5端订单操作
+ *  +----------------------------------------------------------------------
+ *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ *  +----------------------------------------------------------------------
+ *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  +----------------------------------------------------------------------
+ *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ *  +----------------------------------------------------------------------
+ *  | Author: CRMEB Team <admin@crmeb.com>
+ *  +----------------------------------------------------------------------
  */
 @Slf4j
 @RestController("StoreOrderFrontController")
@@ -43,9 +49,10 @@ public class StoreOrderController {
     @ApiOperation(value = "确认订单")
     @RequestMapping(value = "/confirm", method = RequestMethod.POST)
     public CommonResult<ConfirmOrderResponse> OrderConForm(@RequestParam String cartIds,
-                                                           @RequestParam(value = "boolean", defaultValue = "false") boolean isNew,
-                                                           @RequestParam(value = "addAgain", defaultValue = "false") boolean addAgain){
-        return CommonResult.success(orderService.confirmOrder(CrmebUtil.stringToArrayInt(cartIds),isNew,addAgain));
+                                                           @RequestParam(value = "isNew", defaultValue = "false") boolean isNew,
+                                                           @RequestParam(value = "addAgain", defaultValue = "false") boolean addAgain,
+                                                           @RequestParam(value = "secKill", defaultValue = "false") boolean secKill){
+        return CommonResult.success(orderService.confirmOrder(CrmebUtil.stringToArrayStr(cartIds),isNew,addAgain,secKill));
     }
 
     /**

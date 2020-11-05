@@ -15,17 +15,22 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.Security;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 /**
- * @author stivepeim
- * @title: CrmebUtil
- * @projectName crmeb
- * @Description: 工具类
- * @since 2020/4/1414:37
+ * Crmeb工具类
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 public class CrmebUtil {
 
@@ -201,7 +206,7 @@ public class CrmebUtil {
         List<String> strings = stringToArrayStrRegex(str, ",");
         List<Integer> ids = new ArrayList<>();
         for (String string : strings) {
-            ids.add(Integer.parseInt(string));
+            ids.add(Integer.parseInt(string.trim()));
         }
         return ids;
     }
@@ -761,5 +766,37 @@ public class CrmebUtil {
         }
 
         return list;
+    }
+
+
+    /**
+     * 百分比计算
+     * @param detailTotalNumber  销售量
+     * @param totalNumber  限量库存
+     * @return  百分比
+     */
+    public static String percentInstance(Integer detailTotalNumber, Integer totalNumber) {
+        Double bfTotalNumber = Double.valueOf(detailTotalNumber);
+        Double zcTotalNumber = Double.valueOf(totalNumber);
+        double percent = bfTotalNumber/zcTotalNumber;
+        //获取格式化对象
+        NumberFormat nt = NumberFormat.getPercentInstance();
+        //设置百分数精确度2即保留两位小数
+        nt.setMinimumFractionDigits(2);
+        return nt.format(percent);
+    }
+
+    /**
+     * 百分比计算
+     * @param detailTotalNumber  销售量
+     * @param totalNumber  限量库存
+     * @return  百分比
+     */
+    public static int percentInstanceIntVal(Integer detailTotalNumber, Integer totalNumber) {
+        Double bfTotalNumber = Double.valueOf(detailTotalNumber);
+        Double zcTotalNumber = Double.valueOf(totalNumber);
+        double percent = bfTotalNumber/zcTotalNumber;
+        double pec = percent * 100;
+        return (int)pec;
     }
 }

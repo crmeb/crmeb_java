@@ -99,6 +99,21 @@ class AuthWechat {
 		});
 	}
 
+    // 获取经纬度；
+	location(){
+		return new Promise((resolve, reject) => {
+			this.wechat().then(wx => {
+				this.toPromise(wx.getLocation,{type: 'wgs84'}).then(res => {
+					resolve(res);
+				}).catch(err => {
+					reject(err);
+				});
+			}).catch(err => {
+				reject(err);
+			})
+		});
+	} 
+	
 	/**
 	 * 微信支付
 	 * @param {Object} config

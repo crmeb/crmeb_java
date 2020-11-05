@@ -1,11 +1,16 @@
 package com.constants;
 
 /**
- * @author stivepeim
- * @title: Constants
- * @projectName crmeb
- * @Description: 配置类
- * @since 2020/4/1415:46
+ *  配置类
+ *  +----------------------------------------------------------------------
+ *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ *  +----------------------------------------------------------------------
+ *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  +----------------------------------------------------------------------
+ *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ *  +----------------------------------------------------------------------
+ *  | Author: CRMEB Team <admin@crmeb.com>
+ *  +----------------------------------------------------------------------
  */
 public class Constants {
     public static final long TOKEN_EXPRESS_MINUTES = (60 * 1); //1小时
@@ -41,6 +46,8 @@ public class Constants {
     public static final String DATE_FORMAT_YEAR_START = "yyyy-01-01 00:00:00";
     public static final String DATE_FORMAT_YEAR_END = "yyyy-12-31 23:59:59";
     public static final String DATE_FORMAT_HHMMSS = "HH:mm:ss";
+    public static final String DATE_FORMAT_START_PEREND = "00:00:00";
+    public static final String DATE_FORMAT_END_PEREND = "23:59:59";
 
 
     //后台管理员操作资金mark
@@ -120,12 +127,14 @@ public class Constants {
 
     //商品库存变动队列key
     public static final String PRODUCT_STOCK_UPDATE = "product_stock_update";
+    // 商品秒杀库存队列Key
+    public static final String PRODUCT_SECKILL_STOCK_UPDATE = "product_seckill_stock_update";
     //商品库存redis key
     public static final String PRODUCT_STOCK_LIST = "product_stock_list";
 
 
     //sku库存变动队列key
-    public static final String SKU_STOCK_UPDATE = "product_stock_update";
+//    public static final String SKU_STOCK_UPDATE = "product_stock_update";
     //sku库存redis key
 //    public static final String SKU_STOCK_LIST = "product_stock_list";
 
@@ -174,6 +183,8 @@ public class Constants {
 
     //分销
     public static final String CONFIG_KEY_STORE_BROKERAGE_LEVEL = "store_brokerage_rate_num"; //返佣比例前缀
+    public static final String CONFIG_KEY_STORE_BROKERAGE_RATE_ONE = "store_brokerage_ratio"; //一级返佣比例前缀
+    public static final String CONFIG_KEY_STORE_BROKERAGE_RATE_TWO = "store_brokerage_two"; //二级返佣比例前缀
     public static final String CONFIG_KEY_STORE_BROKERAGE_USER_EXTRACT_MIN_PRICE = "user_extract_min_price"; //提现最低金额
     public static final String CONFIG_KEY_STORE_BROKERAGE_MODEL = "brokerage_func_status"; //分销模式
     public static final String CONFIG_KEY_STORE_BROKERAGE_USER_EXTRACT_BANK = "user_extract_bank"; //提现银行卡
@@ -210,8 +221,13 @@ public class Constants {
 
     // 商品类型 活动类型 0=商品，1=秒杀，2=砍价，3=拼团 attrResult表用到
     public static final int PRODUCT_TYPE_NORMAL = 0;
+    public static final String PRODUCT_TYPE_NORMAL_STR = "默认";
     public static final int PRODUCT_TYPE_SECKILL = 1;
+    public static final String PRODUCT_TYPE_SECKILL_STR = "秒杀";
     public static final int PRODUCT_TYPE_BARGIN = 2;
+    public static final String PRODUCT_TYPE_BARGIN_STR = "砍价";
+    public static final int PRODUCT_TYPE_PINGTUAN= 3;
+    public static final String PRODUCT_TYPE_PINGTUAN_STR= "拼团";
     public static final int PRODUCT_TYPE_GROUP = 0;
 
 
@@ -334,8 +350,9 @@ public class Constants {
     public static final int ORDER_STATUS_H5_UNPAID = 0; // 未支付
     public static final int ORDER_STATUS_H5_NOT_SHIPPED = 1; // 待发货
     public static final int ORDER_STATUS_H5_SPIKE = 2; // 待收货
-    public static final int ORDER_STATUS_H5_VERF = 3; // 待核销
+    public static final int ORDER_STATUS_H5_JUDGE = 3; // 待评价
     public static final int ORDER_STATUS_H5_COMPLETE = 4; // 已完成
+    public static final int ORDER_STATUS_H5_VERIFICATION = 5; // 待核销
     public static final int ORDER_STATUS_H5_REFUNDING = -1; // 退款中
     public static final int ORDER_STATUS_H5_REFUNDED = -2; // 已退款
     public static final int ORDER_STATUS_H5_REFUND = -3; // 退款
@@ -400,6 +417,7 @@ public class Constants {
 
     // 订单缓存
     public static final long ORDER_CASH_CONFIRM = (60);
+    public static final String ORDER_CACHE_PER = "ORDER_CACHE"; // redis缓存订单前缀
 
     //订单操作类型 -> 消息
     public static final String ORDER_LOG_MESSAGE_REFUND_PRICE = "退款给用户{amount}元"; //退款

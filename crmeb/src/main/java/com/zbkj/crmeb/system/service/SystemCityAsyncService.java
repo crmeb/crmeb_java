@@ -13,4 +13,5 @@ import com.zbkj.crmeb.system.request.SystemCitySearchRequest;
 public interface SystemCityAsyncService{
 
     void async(Integer id);
+    void setListTree();
 }

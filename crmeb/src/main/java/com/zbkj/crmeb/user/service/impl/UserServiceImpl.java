@@ -1,8 +1,11 @@
 package com.zbkj.crmeb.user.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
@@ -53,6 +56,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -159,16 +163,19 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
         if(!StringUtils.isBlank(dateLimit.getStartTime())){
             switch (request.getAccessType()){
-                case 1:
-                    lambdaQueryWrapper.between(User::getUpdateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
-                    break;
-                case 2:
-                    lambdaQueryWrapper.notBetween(User::getUpdateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
-                    break;
-                case 3:
+                case 1://首次
+//                    lambdaQueryWrapper.between(User::getUpdateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
                     lambdaQueryWrapper.apply(" and create_time = last_login_time");
                     break;
-                default:
+                case 2://访问过
+//                    lambdaQueryWrapper.notBetween(User::getUpdateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
+                    lambdaQueryWrapper.between(User::getLastLoginTime, dateLimit.getStartTime(), dateLimit.getEndTime());
+                    break;
+                case 3://未访问
+//                    lambdaQueryWrapper.apply(" and create_time = last_login_time");
+                    lambdaQueryWrapper.notBetween(User::getLastLoginTime, dateLimit.getStartTime(), dateLimit.getEndTime());
+                    break;
+                default://全部
                     lambdaQueryWrapper.between(User::getCreateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
                     break;
             }
@@ -251,30 +258,61 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             throw new CrmebException("最小值为0.01");
         }
 
+//        UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
+//
+//        if(request.getMoneyType() == 1){
+//            userOperateFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_SYSTEM_ADD);
+//            userOperateFundsRequest.setType(request.getMoneyType());
+//        }else{
+//            userOperateFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_SYSTEM_SUB);
+//            userOperateFundsRequest.setType(0);
+//        }
+//
+//        userOperateFundsRequest.setTitle("后台操作");
+//        if(request.getIntegralValue().compareTo(BigDecimal.ZERO) > 0){
+//            //需要处理
+//            userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_INTEGRAL);
+//            userOperateFundsRequest.setUid(request.getUid());
+//            userOperateFundsRequest.setValue(request.getIntegralValue());
+//            updateFounds(userOperateFundsRequest, true);
+//        }
+//
+//        if(request.getMoneyValue().compareTo(BigDecimal.ZERO) > 0){
+//            //需要处理
+//            userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_MONEY);
+//            userOperateFundsRequest.setUid(request.getUid());
+//            userOperateFundsRequest.setValue(request.getMoneyValue());
+//            updateFounds(userOperateFundsRequest, true);
+//        }
+
         UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
-        if(request.getMoneyType() == 1){
-            userOperateFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_SYSTEM_ADD);
-            userOperateFundsRequest.setType(request.getMoneyType());
-        }else{
-            userOperateFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_SYSTEM_SUB);
-            userOperateFundsRequest.setType(0);
-        }
-
         userOperateFundsRequest.setTitle("后台操作");
-
-        if(request.getIntegralValue().compareTo(BigDecimal.ZERO) > 0){
-            //需要处理
-            userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_INTEGRAL);
-            userOperateFundsRequest.setUid(request.getUid());
-            userOperateFundsRequest.setValue(request.getIntegralValue());
+        userOperateFundsRequest.setUid(request.getUid());
+        // 处理余额
+        if(request.getMoneyValue().compareTo(BigDecimal.ZERO) > 0){
+            if(request.getMoneyType() == 1){
+                userOperateFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_SYSTEM_ADD);
+                userOperateFundsRequest.setType(request.getMoneyType());
+            }else{
+                userOperateFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_SYSTEM_SUB);
+                userOperateFundsRequest.setType(0);
+            }
+            userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_MONEY);
+            userOperateFundsRequest.setValue(request.getMoneyValue());
             updateFounds(userOperateFundsRequest, true);
         }
 
-        if(request.getMoneyValue().compareTo(BigDecimal.ZERO) > 0){
-            //需要处理
-            userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_MONEY);
-            userOperateFundsRequest.setUid(request.getUid());
-            userOperateFundsRequest.setValue(request.getMoneyValue());
+        // 处理积分
+        if(request.getIntegralValue().compareTo(BigDecimal.ZERO) > 0){
+            if(request.getIntegralType() == 1){
+                userOperateFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_SYSTEM_ADD);
+                userOperateFundsRequest.setType(request.getIntegralType());
+            }else{
+                userOperateFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_SYSTEM_SUB);
+                userOperateFundsRequest.setType(0);
+            }
+            userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_INTEGRAL);
+            userOperateFundsRequest.setValue(request.getIntegralValue());
             updateFounds(userOperateFundsRequest, true);
         }
 
@@ -426,7 +464,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
      */
     @Override
     public boolean updateNowMoney(int userId, BigDecimal price) {
-        LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        LambdaUpdateWrapper<User> lambdaUpdateWrapper = Wrappers.lambdaUpdate();
         lambdaUpdateWrapper.eq(User::getUid, userId);
         lambdaUpdateWrapper.set(User::getNowMoney, price);
         return update(lambdaUpdateWrapper);
@@ -1012,7 +1050,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         save(user);
 
         // 添加推广关系
-        if(request.getSpread() > 0){
+        if(null != request.getSpread() && request.getSpread() > 0){
             spread(user.getUid(),request.getSpread());
         }
         return user;
@@ -1066,7 +1104,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     private String getTitle(UserOperateFundsRequest request) {
         String operate = (request.getType() == 1) ? "增加" : "减少";
         String founds = "";
-        switch (request.getFoundsType()){
+        switch (request.getFoundsCategory()){
             case Constants.USER_BILL_CATEGORY_INTEGRAL:
                 founds = "积分";
                 break;
@@ -1075,6 +1113,9 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
                 break;
             case Constants.USER_BILL_CATEGORY_EXPERIENCE:
                 founds = "经验";
+                break;
+            case Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE:
+                founds = "佣金";
                 break;
         }
 
@@ -1221,6 +1262,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             case 4:
                 FundsMonitorSearchRequest fmsqq = new FundsMonitorSearchRequest();
                 fmsqq.setUid(userId);
+                fmsqq.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
                 return userBillService.getList(fmsqq,pageParamRequest);
             case 5:
                 return getUserRelation(userId);
@@ -1555,5 +1597,29 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             user.setSpreadTime(DateUtil.nowDateTime());
         }
         updateById(user);
+    }
+
+    @Override
+    public boolean upadteBrokeragePrice(User user, BigDecimal newBrokeragePrice) {
+        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.set("brokerage_price", newBrokeragePrice)
+                .eq("uid", user.getUid()).eq("brokerage_price", user.getBrokeragePrice());
+        return userDao.update(user, updateWrapper) > 0;
+    }
+
+    /**
+     * 获取用户佣金总金额
+     * @return
+     */
+    @Override
+    public BigDecimal getUnCommissionPrice() {
+        LambdaQueryWrapper<User> lq = Wrappers.lambdaQuery();
+        lq.select(User::getBrokeragePrice);
+        List<User> userList = userDao.selectList(lq);
+        double sum = 0;
+        if (CollUtil.isNotEmpty(userList)) {
+            sum = userList.stream().mapToDouble(e -> e.getBrokeragePrice().doubleValue()).sum();
+        }
+        return BigDecimal.valueOf(sum);
     }
 }

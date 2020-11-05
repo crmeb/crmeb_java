@@ -187,22 +187,22 @@ export default {
         this.$message.success('添加数据成功')
         // 81 82 83
         // 针对云存储配置特殊处理 切勿随意改动
-        _formId = parseInt(_pram.id)
-        if(_formId === 108 || _formId === 81 || _formId === 82 || _formId === 83){
-          let _value
-          switch (_formId) {
-            case 108: _value = 1
-              break;
-            case 81: _value = 2
-              break;
-            case 82: _value = 3
-              break;
-            case 83: _value = 4
-              break;
-          }
-          const _pram = { key:"uploadType",value:_value }
-          systemConfigApi.configSaveUniq(_pram)
-        }
+        // _formId = parseInt(_pram.id)
+        // if(_formId === 108 || _formId === 81 || _formId === 82 || _formId === 83){
+        //   let _value
+        //   switch (_formId) {
+        //     case 108: _value = 1
+        //       break;
+        //     case 81: _value = 2
+        //       break;
+        //     case 82: _value = 3
+        //       break;
+        //     case 83: _value = 4
+        //       break;
+        //   }
+        //   const _pram = { key:"uploadType",value:_value }
+        //   systemConfigApi.configSaveUniq(_pram)
+        // }
       })
     },
     handlerGetTreeList() {

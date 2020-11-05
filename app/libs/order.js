@@ -1,16 +1,16 @@
 export function goShopDetail(item,uid) {
 	return new Promise(resolve => {
-		if (item.activity && item.activity.type === "1") {
+		if (item.activityH5 && item.activityH5.type === "1") {
 			uni.navigateTo({
-				url: `/pages/activity/goods_seckill_details/index?id=${item.activity.id}&time=${item.activity.time}&status=1`
+				url: `/pages/activity/goods_seckill_details/index?id=${item.activityH5.id}&time=${item.activityH5.time}&status=2`
 			})
-		} else if (item.activity && item.activity.type === "2") {
+		} else if (item.activityH5 && item.activityH5.type === "2") {
 			uni.navigateTo({
-				url: `/pages/activity/goods_bargain_details/index?id=${item.activity.id}&bargain=${uid}`
+				url: `/pages/activity/goods_bargain_details/index?id=${item.activityH5.id}&bargain=${uid}`
 			})
-		} else if (item.activity && item.activity.type === "3") {
+		} else if (item.activityH5 && item.activityH5.type === "3") {
 			uni.navigateTo({
-				url: `/pages/activity/goods_combination_details/index?id=${item.activity.id}`
+				url: `/pages/activity/goods_combination_details/index?id=${item.activityH5.id}`
 			})
 		} else {
 			resolve(item);
