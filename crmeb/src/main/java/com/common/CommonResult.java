@@ -3,6 +3,18 @@ package com.common;
 import com.exception.ExceptionCodeEnum;
 import com.exception.ExceptionHandler;
 
+/**
+ * 公共返回对象
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 public class CommonResult<T> {
     private long code;
     private String message;

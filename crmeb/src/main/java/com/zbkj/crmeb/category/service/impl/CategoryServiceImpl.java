@@ -2,6 +2,8 @@ package com.zbkj.crmeb.category.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.exception.CrmebException;
@@ -23,9 +25,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
-* @author Mr.Zhang
-* @Description CategoryServiceImpl 接口实现
-* @since 2020-04-16
+ * CategoryServiceImpl 接口实现
+*  +----------------------------------------------------------------------
+ *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ *  +----------------------------------------------------------------------
+ *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  +----------------------------------------------------------------------
+ *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ *  +----------------------------------------------------------------------
+ *  | Author: CRMEB Team <admin@crmeb.com>
+ *  +----------------------------------------------------------------------
 */
 @Service
 public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> implements CategoryService {
@@ -241,8 +250,8 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
      * @since 2020-04-16
      */
     @Override
-    public List<CategoryTreeVo> getListTree(Integer type, Integer status) {
-        return getTree(type, status, null);
+    public List<CategoryTreeVo> getListTree(Integer type, Integer status, String name) {
+        return getTree(type, status,name,null);
     }
 
     /**
@@ -252,7 +261,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
      */
     @Override
     public List<CategoryTreeVo> getListTree(Integer type, Integer status, List<Integer> categoryIdList) {
-        return getTree(type, status, categoryIdList);
+        return getTree(type, status,null,categoryIdList);
     }
 
     /**
@@ -260,11 +269,11 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
      * @author Mr.Zhang
      * @since 2020-04-16
      */
-    private List<CategoryTreeVo> getTree(Integer type, Integer status, List<Integer> categoryIdList) {
+    private List<CategoryTreeVo> getTree(Integer type, Integer status,String name, List<Integer> categoryIdList) {
         //循环数据，把数据对象变成带list结构的vo
         List<CategoryTreeVo> treeList = new ArrayList<>();
 
-        LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<Category> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.eq(Category::getType, type);
 
         if(null != categoryIdList && categoryIdList.size() > 0){
@@ -274,12 +283,25 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
         if(status >= 0){
             lambdaQueryWrapper.eq(Category::getStatus, status);
         }
+        if(StringUtils.isNotBlank(name)){ // 根据名称模糊搜索
+            lambdaQueryWrapper.like(Category::getName,name);
+        }
+
         lambdaQueryWrapper.orderByDesc(Category::getSort);
         lambdaQueryWrapper.orderByAsc(Category::getId);
         List<Category> allTree = dao.selectList(lambdaQueryWrapper);
-
         if(allTree == null){
             return null;
+        }
+        // 根据名称搜索特殊处理 这里仅仅处理两层搜索后有子父级关系的数据
+        if(StringUtils.isNotBlank(name) && allTree.size() >0){
+            List<Category> searchCategory = new ArrayList<>();
+            for (Category category : allTree) {
+                if(category.getPid() >0){
+                    searchCategory.add(dao.selectById(category.getPid()));
+                }
+            }
+            allTree.addAll(searchCategory);
         }
 
         for (Category category: allTree) {

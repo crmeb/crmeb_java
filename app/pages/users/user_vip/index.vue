@@ -167,7 +167,7 @@
 					that.levelInfo = res.data.experience;
 				}).catch(function(res) {
 					return that.$util.Tips({
-						title: res.msg
+						title: res
 					});
 				})
 			},
@@ -195,7 +195,7 @@
 
 				}).catch(function(res) {
 					return that.$util.Tips({
-						title: res.msg
+						title: res
 					});
 				})
 			},

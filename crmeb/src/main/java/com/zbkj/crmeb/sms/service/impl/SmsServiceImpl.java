@@ -1,6 +1,8 @@
 package com.zbkj.crmeb.sms.service.impl;
 
-import com.alibaba.fastjson.JSONArray;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.common.PageParamRequest;
 import com.constants.Constants;
@@ -63,6 +65,9 @@ public class SmsServiceImpl implements SmsService {
     //异步回调地址uri
     private String payNotifyUri = SmsConstants.SMS_API_PAY_NOTIFY_URI;
 
+    //sms用户token
+    private String smsUserToken;
+
 
     @Autowired
     private SystemConfigService systemConfigService;
@@ -82,8 +87,26 @@ public class SmsServiceImpl implements SmsService {
     private static final Logger logger = LoggerFactory.getLogger(SmsServiceImpl.class);
 
     //初始化
-    private void init(){
-        setAccount(systemConfigService.getValueByKey("sms_account")); //获取配置账号
+//    private void init(){
+//        setAccount(systemConfigService.getValueByKey("sms_account")); //获取配置账号
+//        String token = systemConfigService.getValueByKey("sms_token"); //获取配置token
+//        if(StringUtils.isBlank(token)){
+//            throw new CrmebException("请配置短信密码！");
+//        }
+//        setDomain(systemConfigService.getValueByKey("site_url")); //获取配置域名
+//
+//        setMd5Token(DigestUtils.md5Hex(getAccount() + DigestUtils.md5Hex(token))); //MD5 token
+//        setPayNotifyUrl(getDomain() + getPayNotifyUri()); //支付成功回调地址
+//    }
+
+    // 初始化
+    private void init() {
+        String account = systemConfigService.getValueByKey("sms_account");// 获取配置账号
+        if(StringUtils.isBlank(account)){
+            throw new CrmebException("请配置短信账号！");
+        }
+        setAccount(account);
+
         String token = systemConfigService.getValueByKey("sms_token"); //获取配置token
         if(StringUtils.isBlank(token)){
             throw new CrmebException("请配置短信密码！");
@@ -93,7 +116,9 @@ public class SmsServiceImpl implements SmsService {
         setMd5Token(DigestUtils.md5Hex(getAccount() + DigestUtils.md5Hex(token))); //MD5 token
         setPayNotifyUrl(getDomain() + getPayNotifyUri()); //支付成功回调地址
 
+        setSmsUserToken(getSmsUserTokenByRedis());
     }
+
 
     public String getDomain() {
         if(StringUtils.isBlank(domain)){
@@ -152,11 +177,22 @@ public class SmsServiceImpl implements SmsService {
      */
     @Override
     public JSONObject register(RegisterRequest registerRequest) {
-//        init();
         registerRequest.setPassword(DigestUtils.md5Hex(registerRequest.getPassword()));
+        registerRequest.setVerify_code(registerRequest.getCode());
         Map<String, Object> map = CrmebUtil.objectToMap(registerRequest);
-        map.put("url", registerRequest.getDomain());
-        JSONObject post = post(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_REGISTER_URI, map);
+        MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
+        param.setAll(map);
+//        JSONObject post = post(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_REGISTER_URI, map);
+        JSONObject post = postFrom(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_REGISTER_URI, param, null);
+        String accessToken = SmsConstants.SMS_USER_TOKEN_PREFIX.concat(post.getJSONObject("data").getString("access_token"));
+        Long expiresIn = post.getJSONObject("data").getLong("expires_in");
+        expiresIn = expiresIn - System.currentTimeMillis()/1000;
+        redisUtil.set(StrUtil.format(SmsConstants.SMS_USER_TOKEN_REDIS_PREFIX, getMd5Token()), accessToken, expiresIn, TimeUnit.SECONDS);
+        // 开通短信服务
+        HashMap<String, String> header = getCommonHeader(accessToken);
+        MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
+        params.add("sign", registerRequest.getSign());
+        postFrom(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_USER_OPEN, params, header);
         //更新配置
         setConfigSmsInfo(registerRequest.getAccount(), registerRequest.getPassword());
         return post;
@@ -230,32 +266,55 @@ public class SmsServiceImpl implements SmsService {
         return post(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_PUBLIC_TEMP_USE_URI, map);
     }
 
+//    /**
+//     * 获取账号信息
+//     * @author Mr.Zhang
+//     * @since 2020-04-17
+//     * @return JSONObject
+//     */
+//    @Override
+//    public JSONObject account(SmsLoginRequest smsLoginRequest) {
+//        MultiValueMap<String,String> m = new LinkedMultiValueMap<String, String>();
+//        String encodeMD5Token = DigestUtils.md5Hex(smsLoginRequest.getAccount()+DigestUtils.md5Hex(smsLoginRequest.getToken()));
+//        m.add("account", smsLoginRequest.getAccount());
+//        m.add("token", encodeMD5Token);
+//        JSONObject jsonObject = postForm(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_USER_INFO_URI,m);
+//        setConfigSmsInfo(smsLoginRequest.getAccount(), smsLoginRequest.getToken());
+//        if(null != jsonObject.getJSONObject("data")){
+//            JSONObject jsonResultTemple = getPublicTempList(null, null);
+//            JSONObject data = jsonResultTemple.getJSONObject("data");
+//            JSONArray dataArray = data.getJSONArray("data");
+//            for (int i = 0; i < dataArray.size(); i++) {
+//                JSONObject item = dataArray.getJSONObject(i);
+//                if(item.getInteger("is_have") == 0){
+//                    JSONObject useResult = save(item.getInteger("id").toString(), item.getInteger("templateid").toString());
+//                    checkResult(useResult);
+//                }
+//            }
+//        }
+//        jsonObject.put("account",smsLoginRequest.getAccount());
+//        return jsonObject;
+//    }
+
     /**
-     * 获取账号信息
-     * @author Mr.Zhang
-     * @since 2020-04-17
-     * @return JSONObject
+     * 短信用户登录
+     * @return
      */
     @Override
     public JSONObject account(SmsLoginRequest smsLoginRequest) {
-        MultiValueMap<String,String> m = new LinkedMultiValueMap<String, String>();
-        String encodeMD5Token = DigestUtils.md5Hex(smsLoginRequest.getAccount()+DigestUtils.md5Hex(smsLoginRequest.getToken()));
-        m.add("account", smsLoginRequest.getAccount());
-        m.add("token", encodeMD5Token);
-        JSONObject jsonObject = postForm(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_USER_INFO_URI,m);
+        MultiValueMap<String, Object> param = new LinkedMultiValueMap<String, Object>();
+        param.add("account", smsLoginRequest.getAccount());
+        String secret = SecureUtil.md5(smsLoginRequest.getAccount() + SecureUtil.md5(smsLoginRequest.getToken()));
+        param.add("secret", secret);
+        JSONObject jsonObject = postFrom(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_USER_LOGIN, param, null);
+        checkResult(jsonObject);
         setConfigSmsInfo(smsLoginRequest.getAccount(), smsLoginRequest.getToken());
-        if(null != jsonObject.getJSONObject("data")){
-            JSONObject jsonResultTemple = getPublicTempList(null, null);
-            JSONObject data = jsonResultTemple.getJSONObject("data");
-            JSONArray dataArray = data.getJSONArray("data");
-            for (int i = 0; i < dataArray.size(); i++) {
-                JSONObject item = dataArray.getJSONObject(i);
-                if(item.getInteger("is_have") == 0){
-                    JSONObject useResult = save(item.getInteger("id").toString(), item.getInteger("templateid").toString());
-                    checkResult(useResult);
-                }
-            }
-        }
+
+        String accessToken = SmsConstants.SMS_USER_TOKEN_PREFIX.concat(jsonObject.getJSONObject("data").getString("access_token"));
+        Long expiresIn = jsonObject.getJSONObject("data").getLong("expires_in");
+        expiresIn = expiresIn - System.currentTimeMillis()/1000;
+        redisUtil.set(StrUtil.format(SmsConstants.SMS_USER_TOKEN_REDIS_PREFIX, secret), accessToken, expiresIn, TimeUnit.SECONDS);
+        jsonObject.remove("data");
         jsonObject.put("account",smsLoginRequest.getAccount());
         return jsonObject;
     }
@@ -266,11 +325,17 @@ public class SmsServiceImpl implements SmsService {
      */
     @Override
     public JSONObject info() {
-        MultiValueMap<String,String> m = new LinkedMultiValueMap<String, String>();
-        m.add("account", getAccount());
-        m.add("token", getMd5Token());
-        JSONObject jsonObject = postForm(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_USER_INFO_URI,m);
-        jsonObject.getJSONObject("data").put("account", getAccount());
+//        MultiValueMap<String,String> m = new LinkedMultiValueMap<String, String>();
+//        m.add("account", getAccount());
+//        m.add("token", getMd5Token());
+//        JSONObject jsonObject = postForm(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_USER_INFO_URI,m);
+        String accessToken = getSmsUserTokenByRedis();
+        HashMap<String, String> header = getCommonHeader(accessToken);
+        JSONObject jsonObject = postFrom(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_USER_INFO_URI, null, header);
+        JSONObject msg = jsonObject.getJSONObject("msg");
+        msg.put("account", getAccount());
+        jsonObject.put("data", msg);
+//        jsonObject.getJSONObject("data").put("account", getAccount());
         return jsonObject;
     }
 
@@ -285,7 +350,13 @@ public class SmsServiceImpl implements SmsService {
     public JSONObject payTempList(PageParamRequest pageParamRequest) {
         init();
         Map<String, Object> map = mergeToken(CrmebUtil.objectToMap(pageParamRequest));
-        return get(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_PAY_TEMP_LIST_URI, map);
+        map.put("type", "sms");
+        MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
+        params.setAll(map);
+        String accessToken = getSmsUserTokenByRedis();
+        HashMap<String, String> header = getCommonHeader(accessToken);
+//        return get(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_PAY_TEMP_LIST_URI, map);
+        return postFrom(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_PAY_TEMP_LIST_URI, params, header);
     }
 
     /**
@@ -301,11 +372,14 @@ public class SmsServiceImpl implements SmsService {
     public JSONObject getPayQrCode(String payType, Integer mealId, BigDecimal price) {
         init();
         Map<String, Object> map = getTokenMap();
-        map.put("payType", payType);
-        map.put("mealId", mealId);
+//        map.put("payType", payType);
+        map.put("pay_type", payType);
+//        map.put("mealId", mealId);
+        map.put("meal_id", mealId);
         map.put("price", price);
-        map.put("uid", getAccount());
-        map.put("token", getMd5Token());
+//        map.put("uid", getAccount());
+//        map.put("token", getMd5Token());
+        map.put("type", "sms");
         map.put("notify", getPayNotifyUrl());
         return post(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_PAY_QR_CODE_URI, map);
     }
@@ -322,11 +396,18 @@ public class SmsServiceImpl implements SmsService {
     @Override
     public JSONObject applyTempMessage(String title, String content, Integer type) {
         init();
-        Map<String, Object> map = getTokenMap();
-        map.put("title", title);
-        map.put("content", content);
-        map.put("type", type);
-        return post(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_APPLY_TEMP_MESSAGE_URI, map);
+//        Map<String, Object> map = getTokenMap();
+//        map.put("title", title);
+//        map.put("content", content);
+//        map.put("type", type);
+        String accessToken = getSmsUserTokenByRedis();
+        HashMap<String, String> header = getCommonHeader(accessToken);
+        MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
+        params.add("title", title);
+        params.add("content", content);
+        params.add("type", type);
+//        return post(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_APPLY_TEMP_MESSAGE_URI, map);
+        return postFrom(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_APPLY_TEMP_MESSAGE_URI, params, header);
     }
 
     /**
@@ -345,7 +426,12 @@ public class SmsServiceImpl implements SmsService {
         map.put("title", title);
         map.put("status", status);
         map.put("temp_type", type);
-        return post(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_TEMP_LIST_URI, map);
+        MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
+        param.setAll(map);
+        String accessToken = getSmsUserTokenByRedis();
+        HashMap<String, String> header = getCommonHeader(accessToken);
+//        return post(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_TEMP_LIST_URI, map);
+        return postFrom(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_TEMP_LIST_URI, param, header);
     }
 
     /**
@@ -424,9 +510,19 @@ public class SmsServiceImpl implements SmsService {
                 init();
             }
 //        sendSmsVo.setParam(JSONObject.toJSONString(sendSmsVo.getParam()));
-            result = restTemplateUtil.postJsonData(
-                    SmsConstants.SMS_API_URL + SmsConstants.SMS_API_SEND_URI,
-                    JSONObject.parseObject(JSONObject.toJSONString(sendSmsVo)));
+//            result = restTemplateUtil.postJsonData(
+//                    SmsConstants.SMS_API_URL + SmsConstants.SMS_API_SEND_URI,
+//                    JSONObject.parseObject(JSONObject.toJSONString(sendSmsVo)));
+            Map<String, Object> map = (Map<String, Object>) JSONObject.parseObject(sendSmsVo.getParam());
+            String accessToken = getSmsUserTokenByRedis();
+            HashMap<String, String> header = getCommonHeader(accessToken);
+
+            MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
+            param.add("phone", sendSmsVo.getMobile());
+            param.add("temp_id", sendSmsVo.getTemplate());
+            map.entrySet().stream().forEach(entry -> param.add(StrUtil.format(SmsConstants.SMS_COMMON_PARAM_FORMAT, entry.getKey()), entry.getValue()));
+
+            result = restTemplateUtil.postFromUrlencoded(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_SEND_URI, param, header);
         }catch (Exception e){
             //接口请求异常，需要重新发送
             return false;
@@ -487,7 +583,9 @@ public class SmsServiceImpl implements SmsService {
                     continue;
                 }
                 try{
-                    SendSmsVo smsVo = JSONObject.toJavaObject(JSONObject.parseObject(data.toString()), SendSmsVo.class);
+                    JSONObject jsonObject = JSONObject.parseObject(data.toString());
+                    SendSmsVo smsVo = JSONObject.toJavaObject(jsonObject, SendSmsVo.class);
+//                    SendSmsVo smsVo = JSONObject.toJavaObject(JSONObject.parseObject(data.toString()), SendSmsVo.class);
                     boolean result = sendCode(smsVo);
                     // 捕捉异常或者发送失败存起来下次继续
                     if(!result){
@@ -546,8 +644,20 @@ public class SmsServiceImpl implements SmsService {
      */
     @Override
     public JSONObject sendCodeForRegister(String phone) {
-        return getData(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_CAPTCHA_URI+"?phone="+phone);
+        MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+        map.add("phone", phone);
+//        return getData(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_CAPTCHA_URI+"?phone="+phone);
+        return postFrom(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_CAPTCHA_URI, map, null);
     }
+
+    /**
+     * post请求from表单模式提交
+     */
+    private JSONObject postFrom(String url, MultiValueMap<String, Object> param, Map<String, String> header) {
+        String result = restTemplateUtil.postFromUrlencoded(url, param, header);
+        return checkResult(result);
+    }
+
 
     /**
      * post 请求接口
@@ -619,7 +729,12 @@ public class SmsServiceImpl implements SmsService {
             throw new CrmebException("短信平台接口异常，没任何数据返回！");
         }
 
-        JSONObject jsonObject = JSONObject.parseObject(result);
+        JSONObject jsonObject = null;
+        try {
+            jsonObject = JSONObject.parseObject(result);
+        } catch (Exception e) {
+            throw new CrmebException("短信平台接口异常！");
+        }
         if(SmsConstants.SMS_ERROR_CODE.equals(jsonObject.getInteger("status"))){
             throw new CrmebException("短信平台接口" + jsonObject.getString("msg"));
         }
@@ -682,5 +797,40 @@ public class SmsServiceImpl implements SmsService {
         if(!accountResult || !tokenResult){
             throw new CrmebException("数据更新失败！");
         }
+    }
+
+    /**
+     * 获取sms用户token
+     */
+    private String getSmsUserTokenByRedis() {
+        boolean exists = redisUtil.exists(StrUtil.format(SmsConstants.SMS_USER_TOKEN_REDIS_PREFIX, getMd5Token()));
+        if (exists) {
+            Object token = redisUtil.get(StrUtil.format(SmsConstants.SMS_USER_TOKEN_REDIS_PREFIX, getMd5Token()));
+            return token.toString();
+        }
+        // 缓存中不存在token，重新获取，存入缓存
+        MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+        map.add("account", getAccount());
+        map.add("secret", getMd5Token());
+        JSONObject jsonObject = postFrom(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_USER_LOGIN, map, null);
+        checkResult(jsonObject);
+        String accessToken = "";
+        Long expiresIn = 0L;
+        accessToken = SmsConstants.SMS_USER_TOKEN_PREFIX.concat(jsonObject.getJSONObject("data").getString("access_token"));
+        expiresIn = jsonObject.getJSONObject("data").getLong("expires_in");
+        expiresIn = expiresIn - System.currentTimeMillis()/1000;
+        redisUtil.set(StrUtil.format(SmsConstants.SMS_USER_TOKEN_REDIS_PREFIX, getMd5Token()), accessToken, expiresIn, TimeUnit.SECONDS);
+        return accessToken;
+    }
+
+    /**
+     * 获取请求的headerMap
+     * @param accessToken
+     * @return
+     */
+    private HashMap<String, String> getCommonHeader(String accessToken) {
+        HashMap<String, String> header = CollUtil.newHashMap();
+        header.put("Authorization", accessToken);
+        return header;
     }
 }

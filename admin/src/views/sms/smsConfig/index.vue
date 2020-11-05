@@ -3,7 +3,8 @@
     <el-card v-if="isShowList" v-loading="fullscreenLoading" class="box-card">
       <div class="content acea-row row-middle">
         <div class="demo-basic--circle acea-row row-middle">
-          <el-avatar :size="50" :src="circleUrl" class="mr20" />
+          <div class="circleUrl mr20"><img :src="circleUrl"></div>
+          <!--<el-avatar :size="50" :src="circleUrl" class="mr20" />-->
           <div class="dashboard-workplace-header-tip">
             <div class="dashboard-workplace-header-tip-title">{{ smsAccount }}，祝您每一天开心！</div>
             <div class="dashboard-workplace-header-tip-desc">
@@ -152,6 +153,16 @@ export default {
   $cursor: #1890ff;
   .content{
     justify-content: space-between;
+  }
+  .circleUrl{
+    width: 50px;
+    height: 50px;
+  }
+  .circleUrl img{
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
   }
   .rR{
     text-align: center;

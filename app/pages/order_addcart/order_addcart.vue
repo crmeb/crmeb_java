@@ -278,7 +278,7 @@
 					})
 					.catch(res => {
 						return that.$util.Tips({
-							title: res.msg
+							title: res
 						});
 					});
 			},
@@ -473,11 +473,9 @@
 					selectValue = that.selectValue;
 				if (selectValue.length > 0) {
 					let selectValueProductId = that.getSelectValueProductId();
-					console.log('selectValueProductId');
-					console.log(selectValueProductId.join(','));
 					collectAll(that.getSelectValueProductId()).then(res => {
 						return that.$util.Tips({
-							title: res.msg,
+							title: res,
 							icon: 'success'
 						});
 					}).catch(err => {
@@ -705,7 +703,10 @@
 					let newArr = validList.filter(item => item.attrStatus);
 					that.isAllSelect = newArr.length == selectValue.length && newArr.length;
 					that.switchSelect();
-				}).catch(function() {
+				}).catch(function(err) {
+					that.$util.Tips({
+						title: err
+					});
 					that.loading = false;
 					that.loadTitle = '加载更多';
 				})

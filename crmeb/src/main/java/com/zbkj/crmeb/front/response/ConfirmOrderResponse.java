@@ -10,7 +10,16 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * 订单确认apiResponse
+ * 订单确认ApiResponse对象
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 public class ConfirmOrderResponse {
@@ -49,4 +58,7 @@ public class ConfirmOrderResponse {
 
     // 微信支付 1 开启 0 关闭
     private String payWeixinOpen;
+
+    // 秒杀id
+    private Integer secKillId;
 }

@@ -10,7 +10,7 @@
                 <el-radio-button v-for="(item,i) in fromList.fromTxt" :key="i" :label="item.val">{{ item.text }}
                 </el-radio-button>
               </el-radio-group>
-              <el-date-picker v-model="timeVal" value-format="yyyy/MM/dd" format="yyyy/MM/dd" size="small"
+              <el-date-picker v-model="timeVal" value-format="yyyy-MM-dd" format="yyyy-MM-dd" size="small"
                               type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;"
                               @change="onchangeTime"/>
             </el-form-item>

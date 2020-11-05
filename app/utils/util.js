@@ -363,7 +363,7 @@ import {
 							} else {
 								errorCallback && errorCallback(data);
 								that.Tips({
-									title: data.msg
+									title: data.message
 								});
 							}
 						}
@@ -618,6 +618,23 @@ import {
  			}
  			return status;
  		},
- 	}
+ 	},
+	
+	toStringValue: function(obj) {
+	        if (obj instanceof Array) {
+	            var arr = [];
+	            for (var i = 0; i < obj.length; i++) {
+	                arr[i] = toStringValue(obj[i]);
+	            }
+	            return arr;
+	        } else if (typeof obj == 'object') {
+	            for (var p in obj) {
+	                obj[p] = toStringValue(obj[p]);
+	            }
+	        } else if (typeof obj == 'number') {
+	            obj = obj + '';
+	        }
+	        return obj;
+	}
 
  }

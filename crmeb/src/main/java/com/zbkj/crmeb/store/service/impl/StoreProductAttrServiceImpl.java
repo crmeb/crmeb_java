@@ -3,6 +3,7 @@ package com.zbkj.crmeb.store.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.common.PageParamRequest;
 import com.exception.CrmebException;
@@ -79,22 +80,47 @@ public class StoreProductAttrServiceImpl extends ServiceImpl<StoreProductAttrDao
         return true;
     }
 
+    /**
+     * 根据基本属性查询商品属性详情
+     *
+     * @param storeProductAttr 商品属性
+     * @return 查询商品属性集合
+     */
+    @Override
+    public List<StoreProductAttr> getByEntity(StoreProductAttr storeProductAttr) {
+        LambdaQueryWrapper<StoreProductAttr> lqw = Wrappers.lambdaQuery();
+        if(null != storeProductAttr.getId()) lqw.eq(StoreProductAttr::getId,storeProductAttr.getId());
+        if(StringUtils.isNotBlank(storeProductAttr.getAttrValues()))
+            lqw.eq(StoreProductAttr::getAttrValues,storeProductAttr.getAttrValues());
+        if(StringUtils.isNotBlank(storeProductAttr.getAttrName()))
+            lqw.eq(StoreProductAttr::getAttrName,storeProductAttr.getAttrName());
+        if(null != storeProductAttr.getProductId()) lqw.eq(StoreProductAttr::getProductId,storeProductAttr.getProductId());
+        if(null != storeProductAttr.getType()) lqw.eq(StoreProductAttr::getType,storeProductAttr.getType());
+        return dao.selectList(lqw);
+    }
+
+    /**
+     * 根据id查询商品属性详情
+     * @param productId 商品id
+     * @return 查询结果
+     */
     @Override
     public List<StoreProductAttr> getByProductId(int productId) {
         LambdaQueryWrapper<StoreProductAttr> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(StoreProductAttr::getProductId, productId);
         List<StoreProductAttr> storeProductAttrs = dao.selectList(lambdaQueryWrapper);
-//        storeProductAttrs = storeProductAttrs.stream().map(e->{
-//            e.setAttrValues("["+e.getAttrValues()+"]");
-//            return e;
-//        }).distinct().collect(Collectors.toList());
     return storeProductAttrs;
     }
 
+    /**
+     * 根据id删除商品
+     * @param productId 待删除商品id
+     * @param type 类型区分是是否添加营销
+     */
     @Override
-    public void removeByProductId(Integer productId) {
-        LambdaQueryWrapper<StoreProductAttr> lambdaQW = new LambdaQueryWrapper<>();
-        lambdaQW.eq(StoreProductAttr::getProductId, productId);
+    public void removeByProductId(Integer productId,int type) {
+        LambdaQueryWrapper<StoreProductAttr> lambdaQW = Wrappers.lambdaQuery();
+        lambdaQW.eq(StoreProductAttr::getProductId, productId).eq(StoreProductAttr::getType,type);
         dao.delete(lambdaQW);
     }
 }

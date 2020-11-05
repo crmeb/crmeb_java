@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.front.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
@@ -8,6 +9,7 @@ import com.exception.CrmebException;
 import com.github.pagehelper.PageInfo;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
+import com.zbkj.crmeb.finance.model.UserExtract;
 import com.zbkj.crmeb.finance.model.UserRecharge;
 import com.zbkj.crmeb.finance.request.FundsMonitorSearchRequest;
 import com.zbkj.crmeb.finance.request.UserExtractRequest;
@@ -57,12 +59,16 @@ import java.util.stream.Collectors;
 
 
 /**
- * <p>
  * 用户中心 服务实现类
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-04-10
+ *  +----------------------------------------------------------------------
+ *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ *  +----------------------------------------------------------------------
+ *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  +----------------------------------------------------------------------
+ *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ *  +----------------------------------------------------------------------
+ *  | Author: CRMEB Team <admin@crmeb.com>
+ *  +----------------------------------------------------------------------
  */
 @Service
 public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements UserCenterService {
@@ -116,7 +122,9 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         //昨天的佣金
         userCommissionResponse.setLastDayCount(userBillService.getSumBigDecimal(0, userService.getUserIdException(), Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE, Constants.SEARCH_DATE_YESTERDAY, null));
 
-        userCommissionResponse.setExtractCount(userBillService.getSumBigDecimal(0, userService.getUserIdException(), Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE, null, Constants.USER_BILL_TYPE_EXTRACT));
+//        userCommissionResponse.setExtractCount(userBillService.getSumBigDecimal(0, userService.getUserIdException(), Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE, null, Constants.USER_BILL_TYPE_EXTRACT));
+        //累计已提取佣金
+        userCommissionResponse.setExtractCount(userExtractService.getExtractTotalMoney(userService.getUserIdException()));
 
         userCommissionResponse.setCommissionCount(userService.getInfo().getBrokeragePrice());
         return userCommissionResponse;
@@ -169,7 +177,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
         //累计提现
         if(type == 4){
-            return userExtractService.getWithdrawn(userId);
+            return userExtractService.getWithdrawn(null,null);
         }
 
         return BigDecimal.ZERO;
@@ -201,9 +209,16 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
         BigDecimal brokeragePrice = userService.getInfo().getBrokeragePrice();
         BigDecimal freeze = userExtractService.getFreeze(userService.getUserIdException());
-
+        List<String> bankArr = new ArrayList<>();
+        if(bank.indexOf("\n") > 0){
+            for (String s : bank.split("\n")) {
+                bankArr.add(s);
+            }
+        }else{
+            bankArr.add(bank);
+        }
         return new UserExtractCashResponse(
-                CrmebUtil.stringToArrayStr(bank),
+                bankArr,
                 minPrice,
                 brokeragePrice.subtract(freeze),
                 freeze,
@@ -239,12 +254,28 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         userIdList.add(userService.getUserIdException());
         userIdList = userService.getSpreadPeopleIdList(userIdList); //我推广的一级用户id集合
 
+        if (CollUtil.isEmpty(userIdList)) {//如果没有一级推广人，直接返回
+            userSpreadPeopleResponse.setCount(0);
+            userSpreadPeopleResponse.setTotal(0);
+            userSpreadPeopleResponse.setTotalLevel(0);
+            return userSpreadPeopleResponse;
+        }
+
         userSpreadPeopleResponse.setTotal(userIdList.size()); //一级推广人
+        //查询二级推广人
+        List<Integer> secondSpreadIdList = CollUtil.newArrayList();
+        if (CollUtil.isNotEmpty(userIdList)) {
+            secondSpreadIdList = userService.getSpreadPeopleIdList(userIdList);
+        }
+        userSpreadPeopleResponse.setTotalLevel(secondSpreadIdList.size());
+        userSpreadPeopleResponse.setCount(userIdList.size() + secondSpreadIdList.size());
 
         if(request.getGrade() == 1){
             //二级推广人
-            userIdList.addAll(userService.getSpreadPeopleIdList(userIdList));
-            userSpreadPeopleResponse.setTotalLevel(userIdList.size()); //把二级推广人的id追加到一级推广人集合中
+//            userIdList.addAll(userService.getSpreadPeopleIdList(userIdList));
+//            userSpreadPeopleResponse.setTotalLevel(userIdList.size()); //把二级推广人的id追加到一级推广人集合中
+            userIdList.clear();
+            userIdList.addAll(secondSpreadIdList);
         }
 
         if(userIdList.size() > 0){
@@ -299,7 +330,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         User info = userService.getInfo();
         BigDecimal recharge = userBillService.getSumBigDecimal(1, info.getUid(), Constants.USER_BILL_CATEGORY_MONEY, null, null);
         BigDecimal orderStatusSum = storeOrderService.getSumBigDecimal(info.getUid(), null);
-        return new UserBalanceResponse(info.getBrokeragePrice(), recharge, orderStatusSum);
+        return new UserBalanceResponse(info.getNowMoney(), recharge, orderStatusSum);
     }
 
     /**
@@ -321,10 +352,13 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         //查询所有推广人的由于订单获取佣金记录，分页
 
         FundsMonitorSearchRequest request = new FundsMonitorSearchRequest();
-        request.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
-        request.setType(Constants.USER_BILL_TYPE_PAY_MONEY);
-        request.setUserIdList(userIdList);
+//        request.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
+//        request.setType(Constants.USER_BILL_TYPE_PAY_MONEY);
+        request.setCategory(Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE);
+        request.setType(Constants.USER_BILL_TYPE_BROKERAGE);
+        request.setUserIdList(CollUtil.newArrayList(userId));
         request.setLinkId("gt");
+        request.setPm(1);
         List<UserBill> list = userBillService.getList(request, pageParamRequest);
         if(null == list){
             return userSpreadOrderResponse;
@@ -337,7 +371,9 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         Map<Integer, StoreOrder> orderList = storeOrderService.getMapInId(orderIdList);
 
         //用户信息
-        userIdList = list.stream().map(UserBill::getUid).distinct().collect(Collectors.toList());
+//        userIdList = list.stream().map(UserBill::getUid).distinct().collect(Collectors.toList());
+        List<StoreOrder> storeOrderList = new ArrayList<>(orderList.values());
+        userIdList = storeOrderList.stream().map(StoreOrder::getUid).distinct().collect(Collectors.toList());
         HashMap<Integer, User> userList = userService.getMapListInUid(userIdList);
 
         //按时间分组数据
@@ -355,8 +391,10 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                     orderId, //订单号
                     userBill.getCreateTime(),
                     (userBill.getStatus() == 1) ? userBill.getNumber() : BigDecimal.ZERO,
-                    userList.get(userBill.getUid()).getAvatar(),
-                    userList.get(userBill.getUid()).getNickname(),
+//                    userList.get(userBill.getUid()).getAvatar(),
+//                    userList.get(userBill.getUid()).getNickname(),
+                    userList.get(orderList.get(linkId).getUid()).getAvatar(),
+                    userList.get(orderList.get(linkId).getUid()).getNickname(),
                     userBill.getType()
             );
 
@@ -535,10 +573,10 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     @Override
     public String getLogo() {
         String url = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PROGRAM_LOGO);
-        if(StringUtils.isNotBlank(url) && !url.contains("http")){
-            url = systemConfigService.getValueByKey(Constants.CONFIG_KEY_SITE_URL) + url;
-            url = url.replace("\\", "/");
-        }
+//        if(StringUtils.isNotBlank(url) && !url.contains("http")){
+//            url = systemConfigService.getValueByKey(Constants.CONFIG_KEY_SITE_URL) + url;
+//            url = url.replace("\\", "/");
+//        }
         return url;
     }
 
@@ -752,4 +790,25 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         }
     }
 
+    /**
+     * 提现记录
+     * @author HZE
+     * @since 2020-10-27
+     * @return
+     */
+    @Override
+    public PageInfo<UserExtractRecordResponse> getExtractRecord(PageParamRequest pageParamRequest) {
+        return userExtractService.getExtractRecord(userService.getUserIdException(), pageParamRequest);
+    }
+
+    /**
+     * 提现总金额
+     * @author HZE
+     * @since 2020-10-27
+     * @return
+     */
+    @Override
+    public BigDecimal getExtractTotalMoney(){
+        return userExtractService.getExtractTotalMoney(userService.getUserIdException());
+    }
 }

@@ -248,7 +248,7 @@
 										time: time
 									});
 									self.$util.Tips({
-										title:res.msg,
+										title:res,
 										icon:'success'
 									},{
 										tab:3
@@ -259,7 +259,7 @@
 							.catch(res => {
 								uni.hideLoading();
 								uni.showToast({
-									title: res.msg,
+									title: res,
 									icon: 'none',
 									duration: 2000
 								});

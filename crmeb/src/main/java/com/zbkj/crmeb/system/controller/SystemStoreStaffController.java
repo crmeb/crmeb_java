@@ -4,7 +4,7 @@ import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.system.model.SystemStoreStaff;
-import com.zbkj.crmeb.system.model.SystemStoreStaffResponse;
+import com.zbkj.crmeb.system.response.SystemStoreStaffResponse;
 import com.zbkj.crmeb.system.request.SystemStoreStaffRequest;
 import com.zbkj.crmeb.system.service.SystemStoreStaffService;
 import io.swagger.annotations.Api;

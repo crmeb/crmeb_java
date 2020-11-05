@@ -340,7 +340,7 @@
       :visible.sync="visible"
       width="600px"
     >
-      <edit-from v-if="visible" :uid="uid"></edit-from>
+      <edit-from v-if="visible" :uid="uid" @resetForm="resetForm"></edit-from>
     </el-dialog>
     <!--积分余额-->
     <el-dialog
@@ -585,6 +585,9 @@
       this.getCityList()
     },
     methods: {
+      resetForm(){
+        this.visible = false;
+      },
       reset(formName) {
         this.userFrom = {
             labelId: '',
@@ -755,7 +758,7 @@
       // 具体日期
       onchangeTime (e) {
         this.timeVal = e;
-        this.userFrom.dateLimit = e.join(',');
+        this.tableFrom.dateLimit = e ? this.timeVal.join(',') : '';
       },
       // 分组列表
       groupLists () {

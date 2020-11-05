@@ -4,9 +4,9 @@
 			<view class='item acea-row row-between-wrapper' @tap="goDetail(item)" hover-class="none">
 				<view class='pictrue'>
 					<image :src='item.image'></image>
-					<span class="pictrue_log pictrue_log_class" v-if="item.activity && item.activity.type === '1'">秒杀</span>
-					<span class="pictrue_log pictrue_log_class" v-if="item.activity && item.activity.type === '2'">砍价</span>
-					<span class="pictrue_log pictrue_log_class" v-if="item.activity && item.activity.type === '3'">拼团</span>
+					<span class="pictrue_log pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '1'">秒杀</span>
+					<span class="pictrue_log pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '2'">砍价</span>
+					<span class="pictrue_log pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '3'">拼团</span>
 				</view>
 				<view class='text'>
 					<view class='name line1'>{{item.store_name}}</view>

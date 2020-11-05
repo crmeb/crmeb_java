@@ -2,9 +2,12 @@ package com.zbkj.crmeb.store.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
+import com.constants.Constants;
 import com.exception.CrmebException;
+import com.github.pagehelper.Constant;
 import com.github.pagehelper.PageHelper;
 import com.zbkj.crmeb.store.dao.StoreProductAttrValueDao;
 import com.zbkj.crmeb.store.model.StoreProductAttrValue;
@@ -75,9 +78,10 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
      * @return 商品属性集合
      */
     @Override
-    public List<StoreProductAttrValue> getListByProductIdAndAttrId(Integer productId, String attrId) {
-        LambdaQueryWrapper<StoreProductAttrValue> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+    public List<StoreProductAttrValue> getListByProductIdAndAttrId(Integer productId, String attrId, Integer type) {
+        LambdaQueryWrapper<StoreProductAttrValue> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.eq(StoreProductAttrValue::getProductId, productId);
+        lambdaQueryWrapper.eq(StoreProductAttrValue::getType, type);
         if(null != attrId){
             lambdaQueryWrapper.eq(StoreProductAttrValue::getId, attrId);
         }
@@ -91,10 +95,10 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
      * @return 查询到的属性结果
      */
     @Override
-    public StoreProductAttrValue getByEntity(StoreProductAttrValue storeProductAttrValue) {
+    public List<StoreProductAttrValue> getByEntity(StoreProductAttrValue storeProductAttrValue) {
         LambdaQueryWrapper<StoreProductAttrValue> lqw = new LambdaQueryWrapper<>();
         lqw.setEntity(storeProductAttrValue);
-        return dao.selectOne(lqw);
+        return dao.selectList(lqw);
     }
 
     /**
@@ -102,12 +106,12 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
      * @param productId 商品id
      * @param attrValueId 商品attrValue id
      * @param num 销售数量
-     * @param type 是否限购
+     * @param type 营销活动
      * @return 操作后的结果标识
      */
     @Override
     public boolean decProductAttrStock(Integer productId, Integer attrValueId, Integer num, Integer type) {
-        List<StoreProductAttrValue> existAttrValues = getListByProductIdAndAttrId(productId, attrValueId+"");
+        List<StoreProductAttrValue> existAttrValues = getListByProductIdAndAttrId(productId, attrValueId+"",type);
         if(existAttrValues.size() == 0) throw new CrmebException("商品不存在");
 
         StoreProductAttrValue attrValue = existAttrValues.get(0);
@@ -118,17 +122,21 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
         lambdaUpdateWrapper.eq(StoreProductAttrValue::getId, attrValueId);
         lambdaUpdateWrapper.eq(StoreProductAttrValue::getType, type);
 
-        if(num >= attrValue.getStock()){
-            throw new CrmebException("库存不足");
-        }
-        if(type == 0){ // 不限购
+
+        if(type == Constants.PRODUCT_TYPE_NORMAL){
+            if(num > attrValue.getStock()){
+                throw new CrmebException("库存不足");
+            }
             lambdaUpdateWrapper.set(StoreProductAttrValue::getStock, attrValue.getStock()-num);
             lambdaUpdateWrapper.set(StoreProductAttrValue::getSales, attrValue.getSales()+num);
             result = update(lambdaUpdateWrapper);
         }else{
+            if(num > attrValue.getQuota()){
+                throw new CrmebException("库存不足");
+            }
             lambdaUpdateWrapper.set(StoreProductAttrValue::getStock, attrValue.getStock()-num);
             lambdaUpdateWrapper.set(StoreProductAttrValue::getSales, attrValue.getSales()+num);
-            lambdaUpdateWrapper.set(StoreProductAttrValue::getQuota, attrValue.getStock()-num);
+            lambdaUpdateWrapper.set(StoreProductAttrValue::getQuota, attrValue.getQuota()-num);
             result = update(lambdaUpdateWrapper);
         }
 
@@ -146,12 +154,13 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
     /**
      * 根据商品id删除AttrValue
      * @param productId 商品id
+     * @param type 类型区分是是否添加营销
      * @reture 删除结果
      */
     @Override
-    public boolean removeByProductId(Integer productId) {
-        LambdaQueryWrapper<StoreProductAttrValue> lambdaQW = new LambdaQueryWrapper<>();
-        lambdaQW.eq(StoreProductAttrValue::getProductId, productId);
+    public boolean removeByProductId(Integer productId,int type) {
+        LambdaQueryWrapper<StoreProductAttrValue> lambdaQW = Wrappers.lambdaQuery();
+        lambdaQW.eq(StoreProductAttrValue::getProductId, productId).eq(StoreProductAttrValue::getType,type);
         return dao.delete(lambdaQW) > 0;
     }
 }

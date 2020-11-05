@@ -39,10 +39,17 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
-* @author Mr.Zhang
-* @description StoreCouponUserServiceImpl 接口实现
-* @date 2020-05-18
-*/
+ * StoreCouponUserService 实现类
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, StoreCouponUser> implements StoreCouponUserService {
 
@@ -456,8 +463,10 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
     @Override
     public List<StoreCouponUserOrder> getListByCartIds(List<Integer> cartIds) {
 
+        List<String> carIdsStr = cartIds.stream().map(e -> e.toString()).collect(Collectors.toList());
         //购物车产品集合
-        List<StoreCartResponse> storeCartResponseList = storeCartService.getListByUserIdAndCartIds(userService.getUserIdException(), cartIds,1);
+        List<StoreCartResponse> storeCartResponseList =
+                storeCartService.getListByUserIdAndCartIds(userService.getUserIdException(), carIdsStr,1);
 
         //产品id集合
         List<Integer> productIds = storeCartResponseList.stream().map(StoreCartResponse::getProductId).distinct().collect(Collectors.toList());

@@ -10,11 +10,11 @@
 				<view class='profit acea-row row-between-wrapper'>
 					<view class='item'>
 						<view>昨日收益</view>
-						<view class='money'>{{spreadInfo.lastDayCount}}</view>
+						<view class='money'>{{spreadInfo.lastDayCount ? Number(spreadInfo.lastDayCount).toFixed(2) : 0}}</view>
 					</view>
 					<view class='item'>
 						<view>累积已提</view>
-						<view class='money'>{{spreadInfo.extractCount}}</view>
+						<view class='money'>{{spreadInfo.extractCount ? Number(spreadInfo.extractCount).toFixed(2) : 0}}</view>
 					</view>
 				</view>
 			</view>
