@@ -25,8 +25,11 @@
 
 ### 加技术交流群
 
+* 企业微信
 <!-- ![加技术交流群](https://images.gitee.com/uploads/images/2020/0922/092152_8b623f8b_2012975.png "屏幕截图.png") -->
-![加技术交流群](https://stivepeim.gitee.io/my-images/2020_11_5.jpg "开发技术2群二维码.png")
+![加技术交流群](https://stivepeim.gitee.io/my-images/qywx_2020-11-11.jpg "开发技术2群二维码.png")
+* QQ群
+![QQ群](https://stivepeim.gitee.io/my-images/QQ-Group1.jpg)
 
 
 如果群二维码过期请加开发者微信拉你进群
