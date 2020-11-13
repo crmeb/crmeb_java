@@ -26,12 +26,12 @@
 ### 加技术交流群
 
 * 企业微信
-![加技术交流群](https://stivepeim.gitee.io/my-images/allGroup-QRCode.jpg "开发技术群二维码.png")
+![加技术交流群](https://stivepeim.gitee.io/my-image/allGroup-QRCode.jpg "开发技术群二维码.png")
 
 
 如果群二维码过期请加开发者微信拉你进群
 
-![开发者微信](https://stivepeim.gitee.io/my-images/stivepeim_qywx_qrcode.png "屏幕截图.png")
+![开发者微信](https://stivepeim.gitee.io/my-image/stivepeim_qywx_qrcode.png "屏幕截图.png")
 
 ### 演示站
 1. 移动端：[https://java.crmeb.net](https://java.crmeb.net)
