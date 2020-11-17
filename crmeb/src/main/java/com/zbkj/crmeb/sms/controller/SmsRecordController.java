@@ -35,7 +35,6 @@ public class SmsRecordController {
     @Autowired
     private SmsService smsService;
 
-
     /**
      * 注册账户时发送短信api
      * @param phone 手机号码
@@ -55,7 +54,7 @@ public class SmsRecordController {
     @ApiOperation(value = " 发送短信")
     @RequestMapping(value = "/sendCode", method = RequestMethod.POST)
     @ApiImplicitParams({
-        @ApiImplicitParam(name="phone", value="手机号码", required = true)
+            @ApiImplicitParam(name="phone", value="手机号码", required = true)
     })
     public CommonResult<Object> sendCode(@RequestParam String phone){
         ValidateFormUtil.isPhone(phone,"手机号码错误");
@@ -198,12 +197,14 @@ public class SmsRecordController {
     @ApiImplicitParams({
             @ApiImplicitParam(name="payType", value="支付类型 weixin：微信支付/alipay：支付宝支付"),
             @ApiImplicitParam(name="mealId", value="套餐id"),
-            @ApiImplicitParam(name="price", value="价格")
+            @ApiImplicitParam(name="price", value="价格"),
+            @ApiImplicitParam(name="num", value="套餐条数"),
     })
     public CommonResult<JSONObject> payQrCode(@RequestParam(name = "payType", defaultValue = SmsConstants.PAY_DEFAULT_PAY_TYPE) String payType,
-                                              @RequestParam(name = "mealId", required = false, defaultValue = "0") Integer mealId,
-                                              @RequestParam(name = "price", required = false, defaultValue = "0") BigDecimal price){
-        JSONObject result = smsService.getPayQrCode(payType, mealId, price);
+                                              @RequestParam(name = "mealId", required = true) Integer mealId,
+                                              @RequestParam(name = "price", required = true) BigDecimal price,
+                                              @RequestParam(name = "num", required = false, defaultValue = "0") Integer num){
+        JSONObject result = smsService.getPayQrCode(payType, mealId, price, num);
         return CommonResult.success(getDataByResult(result));
     }
 
@@ -223,8 +224,8 @@ public class SmsRecordController {
             @ApiImplicitParam(name="type", value="type (1=验证码 2=通知 3=推广)"),
     })
     public CommonResult<JSONObject> applyTempMessage(@RequestParam(name = "title") String title,
-                                              @RequestParam(name = "content") String content,
-                                              @RequestParam(name = "type", required = false, defaultValue = "1") Integer type){
+                                                     @RequestParam(name = "content") String content,
+                                                     @RequestParam(name = "type", required = false, defaultValue = "1") Integer type){
         JSONObject result = smsService.applyTempMessage(title, content, type);
         return CommonResult.success(getMsgByResult(result));
     }
@@ -272,6 +273,5 @@ public class SmsRecordController {
         return result.getJSONObject("data");
     }
 }
-
 
 

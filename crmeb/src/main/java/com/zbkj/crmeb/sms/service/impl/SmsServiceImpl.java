@@ -179,15 +179,17 @@ public class SmsServiceImpl implements SmsService {
     public JSONObject register(RegisterRequest registerRequest) {
         registerRequest.setPassword(DigestUtils.md5Hex(registerRequest.getPassword()));
         registerRequest.setVerify_code(registerRequest.getCode());
+        registerRequest.setUrl(registerRequest.getDomain());
         Map<String, Object> map = CrmebUtil.objectToMap(registerRequest);
         MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
         param.setAll(map);
-//        JSONObject post = post(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_REGISTER_URI, map);
         JSONObject post = postFrom(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_REGISTER_URI, param, null);
+        // token存入Redis
         String accessToken = SmsConstants.SMS_USER_TOKEN_PREFIX.concat(post.getJSONObject("data").getString("access_token"));
         Long expiresIn = post.getJSONObject("data").getLong("expires_in");
         expiresIn = expiresIn - System.currentTimeMillis()/1000;
         redisUtil.set(StrUtil.format(SmsConstants.SMS_USER_TOKEN_REDIS_PREFIX, getMd5Token()), accessToken, expiresIn, TimeUnit.SECONDS);
+
         // 开通短信服务
         HashMap<String, String> header = getCommonHeader(accessToken);
         MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
@@ -349,10 +351,11 @@ public class SmsServiceImpl implements SmsService {
     @Override
     public JSONObject payTempList(PageParamRequest pageParamRequest) {
         init();
-        Map<String, Object> map = mergeToken(CrmebUtil.objectToMap(pageParamRequest));
-        map.put("type", "sms");
+//        Map<String, Object> map = mergeToken(CrmebUtil.objectToMap(pageParamRequest));
+//        map.put("type", "sms");
         MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
-        params.setAll(map);
+        params.add("type", "sms");
+//        params.setAll(map);
         String accessToken = getSmsUserTokenByRedis();
         HashMap<String, String> header = getCommonHeader(accessToken);
 //        return get(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_PAY_TEMP_LIST_URI, map);
@@ -369,19 +372,28 @@ public class SmsServiceImpl implements SmsService {
      * @return JSONObject
      */
     @Override
-    public JSONObject getPayQrCode(String payType, Integer mealId, BigDecimal price) {
+    public JSONObject getPayQrCode(String payType, Integer mealId, BigDecimal price, Integer num) {
         init();
-        Map<String, Object> map = getTokenMap();
-//        map.put("payType", payType);
-        map.put("pay_type", payType);
-//        map.put("mealId", mealId);
-        map.put("meal_id", mealId);
-        map.put("price", price);
-//        map.put("uid", getAccount());
-//        map.put("token", getMd5Token());
-        map.put("type", "sms");
-        map.put("notify", getPayNotifyUrl());
-        return post(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_PAY_QR_CODE_URI, map);
+//        Map<String, Object> map = getTokenMap();
+////        map.put("payType", payType);
+//        map.put("pay_type", payType);
+////        map.put("mealId", mealId);
+//        map.put("meal_id", mealId);
+//        map.put("price", price);
+////        map.put("uid", getAccount());
+////        map.put("token", getMd5Token());
+//        map.put("type", "sms");
+//        map.put("notify", getPayNotifyUrl());
+        MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
+        params.add("meal_id", mealId);
+        params.add("price", price);
+        params.add("num", num);
+        params.add("type", "sms");
+        params.add("pay_type", payType);
+        String accessToken = getSmsUserTokenByRedis();
+        HashMap<String, String> header = getCommonHeader(accessToken);
+//        return post(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_PAY_QR_CODE_URI, map);
+        return postFrom(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_PAY_QR_CODE_URI, params, header);
     }
 
     /**
@@ -646,7 +658,6 @@ public class SmsServiceImpl implements SmsService {
     public JSONObject sendCodeForRegister(String phone) {
         MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
         map.add("phone", phone);
-//        return getData(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_CAPTCHA_URI+"?phone="+phone);
         return postFrom(SmsConstants.SMS_API_URL + SmsConstants.SMS_API_CAPTCHA_URI, map, null);
     }
 

@@ -57,4 +57,6 @@ public class RegisterRequest implements Serializable {
     private String code;
 
     private String verify_code;
+
+    private String url;
 }
