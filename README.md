@@ -26,12 +26,12 @@
 ### 加技术交流群
 
 * 企业微信
-![加技术交流群](https://stivepeim.gitee.io/my-image/allGroup-QRCode.jpg "开发技术群二维码.png")
+![加技术交流群](https://stivepeim.gitee.io/my-image/gourp_QRCode_2020_11-17.png "开发技术群二维码.png")
 
 
 如果群二维码过期请加开发者微信拉你进群
 
-![开发者微信](https://stivepeim.gitee.io/my-image/stivepeim_qywx_qrcode.png "屏幕截图.png")
+![开发者微信](https://stivepeim.gitee.io/my-image/stivepeim_qywx_qrcode.png "开发者企业微信.png")
 
 ### 演示站
 1. 移动端：[https://java.crmeb.net](https://java.crmeb.net)
@@ -46,13 +46,11 @@ CRMEB知识付费项目：https://gitee.com/ZhongBangKeJi/crmeb_zzff_class
 CRMEB打通版：https://gitee.com/ZhongBangKeJi/CRMEB
 
 ### Swagger接口文档
-演示站接口: 
-1. 移动端：http://app.beta.java.crmeb.net/api_html/app_api.html
-2. 后台：http://app.beta.java.crmeb.net/api_html/admin_api.html
+演示站接口: http://api.java.crmeb.net/doc.html
 
-自己部署站点接口地址：域名/swagger-ui.html#
+自己部署站点接口地址：域名/doc.html#
 
-本地启动Java Api项目接口地址：http://localhost:8080/swagger-ui.html#    8080为配置文件里配置的 server/port
+本地启动Java Api项目接口地址：http://localhost:8080/doc.html#    8080为配置文件里配置的 server/port
 
 prod环境swagger默认账号密码在 prod.yml配置里
 
@@ -154,7 +152,7 @@ Excel数据导出,导出表格更加美观可视；
 # Java项目框架
 1. SpringBoot 2.2.6.RELEASE
 2. Maven 3.6.1
-3. Swagger 2.9.2
+3. swagger-bootstrap-ui-demo 1.0
 4. Mybatis Plus 3.3.1
 
 
@@ -180,6 +178,12 @@ Excel数据导出,导出表格更加美观可视；
 2. [易联云JAVA SDK](http://doc2.10ss.net/337744 "易联云JAVA SDK gitee文档")
 3. [如何导入第三方JAVA SDK包](https://blog.csdn.net/weixin_46028577/article/details/106342938?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase "如何导入第三方JAVA SDK包")
 #
+
+# v1.2.1 更新内容
+## 更新列表
+    1. 短信后台升级,更新供应商
+    2. 替换官方swagger文档提升友好和易用[swagger-bootstrap-ui] https://doc.xiaominfo.com/knife4j
+    3. 添加商品分类必要素材,可在配置好图片服务后自行维护
 
 # v1.2 功能更新列表
 ### 更新Note

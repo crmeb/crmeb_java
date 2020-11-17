@@ -11,10 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
-* @author Mr.Zhang
-* @Description SmsService 接口
-* @since 2020-04-16
-*/
+ * @author Mr.Zhang
+ * @Description SmsService 接口
+ * @since 2020-04-16
+ */
 public interface SmsService{
 
     JSONObject register(RegisterRequest registerRequest);
@@ -33,7 +33,7 @@ public interface SmsService{
 
     JSONObject payTempList(PageParamRequest pageParamRequest);
 
-    JSONObject getPayQrCode(String payType, Integer mealId, BigDecimal price);
+    JSONObject getPayQrCode(String payType, Integer mealId, BigDecimal price, Integer num);
 
     JSONObject applyTempMessage(String title, String content, Integer type);
 
