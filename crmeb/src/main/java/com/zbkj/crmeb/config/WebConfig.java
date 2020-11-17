@@ -115,13 +115,13 @@ public class WebConfig implements WebMvcConfigurer {
                 excludePathPatterns("/api/front/seckill/list/*").
                 excludePathPatterns("/api/front/seckill/detail/*").
 //                excludePathPatterns("/api/front/cart/count").
-                excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**");
+        excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**");
     }
 
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/");
-        registry.addResourceHandler("swagger-ui.html")
+        registry.addResourceHandler("doc.html")
                 .addResourceLocations("classpath:/META-INF/resources/");
         registry.addResourceHandler("/webjars/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
@@ -140,7 +140,8 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     @ConditionalOnProperty(name = "swagger.basic.enable", havingValue = "true")
     public MappedInterceptor getMappedInterceptor() {
-        return new MappedInterceptor(new String[]{"/swagger-ui.html", "/webjars/**"}, new SwaggerInterceptor(username, password, check));
+
+        return new MappedInterceptor(new String[]{"/doc.html", "/webjars/**"}, new SwaggerInterceptor(username, password, check));
     }
     // 验证参数是否完全匹配
 //    @Override
