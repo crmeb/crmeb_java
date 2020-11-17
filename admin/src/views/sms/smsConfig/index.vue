@@ -88,9 +88,9 @@ export default {
     getNumber() {
       smsInfoApi().then(async res => {
         const data = res
-        this.numbers = data.number
-        this.sendTotal = data.send_total
-        this.amount = data.number + data.send_total
+        this.numbers = data.num
+        this.sendTotal = data.surp
+        this.amount = data.num + data.surp
         this.smsAccount = data.account
       })
     },
