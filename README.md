@@ -26,7 +26,7 @@
 ### 加技术交流群
 
 * 企业微信
-![加技术交流群](https://stivepeim.gitee.io/my-image/gourp_QRCode_2020_11-17.png "开发技术群二维码.png")
+![加技术交流群](https://stivepeim.gitee.io/my-image/QQ-Group1.jpg "开发技术群二维码.png")
 
 
 如果群二维码过期请加开发者微信拉你进群
