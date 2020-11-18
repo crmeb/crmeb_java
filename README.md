@@ -25,7 +25,7 @@
 
 ### 加技术交流群
 
-* 企业微信
+* 技术沟通群
 ![加技术交流群](https://stivepeim.gitee.io/my-image/QQ-Group1.jpg "开发技术群二维码.png")
 
 
