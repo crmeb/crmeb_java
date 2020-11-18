@@ -152,7 +152,7 @@ Excel数据导出,导出表格更加美观可视；
 # Java项目框架
 1. SpringBoot 2.2.6.RELEASE
 2. Maven 3.6.1
-3. swagger-bootstrap-ui-demo 1.0
+3. swagger-bootstrap-ui 1.0
 4. Mybatis Plus 3.3.1
 
 
