@@ -92,7 +92,7 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
     public List<StoreSeckillManger> checkTimeRangeUnique(StoreSeckillManger storeSeckillManger) {
         LambdaQueryWrapper<StoreSeckillManger> lqTimeUnique = Wrappers.lambdaQuery();
         lqTimeUnique.ge(StoreSeckillManger::getStartTime, storeSeckillManger.getStartTime());
-        lqTimeUnique.gt(StoreSeckillManger::getStartTime, storeSeckillManger.getEndTime());
+        lqTimeUnique.lt(StoreSeckillManger::getStartTime, storeSeckillManger.getEndTime());
         lqTimeUnique.or();
         lqTimeUnique.le(StoreSeckillManger::getStartTime, storeSeckillManger.getStartTime());
         lqTimeUnique.ge(StoreSeckillManger::getEndTime, storeSeckillManger.getEndTime());
