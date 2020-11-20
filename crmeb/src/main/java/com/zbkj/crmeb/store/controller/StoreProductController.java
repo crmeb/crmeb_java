@@ -74,15 +74,16 @@ public class StoreProductController {
     }
 
     /**
-     * 删除商品表
-     * @param id Integer
-     * @author Mr.Zhang
-     * @since 2020-05-27
+     *  删除商品
+     * @param id 商品id
+     * @param type 删除类型 recycle 回收站 delete 物理删除
+     * @return
      */
     @ApiOperation(value = "删除")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
-    public CommonResult<String> delete(@RequestBody @PathVariable Integer id){
-        if(storeProductService.deleteProduct(id)){
+    public CommonResult<String> delete(@PathVariable Integer id,
+                                       @RequestParam(value = "type", required = false, defaultValue = "recycle")String type){
+        if(storeProductService.deleteProduct(id, type)){
 //        if(storeProductService.removeById(id)){
             storeCartService.productStatusNotEnable(id);
             return CommonResult.success();

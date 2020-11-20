@@ -126,7 +126,7 @@ public interface StoreProductService extends IService<StoreProduct> {
      * @param productId 商品id
      * @return 删除结果
      */
-    boolean deleteProduct(Integer productId);
+    boolean deleteProduct(Integer productId, String type);
 
     /**
      * 恢复已删除商品
