@@ -75,7 +75,10 @@
         <el-col :span="24">
           <el-col :xs="12" :sm="6" :md="4" :lg="3" class="mr20">&nbsp;</el-col>
           <el-col :xs="11" :sm="13" :md="19" :lg="20">
-            <div class="list-goods-list-item-code mr20"><img :src="code.code_url"></div>
+            <div class="list-goods-list-item-code mr20">
+<!--              <img :src="code.code_url">-->
+              <div id="payQrcode"></div>
+            </div>
           </el-col>
         </el-col>
       </el-row>
@@ -87,6 +90,7 @@
 import { smsNumberApi, smsPriceApi, payCodeApi, smsInfoApi } from '@/api/sms'
 import { isLogin } from '@/libs/public'
 import { mapGetters } from 'vuex'
+import QRcode from 'qrcodejs2'
 export default {
   name: 'SmsPay',
   data() {
@@ -178,6 +182,8 @@ export default {
       }
       payCodeApi(data).then(async res => {
         this.code = res
+        document.getElementById('payQrcode').innerHTML = '';
+        new QRcode('payQrcode', { width:135, height:135,text: res.qr_code})
       })
     }
   }
