@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.store.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -919,8 +920,13 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
      * @return
      */
     @Override
-    public boolean deleteProduct(Integer productId) {
+    public boolean deleteProduct(Integer productId, String type) {
         LambdaUpdateWrapper<StoreProduct> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        if (StrUtil.isNotBlank(type) && "delete".equals(type)) {
+            lambdaUpdateWrapper.eq(StoreProduct::getId, productId);
+            int delete = dao.delete(lambdaUpdateWrapper);
+            return delete > 0;
+        }
         lambdaUpdateWrapper.eq(StoreProduct::getId, productId);
         lambdaUpdateWrapper.set(StoreProduct::getIsDel, true);
         return update(lambdaUpdateWrapper);
