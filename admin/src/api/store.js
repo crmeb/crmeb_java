@@ -39,10 +39,11 @@ export function productDetailApi(id) {
  * 删除商品
  * @param pram
  */
-export function productDeleteApi(id) {
+export function productDeleteApi(id, type) {
   return request({
     url: `/admin/store/product/delete/${id}`,
-    method: 'get'
+    method: 'get',
+    params:{type:type}
   })
 }
 
@@ -245,10 +246,9 @@ export function importProductApi(params) {
  * 恢复
  * @param pram
  */
-export function restoreApi(params) {
+export function restoreApi(id) {
   return request({
-    url: `/admin/store/product/importProduct`,
-    method: 'post',
-    params
+    url: `/admin/store/product/restore/${id}`,
+    method: 'get'
   })
 }
