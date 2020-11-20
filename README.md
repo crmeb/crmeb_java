@@ -179,15 +179,18 @@ Excel数据导出,导出表格更加美观可视；
 3. [如何导入第三方JAVA SDK包](https://blog.csdn.net/weixin_46028577/article/details/106342938?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase "如何导入第三方JAVA SDK包")
 #
 
-# v1.2.1 更新内容
-## 更新列表
+# v1.2.2 更新列表
+	1. 修复了商品从回收站中删除的逻辑
+	2. 新增了icon文件
+	3. 短信下单购买二维码加载不到的问题
+    4. 秒杀配置时间小于当前所有时间的重叠判断
+
+# v1.2.1 更新列表
     1. 短信后台升级,更新供应商
     2. 替换官方swagger文档提升友好和易用[swagger-bootstrap-ui] https://doc.xiaominfo.com/knife4j
     3. 添加商品分类必要素材,可在配置好图片服务后自行维护
 
-# v1.2 功能更新列表
-### 更新Note
-## 修复内容列表
+# v1.2 修复内容列表
 	1. 修复购物车,订单和退单后后置任务正确执行
 	2. 修复佣金记录金额和详情
 	3. 修复管理端 移动应用界面下订单管理数据统计不准确的问题
@@ -195,7 +198,7 @@ Excel数据导出,导出表格更加美观可视；
 	5. 修复用户管理相关问题
 	6. 修复核销点核销后核销地址不准确
 	7. 修复资源同步云服务的问题
-## 新增功能
+### 新增功能
 	1. 秒杀
 		a. 秒杀时段配置
 		b. 秒杀商品维护
