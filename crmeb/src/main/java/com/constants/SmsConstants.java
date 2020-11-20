@@ -36,7 +36,7 @@ public class SmsConstants {
 //    public static final String SMS_API_PAY_TEMP_LIST_URI = "sms/meal";
     public static final String SMS_API_PAY_TEMP_LIST_URI = "meal/list";
     //支付二维码
-    public static final String SMS_API_PAY_QR_CODE_URI = "sms/mealpay";
+    public static final String SMS_API_PAY_QR_CODE_URI = "meal/code";
     //支付二维码
 //    public static final String SMS_API_APPLY_TEMP_MESSAGE_URI = "sms/apply";
     public static final String SMS_API_APPLY_TEMP_MESSAGE_URI = "sms_v2/apply";
