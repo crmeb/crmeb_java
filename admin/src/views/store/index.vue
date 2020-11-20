@@ -254,9 +254,10 @@ export default {
       this.getList()
     },
     // 删除
-    handleDelete(id, idx) {
-      this.$modalSure().then(() => {
-        productDeleteApi(id).then(() => {
+    handleDelete(id, type) {
+      this.$modalSure(`删除 id 为 ${id} 的商品`).then(() => {
+        const deleteFlag = type == 5 ? 'delete':'recycle';
+        productDeleteApi(id,deleteFlag).then(() => {
           this.$message.success('删除成功')
           this.getList()
           this.goodHeade();
