@@ -23,17 +23,10 @@
 
 - - -
 
-### 加技术交流群
+# 加技术交流群
+## [CRMEB JAVA 技术交流QQ群 1群](<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=XJ79nw1CVADxGTl1Ju0iMxzq9HMIhTR0&jump_from=webapi">点击加群 893839288</a>)
 
-* 技术沟通群
-![加技术交流群](https://stivepeim.gitee.io/my-image/QQ-Group1.jpg "开发技术群二维码.png")
-
-
-如果群二维码过期请加开发者微信拉你进群
-
-![开发者微信](https://stivepeim.gitee.io/my-image/stivepeim_qywx_qrcode.png "开发者企业微信.png")
-
-### 演示站
+## 演示站
 1. 移动端：[https://java.crmeb.net](https://java.crmeb.net)
 2. 后台：[https://admin.java.crmeb.net](https://admin.java.crmeb.net)   
 ## 后台账号 demo  密码 crmeb.com， 请大家不要随意改密码！
