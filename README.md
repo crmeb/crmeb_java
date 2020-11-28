@@ -24,6 +24,9 @@
 # 加技术交流群
 ## [CRMEB JAVA 技术交流QQ群 1群](<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=XJ79nw1CVADxGTl1Ju0iMxzq9HMIhTR0&jump_from=webapi">点击加群 893839288</a>)
 
+## 扫码联系客服
+![扫码联系客服](https://stivepeim.gitee.io/my-image/contacUs.jpg)
+
 # 演示站
 1. 移动端：[https://java.crmeb.net](https://java.crmeb.net)
 2. 后台：[https://admin.java.crmeb.net](https://admin.java.crmeb.net)   
