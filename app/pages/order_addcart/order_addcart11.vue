@@ -83,7 +83,7 @@
 			</view>
 			<view class='noCart' v-if="cartList.valid.length == 0 && cartList.invalid.length == 0">
 				<view class='pictrue'>
-					<image src='../../static/images/noCart.png'></image>
+					<image src='../columnGoods/static/noCart.png'></image>
 				</view>
 				<recommend :hostProduct='hostProduct'></recommend>
 			</view>

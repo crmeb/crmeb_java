@@ -15,8 +15,8 @@ package com.constants;
 public class SmsConstants {
     //------------------------------------------------短信配置------------------------------------------------
     //短信请求地址
-//    public static final String SMS_API_URL = "https://sms.crmeb.net/api/";
-    public static final String SMS_API_URL = "http://plat.crmeb.net/api/";
+    public static final String SMS_API_URL = "https://sms.crmeb.net/api/";
+//    public static final String SMS_API_URL = "http://plat.crmeb.net/api/";
     //短信支付回调地址
     public static final String SMS_API_PAY_NOTIFY_URI = "/api/sms/pay/notify";
     //验证码接口
@@ -36,6 +36,7 @@ public class SmsConstants {
 //    public static final String SMS_API_PAY_TEMP_LIST_URI = "sms/meal";
     public static final String SMS_API_PAY_TEMP_LIST_URI = "meal/list";
     //支付二维码
+//    public static final String SMS_API_PAY_QR_CODE_URI = "sms/mealpay";
     public static final String SMS_API_PAY_QR_CODE_URI = "meal/code";
     //支付二维码
 //    public static final String SMS_API_APPLY_TEMP_MESSAGE_URI = "sms/apply";

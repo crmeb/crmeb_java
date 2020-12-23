@@ -5,7 +5,7 @@
         <div class="container">
           <el-form size="small" :inline="true">
             <el-form-item label="回复类型：">
-              <el-select v-model="tableFrom.type" placeholder="请选择类型" @change="seachList" class="selWidth">
+              <el-select v-model="tableFrom.type" placeholder="请选择类型" @change="seachList" class="selWidth" clearable>
                 <el-option label="文本消息" value="text"></el-option>
                 <el-option label="图片消息" value="image"></el-option>
                 <el-option label="图文消息" value="news"></el-option>
@@ -13,7 +13,7 @@
               </el-select>
             </el-form-item>
             <el-form-item label="关键字：">
-              <el-input v-model="tableFrom.keywords" placeholder="请输入关键字" class="selWidth" size="small">
+              <el-input v-model="tableFrom.keywords" placeholder="请输入关键字" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search" size="small" @click="seachList" />
               </el-input>
             </el-form-item>
@@ -58,6 +58,8 @@
               v-model="scope.row.status"
               :active-value="true"
               :inactive-value="false"
+              active-text="显示"
+              inactive-text="隐藏"
               @change="onchangeIsShow(scope.row)"
             />
           </template>
@@ -87,7 +89,7 @@
 </template>
 
 <script>
-import { replyListApi, replyDeleteApi, replyUpdateApi } from '@/api/wxApi'
+import { replyListApi, replyDeleteApi, replyUpdateApi, replyStatusApi } from '@/api/wxApi'
 import { getToken } from '@/utils/auth'
 export default {
   name: 'WechatKeyword',
@@ -115,8 +117,11 @@ export default {
       this.getList()
     },
     onchangeIsShow(row) {
-      replyUpdateApi(row.id, row).then(() => {
-        this.$message.success('修改成功')
+      replyStatusApi({id:row.id, status:row.status}).then(() => {
+        this.$message.success('修改成功');
+        this.getList();
+      }).catch(()=>{
+        row.status = !row.status
       })
     },
     // 列表
@@ -141,7 +146,7 @@ export default {
     // 删除
     handleDelete(id, idx) {
       this.$modalSure().then(() => {
-        replyDeleteApi(id).then(() => {
+        replyDeleteApi({id: id}).then(() => {
           this.$message.success('删除成功')
           this.getList()
         })

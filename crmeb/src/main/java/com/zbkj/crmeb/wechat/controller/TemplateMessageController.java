@@ -3,6 +3,7 @@ package com.zbkj.crmeb.wechat.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
+import com.exception.CrmebException;
 import com.zbkj.crmeb.wechat.model.TemplateMessage;
 import com.zbkj.crmeb.wechat.request.TemplateMessageRequest;
 import com.zbkj.crmeb.wechat.request.TemplateMessageSearchRequest;
@@ -19,12 +20,20 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 微信模板 前端控制器
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Slf4j
 @RestController
 @RequestMapping("api/admin/wechat/template")
 @Api(tags = "微信 -- 消息模版") //配合swagger使用
-
 public class TemplateMessageController {
 
     @Autowired
@@ -58,6 +67,7 @@ public class TemplateMessageController {
     public CommonResult<String> save(@RequestBody @Validated TemplateMessageRequest templateMessageRequest){
         TemplateMessage templateMessage = new TemplateMessage();
         BeanUtils.copyProperties(templateMessageRequest, templateMessage);
+        templateMessage.setType(true);
         if(templateMessageService.save(templateMessage)){
             return CommonResult.success();
         }else{
@@ -92,7 +102,8 @@ public class TemplateMessageController {
     public CommonResult<String> update(@PathVariable Integer id,
                                        @RequestBody @Validated TemplateMessageRequest templateMessageRequest){
         TemplateMessage templateMessage = templateMessageService.infoException(id);
-        BeanUtils.copyProperties(templateMessageRequest, templateMessage);
+        templateMessage.setTempId(templateMessageRequest.getTempId());
+//        BeanUtils.copyProperties(templateMessageRequest, templateMessage);
         if(templateMessageService.updateById(templateMessage)){
             return CommonResult.success();
         }else{
@@ -110,7 +121,11 @@ public class TemplateMessageController {
     @ApiOperation(value = "修改")
     @RequestMapping(value = "/update/status/{id}", method = RequestMethod.POST)
     public CommonResult<String> updateStatus(@PathVariable Integer id, @RequestParam Integer status){
-        TemplateMessage templateMessage = templateMessageService.infoException(id);
+//        TemplateMessage templateMessage = templateMessageService.infoException(id);
+        TemplateMessage templateMessage = templateMessageService.getById(id);
+        if(null == templateMessage){
+            throw new CrmebException("此模板" + id + " 不存在或者已删除");
+        }
         templateMessage.setStatus(status);
         if(templateMessageService.updateById(templateMessage)){
             return CommonResult.success();

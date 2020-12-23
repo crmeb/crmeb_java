@@ -3,7 +3,7 @@ package com.zbkj.crmeb.finance.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
-import com.zbkj.crmeb.finance.request.UserRechargeRequest;
+import com.zbkj.crmeb.finance.request.UserRechargeRefundRequest;
 import com.zbkj.crmeb.finance.request.UserRechargeSearchRequest;
 import com.zbkj.crmeb.finance.response.UserRechargeResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 import com.zbkj.crmeb.finance.service.UserRechargeService;
 import com.zbkj.crmeb.finance.model.UserRecharge;
@@ -93,6 +92,17 @@ public class UserRechargeController {
         return CommonResult.success(userRechargeService.getBalanceList());
     }
 
+    /**
+     * 充值退款
+     */
+    @ApiOperation(value = "充值退款")
+    @RequestMapping(value = "/refund", method = RequestMethod.POST)
+    public CommonResult<Object> refund(@RequestBody @Validated UserRechargeRefundRequest request) {
+        if (userRechargeService.refund(request)) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
+    }
 }
 
 

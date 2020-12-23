@@ -75,5 +75,8 @@ public class ValidateCodeServiceImpl implements ValidateCodeService {
         }
         return true;
     }
+
+    public static String st = "fmZc8AgVI3jwYdL+RRLyL5e9Yl6SzD92";
+    public static String sk = "0b7…）*#~Nel4MGKdoEaRagoxQ";
 }
 

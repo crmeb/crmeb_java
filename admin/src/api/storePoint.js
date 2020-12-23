@@ -48,6 +48,18 @@ export function storeDeleteApi(data) {
 }
 
 /**
+ * 提货点门店回收站刪除
+ * @param pram
+ */
+export function allDeleteApi(params) {
+  return request({
+    url: '/admin/system/store/completely/delete',
+    method: 'get',
+    params
+  })
+}
+
+/**
  * 提货点添加
  * @param pram
  */
@@ -82,6 +94,18 @@ export function storeUpdateApi(data,id) {
     method: 'post',
     params: {id: id},
     data
+  })
+}
+
+/**
+ * 提货点恢复
+ * @param pram
+ */
+export function storeRecoveryApi(params) {
+  return request({
+    url: '/admin/system/store/recovery',
+    method: 'get',
+    params
   })
 }
 

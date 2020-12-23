@@ -57,7 +57,7 @@ public class LoginController {
      */
     @ApiOperation(value = "手机号登录接口")
     @RequestMapping(value = "/login/mobile", method = RequestMethod.POST)
-    public CommonResult<LoginResponse> phoneLogin(@RequestBody @Validated LoginMobileRequest loginRequest, HttpServletRequest request){
+    public CommonResult<LoginResponse> phoneLogin(@RequestBody @Validated LoginMobileRequest loginRequest, HttpServletRequest request) throws Exception {
         String clientIp = CrmebUtil.getClientIp(request);
         RegisterRequest registerRequest = new RegisterRequest();
         BeanUtils.copyProperties(loginRequest, registerRequest);
@@ -71,7 +71,7 @@ public class LoginController {
      */
     @ApiOperation(value = "账号密码登录")
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public CommonResult<LoginResponse> login(@RequestBody @Validated LoginRequest loginRequest){
+    public CommonResult<LoginResponse> login(@RequestBody @Validated LoginRequest loginRequest) throws Exception {
         return CommonResult.success(userService.login(loginRequest));
     }
 

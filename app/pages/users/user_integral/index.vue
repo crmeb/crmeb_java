@@ -15,7 +15,7 @@
 						<view>累计消费</view>
 					</view>
 					<view class='item'>
-						<view class='num'>{{userInfo.today_integral||0}}</view>
+						<view class='num'>{{userInfo.yesterdayIntegral||0}}</view>
 						<view>今日获得</view>
 					</view>
 				</view>

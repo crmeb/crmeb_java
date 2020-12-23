@@ -47,4 +47,6 @@ public interface CategoryService extends IService<Category> {
     int checkName(String name, Integer type);
 
     boolean checkUrl(String uri);
+
+    boolean updateStatus(Integer id);
 }

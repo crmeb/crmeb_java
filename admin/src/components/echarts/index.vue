@@ -14,7 +14,7 @@
       //   type: Object,
       //   default: null
       // },
-      series: {
+      seriesData: {
         type: Array,
         default: () => []
       },
@@ -26,6 +26,10 @@
         type: String,
         default: ''
       },
+      yAxisData: {
+        type: Array,
+        default: () => []
+      },
       legendData: {
         type: Array,
         default: () => []
@@ -35,11 +39,11 @@
       return {
         styles: 'height:300px',
         infoLists: this.infoList,
-        seriesArray: this.series
+        seriesArray: this.seriesData
       }
     },
     watch: {
-      series: {
+      seriesData: {
         handler(newVal, oldVal) {
           this.seriesArray = newVal;
           this.handleSetVisitChart();
@@ -83,7 +87,7 @@
                 type: 'pie',
                 radius: '70%',
                 center: ['50%', '60%'],
-                data: this.series || [],
+                data: this.seriesArray || [],
                 emphasis: {
                   itemStyle: {
                     shadowBlur: 10,
@@ -100,9 +104,9 @@
               trigger: 'axis'
             },
             toolbox: {},
-            // legend: {
-            //   data: this.infoLists.legend || []
-            // },
+            legend: {
+              data: this.legendData || []
+            },
             color: ['#1495EB', '#00CC66', '#F9D249', '#ff9900', '#9860DF'],
             grid: {
               left: 16,
@@ -144,7 +148,7 @@
                 data: this.xAxis
               }
             ],
-            yAxis: {
+            yAxis: this.yAxisData.length?this.yAxisData:{
               axisLine: {
                 show: false
               },

@@ -13,12 +13,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 支付回调
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Slf4j
 @RestController
 @RequestMapping("api/admin/payment/callback")
 @Api(tags = "支付回调")
-
 public class CallbackController {
 
     @Autowired
@@ -28,25 +36,15 @@ public class CallbackController {
      * 微信支付回调
      * @author Mr.Zhang
      * @since 2020-05-06
+     * @return
      */
     @ApiOperation(value = "微信支付回调")
     @RequestMapping(value = "/wechat", method = RequestMethod.POST)
-    public void weChat(@RequestBody String  request) {
-        //微信支付回调
-        try{
-            if(callbackService.weChat(request)){
-                System.out.println("<xml>\n" +
-                        "  <return_code><![CDATA[SUCCESS]]></return_code>\n" +
-                        "  <return_msg><![CDATA[OK]]></return_msg>\n" +
-                        "</xml>");
-            }
-        }catch (Exception e){
-            System.out.println("<xml>\n" +
-                    "  <return_code><![CDATA[FAIL]]></return_code>\n" +
-                    "  <return_msg><![CDATA["+e.getMessage()+"]]></return_msg>\n" +
-                    "</xml>");
-        }
-
+    public String weChat(@RequestBody String  request) {
+        System.out.println("微信支付回调 request ===> " + request);
+        String response = callbackService.weChat(request);
+        System.out.println("微信支付回调 response ===> " + response);
+        return response;
     }
 
     /**

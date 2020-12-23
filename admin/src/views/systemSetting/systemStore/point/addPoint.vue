@@ -165,7 +165,7 @@
         storeInfoApi({id:id}).then(res=>{
           that.ruleForm = res;
           that.ruleForm.address = res.address.split(",");
-          that.dayTime = res.dayTime.split("-")
+          that.dayTime = res.dayTime.split(",")
           this.loading = false;
         })
       },
@@ -235,7 +235,7 @@
       },
       //营业时间
       onchangeTime(e){
-        this.ruleForm.dayTime = e ? e.join(',','-') : '';
+        this.ruleForm.dayTime = e ? e.join(',') : '';
       },
       //上传图片
       modalPicTap (tit) {

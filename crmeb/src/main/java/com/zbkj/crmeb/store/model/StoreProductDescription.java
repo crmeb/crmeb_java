@@ -1,5 +1,7 @@
 package com.zbkj.crmeb.store.model;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import io.swagger.annotations.ApiModel;
@@ -37,6 +39,9 @@ public class StoreProductDescription implements Serializable {
         this.description = description;
         this.type = type;
     }
+
+    @TableId(value = "id", type = IdType.AUTO)
+    private Integer id;
 
     @ApiModelProperty(value = "商品ID")
     private Integer productId;

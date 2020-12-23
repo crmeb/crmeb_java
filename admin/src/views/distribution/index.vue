@@ -11,7 +11,7 @@
               <el-date-picker v-model="timeVal" value-format="yyyy-MM-dd" format="yyyy-MM-dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTime" />
             </el-form-item>
             <el-form-item label="关键字：">
-              <el-input v-model="tableFrom.keywords" placeholder="请输入姓名、电话、UID" class="selWidth" size="small">
+              <el-input v-model="tableFrom.keywords" placeholder="请输入姓名、电话、UID" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search" size="small" @click="seachList" />
               </el-input>
             </el-form-item>
@@ -93,7 +93,7 @@
           prop="brokeragePrice"
         />
         <el-table-column
-          prop="spread.nickname"
+          prop="spreadNickname"
           label="上级推广人"
           min-width="150"
         />
@@ -107,7 +107,7 @@
               <el-dropdown-menu slot="dropdown">
                 <el-dropdown-item @click.native="onSpreadOrder(scope.row.uid, 'order')">推广订单</el-dropdown-item>
                 <!--<el-dropdown-item @click.native="onSpreadType(scope.row.uid)">推广方式</el-dropdown-item>-->
-                <el-dropdown-item @click.native="clearSpread(scope.row)">清除上级推广人</el-dropdown-item>
+                <el-dropdown-item @click.native="clearSpread(scope.row)" v-if="scope.row.spreadNickname">清除上级推广人</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
           </template>
@@ -149,7 +149,7 @@
             </el-radio-group>
           </el-form-item>
           <el-form-item label="关键字：" class="width100">
-            <el-input v-model="spreadFrom.nickName" placeholder="请输入请输入姓名、电话、UID" class="selWidth" size="small">
+            <el-input v-model="spreadFrom.nickName" :placeholder="onName === 'order'?'请输入订单号':'请输入姓名、电话、UID'" class="selWidth" size="small" clearable>
               <el-button slot="append" icon="el-icon-search" size="small" @click="onChanges" />
             </el-input>
           </el-form-item>
@@ -226,20 +226,20 @@
         highlight-current-row
       >
         <el-table-column
-          prop="order_sn"
+          prop="orderId"
           label="订单ID"
           min-width="120"
         />
         <el-table-column
           label="用户信息"
-          min-width="100"
+          min-width="150"
         >
           <template slot-scope="scope">
-            <span>{{ scope.row.user.nickname }}</span>
+            <span>{{scope.row.realName}}<el-divider direction="vertical"></el-divider>{{ scope.row.userPhone }}</span>
           </template>
         </el-table-column>
         <el-table-column
-          prop="create_time"
+          prop="createTime"
           label="时间"
           min-width="150"
         />
@@ -247,7 +247,7 @@
           sortable
           label="返佣金额"
           min-width="120"
-          prop="brokerage"
+          prop="deductionPrice"
         />
       </el-table>
       <div class="block">

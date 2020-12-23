@@ -5,7 +5,6 @@ import com.constants.Constants;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
 
-import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.model.StoreOrderStatus;
 import com.zbkj.crmeb.store.dao.StoreOrderStatusDao;
 import com.zbkj.crmeb.store.request.StoreOrderStatusSearchRequest;
@@ -23,10 +22,17 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
-* @author Mr.Zhang
-* @description StoreOrderStatusServiceImpl 接口实现
-* @date 2020-05-28
-*/
+ * StoreOrderStatusServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class StoreOrderStatusServiceImpl extends ServiceImpl<StoreOrderStatusDao, StoreOrderStatus> implements StoreOrderStatusService {
 
@@ -103,6 +109,14 @@ public class StoreOrderStatusServiceImpl extends ServiceImpl<StoreOrderStatusDao
         LambdaQueryWrapper<StoreOrderStatus> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.setEntity(storeOrderStatus);
         return dao.selectList(lambdaQueryWrapper);
+    }
+
+    public Boolean addLog(Integer orderId, String type, String message) {
+        StoreOrderStatus storeOrderStatus = new StoreOrderStatus();
+        storeOrderStatus.setOid(orderId);
+        storeOrderStatus.setChangeType(type);
+        storeOrderStatus.setChangeMessage(message);
+        return save(storeOrderStatus);
     }
 }
 

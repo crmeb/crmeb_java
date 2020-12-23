@@ -22,15 +22,15 @@
 					<view class='wrapper'>
 						<view class='share acea-row row-between row-bottom'>
 							<view class='money font-color'>
-								￥<text class='num'>{{storeInfo.price}}</text><text class='y-money'>￥{{storeInfo.product_price}}</text>
+								￥<text class='num'>{{storeInfo.price || 0}}</text><text class='y-money'>￥{{storeInfo.product_price || 0}}</text>
 							</view>
 							<view class='iconfont icon-fenxiang' @click="listenerActionSheet"></view>
 						</view>
 						<view class='introduce'>{{storeInfo.title}}</view>
 						<view class='label acea-row row-between-wrapper'>
-							<view class='stock'>类型：{{storeInfo.people}}人团</view>
-							<view>累计销量：{{storeInfo.total?storeInfo.total:0}}件</view>
-							<view>限购: {{ storeInfo.quota ? storeInfo.quota : 0 }} 件</view>
+							<view class='stock'>类型：{{storeInfo.people || 0}}人团</view>
+							<view>累计销量：{{storeInfo.total?storeInfo.total:0}} {{storeInfo.unit_name || ''}}</view>
+							<view>限购: {{ storeInfo.quotaShow ? storeInfo.quotaShow : 0 }} {{storeInfo.unit_name || ''}}</view>
 						</view>
 					</view>
 					<view class='attribute acea-row row-between-wrapper' @tap='selecAttr' v-if='attribute.productAttr.length'>
@@ -40,14 +40,14 @@
 					<view class='notice acea-row row-middle'>
 						<view class='num font-color'>
 							<text class='iconfont icon-laba'></text>
-							已拼{{pink_ok_sum}}件<text class='line'>|</text>
+							已拼{{pinkOkSum}}件<text class='line'>|</text>
 						</view>
 						<view class='swiper'>
 							<swiper :indicator-dots="indicatorDots" :autoplay="autoplay" interval="2500" duration="500" vertical="true"
 							 circular="true">
 								<block v-for="(item,index) in itemNew" :key='index'>
 									<swiper-item>
-										<view class='line1'>{{item}}</view>
+										<view class='line1'>{{item.nickname}}拼团成功</view>
 									</swiper-item>
 								</block>
 							</swiper>
@@ -64,7 +64,10 @@
 							<view class='right acea-row row-middle'>
 								<view>
 									<view class='lack'>还差<text class='font-color'>{{item.count}}</text>人成团</view>
-									<view class='time'><count-down :is-day="false" :tip-text="' '" :day-text="' '" :hour-text="':'" :minute-text="':'" :second-text="' '" :datatime="item.stop_time"></count-down></view>
+									<view class='time'>
+										<count-down :is-day="false" :tip-text="' '" :day-text="' '" :hour-text="':'" :minute-text="':'" :second-text="' '"
+										 :datatime="item.stopTime/1000"></count-down>
+									</view>
 								</view>
 								<navigator hover-class='none' :url="'/pages/activity/goods_combination_status/index?id='+item.id" class='spellBnt'>
 									去拼单
@@ -72,8 +75,10 @@
 								</navigator>
 							</view>
 						</view>
-						<!-- <view class='more' @tap='showAll' v-if="pink.length >= AllIndex">查看更多<text class='iconfont icon-xiangxia'></text></view>
-						<view class='more' @tap='hideAll' v-else="pink.length >= AllIndex && !pink.length">收起<text class='iconfont icon-xiangxia'></text></view> -->
+						<template v-if="pink.length">
+							<view class='more' @tap='showAll' v-if="pink.length > AllIndex">查看更多<text class='iconfont icon-xiangxia'></text></view>
+							<view class='more' @tap='hideAll' v-else-if="pink.length === AllIndex && pink.length !== AllIndexDefault">收起<text class='iconfont icon-xiangshang'></text></view>
+						</template>
 					</view>
 					<view class='playWay'>
 						<view class='title acea-row row-between-wrapper'>
@@ -104,7 +109,7 @@
 				<view class='userEvaluation' id="past1">
 					<view class='title acea-row row-between-wrapper'>
 						<view>用户评价({{replyCount}})</view>
-						<navigator class='praise' hover-class='none' :url='"/pages/users/goods_comment_list/index?product_id="+storeInfo.product_id'>
+						<navigator class='praise' hover-class='none' :url='"/pages/users/goods_comment_list/index?productId="+storeInfo.productId'>
 							<text class='font-color'>{{replyChance || 0}}%</text>
 							好评率
 							<text class='iconfont icon-jiantou'></text>
@@ -129,7 +134,7 @@
 				</button>
 				<!-- #endif -->
 				<!-- #ifndef MP -->
-				<navigator hover-class="none" class="item" url="/pages/customer_list/index">
+				<navigator hover-class="none" class="item" @click="kefuClick">
 					<view class="iconfont icon-kefu"></view>
 					<view>客服</view>
 				</navigator>
@@ -141,20 +146,20 @@
 				</view>
 				<view class="bnt acea-row">
 					<view class="joinCart bnts" @tap="goProduct">单独购买</view>
-					<view class="buy bnts" @tap="goCat" v-if='attribute.productSelect.product_stock>0&&attribute.productSelect.quota>0'>
+					<view class="buy bnts" @tap="goCat" v-if='attribute.productSelect.stock>0&&attribute.productSelect.quota>0'>
 						立即开团
 					</view>
-					<view class="buy bnts bg-color-hui" v-if='attribute.productSelect.quota <= 0 || attribute.productSelect.product_stock <= 0'>
+					<view class="buy bnts bg-color-hui" v-if='attribute.productSelect.quota <= 0 || attribute.productSelect.stock <= 0'>
 						已售罄
 					</view>
 				</view>
 			</view>
 		</view>
-
+        <shareRedPackets :sharePacket="sharePacket" @listenerActionSheet="listenerActionSheet" @closeChange="closeChange"></shareRedPackets>
 		<!-- 分享按钮 -->
 		<view class="generate-posters acea-row row-middle" :class="posters ? 'on' : ''">
 			<!-- #ifndef MP -->
-			<button class="item" hover-class='none' v-if="weixinStatus === true" @click="setShareInfoStatus">
+			<button class="item" hover-class='none'  v-if="weixinStatus === true" @click="H5ShareBox = true">
 				<view class="iconfont icon-weixin3"></view>
 				<view class="">发送给朋友</view>
 			</button>
@@ -170,10 +175,12 @@
 				<view class="">生成海报</view>
 			</button>
 		</view>
-		<view class="mask" v-if="posters" @click="listenerActionClose"></view>
+		<view class="mask"  v-if="posters" @click="closePosters"></view>
+		<view class="mask"  v-if="canvasStatus"  @click="listenerActionClose"></view>
+		<!-- <view class="mask" v-if="posters" @click="listenerActionClose"></view> -->
 
 		<!-- 海报展示 -->
-		<view class='poster-pop' v-if="posterImageStatus">
+		<view class='poster-pop' v-if="canvasStatus">
 			<image src='/static/images/poster-close.png' class='close' @click="posterImageClose"></image>
 			<image :src='posterImage'></image>
 			<!-- #ifndef H5  -->
@@ -183,37 +190,52 @@
 			<view class="keep">长按图片可以保存到手机</view>
 			<!-- #endif -->
 		</view>
-		<view class='mask' v-if="posterImageStatus"></view>
-		<canvas class="canvas" canvas-id='myCanvas' v-if="canvasStatus"></canvas>
+		<view class="canvas"  v-else>
+			<canvas style="width:750px;height:1190px;" canvas-id="firstCanvas"></canvas>
+			<canvas canvas-id="qrcode" :style="{width: `${qrcodeSize}px`, height: `${qrcodeSize}px`}"/>
+		</view>
+		<!-- 发送给朋友图片 -->
+		<view class="share-box" v-if="H5ShareBox">
+			<image src="/static/images/share-info.png" @click="H5ShareBox = false"></image>
+		</view>
+		<!-- <view class='mask' v-if="posterImageStatus"></view>
+		<canvas class="canvas" canvas-id='myCanvas' v-if="canvasStatus"></canvas> -->
 		<!-- #ifdef MP -->
 		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
 		<home></home>
-		<product-window :attr='attribute' :limitNum='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr" @ChangeCartNum="ChangeCartNum"  @iptCartNum="iptCartNum"
-		 @attrVal="attrVal"></product-window>
+		<product-window :attr='attribute' :limitNum='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr" @ChangeCartNum="ChangeCartNum"
+		 @iptCartNum="iptCartNum" @attrVal="attrVal"></product-window>
 	</view>
 </template>
 
 <script>
 	const app = getApp();
+	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
+	
+	import { base64src } from '@/utils/base64src.js'
 	import {
 		mapGetters
 	} from "vuex";
 	// #ifdef MP
 	import authorize from '@/components/Authorize';
+	import {
+		getQrcode
+	} from '@/api/api.js';
 	// #endif
-	import productConSwiper from '@/components/productConSwiper/index.vue'
+	import productConSwiper from '@/components/productConSwiper'
 	import {
 		toLogin
 	} from '@/libs/login.js';
 	import {
-		getCombinationDetail,
-		scombinationCode
+		getCombinationDetail
 	} from '@/api/activity.js';
 	import {
 		postCartAdd,
 		collectAdd,
-		collectDel
+		collectDel,
+		getReplyList,
+		getReplyConfig
 	} from '@/api/store.js';
 	import {
 		imageBase64
@@ -223,9 +245,13 @@
 	import productWindow from '@/components/productWindow/index.vue'
 	import userEvaluation from '@/components/userEvaluation/index.vue'
 	import countDown from '@/components/countDown/index.vue'
-	import { getProductCode } from '@/api/store.js'
+	import shareRedPackets from '@/components/shareRedPackets';
+	import {
+		getProductCode
+	} from '@/api/store.js'
 	export default {
 		components: {
+			shareRedPackets,
 			productConSwiper,
 			// #ifdef MP
 			authorize,
@@ -236,7 +262,12 @@
 			userEvaluation,
 			countDown
 		},
-		computed: mapGetters(['isLogin']),
+		computed: mapGetters({
+			'isLogin': 'isLogin',
+			'userData': 'userInfo',
+			'uid': 'uid',
+			'chatUrl': 'chatUrl'
+		}),
 		data() {
 			return {
 				navH: '',
@@ -258,6 +289,7 @@
 				attr: '请选择',
 				attrValue: '',
 				AllIndex: 2,
+				maxAllIndex: 0,
 				replyChance: '',
 				limitNum: 1,
 				timeer: null,
@@ -273,12 +305,14 @@
 				lock: false,
 				scrollTop: 0,
 				storeInfo: {},
-				pink_ok_sum: 0,
+				pinkOkSum: 0,
 				pink: [],
 				replyCount: 0,
 				reply: [],
 				imgUrls: [],
-				sharePacket: '',
+				sharePacket: {
+					isState: true, //默认不显示
+				},
 				tagStyle: {
 					img: 'width:100%;'
 				},
@@ -296,10 +330,14 @@
 				cart_num: '',
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false, //是否隐藏授权
+				AllIndexDefault: 0,
+				imgTop:'',
+				qrcodeSize: 600,
+				H5ShareBox: false, //公众号分享图片
+				onceNum: 0 //一次可以购买几个
 			}
 		},
 		onLoad(options) {
-			console.log(options,'options')
 			let that = this
 			// #ifdef MP
 			this.navH = app.globalData.navHeight;
@@ -316,7 +354,7 @@
 			});
 			//扫码携带参数处理
 			// #ifdef MP
-			
+
 			if (options.scene) {
 				let value = this.$util.getUrlParams(decodeURIComponent(options.scene));
 				if (value.id) options.id = value.id;
@@ -367,6 +405,38 @@
 			};
 		},
 		methods: {
+			getProductReplyCount: function() {
+				let that = this;
+				getReplyConfig(that.storeInfo.productId).then(res => {
+					that.$set(that, 'replyChance', res.data.replyChance * 100);
+					that.$set(that, 'replyCount', res.data.sumCount);
+				});
+			},
+			getProductReplyList: function() {
+				getReplyList(this.storeInfo.productId, {
+					page: 1,
+					limit: 3,
+					type: 0,
+				}).then(res => {
+					this.reply = res.data.list;
+				})
+			},
+			kefuClick(){
+				location.href = this.chatUrl;
+			},
+			closePosters:function(){
+				this.posters = false;
+			},
+			closeChange: function() {
+				this.$set(this.sharePacket, 'isState', true);
+			},
+			showAll: function() {
+				this.AllIndexDefault = this.AllIndex;
+				this.AllIndex = this.pink.length;
+			},
+			hideAll: function() {
+				this.AllIndex = this.AllIndexDefault;
+			},
 			// 授权关闭
 			authColse: function(e) {
 				this.isShowAuth = e;
@@ -374,10 +444,18 @@
 			/**
 			 * 购物车手动填写
 			 * 
-			*/
-			iptCartNum: function (e) {
-				this.$set(this.attribute.productSelect,'cart_num',e);
-				this.$set(this, "cart_num", e);
+			 */
+			iptCartNum: function(e) {
+				if (e > this.onceNum) {
+				    this.$util.Tips({
+						title: `该商品每次限购${this.onceNum}${this.storeInfo.unitName}`
+					});
+					this.$set(this.attribute.productSelect, 'cart_num', this.onceNum);
+					this.$set(this, "cart_num", this.onceNum);
+				}else{
+					this.$set(this.attribute.productSelect, 'cart_num', e);
+					this.$set(this, "cart_num", e);
+				}
 			},
 			// 返回
 			returns() {
@@ -391,38 +469,45 @@
 					uni.setNavigationBarTitle({
 						title: res.data.storeInfo.title.substring(0, 16)
 					})
-					that.imgUrls = res.data.storeInfo.images
 					that.storeInfo = res.data.storeInfo;
-					that.pink = res.data.pink;
-					that.pindAll = res.data.pindAll;
-					that.reply = res.data.reply ? [res.data.reply] : [];
-					that.replyCount = res.data.replyCount;
-					that.itemNew = res.data.pink_ok_list;
-					that.pink_ok_sum = res.data.pink_ok_sum;
-					that.replyChance = res.data.replyChance;
-					that.attribute.productAttr = res.data.productAttr;
+					that.getProductReplyList();
+					that.getProductReplyCount();
+					that.imgUrls = JSON.parse(res.data.storeInfo.images);
+					that.attribute.productSelect.num = res.data.storeInfo.onceNum;
+					that.pink = res.data.pink || [];
+					that.pindAll = res.data.pindAll || [];
+				//	that.reply = res.data.reply ? res.data.reply : [];
+					that.itemNew = res.data.pinkOkList || [];
+					that.pinkOkSum = res.data.pinkOkSum;
+					that.attribute.productAttr = res.data.productAttr || [];
 					that.productValue = res.data.productValue;
-					that.PromotionCode = res.data.storeInfo.code_base
+					that.onceNum = res.data.storeInfo.onceNum;
+				//	that.PromotionCode = res.data.storeInfo.code_base
 					// #ifdef H5
 					that.setShare();
 					that.storeImage = that.storeInfo.image
-					that.getImageBase64();
+					that.make();
+					that.getImageBase64(that.storeImage);
+					// #endif
+					// #ifdef MP
+					that.getQrcode();
+					that.imgTop = res.data.storeInfo.image;
 					// #endif
 					// #ifndef H5
 					that.downloadFilestoreImage();
 					// #endif
 					// that.setProductSelect();
-					
+
 					that.DefaultSelect();
-					// setTimeout(function() {
-					// 	that.infoScroll();
-					// }, 500);
-					
+					setTimeout(function() {
+						that.infoScroll();
+					}, 500);
+
 				}).catch(function(err) {
 					that.$util.Tips({
-						title:err
-					},{
-						tab:3
+						title: err
+					}, {
+						tab: 3
 					})
 				})
 			},
@@ -498,26 +583,25 @@
 			 * 
 			 */
 			DefaultSelect: function() {
-
 				let self = this
 				let productAttr = self.attribute.productAttr;
 				let value = [];
-				for (var key in this.productValue) {
-					if (this.productValue[key].quota > 0) {
-						value = this.attribute.productAttr.length ? key.split(",") : [];
+				for (var key in self.productValue) {
+					if (self.productValue[key].quota > 0) {
+						value = self.attribute.productAttr.length ? key.split(",") : [];
 						break;
 					}
 				}
 				for (let i = 0; i < productAttr.length; i++) {
-					this.$set(productAttr[i], "index", value[i]);
+					self.$set(productAttr[i], "index", value[i]);
 				}
 				//sort();排序函数:数字-英文-汉字；
-				let productSelect = self.productValue[value.sort().join(",")];
+				let productSelect = self.productValue[value.join(",")];
 
 				if (productSelect && productAttr.length) {
 					self.$set(
 						self.attribute.productSelect,
-						"store_name",
+						"storeName",
 						self.storeInfo.title
 					);
 					self.$set(self.attribute.productSelect, "image", productSelect.image);
@@ -525,22 +609,20 @@
 					self.$set(self.attribute.productSelect, "stock", productSelect.stock);
 					self.$set(self.attribute.productSelect, "unique", productSelect.unique);
 					self.$set(self.attribute.productSelect, "quota", productSelect.quota);
-					self.$set(self.attribute.productSelect, "quota_show", productSelect.quota_show);
-					self.$set(self.attribute.productSelect, "product_stock", productSelect.product_stock);
+					self.$set(self.attribute.productSelect, "quotaShow", productSelect.quotaShow);
 					self.$set(self.attribute.productSelect, "cart_num", 1);
-					self.$set(self, "attrValue", value.sort().join(","));
-					self.attrValue = value.sort().join(",")
+					this.$set(this, "attrValue", value.join(","));
+					this.$set(this, "attrTxt", "已选择");
 				} else if (!productSelect && productAttr.length) {
 					self.$set(
 						self.attribute.productSelect,
-						"store_name",
+						"storeName",
 						self.storeInfo.title
 					);
 					self.$set(self.attribute.productSelect, "image", self.storeInfo.image);
 					self.$set(self.attribute.productSelect, "price", self.storeInfo.price);
 					self.$set(self.attribute.productSelect, "quota", 0);
-					self.$set(self.attribute.productSelect, "quota_show", 0);
-					self.$set(self.attribute.productSelect, "product_stock", 0);
+					self.$set(self.attribute.productSelect, "quotaShow", 0);
 					self.$set(self.attribute.productSelect, "stock", 0);
 					self.$set(self.attribute.productSelect, "unique", "");
 					self.$set(self.attribute.productSelect, "cart_num", 0);
@@ -549,14 +631,14 @@
 				} else if (!productSelect && !productAttr.length) {
 					self.$set(
 						self.attribute.productSelect,
-						"store_name",
+						"storeName",
 						self.storeInfo.title
 					);
 					self.$set(self.attribute.productSelect, "image", self.storeInfo.image);
 					self.$set(self.attribute.productSelect, "price", self.storeInfo.price);
 					self.$set(self.attribute.productSelect, "stock", self.storeInfo.stock);
 					self.$set(self.attribute.productSelect, "quota", 0);
-					self.$set(self.attribute.productSelect, "product_stock", 0);
+					self.$set(self.attribute.productSelect, "stock", 0);
 					self.$set(
 						self.attribute.productSelect,
 						"unique",
@@ -574,7 +656,7 @@
 					heightArr = [];
 				for (var i = 0; i < that.navList.length; i++) { //productList
 					//获取元素所在位置
-					var query = wx.createSelectorQuery().in(this);
+					var query = uni.createSelectorQuery().in(this);
 					var idView = "#past" + i;
 					// if (!that.data.good_list.length && i == 2) {
 					//   var idView = "#past" + 3;
@@ -594,8 +676,8 @@
 			onLoadFun: function(e) {
 				this.userInfo = e
 				app.globalData.openPages = '/pages/activity/goods_combination_details/index?id=' + this.id + '&spid=' + e.uid;
-				this.downloadFilePromotionCode();
 				this.combinationDetail();
+				//this.downloadFilePromotionCode();
 			},
 			selecAttr: function() {
 				this.attribute.cartAttr = true
@@ -612,56 +694,61 @@
 			//changeValue:是否 加|减
 			//获取当前变动属性
 			let productSelect = this.productValue[this.attrValue];
+			if (this.buyNum === productSelect.quota) {
+				return this.$util.Tips({title: '您已超出当前商品每人限购数量，请浏览其他商品'});
+			}
 			if (this.cart_num) {
-			      productSelect.cart_num = this.cart_num;
-				  this.attribute.productSelect.cart_num = this.cart_num;
-			    }
+				productSelect.cart_num = this.cart_num;
+				this.attribute.productSelect.cart_num = this.cart_num;
+			}
 			//如果没有属性,赋值给商品默认库存
-			if (productSelect === undefined && !this.attribute.productAttr.length)
-				productSelect = this.attribute.productSelect;
+			if (productSelect === undefined && !this.attribute.productAttr.length) productSelect = this.attribute.productSelect;
 			//无属性值即库存为0；不存在加减；
 			if (productSelect === undefined) return;
 			let stock = productSelect.stock || 0;
 			let quotaShow = productSelect.quota_show || 0;
-			let productStock = productSelect.product_stock || 0;
+			let quota = productSelect.quota || 0;
 			let num = this.attribute.productSelect;
-			//设置默认数据
-			    if (productSelect.cart_num == undefined) productSelect.cart_num = 1;
-			if (changeValue) {
-				num.cart_num ++;
-				if(quotaShow >= productStock){
-					 if (num.cart_num > productStock) {
-					 	this.$set(this.attribute.productSelect, "cart_num", productStock);
-					 	this.$set(this, "cart_num", productStock);
-					 }
-				}else{
-					if (num.cart_num > quotaShow) {
-						this.$set(this.attribute.productSelect, "cart_num", quotaShow);
-						this.$set(this, "cart_num", quotaShow);
+			let nums = this.storeInfo.onceNum || 0;
+		//设置默认数据
+			if (productSelect.cart_num == undefined) productSelect.cart_num = 1;
+				if (changeValue) {
+					if (num.cart_num === this.onceNum) {
+						return this.$util.Tips({
+							title: `该商品每次限购${this.onceNum}${this.storeInfo.unitName}`
+						});
 					}
+					num.cart_num++;
+					let arrMin = [];
+					arrMin.push(nums);
+					arrMin.push(quota);
+					arrMin.push(stock);
+					let minN = Math.min.apply(null, arrMin);
+					if (num.cart_num >= minN) {
+						this.$set(this.attribute.productSelect, "cart_num", minN ? minN : 1);
+						this.$set(this, "cart_num", minN ? minN : 1);
+					}
+					this.$set(this, "cart_num", num.cart_num);
+					this.$set(this.attribute.productSelect, "cart_num", num.cart_num);
+				} else {
+					num.cart_num--;
+					if (num.cart_num < 1) {
+						this.$set(this.attribute.productSelect, "cart_num", 1);
+						this.$set(this, "cart_num", 1);
+					}
+					this.$set(this, "cart_num", num.cart_num);
+					this.$set(this.attribute.productSelect, "cart_num", num.cart_num);
 				}
-				this.$set(this, "cart_num", num.cart_num);
-				this.$set(this.attribute.productSelect, "cart_num", num.cart_num);
-				
-			} else {
-				num.cart_num--;
-				if (num.cart_num < 1) {
-					this.$set(this.attribute.productSelect, "cart_num", 1);
-					this.$set(this, "cart_num", 1);
-				}
-				this.$set(this, "cart_num", num.cart_num);
-				this.$set(this.attribute.productSelect, "cart_num", num.cart_num);
-			}
-		},
+		    },
 			attrVal(val) {
-				this.attribute.productAttr[val.indexw].index = this.attribute.productAttr[val.indexw].attr_values[val.indexn];
+				this.attribute.productAttr[val.indexw].index = this.attribute.productAttr[val.indexw].attrValues[val.indexn];
 			},
 			/**
 			 * 属性变动赋值
 			 * 
 			 */
 			ChangeAttr: function(res) {
-				this.$set(this,'cart_num',1);
+				this.$set(this, 'cart_num', 1);
 				let productSelect = this.productValue[res];
 				if (productSelect) {
 					this.$set(this.attribute.productSelect, "image", productSelect.image);
@@ -670,7 +757,7 @@
 					this.$set(this.attribute.productSelect, "unique", productSelect.unique);
 					this.$set(this.attribute.productSelect, "cart_num", 1);
 					this.$set(this.attribute.productSelect, "quota", productSelect.quota);
-					this.$set(this.attribute.productSelect, "quota_show", productSelect.quota_show);
+					this.$set(this.attribute.productSelect, "quotaShow", productSelect.quotaShow);
 					this.$set(this, "attrValue", res);
 
 					this.attrTxt = "已选择"
@@ -681,7 +768,7 @@
 					this.$set(this.attribute.productSelect, "unique", "");
 					this.$set(this.attribute.productSelect, "cart_num", 0);
 					this.$set(this.attribute.productSelect, "quota", 0);
-					this.$set(this.attribute.productSelect, "quota_show", 0);
+					this.$set(this.attribute.productSelect, "quotaShow", 0);
 					this.$set(this, "attrValue", "");
 					this.attrTxt = "已选择"
 				}
@@ -689,7 +776,7 @@
 			// 单独购买
 			goProduct() {
 				uni.navigateTo({
-					url: '/pages/goods_details/index?id=' + this.storeInfo.product_id
+					url: '/pages/goods_details/index?id=' + this.storeInfo.productId
 				})
 			},
 			// 立即购买
@@ -708,18 +795,16 @@
 					title: '请选择属性'
 				});
 				var data = {
-					productId: that.storeInfo.product_id,
-					secKillId: 0,
-					bargainId: 0,
-					combinationId: that.id,
-					cartNum: that.cart_num,
-					uniqueId: productSelect !== undefined ? productSelect.unique : '',
-					is_new: 1,
+					productId: that.storeInfo.productId,
+					combinationId:parseFloat(that.id),
+					cartNum: that.cart_num ? this.cart_num : this.attribute.productSelect.cart_num,
+					productAttrUnique: productSelect !== undefined ? productSelect.id : '',
+					isNew: true,
 				};
 				postCartAdd(data).then(function(res) {
 					that.isOpen = false
 					uni.navigateTo({
-						url: '/pages/users/order_confirm/index?cartId=' + res.data.cartId
+						url: '/pages/users/order_confirm/index?new=true&cartId=' + res.data.cartId + '&combination=true'
 					});
 				}).catch(function(res) {
 					uni.showToast({
@@ -734,11 +819,11 @@
 			setCollect: function() {
 				var that = this;
 				if (this.storeInfo.userCollect) {
-					collectDel(this.storeInfo.product_id).then(res => {
+					collectDel(this.storeInfo.productId).then(res => {
 						that.storeInfo.userCollect = !that.storeInfo.userCollect
 					})
 				} else {
-					collectAdd(this.storeInfo.product_id).then(res => {
+					collectAdd(this.storeInfo.productId).then(res => {
 						that.storeInfo.userCollect = !that.storeInfo.userCollect
 					})
 				}
@@ -773,7 +858,7 @@
 			},
 			//隐藏海报
 			posterImageClose: function() {
-				this.posterImageStatus = false
+				this.canvasStatus = false
 			},
 			//替换安全域名
 			setDomain: function(url) {
@@ -825,14 +910,11 @@
 					that.$set(that, 'PromotionCode', '');
 				});
 			},
-			getImageBase64: function() {
+			getImageBase64: function(images) {
 				let that = this;
-				imageBase64(that.storeImage, that.PromotionCode)
-					.then(res => {
-						that.storeImage = res.data.image;
-						that.PromotionCode = res.data.code;
-					})
-					.catch(() => {});
+				imageBase64({url:images}).then(res=>{
+					that.imgTop = res.data.code
+				})
 			},
 			// 小程序关闭分享弹窗；
 			goFriend: function() {
@@ -844,59 +926,61 @@
 			goPoster: function() {
 				let that = this;
 				that.posters = false;
-				that.$set(that, 'canvasStatus', true);
-				let arr2 = [that.posterbackgd, that.storeImage, that.PromotionCode];
-				// #ifndef H5
-				if (that.isDown) return that.$util.Tips({
-					title: '正在下载海报,请稍后再试！'
-				});
-				// #endif
-				uni.getImageInfo({
-					src: that.PromotionCode,
-					fail: function(res) {
-						return that.$util.Tips({
-							title: '小程序二维码需要发布正式版后才能获取到'
-						});
-					},
-					success() {
-						if (arr2[2] == '') {
-							//海报二维码不存在则从新下载
-							// #ifndef H5
-							that.downloadFilePromotionCode(function(msgPromotionCode) {
-								arr2[2] = msgPromotionCode;
-								if (arr2[2] == '')
-									return that.$util.Tips({
-										title: '海报二维码生成失败！'
-									});
-								that.$util.PosterCanvas(arr2, that.storeInfo.title, that.storeInfo.price, function(tempFilePath) {
-									that.$set(that, 'posterImage', tempFilePath);
-									that.$set(that, 'posterImageStatus', true);
-									that.$set(that, 'canvasStatus', false);
-									that.$set(that, 'actionSheetHidden', !that.actionSheetHidden);
-								});
-							});
-							// #endif
-							// #ifdef H5
-							that.$util.PosterCanvas(arr2, that.storeInfo.title, that.storeInfo.price, function(tempFilePath) {
-								that.$set(that, 'posterImage', tempFilePath);
-								that.$set(that, 'posterImageStatus', true);
-								that.$set(that, 'canvasStatus', false);
-								that.$set(that, 'actionSheetHidden', !that.actionSheetHidden);
-							});
-							// #endif
-						} else {
-							//生成推广海报
-							that.$util.PosterCanvas(arr2, that.storeInfo.title, that.storeInfo.price, function(tempFilePath) {
-								that.$set(that, 'posterImage', tempFilePath);
-								that.$set(that, 'posterImageStatus', true);
-								that.$set(that, 'canvasStatus', false);
-								that.$set(that, 'actionSheetHidden', !that.actionSheetHidden);
-							});
-						}
-					},
-				});
+				let arrImagesUrl = '';
+				let arrImagesUrlTop = '';
+				uni.downloadFile({
+					url: that.imgTop, //仅为示例，并非真实的资源
+					success: (res) => {
+						arrImagesUrlTop = res.tempFilePath;
+						let arrImages = [that.posterbackgd, arrImagesUrlTop, that.PromotionCode];
+						let storeName = that.storeInfo.title;
+						let price = that.storeInfo.price;
+						setTimeout(() => {
+							that.$util.PosterCanvas(arrImages, storeName, price, function(tempFilePath) {
+								that.posterImage = tempFilePath;
+								that.canvasStatus = true;
+							});	
+						}, 200);
+					}
+				});	
 			},
-
+           // 小程序二维码
+			getQrcode(){
+				let that = this;
+				let data = {
+					pid: that.uid,
+					id: that.id,
+					path: 'pages/activity/goods_combination_details/index'
+				}
+				getQrcode(data).then(res=>{
+					base64src(res.data.code, res => {
+						that.PromotionCode = res;
+					});
+				})
+			},
+			// 生成二维码；
+			make() {
+				let that = this;
+				let href = location.href;
+				let hrefs = href.indexOf("?") === -1 ? href + "?spread=" + uid : href + "&spread=" + that.uid;
+				uQRCode.make({
+					canvasId: 'qrcode',
+					text: hrefs,
+					size: that.qrcodeSize,
+					margin: 10,
+					success: res => {
+						that.PromotionCode = res;
+						
+					},
+					complete: (res) => {
+					},
+					fail:res=>{
+						that.$util.Tips({
+							title: '海报二维码生成失败！'
+						});
+					}
+				})
+			},
 			/*
 			 * 保存到手机相册
 			 */
@@ -967,11 +1051,6 @@
 					});
 				}
 			},
-
-
-
-
-
 			scroll: function(e) {
 				var that = this,
 					scrollY = e.detail.scrollTop;
@@ -1002,12 +1081,34 @@
 				this.lock = true;
 				this.scrollTop = index > 0 ? that.topArr[index] - (app.globalData.navHeight / 2) : that.topArr[index]
 			},
+		},
+		//#ifdef MP
+		onShareAppMessage() {
+			return {
+				title: this.storeInfo.title,
+				path: app.globalData.openPages,
+				imageUrl: that.storeInfo.image
+			};
 		}
+		//#endif
 
 	}
 </script>
 
-<style>
+<style scoped lang="scss">
+	.share-box {
+		z-index: 1000;
+		position: fixed;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+	
+		image {
+			width: 100%;
+			height: 100%;
+		}
+	}
 	.generate-posters {
 		width: 100%;
 		height: 170rpx;
@@ -1177,6 +1278,8 @@
 	.product-con .assemble .item .pictxt .pictrue {
 		width: 80rpx;
 		height: 80rpx;
+		background: #f0f0f0;
+		border-radius: 50%;
 	}
 
 	.product-con .assemble .item .pictxt .pictrue image {
@@ -1197,6 +1300,7 @@
 		color: #82848f;
 		margin-top: 5rpx;
 	}
+
 	.product-con .assemble .item .right .spellBnt {
 		font-size: 24rpx;
 		color: #fff;
@@ -1342,6 +1446,7 @@
 	.canvas {
 		width: 750px;
 		height: 1190px;
+		opacity: 0;
 	}
 
 	.poster-pop {

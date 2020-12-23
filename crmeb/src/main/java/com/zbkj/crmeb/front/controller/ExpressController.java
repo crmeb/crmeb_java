@@ -45,12 +45,7 @@ public class ExpressController {
     @ApiOperation(value = "列表")
     @RequestMapping(value = "/logistics", method = RequestMethod.GET)
     public CommonResult<CommonPage<Express>> register(){
-        PageParamRequest pageParamRequest = new PageParamRequest();
-        pageParamRequest.setLimit(Constants.EXPORT_MAX_LIMIT);
-
-        ExpressSearchRequest expressSearchRequest = new ExpressSearchRequest();
-        expressSearchRequest.setIsShow(1);
-        return CommonResult.success(CommonPage.restPage(expressService.getList(expressSearchRequest, pageParamRequest)));
+        return CommonResult.success(CommonPage.restPage(expressService.findAll()));
     }
 }
 

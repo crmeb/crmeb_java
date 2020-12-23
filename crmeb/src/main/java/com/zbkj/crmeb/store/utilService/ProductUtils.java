@@ -1,11 +1,17 @@
 package com.zbkj.crmeb.store.utilService;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.constants.Constants;
 import com.exception.CrmebException;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.utils.UrlUtil;
+import com.zbkj.crmeb.bargain.model.StoreBargain;
+import com.zbkj.crmeb.bargain.service.StoreBargainService;
+import com.zbkj.crmeb.combination.model.StoreCombination;
+import com.zbkj.crmeb.combination.request.StoreCombinationRequest;
+import com.zbkj.crmeb.combination.service.StoreCombinationService;
 import com.zbkj.crmeb.front.response.ProductActivityItemResponse;
 import com.zbkj.crmeb.seckill.model.StoreSeckill;
 import com.zbkj.crmeb.seckill.request.StoreSeckillRequest;
@@ -34,10 +40,16 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @Classname ProductUtils
- * @Description 商品工具类
- * @Date 9/29/20 6:09 下午
- * @Created by stivepeim
+ * 商品工具类
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Service
 public class ProductUtils {
@@ -53,6 +65,12 @@ public class ProductUtils {
 
     @Autowired
     private StoreSeckillService storeSeckillService;
+
+    @Autowired
+    private StoreBargainService storeBargainService;
+
+    @Autowired
+    private StoreCombinationService storeCombinationService;
 
 
     /**
@@ -99,25 +117,28 @@ public class ProductUtils {
         BeanUtils.copyProperties(product, productRequest);
         productRequest.setContent(item.getString("desc"));
 
+        productRequest.setSpecType(true);
         JSONArray props = item.getJSONArray("props");
-        if (null == props) throw new CrmebException("复制商品失败--返回数据格式错误--未找到props");
-        if (props.length() > 0) {
-            List<StoreProductAttr> spaAttes = new ArrayList<>();
-            for (int i = 0; i < props.length(); i++) {
-                JSONObject pItem = props.getJSONObject(i);
-                StoreProductAttr spattr = new StoreProductAttr();
-                spattr.setAttrName(pItem.getString("name"));
-                JSONArray values = pItem.getJSONArray("values");
-                List<String> attrValues = new ArrayList<>();
-                for (int j = 0; j < values.length(); j++) {
-                    JSONObject value = values.getJSONObject(j);
-                    attrValues.add(value.getString("name"));
-                }
-                spattr.setAttrValues(attrValues.toString());
-                spaAttes.add(spattr);
-            }
-            productRequest.setAttr(spaAttes);
+//        if (null == props) throw new CrmebException("复制商品失败--返回数据格式错误--未找到props");
+        if (null == props || props.length() < 1) {
+            productRequest.setSpecType(false);
+            return productRequest;
         }
+        List<StoreProductAttr> spaAttes = new ArrayList<>();
+        for (int i = 0; i < props.length(); i++) {
+            JSONObject pItem = props.getJSONObject(i);
+            StoreProductAttr spattr = new StoreProductAttr();
+            spattr.setAttrName(pItem.getString("name"));
+            JSONArray values = pItem.getJSONArray("values");
+            List<String> attrValues = new ArrayList<>();
+            for (int j = 0; j < values.length(); j++) {
+                JSONObject value = values.getJSONObject(j);
+                attrValues.add(value.getString("name"));
+            }
+            spattr.setAttrValues(JSON.toJSONString(attrValues));
+            spaAttes.add(spattr);
+        }
+        productRequest.setAttr(spaAttes);
         return productRequest;
     }
 
@@ -201,27 +222,31 @@ public class ProductUtils {
                 .replace("[", "").replace("\"", ""));
         product.setKeyword(item.getString("title"));
         BeanUtils.copyProperties(product, productRequest);
-        productRequest.setContent(item.getString("desc"));
+        productRequest.setContent(item.getString("descUrl"));
 
+        productRequest.setSpecType(true);
         JSONArray props = item.getJSONArray("props");
-        if (null == props) throw new CrmebException("复制商品失败--返回数据格式错误--未找到props");
-        if (props.length() > 0) {
-            List<StoreProductAttr> spaAttes = new ArrayList<>();
-            for (int i = 0; i < props.length(); i++) {
-                JSONObject pItem = props.getJSONObject(i);
-                StoreProductAttr spattr = new StoreProductAttr();
-                spattr.setAttrName(pItem.getString("name"));
-                JSONArray values = pItem.getJSONArray("values");
-                List<String> attrValues = new ArrayList<>();
-                for (int j = 0; j < values.length(); j++) {
-                    JSONObject value = values.getJSONObject(j);
-                    attrValues.add(value.getString("name"));
-                }
-                spattr.setAttrValues(attrValues.toString());
-                spaAttes.add(spattr);
-            }
-            productRequest.setAttr(spaAttes);
+//        if (null == props) throw new CrmebException("复制商品失败--返回数据格式错误--未找到props");
+        if (null == props || props.length() < 1) {
+            // 无规格商品
+            productRequest.setSpecType(false);
+            return productRequest;
         }
+        List<StoreProductAttr> spaAttes = new ArrayList<>();
+        for (int i = 0; i < props.length(); i++) {
+            JSONObject pItem = props.getJSONObject(i);
+            StoreProductAttr spattr = new StoreProductAttr();
+            spattr.setAttrName(pItem.getString("name"));
+            JSONArray values = pItem.getJSONArray("values");
+            List<String> attrValues = new ArrayList<>();
+            for (int j = 0; j < values.length(); j++) {
+                JSONObject value = values.getJSONObject(j);
+                attrValues.add(value.getString("name"));
+            }
+            spattr.setAttrValues(JSON.toJSONString(attrValues));
+            spaAttes.add(spattr);
+        }
+        productRequest.setAttr(spaAttes);
         return productRequest;
     }
 
@@ -315,35 +340,44 @@ public class ProductUtils {
         product.setPrice(BigDecimal.valueOf(priceS));
         BeanUtils.copyProperties(product, productRequest);
         productRequest.setContent(data.getString("desc"));
-        if(null == data.optJSONArray("passSubList")){
-            return productRequest;
-        }
-        JSONArray props = data.getJSONArray("passSubList");
-        if (null == props){
-            return productRequest;
-        }
-        if (props.length() > 0) {
-            List<StoreProductAttr> spaAttes = new ArrayList<>();
-            for (int i = 0; i < props.length(); i++) {
-                JSONObject pItem = props.getJSONObject(i);
-                Iterator it = pItem.keys();
-                while (it.hasNext()){
-                    String key = (String)it.next();
-                    JSONArray skuItems = pItem.getJSONArray(key);
-                    List<String> attrValues = new ArrayList<>();
-                    StoreProductAttr spattr = new StoreProductAttr();
-                    for (int j = 0; j < skuItems.length(); j++) {
-                        JSONObject skuItem = skuItems.getJSONObject(j);
-                        if(null != skuItem.optString("characterValueDisplayName"))
-                            attrValues.add(skuItem.getString("characterValueDisplayName"));
-                    }
-                    spattr.setAttrName(key);
-                    spattr.setAttrValues(attrValues.toString());
-                    spaAttes.add(spattr);
-                }
-                productRequest.setAttr(spaAttes);
-            }
-        }
+
+        List<StoreProductAttr> spaAttes = new ArrayList<>();
+        StoreProductAttr spattr = new StoreProductAttr();
+        spattr.setAttrName("默认");
+        List<String> attrValues = new ArrayList<>();
+        attrValues.add("默认");
+        spattr.setAttrValues(attrValues.toString());
+        productRequest.setSpecType(false);
+        productRequest.setAttr(spaAttes);
+//        if(null == data.optJSONArray("passSubList")){
+//            return productRequest;
+//        }
+//        JSONArray props = data.getJSONArray("passSubList");
+//        if (null == props){
+//            return productRequest;
+//        }
+//        if (props.length() > 0) {
+//            List<StoreProductAttr> spaAttes = new ArrayList<>();
+//            for (int i = 0; i < props.length(); i++) {
+//                JSONObject pItem = props.getJSONObject(i);
+//                Iterator it = pItem.keys();
+//                while (it.hasNext()){
+//                    String key = (String)it.next();
+//                    JSONArray skuItems = pItem.getJSONArray(key);
+//                    List<String> attrValues = new ArrayList<>();
+//                    StoreProductAttr spattr = new StoreProductAttr();
+//                    for (int j = 0; j < skuItems.length(); j++) {
+//                        JSONObject skuItem = skuItems.getJSONObject(j);
+//                        if(null != skuItem.optString("characterValueDisplayName"))
+//                            attrValues.add(skuItem.getString("characterValueDisplayName"));
+//                    }
+//                    spattr.setAttrName(key);
+//                    spattr.setAttrValues(attrValues.toString());
+//                    spaAttes.add(spattr);
+//                }
+//                productRequest.setAttr(spaAttes);
+//            }
+//        }
         return productRequest;
     }
 
@@ -469,6 +503,10 @@ public class ProductUtils {
         storeProduct.setPrice(attrValuesSortAsc.get(0).getPrice());
         storeProduct.setOtPrice(attrValuesSortAsc.get(0).getOtPrice());
         storeProduct.setStock(attrValuesSortAsc.stream().mapToInt(e -> e.getStock()).sum());
+        List<StoreProductAttrValueRequest> attrValuesSortAsc1 = storeProductRequest.getAttrValue().stream()
+                .sorted(Comparator.comparing(StoreProductAttrValueRequest::getCost))
+                .collect(Collectors.toList());
+        storeProduct.setCost(attrValuesSortAsc1.get(0).getCost());
     }
     /**
      * 计算产品属性之中最大和最小的价格，新增和编辑使用
@@ -489,6 +527,31 @@ public class ProductUtils {
 
         // 计算限购总数
         int skillLimit = storeProductRequest.getAttrValue().stream().mapToInt(e -> e.getQuota()).sum();
+        storeProduct.setQuota(skillLimit);
+        storeProduct.setQuotaShow(skillLimit);
+
+    }
+
+    /**
+     * 计算产品属性之中最大和最小的价格，新增和编辑使用
+     * @param storeProductRequest 分析的参数
+     * @param storeProduct 当前操作的产品
+     */
+    public void calcPriceForAttrValuesCombination(StoreCombinationRequest storeProductRequest, StoreCombination storeProduct) {
+        // 设置商品成本价和市场价
+        List<StoreProductAttrValueRequest> attrValuesSortAsc = storeProductRequest.getAttrValue().stream()
+                .sorted(Comparator.comparing(StoreProductAttrValueRequest::getPrice))
+                .collect(Collectors.toList());
+        if(attrValuesSortAsc.size() == 0){
+            return;
+        }
+        storeProduct.setPrice(attrValuesSortAsc.get(0).getPrice());
+        storeProduct.setOtPrice(attrValuesSortAsc.get(0).getOtPrice());
+        storeProduct.setCost(attrValuesSortAsc.get(0).getOtPrice());
+        storeProduct.setStock(attrValuesSortAsc.stream().mapToInt(StoreProductAttrValueRequest::getStock).sum());
+
+        // 计算限购总数
+        int skillLimit = storeProductRequest.getAttrValue().stream().mapToInt(StoreProductAttrValueRequest::getQuota).sum();
         storeProduct.setQuota(skillLimit);
         storeProduct.setQuotaShow(skillLimit);
 
@@ -523,11 +586,25 @@ public class ProductUtils {
                     result.put(code,seckillResponse);
                 }
             }
-            if(code == 2){ // todo 查找砍价信息
-
+            if(code == 2){ // 查找砍价信息
+                List<StoreBargain> currentBargains = storeBargainService.getCurrentBargainByProductId(productId);
+                if (CollUtil.isNotEmpty(currentBargains)) {
+                    ProductActivityItemResponse bargainResponse = new ProductActivityItemResponse();
+                    bargainResponse.setId(currentBargains.get(0).getId());
+                    bargainResponse.setTime(DateUtil.getSecondTimestamp(currentBargains.get(0).getStopTime()));
+                    bargainResponse.setType(Constants.PRODUCT_TYPE_BARGAIN +"");
+                    result.put(code, bargainResponse);
+                }
             }
-            if(code == 3){ // todo 查找拼团信息
-
+            if(code == 3){ // 查找拼团信息
+                List<StoreCombination> currentCombinations = storeCombinationService.getCurrentBargainByProductId(productId);
+                if (CollUtil.isNotEmpty(currentCombinations)) {
+                    ProductActivityItemResponse bargainResponse = new ProductActivityItemResponse();
+                    bargainResponse.setId(currentCombinations.get(0).getId());
+                    bargainResponse.setTime(DateUtil.getSecondTimestamp(currentCombinations.get(0).getStopTime()));
+                    bargainResponse.setType(Constants.PRODUCT_TYPE_PINGTUAN +"");
+                    result.put(code, bargainResponse);
+                }
             }
         }
         return result;
@@ -583,8 +660,8 @@ public class ProductUtils {
                     case Constants.PRODUCT_TYPE_SECKILL_STR:
                         _activity.add(Constants.PRODUCT_TYPE_SECKILL);
                         break;
-                    case Constants.PRODUCT_TYPE_BARGIN_STR:
-                        _activity.add(Constants.PRODUCT_TYPE_BARGIN);
+                    case Constants.PRODUCT_TYPE_BARGAIN_STR:
+                        _activity.add(Constants.PRODUCT_TYPE_BARGAIN);
                         break;
                     case Constants.PRODUCT_TYPE_PINGTUAN_STR:
                         _activity.add(Constants.PRODUCT_TYPE_PINGTUAN);
@@ -650,4 +727,55 @@ public class ProductUtils {
 //
 //        cp.getTaobaoProductInfo("",0);
 //    }
+
+    /**
+     * 一号通复制商品转公共商品参数
+     * @param jsonObject 一号通复制商品
+     *
+     */
+    public static StoreProductRequest onePassCopyTransition(com.alibaba.fastjson.JSONObject jsonObject) {
+        if (null == jsonObject) return null;
+
+        StoreProductRequest productRequest = new StoreProductRequest();
+        StoreProduct product = new StoreProduct();
+
+        product.setStoreName(jsonObject.getString("store_name"));
+        product.setStoreInfo(jsonObject.getString("store_info"));
+        product.setSliderImage(jsonObject.getString("slider_image"));
+        product.setImage(jsonObject.getString("image").replace("[", "").replace("\"", ""));
+        product.setKeyword(jsonObject.getString("store_name"));
+        product.setCost(jsonObject.getBigDecimal("cost"));
+        product.setPrice(jsonObject.getBigDecimal("price"));
+        product.setOtPrice(jsonObject.getBigDecimal("ot_price"));
+        product.setUnitName(jsonObject.getString("unit_name"));
+        BeanUtils.copyProperties(product, productRequest);
+
+        productRequest.setContent(jsonObject.getString("description"));
+        productRequest.setSpecType(true);
+
+        com.alibaba.fastjson.JSONArray props = jsonObject.getJSONArray("items");
+        if (null == props || props.size() < 1) {
+            // 无规格商品
+            productRequest.setSpecType(false);
+            return productRequest;
+        }
+
+        List<StoreProductAttr> spaAttes = new ArrayList<>();
+        for (int i = 0; i < props.size(); i++) {
+            com.alibaba.fastjson.JSONObject pItem = props.getJSONObject(i);
+            StoreProductAttr spattr = new StoreProductAttr();
+            spattr.setAttrName(pItem.getString("value"));
+            com.alibaba.fastjson.JSONArray values = pItem.getJSONArray("detail");
+            List<String> attrValues = new ArrayList<>();
+            for (int j = 0; j < values.size(); j++) {
+                String value = values.getString(j);
+                attrValues.add(value);
+            }
+            spattr.setAttrValues(JSON.toJSONString(attrValues));
+            spaAttes.add(spattr);
+        }
+        productRequest.setAttr(spaAttes);
+        return productRequest;
+    }
+
 }

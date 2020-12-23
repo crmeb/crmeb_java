@@ -1,33 +1,38 @@
 package com.zbkj.crmeb.store.utilService;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.common.PageParamRequest;
 import com.constants.Constants;
 import com.exception.CrmebException;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.utils.RedisUtil;
-import com.utils.ValidateFormUtil;
-import com.utils.vo.dateLimitUtilVo;
-import com.zbkj.crmeb.express.model.Express;
+import com.zbkj.crmeb.bargain.model.StoreBargain;
+import com.zbkj.crmeb.bargain.model.StoreBargainUser;
+import com.zbkj.crmeb.bargain.service.StoreBargainService;
+import com.zbkj.crmeb.bargain.service.StoreBargainUserHelpService;
+import com.zbkj.crmeb.bargain.service.StoreBargainUserService;
+import com.zbkj.crmeb.combination.model.StoreCombination;
+import com.zbkj.crmeb.combination.model.StorePink;
+import com.zbkj.crmeb.combination.service.StoreCombinationService;
+import com.zbkj.crmeb.combination.service.StorePinkService;
 import com.zbkj.crmeb.express.model.ShippingTemplates;
 import com.zbkj.crmeb.express.model.ShippingTemplatesFree;
 import com.zbkj.crmeb.express.model.ShippingTemplatesRegion;
 import com.zbkj.crmeb.express.service.ShippingTemplatesFreeService;
 import com.zbkj.crmeb.express.service.ShippingTemplatesRegionService;
 import com.zbkj.crmeb.express.service.ShippingTemplatesService;
-import com.zbkj.crmeb.finance.request.FundsMonitorSearchRequest;
 import com.zbkj.crmeb.front.request.OrderCreateRequest;
 import com.zbkj.crmeb.front.response.ComputeOrderResponse;
 import com.zbkj.crmeb.front.response.ConfirmOrderResponse;
 import com.zbkj.crmeb.front.response.PriceGroupResponse;
 import com.zbkj.crmeb.front.vo.OrderAgainItemVo;
 import com.zbkj.crmeb.front.vo.OrderAgainVo;
-import com.zbkj.crmeb.front.vo.PriceGroup;
-import com.zbkj.crmeb.front.vo.PriceItem;
 import com.zbkj.crmeb.marketing.model.StoreCouponUser;
 import com.zbkj.crmeb.marketing.request.StoreCouponUserSearchRequest;
 import com.zbkj.crmeb.marketing.response.StoreCouponUserResponse;
@@ -38,10 +43,7 @@ import com.zbkj.crmeb.seckill.model.StoreSeckillManger;
 import com.zbkj.crmeb.seckill.service.StoreSeckillMangerService;
 import com.zbkj.crmeb.seckill.service.StoreSeckillService;
 import com.zbkj.crmeb.store.model.*;
-import com.zbkj.crmeb.store.request.StoreOrderRefundRequest;
 import com.zbkj.crmeb.store.request.StoreOrderSearchRequest;
-import com.zbkj.crmeb.store.request.StoreOrderSendRequest;
-import com.zbkj.crmeb.store.request.StoreProductRequest;
 import com.zbkj.crmeb.store.response.StoreCartResponse;
 import com.zbkj.crmeb.store.response.StoreProductCartProductInfoResponse;
 import com.zbkj.crmeb.store.service.*;
@@ -50,12 +52,10 @@ import com.zbkj.crmeb.system.model.SystemStore;
 import com.zbkj.crmeb.system.response.SystemGroupDataOrderStatusPicResponse;
 import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.system.service.SystemGroupDataService;
-import com.zbkj.crmeb.system.service.SystemGroupService;
 import com.zbkj.crmeb.system.service.SystemStoreService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserAddress;
 import com.zbkj.crmeb.user.model.UserBill;
-import com.zbkj.crmeb.user.request.UserOperateFundsRequest;
 import com.zbkj.crmeb.user.service.UserAddressService;
 import com.zbkj.crmeb.user.service.UserBillService;
 import com.zbkj.crmeb.user.service.UserService;
@@ -66,7 +66,6 @@ import com.zbkj.crmeb.wechat.vo.WechatSendMessageForPaySuccess;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,11 +76,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * @author stivepeim
- * @title: OrderUtils
- * @projectName crmeb
- * @description: 订单工具类
- * @date 2020/7/2019:29
+ * 订单工具类
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Service
 public class OrderUtils {
@@ -147,6 +151,21 @@ public class OrderUtils {
 
     @Autowired
     private StoreSeckillMangerService storeSeckillMangerService;
+
+    @Autowired
+    private StoreBargainService storeBargainService;
+
+    @Autowired
+    private StoreBargainUserService storeBargainUserService;
+
+    @Autowired
+    private StoreCombinationService storeCombinationService;
+
+    @Autowired
+    private StoreBargainUserHelpService storeBargainUserHelpService;
+
+    @Autowired
+    private StorePinkService storePinkService;
 
     // 组装数据给前端使用
     public OrderAgainVo tidyOrder(StoreOrder storeOrder, boolean detail, boolean isPic){
@@ -282,6 +301,7 @@ public class OrderUtils {
         BigDecimal payPrice = cor.getPriceGroup().getTotalPrice();
 
         User currentUser = userService.getInfo();
+        if(null == currentUser) throw new CrmebException("用户不存在");
 
         Integer offliePayStatus = Integer.valueOf(systemConfigService.getValueByKey("offline_pay_status"));
 
@@ -297,8 +317,6 @@ public class OrderUtils {
 
         // 检测订单是否重复提交
         if(checkOrderSubmitAgain(orderKey)) throw new CrmebException("请勿重复提交订单");
-
-        if(null == currentUser) throw new CrmebException("用户不存在");
 
         // 判断邮费是否正确
         BigDecimal payPostage;
@@ -359,36 +377,19 @@ public class OrderUtils {
                     usedIntegral = currentUser.getIntegral().intValue();
                 }else{
                     deductionPrice = payPrice;
-//                    if(payPrice.compareTo(BigDecimal.ZERO) > 0 && usedIntegral > 0){
-//                        usedIntegral = payPrice.divide(BigDecimal.valueOf(usedIntegral.doubleValue())).intValue();
-//                        surPlusIntegral = currentUser.getIntegral().intValue() - usedIntegral;
-//                    }
                     if(payPrice.compareTo(BigDecimal.ZERO) > 0){
                         usedIntegral = payPrice.multiply(BigDecimal.valueOf(Double.valueOf(cor.getOther().get("integralRatio").toString()))).setScale(0, BigDecimal.ROUND_UP).intValue();
                         surPlusIntegral = currentUser.getIntegral().intValue() - usedIntegral;
                     }
                     payPrice = BigDecimal.ZERO;
-//                    usedIntegral = currentUser.getIntegral().intValue();
                 }
             }
-//            else{
-//                payPrice = currentOrderPriceGroup.getPayPrice();
-//            }
-
         }else{
             deductionPrice = BigDecimal.ZERO;
             usedIntegral = 0;
         }
         if(payPrice.compareTo(BigDecimal.ZERO) <= 0) payPrice = BigDecimal.ZERO;
 
-//        HashMap<String, Object> resultMap = new HashMap<>();
-        // 是否生成订单
-//        if(isCreateOrder){
-        // todo 秒杀在这里需要判断库存
-
-//        StoreOrder orderCreated = createOrder(request, cor, 0, request.getStoreId());
-//        resultMap.put("orderCreate", orderCreated);
-//        }
         ComputeOrderResponse result = new ComputeOrderResponse();
         // 组装返回数据
         result.setTotalPrice(cor.getPriceGroup().getTotalPrice());
@@ -405,7 +406,6 @@ public class OrderUtils {
         cor.getPriceGroup().setCouponPrice(result.getCouponPrice());
         cor.getPriceGroup().setDeductionPrice(result.getDeductionPrice());
         cor.getPriceGroup().setUsedIntegral(result.getUsedIntegral());
-//        cacheDeleteOrderInfo(currentUser.getUid(), orderKey);
         cacheRepliceOrderInfo(orderKey, currentUser.getUid(), cor);
         return result;
     }
@@ -444,7 +444,6 @@ public class OrderUtils {
         for (StoreCartResponse cartResponse : cor.getCartInfo()) {
             cartIds.add(cartResponse.getSeckillId());
             totalNum += cartResponse.getCartNum();
-            // todo 秒杀拼团砍价 二期
 
             Integer cartInfoGainIntegral =
                     (cartResponse.getProductInfo().getGiveIntegral() != null && cartResponse.getProductInfo().getGiveIntegral() > 0 )?
@@ -506,6 +505,7 @@ public class OrderUtils {
         storeOrder.setCreateTime(DateUtil.nowDateTime());
         storeOrder.setUnique(orderKey);
         storeOrder.setShippingType(request.getShippingType());
+        storeOrder.setPinkId(request.getPinkId());
 
         // 如果是自提
         if(request.getShippingType() == 2){
@@ -521,8 +521,6 @@ public class OrderUtils {
         boolean createdResult = storeOrderService.create(storeOrder);
         if(!createdResult) throw new CrmebException("订单生成失败");
 
-        // todo 秒杀产品占用库存
-
         // 积分抵扣
         boolean disIntegle = true;
         User currentUser = userService.getInfo();
@@ -534,7 +532,6 @@ public class OrderUtils {
                     currentUser.setIntegral(BigDecimal.ZERO);
                     disIntegle = userService.updateBase(currentUser);
                 }else{
-//                currentUser.getUid(),"integral",deductionPrice,"uid"
                     if(currentUser.getIntegral().compareTo(deductionPrice) < 0){
                         currentUser.setIntegral(currentUser.getIntegral().subtract(deductionPrice));
                         disIntegle = userService.updateBase(currentUser);
@@ -555,8 +552,6 @@ public class OrderUtils {
             disIntegle = disIntegle && userBillSaveResult;
         }
         if(!disIntegle) throw new CrmebException("使用积分抵扣失败");
-
-        // todo 库存操作 砍价拼团
 
         Integer secKillId = null;
         List<StoreOrderInfo> storeOrderInfos = new ArrayList<>();
@@ -584,7 +579,97 @@ public class OrderUtils {
                         cartResponse.getCartNum(),
                         existAttrValues.get(0).getId(), Constants.PRODUCT_TYPE_NORMAL);
 
-            }else{
+            }else if (ObjectUtil.isNotNull(cartResponse.getBargainId()) && cartResponse.getBargainId() > 0) {
+                // 砍价扣减库存
+                Integer bargainId = cartResponse.getBargainId();
+                // 砍价商品扣减库存
+                deCountResult = storeBargainService.decProductStock(
+                        cartResponse.getBargainId(),
+                        cartResponse.getCartNum(),
+                        Integer.parseInt(cartResponse.getProductAttrUnique()), Constants.PRODUCT_TYPE_BARGAIN);
+                // 商品本身扣减库存 更新商品本身库存步骤 1=根据秒杀uniuqeId 获取对应sku 2=根据商品ID获取商品sku信息后 对比相等的sku 更新其对应数量
+                // 砍价对应商品库存扣减
+                StoreProductAttrValue currentSeckillAttrValue = storeProductAttrValueService.getById(cartResponse.getProductAttrUnique());
+                List<StoreProductAttrValue> currentBargainAttrValues = storeProductAttrValueService.getListByProductId(cartResponse.getProductId());
+                List<StoreProductAttrValue> existAttrValues = currentBargainAttrValues.stream().filter(e ->
+                        e.getSuk().equals(currentSeckillAttrValue.getSuk()) && e.getType().equals(Constants.PRODUCT_TYPE_NORMAL))
+                        .collect(Collectors.toList());
+                if(existAttrValues.size() != 1) throw new CrmebException("未找到扣减库存的商品");
+                deCountResult = storeProductService.decProductStock(
+                        existAttrValues.get(0).getProductId(),
+                        cartResponse.getCartNum(),
+                        existAttrValues.get(0).getId(), Constants.PRODUCT_TYPE_NORMAL);
+
+                // 砍价商品购买成功，改变用户状态
+                StoreBargainUser storeBargainUser = storeBargainUserService.getByBargainIdAndUid(cartResponse.getBargainId(), cor.getUserInfo().getUid());
+                storeBargainUser.setStatus(3);
+                storeBargainUserService.updateById(storeBargainUser);
+            }else if (ObjectUtil.isNotNull(cartResponse.getCombinationId()) && cartResponse.getCombinationId() > 0) {
+                // 判断拼团团长是否存在
+                StorePink headPink = null;
+                if (ObjectUtil.isNotNull(cartResponse.getPinkId()) && cartResponse.getPinkId() > 0) {
+                    headPink = storePinkService.getById(cartResponse.getPinkId());
+                    if (ObjectUtil.isNull(headPink) || headPink.getIsRefund().equals(true) || headPink.getStatus() == 3) {
+                        throw new CrmebException("找不到对应的拼团团队信息");
+                    }
+                }
+                // 拼团扣减库存
+                // 拼团商品本身库存扣减
+                deCountResult = storeCombinationService.decProductStock(
+                        cartResponse.getCombinationId(),
+                        cartResponse.getCartNum(),
+                        Integer.parseInt(cartResponse.getProductAttrUnique()), Constants.PRODUCT_TYPE_PINGTUAN);
+                // 商品本身扣减库存 更新商品本身库存步骤 1=根据拼团uniuqeId 获取对应sku 2=根据商品ID获取商品sku信息后 对比相等的sku 更新其对应数量
+                // 拼团对应商品库存扣减
+                StoreProductAttrValue currentCombinationAttrValue = storeProductAttrValueService.getById(cartResponse.getProductAttrUnique());
+                List<StoreProductAttrValue> currentCombinationAttrValues = storeProductAttrValueService.getListByProductId(cartResponse.getProductId());
+                List<StoreProductAttrValue> existAttrValues = currentCombinationAttrValues.stream().filter(e ->
+                        e.getSuk().equals(currentCombinationAttrValue.getSuk()) && e.getType().equals(Constants.PRODUCT_TYPE_NORMAL))
+                        .collect(Collectors.toList());
+                if(existAttrValues.size() != 1) throw new CrmebException("未找到扣减库存的商品");
+                deCountResult = storeProductService.decProductStock(
+                        existAttrValues.get(0).getProductId(),
+                        cartResponse.getCartNum(),
+                        existAttrValues.get(0).getId(), Constants.PRODUCT_TYPE_NORMAL);
+                // 生成拼团表数据
+                StoreCombination storeCombination = storeCombinationService.getById(cartResponse.getCombinationId());
+                StorePink storePink = new StorePink();
+                storePink.setUid(cor.getUserInfo().getUid());
+                storePink.setAvatar(cor.getUserInfo().getAvatar());
+                storePink.setNickname(cor.getUserInfo().getNickname());
+                storePink.setOrderId(storeOrder.getOrderId());
+                storePink.setOrderIdKey(storeOrder.getId());
+                storePink.setTotalNum(storeOrder.getTotalNum());
+                storePink.setTotalPrice(storeOrder.getTotalPrice());
+                storePink.setCid(cartResponse.getCombinationId());
+                storePink.setPid(cartResponse.getProductId());
+                storePink.setPeople(storeCombination.getPeople());
+                storePink.setPrice(storeCombination.getPrice());
+                Integer effectiveTime = storeCombination.getEffectiveTime();// 有效小时数
+                DateTime dateTime = cn.hutool.core.date.DateUtil.date();
+                storePink.setAddTime(dateTime.getTime());
+                if (ObjectUtil.isNotNull(cartResponse.getPinkId()) && cartResponse.getPinkId() > 0) {
+                    storePink.setStopTime(headPink.getStopTime());
+                } else {
+                    DateTime hourTime = cn.hutool.core.date.DateUtil.offsetHour(dateTime, effectiveTime);
+                    long stopTime =  hourTime.getTime();
+                    if (stopTime > storeCombination.getStopTime()) {
+                        stopTime = storeCombination.getStopTime();
+                    }
+                    storePink.setStopTime(stopTime);
+                }
+                storePink.setKId(Optional.ofNullable(cartResponse.getPinkId()).orElse(0));
+                storePink.setIsTpl(false);
+                storePink.setIsRefund(false);
+                storePink.setStatus(1);
+                storePinkService.save(storePink);
+
+                // 如果是开团，需要更新订单数据
+                if (storePink.getKId() == 0) {
+                    storeOrder.setPinkId(storePink.getId());
+                    storeOrderService.updateById(storeOrder);
+                }
+            }else {
                 // 普通购买扣减库存
                 deCountResult = storeProductService.decProductStock(
                         cartResponse.getProductId(),
@@ -603,12 +688,6 @@ public class OrderUtils {
         if(!saveBatchOrderInfosResult && !deCountResult){
             throw new CrmebException("订单生成失败");
         }
-        // 非秒杀信息清除购物车信息
-//        if(null == secKillId || secKillId <= 0){
-//            List<Long> ids = cor.getCartInfo().stream().map(StoreCartResponse::getId).distinct().collect(Collectors.toList());
-//            List<Integer> idsInt = ids.stream().map(e -> e.intValue()).distinct().collect(Collectors.toList());
-//            storeCartService.deleteCartByIds(idsInt);
-//        }
 
         // 删除缓存订单
         cacheDeleteOrderInfo(currentUser.getUid(), orderKey);
@@ -681,16 +760,6 @@ public class OrderUtils {
      * @return 结果
      */
     public Boolean checkOrderExist(String orderKey, int userId){
-        // 判断订单是否 利用分页api放大参数查询
-//        StoreOrderSearchRequest request = new StoreOrderSearchRequest();
-//        request.setUid(userService.getUserIdException());
-//        request.setOrderId(orderKey);
-//        request.setUid(userId);
-//        request.setIsDel(false);
-//        PageParamRequest paramRequest = new PageParamRequest();
-//        paramRequest.setLimit(999);
-//        paramRequest.setPage(1);
-//        List<StoreOrder> existOrderList = storeOrderService.getList(request, new PageParamRequest());
         StoreOrder storeOrderPram = new StoreOrder();
         storeOrderPram.setUnique(orderKey);
         storeOrderPram.setUid(userId);
@@ -993,7 +1062,7 @@ public class OrderUtils {
                 break;
             case Constants.ORDER_STATUS_H5_REFUND: // 包含已退款和退款中
                 queryWrapper.eq(StoreOrder::getPaid, true);
-                queryWrapper.in(StoreOrder::getStatus,-1,-2);
+                queryWrapper.in(StoreOrder::getStatus,0,-1,-2);
                 queryWrapper.in(StoreOrder::getRefundStatus, 1,2);
                 break;
         }
@@ -1069,7 +1138,6 @@ public class OrderUtils {
      * @param currentUser   当前购买人
      */
     public StoreSeckill validSecKill(StoreCart storeCartPram, User currentUser) {
-
         // 判断秒杀商品是否有效
         StoreSeckill storeProductPram = new StoreSeckill();
         storeProductPram.setId(storeCartPram.getSeckillId());
@@ -1081,9 +1149,7 @@ public class OrderUtils {
         // 判断秒杀时间段
         StoreSeckill existSecKill = existSecKills.get(0);
         StoreSeckillManger seckillManger = storeSeckillMangerService.getById(existSecKill.getTimeId());
-//        String startTimeStr = DateUtil.dateToStr(existSecKill.getStartTime(),Constants.DATE_FORMAT_DATE);
         String stopTimeStr = DateUtil.dateToStr(existSecKill.getStopTime(),Constants.DATE_FORMAT_DATE);
-//        Date startDate = DateUtil.strToDate( startTimeStr + " " + seckillManger.getStartTime() + ":00:00", Constants.DATE_FORMAT);
         Date stopDate = DateUtil.strToDate( stopTimeStr  + " " + seckillManger.getEndTime() +":00:00", Constants.DATE_FORMAT);
         if(DateUtil.getTwoDateDays(DateUtil.nowDateTime(),stopDate) < 0){
             throw new CrmebException("秒杀商品已过期");
@@ -1108,11 +1174,11 @@ public class OrderUtils {
 
         // 判断是否达到上线
         if(null != userCurrentDaySecKillOrders && userCurrentDaySecKillOrders.size() >= existSecKill.getNum()){
-            throw new CrmebException("您已经达到当前秒杀活动上线");
+            throw new CrmebException("您已经达到当前秒杀活动上限");
         }
 
         // 达到商品限量 sku quota
-        List<Integer> secKillOrderIds = userCurrentDaySecKillOrders.stream().map(e -> e.getId()).collect(Collectors.toList());
+        List<Integer> secKillOrderIds = userCurrentDaySecKillOrders.stream().map(StoreOrder::getId).collect(Collectors.toList());
         HashMap<Integer, List<StoreOrderInfoVo>> storeOrderInfos = storeOrderInfoService.getMapInId(secKillOrderIds);
         for (int i = 0; i < userCurrentDaySecKillOrders.size(); i++) {
             StoreOrder storeOrder = userCurrentDaySecKillOrders.get(i);
@@ -1121,11 +1187,159 @@ public class OrderUtils {
             int sum = storeOrderInfoVos.stream().mapToInt(e -> e.getInfo().getCartNum()).sum();
             if(storeCartPram.getSeckillId().equals(storeOrder.getSeckillId())
                     && storeProductAttrValue.getQuota() < sum){
-                throw new CrmebException("您已经达到当前秒杀活动上线");
+                throw new CrmebException("您已经达到当前秒杀活动上限");
             }
         }
 
         return existSecKill;
     }
 
+    /**
+     * 下单前砍价验证
+     * @param storeCartPram 砍价参数
+     * @param currentUser   当前购买人
+     */
+    public StoreBargain validBargain(StoreCart storeCartPram, User currentUser) {
+        // 判断砍价商品是否有效
+        StoreBargain storeBargainParam = new StoreBargain();
+        storeBargainParam.setId(storeCartPram.getBargainId());
+        storeBargainParam.setIsDel(false);
+        storeBargainParam.setStatus(true);
+        List<StoreBargain> existBargains = storeBargainService.getByEntity(storeBargainParam);
+        if (CollUtil.isEmpty(existBargains)) throw new CrmebException("该商品已下架或删除");
+        StoreBargain existBargain = existBargains.get(0);
+
+        // 判断砍价活动时间段
+        long timeMillis = System.currentTimeMillis();
+        if (timeMillis < existBargain.getStartTime()) {
+            throw new CrmebException("砍价商品活动未开始");
+        }
+        if (timeMillis > existBargain.getStopTime()) {
+            throw new CrmebException("砍价商品已过期");
+        }
+
+        // 判断用户是否砍价完成
+        BigDecimal surplusPrice = storeBargainUserHelpService.getSurplusPrice(storeCartPram.getBargainId(), currentUser.getUid());
+        if (surplusPrice.compareTo(BigDecimal.ZERO) > 0) {
+            throw new CrmebException("请先完成砍价");
+        }
+
+        // 判断砍价商品库存和砍价限量
+        StoreProductAttrValue spavPram = new StoreProductAttrValue()
+                .setId(Integer.valueOf(storeCartPram.getProductAttrUnique()))
+                .setType(Constants.PRODUCT_TYPE_BARGAIN);
+        List<StoreProductAttrValue> currentBargainAttrValues = storeProductAttrValueService.getByEntity(spavPram);
+        if(null == currentBargainAttrValues || currentBargainAttrValues.size() == 0){
+            throw new CrmebException("未找到该商品信息");
+        }
+
+        StoreProductAttrValue storeProductAttrValue = currentBargainAttrValues.get(0); // 仅仅会获取一条数据
+        // 参与活动次数 -根据用户和秒杀信息查询当天订单判断订单数量
+        StoreOrder soPram = new StoreOrder().setUid(currentUser.getUid()).setBargainId(storeCartPram.getBargainId());
+        List<StoreOrder> userCurrentBargainOrders = storeOrderService.getUserCurrentBargainOrders(soPram);
+
+        // 判断是否有待支付订单
+        List<StoreOrder> unPayOrders = userCurrentBargainOrders.stream().filter(e -> !e.getPaid()).collect(Collectors.toList());
+        if(unPayOrders.size() > 0) throw new CrmebException("您有砍价待支付订单，请支付后再购买");
+
+        // 判断是否达到上限
+        if(CollUtil.isNotEmpty(userCurrentBargainOrders) && userCurrentBargainOrders.size() >= existBargain.getNum()){
+            throw new CrmebException("您已经达到当前砍价活动上限");
+        }
+
+        // 达到商品限量 sku quota
+        Integer orderCount = storeOrderService.getCountByBargainId(existBargain.getId());
+        if (orderCount >= existBargain.getQuotaShow()) {
+            throw new CrmebException("当前砍价活动商品已达购买上限");
+        }
+        return existBargain;
+    }
+
+    /**
+     * 下单前拼团验证
+     * @param storeCartPram 拼团参数
+     * @param currentUser   当前购买人
+     */
+    public StoreCombination validCombination(StoreCart storeCartPram, User currentUser) {
+        // 判断拼团商品是否有效
+        StoreCombination storeProductPram = new StoreCombination();
+        storeProductPram.setId(storeCartPram.getCombinationId());
+        storeProductPram.setIsDel(false);
+        storeProductPram.setIsShow(true);
+        List<StoreCombination> existCombinations = storeCombinationService.getByEntity(storeProductPram);
+        if(CollUtil.isEmpty(existCombinations)) throw new CrmebException("该商品已下架或者删除");
+        StoreCombination existCombination = existCombinations.get(0);
+
+        // 判断拼团时间段
+        long timeMillis = System.currentTimeMillis();
+        if (timeMillis < existCombination.getStartTime()) {
+            throw new CrmebException("拼团商品活动未开始");
+        }
+        if (timeMillis > existCombination.getStopTime()) {
+            throw new CrmebException("拼团商品已过期");
+        }
+        // 判断购买数量
+        if (storeCartPram.getCartNum() > existCombination.getOnceNum()) {
+            throw new CrmebException("购买数量超过单次拼团购买上限");
+        }
+
+        // 如果时参团，判断团队是否已满员
+        if (ObjectUtil.isNotNull(storeCartPram.getPinkId()) && storeCartPram.getPinkId() > 0) {
+            Integer countPeople = storePinkService.getCountByKid(storeCartPram.getPinkId());
+            if (countPeople >= existCombination.getPeople()) {
+                throw new CrmebException("当前拼团人数已满");
+            }
+        }
+
+        // 判断拼团商品库存和拼团限量
+        StoreProductAttrValue spavPram = new StoreProductAttrValue()
+                .setId(Integer.valueOf(storeCartPram.getProductAttrUnique()))
+                .setType(Constants.PRODUCT_TYPE_PINGTUAN);
+        List<StoreProductAttrValue> currentCombinationAttrValues = storeProductAttrValueService.getByEntity(spavPram);
+        if(CollUtil.isEmpty(currentCombinationAttrValues)){
+            throw new CrmebException("未找到该商品信息");
+        }
+        StoreProductAttrValue storeProductAttrValue = currentCombinationAttrValues.get(0); // 仅仅会获取一条数据
+        // 用户参与活动的次数
+        StoreOrder soPram = new StoreOrder().setUid(currentUser.getUid()).setCombinationId(storeCartPram.getCombinationId());
+        List<StoreOrder> userCombinationOrders = storeOrderService.getByEntity(soPram);
+
+        if (CollUtil.isNotEmpty(userCombinationOrders)) {
+            // 判断是否有待支付订单
+            List<StoreOrder> unPayOrders = userCombinationOrders.stream().filter(e -> !e.getPaid()).collect(Collectors.toList());
+            if(unPayOrders.size() > 0) throw new CrmebException("您有拼团待支付订单，请支付后再购买");
+
+            List<StoreOrder> noRefundOrders = userCombinationOrders.stream().filter(i -> i.getRefundStatus() != 2).collect(Collectors.toList());
+            int payNum = userCombinationOrders.stream().mapToInt(order -> {
+                if (order.getRefundStatus() != 2) {
+                    return order.getTotalNum();
+                }
+                return 0;
+            }).sum();
+            if (CollUtil.isNotEmpty(noRefundOrders) && existCombination.getNum() <= payNum){
+                throw new CrmebException("您已达到该商品拼团活动上限");
+            }
+            if ((payNum + storeCartPram.getCartNum()) > existCombination.getNum()) {
+                throw new CrmebException("超过该商品拼团活动您的购买上限");
+            }
+        }
+
+        // 判断是否达到上限
+        // 达到商品限量 sku quota
+        if (existCombination.getSales() >= existCombination.getQuotaShow()) {// 销量等于限量
+            throw new CrmebException("当前拼团商品已售完");
+        }
+        if (storeProductAttrValue.getSales() >= storeProductAttrValue.getQuotaShow()){// sku销量等于限量
+            throw new CrmebException("当前拼团商品已售完");
+        }
+
+        if (existCombination.getSales() + storeCartPram.getCartNum() > existCombination.getQuotaShow()) {
+            throw new CrmebException("数量超过拼团商品上限");
+        }
+        if (storeProductAttrValue.getSales() + storeCartPram.getCartNum() > storeProductAttrValue.getQuotaShow()) {
+            throw new CrmebException("数量超过拼团商品上限");
+        }
+
+        return existCombination;
+    }
 }

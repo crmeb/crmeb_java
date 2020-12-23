@@ -1,34 +1,29 @@
 package com.zbkj.crmeb.store.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.constants.Constants;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
-
-import com.utils.DateUtil;
+import com.zbkj.crmeb.bargain.model.StoreBargain;
+import com.zbkj.crmeb.combination.model.StoreCombination;
 import com.zbkj.crmeb.front.request.CartResetRequest;
 import com.zbkj.crmeb.seckill.model.StoreSeckill;
-import com.zbkj.crmeb.seckill.model.StoreSeckillManger;
 import com.zbkj.crmeb.seckill.service.StoreSeckillMangerService;
 import com.zbkj.crmeb.seckill.service.StoreSeckillService;
-import com.zbkj.crmeb.store.model.StoreCart;
 import com.zbkj.crmeb.store.dao.StoreCartDao;
-import com.zbkj.crmeb.store.model.StoreOrder;
-import com.zbkj.crmeb.store.model.StoreProduct;
+import com.zbkj.crmeb.store.model.StoreCart;
 import com.zbkj.crmeb.store.model.StoreProductAttrValue;
 import com.zbkj.crmeb.store.response.StoreCartResponse;
 import com.zbkj.crmeb.store.response.StoreProductCartProductInfoResponse;
 import com.zbkj.crmeb.store.response.StoreProductResponse;
 import com.zbkj.crmeb.store.service.*;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.crmeb.store.utilService.OrderUtils;
-import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
-import com.zbkj.crmeb.system.model.SystemUserLevel;
 import com.zbkj.crmeb.system.service.SystemConfigService;
-import com.zbkj.crmeb.system.service.SystemUserLevelService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserLevel;
 import com.zbkj.crmeb.user.service.UserLevelService;
@@ -37,21 +32,26 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
-* @author Mr.Zhang
-* @description StoreCartServiceImpl 接口实现
-* @date 2020-05-28 edit by stivepeim 2020-7-4
-*/
+ * StoreCartServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> implements StoreCartService {
 
@@ -102,6 +102,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         LambdaQueryWrapper<StoreCart> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(StoreCart::getUid, userService.getUserIdException());
         lambdaQueryWrapper.eq(StoreCart::getStatus, isValid);
+        lambdaQueryWrapper.eq(StoreCart::getIsNew, false);
         lambdaQueryWrapper.orderByDesc(StoreCart::getCreateTime);
         List<StoreCart> storeCarts = dao.selectList(lambdaQueryWrapper);
         List<StoreCartResponse> response = new ArrayList<>();
@@ -228,34 +229,62 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         StoreProductResponse existProduct = storeProductService.getByProductId(storeCart.getProductId());
         if(null == existProduct) throw new CrmebException("商品不存在");
 
-        StoreCart storeCartPram = new StoreCart();
+        /**
+         * ================================
+         * 活动商品部分
+         * ================================
+         */
+
+        // 活动校验
+        if (!storeCart.getIsNew() && (ObjectUtil.isNotNull(storeCart.getSeckillId()) || ObjectUtil.isNotNull(storeCart.getBargainId()) || ObjectUtil.isNotNull(storeCart.getCombinationId()))) {
+            throw new CrmebException("活动商品不能加入购物车");
+        }
+
         // 秒杀商品业务处理
-        if(null != storeCart.getSeckillId() && storeCart.getIsNew()){
-            BeanUtils.copyProperties(storeCart,storeCartPram);
-            storeCartPram.setCartNum(1); // 秒杀仅仅只能购买一件商品
-            List<String> cacheSecKillIds = buildCartInfoForSeckill(storeCartPram);
-//            storeCart.setId(cacheSecKillIds.get(0));
+        if(ObjectUtil.isNotNull(storeCart.getSeckillId()) && storeCart.getIsNew()){
+            storeCart.setCartNum(1); // 秒杀仅仅只能购买一件商品
+            List<String> cacheSecKillIds = buildCartInfoForSeckill(storeCart);
             return cacheSecKillIds.get(0);
          }
-        // todo 拼团砍价待处理
 
+        // 砍价商品业务处理
+        if (ObjectUtil.isNotNull(storeCart.getBargainId()) && storeCart.getIsNew()) {
+            storeCart.setCartNum(1); // 砍价一次仅仅只能购买一件商品
+            List<String> cacheBargainIds = buildCartInfoForBargain(storeCart);
+            return cacheBargainIds.get(0);
+        }
+
+        // 拼团商品业务处理
+        if (ObjectUtil.isNotNull(storeCart.getCombinationId()) && storeCart.getIsNew()) {
+            List<String> cacheBargainIds = buildCartInfoForCombination(storeCart);
+            return cacheBargainIds.get(0);
+        }
+
+        /**
+         * ================================
+         * 普通商品部分
+         * ================================
+         */
         // 是否已经有同类型商品在购物车，有则添加数量没有则新增
+        StoreCart storeCartPram = new StoreCart();
         storeCartPram.setProductAttrUnique(storeCart.getProductAttrUnique());
         storeCartPram.setUid(userService.getUserId());
+        storeCartPram.setIsNew(false);
         List<StoreCart> existCarts = getByEntity(storeCartPram); // 这里仅仅能获取一条以信息
-        if(existCarts.size() > 0 && !storeCart.getIsNew() && null == storeCart.getSeckillId()){
+        if(existCarts.size() > 0 && !storeCart.getIsNew()){ // 加入购物车
             StoreCart forUpdateStoreCart = existCarts.get(0);
             forUpdateStoreCart.setCartNum(forUpdateStoreCart.getCartNum()+storeCart.getCartNum());
-            storeCart.setIsNew(false);
             boolean updateResult = updateById(forUpdateStoreCart);
             if(!updateResult) throw new CrmebException("添加购物车失败");
-            storeCart.setId(forUpdateStoreCart.getId());
             return forUpdateStoreCart.getId()+"";
-        }else{
+        }else{// 立即购买
             User currentUser = userService.getInfo();
             storeCart.setUid(currentUser.getUid());
             storeCart.setType("product");
-            storeCart.setIsNew(true);
+//            storeCart.setIsNew(false);
+//            if (storeCart.getIsNew()) {// 立即购买才为true
+//                storeCart.setIsNew(true);
+//            }
             if(dao.insert(storeCart) <= 0) throw new CrmebException("添加购物车失败");
             return storeCart.getId()+"";
         }
@@ -381,7 +410,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         queryWrapper.select("sum(cart_num) as cart_num")
                 .eq("uid", userId)
                 .eq("type", type)
-                .eq("is_new", true);
+                .eq("is_new", false);
         StoreCart storeCart = dao.selectOne(queryWrapper);
         if(null == storeCart || null == storeCart.getCartNum()){
             return 0;
@@ -414,12 +443,10 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
      * @return  组装好的下单前秒杀数据
      */
     private  List<String> buildCartInfoForSeckill(StoreCart storeCartPram){
+        User currentUser = userService.getInfoException();
         List<String> cacheIdsResult = new ArrayList<>();
-        User currentUser = userService.getInfo();
         List<StoreCartResponse> storeCartResponses = new ArrayList<>();
-//        Long cacheKey = DateUtil.getTime()+currentUser.getUid();
         StoreCartResponse storeCartResponse = new StoreCartResponse();
-
         StoreProductCartProductInfoResponse spcpInfo = new StoreProductCartProductInfoResponse();
 
         // 秒杀商品数据验证
@@ -446,11 +473,9 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         storeCartResponse.setProductInfo(spcpInfo);
         storeCartResponse.setTrueStock(storeCartResponse.getProductInfo().getAttrInfo().getStock());
         storeCartResponse.setCostPrice(storeCartResponse.getProductInfo().getAttrInfo().getCost());
-//                storeCartResponse.setTruePrice(BigDecimal.ZERO);
         storeCartResponse.setTruePrice(existSPAttrValue.getPrice());
         storeCartResponse.setVipTruePrice(BigDecimal.ZERO);
 
-//        storeCartResponse.setId(cacheKey);
         storeCartResponse.setType(Constants.PRODUCT_TYPE_SECKILL+"");// 秒杀=1
         storeCartResponse.setProductId(storeCartPram.getProductId());
         storeCartResponse.setProductAttrUnique(storeCartPram.getProductAttrUnique());
@@ -461,6 +486,101 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         return cacheIdsResult;
     }
 
+    /**
+     * 组装砍价下单前数据
+     * @param storeCartPram 砍价参数
+     * @return  组装好的下单前砍价数据
+     */
+    private List<String> buildCartInfoForBargain(StoreCart storeCartPram) {
+        User currentUser = userService.getInfoException();
+        List<String> cacheIdsResult = new ArrayList<>();
+        List<StoreCartResponse> storeCartResponses = new ArrayList<>();
+        StoreCartResponse storeCartResponse = new StoreCartResponse();
+        StoreProductCartProductInfoResponse spcpInfo = new StoreProductCartProductInfoResponse();
 
+        // 砍价商品数据验证
+        StoreBargain storeBargain = orderUtils.validBargain(storeCartPram, currentUser);
+        BeanUtils.copyProperties(storeBargain, spcpInfo);
+
+        // 判断商品对应属性是否有效
+        StoreProductAttrValue apAttrValuePram = new StoreProductAttrValue();
+        apAttrValuePram.setProductId(storeCartPram.getSeckillId());
+        apAttrValuePram.setId(Integer.valueOf(storeCartPram.getProductAttrUnique()));
+        apAttrValuePram.setType(Constants.PRODUCT_TYPE_BARGAIN);
+        List<StoreProductAttrValue> bargainAttrValues = storeProductAttrValueService.getByEntity(apAttrValuePram);
+        StoreProductAttrValue existSPAttrValue = new StoreProductAttrValue();
+        if(CollUtil.isNotEmpty(bargainAttrValues)) existSPAttrValue = bargainAttrValues.get(0);
+        if(ObjectUtil.isEmpty(existSPAttrValue)) throw new CrmebException("请选择有效的商品属性");
+        if(existSPAttrValue.getStock() <= 0) throw new CrmebException("该商品库存不足");
+
+        spcpInfo.setAttrInfo(existSPAttrValue);
+        spcpInfo.setStoreInfo(storeBargain.getInfo());
+        spcpInfo.setStoreName(storeBargain.getTitle());
+
+        storeCartResponse.setBargainId(storeCartPram.getBargainId());
+        storeCartResponse.setProductInfo(spcpInfo);
+        storeCartResponse.setTrueStock(storeCartResponse.getProductInfo().getAttrInfo().getStock());
+        storeCartResponse.setCostPrice(storeCartResponse.getProductInfo().getAttrInfo().getCost());
+        storeCartResponse.setTruePrice(storeBargain.getMinPrice());
+        storeCartResponse.setVipTruePrice(BigDecimal.ZERO);
+
+        storeCartResponse.setType(Constants.PRODUCT_TYPE_BARGAIN +"");// 砍价=2
+        storeCartResponse.setProductId(storeCartPram.getProductId());
+        storeCartResponse.setProductAttrUnique(storeCartPram.getProductAttrUnique());
+        storeCartResponse.setCartNum(1);
+        storeCartResponses.add(storeCartResponse);
+
+        cacheIdsResult.add(orderUtils.setCacheOrderData(currentUser, storeCartResponses));
+        return cacheIdsResult;
+    }
+
+    /**
+     * 组装拼团下单前数据
+     * @param storeCartPram 砍价参数
+     * @return  组装好的下单前砍价数据
+     */
+    private List<String> buildCartInfoForCombination(StoreCart storeCartPram) {
+        User currentUser = userService.getInfoException();
+        List<String> cacheIdsResult = new ArrayList<>();
+        List<StoreCartResponse> storeCartResponses = new ArrayList<>();
+        StoreCartResponse storeCartResponse = new StoreCartResponse();
+        StoreProductCartProductInfoResponse spcpInfo = new StoreProductCartProductInfoResponse();
+
+        // 拼团商品数据验证
+        StoreCombination storeCombination = orderUtils.validCombination(storeCartPram, currentUser);
+        BeanUtils.copyProperties(storeCombination, spcpInfo);
+
+        // 判断商品对应属性是否有效
+        StoreProductAttrValue apAttrValuePram = new StoreProductAttrValue();
+        apAttrValuePram.setProductId(storeCartPram.getCombinationId());
+        apAttrValuePram.setId(Integer.valueOf(storeCartPram.getProductAttrUnique()));
+        apAttrValuePram.setType(Constants.PRODUCT_TYPE_PINGTUAN);
+        List<StoreProductAttrValue> combinationAttrValues = storeProductAttrValueService.getByEntity(apAttrValuePram);
+        StoreProductAttrValue existSPAttrValue = new StoreProductAttrValue();
+        if(CollUtil.isNotEmpty(combinationAttrValues)) existSPAttrValue = combinationAttrValues.get(0);
+        if(ObjectUtil.isEmpty(existSPAttrValue)) throw new CrmebException("请选择有效的商品属性");
+        if(existSPAttrValue.getStock() <= 0) throw new CrmebException("该商品库存不足");
+
+        spcpInfo.setAttrInfo(existSPAttrValue);
+        spcpInfo.setStoreInfo(storeCombination.getInfo());
+        spcpInfo.setStoreName(storeCombination.getTitle());
+
+        storeCartResponse.setCombinationId(storeCartPram.getCombinationId());
+        storeCartResponse.setPinkId(Optional.ofNullable(storeCartPram.getPinkId()).orElse(0));
+        storeCartResponse.setProductInfo(spcpInfo);
+        storeCartResponse.setTrueStock(storeCartResponse.getProductInfo().getAttrInfo().getStock());
+        storeCartResponse.setCostPrice(storeCartResponse.getProductInfo().getAttrInfo().getCost());
+        storeCartResponse.setTruePrice(storeCombination.getPrice());
+        storeCartResponse.setVipTruePrice(BigDecimal.ZERO);
+
+        storeCartResponse.setType(Constants.PRODUCT_TYPE_PINGTUAN+"");// 砍价=3
+        storeCartResponse.setProductId(storeCartPram.getProductId());
+        storeCartResponse.setProductAttrUnique(storeCartPram.getProductAttrUnique());
+        storeCartResponse.setCartNum(storeCartPram.getCartNum());
+        storeCartResponses.add(storeCartResponse);
+
+        cacheIdsResult.add(orderUtils.setCacheOrderData(currentUser, storeCartResponses));
+        return cacheIdsResult;
+    }
 }
 

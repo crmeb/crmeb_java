@@ -3,6 +3,7 @@ package com.zbkj.crmeb.store.request;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.hibernate.validator.constraints.Range;
 
 import javax.validation.constraints.Min;
 
@@ -28,8 +29,9 @@ public class RetailShopStairUserRequest {
     @ApiModelProperty(value = "时间参数 today,yesterday,lately7,lately30,month,year,/yyyy-MM-dd hh:mm:ss,yyyy-MM-dd hh:mm:ss/")
     private String dateLimit;
 
-    // 类型 mull = 全部 1=一级推广人 2=二级推广人
-    @ApiModelProperty(value = "类型 null = 全部 1=一级推广人 2=二级推广人")
+    // 类型 0 = 全部 1=一级推广人 2=二级推广人
+    @ApiModelProperty(value = "类型 0 = 全部 1=一级推广人 2=二级推广人")
+    @Range(min = 0, max = 3, message = "请选择正确的用户类型")
     private Integer type;
 
     // 推广订单中的参数，公用对象

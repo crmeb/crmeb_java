@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.system.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -34,10 +35,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
-* @author Mr.Zhang
-* @Description SystemAdminServiceImpl 接口实现
-* @since 2020-04-13
-*/
+ * SystemAdminServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAdmin> implements SystemAdminService {
 
@@ -121,7 +129,7 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
     }
 
     @Override
-    public SystemAdminResponse login(SystemAdminRequest request, String ip) {
+    public SystemAdminResponse login(SystemAdminRequest request, String ip) throws Exception {
         LambdaQueryWrapper<SystemAdmin> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(SystemAdmin::getAccount, request.getAccount());
         SystemAdmin systemAdmin = dao.selectOne(lambdaQueryWrapper);
@@ -203,6 +211,7 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
             // 执行新增管理员操作
             String pwd = CrmebUtil.encryptPassword(systemAdmin.getPwd(), systemAdmin.getAccount());
             systemAdminAddRequest.setPwd(pwd); // 设置为加密后的密码
+            systemAdmin.setPwd(pwd);
             SystemAdminResponse systemAdminResponse = new SystemAdminResponse();
             BeanUtils.copyProperties(systemAdminAddRequest, systemAdminResponse);
             if(dao.insert(systemAdmin) <= 0){
@@ -296,7 +305,7 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
      * @return SystemAdmin
      */
     @Override
-    public SystemAdminResponse weChatAuthorizeLogin(String code, String ip) {
+    public SystemAdminResponse weChatAuthorizeLogin(String code, String ip) throws Exception {
         //通过code获取用户信息
         WeChatAuthorizeLoginGetOpenIdResponse response = weChatService.authorizeLogin(code);
         UserToken userToken = userTokenService.getUserIdByOpenId(response.getOpenId(), Constants.THIRD_ADMIN_LOGIN_TOKEN_TYPE_PUBLIC);
@@ -348,6 +357,25 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         }catch (Exception e){
             throw new CrmebException("绑定失败：" + e.getMessage());
         }
+    }
+
+    /**
+     * 修改后台管理员状态
+     * @param id
+     * @param status
+     * @return
+     */
+    @Override
+    public Boolean updateStatus(Integer id, Boolean status) {
+        SystemAdmin systemAdmin = getById(id);
+        if (ObjectUtil.isNull(systemAdmin)) {
+            throw new CrmebException("用户不存在");
+        }
+        if (systemAdmin.getStatus().equals(status)) {
+            return true;
+        }
+        systemAdmin.setStatus(status);
+        return updateById(systemAdmin);
     }
 
     /**

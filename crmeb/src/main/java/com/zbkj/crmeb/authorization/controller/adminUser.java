@@ -129,7 +129,7 @@ public class adminUser {
      */
     @ApiOperation(value = "微信登录公共号授权登录")
     @RequestMapping(value = "/authorize/login", method = RequestMethod.GET)
-    public CommonResult<SystemAdminResponse> login(@RequestParam(value = "code") String code, HttpServletRequest request){
+    public CommonResult<SystemAdminResponse> login(@RequestParam(value = "code") String code, HttpServletRequest request) throws Exception {
         return CommonResult.success(systemAdminService.weChatAuthorizeLogin(code, CrmebUtil.getClientIp(request)));
     }
 

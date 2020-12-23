@@ -58,7 +58,7 @@
                   </el-col>
                   <el-col v-bind="grid" v-if="userFrom.country ==='CN'">
                     <el-form-item label="省份：">
-                      <el-cascader :options="addresData" :props="propsCity" v-model="address" @change="handleChange"  class="selWidth"></el-cascader>
+                      <el-cascader :options="addresData" :props="propsCity" filterable v-model="address" @change="handleChange" clearable  class="selWidth"></el-cascader>
                     </el-form-item>
                   </el-col>
                 </el-col>
@@ -250,7 +250,7 @@
           min-width="100"
         >
           <template slot-scope="scope">
-            <span>{{scope.row.level | levelFilter | filterEmpty}}</span>
+            <!--<span>{{scope.row.level | levelFilter | filterEmpty}}</span>-->
           </template>
         </el-table-column>
         <el-table-column
@@ -281,11 +281,22 @@
           label="积分"
           min-width="100"
         />
-        <el-table-column label="操作" min-width="200" fixed="right" align="center">
+        <el-table-column label="操作" min-width="130" fixed="right" align="center">
           <template slot-scope="scope">
-            <el-button type="text" size="small" @click="onDetails(scope.row.uid)">账户详情</el-button>
             <el-button type="text" @click="editUser(scope.row.uid)" size="small">编辑</el-button>
-            <el-button type="text" @click="editPoint(scope.row.uid)" size="small">积分余额</el-button>
+            <el-dropdown trigger="click">
+              <span class="el-dropdown-link">
+                更多<i class="el-icon-arrow-down el-icon--right" />
+              </span>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item @click.native="onDetails(scope.row.uid)">账户详情</el-dropdown-item>
+                <el-dropdown-item @click.native="editPoint(scope.row.uid)">积分余额</el-dropdown-item>
+                <el-dropdown-item @click.native="setBatch('group',scope.row)">设置分组</el-dropdown-item>
+                <el-dropdown-item @click.native="setBatch('label',scope.row)">设置标签</el-dropdown-item>
+                <el-dropdown-item @click.native="setExtension(scope.row)">修改上级推广人</el-dropdown-item>
+                <el-dropdown-item @click.native="clearSpread(scope.row)" v-if="scope.row.spreadUid && scope.row.spreadUid>0">清除上级推广人</el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
           </template>
         </el-table-column>
         </el-table>
@@ -301,6 +312,38 @@
         />
       </div>
     </el-card>
+    <!--修改推广人-->
+    <el-dialog
+      title="修改推广人"
+      :visible.sync="extensionVisible"
+      width="500px"
+      :before-close="handleCloseExtension">
+      <el-form class="formExtension mt20" ref="formExtension" :model="formExtension" :rules="ruleInline" label-width="120px"
+               @submit.native.prevent v-loading="loading">
+        <el-form-item label="用户头像：" prop="image">
+          <div class="upLoadPicBox" @click="modalPicTap">
+            <div v-if="formExtension.image" class="pictrue"><img :src="formExtension.image"></div>
+            <div v-else class="upLoad">
+              <i class="el-icon-camera cameraIconfont"/>
+            </div>
+          </div>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+          <el-button type="primary" @click="onSubExtension('formExtension')">确 定</el-button>
+      </span>
+    </el-dialog>
+    <!--用户列表-->
+    <el-dialog
+      title="用户列表"
+      :visible.sync="userVisible"
+      width="700px">
+      <user-list v-if="userVisible" @getTemplateRow="getTemplateRow"></user-list>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="userVisible = false">取 消</el-button>
+        <el-button type="primary" @click="userVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
     <!--批量设置-->
     <el-dialog
       title="设置"
@@ -313,8 +356,9 @@
           label="用户分组"
           :rules="[{ required: true, message: '请选择用户分组', trigger: 'change' }]"
           v-if="batchName ==='group'"
+          key="1"
         >
-          <el-select v-model="dynamicValidateForm.groupId" placeholder="请选择分组" style="width: 80%" filterable multiple>
+          <el-select v-model="dynamicValidateForm.groupId" placeholder="请选择分组" style="width: 80%" filterable>
             <el-option :value="item.id" v-for="(item, index) in groupList" :key="index" :label="item.groupName"></el-option>
           </el-select>
         </el-form-item>
@@ -347,6 +391,7 @@
       title="积分余额"
       :visible.sync="VisiblePoint"
       width="500px"
+      :close-on-click-modal="false"
       :before-close="handlePointClose">
       <el-form :model="PointValidateForm" ref="PointValidateForm" label-width="100px" class="demo-dynamic" v-loading="loadingPoint">
         <el-form-item
@@ -362,7 +407,7 @@
           label="余额"
           required
         >
-          <el-input type="text" v-model.number="PointValidateForm.moneyValue"></el-input>
+          <el-input-number type="text" v-model="PointValidateForm.moneyValue" :max="999999"></el-input-number>
         </el-form-item>
         <el-form-item
           label="修改积分"
@@ -377,7 +422,7 @@
           label="积分"
           required
         >
-          <el-input type="text" v-model.number="PointValidateForm.integralValue"></el-input>
+          <el-input-number type="text" v-model="PointValidateForm.integralValue" :max="999999"></el-input-number>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -398,14 +443,16 @@
 </template>
 
 <script>
-  import { userListApi, groupListApi, levelListApi, tagListApi, groupPiApi, tagPiApi, foundsApi } from '@/api/user'
+  import { userListApi, groupListApi, levelListApi, tagListApi, groupPiApi, tagPiApi, foundsApi, updateSpreadApi } from '@/api/user'
+  import { spreadClearApi } from '@/api/distribution'
   import editFrom from './edit'
   import userDetails from './userDetails'
+  import userList from '@/components/userList'
   import * as logistics from '@/api/logistics.js'
   import Cookies from 'js-cookie'
   export default {
     name: 'UserIndex',
-    components:{ editFrom, userDetails },
+    components:{ editFrom, userDetails,userList },
     filters: {
       sexFilter(status) {
         const statusMap = {
@@ -419,6 +466,14 @@
     },
     data() {
       return {
+        formExtension: {
+          image: '',
+          spreadUid: '',
+          userId: ''
+        },
+        ruleInline: {},
+        extensionVisible: false,
+        userVisible: false,
         pickerOptions: {
           shortcuts: [
             {
@@ -500,13 +555,13 @@
         props: {
           children: 'child',
           label: 'name',
-          value: 'id',
+          value: 'name',
           emitPath: false
         },
         propsCity: {
           children: 'child',
           label: 'name',
-          value: 'cityId'
+          value: 'name'
         },
         headeNum: [
           { 'type': '', 'name': '全部用户' },
@@ -585,6 +640,46 @@
       this.getCityList()
     },
     methods: {
+      // 清除
+      clearSpread(row) {
+        this.$modalSure('解除【' + row.nickname + '】的上级推广人吗').then(() => {
+          spreadClearApi(row.uid).then((res) => {
+            this.$message.success('清除成功')
+            this.getList()
+          })
+        })
+      },
+      onSubExtension(formName){
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            updateSpreadApi(this.formExtension).then(res => {
+              this.$message.success('设置成功')
+              this.extensionVisible = false
+              this.getList()
+            })
+          } else {
+            return false;
+          }
+        });
+      },
+      getTemplateRow(row){
+         this.formExtension.image = row.avatar
+         this.formExtension.spreadUid = row.uid
+      },
+      setExtension(row){
+        this.formExtension = {
+            image: '',
+            spreadUid: '',
+            userId: row.uid
+        };
+        this.extensionVisible = true
+      },
+      handleCloseExtension(){
+        this.extensionVisible = false
+      },
+      modalPicTap(){
+        this.userVisible = true
+      },
       resetForm(){
         this.visible = false;
       },
@@ -609,6 +704,7 @@
         this.levelData = []
         this.groupData = []
         this.labelData = []
+        this.timeVal = []
         this.getList()
       },
       // 列表
@@ -686,14 +782,14 @@
         }
       },
       editUser(id) {
-        this.visible = true
         this.uid = id
+        this.visible = true
       },
       submitForm(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
             this.loading = true
-            this.batchName ==='group' ? groupPiApi({groupId: this.dynamicValidateForm.groupId.join(','), id: this.userIds}).then(res => {
+            this.batchName ==='group' ? groupPiApi({groupId: this.dynamicValidateForm.groupId, id: this.userIds}).then(res => {
               this.$message.success('设置成功')
               this.loading = false
               this.handleClose()
@@ -713,19 +809,22 @@
           }
         });
       },
-      setBatch(name){
+      setBatch(name, row){
         this.batchName = name
+        if(row){
+          this.selectionList = [row]
+          this.userIds = row.uid
+        }else{
+          this.selectionList=[]
+        }
+      //  row?this.selectionList = [row]:this.selectionList=[]
+
         if (this.selectionList.length === 0) return this.$message.warning('请选择要设置的用户')
         this.dialogVisible = true
       },
       handleClose(){
         this.dialogVisible = false
         this.$refs['dynamicValidateForm'].resetFields();
-      },
-      // 选择时间
-      selectChange (tab) {
-        this.timeVal = [];
-        this.getList();
       },
       // 全选
       onSelectTab (selection) {
@@ -758,7 +857,7 @@
       // 具体日期
       onchangeTime (e) {
         this.timeVal = e;
-        this.tableFrom.dateLimit = e ? this.timeVal.join(',') : '';
+        this.userFrom.dateLimit = e ? this.timeVal.join(',') : '';
       },
       // 分组列表
       groupLists () {
@@ -817,9 +916,13 @@
           ? putOnShellApi( row.id ).then(() => {
             this.$message.success('上架成功')
             this.getList()
+          }).catch(()=>{
+            row.isShow = !row.isShow
           }) : offShellApi(row.id).then(() => {
             this.$message.success('下架成功')
             this.getList()
+          }).catch(()=>{
+            row.isShow = !row.isShow
           })
       }
     }
@@ -833,6 +936,14 @@
       /*width: 87% !important;*/
     /*}*/
   /*}*/
+  .el-dropdown-link {
+    cursor: pointer;
+    color: #409EFF;
+    font-size: 12px;
+  }
+  .el-icon-arrow-down {
+    font-size: 12px;
+  }
   .text-right{
     text-align: right;
   }

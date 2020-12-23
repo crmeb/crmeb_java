@@ -1,12 +1,16 @@
 package com.zbkj.crmeb.store.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.Feature;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
+import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.constants.Constants;
 import com.exception.CrmebException;
@@ -16,12 +20,14 @@ import com.github.pagehelper.PageInfo;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.utils.RedisUtil;
+import com.zbkj.crmeb.bargain.service.StoreBargainService;
 import com.zbkj.crmeb.category.model.Category;
 import com.zbkj.crmeb.category.service.CategoryService;
+import com.zbkj.crmeb.combination.service.StoreCombinationService;
 import com.zbkj.crmeb.front.request.IndexStoreProductSearchRequest;
-import com.zbkj.crmeb.front.response.ProductActivityItemResponse;
 import com.zbkj.crmeb.marketing.model.StoreCoupon;
 import com.zbkj.crmeb.marketing.service.StoreCouponService;
+import com.zbkj.crmeb.pass.service.OnePassService;
 import com.zbkj.crmeb.seckill.service.StoreSeckillService;
 import com.zbkj.crmeb.store.dao.StoreProductDao;
 import com.zbkj.crmeb.store.model.*;
@@ -105,6 +111,18 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
 
     @Autowired
     private ProductUtils productUtils;
+
+    @Autowired
+    private StoreBargainService storeBargainService;
+
+    @Autowired
+    private StoreCombinationService storeCombinationService;
+
+    @Autowired
+    private StoreSeckillService storeSeckillService;
+
+    @Autowired
+    private OnePassService onePassService;
 
     private static final Logger logger = LoggerFactory.getLogger(OrderRefundByUser.class);
 
@@ -293,6 +311,16 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
      */
     @Override
     public boolean save(StoreProductRequest storeProductRequest) {
+        // 判断产品价格必须大于0
+        List<StoreProductAttrValueRequest> attrValue = storeProductRequest.getAttrValue();
+        if (attrValue.size() > 0) {
+            for (StoreProductAttrValueRequest attr : attrValue) {
+                if (attr.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+                    new CrmebException("商品价格必须大于0");
+                }
+            }
+        }
+
         StoreProduct storeProduct = new StoreProduct();
         BeanUtils.copyProperties(storeProductRequest, storeProduct);
         storeProduct.setAddTime(DateUtil.getNowTime());
@@ -399,6 +427,16 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
      */
     @Override
     public boolean update(StoreProductRequest storeProductRequest) {
+        // 判断产品价格必须大于0
+        List<StoreProductAttrValueRequest> attrValue = storeProductRequest.getAttrValue();
+        if (attrValue.size() > 0) {
+            for (StoreProductAttrValueRequest attr : attrValue) {
+                if (attr.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+                    new CrmebException("商品价格必须大于0");
+                }
+            }
+        }
+
         StoreProduct storeProduct = new StoreProduct();
         BeanUtils.copyProperties(storeProductRequest, storeProduct);
         // 设置Acticity活动
@@ -567,7 +605,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                     attrValue.put("weight", currentAttrValue.getWeight());
                     attrValue.put("volume", currentAttrValue.getVolume());
                     attrValue.put("suk", currentSku);
-                    attrValue.put("attrValue", JSON.parse(storeProductAttrValues.get(i).getAttrValue()));
+                    attrValue.put("attrValue", JSON.parseObject(storeProductAttrValues.get(i).getAttrValue(), Feature.OrderedField));
                     attrValue.put("brokerage", currentAttrValue.getBrokerage());
                     attrValue.put("brokerage_two", currentAttrValue.getBrokerageTwo());
                     String[] skus = currentSku.split(",");
@@ -917,12 +955,24 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
     /**
      *
      * @param productId 商品id
+     * @param type 类型：recycle——回收站 delete——彻底删除
      * @return
      */
     @Override
     public boolean deleteProduct(Integer productId, String type) {
+        StoreProduct product = getById(productId);
+        if (ObjectUtil.isNull(product)) {
+            throw new CrmebException("商品不存在");
+        }
+        if (StrUtil.isNotBlank(type) && "recycle".equals(type) && product.getIsDel()) {
+            throw new CrmebException("商品已存在回收站");
+        }
+
         LambdaUpdateWrapper<StoreProduct> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         if (StrUtil.isNotBlank(type) && "delete".equals(type)) {
+            // 判断商品活动状态(秒杀、砍价、拼团)
+            isExistActivity(productId);
+
             lambdaUpdateWrapper.eq(StoreProduct::getId, productId);
             int delete = dao.delete(lambdaUpdateWrapper);
             return delete > 0;
@@ -930,6 +980,29 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         lambdaUpdateWrapper.eq(StoreProduct::getId, productId);
         lambdaUpdateWrapper.set(StoreProduct::getIsDel, true);
         return update(lambdaUpdateWrapper);
+    }
+
+    /**
+     * 判断商品活动状态(秒杀、砍价、拼团)
+     * @param productId
+     */
+    private void isExistActivity(Integer productId) {
+        Boolean existActivity = false;
+        // 秒杀活动判断
+        existActivity = storeSeckillService.isExistActivity(productId);
+        if (existActivity) {
+            throw new CrmebException("有商品关联的秒杀商品活动开启中，不能删除");
+        }
+        // 砍价活动判断
+        existActivity = storeBargainService.isExistActivity(productId);
+        if (existActivity) {
+            throw new CrmebException("有商品关联的砍价商品活动开启中，不能删除");
+        }
+        // 拼团活动判断
+        existActivity = storeCombinationService.isExistActivity(productId);
+        if (existActivity) {
+            throw new CrmebException("有商品关联的拼团商品活动开启中，不能删除");
+        }
     }
 
     /**
@@ -981,6 +1054,41 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             storeProductAttrValueService.updateById(attrValue);
         }
         return true;
+    }
+
+    /**
+     * 获取复制商品配置
+     * @return copyType 复制类型：1：一号通
+     *         copyNum 复制条数(一号通类型下有值)
+     */
+    @Override
+    public MyRecord copyConfig() {
+        String copyType = systemConfigService.getValueByKey("system_product_copy_type");
+        if (StrUtil.isBlank(copyType)) {
+            throw new CrmebException("请先进行采集商品配置");
+        }
+        int copyNum = 0;
+        if (copyType.equals("1")) {// 一号通
+            JSONObject info = onePassService.info();
+            copyNum = Optional.ofNullable(info.getJSONObject("copy").getInteger("surp")).orElse(0);
+        }
+        MyRecord record = new MyRecord();
+        record.set("copyType", copyType);
+        record.set("copyNum", copyNum);
+        return record;
+    }
+
+    /**
+     * 复制平台商品
+     * @param url 商品链接
+     * @return MyRecord
+     */
+    @Override
+    public MyRecord copyProduct(String url) {
+        JSONObject jsonObject = onePassService.copyGoods(url);
+        StoreProductRequest storeProductRequest = ProductUtils.onePassCopyTransition(jsonObject);
+        MyRecord record = new MyRecord();
+        return record.set("info", storeProductRequest);
     }
 
 }

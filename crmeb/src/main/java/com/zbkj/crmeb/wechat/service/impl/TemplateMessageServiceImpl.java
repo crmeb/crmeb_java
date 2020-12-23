@@ -31,10 +31,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
-* @author Mr.Zhang
-* @description TemplateMessageServiceImpl 接口实现
-* @date 2020-06-03
-*/
+ * TemplateMessageServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class TemplateMessageServiceImpl extends ServiceImpl<TemplateMessageDao, TemplateMessage> implements TemplateMessageService {
     private static final Logger logger = LoggerFactory.getLogger(TemplateMessageServiceImpl.class);
@@ -82,10 +89,6 @@ public class TemplateMessageServiceImpl extends ServiceImpl<TemplateMessageDao, 
 
         if(StringUtils.isNotBlank(request.getTempKey())){
             lambdaQueryWrapper.eq(TemplateMessage::getTempKey, request.getTempKey());
-        }
-
-        if(null != request.getType()){
-            lambdaQueryWrapper.eq(TemplateMessage::getType, request.getType());
         }
         lambdaQueryWrapper.orderByDesc(TemplateMessage::getId);
         return dao.selectList(lambdaQueryWrapper);

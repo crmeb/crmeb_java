@@ -3,24 +3,31 @@ package com.zbkj.crmeb.statistics.service.impl;
 import com.constants.Constants;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
+import com.zbkj.crmeb.log.service.StoreProductLogService;
 import com.zbkj.crmeb.statistics.response.HomeRateResponse;
 import com.zbkj.crmeb.statistics.service.HomeService;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.user.service.UserService;
+import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 /**
- * <p>
  * 用户表 服务实现类
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-05-16
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Service
 public class HomeServiceImpl implements HomeService {
@@ -30,6 +37,9 @@ public class HomeServiceImpl implements HomeService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private StoreProductLogService storeProductLogService;
 
     /**
      * 销售额
@@ -147,28 +157,39 @@ public class HomeServiceImpl implements HomeService {
      */
     @Override
     public HomeRateResponse views() {
-        //今日新增
-        Integer today = 0;
+        //今日访问量
+        Integer today = storeProductLogService.getCountByTimeAndType(Constants.SEARCH_DATE_DAY, "visit");
 
-        //昨日新增
-        Integer yesterday = 0;
+        //昨日访问量
+        Integer yesterday = storeProductLogService.getCountByTimeAndType(Constants.SEARCH_DATE_YESTERDAY, "visit");
 
-        //本周
-        Integer week = 0;
+        //本周访问量
+        Integer week = storeProductLogService.getCountByTimeAndType(Constants.SEARCH_DATE_WEEK, "visit");
 
-        //上周
-        Integer preWeek = 0;
+        //上周访问量
+        Integer preWeek = storeProductLogService.getCountByTimeAndType(Constants.SEARCH_DATE_PRE_WEEK, "visit");
 
         //日同比
-        Integer dayRate = 0;
+        Integer dayRate = CrmebUtil.getRate(today, yesterday);
 
         //周同比
-        Integer weekRate = 0;
+        Integer weekRate = CrmebUtil.getRate(week, preWeek);
 
-        //总数
-        Integer all = 0;
-
+        //总访问量
+        Integer all = storeProductLogService.getCountByTimeAndType(Constants.SEARCH_DATE_MONTH, "visit");
         return new HomeRateResponse(yesterday, dayRate, weekRate, all);
+    }
+
+    /**
+     * 增长率计算
+     */
+    private Double growth(Integer nowValuem, Integer lastValue) {
+        if (nowValuem == 0 && lastValue == 0) return 0D;
+        if (lastValue == 0) return nowValuem.doubleValue();
+        if (nowValuem == 0) return -lastValue.doubleValue();
+        double v = (nowValuem - lastValue) / lastValue.doubleValue();
+        BigDecimal bigDecimal = new BigDecimal(v * 100).setScale(2, RoundingMode.UP);
+        return bigDecimal.doubleValue();
     }
 
     /**

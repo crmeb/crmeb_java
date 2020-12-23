@@ -78,11 +78,11 @@ export function orderMarkApi(params) {
  * 订单 发货
  * @param pram
  */
-export function orderSendApi(params) {
+export function orderSendApi(data) {
   return request({
     url: '/admin/store/order/send',
-    method: 'get',
-    params
+    method: 'post',
+    data
   })
 }
 
@@ -170,6 +170,27 @@ export function editPriceApi(params) {
 export function orderTimeApi(params) {
   return request({
     url: `/admin/store/order/time`,
+    method: 'get',
+    params
+  })
+}
+
+/**
+ *面单默认配置信息
+ */
+export function sheetInfoApi() {
+  return request({
+    url: `/admin/store/order/sheet/info`,
+    method: 'get'
+  })
+}
+
+/**
+ *面单默认配置信息
+ */
+export function getLogisticsInfoApi(params) {
+  return request({
+    url: `/admin/store/order/getLogisticsInfo`,
     method: 'get',
     params
   })

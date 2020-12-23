@@ -210,7 +210,7 @@
 				<view class='bnt bg-color' v-if="status.type==0" @tap='pay_open(orderInfo.orderId)'>立即付款</view>
 				<!-- #ifdef MP -->
 				<view @tap="openSubcribe('/pages/users/goods_return/index?orderId='+orderInfo.orderId)" class='bnt cancel'
-				 v-else-if="orderInfo.paid === 1 && orderInfo.refundStatus === 0">申请退款</view>
+				 v-else-if="orderInfo.paid === true && orderInfo.refundStatus === 0">申请退款</view>
 				<!-- #endif -->
 				<!-- #ifndef MP -->
 				<navigator hover-class="none" :url="'/pages/users/goods_return/index?orderId='+orderInfo.orderId" class='bnt cancel'
@@ -829,6 +829,7 @@
 						newCartInfo.push(item.info);
 					});
 					that.$set(that, 'cartInfo', newCartInfo);
+					console.log(that.cartInfo)
 					if (res.data.refundStatus != 0) {
 						that.isGoodsReturn = true;
 					};

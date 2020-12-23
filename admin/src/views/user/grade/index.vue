@@ -7,12 +7,12 @@
             <el-form-item label="用户状态：" class="mr10">
               <el-select v-model="tableFrom.isShow" clearable  placeholder="请选择用户状态" @change="seachList"  class="selWidth">
                 <el-option label="全部" value=""></el-option>
-                <el-option label="显示" value="1"></el-option>
-                <el-option label="隐藏" value="0"></el-option>
+                <el-option label="显示" value="true"></el-option>
+                <el-option label="隐藏" value="false"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="等级名称：">
-              <el-input v-model="tableFrom.name" placeholder="请输入等级名称"  class="selWidth">
+              <el-input v-model="tableFrom.name" placeholder="请输入等级名称"  class="selWidth" clearable>
                 <el-button slot="append" icon="el-icon-search"  @click="seachList" size="small"/>
               </el-input>
             </el-form-item>
@@ -75,7 +75,7 @@
         <el-table-column label="操作" min-width="120" fixed="right" align="center">
           <template slot-scope="scope">
             <el-button type="text" @click="edit(scope.row.id)" class="mr10">编辑</el-button>
-            <el-button type="text" @click="handleDelete(scope.row.id, scope.$index)">删除</el-button>
+            <!--<el-button type="text" @click="handleDelete(scope.row.id, scope.$index)">删除</el-button>-->
           </template>
         </el-table-column>
       </el-table>
@@ -174,6 +174,8 @@
         levelUseApi({id: row.id, value:row.isShow}).then(() => {
           this.$message.success('修改成功')
           this.getList()
+        }).catch(()=>{
+          row.isShow = !row.isShow
         })
       }
     }

@@ -272,7 +272,9 @@
 				news: true,
 				again: false,
 				addAgain: false,
-				secKill: false //是否是秒杀
+				bargain: false, //是否是砍价
+				combination: false, //是否是拼团
+				secKill: false, //是否是秒杀
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -290,7 +292,7 @@
 				url: 1
 			});
 			this.couponId = options.couponId || 0;
-			this.pinkId = options.pinkid ? parseInt(options.pinkid) : 0;
+			this.pinkId = options.pinkId ? parseInt(options.pinkId) : 0;
 			this.addressId = options.addressId || 0;
 			this.cartId = options.cartId;
 			this.is_address = options.is_address ? true : false;
@@ -298,6 +300,8 @@
 			this.again = options.again || false;
 			this.addAgain = options.addAgain || false;
 			this.secKill = options.secKill || false;
+			this.combination = options.combination || false;
+			this.bargain = options.bargain || false;
 			if (this.isLogin) {
 				this.getaddressInfo();
 				this.getConfirm();
@@ -507,7 +511,7 @@
 			 */
 			getConfirm: function() {
 				let that = this;
-				orderConfirm(that.cartId,that.news,this.addAgain,this.secKill).then(res => {
+				orderConfirm(that.cartId,that.news,this.addAgain,this.secKill,this.combination,this.bargain).then(res => {
 					that.$set(that, 'userInfo', res.data.userInfo);
 					that.$set(that, 'integral', res.data.userInfo.integral);
 					that.$set(that, 'cartInfo', res.data.cartInfo);
@@ -524,9 +528,9 @@
 					that.cartArr[0].payStatus = res.data.payWeixinOpen || 0
 					that.cartArr[1].payStatus = res.data.yuePayStatus || 0
 					if (res.data.offlinePayStatus == 2) {
-						that.cartArr[2].payStatus = 0
-					} else {
 						that.cartArr[2].payStatus = 1
+					} else {
+						that.cartArr[2].payStatus = 0
 					}
 
 					// that.$set(that, 'cartArr', that.cartArr);
@@ -551,8 +555,8 @@
 				let BargainId = 0;
 				let combinationId = 0;
 				cartINfo.forEach(function(value, index, cartINfo) {
-					BargainId = cartINfo[index].bargain_id,
-						combinationId = cartINfo[index].combination_id
+					BargainId = cartINfo[index].bargainId,
+						combinationId = cartINfo[index].combinationId
 				})
 				that.$set(that, 'BargainId', parseInt(BargainId));
 				that.$set(that, 'combinationId', parseInt(combinationId));
@@ -623,8 +627,7 @@
 				that.textareaStatus = false;
 				that.address.address = true;
 				that.pagesUrl = '/pages/users/user_address_list/index?cartId=' + this.cartId + '&pinkId=' + this.pinkId +
-					'&couponId=' +
-					this.couponId;
+					'&couponId=' + this.couponId + '&secKill=' + this.secKill + '&combination=' + this.combination + '&bargain=' + this.bargain;
 			},
 			realName: function(e) {
 				this.contacts = e.detail.value;
@@ -640,6 +643,10 @@
 						orderId = result.orderId,
 						jsConfig = res.data.jsConfig,
 						message = res.data.message;
+						if(that.totalPrice===0)return that.$util.Tips({
+										title: '支付成功',
+										icon: 'success'
+									});
 						if(that.news == "false"){
 							orderPay({
 								'paytype': that.payType,
@@ -648,7 +655,7 @@
 								'from': 'routine',
 								// #endif
 								// #ifdef H5 || APP-PLUS
-								'from': this.$wechat.isWeixin() ? 'weixin' : 'weixinh5',
+								'from': this.$wechat.isWeixin() ? 'public' : 'weixinh5',
 								// #endif
 							}).then(res=>{
 								result = res.data.result;

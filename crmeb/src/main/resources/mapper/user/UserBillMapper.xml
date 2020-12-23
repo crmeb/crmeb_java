@@ -22,4 +22,24 @@
         ORDER BY ub.id DESC,ub.create_time DESC
     </select>
 
+    <select id="getListAdminAndIntegeal" resultType="com.zbkj.crmeb.user.response.UserBillResponse" parameterType="map">
+        SELECT ub.id,ub.link_id AS linkId,ub.pm,ub.title,ub.category,ub.type,ub.number,ub.balance,ub.mark,ub.status,ub.create_time AS createTime,ub.update_time AS updateTime,u.nickname,ub.uid FROM eb_user_bill ub
+        LEFT JOIN eb_user u ON ub.uid = u.uid
+        where 1 = 1
+        <if test="keywords != '' and keywords != null ">
+            and ( ub.id like #{keywords} or ub.uid like #{keywords} or ub.link_id like #{keywords, jdbcType=VARCHAR} or ub.title like #{keywords, jdbcType=VARCHAR} or u.nickname like #{keywords, jdbcType=VARCHAR})
+        </if>
+        <if test="type != '' and type != null">
+            and ub.type = #{type, jdbcType=VARCHAR}
+        </if>
+        <if test="category != '' and category != null">
+            and ub.category = #{category, jdbcType=VARCHAR}
+        </if>
+        <if test="startTime != '' and endTime != '' and startTime != null and endTime != null">
+            and (ub.create_time between #{startTime} and #{endTime})
+        </if>
+
+        ORDER BY ub.id DESC,ub.create_time DESC
+    </select>
+
 </mapper>

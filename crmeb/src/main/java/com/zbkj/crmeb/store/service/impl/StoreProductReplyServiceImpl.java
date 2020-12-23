@@ -1,10 +1,11 @@
 package com.zbkj.crmeb.store.service.impl;
 
-import com.alibaba.fastjson.JSONArray;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
+import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.constants.Constants;
 import com.exception.CrmebException;
@@ -42,10 +43,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
-* @author Mr.Zhang
-* @description StoreProductReplyServiceImpl 接口实现
-* @date 2020-05-27
-*/
+ * StoreProductReplyServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyDao, StoreProductReply>
         implements StoreProductReplyService {
@@ -98,7 +106,7 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
         if(!StringUtils.isBlank(request.getProductId())){
             lambdaQueryWrapper.in(StoreProductReply::getProductId, CrmebUtil.stringToArray(request.getProductId()));
         }
-        if(null != request.getProductSearch()){
+        if(StrUtil.isNotBlank(request.getProductSearch())){
             IndexStoreProductSearchRequest storeProductPram = new IndexStoreProductSearchRequest();
             storeProductPram.setKeywords(request.getProductSearch());
             List<StoreProduct> storeProducts = storeProductService.getList(storeProductPram, new PageParamRequest());
@@ -141,8 +149,8 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
 
         if(StringUtils.isNotBlank(request.getDateLimit())){
             dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
-            Date ds = DateUtil.strToDate(dateLimit.getStartTime(), Constants.DATE_FORMAT);
-            Date de = DateUtil.strToDate(dateLimit.getEndTime(), Constants.DATE_FORMAT);
+            Date ds = DateUtil.strToDate(dateLimit.getStartTime().concat(" 00:00:00"), Constants.DATE_FORMAT);
+            Date de = DateUtil.strToDate(dateLimit.getEndTime().concat(" 23:59:59"), Constants.DATE_FORMAT);
             lambdaQueryWrapper.between(StoreProductReply::getCreateTime, ds, de);
         }
         lambdaQueryWrapper.orderByDesc(StoreProductReply::getId);
@@ -248,6 +256,80 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
         lqw.eq(StoreProductReply::getOid, orderId);
         return dao.selectList(lqw);
     }
+
+    /**
+     * 商品评论列表
+     * @param productId     商品ID
+     * @param type          商品类型
+     * @return
+     */
+    @Override
+    public List<StoreProductReply> getAllByPidAndType(Integer productId, String type) {
+        LambdaQueryWrapper<StoreProductReply> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StoreProductReply::getProductId, productId);
+        lqw.eq(StoreProductReply::getReplyType, type);
+        lqw.eq(StoreProductReply::getIsDel, false);
+        lqw.orderByDesc(StoreProductReply::getId);
+        return dao.selectList(lqw);
+    }
+
+    /**
+     * H5商品评论统计
+     * @param productId 商品编号
+     * @return MyRecord
+     */
+    @Override
+    public MyRecord getH5Count(Integer productId) {
+        // 评论总数
+        Integer sumCount = getCountByScore(productId, "all");
+        // 好评总数
+        Integer goodCount = getCountByScore(productId, "good");
+        // 中评总数
+        Integer mediumCount = getCountByScore(productId, "medium");
+        // 差评总数
+        Integer poorCount = getCountByScore(productId, "poor");
+        // 好评率
+        String replyChance = "0";
+        if(sumCount > 0 && goodCount > 0){
+            replyChance = String.format("%.2f", ((goodCount.doubleValue() / sumCount.doubleValue())));
+        }
+        // 评分星数
+        Integer replyStar = 0;
+        if (sumCount > 0) {
+            replyStar = getSumStar(productId);
+        }
+        MyRecord record = new MyRecord();
+        record.set("sumCount", sumCount);
+        record.set("goodCount", goodCount);
+        record.set("mediumCount", mediumCount);
+        record.set("poorCount", poorCount);
+        record.set("replyChance", replyChance);
+        record.set("replyStar", replyStar);
+        return record;
+    }
+
+    // 获取统计数据（好评、中评、差评）
+    private Integer getCountByScore(Integer productId, String type) {
+        LambdaQueryWrapper<StoreProductReply> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StoreProductReply::getProductId, productId);
+        lqw.eq(StoreProductReply::getIsDel, false);
+
+        switch (type) {
+            case "all":
+                break;
+            case "good":
+                lqw.in(StoreProductReply::getProductScore, 4, 5);
+                break;
+            case "medium":
+                lqw.eq(StoreProductReply::getProductScore, 3);
+                break;
+            case "poor":
+                lqw.in(StoreProductReply::getProductScore, 2, 1);
+                break;
+        }
+        return dao.selectCount(lqw);
+    }
+
 
     private StoreOrder getOrder(StoreProductReply storeProductReply) {
         //订单信息

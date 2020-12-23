@@ -28,7 +28,6 @@ import java.util.List;
 @RestController
 @RequestMapping("api/admin/express/shipping/region")
 @Api(tags = "设置 -- 物流 -- 付费")
-
 public class ShippingTemplatesRegionController {
 
     @Autowired

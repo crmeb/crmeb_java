@@ -15,10 +15,10 @@
         <el-form-item label="选择品类：" prop="primaryKey" v-if="ruleForm.useType === 3">
           <el-cascader v-model="ruleForm.primaryKey" :options="merCateList" :props="props2" clearable class="selWidth" :show-all-levels="false" />
         </el-form-item>
-        <el-form-item label="商品：" v-if="ruleForm.useType === 2">
+        <el-form-item label="商品：" v-if="ruleForm.useType === 2" prop="checked">
           <div class="acea-row">
-            <template v-if="checked.length">
-              <div class="pictrue" v-for="(item, index) in checked" :key="index">
+            <template v-if="ruleForm.checked.length">
+              <div class="pictrue" v-for="(item, index) in ruleForm.checked" :key="index">
                 <img :src="item.image">
                 <i class="el-icon-error btndel" @click="handleRemove(index)" />
               </div>
@@ -48,7 +48,7 @@
             <el-radio :label="true">时间段</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="使用有效期限（天）" prop="resource" v-if="!ruleForm.isFixedTime">
+        <el-form-item label="使用有效期限（天）" prop="day" v-if="!ruleForm.isFixedTime">
           <el-input-number v-model="ruleForm.day" :min="0" label="描述文字"></el-input-number>
         </el-form-item>
         <el-form-item label="使用有效期限" prop="resource" v-if="ruleForm.isFixedTime">
@@ -60,6 +60,7 @@
             format="yyyy - MM - dd - HH : mm : ss"
             value-format="yyyy-MM-dd HH:mm:ss"
             start-placeholder="开始日期"
+            :picker-options="pickerOptions"
             end-placeholder="结束日期">
           </el-date-picker>
         </el-form-item>
@@ -77,6 +78,7 @@
             range-separator="至"
             format="yyyy - MM - dd - HH : mm : ss"
             value-format="yyyy-MM-dd HH:mm:ss"
+            :picker-options="pickerOptions"
             start-placeholder="开始日期"
             end-placeholder="结束日期">
           </el-date-picker>
@@ -123,6 +125,11 @@
     name: "creatCoupon",
     data() {
       return {
+        pickerOptions: {
+          disabledDate(time) {
+            return time.getTime() < new Date().setTime(new Date().getTime() - 3600 * 1000 * 24);
+          }
+        },
         loading: false,
         threshold: false,
         termTime: [],
@@ -154,14 +161,26 @@
           receiveEndTime: '',
           sort: 0,
           total: 1,
-          status: false
+          status: false,
+          checked: []
         },
         rules: {
           name: [
             { required: true, message: '请输入优惠券名称', trigger: 'blur' },
           ],
-        },
-        checked: []
+          day: [
+            { required: true, message: '请输入使用有效期限（天）', trigger: 'blur' },
+          ],
+          money: [
+            { required: true, message: '请输入优惠券面值', trigger: 'blur' },
+          ],
+          primaryKey: [
+            { required: true, message: '请选择品类', trigger: 'change' },
+          ],
+          checked:  [
+            { required: true, message: '请至少选择一个商品', trigger: 'change', type: 'array' },
+          ]
+        }
       }
     },
     mounted() {
@@ -195,9 +214,9 @@
             sort: info.sort,
             total: info.total,
             status: info.status,
-            primaryKey: Number(info.primaryKey)
+            primaryKey: Number(info.primaryKey),
+            checked: res.product
           }
-          this.checked = res.product
           info.minPrice === 0 ? this.threshold = false : this.threshold = true
           info.isForever ? this.isForeverTime = [info.receiveStartTime, info.receiveEndTime] : this.isForeverTime = []
           info.isFixedTime ? this.termTime = [info.useStartTime, info.useEndTime] : this.termTime = []
@@ -208,16 +227,16 @@
         })
       },
       handleRemove (i) {
-        this.checked.splice(i, 1)
+        this.ruleForm.checked.splice(i, 1)
       },
       changeGood(){
         const _this = this
         this.$modalGoodList(function(row) {
-          _this.checked = row
-        },'many',_this.checked)
+          _this.ruleForm.checked = row
+        },'many',_this.ruleForm.checked)
       },
       submitForm(formName) {
-        if( this.ruleForm.useType === 2 ) this.ruleForm.primaryKey = this.checked.map(item => {return item.id}).join(',')
+        if( this.ruleForm.useType === 2 ) this.ruleForm.primaryKey = this.ruleForm.checked.map(item => {return item.id}).join(',')
         if( this.ruleForm.useType === 1 ) this.ruleForm.primaryKey = ''
         if( !this.threshold ) this.ruleForm.minPrice = 0
         if( !this.ruleForm.isLimited ) this.ruleForm.total = 0

@@ -11,7 +11,7 @@
               <el-date-picker v-model="timeVal" value-format="yyyy-MM-dd" format="yyyy-MM-dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTime" />
             </el-form-item>
             <el-form-item label="提现状态：">
-              <el-radio-group v-model="tableFrom.status" type="button" size="small" @change="getList(1)">
+              <el-radio-group v-model="tableFrom.status" type="button" size="small" @change="getList(1)" clearable>
                 <el-radio-button label="">全部</el-radio-button>
                 <el-radio-button label="0">审核中</el-radio-button>
                 <el-radio-button label="1">已提现</el-radio-button>
@@ -19,7 +19,7 @@
               </el-radio-group>
             </el-form-item>
             <el-form-item label="提现方式：">
-              <el-radio-group v-model="tableFrom.extractType" type="button" size="small" @change="getList(1)">
+              <el-radio-group v-model="tableFrom.extractType" type="button" size="small" @change="getList(1)" clearable>
                 <el-radio-button label="">全部</el-radio-button>
                 <el-radio-button label="bank">银行卡</el-radio-button>
                 <el-radio-button label="alipay">支付宝</el-radio-button>
@@ -27,7 +27,7 @@
               </el-radio-group>
             </el-form-item>
             <el-form-item label="关键字：" class="width100">
-              <el-input v-model="tableFrom.keywords" placeholder="微信号/姓名/支付宝账号/银行卡号/失败原因" class="selWidth" size="small">
+              <el-input v-model="tableFrom.keywords" placeholder="微信号/姓名/支付宝账号/银行卡号/失败原因" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search" size="small" @click="getList(1)" />
               </el-input>
             </el-form-item>

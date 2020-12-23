@@ -10,10 +10,10 @@
               </el-select>
             </el-form-item>
             <el-form-item label="名称：">
-              <el-input v-model="tableFrom.title" placeholder="请输入模板名称" class="selWidth" size="small"></el-input>
+              <el-input v-model="tableFrom.title" placeholder="请输入模板名称" class="selWidth" size="small" clearable></el-input>
             </el-form-item>
             <el-form-item label="ID：">
-              <el-input v-model="tableFrom.tempId" placeholder="请输入模板ID" class="selWidth" size="small"></el-input>
+              <el-input v-model="tableFrom.tempId" placeholder="请输入模板ID" class="selWidth" size="small" clearable></el-input>
             </el-form-item>
             <el-form-item>
               <el-button type="primary" @click="seachList" size="small">查询</el-button>
@@ -92,7 +92,7 @@
         <el-table-column
           prop="createTime"
           label="添加时间"
-          min-width="120"
+          min-width="150"
         />
         <el-table-column label="操作" min-width="150" fixed="right" align="center">
           <template slot-scope="scope">
@@ -256,6 +256,8 @@
         myTempStatusApi({status: row.status , id: row.id}).then(() => {
           this.$message.success('修改成功')
           this.getList()
+        }).catch(()=>{
+          row.status = !row.status
         })
       },
       // 修改场景

@@ -20,7 +20,7 @@
 		</view>
 		<view class='noCommodity' v-else-if="!collectProductList.length && page > 1">
 			<view class='pictrue'>
-				<image src='../../../static/images/noCollection.png'></image>
+				<image src='../static/noCollection.png'></image>
 			</view>
 			<recommend :hostProduct="hostProduct"></recommend>
 		</view>

@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.export.vo;
 
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -27,40 +28,25 @@ import java.math.BigDecimal;
 public class ProductExcelVo implements Serializable {
 
     private static final long serialVersionUID=1L;
-    public ProductExcelVo() {}
-    public ProductExcelVo(String storeName, String storeInfo, String cateName, BigDecimal price, Integer sales, Integer stock, Integer like, Integer collect) {
-        this.storeName = storeName;
-        this.storeInfo = storeInfo;
-        this.cateName = cateName;
-        this.price = price;
-        this.sales = sales;
-        this.stock = stock;
-        this.like = like;
-        this.collect = collect;
-    }
 
-    @ExcelColumn(value = "商品名称", col = 1)
+    @ApiModelProperty(value = "商品名称")
     private String storeName;
 
-    @ExcelColumn(value = "商品简介", col = 2)
+    @ApiModelProperty(value = "商品简介")
     private String storeInfo;
 
-    @ExcelColumn(value = "分类", col = 3)
+    @ApiModelProperty(value = "商品分类")
     private String cateName;
 
-    @ExcelColumn(value = "商品价格", col = 4)
-    private BigDecimal price;
+    @ApiModelProperty(value = "价格")
+    private String price;
 
-    @ExcelColumn(value = "销量", col = 5)
-    private Integer sales;
+    @ApiModelProperty(value = "库存")
+    private String stock;
 
-    @ExcelColumn(value = "库存", col = 6)
-    private Integer stock;
+    @ApiModelProperty(value = "销量")
+    private String sales;
 
-    @ExcelColumn(value = "点赞人数", col = 7)
-    private Integer like;
-
-    @ExcelColumn(value = "收藏人数", col = 8)
-    private Integer collect;
-
+    @ApiModelProperty(value = "浏览量")
+    private String browse;
 }

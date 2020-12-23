@@ -2,15 +2,21 @@ package com.zbkj.crmeb.system.request;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotEmpty;
 
 /**
- * @author stivepeim
- * @title: SystemAdminLoginRequest
- * @projectName crmeb
- * @Description: TODO
- * @since 2020/4/1418:29
+ * SystemAdminLoginRequest
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 public class SystemAdminLoginRequest {
@@ -20,6 +26,7 @@ public class SystemAdminLoginRequest {
 
     @ApiModelProperty(value = "后台管理员密码", example = "userPassword")
     @NotEmpty(message = "密码 不能为空")
+    @Length(min = 6, max = 30)
     private String pwd;
 
     @ApiModelProperty(value = "key", required = true)

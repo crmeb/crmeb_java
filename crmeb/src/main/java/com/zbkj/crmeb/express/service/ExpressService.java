@@ -1,9 +1,12 @@
 package com.zbkj.crmeb.express.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.express.model.Express;
 import com.zbkj.crmeb.express.request.ExpressSearchRequest;
+import com.zbkj.crmeb.express.request.ExpressUpdateRequest;
+import com.zbkj.crmeb.express.request.ExpressUpdateShowRequest;
 
 import java.util.List;
 
@@ -33,10 +36,43 @@ public interface ExpressService extends IService<Express> {
 
     Express info(Integer id);
 
-//    /**
-//     * 根据快递单号和快递公司类型查看物流信息
-//     * @param no 单号
-//     * @param type 快递公司类型
-//     */
-//    JSONObject getExpressInfo(String no, String type);
+    /**
+     * 编辑
+     */
+    Boolean updateExpress(ExpressUpdateRequest expressRequest);
+
+    /**
+     * 修改显示状态
+     */
+    Boolean updateExpressShow(ExpressUpdateShowRequest expressRequest);
+
+    /**
+     * 同步快递公司
+     */
+    Boolean syncExpress();
+
+    /**
+     * 查询全部快递公司
+     */
+    List<Express> findAll();
+
+    /**
+     * 查询快递公司面单模板
+     * @param com 快递公司编号
+     */
+    JSONObject template(String com);
+
+    /**
+     * 查询快递公司
+     * @param code 快递公司编号
+     * @return
+     */
+    Express getByCode(String code);
+
+    /**
+     * 打印电子面单
+     * @param cargo 物品名称
+     * @param count 商品数量
+     */
+    Boolean dump(String cargo, Integer count);
 }

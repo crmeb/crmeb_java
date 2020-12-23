@@ -9,17 +9,8 @@
                 <el-option :label="item.label" :value="item.value" v-for="(item, index) in switchData" :key="index"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="类型：">
-              <el-select v-model="tableFrom.type" placeholder="请选择类型" clearable class="selWidth">
-                <el-option label="订阅消息" value="0"></el-option>
-                <el-option label="模板消息" value="1"></el-option>
-              </el-select>
-            </el-form-item>
             <el-form-item label="模板名称：">
-              <el-input v-model="tableFrom.name" placeholder="请输入模板名称" class="selWidth" size="small"></el-input>
-            </el-form-item>
-            <el-form-item label="微信模板ID：">
-              <el-input v-model="tableFrom.tempId" placeholder="请输入微信模板ID" class="selWidth" size="small"></el-input>
+              <el-input v-model="tableFrom.name" placeholder="请输入模板名称" class="selWidth" size="small" clearable></el-input>
             </el-form-item>
             <el-form-item>
               <el-button type="primary" @click="seachList" size="small">查询</el-button>
@@ -40,6 +31,11 @@
           label="ID"
           width="80"
           prop="id"
+        />
+        <el-table-column
+          prop="tempKey"
+          label="模板编号"
+          min-width="150"
         />
         <el-table-column
           prop="tempId"
@@ -136,9 +132,7 @@
             page: 1,
             limit: 20,
             status: '',
-            name: '',
-            type: this.$route.path.indexOf('routineTemplate') !== -1? '0' :'1',
-            tempId: ''
+            name: ''
           },
           tableData: {
             data: [],
@@ -217,6 +211,8 @@
           wechatTemplateStatusApi(row.id, {status: row.status}).then(() => {
             this.$message.success('修改成功')
             this.getList()
+          }).catch(()=>{
+            row.status = !row.status
           })
         }
       }

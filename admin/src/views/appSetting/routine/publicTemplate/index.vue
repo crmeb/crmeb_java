@@ -5,7 +5,7 @@
         <div class="container">
           <el-form size="small" :inline="true"  label-width="100px">
             <el-form-item label="模板标题：">
-              <el-input v-model="tableFrom.title" placeholder="请输入模板标题" class="selWidth" size="small"></el-input>
+              <el-input v-model="tableFrom.title" placeholder="请输入模板标题" class="selWidth" size="small" clearable></el-input>
             </el-form-item>
             <el-form-item label="所属类目：">
               <el-select v-model="tableFrom.categoryId" placeholder="请选择状态" clearable class="selWidth">

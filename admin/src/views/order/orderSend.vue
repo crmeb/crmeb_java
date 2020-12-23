@@ -1,6 +1,6 @@
 <template>
-    <el-dialog :visible.sync="modals" title="订单记录" class="order_box">
-        <el-form ref="formItem" :model="formItem" label-width="110px" @submit.native.prevent>
+    <el-dialog :visible.sync="modals" title="订单记录" class="order_box" :before-close="handleClose" width="600px">
+        <el-form ref="formItem" :model="formItem" label-width="110px" @submit.native.prevent :rules="rules">
             <el-form-item label="选择类型：">
                 <el-radio-group v-model="formItem.type" @change="changeRadio(formItem.type)">
                     <el-radio label="1">发货</el-radio>
@@ -9,25 +9,59 @@
                 </el-radio-group>
             </el-form-item>
             <div v-if="formItem.type==='1'">
-                <el-form-item label="快递公司：" prop="expressId"
-                              :rules="[{ required: true, message: '请选择快递公司', trigger: 'change' }]">
-                    <el-select v-model="formItem.expressId" style="width:80%;">
-                        <el-option v-for="(item,i) in express" :value="item.id" :key="i" :label="item.name"></el-option>
+                <el-form-item label="发货类型：" prop="expressId">
+                  <el-radio-group v-model="formItem.expressRecordType" @change="changeRadio(formItem.expressRecordType)">
+                    <el-radio label="1">手动填写</el-radio>
+                    <el-radio label="2">电子面单打印</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+                <el-form-item label="快递公司：" prop="expressCode">
+                    <el-select v-model="formItem.expressCode" filterable  style="width:80%;" @change="onChangeExport(formItem.expressCode)">
+                        <el-option v-for="(item,i) in express" :value="item.code" :key="i" :label="item.name"></el-option>
                     </el-select>
                 </el-form-item>
-                <el-form-item label="快递单号：" prop="expressCode"
-                              :rules="[{ required: true, message: '请输入快递单号', trigger: 'blur' }]">
-                    <el-input v-model="formItem.expressCode" placeholder="请输入快递单号" style="width:80%;"></el-input>
+                <el-form-item v-if="formItem.expressRecordType === '1'" label="快递单号：" prop="expressNumber">
+                    <el-input v-model="formItem.expressNumber" placeholder="请输入快递单号" style="width:80%;"></el-input>
                 </el-form-item>
+                <template v-if="formItem.expressRecordType === '2'">
+                  <el-form-item label="电子面单：" class="express_temp_id" prop="expressTempId">
+                    <div class="acea-row">
+                      <el-select v-model="formItem.expressTempId" placeholder="请选择电子面单" :class="[formItem.expressTempId?'width9':'width8']" @change="onChangeImg">
+                        <el-option v-for="(item,i) in exportTempList" :value="item.temp_id" :key="i" :label="item.title"></el-option>
+                      </el-select>
+                      <div v-if="formItem.expressTempId" style="position: relative;">
+                        <!--<span class="tempImg" @click="">预览</span>-->
+                        <div class="tempImgList ml10">
+                          <div class="demo-image__preview">
+                            <el-image
+                              style="width: 36px; height: 36px"
+                              :src="tempImg"
+                              :preview-src-list="[tempImg]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <!--<Button v-if="formItem.expressTempId" type="text" @click="preview">预览</Button>-->
+                    </div>
+
+                  </el-form-item>
+                  <el-form-item label="寄件人姓名：" prop="toName">
+                    <el-input v-model="formItem.toName" placeholder="请输入寄件人姓名" style="width:80%;"></el-input>
+                  </el-form-item>
+                  <el-form-item label="寄件人电话：" prop="toTel">
+                    <el-input v-model="formItem.toTel" placeholder="请输入寄件人电话" style="width:80%;"></el-input>
+                  </el-form-item>
+                  <el-form-item label="寄件人地址：" prop="toAddr">
+                    <el-input v-model="formItem.toAddr" placeholder="请输入寄件人地址" style="width:80%;"></el-input>
+                  </el-form-item>
+              </template>
             </div>
             <div v-if="formItem.type==='2'">
-                <el-form-item label="送货人姓名：" prop="expressId"
-                              :rules="[{ required: true, message: '请输入送货人姓名', trigger: 'blur' }]">
-                    <el-input v-model="formItem.expressId" placeholder="请输入送货人姓名" style="width:80%;"></el-input>
+                <el-form-item label="送货人姓名：" prop="deliveryName">
+                    <el-input v-model="formItem.deliveryName" placeholder="请输入送货人姓名" style="width:80%;"></el-input>
                 </el-form-item>
-                <el-form-item label="送货人电话：" prop="expressCode"
-                              :rules="[{ required: true, message: '请输入送货人电话', trigger: 'blur' }]">
-                    <el-input v-model="formItem.expressCode" placeholder="请输入送货人电话" style="width:80%;"></el-input>
+                <el-form-item label="送货人电话：" prop="deliveryTel">
+                    <el-input v-model="formItem.deliveryTel" placeholder="请输入送货人电话" style="width:80%;"></el-input>
                 </el-form-item>
             </div>
         </el-form>
@@ -39,8 +73,17 @@
 </template>
 
 <script>
-    import { orderSendApi } from '@/api/order'
-    import { expressList } from '@/api/logistics';
+    import { orderSendApi, sheetInfoApi } from '@/api/order'
+    import { expressAllApi, exportTempApi } from '@/api/sms'
+    const validatePhone = (rule, value, callback) => {
+      if (!value) {
+        return callback(new Error('请填写手机号'));
+      } else if (!/^1[3456789]\d{9}$/.test(value)) {
+        callback(new Error('手机号格式不正确!'));
+      } else {
+        callback();
+      }
+    };
     export default {
         name: 'orderSend',
         props: {
@@ -50,17 +93,78 @@
             return {
                 formItem: {
                     type: '1',
+                    expressRecordType: '1',
                     expressId: '',
                     expressCode: '',
-                    id: ''
+                    id: '',
+                    deliveryName: '',
+                    deliveryTel: '',
+                   // expressName: '',
+                    expressNumber:'',
+                    expressTempId: '',
+                    toAddr: '',
+                    toName: '',
+                    toTel: '',
                 },
                 modals: false,
-                express: []
+                express: [],
+                exportTempList: [],
+                tempImg: '',
+              rules: {
+                toName: [
+                  { required: true, message: '请输寄件人姓名', trigger: 'blur' }
+                ],
+                toTel: [
+                  { required: true, validator: validatePhone, trigger: 'blur' }
+                ],
+                toAddr: [
+                  { required: true, message: '请输入寄件人地址', trigger: 'blur' }
+                ],
+                expressCode: [
+                  { required: true, message: '请选择快递公司', trigger: 'change' }
+                ],
+                expressNumber: [
+                  { required: true, message: '请输入快递单号', trigger: 'blur' }
+                ],
+                expressTempId: [
+                  { required: true, message: '请选择电子面单', trigger: 'change' }
+                ],
+                deliveryName: [
+                  { required: true, message: '请输入送货人姓名', trigger: 'blur' }
+                ],
+                deliveryTel: [
+                  { required: true, validator: validatePhone, trigger: 'blur' }
+                ]
+              }
             }
         },
         mounted () {
         },
         methods: {
+          // 默认信息
+          sheetInfo () {
+            sheetInfoApi().then(async res => {
+                this.formItem.toAddr= res.exportToAddress || '';
+                this.formItem.toName= res.exportToName || '';
+                this.formItem.toTel= res.exportToTel || '';
+            })
+          },
+          // 快递公司选择
+          onChangeExport (val) {
+            this.formItem.expressTempId = '';
+            this.exportTemp(val);
+          },
+          // 电子面单模板
+          exportTemp (val) {
+            exportTempApi({ com: val }).then(async res => {
+              this.exportTempList = res.data.data || [];
+            })
+          },
+          onChangeImg (item) {
+            this.exportTempList.map(i => {
+              if (i.temp_id === item) this.tempImg = i.pic
+            })
+          },
             changeRadio (o) {
               if( o === '3'){
                 this.formItem.expressId = ''
@@ -69,8 +173,8 @@
             },
             // 物流公司列表
             getList () {
-              expressList({ page: 1, limit: 999, isShow:1 }).then(async res => {
-                    this.express = res.list
+              expressAllApi().then(async res => {
+                    this.express = res
                 })
             },
             // 提交
@@ -89,15 +193,39 @@
                 }
               })
             },
+          handleClose(){
+            this.cancel('formItem');
+          },
             cancel (name) {
                 this.modals = false;
                 this.$refs[name].resetFields();
                 this.formItem.type = '1';
+                this.formItem.expressRecordType = '1';
             }
         }
     }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  .width8 {
+    width: 80%;
+  }
 
+  .width9 {
+    width: 70%;
+  }
+
+  .tempImgList {
+    // opacity: 1;
+    width: 38px !important;
+    height: 30px !important;
+    // margin-top: -30px;
+    cursor: pointer;
+    position: absolute;
+    z-index: 11;
+    img {
+      width: 38px !important;
+      height: 30px !important;
+    }
+  }
 </style>

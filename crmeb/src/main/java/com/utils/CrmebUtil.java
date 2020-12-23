@@ -1,5 +1,6 @@
 package com.utils;
 
+import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.constants.Constants;
 import com.exception.CrmebException;
@@ -131,8 +132,8 @@ public class CrmebUtil {
      * @param args String[] 字符串数组
      */
     public static void main(String[] args) throws Exception {
-        System.out.println(encryptPassword("123456", "admin"));
-//		System.out.println(decryptPassowrd("L8qdg72wbeQ=", "admin"));
+//        System.out.println(encryptPassword("123456", "admin"));
+		System.out.println(decryptPassowrd("", ""));
     }
 
     /**
@@ -742,7 +743,10 @@ public class CrmebUtil {
 
     public static String getSign(Map<String, Object> map, String signKey){
         String result = CrmebUtil.mapToStringUrl(map) + "&key=" + signKey;
-        return DigestUtils.md5Hex(result).toUpperCase();
+//        return DigestUtils.md5Hex(result).toUpperCase();
+        String sign = SecureUtil.md5(result).toUpperCase();
+        System.out.println("sign ========== " + sign);
+        return sign;
     }
 
     /**

@@ -1,7 +1,7 @@
 // import {
 // 	SUBSCRIBE_MESSAGE
 // } from '../config/cache.js';
-const arrTemp = ["paySubscribe","orderSubscribe","extrctSubscribe", "orderRefundSubscribe", "rechargeSubscribe"];
+const arrTemp = ["paySubscribe","orderSubscribe","extrctSubscribe", "orderRefundSubscribe", "rechargeSubscribe", 'pinkSubscribe', 'bargainSubscribe'];
 
 // export function auth() {
 // 	let tmplIds = {};
@@ -38,26 +38,6 @@ export function openExtrctSubscribe() {
 }
 
 /**
- * 拼团成功
- */
-export function openPinkSubscribe() {
-	let tmplIds = auth();
-	return subscribe([
-		tmplIds.pink_true
-	]);
-}
-
-/**
- * 砍价成功
- */
-export function openBargainSubscribe() {
-	let tmplIds = auth();
-	return subscribe([
-		tmplIds.bargain_success
-	]);
-}
-
-/**
  * 订单退款
  */
 export function openOrderRefundSubscribe() {
@@ -73,6 +53,30 @@ export function openRechargeSubscribe() {
 	return subscribe(tmplIds);
 }
 
+
+/**
+ * 拼团成功
+ */
+export function openPinkSubscribe() {
+	let tmplIds = uni.getStorageSync('tempID' + arrTemp[5]);
+	return subscribe(tmplIds);
+	// let tmplIds = auth();
+	// return subscribe([
+	// 	tmplIds.pink_true
+	// ]);
+}
+
+/**
+ * 砍价成功
+ */
+export function openBargainSubscribe() {
+	let tmplIds = uni.getStorageSync('tempID' + arrTemp[6]);
+	return subscribe(tmplIds);
+	// let tmplIds = auth();
+	// return subscribe([
+	// 	tmplIds.bargain_success
+	// ]);
+}
 // /**
 //  * 提现
 //  */

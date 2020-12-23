@@ -25,6 +25,9 @@
       <el-form-item label="用户地址：">
         <el-input v-model="ruleForm.addres" class="selWidth"></el-input>
       </el-form-item>
+      <el-form-item label="用户备注：">
+        <el-input v-model="ruleForm.mark" type="textarea" class="selWidth"></el-input>
+      </el-form-item>
       <el-form-item label="用户等级：">
         <el-select v-model="ruleForm.level" placeholder="请选择"  class="selWidth" clearable filterable>
           <el-option :value="item.id" v-for="(item, index) in levelList" :key="index" :label="item.name"></el-option>
@@ -69,8 +72,8 @@
     phone: '',
     realName: '',
     addres:'',
-    groupId: 0,
-    level: 0,
+    groupId: '',
+    level: '',
     isPromoter: false,
     status: false,
   }
@@ -112,12 +115,12 @@
             realName: res.realName,
             status: res.status,
             addres: res.addres,
-            groupId: Number(res.groupId),
-            level: res.level,
+            groupId: Number(res.groupId) || '',
+            level: res.level || '',
             isPromoter: res.isPromoter,
-            tagId: res.tagId
+            tagId: res.tagId || ''
           }
-          this.labelData = res.tagId.split(',').map(Number)
+          this.labelData = res.tagId ? res.tagId.split(',').map(Number): []
         })
       },
       // 分组列表

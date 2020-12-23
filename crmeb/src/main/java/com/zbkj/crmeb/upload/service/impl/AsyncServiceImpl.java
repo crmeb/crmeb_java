@@ -1,5 +1,7 @@
 package com.zbkj.crmeb.upload.service.impl;
 
+import com.aliyun.oss.OSS;
+import com.aliyun.oss.OSSClientBuilder;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
@@ -25,9 +27,16 @@ import java.util.List;
 
 
 /**
- * @author Mr.Zhang
- * @Description AsyncServiceImpl 同步到云服务
- * @since 2020-05-06
+ * AsyncServiceImpl 同步到云服务
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Service
 @Data
@@ -78,14 +87,17 @@ public class AsyncServiceImpl implements AsyncService {
                     pre = "qn";
                     setConf(type);
                     qCloud(systemAttachmentList);
+                    break;
                 case 3:
                     pre = "al";
                     setConf(type);
                     oss(systemAttachmentList);
+                    break;
                 case 4:
                     pre = "tx";
                     setConf(type);
                     cos(systemAttachmentList);
+                    break;
                 default:
                     pre = "local";
                     break;

@@ -39,6 +39,10 @@ public class StoreProductStockRequest implements Serializable {
 
     private Integer seckillId;
 
+    private Integer bargainId;
+
+    private Integer combinationId;
+
     @ApiModelProperty(value = "商品属性ID集合", required = true)
     @NotEmpty(message = "请选择商品属性id集合")
     private Integer attrId;

@@ -1,0 +1,33 @@
+# 配置端口
+server:
+  port: 20002
+  domain: #配合swagger使用 # 待部署域名
+  version: v1.3 # 当前代码版本
+  wechat-api-url:
+  asyncConfig: false
+  asyncWeChatProgramTempList: false
+
+spring:
+  profiles:
+    #  配置的环境
+    active: dev
+    #  数据库配置
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/crmeb_java_beta?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
+    username: crmeb_java_beta
+    password: yourPwd
+  redis:
+    host: 127.0.0.1 #地址
+    port: 6379 #端口
+    password: youPwd
+    timeout: 30000 # 连接超时时间（毫秒）
+    database: 0 #默认数据库
+    jedis:
+      pool:
+        max-active: 200 # 连接池最大连接数（使用负值表示没有限制）
+        max-wait: -1 # 连接池最大阻塞等待时间（使用负值表示没有限制）
+        max-idle: 10 # 连接池中的最大空闲连接
+        min-idle: 0 # 连接池中的最小空闲连接
+        time-between-eviction-runs: -1 #逐出扫描的时间间隔(毫秒) 如果为负数,则不运行逐出线程, 默认-1

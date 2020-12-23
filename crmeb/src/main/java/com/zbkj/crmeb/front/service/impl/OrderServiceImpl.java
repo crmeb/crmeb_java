@@ -1,5 +1,8 @@
 package com.zbkj.crmeb.front.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.common.PageParamRequest;
 import com.constants.Constants;
@@ -7,6 +10,10 @@ import com.exception.CrmebException;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.utils.RedisUtil;
+import com.zbkj.crmeb.bargain.model.StoreBargain;
+import com.zbkj.crmeb.bargain.service.StoreBargainService;
+import com.zbkj.crmeb.combination.model.StoreCombination;
+import com.zbkj.crmeb.combination.service.StoreCombinationService;
 import com.zbkj.crmeb.express.model.ShippingTemplates;
 import com.zbkj.crmeb.express.service.LogisticService;
 import com.zbkj.crmeb.express.service.ShippingTemplatesService;
@@ -42,6 +49,7 @@ import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForCreateOrder;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForReFundNotify;
+import org.apache.catalina.Store;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +58,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * H5端订单操作
@@ -121,6 +130,12 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private StoreSeckillService storeSeckillService;
 
+    @Autowired
+    private StoreCombinationService storeCombinationService;
+
+    @Autowired
+    private StoreBargainService storeBargainService;
+
     /**
      * 确认订单
      * @param cartIds 购物车id集合
@@ -128,20 +143,22 @@ public class OrderServiceImpl implements OrderService {
      * @return 确认订单response
      */
     @Override
-    public ConfirmOrderResponse confirmOrder(List<String> cartIds, boolean isNew, boolean addAgain,boolean seckill) {
+    public ConfirmOrderResponse confirmOrder(List<String> cartIds, boolean isNew, boolean addAgain,boolean seckill, boolean bargain, boolean combination, Integer addressId) {
         ConfirmOrderResponse response = new ConfirmOrderResponse();
         // 获取运费默认模版
-        ShippingTemplates template = shippingTemplatesService.getById(69);
-        if(null == template) template = shippingTemplatesService.getById(1);   // 新创建库
-        if(null == template) throw new CrmebException("默认模板未配置，无法下单");
-        User currentUserInfo = userService.getInfo();
+        // ShippingTemplates template = shippingTemplatesService.getById(69);
+        // if (null == template)
+        ShippingTemplates template = shippingTemplatesService.getById(1);
+        if (null == template) throw new CrmebException("默认模板未配置，无法下单");
+        User currentUserInfo = userService.getInfoException();
 
-        List<StoreCartResponse> storeCartResponse = new ArrayList<>();
-        // isNew=false 从购物车获取 isNew=true 从缓存中获取=再次下单
-        if(addAgain || seckill){ // 从redis缓存中获取重新下单和秒杀订单数据
-            storeCartResponse= JSONObject.parseArray(
-                    orderUtils.getCacheOrderData(cartIds.get(0)+""), StoreCartResponse.class);
-            if(seckill){
+        List<StoreCartResponse> storeCartResponse;
+        // 再次下单、秒杀、砍价、拼团
+        if (addAgain || seckill || bargain || combination) { // 从redis缓存中获取重新下单和秒杀订单数据、砍价订单数据、拼团订单数据
+            String cacheOrderData = orderUtils.getCacheOrderData(cartIds.get(0) + "");
+            if (StrUtil.isBlank(cacheOrderData)) throw new CrmebException("未找到订单数据");
+            storeCartResponse = JSONObject.parseArray(cacheOrderData, StoreCartResponse.class);
+            if (seckill) {
                 // 秒杀商品数据验证
                 StoreCart storeCartPram = new StoreCart()
                         .setSeckillId(storeCartResponse.get(0).getSeckillId())
@@ -149,17 +166,39 @@ public class OrderServiceImpl implements OrderService {
                         .setProductAttrUnique(storeCartResponse.get(0).getProductAttrUnique());
                 orderUtils.validSecKill(storeCartPram, currentUserInfo);
             }
+            if (bargain) {
+                // 砍价商品数据验证
+                StoreCart storeCartPram = new StoreCart()
+                        .setBargainId(storeCartResponse.get(0).getBargainId())
+                        .setUid(currentUserInfo.getUid())
+                        .setProductAttrUnique(storeCartResponse.get(0).getProductAttrUnique());
+                orderUtils.validBargain(storeCartPram, currentUserInfo);
+            }
+            if (combination) {
+                // 拼团商品数据验证
+                StoreCart storeCartPram = new StoreCart()
+                        .setCombinationId(storeCartResponse.get(0).getCombinationId())
+                        .setUid(currentUserInfo.getUid())
+                        .setProductAttrUnique(storeCartResponse.get(0).getProductAttrUnique())
+                        .setCartNum(storeCartResponse.get(0).getCartNum());
+                if (ObjectUtil.isNotNull(storeCartResponse.get(0).getPinkId())) {
+                    storeCartPram.setPinkId(storeCartResponse.get(0).getPinkId());
+                }
+                orderUtils.validCombination(storeCartPram, currentUserInfo);
+            }
         }else if(isNew){// 获取立即购买数据
             storeCartResponse = storeCartService.getListByUserIdAndCartIds(currentUserInfo.getUid(),cartIds,1);
         }else{ // 获取购物车数据
             storeCartResponse = storeCartService.getListByUserIdAndCartIds(currentUserInfo.getUid(),cartIds,null);
         }
 
-        // todo 拼团和砍价暂未处理
-
-        // todo 后面这里需要根据参数判定，不能一直使用默认收货地址
-        UserAddress defaultAddress = userAddressService.getDefault();
-//        if(null == defaultAddress) throw new CrmebException("未配置默认收货地址");
+        // 这里需要根据参数判定，不能一直使用默认收货地址
+        UserAddress defaultAddress;
+        if (addressId > 0) {// 获取选择的地址
+            defaultAddress = userAddressService.getById(addressId);
+        } else {// 获取默认地址
+            defaultAddress = userAddressService.getDefault();
+        }
 
         // 计算订单金额
         PriceGroupResponse orderPriceGroup = orderUtils.getOrderPriceGroup(storeCartResponse, defaultAddress);
@@ -192,8 +231,12 @@ public class OrderServiceImpl implements OrderService {
         response.setStoreSelfMention(systemConfigService.getValueByKey("store_self_mention"));
         response.setOther(otherMap);
         response.setSystemStore(null);
+
+        response.setSecKillId(Optional.ofNullable(storeCartResponse.get(0).getSeckillId()).orElse(0));
+        response.setBargainId(Optional.ofNullable(storeCartResponse.get(0).getBargainId()).orElse(0));
+        response.setCombinationId(Optional.ofNullable(storeCartResponse.get(0).getCombinationId()).orElse(0));
+        response.setPinkId(Optional.ofNullable(storeCartResponse.get(0).getPinkId()).orElse(0));
         response.setOrderKey(orderUtils.cacheSetOrderInfo(currentUserInfo.getUid(), response));
-        response.setSecKillId(storeCartResponse.get(0).getSeckillId());
         return response;
     }
 
@@ -207,23 +250,24 @@ public class OrderServiceImpl implements OrderService {
     public OrderPayResponse createOrder(OrderCreateRequest request, String orderKey, String ip) {
         OrderPayResponse orderPayResponse = new OrderPayResponse();
         User currentUser = userService.getInfo();
+        if (ObjectUtil.isNull(currentUser)) throw new CrmebException("当前用户不存在！");
         // 检查订单是否存在
         if(orderUtils.checkOrderExist(orderKey, currentUser.getUid())) throw new CrmebException(orderKey + "订单已存在");
-
-        // todo 秒杀 团购 砍价 二期
 
         // 检测支付方式
         if(!orderUtils.checkPayType(request.getPayType())) throw new CrmebException("暂不支持该支付方式，请刷新页面或者联系管理员");
 
-        String existCacheOrder = orderUtils.cacheGetOrderInfo(userService.getUserIdException(), orderKey);
-        ConfirmOrderResponse cor = JSONObject.parseObject(existCacheOrder,ConfirmOrderResponse.class);
+        // 判断订单是否过期
+        String existCacheOrder = orderUtils.cacheGetOrderInfo(currentUser.getUid(), orderKey);
         if(null == existCacheOrder) throw new CrmebException("订单已过期,请刷新当前页面!");
 
-        ComputeOrderResponse computeOrderResponse = orderUtils.computedOrder(request, cor, orderKey);
+        ConfirmOrderResponse cor = JSONObject.parseObject(existCacheOrder,ConfirmOrderResponse.class);
+
+        // 缓存订单并做计算
+        orderUtils.computedOrder(request, cor, orderKey);
 
         // 检查订单状态
-        StoreOrder orderCreated = orderUtils.createOrder(request, cor, 0, request.getStoreId(), orderKey);
-//        StoreOrder storeOrderCreated = (StoreOrder)stringObjectHashMap.get("orderCreate");
+         StoreOrder orderCreated = orderUtils.createOrder(request, cor, 0, request.getStoreId(), orderKey);
         if(null == orderCreated)
             throw new CrmebException("订单生成失败");
 
@@ -269,6 +313,14 @@ public class OrderServiceImpl implements OrderService {
             itemResponse.setKey(orderCreated.getOrderId());
             itemResponse.setOrderId(orderKey);
             orderPayResponse.setResult(itemResponse);
+        }
+
+        // 清除购物车数据
+        List<StoreCartResponse> cartInfo = cor.getCartInfo();
+        List<StoreCartResponse> cartList = cartInfo.stream().filter(i -> ObjectUtil.isNotNull(i.getId())).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(cartList)) {
+            List<Integer> cartIdList = cartList.stream().map(temp -> temp.getId().intValue()).collect(Collectors.toList());
+            storeCartService.deleteCartByIds(cartIdList);
         }
 
         // 小程序消息订阅发送
@@ -323,13 +375,23 @@ public class OrderServiceImpl implements OrderService {
         storeOrderPram.setId(request.getOid());
         storeOrderPram.setUid(userService.getUserIdException());
         StoreOrder existStoreOrder = storeOrderService.getByEntityOne(storeOrderPram);
+        if(null == existStoreOrder) throw new CrmebException("该订单不存在");
         // 秒杀商品 在这里处理秒杀评价参数 修改对应productId来评价
         if(null != existStoreOrder.getSeckillId() && existStoreOrder.getSeckillId() > 0){
             StoreSeckill currentSeckill = storeSeckillService.getById(existStoreOrder.getSeckillId());
             request.setProductId(currentSeckill.getProductId());
 
         }
-        if(null == existStoreOrder) throw new CrmebException("该订单不存在");
+        // 拼团商品
+        if (ObjectUtil.isNotNull(existStoreOrder.getCombinationId()) && existStoreOrder.getCombinationId() > 0) {
+            StoreCombination currentCombination = storeCombinationService.getById(existStoreOrder.getCombinationId());
+            request.setProductId(currentCombination.getProductId());
+        }
+        // 砍价商品
+        if (ObjectUtil.isNotNull(existStoreOrder.getBargainId()) && existStoreOrder.getBargainId() > 0) {
+            StoreBargain tempBargain = storeBargainService.getById(existStoreOrder.getBargainId());
+            request.setProductId(tempBargain.getProductId());
+        }
         return storeProductReplyService.create(request);
     }
 
@@ -445,6 +507,71 @@ public class OrderServiceImpl implements OrderService {
             wechatSendMessageForMinService.sendReFundNotifyMessage(notify, userService.getUserId());
         }
         return storeOrderService.updateById(storeOrder);
+    }
+
+    /**
+     * 订单退款申请Task使用
+     * @param applyList OrderRefundApplyRequest 退款参数
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean refundApplyTask(List<OrderRefundApplyRequest> applyList) {
+        if (CollUtil.isEmpty(applyList)) {
+            return false;
+        }
+        List<StoreOrder> orderList = CollUtil.newArrayList();
+        List<Map<String, Object>> notifyMapList = CollUtil.newArrayList();
+        for (OrderRefundApplyRequest request : applyList) {
+            StoreOrder storeOrder = storeOrderService.getById(request.getId());
+            if(ObjectUtil.isNull(storeOrder)){
+                //订单号错误
+                throw new CrmebException("没有找到相关订单信息!");
+            }
+            if(storeOrder.getRefundStatus() == 1){
+                throw new CrmebException("正在申请退款中");
+            }
+
+            if(storeOrder.getRefundStatus() == 2){
+                throw new CrmebException("订单已退款");
+            }
+
+            if(storeOrder.getStatus() == 1){
+                throw new CrmebException("订单当前无法退款");
+            }
+            storeOrder.setRefundReasonWapImg(systemAttachmentService.clearPrefix(request.getReasonImage()));
+            storeOrder.setRefundStatus(1);
+            storeOrder.setRefundReasonWapExplain(request.getExplain());
+            storeOrder.setRefundReason(request.getText());
+            storeOrder.setRefundPrice(BigDecimal.ZERO);
+            storeOrder.setRefundReasonTime(DateUtil.nowDateTime());
+            orderList.add(storeOrder);
+
+            // 发送微信小程序订阅消息
+            String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
+            if(StringUtils.isNotBlank(storeNameAndCarNumString)){
+                WechatSendMessageForReFundNotify notify = new WechatSendMessageForReFundNotify(
+                        storeNameAndCarNumString,storeOrder.getPayPrice().toString(),
+                        storeOrder.getCreateTime().toString(),storeOrder.getOrderId()+"",DateUtil.nowDateTimeStr(),
+                        "CRMEB","发起申请",request.getExplain(),storeOrder.getPayPrice()+"",
+                        request.getText(),storeOrder.getUserPhone(),"CRMEB");
+                Map<String, Object> map = CollUtil.newHashMap();
+                map.put("notify", notify);
+                map.put("uid", storeOrder.getUid());
+                notifyMapList.add(map);
+            }
+        }
+
+        boolean batch = storeOrderService.updateBatchById(orderList, 100);
+        if (batch && notifyMapList.size() > 0) {
+            // 发送微信小程序订阅消息
+            notifyMapList.forEach(i -> {
+                WechatSendMessageForReFundNotify notify = (WechatSendMessageForReFundNotify) i.get("notify");
+                Integer uid = (Integer) i.get("uid");
+                wechatSendMessageForMinService.sendReFundNotifyMessage(notify, uid);
+            });
+        }
+
+        return batch;
     }
 
 
@@ -651,7 +778,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public HashMap<String, Object> computedOrder(OrderComputedRequest request, String orderKey) {
         HashMap<String, Object> resultMap = new HashMap<>();
-        User currentUser = userService.getInfo();
+        User currentUser = userService.getInfoException();
         // 检查订单是否存在 --正常的购买流程
         if(orderUtils.checkOrderExist(orderKey, currentUser.getUid())) {
             OrderPayItemResponse itemResponse = new OrderPayItemResponse(orderKey,orderKey);
@@ -660,9 +787,7 @@ public class OrderServiceImpl implements OrderService {
             return  resultMap;
         }
 
-        // todo 拼团砍价 二期
-
-        // 立即购买或者秒杀
+        // 立即购买或者秒杀或者砍价
         String existCacheOrder = orderUtils.cacheGetOrderInfo(userService.getUserIdException(), orderKey);
         if(null == existCacheOrder) throw new CrmebException("订单已过期,请刷新当前页面!");
         ConfirmOrderResponse cor = JSONObject.parseObject(existCacheOrder,ConfirmOrderResponse.class);
@@ -674,6 +799,25 @@ public class OrderServiceImpl implements OrderService {
                     .setUid(currentUser.getUid())
                     .setProductAttrUnique(cor.getCartInfo().get(0).getProductAttrUnique());
             orderUtils.validSecKill(storeCartPram, currentUser);
+        }
+
+        // 砍价商品数据校验
+        if (ObjectUtil.isNotNull(cor.getBargainId()) && cor.getBargainId() > 0) {
+            StoreCart storeCartPram = new StoreCart()
+                    .setBargainId(cor.getCartInfo().get(0).getBargainId())
+                    .setUid(currentUser.getUid())
+                    .setProductAttrUnique(cor.getCartInfo().get(0).getProductAttrUnique());
+            orderUtils.validBargain(storeCartPram, currentUser);
+        }
+
+        // 拼团商品数据校验
+        if (ObjectUtil.isNotNull(cor.getCombinationId()) && cor.getCombinationId() >0) {
+            StoreCart storeCartPram = new StoreCart()
+                    .setCombinationId(cor.getCartInfo().get(0).getCombinationId())
+                    .setUid(currentUser.getUid())
+                    .setCartNum(cor.getCartInfo().get(0).getCartNum())
+                    .setProductAttrUnique(cor.getCartInfo().get(0).getProductAttrUnique());
+            orderUtils.validCombination(storeCartPram, currentUser);
         }
 
         OrderCreateRequest orderCreateRequest = new OrderCreateRequest();
@@ -703,7 +847,7 @@ public class OrderServiceImpl implements OrderService {
         if(!existOrder.getDeliveryType().equals(Constants.ORDER_LOG_EXPRESS) || StringUtils.isBlank(existOrder.getDeliveryType()))
             throw new CrmebException("该订单不存在快递订单号");
 
-        LogisticsResultVo expressInfo = logisticsService.info(existOrder.getDeliveryId(), null);
+        LogisticsResultVo expressInfo = logisticsService.info(existOrder.getDeliveryId(), null, Optional.ofNullable(existOrder.getDeliveryCode()).orElse(""), storeOrderPram.getUserPhone());
 
         PageParamRequest page = new PageParamRequest();
         page.setPage(1); page.setLimit(999);
@@ -811,21 +955,11 @@ public class OrderServiceImpl implements OrderService {
                     resultMap.put("jsConfig", orderPayResult.getTransJsConfig());
                     return true;
                 }
-//            case Constants.PAY_TYPE_WE_CHAT_FROM_PROGRAM:
-//                OrderPayItemResponse itemResponse = new OrderPayItemResponse(orderPayResult.getPrepayId(), existStoreOrder.getOrderId());
-//                OrderPayResponse orderPayResponse = new OrderPayResponse("WECHAT_PAY",itemResponse);
-//                resultMap.put("result", orderPayResponse.getResult());
-//                resultMap.put("status","WECHAT_PAY");
-//                resultMap.put("jsConfig", orderPayResult.getTransJsConfig());
-//                return true;
             case Constants.PAY_TYPE_YUE:
-//                if(orderPayResult.getReturnCode().equals("1")){
-//                OrderPayItemResponse itemResponse = new OrderPayItemResponse(request.getUni(), existStoreOrder.getOrderId());
                 OrderPayResponse orderPayResponseY = new OrderPayResponse("SUCCESS",
                         new OrderPayItemResponse(request.getUni(), existStoreOrder.getOrderId()));
                 resultMap.put("result", orderPayResponseY.getResult());
                 resultMap.put("status","SUCCESS");
-//                }
                 return true;
             case Constants.PAY_TYPE_OFFLINE:
                 StoreOrder storeOrderOffLinePram = new StoreOrder();

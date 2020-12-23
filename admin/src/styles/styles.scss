@@ -82,6 +82,13 @@
   -webkit-justify-content: space-between;
   justify-content: space-between;
 }
+.acea-row.row-column-around {
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  justify-content: space-around;
+  -webkit-justify-content: space-around;
+}
 .divBox{
   padding: 20px;
   box-sizing: border-box;
@@ -195,6 +202,9 @@ table .el-image{
 }
 .mr15{
   margin-right: 15px;
+}
+.mb5{
+  margin-bottom: 5px;
 }
 .mt20{
   margin-top: 20px;

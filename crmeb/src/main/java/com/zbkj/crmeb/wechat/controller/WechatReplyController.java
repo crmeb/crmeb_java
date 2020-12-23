@@ -18,6 +18,15 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 微信关键字回复表 前端控制器
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Slf4j
 @RestController
@@ -86,8 +95,8 @@ public class WechatReplyController {
      */
     @ApiOperation(value = "修改")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
-    public CommonResult<String> update(@RequestParam Integer id,@RequestBody @Validated WechatReplyRequest wechatReplyRequest){
-        WechatReply wechatReply = wechatReplyService.getInfoException(id, false);
+    public CommonResult<String> update(@RequestBody @Validated WechatReplyRequest wechatReplyRequest){
+        WechatReply wechatReply = wechatReplyService.getInfoException(wechatReplyRequest.getId(), false);
         BeanUtils.copyProperties(wechatReplyRequest, wechatReply);
         if(wechatReplyService.updateVo(wechatReply)){
             return CommonResult.success();

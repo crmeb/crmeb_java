@@ -24,7 +24,7 @@
               <!--</el-input>-->
             </el-form-item>
             <el-form-item label="商品搜索：">
-              <el-input v-model="tableFrom.keywords" placeholder="请输入商品ID/名称" class="selWidth">
+              <el-input v-model="tableFrom.keywords" placeholder="请输入商品ID/名称" class="selWidth" clearable>
                 <el-button slot="append" icon="el-icon-search" @click="getList(1)"/>
               </el-input>
             </el-form-item>
@@ -218,7 +218,9 @@
           .then(async () => {
             this.$message.success('修改成功');
             this.getList()
-          })
+          }).catch(()=>{
+          row.status = !row.status
+        })
       }
     }
   }

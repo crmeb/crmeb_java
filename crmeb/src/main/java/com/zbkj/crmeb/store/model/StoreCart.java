@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.store.model;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -13,12 +14,16 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 /**
- * <p>
  * 购物车表
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-05-28
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -68,4 +73,8 @@ public class StoreCart implements Serializable {
 
     @ApiModelProperty(value = "已添加的商品是否有效状态")
     private Boolean status;
+
+    @ApiModelProperty(value = "团长拼团id")
+    @TableField(exist = false)
+    private Integer pinkId;
 }
