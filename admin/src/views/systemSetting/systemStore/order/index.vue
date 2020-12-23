@@ -21,7 +21,7 @@
               </el-select>
             </el-form-item>
             <el-form-item label="关键字：">
-              <el-input v-model="tableFrom.keywords" placeholder="请输入姓名、电话、订单ID" class="selWidth" size="small">
+              <el-input v-model="tableFrom.keywords" placeholder="请输入姓名、电话、订单ID" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search" size="small" @click="getList(1)" />
               </el-input>
             </el-form-item>
@@ -87,7 +87,7 @@
         <el-table-column
           prop="storeName"
           label="核销门店"
-          min-width="100"
+          min-width="150"
         />
         <el-table-column
           label="支付状态"
@@ -108,7 +108,7 @@
         <el-table-column
           prop="createTime"
           label="下单时间"
-          min-width="100"
+          min-width="150"
         />
       </el-table>
       <div class="block">

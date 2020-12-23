@@ -291,7 +291,7 @@
 				border-radius: 23rpx;
 				padding: 22rpx 27rpx;
 				box-sizing: border-box;
-
+              
 				.title {
 					font-size: 24rpx;
 					color: #AE8B4A;
@@ -305,7 +305,7 @@
 
 				.axis {
 					margin: 10rpx 0 15rpx 0;
-
+                    overflow: hidden;
 					.bar {
 						width: 630rpx;
 						.spotw{

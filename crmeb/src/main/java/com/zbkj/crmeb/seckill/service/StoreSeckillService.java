@@ -20,10 +20,17 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
-* @author Stivepeim
-* @description StoreSeckillService 接口
-* @date 2020-09-17
-*/
+ * StoreSeckillService 接口
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 public interface StoreSeckillService extends IService<StoreSeckill> {
 
     PageInfo<StoreSeckillResponse> getList(StoreSeckillSearchRequest request, PageParamRequest pageParamRequest);
@@ -119,4 +126,10 @@ public interface StoreSeckillService extends IService<StoreSeckill> {
      * 后台任务批量操作库存
      */
     void consumeProductStock();
+
+    /**
+     * 商品是否存在秒杀活动
+     * @param productId 商品编号
+     */
+    Boolean isExistActivity(Integer productId);
 }

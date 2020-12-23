@@ -153,7 +153,7 @@ public class UserController {
      */
     @ApiOperation(value = "推广佣金明细")
     @RequestMapping(value = "/spread/commission/{type}", method = RequestMethod.GET)
-    @ApiImplicitParam(name = "type", value = "类型 佣金类型|0=全部,1=支出,2=收入,3=佣金明细", allowableValues = "range[0,1,2,3]", dataType = "int")
+    @ApiImplicitParam(name = "type", value = "类型 佣金类型|0=全部,1=消费,2=充值,3=返佣,4=提现", allowableValues = "range[0,1,2,3，4]", dataType = "int")
     public CommonResult<CommonPage<UserSpreadCommissionResponse>> getSpreadCommissionByType(@PathVariable int type, @Validated PageParamRequest pageParamRequest){
         return CommonResult.success(CommonPage.restPage(userCenterService.getSpreadCommissionByType(type, pageParamRequest)));
     }

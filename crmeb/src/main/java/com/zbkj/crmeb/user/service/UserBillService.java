@@ -17,11 +17,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
-* @author Mr.Zhang
-* @Description UserBillService 接口
-* @since 2020-04-28
-* @LastEdit stivepeim 2020-6-22
-*/
+ * UserBillService 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 public interface UserBillService extends IService<UserBill> {
 
     /**
@@ -66,7 +72,7 @@ public interface UserBillService extends IService<UserBill> {
      * @since 2020-06-08
      * @return CommonPage<UserBill>
      */
-    PageInfo<UserSpreadCommissionResponse> getListGroupByMonth(Integer userId, Integer type, PageParamRequest pageParamRequest, String category);
+    PageInfo<UserSpreadCommissionResponse> getListGroupByMonth(Integer userId, List<String> typeList, PageParamRequest pageParamRequest, String category);
 
     /**
      * 保存退款日志
@@ -168,7 +174,7 @@ public interface UserBillService extends IService<UserBill> {
      * @param pageParamRequest 分页参数
      * @return 查询结果
      */
-    List<UserBillResponse> getByBaseSearch(Integer userId,UserBillDetailListRequest request, PageParamRequest pageParamRequest);
+    PageInfo<UserBillResponse> getByBaseSearch(Integer userId, UserBillDetailListRequest request, PageParamRequest pageParamRequest);
 
     /**
      * 查询搜索明细类型参数

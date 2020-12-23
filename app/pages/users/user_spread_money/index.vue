@@ -214,12 +214,14 @@
 					page: page,
 					limit: limit
 				}, recordType).then(res => {
-					let len = res.data.list.length;
-					let recordListData = res.data.list;
-					recordListNew = recordList.concat(recordListData);
-					that.status = limit > len;
-					that.page = page + 1;
-					that.$set(that, 'recordList', recordListNew);
+					if(res.data.list){
+						let len = res.data.list.length;
+						let recordListData = res.data.list;
+						recordListNew = recordList.concat(recordListData);
+						that.status = limit > len;
+						that.page = page + 1;
+						that.$set(that, 'recordList', recordListNew);
+					}
 				});
 			},
 			getRecordListCount: function() {

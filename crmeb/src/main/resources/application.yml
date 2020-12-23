@@ -1,9 +1,10 @@
 # 配置端口
 server:
   port: 8080
-  domain:
+  domain: #配合swagger使用 # 待部署域名
+  version: v1.3 # 当前代码版本
   wechat-api-url: http://121.196.17.222:20003/ #请求微信接口中专服务器
-  wechat-js-api-debug: true #微信js api系列是否开启调试模式
+  wechat-js-api-debug: false #微信js api系列是否开启调试模式
   wechat-js-api-beta: true #微信js api是否是beta版本
   asyncConfig: false #是否同步config表数据到redis
   asyncWeChatProgramTempList: false #是否同步小程序公共模板库
@@ -30,14 +31,14 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://121.196.17.222:3306/crmeb_java_beta?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
+    url: jdbc:mysql://127.0.0.1:3306/crmeb_java_beta?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
     username: crmeb_java_beta
-    password: Yx7Scb8zk7KZShM5
+    password: yourPwd
   redis:
-    host: 121.196.17.222 #地址
+    host: 127.0.0.1 #地址
     port: 6379 #端口
-    password: 9c4d4a99a3fa3122d9
-    timeout: 1000 # 连接超时时间（毫秒）
+    password: youPwd
+    timeout: 30000 # 连接超时时间（毫秒）
     database: 0 #默认数据库
     jedis:
       pool:
@@ -60,7 +61,7 @@ logging:
 # mybatis 配置
 mybatis-plus:
   mapper-locations: classpath*:mapper/*/*Mapper.xml #xml扫描，多个目录用逗号或者分号分隔（告诉 Mapper 所对应的 XML 文件位置）
-  # 配置sql打印日志
+  # 配置slq打印日志
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:

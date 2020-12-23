@@ -77,8 +77,12 @@
 					'from': 'routine',
 					// #endif
 					// #ifdef H5 || APP-PLUS
-					'from': this.$wechat.isWeixin() ? 'weixin' : 'weixinh5',
+					'from': this.$wechat.isWeixin() ? 'public' : 'weixinh5'
 					// #endif
+					// // #ifdef H5
+					// quitUrl: location.port ? location.protocol + '//' + location.hostname + ':' + location.port + '/pages/users/order_details/index?order_id=' + this.order_id : location.protocol + '//' + location.hostname + 
+					// '/pages/users/order_details/index?order_id=' + that.order_id
+					// // #endif
 				}).then(res => {
 					switch (paytype) {
 						case 'weixin':
@@ -87,11 +91,11 @@
 							});
 							// #ifdef MP || APP-PLUS
 							let jsConfig = res.data.jsConfig;
-							let packages = 'prepay_id=' + jsConfig.prepayId;
+							// let packages = 'prepay_id=' + jsConfig.prepayId;
 							uni.requestPayment({
 								timeStamp: jsConfig.timeStamp.toString(),
 								nonceStr: jsConfig.nonceStr,
-								package: packages,
+								package: jsConfig.package,
 								signType: jsConfig.signType,
 								paySign: jsConfig.paySign,
 								success: function(res) {
@@ -128,30 +132,18 @@
 							});
 							// #endif
 							// #ifdef H5
-							let data = res.data;
-							if (data.status == "WECHAT_H5_PAY") {
-								uni.hideLoading();
-								location.replace(data.result.jsConfig.h5PayUrl);
-								return that.$util.Tips({
-									title: "支付成功",
-									icon: 'success'
-								}, () => {
-									that.$emit('onChangeFun', {
-										action: 'pay_complete'
-									});
-								});
-							} else {
-								let jsConfig = data.result.jsConfig;
-								let packages = 'prepay_id=' + jsConfig.prepayId;
-								let data = {
+							if (res.data.status === "WECHAT_PAY") {
+								let jsConfig = res.data.jsConfig;
+								//let packages = 'prepay_id=' + jsConfig.prepayId;
+								let datas = {
 									timestamp:jsConfig.timeStamp,
 									nonceStr:jsConfig.nonceStr,
-									package:packages,
+									package:jsConfig.package,
 									signType:jsConfig.signType,
 									paySign:jsConfig.paySign
 								};
-								that.$wechat.pay(data)
-									.finally(() => {
+								that.$wechat.pay(datas)
+									.then(() => {
 										return that.$util.Tips({
 											title: "支付成功",
 											icon: 'success'
@@ -166,6 +158,17 @@
 											title: '支付失败'
 										});
 									});
+							} else {
+								uni.hideLoading();
+								location.replace(res.data.jsConfig.h5PayUrl);
+								return that.$util.Tips({
+									title: "支付成功",
+									icon: 'success'
+								}, () => {
+									that.$emit('onChangeFun', {
+										action: 'pay_complete'
+									});
+								});
 							}
 							// #endif
 							break;

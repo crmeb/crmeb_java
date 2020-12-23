@@ -50,7 +50,7 @@
 			<recommend :hostProduct="hostProduct"></recommend>
 			<view class='growthValue' :class='growthValue==false?"on":""'>
 				<view class='pictrue'>
-					<image src='../../../static/images/value.jpg'></image><text class='iconfont icon-guanbi3' @click='growthValue'></text>
+					<image src='../../columnGoods/static/value.jpg'></image><text class='iconfont icon-guanbi3' @click='growthValue'></text>
 				</view>
 				<view class='conter'>{{illustrate}}</view>
 			</view>

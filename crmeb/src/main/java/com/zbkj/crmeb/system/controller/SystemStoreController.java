@@ -19,6 +19,15 @@ import java.util.HashMap;
 
 /**
  * 门店自提 前端控制器
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Slf4j
 @RestController
@@ -133,6 +142,30 @@ public class SystemStoreController {
         SystemStore systemStore = systemStoreService.getById(id);
         systemStore.setLatitude(systemStore.getLatitude() + "," + systemStore.getLongitude());
         return CommonResult.success(systemStore);
+    }
+
+    /**
+     * 彻底删除
+     */
+    @ApiOperation(value = "彻底删除")
+    @RequestMapping(value = "/completely/delete", method = RequestMethod.GET)
+    public CommonResult<Object> completeLyDelete(@RequestParam(value = "id") Integer id){
+        if (systemStoreService.completeLyDelete(id)) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
+    }
+
+    /**
+     * 恢复
+     */
+    @ApiOperation(value = "提货点恢复")
+    @RequestMapping(value = "/recovery", method = RequestMethod.GET)
+    public CommonResult<Object> recovery(@RequestParam(value = "id") Integer id){
+        if (systemStoreService.recovery(id)) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
     }
 }
 

@@ -38,9 +38,16 @@ import java.util.stream.Collectors;
 
 
 /**
- * @author Mr.Zhang
- * @Description WeChatPublicServiceImpl 接口实现
- * @since 2020-04-22
+ *  WeChatPublicServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Service
 public class WeChatServiceImpl implements WeChatService {
@@ -327,10 +334,11 @@ public class WeChatServiceImpl implements WeChatService {
     private String postReturnBuffer(String url, HashMap<String, Object> data){
         try{
             byte[] bytes = restTemplateUtil.postJsonDataAndReturnBuffer(url, new JSONObject(data));
-            if(null == bytes){
+            String response = new String(bytes);
+            if(StringUtils.contains(response,"errcode")){
+                logger.error("微信生成二维码异常"+response);
                 throw new CrmebException("微信生成二维码异常");
             }
-
             return CrmebUtil.getBase64Image(Base64.encodeBase64String(bytes));
 
         }catch (Exception e){
@@ -895,6 +903,7 @@ public class WeChatServiceImpl implements WeChatService {
             post(this.url, JSONObject.toJSONString(templateMessageVo));
             return true;
         }catch (Exception e){
+            e.printStackTrace();
             return false;
         }
     }

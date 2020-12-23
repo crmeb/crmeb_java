@@ -30,7 +30,7 @@
 			</view>
 			<!-- 无优惠券 -->
 			<view class='pictrue' v-else>
-				<image src='/static/images/noCoupon.png'></image>
+				<image src='../../static/images/noCoupon.png'></image>
 			</view>
 		</view>
 		<view class='mask' catchtouchmove="true" :hidden='coupon.coupon==false' @click='close'></view>

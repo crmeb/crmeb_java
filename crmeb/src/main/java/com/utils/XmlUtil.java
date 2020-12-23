@@ -46,14 +46,12 @@ public class XmlUtil {
                 map.put(element.getName(), element.getText());
             }
         } catch (IOException | DocumentException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } finally{
             try {
                 assert in != null;
                 in.close();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }

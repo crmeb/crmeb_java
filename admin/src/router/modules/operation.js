@@ -21,6 +21,15 @@ const operationRouter = {
       }
     },
     {
+      path: 'onePass',
+      name: 'onePass',
+      component: () => import('@/views/sms/smsConfig'),
+      meta: {
+        title: '一号通',
+        icon: 'clipboard'
+      }
+    },
+    {
       path: 'roleManager',
       name: 'RoleManager',
       component: () => import('@/views/systemSetting/administratorAuthority'),
@@ -140,13 +149,13 @@ const operationRouter = {
           path: 'template',
           component: () => import('@/views/sms/smsTemplate'),
           name: 'SmsTemplate',
-          meta: { title: '短信模板', noCache: true }
+          meta: { title: '短信模板', noCache: true, activeMenu: `/operation/onePass` }
         },
         {
           path: 'pay',
           component: () => import('@/views/sms/smsPay'),
           name: 'SmsPay',
-          meta: { title: '短信购买', noCache: true }
+          meta: { title: '短信购买', noCache: true, activeMenu: `/operation/onePass` }
         },
         {
           path: 'message',

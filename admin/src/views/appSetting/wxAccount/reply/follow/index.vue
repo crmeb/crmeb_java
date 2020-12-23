@@ -120,7 +120,7 @@
                     class="mr10"
                   />
                   <el-upload
-                    class="upload-demo mr10 mb15"
+                    class="upload-demo mr10"
                     action
                     :http-request="handleUploadForm"
                     :headers="myHeaders"

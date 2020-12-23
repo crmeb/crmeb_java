@@ -151,7 +151,7 @@ import java.util.List;
     @ApiImplicitParams({
         @ApiImplicitParam(name="type", value="类型ID | 类型，1 产品分类，2 附件分类，3 文章分类， 4 设置分类， 5 菜单分类， 6 配置分类， 7 秒杀配置", example = "1"),
         @ApiImplicitParam(name="status", value="-1=全部，0=未生效，1=已生效", example = "1"),
-        @ApiImplicitParam(name="status", value="模糊搜索", example = "电视")
+        @ApiImplicitParam(name="name", value="模糊搜索", example = "电视")
     })
     public CommonResult<List<CategoryTreeVo>> getListTree(@RequestParam(name = "type") Integer type,
                                                           @RequestParam(name = "status") Integer status,
@@ -172,6 +172,22 @@ import java.util.List;
         return CommonResult.success(categoryService.getByIds(CrmebUtil.stringToArray(ids)));
     }
 
+    /**
+     * 更改分类状态
+     * @param id Integer 分类id
+     * @since 2020-04-16
+     * @return
+     */
+    @ApiOperation(value = "更改分类状态")
+    @RequestMapping(value = "/updateStatus/{id}", method = RequestMethod.GET)
+    @ApiImplicitParam(name = "id", value="分类id")
+    public CommonResult<Object> getByIds(@Validated @PathVariable(name = "id") Integer id){
+        if (categoryService.updateStatus(id)) {
+            return CommonResult.success("修改成功");
+        } else {
+            return CommonResult.failed("修改失败");
+        }
+    }
 }
 
 

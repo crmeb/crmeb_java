@@ -12,12 +12,16 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
- * <p>
  * 微信关键字回复表
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-04-18
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -27,6 +31,9 @@ import java.io.Serializable;
 public class WechatReplyRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
+
+    @ApiModelProperty(value = "关键字id")
+    private Integer id;
 
     @ApiModelProperty(value = "关键字")
     @NotBlank(message = "请填写关键字, 关注 = subscribe， 默认 = default")

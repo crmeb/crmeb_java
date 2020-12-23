@@ -1,5 +1,8 @@
 package com.utils;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.constants.Constants;
 import com.exception.CrmebException;
 import com.utils.vo.dateLimitUtilVo;
@@ -121,9 +124,7 @@ public final class DateUtil {
     }
 
     /**
-     * 获取当前日期,指定格式
-     * 描述:<描述函数实现的功能>.
-     *
+     * 获取当前时间戳（秒级）
      * @return
      */
     public static Long getTime() {
@@ -343,6 +344,15 @@ public final class DateUtil {
             return 0;
         }
         String timestamp = String.valueOf(date1.getTime()/1000);
+        return Integer.parseInt(timestamp);
+    }
+
+    //获取时间戳10位
+    public static int getSecondTimestamp(Long timeMillis){
+        if (null == timeMillis) {
+            return 0;
+        }
+        String timestamp = String.valueOf(timeMillis / 1000);
         return Integer.parseInt(timestamp);
     }
 
@@ -581,4 +591,43 @@ public final class DateUtil {
         int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
         return hour;
     }
+
+    /**
+     * 13位时间戳转字符串
+     * @param timestamp
+     * @param dateFormat
+     * @return
+     */
+    public static String timestamp2DateStr(Long timestamp, String dateFormat) {
+        if (ObjectUtil.isNull(timestamp)) {
+            return "";
+        }
+        if (StrUtil.isBlank(dateFormat)) {
+            dateFormat = Constants.DATE_FORMAT;
+        }
+        Date date = new Date(timestamp);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat);
+        return simpleDateFormat.format(date);
+    }
+
+    /**
+     * 字符串转13位时间戳
+     */
+    public static Long dateStr2Timestamp(String dateStr, String type) {
+        DateTime parse = cn.hutool.core.date.DateUtil.parse(dateStr);
+        if (StrUtil.isNotBlank(type)) {
+            if (type.equals(Constants.DATE_TIME_TYPE_BEGIN)) {
+                parse = cn.hutool.core.date.DateUtil.beginOfDay(parse);
+            }
+            if (type.equals(Constants.DATE_TIME_TYPE_END)) {
+                parse = cn.hutool.core.date.DateUtil.endOfDay(parse);
+            }
+        }
+        return parse.getTime();
+    }
+
+    public static void main(String[] args) {
+        System.out.println(StringUtils.strip("fsfsdf", "f"));
+    }
+
 }

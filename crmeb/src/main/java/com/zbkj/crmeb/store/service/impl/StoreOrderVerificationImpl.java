@@ -38,10 +38,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @Classname StoreOrderVerificationImpl
- * @Description 核销订单
- * @Date 9/1/20 10:28 上午
- * @Created by stivepeim
+ * StoreOrderVerificationImpl 接口实现 核销订单
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Service
 public class StoreOrderVerificationImpl implements StoreOrderVerification {
@@ -187,15 +193,15 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
         }
         // 判断当前用户是否有权限核销
         SystemAdmin currentAdmin = systemAdminService.getInfo();
-        List<Integer> currentIds = new ArrayList<>();
-        currentIds.add(currentAdmin.getId());
-        List<SystemStoreStaff> currentStaffs = systemStoreStaffService.getByAdminUserIds(currentIds);
-        if(currentStaffs.size() == 0) throw new CrmebException(Constants.RESULT_VERIFICATION_NOTAUTH);
+//        List<Integer> currentIds = new ArrayList<>();
+//        currentIds.add(currentAdmin.getId());
+//        List<SystemStoreStaff> currentStaffs = systemStoreStaffService.getByAdminUserIds(currentIds);
+//        if(currentStaffs.size() == 0) throw new CrmebException(Constants.RESULT_VERIFICATION_NOTAUTH);
         // 添加核销人员后执行核销操作
         StoreOrder storeOrder = new StoreOrder();
         BeanUtils.copyProperties(existOrder,storeOrder);
         storeOrder.setStatus(Constants.ORDER_STATUS_INT_BARGAIN);
-        storeOrder.setClerkId(currentStaffs.get(0).getId());
+//        storeOrder.setClerkId(currentStaffs.get(0).getId());
 //        storeOrder.setStoreId(currentStaffs.get(0).getStoreId());
         boolean saveStatus = dao.updateById(storeOrder) > 0;
 

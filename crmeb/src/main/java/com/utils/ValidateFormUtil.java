@@ -1,5 +1,6 @@
 package com.utils;
 
+import cn.hutool.core.util.ReUtil;
 import com.constants.RegularConstants;
 import com.exception.CrmebException;
 import com.zbkj.crmeb.system.model.SystemConfig;
@@ -191,5 +192,29 @@ public class ValidateFormUtil {
         isRequire(value, info);
         Pattern pattern = Pattern.compile(regular);
         return pattern.matcher(value).matches();
+    }
+
+    /**
+     * 校验是否是手机号，不是则抛出异常
+     * @param phone 手机号
+     * @param errMsg 异常内容
+     */
+    public static void isPhoneException(String phone, String errMsg) {
+        boolean match = ReUtil.isMatch(RegularConstants.PHONE_TWO, phone);
+        if (!match) {
+            throw new CrmebException(errMsg);
+        }
+    }
+
+    /**
+     * 校验是否是手机号，不是则抛出异常
+     * @param phone 手机号
+     * @param errMsg 异常内容
+     */
+    public static void isPhoneException(String phone) {
+        boolean match = ReUtil.isMatch(RegularConstants.PHONE_TWO, phone);
+        if (!match) {
+            throw new CrmebException("请输入正确的手机号");
+        }
     }
 }

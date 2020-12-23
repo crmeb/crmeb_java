@@ -46,7 +46,7 @@
               <i class="el-icon-warning-outline" />
             </el-tooltip>
           </span>
-          <el-input-number v-model="promoterForm.storeBrokerageRatio" class="selWidth" placeholder="订单交易成功后给上级返佣的比例0 - 100,例:5 = 反订单金额的5%"></el-input-number>
+          <el-input-number v-model="promoterForm.storeBrokerageRatio" step-strictly :min="0" :max="100" class="selWidth" placeholder="订单交易成功后给上级返佣的比例0 - 100,例:5 = 反订单金额的5%"></el-input-number>
           <span>%</span>
         </el-form-item>
         <el-form-item prop="storeBrokerageTwo">
@@ -56,7 +56,7 @@
               <i class="el-icon-warning-outline" />
             </el-tooltip>
           </span>
-          <el-input-number v-model="promoterForm.storeBrokerageTwo" class="selWidth" placeholder="订单交易成功后给上级返佣的比例0 ~ 100,例:5 = 反订单金额的5%"></el-input-number>
+          <el-input-number v-model="promoterForm.storeBrokerageTwo" step-strictly :min="0" :max="100" class="selWidth" placeholder="订单交易成功后给上级返佣的比例0 ~ 100,例:5 = 反订单金额的5%"></el-input-number>
           <span>%</span>
         </el-form-item>
         <el-form-item prop="userExtractMinPrice">
@@ -66,7 +66,7 @@
               <i class="el-icon-warning-outline" />
             </el-tooltip>
           </span>
-          <el-input-number v-model="promoterForm.userExtractMinPrice" :precision="2" :step="0.1" class="selWidth" placeholder="用户提现最低金额"></el-input-number>
+          <el-input-number v-model="promoterForm.userExtractMinPrice" :min="0" :precision="2" :step="0.1" class="selWidth" placeholder="用户提现最低金额"></el-input-number>
         </el-form-item>
         <el-form-item prop="userExtractBank">
           <span slot="label">
@@ -89,7 +89,7 @@
               <i class="el-icon-warning-outline" />
             </el-tooltip>
           </span>
-          <el-input-number v-model="promoterForm.extractTime" :precision="2" :step="0.1" class="selWidth" placeholder="佣金冻结时间(天)"></el-input-number>
+          <el-input-number v-model="promoterForm.extractTime" :min="0" class="selWidth" placeholder="佣金冻结时间(天)"></el-input-number>
         </el-form-item>
         <el-form-item prop="storeBrokeragePrice">
           <span slot="label">
@@ -98,7 +98,7 @@
               <i class="el-icon-warning-outline" />
             </el-tooltip>
           </span>
-          <el-input-number v-model="promoterForm.storeBrokeragePrice" placeholder="满额分销满足金额开通分销权限" :precision="2" :step="0.1" class="selWidth"></el-input-number>
+          <el-input-number v-model="promoterForm.storeBrokeragePrice" placeholder="满额分销满足金额开通分销权限" :min="0" :precision="2" :step="0.1" class="selWidth"></el-input-number>
         </el-form-item>
         <el-form-item>
           <el-button size="mini" type="primary" :loading="loading" @click="submitForm('promoterForm')">立即创建</el-button>

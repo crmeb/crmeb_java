@@ -141,6 +141,9 @@
 					</block>
 				</swiper>
 			</view>
+			<a_seckill></a_seckill>
+			<b_combination></b_combination>
+			<c_bargain></c_bargain>
 			<!-- 首页推荐 -->
 			<view class="index-product-wrapper" :class="iSshowH?'on':''">
 				<view class="nav-bd">
@@ -177,40 +180,6 @@
 				</view>
 			</view>
 		</view>
-		<!-- 秒杀 -->
-		<view class="spike-box" :style="" v-if="spikeList.length>0">
-			<view class="hd">
-				<view class="left">
-					<image :src="imgUrl" class="icon" v-if="imgUrl"></image>
-					<image src="/static/images/spike-icon-002.gif" class="icon" v-else></image>
-					
-					<view class="name">限时秒杀</view>
-					<!-- <image src="/static/images/spike-icon-001.png" class="title"></image> -->
-					<countDown :is-day="false" :tip-text="' '" :day-text="' '" :hour-text="' : '" :minute-text="' : '" :second-text="' '"
-					 :datatime="datatime" :bgColor="countDownColor" :colors="themeColor"></countDown>
-				</view>
-				<navigator class="more" url="/pages/activity/goods_seckill/index">更多 <text class="iconfont icon-jiantou"
-					 hover-class='none'></text></navigator>
-			</view>
-			<view class="spike-wrapper">
-				<scroll-view scroll-x="true" style="white-space: nowrap; display: flex" show-scrollbar="false">
-					<navigator class="spike-item" :style="'margin-right:'+ lrConfig +'rpx;'" v-for="(item,index) in spikeList" :key="index" :url="'/pages/activity/goods_seckill_details/index?id='+item.id+'&time='+datatime+'&status=1'"
-					 hover-class='none'>
-						<view class="img-box">
-							<image :src="item.image" mode=""></image>
-							<view class="msg flex-aj-center" :style="'color:'+ themeColor +';border-color:'+ themeColor +';'">{{item.discountNum}}折起</view>
-						</view>
-						<view class="info">
-							<view class="name line1">{{item.title}}</view>
-							<view class="price-box">
-								<text class="tips" :style="'background-color:'+ themeColor +';'">抢</text>
-								<text class="price" :style="'color:'+themeColor+';'"><text>￥</text>{{item.price}}</text>
-							</view>
-						</view>
-					</navigator>
-				</scroll-view>
-			</view>
-		</view>
 		<!-- 分类页 -->
 		<view class="productList" v-if="navIndex>0" :style="'margin-top:'+prodeuctTop+'px'">
 			<block v-if="sortProduct.length>0">
@@ -230,7 +199,7 @@
 								<view class='vip-money' v-if="item.vipPrice && item.vipPrice > 0">￥{{item.vipPrice}}
 									<image src='../../static/images/vip.png'></image>
 								</view>
-								<view>已售{{Number(item.sales) + Number(item.ficti) || 0}}{{item.unitName}</view>
+								<view>已售{{Number(item.sales) + Number(item.ficti) || 0 }}{{item.unitName}}</view>
 							</view>
 						</view>
 					</view>
@@ -242,11 +211,10 @@
 			<block v-if="sortProduct.length == 0">
 				<view class="noCommodity">
 					<view class='pictrue'>
-						<image src='/static/images/noShopper.png'></image>
+						<image src='../../static/images/noShopper.png'></image>
 					</view>
 					<recommend :hostProduct="hostProduct"></recommend>
 				</view>
-
 			</block>
 		</view>
 		<coupon-window :window='window' :couponList="couponList" @onColse="onColse"></coupon-window>
@@ -265,10 +233,6 @@
 		getIndexData,
 		getCoupons
 	} from '@/api/api.js';
-	import {
-		getSeckillHeaderApi,
-		getSeckillList
-	} from '@/api/activity.js';
 	// #ifdef MP-WEIXIN
 	import {
 		getTemlIds
@@ -287,6 +251,9 @@
 	import {
 		getShare
 	} from '@/api/public.js';
+	import a_seckill from './components/a_seckill';
+	import b_combination from './components/b_combination';
+	import c_bargain from './components/c_bargain';
 	import goodList from '@/components/goodList';
 	import promotionGood from '@/components/promotionGood';
 	import couponWindow from '@/components/couponWindow';
@@ -328,6 +295,9 @@
 			promotionGood,
 			couponWindow,
 			countDown,
+			a_seckill,
+			b_combination,
+			c_bargain,
 			recommend,
 			// #ifdef MP
 			authorize
@@ -380,7 +350,6 @@
 				}],
 				ProductNavindex: 0,
 				marTop: 0,
-				datatime: 0,
 				childID: 0,
 				loadend: false,
 				loading: false,
@@ -412,6 +381,7 @@
 				iSshowH: false,
 				configApi: {} ,//分享类容配置
 				spikeList: [], // 秒杀
+				point: ''
 			}
 		},
 		onLoad() {
@@ -424,7 +394,6 @@
 					} catch {}
 				}
 			});
-			this.getSeckillIndexTime();
 			let self = this
 			// #ifdef MP
 			// 获取小程序头部高度
@@ -453,30 +422,6 @@
 			})
 		},
 		methods: {
-			getSeckillIndexTime() {
-				let limit = this.$config.LIMIT;
-				let params = {
-					page: 1,
-					limit: limit,
-					type: 'index'
-				}
-				getSeckillHeaderApi().then(res => {
-					this.datatime = res.data.seckillTime[res.data.seckillTimeIndex].timeSwap
-					let id = res.data.seckillTime[res.data.seckillTimeIndex].id
-					getSeckillList(id, params).then(({
-						data
-					}) => {
-						console.log(data)
-						data.list.forEach((item) => {
-							let num = 0
-							if (item.price > 0 && item.otPrice > 0) num = ((parseFloat(item.price) / parseFloat(item.otPrice)).toFixed(
-								2))
-							item.discountNum = this.$util.$h.Mul(num, 10)
-						})
-						this.spikeList = data
-					})
-				})
-			},
 			// #ifdef MP
 			getTemlIds() {
 				for (var i in arrTemp) {
@@ -888,16 +833,6 @@
 	}
 </style>
 <style lang="scss">
-	/deep/.spike-box .styleAll {
-		display: inline-block;
-		width: 44rpx;
-		height: 40rpx;
-		line-height: 40rpx;
-		padding: 0;
-		text-align: center;
-		border-radius: 8rpx;
-	}
-
 	.page-index {
 		display: flex;
 		flex-direction: column;

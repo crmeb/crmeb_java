@@ -1,6 +1,5 @@
 package com.zbkj.crmeb.store.response;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -9,8 +8,6 @@ import com.utils.CrmebUtil;
 import com.zbkj.crmeb.front.response.ProductActivityItemResponse;
 import com.zbkj.crmeb.marketing.model.StoreCoupon;
 import com.zbkj.crmeb.store.model.StoreProductAttr;
-import com.zbkj.crmeb.store.model.StoreProductAttrValue;
-import com.zbkj.crmeb.store.request.StoreProductAttrValueRequest;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -27,12 +24,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * <p>
  * 商品表
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-05-06
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -57,8 +58,8 @@ public class StoreProductResponse implements Serializable {
                     case Constants.PRODUCT_TYPE_SECKILL:
                         _activity.add(Constants.PRODUCT_TYPE_SECKILL_STR);
                         break;
-                    case Constants.PRODUCT_TYPE_BARGIN:
-                        _activity.add(Constants.PRODUCT_TYPE_BARGIN_STR);
+                    case Constants.PRODUCT_TYPE_BARGAIN:
+                        _activity.add(Constants.PRODUCT_TYPE_BARGAIN_STR);
                         break;
                     case Constants.PRODUCT_TYPE_PINGTUAN:
                         _activity.add(Constants.PRODUCT_TYPE_PINGTUAN_STR);
@@ -246,6 +247,12 @@ public class StoreProductResponse implements Serializable {
     @ApiModelProperty(value = "结束时间")
     private Date stopTime;
 
+    @ApiModelProperty(value = "开始时间")
+    private String startTimeStr;
+
+    @ApiModelProperty(value = "结束时间")
+    private String stopTimeStr;
+
     @ApiModelProperty(value = "秒杀状态 0=关闭 1=开启")
     private Integer status;
 
@@ -261,4 +268,34 @@ public class StoreProductResponse implements Serializable {
     @ApiModelProperty(value = "限购总数")
     private Integer quotaShow;
 
+    @ApiModelProperty(value = "砍价规则")
+    private String rule;
+
+    @ApiModelProperty(value = "用户每次砍价的次数")
+    private Integer bargainNum;
+
+    @ApiModelProperty(value = "帮助砍价好友人数")
+    private Integer peopleNum;
+
+    // 拼团部分
+    @ApiModelProperty(value = "推荐")
+    private Boolean isHost;
+
+    @ApiModelProperty(value = "参团人数")
+    private Integer people;
+
+    @ApiModelProperty(value = "拼团订单有效时间(小时)")
+    private Integer effectiveTime;
+
+    @ApiModelProperty(value = "单次购买数量")
+    private Integer onceNum;
+
+    @ApiModelProperty(value = "虚拟成团百分比")
+    private Integer virtualRation;
+
+    @ApiModelProperty(value = "砍价商品最低价")
+    private BigDecimal minPrice;
+
+    @ApiModelProperty(value = "砍价结束时间")
+    private Long endTime;
 }

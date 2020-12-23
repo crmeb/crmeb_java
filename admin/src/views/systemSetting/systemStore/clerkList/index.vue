@@ -130,8 +130,8 @@
         storeStaffUpdateStatusApi({id:id,status:isShow}).then(() => {
           that.$message.success("操作成功");
           that.tableList();
-        }).catch(res=>{
-          that.$message.error(res.message);
+        }).catch(()=>{
+          row.isShow = !row.isShow
         })
       },
       storeList() {

@@ -105,11 +105,6 @@
             </el-radio-group>
             <el-date-picker v-model="timeValUser" value-format="yyyy-MM-dd" format="yyyy-MM-dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTimeUser" />
           </el-form-item>
-          <el-form-item label="关键字：">
-            <el-input v-model="userTableFrom.keywords" placeholder="请输入订单id" class="selWidth" size="small">
-              <el-button slot="append" icon="el-icon-search" size="small" @click="getUserList(1)" />
-            </el-input>
-          </el-form-item>
         </el-form>
         <el-divider></el-divider>
         <el-table
@@ -148,8 +143,8 @@
             :current-page="userTableFrom.page"
             layout="total, sizes, prev, pager, next, jumper"
             :total="userDetailData.total"
-            @size-change="handleSizeChange"
-            @current-change="pageChange"
+            @size-change="userHandleSizeChange"
+            @current-change="userPageChange"
           />
         </div>
       </div>
@@ -184,7 +179,6 @@
         userTableFrom: {
           page: 1,
           limit: 10,
-          keywords: '',
           dateLimit: ''
         },
         fromList: fromList,
@@ -207,6 +201,7 @@
         this.userDetail = row
         this.Visible = true
         this.tablistLoading = true
+        this.userTableFrom.limit = 10
         this.getUserList()
       },
       getUserList(num){
@@ -223,6 +218,14 @@
         this.userTableFrom.dateLimit = tab
         this.timeValUser = []
         this.userTableFrom.page = 1;
+        this.getUserList()
+      },
+      userPageChange(page) {
+        this.userTableFrom.page = page
+        this.getUserList()
+      },
+      userHandleSizeChange(val) {
+        this.userTableFrom.limit = val
         this.getUserList()
       },
       // 具体日期

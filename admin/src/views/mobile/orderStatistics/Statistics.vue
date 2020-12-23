@@ -323,6 +323,7 @@ export default {
     setTime: function(time) {
       this.time = time;
       this.where.dateLimit = time
+      this.filter.dateLimit = time
       this.list = [];
       this.filter.page = 1;
       this.loaded = false;
@@ -356,8 +357,8 @@ export default {
       } else {
         this.renderValues = [this.value.join("-")];
       }
-      console.log( this.renderValues)
-      this.where.dateLimit = parseTime(this.renderValues[0], '{y}-{m}-{d}')+','+parseTime(this.renderValues[1], '{y}-{m}-{d}')
+      this.where.dateLimit = this.renderValues.join(',')
+      // this.where.dateLimit = parseTime(this.renderValues[0], '{y}-{m}-{d}')+','+parseTime(this.renderValues[1], '{y}-{m}-{d}')
       this.filter.dateLimit = this.where.dateLimit
     },
     prev(y, m, w) {

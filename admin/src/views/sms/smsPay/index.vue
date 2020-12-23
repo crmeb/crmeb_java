@@ -1,6 +1,16 @@
 <template>
   <div class="divBox">
     <el-card class="box-card">
+      <router-link :to="{path:'/operation/onePass'}">
+        <el-button class="mb35" size="mini" icon="el-icon-arrow-left">返回</el-button>
+      </router-link>
+
+      <el-tabs v-model="tableFrom.type" @tab-click="onChangeType" class="mb20">
+        <el-tab-pane label="短信" name="sms"></el-tab-pane>
+        <el-tab-pane label="商品采集" name="copy"></el-tab-pane>
+        <el-tab-pane label="物流查询" name="expr_query"></el-tab-pane>
+        <el-tab-pane label="电子面单打印" name="expr_dump"></el-tab-pane>
+      </el-tabs>
       <el-row v-loading="fullscreenLoading" :gutter="16">
         <el-col :span="24" class="ivu-text-left mb20">
           <el-col :xs="12" :sm="6" :md="4" :lg="3" class="mr20">
@@ -101,7 +111,10 @@ export default {
       current: 0,
       checkList: {},
       fullscreenLoading: false,
-      code: {}
+      code: {},
+      tableFrom: {
+        type: 'sms'
+      },
     }
   },
   computed: {
@@ -109,19 +122,24 @@ export default {
       'isLogin'
     ])
   },
+  created () {
+    this.tableFrom.type = this.$route.query.type;
+    this.onIsLogin();
+  },
   mounted() {
-    this.getNumber()
-    this.getPrice()
-    return
-
     if (!this.isLogin) {
-      this.$router.push('/operation/systemSms/config?url=' + this.$route.path)
+      this.$router.push('/operation/onePass?url=' + this.$route.path)
     } else {
       this.getNumber()
       this.getPrice()
     }
   },
   methods: {
+    onChangeType (val) {
+      this.current = 0;
+      this.getPrice();
+      this.getNumber()
+    },
     // 查看是否登录
     onIsLogin() {
       this.fullscreenLoading = true
@@ -129,29 +147,42 @@ export default {
         const data = res
         if (!data.status) {
           this.$message.warning('请先登录')
-          this.$router.push('/operation/systemSms/config?url=' + this.$route.path)
+          this.$router.push('/operation/onePass?url=' + this.$route.path)
         } else {
           this.getNumber()
           this.getPrice()
         }
         this.fullscreenLoading = false
       }).catch(res => {
-        this.$router.push('/operation/systemSms/config?url=' + this.$route.path)
+        this.$router.push('/operation/onePass?url=' + this.$route.path)
         this.fullscreenLoading = false
       })
     },
     // 剩余条数
     getNumber() {
       smsInfoApi().then(async res => {
-        const data = res
-        this.numbers = data.number
-        this.account = data.account
+        let data = res;
+        this.account = data.account;
+        switch (this.tableFrom.type) {
+          case 'sms':
+            this.numbers = data.sms.num
+            break;
+          case 'copy':
+            this.numbers = data.copy.num
+            break;
+          case 'expr_dump':
+            this.numbers = data.dump.num
+            break;
+          default:
+            this.numbers = data.query.num
+            break;
+        }
       })
     },
     // 支付套餐
     getPrice() {
       this.fullscreenLoading = true
-      smsPriceApi({ page: 1, limit: 9999}).then(async res => {
+      smsPriceApi(this.tableFrom).then(async res => {
         setTimeout(() => {
           this.fullscreenLoading = false
         }, 800)
@@ -178,7 +209,9 @@ export default {
       const data = {
         payType: 'weixin',
         mealId: item.id,
-        price: item.price
+        price: item.price,
+        num: item.num,
+        type: this.tableFrom.type
       }
       payCodeApi(data).then(async res => {
         this.code = res

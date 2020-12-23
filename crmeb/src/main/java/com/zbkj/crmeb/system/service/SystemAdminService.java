@@ -10,10 +10,17 @@ import com.zbkj.crmeb.system.response.SystemAdminResponse;
 import java.util.List;
 
 /**
-* @author Mr.Zhang
-* @Description SystemAdminService 接口
-* @since 2020-04-13
-*/
+ * SystemAdminService 接口
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 public interface SystemAdminService extends IService<SystemAdmin> {
     List<SystemAdminResponse> getList(SystemAdminRequest request, PageParamRequest pageParamRequest);
 
@@ -61,9 +68,11 @@ public interface SystemAdminService extends IService<SystemAdmin> {
 
     SystemAdmin getInfo();
 
-    SystemAdminResponse weChatAuthorizeLogin(String code, String ip);
+    SystemAdminResponse weChatAuthorizeLogin(String code, String ip) throws Exception;
 
     Boolean unBind();
 
     void bind(String wxCode, Integer adminId);
+
+    Boolean updateStatus(Integer id, Boolean status);
 }

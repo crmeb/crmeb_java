@@ -11,7 +11,7 @@
               <el-cascader v-model="tableFrom.cateId" :options="merCateList" :props="props" clearable class="selWidth mr20" @change="seachList" size="small"/>
             </el-form-item>
             <el-form-item label="商品搜索：">
-              <el-input v-model="tableFrom.keywords" placeholder="请输入商品名称，关键字，商品ID" class="selWidth" size="small">
+              <el-input v-model="tableFrom.keywords" placeholder="请输入商品名称，关键字，商品ID" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search" @click="seachList" size="small"/>
               </el-input>
             </el-form-item>
@@ -20,7 +20,7 @@
         <router-link :to=" { path:'/store/list/creatProduct' } ">
           <el-button size="small" type="primary" class="mr10">添加商品</el-button>
         </router-link>
-        <el-button size="small" type="success" class="mr10" @click="onCopy">复制淘宝、天猫、拼多多、京东、苏宁</el-button>
+        <el-button size="small" type="success" class="mr10" @click="onCopy">商品采集</el-button>
         <el-button size="small" @click="exports">导出</el-button>
       </div>
       <el-table
@@ -116,13 +116,13 @@
             <span>{{scope.row.addTime | formatDate}}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="120" fixed="right" align="center">
+        <el-table-column label="操作" min-width="150" fixed="right" align="center">
           <template slot-scope="scope">
             <router-link :to="{path: '/store/list/creatProduct/' + scope.row.id}">
               <el-button type="text" size="small" class="mr10">编辑</el-button>
             </router-link>
             <el-button  v-if="tableFrom.type === '5'" type="text" size="small" @click="handleRestore(scope.row.id, scope.$index)">恢复商品</el-button>
-            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)">{{ tableFrom.type === '5' ? '删除' : '加入回收站' }}</el-button>
+            <el-button type="text" size="small" @click="handleDelete(scope.row.id, tableFrom.type)">{{ tableFrom.type === '5' ? '删除' : '加入回收站' }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -140,19 +140,19 @@
     </el-card>
 
     <el-dialog
-      title="复制淘宝、天猫、拼多多、京东、苏宁"
+      title="复制淘宝、天猫、京东、苏宁"
       :visible.sync="dialogVisible"
-      width="1000px"
+      width="1200px"
       :modal="false"
       class="taoBaoModal"
       :before-close="handleClose">
-      <tao-bao v-if="dialogVisible"></tao-bao>
+      <tao-bao v-if="dialogVisible" @handleClose="handleClose"></tao-bao>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { productLstApi, productDeleteApi, categoryApi, putOnShellApi, offShellApi, productHeadersApi, productExportApi, restoreApi } from '@/api/store'
+import { productLstApi, productDeleteApi, categoryApi, putOnShellApi, offShellApi, productHeadersApi, productExportApi, restoreApi, productExcelApi } from '@/api/store'
 import { getToken } from '@/utils/auth'
 import taoBao from './taoBao'
 export default {
@@ -209,13 +209,21 @@ export default {
     handleClose() {
       this.dialogVisible = false
     },
+    handleCloseMod(item){
+      this.dialogVisible = item
+      this.goodHeade();
+      this.getList();
+    },
     // 复制
     onCopy(){
       this.dialogVisible = true
     },
     // 导出
     exports () {
-      window.open(this.objectUrl + 'admin/export/excel/product?type=1&Authori-zation=' + getToken())
+      productExcelApi({cateId:this.tableFrom.cateId,keywords: this.tableFrom.keywords, type:this.tableFrom.type}).then((res) => {
+        window.open(res.fileName)
+      })
+    //  window.open(this.objectUrl + 'admin/export/excel/product?type=1&Authori-zation=' + getToken())
     },
     // 获取商品表单头数量
     goodHeade () {
@@ -230,6 +238,7 @@ export default {
       categoryApi({ status: -1, type: 1 }).then(res => {
         this.merCateList = res
       }).catch(res => {
+        this.$message.error(res.message)
         this.$message.error(res.message)
       })
     },
@@ -270,10 +279,14 @@ export default {
           this.$message.success('上架成功')
           this.getList()
           this.goodHeade();
+        }).catch(()=>{
+          row.isShow = !row.isShow
         }) : offShellApi(row.id).then(() => {
           this.$message.success('下架成功')
           this.getList()
           this.goodHeade();
+        }).catch(()=>{
+          row.isShow = !row.isShow
         })
     }
   }

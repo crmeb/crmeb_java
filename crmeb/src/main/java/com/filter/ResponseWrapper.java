@@ -73,8 +73,6 @@ public class ResponseWrapper extends HttpServletResponseWrapper {
         @Override
         public void setWriteListener(WriteListener arg0) {
 
-            // TODO Auto-generated method stub
-
         }
     }
 }

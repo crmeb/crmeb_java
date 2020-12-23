@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.system.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
@@ -7,6 +8,7 @@ import com.constants.Constants;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
 import com.utils.RedisUtil;
+import com.zbkj.crmeb.express.vo.ExpressSheetVo;
 import com.zbkj.crmeb.system.dao.SystemConfigDao;
 import com.zbkj.crmeb.system.model.SystemConfig;
 import com.zbkj.crmeb.system.request.SystemFormCheckRequest;
@@ -26,10 +28,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
-* @author Mr.Zhang
-* @Description SystemConfigServiceImpl 接口实现
-* @since 2020-04-13
-*/
+ * SystemConfigServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, SystemConfig> implements SystemConfigService {
 
@@ -263,6 +272,58 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         return value == null;
     }
 
+    /**
+     * 获取系统电子面单信息
+     */
+    @Override
+    public ExpressSheetVo getExpressSheet() {
+        String exportId = get("config_export_id");
+        if (StrUtil.isBlank(exportId)) {
+            throw new CrmebException("请先开通电子面单");
+        }
+        String exportTempId = get("config_export_temp_id");
+        if (StrUtil.isBlank(exportTempId)) {
+            throw new CrmebException("请先开通电子面单");
+        }
+        String exportCom = get("config_export_com");
+        if (StrUtil.isBlank(exportCom)) {
+            throw new CrmebException("请先开通电子面单");
+        }
+        String exportToName = get("config_export_to_name");
+        if (StrUtil.isBlank(exportToName)) {
+            throw new CrmebException("请先开通电子面单");
+        }
+        String exportToTel = get("config_export_to_tel");
+        if (StrUtil.isBlank(exportToTel)) {
+            throw new CrmebException("请先开通电子面单");
+        }
+        String exportToAddress = get("config_export_to_address");
+        if (StrUtil.isBlank(exportToAddress)) {
+            throw new CrmebException("请先开通电子面单");
+        }
+        String exportSiid = get("config_export_siid");
+        if (StrUtil.isBlank(exportSiid)) {
+            throw new CrmebException("请先开通电子面单");
+        }
+        return new ExpressSheetVo(Integer.valueOf(exportId), exportCom, exportTempId, exportToName, exportToTel, exportToAddress, exportSiid);
+    }
+
+    /**
+     * 获取面单默认配置信息
+     * @return ExpressSheetVo
+     */
+    @Override
+    public ExpressSheetVo getDeliveryInfo() {
+        String exportId = get("config_export_id");
+        String exportTempId = get("config_export_temp_id");
+        String exportCom = get("config_export_com");
+        String exportToName = get("config_export_to_name");
+        String exportToTel = get("config_export_to_tel");
+        String exportToAddress = get("config_export_to_address");
+        String exportSiid = get("config_export_siid");
+        String exportOpen = get("config_export_open");
+        return new ExpressSheetVo(Integer.valueOf(exportId), exportCom, exportTempId, exportToName, exportToTel, exportToAddress, exportSiid, Integer.valueOf(exportOpen));
+    }
 
 
     /**
@@ -297,11 +358,11 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         }
 
         for (SystemConfig systemConfig : systemConfigList) {
-            if(systemConfig.getStatus()){
-                //隐藏之后，删除redis的数据
-                deleteRedis(systemConfig.getName());
-                continue;
-            }
+//            if(systemConfig.getStatus()){
+//                //隐藏之后，删除redis的数据
+//                deleteRedis(systemConfig.getName());
+//                continue;
+//            }
             redisUtil.hmSet(redisKey, systemConfig.getName(), systemConfig.getValue());
         }
     }
