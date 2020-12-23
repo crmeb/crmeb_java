@@ -60,9 +60,22 @@ const marketingRouter = {
       children: [
         {
           path: 'bargainGoods',
-          component: () => import('@/views/marketing/bargain/index'),
+          component: () => import('@/views/marketing/bargain/bargainGoods/index'),
           name: 'bargainGoods',
           meta: { title: '砍价商品', icon: '' }
+        },
+        {
+          path: 'creatBargain/:id?',
+          component: () => import('@/views/marketing/bargain/bargainGoods/creatBargain'),
+          name: 'creatBargain',
+          meta: { title: '砍价商品', icon: '',noCache: true,
+            activeMenu: `/marketing/bargain/bargainGoods` }
+        },
+        {
+          path: 'bargainList',
+          component: () => import('@/views/marketing/bargain/bargainList/index'),
+          name: 'bargainList',
+          meta: { title: '砍价列表', icon: '' }
         }
       ]
     },
@@ -75,13 +88,20 @@ const marketingRouter = {
       children: [
         {
           path: 'groupGoods',
-          component: () => import('@/views/marketing/groupBuy/goods/index'),
+          component: () => import('@/views/marketing/groupBuy/groupGoods/index'),
           name: 'groupGoods',
           meta: { title: '拼团商品', icon: '' }
         },
         {
+          path: 'creatGroup/:id?',
+          component: () => import('@/views/marketing/groupBuy/groupGoods/creatGroup'),
+          name: 'creatGroup',
+          meta: { title: '拼团商品', icon: '',noCache: true,
+            activeMenu: `/marketing/groupBuy/groupGoods` }
+        },
+        {
           path: 'groupList',
-          component: () => import('@/views/marketing/groupBuy/list/list'),
+          component: () => import('@/views/marketing/groupBuy/groupList/index'),
           name: 'groupList',
           meta: { title: '拼团列表', icon: '' }
         }

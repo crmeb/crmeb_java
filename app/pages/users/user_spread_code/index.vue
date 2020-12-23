@@ -34,6 +34,7 @@
 	// #ifdef H5
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
 	// #endif
+	import { base64src } from '@/utils/base64src.js'
 	import {
 		getUserInfo,
 		spreadBanner
@@ -78,15 +79,16 @@
 				imagePath: '',
 				qrcodeSize: 1000,
 				PromotionCode: '',
-				base64List: []
+				base64List: [],
+				posterbackgd: 'https://image.java.crmeb.net/image/product/2020/08/03/755bf516b1ca4b6db3bfeaa4dd5901cdh71kob20re.jpg'
 			};
 		},
 		computed: mapGetters(['isLogin']),
 		onLoad() {
 			if (this.isLogin) {
-				// #ifdef H5
+			//	// #ifdef H5
 				this.userSpreadBannerList();
-				// #endif
+			//	// #endif
 			} else {
 				// #ifdef H5 || APP-PLUS
 				toLogin();
@@ -112,34 +114,69 @@
 		onReady() {
 		},
 		methods: {
+			userSpreadBannerList: function() {
+				let that = this;
+				uni.showLoading({
+					title: '获取中',
+					mask: true,
+				})
+				spreadBanner({
+					page: 1,
+					limit: 5
+				}).then(res => {
+					uni.hideLoading();
+					that.$set(that, 'spreadList', res.data);
+					that.getImageBase64(res.data);
+				}).catch(err => {
+					uni.hideLoading();
+				});
+			},
 			getImageBase64:function(images){
 				uni.showLoading({
 					title: '海报生成中',
 					mask: true
 				});
 				let that = this;
+				// #ifdef H5
 				let spreadList = [];
 				images.forEach((item,index)=>{
 					imageBase64({url:item.pic}).then(res=>{
 						spreadList[index] = res.data.code;
 						that.$set(that,'base64List',spreadList);
-						that.$set(that, 'poster', spreadList[0]);
-						that.userInfos();
+						//that.$set(that, 'poster', spreadList[0]);
 					})
 				})
+				// #endif
+				// #ifdef MP
+				this.base64List = images.map(item => {
+					return item.pic
+				});
+				// #endif
+				that.userInfos();
+				console.log('上',this.base64List)
 			},
 			// 小程序二维码
 			getQrcode(){
 				let that = this;
 				let data = {
 					pid: that.userInfo.uid,
-					path: '/pages/index/index'
+					path: 'pages/index/index'
 				}
+				let arrImagesUrl = "";
+				uni.downloadFile({
+					url: this.base64List[0], //仅为示例，并非真实的资源
+					success: (res) => {
+						arrImagesUrl = res.tempFilePath;
+					}
+				});				
 				getQrcode(data).then(res=>{
-					that.PromotionCode = res.data.code;
-					// let image = '../../../static/images/aa.jpg';
-					// that.PosterCanvas(image, res.data.code, that.userInfo.nickname,0);
-					that.PosterCanvas(this.base64List[0], res.data.code, that.userInfo.nickname,0);
+					base64src(res.data.code, res => {
+						that.PromotionCode = res;
+						console.log('第一张',that.PromotionCode)
+					});
+					setTimeout(() => {
+						that.PosterCanvas(arrImagesUrl, that.PromotionCode, that.userInfo.nickname, 0);		
+					}, 200);
 				})
 			},
 			// 生成二维码；
@@ -153,8 +190,6 @@
 					margin: 10,
 					success: res => {
 						that.PromotionCode = res;
-						// let image = '../../../static/images/aa.jpg';
-						// that.PosterCanvas(image, that.PromotionCode, that.userInfo.nickname,0);
 						that.PosterCanvas(this.base64List[0], that.PromotionCode, that.userInfo.nickname,0);
 					},
 					complete: () => {},
@@ -171,7 +206,7 @@
 				let that = this;
 				uni.getImageInfo({
 					src: arrImages,
-					success: function(image) {
+					success: function(res) {
 						context.drawImage(arrImages, 0, 0, 750, 1190);
 						context.save();
 						context.drawImage(code, 110, 925, 140, 140);
@@ -179,22 +214,43 @@
 						context.setFontSize(28);
 						context.fillText(nickname, 270, 980);
 						context.fillText('邀请您加入', 270, 1020);
-						context.draw(true,function(){
-							uni.canvasToTempFilePath({
-							  destWidth: 750,
-							  destHeight: 1190,
-							  canvasId: 'canvasOne',
-							  fileType: 'jpg',
-							  success: function(res) {
-							    // 在H5平台下，tempFilePath 为 base64
-								uni.hideLoading();
-								that.imagePath = res.tempFilePath;
-								that.spreadList[index].pic = res.tempFilePath;
-							  } 
-							})
-						})
+						setTimeout(() => {
+							context.draw(true,function(){
+								uni.canvasToTempFilePath({
+								  destWidth: 750,
+								  destHeight: 1190,
+								  canvasId: 'canvasOne',
+								  fileType: 'jpg',
+								  success: function(res) {
+									  console.log("成功",res)
+									// 在H5平台下，tempFilePath 为 base64
+									uni.hideLoading();
+									that.imagePath = res.tempFilePath;
+									that.spreadList[index].pic = res.tempFilePath;
+									that.poster = res.tempFilePath;
+									console.log("spreadList = ", that.spreadList[index].pic)
+								  } 
+								})
+							})						
+						}, 100);
+						// context.draw(true,function(){
+						// 	uni.canvasToTempFilePath({
+						// 	  destWidth: 750,
+						// 	  destHeight: 1190,
+						// 	  canvasId: 'canvasOne',
+						// 	  fileType: 'jpg',
+						// 	  success: function(res) {
+						// 		  console.log("成功",res)
+						// 	    // 在H5平台下，tempFilePath 为 base64
+						// 		uni.hideLoading();
+						// 		that.imagePath = res.tempFilePath;
+						// 		that.spreadList[index].pic = res.tempFilePath;
+						// 	  } 
+						// 	})
+						// })
 					},
 					fail: function(err) {
+						console.log("失败",err)
 						uni.hideLoading();
 						that.$util.Tips({
 							title: '无法获取图片信息'
@@ -216,10 +272,19 @@
 				let base64List = this.base64List;
 				let index = e.detail.current;
 				this.swiperIndex = index;
-				this.$set(this, 'poster', base64List[index]);
-				this.PosterCanvas(base64List[index], this.PromotionCode, this.userInfo.nickname,index);
-				// let aa = ['../../../static/images/aa.jpg','../../../static/images/aa.jpg','../../../static/images/aa.jpg'];
-				// this.PosterCanvas(aa[index], this.PromotionCode, this.userInfo.nickname,index);
+				let arrImagesUrl = "";
+				uni.downloadFile({
+					url: base64List[index], //仅为示例，并非真实的资源
+					success: (res) => {
+						console.log('移动',res)
+						arrImagesUrl = res.tempFilePath;
+						console.log('移动图片',arrImagesUrl)
+						console.log('移动二维码',this.PromotionCode)
+						setTimeout(() => {
+							this.PosterCanvas(arrImagesUrl, this.PromotionCode, this.userInfo.nickname, index);			
+						}, 200);
+					}
+				});			
 			},
 			// 点击保存海报
 			savePosterPath: function() {
@@ -326,23 +391,6 @@
 					};
 					this.$wechat.wechatEvevt(["updateAppMessageShareData", "updateTimelineShareData"], configAppMessage)
 				}
-			},
-			userSpreadBannerList: function() {
-				let that = this;
-				uni.showLoading({
-					title: '获取中',
-					mask: true,
-				})
-				spreadBanner({
-					page: 1,
-					limit: 5
-				}).then(res => {
-					uni.hideLoading();
-					that.$set(that, 'spreadList', res.data);
-					that.getImageBase64(res.data);
-				}).catch(err => {
-					uni.hideLoading();
-				});
 			}
 		}
 	}
@@ -352,7 +400,7 @@
 	page {
 		background-color: #a3a3a3 !important;
 	}
-	.canvas canvas{
+	.canvas{
 		position: fixed;
 		z-index: -5rpx;
 		opacity: 0;

@@ -216,6 +216,7 @@
 
 <script>
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
+	import { base64src } from '@/utils/base64src.js'
 	// import yzf_chat from '@/plugin/chat/yzf_chat.js'
 	import store from '@/store';
 	import {
@@ -556,7 +557,7 @@
 			getUserInfo: function() {
 				let that = this;
 				getUserInfo().then(res => {
-					that.$set(that.sharePacket, 'isState', that.sharePacket.priceName != 0 ? false : true);
+					that.$set(that.sharePacket, 'isState', that.sharePacket.priceName != '0' ? false : true);
 					store.commit('SETUID', res.data.uid);
 					// that.$set(that, 'uid', res.data.uid);
 					// #ifdef H5
@@ -668,7 +669,7 @@
 					that.$set(that.attr, 'productAttr', res.data.productAttr);
 					that.$set(that, 'productValue', res.data.productValue);
 					that.$set(that.sharePacket, 'priceName', res.data.priceName);
-					that.$set(that, 'systemStore', res.data.system_store);
+					that.$set(that, 'systemStore', storeInfo.systemStore);
 					that.$set(that, 'good_list', goodArray);
 					that.$set(that, 'activityH5', res.data.storeInfo.activityAllH5 ? res.data.storeInfo.activityAllH5 : []);
 					uni.setNavigationBarTitle({
@@ -681,6 +682,7 @@
 					that.$set(that, 'navList', navList);
 					// #ifdef H5
 					that.$set(that, 'storeImage', that.storeInfo.image);
+					that.getImageBase64(res.data.storeInfo.image);
 					if (that.isLogin) {
 						that.getCartCount();
 						that.ShareInfo();
@@ -697,11 +699,13 @@
 					setTimeout(function() {
 						that.infoScroll();
 					}, 500);
+					// #ifdef MP
+					that.imgTop = res.data.storeInfo.image
+					// #endif
 					// #ifndef H5
 					that.downloadFilestoreImage();
 					// #endif
 					that.DefaultSelect();
-					that.getImageBase64(res.data.storeInfo.image);
 				}).catch(err => {
 					//状态异常返回上级页面
 					return that.$util.Tips({
@@ -1106,10 +1110,14 @@
 				let data = {
 					pid: that.uid,
 					id: that.id,
-					path: '/pages/goods_details/index'
+					path: 'pages/goods_details/index'
 				}
 				getQrcode(data).then(res=>{
-					that.PromotionCode = res.data.code;
+					//that.PromotionCode = res.data.code;
+					base64src(res.data.code, res => {
+						that.PromotionCode = res;
+						console.log('第一张',that.PromotionCode)
+					});
 				})
 			},
 			// 生成二维码；
@@ -1139,21 +1147,99 @@
 				let that = this;
 				imageBase64({url:images}).then(res=>{
 					that.imgTop = res.data.code
+					//this.storeImage = res.data.code;
 				})
+			},
+			/**
+			 * 获取产品分销二维码
+			 * @param function successFn 下载完成回调
+			 *
+			 */
+			downloadFilePromotionCode: function(successFn) {
+				let that = this;
+				getProductCode(that.id)
+					.then(res => {
+						uni.downloadFile({
+							url: that.setDomain(res.data.code),
+							success: function(res) {
+								that.$set(that, 'isDown', false);
+								if (typeof successFn == 'function') successFn && successFn(res.tempFilePath);
+								else that.$set(that, 'PromotionCode', res.tempFilePath);
+							},
+							fail: function() {
+								that.$set(that, 'isDown', false);
+								that.$set(that, 'PromotionCode', '');
+							}
+						});
+					})
+					.catch(err => {
+						that.$set(that, 'isDown', false);
+						that.$set(that, 'PromotionCode', '');
+					});
 			},
 			/**
 			 * 生成海报
 			 */
+			// goPoster: function() {
+			// 	debugger
+			// 	let that = this;
+			// 	that.posters = false;
+				
+			// 	that.$set(that, 'canvasStatus', true);
+			// 	let arr2 = [that.posterbackgd, that.storeImage, that.PromotionCode];
+				
+			// 	// // #ifndef H5
+			// 	if (that.isDown)
+			// 		return that.$util.Tips({
+			// 			title: '正在下载海报,请稍后再试！'
+			// 		});
+			// 	// // #endif
+			// 	uni.getImageInfo({
+			// 		src: that.PromotionCode,
+			// 		fail: function(res) {
+			// 			console.log(res)
+			// 			// #ifdef H5
+			// 			return that.$util.Tips({
+			// 				title: res
+			// 			});
+			// 			// #endif
+			// 			// #ifdef MP
+			// 			return that.$util.Tips({
+			// 				title: '小程序二维码需要发布正式版后才能获取到'
+			// 			});
+			// 			// #endif
+			// 		},
+			// 		success(res) {
+			// 			console.log('成功',res)
+			// 			//生成推广海报
+			// 			that.$util.PosterCanvas(arr2, that.storeInfo.storeName, that.storeInfo.price, function(tempFilePath) {
+			// 						that.imagePath = tempFilePath;
+			// 						that.canvasStatus = true;
+			// 			});
+			// 		}
+			// 	});
+			// },
 			goPoster: function() {
 				let that = this;
 				that.posters = false;
-				let arrImages = [that.posterbackgd, that.imgTop, that.PromotionCode];
-				let storeName = that.storeInfo.storeName;
-				let price = that.storeInfo.price;
-				that.$util.PosterCanvas(arrImages, storeName, price, function(tempFilePath) {
-					that.imagePath = tempFilePath;
-					that.canvasStatus = true;
-				});
+				let arrImagesUrl = '';
+				let arrImagesUrlTop = '';
+				uni.downloadFile({
+					url: that.imgTop, //仅为示例，并非真实的资源
+					success: (res) => {
+						arrImagesUrlTop = res.tempFilePath;
+						let arrImages = [that.posterbackgd, arrImagesUrlTop, that.PromotionCode];
+						let storeName = that.storeInfo.storeName;
+						let price = that.storeInfo.price;
+						setTimeout(() => {
+							that.$util.PosterCanvas(arrImages, storeName, price, function(tempFilePath) {
+								that.imagePath = tempFilePath;
+								that.canvasStatus = true;
+							});	
+						}, 200);
+					}
+				});	
+			
 			},
 			/*
 			 * 保存到手机相册

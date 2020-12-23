@@ -281,11 +281,11 @@ public class ExcelUtil {
 
                 CellStyle cellStyle = wb.createCellStyle();
                 cellStyle.setFillForegroundColor(IndexedColors.WHITE.getIndex());
-                cellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
-                cellStyle.setAlignment(CellStyle.ALIGN_CENTER);
+//                cellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+//                cellStyle.setAlignment(CellStyle.ALIGN_CENTER);
 
                 Font font = wb.createFont();
-                font.setBoldweight(Font.BOLDWEIGHT_NORMAL);
+//                font.setBoldweight(Font.BOLDWEIGHT_NORMAL);
                 cellStyle.setFont(font);
                 cell.setCellStyle(cellStyle);
                 cell.setCellValue(columnName);

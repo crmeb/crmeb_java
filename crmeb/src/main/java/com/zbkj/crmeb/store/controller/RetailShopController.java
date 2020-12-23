@@ -30,10 +30,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @Classname retailShop 分销模块
- * @Description 分销模块
- * @Date 2020/6/22 11:12 上午
- * @Created by stivepeim
+ * 分销模块
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Slf4j
 @RestController
@@ -166,7 +172,7 @@ public class RetailShopController {
      */
     @ApiOperation(value = "根据条件获取推广人列表")
     @RequestMapping(value = "/spread/userlist", method = RequestMethod.POST)
-    public CommonResult<CommonPage<User>> getUserListBySpreadLevel(@RequestBody @ModelAttribute @Validated RetailShopStairUserRequest request,
+    public CommonResult<CommonPage<User>> getUserListBySpreadLevel(@RequestBody @Validated RetailShopStairUserRequest request,
                                                          @ModelAttribute PageParamRequest pageParamRequest){
         return CommonResult.success(CommonPage.restPage(userService.getUserListBySpreadLevel(request,pageParamRequest)));
     }
@@ -180,7 +186,7 @@ public class RetailShopController {
      */
     @ApiOperation(value = "根据条件获取推广人订单")
     @RequestMapping(value = "/spread/orderlist", method = RequestMethod.POST)
-    public CommonResult<CommonPage<StoreOrder>> getOrdersBySpreadLevel(@RequestBody @ModelAttribute @Validated RetailShopStairUserRequest request,
+    public CommonResult<CommonPage<StoreOrder>> getOrdersBySpreadLevel(@RequestBody @Validated RetailShopStairUserRequest request,
                                                                        @ModelAttribute PageParamRequest pageParamRequest){
         return CommonResult.success(CommonPage.restPage(userService.getOrderListBySpreadLevel(request,pageParamRequest)));
     }

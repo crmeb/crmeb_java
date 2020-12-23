@@ -6,7 +6,7 @@
 			<view class="header" :class="bargainUid != userInfo.uid ? 'on' : ''">
 				<view class='people' >
 					<!-- :style="'top:'+navH/2+'rpx'" -->
-					{{bargainCount.lookCount}}人查看 丨 {{bargainCount.shareCount}}人分享 丨 {{bargainCount.userCount}}人参与
+					{{bargainCount.lookCount || 0}}人查看 丨 {{bargainCount.shareCount || 0}}人分享 丨 {{bargainCount.userCount || 0}}人参与
 				</view>
 				<!-- <view class='time font-color' v-if="bargainUid == userInfo.uid">
 					倒计时
@@ -25,7 +25,7 @@
 						<image :src='bargainUserInfo.avatar'></image>
 					</view>
 					<view class='text'>
-						{{bargainUserInfo.nickname}}
+						{{bargainUserInfo.nickname || ''}}
 						<text>邀请您帮忙砍价</text>
 					</view>
 				</view>
@@ -45,7 +45,7 @@
 							当前: ￥
 							<text class='num'>{{bargainInfo.price}}</text>
 						</view>
-						<view class='successNum'>最低:￥{{bargainInfo.min_price}}</view>
+						<view class='successNum'>最低:￥{{bargainInfo.minPrice}}</view>
 						<!-- <view class='successNum'>已有{{bargainSumCount}}人砍价成功</view> -->
 					</view>
 				</view>
@@ -60,14 +60,20 @@
 				</view>
 				</block>
 				<!-- 自己砍价 -->
-				<view v-if="bargainUid == userInfo.uid && !userBargainStatus && bargainUserHelpInfo.price > 0">
+				<view v-if="bargainUid == userInfo.uid && (userBargainStatus===0 || userBargainStatus === bargainSumCount) && bargainUserHelpInfo.price > 0">
+					<view class='bargainBnt' @tap='userBargain' v-if="productStock>0&&quota>0">
+						立即参与砍价
+					</view>
+					<view class='bargainBnt grey' v-if="productStock<=0||quota<=0">商品暂无库存</view>
+				</view>
+				<!-- <view v-if="bargainUid == userInfo.uid && !userBargainStatus && bargainUserHelpInfo.price > 0">
 					<view class='bargainBnt' @tap='userBargain' v-if="productStock>0&&quota>0">
 						立即参与砍价
 					</view>
 					<view class='bargainBnt grey' v-if="productStock<=0||quota<=0">立即参与砍价</view>
-				</view>
+				</view> -->
 				<!-- 帮助砍价、帮砍成功： -->
-				<view v-if="bargainUid == userInfo.uid && bargainUserHelpInfo.price > 0 && userBargainStatus">
+				<view v-if="bargainUid == userInfo.uid && bargainUserHelpInfo.price > 0 && userBargainStatus != bargainSumCount">
 				    <!-- #ifdef H5 -->
 					   <view class='bargainBnt' v-if="$wechat.isWeixin()"  @click="H5ShareBox = true">邀请好友帮砍价</view>
 					   <view class='bargainBnt' v-else @tap='getBargainUserBargainPricePoster'>邀请好友帮砍价</view>
@@ -92,8 +98,14 @@
 					</view>
 					<view class='bargainBnt' @tap='currentBargainUser'>我也要参与</view>
 				</view>	
-				
-				<view v-if="bargainUid != userInfo.uid && !userBargainStatusHelp">
+				<view v-if="bargainUid != userInfo.uid && !userBargainStatusHelp && isHelp">
+					<view class='bargainSuccess'>
+						<text class='iconfont icon-xiaolian'></text>
+						您已帮其他好友砍过此商品
+					</view>
+					<view class='bargainBnt' @tap='currentBargainUser'>我也要参与</view>
+				</view>	
+				<view v-if="bargainUid != userInfo.uid && !userBargainStatusHelp && !isHelp">
 					<view class='bargainSuccess'>
 						<text class='iconfont icon-xiaolian'></text>
 						已成功帮助好友砍价
@@ -122,7 +134,7 @@
 					</view>
 				</view>
 				<view class='list'>
-					<block v-for="(item,index) in bargainUserHelpList" :key='index'>
+					<block v-for="(item,index) in bargainUserHelpList" :key='index' v-if="index<3 || !couponsHidden">
 						<view class='item acea-row row-between-wrapper'>
 							<view class='pictxt acea-row row-between-wrapper'>
 								<view class='pictrue'>
@@ -139,6 +151,7 @@
 							</view>
 						</view>
 					</block>
+					<view class="open acea-row row-center-wrapper" @click="openTap" v-if="bargainUserHelpList.length>3">{{couponsHidden?'展开更多':'关闭展开'}}<text class="iconfont" :class='couponsHidden==true?"icon-xiangxia":"icon-xiangshang"'></text></view>
 				</view>
 				<view class='load font-color' v-if="!limitStatus" @tap='getBargainUser'>点击加载更多</view>
 				<view class='lock'></view>
@@ -155,7 +168,7 @@
 				</view>
 				<view class='conter'>
 					<!-- <template is="wxParse" data="{{wxParseData:description.nodes}}" /> -->
-					<jyf-parser :html="bargainInfo.description" ref="article" :tag-style="tagStyle"></jyf-parser>
+					<jyf-parser :html="bargainInfo.content" ref="article" :tag-style="tagStyle"></jyf-parser>
 					<!-- <rich-text :nodes="bargainInfo.description" class="conter"></rich-text> -->
 				</view>
 				<view class='lock'></view>
@@ -182,7 +195,7 @@
 				<view v-if="bargainUid == userInfo.uid">
 					<view class='cutOff'>
 						您已砍掉
-						<text class='font-color'>{{bargainUserBargainPrice.price}}</text>
+						<text class='font-color'>{{bargainUserBargainPrice}}</text>
 						元，听说分享次数越多砍价成功的机会越大哦！
 					</view>
 					<!-- #ifdef MP -->
@@ -193,7 +206,7 @@
 					<!-- #endif -->
 				</view>
 				<view v-else>
-					<view class='help font-color'>成功帮砍{{bargainUserBargainPrice.price}}元</view>
+					<view class='help font-color'>成功帮砍{{bargainUserBargainPrice}}元</view>
 					<view class='cutOff on'>您也可以砍价低价拿哦，快去挑选心仪的商品吧~</view>
 					<view @tap='currentBargainUser' class='tipBnt'>我也要参与</view>
 				</view>
@@ -267,26 +280,26 @@
 				bargainUid: 0, //开启砍价用户
 				bargainUserInfo: {}, //开启砍价用户信息
 				bargainUserId: 0, //开启砍价编号
-				bargainInfo: [], //砍价产品
-				offset: 0,
-				limit: 20,
+				bargainInfo: {}, //砍价产品
+				page: 1,
+				limit: 5,
 				limitStatus: false,
 				bargainUserHelpList: [],
 				bargainUserHelpInfo: [],
-				bargainUserBargainPrice: 0,
+				bargainUserBargainPrice: 0, //砍了多少钱
 				status: '', // 0 开启砍价   1  朋友帮忙砍价  2 朋友帮忙砍价成功 3 完成砍价  4 砍价失败 5已创建订单
 				bargainCount: [], //分享人数  浏览人数 参与人数
 				retunTop: true,
 				bargainPartake: 0,
 				isHelp: false,
 				interval: null,
-				userBargainStatus: 0, //判断自己是否砍价
+				userBargainStatus: 0, // 用户开启的砍价活动次数
 				productStock: 0, //判断是否售罄；
 				quota: 0, //判断是否已限量；
 				userBargainStatusHelp: true,
 				navH: '',
-				statusPay: '',
-				bargainSumCount:0,
+				statusPay: '', //活动状态，1参与中，2活动结束参与失败，3活动结束参与成功
+				bargainSumCount:0, //用户成功支付的砍价订单数
 				bargainPrice:0,
 				datatime:0,
 				offest:'',
@@ -298,6 +311,9 @@
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false, //是否隐藏授权
 				pages:'',
+				couponsHidden: true,
+				loading: false,
+				loadend: false
 			}
 
 		},
@@ -369,6 +385,9 @@
 			})
 		},
 		methods: {
+			openTap() {
+				this.$set(this,'couponsHidden',!this.couponsHidden);
+			},
 			// 授权关闭
 			authColse: function(e) {
 				this.isShowAuth = e;
@@ -376,14 +395,21 @@
 			// 去商品页
 			goProduct(){
 				uni.navigateTo({
-					url:`/pages/goods_details/index?id=${this.bargainInfo.product_id}`
+					url:`/pages/goods_details/index?id=${this.bargainInfo.productId}`
 				})
 			},
 			// 自己砍价；
 			userBargain:function(){
 				let that = this;
 				if (that.userInfo.uid == that.bargainUid){
-					that.setBargain();
+					if (that.userBargainStatus == that.bargainInfo.num) {
+						return that.$util.Tips({
+							title: `该商品每人限购${that.bargainInfo.num}${that.bargainInfo.unitName}`
+						});
+					} else {
+						this.page = 1;
+						that.setBargain();
+					}
 				}
 			},
 			goBack: function() {
@@ -393,9 +419,6 @@
 			},
 			gobargainUserInfo: function() { //获取开启砍价用户信息
 				var that = this;
-				var data = {
-					userId: that.bargainUid
-				};
 				postBargainStartUser({
 					bargainId: that.id,
 					bargainUserUid: that.bargainUid
@@ -406,22 +429,18 @@
 			goPay: function() { //立即支付
 				var that = this;
 				var data = {
-					productId: that.bargainInfo.product_id,
-					bargainId: that.id,
-					cartNum: that.bargainInfo.num,
-					uniqueId: '',
-					combinationId: 0,
-					secKillId: 0,
-					'new': 1
+					isNew: true,
+					productId: that.bargainInfo.productId,
+					bargainId: that.bargainInfo.id,
+					cartNum: 1,
+					productAttrUnique: that.bargainInfo.attrValue[0].id
 				};
 				postCartAdd(data).then(res => {
 					uni.navigateTo({
-						url: '/pages/users/order_confirm/index?cartId=' + res.data.cartId
+						url: '/pages/users/order_confirm/index?new=true&cartId=' + res.data.cartId + '&bargain=true'
 					});
 				}).catch(err => {
-					return app.Tips({
-						title: err
-					})
+					return that.$util.Tips({title:err})
 				});
 			},
 			getBargainDetails: function() { //获取砍价产品详情
@@ -433,12 +452,11 @@
 					that.userInfo = res.data.userInfo;
 					that.bargainSumCount = res.data.bargainSumCount;
 					that.userBargainStatus = res.data.userBargainStatus;
-					that.productStock = res.data.bargain.attr.product_stock;
-					that.quota = res.data.bargain.attr.quota;
-					that.datatime = res.data.bargain.stop_time
+					that.productStock = res.data.bargain.stock;
+					that.quota = res.data.bargain.quota;
+					that.datatime = res.data.bargain.endTime/1000;
 					that.pages = '/pages/activity/goods_bargain_details/index?id=' + that.id + '&bargain=' +
 					that.bargainUid + '&scene=' + that.userInfo.uid;
-					console.log(that.pages);
 					uni.setNavigationBarTitle({
 						title:res.data.bargain.title.substring(0,13)+'...'
 					})
@@ -450,7 +468,15 @@
 					that.setOpenShare();
 					//#endif
 				}).catch(function(err) {
-					that.$util.Tips({title:err})
+					// uni.navigateTo({
+					// 	url: window.location.protocol + "//" + window.location.host +'/pages/activity/goods_bargain/index',
+					// });
+					that.$util.Tips({
+						title: err
+					}, {
+						tab: 2,
+						url: '/pages/activity/goods_bargain/index'
+					});
 				})
 			},
 			getBargainHelpCount: function () {//获取砍价帮总人数、剩余金额、进度条、已经砍掉的价格
@@ -462,6 +488,11 @@
 					that.bargainInfo.price = parseFloat(price) <= 0 ? 0 : price;
 					that.userBargainStatusHelp = res.data.userBargainStatus;
 					that.statusPay = res.data.status;
+					this.isHelp = res.data.isConsume;
+				}).catch(function(err) {
+					that.$util.Tips({
+						title: err
+					});
 				})
 			},
 			currentBargainUser: function() { //当前用户砍价
@@ -471,12 +502,20 @@
 			setBargain: function() { //参与砍价
 				var that = this;
 				postBargainStart(that.id).then(res => {
+					if (res.code === 'subscribe') {
+						return;
+					}
 					that.$set(that, 'bargainUserId', res.data);
-					that.getBargainUserBargainPrice();
+				//	that.getBargainUserBargainPrice();
 					that.setBargainHelp();
 					that.getBargainHelpCount();
 					that.userBargainStatus = 1;
-				})
+				},error => {
+					    this.bargainUid = 0;
+						that.$util.Tips({
+							title: error
+						})
+					})
 			},
 			setBargainHelp: function() { //帮好友砍价
 				var that = this;
@@ -485,10 +524,18 @@
 					bargainUserUid: that.bargainUid
 				};
 				postBargainHelp(data).then(res => {
+					// if(res.data.isConsume){
+					// 	that.$set(that, 'isHelp', true);
+					// }else{
+					// 	that.$set(that, 'isHelp', false);
+					// 	that.$set(that, 'active', true);
+					// }
+					that.page = 1;
 					that.$set(that, 'bargainUserHelpList', []);
-					that.$set(that, 'isHelp', true);
 					that.getBargainUser();
-					that.getBargainUserBargainPrice();
+					that.$set(that, 'bargainUserBargainPrice', res.data.bargainPrice);
+					that.$set(that, 'active', true);
+					//that.getBargainUserBargainPrice();
 					that.getBargainHelpCount();
 				}).catch(err => {
 					that.$util.Tips({
@@ -500,22 +547,36 @@
 			},
 			getBargainUser: function() { //获取砍价帮
 				var that = this;
+			//	if (that.loadend) return;
+				if (that.loading) return;
 				var data = {
 					bargainId: that.id,
 					bargainUserUid: that.bargainUid,
-					offset: that.offset,
+				};
+				var datas = {
+					page: that.page,
 					limit: that.limit,
 				};
-				postBargainHelpList(data).then(res => {
-					var bargainUserHelpListNew = [];
-					var bargainUserHelpList = that.bargainUserHelpList;
-					var len = res.data.length;
-				
-					bargainUserHelpListNew = bargainUserHelpList.concat(res.data);
+				this.loading = true;
+				postBargainHelpList(datas,data).then(res => {
+					let list = res.data.list;
+					let bargainUserHelpList = that.$util.SplitArray(list, that.bargainUserHelpList);
+					let loadend = list.length < that.limit;
+					let len = list.length;
+					that.loadend = loadend;
+					that.loading = false;
+					that.loadTitle = loadend ? '已全部加载' : '加载更多';
+					that.$set(that, 'bargainUserHelpList', bargainUserHelpList);
+					that.$set(that, 'limitStatus', datas.limit > len);
+					that.$set(that, 'page', that.page + 1);
 					
-					that.$set(that, 'bargainUserHelpList', res.data);
-					that.$set(that, 'limitStatus', data.limit > len);
-					that.$set(that, 'offest', (Number(data.offset) + Number(data.limit)));
+					// var bargainUserHelpListNew = [];
+					// var bargainUserHelpList = that.bargainUserHelpList;
+					// var len = res.data.list.length;
+					// bargainUserHelpListNew = bargainUserHelpList.concat(res.data.list);
+					// that.$set(that, 'bargainUserHelpList', res.data.list);
+					// that.$set(that, 'limitStatus', datas.limit > len);
+					// that.$set(that, 'page', (Number(datas.page) + Number(datas.limit)));
 				});
 			},
 			getBargainUserBargainPricePoster: function() {
@@ -668,6 +729,16 @@
 <style lang="scss">
 	page {
 		background-color: #e93323 !important;
+	}
+	.bargain .bargainGang .open {
+		font-size: 24rpx;
+		color: #999;
+		margin-top: 30rpx;
+	}
+	
+	.bargain .bargainGang .open .iconfont {
+		font-size: 25rpx;
+		margin: 5rpx 0 0 10rpx;
 	}
 
 	.bargain .icon-xiangzuo {

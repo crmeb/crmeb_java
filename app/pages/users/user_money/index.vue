@@ -13,16 +13,24 @@
 							<navigator url="/pages/users/user_payment/index" hover-class="none" class='recharge font-color'>充值</navigator>
 							<!-- #endif -->
 							<!-- #ifdef MP -->
-							<view  @click="openSubscribe('/pages/users/user_payment/index')" class='recharge font-color'>充值</view>
+							<view v-if="rechargeSwitch"  @click="openSubscribe('/pages/users/user_payment/index')" class='recharge font-color'>充值</view>
 							<!-- #endif -->
 						</view>
 						<view class='cumulative acea-row row-top'>
+							<!-- #ifdef APP-PLUS || H5 -->
 							<view class='item'>
-								<view>累计收入(元)</view>
+								<view>累计充值(元)</view>
 								<view class='money'>{{statistics.recharge || 0}}</view>
 							</view>
+							<!-- #endif -->
+							<!-- #ifdef MP -->
+							<view class='item' v-if="rechargeSwitch">
+								<view>累计充值(元)</view>
+								<view class='money'>{{statistics.recharge || 0}}</view>
+							</view>
+							<!-- #endif -->
 							<view class='item'>
-								<view>累计支出(元)</view>
+								<view>累计消费(元)</view>
 								<view class='money'>{{statistics.orderStatusSum || 0}}</view>
 							</view>
 						</view>
@@ -39,9 +47,9 @@
 						<view class='pictrue'>
 							<image src='../../../static/images/record2.png'></image>
 						</view>
-						<view>支出记录</view>
+						<view>消费记录</view>
 					</navigator>
-					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=2' v-if="recharge_switch">
+					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=2' v-if="rechargeSwitch">
 						<view class='pictrue'>
 							<image src='../../../static/images/record3.png'></image>
 						</view>
@@ -155,7 +163,7 @@
 				userInfo: {},
 				hostProduct: [],
 				isClose: false,
-				recharge_switch: 0,
+				rechargeSwitch: false,
 				activity: {},
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false ,//是否隐藏授权
@@ -220,7 +228,7 @@
 				let that = this;
 				getUserInfo().then(res => {
 					that.$set(that, 'userInfo', res.data);
-					that.recharge_switch = res.data.recharge_switch;
+					that.rechargeSwitch = res.data.rechargeSwitch;
 				});
 			},
 			/**

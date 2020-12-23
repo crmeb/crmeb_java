@@ -169,6 +169,7 @@ import {
 		uni.getImageInfo({
 		            src: arrImages[0],
 		            success: function (image) {
+						console.log('image成功', image)
 						context.drawImage(arrImages[0], 0, 0, 750, 1190);
 						context.drawImage(arrImages[1], 0, 0, 750, 750);
 						context.save();
@@ -207,6 +208,7 @@ import {
 							  canvasId: 'firstCanvas',
 							  fileType: 'jpg',
 							  success: function(res) {
+								  console.log(res.tempFilePath)
 							    // 在H5平台下，tempFilePath 为 base64
 								uni.hideLoading();
 								successFn && successFn(res.tempFilePath);
@@ -217,6 +219,7 @@ import {
 						})
 		            },
 					fail: function(err) {
+						console.log('image失败', err)
 						uni.hideLoading();
 						that.Tips({
 							title: '无法获取图片信息'

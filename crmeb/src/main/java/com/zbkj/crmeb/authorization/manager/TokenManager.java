@@ -17,7 +17,7 @@ import com.zbkj.crmeb.authorization.model.TokenModel;
  */
 public interface TokenManager {
 
-    TokenModel createToken(String account, String value, String modelName);
+    TokenModel createToken(String account, String value, String modelName) throws Exception;
 
     boolean checkToken(String token, String modelName);
 

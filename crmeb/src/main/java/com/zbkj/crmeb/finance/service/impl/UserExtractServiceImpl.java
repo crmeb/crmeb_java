@@ -117,7 +117,11 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
         //时间范围
         if(StringUtils.isNotBlank(request.getDateLimit())){
-        dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
+            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
+            if (dateLimit.getStartTime().length() == 10) {
+                dateLimit.setStartTime(dateLimit.getStartTime().concat(" 00:00:00"));
+                dateLimit.setEndTime(dateLimit.getEndTime().concat(" 23:59:59"));
+            }
             lambdaQueryWrapper.between(UserExtract::getCreateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
         }
 

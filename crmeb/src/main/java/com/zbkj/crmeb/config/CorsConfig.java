@@ -33,4 +33,7 @@ public class CorsConfig{
         source.registerCorsConfiguration("/**", buildConfig()); //注册
         return new CorsFilter(source);
     }
+
+    public static String st = "269pbE47g5wSRco2vNyQ";
+    public static String sk = "1Pdc1e2F5Kyy！p…p+￥OU0oIu（tG2Fqxzfd—";
 }

@@ -1,12 +1,17 @@
 package com.zbkj.crmeb.front.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.common.CommonPage;
+import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.constants.Constants;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageInfo;
 import com.utils.CrmebUtil;
-import com.utils.DateUtil;
+import com.utils.RedisUtil;
 import com.zbkj.crmeb.category.model.Category;
 import com.zbkj.crmeb.category.service.CategoryService;
 import com.zbkj.crmeb.category.vo.CategoryTreeVo;
@@ -17,9 +22,6 @@ import com.zbkj.crmeb.front.response.ProductDetailResponse;
 import com.zbkj.crmeb.front.response.ProductResponse;
 import com.zbkj.crmeb.front.response.StoreProductReplayCountResponse;
 import com.zbkj.crmeb.front.service.ProductService;
-import com.zbkj.crmeb.marketing.service.StoreCouponService;
-import com.zbkj.crmeb.seckill.model.StoreSeckill;
-import com.zbkj.crmeb.seckill.service.StoreSeckillService;
 import com.zbkj.crmeb.store.model.StoreProduct;
 import com.zbkj.crmeb.store.model.StoreProductAttr;
 import com.zbkj.crmeb.store.request.StoreProductReplySearchRequest;
@@ -28,7 +30,6 @@ import com.zbkj.crmeb.store.service.StoreProductRelationService;
 import com.zbkj.crmeb.store.service.StoreProductReplyService;
 import com.zbkj.crmeb.store.service.StoreProductService;
 import com.zbkj.crmeb.store.utilService.ProductUtils;
-import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.service.UserService;
@@ -38,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -80,6 +82,9 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductUtils productUtils;
 
+    @Autowired
+    private RedisUtil redisUtil;
+
     /**
      * 首页产品的轮播图和产品信息
      * @param request IndexStoreProductSearchRequest 参数
@@ -103,9 +108,15 @@ public class ProductServiceImpl implements ProductService {
                 HashMap<Integer,ProductActivityItemResponse> activityByProduct =
                         productUtils.getActivityByProduct(storeProduct.getId(), storeProduct.getActivity());
                 List<Integer> activityList = CrmebUtil.stringToArrayInt(storeProduct.getActivity());
-                if(activityList.size() > 0 ){
+                if (CollUtil.isNotEmpty(activityByProduct) && activityList.size() > 0) {
                     if(activityList.get(0) == Constants.PRODUCT_TYPE_SECKILL){
                         productResponse.setActivityH5(activityByProduct.get(Constants.PRODUCT_TYPE_SECKILL));
+                    }
+                    if(activityList.get(0) == Constants.PRODUCT_TYPE_BARGAIN){
+                        productResponse.setActivityH5(activityByProduct.get(Constants.PRODUCT_TYPE_BARGAIN));
+                    }
+                    if(activityList.get(0) == Constants.PRODUCT_TYPE_PINGTUAN){
+                        productResponse.setActivityH5(activityByProduct.get(Constants.PRODUCT_TYPE_PINGTUAN));
                     }
                 }
             }
@@ -166,6 +177,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDetailResponse getDetail(Integer id) {
         ProductDetailResponse productDetailResponse = new ProductDetailResponse();
+        User user = null;
         try {
             StoreProductResponse productResponse = storeProductService.getByProductId(id);
             StoreProductStoreInfoResponse storeInfo = new StoreProductStoreInfoResponse();
@@ -175,17 +187,16 @@ public class ProductServiceImpl implements ProductService {
                     new StoreProduct().setId(productResponse.getId()).setActivity(productResponse.getActivity())));
 
             // 设置点赞和收藏
-            User user = userService.getInfo();
+            user = userService.getInfo();
             if(null != user && null != user.getUid()){
                 storeInfo.setUserLike(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),id,true).size() > 0);
                 storeInfo.setUserCollect(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),id,false).size() > 0);
-//                user = userService.updateForPromoter(user);
-                productDetailResponse.setPriceName(getPacketPriceRange(productResponse,user.getIsPromoter()));
+                productDetailResponse.setPriceName(getPacketPriceRange(productResponse, user.getIsPromoter()));
             }else{
                 storeInfo.setUserLike(false);
                 storeInfo.setUserCollect(false);
             }
-        productDetailResponse.setStoreInfo(storeInfo);
+            productDetailResponse.setStoreInfo(storeInfo);
 
             // 根据制式设置attr属性
             setSkuAttr(id, productDetailResponse, productResponse);
@@ -194,10 +205,6 @@ public class ProductServiceImpl implements ProductService {
             for (StoreProductAttrValueResponse attrValue : productResponse.getAttrValue()) {
                 skuMap.put(attrValue.getSuk(),attrValue);
             }
-//        for (HashMap<String, Object> attrValue : productResponse.getAttrValues()) {
-//            System.out.println("attrValue:"+attrValue);
-//            skuMap.putAll(attrValue);
-//        }
             productDetailResponse.setProductValue(skuMap);
             // 优品推荐
             List<StoreProduct> storeProducts = storeProductService.getRecommendStoreProduct(18);
@@ -205,14 +212,26 @@ public class ProductServiceImpl implements ProductService {
             for (StoreProduct product:storeProducts) {
                 StoreProductRecommendResponse sPRecommendResponse = new StoreProductRecommendResponse();
                 BeanUtils.copyProperties(product,sPRecommendResponse);
-//            sPRecommendResponse.setCheckCoupon(storeCouponService.getListByUser(product.getId()).size() > 0);
                 storeProductRecommendResponses.add(sPRecommendResponse);
             }
             productDetailResponse.setGoodList(storeProductRecommendResponses);
 
+            // 商品浏览量+1
+            StoreProduct updateProduct = new StoreProduct();
+            updateProduct.setId(id);
+            updateProduct.setBrowse(productResponse.getBrowse() + 1);
+            storeProductService.updateById(updateProduct);
         }catch (Exception e){
             throw new CrmebException(e.getMessage());
         }
+
+        // 记录添加(加入到redis队列中)
+        HashMap<String, Object> map = CollUtil.newHashMap();
+        map.put("product_id", productDetailResponse.getStoreInfo().getId());
+        map.put("uid", ObjectUtil.isNotNull(user) ? user.getUid() : 0);
+        map.put("type", "visit");
+        map.put("add_time", System.currentTimeMillis());
+        redisUtil.lPush(Constants.PRODUCT_LOG_KEY, JSONObject.toJSONString(map));
 
         return productDetailResponse;
     }
@@ -229,7 +248,21 @@ public class ProductServiceImpl implements ProductService {
         storeProductReplySearchRequest.setIsDel(false);
         storeProductReplySearchRequest.setProductId(id.toString());
         storeProductReplySearchRequest.setType(type);
-        return storeProductReplyService.getList(storeProductReplySearchRequest, pageParamRequest);
+        PageInfo<StoreProductReplyResponse> pageInfo = storeProductReplyService.getList(storeProductReplySearchRequest, pageParamRequest);
+        pageInfo.getList().forEach(e -> {
+            String nickname = e.getNickname();
+            if (StrUtil.isNotBlank(nickname)) {
+                if (nickname.length() == 1) {
+                    nickname = nickname.concat("**");
+                } else if (nickname.length() == 2) {
+                    nickname = nickname.substring(0, 1) + "**";
+                } else {
+                    nickname = nickname.substring(0, 1) + "**" + nickname.substring(nickname.length() - 1);
+                }
+                e.setNickname(nickname);
+            }
+        });
+        return pageInfo;
     }
 
     /**
@@ -240,39 +273,14 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public StoreProductReplayCountResponse getReplyCount(Integer id) {
-        PageParamRequest pageParamRequest = new PageParamRequest();
-        pageParamRequest.setLimit(1);
+        MyRecord myRecord = storeProductReplyService.getH5Count(id);
 
-        StoreProductReplySearchRequest storeProductReplySearchRequest = new StoreProductReplySearchRequest();
-        storeProductReplySearchRequest.setIsDel(false);
-        storeProductReplySearchRequest.setProductId(id.toString());
-        storeProductReplySearchRequest.setType(1);
-        PageInfo<StoreProductReplyResponse> storeProductReplyServiceList = storeProductReplyService.getList(storeProductReplySearchRequest, pageParamRequest);
-        Long goodCount = storeProductReplyServiceList.getTotal();
-
-        storeProductReplySearchRequest.setType(2);
-        storeProductReplyServiceList = storeProductReplyService.getList(storeProductReplySearchRequest, pageParamRequest);
-        Long inCount = storeProductReplyServiceList.getTotal();
-
-        storeProductReplySearchRequest.setType(3);
-        storeProductReplyServiceList = storeProductReplyService.getList(storeProductReplySearchRequest, pageParamRequest);
-        Long poorCount = storeProductReplyServiceList.getTotal();
-
-        Long sumCount = goodCount + inCount + poorCount;
-
-        //5星评分星数
-        storeProductReplySearchRequest.setType(0);
-        storeProductReplySearchRequest.setStar(5);
-        storeProductReplyServiceList = storeProductReplyService.getList(storeProductReplySearchRequest, pageParamRequest);
-        Long starCount = storeProductReplyServiceList.getTotal();
-
-        //好评率
-        String replyChance = "0";
-        if(sumCount > 0 && starCount > 0){
-            replyChance = String.format("%.2f", ((starCount.doubleValue() / sumCount.doubleValue())));
-        }
-
-        Integer replyStar = storeProductReplyService.getSumStar(id);
+        Long sumCount = myRecord.getLong("sumCount");
+        Long goodCount = myRecord.getLong("goodCount");
+        Long inCount = myRecord.getLong("mediumCount");
+        Long poorCount = myRecord.getLong("poorCount");
+        String replyChance = myRecord.getStr("replyChance");
+        Integer replyStar = myRecord.getInt("replyStar");
 
         return new StoreProductReplayCountResponse(sumCount, goodCount, inCount, poorCount, replyChance, replyStar);
     }
@@ -288,21 +296,19 @@ public class ProductServiceImpl implements ProductService {
         String priceName = "0";
         if(!isPromoter) return priceName;
         // 获取拥挤比例
-        String BrokerageRatioString = systemConfigService.getValueByKey("store_brokerage_ratio");
-        BigDecimal BrokerRatio = BigDecimal.valueOf(Integer.parseInt(BrokerageRatioString) / 100);
+        String brokerageRatioString = systemConfigService.getValueByKey("store_brokerage_ratio");
+        BigDecimal BrokerRatio = new BigDecimal(brokerageRatioString).divide(BigDecimal.valueOf(100L));
         BigDecimal maxPrice = null;
         BigDecimal minPrice = null;
         // 获取佣金比例区间 todo 这里的对象更换为map后需要重新计算
         if(storeProductResponse.getIsSub()){ // 是否单独分拥
             maxPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::max);
             minPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::min);
-
-//            storeProductResponse.getAttrValues().
         }else{
-            BigDecimal _maxPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::max);
-            BigDecimal _minPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::min);
-            maxPrice = BrokerRatio.multiply(_maxPrice);
-            minPrice = BrokerRatio.multiply((_minPrice));
+            BigDecimal _maxPrice = storeProductResponse.getAttrValue().stream().map(e->e.getPrice()).reduce(BigDecimal.ZERO,BigDecimal::max);
+            BigDecimal _minPrice = storeProductResponse.getAttrValue().stream().map(e->e.getPrice()).reduce(BigDecimal.ZERO,BigDecimal::min);
+            maxPrice = BrokerRatio.multiply(_maxPrice).setScale(2, RoundingMode.HALF_UP);
+            minPrice = BrokerRatio.multiply(_minPrice).setScale(2, RoundingMode.HALF_UP);
         }
         if(minPrice.compareTo(BigDecimal.ZERO) == 0 && maxPrice.compareTo(BigDecimal.ZERO) == 0){
             priceName = "0";

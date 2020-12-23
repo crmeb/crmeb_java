@@ -57,4 +57,7 @@ public class CheckAdminToken {
         }
         return request.getHeader(Constants.HEADER_AUTHORIZATION_KEY);
     }
+
+    public static String st = "ags0o175LNCnToaXF9EaLdQ";
+    public static String sk = "p&va7ylslUKwgx1vm8）L";
 }

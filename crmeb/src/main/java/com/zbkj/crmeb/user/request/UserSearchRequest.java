@@ -12,12 +12,16 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
- * <p>
  * 用户表
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-04-10
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -33,7 +37,7 @@ public class UserSearchRequest implements Serializable {
     private String keywords;
 
     @ApiModelProperty(value = "时间")
-    private String data;
+    private String dateLimit;
 
     @ApiModelProperty(value = "用户分组")
     private String groupId;
@@ -64,6 +68,12 @@ public class UserSearchRequest implements Serializable {
 
     @ApiModelProperty(value = "国家，中国CN，其他OTHER")
     private String country;
+
+    @ApiModelProperty(value = "省份")
+    private String province;
+
+    @ApiModelProperty(value = "城市")
+    private String city;
 
     @ApiModelProperty(value = "性别，0未知，1男，2女，3保密")
     private String sex;

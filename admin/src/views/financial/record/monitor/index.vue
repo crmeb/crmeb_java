@@ -10,18 +10,18 @@
               </el-radio-group>
               <el-date-picker v-model="timeVal" value-format="yyyy-MM-dd" format="yyyy-MM-dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTime" />
             </el-form-item>
-            <el-form-item label="明细类型：">
-              <el-select  class="selWidth" v-model="tableFrom.type" filterable clearable placeholder="请选择" @change="getList(1)">
-                <el-option
-                  v-for="(item, index) in optionList"
-                  :key="index"
-                  :label="item.title"
-                  :value="item.type"
-                />
-              </el-select>
-            </el-form-item>
+            <!--<el-form-item label="明细类型：">-->
+              <!--<el-select  class="selWidth" v-model="tableFrom.type" filterable clearable placeholder="请选择" @change="getList(1)">-->
+                <!--<el-option-->
+                  <!--v-for="(item, index) in optionList"-->
+                  <!--:key="index"-->
+                  <!--:label="item.title"-->
+                  <!--:value="item.type"-->
+                <!--/>-->
+              <!--</el-select>-->
+            <!--</el-form-item>-->
             <el-form-item label="关键字：" class="width100">
-              <el-input v-model="tableFrom.keywords" placeholder="微信昵称/ID" class="selWidth" size="small">
+              <el-input v-model="tableFrom.keywords" placeholder="微信昵称/ID" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search" size="small" @click="getList(1)" />
               </el-input>
             </el-form-item>
@@ -98,7 +98,7 @@
         },
         listLoading: true,
         tableFrom: {
-          type: '',
+         // type: '',
           dateLimit: '',
           keywords: '',
           page: 1,

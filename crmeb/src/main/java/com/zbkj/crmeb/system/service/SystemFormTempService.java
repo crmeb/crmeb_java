@@ -9,10 +9,17 @@ import com.zbkj.crmeb.system.request.SystemFormTempSearchRequest;
 import java.util.List;
 
 /**
-* @author Mr.Zhang
-* @description SystemFormTempService 接口
-* @date 2020-05-15
-*/
+ * SystemFormTempService 接口
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 public interface SystemFormTempService extends IService<SystemFormTemp> {
 
     List<SystemFormTemp> getList(SystemFormTempSearchRequest request, PageParamRequest pageParamRequest);

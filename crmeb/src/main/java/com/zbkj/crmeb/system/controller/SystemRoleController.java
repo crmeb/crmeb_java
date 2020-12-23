@@ -22,6 +22,15 @@ import java.util.List;
 
 /**
  * 身份管理表 前端控制器
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Slf4j
 @RestController
@@ -126,6 +135,21 @@ public class SystemRoleController {
     public CommonResult<List<CategoryTreeVo>> menu(){
         List<CategoryTreeVo> categoryTreeVoList = systemRoleService.menu();
         return CommonResult.success(categoryTreeVoList);
+    }
+
+    /**
+     * 修改身份状态
+     * @author Mr.Zhang
+     * @since 2020-04-13
+     * @return
+     */
+    @ApiOperation(value = "修改身份状态")
+    @RequestMapping(value = "/updateStatus", method = RequestMethod.GET)
+    public CommonResult<Object> updateStatus(@Validated @RequestParam(value = "id") Integer id, @Validated @RequestParam(value = "status") Boolean status){
+        if (systemRoleService.updateStatus(id, status)) {
+            return CommonResult.success("修改成功");
+        }
+        return CommonResult.failed("修改失败");
     }
 }
 

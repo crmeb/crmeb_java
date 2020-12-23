@@ -20,7 +20,7 @@
                         </div>
                     </div>
                     <h4>订单量趋势</h4>
-                    <echarts-from ref="visitChart" :series="series" :xAxis="xAxis" v-if="info"></echarts-from>
+                    <echarts-from ref="visitChart" :yAxisData="yAxisData" :seriesData="series" :xAxis="xAxis" v-if="info" :legendData="legendData"></echarts-from>
                 </el-card>
             </el-col>
         </el-row>
@@ -39,8 +39,58 @@
         series: [],
         xAxis: [],
         info: {},
-        legendData: []
+        legendData: [],
+        yAxisData: []
       }
+    },
+    mounted(){
+      this.yAxisData = [
+        {
+          type: 'value',
+          name: '金额',
+          axisLine: {
+            show: false
+          },
+          axisTick: {
+            show: false
+          },
+          axisLabel: {
+            textStyle: {
+              color: '#7F8B9C'
+            }
+          },
+          splitLine: {
+            show: true,
+            lineStyle: {
+              color: '#F5F7F9'
+            }
+          }
+        },
+        {
+          type: 'value',
+          name: '数量',
+          axisLine: {
+            show: false
+          },
+          axisTick: {
+            show: false
+          },
+          axisLabel: {
+            textStyle: {
+              color: '#7F8B9C'
+            }
+          },
+          splitLine: {
+            show: true,
+            lineStyle: {
+              color: '#F5F7F9'
+            }
+          }
+          // axisLabel: {
+          //     formatter: '{value} °C'
+          // }
+        }
+      ]
     },
     methods: {
       // 时间改变
@@ -58,10 +108,11 @@
           for (let key  in res.quality) {
             qualitys.push(Number(res.quality[key]))
           }
+          this.legendData = ['订单金额','订单数']
           this.series = [{
-            "name":"订单金额",
-            "type":"bar",
-            "itemStyle":{
+            name:"订单金额",
+            type:"bar",
+            itemStyle:{
               "normal":{
                 "color":{
                   "x":0,
@@ -85,12 +136,12 @@
                 }
               }
             },
-            "data": pices
+            data: pices
           },
             {
-              "name":"订单数",
-              "type":"bar",
-              "itemStyle":{
+              name:"订单数",
+              type:"line",
+              itemStyle:{
                 "normal":{
                   "color":{
                     "x":0,
@@ -114,7 +165,8 @@
                   }
                 }
               },
-              "data": qualitys
+              yAxisIndex: 1,
+              data: qualitys
             }]
         })
       },
@@ -143,9 +195,9 @@
           }
           this.series = [
             {
-              "name":"上周金额",
-              "type":"bar",
-              "itemStyle":{
+              name :"上周金额",
+              type:"bar",
+              itemStyle:{
                 "normal":{
                   "color":{
                     "x":0,
@@ -169,12 +221,12 @@
                   }
                 }
               },
-              "data": prePrice
+              data: prePrice
             },
             {
-              "name":"本周金额",
-              "type":"bar",
-              "itemStyle":{
+              name:"本周金额",
+              type:"bar",
+              itemStyle:{
                 "normal":{
                   "color":{
                     "x":0,
@@ -198,12 +250,12 @@
                   }
                 }
               },
-              "data": price
+              data: price
             },
             {
-              "name":"上周订单数",
-              "type":"line",
-              "itemStyle":{
+              name:"上周订单数",
+              type:"line",
+              itemStyle:{
                 "normal":{
                   "color":{
                     "x":0,
@@ -227,12 +279,13 @@
                   }
                 }
               },
-              "data": preQuality
+              yAxisIndex: 1,
+              data: preQuality
             },
             {
-              "name":"本周订单数",
-              "type":"line",
-              "itemStyle":{
+              name:"本周订单数",
+              type:"line",
+              itemStyle:{
                 "normal":{
                   "color":{
                     "x":0,
@@ -256,7 +309,8 @@
                   }
                 }
               },
-              "data": qualitys
+              yAxisIndex: 1,
+              data: qualitys
             }
           ]
         })
@@ -286,9 +340,9 @@
           }
           this.series = [
             {
-              "name":"上月金额",
-              "type":"bar",
-              "itemStyle":{
+              name:"上月金额",
+              type:"bar",
+              itemStyle:{
                 "normal":{
                   "color":{
                     "x":0,
@@ -312,12 +366,12 @@
                   }
                 }
               },
-              "data": prePrice
+              data: prePrice
             },
             {
-              "name":"本月金额",
-              "type":"bar",
-              "itemStyle":{
+              name:"本月金额",
+              type:"bar",
+              itemStyle:{
                 "normal":{
                   "color":{
                     "x":0,
@@ -341,12 +395,12 @@
                   }
                 }
               },
-              "data": price
+              data: price
             },
             {
-              "name":"上月订单数",
-              "type":"line",
-              "itemStyle":{
+              name:"上月订单数",
+              type:"line",
+              itemStyle:{
                 "normal":{
                   "color":{
                     "x":0,
@@ -370,12 +424,13 @@
                   }
                 }
               },
-              "data": preQuality
+              yAxisIndex: 1,
+              data: preQuality
             },
             {
-              "name":"本月订单数",
-              "type":"line",
-              "itemStyle":{
+              name:"本月订单数",
+              type:"line",
+              itemStyle:{
                 "normal":{
                   "color":{
                     "x":0,
@@ -399,7 +454,8 @@
                   }
                 }
               },
-              "data": qualitys
+              yAxisIndex: 1,
+              data: qualitys
             }
           ]
         })
@@ -429,9 +485,9 @@
           }
           this.series = [
             {
-              "name":"去年金额",
-              "type":"bar",
-              "itemStyle":{
+              name:"去年金额",
+              type:"bar",
+              itemStyle:{
                 "normal":{
                   "color":{
                     "x":0,
@@ -455,12 +511,12 @@
                   }
                 }
               },
-              "data": prePrice
+              data: prePrice
             },
             {
-              "name":"今年金额",
-              "type":"bar",
-              "itemStyle":{
+              name:"今年金额",
+              type:"bar",
+              itemStyle:{
                 "normal":{
                   "color":{
                     "x":0,
@@ -484,12 +540,12 @@
                   }
                 }
               },
-              "data": price
+              data: price
             },
             {
-              "name":"去年订单数",
-              "type":"line",
-              "itemStyle":{
+              name:"去年订单数",
+              type:"line",
+              itemStyle:{
                 "normal":{
                   "color":{
                     "x":0,
@@ -513,12 +569,13 @@
                   }
                 }
               },
-              "data": preQuality
+              yAxisIndex: 1,
+              data: preQuality
             },
             {
-              "name":"今年订单数",
-              "type":"line",
-              "itemStyle":{
+              name:"今年订单数",
+              type:"line",
+              itemStyle:{
                 "normal":{
                   "color":{
                     "x":0,
@@ -542,7 +599,8 @@
                   }
                 }
               },
-              "data": qualitys
+              yAxisIndex: 1,
+              data: qualitys
             }
           ]
         })

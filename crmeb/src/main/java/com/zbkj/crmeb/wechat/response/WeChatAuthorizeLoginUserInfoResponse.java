@@ -10,12 +10,16 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 
 /**
- * <p>
- * 用户地址表
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-04-28
+ * 获取微信用户信息
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -46,8 +50,7 @@ public class WeChatAuthorizeLoginUserInfoResponse implements Serializable {
     private String country;
 
     @ApiModelProperty(value = "用户头像")
-    @TableField(value = "headimgurl")
-    private String avatar;
+    private String headimgurl;
 
     @ApiModelProperty(value = "用户特权信息，json 数组，如微信沃卡用户为（chinaunicom）")
     private String privilege;

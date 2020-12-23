@@ -1,21 +1,29 @@
 <template>
   <div class="Box">
     <el-card>
-      <div>生成的商品默认是没有上架的，请手动上架商品！</div>
+      <div>生成的商品默认是没有上架的，请手动上架商品！
+        <span v-if="copyConfig.copyType && copyConfig.copyType==1">您当前剩余{{copyConfig.copyNum}}条采集次数，
+          <router-link :to="{path:'/operation/onePass'}">
+            <el-link type="primary" :underline="false">增加采集次数</el-link>
+          </router-link>
+        </span>
+        <el-link  v-if="copyConfig.copyType && copyConfig.copyType!=1" type="primary" :underline="false" href="https://www.kancloud.cn/crmeb/crmeb_java/1909022" target="_blank">如何配置密钥</el-link>
+        <br>
+        商品采集设置：设置 > 系统设置 > 第三方接口设置 > 采集商品配置（如配置一号通采集，请先登录一号通账号，无一号通，请选择99Api设置）</div>
     </el-card>
     <el-form class="formValidate mt20" ref="formValidate" :model="formValidate" :rules="ruleInline" label-width="120px"
              @submit.native.prevent v-loading="loading">
-      <el-form-item>
+      <el-form-item v-if="copyConfig.copyType && copyConfig.copyType!=1">
         <el-radio-group v-model="form">
           <el-radio :label="1">淘宝</el-radio>
           <el-radio :label="2">京东</el-radio>
-          <el-radio :label="3">苏宁</el-radio>
-          <el-radio :label="4">拼多多</el-radio>
+          <!--<el-radio :label="3">苏宁</el-radio>-->
+          <!--<el-radio :label="4">拼多多</el-radio>-->
           <el-radio :label="5">天猫</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-row :gutter="24">
-        <el-col :span="24">
+        <el-col :span="24" v-if="copyConfig.copyType">
           <el-form-item label="链接地址：">
             <el-input v-model="url" placeholder="请输入链接地址" class="selWidth" size="small">
               <el-button slot="append" icon="el-icon-search" @click="add" size="small"/>
@@ -25,12 +33,12 @@
         <el-col v-if="formValidate">
           <el-col :span="24">
             <el-form-item label="商品名称：" prop="storeName">
-              <el-input v-model="formValidate.storeName" placeholder="请输入商品名称"></el-input>
+              <el-input v-model="formValidate.storeName" maxlength="249" placeholder="请输入商品名称"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="商品简介：">
-              <el-input v-model="formValidate.storeInfo" type="textarea" :rows="3" placeholder="请输入商品简介"></el-input>
+              <el-input v-model="formValidate.storeInfo"  maxlength="250" type="textarea" :rows="3" placeholder="请输入商品简介"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -103,7 +111,7 @@
               </div>
             </el-form-item>
           </el-col>
-          <el-col v-if="formValidate.specType" :span="24" class="noForm">
+          <el-col v-if="formValidate.specType || formValidate.attr.length" :span="24" class="noForm">
             <el-form-item label="批量设置：" class="labeltop">
               <el-table :data="oneFormBatch" border class="tabNumWidth" size="mini">
                 <el-table-column align="center" label="图片" min-width="80">
@@ -186,13 +194,13 @@
 </template>
 
 <script>
-  import {crawlFromApi, treeListApi, crawlSaveApi, categoryApi, importProductApi, productCreateApi} from '@/api/store';
+  import {crawlFromApi, treeListApi, crawlSaveApi, categoryApi, importProductApi, productCreateApi, copyConfigApi} from '@/api/store';
   import { shippingTemplatesList } from '@/api/logistics'
   const defaultObj = [{
     image: '',
     price: null,
     cost: null,
-    ot_price: null,
+    otPrice: null,
     stock: null,
     barCode: '',
     weight: null,
@@ -205,7 +213,7 @@
     cost: {
       title: '成本价'
     },
-    ot_price: {
+    otPrice: {
       title: '原价'
     },
     stock: {
@@ -274,7 +282,8 @@
           md: 12,
           sm: 24,
           xs: 24
-        }
+        },
+        copyConfig: {}
       }
     },
     created() {
@@ -303,8 +312,18 @@
     },
     mounted() {
       this.productGetTemplate();
+      this.getCopyConfig();
     },
     methods: {
+      // 删除表格中的属性
+      delAttrTable(index) {
+        this.ManyAttrValue.splice(index, 1)
+      },
+      getCopyConfig(){
+        copyConfigApi().then(res => {
+           this.copyConfig = res
+        })
+      },
       // 批量添加
       batchAdd() {
         // if (!this.oneFormBatch[0].pic || !this.oneFormBatch[0].price || !this.oneFormBatch[0].cost || !this.oneFormBatch[0].ot_price ||
@@ -313,7 +332,7 @@
           this.$set(val, 'image', this.oneFormBatch[0].image)
           this.$set(val, 'price', this.oneFormBatch[0].price)
           this.$set(val, 'cost', this.oneFormBatch[0].cost)
-          this.$set(val, 'ot_price', this.oneFormBatch[0].ot_price)
+          this.$set(val, 'otPrice', this.oneFormBatch[0].otPrice)
           this.$set(val, 'stock', this.oneFormBatch[0].stock)
           this.$set(val, 'barCode', this.oneFormBatch[0].barCode)
           this.$set(val, 'weight', this.oneFormBatch[0].weight)
@@ -350,7 +369,7 @@
                       image: '',
                       price: 0,
                       cost: 0,
-                      ot_price: 0,
+                      otPrice: 0,
                       stock: 0,
                       barCode: '',
                       weight: 0,
@@ -381,7 +400,7 @@
                   image: '',
                   price: 0,
                   cost: 0,
-                  ot_price: 0,
+                  otPrice: 0,
                   stock: 0,
                   barCode: '',
                   weight: 0,
@@ -429,17 +448,16 @@
           // }
           this.loading = true;
           importProductApi({ url: this.url, form: this.form}).then(res => {
-            let info = res
             this.formValidate = {
-              image: info.image,
-              sliderImages: JSON.parse(info.sliderImage),
-              sliderImage: info.sliderImage,
-              storeName: info.storeName,
-              storeInfo: info.storeInfo,
-              keyword: info.keyword,
-              cateIds: info.cateId ? info.cateId.split(',') : [], // 商品分类id
-              cateId: info.cateId,// 商品分类id传值
-              unitName: info.unitName,
+              image: res.image,
+              sliderImages: JSON.parse(res.sliderImage),
+              sliderImage: res.sliderImage,
+              storeName: res.storeName,
+              storeInfo: res.storeInfo,
+              keyword: res.keyword,
+              cateIds: res.cateId ? res.cateId.split(',') : [], // 商品分类id
+              cateId: res.cateId,// 商品分类id传值
+              unitName: res.unitName,
               sort: 0,
               isShow: 0,
               isBenefit: 0,
@@ -447,20 +465,20 @@
               isGood: 0,
               isHot: 0,
               isBest: 0,
-              tempId: info.tempId,
-              attrValue: info.attrValue,
-              attr: info.attr || [],
-              selectRule: info.selectRule,
+              tempId: res.tempId,
+              attrValue: res.attrValue,
+              attr: res.attr || [],
+              selectRule: res.selectRule,
               isSub: false,
-              content: info.content,
-              specType: info.specType || false,
-              id: info.id,
-              giveIntegral: info.giveIntegral,
-              ficti: info.ficti
+              content: res.content,
+              specType: res.attr.length ? true : false,
+              id: res.id,
+              giveIntegral: res.giveIntegral,
+              ficti: res.ficti
             }
             if(this.formValidate.attr.length){
               for (var i = 0; i < this.formValidate.attr.length; i++) {
-                this.formValidate.attr[i].attrValue = JSON.parse(info.attr[i].attrValues)
+                this.formValidate.attr[i].attrValue = JSON.parse(this.formValidate.attr[i].attrValues)
               }
             }
             this.loading = false;
@@ -473,13 +491,9 @@
       },
       // 提交
       handleSubmit (name) {
-        this.formValidate.attr.length ? this.formValidate.attrValue=JSON.stringify(this.ManyAttrValue):this.formValidate.attrValue=[]
+        this.formValidate.attr.length ? this.formValidate.attrValue=this.ManyAttrValue:this.formValidate.attrValue=[]
         this.formValidate.cateId = this.formValidate.cateIds.join(',')
         this.formValidate.sliderImage = JSON.stringify(this.formValidate.sliderImages)
-        if(!this.formValidate.specType){
-          this.formValidate.attr = []
-          this.formValidate.attrValue = ''
-        }
         for (var i = 0; i < this.formValidate.attr.length; i++) {
           this.formValidate.attr[i].attrValues = JSON.stringify(this.formValidate.attr[i].attrValue)
         }
@@ -488,7 +502,7 @@
             this.modal_loading = true
             productCreateApi(this.formValidate).then(async res => {
               this.$message.success('新增成功');
-              this.$parent.dialogVisible = false
+              this.$emit('handleCloseMod', false)
               this.modal_loading = false
             }).catch(() => {
               this.modal_loading = false
@@ -510,6 +524,8 @@
             _this.OneattrValue[0].image = img[0].sattDir
           }
           if(tit==='2'&& !num){
+            if(img.length>10) return this.$message.warning("最多选择10张图片！");
+            if(img.length + _this.formValidate.sliderImages.length > 10) return this.$message.warning("最多选择10张图片！");
             img.map((item) => {
               _this.formValidate.sliderImages.push(item.sattDir)
             });

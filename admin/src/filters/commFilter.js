@@ -141,3 +141,64 @@ export function extractStatusFilter(status) {
   }
   return statusMap[status]
 }
+
+/**
+ * @description 砍价状态
+ */
+export function bargainStatusFilter(status) {
+  const statusMap = {
+    '1': '进行中',
+    '2': '未完成',
+    '3': '已成功'
+  }
+  return statusMap[status]
+}
+
+/**
+ * @description 砍价状态
+ */
+export function bargainColorFilter(status) {
+  const statusMap = {
+    '1': '',
+    '2': 'danger',
+    '3': 'success'
+  }
+  return statusMap[status]
+}
+
+/**
+ * @description 拼团状态
+ */
+export function groupStatusFilter(status) {
+  const statusMap = {
+    '1': '进行中',
+    '2': '已成功',
+    '3': '未完成'
+  }
+  return statusMap[status]
+}
+
+/**
+ * @description 拼团状态
+ */
+export function groupColorFilter(status) {
+  const statusMap = {
+    '1': '',
+    '2': 'success',
+    '3': 'danger'
+  }
+  return statusMap[status]
+}
+
+/**
+ * @description 一号通tab值
+ */
+export function onePassTypeFilter(status) {
+  const statusMap = {
+    'sms': '短信',
+    'copy': '商品采集',
+    'expr_query': '物流查询',
+    'expr_dump': '电子面单打印'
+  }
+  return statusMap[status]
+}

@@ -16,7 +16,7 @@
 			<view class='nav' v-if="navList.length > 0">
 				<scroll-view class="scroll-view_x" scroll-x scroll-with-animation :scroll-left="scrollLeft" style="width:auto;overflow:hidden;">
 					<block v-for="(item,index) in navList" :key="index">
-						<view class='item' :class='active==item.id?"on":""' @click='tabSelect(item.id)'>
+						<view class='item' :class='active==item.id?"on":""' @click='tabSelect(item.id, index)'>
 							<view>{{item.name}}</view>
 							<view class='line bg-color' v-if="active==item.id"></view>
 						</view>
@@ -157,9 +157,10 @@
 					that.$set(that, 'navList', list);
 				});
 			},
-			tabSelect(active) {
+			tabSelect(active,e) {
 				this.active = active;
-				this.scrollLeft = (active - 1) * 50;
+				this.scrollLeft =  e * 60;
+				// this.scrollLeft = (active - 1) * 50;
 				if (this.active == 0) this.getArticleHot();
 				else {
 					this.$set(this, 'articleList', []);

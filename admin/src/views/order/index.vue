@@ -3,11 +3,11 @@
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <!--<el-tabs v-model="tableFrom.type" @tab-click="getList">-->
-        <!--<el-tab-pane label="全部订单" name="" />-->
-        <!--<el-tab-pane label="普通订单" name="1" />-->
-        <!--<el-tab-pane label="拼团订单" name="2" />-->
-        <!--<el-tab-pane label="秒杀订单" name="3" />-->
-        <!--<el-tab-pane label="砍价订单" name="4" />-->
+          <!--<el-tab-pane label="全部订单" name=""/>-->
+          <!--<el-tab-pane label="普通订单" name="1"/>-->
+          <!--<el-tab-pane label="拼团订单" name="2"/>-->
+          <!--<el-tab-pane label="秒杀订单" name="3"/>-->
+          <!--<el-tab-pane label="砍价订单" name="4"/>-->
         <!--</el-tabs>-->
         <div class="container">
           <el-form size="small" label-width="100px">
@@ -32,7 +32,7 @@
               <el-date-picker v-model="timeVal" value-format="yyyy-MM-dd" format="yyyy-MM-dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 220px;" @change="onchangeTime" />
             </el-form-item>
             <el-form-item label="订单号：" class="width100">
-              <el-input v-model="tableFrom.orderId" placeholder="请输入订单号" class="selWidth" size="small">
+              <el-input v-model="tableFrom.orderId" placeholder="请输入订单号" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search" size="small" @click="seachList" />
               </el-input>
             </el-form-item>
@@ -83,11 +83,11 @@
             <span v-show="scope.row.isDel" style="color: #ED4014;display: block;">用户已删除</span>
           </template>
         </el-table-column>
-        <!--<el-table-column-->
-        <!--prop="id"-->
-        <!--label="订单类型"-->
-        <!--min-width="150"-->
-        <!--/>-->
+        <el-table-column
+        prop="orderType"
+        label="订单类型"
+        min-width="130"
+        />
         <el-table-column
           prop="realName"
           label="用户信息"
@@ -99,15 +99,17 @@
         >
           <template slot-scope="scope">
             <div v-if=" scope.row.productList && scope.row.productList.length">
-              <div v-for="(val, i ) in scope.row.productList" :key="i" class="tabBox acea-row row-middle">
+              <div v-for="(val, i ) in scope.row.productList" :key="i" class="tabBox acea-row row-middle" style="flex-wrap: inherit;">
                 <div class="demo-image__preview">
                   <el-image
                     :src="val.info.productInfo.image"
                     :preview-src-list="[val.info.productInfo.image]"
                   />
                 </div>
-                <span class="tabBox_tit mr10">{{ val.info.productInfo.storeName + ' | ' }}{{ val.info.productInfo.attrInfo.suk ? val.info.productInfo.attrInfo.suk:'-' }}</span>
-                <span class="tabBox_pice">{{ '￥'+ val.info.productInfo.attrInfo.price ? val.info.productInfo.attrInfo.price + ' x '+ val.info.cartNum : '-' }}</span>
+                <div>
+                  <span class="tabBox_tit mr10">{{ val.info.productInfo.storeName + ' | ' }}{{ val.info.productInfo.attrInfo.suk ? val.info.productInfo.attrInfo.suk:'-' }}</span>
+                  <span class="tabBox_pice">{{ '￥'+ val.info.productInfo.attrInfo.price ? val.info.productInfo.attrInfo.price + ' x '+ val.info.cartNum : '-' }}</span>
+                </div>
               </div>
             </div>
           </template>
@@ -161,7 +163,7 @@
           <template slot-scope="scope">
             <el-button v-if="scope.row.paid === false" type="text" size="small" @click="edit(scope.row)" class="mr10">编辑</el-button>
             <el-button v-if="scope.row.statusStr.key === 'notShipped' && scope.row.shippingType === 1 && scope.row.refundStatus !==2" type="text" size="small" class="mr10" @click="sendOrder(scope.row)">发送货</el-button>
-            <el-button v-if="scope.row.shippingType === 2 && scope.row.statusStr.key === 'toBeWrittenOff'  && scope.row.paid == true && scope.row.refundStatus === 0 && isWriteOff" type="text" size="small" class="mr10" @click="onWriteOff(scope.row)">立即核销</el-button>
+            <el-button v-if="scope.row.shippingType === 2 && scope.row.statusStr.key === 'toBeWrittenOff'  && scope.row.paid == true && scope.row.refundStatus === 0 " type="text" size="small" class="mr10" @click="onWriteOff(scope.row)">立即核销</el-button>
             <el-dropdown trigger="click">
               <span class="el-dropdown-link">
                 更多<i class="el-icon-arrow-down el-icon--right" />
@@ -171,7 +173,7 @@
                 <el-dropdown-item @click.native="onOrderLog(scope.row.id)">订单记录</el-dropdown-item>
                 <el-dropdown-item @click.native="onOrderMark(scope.row)">订单备注</el-dropdown-item>
                 <el-dropdown-item v-show="scope.row.statusStr.key === 'refunding'" @click.native="onOrderRefuse(scope.row)">拒绝退款</el-dropdown-item>
-                <el-dropdown-item v-show="scope.row.statusStr.key === 'refunding' && ((parseFloat(scope.row.payPrice) > parseFloat(scope.row.refundPrice) || (scope.row.payPrice == 0 && [0,1].indexOf(scope.row.refundStatus) !== -1)))" @click.native="onOrderRefund(scope.row)">立即退款</el-dropdown-item>
+                <el-dropdown-item v-show="scope.row.statusStr.key !== 'refunded' && ((parseFloat(scope.row.payPrice) >= parseFloat(scope.row.refundPrice) || (scope.row.payPrice == 0 && [0,1].indexOf(scope.row.refundStatus) !== -1)))" @click.native="onOrderRefund(scope.row)">立即退款</el-dropdown-item>
                 <el-dropdown-item @click.native="handleDelete(scope.row, scope.$index)">删除订单</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
@@ -419,6 +421,7 @@
       sendOrder(row) {
         this.$refs.send.modals = true;
         this.$refs.send.getList();
+        this.$refs.send.sheetInfo();
         this.orderId = row.id;
       },
       // 订单删除
@@ -474,7 +477,7 @@
           cancelButtonText: '取消',
           inputErrorMessage: '请输入订单备注',
           inputType: 'textarea',
-          inputValue: row.mark,
+          inputValue: row.remark,
           inputPlaceholder: '请输入订单备注',
           inputValidator: (value) => { if(!value) return '输入不能为空'}
         }).then(({value}) => {
@@ -581,7 +584,7 @@
     font-size: 12px;
   }
   .tabBox_tit {
-    width: 60%;
+    /*width: 60%;*/
     font-size: 12px !important;
     margin: 0 2px 0 10px;
     letter-spacing: 1px;

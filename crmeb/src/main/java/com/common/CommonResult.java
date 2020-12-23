@@ -3,6 +3,10 @@ package com.common;
 import com.exception.ExceptionCodeEnum;
 import com.exception.ExceptionHandler;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
  * 公共返回对象
  * +----------------------------------------------------------------------
@@ -50,6 +54,28 @@ public class CommonResult<T> {
      */
     public static <T> CommonResult<T> success(T data) {
         return new CommonResult<T>(ExceptionCodeEnum.SUCCESS.getCode(), ExceptionCodeEnum.SUCCESS.getMessage(), data);
+    }
+
+    /**
+     * 成功返回结果
+     *
+     * @param record 获取的数据
+     */
+    public static CommonResult<Map<String, Object>> success(MyRecord record) {
+        return new CommonResult<>(ExceptionCodeEnum.SUCCESS.getCode(), ExceptionCodeEnum.SUCCESS.getMessage(), record.getColumns());
+    }
+
+    /**
+     * 成功返回结果
+     *
+     * @param recordList 获取的数据
+     */
+    public static CommonResult<List<Map<String, Object>>> success(List<MyRecord> recordList) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        recordList.forEach(i -> {
+             list.add(i.getColumns());
+        });
+        return new CommonResult<>(ExceptionCodeEnum.SUCCESS.getCode(), ExceptionCodeEnum.SUCCESS.getMessage(), list);
     }
 
     /**

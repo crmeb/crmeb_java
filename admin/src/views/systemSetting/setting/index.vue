@@ -6,7 +6,7 @@
           v-for="tab,index in treeList"
           :key="index"
           :label="tab.name"
-          :name="tab.extra"
+          :name="tab.id.toString()"
         >
           <!--      文件上传特殊处理-->
 <!--          <template v-if="activeNamel1 == 4">-->
@@ -77,7 +77,7 @@ export default {
       formConf: { content: { fields: [] }, id: null, render: false, isEdit: false },
       formConfChild: { content: { fields: [] }, id: null, render: false, isEdit: false },
       activeNamel1: null,
-      activeNamel2: '本地(不推荐)',//针对文件特殊处理
+      activeNamel2: '',//针对文件特殊处理
       treeList: [],
       editDataChild: {},
       isCreate: 0,
@@ -91,42 +91,46 @@ export default {
     this.getCurrentUploadSelectedFlag()
   },
   methods: {
-    handleTabClick(tab, event) {
-      if (tab.name) {
-        this.handlerGetLevel1FormConfig(tab.name)
-      } else if (tab.$children.length > 0 ) { // 初次加载第二层的第一个Tab数据
-        // if(tab.$children[0].panes){ // todo 优化。。。
-        //   this.activeNamel2 = tab.$children[0].panes[0].name
-        // }else{
-        //   conaole.integralLog()
-        // }
-        let _selected = tab.$children[0].panes[0]
-        // 设置特殊处理的文件长传表单默认选中第一个tab
-        this.activeNamel2 = _selected.name != 72 ? _selected.name : _selected.label
-        if(this.activeNamel2 == 108){
-          switch (this.currentSelectedUploadFlag) {
-            case 1:
-              this.activeNamel2 = '本地(不推荐)'
-              this.handlerGetLevel2FormConfig(108)
-              break
-            case 2:
-              this.activeNamel2 = '阿里云配置'
-              this.handlerGetLevel2FormConfig(81)
-              break
-            case 3:
-              this.activeNamel2 = '七牛云配置'
-              this.handlerGetLevel2FormConfig(82)
-              break
-            case 4:
-              this.activeNamel2 = '腾讯云配置'
-              this.handlerGetLevel2FormConfig(83)
-              break
-          }
-        }else{
-          this.handlerGetLevel2FormConfig(_selected.name)
-        }
-
-      }
+    // handleTabClick(tab, event) {
+    //   if (tab.name) {
+    //     this.handlerGetLevel1FormConfig(tab.name)
+    //   } else if (tab.$children.length > 0 ) { // 初次加载第二层的第一个Tab数据
+    //     // if(tab.$children[0].panes){ // todo 优化。。。
+    //     //   this.activeNamel2 = tab.$children[0].panes[0].name
+    //     // }else{
+    //     //   conaole.integralLog()
+    //     // }
+    //     let _selected = tab.$children[0].panes[0]
+    //     // 设置特殊处理的文件长传表单默认选中第一个tab
+    //     this.activeNamel2 = _selected.name != 72 ? _selected.name : _selected.label
+    //     if(this.activeNamel2 == 108){
+    //       switch (this.currentSelectedUploadFlag) {
+    //         case 1:
+    //           this.activeNamel2 = '本地(不推荐)'
+    //           this.handlerGetLevel2FormConfig(108)
+    //           break
+    //         case 2:
+    //           this.activeNamel2 = '阿里云配置'
+    //           this.handlerGetLevel2FormConfig(81)
+    //           break
+    //         case 3:
+    //           this.activeNamel2 = '七牛云配置'
+    //           this.handlerGetLevel2FormConfig(82)
+    //           break
+    //         case 4:
+    //           this.activeNamel2 = '腾讯云配置'
+    //           this.handlerGetLevel2FormConfig(83)
+    //           break
+    //       }
+    //     }else{
+    //       this.handlerGetLevel2FormConfig(_selected.name)
+    //     }
+    //
+    //   }
+    // },
+    handleTabClick(tab) {
+      this.activeNamel2 = tab.$children[0].panes[0].name;
+      this.handlerGetLevel2FormConfig(this.activeNamel2);
     },
     handlerGetLevel1FormConfig(id) {
       const formPram = { id: id }
@@ -210,15 +214,16 @@ export default {
       this.loading = true
       categoryApi.treeCategroy(_pram).then(data => {
         this.treeList = this.handleAddArrt(data)
-        if (this.treeList.length > 0) this.activeNamel1 = this.treeList[0].extra
+        if (this.treeList.length > 0) this.activeNamel1 = this.treeList[0].id.toString();
         if (this.treeList.length > 0 && this.treeList[0].child.length > 0) {
           this.activeNamel2 = this.treeList[0].child[0].extra
         }
         if (this.activeNamel2) {
           this.handlerGetLevel2FormConfig(this.treeList[0].child[0].extra)
-        } else {
-          this.handlerGetLevel1FormConfig(this.treeList[0].extra)
         }
+       // else {
+        //  this.handlerGetLevel1FormConfig(this.treeList[0].extra)
+        //}
         this.loading = false
       }).catch(() =>{
         this.loading = false

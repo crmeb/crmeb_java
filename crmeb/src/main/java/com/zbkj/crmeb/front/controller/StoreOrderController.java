@@ -51,8 +51,11 @@ public class StoreOrderController {
     public CommonResult<ConfirmOrderResponse> OrderConForm(@RequestParam String cartIds,
                                                            @RequestParam(value = "isNew", defaultValue = "false") boolean isNew,
                                                            @RequestParam(value = "addAgain", defaultValue = "false") boolean addAgain,
-                                                           @RequestParam(value = "secKill", defaultValue = "false") boolean secKill){
-        return CommonResult.success(orderService.confirmOrder(CrmebUtil.stringToArrayStr(cartIds),isNew,addAgain,secKill));
+                                                           @RequestParam(value = "secKill", defaultValue = "false") boolean secKill,
+                                                           @RequestParam(value = "bargain", defaultValue = "false") boolean bargain,
+                                                           @RequestParam(value = "combination", defaultValue = "false") boolean combination,
+                                                           @RequestParam(value = "addressId", defaultValue = "0") Integer addressId){
+        return CommonResult.success(orderService.confirmOrder(CrmebUtil.stringToArrayStr(cartIds),isNew,addAgain,secKill,bargain, combination, addressId));
     }
 
     /**

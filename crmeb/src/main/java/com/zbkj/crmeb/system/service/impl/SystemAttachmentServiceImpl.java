@@ -14,15 +14,23 @@ import com.zbkj.crmeb.upload.vo.FileResultVo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.List;
 
 /**
-* @author Mr.Zhang
-* @Description SystemAttachmentServiceImpl 接口实现
-* @since 2020-05-08
-*/
+ * SystemAttachmentServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao, SystemAttachment>
         implements SystemAttachmentService {
@@ -64,6 +72,7 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
      * @since 2020-05-08
      */
     @Override
+    @Transactional
     public void async() {
         String uploadType = systemConfigService.getValueByKeyException("uploadType");
         if(Integer.parseInt(uploadType) <= 1){
@@ -142,7 +151,7 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
      */
     @Override
     public String prefixFile(String path) {
-        return path.replace("file/", getCdnUrl() + "/image/");
+        return path.replace("file/", getCdnUrl() + "/file/");
     }
 
     /**

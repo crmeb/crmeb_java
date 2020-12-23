@@ -16,7 +16,8 @@
 
       <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click">
         <div class="avatar-wrapper">
-          <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
+          {{JavaInfo.account}}
+          <!--<img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">-->
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown">
@@ -29,7 +30,7 @@
           <router-link :to=" { path: '/maintain/user' } " v-if="!isPhone">
             <el-dropdown-item>个人中心</el-dropdown-item>
           </router-link>
-          <el-dropdown-item @click.native="onUnbundling">解绑账号</el-dropdown-item>
+          <!--<el-dropdown-item @click.native="onUnbundling">解绑账号</el-dropdown-item>-->
           <!--          <a target="_blank" href="https://github.com/PanJiaChen/vue-element-admin/">-->
           <!--            <el-dropdown-item>Github</el-dropdown-item>-->
           <!--          </a>-->
@@ -53,7 +54,7 @@ import ErrorLog from '@/components/ErrorLog'
 import Screenfull from '@/components/Screenfull'
 import Search from '@/components/HeaderSearch'
 import { unbindApi } from '@/api/wxApi'
-
+import Cookies from 'js-cookie'
 export default {
   components: {
     Breadcrumb,
@@ -64,7 +65,8 @@ export default {
   },
   data() {
     return {
-      isPhone: this.$wechat.isPhone()
+      isPhone: this.$wechat.isPhone(),
+      JavaInfo: JSON.parse(Cookies.get('JavaInfo')),
     }
   },
   computed: {

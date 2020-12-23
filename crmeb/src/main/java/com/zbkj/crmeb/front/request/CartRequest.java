@@ -39,7 +39,7 @@ public class CartRequest {
     private String productAttrUnique;
 
     @ApiModelProperty(value = "商品数量", required = true)
-    @NotNull
+    @NotNull(message = "商品数量不能为空")
     @Min(value = 1, message = "商品数量不能小于1")
     @Max(value = 99, message = "单个商品数量不能大于99")
     private Integer cartNum;
@@ -48,12 +48,15 @@ public class CartRequest {
     @NotNull(message = "是否为立即购买不能为空")
     private Boolean isNew;
 
-//    @ApiModelProperty(value = "拼团id")
-//    private Integer combinationId;
+    @ApiModelProperty(value = "拼团id")
+    private Integer combinationId;
 
     @ApiModelProperty(value = "秒杀商品ID")
     private Integer seckillId;
-//
-//    @ApiModelProperty(value = "砍价id")
-//    private Integer bargainId;
+
+    @ApiModelProperty(value = "砍价id")
+    private Integer bargainId;
+
+    @ApiModelProperty(value = "团长拼团id")
+    private Integer pinkId;
 }

@@ -36,9 +36,12 @@ public interface OrderService {
      * @param isNew     立即购买
      * @param addAgain  重复下单
      * @param seckill   秒杀
+     * @param bargain   砍价
+     * @param combination   拼团
+     * @param addressId   用户地址Id
      * @return  确认订单信息
      */
-    ConfirmOrderResponse confirmOrder(List<String> cartIds, boolean isNew, boolean addAgain,boolean seckill);
+    ConfirmOrderResponse confirmOrder(List<String> cartIds, boolean isNew, boolean addAgain,boolean seckill, boolean bargain, boolean combination, Integer addressId);
 
 
     /**
@@ -107,6 +110,13 @@ public interface OrderService {
     boolean cancel(Integer id);
 
     boolean refundApply(OrderRefundApplyRequest request);
+
+    /**
+     * 订单退款申请Task使用
+     * @param request
+     * @return
+     */
+    boolean refundApplyTask(List<OrderRefundApplyRequest> applyList);
 
     /**
      * 订单退款前验证

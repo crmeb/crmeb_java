@@ -6,6 +6,9 @@ import com.constants.Constants;
 import com.exception.CrmebException;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
+import com.zbkj.crmeb.bargain.service.StoreBargainService;
+import com.zbkj.crmeb.combination.model.StoreCombination;
+import com.zbkj.crmeb.combination.service.StoreCombinationService;
 import com.zbkj.crmeb.marketing.service.StoreCouponUserService;
 import com.zbkj.crmeb.seckill.service.StoreSeckillService;
 import com.zbkj.crmeb.store.model.StoreOrder;
@@ -70,6 +73,12 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
     @Autowired
     private StoreSeckillService storeSeckillService;
 
+    @Autowired
+    private StoreBargainService storeBargainService;
+
+    @Autowired
+    private StoreCombinationService storeCombinationService;
+
     /**
      * 用户取消订单
      * @author Mr.Zhang
@@ -132,6 +141,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             //回滚经验
             rollbackExp(storeOrder);
 
+            // 回滚库存
             rollbackStock(storeOrder);
             return true;
         }catch (Exception e){
@@ -457,20 +467,21 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             if (ObjectUtil.isEmpty(spreadUser)) {
                 return null;
             }
-            if (ObjectUtil.isNull(spreadUser.getSpreadUid()) || spreadUser.getSpreadUid() == 0) {
-                return null;
-            }
-            spreadList.add(spreadId);
             if (!spreadUser.getIsPromoter()) {
                 spreadList.add(0);
+            } else {
+                spreadList.add(spreadId);
             }
-
+            if (ObjectUtil.isNull(spreadUser.getSpreadUid()) || spreadUser.getSpreadUid() == 0) {
+                return spreadList;
+            }
 
             User spreadSpreadUser = userService.getById(spreadUser.getSpreadUid());
             if (ObjectUtil.isNotEmpty(spreadSpreadUser)) {
-                spreadList.add(spreadSpreadUser.getUid());
                 if (!spreadSpreadUser.getIsPromoter()) {
                     spreadList.add(0);
+                } else {
+                    spreadList.add(spreadSpreadUser.getUid());
                 }
             }
             return spreadList;
@@ -553,7 +564,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
      * 回滚库存
      * @param storeOrder 订单信息
      */
-    private Boolean rollbackStock(StoreOrder storeOrder) {
+    private Boolean                                                     rollbackStock(StoreOrder storeOrder) {
         try{
             // 查找出商品详情
             List<StoreOrderInfoVo> orderInfoVoList = storeOrderInfoService.getOrderListByOrderId(storeOrder.getId());
@@ -580,7 +591,39 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
                     storeSeckillService.stockAddRedis(stockRequest);
                 }
 
-            }else{ // 正常商品回滚销量库存
+            }else if (ObjectUtil.isNotNull(storeOrder.getBargainId()) && storeOrder.getBargainId() > 0) { // 砍价商品回滚销量库存
+                for (StoreOrderInfoVo orderInfoVo : orderInfoVoList) {
+                    StoreProductStockRequest stockRequest = new StoreProductStockRequest();
+                    stockRequest.setBargainId(orderInfoVo.getInfo().getBargainId());
+                    stockRequest.setProductId(orderInfoVo.getProductId());
+                    stockRequest.setAttrId(Integer.valueOf(orderInfoVo.getInfo().getProductAttrUnique()));
+                    stockRequest.setOperationType("add");
+                    stockRequest.setType(orderInfoVo.getInfo().getProductInfo().getAttrInfo().getType());
+                    stockRequest.setSuk(orderInfoVo.getInfo().getProductInfo().getAttrInfo().getSuk());
+                    if(orderInfoVo.getInfo().getCartNum() < 1){
+                        //如果取不到值，则跳过
+                        continue;
+                    }
+                    stockRequest.setNum(orderInfoVo.getInfo().getCartNum());
+                    storeBargainService.stockAddRedis(stockRequest);
+                }
+            } if (ObjectUtil.isNotNull(storeOrder.getCombinationId()) && storeOrder.getCombinationId() > 0) { // 拼团商品回滚销量库存
+                for (StoreOrderInfoVo orderInfoVo : orderInfoVoList) {
+                    StoreProductStockRequest stockRequest = new StoreProductStockRequest();
+                    stockRequest.setCombinationId(orderInfoVo.getInfo().getCombinationId());
+                    stockRequest.setProductId(orderInfoVo.getProductId());
+                    stockRequest.setAttrId(Integer.valueOf(orderInfoVo.getInfo().getProductAttrUnique()));
+                    stockRequest.setOperationType("add");
+                    stockRequest.setType(orderInfoVo.getInfo().getProductInfo().getAttrInfo().getType());
+                    stockRequest.setSuk(orderInfoVo.getInfo().getProductInfo().getAttrInfo().getSuk());
+                    if(orderInfoVo.getInfo().getCartNum() < 1){
+                        //如果取不到值，则跳过
+                        continue;
+                    }
+                    stockRequest.setNum(orderInfoVo.getInfo().getCartNum());
+                    storeCombinationService.stockAddRedis(stockRequest);
+                }
+            } else { // 正常商品回滚销量库存
                 for (StoreOrderInfoVo orderInfoVo : orderInfoVoList) {
                     StoreProductStockRequest stockRequest = new StoreProductStockRequest();
                     stockRequest.setProductId(orderInfoVo.getProductId());

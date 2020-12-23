@@ -22,6 +22,9 @@ public class RegularConstants {
     //手机
     public static final String PHONE = "^1([358][0-9]|4[579]|66|7[0135678]|9[89])[0-9]{8}$";
 
+    //只校验手机为11位
+    public static final String PHONE_TWO = "^1\\d{10}$";
+
     //整数或者小数：
     public static final String INTEGER_OR_FLOAT = "^[0-9]+=\\.{0,1}[0-9]{0,2}$";
 

@@ -9,7 +9,7 @@
          </el-tabs>
          <el-form ref="form" inline :model="artFrom" @submit.native.prevent>
            <el-form-item label="关键字：">
-             <el-input v-model="artFrom.keywords" placeholder="请输入提货点名称/电话" class="selWidth" size="small">
+             <el-input v-model="artFrom.keywords" placeholder="请输入提货点名称/电话" class="selWidth" size="small" clearable>
                <el-button slot="append" icon="el-icon-search" @click="search" />
              </el-input>
            </el-form-item>
@@ -82,7 +82,9 @@
            <template slot-scope="{ row, index }">
              <el-button type="text" size="small" @click="edit(row.id)">编辑</el-button>
              <el-divider direction="vertical"></el-divider>
-             <el-button type="text" size="small" @click="storeDelete(row.id)">删除</el-button>
+             <el-button v-if="artFrom.status==='2'" type="text" size="small" @click="storeRecovery(row.id)">恢复</el-button>
+             <el-divider v-if="artFrom.status==='2'" direction="vertical"></el-divider>
+             <el-button type="text" size="small" @click="artFrom.status==='2'?allDelete(row.id):storeDelete(row.id)">删除</el-button>
            </template>
          </el-table-column>
        </el-table>
@@ -103,7 +105,7 @@
 
 <script>
   import systemStore from './addPoint';
-  import { storeListApi, storeGetCountApi, storeUpdateStatusApi, storeDeleteApi } from '@/api/storePoint';
+  import { storeListApi, storeGetCountApi, storeUpdateStatusApi, storeDeleteApi, allDeleteApi, storeRecoveryApi } from '@/api/storePoint';
 export default {
   name: 'Point',
   components: { systemStore },
@@ -141,8 +143,6 @@ export default {
         that.loading = false;
         that.tableData = res.list;
         that.total = res.total;
-      }).catch(res => {
-        that.$message.error(res.message);
       })
     },
     //切换页数
@@ -172,8 +172,18 @@ export default {
         that.$message.success("操作成功");
         that.tableList();
         that.storeGetCount();
-      }).catch(res=>{
-        that.$message.error(res.message);
+      }).catch(()=>{
+        row.isShow = !row.isShow
+      })
+    },
+    // 恢复
+    storeRecovery(id){
+      this.$modalSure('恢复提货吗').then(() => {
+        storeRecoveryApi({ id: id }).then(() => {
+          this.$message.success('恢复成功')
+          this.storeGetCount();
+          this.tableList();
+        })
       })
     },
     //刪除
@@ -182,11 +192,18 @@ export default {
       that.$modalSure().then(() => {
         storeDeleteApi({ id: id }).then(() => {
           that.$message.success('删除成功')
-          that.tableList();
           that.storeGetCount();
+          that.tableList();
         })
-      }).catch(res=>{
-        that.$message.error(res.message);
+      })
+    },
+    allDelete(id){
+      this.$modalSure().then(() => {
+        allDeleteApi({ id: id }).then(() => {
+          this.$message.success('删除成功')
+          this.storeGetCount();
+          this.tableList();
+        })
       })
     },
     //添加

@@ -130,7 +130,7 @@ public class StoreOrderDetailResponse {
     private BigDecimal gainIntegral;
 
     @ApiModelProperty(value = "使用积分")
-    private BigDecimal useIntegral;
+    private Integer useIntegral;
 
     @ApiModelProperty(value = "给用户退了多少积分")
     private BigDecimal backIntegral;

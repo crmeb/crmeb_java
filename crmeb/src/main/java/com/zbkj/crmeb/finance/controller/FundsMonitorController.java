@@ -3,23 +3,24 @@ package com.zbkj.crmeb.finance.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
+import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.finance.model.UserFundsMonitor;
 import com.zbkj.crmeb.finance.request.FundsMonitorSearchRequest;
 import com.zbkj.crmeb.finance.request.FundsMonitorUserSearchRequest;
 import com.zbkj.crmeb.finance.service.UserFundsMonitorService;
+import com.zbkj.crmeb.user.model.User;
+import com.zbkj.crmeb.user.model.UserBill;
 import com.zbkj.crmeb.user.request.UserBillDetailListRequest;
 import com.zbkj.crmeb.user.response.BillType;
 import com.zbkj.crmeb.user.response.UserBillResponse;
 import com.zbkj.crmeb.user.service.UserBillService;
+import com.zbkj.crmeb.user.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -100,7 +101,7 @@ public class FundsMonitorController {
     public CommonResult<CommonPage<UserBillResponse>> userDetail(UserBillDetailListRequest request,
                                                          PageParamRequest pageParamRequest,
                                                          @PathVariable Integer userId){
-        CommonPage<UserBillResponse> ub = CommonPage.restPage(userBillService.getByBaseSearch(userId,request,pageParamRequest));
+        CommonPage<UserBillResponse> ub = CommonPage.restPage(userBillService.getByBaseSearch(userId, request, pageParamRequest));
         return CommonResult.success(ub);
     }
 

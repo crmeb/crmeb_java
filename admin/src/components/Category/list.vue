@@ -20,12 +20,15 @@
               <el-form inline size="small">
                 <el-form-item>
                   <el-select v-model="listPram.status" placeholder="状态" class="selWidth">
-                    <el-option
-                      v-for="item in constants.roleListStatus"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value"
-                    />
+                    <el-option label="全部" :value="-1"></el-option>
+                    <el-option label="显示" :value="1"></el-option>
+                    <el-option label="不显示" :value="0"></el-option>
+                    <!--<el-option-->
+                      <!--v-for="item in constants.roleListStatus"-->
+                      <!--:key="item.value"-->
+                      <!--:label="item.label"-->
+                      <!--:value="item.value"-->
+                    <!--/>-->
                   </el-select>
                 </el-form-item>
                 <el-form-item>
@@ -78,11 +81,26 @@
                 </template>
               </el-table-column>
               <el-table-column label="排序" prop="sort" min-width="150" />
-              <el-table-column label="启用状态" width="150">
+              <el-table-column
+                label="状态"
+                min-width="150"
+              >
                 <template slot-scope="scope">
-                  <span>{{ scope.row.status | filterYesOrNo }}</span>
+                  <el-switch
+                    v-model="scope.row.status"
+                    :active-value="true"
+                    :inactive-value="false"
+                    active-text="显示"
+                    inactive-text="隐藏"
+                    @change="onchangeIsShow(scope.row)"
+                  />
                 </template>
               </el-table-column>
+              <!--<el-table-column label="启用状态" width="150">-->
+                <!--<template slot-scope="scope">-->
+                  <!--<span>{{ scope.row.status | filterYesOrNo }}</span>-->
+                <!--</template>-->
+              <!--</el-table-column>-->
               <el-table-column label="操作" min-width="200" fixed="right">
                 <template slot-scope="scope">
                   <el-button
@@ -201,6 +219,12 @@ export default {
     // }
   },
   methods: {
+    onchangeIsShow(row){
+      categoryApi.categroyUpdateStatus( row.id ).then(() => {
+        this.$message.success('修改成功')
+        this.handlerGetTreeList()
+      })
+    },
     handleEditMenu(rowData) {
       this.editDialogConfig.isCreate = 1
       this.editDialogConfig.data = rowData

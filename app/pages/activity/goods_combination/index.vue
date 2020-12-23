@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<view class='group-list'>
-			<view class='iconfont icon-xiangzuo' @tap='goBack' :style="'top:'+ (navH/2) +'rpx'"></view>
+			<view class='iconfont icon-xiangzuo' @tap='goBack' :style="'top:'+ (navH/2) +'rpx'" v-if="returnShow"></view>
 			<view class='header'></view>
 			<view class='list'>
 				<block v-for="(item,index) in combinationList" :key='index'>
@@ -19,12 +19,15 @@
 								</view>
 							</view>
 							<view class='bottom acea-row row-between-wrapper'>
-								<view class='money'>￥<text class='num'>{{item.price}}</text><text class='y-money'>￥{{item.product_price}}</text></view>
+								<view class='money'>￥<text class='num'>{{item.price}}</text><text class='y-money'>￥{{item.otPrice}}</text></view>
 								<view class='groupBnt bg-color'>去拼团<text class="iconfont icon-jiantou"></text></view>
 							</view>
 						</view>
 					</view>
 				</block>
+				<view class='loadingicon acea-row row-center-wrapper' v-if='combinationList.length > 0'>
+					<text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>{{loadTitle}}
+				</view>
 			</view>
 		</view>
 		<home></home>
@@ -52,9 +55,13 @@
 				page: 1,
 				loading: false,
 				loadend: false,
+				returnShow: true,
+				loadTitle: ''
 			}
 		},
 		onLoad() {
+			var pages = getCurrentPages();
+			this.returnShow = pages.length===1?false:true;
 			uni.setNavigationBarTitle({
 				title:"拼团列表"
 			})
@@ -90,21 +97,24 @@
 				var that = this;
 				if (that.loadend) return;
 				if (that.loading) return;
+				that.loadTitle = '';
 				var data = {
 					page: that.page,
 					limit: that.limit
 				};
 				this.loading = true
 				getCombinationList(data).then(function(res) {
-					var combinationList = that.combinationList;
-					var limit = that.limit;
-					that.page++;
-					that.loadend = limit > res.data.length;
-					that.combinationList = combinationList.concat(res.data);
-					that.page = that.data.page;
+					let list = res.data.list;
+					let combinationList = that.$util.SplitArray(list, that.combinationList);
+					let loadend = list.length < that.limit;
+					that.loadend = loadend;
 					that.loading = false;
+					that.loadTitle = loadend ? '已全部加载' : '加载更多';
+					that.$set(that, 'combinationList', combinationList);
+					that.$set(that, 'page', that.page + 1);
 				}).catch(() => {
-					that.loading = false
+					that.loading = false;
+					that.loadTitle = '加载更多';
 				})
 			},
 		},

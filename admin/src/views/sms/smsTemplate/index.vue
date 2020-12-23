@@ -4,26 +4,9 @@
     <el-card v-loading="fullscreenLoading" class="box-card">
       <div slot="header" class="clearfix">
         <div class="container">
-          <el-form :inline="true">
-            <el-form-item label="模板状态：" class="mr10">
-              <el-select v-model="tableFrom.status" placeholder="请选择" clearable class="filter-item selWidth mr20" @change="userSearchs">
-                <el-option value="1" label="可用"></el-option>
-                <el-option value="0" label="不可用"></el-option>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="模板类型：" class="mr10">
-              <el-select v-model="tableFrom.type" placeholder="请选择" clearable class="filter-item selWidth mr20" @change="userSearchs">
-                <el-option value="1" label="验证码"></el-option>
-                <el-option value="2" label="通知"></el-option>
-                <el-option value="3" label="推广"></el-option>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="模板名称：" class="mr10">
-              <el-input v-model="tableFrom.title" placeholder="请输入模板名称" class="selWidth">
-                <el-button slot="append" icon="el-icon-search" @click="userSearchs" />
-              </el-input>
-            </el-form-item>
-          </el-form>
+          <router-link :to="{path:'/operation/onePass'}">
+            <el-button class="mb35" size="mini" icon="el-icon-arrow-left">返回</el-button>
+          </router-link>
         </div>
         <el-button size="mini" type="primary" @click="add">添加短信模板</el-button>
       </div>
@@ -40,7 +23,7 @@
           min-width="50"
         />
         <el-table-column
-          prop="templateid"
+          prop="temp_id"
           label="模板ID"
           min-width="80"
         />
@@ -59,7 +42,7 @@
           min-width="100"
         >
           <template slot-scope="{row}">
-            <span>{{ row.type | typesFilter }}</span>
+            <span>{{ row.temp_type | typesFilter }}</span>
           </template>
         </el-table-column>
         <el-table-column label="模板状态">
@@ -67,11 +50,6 @@
             <span>{{ row.status | statusFilter }}</span>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="add_time"
-          label="添加时间"
-          min-width="150"
-        />
       </el-table>
       <div class="block">
         <el-pagination
@@ -142,10 +120,7 @@ export default {
       },
       tableFrom: {
         page: 1,
-        limit: 20,
-        status: '',
-        title: '',
-        type: ''
+        limit: 20
       }
     }
   },
@@ -156,7 +131,7 @@ export default {
   },
   mounted() {
     if (!this.isLogin) {
-      this.$router.push('/operation/systemSms/config?url=' + this.$route.path)
+      this.$router.push('/operation/onePass?url=' + this.$route.path)
     } else {
       this.getList()
     }
@@ -187,13 +162,13 @@ export default {
         const data = res
         if (!data.status) {
           this.$message.warning('请先登录')
-          this.$router.push( '/operation/systemSms/config?url=' + this.$route.path)
+          this.$router.push( '/operation/onePass?url=' + this.$route.path)
         } else {
           this.getList()
         }
         this.fullscreenLoading = false
       }).catch(res => {
-        this.$router.push( '/operation/systemSms/config?url=' + this.$route.path)
+        this.$router.push( '/operation/onePass?url=' + this.$route.path)
         this.fullscreenLoading = false
       })
     },

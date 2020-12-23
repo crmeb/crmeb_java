@@ -2,7 +2,7 @@
 	<div class="register absolute">
 		<div class="shading">
 			<div class="pictrue acea-row row-center-wrapper">
-				<image src="/static/images/logo2.png" />
+				<image src="../../../static/images/logo2.png" />
 			</div>
 		</div>
 		<div class="whiteBg">
