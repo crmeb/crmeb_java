@@ -24,9 +24,6 @@
 # 加技术交流群
 ## [CRMEB JAVA 技术交流QQ群 1群](<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=XJ79nw1CVADxGTl1Ju0iMxzq9HMIhTR0&jump_from=webapi">点击加群 893839288</a>)
 
-## 扫码联系客服
-![扫码联系客服](https://stivepeim.gitee.io/my-image/contacUs.jpg)
-
 # 演示站
 1. 移动端：[https://java.crmeb.net](https://java.crmeb.net)
 2. 后台：[https://admin.java.crmeb.net](https://admin.java.crmeb.net)   
@@ -48,8 +45,7 @@ CRMEB打通版：https://gitee.com/ZhongBangKeJi/CRMEB
     1:admin     WEB程序         PC端管理端 VUE + ElementUi
     2:app       移动商城         UniApp标准开发
     3:crmeb     Api            Java SpringBoot + mybatisPlus ...
-    4:icons     基本素材         分类图标等
-    5:接口文档   Api对应的接口文档也可以部署项目后查看  
+    4:接口文档   Api对应的接口文档也可以部署项目后查看  
 ~~~
 ## 主要特性
 
@@ -134,6 +130,21 @@ prod环境swagger默认账号密码在 prod.yml配置里
 2. [易联云JAVA SDK](http://doc2.10ss.net/337744 "易联云JAVA SDK gitee文档")
 3. [如何导入第三方JAVA SDK包](https://blog.csdn.net/weixin_46028577/article/details/106342938?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase "如何导入第三方JAVA SDK包")
 #
+
+
+# v1.3 更新列表 
+    1. 【新增】砍价
+	2. 【新增】拼团
+	3. 【新增】一号通
+	4. 【修复】商品sku 编辑时出现商品属性对应错误的问题
+	5. 【修复】商品推广海报生成二维码可能会出错的问题【小程序调试中】
+	6. 【修复】微信公众号和小程序头像可能获取不到的问题
+	7. 【修复】下单时可能会出错的问题
+	8. 【修复】pc管理端用户访问量
+	9. 【修复】微信退款
+	10. 【修复】管理端订单状态可能出现不正确的情况
+	11. 【修复】WEB管理端-菜单色调，短信API更新，首页用户访问量，系统设置tab是自动选择下一及表单
+	12. 【修复】系统设置出现更新不正确的问题
 
 # v1.2.2 更新列表
 	1. 修复了商品从回收站中删除的逻辑
