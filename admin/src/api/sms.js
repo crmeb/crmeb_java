@@ -4,7 +4,7 @@ import request from '@/utils/request'
  */
 export function smsLstApi(params) {
   return request({
-    url: '/admin/sms/record/list',
+    url: '/admin/pass/user/record',
     method: 'get',
     params
   })
@@ -12,30 +12,31 @@ export function smsLstApi(params) {
 /**
  * @description 短信账户 -- 登录
  */
-export function configApi(params) {
+export function configApi(data) {
   return request({
-    url: '/admin/sms/login',
-    method: 'get',
-    params
+    url: '/admin/pass/login',
+    method: 'post',
+    data
   })
 }
 /**
  * @description 短信账户 -- 获取验证码
  */
-export function captchaApi(phone) {
+export function captchaApi(params) {
   return request({
-    url: `/admin/sms/sendCodeForRegister/${phone}`,
-    method: 'get'
+    url: `/admin/pass/sendUserCode`,
+    method: 'get',
+    params
   })
 }
 /**
  * @description 短信账户 -- 注册
  */
-export function registerApi(params) {
+export function registerApi(data) {
   return request({
-    url: '/admin/sms/register',
+    url: '/admin/pass/register',
     method: 'post',
-    params
+    data
   })
 }
 /**
@@ -43,7 +44,7 @@ export function registerApi(params) {
  */
 export function isLoginApi() {
   return request({
-    url: '/admin/sms/islogin',
+    url: '/admin/pass/isLogin',
     method: 'get'
   })
 }
@@ -52,7 +53,7 @@ export function isLoginApi() {
  */
 export function logoutApi() {
   return request({
-    url: '/admin/sms/logout',
+    url: '/admin/pass/logout',
     method: 'get'
   })
 }
@@ -70,7 +71,7 @@ export function smsNumberApi() {
  */
 export function smsTempLstApi(params) {
   return request({
-    url: '/admin/sms/temp/list',
+    url: '/admin/sms/temps',
     method: 'get',
     params
   })
@@ -80,7 +81,7 @@ export function smsTempLstApi(params) {
  */
 export function smsPriceApi(params) {
   return request({
-    url: '/admin/sms/pay/list',
+    url: '/admin/pass/meal/list',
     method: 'get',
     params
   })
@@ -88,21 +89,21 @@ export function smsPriceApi(params) {
 /**
  * @description 短信购买 -- 支付码
  */
-export function payCodeApi(params) {
+export function payCodeApi(data) {
   return request({
-    url: '/admin/sms/pay/qrCode',
-    method: 'get',
-    params
+    url: '/admin/pass/meal/code',
+    method: 'post',
+    data
   })
 }
 /**
  * @description 短信模板 -- 添加表单
  */
-export function tempCreateApi(params) {
+export function tempCreateApi(data) {
   return request({
     url: '/admin/sms/temp/apply',
     method: 'post',
-    params
+    data
   })
 }
 /**
@@ -110,7 +111,7 @@ export function tempCreateApi(params) {
  */
 export function smsInfoApi() {
   return request({
-    url: '/admin/sms/info',
+    url: '/admin/pass/info',
     method: 'get'
   })
 }
@@ -123,5 +124,70 @@ export function smsSaveApi(params) {
     url: '/admin/sms/config/save',
     method: 'post',
     params
+  })
+}
+
+/**
+ * @description 短信 -- 修改密码
+ */
+export function updatePasswordApi(data) {
+  return request({
+    url: '/admin/pass/update/password',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * @description 短信 -- 修改手机号
+ */
+export function updateHoneApi(data) {
+  return request({
+    url: '/admin/pass/update/phone',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * @description 一号通 -- 服务开通
+ */
+export function serviceOpenApi(data) {
+  return request({
+    url: '/admin/pass/service/open',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * @description 一号通 -- 电子面单模板
+ */
+export function exportTempApi(params) {
+  return request({
+    url: '/admin/express/template',
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * @description 全部物流公司
+ */
+export function expressAllApi() {
+  return request({
+    url: 'admin/express/all',
+    method: 'get'
+  })
+}
+
+/**
+ * @description 修改签名
+ */
+export function smsSignApi(data) {
+  return request({
+    url: 'admin/sms/modify/sign',
+    method: 'post',
+    data
   })
 }

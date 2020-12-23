@@ -17,26 +17,25 @@
               </el-select>
             </el-form-item>
             <el-form-item label="商品搜索：" class="mr10">
-              <el-input v-model="tableFrom.productSearch" placeholder="请输入商品名称，商品id" class="selWidth" size="small">
+              <el-input v-model="tableFrom.productSearch" placeholder="请输入商品名称，商品id" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search"  @click="seachList" size="small"/>
               </el-input>
             </el-form-item>
             <el-form-item label="用户名称：">
-              <el-select v-model="uids" class="selWidth" reserve-keyword multiple remote filterable
-                         :remote-method="remoteMethod" :loading="loading" placeholder="请输入用户名称" clearable @change="seachList">
-                <el-option
-                  v-for="item in options"
-                  :key="item.uid"
-                  :label="item.nickname"
-                  :value="item.uid">
-                </el-option>
-              </el-select>
+              <el-input v-model="tableFrom.nickname" placeholder="请输入用户名称" class="selWidth" size="small" clearable>
+                <el-button slot="append" icon="el-icon-search"  @click="seachList" size="small"/>
+              </el-input>
             </el-form-item>
-            <!--<el-form-item label="用户名称：">-->
-              <!--<el-input v-model="tableFrom.nickname" placeholder="请输入用户名称" class="selWidth" size="small">-->
-                <!--<el-button slot="append" icon="el-icon-search"  @click="seachList" size="small"/>-->
-              <!--</el-input>-->
-            <!--</el-form-item>-->
+              <!--<el-select v-model="uids" class="selWidth" reserve-keyword multiple remote filterable-->
+                         <!--:remote-method="remoteMethod" :loading="loading" placeholder="请输入用户名称" clearable @change="seachList">-->
+                <!--<el-option-->
+                  <!--v-for="item in options"-->
+                  <!--:key="item.uid"-->
+                  <!--:label="item.nickname"-->
+                  <!--:value="item.uid">-->
+                <!--</el-option>-->
+              <!--</el-select>-->
+
           </el-form>
         </div>
         <el-button size="small" type="primary" @click="add">添加虚拟评论</el-button>
@@ -72,8 +71,13 @@
           min-width="200"
         />
         <el-table-column
+          prop="productScore"
+          label="商品评分"
+          min-width="90"
+        />
+        <el-table-column
           prop="serviceScore"
-          label="评分"
+          label="服务评分"
           min-width="90"
         />
         <el-table-column
@@ -185,7 +189,8 @@ export default {
         limit: 20,
         isReply: '',
         dateLimit: '',
-        uid: '',
+        // uid: '',
+        nickname: '',
         productSearch:'',
         isDel: false
       },

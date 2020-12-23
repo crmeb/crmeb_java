@@ -36,7 +36,7 @@ public class LogisticsResultVo {
     @ApiModelProperty(value = "快递运送轨迹")
     private List<LogisticsResultListVo> list;
 
-    @ApiModelProperty(value = "快递收件(揽件)1.在途中 2.正在派件 3.已签收 4.派送失败 5.疑难件 6.退件签收  */")
+    @ApiModelProperty(value = "快递收件(揽件)1.在途中 2.正在派件 3.已签收 4.派送失败 5.疑难件 6.退件签收 10待清关，11清关中，12已清关，13清关异常，14收件人拒签  */")
     @JsonProperty("deliverystatus")
     private String deliveryStatus;
 

@@ -13,6 +13,7 @@ import com.zbkj.crmeb.payment.vo.wechat.PayParamsVo;
 import com.zbkj.crmeb.payment.wechat.WeChatPayService;
 import com.zbkj.crmeb.sms.service.SmsService;
 import com.zbkj.crmeb.user.model.User;
+import com.zbkj.crmeb.user.model.UserToken;
 import com.zbkj.crmeb.user.request.UserOperateFundsRequest;
 import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.wechat.service.TemplateMessageService;
@@ -24,17 +25,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.HashMap;
 
 
 /**
- * <p>
  * 支付类
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-04-10
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -57,6 +63,9 @@ public class RechargePayServiceImpl extends PayService implements RechargePaySer
 
     @Autowired
     private SmsService smsService;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     //订单类
     private UserRecharge userRecharge;
@@ -142,6 +151,60 @@ public class RechargePayServiceImpl extends PayService implements RechargePaySer
         }catch (Exception e){
             throw new CrmebException("订单支付回调失败，" + e.getMessage());
         }
+    }
+
+    /**
+     * 支付成功处理
+     * @param userRecharge 充值订单
+     * @param userToken 用户Token
+     */
+    @Override
+    public Boolean paySuccess(UserRecharge userRecharge, UserToken userToken) {
+        userRecharge.setPaid(true);
+        userRecharge.setPayTime(DateUtil.nowDateTime());
+        // 余额变动对象
+        UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
+        userOperateFundsRequest.setValue(userRecharge.getPrice().add(userRecharge.getGivePrice()));
+        userOperateFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_PAY_RECHARGE);
+        userOperateFundsRequest.setUid(userRecharge.getUid());
+        userOperateFundsRequest.setTitle("充值支付");
+        userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_MONEY);
+        userOperateFundsRequest.setType(1);
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            // 订单变动
+            userRechargeService.updateById(userRecharge);
+            //余额变动
+            userService.updateFounds(userOperateFundsRequest, true);
+            //增加经验、积分
+            userService.consumeAfterUpdateUserFounds(userRecharge.getUid(), userRecharge.getPrice(), Constants.USER_BILL_TYPE_PAY_RECHARGE);
+            return Boolean.TRUE;
+        });
+        if (execute) {
+            //下发模板通知
+            pushTempMessageRecharge(userRecharge);
+        }
+        return execute;
+    }
+
+    /**
+     * 发送模板消息通知
+     */
+    private void pushTempMessageRecharge(UserRecharge userRecharge) {
+        User info = userService.getById(userRecharge.getUid());
+
+        String tempKey = Constants.WE_CHAT_PUBLIC_TEMP_KEY_RECHARGE;
+        if(Constants.PAY_TYPE_WE_CHAT_FROM_PROGRAM.equals(userRecharge.getRechargeType())){
+            tempKey = Constants.WE_CHAT_PROGRAM_TEMP_KEY_RECHARGE;
+        }
+
+        HashMap<String, String> map = new HashMap<>();
+        map.put("rechargeOrderId", userRecharge.getOrderId());
+        map.put("rechargeAmount", userRecharge.getPrice().add(userRecharge.getGivePrice()).toString());
+        map.put("rechargeAfterBalance", info.getNowMoney().toString());
+        map.put("rechargeDate", userRecharge.getOrderId());
+
+        templateMessageService.push(tempKey, map, userRecharge.getUid(), userRecharge.getRechargeType());
     }
 
     /**

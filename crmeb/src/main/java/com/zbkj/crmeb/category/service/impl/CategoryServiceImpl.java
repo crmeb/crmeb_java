@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.category.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -392,6 +393,13 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
         LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(Category::getUrl, uri);
         return dao.selectCount(lambdaQueryWrapper) > 0;
+    }
+
+    @Override
+    public boolean updateStatus(Integer id) {
+        Category category = getById(id);
+        category.setStatus(!category.getStatus());
+        return updateById(category);
     }
 }
 

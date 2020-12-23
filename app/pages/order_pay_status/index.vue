@@ -2,8 +2,8 @@
 	<view>
 		<view class='payment-status'>
 			<!--失败时： 用icon-iconfontguanbi fail替换icon-duihao2 bg-color-->
-			<view class='iconfont icon-duihao2 bg-color' v-if="order_pay_info.paid || order_pay_info.payType == 'offline'"></view>
-			<view class='iconfont icon-iconfontguanbi bg-color' v-else></view>
+			<view class='iconfont icons icon-duihao2 bg-color' v-if="order_pay_info.paid || order_pay_info.payType == 'offline'"></view>
+			<view class='iconfont icons icon-iconfontguanbi bg-color' v-else></view>
 			<!-- 失败时：订单支付失败 -->
 			<view class='status' v-if="order_pay_info.payType != 'offline'">{{order_pay_info.paid ? '订单支付成功':'订单支付失败'}}</view>
 			<view class='status' v-else>订单创建成功</view>
@@ -14,7 +14,7 @@
 				</view>
 				<view class='item acea-row row-between-wrapper'>
 					<view>下单时间</view>
-					<view class='itemCom'>{{order_pay_info.payTime}}</view>
+					<view class='itemCom'>{{order_pay_info.createTime}}</view>
 				</view>
 				<view class='item acea-row row-between-wrapper'>
 					<view>支付方式</view>
@@ -184,6 +184,19 @@
 		margin: 195rpx 30rpx 0 30rpx;
 		border-radius: 10rpx;
 		padding: 1rpx 0 28rpx 0;
+	}
+	.payment-status .icons {
+		font-size: 70rpx;
+		width: 140rpx;
+		height: 140rpx;
+		border-radius: 50%;
+		color: #fff;
+		text-align: center;
+		line-height: 140rpx;
+		text-shadow: 0px 4px 0px #df1e14;
+		border: 6rpx solid #f5f5f5;
+		margin: -76rpx auto 0 auto;
+		background-color: #999;
 	}
 
 	.payment-status .iconfont {

@@ -31,8 +31,4 @@ public class ExpressSearchRequest implements Serializable {
     @ApiModelProperty(value = "搜索关键字", required = true)
     private String keywords;
 
-    @ApiModelProperty(value = "是否显示 0=否 1=是", required = true)
-    private Integer isShow;
-
-
 }

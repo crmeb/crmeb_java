@@ -1,7 +1,7 @@
 <template>
 	<view>
 		<view class='bargain-list'>
-			<view class='iconfont icon-xiangzuo' @tap='goBack' :style="'top:'+ (navH/2) +'rpx'"></view>
+			<view class='iconfont icon-xiangzuo' @tap='goBack' :style="'top:'+ (navH/2) +'rpx'" v-if="returnShow"></view>
 			<view class='header'></view>
 			<view class='list'>
 				<block v-for="(item,index) in bargainList" :key="index">
@@ -11,12 +11,15 @@
 						</view>
 						<view class='text acea-row row-column-around'>
 							<view class='name line1'>{{item.title}}</view>
-							<view class='num'><text class='iconfont icon-pintuan'></text>{{item.people}}人正在参与</view>
-							<view class='money font-color'>最低: ￥<text class='price'>{{item.min_price}}</text></view>
+							<view class='num'><text class='iconfont icon-pintuan'></text>{{item.countPeopleAll}}人正在参与</view>
+							<view class='money font-color'>最低: ￥<text class='price'>{{item.minPrice}}</text></view>
 						</view>
 						<view class='cutBnt bg-color'><text class='iconfont icon-kanjia'></text>参与砍价</view>
 					</view>
 				</block>
+				<view class='loadingicon acea-row row-center-wrapper' v-if='bargainList.length > 0'>
+					<text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>{{loadTitle}}
+				</view>
 			</view>
 		</view>
 		<!-- #ifdef MP -->
@@ -57,21 +60,24 @@
 			return {
 				bargainList: [],
 				page: 1,
-				limit: 20,
+				limit: 10,
 				loading: false,
 				loadend: false,
 				userInfo: {},
 				navH: '',
 				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false //是否隐藏授权
+				isShowAuth: false, //是否隐藏授权
+				returnShow:true,
+				loadTitle: '加载更多'
 			};
 		},
 		computed: mapGetters(['isLogin']),
 		onLoad: function(options) {
+			var pages = getCurrentPages();
+			this.returnShow = pages.length===1?false:true;
 			uni.setNavigationBarTitle({
 				title:"砍价列表"
 			})
-
 			this.navH = app.globalData.navHeight;
 			if (this.isLogin) {
 				this.getUserInfo();
@@ -136,16 +142,22 @@
 				if (that.loadend) return;
 				if (that.loading) return;
 				that.loading = true;
+				that.loadTitle = '';
 				getBargainList({
 					page: that.page,
 					limit: that.limit
 				}).then(function(res) {
-					that.$set(that, 'bargainList', that.bargainList.concat(res.data));
+					let list = res.data.list;
+					let bargainList = that.$util.SplitArray(list, that.bargainList);
+					let loadend = list.length < that.limit;
+					that.loadend = loadend;
+					that.loading = false;
+					that.loadTitle = loadend ? '已全部加载' : '加载更多';
+					that.$set(that, 'bargainList', bargainList);
 					that.$set(that, 'page', that.page + 1);
-					that.$set(that, 'loadend', that.limit > res.data.length);
-					that.$set(that, 'loading', false);
 				}).catch(res => {
 					that.loading = false;
+					that.loadTitle = '加载更多';
 				});
 			}
 		},

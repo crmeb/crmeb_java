@@ -125,3 +125,14 @@ export function categroyByIds(pram) {
     params: data
   })
 }
+
+/**
+ * 修改 显示关闭状态
+ * @param pram
+ */
+export function categroyUpdateStatus(id) {
+  return request({
+    url: `/admin/category/updateStatus/${id}`,
+    method: 'GET'
+  })
+}

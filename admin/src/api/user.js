@@ -346,3 +346,14 @@ export function captchaApi() {
     method: 'get'
   })
 }
+
+/**
+ * @description 修改上级推广人
+ */
+export function updateSpreadApi(data) {
+  return request({
+    url: `/admin/user/update/spread`,
+    method: 'post',
+    data
+  })
+}

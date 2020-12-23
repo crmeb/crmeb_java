@@ -22,15 +22,22 @@ import com.zbkj.crmeb.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @Classname RetailShopServiceImpl
- * @Description 分销业务实现
- * @Date 2020/6/22 11:20 上午
- * @Created by stivepeim
+ * RetailShopServiceImpl 接口实现 分销业务实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Service
 public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements RetailShopService {
@@ -66,7 +73,7 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
         userSearchRequest.setStatus(true);
         userSearchRequest.setIsPromoter(true);
         userSearchRequest.setKeywords(keywords);
-        userSearchRequest.setData(dateLimit);
+        userSearchRequest.setDateLimit(dateLimit);
         PageInfo<UserResponse> userResponses = userService.getList(userSearchRequest,pageRequest);
         List<RetailShopUserResponse> retailShopUserResponses = new ArrayList<>();
         for (UserResponse rp:userResponses.getList()) {
@@ -108,7 +115,7 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
     public List<UserResponse> getStatisticsData(String nickName, String dateLimit) {
         UserSearchRequest request = new UserSearchRequest();
         request.setIsPromoter(true);
-        request.setData(dateLimit);
+        request.setDateLimit(dateLimit);
         request.setKeywords(nickName);
 
         PageParamRequest pageParamRequest = new PageParamRequest();
@@ -138,12 +145,12 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
         RetailShopRequest response = new RetailShopRequest();
         response.setBrokerageFuncStatus(systemConfigService.getValueByKey(keys.get(0)));
         response.setStoreBrokerageStatus(systemConfigService.getValueByKey(keys.get(1)));
-        response.setStoreBrokerageRatio(systemConfigService.getValueByKey(keys.get(2)));
-        response.setStoreBrokerageTwo(systemConfigService.getValueByKey(keys.get(3)));
-        response.setUserExtractMinPrice(systemConfigService.getValueByKey(keys.get(4)));
+        response.setStoreBrokerageRatio(Integer.parseInt(systemConfigService.getValueByKey(keys.get(2))));
+        response.setStoreBrokerageTwo(Integer.parseInt(systemConfigService.getValueByKey(keys.get(3))));
+        response.setUserExtractMinPrice(new BigDecimal(systemConfigService.getValueByKey(keys.get(4))));
         response.setUserExtractBank(systemConfigService.getValueByKey(keys.get(5)).replace("\\n","\n"));
-        response.setExtractTime(systemConfigService.getValueByKey(keys.get(6)));
-        response.setStoreBrokeragePrice(systemConfigService.getValueByKey(keys.get(7)));
+        response.setExtractTime(Integer.parseInt(systemConfigService.getValueByKey(keys.get(6))));
+        response.setStoreBrokeragePrice(new BigDecimal(systemConfigService.getValueByKey(keys.get(7))));
         response.setBrokerageBindind(systemConfigService.getValueByKey(keys.get(8)));
         return response;
     }
@@ -158,12 +165,12 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
         List<String> keys = initKeys();
         systemConfigService.updateOrSaveValueByName(keys.get(0), retailShopRequest.getBrokerageFuncStatus());
         systemConfigService.updateOrSaveValueByName(keys.get(1), retailShopRequest.getStoreBrokerageStatus());
-        systemConfigService.updateOrSaveValueByName(keys.get(2), retailShopRequest.getStoreBrokerageRatio());
-        systemConfigService.updateOrSaveValueByName(keys.get(3), retailShopRequest.getStoreBrokerageTwo());
-        systemConfigService.updateOrSaveValueByName(keys.get(4), retailShopRequest.getUserExtractMinPrice());
+        systemConfigService.updateOrSaveValueByName(keys.get(2), retailShopRequest.getStoreBrokerageRatio().toString());
+        systemConfigService.updateOrSaveValueByName(keys.get(3), retailShopRequest.getStoreBrokerageTwo().toString());
+        systemConfigService.updateOrSaveValueByName(keys.get(4), retailShopRequest.getUserExtractMinPrice().toString());
         systemConfigService.updateOrSaveValueByName(keys.get(5), retailShopRequest.getUserExtractBank());
-        systemConfigService.updateOrSaveValueByName(keys.get(6), retailShopRequest.getExtractTime());
-        systemConfigService.updateOrSaveValueByName(keys.get(7), retailShopRequest.getStoreBrokeragePrice());
+        systemConfigService.updateOrSaveValueByName(keys.get(6), retailShopRequest.getExtractTime().toString());
+        systemConfigService.updateOrSaveValueByName(keys.get(7), retailShopRequest.getStoreBrokeragePrice().toString());
         systemConfigService.updateOrSaveValueByName(keys.get(8), retailShopRequest.getBrokerageBindind());
         return true;
     }

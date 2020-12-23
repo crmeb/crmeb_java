@@ -85,6 +85,18 @@ export function topUpLogDeleteApi(params) {
 }
 
 /**
+ * 充值 退款
+ * @param pram
+ */
+export function refundApi(data) {
+  return request({
+    url: '/admin/user/topUpLog/refund',
+    method: 'post',
+    data
+  })
+}
+
+/**
  * 资金监控 列表
  * @param pram
  */

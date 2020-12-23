@@ -23,6 +23,7 @@ import com.zbkj.crmeb.store.utilService.OrderUtils;
 import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserBill;
+import com.zbkj.crmeb.user.model.UserToken;
 import com.zbkj.crmeb.user.service.UserBillService;
 import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.wechat.service.TemplateMessageService;
@@ -37,8 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.HashMap;
 import java.util.List;
 
 
@@ -104,17 +105,20 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
     //支付类参参数
     private PayParamsVo payParamsVo;
 
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
 
     /**
      * 订单支付
      * @param orderId Integer 订单号
-     * @param fromType String 客户端类型
+     * @param from String 客户端类型
      * @author Mr.Zhang
      * @since 2020-06-22
      * @return PayResponseVo
      */
     @Override
-    public CreateOrderResponseVo payOrder(Integer orderId, String fromType, String clientIp) {
+    public CreateOrderResponseVo payOrder(Integer orderId, String from, String clientIp) {
         CreateOrderResponseVo responseVo = new CreateOrderResponseVo();
         StoreOrder storeOrder = storeOrderService.getById(orderId);
         setOrder(storeOrder);
@@ -124,7 +128,7 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
             switch (storeOrder.getPayType()){
                 case Constants.PAY_TYPE_WE_CHAT: //微信支付
                 case Constants.PAY_TYPE_WE_CHAT_FROM_PROGRAM:
-                    PayParamsVo payParamsVoRouter = getPayParamsVo(fromType, clientIp, storeOrder);
+                    PayParamsVo payParamsVoRouter = getPayParamsVo(from, clientIp, storeOrder);
                     responseVo = weChatPayService.create(payParamsVoRouter);//构造下单类
                     UserRechargePaymentResponse response = weChatService.response(responseVo);
                     responseVo.setTransJsConfig(response);
@@ -134,7 +138,9 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
                 case Constants.PAY_TYPE_OFFLINE: //线下支付
                     throw new CrmebException("线下支付未开通");
                 case Constants.PAY_TYPE_YUE: //余额支付 判断余额支付成功CreateOrderResponseVo.ResultCode = 1;
-                    responseVo = responseVo.setResultCode(storeOrderService.yuePay(storeOrder, userService.getInfo(),"")+"");
+//                    boolean yuePay = storeOrderService.yuePay(storeOrder, userService.getInfo(),"");
+                    boolean yuePay = storeOrderService.yuePay(storeOrder, userService.getInfo(),"");
+                    responseVo = responseVo.setResultCode(yuePay + "");
                     break;
             }
             // 清除缓存的订单信息
@@ -224,13 +230,112 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
         pushTempMessage();
 
         // 购买成功后根据配置送优惠券
-        autoSendCoupons();
+//        autoSendCoupons();
 
         // 更新用户下单数量
         updateUserPayCount();
 
         //增加经验、积分
         updateFounds();
+    }
+
+    /**
+     * 支付成功处理
+     * @param storeOrder 订单
+     * @param user  用户
+     * @param userToken 用户Token
+     */
+    @Override
+    public Boolean paySuccess(StoreOrder storeOrder, User user, UserToken userToken) {
+        storeOrder.setPaid(true);
+        storeOrder.setPayTime(DateUtil.nowDateTime());
+
+        if (storeOrder.getPayType().equals(Constants.PAY_TYPE_YUE)) {
+            user.setNowMoney(user.getNowMoney().subtract(storeOrder.getPayPrice()));
+
+        }
+
+        UserBill userBill = userBillInit(storeOrder, user);
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            //更新订单状态
+            storeOrderService.updateById(storeOrder);
+
+            //订单日志
+            storeOrderStatusService.addLog(storeOrder.getId(), Constants.ORDER_LOG_PAY_SUCCESS, Constants.ORDER_LOG_MESSAGE_PAY_SUCCESS);
+
+            // 余额支付——用户余额更新,余额资金变动记录添加
+            if (storeOrder.getPayType().equals(Constants.PAY_TYPE_YUE)) {
+                userService.updateNowMoney(user.getUid(), user.getNowMoney());
+                UserBill userBillYueInit = userBillYueInit(storeOrder, user);
+                userBillService.save(userBillYueInit);
+            }
+
+            //资金变动
+            userBillService.save(userBill);
+
+            // 更新用户下单数量
+            userService.userPayCountPlus(user);
+
+            //增加经验、积分
+            userService.consumeAfterUpdateUserFounds(storeOrder.getUid(), storeOrder.getPayPrice(), Constants.USER_BILL_TYPE_PAY_ORDER);
+            return Boolean.TRUE;
+        });
+
+        if (execute) {
+            try {
+                //下发模板通知
+                pushTempMessageOrder(storeOrder);
+
+                // 购买成功后根据配置送优惠券
+                autoSendCoupons(storeOrder);
+            } catch (Exception e) {
+                e.printStackTrace();
+                logger.error("模板通知或优惠券异常");
+            }
+        }
+        return execute;
+    }
+
+    private UserBill userBillYueInit(StoreOrder storeOrder, User user) {
+        UserBill userBill = new UserBill();
+        userBill.setTitle("购买商品");
+        userBill.setUid(user.getUid());
+        userBill.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
+        userBill.setType(Constants.USER_BILL_TYPE_PAY_PRODUCT);
+        userBill.setNumber(storeOrder.getPayPrice());
+        userBill.setLinkId(storeOrder.getId()+"");
+        userBill.setBalance(user.getNowMoney());
+        userBill.setMark("余额支付" + storeOrder.getPayPrice() + "元购买商品");
+        return userBill;
+    }
+
+    private UserBill userBillInit(StoreOrder order, User user) {
+        UserBill userBill = new UserBill();
+        userBill.setPm(0);
+        userBill.setUid(order.getUid());
+        userBill.setLinkId(order.getId().toString());
+        userBill.setTitle("购买商品");
+        userBill.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
+        userBill.setType(Constants.USER_BILL_TYPE_PAY_MONEY);
+        userBill.setNumber(order.getPayPrice());
+        userBill.setBalance(user.getNowMoney());
+        userBill.setMark("支付" + order.getPayPrice() + "元购买商品");
+        return userBill;
+    }
+
+    /**
+     * 发送模板消息通知
+     */
+    private void pushTempMessageOrder(StoreOrder storeOrder) {
+        // 小程序发送订阅消息
+        String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
+        if(StringUtils.isNotBlank(storeNameAndCarNumString)){
+            WechatSendMessageForPaySuccess paySuccess = new WechatSendMessageForPaySuccess(
+                    storeOrder.getId()+"",storeOrder.getPayPrice()+"",storeOrder.getPayTime()+"","暂无",
+                    storeOrder.getTotalPrice()+"",storeNameAndCarNumString);
+            orderUtils.sendWeiChatMiniMessageForPaySuccess(paySuccess, userService.getById(storeOrder).getUid());
+        }
     }
 
     /**
@@ -247,16 +352,18 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
         userService.userPayCountPlus(userService.getInfo());
     }
 
-    // 商品购买后根据配置送券
-    private void autoSendCoupons(){
+    /**
+     * 商品购买后根据配置送券
+     */
+    private void autoSendCoupons(StoreOrder storeOrder){
         // 根据订单详情获取商品信息
-        List<StoreOrderInfoVo> orders = storeOrderInfoService.getOrderListByOrderId(getOrder().getId());
+        List<StoreOrderInfoVo> orders = storeOrderInfoService.getOrderListByOrderId(storeOrder.getId());
         if(null == orders){
             return;
         }
         for (StoreOrderInfoVo order : orders) {
             List<StoreProductCoupon> couponsForGiveUser = storeProductCouponService.getListByProductId(order.getProductId());
-            User currentUser = userService.getInfo();
+            User currentUser = userService.getById(storeOrder.getUid());
             for (StoreProductCoupon storeProductCoupon : couponsForGiveUser) {
                 StoreCouponUserRequest crp = new StoreCouponUserRequest();
                 crp.setUid(currentUser.getUid()+"");
@@ -308,20 +415,6 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
      * @since 2020-07-01
      */
     private void pushTempMessage() {
-//        String tempKey = Constants.WE_CHAT_PUBLIC_TEMP_KEY_ORDER_PAY_SUCCESS;
-//        String type = Constants.PAY_TYPE_WE_CHAT_FROM_PUBLIC;
-//        if(Constants.ORDER_PAY_CHANNEL_PROGRAM == getOrder().getIsChannel()){
-//            tempKey = Constants.WE_CHAT_PROGRAM_TEMP_KEY_ORDER_PAY_SUCCESS;
-//            type = Constants.PAY_TYPE_WE_CHAT_FROM_PROGRAM;
-//        }
-//
-//        HashMap<String, String> map = new HashMap<>();
-//        map.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "订单支付成功");
-//        map.put("orderId", getOrder().getOrderId());
-//        map.put("payAmount", getOrder().getPayPrice().toString());
-//        map.put(Constants.WE_CHAT_TEMP_KEY_END, "感谢购买！");
-
-//        templateMessageService.push(tempKey, map, getOrder().getUid(), type);
         // 小程序发送订阅消息
         String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(getOrder().getId());
         if(StringUtils.isNotBlank(storeNameAndCarNumString)){

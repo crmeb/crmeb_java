@@ -14,12 +14,16 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * <p>
  * 购物车表
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-05-28
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -83,4 +87,7 @@ public class StoreCartResponse implements Serializable {
     private BigDecimal costPrice;
     private Integer isReply;
     private String addTime;
+
+    @ApiModelProperty(value = "团长拼团id")
+    private Integer pinkId;
 }

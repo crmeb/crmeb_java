@@ -36,6 +36,13 @@ export function postCombinationRemove(data) {
 }
 
 /**
+ * 拼团 更多拼团
+ */
+export function getCombinationMore(data) {
+  return request.get("combination/more",data,{noAuth:true});
+}
+
+/**
  * 砍价列表
  */
 export function getBargainList(data) {
@@ -72,7 +79,7 @@ export function getBargainDetail(id) {
  * 砍价 开启砍价用户信息
  */
 export function postBargainStartUser(data) {
-  return request.post("bargain/start/user", data);
+  return request.get("bargain/start/user", data);
 }
 
 /**
@@ -97,24 +104,24 @@ export function postBargainHelpPrice(data) {
 }
 
 /**
- * 砍价 砍价帮
+ * 砍价 砍价帮 
  */
-export function postBargainHelpList(data) {
-  return request.post("bargain/help/list", data);
+export function postBargainHelpList(params,data) {
+  return request.get("bargain/help/list?limit="+params.limit+"&page="+params.page, data,{});
 }
 
 /**
  * 砍价 砍价帮总人数、剩余金额、进度条、已经砍掉的价格
  */
 export function postBargainHelpCount(data) {
-  return request.post("bargain/help/count", data);
+  return request.get("bargain/help/count", data,1);
 }
 
 /**
  * 砍价 观看/分享/参与次数
  */
 export function postBargainShare(bargainId) {
-  return request.post("bargain/share", { bargainId: bargainId});
+  return request.get("bargain/share/" + bargainId);
 }
 
 /**

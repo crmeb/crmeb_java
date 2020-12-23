@@ -149,4 +149,7 @@ public class UserCenterResponse implements Serializable {
 
     @ApiModelProperty(value = "会员名称")
     private String vipName;
+
+    @ApiModelProperty(value = "小程序充值开关")
+    private Boolean rechargeSwitch;
 }

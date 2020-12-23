@@ -95,7 +95,10 @@
 				page: 1,
 				limit: 20,
 				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false //是否隐藏授权
+				isShowAuth: false, //是否隐藏授权
+				bargain: false, //是否是砍价
+				combination: false, //是否是拼团
+				secKill: false, //是否是秒杀
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -104,6 +107,9 @@
 				this.cartId = options.cartId || '';
 				this.pinkId = options.pinkId || 0;
 				this.couponId = options.couponId || 0;
+				this.secKill = options.secKill || false;
+				this.combination = options.combination || false;
+				this.bargain = options.bargain || false;
 				this.getAddressList(true);
 			} else {
 				// #ifdef H5 || APP-PLUS
@@ -353,7 +359,7 @@
 					this.couponId = '';
 					uni.redirectTo({
 						url: '/pages/users/order_confirm/index?is_address=1&cartId=' + cartId + '&addressId=' + id + '&pinkId=' +
-							pinkId + '&couponId=' + couponId
+							pinkId + '&couponId=' + couponId + '&secKill=' + this.secKill + '&combination=' + this.combination + '&bargain=' + this.bargain
 					})
 				}
 			}

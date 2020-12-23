@@ -205,6 +205,8 @@ public class WeChatConstants {
     public static final String PAY_API_URL = "https://api.mch.weixin.qq.com/";
     public static final String PAY_API_URI = "pay/unifiedorder";
     public static final String PAY_NOTIFY_API_URI_WECHAT = "/api/admin/payment/callback/wechat";
+    // 公共号退款
+    public static final String PAY_REFUND_API_URI_WECHAT = "secapi/pay/refund";
 
     public static final String PAY_TYPE_JS = "JSAPI";
     public static final String PAY_TYPE_H5 = "MWEB";

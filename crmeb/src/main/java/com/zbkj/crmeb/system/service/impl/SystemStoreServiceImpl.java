@@ -1,9 +1,11 @@
 package com.zbkj.crmeb.system.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.constants.Constants;
+import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
 import com.utils.CrmebUtil;
 import com.zbkj.crmeb.front.request.StoreNearRequest;
@@ -26,10 +28,17 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
-* @author Mr.Zhang
-* @Description SystemStoreServiceImpl 接口实现
-* @since 2020-04-13
-*/
+ * SystemStoreServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemStore> implements SystemStoreService {
 
@@ -237,6 +246,33 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
         systemStore.setId(id);
         splitLat(systemStore);
         clearPrefix(systemStore);
+        return updateById(systemStore);
+    }
+
+    /**
+     * 彻底删除
+     * @param id 提货点编号
+     * @return Boolean
+     */
+    @Override
+    public Boolean completeLyDelete(Integer id) {
+        SystemStore systemStore = getById(id);
+        if (ObjectUtil.isNull(systemStore)) throw new CrmebException("提货点不存在!");
+        int delete = dao.deleteById(id);
+        return delete > 0;
+    }
+
+    /**
+     * 提货点恢复
+     * @param id 提货点编号
+     * @return Boolean
+     */
+    @Override
+    public Boolean recovery(Integer id) {
+        SystemStore systemStore = getById(id);
+        if (ObjectUtil.isNull(systemStore)) throw new CrmebException("提货点不存在!");
+        if (systemStore.getIsDel()) return Boolean.TRUE;
+        systemStore.setIsDel(false);
         return updateById(systemStore);
     }
 

@@ -4,7 +4,7 @@
 			<view class='generalComment acea-row row-between-wrapper'>
 				<view class='acea-row row-middle font-color'>
 					<view class='evaluate'>评分</view>
-					<view class='start' :class="'star'+Math.round((replyData.replyChance)*5)"></view>
+					<view class='start' :class="'star'+ (replyData.sumCount===0?'3':Math.round(replyData.replyStar/replyData.sumCount))"></view>
 				</view>
 				<view><text class='font-color'>{{(replyData.replyChance)*100}}%</text>好评率</view>
 			</view>
@@ -21,7 +21,7 @@
 		</view>
 		<view class='noCommodity' v-if="!replyData.sumCount && page > 1">
 			<view class='pictrue'>
-				<image src='/images/noEvaluate.png'></image>
+				<image src='../static/noEvaluate.png'></image>
 			</view>
 		</view>
 	</view>

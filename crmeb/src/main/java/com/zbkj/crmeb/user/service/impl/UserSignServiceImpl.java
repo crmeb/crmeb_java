@@ -23,10 +23,12 @@ import com.zbkj.crmeb.user.vo.UserSignVo;
 import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForIntegral;
 import io.swagger.models.auth.In;
+import org.apache.commons.io.filefilter.IOFileFilter;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -35,10 +37,17 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
-* @author Mr.Zhang
-* @Description UserSignServiceImpl 接口实现
-* @since 2020-04-30
-*/
+ * UserSignServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> implements UserSignService {
 
@@ -56,6 +65,9 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
 
     @Autowired
     private WechatSendMessageForMinService wechatSendMessageForMinService;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     /**
     * 列表
@@ -90,62 +102,71 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
      * @since 2020-04-30
      */
     @Override
-    @Transactional(rollbackFor = {RuntimeException.class, Error.class, CrmebException.class})
     public SystemGroupDataSignConfigVo sign() {
-        try{
-            User user = userService.getInfo();
-            SystemGroupDataSignConfigVo configVo = getSignInfo(user.getUid());
-            if(configVo == null){
-                throw new CrmebException("请配置相关签到数据！");
-            }
-
-            //保存签到数据
-            UserSign userSign = new UserSign();
-            userSign.setUid(user.getUid());
-            userSign.setTitle(Constants.SIGN_TYPE_INTEGRAL_TITLE);
-            userSign.setNumber(configVo.getIntegral());
-            userSign.setType(Constants.SIGN_TYPE_INTEGRAL);
-            userSign.setBalance(user.getIntegral().intValue() + configVo.getIntegral());
-            userSign.setCreateDay(DateUtil.strToDate(DateUtil.nowDate(Constants.DATE_FORMAT_DATE), Constants.DATE_FORMAT_DATE));
-            save(userSign);
-
-            //更新用户积分信息
-            UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
-            userOperateFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_SIGN);
-            userOperateFundsRequest.setUid(user.getUid());
-            userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_INTEGRAL);
-            userOperateFundsRequest.setTitle(Constants.SIGN_TYPE_INTEGRAL_TITLE);
-            userOperateFundsRequest.setType(1);
-            userOperateFundsRequest.setValue(new BigDecimal(configVo.getIntegral()));
-            userService.updateFounds(userOperateFundsRequest, true);
-
-            // 小程序消息积分变动通知
-            WechatSendMessageForIntegral integralPram = new WechatSendMessageForIntegral(
-                    "您的积分变动如下","签到获得积分","签到","0",configVo.getIntegral()+"",
-                    (user.getIntegral().add(BigDecimal.valueOf(configVo.getIntegral())))+"",
-                    DateUtil.nowDateTimeStr(),"暂无","暂无","签到赠送积分"
-            );
-            wechatSendMessageForMinService.sendIntegralMessage(integralPram,user.getUid());
-
-            //更新用户经验信息
-            userOperateFundsRequest.setUid(user.getUid());
-            userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_EXPERIENCE);
-            userOperateFundsRequest.setTitle(Constants.SIGN_TYPE_EXPERIENCE_TITLE);
-            userOperateFundsRequest.setType(1);
-            userOperateFundsRequest.setValue(new BigDecimal(configVo.getExperience()));
-            userService.updateFounds(userOperateFundsRequest, true);
-
-            //更新用户签到天数
-            user.setSignNum(user.getSignNum()+1);
-
-            //更新用户积分
-            user.setIntegral(user.getIntegral().add(userOperateFundsRequest.getValue()));
-            userService.updateById(user);
-
-            return configVo;
-        }catch (Exception e){
-            throw new CrmebException(e.getMessage());
+        User user = userService.getInfoException();
+        SystemGroupDataSignConfigVo configVo = getSignInfo(user.getUid());
+        if(configVo == null){
+            throw new CrmebException("请先配置签到天数！");
         }
+
+        //保存签到数据
+        UserSign userSign = new UserSign();
+        userSign.setUid(user.getUid());
+        userSign.setTitle(Constants.SIGN_TYPE_INTEGRAL_TITLE);
+        userSign.setNumber(configVo.getIntegral());
+        userSign.setType(Constants.SIGN_TYPE_INTEGRAL);
+        userSign.setBalance(user.getIntegral().intValue() + configVo.getIntegral());
+        userSign.setCreateDay(DateUtil.strToDate(DateUtil.nowDate(Constants.DATE_FORMAT_DATE), Constants.DATE_FORMAT_DATE));
+
+        //更新用户积分信息
+        UserOperateFundsRequest integralFundsRequest = new UserOperateFundsRequest();
+        integralFundsRequest.setUid(user.getUid());
+        integralFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_INTEGRAL);
+        integralFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_SIGN);
+        integralFundsRequest.setTitle(Constants.SIGN_TYPE_INTEGRAL_TITLE);
+        integralFundsRequest.setType(1);
+        integralFundsRequest.setValue(new BigDecimal(configVo.getIntegral()));
+
+        //更新用户经验信息
+        UserOperateFundsRequest experienceFundsRequest = new UserOperateFundsRequest();
+        experienceFundsRequest.setUid(user.getUid());
+        experienceFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_EXPERIENCE);
+        experienceFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_SIGN);
+        experienceFundsRequest.setTitle(Constants.SIGN_TYPE_EXPERIENCE_TITLE);
+        experienceFundsRequest.setType(1);
+        experienceFundsRequest.setValue(new BigDecimal(configVo.getExperience()));
+
+        //更新用户签到天数
+        user.setSignNum(user.getSignNum()+1);
+        //更新用户积分
+        user.setIntegral(user.getIntegral().add(integralFundsRequest.getValue()));
+        // 更新用户经验
+        user.setExperience(user.getExperience() + experienceFundsRequest.getValue().intValue());
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            //保存签到数据
+            save(userSign);
+            //更新用户积分信息
+            userService.updateFounds(integralFundsRequest, true);
+            //更新用户经验信息
+            userService.updateFounds(experienceFundsRequest, true);
+            //更新用户 签到天数、积分、经验
+            userService.updateById(user);
+            return Boolean.TRUE;
+        });
+
+        if (!execute) {
+            throw new CrmebException("修改用户签到信息失败!");
+        }
+        // 小程序消息积分变动通知
+        WechatSendMessageForIntegral integralPram = new WechatSendMessageForIntegral(
+                "您的积分变动如下","签到获得积分","签到","0",configVo.getIntegral()+"",
+                (user.getIntegral().add(BigDecimal.valueOf(configVo.getIntegral())))+"",
+                DateUtil.nowDateTimeStr(),"暂无","暂无","签到赠送积分"
+        );
+        wechatSendMessageForMinService.sendIntegralMessage(integralPram,user.getUid());
+
+        return configVo;
     }
 
 

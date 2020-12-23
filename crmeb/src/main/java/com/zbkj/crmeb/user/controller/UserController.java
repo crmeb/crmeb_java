@@ -8,6 +8,7 @@ import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.request.UserOperateIntegralMoneyRequest;
 import com.zbkj.crmeb.user.request.UserRequest;
 import com.zbkj.crmeb.user.request.UserSearchRequest;
+import com.zbkj.crmeb.user.request.UserUpdateSpreadRequest;
 import com.zbkj.crmeb.user.response.TopDetail;
 import com.zbkj.crmeb.user.response.UserResponse;
 import com.zbkj.crmeb.user.service.UserService;
@@ -29,6 +30,15 @@ import java.util.List;
 
 /**
  * 用户表 前端控制器
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Slf4j
 @RestController
@@ -184,6 +194,19 @@ public class UserController {
             return CommonResult.success();
         }else{
             return CommonResult.failed();
+        }
+    }
+
+    /**
+     * 修改上级推广人
+     */
+    @ApiOperation(value = "修改上级推广人")
+    @RequestMapping(value = "/update/spread", method = RequestMethod.POST)
+    public CommonResult<String> editSpread(@Validated @RequestBody UserUpdateSpreadRequest request){
+        if(userService.editSpread(request)){
+            return CommonResult.success("修改成功");
+        }else{
+            return CommonResult.failed("修改失败");
         }
     }
 }

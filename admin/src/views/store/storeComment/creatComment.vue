@@ -46,7 +46,7 @@
           <i class="el-icon-error btndel" @click="handleRemove(index)" />
           <!--<Button shape="circle" icon="md-close" class="btndel" @click.native="handleRemove(index)" />-->
         </div>
-        <div class="upLoadPicBox" @click="modalPicTap('2')">
+        <div v-if="pics<10" class="upLoadPicBox" @click="modalPicTap('2')">
           <div class="upLoad">
             <i class="el-icon-camera cameraIconfont" />
           </div>

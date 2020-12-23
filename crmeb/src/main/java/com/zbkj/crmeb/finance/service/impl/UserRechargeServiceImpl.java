@@ -1,31 +1,44 @@
 package com.zbkj.crmeb.finance.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
 import com.constants.Constants;
+import com.constants.WeChatConstants;
 import com.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
+import com.utils.RestTemplateUtil;
+import com.utils.XmlUtil;
 import com.utils.vo.dateLimitUtilVo;
 import com.zbkj.crmeb.finance.dao.UserRechargeDao;
 import com.zbkj.crmeb.finance.model.UserRecharge;
+import com.zbkj.crmeb.finance.request.UserRechargeRefundRequest;
 import com.zbkj.crmeb.finance.request.UserRechargeSearchRequest;
 import com.zbkj.crmeb.finance.response.UserRechargeResponse;
 import com.zbkj.crmeb.finance.service.UserRechargeService;
 import com.zbkj.crmeb.front.request.UserRechargeRequest;
+import com.zbkj.crmeb.payment.vo.wechat.WxRefundResponseVo;
+import com.zbkj.crmeb.payment.vo.wechat.WxRefundVo;
+import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.user.model.User;
+import com.zbkj.crmeb.user.model.UserBill;
+import com.zbkj.crmeb.user.service.UserBillService;
 import com.zbkj.crmeb.user.service.UserService;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.unit.DataUnit;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -54,6 +67,18 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private SystemConfigService systemConfigService;
+
+    @Autowired
+    private RestTemplateUtil restTemplateUtil;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
+    @Autowired
+    private UserBillService userBillService;
 
 
     /**
@@ -214,6 +239,155 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
             return BigDecimal.ZERO;
         }
         return userRecharge.getPrice();
+    }
+
+    /**
+     * 充值退款
+     * @param request 退款参数
+     */
+    @Override
+    public Boolean refund(UserRechargeRefundRequest request) {
+        UserRecharge userRecharge = getById(request.getId());
+        if (ObjectUtil.isNull(userRecharge)) throw new CrmebException("数据不存在！");
+        if (!userRecharge.getPaid()) throw new CrmebException("订单未支付");
+        if (userRecharge.getPrice().compareTo(userRecharge.getRefundPrice()) == 0) {
+            throw new CrmebException("已退完支付金额!不能再退款了");
+        }
+        if (userRecharge.getRechargeType().equals("balance")) {
+            throw new CrmebException("佣金转入余额，不能退款");
+        }
+
+        User user = userService.getById(userRecharge.getUid());
+        if (ObjectUtil.isNull(user)) throw new CrmebException("用户不存在！");
+
+        // 退款金额
+        BigDecimal refundPrice = userRecharge.getPrice();
+        if (request.getType().equals(2)) {// 本金+赠送
+            refundPrice = userRecharge.getPrice().add(userRecharge.getGivePrice());
+        }
+
+        // 判断充值方式进行退款
+        try {
+            if (userRecharge.getRechargeType().equals(Constants.PAY_TYPE_WE_CHAT_FROM_PUBLIC)) {// 公众号
+                refundJSAPI(userRecharge);
+            } else {// 小程序
+                refundMiniWx(userRecharge);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new CrmebException("微信申请退款失败！");
+        }
+
+        userRecharge.setRefundPrice(userRecharge.getPrice());
+
+        user.setNowMoney(user.getNowMoney().subtract(refundPrice));
+
+        UserBill userBill = getRefundBill(userRecharge, user.getNowMoney(), refundPrice);
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            updateById(userRecharge);
+            userService.updateById(user);
+            userBillService.save(userBill);
+            return Boolean.TRUE;
+        });
+
+        if (!execute) throw new CrmebException("充值退款-修改提现数据失败！");
+        // 成功后发送小程序通知
+        return execute;
+    }
+
+    private UserBill getRefundBill(UserRecharge userRecharge, BigDecimal nowMoney, BigDecimal refundPrice) {
+        UserBill userBill = new UserBill();
+        userBill.setUid(userRecharge.getUid());
+        userBill.setLinkId(userRecharge.getOrderId());
+        userBill.setPm(0);
+        userBill.setTitle("系统退款");
+        userBill.setCategory("now_money");
+        userBill.setType("user_recharge_refund");
+        userBill.setNumber(refundPrice);
+        userBill.setBalance(nowMoney.subtract(refundPrice));
+        userBill.setMark(StrUtil.format("退款给用户{}元", userRecharge.getPrice()));
+        userBill.setStatus(1);
+        userBill.setCreateTime(DateUtil.nowDateTime());
+        return userBill;
+    }
+
+    /**
+     * 小程序退款
+     */
+    private WxRefundResponseVo refundMiniWx(UserRecharge userRecharge) {
+        WxRefundVo wxRefundVo = new WxRefundVo();
+
+        String appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
+        String mchId = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PAY_ROUTINE_MCH_ID);
+        wxRefundVo.setAppid(appId);
+        wxRefundVo.setMch_id(mchId);
+        wxRefundVo.setNonce_str(DigestUtils.md5Hex(CrmebUtil.getUuid() + CrmebUtil.randomCount(111111, 666666)));
+        wxRefundVo.setOut_trade_no(userRecharge.getOrderId());
+        wxRefundVo.setOut_refund_no(userRecharge.getOrderId());
+        wxRefundVo.setTotal_fee(userRecharge.getPrice().multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue());
+        wxRefundVo.setRefund_fee(userRecharge.getPrice().multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue());
+        String signKey = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
+        String sign = CrmebUtil.getSign(CrmebUtil.objectToMap(wxRefundVo), signKey);
+        wxRefundVo.setSign(sign);
+        String path = systemConfigService.getValueByKeyException("pay_mini_client_p12");
+        return commonRefound(wxRefundVo, path);
+
+    }
+
+    /**
+     * 公众号退款
+     */
+    private WxRefundResponseVo refundJSAPI(UserRecharge userRecharge) {
+        WxRefundVo wxRefundVo = new WxRefundVo();
+
+        String appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
+        String mchId = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PAY_WE_CHAT_MCH_ID);
+        wxRefundVo.setAppid(appId);
+        wxRefundVo.setMch_id(mchId);
+        wxRefundVo.setNonce_str(DigestUtils.md5Hex(CrmebUtil.getUuid() + CrmebUtil.randomCount(111111, 666666)));
+        wxRefundVo.setOut_trade_no(userRecharge.getOrderId());
+        wxRefundVo.setOut_refund_no(userRecharge.getOrderId());
+        wxRefundVo.setTotal_fee(userRecharge.getPrice().multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue());
+        wxRefundVo.setRefund_fee(userRecharge.getPrice().multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue());
+        String signKey = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
+        String sign = CrmebUtil.getSign(CrmebUtil.objectToMap(wxRefundVo), signKey);
+        wxRefundVo.setSign(sign);
+        String path = systemConfigService.getValueByKeyException("pay_routine_client_p12");
+        return commonRefound(wxRefundVo, path);
+    }
+
+    /**
+     * 公共退款部分
+     */
+    private WxRefundResponseVo commonRefound(WxRefundVo wxRefundVo, String path) {
+        String xmlStr = XmlUtil.objectToXml(wxRefundVo);
+        String url = WeChatConstants.PAY_API_URL + WeChatConstants.PAY_REFUND_API_URI_WECHAT;
+        HashMap<String, Object> map = CollUtil.newHashMap();
+        String xml = "";
+        System.out.println("微信申请退款xmlStr = " + xmlStr);
+        try {
+            xml = restTemplateUtil.postWXRefundXml(url, xmlStr, wxRefundVo.getMch_id(), path);
+            map = XmlUtil.xmlToMap(xml);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new CrmebException("xmlToMap错误，xml = " + xml);
+        }
+        if(null == map){
+            throw new CrmebException("微信退款失败！");
+        }
+
+        WxRefundResponseVo responseVo = CrmebUtil.mapToObj(map, WxRefundResponseVo.class);
+        if(responseVo.getReturnCode().toUpperCase().equals("FAIL")){
+            throw new CrmebException("微信退款失败1！" +  responseVo.getReturnMsg());
+        }
+
+        if(responseVo.getResultCode().toUpperCase().equals("FAIL")){
+            throw new CrmebException("微信退款失败2！" + responseVo.getErrCodeDes());
+        }
+        System.out.println("================微信申请退款结束=========================");
+        System.out.println("xml = " + xml);
+        return responseVo;
     }
 }
 

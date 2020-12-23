@@ -24,7 +24,7 @@ export const categoryType = [ // 1 产品分类，2 附件分类，3 文章分�
 ]
 
 export const roleListStatus = [
-  { label: '全部', value: -1 },
+  { label: '全部', value: '' },
   { label: '显示', value: 1 },
   { label: '不显示', value: 0 }
 ]

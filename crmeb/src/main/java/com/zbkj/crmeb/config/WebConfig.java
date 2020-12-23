@@ -115,7 +115,7 @@ public class WebConfig implements WebMvcConfigurer {
                 excludePathPatterns("/api/front/seckill/list/*").
                 excludePathPatterns("/api/front/seckill/detail/*").
 //                excludePathPatterns("/api/front/cart/count").
-        excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**");
+                excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**");
     }
 
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

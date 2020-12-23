@@ -9,10 +9,17 @@ import com.zbkj.crmeb.system.request.SystemRoleSearchRequest;
 import java.util.List;
 
 /**
-* @author Mr.Zhang
-* @Description SystemRoleService 接口
-* @since 2020-04-18
-*/
+ * SystemRoleService 接口
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 public interface SystemRoleService extends IService<SystemRole> {
 
     List<SystemRole> getList(SystemRoleSearchRequest request, PageParamRequest pageParamRequest);
@@ -27,4 +34,6 @@ public interface SystemRoleService extends IService<SystemRole> {
     Boolean checkAuth(String uri);
 
     List<CategoryTreeVo> menu();
+
+    Boolean updateStatus(Integer id, Boolean status);
 }

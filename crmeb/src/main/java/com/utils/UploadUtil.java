@@ -218,7 +218,7 @@ public class UploadUtil {
      * @author Mr.Zhang
      * @since 2020-05-08
      */
-    private static String getServerPath() {
+    public static String getServerPath() {
         // 文件分隔符转化为当前系统的格式
         return FilenameUtils.separatorsToSystem( getRootPath() + getWebPath());
     }
@@ -228,7 +228,7 @@ public class UploadUtil {
      * @author Mr.Zhang
      * @since 2020-05-08
      */
-    private static String getWebPath() {
+    public static String getWebPath() {
         // 文件分隔符转化为当前系统的格式
         return getType() + getModelPath() + DateUtil.nowDate(Constants.DATE_FORMAT_DATE).replace("-", "/") + "/";
     }

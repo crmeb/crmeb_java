@@ -104,7 +104,7 @@
 				this.loadend = false;
 				this.$set(this, 'rankList', []);
 				this.getBrokerageRankList();
-				this.getBrokerageRankNumber(this.type);
+				this.getBrokerageRankNumber();
 			},
 			getBrokerageRankNumber(type) {
 				brokerageRankNumber({
@@ -125,12 +125,19 @@
 				}).then(res => {
 					let list = res.data;
 					let loadend = list.length < this.limit;
-					this.rankList.push.apply(this.rankList, list);
-					this.loading = false;
+					this.rankList = this.$util.SplitArray(list, this.rankList);
+					this.$set(that,'rankList',this.rankList);
 					this.loadend = loadend;
-					this.loadTitle = loadend ? '😕我也是有底线的' : '加载更多';
-					this.$set(this, 'rankList', this.rankList);
-					this.position = res.data.position;
+					this.loading = false;
+					this.loadtitle = loadend ? "哼😕~我也是有底线的~" : "加载更多"
+					// let list = res.data;
+					// let loadend = list.length < this.limit;
+					// this.rankList.push.apply(this.rankList, list);
+					// this.loading = false;
+					// this.loadend = loadend;
+					// this.loadTitle = loadend ? '😕我也是有底线的' : '加载更多';
+					// this.$set(this, 'rankList', this.rankList);
+					// this.position = res.data.position;
 				}).catch(err => {
 					this.loading = false;
 					this.loadTitle = '加载更多';
