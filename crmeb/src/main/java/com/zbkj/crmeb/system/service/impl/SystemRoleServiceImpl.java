@@ -1,5 +1,7 @@
 package com.zbkj.crmeb.system.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
@@ -24,10 +26,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
-* @author Mr.Zhang
-* @Description SystemRoleServiceImpl 接口实现
-* @since 2020-04-18
-*/
+ * SystemRoleServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class SystemRoleServiceImpl extends ServiceImpl<SystemRoleDao, SystemRole> implements SystemRoleService {
 
@@ -107,6 +116,19 @@ public class SystemRoleServiceImpl extends ServiceImpl<SystemRoleDao, SystemRole
     public List<CategoryTreeVo> menu() {
         List<Integer> categoryIdList = getRoleListInRoleId();
         return categoryService.getListTree(Constants.CATEGORY_TYPE_MENU, 1, categoryIdList);
+    }
+
+    @Override
+    public Boolean updateStatus(Integer id, Boolean status) {
+        SystemRole role = getById(id);
+        if (ObjectUtil.isNull(role)) {
+            throw new CrmebException("身份不存在");
+        }
+        if (role.getStatus().equals(status)) {
+            return true;
+        }
+        role.setStatus(status);
+        return updateById(role);
     }
 
     private List<Integer> getRoleListInRoleId(){

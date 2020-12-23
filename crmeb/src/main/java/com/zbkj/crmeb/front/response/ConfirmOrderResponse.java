@@ -61,4 +61,12 @@ public class ConfirmOrderResponse {
 
     // 秒杀id
     private Integer secKillId;
+
+    // 砍价id
+    private Integer bargainId;
+
+    // 拼团id
+    private Integer combinationId;
+
+    private Integer pinkId;
 }

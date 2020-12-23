@@ -1,9 +1,12 @@
 package com.zbkj.crmeb.article.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
+import com.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -23,6 +26,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
 * ArticleServiceImpl 接口实现
@@ -141,12 +145,12 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
     @Override
     public ArticleVo getVoByFront(Integer id) {
         Article article = getById(id);
-        if(null == article){
-            return null;
+        if (ObjectUtil.isNull(article)) {
+            throw new CrmebException("文章不存在");
         }
 
         if(article.getStatus()){
-            return null;
+            throw new CrmebException("文章不存在");
         }
 
         ArticleVo articleVo = new ArticleVo();
@@ -160,6 +164,15 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
         if(null != category){
             articleVo.setCategoryName(category.getName());
         }
+        String visit = Optional.ofNullable(article.getVisit()).orElse("");
+        int num;
+        if (StrUtil.isBlank(visit)) {
+            num = 0;
+        } else {
+            num = Integer.parseInt(visit) + 1;
+        }
+        article.setVisit(String.valueOf(num));
+        dao.updateById(article);
         return articleVo;
     }
 }

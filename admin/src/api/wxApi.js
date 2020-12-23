@@ -124,6 +124,17 @@ export function replySaveApi(data) {
 }
 
 /**
+ * 关键字回复 修改状态
+ * @param pram
+ */
+export function replyStatusApi(params) {
+  return request({
+    url: `/admin/wechat/keywords/reply/status`,
+    method: 'post',
+    params
+  })
+}
+/**
  * 关键字回复 编辑
  * @param pram
  */

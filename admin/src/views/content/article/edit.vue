@@ -55,10 +55,10 @@
       <el-form-item label="是否热门">
         <el-switch v-model="pram.isHot" />
       </el-form-item>
-      <el-form-item label="原文链接">
-        <p>原文链接选填，填写之后在图文左下方会出现此链接</p>
-        <el-input v-model="pram.url" placeholder="原文链接" />
-      </el-form-item>
+      <!--<el-form-item label="原文链接">-->
+        <!--<p>原文链接选填，填写之后在图文左下方会出现此链接</p>-->
+        <!--<el-input v-model="pram.url" placeholder="原文链接" />-->
+      <!--</el-form-item>-->
       <el-form-item>
         <el-button type="primary" @click="handerSubmit('pram')">保存</el-button>
       </el-form-item>
@@ -169,9 +169,9 @@ export default {
       // this.pram.mediaId = mediaId
     },
     handlerGetCategoryTreeData() {
-      const _pram = { type: constants.categoryType[2].value, status: 1, pid: 0 }
-      categoryApi.treeCategroy(_pram).then(data => {
-        this.categoryTreeData = data
+      categoryApi.listCategroy({ type: 3, status: '' }).then(data => {
+        this.categoryTreeData = data.list
+        localStorage.setItem('articleClass', JSON.stringify(data.list))
       })
     },
     handerSubmit(form) {

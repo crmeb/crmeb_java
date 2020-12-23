@@ -27,9 +27,6 @@ import lombok.experimental.Accessors;
 @ApiModel(value="TemplateMessageRequest对象", description="微信模板")
 public class TemplateMessageRequest {
 
-    @ApiModelProperty(value = "0=订阅消息,1=微信模板消息")
-    private Boolean type;
-
     @ApiModelProperty(value = "模板编号")
     private String tempKey;
 

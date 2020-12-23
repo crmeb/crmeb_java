@@ -11,7 +11,7 @@
               </el-select>
             </el-form-item>
             <el-form-item label="秒杀名称：">
-              <el-input v-model="tableFrom.name" placeholder="请输入秒杀名称" class="selWidth">
+              <el-input v-model="tableFrom.name" placeholder="请输入秒杀名称" class="selWidth" clearable>
                 <el-button slot="append" icon="el-icon-search" @click="getList(1)"/>
               </el-input>
             </el-form-item>
@@ -187,7 +187,9 @@
           .then(async () => {
             this.$message.success('修改成功');
             this.getList()
-          })
+          }).catch(()=>{
+          row.status = !row.status
+        })
       },
       onEditSort(row) {
         this.$set(row, 'isEdit', true)

@@ -20,7 +20,7 @@
         <!--        </el-form-item>-->
       </el-form>
     </div>
-    <el-button type="primary" size="mini" @click="handlerOpenEditData({},0)">添加数据</el-button>
+    <el-button type="primary" size="mini" @click="handlerOpenEditData({},0)" v-if="((formData.id==55 || formData.name==='签到天数配置') && dataList.list.length<7) || (formData.id!=55|| formData.name!=='签到天数配置')">添加数据</el-button>
     <el-dialog
       :title="editDataConfig.isCreate === 0?'添加数据':'编辑数据'"
       :visible.sync="editDataConfig.visible"

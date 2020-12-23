@@ -3,7 +3,6 @@ package com.zbkj.crmeb.store.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
-import com.zbkj.crmeb.store.model.StoreCart;
 import com.zbkj.crmeb.store.model.StoreProduct;
 import com.zbkj.crmeb.store.request.StoreProductRequest;
 import com.zbkj.crmeb.store.request.StoreProductSearchRequest;
@@ -24,16 +23,25 @@ import com.zbkj.crmeb.store.service.StoreProductService;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 
 /**
  * 商品表 前端控制器
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Slf4j
 @RestController
 @RequestMapping("api/admin/store/product")
 @Api(tags = "商品") //配合swagger使用
-
 public class StoreProductController {
 
     @Autowired
@@ -74,15 +82,14 @@ public class StoreProductController {
     }
 
     /**
-     *  删除商品
-     * @param id 商品id
-     * @param type 删除类型 recycle 回收站 delete 物理删除
-     * @return
+     * 删除商品表
+     * @param id Integer
+     * @author Mr.Zhang
+     * @since 2020-05-27
      */
     @ApiOperation(value = "删除")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
-    public CommonResult<String> delete(@PathVariable Integer id,
-                                       @RequestParam(value = "type", required = false, defaultValue = "recycle")String type){
+    public CommonResult<String> delete(@RequestBody @PathVariable Integer id, @RequestParam(value = "type", required = false, defaultValue = "recycle")String type){
         if(storeProductService.deleteProduct(id, type)){
 //        if(storeProductService.removeById(id)){
             storeCartService.productStatusNotEnable(id);
@@ -247,7 +254,7 @@ public class StoreProductController {
         }
     }
 
-    @ApiOperation(value = "导入商品")
+    @ApiOperation(value = "导入99Api商品")
     @RequestMapping(value = "/importProduct", method = RequestMethod.POST)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "form", value = "导入平台1=淘宝，2=京东，3=苏宁，4=拼多多, 5=天猫", dataType = "int",  required = true),
@@ -256,13 +263,24 @@ public class StoreProductController {
     public CommonResult<StoreProductRequest> importProduct(
             @RequestParam @Valid int form,
             @RequestParam @Valid String url) throws IOException, JSONException {
-
-//        String id = UrlUtil.getParamsByKey(url, "id");
-//        if(StringUtils.isBlank(id)){
-//            return CommonResult.failed("url 中未找到有效参数");
-//        }
         StoreProductRequest productRequest = storeProductService.importProductFromUrl(url, form);
         return CommonResult.success(productRequest);
+    }
+
+    /**
+     * 获取复制商品配置
+     */
+    @ApiOperation(value = "获取复制商品配置")
+    @RequestMapping(value = "/copy/config", method = RequestMethod.POST)
+    public CommonResult<Map<String, Object>> copyConfig() {
+        return CommonResult.success(storeProductService.copyConfig());
+    }
+
+    @ApiOperation(value = "复制平台商品")
+    @RequestMapping(value = "/copy/product", method = RequestMethod.POST)
+    @ApiImplicitParam(name = "url", value = "URL", dataType = "String", required = true)
+    public CommonResult<Map<String, Object>> copyProduct(@RequestParam @Valid String url) {
+        return CommonResult.success(storeProductService.copyProduct(url));
     }
 }
 

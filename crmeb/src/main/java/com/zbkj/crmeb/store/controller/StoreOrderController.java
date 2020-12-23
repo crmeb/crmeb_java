@@ -3,6 +3,7 @@ package com.zbkj.crmeb.store.controller;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
 import com.exception.CrmebException;
+import com.zbkj.crmeb.express.vo.ExpressSheetVo;
 import com.zbkj.crmeb.express.vo.LogisticsResultVo;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.request.*;
@@ -13,7 +14,6 @@ import com.zbkj.crmeb.store.response.StoreStaffTopDetail;
 import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.store.service.StoreOrderVerification;
 import io.swagger.annotations.*;
-import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -144,19 +144,10 @@ public class StoreOrderController {
      * @since 2020-05-28
      */
     @ApiOperation(value = "发送货")
-    @RequestMapping(value = "/send", method = RequestMethod.GET)
-    public CommonResult<Boolean> send(@Validated StoreOrderSendRequest request){
-        if(!request.getType().equals("3")){
-            if(StringUtils.isBlank(request.getExpressId())){
-                throw new CrmebException("请选择快递公司/填写收货人");
-            }
-
-            if(StringUtils.isBlank(request.getExpressCode())){
-                throw new CrmebException("请填写快递单号/收货人手机号码");
-            }
-        }
-
-        return CommonResult.success(storeOrderService.send(request));
+    @RequestMapping(value = "/send", method = RequestMethod.POST)
+    public CommonResult<Boolean> send(@RequestBody @Validated StoreOrderSendRequest request){
+        storeOrderService.send(request);
+        return CommonResult.success();
     }
 
     /**
@@ -280,6 +271,15 @@ public class StoreOrderController {
         return CommonResult.success(storeOrderService.orderStatisticsByTime(dateLimit,type));
     }
 
+    /**
+     * 获取面单默认配置信息
+     * @return
+     */
+    @ApiOperation(value = "获取面单默认配置信息")
+    @RequestMapping(value = "/sheet/info", method = RequestMethod.GET)
+    public CommonResult<ExpressSheetVo> getDeliveryInfo() {
+        return CommonResult.success(storeOrderService.getDeliveryInfo());
+    }
 }
 
 

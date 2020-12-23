@@ -2,6 +2,7 @@
   <div>
     <parser
       v-if="formConf.fields.length > 0"
+      v-loading="loading"
       :is-edit="isCreate === 1"
       :form-conf="formConf"
       :form-edit-data="editData"
@@ -40,6 +41,7 @@ export default {
   },
   data() {
     return {
+      loading: false,
       formConf: { fields: [] }
     }
   },
@@ -48,9 +50,13 @@ export default {
   },
   methods: {
     handlerGetFormConfig(formId) { // 获取表单配置后生成table列
+      this.loading = true
       const _pram = { id: formId }
       systemFormConfigApi.getFormConfigInfo(_pram).then(data => {
         this.formConf = JSON.parse(data.content)
+        this.loading = false
+      }).catch(()=>{
+        this.loading = false
       })
     },
     handlerSubmit(formValue) {

@@ -252,3 +252,26 @@ export function restoreApi(id) {
     method: 'get'
   })
 }
+
+/**
+ * 商品列表 导出
+ * @param pram
+ */
+export function productExcelApi(params) {
+  return request({
+    url: `/admin/export/excel/product`,
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 商品列表 获取复制商品配置
+ * @param pram
+ */
+export function copyConfigApi() {
+  return request({
+    url: `/admin/store/product/copy/config`,
+    method: 'post'
+  })
+}

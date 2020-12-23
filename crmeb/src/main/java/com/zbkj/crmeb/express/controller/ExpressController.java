@@ -1,20 +1,23 @@
 package com.zbkj.crmeb.express.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
-import com.zbkj.crmeb.express.request.ExpressRequest;
+import com.zbkj.crmeb.express.request.ExpressUpdateRequest;
 import com.zbkj.crmeb.express.request.ExpressSearchRequest;
+import com.zbkj.crmeb.express.request.ExpressUpdateShowRequest;
 import io.swagger.annotations.ApiImplicitParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.BeanUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import com.zbkj.crmeb.express.service.ExpressService;
 import com.zbkj.crmeb.express.model.Express;
+
+import java.util.List;
 
 
 /**
@@ -33,7 +36,6 @@ import com.zbkj.crmeb.express.model.Express;
 @RestController
 @RequestMapping("api/admin/express")
 @Api(tags = "设置 -- 物流 -- 公司")
-
 public class ExpressController {
 
     @Autowired
@@ -43,8 +45,6 @@ public class ExpressController {
      * 分页显示快递公司表
      * @param request ExpressSearchRequest 搜索条件
      * @param pageParamRequest 分页参数
-     * @author Mr.Zhang
-     * @since 2020-04-17
      */
     @ApiOperation(value = "分页列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -56,62 +56,44 @@ public class ExpressController {
     }
 
     /**
-     * 新增快递公司表
-     * @param expressRequest 新增参数
-     * @author Mr.Zhang
-     * @since 2020-04-17
+     * 编辑快递公司
      */
-    @ApiOperation(value = "新增")
-    @RequestMapping(value = "/save", method = RequestMethod.POST)
-    public CommonResult<String> save(@ModelAttribute ExpressRequest expressRequest){
-        Express express = new Express();
-        BeanUtils.copyProperties(expressRequest, express);
-
-        if(expressService.save(express)){
-            return CommonResult.success();
-        }else{
-            return CommonResult.failed();
-        }
-    }
-
-    /**
-     * 删除快递公司表
-     * @param id Integer
-     * @author Mr.Zhang
-     * @since 2020-04-17
-     */
-    @ApiOperation(value = "删除")
-    @RequestMapping(value = "/delete", method = RequestMethod.GET)
-    @ApiImplicitParam(name="id", value="快递ID")
-    public CommonResult<String> delete(@RequestParam(value = "id") Integer id){
-        if(expressService.removeById(id)){
-            return CommonResult.success();
-        }else{
-            return CommonResult.failed();
-        }
-    }
-
-    /**
-     * 修改快递公司表
-     * @param id integer id
-     * @param expressRequest 修改参数
-     * @author Mr.Zhang
-     * @since 2020-04-17
-     */
-    @ApiOperation(value = "修改")
+    @ApiOperation(value = "编辑")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
-    @ApiImplicitParam(name="id", value="快递ID")
-    public CommonResult<String> update(@RequestParam Integer id, @ModelAttribute ExpressRequest expressRequest){
-        Express express = new Express();
-        BeanUtils.copyProperties(expressRequest, express);
-        express.setId(id);
-
-        if(expressService.updateById(express)){
+    public CommonResult<String> update(@RequestBody @Validated ExpressUpdateRequest expressRequest){
+        if(expressService.updateExpress(expressRequest)){
             return CommonResult.success();
         }else{
             return CommonResult.failed();
         }
     }
+
+    /**
+     *修改显示状态
+     */
+    @ApiOperation(value = "修改显示状态")
+    @RequestMapping(value = "/update/show", method = RequestMethod.POST)
+    public CommonResult<String> update(@RequestBody @Validated ExpressUpdateShowRequest expressRequest){
+        if(expressService.updateExpressShow(expressRequest)){
+            return CommonResult.success();
+        }else{
+            return CommonResult.failed();
+        }
+    }
+
+    /**
+     * 同步物流公司
+     */
+    @ApiOperation(value = "同步物流公司")
+    @RequestMapping(value = "/sync/express", method = RequestMethod.POST)
+    public CommonResult<String> syncExpress(){
+        if(expressService.syncExpress()){
+            return CommonResult.success();
+        }else{
+            return CommonResult.failed();
+        }
+    }
+
 
     /**
      * 查询快递公司表信息
@@ -126,6 +108,26 @@ public class ExpressController {
         Express express = expressService.getById(id);
         return CommonResult.success(express);
    }
+
+    /**
+     * 查询全部物流公司
+     */
+    @ApiOperation(value = "查询全部物流公司")
+    @RequestMapping(value = "/all", method = RequestMethod.GET)
+    public CommonResult<List<Express>> all() {
+        return CommonResult.success(expressService.findAll());
+    }
+
+    /**
+     * 查询物流公司面单模板
+     * @return
+     */
+    @ApiOperation(value = "查询物流公司面单模板")
+    @RequestMapping(value = "/template", method = RequestMethod.GET)
+    @ApiImplicitParam(name="com", value="快递公司编号")
+    public CommonResult<JSONObject> template(@RequestParam(value = "com") String com) {
+        return CommonResult.success(expressService.template(com));
+    }
 }
 
 

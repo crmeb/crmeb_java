@@ -1,6 +1,9 @@
 package com.zbkj.crmeb.seckill.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.parser.Feature;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -15,6 +18,7 @@ import com.github.pagehelper.PageInfo;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.utils.RedisUtil;
+import com.zbkj.crmeb.combination.model.StoreCombination;
 import com.zbkj.crmeb.front.response.SecKillResponse;
 import com.zbkj.crmeb.seckill.dao.StoreSeckillDao;
 import com.zbkj.crmeb.seckill.model.StoreSeckill;
@@ -422,6 +426,18 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
      */
     @Override
     public boolean updateSecKillStatus(int secKillId, boolean status) {
+        StoreSeckill seckill = getById(secKillId);
+        if (ObjectUtil.isNull(seckill) || seckill.getIsDel()) {
+            throw new CrmebException("秒杀商品不存在");
+        }
+        if (status) {
+            // 判断商品是否存在
+            StoreProduct product = storeProductService.getById(seckill.getProductId());
+            if (ObjectUtil.isNull(product)) {
+                throw new CrmebException("关联的商品已删除，无法开启活动");
+            }
+        }
+
         StoreSeckill storeSeckill = new StoreSeckill().setId(secKillId).setStatus(status?1:0);
         return dao.updateById(storeSeckill) > 0;
     }
@@ -778,6 +794,25 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
             }
         }
     }
+
+    /**
+     * 商品是否存在秒杀活动
+     * @param productId 商品编号
+     * @return
+     */
+    @Override
+    public Boolean isExistActivity(Integer productId) {
+        LambdaQueryWrapper<StoreSeckill> lqw = Wrappers.lambdaQuery();
+        lqw.eq(StoreSeckill::getProductId, productId);
+        lqw.eq(StoreSeckill::getIsDel, false);
+        List<StoreSeckill> seckillList = dao.selectList(lqw);
+        if (CollUtil.isEmpty(seckillList)) {
+            return false;
+        }
+        // 判断关联的商品是否处于活动开启状态
+        List<StoreSeckill> list = seckillList.stream().filter(i -> i.getStatus().equals(1)).collect(Collectors.toList());
+        return CollUtil.isNotEmpty(list);
+    }
     ///////////////////////////////////////////////////////////////////  自定义方法
 
     // 秒杀操作库存
@@ -929,7 +964,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
                     attrValue.put("weight", currentAttrValue.getWeight());
                     attrValue.put("volume", currentAttrValue.getVolume());
                     attrValue.put("suk", currentSku);
-                    attrValue.put("attrValue", JSON.parse(storeProductAttrValues.get(i).getAttrValue()));
+                    attrValue.put("attrValue", JSON.parse(storeProductAttrValues.get(i).getAttrValue(), Feature.OrderedField));
                     attrValue.put("brokerage", currentAttrValue.getBrokerage());
                     attrValue.put("brokerageTwo", currentAttrValue.getBrokerageTwo());
                     attrValue.put("quota", currentAttrValue.getQuota());

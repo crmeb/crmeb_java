@@ -40,22 +40,22 @@ public class OrderCreateRequest {
     @ApiModelProperty(value = "")
     private Integer formId;
 
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "优惠券编号")
     private Integer couponId;
 
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "支付类型")
     private String payType;
 
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "是否使用积分")
     private Boolean useIntegral;
 
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "砍价商品id")
     private Integer bargainId;
 
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "拼团商品id")
     private Integer combinationId;
 
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "拼团团长id")
     private Integer pinkId;
 
     @ApiModelProperty(value = "秒杀商品id")

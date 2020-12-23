@@ -2,8 +2,11 @@ package com.zbkj.crmeb.store.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.common.PageParamRequest;
+import com.github.pagehelper.PageInfo;
+import com.zbkj.crmeb.express.vo.ExpressSheetVo;
 import com.zbkj.crmeb.express.vo.LogisticsResultVo;
 import com.zbkj.crmeb.store.model.StoreOrder;
+import com.zbkj.crmeb.store.request.RetailShopStairUserRequest;
 import com.zbkj.crmeb.store.request.StoreOrderRefundRequest;
 import com.zbkj.crmeb.store.request.StoreOrderSearchRequest;
 import com.zbkj.crmeb.store.request.StoreOrderSendRequest;
@@ -17,10 +20,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
-* @author Mr.Zhang
-* @description StoreOrderService 接口
-* @date 2020-05-28
-*/
+ * StoreOrderService 接口
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 public interface StoreOrderService extends IService<StoreOrder> {
 
     List<StoreOrder> getList(StoreOrderSearchRequest request, PageParamRequest pageParamRequest);
@@ -167,4 +177,35 @@ public interface StoreOrderService extends IService<StoreOrder> {
      * @return  用户当天的秒杀商品订单数量
      */
     List<StoreOrder> getUserCurrentDaySecKillOrders(StoreOrder storeOrder);
+
+    /**
+     * 获取用户当前的砍价订单数量
+     * @param storeOrder    订单查询参数
+     * @return  用户当天的秒杀商品订单数量
+     */
+    List<StoreOrder> getUserCurrentBargainOrders(StoreOrder storeOrder);
+
+    /**
+     * 获取砍价商品订单数量（销量）
+     * @param bargainId 砍价商品编号
+     * @return
+     */
+    Integer getCountByBargainId(Integer bargainId);
+
+    /**
+     * 获取砍价商品订单数量（销量）
+     * @param bargainId 砍价商品编号
+     * @return
+     */
+    Integer getCountByBargainIdAndUid(Integer bargainId, Integer uid);
+
+    StoreOrder getByOderId(String orderId);
+
+    /**
+     * 获取面单默认配置信息
+     * @return
+     */
+    ExpressSheetVo getDeliveryInfo();
+
+    PageInfo<StoreOrder> findListByUserIdsForRetailShop(List<Integer> userIds, RetailShopStairUserRequest request, PageParamRequest pageParamRequest);
 }

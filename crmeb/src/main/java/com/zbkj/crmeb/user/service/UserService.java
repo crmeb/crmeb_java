@@ -14,10 +14,7 @@ import com.zbkj.crmeb.front.response.UserSpreadPeopleItemResponse;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.request.RetailShopStairUserRequest;
 import com.zbkj.crmeb.user.model.User;
-import com.zbkj.crmeb.user.request.RegisterThirdUserRequest;
-import com.zbkj.crmeb.user.request.UserOperateFundsRequest;
-import com.zbkj.crmeb.user.request.UserOperateIntegralMoneyRequest;
-import com.zbkj.crmeb.user.request.UserSearchRequest;
+import com.zbkj.crmeb.user.request.*;
 import com.zbkj.crmeb.user.response.TopDetail;
 import com.zbkj.crmeb.user.response.UserResponse;
 
@@ -27,12 +24,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>
  * 用户表 服务类
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-04-10
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 public interface UserService extends IService<User> {
     PageInfo<UserResponse> getList(UserSearchRequest request, PageParamRequest pageParamRequest);
@@ -48,7 +49,7 @@ public interface UserService extends IService<User> {
      */
     boolean updateBase(User user);
 
-    void userPayCountPlus(User user);
+    boolean userPayCountPlus(User user);
 
     /**
      * 更新余额
@@ -62,9 +63,9 @@ public interface UserService extends IService<User> {
 
     boolean cleanLevel(Integer userId);
 
-    LoginResponse register(RegisterRequest loginRequest, String ip);
+    LoginResponse register(RegisterRequest loginRequest, String ip) throws Exception;
 
-    LoginResponse login(LoginRequest loginRequest);
+    LoginResponse login(LoginRequest loginRequest) throws Exception;
 
     boolean password(PasswordRequest request);
 
@@ -112,7 +113,7 @@ public interface UserService extends IService<User> {
 
     User registerByThird(RegisterThirdUserRequest thirdUserRequest, String type);
 
-    String token(User user);
+    String token(User user) throws Exception;
 
     String getValidateCodeRedisKey(String phone);
 
@@ -141,4 +142,11 @@ public interface UserService extends IService<User> {
     boolean upadteBrokeragePrice(User user, BigDecimal newBrokeragePrice);
 
     BigDecimal getUnCommissionPrice();
+
+    /**
+     * 更新推广人
+     * @param request
+     * @return
+     */
+    Boolean editSpread(UserUpdateSpreadRequest request);
 }

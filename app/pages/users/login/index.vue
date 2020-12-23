@@ -3,7 +3,7 @@
 		<div class="shading">
 			<div class="pictrue acea-row row-center-wrapper">
 				<image :src="logoUrl" v-if="logoUrl" />
-				<image src="/static/images/logo2.png" v-else />
+				<image src="../../../static/images/logo2.png" v-else />
 			</div>
 		</div>
 		<div class="whiteBg" v-if="formItem === 1">
@@ -324,7 +324,7 @@
 				loginH5({
 						account: that.account,
 						password: that.password,
-						spread: that.$Cache.get("spread")
+						spread_spid: that.$Cache.get("spread")
 					})
 					.then(({
 						data

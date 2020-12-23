@@ -1,6 +1,6 @@
 <template>
 	<view class="empty-box">
-		<image src="/static/images/empty-box.png"></image>
+		<image src="../static/images/empty-box.png"></image>
 		<view class="txt">{{title}}</view>
 	</view>
 </template>

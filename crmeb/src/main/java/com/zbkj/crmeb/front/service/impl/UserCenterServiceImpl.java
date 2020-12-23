@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.front.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
@@ -138,25 +139,40 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
      */
     @Override
     public PageInfo<UserSpreadCommissionResponse> getSpreadCommissionByType(int type, PageParamRequest pageParamRequest) {
-        Integer pm = null;
         String category = Constants.USER_BILL_CATEGORY_MONEY;
+        List<String> typeList = CollUtil.newArrayList();
         switch (type){
+            case 0:
+                typeList.add(Constants.USER_BILL_TYPE_RECHARGE);
+                typeList.add(Constants.USER_BILL_TYPE_PAY_MONEY);
+                typeList.add(Constants.USER_BILL_TYPE_SYSTEM_ADD);
+                typeList.add(Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
+                typeList.add(Constants.USER_BILL_TYPE_SYSTEM_SUB);
+                typeList.add(Constants.USER_BILL_TYPE_PAY_MEMBER);
+                typeList.add(Constants.USER_BILL_TYPE_OFFLINE_SCAN);
+                break;
             case 1:
-                pm = 0;
+                typeList.add(Constants.USER_BILL_TYPE_PAY_MONEY);
+                typeList.add(Constants.USER_BILL_TYPE_PAY_MEMBER);
+                typeList.add(Constants.USER_BILL_TYPE_OFFLINE_SCAN);
+                typeList.add(Constants.USER_BILL_TYPE_USER_RECHARGE_REFUND);
                 break;
             case 2:
-                pm = 1;
+                typeList.add(Constants.USER_BILL_TYPE_RECHARGE);
+                typeList.add(Constants.USER_BILL_TYPE_SYSTEM_ADD);
                 break;
             case 3:
                 category = Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE;
+                typeList.add(Constants.USER_BILL_TYPE_BROKERAGE);
                 break;
             case 4:
-                return null;
+                typeList.add(Constants.USER_BILL_TYPE_EXTRACT);
+                break;
             default:
                 break;
 
         }
-        return userBillService.getListGroupByMonth(userService.getUserIdException(), pm, pageParamRequest, category);
+        return userBillService.getListGroupByMonth(userService.getUserIdException(), typeList, pageParamRequest, category);
     }
 
     /**
@@ -504,8 +520,11 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     @Transactional(rollbackFor = {RuntimeException.class, Error.class, CrmebException.class})
     public LoginResponse weChatAuthorizeLogin(String code, Integer spreadUid) {
         try{
+            System.out.println("code = " + code);
             WeChatAuthorizeLoginGetOpenIdResponse response = weChatService.authorizeLogin(code);
+            System.out.println("response = " + response);
             User user = publicLogin(response.getOpenId(), response.getAccessToken());
+            System.out.println("user = " + user);
             //通过用户id获取登录token信息
             LoginResponse loginResponse = new LoginResponse();
             loginResponse.setToken(userService.token(user));
@@ -531,15 +550,20 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     private User publicLogin(String openId, String token) {
         try {
             //检测是否存在
+            System.out.println("openId = " + openId);
+            System.out.println("token = " + token);
             UserToken userToken = userTokenService.checkToken(openId,  Constants.THIRD_LOGIN_TOKEN_TYPE_PUBLIC);
+            System.out.println("userToken = " + userToken);
             if(null != userToken){
                 return userService.getById(userToken.getUid());
             }
 
             //没有注册， 获取微信用户信息， 小程序需要前端传入用户信息参数
             WeChatAuthorizeLoginUserInfoResponse userInfo = weChatService.getUserInfo(openId, token);
+            System.out.println("userInfo = " + userInfo);
             RegisterThirdUserRequest registerThirdUserRequest = new RegisterThirdUserRequest();
             BeanUtils.copyProperties(userInfo, registerThirdUserRequest);
+            System.out.println("registerThirdUserRequest = " + registerThirdUserRequest);
             String unionId = userInfo.getUnionId();
 
             //看unionid是否已经绑定
@@ -572,7 +596,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
      */
     @Override
     public String getLogo() {
-        String url = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PROGRAM_LOGO);
+        String url = systemConfigService.getValueByKey(Constants.CONFIG_KEY_SITE_LOGO);
 //        if(StringUtils.isNotBlank(url) && !url.contains("http")){
 //            url = systemConfigService.getValueByKey(Constants.CONFIG_KEY_SITE_URL) + url;
 //            url = url.replace("\\", "/");
@@ -592,6 +616,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     public LoginResponse weChatAuthorizeProgramLogin(String code, RegisterThirdUserRequest request) {
         try{
             WeChatProgramAuthorizeLoginGetOpenIdResponse response = weChatService.programAuthorizeLogin(code);
+            System.out.println("小程序登陆成功 = " + JSON.toJSONString(response));
             User user = programLogin(response.getOpenId(), response.getUnionId(), request);
             //通过用户id获取登录token信息
             LoginResponse loginResponse = new LoginResponse();

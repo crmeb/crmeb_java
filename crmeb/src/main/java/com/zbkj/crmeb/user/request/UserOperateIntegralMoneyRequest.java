@@ -7,18 +7,24 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.hibernate.validator.constraints.Range;
 
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
- * <p>
  * 资金操作
- * </p>
- *
- * @author Mr.Zhang
- * @since 2020-04-10
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -39,6 +45,8 @@ public class UserOperateIntegralMoneyRequest implements Serializable {
     private int integralType;
 
     @ApiModelProperty(value = "积分")
+    @DecimalMin(value = "0")
+    @DecimalMax(value = "999999")
     private BigDecimal integralValue;
 
     @ApiModelProperty(value = "余额类型， 1 = 增加， 2 = 减少")
@@ -47,6 +55,8 @@ public class UserOperateIntegralMoneyRequest implements Serializable {
     private int moneyType;
 
     @ApiModelProperty(value = "余额")
+    @DecimalMin(value = "0")
+    @DecimalMax(value = "999999")
     private BigDecimal moneyValue;
 
 }
