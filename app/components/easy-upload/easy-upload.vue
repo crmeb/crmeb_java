@@ -161,7 +161,6 @@
 				});
 			},
 			upload(){
-				debugger
 				if(!this.uploadUrl) {
 					uni.showModal({
 						content: '请填写上传接口'

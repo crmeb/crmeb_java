@@ -5,7 +5,7 @@
         <div class="container">
           <el-form inline>
             <el-form-item label="数据搜索">
-              <el-input v-model="listPram.keywords" placeholder="请输入ID，KEY，组合数据名称，简介" class="selWidth" size="small">
+              <el-input v-model="listPram.keywords" placeholder="请输入ID，KEY，组合数据名称，简介" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search" size="small" @click="handlerSearch" />
               </el-input>
             </el-form-item>

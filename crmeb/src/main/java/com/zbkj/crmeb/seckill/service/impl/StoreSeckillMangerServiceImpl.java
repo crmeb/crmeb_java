@@ -25,10 +25,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
-* @author Stivepeim
-* @description StoreSeckillMangerServiceImpl 接口实现
-* @date 2020-09-18
-*/
+ * StoreSeckillMangerServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMangerDao, StoreSeckillManger>
         implements StoreSeckillMangerService {
@@ -92,7 +99,7 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
     public List<StoreSeckillManger> checkTimeRangeUnique(StoreSeckillManger storeSeckillManger) {
         LambdaQueryWrapper<StoreSeckillManger> lqTimeUnique = Wrappers.lambdaQuery();
         lqTimeUnique.ge(StoreSeckillManger::getStartTime, storeSeckillManger.getStartTime());
-        lqTimeUnique.lt(StoreSeckillManger::getStartTime, storeSeckillManger.getEndTime());
+        lqTimeUnique.gt(StoreSeckillManger::getStartTime, storeSeckillManger.getEndTime());
         lqTimeUnique.or();
         lqTimeUnique.le(StoreSeckillManger::getStartTime, storeSeckillManger.getStartTime());
         lqTimeUnique.ge(StoreSeckillManger::getEndTime, storeSeckillManger.getEndTime());

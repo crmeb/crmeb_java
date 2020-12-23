@@ -74,7 +74,7 @@
 				</button>
 				<!-- #endif -->
 				<!-- #ifndef MP -->
-				<navigator hover-class="none" class="item" url="/pages/customer_list/index">
+				<navigator hover-class="none" class="item" @click="kefuClick">
 					<view class="iconfont icon-kefu"></view>
 					<view>客服</view>
 				</navigator>
@@ -106,6 +106,7 @@
 				</view>
 			</view>
 		</view>
+		<shareRedPackets :sharePacket="sharePacket" @listenerActionSheet="listenerActionSheet" @closeChange="closeChange"></shareRedPackets>
 		<product-window :attr='attribute' :limitNum='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr" @ChangeCartNum="ChangeCartNum"
 		 @attrVal="attrVal" @iptCartNum="iptCartNum"></product-window>
 		<!-- #ifdef MP -->
@@ -115,7 +116,7 @@
 		<!-- 分享按钮 -->
 		<view class="generate-posters acea-row row-middle" :class="posters ? 'on' : ''">
 			<!-- #ifndef MP -->
-			<button class="item" hover-class='none' v-if="weixinStatus === true" @click="setShareInfoStatus">
+			<button class="item" hover-class='none' v-if="weixinStatus === true" @click="H5ShareBox = true">
 				<view class="iconfont icon-weixin3"></view>
 				<view class="">发送给朋友</view>
 			</button>
@@ -149,6 +150,10 @@
 			<canvas style="width:750px;height:1190px;" canvas-id="firstCanvas"></canvas>
 			<canvas canvas-id="qrcode" :style="{width: `${qrcodeSize}px`, height: `${qrcodeSize}px`}"/>
 		</view>
+		<!-- 发送给朋友图片 -->
+		<view class="share-box" v-if="H5ShareBox">
+			<image src="/static/images/share-info.png" @click="H5ShareBox = false"></image>
+		</view>
 		<!-- <view class='mask' v-if="canvasStatus"></view> -->
 		<!-- 
 		<canvas class="canvas" canvas-id='qrcode' v-if="canvasStatus"></canvas> -->
@@ -158,6 +163,7 @@
 <script>
 	const app = getApp();
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
+	import { base64src } from '@/utils/base64src.js'
 	import {
 		mapGetters
 	} from "vuex";
@@ -184,6 +190,7 @@
 	import parser from "@/components/jyf-parser/jyf-parser";
 	import home from '@/components/home/index.vue'
 	import countDown from '@/components/countDown';
+	import shareRedPackets from '@/components/shareRedPackets';
 	import {
 		imageBase64
 	} from "@/api/public";
@@ -260,10 +267,15 @@
 				aloneAttrValueId: 0 ,//单规格规格id
 				imagePath:'',//海报路径
 				imgTop:'',
+				H5ShareBox: false, //公众号分享图片
+				sharePacket: {
+					isState: true, //默认不显示
+				},
 				buyNum: 1
 			}
 		},
 		components: {
+			shareRedPackets,
 			productConSwiper,
 			'productWindow': productWindow,
 			userEvaluation,
@@ -274,7 +286,7 @@
 			authorize
 			// #endif
 		},
-		computed: mapGetters(['isLogin','uid']),
+		computed: mapGetters(['isLogin','uid','chatUrl']),
 		onLoad(options) {
 			
 			let that = this
@@ -334,6 +346,12 @@
 			}
 		},
 		methods: {
+			kefuClick(){
+				location.href = this.chatUrl;
+			},
+			closePosters:function(){
+				this.posters = false;
+			},
 			getProductReplyList: function() {
 				getReplyList(this.productId, {
 					page: 1,
@@ -393,6 +411,7 @@
 					// #endif
 					// #ifdef MP
 					that.getQrcode();
+					that.imgTop = res.data.storeInfo.image
 					// #endif
 					// #ifndef H5
 					that.downloadFilestoreImage();
@@ -534,7 +553,6 @@
 				//设置默认数据
 				if (productSelect.cart_num == undefined) productSelect.cart_num = 1;
 				if (changeValue) {
-					console.log(this.buyNum);
 					if (num.cart_num === 1) {
 						return this.$util.Tips({
 							title: `该商品每次限购1${this.storeInfo.unitName}`
@@ -854,13 +872,30 @@
 			goPoster: function() {
 				let that = this;
 				that.posters = false;
-				let arrImages = [that.posterbackgd, that.imgTop, that.PromotionCode];
-				let storeName = that.storeInfo.storeName;
-				let price = that.storeInfo.price;
-				that.$util.PosterCanvas(arrImages, storeName, price, function(tempFilePath) {
-					that.posterImage = tempFilePath;
-					that.canvasStatus = true;
-				});
+				let arrImagesUrl = '';
+				let arrImagesUrlTop = '';
+				uni.downloadFile({
+					url: that.imgTop, //仅为示例，并非真实的资源
+					success: (res) => {
+						arrImagesUrlTop = res.tempFilePath;
+						let arrImages = [that.posterbackgd, arrImagesUrlTop, that.PromotionCode];
+						let storeName = that.storeInfo.storeName;
+						let price = that.storeInfo.price;
+						setTimeout(() => {
+							that.$util.PosterCanvas(arrImages, storeName, price, function(tempFilePath) {
+								that.posterImage = tempFilePath;
+								that.canvasStatus = true;
+							});	
+						}, 200);
+					}
+				});	
+				// let arrImages = [that.posterbackgd, that.imgTop, that.PromotionCode];
+				// let storeName = that.storeInfo.storeName;
+				// let price = that.storeInfo.price;
+				// that.$util.PosterCanvas(arrImages, storeName, price, function(tempFilePath) {
+				// 	that.posterImage = tempFilePath;
+				// 	that.canvasStatus = true;
+				// });
 			},
 			// 小程序二维码
 			getQrcode(){
@@ -868,10 +903,12 @@
 				let data = {
 					pid: that.uid,
 					id: that.id,
-					path: '/pages/goods_seckill_details/index'
+					path: 'pages/activity/goods_seckill_details/index'
 				}
 				getQrcode(data).then(res=>{
-					that.PromotionCode = res.data.code;
+					base64src(res.data.code, res => {
+						that.PromotionCode = res;
+					});
 				})
 			},
 			// 生成二维码；
@@ -973,6 +1010,19 @@
 </script>
 
 <style scoped lang="scss">
+	.share-box {
+		z-index: 1000;
+		position: fixed;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+	
+		image {
+			width: 100%;
+			height: 100%;
+		}
+	}
 	.generate-posters {
 		width: 100%;
 		height: 170rpx;

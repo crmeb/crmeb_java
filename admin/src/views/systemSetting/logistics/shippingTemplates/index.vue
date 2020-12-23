@@ -5,7 +5,7 @@
         <div class="container">
           <el-form ref="form" inline :model="form">
             <el-form-item label="模板名称：">
-              <el-input v-model="form.keywords" placeholder="请输入模板名称" class="selWidth" size="small">
+              <el-input v-model="form.keywords" placeholder="请输入模板名称" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search" @click="handleSearch" />
               </el-input>
             </el-form-item>

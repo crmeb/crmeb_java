@@ -5,6 +5,18 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+/**
+ * 模板消息查询请求体
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Data
 public class TemplateMessageSearchRequest {
 
@@ -19,7 +31,4 @@ public class TemplateMessageSearchRequest {
 
     @ApiModelProperty(value = "状态, 0 正常，1 禁用")
     private Integer status = null;
-
-    @ApiModelProperty(value = "类型， 0 订阅消息, 1 模板消息")
-    private Integer type = null;
 }

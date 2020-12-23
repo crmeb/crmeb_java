@@ -28,7 +28,6 @@ import java.util.List;
 @RestController
 @RequestMapping("api/admin/express/shipping/free")
 @Api(tags = "设置 -- 物流 -- 免费")
-
 public class ShippingTemplatesFreeController {
 
     @Autowired

@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.user.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -13,7 +14,6 @@ import com.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.utils.ArrayUtil;
 import com.utils.DateUtil;
 import com.utils.vo.dateLimitUtilVo;
 import com.zbkj.crmeb.finance.request.FundsMonitorSearchRequest;
@@ -38,10 +38,17 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
-* @author Mr.Zhang
-* @Description UserBillServiceImpl 接口实现
-* @since 2020-04-28
-*/
+ * UserBillServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> implements UserBillService {
 
@@ -235,8 +242,8 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
         if (StrUtil.isNotBlank(request.getKeywords())) {
             map.put("keywords", "%"+request.getKeywords()+"%");
         }
-        if (StrUtil.isNotBlank(request.getType())) {
-            map.put("type", request.getType());
+        if (StrUtil.isNotBlank(request.getCategory())) {
+            map.put("category", request.getCategory());
         }
         //时间范围
         if(StrUtil.isNotBlank(request.getDateLimit())){
@@ -251,7 +258,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
             map.put("endTime", dateLimit.getEndTime());
         }
 
-        List<UserBillResponse> responses = dao.getListAdmin(map);
+        List<UserBillResponse> responses = dao.getListAdminAndIntegeal(map);
         return CommonPage.copyPageInfo(userBillPage, responses);
     }
 
@@ -338,14 +345,14 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
      * @return CommonPage<UserBill>
      */
     @Override
-    public PageInfo<UserSpreadCommissionResponse> getListGroupByMonth(Integer userId, Integer pm, PageParamRequest pageParamRequest, String category) {
+    public PageInfo<UserSpreadCommissionResponse> getListGroupByMonth(Integer userId, List<String> typeList, PageParamRequest pageParamRequest, String category) {
         Page<UserBill> userBillPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         ArrayList<UserSpreadCommissionResponse> userSpreadCommissionResponseList = new ArrayList<>();
 
         QueryWrapper<UserBill> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("uid", userId).eq("status", 1).eq("category", category);
-        if(null != pm){
-            queryWrapper.eq("pm", pm);
+        if(CollUtil.isNotEmpty(typeList)){
+            queryWrapper.in("type", typeList);
         }
 
         queryWrapper.groupBy("left(create_time, 7)");
@@ -357,9 +364,8 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
 
         for (UserBill userBill : list) {
             String date = DateUtil.dateToStr(userBill.getCreateTime(), Constants.DATE_FORMAT_MONTH);
-            userSpreadCommissionResponseList.add(new UserSpreadCommissionResponse(date, getListByMonth(userId, pm, date, category)));
+            userSpreadCommissionResponseList.add(new UserSpreadCommissionResponse(date, getListByMonth(userId, typeList, date, category)));
         }
-
        return CommonPage.copyPageInfo(userBillPage, userSpreadCommissionResponseList);
     }
 
@@ -547,9 +553,9 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
      * @return 查询结果
      */
     @Override
-    public List<UserBillResponse> getByBaseSearch(Integer userId,UserBillDetailListRequest request, PageParamRequest pageParamRequest) {
+    public PageInfo<UserBillResponse> getByBaseSearch(Integer userId, UserBillDetailListRequest request, PageParamRequest pageParamRequest) {
+        Page<UserBill> startPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         LambdaQueryWrapper<UserBill> lqw = Wrappers.lambdaQuery();
-        PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         if(null!= userId && userId > 0) lqw.eq(UserBill::getUid, userId);
         if(StringUtils.isNotBlank(request.getKeywords())){
             lqw.like(UserBill::getLinkId, "%"+request.getKeywords()+"%");
@@ -571,7 +577,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
             userBillResponseResults.add(ub);
             return e;
         }).collect(Collectors.toList());
-        return userBillResponseResults;
+        return CommonPage.copyPageInfo(startPage, userBillResponseResults);
     }
 
     /**
@@ -621,11 +627,11 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
      * @since 2020-06-08
      * @return List<UserBill>
      */
-    private List<UserBill> getListByMonth(Integer userId, Integer pm, String month, String category) {
+    private List<UserBill> getListByMonth(Integer userId, List<String> typeList, String month, String category) {
         QueryWrapper<UserBill> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("pm,title,number,create_time").eq("uid", userId). eq("status", 1).eq("left(create_time, 7)", month).eq("category", category);
-        if(null != pm){
-            queryWrapper.eq("pm", pm);
+        if(CollUtil.isNotEmpty(typeList)){
+            queryWrapper.in("type", typeList);
         }
 
         queryWrapper.orderByDesc("create_time");

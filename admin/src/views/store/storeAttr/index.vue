@@ -5,7 +5,7 @@
         <div class="container">
           <el-form inline size="small">
             <el-form-item label="规格搜索：">
-              <el-input v-model="tableFrom.keywords" placeholder="请输入商品规格" class="selWidth">
+              <el-input v-model="tableFrom.keywords" placeholder="请输入商品规格" class="selWidth" clearable>
                 <el-button slot="append" icon="el-icon-search" @click="seachList" />
               </el-input>
             </el-form-item>

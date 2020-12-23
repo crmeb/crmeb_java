@@ -61,7 +61,7 @@
 		</view>
 		<view class='noCommodity' v-if="seckillList.length == 0 && (page != 1 || active== 0)">
 			<view class='pictrue'>
-				<image src='/static/images/noShopper.png'></image>
+				<image src='../../../static/images/noShopper.png'></image>
 			</view>
 		</view>
 		<home></home>

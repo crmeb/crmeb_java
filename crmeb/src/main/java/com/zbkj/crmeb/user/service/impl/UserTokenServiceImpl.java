@@ -16,10 +16,17 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
-* @author Mr.Zhang
-* @Description UserTokenServiceImpl 接口实现
-* @since 2020-05-25
-*/
+ * UserTokenServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class UserTokenServiceImpl extends ServiceImpl<UserTokenDao, UserToken> implements UserTokenService {
 
@@ -116,6 +123,18 @@ public class UserTokenServiceImpl extends ServiceImpl<UserTokenDao, UserToken> i
         return dao.selectOne(lambdaQueryWrapper);
     }
 
+    @Override
+    public UserToken getByOpenid(String openid) {
+        LambdaQueryWrapper<UserToken> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(UserToken::getToken, openid);
+        return dao.selectOne(lambdaQueryWrapper);
+    }
 
+    @Override
+    public UserToken getByUid(Integer uid) {
+        LambdaQueryWrapper<UserToken> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(UserToken::getUid, uid);
+        return dao.selectOne(lambdaQueryWrapper);
+    }
 }
 

@@ -5,7 +5,7 @@
         <el-form ref="formInline" size="small" :model="formInline" :rules="ruleInline" class="login-form"
                  autocomplete="on" label-position="left">
           <div class="title-container">
-            <h3 class="title">短信账户登录</h3>
+            <h3 class="title mb15">短信账户登录</h3>
           </div>
           <el-form-item prop="account">
             <el-input
@@ -19,14 +19,14 @@
               autocomplete="off"
             />
           </el-form-item>
-          <el-form-item prop="token">
+          <el-form-item prop="password">
             <el-input
               :key="passwordType"
-              ref="token"
-              v-model="formInline.token"
+              ref="password"
+              v-model="formInline.password"
               :type="passwordType"
               placeholder="密码"
-              name="token"
+              name="password"
               tabindex="2"
               auto-complete="off"
               prefix-icon="el-icon-lock"
@@ -38,7 +38,7 @@
           <el-button size="mini" :loading="loading" type="primary" style="width:100%;margin-bottom:20px;"
                      @click="handleSubmit('formInline')">登录
           </el-button>
-          <el-button size="mini" type="text" style="width: 100%;" @click="changeReg">注册账户</el-button>
+          <el-button size="mini" type="text" style="width: 100%;margin-left: 0" @click="changeReg">注册账户</el-button>
         </el-form>
       </el-col>
     </el-row>
@@ -53,13 +53,13 @@ export default {
     return {
       formInline: {
         account: '',
-        token: ''
+        password: ''
       },
       ruleInline: {
         account: [
           { required: true, message: '请输入用户名', trigger: 'blur' }
         ],
-        token: [
+        password: [
           { required: true, message: '请输入密码', trigger: 'blur' }
         ]
       },
@@ -90,12 +90,14 @@ export default {
     handleSubmit(name) {
       this.$refs[name].validate((valid) => {
         if (valid) {
+          this.loading = true;
           configApi(this.formInline).then(async res => {
             this.$message.success('登录成功!')
             this.$store.dispatch('user/isLogin')
             this.$emit('on-Login')
-          }).catch(res => {
-            this.$message.error(res.message)
+            this.loading = false;
+          }).catch(()=>{
+            this.loading = false;
           })
         } else {
           return false

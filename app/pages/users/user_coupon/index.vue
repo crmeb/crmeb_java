@@ -95,7 +95,7 @@
 				let that = this;
 				getUserCoupons({status:0}).then(res => {
 					that.loading = true;
-					that.$set(that, 'couponsList', res.data);
+					that.$set(that, 'couponsList', res.data || []);
 				})
 			}
 		}
@@ -118,9 +118,9 @@
 		align-items: center;
 	}
 	.condition .line-title {
-		width: 90rpx;
+		/* width: 90rpx; */
 		height: 40rpx !important;
-		line-height: 1.5 !important;
+		line-height: 40rpx !important;
 		padding: 0 10rpx;
 		-webkit-box-sizing: border-box;
 		box-sizing: border-box;

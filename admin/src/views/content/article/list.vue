@@ -58,11 +58,11 @@
         <el-table-column prop="synopsis" label="文章简介" show-overflow-tooltip min-width="250"/>
         <el-table-column prop="shareTitle" label="分享标题" show-overflow-tooltip min-width="200"/>
         <el-table-column prop="updateTime" label="更新时间" min-width="180"/>
-        <el-table-column label="操作" min-width="180" fixed="right">
+        <el-table-column label="操作" min-width="100" fixed="right" align="center">
           <template slot-scope="scope">
-            <el-button type="text" @click="handlerOpenEdit(1, scope.row)">编辑</el-button>
-            <el-button type="text" disabled>关联产品</el-button>
-            <el-button type="text" @click="handlerDelete(scope.row)">删除</el-button>
+            <el-button type="text" size="small" @click="handlerOpenEdit(1, scope.row)">编辑</el-button>
+            <!--<el-button type="text" size="small" disabled>关联产品</el-button>-->
+            <el-button type="text" size="small" @click="handlerDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -79,7 +79,7 @@
       :visible.sync="editDialogConfig.visible"
       :title="editDialogConfig.isEdit === 0?'创建文章':'编辑文章'"
       top="1vh"
-      width="80%"
+      width="900px"
       destroy-on-close
       :modal="false"
       :close-on-click-modal="false"

@@ -10,7 +10,7 @@
               <el-option label="开启" :value="1" />
             </el-select>
             <span class="seachTiele">优惠券名称：</span>
-            <el-input v-model="tableFrom.name" placeholder="请输入优惠券名称" class="selWidth">
+            <el-input v-model="tableFrom.name" placeholder="请输入优惠券名称" class="selWidth" clearable>
               <el-button slot="append" icon="el-icon-search" @click="seachList" />
             </el-input>
           </div>
@@ -142,7 +142,7 @@
         style="width: 100%"
       >
         <el-table-column
-          prop="user.nickname"
+          prop="nickname"
           label="用户名"
           min-width="120"
         />
@@ -271,6 +271,8 @@
         couponIssueStatusApi({id:row.id, status:row.status}).then(() => {
           this.$message.success('修改成功')
           this.getList()
+        }).catch(()=>{
+          row.status = !row.status
         })
       }
     }

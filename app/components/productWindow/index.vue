@@ -53,7 +53,7 @@
 			<view class="joinBnt bg-color" v-if="iSbnt && attr.productSelect.stock>0 &&attr.productSelect.quota>0" @click="goCat">我要参团</view>
 			<view class="joinBnt on" v-else-if="(iSbnt && attr.productSelect.quota<=0)||(iSbnt &&attr.productSelect.stock<=0)">已售罄</view>
 			<view class="joinBnt bg-color" v-if="iScart && attr.productSelect.stock" @click="goCat">确定</view>
-			<view class="joinBnt bg-color" v-if="iSbnt && attr.productSelect.stock && attr.productSelect.quota" @click="goCat">确定</view>
+			<!-- <view class="joinBnt bg-color" v-if="iSbnt && attr.productSelect.stock && attr.productSelect.quota" @click="goCat">确定</view> -->
 			<view class="joinBnt on" v-else-if="(iScart && !attr.productSelect.stock)">已售罄</view>
 		</view>
 		<view class="mask" @touchmove.prevent :hidden="attr.cartAttr === false" @click="closeAttr"></view>

@@ -9,7 +9,7 @@
               <span class="ivu-pl-8">用户</span>
             </div>
           </div>
-          <echarts-from ref="userChart" :echartsTitle="line" :xAxis="xAxis" :series="series" v-if="infoList"></echarts-from>
+          <echarts-from ref="userChart" :echartsTitle="line" :xAxis="xAxis" :seriesData="series" v-if="infoList"></echarts-from>
         </el-card>
       </el-col>
       <el-col :xl="8" :lg="12" :md="24" :sm="24" :xs="24">
@@ -21,7 +21,7 @@
             </div>
           </div>
           <echarts-from ref="visitChart" :echartsTitle="circle" :legendData="legendData"
-                        :series="seriesUser" v-if="chartBuy"></echarts-from>
+                        :seriesData="seriesUser" v-if="chartBuy"></echarts-from>
         </el-card>
       </el-col>
     </el-row>

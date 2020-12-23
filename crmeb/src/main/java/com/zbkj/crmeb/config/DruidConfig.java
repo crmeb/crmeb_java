@@ -51,7 +51,7 @@ public class DruidConfig {
         filterRegistrationBean.addInitParameter("exclusions", "*.html,*.png,*.ico,*.js,*.gif,*.jpg,*.css,/druid/*");
         return filterRegistrationBean ;
     }
-    @Bean
+    @Bean("dataSource")
     @ConfigurationProperties(prefix = "spring.datasource")
     public DataSource druidDataSource() {
         return new DruidDataSource();

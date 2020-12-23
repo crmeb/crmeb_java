@@ -42,7 +42,7 @@
               </el-form-item>
             </el-col>
             <el-col :span="24">
-              <el-form-item label="商品轮播图：" prop="images">
+              <el-form-item label="商品轮播图：" prop="imagess">
                 <div class="acea-row">
                   <div
                     v-for="(item,index) in formValidate.imagess"
@@ -57,7 +57,7 @@
                     <img :src="item">
                     <i class="el-icon-error btndel" @click="handleRemove(index)" />
                   </div>
-                  <div class="upLoadPicBox" @click="modalPicTap('2')">
+                  <div v-if="formValidate.imagess.length<10" class="upLoadPicBox" @click="modalPicTap('2')">
                     <div class="upLoad">
                       <i class="el-icon-camera cameraIconfont" />
                     </div>
@@ -67,12 +67,12 @@
             </el-col>
             <el-col :span="24">
               <el-form-item label="商品标题：" prop="title">
-                <el-input v-model="formValidate.title" placeholder="请输入商品名称" />
+                <el-input v-model="formValidate.title" maxlength="249" placeholder="请输入商品名称" />
               </el-form-item>
             </el-col>
             <el-col :span="24">
               <el-form-item label="秒杀活动简介：">
-                <el-input v-model="formValidate.info" type="textarea" :rows="3" placeholder="请输入商品简介" />
+                <el-input v-model="formValidate.info" type="textarea" maxlength="250"  :rows="3" placeholder="请输入商品简介" />
               </el-form-item>
             </el-col>
             <!--<el-col v-bind="grid2">-->
@@ -115,6 +115,7 @@
                   size="small"
                   type="daterange"
                   placement="bottom-end"
+                  :picker-options="pickerOptions"
                   placeholder="请选择活动日期"
                   @change="onchangeTime"
                 />
@@ -318,6 +319,11 @@
     components: { CreatTemplates },
     data() {
       return {
+        pickerOptions: {
+          disabledDate(time) {
+            return time.getTime() < new Date().setTime(new Date().getTime() - 3600 * 1000 * 24);
+          }
+        },
         props2: {
           children: 'child',
           label: 'name',
@@ -451,6 +457,8 @@
             _this.ManyAttrValue[0].image = img[0].sattDir
           }
           if(tit==='2'&& !num){
+            if(img.length>10) return this.$message.warning("最多选择10张图片！");
+            if(img.length + _this.formValidate.imagess.length > 10) return this.$message.warning("最多选择10张图片！");
             img.map((item) => {
               _this.formValidate.imagess.push(item.sattDir)
             });
@@ -715,6 +723,27 @@
         const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.$route.params.id}` })
         this.$store.dispatch('tagsView/updateVisitedView', route)
       },
+      // 移动
+      handleDragStart (e, item) {
+        this.dragging = item;
+      },
+      handleDragEnd (e, item) {
+        this.dragging = null
+      },
+      handleDragOver (e) {
+        e.dataTransfer.dropEffect = 'move'
+      },
+      handleDragEnter (e, item) {
+        e.dataTransfer.effectAllowed = 'move'
+        if (item === this.dragging) {
+          return
+        }
+        const newItems = [...this.formValidate.imagess]
+        const src = newItems.indexOf(this.dragging)
+        const dst = newItems.indexOf(item)
+        newItems.splice(dst, 0, ...newItems.splice(src, 1))
+        this.formValidate.imagess = newItems;
+      }
     }
   }
 </script>

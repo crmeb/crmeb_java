@@ -5,10 +5,16 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 /**
- * @Classname StoreStaffDetail
- * @Description 核销月详情Response
- * @Date 8/31/20 2:50 下午
- * @Created by stivepeim
+ * 核销月详情Response
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Data
 public class StoreStaffDetail {
