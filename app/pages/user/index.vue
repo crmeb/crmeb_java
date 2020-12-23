@@ -115,7 +115,9 @@
 			</button>
 			<!-- #endif -->
 		</view>
-		<view style="height: 50rpx;"></view>
+		<!-- <view style="height: 50rpx;"></view> -->
+		<img src="/static/images/support.png" alt="" class='support'>
+
 		<!-- #ifdef MP -->
 		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
@@ -338,7 +340,14 @@
 	}
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+	.support {
+		width: 219rpx;
+		height: 74rpx;
+		margin: 54rpx auto;
+		display: block;
+	}
+
 	.new-users {
 		.head {
 			padding-top: 30rpx;
