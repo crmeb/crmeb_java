@@ -1,7 +1,7 @@
 # 配置端口
 server:
   port: 20000
-  domain: api.java.crmeb.net #配合swagger使用 # 待部署域名
+  domain: #配合swagger使用 # 待部署域名
   version: v1.3 # 当前代码版本
   wechat-api-url:
   wechat-js-api-debug: false
