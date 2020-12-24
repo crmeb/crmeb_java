@@ -70,7 +70,7 @@ public class ValidateCodeServiceImpl implements ValidateCodeService {
     public boolean check(ValidateCode validateCode){
         if(!redisUtil.exists(getRedisKey(validateCode.getKey()))) throw new CrmebException("验证码错误");
         Object redisValue = redisUtil.get(getRedisKey(validateCode.getKey()));
-        if(!redisValue.equals(validateCode.getCode())){
+        if(!redisValue.equals(validateCode.getCode().toLowerCase())){
             return false;
         }
         return true;
