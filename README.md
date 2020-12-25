@@ -6,7 +6,7 @@
     <b>如果对您有帮助，您可以点右上角 "Star" 支持一下 谢谢！</b>
 </p>
 
-# 项目介绍
+## 项目介绍
 
    CRMEB JAVA版商城系统是基于JavaSpringBoot + Vue + UniApp开发的一套新零售移动电商系统，CRMEB系统就是集客户关系管理+营销电商系统，能够快速积累客户、会员数据分析、智能转化客户、
    有效提高销售、会员维护、网络营销的一款企业应用，更适合企业二次开发；
@@ -21,121 +21,64 @@
  | [GitHub地址](https://github.com/crmeb/crmeb_java)
  | [码云地址](https://gitee.com/ZhongBangKeJi/crmeb_java)
 
-# 加技术交流群
-## [CRMEB JAVA 技术交流QQ群 1群](<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=XJ79nw1CVADxGTl1Ju0iMxzq9HMIhTR0&jump_from=webapi">点击加群 893839288</a>)
+![项目基本功能介绍](https://gitee.com/stivepeim/img4mk/raw/master/20201225180349.jpeg)
 
-# 演示站
-1. 移动端：[https://java.crmeb.net](https://java.crmeb.net)
-2. 后台：[https://admin.java.crmeb.net](https://admin.java.crmeb.net)   
-### 后台账号 demo  密码 crmeb.com， 请大家不要随意改密码！
-### 请大家不要随意改密码！请大家不要随意改密码！请大家不要随意改密码！
+## 加技术交流群
+[CRMEB JAVA 技术交流QQ群 1群](<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=XJ79nw1CVADxGTl1Ju0iMxzq9HMIhTR0&jump_from=webapi">点击加群 893839288</a>)
 
-# 推荐项目
+
+## 推荐项目
+~~~
 CRMEB知识付费项目：https://gitee.com/ZhongBangKeJi/crmeb_zzff_class
 CRMEB打通版：https://gitee.com/ZhongBangKeJi/CRMEB
-
-#运行环境
-
-运行环境要求JAVA1.8
-
-注意：请尽量遵循阿里巴巴开发规范，可以减少在开发过程中出现不必要的错误
-
-# 开源项目内包含三个子项目
 ~~~
-    1:admin     WEB程序         PC端管理端 VUE + ElementUi
-    2:app       移动商城         UniApp标准开发
-    3:crmeb     Api            Java SpringBoot + mybatisPlus ...
-    4:接口文档   Api对应的接口文档也可以部署项目后查看  
+
+## 开源项目内包含三个子项目
+~~~
+1:admin     WEB程序         PC端管理端 VUE + ElementUi
+2:app       移动商城         UniApp标准开发
+3:crmeb     Api            Java SpringBoot + mybatisPlus ...
+4:接口文档   Api对应的接口文档也可以部署项目后查看  
 ~~~
 ## 主要特性
-
-有详细的代码注释，有完整系统手册
-### SpringBoot框架
-使用SpringBoot框架框架开发
-### 前端采用Vue UniApp框架
-前端使用Vue UniApp框架，标准前后端分离开发.
-### 标准接口
-标准RESTful 接口、逻辑层次更明确
-### 支持队列
-降低流量高峰，解除耦合，高可用
-### 无缝事件机制
-行为扩展更方便，方便二次开发
-### 数据操作
-Excel数据导出,导出表格更加美观可视；
-### 数据统计分析
-后台使用ECharts图表统计，实现用户、产品、订单、资金等统计分析
-### 强大的后台权限管理
-后台多种角色、多重身份权限管理，权限可以控制到每一步操作
-### 基于Vue表单生成控件
-可以自由拖拉拽配置表单，减少前端重复表单工作量，后端接口统一调用
-
-
-# 安装
-
-### 创建三个站点
-1. 把crmeb内的文件夹上传到 接口站点，此站点重定向到自己配置的端口，详情见crmeb项目.md文档
-2. 打包app项目，请使用uniapp专业工具
-3. 打包admin项目，详情见admin文件夹里.md文档
-4. 新建数据库导入sql文件
-
-### 解析三个域名：
-1. api.xx.com       后台服务使用
-2. app.xx.com       移动端使用
-3. admin.xx.com     PC管理端使用
-
-
-### Java项目说明
-### 运行环境
-1. Java Jdk1.8
-2. Redis 5+
-3. Mysql 5.7+
-4. Nginx
-
-### Java项目框架
-1. SpringBoot 2.2.6.RELEASE
-2. Maven 3.6.1
-3. swagger-bootstrap-ui 1.0
-4. Mybatis Plus 3.3.1
-
-# 运行部署
-1. 拿到jar包，上传到web目录下，（宝塔配置的域名指向的web目录下即可）
-2. 在 jar包同级目录下运行 `start.sh (运行命令为 ./start.sh )` 脚本即可启动项目
-3. shell脚本会自动运行 `tail -f crmeb_out.file` 命令输出当前启动日志
-4. 看到 `Completed 200 OK` 表示启动成功
-5. 默认启动 `20000` 端口号
 ~~~
-Swagger接口文档
-演示站接口: https://api.java.crmeb.net/doc.html
-
-本地启动Java Api项目接口地址：http://localhost:8080/doc.html#    8080为配置文件里配置的 server/port
-
-prod环境swagger默认账号密码在 prod.yml配置里
+1:有详细的代码注释，有完整系统手册。
+2:使用SpringBoot框架框架开发。
+3:前端使用Vue UniApp框架，标准前后端分离开发。
+4:标准RESTful 接口、逻辑层次更明确。
+5:支持Redis队列，降低流量高峰，解除耦合，高可用。
+6:无缝事件机制，行为扩展更方便，方便二次开发。
+7:数据导出，方便个性话分析。
+8:数据统计分析,使用ECharts图表统计，实现用户、产品、订单、资金等统计分析。
+9:权限管理，后台多种角色，多重身份权限管理，权限可以控制到每一步操作。
+10:Vue表单生成控件，可以自由拖拉拽配置表单，减少前端重复表单工作量。
 ~~~
-# **自己安装项目后台管理员**
-### 超级管理员：admin
-### 密码：123456
 
-# 素材说明
-建议使用自己的素材文件，如果像我一样实在懒得找，可以在技术群里@售前小姐姐 说话温柔点说不定会给你。
+## 运行环境及框架
+~~~
+Java项目运行环境
+1.Java Jdk1.8
+2.Redis 5+
+3.Mysql 5.7+
+4.Nginx
 
-# 注意事项
-1. web端口号不可以设置为`20000`
-2. 反向代理地址: `http://127.0.0.1:20000` 【外网域名指向这个地址】
+Java项目框架
+1.SpringBoot 2.2.6.RELEASE
+2.Maven 3.6.1
+3.swagger-bootstrap-ui 1.0
+4.Mybatis Plus 3.3.1
 
+WEB PC 项目运行环境
+1.npm 6
+2.node 14
+3.vue 2.x
+4.element ui 2.13
 
-# 产品复制
-1. 设置 [99api](https://www.99api.com "99api") 对应的api到配置表eb_system_config 
-2. 配置baseUrl和key 实际的key可以根据自己的定义修改
-3. 目前支持天猫，京东，淘宝，苏宁，拼多多
+移动端 uniapp 开发 使用 HbuilderX 开发
+~~~
 
-# 打印机
-1. [易联云文档](http://doc2.10ss.net/337744 "易联云文档")
-2. [易联云JAVA SDK](http://doc2.10ss.net/337744 "易联云JAVA SDK gitee文档")
-3. [如何导入第三方JAVA SDK包](https://blog.csdn.net/weixin_46028577/article/details/106342938?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.nonecase "如何导入第三方JAVA SDK包")
-#
-
-
-# v1.3 更新列表 
+## 更新列表一览
+## v1.3 更新列表 
     1. 【新增】砍价
 	2. 【新增】拼团
 	3. 【新增】一号通
@@ -149,71 +92,41 @@ prod环境swagger默认账号密码在 prod.yml配置里
 	11. 【修复】WEB管理端-菜单色调，短信API更新，首页用户访问量，系统设置tab是自动选择下一及表单
 	12. 【修复】系统设置出现更新不正确的问题
 
-# v1.2.2 更新列表
+## v1.2.2 更新列表
 	1. 修复了商品从回收站中删除的逻辑
 	2. 新增了icon文件
 	3. 短信下单购买二维码加载不到的问题
     4. 秒杀配置时间小于当前所有时间的重叠判断
 
-# v1.2.1 更新列表
+## v1.2.1 更新列表
     1. 短信后台升级,更新供应商
     2. 替换官方swagger文档提升友好和易用[swagger-bootstrap-ui] https://doc.xiaominfo.com/knife4j
     3. 添加商品分类必要素材,可在配置好图片服务后自行维护
 
-# v1.2 修复内容列表
-	1. 修复购物车,订单和退单后后置任务正确执行
-	2. 修复佣金记录金额和详情
-	3. 修复管理端 移动应用界面下订单管理数据统计不准确的问题
-	4. 修复短信API升级-后台使用一号通
-	5. 修复用户管理相关问题
-	6. 修复核销点核销后核销地址不准确
-	7. 修复资源同步云服务的问题
-### 新增功能
-	1. 秒杀
-		a. 秒杀时段配置
-		b. 秒杀商品维护
-	2. 财务管理
-		a. 申请提现
-		b. 财务记录
-			i. 充值记录
-			ii. 资金监控
-		c. 佣金记录
-普通商品显示该商品正在参加的活动信息[秒杀]
+## v1.2 更新列表
+	1.【修复】购物车,订单和退单后后置任务正确执行
+	2.【修复】佣金记录金额和详情
+	3.【修复】管理端 移动应用界面下订单管理数据统计不准确的问题
+	4.【修复】短信API升级-后台使用一号通
+	5.【修复】用户管理相关问题
+	6.【修复】核销点核销后核销地址不准确
+	7.【修复】资源同步云服务的问题
+	8.【新增】秒杀
+	9.【新增】财务管理
+	10.【新增】普通商品显示该商品正在参加的活动信息[秒杀]
 
+## 演示站
+~~~
+1. 移动端：[https://java.crmeb.net](https://java.crmeb.net)
+2. 后台：[https://admin.java.crmeb.net](https://admin.java.crmeb.net)   
+后台账号 demo  密码 crmeb.com， 请大家不要改密码！
+请大家不要改密码！请大家不要改密码！请大家不要改密码！
+~~~
 
-# admin项目说明
-公用组件
-无限极分类组件 src/components/Category
-使用范围：菜单，文章等各种分类配置数据
+## 素材说明
+建议使用自己的素材文件，如果像我一样实在懒得找，可以在技术群里@售前小姐姐
 
-表单生成组件
-https://github.com/JakHuang/form-generator
-
-json渲染表单以及是否需要编辑数据回填的功能以下为例
-示例：src/views/maintain/devconfig/combineEdit.vue
-
-<parser v-if="formConf.fields.length > 0" :isEdit="isCreate === 1"
-              :form-conf="formConf" :formEditData="editData"
-              @submit="handlerSubmit" />
-注意：设置单选按钮的值时需要带上单引号，要不渲染待编辑数据时不会自动选中
-
-
-## 帮助文档
-[帮助文档](http://help.crmeb.net/crmeb_java/1748037)
-![详细的安装流程](https://images.gitee.com/uploads/images/2020/0824/153018_a0d52767_2012975.png "屏幕截图.png")
-![目录结构](https://images.gitee.com/uploads/images/2020/0824/153257_9b80e21b_2012975.png "屏幕截图.png")
-![数据字典](https://images.gitee.com/uploads/images/2020/0824/153317_abb02860_2012975.png "屏幕截图.png")
-![任务](https://images.gitee.com/uploads/images/2020/0824/153342_96cb48f6_2012975.png "屏幕截图.png")
-![系统配置](https://images.gitee.com/uploads/images/2020/0824/153403_a3aa12c7_2012975.png "屏幕截图.png")
-![组合数据](https://images.gitee.com/uploads/images/2020/0824/153420_18c99224_2012975.png "屏幕截图.png")
-![form表单拖拉拽](https://images.gitee.com/uploads/images/2020/0824/153433_3a83ffe2_2012975.png "屏幕截图.png")
-![拦截器](https://images.gitee.com/uploads/images/2020/0824/153505_126970b4_2012975.png "屏幕截图.png")
-![过滤器](https://images.gitee.com/uploads/images/2020/0824/153521_be33bd82_2012975.png "屏幕截图.png")
-![无限级分类](https://images.gitee.com/uploads/images/2020/0824/153546_4b28e184_2012975.png "屏幕截图.png")
-
-
-
-###后台界面
+## 功能预览
 ![登录界面](https://images.gitee.com/uploads/images/2020/0824/153756_35878cdb_2012975.png "屏幕截图.png")
 ![控制台](https://images.gitee.com/uploads/images/2020/0824/153848_442b3527_2012975.png "屏幕截图.png")
 ![商品列表](https://images.gitee.com/uploads/images/2020/0824/153920_877f7cba_2012975.png "屏幕截图.png")
@@ -236,23 +149,24 @@ json渲染表单以及是否需要编辑数据回填的功能以下为例
 ![系统设置分类](https://images.gitee.com/uploads/images/2020/0824/154816_db8139fd_2012975.png "屏幕截图.png")
 
 
-# 参与开发
+## 参与开发
 
 请参阅 [CRMEB](https://github.com/crmeb/crmeb_java)。
 
-# 开源版使用须知
+
+
+## 开源版使用须知
 
 1.允许用于个人学习、毕业设计、教学案例、公益事业;
 
-2.如果商用必须保留版权信息，请自觉遵守;
+2.如果商用必须保留版权信息，如果需要去版权请联系客服;
 
 3.禁止将本项目的代码和资源进行任何形式的出售，产生的一切任何后果责任由侵权者自负。
 
-# 版权信息
 
 
+## 版权信息
 本项目包含的第三方源码和二进制文件之版权信息另行标注。
-
 版权所有Copyright © 2017-2020 by CRMEB (http://www.crmeb.com)
 
 All rights reserved。
