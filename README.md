@@ -36,7 +36,7 @@ CRMEB打通版：https://gitee.com/ZhongBangKeJi/CRMEB
 ## 开源项目内包含三个子项目
 ~~~
 1:admin     WEB程序         PC端管理端 VUE + ElementUi
-2:app       移动商城         UniApp标准开发
+2:app       移动商城         UniApp标准开发(H5 + 微信小程序)
 3:crmeb     Api            Java SpringBoot + mybatisPlus ...
 4:接口文档   Api对应的接口文档也可以部署项目后查看  
 ~~~
