@@ -17,7 +17,7 @@
  | [论坛地址](http://bbs.crmeb.net)
  | [官网地址](https://www.crmeb.com)
  | [服务器](https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=dligum2z)
- | [授权价格](http://crmeb.com/web/index/price.html)
+ | [授权价格](http://crmeb.com/web/auth/apply)
  | [GitHub地址](https://github.com/crmeb/crmeb_java)
  | [码云地址](https://gitee.com/ZhongBangKeJi/crmeb_java)
 
