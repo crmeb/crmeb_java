@@ -246,7 +246,7 @@ export default {
         _fields.push({
           name: key,
           title: key,
-          value: formValue[key] || '1111'
+          value: formValue[key]
         })
       })
       _pram.fields = _fields
