@@ -6520,7 +6520,7 @@ LOCK TABLES `eb_system_admin` WRITE;
 
 INSERT INTO `eb_system_admin` (`id`, `account`, `pwd`, `real_name`, `roles`, `last_ip`, `update_time`, `create_time`, `login_count`, `level`, `status`, `is_del`)
 VALUES
-	(1,'admin','IQmAeTaTWb3k5FnkM8ghNQ==','admin','1','127.0.0.1','2020-12-24 12:33:43','2020-08-17 17:48:58',1054,0,1,0),
+	(1,'admin','L8qdg72wbeQ=','admin','1','127.0.0.1','2020-12-24 12:33:43','2020-08-17 17:48:58',1054,0,1,0),
 	(31,'demo','7iIl3H5zCinwrYbrxAR7cQ==','demo','4','112.80.52.45','2020-12-23 14:29:27','2020-12-04 09:18:14',1868,1,1,0);
 
 /*!40000 ALTER TABLE `eb_system_admin` ENABLE KEYS */;
