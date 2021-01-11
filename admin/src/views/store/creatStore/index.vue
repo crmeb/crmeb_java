@@ -573,6 +573,7 @@
       handleCloseCoupon(tag) {
         this.isAttr = true
         this.formValidate.coupons.splice(this.formValidate.coupons.indexOf(tag), 1)
+        this.formValidate.couponIds.splice(this.formValidate.couponIds.indexOf(tag.id), 1)
       },
       addCoupon() {
         const _this = this
@@ -894,6 +895,7 @@
             giveIntegral: info.giveIntegral,
             ficti: info.ficti,
             coupons: info.coupons,
+            couponIds: info.couponIds,
             activity: info.activityStr ? info.activityStr.split(',') : ['默认','秒杀','砍价','拼团']
           }
           if(info.isHot) this.checkboxGroup.push('isHot')
