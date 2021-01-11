@@ -760,18 +760,19 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
 
     /** 退款
      * @param request StoreOrderRefundRequest 退款参数
-     * @author Mr.Zhang
-     * @since 2020-06-10
      * @return boolean
+     * 这里只处理订单状态
+     * 余额支付需要把余额给用户加回去
+     * 其余处理放入redis中处理
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public boolean refund(StoreOrderRefundRequest request) {
         StoreOrder storeOrder = getById(request.getOrderId());
-        if(null == storeOrder){throw new CrmebException("未查到订单");}
+        if(ObjectUtil.isNull(storeOrder)){throw new CrmebException("未查到订单");}
         if(!storeOrder.getPaid()){throw new CrmebException("未支付无法退款");}
-        if(storeOrder.getRefundPrice().add(request.getAmount()).compareTo(storeOrder.getPayPrice()) > 0){throw new CrmebException("退款金额大于支付金额，请修改退款金额");}
-
+        if(storeOrder.getRefundPrice().add(request.getAmount()).compareTo(storeOrder.getPayPrice()) > 0) {
+            throw new CrmebException("退款金额大于支付金额，请修改退款金额");
+        }
 
         //用户
         User user = userService.getById(storeOrder.getUid());
@@ -785,61 +786,45 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
                 throw new CrmebException("微信申请退款失败！");
             }
         }
-        if (storeOrder.getPayType().equals(Constants.PAY_TYPE_YUE)) {
-            UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
-            userOperateFundsRequest.setUid(storeOrder.getUid());
-            userOperateFundsRequest.setValue(request.getAmount());
-            userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_MONEY);
-            userOperateFundsRequest.setFoundsType(Constants.ORDER_STATUS_REFUNDED);
-            userOperateFundsRequest.setType(1);
-            userOperateFundsRequest.setTitle(Constants.ORDER_STATUS_STR_REFUNDED);
-            boolean addMoney = userService.updateFounds(userOperateFundsRequest, false); //更新余额
-            if(!addMoney){throw new CrmebException("余额退款失败");}
-
-            //新增日志
-            boolean addBill = userBillService.saveRefundBill(request, user);
-            if(!addBill){throw new CrmebException("余额退款失败");}
-        }
 
         //修改订单退款状态
-        if(request.getType() == 1){
-            storeOrder.setRefundStatus(2);
-        }else if(request.getType() == 2){
-            storeOrder.setRefundStatus(0);
-        }else{
-            throw new CrmebException("选择退款状态错误");
-        }
+        storeOrder.setRefundStatus(3);
         storeOrder.setRefundPrice(request.getAmount());
-        boolean updateOrder = updateById(storeOrder);
-        if(!updateOrder){
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            updateById(storeOrder);
+            if (storeOrder.getPayType().equals(Constants.PAY_TYPE_YUE)) {
+                // 更新用户金额 TODO 后期要调整
+                UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
+                userOperateFundsRequest.setUid(storeOrder.getUid());
+                userOperateFundsRequest.setValue(request.getAmount());
+                userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_MONEY);
+                userOperateFundsRequest.setFoundsType(Constants.ORDER_STATUS_REFUNDED);
+                userOperateFundsRequest.setType(1);
+                userOperateFundsRequest.setTitle(Constants.ORDER_STATUS_STR_REFUNDED);
+                userService.updateFounds(userOperateFundsRequest, false); //更新余额
+                //新增日志
+                userBillService.saveRefundBill(request, user);
+                // 退款task
+                redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER, storeOrder.getId());
+            }
+            return Boolean.TRUE;
+        });
+        if(!execute){
             storeOrderStatusService.saveRefund(request.getOrderId(), request.getAmount(), "失败");
             throw new CrmebException("订单更新失败");
         }
-        //退款成功
-        storeOrderStatusService.saveRefund(request.getOrderId(), request.getAmount(), null);
+//        // 小程序订阅消息 退款成功
+//        String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
+//        WechatSendMessageForReFundEd forReFundEd = new WechatSendMessageForReFundEd(
+//                "退款成功",storeNameAndCarNumString,request.getAmount()+"",DateUtil.nowDateTimeStr(),"退款金额已到余额中",
+//                storeOrder.getOrderId(),storeOrder.getId()+"",storeOrder.getCreateTime()+"",storeOrder.getRefundPrice()+"",
+//                storeNameAndCarNumString,storeOrder.getRefundReason(),"CRMEB",storeOrder.getRefundReasonWapExplain(),
+//                "暂无"
+//        );
+//        wechatSendMessageForMinService.sendReFundEdMessage(forReFundEd, userService.getUserIdException());
 
-        //佣金
-        subtractBill(request, Constants.USER_BILL_CATEGORY_MONEY,
-                Constants.USER_BILL_TYPE_BROKERAGE, Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE);
-
-        //积分
-        subtractBill(request, Constants.USER_BILL_CATEGORY_INTEGRAL,
-                Constants.USER_BILL_TYPE_GAIN, Constants.USER_BILL_CATEGORY_INTEGRAL);
-
-        // 回滚库存 后续操作放入redis
-        redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER, storeOrder.getId());
-
-        // 小程序订阅消息 退款成功
-        String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
-        WechatSendMessageForReFundEd forReFundEd = new WechatSendMessageForReFundEd(
-                "退款成功",storeNameAndCarNumString,request.getAmount()+"",DateUtil.nowDateTimeStr(),"退款金额已到余额中",
-                storeOrder.getOrderId(),storeOrder.getId()+"",storeOrder.getCreateTime()+"",storeOrder.getRefundPrice()+"",
-                storeNameAndCarNumString,storeOrder.getRefundReason(),"CRMEB",storeOrder.getRefundReasonWapExplain(),
-                "暂无"
-        );
-        wechatSendMessageForMinService.sendReFundEdMessage(forReFundEd, userService.getUserIdException());
-
-        return true;
+        return execute;
     }
 
     /** 订单详情

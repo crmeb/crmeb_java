@@ -38,8 +38,8 @@ public class StoreOrderRefundRequest {
     @DecimalMin(value = "0.00", message = "退款金额不能少于0.00")
     private BigDecimal amount;
 
-    @ApiModelProperty(value = "status 1 = 直接退款, 2 = 退款后,返回原状态", allowableValues = "range[1,2]")
-    @Range(min = 1, max = 2, message = "请选择退款状态 1 = 直接退款, 2 = 退款后,返回原状态")
-    private int type;
+//    @ApiModelProperty(value = "status 1 = 直接退款, 2 = 退款后,返回原状态", allowableValues = "range[1,2]")
+//    @Range(min = 1, max = 2, message = "请选择退款状态 1 = 直接退款, 2 = 退款后,返回原状态")
+//    private int type;
 
 }
