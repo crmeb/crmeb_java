@@ -3,13 +3,17 @@
     <a href="http://www.crmeb.com">
     </p>
 <p align="center">    
-    <b>如果对您有帮助，您可以点右上角 "Star" 支持一下 谢谢！</b>
+    <b>如果对您有帮助，您可以点右上角 "Star" ❤️  支持一下 谢谢！</b>
 </p>
 
 ## 项目介绍
+~~~
 
-   CRMEB JAVA版商城系统是基于JavaSpringBoot + Vue + UniApp开发的一套新零售移动电商系统，CRMEB系统就是集客户关系管理+营销电商系统，能够快速积累客户、会员数据分析、智能转化客户、
-   有效提高销售、会员维护、网络营销的一款企业应用，更适合企业二次开发；
+	CRMEB 是西安众邦网络科技有限公司旗下品牌，众邦科技8年专注电商的技术沉淀和行业积累，专业打造行业领先，功能强大，易用性强，扩展性强产品，CRMEB现有CRMEB单商户系统(Java版本)、CRMEB Pro系统、CRMEB 多商户系统、知识付费系统等系统产品。
+
+	JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的一套新零售移动电商系统，CRMEB系统就是集客户关系管理 + 营销电商系统，能够快速积累客户、会员数据分析、智能转化客户、有效提高销售、会员维护、网络营销的一款企业应用，更适合企业二次开发。
+
+~~~~
 
 ## 导航栏目
 
@@ -21,54 +25,44 @@
  | [GitHub地址](https://github.com/crmeb/crmeb_java)
  | [码云地址](https://gitee.com/ZhongBangKeJi/crmeb_java)
 
-![项目基本功能介绍](https://gitee.com/stivepeim/img4mk/raw/master/20201225180349.jpeg)
+## 预览地址
 
-## 加技术交流群
-[CRMEB JAVA 技术交流QQ群 1群](<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=XJ79nw1CVADxGTl1Ju0iMxzq9HMIhTR0&jump_from=webapi">点击加群 893839288</a>)
+移动端：[https://java.crmeb.net](https://java.crmeb.net)
 
+后台：[https://admin.java.crmeb.net](https://admin.java.crmeb.net)   
 
-## 推荐项目
-~~~
-CRMEB知识付费项目：https://gitee.com/ZhongBangKeJi/crmeb_zzff_class
-CRMEB打通版：https://gitee.com/ZhongBangKeJi/CRMEB
-~~~
+账号密码：后台账号 demo  密码 crmeb.com
 
-## 开源项目内包含三个子项目
-~~~
-1:admin     WEB程序         PC端管理端 VUE + ElementUi
-2:app       移动商城         UniApp标准开发(H5 + 微信小程序)
-3:crmeb     Api            Java SpringBoot + mybatisPlus ...
-4:接口文档   Api对应的接口文档也可以部署项目后查看  
-~~~
-## 主要特性
-~~~
-1:有详细的代码注释，有完整系统手册。
-2:使用SpringBoot框架框架开发。
-3:前端使用Vue UniApp框架，标准前后端分离开发。
-4:标准RESTful 接口、逻辑层次更明确。
-5:支持Redis队列，降低流量高峰，解除耦合，高可用。
-6:无缝事件机制，行为扩展更方便，方便二次开发。
-7:数据导出，方便个性话分析。
-8:数据统计分析,使用ECharts图表统计，实现用户、产品、订单、资金等统计分析。
-9:权限管理，后台多种角色，多重身份权限管理，权限可以控制到每一步操作。
-10:Vue表单生成控件，可以自由拖拉拽配置表单，减少前端重复表单工作量。
-~~~
+## 项目源码
+| | 源码地址|
+|--- |--- |
+|gitHub| https://github.com/crmeb/crmeb_java|
+|gitee|https://gitee.com/ZhongBangKeJi/crmeb_java|
+
 
 ## 运行环境及框架
 ~~~
+
 Java项目运行环境
+
 1.Java Jdk1.8
 2.Redis 5+
 3.Mysql 5.7+
 4.Nginx
 
+
+
 Java项目框架
+
 1.SpringBoot 2.2.6.RELEASE
 2.Maven 3.6.1
 3.swagger-bootstrap-ui 1.0
 4.Mybatis Plus 3.3.1
 
+
+
 WEB PC 项目运行环境
+
 1.npm 6
 2.node 14
 3.vue 2.x
@@ -76,6 +70,55 @@ WEB PC 项目运行环境
 
 移动端 uniapp 开发 使用 HbuilderX 开发
 ~~~
+
+## 项目代码包介绍
+~~~
+
+1:admin     WEB程序         PC端管理端 VUE + ElementUi
+2:app       移动商城         UniApp标准开发(H5 + 微信小程序)
+3:crmeb     Api            Java SpringBoot + mybatisPlus ...
+4:接口文档   Api对应的接口文档也可以部署项目后查看  
+
+~~~
+
+## 素材说明
+建议使用自己的素材文件，如果像我一样实在懒得找，可以在技术群里@售前小姐姐
+
+## 内推荐项目
+~~~
+
+CRMEB知识付费项目：https://gitee.com/ZhongBangKeJi/crmeb_zzff_class
+CRMEB打通版：https://gitee.com/ZhongBangKeJi/CRMEB
+
+~~~
+
+## 主要特点
+~~~
+
+1:有详细的代码注释，有完整系统手册。
+2:基于 SpringBoot 框架开发业界主流。
+3:【前端】Web PC 管理端 vue + element UI。 
+4:【前端】移动端使用 UniApp 框架，前后端分离开发。
+5:标准RESTful 接口、标准数据传输，逻辑层次更明确，更多的提高api复用。
+6:支持Redis队列，降低流量高峰，解除耦合，高可用。
+7:无缝事件机制，行为扩展更方便，方便二次开发。
+8:数据导出，方便个性化分析。
+9:数据统计分析,使用ECharts图表统计，实现用户、产品、订单、资金等统计分析。
+10:权限管理，后台多种角色，多重身份权限管理，权限可以控制到按钮级别的操作。
+11:Vue表单生成控件，拖拽配置表单，减少前端重复表单工作量，提高前端开发效率。
+
+~~~
+
+![项目基本功能介绍](https://gitee.com/stivepeim/img4mk/raw/master/20201225180349.jpeg)
+
+## 反馈交流
+[CRMEB JAVA 技术交流QQ群 1群](<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=XJ79nw1CVADxGTl1Ju0iMxzq9HMIhTR0&jump_from=webapi">点击加群 893839288</a>)
+
+使用中遇到bug 或者问题可以在gitee 上提 [Issues](https://gitee.com/ZhongBangKeJi/crmeb_java/issues)
+
+如果直接点击加群无反应可复制QQ号码手动加入
+
+
 
 ## 更新列表一览
 ## v1.3 更新列表 
@@ -115,16 +158,8 @@ WEB PC 项目运行环境
 	9.【新增】财务管理
 	10.【新增】普通商品显示该商品正在参加的活动信息[秒杀]
 
-## 演示站
-~~~
-1. 移动端：[https://java.crmeb.net](https://java.crmeb.net)
-2. 后台：[https://admin.java.crmeb.net](https://admin.java.crmeb.net)   
-后台账号 demo  密码 crmeb.com， 请大家不要改密码！
-请大家不要改密码！请大家不要改密码！请大家不要改密码！
-~~~
 
-## 素材说明
-建议使用自己的素材文件，如果像我一样实在懒得找，可以在技术群里@售前小姐姐
+
 
 ## 功能预览
 ![登录界面](https://images.gitee.com/uploads/images/2020/0824/153756_35878cdb_2012975.png "屏幕截图.png")
