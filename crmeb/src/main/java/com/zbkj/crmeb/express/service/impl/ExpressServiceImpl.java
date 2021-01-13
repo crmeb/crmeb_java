@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
  *  +----------------------------------------------------------------------
  *  | Author: CRMEB Team <admin@crmeb.com>
  *  +----------------------------------------------------------------------
-*/
+ */
 @Service
 public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> implements ExpressService {
 
@@ -148,12 +148,15 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
 
     /**
      * 查询全部物流公司
+     * @param type 类型：normal-普通，elec-电子面单
      */
     @Override
-    public List<Express> findAll() {
+    public List<Express> findAll(String type) {
         LambdaQueryWrapper<Express> lqw = new LambdaQueryWrapper<>();
         lqw.eq(Express::getIsShow, true);
-        lqw.eq(Express::getStatus, true);
+        if (type.equals("elec")) {
+            lqw.eq(Express::getStatus, true);
+        }
         lqw.orderByDesc(Express::getSort, Express::getId);
         return dao.selectList(lqw);
     }
@@ -268,4 +271,3 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
     public static String st = "mnc7Yay0RsvF70LWX7i6k";
     public static String sk = "￥bugJEjOmF01hxGr~qj5";
 }
-
