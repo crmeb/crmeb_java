@@ -26,8 +26,8 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
-* ExpressServiceImpl 接口实现
-*  +----------------------------------------------------------------------
+ * ExpressServiceImpl 接口实现
+ *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
  *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
  *  +----------------------------------------------------------------------
  *  | Author: CRMEB Team <admin@crmeb.com>
  *  +----------------------------------------------------------------------
-*/
+ */
 @Data
 @Service
 public class LogisticsServiceImpl implements LogisticService {
@@ -119,38 +119,14 @@ public class LogisticsServiceImpl implements LogisticService {
         resultVo.setNumber(queryVo.getNum());
         resultVo.setExpName(queryVo.getCom());
         resultVo.setIsSign(queryVo.getIscheck());
-        switch (queryVo.getStatus()) {
-            case "0":// 在途
-            case "1":// 揽收
-            case "7":// 转单
-                resultVo.setDeliveryStatus("1");
-                break;
-            case "2":// 疑难
-                resultVo.setDeliveryStatus("5");
-                break;
-            case "3":// 签收
-                resultVo.setDeliveryStatus("3");
-                break;
-            case "4":// 退签
-                resultVo.setDeliveryStatus("6");
-                break;
-            case "5":// 派件
-                resultVo.setDeliveryStatus("2");
-                break;
-            case "6":// 退回
-                resultVo.setDeliveryStatus("6");
-                break;
-            default:
-                resultVo.setDeliveryStatus(queryVo.getStatus());
-        }
-        resultVo.setDeliveryStatus(queryVo.getNum());
+        resultVo.setDeliveryStatus(queryVo.getStatus());
 
         if (CollUtil.isNotEmpty(queryVo.getContent())) {
             List<LogisticsResultListVo> list = CollUtil.newArrayList();
             queryVo.getContent().forEach(i -> {
                 LogisticsResultListVo listVo = new LogisticsResultListVo();
                 listVo.setTime(i.getTime());
-                listVo.setStatus(i.getContext());
+                listVo.setStatus(i.getStatus());
                 list.add(listVo);
             });
             resultVo.setList(list);
@@ -166,7 +142,7 @@ public class LogisticsServiceImpl implements LogisticService {
     private JSONObject getCache() {
         Object data = redisUtil.get(getRedisKey() + getExpressNo());
         if(null != data){
-         return JSONObject.parseObject(data.toString());
+            return JSONObject.parseObject(data.toString());
         }
         return null;
     }
@@ -191,4 +167,3 @@ public class LogisticsServiceImpl implements LogisticService {
         }
     }
 }
-

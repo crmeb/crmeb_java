@@ -3,12 +3,8 @@ package com.zbkj.crmeb.front.controller;
 
 import com.common.CommonPage;
 import com.common.CommonResult;
-import com.common.PageParamRequest;
-import com.constants.Constants;
 import com.zbkj.crmeb.express.model.Express;
-import com.zbkj.crmeb.express.request.ExpressSearchRequest;
 import com.zbkj.crmeb.express.service.ExpressService;
-import com.zbkj.crmeb.system.service.SystemCityService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -45,9 +41,8 @@ public class ExpressController {
     @ApiOperation(value = "列表")
     @RequestMapping(value = "/logistics", method = RequestMethod.GET)
     public CommonResult<CommonPage<Express>> register(){
-        return CommonResult.success(CommonPage.restPage(expressService.findAll()));
+        return CommonResult.success(CommonPage.restPage(expressService.findAll("normal")));
     }
 }
-
 
 

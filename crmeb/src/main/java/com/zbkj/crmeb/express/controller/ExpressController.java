@@ -107,15 +107,16 @@ public class ExpressController {
     public CommonResult<Express> info(@RequestParam(value = "id") Integer id){
         Express express = expressService.getById(id);
         return CommonResult.success(express);
-   }
+    }
 
     /**
      * 查询全部物流公司
      */
     @ApiOperation(value = "查询全部物流公司")
     @RequestMapping(value = "/all", method = RequestMethod.GET)
-    public CommonResult<List<Express>> all() {
-        return CommonResult.success(expressService.findAll());
+    @ApiImplicitParam(name="type", value="类型：normal-普通，elec-电子面单")
+    public CommonResult<List<Express>> all(@RequestParam(value = "type") String type) {
+        return CommonResult.success(expressService.findAll(type));
     }
 
     /**
@@ -129,6 +130,3 @@ public class ExpressController {
         return CommonResult.success(expressService.template(com));
     }
 }
-
-
-
