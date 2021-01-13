@@ -36,6 +36,5 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 public class CrmebApplication{
     public static void main(String[] args) {
         SpringApplication.run(CrmebApplication.class, args);
-        System.out.println("CRMEB Started!");
     }
 }
