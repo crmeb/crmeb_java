@@ -23,7 +23,7 @@
         <div class="title">订单信息</div>
         <div class="acea-row">
           <div class="description-term">订单编号：{{orderDatalist.orderId}}</div>
-          <div class="description-term" style="color: red">订单状态：{{orderDatalist.status | orderStatusFilter}}</div>
+          <div class="description-term" style="color: red">订单状态：{{orderDatalist.statusStr.value}}</div>
           <div class="description-term">商品总数：{{orderDatalist.totalNum}}</div>
           <div class="description-term">商品总价：{{orderDatalist.totalPrice}}</div>
           <div class="description-term">交付邮费：{{orderDatalist.payPostage}}</div>
@@ -102,50 +102,50 @@
 </template>
 
 <script>
-import { orderDetailApi, getLogisticsInfoApi } from '@/api/order'
-export default {
-  name: 'OrderDetail',
-  props: {
-    orderId: {
-      type: Number,
-      default: 0
-    }
-  },
-  data() {
-    return {
-      reverse: true,
-      dialogVisible: false,
-      orderDatalist: null,
-      loading: false,
-      modal2: false,
-      result: []
-    }
-  },
-  mounted() {
-  },
-  methods: {
-    openLogistics () {
-      this.getOrderData()
-      this.modal2 = true;
+  import { orderDetailApi, getLogisticsInfoApi } from '@/api/order'
+  export default {
+    name: 'OrderDetail',
+    props: {
+      orderId: {
+        type: Number,
+        default: 0
+      }
     },
-    // 获取订单物流信息
-    getOrderData () {
-      getLogisticsInfoApi({id:this.orderId}).then(async res => {
-        this.result = res.result;
-      })
+    data() {
+      return {
+        reverse: true,
+        dialogVisible: false,
+        orderDatalist: null,
+        loading: false,
+        modal2: false,
+        result: []
+      }
     },
-    getDetail(id) {
-      this.loading = true
-      orderDetailApi({id: id}).then(res => {
-        this.orderDatalist = res
-        this.loading = false
-      }).catch(() => {
-        this.orderDatalist = null
-        this.loading = false
-      })
+    mounted() {
+    },
+    methods: {
+      openLogistics () {
+        this.getOrderData()
+        this.modal2 = true;
+      },
+      // 获取订单物流信息
+      getOrderData () {
+        getLogisticsInfoApi({id:this.orderId}).then(async res => {
+          this.result = res.list;
+        })
+      },
+      getDetail(id) {
+        this.loading = true
+        orderDetailApi({id: id}).then(res => {
+          this.orderDatalist = res
+          this.loading = false
+        }).catch(() => {
+          this.orderDatalist = null
+          this.loading = false
+        })
+      }
     }
   }
-}
 </script>
 
 <style scoped lang="scss">
