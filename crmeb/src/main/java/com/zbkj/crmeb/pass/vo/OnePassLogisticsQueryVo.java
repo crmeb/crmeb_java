@@ -31,7 +31,7 @@ public class OnePassLogisticsQueryVo {
     @ApiModelProperty(value = "是否签收")
     private String ischeck;
 
-    @ApiModelProperty(value = "物流状态：0在途，1揽收，2疑难，3签收，4退签，5派件，6退回，7转单，10待清关，11清关中，12已清关，13清关异常，14收件人拒签")
+    @ApiModelProperty(value = "物流状态：0：快递收件(揽件)1.在途中 2.正在派件 3.已签收 4.派送失败 5.疑难件 6.退件签收 ")
     private String status;
 
     @ApiModelProperty(value = "物流公司")

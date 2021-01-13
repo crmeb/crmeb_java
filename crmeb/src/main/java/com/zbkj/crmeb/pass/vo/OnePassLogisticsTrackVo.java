@@ -32,5 +32,5 @@ public class OnePassLogisticsTrackVo {
     private String ftime;
 
     @ApiModelProperty(value = "变动详情")
-    private String context;
+    private String status;
 }
