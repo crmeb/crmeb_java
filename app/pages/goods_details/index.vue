@@ -29,9 +29,9 @@
 						</view>
 						<view class='introduce'>{{storeInfo.storeName}}</view>
 						<view class='label acea-row row-between-wrapper'>
-							<view>原价:￥{{storeInfo.otPrice}}</view>
-							<view>库存:{{storeInfo.stock}}{{storeInfo.unitName}}</view>
-							<view>销量:{{Number(storeInfo.sales) + Number(storeInfo.ficti) || 0}}{{storeInfo.unitName}}</view>
+							<view>原价:￥{{storeInfo.otPrice || 0}}</view>
+							<view>库存:{{storeInfo.stock || 0}}{{storeInfo.unitName || ''}}</view>
+							<view>销量:{{Math.floor(storeInfo.sales) + Math.floor(storeInfo.ficti) || 0}}{{storeInfo.unitName || ''}}</view>
 						</view>
 						<!-- <view class='coupon acea-row row-between-wrapper' v-if="storeInfo.give_integral > 0">
 							<view class='hide line1 acea-row'>
@@ -148,7 +148,7 @@
 			<navigator open-type='switchTab' class="animated item" :class="animated==true?'bounceIn':''" url='/pages/order_addcart/order_addcart'
 			 hover-class="none">
 				<view class='iconfont icon-gouwuche1'>
-					<text class='num bg-color'>{{CartCount || 0}}</text>
+					<text v-if="Math.floor(CartCount)>0" class='num bg-color'>{{CartCount}}</text>
 				</view>
 				<view>购物车</view>
 			</navigator>
@@ -340,7 +340,9 @@
 				lock: false,
 				scrollTop: 0,
 				tagStyle: {
-					img: 'width:100%;'
+					img: 'width:100%;display:block;',
+					table: 'width:100%',
+					video: 'width:100%'
 				},
 				sliderImage: [],
 				qrcodeSize: 600,
@@ -419,7 +421,6 @@
 		// #endif
 		methods: {
 			getChat(uid){
-				console.log(this.uid)
 				window.yzf && window.yzf.init({
 				      sign: '37ef9b97872756ce2a1596ec4fe9b66b0b4cbeec7b36239a65924fa6cbd5c29ac6b013c274511b2eee929e72312baeeeb97aae86',
 				      token: '', //非必填
@@ -786,7 +787,6 @@
 			DefaultSelect: function() {
 				let productAttr = this.attr.productAttr;
 				let value = [];
-				console.log(this.productValue)
 				for (let key in this.productValue) {
 					if (this.productValue[key].stock > 0) {
 						value = this.attr.productAttr.length ? key.split(",") : [];
@@ -1040,7 +1040,6 @@
 			},
 			// 授权关闭
 			authColse: function(e) {
-				console.log(e, 'eeeee')
 				this.isShowAuth = e
 			},
 			/**
@@ -1116,16 +1115,18 @@
 					//that.PromotionCode = res.data.code;
 					base64src(res.data.code, res => {
 						that.PromotionCode = res;
-						console.log('第一张',that.PromotionCode)
 					});
-				})
+				}).catch(err => {
+					that.$util.Tips({
+						title: err
+					});
+				});
 			},
 			// 生成二维码；
 			make(uid) {
 				let that = this;
 				let href = location.href;
 				href = href.indexOf("?") === -1 ? href + "?spread=" + uid : href + "&spread=" + uid;
-				console.log(href)
 				uQRCode.make({
 					canvasId: 'qrcode',
 					text: href,
@@ -1180,45 +1181,6 @@
 			/**
 			 * 生成海报
 			 */
-			// goPoster: function() {
-			// 	debugger
-			// 	let that = this;
-			// 	that.posters = false;
-				
-			// 	that.$set(that, 'canvasStatus', true);
-			// 	let arr2 = [that.posterbackgd, that.storeImage, that.PromotionCode];
-				
-			// 	// // #ifndef H5
-			// 	if (that.isDown)
-			// 		return that.$util.Tips({
-			// 			title: '正在下载海报,请稍后再试！'
-			// 		});
-			// 	// // #endif
-			// 	uni.getImageInfo({
-			// 		src: that.PromotionCode,
-			// 		fail: function(res) {
-			// 			console.log(res)
-			// 			// #ifdef H5
-			// 			return that.$util.Tips({
-			// 				title: res
-			// 			});
-			// 			// #endif
-			// 			// #ifdef MP
-			// 			return that.$util.Tips({
-			// 				title: '小程序二维码需要发布正式版后才能获取到'
-			// 			});
-			// 			// #endif
-			// 		},
-			// 		success(res) {
-			// 			console.log('成功',res)
-			// 			//生成推广海报
-			// 			that.$util.PosterCanvas(arr2, that.storeInfo.storeName, that.storeInfo.price, function(tempFilePath) {
-			// 						that.imagePath = tempFilePath;
-			// 						that.canvasStatus = true;
-			// 			});
-			// 		}
-			// 	});
-			// },
 			goPoster: function() {
 				let that = this;
 				that.posters = false;
@@ -1232,14 +1194,13 @@
 						let storeName = that.storeInfo.storeName;
 						let price = that.storeInfo.price;
 						setTimeout(() => {
-							that.$util.PosterCanvas(arrImages, storeName, price, function(tempFilePath) {
+							that.$util.PosterCanvas(arrImages, storeName, price, that.storeInfo.otPrice,function(tempFilePath) {
 								that.imagePath = tempFilePath;
 								that.canvasStatus = true;
 							});	
 						}, 200);
 					}
-				});	
-			
+				});
 			},
 			/*
 			 * 保存到手机相册

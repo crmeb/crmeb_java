@@ -344,11 +344,9 @@
 					this.switchSelect();
 			 },
 			 blurInput:function (index) {
-				 console.log(66);
 				 let item = this.cartList.valid[index];
 				 if(!item.cart_num){
 					 item.cart_num = 1;
-					 console.log( item.cart_num)
 					 this.$set(this.cartList,'valid',this.cartList.valid)
 				 }
 			 },

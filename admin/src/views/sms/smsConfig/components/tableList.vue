@@ -36,7 +36,7 @@
           :label="item.title"
           :min-width="item.minWidth">
           <template slot-scope="scope">
-            <div v-if="['content'].indexOf(item.key) > -1" class="demo-image__preview">
+            <div v-if="['content'].indexOf(item.key) > -1 && tableFrom.type==='expr_query'" class="demo-image__preview">
               <span>{{scope.row[item.key].num}}</span>
             </div>
             <span v-else>{{ scope.row[item.key] }}</span>
@@ -70,7 +70,7 @@
       <div class="smsBox" v-if="(isDump && tableFrom.type==='expr_dump') || (isSms && tableFrom.type==='sms')">
         <div class="index_from page-account-container">
           <div class="page-account-top">
-            <span class="page-account-top-tit">开通电子面单服务</span>
+            <span class="page-account-top-tit">开通{{tableFrom.type | onePassTypeFilter}}服务</span>
           </div>
           <el-form ref="formInlineDump" :model="formInlineDump" :rules="ruleInline" @submit.native.prevent @keyup.enter="handleSubmitDump('formInlineDump')">
             <el-form-item prop="sign" class="maxInpt" v-if="isSms && tableFrom.type==='sms'" key="1">
@@ -316,7 +316,7 @@ export default {
       this.$refs[name].validate((valid) => {
         if (valid) {
           smsSignApi(this.formInline).then(async res => {
-            this.$message.success('修改成功!');
+            this.$message.success('修改签名之后一号通需要审核过后通过!');
             this.dialogVisible = false;
             this.$refs[formName].resetFields();
           })
@@ -474,7 +474,7 @@ export default {
             this.columns2 = [
               // {
               //   title: '订单号',
-              //   slot: 'num',
+              //   key: 'order_id',
               //   minWidth: 150
               // },
               {

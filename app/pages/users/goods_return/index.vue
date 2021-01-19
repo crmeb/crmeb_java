@@ -141,7 +141,6 @@
 			    DelPic:function(e){
 			      let index = e, that = this;
 			      that.refund_reason_wap_imgPath.splice(index, 1);
-				//  that.$set(that,'refund_reason_wap_imgPath',that.refund_reason_wap_imgPath);
 			    },
 			    /**
 			     * 上传文件
@@ -150,10 +149,7 @@
 			    uploadpic:function(){
 			      let that=this;
 				  that.$util.uploadImageOne({url:'user/upload/image',name:'multipart', model:"product", pid:1}, function(res){
-					//  that.refund_reason_wap_img.push(res.data.url);
 					  that.refund_reason_wap_imgPath.push(res.data.url);
-					 // that.$set(that,'refund_reason_wap_img',that.refund_reason_wap_img);
-					//  that.$set(that,'refund_reason_wap_imgPath',that.refund_reason_wap_imgPath);
 				  });
 			    },
 				
@@ -161,11 +157,9 @@
 			     * 申请退货
 			    */
 			    subRefund:function(e){
-					
 			      let that = this, value = e.detail.value;
-				  console.log(that.refund_reason_wap_imgPath.join(','));
 			      //收集form表单
-			      if (!value.refund_reason_wap_explain) return this.$util.Tips({title:'请输入退款原因'});
+			      // if (!value.refund_reason_wap_explain) return this.$util.Tips({title:'请输入退款原因'});
 			      orderRefundVerify({
 			        text: that.RefundArray[that.index] || '',
 			        refund_reason_wap_explain: value.refund_reason_wap_explain,

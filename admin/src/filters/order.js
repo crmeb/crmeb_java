@@ -26,3 +26,17 @@ export function orderStatusFilter(status) {
   }
   return statusMap[status]
 }
+
+/**
+ * @description 退款状态
+ * 2,已收货，待评价
+ */
+export function refundStatusFilter(status) {
+  const statusMap = {
+    '0': '未退款',
+    '1': '申请中',
+    '2': '已退款',
+    '3': '退款中'
+  }
+  return statusMap[status]
+}

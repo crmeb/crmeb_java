@@ -444,7 +444,6 @@
 			subDel: function(event) {
 				let that = this,
 					selectValue = that.selectValue;
-					console.log(that.selectValue)
 				
 				// if (selectValue.length > 0)
 				// 	cartDel(selectValue).then(res => {
@@ -478,8 +477,6 @@
 					selectValue = that.selectValue;
 				if (selectValue.length > 0) {
 					let selectValueProductId = that.getSelectValueProductId();
-					console.log('selectValueProductId');
-					console.log(selectValueProductId.join(','));
 					// collectAll(that.getSelectValueProductId()).then(res => {
 					// 	return that.$util.Tips({
 					// 		title: res.msg,
@@ -499,7 +496,6 @@
 			subOrder: function(event) {
 				let that = this,
 					selectValue = that.selectValue;
-					console.log(that.selectValue)
 				if (selectValue.length > 0) {
 					// uni.navigateTo({
 					// 	url: '/pages/users/order_confirm/index?new=false&cartId=' + selectValue.join(',')
@@ -541,13 +537,10 @@
 					}
 					that.$set(that.cartList, 'valid', valid);
 					that.selectValue = selectValue;
-					console.log('cartList', that.cartList)
-					console.log(that.selectValue)
 					that.switchSelect();
 				}
 			},
 			checkboxChange: function(event) {
-				console.log(event)
 				let that = this;
 				let value = event.detail.value;
 				let valid = that.cartList.valid;
@@ -587,8 +580,6 @@
 				let newArr = that.cartList.valid.filter(item => item.attrStatus);
 				that.isAllSelect = value.length == newArr.length;
 				that.selectValue = value
-				console.log('选中', that.selectValue)
-				console.log('啦啦啦', that.cartList.valid)
 				that.switchSelect();
 			},
 			inArray: function(search, array) {
@@ -703,7 +694,6 @@
 					let valid = res.data.list;
 					let loadend = valid.length < that.limit;
 					let validList = that.$util.SplitArray(valid, that.cartList.valid)
-					console.log(validList)
 					//console.log(that.$util.toStringValue(validList)) 
 					
 					let numSub = [{

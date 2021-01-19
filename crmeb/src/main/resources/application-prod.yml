@@ -2,7 +2,7 @@
 server:
   port: 20000
   domain: #配合swagger使用 # 待部署域名
-  version: v1.3 # 当前代码版本
+  version: v1.3.1 # 当前代码版本
   wechat-api-url:
   wechat-js-api-debug: false
   wechat-js-api-beta: false

@@ -57,7 +57,6 @@
 </template>
 
 <script>
-import * as constants from '@/utils/constants.js'
 import edit from '@/views/maintain/devconfig/combinedDataEdit'
 import * as systemGroupApi from '@/api/systemGroup'
 import cmDataList from './combineDataList'
@@ -66,7 +65,7 @@ export default {
   components: { edit, cmDataList },
   data() {
     return {
-      constants,
+      constants: this.$constants,
       dataList: {
         list: [],
         total: 0
@@ -74,7 +73,7 @@ export default {
       listPram: {
         keywords: null,
         page: 1,
-        pageSize: constants.page.limit[0]
+        pageSize: this.$constants.page.limit[0]
       },
       editDialogConfig: {
         visible: false,

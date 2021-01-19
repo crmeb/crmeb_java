@@ -90,7 +90,7 @@
         >
           <template slot-scope="scope">
             <i v-if="scope.row.status === 0" class="el-icon-check" style="font-size: 14px;color: #0092DC;" />
-            <i v-else class="el-icon-download" style="font-size: 14px;color: #ed5565;" />
+            <i v-else class="el-icon-close" style="font-size: 14px;color: #ed5565;" />
           </template>
         </el-table-column>
         <el-table-column

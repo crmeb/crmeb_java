@@ -115,9 +115,7 @@
 			</button>
 			<!-- #endif -->
 		</view>
-		<!-- <view style="height: 50rpx;"></view> -->
 		<img src="/static/images/support.png" alt="" class='support'>
-
 		<!-- #ifdef MP -->
 		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
@@ -347,7 +345,6 @@
 		margin: 54rpx auto;
 		display: block;
 	}
-
 	.new-users {
 		.head {
 			padding-top: 30rpx;

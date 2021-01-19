@@ -11,10 +11,12 @@
 						<view class="start" :class="'star' + item.productScore"></view>
 					</view>
 					<view class="time">{{ item.createTime }}</view>
-					<!-- <view class="time">{{ item.createTime }} {{ item.suk }}</view> -->
+					<!-- <view class="time">{{ item.createTime }}</view>
+					<view class="time">{{ item.suk }}</view> -->
+					<!-- <view class="time">{{ item.createTime }} {{ item.sku }}</view> -->
 				</view>
-				
 			</view>
+			<view class="time">规格：{{ item.sku?item.sku:'无' }}</view>
 			<view class="evaluate-infor">{{ item.comment }}</view>
 			<view class="imgList acea-row" v-if="item.pics.length && item.pics[0]">
 				<view class="pictrue" v-for="(itemn, indexn) in item.pics" :key="indexn">

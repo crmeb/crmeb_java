@@ -3,7 +3,7 @@
 		<view class='payment-status'>
 			<!--失败时： 用icon-iconfontguanbi fail替换icon-duihao2 bg-color-->
 			<view class='iconfont icons icon-duihao2 bg-color' v-if="order_pay_info.paid || order_pay_info.payType == 'offline'"></view>
-			<view class='iconfont icons icon-iconfontguanbi bg-color' v-else></view>
+			<view class='iconfont icons icon-iconfontguanbi' v-else></view>
 			<!-- 失败时：订单支付失败 -->
 			<view class='status' v-if="order_pay_info.payType != 'offline'">{{order_pay_info.paid ? '订单支付成功':'订单支付失败'}}</view>
 			<view class='status' v-else>订单创建成功</view>
@@ -14,7 +14,7 @@
 				</view>
 				<view class='item acea-row row-between-wrapper'>
 					<view>下单时间</view>
-					<view class='itemCom'>{{order_pay_info.createTime}}</view>
+					<view class='itemCom'>{{order_pay_info.createTime?order_pay_info.createTime:'-'}}</view>
 				</view>
 				<view class='item acea-row row-between-wrapper'>
 					<view>支付方式</view>
@@ -34,7 +34,7 @@
 				</view>
 			</view>
 			<!--失败时： 重新购买 -->
-			<view @tap="goOrderDetails" v-if="status==0">
+			<view @tap="goOrderDetails">
 				<button formType="submit" class='returnBnt bg-color' hover-class='none'>查看订单</button>
 			</view>
 			<view @tap="goOrderDetails" v-if="order_pay_info.paid==0 && status==1">
@@ -179,6 +179,10 @@
 </script>
 
 <style>
+	.icon-iconfontguanbi{
+		background-color: #999 !important;
+		text-shadow: none !important;
+	}
 	.payment-status {
 		background-color: #fff;
 		margin: 195rpx 30rpx 0 30rpx;

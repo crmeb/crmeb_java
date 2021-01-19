@@ -91,178 +91,178 @@
 </template>
 
 <script>
-  import { marketingListApi, couponUserApi } from '@/api/marketing'
-  export default {
-    name: 'CouponList',
-    props: {
-      handle: {
-        type: String,
-        default: ''
-      },
-      couponData: {
-        type: Array,
-        default: () => []
-      },
-      keyNum: {
-        type: Number,
-        default: 0
-      },
-      userIds: {
-        type: String,
-        default: ''
-      }
+import { marketingListApi, couponUserApi } from '@/api/marketing'
+export default {
+  name: 'CouponList',
+  props: {
+    handle: {
+      type: String,
+      default: ''
     },
-    data() {
-      return {
-        listLoading: true,
-        tableData: {
-          data: [],
-          total: 0
-        },
-        tableFrom: {
-          page: 1,
-          limit: 10,
-          name: '',
-          // type: 0,
-          isDel: 0,
-          status: 1
-        },
-        multipleSelection: [],
-        multipleSelectionAll: [],
-        idKey: 'id',
-        nextPageFlag: false,
-        attr: []
-      }
+    couponData: {
+      type: Array,
+      default: () => []
     },
-    watch: {
-      keyNum: {
-        deep: true,
-        handler(val) {
-          this.getList()
-        }
-      }
+    keyNum: {
+      type: Number,
+      default: 0
     },
-    mounted() {
-      this.tableFrom.page = 1
-      this.getList()
-      this.multipleSelectionAll = this.couponData || []
-    },
-    methods: {
-      close() {
-        this.multipleSelection = []
+    userIds: {
+      type: String,
+      default: ''
+    }
+  },
+  data() {
+    return {
+      listLoading: true,
+      tableData: {
+        data: [],
+        total: 0
       },
-      handleSelectionChange(val) {
-        this.multipleSelection = val
-        setTimeout(() => {
-          this.changePageCoreRecordData()
-        }, 50)
+      tableFrom: {
+        page: 1,
+        limit: 10,
+        name: '',
+        // type: 0,
+        isDel: 0,
+        status: 1
       },
-      // 设置选中的方法
-      setSelectRow() {
-        if (!this.multipleSelectionAll || this.multipleSelectionAll.length <= 0) {
-          return
-        }
-        // 标识当前行的唯一键的名称
-        const idKey = this.idKey
-        const selectAllIds = []
-        this.multipleSelectionAll.forEach(row => {
-          selectAllIds.push(row[idKey])
-        })
-        this.$refs.table.clearSelection()
-        for (var i = 0; i < this.tableData.data.length; i++) {
-          if (selectAllIds.indexOf(this.tableData.data[i][idKey]) >= 0) {
-            // 设置选中，记住table组件需要使用ref="table"
-            this.$refs.table.toggleRowSelection(this.tableData.data[i], true)
-          }
-        }
-      },
-      // 记忆选择核心方法
-      changePageCoreRecordData() {
-        // 标识当前行的唯一键的名称
-        const idKey = this.idKey
-        const that = this
-        // 如果总记忆中还没有选择的数据，那么就直接取当前页选中的数据，不需要后面一系列计算
-        if (this.multipleSelectionAll.length <= 0) {
-          this.multipleSelectionAll = this.multipleSelection
-          return
-        }
-        // 总选择里面的key集合
-        const selectAllIds = []
-        this.multipleSelectionAll.forEach(row => {
-          selectAllIds.push(row[idKey])
-        })
-        const selectIds = []
-        // 获取当前页选中的id
-        this.multipleSelection.forEach(row => {
-          selectIds.push(row[idKey])
-          // 如果总选择里面不包含当前页选中的数据，那么就加入到总选择集合里
-          if (selectAllIds.indexOf(row[idKey]) < 0) {
-            that.multipleSelectionAll.push(row)
-          }
-        })
-        const noSelectIds = []
-        // 得到当前页没有选中的id
-        this.tableData.data.forEach(row => {
-          if (selectIds.indexOf(row[idKey]) < 0) {
-            noSelectIds.push(row[idKey])
-          }
-        })
-        noSelectIds.forEach(id => {
-          if (selectAllIds.indexOf(id) >= 0) {
-            for (let i = 0; i < that.multipleSelectionAll.length; i++) {
-              if (that.multipleSelectionAll[i][idKey] == id) {
-                // 如果总选择中有未被选中的，那么就删除这条
-                that.multipleSelectionAll.splice(i, 1)
-                break
-              }
-            }
-          }
-        })
-      },
-      ok() {
-        if (this.multipleSelection.length > 0) {
-          this.$emit('getCouponId', this.multipleSelectionAll)
-          // this.close()
-        } else {
-          this.$message.warning('请先选择优惠劵')
-        }
-      },
-      // 列表
-      getList(num) {
-        this.listLoading = true
-        this.tableFrom.page = num ? num : this.tableFrom.page
-        marketingListApi(this.tableFrom).then(res => {
-          this.tableData.data = res.list
-          this.tableData.total = res.total
-          this.listLoading = false
-          this.$nextTick(function() {
-            this.setSelectRow()// 调用跨页选中方法
-          })
-        }).catch(res => {
-          this.listLoading = false
-        })
-      },
-      pageChange(page) {
-        this.changePageCoreRecordData()
-        this.tableFrom.page = page
+      multipleSelection: [],
+      multipleSelectionAll: [],
+      idKey: 'id',
+      nextPageFlag: false,
+      attr: []
+    }
+  },
+  watch: {
+    keyNum: {
+      deep: true,
+      handler(val) {
         this.getList()
-      },
-      handleSizeChange(val) {
-        this.changePageCoreRecordData()
-        this.tableFrom.limit = val
-        this.getList()
-      },
-      // 发送
-      sendGrant(id){
-        this.$modalSure('发送优惠劵吗').then(() => {
-          couponUserApi({ couponId:id, uid:this.userIds }).then(() => {
-            this.$message.success('发送成功')
-            this.getList()
-          })
-        })
       }
     }
+  },
+  mounted() {
+    this.tableFrom.page = 1
+    this.getList()
+    this.multipleSelectionAll = this.couponData || []
+  },
+  methods: {
+    close() {
+      this.multipleSelection = []
+    },
+    handleSelectionChange(val) {
+      this.multipleSelection = val
+      setTimeout(() => {
+        this.changePageCoreRecordData()
+      }, 50)
+    },
+    // 设置选中的方法
+    setSelectRow() {
+      if (!this.multipleSelectionAll || this.multipleSelectionAll.length <= 0) {
+        return
+      }
+      // 标识当前行的唯一键的名称
+      const idKey = this.idKey
+      const selectAllIds = []
+      this.multipleSelectionAll.forEach(row => {
+        selectAllIds.push(row[idKey])
+      })
+      this.$refs.table.clearSelection()
+      for (var i = 0; i < this.tableData.data.length; i++) {
+        if (selectAllIds.indexOf(this.tableData.data[i][idKey]) >= 0) {
+          // 设置选中，记住table组件需要使用ref="table"
+          this.$refs.table.toggleRowSelection(this.tableData.data[i], true)
+        }
+      }
+    },
+    // 记忆选择核心方法
+    changePageCoreRecordData() {
+      // 标识当前行的唯一键的名称
+      const idKey = this.idKey
+      const that = this
+      // 如果总记忆中还没有选择的数据，那么就直接取当前页选中的数据，不需要后面一系列计算
+      if (this.multipleSelectionAll.length <= 0) {
+        this.multipleSelectionAll = this.multipleSelection
+        return
+      }
+      // 总选择里面的key集合
+      const selectAllIds = []
+      this.multipleSelectionAll.forEach(row => {
+        selectAllIds.push(row[idKey])
+      })
+      const selectIds = []
+      // 获取当前页选中的id
+      this.multipleSelection.forEach(row => {
+        selectIds.push(row[idKey])
+        // 如果总选择里面不包含当前页选中的数据，那么就加入到总选择集合里
+        if (selectAllIds.indexOf(row[idKey]) < 0) {
+          that.multipleSelectionAll.push(row)
+        }
+      })
+      const noSelectIds = []
+      // 得到当前页没有选中的id
+      this.tableData.data.forEach(row => {
+        if (selectIds.indexOf(row[idKey]) < 0) {
+          noSelectIds.push(row[idKey])
+        }
+      })
+      noSelectIds.forEach(id => {
+        if (selectAllIds.indexOf(id) >= 0) {
+          for (let i = 0; i < that.multipleSelectionAll.length; i++) {
+            if (that.multipleSelectionAll[i][idKey] == id) {
+              // 如果总选择中有未被选中的，那么就删除这条
+              that.multipleSelectionAll.splice(i, 1)
+              break
+            }
+          }
+        }
+      })
+    },
+    ok() {
+      if (this.multipleSelection.length > 0) {
+        this.$emit('getCouponId', this.multipleSelectionAll)
+        // this.close()
+      } else {
+        this.$message.warning('请先选择优惠劵')
+      }
+    },
+    // 列表
+    getList(num) {
+      this.listLoading = true
+      this.tableFrom.page = num ? num : this.tableFrom.page
+      marketingListApi(this.tableFrom).then(res => {
+        this.tableData.data = res.list
+        this.tableData.total = res.total
+        this.listLoading = false
+        this.$nextTick(function() {
+          this.setSelectRow()// 调用跨页选中方法
+        })
+      }).catch(res => {
+        this.listLoading = false
+      })
+    },
+    pageChange(page) {
+      this.changePageCoreRecordData()
+      this.tableFrom.page = page
+      this.getList()
+    },
+    handleSizeChange(val) {
+      this.changePageCoreRecordData()
+      this.tableFrom.limit = val
+      this.getList()
+    },
+    // 发送
+    sendGrant(id){
+      this.$modalSure('发送优惠劵吗').then(() => {
+        couponUserApi({ couponId:id, uid:this.userIds }).then(() => {
+          this.$message.success('发送成功')
+          this.getList()
+        })
+      })
+    }
   }
+}
 </script>
 
 <style scoped lang="scss">

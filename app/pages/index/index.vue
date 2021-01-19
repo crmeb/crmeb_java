@@ -282,10 +282,14 @@
 	import {
 		silenceBindingSpread
 	} from '@/utils';
-	
+	// #ifdef H5
+	import {
+		kefuConfig
+	} from "@/api/public";
 	import {
 		getWechatConfig
 	} from "@/api/public";
+	// #endif
 	const arrTemp = ["paySubscribe","orderSubscribe","extrctSubscribe", "orderRefundSubscribe", "rechargeSubscribe"];
 	export default {
 		computed: mapGetters(['isLogin', 'uid']),
@@ -434,7 +438,6 @@
 						let arr = res.data.map((item) => {
 							return item.tempId
 						})
-						//console.log(arr)
 						wx.setStorageSync('tempID'+ data, arr);
 					}
 				})
@@ -627,11 +630,17 @@
 				})
 			},
 			getChatUrL() {
+				kefuConfig().then(res => {
+					let data = res.data;
+					this.$store.commit("SET_CHATURL", data.yzfUrl);
+					Cache.set('chatUrl', data.yzfUrl);
+				})
+			},
+			getMpChatUrL(){
 				getWechatConfig().then(res => {
 					let data = res.data;
 					this.$store.commit("SET_CHATURL", data.yzfUrl);
 					Cache.set('chatUrl', data.yzfUrl);
-					console.log(data)
 				})
 			},
 			// setOpenShare:function(mss){
@@ -772,7 +781,7 @@
 		mounted() {
 			let self = this
 			// #ifdef H5
-			this.getChatUrL();
+			self.$wechat.isWeixin()?self.getMpChatUrL():self.getChatUrL();
 			// 获取H5 搜索框高度
 			let appSearchH = uni.createSelectorQuery().select(".serch-wrapper");
 			appSearchH.boundingClientRect(function(data) {

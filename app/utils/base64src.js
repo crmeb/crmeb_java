@@ -1,4 +1,4 @@
-const fsm = wx.getFileSystemManager();
+const fsm = uni.getFileSystemManager ? uni.getFileSystemManager() : null;
 const FILE_BASE_NAME = 'tmp_base64src'; //自定义文件名
 
 export function base64src(base64data, cb) {

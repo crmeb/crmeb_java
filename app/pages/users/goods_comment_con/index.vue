@@ -185,13 +185,11 @@
 				});
 				value.productScore = product_score;
 				value.serviceScore = service_score;
-				console.log("that.pics");
-				let aa = JSON.stringify(that.pics);
-				console.log(typeof aa);
-				value.pics = JSON.stringify(that.pics);
+				value.pics = that.pics.length>0?JSON.stringify(that.pics):'';
 				value.productId = that.productId;
 				value.oid = that.evaluateId;
 				value.unique = that.unique;
+				value.sku = that.productInfo.attrInfo.suk;
 				uni.showLoading({
 					title: "正在发布评论……"
 				});

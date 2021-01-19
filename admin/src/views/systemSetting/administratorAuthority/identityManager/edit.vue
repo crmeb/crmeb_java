@@ -26,7 +26,6 @@
 
 <script>
 import categoryList from '@/components/Category/list'
-import * as constants from '@/utils/constants.js'
 import * as roleApi from '@/api/role.js'
 export default {
   // name: "edit"
@@ -43,7 +42,7 @@ export default {
   },
   data() {
     return {
-      constants,
+      constants:this.$constants,
       pram: {
         level: 1,
         roleName: null,
