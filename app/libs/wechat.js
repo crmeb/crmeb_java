@@ -51,16 +51,13 @@ class AuthWechat {
 			// if (this.status && !this.isAndroid()) return resolve(this.instance);
 			getWechatConfig()
 				.then(res => {
-					let data = res.data;
-					// delete data.jsApiTicket;
-					this.instance.config(data);
-					this.initConfig = data;
+					this.instance.config(res.data);
+					this.initConfig = res.data;
 					this.status = true;
 					this.instance.ready(() => {
 						resolve(this.instance);
 					})
 				}).catch(err => {
-					console.log(err);
 					this.status = false;
 					reject(err);
 				});
@@ -124,14 +121,15 @@ class AuthWechat {
 				this.toPromise(wx.chooseWXPay, config).then(res => {
 					resolve(res);
 				}).catch(res => {
-					reject(res);
+					console.log('js中的错误',res)
+					resolve(res);
 				});
 			}).catch(res => {
 				reject(res);
 			});
 		});
 	}
-
+	
 	toPromise(fn, config = {}) {
 		return new Promise((resolve, reject) => {
 			fn({
@@ -174,7 +172,6 @@ class AuthWechat {
 	auth(code) {
 		return new Promise((resolve, reject) => {
 			let loginType = Cache.get(LOGINTYPE);
-			console.log('spread', Cache.get("spread"))
 			wechatAuth(code, Cache.get("spread"), loginType)
 				.then(({
 					data
@@ -252,7 +249,6 @@ class AuthWechat {
 					})
 				},
 				success(res) {
-					console.log(res);
 					return resolve(res,2222);
 				}
 			};

@@ -314,7 +314,9 @@
 					isState: true, //默认不显示
 				},
 				tagStyle: {
-					img: 'width:100%;'
+					img: 'width:100%;display:block;',
+					table: 'width:100%',
+					video: 'width:100%'
 				},
 				posters: false,
 				weixinStatus: false,
@@ -531,53 +533,6 @@
 					});
 			},
 			//#endif
-			// setTime: function() { //到期时间戳
-			// 	var that = this;
-			// 	var endTimeList = that.pink;
-			// 	that.pink.map(item => {
-			// 		item.time = {
-			// 			day: '00',
-			// 			hou: '00',
-			// 			min: '00',
-			// 			sec: '00'
-			// 		};
-			// 	});
-			// 	var countDownArr = [];
-			// 	var timeer = setInterval(function() {
-			// 		var newTime = new Date().getTime() / 1000;
-			// 		for (var i in endTimeList) {
-			// 			var endTime = endTimeList[i].stop_time;
-			// 			var obj = [];
-			// 			if (endTime - newTime > 0) {
-			// 				var time = endTime - newTime;
-			// 				var day = parseInt(time / (60 * 60 * 24));
-			// 				var hou = parseInt(time % (60 * 60 * 24) / 3600);
-			// 				var min = parseInt(time % (60 * 60 * 24) % 3600 / 60);
-			// 				var sec = parseInt(time % (60 * 60 * 24) % 3600 % 60);
-			// 				hou = parseInt(hou) + parseInt(day * 24);
-			// 				obj = {
-			// 					day: that.timeFormat(day),
-			// 					hou: that.timeFormat(hou),
-			// 					min: that.timeFormat(min),
-			// 					sec: that.timeFormat(sec)
-			// 				}
-			// 			} else {
-			// 				obj = {
-			// 					day: '00',
-			// 					hou: '00',
-			// 					min: '00',
-			// 					sec: '00'
-			// 				}
-			// 			}
-			// 			endTimeList[i].time = obj;
-			// 		}
-			// 		that.pink = endTimeList
-			// 	}, 1000);
-			// 	that.timeer = timeer
-			// },
-			// timeFormat(param) { //小于10的格式化函数
-			// 	return param < 10 ? '0' + param : param;
-			// },
 			/**
 			 * 默认选中属性
 			 * 
@@ -936,7 +891,7 @@
 						let storeName = that.storeInfo.title;
 						let price = that.storeInfo.price;
 						setTimeout(() => {
-							that.$util.PosterCanvas(arrImages, storeName, price, function(tempFilePath) {
+							that.$util.PosterCanvas(arrImages, storeName, price, that.storeInfo.otPrice, function(tempFilePath) {
 								that.posterImage = tempFilePath;
 								that.canvasStatus = true;
 							});	

@@ -3,7 +3,7 @@
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <div class="container">
-          <el-form size="small" label-width="100px">
+          <el-form size="small" label-width="120px">
             <el-form-item label="时间选择：" class="width100">
               <el-radio-group v-model="tableFrom.dateLimit" type="button" class="mr20" size="small"
                               @change="selectChange(tableFrom.dateLimit)">
@@ -14,9 +14,9 @@
                               type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;"
                               @change="onchangeTime"/>
             </el-form-item>
-            <el-form-item label="用户搜索：">
+            <el-form-item label="用户微信昵称：">
               <el-select v-model="tableFrom.userIdList" style="width: 500px" reserve-keyword multiple remote filterable
-                         :remote-method="remoteMethod" :loading="loading" placeholder="请输入用户名称" clearable @change="seachList">
+                         :remote-method="remoteMethod" :loading="loading" placeholder="请输入用户微信昵称" clearable @change="seachList">
                 <el-option
                   v-for="item in options"
                   :key="item.uid"
@@ -52,12 +52,14 @@
           prop="balance"
           label="积分余量"
           min-width="120"
+          :sort-method="(a,b)=>{return a.balance - b.balance}"
         />
         <el-table-column
           sortable
           label="明细数字"
           min-width="120"
           prop="number"
+          :sort-method="(a,b)=>{return a.number - b.number}"
         />
         <el-table-column
           label="备注"
@@ -91,7 +93,6 @@
 </template>
 
 <script>
-  import { fromList } from '@/utils/constants.js'
   import { integralListApi } from '@/api/marketing'
   import { userListApi } from '@/api/user'
   import cardsData from '@/components/cards/index'
@@ -101,7 +102,7 @@
       return {
         loading: false,
         options: [],
-        fromList: fromList,
+        fromList: this.$constants.fromList,
         listLoading: false,
         tableData: {
           data: [],

@@ -115,143 +115,143 @@
 </template>
 
 <script>
-  import parser from '@/components/FormGenerator/components/parser/Parser'
-  import * as systemFormConfigApi from '@/api/systemFormConfig.js'
-  import * as logistics from '@/api/logistics.js'
-  export default {
-    name: 'CompanyList',
-    components: { parser },
-    data() {
-      return {
-        constants:this.$constants,
-        // 表单
-        formConf: { fields: [] },
-        form: {
-          keywords: ''
-        },
-        tableData: {},
-        page: 1,
-        limit: 20,
-        loading: false,
-        dialogVisible: false,
-        fromType: 'add',
-        formData: {
-          status: false
-        },
-        isCreate: 0,
-        formShow: false,
-        editId: 0,
-        rules: {
-          sort: [
-            { required: true, message: '请输入排序', trigger: 'blur' },
-          ],
-          account: [
-            { required: true, message: '请输入月结账号', trigger: 'blur' },
-          ],
-          password: [
-            { required: true, message: '请输入月结密码', trigger: 'blur' },
-          ],
-          netName:  [
-            { required: true, message: '请输入网点名称', trigger: 'blur' },
-          ]
-        }
-      }
-    },
-    created() {
-      this.getExpressList()
-    },
-    methods: {
-      handlerSearch() {
-        this.page = 1
-        this.getExpressList()
+import parser from '@/components/FormGenerator/components/parser/Parser'
+import * as systemFormConfigApi from '@/api/systemFormConfig.js'
+import * as logistics from '@/api/logistics.js'
+export default {
+  name: 'CompanyList',
+  components: { parser },
+  data() {
+    return {
+      constants:this.$constants,
+      // 表单
+      formConf: { fields: [] },
+      form: {
+        keywords: ''
       },
-      //  获取物流公司列表
-      getExpressList() {
-        this.loading = true
-        logistics.expressList({
-          page: this.page,
-          limit: this.limit,
-          keywords: this.form.keywords
-        }).then(res => {
-          this.loading = false
-          this.tableData = res
-        }).catch(()=>{
-          this.loading = false
-        })
+      tableData: {},
+      page: 1,
+      limit: 20,
+      loading: false,
+      dialogVisible: false,
+      fromType: 'add',
+      formData: {
+        status: false
       },
-      // 物流开关
-      bindStatus(item) {
-        logistics.expressUpdateShow({
-          account: item.account,
-          code: item.code,
-          id: item.id,
-          isShow: item.isShow,
-          name: item.name,
-          sort: item.sort
-        }).then(res => {
-          this.$message.success('操作成功')
-          this.getExpressList()
-        }).catch(() => {
-          item.isShow = !item.isShow
-        })
-      },
-      // 分页
-      pageChange(e) {
-        this.page = e
-        this.getExpressList()
-      },
-      handleSizeChange(e) {
-        this.limit = e
-        this.getExpressList()
-      },
-      // 添加物流公司
-      addExpress() {
-        logistics.expressSyncApi().then(data => {
-          this.page = 1
-          this.getExpressList()
-        })
-      },
-      // 删除物流公司
-      bindDelete(item) {
-        this.$modalSure().then(() => {
-          logistics.expressDelete({ id: item.id }).then(res => {
-            this.$message.success('删除成功')
-            this.getExpressList()
-          })
-        })
-      },
-      // 表单提交
-      submit(formName) {
-        this.$refs[formName].validate((valid) => {
-          if (valid) {
-            logistics.expressUpdate(this.formData).then(res => {
-              this.$message.success('操作成功')
-              this.handleClose()
-              this.getExpressList()
-            })
-          } else {
-            return false;
-          }
-        });
-      },
-      //  关闭模态框
-      handleClose(done) {
-        this.formShow = false
-        // this.formData = {}
-        this.formConf.fields = []
-        this.dialogVisible = false
-        this.isCreate = 0
-      },
-      // 编辑
-      bindEdit(item) {
-        this.dialogVisible = true
-        this.editId = item.id
-        logistics.expressInfo({ id: item.id }).then(res => {
-          this.formData = res
-        })
+      isCreate: 0,
+      formShow: false,
+      editId: 0,
+      rules: {
+        sort: [
+          { required: true, message: '请输入排序', trigger: 'blur' },
+        ],
+        account: [
+          { required: true, message: '请输入月结账号', trigger: 'blur' },
+        ],
+        password: [
+          { required: true, message: '请输入月结密码', trigger: 'blur' },
+        ],
+        netName:  [
+          { required: true, message: '请输入网点名称', trigger: 'blur' },
+        ]
       }
     }
+  },
+  created() {
+    this.getExpressList()
+  },
+  methods: {
+    handlerSearch() {
+      this.page = 1
+      this.getExpressList()
+    },
+    //  获取物流公司列表
+    getExpressList() {
+      this.loading = true
+      logistics.expressList({
+        page: this.page,
+        limit: this.limit,
+        keywords: this.form.keywords
+      }).then(res => {
+        this.loading = false
+        this.tableData = res
+      }).catch(()=>{
+        this.loading = false
+      })
+    },
+    // 物流开关
+    bindStatus(item) {
+      logistics.expressUpdateShow({
+        account: item.account,
+        code: item.code,
+        id: item.id,
+        isShow: item.isShow,
+        name: item.name,
+        sort: item.sort
+      }).then(res => {
+        this.$message.success('操作成功')
+        this.getExpressList()
+      }).catch(() => {
+        item.isShow = !item.isShow
+      })
+    },
+    // 分页
+    pageChange(e) {
+      this.page = e
+      this.getExpressList()
+    },
+    handleSizeChange(e) {
+      this.limit = e
+      this.getExpressList()
+    },
+    // 添加物流公司
+    addExpress() {
+      logistics.expressSyncApi().then(data => {
+        this.page = 1
+        this.getExpressList()
+      })
+    },
+    // 删除物流公司
+    bindDelete(item) {
+      this.$modalSure().then(() => {
+        logistics.expressDelete({ id: item.id }).then(res => {
+          this.$message.success('删除成功')
+          this.getExpressList()
+        })
+      })
+    },
+    // 表单提交
+    submit(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          logistics.expressUpdate(this.formData).then(res => {
+            this.$message.success('操作成功')
+            this.handleClose()
+            this.getExpressList()
+          })
+        } else {
+          return false;
+        }
+      });
+    },
+    //  关闭模态框
+    handleClose(done) {
+      this.formShow = false
+     // this.formData = {}
+      this.formConf.fields = []
+      this.dialogVisible = false
+      this.isCreate = 0
+    },
+    // 编辑
+    bindEdit(item) {
+      this.dialogVisible = true
+      this.editId = item.id
+      logistics.expressInfo({ id: item.id }).then(res => {
+        this.formData = res
+      })
+    }
   }
+}
 </script>
 
 <style lang="scss" scoped>

@@ -12,16 +12,15 @@
 					<view class="item" :class="active==index?'on':''" v-for="(item,index) in navRecharge" :key="index" @click="navRecharges(index)">{{item}}</view>
 				</view>
 				<view class='tip picList' v-if='!active'>
-					<view class="pic-box pic-box-color acea-row row-center-wrapper row-column" :class="activePic == index ? 'pic-box-color-active' : ''"
+					<view class="pic-box pic-box-color acea-row row-center-wrapper row-column" :class="activePic === index ? 'pic-box-color-active' : ''"
 					 v-for="(item, index) in picList" :key="index" @click="picCharge(index, item)">
 						<view class="pic-number-pic">
 							{{ item.price }}<span class="pic-number"> 元</span>
 						</view>
 						<view class="pic-number">赠送：{{ item.giveMoney }} 元</view>
 					</view>
-					<view class="pic-box pic-box-color acea-row row-center-wrapper" :class="activePic == picList.length ? 'pic-box-color-active' : ''"
-					 @click="picCharge(picList.length)">
-						<input type="number" placeholder="其他" v-model="money" class="pic-box-money pic-number-pic" :class="activePic == picList.length ? 'pic-box-color-active' : ''" />
+					<view class="pic-box pic-box-color acea-row row-center-wrapper" :class="parseFloat(activePic)===parseFloat(picList.length)?'pic-box-color-active':''" @click="picCharge(picList.length)">
+						<input type="number" placeholder="其他" v-model="money" class="pic-box-money pic-number-pic" :class="parseFloat(activePic) === parseFloat(picList.length) ? 'pic-box-color-active' : ''" />
 					</view>
 					<view class="tips-box">
 						<view class="tips mt-30">注意事项：</view>
@@ -485,12 +484,11 @@
 			text-align: center;
 		}
 
-		.pic-box-color-active {
+	}
+    .pic-box-color-active {
 			background-color: #ec3323 !important;
 			color: #fff !important;
-		}
 	}
-
 	.tips-box {
 		.tips {
 			font-size: 28rpx;

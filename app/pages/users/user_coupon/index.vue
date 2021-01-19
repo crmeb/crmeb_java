@@ -2,22 +2,20 @@
 	<view>
 		<view class='coupon-list' v-if="couponsList.length">
 			<view class='item acea-row row-center-wrapper' v-for='(item,index) in couponsList' :key="index">
-				<view class='money' :class='item.isValid === false ? "moneyGray" : ""'>
+				<view class='money' :class="item.validStr==='unusable'||item.validStr==='overdue'||item.validStr==='notStart' ? 'moneyGray' : ''">
 					<view>￥<text class='num'>{{item.money}}</text></view>
 					<view class="pic-num">满{{ item.minPrice }}元可用</view>
 				</view>
 				<view class='text'>
-					<view class='condition line1'>
-						<view class="line-title" :class="item.isValid === false ? 'bg-color-huic' : 'bg-color-check'" v-if="item.useType === 1">通用劵</view>
-						<view class="line-title" :class="item.isValid === false ? 'bg-color-huic' : 'bg-color-check'"  v-else-if="item.useType === 2">商品券</view>
-						<view class="line-title" :class="item.isValid === false ? 'bg-color-huic' : 'bg-color-check'" v-else-if="item.useType === 3">品类券</view>
-						
-						<view>{{item.name}}</view>
+					<view class='condition line2'>
+						<span class="line-title" :class="item.validStr==='unusable'||item.validStr==='overdue'||item.validStr==='notStart' ? 'bg-color-huic' : 'bg-color-check'" v-if="item.useType === 1">通用</span>
+						<span class="line-title" :class="item.validStr==='unusable'||item.validStr==='overdue'||item.validStr==='notStart' ? 'bg-color-huic' : 'bg-color-check'"  v-else-if="item.useType === 2">商品</span>
+						<span class="line-title" :class="item.validStr==='unusable'||item.validStr==='overdue'||item.validStr==='notStart' ? 'bg-color-huic' : 'bg-color-check'" v-else-if="item.useType === 3">品类</span>
+						<span>{{item.name}}</span>
 					</view>
 					<view class='data acea-row row-between-wrapper'>
-						<view>{{item.startTime}} ~ {{item.endTime}}</view>
-						<view class='bnt gray' v-if="item.isValid===false">已过期</view>
-						<view class='bnt bg-color' v-else>可使用</view>
+						<view>{{item.useStartTimeStr}}~{{item.useEndTimeStr}}</view>
+						<view class='bnt' :class="item.validStr==='unusable'||item.validStr==='overdue'||item.validStr==='notStart'?'gray':'bg-color'">{{item.validStr | validStrFilter}}</view>
 					</view>
 				</view>
 			</view>
@@ -54,6 +52,17 @@
 			authorize,
 			// #endif
 			home
+		},
+		filters: {
+		    validStrFilter(status) {
+		      const statusMap = {
+		        'usable': '可用',
+		        'unusable': '已用',
+				'overdue': '过期',
+				'notStart': '未开始'
+		      }
+		      return statusMap[status]
+		    }
 		},
 		data() {
 			return {
@@ -111,24 +120,27 @@
 
 	.pic-num {
 		color: #ffffff;
-		font-size: 0.24rem;
+		font-size: 24rpx;
+	}
+	.coupon-list .item .text{
+		height: 100%;
 	}
 	.coupon-list .item .text .condition{
-		display: flex;
-		align-items: center;
+		/* display: flex;
+		align-items: center; */
 	}
 	.condition .line-title {
-		/* width: 90rpx; */
+		width: 90rpx;
 		height: 40rpx !important;
 		line-height: 40rpx !important;
-		padding: 0 10rpx;
+		padding: 2rpx 10rpx;
 		-webkit-box-sizing: border-box;
 		box-sizing: border-box;
 		background: rgba(255, 247, 247, 1);
 		border: 1px solid rgba(232, 51, 35, 1);
 		opacity: 1;
-		border-radius: 22rpx;
-		font-size: 20rpx !important;
+		border-radius: 20rpx;
+		font-size: 18rpx !important;
 		color: #e83323;
 		margin-right: 12rpx;
 	}

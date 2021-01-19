@@ -154,7 +154,6 @@
 
 <script>
   import { brokerageListApi, monitorListDetailApi } from '@/api/financial'
-  import { fromList } from '@/utils/constants.js'
   export default {
     name: 'AccountsCapital',
     data() {
@@ -181,7 +180,7 @@
           limit: 10,
           dateLimit: ''
         },
-        fromList: fromList,
+        fromList: this.$constants.fromList,
         options: [],
         Visible: false,
         tablistLoading: false,

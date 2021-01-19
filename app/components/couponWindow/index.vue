@@ -6,7 +6,8 @@
 					<view class='money font-color'>￥<text class='num'>{{item.money}}</text></view>
 					<view class='text'>
 						<view class='name'>购物买{{item.minPrice}}减{{item.money}}</view>
-						<view>{{item.receiveStartTime ? item.receiveStartTime+'~' : ''}}{{item.receiveEndTime}}</view>
+						<view v-if="item.day>0">领取后{{item.day}}天内可用</view>
+						<view v-else>{{item.useStartTimeStr&&item.useEndTimeStr ? item.useStartTimeStr+'~'+item.useEndTimeStr : ''}}</view>
 					</view>
 				</view>
 			</view>

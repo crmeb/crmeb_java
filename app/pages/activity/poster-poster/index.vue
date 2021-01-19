@@ -158,7 +158,6 @@
 				uni.getImageInfo({
 				            src: arrImages[0],
 				            success: function (image) {
-								console.log('啦啦', image)
 								context.drawImage(arrImages[0], 0, 0, 750, 1190);
 								context.setFontSize(36);
 								context.setTextAlign('center');
@@ -210,19 +209,15 @@
 									  canvasId: 'firstCanvas',
 									  fileType: 'jpg',
 									  success: function(res) {
-										  console.log('啦啦222', res)
 									    // 在H5平台下，tempFilePath 为 base64
 										uni.hideLoading();
-										//successFn && successFn(res.tempFilePath);
 										that.imagePath = res.tempFilePath;
-										console.log(that.imagePath)
 										that.canvasStatus = true;
 									  } 
 									})
 								})
 				            },
 							fail: function(err) {
-								console.log(err)
 								uni.hideLoading();
 								that.$util.Tips({
 									title: '无法获取图片信息'

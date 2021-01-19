@@ -69,7 +69,6 @@
 <script>
   import * as articleApi from '@/api/article.js'
   import * as categoryApi from '@/api/categoryApi.js'
-  import * as constants from '@/utils/constants.js'
   import * as selfUtil from '@/utils/ZBKJIutil.js'
   export default {
     // name: "list",
@@ -83,12 +82,12 @@
       return {
         templateRadio:'',
         imgList: [],
-        constants,
+        constants: this.$constants,
         listPram: {
           keywords: null,
           cid: null,
           page: 1,
-          limit: constants.page.limit[0]
+          limit: this.$constants.page.limit[0]
         },
         listData: { list: [], total: 0 },
         editDialogConfig: {
@@ -130,7 +129,7 @@
         })
       },
       handlerGetCategoryTreeData() {
-        const _pram = { type: constants.categoryType[2].value, status: 1 }
+        const _pram = { type: this.constants.categoryType[2].value, status: 1 }
         categoryApi.treeCategroy(_pram).then(data => {
           this.categoryTreeData = selfUtil.addTreeListLabelForCasCard(data)
         })

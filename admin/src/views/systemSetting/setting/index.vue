@@ -60,7 +60,6 @@
 
 <script>
 import parser from '@/components/FormGenerator/components/parser/Parser'
-import * as constants from '@/utils/constants.js'
 import * as categoryApi from '@/api/categoryApi.js'
 import * as selfUtil from '@/utils/ZBKJIutil.js'
 import * as systemFormConfigApi from '@/api/systemFormConfig.js'
@@ -189,28 +188,10 @@ export default {
       let _formId = 0
       systemSettingApi.systemConfigSave(_pram).then(data => {
         this.$message.success('添加数据成功')
-        // 81 82 83
-        // 针对云存储配置特殊处理 切勿随意改动
-        // _formId = parseInt(_pram.id)
-        // if(_formId === 108 || _formId === 81 || _formId === 82 || _formId === 83){
-        //   let _value
-        //   switch (_formId) {
-        //     case 108: _value = 1
-        //       break;
-        //     case 81: _value = 2
-        //       break;
-        //     case 82: _value = 3
-        //       break;
-        //     case 83: _value = 4
-        //       break;
-        //   }
-        //   const _pram = { key:"uploadType",value:_value }
-        //   systemConfigApi.configSaveUniq(_pram)
-        // }
       })
     },
     handlerGetTreeList() {
-      const _pram = { type: constants.categoryType[5].value, status: 1 }
+      const _pram = { type: this.$constants.categoryType[5].value, status: 1 }
       this.loading = true
       categoryApi.treeCategroy(_pram).then(data => {
         this.treeList = this.handleAddArrt(data)

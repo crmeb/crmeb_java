@@ -124,8 +124,6 @@
 					let loadend = list.length < that.limit;
 					that.orderList = that.$util.SplitArray(list, that.orderList);
 					that.$set(that,'orderList',that.orderList);
-					console.log('8888888888888888888');
-					console.log(that.orderList);
 					that.loadend = loadend;
 					that.loading = false;
 					that.loadTitle = loadend ? "我也是有底线的" : '加载更多';

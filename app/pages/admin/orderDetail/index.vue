@@ -301,7 +301,6 @@
 							that.getIndex();
 						},
 						err => {
-							console.log(err, 'err')
 							that.change = false;
 							that.$util.Tips({
 								title: err
@@ -364,13 +363,11 @@
 			// #endif
 			// #ifdef H5
 			webCopy(item, index) {
-				console.log('yunxingle')
 				let items = item
 				let indexs = index
 				let self = this
 
 				if (self.clickNum == 1) {
-					console.log('22')
 					self.clickNum += 1
 					self.webCopy(items, indexs)
 				}

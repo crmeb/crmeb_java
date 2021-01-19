@@ -359,7 +359,6 @@
 			}
 			
 			if (this.isLogin) {
-				console.log(that.bargainUid,'that.bargainUid')
 				if(that.bargainUid == 'undefined'){
 					that.bargainUid = that.$store.state.app.uid
 				}

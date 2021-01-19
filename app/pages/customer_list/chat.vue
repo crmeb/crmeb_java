@@ -382,7 +382,6 @@
 			})
 		},
 		onReady: function() {
-			console.log(this.emojiGroup);
 			this.height();
 			this.getHistory();
 			this.getproductInfo();
@@ -417,7 +416,6 @@
 		},
 		methods: {
 			uploadImg() {
-				console.log(this.$store.state.app.token)
 				let self = this
 				uni.chooseImage({
 					count: 1, //默认1
@@ -460,7 +458,6 @@
 			getOrderInfo() {
 				if (!this.orderId) return;
 				getOrderDetail(this.orderId).then(res => {
-					console.log(res)
 					this.orderInfo = res.data;
 					if (this.orderInfo.add_time_h) {
 						this.orderInfo.add_time_h = this.orderInfo.add_time_h.substring(
@@ -511,7 +508,6 @@
 						this.loaded = data.length < this.limit;
 					})
 					.catch(err => {
-						console.log(err);
 						this.$dialog.error(err || "加载失败");
 					});
 			},
@@ -588,7 +584,6 @@
 				if (this.timeOutEvent !== 0 && this.longClick === 0) {
 					//点击
 					//此处为点击事件----在此处添加跳转详情页
-					console.log("这是点击");
 				}
 				this.speak = "按住 说话";
 				this.recording = false;
@@ -643,10 +638,9 @@
 				setTimeout(res=>{
 					let info = uni.createSelectorQuery().select(".chat");
 					info.boundingClientRect(function(data) { //data - 各种参数
-						console.log(data.height) // 获取元素宽度
+						 // 获取元素宽度
 						scrollTop = data.height
 					}).exec()
-					console.log(scrollTop,'scrollTop')
 					if(this.active){
 						this.scrollTop = scrollTop+500
 					}else{

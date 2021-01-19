@@ -179,7 +179,6 @@
 			},
 			setInfo: function(item) {
 				let that = this;
-				console.log(item);
 				setAdminOrderDelivery(item).then(
 					res => {
 						that.$util.Tips({
@@ -197,7 +196,6 @@
 				);
 			},
 			bindPickerChange(e){
-				console.log(e,'tar')
 				this.seIndex = e.detail.value
 			}
 		}

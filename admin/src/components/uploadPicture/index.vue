@@ -1,4 +1,4 @@
-<template>
+                                                                                                                                                                                                                                                               <template>
   <div>
     <el-row :gutter="30">
       <el-col v-bind="grid">
@@ -31,34 +31,45 @@
                       >（{{ data.name }}）</span>
                     </div>
                     <span class="el-ic">
-                      <svg-icon
-                        icon-class="example"
-                        title="添加分类"
-                        class="icon-space"
-                        @click.stop="onAdd(data.id)"
-                      />
-                      <svg-icon
-                        icon-class="danyuan"
-                        title="添加管理单元"
-                        class="icon-space"
-                      />
-                      <i
-                        v-if="data.id!== 10000"
-                        class="el-icon-edit"
-                        title="修改"
-                        @click.stop="onEdit(data.id)"
-                      />
-                      <svg-icon
-                        icon-class="detail"
-                        title="查看该空间详情"
-                        class="icon-space"
-                      />
-                      <i
-                        v-if="data.id!== 10000"
-                        class="el-icon-delete"
-                        title="删除分类"
-                        @click.stop="() => handleDelete(data.id)"
-                      />
+                      <el-dropdown>
+                        <span class="el-dropdown-link">
+                          <i class="el-icon-more"></i>
+                        </span>
+                        <el-dropdown-menu slot="dropdown">
+                          <el-dropdown-item @click.native="onAdd(data.id)">添加分类</el-dropdown-item>
+                          <el-dropdown-item @click.native="onEdit(data.id)">编辑分类</el-dropdown-item>
+                          <el-dropdown-item @click.native="handleDelete(data.id)">删除分类</el-dropdown-item>
+                        </el-dropdown-menu>
+                      </el-dropdown>
+
+                      <!--<svg-icon-->
+                        <!--icon-class="example"-->
+                        <!--title="添加分类"-->
+                        <!--class="icon-space"-->
+                        <!--@click.stop="onAdd(data.id)"-->
+                      <!--/>-->
+                      <!--<svg-icon-->
+                        <!--icon-class="danyuan"-->
+                        <!--title="添加管理单元"-->
+                        <!--class="icon-space"-->
+                      <!--/>-->
+                      <!--<i-->
+                        <!--v-if="data.id!== 10000"-->
+                        <!--class="el-icon-edit"-->
+                        <!--title="修改"-->
+                        <!--@click.stop="onEdit(data.id)"-->
+                      <!--/>-->
+                      <!--<svg-icon-->
+                        <!--icon-class="detail"-->
+                        <!--title="查看该空间详情"-->
+                        <!--class="icon-space"-->
+                      <!--/>-->
+                      <!--<i-->
+                        <!--v-if="data.id!== 10000"-->
+                        <!--class="el-icon-delete"-->
+                        <!--title="删除分类"-->
+                        <!--@click.stop="() => handleDelete(data.id)"-->
+                      <!--/>-->
                     </span>
                   </div>
                 </el-tree>
@@ -70,22 +81,60 @@
       <el-col v-bind="grid2" class="colLeft">
         <div class="conter mb15">
           <div class="bnt">
-            <el-button size="mini" type="primary" class="mb10 mr10" @click="checkPics">使用选中图片</el-button>
-            <el-upload
-              class="upload-demo mr10 mb15"
-              action
-              :http-request="handleUploadForm"
-              :on-change="imgSaveToUrl"
-              :headers="myHeaders"
-              :show-file-list="false"
-              multiple
-            >
-              <el-button size="mini" type="primary">点击上传</el-button>
-            </el-upload>
-            <el-button type="success" size="mini" @click.stop="onAdd">添加分类</el-button>
-            <el-button type="error" size="mini" class="mr10" :disabled="checkPicList.length===0" @click.stop="editPicList('图片')">删除图片</el-button>
-            <el-select v-model="sleOptions.attachment_category_name" placeholder="图片移动至" class="mb15" size="mini">
+            <!--<el-tooltip class="item" effect="dark" content="使用选中图片" placement="top-start">-->
+              <!--<i class="el-icon-thumb mr20" style="font-size: 25px;" @click="checkPics"></i>-->
+            <!--</el-tooltip>-->
+            <!--<el-upload-->
+              <!--class="upload-demo mb15"-->
+              <!--action-->
+              <!--:http-request="handleUploadForm"-->
+              <!--:on-change="imgSaveToUrl"-->
+              <!--:headers="myHeaders"-->
+              <!--:show-file-list="false"-->
+              <!--multiple-->
+            <!--&gt;-->
+              <!--<el-tooltip class="item" effect="dark" content="上传图片" placement="top-start">-->
+                <!--<i class="el-icon-upload2 mr20" style="font-size: 25px;"></i>-->
+              <!--</el-tooltip>-->
+
+              <!--&lt;!&ndash;<el-button size="mini" type="primary">点击上传</el-button>&ndash;&gt;-->
+            <!--</el-upload>-->
+            <el-button size="small" type="primary" class="mr20 mb20" @click="checkPics">使用选中图片</el-button>
+            <div class="mr20 mb20">
+              <el-button-group>
+                <el-tooltip class="item" effect="dark" content="上传图片" placement="top-start">
+                  <el-upload
+                    class="upload-demo"
+                    action
+                    :http-request="handleUploadForm"
+                    :on-change="imgSaveToUrl"
+                    :headers="myHeaders"
+                    :show-file-list="false"
+                    multiple
+                  >
+                    <el-button type="primary" icon="el-icon-upload2" size="mini" style="font-size: 15px;"></el-button>
+                  </el-upload>
+                </el-tooltip>
+                <el-tooltip class="item" effect="dark" content="添加分类" placement="top-start">
+                  <el-button type="primary" icon="el-icon-circle-plus-outline" style="font-size: 15px;" size="mini" @click="onAdd"></el-button>
+                </el-tooltip>
+                <el-tooltip class="item" effect="dark" content="删除图片" placement="top-start">
+                  <el-button type="primary" icon="el-icon-delete" style="font-size: 15px;" size="mini" @click.stop="editPicList('图片')"></el-button>
+                </el-tooltip>
+              </el-button-group>
+            </div>
+
+            <!--<el-tooltip class="item" effect="dark" content="添加分类" placement="top-start">-->
+              <!--<i class="el-icon-circle-plus-outline mr20" style="font-size: 25px;" @click="onAdd"></i>-->
+            <!--</el-tooltip>-->
+            <!--<el-button type="success" size="mini" @click.stop="onAdd">添加分类</el-button>-->
+            <!--<el-tooltip class="item" effect="dark" content="删除图片" placement="top-start">-->
+              <!--<i class="el-icon-delete mr20" style="font-size: 25px;" @click.stop="editPicList('图片')"></i>-->
+            <!--</el-tooltip>-->
+            <!--<el-button type="error" size="mini" class="mr10" :disabled="checkPicList.length===0" @click.stop="editPicList('图片')">删除图片</el-button>-->
+            <el-select v-model="sleOptions.attachment_category_name" placeholder="图片移动至" class="mb20" size="small">
               <el-option
+                class="demo"
                 :label="sleOptions.attachment_category_name"
                 :value="sleOptions.attachment_category_id"
                 style="max-width: 560px;height:200px;overflow: auto;background-color:#fff"
@@ -106,7 +155,7 @@
               <i class="el-icon-picture" style="font-size: 60px;color: rgb(219, 219, 219);" />
               <span class="imagesNo_sp">图片库为空</span>
             </div>
-            <div class="conters">
+            <div class="conters scrollbarAll">
               <div
                 v-for="(item, index) in pictrueList.list"
                 :key="index"
@@ -121,7 +170,7 @@
         </div>
         <div class="block">
           <el-pagination
-            :page-sizes="[12, 24, 48, 60]"
+            :page-sizes="[10, 20, 30, 40]"
             :page-size="tableData.limit"
             :current-page="tableData.page"
             :pager-count="5"
@@ -142,8 +191,10 @@
       @close="closeModel"
     >
       <el-form ref="editPram" :model="editPram" label-width="100px"  v-loading="loading">
-        <el-form-item label="上级分类">
-          <el-cascader v-model="editPram.pid" :options="treeData2" :props="categoryProps" style="width:100%" />
+        <el-form-item label="上级分类" prop="pid"
+                      :rules="[{ type: 'number',required:true,message:'请选择上级分类',trigger:['blur','change'] }]"
+        >
+          <el-cascader v-model="editPram.pid" :options="treeData2" :props="categoryProps" style="width:100%"/>
         </el-form-item>
         <el-form-item
           label="分类名称"
@@ -197,7 +248,7 @@ export default {
         emitPath: false
       },
       editPram:{
-        pid: 0,
+        pid: 1000,
         name: '',
         type: 2,
         sort: 1,
@@ -213,17 +264,17 @@ export default {
       },
       list: [],
       grid: {
-        xl: 8,
-        lg: 8,
-        md: 8,
-        sm: 8,
+        xl: 7,
+        lg: 7,
+        md: 7,
+        sm: 7,
         xs: 24
       },
       grid2: {
-        xl: 16,
-        lg: 16,
-        md: 16,
-        sm: 16,
+        xl: 17,
+        lg: 17,
+        md: 17,
+        sm: 17,
         xs: 24
       },
       filterText: '',
@@ -235,7 +286,7 @@ export default {
       },
       tableData: {
         page: 1,
-        limit: 12,
+        limit: 10,
         pid: 0
       },
       classifyId: 0,
@@ -300,7 +351,7 @@ export default {
     handlerSubmit(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          if( this.editPram.pid === 10000 ) this.editPram.pid = 0
+          if( this.editPram.pid==10000) this.editPram.pid = 0
           this.bizTitle==='添加分类' ? addCategroy(this.editPram).then(data => {
             this.$message.success('创建成功')
             this.visible = false
@@ -457,6 +508,7 @@ export default {
     },
     // 删除图片
     editPicList(tit) {
+      if (!this.checkPicList.length) return this.$message.warning('请先选择图片')
       this.$modalSure().then(() => {
         fileDeleteApi(this.ids.join(',')).then(() => {
           this.$message.success('刪除成功')
@@ -500,6 +552,16 @@ export default {
 </script>
 
 <style scoped lang="scss">
+  .demo::-webkit-scrollbar {
+    display: none; /* Chrome Safari */
+  }
+
+  .demo {
+    scrollbar-width: none; /* firefox */
+    -ms-overflow-style: none; /* IE 10+ */
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
   .temp {
     height: 0;
     margin-bottom: 0;
@@ -515,6 +577,7 @@ export default {
   }
   .upload-demo {
     display: inline-block !important;
+    float: left;
   }
   .tree_w {
     padding: 20px 30px
@@ -524,7 +587,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 14px;
+    font-size: 12px;
     padding-right: 8px;
     color: #4386c6;
   }
@@ -607,7 +670,7 @@ export default {
       box-sizing: border-box;
       .trees {
         width: 100%;
-        max-height: 374px;
+        max-height: 345px;
       }
     }
     .scollhide::-webkit-scrollbar {
@@ -617,10 +680,12 @@ export default {
   .conters{
     display: flex;
     flex-wrap: wrap;
+    max-height: 296px;
+    overflow: auto;
   }
   .conters:after {content: ""; width: 410px !important; }
   .gridPic{
-    margin-right: 20px;
+    margin-right: 15px;
     margin-bottom: 10px;
     width: 110px;
     height: 110px;
@@ -636,11 +701,12 @@ export default {
     height: 100%;
     .bnt {
       width: 100%;
-      padding: 0 13px 10px 15px;
+      padding: 0 13px 10px 7px;
       box-sizing: border-box;
+      display: flex;
     }
     .pictrueList {
-      padding-left: 15px;
+      /*padding-left: 15px;*/
       width: 100%;
       el-image {
         width: 100%;

@@ -78,3 +78,10 @@ export function copyWords() {
   return request.get("copy_words", {}, { noAuth: true });
 }
 
+/**
+ * 首页 获取客服地址
+ * @returns {*}
+ */
+export function kefuConfig() {
+  return request.get("config", {}, { noAuth: true });
+}

@@ -38,6 +38,7 @@ import scroll from "@/libs/loading";
 import schema from "async-validator";
 // 切勿更改 此组件为表单生成中使用的图片上传组件
 import SelfUpload from '@/components/uploadPicture/forGenrator/index.vue'
+import util from '@/utils/utils'
 import modalAttr from '@/libs/modal-attr'
 import modalIcon from '@/libs/modal-icon'
 import { modalSure } from '@/libs/public'
@@ -49,6 +50,8 @@ import './utils/error-log' // error integralLog
 import * as filters from './filters' // global filters
 import { parseQuery } from "@/utils";
 import * as Auth from '@/libs/wechat';
+import * as constants from '@/utils/constants.js'
+
 Vue.use(VueLazyload, {
   preLoad: 1.3,
   error: require('./assets/imgs/no.png'),
@@ -76,6 +79,8 @@ Vue.prototype.$modalIcon = modalIcon
 Vue.prototype.$dialog = dialog
 Vue.prototype.$scroll = scroll;
 Vue.prototype.$wechat = Auth;
+Vue.prototype.$util = util;
+Vue.prototype.$constants = constants;
 Vue.prototype.$validator = function(rule) {
   return new schema(rule);
 };

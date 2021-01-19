@@ -63,7 +63,6 @@
 
 <script>
 import * as systemFormConfigApi from '@/api/systemFormConfig.js'
-import * as constants from '@/utils/constants.js'
 import edit from './edit'
 export default {
   // name: "index"
@@ -76,11 +75,11 @@ export default {
   },
   data() {
     return {
-      constants,
+      constants: this.$constants,
       listPram: {
         keywords: null,
         page: 1,
-        limit: constants.page.limit[0]
+        limit: this.$constants.page.limit[0]
       },
       editDialogConfig: {
         visible: false,

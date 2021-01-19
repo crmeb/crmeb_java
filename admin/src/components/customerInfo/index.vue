@@ -102,12 +102,11 @@
 <script>
   import * as systemAdminApi from '@/api/systemadmin.js'
   import * as roleApi from '@/api/role.js'
-  import * as constants from '@/utils/constants.js'
     export default {
       name: "index",
       data(){
           return {
-            constants,
+            constants: this.$constants,
             loading:false,
             templateRadio:'',
             dialogFormVisible:false,

@@ -82,7 +82,6 @@
 
 <script>
 import edit from './combineEdit'
-import * as constants from '@/utils/constants.js'
 import * as systemGroupDataApi from '@/api/systemGroupData.js'
 import * as systemFormConfigApi from '@/api/systemFormConfig.js'
 export default {
@@ -96,13 +95,13 @@ export default {
   },
   data() {
     return {
-      constants,
+      constants: this.$constants,
       listPram: {
         gid: null,
         keywords: null,
         status: null, // 1=开启 2=关闭
         page: 1,
-        pageSize: constants.page.limit[0]
+        pageSize: this.$constants.page.limit[0]
       },
       editDataConfig: {
         visible: false,

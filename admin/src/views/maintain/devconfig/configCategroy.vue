@@ -87,7 +87,6 @@
 </template>
 
 <script>
-import * as constants from '@/utils/constants.js'
 import * as categoryApi from '@/api/categoryApi.js'
 import edit from '@/views/maintain/devconfig/configCategotyEdit.vue'
 import * as selfUtil from '@/utils/ZBKJIutil.js'
@@ -101,7 +100,7 @@ export default {
   },
   data() {
     return {
-      constants,
+      constants: this.$constants,
       searchPram: {
         status: null,
         type: null
@@ -115,11 +114,11 @@ export default {
       treeList: [],
       listPram: {
         pid: 0,
-        type: constants.categoryType[5].value,
+        type: this.$constants.categoryType[5].value,
         status: null,
         name: null,
-        page: constants.page.page,
-        limit: constants.page.limit[1]
+        page: this.$constants.page.page,
+        limit: this.$constants.page.limit[1]
       },
       configFormSelectedDialog: {
         visible: false,
@@ -172,7 +171,7 @@ export default {
     },
     handlerGetTreeList() {
       // status: this.selectModel?1:-1
-      const _pram = { type: constants.categoryType[5].value, status: -1 }
+      const _pram = { type: this.constants.categoryType[5].value, status: -1 }
       categoryApi.treeCategroy(_pram).then(data => {
         this.treeList = this.handleAddArrt(data)
       })

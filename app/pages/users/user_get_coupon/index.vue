@@ -7,14 +7,15 @@
 					<view class="pic-num">满{{item.minPrice}}元可用</view>
 				</view>
 				<view class='text'>
-					<view class='condition line1'>
-					    <span class='line-title' :class='(item.isUse==true || item.isUse==2)?"gray":""' v-if='item.type===0'>通用劵</span>
-					    <span class='line-title' :class='(item.isUse==true || item.isUse==2)?"gray":""' v-else-if='item.type===1'>品类券</span>
-					    <span class='line-title' :class='(item.isUse==true || item.isUse==2)?"gray":""' v-else>商品券</span>
+					<view class='condition line2'>
+					    <span class='line-title' :class='(item.isUse==true || item.isUse==2)?"gray":""' v-if='item.useType===1'>通用</span>
+					    <span class='line-title' :class='(item.isUse==true || item.isUse==2)?"gray":""' v-else-if='item.useType===3'>品类</span>
+					    <span class='line-title' :class='(item.isUse==true || item.isUse==2)?"gray":""' v-else>商品</span>
 					    <span>{{item.name}}</span>
 					</view>
 					<view class='data acea-row row-between-wrapper'>
-						<view>{{ item.receiveStartTime ? item.receiveStartTime + "-" : ""}}{{ item.receiveEndTime }}</view>
+						<view v-if="item.day>0">领取后{{item.day}}天内可用</view>
+						<view v-else>{{ item.useStartTimeStr&& item.useEndTimeStr ? item.useStartTimeStr + " - " + item.useEndTimeStr : ""}}</view>
 						<view class='bnt gray' v-if="item.isUse==true">已领取</view>
 						<view class='bnt bg-color' v-else @click='getCoupon(item.id,index)'>立即领取</view>
 					</view>

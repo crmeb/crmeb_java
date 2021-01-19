@@ -8,14 +8,13 @@
 import { asyncRoutes, constantRoutes } from '@/router'
 import * as categoryApi from '@/api/categoryApi.js'
 import categoryList from '@/components/Category/list'
-import * as constants from '@/utils/constants.js'
 export default {
   // name: "index"
   components: { categoryList },
   data() {
     return {
       asyncRoutes,
-      constants
+      constants: this.$constants
     }
   },
   mounted() {

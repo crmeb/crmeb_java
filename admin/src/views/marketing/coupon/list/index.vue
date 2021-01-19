@@ -54,7 +54,7 @@
           min-width="100"
         >
           <template slot-scope="{ row }">
-            <span>{{row.useType | couponTypeFilter}}</span>
+            <span>{{row.type | couponTypeFilter}}</span>
           </template>
         </el-table-column>
         <el-table-column
@@ -224,12 +224,12 @@
       // 领取记录
       receive(row) {
         this.dialogVisible = true
-        this.getIssueList(row)
+        this.tableFromIssue.couponId = row.id
+        this.getIssueList()
       },
       // 列表
-      getIssueList(row) {
+      getIssueList() {
         this.Loading = true
-        this.tableFromIssue.couponId = row.id
         couponUserListApi(this.tableFromIssue).then(res => {
           this.issueData.data = res.list
           this.issueData.total = res.total
