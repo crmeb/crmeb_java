@@ -54,7 +54,7 @@
         />
         <el-table-column
           prop="discount"
-          label="享受折扣"
+          label="享受折扣(%)"
           min-width="100"
         />
         <el-table-column

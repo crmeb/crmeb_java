@@ -129,7 +129,6 @@
 <script>
   import { orderListApi, storeListApi } from '@/api/storePoint'
   import cardsData from '@/components/cards/index'
-  import { fromList } from '@/utils/constants.js'
   export default {
     components: { cardsData },
     data() {
@@ -149,7 +148,7 @@
           limit: 20
         },
         timeVal: [],
-        fromList: fromList,
+        fromList: this.$constants.fromList,
         ids: '',
         cardLists: [],
       }

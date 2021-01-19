@@ -1,5 +1,5 @@
 <template>
-	<view>
+	<view style="height: 100%;">
 		<view class='distribution-posters'>
 				<swiper :indicator-dots="indicatorDots" :autoplay="autoplay" :circular="circular" :interval="interval" :duration="duration"
 			 @change="bindchange" previous-margin="40px" next-margin="40px">
@@ -23,9 +23,9 @@
 		<!-- #ifdef MP -->
 		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
-		<view class="canvas">
+		<view class="canvas" v-if="canvasStatus">
 			<canvas style="width:750px;height:1190px;" canvas-id="canvasOne"></canvas>
-			<canvas style="" canvas-id="qrcode" :style="{width: `${qrcodeSize}px`, height: `${qrcodeSize}px`}" />
+			<canvas canvas-id="qrcode" :style="{width: `${qrcodeSize}px`, height: `${qrcodeSize}px`}"/>
 		</view>
 	</view>
 </template>
@@ -76,11 +76,10 @@
 				poster: '',
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false, //是否隐藏授权
-				imagePath: '',
 				qrcodeSize: 1000,
 				PromotionCode: '',
 				base64List: [],
-				posterbackgd: 'https://image.java.crmeb.net/image/product/2020/08/03/755bf516b1ca4b6db3bfeaa4dd5901cdh71kob20re.jpg'
+				canvasStatus: true //海报绘图标签
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -143,7 +142,6 @@
 					imageBase64({url:item.pic}).then(res=>{
 						spreadList[index] = res.data.code;
 						that.$set(that,'base64List',spreadList);
-						//that.$set(that, 'poster', spreadList[0]);
 					})
 				})
 				// #endif
@@ -153,7 +151,6 @@
 				});
 				// #endif
 				that.userInfos();
-				console.log('上',this.base64List)
 			},
 			// 小程序二维码
 			getQrcode(){
@@ -164,7 +161,7 @@
 				}
 				let arrImagesUrl = "";
 				uni.downloadFile({
-					url: this.base64List[0], //仅为示例，并非真实的资源
+					url: this.base64List[0], 
 					success: (res) => {
 						arrImagesUrl = res.tempFilePath;
 					}
@@ -172,12 +169,18 @@
 				getQrcode(data).then(res=>{
 					base64src(res.data.code, res => {
 						that.PromotionCode = res;
-						console.log('第一张',that.PromotionCode)
 					});
 					setTimeout(() => {
 						that.PosterCanvas(arrImagesUrl, that.PromotionCode, that.userInfo.nickname, 0);		
-					}, 200);
-				})
+					}, 300);
+				}).catch(err => {
+					uni.hideLoading();
+					that.$util.Tips({
+						title: err
+					});
+					that.$set(that, 'canvasStatus', false);
+					//that.getQrcode();
+				});
 			},
 			// 生成二维码；
 			make() {
@@ -190,10 +193,14 @@
 					margin: 10,
 					success: res => {
 						that.PromotionCode = res;
-						that.PosterCanvas(this.base64List[0], that.PromotionCode, that.userInfo.nickname,0);
+						setTimeout(() => {
+							that.PosterCanvas(this.base64List[0], that.PromotionCode, that.userInfo.nickname,0);		
+						}, 300);
 					},
-					complete: () => {},
+					complete: (res) => {
+					},
 					fail: res => {
+						uni.hideLoading();
 						that.$util.Tips({
 							title: '海报二维码生成失败！'
 						});
@@ -222,35 +229,17 @@
 								  canvasId: 'canvasOne',
 								  fileType: 'jpg',
 								  success: function(res) {
-									  console.log("成功",res)
 									// 在H5平台下，tempFilePath 为 base64
 									uni.hideLoading();
-									that.imagePath = res.tempFilePath;
 									that.spreadList[index].pic = res.tempFilePath;
-									that.poster = res.tempFilePath;
-									console.log("spreadList = ", that.spreadList[index].pic)
+									that.$set(that, 'poster', res.tempFilePath);
+									that.$set(that, 'canvasStatus', false);
 								  } 
 								})
 							})						
 						}, 100);
-						// context.draw(true,function(){
-						// 	uni.canvasToTempFilePath({
-						// 	  destWidth: 750,
-						// 	  destHeight: 1190,
-						// 	  canvasId: 'canvasOne',
-						// 	  fileType: 'jpg',
-						// 	  success: function(res) {
-						// 		  console.log("成功",res)
-						// 	    // 在H5平台下，tempFilePath 为 base64
-						// 		uni.hideLoading();
-						// 		that.imagePath = res.tempFilePath;
-						// 		that.spreadList[index].pic = res.tempFilePath;
-						// 	  } 
-						// 	})
-						// })
 					},
 					fail: function(err) {
-						console.log("失败",err)
 						uni.hideLoading();
 						that.$util.Tips({
 							title: '无法获取图片信息'
@@ -274,99 +263,59 @@
 				this.swiperIndex = index;
 				let arrImagesUrl = "";
 				uni.downloadFile({
-					url: base64List[index], //仅为示例，并非真实的资源
+					url: base64List[index], 
 					success: (res) => {
-						console.log('移动',res)
 						arrImagesUrl = res.tempFilePath;
-						console.log('移动图片',arrImagesUrl)
-						console.log('移动二维码',this.PromotionCode)
 						setTimeout(() => {
+							this.$set(this, 'canvasStatus', true);
 							this.PosterCanvas(arrImagesUrl, this.PromotionCode, this.userInfo.nickname, index);			
-						}, 200);
+						}, 300);
 					}
 				});			
 			},
 			// 点击保存海报
 			savePosterPath: function() {
 				let that = this;
-				uni.downloadFile({
-					url: that.poster,
-					success(resFile) {
-						if (resFile.statusCode === 200) {
-							uni.getSetting({
-								success(res) {
-									if (!res.authSetting['scope.writePhotosAlbum']) {
-										uni.authorize({
-											scope: 'scope.writePhotosAlbum',
-											success() {
-												uni.saveImageToPhotosAlbum({
-													filePath: resFile.tempFilePath,
-													success: function(res) {
-														return that.$util.Tips({
-															title: '保存成功'
-														});
-													},
-													fail: function(res) {
-														return that.$util.Tips({
-															title: res
-														});
-													},
-													complete: function(res) {},
-												})
-											},
-											fail() {
-												uni.showModal({
-													title: '您已拒绝获取相册权限',
-													content: '是否进入权限管理，调整授权？',
-													success(res) {
-														if (res.confirm) {
-															uni.openSetting({
-																success: function(res) {
-																	console.log(res.authSetting)
-																}
-															});
-														} else if (res.cancel) {
-															return that.$util.Tips({
-																title: '已取消！'
-															});
-														}
-													}
-												})
-											}
-										})
-									} else {
-										uni.saveImageToPhotosAlbum({
-											filePath: resFile.tempFilePath,
-											success: function(res) {
-												return that.$util.Tips({
-													title: '保存成功'
-												});
-											},
-											fail: function(res) {
-												return that.$util.Tips({
-													title: res
-												});
-											},
-											complete: function(res) {},
-										})
-									}
-								},
-								fail(res) {
-
+				uni.getSetting({
+					success(res) {
+						if (!res.authSetting['scope.writePhotosAlbum']) {
+							uni.authorize({
+								scope: 'scope.writePhotosAlbum',
+								success() {
+									uni.saveImageToPhotosAlbum({
+										filePath: that.poster,
+										success: function(res) {
+											that.$util.Tips({
+												title: '保存成功',
+												icon: 'success'
+											});
+										},
+										fail: function(res) {
+											that.$util.Tips({
+												title: '保存失败'
+											});
+										}
+									});
 								}
-							})
+							});
 						} else {
-							return that.$util.Tips({
-								title: resFile
+							uni.saveImageToPhotosAlbum({
+								filePath: that.poster,
+								success: function(res) {
+									that.$util.Tips({
+										title: '保存成功',
+										icon: 'success'
+									});
+								},
+								fail: function(res) {
+									that.$util.Tips({
+										title: '保存失败'
+									});
+								}
 							});
 						}
-					},
-					fail(res) {
-						return that.$util.Tips({
-							title: res
-						});
 					}
-				})
+				});
 			},
 			userInfos() {
 				let that = this;
@@ -399,11 +348,18 @@
 <style lang="scss">
 	page {
 		background-color: #a3a3a3 !important;
+		height: 100% !important;
 	}
 	.canvas{
-		position: fixed;
-		z-index: -5rpx;
-		opacity: 0;
+		position: relative;
+	}
+	.distribution-posters{
+		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
 	}
 	.distribution-posters swiper {
 		width: 100%;

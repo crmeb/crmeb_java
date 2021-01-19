@@ -31,7 +31,7 @@
           </div>
         </el-form-item>
         <el-form-item label="优惠券面值" prop="money">
-          <el-input-number v-model="ruleForm.money" :min="1" :max="10" label="描述文字"></el-input-number>
+          <el-input-number v-model="ruleForm.money" :min="1" label="描述文字"></el-input-number>
         </el-form-item>
         <el-form-item label="使用门槛">
           <el-radio-group v-model="threshold">
@@ -215,9 +215,9 @@
             total: info.total,
             status: info.status,
             primaryKey: Number(info.primaryKey),
-            checked: res.product
+            checked: res.product || []
           }
-          info.minPrice === 0 ? this.threshold = false : this.threshold = true
+          info.minPrice == 0 ? this.threshold = false : this.threshold = true
           info.isForever ? this.isForeverTime = [info.receiveStartTime, info.receiveEndTime] : this.isForeverTime = []
           info.isFixedTime ? this.termTime = [info.useStartTime, info.useEndTime] : this.termTime = []
           this.loading = false

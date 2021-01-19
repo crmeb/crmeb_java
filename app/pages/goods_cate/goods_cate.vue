@@ -25,7 +25,7 @@
 						<view class='list acea-row'>
 							<block v-for="(itemn,indexn) in item.child" :key="indexn">
 								<navigator hover-class='none' :url='"/pages/goods_list/index?cid="+itemn.id+"&title="+itemn.name' class='item acea-row row-column row-middle'>
-									<view class='picture'>
+									<view class='picture' :style="{'background-color':itemn.extra?'none':'#f7f7f7'}">
 										<image :src='itemn.extra'></image>
 									</view>
 									<view class='name line1'>{{itemn.name}}</view>
@@ -241,6 +241,9 @@
 		width: 100%;
 		height: 100%;
 		border-radius: 50%;
+		div{
+			background-color: #f7f7f7;
+		}
 	}
 	
 	.productSort .conter .list .item .name {

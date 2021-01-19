@@ -93,7 +93,6 @@
 			return {};
 		},
 		mounted() {
-			console.log(this.attr)
 		},
 		methods: {
 			    goCat:function(){

@@ -648,7 +648,6 @@ const initPicker={
 			let bDate=new Date(tYear,curMonth,curDate).getTime();
 			let months=[];
 			if(bDate-aDate>0){
-				console.log(1)
 				for(let m=1;m<=12;m++){
 					months.push(forMatNum(m));
 				};

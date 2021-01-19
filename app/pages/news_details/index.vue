@@ -5,7 +5,7 @@
 			<view class='list acea-row row-middle'>
 				<view class='label'>{{articleInfo.categoryName}}</view>
 				<view class='item'></text>{{articleInfo.createTime}}</view>
-			<!-- 	<view class='item'><text class='iconfont icon-liulan'></text>{{articleInfo.visit}}</view> -->
+				<view class='item'><text class='iconfont icon-liulan'></text>{{articleInfo.visit}}</view>
 			</view>
 			<view class='conters'>
 				<jyf-parser :html="content" ref="article" :tag-style="tagStyle"></jyf-parser>
@@ -140,7 +140,7 @@
 	}
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 	page {
 		background-color: #fff !important;
 	}

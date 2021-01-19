@@ -51,7 +51,6 @@
 </template>
 
 <script>
-import * as constants from '@/utils/constants.js'
 import * as categoryApi from '@/api/categoryApi.js'
 import * as selfUtil from '@/utils/ZBKJIutil.js'
 export default {
@@ -74,14 +73,14 @@ export default {
   },
   data() {
     return {
-      constants,
+      constants: this.$constants,
       editPram: {
         extra: null, // 关联表单id
         name: null,
         pid: null,
         sort: 0,
         status: true,
-        type: constants.categoryType[5].value,
+        type: this.$constants.categoryType[5].value,
         url: null,
         id: 0
       },

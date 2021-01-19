@@ -158,7 +158,6 @@
 </template>
 
 <script>
-  import {fromList} from '@/utils/constants.js';
   import { bargainListListApi,bargainOrderPinkApi } from '@/api/marketing'
   export default {
     name: "index",
@@ -180,7 +179,7 @@
           page: 1,
           limit: 20
         },
-        fromList: fromList,
+        fromList: this.$constants.fromList,
         timeVal: []
       }
     },

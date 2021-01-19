@@ -102,50 +102,50 @@
 </template>
 
 <script>
-  import { orderDetailApi, getLogisticsInfoApi } from '@/api/order'
-  export default {
-    name: 'OrderDetail',
-    props: {
-      orderId: {
-        type: Number,
-        default: 0
-      }
+import { orderDetailApi, getLogisticsInfoApi } from '@/api/order'
+export default {
+  name: 'OrderDetail',
+  props: {
+    orderId: {
+      type: Number,
+      default: 0
+    }
+  },
+  data() {
+    return {
+      reverse: true,
+      dialogVisible: false,
+      orderDatalist: null,
+      loading: false,
+      modal2: false,
+      result: []
+    }
+  },
+  mounted() {
+  },
+  methods: {
+    openLogistics () {
+      this.getOrderData()
+      this.modal2 = true;
     },
-    data() {
-      return {
-        reverse: true,
-        dialogVisible: false,
-        orderDatalist: null,
-        loading: false,
-        modal2: false,
-        result: []
-      }
+    // 获取订单物流信息
+    getOrderData () {
+      getLogisticsInfoApi({id:this.orderId}).then(async res => {
+        this.result = res.list;
+      })
     },
-    mounted() {
-    },
-    methods: {
-      openLogistics () {
-        this.getOrderData()
-        this.modal2 = true;
-      },
-      // 获取订单物流信息
-      getOrderData () {
-        getLogisticsInfoApi({id:this.orderId}).then(async res => {
-          this.result = res.list;
-        })
-      },
-      getDetail(id) {
-        this.loading = true
-        orderDetailApi({id: id}).then(res => {
-          this.orderDatalist = res
-          this.loading = false
-        }).catch(() => {
-          this.orderDatalist = null
-          this.loading = false
-        })
-      }
+    getDetail(id) {
+      this.loading = true
+      orderDetailApi({id: id}).then(res => {
+        this.orderDatalist = res
+        this.loading = false
+      }).catch(() => {
+        this.orderDatalist = null
+        this.loading = false
+      })
     }
   }
+}
 </script>
 
 <style scoped lang="scss">

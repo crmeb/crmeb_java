@@ -136,3 +136,15 @@ export function categroyUpdateStatus(id) {
     method: 'GET'
   })
 }
+
+/**
+ * 文章详情
+ * @param pram
+ */
+export function articleInfoApi(params) {
+  return request({
+    url: `/admin/article/info`,
+    method: 'GET',
+    params
+  })
+}

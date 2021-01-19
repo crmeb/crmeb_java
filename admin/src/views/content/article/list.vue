@@ -22,7 +22,10 @@
             </el-form-item>
           </el-form>
         </div>
-        <el-button size="mini" type="primary" @click="handlerOpenEdit(0)">添加文章</el-button>
+        <router-link :to=" { path:'/content/articleCreat' } ">
+          <el-button size="small" type="primary" class="mr10">添加文章</el-button>
+        </router-link>
+        <!--<el-button size="mini" type="primary" @click="handlerOpenEdit(0)">添加文章</el-button>-->
       </div>
       <el-table :data="listData.list" size="mini"
                 class="table"
@@ -60,7 +63,10 @@
         <el-table-column prop="updateTime" label="更新时间" min-width="180"/>
         <el-table-column label="操作" min-width="100" fixed="right" align="center">
           <template slot-scope="scope">
-            <el-button type="text" size="small" @click="handlerOpenEdit(1, scope.row)">编辑</el-button>
+            <router-link :to=" { path:'/content/articleCreat/'+ scope.row.id } ">
+              <el-button size="small" type="text" class="mr10">编辑</el-button>
+            </router-link>
+            <!--<el-button type="text" size="small" @click="handlerOpenEdit(1, scope.row)">编辑</el-button>-->
             <!--<el-button type="text" size="small" disabled>关联产品</el-button>-->
             <el-button type="text" size="small" @click="handlerDelete(scope.row)">删除</el-button>
           </template>
@@ -98,7 +104,6 @@
 <script>
 import * as articleApi from '@/api/article.js'
 import * as categoryApi from '@/api/categoryApi.js'
-import * as constants from '@/utils/constants.js'
 import * as selfUtil from '@/utils/ZBKJIutil.js'
 import edit from './edit'
 export default {
@@ -106,12 +111,12 @@ export default {
   components: { edit },
   data() {
     return {
-      constants,
+      constants: this.$constants,
       listPram: {
         keywords: null,
         cid: null,
         page: 1,
-        limit: constants.page.limit[0]
+        limit: this.$constants.page.limit[0]
       },
       listData: { list: [], total: 0 },
       editDialogConfig: {

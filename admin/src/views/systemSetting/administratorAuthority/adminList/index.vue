@@ -107,14 +107,13 @@
 <script>
 import * as systemAdminApi from '@/api/systemadmin.js'
 import * as roleApi from '@/api/role.js'
-import * as constants from '@/utils/constants.js'
 import edit from './edit'
 export default {
   // name: "index"
   components: { edit },
   data() {
     return {
-      constants,
+      constants:this.$constants,
       listData: { list: [] },
       listPram: {
         account: null,
@@ -127,7 +126,7 @@ export default {
         roles: null,
         status: null,
         page: 1,
-        limit: constants.page.limit[0]
+        limit: this.$constants.page.limit[0]
       },
       roleList: [],
       menuList: [],
@@ -160,7 +159,7 @@ export default {
     handleGetRoleList() {
       const _pram = {
         page: 1,
-        limit: constants.page.limit[4]
+        limit: this.constants.page.limit[4]
       }
       roleApi.getRoleList(_pram).then(data => {
         this.roleList = data

@@ -98,6 +98,20 @@
     margin-top: 25px;
   }
 }
+.el-dialog{
+  border-radius: 6px;
+}
+/* 去掉滚动条 */
+.scrollbarAll::-webkit-scrollbar {
+  display: none; /* Chrome Safari */
+}
+
+.scrollbarAll {
+  scrollbar-width: none; /* firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
 .seachTiele{
   font-size: 12px;
   line-height: 29px;

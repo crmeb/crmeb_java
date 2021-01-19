@@ -1,14 +1,6 @@
-# ************************************************************
-# Sequel Pro SQL dump
-# Version 4541
-#
-# http://www.sequelpro.com/
-# https://github.com/sequelpro/sequelpro
-#
-# Host: 121.196.17.222 (MySQL 5.7.29-log)
-# Database: crmeb_java
-# Generation Time: 2021-01-07 06:57:16 +0000
-# ************************************************************
+/**
+    本sql为 crmeb_java 1.3 老版本sql
+ */
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;

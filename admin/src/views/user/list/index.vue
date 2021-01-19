@@ -2,7 +2,7 @@
   <div class="divBox">
     <el-card class="box-card">
       <div slot="header" class="clearfix">
-        <el-tabs v-model="loginType" @tab-click="getList">
+        <el-tabs v-model="loginType" @tab-click="getList(1)">
           <el-tab-pane :label="item.name" :name="item.type.toString()" v-for="(item,index) in headeNum" :key="index"/>
         </el-tabs>
         <div class="container">
@@ -94,7 +94,7 @@
                           <span>推广员</span>
                         </el-radio-button>
                         <el-radio-button label="0">
-                          <span>普通会员</span>
+                          <span>普通用户</span>
                         </el-radio-button>
                       </el-radio-group>
                     </el-form-item>
@@ -169,6 +169,7 @@
         <el-button class="mr10" size="small" @click="setBatch('label')">批量设置标签</el-button>
       </div>
       <el-table
+        ref="table"
         v-loading="listLoading"
         :data="tableData.data"
         style="width: 100%"
@@ -179,6 +180,9 @@
         <el-table-column type="expand">
           <template slot-scope="props">
             <el-form label-position="left" inline class="demo-table-expand">
+              <el-form-item label="身份：">
+                <span>{{ props.row.isPromoter | filterIsPromoter }}</span>
+              </el-form-item>
               <el-form-item label="首次访问：">
                 <span>{{ props.row.createTime | filterEmpty }}</span>
               </el-form-item>
@@ -203,7 +207,7 @@
               <el-form-item label="地址：">
                 <span>{{ props.row.addres | filterEmpty }}</span>
               </el-form-item>
-              <el-form-item label="备注：">
+              <el-form-item label="备注：" style="width: 100%;display: flex;margin-right: 10px;">
                 <span>{{ props.row.mark  | filterEmpty}}</span>
               </el-form-item>
             </el-form>
@@ -231,18 +235,10 @@
         </el-table-column>
         <el-table-column
           label="姓名"
-          min-width="150"
+          min-width="130"
         >
           <template slot-scope="scope">
-            <span>{{scope.row.nickname | filterEmpty}}</span>
-          </template>
-        </el-table-column>
-        <el-table-column
-          label="性别"
-          min-width="60"
-        >
-          <template slot-scope="scope">
-            <span>{{scope.row.sex | sexFilter}}</span>
+            <span>{{scope.row.nickname | filterEmpty  }} | {{scope.row.sex | sexFilter}}</span>
           </template>
         </el-table-column>
         <el-table-column
@@ -250,7 +246,7 @@
           min-width="100"
         >
           <template slot-scope="scope">
-            <!--<span>{{scope.row.level | levelFilter | filterEmpty}}</span>-->
+            <span>{{scope.row.level | levelFilter | filterEmpty}}</span>
           </template>
         </el-table-column>
         <el-table-column
@@ -302,7 +298,7 @@
         </el-table>
       <div class="block">
         <el-pagination
-          :page-sizes="[20, 40, 60, 80]"
+          :page-sizes="[15, 30, 45, 60]"
           :page-size="userFrom.limit"
           :current-page="userFrom.page"
           layout="total, sizes, prev, pager, next, jumper"
@@ -629,7 +625,9 @@
         uid: 0,
         Visible: false,
         keyNum: 0,
-        address: []
+        address: [],
+        multipleSelectionAll: [],
+        idKey:'uid'
       }
     },
     mounted() {
@@ -786,6 +784,13 @@
         this.visible = true
       },
       submitForm(formName) {
+        let data = [];
+        if(this.multipleSelectionAll.length){
+          this.multipleSelectionAll.map((item) => {
+            data.push(item.uid)
+          });
+          this.userIds = data.join(',');
+        }
         this.$refs[formName].validate((valid) => {
           if (valid) {
             this.loading = true
@@ -811,29 +816,21 @@
       },
       setBatch(name, row){
         this.batchName = name
-        if(row){
-          this.selectionList = [row]
-          this.userIds = row.uid
-        }else{
-          this.selectionList=[]
-        }
-      //  row?this.selectionList = [row]:this.selectionList=[]
-
-        if (this.selectionList.length === 0) return this.$message.warning('请选择要设置的用户')
+        if(row) this.userIds = row.uid
+        if (this.multipleSelectionAll.length === 0 && !row) return this.$message.warning('请选择要设置的用户')
         this.dialogVisible = true
       },
       handleClose(){
         this.dialogVisible = false
+        this.multipleSelectionAll = [];
         this.$refs['dynamicValidateForm'].resetFields();
       },
       // 全选
       onSelectTab (selection) {
         this.selectionList = selection;
-        let data = [];
-        this.selectionList.map((item) => {
-          data.push(item.uid)
-        });
-        this.userIds = data.join(',');
+        setTimeout(() => {
+          this.changePageCoreRecordData()
+        }, 50)
       },
       // 搜索
       userSearchs () {
@@ -879,8 +876,9 @@
         })
       },
       // 列表
-      getList() {
+      getList(num) {
         this.listLoading = true
+        this.userFrom.page = num ? num : this.userFrom.page;
         this.userFrom.userType = this.loginType
         if(this.loginType == 0) this.userFrom.userType =''
         this.userFrom.level = this.levelData.join(',')
@@ -889,16 +887,83 @@
         userListApi(this.userFrom).then(res => {
           this.tableData.data = res.list
           this.tableData.total = res.total
+          this.$nextTick(function() {
+            this.setSelectRow()// 调用跨页选中方法
+          })
           this.listLoading = false
         }).catch(() => {
           this.listLoading = false
         })
       },
+      // 设置选中的方法
+      setSelectRow() {
+        if (!this.multipleSelectionAll || this.multipleSelectionAll.length <= 0) {
+          return
+        }
+        // 标识当前行的唯一键的名称
+        const idKey = this.idKey
+        const selectAllIds = []
+        this.multipleSelectionAll.forEach(row => {
+          selectAllIds.push(row[idKey])
+        })
+        this.$refs.table.clearSelection()
+        for (var i = 0; i < this.tableData.data.length; i++) {
+          if (selectAllIds.indexOf(this.tableData.data[i][idKey]) >= 0) {
+            // 设置选中，记住table组件需要使用ref="table"
+            this.$refs.table.toggleRowSelection(this.tableData.data[i], true)
+          }
+        }
+      },
+      // 记忆选择核心方法
+      changePageCoreRecordData() {
+        // 标识当前行的唯一键的名称
+        const idKey = this.idKey
+        const that = this
+        // 如果总记忆中还没有选择的数据，那么就直接取当前页选中的数据，不需要后面一系列计算
+        if (this.multipleSelectionAll.length <= 0) {
+          this.multipleSelectionAll = this.selectionList
+          return
+        }
+        // 总选择里面的key集合
+        const selectAllIds = []
+        this.multipleSelectionAll.forEach(row => {
+          selectAllIds.push(row[idKey])
+        })
+        const selectIds = []
+        // 获取当前页选中的id
+        this.selectionList.forEach(row => {
+          selectIds.push(row[idKey])
+          // 如果总选择里面不包含当前页选中的数据，那么就加入到总选择集合里
+          if (selectAllIds.indexOf(row[idKey]) < 0) {
+            that.multipleSelectionAll.push(row)
+          }
+        })
+        const noSelectIds = []
+        // 得到当前页没有选中的id
+        this.tableData.data.forEach(row => {
+          if (selectIds.indexOf(row[idKey]) < 0) {
+            noSelectIds.push(row[idKey])
+          }
+        })
+        noSelectIds.forEach(uid => {
+          if (selectAllIds.indexOf(uid) >= 0) {
+            for (let i = 0; i < that.multipleSelectionAll.length; i++) {
+              if (that.multipleSelectionAll[i][idKey] == uid) {
+                // 如果总选择中有未被选中的，那么就删除这条
+                that.multipleSelectionAll.splice(i, 1)
+                break
+              }
+            }
+          }
+        })
+      },
       pageChange(page) {
+        this.changePageCoreRecordData()
         this.userFrom.page = page
         this.getList()
       },
       handleSizeChange(val) {
+        this.changePageCoreRecordData()
         this.userFrom.limit = val
         this.getList()
       },

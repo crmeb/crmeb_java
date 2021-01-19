@@ -41,7 +41,6 @@
 </template>
 
 <script>
-import * as constants from '@/utils/constants.js'
 import * as roleApi from '@/api/role.js'
 import * as systemAdminApi from '@/api/systemadmin.js'
 export default {
@@ -70,7 +69,7 @@ export default {
       }
     }
     return {
-      constants,
+      constants:this.$constants,
       pram: {
         account: null,
         level: null,
@@ -103,7 +102,7 @@ export default {
     handleGetRoleList() {
       const _pram = {
         page: 1,
-        limit: constants.page.limit[4],
+        limit: this.constants.page.limit[4],
         status: 1
       }
       roleApi.getRoleList(_pram).then(data => {

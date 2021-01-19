@@ -86,7 +86,6 @@
 
 <script>
   import { monitorListApi, monitorListOptionApi } from '@/api/financial'
-  import { fromList } from '@/utils/constants.js'
   export default {
     name: 'AccountsCapital',
     data() {
@@ -105,7 +104,7 @@
           limit: 20
         },
         categoryId: '',
-        fromList: fromList,
+        fromList: this.$constants.fromList,
         optionList: []
       }
     },

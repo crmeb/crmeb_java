@@ -245,7 +245,9 @@
 				lock: false,
 				scrollTop: 0,
 				tagStyle: {
-					img: 'width:100%;'
+					img: 'width:100%;display:block;',
+					table: 'width:100%',
+					video: 'width:100%'
 				},
 				datatime: '',
 				navActive: 0,
@@ -581,50 +583,6 @@
 					this.$set(this.attribute.productSelect, "cart_num", num.cart_num);
 				}
 			},
-			// ChangeCartNum: function(changeValue) {
-			// 	//changeValue:是否 加|减
-			// 	//获取当前变动属性
-			// 	let productSelect = this.productValue[this.attrValue];
-			// 	if (this.cart_num) {
-			// 	      productSelect.cart_num = this.cart_num;
-			// 		  this.attribute.productSelect.cart_num = this.cart_num;
-			// 	    }
-			// 	//如果没有属性,赋值给商品默认库存
-			// 	if (productSelect === undefined && !this.attribute.productAttr.length)
-			// 		productSelect = this.attribute.productSelect;
-			// 	//无属性值即库存为0；不存在加减；
-			// 	if (productSelect === undefined) return;
-			// 	let stock = productSelect.stock || 0;
-			// 	let num = this.attribute.productSelect;
-			// 	let quota = productSelect.quota || 0;
-			// 	//设置默认数据
-			// 	if (productSelect.cart_num == undefined) productSelect.cart_num = 1;
-			// 	if (changeValue) {
-			// 		num.cart_num ++;
-			// 		if(quota >= stock){
-			// 			 if (num.cart_num > stock) {
-			// 			 	this.$set(this.attribute.productSelect, "cart_num", stock);
-			// 			 	this.$set(this, "cart_num", stock);
-			// 			 }
-			// 		}else{
-			// 			if (num.cart_num > quota) {
-			// 				this.$set(this.attribute.productSelect, "cart_num", quota);
-			// 				this.$set(this, "cart_num", quota);
-			// 			}
-			// 		}
-			// 		this.$set(this, "cart_num", num.cart_num);
-			// 		this.$set(this.attribute.productSelect, "cart_num", num.cart_num);
-					
-			// 	} else {
-			// 		num.cart_num--;
-			// 		if (num.cart_num < 1) {
-			// 			this.$set(this.attribute.productSelect, "cart_num", 1);
-			// 			this.$set(this, "cart_num", 1);
-			// 		}
-			// 		this.$set(this, "cart_num", num.cart_num);
-			// 		this.$set(this.attribute.productSelect, "cart_num", num.cart_num);
-			// 	}
-			// },
 			attrVal(val) {
 				this.attribute.productAttr[val.indexw].index = this.attribute.productAttr[val.indexw].attrValues[val.indexn];
 			},
@@ -882,20 +840,13 @@
 						let storeName = that.storeInfo.storeName;
 						let price = that.storeInfo.price;
 						setTimeout(() => {
-							that.$util.PosterCanvas(arrImages, storeName, price, function(tempFilePath) {
+							that.$util.PosterCanvas(arrImages, storeName, price, that.storeInfo.otPrice,function(tempFilePath) {
 								that.posterImage = tempFilePath;
 								that.canvasStatus = true;
 							});	
 						}, 200);
 					}
 				});	
-				// let arrImages = [that.posterbackgd, that.imgTop, that.PromotionCode];
-				// let storeName = that.storeInfo.storeName;
-				// let price = that.storeInfo.price;
-				// that.$util.PosterCanvas(arrImages, storeName, price, function(tempFilePath) {
-				// 	that.posterImage = tempFilePath;
-				// 	that.canvasStatus = true;
-				// });
 			},
 			// 小程序二维码
 			getQrcode(){
