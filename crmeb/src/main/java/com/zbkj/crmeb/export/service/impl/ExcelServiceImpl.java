@@ -105,7 +105,7 @@ public class ExcelServiceImpl implements ExcelService {
         aliasMap.put("startTime", "砍价开启时间");
         aliasMap.put("stopTime", "砍价结束时间");
         aliasMap.put("sales", "销量");
-        aliasMap.put("stock", "库存");
+        aliasMap.put("quotaShow", "库存");
         aliasMap.put("giveIntegral", "返多少积分");
         aliasMap.put("addTime", "添加时间");
 
@@ -146,7 +146,7 @@ public class ExcelServiceImpl implements ExcelService {
         aliasMap.put("title", "拼团名称");
         aliasMap.put("otPrice", "原价");
         aliasMap.put("price", "拼团价");
-        aliasMap.put("stock", "库存");
+        aliasMap.put("quotaShow", "库存");
         aliasMap.put("countPeople", "拼团人数");
         aliasMap.put("countPeopleAll", "参与人数");
         aliasMap.put("countPeoplePink", "成团数量");

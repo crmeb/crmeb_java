@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.category.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -56,20 +57,18 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
     public List<Category> getList(CategorySearchRequest request, PageParamRequest pageParamRequest) {
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        Category category = new Category();
-        BeanUtils.copyProperties(request,category);
 //        objectQueryWrapper.setEntity(category);
-        if(null != category.getPid()){
-            lambdaQueryWrapper.eq(Category::getPid, category.getPid());
+        if(null != request.getPid()){
+            lambdaQueryWrapper.eq(Category::getPid, request.getPid());
         }
-        if(null != category.getType()){
-            lambdaQueryWrapper.eq(Category::getType, category.getType());
+        if(null != request.getType()){
+            lambdaQueryWrapper.eq(Category::getType, request.getType());
         }
-        if(null != category.getStatus()){
-            lambdaQueryWrapper.eq(Category::getStatus, category.getStatus());
+        if(ObjectUtil.isNotNull(request.getStatus()) && request.getStatus() >= 0){
+            lambdaQueryWrapper.eq(Category::getStatus, request.getStatus().equals(1));
         }
-        if(null != category.getName()){
-            lambdaQueryWrapper.like(Category::getName, category.getName());
+        if(null != request.getName()){
+            lambdaQueryWrapper.like(Category::getName, request.getName());
         }
         lambdaQueryWrapper.orderByDesc(Category::getSort).orderByDesc(Category::getId);
         return dao.selectList(lambdaQueryWrapper);
@@ -262,6 +261,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
      */
     @Override
     public List<CategoryTreeVo> getListTree(Integer type, Integer status, List<Integer> categoryIdList) {
+        System.out.println("菜单列表:getListTree: type:" + type + "| status:" + status + "| categoryIdList:" + JSON.toJSONString(categoryIdList));
         return getTree(type, status,null,categoryIdList);
     }
 
@@ -329,6 +329,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
                 list.add(tree);
             }
         }
+        System.out.println("无限极分类 : getTree:" + JSON.toJSONString(list));
         return list;
     }
 

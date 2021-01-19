@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 
 /**
  * H5端订单操作
@@ -43,19 +44,13 @@ public class StoreOrderController {
 
     /**
      * 根据购物车id确认订单
-     * @param cartIds 购物车id集合
+     * @param request 购物车id集合
      * @return 订单确认结果
      */
     @ApiOperation(value = "确认订单")
     @RequestMapping(value = "/confirm", method = RequestMethod.POST)
-    public CommonResult<ConfirmOrderResponse> OrderConForm(@RequestParam String cartIds,
-                                                           @RequestParam(value = "isNew", defaultValue = "false") boolean isNew,
-                                                           @RequestParam(value = "addAgain", defaultValue = "false") boolean addAgain,
-                                                           @RequestParam(value = "secKill", defaultValue = "false") boolean secKill,
-                                                           @RequestParam(value = "bargain", defaultValue = "false") boolean bargain,
-                                                           @RequestParam(value = "combination", defaultValue = "false") boolean combination,
-                                                           @RequestParam(value = "addressId", defaultValue = "0") Integer addressId){
-        return CommonResult.success(orderService.confirmOrder(CrmebUtil.stringToArrayStr(cartIds),isNew,addAgain,secKill,bargain, combination, addressId));
+    public CommonResult<ConfirmOrderResponse> OrderConForm(@RequestBody @Validated ConfirmOrderRequest request){
+        return CommonResult.success(orderService.confirmOrder(request));
     }
 
     /**
@@ -66,9 +61,8 @@ public class StoreOrderController {
      */
     @ApiOperation(value = "生成订单")
     @RequestMapping(value = "/create/{key}", method = RequestMethod.POST)
-    public CommonResult<Object> createOrder(@PathVariable String key,@Validated @RequestBody OrderCreateRequest orderRequest,HttpServletRequest request){
-        String ip = CrmebUtil.getClientIp(request);
-        return CommonResult.success(orderService.createOrder(orderRequest,key, ip));
+    public CommonResult<Map<String, Object>> createOrder(@PathVariable String key, @Validated @RequestBody OrderCreateRequest orderRequest, HttpServletRequest request){
+        return CommonResult.success(orderService.createOrder_1_3_1(orderRequest, key));
     }
 
     /**
@@ -203,16 +197,6 @@ public class StoreOrderController {
         }else{
             return CommonResult.failed();
         }
-    }
-
-    /**
-     * 订单退款前验证
-     * @return 验证结果
-     */
-    @ApiOperation(value = "退款订单验证")
-    @RequestMapping(value = "/refund/verify", method = RequestMethod.POST)
-    public CommonResult<Object> refundVerify(@RequestBody @Validated OrderRefundVerifyRequest request){
-        return CommonResult.success(orderService.refundVerify(request));
     }
 
     /**

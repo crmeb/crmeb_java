@@ -1,7 +1,9 @@
 package com.zbkj.crmeb.store.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
@@ -9,6 +11,7 @@ import com.constants.Constants;
 import com.exception.CrmebException;
 import com.github.pagehelper.Constant;
 import com.github.pagehelper.PageHelper;
+import com.zbkj.crmeb.seckill.model.StoreSeckill;
 import com.zbkj.crmeb.store.dao.StoreProductAttrValueDao;
 import com.zbkj.crmeb.store.model.StoreProductAttrValue;
 import com.zbkj.crmeb.store.request.StoreProductAttrValueSearchRequest;
@@ -169,6 +172,69 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
         LambdaQueryWrapper<StoreProductAttrValue> lambdaQW = Wrappers.lambdaQuery();
         lambdaQW.eq(StoreProductAttrValue::getProductId, productId).eq(StoreProductAttrValue::getType,type);
         return dao.delete(lambdaQW) > 0;
+    }
+
+    /**
+     * 根据id、类型查询
+     * @param id ID
+     * @param type 类型
+     * @return StoreProductAttrValue
+     */
+    @Override
+    public StoreProductAttrValue getByIdAndProductIdAndType(Integer id, Integer productId, Integer type) {
+        LambdaQueryWrapper<StoreProductAttrValue> lqw = Wrappers.lambdaQuery();
+        lqw.eq(StoreProductAttrValue::getId, id);
+        lqw.eq(StoreProductAttrValue::getProductId, productId);
+        lqw.eq(StoreProductAttrValue::getType, type);
+        return dao.selectOne(lqw);
+    }
+
+    /**
+     * 根据sku查询
+     * @param productId 商品id
+     * @param suk   sku
+     * @param type  规格类型
+     * @return StoreProductAttrValue
+     */
+    @Override
+    public StoreProductAttrValue getByProductIdAndSkuAndType(Integer productId, String suk, Integer type) {
+        LambdaQueryWrapper<StoreProductAttrValue> lqw = Wrappers.lambdaQuery();
+        lqw.eq(StoreProductAttrValue::getProductId, productId);
+        lqw.eq(StoreProductAttrValue::getSuk, suk);
+        lqw.eq(StoreProductAttrValue::getType, type);
+        return dao.selectOne(lqw);
+    }
+
+    /**
+     * 添加(退货)/扣减库存
+     * @param id 秒杀商品id
+     * @param num 数量
+     * @param operationType 类型：add—添加，sub—扣减
+     * @param type 活动类型 0=商品，1=秒杀，2=砍价，3=拼团
+     * @return Boolean
+     */
+    @Override
+    public Boolean operationStock(Integer id, Integer num, String operationType, Integer type) {
+        UpdateWrapper<StoreProductAttrValue> updateWrapper = new UpdateWrapper<>();
+        if (operationType.equals("add")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
+            if (type > 0) {
+                updateWrapper.setSql(StrUtil.format("quota = quota + {}", num));
+            }
+        }
+        if (operationType.equals("sub")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
+            if (type > 0) {
+                updateWrapper.setSql(StrUtil.format("quota = quota - {}", num));
+            }
+            // 扣减时加乐观锁保证库存不为负
+            updateWrapper.last(StrUtil.format("and (stock - {} >= 0)", num));
+        }
+        updateWrapper.eq("id", id);
+        updateWrapper.eq("type", type);
+        return update(updateWrapper);
     }
 }
 

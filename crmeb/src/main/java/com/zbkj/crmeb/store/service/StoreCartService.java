@@ -38,7 +38,7 @@ public interface StoreCartService extends IService<StoreCart> {
      * @param cartIds 购物车id集合
      * @return 购物车列表
      */
-    List<StoreCartResponse> getListByUserIdAndCartIds(Integer userId, List<String> cartIds,Integer isNew);
+    List<StoreCartResponse> getListByUserIdAndCartIds(Integer userId, List<String> cartIds,Boolean isNew);
 
     /**
      * 根据用户id和购物车id集合获取列表

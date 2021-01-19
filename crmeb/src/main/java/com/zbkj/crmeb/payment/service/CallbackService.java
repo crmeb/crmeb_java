@@ -15,7 +15,7 @@ package com.zbkj.crmeb.payment.service;
 public interface CallbackService {
     /**
      * 微信支付回调
-     * @param xmlInfo 微信会到json
+     * @param xmlInfo 微信回调json
      * @return String
      */
     String weChat(String xmlInfo);
@@ -26,4 +26,11 @@ public interface CallbackService {
      * @return
      */
     boolean aliPay(String request);
+
+    /**
+     * 微信退款回调
+     * @param request 微信回调json
+     * @return String
+     */
+    String weChatRefund(String request);
 }
