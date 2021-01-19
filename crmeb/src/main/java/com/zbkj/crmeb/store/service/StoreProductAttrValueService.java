@@ -69,4 +69,30 @@ public interface StoreProductAttrValueService extends IService<StoreProductAttrV
      * @return 删除结果
      */
     boolean removeByProductId(Integer productId,int type);
+
+    /**
+     * 根据id、类型查询
+     * @param id ID
+     * @param type 类型
+     * @return StoreProductAttrValue
+     */
+    StoreProductAttrValue getByIdAndProductIdAndType(Integer id, Integer productId, Integer type);
+
+    /**
+     * 根据sku查询
+     * @param productId 商品id
+     * @param suk   sku
+     * @param type  规格类型
+     * @return StoreProductAttrValue
+     */
+    StoreProductAttrValue getByProductIdAndSkuAndType(Integer productId, String suk, Integer type);
+
+    /**
+     * 添加/扣减库存
+     * @param id 秒杀商品id
+     * @param num 数量
+     * @param operationType 类型：add—添加，sub—扣减
+     * @param type 活动类型 0=商品，1=秒杀，2=砍价，3=拼团
+     */
+    Boolean operationStock(Integer id, Integer num, String operationType, Integer type);
 }

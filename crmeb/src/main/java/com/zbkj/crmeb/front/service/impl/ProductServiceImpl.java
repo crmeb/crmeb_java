@@ -140,7 +140,16 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public List<CategoryTreeVo> getCategory() {
-        return categoryService.getListTree(Constants.CATEGORY_TYPE_PRODUCT, 1,"");
+        List<CategoryTreeVo> listTree = categoryService.getListTree(Constants.CATEGORY_TYPE_PRODUCT, 1, "");
+        for (int i = 0; i < listTree.size();) {
+            CategoryTreeVo categoryTreeVo = listTree.get(i);
+            if (!categoryTreeVo.getPid().equals(0)) {
+                listTree.remove(i);
+                continue;
+            }
+            i++;
+        }
+        return listTree;
     }
 
     /**

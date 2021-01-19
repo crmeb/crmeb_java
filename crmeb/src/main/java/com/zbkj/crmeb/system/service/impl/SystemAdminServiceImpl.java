@@ -3,6 +3,7 @@ package com.zbkj.crmeb.system.service.impl;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.constants.Constants;
@@ -14,6 +15,7 @@ import com.zbkj.crmeb.authorization.model.TokenModel;
 import com.zbkj.crmeb.system.dao.SystemAdminDao;
 import com.zbkj.crmeb.system.model.SystemAdmin;
 import com.zbkj.crmeb.system.model.SystemRole;
+import com.zbkj.crmeb.system.model.SystemStoreStaff;
 import com.zbkj.crmeb.system.request.SystemAdminAddRequest;
 import com.zbkj.crmeb.system.request.SystemAdminRequest;
 import com.zbkj.crmeb.system.request.SystemRoleSearchRequest;
@@ -31,6 +33,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -376,6 +379,24 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         }
         systemAdmin.setStatus(status);
         return updateById(systemAdmin);
+    }
+
+    @Override
+    public HashMap<Integer, SystemAdmin> getMapInId(List<Integer> adminIdList) {
+        HashMap<Integer, SystemAdmin> map = new HashMap<>();
+        if(adminIdList.size() < 1){
+            return map;
+        }
+        LambdaQueryWrapper<SystemAdmin> lambdaQueryWrapper = Wrappers.lambdaQuery();
+        lambdaQueryWrapper.in(SystemAdmin::getId, adminIdList);
+        List<SystemAdmin> systemAdminList = dao.selectList(lambdaQueryWrapper);
+        if(systemAdminList.size() < 1){
+            return map;
+        }
+        for (SystemAdmin systemAdmin : systemAdminList) {
+            map.put(systemAdmin.getId(), systemAdmin);
+        }
+        return map;
     }
 
     /**

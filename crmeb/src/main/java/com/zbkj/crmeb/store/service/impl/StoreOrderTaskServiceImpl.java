@@ -1,15 +1,18 @@
 package com.zbkj.crmeb.store.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.constants.Constants;
 import com.exception.CrmebException;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.zbkj.crmeb.bargain.service.StoreBargainService;
-import com.zbkj.crmeb.combination.model.StoreCombination;
 import com.zbkj.crmeb.combination.service.StoreCombinationService;
 import com.zbkj.crmeb.marketing.service.StoreCouponUserService;
+import com.zbkj.crmeb.payment.service.OrderPayService;
 import com.zbkj.crmeb.seckill.service.StoreSeckillService;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.model.StoreProduct;
@@ -17,16 +20,19 @@ import com.zbkj.crmeb.store.request.StoreProductStockRequest;
 import com.zbkj.crmeb.store.service.*;
 import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
 import com.zbkj.crmeb.system.service.SystemConfigService;
-import com.zbkj.crmeb.task.order.OrderRefundByUser;
 import com.zbkj.crmeb.user.model.User;
+import com.zbkj.crmeb.user.model.UserBill;
 import com.zbkj.crmeb.user.request.UserOperateFundsRequest;
+import com.zbkj.crmeb.user.service.UserBillService;
 import com.zbkj.crmeb.user.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -47,7 +53,7 @@ import java.util.stream.Collectors;
 @Service
 public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
     //日志
-    private static final Logger logger = LoggerFactory.getLogger(OrderRefundByUser.class);
+    private static final Logger logger = LoggerFactory.getLogger(StoreOrderTaskServiceImpl.class);
 
     @Autowired
     private StoreOrderService storeOrderService;
@@ -78,6 +84,15 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
 
     @Autowired
     private StoreCombinationService storeCombinationService;
+
+    @Autowired
+    private OrderPayService orderPayService;
+
+    @Autowired
+    private UserBillService userBillService;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     /**
      * 用户取消订单
@@ -130,7 +145,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
          * */
         try{
             //写订单日志
-            storeOrderStatusService.createLog(storeOrder.getId(), "order_refund_apply", "申请退款");
+            storeOrderStatusService.saveRefund(storeOrder.getId(), storeOrder.getRefundPrice(), "成功");
 
             //回滚积分  消耗和获得
             rollbackIntegral(storeOrder);
@@ -178,11 +193,8 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
     @Transactional(rollbackFor = {RuntimeException.class, Error.class, CrmebException.class})
     public Boolean takeByUser(StoreOrder storeOrder) {
         /*
-         * 1、修改订单状态 （用户操作的时候已处理）
-         * 2、写订单日志
-         * 3、获得佣金
-         * 4、获得赠送积分
-         * 5、获得赠送经验
+         * 1、写订单日志
+         * 2、获得佣金
          * */
         try{
             //日志
@@ -190,15 +202,6 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
 
             //获得佣金
             setBrokeragePrice(storeOrder, 1);
-
-            //获得赠送积分
-            setIntegral(storeOrder, 1);
-
-            // 获取商品额外赠送的积分
-            setGiveIntegral(storeOrder);
-
-            //获得赠送经验
-            setExp(storeOrder, 1);
 
             return true;
         }catch (Exception e){
@@ -236,21 +239,14 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
      * @since 2020-07-09
      */
     private void setIntegral(StoreOrder storeOrder, int type) {
-        try {
-            if(storeOrder.getUseIntegral() < 1){
-                return;
-            }
-            UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
-            userOperateFundsRequest.setValue(BigDecimal.valueOf(storeOrder.getUseIntegral()));
-            userOperateFundsRequest.setFoundsType(Constants.ORDER_STATUS_STR_BARGAIN);
-            userOperateFundsRequest.setUid(storeOrder.getUid());
-            userOperateFundsRequest.setTitle(Constants.ORDER_STATUS_STR_TAKE);
-            userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_INTEGRAL);
-            userOperateFundsRequest.setType(type);
-            userService.updateFounds(userOperateFundsRequest, true);
-        }catch (Exception e){
-            throw new CrmebException("更新积分失败" + e.getMessage());
-        }
+        UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
+        userOperateFundsRequest.setValue(BigDecimal.valueOf(storeOrder.getUseIntegral()));
+        userOperateFundsRequest.setFoundsType(Constants.ORDER_STATUS_STR_BARGAIN);
+        userOperateFundsRequest.setUid(storeOrder.getUid());
+        userOperateFundsRequest.setTitle(Constants.ORDER_STATUS_STR_TAKE);
+        userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_INTEGRAL);
+        userOperateFundsRequest.setType(type);
+        userService.updateFounds(userOperateFundsRequest, true);
     }
 
     // 获取额外赠送积分
@@ -315,12 +311,12 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             User user = userService.getById(storeOrder.getUid());
 
             //当前用户不存在 没有上级 或者 当用用户上级时自己  直接返回
-            if(user.getSpreadUid() < 1 || null == user.getSpreadUid() || 0 == user.getSpreadUid() || user.getSpreadUid().equals(storeOrder.getUid())){
+            if(null == user.getSpreadUid() || user.getSpreadUid() < 1 || user.getSpreadUid().equals(storeOrder.getUid())){
                 return;
             }
 
             //计算分销人
-//            List<Integer> spreadList = getSpreadList(user.getPath());
+//            List<Integer> spreadList = getSpread List(user.getPath());
             List<Integer> spreadList = getSpreadList(user.getSpreadUid());
             if(null == spreadList || spreadList.size() < 1){
                 return;
@@ -380,7 +376,6 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
                 return brokeragePrice;
             }
 
-
             //查询对应等级的分销比例
             String key = Constants.CONFIG_KEY_STORE_BROKERAGE_LEVEL.replace("num", i.toString());
             if (i == 1) {
@@ -426,68 +421,31 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
     /**
      * 通过分佣等级关系计算需要拿到分佣的用户数据
      * @param spreadId String 推广人ID
-     * @author Mr.Zhang
-     * @since 2020-07-09
-     * @return BigDecimal
      */
-    //     * @param path String 推广人关系  /0/1/2/3/4/
     private List<Integer> getSpreadList(Integer spreadId) {
-        try{
+        List<Integer> spreadList = CollUtil.newArrayList();
+        User spreadUser = userService.getById(spreadId);
+        if (ObjectUtil.isEmpty(spreadUser)) {
+            return spreadList;
+        }
+        if (!spreadUser.getIsPromoter()) {
+            spreadList.add(0);
+        } else {
+            spreadList.add(spreadId);
+        }
+        if (ObjectUtil.isNull(spreadUser.getSpreadUid()) || spreadUser.getSpreadUid() == 0) {
+            return spreadList;
+        }
 
-//            List<Integer> spreadList = CrmebUtil.stringToArrayByRegex(path, "/");
-//            if(spreadList.size() < 1){
-//                return null;
-//            }
-//            //去拿所有是分销员的信息
-//            HashMap<Integer, User> mapListInUidList = userService.getMapListInUid(spreadList);
-//            if(null == mapListInUidList){
-//                return null;
-//            }
-//
-//            Collections.reverse(spreadList); // 倒序
-//
-//            //分佣级别
-//            int level = 2;
-//            int i = 0;
-//
-//            //超过返佣等级去除掉
-//            for (Integer spreadId : spreadList) {
-//                if(level <= i){
-//                    spreadList.remove(i);
-//                }
-//
-//                //不是推广员，没有找到用户数据去，把推广人id设置为0
-//                if(!mapListInUidList.containsKey(spreadId) || !mapListInUidList.get(spreadId).getIsPromoter()){
-//                    spreadList.set(i, 0);
-//                }
-//                i++;
-//            }
-            List<Integer> spreadList = CollUtil.newArrayList();
-            User spreadUser = userService.getById(spreadId);
-            if (ObjectUtil.isEmpty(spreadUser)) {
-                return null;
-            }
-            if (!spreadUser.getIsPromoter()) {
+        User spreadSpreadUser = userService.getById(spreadUser.getSpreadUid());
+        if (ObjectUtil.isNotNull(spreadSpreadUser)) {
+            if (!spreadSpreadUser.getIsPromoter()) {
                 spreadList.add(0);
             } else {
-                spreadList.add(spreadId);
+                spreadList.add(spreadSpreadUser.getUid());
             }
-            if (ObjectUtil.isNull(spreadUser.getSpreadUid()) || spreadUser.getSpreadUid() == 0) {
-                return spreadList;
-            }
-
-            User spreadSpreadUser = userService.getById(spreadUser.getSpreadUid());
-            if (ObjectUtil.isNotEmpty(spreadSpreadUser)) {
-                if (!spreadSpreadUser.getIsPromoter()) {
-                    spreadList.add(0);
-                } else {
-                    spreadList.add(spreadSpreadUser.getUid());
-                }
-            }
-            return spreadList;
-        }catch (Exception e){
-            return null;
         }
+        return spreadList;
     }
 
 
@@ -564,7 +522,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
      * 回滚库存
      * @param storeOrder 订单信息
      */
-    private Boolean                                                     rollbackStock(StoreOrder storeOrder) {
+    private Boolean rollbackStock(StoreOrder storeOrder) {
         try{
             // 查找出商品详情
             List<StoreOrderInfoVo> orderInfoVoList = storeOrderInfoService.getOrderListByOrderId(storeOrder.getId());
@@ -655,7 +613,6 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
         //回滚使用积分
         if(storeOrder.getUseIntegral() > 0){
             //有退积分操作， 那么用户使用的积分会减少
-//            storeOrder.setUseIntegral(storeOrder.getUseIntegral()- (storeOrder.getBackIntegral()));
             storeOrder.setBackIntegral(storeOrder.getUseIntegral());
         }
         setIntegral(storeOrder, 1);
@@ -674,5 +631,326 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
     private void rollbackCoupon(StoreOrder storeOrder){
         //回滚用户已使用的优惠券
         couponUserService.rollbackByCancelOrder(storeOrder);
+    }
+
+    /**
+     * 订单退款处理
+     * 退款得时候根据userBill 来进行回滚
+     */
+    @Override
+    public Boolean refundOrder(StoreOrder storeOrder) {
+        /**
+         * 1、写订单日志
+         * 2、回滚消耗积分
+         * 3、回滚获得积分
+         * 4、回滚冻结期佣金
+         * 5、回滚经验
+         * 6、回滚库存
+         * 7、发送通知
+         * 实际上2-5就是user数据的处理+userBill的记录
+         */
+        // 获取用户对象
+        User user = userService.getById(storeOrder.getUid());
+        if (ObjectUtil.isNull(user)) {
+            logger.error("订单退款处理，对应的用户不存在,storeOrder===>" + storeOrder);
+            return Boolean.FALSE;
+        }
+
+        List<UserBill> userBillList = CollUtil.newArrayList();
+
+        //回滚积分  消耗和获得
+        // 通过userBill记录获取订单之前处理的记录
+        List<UserBill> userBills = userBillService.findListByOrderIdAndUid(storeOrder.getId(), storeOrder.getUid());
+
+        // 回滚经验
+        List<UserBill> experienceList = userBills.stream().filter(e -> e.getCategory().equals(Constants.USER_BILL_CATEGORY_EXPERIENCE)).collect(Collectors.toList());
+        experienceList.forEach(bill -> {
+            user.setExperience(user.getExperience() - bill.getNumber().intValue());
+
+            UserBill userBill = new UserBill();
+            BeanUtils.copyProperties(bill, userBill);
+            userBill.setId(null);
+            userBill.setTitle(Constants.ORDER_STATUS_STR_REFUNDED);
+            userBill.setPm(0);
+            userBill.setType(Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
+            userBill.setBalance(new BigDecimal(user.getExperience()));
+            userBill.setMark(StrUtil.format("订单退款，扣除{}赠送经验", bill.getNumber().intValue()));
+            userBill.setStatus(1);
+            userBillList.add(userBill);
+        });
+
+        // 回滚积分
+        List<UserBill> integralList = userBills.stream().filter(e -> e.getCategory().equals(Constants.USER_BILL_CATEGORY_INTEGRAL)).collect(Collectors.toList());
+        integralList.forEach(bill -> {
+            UserBill userBill = new UserBill();
+            BeanUtils.copyProperties(bill, userBill);
+            if (bill.getPm() == 0) {// 返还用户使用的积分
+                user.setIntegral(user.getIntegral() + bill.getNumber().intValue());
+                userBill.setId(null);
+                userBill.setTitle(Constants.ORDER_STATUS_STR_REFUNDED);
+                userBill.setPm(1);
+                userBill.setType(Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
+                userBill.setBalance(new BigDecimal(user.getIntegral()));
+                userBill.setMark(StrUtil.format("订单退款，返还{}支付扣除积分", bill.getNumber().intValue()));
+                userBill.setStatus(1);
+                userBillList.add(userBill);
+            }
+            if (bill.getPm() == 1) {// 回滚之前获得的积分
+                user.setIntegral(user.getIntegral() - bill.getNumber().intValue());
+                userBill.setId(null);
+                userBill.setTitle(Constants.ORDER_STATUS_STR_REFUNDED);
+                userBill.setPm(0);
+                userBill.setType(Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
+                userBill.setBalance(new BigDecimal(user.getIntegral()));
+                userBill.setMark(StrUtil.format("订单退款，扣除{}订单赠送积分", bill.getNumber().intValue()));
+                userBill.setStatus(1);
+                userBillList.add(userBill);
+            }
+        });
+
+        StoreOrder tempOrder = new StoreOrder();
+        tempOrder.setId(storeOrder.getId());
+        tempOrder.setRefundStatus(2);
+        // 回滚佣金 TODO 这里之后处理
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            //写订单日志
+            storeOrderStatusService.saveRefund(storeOrder.getId(), storeOrder.getRefundPrice(), "成功");
+
+            // 更新用户数据
+            userService.updateById(user);
+
+            // 用户账单记录处理
+            userBillService.saveBatch(userBillList);
+
+            //回滚冻结期佣金
+            rollbackBrokeragePrice(storeOrder);
+
+            // 回滚库存
+            rollbackStock(storeOrder);
+
+            storeOrderService.updateById(tempOrder);
+            return Boolean.TRUE;
+        });
+
+        if (execute) {
+            // 发送通知
+        }
+
+        return execute;
+    }
+
+    /**
+     * 订单支付成功后置处理
+     * @param storeOrder
+     * @return
+     */
+    @Override
+    public Boolean paySuccessAfter(StoreOrder storeOrder) {
+        return orderPayService.paySuccess(storeOrder);
+    }
+
+    /**
+     * 回滚佣金
+     * @param storeOrder 订单信息
+     * @param user 订单用户
+     */
+    private void rollbackBrokeragePrice(StoreOrder storeOrder, User user) {
+        //计算分销人
+        List<Integer> spreadList = getSpreadList(user.getSpreadUid());
+        if(null == spreadList || spreadList.size() < 1){
+            return;
+        }
+        //资金明细加一条数据
+        UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
+        userOperateFundsRequest.setLinkId(storeOrder.getId().toString());
+        userOperateFundsRequest.setTitle("推广佣金");
+        userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE);
+        userOperateFundsRequest.setFoundsType(Constants.USER_BILL_TYPE_BROKERAGE);
+        userOperateFundsRequest.setType(0);
+
+
+        //计算每个人的佣金
+        int i = 1;
+        for (Integer spreadId: spreadList) {
+            if(spreadId < 1){
+                continue;
+            }
+            //大于0的用户开始计算佣金, 并更新数据库
+            BigDecimal brokeragePrice = getBrokeragePriceByOrder(i, storeOrder.getId());
+            User userInfo = userService.getById(spreadId);
+            userInfo.setBrokeragePrice(userInfo.getBrokeragePrice().add(brokeragePrice));
+
+            //获得推广佣金
+            userOperateFundsRequest.setUid(spreadId);
+            userOperateFundsRequest.setValue(brokeragePrice);
+            userService.updateFounds(userOperateFundsRequest, true);
+            i++;
+        }
+    }
+
+    /**
+     * 检查是否需要回滚佣金
+     * @param storeOrder 订单
+     * @param user
+     */
+    private Boolean checkRollbackBrokeragePrice(StoreOrder storeOrder, User user) {
+        //营销产品不参与
+        if(storeOrder.getCombinationId() > 0 || storeOrder.getSeckillId() > 0 || storeOrder.getBargainId() > 0){
+            return Boolean.FALSE;
+        }
+
+        //当前用户不存在 没有上级 或者 当用用户上级时自己  直接返回
+        if(user.getSpreadUid() < 1 || null == user.getSpreadUid() || 0 == user.getSpreadUid() || user.getSpreadUid().equals(storeOrder.getUid())){
+            return Boolean.FALSE;
+        }
+
+        //检测商城是否开启分销功能
+        String isOpen = systemConfigService.getValueByKey(Constants.CONFIG_KEY_STORE_BROKERAGE_IS_OPEN);
+        if(StringUtils.isBlank(isOpen) || isOpen.equals("0")){
+            return Boolean.FALSE;
+        }
+
+        // 查看是否在冻结期之内， 如果在是需要回滚的，如果不在则不需要回滚
+        String time = systemConfigService.getValueByKey(Constants.CONFIG_KEY_STORE_BROKERAGE_EXTRACT_TIME);
+        if(StringUtils.isBlank(time)){
+            return Boolean.FALSE;
+        }
+        DateTime patTime = cn.hutool.core.date.DateUtil.offsetDay(storeOrder.getPayTime(), Integer.parseInt(time));
+        long between = cn.hutool.core.date.DateUtil.between(patTime, DateUtil.nowDateTime(), DateUnit.MS, false);
+        if (between < 0) {
+            return Boolean.FALSE;
+        }
+        return Boolean.TRUE;
+    }
+
+    /**
+     * 创建退款UserBill对象（包含积分、佣金、经验）
+     * @param storeOrder 订单
+     * @param user 用户
+     * @param category 分类
+     * @param pm 1 = 增加， 0 = 减少
+     *
+     */
+    private UserBill createRefundUserBill(StoreOrder storeOrder, User user, String category, Integer pm) {
+        UserBill userBill = new UserBill();
+        BigDecimal balance = getUserBalance(user, category);
+        userBill.setTitle(Constants.ORDER_STATUS_STR_REFUNDED);
+        userBill.setUid(storeOrder.getUid());
+        userBill.setCategory(category);
+        userBill.setLinkId(storeOrder.getOrderId());  //链接id
+        userBill.setPm(pm);
+        userBill.setBalance(balance);
+        switch (category) {
+            case Constants.USER_BILL_CATEGORY_INTEGRAL:// 积分
+                userBill.setType(Constants.USER_BILL_TYPE_PAY_PRODUCT_INTEGRAL_BACK);
+                if (pm.equals(1)) {// 返还积分
+                    userBill.setNumber(new BigDecimal(storeOrder.getUseIntegral()));
+                } else {// 扣除奖励积分
+                    userBill.setNumber(new BigDecimal(storeOrder.getGainIntegral()));
+                }
+                userBill.setMark(getMark(userBill));
+                break;
+            case Constants.USER_BILL_CATEGORY_EXPERIENCE:// 经验
+                break;
+            case Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE:// 佣金
+                break;
+            case Constants.USER_BILL_CATEGORY_MONEY:// 余额
+                break;
+        }
+        return userBill;
+    }
+
+    /**
+     * 获取用户剩余
+     * @param user 用户
+     * @param category 分类
+     * @return BigDecimal
+     */
+    private BigDecimal getUserBalance(User user, String category) {
+        BigDecimal value = BigDecimal.ZERO;
+        switch (category) {
+            case Constants.USER_BILL_CATEGORY_INTEGRAL:// 积分
+                value = new BigDecimal(user.getIntegral());
+                break;
+            case Constants.USER_BILL_CATEGORY_EXPERIENCE:// 经验
+                value = new BigDecimal(user.getExperience());
+                break;
+            case Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE:// 佣金
+                value = user.getBrokeragePrice();
+                break;
+            case Constants.USER_BILL_CATEGORY_MONEY:// 余额
+                value = user.getNowMoney();
+                break;
+        }
+        return value;
+    }
+
+    private String getMark(UserBill userBill) {
+        String operate = (userBill.getPm() == 1) ? "增加" : "减少";
+        String founds = "";
+        switch (userBill.getCategory()){
+            case Constants.USER_BILL_CATEGORY_INTEGRAL:
+                founds = "积分";
+                break;
+            case Constants.USER_BILL_CATEGORY_MONEY:
+                founds = "余额";
+                break;
+            case Constants.USER_BILL_CATEGORY_EXPERIENCE:
+                founds = "经验";
+                break;
+            case Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE:
+                founds = "佣金";
+                break;
+        }
+
+        return Constants.USER_BILL_OPERATE_LOG_TITLE.replace("{$title}", userBill.getTitle()).replace("{$operate}", operate).replace("{$founds}", founds);
+    }
+
+    /**
+     * 计算佣金
+     * @param i Integer 分销员等级
+     * @param id Integer 订单id
+     */
+    private BigDecimal getBrokeragePrice(Integer i, Integer id) {
+        BigDecimal brokeragePrice = BigDecimal.ZERO;
+
+        //先看商品是否有固定分佣
+        List<StoreOrderInfoVo> orderInfoVoList = storeOrderInfoService.getOrderListByOrderId(id);
+        if(null == orderInfoVoList  || orderInfoVoList.size() < 1){
+            return brokeragePrice;
+        }
+
+        //查询对应等级的分销比例
+        String key = "";
+        if (i == 1) {
+            key = Constants.CONFIG_KEY_STORE_BROKERAGE_RATE_ONE;
+        }
+        if (i == 2) {
+            key = Constants.CONFIG_KEY_STORE_BROKERAGE_RATE_TWO;
+        }
+        String rate = systemConfigService.getValueByKey(key);
+        if(StrUtil.isBlank(rate)){
+            return brokeragePrice;
+        }
+        //佣金比例整数存储， 例如80， 所以计算的时候要除以 10*10
+        BigDecimal rateBigDecimal = new BigDecimal(rate).divide(new BigDecimal(100));
+
+        BigDecimal totalBrokerPrice = BigDecimal.ZERO;
+        for (StoreOrderInfoVo orderInfoVo : orderInfoVoList) {
+            if(i == 1){
+                brokeragePrice = orderInfoVo.getInfo().getProductInfo().getAttrInfo().getBrokerage();
+            }else if(i == 2){
+                brokeragePrice = orderInfoVo.getInfo().getProductInfo().getAttrInfo().getBrokerageTwo();
+            }
+
+            if(brokeragePrice.compareTo(BigDecimal.ZERO) == 0 && !rateBigDecimal.equals(BigDecimal.ZERO)){
+                //商品没有分销金额, 并且有设置对应等级的分佣比例
+                brokeragePrice = orderInfoVo.getInfo().getTruePrice().multiply(rateBigDecimal).setScale(2, BigDecimal.ROUND_HALF_UP);
+            }
+
+            totalBrokerPrice = totalBrokerPrice.add(brokeragePrice);
+        }
+        return totalBrokerPrice;
     }
 }

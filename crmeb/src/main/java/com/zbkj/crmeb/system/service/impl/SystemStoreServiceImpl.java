@@ -271,7 +271,7 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
     public Boolean recovery(Integer id) {
         SystemStore systemStore = getById(id);
         if (ObjectUtil.isNull(systemStore)) throw new CrmebException("提货点不存在!");
-        if (systemStore.getIsDel()) return Boolean.TRUE;
+        if (!systemStore.getIsDel()) return Boolean.TRUE;
         systemStore.setIsDel(false);
         return updateById(systemStore);
     }

@@ -42,7 +42,7 @@ public class UserSignInfoResponse implements Serializable {
     private BigDecimal nowMoney;
 
     @ApiModelProperty(value = "用户剩余积分")
-    private BigDecimal integral;
+    private Integer integral;
 
     @ApiModelProperty(value = "连续签到天数")
     private Integer signNum;

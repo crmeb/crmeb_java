@@ -6,6 +6,7 @@ import com.zbkj.crmeb.combination.model.StorePink;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zbkj.crmeb.combination.request.StorePinkSearchRequest;
 import com.zbkj.crmeb.combination.response.StorePinkAdminListResponse;
+import com.zbkj.crmeb.combination.response.StorePinkDetailResponse;
 
 import java.util.List;
 
@@ -50,7 +51,7 @@ public interface StorePinkService extends IService<StorePink> {
      * @param pinkId 团长pinkId
      * @return
      */
-    List<StorePink> getAdminList(Integer pinkId);
+    List<StorePinkDetailResponse> getAdminList(Integer pinkId);
 
     /**
      * 查询拼团列表

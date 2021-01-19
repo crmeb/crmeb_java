@@ -41,7 +41,7 @@ public class CategorySearchRequest implements Serializable {
     @ApiModelProperty(value = "类型ID | 类型，1 产品分类，2 附件分类，3 文章分类， 4 设置分类， 5 菜单分类， 6 配置分类， 7 秒杀配置")
     private Integer type;
 
-    @ApiModelProperty(value = "状态, 0正常，1失效")
-    private Boolean status;
+    @ApiModelProperty(value = "状态, 1正常，0失效 -1全部")
+    private Integer status;
 
 }

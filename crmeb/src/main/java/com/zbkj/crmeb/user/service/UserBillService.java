@@ -181,4 +181,11 @@ public interface UserBillService extends IService<UserBill> {
      * @return  明细类型集合
      */
     List<UserBill> getSearchOption();
+
+    /**
+     * 获取订单历史处理记录(退款使用)
+     * @param orderId 订单id
+     * @param uid 用户id
+     */
+    List<UserBill> findListByOrderIdAndUid(Integer orderId, Integer uid);
 }

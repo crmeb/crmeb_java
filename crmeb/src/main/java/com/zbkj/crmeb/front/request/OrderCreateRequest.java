@@ -28,7 +28,6 @@ import java.net.Inet4Address;
 public class OrderCreateRequest {
 
     @ApiModelProperty(value = "真实名称")
-//    @NotNull(message = "商品id不能为空")
     private String realName;
 
     @ApiModelProperty(value = "手机号码")
@@ -37,14 +36,17 @@ public class OrderCreateRequest {
     @ApiModelProperty(value = "收货地址id")
     private Integer addressId;
 
-    @ApiModelProperty(value = "")
-    private Integer formId;
+//    @ApiModelProperty(value = "")
+//    private Integer formId;
 
     @ApiModelProperty(value = "优惠券编号")
     private Integer couponId;
 
-    @ApiModelProperty(value = "支付类型")
+    @ApiModelProperty(value = "支付类型:weixin-微信支付，yue-余额支付，offline-线下支付，alipay-支付包支付")
     private String payType;
+
+    @ApiModelProperty(value = "支付渠道:weixinh5-微信H5支付，public-公众号支付，routine-小程序支付")
+    private String payChannel;
 
     @ApiModelProperty(value = "是否使用积分")
     private Boolean useIntegral;
@@ -61,14 +63,14 @@ public class OrderCreateRequest {
     @ApiModelProperty(value = "秒杀商品id")
     private Integer seckillId;
 
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "订单备注")
     private String mark;
 
-    @ApiModelProperty(value = "")
+    @ApiModelProperty(value = "自提点id")
     private Integer storeId;
 
-    @ApiModelProperty(value = "")
-    private String from;
+//    @ApiModelProperty(value = "")
+//    private String from;
 
     @ApiModelProperty(value = "快递类型")
     private Integer shippingType;

@@ -4,8 +4,10 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.constants.Constants;
+import com.constants.PayConstants;
 import com.exception.CrmebException;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
@@ -49,12 +51,12 @@ import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForCreateOrder;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForReFundNotify;
-import org.apache.catalina.Store;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -116,9 +118,6 @@ public class OrderServiceImpl implements OrderService {
     private OrderUtils orderUtils;
 
     @Autowired
-    private SmsService smsService;
-
-    @Autowired
     private SystemAttachmentService systemAttachmentService;
 
     @Autowired
@@ -136,45 +135,48 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private StoreBargainService storeBargainService;
 
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
     /**
      * 确认订单
-     * @param cartIds 购物车id集合
-     * @param isNew 是否再次下单=从缓存中获取数据
      * @return 确认订单response
+     * isNew 是否再次下单=从缓存中获取数据
      */
     @Override
-    public ConfirmOrderResponse confirmOrder(List<String> cartIds, boolean isNew, boolean addAgain,boolean seckill, boolean bargain, boolean combination, Integer addressId) {
-        ConfirmOrderResponse response = new ConfirmOrderResponse();
+    public ConfirmOrderResponse confirmOrder(ConfirmOrderRequest request) {
+        List<String> cartIds = CrmebUtil.stringToArrayStr(request.getCartIds());
+
+        User currentUserInfo = userService.getInfoException();
         // 获取运费默认模版
-        // ShippingTemplates template = shippingTemplatesService.getById(69);
-        // if (null == template)
         ShippingTemplates template = shippingTemplatesService.getById(1);
         if (null == template) throw new CrmebException("默认模板未配置，无法下单");
-        User currentUserInfo = userService.getInfoException();
 
         List<StoreCartResponse> storeCartResponse;
         // 再次下单、秒杀、砍价、拼团
-        if (addAgain || seckill || bargain || combination) { // 从redis缓存中获取重新下单和秒杀订单数据、砍价订单数据、拼团订单数据
+        if (request.getAddAgain() || request.getSecKill() || request.getBargain() || request.getCombination()) { // 从redis缓存中获取重新下单和秒杀订单数据、砍价订单数据、拼团订单数据
             String cacheOrderData = orderUtils.getCacheOrderData(cartIds.get(0) + "");
             if (StrUtil.isBlank(cacheOrderData)) throw new CrmebException("未找到订单数据");
             storeCartResponse = JSONObject.parseArray(cacheOrderData, StoreCartResponse.class);
-            if (seckill) {
+            if (request.getSecKill()) {
                 // 秒杀商品数据验证
                 StoreCart storeCartPram = new StoreCart()
                         .setSeckillId(storeCartResponse.get(0).getSeckillId())
                         .setUid(currentUserInfo.getUid())
                         .setProductAttrUnique(storeCartResponse.get(0).getProductAttrUnique());
+                storeCartPram.setCartNum(1);
                 orderUtils.validSecKill(storeCartPram, currentUserInfo);
             }
-            if (bargain) {
+            if (request.getBargain()) {
                 // 砍价商品数据验证
                 StoreCart storeCartPram = new StoreCart()
                         .setBargainId(storeCartResponse.get(0).getBargainId())
                         .setUid(currentUserInfo.getUid())
                         .setProductAttrUnique(storeCartResponse.get(0).getProductAttrUnique());
+                storeCartPram.setCartNum(1);
                 orderUtils.validBargain(storeCartPram, currentUserInfo);
             }
-            if (combination) {
+            if (request.getCombination()) {
                 // 拼团商品数据验证
                 StoreCart storeCartPram = new StoreCart()
                         .setCombinationId(storeCartResponse.get(0).getCombinationId())
@@ -186,16 +188,16 @@ public class OrderServiceImpl implements OrderService {
                 }
                 orderUtils.validCombination(storeCartPram, currentUserInfo);
             }
-        }else if(isNew){// 获取立即购买数据
-            storeCartResponse = storeCartService.getListByUserIdAndCartIds(currentUserInfo.getUid(),cartIds,1);
-        }else{ // 获取购物车数据
-            storeCartResponse = storeCartService.getListByUserIdAndCartIds(currentUserInfo.getUid(),cartIds,null);
+        }else{
+            // 获取购物车数据
+            // 获取立即购买数据 根据isNew判断
+            storeCartResponse = storeCartService.getListByUserIdAndCartIds(currentUserInfo.getUid(),cartIds,request.getIsNew());
         }
 
         // 这里需要根据参数判定，不能一直使用默认收货地址
         UserAddress defaultAddress;
-        if (addressId > 0) {// 获取选择的地址
-            defaultAddress = userAddressService.getById(addressId);
+        if (ObjectUtil.isNotNull(request.getAddressId()) && request.getAddressId() > 0) {// 获取选择的地址
+            defaultAddress = userAddressService.getById(request.getAddressId());
         } else {// 获取默认地址
             defaultAddress = userAddressService.getDefault();
         }
@@ -216,6 +218,9 @@ public class OrderServiceImpl implements OrderService {
         if(null != canUseUseCouponList && canUseUseCouponList.size() > 0){
             canUserCoupon = canUseUseCouponList.get(0);
         }
+
+        // 确认订单响应对象
+        ConfirmOrderResponse response = new ConfirmOrderResponse();
         response.setUsableCoupon(canUserCoupon);
         response.setAddressInfo(defaultAddress);
         response.setCartInfo(storeCartResponse);
@@ -264,7 +269,7 @@ public class OrderServiceImpl implements OrderService {
         ConfirmOrderResponse cor = JSONObject.parseObject(existCacheOrder,ConfirmOrderResponse.class);
 
         // 缓存订单并做计算
-        orderUtils.computedOrder(request, cor, orderKey);
+        orderUtils.computedOrder(request, cor, orderKey, currentUser);
 
         // 检查订单状态
          StoreOrder orderCreated = orderUtils.createOrder(request, cor, 0, request.getStoreId(), orderKey);
@@ -275,8 +280,8 @@ public class OrderServiceImpl implements OrderService {
         if(request.getIsNew()){
             HashMap<String, Object> resultMap = new HashMap<>();
             OrderPayRequest orderPayRequest = new OrderPayRequest();
-            orderPayRequest.setFrom(request.getFrom());
-            orderPayRequest.setPaytype(request.getPayType());
+//            orderPayRequest.setFrom(request.getFrom());
+            orderPayRequest.setPayType(request.getPayType());
             orderPayRequest.setUni(orderCreated.getOrderId());
             boolean b = doPayOrder(orderPayRequest, ip, resultMap, orderCreated);
             OrderPayItemResponse itemResponse = new OrderPayItemResponse();
@@ -297,8 +302,7 @@ public class OrderServiceImpl implements OrderService {
                     orderPayResponse.setStatus("SUCCESS");
                     break;
             }
-            orderPayResponse.setMessage(payType);
-            itemResponse.setKey(orderCreated.getOrderId());
+             itemResponse.setKey(orderCreated.getOrderId());
             itemResponse.setOrderId(orderKey);
             orderPayResponse.setResult(itemResponse);
         }else{
@@ -332,6 +336,59 @@ public class OrderServiceImpl implements OrderService {
 
         return orderPayResponse;
     }
+
+    /**
+     * 订单创建
+     * 订单创建只生成订单返回订单编号
+     * 前端在之后需调用查询支付结果接口
+     * @param request 创建订单参数
+     * @param orderKey orderKey
+     * @return 创建订单结果
+     */
+    @Override
+    public MyRecord createOrder_1_3_1(OrderCreateRequest request, String orderKey) {
+        User currentUser = userService.getInfo();
+        if (ObjectUtil.isNull(currentUser)) throw new CrmebException("当前用户不存在！");
+        // 检查订单是否存在
+        if(orderUtils.checkOrderExist(orderKey, currentUser.getUid())) throw new CrmebException(orderKey + "订单已存在");
+
+        // 检测支付方式
+        if(!orderUtils.checkPayType(request.getPayType())) throw new CrmebException("暂不支持该支付方式，请刷新页面或者联系管理员");
+
+        if (request.getPayType().equals(PayConstants.PAY_TYPE_WE_CHAT)) {
+            // 检测支付渠道
+            if (StrUtil.isBlank(request.getPayChannel())) throw new CrmebException("支付渠道不能为空!");
+            if (!OrderUtils.checkPayChannel(request.getPayChannel())) throw new CrmebException("支付渠道不存在!");
+        }
+
+        // 判断订单是否过期
+        String existCacheOrder = orderUtils.cacheGetOrderInfo(currentUser.getUid(), orderKey);
+        if(StrUtil.isBlank(existCacheOrder)) throw new CrmebException("订单已过期,请刷新当前页面!");
+
+        ConfirmOrderResponse cor = JSONObject.parseObject(existCacheOrder, ConfirmOrderResponse.class);
+
+        // 缓存订单并做计算
+        orderUtils.computedOrder(request, cor, orderKey, currentUser);
+
+        // 生成订单
+        StoreOrder orderCreated = orderUtils.createOrder_v131(request, cor, orderKey, currentUser);
+        if(ObjectUtil.isNull(orderCreated)) {
+            throw new CrmebException("订单生成失败");
+        }
+
+        // 清除购物车数据
+        List<StoreCartResponse> cartInfo = cor.getCartInfo();
+        List<StoreCartResponse> cartList = cartInfo.stream().filter(i -> ObjectUtil.isNotNull(i.getId())).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(cartList)) {
+            List<Integer> cartIdList = cartList.stream().map(temp -> temp.getId().intValue()).collect(Collectors.toList());
+            storeCartService.deleteCartByIds(cartIdList);
+        }
+
+        MyRecord record = new MyRecord();
+        record.set("orderNo", orderCreated.getOrderId());
+        return record;
+    }
+
 
     /**
      * 删除已完成订单
@@ -436,77 +493,72 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 订单退款前验证
-     * @param request 退款参数
+     * 订单退款申请
+     * @param request OrderRefundApplyRequest 退款参数
      */
     @Override
-    public boolean refundVerify(OrderRefundVerifyRequest request) {
-        User currentUser = userService.getInfo();
+    public boolean refundApply(OrderRefundApplyRequest request) {
+        User currentUser = userService.getInfoException();
         StoreOrder storeOrderPram = new StoreOrder();
         storeOrderPram.setOrderId(request.getUni());
         storeOrderPram.setIsDel(false);
         storeOrderPram.setPaid(true);
         StoreOrder existStoreOrder = storeOrderService.getByEntityOne(storeOrderPram);
         if(null == existStoreOrder) throw new CrmebException("支付订单不存在");
-        if(existStoreOrder.getRefundStatus() == 2) throw new CrmebException("订单已退款");
-        if(existStoreOrder.getRefundStatus() == 1) throw new CrmebException("正在申请退款中");
-        if(existStoreOrder.getStatus() == 1) throw new CrmebException("当前订单无法退款");
-
-        storeOrderStatusService.createLog(existStoreOrder.getId(), Constants.ORDER_LOG_REFUND_APPLY,"用户申请退款原因：" + request.getRefund_reason_wap_explain());
-
-        existStoreOrder.setRefundStatus(1);
-        existStoreOrder.setStatus(-1);
-        existStoreOrder.setRefundReasonTime(DateUtil.nowDateTime());
-        existStoreOrder.setRefundReasonWap(request.getText());
-        existStoreOrder.setRefundReasonWapExplain(request.getRefund_reason_wap_explain());
-        existStoreOrder.setRefundReasonWapImg(systemAttachmentService.clearPrefix(request.getRefund_reason_wap_img()));
-        boolean updateOrderResult = storeOrderService.updateById(existStoreOrder);
-        if(!updateOrderResult) throw new CrmebException("申请退款失败");
-
-        HashMap<String, Object> smsInfo = new HashMap<>();
-        smsInfo.put("orderId", existStoreOrder.getOrderId());
-        smsInfo.put("adminName", currentUser.getNickname());
-        boolean codeResult = smsService.pushCodeToList(currentUser.getPhone(),1, smsInfo);
-        if(!codeResult) throw new CrmebException("短信加入发送队列失败");
-        return true;
-    }
-
-    /**
-     * 订单退款申请
-     * @param request OrderRefundApplyRequest 退款参数
-     */
-    @Override
-    public boolean refundApply(OrderRefundApplyRequest request) {
-        StoreOrder storeOrder = orderUtils.getInfoById(request.getId());
-        if(storeOrder.getRefundStatus() == 1){
+        if(existStoreOrder.getRefundStatus() == 1){
             throw new CrmebException("正在申请退款中");
         }
 
-        if(storeOrder.getRefundStatus() == 2){
+        if(existStoreOrder.getRefundStatus() == 2){
             throw new CrmebException("订单已退款");
         }
 
-        if(storeOrder.getStatus() == 1){
-            throw new CrmebException("订单当前无法退款");
+        if(existStoreOrder.getRefundStatus() == 3){
+            throw new CrmebException("订单退款中");
         }
-        storeOrder.setRefundReasonWapImg(systemAttachmentService.clearPrefix(request.getReasonImage()));
-        storeOrder.setRefundStatus(1);
-        storeOrder.setRefundReasonWapExplain(request.getExplain());
-        storeOrder.setRefundReason(request.getText());
-        storeOrder.setRefundPrice(storeOrder.getPayPrice());
-        storeOrder.setRefundReasonTime(DateUtil.nowDateTime());
 
-        // 发送微信小程序订阅消息
-        String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
-        if(StringUtils.isNotBlank(storeNameAndCarNumString)){
-            WechatSendMessageForReFundNotify notify = new WechatSendMessageForReFundNotify(
-                    storeNameAndCarNumString,storeOrder.getPayPrice().toString(),
-                    storeOrder.getCreateTime().toString(),storeOrder.getOrderId()+"",DateUtil.nowDateTimeStr(),
-                    "CRMEB","发起申请",request.getExplain(),storeOrder.getPayPrice()+"",
-                    request.getText(),storeOrder.getUserPhone(),"CRMEB");
-            wechatSendMessageForMinService.sendReFundNotifyMessage(notify, userService.getUserId());
-        }
-        return storeOrderService.updateById(storeOrder);
+//        if(existStoreOrder.getStatus() == 1){
+//            throw new CrmebException("订单当前状态无法申请退款");
+//        }
+
+//        if (StrUtil.isBlank(existStoreOrder.getRefundReason())) {
+//            throw new CrmebException("订单退款已被拒绝");
+//        }
+
+
+        existStoreOrder.setRefundStatus(1);
+        existStoreOrder.setRefundReasonTime(DateUtil.nowDateTime());
+        existStoreOrder.setRefundReasonWap(request.getText());
+        existStoreOrder.setRefundReasonWapExplain(request.getExplain());
+        existStoreOrder.setRefundReasonWapImg(systemAttachmentService.clearPrefix(request.getReasonImage()));
+        existStoreOrder.setRefundPrice(BigDecimal.ZERO);
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            storeOrderService.updateById(existStoreOrder);
+            storeOrderStatusService.createLog(existStoreOrder.getId(), Constants.ORDER_LOG_REFUND_APPLY, "用户申请退款原因：" + request.getExplain());
+            return Boolean.TRUE;
+        });
+
+        if(!execute) throw new CrmebException("申请退款失败");
+
+//        HashMap<String, Object> smsInfo = new HashMap<>();
+//        smsInfo.put("orderId", existStoreOrder.getOrderId());
+//        smsInfo.put("adminName", currentUser.getNickname());
+//        if (execute) {
+//            // 发送微信小程序订阅消息
+//            String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
+//            if(StringUtils.isNotBlank(storeNameAndCarNumString)){
+//                WechatSendMessageForReFundNotify notify = new WechatSendMessageForReFundNotify(
+//                        storeNameAndCarNumString,storeOrder.getPayPrice().toString(),
+//                        storeOrder.getCreateTime().toString(),storeOrder.getOrderId()+"",DateUtil.nowDateTimeStr(),
+//                        "CRMEB","发起申请",request.getExplain(),storeOrder.getPayPrice()+"",
+//                        request.getText(),storeOrder.getUserPhone(),"CRMEB");
+//                wechatSendMessageForMinService.sendReFundNotifyMessage(notify, userService.getUserId());
+//            }
+//        boolean codeResult = smsService.pushCodeToList(currentUser.getPhone(),1, smsInfo);
+//        if(!codeResult) throw new CrmebException("短信加入发送队列失败");
+//        }
+        return execute;
     }
 
     /**
@@ -515,7 +567,7 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean refundApplyTask(List<OrderRefundApplyRequest> applyList) {
+    public Boolean refundApplyTask(List<OrderRefundApplyRequest> applyList) {
         if (CollUtil.isEmpty(applyList)) {
             return false;
         }
@@ -535,9 +587,13 @@ public class OrderServiceImpl implements OrderService {
                 throw new CrmebException("订单已退款");
             }
 
-            if(storeOrder.getStatus() == 1){
-                throw new CrmebException("订单当前无法退款");
+            if(storeOrder.getRefundStatus() == 3){
+                throw new CrmebException("订单退款中");
             }
+
+//            if(storeOrder.getStatus() == 1){
+//                throw new CrmebException("订单状态当前无法退款");
+//            }
             storeOrder.setRefundReasonWapImg(systemAttachmentService.clearPrefix(request.getReasonImage()));
             storeOrder.setRefundStatus(1);
             storeOrder.setRefundReasonWapExplain(request.getExplain());
@@ -582,17 +638,27 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public HashMap<String, Object> againOrder(OrderAgainRequest request) {
-        // 检查是否已经有相同的商品再次下单
-//        StoreCartResponse cacheOrderAgain = orderUtils.getCacheOrderAgain(request.getNui());
-//        if(null != cacheOrderAgain) throw new CrmebException("已经有相同的订单存在");
-
+        User currentUser = userService.getInfoException();
         HashMap<String, Object> resultMap = new HashMap<>();
-        User currentUser = userService.getInfo();
+        // 查询订单是否存在
         StoreOrder storeOrder = new StoreOrder();
         storeOrder.setUid(currentUser.getUid());
-        storeOrder.setUnique(request.getNui());
+        storeOrder.setOrderId(request.getOrderNo());
         StoreOrder storeOrderExist = storeOrderService.getInfoByEntity(storeOrder);
         if(null == storeOrderExist) throw new CrmebException("订单不存在");
+        // 申请退款订单不能再次下单
+        if (!storeOrderExist.getRefundStatus().equals(0)) {
+            throw new CrmebException("申请退款订单不支持再次下单");
+        }
+        // 订单收货后才能再次下单
+        if (storeOrderExist.getStatus() < 2) {
+            throw new CrmebException("订单收货后才能再次下单");
+        }
+        // 活动商品不支持再次下单
+        if (storeOrderExist.getCombinationId() > 0 || storeOrderExist.getSeckillId() > 0 || storeOrderExist.getBargainId() > 0) {
+            throw new CrmebException("活动商品不支持再次下单");
+        }
+
         OrderAgainVo orderAgainVo = orderUtils.tidyOrder(storeOrderExist, true, false);
 //        List<StoreCart> storeCartResultList = new ArrayList<>();
         for (StoreOrderInfoVo oldCartInfo : orderAgainVo.getCartInfo()) { // todo 确实是否仅仅一条数据
@@ -626,8 +692,8 @@ public class OrderServiceImpl implements OrderService {
         if(null == existStoreOrder) throw new CrmebException("订单不存在");
         if(existStoreOrder.getPaid()) throw new CrmebException("该订单已支付");
         // 判断支付类型是否更改
-        if(!existStoreOrder.getPayType().equals(request.getPaytype())){
-            boolean changePayTypeResult = changePayType(request.getPaytype(), existStoreOrder.getOrderId());
+        if(!existStoreOrder.getPayType().equals(request.getPayType())){
+            boolean changePayTypeResult = changePayType(request.getPayType(), existStoreOrder.getOrderId());
             if(!changePayTypeResult) throw new CrmebException("更新订单支付状态失败");
         }
         // 支付
@@ -713,8 +779,6 @@ public class OrderServiceImpl implements OrderService {
             // todo 二维码前端生成
         }
         storeOrderDetailResponse.setMapKey(systemConfigService.getValueByKey("tengxun_map_key"));
-//        StoreOrder storeOrder = new StoreOrder();
-//        BeanUtils.copyProperties(storeOrderDetailResponse,storeOrder);
         OrderAgainVo orderAgainVo = orderUtils.tidyOrder(storeOrderResult, true, true);
         BeanUtils.copyProperties(orderAgainVo.getStoreOrder(), storeOrderDetailResponse);
         storeOrderDetailResponse.setCartInfo(orderAgainVo.getCartInfo());
@@ -788,7 +852,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 立即购买或者秒杀或者砍价
-        String existCacheOrder = orderUtils.cacheGetOrderInfo(userService.getUserIdException(), orderKey);
+        String existCacheOrder = orderUtils.cacheGetOrderInfo(currentUser.getUid(), orderKey);
         if(null == existCacheOrder) throw new CrmebException("订单已过期,请刷新当前页面!");
         ConfirmOrderResponse cor = JSONObject.parseObject(existCacheOrder,ConfirmOrderResponse.class);
 
@@ -798,6 +862,7 @@ public class OrderServiceImpl implements OrderService {
                     .setSeckillId(cor.getCartInfo().get(0).getSeckillId())
                     .setUid(currentUser.getUid())
                     .setProductAttrUnique(cor.getCartInfo().get(0).getProductAttrUnique());
+            storeCartPram.setCartNum(1);
             orderUtils.validSecKill(storeCartPram, currentUser);
         }
 
@@ -807,6 +872,7 @@ public class OrderServiceImpl implements OrderService {
                     .setBargainId(cor.getCartInfo().get(0).getBargainId())
                     .setUid(currentUser.getUid())
                     .setProductAttrUnique(cor.getCartInfo().get(0).getProductAttrUnique());
+            storeCartPram.setCartNum(1);
             orderUtils.validBargain(storeCartPram, currentUser);
         }
 
@@ -822,7 +888,7 @@ public class OrderServiceImpl implements OrderService {
 
         OrderCreateRequest orderCreateRequest = new OrderCreateRequest();
         BeanUtils.copyProperties(request,orderCreateRequest);
-        ComputeOrderResponse priceGroup = orderUtils.computedOrder(orderCreateRequest, cor, orderKey);
+        ComputeOrderResponse priceGroup = orderUtils.computedOrder(orderCreateRequest, cor, orderKey, currentUser);
         if(null == priceGroup){
             throw new CrmebException("计算失败");
         }else{
@@ -934,7 +1000,7 @@ public class OrderServiceImpl implements OrderService {
      */
     @Transactional(rollbackFor = {RuntimeException.class, Error.class, CrmebException.class})
     public boolean doPayOrder(OrderPayRequest request, String ip, HashMap<String, Object> resultMap, StoreOrder existStoreOrder) {
-        existStoreOrder.setPayType(request.getPaytype());
+        existStoreOrder.setPayType(request.getPayType());
         CreateOrderResponseVo orderPayResult = orderPayService.payOrder(existStoreOrder.getId(), request.getFrom(), ip);
         // 下面组装前端所需数据
         switch (existStoreOrder.getPayType()){

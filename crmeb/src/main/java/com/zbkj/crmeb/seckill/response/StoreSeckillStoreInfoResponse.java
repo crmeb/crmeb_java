@@ -137,7 +137,7 @@ public class StoreSeckillStoreInfoResponse {
     private Boolean merUse;
 
     @ApiModelProperty(value = "获得积分")
-    private BigDecimal giveIntegral;
+    private Integer giveIntegral;
 
     @ApiModelProperty(value = "成本价")
     private BigDecimal cost;

@@ -50,23 +50,20 @@ public class StoreProductResponse implements Serializable {
             return activity;
         }else{
             List<Integer> activityValue = CrmebUtil.stringToArrayInt(activity);
-            activityValue.stream().map(e->{
-                switch (e){
-                    case Constants.PRODUCT_TYPE_NORMAL:
-                        _activity.add(Constants.PRODUCT_TYPE_NORMAL_STR);
-                        break;
-                    case Constants.PRODUCT_TYPE_SECKILL:
-                        _activity.add(Constants.PRODUCT_TYPE_SECKILL_STR);
-                        break;
-                    case Constants.PRODUCT_TYPE_BARGAIN:
-                        _activity.add(Constants.PRODUCT_TYPE_BARGAIN_STR);
-                        break;
-                    case Constants.PRODUCT_TYPE_PINGTUAN:
-                        _activity.add(Constants.PRODUCT_TYPE_PINGTUAN_STR);
-                        break;
+            activityValue.forEach(e->{
+                if (e.equals(Constants.PRODUCT_TYPE_NORMAL)) {
+                    _activity.add(Constants.PRODUCT_TYPE_NORMAL_STR);
                 }
-                return e;
-            }).collect(Collectors.toList());
+                if (e.equals(Constants.PRODUCT_TYPE_SECKILL)) {
+                    _activity.add(Constants.PRODUCT_TYPE_SECKILL_STR);
+                }
+                if (e.equals(Constants.PRODUCT_TYPE_BARGAIN)) {
+                    _activity.add(Constants.PRODUCT_TYPE_BARGAIN_STR);
+                }
+                if (e.equals(Constants.PRODUCT_TYPE_PINGTUAN)) {
+                    _activity.add(Constants.PRODUCT_TYPE_PINGTUAN_STR);
+                }
+            });
         }
         this.setActivityStr(String.join(",",_activity));
         return activity;
@@ -155,7 +152,7 @@ public class StoreProductResponse implements Serializable {
     private Boolean merUse;
 
     @ApiModelProperty(value = "获得积分")
-    private BigDecimal giveIntegral;
+    private Integer giveIntegral;
 
     @ApiModelProperty(value = "成本价")
     private BigDecimal cost;

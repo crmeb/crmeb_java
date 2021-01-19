@@ -13,7 +13,10 @@ import com.zbkj.crmeb.store.response.StoreStaffDetail;
 import com.zbkj.crmeb.store.response.StoreStaffTopDetail;
 import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.store.service.StoreOrderVerification;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -163,19 +166,20 @@ public class StoreOrderController {
     }
 
     /**
-     * 退款
+     * 拒绝退款
      * @param id Integer 订单id
      * @param reason String 原因
-     * @author Mr.Zhang
-     * @since 2020-05-28
      */
     @ApiOperation(value = "拒绝退款")
     @RequestMapping(value = "/refund/refuse", method = RequestMethod.GET)
-    public CommonResult<Boolean> refundRefuse(@RequestParam Integer id, @RequestParam String reason){
+    public CommonResult<Object> refundRefuse(@RequestParam Integer id, @RequestParam String reason){
         if(StringUtils.isBlank(reason)){
             CommonResult.validateFailed("请填写退款原因");
         }
-        return CommonResult.success(storeOrderService.refundRefuse(id, reason));
+        if (storeOrderService.refundRefuse(id, reason)) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
     }
 
     /**
@@ -202,7 +206,7 @@ public class StoreOrderController {
     }
 
     /**
-     * 核销订单头部数据
+     * 核销订单 月列表数据
      * @author stivepeim
      * @since 2020-08-29
      */
@@ -226,7 +230,7 @@ public class StoreOrderController {
     }
 
     /**
-     * 核销码核销订单
+     * 核销码查询待核销订单
      * @author stivepeim
      * @since 2020-09-01
      */

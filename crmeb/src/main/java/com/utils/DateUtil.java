@@ -507,10 +507,10 @@ public final class DateUtil {
                     startTime = list.get(0);
                     endTime = list.get(1);
 
-                    if (startTime.equals(endTime)) {
+//                    if (startTime.equals(endTime)) {
                         startTime = DateUtil.appointedDayStrToFormatStr(startTime, Constants.DATE_FORMAT_DATE, Constants.DATE_FORMAT_START);
                         endTime = DateUtil.appointedDayStrToFormatStr(endTime, Constants.DATE_FORMAT_DATE, Constants.DATE_FORMAT_END);
-                    }
+//                    }
                     break;
             }
         }

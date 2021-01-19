@@ -122,7 +122,7 @@ public interface StoreOrderService extends IService<StoreOrder> {
 
     boolean mark(Integer id, String mark);
 
-    boolean refundRefuse(Integer id, String reason);
+    Boolean refundRefuse(Integer id, String reason);
 
     RetailShopOrderDataResponse getOrderDataByUserId(Integer userId);
 
@@ -208,4 +208,10 @@ public interface StoreOrderService extends IService<StoreOrder> {
     ExpressSheetVo getDeliveryInfo();
 
     PageInfo<StoreOrder> findListByUserIdsForRetailShop(List<Integer> userIds, RetailShopStairUserRequest request, PageParamRequest pageParamRequest);
+
+    /**
+     * 更新支付结果
+     * @param orderNo 订单编号
+     */
+    Boolean updatePaid(String orderNo);
 }

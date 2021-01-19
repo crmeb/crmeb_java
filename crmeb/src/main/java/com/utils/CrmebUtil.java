@@ -588,6 +588,44 @@ public class CrmebUtil {
     }
 
     /**
+     * 同比率计算 //同比增长率= ((当前周期 - 上一个周期) ÷ 上一个周期 ) *100%
+     * @param i1 当前周期
+     * @param i2 上一个周期
+     * @author Mr.Zhang
+     * @since 2020-05-06
+     * @
+     */
+    public static BigDecimal getRateBig(Integer i1, Integer i2){
+        BigDecimal b1 = new BigDecimal(i1);
+        BigDecimal b2 = new BigDecimal(i2);
+        return getRateBig(b1, b2);
+    }
+
+    /**
+     * 同比率计算 //同比增长率= ((当前周期 - 上一个周期) ÷ 上一个周期 ) *100%
+     * @param b1 当前周期
+     * @param b2 上一个周期
+     * @author Mr.Zhang
+     * @since 2020-05-06
+     * @
+     */
+    public static BigDecimal getRateBig(BigDecimal b1, BigDecimal b2){
+        //计算差值
+
+        if(b2.equals(b1)){
+            //数值一样，说明没有增长
+            return BigDecimal.ZERO;
+        }
+
+        if(b2.equals(BigDecimal.ZERO)){
+            //b2是0
+            return BigDecimal.TEN.multiply(BigDecimal.TEN).setScale(2, BigDecimal.ROUND_UP);
+        }
+
+        return (b1.subtract(b2)).multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).divide(b2, BigDecimal.ROUND_UP);
+    }
+
+    /**
      * hash 转换
      * @param hash final byte[] hash参数
      * @author Mr.Zhang

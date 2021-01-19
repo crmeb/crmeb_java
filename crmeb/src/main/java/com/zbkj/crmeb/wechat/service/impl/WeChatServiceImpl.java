@@ -826,7 +826,6 @@ public class WeChatServiceImpl implements WeChatService {
         map.put("jsApiList", getJsApiList());
         map.put("debug", debug);
         map.put("beta", beta);
-        map.put("yzfUrl", systemConfigService.getValueByKey(Constants.CONFIG_KEY_YZF_H5_URL));
         return map;
     }
 

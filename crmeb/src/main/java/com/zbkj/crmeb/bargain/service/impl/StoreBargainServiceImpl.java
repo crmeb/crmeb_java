@@ -8,6 +8,7 @@ import com.alibaba.fastjson.parser.Feature;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
@@ -44,6 +45,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -103,6 +105,9 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
 
     @Autowired
     private StoreOrderService storeOrderService;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     private static final Logger logger = LoggerFactory.getLogger(StoreBargainServiceImpl.class);
 
@@ -633,43 +638,49 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
 
     /**
      * 扣减砍价商品库存
-     * @param bargainId
-     * @param num
-     * @param attrValueId
-     * @param type
-     * @return
-     * 扣除砍价商品表库存
+     * @param bargainId     砍价产品id
+     * @param num           购买商品数量
+     * @param attrValueId   砍价产品规格
+     * @param productId     主商品id
+     * @param uid           用户uid
+     * @return Boolean
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean decProductStock(Integer bargainId, Integer num, Integer attrValueId, Integer type) {
+    public Boolean decProductStock(Integer bargainId, Integer num, Integer attrValueId, Integer productId, Integer uid) {
         // 因为attrvalue表中unique使用Id代替，更新前先查询此表是否存在
         StoreProductAttrValue spavParm = new StoreProductAttrValue();
-        spavParm.setId(attrValueId).setType(type).setProductId(bargainId);
+        spavParm.setProductId(bargainId);
+        spavParm.setType(Constants.PRODUCT_TYPE_BARGAIN);
+        spavParm.setId(attrValueId);
         List<StoreProductAttrValue> attrvalues = storeProductAttrValueService.getByEntity(spavParm);
         if (CollUtil.isEmpty(attrvalues)) throw new CrmebException("未找到相关商品属性");
-
-        // 扣除砍价商品属性值表的suk   砍价商品只会有一条sku
-        StoreProductAttrValue storeProductAttrValue = attrvalues.get(0);
-        if (ObjectUtil.isNotNull(storeProductAttrValue)) {
-            boolean updateAttrValue = storeProductAttrValueService.decProductAttrStock(bargainId, attrValueId, num, type);
-            if (!updateAttrValue) {
-                throw new CrmebException("扣减砍价商品sku库存失败");
-            }
-        }
-
+        StoreProductAttrValue bargaunAttrValue = attrvalues.get(0);
+        // 对应的主商品sku
+        List<StoreProductAttrValue> currentProAttrValues = storeProductAttrValueService.getListByProductId(productId);
+        List<StoreProductAttrValue> existAttrValues = currentProAttrValues.stream().filter(e ->
+                e.getSuk().equals(bargaunAttrValue.getSuk()) && e.getType().equals(Constants.PRODUCT_TYPE_NORMAL))
+                .collect(Collectors.toList());
+        if (CollUtil.isEmpty(existAttrValues)) throw new CrmebException("未找到扣减库存的商品");
         // 砍价SKU 库存减，销量、限购总数减
         StoreBargain storeBargain = getById(bargainId);
         LambdaUpdateWrapper<StoreBargain> luw = new LambdaUpdateWrapper<>();
-        luw.eq(StoreBargain::getId, bargainId);
         luw.set(StoreBargain::getStock, storeBargain.getStock() - num);
         luw.set(StoreBargain::getSales, storeBargain.getSales() + num);
         luw.set(StoreBargain::getQuota, storeBargain.getQuota() - num);
-        boolean update = update(luw);
-        if (!update) {
-            throw new CrmebException("扣减砍价商品库存失败");
-        }
-        return update;
+        luw.eq(StoreBargain::getId, bargainId);
+        luw.apply(StrUtil.format(" (stock - {} >= 0) ", num));
+        // 砍价商品购买成功，改变用户状态
+        StoreBargainUser storeBargainUser = storeBargainUserService.getByBargainIdAndUid(bargainId, uid);
+        if (ObjectUtil.isNull(storeBargainUser)) throw new CrmebException("砍价用户信息不存在");
+        storeBargainUser.setStatus(3);
+        Boolean execute = transactionTemplate.execute(e -> {
+            storeProductAttrValueService.decProductAttrStock(bargainId, attrValueId, num, Constants.PRODUCT_TYPE_BARGAIN);
+            storeProductService.decProductStock(productId, num, existAttrValues.get(0).getId(), Constants.PRODUCT_TYPE_NORMAL);
+            update(luw);
+            storeBargainUserService.updateById(storeBargainUser);
+            return Boolean.TRUE;
+        });
+        return execute;
     }
 
     /**
@@ -767,6 +778,47 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         // 判断关联的商品是否处于活动开启状态
         List<StoreBargain> list = bargainList.stream().filter(i -> i.getStatus().equals(true)).collect(Collectors.toList());
         return CollUtil.isNotEmpty(list);
+    }
+
+    /**
+     * 查询带异常
+     * @param id 砍价商品id
+     * @return StoreBargain
+     */
+    @Override
+    public StoreBargain getByIdException(Integer id) {
+        LambdaQueryWrapper<StoreBargain> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StoreBargain::getId, id);
+        lqw.eq(StoreBargain::getIsDel, false);
+        lqw.eq(StoreBargain::getStatus, true);
+        StoreBargain storeBargain = dao.selectOne(lqw);
+        if (ObjectUtil.isNull(storeBargain)) throw new CrmebException("砍价商品不存在或未开启");
+        return storeBargain;
+    }
+
+    /**
+     * 添加/扣减库存
+     * @param id 秒杀商品id
+     * @param num 数量
+     * @param type 类型：add—添加，sub—扣减
+     */
+    @Override
+    public Boolean operationStock(Integer id, Integer num, String type) {
+        UpdateWrapper<StoreBargain> updateWrapper = new UpdateWrapper<>();
+        if (type.equals("add")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
+            updateWrapper.setSql(StrUtil.format("quota = quota + {}", num));
+        }
+        if (type.equals("sub")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
+            updateWrapper.setSql(StrUtil.format("quota = quota - {}", num));
+            // 扣减时加乐观锁保证库存不为负
+            updateWrapper.last(StrUtil.format(" and (stock - {} >= 0)", num));
+        }
+        updateWrapper.eq("id", id);
+        return update(updateWrapper);
     }
 
     /**

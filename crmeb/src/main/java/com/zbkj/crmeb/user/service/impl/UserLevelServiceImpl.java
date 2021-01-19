@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.user.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.common.PageParamRequest;
 import com.constants.Constants;
@@ -8,6 +9,7 @@ import com.github.pagehelper.PageHelper;
 
 import com.utils.DateUtil;
 import com.zbkj.crmeb.system.model.SystemUserLevel;
+import com.zbkj.crmeb.system.request.SystemUserLevelSearchRequest;
 import com.zbkj.crmeb.system.service.SystemUserLevelService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserLevel;
@@ -18,6 +20,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.crmeb.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -46,6 +49,9 @@ public class UserLevelServiceImpl extends ServiceImpl<UserLevelDao, UserLevel> i
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
 
     /**
@@ -154,6 +160,81 @@ public class UserLevelServiceImpl extends ServiceImpl<UserLevelDao, UserLevel> i
         levelLambdaQueryWrapper.eq(UserLevel::getUid, userId);
         levelLambdaQueryWrapper.eq(UserLevel::getIsDel, 0);
         return dao.selectOne(levelLambdaQueryWrapper);
+    }
+
+    /**
+     * 用户升级
+     * @param user
+     * @return
+     */
+    @Override
+    public Boolean upLevel(User user) {
+        //确定当前经验所达到的等级
+        SystemUserLevelSearchRequest systemUserLevelSearchRequest = new SystemUserLevelSearchRequest();
+        systemUserLevelSearchRequest.setIsDel(false);
+        systemUserLevelSearchRequest.setIsShow(true);
+        List<SystemUserLevel> list = systemUserLevelService.getList(systemUserLevelSearchRequest, new PageParamRequest());
+
+        SystemUserLevel userLevelConfig = new SystemUserLevel();
+        for (SystemUserLevel systemUserLevel : list) {
+            if(user.getExperience() > systemUserLevel.getExperience()){
+                userLevelConfig = systemUserLevel;
+                continue;
+            }
+            break;
+        }
+
+        if(userLevelConfig.getId() == null){
+            System.out.println("未找到用户对应的等级");
+            return Boolean.TRUE;
+        }
+
+        // 判断用户是否还在原等级
+        UserLevel userLevel = getByUid(user.getUid());
+        if (ObjectUtil.isNotNull(userLevel) && userLevelConfig.getId().equals(userLevel.getLevelId())) {
+            // 之前有记录，并且等级不需要变化
+            return Boolean.TRUE;
+        }
+
+
+        UserLevel newLevel = new UserLevel();
+        newLevel.setStatus(true);
+        newLevel.setIsDel(false);
+        newLevel.setGrade(userLevelConfig.getGrade());
+        newLevel.setUid(user.getUid());
+        newLevel.setLevelId(userLevelConfig.getId());
+        newLevel.setDiscount(userLevelConfig.getDiscount());
+
+        Date date = DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT);
+        String mark = Constants.USER_LEVEL_OPERATE_LOG_MARK.replace("【{$userName}】", user.getNickname()).
+                replace("{$date}", DateUtil.dateToStr(date, Constants.DATE_FORMAT)).
+                replace("{$levelName}", userLevelConfig.getName());
+        newLevel.setMark(mark);
+
+        //更新会员等级
+        user.setLevel(userLevelConfig.getGrade());
+        Boolean execute = transactionTemplate.execute(e -> {
+            if (userLevel == null) {
+                //创建新的会员等级信息
+                save(userLevel);
+            } else {
+                //有数据，更新即可
+                newLevel.setId(userLevel.getId());
+                updateById(newLevel);
+            }
+
+            userService.updateById(user);
+            return Boolean.TRUE;
+        });
+        return execute;
+    }
+
+    private UserLevel getByUid(Integer uid) {
+        LambdaQueryWrapper<UserLevel> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(UserLevel::getUid, uid);
+        lqw.eq(UserLevel::getStatus, true);
+        lqw.eq(UserLevel::getIsDel, false);
+        return dao.selectOne(lqw);
     }
 }
 

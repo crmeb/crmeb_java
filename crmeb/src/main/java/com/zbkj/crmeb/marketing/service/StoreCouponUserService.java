@@ -38,7 +38,7 @@ public interface StoreCouponUserService extends IService<StoreCouponUser> {
      */
     List<StoreCouponUser> getList(StoreCouponUser storeCouponUser);
 
-    boolean receive(StoreCouponUserRequest storeCouponUserRequest);
+    Boolean receive(StoreCouponUserRequest storeCouponUserRequest);
 
     boolean use(Integer id, List<Integer> productIdList, BigDecimal price);
 
@@ -65,4 +65,9 @@ public interface StoreCouponUserService extends IService<StoreCouponUser> {
     List<StoreCouponUserOrder> getListByCartIds(List<Integer> cartIds);
 
     List<StoreCouponUserResponse> getListFront(Integer userId, PageParamRequest pageParamRequest);
+
+    /**
+     * 优惠券过期定时任务
+     */
+    void overdueTask();
 }

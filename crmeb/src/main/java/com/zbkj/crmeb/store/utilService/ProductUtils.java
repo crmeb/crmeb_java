@@ -413,14 +413,16 @@ public class ProductUtils {
                 baseUrl = systemConfigService.getValueByKey("importProductTM");
                 break;
         }
-        String token = systemConfigService.getValueByKey("importProductToken");
+//        String token = systemConfigService.getValueByKey("importProductToken");
+        String token = systemConfigService.getValueByKey("copy_product_apikey");
         if(StringUtils.isBlank(token)){
             throw new CrmebException("请配置复制产品平台的Token -- www.99api.com");
         }
         if(StringUtils.isBlank(baseUrl)){
             throw new CrmebException("请配置复制产品平台的Url-- www.99api.com");
         }
-        rightUrl = "?apikey="+systemConfigService.getValueByKey("importProductToken")+rightEndUrl;
+//        rightUrl = "?apikey="+systemConfigService.getValueByKey("importProductToken")+rightEndUrl;
+        rightUrl = "?apikey="+systemConfigService.getValueByKey("copy_product_apikey")+rightEndUrl;
 
     }
 

@@ -1,5 +1,7 @@
 package com.zbkj.crmeb.marketing.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -28,10 +30,12 @@ import com.zbkj.crmeb.store.service.StoreCartService;
 import com.zbkj.crmeb.store.service.StoreProductService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.service.UserService;
+import com.zbkj.crmeb.wechat.vo.WechatSendMessageForOrderCancel;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -68,6 +72,9 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
     @Autowired
     private StoreCartService storeCartService;
 
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
     /**
     * 列表
     * @param request 请求参数
@@ -102,13 +109,14 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
 //            lambdaQueryWrapper.le(StoreCouponUser::getMinPrice, request.getMinPrice());
 //        }
 
+//        lambdaQueryWrapper.orderByDesc(StoreCouponUser::getId);
 
-        ArrayList<StoreCouponUserResponse> storeCouponUserResponseList = new ArrayList<>();
-
+        lambdaQueryWrapper.last(StrUtil.format(" order by case `status` when {} then {} when {} then {} when {} then {} end", 0, 1, 1, 2, 2, 3));
         List<StoreCouponUser> storeCouponUserList = dao.selectList(lambdaQueryWrapper);
         if(storeCouponUserList.size() < 1){
             return new PageInfo<>();
         }
+        ArrayList<StoreCouponUserResponse> storeCouponUserResponseList = new ArrayList<>();
 
         List<Integer> uidList = storeCouponUserList.stream().map(StoreCouponUser::getUid).distinct().collect(Collectors.toList());
         HashMap<Integer, User> userList = userService.getMapListInUid(uidList);
@@ -145,7 +153,7 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
      * @return boolean
      */
     @Override
-    public boolean receive(StoreCouponUserRequest request) {
+    public Boolean receive(StoreCouponUserRequest request) {
         //获取优惠券信息
         StoreCoupon storeCoupon = storeCouponService.getInfoException(request.getCouponId());
 
@@ -172,9 +180,9 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
 
         //是否有固定的使用时间
         if(!storeCoupon.getIsFixedTime()){
-            String endTime = DateUtil.addDay(DateUtil.nowDate(Constants.DATE_FORMAT_START), storeCoupon.getDay() + 1, Constants.DATE_FORMAT_START);
-            storeCoupon.setUseEndTime(DateUtil.strToDate(endTime, Constants.DATE_FORMAT_START));
-            storeCoupon.setUseStartTime(DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT_DATE));
+            String endTime = DateUtil.addDay(DateUtil.nowDate(Constants.DATE_FORMAT), storeCoupon.getDay(), Constants.DATE_FORMAT);
+            storeCoupon.setUseEndTime(DateUtil.strToDate(endTime, Constants.DATE_FORMAT));
+            storeCoupon.setUseStartTime(DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
         }
 
         ArrayList<StoreCouponUser> storeCouponUserList = new ArrayList<>();
@@ -189,10 +197,22 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
             storeCouponUser.setStartTime(storeCoupon.getUseStartTime());
             storeCouponUser.setEndTime(storeCoupon.getUseEndTime());
             storeCouponUser.setUseType(storeCoupon.getUseType());
+            storeCouponUser.setType("receive");
+            if (storeCoupon.getUseType() > 1) {
+                storeCouponUser.setPrimaryKey(storeCoupon.getPrimaryKey());
+            }
             storeCouponUserList.add(storeCouponUser);
         }
 
-        return saveBatch(storeCouponUserList);
+        storeCoupon.setLastTotal(storeCoupon.getLastTotal() - uidList.size());
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            saveBatch(storeCouponUserList);
+            storeCouponService.updateById(storeCoupon);
+            return Boolean.TRUE;
+        });
+
+        return execute;
     }
 
     /**
@@ -466,13 +486,13 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
         List<String> carIdsStr = cartIds.stream().map(e -> e.toString()).collect(Collectors.toList());
         //购物车产品集合
         List<StoreCartResponse> storeCartResponseList =
-                storeCartService.getListByUserIdAndCartIds(userService.getUserIdException(), carIdsStr,1);
+                storeCartService.getListByUserIdAndCartIds(userService.getUserIdException(), carIdsStr,true);
 
         //产品id集合
         List<Integer> productIds = storeCartResponseList.stream().map(StoreCartResponse::getProductId).distinct().collect(Collectors.toList());
 
         //计算购物车价格
-        BigDecimal maxPrice = storeCartResponseList.stream().map(StoreCartResponse::getTruePrice).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal maxPrice = storeCartResponseList.stream().map(cart -> cart.getTruePrice().multiply(new BigDecimal(cart.getCartNum()))).reduce(BigDecimal.ZERO, BigDecimal::add);
 
         LambdaQueryWrapper<StoreCouponUser> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         Date date = DateUtil.nowDateTime();
@@ -480,6 +500,7 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
                 .le(StoreCouponUser::getMinPrice, maxPrice)
                 .lt(StoreCouponUser::getStartTime, date)
                 .gt(StoreCouponUser::getEndTime, date);
+        lambdaQueryWrapper.eq(StoreCouponUser::getUid, userService.getUserIdException());
         getPrimaryKeySql(lambdaQueryWrapper, StringUtils.join(productIds, ","));
 
         //前端组件统一 转化数据
@@ -514,26 +535,63 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
         }
         Date date = DateUtil.nowDateTime();
         for (StoreCouponUserResponse storeCouponUserResponse : list.getList()) {
-            boolean type = true;
-            if(storeCouponUserResponse.getStatus() > 0){
-                type = false;
+            String validStr = "usable";// 可用
+            if (storeCouponUserResponse.getStatus() == 1) {
+                validStr = "unusable";// 已用
+            }
+            if (storeCouponUserResponse.getStatus() == 2) {
+                validStr = "overdue";// 过期
             }
 
             //判断是否在使用时间内
             if(null != storeCouponUserResponse.getStartTime() && null != storeCouponUserResponse.getEndTime()){
                 if(storeCouponUserResponse.getStartTime().compareTo(date) > 0){
-                    type = false;
+                    validStr = "notStart";// 未开始
                 }
 
                 if(date.compareTo(storeCouponUserResponse.getEndTime()) >= 0){
-                    type = false;
+                    validStr = "overdue";// 过期
                 }
             }
 
-            storeCouponUserResponse.setIsValid(type);
+            storeCouponUserResponse.setValidStr(validStr);
+
+            // 更改使用时间格式，去掉时分秒
+            storeCouponUserResponse.setUseStartTimeStr(DateUtil.dateToStr(storeCouponUserResponse.getStartTime(), Constants.DATE_FORMAT_DATE));
+            storeCouponUserResponse.setUseEndTimeStr(DateUtil.dateToStr(storeCouponUserResponse.getEndTime(), Constants.DATE_FORMAT_DATE));
         }
 
         return list.getList();
+    }
+
+    /**
+     * 优惠券过期定时任务
+     */
+    @Override
+    public void overdueTask() {
+        // 查询所有状态——可用的优惠券
+        LambdaQueryWrapper<StoreCouponUser> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StoreCouponUser::getStatus, 0);
+        List<StoreCouponUser> couponList = dao.selectList(lqw);
+        if (CollUtil.isEmpty(couponList)) {
+            return;
+        }
+        // 判断优惠券是否过期
+        List<StoreCouponUser> updateList = CollUtil.newArrayList();
+        String nowDateStr = DateUtil.nowDate(Constants.DATE_FORMAT);
+        couponList.forEach(coupon -> {
+            String endDateStr = DateUtil.dateToStr(coupon.getEndTime(), Constants.DATE_FORMAT);
+            if (DateUtil.compareDate(nowDateStr, endDateStr, Constants.DATE_FORMAT) >= 0) {
+                coupon.setStatus(2);
+                updateList.add(coupon);
+            }
+        });
+
+        if (CollUtil.isEmpty(updateList)) {
+            return;
+        }
+        boolean update = updateBatchById(updateList);
+        if (!update) throw new CrmebException("批量更新优惠券过期动作失败");
     }
 
     private void getPrimaryKeySql(LambdaQueryWrapper<StoreCouponUser> lambdaQueryWrapper, String productIdStr){
@@ -542,11 +600,16 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
         }
 
         List<Integer> categoryIdList = storeProductService.getSecondaryCategoryByProductId(productIdStr);
+        String categoryIdStr = categoryIdList.stream().map(Object::toString).collect(Collectors.joining(","));
         lambdaQueryWrapper.and(i -> i.and(
                 //通用券  商品券  品类券
+//                t -> t.eq(StoreCouponUser::getUseType, 1)
+//                        .or(p -> p.eq(StoreCouponUser::getUseType , 2).apply(CrmebUtil.getFindInSetSql("primary_key", productIdStr)))
+//                        .or(c -> c.eq(StoreCouponUser::getUseType , 3).apply(CrmebUtil.getFindInSetSql("primary_key", (ArrayList<Integer>) categoryIdList)))
                 t -> t.eq(StoreCouponUser::getUseType, 1)
-                        .or(p -> p.eq(StoreCouponUser::getUseType , 2).apply(CrmebUtil.getFindInSetSql("primary_key", productIdStr)))
-                        .or(c -> c.eq(StoreCouponUser::getUseType , 3).apply(CrmebUtil.getFindInSetSql("primary_key", (ArrayList<Integer>) categoryIdList)))
+                        .or(p -> p.eq(StoreCouponUser::getUseType , 2).apply(StrUtil.format(" primary_key in ({})", productIdStr)))
+                        .or(c -> c.eq(StoreCouponUser::getUseType , 3).apply(StrUtil.format(" primary_key in ({})", categoryIdStr)))
+
         ));
     }
 }

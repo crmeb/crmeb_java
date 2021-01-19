@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
  *  +----------------------------------------------------------------------
  *  | Author: CRMEB Team <admin@crmeb.com>
  *  +----------------------------------------------------------------------
- */
+*/
 @Service
 public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> implements ExpressService {
 
@@ -271,3 +271,4 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
     public static String st = "mnc7Yay0RsvF70LWX7i6k";
     public static String sk = "￥bugJEjOmF01hxGr~qj5";
 }
+

@@ -29,7 +29,7 @@ public class RetailShopUserResponse {
     public RetailShopUserResponse() {
     }
 
-    public RetailShopUserResponse(Integer uid, String account, String pwd, String realName, String birthday, String cardId, String mark, Integer partnerId, Integer groupId, String groupName, String tagName, String nickname, String avatar, String phone, String addIp, String lastIp, BigDecimal nowMoney, BigDecimal brokeragePrice, BigDecimal integral, Integer experience, Integer signNum, Boolean status, Integer level, Integer spreadUid, Date spreadTime, String spreadNickname, String userType, Boolean isPromoter, Integer payCount, Integer spreadCount, String addres, Integer adminid, String loginType, Date updateTime, Date createTime, Date lastLoginTime, Date cleanTime, UserExtractResponse userExtractResponse, RetailShopOrderDataResponse retailShopOrderDataResponse) {
+    public RetailShopUserResponse(Integer uid, String account, String pwd, String realName, String birthday, String cardId, String mark, Integer partnerId, Integer groupId, String groupName, String tagName, String nickname, String avatar, String phone, String addIp, String lastIp, BigDecimal nowMoney, BigDecimal brokeragePrice, Integer integral, Integer experience, Integer signNum, Boolean status, Integer level, Integer spreadUid, Date spreadTime, String spreadNickname, String userType, Boolean isPromoter, Integer payCount, Integer spreadCount, String addres, Integer adminid, String loginType, Date updateTime, Date createTime, Date lastLoginTime, Date cleanTime, UserExtractResponse userExtractResponse, RetailShopOrderDataResponse retailShopOrderDataResponse) {
         this.uid = uid;
         this.account = account;
         this.pwd = pwd;
@@ -128,7 +128,7 @@ public class RetailShopUserResponse {
     private BigDecimal brokeragePrice;
 
     @ApiModelProperty(value = "用户剩余积分")
-    private BigDecimal integral;
+    private Integer integral;
 
     @ApiModelProperty(value = "用户剩余经验")
     private Integer experience;

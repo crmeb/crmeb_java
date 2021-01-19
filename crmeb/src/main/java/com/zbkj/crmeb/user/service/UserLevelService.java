@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.user.service;
 
 import com.common.PageParamRequest;
+import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserLevel;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zbkj.crmeb.user.request.UserLevelSearchRequest;
@@ -32,4 +33,11 @@ public interface UserLevelService extends IService<UserLevel> {
      * @return 用户等级
      */
     UserLevel getUserLevelByUserId(Integer userId);
+
+    /**
+     * 经验升级
+     * @param user
+     * @return
+     */
+    Boolean upLevel(User user);
 }

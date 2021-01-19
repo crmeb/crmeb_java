@@ -48,7 +48,7 @@ if test -e $APP_NAME;then
   #通过检测日志来判断
   while [ -f $LOG_FILE ]
   do
-      success=`grep "CRMEB Started!" $LOG_FILE`
+      success=`grep "Started CrmebApplication in " $LOG_FILE`
       if [[ "$success" != "" ]]
       then
 #          echo "Crmeb start ........."
