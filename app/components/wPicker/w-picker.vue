@@ -312,7 +312,6 @@
 			},
 			defaultVal(val){
 				this.initData();
-				console.log(val)
 			},
 			areaCode(){
 				this.initData();

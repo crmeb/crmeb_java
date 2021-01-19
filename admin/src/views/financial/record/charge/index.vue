@@ -140,7 +140,6 @@
 <script>
   import { topUpLogListApi, balanceApi, topUpLogDeleteApi, refundApi } from '@/api/financial'
   import cardsData from '@/components/cards/index'
-  import { fromList } from '@/utils/constants.js'
   import zbParser from '@/components/FormGenerator/components/parser/ZBParser'
   export default {
     name: 'AccountsBill',
@@ -163,7 +162,7 @@
           page: 1,
           limit: 20
         },
-        fromList: fromList,
+        fromList: this.$constants.fromList,
         dialogVisible: false
       }
     },

@@ -100,7 +100,7 @@
           <template slot-scope="scope">
             <div v-if=" scope.row.productList && scope.row.productList.length">
               <div v-for="(val, i ) in scope.row.productList" :key="i" class="tabBox acea-row row-middle" style="flex-wrap: inherit;">
-                <div class="demo-image__preview">
+                <div class="demo-image__preview mr10">
                   <el-image
                     :src="val.info.productInfo.image"
                     :preview-src-list="[val.info.productInfo.image]"
@@ -173,8 +173,10 @@
                 <el-dropdown-item @click.native="onOrderLog(scope.row.id)">订单记录</el-dropdown-item>
                 <el-dropdown-item @click.native="onOrderMark(scope.row)">订单备注</el-dropdown-item>
                 <el-dropdown-item v-show="scope.row.statusStr.key === 'refunding'" @click.native="onOrderRefuse(scope.row)">拒绝退款</el-dropdown-item>
-                <el-dropdown-item v-show="scope.row.statusStr.key !== 'refunded' && ((parseFloat(scope.row.payPrice) >= parseFloat(scope.row.refundPrice) || (scope.row.payPrice == 0 && [0,1].indexOf(scope.row.refundStatus) !== -1)))" @click.native="onOrderRefund(scope.row)">立即退款</el-dropdown-item>
-                <el-dropdown-item @click.native="handleDelete(scope.row, scope.$index)">删除订单</el-dropdown-item>
+                <!--(scope.row.payPrice == 0 && [0,1].indexOf(scope.row.refundStatus) !== -1))-->
+                <!--&& (parseFloat(scope.row.payPrice) >= parseFloat(scope.row.refundPrice))-->
+                <el-dropdown-item v-show="((scope.row.statusStr.key !== 'refunded' && scope.row.statusStr.key !== 'unPaid') && (parseFloat(scope.row.payPrice) >= parseFloat(scope.row.refundPrice))) || (scope.row.payPrice == 0 && [0,1].indexOf(scope.row.refundStatus) !== -1)" @click.native="onOrderRefund(scope.row)">立即退款</el-dropdown-item>
+                <el-dropdown-item v-show="scope.row.statusStr.key === 'deleted'" @click.native="handleDelete(scope.row, scope.$index)">删除订单</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
           </template>
@@ -204,6 +206,7 @@
         :is-create="isCreate"
         :edit-data="editData"
         @submit="handlerSubmit"
+        @resetForm="resetForm"
       />
     </el-dialog>
 
@@ -283,6 +286,7 @@
         :is-create="1"
         :edit-data="refundData"
         @submit="refundhandlerSubmit"
+        v-if="refundVisible"
         @resetForm="resetFormRefundhandler"
       />
     </el-dialog>
@@ -297,7 +301,6 @@
   import orderSend from './orderSend'
   import { storeStaffListApi } from '@/api/storePoint'
   import Cookies from 'js-cookie'
-  import { fromList } from '@/utils/constants.js'
   import { isWriteOff } from "@/utils";
   export default {
     name: 'orderlistDetails',
@@ -342,7 +345,7 @@
           },
           orderChartType: {},
           timeVal: [],
-          fromList: fromList,
+          fromList: this.$constants.fromList,
           selectionList: [],
           ids: '',
           orderids: '',
@@ -368,7 +371,6 @@
         this.$modalSure('核销订单吗').then(() => {
           writeUpdateApi(row.verifyCode).then(() => {
             this.$message.success('核销成功')
-            this.tableFrom.status = 'toBeWrittenOff'
             this.tableFrom.page = 1
             this.getList()
           })
@@ -584,11 +586,10 @@
     font-size: 12px;
   }
   .tabBox_tit {
-    /*width: 60%;*/
     font-size: 12px !important;
-    margin: 0 2px 0 10px;
+    /*margin: 0 2px 0 10px;*/
     letter-spacing: 1px;
-    padding: 5px 0;
+    /*padding: 5px 0;*/
     box-sizing: border-box;
   }
 </style>

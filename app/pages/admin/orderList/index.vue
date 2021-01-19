@@ -228,7 +228,6 @@
 							that.init();
 						},
 						err => {
-							console.log(err,'err')
 							that.change = false;
 							that.$util.Tips({title: err});
 						}

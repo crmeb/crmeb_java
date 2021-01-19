@@ -13,7 +13,6 @@
 </template>
 
 <script>
-import * as constants from '@/utils/constants.js'
 import zbParser from '@/components/FormGenerator/components/parser/ZBParser'
 import * as systemGroupDataApi from '@/api/systemGroupData.js'
 import * as systemFormConfigApi from '@/api/systemFormConfig.js'
@@ -35,7 +34,7 @@ export default {
   },
   data() {
     return {
-      constants,
+      constants: this.$constants,
       formConf: { fields: [] },
       selfForm: {
         sort: 0,

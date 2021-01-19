@@ -153,7 +153,9 @@
 		getCouponsOrderPrice,
 		orderCreate,
 		postOrderComputed,
-		orderPay
+		orderPay,
+		wechatOrderPay,
+		wechatQueryPayResult
 	} from '@/api/order.js';
 	import {
 		getAddressDefault,
@@ -211,11 +213,11 @@
 						payStatus: 1,
 					},
 					{
-						"name": "线下支付",//offlinePayStatu：1开启线下支付；2关闭；offlinePostage：true有邮费
+						"name": "线下支付", //offlinePayStatu：1开启线下支付；2关闭；offlinePostage：true有邮费
 						"icon": "icon-yinhangqia",
 						value: 'offline',
 						title: '线下支付',
-						payStatus: 2,
+						payStatus: 1,
 					},
 				],
 				payType: 'weixin', //支付方式
@@ -268,7 +270,7 @@
 				offlinePostage: "",
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false, //是否隐藏授权
-				from: '',
+				payChannel: '',
 				news: true,
 				again: false,
 				addAgain: false,
@@ -280,10 +282,10 @@
 		computed: mapGetters(['isLogin']),
 		onLoad: function(options) {
 			// #ifdef H5
-			this.from = this.$wechat.isWeixin() ? 'public' : 'weixinh5'
+			this.payChannel = this.$wechat.isWeixin() ? 'public' : 'weixinh5'
 			// #endif
 			// #ifdef MP
-			this.from = 'routine'
+			this.payChannel = 'routine'
 			// #endif
 			if (!options.cartId) return this.$util.Tips({
 				title: '请选择要购买的商品'
@@ -306,9 +308,7 @@
 				this.getaddressInfo();
 				this.getConfirm();
 				//调用子页面方法授权后执行获取地址列表
-				this.$nextTick(function() {
-					this.$refs.addressWindow.getAddressList();
-				})
+				this.$nextTick(function() {})
 			} else {
 				// #ifdef H5 || APP-PLUS
 				toLogin();
@@ -412,7 +412,6 @@
 					shippingType: parseInt(shippingType) + 1,
 					payType: this.payType
 				}).then(res => {
-					console.log(res)
 					let result = res.data.result.result;
 					if (result) {
 						this.totalPrice = result.orderId.payPrice;
@@ -511,7 +510,7 @@
 			 */
 			getConfirm: function() {
 				let that = this;
-				orderConfirm(that.cartId,that.news,this.addAgain,this.secKill,this.combination,this.bargain).then(res => {
+				orderConfirm(that.cartId, that.news, this.addAgain, this.secKill, this.combination, this.bargain).then(res => {
 					that.$set(that, 'userInfo', res.data.userInfo);
 					that.$set(that, 'integral', res.data.userInfo.integral);
 					that.$set(that, 'cartInfo', res.data.cartInfo);
@@ -523,11 +522,11 @@
 					that.$set(that, 'totalPrice', that.$util.$h.Add(parseFloat(res.data.priceGroup.totalPrice), parseFloat(res.data
 						.priceGroup.storePostage)));
 					that.$set(that, 'seckillId', parseInt(res.data.secKillId));
-					that.$set(that, 'store_self_mention', res.data.storeSelfMention == 'true'?true:false);
+					that.$set(that, 'store_self_mention', res.data.storeSelfMention == 'true' ? true : false);
 					that.cartArr[1].title = '可用余额:' + res.data.userInfo.nowMoney;
 					that.cartArr[0].payStatus = res.data.payWeixinOpen || 0
 					that.cartArr[1].payStatus = res.data.yuePayStatus || 0
-					if (res.data.offlinePayStatus == 2) {
+					if (res.data.offlinePayStatus == 1) {
 						that.cartArr[2].payStatus = 1
 					} else {
 						that.cartArr[2].payStatus = 0
@@ -536,7 +535,7 @@
 					// that.$set(that, 'cartArr', that.cartArr);
 					that.$set(that, 'ChangePrice', that.totalPrice);
 					that.getBargainId();
-					if(!that.secKill) that.getCouponList();
+					if (!that.secKill) that.getCouponList();
 				}).catch(err => {
 					return this.$util.Tips({
 						title: err
@@ -555,8 +554,8 @@
 				let BargainId = 0;
 				let combinationId = 0;
 				cartINfo.forEach(function(value, index, cartINfo) {
-					BargainId = cartINfo[index].bargainId,
-						combinationId = cartINfo[index].combinationId
+					BargainId = cartINfo[index].bargainId || 0,
+						combinationId = cartINfo[index].combinationId || 0
 				})
 				that.$set(that, 'BargainId', parseInt(BargainId));
 				that.$set(that, 'combinationId', parseInt(combinationId));
@@ -586,7 +585,7 @@
 				let that = this;
 				if (that.addressId) {
 					getAddressDetail(that.addressId).then(res => {
-						if(res.data){
+						if (res.data) {
 							res.data.isDefault = parseInt(res.data.isDefault);
 							that.addressInfo = res.data || {};
 							that.addressId = res.data.id || 0;
@@ -595,7 +594,7 @@
 					})
 				} else {
 					getAddressDefault().then(res => {
-						if(res.data){
+						if (res.data) {
 							res.data.isDefault = parseInt(res.data.isDefault);
 							that.addressInfo = res.data || {};
 							that.addressId = res.data.id || 0;
@@ -627,7 +626,8 @@
 				that.textareaStatus = false;
 				that.address.address = true;
 				that.pagesUrl = '/pages/users/user_address_list/index?cartId=' + this.cartId + '&pinkId=' + this.pinkId +
-					'&couponId=' + this.couponId + '&secKill=' + this.secKill + '&combination=' + this.combination + '&bargain=' + this.bargain;
+					'&couponId=' + this.couponId + '&secKill=' + this.secKill + '&combination=' + this.combination + '&bargain=' +
+					this.bargain;
 			},
 			realName: function(e) {
 				this.contacts = e.detail.value;
@@ -638,36 +638,176 @@
 			payment: function(data) {
 				let that = this;
 				orderCreate(that.orderKey, data).then(res => {
-					let result = res.data.result,
-					    status = res.data.status,
-						orderId = result.orderId,
-						jsConfig = res.data.jsConfig,
-						message = res.data.message;
-						if(that.totalPrice===0)return that.$util.Tips({
+					that.getOrderPay(res.data.orderNo, '支付成功');
+					// if(that.totalPrice===0)return that.$util.Tips({
+					// 				title: '支付成功',
+					// 				icon: 'success'
+					// 			});
+
+				}).catch(err => {
+					uni.hideLoading();
+					return that.$util.Tips({
+						title: err
+					});
+				});
+				// orderCreate(that.orderKey, data).then(res => {
+				// 	let result = res.data.result,
+				// 	    status = res.data.status,
+				// 		orderId = result.orderId,
+				// 		jsConfig = res.data.jsConfig,
+				// 		message = res.data.message;
+				// 		if(that.totalPrice===0)return that.$util.Tips({
+				// 						title: '支付成功',
+				// 						icon: 'success'
+				// 					});
+				// 		if(that.news == "false"){
+				// 			orderPay({
+				// 				'paytype': that.payType,
+				// 				'uni':res.data.result.key,
+				// 				// #ifdef MP 
+				// 				'from': 'routine',
+				// 				// #endif
+				// 				// #ifdef H5 || APP-PLUS
+				// 				'from': this.$wechat.isWeixin() ? 'public' : 'weixinh5',
+				// 				// #endif
+				// 			}).then(res=>{
+				// 				result = res.data.result;
+				// 				status = res.data.status;
+				// 				orderId = result.orderId;
+				// 				jsConfig = res.data.jsConfig;
+				// 				message = res.data.message;
+				// 				that.getPayType(status,orderId,message,jsConfig);
+				// 			})
+				// 		}else{
+				// 			that.getPayType(status,orderId,message,jsConfig);
+				// 		}
+				// }).catch(err => {
+				// 	uni.hideLoading();
+				// 	return that.$util.Tips({
+				// 		title: err
+				// 	});
+				// });
+			},
+			getOrderPay: function(orderNo, message) {
+				let that = this;
+				let goPages = '/pages/order_pay_status/index?order_id=' + orderNo + '&msg=' + message;
+				wechatOrderPay({
+					orderNo: orderNo,
+					// #ifdef MP
+					payChannel: 'routine',
+					// #endif
+					// #ifdef H5 || APP-PLUS
+					payChannel: that.$wechat.isWeixin() ? 'public' : 'weixinh5',
+					// #endif
+					payType: that.payType
+				}).then(res => {
+					let jsConfig = res.data.jsConfig;
+					switch (res.data.payType) {
+						case 'weixin':
+							// #ifdef MP
+							uni.requestPayment({
+								timeStamp: jsConfig.timeStamp,
+								nonceStr: jsConfig.nonceStr,
+								package: jsConfig.packages,
+								signType: jsConfig.signType,
+								paySign: jsConfig.paySign,
+								success: function(ress) {
+									uni.hideLoading();
+									if (that.BargainId || that.combinationId || that.pinkId || that.seckillId)
+										return that.$util.Tips({
+											title: '支付成功',
+											icon: 'success'
+										}, {
+											tab: 4,
+											url: goPages
+										});
+									return that.$util.Tips({
 										title: '支付成功',
 										icon: 'success'
+									}, {
+										tab: 5,
+										url: goPages
 									});
-						if(that.news == "false"){
-							orderPay({
-								'paytype': that.payType,
-								'uni':res.data.result.key,
-								// #ifdef MP 
-								'from': 'routine',
-								// #endif
-								// #ifdef H5 || APP-PLUS
-								'from': this.$wechat.isWeixin() ? 'public' : 'weixinh5',
-								// #endif
-							}).then(res=>{
-								result = res.data.result;
-								status = res.data.status;
-								orderId = result.orderId;
-								jsConfig = res.data.jsConfig;
-								message = res.data.message;
-								that.getPayType(status,orderId,message,jsConfig);
+								},
+								fail: function(e) {
+									uni.hideLoading();
+									return that.$util.Tips({
+										title: '取消支付'
+									}, {
+										tab: 5,
+										url: goPages + '&status=2'
+									});
+								},
+								complete: function(e) {
+									uni.hideLoading();
+									//关闭当前页面跳转至订单状态
+									if (e.errMsg == 'requestPayment:cancel') return that.$util.Tips({
+										title: '取消支付'
+									}, {
+										tab: 5,
+										url: goPages + '&status=2'
+									});
+								},
 							})
-						}else{
-							that.getPayType(status,orderId,message,jsConfig);
-						}
+							// #endif
+							// #ifdef H5
+							let data = {
+								timestamp: jsConfig.timeStamp,
+								nonceStr: jsConfig.nonceStr,
+								package: jsConfig.packages,
+								signType: jsConfig.signType,
+								paySign: jsConfig.paySign
+							};
+							that.$wechat.pay(data).then(res => {
+								if (res.errMsg == 'chooseWXPay:cancel') {
+									return that.$util.Tips({
+										title: '取消支付'
+									}, {
+										tab: 5,
+										url: goPages + '&status=2'
+									});
+								} else {
+									wechatQueryPayResult({
+										orderNo: orderNo
+									}).then(res => {
+										return that.$util.Tips({
+											title: '支付成功',
+											icon: 'success'
+										}, {
+											tab: 5,
+											url: goPages
+										});
+									}).cache(err => {
+										return that.$util.Tips({
+											title: err
+										});
+									})
+								}
+							})
+							// #endif
+							break;
+						case 'yue':
+							uni.hideLoading();
+							return that.$util.Tips({
+								title: message
+							}, {
+								tab: 5,
+								url: goPages + '&status=1'
+							});
+							break;
+					    case 'weixinh5':
+					       uni.hideLoading();
+					       that.$util.Tips({
+					       	title: '订单创建成功'
+					       }, {
+					       	tab: 5,
+					       	url: goPages + '&status=0'
+					       });
+					       setTimeout(() => {
+					       	location.href = jsConfig.mwebUrl;
+					       }, 100)
+					    	break;			
+					}
 				}).catch(err => {
 					uni.hideLoading();
 					return that.$util.Tips({
@@ -675,7 +815,7 @@
 					});
 				});
 			},
-			getPayType: function(status,orderId,message,jsConfig){
+			getPayType: function(status, orderId, message, jsConfig) {
 				let that = this;
 				let goPages = '/pages/order_pay_status/index?order_id=' + orderId + '&msg=' + message;
 				switch (status) {
@@ -690,7 +830,7 @@
 							url: goPages
 						});
 						break;
-					case 'SUCCESS':	
+					case 'SUCCESS':
 						uni.hideLoading();
 						if (that.BargainId || that.combinationId || that.pinkId || that.seckillId)
 							return that.$util.Tips({
@@ -699,7 +839,7 @@
 							}, {
 								tab: 4,
 								url: goPages
-							});	
+							});
 						return that.$util.Tips({
 							title: message,
 							icon: 'success'
@@ -761,12 +901,12 @@
 						let jsConfigAgain = jsConfig;
 						let packages = 'prepay_id=' + jsConfigAgain.prepayId;
 						let data = {
-							timestamp:jsConfigAgain.timeStamp,
-							nonceStr:jsConfigAgain.nonceStr,
-							package:packages,
-							signType:jsConfigAgain.signType,
-							paySign:jsConfigAgain.paySign,
-							h5PayUrl:jsConfigAgain.h5PayUrl
+							timestamp: jsConfigAgain.timeStamp,
+							nonceStr: jsConfigAgain.nonceStr,
+							package: packages,
+							signType: jsConfigAgain.signType,
+							paySign: jsConfigAgain.paySign,
+							h5PayUrl: jsConfigAgain.h5PayUrl
 						};
 						this.$wechat.pay(data).then(res => {
 							return that.$util.Tips({
@@ -788,7 +928,6 @@
 						break;
 					case 'PAY_DEFICIENCY':
 						uni.hideLoading();
-						//余额不足
 						return that.$util.Tips({
 							title: message
 						}, {
@@ -799,7 +938,7 @@
 					case "WECHAT_H5_PAY": //网页版公众号支付
 						setTimeout(() => {
 							let domain = encodeURIComponent(location.href);
-							let urls = jsConfigAgain.h5PayUrl + '&redirect_url='+ domain;
+							let urls = jsConfigAgain.h5PayUrl + '&redirect_url=' + domain;
 							location.href = urls;
 							return that.$util.Tips({
 								title: '支付成功',
@@ -812,7 +951,7 @@
 						break;
 				}
 			},
-			SubOrder: function(e) {	
+			SubOrder: function(e) {
 
 				let that = this,
 					data = {};
@@ -857,24 +996,27 @@
 					seckillId: that.seckillId,
 					mark: that.mark,
 					storeId: that.system_store.id || 0,
-					'from': that.from,
 					shippingType: that.$util.$h.Add(that.shippingType, 1),
-					isNew: that.news
+					isNew: that.news,
+					payChannel: that.payChannel
+
 				};
-				if (data.payType == 'yue' && parseFloat(that.userInfo.nowMoney) < parseFloat(that.totalPrice)) return that.$util.Tips({
-					title: '余额不足！'
-				});
+				if (data.payType == 'yue' && parseFloat(that.userInfo.nowMoney) < parseFloat(that.totalPrice)) return that.$util
+					.Tips({
+						title: '余额不足！'
+					});
 				uni.showLoading({
 					title: '订单支付中'
 				});
-				// #ifdef MP
-				openPaySubscribe().then(() => {
-					that.payment(data);
-				});
-				// #endif
-				// #ifndef MP
+				// // #ifdef MP
+				// openPaySubscribe().then(() => {
+				// 	that.payment(data);
+				// });
+				// // #endif
+				// // #ifndef MP
+				// that.payment(data);
+				// // #endif
 				that.payment(data);
-				// #endif
 			}
 		}
 	}

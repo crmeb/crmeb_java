@@ -25,11 +25,6 @@
 			wechat.auth(code, state)
 				.then(() => {
 					getUserInfo().then(res => {
-						console.log(res);
-						console.log(option.back_url);
-						console.log(decodeURIComponent(
-							decodeURIComponent(option.back_url)
-						));
 						that.$store.commit("SETUID", res.data.uid);
 						location.href = decodeURIComponent(
 							decodeURIComponent(option.back_url)

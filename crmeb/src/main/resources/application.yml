@@ -2,7 +2,7 @@
 server:
   port: 8080
   domain: #配合swagger使用 # 待部署域名
-  version: v1.3 # 当前代码版本
+  version: v1.3.1 # 当前代码版本
   wechat-api-url:  #请求微信接口中转服务器
   wechat-js-api-debug: false #微信js api系列是否开启调试模式
   wechat-js-api-beta: true #微信js api是否是beta版本

@@ -32,7 +32,7 @@
     },
     methods: {
       resetForm(formValue) {
-        this.isShow = false
+        this.editData = {}
       },
       handlerSubmit(data) {
         const tempArr = []

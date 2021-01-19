@@ -425,13 +425,6 @@ export default {
 			that.isOpen = true;
 		},
 		goPay() {
-			// productId: that.storeInfo.productId,
-			// combinationId:parseFloat(that.id),
-			// cartNum: that.cart_num ? this.cart_num : this.attribute.productSelect.cart_num,
-			// productAttrUnique: productSelect !== undefined ? productSelect.id : '',
-			// isNew: true,
-			
-			
 			var that = this;
 			var data = {};
 			// that.attr.cartAttr = res;
@@ -441,7 +434,6 @@ export default {
 			data.productAttrUnique = that.attr.productSelect.unique;
 			data.combinationId = that.storeCombination.id;
 			data.isNew = true;
-			console.log(that.pinkId);
 			postCartAdd(data)
 				.then(res => {
 					uni.navigateTo({

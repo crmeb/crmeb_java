@@ -656,7 +656,7 @@
               return this.$message.warning("请选择一个商品属性！");
             }else{
               if(!this.radio.price) return this.$message.warning("请填写砍价起始金额！");
-              // if(!this.radio.minPrice) return this.$message.warning("请填写砍价最低价！");
+              if(!this.radio.minPrice && this.radio.minPrice!=0) return this.$message.warning("请填写砍价最低价！");
               if(!this.radio.quota) return this.$message.warning("请填写限量！");
             }
             this.currentTab++;
