@@ -75,77 +75,25 @@ public class RetailShopController {
     public CommonResult<CommonPage<RetailShopUserResponse>> getList(@RequestParam(required = false) String keywords,
                                                                     @RequestParam(required = false) String dateLimit,
                                                                     @ModelAttribute PageParamRequest pageParamRequest){
-        PageInfo<RetailShopUserResponse> rsup = retailShopService.getList(keywords,dateLimit,pageParamRequest);
-        return CommonResult.success(CommonPage.restPage(rsup));
+        return CommonResult.success(retailShopService.getList(keywords,dateLimit,pageParamRequest));
     }
 
 
     /**
      * 分销头部信息
-     * @param nickName
-     * @param dateLimit
+     * @param keywords 搜索参数
+     * @param dateLimit 时间参数
      * @return
      */
     @ApiOperation(value = "分销头部数据")
     @RequestMapping(value = "/statistics", method = RequestMethod.GET)
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "nickName", value = "昵称"),
+            @ApiImplicitParam(name = "keywords", value = "搜索参数"),
             @ApiImplicitParam(name = "dateLimit", value = "today,yesterday,lately7,lately30,month,year,/yyyy-MM-dd hh:mm:ss,yyyy-MM-dd hh:mm:ss/")
     })
-    public CommonResult<Object> getStatistics(@RequestParam(required = false) String nickName,
+    public CommonResult<RetailShopStatisticsResponse> getStatistics(@RequestParam(required = false) String keywords,
                                               @RequestParam(required = false) String dateLimit){
-        List<RetailShopStatisticsResponse> resultList = new ArrayList<>();
-        // 获取分销人数
-        List<UserResponse> userResponseList = retailShopService.getStatisticsData(nickName, dateLimit);
-        // 发展会员人数
-        RetailShopStatisticsResponse spreadCount = new RetailShopStatisticsResponse("发展会员人数",0);
-        // 订单总数
-        RetailShopStatisticsResponse orderCount = new RetailShopStatisticsResponse("订单总数",0);
-        // 订单金额
-        RetailShopStatisticsResponse orderPrice = new RetailShopStatisticsResponse("订单金额",0);
-        // 可提现金额
-        RetailShopStatisticsResponse cashMoney = new RetailShopStatisticsResponse("可提现金额",0);
-        // 提现次数
-        RetailShopStatisticsResponse cashCount = new RetailShopStatisticsResponse("提现次数",0);
-        // 未提现金额
-        RetailShopStatisticsResponse maxCashCount = new RetailShopStatisticsResponse("未提现金额",0);
-
-        List<Integer> ids = userResponseList.stream().map(UserResponse::getUid).distinct().collect(Collectors.toList());
-
-        if(userResponseList.size() > 0){
-            spreadCount.setCount(userService.getSpreadPeopleIdList(ids).size());
-            List<StoreOrder> storeOrders = storeOrderService.getOrderByUserIdsForRetailShop(ids);
-
-            orderCount.setCount(storeOrders.size());
-            BigDecimal payPrice = new BigDecimal("0");
-            for (StoreOrder so: storeOrders) {
-                payPrice.add(so.getPayPrice());
-            }
-            orderPrice.setCount(payPrice.intValue());
-
-            List<User> userList = userService.getSpreadPeopleList(ids);
-            BigDecimal cashTotalPrice = new BigDecimal("0");
-            BigDecimal canCashTotalPrice = new BigDecimal("0");
-            for(User user: userList){
-                cashTotalPrice.add(user.getBrokeragePrice());
-                canCashTotalPrice.add(user.getBrokeragePrice());//todo 待统一
-            }
-
-            cashMoney.setCount(cashTotalPrice.intValue());
-            cashCount.setCount(userExtractService.getListByUserIds(ids).size());
-            maxCashCount.setCount(canCashTotalPrice.intValue());
-
-        }
-
-        // 组装结果数据
-        resultList.add(new RetailShopStatisticsResponse("分销人员人数(人)",userResponseList.size()));
-        resultList.add(spreadCount);
-        resultList.add(orderCount);
-        resultList.add(orderPrice);
-        resultList.add(cashMoney);
-        resultList.add(cashCount);
-        resultList.add(maxCashCount);
-        return CommonResult.success(resultList);
+        return CommonResult.success(retailShopService.getAdminStatistics(keywords, dateLimit));
     }
 
     /**

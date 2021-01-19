@@ -3,13 +3,12 @@ package com.zbkj.crmeb.combination.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
-import com.zbkj.crmeb.combination.model.StorePink;
 import com.zbkj.crmeb.combination.request.StoreCombinationRequest;
 import com.zbkj.crmeb.combination.request.StoreCombinationSearchRequest;
 import com.zbkj.crmeb.combination.request.StorePinkSearchRequest;
 import com.zbkj.crmeb.combination.response.StoreCombinationResponse;
 import com.zbkj.crmeb.combination.response.StorePinkAdminListResponse;
-import com.zbkj.crmeb.combination.response.StorePinkResponse;
+import com.zbkj.crmeb.combination.response.StorePinkDetailResponse;
 import com.zbkj.crmeb.combination.service.StoreCombinationService;
 import com.zbkj.crmeb.combination.service.StorePinkService;
 import com.zbkj.crmeb.store.response.StoreProductResponse;
@@ -168,7 +167,7 @@ public class StoreCombinationController {
      */
     @ApiOperation(value = "拼团订单列表")
     @RequestMapping(value = "/order_pink/{id}", method = RequestMethod.GET)
-    public CommonResult<List<StorePink>> getPinkList(@PathVariable(value = "id") Integer id) {
+    public CommonResult<List<StorePinkDetailResponse>> getPinkList(@PathVariable(value = "id") Integer id) {
         return CommonResult.success(storePinkService.getAdminList(id));
     }
 }

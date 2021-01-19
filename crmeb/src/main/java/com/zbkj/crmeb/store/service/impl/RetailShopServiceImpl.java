@@ -1,14 +1,18 @@
 package com.zbkj.crmeb.store.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
+import com.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.finance.service.UserExtractService;
+import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.request.RetailShopRequest;
 import com.zbkj.crmeb.store.request.RetailShopStairUserRequest;
+import com.zbkj.crmeb.store.response.RetailShopStatisticsResponse;
 import com.zbkj.crmeb.store.response.RetailShopUserResponse;
 import com.zbkj.crmeb.store.service.RetailShopService;
 import com.zbkj.crmeb.store.service.StoreOrderService;
@@ -65,7 +69,7 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
      * @return
      */
     @Override
-    public PageInfo<RetailShopUserResponse> getList(String keywords, String dateLimit, PageParamRequest pageRequest) {
+    public CommonPage<RetailShopUserResponse> getList(String keywords, String dateLimit, PageParamRequest pageRequest) {
         Page<User> pageUserPage = PageHelper.startPage(pageRequest.getPage(), pageRequest.getLimit());
 
 //        User currentUser = userService.getUserByEntity();
@@ -103,7 +107,10 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
             // 佣金数据
             rShopUser.setBrokerageMoney(userBillService.getDataByUserId(rShopUser.getUid()));
         }
-        return CommonPage.copyPageInfo(pageUserPage, retailShopUserResponses);
+        PageInfo<RetailShopUserResponse> responsePageInfo = CommonPage.copyPageInfo(pageUserPage, retailShopUserResponses);
+        responsePageInfo.setTotal(userResponses.getTotal());
+        responsePageInfo.setPages(userResponses.getPages());
+        return CommonPage.restPage(responsePageInfo);
     }
 
     /**
@@ -162,6 +169,10 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
      */
     @Override
     public boolean setManageInfo(RetailShopRequest retailShopRequest) {
+        // 返佣比例之和+起来不能超过100%
+        int ration = retailShopRequest.getStoreBrokerageTwo() + retailShopRequest.getStoreBrokerageRatio();
+        if (ration > 100 || ration < 0) throw new CrmebException("返佣比例加起来不能超过100%");
+
         List<String> keys = initKeys();
         systemConfigService.updateOrSaveValueByName(keys.get(0), retailShopRequest.getBrokerageFuncStatus());
         systemConfigService.updateOrSaveValueByName(keys.get(1), retailShopRequest.getStoreBrokerageStatus());
@@ -173,6 +184,40 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
         systemConfigService.updateOrSaveValueByName(keys.get(7), retailShopRequest.getStoreBrokeragePrice().toString());
         systemConfigService.updateOrSaveValueByName(keys.get(8), retailShopRequest.getBrokerageBindind());
         return true;
+    }
+
+    /**
+     * 获取分销统计数据
+     * @param keywords  模糊搜索参数
+     * @param dateLimit 时间参数
+     * @return RetailShopStatisticsResponse
+     */
+    @Override
+    public RetailShopStatisticsResponse getAdminStatistics(String keywords, String dateLimit) {
+
+        // 获取分销人数
+        List<User> userDisList = userService.findDistributionList(keywords, dateLimit);
+        if (CollUtil.isEmpty(userDisList)) {
+            return new RetailShopStatisticsResponse(0, 0, 0, BigDecimal.ZERO, 0, BigDecimal.ZERO);
+        }
+        // 分销人员人数
+        Integer distributionNum = userDisList.size();
+
+        // 发展会员人数
+        List<Integer> ids = userDisList.stream().map(User::getUid).collect(Collectors.toList());
+        Integer developNum = userService.getDevelopDistributionPeopleNum(ids, dateLimit);
+
+        List<StoreOrder> storeOrders = storeOrderService.getOrderByUserIdsForRetailShop(ids);
+        // 订单总数
+        Integer orderNum = storeOrders.size();
+        // 订单金额
+        BigDecimal orderPriceCount = storeOrders.stream().map(StoreOrder::getPayPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
+        // 提现次数
+        Integer withdrawCount = userExtractService.getListByUserIds(ids).size();
+        // 未提现金额
+        BigDecimal noWithdrawPrice = userDisList.stream().map(User::getBrokeragePrice).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new RetailShopStatisticsResponse(distributionNum, developNum, orderNum, orderPriceCount, withdrawCount, noWithdrawPrice);
     }
 
     ///////////////////////////////////////////////////// 自定义

@@ -298,6 +298,9 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
                 response.setReceiveStartTime(null);
             }
 
+            // 更改使用时间格式，去掉时分秒
+            response.setUseStartTimeStr(DateUtil.dateToStr(response.getUseStartTime(), Constants.DATE_FORMAT_DATE));
+            response.setUseEndTimeStr(DateUtil.dateToStr(response.getUseEndTime(), Constants.DATE_FORMAT_DATE));
             storeCouponFrontResponseArrayList.add(response);
         }
 
@@ -334,6 +337,7 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
                 .and(i -> i.gt(StoreCoupon::getLastTotal, 0).or().eq(StoreCoupon::getIsLimited, false))
                 //领取时间范围, 结束时间为null则是不限时
                 .and(i -> i.isNull(StoreCoupon::getReceiveEndTime).or( p -> p.lt(StoreCoupon::getReceiveStartTime, date).gt(StoreCoupon::getReceiveEndTime, date)));
+        lambdaQueryWrapper.eq(StoreCoupon::getType, 1);
         if(productId > 0){
             //有商品id  通用券可以领取，商品券可以领取，分类券可以领取
             getPrimaryKeySql(lambdaQueryWrapper, productId.toString());

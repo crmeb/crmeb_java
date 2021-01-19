@@ -24,4 +24,6 @@ package com.zbkj.crmeb.store.service;
      void takeByUser();
 
      void deleteByUser();
- }
+
+    void orderPaySuccessAfter();
+}

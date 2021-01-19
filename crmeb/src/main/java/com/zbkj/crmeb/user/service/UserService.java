@@ -53,11 +53,12 @@ public interface UserService extends IService<User> {
 
     /**
      * 更新余额
-     * @param userId 用户id
-     * @param price 余额
+     * @param user 用户
+     * @param price 金额
+     * @param type 增加add、扣减sub
      * @return 更新后的用户数据
      */
-    boolean updateNowMoney(int userId, BigDecimal price);
+    Boolean updateNowMoney(User user, BigDecimal price, String type);
 
     boolean group(String id, String groupId);
 
@@ -149,4 +150,28 @@ public interface UserService extends IService<User> {
      * @return
      */
     Boolean editSpread(UserUpdateSpreadRequest request);
+
+    /**
+     * 更新用户积分
+     * @param user 用户
+     * @param integral 积分
+     * @param type 增加add、扣减sub
+     * @return 更新后的用户对象
+     */
+    Boolean updateIntegral(User user, Integer integral, String type);
+
+    /**
+     * 获取分销人员列表
+     * @param keywords 搜索参数
+     * @param dateLimit 时间参数
+     */
+    List<User> findDistributionList(String keywords, String dateLimit);
+
+    /**
+     * 获取发展会员人数
+     * @param ids       推广人id集合
+     * @param dateLimit 时间参数
+     * @return
+     */
+    Integer getDevelopDistributionPeopleNum(List<Integer> ids, String dateLimit);
 }

@@ -68,11 +68,9 @@ public class StoreCouponUserResponse implements Serializable {
     private Date updateTime;
 
     @ApiModelProperty(value = "开始使用时间")
-    @JsonFormat(pattern = "yyyy-MM-dd",timezone="GMT+8")
     private Date startTime;
 
     @ApiModelProperty(value = "过期时间")
-    @JsonFormat(pattern = "yyyy-MM-dd",timezone="GMT+8")
     private Date endTime;
 
     @ApiModelProperty(value = "使用时间")
@@ -92,4 +90,13 @@ public class StoreCouponUserResponse implements Serializable {
 
     @ApiModelProperty(value = "主键id 商品id/分类id", required = true)
     private String primaryKey;
+
+    @ApiModelProperty(value = "有效状态：usable-可用，unusable-已用，overdue-过期，notStart-未开始")
+    private String validStr;
+
+    @ApiModelProperty(value = "开始使用时间字符串")
+    private String useStartTimeStr;
+
+    @ApiModelProperty(value = "过期时间字符串")
+    private String useEndTimeStr;
 }

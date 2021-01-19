@@ -167,4 +167,12 @@ public interface StoreProductService extends IService<StoreProduct> {
      * @return
      */
     MyRecord copyProduct(String url);
+
+    /**
+     * 添加/扣减库存
+     * @param id 商品id
+     * @param num 数量
+     * @param type 类型：add—添加，sub—扣减
+     */
+    Boolean operationStock(Integer id, Integer num, String type);
 }

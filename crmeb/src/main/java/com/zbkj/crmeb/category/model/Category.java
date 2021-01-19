@@ -52,7 +52,7 @@ public class Category implements Serializable {
     @ApiModelProperty(value = "扩展字段")
     private String extra;
 
-    @ApiModelProperty(value = "状态, 0正常，1失效")
+    @ApiModelProperty(value = "状态,1正常，0失效")
     private Boolean status;
 
     @ApiModelProperty(value = "排序")
