@@ -140,7 +140,9 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
         QueryWrapper<UserBill> queryWrapper = new QueryWrapper<>();
 
         dateLimitUtilVo dateLimit = DateUtil.getDateLimit(type);
-        queryWrapper.select("uid", "sum(IF((pm=0), -number, number))AS number").eq("status", true);
+        queryWrapper.select("uid", "sum(IF((pm=0), -number, number))AS number");
+        queryWrapper.eq("status", true);
+        queryWrapper.eq("category", Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE);
         if(!StringUtils.isBlank(dateLimit.getStartTime())){
             queryWrapper.between("create_time", dateLimit.getStartTime(), dateLimit.getEndTime());
         }
@@ -218,25 +220,6 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
      */
     @Override
     public PageInfo<UserBillResponse> getListAdmin(FundsMonitorSearchRequest request, PageParamRequest pageParamRequest) {
-//        List<UserBill> userBillList = getList(request, pageParamRequest);
-//        if(userBillList.size() < 1){
-//            return new PageInfo<>();
-//        }
-//
-//        List<UserBillResponse> responses = new ArrayList<>();
-//
-//        //用户信息
-//        List<Integer> userIdList = userBillList.stream().map(UserBill::getUid).distinct().collect(Collectors.toList());
-//        HashMap<Integer, User> mapListInUid = userService.getMapListInUid(userIdList);
-//
-//        for (UserBill userBill : userBillList) {
-//            UserBillResponse userBillResponse = new UserBillResponse();
-//            BeanUtils.copyProperties(userBill, userBillResponse);
-//            userBillResponse.setNickName(mapListInUid.get(userBill.getUid()).getNickname());
-//            responses.add(userBillResponse);
-//        }
-
-//        return CommonPage.copyPageInfo(userBillPage, responses);
         userBillPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         Map<String, Object> map = new HashMap<>();
         if (StrUtil.isNotBlank(request.getKeywords())) {
@@ -256,6 +239,9 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
 
             map.put("startTime", dateLimit.getStartTime());
             map.put("endTime", dateLimit.getEndTime());
+        }
+        if (CollUtil.isNotEmpty(request.getUserIdList())) {
+            map.put("userIdList", request.getUserIdList());
         }
 
         List<UserBillResponse> responses = dao.getListAdminAndIntegeal(map);
@@ -315,8 +301,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
         QueryWrapper<UserBill> queryWrapper = new QueryWrapper<>();
 
 
-        queryWrapper.select("sum(number) as number").
-                eq("category", category).
+        queryWrapper.eq("category", category).
                 eq("status", 1);
         if (ObjectUtil.isNotNull(userId)) {
             queryWrapper.eq("uid", userId);
@@ -331,11 +316,16 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
             dateLimitUtilVo dateLimit = DateUtil.getDateLimit(date);
             queryWrapper.between("create_time", dateLimit.getStartTime(), dateLimit.getEndTime());
         }
-        UserBill userBill = dao.selectOne(queryWrapper);
-        if(null == userBill || null == userBill.getNumber()){
+//        UserBill userBill = dao.selectOne(queryWrapper);
+//        if(null == userBill || null == userBill.getNumber()){
+//            return BigDecimal.ZERO;
+//        }
+//        return userBill.getNumber();
+        List<UserBill> userBills = dao.selectList(queryWrapper);
+        if (CollUtil.isEmpty(userBills)) {
             return BigDecimal.ZERO;
         }
-        return userBill.getNumber();
+        return userBills.stream().map(UserBill::getNumber).reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2);
     }
 
     /**
@@ -377,20 +367,17 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
      */
     @Override
     public boolean saveRefundBill(StoreOrderRefundRequest request, User user) {
-        try{
-            UserBill userBill = new UserBill();
-            userBill.setTitle("商品退款");
-            userBill.setUid(user.getUid());
-            userBill.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
-            userBill.setType(Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
-            userBill.setNumber(request.getAmount());
-            userBill.setLinkId(request.getOrderId().toString());
-            userBill.setBalance(user.getNowMoney().add(request.getAmount()));
-            userBill.setMark("订单退款到余额" + request.getAmount() + "元");
-            return save(userBill);
-        }catch (Exception e){
-            throw new CrmebException(e.getMessage());
-        }
+        UserBill userBill = new UserBill();
+        userBill.setTitle("商品退款");
+        userBill.setUid(user.getUid());
+        userBill.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
+        userBill.setType(Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
+        userBill.setNumber(request.getAmount());
+        userBill.setLinkId(request.getOrderId().toString());
+        userBill.setBalance(user.getNowMoney().add(request.getAmount()));
+        userBill.setMark("订单退款到余额" + request.getAmount() + "元");
+        userBill.setPm(1);
+        return save(userBill);
     }
 
     /**
@@ -606,6 +593,21 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
         qw.notIn("type","gain", "system_sub", "deduction", "sign");
         qw.notIn("category","exp", "integral");
         return dao.selectList(qw);
+    }
+
+    /**
+     * 获取订单历史处理记录(退款使用)
+     * @param orderId 订单id
+     * @param uid 用户id
+     * @return
+     */
+    @Override
+    public List<UserBill> findListByOrderIdAndUid(Integer orderId, Integer uid) {
+        LambdaQueryWrapper<UserBill> lqw = Wrappers.lambdaQuery();
+        lqw.eq(UserBill::getUid, uid);
+        lqw.eq(UserBill::getLinkId, String.valueOf(orderId));
+        lqw.eq(UserBill::getStatus, 1);
+        return dao.selectList(lqw);
     }
 
     /////////////////////////////////////////////////////////////////////// 自定义方法

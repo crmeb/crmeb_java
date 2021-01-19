@@ -70,12 +70,12 @@ public class StoreCouponUserOrder implements Serializable {
 
     @ApiModelProperty(value = "开始使用时间")
     @JsonFormat(pattern = "yyyy-MM-dd",timezone="GMT+8")
-    @JsonProperty("receiveStartTime")
+    @JsonProperty("useStartTimeStr")
     private Date startTime;
 
     @ApiModelProperty(value = "过期时间")
     @JsonFormat(pattern = "yyyy-MM-dd",timezone="GMT+8")
-    @JsonProperty("receiveEndTime")
+    @JsonProperty("useEndTimeStr")
     private Date endTime;
 
     @ApiModelProperty(value = "使用时间")

@@ -54,7 +54,7 @@ public class StoreProductLogServiceImpl extends ServiceImpl<StoreProductLogDao, 
         dateLimitUtilVo dateLimit = DateUtil.getDateLimit(time);
         //时间范围
         if(dateLimit.getStartTime() != null && dateLimit.getEndTime() != null){
-            lqw.between(StoreProductLog::getAddTime, cn.hutool.core.date.DateUtil.parse(dateLimit.getStartTime()).getTime(), cn.hutool.core.date.DateUtil.parse(dateLimit.getEndTime()).getTime());
+            lqw.between(StoreProductLog::getAddTime, dateLimit.getStartTime(), dateLimit.getEndTime());
         }
         return dao.selectCount(lqw);
     }

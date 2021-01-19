@@ -334,11 +334,10 @@ public class OnePassServiceImpl implements OnePassService {
         params.add("page", request.getPage());
         params.add("limit", request.getLimit());
         if (OnePassConstants.ONE_PASS_MEAL_TYPE_SMS.equals(request.getType())) {
-            int status = 3;// 查询全部状态
-            if (ObjectUtil.isNotNull(request.getStatus())) {
-                status = request.getStatus();
+//            int status = 3;// 查询全部状态
+            if (ObjectUtil.isNotNull(request.getStatus()) && request.getStatus() != 3) {
+                params.add("status", request.getStatus());
             }
-            params.add("status", status);
         }
         String token = onePassUtil.getToken();
         HashMap<String, String> header = onePassUtil.getCommonHeader(token);

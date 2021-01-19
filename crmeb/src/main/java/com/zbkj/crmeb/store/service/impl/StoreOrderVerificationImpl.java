@@ -188,21 +188,13 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
     @Override
     public boolean verificationOrderByCode(String vCode) {
         StoreOrderVerificationConfirmResponse existOrder = getVerificationOrderByCode(vCode);
-        if(existOrder.getCombinationId() >0 && existOrder.getPinkId() > 0){
-            // todo 营销业务待处理
-        }
         // 判断当前用户是否有权限核销
         SystemAdmin currentAdmin = systemAdminService.getInfo();
-//        List<Integer> currentIds = new ArrayList<>();
-//        currentIds.add(currentAdmin.getId());
-//        List<SystemStoreStaff> currentStaffs = systemStoreStaffService.getByAdminUserIds(currentIds);
-//        if(currentStaffs.size() == 0) throw new CrmebException(Constants.RESULT_VERIFICATION_NOTAUTH);
         // 添加核销人员后执行核销操作
         StoreOrder storeOrder = new StoreOrder();
         BeanUtils.copyProperties(existOrder,storeOrder);
         storeOrder.setStatus(Constants.ORDER_STATUS_INT_BARGAIN);
-//        storeOrder.setClerkId(currentStaffs.get(0).getId());
-//        storeOrder.setStoreId(currentStaffs.get(0).getStoreId());
+        storeOrder.setClerkId(currentAdmin.getId());
         boolean saveStatus = dao.updateById(storeOrder) > 0;
 
         // 小程序订阅消息发送

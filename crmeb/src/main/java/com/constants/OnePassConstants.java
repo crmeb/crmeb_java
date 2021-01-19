@@ -24,8 +24,8 @@ public class OnePassConstants {
     public static final String ONE_PASS_USER_TOKEN_PREFIX = "Bearer-";
 
     // 一号通请求地址
-    public static final String ONE_PASS_API_URL = "https://sms.crmeb.net/api/";// 正式环境
-//    public static final String ONE_PASS_API_URL = "http://plat.crmeb.net/api/";// 测试环境
+//    public static final String ONE_PASS_API_URL = "https://sms.crmeb.net/api/";// 正式环境
+    public static final String ONE_PASS_API_URL = "http://plat.crmeb.net/api/";// 测试环境
 
     // 验证码地址
     public static final String REGISTER_CAPTCHA_URI = "user/code";

@@ -213,5 +213,17 @@ public class IndexServiceImpl implements IndexService {
         map.put("synopsis", info.get("wechat_share_synopsis"));
         return map;
     }
+
+    /**
+     * 获取公共配置
+     *
+     * @return 公共配置
+     */
+    @Override
+    public HashMap<String, String> getCommConfig() {
+        HashMap<String,String> result = new HashMap<>();
+        result.put("yzfUrl", systemConfigService.getValueByKey(Constants.CONFIG_KEY_YZF_H5_URL));
+        return result;
+    }
 }
 

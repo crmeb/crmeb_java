@@ -22,7 +22,7 @@ import lombok.experimental.Accessors;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@ApiModel(value="CreateOrderVo对象", description="微信统一下单对象")
+@ApiModel(value="CreateOrderRequestVo对象", description="微信统一下单对象")
 public class CreateOrderRequestVo {
     @ApiModelProperty(value = "appId，公众号名称，由商户传入", required = true)
     private String appid;
@@ -39,13 +39,13 @@ public class CreateOrderRequestVo {
     @ApiModelProperty(value = "签名", required = true)
     private String sign;
 
-    @ApiModelProperty(value = "随机字符串，不长于32位")
+    @ApiModelProperty(value = "签名类型，默认为MD5，支持HMAC-SHA256和MD5。")
     private String sign_type;
 
     @ApiModelProperty(value = "商品简单描述，该字段须严格按照规范传递", required = true)
     private String body;
 
-    @ApiModelProperty(value = "单品优惠字段(暂未上线)")
+    @ApiModelProperty(value = "商品简单描述")
     private String detail;
 
     @ApiModelProperty(value = "附加数据，在查询API和支付通知中原样返回，该字段主要用于商户携带订单的自定义数据, String(127)")
@@ -75,8 +75,8 @@ public class CreateOrderRequestVo {
     @ApiModelProperty(value = "接收微信支付异步通知回调地址，通知url必须为直接可访问的url，不能携带参数。")
     private String notify_url;
 
-    @ApiModelProperty(value = "H5支付的交易类型为MWEB")
-    private String trade_type = WeChatConstants.PAY_TYPE_H5;
+    @ApiModelProperty(value = "JSAPI -JSAPI支付（或小程序支付）， NATIVE -Native支付， APP -APP支付，MWEB--H5支付", required = true)
+    private String trade_type;
 
     @ApiModelProperty(value = "trade_type=NATIVE，此参数必传。此id为二维码中包含的商品ID，商户自行定义。")
     private String product_id;

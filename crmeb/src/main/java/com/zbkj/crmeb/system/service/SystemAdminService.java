@@ -7,6 +7,7 @@ import com.zbkj.crmeb.system.request.SystemAdminAddRequest;
 import com.zbkj.crmeb.system.request.SystemAdminRequest;
 import com.zbkj.crmeb.system.response.SystemAdminResponse;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -75,4 +76,6 @@ public interface SystemAdminService extends IService<SystemAdmin> {
     void bind(String wxCode, Integer adminId);
 
     Boolean updateStatus(Integer id, Boolean status);
+
+    HashMap<Integer, SystemAdmin> getMapInId(List<Integer> adminIdList);
 }

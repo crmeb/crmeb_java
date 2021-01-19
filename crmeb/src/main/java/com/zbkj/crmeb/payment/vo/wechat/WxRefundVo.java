@@ -61,5 +61,8 @@ public class WxRefundVo {
     @ApiModelProperty(value = "退款货币种类:符合ISO 4217标准的三位字母代码，默认人民币：CNY，其他值列表详见货币类型")
     private String refund_fee_type = "CNY";
 
+    @ApiModelProperty(value = "退款结果通知url")
+    private String notify_url;
+
 }
 

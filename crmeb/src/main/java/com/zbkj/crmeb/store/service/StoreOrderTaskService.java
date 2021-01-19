@@ -26,4 +26,8 @@ import com.zbkj.crmeb.store.model.StoreOrder;
      Boolean takeByUser(StoreOrder storeOrder);
 
      Boolean deleteByUser(StoreOrder storeOrder);
+
+     Boolean refundOrder(StoreOrder storeOrder);
+
+     Boolean paySuccessAfter(StoreOrder storeOrder);
  }

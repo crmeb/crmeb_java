@@ -85,6 +85,16 @@ public class IndexController {
     public CommonResult<HashMap<String, String>> share(){
         return CommonResult.success(indexService.getShareConfig());
     }
+
+    /**
+     * 公共配置 云智服
+     * @return 公共配置
+     */
+    @ApiOperation(value = "公共配置")
+    @RequestMapping(value = "/config", method = RequestMethod.GET)
+    public CommonResult<HashMap<String,String>> getConfig(){
+        return CommonResult.success(indexService.getCommConfig());
+    }
 }
 
 

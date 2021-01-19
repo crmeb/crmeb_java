@@ -1,8 +1,10 @@
 package com.zbkj.crmeb.store.service.impl;
 
 
+import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.constants.Constants;
+import com.exception.CrmebException;
 import com.utils.DateUtil;
 import com.utils.RedisUtil;
 import com.zbkj.crmeb.store.model.StoreOrder;
@@ -10,7 +12,7 @@ import com.zbkj.crmeb.store.service.OrderTaskService;
 import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.store.service.StoreOrderTaskService;
 import com.zbkj.crmeb.store.utilService.OrderUtils;
-import com.zbkj.crmeb.task.order.OrderRefundByUser;
+import com.zbkj.crmeb.task.order.OrderRefundTask;
 import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForGetPackage;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForOrderCancel;
@@ -34,7 +36,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class OrderTaskServiceImpl implements OrderTaskService {
     //日志
-    private static final Logger logger = LoggerFactory.getLogger(OrderRefundByUser.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrderTaskServiceImpl.class);
 
     @Autowired
     private RedisUtil redisUtil;
@@ -116,7 +118,11 @@ public class OrderTaskServiceImpl implements OrderTaskService {
             }
             try{
                 StoreOrder storeOrder = storeOrderService.getById(Integer.valueOf(orderId.toString()));
-                boolean result = storeOrderTaskService.refundApply(storeOrder);
+                if (ObjectUtil.isNull(storeOrder)) {
+                    throw new CrmebException("订单不存在,orderNo = " + orderId);
+                }
+//                boolean result = storeOrderTaskService.refundApply(storeOrder);
+                boolean result = storeOrderTaskService.refundOrder(storeOrder);
                 if(!result){
                     redisUtil.lPush(redisKey, orderId);
                 }
@@ -221,6 +227,40 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                     redisUtil.lPush(redisKey, data);
                 }
             }catch (Exception e){
+                redisUtil.lPush(redisKey, data);
+            }
+        }
+    }
+
+    /**
+     * 订单支付成功后置处理
+     */
+    @Override
+    public void orderPaySuccessAfter() {
+        String redisKey = Constants.ORDER_TASK_PAY_SUCCESS_AFTER;
+        Long size = redisUtil.getListSize(redisKey);
+        logger.info("OrderTaskServiceImpl.orderPaySuccessAfter | size:" + size);
+        if(size < 1){
+            return;
+        }
+        for (int i = 0; i < size; i++) {
+            //如果10秒钟拿不到一个数据，那么退出循环
+            Object data = redisUtil.getRightPop(redisKey, 10L);
+            if(null == data){
+                continue;
+            }
+            try{
+                StoreOrder storeOrder = storeOrderService.getByOderId(String.valueOf(data));
+                if (ObjectUtil.isNull(storeOrder)) {
+                    logger.error("OrderTaskServiceImpl.orderPaySuccessAfter | 订单不存在，orderNo: " + data);
+                    throw new CrmebException("订单不存在，orderNo: " + data);
+                }
+                boolean result = storeOrderTaskService.paySuccessAfter(storeOrder);
+                if(!result){
+                    redisUtil.lPush(redisKey, data);
+                }
+            }catch (Exception e){
+                e.printStackTrace();
                 redisUtil.lPush(redisKey, data);
             }
         }

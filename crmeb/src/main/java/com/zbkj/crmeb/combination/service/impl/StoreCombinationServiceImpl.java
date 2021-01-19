@@ -1,12 +1,14 @@
 package com.zbkj.crmeb.combination.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.parser.Feature;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
@@ -49,6 +51,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -114,6 +117,9 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
 
     @Autowired
     private RedisUtil redisUtil;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     private static final Logger logger = LoggerFactory.getLogger(StoreCombinationServiceImpl.class);
 
@@ -313,8 +319,15 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean updateCombination(StoreCombinationRequest request) {
+        StoreCombination existCombination = getById(request.getId());
+        if (ObjectUtil.isNull(existCombination) || existCombination.getIsDel()) throw new CrmebException("拼团商品不存在");
+
+        long timeMillis = System.currentTimeMillis();
+        if (existCombination.getIsShow().equals(true) && existCombination.getStartTime() <= timeMillis && timeMillis <= existCombination.getStopTime()) {
+            throw new CrmebException("活动开启中，商品不支持修改");
+        }
+
         // 过滤掉checked=false的数据
-        System.out.println("updateCombination request = " + request);
         clearNotCheckedAndValidationPrice(request);
 
         StoreCombination storeCombination = new StoreCombination();
@@ -911,38 +924,95 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
 
     /**
      * 扣减库存加销量
-     * @param combinationId 产品id
-     * @param num 商品数量
-     * @param attrValueId
-     * @param type 是否限购 0=不限购
-     * @return
+     * @param num           商品数量
+     * @param attrValueId   拼团商品规格
+     * @param productId     主商品id
+     * @param user          购买用户
+     * @return Boolean
      */
     @Override
-    public Boolean decProductStock(Integer combinationId, Integer num, int attrValueId, int type) {
-        // 因为attrvalue表中unique使用Id代替，更新前先查询此表是否存在
-
-        // 秒杀SKU 扣减库存加销量
-        StoreProductAttrValue spavPram = new StoreProductAttrValue();
-        spavPram.setProductId(combinationId).setType(type).setId(attrValueId);
-        List<StoreProductAttrValue> existAttrValues = storeProductAttrValueService.getByEntity(spavPram);
-        if(CollUtil.isEmpty(existAttrValues)) throw new CrmebException("未找到相关商品属性信息");
-
-        StoreProductAttrValue productsInAttrValue = existAttrValues.get(0);
-        StoreCombination storeCombination = getById(combinationId);
-        boolean result = false;
-        if(ObjectUtil.isNotNull(productsInAttrValue)){
-            boolean resultDecProductStock = storeProductAttrValueService.decProductAttrStock(combinationId, attrValueId, num, type);
-            if(!resultDecProductStock) throw new CrmebException("扣减拼团sku库存失败");
+    public Boolean decProductStock(StoreOrder storeOrder, Integer num, Integer attrValueId, Integer productId, User user) {
+        // 判断拼团团长是否存在
+        StorePink headPink = new StorePink();
+        if (storeOrder.getPinkId() > 0) {
+            headPink = storePinkService.getById(storeOrder.getPinkId());
+            if (ObjectUtil.isNull(headPink) || headPink.getIsRefund().equals(true) || headPink.getStatus() == 3) {
+                throw new CrmebException("找不到对应的拼团团队信息");
+            }
         }
 
+        // 拼团商品本身库存扣减
+        StoreProductAttrValue spavPram = new StoreProductAttrValue();
+        spavPram.setProductId(storeOrder.getCombinationId());
+        spavPram.setType(Constants.PRODUCT_TYPE_PINGTUAN);
+        spavPram.setId(attrValueId);
+        List<StoreProductAttrValue> attrvalues = storeProductAttrValueService.getByEntity(spavPram);
+        if(CollUtil.isEmpty(attrvalues)) throw new CrmebException("未找到相关商品属性信息");
+        StoreProductAttrValue combinationAttrValue = attrvalues.get(0);
+        // 对应的主商品sku
+        List<StoreProductAttrValue> currentProAttrValues = storeProductAttrValueService.getListByProductId(productId);
+        List<StoreProductAttrValue> existAttrValues = currentProAttrValues.stream().filter(e ->
+                e.getSuk().equals(combinationAttrValue.getSuk()) && e.getType().equals(Constants.PRODUCT_TYPE_NORMAL))
+                .collect(Collectors.toList());
+        if (CollUtil.isEmpty(existAttrValues)) throw new CrmebException("未找到扣减库存的商品");
+        StoreCombination storeCombination = getById(storeOrder.getCombinationId());
         // 拼团商品表扣减库存加销量
         LambdaUpdateWrapper<StoreCombination> lqwuper = new LambdaUpdateWrapper<>();
-        lqwuper.eq(StoreCombination::getId, combinationId);
         lqwuper.set(StoreCombination::getStock, storeCombination.getStock()-num);
         lqwuper.set(StoreCombination::getSales, storeCombination.getSales()+num);
         lqwuper.set(StoreCombination::getQuota, storeCombination.getQuota()-num);
-        result = update(lqwuper);
-        return result;
+        lqwuper.eq(StoreCombination::getId, storeOrder.getCombinationId());
+        lqwuper.apply(StrUtil.format(" (stock - {} >= 0) ", num));
+
+        // 生成拼团表数据
+        StorePink storePink = new StorePink();
+        storePink.setUid(user.getUid());
+        storePink.setAvatar(user.getAvatar());
+        storePink.setNickname(user.getNickname());
+        storePink.setOrderId(storeOrder.getOrderId());
+        storePink.setOrderIdKey(storeOrder.getId());
+        storePink.setTotalNum(storeOrder.getTotalNum());
+        storePink.setTotalPrice(storeOrder.getTotalPrice());
+        storePink.setCid(storeCombination.getId());
+        storePink.setPid(storeCombination.getProductId());
+        storePink.setPeople(storeCombination.getPeople());
+        storePink.setPrice(storeCombination.getPrice());
+        Integer effectiveTime = storeCombination.getEffectiveTime();// 有效小时数
+        DateTime dateTime = cn.hutool.core.date.DateUtil.date();
+        storePink.setAddTime(dateTime.getTime());
+        if (ObjectUtil.isNotNull(storeOrder.getPinkId()) && storeOrder.getPinkId() > 0) {
+            storePink.setStopTime(headPink.getStopTime());
+        } else {
+            DateTime hourTime = cn.hutool.core.date.DateUtil.offsetHour(dateTime, effectiveTime);
+            long stopTime =  hourTime.getTime();
+            if (stopTime > storeCombination.getStopTime()) {
+                stopTime = storeCombination.getStopTime();
+            }
+            storePink.setStopTime(stopTime);
+        }
+        storePink.setKId(Optional.ofNullable(storeOrder.getPinkId()).orElse(0));
+        storePink.setIsTpl(false);
+        storePink.setIsRefund(false);
+        storePink.setStatus(1);
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            // 拼团规格扣减
+            storeProductAttrValueService.decProductAttrStock(storeOrder.getCombinationId(), attrValueId, num, Constants.PRODUCT_TYPE_PINGTUAN);
+            // 主商品扣减
+            storeProductService.decProductStock(productId, num, existAttrValues.get(0).getId(), Constants.PRODUCT_TYPE_NORMAL);
+            // 拼团商品扣减
+            update(lqwuper);
+
+            storePinkService.save(storePink);
+
+            // 如果是开团，需要更新订单数据
+            if (storePink.getKId() == 0) {
+                storeOrder.setPinkId(storePink.getId());
+                storeOrderService.updateById(storeOrder);
+            }
+            return Boolean.TRUE;
+        });
+        return execute;
     }
 
     /**
@@ -1029,6 +1099,47 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         // 判断关联的商品是否处于活动开启状态
         List<StoreCombination> list = combinationList.stream().filter(i -> i.getIsShow().equals(true)).collect(Collectors.toList());
         return CollUtil.isNotEmpty(list);
+    }
+
+    /**
+     * 查询带异常
+     * @param combinationId 拼团商品id
+     * @return StoreCombination
+     */
+    @Override
+    public StoreCombination getByIdException(Integer combinationId) {
+        LambdaQueryWrapper<StoreCombination> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StoreCombination::getId, combinationId);
+        lqw.eq(StoreCombination::getIsDel, false);
+        lqw.eq(StoreCombination::getIsShow, true);
+        StoreCombination storeCombination = dao.selectOne(lqw);
+        if (ObjectUtil.isNull(storeCombination)) throw new CrmebException("拼团商品不存在或未开启");
+        return storeCombination;
+    }
+
+    /**
+     * 添加/扣减库存
+     * @param id 秒杀商品id
+     * @param num 数量
+     * @param type 类型：add—添加，sub—扣减
+     */
+    @Override
+    public Boolean operationStock(Integer id, Integer num, String type) {
+        UpdateWrapper<StoreCombination> updateWrapper = new UpdateWrapper<>();
+        if (type.equals("add")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
+            updateWrapper.setSql(StrUtil.format("quota = quota + {}", num));
+        }
+        if (type.equals("sub")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
+            updateWrapper.setSql(StrUtil.format("quota = quota - {}", num));
+            // 扣减时加乐观锁保证库存不为负
+            updateWrapper.last(StrUtil.format(" and (stock - {} >= 0)", num));
+        }
+        updateWrapper.eq("id", id);
+        return update(updateWrapper);
     }
 
     /**

@@ -180,11 +180,9 @@ public class UserController {
     }
 
     /**
-     * 会员分组
+     * 会员标签
      * @param id String id
      * @param tagId Integer 标签id
-     * @author Mr.Zhang
-     * @since 2020-04-28
      */
     @ApiOperation(value = "标签")
     @RequestMapping(value = "/tag", method = RequestMethod.POST)
