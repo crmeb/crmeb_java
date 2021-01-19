@@ -477,6 +477,7 @@
               ficti: res.ficti
             }
             if(this.formValidate.attr.length){
+              this.oneFormBatch[0].image = res.image
               for (var i = 0; i < this.formValidate.attr.length; i++) {
                 this.formValidate.attr[i].attrValue = JSON.parse(this.formValidate.attr[i].attrValues)
               }

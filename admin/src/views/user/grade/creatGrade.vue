@@ -11,13 +11,13 @@
       <el-form-item label="等级" prop="grade">
         <el-input  v-model.number="formValidate.grade" placeholder="请输入等级"></el-input>
       </el-form-item>
-      <el-form-item label="享受折扣" prop="discount">
-        <el-input  v-model="formValidate.discount" placeholder="请输入享受折扣"></el-input>
+      <el-form-item label="享受折扣(%)" prop="discount">
+        <el-input-number  :min="0" :max="100" step-strictly  v-model="formValidate.discount" placeholder="请输入享受折扣"></el-input-number>
       </el-form-item>
       <el-form-item label="经验" prop="experience">
         <el-input  v-model.number="formValidate.experience" placeholder="请输入经验"></el-input>
       </el-form-item>
-      <el-form-item label="图标：" prop="icon">
+      <el-form-item label="图标" prop="icon">
         <div class="upLoadPicBox" @click="modalPicTap('1', 'icon')">
           <div v-if="formValidate.icon" class="pictrue"><img :src="formValidate.icon"></div>
           <div v-else class="upLoad">
@@ -25,7 +25,7 @@
           </div>
         </div>
       </el-form-item>
-      <el-form-item label="用户背景：" required prop="image">
+      <el-form-item label="用户背景" required prop="image">
         <div class="upLoadPicBox" @click="modalPicTap('1', 'image')">
           <div v-if="formValidate.image" class="pictrue"><img :src="formValidate.image"></div>
           <div v-else class="upLoad">

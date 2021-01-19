@@ -390,9 +390,9 @@ export function getlevelInfo()
  * 经验值明细；
  * 
  */
-export function getlevelExpList()
+export function getlevelExpList(data)
 {
-	return request.get("user/expList");
+	return request.get("user/expList",data);
 }
 
 /**

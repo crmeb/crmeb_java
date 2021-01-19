@@ -75,7 +75,7 @@
                   </div>
                 </template>
               </el-table-column>
-              <el-table-column label="Url" min-width="250">
+              <el-table-column label="Url" min-width="250" v-if="biztype.value === 5" key="2">
                 <template slot-scope="scope">
                   <span>{{ scope.row.url }}</span>
                 </template>
@@ -141,7 +141,6 @@
 import * as categoryApi from '@/api/categoryApi.js'
 import info from './info'
 import edit from './edit'
-import * as constants from '@/utils/constants.js'
 import * as selfUtil from '@/utils/ZBKJIutil.js'
 export default {
   // name: "list"
@@ -177,7 +176,7 @@ export default {
     return {
       selectModelKeysNew: this.selectModelKeys,
       loading: false,
-      constants,
+      constants: this.$constants,
       treeProps: {
         label: 'name',
         children: 'child',
@@ -197,12 +196,12 @@ export default {
       dataList: [],
       treeList: [],
       listPram: {
-       pid: this.pid,
+        pid: this.pid,
         type: this.biztype.value,
         status: -1,
         name: '',
-        page: constants.page.page,
-        limit: constants.page.limit[0]
+        page: this.$constants.page.page,
+        limit: this.$constants.page.limit[0]
       },
       viewInfoConfig: {
         data: null,
@@ -293,7 +292,7 @@ export default {
         this.loading = false
       }).catch(()=>{
         this.loading = false
-      }) : categoryApi.listCategroy({ type: 3, status: '', pid: this.listPram.pid}).then(data => {
+      }) : categoryApi.listCategroy({ type: 3, status: this.listPram.status, pid: this.listPram.pid, name: this.listPram.name}).then(data => {
         this.treeList = data.list
       })
     },

@@ -74,21 +74,20 @@
 <script>
 import * as roleApi from '@/api/role.js'
 import * as categroyApi from '@/api/categoryApi.js'
-import * as constants from '@/utils/constants.js'
 import edit from './edit'
 export default {
   // name: "index"
   components: { edit },
   data() {
     return {
-      constants,
+      constants:this.$constants,
       listData: { list: [] },
       listPram: {
         createTime: null,
         updateTime: null,
         level: null,
         page: 1,
-        limit: constants.page.limit[0],
+        limit: this.$constants.page.limit[0],
         roleName: null,
         rules: null,
         status: null

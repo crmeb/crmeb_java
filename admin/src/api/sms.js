@@ -174,10 +174,11 @@ export function exportTempApi(params) {
 /**
  * @description 全部物流公司
  */
-export function expressAllApi() {
+export function expressAllApi(params) {
   return request({
     url: 'admin/express/all',
-    method: 'get'
+    method: 'get',
+    params
   })
 }
 

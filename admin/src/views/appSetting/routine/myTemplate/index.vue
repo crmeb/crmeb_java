@@ -135,7 +135,6 @@
 </template>
 
 <script>
-  import * as constants from '@/utils/constants.js'
   import { tempAsyncApi, myTempTypeApi, myTempListApi, wechatTemplateStatusApi, wechatTemplateSaveApi, wechatTemplateUpdateApi, wechatTemplateDeleteApi, myTempStatusApi} from '@/api/wxApi'
   import zbParser from '@/components/FormGenerator/components/parser/ZBParser'
   export default {
@@ -164,7 +163,7 @@
         isCreate: 0,
         editData: {},
         dialogVisible: false,
-        switchData: constants.switchStatus,
+        switchData: this.$constants.switchStatus,
         tableFrom: {
           page: 1,
           limit: 20,

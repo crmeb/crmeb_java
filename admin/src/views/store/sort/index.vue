@@ -6,13 +6,12 @@
 
 <script>
   import categoryList from '@/components/Category/list'
-  import * as constants from '@/utils/constants.js'
   export default {
     // name: "list",
     components: { categoryList },
     data() {
       return {
-        constants
+        constants: this.$constants
       }
     }
   }

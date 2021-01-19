@@ -195,7 +195,6 @@
 
 <script>
   import { applyListApi, applyBalanceApi, applyUpdateApi, applyStatusApi } from '@/api/financial'
-  import { fromList } from '@/utils/constants.js'
   import cardsData from '@/components/cards/index'
   import zbParser from '@/components/FormGenerator/components/parser/ZBParser'
   export default {
@@ -223,7 +222,7 @@
           page: 1,
           limit: 20
         },
-        fromList: fromList,
+        fromList: this.$constants.fromList,
         cardLists: [],
         applyId: null,
         extractType: ''

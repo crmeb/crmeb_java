@@ -304,7 +304,7 @@
 						// 	that.codeUrl = `${VUE_APP_API_URL}/sms_captcha?key=${that.keyCode}`;
 						// 	that.isShowCode = true;
 						// }
-						that.$util.Tips({title:res.message});
+						that.$util.Tips({title:res});
 					});
 			},
 			navTap: function(index) {
@@ -347,7 +347,11 @@
 									url: '/pages/index/index'
 								});
 							}
-						})
+						}).catch(e => {
+						that.$util.Tips({
+							title: e
+						    });
+					     });
 					})
 					.catch(e => {
 						that.$util.Tips({

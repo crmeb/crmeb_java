@@ -8,7 +8,7 @@
       >
         <el-input v-model="editPram.name"  :maxlength="biztype.value === 1 ? 8 : 20" placeholder="分类名称" />
       </el-form-item>
-      <el-form-item label="URL">
+      <el-form-item label="URL" v-if="biztype.value!==1">
         <el-input v-model="editPram.url" placeholder="URL" />
       </el-form-item>
       <el-form-item label="父级" v-if="biztype.value!==3">
@@ -31,7 +31,8 @@
         <el-input-number v-model="editPram.sort"/>
       </el-form-item>
       <el-form-item label="状态">
-        <el-switch v-model="editPram.status" :active-value="true" :inactive-value="false" />
+        <el-switch v-model="editPram.status"  active-text="显示"
+                   inactive-text="隐藏" :active-value="true" :inactive-value="false" />
       </el-form-item>
       <el-form-item label="扩展字段" v-if="biztype.value !== 1 && biztype.value !== 3 && biztype.value !== 5">
         <el-input v-model="editPram.extra" type="textarea" placeholder="扩展字段" />
@@ -45,7 +46,6 @@
 </template>
 <!--创建和编辑公用一个组件-->
 <script>
-import * as constants from '@/utils/constants.js'
 import * as categoryApi from '@/api/categoryApi.js'
 import * as selfUtil from '@/utils/ZBKJIutil.js'
 export default {
@@ -73,7 +73,7 @@ export default {
   data() {
     return {
       loadingBtn: false,
-      constants,
+      constants: this.$constants,
       editPram: {
         extra: null,
         name: null,

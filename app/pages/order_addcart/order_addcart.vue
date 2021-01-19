@@ -475,7 +475,7 @@
 					let selectValueProductId = that.getSelectValueProductId();
 					collectAll(that.getSelectValueProductId()).then(res => {
 						return that.$util.Tips({
-							title: res,
+							title: '收藏成功',
 							icon: 'success'
 						});
 					}).catch(err => {

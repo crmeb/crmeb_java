@@ -99,15 +99,15 @@
         />
         <el-table-column label="操作" min-width="150" fixed="right" align="center">
           <template slot-scope="scope">
-            <el-button type="text" size="small" class="mr10" @click="onSpread(scope.row.uid, 'man')">推广人</el-button>
+            <el-button type="text" size="small" class="mr10" @click="onSpread(scope.row.uid, 'man','推广人')">推广人</el-button>
             <el-dropdown>
               <span class="el-dropdown-link">
                 更多<i class="el-icon-arrow-down el-icon--right" />
               </span>
               <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item @click.native="onSpreadOrder(scope.row.uid, 'order')">推广订单</el-dropdown-item>
+                <el-dropdown-item @click.native="onSpreadOrder(scope.row.uid, 'order','推广订单')">推广订单</el-dropdown-item>
                 <!--<el-dropdown-item @click.native="onSpreadType(scope.row.uid)">推广方式</el-dropdown-item>-->
-                <el-dropdown-item @click.native="clearSpread(scope.row)" v-if="scope.row.spreadNickname">清除上级推广人</el-dropdown-item>
+                <el-dropdown-item @click.native="clearSpread(scope.row)" v-if="scope.row.spreadNickname && scope.row.spreadNickname!=='无'">清除上级推广人</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
           </template>
@@ -128,7 +128,7 @@
 
     <!--推广人-->
     <el-dialog
-      title="提示"
+      :title="titleName+'列表'"
       :visible.sync="dialogVisible"
       width="900px"
       :before-close="handleClose"
@@ -143,7 +143,7 @@
           </el-form-item>
           <el-form-item label="用户类型：">
             <el-radio-group v-model="spreadFrom.type" size="small" @change="onChanges">
-              <el-radio-button label="null">全部</el-radio-button>
+              <el-radio-button label="0">全部</el-radio-button>
               <el-radio-button label="1">一级推广人</el-radio-button>
               <el-radio-button label="2">二级推广人</el-radio-button>
             </el-radio-group>
@@ -194,23 +194,23 @@
           min-width="120"
         >
           <template slot-scope="scope">
-            <span>{{ scope.row.is_promoter | filterYesOrNo }}</span>
+            <span>{{ scope.row.isPromoter | filterYesOrNo }}</span>
           </template>
         </el-table-column>
         <el-table-column
           sortable
           label="推广人数"
           min-width="120"
-          prop="spread_count"
+          prop="spreadCount"
         />
         <el-table-column
           sortable
           label="订单数"
           min-width="120"
-          prop="pay_count"
+          prop="payCount"
         />
         <el-table-column
-          prop="create_time"
+          prop="spreadTime"
           label="关注时间"
           min-width="150"
         />
@@ -267,7 +267,6 @@
 
 <script>
   import { promoterListApi, spreadStatisticsApi, spreadListApi, spreadOrderListApi, spreadClearApi } from '@/api/distribution'
-  import { fromList } from '@/utils/constants.js'
   import cardsData from '@/components/cards/index'
   export default {
     name: 'AccountsUser',
@@ -287,7 +286,7 @@
           page: 1,
           limit: 20
         },
-        fromList: fromList,
+        fromList: this.$constants.fromList,
         dialogVisible: false,
         spreadData: {
           data: [],
@@ -297,14 +296,15 @@
           page: 1,
           limit: 10,
           dateLimit: '',
-          type: null,
+          type: 0,
           nickName: '',
           uid: ''
         },
         timeValSpread: [],
         spreadLoading: false,
         uid: '',
-        onName: ''
+        onName: '',
+        titleName: ''
       }
     },
     mounted() {
@@ -318,8 +318,15 @@
       },
       // 统计
       spreadStatistics() {
-        spreadStatisticsApi({ dateLimit: this.tableFrom.dateLimit, nickName: this.tableFrom.nickName}).then((res) => {
-          this.cardLists = res
+        spreadStatisticsApi({ dateLimit: this.tableFrom.dateLimit, keywords: this.tableFrom.nickName}).then((res) => {
+          //this.cardLists = res
+          this.cardLists = [
+            { name: '分销人员人数', count: res.distributionNum },
+            { name: '发展会员人数', count: res.developNum },
+            { name: '订单总数', count: res.orderNum },
+            { name: '订单金额（元）', count: res.orderPriceCount },
+            { name: '提现次数', count: res.withdrawCount }
+          ]
         })
       },
       // 清除
@@ -331,15 +338,16 @@
           })
         })
       },
-      onSpread(uid, n) {
+      onSpread(uid, n, p) {
         this.onName = n
+        this.titleName = p
         this.uid = uid
         this.dialogVisible = true
         this.spreadFrom = {
           page: 1,
           limit: 10,
           dateLimit: '',
-          type: null,
+          type: 0,
           nickName: '',
           uid: uid
         }
@@ -386,15 +394,16 @@
         this.onName === 'man' ? this.getListSpread(this.uid) : this.getSpreadOrderList(this.uid)
       },
       // 推广订单
-      onSpreadOrder(uid, n) {
+      onSpreadOrder(uid, n, p) {
         this.uid = uid
         this.onName = n
+        this.titleName = p
         this.dialogVisible = true
         this.spreadFrom = {
           page: 1,
           limit: 10,
           dateLimit: '',
-          type: '',
+          type: 0,
           nickName: '',
           uid: uid
         }
