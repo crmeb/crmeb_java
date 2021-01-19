@@ -305,8 +305,6 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     @Transactional(rollbackFor = {RuntimeException.class, Error.class, CrmebException.class})
     public List<String> addCartAgain(Integer userId, Integer productId, Integer cartNum, String orderUnique, String type, boolean isNew, Integer combinationId, Integer skillId, Integer bargainId) {
         List<String> cacheIdsResult = new ArrayList<>();
-        // todo 营销活动二期处理
-
         // 检测订单是否有效
         StoreOrder storeOrderPram = new StoreOrder();
         storeOrderPram.setUnique(orderUnique);
@@ -467,7 +465,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
 
         UserToken userToken = userTokenService.getByUid(currentUser.getUid());
 
-        Boolean execute = orderPayService.paySuccess(storeOrder, currentUser, userToken);
+        Boolean execute = orderPayService.paySuccess(storeOrder);
 //        Boolean execute = transactionTemplate.execute(e -> {
 //            userService.updateNowMoney(currentUser.getUid(), priceSubtract);
 //            userBillService.save(userBill);
@@ -571,7 +569,8 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         //获取门店map
         HashMap<Integer, SystemStore> systemStoreList = systemStoreService.getMapInId(storeIdList);
         //获取店员map
-        HashMap<Integer, SystemStoreStaff> systemStoreStaffList = systemStoreStaffService.getMapInId(clerkIdList);
+//        HashMap<Integer, SystemStoreStaff> systemStoreStaffList = systemStoreStaffService.getMapInId(clerkIdList);
+        HashMap<Integer, SystemAdmin> systemStoreStaffList = systemAdminService.getMapInId(clerkIdList);
         //获取订单详情map
         HashMap<Integer, List<StoreOrderInfoVo>> orderInfoList = StoreOrderInfoService.getMapInId(orderIdList);
 
@@ -605,7 +604,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
             // 添加核销人信息
             String clerkName = "";
             if(systemStoreStaffList.containsKey(storeOrder.getClerkId())){
-                clerkName = systemStoreStaffList.get(storeOrder.getClerkId()).getStaffName();
+                clerkName = systemStoreStaffList.get(storeOrder.getClerkId()).getRealName();
             }
             storeOrderItemResponse.setProductList(orderInfoList.get(storeOrder.getId()));
             storeOrderItemResponse.setTotalNum(storeOrder.getTotalNum());
@@ -760,18 +759,19 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
 
     /** 退款
      * @param request StoreOrderRefundRequest 退款参数
-     * @author Mr.Zhang
-     * @since 2020-06-10
      * @return boolean
+     * 这里只处理订单状态
+     * 余额支付需要把余额给用户加回去
+     * 其余处理放入redis中处理
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public boolean refund(StoreOrderRefundRequest request) {
         StoreOrder storeOrder = getById(request.getOrderId());
-        if(null == storeOrder){throw new CrmebException("未查到订单");}
+        if(ObjectUtil.isNull(storeOrder)){throw new CrmebException("未查到订单");}
         if(!storeOrder.getPaid()){throw new CrmebException("未支付无法退款");}
-        if(storeOrder.getRefundPrice().add(request.getAmount()).compareTo(storeOrder.getPayPrice()) > 0){throw new CrmebException("退款金额大于支付金额，请修改退款金额");}
-
+        if(storeOrder.getRefundPrice().add(request.getAmount()).compareTo(storeOrder.getPayPrice()) > 0) {
+            throw new CrmebException("退款金额大于支付金额，请修改退款金额");
+        }
 
         //用户
         User user = userService.getById(storeOrder.getUid());
@@ -785,61 +785,45 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
                 throw new CrmebException("微信申请退款失败！");
             }
         }
-        if (storeOrder.getPayType().equals(Constants.PAY_TYPE_YUE)) {
-            UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
-            userOperateFundsRequest.setUid(storeOrder.getUid());
-            userOperateFundsRequest.setValue(request.getAmount());
-            userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_MONEY);
-            userOperateFundsRequest.setFoundsType(Constants.ORDER_STATUS_REFUNDED);
-            userOperateFundsRequest.setType(1);
-            userOperateFundsRequest.setTitle(Constants.ORDER_STATUS_STR_REFUNDED);
-            boolean addMoney = userService.updateFounds(userOperateFundsRequest, false); //更新余额
-            if(!addMoney){throw new CrmebException("余额退款失败");}
-
-            //新增日志
-            boolean addBill = userBillService.saveRefundBill(request, user);
-            if(!addBill){throw new CrmebException("余额退款失败");}
-        }
 
         //修改订单退款状态
-        if(request.getType() == 1){
-            storeOrder.setRefundStatus(2);
-        }else if(request.getType() == 2){
-            storeOrder.setRefundStatus(0);
-        }else{
-            throw new CrmebException("选择退款状态错误");
-        }
+        storeOrder.setRefundStatus(3);
         storeOrder.setRefundPrice(request.getAmount());
-        boolean updateOrder = updateById(storeOrder);
-        if(!updateOrder){
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            updateById(storeOrder);
+            if (storeOrder.getPayType().equals(Constants.PAY_TYPE_YUE)) {
+                // 更新用户金额 TODO 后期要调整
+                UserOperateFundsRequest userOperateFundsRequest = new UserOperateFundsRequest();
+                userOperateFundsRequest.setUid(storeOrder.getUid());
+                userOperateFundsRequest.setValue(request.getAmount());
+                userOperateFundsRequest.setFoundsCategory(Constants.USER_BILL_CATEGORY_MONEY);
+                userOperateFundsRequest.setFoundsType(Constants.ORDER_STATUS_REFUNDED);
+                userOperateFundsRequest.setType(1);
+                userOperateFundsRequest.setTitle(Constants.ORDER_STATUS_STR_REFUNDED);
+                userService.updateFounds(userOperateFundsRequest, false); //更新余额
+                //新增日志
+                userBillService.saveRefundBill(request, user);
+                // 退款task
+                redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER, storeOrder.getId());
+            }
+            return Boolean.TRUE;
+        });
+        if(!execute){
             storeOrderStatusService.saveRefund(request.getOrderId(), request.getAmount(), "失败");
             throw new CrmebException("订单更新失败");
         }
-        //退款成功
-        storeOrderStatusService.saveRefund(request.getOrderId(), request.getAmount(), null);
+//        // 小程序订阅消息 退款成功
+//        String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
+//        WechatSendMessageForReFundEd forReFundEd = new WechatSendMessageForReFundEd(
+//                "退款成功",storeNameAndCarNumString,request.getAmount()+"",DateUtil.nowDateTimeStr(),"退款金额已到余额中",
+//                storeOrder.getOrderId(),storeOrder.getId()+"",storeOrder.getCreateTime()+"",storeOrder.getRefundPrice()+"",
+//                storeNameAndCarNumString,storeOrder.getRefundReason(),"CRMEB",storeOrder.getRefundReasonWapExplain(),
+//                "暂无"
+//        );
+//        wechatSendMessageForMinService.sendReFundEdMessage(forReFundEd, userService.getUserIdException());
 
-        //佣金
-        subtractBill(request, Constants.USER_BILL_CATEGORY_MONEY,
-                Constants.USER_BILL_TYPE_BROKERAGE, Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE);
-
-        //积分
-        subtractBill(request, Constants.USER_BILL_CATEGORY_INTEGRAL,
-                Constants.USER_BILL_TYPE_GAIN, Constants.USER_BILL_CATEGORY_INTEGRAL);
-
-        // 回滚库存 后续操作放入redis
-        redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER, storeOrder.getId());
-
-        // 小程序订阅消息 退款成功
-        String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
-        WechatSendMessageForReFundEd forReFundEd = new WechatSendMessageForReFundEd(
-                "退款成功",storeNameAndCarNumString,request.getAmount()+"",DateUtil.nowDateTimeStr(),"退款金额已到余额中",
-                storeOrder.getOrderId(),storeOrder.getId()+"",storeOrder.getCreateTime()+"",storeOrder.getRefundPrice()+"",
-                storeNameAndCarNumString,storeOrder.getRefundReason(),"CRMEB",storeOrder.getRefundReasonWapExplain(),
-                "暂无"
-        );
-        wechatSendMessageForMinService.sendReFundEdMessage(forReFundEd, userService.getUserIdException());
-
-        return true;
+        return execute;
     }
 
     /** 订单详情
@@ -933,18 +917,21 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
      * @return boolean
      */
     @Override
-    public boolean refundRefuse(Integer id, String reason) {
+    public Boolean refundRefuse(Integer id, String reason) {
         StoreOrder storeOrder = getInfoException(id);
         storeOrder.setRefundReason(reason);
         storeOrder.setRefundStatus(0);
-        storeOrder.setStatus(1);
-        updateById(storeOrder);
 
-        storeOrderStatusService.createLog(storeOrder.getId(), Constants.ORDER_LOG_REFUND_REFUSE, Constants.ORDER_LOG_MESSAGE_REFUND_REFUSE.replace("{reason}", reason));
+        Boolean execute = transactionTemplate.execute(e -> {
+            updateById(storeOrder);
+            storeOrderStatusService.createLog(storeOrder.getId(), Constants.ORDER_LOG_REFUND_REFUSE, Constants.ORDER_LOG_MESSAGE_REFUND_REFUSE.replace("{reason}", reason));
+            return Boolean.TRUE;
+        });
+        if (execute) {
 
-        //TODO 模板消息通知
-
-        return true;
+            //TODO 模板消息通知
+        }
+        return execute;
     }
 
     /**
@@ -1025,8 +1012,9 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     public List<StoreOrder> getOrderByUserIdsForRetailShop(List<Integer> ids) {
         LambdaQueryWrapper<StoreOrder> lqw = new LambdaQueryWrapper<>();
         lqw.in(StoreOrder::getUid,ids);
-        lqw.ge(StoreOrder::getPaid, 1);
-        lqw.ge(StoreOrder::getRefundStatus, 0);
+        lqw.eq(StoreOrder::getPaid, 1);
+        lqw.eq(StoreOrder::getRefundStatus, 0);
+        lqw.eq(StoreOrder::getIsDel, false);
         return dao.selectList(lqw);
     }
 
@@ -1182,6 +1170,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         LambdaQueryWrapper<StoreOrder> lqw = Wrappers.lambdaQuery();
         lqw.eq(StoreOrder::getUid,storeOrder.getUid()).eq(StoreOrder::getSeckillId,storeOrder.getSeckillId())
                 .between(StoreOrder::getCreateTime,dayStart,dayEnd);
+        lqw.eq(StoreOrder::getIsDel, false);
         return dao.selectList(lqw);
     }
 
@@ -1262,6 +1251,20 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         return CommonPage.copyPageInfo(storeOrderPage, dao.selectList(lqw));
     }
 
+    /**
+     * 更新支付结果
+     * @param orderNo 订单编号
+     * @return Boolean
+     */
+    @Override
+    public Boolean updatePaid(String orderNo) {
+        LambdaUpdateWrapper<StoreOrder> lqw = new LambdaUpdateWrapper<>();
+        lqw.set(StoreOrder::getPaid, true);
+        lqw.eq(StoreOrder::getOrderId, orderNo);
+        lqw.eq(StoreOrder::getPaid,false);
+        return update(lqw);
+    }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////// 以下为自定义方法
 
     /**
@@ -1303,7 +1306,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
                 }
                 BigDecimal price;
                 if(category.equals(Constants.USER_BILL_CATEGORY_INTEGRAL)){
-                    price = user.getIntegral();
+                    price = new BigDecimal(user.getIntegral());
                 }else{
                     price = user.getBrokeragePrice();
                 }
@@ -1567,8 +1570,8 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         userBill.setMark("支付" + storeOrder.getPayPrice() + "元购买商品");
         boolean saveUserbillResult = userBillService.save(userBill);
         if(storeOrder.getUseIntegral() > 0){
-            BigDecimal useIntegral = BigDecimal.valueOf(storeOrder.getUseIntegral(),0);
-            currentUser.setIntegral(currentUser.getIntegral().subtract(useIntegral));
+            Integer useIntegral = storeOrder.getUseIntegral();
+            currentUser.setIntegral(currentUser.getIntegral() - useIntegral);
             userService.updateBase(currentUser);
         }
         userService.userPayCountPlus(currentUser);
@@ -1684,111 +1687,61 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         if(null == status){
             return;
         }
-        Integer orderStatus = null; //订单状态
-        Integer paidStatus = null; //支付状态
-        Integer refundStatus = null; //退款状态
-        Integer deleteStatus = null; //删除状态
-        Integer systemDeleteStatus = null; //系统删除
-        Integer shippingType = null; //配送方式
         switch (status){
             case Constants.ORDER_STATUS_UNPAID: //未支付
-                paidStatus = 0; //支付状态
-                orderStatus = 0; //订单状态
-                refundStatus = 0; //退款状态
-                deleteStatus = 0; //删除状态
-                systemDeleteStatus = 0; //系统删除
+                queryWrapper.eq("paid", 0);//支付状态
+                queryWrapper.eq("status", 0); //订单状态
+                queryWrapper.eq("is_del", 0);//删除状态
                 break;
             case Constants.ORDER_STATUS_NOT_SHIPPED: //未发货
-                paidStatus = 1; //支付状态
-                orderStatus = 0; //订单状态
-                refundStatus = 0; //退款状态
-                shippingType = 1; //配送方式
-                deleteStatus = 0; //删除状态
-                systemDeleteStatus = 0; //系统删除
+                queryWrapper.eq("paid", 1);
+                queryWrapper.eq("status", 0);
+                queryWrapper.eq("refund_status", 0);
+                queryWrapper.eq("shipping_type", 1);//配送方式
+                queryWrapper.eq("is_del", 0);
                 break;
             case Constants.ORDER_STATUS_SPIKE: //待收货
-                paidStatus = 1; //支付状态
-                orderStatus = 1; //订单状态
-                refundStatus = 0; //退款状态
-                deleteStatus = 0; //删除状态
-                systemDeleteStatus = 0; //系统删除
+                queryWrapper.eq("paid", 1);
+                queryWrapper.eq("status", 1);
+                queryWrapper.eq("refund_status", 0);
+                queryWrapper.eq("is_del", 0);
                 break;
             case Constants.ORDER_STATUS_BARGAIN: //待评价
-                paidStatus = 1; //支付状态
-                orderStatus = 2; //订单状态
-                refundStatus = 0; //退款状态
-                deleteStatus = 0; //删除状态
-                systemDeleteStatus = 0; //系统删除
+                queryWrapper.eq("paid", 1);
+                queryWrapper.eq("status", 2);
+                queryWrapper.eq("refund_status", 0);
+                queryWrapper.eq("is_del", 0);
                 break;
             case Constants.ORDER_STATUS_COMPLETE: //交易完成
-                paidStatus = 1; //支付状态
-                orderStatus = 3; //订单状态
-                refundStatus = 0; //退款状态
-                deleteStatus = 0; //删除状态
-                systemDeleteStatus = 0; //系统删除
+                queryWrapper.eq("paid", 1);
+                queryWrapper.eq("status", 3);
+                queryWrapper.eq("refund_status", 0);
+                queryWrapper.eq("is_del", 0);
                 break;
             case Constants.ORDER_STATUS_TOBE_WRITTEN_OFF: //待核销
-                paidStatus = 1; //支付状态
-                orderStatus = 0; //订单状态
-                refundStatus = 0; //退款状态
-                shippingType = 2; //配送方式
-                deleteStatus = 0; //删除状态
-                systemDeleteStatus = 0; //系统删除
+                queryWrapper.eq("paid", 1);
+                queryWrapper.eq("status", 0);
+                queryWrapper.eq("refund_status", 0);
+                queryWrapper.eq("shipping_type", 2);//配送方式
+                queryWrapper.eq("is_del", 0);
                 break;
             case Constants.ORDER_STATUS_REFUNDING: //退款中
-                paidStatus = 1; //支付状态
-                refundStatus = 1; //退款状态
-                deleteStatus = 0; //删除状态
-                systemDeleteStatus = 0; //系统删除
+                queryWrapper.eq("paid", 1);
+                queryWrapper.in("refund_status", 1,3);
+                queryWrapper.eq("is_del", 0);
                 break;
             case Constants.ORDER_STATUS_REFUNDED: //已退款
-                paidStatus = 1; //支付状态
-                refundStatus = 2; //退款状态
-                deleteStatus = 0; //删除状态
-                systemDeleteStatus = 0; //系统删除
+                queryWrapper.eq("paid", 1);
+                queryWrapper.eq("refund_status", 2);
+                queryWrapper.eq("is_del", 0);
                 break;
             case Constants.ORDER_STATUS_DELETED: //已删除
-                deleteStatus = 1; //删除状态
-                systemDeleteStatus = 1; //系统删除,  未付款超时自动删除
+                queryWrapper.eq("is_del", 1);
                 break;
             default:
                 break;
         }
-        if(paidStatus != null){
-            queryWrapper.eq("paid", paidStatus);
-        }
-
-        if(orderStatus != null){
-            queryWrapper.eq("status", orderStatus);
-        }
-
-        if(refundStatus != null){
-            queryWrapper.eq("refund_status", refundStatus);
-        }
-
-        if(shippingType != null){
-            queryWrapper.eq("shipping_type", shippingType);
-        }
-
-        if(deleteStatus != null){
-            if(deleteStatus == 1){
-                queryWrapper.eq("is_del", 1);
-            }else{
-                queryWrapper.eq("is_del", deleteStatus);
-            }
-        }
         queryWrapper.eq("is_system_del", 0);
-//        if(systemDeleteStatus != null){
-//            if(deleteStatus == 1 && systemDeleteStatus == 1){
-//                queryWrapper.and(i -> i.or().eq("is_del", 1).or().eq("is_system_del", 1));
-//            }else{
-//                queryWrapper.eq("is_del", deleteStatus);
-//            }
-//        }
-
-
-
-
     }
 
     /**
@@ -1868,9 +1821,19 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
             return map;
         }
 
-        //退款中
+        //申请退款
         if(storeOrder.getPaid()
                 && storeOrder.getRefundStatus() == 1
+                && !storeOrder.getIsDel()
+                && !storeOrder.getIsSystemDel()){
+            map.put("key", Constants.ORDER_STATUS_APPLY_REFUNDING);
+            map.put("value", Constants.ORDER_STATUS_STR_APPLY_REFUNDING);
+            return map;
+        }
+
+        //退款中
+        if(storeOrder.getPaid()
+                && storeOrder.getRefundStatus() == 3
                 && !storeOrder.getIsDel()
                 && !storeOrder.getIsSystemDel()){
             map.put("key", Constants.ORDER_STATUS_REFUNDING);
@@ -1887,32 +1850,32 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
             map.put("value", Constants.ORDER_STATUS_STR_REFUNDED);
         }
 
-        //未发货
-        if(storeOrder.getPaid()
-                && storeOrder.getStatus() == 0
-                && !storeOrder.getIsDel()
-                && !storeOrder.getIsSystemDel()){
-            map.put("key", Constants.ORDER_STATUS_NOT_SHIPPED);
-            map.put("value", Constants.ORDER_STATUS_STR_NOT_SHIPPED);
-        }
+//        //未发货
+//        if(storeOrder.getPaid()
+//                && storeOrder.getStatus() == 0
+//                && !storeOrder.getIsDel()
+//                && !storeOrder.getIsSystemDel()){
+//            map.put("key", Constants.ORDER_STATUS_NOT_SHIPPED);
+//            map.put("value", Constants.ORDER_STATUS_STR_NOT_SHIPPED);
+//        }
 
-        //待收货
-        if(storeOrder.getPaid()
-                && storeOrder.getStatus() == 1
-                && !storeOrder.getIsDel()
-                && !storeOrder.getIsSystemDel()){
-            map.put("key", Constants.ORDER_STATUS_SPIKE);
-            map.put("value", Constants.ORDER_STATUS_STR_SPIKE);
-        }
+//        //待收货
+//        if(storeOrder.getPaid()
+//                && storeOrder.getStatus() == 1
+//                && !storeOrder.getIsDel()
+//                && !storeOrder.getIsSystemDel()){
+//            map.put("key", Constants.ORDER_STATUS_SPIKE);
+//            map.put("value", Constants.ORDER_STATUS_STR_SPIKE);
+//        }
 
-        //用户已收货
-        if(storeOrder.getPaid()
-                && storeOrder.getStatus() == 2
-                && !storeOrder.getIsDel()
-                && !storeOrder.getIsSystemDel()){
-            map.put("key", Constants.ORDER_STATUS_COMPLETE);
-            map.put("value", Constants.ORDER_STATUS_STR_TAKE);
-        }
+//        //用户已收货
+//        if(storeOrder.getPaid()
+//                && storeOrder.getStatus() == 2
+//                && !storeOrder.getIsDel()
+//                && !storeOrder.getIsSystemDel()){
+//            map.put("key", Constants.ORDER_STATUS_COMPLETE);
+//            map.put("value", Constants.ORDER_STATUS_STR_TAKE);
+//        }
 
 
         //已删除

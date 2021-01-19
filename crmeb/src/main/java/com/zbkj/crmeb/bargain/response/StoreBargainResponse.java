@@ -78,7 +78,7 @@ public class StoreBargainResponse {
     private Boolean status;
 
     @ApiModelProperty(value = "反多少积分")
-    private BigDecimal giveIntegral;
+    private Integer giveIntegral;
 
     @ApiModelProperty(value = "砍价活动简介")
     private String info;

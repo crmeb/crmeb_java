@@ -26,8 +26,8 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
- * ExpressServiceImpl 接口实现
- *  +----------------------------------------------------------------------
+* ExpressServiceImpl 接口实现
+*  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
  *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
  *  +----------------------------------------------------------------------
  *  | Author: CRMEB Team <admin@crmeb.com>
  *  +----------------------------------------------------------------------
- */
+*/
 @Data
 @Service
 public class LogisticsServiceImpl implements LogisticService {
@@ -142,7 +142,7 @@ public class LogisticsServiceImpl implements LogisticService {
     private JSONObject getCache() {
         Object data = redisUtil.get(getRedisKey() + getExpressNo());
         if(null != data){
-            return JSONObject.parseObject(data.toString());
+         return JSONObject.parseObject(data.toString());
         }
         return null;
     }
@@ -167,3 +167,4 @@ public class LogisticsServiceImpl implements LogisticService {
         }
     }
 }
+

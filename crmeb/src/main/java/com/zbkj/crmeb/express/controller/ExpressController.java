@@ -107,7 +107,7 @@ public class ExpressController {
     public CommonResult<Express> info(@RequestParam(value = "id") Integer id){
         Express express = expressService.getById(id);
         return CommonResult.success(express);
-    }
+   }
 
     /**
      * 查询全部物流公司
@@ -130,3 +130,6 @@ public class ExpressController {
         return CommonResult.success(expressService.template(com));
     }
 }
+
+
+

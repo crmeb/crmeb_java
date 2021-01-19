@@ -68,10 +68,10 @@ public class HomeServiceImpl implements HomeService {
 
 
         //日同比
-        int dayRate = CrmebUtil.getRate(today, yesterday);
+        BigDecimal dayRate = CrmebUtil.getRateBig(today, yesterday);
 
         //周同比
-        int weekRate = CrmebUtil.getRate(week, preWeek);
+        BigDecimal weekRate = CrmebUtil.getRateBig(week, preWeek);
 
 
         return new HomeRateResponse(yesterday, dayRate, weekRate, all);
@@ -104,10 +104,10 @@ public class HomeServiceImpl implements HomeService {
 
 
         //日同比
-        int dayRate = CrmebUtil.getRate(today, yesterday);
+        BigDecimal dayRate = CrmebUtil.getRateBig(today, yesterday);
 
         //周同比
-        int weekRate = CrmebUtil.getRate(week, preWeek);
+        BigDecimal weekRate = CrmebUtil.getRateBig(week, preWeek);
 
 
         return new HomeRateResponse(yesterday, dayRate, weekRate, all);
@@ -140,10 +140,10 @@ public class HomeServiceImpl implements HomeService {
 
 
         //日同比
-        int dayRate = CrmebUtil.getRate(today, yesterday);
+        BigDecimal dayRate = CrmebUtil.getRateBig(today, yesterday);
 
         //周同比
-        int weekRate = CrmebUtil.getRate(week, preWeek);
+        BigDecimal weekRate = CrmebUtil.getRateBig(week, preWeek);
 
 
         return new HomeRateResponse(yesterday, dayRate, weekRate, all);
@@ -170,10 +170,10 @@ public class HomeServiceImpl implements HomeService {
         Integer preWeek = storeProductLogService.getCountByTimeAndType(Constants.SEARCH_DATE_PRE_WEEK, "visit");
 
         //日同比
-        Integer dayRate = CrmebUtil.getRate(today, yesterday);
+        BigDecimal dayRate = CrmebUtil.getRateBig(today, yesterday);
 
         //周同比
-        Integer weekRate = CrmebUtil.getRate(week, preWeek);
+        BigDecimal weekRate = CrmebUtil.getRateBig(week, preWeek);
 
         //总访问量
         Integer all = storeProductLogService.getCountByTimeAndType(Constants.SEARCH_DATE_MONTH, "visit");

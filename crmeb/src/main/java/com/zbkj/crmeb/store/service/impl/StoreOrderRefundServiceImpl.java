@@ -3,10 +3,12 @@ package com.zbkj.crmeb.store.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.constants.Constants;
+import com.constants.PayConstants;
 import com.constants.WeChatConstants;
 import com.exception.CrmebException;
 import com.utils.CrmebUtil;
 import com.utils.RestTemplateUtil;
+import com.utils.WxPayUtil;
 import com.utils.XmlUtil;
 import com.zbkj.crmeb.payment.vo.wechat.WxRefundResponseVo;
 import com.zbkj.crmeb.payment.vo.wechat.WxRefundVo;
@@ -49,18 +51,9 @@ public class StoreOrderRefundServiceImpl extends ServiceImpl<StoreOrderDao, Stor
      * @author Mr.Zhang
      * @since 2020-06-03
      */
-    @Async
     @Override
     public void refund(StoreOrderRefundRequest request, StoreOrder storeOrder) {
-        //开始处理
-        if(storeOrder.getIsChannel() == Constants.ORDER_PAY_CHANNEL_PUBLIC){
-            //公众号
-            refundJSAPI(request, storeOrder);
-        }else{
-            //小程序
-            refundMiniWx(request, storeOrder);
-        }
-
+        refundWx(request, storeOrder);
     }
 
     /**
@@ -92,22 +85,45 @@ public class StoreOrderRefundServiceImpl extends ServiceImpl<StoreOrderDao, Stor
      * @param request
      * @param storeOrder
      */
-    private void refundJSAPI(StoreOrderRefundRequest request, StoreOrder storeOrder) {
-        WxRefundVo wxRefundVo = new WxRefundVo();
+    private void refundWx(StoreOrderRefundRequest request, StoreOrder storeOrder) {
+        // 获取appid、mch_id
+        // 微信签名key
+        String appId = "";
+        String mchId = "";
+        String signKey = "";
+        String path = "";
+        if (storeOrder.getIsChannel() == 0) {// 公众号
+            appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
+            mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_MCH_ID);
+            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
+            path = systemConfigService.getValueByKeyException("pay_routine_client_p12");
+        }
+        if (storeOrder.getIsChannel() == 1) {// 小程序
+            appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
+            mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_MCH_ID);
+            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
+            path = systemConfigService.getValueByKeyException("pay_mini_client_p12");
+        }
+        if (storeOrder.getIsChannel() == 2) {// H5
+            appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
+            mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_MCH_ID);
+            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
+        }
+        String apiDomain = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_API_URL);
 
-        String appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
-        String mchId = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PAY_WE_CHAT_MCH_ID);
+        //统一下单数据
+        WxRefundVo wxRefundVo = new WxRefundVo();
         wxRefundVo.setAppid(appId);
         wxRefundVo.setMch_id(mchId);
-        wxRefundVo.setNonce_str(DigestUtils.md5Hex(CrmebUtil.getUuid() + CrmebUtil.randomCount(111111, 666666)));
+        wxRefundVo.setNonce_str(WxPayUtil.getNonceStr());
         wxRefundVo.setOut_trade_no(storeOrder.getOrderId());
         wxRefundVo.setOut_refund_no(storeOrder.getOrderId());
         wxRefundVo.setTotal_fee(storeOrder.getPayPrice().multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue());
         wxRefundVo.setRefund_fee(request.getAmount().multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue());
-        String signKey = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
-        String sign = CrmebUtil.getSign(CrmebUtil.objectToMap(wxRefundVo), signKey);
+        wxRefundVo.setNotify_url(apiDomain + PayConstants.WX_PAY_REFUND_NOTIFY_API_URI);
+        String sign = WxPayUtil.getSign(wxRefundVo, signKey);
         wxRefundVo.setSign(sign);
-        String path = systemConfigService.getValueByKeyException("pay_routine_client_p12");
+
         commonRefound(wxRefundVo, path);
     }
 
@@ -130,16 +146,16 @@ public class StoreOrderRefundServiceImpl extends ServiceImpl<StoreOrderDao, Stor
             throw new CrmebException("xmlToMap错误，xml = " + xml);
         }
         if(null == map){
-            throw new CrmebException("微信退款失败！");
+            throw new CrmebException("微信申请退款失败！");
         }
 
         WxRefundResponseVo responseVo = CrmebUtil.mapToObj(map, WxRefundResponseVo.class);
         if(responseVo.getReturnCode().toUpperCase().equals("FAIL")){
-            throw new CrmebException("微信退款失败1！" +  responseVo.getReturnMsg());
+            throw new CrmebException("微信申请退款失败1！" +  responseVo.getReturnMsg());
         }
 
         if(responseVo.getResultCode().toUpperCase().equals("FAIL")){
-            throw new CrmebException("微信退款失败2！" + responseVo.getErrCodeDes());
+            throw new CrmebException("微信申请退款失败2！" + responseVo.getErrCodeDes());
         }
         System.out.println("================微信申请退款结束=========================");
         System.out.println("xml = " + xml);

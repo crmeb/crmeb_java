@@ -32,8 +32,8 @@ public class CombinationProductExcelVo {
     @ApiModelProperty(value = "拼团价")
     private BigDecimal price;
 
-    @ApiModelProperty(value = "库存")
-    private Integer stock;
+    @ApiModelProperty(value = "库存剩余")
+    private Integer quotaShow;
 
     @ApiModelProperty(value = "拼团人数")
     private Integer countPeople;

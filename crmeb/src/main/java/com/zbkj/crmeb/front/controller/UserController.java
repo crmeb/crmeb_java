@@ -322,7 +322,7 @@ public class UserController {
      */
     @ApiOperation(value = "推广人排行")
     @RequestMapping(value = "rank", method = RequestMethod.GET)
-    public CommonResult<List<User>> getTopSpreadPeopleListByDate(@RequestParam String type, @Validated PageParamRequest pageParamRequest){
+    public CommonResult<List<User>> getTopSpreadPeopleListByDate(@RequestParam(required = false) String type, @Validated PageParamRequest pageParamRequest){
         return CommonResult.success(userCenterService.getTopSpreadPeopleListByDate(type, pageParamRequest));
     }
 

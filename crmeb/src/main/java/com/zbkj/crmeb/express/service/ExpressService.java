@@ -11,8 +11,8 @@ import com.zbkj.crmeb.express.request.ExpressUpdateShowRequest;
 import java.util.List;
 
 /**
- *  ExpressService 接口
- *  +----------------------------------------------------------------------
+*  ExpressService 接口
+*  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
  *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
@@ -21,17 +21,17 @@ import java.util.List;
  *  +----------------------------------------------------------------------
  *  | Author: CRMEB Team <admin@crmeb.com>
  *  +----------------------------------------------------------------------
- */
+*/
 public interface ExpressService extends IService<Express> {
 
     /**
-     * 列表
-     * @param request 搜索条件
-     * @param pageParamRequest 分页类参数
-     * @author Mr.Zhang
-     * @since 2020-04-17
-     * @return List<Express>
-     */
+    * 列表
+    * @param request 搜索条件
+    * @param pageParamRequest 分页类参数
+    * @author Mr.Zhang
+    * @since 2020-04-17
+    * @return List<Express>
+    */
     List<Express> getList(ExpressSearchRequest request, PageParamRequest pageParamRequest);
 
     Express info(Integer id);

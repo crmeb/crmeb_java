@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.store.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -7,6 +8,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.Feature;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
@@ -42,7 +44,7 @@ import com.zbkj.crmeb.store.service.*;
 import com.zbkj.crmeb.store.utilService.ProductUtils;
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import com.zbkj.crmeb.system.service.SystemConfigService;
-import com.zbkj.crmeb.task.order.OrderRefundByUser;
+import com.zbkj.crmeb.task.order.OrderRefundTask;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,7 +126,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
     @Autowired
     private OnePassService onePassService;
 
-    private static final Logger logger = LoggerFactory.getLogger(OrderRefundByUser.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrderRefundTask.class);
 
     /**
      * H5端使用
@@ -266,11 +268,15 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
 //            }
             // 处理分类中文
             List<Category> cg = categoryService.getByIds(CrmebUtil.stringToArray(product.getCateId()));
-            StringBuilder sb = new StringBuilder();
-            for (Category category : cg) {
-                sb.append(sb.length() == 0 ? category.getName(): category.getName()+",");
+//            StringBuilder sb = new StringBuilder();
+//            for (Category category : cg) {
+//                sb.append(sb.length() == 0 ? category.getName(): category.getName()+",");
+//            }
+            if (CollUtil.isEmpty(cg)) {
+                storeProductResponse.setCateValues("");
+            } else {
+                storeProductResponse.setCateValues(cg.stream().map(Category::getName).collect(Collectors.joining(",")));
             }
-            storeProductResponse.setCateValues(sb.toString());
 
             storeProductResponse.setCollectCount(
                     storeProductRelationService.getList(product.getId(),"collect").size());
@@ -823,23 +829,15 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
     public boolean decProductStock(Integer productId, Integer num, Integer attrValueId, Integer type) {
         // 因为attrvalue表中unique使用Id代替，更新前先查询此表是否存在
         // 不存在=但属性 存在则是多属性
-        StoreProductAttrValue productsInAttrValue =
-                storeProductAttrValueService.getById(attrValueId);
-//        StoreProductAttrValue spavPram = new StoreProductAttrValue();
-//        spavPram.setProductId(productId).setType(type);
-//        List<StoreProductAttrValue> existAttrValues = storeProductAttrValueService.getByEntity(spavPram);
-//        if(null == existAttrValues && existAttrValues.size() == 0) throw new CrmebException("未找到相关商品属性信息");
-
-//        StoreProductAttrValue productsInAttrValue = existAttrValues.get(0);
+        StoreProductAttrValue productsInAttrValue = storeProductAttrValueService.getById(attrValueId);
         StoreProduct storeProduct = getById(productId);
-        boolean result = false;
-        if(null != productsInAttrValue){
-            result = storeProductAttrValueService.decProductAttrStock(productId,attrValueId,num,type);
-        }
+        boolean result = storeProductAttrValueService.decProductAttrStock(productId,attrValueId,num,type);
+        if (!result) return result;
         LambdaUpdateWrapper<StoreProduct> lqwuper = new LambdaUpdateWrapper<>();
-        lqwuper.eq(StoreProduct::getId, productId);
         lqwuper.set(StoreProduct::getStock, storeProduct.getStock()-num);
         lqwuper.set(StoreProduct::getSales, storeProduct.getSales()+num);
+        lqwuper.eq(StoreProduct::getId, productId);
+        lqwuper.apply(StrUtil.format(" (stock - {} >= 0) ", num));
         result = update(lqwuper);
         if(result){ //判断库存警戒值
             Integer alterNumI=0;
@@ -1089,6 +1087,29 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         StoreProductRequest storeProductRequest = ProductUtils.onePassCopyTransition(jsonObject);
         MyRecord record = new MyRecord();
         return record.set("info", storeProductRequest);
+    }
+
+    /**
+     * 添加/扣减库存
+     * @param id 商品id
+     * @param num 数量
+     * @param type 类型：add—添加，sub—扣减
+     */
+    @Override
+    public Boolean operationStock(Integer id, Integer num, String type) {
+        UpdateWrapper<StoreProduct> updateWrapper = new UpdateWrapper<>();
+        if (type.equals("add")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
+        }
+        if (type.equals("sub")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
+            // 扣减时加乐观锁保证库存不为负
+            updateWrapper.last(StrUtil.format(" and (stock - {} >= 0)", num));
+        }
+        updateWrapper.eq("id", id);
+        return update(updateWrapper);
     }
 
 }

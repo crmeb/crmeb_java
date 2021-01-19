@@ -1,10 +1,12 @@
 package com.zbkj.crmeb.store.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.common.CommonPage;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.store.request.RetailShopRequest;
 import com.zbkj.crmeb.store.request.RetailShopStairUserRequest;
+import com.zbkj.crmeb.store.response.RetailShopStatisticsResponse;
 import com.zbkj.crmeb.store.response.RetailShopUserResponse;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.response.UserResponse;
@@ -32,7 +34,7 @@ public interface RetailShopService extends IService<User> {
      * @param pageRequest
      * @return
      */
-    PageInfo<RetailShopUserResponse> getList(String keywords, String dateLimit, PageParamRequest pageRequest);
+    CommonPage<RetailShopUserResponse> getList(String keywords, String dateLimit, PageParamRequest pageRequest);
 
     /**
      * 获取分销头部数据
@@ -60,4 +62,12 @@ public interface RetailShopService extends IService<User> {
      * @return 保存结果
      */
     boolean setManageInfo(RetailShopRequest retailShopRequest);
+
+    /**
+     * 获取分销统计数据
+     * @param keywords  模糊搜索参数
+     * @param dateLimit 时间参数
+     * @return
+     */
+    RetailShopStatisticsResponse getAdminStatistics(String keywords, String dateLimit);
 }

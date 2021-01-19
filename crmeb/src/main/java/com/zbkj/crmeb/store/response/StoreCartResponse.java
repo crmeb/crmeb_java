@@ -81,10 +81,15 @@ public class StoreCartResponse implements Serializable {
     private Boolean attrStatus;
 
     // todo 价格计算有问题
+    // 真实价格
     private BigDecimal truePrice;
+    // 会员价格
     private BigDecimal vipTruePrice;
+    // 真实库存
     private Integer trueStock;
+    // 原价
     private BigDecimal costPrice;
+
     private Integer isReply;
     private String addTime;
 

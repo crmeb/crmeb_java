@@ -2,6 +2,9 @@ package com.zbkj.crmeb.payment.wechat;
 
 import com.zbkj.crmeb.payment.vo.wechat.CreateOrderResponseVo;
 import com.zbkj.crmeb.payment.vo.wechat.PayParamsVo;
+import com.zbkj.crmeb.store.model.StoreOrder;
+
+import java.util.Map;
 
 /**
  * 微信支付
@@ -17,4 +20,19 @@ import com.zbkj.crmeb.payment.vo.wechat.PayParamsVo;
  */
 public interface WeChatPayService {
     CreateOrderResponseVo create(PayParamsVo payParamsVo);
+
+    /**
+     * 微信预下单接口
+     * @param storeOrder 订单
+     * @param ip      ip
+     * @return 获取wechat.requestPayment()参数
+     */
+    Map<String, String> unifiedorder(StoreOrder storeOrder, String ip);
+
+    /**
+     * 查询支付结果
+     * @param orderNo 订单编号
+     * @return
+     */
+    Boolean queryPayResult(String orderNo);
 }

@@ -2,10 +2,12 @@ package com.zbkj.crmeb.seckill.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.parser.Feature;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
@@ -18,7 +20,6 @@ import com.github.pagehelper.PageInfo;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.utils.RedisUtil;
-import com.zbkj.crmeb.combination.model.StoreCombination;
 import com.zbkj.crmeb.front.response.SecKillResponse;
 import com.zbkj.crmeb.seckill.dao.StoreSeckillDao;
 import com.zbkj.crmeb.seckill.model.StoreSeckill;
@@ -35,12 +36,11 @@ import com.zbkj.crmeb.store.model.*;
 import com.zbkj.crmeb.store.request.StoreProductAttrValueRequest;
 import com.zbkj.crmeb.store.request.StoreProductStockRequest;
 import com.zbkj.crmeb.store.response.StoreProductAttrValueResponse;
-import com.zbkj.crmeb.store.response.StoreProductRecommendResponse;
 import com.zbkj.crmeb.store.response.StoreProductResponse;
 import com.zbkj.crmeb.store.service.*;
 import com.zbkj.crmeb.store.utilService.ProductUtils;
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
-import com.zbkj.crmeb.task.order.OrderRefundByUser;
+import com.zbkj.crmeb.task.order.OrderRefundTask;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.service.UserService;
 import org.apache.commons.lang3.StringUtils;
@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -107,7 +108,10 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
     @Autowired
     private RedisUtil redisUtil;
 
-    private static final Logger logger = LoggerFactory.getLogger(OrderRefundByUser.class);
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderRefundTask.class);
 
     /**
     * 列表
@@ -649,7 +653,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         }
         lqw.orderByDesc(StoreSeckill::getId);
         List<StoreSeckill> storeSeckills = dao.selectList(lqw);
-        storeSeckills.stream().map(e->{
+        storeSeckills.forEach(e->{
             StoreSeckillResponse r = new StoreSeckillResponse();
             BeanUtils.copyProperties(e,r);
             r.setImages(CrmebUtil.stringToArrayStr(e.getImages()));
@@ -657,8 +661,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
             r.setTimeSwap(currentTimeSwap+"");
             r.setPercent(CrmebUtil.percentInstanceIntVal(e.getQuotaShow() - e.getQuota(), e.getQuotaShow()));
             responses.add(r);
-            return e;
-        }).collect(Collectors.toList());
+        });
         return responses;
     }
 
@@ -678,46 +681,46 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
     /**
      * 扣减库存加销量
      *
-     * @param seckillId   产品id
-     * @param num         商品数量
-     * @param attrValueId
-     * @param type
+     * @param seckillId   秒杀产品id
+     * @param num         购买商品数量
+     * @param attrValueId 秒杀商品规格
+     * @param productId   主商品id
      * @return 扣减结果
      */
     @Override
-    public boolean decProductStock(Integer seckillId, Integer num, Integer attrValueId, Integer type) {
+    public Boolean decProductStock(Integer seckillId, Integer num, Integer attrValueId, Integer productId) {
         // 因为attrvalue表中unique使用Id代替，更新前先查询此表是否存在
-
-        // 秒杀SKU 扣减库存加销量
+        // 秒杀商品sku
         StoreProductAttrValue spavPram = new StoreProductAttrValue();
-        spavPram.setProductId(seckillId).setType(type).setId(attrValueId);
-        List<StoreProductAttrValue> existAttrValues = storeProductAttrValueService.getByEntity(spavPram);
-        if(null == existAttrValues && existAttrValues.size() == 0) throw new CrmebException("未找到相关商品属性信息");
-
-        StoreProductAttrValue productsInAttrValue = existAttrValues.get(0); // 现在默认只能秒杀一件
-        StoreSeckill storeSeckill = getById(seckillId);
-        boolean result = false;
-        if(null != productsInAttrValue){
-            boolean resultDecProductStock = storeProductAttrValueService.decProductAttrStock(seckillId,attrValueId,num,type);
-            if(!resultDecProductStock) throw new CrmebException("扣减秒杀sku库存失败");
-        }
-
+        spavPram.setProductId(seckillId);
+        spavPram.setType(Constants.PRODUCT_TYPE_SECKILL);
+        spavPram.setId(attrValueId);
+        List<StoreProductAttrValue> existSeckillAttrValues = storeProductAttrValueService.getByEntity(spavPram);
+        if (CollUtil.isEmpty(existSeckillAttrValues)) throw new CrmebException("未找到扣减库存的秒杀商品");
+        StoreProductAttrValue currentSeckillAttrValue = existSeckillAttrValues.get(0);
+        // 对应的主商品sku
+        List<StoreProductAttrValue> currentProAttrValues = storeProductAttrValueService.getListByProductId(productId);
+        List<StoreProductAttrValue> existAttrValues = currentProAttrValues.stream().filter(e ->
+                e.getSuk().equals(currentSeckillAttrValue.getSuk()) && e.getType().equals(Constants.PRODUCT_TYPE_NORMAL))
+                .collect(Collectors.toList());
+        if (CollUtil.isEmpty(existAttrValues)) throw new CrmebException("未找到扣减库存的商品");
         // 秒杀商品表扣减库存加销量
+        StoreSeckill storeSeckill = getById(seckillId);
+        if (ObjectUtil.isNull(storeSeckill)) throw new CrmebException("未找到对应的秒杀商品");
         LambdaUpdateWrapper<StoreSeckill> lqwuper = new LambdaUpdateWrapper<>();
-        lqwuper.eq(StoreSeckill::getId, seckillId);
         lqwuper.set(StoreSeckill::getStock, storeSeckill.getStock()-num);
         lqwuper.set(StoreSeckill::getSales, storeSeckill.getSales()+num);
         lqwuper.set(StoreSeckill::getQuota, storeSeckill.getQuota()-num);
-        result = update(lqwuper);
-//        if(result){ //判断库存警戒值
-//            Integer alterNumI=0;
-//            String alterNum = systemConfigService.getValueByKey("store_stock");
-//            if(StringUtils.isNotBlank(alterNum)) alterNumI = Integer.parseInt(alterNum);
-//            if(alterNumI >= productsInAttrValue.getStock()){
-//                // todo socket 发送库存警告
-//            }
-//        }
-        return result;
+        lqwuper.eq(StoreSeckill::getId, seckillId);
+        lqwuper.apply(StrUtil.format(" (stock - {} >= 0) ", num));
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            storeProductAttrValueService.decProductAttrStock(seckillId, attrValueId, num, Constants.PRODUCT_TYPE_SECKILL);
+            storeProductService.decProductStock(productId, num, existAttrValues.get(0).getId(), Constants.PRODUCT_TYPE_NORMAL);
+            update(lqwuper);
+            return Boolean.TRUE;
+        });
+        return execute;
     }
 
     /**
@@ -812,6 +815,48 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         // 判断关联的商品是否处于活动开启状态
         List<StoreSeckill> list = seckillList.stream().filter(i -> i.getStatus().equals(1)).collect(Collectors.toList());
         return CollUtil.isNotEmpty(list);
+    }
+
+    /**
+     * 查询带异常
+     * @param id 秒杀商品id
+     * @return StoreSeckill
+     */
+    @Override
+    public StoreSeckill getByIdException(Integer id) {
+        LambdaQueryWrapper<StoreSeckill> lqw = Wrappers.lambdaQuery();
+        lqw.eq(StoreSeckill::getId, id);
+        lqw.eq(StoreSeckill::getIsDel, false);
+        lqw.eq(StoreSeckill::getIsShow, true);
+        StoreSeckill storeSeckill = dao.selectOne(lqw);
+        if (ObjectUtil.isNull(storeSeckill)) throw new CrmebException("秒杀商品不存在或以删除");
+        return storeSeckill;
+    }
+
+    /**
+     * 添加(退货)/扣减库存
+     * @param id 秒杀商品id
+     * @param num 数量
+     * @param type 类型：add—添加，sub—扣减
+     * @return Boolean
+     */
+    @Override
+    public Boolean operationStock(Integer id, Integer num, String type) {
+        UpdateWrapper<StoreSeckill> updateWrapper = new UpdateWrapper<>();
+        if (type.equals("add")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
+            updateWrapper.setSql(StrUtil.format("quota = quota + {}", num));
+        }
+        if (type.equals("sub")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
+            updateWrapper.setSql(StrUtil.format("quota = quota - {}", num));
+            // 扣减时加乐观锁保证库存不为负
+            updateWrapper.last(StrUtil.format(" and (stock - {} >= 0)", num));
+        }
+        updateWrapper.eq("id", id);
+        return update(updateWrapper);
     }
     ///////////////////////////////////////////////////////////////////  自定义方法
 

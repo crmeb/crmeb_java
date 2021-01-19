@@ -533,6 +533,8 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             userService.bindSpread(user, spreadUid);
             loginResponse.setUser(user);
 
+            user.setLastLoginTime(DateUtil.nowDateTime());
+            updateById(user);
             return loginResponse;
         }catch (Exception e){
             throw new CrmebException(e.getMessage());
@@ -626,6 +628,8 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             userService.bindSpread(user, request.getSpreadPid());
             loginResponse.setUser(user);
 
+            user.setLastLoginTime(DateUtil.nowDateTime());
+            updateById(user);
             return loginResponse;
         }catch (Exception e){
             throw new CrmebException(e.getMessage());

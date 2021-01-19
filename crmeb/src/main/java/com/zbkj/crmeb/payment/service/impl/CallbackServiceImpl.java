@@ -1,12 +1,14 @@
 package com.zbkj.crmeb.payment.service.impl;
 
+import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.common.MyRecord;
 import com.constants.Constants;
 import com.exception.CrmebException;
-import com.utils.CrmebUtil;
-import com.utils.WxPayUtil;
+import com.utils.*;
 import com.zbkj.crmeb.finance.model.UserRecharge;
 import com.zbkj.crmeb.finance.service.UserRechargeService;
 import com.zbkj.crmeb.payment.service.CallbackService;
@@ -16,6 +18,7 @@ import com.zbkj.crmeb.payment.vo.wechat.AttachVo;
 import com.zbkj.crmeb.payment.vo.wechat.CallbackVo;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.service.StoreOrderService;
+import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserToken;
 import com.zbkj.crmeb.user.service.UserService;
@@ -25,8 +28,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -65,6 +75,15 @@ public class CallbackServiceImpl implements CallbackService {
     @Autowired
     private UserRechargeService userRechargeService;
 
+    @Autowired
+    private RedisUtil redisUtil;
+
+    @Autowired
+    private SystemConfigService systemConfigService;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
     /**
      * 微信支付回调
      * @author Mr.Zhang
@@ -74,7 +93,7 @@ public class CallbackServiceImpl implements CallbackService {
     public String weChat(String xmlInfo) {
         StringBuffer sb = new StringBuffer();
         sb.append("<xml>");
-        if(StrUtil.isBlank("xmlInfo")){
+        if(StrUtil.isBlank(xmlInfo)){
             sb.append("<return_code><![CDATA[FAIL]]></return_code>");
             sb.append("<return_msg><![CDATA[xmlInfo is blank]]></return_msg>");
             sb.append("</xml>");
@@ -127,11 +146,11 @@ public class CallbackServiceImpl implements CallbackService {
             }
             // 订单
             if (Constants.SERVICE_PAY_TYPE_ORDER.equals(attachVo.getType())) {
-                StoreOrder storeOrder = new StoreOrder();
-                storeOrder.setOrderId(callbackVo.getOutTradeNo());
-                storeOrder.setUid(attachVo.getUserId());
+                StoreOrder orderParam = new StoreOrder();
+                orderParam.setOrderId(callbackVo.getOutTradeNo());
+                orderParam.setUid(attachVo.getUserId());
 
-                storeOrder = storeOrderService.getInfoByEntity(storeOrder);
+                StoreOrder storeOrder = storeOrderService.getInfoByEntity(orderParam);
                 if (ObjectUtil.isNull(storeOrder)) {
                     logger.error("wechat pay error : 订单信息不存在==》" + callbackVo.getOutTradeNo());
                     throw new CrmebException("wechat pay error : 订单信息不存在==》" + callbackVo.getOutTradeNo());
@@ -143,12 +162,22 @@ public class CallbackServiceImpl implements CallbackService {
                     sb.append("</xml>");
                     return sb.toString();
                 }
-                // 支付成功处理
-                Boolean payAfter = orderPayService.paySuccess(storeOrder, user, userToken);
-                if (!payAfter) {
-                    logger.error("wechat pay error : 数据保存失败==》" + callbackVo.getOutTradeNo());
-                    throw new CrmebException("wechat pay error : 数据保存失败==》" + callbackVo.getOutTradeNo());
+                // 添加支付成功redis队列
+                Boolean execute = transactionTemplate.execute(e -> {
+                    storeOrderService.updatePaid(storeOrder.getOrderId());
+                    if (storeOrder.getUseIntegral() > 0) {
+                        userService.updateIntegral(user, storeOrder.getUseIntegral(), "sub");
+                    }
+                    return Boolean.TRUE;
+                });
+                if (!execute) {
+                    logger.error("wechat pay error : 订单更新失败==》" + callbackVo.getOutTradeNo());
+                    sb.append("<return_code><![CDATA[SUCCESS]]></return_code>");
+                    sb.append("<return_msg><![CDATA[OK]]></return_msg>");
+                    sb.append("</xml>");
+                    return sb.toString();
                 }
+                redisUtil.lPush(Constants.ORDER_TASK_PAY_SUCCESS_AFTER, storeOrder.getOrderId());
             }
             // 充值
             if (Constants.SERVICE_PAY_TYPE_RECHARGE.equals(attachVo.getType())) {
@@ -193,5 +222,156 @@ public class CallbackServiceImpl implements CallbackService {
     public boolean aliPay(String request) {
         //根据类型判断是订单或者充值
         return false;
+    }
+
+    /**
+     * 微信退款回调
+     * @param xmlInfo 微信回调json
+     * @return MyRecord
+     */
+    @Override
+    public String weChatRefund(String xmlInfo) {
+        MyRecord notifyRecord = new MyRecord();
+        MyRecord refundRecord = refundNotify(xmlInfo, notifyRecord);
+        if (refundRecord.getStr("status").equals("fail")) {
+            logger.error("微信退款回调失败==>" + refundRecord.getColumns() + ", rawData==>" + xmlInfo + ", data==>" + notifyRecord);
+            return refundRecord.getStr("returnXml");
+        }
+
+        if (!refundRecord.getBoolean("isRefund")) {
+            logger.error("微信退款回调失败==>" + refundRecord.getColumns() + ", rawData==>" + xmlInfo + ", data==>" + notifyRecord);
+            return refundRecord.getStr("returnXml");
+        }
+        String outRefundNo = notifyRecord.getStr("out_refund_no");
+        StoreOrder storeOrder = storeOrderService.getByOderId(outRefundNo);
+        if (ObjectUtil.isNull(storeOrder)) {
+            logger.error("微信退款订单查询失败==>" + refundRecord.getColumns() + ", rawData==>" + xmlInfo + ", data==>" + notifyRecord);
+            return refundRecord.getStr("returnXml");
+        }
+        if (storeOrder.getRefundStatus() == 2) {
+            logger.warn("微信退款订单已确认成功==>" + refundRecord.getColumns() + ", rawData==>" + xmlInfo + ", data==>" + notifyRecord);
+            return refundRecord.getStr("returnXml");
+        }
+        storeOrder.setRefundStatus(2);
+        boolean update = storeOrderService.updateById(storeOrder);
+        if (update) {
+            // 退款task
+            redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER, storeOrder.getId());
+        } else {
+            logger.warn("微信退款订单更新失败==>" + refundRecord.getColumns() + ", rawData==>" + xmlInfo + ", data==>" + notifyRecord);
+        }
+        return refundRecord.getStr("returnXml");
+    }
+
+    /**
+     * 支付订单回调通知
+     * @return MyRecord
+     */
+    private MyRecord refundNotify(String xmlInfo, MyRecord notifyRecord) {
+        MyRecord refundRecord = new MyRecord();
+        refundRecord.set("status", "fail");
+        StringBuilder sb = new StringBuilder();
+        sb.append("<xml>");
+        if(StrUtil.isBlank(xmlInfo)){
+            sb.append("<return_code><![CDATA[FAIL]]></return_code>");
+            sb.append("<return_msg><![CDATA[xmlInfo is blank]]></return_msg>");
+            sb.append("</xml>");
+            logger.error("wechat refund callback error : " + sb.toString());
+            return refundRecord.set("returnXml", sb.toString()).set("errMsg", "xmlInfo is blank");
+        }
+
+        Map<String, String> respMap;
+        try {
+            respMap = WxPayUtil.xmlToMap(xmlInfo);
+        } catch (Exception e) {
+            sb.append("<return_code><![CDATA[FAIL]]></return_code>");
+            sb.append("<return_msg><![CDATA[").append(e.getMessage()).append("]]></return_msg>");
+            sb.append("</xml>");
+            logger.error("wechat refund callback error : " + e.getMessage());
+            return refundRecord.set("returnXml", sb.toString()).set("errMsg", e.getMessage());
+        }
+
+        notifyRecord.setColums(_strMap2ObjMap(respMap));
+        // 这里的可以应该根据小程序还是公众号区分
+        String return_code = respMap.get("return_code");
+        if (return_code.equals(Constants.SUCCESS)) {
+            String appid = respMap.get("appid");
+            String signKey = getSignKey(appid);
+            // 解码加密信息
+            String reqInfo = respMap.get("req_info");
+            System.out.println("encodeReqInfo==>" + reqInfo);
+            try {
+                String decodeInfo = decryptToStr(reqInfo, signKey);
+                Map<String, String> infoMap = WxPayUtil.xmlToMap(decodeInfo);
+                notifyRecord.setColums(_strMap2ObjMap(infoMap));
+
+                String refund_status = infoMap.get("refund_status");
+                refundRecord.set("isRefund", refund_status.equals(Constants.SUCCESS));
+            } catch (Exception e) {
+                refundRecord.set("isRefund", false);
+                logger.error("微信退款回调异常，e==》" + e.getMessage());
+            }
+        } else {
+            notifyRecord.set("return_msg", respMap.get("return_msg"));
+            refundRecord.set("isRefund", false);
+        }
+        sb.append("<return_code><![CDATA[SUCCESS]]></return_code>");
+        sb.append("<return_msg><![CDATA[OK]]></return_msg>");
+        sb.append("</xml>");
+        return refundRecord.set("returnXml", sb.toString()).set("status", "ok");
+    }
+
+    private String getSignKey(String appid) {
+        String publicAppid = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
+        String miniAppid = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
+        String signKey = "";
+        if (appid.equals(publicAppid)) {
+            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
+        }
+        if (appid.equals(miniAppid)) {
+            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
+        }
+        return signKey;
+    }
+
+    public String decryptToStr(String reqInfo, String signKey) throws Exception {
+        byte[] decodeReqInfo = Base64.decode(reqInfo);
+        SecretKeySpec key = new SecretKeySpec(SecureUtil.md5(signKey).toLowerCase().getBytes(), "AES");
+        Cipher cipher;
+        cipher = Cipher.getInstance("AES/ECB/PKCS7Padding");
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        return new String(cipher.doFinal(decodeReqInfo), StandardCharsets.UTF_8);
+    }
+
+    private static final List<String> list = new ArrayList<>();
+    static {
+        list.add("total_fee");
+        list.add("cash_fee");
+        list.add("coupon_fee");
+        list.add("coupon_count");
+        list.add("refund_fee");
+        list.add("settlement_refund_fee");
+        list.add("settlement_total_fee");
+        list.add("cash_refund_fee");
+        list.add("coupon_refund_fee");
+        list.add("coupon_refund_count");
+    }
+
+    private Map<String, Object> _strMap2ObjMap(Map<String, String> params) {
+        Map<String, Object> map = new HashMap<>();
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (list.contains(entry.getKey())) {
+                try {
+                    map.put(entry.getKey(), Integer.parseInt(entry.getValue()));
+                } catch (NumberFormatException e) {
+                    map.put(entry.getKey(), 0);
+                    logger.error("字段格式错误，key==》" + entry.getKey() + ", value==》" + entry.getValue());
+                }
+                continue;
+            }
+
+            map.put(entry.getKey(), entry.getValue());
+        }
+        return map;
     }
 }

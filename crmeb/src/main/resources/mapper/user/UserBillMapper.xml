@@ -35,6 +35,12 @@
         <if test="category != '' and category != null">
             and ub.category = #{category, jdbcType=VARCHAR}
         </if>
+        <if test="userIdList != null">
+            and ub.uid in 
+            <foreach collection="userIdList" item="userIdList" index="index" open="(" separator="," close=")">
+                #{userIdList}
+            </foreach>
+        </if>
         <if test="startTime != '' and endTime != '' and startTime != null and endTime != null">
             and (ub.create_time between #{startTime} and #{endTime})
         </if>

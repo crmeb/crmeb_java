@@ -58,6 +58,18 @@ public class CallbackController {
         //支付宝支付回调
         callbackService.aliPay(request);
     }
+
+    /**
+     * 微信退款回调
+     */
+    @ApiOperation(value = "微信退款回调")
+    @RequestMapping(value = "/wechat/refund", method = RequestMethod.POST)
+    public String weChatRefund(@RequestBody String request) {
+        System.out.println("微信退款回调 request ===> " + request);
+        String response = callbackService.weChatRefund(request);
+        System.out.println("微信退款回调 response ===> " + response);
+        return response;
+    }
 }
 
 

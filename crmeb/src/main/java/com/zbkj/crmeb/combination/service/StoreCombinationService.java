@@ -10,8 +10,10 @@ import com.zbkj.crmeb.combination.request.StorePinkRequest;
 import com.zbkj.crmeb.front.response.CombinationDetailResponse;
 import com.zbkj.crmeb.combination.response.StoreCombinationResponse;
 import com.zbkj.crmeb.front.response.GoPinkResponse;
+import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.request.StoreProductStockRequest;
 import com.zbkj.crmeb.store.response.StoreProductResponse;
+import com.zbkj.crmeb.user.model.User;
 
 import java.util.HashMap;
 import java.util.List;
@@ -130,13 +132,13 @@ public interface StoreCombinationService extends IService<StoreCombination> {
 
     /**
      * 扣减库存加销量
-     * @param combinationId 产品id
-     * @param num 商品数量
-     * @param attrValueId
-     * @param type 是否限购 0=不限购
-     * @return 扣减结果
+     * @param num           商品数量
+     * @param attrValueId   拼团商品规格
+     * @param productId     主商品id
+     * @param user          购买用户
+     * @return Boolean
      */
-    Boolean decProductStock(Integer combinationId, Integer num, int attrValueId, int type);
+    Boolean decProductStock(StoreOrder storeOrder, Integer num, Integer attrValueId, Integer productId, User user);
 
     /**
      * 添加库存
@@ -170,4 +172,19 @@ public interface StoreCombinationService extends IService<StoreCombination> {
      * @return
      */
     Boolean isExistActivity(Integer productId);
+
+    /**
+     * 查询带异常
+     * @param combinationId 拼团商品id
+     * @return StoreCombination
+     */
+    StoreCombination getByIdException(Integer combinationId);
+
+    /**
+     * 添加/扣减库存
+     * @param id 秒杀商品id
+     * @param num 数量
+     * @param type 类型：add—添加，sub—扣减
+     */
+    Boolean operationStock(Integer id, Integer num, String type);
 }

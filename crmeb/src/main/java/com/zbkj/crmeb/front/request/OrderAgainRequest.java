@@ -20,7 +20,7 @@ import javax.validation.constraints.NotNull;
 @Data
 public class OrderAgainRequest {
 
-    @ApiModelProperty(value = "订单id")
-    @NotNull(message = "uni参数不能为空")
-    private String nui;
+    @ApiModelProperty(value = "订单编号")
+    @NotNull(message = "订单编号不能为空")
+    private String orderNo;
 }

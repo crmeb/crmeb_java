@@ -63,7 +63,7 @@ public class StoreSeckill implements Serializable {
     private BigDecimal otPrice;
 
     @ApiModelProperty(value = "返多少积分")
-    private BigDecimal giveIntegral;
+    private Integer giveIntegral;
 
     @ApiModelProperty(value = "排序")
     private Integer sort;

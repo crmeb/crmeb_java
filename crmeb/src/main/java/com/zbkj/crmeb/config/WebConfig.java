@@ -78,6 +78,8 @@ public class WebConfig implements WebMvcConfigurer {
                 excludePathPatterns("/api/admin/wechat/config").
                 excludePathPatterns("/api/admin/authorize/login").
                 excludePathPatterns("/api/admin/payment/callback/**").
+                excludePathPatterns("/api/admin/system/role/menu").
+                excludePathPatterns("/api/admin/system/role/info").
                 excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**");
 
         //后台权限规则
@@ -110,6 +112,7 @@ public class WebConfig implements WebMvcConfigurer {
                 excludePathPatterns("/api/front/logistics").
                 excludePathPatterns("/api/front/groom/list/**").
                 excludePathPatterns("/api/front/index").
+                excludePathPatterns("/api/front/config").
                 excludePathPatterns("/api/front/category").
                 excludePathPatterns("/api/front/seckill/*").
                 excludePathPatterns("/api/front/seckill/list/*").

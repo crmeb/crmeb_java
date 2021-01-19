@@ -1,10 +1,11 @@
 package com.zbkj.crmeb.store.service.impl;
 
+import cn.hutool.core.date.DateTime;
 import com.common.PageParamRequest;
 import com.constants.Constants;
-import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
 
+import com.utils.DateUtil;
 import com.zbkj.crmeb.store.model.StoreOrderStatus;
 import com.zbkj.crmeb.store.dao.StoreOrderStatusDao;
 import com.zbkj.crmeb.store.request.StoreOrderStatusSearchRequest;
@@ -14,11 +15,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -62,20 +63,23 @@ public class StoreOrderStatusServiceImpl extends ServiceImpl<StoreOrderStatusDao
 
     /**
      * 保存订单退款记录
-     * @param orderId Integer 订单号
-     * @param amount BigDecimal 金额
-     * @author Mr.Zhang
-     * @since 2020-05-28
+     * @param orderId 订单号
+     * @param amount  金额
+     * @param message  备注
+     * @return {@link Boolean}
      */
-    @Async
     @Override
-    public void saveRefund(Integer orderId, BigDecimal amount, String message) {
+    public Boolean saveRefund(Integer orderId, BigDecimal amount, String message) {
         //此处更新订单状态
         String changeMessage = Constants.ORDER_LOG_MESSAGE_REFUND_PRICE.replace("{amount}", amount.toString());
         if(StringUtils.isNotBlank(message)){
             changeMessage += message;
         }
-        createLog(orderId, Constants.ORDER_LOG_REFUND_PRICE, changeMessage);
+        StoreOrderStatus storeOrderStatus = new StoreOrderStatus();
+        storeOrderStatus.setOid(orderId);
+        storeOrderStatus.setChangeType(Constants.ORDER_LOG_REFUND_PRICE);
+        storeOrderStatus.setChangeMessage(changeMessage);
+        return save(storeOrderStatus);
     }
 
     /**
@@ -83,20 +87,16 @@ public class StoreOrderStatusServiceImpl extends ServiceImpl<StoreOrderStatusDao
      * @param orderId Integer 订单号
      * @param type String 类型
      * @param message String 消息
-     * @author Mr.Zhang
-     * @since 2020-05-28
+     * @return Boolean
      */
     @Override
-    public void createLog(Integer orderId, String type, String message) {
-        try{
-            StoreOrderStatus storeOrderStatus = new StoreOrderStatus();
-            storeOrderStatus.setOid(orderId);
-            storeOrderStatus.setChangeType(type);
-            storeOrderStatus.setChangeMessage(message);
-            save(storeOrderStatus);
-        }catch (Exception e){
-            throw new CrmebException("日志记录失败");
-        }
+    public Boolean createLog(Integer orderId, String type, String message) {
+        StoreOrderStatus storeOrderStatus = new StoreOrderStatus();
+        storeOrderStatus.setOid(orderId);
+        storeOrderStatus.setChangeType(type);
+        storeOrderStatus.setChangeMessage(message);
+        storeOrderStatus.setCreateTime(DateUtil.nowDateTime());
+        return save(storeOrderStatus);
     }
 
     /**

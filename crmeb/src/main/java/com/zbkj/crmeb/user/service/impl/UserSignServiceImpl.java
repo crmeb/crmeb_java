@@ -139,7 +139,7 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
         //更新用户签到天数
         user.setSignNum(user.getSignNum()+1);
         //更新用户积分
-        user.setIntegral(user.getIntegral().add(integralFundsRequest.getValue()));
+        user.setIntegral(user.getIntegral() + integralFundsRequest.getValue().intValue());
         // 更新用户经验
         user.setExperience(user.getExperience() + experienceFundsRequest.getValue().intValue());
 
@@ -161,7 +161,7 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
         // 小程序消息积分变动通知
         WechatSendMessageForIntegral integralPram = new WechatSendMessageForIntegral(
                 "您的积分变动如下","签到获得积分","签到","0",configVo.getIntegral()+"",
-                (user.getIntegral().add(BigDecimal.valueOf(configVo.getIntegral())))+"",
+                (user.getIntegral() + configVo.getIntegral())+"",
                 DateUtil.nowDateTimeStr(),"暂无","暂无","签到赠送积分"
         );
         wechatSendMessageForMinService.sendIntegralMessage(integralPram,user.getUid());

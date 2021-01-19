@@ -195,7 +195,7 @@ public class Constants {
     public static final String CONFIG_KEY_STORE_BROKERAGE_USER_EXTRACT_BANK = "user_extract_bank"; //提现银行卡
     public static final String CONFIG_KEY_STORE_BROKERAGE_EXTRACT_TIME = "extract_time"; //冻结时间
     public static final String CONFIG_KEY_STORE_BROKERAGE_PERSON_PRICE = "store_brokerage_price"; //人人分销满足金额
-    public static final String CONFIG_KEY_STORE_BROKERAGE_IS_OPEN = "store_brokerage_status"; //分销启用
+    public static final String CONFIG_KEY_STORE_BROKERAGE_IS_OPEN = "brokerage_func_status"; //分销启用
 
     //积分
     public static final String CONFIG_KEY_INTEGRAL_RATE = "integral_ratio"; //积分抵用比例(1积分抵多少金额
@@ -225,15 +225,15 @@ public class Constants {
 
 
     // 商品类型 活动类型 0=商品，1=秒杀，2=砍价，3=拼团 attrResult表用到
-    public static final int PRODUCT_TYPE_NORMAL = 0;
+    public static final Integer PRODUCT_TYPE_NORMAL = 0;
     public static final String PRODUCT_TYPE_NORMAL_STR = "默认";
-    public static final int PRODUCT_TYPE_SECKILL = 1;
+    public static final Integer PRODUCT_TYPE_SECKILL = 1;
     public static final String PRODUCT_TYPE_SECKILL_STR = "秒杀";
-    public static final int PRODUCT_TYPE_BARGAIN = 2;
+    public static final Integer PRODUCT_TYPE_BARGAIN = 2;
     public static final String PRODUCT_TYPE_BARGAIN_STR = "砍价";
-    public static final int PRODUCT_TYPE_PINGTUAN= 3;
+    public static final Integer PRODUCT_TYPE_PINGTUAN= 3;
     public static final String PRODUCT_TYPE_PINGTUAN_STR= "拼团";
-    public static final int PRODUCT_TYPE_GROUP = 0;
+    public static final Integer PRODUCT_TYPE_GROUP = 0;
 
 
 
@@ -310,7 +310,7 @@ public class Constants {
     public static final String USER_BILL_CATEGORY_BROKERAGE_PRICE = "brokerage_price"; //佣金金额
     public static final String USER_BILL_CATEGORY_SIGN_NUM = "sign_num"; //签到天数
 
-    public static final String USER_BILL_TYPE_BROKERAGE = "brokerage"; //推广
+    public static final String USER_BILL_TYPE_BROKERAGE = "brokerage"; //推广佣金
     public static final String USER_BILL_TYPE_DEDUCTION = "deduction"; //抵扣
     public static final String USER_BILL_TYPE_EXTRACT = "extract"; //提现
     public static final String USER_BILL_TYPE_TRANSFER_IN = "transferIn"; //佣金转入余额
@@ -330,8 +330,6 @@ public class Constants {
     public static final String USER_BILL_TYPE_PAY_MEMBER = "pay_member";// 会员支付
     public static final String USER_BILL_TYPE_OFFLINE_SCAN = "offline_scan";// 线下支付
     public static final String USER_BILL_TYPE_USER_RECHARGE_REFUND = "user_recharge_refund";// 用户充值退款
-    public static final String USER_BILL_TYPE_PAY_BROKERAGE = "brokerage";// 佣金
-    public static final String USER_BILL_TYPE_PAY_EXTRACT = "extract";// 提现
 
     //订单状态
     public static final String ORDER_STATUS_ALL = "all"; //所有
@@ -341,6 +339,7 @@ public class Constants {
     public static final String ORDER_STATUS_BARGAIN = "bargain"; //已收货待评价
     public static final String ORDER_STATUS_COMPLETE = "complete"; //交易完成
     public static final String ORDER_STATUS_TOBE_WRITTEN_OFF = "toBeWrittenOff"; //待核销
+    public static final String ORDER_STATUS_APPLY_REFUNDING = "applyRefund"; //申请退款
     public static final String ORDER_STATUS_REFUNDING = "refunding"; //退款中
     public static final String ORDER_STATUS_REFUNDED = "refunded"; //已退款
     public static final String ORDER_STATUS_DELETED = "deleted"; //已删除
@@ -352,6 +351,7 @@ public class Constants {
     public static final String ORDER_STATUS_STR_TAKE = "用户已收货"; //用户已收货
     public static final String ORDER_STATUS_STR_COMPLETE = "交易完成"; //交易完成
     public static final String ORDER_STATUS_STR_TOBE_WRITTEN_OFF = "待核销"; //待核销
+    public static final String ORDER_STATUS_STR_APPLY_REFUNDING = "申请退款"; //申请退款
     public static final String ORDER_STATUS_STR_REFUNDING = "退款中"; //退款中
     public static final String ORDER_STATUS_STR_REFUNDED = "已退款"; //已退款
     public static final String ORDER_STATUS_STR_DELETED = "已删除"; //已删除
@@ -379,6 +379,7 @@ public class Constants {
     public static final String ORDER_TASK_REDIS_KEY_AFTER_CANCEL_BY_USER = "alterOrderCancelByUser"; // 用户取消订单后续操作
     public static final String ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER = "alterOrderRefundByUser"; // 用户订单退款后续操作
     public static final String ORDER_TASK_REDIS_KEY_AFTER_TAKE_BY_USER = "alterOrderTakeByUser"; // 用户订单收货后续操作
+    public static final String ORDER_TASK_PAY_SUCCESS_AFTER = "orderPaySuccessTask"; // 订单支付成功后续操作
 
     public static final String ORDER_STATUS_CACHE_CREATE_ORDER = "cache_key_create_order";
 
