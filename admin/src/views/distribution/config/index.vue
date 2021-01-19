@@ -101,7 +101,7 @@
           <el-input-number v-model="promoterForm.storeBrokeragePrice" placeholder="满额分销满足金额开通分销权限" :min="0" :precision="2" :step="0.1" class="selWidth"></el-input-number>
         </el-form-item>
         <el-form-item>
-          <el-button size="mini" type="primary" :loading="loading" @click="submitForm('promoterForm')">立即创建</el-button>
+          <el-button size="mini" type="primary" :loading="loading" @click="submitForm('promoterForm')">提交</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -110,6 +110,7 @@
 
 <script>
   import { configApi, configUpdateApi, productCheckApi } from '@/api/distribution'
+  import * as selfUtil from '@/utils/ZBKJIutil.js'
   export default {
     name: 'Index',
     data() {
@@ -143,6 +144,7 @@
       submitForm(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
+          if(selfUtil.Add(this.promoterForm.storeBrokerageRatio,this.promoterForm.storeBrokerageTwo)>100) return this.$message.warning('返佣比例相加不能超过100%')
             this.loading = true
             configUpdateApi(this.promoterForm).then(res => {
               this.loading = false
@@ -155,7 +157,6 @@
               //   })
               // })
             }).catch((res) => {
-              this.$message.error(res.message)
               this.loading = false
             })
           } else {

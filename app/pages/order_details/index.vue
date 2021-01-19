@@ -657,14 +657,19 @@
 				totalPrice: '0',
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false, //是否隐藏授权
-				id: 0,//订单id
-				uniId:''
+				id: 0, //订单id
+				uniId: ''
 			};
 		},
 		computed: mapGetters(['isLogin', 'chatUrl']),
 		onLoad: function(options) {
-			if (!options.order_id && !options.uniId) return this.$util.Tips({title:'缺少参数'},{tab:3,url:1});
-			   this.$set(this, 'order_id', options.order_id);
+			if (!options.order_id && !options.uniId) return this.$util.Tips({
+				title: '缺少参数'
+			}, {
+				tab: 3,
+				url: 1
+			});
+			this.$set(this, 'order_id', options.order_id);
 		},
 		onShow() {
 			if (this.isLogin) {
@@ -696,8 +701,8 @@
 			// #endif
 		},
 		methods: {
-			kefuClick(){
-               location.href = this.chatUrl;
+			kefuClick() {
+				location.href = this.chatUrl;
 			},
 			goGoodCall() {
 				let self = this
@@ -824,8 +829,9 @@
 					that.$set(that, 'evaluate', _type == 3 ? 3 : 0);
 					that.$set(that, 'system_store', res.data.systemStore);
 					that.$set(that, 'id', res.data.id);
-					let cartInfo = res.data.cartInfo,newCartInfo = [];
-					cartInfo.forEach((item,index)=>{
+					let cartInfo = res.data.cartInfo,
+						newCartInfo = [];
+					cartInfo.forEach((item, index) => {
 						newCartInfo.push(item.info);
 					});
 					that.$set(that, 'cartInfo', newCartInfo);
@@ -847,7 +853,11 @@
 			 * 生成二维码
 			 */
 			markCode(text) {
-				qrcodeApi({ height: '145', text: text, width: '145' }).then(res => {
+				qrcodeApi({
+					height: '145',
+					text: text,
+					width: '145'
+				}).then(res => {
 					this.codeImg = res.data.code
 				});
 			},
@@ -859,7 +869,7 @@
 			copy: function() {
 				let that = this;
 				uni.setClipboardData({
-					data: this.orderInfo.order_id
+					data: this.orderInfo.orderId
 				});
 			},
 			// #endif
@@ -912,11 +922,15 @@
 			 */
 			goOrderConfirm: function() {
 				let that = this;
-				orderAgain(that.orderInfo.unique).then(res => {
+				orderAgain(that.orderInfo.orderId).then(res => {
 					return uni.navigateTo({
 						url: '/pages/users/order_confirm/index?cartId=' + res.data.cateId + '&again=true&new=true&addAgain=true'
 					});
-				});
+				}).catch(err => {
+					return that.$util.Tips({
+						title: err
+					});
+				})
 			},
 			confirmOrder: function() {
 				let that = this;

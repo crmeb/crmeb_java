@@ -125,7 +125,7 @@ export function getOrderDetail(uni) {
  */
 export function orderAgain(uni) {
 	return request.post('order/again', {
-		nui: uni
+		orderNo: uni
 	});
 }
 
@@ -161,7 +161,7 @@ export function ordeRefundReason() {
  * @param object data
  */
 export function orderRefundVerify(data) {
-	return request.post('order/refund/verify', data);
+	return request.post('order/refund', data);
 }
 
 /**
@@ -176,7 +176,7 @@ export function orderConfirm(cartId, isNew, addAgain,secKill,combination,bargain
 		secKill: secKill,
 		combination:combination,
 		bargain:bargain
-	}, {}, 1);
+	});
 }
 
 /**
@@ -214,4 +214,20 @@ export function postOrderComputed(key, data) {
  */
 export function qrcodeApi(data) {
 	return request.post('qrcode/str2base64', data, {}, 1);
+}
+
+/**
+ * 微信订单支付
+ * @param object data
+ */
+export function wechatOrderPay(data) {
+	return request.post('pay/payment', data);
+}
+
+/**
+ * 微信查询支付结果
+ * @param object data
+ */
+export function wechatQueryPayResult(data) {
+	return request.get('pay/queryPayResult', data);
 }

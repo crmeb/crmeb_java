@@ -11,8 +11,16 @@
 				</div>
 				<div class="row-right">
 					<div>
+						<!-- #ifdef H5 -->
 						<a class="store-phone" :href="'tel:' + item.phone"><span class="iconfont icon-dadianhua01"></span></a>
+						<!-- #endif -->
+						<!-- #ifdef MP -->
+						<view class="store-phone" @click="call(item.phone)"><text class="iconfont icon-dadianhua01"></text></view>
+						<!-- #endif -->
 					</div>
+					<!-- <div>
+						<a class="store-phone" :href="'tel:' + item.phone"><span class="iconfont icon-dadianhua01"></span></a>
+					</div> -->
 					<div class="store-distance" @click.stop="showMaoLocation(item)">
 						<span class="addressTxt" v-if="item.range">距离{{ item.range }}千米</span>
 						<span class="addressTxt" v-else>查看地图</span>
@@ -89,12 +97,18 @@
 				this.getList();
 			} else {
 				this.selfLocation();
+				this.getList();
 			}
 			// this.$scroll(this.$refs.container, () => {
 			//   !this.loading && this.getList();
 			// });
 		},
 		methods: {
+			call(phone) {
+				uni.makePhoneCall({
+					phoneNumber: phone,
+				});
+			},
 			selfLocation() {
 				let self = this
 				uni.getLocation({

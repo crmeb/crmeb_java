@@ -54,8 +54,8 @@
       </div>
     </el-form-item>
     <el-form-item>
-      <el-button size="mini" type="primary" @click="submitForm('formValidate')">立即创建</el-button>
-      <el-button size="mini" @click="resetForm('formValidate')">取消</el-button>
+      <el-button size="mini" type="primary" @click="submitForm('formValidate')"  :loading="loadingbtn">提交</el-button>
+      <el-button size="mini" @click="resetForm('formValidate')">重置</el-button>
     </el-form-item>
   </el-form>
 </template>
@@ -69,7 +69,8 @@
     pics: '',
     productId: '',
     productScore: null,
-    serviceScore: null
+    serviceScore: null,
+    sku: ''
   }
   export default {
     name: "creatComment",
@@ -95,6 +96,7 @@
         }
       };
       return {
+        loadingbtn: false,
         loading: false,
         pics: [],
         image: '',
@@ -138,6 +140,7 @@
         this.$modalGoodList(function(row) {
           _this.image = row.image
           _this.formValidate.productId = row.id
+          _this.formValidate.sku = row.attrValue[0].suk
         })
       },
       // 点击商品图
@@ -153,7 +156,8 @@
         this.pics.splice(i, 1)
       },
       submitForm(formName) {
-        this.formValidate.pics = JSON.stringify(this.pics)
+        this.loadingbtn = true;
+        this.formValidate.pics = this.pics.length>0 ? JSON.stringify(this.pics) : ''
         this.$refs[formName].validate((valid) => {
           if (valid) {
             replyCreatApi(this.formValidate).then(() => {
@@ -162,6 +166,9 @@
                 // this.clear();
                 this.$emit('getList');
               }, 600);
+              this.loadingbtn = false;
+            }).catch(()=>{
+              this.loadingbtn = false;
             })
           } else {
             return false;
@@ -170,7 +177,6 @@
       },
       resetForm(formName) {
         this.$refs[formName].resetFields()
-        this.$msgbox.close()
         this.pics=[]
         this.formValidate.pics=''
       },

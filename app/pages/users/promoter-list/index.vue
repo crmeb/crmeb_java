@@ -143,7 +143,6 @@
 				this.isShowAuth = e
 			},
 			setSort: function(sortKey,isAsc) {
-				console.log(sortKey);
 				let that = this;
 				that.isAsc = isAsc;
 				that.sort = sortKey+isAsc;

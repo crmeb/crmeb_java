@@ -29,6 +29,7 @@
         style="width: 100%"
         size="mini"
         ref="multipleTable"
+        highlight-current-row
       >
         <el-table-column
           prop="id"
@@ -143,7 +144,7 @@
         />
         <el-table-column
           label="金额"
-          prop="price"
+          prop="totalPrice"
           min-width="100"
         />
         <el-table-column
@@ -151,7 +152,8 @@
           min-width="100"
         >
           <template slot-scope="scope">
-            <span>{{scope.row.status | orderStatusFilter}}</span>
+            <span v-if="scope.row.refundStatus==0">{{scope.row.orderStatus | orderStatusFilter}}</span>
+            <span v-else>{{scope.row.refundStatus | refundStatusFilter}}</span>
           </template>
         </el-table-column>
       </el-table>
@@ -160,7 +162,6 @@
 </template>
 
 <script>
-  import {fromList} from '@/utils/constants.js';
   import { combineListApi, combineStatisticsApi,combineOrderPinkApi } from '@/api/marketing'
   import cardsData from '@/components/cards/index'
   export default {
@@ -186,7 +187,7 @@
           page: 1,
           limit: 20
         },
-        fromList: fromList,
+        fromList: this.$constants.fromList,
         timeVal: [],
         cardLists: []
       }

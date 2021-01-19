@@ -72,7 +72,6 @@
 
 <script>
 import edit from './edit'
-import * as constants from '@/utils/constants.js'
 import * as systemGroupDataApi from '@/api/systemGroupData.js'
 import * as systemFormConfigApi from '@/api/systemFormConfig.js'
 export default {
@@ -80,7 +79,7 @@ export default {
   components: { edit },
   data() {
     return {
-      constants,
+      constants: this.$constants,
       listPram: {
         gid: null,
         keywords: null,

@@ -202,9 +202,9 @@ export default {
 
 <style lang="scss" scoped>
 .tags-view-container {
-  height: 34px;
+  padding: 6px 0;
   width: 100%;
-  background: #fff;
+  background: #f5f7f9;
   border-bottom: 1px solid #d8dce5;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .12), 0 0 3px 0 rgba(0, 0, 0, .04);
   .tags-view-wrapper {
@@ -212,15 +212,14 @@ export default {
       display: inline-block;
       position: relative;
       cursor: pointer;
-      height: 26px;
-      line-height: 26px;
-      border: 1px solid #d8dce5;
+      height: 30px;
+      line-height: 30px;
+      border: 1px solid #fff;
       color: #495060;
       background: #fff;
       padding: 0 8px;
       font-size: 12px;
       margin-left: 5px;
-      margin-top: 4px;
       &:first-of-type {
         margin-left: 15px;
       }
@@ -228,9 +227,9 @@ export default {
         margin-right: 15px;
       }
       &.active {
-        background-color: #42b983;
-        color: #fff;
-        border-color: #42b983;
+        background-color: #fff;
+        color: #498ff7;
+        border-color: #fff;
         &::before {
           content: '';
           background: #fff;

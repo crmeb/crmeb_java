@@ -157,157 +157,124 @@ import {
  		arr.push(text.slice(str, text.length));
  		return [strLength, arr, rows] //  [处理文字的总字节长度，每行显示内容的数组，行数]
  	},
-	// 生成海报
-	PosterCanvas:function(arrImages, storeName, price, successFn){
+	
+	/**
+	 * 获取分享海报
+	 * @param array arr2 海报素材
+	 * @param string store_name 素材文字
+	 * @param string price 价格
+	 * @param string ot_price 原始价格
+	 * @param function successFn 回调函数
+	 * 
+	 * 
+	 */
+	PosterCanvas: function(arr2, store_name, price,ot_price, successFn) {
+		let that = this;
 		uni.showLoading({
 			title: '海报生成中',
 			mask: true
 		});
-		let context = uni.createCanvasContext('firstCanvas')
-		context.clearRect(0, 0, 0, 0);
-		let that = this;
+		const ctx = uni.createCanvasContext('firstCanvas');
+		ctx.clearRect(0, 0, 0, 0);
+		/**
+		 * 只能获取合法域名下的图片信息,本地调试无法获取
+		 * 
+		 */
+		ctx.fillStyle = '#fff';
+		ctx.fillRect(0, 0, 750, 1150);
 		uni.getImageInfo({
-		            src: arrImages[0],
-		            success: function (image) {
-						console.log('image成功', image)
-						context.drawImage(arrImages[0], 0, 0, 750, 1190);
-						context.drawImage(arrImages[1], 0, 0, 750, 750);
-						context.save();
-						context.drawImage(arrImages[2], 110, 1000, 140, 140);
-						context.restore();
-						context.setFontSize(30);
-						context.setTextAlign('center');
-						let maxText = 28;
-						let text = storeName;
-						let topText = '';
-						let bottomText = '';
-						let len = text.length;
-						if(len>maxText*2){
-							text = text.slice(0,maxText*2-4)+'......';
-							topText = text.slice(0,maxText-1);
-							bottomText = text.slice(maxText-1,len);
-						}else{
-							if(len>maxText){
-								topText = text.slice(0,maxText-1);
-								bottomText = text.slice(maxText-1,len);
-							}else{
-								topText = text;
-								bottomText = '';
-							}
-						}
-						context.fillText(topText, 750/2, 800);
-						context.fillText(bottomText, 750/2, 840);
-						context.setFontSize(37);
-						context.setTextAlign('center');
-						context.setFillStyle('#fc4141');
-						context.fillText('￥' + price, 750 / 2, 900);
-						context.draw(true,function(){
-							uni.canvasToTempFilePath({
-							  destWidth: 750,
-							  destHeight: 1190,
-							  canvasId: 'firstCanvas',
-							  fileType: 'jpg',
-							  success: function(res) {
-								  console.log(res.tempFilePath)
-							    // 在H5平台下，tempFilePath 为 base64
-								uni.hideLoading();
-								successFn && successFn(res.tempFilePath);
-								// that.imagePath = res.tempFilePath;
-								// that.canvasStatus = true;
-							  } 
-							})
-						})
-		            },
-					fail: function(err) {
-						console.log('image失败', err)
-						uni.hideLoading();
-						that.Tips({
-							title: '无法获取图片信息'
-						});
+			src: arr2[0],
+			success: function(res) {
+				const WIDTH = res.width;
+				const HEIGHT = res.height;
+				// ctx.drawImage(arr2[0], 0, 0, WIDTH, 1050);
+				ctx.drawImage(arr2[1], 0, 0, WIDTH, WIDTH);
+				ctx.save();
+				let r = 110;
+				let d = r * 2;
+				let cx = 480;
+				let cy = 790;
+				ctx.arc(cx + r, cy + r, r, 0, 2 * Math.PI);
+				// ctx.clip();
+				ctx.drawImage(arr2[2], cx, cy,d,d);
+				ctx.restore();
+				const CONTENT_ROW_LENGTH = 20;
+				let [contentLeng, contentArray, contentRows] = that.textByteLength(store_name, CONTENT_ROW_LENGTH);
+				if (contentRows > 2) {
+					contentRows = 2;
+					let textArray = contentArray.slice(0, 2);
+					textArray[textArray.length - 1] += '……';
+					contentArray = textArray;
+				}
+				ctx.setTextAlign('left');
+				ctx.setFontSize(36);
+				ctx.setFillStyle('#000');
+				// let contentHh = 36 * 1.5;
+				let contentHh = 36;
+				for (let m = 0; m < contentArray.length; m++) {
+					// ctx.fillText(contentArray[m], 50, 1000 + contentHh * m,750);
+					if (m) {
+						ctx.fillText(contentArray[m], 50, 1000 + contentHh * m + 18,1100);
+					} else {
+						ctx.fillText(contentArray[m], 50, 1000 + contentHh * m,1100);
 					}
-		        });
+				}
+				ctx.setTextAlign('left')
+				ctx.setFontSize(72);
+				ctx.setFillStyle('#DA4F2A');
+				ctx.fillText('￥' + price, 40, 820 + contentHh);
+				
+				ctx.setTextAlign('left')
+				ctx.setFontSize(36);
+				ctx.setFillStyle('#999');
+				ctx.fillText('￥' + ot_price, 50, 876 + contentHh);
+				
+				var underline = function(ctx, text, x, y, size, color, thickness ,offset){ 
+					var width = ctx.measureText(text).width; 
+					 switch(ctx.textAlign){ 
+					 case "center": 
+					 x -= (width/2); break; 
+					 case "right": 
+					 x -= width; break; 
+					 } 
+					
+					 y += size+offset; 
+					
+					 ctx.beginPath(); 
+					 ctx.strokeStyle = color; 
+					 ctx.lineWidth = thickness; 
+					 ctx.moveTo(x,y); 
+					 ctx.lineTo(x+width,y); 
+					 ctx.stroke(); 
+				} 
+				underline(ctx,'￥'+ot_price, 55,865,36,'#999',2,0)
+				ctx.setTextAlign('left')
+				ctx.setFontSize(28);
+				ctx.setFillStyle('#999');
+				ctx.fillText('长按或扫描查看', 490, 1030 + contentHh);
+				ctx.draw(true, function() {
+					uni.canvasToTempFilePath({
+						canvasId: 'firstCanvas',
+						fileType: 'png',
+						destWidth: WIDTH,
+						destHeight: HEIGHT,
+						success: function(res) {
+							uni.hideLoading();
+							successFn && successFn(res.tempFilePath);
+						}
+					})
+				});
+			},
+			fail: function(err) {
+				console.log('失败',err)
+				uni.hideLoading();
+				that.Tips({
+					title: '无法获取图片信息'
+				});
+			}
+		})
 	},
- 	/**
- 	 * 获取分享海报
- 	 * @param array arr2 海报素材
- 	 * @param string store_name 素材文字
- 	 * @param string price 价格
- 	 * @param function successFn 回调函数
- 	 * 
- 	 * 
- 	 */
- 	// PosterCanvas: function(arr2, store_name, price, successFn) {
- 	// 	let that = this;
- 	// 	uni.showLoading({
- 	// 		title: '海报生成中',
- 	// 		mask: true
- 	// 	});
- 	// 	const ctx = uni.createCanvasContext('myCanvas');
- 	// 	ctx.clearRect(0, 0, 0, 0);
- 	// 	/**
- 	// 	 * 只能获取合法域名下的图片信息,本地调试无法获取
- 	// 	 * 
- 	// 	 */
- 	// 	uni.getImageInfo({
- 	// 		src: arr2[0],
- 	// 		success: function(res) {
- 	// 			const WIDTH = res.width;
- 	// 			const HEIGHT = res.height;
-		// 		ctx.drawImage(arr2[0], 0, 0, WIDTH, HEIGHT);
-		// 		ctx.drawImage(arr2[1], 0, 0, WIDTH, WIDTH);
- 	// 			ctx.save();
- 	// 			let r = 90;
- 	// 			let d = r * 2;
- 	// 			let cx = 40;
- 	// 			let cy = 990;
- 	// 			ctx.arc(cx + r, cy + r, r, 0, 2 * Math.PI);
- 	// 			ctx.drawImage(arr2[2], cx, cy,d,d);
- 	// 			ctx.restore();
- 	// 			const CONTENT_ROW_LENGTH = 40;
- 	// 			let [contentLeng, contentArray, contentRows] = that.textByteLength(store_name, CONTENT_ROW_LENGTH);
- 	// 			if (contentRows > 2) {
- 	// 				contentRows = 2;
- 	// 				let textArray = contentArray.slice(0, 2);
- 	// 				textArray[textArray.length - 1] += '……';
- 	// 				contentArray = textArray;
- 	// 			}
- 	// 			ctx.setTextAlign('center');
- 	// 			ctx.setFontSize(32);
- 	// 			let contentHh = 32 * 1.3;
- 	// 			for (let m = 0; m < contentArray.length; m++) {
- 	// 				ctx.fillText(contentArray[m], WIDTH / 2, 820 + contentHh * m);
- 	// 			}
- 	// 			ctx.setTextAlign('center')
- 	// 			ctx.setFontSize(48);
- 	// 			ctx.setFillStyle('red');
- 	// 			ctx.fillText('￥' + price, WIDTH / 2, 880 + contentHh);
-		// 		console.log('787878奋斗奋斗');
-		// 		console.log(res);
- 	// 			ctx.draw(true, function() {
-		// 			console.log('我在测试');
-		// 			console.log(res);
- 	// 				uni.canvasToTempFilePath({
- 	// 					canvasId: 'myCanvas',
- 	// 					fileType: 'png',
- 	// 					destWidth: WIDTH,
- 	// 					destHeight: HEIGHT,
- 	// 					success: function(res) {
-		// 					console.log('3333');
-		// 					console.log(res);
- 	// 						uni.hideLoading();
- 	// 						successFn && successFn(res.tempFilePath);
- 	// 					}
- 	// 				})
- 	// 			});
- 	// 		},
- 	// 		fail: function(err) {
- 	// 			uni.hideLoading();
- 	// 			that.Tips({
- 	// 				title: '无法获取图片信息'
- 	// 			});
- 	// 		}
- 	// 	})
- 	// },
+	
  	/*
  	 * 单图上传
  	 * @param object opt

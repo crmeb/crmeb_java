@@ -2,7 +2,7 @@
 	<view>
 		<view class="CommissionRank">
 			<view class="header">
-				<view class="rank" v-if="position&&position<100 ">您目前的排名<text class="num">{{position}}</text>名</view>
+				<view class="rank" v-if="position">您目前的排名<text class="num">{{position}}</text>名</view>
 				<view class="rank" v-else>您目前暂无排名</view>
 			</view>
 			<view class="wrapper">
@@ -63,7 +63,7 @@
 				active: 0,
 				rankList: [],
 				page: 1,
-				limit: 10,
+				limit: 20,
 				loadend: false,
 				loading: false,
 				loadTitle: '加载更多',
@@ -104,7 +104,7 @@
 				this.loadend = false;
 				this.$set(this, 'rankList', []);
 				this.getBrokerageRankList();
-				this.getBrokerageRankNumber();
+				this.getBrokerageRankNumber(this.type);
 			},
 			getBrokerageRankNumber(type) {
 				brokerageRankNumber({
@@ -124,23 +124,16 @@
 					type: this.type
 				}).then(res => {
 					let list = res.data;
-					let loadend = list.length < this.limit;
-					this.rankList = this.$util.SplitArray(list, this.rankList);
-					this.$set(that,'rankList',this.rankList);
-					this.loadend = loadend;
+					let loadend = list.length <= this.limit;
+					this.rankList.push.apply(this.rankList, list);
 					this.loading = false;
-					this.loadtitle = loadend ? "哼😕~我也是有底线的~" : "加载更多"
-					// let list = res.data;
-					// let loadend = list.length < this.limit;
-					// this.rankList.push.apply(this.rankList, list);
-					// this.loading = false;
-					// this.loadend = loadend;
-					// this.loadTitle = loadend ? '😕我也是有底线的' : '加载更多';
-					// this.$set(this, 'rankList', this.rankList);
-					// this.position = res.data.position;
+					this.loadend = loadend;
+					this.loadTitle = loadend ? '😕我也是有底线的' : '加载更多';
+					this.$set(this, 'rankList', this.rankList);
+					//this.position = res.data.position;
 				}).catch(err => {
 					this.loading = false;
-					this.loadTitle = '加载更多';
+					this.loadTitle = '加载更多'; 
 				})
 			}
 		},

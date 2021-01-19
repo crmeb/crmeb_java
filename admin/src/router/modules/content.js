@@ -20,6 +20,15 @@ const contentRouter = {
       }
     },
     {
+      path: 'articleCreat/:id?',
+      name: 'articleCreat',
+      component: () => import('@/views/content/article/edit'),
+      meta: {
+        title: '添加文章',
+       noCache: true, activeMenu: `/content/articleManager`
+      }
+    },
+    {
       path: 'classifManager',
       name: 'classifManager',
       component: () => import('@/views/content/articleclass/list'),

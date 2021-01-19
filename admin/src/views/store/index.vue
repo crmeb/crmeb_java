@@ -146,7 +146,7 @@
       :modal="false"
       class="taoBaoModal"
       :before-close="handleClose">
-      <tao-bao v-if="dialogVisible" @handleClose="handleClose"></tao-bao>
+      <tao-bao v-if="dialogVisible" @handleCloseMod="handleCloseMod"></tao-bao>
     </el-dialog>
   </div>
 </template>
