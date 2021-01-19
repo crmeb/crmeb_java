@@ -89,4 +89,7 @@ public class StoreProductReply implements Serializable {
 
     @ApiModelProperty(value = "更新时间")
     private Date updateTime;
+
+    @ApiModelProperty(value = "商品规格属性值")
+    private String sku;
 }

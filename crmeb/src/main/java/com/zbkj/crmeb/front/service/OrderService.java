@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.front.service;
 
+import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.front.request.*;
 import com.zbkj.crmeb.front.response.ConfirmOrderResponse;
@@ -32,16 +33,9 @@ import java.util.List;
 public interface OrderService {
     /**
      * 订单确认
-     * @param cartIds   购物车id集合
-     * @param isNew     立即购买
-     * @param addAgain  重复下单
-     * @param seckill   秒杀
-     * @param bargain   砍价
-     * @param combination   拼团
-     * @param addressId   用户地址Id
      * @return  确认订单信息
      */
-    ConfirmOrderResponse confirmOrder(List<String> cartIds, boolean isNew, boolean addAgain,boolean seckill, boolean bargain, boolean combination, Integer addressId);
+    ConfirmOrderResponse confirmOrder(ConfirmOrderRequest request);
 
 
     /**
@@ -52,6 +46,13 @@ public interface OrderService {
      */
     OrderPayResponse createOrder(OrderCreateRequest request, String key, String ip);
 
+    /**
+     * 创建订单
+     * @param request 创建订单参数
+     * @param key 订单key
+     * @return MyRecord
+     */
+    MyRecord createOrder_1_3_1(OrderCreateRequest request, String key);
 
     /**
      * 再次下单
@@ -116,13 +117,7 @@ public interface OrderService {
      * @param request
      * @return
      */
-    boolean refundApplyTask(List<OrderRefundApplyRequest> applyList);
-
-    /**
-     * 订单退款前验证
-     * @param request 退款参数
-     */
-    boolean refundVerify(OrderRefundVerifyRequest request);
+    Boolean refundApplyTask(List<OrderRefundApplyRequest> applyList);
 
     /**
      * 订单物流查看

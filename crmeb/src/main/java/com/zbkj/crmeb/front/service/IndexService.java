@@ -27,4 +27,10 @@ public interface IndexService{
     List<HashMap<String, Object>> hotKeywords();
 
     HashMap<String, String> getShareConfig();
+
+    /**
+     * 获取公共配置
+     * @return 公共配置
+     */
+    HashMap<String,String> getCommConfig();
 }

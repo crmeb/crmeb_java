@@ -3,19 +3,14 @@ package com.zbkj.crmeb.seckill.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageInfo;
-import com.zbkj.crmeb.front.response.SecKillResponse;
 import com.zbkj.crmeb.seckill.model.StoreSeckill;
-import com.zbkj.crmeb.seckill.request.StoreSeckillAttrRequest;
 import com.zbkj.crmeb.seckill.request.StoreSeckillRequest;
 import com.zbkj.crmeb.seckill.request.StoreSeckillSearchRequest;
 import com.zbkj.crmeb.seckill.response.StoreSeckillDetailResponse;
 import com.zbkj.crmeb.seckill.response.StoreSeckillResponse;
-import com.zbkj.crmeb.store.request.StoreProductRequest;
 import com.zbkj.crmeb.store.request.StoreProductStockRequest;
 import com.zbkj.crmeb.store.response.StoreProductResponse;
-import org.json.JSONException;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
@@ -101,12 +96,13 @@ public interface StoreSeckillService extends IService<StoreSeckill> {
 
     /**
      * 扣减库存加销量
-     * @param seckillId 产品id
-     * @param num 商品数量
-     * @param type 是否限购 0=不限购
+     * @param seckillId   秒杀产品id
+     * @param num         购买商品数量
+     * @param attrValueId 秒杀商品规格
+     * @param productId   主商品id
      * @return 扣减结果
      */
-    boolean decProductStock(Integer seckillId, Integer num, Integer attrValueId, Integer type);
+    Boolean decProductStock(Integer seckillId, Integer num, Integer attrValueId, Integer productId);
 
     /**
      * 根据商品id查询正在秒杀的商品信息
@@ -132,4 +128,19 @@ public interface StoreSeckillService extends IService<StoreSeckill> {
      * @param productId 商品编号
      */
     Boolean isExistActivity(Integer productId);
+
+    /**
+     * 查询带异常
+     * @param id 秒杀商品id
+     * @return StoreSeckill
+     */
+    StoreSeckill getByIdException(Integer id);
+
+    /**
+     * 添加/扣减库存
+     * @param id 秒杀商品id
+     * @param num 数量
+     * @param type 类型：add—添加，sub—扣减
+     */
+    Boolean operationStock(Integer id, Integer num, String type);
 }

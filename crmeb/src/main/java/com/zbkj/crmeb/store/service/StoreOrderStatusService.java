@@ -1,7 +1,6 @@
 package com.zbkj.crmeb.store.service;
 
 import com.common.PageParamRequest;
-import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.model.StoreOrderStatus;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zbkj.crmeb.store.request.StoreOrderStatusSearchRequest;
@@ -25,9 +24,9 @@ public interface StoreOrderStatusService extends IService<StoreOrderStatus> {
 
     List<StoreOrderStatus> getList(StoreOrderStatusSearchRequest request, PageParamRequest pageParamRequest);
 
-    void saveRefund(Integer orderId, BigDecimal amount, String message);
+    Boolean saveRefund(Integer orderId, BigDecimal amount, String message);
 
-    void createLog(Integer orderId, String type, String message);
+    Boolean createLog(Integer orderId, String type, String message);
 
     Boolean addLog(Integer orderId, String type, String message);
 

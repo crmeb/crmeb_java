@@ -20,6 +20,7 @@ import com.zbkj.crmeb.combination.model.StoreCombination;
 import com.zbkj.crmeb.combination.model.StorePink;
 import com.zbkj.crmeb.combination.request.StorePinkSearchRequest;
 import com.zbkj.crmeb.combination.response.StorePinkAdminListResponse;
+import com.zbkj.crmeb.combination.response.StorePinkDetailResponse;
 import com.zbkj.crmeb.combination.service.StoreCombinationService;
 import com.zbkj.crmeb.combination.service.StorePinkService;
 import com.zbkj.crmeb.front.request.OrderRefundApplyRequest;
@@ -142,19 +143,23 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
      * @return
      */
     @Override
-    public List<StorePink> getAdminList(Integer pinkId) {
+    public List<StorePinkDetailResponse> getAdminList(Integer pinkId) {
         LambdaQueryWrapper<StorePink> lqw = Wrappers.lambdaQuery();
         lqw.eq(StorePink::getId, pinkId).or().eq(StorePink::getKId, pinkId);
         lqw.orderByDesc(StorePink::getId);
         List<StorePink> pinkList = dao.selectList(lqw);
         // 将拼团状态提换为订单状态
-        pinkList.forEach(i -> {
-            StoreOrder storeOrder = storeOrderService.getByOderId(i.getOrderId());
+        List<StorePinkDetailResponse> responseList = pinkList.stream().map(pink -> {
+            StorePinkDetailResponse response = new StorePinkDetailResponse();
+            BeanUtils.copyProperties(pink, response);
+            StoreOrder storeOrder = storeOrderService.getByOderId(pink.getOrderId());
             if (ObjectUtil.isNotNull(storeOrder)) {
-                i.setStatus(storeOrder.getStatus());
+                response.setOrderStatus(storeOrder.getStatus());
+                response.setRefundStatus(storeOrder.getRefundStatus());
             }
-        });
-        return pinkList;
+            return response;
+        }).collect(Collectors.toList());
+        return responseList;
     }
 
     @Override

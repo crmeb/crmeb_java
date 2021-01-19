@@ -44,8 +44,8 @@ public class BargainProductExcelVo {
     @ApiModelProperty(value = "销量")
     private Integer sales;
 
-    @ApiModelProperty(value = "库存")
-    private Integer stock;
+    @ApiModelProperty(value = "库存剩余")
+    private Integer quotaShow;
 
     @ApiModelProperty(value = "反多少积分")
     private BigDecimal giveIntegral;

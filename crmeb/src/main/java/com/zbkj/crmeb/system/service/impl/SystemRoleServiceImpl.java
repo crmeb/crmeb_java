@@ -2,6 +2,7 @@ package com.zbkj.crmeb.system.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
@@ -115,6 +116,7 @@ public class SystemRoleServiceImpl extends ServiceImpl<SystemRoleDao, SystemRole
     @Override
     public List<CategoryTreeVo> menu() {
         List<Integer> categoryIdList = getRoleListInRoleId();
+        System.out.println("权限列表:categoryIdList:"+ JSON.toJSONString(categoryIdList));
         return categoryService.getListTree(Constants.CATEGORY_TYPE_MENU, 1, categoryIdList);
     }
 

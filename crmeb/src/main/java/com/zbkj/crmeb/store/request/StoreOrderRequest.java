@@ -31,18 +31,18 @@ import java.util.Date;
 public class StoreOrderRequest {
     private static final long serialVersionUID=1L;
 
-    @ApiModelProperty(value = "订单总价")
-    private BigDecimal totalPrice;
-
-    @ApiModelProperty(value = "邮费")
-    private BigDecimal totalPostage;
+//    @ApiModelProperty(value = "订单总价")
+//    private BigDecimal totalPrice;
+//
+//    @ApiModelProperty(value = "邮费")
+//    private BigDecimal totalPostage;
 
     @ApiModelProperty(value = "实际支付金额")
     private BigDecimal payPrice;
 
-    @ApiModelProperty(value = "支付邮费")
-    private BigDecimal payPostage;
+//    @ApiModelProperty(value = "支付邮费")
+//    private BigDecimal payPostage;
 
     @ApiModelProperty(value = "消费赚取积分")
-    private BigDecimal gainIntegral;
+    private Integer gainIntegral;
 }

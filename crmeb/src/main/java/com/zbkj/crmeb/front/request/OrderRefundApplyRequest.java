@@ -36,14 +36,17 @@ public class OrderRefundApplyRequest {
     private String text;
 
     @ApiModelProperty(value = "订单id", required = true)
-    @NotBlank(message = "请选择订单")
     private Integer id;
 
-    @ApiModelProperty(value = "退款凭证(多个图片请用,(英文逗号)隔开)")
+    @ApiModelProperty(value = "退款凭证图片(多个图片请用,(英文逗号)隔开)")
     @JsonProperty("refund_reason_wap_img")
     private String reasonImage;
 
     @ApiModelProperty(value = "备注说明")
     @JsonProperty("refund_reason_wap_explain")
     private String explain;
+
+    @ApiModelProperty(value = "待退款订单")
+    @NotNull(message = "待退款订单 不能为空")
+    private String  uni;
 }
