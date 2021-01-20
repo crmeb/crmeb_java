@@ -636,13 +636,13 @@
 					Cache.set('chatUrl', data.yzfUrl);
 				})
 			},
-			getMpChatUrL(){
-				getWechatConfig().then(res => {
-					let data = res.data;
-					this.$store.commit("SET_CHATURL", data.yzfUrl);
-					Cache.set('chatUrl', data.yzfUrl);
-				})
-			},
+			// getMpChatUrL(){
+			// 	getWechatConfig().then(res => {
+			// 		let data = res.data;
+			// 		this.$store.commit("SET_CHATURL", data.yzfUrl);
+			// 		Cache.set('chatUrl', data.yzfUrl);
+			// 	})
+			// },
 			// setOpenShare:function(mss){
 			// 	getWechatConfig()
 			// 		.then(res => {
@@ -781,7 +781,7 @@
 		mounted() {
 			let self = this
 			// #ifdef H5
-			self.$wechat.isWeixin()?self.getMpChatUrL():self.getChatUrL();
+			self.getChatUrL();
 			// 获取H5 搜索框高度
 			let appSearchH = uni.createSelectorQuery().select(".serch-wrapper");
 			appSearchH.boundingClientRect(function(data) {
@@ -939,8 +939,9 @@
 		/* #endif */
 
 		.page_content {
+			background-color: #f5f5f5;
 			/* #ifdef H5 */
-			margin-top: -140rpx !important;
+			margin-top: 20rpx !important;
 			/* #endif */
 			padding: 0 20rpx;
 
@@ -1555,7 +1556,7 @@
 
 			.index-product-wrapper {
 				margin-top: 40rpx;
-
+                margin-bottom: 40rpx;
 				&.on {
 					min-height: 1500rpx;
 				}
