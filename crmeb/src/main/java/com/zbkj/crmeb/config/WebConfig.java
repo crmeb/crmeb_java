@@ -78,7 +78,7 @@ public class WebConfig implements WebMvcConfigurer {
                 excludePathPatterns("/api/admin/wechat/config").
                 excludePathPatterns("/api/admin/authorize/login").
                 excludePathPatterns("/api/admin/payment/callback/**").
-                excludePathPatterns("/api/admin/system/role/menu").
+//                excludePathPatterns("/api/admin/system/role/menu").
                 excludePathPatterns("/api/admin/system/role/info").
                 excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**");
 
