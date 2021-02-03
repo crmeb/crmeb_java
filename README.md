@@ -31,7 +31,7 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
   [![码云地址](https://img.shields.io/badge/gitee-%E7%A0%81%E4%BA%91-blue)](https://gitee.com/ZhongBangKeJi/crmeb_java)
 
 ## 预览
-![java预览二维码](https://gitee.com/stivepeim/img4mk/raw/master/20210202173837.jpg)
+![java预览二维码](https://gitee.com/stivepeim/img4mk/raw/master/20210203094719.jpg)
 
 移动端：[https://java.crmeb.net](https://java.crmeb.net)
 
