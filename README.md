@@ -59,13 +59,9 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
 ~~~
 
 ## 移动端预览
-|	|	||
-|---|---|---|
-|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202181316.png)|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202181502.png)|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202181659.png)|
-|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202181758.png)|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202181838.png)|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202182537.png)|
-|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202182731.png)|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202182857.png)|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202182943.png)|
-|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202183033.png)|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202183110.png)|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202183210.png)|
-|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202183259.png)|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202183418.png)|![](https://gitee.com/stivepeim/img4mk/raw/master/20210202183450.png)|
+![](https://gitee.com/stivepeim/img4mk/raw/master/20210204184108.jpg)
+![](https://gitee.com/stivepeim/img4mk/raw/master/20210204184109.jpg)
+![](https://gitee.com/stivepeim/img4mk/raw/master/20210204184110.jpg)
 
 ## 功能图预览
 ![项目基本功能介绍](https://gitee.com/stivepeim/img4mk/raw/master/20201225180349.jpeg)
