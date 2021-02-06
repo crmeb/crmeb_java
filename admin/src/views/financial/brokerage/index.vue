@@ -43,21 +43,26 @@
           min-width="130"
         />
         <el-table-column
+          sortable
           prop="totalBrokerage"
           label="总佣金金额"
           min-width="120"
         />
         <el-table-column
+          sortable
           label="账户余额"
           min-width="100"
           prop="nowMoney"
         />
         <el-table-column
+          sortable
+          :default-sort = "{prop: 'brokerage', order: 'descending'}"
           prop="brokerage"
           label="账户佣金"
           min-width="200"
         />
         <el-table-column
+          sortable
           prop="totalExtract"
           label="到账佣金"
           min-width="150"
@@ -116,17 +121,12 @@
           highlight-current-row
         >
           <el-table-column
-            prop="nickName"
-            label="昵称"
-            width="80"
-          />
-          <el-table-column
-            prop="number"
+            prop="price"
             label="佣金金额"
             min-width="100"
           />
           <el-table-column
-            prop="createTime"
+            prop="updateTime"
             label="获得时间"
             min-width="120"
           />

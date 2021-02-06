@@ -24,7 +24,7 @@
           <el-radio-group v-model="promoterForm.storeBrokerageStatus">
             <el-radio label="1">指定分销</el-radio>
             <el-radio label="2">人人分销</el-radio>
-            <el-radio label="3">满额分销</el-radio>
+            <!--<el-radio label="3">满额分销</el-radio>-->
           </el-radio-group>
         </el-form-item>
         <el-form-item prop="brokerageBindind">
@@ -91,15 +91,15 @@
           </span>
           <el-input-number v-model="promoterForm.extractTime" :min="0" class="selWidth" placeholder="佣金冻结时间(天)"></el-input-number>
         </el-form-item>
-        <el-form-item prop="storeBrokeragePrice">
-          <span slot="label">
-            <span>满额分销最低金额：</span>
-            <el-tooltip class="item" effect="dark" content="满额分销满足金额开通分销权限" placement="top-start">
-              <i class="el-icon-warning-outline" />
-            </el-tooltip>
-          </span>
-          <el-input-number v-model="promoterForm.storeBrokeragePrice" placeholder="满额分销满足金额开通分销权限" :min="0" :precision="2" :step="0.1" class="selWidth"></el-input-number>
-        </el-form-item>
+        <!--<el-form-item prop="storeBrokeragePrice">-->
+          <!--<span slot="label">-->
+            <!--<span>满额分销最低金额：</span>-->
+            <!--<el-tooltip class="item" effect="dark" content="满额分销满足金额开通分销权限" placement="top-start">-->
+              <!--<i class="el-icon-warning-outline" />-->
+            <!--</el-tooltip>-->
+          <!--</span>-->
+          <!--<el-input-number v-model="promoterForm.storeBrokeragePrice" placeholder="满额分销满足金额开通分销权限" :min="0" :precision="2" :step="0.1" class="selWidth"></el-input-number>-->
+        <!--</el-form-item>-->
         <el-form-item>
           <el-button size="mini" type="primary" :loading="loading" @click="submitForm('promoterForm')">提交</el-button>
         </el-form-item>

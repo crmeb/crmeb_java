@@ -1,6 +1,7 @@
 <template>
   <div :class="{'show':show}" class="header-search">
-    <svg-icon class-name="search-icon" icon-class="search" @click.stop="click" />
+    <i class="iconfont iconios-search" style="font-size: 20px;" @click.stop="click"></i>
+    <!--<svg-icon class-name="search-icon" icon-class="search" @click.stop="click" />-->
     <el-select
       ref="headerSearchSelect"
       v-model="search"
@@ -8,7 +9,7 @@
       filterable
       default-first-option
       remote
-      placeholder="Search"
+      placeholder="搜索菜单"
       class="header-search-select"
       @change="change"
     >
@@ -145,7 +146,8 @@ export default {
 <style lang="scss" scoped>
 .header-search {
   font-size: 0 !important;
-
+  display: inline-flex !important;
+  cursor: pointer;
   .search-icon {
     cursor: pointer;
     font-size: 18px;
@@ -160,15 +162,15 @@ export default {
     background: transparent;
     border-radius: 0;
     display: inline-block;
-    vertical-align: middle;
-
+    /*vertical-align: middle;*/
+    line-height: 50px;
     /deep/ .el-input__inner {
       border-radius: 0;
       border: 0;
       padding-left: 0;
       padding-right: 0;
       box-shadow: none !important;
-      border-bottom: 1px solid #d9d9d9;
+      /*border-bottom: 1px solid #d9d9d9;*/
       vertical-align: middle;
     }
   }

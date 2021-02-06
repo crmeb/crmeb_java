@@ -101,6 +101,9 @@
 .el-dialog{
   border-radius: 6px;
 }
+.fontColor3{
+  color: #f1a417;
+}
 /* 去掉滚动条 */
 .scrollbarAll::-webkit-scrollbar {
   display: none; /* Chrome Safari */
@@ -372,14 +375,17 @@ table .el-image{
 //}
 
 //富文本编辑器弹框
+#edui_fixedlayer{
+  z-index: 4000 !important;
+}
 .edui-shadow{
   //z-index: -1 !important;
 }
 .edui-default{
-  //z-index: 4000;
+ // z-index: 4000 !important;
 }
 .edui-dialog{
-  //z-index: 4009 !important;
+  z-index: 4009 !important;
 }
 .maskModel {
   position:fixed;top:0;left:0;right:0;bottom:0;z-index:55;background-color:rgba(0,0,0,0.5);

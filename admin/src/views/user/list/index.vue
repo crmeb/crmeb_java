@@ -52,7 +52,7 @@
                       <el-select v-model="userFrom.country" placeholder="请选择"  class="selWidth" clearable @on-change="changeCountry">
                         <el-option value="" label="全部"></el-option>
                         <el-option value="CN" label="中国"></el-option>
-                        <el-option value="OTHER" label="其他"></el-option>
+                        <el-option value="OTHER" label="国外"></el-option>
                       </el-select>
                     </el-form-item>
                   </el-col>
@@ -333,7 +333,7 @@
     <el-dialog
       title="用户列表"
       :visible.sync="userVisible"
-      width="700px">
+      width="900px">
       <user-list v-if="userVisible" @getTemplateRow="getTemplateRow"></user-list>
       <span slot="footer" class="dialog-footer">
         <el-button @click="userVisible = false">取 消</el-button>
@@ -418,7 +418,7 @@
           label="积分"
           required
         >
-          <el-input-number type="text" v-model="PointValidateForm.integralValue" :max="999999"></el-input-number>
+          <el-input-number type="text" step-strictly v-model="PointValidateForm.integralValue" :max="999999"></el-input-number>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -430,7 +430,7 @@
     <el-dialog
       title="用户详情"
       :visible.sync="Visible"
-      width="1000px"
+      width="1100px"
       v-if="uid"
       :before-close="Close">
       <user-details ref="userDetails" :uid="uid" v-if="Visible"></user-details>
@@ -734,6 +734,7 @@
             _this.formValidate.give_coupon_ids.push(item.coupon_id)
             _this.couponData.push(item.title)
           })
+          _this.selectionList = []
         },this.userIds)
       },
       Close() {
@@ -784,13 +785,15 @@
         this.visible = true
       },
       submitForm(formName) {
-        let data = [];
-        if(this.multipleSelectionAll.length){
-          this.multipleSelectionAll.map((item) => {
-            data.push(item.uid)
-          });
-          this.userIds = data.join(',');
-        }
+        // let data = [];
+        // if(!this.userIds){
+        //   if(this.multipleSelectionAll.length){
+        //     this.multipleSelectionAll.map((item) => {
+        //       data.push(item.uid)
+        //     });
+        //     this.userIds = data.join(',');
+        //   }
+        // }
         this.$refs[formName].validate((valid) => {
           if (valid) {
             this.loading = true
@@ -816,13 +819,21 @@
       },
       setBatch(name, row){
         this.batchName = name
-        if(row) this.userIds = row.uid
+        if(row){
+          this.userIds = row.uid
+          if(this.batchName ==='group'){
+            this.dynamicValidateForm.groupId = row.groupId?Number(row.groupId):''
+          }else{
+            this.dynamicValidateForm.groupId = row.tagId?row.tagId.split(',').map(Number):[]
+          }
+        }else{
+          this.dynamicValidateForm.groupId = ''
+        }
         if (this.multipleSelectionAll.length === 0 && !row) return this.$message.warning('请选择要设置的用户')
         this.dialogVisible = true
       },
       handleClose(){
         this.dialogVisible = false
-        this.multipleSelectionAll = [];
         this.$refs['dynamicValidateForm'].resetFields();
       },
       // 全选
@@ -830,6 +841,13 @@
         this.selectionList = selection;
         setTimeout(() => {
           this.changePageCoreRecordData()
+          let data = [];
+          if(this.multipleSelectionAll.length){
+            this.multipleSelectionAll.map((item) => {
+              data.push(item.uid)
+            });
+            this.userIds = data.join(',');
+          }
         }, 50)
       },
       // 搜索

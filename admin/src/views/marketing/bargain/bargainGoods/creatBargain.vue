@@ -104,7 +104,7 @@
             </el-col>
             <el-col :span="24">
               <el-form-item label="砍价人数：" prop="peopleNum">
-                <el-input-number v-model="formValidate.peopleNum" :min="2"  :step="1" step-strictly step-strictly placeholder="请输入砍价人数" class="selWidthd mr20"/>
+                <el-input-number v-model="formValidate.peopleNum" :min="2"  :step="1" step-strictly placeholder="请输入砍价人数" class="selWidthd mr20"/>
                 <span>需邀请多少人砍价成功</span>
               </el-form-item>
             </el-col>
@@ -493,7 +493,7 @@
             });
           }
           if(tit==='1'&& num === 'duo' ){
-            _this.specType ? _this.ManyAttrValue[i].image = img[0].sattDir : _this.ManyAttrValue[0].image = img[0].sattDir
+            _this.ManyAttrValue[i].image = img[0].sattDir
           }
         },tit, 'content')
       },
@@ -558,7 +558,7 @@
         this.fullscreenLoading = true
         productDetailApi(id).then(async res => {
           this.formValidate = {
-            image: res.image,
+            image: this.$selfUtil.setDomain(res.image),
             imagess: JSON.parse(res.sliderImage),
             title: res.storeName,
             info: res.storeInfo,
@@ -585,12 +585,14 @@
           if(res.specType){
             res.attrValues.forEach((row) => {
               row.quota = row.stock;
+              row.image = this.$selfUtil.setDomain(row.image)
             });
             this.ManyAttrValue = res.attrValues
             this.multipleSelection = res.attrValues
           }else{
             res.attrValue.forEach((row) => {
               row.quota = row.stock;
+              row.image = this.$selfUtil.setDomain(row.image)
             });
             this.ManyAttrValue = res.attrValue
             this.radio = res.attrValue[0]
@@ -605,8 +607,8 @@
         this.fullscreenLoading = true
         bargainInfoApi({id:id}).then(async res => {
           this.formValidate = {
-            image: res.image,
-            imagess: res.sliderImage?JSON.parse(res.sliderImage):[],
+            image: this.$selfUtil.setDomain(res.image),
+            imagess: JSON.parse(res.sliderImage),
             title: res.title,
             proName: res.title,
             info: res.info,
@@ -633,6 +635,7 @@
             this.ManyAttrValue = res.attrValues;
             this.$nextTick(() => {
               this.ManyAttrValue.forEach((item, index) => {
+                item.image = this.$selfUtil.setDomain(item.image)
                 if (item.checked) {
                   this.radio = item
                 }
@@ -640,6 +643,9 @@
             });
           }else{
             this.ManyAttrValue = res.attrValue;
+            this.ManyAttrValue.forEach((item, index) => {
+              item.image = this.$selfUtil.setDomain(item.image)
+            })
             this.formValidate.attr = [];
             this.radio = res.attrValue[0];
           }

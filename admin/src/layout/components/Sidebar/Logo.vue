@@ -34,7 +34,7 @@
     },
     methods: {
       getLogo() {
-        systemConfigApi.configGetUniq({key: "site_logo"}).then(data => {
+        systemConfigApi.configGetUniq({key: "site_logo_lefttop"}).then(data => {
           this.logo = data
         })
       },

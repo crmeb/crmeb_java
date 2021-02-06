@@ -4,11 +4,8 @@
       <div slot="header" class="clearfix">
         <div class="container">
           <el-form inline size="small">
-            <el-form-item>
-              <el-input class="selWidth" v-model="listPram.keywords" placeholder="请输入关键词" clearable />
-            </el-form-item>
-            <el-form-item>
-              <el-select v-model="listPram.cid" clearable  placeholder="请选择文章分类">
+            <el-form-item label="文章分类：">
+              <el-select v-model="listPram.cid" clearable class="selWidth"  placeholder="请选择文章分类" @change="handerSearch">
                 <el-option
                   v-for="item in categoryTreeData"
                   :key="item.id"
@@ -17,8 +14,10 @@
                 </el-option>
               </el-select>
             </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="handerSearch">搜索</el-button>
+            <el-form-item label="关键词：">
+              <el-input v-model="listPram.keywords" placeholder="请输入关键词" class="selWidth" size="small" clearable>
+                <el-button slot="append" icon="el-icon-search" @click="handerSearch" size="small"/>
+              </el-input>
             </el-form-item>
           </el-form>
         </div>

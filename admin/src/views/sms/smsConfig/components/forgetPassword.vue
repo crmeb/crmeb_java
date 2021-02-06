@@ -9,7 +9,7 @@
       <template v-if="current === 0">
         <el-form-item prop="phone">
           <el-input type="text" v-model="formInline.phone" prefix="ios-contact-outline"
-                    placeholder="请输入手机号" size="large"/>
+                    placeholder="请输入手机号" size="large" :readonly="infoData.phone?true:false"/>
         </el-form-item>
         <el-form-item prop="code" class="captcha">
           <div class="acea-row" style="flex-wrap: nowrap;">
@@ -102,6 +102,7 @@
                 }
             };
             return {
+                isReadonly: false,
                 cutNUm: '获取验证码',
                 canClick: true,
                 current: 0,
@@ -127,6 +128,15 @@
                     ],
                 }
             }
+        },
+        props:{
+          infoData: {
+            type: Object,
+            default: null
+          }
+        },
+        mounted(){
+          this.infoData ? this.formInline.phone = this.infoData.phone : this.formInline.phone = '';
         },
         methods: {
             // 短信验证码
