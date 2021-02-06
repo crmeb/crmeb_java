@@ -163,7 +163,6 @@
 <script>
 	const app = getApp();
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
-	import { base64src } from '@/utils/base64src.js'
 	import {
 		mapGetters
 	} from "vuex";
@@ -183,6 +182,7 @@
 	import userEvaluation from '@/components/userEvaluation/index.vue'
 	// #ifdef MP
 	import authorize from '@/components/Authorize';
+	import { base64src } from '@/utils/base64src.js'
 	import {
 		getQrcode
 	} from '@/api/api.js';
@@ -199,7 +199,6 @@
 	} from '@/libs/login.js';
 	import { silenceBindingSpread } from "@/utils";
 	export default {
-		computed: mapGetters(['isLogin']),
 		data() {
 			return {
 				id: 0,
@@ -310,9 +309,9 @@
 			
 			//扫码携带参数处理
 			if (options.scene) {
-				let value = this.$util.getUrlParams(decodeURIComponent(options.scene));
-				if (value.id){
-					this.id = value.id;
+			//	let value = this.$util.getUrlParams(decodeURIComponent(options));
+				if (options.id){
+					this.id = options.id;
 				}else{
 					return this.$util.Tips({
 						title: '缺少参数无法查看商品'
@@ -322,8 +321,8 @@
 					});
 				} 
 				//记录推广人uid
-				if (value.pid) app.globalData.spid = value.pid;
-				if (value.time) this.datatime = value.time
+				if (options.pid) app.globalData.spid = options.pid;
+				if (options.time) this.datatime = options.time
 			}
 			// #endif
 			
@@ -423,8 +422,8 @@
 					setTimeout(function() {
 						that.infoScroll();
 					}, 500);
-					app.globalData.openPages = '/pages/activity/goods_seckill_details/index?id=' + that.id + '&time=' + that.time +
-					'&status=' + that.status + '&scene=' + that.storeInfo.uid;
+					app.globalData.openPages = '/pages/activity/goods_seckill_details/index?id=' + that.id + '&time=' + that.datatime +
+					'&status=' + that.status + '&scene=' + that.uid + '&productId=' + that.storeInfo.productId;
 				
 				}).catch(err => {
 					that.$util.Tips({
@@ -956,7 +955,17 @@
 					});
 				}
 			},
-		}
+		},
+	    //#ifdef MP
+	    onShareAppMessage() {
+	    	let that = this;
+	    	return {
+	    		title: that.storeInfo.title,
+	    		path: app.globalData.openPages,
+	    		imageUrl: that.storeInfo.image
+	    	};
+	    },
+	    //#endif
 	}
 </script>
 

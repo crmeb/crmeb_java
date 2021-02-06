@@ -77,6 +77,9 @@
 
 	.recommend .recommendList {
 		padding: 0 30rpx;
+		/* #ifdef H5 */
+		padding-bottom: 50rpx;
+		/* #endif */
 	}
 
 	.recommend .recommendList .item {

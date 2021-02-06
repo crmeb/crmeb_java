@@ -208,6 +208,7 @@
 					</view>
 				</view>
 			</block>
+			<Loading :loaded="loadend" :loading="loading"></Loading>
 			<block v-if="sortProduct.length == 0">
 				<view class="noCommodity">
 					<view class='pictrue'>
@@ -216,6 +217,7 @@
 					<recommend :hostProduct="hostProduct"></recommend>
 				</view>
 			</block>
+		 
 		</view>
 		<coupon-window :window='window' :couponList="couponList" @onColse="onColse"></coupon-window>
 		<!-- #ifdef MP -->
@@ -290,7 +292,8 @@
 		getWechatConfig
 	} from "@/api/public";
 	// #endif
-	const arrTemp = ["paySubscribe","orderSubscribe","extrctSubscribe", "orderRefundSubscribe", "rechargeSubscribe"];
+	import Loading from '@/components/Loading/index.vue';
+	const arrTemp = ["beforePay","afterPay","refundApply", "beforeRecharge", "createBargain","pink"];
 	export default {
 		computed: mapGetters(['isLogin', 'uid']),
 		components: {
@@ -304,11 +307,13 @@
 			c_bargain,
 			recommend,
 			// #ifdef MP
-			authorize
+			authorize,
 			// #endif
+			Loading
 		},
 		data() {
 			return {
+				loaded: false,
 				loading: false,
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false, //是否隐藏授权
@@ -433,7 +438,7 @@
 				}
 			},
 			getTem(data){
-				getTemlIds({status:true,type:data}).then(res => {
+				getTemlIds({type:data}).then(res => {
 					if (res.data) {
 						let arr = res.data.map((item) => {
 							return item.tempId
@@ -1677,6 +1682,7 @@
 
 	.productList {
 		background-color: #fff;
+		/* #ifdef H5 */		padding-bottom: 140rpx;		/* #endif */
 	}
 
 	.productList .list {
