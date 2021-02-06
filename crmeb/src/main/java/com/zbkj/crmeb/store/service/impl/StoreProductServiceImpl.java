@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -125,6 +126,12 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
 
     @Autowired
     private OnePassService onePassService;
+
+    @Autowired
+    private StoreCartService storeCartService;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     private static final Logger logger = LoggerFactory.getLogger(OrderRefundTask.class);
 
@@ -613,7 +620,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                     attrValue.put("suk", currentSku);
                     attrValue.put("attrValue", JSON.parseObject(storeProductAttrValues.get(i).getAttrValue(), Feature.OrderedField));
                     attrValue.put("brokerage", currentAttrValue.getBrokerage());
-                    attrValue.put("brokerage_two", currentAttrValue.getBrokerageTwo());
+                    attrValue.put("brokerageTwo", currentAttrValue.getBrokerageTwo());
                     String[] skus = currentSku.split(",");
                     for (int k = 0; k < skus.length; k++) {
                         attrValue.put("value"+k,skus[k]);
@@ -946,6 +953,9 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         if(limit <0 || limit > 20) throw new CrmebException("获取推荐商品数量不合法 limit > 0 || limit < 20");
         LambdaQueryWrapper<StoreProduct> lambdaQueryWrapper = new LambdaQueryWrapper<StoreProduct>();
         lambdaQueryWrapper.eq(StoreProduct::getIsGood,1);
+        lambdaQueryWrapper.eq(StoreProduct::getIsShow,1);
+        lambdaQueryWrapper.eq(StoreProduct::getIsDel,false);
+
         lambdaQueryWrapper.orderByDesc(StoreProduct::getSort).orderByDesc(StoreProduct::getId);
         return dao.selectList(lambdaQueryWrapper);
     }
@@ -1068,7 +1078,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         int copyNum = 0;
         if (copyType.equals("1")) {// 一号通
             JSONObject info = onePassService.info();
-            copyNum = Optional.ofNullable(info.getJSONObject("copy").getInteger("surp")).orElse(0);
+            copyNum = Optional.ofNullable(info.getJSONObject("copy").getInteger("num")).orElse(0);
         }
         MyRecord record = new MyRecord();
         record.set("copyType", copyType);
@@ -1110,6 +1120,61 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         }
         updateWrapper.eq("id", id);
         return update(updateWrapper);
+    }
+
+    /**
+     * 下架
+     * @param id 商品id
+     */
+    @Override
+    public Boolean offShelf(Integer id) {
+        StoreProduct storeProduct = getById(id);
+        if (ObjectUtil.isNull(storeProduct)) {
+            throw new CrmebException("商品不存在");
+        }
+        if (!storeProduct.getIsShow()) {
+            return true;
+        }
+
+        storeProduct.setIsShow(false);
+        Boolean execute = transactionTemplate.execute(e -> {
+            dao.updateById(storeProduct);
+            storeCartService.productStatusNotEnable(id);
+            return Boolean.TRUE;
+        });
+
+        return execute;
+    }
+
+    /**
+     * 上架
+     * @param id 商品id
+     * @return Boolean
+     */
+    @Override
+    public Boolean putOnShelf(Integer id) {
+        StoreProduct storeProduct = getById(id);
+        if (ObjectUtil.isNull(storeProduct)) {
+            throw new CrmebException("商品不存在");
+        }
+        if (storeProduct.getIsShow()) {
+            return true;
+        }
+
+        // 获取商品skuid
+        StoreProductAttrValue tempSku = new StoreProductAttrValue();
+        tempSku.setProductId(id);
+        tempSku.setType(Constants.PRODUCT_TYPE_NORMAL);
+        List<StoreProductAttrValue> skuList = storeProductAttrValueService.getByEntity(tempSku);
+        List<Integer> skuIdList = skuList.stream().map(StoreProductAttrValue::getId).collect(Collectors.toList());
+
+        storeProduct.setIsShow(true);
+        Boolean execute = transactionTemplate.execute(e -> {
+            dao.updateById(storeProduct);
+            storeCartService.productStatusNoEnable(skuIdList);
+            return Boolean.TRUE;
+        });
+        return execute;
     }
 
 }

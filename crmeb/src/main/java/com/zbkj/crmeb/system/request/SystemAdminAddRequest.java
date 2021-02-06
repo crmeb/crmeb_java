@@ -33,10 +33,6 @@ public class SystemAdminAddRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 
-//    @ApiModelProperty(value = "后台管理员表ID")
-//    @TableId(value = "id", type = IdType.AUTO)
-//    private Integer id;
-
     @ApiModelProperty(value = "后台管理员账号", required = true)
     @NotNull(message = "后台管理员账号不能为空")
     private String account;
@@ -53,18 +49,6 @@ public class SystemAdminAddRequest implements Serializable {
     @NotNull(message = "menus_id不能为空")
     private String roles;
 
-//    @ApiModelProperty(value = "后台管理员最后一次登录ip")
-//    private String lastIp;
-
-//    @ApiModelProperty(value = "后台管理员最后一次登录时间")
-//    private Integer lastTime;
-
-//    @ApiModelProperty(value = "后台管理员添加时间")
-//    private Integer addTime;
-
-//    @ApiModelProperty(value = "登录次数")
-//    private Integer loginCount;
-
     @ApiModelProperty(value = "后台管理员级别", required = true)
     @Min(value=0, message = "管理员级别不能小于0")
     private Integer level;
@@ -75,8 +59,6 @@ public class SystemAdminAddRequest implements Serializable {
     @Max(value = 1, message = "不能大于1")
     private Boolean status;
 
-//    @ApiModelProperty(value = "是否删除 1删除 0未删除")
-//    private Boolean isDel;
-
-
+    @ApiModelProperty(value = "手机号")
+    private String phone;
 }

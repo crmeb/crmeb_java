@@ -36,12 +36,12 @@ public class PinkStatusChange {
 
     @Scheduled(cron = "0 */1 * * * ?") //每分钟执行一次
     public void init(){
-        logger.info("---BargainStopChangeTask------bargain stop status change task: Execution Time - {}", DateUtil.nowDateTime());
+        logger.info("---PinkStatusChange------bargain stop status change task: Execution Time - {}", DateUtil.nowDateTime());
         try {
             storePinkService.detectionStatus();
         }catch (Exception e){
             e.printStackTrace();
-            logger.error("BargainStopChangeTask" + " | msg : " + e.getMessage());
+            logger.error("PinkStatusChange" + " | msg : " + e.getMessage());
         }
 
     }

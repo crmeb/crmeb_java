@@ -7,7 +7,6 @@ import com.zbkj.crmeb.marketing.request.StoreCouponRequest;
 import com.zbkj.crmeb.marketing.request.StoreCouponSearchRequest;
 import com.zbkj.crmeb.marketing.response.StoreCouponFrontResponse;
 import com.zbkj.crmeb.marketing.response.StoreCouponInfoResponse;
-import io.swagger.models.auth.In;
 
 import java.util.List;
 
@@ -47,4 +46,18 @@ public interface StoreCouponService extends IService<StoreCoupon> {
      * @return
      */
     List<StoreCoupon> getByIds(List<Integer> ids);
+
+    /**
+     * 扣减数量
+     * @param id 优惠券id
+     * @param num 数量
+     * @param isLimited 是否限量
+     */
+    Boolean deduction(Integer id, Integer num, Boolean isLimited);
+
+    /**
+     * 获取用户注册赠送新人券
+     * @return
+     */
+    List<StoreCoupon> findRegisterList();
 }

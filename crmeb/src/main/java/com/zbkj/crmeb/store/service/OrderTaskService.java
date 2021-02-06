@@ -26,4 +26,19 @@ package com.zbkj.crmeb.store.service;
      void deleteByUser();
 
     void orderPaySuccessAfter();
+
+    /**
+     * 自动取消未支付订单
+     */
+    void autoCancel();
+
+    /**
+     * 订单收货
+     */
+    void orderReceiving();
+
+    /**
+     * 订单自动完成
+     */
+    void autoComplete();
 }

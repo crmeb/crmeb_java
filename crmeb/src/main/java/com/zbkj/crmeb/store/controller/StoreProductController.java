@@ -4,6 +4,7 @@ import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.store.model.StoreProduct;
+import com.zbkj.crmeb.store.request.StoreCopyProductRequest;
 import com.zbkj.crmeb.store.request.StoreProductRequest;
 import com.zbkj.crmeb.store.request.StoreProductSearchRequest;
 import com.zbkj.crmeb.store.request.StoreProductStockRequest;
@@ -158,17 +159,11 @@ public class StoreProductController {
 
     /**
      * 上架
-     * @param id integer id
-     * @author Mr.Zhang
-     * @since 2020-05-06
      */
     @ApiOperation(value = "上架")
     @RequestMapping(value = "/putOnShell/{id}", method = RequestMethod.GET)
     public CommonResult<String> putOn(@PathVariable Integer id){
-        StoreProduct storeProduct = new StoreProduct();
-        storeProduct.setId(id);
-        storeProduct.setIsShow(true);
-        if(storeProductService.updateById(storeProduct)){
+        if(storeProductService.putOnShelf(id)){
             return CommonResult.success();
         }else{
             return CommonResult.failed();
@@ -177,17 +172,11 @@ public class StoreProductController {
 
     /**
      * 下架
-     * @param id integer id
-     * @author Mr.Zhang
-     * @since 2020-05-06
      */
     @ApiOperation(value = "下架")
     @RequestMapping(value = "/offShell/{id}", method = RequestMethod.GET)
     public CommonResult<String> offShell(@PathVariable Integer id){
-        StoreProduct storeProduct = storeProductService.getById(id);
-        storeProduct.setIsShow(false);
-        if(storeProductService.updateById(storeProduct)){
-            storeCartService.productStatusNotEnable(id);
+        if(storeProductService.offShelf(id)){
             return CommonResult.success();
         }else{
             return CommonResult.failed();
@@ -278,9 +267,8 @@ public class StoreProductController {
 
     @ApiOperation(value = "复制平台商品")
     @RequestMapping(value = "/copy/product", method = RequestMethod.POST)
-    @ApiImplicitParam(name = "url", value = "URL", dataType = "String", required = true)
-    public CommonResult<Map<String, Object>> copyProduct(@RequestParam @Valid String url) {
-        return CommonResult.success(storeProductService.copyProduct(url));
+    public CommonResult<Map<String, Object>> copyProduct(@RequestBody @Valid StoreCopyProductRequest request) {
+        return CommonResult.success(storeProductService.copyProduct(request.getUrl()));
     }
 }
 

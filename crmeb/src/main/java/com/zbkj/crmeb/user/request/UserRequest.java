@@ -35,6 +35,9 @@ public class UserRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 
+    @ApiModelProperty(value = "uid")
+    private Integer uid;
+
     @ApiModelProperty(value = "真实姓名")
     @NotNull
     private String realName;

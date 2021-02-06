@@ -63,7 +63,7 @@ public class StoreSeckillMangerController {
         StoreSeckillManger storeSeckillManger = new StoreSeckillManger();
         BeanUtils.copyProperties(request, storeSeckillManger);
         // 对request中的time做分割后赋值给mode中的start和end属性
-        setTimeRangeFromRequest(request, storeSeckillManger);
+        storeSeckillMangerService.setTimeRangeFromRequest(request, storeSeckillManger);
         CommonPage<StoreSeckillManagerResponse> storeSeckillMangerCommonPage =
                 CommonPage.restPage(storeSeckillMangerService.getList(storeSeckillManger, pageParamRequest));
         return CommonResult.success(storeSeckillMangerCommonPage);
@@ -81,7 +81,7 @@ public class StoreSeckillMangerController {
         StoreSeckillManger storeSeckillManger = new StoreSeckillManger();
         BeanUtils.copyProperties(storeSeckillMangerRequest, storeSeckillManger);
         // 对request中的time做分割后赋值给mode中的start和end属性
-        setTimeRangeFromRequest(storeSeckillMangerRequest, storeSeckillManger);
+        storeSeckillMangerService.setTimeRangeFromRequest(storeSeckillMangerRequest, storeSeckillManger);
         List<StoreSeckillManger> storeSeckillMangers = storeSeckillMangerService.checkTimeRangeUnique(storeSeckillManger);
         if(storeSeckillMangers.size() > 0){
             throw new CrmebException("当前时间段的秒杀配置已存在");
@@ -122,29 +122,7 @@ public class StoreSeckillMangerController {
     @ApiOperation(value = "修改")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public CommonResult<String> update(@RequestParam Integer id, @RequestBody @Validated StoreSeckillMangerRequest storeSeckillMangerRequest){
-        StoreSeckillManger storeSeckillManger = new StoreSeckillManger();
-        BeanUtils.copyProperties(storeSeckillMangerRequest, storeSeckillManger);
-        storeSeckillManger.setId(id);
-        // 对request中的time做分割后赋值给mode中的start和end属性
-        setTimeRangeFromRequest(storeSeckillMangerRequest, storeSeckillManger);
-        List<StoreSeckillManger> existTimes = storeSeckillMangerService.checkTimeRangeUnique(storeSeckillManger);
-        if(existTimes.size() == 0){
-            storeSeckillMangerService.updateByCondition(storeSeckillManger);
-        }else{
-            // 更新时排除自身更新
-            StoreSeckillManger ssm = existTimes.get(0);
-            if(ssm.getId() == id && ssm.getStartTime() == storeSeckillManger.getStartTime()
-                    && ssm.getEndTime() == storeSeckillManger.getEndTime()){
-                if(storeSeckillMangerService.updateByCondition(storeSeckillManger)){
-                    return CommonResult.success();
-                }else{
-                    return CommonResult.failed();
-                }
-            }else{
-                throw new CrmebException("当前时间段的秒杀配置已存在");
-            }
-        }
-        return CommonResult.failed();
+        return storeSeckillMangerService.update(id,storeSeckillMangerRequest) ? CommonResult.success() : CommonResult.failed();
     }
 
     /**
@@ -176,38 +154,7 @@ public class StoreSeckillMangerController {
         return CommonResult.success(storeSeckillMangerService.updateStatus(id,status));
    }
 
-    /**
-     * 兼容时间参数 request中String格式 mode中Integer
-     * @param storeSeckillMangerRequest request参数
-     * @param storeSeckillManger        秒杀配置实体
-     */
-    private void setTimeRangeFromRequest(@Validated @RequestBody StoreSeckillMangerRequest storeSeckillMangerRequest, StoreSeckillManger storeSeckillManger) {
-        if(!storeSeckillMangerRequest.getTime().contains(",")){
-            throw new CrmebException("时间参数不正确 例如:01:00,02:00");
-        }
-        String[] timeRage = storeSeckillMangerRequest.getTime().split(",");
-        Integer startTime = Integer.parseInt(timeRage[0].split(":")[0]);
-        Integer endTime = Integer.parseInt(timeRage[1].split(":")[0]);
-        storeSeckillManger.setStartTime(startTime);
-        storeSeckillManger.setEndTime(endTime);
-    }
 
-    /**
-     * 兼容时间参数 request中String格式 mode中Integer
-     * @param request request参数
-     * @param storeSeckillManger        秒杀配置实体
-     */
-    private void setTimeRangeFromRequest(@Validated @RequestBody StoreSeckillMangerSearchRequest request, StoreSeckillManger storeSeckillManger) {
-        if(null == request.getTime()) return;
-        if(!request.getTime().contains(",")){
-            throw new CrmebException("时间参数不正确 例如:01：00,02:00");
-        }
-        String[] timeRage = request.getTime().split(",");
-        Integer startTime = Integer.parseInt(timeRage[0].split(":")[0]);
-        Integer endTime = Integer.parseInt(timeRage[1].split(":")[0]);
-        storeSeckillManger.setStartTime(startTime);
-        storeSeckillManger.setEndTime(endTime);
-    }
 }
 
 

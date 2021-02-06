@@ -12,6 +12,8 @@ import com.common.CommonPage;
 import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.constants.Constants;
+import com.constants.SmsConstants;
+import com.constants.UserConstants;
 import com.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -31,6 +33,7 @@ import com.zbkj.crmeb.finance.request.FundsMonitorSearchRequest;
 import com.zbkj.crmeb.front.vo.OrderAgainVo;
 import com.zbkj.crmeb.pass.service.OnePassService;
 import com.zbkj.crmeb.payment.service.OrderPayService;
+import com.zbkj.crmeb.sms.service.SmsService;
 import com.zbkj.crmeb.store.dao.StoreOrderDao;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.model.StoreOrderStatus;
@@ -43,7 +46,6 @@ import com.zbkj.crmeb.store.utilService.OrderUtils;
 import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
 import com.zbkj.crmeb.system.model.SystemAdmin;
 import com.zbkj.crmeb.system.model.SystemStore;
-import com.zbkj.crmeb.system.model.SystemStoreStaff;
 import com.zbkj.crmeb.system.request.SystemWriteOffOrderSearchRequest;
 import com.zbkj.crmeb.system.response.StoreOrderItemResponse;
 import com.zbkj.crmeb.system.response.SystemWriteOffOrderResponse;
@@ -61,7 +63,6 @@ import com.zbkj.crmeb.user.service.UserTokenService;
 import com.zbkj.crmeb.wechat.service.TemplateMessageService;
 import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForPaySuccess;
-import com.zbkj.crmeb.wechat.vo.WechatSendMessageForReFundEd;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -160,6 +161,12 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
 
     @Autowired
     private UserTokenService userTokenService;
+
+    @Autowired
+    private SmsService smsService;
+
+    @Autowired
+    private StoreOrderInfoService storeOrderInfoService;
 
     /**
     * 列表
@@ -772,12 +779,17 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         if(storeOrder.getRefundPrice().add(request.getAmount()).compareTo(storeOrder.getPayPrice()) > 0) {
             throw new CrmebException("退款金额大于支付金额，请修改退款金额");
         }
+        if (request.getAmount().compareTo(BigDecimal.ZERO) == 0) {
+            if (storeOrder.getPayPrice().compareTo(BigDecimal.ZERO) != 0) {
+                throw new CrmebException("退款金额不能为0，请修改退款金额");
+            }
+        }
 
         //用户
         User user = userService.getById(storeOrder.getUid());
 
         //退款
-        if (storeOrder.getPayType().equals(Constants.PAY_TYPE_WE_CHAT)) {
+        if (storeOrder.getPayType().equals(Constants.PAY_TYPE_WE_CHAT) && request.getAmount().compareTo(BigDecimal.ZERO) > 0) {
             try {
                 storeOrderRefundService.refund(request, storeOrder);
             } catch (Exception e) {
@@ -813,6 +825,15 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
             storeOrderStatusService.saveRefund(request.getOrderId(), request.getAmount(), "失败");
             throw new CrmebException("订单更新失败");
         }
+
+        // 发送消息通知
+        HashMap<String, String> temMap = new HashMap<>();
+        temMap.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "您的订单退款申请被通过，钱款将退还至您的支付账户，请耐心等待。");
+        temMap.put("keyword1", storeOrder.getOrderId());
+        temMap.put("keyword2", storeOrder.getPayPrice().toString());
+        temMap.put("keyword3", DateUtil.dateToStr(storeOrder.getCreateTime(), Constants.DATE_FORMAT));
+        temMap.put(Constants.WE_CHAT_TEMP_KEY_END, "感谢你的使用。");
+        pushMessageRefundOrder(storeOrder, user, temMap);
 //        // 小程序订阅消息 退款成功
 //        String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
 //        WechatSendMessageForReFundEd forReFundEd = new WechatSendMessageForReFundEd(
@@ -824,6 +845,37 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
 //        wechatSendMessageForMinService.sendReFundEdMessage(forReFundEd, userService.getUserIdException());
 
         return execute;
+    }
+
+    /**
+     * 发送消息通知
+     * 根据用户类型发送
+     * 公众号模板消息
+     * 小程序订阅消息
+     */
+    private void pushMessageRefundOrder(StoreOrder storeOrder, User user, HashMap<String, String> temMap) {
+        if (user.getUserType().equals(UserConstants.USER_TYPE_H5)) {
+            return;
+        }
+        UserToken userToken;
+        // 公众号
+        if (user.getUserType().equals(UserConstants.USER_TYPE_WECHAT)) {
+            userToken = userTokenService.getTokenByUserId(user.getUid(), UserConstants.USER_TOKEN_TYPE_WECHAT);
+            if (ObjectUtil.isNull(userToken)) {
+                return ;
+            }
+            // 发送微信模板消息
+            templateMessageService.pushTemplateMessage(Constants.WE_CHAT_TEMP_KEY_ORDER_REFUND, temMap, userToken.getToken());
+            return;
+        }
+        // 小程序发送订阅消息
+        String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
+        if(StringUtils.isNotBlank(storeNameAndCarNumString)){
+            WechatSendMessageForPaySuccess paySuccess = new WechatSendMessageForPaySuccess(
+                    storeOrder.getId()+"",storeOrder.getPayPrice()+"",storeOrder.getPayTime()+"","暂无",
+                    storeOrder.getTotalPrice()+"",storeNameAndCarNumString);
+            orderUtils.sendWeiChatMiniMessageForPaySuccess(paySuccess, userService.getById(storeOrder).getUid());
+        }
     }
 
     /** 订单详情
@@ -875,11 +927,11 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         switch (request.getType()){
             case "1":// 发货
                 express(request, storeOrder);
-                orderUtils.sendWeiChatMiniMessageForPackageExpress(storeOrder,currentAdmin.getId());
+//                orderUtils.sendWeiChatMiniMessageForPackageExpress(storeOrder,currentAdmin.getId());
                 break;
             case "2":// 送货
                 delivery(request, storeOrder);
-                orderUtils.senWeiChatMiniMessageForDeliver(storeOrder,currentAdmin.getId());
+//                orderUtils.senWeiChatMiniMessageForDeliver(storeOrder,currentAdmin.getId());
                 break;
             case "3":// 虚拟
                 virtual(request, storeOrder);
@@ -922,14 +974,30 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         storeOrder.setRefundReason(reason);
         storeOrder.setRefundStatus(0);
 
+        User user = userService.getById(storeOrder.getUid());
+
         Boolean execute = transactionTemplate.execute(e -> {
             updateById(storeOrder);
             storeOrderStatusService.createLog(storeOrder.getId(), Constants.ORDER_LOG_REFUND_REFUSE, Constants.ORDER_LOG_MESSAGE_REFUND_REFUSE.replace("{reason}", reason));
             return Boolean.TRUE;
         });
         if (execute) {
-
-            //TODO 模板消息通知
+            // 如果是拼团订单要将拼团状态改回去
+            if (ObjectUtil.isNotNull(storeOrder) && storeOrder.getPinkId() > 0) {
+                StorePink storePink = storePinkService.getById(storeOrder.getPinkId());
+                if (storePink.getStatus().equals(3)) {
+                    storePink.setStatus(1);
+                    storePinkService.updateById(storePink);
+                }
+            }
+            // 发送消息通知
+            HashMap<String, String> temMap = new HashMap<>();
+            temMap.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "您的订单退款申请被拒绝！");
+            temMap.put("keyword1", storeOrder.getOrderId());
+            temMap.put("keyword2", storeOrder.getPayPrice().toString());
+            temMap.put("keyword3", DateUtil.dateToStr(storeOrder.getCreateTime(), Constants.DATE_FORMAT));
+            temMap.put(Constants.WE_CHAT_TEMP_KEY_END, "拒绝原因："+ reason);
+            pushMessageRefundOrder(storeOrder, user, temMap);
         }
         return execute;
     }
@@ -1035,36 +1103,67 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     /**
      * 更改订单价格
      *
-     * @param orderId 订单id wx开头
-     * @param price   待更改价格
+     * @param request 订单id改价对象
      * @return 更改结果
      */
     @Override
-    public boolean editPrice(String orderId, BigDecimal price) {
-        String oldPrice = null;
-        StoreOrder existOrder = getInfoByEntity(new StoreOrder().setOrderId(orderId));
+    public boolean editPrice(StoreOrderEditPriceRequest request) {
+        String oldPrice;
+        StoreOrder existOrder = getByOderId(request.getOrderId());
         // 订单不存在
-        if(null == existOrder) throw new CrmebException(Constants.RESULT_ORDER_NOTFOUND.replace("${orderCode}", orderId));
-
+        if(null == existOrder) {
+            throw new CrmebException(Constants.RESULT_ORDER_NOTFOUND.replace("${orderCode}", request.getOrderId()));
+        }
         // 订单已支付
-        if(existOrder.getPaid()) throw new CrmebException(Constants.RESULT_ORDER_PAYED.replace("${orderCode}", orderId));
-
+        if(existOrder.getPaid()) {
+            throw new CrmebException(Constants.RESULT_ORDER_PAYED.replace("${orderCode}", request.getOrderId()));
+        }
         // 修改价格和原来价格相同
-        if(existOrder.getPayPrice().compareTo(price) ==0)
+        if(existOrder.getPayPrice().compareTo(request.getPrice()) ==0) {
             throw new CrmebException(Constants.RESULT_ORDER_EDIT_PRICE_SAME.replace("${oldPrice}",existOrder.getPayPrice()+"")
-            .replace("${editPrice}",price+""));
+                    .replace("${editPrice}",request.getPrice()+""));
+        }
 
         oldPrice = existOrder.getPayPrice()+"";
-        // 修改订单价格
-        existOrder.setPayPrice(price);
-        boolean updateOrderPrice = updateByEntity(existOrder);
-        if(!updateOrderPrice) throw new CrmebException(Constants.RESULT_ORDER_EDIT_PRICE_SUCCESS
-                .replace("${orderNo}", existOrder.getOrderId()).replace("${price}", price+""));
-        // 订单修改状态操作
-        storeOrderStatusService.createLog(existOrder.getId(),Constants.ORDER_LOG_EDIT,
-                Constants.RESULT_ORDER_EDIT_PRICE_LOGS.replace("${orderPrice}",oldPrice)
-                        .replace("${price}", existOrder.getPayPrice()+""));
-        return true;
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            // 修改订单价格
+            orderEditPrice(request.getOrderId(), request.getPrice());
+            // 订单修改状态操作
+            storeOrderStatusService.createLog(existOrder.getId(), Constants.ORDER_LOG_EDIT,
+                    Constants.RESULT_ORDER_EDIT_PRICE_LOGS.replace("${orderPrice}", oldPrice)
+                            .replace("${price}", request.getPrice() + ""));
+            return Boolean.TRUE;
+        });
+        if(!execute) {
+            throw new CrmebException(Constants.RESULT_ORDER_EDIT_PRICE_SUCCESS
+                    .replace("${orderNo}", existOrder.getOrderId()).replace("${price}", request.getPrice()+""));
+        }
+        // 发送改价短信提醒
+        User user = userService.getById(existOrder.getUid());
+        if (StrUtil.isNotBlank(user.getPhone())) {
+            // 改价短信开关是否开启
+            String smsSwitch = systemConfigService.getValueByKey(SmsConstants.SMS_CONFIG_PRICE_REVISION_SWITCH);
+            if (StrUtil.isNotBlank(smsSwitch) && smsSwitch.equals("1")) {
+                // 发送改价短信提醒
+                smsService.sendOrderEditPriceNotice(user.getPhone(), existOrder.getOrderId(), request.getPrice());
+            }
+        }
+
+        return execute;
+    }
+
+    /**
+     * 改价
+     * @param orderNo 订单编号
+     * @param price 修改后的价格
+     */
+    private Boolean orderEditPrice(String orderNo, BigDecimal price) {
+        LambdaUpdateWrapper<StoreOrder> luw = new LambdaUpdateWrapper<>();
+        luw.set(StoreOrder::getPayPrice, price);
+        luw.eq(StoreOrder::getOrderId, orderNo);
+        luw.eq(StoreOrder::getPaid, false);
+        return update(luw);
     }
 
     /**
@@ -1183,6 +1282,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     public List<StoreOrder> getUserCurrentBargainOrders(StoreOrder storeOrder) {
         LambdaQueryWrapper<StoreOrder> lqw = Wrappers.lambdaQuery();
         lqw.eq(StoreOrder::getUid,storeOrder.getUid()).eq(StoreOrder::getBargainId,storeOrder.getBargainId());
+        lqw.eq(StoreOrder::getIsDel, false);
         return dao.selectList(lqw);
     }
 
@@ -1260,9 +1360,72 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     public Boolean updatePaid(String orderNo) {
         LambdaUpdateWrapper<StoreOrder> lqw = new LambdaUpdateWrapper<>();
         lqw.set(StoreOrder::getPaid, true);
+        lqw.set(StoreOrder::getPayTime, DateUtil.nowDateTime());
         lqw.eq(StoreOrder::getOrderId, orderNo);
         lqw.eq(StoreOrder::getPaid,false);
         return update(lqw);
+    }
+
+    @Override
+    public Map<String, StoreOrder> getMapInOrderNo(List<String> orderNoList) {
+        Map<String, StoreOrder> map = CollUtil.newHashMap();
+        LambdaUpdateWrapper<StoreOrder> lqw = new LambdaUpdateWrapper<>();
+        lqw.in(StoreOrder::getOrderId, orderNoList);
+        List<StoreOrder> orderList = dao.selectList(lqw);
+        orderList.forEach(order -> {
+            map.put(order.getOrderId(), order);
+        });
+        return map;
+    }
+
+    /**
+     * 获取推广订单总金额
+     * @param orderNoList 订单编号列表
+     * @return
+     */
+    @Override
+    public BigDecimal getSpreadOrderTotalPriceByOrderList(List<String> orderNoList) {
+        LambdaQueryWrapper<StoreOrder> lqw = new LambdaQueryWrapper<>();
+        lqw.select(StoreOrder::getPayPrice);
+        lqw.in(StoreOrder::getOrderId, orderNoList);
+        List<StoreOrder> orderList = dao.selectList(lqw);
+        return orderList.stream().map(StoreOrder::getPayPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * 获取所有收货订单id集合
+     * @return
+     */
+    @Override
+    public List<StoreOrder> findIdAndUidListByReceipt() {
+        LambdaQueryWrapper<StoreOrder> lqw = new LambdaQueryWrapper<>();
+        lqw.select(StoreOrder::getId, StoreOrder::getUid);
+        lqw.eq(StoreOrder::getStatus, 2);
+        lqw.eq(StoreOrder::getRefundStatus, 0);
+        lqw.eq(StoreOrder::getIsDel, false);
+        List<StoreOrder> orderList = dao.selectList(lqw);
+        if (CollUtil.isEmpty(orderList)) {
+            return CollUtil.newArrayList();
+        }
+        return orderList;
+    }
+
+    /**
+     *
+     * @param userId 用户uid
+     * @param pageParamRequest 分页参数
+     * @return List
+     */
+    @Override
+    public List<StoreOrder> findPaidListByUid(Integer userId, PageParamRequest pageParamRequest) {
+        Page<StoreOrder> orderPage = pageInfo = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+        LambdaQueryWrapper<StoreOrder> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StoreOrder::getUid, userId);
+        lqw.eq(StoreOrder::getPaid, true);
+        lqw.eq(StoreOrder::getIsDel, false);
+//        lqw.in(StoreOrder::getRefundStatus, 0, 1);
+        lqw.orderByDesc(StoreOrder::getId);
+        return dao.selectList(lqw);
     }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////// 以下为自定义方法
@@ -1379,16 +1542,74 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
             storeOrderStatusService.createLog(request.getId(), Constants.ORDER_LOG_EXPRESS, message);
             return Boolean.TRUE;
         });
-        if (!execute) throw new CrmebException("快递发货失败！");
 
-        //微信模板消息发送
-        HashMap<String, String> map = new HashMap<>();
-        map.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "订单发货提醒");
-        map.put("keyword1", storeOrder.getOrderId());
-        map.put("keyword2", storeOrder.getDeliveryName());
-        map.put("keyword3", storeOrder.getDeliveryId());
-        map.put(Constants.WE_CHAT_TEMP_KEY_END, "欢迎再次购买！");
-        templateMessageService.push(Constants.WE_CHAT_TEMP_KEY_EXPRESS, map, storeOrder.getUid(), Constants.PAY_TYPE_WE_CHAT_FROM_PUBLIC);
+        if (!execute) throw new CrmebException("快递发货失败！");
+        User user = userService.getById(storeOrder.getUid());
+        if (StrUtil.isNotBlank(user.getPhone())) {
+            // 发货短信提醒
+            String smsSwitch = systemConfigService.getValueByKey(SmsConstants.SMS_CONFIG_DELIVER_GOODS_SWITCH);
+            if (StrUtil.isNotBlank(smsSwitch) && smsSwitch.equals("1")) {
+                String proName = "";
+                List<StoreOrderInfoVo> voList = storeOrderInfoService.getOrderListByOrderId(storeOrder.getId());
+                proName = voList.get(0).getInfo().getProductInfo().getStoreName();
+                if (voList.size() > 1) {
+                    proName = proName.concat("等");
+                }
+                smsService.sendOrderDeliverNotice(user.getPhone(), user.getNickname(), proName, storeOrder.getOrderId());
+            }
+        }
+
+        // 发送消息通知
+        pushMessageOrder(storeOrder, user);
+
+//        //微信模板消息发送
+//        HashMap<String, String> map = new HashMap<>();
+//        map.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "订单发货提醒");
+//        map.put("keyword1", storeOrder.getOrderId());
+//        map.put("keyword2", storeOrder.getDeliveryName());
+//        map.put("keyword3", storeOrder.getDeliveryId());
+//        map.put(Constants.WE_CHAT_TEMP_KEY_END, "欢迎再次购买！");
+//        templateMessageService.push(Constants.WE_CHAT_TEMP_KEY_EXPRESS, map, storeOrder.getUid(), Constants.PAY_TYPE_WE_CHAT_FROM_PUBLIC);
+    }
+
+    /**
+     * 发送消息通知
+     * 根据用户类型发送
+     * 公众号模板消息
+     * 小程序订阅消息
+     */
+    private void pushMessageOrder(StoreOrder storeOrder, User user) {
+        if (user.getUserType().equals(UserConstants.USER_TYPE_H5)) {
+            return;
+        }
+        UserToken userToken;
+        HashMap<String, String> temMap = new HashMap<>();
+        // 公众号
+        if (user.getUserType().equals(UserConstants.USER_TYPE_WECHAT)) {
+            userToken = userTokenService.getTokenByUserId(user.getUid(), UserConstants.USER_TOKEN_TYPE_WECHAT);
+            if (ObjectUtil.isNull(userToken)) {
+                return ;
+            }
+            // 发送微信模板消息
+            temMap.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "订单发货提醒");
+            temMap.put("keyword1", storeOrder.getOrderId());
+            temMap.put("keyword2", storeOrder.getDeliveryName());
+            temMap.put("keyword3", storeOrder.getDeliveryId());
+            temMap.put(Constants.WE_CHAT_TEMP_KEY_END, "欢迎再次购买！");
+            templateMessageService.pushTemplateMessage(Constants.WE_CHAT_TEMP_KEY_EXPRESS, temMap, userToken.getToken());
+            return;
+        }
+        // 小程序发送订阅消息
+        userToken = userTokenService.getTokenByUserId(user.getUid(), UserConstants.USER_TOKEN_TYPE_ROUTINE);
+        if (ObjectUtil.isNull(userToken)) {
+            return ;
+        }
+        // 组装数据
+        temMap.put("character_string1", storeOrder.getOrderId());
+        temMap.put("name3", storeOrder.getDeliveryName());
+        temMap.put("character_string4", storeOrder.getDeliveryId());
+        temMap.put("thing7", "您的订单已发货");
+        templateMessageService.pushMiniTemplateMessage(Constants.WE_CHAT_PROGRAM_TEMP_KEY_EXPRESS, temMap, userToken.getToken());
     }
 
     /**
@@ -1506,18 +1727,67 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         });
         if (!execute) throw new CrmebException("订单更新送货失败");
 
-        //微信模板消息发送
-        HashMap<String, String> map = new HashMap<>();
-        map.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "订单发货提醒");
-        map.put("keyword1", StringUtils.join(productNameList, "|"));
-        map.put("keyword2", DateUtil.dateToStr(storeOrder.getCreateTime(), Constants.DATE_FORMAT));
-        map.put("keyword3", storeOrder.getUserAddress());
-        map.put("keyword4", request.getDeliveryName());
-        map.put("keyword5", request.getDeliveryTel());
-        map.put(Constants.WE_CHAT_TEMP_KEY_END, "欢迎再次购买！");
-
-        templateMessageService.push(Constants.WE_CHAT_TEMP_KEY_DELIVERY, map, storeOrder.getUid() , Constants.PAY_TYPE_WE_CHAT_FROM_PUBLIC);
+        User user = userService.getById(storeOrder.getUid());
+        // 发送消息通知
+        pushMessageDeliveryOrder(storeOrder, user, request, productNameList);
     }
+
+    /**
+     * 发送消息通知
+     * 根据用户类型发送
+     * 公众号模板消息
+     * 小程序订阅消息
+     */
+    private void pushMessageDeliveryOrder(StoreOrder storeOrder, User user, StoreOrderSendRequest request, List<String> productNameList) {
+        if (user.getUserType().equals(UserConstants.USER_TYPE_H5)) {
+            return;
+        }
+        UserToken userToken;
+        HashMap<String, String> map = new HashMap<>();
+        String proName = "";
+        if (CollUtil.isNotEmpty(productNameList)) {
+            proName = StringUtils.join(productNameList, "|");
+        }
+        // 公众号
+        if (user.getUserType().equals(UserConstants.USER_TYPE_WECHAT)) {
+            userToken = userTokenService.getTokenByUserId(user.getUid(), UserConstants.USER_TOKEN_TYPE_WECHAT);
+            if (ObjectUtil.isNull(userToken)) {
+                return ;
+            }
+            map.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "订单配送提醒");
+            map.put("keyword1", storeOrder.getOrderId());
+            map.put("keyword2", DateUtil.dateToStr(storeOrder.getCreateTime(), Constants.DATE_FORMAT));
+            map.put("keyword3", storeOrder.getUserAddress());
+            map.put("keyword4", request.getDeliveryName());
+            map.put("keyword5", request.getDeliveryTel());
+            map.put(Constants.WE_CHAT_TEMP_KEY_END, "欢迎再次购买！");
+            // 发送微信模板消息
+            templateMessageService.pushTemplateMessage(Constants.WE_CHAT_TEMP_KEY_DELIVERY, map, userToken.getToken());
+            return;
+        }
+        // 小程序发送订阅消息
+        userToken = userTokenService.getTokenByUserId(user.getUid(), UserConstants.USER_TOKEN_TYPE_ROUTINE);
+        if (ObjectUtil.isNull(userToken)) {
+            return ;
+        }
+
+        if (proName.length() > 20) {
+            proName = proName.substring(0, 15) + "***";
+        }
+        map.put("thing8", proName);
+        map.put("character_string1", storeOrder.getOrderId());
+        map.put("name4", request.getDeliveryName());
+        map.put("phone_number10", request.getDeliveryTel());
+        templateMessageService.pushMiniTemplateMessage(Constants.WE_CHAT_PROGRAM_TEMP_KEY_DELIVERY, map, userToken.getToken());
+//        String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
+//        if(StringUtils.isNotBlank(storeNameAndCarNumString)){
+//            WechatSendMessageForPaySuccess paySuccess = new WechatSendMessageForPaySuccess(
+//                    storeOrder.getId()+"",storeOrder.getPayPrice()+"",storeOrder.getPayTime()+"","暂无",
+//                    storeOrder.getTotalPrice()+"",storeNameAndCarNumString);
+//            orderUtils.sendWeiChatMiniMessageForPaySuccess(paySuccess, userService.getById(storeOrder).getUid());
+//        }
+    }
+
     /** 虚拟
      * @param request StoreOrderSendRequest 发货参数
      * @param storeOrder StoreOrder 订单信息
