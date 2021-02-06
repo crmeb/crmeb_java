@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.express.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.common.PageParamRequest;
 import com.exception.CrmebException;
@@ -140,7 +141,7 @@ public class ShippingTemplatesServiceImpl extends ServiceImpl<ShippingTemplatesD
         shippingTemplatesRegionService.saveAll(shippingTemplatesRegionRequestList, request.getType(), shippingTemplates.getId());
 
         List<ShippingTemplatesFreeRequest> shippingTemplatesFreeRequestList = request.getShippingTemplatesFreeRequestList();
-        if(shippingTemplatesFreeRequestList.size() > 0 && request.getAppoint()){
+        if(CollUtil.isNotEmpty(shippingTemplatesFreeRequestList) && request.getAppoint()){
             shippingTemplatesFreeService.saveAll(shippingTemplatesFreeRequestList, request.getType(), shippingTemplates.getId());
         }
 

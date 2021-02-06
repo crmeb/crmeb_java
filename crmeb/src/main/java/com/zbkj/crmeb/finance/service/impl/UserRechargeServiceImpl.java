@@ -261,9 +261,11 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
         if (ObjectUtil.isNull(user)) throw new CrmebException("用户不存在！");
 
         // 退款金额
-        BigDecimal refundPrice = userRecharge.getPrice();
+        BigDecimal refundPrice;
         if (request.getType().equals(2)) {// 本金+赠送
             refundPrice = userRecharge.getPrice().add(userRecharge.getGivePrice());
+        } else {
+            refundPrice = userRecharge.getPrice();
         }
 
         // 判断充值方式进行退款
@@ -286,7 +288,8 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
 
         Boolean execute = transactionTemplate.execute(e -> {
             updateById(userRecharge);
-            userService.updateById(user);
+            userService.operationNowMoney(user.getUid(), refundPrice, user.getNowMoney(), "sub");
+//            userService.updateById(user);
             userBillService.save(userBill);
             return Boolean.TRUE;
         });
@@ -301,9 +304,9 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
         userBill.setUid(userRecharge.getUid());
         userBill.setLinkId(userRecharge.getOrderId());
         userBill.setPm(0);
-        userBill.setTitle("系统退款");
-        userBill.setCategory("now_money");
-        userBill.setType("user_recharge_refund");
+        userBill.setTitle("系统充值退款");
+        userBill.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
+        userBill.setType(Constants.USER_BILL_TYPE_USER_RECHARGE_REFUND);
         userBill.setNumber(refundPrice);
         userBill.setBalance(nowMoney.subtract(refundPrice));
         userBill.setMark(StrUtil.format("退款给用户{}元", userRecharge.getPrice()));
@@ -327,7 +330,7 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
         wxRefundVo.setOut_refund_no(userRecharge.getOrderId());
         wxRefundVo.setTotal_fee(userRecharge.getPrice().multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue());
         wxRefundVo.setRefund_fee(userRecharge.getPrice().multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue());
-        String signKey = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
+        String signKey = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
         String sign = CrmebUtil.getSign(CrmebUtil.objectToMap(wxRefundVo), signKey);
         wxRefundVo.setSign(sign);
         String path = systemConfigService.getValueByKeyException("pay_mini_client_p12");

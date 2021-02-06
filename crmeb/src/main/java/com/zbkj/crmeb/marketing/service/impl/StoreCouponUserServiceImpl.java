@@ -1,11 +1,13 @@
 package com.zbkj.crmeb.marketing.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
+import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.constants.Constants;
 import com.exception.CrmebException;
@@ -30,7 +32,6 @@ import com.zbkj.crmeb.store.service.StoreCartService;
 import com.zbkj.crmeb.store.service.StoreProductService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.service.UserService;
-import com.zbkj.crmeb.wechat.vo.WechatSendMessageForOrderCancel;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -365,12 +366,20 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
             List<Integer> primaryKeyIdList = CrmebUtil.stringToArray(storeCouponUser.getPrimaryKey());
 
             //取两个集合的交集，如果是false则证明没有相同的值
-            if(storeCouponUser.getUseType() == 2 && !primaryKeyIdList.retainAll(productIdList)){
-                throw new CrmebException("此优惠券为商品券，请购买相关商品之后再使用！");
+            //oldList.retainAll(newList)返回值代表oldList是否保持原样，如果old和new完全相同，那old保持原样并返回false。
+            //交集：listA.retainAll(listB) ——listA内容变为listA和listB都存在的对象；listB不变
+            if(storeCouponUser.getUseType() == 2){
+                primaryKeyIdList.retainAll(productIdList);
+                if (CollUtil.isEmpty(primaryKeyIdList)) {
+                    throw new CrmebException("此优惠券为商品券，请购买相关商品之后再使用！");
+                }
             }
 
-            if(storeCouponUser.getUseType() == 3 && !primaryKeyIdList.retainAll(categoryIdList)){
-                throw new CrmebException("此优惠券为分类券，请购买相关分类下的商品之后再使用！");
+            if(storeCouponUser.getUseType() == 3){
+                primaryKeyIdList.retainAll(categoryIdList);
+                if (CollUtil.isEmpty(primaryKeyIdList)) {
+                    throw new CrmebException("此优惠券为分类券，请购买相关分类下的商品之后再使用！");
+                }
             }
         }
         return true;
@@ -580,10 +589,12 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
         List<StoreCouponUser> updateList = CollUtil.newArrayList();
         String nowDateStr = DateUtil.nowDate(Constants.DATE_FORMAT);
         couponList.forEach(coupon -> {
-            String endDateStr = DateUtil.dateToStr(coupon.getEndTime(), Constants.DATE_FORMAT);
-            if (DateUtil.compareDate(nowDateStr, endDateStr, Constants.DATE_FORMAT) >= 0) {
-                coupon.setStatus(2);
-                updateList.add(coupon);
+            if (ObjectUtil.isNotNull(coupon.getEndTime())) {
+                String endDateStr = DateUtil.dateToStr(coupon.getEndTime(), Constants.DATE_FORMAT);
+                if (DateUtil.compareDate(nowDateStr, endDateStr, Constants.DATE_FORMAT) >= 0) {
+                    coupon.setStatus(2);
+                    updateList.add(coupon);
+                }
             }
         });
 
@@ -592,6 +603,134 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
         }
         boolean update = updateBatchById(updateList);
         if (!update) throw new CrmebException("批量更新优惠券过期动作失败");
+    }
+
+    /**
+     * 用户领取优惠券
+     */
+    @Override
+    public Boolean receiveCoupon(UserCouponReceiveRequest request) {
+        // 获取优惠券信息
+        StoreCoupon storeCoupon = storeCouponService.getInfoException(request.getCouponId());
+
+        Integer userId = userService.getUserIdException();
+
+        //看是否有剩余数量,是否够给当前用户
+        if(storeCoupon.getIsLimited() && storeCoupon.getLastTotal() < 1){
+            throw new CrmebException("当前剩余数量不够领取！");
+        }
+
+        //过滤掉已经领取过的用户
+        List<Integer> uidList = CollUtil.newArrayList();
+        uidList.add(userId);
+        filterReceiveUserInUid(storeCoupon.getId(), uidList);
+        if(uidList.size() < 1){
+            //都已经领取过了
+            throw new CrmebException("当前用户已经领取过此优惠券了！");
+
+        }
+
+        //是否有固定的使用时间
+        if(!storeCoupon.getIsFixedTime()){
+            String endTime = DateUtil.addDay(DateUtil.nowDate(Constants.DATE_FORMAT), storeCoupon.getDay(), Constants.DATE_FORMAT);
+            storeCoupon.setUseEndTime(DateUtil.strToDate(endTime, Constants.DATE_FORMAT));
+            storeCoupon.setUseStartTime(DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
+        }
+
+
+        StoreCouponUser storeCouponUser = new StoreCouponUser();
+        storeCouponUser.setCouponId(storeCoupon.getId());
+        storeCouponUser.setUid(userId);
+        storeCouponUser.setName(storeCoupon.getName());
+        storeCouponUser.setMoney(storeCoupon.getMoney());
+        storeCouponUser.setMinPrice(storeCoupon.getMinPrice());
+        storeCouponUser.setStartTime(storeCoupon.getUseStartTime());
+        storeCouponUser.setEndTime(storeCoupon.getUseEndTime());
+        storeCouponUser.setUseType(storeCoupon.getUseType());
+        storeCouponUser.setType("receive");
+        if (storeCoupon.getUseType() > 1) {
+            storeCouponUser.setPrimaryKey(storeCoupon.getPrimaryKey());
+        }
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            save(storeCouponUser);
+            storeCouponService.deduction(storeCoupon.getId(), 1, storeCoupon.getIsLimited());
+            return Boolean.TRUE;
+        });
+
+        return execute;
+    }
+
+    /**
+     * 支付成功赠送处理
+     * @param couponId 优惠券编号
+     * @param uid  用户uid
+     * @return MyRecord
+     */
+    @Override
+    public MyRecord paySuccessGiveAway(Integer couponId, Integer uid) {
+        MyRecord record = new MyRecord();
+        record.set("status", "fail");
+        // 获取优惠券信息
+        StoreCoupon storeCoupon = storeCouponService.getById(couponId);
+        if(ObjectUtil.isNull(storeCoupon) || storeCoupon.getIsDel() || !storeCoupon.getStatus()){
+            record.set("errMsg", "优惠券信息不存在或者已失效！");
+            return record;
+        }
+
+        //看是否过期
+        if(!(storeCoupon.getReceiveEndTime() == null || storeCoupon.getReceiveEndTime().equals(""))){
+            //非永久可领取
+            String date = DateUtil.nowDateTimeStr();
+            int result = DateUtil.compareDate(date, DateUtil.dateToStr(storeCoupon.getReceiveEndTime(), Constants.DATE_FORMAT), Constants.DATE_FORMAT);
+            if(result == 1){
+                //过期了
+                record.set("errMsg", "已超过优惠券领取最后期限！");
+                return record;
+            }
+        }
+
+        //看是否有剩余数量
+        if(storeCoupon.getIsLimited() && storeCoupon.getLastTotal() < 1){
+            record.set("errMsg", "此优惠券已经被领完了！");
+            return record;
+        }
+
+        //过滤掉已经领取过的用户
+        List<Integer> uidList = CollUtil.newArrayList();
+        uidList.add(uid);
+        filterReceiveUserInUid(storeCoupon.getId(), uidList);
+        if(uidList.size() < 1){
+            //都已经领取过了
+            record.set("errMsg", "当前用户已经领取过此优惠券了！");
+            return record;
+        }
+
+        //是否有固定的使用时间
+        if(!storeCoupon.getIsFixedTime()){
+            String endTime = DateUtil.addDay(DateUtil.nowDate(Constants.DATE_FORMAT), storeCoupon.getDay(), Constants.DATE_FORMAT);
+            storeCoupon.setUseEndTime(DateUtil.strToDate(endTime, Constants.DATE_FORMAT));
+            storeCoupon.setUseStartTime(DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
+        }
+
+
+        StoreCouponUser storeCouponUser = new StoreCouponUser();
+        storeCouponUser.setCouponId(storeCoupon.getId());
+        storeCouponUser.setUid(uid);
+        storeCouponUser.setName(storeCoupon.getName());
+        storeCouponUser.setMoney(storeCoupon.getMoney());
+        storeCouponUser.setMinPrice(storeCoupon.getMinPrice());
+        storeCouponUser.setStartTime(storeCoupon.getUseStartTime());
+        storeCouponUser.setEndTime(storeCoupon.getUseEndTime());
+        storeCouponUser.setUseType(storeCoupon.getUseType());
+        storeCouponUser.setType("receive");
+        if (storeCoupon.getUseType() > 1) {
+            storeCouponUser.setPrimaryKey(storeCoupon.getPrimaryKey());
+        }
+        record.set("status", "ok");
+        record.set("storeCouponUser", storeCouponUser);
+        record.set("isLimited", storeCoupon.getIsLimited());
+        return record;
     }
 
     private void getPrimaryKeySql(LambdaQueryWrapper<StoreCouponUser> lambdaQueryWrapper, String productIdStr){

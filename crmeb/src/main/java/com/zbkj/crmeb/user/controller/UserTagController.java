@@ -4,6 +4,7 @@ import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.user.request.UserTagRequest;
+import com.zbkj.crmeb.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -16,7 +17,7 @@ import com.zbkj.crmeb.user.model.UserTag;
 
 
 /**
- * 用户分组表 前端控制器
+ * 用户标签 前端控制器
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
@@ -37,11 +38,12 @@ public class UserTagController {
     @Autowired
     private UserTagService userTagService;
 
+    @Autowired
+    private UserService userService;
+
     /**
-     * 分页显示用户分组表
+     * 分页显示用户分标签
      * @param pageParamRequest 分页参数
-     * @author Mr.Zhang
-     * @since 2020-06-05
      */
     @ApiOperation(value = "分页列表") //配合swagger使用
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -51,10 +53,8 @@ public class UserTagController {
     }
 
     /**
-     * 新增用户分组表
+     * 新增用户分标签
      * @param userTagRequest 新增参数
-     * @author Mr.Zhang
-     * @since 2020-06-05
      */
     @ApiOperation(value = "新增")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
@@ -70,15 +70,14 @@ public class UserTagController {
     }
 
     /**
-     * 删除用户分组表
+     * 删除用户分标签
      * @param id Integer
-     * @author Mr.Zhang
-     * @since 2020-06-05
      */
     @ApiOperation(value = "删除")
     @RequestMapping(value = "/delete", method = RequestMethod.GET)
     public CommonResult<String> delete(@RequestParam(value = "id") Integer id){
         if(userTagService.removeById(id)){
+            userService.clearGroupByGroupId(id+"");
             return CommonResult.success();
         }else{
             return CommonResult.failed();
@@ -86,11 +85,9 @@ public class UserTagController {
     }
 
     /**
-     * 修改用户分组表
+     * 修改用户标签
      * @param id integer id
      * @param userTagRequest 修改参数
-     * @author Mr.Zhang
-     * @since 2020-06-05
      */
     @ApiOperation(value = "修改")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
@@ -107,10 +104,8 @@ public class UserTagController {
     }
 
     /**
-     * 查询用户分组表信息
+     * 查询用户标签
      * @param id Integer
-     * @author Mr.Zhang
-     * @since 2020-06-05
      */
     @ApiOperation(value = "详情")
     @RequestMapping(value = "/info", method = RequestMethod.GET)

@@ -27,10 +27,10 @@ public interface StoreCartService extends IService<StoreCart> {
     /**
      * 根据有效标识符获取出数据
      * @param pageParamRequest 分页参数
-     * @param cart 购物车参数
+     * @param isValid 是否失效
      * @return 购物车列表
      */
-    List<StoreCartResponse> getList(PageParamRequest pageParamRequest, StoreCart cart, boolean isValid);
+    List<StoreCartResponse> getList(PageParamRequest pageParamRequest, boolean isValid);
 
     /**
      * 根据用户id和购物车ids查询购物车集合
@@ -93,7 +93,7 @@ public interface StoreCartService extends IService<StoreCart> {
      * @param productId 商品id
      * @return 跟新结果
      */
-    boolean productStatusNotEnable(Integer productId);
+    Boolean productStatusNotEnable(Integer productId);
 
     /**
      * 购物车重选提交
@@ -101,4 +101,10 @@ public interface StoreCartService extends IService<StoreCart> {
      * @return 提交结果
      */
     boolean resetCart(CartResetRequest resetRequest);
+
+    /**
+     * 对应sku购物车生效
+     * @param skuIdList skuIdList
+     */
+    Boolean productStatusNoEnable(List<Integer> skuIdList);
 }

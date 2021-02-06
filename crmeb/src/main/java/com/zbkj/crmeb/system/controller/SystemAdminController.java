@@ -41,19 +41,6 @@ public class SystemAdminController {
     @Autowired
     private SystemAdminService systemAdminService;
 
-//    @ApiOperation(value="后台用户登录")
-//    @PostMapping(value = "/login")
-//    public CommonResult<SystemAdminResponse> SystemAdminLogin(@Validated SystemAdminLoginRequest systemAdminLoginRequest) throws Exception {
-//        SystemAdminRequest systemAdminRequest = new SystemAdminRequest();
-//        systemAdminRequest.setAccount(systemAdminLoginRequest.getAccount());
-//        systemAdminRequest.setPwd(systemAdminLoginRequest.getPwd());
-//        SystemAdminResponse systemAdminResponse = systemAdminService.login(systemAdminRequest);
-//        if(null == systemAdminResponse){
-//            return CommonResult.failed(ExceptionCodeEnum.FAILED, "login failed");
-//        }
-//
-//        return CommonResult.success(systemAdminResponse, "login success");
-//    }
     /**
      * 分页显示后台管理员表
      * @param systemAdminRequest 搜索条件
@@ -154,6 +141,18 @@ public class SystemAdminController {
     @RequestMapping(value = "/updateStatus", method = RequestMethod.GET)
     public CommonResult<Object> updateStatus(@RequestParam(value = "id") @Valid Integer id, @RequestParam(value = "status") @Valid Boolean status){
         if (systemAdminService.updateStatus(id, status)) {
+            return CommonResult.success("修改成功");
+        }
+        return CommonResult.failed("修改失败");
+    }
+
+    /**
+     * 修改后台管理员是否接收状态
+     */
+    @ApiOperation(value = "修改后台管理员是否接收状态")
+    @RequestMapping(value = "/update/isSms", method = RequestMethod.GET)
+    public CommonResult<Object> updateIsSms(@RequestParam(value = "id") @Valid Integer id){
+        if (systemAdminService.updateIsSms(id)) {
             return CommonResult.success("修改成功");
         }
         return CommonResult.failed("修改失败");

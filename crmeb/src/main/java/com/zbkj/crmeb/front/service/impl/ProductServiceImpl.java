@@ -200,7 +200,17 @@ public class ProductServiceImpl implements ProductService {
             if(null != user && null != user.getUid()){
                 storeInfo.setUserLike(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),id,true).size() > 0);
                 storeInfo.setUserCollect(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),id,false).size() > 0);
-                productDetailResponse.setPriceName(getPacketPriceRange(productResponse, user.getIsPromoter()));
+
+                // 判断是否开启分销
+                String brokerageFuncStatus = systemConfigService.getValueByKey("brokerage_func_status");
+                String storeBrokerageStatus = systemConfigService.getValueByKey("store_brokerage_status");
+                if (brokerageFuncStatus.equals("1")) {
+                    if (storeBrokerageStatus.equals("1")) {
+                        productDetailResponse.setPriceName(getPacketPriceRange(productResponse, user.getIsPromoter()));
+                    } else {
+                        productDetailResponse.setPriceName(getPacketPriceRange(productResponse, true));
+                    }
+                }
             }else{
                 storeInfo.setUserLike(false);
                 storeInfo.setUserCollect(false);

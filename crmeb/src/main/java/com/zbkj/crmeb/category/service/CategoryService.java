@@ -36,8 +36,6 @@ public interface CategoryService extends IService<Category> {
 
     HashMap<Integer, String> getListInId(List<Integer> cateIdList);
 
-    void checkCategoryIsExist(List<Integer> categoryIdList);
-
     Boolean checkAuth(List<Integer> pathIdList, String uri);
 
     boolean update(CategoryRequest request, Integer id);
@@ -49,4 +47,9 @@ public interface CategoryService extends IService<Category> {
     boolean checkUrl(String uri);
 
     boolean updateStatus(Integer id);
+
+    /**
+     * 新增分类表
+     */
+    Boolean create(CategoryRequest categoryRequest);
 }
