@@ -47,6 +47,14 @@ public interface StoreProductReplyService extends IService<StoreProductReply> {
     List<StoreProductReply> isReply(String unique,String replayType, Integer orderId);
 
     /**
+     * 查询是否已经回复
+     * @param unique skuId
+     * @param orderId 订单id
+     * @return Boolean
+     */
+    Boolean isReply(String unique, Integer orderId);
+
+    /**
      * 获取商品评论列表
      * @param productId     商品ID
      * @param type          商品类型

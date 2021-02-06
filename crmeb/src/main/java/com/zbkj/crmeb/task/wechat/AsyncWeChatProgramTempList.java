@@ -23,9 +23,9 @@ import org.springframework.stereotype.Component;
  * | Author: CRMEB Team <admin@crmeb.com>
  * +----------------------------------------------------------------------
  */
-@Component
-@Configuration //读取配置
-@EnableScheduling // 2.开启定时任务
+//@Component
+//@Configuration //读取配置
+//@EnableScheduling // 2.开启定时任务
 public class AsyncWeChatProgramTempList {
     //日志
     private static final Logger logger = LoggerFactory.getLogger(AsyncWeChatProgramTempList.class);

@@ -31,4 +31,7 @@ public class TemplateMessageSearchRequest {
 
     @ApiModelProperty(value = "状态, 0 正常，1 禁用")
     private Integer status = null;
+
+    @ApiModelProperty(value = "0=订阅消息,1=微信模板消息")
+    private Boolean type;
 }

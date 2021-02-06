@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.MyRecord;
 import com.common.PageParamRequest;
@@ -81,12 +82,11 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
     /**
     * 列表
     * @param pageParamRequest 分页类参数
-    * @author Mr.Zhang edite by stivepeim 2020-7-4
-    * @since 2020-05-28
+    * @param isValid 是否失效
     * @return List<StoreCart>
     */
     @Override
-    public List<StoreCartResponse> getList(PageParamRequest pageParamRequest, StoreCart cart, boolean isValid) {
+    public List<StoreCartResponse> getList(PageParamRequest pageParamRequest, boolean isValid) {
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         //带 StoreCart 类的多条件查询
         LambdaQueryWrapper<StoreCart> lambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -108,6 +108,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
                 BeanUtils.copyProperties(storeCart,storeCartResponse);
                 storeCartResponse.setAttrStatus(false);
                 response.add(storeCartResponse);
+                continue ;
             }
             BeanUtils.copyProperties(storeCart,storeCartResponse);
             StoreProductResponse product = storeProductService.getByProductId(storeCart.getProductId());
@@ -341,13 +342,11 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
      * @return 跟新结果
      */
     @Override
-    public boolean productStatusNotEnable(Integer productId) {
-//        StoreProductResponse storeProductResponse = storeProductService.getByProductId(productId);
-//        if(null == storeProductResponse) return false;
+    public Boolean productStatusNotEnable(Integer productId) {
         StoreCart storeCartPram = new StoreCart();
         storeCartPram.setProductId(productId);
         List<StoreCart> existStoreCartProducts = getByEntity(storeCartPram);
-        if(null == existStoreCartProducts) return false;
+        if(null == existStoreCartProducts) return true;
         existStoreCartProducts = existStoreCartProducts.stream().map(e->{
             e.setStatus(false);
             return e;
@@ -374,6 +373,20 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         if(!updateResult) throw new CrmebException("重选添加购物车失败");
         productStatusEnableFlag(resetRequest.getId(), true);
         return updateResult;
+    }
+
+    /**
+     * 对应sku购物车生效
+     * @param skuIdList skuIdList
+     * @return Boolean
+     */
+    @Override
+    public Boolean productStatusNoEnable(List<Integer> skuIdList) {
+        LambdaUpdateWrapper<StoreCart> lqw = new LambdaUpdateWrapper<>();
+        lqw.set(StoreCart::getStatus, true);
+        lqw.in(StoreCart::getProductAttrUnique, skuIdList);
+        lqw.eq(StoreCart::getIsNew, false);
+        return update(lqw);
     }
 
     ///////////////////////////////////////////////////////////////////自定义方法

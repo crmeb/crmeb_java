@@ -4,11 +4,13 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.system.model.SystemAdmin;
 import com.zbkj.crmeb.system.request.SystemAdminAddRequest;
+import com.zbkj.crmeb.system.request.SystemAdminLoginRequest;
 import com.zbkj.crmeb.system.request.SystemAdminRequest;
 import com.zbkj.crmeb.system.response.SystemAdminResponse;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * SystemAdminService 接口
@@ -27,39 +29,28 @@ public interface SystemAdminService extends IService<SystemAdmin> {
 
     SystemAdminResponse getInfo(SystemAdminRequest request) throws Exception;
 
-    SystemAdminResponse login(SystemAdminRequest request, String ip) throws Exception;
+    /**
+     * PC登录
+     */
+    SystemAdminResponse login(SystemAdminLoginRequest request, String ip) throws Exception;
 
     /**
      * 根据Token获取对应用户信息
-     *
-     * @param token
-     * @return
      */
     SystemAdminResponse getInfoByToken(String token) throws Exception;
 
     /**
      * 用户登出
-     *
-     * @param token
-     * @return
-     * @throws Exception
      */
     Boolean logout(String token) throws Exception;
 
     /**
      * 新增管理员
-     *
-     * @param systemAdminAddRequest
-     * @return
      */
     SystemAdminResponse saveAdmin(SystemAdminAddRequest systemAdminAddRequest) throws Exception;
 
     /**
      * 更新管理员
-     *
-     * @param systemAdminRequest
-     * @return
-     * @throws Exception
      */
     SystemAdminResponse updateAdmin(SystemAdminRequest systemAdminRequest) throws Exception;
 
@@ -78,4 +69,22 @@ public interface SystemAdminService extends IService<SystemAdmin> {
     Boolean updateStatus(Integer id, Boolean status);
 
     HashMap<Integer, SystemAdmin> getMapInId(List<Integer> adminIdList);
+
+    /**
+     * 修改后台管理员是否接收状态
+     * @param id 管理员id
+     * @return Boolean
+     */
+    Boolean updateIsSms(Integer id);
+
+    /**
+     * 获取可以接收短信的管理员
+     */
+    List<SystemAdmin> findIsSmsList();
+
+    /**
+     * 获取登录页图片
+     * @return Map
+     */
+    Map<String, Object> getLoginPic();
 }

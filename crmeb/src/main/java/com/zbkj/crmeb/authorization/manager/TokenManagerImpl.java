@@ -1,6 +1,5 @@
 package com.zbkj.crmeb.authorization.manager;
 
-import cn.hutool.Hutool;
 import cn.hutool.core.thread.ThreadUtil;
 import com.common.CheckAdminToken;
 import com.common.CommonResult;
@@ -16,10 +15,8 @@ import com.zbkj.crmeb.express.service.impl.ExpressServiceImpl;
 import com.zbkj.crmeb.validatecode.service.impl.ValidateCodeServiceImpl;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.ThreadUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;

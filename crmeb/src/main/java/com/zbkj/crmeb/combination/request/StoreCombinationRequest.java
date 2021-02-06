@@ -1,7 +1,5 @@
 package com.zbkj.crmeb.combination.request;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.zbkj.crmeb.store.model.StoreProductAttr;
 import com.zbkj.crmeb.store.request.StoreProductAttrValueRequest;
@@ -155,9 +153,8 @@ public class StoreCombinationRequest implements Serializable {
     @Min(value = 1, message = "单次购买数量限制不能小于1")
     private Integer onceNum;
 
-    @ApiModelProperty(value = "虚拟成团百分比")
-    @Min(value = 1, message = "虚拟成团百分比不能小于1")
-    @Max(value = 100, message = "虚拟成团百分比不能大于100")
+    @ApiModelProperty(value = "虚拟成团数量")
+    @Min(value = 0, message = "虚拟成团数量不能小于0")
     private Integer virtualRation;
 
     @ApiModelProperty(value = "商品属性")

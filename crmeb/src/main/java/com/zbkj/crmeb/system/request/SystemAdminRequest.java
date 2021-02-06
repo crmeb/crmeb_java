@@ -70,5 +70,9 @@ public class SystemAdminRequest implements Serializable {
     @ApiModelProperty(value = "是否删除 1删除 0未删除")
     private Boolean isDel;
 
+    @ApiModelProperty(value = "手机号码")
+    private String phone;
 
+    @ApiModelProperty(value = "是否接收短信")
+    private Boolean isSms;
 }

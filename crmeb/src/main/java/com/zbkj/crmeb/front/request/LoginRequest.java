@@ -12,7 +12,7 @@ import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 
 /**
- * 手机快速登录
+ * 移动端手机密码登录请求对象
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
@@ -26,7 +26,7 @@ import java.io.Serializable;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@ApiModel(value="LoginRequest对象", description="手机快速登录")
+@ApiModel(value="LoginRequest对象", description="移动端手机密码登录请求对象")
 public class LoginRequest implements Serializable {
 
     private static final long serialVersionUID=1L;

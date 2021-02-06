@@ -12,7 +12,9 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
+import com.constants.BargainConstants;
 import com.constants.Constants;
+import com.constants.ProductConstants;
 import com.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -158,7 +160,8 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
             //砍价参与人数
             Integer countPeopleAll = bargainUserList.size();
             //砍价成功人数
-            Long countPeopleSuccess = bargainUserList.stream().filter(o -> o.getStatus().equals(3)).count();
+            Long countPeopleSuccess = bargainUserList.stream()
+                    .filter(o -> o.getStatus().equals(BargainConstants.BARGAIN_USER_STATUS_SUCCESS)).count();
             //帮忙砍价人数
             Long countPeopleHelp = storeBargainUserHelpService.getHelpCountByBargainId(storeBargain.getId());
             storeBargainResponse.setCountPeopleAll(countPeopleAll.longValue());
@@ -231,14 +234,15 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
 
         // 处理商品属性，给砍价商品一份单规格默认属性
         StoreProductAttr singleAttr = new StoreProductAttr();
-        singleAttr.setProductId(bargain.getId()).setAttrName("规格").setAttrValues("默认").setType(Constants.PRODUCT_TYPE_BARGAIN);
+        singleAttr.setProductId(bargain.getId()).setAttrName(ProductConstants.SINGLE_ATTR_NAME)
+                .setAttrValues(ProductConstants.SINGLE_ATTR_VALUE).setType(ProductConstants.PRODUCT_TYPE_BARGAIN);
         boolean attrAddResult = attrService.save(singleAttr);
         if (!attrAddResult) throw new CrmebException("新增属性名失败");
 
         // 处理商品属性值，砍价商品只有一条属性值
         StoreProductAttrValue singleAttrValue = new StoreProductAttrValue();
         BeanUtils.copyProperties(attrValueRequest, singleAttrValue);
-        singleAttrValue.setProductId(bargain.getId()).setType(Constants.PRODUCT_TYPE_BARGAIN);
+        singleAttrValue.setProductId(bargain.getId()).setType(ProductConstants.PRODUCT_TYPE_BARGAIN);
         singleAttrValue.setImage(systemAttachmentService.clearPrefix(singleAttrValue.getImage()));
         boolean saveAttrValue = attrValueService.save(singleAttrValue);
         if(!saveAttrValue) throw new CrmebException("新增属性详情失败");
@@ -248,15 +252,15 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
                 0,
                 bargain.getId(),
                 systemAttachmentService.clearPrefix(JSON.toJSONString(request.getAttrValue())),
-                DateUtil.getNowTime(),Constants.PRODUCT_TYPE_BARGAIN);
+                DateUtil.getNowTime(),ProductConstants.PRODUCT_TYPE_BARGAIN);
         boolean saveResult = storeProductAttrResultService.save(attrResult);
         if(!saveResult) throw new CrmebException("新增商品属性详情详情失败");
 
         // 处理富文本
         StoreProductDescription spd = new StoreProductDescription(
                 bargain.getId(),  request.getContent().length() > 0
-                ? systemAttachmentService.clearPrefix(request.getContent()) : "" , Constants.PRODUCT_TYPE_BARGAIN);
-        storeProductDescriptionService.deleteByProductId(spd.getProductId(), Constants.PRODUCT_TYPE_BARGAIN);
+                ? systemAttachmentService.clearPrefix(request.getContent()) : "" , ProductConstants.PRODUCT_TYPE_BARGAIN);
+        storeProductDescriptionService.deleteByProductId(spd.getProductId(), ProductConstants.PRODUCT_TYPE_BARGAIN);
         boolean saveDesc = storeProductDescriptionService.save(spd);
         if (!saveDesc) throw new CrmebException("新增商品富文本失败");
 
@@ -303,21 +307,21 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         }
 
         // 砍价商品属性attr不用变化，attrValue删除原有的替换为现有的
-        attrValueService.removeByProductId(request.getId(), Constants.PRODUCT_TYPE_BARGAIN);
+        attrValueService.removeByProductId(request.getId(), ProductConstants.PRODUCT_TYPE_BARGAIN);
         StoreProductAttrValue singleAttrValue = new StoreProductAttrValue();
         BeanUtils.copyProperties(attrValueRequest, singleAttrValue);
-        singleAttrValue.setProductId(bargain.getId()).setType(Constants.PRODUCT_TYPE_BARGAIN);
+        singleAttrValue.setProductId(bargain.getId()).setType(ProductConstants.PRODUCT_TYPE_BARGAIN);
         singleAttrValue.setImage(systemAttachmentService.clearPrefix(singleAttrValue.getImage()));
         boolean saveAttrValue = attrValueService.save(singleAttrValue);
         if(!saveAttrValue) throw new CrmebException("编辑属性详情失败");
 
         // attrResult整存整取，不做更新
-        storeProductAttrResultService.deleteByProductId(bargain.getId(),Constants.PRODUCT_TYPE_BARGAIN);
+        storeProductAttrResultService.deleteByProductId(bargain.getId(),ProductConstants.PRODUCT_TYPE_BARGAIN);
         StoreProductAttrResult attrResult = new StoreProductAttrResult(
                 0,
                 bargain.getId(),
                 systemAttachmentService.clearPrefix(JSON.toJSONString(request.getAttrValue())),
-                DateUtil.getNowTime(),Constants.PRODUCT_TYPE_BARGAIN);
+                DateUtil.getNowTime(),ProductConstants.PRODUCT_TYPE_BARGAIN);
         storeProductAttrResultService.save(attrResult);
 
         return saveCount > 0;
@@ -325,9 +329,9 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
 
     /**
      * 更新砍价商品状态
-     * @param id
-     * @param status
-     * @return
+     * @param id 砍价商品id
+     * @param status 砍价商品状态
+     * @return Boolean
      */
     @Override
     public boolean updateBargainStatus(Integer id, boolean status) {
@@ -365,7 +369,7 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
 
         // 查询attr
         StoreProductAttr spaPram = new StoreProductAttr();
-        spaPram.setProductId(storeBargain.getProductId() ).setType(Constants.PRODUCT_TYPE_NORMAL);
+        spaPram.setProductId(storeBargain.getProductId() ).setType(ProductConstants.PRODUCT_TYPE_NORMAL);
         List<StoreProductAttr> attrs = attrService.getByEntity(spaPram);
         storeProductResponse.setAttr(attrs);
         storeProductResponse.setSliderImage(String.join(",",storeBargain.getImages()));
@@ -378,15 +382,15 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
 
         // 注意：数据瓶装步骤：分别查询砍价和商品本身信息组装sku信息之后，再对比sku属性是否相等来赋值是否砍价sku信息
         StoreProductAttrValue spavPramBargain = new StoreProductAttrValue();
-        spavPramBargain.setProductId(bargainId).setType(Constants.PRODUCT_TYPE_BARGAIN);
+        spavPramBargain.setProductId(bargainId).setType(ProductConstants.PRODUCT_TYPE_BARGAIN);
         List<StoreProductAttrValue> storeProductAttrValuesBargain = attrValueService.getByEntity(spavPramBargain);
-        List<HashMap<String, Object>> attrValuesBargain = genratorSkuInfo(bargainId, specType, storeBargain, storeProductAttrValuesBargain, Constants.PRODUCT_TYPE_BARGAIN);
+        List<HashMap<String, Object>> attrValuesBargain = genratorSkuInfo(bargainId, specType, storeBargain, storeProductAttrValuesBargain, ProductConstants.PRODUCT_TYPE_BARGAIN);
 
         // 查询attrValue
         StoreProductAttrValue spavPramProduct = new StoreProductAttrValue();
-        spavPramProduct.setProductId(storeBargain.getProductId()).setType(Constants.PRODUCT_TYPE_NORMAL);
+        spavPramProduct.setProductId(storeBargain.getProductId()).setType(ProductConstants.PRODUCT_TYPE_NORMAL);
         List<StoreProductAttrValue> storeProductAttrValuesProduct = attrValueService.getByEntity(spavPramProduct);
-        List<HashMap<String, Object>> attrValuesProduct = genratorSkuInfo(storeBargain.getProductId(), specType, storeBargain, storeProductAttrValuesProduct, Constants.PRODUCT_TYPE_NORMAL);
+        List<HashMap<String, Object>> attrValuesProduct = genratorSkuInfo(storeBargain.getProductId(), specType, storeBargain, storeProductAttrValuesProduct, ProductConstants.PRODUCT_TYPE_NORMAL);
 
         // H5 端用于生成skuList
         List<StoreProductAttrValueResponse> sPAVResponses = new ArrayList<>();
@@ -423,7 +427,7 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         StoreProductDescription sd = storeProductDescriptionService.getOne(
                 new LambdaQueryWrapper<StoreProductDescription>()
                         .eq(StoreProductDescription::getProductId, bargainId)
-                        .eq(StoreProductDescription::getType, Constants.PRODUCT_TYPE_BARGAIN));
+                        .eq(StoreProductDescription::getType, ProductConstants.PRODUCT_TYPE_BARGAIN));
         if(null != sd){
             storeProductResponse.setContent(StrUtil.isBlank(sd.getDescription()) ? "" : sd.getDescription());
         }
@@ -470,7 +474,6 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         qw.select("ifnull(sum(look), 0) as lookCount", "ifnull(sum(share), 0) as shareCount");
         qw.eq("is_del", false);
         Map<String, Object> map = getMap(qw);
-//        Long userCount = storeBargainUserHelpService.getHelpPeopleCount();
         Integer count = storeBargainUserHelpService.count();
         map.put("userCount", count.longValue());
         return map;
@@ -478,8 +481,7 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
 
     /**
      * H5 砍价商品详情
-     * @param id
-     * @return
+     * @param id 砍价商品id
      */
     @Override
     public BargainDetailResponse getH5Detail(Integer id) {
@@ -491,22 +493,22 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         storeProductResponse.setEndTime(storeBargain.getStopTime());
 
         StoreProductAttr spaPram = new StoreProductAttr();
-        spaPram.setProductId(id).setType(Constants.PRODUCT_TYPE_BARGAIN);
+        spaPram.setProductId(id).setType(ProductConstants.PRODUCT_TYPE_BARGAIN);
         storeProductResponse.setAttr(attrService.getByEntity(spaPram));
 
         StoreProductAttrValue spavPramBargain = new StoreProductAttrValue();
-        spavPramBargain.setProductId(id).setType(Constants.PRODUCT_TYPE_BARGAIN);
+        spavPramBargain.setProductId(id).setType(ProductConstants.PRODUCT_TYPE_BARGAIN);
         List<StoreProductAttrValue> storeProductAttrValuesBargain = storeProductAttrValueService.getByEntity(spavPramBargain);
 
         // 查询attr
         StoreProductAttr spaPramNormal = new StoreProductAttr();
-        spaPramNormal.setProductId(storeBargain.getProductId() ).setType(Constants.PRODUCT_TYPE_NORMAL);
+        spaPramNormal.setProductId(storeBargain.getProductId() ).setType(ProductConstants.PRODUCT_TYPE_NORMAL);
         List<StoreProductAttr> attrs = attrService.getByEntity(spaPramNormal);
         boolean specType = false;
         if (attrs.size() > 1) {
             specType = true;
         }
-        List<HashMap<String, Object>> attrValuesBargain = genratorSkuInfo(id, specType, storeBargain, storeProductAttrValuesBargain, Constants.PRODUCT_TYPE_BARGAIN);
+        List<HashMap<String, Object>> attrValuesBargain = genratorSkuInfo(id, specType, storeBargain, storeProductAttrValuesBargain, ProductConstants.PRODUCT_TYPE_BARGAIN);
 
         // H5 端用于生成skuList
         List<StoreProductAttrValueResponse> sPAVResponses = new ArrayList<>();
@@ -523,7 +525,7 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         StoreProductDescription sd = storeProductDescriptionService.getOne(
                 new LambdaQueryWrapper<StoreProductDescription>()
                         .eq(StoreProductDescription::getProductId, id)
-                        .eq(StoreProductDescription::getType, Constants.PRODUCT_TYPE_BARGAIN));
+                        .eq(StoreProductDescription::getType, ProductConstants.PRODUCT_TYPE_BARGAIN));
         if(null != sd){
             storeProductResponse.setContent(null == sd.getDescription()?"":sd.getDescription());
         }
@@ -546,23 +548,14 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
 
     /**
      * 用户砍价活动次数
-     * @param storeBargain
-     * @param uid
+     * @param storeBargain 砍价商品
+     * @param uid 用户uid
      * @return
      * 1.用户有没有砍价中的活动
      * 2.没有的，用户的砍价次数有没有到
      */
     private int isCanPink(StoreBargain storeBargain, Integer uid) {
         int userBargainStatus = 0; // 能
-//        StoreBargainUser storeBargainUser = storeBargainUserService.getByBargainIdAndUidAndPink(storeBargain.getId(), uid);
-//        if (ObjectUtil.isNotNull(storeBargainUser)) {
-//            userBargainStatus = 1; // 不能
-//            return userBargainStatus;
-//        }
-//        List<StoreBargainUser> list = storeBargainUserService.getListByBargainIdAndUid(storeBargain.getId(), uid);
-//        if (CollUtil.isNotEmpty(list) && list.size() >= storeBargain.getNum()) {
-//            userBargainStatus = 1;
-//        }
         List<StoreBargainUser> list = storeBargainUserService.getListByBargainIdAndUid(storeBargain.getId(), uid);
         if (CollUtil.isNotEmpty(list)) {
             userBargainStatus = list.size();
@@ -572,13 +565,12 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
 
     /**
      * 获取当前时间段的砍价商品
-     * @param productId
+     * @param productId 砍价商品id
      * @return
      */
     @Override
     public List<StoreBargain> getCurrentBargainByProductId(Integer productId) {
         long timeMillis = System.currentTimeMillis();
-        PageParamRequest pageParamRequest = new PageParamRequest();
         LambdaQueryWrapper<StoreBargain> lqw = new LambdaQueryWrapper<>();
         lqw.eq(StoreBargain::getProductId, productId);
         lqw.eq(StoreBargain::getIsDel, false);
@@ -590,8 +582,8 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
 
     /**
      * 参与砍价商品活动
-     * @param request
-     * @return
+     * @param request 请求参数
+     * @return Boolean
      */
     @Override
     public Boolean start(BargainFrontRequest request) {
@@ -605,7 +597,7 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         spavBargainUser.setIsDel(false).setBargainId(request.getBargainId()).setUid(user.getUid());
         List<StoreBargainUser> historyList = storeBargainUserService.getByEntity(spavBargainUser);
         if (CollUtil.isNotEmpty(historyList)) {
-            List<StoreBargainUser> collect = historyList.stream().filter(i -> i.getStatus() == 1).collect(Collectors.toList());
+            List<StoreBargainUser> collect = historyList.stream().filter(i -> i.getStatus().equals(BargainConstants.BARGAIN_USER_STATUS_PARTICIPATE)).collect(Collectors.toList());
             if (CollUtil.isNotEmpty(collect)) throw new CrmebException("请先完成当前砍价活动");
             // 判断是否达到参与砍价活动上限
             if (historyList.size() >= storeBargain.getNum()) {
@@ -620,14 +612,14 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         storeBargainUser.setBargainPrice(storeBargain.getPrice());
         storeBargainUser.setPrice(BigDecimal.ZERO);
         storeBargainUser.setAddTime(System.currentTimeMillis());
-        storeBargainUser.setStatus(1);
+        storeBargainUser.setStatus(BargainConstants.BARGAIN_USER_STATUS_PARTICIPATE);
         return storeBargainUserService.save(storeBargainUser);
     }
 
     /**
      * 砍价商品根据实体查询
-     * @param storeBargainParam
-     * @return
+     * @param storeBargainParam 请求参数
+     * @return list
      */
     @Override
     public List<StoreBargain> getByEntity(StoreBargain storeBargainParam) {
@@ -650,7 +642,7 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         // 因为attrvalue表中unique使用Id代替，更新前先查询此表是否存在
         StoreProductAttrValue spavParm = new StoreProductAttrValue();
         spavParm.setProductId(bargainId);
-        spavParm.setType(Constants.PRODUCT_TYPE_BARGAIN);
+        spavParm.setType(ProductConstants.PRODUCT_TYPE_BARGAIN);
         spavParm.setId(attrValueId);
         List<StoreProductAttrValue> attrvalues = storeProductAttrValueService.getByEntity(spavParm);
         if (CollUtil.isEmpty(attrvalues)) throw new CrmebException("未找到相关商品属性");
@@ -658,7 +650,7 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         // 对应的主商品sku
         List<StoreProductAttrValue> currentProAttrValues = storeProductAttrValueService.getListByProductId(productId);
         List<StoreProductAttrValue> existAttrValues = currentProAttrValues.stream().filter(e ->
-                e.getSuk().equals(bargaunAttrValue.getSuk()) && e.getType().equals(Constants.PRODUCT_TYPE_NORMAL))
+                e.getSuk().equals(bargaunAttrValue.getSuk()) && e.getType().equals(ProductConstants.PRODUCT_TYPE_NORMAL))
                 .collect(Collectors.toList());
         if (CollUtil.isEmpty(existAttrValues)) throw new CrmebException("未找到扣减库存的商品");
         // 砍价SKU 库存减，销量、限购总数减
@@ -674,8 +666,8 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         if (ObjectUtil.isNull(storeBargainUser)) throw new CrmebException("砍价用户信息不存在");
         storeBargainUser.setStatus(3);
         Boolean execute = transactionTemplate.execute(e -> {
-            storeProductAttrValueService.decProductAttrStock(bargainId, attrValueId, num, Constants.PRODUCT_TYPE_BARGAIN);
-            storeProductService.decProductStock(productId, num, existAttrValues.get(0).getId(), Constants.PRODUCT_TYPE_NORMAL);
+            storeProductAttrValueService.decProductAttrStock(bargainId, attrValueId, num, ProductConstants.PRODUCT_TYPE_BARGAIN);
+            storeProductService.decProductStock(productId, num, existAttrValues.get(0).getId(), ProductConstants.PRODUCT_TYPE_NORMAL);
             update(luw);
             storeBargainUserService.updateById(storeBargainUser);
             return Boolean.TRUE;
@@ -743,14 +735,14 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
             // 查询用户参与活动表中状态为进行中的数据
             StoreBargainUser spavBargainUser = new StoreBargainUser();
             spavBargainUser.setBargainId(bargain.getId());
-            spavBargainUser.setStatus(1);
+            spavBargainUser.setStatus(BargainConstants.BARGAIN_USER_STATUS_PARTICIPATE);
             spavBargainUser.setIsDel(false);
             List<StoreBargainUser> bargainUsers = storeBargainUserService.getByEntity(spavBargainUser);
             if (CollUtil.isEmpty(bargainUsers)) {
                 continue ;
             }
             for (int i = 0; i < bargainUsers.size(); i++) {
-                bargainUsers.get(i).setStatus(2);
+                bargainUsers.get(i).setStatus(BargainConstants.BARGAIN_USER_STATUS_FAIL);
             }
             bargainUserList.addAll(bargainUsers);
         }
