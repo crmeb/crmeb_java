@@ -10,13 +10,13 @@
               </el-radio-group>
               <el-date-picker v-model="timeVal" value-format="yyyy-MM-dd" format="yyyy-MM-dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTime" />
             </el-form-item>
-            <el-form-item label="是否支付：">
-              <el-radio-group v-model="tableFrom.paid" type="button" size="small" @change="getList(1)">
-                <el-radio-button label="">全部</el-radio-button>
-                <el-radio-button label="1">已支付</el-radio-button>
-                <el-radio-button label="0">未支付</el-radio-button>
-              </el-radio-group>
-            </el-form-item>
+            <!--<el-form-item label="是否支付：">-->
+              <!--<el-radio-group v-model="tableFrom.paid" type="button" size="small" @change="getList(1)">-->
+                <!--<el-radio-button label="">全部</el-radio-button>-->
+                <!--<el-radio-button label="1">已支付</el-radio-button>-->
+                <!--<el-radio-button label="0">未支付</el-radio-button>-->
+              <!--</el-radio-group>-->
+            <!--</el-form-item>-->
             <el-form-item label="关键字：" class="width100">
               <el-input v-model="tableFrom.keywords" placeholder="微信昵称/姓名/订单号" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search" size="small" @click="getList(1)" />
@@ -76,14 +76,14 @@
           prop="givePrice"
           :sort-method="(a,b)=>{return a.givePrice - b.givePrice}"
         />
-        <el-table-column
-          label="是否支付"
-          min-width="80"
-        >
-          <template slot-scope="scope">
-            <span class="spBlock">{{ scope.row.paid | payStatusFilter }}</span>
-          </template>
-        </el-table-column>
+        <!--<el-table-column-->
+          <!--label="是否支付"-->
+          <!--min-width="80"-->
+        <!--&gt;-->
+          <!--<template slot-scope="scope">-->
+            <!--<span class="spBlock">{{ scope.row.paid | payStatusFilter }}</span>-->
+          <!--</template>-->
+        <!--</el-table-column>-->
         <el-table-column
           label="充值类型"
           min-width="80"
@@ -100,12 +100,12 @@
             <span class="spBlock">{{ scope.row.payTime || '无' }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="120" fixed="right" align="center">
-          <template slot-scope="scope">
-            <el-button type="text" size="small" @click="handleDelete(scope.row)" v-if="!scope.row.paid">删除</el-button>
-            <el-button type="text" size="small" @click="handleRefund(scope.row)" v-if="parseFloat(scope.row.refundPrice) <= 0 && scope.row.paid">退款</el-button>
-          </template>
-        </el-table-column>
+        <!--<el-table-column label="操作" min-width="120" fixed="right" align="center">-->
+          <!--<template slot-scope="scope">-->
+            <!--<el-button type="text" size="small" @click="handleDelete(scope.row)" v-if="!scope.row.paid">删除</el-button>-->
+            <!--<el-button type="text" size="small" @click="handleRefund(scope.row)" v-if="parseFloat(scope.row.refundPrice) <= 0 && scope.row.paid">退款</el-button>-->
+          <!--</template>-->
+        <!--</el-table-column>-->
       </el-table>
       <div class="block">
         <el-pagination

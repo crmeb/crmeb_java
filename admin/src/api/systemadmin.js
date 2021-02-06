@@ -70,3 +70,27 @@ export function adminUpdate(pram) {
     params: pram
   })
 }
+
+/**
+ * 修改状态
+ * @param pram
+ */
+export function updateStatusApi(params) {
+  return request({
+    url: `/admin/system/admin/updateStatus`,
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 修改后台管理员是否接收状态
+ * @param pram
+ */
+export function updateIsSmsApi(params) {
+  return request({
+    url: `/admin/system/admin/update/isSms`,
+    method: 'get',
+    params
+  })
+}

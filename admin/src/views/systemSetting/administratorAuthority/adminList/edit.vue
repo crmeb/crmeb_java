@@ -20,7 +20,7 @@
         <el-input v-model="pram.realName" placeholder="管理员姓名" />
       </el-form-item>
       <el-form-item label="管理员身份" prop="roles">
-        <el-select v-model="pram.roles" placeholder="身份" clearable multiple>
+        <el-select v-model="pram.roles" placeholder="身份" clearable multiple style="width: 100%">
           <el-option
             v-for="item,index in roleList.list"
             :key="index"
@@ -28,6 +28,10 @@
             :value="item.id"
           />
         </el-select>
+      </el-form-item>
+      <el-form-item label="手机号" prop="phone">
+        <el-input type="text" v-model="pram.phone" prefix="ios-contact-outline"
+                  placeholder="请输入手机号" size="large"/>
       </el-form-item>
       <el-form-item label="状态">
         <el-switch v-model="pram.status" :active-value="true" :inactive-value="false" />
@@ -59,6 +63,15 @@ export default {
     }
   },
   data() {
+    const validatePhone = (rule, value, callback) => {
+      if (!value) {
+        return callback(new Error('请填写手机号'));
+      } else if (!/^1[3456789]\d{9}$/.test(value)) {
+        callback(new Error('手机号格式不正确!'));
+      } else {
+        callback();
+      }
+    };
     const validatePass = (rule, value, callback) => {
       if (value === '') {
         callback(new Error('请再次输入密码'))
@@ -78,7 +91,8 @@ export default {
         realName: null,
         roles: [],
         status: null,
-        id: null
+        id: null,
+        phone: null
       },
       roleList: [],
       rules: {
@@ -87,7 +101,10 @@ export default {
         pwd: [{ required: true, message: '请填管理员密码', trigger: ['blur', 'change'] }],
         repwd: [{ required: true, message: '确认密码密码', validator: validatePass, trigger: ['blur', 'change'] }],
         realName: [{ required: true, message: '管理员姓名', trigger: ['blur', 'change'] }],
-        roles: [{ required: true, message: '管理员身份', type: 'array', trigger: ['blur', 'change'] }]
+        roles: [{ required: true, message: '管理员身份', type: 'array', trigger: ['blur', 'change'] }],
+        phone: [
+          { validator: validatePhone, trigger: 'blur' }
+        ]
       }
     }
   },
@@ -111,7 +128,7 @@ export default {
     },
     initEditData() {
       if (this.isCreate !== 1) return
-      const { account, realName, roles, level, status, id } = this.editData
+      const { account, realName, roles, level, status, id, phone } = this.editData
       this.pram.account = account
       this.pram.realName = realName
       const _roles = []
@@ -123,6 +140,7 @@ export default {
       this.pram.roles = _roles
       this.pram.status = status
       this.pram.id = id
+      this.pram.phone = phone
       this.rules.pwd = []
       this.rules.repwd = []
     },

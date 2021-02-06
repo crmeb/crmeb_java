@@ -139,7 +139,8 @@
         />
         <el-table-column label="操作" min-width="80" fixed="right" align="center">
           <template slot-scope="scope">
-            <el-button type="text" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+            <el-button v-if="scope.row.status !== 1" type="text" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+            <span v-else>无</span>
           </template>
         </el-table-column>
       </el-table>
@@ -345,6 +346,6 @@
 
 <style scoped>
   .selWidth{
-    width: 300px;
+    width: 350px;
   }
 </style>

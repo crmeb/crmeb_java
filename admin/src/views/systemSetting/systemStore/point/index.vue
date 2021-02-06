@@ -189,7 +189,7 @@ export default {
     //刪除
     storeDelete(id){
       let that = this;
-      that.$modalSure().then(() => {
+      that.$modalSure('删除提货点吗？').then(() => {
         storeDeleteApi({ id: id }).then(() => {
           that.$message.success('删除成功')
           that.storeGetCount();

@@ -79,3 +79,11 @@ export function Mul(arg1, arg2) {
   } catch (e) {}
   return Number(s1.replace(".", "")) * Number(s2.replace(".", "")) / Math.pow(10, m);
 }
+
+//替换安全域名
+export function setDomain(url) {
+  url = url ? url.toString() : '';
+  //本地调试打开,生产请注销
+  if (url.indexOf("https://") > -1) return url;
+  else return url.replace('http://', 'https://');
+}

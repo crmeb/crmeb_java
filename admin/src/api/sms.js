@@ -192,3 +192,14 @@ export function smsSignApi(data) {
     data
   })
 }
+
+/**
+ * @description 修改手机号验证账号密码
+ */
+export function phoneValidatorApi(data) {
+  return request({
+    url: 'admin/pass/update/phone/validator',
+    method: 'post',
+    data
+  })
+}

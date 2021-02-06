@@ -140,8 +140,8 @@ export default {
         wxCode: ''
       },
       loginRules: {
-        account: [{ required: true, trigger: 'blur' }], // validator: validateUsername
-        pwd: [{ required: true, trigger: 'blur', validator: validatePassword }],
+        account: [{ required: true, trigger: 'blur', message: '请输入用户名' }], // validator: validateUsername
+        pwd: [{ required: true, trigger: 'blur', message: '请输入密码' }],
         code: [{ required: true, message: '请输入正确的验证码', trigger: 'blur' }]
       },
       passwordType: 'password',
@@ -241,7 +241,7 @@ export default {
     getInfo() {
       getLoginPicApi().then(res => {
         this.swiperList = res.banner
-        this.loginLogo = res.logo
+        this.loginLogo = res.loginLogo
         this.backgroundImages = res.backgroundImage
         // Cookies.set('MerInfo', JSON.stringify(data))
       })
@@ -484,6 +484,7 @@ export default {
 
   .containerSamll {
     /*width: 56% !important;*/
+    width: 670px;
     background: #fff !important;
   }
 
@@ -493,6 +494,7 @@ export default {
   }
 
   .index_from {
+    width: 384px;
     padding: 0 40px 32px 40px;
     height: 400px;
     box-sizing: border-box;

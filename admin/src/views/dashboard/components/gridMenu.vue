@@ -74,7 +74,7 @@
             return {
                 grid: {
                     xl: 3,
-                    lg: 6,
+                    lg: 3,
                     md: 6,
                     sm: 8,
                     xs: 8

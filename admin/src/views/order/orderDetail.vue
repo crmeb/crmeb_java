@@ -29,7 +29,7 @@
           <div class="description-term">交付邮费：{{orderDatalist.payPostage}}</div>
           <div class="description-term">优惠券金额：{{orderDatalist.couponPrice}}</div>
           <div class="description-term">实际支付：{{orderDatalist.payPrice}}</div>
-          <div class="description-term" v-if="orderDatalist.refundPrice">退款金额：{{orderDatalist.refundPrice}}</div>
+          <div class="description-term fontColor3" v-if="orderDatalist.refundPrice">退款金额：{{orderDatalist.refundPrice}}</div>
           <div class="description-term" v-if="orderDatalist.useIntegral">使用积分：{{orderDatalist.useIntegral}}</div>
           <div class="description-term" v-if="orderDatalist.backIntegral">退回积分：{{orderDatalist.backIntegral}}</div>
           <div class="description-term">创建时间：{{orderDatalist.createTime}}</div>
@@ -94,14 +94,13 @@
         </div>
       </div>
       <span slot="footer" class="dialog-footer">
-    <el-button @click="dialogVisible = false">取 消</el-button>
-    <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+      <el-button type="primary" @click="modal2 = false">关闭</el-button>
   </span>
     </el-dialog>
   </div>
 </template>
 
-<script>
+<script>0
 import { orderDetailApi, getLogisticsInfoApi } from '@/api/order'
 export default {
   name: 'OrderDetail',

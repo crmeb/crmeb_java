@@ -10,8 +10,8 @@
           <div class="content" v-if="sales">
             <span class="content-number spBlock mb15">{{ sales.count }}</span>
             <div>
-              <span class="content-time mr20">日同比：<i class="content-is" :class="Number(sales.dayRate)>=0?'up':'down'">{{ sales.dayRate }}%</i><i :class="Number(sales.dayRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
-              <span class="content-time">周同比：<i class="content-is" :class="Number(sales.weekRate)>=0?'up':'down'">{{ sales.weekRate }}%</i><i :class="Number(sales.weekRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
+              <span class="content-time mr20">日环比：<i class="content-is" :class="Number(sales.dayRate)>=0?'up':'down'">{{ sales.dayRate }}%</i><i :class="Number(sales.dayRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
+              <span class="content-time">周环比：<i class="content-is" :class="Number(sales.weekRate)>=0?'up':'down'">{{ sales.weekRate }}%</i><i :class="Number(sales.weekRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
             </div>
             <el-divider></el-divider>
             <div class="acea-row row-between-wrapper">
@@ -30,8 +30,8 @@
           <div class="content" v-if="views">
             <span class="content-number spBlock mb15">{{ views.count }}</span>
             <div>
-              <span class="content-time mr20">日同比：<i class="content-is" :class="Number(views.dayRate)>=0?'up':'down'">{{ views.dayRate }}%</i><i :class="Number(views.dayRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
-              <span class="content-time">周同比：<i class="content-is" :class="Number(views.weekRate)>=0?'up':'down'">{{ views.weekRate }}%</i><i :class="Number(views.weekRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
+              <span class="content-time mr20">日环比：<i class="content-is" :class="Number(views.dayRate)>=0?'up':'down'">{{ views.dayRate }}%</i><i :class="Number(views.dayRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
+              <span class="content-time">周环比：<i class="content-is" :class="Number(views.weekRate)>=0?'up':'down'">{{ views.weekRate }}%</i><i :class="Number(views.weekRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
             </div>
             <el-divider></el-divider>
             <div class="acea-row row-between-wrapper">
@@ -50,8 +50,8 @@
           <div class="content" v-if="order">
             <span class="content-number spBlock mb15">{{ order.count }}</span>
             <div>
-              <span class="content-time mr20">日同比：<i class="content-is" :class="Number(order.dayRate)>=0?'up':'down'">{{ order.dayRate }}%</i><i :class="Number(order.dayRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
-              <span class="content-time">周同比：<i class="content-is" :class="Number(order.weekRate)>=0?'up':'down'">{{ order.weekRate }}%</i><i :class="Number(order.weekRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
+              <span class="content-time mr20">日环比：<i class="content-is" :class="Number(order.dayRate)>=0?'up':'down'">{{ order.dayRate }}%</i><i :class="Number(order.dayRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
+              <span class="content-time">周环比：<i class="content-is" :class="Number(order.weekRate)>=0?'up':'down'">{{ order.weekRate }}%</i><i :class="Number(order.weekRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
             </div>
             <el-divider></el-divider>
             <div class="acea-row row-between-wrapper">
@@ -70,8 +70,8 @@
           <div class="content" v-if="user">
             <span class="content-number spBlock mb15">{{ user.count }}</span>
             <div>
-              <span class="content-time mr20">日同比：<i class="content-is" :class="Number(user.dayRate)>=0?'up':'down'">{{ user.dayRate }}%</i><i :class="Number(user.dayRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
-              <span class="content-time">周同比：<i class="content-is" :class="Number(user.weekRate)>=0?'up':'down'">{{ user.weekRate }}%</i><i :class="Number(user.weekRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
+              <span class="content-time mr20">日环比：<i class="content-is" :class="Number(user.dayRate)>=0?'up':'down'">{{ user.dayRate }}%</i><i :class="Number(user.dayRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
+              <span class="content-time">周环比：<i class="content-is" :class="Number(user.weekRate)>=0?'up':'down'">{{ user.weekRate }}%</i><i :class="Number(user.weekRate)>=0?'el-icon-caret-top':'el-icon-caret-bottom'" /></span>
             </div>
             <el-divider></el-divider>
             <div class="acea-row row-between-wrapper">

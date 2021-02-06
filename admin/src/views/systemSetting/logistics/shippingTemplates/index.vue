@@ -86,7 +86,7 @@
         />
       </div>
     </el-card>
-    <CreatTemplates ref="addTemplates" @getList="getList" />
+    <CreatTemplates ref="addTemplates" @getList="getList"/>
   </div>
 </template>
 
@@ -115,6 +115,7 @@ export default {
   components: { CreatTemplates },
   data() {
     return {
+      isShow: false,
       dialogVisible: false,
       form: {
         keywords: ''
@@ -133,7 +134,7 @@ export default {
     handleSubmit() {
       this.$refs.addTemplates.dialogVisible = true
       this.$refs.addTemplates.getCityList()
-      this.$refs.addTemplates.changType(0, this.te)
+      this.$refs.addTemplates.changType(0)
     },
     handleSearch() {
       this.page = 1
@@ -162,7 +163,6 @@ export default {
     },
     // 编辑
     bindEdit(item) {
-      // this.$refs.addTemplates.dialogVisible = true
       this.$refs.addTemplates.getCityList()
       this.$refs.addTemplates.getInfo(item.id, item.appoint)
       this.$refs.addTemplates.changType(1)

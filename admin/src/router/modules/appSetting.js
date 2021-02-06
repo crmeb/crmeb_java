@@ -64,7 +64,7 @@ const appSettingRouter = {
           ]
         },
         {
-          path: 'template',
+          path: 'template/:type?',
           component: () => import('@/views/appSetting/wxAccount/wxTemplate'),
           name: 'wxTemplate',
           meta: { title: '微信模板消息', icon: '' }
@@ -82,6 +82,12 @@ const appSettingRouter = {
         hidden: true
       },
       children: [
+        {
+          path: 'template/:type?',
+          component: () => import('@/views/appSetting/wxAccount/wxTemplate'),
+          name: 'RoutineTemplate',
+          meta: { title: '小程序订阅消息', icon: '' }
+        },
         {
           path: 'routineTemplate',
           component: () => import('@/views/appSetting/routine/myTemplate'),

@@ -43,7 +43,6 @@ import modalAttr from '@/libs/modal-attr'
 import modalIcon from '@/libs/modal-icon'
 import { modalSure } from '@/libs/public'
 import { loadScriptQueue } from '@/components/FormGenerator/utils/loadScript'
-
 import './icons' // icon
 import './permission' // permission control
 import './utils/error-log' // error integralLog
@@ -51,7 +50,7 @@ import * as filters from './filters' // global filters
 import { parseQuery } from "@/utils";
 import * as Auth from '@/libs/wechat';
 import * as constants from '@/utils/constants.js'
-
+import * as selfUtil from '@/utils/ZBKJIutil.js';
 Vue.use(VueLazyload, {
   preLoad: 1.3,
   error: require('./assets/imgs/no.png'),
@@ -81,6 +80,7 @@ Vue.prototype.$scroll = scroll;
 Vue.prototype.$wechat = Auth;
 Vue.prototype.$util = util;
 Vue.prototype.$constants = constants;
+Vue.prototype.$selfUtil = selfUtil;
 Vue.prototype.$validator = function(rule) {
   return new schema(rule);
 };

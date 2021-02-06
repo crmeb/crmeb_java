@@ -42,6 +42,11 @@
         />
         <el-table-column label="姓名" prop="realName" min-width="120"/>
         <el-table-column label="账号" prop="account" min-width="120"/>
+        <el-table-column label="手机号" prop="lastTime" min-width="120">
+          <template slot-scope="scope">
+            <span>{{ scope.row.phone | filterEmpty }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="身份" prop="realName" min-width="230">
           <template slot-scope="scope">
             <el-tag size="small" type="info" v-for="(item, index) in scope.row.roleNames.split(',')" class="mr5">{{ item }}</el-tag>
@@ -57,9 +62,35 @@
             <span>{{ scope.row.lastIp | filterEmpty }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="状态" prop="status" min-width="100">
+        <el-table-column
+          label="状态"
+          min-width="100"
+        >
           <template slot-scope="scope">
-            <span>{{ scope.row.status | filterShowOrHide }}</span>
+            <el-switch
+              v-model="scope.row.status"
+              :active-value="true"
+              :inactive-value="false"
+              active-text="开启"
+              inactive-text="关闭"
+              @change="onchangeIsShow(scope.row)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="是否接收短信"
+          min-width="100"
+        >
+          <template slot-scope="scope">
+            <el-switch
+              v-model="scope.row.isSms"
+              :active-value="true"
+              :inactive-value="false"
+              active-text="开启"
+              inactive-text="关闭"
+              :disabled="!scope.row.phone"
+              @click.native="onchangeIsSms(scope.row)"
+            />
           </template>
         </el-table-column>
         <el-table-column label="删除标记" prop="status" min-width="100">
@@ -93,6 +124,7 @@
       :title="editDialogConfig.isCreate === 0? '创建身份':'编辑身份'"
       destroy-on-close
       :close-on-click-modal="false"
+      width="700px"
     >
       <edit
         v-if="editDialogConfig.visible"
@@ -142,6 +174,38 @@ export default {
     this.handleGetRoleList()
   },
   methods: {
+    onchangeIsShow(row) {
+      systemAdminApi.updateStatusApi({id: row.id, status: row.status})
+        .then(async () => {
+          this.$message.success('修改成功');
+          this.handleGetAdminList()
+        }).catch(()=>{
+        row.status = !row.status
+      })
+    },
+    onchangeIsSms(row) {
+      // this.$confirm(`此操作将${!row.isSms ? '开启' : '关闭'}验证, 是否继续？`, "提示", {
+      //   confirmButtonText: "确定",
+      //   cancelButtonText: "取消",
+      //   type: "warning"
+      // }).then(async () => {
+      //   row.isSms = !row.isSms
+      // }).catch(() => {
+      //   this.$message.error('取消操作')
+      // })
+
+      if(!row.phone) return this.$message({
+        message: '请先为管理员添加手机号!',
+        type: 'warning'
+      });
+      systemAdminApi.updateIsSmsApi({id: row.id})
+        .then(async () => {
+          this.$message.success('修改成功');
+          this.handleGetAdminList()
+        }).catch(()=>{
+        row.isSms = !row.isSms
+      })
+    },
     handleSearch() {
       this.listPram.page = 1
       this.handleGetAdminList()

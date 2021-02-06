@@ -4,7 +4,7 @@
       <div slot="header" class="clearfix">
         <el-form inline>
           <el-form-item>
-            <el-input v-model="tableFrom.keyword" placeholder="请输入用户名称" class="selWidth">
+            <el-input v-model="tableFrom.keywords" placeholder="请输入用户名称" class="selWidth">
               <el-button slot="append" icon="el-icon-search" @click="getList" />
             </el-input>
           </el-form-item>
@@ -114,7 +114,7 @@ export default {
       tableFrom: {
         page: 1,
         limit: 10,
-        keyword: ''
+        keywords: ''
       }
     }
   },
