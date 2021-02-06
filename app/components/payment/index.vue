@@ -62,6 +62,7 @@
 			},
 			goPay: function(number, paytype) {
 				let that = this;
+				let goPages = '/pages/order_pay_status/index?order_id=' + that.order_id;
 				if (!that.order_id) return that.$util.Tips({
 					title: '请选择要支付的订单'
 				});
@@ -73,7 +74,12 @@
 				}); 
 				wechatOrderPay({
 					orderNo: that.order_id,
-					payChannel: this.$wechat.isWeixin() ? 'public' : 'weixinh5',
+					// #ifdef MP
+					payChannel: 'routine',
+					// #endif
+					// #ifdef H5 || APP-PLUS
+					payChannel: that.$wechat.isWeixin() ? 'public' : 'weixinh5',
+					// #endif
 					payType: paytype
 				}).then(res => {
 					let jsConfig = res.data.jsConfig;
@@ -167,9 +173,9 @@
 							break;
 					    case 'weixinh5':
 						  uni.hideLoading();
-						  location.replace(jsConfig.mwebUrl);
+						  location.replace(jsConfig.mwebUrl + '&redirect_url=' + window.location.protocol + '//' + window.location.host + goPages + '&status=1');
 						  return that.$util.Tips({
-						  	title: "支付成功",
+						  	title: "支付中",
 						  	icon: 'success'
 						  }, () => {
 						  	that.$emit('onChangeFun', {
@@ -178,119 +184,6 @@
 						  });
 							break;	
 					}
-
-
-
-					// switch (paytype) {
-					// 	case 'weixin':
-					// 		if (res.data.result === undefined) return that.$util.Tips({
-					// 			title: '缺少支付参数'
-					// 		});
-					// 		// #ifdef MP || APP-PLUS
-					// 		let jsConfig = res.data.jsConfig;
-					// 		uni.requestPayment({
-					// 			timeStamp: jsConfig.timeStamp.toString(),
-					// 			nonceStr: jsConfig.nonceStr,
-					// 			package: jsConfig.package,
-					// 			signType: jsConfig.signType,
-					// 			paySign: jsConfig.paySign,
-					// 			success: function(res) {
-					// 				uni.hideLoading();
-					// 				return that.$util.Tips({
-					// 					title: '支付成功',
-					// 					icon: 'success'
-					// 				}, () => {
-					// 					that.$emit('onChangeFun', {
-					// 						action: 'pay_complete'
-					// 					});
-					// 				});
-					// 			},
-					// 			fail: function(e) {
-					// 				uni.hideLoading();
-					// 				return that.$util.Tips({
-					// 					title: '取消支付'
-					// 				}, () => {
-					// 					that.$emit('onChangeFun', {
-					// 						action: 'pay_fail'
-					// 					});
-					// 				});
-					// 			},
-					// 			complete: function(e) {
-					// 				uni.hideLoading();
-					// 				if (e.errMsg == 'requestPayment:cancel') return that.$util.Tips({
-					// 					title: '取消支付'
-					// 				}, () => {
-					// 					that.$emit('onChangeFun', {
-					// 						action: 'pay_fail'
-					// 					});
-					// 				});
-					// 			},
-					// 		});
-					// 		// #endif
-					// 		// #ifdef H5
-					// 		if (res.data.status === "WECHAT_PAY") {
-					// 			let jsConfig = res.data.jsConfig;
-					// 			//let packages = 'prepay_id=' + jsConfig.prepayId;
-					// 			let datas = {
-					// 				timestamp:jsConfig.timeStamp,
-					// 				nonceStr:jsConfig.nonceStr,
-					// 				package:jsConfig.package,
-					// 				signType:jsConfig.signType,
-					// 				paySign:jsConfig.paySign
-					// 			};
-					// 			that.$wechat.pay(datas)
-					// 				.then(() => {
-					// 					return that.$util.Tips({
-					// 						title: "支付成功",
-					// 						icon: 'success'
-					// 					}, () => {
-					// 						that.$emit('onChangeFun', {
-					// 							action: 'pay_complete'
-					// 						});
-					// 					});
-					// 				})
-					// 				.catch(function() {
-					// 					return that.$util.Tips({
-					// 						title: '支付失败'
-					// 					});
-					// 				});
-					// 		} else {
-					// 			uni.hideLoading();
-					// 			location.replace(res.data.jsConfig.h5PayUrl);
-					// 			return that.$util.Tips({
-					// 				title: "支付成功",
-					// 				icon: 'success'
-					// 			}, () => {
-					// 				that.$emit('onChangeFun', {
-					// 					action: 'pay_complete'
-					// 				});
-					// 			});
-					// 		}
-					// 		// #endif
-					// 		break;
-					// 	case 'yue':
-					// 		uni.hideLoading();
-					// 		return that.$util.Tips({
-					// 			title: '余额支付成功',
-					// 			icon: 'success'
-					// 		}, () => {
-					// 			that.$emit('onChangeFun', {
-					// 				action: 'pay_complete'
-					// 			});
-					// 		});
-					// 		break;
-					// 	case 'offline':
-					// 		uni.hideLoading();
-					// 		return that.$util.Tips({
-					// 			title: '线下支付成功',
-					// 			icon: 'success'
-					// 		}, () => {
-					// 			that.$emit('onChangeFun', {
-					// 				action: 'pay_complete'
-					// 			});
-					// 		});
-					// 		break;
-					// }
 				}).catch(err => {
 					uni.hideLoading();
 					return that.$util.Tips({

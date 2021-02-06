@@ -37,12 +37,12 @@
 			<view @tap="goOrderDetails">
 				<button formType="submit" class='returnBnt bg-color' hover-class='none'>查看订单</button>
 			</view>
-			<view @tap="goOrderDetails" v-if="order_pay_info.paid==0 && status==1">
+		<!-- 	<view @tap="goOrderDetails" v-if="order_pay_info.paid==0 && status==1">
 				<button class='returnBnt bg-color' hover-class='none'>重新购买</button>
 			</view>
 			<view @tap="goOrderDetails" v-if="order_pay_info.paid==0 && status==2">
 				<button class='returnBnt bg-color' hover-class='none'>重新支付</button>
-			</view>
+			</view> -->
 			<button @click="goPink(order_pay_info.pinkId)" class='returnBnt cart-color' formType="submit" hover-class='none' v-if="order_pay_info.pinkId && order_pay_info.paid!=0 && status!=2 && status!=1">邀请好友参团</button>
 			<button @click="goIndex" class='returnBnt cart-color' formType="submit" hover-class='none' v-else>返回首页</button>
 			</view>
