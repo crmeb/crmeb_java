@@ -58,33 +58,33 @@
         />
         <el-table-column
           sortable
-          label="订单数量"
+          label="推广订单数量"
+          prop="spreadOrderNum"
           min-width="120"
-          prop="payCount"
         />
         <el-table-column
           sortable
           label="推广订单金额"
           min-width="120"
-          prop="payCount"
+          prop="spreadOrderTotalPrice"
         />
         <el-table-column
           sortable
-          label="佣金金额"
+          label="佣金总金额"
           min-width="120"
-          prop="brokeragePrice"
+          prop="totalBrokeragePrice"
         />
         <el-table-column
           sortable
           label="已提现金额"
           min-width="120"
-          prop="brokeragePrice"
+          prop="extractCountPrice"
         />
         <el-table-column
           sortable
-          label="提现金额"
+          label="已提现次数"
           min-width="120"
-          prop="brokeragePrice"
+          prop="extractCountNum"
         />
         <el-table-column
           sortable
@@ -135,7 +135,7 @@
     >
       <div class="container">
         <el-form size="small" label-width="100px">
-          <el-form-item label="时间选择：" class="width100">
+          <el-form-item v-if="this.onName !== 'man'" key="1" label="时间选择：" class="width100">
             <el-radio-group v-model="spreadFrom.dateLimit" type="button" class="mr20" size="small" @change="selectChangeSpread(spreadFrom.dateLimit)">
               <el-radio-button v-for="(item,i) in fromList.fromTxt" :key="i" :label="item.val">{{ item.text }}</el-radio-button>
             </el-radio-group>
@@ -319,7 +319,6 @@
       // 统计
       spreadStatistics() {
         spreadStatisticsApi({ dateLimit: this.tableFrom.dateLimit, keywords: this.tableFrom.nickName}).then((res) => {
-          //this.cardLists = res
           this.cardLists = [
             { name: '分销人员人数', count: res.distributionNum },
             { name: '发展会员人数', count: res.developNum },
@@ -423,7 +422,8 @@
         this.tableFrom.dateLimit = tab
         this.tableFrom.page = 1
         this.timeVal = []
-        this.getList()
+        this.spreadStatistics()
+       // this.getList()
       },
       // 具体日期
       onchangeTime(e) {

@@ -59,6 +59,16 @@ const maintainRouter = {
         icon: 'clipboard'
       },
       hidden: true
+    },
+    {
+      path: 'picture',
+      name: 'picture',
+      component: () => import('@/views/maintain/picture'),
+      meta: {
+        title: '素材管理',
+        icon: 'clipboard'
+      },
+      hidden: false
     }
   ]
 }

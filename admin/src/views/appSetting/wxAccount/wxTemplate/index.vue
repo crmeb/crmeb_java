@@ -3,20 +3,19 @@
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <div class="container">
-          <el-form size="small" :inline="true"  label-width="100px">
+          <el-form size="small" :inline="true"  >
             <el-form-item label="状态：">
-              <el-select v-model="tableFrom.status" placeholder="请选择状态" clearable class="selWidth">
+              <el-select v-model="tableFrom.status" placeholder="请选择状态" clearable class="selWidth" @change="seachList">
                 <el-option :label="item.label" :value="item.value" v-for="(item, index) in switchData" :key="index"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="模板名称：">
-              <el-input v-model="tableFrom.name" placeholder="请输入模板名称" class="selWidth" size="small" clearable></el-input>
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="seachList" size="small">查询</el-button>
+              <el-input v-model="tableFrom.name" placeholder="请输入模板名称" class="selWidth" size="small" clearable>
+                <el-button slot="append" icon="el-icon-search" @click="seachList" size="small"/>
+              </el-input>
             </el-form-item>
           </el-form>
-          <el-button type="primary" @click="add" size="small">添加模板消息</el-button>
+          <!--<el-button type="primary" @click="add" size="small">添加模板消息</el-button>-->
         </div>
       </div>
       <el-table
@@ -76,12 +75,12 @@
           label="添加时间"
           min-width="150"
         />
-        <el-table-column label="操作" min-width="150" fixed="right" align="center">
-          <template slot-scope="scope">
-            <el-button type="text" size="small" @click="edit(scope.row)">编辑</el-button>
-            <el-button type="text" size="small" @click="handleDelete(scope.row, scope.$index)">删除</el-button>
-          </template>
-        </el-table-column>
+        <!--<el-table-column label="操作" min-width="150" fixed="right" align="center">-->
+          <!--<template slot-scope="scope">-->
+            <!--<el-button type="text" size="small" @click="edit(scope.row)">编辑</el-button>-->
+            <!--<el-button type="text" size="small" @click="handleDelete(scope.row, scope.$index)">删除</el-button>-->
+          <!--</template>-->
+        <!--</el-table-column>-->
       </el-table>
       <div class="block">
         <el-pagination
@@ -131,7 +130,8 @@
             page: 1,
             limit: 20,
             status: '',
-            name: ''
+            name: '',
+            type: this.$route.params.type
           },
           tableData: {
             data: [],

@@ -1,6 +1,7 @@
 <template>
   <div>
-    <svg-icon :icon-class="isFullscreen?'exit-fullscreen':'fullscreen'" @click="click" />
+    <i class="iconfont iconios-qr-scanner" style="font-size: 20px;" @click="click"></i>
+    <!--<svg-icon :icon-class="isFullscreen?'exit-fullscreen':'fullscreen'" @click="click" />-->
   </div>
 </template>
 

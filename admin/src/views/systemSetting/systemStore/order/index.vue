@@ -11,7 +11,7 @@
               <el-date-picker v-model="timeVal" value-format="yyyy-MM-dd" format="yyyy-MM-dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTime" />
             </el-form-item>
             <el-form-item label="选择门店：">
-              <el-select v-model="tableFrom.storeId" clearable filterable placeholder="请选择" class="selWidth" clearable @change="getList(1)">
+              <el-select v-model="tableFrom.storeId" filterable placeholder="请选择" class="selWidth" clearable @change="getList(1)">
                 <el-option
                   v-for="item in storeSelectList"
                   :key="item.id"

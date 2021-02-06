@@ -17,7 +17,7 @@
         label-width="180px"
         @submit.native.prevent
       >
-        <!-- 砍价商品-->
+        <!-- 拼团商品-->
         <div v-show="currentTab === 0">
           <el-form-item label="选择商品：" prop="image">
             <div class="upLoadPicBox" @click="changeGood">
@@ -99,13 +99,13 @@
             </el-col>
             <el-col :span="24">
               <el-form-item label="拼团时效(单位 小时)：" prop="effectiveTime">
-                <el-input-number v-model="formValidate.effectiveTime" :min="1"  :step="1" step-strictly step-strictly placeholder="请输入拼团人数" class="selWidthd mr20"/>
+                <el-input-number v-model="formValidate.effectiveTime" :min="1"  :step="1" step-strictly placeholder="请输入拼团人数" class="selWidthd mr20"/>
                 <span>用户发起拼团后开始计时，需在设置时间内邀请到规定好友人数参团，超过时效时间，则系统判定拼团失败，自动发起退款</span>
               </el-form-item>
             </el-col>
             <el-col :span="24">
               <el-form-item label="拼团人数：" prop="people">
-                <el-input-number v-model="formValidate.people" :min="2"  :step="1" step-strictly step-strictly placeholder="请输入拼团人数" class="selWidthd mr20"/>
+                <el-input-number v-model="formValidate.people" :min="2"  :step="1" step-strictly placeholder="请输入拼团人数" class="selWidthd mr20"/>
                 <span>单次拼团需要参与的用户数</span>
               </el-form-item>
             </el-col>
@@ -117,13 +117,13 @@
             </el-col>
             <el-col :span="24">
               <el-form-item label="单次购买数量限制：" prop="onceNum">
-                <el-input-number v-model="formValidate.onceNum" :min="1"  :step="1" step-strictly placeholder="请输入购买数量限制" class="selWidthd mr20"/>
+                <el-input-number v-model="formValidate.onceNum" :min="1" :max="formValidate.num"  :step="1" step-strictly placeholder="请输入购买数量限制" class="selWidthd mr20"/>
                 <span>用户参与拼团时，一次购买最大数量限制。例如设置为2，表示参与拼团时，用户一次购买数量最大可选择2个</span>
               </el-form-item>
             </el-col>
             <el-col :span="24">
-              <el-form-item label="补齐人数：" prop="peopleNum">
-                <el-input-number v-model="formValidate.peopleNum" :min="0" :max="formValidate.people - 1"   :step="1" step-strictly placeholder="请输入补齐人数" class="selWidthd mr20"/>
+              <el-form-item label="补齐人数：" prop="virtualRation">
+                <el-input-number v-model="formValidate.virtualRation" :min="0" :max="formValidate.people - 1"   :step="1" step-strictly placeholder="请输入补齐人数" class="selWidthd mr20"/>
                 <span>当用户参与拼团后，成团时效内未成团情况下，设置补齐人数可虚拟成团。例如：成团人数为10人，补齐人数为4人，真实用户需要参与6人成团才可以在最后未成团时自动补齐虚拟人员</span>
               </el-form-item>
             </el-col>
@@ -147,14 +147,14 @@
                 </div>
               </el-form-item>
             </el-col>
-            <el-col v-bind="grid2">
-              <el-form-item label="热门推荐：" required>
-                <el-radio-group v-model="formValidate.isHost">
-                  <el-radio :label="false" class="radio">关闭</el-radio>
-                  <el-radio :label="true">开启</el-radio>
-                </el-radio-group>
-              </el-form-item>
-            </el-col>
+            <!--<el-col v-bind="grid2">-->
+              <!--<el-form-item label="热门推荐：" required>-->
+                <!--<el-radio-group v-model="formValidate.isHost">-->
+                  <!--<el-radio :label="false" class="radio">关闭</el-radio>-->
+                  <!--<el-radio :label="true">开启</el-radio>-->
+                <!--</el-radio-group>-->
+              <!--</el-form-item>-->
+            <!--</el-col>-->
             <el-col v-bind="grid2">
               <el-form-item label="活动状态：" required>
                 <el-radio-group v-model="formValidate.isShow">
@@ -214,7 +214,6 @@
                         :max="scope.row.stock"
                         :step="1" step-strictly
                         class="priceBox"
-                        @change="inpChange(scope.row[iii], scope.row.id)"
                       />
                       <span v-else v-text="scope.row[iii]" class="priceBox" />
                     </template>
@@ -308,7 +307,7 @@
     timeVal: [],
     effectiveTime: 0,
     people: 2,
-    peopleNum: 0
+    virtualRation: 0
   }
   const objTitle = {
     price: {
@@ -402,7 +401,7 @@
           timeVal:[
             { required: true, message: '请选择活动日期', trigger: 'change', type: 'array'}
           ],
-          peopleNum:[
+          virtualRation:[
             { required: true, message: '请输入补齐人数', trigger: 'blur'}
           ],
           onceNum: [
@@ -456,18 +455,6 @@
         })
         this.multipleSelection = val;
       },
-      inpChange(currentValue, id){
-        // this.ManyAttrValue.map(item => {
-        //    if(!currentValue && item.id ===id){
-        //      item.quota = 1
-        //      this.$set(item, 'quota', 1)
-        //      this.ManyAttrValue = Object.assign([], this.ManyAttrValue)
-        //    }
-        // })
-
-        console.log(this.ManyAttrValue)
-        // if(!currentValue) item.quota = 1
-      },
       watCh(val) {
         const tmp = {}
         const tmpTab = {}
@@ -499,7 +486,7 @@
             });
           }
           if(tit==='1'&& num === 'duo' ){
-            _this.specType ? _this.ManyAttrValue[i].image = img[0].sattDir : _this.ManyAttrValue[0].image = img[0].sattDir
+            _this.ManyAttrValue[i].image = img[0].sattDir
           }
         },tit, 'content')
 
@@ -520,8 +507,7 @@
       },
       handleSubmitNest1() {
         if (!this.formValidate.image) {
-          this.$message.warning("请选择商品！");
-          return;
+          return this.$message.warning("请选择商品！");
         } else {
           this.currentTab++;
           if (!this.$route.params.id) this.getProdect(this.productId);
@@ -564,9 +550,9 @@
       getProdect(id) {
         this.fullscreenLoading = true
         productDetailApi(id).then(async res => {
-          this.formValidate = res;
+          //this.formValidate = res;
           this.formValidate = {
-            image: res.image,
+            image: this.$selfUtil.setDomain(res.image),
             imagelist: JSON.parse(res.sliderImage),
             title: res.storeName,
             info: res.storeInfo,
@@ -600,6 +586,7 @@
             });
             this.$nextTick(() => {
               res.attrValues.forEach((row) => {
+                row.image = this.$selfUtil.setDomain(row.image)
                 this.$refs.multipleTable.toggleRowSelection(row, true);
                 this.$set(row, 'checked', true)
               });
@@ -621,9 +608,9 @@
       getSekllProdect(id) {
         this.fullscreenLoading = true
         combinationInfoApi({id:id}).then(async res => {
-          this.formValidate = res;
+          //this.formValidate = res;
           this.formValidate = {
-            image: res.image,
+            image: this.$selfUtil.setDomain(res.image),
             imagelist: JSON.parse(res.sliderImage),
             title: res.title,
             info: res.info,
@@ -648,13 +635,13 @@
             effectiveTime : res.effectiveTime,
             isPostage: false,
             startTime: res.startTimeStr || '',
-            stopTime: res.stopTimeStr || '',
-            peopleNum : Math.floor(res.people-res.virtualRation/100*res.people)
+            stopTime: res.stopTimeStr || ''
           }
           if(res.specType){
             this.ManyAttrValue = res.attrValues;
             this.$nextTick(() => {
               this.ManyAttrValue.forEach((item, index) => {
+                item.image = this.$selfUtil.setDomain(item.image)
                 if (item.checked) {
                   this.$set(item, 'price', item.price)
                   this.$set(item, 'quota', item.quota)
@@ -709,7 +696,7 @@
           this.formValidate.attrValue = this.multipleSelection
         }
         this.formValidate.images = JSON.stringify(this.formValidate.imagelist);
-        this.formValidate.virtualRation = Math.floor((this.formValidate.people - this.formValidate.peopleNum) / this.formValidate.people * 100)
+        // this.formValidate.virtualRation = Math.floor((this.formValidate.people - this.formValidate.peopleNum) / this.formValidate.people * 100)
         this.$refs[name].validate((valid) => {
           if (valid) {
             this.fullscreenLoading = true;

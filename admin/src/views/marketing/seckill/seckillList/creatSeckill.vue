@@ -192,7 +192,6 @@
                         :max="scope.row.stock"
                         :step="1" step-strictly
                         class="priceBox"
-                        @change="inpChange(scope.row[iii], scope.row.id)"
                       />
                       <span v-else v-text="scope.row[iii]" class="priceBox" />
                       <!--<el-input v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" class="priceBox" />-->
@@ -419,18 +418,6 @@
       this.getCategorySelect()
     },
     methods: {
-      inpChange(currentValue, id){
-        // this.ManyAttrValue.map(item => {
-        //    if(!currentValue && item.id ===id){
-        //      item.quota = 1
-        //      this.$set(item, 'quota', 1)
-        //      this.ManyAttrValue = Object.assign([], this.ManyAttrValue)
-        //    }
-        // })
-
-        console.log(this.ManyAttrValue)
-        // if(!currentValue) item.quota = 1
-      },
       watCh(val) {
         const tmp = {}
         const tmpTab = {}
@@ -464,7 +451,7 @@
             });
           }
           if(tit==='1'&& num === 'duo' ){
-            _this.specType ? _this.ManyAttrValue[i].image = img[0].sattDir : _this.ManyAttrValue[0].image = img[0].sattDir
+            _this.ManyAttrValue[i].image = img[0].sattDir
           }
         },tit, 'content')
       },
@@ -484,8 +471,7 @@
       },
       handleSubmitNest1() {
         if (!this.formValidate.image) {
-          this.$message.warning("请选择商品！");
-          return;
+          return this.$message.warning("请选择商品！");
         } else {
           this.currentTab++;
           if (!this.$route.params.id) this.getProdect(this.productId);
@@ -530,7 +516,7 @@
         productDetailApi(id).then(async res => {
           let info = res
           this.formValidate = {
-            image: info.image,
+            image: this.$selfUtil.setDomain(info.image),
             imagess: JSON.parse(info.sliderImage),
             title: info.storeName,
             info: info.storeInfo,
@@ -559,6 +545,7 @@
             });
             this.$nextTick(() => {
               info.attrValues.forEach((row) => {
+                row.image = this.$selfUtil.setDomain(row.image)
                 this.$refs.multipleTable.toggleRowSelection(row, true);
                 this.$set(row, 'checked', true)
               });
@@ -582,8 +569,8 @@
         seckillStoreInfoApi({id:id}).then(async res => {
           let info = res
           this.formValidate = {
-            image: info.image,
-            imagess: JSON.parse(info.sliderImage) || [],
+            image: this.$selfUtil.setDomain(info.image),
+            imagess: JSON.parse(info.sliderImage),
             title: info.title,
             info: info.info,
             quota: info.quota,
@@ -609,6 +596,7 @@
             this.ManyAttrValue = info.attrValues;
             this.$nextTick(() => {
               this.ManyAttrValue.forEach((item, index) => {
+                item.image = this.$selfUtil.setDomain(item.image)
                 if (item.checked) {
                   this.$set(item, 'price', item.price)
                   this.$set(item, 'quota', item.quota)

@@ -231,7 +231,7 @@ export function productExportApi(params) {
 }
 
 /**
- * 商品复制
+ * 商品复制 99Api
  * @param pram
  */
 export function importProductApi(params) {
@@ -239,6 +239,19 @@ export function importProductApi(params) {
     url: `/admin/store/product/importProduct`,
     method: 'post',
     params
+  })
+}
+
+
+/**
+ * 商品复制 一号通
+ * @param pram
+ */
+export function copyProductApi(data) {
+  return request({
+    url: `/admin/store/product/copy/product`,
+    method: 'post',
+    data
   })
 }
 

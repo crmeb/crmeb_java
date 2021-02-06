@@ -92,7 +92,7 @@
                 <el-tag
                   v-for="(tag, index) in formValidate.coupons"
                   :key="index"
-                  class="mr10"
+                  class="mr10 mb10"
                   closable
                   :disable-transitions="false"
                   @close="handleCloseCoupon(tag)"
@@ -561,11 +561,6 @@
         this.setTagsViewTitle()
         this.getInfo()
       }
-      // if( this.formValidate.attr.length ){
-      //   this.formValidate.attr.map(item => {
-      //     this.$set(item, 'inputVisible', false)
-      //   })
-      // }
       this.getCategorySelect()
       this.getShippingList()
     },
@@ -868,9 +863,9 @@
           this.isAttr = false;
           let info = res
           this.formValidate = {
-            image: info.image,
-            sliderImages: JSON.parse(info.sliderImage),
+            image: this.$selfUtil.setDomain(info.image),
             sliderImage: info.sliderImage,
+            sliderImages: JSON.parse(info.sliderImage),
             storeName: info.storeName,
             storeInfo: info.storeInfo,
             keyword: info.keyword,
@@ -898,6 +893,12 @@
             couponIds: info.couponIds,
             activity: info.activityStr ? info.activityStr.split(',') : ['默认','秒杀','砍价','拼团']
           }
+          let imgs = JSON.parse(info.sliderImage)
+          let imgss = []
+          Object.keys(imgs).map(i => {
+            imgss.push(this.$selfUtil.setDomain(imgs[i]))
+           })
+          this.formValidate.sliderImages = [ ...imgss ]
           if(info.isHot) this.checkboxGroup.push('isHot')
           if(info.isGood) this.checkboxGroup.push('isGood')
           if(info.isBenefit) this.checkboxGroup.push('isBenefit')
@@ -914,9 +915,9 @@
             })
             this.ManyAttrValue = info.attrValues;
             this.ManyAttrValue.forEach((val) => {
+              val.image = this.$selfUtil.setDomain(val.image)
               this.attrInfo[Object.values(val.attrValue).sort().join('/')] = val
             })
-
             const tmp = {}
             const tmpTab = {}
             this.formValidate.attr.forEach((o, i) => {

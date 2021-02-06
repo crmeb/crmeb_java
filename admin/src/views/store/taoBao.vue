@@ -7,9 +7,12 @@
             <el-link type="primary" :underline="false">增加采集次数</el-link>
           </router-link>
         </span>
-        <el-link  v-if="copyConfig.copyType && copyConfig.copyType!=1" type="primary" :underline="false" href="https://www.kancloud.cn/crmeb/crmeb_java/1909022" target="_blank">如何配置密钥</el-link>
+        <el-link v-if="copyConfig.copyType && copyConfig.copyType!=1" type="primary" :underline="false"
+                 href="https://help.crmeb.net/crmeb_java/2103903" target="_blank">如何配置密钥
+        </el-link>
         <br>
-        商品采集设置：设置 > 系统设置 > 第三方接口设置 > 采集商品配置（如配置一号通采集，请先登录一号通账号，无一号通，请选择99Api设置）</div>
+        商品采集设置：设置 > 系统设置 > 第三方接口设置 > 采集商品配置（如配置一号通采集，请先登录一号通账号，无一号通，请选择99Api设置）
+      </div>
     </el-card>
     <el-form class="formValidate mt20" ref="formValidate" :model="formValidate" :rules="ruleInline" label-width="120px"
              @submit.native.prevent v-loading="loading">
@@ -38,7 +41,8 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="商品简介：">
-              <el-input v-model="formValidate.storeInfo"  maxlength="250" type="textarea" :rows="3" placeholder="请输入商品简介"></el-input>
+              <el-input v-model="formValidate.storeInfo" maxlength="250" type="textarea" :rows="3"
+                        placeholder="请输入商品简介"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -47,29 +51,29 @@
                            class="selWidth" :show-all-levels="false"/>
             </el-form-item>
           </el-col>
-          <el-col v-bind="grid">
+          <el-col :span="24">
             <el-form-item label="商品关键字：" prop="keyword">
               <el-input v-model="formValidate.keyword" placeholder="请输入商品关键字"></el-input>
             </el-form-item>
           </el-col>
           <el-col v-bind="grid">
             <el-form-item label="单位：" prop="unitName">
-              <el-input v-model="formValidate.unitName" placeholder="请输入单位"></el-input>
+              <el-input v-model="formValidate.unitName" placeholder="请输入单位" class="selWidth"></el-input>
             </el-form-item>
           </el-col>
           <el-col v-bind="grid">
             <el-form-item label="积分：">
-              <el-input-number v-model="formValidate.giveIntegral" placeholder="请输入排序" />
+              <el-input-number v-model="formValidate.giveIntegral" placeholder="请输入排序" class="selWidth"/>
             </el-form-item>
           </el-col>
           <el-col v-bind="grid">
             <el-form-item label="虚拟销量：">
-              <el-input-number v-model="formValidate.ficti" placeholder="请输入排序" />
+              <el-input-number v-model="formValidate.ficti" placeholder="请输入排序" class="selWidth"/>
             </el-form-item>
           </el-col>
           <el-col v-bind="grid">
             <el-form-item label="运费模板：" prop="tempId">
-              <el-select v-model="formValidate.tempId" placeholder="请选择" class="selWidthd mr20">
+              <el-select v-model="formValidate.tempId" placeholder="请选择" class="selWidth">
                 <el-option
                   v-for="item in shippingList"
                   :key="item.id"
@@ -194,8 +198,17 @@
 </template>
 
 <script>
-  import {crawlFromApi, treeListApi, crawlSaveApi, categoryApi, importProductApi, productCreateApi, copyConfigApi} from '@/api/store';
-  import { shippingTemplatesList } from '@/api/logistics'
+  import {
+    copyProductApi,
+    crawlFromApi,
+    treeListApi,
+    crawlSaveApi,
+    categoryApi,
+    importProductApi,
+    productCreateApi,
+    copyConfigApi
+  } from '@/api/store';
+  import {shippingTemplatesList} from '@/api/logistics'
   const defaultObj = [{
     image: '',
     price: null,
@@ -253,32 +266,32 @@
           page: 1,
           limit: 9999
         },
-        shippingList:[],
-        merCateList:[],
+        shippingList: [],
+        merCateList: [],
         images: '',
         url: '',
         modalPic: false,
         isChoice: '',
         ruleInline: {
           storeName: [
-            { required: true, message: '请输入商品名称', trigger: 'blur' }
+            {required: true, message: '请输入商品名称', trigger: 'blur'}
           ],
           cateIds: [
-            { required: true, message: '请选择商品分类', trigger: 'change', type: 'array', min: '1' }
+            {required: true, message: '请选择商品分类', trigger: 'change', type: 'array', min: '1'}
           ],
           unitName: [
-            { required: true, message: '请输入单位', trigger: 'blur' }
+            {required: true, message: '请输入单位', trigger: 'blur'}
           ],
           tempId: [
             {required: true, message: '请选择运费模板', trigger: 'change', type: 'number'}
           ],
           keyword: [
-            { required: true, message: '请输入商品关键字', trigger: 'blur' }
+            {required: true, message: '请输入商品关键字', trigger: 'blur'}
           ]
         },
         grid: {
-          xl: 8,
-          lg: 8,
+          xl: 12,
+          lg: 12,
           md: 12,
           sm: 24,
           xs: 24
@@ -303,7 +316,7 @@
     },
     watch: {
       'formValidate.attr': {
-        handler: function(val) {
+        handler: function (val) {
           this.watCh(val)
         },
         immediate: false,
@@ -319,9 +332,9 @@
       delAttrTable(index) {
         this.ManyAttrValue.splice(index, 1)
       },
-      getCopyConfig(){
+      getCopyConfig() {
         copyConfigApi().then(res => {
-           this.copyConfig = res
+          this.copyConfig = res
         })
       },
       // 批量添加
@@ -343,7 +356,7 @@
         const tmp = {}
         const tmpTab = {}
         this.formValidate.attr.forEach((o, i) => {
-          tmp['value' + i] = { title: o.attrName }
+          tmp['value' + i] = {title: o.attrName}
           tmpTab['value' + i] = ''
         })
         this.ManyAttrValue = this.attrFormat(val)
@@ -355,12 +368,13 @@
         let data = []
         const res = []
         return format(arr)
+
         function format(arr) {
           if (arr.length > 1) {
             arr.forEach((v, i) => {
               if (i === 0) data = arr[i]['attrValue']
               const tmp = []
-              data.forEach(function(vv) {
+              data.forEach(function (vv) {
                 arr[i + 1] && arr[i + 1]['attrValue'] && arr[i + 1]['attrValue'].forEach(g => {
                   const rep2 = (i !== 0 ? '' : arr[i]['attrName'] + '_') + vv + '$&' + arr[i + 1]['attrName'] + '_' + g
                   tmp.push(rep2)
@@ -407,7 +421,7 @@
                   volume: 0,
                   brokerage: 0,
                   brokerage_two: 0,
-                  attrValue: { [v['attrName']]: vv }
+                  attrValue: {[v['attrName']]: vv}
                 }
                 Object.values(res[kk].attrValue).forEach((v, i) => {
                   res[kk]['value' + i] = v
@@ -435,7 +449,7 @@
       },
       // 商品分类；
       goodsCategory() {
-        categoryApi({ status: -1, type: 1 }).then(res => {
+        categoryApi({status: -1, type: 1}).then(res => {
           this.merCateList = res
         })
       },
@@ -447,10 +461,53 @@
           //   return this.$message.warning('请输入以http开头的地址！');
           // }
           this.loading = true;
-          importProductApi({ url: this.url, form: this.form}).then(res => {
+          this.copyConfig.copyType == 1 ? copyProductApi({url: this.url}).then(res => {
+            let info = res.info;
             this.formValidate = {
-              image: res.image,
-              sliderImages: JSON.parse(res.sliderImage),
+              image: this.$selfUtil.setDomain(info.image),
+              sliderImage: info.sliderImage,
+              storeName: info.storeName,
+              storeInfo: info.storeInfo,
+              keyword: info.keyword,
+              cateIds: info.cateId ? info.cateId.split(',') : [], // 商品分类id
+              cateId: info.cateId,// 商品分类id传值
+              unitName: info.unitName,
+              sort: 0,
+              isShow: 0,
+              isBenefit: 0,
+              isNew: 0,
+              isGood: 0,
+              isHot: 0,
+              isBest: 0,
+              tempId: info.tempId,
+              attrValue: info.attrValue,
+              attr: info.attr || [],
+              selectRule: info.selectRule,
+              isSub: false,
+              content: info.content,
+              specType: info.attr.length ? true : false,
+              id: info.id,
+              giveIntegral: info.giveIntegral,
+              ficti: info.ficti
+            }
+            let imgs = JSON.parse(info.sliderImage)
+            let imgss = []
+            Object.keys(imgs).map(i => {
+              imgss.push(this.$selfUtil.setDomain(imgs[i]))
+            })
+            this.formValidate.sliderImages = imgss
+            if (this.formValidate.attr.length) {
+              this.oneFormBatch[0].image = this.$selfUtil.setDomain(info.image)
+              for (var i = 0; i < this.formValidate.attr.length; i++) {
+                this.formValidate.attr[i].attrValue = JSON.parse(this.formValidate.attr[i].attrValues)
+              }
+            }
+            this.loading = false;
+          }).catch(() => {
+            this.loading = false;
+          }) : importProductApi({url: this.url, form: this.form}).then(res => {
+            this.formValidate = {
+              image: this.$selfUtil.setDomain(res.image),
               sliderImage: res.sliderImage,
               storeName: res.storeName,
               storeInfo: res.storeInfo,
@@ -476,8 +533,14 @@
               giveIntegral: res.giveIntegral,
               ficti: res.ficti
             }
-            if(this.formValidate.attr.length){
-              this.oneFormBatch[0].image = res.image
+            let imgs = JSON.parse(res.sliderImage)
+            let imgss = []
+            Object.keys(imgs).map(i => {
+              imgss.push(this.$selfUtil.setDomain(imgs[i]))
+            })
+            this.formValidate.sliderImages = imgss
+            if (this.formValidate.attr.length) {
+              this.oneFormBatch[0].image = this.$selfUtil.setDomain(res.image)
               for (var i = 0; i < this.formValidate.attr.length; i++) {
                 this.formValidate.attr[i].attrValue = JSON.parse(this.formValidate.attr[i].attrValues)
               }
@@ -491,8 +554,8 @@
         }
       },
       // 提交
-      handleSubmit (name) {
-        this.formValidate.attr.length ? this.formValidate.attrValue=this.ManyAttrValue:this.formValidate.attrValue=[]
+      handleSubmit(name) {
+        this.formValidate.attr.length ? this.formValidate.attrValue = this.ManyAttrValue : this.formValidate.attrValue = []
         this.formValidate.cateId = this.formValidate.cateIds.join(',')
         this.formValidate.sliderImage = JSON.stringify(this.formValidate.sliderImages)
         for (var i = 0; i < this.formValidate.attr.length; i++) {
@@ -509,38 +572,38 @@
               this.modal_loading = false
             })
           } else {
-            if(!this.formValidate.storeName || !this.formValidate.cateId  || !this.formValidate.keyword
-              || !this.formValidate.unitName || !this.formValidate.image){
+            if (!this.formValidate.storeName || !this.formValidate.cateId || !this.formValidate.keyword
+              || !this.formValidate.unitName || !this.formValidate.image) {
               this.$message.warning("请填写完整商品信息！");
             }
           }
         })
       },
       // 点击商品图
-      modalPicTap (tit, num, i) {
+      modalPicTap(tit, num, i) {
         const _this = this
-        this.$modalUpload(function(img) {
-          if(tit==='1'&& !num){
+        this.$modalUpload(function (img) {
+          if (tit === '1' && !num) {
             _this.formValidate.image = img[0].sattDir
             _this.OneattrValue[0].image = img[0].sattDir
           }
-          if(tit==='2'&& !num){
-            if(img.length>10) return this.$message.warning("最多选择10张图片！");
-            if(img.length + _this.formValidate.sliderImages.length > 10) return this.$message.warning("最多选择10张图片！");
+          if (tit === '2' && !num) {
+            if (img.length > 10) return this.$message.warning("最多选择10张图片！");
+            if (img.length + _this.formValidate.sliderImages.length > 10) return this.$message.warning("最多选择10张图片！");
             img.map((item) => {
               _this.formValidate.sliderImages.push(item.sattDir)
             });
           }
-          if(tit==='1'&& num === 'dan' ){
+          if (tit === '1' && num === 'dan') {
             _this.OneattrValue[0].image = img[0].sattDir
           }
-          if(tit==='1'&& num === 'duo' ){
+          if (tit === '1' && num === 'duo') {
             _this.ManyAttrValue[i].image = img[0].sattDir
           }
-          if(tit==='1'&& num === 'pi' ){
+          if (tit === '1' && num === 'pi') {
             _this.oneFormBatch[0].image = img[0].sattDir
           }
-        },tit, 'store')
+        }, tit, 'store')
       },
       handleDragStart(e, item) {
         this.dragging = item;
@@ -570,43 +633,48 @@
 </script>
 
 <style scoped lang="scss">
-    .selWidth{
-      width: 100%;
-    }
-    .lunBox{
-      display: flex;
-      flex-direction: column;
-      border: 1px solid #0bb20c;
-    }
-    .pictrueBox{
-      display: inline-block;
-    }
+  .selWidth {
+    width: 100%;
+  }
 
-    .pictrue{
-      width:111px;
-      height:111px;
-      border:1px dotted rgba(0,0,0,0.1);
-      display: inline-block;
-      position: relative;
-      cursor: pointer;
-      img{
-        width: 100%;
-        height: 100%;
-      }
+  .lunBox {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #0bb20c;
+  }
+
+  .pictrueBox {
+    display: inline-block;
+  }
+
+  .pictrue {
+    width: 111px;
+    height: 111px;
+    border: 1px dotted rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+    img {
+      width: 100%;
+      height: 100%;
     }
-    .pictrueTab{
-      width:40px !important;
-      height:40px !important;
-    }
-    .upLoad {
-        width: 86px;
-        height: 86px;
-        border: 1px dotted rgba(0, 0, 0, 0.1);
-        border-radius: 4px;
-        background: rgba(0, 0, 0, 0.02);
-        cursor: pointer;
-    }
-    .ft{
-      color: red;
-    }
+  }
+
+  .pictrueTab {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .upLoad {
+    width: 86px;
+    height: 86px;
+    border: 1px dotted rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+  }
+
+  .ft {
+    color: red;
+  }
 </style>

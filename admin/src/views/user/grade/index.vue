@@ -74,8 +74,8 @@
         </el-table-column>
         <el-table-column label="操作" min-width="120" fixed="right" align="center">
           <template slot-scope="scope">
-            <el-button type="text" @click="edit(scope.row.id)" class="mr10">编辑</el-button>
-            <!--<el-button type="text" @click="handleDelete(scope.row.id, scope.$index)">删除</el-button>-->
+            <el-button type="text" size="small" @click="edit(scope.row.id)" class="mr10">编辑</el-button>
+            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -163,7 +163,7 @@
       },
       // 删除
       handleDelete(id, idx) {
-        this.$modalSure().then(() => {
+        this.$modalSure('删除吗？所有用户已经关联的数据都会清除').then(() => {
           levelDeleteApi({id:id}).then(() => {
             this.$message.success('删除成功')
             this.tableData.data.splice(idx, 1)

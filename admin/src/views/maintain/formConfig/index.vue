@@ -21,7 +21,6 @@
         :highlight-current-row="selectModel"
         size="mini"
         class="table"
-        highlight-current-row
         @current-change="handleCurrentRowChange"
       >
         <el-table-column label="ID" prop="id" width="80"/>
@@ -45,7 +44,6 @@
     </el-card>
     <el-dialog
       :visible.sync="editDialogConfig.visible"
-      title="title"
       fullscreen
       :title="editDialogConfig.isCreate === 0? '创建表单':'编辑表单'"
       destroy-on-close
