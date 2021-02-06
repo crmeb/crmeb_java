@@ -31,11 +31,8 @@ public interface UserExtractService extends IService<UserExtract> {
 
     /**
      * 提现总金额
-     * @author Mr.Zhang
-     * @since 2020-05-11
-     * @return BalanceResponse
      */
-    BalanceResponse getBalance(String startTime,String endTime);
+    BalanceResponse getBalance(String dateLimit);
 
     /**
      * 提现总金额
@@ -76,9 +73,15 @@ public interface UserExtractService extends IService<UserExtract> {
      * @param backMessage   驳回原因
      * @return  审核结果
      */
-    boolean updateStatus(Integer id,Integer status,String backMessage);
+    Boolean updateStatus(Integer id,Integer status,String backMessage);
 
     PageInfo<UserExtractRecordResponse> getExtractRecord(Integer userId, PageParamRequest pageParamRequest);
 
     BigDecimal getExtractTotalMoney(Integer userId);
+
+    /**
+     * 提现申请
+     * @return
+     */
+    Boolean extractApply(UserExtractRequest request);
 }

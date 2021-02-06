@@ -29,7 +29,8 @@ public class ResponseRouter {
 
 
         //根据需要处理返回值
-        if(data.contains("image/") && !data.contains("data:image/png;base64")){
+//        if(data.contains("image/") && !data.contains("data:image/png;base64")){
+        if(data.contains("crmebimage/") && !data.contains("data:image/png;base64")){
             data = SpringUtil.getBean(SystemAttachmentService.class).prefixImage(data);
         }
 

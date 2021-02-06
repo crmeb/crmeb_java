@@ -24,7 +24,6 @@ public interface RechargePayService {
     /**
      * 支付成功处理
      * @param userRecharge 充值订单
-     * @param userToken 用户Token
      */
-    Boolean paySuccess(UserRecharge userRecharge, UserToken userToken);
+    Boolean paySuccess(UserRecharge userRecharge);
 }

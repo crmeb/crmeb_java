@@ -833,10 +833,9 @@ public class OrderUtils {
             }
         }
 
-        String orderNo = "";
+        String orderNo = CrmebUtil.getOrderNo("order");
         int isChannel = 3;  // 支付渠道
         if (request.getPayType().equals(PayConstants.PAY_TYPE_WE_CHAT)) {
-            orderNo = CrmebUtil.getOrderNo(Constants.PAY_TYPE_WE_CHAT);
             switch (request.getPayChannel()){
                 case PayConstants.PAY_CHANNEL_WE_CHAT_H5:// H5
                     isChannel = 2;
@@ -849,7 +848,7 @@ public class OrderUtils {
                     break;
             }
         } else {// 目前只有余额支付
-            orderNo = CrmebUtil.getOrderNo(Constants.PAY_TYPE_YUE);
+//            orderNo = CrmebUtil.getOrderNo(Constants.PAY_TYPE_YUE);
         }
 
 
@@ -1377,7 +1376,7 @@ public class OrderUtils {
      */
     public String cacheSetOrderInfo(Integer userId,ConfirmOrderResponse confirmOrderResponse){
         String key = DigestUtils.md5Hex(DateUtil.getNowTime().toString());
-        redisUtil.set("user_order_" + userId + key, JSONObject.toJSONString(confirmOrderResponse),Constants.ORDER_CASH_CONFIRM, TimeUnit.MINUTES);
+        redisUtil.set("user_order:" + userId + key, JSONObject.toJSONString(confirmOrderResponse),Constants.ORDER_CASH_CONFIRM, TimeUnit.MINUTES);
         return key;
     }
 
@@ -1388,7 +1387,7 @@ public class OrderUtils {
      * @return 订单确认对象JSON
      */
     public String cacheGetOrderInfo(Integer userId, String cacheKey){
-        String key = "user_order_" + userId + cacheKey;
+        String key = "user_order:" + userId + cacheKey;
         boolean exists = redisUtil.exists(key);
         if(!exists) return null;
         return redisUtil.get(key).toString();
@@ -1400,7 +1399,7 @@ public class OrderUtils {
      * @param cacheKey 缓存key
      */
     public void cacheDeleteOrderInfo(Integer userId, String cacheKey){
-        String key = "user_order_" + userId + cacheKey;
+        String key = "user_order:" + userId + cacheKey;
         boolean exists = redisUtil.exists(key);
         if(!exists) return;
         redisUtil.remove(key);
@@ -1413,7 +1412,7 @@ public class OrderUtils {
      * @param confirmOrderResponse
      */
     public void cacheRepliceOrderInfo(String orderKey,Integer userId, ConfirmOrderResponse confirmOrderResponse){
-        String key = "user_order_" + userId + orderKey;
+        String key = "user_order:" + userId + orderKey;
         if(redisUtil.exists(key)){
             redisUtil.remove(key);
         }
@@ -1543,7 +1542,7 @@ public class OrderUtils {
                 queryWrapper.eq(StoreOrder::getPaid, true);
                 queryWrapper.eq(StoreOrder::getStatus, 0);
                 queryWrapper.eq(StoreOrder::getRefundStatus, 0);
-                queryWrapper.eq(StoreOrder::getShippingType, 1);
+//                queryWrapper.eq(StoreOrder::getShippingType, 1);
                 break;
             case Constants.ORDER_STATUS_H5_SPIKE: // 待收货
                 queryWrapper.eq(StoreOrder::getPaid, true);

@@ -3,7 +3,11 @@ package com.zbkj.crmeb.seckill.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.seckill.model.StoreSeckillManger;
+import com.zbkj.crmeb.seckill.request.StoreSeckillMangerRequest;
+import com.zbkj.crmeb.seckill.request.StoreSeckillMangerSearchRequest;
 import com.zbkj.crmeb.seckill.response.StoreSeckillManagerResponse;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -64,4 +68,14 @@ public interface StoreSeckillMangerService extends IService<StoreSeckillManger> 
      * @return 结果
      */
     boolean updateStatus(int id, boolean status);
+
+    /**
+     * 更新秒杀配置
+     * @param id id
+     * @param storeSeckillMangerRequest 秒杀配置
+     * @return 结果
+     */
+    boolean update(Integer id,StoreSeckillMangerRequest storeSeckillMangerRequest);
+    void setTimeRangeFromRequest(@Validated @RequestBody StoreSeckillMangerRequest storeSeckillMangerRequest, StoreSeckillManger storeSeckillManger);
+    void setTimeRangeFromRequest(@Validated @RequestBody StoreSeckillMangerSearchRequest request, StoreSeckillManger storeSeckillManger);
 }

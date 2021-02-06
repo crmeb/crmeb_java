@@ -50,13 +50,16 @@ public class UserResponse {
     private Integer partnerId;
 
     @ApiModelProperty(value = "用户分组id")
-    private Integer groupId;
+    private String groupId;
 
     @ApiModelProperty(value = "分组名称")
     private String groupName;
 
     @ApiModelProperty(value = "标签名称")
     private String tagName;
+
+    @ApiModelProperty(value = "标签Ids")
+    private String tagId;
 
     @ApiModelProperty(value = "用户昵称")
     private String nickname;
@@ -141,4 +144,7 @@ public class UserResponse {
 
     @ApiModelProperty(value = "清除时间")
     private Date cleanTime;
+
+    @ApiModelProperty(value = "是否关注公众号")
+    private Boolean subscribe;
 }

@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.payment.service.impl;
 
 import cn.hutool.core.codec.Base64;
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
@@ -9,6 +10,10 @@ import com.common.MyRecord;
 import com.constants.Constants;
 import com.exception.CrmebException;
 import com.utils.*;
+import com.zbkj.crmeb.combination.model.StoreCombination;
+import com.zbkj.crmeb.combination.model.StorePink;
+import com.zbkj.crmeb.combination.service.StoreCombinationService;
+import com.zbkj.crmeb.combination.service.StorePinkService;
 import com.zbkj.crmeb.finance.model.UserRecharge;
 import com.zbkj.crmeb.finance.service.UserRechargeService;
 import com.zbkj.crmeb.payment.service.CallbackService;
@@ -23,6 +28,7 @@ import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserToken;
 import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.user.service.UserTokenService;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +39,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -84,6 +91,12 @@ public class CallbackServiceImpl implements CallbackService {
     @Autowired
     private TransactionTemplate transactionTemplate;
 
+    @Autowired
+    private StoreCombinationService storeCombinationService;
+
+    @Autowired
+    private StorePinkService storePinkService;
+
     /**
      * 微信支付回调
      * @author Mr.Zhang
@@ -128,11 +141,11 @@ public class CallbackServiceImpl implements CallbackService {
             AttachVo attachVo = JSONObject.toJavaObject(JSONObject.parseObject(callbackVo.getAttach()), AttachVo.class);
 
             //判断openid
-            UserToken userToken = userTokenService.getByOpenid(callbackVo.getOpenid());
-            if(null == userToken || !userToken.getUid().equals(attachVo.getUserId())){
-                //用户信息错误
-                throw new CrmebException("用户信息错误！");
-            }
+//            UserToken userToken = userTokenService.getByOpenid(callbackVo.getOpenid());
+//            if(null == userToken || !userToken.getUid().equals(attachVo.getUserId())){
+//                //用户信息错误
+//                throw new CrmebException("用户信息错误！");
+//            }
             User user = userService.getById(attachVo.getUserId());
             if (ObjectUtil.isNull(user)) {
                 //用户信息错误
@@ -168,6 +181,57 @@ public class CallbackServiceImpl implements CallbackService {
                     if (storeOrder.getUseIntegral() > 0) {
                         userService.updateIntegral(user, storeOrder.getUseIntegral(), "sub");
                     }
+
+                    // 处理拼团
+                    if (storeOrder.getCombinationId() > 0) {
+                        // 判断拼团团长是否存在
+                        StorePink headPink = new StorePink();
+                        Integer pinkId = storeOrder.getPinkId();
+                        if (pinkId > 0) {
+                            headPink = storePinkService.getById(pinkId);
+                            if (ObjectUtil.isNull(headPink) || headPink.getIsRefund().equals(true) || headPink.getStatus() == 3) {
+                                pinkId = 0;
+                            }
+                        }
+                        StoreCombination storeCombination = storeCombinationService.getById(storeOrder.getCombinationId());
+                        // 生成拼团表数据
+                        StorePink storePink = new StorePink();
+                        storePink.setUid(user.getUid());
+                        storePink.setAvatar(user.getAvatar());
+                        storePink.setNickname(user.getNickname());
+                        storePink.setOrderId(storeOrder.getOrderId());
+                        storePink.setOrderIdKey(storeOrder.getId());
+                        storePink.setTotalNum(storeOrder.getTotalNum());
+                        storePink.setTotalPrice(storeOrder.getTotalPrice());
+                        storePink.setCid(storeCombination.getId());
+                        storePink.setPid(storeCombination.getProductId());
+                        storePink.setPeople(storeCombination.getPeople());
+                        storePink.setPrice(storeCombination.getPrice());
+                        Integer effectiveTime = storeCombination.getEffectiveTime();// 有效小时数
+                        DateTime dateTime = cn.hutool.core.date.DateUtil.date();
+                        storePink.setAddTime(dateTime.getTime());
+                        if (pinkId > 0) {
+                            storePink.setStopTime(headPink.getStopTime());
+                        } else {
+                            DateTime hourTime = cn.hutool.core.date.DateUtil.offsetHour(dateTime, effectiveTime);
+                            long stopTime =  hourTime.getTime();
+                            if (stopTime > storeCombination.getStopTime()) {
+                                stopTime = storeCombination.getStopTime();
+                            }
+                            storePink.setStopTime(stopTime);
+                        }
+                        storePink.setKId(pinkId);
+                        storePink.setIsTpl(false);
+                        storePink.setIsRefund(false);
+                        storePink.setStatus(1);
+                        storePinkService.save(storePink);
+                        // 如果是开团，需要更新订单数据
+                        if (storePink.getKId() == 0) {
+                            storeOrder.setPinkId(storePink.getId());
+                            storeOrderService.updateById(storeOrder);
+                        }
+                    }
+
                     return Boolean.TRUE;
                 });
                 if (!execute) {
@@ -195,7 +259,7 @@ public class CallbackServiceImpl implements CallbackService {
                     return sb.toString();
                 }
                 // 支付成功处理
-                Boolean rechargePayAfter = rechargePayService.paySuccess(userRecharge, userToken);
+                Boolean rechargePayAfter = rechargePayService.paySuccess(userRecharge);
                 if (!rechargePayAfter) {
                     logger.error("wechat pay error : 数据保存失败==》" + callbackVo.getOutTradeNo());
                     throw new CrmebException("wechat pay error : 数据保存失败==》" + callbackVo.getOutTradeNo());
@@ -334,7 +398,14 @@ public class CallbackServiceImpl implements CallbackService {
         return signKey;
     }
 
-    public String decryptToStr(String reqInfo, String signKey) throws Exception {
+    /**
+     * java自带的是PKCS5Padding填充，不支持PKCS7Padding填充。
+     * 通过BouncyCastle组件来让java里面支持PKCS7Padding填充
+     * 在加解密之前加上：Security.addProvider(new BouncyCastleProvider())，
+     * 并给Cipher.getInstance方法传入参数来指定Java使用这个库里的加/解密算法。
+     */
+    public static String decryptToStr(String reqInfo, String signKey) throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
         byte[] decodeReqInfo = Base64.decode(reqInfo);
         SecretKeySpec key = new SecretKeySpec(SecureUtil.md5(signKey).toLowerCase().getBytes(), "AES");
         Cipher cipher;

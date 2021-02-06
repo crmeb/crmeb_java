@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.payment.wechat;
 
+import com.zbkj.crmeb.finance.model.UserRecharge;
 import com.zbkj.crmeb.payment.vo.wechat.CreateOrderResponseVo;
 import com.zbkj.crmeb.payment.vo.wechat.PayParamsVo;
 import com.zbkj.crmeb.store.model.StoreOrder;
@@ -35,4 +36,12 @@ public interface WeChatPayService {
      * @return
      */
     Boolean queryPayResult(String orderNo);
+
+    /**
+     * 微信充值预下单接口
+     * @param userRecharge 充值订单
+     * @param clientIp      ip
+     * @return 获取wechat.requestPayment()参数
+     */
+    Map<String, String> unifiedRecharge(UserRecharge userRecharge, String clientIp);
 }
