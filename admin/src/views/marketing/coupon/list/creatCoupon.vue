@@ -57,7 +57,6 @@
             v-model="termTime"
             type="datetimerange"
             range-separator="至"
-            format="yyyy - MM - dd - HH : mm : ss"
             value-format="yyyy-MM-dd HH:mm:ss"
             start-placeholder="开始日期"
             :picker-options="pickerOptions"
@@ -76,11 +75,11 @@
             v-model="isForeverTime"
             type="datetimerange"
             range-separator="至"
-            format="yyyy - MM - dd - HH : mm : ss"
             value-format="yyyy-MM-dd HH:mm:ss"
             :picker-options="pickerOptions"
             start-placeholder="开始日期"
-            end-placeholder="结束日期">
+            end-placeholder="结束日期"
+            @blur="handleTimestamp">
           </el-date-picker>
         </el-form-item>
         <el-form-item label="领取方式" prop="resource">
@@ -133,7 +132,6 @@
         loading: false,
         threshold: false,
         termTime: [],
-        isForeverTime: [],
         props2: {
           children: 'child',
           label: 'name',
@@ -164,21 +162,31 @@
           status: false,
           checked: []
         },
+        isForeverTime: [],
         rules: {
           name: [
-            { required: true, message: '请输入优惠券名称', trigger: 'blur' },
+            { required: true, message: '请输入优惠券名称', trigger: 'blur' }
           ],
           day: [
-            { required: true, message: '请输入使用有效期限（天）', trigger: 'blur' },
+            { required: true, message: '请输入使用有效期限（天）', trigger: 'blur' }
           ],
           money: [
-            { required: true, message: '请输入优惠券面值', trigger: 'blur' },
+            { required: true, message: '请输入优惠券面值', trigger: 'blur' }
           ],
           primaryKey: [
-            { required: true, message: '请选择品类', trigger: 'change' },
+            { required: true, message: '请选择品类', trigger: 'change' }
           ],
           checked:  [
-            { required: true, message: '请至少选择一个商品', trigger: 'change', type: 'array' },
+            { required: true, message: '请至少选择一个商品', trigger: 'change', type: 'array' }
+          ],
+          isForeverTime: [
+            { required: true, message: '请选择领取时间', trigger: 'change', type: 'array' }
+          ],
+          total: [
+            { required: true, message: '请输入发布数量', trigger: 'blur' }
+          ],
+          minPrice: [
+            { required: true, message: '请输入最低消费', trigger: 'blur' }
           ]
         }
       }
@@ -188,6 +196,9 @@
       if( this.$route.params.id ) this.getInfo()
     },
     methods: {
+      handleTimestamp(){
+
+      },
       // 商品分类；
       getCategorySelect() {
         categoryApi({ status: -1, type: 1 }).then(res => {
@@ -219,7 +230,7 @@
           }
           info.minPrice == 0 ? this.threshold = false : this.threshold = true
           info.isForever ? this.isForeverTime = [info.receiveStartTime, info.receiveEndTime] : this.isForeverTime = []
-          info.isFixedTime ? this.termTime = [info.useStartTime, info.useEndTime] : this.termTime = []
+          info.isFixedTime && info.useStartTime && info.useEndTime ? this.termTime = [info.useStartTime, info.useEndTime] : this.termTime = []
           this.loading = false
         }).catch(res => {
           this.loading = false
@@ -236,6 +247,8 @@
         },'many',_this.ruleForm.checked)
       },
       submitForm(formName) {
+       if( (this.ruleForm.isFixedTime && !this.termTime) || this.ruleForm.isFixedTime && !this.termTime.length) return this.$message.warning("请选择使用有效期限")
+       if( (this.ruleForm.isForever && !this.isForeverTime) || (this.ruleForm.isForever && !this.isForeverTime.length)) return this.$message.warning("请选择请选择领取时间")
         if( this.ruleForm.useType === 2 ) this.ruleForm.primaryKey = this.ruleForm.checked.map(item => {return item.id}).join(',')
         if( this.ruleForm.useType === 1 ) this.ruleForm.primaryKey = ''
         if( !this.threshold ) this.ruleForm.minPrice = 0
@@ -246,7 +259,7 @@
         this.ruleForm.isForever && this.isForeverTime.length ? this.ruleForm.receiveEndTime = this.isForeverTime[1] : this.ruleForm.receiveEndTime = ''
         this.$refs[formName].validate((valid) => {
           if (valid) {
-            this.loading = true
+           this.loading = true
             couponSaveApi(this.ruleForm).then(() => {
               this.$message.success("新增成功")
               this.loading = false

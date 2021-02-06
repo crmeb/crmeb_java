@@ -313,7 +313,8 @@ export default {
           contents: {
             content: JSON.parse(info.data).content,
             mediaId: JSON.parse(info.data).mediaId,
-            srcUrl: JSON.parse(info.data).srcUrl
+            srcUrl: JSON.parse(info.data).srcUrl,
+            articleData: JSON.parse(info.data).articleData
           }
         }
         this.labelarr = info.keywords.split(',') || []
@@ -417,7 +418,7 @@ export default {
         }, 1000)
       }).catch(() => {
         setTimeout(() => {
-          this.$router.push({ path: `/publicAccount/wxReply/keyword` })
+          this.$router.push({ path: `/appSetting/publicAccount/wxReply/keyword` })
         }, 500)
       })
     }

@@ -259,10 +259,28 @@ export default {
     },
     popoverHide() {},
     handleClose() {
-      this.dialogVisible = false
       this.$refs['ruleForm'].resetFields()
+      this.dialogVisible = false
+      this.ruleForm={
+          name: '',
+          type: 1,
+          appoint: false,
+          sort: 0,
+          region: [{
+          first: 1,
+          firstPrice: 1,
+          renewal: 1,
+          renewalPrice: 1,
+          city_ids: []
+        }],
+          undelivery: 0,
+          free: [],
+          undelives: {},
+          city_id3: []
+      }
     },
     changeRegion(value) {
+      console.log(value)
       // console.integralLog(value)
     },
     changeRadio(num) {

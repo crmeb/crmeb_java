@@ -156,8 +156,7 @@
         parentMenuId: null,
         list: [],
         checkedMenuId: null,
-        isTrue: false,
-        isAsync: false
+        isTrue: false
       }
     },
     mounted() {
@@ -186,7 +185,7 @@
       },
       // 获取 菜单
       getMenus() {
-        wechatMenuApi({ isAsync:this.isAsync }).then(async res => {
+        wechatMenuApi().then(async res => {
           const data = res.menu
           this.list = data.button
         })
@@ -297,10 +296,11 @@
           pagepath: '',
           id: 0
         }
-        this.isTrue = true
+        this.isTrue = false
         this.modal2 = false
         this.checkedMenuId = null
         this.$refs['formValidate'].resetFields()
+        this.submenus('formValidate')
       }
     }
   }

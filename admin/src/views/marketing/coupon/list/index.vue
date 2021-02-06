@@ -112,7 +112,7 @@
           <template slot-scope="scope">
             <el-button type="text" class="mr10" size="small" @click="receive(scope.row)">领取记录</el-button>
             <router-link :to=" { path: '/marketing/coupon/list/save/' + scope.row.id } ">
-              <el-button type="text" size="small">复制</el-button>
+              <el-button v-if="scope.row.status" type="text" size="small">复制</el-button>
             </router-link>
           </template>
         </el-table-column>

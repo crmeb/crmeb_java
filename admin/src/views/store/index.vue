@@ -98,7 +98,7 @@
         >
           <template slot-scope="scope">
             <el-switch
-              :disabled="tableFrom.type === '5'"
+              :disabled="Number(tableFrom.type) > 2"
               v-model="scope.row.isShow"
               :active-value="true"
               :inactive-value="false"
@@ -142,8 +142,8 @@
     <el-dialog
       title="复制淘宝、天猫、京东、苏宁"
       :visible.sync="dialogVisible"
+      :close-on-click-modal="false"
       width="1200px"
-      :modal="false"
       class="taoBaoModal"
       :before-close="handleClose">
       <tao-bao v-if="dialogVisible" @handleCloseMod="handleCloseMod"></tao-bao>
@@ -295,7 +295,7 @@ export default {
 
 <style scoped lang="scss">
   .taoBaoModal{
-    z-index: 333 !important;
+  //  z-index: 3333 !important;
   }
   .demo-table-expand{
     /deep/ label{

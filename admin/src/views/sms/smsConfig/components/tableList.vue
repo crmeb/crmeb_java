@@ -299,11 +299,15 @@ export default {
   },
   watch: {
     sms (n) {
+      console.log(n)
       if (n.open === 1) this.getList();
     }
   },
   mounted() {
-    if (this.isChecked === '1' && this.sms.open === 1) this.getList();
+    console.log(this.isChecked)
+    console.log(this.sms.open)
+    if (this.sms.open === 1) this.getList();
+    // if (this.isChecked === '1' && this.sms.open === 1) this.getList();
   },
   methods: {
     editSign(){
