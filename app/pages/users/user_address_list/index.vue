@@ -306,7 +306,7 @@
 				this.couponId = '';
 				uni.navigateTo({
 					url: '/pages/users/user_address/index?id=' + id + '&cartId=' + cartId + '&pinkId=' + pinkId + '&couponId=' +
-						couponId
+						couponId + '&secKill' + this.secKill + '&combination=' + this.combination + '&bargain=' + this.bargain
 				})
 			},
 			/**
@@ -343,7 +343,7 @@
 				this.pinkId = '';
 				this.couponId = '';
 				uni.navigateTo({
-					url: '/pages/users/user_address/index?cartId=' + cartId + '&pinkId=' + pinkId + '&couponId=' + couponId
+					url: '/pages/users/user_address/index?cartId=' + cartId + '&pinkId=' + pinkId + '&couponId=' + couponId + '&secKill=' + this.secKill + '&combination=' + this.combination + '&bargain=' + this.bargain
 				})
 			},
 			goOrder: function(id) {

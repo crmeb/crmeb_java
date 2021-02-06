@@ -16,7 +16,7 @@
 							{{userInfo.nickname}}
 							<view class="vip" v-if="userInfo.vip">
 								<image :src="userInfo.vipIcon" alt="">
-								<view style="margin-left: 10rpx;" class="vip-txt">{{userInfo.vipName}}</view>
+								<view style="margin-left: 10rpx;" class="vip-txt">{{userInfo.vipName || ''}}</view>
 							</view>
 						</view>
 						<view class="num" v-if="userInfo.phone" @click="goEdit()">
@@ -90,13 +90,6 @@
 				</navigator>
 			</block>
 			<!-- #ifdef H5 -->
-		<!-- 	<navigator class="item" url="/pages/customer_list/index" hover-class="none">
-				<view class="left">
-					<image src="/static/images/user_menu08.png"></image>
-					<text>联系客服</text>
-				</view>
-				<view class="iconfont icon-xiangyou"></view>
-			</navigator> -->
 			<view class="item" @click="kefuClick">
 				<view class="left">
 					<image src="/static/images/user_menu08.png"></image>

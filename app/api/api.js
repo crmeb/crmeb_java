@@ -191,7 +191,7 @@ export function logout(){
  */
 export function getTemlIds(data)
 {
-  return request.post('wechat/program/my/temp/list?limit=3&page=1', data , { noAuth:true});
+  return request.get('wechat/program/my/temp/list', data , { noAuth:true});
 }
 
 /**

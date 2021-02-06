@@ -8,17 +8,6 @@
 					<!-- :style="'top:'+navH/2+'rpx'" -->
 					{{bargainCount.lookCount || 0}}人查看 丨 {{bargainCount.shareCount || 0}}人分享 丨 {{bargainCount.userCount || 0}}人参与
 				</view>
-				<!-- <view class='time font-color' v-if="bargainUid == userInfo.uid">
-					倒计时
-					<text>{{countDownDay}}</text>
-					天
-					<text>{{countDownHour}}</text>
-					时
-					<text>{{countDownMinute}}</text>
-					分
-					<text>{{countDownSecond}}</text>
-					秒
-				</view> -->
 				<countDown :tipText="'倒计时'" :dayText="'天'" :hourText="'时'" :minuteText="'分'" :secondText="'秒'" :datatime="datatime" :isDay="true" v-if="bargainUid == userInfo.uid"></countDown>
 				<view v-if="bargainUid != userInfo.uid" class='pictxt acea-row row-center-wrapper'>
 					<view class='pictrue'>

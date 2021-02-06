@@ -39,7 +39,7 @@
 								<view class='activity'>赠送 {{storeInfo.give_integral}} 积分</view>
 							</view>
 						</view> -->
-						<view class='coupon acea-row row-between-wrapper' @click='couponTap' style="margin-top: 20rpx;">
+						<view v-if="couponList.length" class='coupon acea-row row-between-wrapper' @click='couponTap' style="margin-top: 20rpx;">
 							<view class='hide line1 acea-row'>
 								优惠券：
 								<view class='activity' v-for="(item,index) in couponList" :key="index">满{{item.minPrice}}减{{item.money}}</view>
@@ -152,14 +152,22 @@
 				</view>
 				<view>购物车</view>
 			</navigator>
-			<view class='bnt acea-row'>
+			<view class="bnt acea-row" v-if="attr.productSelect.stock <= 0">
+				<form @submit="joinCart" report-submit="true"><button class="joinCart bnts" form-type="submit">加入购物车</button></form>
+				<form report-submit="true"><button class="buy bnts bg-color-hui" form-type="submit">已售罄</button></form>
+			</view>
+			<view class="bnt acea-row" v-else>
+				<form @submit="joinCart" report-submit="true"><button class="joinCart bnts" form-type="submit">加入购物车</button></form>
+				<form @submit="goBuy" report-submit="true"><button class="buy bnts" form-type="submit">立即购买</button></form>
+			</view>
+			<!-- <view class='bnt acea-row'>
 				<form @submit="joinCart" report-submit='true'>
 					<button class='joinCart bnts' form-type="submit">加入购物车</button>
 				</form>
 				<form @submit="goBuy" report-submit='true'>
 					<button class='buy bnts' form-type="submit">立即购买</button>
 				</form>
-			</view>
+			</view> -->
 		</view>
 		<shareRedPackets :sharePacket="sharePacket" @listenerActionSheet="listenerActionSheet" @closeChange="closeChange"></shareRedPackets>
 		<!-- 组件 -->
@@ -216,7 +224,6 @@
 
 <script>
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
-	import { base64src } from '@/utils/base64src.js'
 	// import yzf_chat from '@/plugin/chat/yzf_chat.js'
 	import store from '@/store';
 	import {
@@ -259,6 +266,7 @@
 	} from "@/utils";
 	import parser from "@/components/jyf-parser/jyf-parser";
 	// #ifdef MP
+	import { base64src } from '@/utils/base64src.js'
 	import authorize from '@/components/Authorize';
 	import {
 		getQrcode
@@ -558,7 +566,7 @@
 			getUserInfo: function() {
 				let that = this;
 				getUserInfo().then(res => {
-					that.$set(that.sharePacket, 'isState', that.sharePacket.priceName != '0' ? false : true);
+					that.$set(that.sharePacket, 'isState', Math.floor(that.sharePacket.priceName) != 0 ? false : true);
 					store.commit('SETUID', res.data.uid);
 					// that.$set(that, 'uid', res.data.uid);
 					// #ifdef H5
@@ -1242,8 +1250,6 @@
 									});
 								},
 								fail: function(res) {
-									console.log('保存失败原因2')
-									console.log(res)
 									that.$util.Tips({
 										title: '保存失败'
 									});

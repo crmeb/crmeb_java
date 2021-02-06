@@ -95,7 +95,10 @@
 				multiIndex: [0, 0, 0],
 				cityId: 0,
 				defaultRegion: ['广东省', '广州市', '番禺区'],
-				defaultRegionCode: '440113'
+				defaultRegionCode: '440113',
+				bargain: false, //是否是砍价
+				combination: false, //是否是拼团
+				secKill: false //是否是秒杀
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -105,6 +108,9 @@
 				this.pinkId = options.pinkId || 0;
 				this.couponId = options.couponId || 0;
 				this.id = options.id || 0;
+				this.secKill = options.secKill || false;
+				this.combination = options.combination || false;
+				this.bargain = options.bargain || false;
 				uni.setNavigationBarTitle({
 					title: options.id ? '修改地址' : '添加地址'
 				})
@@ -271,7 +277,7 @@
 											uni.navigateTo({
 												url: '/pages/users/order_confirm/index?cartId=' + cartId + '&addressId=' + (that.id ? that.id :
 													res.data
-													.id) + '&pinkId=' + pinkId + '&couponId=' + couponId
+													.id) + '&pinkId=' + pinkId + '&couponId=' + couponId  + '&secKill=' + that.secKill + '&combination=' + that.combination + '&bargain=' + that.bargain
 											});
 										} else {
 											uni.navigateBack({
@@ -346,7 +352,7 @@
 									uni.navigateTo({
 										url: '/pages/users/order_confirm/index?cartId=' + cartId + '&addressId=' + (that.id ? that.id :
 											res.data
-											.id) + '&pinkId=' + pinkId + '&couponId=' + couponId
+											.id) + '&pinkId=' + pinkId + '&couponId=' + couponId  + '&secKill=' + that.secKill + '&combination=' + that.combination + '&bargain=' + that.bargain
 									});
 								} else {
 									uni.navigateTo({
@@ -427,7 +433,7 @@
 							that.pinkId = '';
 							that.couponId = '';
 							uni.navigateTo({
-								url: '/pages/users/order_confirm/index?cartId=' + cartId + '&addressId=' + (that.id ? that.id : res.data.id) +'&pinkId=' + pinkId + '&couponId=' + couponId
+								url: '/pages/users/order_confirm/index?cartId=' + cartId + '&addressId=' + (that.id ? that.id : res.data.id) +'&pinkId=' + pinkId + '&couponId=' + couponId + '&secKill=' + that.secKill + '&combination=' + that.combination + '&bargain=' + that.bargain
 							});
 						} else {
 							// #ifdef H5
