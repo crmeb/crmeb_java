@@ -25,4 +25,6 @@ public interface UserBillDao extends BaseMapper<UserBill> {
     List<UserBillResponse> getListAdmin(Map<String, Object> map);
 
     List<UserBillResponse> getListAdminAndIntegeal(Map<String, Object> map);
+
+    List<UserBillResponse> fundMonitoring(Map<String, Object> map);
 }

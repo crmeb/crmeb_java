@@ -87,21 +87,21 @@ public class SmsRecordController {
         return CommonResult.success(smsService.applys(type, pageParamRequest));
     }
 
-    /**
-     * 发送短信
-     * @param phone 手机号码
-     * @return 发送是否成功
-     */
-    @ApiOperation(value = " 发送短信")
-    @RequestMapping(value = "/sendCode", method = RequestMethod.POST)
-    @ApiImplicitParams({
-            @ApiImplicitParam(name="phone", value="手机号码", required = true)
-    })
-    public CommonResult<Object> sendCode(@RequestParam String phone){
-        ValidateFormUtil.isPhone(phone,"手机号码错误");
-        boolean codeResult = smsService.pushCodeToList(phone,1, null);
-        return codeResult ? CommonResult.success("短信加入发送队列成功"):CommonResult.failed("短信加入发送队列失败");
-    }
+//    /**
+//     * 发送短信
+//     * @param phone 手机号码
+//     * @return 发送是否成功
+//     */
+//    @ApiOperation(value = " 发送短信")
+//    @RequestMapping(value = "/sendCode", method = RequestMethod.POST)
+//    @ApiImplicitParams({
+//            @ApiImplicitParam(name="phone", value="手机号码", required = true)
+//    })
+//    public CommonResult<Object> sendCode(@RequestParam String phone){
+//        ValidateFormUtil.isPhone(phone,"手机号码错误");
+//        boolean codeResult = smsService.pushCodeToList(phone,1, null);
+//        return codeResult ? CommonResult.success("短信加入发送队列成功"):CommonResult.failed("短信加入发送队列失败");
+//    }
 }
 
 

@@ -28,11 +28,11 @@ public class RetailShopRequest {
     public RetailShopRequest() {
     }
 
-    @ApiModelProperty(value = "是否启用分销")
+    @ApiModelProperty(value = "是否启用分销:1-启用，0-禁止")
     @NotNull(message = "是否启用分销 不能为空")
     private String brokerageFuncStatus;
 
-    @ApiModelProperty(value = "分销模式")
+    @ApiModelProperty(value = "分销模式：1-指定分销，2-人人分销，3-满额分销")
     @NotNull(message = "分销模式 不能为空")
     private String storeBrokerageStatus;
 
@@ -46,7 +46,7 @@ public class RetailShopRequest {
     @Range(min = 0, max = 100, message = "二级返佣比例在0-100中选择")
     private Integer storeBrokerageTwo;
 
-    @ApiModelProperty(value = "分销关系绑定")
+    @ApiModelProperty(value = "分销关系绑定:0-所有用户，1-新用户")
     @NotNull(message = "分销关系绑定 不能为空")
     private String brokerageBindind;
 
@@ -64,8 +64,8 @@ public class RetailShopRequest {
     @Min(value = 0, message = "冻结时间最少为0天")
     private Integer extractTime;
 
-    @ApiModelProperty(value = "人人分销满足金额")
-    @NotNull(message = "人人分销满足金额 不能为空")
-    @DecimalMin(value = "0", message = "人人分销满足金额最小为0")
-    private BigDecimal storeBrokeragePrice;
+//    @ApiModelProperty(value = "满额分销满足金额")
+//    @NotNull(message = "满额分销满足金额 不能为空")
+//    @DecimalMin(value = "0", message = "满额分销满足金额最小为0")
+//    private BigDecimal storeBrokeragePrice;
 }

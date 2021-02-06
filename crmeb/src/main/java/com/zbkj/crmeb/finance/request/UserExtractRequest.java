@@ -38,7 +38,7 @@ public class UserExtractRequest implements Serializable {
     private String realName;
 
     @ApiModelProperty(value = "提现方式| alipay=支付宝,bank=银行卡,weixin=微信", allowableValues = "range[alipay,weixin,bank]")
-    @NotBlank(message = "请选择提现方式， 支付宝|者微信|银行卡")
+    @NotBlank(message = "请选择提现方式， 支付宝|微信|银行卡")
     private String extractType;
 
     @ApiModelProperty(value = "银行卡")

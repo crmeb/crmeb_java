@@ -3,6 +3,7 @@ package com.zbkj.crmeb.user.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageInfo;
+import com.zbkj.crmeb.finance.request.FundsMonitorRequest;
 import com.zbkj.crmeb.finance.request.FundsMonitorSearchRequest;
 import com.zbkj.crmeb.front.response.UserSpreadCommissionResponse;
 import com.zbkj.crmeb.store.request.StoreOrderRefundRequest;
@@ -188,4 +189,20 @@ public interface UserBillService extends IService<UserBill> {
      * @param uid 用户id
      */
     List<UserBill> findListByOrderIdAndUid(Integer orderId, Integer uid);
+
+    /**
+     * 资金监控
+     * @param request 查询参数
+     * @param pageParamRequest 分页参数
+     * @return PageInfo
+     */
+    PageInfo<UserBillResponse> fundMonitoring(FundsMonitorRequest request, PageParamRequest pageParamRequest);
+
+    /**
+     * 用户账单记录（现金）
+     * @param uid 用户uid
+     * @param type 记录类型：all-全部，expenditure-支出，income-收入
+     * @return
+     */
+    PageInfo<UserBill> nowMoneyBillRecord(Integer uid, String type, PageParamRequest pageRequest);
 }

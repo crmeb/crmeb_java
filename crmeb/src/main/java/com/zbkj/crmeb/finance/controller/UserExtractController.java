@@ -39,7 +39,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("api/admin/finance/apply")
 @Api(tags = "财务 -- 提现申请")
-
 public class UserExtractController {
 
     @Autowired
@@ -81,26 +80,17 @@ public class UserExtractController {
     }
 
     /**
-     * 提现总金额
+     * 提现统计
      * @Param dateLimit 时间限制 today,yesterday,lately7,lately30,month,year,/yyyy-MM-dd hh:mm:ss,yyyy-MM-dd hh:mm:ss/
      * @author Mr.Zhang
      * @since 2020-05-11
      */
-    @ApiOperation(value = "提现总金额")
+    @ApiOperation(value = "提现统计")
     @RequestMapping(value = "/balance", method = RequestMethod.POST)
     public CommonResult<BalanceResponse> balance(
-            @RequestParam(value = "dateLimit", required = false,
-                    defaultValue = "")
+            @RequestParam(value = "dateLimit", required = false,defaultValue = "")
                     String dateLimit){
-        String startTime = null;
-        String endTime = null;
-        if(StringUtils.isNotBlank(dateLimit)){
-            dateLimitUtilVo dateRage = DateUtil.getDateLimit(dateLimit);
-            startTime = dateRage.getStartTime();
-            endTime = dateRage.getEndTime();
-        }
-
-        return CommonResult.success(userExtractService.getBalance(startTime,endTime));
+        return CommonResult.success(userExtractService.getBalance(dateLimit));
     }
 
     /**

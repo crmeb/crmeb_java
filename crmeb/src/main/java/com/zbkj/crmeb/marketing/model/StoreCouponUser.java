@@ -56,7 +56,7 @@ public class StoreCouponUser implements Serializable {
     @ApiModelProperty(value = "最低消费多少金额可用优惠券")
     private BigDecimal minPrice;
 
-    @ApiModelProperty(value = "获取方式")
+    @ApiModelProperty(value = "获取方式，send后台发放, 用户领取 get,register用户注册")
     private String type;
 
     @ApiModelProperty(value = "状态（0：未使用，1：已使用, 2:已失效）")

@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
+import com.constants.BargainConstants;
 import com.constants.Constants;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -100,7 +101,7 @@ public class StoreBargainUserServiceImpl extends ServiceImpl<StoreBargainUserDao
             bargainUserResponse.setPeopleNum(storeBargain.getPeopleNum());
             // 剩余砍价次数
             Long helpCount = storeBargainUserHelpService.getHelpCountByBargainIdAndBargainUid(storeBargain.getId(), bargainUser.getId());
-            bargainUserResponse.setNum(helpCount.intValue());
+            bargainUserResponse.setNum(storeBargain.getPeopleNum() - helpCount.intValue());
             return bargainUserResponse;
         }).collect(Collectors.toList());
 
@@ -165,7 +166,7 @@ public class StoreBargainUserServiceImpl extends ServiceImpl<StoreBargainUserDao
         lqw.eq(StoreBargainUser::getBargainId, bargainId);
         lqw.eq(StoreBargainUser::getUid, uid);
         lqw.eq(StoreBargainUser::getIsDel, false);
-        lqw.eq(StoreBargainUser::getStatus, 1);
+        lqw.eq(StoreBargainUser::getStatus, BargainConstants.BARGAIN_USER_STATUS_PARTICIPATE);
         lqw.orderByDesc(StoreBargainUser::getId);
         List<StoreBargainUser> userList = dao.selectList(lqw);
         if (CollUtil.isEmpty(userList)) {

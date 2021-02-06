@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.payment.wechat.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -10,6 +11,13 @@ import com.constants.PayConstants;
 import com.constants.WeChatConstants;
 import com.exception.CrmebException;
 import com.utils.*;
+import com.zbkj.crmeb.combination.model.StoreCombination;
+import com.zbkj.crmeb.combination.model.StorePink;
+import com.zbkj.crmeb.combination.service.StoreCombinationService;
+import com.zbkj.crmeb.combination.service.StorePinkService;
+import com.zbkj.crmeb.finance.model.UserRecharge;
+import com.zbkj.crmeb.finance.service.UserRechargeService;
+import com.zbkj.crmeb.payment.service.RechargePayService;
 import com.zbkj.crmeb.payment.vo.wechat.*;
 import com.zbkj.crmeb.payment.wechat.WeChatPayService;
 import com.zbkj.crmeb.store.model.StoreOrder;
@@ -86,6 +94,18 @@ public class WeChatPayServiceImpl implements WeChatPayService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserRechargeService userRechargeService;
+
+    @Autowired
+    private RechargePayService rechargePayService;
+
+    @Autowired
+    private StoreCombinationService storeCombinationService;
+
+    @Autowired
+    private StorePinkService storePinkService;
 
     /**
      * 统一下单
@@ -343,66 +363,227 @@ public class WeChatPayServiceImpl implements WeChatPayService {
         if (StrUtil.isBlank(orderNo)) {
             throw new CrmebException("订单编号不能为空");
         }
-        StoreOrder storeOrder = storeOrderService.getByOderId(orderNo);
-        if (ObjectUtil.isNull(storeOrder)) {
-            throw new CrmebException("订单不存在");
-        }
-        if (storeOrder.getIsDel()) {
-            throw new CrmebException("订单已被删除");
-        }
-        if (!storeOrder.getPayType().equals(PayConstants.PAY_TYPE_WE_CHAT)) {
-            throw new CrmebException("不是微信支付类型订单，请重新选择支付方式");
-        }
+        // 切割字符串，判断是支付订单还是充值订单
+        String pre = StrUtil.subPre(orderNo, 5);
+        if (pre.equals("order")) {// 支付订单
+            StoreOrder storeOrder = storeOrderService.getByOderId(orderNo);
+            if (ObjectUtil.isNull(storeOrder)) {
+                throw new CrmebException("订单不存在");
+            }
+            if (storeOrder.getIsDel()) {
+                throw new CrmebException("订单已被删除");
+            }
+            if (!storeOrder.getPayType().equals(PayConstants.PAY_TYPE_WE_CHAT)) {
+                throw new CrmebException("不是微信支付类型订单，请重新选择支付方式");
+            }
 
-        if (storeOrder.getPaid()) {
+            if (storeOrder.getPaid()) {
 //            throw new CrmebException("订单已支付");
+                return Boolean.TRUE;
+            }
+
+            User user = userService.getById(storeOrder.getUid());
+            if (ObjectUtil.isNull(user)) throw new CrmebException("用户不存在");
+
+
+            // 获取appid、mch_id
+            // 微信签名key
+            String appId = "";
+            String mchId = "";
+            String signKey = "";
+            if (storeOrder.getIsChannel() == 0) {// 公众号
+                appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
+                mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_MCH_ID);
+                signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
+            }
+            if (storeOrder.getIsChannel() == 1) {// 小程序
+                appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
+                mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_MCH_ID);
+                signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
+            }
+            if (storeOrder.getIsChannel() == 2) {// H5
+                appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
+                mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_MCH_ID);
+                signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
+            }
+
+            // 生成查询订单对象
+            Map<String, String> payVo = getWxChantQueryPayVo(orderNo, appId, mchId, signKey);
+            // 查询订单信息
+            MyRecord record = orderPayQuery(payVo);
+
+            Boolean updatePaid = transactionTemplate.execute(e -> {
+                storeOrderService.updatePaid(orderNo);
+                if (storeOrder.getUseIntegral() > 0) {
+                    userService.updateIntegral(user, storeOrder.getUseIntegral(), "sub");
+                }
+                // 处理拼团
+                if (storeOrder.getCombinationId() > 0) {
+                    // 判断拼团团长是否存在
+                    StorePink headPink = new StorePink();
+                    Integer pinkId = storeOrder.getPinkId();
+                    if (pinkId > 0) {
+                        headPink = storePinkService.getById(pinkId);
+                        if (ObjectUtil.isNull(headPink) || headPink.getIsRefund().equals(true) || headPink.getStatus() == 3) {
+                            pinkId = 0;
+                        }
+                    }
+                    StoreCombination storeCombination = storeCombinationService.getById(storeOrder.getCombinationId());
+                    // 生成拼团表数据
+                    StorePink storePink = new StorePink();
+                    storePink.setUid(user.getUid());
+                    storePink.setAvatar(user.getAvatar());
+                    storePink.setNickname(user.getNickname());
+                    storePink.setOrderId(storeOrder.getOrderId());
+                    storePink.setOrderIdKey(storeOrder.getId());
+                    storePink.setTotalNum(storeOrder.getTotalNum());
+                    storePink.setTotalPrice(storeOrder.getTotalPrice());
+                    storePink.setCid(storeCombination.getId());
+                    storePink.setPid(storeCombination.getProductId());
+                    storePink.setPeople(storeCombination.getPeople());
+                    storePink.setPrice(storeCombination.getPrice());
+                    Integer effectiveTime = storeCombination.getEffectiveTime();// 有效小时数
+                    DateTime dateTime = cn.hutool.core.date.DateUtil.date();
+                    storePink.setAddTime(dateTime.getTime());
+                    if (pinkId > 0) {
+                        storePink.setStopTime(headPink.getStopTime());
+                    } else {
+                        DateTime hourTime = cn.hutool.core.date.DateUtil.offsetHour(dateTime, effectiveTime);
+                        long stopTime =  hourTime.getTime();
+                        if (stopTime > storeCombination.getStopTime()) {
+                            stopTime = storeCombination.getStopTime();
+                        }
+                        storePink.setStopTime(stopTime);
+                    }
+                    storePink.setKId(pinkId);
+                    storePink.setIsTpl(false);
+                    storePink.setIsRefund(false);
+                    storePink.setStatus(1);
+                    storePinkService.save(storePink);
+                    // 如果是开团，需要更新订单数据
+                    if (storePink.getKId() == 0) {
+                        storeOrder.setPinkId(storePink.getId());
+                        storeOrderService.updateById(storeOrder);
+                    }
+                }
+                return Boolean.TRUE;
+            });
+            if (!updatePaid) {
+                throw new CrmebException("支付成功更新订单失败");
+            }
+            // 添加支付成功task
+            redisUtil.lPush(Constants.ORDER_TASK_PAY_SUCCESS_AFTER, orderNo);
             return Boolean.TRUE;
         }
+        // 充值订单
+        UserRecharge userRecharge = new UserRecharge();
+        userRecharge.setOrderId(orderNo);
+        userRecharge = userRechargeService.getInfoByEntity(userRecharge);
+        if(ObjectUtil.isNull(userRecharge)){
+            throw new CrmebException("没有找到订单信息");
+        }
+        if(userRecharge.getPaid()){
+            return Boolean.TRUE;
+        }
+        // 查询订单
+        // 获取appid、mch_id
+        // 微信签名key
+        String appId = "";
+        String mchId = "";
+        String signKey = "";
+        if (userRecharge.getRechargeType().equals("public")) {// 公众号
+            appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
+            mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_MCH_ID);
+            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
+        }
+        if (userRecharge.getRechargeType().equals("routine")) {// 小程序
+            appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
+            mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_MCH_ID);
+            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
+        }
+        // 生成查询订单对象
+        Map<String, String> payVo = getWxChantQueryPayVo(orderNo, appId, mchId, signKey);
+        // 查询订单信息
+        MyRecord record = orderPayQuery(payVo);
+        // 支付成功处理
+        Boolean rechargePayAfter = rechargePayService.paySuccess(userRecharge);
+        if (!rechargePayAfter) {
+            throw new CrmebException("wechat pay error : 数据保存失败==》" + orderNo);
+        }
+        return rechargePayAfter;
+    }
 
-        User user = userService.getById(storeOrder.getUid());
-        if (ObjectUtil.isNull(user)) throw new CrmebException("用户不存在");
+    /**
+     * 微信充值预下单接口
+     * @param userRecharge 充值订单
+     * @param clientIp      ip
+     * @return
+     */
+    @Override
+    public Map<String, String> unifiedRecharge(UserRecharge userRecharge, String clientIp) {
+        if (ObjectUtil.isNull(userRecharge)) {
+            throw new CrmebException("订单不存在");
+        }
+//        if (userRecharge.getPaid()) {
+//            throw new CrmebException("订单已支付");
+//        }
+        // 获取用户openId
+        // 根据订单支付类型来判断获取公众号openId还是小程序openId
+        UserToken userToken = new UserToken();
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_PUBLIC)) {// 公众号
+            userToken = userTokenService.getTokenByUserId(userRecharge.getUid(), 1);
+        }
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_PROGRAM)) {// 小程序
+            userToken = userTokenService.getTokenByUserId(userRecharge.getUid(), 2);
+        }
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_H5)) {// H5
+//            userTokenService.getByUid(storeOrder.getUid());
+            userToken.setToken("");
+        }
 
+        if (ObjectUtil.isNull(userToken)) {
+            throw new CrmebException("该用户没有openId");
+        }
 
         // 获取appid、mch_id
         // 微信签名key
         String appId = "";
         String mchId = "";
         String signKey = "";
-        if (storeOrder.getIsChannel() == 0) {// 公众号
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_PUBLIC)) {// 公众号
             appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
             mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_MCH_ID);
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
         }
-        if (storeOrder.getIsChannel() == 1) {// 小程序
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_PROGRAM)) {// 小程序
             appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
             mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_MCH_ID);
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
         }
-        if (storeOrder.getIsChannel() == 2) {// H5
-            appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
-            mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_MCH_ID);
-            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_H5)) {// H5,使用公众号的
+            appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
+            mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_MCH_ID);
+            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
         }
 
-        // 生成查询订单对象
-        Map<String, String> payVo = getWxChantQueryPayVo(orderNo, appId, mchId, signKey);
-        // 查询订单信息
-        MyRecord record = orderPayQuery(payVo);
+        // 获取微信预下单对象
+        CreateOrderRequestVo unifiedorderVo = getUnifiedorderVo(userRecharge, userToken.getToken(), clientIp, appId, mchId, signKey);
+        // 预下单
+        CreateOrderResponseVo responseVo = unifiedOrder(unifiedorderVo);
 
-        Boolean updatePaid = transactionTemplate.execute(e -> {
-            storeOrderService.updatePaid(orderNo);
-            if (storeOrder.getUseIntegral() > 0) {
-                userService.updateIntegral(user, storeOrder.getUseIntegral(), "sub");
-            }
-            return Boolean.TRUE;
-        });
-
-        if (!updatePaid) {
-            throw new CrmebException("支付成功更新订单失败");
+        // 组装前端预下单参数
+        Map<String, String> map = new HashMap<>();
+        map.put("appId", unifiedorderVo.getAppid());
+        map.put("nonceStr", WxPayUtil.getNonceStr());
+        map.put("package", "prepay_id=".concat(responseVo.getPrepayId()));
+        map.put("signType", unifiedorderVo.getSign_type());
+        map.put("timeStamp", Long.toString(WxPayUtil.getCurrentTimestamp()));
+        String paySign = WxPayUtil.getSign(map, signKey);
+        map.put("paySign", paySign);
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_H5)) {
+            map.put("mweb_url", responseVo.getMWebUrl());
         }
-        // 添加支付成功task
-        redisUtil.lPush(Constants.ORDER_TASK_PAY_SUCCESS_AFTER, orderNo);
-        return Boolean.TRUE;
+        return map;
     }
 
     private MyRecord orderPayQuery(Map<String, String> payVo) {
@@ -416,13 +597,17 @@ public class WeChatPayServiceImpl implements WeChatPayService {
                 throw new CrmebException("微信订单查询失败！");
             }
             record.setColums(map);
-            if(record.getStr("return_code").toUpperCase().equals("FAIL")){
-                throw new CrmebException("微信下单失败1！" +  record.getStr("return_msg"));
+            if (record.getStr("return_code").toUpperCase().equals("FAIL")){
+                throw new CrmebException("微信订单查询失败1！" +  record.getStr("return_msg"));
             }
 
-            if(record.getStr("result_code").toUpperCase().equals("FAIL")){
-                throw new CrmebException("微信下单失败2！" + record.getStr("err_code_des"));
+            if (record.getStr("result_code").toUpperCase().equals("FAIL")){
+                throw new CrmebException("微信订单查询失败2！" + record.getStr("err_code") + record.getStr("err_code_des"));
             }
+            if (!record.getStr("trade_state").toUpperCase().equals("SUCCESS")){
+                throw new CrmebException("微信订单支付失败！" + record.getStr("trade_state"));
+            }
+
             return record;
         } catch (Exception e) {
             e.printStackTrace();
@@ -472,6 +657,48 @@ public class WeChatPayServiceImpl implements WeChatPayService {
         vo.setTrade_type(PayConstants.WX_PAY_TRADE_TYPE_JS);
         vo.setOpenid(openid);
         if (storeOrder.getIsChannel() == 2){// H5
+            vo.setTrade_type(PayConstants.WX_PAY_TRADE_TYPE_H5);
+            vo.setOpenid(null);
+        }
+        CreateOrderH5SceneInfoVo createOrderH5SceneInfoVo = new CreateOrderH5SceneInfoVo(
+                new CreateOrderH5SceneInfoDetailVo(
+                        domain,
+                        systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_SITE_NAME)
+                )
+        );
+        vo.setScene_info(JSONObject.toJSONString(createOrderH5SceneInfoVo));
+        String sign = WxPayUtil.getSign(vo, signKey);
+        vo.setSign(sign);
+        return vo;
+    }
+
+    /**
+     * 获取微信预下单对象
+     * @return
+     */
+    private CreateOrderRequestVo getUnifiedorderVo(UserRecharge userRecharge, String openid, String ip, String appId, String mchId, String signKey) {
+
+        // 获取域名
+        String domain = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_SITE_URL);
+        String apiDomain = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_API_URL);
+
+        AttachVo attachVo = new AttachVo(Constants.SERVICE_PAY_TYPE_RECHARGE, userRecharge.getUid());
+        CreateOrderRequestVo vo = new CreateOrderRequestVo();
+
+        vo.setAppid(appId);
+        vo.setMch_id(mchId);
+        vo.setNonce_str(WxPayUtil.getNonceStr());
+        vo.setSign_type(PayConstants.WX_PAY_SIGN_TYPE_MD5);
+        vo.setBody(PayConstants.PAY_BODY);
+        vo.setAttach(JSONObject.toJSONString(attachVo));
+        vo.setOut_trade_no(userRecharge.getOrderId());
+        // 订单中使用的是BigDecimal,这里要转为Integer类型
+        vo.setTotal_fee(userRecharge.getPrice().multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue());
+        vo.setSpbill_create_ip(ip);
+        vo.setNotify_url(apiDomain + PayConstants.WX_PAY_NOTIFY_API_URI);
+        vo.setTrade_type(PayConstants.WX_PAY_TRADE_TYPE_JS);
+        vo.setOpenid(openid);
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_H5)){// H5
             vo.setTrade_type(PayConstants.WX_PAY_TRADE_TYPE_H5);
             vo.setOpenid(null);
         }

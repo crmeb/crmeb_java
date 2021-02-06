@@ -104,10 +104,11 @@ public class StoreOrderRefundServiceImpl extends ServiceImpl<StoreOrderDao, Stor
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
             path = systemConfigService.getValueByKeyException("pay_mini_client_p12");
         }
-        if (storeOrder.getIsChannel() == 2) {// H5
-            appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
-            mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_MCH_ID);
-            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
+        if (storeOrder.getIsChannel() == 2) {// H5, 使用公众号的
+            appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
+            mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_MCH_ID);
+            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
+            path = systemConfigService.getValueByKeyException("pay_mini_client_p12");
         }
         String apiDomain = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_API_URL);
 

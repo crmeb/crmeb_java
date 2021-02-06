@@ -3,17 +3,13 @@ package com.zbkj.crmeb.store.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
-import com.github.pagehelper.PageInfo;
-import com.zbkj.crmeb.finance.service.UserExtractService;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.request.RetailShopRequest;
 import com.zbkj.crmeb.store.request.RetailShopStairUserRequest;
 import com.zbkj.crmeb.store.response.RetailShopStatisticsResponse;
-import com.zbkj.crmeb.store.response.RetailShopUserResponse;
 import com.zbkj.crmeb.store.service.RetailShopService;
-import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.user.model.User;
-import com.zbkj.crmeb.user.response.UserResponse;
+import com.zbkj.crmeb.user.response.SpreadUserResponse;
 import com.zbkj.crmeb.user.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -23,11 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 分销模块
@@ -53,37 +44,29 @@ public class RetailShopController {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private StoreOrderService storeOrderService;
-
-    @Autowired
-    private UserExtractService userExtractService;
-
     /**
-     * 分销列表
-     * @param keywords
-     * @param dateLimit
-     * @param pageParamRequest
-     * @return
+     * 分销员列表
+     * @param keywords         搜索参数
+     * @param dateLimit        时间参数
+     * @param pageParamRequest 分页参数
      */
-    @ApiOperation(value = "分销列表")
+    @ApiOperation(value = "分销员列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "keywords", value = "搜索关键字[身份证，手机，昵称，备注等]"),
             @ApiImplicitParam(name = "dateLimit", value = "today,yesterday,lately7,lately30,month,year,/yyyy-MM-dd hh:mm:ss,yyyy-MM-dd hh:mm:ss/")
     })
-    public CommonResult<CommonPage<RetailShopUserResponse>> getList(@RequestParam(required = false) String keywords,
-                                                                    @RequestParam(required = false) String dateLimit,
-                                                                    @ModelAttribute PageParamRequest pageParamRequest){
-        return CommonResult.success(retailShopService.getList(keywords,dateLimit,pageParamRequest));
+    public CommonResult<CommonPage<SpreadUserResponse>> getList(@RequestParam(required = false) String keywords,
+                                                                @RequestParam(required = false) String dateLimit,
+                                                                @ModelAttribute PageParamRequest pageParamRequest) {
+        return CommonResult.success(retailShopService.getSpreadPeopleList(keywords, dateLimit, pageParamRequest));
     }
 
 
     /**
      * 分销头部信息
-     * @param keywords 搜索参数
+     * @param keywords  搜索参数
      * @param dateLimit 时间参数
-     * @return
      */
     @ApiOperation(value = "分销头部数据")
     @RequestMapping(value = "/statistics", method = RequestMethod.GET)
@@ -92,14 +75,14 @@ public class RetailShopController {
             @ApiImplicitParam(name = "dateLimit", value = "today,yesterday,lately7,lately30,month,year,/yyyy-MM-dd hh:mm:ss,yyyy-MM-dd hh:mm:ss/")
     })
     public CommonResult<RetailShopStatisticsResponse> getStatistics(@RequestParam(required = false) String keywords,
-                                              @RequestParam(required = false) String dateLimit){
+                                                                    @RequestParam(required = false) String dateLimit) {
         return CommonResult.success(retailShopService.getAdminStatistics(keywords, dateLimit));
     }
 
     /**
      * 添加推广关系
      * @param currentUserId 当前用户id
-     * @param spreadUserId 推广人用户id
+     * @param spreadUserId  推广人用户id
      * @return 结果
      */
     @ApiOperation(value = "添加推广关系")
@@ -108,35 +91,35 @@ public class RetailShopController {
             @ApiImplicitParam(name = "currentUserId", value = "当前用户id"),
             @ApiImplicitParam(name = "spreadUserId", value = "推广人id")
     })
-    public CommonResult<Object> save(Integer currentUserId, Integer spreadUserId){
+    public CommonResult<Object> save(Integer currentUserId, Integer spreadUserId) {
         return CommonResult.success(userService.spread(currentUserId, spreadUserId));
     }
 
     /**
      * 根据用户参数获取推广人列表
-     * @param request 查询参数
+     * @param request          查询参数
      * @param pageParamRequest 分页参数
      * @return 查询结果推广人列表
      */
     @ApiOperation(value = "根据条件获取推广人列表")
     @RequestMapping(value = "/spread/userlist", method = RequestMethod.POST)
     public CommonResult<CommonPage<User>> getUserListBySpreadLevel(@RequestBody @Validated RetailShopStairUserRequest request,
-                                                         @ModelAttribute PageParamRequest pageParamRequest){
-        return CommonResult.success(CommonPage.restPage(userService.getUserListBySpreadLevel(request,pageParamRequest)));
+                                                                   @ModelAttribute PageParamRequest pageParamRequest) {
+        return CommonResult.success(CommonPage.restPage(userService.getUserListBySpreadLevel(request, pageParamRequest)));
     }
 
 
     /**
      * 根据参数获取推广订单列表
-     * @param request 查询参数
+     * @param request          查询参数
      * @param pageParamRequest 分页参数
      * @return 查询结果推广人订单列表
      */
     @ApiOperation(value = "根据条件获取推广人订单")
     @RequestMapping(value = "/spread/orderlist", method = RequestMethod.POST)
     public CommonResult<CommonPage<StoreOrder>> getOrdersBySpreadLevel(@RequestBody @Validated RetailShopStairUserRequest request,
-                                                                       @ModelAttribute PageParamRequest pageParamRequest){
-        return CommonResult.success(CommonPage.restPage(userService.getOrderListBySpreadLevel(request,pageParamRequest)));
+                                                                       @ModelAttribute PageParamRequest pageParamRequest) {
+        return CommonResult.success(CommonPage.restPage(userService.getOrderListBySpreadLevel(request, pageParamRequest)));
     }
 
     /**
@@ -146,7 +129,7 @@ public class RetailShopController {
      */
     @ApiOperation(value = "清除上级推广人")
     @RequestMapping(value = "/spread/clean/{id}", method = RequestMethod.GET)
-    public CommonResult<Object> clearSpread(@PathVariable Integer id){
+    public CommonResult<Object> clearSpread(@PathVariable Integer id) {
         return CommonResult.success(userService.clearSpread(id));
     }
 
@@ -156,7 +139,7 @@ public class RetailShopController {
      */
     @ApiOperation(value = "分销配置信息获取")
     @RequestMapping(value = "/spread/manage/get", method = RequestMethod.GET)
-    public CommonResult<Object> getSpreadInfo(){
+    public CommonResult<Object> getSpreadInfo() {
         return CommonResult.success(retailShopService.getManageInfo());
     }
 
@@ -167,7 +150,7 @@ public class RetailShopController {
      */
     @ApiOperation(value = "分销管理信息保存")
     @RequestMapping(value = "/spread/manage/set", method = RequestMethod.POST)
-    public CommonResult<Object> setSpreadInfo(@RequestBody @Validated RetailShopRequest retailShopRequest){
+    public CommonResult<Object> setSpreadInfo(@RequestBody @Validated RetailShopRequest retailShopRequest) {
         return CommonResult.success(retailShopService.setManageInfo(retailShopRequest));
     }
 }

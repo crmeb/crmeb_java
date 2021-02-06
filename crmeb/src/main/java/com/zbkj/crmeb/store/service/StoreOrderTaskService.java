@@ -15,19 +15,21 @@ import com.zbkj.crmeb.store.model.StoreOrder;
  * | Author: CRMEB Team <admin@crmeb.com>
  * +----------------------------------------------------------------------
  */
- public interface StoreOrderTaskService {
+public interface StoreOrderTaskService {
 
-     Boolean cancelByUser(StoreOrder storeOrder);
+    Boolean cancelByUser(StoreOrder storeOrder);
 
-     Boolean refundApply(StoreOrder storeOrder);
+    Boolean complete(StoreOrder storeOrder);
 
-     Boolean complete(StoreOrder storeOrder);
+    Boolean takeByUser(StoreOrder storeOrder);
 
-     Boolean takeByUser(StoreOrder storeOrder);
+    Boolean deleteByUser(StoreOrder storeOrder);
 
-     Boolean deleteByUser(StoreOrder storeOrder);
+    Boolean refundOrder(StoreOrder storeOrder);
 
-     Boolean refundOrder(StoreOrder storeOrder);
+    Boolean paySuccessAfter(StoreOrder storeOrder);
 
-     Boolean paySuccessAfter(StoreOrder storeOrder);
- }
+    Boolean autoCancel(StoreOrder storeOrder);
+
+    Boolean orderReceiving(Integer orderId);
+}

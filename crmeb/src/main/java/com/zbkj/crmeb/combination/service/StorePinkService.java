@@ -78,4 +78,11 @@ public interface StorePinkService extends IService<StorePink> {
      * @return
      */
     boolean pinkSuccess(Integer kid);
+
+    /**
+     * 根据订单编号获取
+     * @param orderId
+     * @return
+     */
+    StorePink getByOrderId(String orderId);
 }

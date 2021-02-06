@@ -48,4 +48,18 @@
         ORDER BY ub.id DESC,ub.create_time DESC
     </select>
 
+    <select id="fundMonitoring" resultType="com.zbkj.crmeb.user.response.UserBillResponse" parameterType="map">
+        SELECT ub.id,ub.link_id AS linkId,ub.pm,ub.title,ub.category,ub.type,ub.number,ub.balance,ub.mark,ub.status,ub.create_time AS createTime,ub.update_time AS updateTime,u.nickname,ub.uid FROM eb_user_bill ub
+        LEFT JOIN eb_user u ON ub.uid = u.uid
+        where ub.category = 'now_money'
+        <if test="keywords != '' and keywords != null ">
+            and ( ub.uid like #{keywords} or u.nickname like #{keywords, jdbcType=VARCHAR})
+        </if>
+        <if test="startTime != '' and endTime != '' and startTime != null and endTime != null">
+            and (ub.create_time between #{startTime} and #{endTime})
+        </if>
+
+        ORDER BY ub.id DESC,ub.create_time DESC
+    </select>
+
 </mapper>

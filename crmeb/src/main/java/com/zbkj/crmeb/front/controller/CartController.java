@@ -59,9 +59,8 @@ public class CartController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public CommonResult<CommonPage<StoreCartResponse>> getList(@RequestParam Boolean isValid, @Validated PageParamRequest pageParamRequest){
         StoreCart storeCart = new StoreCart();
-        storeCart.setUid(userService.getUserIdException());
         CommonPage<StoreCartResponse> storeCartCommonPage =
-                CommonPage.restPage(storeCartService.getList(pageParamRequest, storeCart, isValid));
+                CommonPage.restPage(storeCartService.getList(pageParamRequest, isValid));
         return CommonResult.success(storeCartCommonPage);
     }
 

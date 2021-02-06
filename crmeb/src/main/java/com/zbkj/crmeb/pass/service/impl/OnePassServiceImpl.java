@@ -400,6 +400,23 @@ public class OnePassServiceImpl implements OnePassService {
     }
 
     /**
+     * 修改手机号——验证账号密码
+     * @return Boolean
+     */
+    @Override
+    public Boolean beforeUpdatePhoneValidator(OnePassLoginRequest request) {
+        OnePassLoginVo loginVo = onePassUtil.getLoginVo();
+        if (!loginVo.getAccount().equals(request.getAccount())) {
+            throw new CrmebException("账号不匹配");
+        }
+        String secret = SecureUtil.md5(request.getAccount() + SecureUtil.md5(request.getPassword()));
+        if (!loginVo.getSecret().equals(secret)) {
+            throw new CrmebException("密码不匹配");
+        }
+        return Boolean.TRUE;
+    }
+
+    /**
      * 物流、电子面单开通参数校验
      */
     private void expressOpenValidate(ServiceOpenRequest request) {
