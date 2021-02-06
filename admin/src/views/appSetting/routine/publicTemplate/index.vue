@@ -3,23 +3,22 @@
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <div class="container">
-          <el-form size="small" :inline="true"  label-width="100px">
-            <el-form-item label="模板标题：">
-              <el-input v-model="tableFrom.title" placeholder="请输入模板标题" class="selWidth" size="small" clearable></el-input>
-            </el-form-item>
+          <el-form size="small" :inline="true">
             <el-form-item label="所属类目：">
-              <el-select v-model="tableFrom.categoryId" placeholder="请选择状态" clearable class="selWidth">
+              <el-select v-model="tableFrom.categoryId" placeholder="请选择状态" clearable class="selWidth" @change="seachList">
                 <el-option :label="item.name" :value="item.id" v-for="item in categoryList" :key="item.id"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="模板类型：">
-              <el-select v-model="tableFrom.type" placeholder="请选择类型" clearable class="selWidth">
+              <el-select v-model="tableFrom.type" placeholder="请选择类型" clearable class="selWidth" @change="seachList">
                 <el-option label="一次性订阅" value="2"></el-option>
                 <el-option label="长期订阅" value="3"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="seachList" size="small">查询</el-button>
+            <el-form-item label="模板标题：">
+              <el-input v-model="tableFrom.title" placeholder="请输入模板标题" class="selWidth" size="small" clearable>
+                <el-button slot="append" icon="el-icon-search" @click="seachList" size="small"/>
+              </el-input>
             </el-form-item>
           </el-form>
         </div>

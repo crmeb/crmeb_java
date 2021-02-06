@@ -129,11 +129,11 @@
         </el-table-column>
         <el-table-column
           label="订单状态"
-          min-width="150"
+          min-width="180"
         >
           <template slot-scope="scope">
-            <div v-if="scope.row.statusStr.key === 'refunding'" class="refunding">
-              <b style="color: #f124c7;">申请退款</b>
+            <div v-if="scope.row.refundStatus === 1 || scope.row.refundStatus === 2" class="refunding">
+              <b style="color: #f124c7;">{{scope.row.statusStr.value}}</b>
               <span>退款原因：{{scope.row.refundReasonWap}}</span>
               <span>备注说明：{{scope.row.refundReasonWapExplain}}</span>
               <span>退款时间：{{scope.row.refundReasonTime}}</span>
@@ -172,10 +172,9 @@
                 <el-dropdown-item @click.native="onOrderDetails(scope.row.id)">订单详情</el-dropdown-item>
                 <el-dropdown-item @click.native="onOrderLog(scope.row.id)">订单记录</el-dropdown-item>
                 <el-dropdown-item @click.native="onOrderMark(scope.row)">订单备注</el-dropdown-item>
-                <el-dropdown-item v-show="scope.row.statusStr.key === 'refunding'" @click.native="onOrderRefuse(scope.row)">拒绝退款</el-dropdown-item>
-                <!--(scope.row.payPrice == 0 && [0,1].indexOf(scope.row.refundStatus) !== -1))-->
-                <!--&& (parseFloat(scope.row.payPrice) >= parseFloat(scope.row.refundPrice))-->
-                <el-dropdown-item v-show="((scope.row.statusStr.key !== 'refunded' && scope.row.statusStr.key !== 'unPaid') && (parseFloat(scope.row.payPrice) >= parseFloat(scope.row.refundPrice))) || (scope.row.payPrice == 0 && [0,1].indexOf(scope.row.refundStatus) !== -1)" @click.native="onOrderRefund(scope.row)">立即退款</el-dropdown-item>
+                <el-dropdown-item v-show="scope.row.refundStatus === 1" @click.native="onOrderRefuse(scope.row)">拒绝退款</el-dropdown-item>
+                <!--v-show="((scope.row.statusStr.key !== 'refunded' && scope.row.statusStr.key !== 'unPaid') && (parseFloat(scope.row.payPrice) >= parseFloat(scope.row.refundPrice))) || (scope.row.payPrice == 0 && [0,1].indexOf(scope.row.refundStatus) !== -1)"-->
+                <el-dropdown-item v-show="scope.row.refundStatus === 1" @click.native="onOrderRefund(scope.row)">立即退款</el-dropdown-item>
                 <el-dropdown-item v-show="scope.row.statusStr.key === 'deleted'" @click.native="handleDelete(scope.row, scope.$index)">删除订单</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>

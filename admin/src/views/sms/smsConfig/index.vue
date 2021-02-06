@@ -44,8 +44,8 @@
     </el-card>
     <el-card class="box-card" v-loading="loading">
       <table-list v-if="isShowList"  ref="tableLists"  :sms="sms" :copy="copy" :dump="dump" :query="query" :accountInfo="accountInfo" @openService="openService"/>
-      <login-from v-if="isShowLogn" @on-changes="onChangeReg" @on-Login="onLogin" />
-      <forget-password v-if="isShow" @goback="goback" @on-Login="onLogin" :isIndex="isIndex"></forget-password>
+      <login-from v-if="isShowLogn" @on-change="onChangePasssword" @on-changes="onChangeReg" @on-Login="onLogin" />
+      <forget-password :infoData="infoData" v-if="isShow" @goback="goback" @on-Login="onLogin" :isIndex="isIndex"></forget-password>
       <forget-phone v-if="isForgetPhone" @gobackPhone="gobackPhone" @on-Login="onLogin"></forget-phone>
       <register-from v-if="isShowReg" @on-change="logoup" />
     </el-card>
@@ -81,7 +81,8 @@ export default {
       sms: { open: 0 }, // 短信信息
       query: { open: 0 }, // 物流查询
       dump: { open: 0 }, // 电子面单打印
-      copy: { open: 0 } // 商品采集
+      copy: { open: 0 }, // 商品采集,
+      infoData: {}
     }
   },
   computed: {
@@ -130,6 +131,14 @@ export default {
       this.isIndex = true;
       this.passsword();
     },
+    // 忘记密码
+    onChangePasssword () {
+      this.isIndex = false;
+      this.passsword();
+      // this.isShowLogn = false;
+      // this.isShow = true;
+      // this.isShowList = false;
+    },
     passsword () {
       this.isShowLogn = false;
       this.isShow = true;
@@ -143,6 +152,7 @@ export default {
       this.loading = true;
       smsInfoApi().then(async res => {
         let data = res;
+        this.infoData = res;
         this.sms = {
           num: data.sms.num,
           open: data.sms.open,
@@ -207,6 +217,7 @@ export default {
       logoutApi().then(async res => {
         this.isShowLogn = true
         this.isShowList = false
+        this.infoData.phone = '';
         this.$store.dispatch('user/isLogin')
       })
     },

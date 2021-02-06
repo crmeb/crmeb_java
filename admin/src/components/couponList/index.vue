@@ -64,7 +64,7 @@
         min-width="90"
       >
         <template slot-scope="scope">
-          <span>{{ scope.row.isLimited===0 ? '不限量' : scope.row.lastTotal }}</span>
+          <span>{{ !scope.row.isLimited ? '不限量' : scope.row.lastTotal }}</span>
         </template>
       </el-table-column>
       <el-table-column v-if="handle==='send'" label="操作" min-width="120" fixed="right" align="center">
@@ -145,7 +145,9 @@ export default {
   mounted() {
     this.tableFrom.page = 1
     this.getList()
-    this.multipleSelectionAll = this.couponData || []
+    this.couponData.forEach(row => {
+      this.$refs.table.toggleRowSelection(row);
+    });
   },
   methods: {
     close() {
@@ -222,7 +224,7 @@ export default {
     ok() {
       if (this.multipleSelection.length > 0) {
         this.$emit('getCouponId', this.multipleSelectionAll)
-        // this.close()
+         this.close()
       } else {
         this.$message.warning('请先选择优惠劵')
       }

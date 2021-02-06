@@ -18,8 +18,8 @@
           <div slot="header" class="clearfix">
             <div class="container">
               <el-form inline size="small">
-                <el-form-item>
-                  <el-select v-model="listPram.status" placeholder="状态" class="selWidth">
+                <el-form-item label="状态：">
+                  <el-select v-model="listPram.status" placeholder="状态" class="selWidth" @change="handlerGetList">
                     <el-option label="全部" :value="-1"></el-option>
                     <el-option label="显示" :value="1"></el-option>
                     <el-option label="不显示" :value="0"></el-option>
@@ -31,11 +31,10 @@
                     <!--/>-->
                   </el-select>
                 </el-form-item>
-                <el-form-item>
-                  <el-input v-model="listPram.name" placeholder="名称" clearable class="selWidth"/>
-                </el-form-item>
-                <el-form-item>
-                  <el-button size="mini" @click="handlerGetList">查询</el-button>
+                <el-form-item label="名称：">
+                  <el-input v-model="listPram.name" placeholder="请输入名称" class="selWidth" size="small" clearable>
+                    <el-button slot="append" icon="el-icon-search" @click="handlerGetList" size="small"/>
+                  </el-input>
                 </el-form-item>
               </el-form>
             </div>
@@ -222,6 +221,8 @@ export default {
       categoryApi.categroyUpdateStatus( row.id ).then(() => {
         this.$message.success('修改成功')
         this.handlerGetTreeList()
+      }).catch(()=>{
+        row.status = !row.status
       })
     },
     handleEditMenu(rowData) {

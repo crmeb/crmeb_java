@@ -1169,7 +1169,7 @@ div.edui-box {
 }
 /* 弹出对话框按钮和对话框大小 */
 .edui-default .edui-dialog {
-    z-index: 2000;
+    z-index: 4000 !important;
     position: absolute;
 
 }

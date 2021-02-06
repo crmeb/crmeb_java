@@ -38,7 +38,11 @@
           <el-button size="mini" :loading="loading" type="primary" style="width:100%;margin-bottom:20px;"
                      @click="handleSubmit('formInline')">登录
           </el-button>
-          <el-button size="mini" type="text" style="width: 100%;margin-left: 0" @click="changeReg">注册账户</el-button>
+          <div class="acea-row row-center-wrapper">
+            <el-button size="mini" type="text" style="margin-left: 0" @click="changePassword">忘记密码</el-button>
+            <el-divider direction="vertical"></el-divider>
+            <el-button size="mini" type="text" style="margin-left: 0" @click="changeReg">注册账户</el-button>
+          </div>
         </el-form>
       </el-col>
     </el-row>
@@ -84,7 +88,7 @@ export default {
         this.passwordType = 'password'
       }
       this.$nextTick(() => {
-        this.$refs.token.focus()
+        this.$refs.password.focus()
       })
     },
     handleSubmit(name) {
@@ -104,7 +108,7 @@ export default {
         }
       })
     },
-    // 休息密码
+    // 修改密码
     changePassword() {
       this.$emit('on-change')
     },
