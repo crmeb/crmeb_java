@@ -99,7 +99,8 @@ public class RequestUtil extends HttpServlet{
     public static String getUri(HttpServletRequest request){
         String uri = request.getRequestURI();
         List<String> list = CrmebUtil.stringToArrayStrRegex(uri, "/");
-        list.removeIf(StringUtils::isNumeric);
+        list.removeIf(StringUtils::isNumeric); //去掉url中的数字参数
+        list.removeIf(c -> c.contains(","));// 去掉url中的逗号分隔参数
         return StringUtils.join(list, "/");
     }
 }

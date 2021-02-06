@@ -5,6 +5,7 @@ import com.common.CommonResult;
 import com.constants.WeChatConstants;
 import com.utils.RedisUtil;
 import com.zbkj.crmeb.wechat.service.WeChatService;
+import com.zbkj.crmeb.wechat.service.WechatPublicService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -36,6 +37,9 @@ public class WeChatController {
     @Autowired
     private RedisUtil redisUtil;
 
+    @Autowired
+    private WechatPublicService wechatPublicService;
+
     /**
      * 获取微信菜单
      * @author Mr.Zhang
@@ -43,16 +47,8 @@ public class WeChatController {
      */
     @ApiOperation(value = "获取自定义菜单")
     @RequestMapping(value = "/public/get", method = RequestMethod.GET)
-    @ApiImplicitParam(name="isAsync", value="是否同步微信数据, true是，false否")
-    public CommonResult<Object> get(@RequestParam(name = "isAsync", defaultValue = "false") Boolean isAsync){
-        Object list = redisUtil.get(WeChatConstants.REDIS_PUBLIC_MENU_KEY);
-        if(list == null || list.equals("") || isAsync){
-            //如果没有， 去读取
-            JSONObject tagsList = weChatService.get();
-            redisUtil.set(WeChatConstants.REDIS_PUBLIC_MENU_KEY, tagsList);
-            list = tagsList;
-        }
-        return CommonResult.success(list);
+    public CommonResult<Object> get(){
+        return CommonResult.success(wechatPublicService.getCustomizeMenus());
     }
 
     /**
@@ -64,7 +60,7 @@ public class WeChatController {
     @ApiOperation(value = "保存自定义菜单")
     @RequestMapping(value = "/public/create", method = RequestMethod.POST)
     public CommonResult<JSONObject> create(@RequestBody String data){
-        return CommonResult.success(weChatService.create(data));
+        return CommonResult.success(wechatPublicService.createMenus(data));
     }
 
     /**
@@ -75,7 +71,7 @@ public class WeChatController {
     @ApiOperation(value = "删除自定义菜单")
     @RequestMapping(value = "/public/delete", method = RequestMethod.GET)
     public CommonResult<JSONObject> delete(){
-        return CommonResult.success(weChatService.delete());
+        return CommonResult.success(wechatPublicService.deleteMenus());
     }
 
     //自定义菜单

@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.store.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -38,7 +39,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -253,6 +253,24 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
         lqw.eq(StoreProductReply::getReplyType, replayType);
         lqw.eq(StoreProductReply::getOid, orderId);
         return dao.selectList(lqw);
+    }
+
+    /**
+     * 订单是否已回复
+     * @param unique skuId
+     * @param orderId 订单id
+     * @return 回复内容
+     */
+    @Override
+    public Boolean isReply(String unique, Integer orderId) {
+        LambdaQueryWrapper<StoreProductReply> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StoreProductReply::getUnique, unique);
+        lqw.eq(StoreProductReply::getOid, orderId);
+        List<StoreProductReply> replyList = dao.selectList(lqw);
+        if (CollUtil.isEmpty(replyList)) {
+            return Boolean.FALSE;
+        }
+        return Boolean.TRUE;
     }
 
     /**

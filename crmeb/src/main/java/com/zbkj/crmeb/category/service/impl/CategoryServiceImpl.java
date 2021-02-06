@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.category.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -8,6 +9,7 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
+import com.constants.CategoryConstants;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
 import com.utils.CrmebUtil;
@@ -17,7 +19,9 @@ import com.zbkj.crmeb.category.request.CategoryRequest;
 import com.zbkj.crmeb.category.request.CategorySearchRequest;
 import com.zbkj.crmeb.category.service.CategoryService;
 import com.zbkj.crmeb.category.vo.CategoryTreeVo;
+import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -25,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * CategoryServiceImpl 接口实现
@@ -44,6 +49,9 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
     @Resource
     private CategoryDao dao;
 
+    @Autowired
+    private SystemAttachmentService systemAttachmentService;
+
 
     /**
      * 获取分类下子类的数量
@@ -57,7 +65,6 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
     public List<Category> getList(CategorySearchRequest request, PageParamRequest pageParamRequest) {
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-//        objectQueryWrapper.setEntity(category);
         if(null != request.getPid()){
             lambdaQueryWrapper.eq(Category::getPid, request.getPid());
         }
@@ -65,7 +72,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
             lambdaQueryWrapper.eq(Category::getType, request.getType());
         }
         if(ObjectUtil.isNotNull(request.getStatus()) && request.getStatus() >= 0){
-            lambdaQueryWrapper.eq(Category::getStatus, request.getStatus().equals(1));
+            lambdaQueryWrapper.eq(Category::getStatus, request.getStatus().equals(CategoryConstants.CATEGORY_STATUS_NORMAL));
         }
         if(null != request.getName()){
             lambdaQueryWrapper.like(Category::getName, request.getName());
@@ -104,28 +111,6 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
         }
 
         return map;
-    }
-
-    /**
-     * 批量查询分类id是否合法
-     * @param categoryIdList List<Integer> id集合
-     * @author Mr.Zhang
-     * @since 2020-04-16
-     */
-    @Override
-    public void checkCategoryIsExist(List<Integer> categoryIdList) {
-        //查询分类id是否合法
-        HashMap<Integer, String> categoryServiceListInId = getListInId(categoryIdList);
-        if(categoryServiceListInId.size() != categoryIdList.size()){
-            for (Integer categoryId: categoryIdList) {
-                String categoryName = CrmebUtil.getStrValueByIndex(categoryServiceListInId, categoryId);
-
-                if(categoryName.equals("")){
-                    //如果取出的分类名称是空， 那么有问题
-                    throw new CrmebException("ID是 " + categoryId + "的分类不存在，或者分类名称为空！");
-                }
-            }
-        }
     }
 
     /**
@@ -213,7 +198,6 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
     private int getChildCountByPid(Integer pid) {
         //查看是否有子类
         QueryWrapper<Category> objectQueryWrapper = new QueryWrapper<>();
-//        objectQueryWrapper.eq("status", 1);
         objectQueryWrapper.like("path", "/"+pid+"/");
         return dao.selectCount(objectQueryWrapper);
     }
@@ -297,10 +281,14 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
         // 根据名称搜索特殊处理 这里仅仅处理两层搜索后有子父级关系的数据
         if(StringUtils.isNotBlank(name) && allTree.size() >0){
             List<Category> searchCategory = new ArrayList<>();
-            for (Category category : allTree) {
-                if(category.getPid() >0){
-                    searchCategory.add(dao.selectById(category.getPid()));
-                }
+            List<Integer> categoryIds = allTree.stream().map(Category::getId).collect(Collectors.toList());
+
+            List<Integer> pidList = allTree.stream().filter(c -> c.getPid() > 0 && !categoryIds.contains(c.getPid()))
+                    .map(Category::getPid).distinct().collect(Collectors.toList());
+            if (CollUtil.isNotEmpty(pidList)) {
+                pidList.forEach(pid -> {
+                    searchCategory.add(dao.selectById(pid));
+                });
             }
             allTree.addAll(searchCategory);
         }
@@ -361,7 +349,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
     public List<Category> getChildVoListByPid(Integer pid) {
         //查看是否有子类
         QueryWrapper<Category> objectQueryWrapper = new QueryWrapper<>();
-        objectQueryWrapper.eq("status", 1);
+        objectQueryWrapper.eq("status", CategoryConstants.CATEGORY_STATUS_NORMAL);
         objectQueryWrapper.like("path", "/"+pid+"/");
         return dao.selectList(objectQueryWrapper);
     }
@@ -377,8 +365,10 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
     @Override
     public int checkName(String name, Integer type) {
         LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(Category::getName, name)
-                .eq(Category::getType, type);
+        lambdaQueryWrapper.eq(Category::getName, name);
+        if (ObjectUtil.isNotNull(type)) {
+            lambdaQueryWrapper.eq(Category::getType, type);
+        }
         return dao.selectCount(lambdaQueryWrapper);
     }
 
@@ -401,6 +391,23 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
         Category category = getById(id);
         category.setStatus(!category.getStatus());
         return updateById(category);
+    }
+
+    /**
+     * 新增分类
+     * @param categoryRequest
+     */
+    @Override
+    public Boolean create(CategoryRequest categoryRequest) {
+        //检测标题是否存在
+        if(checkName(categoryRequest.getName(), null) > 0){
+            throw new CrmebException("此分类已存在");
+        }
+        Category category = new Category();
+        BeanUtils.copyProperties(categoryRequest, category);
+        category.setPath(getPathByPId(category.getPid()));
+        category.setExtra(systemAttachmentService.clearPrefix(category.getExtra()));
+        return save(category);
     }
 }
 

@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.user.controller;
 
 
+import cn.hutool.core.util.ObjectUtil;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
@@ -90,10 +91,8 @@ public class UserController {
     @ApiOperation(value = "修改")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public CommonResult<String> update(@RequestParam Integer id, @RequestBody UserRequest userRequest){
-        User user = new User();
-        BeanUtils.copyProperties(userRequest, user);
-        user.setUid(id);
-        if(userService.updateById(user)){
+        userRequest.setUid(id);
+        if(userService.updateUser(userRequest)){
             return CommonResult.success();
         }else{
             return CommonResult.failed();
@@ -142,14 +141,11 @@ public class UserController {
     @ApiOperation(value = "会员详情页Top数据")
     @RequestMapping(value = "topdetail", method = RequestMethod.GET)
     public CommonResult<TopDetail> topDetail (@RequestParam @Valid Integer userId){
-
         return CommonResult.success(userService.getTopDetail(userId));
     }
 
     /**
      * 操作积分
-     * @author Mr.Zhang
-     * @since 2020-04-10
      */
     @ApiOperation(value = "积分余额")
     @RequestMapping(value = "/operate/founds", method = RequestMethod.GET)

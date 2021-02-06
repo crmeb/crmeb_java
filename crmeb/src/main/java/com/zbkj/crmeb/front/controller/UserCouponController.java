@@ -57,37 +57,17 @@ public class UserCouponController {
     /**
      * 领券
      * @param request UserCouponReceiveRequest 新增参数
-     * @author Mr.Zhang
-     * @since 2020-05-18
      */
     @ApiOperation(value = "领券")
     @RequestMapping(value = "/receive", method = RequestMethod.POST)
     public CommonResult<String> receive(@RequestBody @Validated UserCouponReceiveRequest request){
-        StoreCouponUserRequest storeCouponUserRequest = new StoreCouponUserRequest();
-        storeCouponUserRequest.setUid(userService.getUserIdException().toString());
-        storeCouponUserRequest.setCouponId(request.getCouponId()[0]);
-        if(storeCouponUserService.receive(storeCouponUserRequest)){
+        if(storeCouponUserService.receiveCoupon(request)){
             return CommonResult.success();
         }else{
             return CommonResult.failed();
         }
     }
 
-    /**
-     * 领券
-     * @param request UserCouponReceiveRequest 新增参数
-     * @author Mr.Zhang
-     * @since 2020-05-18
-     */
-    @ApiOperation(value = "批量领券")
-    @RequestMapping(value = "/receive/batch", method = RequestMethod.POST)
-    public CommonResult<String> receiveAll(@RequestBody @Validated UserCouponReceiveRequest request){
-        if(storeCouponUserService.receiveAll(request, userService.getUserIdException(), "get")){
-            return CommonResult.success();
-        }else{
-            return CommonResult.failed();
-        }
-    }
 }
 
 

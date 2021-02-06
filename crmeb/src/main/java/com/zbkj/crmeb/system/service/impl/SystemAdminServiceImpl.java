@@ -1,29 +1,39 @@
 package com.zbkj.crmeb.system.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.constants.Constants;
+import com.constants.SysConfigConstants;
+import com.constants.SysGroupDataConstants;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
 import com.utils.CrmebUtil;
+import com.utils.ValidateFormUtil;
 import com.zbkj.crmeb.authorization.manager.TokenManager;
 import com.zbkj.crmeb.authorization.model.TokenModel;
 import com.zbkj.crmeb.system.dao.SystemAdminDao;
 import com.zbkj.crmeb.system.model.SystemAdmin;
 import com.zbkj.crmeb.system.model.SystemRole;
-import com.zbkj.crmeb.system.model.SystemStoreStaff;
 import com.zbkj.crmeb.system.request.SystemAdminAddRequest;
+import com.zbkj.crmeb.system.request.SystemAdminLoginRequest;
 import com.zbkj.crmeb.system.request.SystemAdminRequest;
 import com.zbkj.crmeb.system.request.SystemRoleSearchRequest;
 import com.zbkj.crmeb.system.response.SystemAdminResponse;
+import com.zbkj.crmeb.system.response.SystemGroupDataAdminLoginBannerResponse;
 import com.zbkj.crmeb.system.service.SystemAdminService;
+import com.zbkj.crmeb.system.service.SystemConfigService;
+import com.zbkj.crmeb.system.service.SystemGroupDataService;
 import com.zbkj.crmeb.system.service.SystemRoleService;
 import com.zbkj.crmeb.user.model.UserToken;
 import com.zbkj.crmeb.user.service.UserTokenService;
+import com.zbkj.crmeb.validatecode.model.ValidateCode;
+import com.zbkj.crmeb.validatecode.service.ValidateCodeService;
 import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginGetOpenIdResponse;
 import com.zbkj.crmeb.wechat.service.WeChatService;
 import org.apache.commons.lang3.StringUtils;
@@ -35,6 +45,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -66,6 +77,15 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
 
     @Autowired
     private WeChatService weChatService;
+
+    @Autowired
+    private ValidateCodeService validateCodeService;
+
+    @Autowired
+    private SystemConfigService systemConfigService;
+
+    @Autowired
+    private SystemGroupDataService systemGroupDataService;
 
 
     @Override
@@ -132,27 +152,30 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
     }
 
     @Override
-    public SystemAdminResponse login(SystemAdminRequest request, String ip) throws Exception {
+    public SystemAdminResponse login(SystemAdminLoginRequest systemAdminLoginRequest, String ip) throws Exception {
+        // 判断验证码
+        ValidateCode validateCode = new ValidateCode(systemAdminLoginRequest.getKey(), systemAdminLoginRequest.getCode());
+        boolean codeCheckResult = validateCodeService.check(validateCode);
+        if(!codeCheckResult) throw new CrmebException("验证码不正确");
+        // 执行登录
         LambdaQueryWrapper<SystemAdmin> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(SystemAdmin::getAccount, request.getAccount());
+        lambdaQueryWrapper.eq(SystemAdmin::getAccount, systemAdminLoginRequest.getAccount());
         SystemAdmin systemAdmin = dao.selectOne(lambdaQueryWrapper);
-        String encryptPassword =
-        CrmebUtil.encryptPassword(request.getPwd(),request.getAccount());
         if(null == systemAdmin){
             throw new CrmebException("用户不存在");
         }
-
+        // base64加密获取真正密码
+        String encryptPassword = CrmebUtil.encryptPassword(systemAdminLoginRequest.getPwd(), systemAdminLoginRequest.getAccount());
+        if(!systemAdmin.getPwd().equals(encryptPassword)){
+            throw new CrmebException("账号或者密码不正确");
+        }
         if(!systemAdmin.getStatus()){
             throw new CrmebException("用户已经被禁用");
         }
-
         if(systemAdmin.getIsDel()){
             throw new CrmebException("用户已经被删除");
         }
 
-        if(!systemAdmin.getPwd().equals(encryptPassword)){
-            throw new CrmebException("账号或者密码不正确");
-        }
         TokenModel tokenModel = tokenManager.createToken(systemAdmin.getAccount(), systemAdmin.getId().toString(), TokenModel.TOKEN_REDIS);
         SystemAdminResponse systemAdminResponse = new SystemAdminResponse();
         systemAdminResponse.setToken(tokenModel.getToken());
@@ -208,6 +231,11 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
                 throw new CrmebException("管理员已存在");
             }
 
+            // 如果有手机号，校验手机号
+            if (StrUtil.isNotBlank(systemAdminAddRequest.getPhone())) {
+                ValidateFormUtil.isPhoneException(systemAdminAddRequest.getPhone());
+            }
+
             SystemAdmin systemAdmin = new SystemAdmin();
             BeanUtils.copyProperties(systemAdminAddRequest, systemAdmin);
 
@@ -241,6 +269,12 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         if(null == systemAdminResponseExsit){
             throw new CrmebException("管理员不存在");
         }
+
+        // 如果有手机号，校验手机号
+        if (StrUtil.isNotBlank(systemAdminRequest.getPhone())) {
+            ValidateFormUtil.isPhoneException(systemAdminRequest.getPhone());
+        }
+
         SystemAdmin systemAdmin = new SystemAdmin();
         BeanUtils.copyProperties(systemAdminRequest, systemAdmin);
         if(null != systemAdminRequest.getPwd()){
@@ -396,6 +430,60 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         for (SystemAdmin systemAdmin : systemAdminList) {
             map.put(systemAdmin.getId(), systemAdmin);
         }
+        return map;
+    }
+
+    /**
+     * 修改后台管理员是否接收状态
+     * @param id 管理员id
+     * @return Boolean
+     */
+    @Override
+    public Boolean updateIsSms(Integer id) {
+        SystemAdmin systemAdmin = getById(id);
+        if (ObjectUtil.isNull(systemAdmin)) {
+            throw new CrmebException("后台管理员不存在!");
+        }
+        if (StrUtil.isBlank(systemAdmin.getPhone())) {
+            throw new CrmebException("请先为管理员添加手机号!");
+        }
+
+        systemAdmin.setIsSms(!systemAdmin.getIsSms());
+        return updateById(systemAdmin);
+    }
+
+    /**
+     * 获取可以接收短信的管理员
+     * @return List
+     */
+    @Override
+    public List<SystemAdmin> findIsSmsList() {
+        LambdaQueryWrapper<SystemAdmin> lqw = Wrappers.lambdaQuery();
+        lqw.eq(SystemAdmin::getStatus, true);
+        lqw.eq(SystemAdmin::getIsDel, false);
+        lqw.eq(SystemAdmin::getIsSms, true);
+        List<SystemAdmin> list = dao.selectList(lqw);
+        if (CollUtil.isEmpty(list)) {
+            return list;
+        }
+        return list.stream().filter(i -> StrUtil.isNotBlank(i.getPhone())).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取登录页图片
+     * @return
+     */
+    @Override
+    public Map<String, Object> getLoginPic() {
+        Map<String, Object> map = new HashMap<>();
+        //背景图
+        map.put("backgroundImage", systemConfigService.getValueByKey(SysConfigConstants.CONFIG_KEY_ADMIN_LOGIN_BACKGROUND_IMAGE));
+        //logo
+        map.put("logo", systemConfigService.getValueByKey(SysConfigConstants.CONFIG_KEY_ADMIN_LOGIN_LOGO_LEFT_TOP));
+        map.put("loginLogo", systemConfigService.getValueByKey(SysConfigConstants.CONFIG_KEY_ADMIN_LOGIN_LOGO_LOGIN));
+        //轮播图
+        List<SystemGroupDataAdminLoginBannerResponse> bannerList = systemGroupDataService.getListByGid(SysGroupDataConstants.GROUP_DATA_ID_ADMIN_LOGIN_BANNER_IMAGE_LIST, SystemGroupDataAdminLoginBannerResponse.class);
+        map.put("banner", bannerList);
         return map;
     }
 
