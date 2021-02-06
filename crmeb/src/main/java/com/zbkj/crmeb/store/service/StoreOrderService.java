@@ -6,10 +6,7 @@ import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.express.vo.ExpressSheetVo;
 import com.zbkj.crmeb.express.vo.LogisticsResultVo;
 import com.zbkj.crmeb.store.model.StoreOrder;
-import com.zbkj.crmeb.store.request.RetailShopStairUserRequest;
-import com.zbkj.crmeb.store.request.StoreOrderRefundRequest;
-import com.zbkj.crmeb.store.request.StoreOrderSearchRequest;
-import com.zbkj.crmeb.store.request.StoreOrderSendRequest;
+import com.zbkj.crmeb.store.request.*;
 import com.zbkj.crmeb.store.response.*;
 import com.zbkj.crmeb.system.request.SystemWriteOffOrderSearchRequest;
 import com.zbkj.crmeb.system.response.SystemWriteOffOrderResponse;
@@ -143,11 +140,10 @@ public interface StoreOrderService extends IService<StoreOrder> {
 
     /**
      * 更改订单价格
-     * @param orderId 订单id wx开头
-     * @param price 待更改价格
+     * @param request 订单改价对象
      * @return 更改结果
      */
-    boolean editPrice(String orderId,BigDecimal price);
+    boolean editPrice(StoreOrderEditPriceRequest request);
 
     /**
      *  确认付款
@@ -214,4 +210,27 @@ public interface StoreOrderService extends IService<StoreOrder> {
      * @param orderNo 订单编号
      */
     Boolean updatePaid(String orderNo);
+
+    Map<String, StoreOrder> getMapInOrderNo(List<String> orderNoList);
+
+    /**
+     * 获取推广订单总金额
+     * @param orderNoList 订单编号列表
+     * @return
+     */
+    BigDecimal getSpreadOrderTotalPriceByOrderList(List<String> orderNoList);
+
+    /**
+     * 获取所有收货订单id集合
+     * @return
+     */
+    List<StoreOrder> findIdAndUidListByReceipt();
+
+    /**
+     * 根据用户uid查询所有已支付订单
+     * @param userId 用户uid
+     * @param pageParamRequest 分页参数
+     * @return
+     */
+    List<StoreOrder> findPaidListByUid(Integer userId, PageParamRequest pageParamRequest);
 }

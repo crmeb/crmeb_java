@@ -35,7 +35,7 @@ public class OrderReceiptTask {
     public void init(){
         logger.info("---OrderReceiptTask task------produce Data with fixed rate task: Execution Time - {}", DateUtil.nowDateTime());
         try {
-            orderTaskService.takeByUser();
+            orderTaskService.orderReceiving();
 
         }catch (Exception e){
             e.printStackTrace();
