@@ -36,4 +36,11 @@ public interface StoreOrderStatusService extends IService<StoreOrderStatus> {
      * @return 订单状态结果
      */
     List<StoreOrderStatus> getByEntity(StoreOrderStatus storeOrderStatus);
+
+    /**
+     * 根据订单id获取最后一条记录
+     * @param orderId 订单id
+     * @return
+     */
+    StoreOrderStatus getLastByOrderId(Integer orderId);
 }

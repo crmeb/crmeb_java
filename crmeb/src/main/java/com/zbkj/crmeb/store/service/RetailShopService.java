@@ -7,8 +7,8 @@ import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.store.request.RetailShopRequest;
 import com.zbkj.crmeb.store.request.RetailShopStairUserRequest;
 import com.zbkj.crmeb.store.response.RetailShopStatisticsResponse;
-import com.zbkj.crmeb.store.response.RetailShopUserResponse;
 import com.zbkj.crmeb.user.model.User;
+import com.zbkj.crmeb.user.response.SpreadUserResponse;
 import com.zbkj.crmeb.user.response.UserResponse;
 
 import java.util.List;
@@ -28,13 +28,13 @@ import java.util.List;
 public interface RetailShopService extends IService<User> {
 
     /**
-     * 获取分销列表
-     * @param keywords
-     * @param dateLimit
-     * @param pageRequest
+     * 分销员列表
+     * @param keywords 搜索参数
+     * @param dateLimit 时间参数
+     * @param pageRequest 分页参数
      * @return
      */
-    CommonPage<RetailShopUserResponse> getList(String keywords, String dateLimit, PageParamRequest pageRequest);
+    CommonPage<SpreadUserResponse> getSpreadPeopleList(String keywords, String dateLimit, PageParamRequest pageRequest);
 
     /**
      * 获取分销头部数据

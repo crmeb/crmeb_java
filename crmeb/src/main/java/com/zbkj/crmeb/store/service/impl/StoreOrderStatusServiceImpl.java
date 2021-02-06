@@ -1,6 +1,6 @@
 package com.zbkj.crmeb.store.service.impl;
 
-import cn.hutool.core.date.DateTime;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.common.PageParamRequest;
 import com.constants.Constants;
 import com.github.pagehelper.PageHelper;
@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -109,6 +108,20 @@ public class StoreOrderStatusServiceImpl extends ServiceImpl<StoreOrderStatusDao
         LambdaQueryWrapper<StoreOrderStatus> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.setEntity(storeOrderStatus);
         return dao.selectList(lambdaQueryWrapper);
+    }
+
+    /**
+     * 根据订单id获取最后一条记录
+     * @param orderId 订单id
+     * @return
+     */
+    @Override
+    public StoreOrderStatus getLastByOrderId(Integer orderId) {
+        QueryWrapper<StoreOrderStatus> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("oid", orderId);
+        queryWrapper.orderByDesc("oid");
+        queryWrapper.last(" limit 1");
+        return dao.selectOne(queryWrapper);
     }
 
     public Boolean addLog(Integer orderId, String type, String message) {

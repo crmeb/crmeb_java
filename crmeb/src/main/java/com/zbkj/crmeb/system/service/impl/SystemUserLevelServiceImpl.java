@@ -61,6 +61,7 @@ public class SystemUserLevelServiceImpl extends ServiceImpl<SystemUserLevelDao, 
         }
 
         levelLambdaQueryWrapper.eq(SystemUserLevel::getIsDel, false);
+        levelLambdaQueryWrapper.orderByAsc(SystemUserLevel::getGrade);
         return dao.selectList(levelLambdaQueryWrapper);
     }
 

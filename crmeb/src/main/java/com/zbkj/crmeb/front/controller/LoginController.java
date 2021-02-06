@@ -9,6 +9,7 @@ import com.zbkj.crmeb.front.request.LoginMobileRequest;
 import com.zbkj.crmeb.front.request.LoginRequest;
 import com.zbkj.crmeb.front.request.RegisterRequest;
 import com.zbkj.crmeb.front.response.LoginResponse;
+import com.zbkj.crmeb.front.service.LoginService;
 import com.zbkj.crmeb.sms.service.SmsService;
 import com.zbkj.crmeb.user.service.UserService;
 import io.swagger.annotations.Api;
@@ -49,6 +50,9 @@ public class LoginController {
     @Autowired
     private SmsService smsService;
 
+    @Autowired
+    private LoginService loginService;
+
 
     /**
      * 手机号登录接口
@@ -59,9 +63,7 @@ public class LoginController {
     @RequestMapping(value = "/login/mobile", method = RequestMethod.POST)
     public CommonResult<LoginResponse> phoneLogin(@RequestBody @Validated LoginMobileRequest loginRequest, HttpServletRequest request) throws Exception {
         String clientIp = CrmebUtil.getClientIp(request);
-        RegisterRequest registerRequest = new RegisterRequest();
-        BeanUtils.copyProperties(loginRequest, registerRequest);
-        return CommonResult.success(userService.register(registerRequest, clientIp));
+        return CommonResult.success(loginService.phoneLogin(loginRequest, clientIp));
     }
 
     /**
@@ -72,7 +74,7 @@ public class LoginController {
     @ApiOperation(value = "账号密码登录")
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     public CommonResult<LoginResponse> login(@RequestBody @Validated LoginRequest loginRequest) throws Exception {
-        return CommonResult.success(userService.login(loginRequest));
+        return CommonResult.success(loginService.login(loginRequest));
     }
 
 
@@ -89,18 +91,18 @@ public class LoginController {
     }
 
     /**
-     * 发送短信
+     * 发送短信登录验证码
      * @param phone 手机号码
      * @return 发送是否成功
      */
-    @ApiOperation(value = " 发送短信")
+    @ApiOperation(value = "发送短信登录验证码")
     @RequestMapping(value = "/sendCode", method = RequestMethod.POST)
     @ApiImplicitParams({
             @ApiImplicitParam(name="phone", value="手机号码", required = true)
     })
     public CommonResult<Object> sendCode(@RequestParam String phone){
         ValidateFormUtil.isPhone(phone,"手机号码错误");
-        if(smsService.pushCodeToList(phone,1, null)){
+        if(smsService.sendCommonCode(phone)){
             return CommonResult.success("发送成功");
         }else{
             return CommonResult.failed("发送失败");
