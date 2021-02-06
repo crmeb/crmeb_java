@@ -27,7 +27,7 @@
         </el-menu>
       </el-col>
       <el-col :span="20">
-        <el-table :data="tableData.data" class="tabNumWidth" size="mini"  v-loading="loading">
+        <el-table :data="tableData.data" class="tabNumWidth" size="mini"  v-loading="loading" max-height="400">
           <el-table-column
             :prop="item.key"
             :label="item.title"
@@ -37,7 +37,7 @@
         </el-table>
         <div class="block">
           <el-pagination
-            :page-sizes="[20, 40, 60, 80]"
+            :page-sizes="[6, 12, 18, 24]"
             :page-size="tableFrom.limit"
             :current-page="tableFrom.page"
             layout="total, sizes, prev, pager, next, jumper"
@@ -236,7 +236,7 @@
                 },
                 {
                   title: '类型',
-                  key: 'type',
+                  key: 'title',
                   minWidth: 120
                 },
                 {

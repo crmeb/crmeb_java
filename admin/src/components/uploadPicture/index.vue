@@ -14,7 +14,7 @@
           </div>
           <div class="trees-coadd">
             <div class="scollhide">
-              <div class="trees">
+              <div class="trees" :style="{maxHeight:(!pictureType?'345px':'700px')}">
                 <el-tree
                   ref="tree"
                   :data="treeData2"
@@ -37,39 +37,10 @@
                         </span>
                         <el-dropdown-menu slot="dropdown">
                           <el-dropdown-item @click.native="onAdd(data.id)">添加分类</el-dropdown-item>
-                          <el-dropdown-item @click.native="onEdit(data.id)">编辑分类</el-dropdown-item>
-                          <el-dropdown-item @click.native="handleDelete(data.id)">删除分类</el-dropdown-item>
+                          <el-dropdown-item v-if="node.label !== '全部分类'" @click.native="onEdit(data.id)">编辑分类</el-dropdown-item>
+                          <el-dropdown-item v-if="node.label !== '全部分类'" @click.native="handleDelete(data.id)">删除分类</el-dropdown-item>
                         </el-dropdown-menu>
                       </el-dropdown>
-
-                      <!--<svg-icon-->
-                        <!--icon-class="example"-->
-                        <!--title="添加分类"-->
-                        <!--class="icon-space"-->
-                        <!--@click.stop="onAdd(data.id)"-->
-                      <!--/>-->
-                      <!--<svg-icon-->
-                        <!--icon-class="danyuan"-->
-                        <!--title="添加管理单元"-->
-                        <!--class="icon-space"-->
-                      <!--/>-->
-                      <!--<i-->
-                        <!--v-if="data.id!== 10000"-->
-                        <!--class="el-icon-edit"-->
-                        <!--title="修改"-->
-                        <!--@click.stop="onEdit(data.id)"-->
-                      <!--/>-->
-                      <!--<svg-icon-->
-                        <!--icon-class="detail"-->
-                        <!--title="查看该空间详情"-->
-                        <!--class="icon-space"-->
-                      <!--/>-->
-                      <!--<i-->
-                        <!--v-if="data.id!== 10000"-->
-                        <!--class="el-icon-delete"-->
-                        <!--title="删除分类"-->
-                        <!--@click.stop="() => handleDelete(data.id)"-->
-                      <!--/>-->
                     </span>
                   </div>
                 </el-tree>
@@ -81,25 +52,7 @@
       <el-col v-bind="grid2" class="colLeft">
         <div class="conter mb15">
           <div class="bnt">
-            <!--<el-tooltip class="item" effect="dark" content="使用选中图片" placement="top-start">-->
-              <!--<i class="el-icon-thumb mr20" style="font-size: 25px;" @click="checkPics"></i>-->
-            <!--</el-tooltip>-->
-            <!--<el-upload-->
-              <!--class="upload-demo mb15"-->
-              <!--action-->
-              <!--:http-request="handleUploadForm"-->
-              <!--:on-change="imgSaveToUrl"-->
-              <!--:headers="myHeaders"-->
-              <!--:show-file-list="false"-->
-              <!--multiple-->
-            <!--&gt;-->
-              <!--<el-tooltip class="item" effect="dark" content="上传图片" placement="top-start">-->
-                <!--<i class="el-icon-upload2 mr20" style="font-size: 25px;"></i>-->
-              <!--</el-tooltip>-->
-
-              <!--&lt;!&ndash;<el-button size="mini" type="primary">点击上传</el-button>&ndash;&gt;-->
-            <!--</el-upload>-->
-            <el-button size="small" type="primary" class="mr20 mb20" @click="checkPics">使用选中图片</el-button>
+            <el-button v-if="!pictureType" size="small" type="primary" class="mr20 mb20" @click="checkPics">使用选中图片</el-button>
             <div class="mr20 mb20">
               <el-button-group>
                 <el-tooltip class="item" effect="dark" content="上传图片" placement="top-start">
@@ -112,26 +65,17 @@
                     :show-file-list="false"
                     multiple
                   >
-                    <el-button type="primary" icon="el-icon-upload2" size="mini" style="font-size: 15px;"></el-button>
+                    <el-button icon="el-icon-upload2" size="mini" style="font-size: 15px;"></el-button>
                   </el-upload>
                 </el-tooltip>
                 <el-tooltip class="item" effect="dark" content="添加分类" placement="top-start">
-                  <el-button type="primary" icon="el-icon-circle-plus-outline" style="font-size: 15px;" size="mini" @click="onAdd"></el-button>
+                  <el-button icon="el-icon-circle-plus-outline" style="font-size: 15px;" size="mini" @click="onAdd(10000)"></el-button>
                 </el-tooltip>
                 <el-tooltip class="item" effect="dark" content="删除图片" placement="top-start">
-                  <el-button type="primary" icon="el-icon-delete" style="font-size: 15px;" size="mini" @click.stop="editPicList('图片')"></el-button>
+                  <el-button icon="el-icon-delete" style="font-size: 15px;" size="mini" @click.stop="editPicList('图片')"></el-button>
                 </el-tooltip>
               </el-button-group>
             </div>
-
-            <!--<el-tooltip class="item" effect="dark" content="添加分类" placement="top-start">-->
-              <!--<i class="el-icon-circle-plus-outline mr20" style="font-size: 25px;" @click="onAdd"></i>-->
-            <!--</el-tooltip>-->
-            <!--<el-button type="success" size="mini" @click.stop="onAdd">添加分类</el-button>-->
-            <!--<el-tooltip class="item" effect="dark" content="删除图片" placement="top-start">-->
-              <!--<i class="el-icon-delete mr20" style="font-size: 25px;" @click.stop="editPicList('图片')"></i>-->
-            <!--</el-tooltip>-->
-            <!--<el-button type="error" size="mini" class="mr10" :disabled="checkPicList.length===0" @click.stop="editPicList('图片')">删除图片</el-button>-->
             <el-select v-model="sleOptions.attachment_category_name" placeholder="图片移动至" class="mb20" size="small">
               <el-option
                 class="demo"
@@ -155,7 +99,7 @@
               <i class="el-icon-picture" style="font-size: 60px;color: rgb(219, 219, 219);" />
               <span class="imagesNo_sp">图片库为空</span>
             </div>
-            <div class="conters scrollbarAll">
+            <div class="conters scrollbarAll" :style="{maxHeight:(!pictureType?'296px':'700px')}">
               <div
                 v-for="(item, index) in pictrueList.list"
                 :key="index"
@@ -170,7 +114,7 @@
         </div>
         <div class="block">
           <el-pagination
-            :page-sizes="[10, 20, 30, 40]"
+            :page-sizes="!pictureType?[10, 20, 30, 40]:[30,60,90,120]"
             :page-size="tableData.limit"
             :current-page="tableData.page"
             :pager-count="5"
@@ -221,6 +165,10 @@ import { getToken } from '@/utils/auth'
 export default {
   name: 'Upload',
   props: {
+    pictureType: {
+      type: String,
+      default: ''
+    },
     isMore: {
       type: String,
       default: '1'
@@ -319,6 +267,7 @@ export default {
     }
   },
   mounted() {
+    this.pictureType ? this.tableData.limit = 30 : this.tableData.limit = 10
     if (this.$route && this.$route.query.field === 'dialog') import('../../../public/UEditor/dialogs/internal.js')
     this.getList()
     this.getFileList()
@@ -670,7 +619,6 @@ export default {
       box-sizing: border-box;
       .trees {
         width: 100%;
-        max-height: 345px;
       }
     }
     .scollhide::-webkit-scrollbar {
@@ -680,7 +628,7 @@ export default {
   .conters{
     display: flex;
     flex-wrap: wrap;
-    max-height: 296px;
+    /*max-height: 296px;*/
     overflow: auto;
   }
   .conters:after {content: ""; width: 410px !important; }

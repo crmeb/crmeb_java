@@ -9,7 +9,7 @@
       <template v-if="current === 0">
         <el-form-item prop="account">
           <el-input type="text" v-model="formInline.account" prefix="ios-contact-outline"
-                    placeholder="请输入当前手机号" size="large"/>
+                    placeholder="请输入当前账号" size="large"/>
         </el-form-item>
         <el-form-item prop="password">
           <el-input type="password" v-model="formInline.password" prefix="ios-contact-outline"
@@ -62,7 +62,7 @@
 </template>
 
 <script>
-    import { captchaApi, configApi, updateHoneApi } from '@/api/sms';
+    import { captchaApi, configApi, updateHoneApi, phoneValidatorApi } from '@/api/sms';
     export default {
         name: 'forgetPhone',
         props: {
@@ -113,7 +113,7 @@
                         { required: true, message: '请输入密码', trigger: 'blur' }
                     ],
                     account: [
-                        { required: true, validator: validatePhone, trigger: 'blur' }
+                        { required: true, message: '请输入当前账号', trigger: 'blur' }
                     ]
                 }
             }
@@ -147,7 +147,10 @@
             handleSubmit1 (name) {
                 this.$refs[name].validate((valid) => {
                     if (valid) {
-                        this.handleSubmit(name,1);
+                      phoneValidatorApi(this.formInline).then(async res => {
+                        this.$message.success('操作成功')
+                        this.current = 1;
+                      })
                     } else {
                         return false;
                     }

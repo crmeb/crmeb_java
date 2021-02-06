@@ -17,7 +17,7 @@
               </el-select>
             </el-form-item>
             <el-form-item label="商品搜索：" class="mr10">
-              <el-input v-model="tableFrom.productSearch" placeholder="请输入商品名称，商品id" class="selWidth" size="small" clearable>
+              <el-input v-model="tableFrom.productSearch" placeholder="请输入商品名称" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search"  @click="seachList" size="small"/>
               </el-input>
             </el-form-item>

@@ -7,7 +7,7 @@ import Cookies from 'js-cookie'
  */
 export function modalSure(title) {
   return new Promise((resolve, reject) => {
-    this.$confirm(`确定${title || '永久删除该文件'}?`, '提示', {
+    this.$confirm(`确定${title || '永久删除该文件'}`, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
