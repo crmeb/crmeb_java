@@ -135,7 +135,9 @@
 						let people = this.storeCombination.storeCombination.people;
 						let otPrice = this.storeCombination.storeCombination.otPrice;
 						let count = this.storeCombination.count;
-						this.PosterCanvas(arrImages, storeName, price, people,otPrice,count);
+						setTimeout(() => {
+							this.PosterCanvas(arrImages, storeName, price, people,otPrice,count);
+						}, 300);
 					},
 					complete: () => {
 					},
@@ -162,7 +164,7 @@
 								context.setFontSize(36);
 								context.setTextAlign('center');
 								context.setFillStyle('#282828');
-								let maxText = 17;
+								let maxText = 20;
 								let text = storeName;
 								let topText = '';
 								let bottomText = '';
@@ -190,7 +192,7 @@
 								
 								context.setFontSize(72);
 								context.setFillStyle('#fc4141');
-								context.fillText(price, 220, 210);
+								context.fillText(price, 250, 210);
 								
 								context.setFontSize(32);
 								context.setFillStyle('#FFFFFF');

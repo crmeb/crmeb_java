@@ -1,6 +1,5 @@
 
-var josn=require('../../domain.json')  
-let domain = josn.domain
+let domain = 'http://localhost:8080'
 
 module.exports = {
 	// 请求域名 格式： https://您的域名
@@ -12,7 +11,6 @@ module.exports = {
 	// #ifdef H5
 		//H5接口是浏览器地址
 		// HTTP_REQUEST_URL: window.location.protocol+"//"+window.location.host,
-		// http://api.java.crmeb.net:20001
 		HTTP_REQUEST_URL:domain,
 	// #endif
 	

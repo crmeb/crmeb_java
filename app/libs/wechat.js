@@ -58,6 +58,7 @@ class AuthWechat {
 						resolve(this.instance);
 					})
 				}).catch(err => {
+					console.log('微信分享配置失败',err);
 					this.status = false;
 					reject(err);
 				});
@@ -121,7 +122,6 @@ class AuthWechat {
 				this.toPromise(wx.chooseWXPay, config).then(res => {
 					resolve(res);
 				}).catch(res => {
-					console.log('js中的错误',res)
 					resolve(res);
 				});
 			}).catch(res => {
