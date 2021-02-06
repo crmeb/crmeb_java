@@ -5,7 +5,7 @@
 				<view class="phone">当前手机号：{{phone}}</view>
 				<view class="list">
 					<view class="item">
-						<input type='password' placeholder='设置新密码' placeholder-class='placeholder' name="password" :value="password"></input>
+						<input type='password' placeholder='以字母开头，长度在6~18之间，只能包含字符、数字和下划线' placeholder-class='placeholder' name="password" :value="password"></input>
 					</view>
 					<view class="item">
 						<input type='password' placeholder='确认新密码' placeholder-class='placeholder' name="qr_password" :value="qr_password"></input>
@@ -131,6 +131,9 @@
 					captcha = e.detail.value.captcha;
 				if (!password) return that.$util.Tips({
 					title: '请输入新密码'
+				});
+				if (!/^[a-zA-Z]\w{5,17}$/i.test(password)) return that.$util.Tips({
+					title: '以字母开头，长度在6~18之间，只能包含字符、数字和下划线'
 				});
 				if (qr_password != password) return that.$util.Tips({
 					title: '两次输入的密码不一致！'

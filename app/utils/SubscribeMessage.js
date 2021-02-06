@@ -1,7 +1,7 @@
 // import {
 // 	SUBSCRIBE_MESSAGE
 // } from '../config/cache.js';
-const arrTemp = ["paySubscribe","orderSubscribe","extrctSubscribe", "orderRefundSubscribe", "rechargeSubscribe", 'pinkSubscribe', 'bargainSubscribe'];
+const arrTemp =  ["beforePay","afterPay","refundApply", "beforeRecharge", "createBargain","pink"];
 
 // export function auth() {
 // 	let tmplIds = {};
@@ -16,6 +16,7 @@ const arrTemp = ["paySubscribe","orderSubscribe","extrctSubscribe", "orderRefund
  */
 export function openPaySubscribe() {
 	let tmplIds = uni.getStorageSync('tempID' + arrTemp[0]);
+	console.log(tmplIds)
 	return subscribe(tmplIds);
 }
 
@@ -32,16 +33,16 @@ export function openOrderSubscribe() {
  * 提现消息订阅
  * 成功 和 失败 消息
  */
-export function openExtrctSubscribe() {
-	let tmplIds = uni.getStorageSync('tempID' + arrTemp[2]);
-	return subscribe(tmplIds);
-}
+// export function openExtrctSubscribe() {
+// 	let tmplIds = uni.getStorageSync('tempID' + arrTemp[2]);
+// 	return subscribe(tmplIds);
+// }
 
 /**
  * 订单退款
  */
 export function openOrderRefundSubscribe() {
-	let tmplIds = uni.getStorageSync('tempID' + arrTemp[3]);
+	let tmplIds = uni.getStorageSync('tempID' + arrTemp[2]);
 	return subscribe(tmplIds);
 }
 
@@ -49,6 +50,14 @@ export function openOrderRefundSubscribe() {
  * 充值成功
  */
 export function openRechargeSubscribe() {
+	let tmplIds = uni.getStorageSync('tempID' + arrTemp[3]);
+	return subscribe(tmplIds);
+}
+
+/**
+ * 砍价成功
+ */
+export function openBargainSubscribe() {
 	let tmplIds = uni.getStorageSync('tempID' + arrTemp[4]);
 	return subscribe(tmplIds);
 }
@@ -60,22 +69,6 @@ export function openRechargeSubscribe() {
 export function openPinkSubscribe() {
 	let tmplIds = uni.getStorageSync('tempID' + arrTemp[5]);
 	return subscribe(tmplIds);
-	// let tmplIds = auth();
-	// return subscribe([
-	// 	tmplIds.pink_true
-	// ]);
-}
-
-/**
- * 砍价成功
- */
-export function openBargainSubscribe() {
-	let tmplIds = uni.getStorageSync('tempID' + arrTemp[6]);
-	return subscribe(tmplIds);
-	// let tmplIds = auth();
-	// return subscribe([
-	// 	tmplIds.bargain_success
-	// ]);
 }
 // /**
 //  * 提现

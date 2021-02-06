@@ -104,7 +104,7 @@
 					let ids = [];
 					ids.push(id);
 				    //领取优惠券
-				    setCouponReceive(ids).then(function (res) {
+				    setCouponReceive(id).then(function (res) {
 				      list[index].isUse = true;
 					  that.$set(that,'couponsList',list);
 				      that.$util.Tips({ title: '领取成功' });

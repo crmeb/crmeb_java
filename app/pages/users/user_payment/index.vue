@@ -62,6 +62,7 @@
 		extractBank,
 		transferIn
 	} from '@/api/user.js';
+	import { wechatQueryPayResult } from '@/api/order.js';
 	import {
 		toLogin
 	} from '@/libs/login.js';
@@ -251,12 +252,11 @@
 						rechar_id: this.rechar_id
 					}).then(res => {
 						uni.hideLoading();
-						let jsConfig = res.data.data;
-						let packages = 'prepay_id=' + jsConfig.prepayId;
+						let jsConfig = res.data.data.jsConfig;
 						uni.requestPayment({
-							timeStamp: jsConfig.timeStamp.toString(),
+							timeStamp: jsConfig.timeStamp,
 							nonceStr: jsConfig.nonceStr,
-							package: packages,
+							package: jsConfig.packages,
 							signType: jsConfig.signType,
 							paySign: jsConfig.paySign,
 							success: function(res) {
@@ -294,38 +294,49 @@
 						rechar_id: that.rechar_id,
 						payType: 0
 					}).then(res => {
-						let jsConfig = res.data;
-						let packages = 'prepay_id=' + jsConfig.prepayId;
+						let jsConfig = res.data.jsConfig;
+						let orderNo = res.data.orderNo;
 						let data = {
 							timestamp:jsConfig.timeStamp,
 							nonceStr:jsConfig.nonceStr,
-							package:packages,
+							package:jsConfig.packages,
 							signType:jsConfig.signType,
-							paySign:jsConfig.paySign,
-							h5PayUrl:jsConfig.h5PayUrl
+							paySign:jsConfig.paySign
 						};
 						if (that.from == "weixinh5") {
 							let domain = encodeURIComponent(location.href.split('/pages')[0]);
-							let urls = data.h5PayUrl + '&redirect_url='+ domain + '/pages/users/user_money/index';
+							let urls = jsConfig.mwebUrl + '&redirect_url='+ domain + '/pages/users/user_money/index';
 							location.replace(urls);
 							return that.$util.Tips({
-								title: '支付成功',
-								icon: 'success'
-							}, {
 								tab: 5,
 								url: '/pages/users/user_money/index'
 							});
+							// return that.$util.Tips({
+							// 	title: '支付成功',
+							// 	icon: 'success'
+							// }, {
+							// 	tab: 5,
+							// 	url: '/pages/users/user_money/index'
+							// });
 						} else {
 							that.$wechat.pay(data)
 								.finally(() => {
 									that.$set(that, 'userinfo.nowMoney', that.$util.$h.Add(value, that.userinfo.nowMoney));
-									return that.$util.Tips({
-										title: '支付成功',
-										icon: 'success'
-									}, {
-										tab: 5,
-										url: '/pages/users/user_money/index'
-									});
+									wechatQueryPayResult({
+										orderNo: orderNo
+									}).then(res => {
+										return that.$util.Tips({
+											title: '支付成功',
+											icon: 'success'
+										}, {
+											tab: 5,
+											url: '/pages/users/user_money/index'
+										});
+									}).cache(err => {
+										return that.$util.Tips({
+											title: err
+										});
+									})
 								})
 								.catch(function(err) {
 									return that.$util.Tips({

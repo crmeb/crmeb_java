@@ -22,7 +22,7 @@
 					<view class='wrapper'>
 						<view class='share acea-row row-between row-bottom'>
 							<view class='money font-color'>
-								￥<text class='num'>{{storeInfo.price || 0}}</text><text class='y-money'>￥{{storeInfo.product_price || 0}}</text>
+								￥<text class='num'>{{storeInfo.price || 0}}</text><text class='y-money'>￥{{storeInfo.otPrice || 0}}</text>
 							</view>
 							<view class='iconfont icon-fenxiang' @click="listenerActionSheet"></view>
 						</view>
@@ -120,8 +120,7 @@
 				<view class='product-intro' id="past2">
 					<view class='title'>产品介绍</view>
 					<view class='conter'>
-						<!-- <rich-text :nodes="storeInfo.description" class="conter"></rich-text> -->
-						<jyf-parser :html="storeInfo.description" ref="article" :tag-style="tagStyle"></jyf-parser>
+						<jyf-parser :html="storeInfo.content" ref="article" :tag-style="tagStyle"></jyf-parser>
 					</view>
 				</view>
 				<view style='height:120rpx;'></view>
@@ -198,8 +197,6 @@
 		<view class="share-box" v-if="H5ShareBox">
 			<image src="/static/images/share-info.png" @click="H5ShareBox = false"></image>
 		</view>
-		<!-- <view class='mask' v-if="posterImageStatus"></view>
-		<canvas class="canvas" canvas-id='myCanvas' v-if="canvasStatus"></canvas> -->
 		<!-- #ifdef MP -->
 		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
@@ -212,12 +209,11 @@
 <script>
 	const app = getApp();
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
-	
-	import { base64src } from '@/utils/base64src.js'
 	import {
 		mapGetters
 	} from "vuex";
 	// #ifdef MP
+	import { base64src } from '@/utils/base64src.js'
 	import authorize from '@/components/Authorize';
 	import {
 		getQrcode
@@ -645,7 +641,7 @@
 			 * 购物车数量加和数量减
 			 * 
 			 */
-		ChangeCartNum: function(changeValue) {
+		    ChangeCartNum: function(changeValue) {
 			//changeValue:是否 加|减
 			//获取当前变动属性
 			let productSelect = this.productValue[this.attrValue];
@@ -667,7 +663,7 @@
 			let nums = this.storeInfo.onceNum || 0;
 		//设置默认数据
 			if (productSelect.cart_num == undefined) productSelect.cart_num = 1;
-				if (changeValue) {
+			if (changeValue) {
 					if (num.cart_num === this.onceNum) {
 						return this.$util.Tips({
 							title: `该商品每次限购${this.onceNum}${this.storeInfo.unitName}`
@@ -809,7 +805,7 @@
 			},
 			// 分享关闭
 			listenerActionClose: function() {
-				this.posters = false;
+				this.canvasStatus = false;
 			},
 			//隐藏海报
 			posterImageClose: function() {
@@ -1039,8 +1035,9 @@
 		},
 		//#ifdef MP
 		onShareAppMessage() {
+			let that = this;
 			return {
-				title: this.storeInfo.title,
+				title: that.storeInfo.title,
 				path: app.globalData.openPages,
 				imageUrl: that.storeInfo.image
 			};
@@ -1399,8 +1396,8 @@
 	}
 
 	.canvas {
-		width: 750px;
-		height: 1190px;
+		position:fixed;
+		z-index: -5;
 		opacity: 0;
 	}
 

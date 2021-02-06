@@ -34,7 +34,6 @@
 	// #ifdef H5
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
 	// #endif
-	import { base64src } from '@/utils/base64src.js'
 	import {
 		getUserInfo,
 		spreadBanner
@@ -46,6 +45,7 @@
 		mapGetters
 	} from "vuex";
 	// #ifdef MP
+	import { base64src } from '@/utils/base64src.js'
 	import authorize from '@/components/Authorize';
 	import {
 		getQrcode

@@ -67,13 +67,13 @@
 				<view v-else>
 					<view class="item acea-row row-between-wrapper">
 						<view>联系人</view>
-						<view class="discount">
+						<view class="discount textR">
 							<input type="text" placeholder="请填写您的联系姓名" placeholder-class="placeholder" @blur='realName'></input>
 						</view>
 					</view>
 					<view class="item acea-row row-between-wrapper">
 						<view>联系电话</view>
-						<view class="discount">
+						<view class="discount textR">
 							<input type="text" placeholder="请填写您的联系电话" placeholder-class="placeholder" @blur='phone'></input>
 						</view>
 					</view>
@@ -650,43 +650,6 @@
 						title: err
 					});
 				});
-				// orderCreate(that.orderKey, data).then(res => {
-				// 	let result = res.data.result,
-				// 	    status = res.data.status,
-				// 		orderId = result.orderId,
-				// 		jsConfig = res.data.jsConfig,
-				// 		message = res.data.message;
-				// 		if(that.totalPrice===0)return that.$util.Tips({
-				// 						title: '支付成功',
-				// 						icon: 'success'
-				// 					});
-				// 		if(that.news == "false"){
-				// 			orderPay({
-				// 				'paytype': that.payType,
-				// 				'uni':res.data.result.key,
-				// 				// #ifdef MP 
-				// 				'from': 'routine',
-				// 				// #endif
-				// 				// #ifdef H5 || APP-PLUS
-				// 				'from': this.$wechat.isWeixin() ? 'public' : 'weixinh5',
-				// 				// #endif
-				// 			}).then(res=>{
-				// 				result = res.data.result;
-				// 				status = res.data.status;
-				// 				orderId = result.orderId;
-				// 				jsConfig = res.data.jsConfig;
-				// 				message = res.data.message;
-				// 				that.getPayType(status,orderId,message,jsConfig);
-				// 			})
-				// 		}else{
-				// 			that.getPayType(status,orderId,message,jsConfig);
-				// 		}
-				// }).catch(err => {
-				// 	uni.hideLoading();
-				// 	return that.$util.Tips({
-				// 		title: err
-				// 	});
-				// });
 			},
 			getOrderPay: function(orderNo, message) {
 				let that = this;
@@ -783,7 +746,14 @@
 										});
 									})
 								}
-							})
+							}).cache(res => {
+								return that.$util.Tips({
+									title: '取消支付'
+								}, {
+									tab: 5,
+									url: goPages + '&status=0'
+								});
+							});
 							// #endif
 							break;
 						case 'yue':
@@ -795,18 +765,19 @@
 								url: goPages + '&status=1'
 							});
 							break;
-					    case 'weixinh5':
-					       uni.hideLoading();
-					       that.$util.Tips({
-					       	title: '订单创建成功'
-					       }, {
-					       	tab: 5,
-					       	url: goPages + '&status=0'
-					       });
-					       setTimeout(() => {
-					       	location.href = jsConfig.mwebUrl;
-					       }, 100)
-					    	break;			
+						case 'weixinh5':
+							uni.hideLoading();
+							that.$util.Tips({
+								title: '订单创建成功'
+							}, {
+								tab: 5,
+								url: goPages + '&status=0'
+							});
+							setTimeout(() => {
+								location.href = jsConfig.mwebUrl + '&redirect_url=' + window.location.protocol + '//' + window.location.host +
+									goPages + '&status=1';
+							}, 100)
+							break;
 					}
 				}).catch(err => {
 					uni.hideLoading();
@@ -1008,21 +979,25 @@
 				uni.showLoading({
 					title: '订单支付中'
 				});
-				// // #ifdef MP
-				// openPaySubscribe().then(() => {
-				// 	that.payment(data);
-				// });
-				// // #endif
-				// // #ifndef MP
-				// that.payment(data);
-				// // #endif
+				// #ifdef MP
+				openPaySubscribe().then(() => {
+					that.payment(data);
+				});
+				// #endif
+				// #ifndef MP
 				that.payment(data);
+				// #endif
+				//	that.payment(data);
 			}
 		}
 	}
 </script>
 
 <style lang="scss" scoped>
+	.textR {
+		text-align: right;
+	}
+
 	.order-submission .line {
 		width: 100%;
 		height: 3rpx;

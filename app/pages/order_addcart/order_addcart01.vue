@@ -17,12 +17,37 @@
 						<block v-for="(item,index) in cartList.valid" :key="index">
 							<view class='item acea-row row-between-wrapper'>
 								<!-- #ifndef MP -->
-								<checkbox :value="(item.id).toString()" :checked="item.checked" />
+								<checkbox :value="(item.id).toString()" :checked="item.checked" :disabled="!item.attrStatus && footerswitch" />
+								<!-- <checkbox :value="(item.id).toString()" :checked="item.checked" /> -->
 								<!-- #endif -->
 								<!-- #ifdef MP -->
-								<checkbox :value="item.id" :checked="item.checked" />
+								<checkbox :value="item.id" :checked="item.checked" :disabled="!item.attrStatus && footerswitch" />
+								<!-- <checkbox :value="item.id" :checked="item.checked" /> -->
 								<!-- #endif -->
 								<navigator :url='"/pages/goods_details/index?id="+item.product_id' hover-class='none' class='picTxt acea-row row-between-wrapper'>
+									<view class='pictrue'>
+										<image v-if="item.productInfo.attrInfo" :src='item.productInfo.attrInfo.image'></image>
+										<image v-else :src='item.productInfo.image'></image>
+									</view>
+									<view class='text'>
+										<view class='line1' :class="item.attrStatus?'':'reColor'">{{item.productInfo.store_name}}</view>
+										<view class='infor line1' v-if="item.productInfo.attrInfo">属性：{{item.productInfo.attrInfo.suk}}</view>
+										<view class='money' v-if="item.attrStatus">￥{{item.truePrice}}</view>
+										<view class="reElection acea-row row-between-wrapper" v-else>
+											<view class="title">请重新选择商品规格</view>
+											<view class="reBnt cart-color acea-row row-center-wrapper" @click.stop="reElection(item)">重选</view>
+										</view>
+									</view>
+									<view class='carnum acea-row row-center-wrapper' v-if="item.attrStatus">
+										<view class="reduce" :class="item.numSub ? 'on' : ''" @click.stop='subCart(index)'>-</view>
+										<view class='num'>{{item.cart_num}}</view>
+										<!-- <view class="num">
+											<input type="number" v-model="item.cart_num" @click.stop @input="iptCartNum(index)" @blur="blurInput(index)"/>
+										</view> -->
+										<view class="plus" :class="item.numAdd ? 'on' : ''" @click.stop='addCart(index)'>+</view>
+									</view>
+								</navigator>
+								<!-- <navigator :url='"/pages/goods_details/index?id="+item.product_id' hover-class='none' class='picTxt acea-row row-between-wrapper'>
 									<view class='pictrue'>
 										<image v-if="item.productInfo.attrInfo" :src='item.productInfo.attrInfo.image'></image>
 										<image v-else :src='item.productInfo.image'></image>
@@ -35,12 +60,9 @@
 									<view class='carnum acea-row row-center-wrapper'>
 										<view class="reduce" :class="item.numSub ? 'on' : ''" @click.stop='subCart(index)'>-</view>
 										<view class='num'>{{item.cart_num}}</view>
-										<!-- <view class="num">
-											<input type="number" v-model="item.cart_num" @click.stop @input="iptCartNum(index)" @blur="blurInput(index)"/>
-										</view> -->
 										<view class="plus" :class="item.numAdd ? 'on' : ''" @click.stop='addCart(index)'>+</view>
 									</view>
-								</navigator>
+								</navigator> -->
 							</view>
 						</block>
 					</checkbox-group>
@@ -70,6 +92,12 @@
 						</block>
 					</view>
 				</view>
+				<view class='loadingicon acea-row row-center-wrapper' v-if="cartList.valid.length&&!loadend">
+					<text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>{{loadTitle}}
+				</view>
+				<view class='loadingicon acea-row row-center-wrapper' v-if="cartList.invalid.length&&loadend">
+					<text class='loading iconfont icon-jiazai' :hidden='loadingInvalid==false'></text>{{loadTitleInvalid}}
+				</view>
 			</view>
 			<view class='noCart' v-if="cartList.valid.length == 0 && cartList.invalid.length == 0">
 				<view class='pictrue'>
@@ -81,7 +109,7 @@
 			<view class='footer acea-row row-between-wrapper' v-if="cartList.valid.length > 0">
 				<view>
 					<checkbox-group @change="checkboxAllChange">
-						<checkbox value="all" :checked="!!isAllSelect" /><text class='checkAll'>全选 ({{cartCount}})</text>
+						<checkbox value="all" :checked="!!isAllSelect" /><text class='checkAll'>全选 ({{selectValue.length}})</text>
 					</checkbox-group>
 				</view>
 				<view class='money acea-row row-middle' v-if="footerswitch==true">
@@ -152,7 +180,29 @@
 				isShowAuth: false, //是否隐藏授权
 				hotScroll:false,
 				hotPage:1,
-				hotLimit:10
+				hotLimit:10,
+				
+				loading: false,
+				loadend: false,
+				loadTitle: '加载更多', //提示语
+				page: 1,
+				limit: 20,
+				loadingInvalid: false,
+				loadendInvalid: false,
+				loadTitleInvalid: '加载更多', //提示语
+				pageInvalid: 1,
+				limitInvalid: 20,
+				attr: {
+					cartAttr: false,
+					productAttr: [],
+					productSelect: {}
+				},
+				productValue: [], //系统属性
+				storeInfo: {},
+				attrValue: '', //已选属性
+				attrTxt: '请选择', //属性页面提示
+				cartId: 0,
+				product_id: 0
 			};
 		},
 		computed: mapGetters(['isLogin']),

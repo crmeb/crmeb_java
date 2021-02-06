@@ -37,19 +37,19 @@
 					</view>
 				</view>
 				<view class='nav acea-row row-middle'>
-					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index'>
+					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=all'>
 						<view class='pictrue'>
 							<image src='../../../static/images/record1.png'></image>
 						</view>
 						<view>账单记录</view>
 					</navigator>
-					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=1'>
+					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=expenditure'>
 						<view class='pictrue'>
 							<image src='../../../static/images/record2.png'></image>
 						</view>
 						<view>消费记录</view>
 					</navigator>
-					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=2' v-if="rechargeSwitch">
+					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=income' v-if="rechargeSwitch">
 						<view class='pictrue'>
 							<image src='../../../static/images/record3.png'></image>
 						</view>
