@@ -1,9 +1,9 @@
 package com.zbkj.crmeb.front.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.common.CommonPage;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageInfo;
-import com.zbkj.crmeb.finance.model.UserExtract;
 import com.zbkj.crmeb.finance.request.UserExtractRequest;
 import com.zbkj.crmeb.front.request.UserRechargeRequest;
 import com.zbkj.crmeb.front.request.UserSpreadPeopleRequest;
@@ -51,7 +51,7 @@ public interface UserCenterService extends IService<User> {
 
     UserSpreadOrderResponse getSpreadOrder(PageParamRequest pageParamRequest);
 
-    UserRechargePaymentResponse recharge(UserRechargeRequest request);
+    OrderPayResultResponse recharge(UserRechargeRequest request);
 
     LoginResponse weChatAuthorizeLogin(String code, Integer spreadUid);
 
@@ -72,4 +72,17 @@ public interface UserCenterService extends IService<User> {
     PageInfo<UserExtractRecordResponse> getExtractRecord(PageParamRequest pageParamRequest);
 
     BigDecimal getExtractTotalMoney();
+
+    /**
+     * 推广佣金明细
+     * @param pageParamRequest 分页参数
+     */
+    PageInfo<SpreadCommissionDetailResponse> getSpreadCommissionDetail(PageParamRequest pageParamRequest);
+
+    /**
+     * 用户账单记录（现金）
+     * @param type 记录类型：all-全部，expenditure-支出，income-收入
+     * @return CommonPage
+     */
+    CommonPage<UserRechargeBillRecordResponse> nowMoneyBillRecord(String type, PageParamRequest pageRequest);
 }

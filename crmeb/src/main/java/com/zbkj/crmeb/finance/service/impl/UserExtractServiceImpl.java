@@ -2,6 +2,7 @@ package com.zbkj.crmeb.finance.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -9,6 +10,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
+import com.constants.BrokerageRecordConstants;
 import com.constants.Constants;
 import com.exception.CrmebException;
 import com.github.pagehelper.Page;
@@ -27,7 +29,9 @@ import com.zbkj.crmeb.front.response.UserExtractRecordResponse;
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.user.model.User;
+import com.zbkj.crmeb.user.model.UserBrokerageRecord;
 import com.zbkj.crmeb.user.service.UserBillService;
+import com.zbkj.crmeb.user.service.UserBrokerageRecordService;
 import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForCash;
@@ -35,6 +39,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -78,6 +83,12 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     @Autowired
     private SystemAttachmentService systemAttachmentService;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
+    @Autowired
+    private UserBrokerageRecordService userBrokerageRecordService;
 
 
     /**
@@ -138,9 +149,6 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     /**
      * 提现总金额
-     * @author Mr.Zhang
-     * @since 2020-05-11
-     * @return BalanceResponse
      * 总佣金 = 已提现佣金 + 未提现佣金
      * 已提现佣金 = 用户成功提现的金额
      * 未提现佣金 = 用户未提现的佣金 = 可提现佣金 + 冻结佣金 = 用户佣金
@@ -150,28 +158,26 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
      * 退回佣金 = 因退款导致的冻结佣金退回
      */
     @Override
-    public BalanceResponse getBalance(String startTime,String endTime) {
-//        BigDecimal withdrawn = getWithdrawn(startTime,endTime);//已提现
-//        BigDecimal unDrawn = getUnDrawn(startTime,endTime);//审核中现
-////        BigDecimal commissionTotal = user.getBrokeragePrice();//佣金总金额
-//        BigDecimal commissionTotal = userBillService.getSumBrokerage();//佣金总金额
-//        BigDecimal toBeWithdrawn = getWaiteForDrawn(startTime,endTime); //待提现
-
-        BigDecimal withdrawn = getWithdrawn(startTime,endTime);//已提现
-        BigDecimal toBeWithdrawn = getWithdrawning(startTime,endTime); //待提现(审核中)
-//        BigDecimal unDrawn = userService.getUnCommissionPrice();//未提现
-        //未提现佣金 = （单位时间内） 增加的佣金 - 消耗的佣金(佣金转余额) - 待提现的佣金 - 已提现金额  (可能会产生负值)
-        String date = null;
-        if (StrUtil.isNotBlank(startTime) && StrUtil.isNotBlank(endTime)) {
-            date = startTime.concat(",").concat(endTime);
+    public BalanceResponse getBalance(String dateLimit) {
+        String startTime = "";
+        String endTime = "";
+        if(StringUtils.isNotBlank(dateLimit)){
+            dateLimitUtilVo dateRage = DateUtil.getDateLimit(dateLimit);
+            startTime = dateRage.getStartTime();
+            endTime = dateRage.getEndTime();
         }
-        BigDecimal addSum = userBillService.getSumBigDecimal(1, null, Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE, date, null);
-        BigDecimal subSum = userBillService.getSumBigDecimal(0, null, Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE, date, null);
-        BigDecimal unDrawn = addSum.subtract(subSum).subtract(toBeWithdrawn).subtract(withdrawn);
 
-        //佣金总金额 = 已提现 + 待提现 + 未提现
-        BigDecimal commissionTotal = withdrawn.add(toBeWithdrawn).add(unDrawn);//佣金总金额
+        // 已提现
+        BigDecimal withdrawn = getWithdrawn(startTime, endTime);
+        // 待提现(审核中)
+        BigDecimal toBeWithdrawn = getWithdrawning(startTime, endTime);
 
+        // 佣金总金额（单位时间）
+        BigDecimal commissionTotal = userBrokerageRecordService.getTotalSpreadPriceBydateLimit(dateLimit);
+        // 单位时间消耗的佣金
+        BigDecimal subWithdarw = userBrokerageRecordService.getSubSpreadPriceByDateLimit(dateLimit);
+        // 未提现
+        BigDecimal unDrawn = commissionTotal.subtract(subWithdarw);
         return new BalanceResponse(withdrawn, unDrawn, commissionTotal, toBeWithdrawn);
     }
 
@@ -183,8 +189,8 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
      * @return BalanceResponse
      */
     @Override
-    public BigDecimal getWithdrawn(String startTime,String endTime) {
-        return getSum(null,1,startTime,endTime);
+    public BigDecimal getWithdrawn(String startTime, String endTime) {
+        return getSum(null, 1, startTime, endTime);
     }
 
     /**
@@ -195,7 +201,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
      */
     @Override
     public BigDecimal getWithdrawning(String startTime, String endTime) {
-        return getSum(null, 0,startTime,endTime);
+        return getSum(null, 0, startTime, endTime);
     }
 
     /**
@@ -325,24 +331,22 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     /**
      * 根据状态获取总额
-     * @author Mr.Zhang
-     * @since 2020-05-11 edite by stivepeim 2020-09-29
      * @return BigDecimal
      */
     private BigDecimal getSum(Integer userId, int status, String startTime, String endTime) {
         LambdaQueryWrapper<UserExtract> lqw = Wrappers.lambdaQuery();
-        if(null != userId) lqw.eq(UserExtract::getUid,userId);
+        if(null != userId) {
+            lqw.eq(UserExtract::getUid,userId);
+        }
         lqw.eq(UserExtract::getStatus,status);
         if(StringUtils.isNotBlank(startTime) && StringUtils.isNotBlank(endTime)){
-            lqw.between(UserExtract::getCreateTime,startTime,endTime);
+            lqw.between(UserExtract::getCreateTime, startTime, endTime);
         }
         List<UserExtract> userExtracts = dao.selectList(lqw);
-//        double sum = 0;
         BigDecimal sum = ZERO;
-        if(null != userExtracts && userExtracts.size() > 0) {
+        if(CollUtil.isNotEmpty(userExtracts)) {
             sum = userExtracts.stream().map(UserExtract::getExtractPrice).reduce(ZERO, BigDecimal::add);
         }
-//        sum = userExtracts.stream().mapToDouble(e -> e.getExtractPrice().doubleValue()).sum();
         return sum;
     }
 
@@ -393,18 +397,66 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
      * @return 审核结果
      */
     @Override
-    public boolean updateStatus(Integer id, Integer status, String backMessage) {
+    public Boolean updateStatus(Integer id, Integer status, String backMessage) {
         if(status == -1 && StringUtils.isBlank(backMessage))
             throw new CrmebException("驳回时请填写驳回原因");
 
-        UserExtract ue = new UserExtract().setId(id).setStatus(status).setFailMsg(backMessage);
-        if (status == -1) {//未通过时恢复用户总金额
-            UserExtract userExtract = getById(id);
-            User user = userService.getById(userExtract.getUid());
-            userService.upadteBrokeragePrice(user, user.getBrokeragePrice().add(userExtract.getExtractPrice()));
+        UserExtract userExtract = getById(id);
+        if (ObjectUtil.isNull(userExtract)) {
+            throw new CrmebException("提现申请记录不存在");
         }
-        //TODO 审核申请通过已提现，是否添加user_bill用户账单表记录
-        return dao.updateById(ue) > 0;
+        if (userExtract.getStatus() != 0) {
+            throw new CrmebException("提现申请已处理过");
+        }
+        userExtract.setStatus(status);
+
+        User user = userService.getById(userExtract.getUid());
+        if (ObjectUtil.isNull(user)) {
+            throw new CrmebException("提现用户数据异常");
+        }
+
+        Boolean execute = false;
+
+        // 拒绝
+        if (status == -1) {//未通过时恢复用户总金额
+            userExtract.setFailMsg(backMessage);
+            // 添加提现申请拒绝佣金记录
+            UserBrokerageRecord brokerageRecord = new UserBrokerageRecord();
+            brokerageRecord.setUid(user.getUid());
+            brokerageRecord.setLinkId(userExtract.getId().toString());
+            brokerageRecord.setLinkType(BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_WITHDRAW);
+            brokerageRecord.setType(BrokerageRecordConstants.BROKERAGE_RECORD_TYPE_ADD);
+            brokerageRecord.setTitle(BrokerageRecordConstants.BROKERAGE_RECORD_TITLE_WITHDRAW_FAIL);
+            brokerageRecord.setPrice(userExtract.getExtractPrice());
+            brokerageRecord.setBalance(user.getBrokeragePrice().add(userExtract.getExtractPrice()));
+            brokerageRecord.setMark(StrUtil.format("提现申请拒绝返还佣金{}", userExtract.getExtractPrice()));
+            brokerageRecord.setStatus(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
+            brokerageRecord.setCreateTime(DateUtil.nowDateTime());
+
+            execute = transactionTemplate.execute(e -> {
+                // 返还佣金
+                userService.operationBrokerage(userExtract.getUid(), userExtract.getExtractPrice(), user.getBrokeragePrice(), "add");
+                updateById(userExtract);
+                userBrokerageRecordService.save(brokerageRecord);
+                return Boolean.TRUE;
+            });
+        }
+
+        // 同意
+        if (status == 1) {
+            // 获取佣金提现记录
+            UserBrokerageRecord brokerageRecord = userBrokerageRecordService.getByLinkIdAndLinkType(userExtract.getId().toString(), BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_WITHDRAW);
+            if (ObjectUtil.isNull(brokerageRecord)) {
+                throw new CrmebException("对应的佣金记录不存在");
+            }
+            execute = transactionTemplate.execute(e -> {
+                updateById(userExtract);
+                brokerageRecord.setStatus(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
+                userBrokerageRecordService.updateById(brokerageRecord);
+                return Boolean.TRUE;
+            });
+        }
+        return execute;
     }
 
     /**
@@ -434,11 +486,11 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
     }
 
     private List<UserExtract> getListByMonth(Integer userId, String date) {
-        LambdaQueryWrapper<UserExtract> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(UserExtract::getUid, userId);
-//        lambdaQueryWrapper.in(UserExtract::getStatus, -1, 1);
-        lambdaQueryWrapper.orderByDesc(UserExtract::getCreateTime, UserExtract::getId);
-        return dao.selectList(lambdaQueryWrapper);
+        QueryWrapper<UserExtract> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("uid", userId);
+        queryWrapper.apply(StrUtil.format(" left(create_time, 7) = '{}'", date));
+        queryWrapper.orderByDesc("create_time");
+        return dao.selectList(queryWrapper);
     }
 
     /**
@@ -449,6 +501,69 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
     @Override
     public BigDecimal getExtractTotalMoney(Integer userId){
         return getSum(userId, 1, null, null);
+    }
+
+
+    /**
+     * 提现申请
+     * @return
+     */
+    @Override
+    public Boolean extractApply(UserExtractRequest request) {
+        //添加判断，提现金额不能后台配置金额
+        String value = systemConfigService.getValueByKeyException(Constants.CONFIG_EXTRACT_MIN_PRICE);
+        BigDecimal ten = new BigDecimal(value);
+        if (request.getExtractPrice().compareTo(ten) < 0) {
+            throw new CrmebException(StrUtil.format("最低提现金额{}元", ten));
+        }
+
+        User user = userService.getInfo();
+        if (ObjectUtil.isNull(user)) {
+            throw new CrmebException("提现用户信息异常");
+        }
+        BigDecimal money = user.getBrokeragePrice();//可提现总金额
+        if(money.compareTo(ZERO) < 1){
+            throw new CrmebException("您当前没有金额可以提现");
+        }
+
+        if(money.compareTo(request.getExtractPrice()) < 0){
+            throw new CrmebException("你当前最多可提现 " + money + "元");
+        }
+
+        UserExtract userExtract = new UserExtract();
+        BeanUtils.copyProperties(request, userExtract);
+        userExtract.setUid(user.getUid());
+        userExtract.setBalance(money.subtract(request.getExtractPrice()));
+        //存入银行名称
+        if (StrUtil.isNotBlank(userExtract.getQrcodeUrl())) {
+            userExtract.setQrcodeUrl(systemAttachmentService.clearPrefix(userExtract.getQrcodeUrl()));
+        }
+
+        // 添加佣金记录
+        UserBrokerageRecord brokerageRecord = new UserBrokerageRecord();
+        brokerageRecord.setUid(user.getUid());
+        brokerageRecord.setLinkType(BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_WITHDRAW);
+        brokerageRecord.setType(BrokerageRecordConstants.BROKERAGE_RECORD_TYPE_SUB);
+        brokerageRecord.setTitle(BrokerageRecordConstants.BROKERAGE_RECORD_TITLE_WITHDRAW_APPLY);
+        brokerageRecord.setPrice(userExtract.getExtractPrice());
+        brokerageRecord.setBalance(money.subtract(userExtract.getExtractPrice()));
+        brokerageRecord.setMark(StrUtil.format("提现申请扣除佣金{}", userExtract.getExtractPrice()));
+        brokerageRecord.setStatus(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_WITHDRAW);
+        brokerageRecord.setCreateTime(DateUtil.nowDateTime());
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            // 保存提现记录
+            save(userExtract);
+            // 修改用户佣金
+            userService.operationBrokerage(user.getUid(), userExtract.getExtractPrice(), money, "sub");
+            // 添加佣金记录
+            brokerageRecord.setLinkId(userExtract.getId().toString());
+            userBrokerageRecordService.save(brokerageRecord);
+            return Boolean.TRUE;
+        });
+
+        //todo 提现申请通知
+        return execute;
     }
 }
 

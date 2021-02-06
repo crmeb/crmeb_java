@@ -49,4 +49,10 @@ public class SystemAdminResponse implements Serializable {
 //    private Boolean isDel;
 
     private String Token;
+
+    @ApiModelProperty(value = "手机号码")
+    private String phone;
+
+    @ApiModelProperty(value = "是否接收短信")
+    private Boolean isSms;
 }

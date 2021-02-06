@@ -62,7 +62,7 @@ public class StoreOrderController {
     @ApiOperation(value = "生成订单")
     @RequestMapping(value = "/create/{key}", method = RequestMethod.POST)
     public CommonResult<Map<String, Object>> createOrder(@PathVariable String key, @Validated @RequestBody OrderCreateRequest orderRequest, HttpServletRequest request){
-        return CommonResult.success(orderService.createOrder_1_3_1(orderRequest, key));
+        return CommonResult.success(orderService.createOrder(orderRequest, key));
     }
 
     /**

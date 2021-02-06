@@ -36,10 +36,6 @@ public class RetailShopStairUserRequest {
     @Range(min = 0, max = 3, message = "请选择正确的用户类型")
     private Integer type;
 
-    // 推广订单中的参数，公用对象
-    @ApiModelProperty()
-    private String orderPriceId;
-
     @ApiModelProperty(value = "用户id")
     @Min(value = 1, message = "用户id不能为空")
     private Integer uid;

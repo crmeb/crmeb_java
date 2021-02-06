@@ -1,6 +1,10 @@
 package com.zbkj.crmeb.marketing.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.constants.Constants;
@@ -32,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * StoreCouponServiceImpl 接口实现
@@ -318,6 +323,59 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
         LambdaQueryWrapper<StoreCoupon> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.in(StoreCoupon::getId, ids);
         return dao.selectList(lambdaQueryWrapper);
+    }
+
+    /**
+     * 扣减数量
+     * @param id 优惠券id
+     * @param num 数量
+     * @param isLimited 是否限量
+     */
+    @Override
+    public Boolean deduction(Integer id, Integer num, Boolean isLimited) {
+        UpdateWrapper<StoreCoupon> updateWrapper = new UpdateWrapper<>();
+        if (isLimited) {
+            updateWrapper.setSql(StrUtil.format("last_total = last_total - {}", num));
+            updateWrapper.last(StrUtil.format(" and (last_total - {} >= 0)", num));
+        } else {
+            updateWrapper.setSql(StrUtil.format("last_total = last_total + {}", num));
+        }
+        updateWrapper.eq("id", id);
+        return update(updateWrapper);
+    }
+
+    /**
+     * 获取用户注册赠送新人券
+     * @return
+     */
+    @Override
+    public List<StoreCoupon> findRegisterList() {
+        String dateStr = DateUtil.nowDate(Constants.DATE_FORMAT);
+        LambdaQueryWrapper<StoreCoupon> lqw = new LambdaQueryWrapper<>();
+//        lqw.gt(StoreCoupon::getLastTotal, 0);
+        lqw.eq(StoreCoupon::getType, 2);
+        lqw.eq(StoreCoupon::getStatus, true);
+        lqw.eq(StoreCoupon::getIsDel, false);
+        lqw.le(StoreCoupon::getReceiveStartTime, dateStr);
+        List<StoreCoupon> list = dao.selectList(lqw);
+        if (CollUtil.isEmpty(list)) {
+            return CollUtil.newArrayList();
+        }
+        List<StoreCoupon> couponList = list.stream().filter(coupon -> {
+            // 是否限量
+            if (coupon.getIsLimited() && coupon.getLastTotal() <= 0) {
+                return false;
+            }
+            // 是否有领取结束时间
+            if (ObjectUtil.isNotNull(coupon.getReceiveEndTime())) {
+                int compareDate = DateUtil.compareDate(dateStr, DateUtil.dateToStr(coupon.getReceiveEndTime(), Constants.DATE_FORMAT), Constants.DATE_FORMAT);
+                if (compareDate > 0) {
+                    return false;
+                }
+            }
+            return true;
+        }).collect(Collectors.toList());
+        return couponList;
     }
 
     /**

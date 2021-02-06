@@ -4,10 +4,12 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.constants.Constants;
 import com.constants.PayConstants;
+import com.constants.SmsConstants;
 import com.exception.CrmebException;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
@@ -39,8 +41,10 @@ import com.zbkj.crmeb.store.response.StoreCartResponse;
 import com.zbkj.crmeb.store.service.*;
 import com.zbkj.crmeb.store.utilService.OrderUtils;
 import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
+import com.zbkj.crmeb.system.model.SystemAdmin;
 import com.zbkj.crmeb.system.model.SystemAttachment;
 import com.zbkj.crmeb.system.model.SystemStore;
+import com.zbkj.crmeb.system.service.SystemAdminService;
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.system.service.SystemStoreService;
@@ -52,8 +56,11 @@ import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForCreateOrder;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForReFundNotify;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -76,6 +83,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class OrderServiceImpl implements OrderService {
+
+    private Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
 
     @Autowired
     private UserService userService;
@@ -137,6 +146,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private TransactionTemplate transactionTemplate;
+
+    @Autowired
+    private SystemAdminService systemAdminService;
+
+    @Autowired
+    private SmsService smsService;
 
     /**
      * 确认订单
@@ -247,98 +262,6 @@ public class OrderServiceImpl implements OrderService {
 
     /**
      * 订单创建
-     * @param request 创建订单参数
-     * @param orderKey orderKey
-     * @return 创建订单结果
-     */
-    @Override
-    public OrderPayResponse createOrder(OrderCreateRequest request, String orderKey, String ip) {
-        OrderPayResponse orderPayResponse = new OrderPayResponse();
-        User currentUser = userService.getInfo();
-        if (ObjectUtil.isNull(currentUser)) throw new CrmebException("当前用户不存在！");
-        // 检查订单是否存在
-        if(orderUtils.checkOrderExist(orderKey, currentUser.getUid())) throw new CrmebException(orderKey + "订单已存在");
-
-        // 检测支付方式
-        if(!orderUtils.checkPayType(request.getPayType())) throw new CrmebException("暂不支持该支付方式，请刷新页面或者联系管理员");
-
-        // 判断订单是否过期
-        String existCacheOrder = orderUtils.cacheGetOrderInfo(currentUser.getUid(), orderKey);
-        if(null == existCacheOrder) throw new CrmebException("订单已过期,请刷新当前页面!");
-
-        ConfirmOrderResponse cor = JSONObject.parseObject(existCacheOrder,ConfirmOrderResponse.class);
-
-        // 缓存订单并做计算
-        orderUtils.computedOrder(request, cor, orderKey, currentUser);
-
-        // 检查订单状态
-         StoreOrder orderCreated = orderUtils.createOrder(request, cor, 0, request.getStoreId(), orderKey);
-        if(null == orderCreated)
-            throw new CrmebException("订单生成失败");
-
-        // 立即购买支付
-        if(request.getIsNew()){
-            HashMap<String, Object> resultMap = new HashMap<>();
-            OrderPayRequest orderPayRequest = new OrderPayRequest();
-//            orderPayRequest.setFrom(request.getFrom());
-            orderPayRequest.setPayType(request.getPayType());
-            orderPayRequest.setUni(orderCreated.getOrderId());
-            boolean b = doPayOrder(orderPayRequest, ip, resultMap, orderCreated);
-            OrderPayItemResponse itemResponse = new OrderPayItemResponse();
-            String payType = null;
-            switch (request.getPayType()){
-                case Constants.PAY_TYPE_WE_CHAT:
-                case Constants.PAY_TYPE_WE_CHAT_FROM_PROGRAM:
-                    payType = "微信支付下单成功 请支付";
-                    orderPayResponse.setStatus("WECHAT_PAY");
-                    orderPayResponse.setJsConfig(resultMap.get("jsConfig"));
-                    break;
-                case Constants.PAY_TYPE_YUE:
-                    payType = "余额支付成功";
-                    orderPayResponse.setStatus("SUCCESS");
-                    break;
-                case Constants.PAY_TYPE_OFFLINE:
-                    payType = "线下支付";
-                    orderPayResponse.setStatus("SUCCESS");
-                    break;
-            }
-             itemResponse.setKey(orderCreated.getOrderId());
-            itemResponse.setOrderId(orderKey);
-            orderPayResponse.setResult(itemResponse);
-        }else{
-            String tempStatus = "";
-            switch (request.getPayType()){
-                case Constants.PAY_TYPE_WE_CHAT:tempStatus="WECHAT_H5_PAY";  break;
-                case Constants.PAY_TYPE_YUE:tempStatus="SUCCESS";  break;
-                case Constants.PAY_TYPE_OFFLINE:tempStatus="SUCCESS";  break;
-            }
-            orderPayResponse.setStatus(tempStatus);
-            OrderPayItemResponse itemResponse = new OrderPayItemResponse();
-            itemResponse.setKey(orderCreated.getOrderId());
-            itemResponse.setOrderId(orderKey);
-            orderPayResponse.setResult(itemResponse);
-        }
-
-        // 清除购物车数据
-        List<StoreCartResponse> cartInfo = cor.getCartInfo();
-        List<StoreCartResponse> cartList = cartInfo.stream().filter(i -> ObjectUtil.isNotNull(i.getId())).collect(Collectors.toList());
-        if (CollUtil.isNotEmpty(cartList)) {
-            List<Integer> cartIdList = cartList.stream().map(temp -> temp.getId().intValue()).collect(Collectors.toList());
-            storeCartService.deleteCartByIds(cartIdList);
-        }
-
-        // 小程序消息订阅发送
-        WechatSendMessageForCreateOrder createOrder = new WechatSendMessageForCreateOrder(
-                orderUtils.getPayTypeStrByOrder(orderCreated),orderUtils.getStoreNameAndCarNumString(orderCreated.getId()),
-                orderCreated.getPayPrice()+"",orderCreated.getId()+"","CRMEB",orderCreated.getCreateTime()+"","创建订单成功","暂无地址",
-                orderUtils.getPayTypeStrByOrder(orderCreated),orderCreated.getUserAddress());
-        wechatSendMessageForMinService.sendCreateOrderMessage(createOrder, userService.getUserIdException());
-
-        return orderPayResponse;
-    }
-
-    /**
-     * 订单创建
      * 订单创建只生成订单返回订单编号
      * 前端在之后需调用查询支付结果接口
      * @param request 创建订单参数
@@ -346,7 +269,7 @@ public class OrderServiceImpl implements OrderService {
      * @return 创建订单结果
      */
     @Override
-    public MyRecord createOrder_1_3_1(OrderCreateRequest request, String orderKey) {
+    public MyRecord createOrder(OrderCreateRequest request, String orderKey) {
         User currentUser = userService.getInfo();
         if (ObjectUtil.isNull(currentUser)) throw new CrmebException("当前用户不存在！");
         // 检查订单是否存在
@@ -383,10 +306,38 @@ public class OrderServiceImpl implements OrderService {
             List<Integer> cartIdList = cartList.stream().map(temp -> temp.getId().intValue()).collect(Collectors.toList());
             storeCartService.deleteCartByIds(cartIdList);
         }
+        // 加入自动未支付自动取消队列
+        redisUtil.lPush(Constants.ORDER_AUTO_CANCEL_KEY, orderCreated.getOrderId());
+
+        // 发送后台管理员下单提醒通知短信
+        sendAdminOrderNotice(orderCreated.getOrderId());
 
         MyRecord record = new MyRecord();
         record.set("orderNo", orderCreated.getOrderId());
         return record;
+    }
+
+    /**
+     * 发送后台管理员下单提醒通知短信
+     * @param orderNo 订单编号
+     */
+    @Async
+    public void sendAdminOrderNotice(String orderNo) {
+        // 系统是否开启用户下单管理员提醒开关
+        String smsSwitch = systemConfigService.getValueByKey(SmsConstants.SMS_CONFIG_ADMIN_LOWER_ORDER_SWITCH);
+        if (StrUtil.isBlank(smsSwitch) || smsSwitch.equals("1")) {
+            return ;
+        }
+        // 查询可已发送短信的管理员
+        List<SystemAdmin> systemAdminList = systemAdminService.findIsSmsList();
+        if (CollUtil.isEmpty(systemAdminList)) {
+            return ;
+        }
+
+        // 发送短信
+        systemAdminList.forEach(admin -> {
+            smsService.sendCreateOrderNotice(admin.getPhone(), orderNo, admin.getRealName());
+        });
     }
 
 
@@ -539,6 +490,20 @@ public class OrderServiceImpl implements OrderService {
             return Boolean.TRUE;
         });
 
+        if (execute) {
+            // 发送用户退款管理员提醒短信
+            String smsSwitch = systemConfigService.getValueByKey(SmsConstants.SMS_CONFIG_ADMIN_CONFIRM_TAKE_OVER_SWITCH);
+            if (StrUtil.isNotBlank(smsSwitch) || smsSwitch.equals("1")) {
+                // 查询可已发送短信的管理员
+                List<SystemAdmin> systemAdminList = systemAdminService.findIsSmsList();
+                if (CollUtil.isNotEmpty(systemAdminList)) {
+                    // 发送短信
+                    systemAdminList.forEach(admin -> {
+                        smsService.sendOrderRefundApplyNotice(admin.getPhone(), existStoreOrder.getOrderId(), admin.getRealName());
+                    });
+                }
+            }
+        }
         if(!execute) throw new CrmebException("申请退款失败");
 
 //        HashMap<String, Object> smsInfo = new HashMap<>();
@@ -571,24 +536,32 @@ public class OrderServiceImpl implements OrderService {
         if (CollUtil.isEmpty(applyList)) {
             return false;
         }
+        String smsSwitch = systemConfigService.getValueByKey(SmsConstants.SMS_CONFIG_ADMIN_CONFIRM_TAKE_OVER_SWITCH);
         List<StoreOrder> orderList = CollUtil.newArrayList();
-        List<Map<String, Object>> notifyMapList = CollUtil.newArrayList();
         for (OrderRefundApplyRequest request : applyList) {
             StoreOrder storeOrder = storeOrderService.getById(request.getId());
             if(ObjectUtil.isNull(storeOrder)){
                 //订单号错误
-                throw new CrmebException("没有找到相关订单信息!");
+//                throw new CrmebException("没有找到相关订单信息!");
+                logger.error("拼团自动处理订单申请退款：没有找到相关订单信息!");
+                continue;
             }
             if(storeOrder.getRefundStatus() == 1){
-                throw new CrmebException("正在申请退款中");
+//                throw new CrmebException("正在申请退款中");
+                logger.error("拼团自动处理订单申请退款：正在申请退款中!");
+                continue;
             }
 
             if(storeOrder.getRefundStatus() == 2){
-                throw new CrmebException("订单已退款");
+//                throw new CrmebException("订单已退款");
+                logger.error("拼团自动处理订单申请退款：订单已退款!");
+                continue;
             }
 
             if(storeOrder.getRefundStatus() == 3){
-                throw new CrmebException("订单退款中");
+//                throw new CrmebException("订单退款中");
+                logger.error("拼团自动处理订单申请退款：订单退款中!");
+                continue;
             }
 
 //            if(storeOrder.getStatus() == 1){
@@ -602,32 +575,20 @@ public class OrderServiceImpl implements OrderService {
             storeOrder.setRefundReasonTime(DateUtil.nowDateTime());
             orderList.add(storeOrder);
 
-            // 发送微信小程序订阅消息
-            String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
-            if(StringUtils.isNotBlank(storeNameAndCarNumString)){
-                WechatSendMessageForReFundNotify notify = new WechatSendMessageForReFundNotify(
-                        storeNameAndCarNumString,storeOrder.getPayPrice().toString(),
-                        storeOrder.getCreateTime().toString(),storeOrder.getOrderId()+"",DateUtil.nowDateTimeStr(),
-                        "CRMEB","发起申请",request.getExplain(),storeOrder.getPayPrice()+"",
-                        request.getText(),storeOrder.getUserPhone(),"CRMEB");
-                Map<String, Object> map = CollUtil.newHashMap();
-                map.put("notify", notify);
-                map.put("uid", storeOrder.getUid());
-                notifyMapList.add(map);
+            // 发送用户退款管理员提醒短信
+            if (StrUtil.isNotBlank(smsSwitch) || smsSwitch.equals("1")) {
+                // 查询可已发送短信的管理员
+                List<SystemAdmin> systemAdminList = systemAdminService.findIsSmsList();
+                if (CollUtil.isNotEmpty(systemAdminList)) {
+                    // 发送短信
+                    systemAdminList.forEach(admin -> {
+                        smsService.sendOrderRefundApplyNotice(admin.getPhone(), storeOrder.getOrderId(), admin.getRealName());
+                    });
+                }
             }
         }
 
-        boolean batch = storeOrderService.updateBatchById(orderList, 100);
-        if (batch && notifyMapList.size() > 0) {
-            // 发送微信小程序订阅消息
-            notifyMapList.forEach(i -> {
-                WechatSendMessageForReFundNotify notify = (WechatSendMessageForReFundNotify) i.get("notify");
-                Integer uid = (Integer) i.get("uid");
-                wechatSendMessageForMinService.sendReFundNotifyMessage(notify, uid);
-            });
-        }
-
-        return batch;
+        return storeOrderService.updateBatchById(orderList, 100);
     }
 
 
