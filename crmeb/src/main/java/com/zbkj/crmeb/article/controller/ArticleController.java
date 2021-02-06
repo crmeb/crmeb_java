@@ -36,7 +36,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("api/admin/article")
 @Api(tags = "文章管理")
-
 public class ArticleController {
 
     @Autowired

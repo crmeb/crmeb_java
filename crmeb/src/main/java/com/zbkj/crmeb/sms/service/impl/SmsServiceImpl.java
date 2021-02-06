@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,6 @@ import java.util.stream.Collectors;
  * | Author: CRMEB Team <admin@crmeb.com>
  * +----------------------------------------------------------------------
  */
-@Data
 @Service
 public class SmsServiceImpl implements SmsService {
 
@@ -78,72 +78,71 @@ public class SmsServiceImpl implements SmsService {
      * 添加到短信队列
      * 验证码特殊处理其他的参数自行根据要求处理
      * 参数处理逻辑 {code:value,code1:value1}
+     *
      * @param phone String 手机号码
      * @return boolean
-     * @author Mr.Zhang
-     * @since 2020-04-16
      */
-    @Override
-    public Boolean pushCodeToList(String phone, Integer tag, HashMap<String, Object> pram) {
+    private Boolean pushCodeToList(String phone, Integer tag, HashMap<String, Object> pram) {
         //发送手机验证码， 记录到redis  sms_validate_code_手机号
         switch (tag) {
             case SmsConstants.SMS_CONFIG_TYPE_VERIFICATION_CODE: // 验证码 特殊处理 code
                 //获取短信验证码过期时间
                 String codeExpireStr = systemConfigService.getValueByKey(Constants.CONFIG_KEY_SMS_CODE_EXPIRE);
                 if (StringUtils.isBlank(codeExpireStr) || Integer.parseInt(codeExpireStr) == 0) {
-                    codeExpireStr = Constants.NUM_FIVE + "";
+                    codeExpireStr = Constants.NUM_FIVE + "";// 默认5分钟过期
                 }
                 Integer code = CrmebUtil.randomCount(111111, 999999);
                 HashMap<String, Object> justPram = new HashMap<>();
                 justPram.put("code", code);
+                justPram.put("time", codeExpireStr);
                 push(phone, SmsConstants.SMS_CONFIG_VERIFICATION_CODE,
-                        SmsConstants.SMS_CONFIG_VERIFICATION_CODE_TEMP_ID, false, justPram);
+                        SmsConstants.SMS_CONFIG_VERIFICATION_CODE_TEMP_ID, justPram);
 
-                redisUtil.set(userService.getValidateCodeRedisKey(phone), code, Long.valueOf(codeExpireStr), TimeUnit.MINUTES);//5分钟过期
-
+                // 将验证码存入redis
+                redisUtil.set(userService.getValidateCodeRedisKey(phone), code, Long.valueOf(codeExpireStr), TimeUnit.MINUTES);
                 break;
             case SmsConstants.SMS_CONFIG_TYPE_LOWER_ORDER_SWITCH: // 支付成功短信提醒 pay_price order_id
                 push(phone, SmsConstants.SMS_CONFIG_LOWER_ORDER_SWITCH,
-                        SmsConstants.SMS_CONFIG_LOWER_ORDER_SWITCH_TEMP_ID, true, pram);
+                        SmsConstants.SMS_CONFIG_LOWER_ORDER_SWITCH_TEMP_ID, pram);
                 break;
             case SmsConstants.SMS_CONFIG_TYPE_DELIVER_GOODS_SWITCH: // 发货短信提醒 nickname store_name
                 push(phone, SmsConstants.SMS_CONFIG_DELIVER_GOODS_SWITCH,
-                        SmsConstants.SMS_CONFIG_DELIVER_GOODS_SWITCH_TEMP_ID, true, pram);
+                        SmsConstants.SMS_CONFIG_DELIVER_GOODS_SWITCH_TEMP_ID, pram);
                 break;
             case SmsConstants.SMS_CONFIG_TYPE_CONFIRM_TAKE_OVER_SWITCH: // 确认收货短信提醒 order_id store_name
                 push(phone, SmsConstants.SMS_CONFIG_CONFIRM_TAKE_OVER_SWITCH,
-                        SmsConstants.SMS_CONFIG_CONFIRM_TAKE_OVER_SWITCH_TEMP_ID, true, pram);
+                        SmsConstants.SMS_CONFIG_CONFIRM_TAKE_OVER_SWITCH_TEMP_ID, pram);
                 break;
             case SmsConstants.SMS_CONFIG_TYPE_ADMIN_LOWER_ORDER_SWITCH: // 用户下单管理员短信提醒 admin_name order_id
                 push(phone, SmsConstants.SMS_CONFIG_ADMIN_LOWER_ORDER_SWITCH,
-                        SmsConstants.SMS_CONFIG_ADMIN_LOWER_ORDER_SWITCH_TEMP_ID, true, pram);
+                        SmsConstants.SMS_CONFIG_ADMIN_LOWER_ORDER_SWITCH_TEMP_ID, pram);
                 break;
             case SmsConstants.SMS_CONFIG_TYPE_ADMIN_PAY_SUCCESS_SWITCH: // 支付成功管理员短信提醒 admin_name order_id
                 push(phone, SmsConstants.SMS_CONFIG_ADMIN_PAY_SUCCESS_SWITCH,
-                        SmsConstants.SMS_CONFIG_ADMIN_PAY_SUCCESS_SWITCH_TEMP_ID, true, pram);
+                        SmsConstants.SMS_CONFIG_ADMIN_PAY_SUCCESS_SWITCH_TEMP_ID, pram);
                 break;
             case SmsConstants.SMS_CONFIG_TYPE_ADMIN_REFUND_SWITCH: // 用户确认收货管理员短信提醒 admin_name order_id
                 push(phone, SmsConstants.SMS_CONFIG_ADMIN_REFUND_SWITCH,
-                        SmsConstants.SMS_CONFIG_ADMIN_REFUND_SWITCH_TEMP_ID, true, pram);
+                        SmsConstants.SMS_CONFIG_ADMIN_REFUND_SWITCH_TEMP_ID, pram);
                 break;
             case SmsConstants.SMS_CONFIG_TYPE_ADMIN_CONFIRM_TAKE_OVER_SWITCH: // 用户发起退款管理员短信提醒 admin_name order_id
                 push(phone, SmsConstants.SMS_CONFIG_ADMIN_CONFIRM_TAKE_OVER_SWITCH,
-                        SmsConstants.SMS_CONFIG_ADMIN_CONFIRM_TAKE_OVER_SWITCH_TEMP_ID, true, pram);
+                        SmsConstants.SMS_CONFIG_ADMIN_CONFIRM_TAKE_OVER_SWITCH_TEMP_ID, pram);
                 break;
             case SmsConstants.SMS_CONFIG_TYPE_PRICE_REVISION_SWITCH: // 改价短信提醒 order_id pay_price
                 push(phone, SmsConstants.SMS_CONFIG_PRICE_REVISION_SWITCH,
-                        SmsConstants.SMS_CONFIG_PRICE_REVISION_SWITCH_TEMP_ID, true, pram);
+                        SmsConstants.SMS_CONFIG_PRICE_REVISION_SWITCH_TEMP_ID, pram);
                 break;
             case SmsConstants.SMS_CONFIG_TYPE_ORDER_PAY_FALSE: // 订单未支付 order_id
                 push(phone, SmsConstants.SMS_CONFIG_ORDER_PAY_FALSE,
-                        SmsConstants.SMS_CONFIG_ORDER_PAY_FALSE_TEMP_ID, false, pram);
+                        SmsConstants.SMS_CONFIG_ORDER_PAY_FALSE_TEMP_ID, pram);
                 break;
         }
         return true;
     }
 
     @Override
-    public boolean sendCode(SendSmsVo sendSmsVo) {
+    public Boolean sendCode(SendSmsVo sendSmsVo) {
         String result;
         try {
             String token = onePassUtil.getToken();
@@ -154,7 +153,7 @@ public class SmsServiceImpl implements SmsService {
             param.add("phone", sendSmsVo.getMobile());
             param.add("temp_id", sendSmsVo.getTemplate());
             map.entrySet().stream().forEach(entry -> param.add(StrUtil.format(SmsConstants.SMS_COMMON_PARAM_FORMAT, entry.getKey()), entry.getValue()));
-
+            System.out.println("============发送短信=========header = " + header);
             result = restTemplateUtil.postFromUrlencoded(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_SEND_URI, param, header);
         } catch (Exception e) {
             //接口请求异常，需要重新发送
@@ -227,9 +226,14 @@ public class SmsServiceImpl implements SmsService {
 
     /**
      * 添加待发送消息到redis队列
+     *
+     * @param phone     手机号
+     * @param tempKey   模板key
+     * @param msgTempId 模板id
+     * @param mapPram   参数map
      */
     @Override
-    public void push(String phone, String tempKey, Integer msgTempId, boolean valid, HashMap<String, Object> mapPram) {
+    public void push(String phone, String tempKey, Integer msgTempId, HashMap<String, Object> mapPram) {
         if (StringUtils.isBlank(phone) || StringUtils.isBlank(tempKey) || msgTempId <= 0) {
             return;
         }
@@ -242,14 +246,7 @@ public class SmsServiceImpl implements SmsService {
         mParam.put("template", msgTempId);
         mParam.put("param", JSONObject.toJSONString(mapPram));
 
-        if (!valid) {
-            redisUtil.lPush(SmsConstants.SMS_SEND_KEY, JSONObject.toJSONString(mParam));
-            return;
-        }
-        String value = systemConfigService.getValueByKey(tempKey);
-        if (value.equals("1")) {
-            redisUtil.lPush(SmsConstants.SMS_SEND_KEY, JSONObject.toJSONString(mParam));
-        }
+        redisUtil.lPush(SmsConstants.SMS_SEND_KEY, JSONObject.toJSONString(mParam));
     }
 
     /**
@@ -329,7 +326,7 @@ public class SmsServiceImpl implements SmsService {
     /**
      * 模板申请记录
      *
-     * @param type  (1=验证码 2=通知 3=推广)
+     * @param type (1=验证码 2=通知 3=推广)
      */
     @Override
     public MyRecord applys(Integer type, PageParamRequest pageParamRequest) {
@@ -369,6 +366,123 @@ public class SmsServiceImpl implements SmsService {
         myRecord.set("count", recordList.size());
         myRecord.set("data", recordList);
         return myRecord;
+    }
+
+    /**
+     * 发送公共验证码
+     *
+     * @param phone 手机号
+     * @return Boolean
+     */
+    @Override
+    public Boolean sendCommonCode(String phone) {
+        return pushCodeToList(phone, SmsConstants.SMS_CONFIG_TYPE_VERIFICATION_CODE, null);
+    }
+
+    /**
+     * 发送支付成功短信
+     * @param phone 手机号
+     * @param orderNo 订单编号
+     * @param payPrice 支付金额
+     * @return Boolean
+     */
+    @Override
+    public Boolean sendPaySuccess(String phone, String orderNo, BigDecimal payPrice) {
+        HashMap<String, Object> map = CollUtil.newHashMap();
+        map.put("pay_price", payPrice);
+        map.put("order_id", orderNo);
+        return pushCodeToList(phone, SmsConstants.SMS_CONFIG_TYPE_LOWER_ORDER_SWITCH, map);
+    }
+
+    /**
+     * 发送管理员下单短信提醒
+     * @param phone 手机号
+     * @param orderNo 订单编号
+     * @param realName 管理员名称
+     * @return Boolean
+     */
+    @Override
+    public Boolean sendCreateOrderNotice(String phone, String orderNo, String realName) {
+        HashMap<String, Object> map = CollUtil.newHashMap();
+        map.put("admin_name", realName);
+        map.put("order_id", orderNo);
+        return pushCodeToList(phone, SmsConstants.SMS_CONFIG_TYPE_ADMIN_LOWER_ORDER_SWITCH, map);
+    }
+
+    /**
+     * 发送订单支付成功管理员提醒短信
+     * @param phone 手机号
+     * @param orderNo 订单编号
+     * @param realName 管理员名称
+     * @return Boolean
+     */
+    @Override
+    public Boolean sendOrderPaySuccessNotice(String phone, String orderNo, String realName) {
+        HashMap<String, Object> map = CollUtil.newHashMap();
+        map.put("admin_name", realName);
+        map.put("order_id", orderNo);
+        return pushCodeToList(phone, SmsConstants.SMS_CONFIG_TYPE_ADMIN_PAY_SUCCESS_SWITCH, map);
+    }
+
+    /**
+     * 发送用户退款管理员提醒短信
+     * @param phone 手机号
+     * @param orderNo 订单编号
+     * @param realName 管理员名称
+     * @return Boolean
+     */
+    @Override
+    public Boolean sendOrderRefundApplyNotice(String phone, String orderNo, String realName) {
+        HashMap<String, Object> map = CollUtil.newHashMap();
+        map.put("admin_name", realName);
+        map.put("order_id", orderNo);
+        return pushCodeToList(phone, SmsConstants.SMS_CONFIG_TYPE_ADMIN_CONFIRM_TAKE_OVER_SWITCH, map);
+    }
+
+    /**
+     * 发送用户确认收货管理员提醒短信
+     * @param phone 手机号
+     * @param orderNo 订单编号
+     * @param realName 管理员名称
+     * @return Boolean
+     */
+    @Override
+    public Boolean sendOrderReceiptNotice(String phone, String orderNo, String realName) {
+        HashMap<String, Object> map = CollUtil.newHashMap();
+        map.put("admin_name", realName);
+        map.put("order_id", orderNo);
+        return pushCodeToList(phone, SmsConstants.SMS_CONFIG_TYPE_ADMIN_REFUND_SWITCH, map);
+    }
+
+    /**
+     * 发送订单改价提醒短信
+     * @param phone 手机号
+     * @param orderNo 订单编号
+     * @param price 修改后的支付金额
+     * @return Boolean
+     */
+    @Override
+    public Boolean sendOrderEditPriceNotice(String phone, String orderNo, BigDecimal price) {
+        HashMap<String, Object> map = CollUtil.newHashMap();
+        map.put("order_id", orderNo);
+        map.put("pay_price", price);
+        return pushCodeToList(phone, SmsConstants.SMS_CONFIG_TYPE_PRICE_REVISION_SWITCH, map);
+    }
+
+    /**
+     * 发送订单发货提醒短信
+     * @param phone 手机号
+     * @param nickName 用户昵称
+     * @param storeName 商品名称
+     * @param orderNo 订单编号
+     */
+    @Override
+    public Boolean sendOrderDeliverNotice(String phone, String nickName, String storeName, String orderNo) {
+        HashMap<String, Object> map = CollUtil.newHashMap();
+        map.put("nickname", nickName);
+        map.put("store_name", storeName);
+        map.put("order_id", orderNo);
+        return pushCodeToList(phone, SmsConstants.SMS_CONFIG_TYPE_DELIVER_GOODS_SWITCH, map);
     }
 
     /**

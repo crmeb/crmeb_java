@@ -27,7 +27,7 @@ public interface StoreOrderInfoService extends IService<StoreOrderInfo> {
 
     HashMap<Integer, List<StoreOrderInfoVo>> getMapInId(List<Integer> orderIdList);
 
-    public List<StoreOrderInfoVo> getOrderListByOrderId(Integer orderId);
+    List<StoreOrderInfoVo> getOrderListByOrderId(Integer orderId);
 
     /**
      * 批量添加订单详情

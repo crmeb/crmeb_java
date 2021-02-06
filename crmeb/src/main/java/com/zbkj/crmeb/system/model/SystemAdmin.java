@@ -70,4 +70,9 @@ public class SystemAdmin implements Serializable {
     @ApiModelProperty(value = "登录次数")
     private Integer loginCount;
 
+    @ApiModelProperty(value = "手机号码")
+    private String phone;
+
+    @ApiModelProperty(value = "是否接收短信")
+    private Boolean isSms;
 }

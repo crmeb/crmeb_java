@@ -115,6 +115,17 @@ public class OnePassController {
         return CommonResult.failed();
     }
 
+    /**
+     * 修改手机号——验证账号密码
+     */
+    @ApiOperation(value = "修改手机号——验证账号密码")
+    @RequestMapping(value = "/update/phone/validator", method = RequestMethod.POST)
+    public CommonResult<JSONObject> updatePhone(@Validated @RequestBody OnePassLoginRequest request){
+        if (onePassService.beforeUpdatePhoneValidator(request)) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
+    }
 
     /**
      * 修改手机号

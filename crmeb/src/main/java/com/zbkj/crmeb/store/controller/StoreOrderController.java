@@ -247,15 +247,9 @@ public class StoreOrderController {
      * @since 2020-09-01
      */
     @ApiOperation(value = "一键改价")
-    @RequestMapping(value = "/editPrice", method = RequestMethod.GET)
-    public CommonResult<Object> editOrderPrice(
-            @RequestParam String orderId, @RequestParam(required = true,defaultValue = "0") BigDecimal price){
-        try {
-            if(price.compareTo(BigDecimal.ZERO) < 0) throw new CrmebException("请输入合法参数");
-        }catch (Exception e){
-            throw new CrmebException("价格参数错误");
-        }
-        return CommonResult.success(storeOrderService.editPrice(orderId,price));
+    @RequestMapping(value = "/editPrice", method = RequestMethod.POST)
+    public CommonResult<Object> editOrderPrice(@RequestBody @Validated StoreOrderEditPriceRequest request){
+        return CommonResult.success(storeOrderService.editPrice(request));
     }
 
     /**

@@ -42,17 +42,9 @@ public interface OrderService {
      * 创建订单
      * @param request 创建订单参数
      * @param key 订单key
-     * @return payResponse
-     */
-    OrderPayResponse createOrder(OrderCreateRequest request, String key, String ip);
-
-    /**
-     * 创建订单
-     * @param request 创建订单参数
-     * @param key 订单key
      * @return MyRecord
      */
-    MyRecord createOrder_1_3_1(OrderCreateRequest request, String key);
+    MyRecord createOrder(OrderCreateRequest request, String key);
 
     /**
      * 再次下单
@@ -114,7 +106,7 @@ public interface OrderService {
 
     /**
      * 订单退款申请Task使用
-     * @param request
+     * @param applyList
      * @return
      */
     Boolean refundApplyTask(List<OrderRefundApplyRequest> applyList);
