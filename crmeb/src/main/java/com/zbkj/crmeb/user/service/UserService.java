@@ -60,8 +60,18 @@ public interface UserService extends IService<User> {
      */
     Boolean updateNowMoney(User user, BigDecimal price, String type);
 
+    /**
+     * 会员分组
+     * @param id String id
+     * @param groupId Integer 分组Id
+     */
     boolean group(String id, String groupId);
 
+    /**
+     * 清除会员登记
+     * @param userId 用户id
+     * @return 清除结果
+     */
     boolean cleanLevel(Integer userId);
 
     LoginResponse register(RegisterRequest loginRequest, String ip) throws Exception;
@@ -164,8 +174,9 @@ public interface UserService extends IService<User> {
      * 获取分销人员列表
      * @param keywords 搜索参数
      * @param dateLimit 时间参数
+     * @param storeBrokerageStatus 分销状态：1-指定分销，2-人人分销
      */
-    List<User> findDistributionList(String keywords, String dateLimit);
+    List<User> findDistributionList(String keywords, String dateLimit, String storeBrokerageStatus);
 
     /**
      * 获取发展会员人数
@@ -174,4 +185,94 @@ public interface UserService extends IService<User> {
      * @return
      */
     Integer getDevelopDistributionPeopleNum(List<Integer> ids, String dateLimit);
+
+    User getUserByAccount(String account);
+
+    /**
+     * 手机号注册用户
+     * @param phone 手机号
+     * @param spreadUid 推广人编号
+     * @param clientIp ip
+     * @return
+     */
+    User registerPhone(String phone, Integer spreadUid, String clientIp);
+
+    /**
+     * 检测能否绑定关系
+     * @param user 当前用户
+     * @param spreadUid 推广员Uid
+     * @param type 用户类型:new-新用户，old—老用户
+     * @return Boolean
+     */
+    Boolean checkBingSpread(User user, Integer spreadUid, String type);
+
+    /**
+     * 更新推广员推广数
+     * @param uid uid
+     * @return Boolean
+     */
+    Boolean updateSpreadCountByUid(Integer uid);
+
+    /**
+     * 添加/扣减佣金
+     * @param uid 用户id
+     * @param price 金额
+     * @param brokeragePrice 历史金额
+     * @param type 类型：add—添加，sub—扣减
+     */
+    Boolean operationBrokerage(Integer uid, BigDecimal price, BigDecimal brokeragePrice, String type);
+
+    /**
+     * 添加/扣减余额
+     * @param uid 用户id
+     * @param price 金额
+     * @param nowMoney 历史金额
+     * @param type 类型：add—添加，sub—扣减
+     */
+    Boolean operationNowMoney(Integer uid, BigDecimal price, BigDecimal nowMoney, String type);
+
+    /**
+     * 添加/扣减积分
+     * @param uid 用户id
+     * @param integral 积分
+     * @param nowIntegral 历史积分
+     * @param type 类型：add—添加，sub—扣减
+     */
+    Boolean operationIntegral(Integer uid, Integer integral, Integer nowIntegral, String type);
+
+    /**
+     * PC后台分销员列表
+     * @param storeBrokerageStatus 分销模式 1-指定分销，2-人人分销
+     * @param keywords 搜索参数
+     * @param dateLimit 时间参数
+     * @param pageRequest 分页参数
+     * @return
+     */
+    PageInfo<User> getAdminSpreadPeopleList(String storeBrokerageStatus, String keywords, String dateLimit, PageParamRequest pageRequest);
+
+    /**
+     * 推广用户数
+     * @param uid 用户id
+     * @param dateLimit 时间参数
+     * @return Integer
+     */
+    Integer getSpreadNumberByUidAndDateLimit(Integer uid, String dateLimit);
+
+    /**
+     * 清除User Group id
+     * @param groupId 待清除的GroupId
+     */
+    void clearGroupByGroupId(String groupId);
+
+    /**
+     * 清除tag
+     * @param tagIds tagIds
+     */
+    void clearTagByTagId(String tagIds);
+
+    /**
+     * 更新用户
+     * @param userRequest 用户参数
+     */
+    Boolean updateUser(UserRequest userRequest);
 }

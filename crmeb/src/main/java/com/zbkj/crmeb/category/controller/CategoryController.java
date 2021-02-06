@@ -66,23 +66,11 @@ import java.util.List;
     /**
      * 新增分类表
      * @param categoryRequest 新增参数
-     * @author Mr.Zhang
-     * @since 2020-04-16
      */
     @ApiOperation(value = "新增")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     public CommonResult<String> save(@Validated CategoryRequest categoryRequest){
-        Category category = new Category();
-
-        //检测标题是否存在
-        if(categoryService.checkName(categoryRequest.getName(), category.getType()) > 0){
-            throw new CrmebException("此分类已存在");
-        }
-
-        BeanUtils.copyProperties(categoryRequest, category);
-        category.setPath(categoryService.getPathByPId(category.getPid()));
-        category.setExtra(systemAttachmentService.clearPrefix(category.getExtra()));
-        if(categoryService.save(category)){
+        if(categoryService.create(categoryRequest)){
             return CommonResult.success();
         }else{
             return CommonResult.failed();

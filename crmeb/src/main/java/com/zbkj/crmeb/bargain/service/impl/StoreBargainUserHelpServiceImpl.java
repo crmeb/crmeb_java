@@ -8,7 +8,9 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
+import com.constants.BargainConstants;
 import com.constants.Constants;
+import com.constants.UserConstants;
 import com.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -25,7 +27,9 @@ import com.zbkj.crmeb.bargain.service.StoreBargainUserService;
 import com.zbkj.crmeb.front.request.BargainFrontRequest;
 import com.zbkj.crmeb.front.response.BargainCountResponse;
 import com.zbkj.crmeb.user.model.User;
+import com.zbkj.crmeb.user.model.UserToken;
 import com.zbkj.crmeb.user.service.UserService;
+import com.zbkj.crmeb.user.service.UserTokenService;
 import com.zbkj.crmeb.wechat.service.TemplateMessageService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +71,9 @@ public class StoreBargainUserHelpServiceImpl extends ServiceImpl<StoreBargainUse
 
     @Autowired
     private TemplateMessageService templateMessageService;
+
+    @Autowired
+    private UserTokenService userTokenService;
 
 
     /**
@@ -145,7 +152,7 @@ public class StoreBargainUserHelpServiceImpl extends ServiceImpl<StoreBargainUse
         lqw.eq(StoreBargainUserHelp::getBargainUserId, bargainUser.getId());
         List<StoreBargainUserHelp> storeBargainUserHelps = dao.selectList(lqw);
         if (CollUtil.isEmpty(storeBargainUserHelps)) {
-            return new BargainCountResponse(ZERO, 0, bargainUser.getBargainPrice().subtract(bargainUser.getBargainPriceMin()), 0, 1, true, isConsume);
+            return new BargainCountResponse(ZERO, 0, bargainUser.getBargainPrice().subtract(bargainUser.getBargainPriceMin()), 0, BargainConstants.BARGAIN_USER_STATUS_PARTICIPATE, true, isConsume);
         }
 
         // 已砍金额
@@ -176,19 +183,6 @@ public class StoreBargainUserHelpServiceImpl extends ServiceImpl<StoreBargainUse
                 } else {
                     isConsume = true;
                 }
-//
-//                LambdaQueryWrapper<StoreBargainUserHelp> lqWrapper = new LambdaQueryWrapper<>();
-//                lqWrapper.eq(StoreBargainUserHelp::getBargainId, request.getBargainId());
-//                lqWrapper.eq(StoreBargainUserHelp::getUid, user.getUid());
-//                lqWrapper.ne(StoreBargainUserHelp::getBargainUserId, bargainUser.getId());
-//                List<StoreBargainUserHelp> myHelps = dao.selectList(lqWrapper);
-//                if (CollUtil.isEmpty(myHelps)) {
-//                    userBargainStatus = true;
-//                } else if (myHelps.size() < storeBargain.getBargainNum()) {
-//                    userBargainStatus = true;
-//                } else {
-//                    isConsume = true;
-//                }
             }
         }
 
@@ -246,7 +240,7 @@ public class StoreBargainUserHelpServiceImpl extends ServiceImpl<StoreBargainUse
         User user = userService.getInfo();
 
         // 判断是否砍价成功
-        if (storeBargainUser.getStatus() == 3 || storeBargainUser.getBargainPriceMin().compareTo(storeBargainUser.getBargainPrice().subtract(storeBargainUser.getPrice())) >= 0) {
+        if (storeBargainUser.getStatus().equals(BargainConstants.BARGAIN_USER_STATUS_SUCCESS) || storeBargainUser.getBargainPriceMin().compareTo(storeBargainUser.getBargainPrice().subtract(storeBargainUser.getPrice())) >= 0) {
             throw new CrmebException("商品已完成砍价");
         }
 
@@ -302,13 +296,16 @@ public class StoreBargainUserHelpServiceImpl extends ServiceImpl<StoreBargainUse
         // 如果砍价完成，发送微信模板消息
         if (storeBargain.getPeopleNum().equals(helpCount.intValue() + 1)) {
             // 发送微信模板消息
-            HashMap<String, String> temMap = new HashMap<>();
-            temMap.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "好腻害！你的朋友们已经帮你砍到底价了！");
-            temMap.put("keyword1", storeBargain.getTitle());
-            temMap.put("keyword2", storeBargain.getMinPrice().toString());
-            temMap.put(Constants.WE_CHAT_TEMP_KEY_END, "感谢您的参与！");
+//            HashMap<String, String> temMap = new HashMap<>();
+//            temMap.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "好腻害！你的朋友们已经帮你砍到底价了！");
+//            temMap.put("keyword1", storeBargain.getTitle());
+//            temMap.put("keyword2", storeBargain.getMinPrice().toString());
+//            temMap.put(Constants.WE_CHAT_TEMP_KEY_END, "感谢您的参与！");
+//
+//            templateMessageService.push(Constants.WE_CHAT_TEMP_KEY_BARGAIN_SUCCESS, temMap, storeBargainUser.getUid(), Constants.PAY_TYPE_WE_CHAT_FROM_PUBLIC);
 
-            templateMessageService.push(Constants.WE_CHAT_TEMP_KEY_BARGAIN_SUCCESS, temMap, storeBargainUser.getUid(), Constants.PAY_TYPE_WE_CHAT_FROM_PUBLIC);
+            User tempUser = userService.getById(storeBargainUser.getUid());
+            pushMessageOrder(storeBargain, tempUser);
         }
 
         map.put("bargainPrice", bargainPrice);
@@ -316,8 +313,44 @@ public class StoreBargainUserHelpServiceImpl extends ServiceImpl<StoreBargainUse
     }
 
     /**
+     * 发送消息通知
+     * @param storeBargain 砍价商品
+     * @param user 发起砍价用户
+     */
+    private void pushMessageOrder(StoreBargain storeBargain, User user) {
+        if (user.getUserType().equals(UserConstants.USER_TYPE_H5)) {
+            return;
+        }
+        UserToken userToken;
+        HashMap<String, String> temMap = new HashMap<>();
+        // 公众号
+        if (user.getUserType().equals(UserConstants.USER_TYPE_WECHAT)) {
+            userToken = userTokenService.getTokenByUserId(user.getUid(), UserConstants.USER_TOKEN_TYPE_WECHAT);
+            if (ObjectUtil.isNull(userToken)) {
+                return ;
+            }
+            // 发送微信模板消息
+            temMap.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "好腻害！你的朋友们已经帮你砍到底价了！");
+            temMap.put("keyword1", storeBargain.getTitle());
+            temMap.put("keyword2", storeBargain.getMinPrice().toString());
+            temMap.put(Constants.WE_CHAT_TEMP_KEY_END, "请尽快支付！");
+            templateMessageService.pushTemplateMessage(Constants.WE_CHAT_TEMP_KEY_BARGAIN_SUCCESS, temMap, userToken.getToken());
+            return;
+        }
+        // 小程序发送订阅消息
+        userToken = userTokenService.getTokenByUserId(user.getUid(), UserConstants.USER_TOKEN_TYPE_ROUTINE);
+        if (ObjectUtil.isNull(userToken)) {
+            return ;
+        }
+        // 组装数据
+        temMap.put("thing6",  storeBargain.getTitle());
+        temMap.put("amount3", storeBargain.getMinPrice().toString() + "元");
+        temMap.put("thing7", "好腻害！你的朋友们已经帮你砍到底价了！");
+        templateMessageService.pushMiniTemplateMessage(Constants.WE_CHAT_PROGRAM_TEMP_KEY_BARGAIN_SUCCESS, temMap, userToken.getToken());
+    }
+
+    /**
      * 获取参与砍价人员数量
-     * @return
      */
     @Override
     public Long getHelpPeopleCount() {
@@ -339,8 +372,7 @@ public class StoreBargainUserHelpServiceImpl extends ServiceImpl<StoreBargainUse
 
     /**
      * 获取参与砍价人员数量
-     * @param bargainId
-     * @return
+     * @param bargainId 砍价商品id
      */
     @Override
     public Long getHelpPeopleCountByBargainId(Integer bargainId) {
@@ -375,8 +407,7 @@ public class StoreBargainUserHelpServiceImpl extends ServiceImpl<StoreBargainUse
 
     /**
      * 砍价发起用户信息
-     * @param bargainFrontRequest
-     * @return
+     * @param bargainFrontRequest 砍价公共请求参数
      */
     @Override
     public Map<String, String> startUser(BargainFrontRequest bargainFrontRequest) {
@@ -427,7 +458,6 @@ public class StoreBargainUserHelpServiceImpl extends ServiceImpl<StoreBargainUse
 
     /**
      * 获取帮助砍价用户的帮砍次数
-     * @return
      */
     private StoreBargainUserHelp getByUidAndBargainIdAndBargainUserId(Integer uid, Integer bargainId, Integer bargainUserId) {
         LambdaQueryWrapper<StoreBargainUserHelp> lambdaQueryWrapper = new LambdaQueryWrapper<>();

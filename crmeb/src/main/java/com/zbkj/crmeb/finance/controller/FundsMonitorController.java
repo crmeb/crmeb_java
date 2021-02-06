@@ -3,18 +3,14 @@ package com.zbkj.crmeb.finance.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
-import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.finance.model.UserFundsMonitor;
-import com.zbkj.crmeb.finance.request.FundsMonitorSearchRequest;
+import com.zbkj.crmeb.finance.request.FundsMonitorRequest;
 import com.zbkj.crmeb.finance.request.FundsMonitorUserSearchRequest;
 import com.zbkj.crmeb.finance.service.UserFundsMonitorService;
-import com.zbkj.crmeb.user.model.User;
-import com.zbkj.crmeb.user.model.UserBill;
-import com.zbkj.crmeb.user.request.UserBillDetailListRequest;
+import com.zbkj.crmeb.user.model.UserBrokerageRecord;
 import com.zbkj.crmeb.user.response.BillType;
 import com.zbkj.crmeb.user.response.UserBillResponse;
 import com.zbkj.crmeb.user.service.UserBillService;
-import com.zbkj.crmeb.user.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -59,8 +55,8 @@ public class FundsMonitorController {
      */
     @ApiOperation(value = "资金监控")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<UserBillResponse>>  getList(@Validated FundsMonitorSearchRequest request, @Validated PageParamRequest pageParamRequest){
-        CommonPage<UserBillResponse> userExtractCommonPage = CommonPage.restPage(userBillService.getListAdmin(request, pageParamRequest));
+    public CommonResult<CommonPage<UserBillResponse>>  getList(@Validated FundsMonitorRequest request, @Validated PageParamRequest pageParamRequest){
+        CommonPage<UserBillResponse> userExtractCommonPage = CommonPage.restPage(userBillService.fundMonitoring(request, pageParamRequest));
         return CommonResult.success(userExtractCommonPage);
     }
 
@@ -75,7 +71,7 @@ public class FundsMonitorController {
     }
 
     /**
-     * 分页显示资金监控
+     * 佣金记录
      * @param request 搜索条件
      * @param pageParamRequest 分页参数
      * @author Mr.Zhang
@@ -91,18 +87,17 @@ public class FundsMonitorController {
 
     /**
      * 佣金详细记录
-     * @param request   查询基本参数
      * @param pageParamRequest  分页参数
      * @param userId    被查询的用户id
      * @return  佣金查询结果
      */
     @ApiOperation(value = "佣金详细记录")
     @RequestMapping(value = "/list/user/detail/{userId}", method = RequestMethod.GET)
-    public CommonResult<CommonPage<UserBillResponse>> userDetail(UserBillDetailListRequest request,
-                                                         PageParamRequest pageParamRequest,
-                                                         @PathVariable Integer userId){
-        CommonPage<UserBillResponse> ub = CommonPage.restPage(userBillService.getByBaseSearch(userId, request, pageParamRequest));
-        return CommonResult.success(ub);
+    public CommonResult<CommonPage<UserBrokerageRecord>> userDetail(PageParamRequest pageParamRequest,
+                                                                    @RequestParam(value = "dateLimit", required = false) String dateLimit,
+                                                                    @PathVariable Integer userId){
+        CommonPage<UserBrokerageRecord> commonPage = CommonPage.restPage(userFundsMonitorService.getFundsMonitorDetail(userId, dateLimit, pageParamRequest));
+        return CommonResult.success(commonPage);
     }
 
 

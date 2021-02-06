@@ -123,13 +123,13 @@ public class StoreOrderInfoServiceImpl extends ServiceImpl<StoreOrderInfoDao, St
         List<StoreOrderInfoVo> storeOrderInfoVoList = new ArrayList<>();
         for (StoreOrderInfo storeOrderInfo : systemStoreStaffList) {
             //解析商品详情JSON
-            StoreOrderInfoVo StoreOrderInfoVo = new StoreOrderInfoVo();
-            BeanUtils.copyProperties(storeOrderInfo, StoreOrderInfoVo, "info");
-            StoreOrderInfoVo.setInfo(JSON.parseObject(storeOrderInfo.getInfo(),StoreCartResponse.class));
-            StoreOrderInfoVo.getInfo().setIsReply(
-                    storeProductReplyService.isReply(StoreOrderInfoVo.getUnique(),"product",StoreOrderInfoVo.getOrderId()).size()
+            StoreOrderInfoVo storeOrderInfoVo = new StoreOrderInfoVo();
+            BeanUtils.copyProperties(storeOrderInfo, storeOrderInfoVo, "info");
+            storeOrderInfoVo.setInfo(JSON.parseObject(storeOrderInfo.getInfo(),StoreCartResponse.class));
+            storeOrderInfoVo.getInfo().setIsReply(
+                    storeProductReplyService.isReply(storeOrderInfoVo.getUnique(), storeOrderInfoVo.getOrderId()) ? 1 : 0
             );
-            storeOrderInfoVoList.add(StoreOrderInfoVo);
+            storeOrderInfoVoList.add(storeOrderInfoVo);
         }
         return storeOrderInfoVoList;
     }

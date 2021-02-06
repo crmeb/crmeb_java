@@ -432,7 +432,10 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         storeProductResponse.setSliderImage(String.join(",",storeCombination.getImages()));
 
         boolean specType = false;
-        if (attrs.size() > 1) {
+        StoreProductAttr proPram = new StoreProductAttr();
+        spaPram.setProductId(id).setType(Constants.PRODUCT_TYPE_NORMAL);
+        List<StoreProductAttr> proAttrs = storeProductAttrService.getByEntity(proPram);
+        if (proAttrs.size() > 1) {
             specType = true;
         }
         storeProductResponse.setSpecType(specType);
@@ -860,15 +863,16 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
     public Boolean removePink(StorePinkRequest storePinkRequest) {
         StorePink userPink = storePinkService.getById(storePinkRequest.getId());
         if (ObjectUtil.isNull(userPink)) throw new CrmebException("未查到拼团信息，无法取消");
-        if (userPink.getIsRefund()) throw new CrmebException("拼团已取消");
+        if (userPink.getIsRefund()) throw new CrmebException("拼团订单已退款");
         // 获取是否拼团成功
         if (userPink.getStatus() == 2) {
             throw new CrmebException("拼团已完成，无法取消");
         }
-        Integer count = storePinkService.getCountByKid(userPink.getKId());
+        Integer kid = userPink.getKId() > 0 ? userPink.getKId() : userPink.getId();
+        Integer count = storePinkService.getCountByKid(kid);
         if (count.equals(userPink.getPeople())) {
             // 拼团完成操作
-            storePinkService.pinkSuccess(userPink.getId());
+            storePinkService.pinkSuccess(kid);
             throw new CrmebException("拼团已完成，无法取消");
         }
         if (userPink.getStatus() == 3) {
@@ -884,6 +888,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         // 订单申请退款
         OrderRefundApplyRequest refundRequest = new OrderRefundApplyRequest();
         refundRequest.setId(order.getId());
+        refundRequest.setUni(order.getOrderId());
         refundRequest.setText("拼团订单取消，申请退款");
         refundRequest.setExplain("用户取消拼团订单，申请退款");
         boolean apply = orderService.refundApply(refundRequest);
