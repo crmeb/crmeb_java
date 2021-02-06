@@ -9,7 +9,7 @@
 			</scroll-view>
 		</view>
 		<view class="child-box" v-if="tabClick>0 && tabTitle[tabClick].child?tabTitle[tabClick].child.length>0:0">
-			<scroll-view scroll-x="true" style="white-space: nowrap; display: flex;align-items: center; height: 100%;" scroll-with-animation :scroll-left="tabLeft" show-scrollbar="false">
+			<scroll-view scroll-x="true">
 				<view class="wrapper">
 					<view v-for="(item,index) in tabTitle[tabClick].child?tabTitle[tabClick].child:[]" :key="index" class="child-item" :class="{on:index == childIndex}" @click="childTab(tabClick,index)">
 						<image :src="item.extra" mode="" :style="{'background-color':item.extra?'none':'#f7f7f7'}"></image>
@@ -18,6 +18,17 @@
 				</view>
 			</scroll-view>
 		</view>
+			<!-- <image :src="item.extra" mode="" :style="{'background-color':(item.extra&&item.extra.indexOf('https://') > -1) || (item.extra&&item.extra.indexOf('http://') > -1)?'none':'#f7f7f7'}"></image> -->
+		<!-- <view class="child-box" v-if="tabClick>0 && tabTitle[tabClick].child?tabTitle[tabClick].child.length>0:0">
+			<scroll-view scroll-x="true" style="white-space: nowrap; display: flex;align-items: center; height: 100%;" scroll-with-animation :scroll-left="tabLeft" show-scrollbar="false">
+				<view class="wrapper">
+					<view v-for="(item,index) in tabTitle[tabClick].child?tabTitle[tabClick].child:[]" :key="index" class="child-item" :class="{on:index == childIndex}" @click="childTab(tabClick,index)">
+						<image :src="item.extra" mode="" :style="{'background-color':item.extra?'none':'#f7f7f7'}"></image>
+						<view class="txt line1">{{item.name}}</view>
+					</view>
+				</view>
+			</scroll-view>
+		</view> -->
 	</view>
 </template>
 

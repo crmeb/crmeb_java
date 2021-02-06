@@ -124,8 +124,8 @@ export function userActivity(){
 /*
  * 余额明细（types|2=全部,1=支出,2=收入）
  * */
-export function getCommissionInfo(q, types) {
-  return request.get("spread/commission/" + types, q);
+export function getCommissionInfo(data) {
+  return request.get("spread/commission/detail", data);
 }
 
 /*
@@ -404,6 +404,15 @@ export function getuserDalance()
 	return request.get("user/balance");
 }
 
+
+/**
+ * 账单记录；
+ * 
+ */
+export function getBillList(data)
+{
+	return request.get("recharge/bill/record",data);
+}
 
 
 

@@ -66,7 +66,7 @@
 			          //领取优惠券
 					  let ids = [];
 					  ids.push(id);
-			          setCouponReceive(ids).then(res=>{
+			          setCouponReceive(id).then(res=>{
 						  that.$emit('ChangCouponsUseState', index);
 						  that.$util.Tips({title: "领取成功"});
 						  that.$emit('ChangCoupons', list[index]);

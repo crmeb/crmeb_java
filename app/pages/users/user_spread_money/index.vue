@@ -45,10 +45,10 @@
 									<view class='itemn acea-row row-between-wrapper'>
 										<view>
 											<view class='name line1'>{{child.title}}</view>
-											<view>{{child.add_time}}</view>
+											<view>{{child.price}}</view>
 										</view>
-										<view class='num font-color' v-if="child.pm == 1">+{{child.number}}</view>
-										<view class='num' v-else>-{{child.number}}</view>
+										<view class='num font-color' v-if="child.type == 1">+{{child.price}}</view>
+										<view class='num' v-else>-{{child.price}}</view>
 									</view>
 								</block>
 							</view>
@@ -181,14 +181,12 @@
 					page: that.page,
 					limit: that.limit
 				}).then(res => {
-					console.log(res)
 					let len = res.data.list.length;
 					let recordListData = res.data.list;
 					recordListNew = recordList.concat(recordListData);
 					that.status = that.limit > len;
 					that.page = that.page + 1;
 					that.$set(that, 'recordList', recordListNew);
-					console.log(that.recordList)
 				});
 			},
 			getCount: function() {
@@ -213,7 +211,7 @@
 				getCommissionInfo({
 					page: page,
 					limit: limit
-				}, recordType).then(res => {
+				}).then(res => {
 					if(res.data.list){
 						let len = res.data.list.length;
 						let recordListData = res.data.list;

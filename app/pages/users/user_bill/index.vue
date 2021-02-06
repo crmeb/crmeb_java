@@ -2,9 +2,9 @@
 	<view>
 		<view class='bill-details'>
 			<view class='nav acea-row'>
-				<view class='item' :class='type==0 ? "on":""' @click='changeType(0)'>全部</view>
-				<view class='item' :class='type==1 ? "on":""' @click='changeType(1)'>支出</view>
-				<view class='item' :class='type==2 ? "on":""' @click='changeType(2)'>收入</view>
+				<view class='item' :class='type==="all" ? "on":""' @click='changeType("all")'>全部</view>
+				<view class='item' :class='type==="expenditure" ? "on":""' @click='changeType("expenditure")'>支出</view>
+				<view class='item' :class='type==="income" ? "on":""' @click='changeType("income")'>收入</view>
 			</view>
 			<view class='sign-record'>
 				<view class='list' v-for="(item,index) in userBillList" :key="index">
@@ -39,7 +39,7 @@
 
 <script>
 	import {
-		getCommissionInfo
+		getBillList
 	} from '@/api/user.js';
 	import {
 		toLogin
@@ -67,7 +67,7 @@
 				loadend: false,
 				page: 1,
 				limit: 10,
-				type: 0,
+				type: 'all',
 				userBillList: [],
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false //是否隐藏授权
@@ -91,7 +91,7 @@
 		 * 生命周期函数--监听页面加载
 		 */
 		onLoad: function(options) {
-			this.type = options.type || 0;
+			this.type = options.type;
 		},
 		/**
 		 * 页面上拉触底事件的处理函数
@@ -121,9 +121,10 @@
 				that.loadTitle = "";
 				let data = {
 					page: that.page,
-					limit: that.limit
+					limit: that.limit,
+					type: that.type
 				}
-				getCommissionInfo(data, that.type).then(function(res) {
+				getBillList(data).then(function(res) {
 					let list = res.data.list?res.data.list:[],
 						loadend = list.length < that.limit;
 					that.userBillList = that.$util.SplitArray(list, that.userBillList);

@@ -17,10 +17,10 @@
 						<block v-for="(item,index) in cartList.valid" :key="index">
 							<view class='item acea-row row-between-wrapper'>
 								<!-- #ifndef MP -->
-								<checkbox :value="(item.id).toString()" :checked="item.checked" :disabled="item.attrStatus?false:true" />
+								<checkbox :value="(item.id).toString()" :checked="item.checked" :disabled="!item.attrStatus && footerswitch" />
 								<!-- #endif -->
 								<!-- #ifdef MP -->
-								<checkbox :value="item.id" :checked="item.checked" :disabled="item.attrStatus?false:true" />
+								<checkbox :value="item.id" :checked="item.checked" :disabled="!item.attrStatus && footerswitch" />
 								<!-- #endif -->
 								<navigator :url='"/pages/goods_details/index?id="+item.productId' hover-class='none' class='picTxt acea-row row-between-wrapper'>
 									<view class='pictrue'>
@@ -91,7 +91,7 @@
 			<view class='footer acea-row row-between-wrapper' v-if="cartList.valid.length > 0">
 				<view>
 					<checkbox-group @change="checkboxAllChange">
-						<checkbox value="all" :checked="!!isAllSelect" /><text class='checkAll'>全选 ({{cartCount}})</text>
+						<checkbox value="all" :checked="!!isAllSelect" /><text class='checkAll'>全选 ({{selectValue.length}})</text>
 					</checkbox-group>
 				</view>
 				<view class='money acea-row row-middle' v-if="footerswitch==true">
@@ -510,22 +510,52 @@
 					this.setAllSelectValue(0)
 				}
 			},
+			// setAllSelectValue: function(status) {
+			// 	let that = this;
+			// 	let selectValue = [];
+			// 	let valid = that.cartList.valid;
+			// 	if (valid.length > 0) {
+			// 		for (let index in valid) {
+			// 			if (status == 1) {
+			// 				if(valid[index].attrStatus){
+			// 					valid[index].checked = true;
+			// 					selectValue.push(valid[index].id);
+			// 				}else{
+			// 					valid[index].checked = false;
+			// 				}
+			// 			} else valid[index].checked = false;
+			// 		}
+			// 		that.$set(that.cartList, 'valid', valid);
+			// 		that.selectValue = selectValue;
+			// 		that.switchSelect();
+			// 	}
+			// },
 			setAllSelectValue: function(status) {
 				let that = this;
 				let selectValue = [];
 				let valid = that.cartList.valid;
 				if (valid.length > 0) {
-					for (let index in valid) {
-						if (status == 1) {
-							if(valid[index].attrStatus){
-								valid[index].checked = true;
-								selectValue.push(valid[index].id);
-							}else{
-								valid[index].checked = false;
+					let newValid = valid.map(item => {
+						if (status) {
+							if (that.footerswitch) {
+								if (item.attrStatus) {
+									item.checked = true;
+									selectValue.push(item.id);
+								} else{
+									item.checked = false;
+								}
+							} else{
+								item.checked = true;
+								selectValue.push(item.id);
 							}
-						} else valid[index].checked = false;
-					}
-					that.$set(that.cartList, 'valid', valid);
+							that.isAllSelect = true;
+						} else{
+							item.checked = false;
+							that.isAllSelect = false;
+						}
+						return item;
+					});
+					that.$set(that.cartList, 'valid', newValid);
 					that.selectValue = selectValue;
 					that.switchSelect();
 				}
@@ -534,23 +564,59 @@
 				let that = this;
 				let value = event.detail.value;
 				let valid = that.cartList.valid;
-				for (let index in valid) {
-					if (that.inArray(valid[index].id, value)){
-						if(valid[index].attrStatus){
-							valid[index].checked = true;
-						}else{
-							valid[index].checked = false;
+				let arr1 = [];
+				let arr2 = [];
+				let arr3 = [];
+				let newValid = valid.map(item => {
+					if (that.inArray(item.id, value)) {
+						if (that.footerswitch) {
+							if (item.attrStatus) {
+								item.checked = true;
+								arr1.push(item);
+							} else{
+								item.checked = false;
+							}
+						} else{
+							item.checked = true;
+							arr1.push(item);
 						}
-					} else {
-						valid[index].checked = false;
-					} 
+					} else{
+						item.checked = false;
+						arr2.push(item);
+					}
+					return item;
+				});
+				if (that.footerswitch) {
+					arr3 = arr2.filter(item => !item.attrStatus);
 				}
-				that.$set(that.cartList, 'valid', valid);
-				let newArr = that.cartList.valid.filter(item => item.attrStatus);
-				that.isAllSelect = value.length == newArr.length;
+				that.$set(that.cartList, 'valid', newValid);
+				// let newArr = that.cartList.valid.filter(item => item.attrStatus);
+				that.isAllSelect = newValid.length === arr1.length + arr3.length;
 				that.selectValue = value;
+				console.log(that.selectValue)
 				that.switchSelect();
 			},
+			// checkboxChange: function(event) {
+			// 	let that = this;
+			// 	let value = event.detail.value;
+			// 	let valid = that.cartList.valid;
+			// 	for (let index in valid) {
+			// 		if (that.inArray(valid[index].id, value)){
+			// 			if(valid[index].attrStatus){
+			// 				valid[index].checked = true;
+			// 			}else{
+			// 				valid[index].checked = false;
+			// 			}
+			// 		} else {
+			// 			valid[index].checked = false;
+			// 		} 
+			// 	}
+			// 	that.$set(that.cartList, 'valid', valid);
+			// 	let newArr = that.cartList.valid.filter(item => item.attrStatus);
+			// 	that.isAllSelect = value.length == newArr.length;
+			// 	that.selectValue = value;
+			// 	that.switchSelect();
+			// },
 			inArray: function(search, array) {
 				for (let i in array) {
 					if (array[i] == search) {
@@ -755,6 +821,33 @@
 			manage: function() {
 				let that = this;
 				that.footerswitch = !that.footerswitch;
+				let arr1 = [];
+				let arr2 = [];
+				let newValid = that.cartList.valid.map(item => {
+					if (that.footerswitch) {
+						if (item.attrStatus) {
+							if (item.checked) {	
+								arr1.push(item.id);
+							}
+						} else{
+							item.checked = false;
+							arr2.push(item);
+						}
+					} else {
+						if (item.checked) {
+							arr1.push(item.id);
+						}
+					}
+					return item;
+				});
+				that.cartList.valid = newValid;
+				if (that.footerswitch) {
+					that.isAllSelect = newValid.length === arr1.length + arr2.length;
+				} else{
+					that.isAllSelect = newValid.length === arr1.length;
+				}
+				that.selectValue = arr1;
+				that.switchSelect();
 			},
 			unsetCart: function() {
 				let that = this,
@@ -780,7 +873,7 @@
 				that.getCartList();
 			}
 			if (that.cartList.valid.length == 0 && that.cartList.invalid.length == 0) {
-				that.getHostProduct();
+			//	that.getHostProduct();
 			}
 		}
 	}
