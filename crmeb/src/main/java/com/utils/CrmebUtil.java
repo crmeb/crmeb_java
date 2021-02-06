@@ -603,6 +603,7 @@ public class CrmebUtil {
 
     /**
      * 同比率计算 //同比增长率= ((当前周期 - 上一个周期) ÷ 上一个周期 ) *100%
+     * 如果上个周期为0， = 当前周期 * 100%
      * @param b1 当前周期
      * @param b2 上一个周期
      * @author Mr.Zhang
@@ -619,7 +620,7 @@ public class CrmebUtil {
 
         if(b2.equals(BigDecimal.ZERO)){
             //b2是0
-            return BigDecimal.TEN.multiply(BigDecimal.TEN).setScale(2, BigDecimal.ROUND_UP);
+            return b1.setScale(2, BigDecimal.ROUND_UP);
         }
 
         return (b1.subtract(b2)).multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).divide(b2, BigDecimal.ROUND_UP);
@@ -679,7 +680,7 @@ public class CrmebUtil {
      * @return 生成的随机码
      */
     public static String getOrderNo(String payType){
-        return getOrderNoPrefix(payType) + DateUtil.nowDate(Constants.DATE_TIME_FORMAT_NUM) + randomCount(11111, 99999);
+        return payType + DateUtil.nowDate(Constants.DATE_TIME_FORMAT_NUM) + randomCount(11111, 99999);
     }
 
     /**

@@ -16,6 +16,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.utils.DateUtil;
 import com.utils.vo.dateLimitUtilVo;
+import com.zbkj.crmeb.finance.request.FundsMonitorRequest;
 import com.zbkj.crmeb.finance.request.FundsMonitorSearchRequest;
 import com.zbkj.crmeb.front.response.UserSpreadCommissionResponse;
 import com.zbkj.crmeb.store.request.StoreOrderRefundRequest;
@@ -574,20 +575,6 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
      */
     @Override
     public List<UserBill> getSearchOption() {
-
-//        LambdaQueryWrapper<UserBill> lqw = Wrappers.lambdaQuery();
-//        lqw.select("DISTINCT title, type");
-//        lqw.notIn(UserBill::getType,"gain", "system_sub", "deduction", "sign");
-//        lqw.notIn(UserBill::getCategory,"exp", "integral");
-//        lqw.groupBy(UserBill::getType);
-//        List<UserBill> userBills = dao.selectList(lqw);
-//        List<UserBill> result = new ArrayList<>();
-//        for (UserBill userBill : userBills) {
-//            List<UserBill> existUserBills = result.stream().filter(e ->
-//                    e.getTitle().equals(userBill.getTitle())).collect(Collectors.toList());
-//            if(existUserBills.size() == 0) result.add(userBill);
-//        }
-//        return result;
         QueryWrapper<UserBill> qw = new QueryWrapper<>();
         qw.select("DISTINCT title, type");
         qw.notIn("type","gain", "system_sub", "deduction", "sign");
@@ -608,6 +595,57 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
         lqw.eq(UserBill::getLinkId, String.valueOf(orderId));
         lqw.eq(UserBill::getStatus, 1);
         return dao.selectList(lqw);
+    }
+
+    /**
+     * 资金监控
+     * @param request 查询参数
+     * @param pageParamRequest 分页参数
+     * @return PageInfo
+     */
+    @Override
+    public PageInfo<UserBillResponse> fundMonitoring(FundsMonitorRequest request, PageParamRequest pageParamRequest) {
+        Page<UserBill> billPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+        Map<String, Object> map = new HashMap<>();
+        if (StrUtil.isNotBlank(request.getKeywords())) {
+            map.put("keywords", StrUtil.format("%{}%", request.getKeywords()));
+        }
+        //时间范围
+        if(StrUtil.isNotBlank(request.getDateLimit())){
+            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
+            map.put("startTime", dateLimit.getStartTime());
+            map.put("endTime", dateLimit.getEndTime());
+        }
+        List<UserBillResponse> userBillResponses = dao.fundMonitoring(map);
+        return CommonPage.copyPageInfo(billPage, userBillResponses);
+    }
+
+    /**
+     * 用户账单记录（现金）
+     * @param uid 用户uid
+     * @param type 记录类型：all-全部，expenditure-支出，income-收入
+     * @return
+     */
+    @Override
+    public PageInfo<UserBill> nowMoneyBillRecord(Integer uid, String type, PageParamRequest pageRequest) {
+        Page<UserBill> billPage = PageHelper.startPage(pageRequest.getPage(), pageRequest.getLimit());
+        LambdaQueryWrapper<UserBill> lqw = Wrappers.lambdaQuery();
+        lqw.eq(UserBill::getUid, uid);
+        lqw.eq(UserBill::getCategory, Constants.USER_BILL_CATEGORY_MONEY);
+        switch (type) {
+            case "all":
+                break;
+            case "expenditure":
+                lqw.eq(UserBill::getPm, 0);
+                break;
+            case "income":
+                lqw.eq(UserBill::getPm, 1);
+                break;
+        }
+        lqw.eq(UserBill::getStatus, 1);
+        lqw.orderByDesc(UserBill::getId);
+        List<UserBill> billList = dao.selectList(lqw);
+        return CommonPage.copyPageInfo(billPage, billList);
     }
 
     /////////////////////////////////////////////////////////////////////// 自定义方法

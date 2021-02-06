@@ -78,4 +78,17 @@ public class CommonPage<T> {
         BeanUtils.copyProperties(originPageInfo, pageInfo, "list");
         return pageInfo;
     }
+
+    /**
+     * 对象A复制对象B的分页信息 //TODO 多次数据查询导致分页数据异常解决办法
+     */
+    public static <T> PageInfo<T> copyPageInfo(PageInfo<?> originPageInfo, List<T> list) {
+        PageInfo<T> pageInfo = new PageInfo<>(list);
+        pageInfo.setPages(originPageInfo.getPages());
+        pageInfo.setPageNum(originPageInfo.getPageNum());
+        pageInfo.setPageSize(originPageInfo.getPageSize());
+        pageInfo.setTotal(originPageInfo.getTotal());
+        pageInfo.setList(list);
+        return pageInfo;
+    }
 }

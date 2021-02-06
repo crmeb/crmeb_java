@@ -8,11 +8,12 @@ import lombok.experimental.Accessors;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 
 /**
- * 用户领券
+ * 用户领取优惠券请求对象
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
@@ -26,12 +27,12 @@ import java.io.Serializable;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@ApiModel(value="UserCouponReceiveRequest对象", description="用户领券")
+@ApiModel(value="UserCouponReceiveRequest对象", description="用户领取优惠券请求对象")
 public class UserCouponReceiveRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 
     @ApiModelProperty(value = "优惠券id")
-    @Size(min = 1, message = "请选择优惠券")
-    private Integer[] couponId;
+    @NotNull(message = "优惠券编号不能为空")
+    private Integer couponId;
 }

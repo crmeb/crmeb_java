@@ -1,6 +1,7 @@
 package com.utils;
 
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.constants.Constants;
 import com.exception.CrmebException;
 import com.zbkj.crmeb.upload.vo.FileResultVo;
@@ -35,7 +36,8 @@ public class UploadUtil {
 
     //类型
 //    private static String imagePath = "/image";
-    private static String type = "/image";
+//    private static String type = "/image";
+    private static String type = "/crmebimage";
 
 
     //模块
@@ -260,10 +262,15 @@ public class UploadUtil {
         }
         // 文件名
         String fileName = multipartFile.getOriginalFilename();
+        System.out.println("fileName = " + fileName);
         // 文件后缀名
         String extName = FilenameUtils.getExtension(fileName);
         if (StringUtils.isEmpty(extName)) {
             throw new RuntimeException("文件类型未定义不能上传...");
+        }
+
+        if (fileName.length() > 99) {
+            fileName = StrUtil.subPre(fileName, 90).concat(".").concat(extName);
         }
 
         //文件大小验证

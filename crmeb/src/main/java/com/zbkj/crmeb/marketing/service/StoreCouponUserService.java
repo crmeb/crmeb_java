@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.marketing.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.front.request.UserCouponReceiveRequest;
@@ -70,4 +71,17 @@ public interface StoreCouponUserService extends IService<StoreCouponUser> {
      * 优惠券过期定时任务
      */
     void overdueTask();
+
+    /**
+     * 用户领取优惠券
+     */
+    Boolean receiveCoupon(UserCouponReceiveRequest request);
+
+    /**
+     * 支付成功赠送处理
+     * @param couponId 优惠券编号
+     * @param uid  用户uid
+     * @return
+     */
+    MyRecord paySuccessGiveAway(Integer couponId, Integer uid);
 }

@@ -175,4 +175,17 @@ public interface StoreProductService extends IService<StoreProduct> {
      * @param type 类型：add—添加，sub—扣减
      */
     Boolean operationStock(Integer id, Integer num, String type);
+
+    /**
+     * 下架
+     * @param id 商品id
+     */
+    Boolean offShelf(Integer id);
+
+    /**
+     * 上架
+     * @param id 商品id
+     * @return Boolean
+     */
+    Boolean putOnShelf(Integer id);
 }

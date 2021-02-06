@@ -106,4 +106,10 @@ public interface OnePassService {
      * @return OnePassLogisticsQueryVo
      */
     OnePassLogisticsQueryVo exprQuery(String expressNo, String com);
+
+    /**
+     * 修改手机号——验证账号密码
+     * @return Boolean
+     */
+    Boolean beforeUpdatePhoneValidator(OnePassLoginRequest request);
 }

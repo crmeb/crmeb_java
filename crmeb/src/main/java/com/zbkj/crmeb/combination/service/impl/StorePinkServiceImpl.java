@@ -7,8 +7,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
+import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.constants.Constants;
+import com.constants.UserConstants;
 import com.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -27,7 +29,10 @@ import com.zbkj.crmeb.front.request.OrderRefundApplyRequest;
 import com.zbkj.crmeb.front.service.OrderService;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.service.StoreOrderService;
+import com.zbkj.crmeb.user.model.User;
+import com.zbkj.crmeb.user.model.UserToken;
 import com.zbkj.crmeb.user.service.UserService;
+import com.zbkj.crmeb.user.service.UserTokenService;
 import com.zbkj.crmeb.wechat.service.TemplateMessageService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,6 +76,9 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
 
     @Autowired
     private TemplateMessageService templateMessageService;
+
+    @Autowired
+    private UserTokenService userTokenService;
 
 
     /**
@@ -207,26 +215,20 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
         for (StorePink headPink : headList) {
             // 查询团员
             List<StorePink> memberList = getListByCidAndKid(headPink.getCid(), headPink.getId());
-            if (CollUtil.isNotEmpty(memberList)) {
-                if (headPink.getPeople().equals(memberList.size() + 1)) {
-                    headPink.setStatus(2);
-                    memberList.forEach(i -> i.setStatus(2));
-                    pinkSuccessList.add(headPink);
-                    pinkSuccessList.addAll(memberList);
-                    continue;
-                }
-                // 计算虚拟比例，判断是否拼团成功
-                StoreCombination storeCombination = storeCombinationService.getById(headPink.getCid());
-                Integer virtual = storeCombination.getVirtualRation();// 虚拟成团比例
-                int a = (memberList.size() + 1) * 100;
-                int b = storeCombination.getPeople() * virtual;
-                if (a >= b) {// 可以虚拟成团
-                    headPink.setStatus(2).setIs_virtual(true);
-                    memberList.forEach(i -> i.setStatus(2).setIs_virtual(true));
-                    pinkSuccessList.add(headPink);
-                    pinkSuccessList.addAll(memberList);
-                    continue;
-                }
+            memberList.add(headPink);
+            if (headPink.getPeople().equals(memberList.size())) {
+                memberList.forEach(i -> i.setStatus(2));
+                pinkSuccessList.addAll(memberList);
+                continue;
+            }
+            // 计算虚拟比例，判断是否拼团成功
+            StoreCombination storeCombination = storeCombinationService.getById(headPink.getCid());
+            Integer virtual = storeCombination.getVirtualRation();// 虚拟成团比例
+            if (headPink.getPeople() <= memberList.size() + virtual) {
+                // 可以虚拟成团
+                memberList.forEach(i -> i.setStatus(2).setIs_virtual(true));
+                pinkSuccessList.addAll(memberList);
+                continue;
             }
             // 失败
             headPink.setStatus(3);
@@ -266,16 +268,59 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
             pinkSuccessList.forEach(i -> {
                 StoreOrder storeOrder = storeOrderService.getByOderId(i.getOrderId());
                 StoreCombination storeCombination = storeCombinationService.getById(i.getCid());
+                User tempUser = userService.getById(i.getUid());
                 // 发送微信模板消息
-                HashMap<String, String> map = new HashMap<>();
-                map.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "恭喜您拼团成功！我们将尽快为您发货。");
-                map.put("keyword1", storeOrder.getOrderId());
-                map.put("keyword2", storeCombination.getTitle());
-                map.put(Constants.WE_CHAT_TEMP_KEY_END, "感谢你的使用！");
-
-                templateMessageService.push(Constants.WE_CHAT_TEMP_KEY_COMBINATION_SUCCESS, map, storeOrder.getUid(), Constants.PAY_TYPE_WE_CHAT_FROM_PUBLIC);
+                MyRecord record = new MyRecord();
+                record.set("orderNo", storeOrder.getOrderId());
+                record.set("proName", storeCombination.getTitle());
+                pushMessageOrder(record, tempUser);
+//                map.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "恭喜您拼团成功！我们将尽快为您发货。");
+//                map.put("keyword1", storeOrder.getOrderId());
+//                map.put("keyword2", storeCombination.getTitle());
+//                map.put(Constants.WE_CHAT_TEMP_KEY_END, "感谢你的使用！");
+//
+//                templateMessageService.push(Constants.WE_CHAT_TEMP_KEY_COMBINATION_SUCCESS, map, storeOrder.getUid(), Constants.PAY_TYPE_WE_CHAT_FROM_PUBLIC);
             });
         }
+    }
+
+    /**
+     * 发送消息通知
+     * @param record 参数
+     * @param user 拼团用户
+     */
+    private void pushMessageOrder(MyRecord record, User user) {
+        if (user.getUserType().equals(UserConstants.USER_TYPE_H5)) {
+            return;
+        }
+        UserToken userToken;
+        HashMap<String, String> temMap = new HashMap<>();
+        // 公众号
+        if (user.getUserType().equals(UserConstants.USER_TYPE_WECHAT)) {
+            userToken = userTokenService.getTokenByUserId(user.getUid(), UserConstants.USER_TOKEN_TYPE_WECHAT);
+            if (ObjectUtil.isNull(userToken)) {
+                return ;
+            }
+            // 发送微信模板消息
+            temMap.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "恭喜您拼团成功！我们将尽快为您发货。");
+            temMap.put("keyword1", record.getStr("orderNo"));
+            temMap.put("keyword2", record.getStr("proName"));
+            temMap.put(Constants.WE_CHAT_TEMP_KEY_END, "感谢你的使用！");
+            templateMessageService.pushTemplateMessage(Constants.WE_CHAT_TEMP_KEY_COMBINATION_SUCCESS, temMap, userToken.getToken());
+            return;
+        }
+        // 小程序发送订阅消息
+        userToken = userTokenService.getTokenByUserId(user.getUid(), UserConstants.USER_TOKEN_TYPE_ROUTINE);
+        if (ObjectUtil.isNull(userToken)) {
+            return ;
+        }
+        // 组装数据
+        temMap.put("character_string1",  record.getStr("orderNo"));
+        temMap.put("thing2", record.getStr("proName"));
+        temMap.put("thing5", "恭喜您拼团成功！我们将尽快为您发货。");
+        templateMessageService.pushMiniTemplateMessage(Constants.WE_CHAT_PROGRAM_TEMP_KEY_COMBINATION_SUCCESS, temMap, userToken.getToken());
+
+
     }
 
     /**
@@ -297,6 +342,18 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
             i.setStopTime(timeMillis);
         });
         return updateBatchById(memberList);
+    }
+
+    /**
+     * 根据订单编号获取
+     * @param orderId
+     * @return
+     */
+    @Override
+    public StorePink getByOrderId(String orderId) {
+        LambdaQueryWrapper<StorePink> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StorePink::getOrderId, orderId);
+        return dao.selectOne(lqw);
     }
 
     private Integer getCountByKidAndCid(Integer cid, Integer kid) {

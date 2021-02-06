@@ -141,7 +141,7 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
     @Override
     public String prefixImage(String path) {
         //TODO 如果那些域名不需要加，则跳过
-        return path.replace("image/", getCdnUrl() + "/image/");
+        return path.replace("crmebimage/", getCdnUrl() + "/crmebimage/");
     }
 
     /**
