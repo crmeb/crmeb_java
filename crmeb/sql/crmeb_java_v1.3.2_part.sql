@@ -3,7 +3,7 @@
     适用于1.3.1版本升级1.3.2
     运行此脚本必须保证已经导入了1.3.1 的sql脚本
  */
-alter table eb_system_admin add integral varchar(15) DEFAULT NULL COMMENT '手机号码';
+alter table eb_system_admin add phone varchar(15) DEFAULT NULL COMMENT '手机号码';
 alter table eb_system_admin add is_sms tinyint(1) unsigned DEFAULT '0' COMMENT '是否接收短信';
 
 select * from `eb_system_attachment` s where s.`satt_dir` like 'image/%';
