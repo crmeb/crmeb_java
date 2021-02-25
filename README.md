@@ -41,6 +41,7 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
 
 账号密码：后台账号 demo  密码 crmeb.com
 
+购买商业版：[http://crmeb.com/web/index/java](http://crmeb.com/web/index/java)
 
 
 ## 主要特点
