@@ -389,12 +389,12 @@ public class OrderUtils {
                 // 积分兑换金额小于实际支付金额
                 if(deductionPrice.compareTo(payPrice) < 0){
                     payPrice = payPrice.subtract(deductionPrice);
-                    usedIntegral = currentUser.getIntegral().intValue();
+                    usedIntegral = currentUser.getIntegral();
                 }else{
                     deductionPrice = payPrice;
                     if(payPrice.compareTo(BigDecimal.ZERO) > 0){
-                        usedIntegral = payPrice.divide(BigDecimal.valueOf(Double.parseDouble(cor.getOther().get("integralRatio").toString()))).setScale(0, BigDecimal.ROUND_UP).intValue();
-                        surPlusIntegral = currentUser.getIntegral().intValue() - usedIntegral;
+                        usedIntegral = payPrice.divide(BigDecimal.valueOf(Double.parseDouble(cor.getOther().get("integralRatio").toString())), 0, BigDecimal.ROUND_UP).intValue();
+                        surPlusIntegral = currentUser.getIntegral() - usedIntegral;
                     }
                     payPrice = BigDecimal.ZERO;
                 }
