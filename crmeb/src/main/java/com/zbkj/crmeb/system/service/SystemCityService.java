@@ -29,8 +29,6 @@ public interface SystemCityService extends IService<SystemCity> {
 
     Object getListTree();
 
-    String getStringNameInId(String cityIdList);
-
     List<Integer> getCityIdList();
 
     SystemCity getCityByCityId(Integer cityId);

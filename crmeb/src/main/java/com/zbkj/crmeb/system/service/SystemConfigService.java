@@ -1,9 +1,9 @@
 package com.zbkj.crmeb.system.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.express.vo.ExpressSheetVo;
 import com.zbkj.crmeb.system.model.SystemConfig;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.zbkj.crmeb.system.request.SystemFormCheckRequest;
 
 import java.util.HashMap;
@@ -42,11 +42,6 @@ public interface SystemConfigService extends IService<SystemConfig> {
     HashMap<String, String> info(Integer formId);
 
     boolean checkName(String name);
-
-    /**
-     * 获取系统电子面单信息
-     */
-    ExpressSheetVo getExpressSheet();
 
     /**
      * 获取面单默认配置信息

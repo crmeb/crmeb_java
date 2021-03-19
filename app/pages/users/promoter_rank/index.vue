@@ -10,21 +10,21 @@
 						</view>
 					</view>
 					<view class="rank acea-row row-bottom row-around">
-						<view class="item" v-if="Two.uid">
+						<view class="item" v-show="Two.uid">
 							<view class="pictrue">
 								<image :src="Two.avatar"></image>
 							</view>
 							<view class="name line1">{{Two.nickname}}</view>
 							<view class="num">{{Two.spreadCount}}人</view>
 						</view>
-						<view class="item" v-if="One.uid">
+						<view class="item" v-show="One.uid">
 							<view class="pictrue">
 								<image :src="One.avatar"></image>
 							</view>
 							<view class="name line1">{{One.nickname}}</view>
 							<view class="num">{{One.spreadCount}}人</view>
 						</view>
-						<view class="item" v-if="Three.uid">
+						<view class="item" v-show="Three.uid">
 							<view class="pictrue">
 								<image :src="Three.avatar"></image>
 							</view>
@@ -48,7 +48,7 @@
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -93,17 +93,21 @@
 			};
 		},
 		computed: mapGetters(['isLogin']),
+		watch:{
+			isLogin:{
+				handler:function(newV,oldV){
+					if(newV){
+						this.getRanklist();
+					}
+				},
+				deep:true
+			}
+		},
 		onLoad() {
 			if (this.isLogin) {
 				this.getRanklist();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true)
-				// #endif
 			}
 		},
 		// onShow: function () {

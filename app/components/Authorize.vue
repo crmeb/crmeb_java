@@ -112,7 +112,7 @@
 					return;
 				}
 				getLogo().then(res=>{
-					that.logoUrl = res.data.logo_url
+					that.logoUrl = res.data.logoUrl
 					Cache.set(LOGO_URL,that.logoUrl);
 				})
 			},

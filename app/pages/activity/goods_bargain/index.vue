@@ -1,7 +1,9 @@
 <template>
 	<view>
 		<view class='bargain-list'>
+			<!-- #ifndef APP-PLUS -->
 			<view class='iconfont icon-xiangzuo' @tap='goBack' :style="'top:'+ (navH/2) +'rpx'" v-if="returnShow"></view>
+			<!-- #endif -->
 			<view class='header'></view>
 			<view class='list'>
 				<block v-for="(item,index) in bargainList" :key="index">
@@ -23,7 +25,7 @@
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -72,6 +74,17 @@
 			};
 		},
 		computed: mapGetters(['isLogin']),
+		watch:{
+		 isLogin:{
+			handler:function(newV,oldV){
+				if(newV){
+					this.getUserInfo();
+					this.getBargainList();
+				}
+			},
+			deep:true
+		 }
+		},
 		onLoad: function(options) {
 			var pages = getCurrentPages();
 			this.returnShow = pages.length===1?false:true;
@@ -83,13 +96,7 @@
 				this.getUserInfo();
 				this.getBargainList();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {

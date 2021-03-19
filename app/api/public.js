@@ -1,6 +1,9 @@
 import request from "@/utils/request.js";
 import wechat from "@/libs/wechat.js";
-
+import {
+	toLogin,
+	checkLogin
+} from '../libs/login';
 /**
  * 获取微信公众号js配置
  * @returns {*}
@@ -84,4 +87,25 @@ export function copyWords() {
  */
 export function kefuConfig() {
   return request.get("config", {}, { noAuth: true });
+}
+
+/**
+ * 微信（公众号，小程序）绑定手机号
+ * @param {Object} data
+ */
+export function getUserPhone(data){
+	return request.post('wechat/register/binding/phone',data,{noAuth : true});
+}
+
+/**
+ * 静默授权
+ * @param {Object} data
+ */
+export function silenceAuth(data) {
+	//#ifdef MP
+  return request.get("wechat/authorize/program/login", data, { noAuth : true });
+  //#endif
+  //#ifdef H5
+  return request.get("wechat/authorize/login", data, { noAuth : true });
+  //#endif
 }

@@ -85,14 +85,12 @@
           scanType: ["qrCode", "barCode"]
         })
           .then(res => {
-            console.log('openQRCode',res)
             if (res.resultStr) {
               that.verify_code = res.resultStr;
               that.storeCancellation();
             } else that.$dialog.error("没有扫描到什么！");
           })
           .catch(res => {
-            console.log('catch', res)
             if (res.is_ready) {
               res.wx.scanQRCode({
                 needResult: 1,

@@ -360,6 +360,13 @@
 					"style": {
 						"navigationBarTitleText": "商品评价"
 					}
+				},
+				{
+					"path": "wechat_login/index",
+					"style": {
+						"navigationBarTitleText": "账户登录",
+						"navigationStyle": "custom"
+					}
 				}
 		  ]
 	    },

@@ -3,7 +3,6 @@ package com.zbkj.crmeb.article.service.impl;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
@@ -27,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -126,6 +124,45 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
             if(articleVoArrayList.size() >= articleBannerLimit){
                 break;
             }
+        }
+
+        return CommonPage.copyPageInfo(articlePage, articleVoArrayList);
+    }
+
+    @Override
+    public PageInfo<ArticleVo> getAdminList(ArticleSearchRequest request, PageParamRequest pageParamRequest) {
+        Page<Article> articlePage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+
+        LambdaQueryWrapper<Article> lambdaQueryWrapper = Wrappers.lambdaQuery();
+
+        if(StringUtils.isNotBlank(request.getCid())){
+            lambdaQueryWrapper.eq(Article::getCid, request.getCid());
+        }
+
+        if(!StringUtils.isBlank(request.getKeywords())){
+            lambdaQueryWrapper.and(i -> i.or().like(Article::getTitle, request.getKeywords())
+                    .or().like(Article::getAuthor, request.getKeywords())
+                    .or().like(Article::getSynopsis, request.getKeywords())
+                    .or().like(Article::getShareTitle, request.getKeywords())
+                    .or().like(Article::getShareSynopsis, request.getKeywords()));
+        }
+
+        lambdaQueryWrapper.orderByDesc(Article::getSort).orderByDesc(Article::getVisit).orderByDesc(Article::getCreateTime);
+        List<Article> articleList = dao.selectList(lambdaQueryWrapper);
+
+        ArrayList<ArticleVo> articleVoArrayList = new ArrayList<>();
+        if(articleList.size() < 1){
+            return CommonPage.copyPageInfo(articlePage, articleVoArrayList);
+        }
+
+        for (Article article : articleList) {
+            ArticleVo articleVo = new ArticleVo();
+            BeanUtils.copyProperties(article, articleVo);
+            if(!StringUtils.isBlank(article.getImageInput()) ){
+                articleVo.setImageInput(CrmebUtil.jsonToListString(article.getImageInput()));
+                articleVo.setImageInputs(article.getImageInput());
+            }
+            articleVoArrayList.add(articleVo);
         }
 
         return CommonPage.copyPageInfo(articlePage, articleVoArrayList);

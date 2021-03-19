@@ -52,7 +52,7 @@
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -86,17 +86,21 @@
 			};
 		},
 		computed: mapGetters(['isLogin']),
+		watch: {
+			isLogin: {
+				handler: function(newV, oldV) {
+					if (newV) {
+						this.getUserInfo();
+					}
+				},
+				deep: true
+			}
+		},
 		onLoad() {
 			if (this.isLogin) {
 				this.getSpreadInfo();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true)
-				// #endif
 			}
 		},
 		methods: {
@@ -108,17 +112,20 @@
 				this.isShowAuth = e
 			},
 			openSubscribe: function(page) {
-				uni.showLoading({
-					title: '正在加载',
-				})
-				openExtrctSubscribe().then(res => {
-					uni.hideLoading();
-					uni.navigateTo({
-						url: page,
-					});
-				}).catch(() => {
-					uni.hideLoading();
+				uni.navigateTo({
+					url: page,
 				});
+				// uni.showLoading({
+				// 	title: '正在加载',
+				// })
+				// openExtrctSubscribe().then(res => {
+				// 	uni.hideLoading();
+				// 	uni.navigateTo({
+				// 		url: page,
+				// 	});
+				// }).catch(() => {
+				// 	uni.hideLoading();
+				// });
 			},
 			/**
 			 * 获取个人用户信息

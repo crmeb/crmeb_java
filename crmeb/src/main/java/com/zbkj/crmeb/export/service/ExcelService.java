@@ -22,7 +22,6 @@ import java.util.List;
  *  +----------------------------------------------------------------------
 */
 public interface ExcelService{
-//    List<ProductExcelVo> product(StoreProductSearchRequest request, HttpServletResponse response);
 
     String exportBargainProduct(StoreBargainSearchRequest request, HttpServletResponse response);
 

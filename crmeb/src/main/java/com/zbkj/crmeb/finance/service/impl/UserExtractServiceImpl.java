@@ -204,17 +204,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
         return getSum(null, 0, startTime, endTime);
     }
 
-    /**
-     * 获取待提现总金额
-     *
-     * @return 待提现总金额
-     */
-    @Override
-    public BigDecimal getWaiteForDrawn(String startTime,String endTime) {
-        return getSum(null,-1,startTime,endTime);
-    }
-
-    /**
+     /**
      * 提现申请
      * @author Mr.Zhang
      * @since 2020-06-08
@@ -258,37 +248,11 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
                 "暂无",request.getExtractType(),"暂无",request.getRealName()
         );
         wechatSendMessageForMinService.sendCashMessage(cash,userId);
-//        return save(userExtract);
         save(userExtract);
         // 扣除用户总金额
         return userService.upadteBrokeragePrice(user, toBeWithdrawn.subtract(request.getExtractPrice()));
     }
 
-
-//    /**
-//     * 可提现总金额
-//     * @author Mr.Zhang
-//     * @since 2020-06-08
-//     * @return Boolean
-//     */
-//    @Override
-//    public BigDecimal getToBeWihDraw(Integer userId) {
-//        //可提现佣金
-//        //返佣 +
-//        BigDecimal withDrawable = userBillService.getSumBigDecimal(1, userId, Constants.USER_BILL_CATEGORY_MONEY, Constants.SEARCH_DATE_LATELY_30, Constants.USER_BILL_TYPE_BROKERAGE);
-//
-//        //退款退的佣金 -
-//        BigDecimal refund = userBillService.getSumBigDecimal(0, userId, Constants.USER_BILL_CATEGORY_MONEY, Constants.SEARCH_DATE_LATELY_30, Constants.USER_BILL_TYPE_BROKERAGE);
-//
-//        BigDecimal subtract = withDrawable.subtract(refund);
-//        subtract = (subtract.compareTo(ZERO) < 1) ? ZERO : subtract;
-//
-//        //用户累计佣金
-//        BigDecimal brokeragePrice = userService.getById(userId).getBrokeragePrice();
-//
-//        //可提现佣金
-//        return brokeragePrice.subtract(subtract);
-//    }
 
     /**
      * 冻结的佣金
@@ -298,25 +262,6 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
      */
     @Override
     public BigDecimal getFreeze(Integer userId) {
-//        //冻结时间
-//        //查看是否在冻结期之内， 如果在是需要回滚的，如果不在则不需要回滚
-//        String time = systemConfigService.getValueByKey(Constants.CONFIG_KEY_STORE_BROKERAGE_EXTRACT_TIME);
-//
-//        String date = null;
-//        if(StringUtils.isNotBlank(time)){
-//            String startTime = DateUtil.nowDateTime(Constants.DATE_FORMAT);
-//            String endTime = DateUtil.addDay(DateUtil.nowDateTime(), Integer.parseInt(time), Constants.DATE_FORMAT);
-//            date = startTime + "," + endTime;
-//        }
-//
-//        //在此期间获得的佣金
-//        BigDecimal getSum = userBillService.getSumBigDecimal(1, userId, Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE, null, date);
-//
-//        //在此期间消耗的佣金
-//        BigDecimal subSum = userBillService.getSumBigDecimal(0, userId, Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE, null, date);
-//
-//        //冻结的佣金
-//        return getSum.subtract(subSum);
         String time = systemConfigService.getValueByKey(Constants.CONFIG_KEY_STORE_BROKERAGE_EXTRACT_TIME);
         if (StrUtil.isBlank(time)) {
             return BigDecimal.ZERO;
@@ -465,7 +410,6 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
      */
     @Override
     public PageInfo<UserExtractRecordResponse> getExtractRecord(Integer userId, PageParamRequest pageParamRequest){
-//        PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         Page<UserExtract> userExtractPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         QueryWrapper<UserExtract> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("uid", userId);

@@ -6,7 +6,6 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.common.MyRecord;
 import com.constants.BrokerageRecordConstants;
 import com.constants.Constants;
 import com.constants.SmsConstants;
@@ -18,7 +17,6 @@ import com.zbkj.crmeb.bargain.service.StoreBargainService;
 import com.zbkj.crmeb.combination.model.StorePink;
 import com.zbkj.crmeb.combination.service.StoreCombinationService;
 import com.zbkj.crmeb.combination.service.StorePinkService;
-import com.zbkj.crmeb.marketing.service.StoreCouponUserService;
 import com.zbkj.crmeb.payment.service.OrderPayService;
 import com.zbkj.crmeb.seckill.service.StoreSeckillService;
 import com.zbkj.crmeb.sms.service.SmsService;
@@ -40,7 +38,6 @@ import com.zbkj.crmeb.user.service.UserBrokerageRecordService;
 import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.user.service.UserTokenService;
 import com.zbkj.crmeb.wechat.service.TemplateMessageService;
-import com.zbkj.crmeb.wechat.vo.WechatSendMessageForPaySuccess;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,9 +84,6 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
     private UserService userService;
 
     @Autowired
-    private StoreCouponUserService couponUserService;
-
-    @Autowired
     private SystemConfigService systemConfigService;
 
     @Autowired
@@ -106,9 +100,6 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
 
     @Autowired
     private UserBillService userBillService;
-
-    @Autowired
-    private StoreProductAttrValueService storeProductAttrValueService;
 
     @Autowired
     private TransactionTemplate transactionTemplate;
@@ -181,30 +172,6 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
          * */
         try{
             storeOrderStatusService.createLog(storeOrder.getId(), "check_order_over", "用户评价");
-            return true;
-        }catch (Exception e){
-            return false;
-        }
-    }
-
-    /**
-     * 用户已收货
-     * @author Mr.Zhang
-     * @since 2020-07-09
-     */
-    @Override
-    public Boolean takeByUser(StoreOrder storeOrder) {
-        /*
-         * 1、写订单日志
-         * 2、获得佣金
-         * */
-        try{
-            //日志
-            storeOrderStatusService.createLog(storeOrder.getId(), "user_take_delivery", Constants.ORDER_STATUS_STR_TAKE);
-
-            //获得佣金
-            setBrokeragePrice(storeOrder, 1);
-
             return true;
         }catch (Exception e){
             return false;
@@ -548,7 +515,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
                     stockRequest.setNum(orderInfoVo.getInfo().getCartNum());
                     storeBargainService.stockAddRedis(stockRequest);
                 }
-            } if (ObjectUtil.isNotNull(storeOrder.getCombinationId()) && storeOrder.getCombinationId() > 0) { // 拼团商品回滚销量库存
+            } else if (ObjectUtil.isNotNull(storeOrder.getCombinationId()) && storeOrder.getCombinationId() > 0) { // 拼团商品回滚销量库存
                 for (StoreOrderInfoVo orderInfoVo : orderInfoVoList) {
                     StoreProductStockRequest stockRequest = new StoreProductStockRequest();
                     stockRequest.setCombinationId(orderInfoVo.getInfo().getCombinationId());
@@ -608,15 +575,6 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
     }
 
     /**
-     * 回滚优惠券
-     * @param storeOrder 订单信息
-     */
-    private void rollbackCoupon(StoreOrder storeOrder){
-        //回滚用户已使用的优惠券
-        couponUserService.rollbackByCancelOrder(storeOrder);
-    }
-
-    /**
      * 订单退款处理
      * 退款得时候根据userBill 来进行回滚
      */
@@ -656,7 +614,8 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             userBill.setTitle(Constants.ORDER_STATUS_STR_REFUNDED);
             userBill.setPm(0);
             userBill.setType(Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
-            userBill.setBalance(new BigDecimal(user.getExperience()));
+            userBill.setNumber(bill.getNumber());
+            userBill.setBalance(new BigDecimal(user.getExperience()).setScale(2));
             userBill.setMark(StrUtil.format("订单退款，扣除{}赠送经验", bill.getNumber().intValue()));
             userBill.setStatus(1);
             userBillList.add(userBill);
@@ -669,22 +628,24 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             BeanUtils.copyProperties(bill, userBill);
             if (bill.getPm() == 0) {// 返还用户使用的积分
                 user.setIntegral(user.getIntegral() + bill.getNumber().intValue());
+                userBill.setNumber(bill.getNumber());
                 userBill.setId(null);
                 userBill.setTitle(Constants.ORDER_STATUS_STR_REFUNDED);
                 userBill.setPm(1);
                 userBill.setType(Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
-                userBill.setBalance(new BigDecimal(user.getIntegral()));
+                userBill.setBalance(new BigDecimal(user.getIntegral()).setScale(2));
                 userBill.setMark(StrUtil.format("订单退款，返还{}支付扣除积分", bill.getNumber().intValue()));
                 userBill.setStatus(1);
                 userBillList.add(userBill);
             }
             if (bill.getPm() == 1) {// 回滚之前获得的积分
                 user.setIntegral(user.getIntegral() - bill.getNumber().intValue());
+                userBill.setNumber(bill.getNumber());
                 userBill.setId(null);
                 userBill.setTitle(Constants.ORDER_STATUS_STR_REFUNDED);
                 userBill.setPm(0);
                 userBill.setType(Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
-                userBill.setBalance(new BigDecimal(user.getIntegral()));
+                userBill.setBalance(new BigDecimal(user.getIntegral()).setScale(2));
                 userBill.setMark(StrUtil.format("订单退款，扣除{}订单赠送积分", bill.getNumber().intValue()));
                 userBill.setStatus(1);
                 userBillList.add(userBill);
@@ -708,6 +669,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             });
         }
 
+        System.out.println("退款task userBillList = " + userBillList);
         Boolean execute = transactionTemplate.execute(e -> {
             //写订单日志
             storeOrderStatusService.saveRefund(storeOrder.getId(), storeOrder.getRefundPrice(), "成功");
@@ -722,7 +684,6 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             if (CollUtil.isNotEmpty(brokerageRecordList)) {
                 userBrokerageRecordService.updateBatchById(brokerageRecordList);
             }
-//            rollbackBrokeragePrice(storeOrder);
 
             // 回滚库存
             rollbackStock(storeOrder);
@@ -738,10 +699,6 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             }
             return Boolean.TRUE;
         });
-
-        if (execute) {
-            // 发送通知
-        }
 
         return execute;
     }
@@ -791,30 +748,6 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
         if (execute) {
             // 回滚库存
             rollbackStock(storeOrder);
-            /*// 查找出商品详情
-            List<StoreOrderInfoVo> orderInfoVoList = storeOrderInfoService.getOrderListByOrderId(storeOrder.getId());
-            if(null == orderInfoVoList || orderInfoVoList.size() < 1){
-                logger.error("自动取消未付款订单式，未找到对应的订单商品详情,orderNo===" + storeOrder.getOrderId());
-                return true;
-            }
-            if (storeOrder.getSeckillId() > 0) {// 秒杀回滚
-                StoreOrderInfoVo storeOrderInfoVo = orderInfoVoList.get(0);
-                // 秒杀商品回滚库存
-                storeSeckillService.operationStock(storeOrderInfoVo.getInfo().getSeckillId(), storeOrderInfoVo.getInfo().getCartNum(), "add");
-                // 秒杀商品规格回滚库存
-                storeProductAttrValueService.operationStock(Integer.valueOf(storeOrderInfoVo.getInfo().getProductAttrUnique()), storeOrderInfoVo.getInfo().getCartNum(), "add", Constants.PRODUCT_TYPE_SECKILL);
-                // 普通商品回滚库存
-                storeProductService.operationStock(storeOrderInfoVo.getProductId(), storeOrderInfoVo.getInfo().getCartNum(), "add");
-                // 普通商品规格回滚库存
-                storeProductAttrValueService.operationStock(skuRecord.getInt("attrValueId"), storeOrderInfoVo.getInfo().getCartNum(), "add", Constants.PRODUCT_TYPE_NORMAL);
-            }
-            if (storeOrder.getBargainId() > 0) {// 砍价回滚
-
-            }
-            if (storeOrder.getCombinationId() > 0) {// 拼团回滚
-
-            }
-            // 普通回滚*/
         }
         return execute;
     }
@@ -930,131 +863,4 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
         temMap.put("thing5", "您购买的商品已确认收货！");
         templateMessageService.pushMiniTemplateMessage(Constants.WE_CHAT_PROGRAM_TEMP_KEY_ORDER_RECEIVING, temMap, userToken.getToken());
     }
-
-    /**
-     * 分配佣金
-     * @param storeOrder
-     * @return
-     */
-    private List<MyRecord> assignCommission(StoreOrder storeOrder) {
-        // 检测商城是否开启分销功能
-        String isOpen = systemConfigService.getValueByKey(Constants.CONFIG_KEY_STORE_BROKERAGE_IS_OPEN);
-        if(StrUtil.isBlank(isOpen) || isOpen.equals("0")){
-            return CollUtil.newArrayList();
-        }
-        // 营销产品不参与
-        if(storeOrder.getCombinationId() > 0 || storeOrder.getSeckillId() > 0 || storeOrder.getBargainId() > 0){
-            return CollUtil.newArrayList();
-        }
-        // 查找订单所属人信息
-        User user = userService.getById(storeOrder.getUid());
-        // 当前用户不存在 没有上级 或者 当用用户上级时自己  直接返回
-        if(null == user.getSpreadUid() || user.getSpreadUid() < 1 || user.getSpreadUid().equals(storeOrder.getUid())){
-            return CollUtil.newArrayList();
-        }
-        // 获取参与分佣的人（两级）
-        List<MyRecord> spreadRecordList = getSpreadRecordList(user.getSpreadUid());
-        if (CollUtil.isEmpty(spreadRecordList)) {
-            return CollUtil.newArrayList();
-        }
-        spreadRecordList.forEach(record -> {
-            BigDecimal brokerage = calculateCommission(record, storeOrder.getId());
-            record.set("brokerage", brokerage);
-        });
-        return spreadRecordList;
-    }
-
-    /**
-     * 计算佣金
-     * @param record index-分销级数，spreadUid-分销人
-     * @param orderId 订单id
-     * @return
-     */
-    private BigDecimal calculateCommission(MyRecord record, Integer orderId) {
-        BigDecimal brokeragePrice = BigDecimal.ZERO;
-        //先看商品是否有固定分佣
-        List<StoreOrderInfoVo> orderInfoVoList = storeOrderInfoService.getOrderListByOrderId(orderId);
-        if(null == orderInfoVoList  || orderInfoVoList.size() < 1){
-            return brokeragePrice;
-        }
-
-        //查询对应等级的分销比例
-        Integer index = record.getInt("index");
-        String key = "";
-        if (index == 1) {
-            key = Constants.CONFIG_KEY_STORE_BROKERAGE_RATE_ONE;
-        }
-        if (index == 2) {
-            key = Constants.CONFIG_KEY_STORE_BROKERAGE_RATE_TWO;
-        }
-        String rate = systemConfigService.getValueByKey(key);
-        if(StringUtils.isBlank(rate)){
-            rate = "1";
-        }
-        //佣金比例整数存储， 例如80， 所以计算的时候要除以 10*10
-        BigDecimal rateBigDecimal = brokeragePrice;
-        if(StringUtils.isNotBlank(rate)){
-            rateBigDecimal = new BigDecimal(rate).divide(BigDecimal.TEN.multiply(BigDecimal.TEN));
-        }
-
-        BigDecimal totalBrokerPrice = BigDecimal.ZERO;
-        for (StoreOrderInfoVo orderInfoVo : orderInfoVoList) {
-            if(index == 1){
-                brokeragePrice = orderInfoVo.getInfo().getProductInfo().getAttrInfo().getBrokerage();
-            }
-            if(index == 2){
-                brokeragePrice = orderInfoVo.getInfo().getProductInfo().getAttrInfo().getBrokerageTwo();
-            }
-
-            if(brokeragePrice.compareTo(BigDecimal.ZERO) == 0 && !rateBigDecimal.equals(BigDecimal.ZERO)){
-                // 商品没有分销金额, 并且有设置对应等级的分佣比例
-                // 舍入模式向零舍入。
-                brokeragePrice = orderInfoVo.getInfo().getTruePrice().multiply(rateBigDecimal).setScale(2, BigDecimal.ROUND_DOWN);
-            }
-
-            totalBrokerPrice = totalBrokerPrice.add(brokeragePrice);
-        }
-        return totalBrokerPrice;
-
-
-    }
-
-    /**
-     * 获取参与奋勇人员（两级）
-     * @param spreadUid 一级奋分佣人Uid
-     * @return
-     */
-    private List<MyRecord> getSpreadRecordList(Integer spreadUid) {
-        List<MyRecord> recordList = CollUtil.newArrayList();
-
-        // 第一级
-        User spreadUser = userService.getById(spreadUid);
-        if (ObjectUtil.isNull(spreadUser)) {
-            return recordList;
-        }
-        // 判断分销模式
-        String model = systemConfigService.getValueByKey(Constants.CONFIG_KEY_STORE_BROKERAGE_MODEL);
-        if (StrUtil.isNotBlank(model) && model.equals("1") && !spreadUser.getIsPromoter()) {
-            // 指定分销模式下：不是推广员不参与分销
-            return recordList;
-        }
-        MyRecord firstRecord = new MyRecord();
-        firstRecord.set("index", 1);
-        firstRecord.set("spreadUid", spreadUid);
-
-        // 第二级
-        User spreadSpreadUser = userService.getById(spreadUser.getSpreadUid());
-        if (ObjectUtil.isNull(spreadSpreadUser)) {
-            return recordList;
-        }
-        if (StrUtil.isNotBlank(model) && model.equals("1") && !spreadSpreadUser.getIsPromoter()) {
-            // 指定分销模式下：不是推广员不参与分销
-            return recordList;
-        }
-        MyRecord secondRecord = new MyRecord();
-        secondRecord.set("index", 2);
-        secondRecord.set("spreadUid", spreadSpreadUser.getUid());
-        return recordList;
-    }
-
 }

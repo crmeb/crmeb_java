@@ -22,7 +22,5 @@ public interface UserTagService extends IService<UserTag> {
 
     List<UserTag> getList(PageParamRequest pageParamRequest);
 
-    String clean(String tagIdValue);
-
     String getGroupNameInId(String tagIdValue);
 }

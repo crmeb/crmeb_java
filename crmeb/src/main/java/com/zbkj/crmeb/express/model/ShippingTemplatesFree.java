@@ -48,7 +48,7 @@ public class ShippingTemplatesFree implements Serializable {
     private String title;
 
     @ApiModelProperty(value = "包邮件数")
-    private Integer number;
+    private BigDecimal number;
 
     @ApiModelProperty(value = "包邮金额")
     private BigDecimal price;

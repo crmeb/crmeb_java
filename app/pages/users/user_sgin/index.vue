@@ -21,7 +21,8 @@
 			<view class='wrapper'>
 				<view class='list acea-row row-between-wrapper'>
 					<view class='item' v-for="(item,index) in signSystemList" :key="index">
-						<view :class='(index+1) == signSystemList.length ? "rewardTxt" : ""'>{{item.title}}</view>
+						<view :class="(index + 1 === signSystemList.length ? 'reward' : '') + ' ' +(sign_index >= index + 1 ? 'rewardTxt' : '')">{{item.title}}</view>
+						<!-- <view :class='(index+1) == signSystemList.length ? "rewardTxt" : ""'>{{item.title}}</view> -->
 						<view class='venus' :class="(index + 1 === signSystemList.length ? 'reward' : '') + ' ' +(sign_index >= index + 1 ? 'venusSelect' : '')"></view>
 						<view class='num' :class='item.is_sgin ? "on" : ""'>+{{item.integral}}</view>
 					</view>
@@ -64,7 +65,7 @@
 			<view class='mask' @touchmove.stop.prevent="false" :hidden='active==false'></view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 	</view>
 </template>
@@ -109,19 +110,25 @@
 			};
 		},
 		computed: mapGetters(['isLogin']),
+		watch:{
+			isLogin:{
+				handler:function(newV,oldV){
+					if(newV){
+						this.getUserInfo();
+						this.getSignSysteam();
+						this.getSignList();
+					}
+				},
+				deep:true
+			}
+		},
 		onLoad() {
 			if (this.isLogin) {
 				this.getUserInfo();
 				this.getSignSysteam();
 				this.getSignList();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true)
-				// #endif
 			}
 		},
 		methods: {

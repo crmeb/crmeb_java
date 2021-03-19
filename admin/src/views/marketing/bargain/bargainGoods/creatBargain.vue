@@ -204,7 +204,6 @@
                         :max="row.stock"
                         :step="1" step-strictly
                         class="priceBox"
-                        @change="inpChange(row[iii], row.id)"
                       />
                       <span v-else v-text="row[iii]" class="priceBox" />
                     </template>
@@ -451,18 +450,6 @@
         row.checked = true;
         this.multipleSelection = [row];
       },
-      inpChange(currentValue, id){
-        // this.ManyAttrValue.map(item => {
-        //    if(!currentValue && item.id ===id){
-        //      item.quota = 1
-        //      this.$set(item, 'quota', 1)
-        //      this.ManyAttrValue = Object.assign([], this.ManyAttrValue)
-        //    }
-        // })
-
-        console.log(this.ManyAttrValue)
-        // if(!currentValue) item.quota = 1
-      },
       watCh(val) {
         const tmp = {}
         const tmpTab = {}
@@ -508,7 +495,6 @@
         this.$modalGoodList(function(row) {
           _this.formValidate.image = row.image
           _this.productId = row.id
-          // _this.formValidate.productId = row.id
         })
       },
       handleSubmitNest1() {
@@ -516,8 +502,8 @@
           this.$message.warning("请选择商品！");
           return;
         } else {
-          this.currentTab++;
-          if (!this.$route.params.id) this.getProdect(this.productId);
+         this.currentTab++;
+         if (!this.$route.params.id) this.getProdect(this.productId);
         }
       },
       // 商品分类；
@@ -664,6 +650,9 @@
               if(!this.radio.price) return this.$message.warning("请填写砍价起始金额！");
               if(!this.radio.minPrice && this.radio.minPrice!=0) return this.$message.warning("请填写砍价最低价！");
               if(!this.radio.quota) return this.$message.warning("请填写限量！");
+              // 砍价起始金额 >= 砍价人数*0.01 + 砍价最低价
+              let nums = this.formValidate.peopleNum * 0.01 + this.radio.minPrice
+              if(this.radio.price < nums) return this.$message.warning(`砍价起始金额不能小于${nums}！`);
             }
             this.currentTab++;
           } else {

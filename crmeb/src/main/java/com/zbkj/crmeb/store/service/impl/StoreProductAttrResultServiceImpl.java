@@ -1,12 +1,10 @@
 package com.zbkj.crmeb.store.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageHelper;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.crmeb.store.dao.StoreProductAttrResultDao;
 import com.zbkj.crmeb.store.model.StoreProductAttrResult;
 import com.zbkj.crmeb.store.request.StoreProductAttrResultSearchRequest;
@@ -69,18 +67,6 @@ public class StoreProductAttrResultServiceImpl extends ServiceImpl<StoreProductA
         }else{
             return null;
         }
-    }
-
-    @Override
-    public Integer updateByProductId(StoreProductAttrResult storeProductAttrResult) {
-        LambdaUpdateWrapper<StoreProductAttrResult> uw = Wrappers.lambdaUpdate();
-        uw.eq(StoreProductAttrResult::getProductId, storeProductAttrResult.getProductId());
-        uw.set(StoreProductAttrResult::getResult, storeProductAttrResult.getResult());
-        uw.set(StoreProductAttrResult::getChangeTime, storeProductAttrResult.getChangeTime());
-        if(null != storeProductAttrResult.getType()){
-            uw.set(StoreProductAttrResult::getType, storeProductAttrResult.getType());
-        }
-        return dao.update(storeProductAttrResult, uw);
     }
 
     @Override

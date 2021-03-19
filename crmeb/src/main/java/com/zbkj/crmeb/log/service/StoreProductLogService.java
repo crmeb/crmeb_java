@@ -17,8 +17,6 @@ import com.zbkj.crmeb.log.model.StoreProductLog;
  */
 public interface StoreProductLogService extends IService<StoreProductLog> {
 
-//    List<StoreProductLog> getList(StoreProductLogSearchRequest request, PageParamRequest pageParamRequest);
-
     Integer getCountByTimeAndType(String time, String type);
 
     void addLogTask();
