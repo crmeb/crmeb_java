@@ -98,7 +98,9 @@
 					that.$set(that,'reply',that.reply);
 					that.loading = false;
 					that.loadend = loadend;
-					that.loadTitle = loadend ? "😕人家是有底线的~~" : "加载更多";
+					if(that.reply.length){
+						that.loadTitle = loadend ? "😕人家是有底线的~~" : "加载更多";
+					}
 					that.page = that.page + 1;
 				}).catch(err => {
 					that.loading = false,

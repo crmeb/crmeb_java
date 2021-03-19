@@ -198,7 +198,7 @@
 		<view class="mask"  v-if="posters" @click="closePosters"></view>
 		<view class="mask"  v-if="canvasStatus"  @click="listenerActionClose"></view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<!-- 海报展示 -->
 		<view class='poster-pop' v-if="canvasStatus">
@@ -356,10 +356,29 @@
 				qrcodeSize: 600,
 				canvasStatus: false,//是否显示海报
 				imagePath:'',//海报路径
-				imgTop:''
+				imgTop:'',
+				errT: ''
 			};
 		},
 		computed: mapGetters(['isLogin', 'uid', 'chatUrl']),
+		watch: {
+			isLogin: {
+				handler: function(newV, oldV) {
+					if (newV == true) {
+						this.getCouponList();
+						this.getCartCount();
+						this.downloadFilePromotionCode();
+					}
+				},
+				deep: true
+			},
+			storeInfo: {
+				handler: function() {
+					this.$nextTick(() => {});
+				},
+				immediate: true
+			}
+		},
 		onLoad(options) {
 			// this.getChat(this.uid || '');
 			let that = this
@@ -885,13 +904,7 @@
 			setCollect: function() {
 				let that = this;
 				if (this.isLogin === false) {
-					// #ifdef H5 || APP-PLUS
 					toLogin();
-					// #endif 
-					// #ifdef MP
-					this.isAuto = true;
-					this.$set(this, 'isShowAuth', true)
-					// #endif
 				} else {
 					if (this.storeInfo.userCollect) {
 						collectDel(this.storeInfo.id).then(res => {
@@ -917,13 +930,7 @@
 			couponTap: function() {
 				let that = this;
 				if (that.isLogin === false) {
-					// #ifdef H5 || APP-PLUS
 					toLogin();
-					// #endif
-					// #ifdef MP
-					that.$set(that, 'isAuto', true);
-					that.$set(that, 'isShowAuth', true);
-					// #endif
 				} else {
 					that.getCouponList();
 					that.$set(that.coupon, 'coupon', true);
@@ -940,13 +947,7 @@
 			joinCart: function(e) {
 				//是否登录
 				if (this.isLogin === false) {
-					// #ifdef H5 || APP-PLUS
 					toLogin();
-					// #endif
-					// #ifdef MP
-					this.$set(this, 'isAuto', true);
-					this.$set(this, 'isShowAuth', true)
-					// #endif
 				} else {
 					this.goCat();
 				}
@@ -1035,13 +1036,7 @@
 			 */
 			goBuy: function(e) {
 				if (this.isLogin === false) {
-					// #ifdef H5 || APP-PLUS
 					toLogin();
-					// #endif
-					// #ifdef MP
-					this.$set(this, 'isAuto', true);
-					this.$set(this, 'isShowAuth', true);
-					// #endif
 				} else {
 					this.goCat(true);
 				}
@@ -1056,13 +1051,7 @@
 			 */
 			listenerActionSheet: function() {
 				if (this.isLogin === false) {
-					// #ifdef H5 || APP-PLUS
 					toLogin();
-					// #endif
-					// #ifdef MP
-					this.$set(this, 'isAuto', true);
-					this.$set(this, 'isShowAuth', true);
-					// #endif
 				} else {
 					// #ifdef H5
 					if (this.$wechat.isWeixin() === true) {
@@ -1120,14 +1109,12 @@
 					path: 'pages/goods_details/index'
 				}
 				getQrcode(data).then(res=>{
-					//that.PromotionCode = res.data.code;
 					base64src(res.data.code, res => {
 						that.PromotionCode = res;
 					});
+					
 				}).catch(err => {
-					that.$util.Tips({
-						title: err
-					});
+					that.errT = err;
 				});
 			},
 			// 生成二维码；
@@ -1191,9 +1178,20 @@
 			 */
 			goPoster: function() {
 				let that = this;
+				uni.showLoading({
+					title: '海报生成中',
+					mask: true
+				});
 				that.posters = false;
 				let arrImagesUrl = '';
 				let arrImagesUrlTop = '';
+				if(!that.PromotionCode){
+					uni.hideLoading();
+					that.$util.Tips({
+						title: that.errT
+					});
+					return 
+				} 
 				uni.downloadFile({
 					url: that.imgTop, //仅为示例，并非真实的资源
 					success: (res) => {
@@ -1205,8 +1203,9 @@
 							that.$util.PosterCanvas(arrImages, storeName, price, that.storeInfo.otPrice,function(tempFilePath) {
 								that.imagePath = tempFilePath;
 								that.canvasStatus = true;
+								uni.hideLoading();
 							});	
-						}, 200);
+						}, 500);
 					}
 				});
 			},

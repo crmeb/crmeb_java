@@ -14,7 +14,7 @@
 						<!-- #ifdef H5 -->
 						<a class="store-phone" :href="'tel:' + item.phone"><span class="iconfont icon-dadianhua01"></span></a>
 						<!-- #endif -->
-						<!-- #ifdef MP -->
+						<!-- #ifdef MP || APP-PLUS -->
 						<view class="store-phone" @click="call(item.phone)"><text class="iconfont icon-dadianhua01"></text></view>
 						<!-- #endif -->
 					</div>

@@ -3,7 +3,6 @@ import { checkLogin } from './login';
 import { login } from '../api/public';
 import Cache from '../utils/cache';
 import { STATE_R_KEY, USER_INFO, EXPIRES_TIME, LOGIN_STATUS} from './../config/cache';
-
 class Routine 
 {
 	
@@ -65,9 +64,6 @@ class Routine
 	async getCode(){
 		let provider = await this.getProvider();
 		return new Promise((resolve,reject)=>{
-			if(Cache.has(STATE_R_KEY)){
-				return resolve(Cache.get(STATE_R_KEY));
-			}
 			uni.login({
 				provider:provider,
 				success(res) {
@@ -122,14 +118,18 @@ class Routine
 	
 	authUserInfo(code,data)
 	{
+		console.log('code:',code);
+		console.log('data:',data);
 		return new Promise((resolve, reject)=>{
 			login(code,data).then(res=>{
-				// let time = res.data.expiresTime - Cache.time();
-				store.commit('UPDATE_USERINFO', res.data.user);
-				store.commit('LOGIN', {token:res.data.token});
-				store.commit('SETUID', res.data.user.uid);
-				// Cache.set(EXPIRES_TIME,res.data.expiresTime,time);
-				Cache.set(USER_INFO,res.data.user);
+				if(res.data.type==='login'){
+					// let time = res.data.expiresTime - Cache.time();
+					store.commit('UPDATE_USERINFO', res.data.user);
+					store.commit('LOGIN', {token:res.data.token});
+					store.commit('SETUID', res.data.user.uid);
+					// Cache.set(EXPIRES_TIME,res.data.expiresTime,time);
+					Cache.set(USER_INFO,res.data.user);
+				}
 				return resolve(res);
 			}).catch(res=>{
 				return reject(res);

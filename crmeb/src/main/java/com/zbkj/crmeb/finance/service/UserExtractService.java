@@ -50,15 +50,7 @@ public interface UserExtractService extends IService<UserExtract> {
      */
     BigDecimal getWithdrawning(String startTime, String endTime);
 
-    /**
-     * 获取待提现总金额
-     * @return 待提现总金额
-     */
-    BigDecimal getWaiteForDrawn(String startTime,String endTime);
-
     Boolean create(UserExtractRequest request, Integer userId);
-
-//    BigDecimal getToBeWihDraw(Integer userId);
 
     BigDecimal getFreeze(Integer userId);
 

@@ -23,10 +23,6 @@ public interface StoreProductAttrService extends IService<StoreProductAttr> {
 
     List<StoreProductAttr> getList(StoreProductAttrSearchRequest request, PageParamRequest pageParamRequest);
 
-    Boolean batchSave(List<StoreProductAttr> storeProductAttrs);
-
-    Boolean batchUpdate(List<StoreProductAttr> storeProductAttrs);
-
     /**
      * 根据基本属性查询商品属性详情
      * @param storeProductAttr 商品属性

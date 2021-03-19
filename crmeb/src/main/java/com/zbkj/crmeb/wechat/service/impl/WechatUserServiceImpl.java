@@ -57,8 +57,6 @@ public class WechatUserServiceImpl implements WechatUserService {
             throw new CrmebException("你选择的文章不存在！");
         }
 
-
-
 //        {
 //            "touser":"od9iXwsAl3c0e3POY39awOq0nnJ4",
 //            "msgtype":"news",

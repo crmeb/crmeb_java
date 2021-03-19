@@ -113,13 +113,8 @@ public class IndexServiceImpl implements IndexService {
         indexInfoResponse.setBanner(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_BANNER)); //首页banner滚动图
         indexInfoResponse.setMenus(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_MENU)); //导航模块
         indexInfoResponse.setRoll(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_NEWS_BANNER)); //首页滚动新闻
-        indexInfoResponse.setActivity(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_ACTIVITY_BANNER)); //首页活动区域图片
-        indexInfoResponse.setInfo(null); //活动
-        indexInfoResponse.setActivity(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_ACTIVITY_BANNER)); //首页活动区域图片
 
-        //首页配置
-        HashMap<String, String> info = systemConfigService.info(Constants.CONFIG_FORM_ID_INDEX);
-        IndexInfoItemResponse indexInfoItemResponse = CrmebUtil.mapStringToObj(info, IndexInfoItemResponse.class);
+        IndexInfoItemResponse indexInfoItemResponse = new IndexInfoItemResponse();
 
 
         int limit = Constants.INDEX_LIMIT_DEFAULT;
@@ -129,16 +124,11 @@ public class IndexServiceImpl implements IndexService {
         PageParamRequest pageParamRequest = new PageParamRequest();
         pageParamRequest.setLimit(limit);
 
-        if(!StringUtils.isBlank(indexInfoItemResponse.getBastNumber())){
-            pageParamRequest.setLimit(Integer.parseInt(indexInfoItemResponse.getBastNumber()));
-        }
         indexInfoItemResponse.setBastList(productService.getIndexProduct(request, pageParamRequest).getList()); //精品推荐个数
 
         request.setIsBest(false);
         request.setIsNew(true);
-        if(!StringUtils.isBlank(indexInfoItemResponse.getFirstNumber())){
-            pageParamRequest.setLimit(Integer.parseInt(indexInfoItemResponse.getFirstNumber()));
-        }
+
         indexInfoItemResponse.setFirstList(productService.getIndexProduct(request, pageParamRequest).getList()); //首发新品个数
 
         //首页展示的二级分类  排序默认降序

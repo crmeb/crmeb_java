@@ -35,24 +35,32 @@
               />
             </template>
           </el-table-column>
-          <el-table-column min-width="130px" align="center" :label="columns.title">
-            <template slot-scope="{row}">
-              <el-input-number v-model="row.first" controls-position="right" :min="1" />
+          <el-table-column min-width="130px" align="center" :label="columns.title" prop="first">
+            <template scope="scope">
+              <el-form-item :rules="rules.first" :prop="'region.'+scope.$index+'.first'">
+                <el-input-number v-model="scope.row.first" controls-position="right" :step-strictly="ruleForm.type===1?true:false" :min="ruleForm.type===1?1:0.1"/>
+              </el-form-item>
             </template>
           </el-table-column>
-          <el-table-column min-width="120px" align="center" label="运费（元）">
-            <template slot-scope="{row}">
-              <el-input-number v-model="row.firstPrice" controls-position="right" />
+          <el-table-column min-width="120px" align="center" label="运费（元）" prop="firstPrice">
+            <template scope="scope">
+              <el-form-item :rules="rules.firstPrice" :prop="'region.'+scope.$index+'.firstPrice'">
+                <el-input-number v-model="scope.row.firstPrice" controls-position="right" />
+              </el-form-item>
             </template>
           </el-table-column>
-          <el-table-column min-width="120px" align="center" :label="columns.title2">
-            <template slot-scope="{row}">
-              <el-input-number v-model="row.renewal" controls-position="right" />
+          <el-table-column min-width="120px" align="center" :label="columns.title2" prop="renewal">
+            <template scope="scope">
+              <el-form-item :rules="rules.renewal" :prop="'region.'+scope.$index+'.renewal'">
+                <el-input-number v-model="scope.row.renewal" controls-position="right" :step-strictly="ruleForm.type===1?true:false" :min="ruleForm.type===1?1:0.1"/>
+              </el-form-item>
             </template>
           </el-table-column>
-          <el-table-column class-name="status-col" align="center" label="续费（元）" min-width="120">
-            <template slot-scope="{row}">
-              <el-input-number v-model="row.renewalPrice" controls-position="right" />
+          <el-table-column class-name="status-col" align="center" label="续费（元）" min-width="120" prop="renewalPrice">
+            <template scope="scope">
+              <el-form-item :rules="rules.renewalPrice" :prop="'region.'+scope.$index+'.renewalPrice'">
+                <el-input-number v-model="scope.row.renewalPrice" controls-position="right" />
+              </el-form-item>
             </template>
           </el-table-column>
           <el-table-column align="center" label="操作" min-width="80">
@@ -96,7 +104,7 @@
           </el-table-column>
           <el-table-column min-width="180px" align="center" :label="columns.title3">
             <template slot-scope="{row}">
-              <el-input-number v-model="row.number" controls-position="right" />
+              <el-input-number v-model="row.number" controls-position="right" :step-strictly="ruleForm.type===1?true:false" :min="ruleForm.type===1?1:0.1"/>
             </template>
           </el-table-column>
           <el-table-column min-width="120px" align="center" label="包邮金额（元）">
@@ -151,7 +159,7 @@
     </el-form>
     <span slot="footer" class="dialog-footer">
       <el-button @click="onClose('ruleForm')">取 消</el-button>
-      <el-button type="primary" @click="onsubmit('ruleForm')">确 定</el-button>
+      <el-button type="primary"  :loading="loading" @click="onsubmit('ruleForm')">确 定</el-button>
     </span>
   </el-dialog>
 </template>
@@ -165,10 +173,10 @@ const defaultRole = {
   appoint: false,
   sort: 0,
   region: [{
-    first: 1,
-    firstPrice: 1,
-    renewal: 1,
-    renewalPrice: 1,
+    first: 0,
+    firstPrice: 0,
+    renewal: 0,
+    renewalPrice: 0,
     city_ids: []
   }],
   undelivery: 0,
@@ -201,6 +209,7 @@ export default {
   },
   data() {
     return {
+      loading : false,
       rules: {
         name: [
           { required: true, message: '请输入模板名称', trigger: 'blur' }
@@ -222,6 +231,18 @@ export default {
         ],
         city_id3: [
           { type: 'array', required: true, message: '请至少选择一个地区', trigger: 'change' }
+        ],
+        first: [
+          { required: true, message: '请输入', trigger: 'blur' }
+        ],
+        renewal: [
+          { required: true, message: '请输入', trigger: 'blur' }
+        ],
+        firstPrice: [
+          { required: true, message: '请输入运费', trigger: 'blur' }
+        ],
+        renewalPrice: [
+          { required: true, message: '请输入续费', trigger: 'blur' }
         ]
       },
       nodeKey: 'city_id',
@@ -259,7 +280,7 @@ export default {
     },
     popoverHide() {},
     handleClose() {
-      this.$refs['ruleForm'].resetFields()
+     // this.$refs['ruleForm'].resetFields()
       this.dialogVisible = false
       this.ruleForm={
           name: '',
@@ -267,10 +288,10 @@ export default {
           appoint: false,
           sort: 0,
           region: [{
-          first: 1,
-          firstPrice: 1,
-          renewal: 1,
-          renewalPrice: 1,
+          first: 0,
+          firstPrice: 0,
+          renewal: 0,
+          renewalPrice: 0,
           city_ids: []
         }],
           undelivery: 0,
@@ -281,7 +302,6 @@ export default {
     },
     changeRegion(value) {
       console.log(value)
-      // console.integralLog(value)
     },
     changeRadio(num) {
       this.columns = Object.assign({}, statusMap[num - 1])
@@ -289,10 +309,10 @@ export default {
     // 添加配送区域
     addRegion(region) {
       region.push(Object.assign({}, {
-        first: 1,
-        firstPrice: 1,
-        renewal: 1,
-        renewalPrice: 1,
+        first: 0,
+        firstPrice: 0,
+        renewal: 0,
+        renewalPrice: 0,
         city_ids: []
       }))
     },
@@ -322,6 +342,7 @@ export default {
           appoint: info.appoint,
           sort: info.sort
         })
+        this.columns = Object.assign({}, statusMap[this.ruleForm.type - 1])
         this.$nextTick(() => {
           loadingInstance.close()
         })
@@ -395,6 +416,7 @@ export default {
     onsubmit(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
+          this.loading = true;
           const param = {
             appoint: this.ruleForm.appoint,
             name: this.ruleForm.name,
@@ -434,28 +456,26 @@ export default {
           if (this.type === 0) {
             logistics.shippingSave(param).then(res => {
               this.$message.success('操作成功')
-
+              this.handleClose()
               this.$nextTick(() => {
                 this.dialogVisible = false
-                this.$refs[formName].resetFields()
-                this.clear()
               })
               setTimeout(() => {
                 this.$emit('getList')
               }, 600)
+              this.loading = false;
             })
           } else {
             logistics.shippingUpdate(param, { id: this.tempId }).then(res => {
               this.$message.success('操作成功')
               setTimeout(() => {
                 this.$emit('getList')
-                this.$refs[formName].resetFields()
-                this.clear()
+                this.handleClose()
               }, 600)
               this.$nextTick(() => {
                 this.dialogVisible = false
-                this.$refs[formName].resetFields()
               })
+              this.loading = false;
             })
           }
         } else {

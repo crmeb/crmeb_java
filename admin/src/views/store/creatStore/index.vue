@@ -254,12 +254,12 @@
                 <template v-if="formValidate.isSub">
                   <el-table-column align="center" label="一级返佣(元)" min-width="120">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.brokerage" type="number" :min="0" class="priceBox" />
+                      <el-input v-model="scope.row.brokerage" type="number" :min="0" :max="scope.row.price" class="priceBox" />
                     </template>
                   </el-table-column>
                   <el-table-column align="center" label="二级返佣(元)" min-width="120">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.brokerageTwo" type="number" :min="0" class="priceBox" />
+                      <el-input v-model="scope.row.brokerageTwo" type="number" :min="0" :max="scope.row.price" class="priceBox" />
                     </template>
                   </el-table-column>
                 </template>
@@ -331,12 +331,12 @@
                 </el-table-column>
                 <el-table-column align="center" label="一级返佣(元)" min-width="120" v-if="formValidate.isSub">
                   <template slot-scope="scope">
-                    <el-input v-model="scope.row.brokerage" type="number" :min="0" class="priceBox" />
+                    <el-input v-model="scope.row.brokerage" type="number" :min="0" :max="scope.row.price" class="priceBox" />
                   </template>
                 </el-table-column>
                 <el-table-column align="center" label="二级返佣(元)" min-width="120" v-if="formValidate.isSub">
                   <template slot-scope="scope">
-                    <el-input v-model="scope.row.brokerageTwo" type="number" :min="0" class="priceBox" />
+                    <el-input v-model="scope.row.brokerageTwo" type="number" :min="0" :max="scope.row.price" class="priceBox" />
                   </template>
                 </el-table-column>
                 <el-table-column key="3" align="center" label="操作" min-width="80">
@@ -880,11 +880,10 @@
             isHot: info.isHot,
             isBest: info.isBest,
             tempId: info.tempId,
-            // attrValue: info.attrValue,
             attr: info.attr,
             selectRule: info.selectRule,
             isSub: info.isSub,
-            content: info.content,
+            content: this.$selfUtil.replaceImgSrcHttps(info.content),
             specType: info.specType,
             id: info.id,
             giveIntegral: info.giveIntegral,
@@ -909,8 +908,7 @@
             this.formValidate.attr = info.attr.map(item => {
               return {
                 attrName : item.attrName,
-                attrValue: item.attrValues.split(','),
-                // inputVisible: false
+                attrValue: item.attrValues.split(',')
               }
             })
             this.ManyAttrValue = info.attrValues;

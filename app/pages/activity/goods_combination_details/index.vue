@@ -12,7 +12,13 @@
 				</view>
 			</view>
 		</view>
-		<view class='iconfont icon-xiangzuo' :style="'top:'+navH/2+'rpx'" @tap='returns'></view>
+		<!-- #ifndef APP-PLUS -->
+		<view id="home" class="home-nav acea-row row-center-wrapper iconfont icon-xiangzuo" :class="opacity>0.5?'on':''"
+		 :style="{ top: homeTop + 'rpx' }" v-if="returnShow" @tap="returns">
+		</view>
+		<!-- #endif -->
+		
+		<!-- <view class='iconfont icon-xiangzuo' :style="'top:'+navH/2+'rpx'" @tap='returns'></view> -->
 		<!-- 详情 -->
 		<view class='product-con'>
 			<scroll-view :scroll-top="scrollTop" scroll-y='true' scroll-with-animation="true" :style="'height:'+height+'px;'"
@@ -169,6 +175,16 @@
 				<view class="">发送给朋友</view>
 			</button>
 			<!-- #endif -->
+			<!-- #ifdef APP-PLUS -->
+			<view class="item" @click="appShare('WXSceneSession')">
+				<view class="iconfont icon-weixin3"></view>
+				<view class="">微信好友</view>
+			</view>
+			<view class="item" @click="appShare('WXSenceTimeline')">
+				<view class="iconfont icon-pengyouquan"></view>
+				<view class="">微信朋友圈</view>
+			</view>
+			<!-- #endif -->
 			<button class="item" hover-class='none' @tap="goPoster">
 				<view class="iconfont icon-haibao"></view>
 				<view class="">生成海报</view>
@@ -198,7 +214,7 @@
 			<image src="/static/images/share-info.png" @click="H5ShareBox = false"></image>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 		<product-window :attr='attribute' :limitNum='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr" @ChangeCartNum="ChangeCartNum"
@@ -332,11 +348,38 @@
 				imgTop:'',
 				qrcodeSize: 600,
 				H5ShareBox: false, //公众号分享图片
-				onceNum: 0 //一次可以购买几个
+				onceNum: 0, //一次可以购买几个
+				errT: '',
+				returnShow: true
 			}
+		},
+		watch: {
+			isLogin: {
+				handler: function(newV, oldV) {
+					if (newV) {
+						this.downloadFilePromotionCode();
+						this.combinationDetail();
+					}
+				},
+				deep: true
+			},
 		},
 		onLoad(options) {
 			let that = this
+			var pages = getCurrentPages();
+			that.returnShow = pages.length === 1 ? false : true;
+			this.$nextTick(() => {
+				// #ifdef MP
+				const menuButton = uni.getMenuButtonBoundingClientRect();
+				const query = uni.createSelectorQuery().in(this);
+				query
+					.select('#home')
+					.boundingClientRect(data => {
+						this.homeTop = menuButton.top * 2 + menuButton.height - data.height;
+					})
+					.exec();
+				// #endif
+			});
 			// #ifdef MP
 			this.navH = app.globalData.navHeight;
 			// #endif
@@ -378,12 +421,8 @@
 					try {
 						uni.setStorageSync('comGoodsId', options.id);
 					} catch (e) {}
-					toLogin();
 					// #endif 
-					// #ifdef MP
-					this.isAuto = true;
-					this.$set(this, 'isShowAuth', true)
-					// #endif
+					toLogin();
 				}
 			} else {
 				try {
@@ -403,6 +442,40 @@
 			};
 		},
 		methods: {
+			// app分享
+			// #ifdef APP-PLUS
+			appShare(scene) {
+				let that = this
+				console.log(HTTP_REQUEST_URL)
+				let routes = getCurrentPages(); // 获取当前打开过的页面路由数组
+				let curRoute = routes[routes.length - 1].$page.fullPath // 获取当前页面路由，也就是最后一个打开的页面路由
+				uni.share({
+					provider: "weixin",
+					scene: scene,
+					type: 0,
+					href: `${HTTP_REQUEST_URL}${curRoute}`,
+					title: that.storeInfo.title,
+					summary: that.storeInfo.info,
+					imageUrl: that.storeInfo.image,
+					success: function(res) {
+						uni.showToast({
+							title: '分享成功',
+							icon: 'success'
+						})
+						that.posters = false;
+					},
+					fail: function(err) {
+						uni.showToast({
+							title: '分享失败',
+							icon: 'none',
+							duration: 2000
+						})
+						that.posters = false;
+					}
+				});
+			},
+			// #endif
+			
 			getProductReplyCount: function() {
 				let that = this;
 				getReplyConfig(that.storeInfo.productId).then(res => {
@@ -474,7 +547,6 @@
 					that.attribute.productSelect.num = res.data.storeInfo.onceNum;
 					that.pink = res.data.pink || [];
 					that.pindAll = res.data.pindAll || [];
-				//	that.reply = res.data.reply ? res.data.reply : [];
 					that.itemNew = res.data.pinkOkList || [];
 					that.pinkOkSum = res.data.pinkOkSum;
 					that.attribute.productAttr = res.data.productAttr || [];
@@ -486,6 +558,10 @@
 					that.storeImage = that.storeInfo.image
 					that.make();
 					that.getImageBase64(that.storeImage);
+					// #endif
+					// #ifdef APP-PLUS
+					that.downloadFilestoreImage();
+					that.downloadFileAppCode();
 					// #endif
 					// #ifdef MP
 					that.getQrcode();
@@ -786,13 +862,7 @@
 			 */
 			listenerActionSheet: function() {
 				if (this.isLogin == false) {
-					// #ifdef H5 || APP-PLUS
 					toLogin();
-					// #endif
-					// #ifdef MP
-					this.$set(this, 'isAuto', true);
-					this.$set(this, 'isShowAuth', true);
-					// #endif
 				} else {
 					// #ifdef H5
 					if (this.$wechat.isWeixin() === true) {
@@ -834,6 +904,24 @@
 					},
 				});
 			},
+			
+			// app获取二维码
+			downloadFileAppCode() {
+				let that = this;
+				uni.downloadFile({
+					url: that.setDomain(that.storeInfo.code_base),
+					success: function(res) {
+						that.PromotionCode = res.tempFilePath;
+					},
+					fail: function() {
+						return that.$util.Tips({
+							title: ''
+						});
+						that.PromotionCode = '';
+					},
+				});
+			},
+			
 			/**
 			 * 获取产品分销二维码
 			 * @param function successFn 下载完成回调
@@ -876,11 +964,22 @@
 			 */
 			goPoster: function() {
 				let that = this;
+				uni.showLoading({
+					title: '海报生成中',
+					mask: true
+				});
 				that.posters = false;
 				let arrImagesUrl = '';
 				let arrImagesUrlTop = '';
+				if(!that.PromotionCode){
+					uni.hideLoading();
+					that.$util.Tips({
+						title: that.errT
+					});
+					return 
+				} 
 				uni.downloadFile({
-					url: that.imgTop, //仅为示例，并非真实的资源
+					url: that.imgTop, 
 					success: (res) => {
 						arrImagesUrlTop = res.tempFilePath;
 						let arrImages = [that.posterbackgd, arrImagesUrlTop, that.PromotionCode];
@@ -890,8 +989,9 @@
 							that.$util.PosterCanvas(arrImages, storeName, price, that.storeInfo.otPrice, function(tempFilePath) {
 								that.posterImage = tempFilePath;
 								that.canvasStatus = true;
+								uni.hideLoading();
 							});	
-						}, 200);
+						}, 500);
 					}
 				});	
 			},
@@ -907,7 +1007,9 @@
 					base64src(res.data.code, res => {
 						that.PromotionCode = res;
 					});
-				})
+				}).catch(err => {
+					that.errT = err;
+				});
 			},
 			// 生成二维码；
 			make() {
@@ -1465,5 +1567,53 @@
 
 	.pro-wrapper .iconn.iconn1 {
 		background-image: url('data:image/png;base64,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');
+	}
+	
+	.home-nav {
+		/* #ifdef H5 */
+		top: 20rpx !important;
+		/* #endif */
+	}
+	
+	.home-nav {
+		color: #fff;
+		position: fixed;
+		font-size: 33rpx;
+		width: 56rpx;
+		height: 56rpx;
+		z-index: 99;
+		left: 33rpx;
+		background: rgba(190, 190, 190, 0.5);
+		border-radius: 50%;
+	
+		&.on {
+			background: unset;
+			color: #333;
+		}
+	}
+	
+	.home-nav .line {
+		width: 1rpx;
+		height: 24rpx;
+		background: rgba(255, 255, 255, 0.25);
+	}
+	
+	.home-nav .icon-xiangzuo {
+		width: auto;
+		font-size: 28rpx;
+	}
+	
+	.share-box {
+		z-index: 1000;
+		position: fixed;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+	}
+	
+	.share-box image {
+		width: 100%;
+		height: 100%;
 	}
 </style>

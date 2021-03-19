@@ -23,6 +23,8 @@ public interface ArticleService extends IService<Article> {
 
     PageInfo<ArticleVo> getList(ArticleSearchRequest request, PageParamRequest pageParamRequest);
 
+    PageInfo<ArticleVo> getAdminList(ArticleSearchRequest request, PageParamRequest pageParamRequest);
+
     boolean update(Integer id, Integer productId);
 
     ArticleVo getVoByFront(Integer id);

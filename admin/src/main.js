@@ -1,5 +1,6 @@
 import Vue from 'vue'
-
+import '@babel/polyfill'
+// import 'babel-polyfill'
 import Cookies from 'js-cookie'
 
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
@@ -105,6 +106,10 @@ if (vconsole !== undefined && vconsole === md5Crmeb) {
     new Module.default();
   });
 }
+// 自定义实现String 类型的replaceAll方法
+String.prototype.replaceAll = function(s1, s2) {
+  return this.replace(new RegExp(s1, "gm"), s2);
+}
 // Vue.prototype.$modalCoupon = modalCoupon
 /**
  * If you don't want to use mock-server
@@ -183,6 +188,10 @@ function newVue(attrs, main, html) {
     },
     template: `<div><child ${attrs}/></div>`
   }).$mount('#app')
+}
+
+String.prototype.replaceAll = function(s1, s2) {
+  return this.replace(new RegExp(s1, "gm"), s2);
 }
 
 new Vue({

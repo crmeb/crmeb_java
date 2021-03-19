@@ -7,7 +7,6 @@
 <script>
   import categoryList from '@/components/Category/list'
   export default {
-    // name: "list",
     components: { categoryList },
     data() {
       return {

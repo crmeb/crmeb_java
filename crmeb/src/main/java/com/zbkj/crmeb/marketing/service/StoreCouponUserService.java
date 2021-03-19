@@ -41,8 +41,6 @@ public interface StoreCouponUserService extends IService<StoreCouponUser> {
 
     Boolean receive(StoreCouponUserRequest storeCouponUserRequest);
 
-    boolean use(Integer id, List<Integer> productIdList, BigDecimal price);
-
     /**
      * 检测优惠券是否可用，计算订单价格时使用
      * @param id            优惠券id
@@ -51,8 +49,6 @@ public interface StoreCouponUserService extends IService<StoreCouponUser> {
      * @return  可用状态
      */
     boolean canUse(Integer id, List<Integer> productIdList, BigDecimal price);
-
-    boolean receiveAll(UserCouponReceiveRequest request, Integer userId, String type);
 
     boolean rollbackByCancelOrder(StoreOrder storeOrder);
 
@@ -84,4 +80,12 @@ public interface StoreCouponUserService extends IService<StoreCouponUser> {
      * @return
      */
     MyRecord paySuccessGiveAway(Integer couponId, Integer uid);
+
+    /**
+     * 根据uid获取列表
+     * @param uid uid
+     * @param pageParamRequest 分页参数
+     * @return
+     */
+    List<StoreCouponUser> findListByUid(Integer uid, PageParamRequest pageParamRequest);
 }

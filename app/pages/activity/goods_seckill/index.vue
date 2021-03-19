@@ -3,22 +3,19 @@
 		<view class='flash-sale'>
 			<view class="saleBox"></view>
 			<!-- banner -->
+			<!-- <navigator :url='item.url' class='slide-navigator acea-row row-between-wrapper' hover-class='none'>
+				<image :src="item.pic" class="slide-image" lazy-load></image>
+			</navigator> -->
 			<view class="header" v-if="timeList.length">
 				<swiper indicator-dots="true" autoplay="true" :circular="circular" interval="3000" duration="1500"
 				 indicator-color="rgba(255,255,255,0.6)" indicator-active-color="#fff">
-					<block v-for="(item,index) in JSON.parse(timeList[active].slide)" :key="index">
+					<block v-for="(item,index) in timeList[active].slide" :key="index">
 						<swiper-item>
 							<image :src="item.sattDir" class="slide-image" lazy-load></image>
-							<!-- <navigator :url='item.url' class='slide-navigator acea-row row-between-wrapper' hover-class='none'>
-								<image :src="item.pic" class="slide-image" lazy-load></image>
-							</navigator> -->
 						</swiper-item>
 					</block>
 				</swiper>
 			</view>
-			<!-- <view class='header' v-if="timeList.length>0">
-				<image :src='timeList[active].slide'></image>
-			</view> -->
 			<view class="seckillList acea-row row-between-wrapper">
 				<view class="priceTag">
 					<image src="/static/images/priceTag.png"></image>
@@ -99,7 +96,7 @@
 				loading: false,
 				loadend: false,
 				pageloading: false,
-				seckillHeader: [],
+				seckillHeader: []
 			}
 		},
 		onLoad() {
@@ -109,10 +106,12 @@
 			getSeckillConfig: function() {
 				let that = this;
 				getSeckillHeaderApi().then(res => {
+					res.data.seckillTime.map(item => {
+						item.slide = JSON.parse(item.slide)
+					})
 					that.timeList = res.data.seckillTime;
 					that.active = res.data.seckillTimeIndex;
 					if (that.timeList.length) {
-						// wxh.time(that.data.timeList[that.data.active].stop, that);
 						that.scrollLeft = (that.active - 1.37) * 100
 						setTimeout(function() {
 							that.loading = true

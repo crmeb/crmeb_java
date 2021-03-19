@@ -34,7 +34,7 @@
           label="ID"
           min-width="50"
         />
-        <el-table-column label="拼图图片" min-width="80">
+        <el-table-column label="拼团图片" min-width="80">
           <template slot-scope="scope">
             <div class="demo-image__preview">
               <el-image

@@ -84,17 +84,17 @@ echo "本次运行时间： "$total"s"
 echo "当前时间："$endTime
 
 
-#  #消息推送到企业微信群
-#  curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=4f7df494-cece-49c2-8e04-60610c937b4a' \
-#   -H 'Content-Type: application/json' \
-#   -d '
-#   {
-#    "msgtype": "text",
-#    "text": {
-#        "content": "Api项目部署成功！\n 耗时：'$total's \n 当前时间：'"$endTime"'",
-#        "mentioned_list":["@all"]
-#    }
-#  }'
+  #消息推送到企业微信群
+  curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=4f7df494-cece-49c2-8e04-60610c937b4a' \
+   -H 'Content-Type: application/json' \
+   -d '
+   {
+    "msgtype": "text",
+    "text": {
+        "content": "Api项目部署成功！\n 耗时：'$total's \n 当前时间：'"$endTime"'",
+        "mentioned_list":["@all"]
+    }
+  }'
 
 ##实时查看启动日志
 #  #tail -f $LOG_FILE

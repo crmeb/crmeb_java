@@ -13,6 +13,7 @@ import com.constants.Constants;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.utils.ArrayUtil;
 import com.utils.DateUtil;
 import com.utils.vo.dateLimitUtilVo;
 import com.zbkj.crmeb.front.response.SpreadCommissionDetailResponse;
@@ -212,7 +213,7 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
         queryWrapper.eq("uid", uid);
         queryWrapper.eq("link_type", BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_ORDER);
         queryWrapper.eq("status", BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
-        queryWrapper.apply(StrUtil.format("left(update_time, 7) in ({})", StrUtil.join(",", monthList)));
+        queryWrapper.apply(StrUtil.format("left(update_time, 7) in ({})", ArrayUtil.strListToSqlJoin(monthList)));
         queryWrapper.groupBy("left(update_time, 7)");
         List<UserBrokerageRecord> list = dao.selectList(queryWrapper);
         Map<String, Integer> map = CollUtil.newHashMap();

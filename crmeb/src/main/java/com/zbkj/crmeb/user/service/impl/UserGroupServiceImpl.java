@@ -47,25 +47,6 @@ public class UserGroupServiceImpl extends ServiceImpl<UserGroupDao, UserGroup> i
     }
 
     /**
-     * 检测是否有分组已经废弃
-     * @param groupIdValue String 分组id
-     * @author Mr.Zhang
-     * @since 2020-06-05
-     * @return List<UserTag>
-     */
-    @Override
-    public String clean(String groupIdValue) {
-        LambdaQueryWrapper<UserGroup> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.in(UserGroup::getId, CrmebUtil.stringToArray(groupIdValue));
-        List<UserGroup> userTags = dao.selectList(lambdaQueryWrapper);
-        if(null == userTags){
-            return null;
-        }
-
-        return userTags.stream().map(s -> s.getId().toString()).distinct().collect(Collectors.joining(","));
-    }
-
-    /**
      * 根据id in，返回字符串拼接
      * @param groupIdValue String 分组id
      * @author Mr.Zhang

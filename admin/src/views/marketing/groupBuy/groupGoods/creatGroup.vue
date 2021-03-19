@@ -468,7 +468,6 @@
       },
       handleRemove (i) {
         this.formValidate.imagelist.splice(i, 1)
-       // this.imagelist=[...this.imagelist];
       },
       // 点击商品图
       modalPicTap (tit, num, i) {
@@ -502,7 +501,6 @@
         this.$modalGoodList(function(row) {
           _this.formValidate.image = row.image
           _this.productId = row.id
-          // _this.formValidate.productId = row.id
         })
       },
       handleSubmitNest1() {
@@ -550,7 +548,6 @@
       getProdect(id) {
         this.fullscreenLoading = true
         productDetailApi(id).then(async res => {
-          //this.formValidate = res;
           this.formValidate = {
             image: this.$selfUtil.setDomain(res.image),
             imagelist: JSON.parse(res.sliderImage),
@@ -608,7 +605,6 @@
       getSekllProdect(id) {
         this.fullscreenLoading = true
         combinationInfoApi({id:id}).then(async res => {
-          //this.formValidate = res;
           this.formValidate = {
             image: this.$selfUtil.setDomain(res.image),
             imagelist: JSON.parse(res.sliderImage),
@@ -665,23 +661,6 @@
           if (valid) {
             if(this.formValidate.specType && this.multipleSelection.length ===0 ) return this.$message.warning("请选择至少一个商品属性！");
             this.currentTab++;
-            // this.multipleSelection.every((value, index) => {
-            //   if(!value.quota){
-            //     this.$message.warning("请填选择至少一个商品属性！");
-            //     return false;
-            //   }else{
-            //    this.currentTab++;
-            //    return true;
-            //   }
-            // });
-            // for(i = 0; i < this.multipleSelection.length; i++){
-            //   if(!this.multipleSelection[i].quota){
-            //     break;
-            //   }else{
-            //     this.currentTab++;
-            //   }
-            // }
-
           } else {
             return false;
           }

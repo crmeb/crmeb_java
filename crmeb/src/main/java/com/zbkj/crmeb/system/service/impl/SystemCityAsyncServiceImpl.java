@@ -43,6 +43,7 @@ public class SystemCityAsyncServiceImpl extends ServiceImpl<SystemCityDao, Syste
 
     /**
      * 设置属性列表进入redis
+     *
      * @author Mr.Zhang
      * @since 2020-04-16
      */
@@ -56,11 +57,11 @@ public class SystemCityAsyncServiceImpl extends ServiceImpl<SystemCityDao, Syste
         lambdaQueryWrapper.eq(SystemCity::getIsShow, true);
         List<SystemCity> allTree = dao.selectList(lambdaQueryWrapper);
 
-        if(allTree == null){
+        if (allTree == null) {
             return;
         }
 
-        for (SystemCity systemCity: allTree) {
+        for (SystemCity systemCity : allTree) {
             SystemCityTreeVo systemCityTreeVo = new SystemCityTreeVo();
             BeanUtils.copyProperties(systemCity, systemCityTreeVo);
             treeList.add(systemCityTreeVo);
@@ -79,9 +80,9 @@ public class SystemCityAsyncServiceImpl extends ServiceImpl<SystemCityDao, Syste
         for (SystemCityTreeVo tree : treeList) {
             //子集ID返回对象，有则添加。
             SystemCityTreeVo tree1 = map.get(tree.getParentId());
-            if(tree1 != null){
+            if (tree1 != null) {
                 tree1.getChild().add(tree);
-            }else {
+            } else {
                 list.add(tree);
             }
         }
@@ -90,26 +91,28 @@ public class SystemCityAsyncServiceImpl extends ServiceImpl<SystemCityDao, Syste
 
     /**
      * 数据整体刷入redis
+     *
      * @author Mr.Zhang
      * @since 2020-05-18
      */
-    private void asyncList(Integer pid){
+    private void asyncList(Integer pid) {
         LambdaQueryWrapper<SystemCity> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(SystemCity::getParentId, pid);
         lambdaQueryWrapper.in(SystemCity::getIsShow, true);
         List<SystemCity> systemCityList = dao.selectList(lambdaQueryWrapper);
-        if(systemCityList != null && systemCityList.size() > 0){
+        if (systemCityList != null && systemCityList.size() > 0) {
             redisUtil.hmSet(Constants.CITY_LIST, pid.toString(), systemCityList);
         }
     }
 
     /**
      * 数据整体刷入redis
+     *
      * @author Mr.Zhang
      * @since 2020-05-18
      */
     @Async
-    public void async(Integer pid){
+    public void async(Integer pid) {
         asyncList(pid);
         setListTree();
     }

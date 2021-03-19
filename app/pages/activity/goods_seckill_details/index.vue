@@ -110,7 +110,7 @@
 		<product-window :attr='attribute' :limitNum='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr" @ChangeCartNum="ChangeCartNum"
 		 @attrVal="attrVal" @iptCartNum="iptCartNum"></product-window>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 		<!-- 分享按钮 -->
@@ -272,7 +272,8 @@
 				sharePacket: {
 					isState: true, //默认不显示
 				},
-				buyNum: 1
+				buyNum: 1,
+				errT: ''
 			}
 		},
 		components: {
@@ -288,6 +289,18 @@
 			// #endif
 		},
 		computed: mapGetters(['isLogin','uid','chatUrl']),
+		watch:{
+			isLogin:{
+				handler:function(newV,oldV){
+					if(newV){
+						this.getSeckillDetail();
+						this.getProductReplyList();
+						this.getProductReplyCount();
+					}
+				},
+				deep:true
+			}
+		},
 		onLoad(options) {
 			
 			let that = this
@@ -337,13 +350,7 @@
 				this.getProductReplyList();
 				this.getProductReplyCount();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.isShowAuth = true
-				// #endif
 			}
 		},
 		methods: {
@@ -828,9 +835,20 @@
 			 */
 			goPoster: function() {
 				let that = this;
+				uni.showLoading({
+					title: '海报生成中',
+					mask: true
+				});
 				that.posters = false;
 				let arrImagesUrl = '';
 				let arrImagesUrlTop = '';
+				if(!that.PromotionCode){
+					uni.hideLoading();
+					that.$util.Tips({
+						title: that.errT
+					});
+					return 
+				} 
 				uni.downloadFile({
 					url: that.imgTop, //仅为示例，并非真实的资源
 					success: (res) => {
@@ -842,10 +860,11 @@
 							that.$util.PosterCanvas(arrImages, storeName, price, that.storeInfo.otPrice,function(tempFilePath) {
 								that.posterImage = tempFilePath;
 								that.canvasStatus = true;
+								uni.hideLoading();
 							});	
-						}, 200);
+						}, 500);
 					}
-				});	
+				});		
 			},
 			// 小程序二维码
 			getQrcode(){
@@ -859,7 +878,9 @@
 					base64src(res.data.code, res => {
 						that.PromotionCode = res;
 					});
-				})
+				}).catch(err => {
+					that.errT = err;
+				});
 			},
 			// 生成二维码；
 			make() {

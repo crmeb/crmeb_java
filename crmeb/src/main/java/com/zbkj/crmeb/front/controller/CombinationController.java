@@ -39,17 +39,7 @@ public class CombinationController {
     private StoreCombinationService storeCombinationService;
 
     /**
-     * 拼团Pink
-     */
-    @ApiOperation(value = "拼团Pink")
-    @RequestMapping(value = "/pink", method = RequestMethod.GET)
-    public CommonResult<HashMap<String,Object>> pink(){
-        return CommonResult.success(storeCombinationService.getForH5Pink());
-    }
-
-    /**
      * 砍价商品列表
-     * @return 砍价商品列表
      */
     @ApiOperation(value = "拼团商品列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -60,7 +50,6 @@ public class CombinationController {
 
     /**
      * 拼团商品详情
-     * @return
      */
     @ApiOperation(value = "拼团商品详情")
     @RequestMapping(value = "/detail/{id}", method = RequestMethod.GET)
@@ -72,7 +61,6 @@ public class CombinationController {
     /**
      * 去拼团
      * @param pinkId 拼团团长单id
-     * @return
      */
     @ApiOperation(value = "去拼团")
     @RequestMapping(value = "/pink/{pinkId}", method = RequestMethod.GET)
@@ -83,7 +71,6 @@ public class CombinationController {
 
     /**
      * 更多拼团
-     * @return
      */
     @ApiOperation(value = "更多拼团")
     @RequestMapping(value = "/more", method = RequestMethod.GET)
@@ -94,7 +81,6 @@ public class CombinationController {
 
     /**
      * 取消拼团
-     * @return
      */
     @ApiOperation(value = "取消拼团")
     @RequestMapping(value = "/remove", method = RequestMethod.POST)
@@ -106,16 +92,4 @@ public class CombinationController {
         }
     }
 
-    /**
-     * 拼团海报
-     */
-//    @ApiOperation(value = "拼团海报")
-//    @RequestMapping(value = "/poster", method = RequestMethod.POST)
-//    public CommonResult<Object> poster(@Validated @RequestParam Integer pinkId, @Validated @RequestParam String from) {
-//        if (storeCombinationService.poster(pinkId, from)) {
-//            return CommonResult.success("取消成功");
-//        } else {
-//            return CommonResult.failed("取消失败");
-//        }
-//    }
 }

@@ -60,7 +60,7 @@ public class StoreCouponUser implements Serializable {
     private String type;
 
     @ApiModelProperty(value = "状态（0：未使用，1：已使用, 2:已失效）")
-    private int status;
+    private Integer status;
 
     @ApiModelProperty(value = "创建时间")
     private Date createTime;

@@ -16,13 +16,19 @@
 					</view>
 					<view class='item acea-row row-between-wrapper'>
 						<view>手机号码</view>
-						<navigator url="/pages/users/user_phone/index" hover-class="none" class="input" v-if="!userInfo.phone">
+						<navigator url="/pages/users/user_phone/index" hover-class="none" class="input">
+							<view class='input acea-row row-between-wrapper'>
+								<input type='text' disabled='true' name='phone' :value='userInfo.phone' class='id'></input>
+								<text class='iconfont icon-xiangyou'></text>
+							</view>
+						</navigator>
+						<!-- <navigator url="/pages/users/user_phone/index" hover-class="none" class="input" v-if="!userInfo.phone">
 							点击绑定手机号<text class="iconfont icon-xiangyou"></text>
 						</navigator>
 						<view class='input acea-row row-between-wrapper' v-else>
 							<input type='text' disabled='true' name='phone' :value='userInfo.phone' class='id'></input>
 							<text class='iconfont icon-suozi'></text>
-						</view>
+						</view> -->
 					</view>
 					<view class='item acea-row row-between-wrapper'>
 						<view>ID号</view>
@@ -53,7 +59,7 @@
 			</view>
 		</form>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 	</view>
 </template>
@@ -93,17 +99,21 @@
 			};
 		},
 		computed: mapGetters(['isLogin']),
+		watch: {
+			isLogin: {
+				handler: function(newV, oldV) {
+					if (newV) {
+						this.getUserInfo();
+					}
+				},
+				deep: true
+			}
+		},
 		onLoad() {
 			if (this.isLogin) {
 				this.getUserInfo();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true)
-				// #endif
 			}
 		},
 		methods: {
@@ -164,6 +174,8 @@
 				getUserInfo().then(res => {
 					res.data.localPath = res.data.avatar;
 					that.$set(that, 'userInfo', res.data);
+					that.$store.commit("UPDATE_USERINFO", res.data);
+					that.$store.commit("SETUID", res.data.uid);
 				});
 			},
 			/**

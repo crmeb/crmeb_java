@@ -2,6 +2,8 @@ package com.zbkj.crmeb.front.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.constants.Constants;
 import com.constants.SmsConstants;
 import com.exception.CrmebException;
@@ -12,8 +14,10 @@ import com.zbkj.crmeb.front.request.LoginMobileRequest;
 import com.zbkj.crmeb.front.request.LoginRequest;
 import com.zbkj.crmeb.front.response.LoginResponse;
 import com.zbkj.crmeb.front.service.LoginService;
+import com.zbkj.crmeb.front.utils.userUtil;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +38,7 @@ import java.util.Optional;
  * | Author: CRMEB Team <admin@crmeb.com>
  * +----------------------------------------------------------------------
  */
+@Slf4j
 @Service
 public class LoginServiceImpl implements LoginService {
 
@@ -48,12 +53,16 @@ public class LoginServiceImpl implements LoginService {
     @Autowired
     private RedisUtil redisUtil;
 
+    @Autowired
+    private userUtil userUtil;
+
     /**
      * 账号密码登录
      * @return
      */
     @Override
     public LoginResponse login(LoginRequest loginRequest) throws Exception {
+        log.info("移动端登录loginRequest:" + JSON.toJSONString(loginRequest));
         User user = userService.getUserByAccount(loginRequest.getPhone());
         if (ObjectUtil.isNull(user)) {
             throw new CrmebException("此账号未注册");
@@ -74,8 +83,9 @@ public class LoginServiceImpl implements LoginService {
         user.setPwd(null);
 
         //绑定推广关系
-        if (user.getSpreadUid() < 1 && loginRequest.getSpreadPid() > 0) {
-            bindSpread(user, loginRequest.getSpreadPid());
+        if (loginRequest.getSpreadPid() > 0) {
+            userUtil.bindSpread(user, loginRequest.getSpreadPid());
+            log.info(StrUtil.format("绑定推广关系成功:user={},loginRequest={}",JSON.toJSONString(user),JSON.toJSONString(loginRequest)));
         }
 
         // 记录最后一次登录时间
@@ -97,7 +107,7 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public LoginResponse phoneLogin(LoginMobileRequest loginRequest, String clientIp) throws Exception {
         //检测验证码
-        checkValidateCode(loginRequest.getPhone(), loginRequest.getValidateCode());
+        userUtil.checkValidateCode(loginRequest.getPhone(), loginRequest.getValidateCode());
 
         //查询手机号信息
         User user = userService.getUserByAccount(loginRequest.getPhone());
@@ -108,8 +118,8 @@ public class LoginServiceImpl implements LoginService {
         } else {
             // 正常流程
             // 绑定推广关系
-            if (user.getSpreadUid() < 1 && spread > 0) {
-                bindSpread(user, spread);
+            if (spread > 0) {
+                userUtil.bindSpread(user, spread);
             }
         }
 
@@ -164,12 +174,17 @@ public class LoginServiceImpl implements LoginService {
         Boolean checkBingSpread = userService.checkBingSpread(user, spreadUid, "old");
         if (!checkBingSpread) return false;
 
+        Integer oldSprUid = user.getSpreadUid();
+
         user.setSpreadUid(spreadUid);
         user.setSpreadTime(DateUtil.nowDateTime());
 
         Boolean execute = transactionTemplate.execute(e -> {
             userService.updateById(user);
-            userService.updateSpreadCountByUid(spreadUid);
+            userService.updateSpreadCountByUid(spreadUid, "add");
+            if (oldSprUid > 0) {
+                userService.updateSpreadCountByUid(oldSprUid, "sub");
+            }
             return Boolean.TRUE;
         });
         if (!execute) {

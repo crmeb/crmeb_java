@@ -90,7 +90,7 @@
 						</view>
 						<navigator url="/pages/goods_cate/goods_cate" class="button" hover-class="none" open-type='switchTab'>去获取</navigator>
 					</view>
-					<view class="item acea-row row-between-wrapper">
+					<!-- <view class="item acea-row row-between-wrapper">
 						<view class="picTxt acea-row row-middle">
 							<view class="pictrue on2"><text class="iconfont icon-yaoqing"></text></view>
 							<view class="text">
@@ -99,7 +99,7 @@
 							</view>
 						</view>
 						<navigator url="/pages/users/user_spread_code/index" class="button" hover-class="none">去获取</navigator>
-					</view>
+					</view> -->
 				</view>
 			</view>
 		</view>
@@ -163,6 +163,8 @@
 			getUserInfo: function() {
 				let that = this;
 				getUserInfo().then(res => {
+					that.$store.commit("SETUID", res.data.uid);
+					that.$store.commit("UPDATE_USERINFO", res.data);
 					that.userInfo = res.data;
 					that.levelInfo = res.data.experience;
 				}).catch(function(res) {

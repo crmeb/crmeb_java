@@ -142,7 +142,7 @@
 		<addressWindow ref="addressWindow" @changeTextareaStatus="changeTextareaStatus" :address='address' :pagesUrl="pagesUrl"
 		 @OnChangeAddress="OnChangeAddress" @changeClose="changeClose"></addressWindow>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -280,6 +280,17 @@
 			};
 		},
 		computed: mapGetters(['isLogin']),
+		watch:{
+			isLogin:{
+				handler:function(newV,oldV){
+					if(newV){
+						this.getaddressInfo();
+						this.getConfirm();
+					}
+				},
+				deep:true
+			}
+		},
 		onLoad: function(options) {
 			// #ifdef H5
 			this.payChannel = this.$wechat.isWeixin() ? 'public' : 'weixinh5'
@@ -310,13 +321,7 @@
 				//调用子页面方法授权后执行获取地址列表
 				this.$nextTick(function() {})
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		/**

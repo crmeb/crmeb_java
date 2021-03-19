@@ -164,7 +164,7 @@
           </el-form>
         </div>
         <el-button class="mr10" size="small" @click="onSend">发送优惠券</el-button>
-        <el-button v-show="loginType === 'wechat'" size="mini" class="mr10" @click="sendNews">发送文章</el-button>
+        <!--<el-button v-show="loginType === 'wechat'" size="mini" class="mr10" @click="sendNews">发送文章</el-button>-->
         <el-button class="mr10" size="small" @click="setBatch('group')">批量设置分组</el-button>
         <el-button class="mr10" size="small" @click="setBatch('label')">批量设置标签</el-button>
       </div>

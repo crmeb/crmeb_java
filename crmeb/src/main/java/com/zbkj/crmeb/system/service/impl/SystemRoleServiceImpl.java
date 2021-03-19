@@ -1,7 +1,6 @@
 package com.zbkj.crmeb.system.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -63,10 +62,8 @@ public class SystemRoleServiceImpl extends ServiceImpl<SystemRoleDao, SystemRole
     public List<SystemRole> getList(SystemRoleSearchRequest request, PageParamRequest pageParamRequest) {
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         LambdaQueryWrapper<SystemRole> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-//        queryWrapper.eq("level", request.getLevel());
         if(null != request.getStatus())
         lambdaQueryWrapper.eq(SystemRole::getStatus, request.getStatus());
-//        queryWrapper.eq("rules", request.getRules());
         if(null != request.getRoleName())
         lambdaQueryWrapper.like(SystemRole::getRoleName, request.getRoleName());
         lambdaQueryWrapper.orderByAsc(SystemRole::getId);
@@ -80,8 +77,6 @@ public class SystemRoleServiceImpl extends ServiceImpl<SystemRoleDao, SystemRole
      */
     @Override
     public List<SystemRole> getListInIds(List<Integer> ids) {
-//        LambdaQueryWrapper<SystemRole> lqw = new LambdaQueryWrapper<>();
-//        lqw.in(SystemRole::getId, ids);
         return dao.selectBatchIds(ids);
     }
 

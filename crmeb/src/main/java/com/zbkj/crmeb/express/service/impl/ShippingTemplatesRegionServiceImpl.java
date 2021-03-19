@@ -1,15 +1,14 @@
 package com.zbkj.crmeb.express.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageHelper;
 import com.utils.CrmebUtil;
-
-import com.zbkj.crmeb.express.model.ShippingTemplatesRegion;
 import com.zbkj.crmeb.express.dao.ShippingTemplatesRegionDao;
+import com.zbkj.crmeb.express.model.ShippingTemplatesRegion;
 import com.zbkj.crmeb.express.request.ShippingTemplatesRegionRequest;
 import com.zbkj.crmeb.express.service.ShippingTemplatesRegionService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.crmeb.system.service.SystemCityService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,21 +66,6 @@ public class ShippingTemplatesRegionServiceImpl extends ServiceImpl<ShippingTemp
     }
 
     /**
-     * 根据id集合和城市id获取
-     * @param ids id集合
-     * @param cityId 城市id
-     * @return 运费模版集合
-     */
-    @Override
-    public List<ShippingTemplatesRegion> getListInIdsAndCityId(List<Integer> ids, Integer cityId) {
-        LambdaQueryWrapper<ShippingTemplatesRegion> lqw = new LambdaQueryWrapper<>();
-        lqw.in(ShippingTemplatesRegion::getTempId, ids);
-        lqw.in(ShippingTemplatesRegion::getCityId, cityId);
-        lqw.orderByAsc(ShippingTemplatesRegion::getCityId);
-        return dao.selectList(lqw);
-    }
-
-    /**
      * 保存配送区域及运费
      * @param shippingTemplatesRegionRequestList List<ShippingTemplatesRegionRequest> 运费集合
      * @param type Integer 计费方式
@@ -116,6 +100,7 @@ public class ShippingTemplatesRegionServiceImpl extends ServiceImpl<ShippingTemp
                 shippingTemplatesRegion.setFirstPrice(shippingTemplatesRegionRequest.getFirstPrice());
                 shippingTemplatesRegion.setTempId(tempId);
                 shippingTemplatesRegion.setType(type);
+                shippingTemplatesRegion.setStatus(true);
                 shippingTemplatesRegionList.add(shippingTemplatesRegion);
             }
         }
@@ -150,7 +135,7 @@ public class ShippingTemplatesRegionServiceImpl extends ServiceImpl<ShippingTemp
         lambdaQueryWrapper.eq(ShippingTemplatesRegion::getTempId, tempId);
 
         ShippingTemplatesRegion shippingTemplatesRegion = new ShippingTemplatesRegion();
-        shippingTemplatesRegion.setStatus(true);
+        shippingTemplatesRegion.setStatus(false);
         update(shippingTemplatesRegion, lambdaQueryWrapper);
     }
 
@@ -164,22 +149,24 @@ public class ShippingTemplatesRegionServiceImpl extends ServiceImpl<ShippingTemp
     public void delete(Integer tempId) {
         LambdaQueryWrapper<ShippingTemplatesRegion> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(ShippingTemplatesRegion::getTempId, tempId);
-        lambdaQueryWrapper.eq(ShippingTemplatesRegion::getStatus, true);
+        lambdaQueryWrapper.eq(ShippingTemplatesRegion::getStatus, false);
         dao.delete(lambdaQueryWrapper);
     }
 
     /**
-     * 根据模板id和城市id查询数据
-     * @param tempId Integer 运费模板id
-     * @param cityId Integer 城市id
-     * @author Mr.Zhang
-     * @since 2020-05-20
-     * @return ShippingTemplatesFree
+     * 根据模板编号、城市ID查询
+     * @param tempId 模板编号
+     * @param cityId 城市ID
+     * @return 运费模板
      */
-    private ShippingTemplatesRegion getVoByTempIdAndCityId(Integer tempId, Integer cityId) {
+    @Override
+    public ShippingTemplatesRegion getByTempIdAndCityId(Integer tempId, Integer cityId) {
         LambdaQueryWrapper<ShippingTemplatesRegion> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(ShippingTemplatesRegion::getCityId, cityId);
         lambdaQueryWrapper.eq(ShippingTemplatesRegion::getTempId, tempId);
+        lambdaQueryWrapper.eq(ShippingTemplatesRegion::getCityId, cityId);
+        lambdaQueryWrapper.eq(ShippingTemplatesRegion::getStatus, true);
+        lambdaQueryWrapper.orderByDesc(ShippingTemplatesRegion::getId);
+        lambdaQueryWrapper.last(" limit 1");
         return dao.selectOne(lambdaQueryWrapper);
     }
 

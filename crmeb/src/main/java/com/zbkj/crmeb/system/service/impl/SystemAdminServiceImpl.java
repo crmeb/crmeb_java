@@ -336,48 +336,6 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
     }
 
     /**
-     * 微信扫码登录
-     * @author Mr.Zhang
-     * @since 2020-04-28
-     * @return SystemAdmin
-     */
-    @Override
-    public SystemAdminResponse weChatAuthorizeLogin(String code, String ip) throws Exception {
-        //通过code获取用户信息
-        WeChatAuthorizeLoginGetOpenIdResponse response = weChatService.authorizeLogin(code);
-        UserToken userToken = userTokenService.getUserIdByOpenId(response.getOpenId(), Constants.THIRD_ADMIN_LOGIN_TOKEN_TYPE_PUBLIC);
-        if(null == userToken){
-            throw new CrmebException("当前微信账号没有绑定后台账户，请用账号密码登录之后在个人中心扫码绑定");
-        }
-
-        SystemAdmin systemAdmin = getInfo(userToken.getUid());
-
-        if(null == systemAdmin){
-            throw new CrmebException("用户不存在");
-        }
-
-        if(!systemAdmin.getStatus()){
-            throw new CrmebException("用户已经被禁用");
-        }
-
-        if(systemAdmin.getIsDel()){
-            throw new CrmebException("用户已经被删除");
-        }
-
-        TokenModel tokenModel = tokenManager.createToken(systemAdmin.getAccount(), systemAdmin.getId().toString(), TokenModel.TOKEN_REDIS);
-        SystemAdminResponse systemAdminResponse = new SystemAdminResponse();
-        systemAdminResponse.setToken(tokenModel.getToken());
-        BeanUtils.copyProperties(systemAdmin, systemAdminResponse);
-
-        //更新最后登录信息
-        systemAdmin.setLoginCount(systemAdmin.getLoginCount() + 1);
-        systemAdmin.setLastIp(ip);
-        updateById(systemAdmin);
-
-        return systemAdminResponse;
-    }
-
-    /**
      * 绑定微信
      * @author Mr.Zhang
      * @since 2020-04-28
@@ -485,17 +443,6 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         List<SystemGroupDataAdminLoginBannerResponse> bannerList = systemGroupDataService.getListByGid(SysGroupDataConstants.GROUP_DATA_ID_ADMIN_LOGIN_BANNER_IMAGE_LIST, SystemGroupDataAdminLoginBannerResponse.class);
         map.put("banner", bannerList);
         return map;
-    }
-
-    /**
-     * 解绑微信
-     * @author Mr.Zhang
-     * @since 2020-04-28
-     * @return Boolean
-     */
-    @Override
-    public Boolean unBind() {
-        return userTokenService.unBind(Constants.THIRD_ADMIN_LOGIN_TOKEN_TYPE_PUBLIC, tokenManager.getLocalUserId());
     }
 
 }

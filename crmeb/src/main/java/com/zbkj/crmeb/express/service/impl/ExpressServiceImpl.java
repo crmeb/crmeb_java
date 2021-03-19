@@ -19,8 +19,6 @@ import com.zbkj.crmeb.express.request.ExpressSearchRequest;
 import com.zbkj.crmeb.express.request.ExpressUpdateRequest;
 import com.zbkj.crmeb.express.request.ExpressUpdateShowRequest;
 import com.zbkj.crmeb.express.service.ExpressService;
-import com.zbkj.crmeb.express.vo.ExpressSheetVo;
-import com.zbkj.crmeb.system.service.SystemConfigService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -57,9 +55,6 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
 
     @Autowired
     private OnePassUtil onePassUtil;
-
-    @Autowired
-    private SystemConfigService systemConfigService;
 
     /**
      * 分页显示快递公司表
@@ -183,23 +178,6 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
         LambdaQueryWrapper<Express> lqw = new LambdaQueryWrapper<>();
         lqw.eq(Express::getCode, code);
         return dao.selectOne(lqw);
-    }
-
-    /**
-     * 打印电子面单
-     * @param cargo 物品名称
-     * @param count 商品数量
-     *              TODO
-     */
-    @Override
-    public Boolean dump(String cargo, Integer count) {
-        // 获取系统保存的电子面单信息
-        ExpressSheetVo expressSheetVo = systemConfigService.getExpressSheet();
-        Express express = getById(expressSheetVo.getExportId());
-        if (ObjectUtil.isNull(express)) {
-            throw new CrmebException("电子面单中对应的快递公司不存在");
-        }
-        return false;
     }
 
     /**

@@ -1,5 +1,9 @@
 <template>
 	<view class='productSort copy-data'>
+		<!-- #ifdef APP-PLUS -->
+		<view class="sys-head" :style="{height:sysHeight}"></view>
+		<!-- #endif -->
+		
 		<view class='header acea-row row-center-wrapper'>
 			<view class='acea-row row-between-wrapper input'>
 				<text class='iconfont icon-sousuo'></text>
@@ -44,6 +48,7 @@
 </template>
 
 <script>
+	let sysHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
 	import {
 		getCategoryList
 	} from '@/api/store.js';
@@ -58,7 +63,8 @@
 				height: 0,
 				hightArr: [],
 				toView: "",
-				tabbarH: 0
+				tabbarH: 0,
+				sysHeight: sysHeight,
 			}
 		},
 		onLoad(options) {
@@ -133,6 +139,9 @@
 </script>
 
 <style scoped lang="scss">
+	.sys-head{
+		background-color: #fff;
+	}
 	.productSort .header {
 		width: 100%;
 		height: 96rpx;

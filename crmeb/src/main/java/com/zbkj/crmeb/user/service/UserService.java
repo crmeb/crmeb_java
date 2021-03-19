@@ -9,7 +9,6 @@ import com.zbkj.crmeb.front.request.RegisterRequest;
 import com.zbkj.crmeb.front.request.UserBindingRequest;
 import com.zbkj.crmeb.front.response.LoginResponse;
 import com.zbkj.crmeb.front.response.UserCenterResponse;
-import com.zbkj.crmeb.front.response.UserCommissionResponse;
 import com.zbkj.crmeb.front.response.UserSpreadPeopleItemResponse;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.request.RetailShopStairUserRequest;
@@ -67,16 +66,9 @@ public interface UserService extends IService<User> {
      */
     boolean group(String id, String groupId);
 
-    /**
-     * 清除会员登记
-     * @param userId 用户id
-     * @return 清除结果
-     */
-    boolean cleanLevel(Integer userId);
-
-    LoginResponse register(RegisterRequest loginRequest, String ip) throws Exception;
-
-    LoginResponse login(LoginRequest loginRequest) throws Exception;
+//    LoginResponse register(RegisterRequest loginRequest, String ip) throws Exception;
+//
+//    LoginResponse login(LoginRequest loginRequest) throws Exception;
 
     boolean password(PasswordRequest request);
 
@@ -87,8 +79,6 @@ public interface UserService extends IService<User> {
     User getUserPromoter();
 
     User getInfoException();
-
-    User getInfoEmpty();
 
     Object getInfoByCondition(Integer userId,Integer type,PageParamRequest pageParamRequest);
 
@@ -110,13 +100,9 @@ public interface UserService extends IService<User> {
 
     void repeatSignNum(Integer userId);
 
-    UserCommissionResponse getCommission();
-
     boolean tag(String id, String tagId);
 
     List<Integer> getSpreadPeopleIdList(List<Integer> userId);
-
-    List<User> getSpreadPeopleList(List<Integer> userIds);
 
     List<UserSpreadPeopleItemResponse> getSpreadPeopleList(List<Integer> userIdList, String keywords, String sortKey, String isAsc, PageParamRequest pageParamRequest);
 
@@ -136,23 +122,17 @@ public interface UserService extends IService<User> {
 
     boolean clearSpread(Integer userId);
 
-    User updateForPromoter(User current);
-
     boolean checkIsPromoter(BigDecimal price);
 
     List<User> getTopSpreadPeopleListByDate(String type, PageParamRequest pageParamRequest);
 
     Integer getCountByPayCount(int minPayCount, int maxPayCount);
 
-    List<User> getUserByEntity(User user);
-
     void consumeAfterUpdateUserFounds(Integer uid, BigDecimal price, String type);
 
     void bindSpread(User user, Integer spreadPid);
 
     boolean upadteBrokeragePrice(User user, BigDecimal newBrokeragePrice);
-
-    BigDecimal getUnCommissionPrice();
 
     /**
      * 更新推广人
@@ -209,9 +189,10 @@ public interface UserService extends IService<User> {
     /**
      * 更新推广员推广数
      * @param uid uid
+     * @param type add or sub
      * @return Boolean
      */
-    Boolean updateSpreadCountByUid(Integer uid);
+    Boolean updateSpreadCountByUid(Integer uid, String type);
 
     /**
      * 添加/扣减佣金
@@ -251,24 +232,10 @@ public interface UserService extends IService<User> {
     PageInfo<User> getAdminSpreadPeopleList(String storeBrokerageStatus, String keywords, String dateLimit, PageParamRequest pageRequest);
 
     /**
-     * 推广用户数
-     * @param uid 用户id
-     * @param dateLimit 时间参数
-     * @return Integer
-     */
-    Integer getSpreadNumberByUidAndDateLimit(Integer uid, String dateLimit);
-
-    /**
      * 清除User Group id
      * @param groupId 待清除的GroupId
      */
     void clearGroupByGroupId(String groupId);
-
-    /**
-     * 清除tag
-     * @param tagIds tagIds
-     */
-    void clearTagByTagId(String tagIds);
 
     /**
      * 更新用户

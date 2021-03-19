@@ -43,7 +43,6 @@ public class QiNiuServiceImpl implements QiNiuService {
      * @author Mr.Zhang
      * @since 2020-05-06
      */
-
     @Async
     @Override
     public void upload(UploadManager uploadManager, CloudVo cloudVo, String upToken, String webPth, String localFile, Integer id) {
@@ -61,8 +60,6 @@ public class QiNiuServiceImpl implements QiNiuService {
             logger.info("上传文件" + id + " -- 结束：" + put.address);
             //更新数据库
             systemAttachmentService.updateCloudType(id, 2);
-            //删除
-//            file.delete();
         } catch (QiniuException ex) {
             //TODO
             throw new CrmebException(ex.getMessage());

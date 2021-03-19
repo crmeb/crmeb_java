@@ -226,7 +226,7 @@ export default {
       tableFrom: {
         page: 1,
         limit: 20,
-        status: '',
+        status: '3',
         type: 'sms'
       },
       columns2: [],
@@ -299,13 +299,10 @@ export default {
   },
   watch: {
     sms (n) {
-      console.log(n)
       if (n.open === 1) this.getList();
     }
   },
   mounted() {
-    console.log(this.isChecked)
-    console.log(this.sms.open)
     if (this.sms.open === 1) this.getList();
     // if (this.isChecked === '1' && this.sms.open === 1) this.getList();
   },

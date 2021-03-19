@@ -170,10 +170,10 @@ import {
 	 */
 	PosterCanvas: function(arr2, store_name, price,ot_price, successFn) {
 		let that = this;
-		uni.showLoading({
-			title: '海报生成中',
-			mask: true
-		});
+		// uni.showLoading({
+		// 	title: '海报生成中',
+		// 	mask: true
+		// });
 		const ctx = uni.createCanvasContext('firstCanvas');
 		ctx.clearRect(0, 0, 0, 0);
 		/**
@@ -259,7 +259,7 @@ import {
 						destWidth: WIDTH,
 						destHeight: HEIGHT,
 						success: function(res) {
-							uni.hideLoading();
+							// uni.hideLoading();
 							successFn && successFn(res.tempFilePath);
 						}
 					})
@@ -605,6 +605,15 @@ import {
 	            obj = obj + '';
 	        }
 	        return obj;
+	},
+	
+	/*
+	 * 替换域名
+	 */
+	setDomain: function(url) {
+	        url = url ? url.toString() : '';
+	        if (url.indexOf("https://") > -1) return url;
+	        else return url.replace('http://', 'https://');
 	}
 
  }

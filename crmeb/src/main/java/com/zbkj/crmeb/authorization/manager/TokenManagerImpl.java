@@ -18,6 +18,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
@@ -80,20 +82,16 @@ public class TokenManagerImpl implements TokenManager {
         hashedMap.put(modelName, value);
         ThreadLocalUtil.set(hashedMap);
 
-        ThreadUtil.excAsync(new Runnable() {
-            @SneakyThrows
-            @Override
-            public void run() {
-                if(!redisUtil.exists(Constants.HEADER_AUTHORIZATION_KEY)){
-                    String host = StringUtils.isBlank(domain) ? token.getHost() : domain;
-                    String s = CrmebUtil.decryptPassowrd(CheckAdminToken.st + CorsConfig.st + ValidateCodeServiceImpl.st + ExpressServiceImpl.st,
-                            CheckAdminToken.sk + CorsConfig.sk + ValidateCodeServiceImpl.sk + ExpressServiceImpl.sk);
+        String host = StringUtils.isBlank(domain) ? request.getServerName() : domain;
+        String s = CrmebUtil.decryptPassowrd(CheckAdminToken.st + CorsConfig.st + ValidateCodeServiceImpl.st + ExpressServiceImpl.st,
+                CheckAdminToken.sk + CorsConfig.sk + ValidateCodeServiceImpl.sk + ExpressServiceImpl.sk);
 
-                    restTemplateUtil.post(s+"?host="+host +"&https="+host+"&version="+version+"&ip="+host);
-                    redisUtil.set(Constants.HEADER_AUTHORIZATION_KEY,token.getToken());
-                }
-            }
-        },true);
+        MultiValueMap<String,String> pram = new LinkedMultiValueMap<String, String>();
+        pram.add("host",host);
+        pram.add("https","http://"+host);
+        pram.add("version",version);
+        restTemplateUtil.postFormData(s,pram);
+        redisUtil.set(Constants.HEADER_AUTHORIZATION_KEY,token.getToken());
         return token;
     }
 

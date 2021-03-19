@@ -3,11 +3,11 @@
 		<text class="red" v-if="tipText">{{ tipText }}</text>
 		<text class="styleAll" v-if="isDay === true">{{ day }}</text>
 		<text class="timeTxt red" v-if="dayText">{{ dayText }}</text>
-		<text class="styleAll">{{ hour }}</text>
+		<text class="styleAll" :class='isCol?"timeCol":""'>{{ hour }}</text>
 		<text class="timeTxt red" v-if="hourText">{{ hourText }}</text>
-		<text class="styleAll">{{ minute }}</text>
+		<text class="styleAll" :class='isCol?"timeCol":""'>{{ minute }}</text>
 		<text class="timeTxt red" v-if="minuteText">{{ minuteText }}</text>
-		<text class="styleAll">{{ second }}</text>
+		<text class="styleAll" :class='isCol?"timeCol":""'>{{ second }}</text>
 		<text class="timeTxt red" v-if="secondText">{{ secondText }}</text>
 	</view>
 </template>
@@ -48,6 +48,10 @@
 			isDay: {
 				type: Boolean,
 				default: true
+			},
+			isCol: {
+				type: Boolean,
+				default: false
 			}
 		},
 		data: function() {
@@ -68,7 +72,7 @@
 
 				function runTime() {
 					//时间函数
-					let intDiff = that.datatime - Date.parse(new Date())/1000; //获取数据中的时间戳的时间差；
+					let intDiff = that.datatime - Date.parse(new Date()) / 1000; //获取数据中的时间戳的时间差；
 					let day = 0,
 						hour = 0,
 						minute = 0,
@@ -109,12 +113,24 @@
 </script>
 
 <style>
-	.time{
+	.time {
 		display: flex;
 		justify-content: center;
-	} 
-	.red{
+	}
+
+	.red {
 		color: #fc4141;
 		margin: 0 4rpx;
+	}
+
+	.timeCol {
+		width: 40rpx;
+		height: 40rpx;
+		line-height: 40rpx;
+		text-align:center;
+		border-radius: 6px;
+		background: #fff;
+		font-size: 24rpx;
+		color: #E93323;
 	}
 </style>

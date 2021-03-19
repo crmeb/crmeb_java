@@ -25,7 +25,10 @@ import com.zbkj.crmeb.store.model.StoreProductReply;
 import com.zbkj.crmeb.store.request.StoreProductReplyAddRequest;
 import com.zbkj.crmeb.store.request.StoreProductReplySearchRequest;
 import com.zbkj.crmeb.store.response.StoreProductReplyResponse;
-import com.zbkj.crmeb.store.service.*;
+import com.zbkj.crmeb.store.service.StoreOrderInfoService;
+import com.zbkj.crmeb.store.service.StoreOrderService;
+import com.zbkj.crmeb.store.service.StoreProductReplyService;
+import com.zbkj.crmeb.store.service.StoreProductService;
 import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import com.zbkj.crmeb.user.model.User;
@@ -35,7 +38,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -189,7 +191,6 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
      * @return Integer
      */
     @Override
-    @Transactional(rollbackFor = {RuntimeException.class, Error.class, CrmebException.class})
     public boolean create(StoreProductReplyAddRequest request) {
         try{
             StoreProductReply storeProductReply = new StoreProductReply();
@@ -372,8 +373,8 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
             //全部商品都已评价
             storeOrder.setStatus(Constants.ORDER_STATUS_INT_COMPLETE);
             storeOrderService.updateById(storeOrder);
+            redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_COMPLETE_BY_USER, storeOrder.getId());
         }
-        redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_COMPLETE_BY_USER, storeOrder.getId());
     }
 
     /**
@@ -425,8 +426,8 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
      */
     private Integer getReplyCountByEntity(StoreProductReply request, boolean isAll) {
         LambdaQueryWrapper<StoreProductReply> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(StoreProductReply::getOid, request.getOid())
-        .eq(StoreProductReply::getUnique, request.getUnique());
+        lambdaQueryWrapper.eq(StoreProductReply::getOid, request.getOid());
+//        .eq(StoreProductReply::getUnique, request.getUnique());
         if(null != request.getUid()){
             lambdaQueryWrapper.eq(StoreProductReply::getUid, request.getUid());
         }
