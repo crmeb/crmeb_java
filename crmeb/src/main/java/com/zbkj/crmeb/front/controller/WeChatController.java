@@ -1,5 +1,7 @@
 package com.zbkj.crmeb.front.controller;
 
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import com.common.CommonResult;
 import com.zbkj.crmeb.front.response.LoginResponse;
 import com.zbkj.crmeb.front.service.UserCenterService;
@@ -59,7 +61,10 @@ public class WeChatController {
     @ApiOperation(value = "获取授权页面跳转地址")
     @RequestMapping(value = "/authorize/get", method = RequestMethod.GET)
     public CommonResult<Object> get(){
-        return CommonResult.success(weChatService.getAuthorizeUrl());
+        log.info("获取微信授权页面跳转地址");
+        String authorizeUrl = weChatService.getAuthorizeUrl();
+        log.info("授权地址:"+authorizeUrl);
+        return CommonResult.success(authorizeUrl);
     }
 
     /**
@@ -71,6 +76,7 @@ public class WeChatController {
     @RequestMapping(value = "/authorize/login", method = RequestMethod.GET)
     public CommonResult<LoginResponse> login(@RequestParam(value = "spread_spid", defaultValue = "0", required = false) Integer spreadUid,
                                              @RequestParam(value = "code") String code){
+        log.info(StrUtil.format("微信登录公共号授权登录:spreadUid={},code={}",spreadUid,code));
         return CommonResult.success(userCenterService.weChatAuthorizeLogin(code, spreadUid));
     }
 
@@ -83,6 +89,7 @@ public class WeChatController {
     @ApiOperation(value = "微信登录小程序授权登录")
     @RequestMapping(value = "/authorize/program/login", method = RequestMethod.POST)
     public CommonResult<LoginResponse> programLogin(@RequestParam String code, @RequestBody @Validated RegisterThirdUserRequest request){
+        log.info(StrUtil.format("微信小程序授权登录:code={},request={}",code, JSON.toJSONString(request)));
         return CommonResult.success(userCenterService.weChatAuthorizeProgramLogin(code, request));
     }
 
@@ -92,10 +99,11 @@ public class WeChatController {
      * @author Mr.Zhang
      * @since 2020-05-25
      */
-    @ApiOperation(value = "获取微信公众号js配置")
+    @ApiOperation(value = "获取微信js配置")
     @RequestMapping(value = "/config", method = RequestMethod.GET)
     @ApiImplicitParam(name = "url", value = "页面地址url")
     public CommonResult<Object> configJs(@RequestParam(value = "url") String url){
+        log.info("获取微信js配置:url:"+url);
         return CommonResult.success(weChatService.getJsSdkConfig(url));
     }
 

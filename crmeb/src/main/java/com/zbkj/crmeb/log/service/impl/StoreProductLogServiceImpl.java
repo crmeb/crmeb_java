@@ -1,28 +1,22 @@
 package com.zbkj.crmeb.log.service.impl;
 
-import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.constants.Constants;
-import com.constants.SmsConstants;
-import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.utils.RedisUtil;
 import com.utils.vo.dateLimitUtilVo;
 import com.zbkj.crmeb.log.dao.StoreProductLogDao;
 import com.zbkj.crmeb.log.model.StoreProductLog;
 import com.zbkj.crmeb.log.service.StoreProductLogService;
-import com.zbkj.crmeb.task.log.ProductLogAddTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
 
 /**
  * StoreProductLogServiceImpl 接口实现
@@ -93,27 +87,6 @@ public class StoreProductLogServiceImpl extends ServiceImpl<StoreProductLogDao, 
         proLog.setAddTime(jsonObject.getLong("add_time"));
         save(proLog);
     }
-
-
-    /**
-    * 列表
-    * @param request 请求参数
-    * @param pageParamRequest 分页类参数
-    * @author HZW
-    * @since 2020-12-01
-    * @return List<StoreProductLog>
-    */
-//    @Override
-//    public List<StoreProductLog> getList(StoreProductLogSearchRequest request, PageParamRequest pageParamRequest) {
-//        PageHelper.startPage(pageParamRequest.getPageNum(), pageParamRequest.getPageSize());
-//
-//        //带 StoreProductLog 类的多条件查询
-//        LambdaQueryWrapper<StoreProductLog> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-//        StoreProductLog model = new StoreProductLog();
-//        BeanUtils.copyProperties(request, model);
-//        lambdaQueryWrapper.setEntity(model);
-//        return dao.selectList(lambdaQueryWrapper);
-//    }
 
 }
 

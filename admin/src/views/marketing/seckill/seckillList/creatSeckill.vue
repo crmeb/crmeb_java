@@ -280,7 +280,6 @@
     content: '',
     specType: false,
     id: 0,
-    // productId: 0,
     timeId: '',
     startTime: '',
     stopTime: '',
@@ -620,23 +619,6 @@
           if (valid) {
             if(this.formValidate.specType && this.multipleSelection.length ===0 ) return this.$message.warning("请填选择至少一个商品属性！");
             this.currentTab++;
-            // this.multipleSelection.every((value, index) => {
-            //   if(!value.quota){
-            //     this.$message.warning("请填选择至少一个商品属性！");
-            //     return false;
-            //   }else{
-            //    this.currentTab++;
-            //    return true;
-            //   }
-            // });
-            // for(i = 0; i < this.multipleSelection.length; i++){
-            //   if(!this.multipleSelection[i].quota){
-            //     break;
-            //   }else{
-            //     this.currentTab++;
-            //   }
-            // }
-
           } else {
             return false;
           }

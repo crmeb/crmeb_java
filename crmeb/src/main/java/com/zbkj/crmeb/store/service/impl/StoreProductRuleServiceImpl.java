@@ -1,11 +1,10 @@
 package com.zbkj.crmeb.store.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.crmeb.store.dao.StoreProductRuleDao;
 import com.zbkj.crmeb.store.model.StoreProductRule;
 import com.zbkj.crmeb.store.request.StoreProductRuleRequest;
@@ -85,7 +84,7 @@ public class StoreProductRuleServiceImpl extends ServiceImpl<StoreProductRuleDao
         if(StringUtils.isBlank(ruleName)){
             return new ArrayList<>();
         }
-            lambdaQueryWrapper.eq(StoreProductRule::getRuleName, ruleName);
+        lambdaQueryWrapper.eq(StoreProductRule::getRuleName, ruleName);
         return dao.selectList(lambdaQueryWrapper);
     }
 }

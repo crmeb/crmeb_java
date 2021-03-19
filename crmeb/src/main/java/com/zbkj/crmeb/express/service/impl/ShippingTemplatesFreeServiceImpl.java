@@ -1,15 +1,14 @@
 package com.zbkj.crmeb.express.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageHelper;
 import com.utils.CrmebUtil;
-
-import com.zbkj.crmeb.express.model.ShippingTemplatesFree;
 import com.zbkj.crmeb.express.dao.ShippingTemplatesFreeDao;
+import com.zbkj.crmeb.express.model.ShippingTemplatesFree;
 import com.zbkj.crmeb.express.request.ShippingTemplatesFreeRequest;
 import com.zbkj.crmeb.express.service.ShippingTemplatesFreeService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.crmeb.system.service.SystemCityService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -59,33 +57,6 @@ public class ShippingTemplatesFreeServiceImpl extends ServiceImpl<ShippingTempla
     }
 
     /**
-     * 根据模版id查询包邮信息
-     * @param tempIds 模版id
-     * @return 包邮信息集合
-     */
-    @Override
-    public List<ShippingTemplatesFree> getListByTempIds(List<Integer> tempIds) {
-        LambdaQueryWrapper<ShippingTemplatesFree> lqw = new LambdaQueryWrapper<>();
-        lqw.in(ShippingTemplatesFree::getTempId, tempIds);
-        return dao.selectList(lqw);
-    }
-
-    /**
-     *  根据模版参数查询 H5 计算订单价格使用
-     * @param templatesFree 模版参数
-     * @return 模版集合
-     */
-    @Override
-    public List<ShippingTemplatesFree> getListByConditionForCalcOrderPrice(ShippingTemplatesFree templatesFree) {
-        LambdaQueryWrapper<ShippingTemplatesFree> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(ShippingTemplatesFree::getTempId, templatesFree.getTempId());
-        lqw.eq(ShippingTemplatesFree::getCityId, templatesFree.getCityId());
-        lqw.le(ShippingTemplatesFree::getNumber, templatesFree.getNumber());
-        lqw.ge(ShippingTemplatesFree::getPrice, templatesFree.getPrice());
-        return dao.selectList(lqw);
-    }
-
-    /**
      * 保存配送区域
      * @param shippingTemplatesFreeRequestList List<ShippingTemplatesFreeRequest> 运费集合
      * @param type Integer 计费方式
@@ -101,7 +72,6 @@ public class ShippingTemplatesFreeServiceImpl extends ServiceImpl<ShippingTempla
 
         //把目前模板下的所有数据标记为无效
         updateStatus(tempId);
-
 
         for (ShippingTemplatesFreeRequest shippingTemplatesFreeRequest : shippingTemplatesFreeRequestList) {
             String uniqueKey = DigestUtils.md5Hex(shippingTemplatesFreeRequest.toString());
@@ -119,6 +89,7 @@ public class ShippingTemplatesFreeServiceImpl extends ServiceImpl<ShippingTempla
                 shippingTemplatesFree.setType(type);
                 shippingTemplatesFree.setNumber(shippingTemplatesFreeRequest.getNumber());
                 shippingTemplatesFree.setPrice(shippingTemplatesFreeRequest.getPrice());
+                shippingTemplatesFree.setStatus(true);
                 shippingTemplatesFreesList.add(shippingTemplatesFree);
             }
         }
@@ -153,7 +124,7 @@ public class ShippingTemplatesFreeServiceImpl extends ServiceImpl<ShippingTempla
         lambdaQueryWrapper.eq(ShippingTemplatesFree::getTempId, tempId);
 
         ShippingTemplatesFree shippingTemplatesFree = new ShippingTemplatesFree();
-        shippingTemplatesFree.setStatus(true);
+        shippingTemplatesFree.setStatus(false);
         update(shippingTemplatesFree, lambdaQueryWrapper);
     }
 
@@ -167,23 +138,25 @@ public class ShippingTemplatesFreeServiceImpl extends ServiceImpl<ShippingTempla
     public void delete(Integer tempId) {
         LambdaQueryWrapper<ShippingTemplatesFree> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(ShippingTemplatesFree::getTempId, tempId);
-        lambdaQueryWrapper.eq(ShippingTemplatesFree::getStatus, true);
+        lambdaQueryWrapper.eq(ShippingTemplatesFree::getStatus, false);
         dao.delete(lambdaQueryWrapper);
     }
 
     /**
-     * 根据模板id和城市id查询数据
-     * @param tempId Integer 运费模板id
-     * @param cityId Integer 城市id
-     * @author Mr.Zhang
-     * @since 2020-05-20
-     * @return ShippingTemplatesFree
+     * 根据模板编号、城市ID查询
+     * @param tempId 模板编号
+     * @param cityId 城市ID
+     * @return 运费模板
      */
-    private ShippingTemplatesFree getVoByTempIdAndCityId(Integer tempId, Integer cityId) {
-        LambdaQueryWrapper<ShippingTemplatesFree> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(ShippingTemplatesFree::getCityId, cityId);
-        lambdaQueryWrapper.eq(ShippingTemplatesFree::getTempId, tempId);
-        return dao.selectOne(lambdaQueryWrapper);
+    @Override
+    public ShippingTemplatesFree getByTempIdAndCityId(Integer tempId, Integer cityId) {
+        LambdaQueryWrapper<ShippingTemplatesFree> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(ShippingTemplatesFree::getTempId, tempId);
+        lqw.eq(ShippingTemplatesFree::getCityId, cityId);
+        lqw.eq(ShippingTemplatesFree::getStatus, true);
+        lqw.orderByDesc(ShippingTemplatesFree::getId);
+        lqw.last(" limit 1");
+        return dao.selectOne(lqw);
     }
 
     /**

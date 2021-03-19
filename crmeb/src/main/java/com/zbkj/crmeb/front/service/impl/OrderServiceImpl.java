@@ -4,7 +4,6 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.constants.Constants;
@@ -53,8 +52,6 @@ import com.zbkj.crmeb.user.model.UserAddress;
 import com.zbkj.crmeb.user.service.UserAddressService;
 import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
-import com.zbkj.crmeb.wechat.vo.WechatSendMessageForCreateOrder;
-import com.zbkj.crmeb.wechat.vo.WechatSendMessageForReFundNotify;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -222,7 +219,7 @@ public class OrderServiceImpl implements OrderService {
 
         // other
         HashMap<String, Object> otherMap = new HashMap<>();
-        otherMap.put("offlinePostage",systemConfigService.getValueByKey("offline_postage"));
+//        otherMap.put("offlinePostage",systemConfigService.getValueByKey("offline_postage"));
         otherMap.put("integralRatio",systemConfigService.getValueByKey("integral_ratio"));
 
         // 获取有效优惠券
@@ -240,7 +237,7 @@ public class OrderServiceImpl implements OrderService {
         response.setAddressInfo(defaultAddress);
         response.setCartInfo(storeCartResponse);
         response.setPriceGroup(orderPriceGroup);
-        response.setOfflinePostage(otherMap.get("offlinePostage").toString());
+//        response.setOfflinePostage(otherMap.get("offlinePostage").toString());
         response.setIntegralRatio(otherMap.get("integralRatio").toString());
         response.setUserInfo(currentUserInfo);
         response.setOfflinePayStatus(systemConfigService.getValueByKey("offline_pay_status"));
@@ -303,7 +300,8 @@ public class OrderServiceImpl implements OrderService {
         List<StoreCartResponse> cartInfo = cor.getCartInfo();
         List<StoreCartResponse> cartList = cartInfo.stream().filter(i -> ObjectUtil.isNotNull(i.getId())).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(cartList)) {
-            List<Integer> cartIdList = cartList.stream().map(temp -> temp.getId().intValue()).collect(Collectors.toList());
+//            List<Integer> cartIdList = cartList.stream().map(temp -> temp.getId().intValue()).collect(Collectors.toList());
+            List<Long> cartIdList = cartList.stream().map(temp -> temp.getId()).collect(Collectors.toList());
             storeCartService.deleteCartByIds(cartIdList);
         }
         // 加入自动未支付自动取消队列
@@ -468,15 +466,6 @@ public class OrderServiceImpl implements OrderService {
             throw new CrmebException("订单退款中");
         }
 
-//        if(existStoreOrder.getStatus() == 1){
-//            throw new CrmebException("订单当前状态无法申请退款");
-//        }
-
-//        if (StrUtil.isBlank(existStoreOrder.getRefundReason())) {
-//            throw new CrmebException("订单退款已被拒绝");
-//        }
-
-
         existStoreOrder.setRefundStatus(1);
         existStoreOrder.setRefundReasonTime(DateUtil.nowDateTime());
         existStoreOrder.setRefundReasonWap(request.getText());
@@ -505,24 +494,6 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         if(!execute) throw new CrmebException("申请退款失败");
-
-//        HashMap<String, Object> smsInfo = new HashMap<>();
-//        smsInfo.put("orderId", existStoreOrder.getOrderId());
-//        smsInfo.put("adminName", currentUser.getNickname());
-//        if (execute) {
-//            // 发送微信小程序订阅消息
-//            String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
-//            if(StringUtils.isNotBlank(storeNameAndCarNumString)){
-//                WechatSendMessageForReFundNotify notify = new WechatSendMessageForReFundNotify(
-//                        storeNameAndCarNumString,storeOrder.getPayPrice().toString(),
-//                        storeOrder.getCreateTime().toString(),storeOrder.getOrderId()+"",DateUtil.nowDateTimeStr(),
-//                        "CRMEB","发起申请",request.getExplain(),storeOrder.getPayPrice()+"",
-//                        request.getText(),storeOrder.getUserPhone(),"CRMEB");
-//                wechatSendMessageForMinService.sendReFundNotifyMessage(notify, userService.getUserId());
-//            }
-//        boolean codeResult = smsService.pushCodeToList(currentUser.getPhone(),1, smsInfo);
-//        if(!codeResult) throw new CrmebException("短信加入发送队列失败");
-//        }
         return execute;
     }
 
@@ -542,31 +513,24 @@ public class OrderServiceImpl implements OrderService {
             StoreOrder storeOrder = storeOrderService.getById(request.getId());
             if(ObjectUtil.isNull(storeOrder)){
                 //订单号错误
-//                throw new CrmebException("没有找到相关订单信息!");
                 logger.error("拼团自动处理订单申请退款：没有找到相关订单信息!");
                 continue;
             }
             if(storeOrder.getRefundStatus() == 1){
-//                throw new CrmebException("正在申请退款中");
                 logger.error("拼团自动处理订单申请退款：正在申请退款中!");
                 continue;
             }
 
             if(storeOrder.getRefundStatus() == 2){
-//                throw new CrmebException("订单已退款");
                 logger.error("拼团自动处理订单申请退款：订单已退款!");
                 continue;
             }
 
             if(storeOrder.getRefundStatus() == 3){
-//                throw new CrmebException("订单退款中");
                 logger.error("拼团自动处理订单申请退款：订单退款中!");
                 continue;
             }
 
-//            if(storeOrder.getStatus() == 1){
-//                throw new CrmebException("订单状态当前无法退款");
-//            }
             storeOrder.setRefundReasonWapImg(systemAttachmentService.clearPrefix(request.getReasonImage()));
             storeOrder.setRefundStatus(1);
             storeOrder.setRefundReasonWapExplain(request.getExplain());
@@ -621,7 +585,6 @@ public class OrderServiceImpl implements OrderService {
         }
 
         OrderAgainVo orderAgainVo = orderUtils.tidyOrder(storeOrderExist, true, false);
-//        List<StoreCart> storeCartResultList = new ArrayList<>();
         for (StoreOrderInfoVo oldCartInfo : orderAgainVo.getCartInfo()) { // todo 确实是否仅仅一条数据
             // todo 营销产品类型二期
             List<String> orderAgainCacheKeys = storeOrderService.addCartAgain(userService.getUserIdException(), oldCartInfo.getProductId(), oldCartInfo.getInfo().getCartNum(),
@@ -631,7 +594,6 @@ public class OrderServiceImpl implements OrderService {
 
         }
         if(resultMap.size() == 0) throw new CrmebException("再来一单失败，请重新下单");
-//        resultMap.put("cateId",storeCartResultList.stream().map(StoreCart::getId).distinct().collect(Collectors.toList()));
         return resultMap;
     }
 
@@ -899,7 +861,6 @@ public class OrderServiceImpl implements OrderService {
         resultMap.put("order", orderInfo);
         resultMap.put("express", expressInfo);
         return resultMap;
-//        expressService.getExpressInfo();
 
     }
 
@@ -910,10 +871,6 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Object getReplyProduct(GetProductReply productReply) {
         HashMap<String,Object> resultMap = new HashMap<>();
-//        StoreOrder storeOrderPram = new StoreOrder();
-//        storeOrderPram.setUnique(unique);
-//        StoreOrder existOrder = storeOrderService.getByEntityOne(storeOrderPram);
-//        if(null== existOrder) throw new CrmebException("未找到该订单信息");
         StoreOrderInfoSearchRequest soinfoRequest = new StoreOrderInfoSearchRequest();
         soinfoRequest.setUnique(productReply.getUni());
         soinfoRequest.setOrderId(productReply.getOrderId());

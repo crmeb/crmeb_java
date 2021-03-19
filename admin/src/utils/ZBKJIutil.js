@@ -83,7 +83,19 @@ export function Mul(arg1, arg2) {
 //替换安全域名
 export function setDomain(url) {
   url = url ? url.toString() : '';
-  //本地调试打开,生产请注销
-  if (url.indexOf("https://") > -1) return url;
-  else return url.replace('http://', 'https://');
+  // 正则替换存在的转义符
+  url = url.replace(/\\/g,'');
+  url = url.replace('http://','https://');
+  if(url.startsWith('src="')){
+    url = url.replaceAll('src="','');
+  }
+  if(url.startsWith('//img')){
+    url = url.replace('//img','https://img');
+  }
+  return url;
+}
+
+// 过滤富文本中的 img 相对路径访问
+export function replaceImgSrcHttps(content) {
+  return content.replaceAll('src="//','src="https://');
 }

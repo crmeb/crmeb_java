@@ -1,11 +1,9 @@
 package com.zbkj.crmeb.store.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.common.PageParamRequest;
-import com.github.pagehelper.PageHelper;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.common.PageParamRequest;
+import com.github.pagehelper.PageHelper;
 import com.zbkj.crmeb.store.dao.StoreProductCateDao;
 import com.zbkj.crmeb.store.model.StoreProductCate;
 import com.zbkj.crmeb.store.request.StoreProductCateSearchRequest;
@@ -63,13 +61,5 @@ public class StoreProductCateServiceImpl extends ServiceImpl<StoreProductCateDao
         return dao.selectList(lqw);
     }
 
-//    @Override
-//    public Integer updateByProductId(StoreProductCate storeProductCate) {
-//        LambdaUpdateWrapper<StoreProductCate> luw = new LambdaUpdateWrapper<>();
-//        luw.set(StoreProductCate::getProductId, storeProductCate.getProductId());
-//        luw.set(StoreProductCate::getCateId, storeProductCate.getCateId());
-//        luw.set(StoreProductCate::getAddTime, storeProductCate.getAddTime());
-//        return dao.update(storeProductCate, luw);
-//    }
 }
 

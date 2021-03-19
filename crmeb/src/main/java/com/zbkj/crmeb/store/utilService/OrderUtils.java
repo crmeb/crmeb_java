@@ -37,7 +37,6 @@ import com.zbkj.crmeb.front.vo.OrderAgainVo;
 import com.zbkj.crmeb.marketing.model.StoreCouponUser;
 import com.zbkj.crmeb.marketing.request.StoreCouponUserSearchRequest;
 import com.zbkj.crmeb.marketing.response.StoreCouponUserResponse;
-import com.zbkj.crmeb.marketing.service.StoreCouponService;
 import com.zbkj.crmeb.marketing.service.StoreCouponUserService;
 import com.zbkj.crmeb.seckill.model.StoreSeckill;
 import com.zbkj.crmeb.seckill.model.StoreSeckillManger;
@@ -46,7 +45,6 @@ import com.zbkj.crmeb.seckill.service.StoreSeckillService;
 import com.zbkj.crmeb.store.model.*;
 import com.zbkj.crmeb.store.request.StoreOrderSearchRequest;
 import com.zbkj.crmeb.store.response.StoreCartResponse;
-import com.zbkj.crmeb.store.response.StoreProductCartProductInfoResponse;
 import com.zbkj.crmeb.store.service.*;
 import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
 import com.zbkj.crmeb.system.model.SystemStore;
@@ -57,7 +55,6 @@ import com.zbkj.crmeb.system.service.SystemStoreService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserAddress;
 import com.zbkj.crmeb.user.service.UserAddressService;
-import com.zbkj.crmeb.user.service.UserBillService;
 import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForDistrbution;
@@ -68,7 +65,6 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
@@ -97,9 +93,6 @@ public class OrderUtils {
     private UserService userService;
 
     @Autowired
-    private UserBillService userBillService;
-
-    @Autowired
     private StoreOrderStatusService storeOrderStatusService;
 
     @Autowired
@@ -110,9 +103,6 @@ public class OrderUtils {
 
     @Autowired
     private StoreCouponUserService storeCouponUserService;
-
-    @Autowired
-    private StoreCouponService storeCouponService;
 
     @Autowired
     private StoreProductService storeProductService;
@@ -134,9 +124,6 @@ public class OrderUtils {
 
     @Autowired
     private ShippingTemplatesFreeService shippingTemplatesFreeService;
-
-    @Autowired
-    private StoreCartService storeCartService;
 
     @Autowired
     private SystemGroupDataService systemGroupDataService;
@@ -211,18 +198,7 @@ public class OrderUtils {
             // 拼团秒杀砍价逻辑处理
             String tempTime = null;
             Date timeSpace = null;
-//            if(storeOrder.getPinkId() > 0 || storeOrder.getCombinationId() > 0){
-//                tempTime = configValues.get(4).length() > 0 ? configValues.get(4) : configValues.get(1);
-//                timeSpace = DateUtil.addSecond(storeOrder.getCreateTime(),Integer.parseInt(tempTime) * 3600);
-//            }else if(storeOrder.getSeckillId() > 0){
-//                tempTime = configValues.get(3).length() > 0 ? configValues.get(3) : configValues.get(1);
-//                timeSpace = DateUtil.addSecond(storeOrder.getCreateTime(), Integer.parseInt(tempTime) * 3600);
-//            }else if(storeOrder.getBargainId() > 0){
-//                tempTime = configValues.get(2).length() > 0 ? configValues.get(2) : configValues.get(1);
-//                timeSpace = DateUtil.addSecond(storeOrder.getCreateTime(), Integer.parseInt(tempTime) * 3600);
-//            }else{ // 非 营销活动购买处理
-                timeSpace = DateUtil.addSecond(storeOrder.getCreateTime(),Double.valueOf(configValues.get(0).toString()).intValue() * 3600);
-//            }
+            timeSpace = DateUtil.addSecond(storeOrder.getCreateTime(),Double.valueOf(configValues.get(0).toString()).intValue() * 3600);
             status.setMsg("请在" + DateUtil.dateToStr(timeSpace, Constants.DATE_FORMAT) +"前完成支付");
         }else if(storeOrder.getRefundStatus() == 1){
             status = new OrderAgainItemVo(-1,"申请退款中","商家审核中,请耐心等待");
@@ -337,6 +313,8 @@ public class OrderUtils {
         BigDecimal payPostage;
         if(request.getPayType().equals("offline") && systemConfigService.getValueByKey("offline_postage").equals("1")){
             payPostage = BigDecimal.ZERO;
+        } else if (request.getShippingType().equals(2)) {// 到店自取，不计算运费
+            payPostage = BigDecimal.ZERO;
         }else{
             UserAddress ua = new UserAddress();
             ua.setUid(currentUser.getUid());
@@ -344,6 +322,7 @@ public class OrderUtils {
             UserAddress currentUserAddress = userAddressService.getUserAddress(ua);
             currentOrderPriceGroup = getOrderPriceGroup(cor.getCartInfo(), currentUserAddress);
             payPostage = currentOrderPriceGroup.getStorePostage();
+            payPrice = payPrice.add(payPostage);
         }
 
         // 检测优惠券
@@ -363,23 +342,6 @@ public class OrderUtils {
             // 减去优惠券金额  后使用优惠券
             payPrice = payPrice.subtract(storeCouponUser.getMoney());
             couponPrice = storeCouponUser.getMoney();
-        }
-
-
-        // 发快递还是门店自提
-        String storeSelfMention = systemConfigService.getValueByKey("store_self_mention");
-        int shippingType = 0;
-
-        if(Boolean.valueOf(storeSelfMention)) shippingType = 1;
-        if(shippingType == 1){ // 是否包邮
-            if(StringUtils.isNotBlank(cor.getOther().get("offlinePostage").toString())
-                    && request.getPayType().equals(Constants.PAY_TYPE_OFFLINE)){
-                payPostage = BigDecimal.ZERO;
-            }
-            payPrice = payPrice.add(payPostage);
-        }else if(shippingType == 2){ // 门店自提没有邮费
-            cor.getPriceGroup().setStorePostage(BigDecimal.ZERO);
-            payPostage = BigDecimal.ZERO;
         }
 
         // 积分
@@ -423,298 +385,6 @@ public class OrderUtils {
         cor.getPriceGroup().setUsedIntegral(result.getUsedIntegral());
         cacheRepliceOrderInfo(orderKey, currentUser.getUid(), cor);
         return result;
-    }
-
-    /**
-     * 创建订单
-     * @param request 订单创建参数
-     * @param cor 缓存的购物车，价钱等信息集合
-     * @param isChannel 购买渠道
-     * @param orderId 订单id
-     * @return 订单信息
-     */
-    @Transactional(rollbackFor = {RuntimeException.class, Error.class, CrmebException.class})
-    public StoreOrder createOrder(OrderCreateRequest request,ConfirmOrderResponse cor, Integer isChannel,Integer orderId, String orderKey){
-//        UserAddress currentUserAddress = new UserAddress();
-//        List<Integer> cartIds = new ArrayList<>();
-//        Integer totalNum = 0;
-//        Integer gainIntegral = 0;
-//
-//        if(request.getShippingType() == 1){ // 是否包邮
-//            if(request.getAddressId() <= 0) throw new CrmebException("请选择收货地址");
-//            UserAddress userAddress = new UserAddress();
-//            userAddress.setId(request.getAddressId());
-//            userAddress.setIsDel(false);
-//            currentUserAddress = userAddressService.getUserAddress(userAddress);
-//            if(null == currentUserAddress){
-//                throw new CrmebException("收货地址有误");
-//            }
-//        }else if(request.getShippingType() == 2){ // 到店自提
-//            if(StringUtils.isBlank(request.getRealName()) || StringUtils.isBlank(request.getPhone()))
-//                throw new CrmebException("请填写姓名和电话");
-//
-//            currentUserAddress.setRealName(request.getRealName());
-//            currentUserAddress.setPhone(request.getPhone());
-//        }
-//        for (StoreCartResponse cartResponse : cor.getCartInfo()) {
-//            cartIds.add(cartResponse.getSeckillId());
-//            totalNum += cartResponse.getCartNum();
-//
-//            Integer cartInfoGainIntegral =
-//                    (cartResponse.getProductInfo().getGiveIntegral() != null && cartResponse.getProductInfo().getGiveIntegral() > 0 )?
-//                            cartResponse.getProductInfo().getGiveIntegral() * cartResponse.getCartNum()
-//                            : 0;
-//            gainIntegral = gainIntegral + cartInfoGainIntegral;
-//        }
-//        // todo 检测营销产品状态
-//        // 发快递还是门店自提
-//        String storeSelfMention = systemConfigService.getValueByKey("store_self_mention");
-//        if(!Boolean.valueOf(storeSelfMention)) request.setShippingType(1);
-//
-//        StoreOrder storeOrder = new StoreOrder();
-//        storeOrder.setUid(cor.getUserInfo().getUid());
-//        storeOrder.setOrderId(CrmebUtil.getOrderNo(Constants.PAY_TYPE_WE_CHAT));
-//
-//        // 后置选择收货地址信息
-//        if(null == cor.getAddressInfo() && request.getAddressId() > 0){
-//            UserAddress selectUserAddress = userAddressService.getById(request.getAddressId());
-//            cor.setAddressInfo(selectUserAddress);
-//        }
-//
-//        storeOrder.setRealName(currentUserAddress.getRealName());
-//        storeOrder.setUserPhone(currentUserAddress.getPhone());
-//        storeOrder.setUserAddress(cor.getAddressInfo().getProvince()
-//                + cor.getAddressInfo().getCity()
-//                + cor.getAddressInfo().getDistrict()
-//                + cor.getAddressInfo().getDetail());
-////        storeOrder.setCarId(cartIds);
-//        storeOrder.setTotalNum(totalNum);
-//        BigDecimal mapTotalPrice = cor.getPriceGroup().getTotalPrice();
-//        BigDecimal mapStorePostage = cor.getPriceGroup().getStorePostage();
-//        BigDecimal mapCouponPrice = cor.getPriceGroup().getCouponPrice();
-//        BigDecimal mapPayPrice = cor.getPriceGroup().getPayPrice();
-//        BigDecimal mapPayPostage = cor.getPriceGroup().getPayPostage();
-//        BigDecimal mapDeductionPrice = cor.getPriceGroup().getDeductionPrice();
-//        Integer mapUsedIntegral = cor.getPriceGroup().getUsedIntegral();
-//        BigDecimal mapCostPrice = cor.getPriceGroup().getCostPrice();
-//
-//        int couponId = null == cor.getUsableCoupon() ? 0: cor.getUsableCoupon().getId();
-//        storeOrder.setTotalPrice(mapTotalPrice);
-//        storeOrder.setTotalPostage(mapStorePostage);
-//        storeOrder.setCouponId(couponId);
-//        storeOrder.setCouponPrice(mapCouponPrice);
-//        storeOrder.setPayPrice(mapPayPrice);
-//        storeOrder.setPayPostage(mapPayPostage);
-//        storeOrder.setDeductionPrice(mapDeductionPrice);
-////        storeOrder.setPaid(false);
-//        storeOrder.setPayType(request.getPayType());
-//        storeOrder.setUseIntegral(mapUsedIntegral);
-//        storeOrder.setGainIntegral(gainIntegral);
-//        storeOrder.setMark(StringEscapeUtils.escapeHtml4(request.getMark()));
-//        storeOrder.setCombinationId(request.getCombinationId());
-//        storeOrder.setPinkId(request.getPinkId());
-//        storeOrder.setSeckillId(request.getSeckillId());
-//        storeOrder.setBargainId(request.getBargainId());
-//        storeOrder.setCost(mapCostPrice);
-//        storeOrder.setIsChannel(isChannel);
-//        storeOrder.setCreateTime(DateUtil.nowDateTime());
-//        storeOrder.setUnique(orderKey);
-//        storeOrder.setShippingType(request.getShippingType());
-//        storeOrder.setPinkId(request.getPinkId());
-//
-//        // 如果是自提
-//        if(request.getShippingType() == 2){
-//            storeOrder.setVerifyCode(CrmebUtil.randomCount(1111111111,999999999)+"");
-//            SystemStore systemStore = new SystemStore();
-//            systemStore.setId(request.getStoreId());
-//            systemStore.setIsShow(true);
-//            systemStore.setIsDel(false);
-//            SystemStore existSystemStore = systemStoreService.getByCondition(systemStore);
-//            if(null == existSystemStore) throw new CrmebException("暂无门店无法选择门店自提");
-//            storeOrder.setStoreId(existSystemStore.getId());
-//        }
-//        boolean createdResult = storeOrderService.create(storeOrder);
-//        if(!createdResult) throw new CrmebException("订单生成失败");
-//
-//        // 积分抵扣
-//        boolean disIntegle = true;
-//        User currentUser = userService.getInfo();
-//        if(request.getUseIntegral() && currentUser.getIntegral() > 0){
-//            BigDecimal deductionPrice = BigDecimal.ZERO;
-//            if(null != cor.getPriceGroup().getUsedIntegral()){
-//                deductionPrice = BigDecimal.valueOf(cor.getPriceGroup().getUsedIntegral(),2);
-//                if(cor.getPriceGroup().getUsedIntegral() > 0){
-//                    currentUser.setIntegral(0);
-//                    disIntegle = userService.updateBase(currentUser);
-//                }else{
-//                    if(currentUser.getIntegral() < deductionPrice.intValue()){
-//                        currentUser.setIntegral(currentUser.getIntegral() - deductionPrice.intValue());
-//                        disIntegle = userService.updateBase(currentUser);
-//                    }
-//                }
-//            }
-//            UserBill userBill = new UserBill();
-//            userBill.setTitle("积分抵扣");
-//            userBill.setUid(currentUser.getUid());
-//            userBill.setCategory("integral");
-//            userBill.setType("deduction");
-//            userBill.setNumber(deductionPrice);
-//            userBill.setLinkId(orderId+"");
-//            userBill.setBalance(new BigDecimal(currentUser.getIntegral()));
-//
-//            userBill.setMark("购买商品使用"+userBill.getNumber()+"积分抵扣"+deductionPrice+"元");
-//            boolean userBillSaveResult = userBillService.save(userBill);
-//            disIntegle = disIntegle && userBillSaveResult;
-//        }
-//        if(!disIntegle) throw new CrmebException("使用积分抵扣失败");
-//
-//        Integer secKillId = null;
-//        List<StoreOrderInfo> storeOrderInfos = new ArrayList<>();
-//        boolean deCountResult = true;
-//        for (StoreCartResponse cartResponse : cor.getCartInfo()) {
-//            StoreOrderInfo soInfo = new StoreOrderInfo();
-//            // 秒杀商品扣减库存
-//            if(null != cartResponse.getSeckillId() && cartResponse.getSeckillId() > 0){
-//                secKillId = cartResponse.getSeckillId();
-//                // 秒杀商品本身库存扣减
-//                deCountResult = storeSeckillService.decProductStock(
-//                        cartResponse.getSeckillId(),
-//                        cartResponse.getCartNum(),
-//                        Integer.parseInt(cartResponse.getProductAttrUnique()), Constants.PRODUCT_TYPE_SECKILL);
-//                // 商品本身扣减库存 更新商品本身库存步骤 1=根据秒杀uniuqeId 获取对应sku 2=根据商品ID获取商品sku信息后 对比相等的sku 更新其对应数量
-//                // 秒杀对应商品库存扣减
-//                StoreProductAttrValue currentSeckillAttrValue = storeProductAttrValueService.getById(cartResponse.getProductAttrUnique());
-//                List<StoreProductAttrValue> currentSeckillAttrValues = storeProductAttrValueService.getListByProductId(cartResponse.getProductId());
-//                List<StoreProductAttrValue> existAttrValues = currentSeckillAttrValues.stream().filter(e ->
-//                        e.getSuk().equals(currentSeckillAttrValue.getSuk()) && e.getType().equals(Constants.PRODUCT_TYPE_NORMAL))
-//                        .collect(Collectors.toList());
-//                if(existAttrValues.size() != 1) throw new CrmebException("未找到扣减库存的商品");
-//                deCountResult = storeProductService.decProductStock(
-//                        existAttrValues.get(0).getProductId(),
-//                        cartResponse.getCartNum(),
-//                        existAttrValues.get(0).getId(), Constants.PRODUCT_TYPE_NORMAL);
-//
-//            }else if (ObjectUtil.isNotNull(cartResponse.getBargainId()) && cartResponse.getBargainId() > 0) {
-//                // 砍价扣减库存
-//                Integer bargainId = cartResponse.getBargainId();
-//                // 砍价商品扣减库存
-//                deCountResult = storeBargainService.decProductStock(
-//                        cartResponse.getBargainId(),
-//                        cartResponse.getCartNum(),
-//                        Integer.parseInt(cartResponse.getProductAttrUnique()), Constants.PRODUCT_TYPE_BARGAIN);
-//                // 商品本身扣减库存 更新商品本身库存步骤 1=根据秒杀uniuqeId 获取对应sku 2=根据商品ID获取商品sku信息后 对比相等的sku 更新其对应数量
-//                // 砍价对应商品库存扣减
-//                StoreProductAttrValue currentSeckillAttrValue = storeProductAttrValueService.getById(cartResponse.getProductAttrUnique());
-//                List<StoreProductAttrValue> currentBargainAttrValues = storeProductAttrValueService.getListByProductId(cartResponse.getProductId());
-//                List<StoreProductAttrValue> existAttrValues = currentBargainAttrValues.stream().filter(e ->
-//                        e.getSuk().equals(currentSeckillAttrValue.getSuk()) && e.getType().equals(Constants.PRODUCT_TYPE_NORMAL))
-//                        .collect(Collectors.toList());
-//                if(existAttrValues.size() != 1) throw new CrmebException("未找到扣减库存的商品");
-//                deCountResult = storeProductService.decProductStock(
-//                        existAttrValues.get(0).getProductId(),
-//                        cartResponse.getCartNum(),
-//                        existAttrValues.get(0).getId(), Constants.PRODUCT_TYPE_NORMAL);
-//
-//                // 砍价商品购买成功，改变用户状态
-//                StoreBargainUser storeBargainUser = storeBargainUserService.getByBargainIdAndUid(cartResponse.getBargainId(), cor.getUserInfo().getUid());
-//                storeBargainUser.setStatus(3);
-//                storeBargainUserService.updateById(storeBargainUser);
-//            }else if (ObjectUtil.isNotNull(cartResponse.getCombinationId()) && cartResponse.getCombinationId() > 0) {
-//                // 判断拼团团长是否存在
-//                StorePink headPink = null;
-//                if (ObjectUtil.isNotNull(cartResponse.getPinkId()) && cartResponse.getPinkId() > 0) {
-//                    headPink = storePinkService.getById(cartResponse.getPinkId());
-//                    if (ObjectUtil.isNull(headPink) || headPink.getIsRefund().equals(true) || headPink.getStatus() == 3) {
-//                        throw new CrmebException("找不到对应的拼团团队信息");
-//                    }
-//                }
-//                // 拼团扣减库存
-//                // 拼团商品本身库存扣减
-//                deCountResult = storeCombinationService.decProductStock(
-//                        cartResponse.getCombinationId(),
-//                        cartResponse.getCartNum(),
-//                        Integer.parseInt(cartResponse.getProductAttrUnique()), Constants.PRODUCT_TYPE_PINGTUAN);
-//                // 商品本身扣减库存 更新商品本身库存步骤 1=根据拼团uniuqeId 获取对应sku 2=根据商品ID获取商品sku信息后 对比相等的sku 更新其对应数量
-//                // 拼团对应商品库存扣减
-//                StoreProductAttrValue currentCombinationAttrValue = storeProductAttrValueService.getById(cartResponse.getProductAttrUnique());
-//                List<StoreProductAttrValue> currentCombinationAttrValues = storeProductAttrValueService.getListByProductId(cartResponse.getProductId());
-//                List<StoreProductAttrValue> existAttrValues = currentCombinationAttrValues.stream().filter(e ->
-//                        e.getSuk().equals(currentCombinationAttrValue.getSuk()) && e.getType().equals(Constants.PRODUCT_TYPE_NORMAL))
-//                        .collect(Collectors.toList());
-//                if(existAttrValues.size() != 1) throw new CrmebException("未找到扣减库存的商品");
-//                deCountResult = storeProductService.decProductStock(
-//                        existAttrValues.get(0).getProductId(),
-//                        cartResponse.getCartNum(),
-//                        existAttrValues.get(0).getId(), Constants.PRODUCT_TYPE_NORMAL);
-//                // 生成拼团表数据
-//                StoreCombination storeCombination = storeCombinationService.getById(cartResponse.getCombinationId());
-//                StorePink storePink = new StorePink();
-//                storePink.setUid(cor.getUserInfo().getUid());
-//                storePink.setAvatar(cor.getUserInfo().getAvatar());
-//                storePink.setNickname(cor.getUserInfo().getNickname());
-//                storePink.setOrderId(storeOrder.getOrderId());
-//                storePink.setOrderIdKey(storeOrder.getId());
-//                storePink.setTotalNum(storeOrder.getTotalNum());
-//                storePink.setTotalPrice(storeOrder.getTotalPrice());
-//                storePink.setCid(cartResponse.getCombinationId());
-//                storePink.setPid(cartResponse.getProductId());
-//                storePink.setPeople(storeCombination.getPeople());
-//                storePink.setPrice(storeCombination.getPrice());
-//                Integer effectiveTime = storeCombination.getEffectiveTime();// 有效小时数
-//                DateTime dateTime = cn.hutool.core.date.DateUtil.date();
-//                storePink.setAddTime(dateTime.getTime());
-//                if (ObjectUtil.isNotNull(cartResponse.getPinkId()) && cartResponse.getPinkId() > 0) {
-//                    storePink.setStopTime(headPink.getStopTime());
-//                } else {
-//                    DateTime hourTime = cn.hutool.core.date.DateUtil.offsetHour(dateTime, effectiveTime);
-//                    long stopTime =  hourTime.getTime();
-//                    if (stopTime > storeCombination.getStopTime()) {
-//                        stopTime = storeCombination.getStopTime();
-//                    }
-//                    storePink.setStopTime(stopTime);
-//                }
-//                storePink.setKId(Optional.ofNullable(cartResponse.getPinkId()).orElse(0));
-//                storePink.setIsTpl(false);
-//                storePink.setIsRefund(false);
-//                storePink.setStatus(1);
-//                storePinkService.save(storePink);
-//
-//                // 如果是开团，需要更新订单数据
-//                if (storePink.getKId() == 0) {
-//                    storeOrder.setPinkId(storePink.getId());
-//                    storeOrderService.updateById(storeOrder);
-//                }
-//            }else {
-//                // 普通购买扣减库存
-//                deCountResult = storeProductService.decProductStock(
-//                        cartResponse.getProductId(),
-//                        cartResponse.getCartNum(),
-//                        Integer.parseInt(cartResponse.getProductAttrUnique()), Constants.PRODUCT_TYPE_NORMAL);
-//            }
-//            soInfo.setOrderId(storeOrder.getId());
-//            soInfo.setProductId(cartResponse.getProductId());
-//            soInfo.setInfo(JSON.toJSON(cartResponse).toString());
-//            soInfo.setUnique(cartResponse.getProductAttrUnique());
-//            storeOrderInfos.add(soInfo);
-//
-//        }
-//        // 保存购物车商品详情
-//        boolean saveBatchOrderInfosResult = storeOrderInfoService.saveOrderInfos(storeOrderInfos);
-//        if(!saveBatchOrderInfosResult && !deCountResult){
-//            throw new CrmebException("订单生成失败");
-//        }
-//
-//        // 删除缓存订单
-//        cacheDeleteOrderInfo(currentUser.getUid(), orderKey);
-//        // 检查缺省的默认地址设置
-//        UserAddress defaultAddress = userAddressService.getDefault();
-//        if(null != defaultAddress){
-//            userAddressService.def(cor.getAddressInfo().getId());
-//        }
-//        storeOrderStatusService.createLog(storeOrder.getId(),
-//                Constants.ORDER_STATUS_CACHE_CREATE_ORDER,"订单生成");
-//        return storeOrder;
-        return null;
     }
 
     /**
@@ -982,8 +652,6 @@ public class OrderUtils {
             // 生成订单日志
             storeOrderStatusService.createLog(storeOrder.getId(), Constants.ORDER_STATUS_CACHE_CREATE_ORDER, "订单生成");
 
-            // 扣减库存
-//            deductionsStock(cartInfoList, storeOrder, user);
             return Boolean.TRUE;
         });
         if (!execute) {
@@ -1120,10 +788,10 @@ public class OrderUtils {
                 // 主商品sku
                 StoreProductAttrValue productAttrValue = storeProductAttrValueService.getByProductIdAndSkuAndType(productId, combinationAttrValue.getSuk(), Constants.PRODUCT_TYPE_NORMAL);
                 if (ObjectUtil.isNull(productAttrValue)) {
-                    throw new CrmebException("砍价主商品规格不存在");
+                    throw new CrmebException("拼团主商品规格不存在");
                 }
                 if (productAttrValue.getStock() <= 0 || cartNum > productAttrValue.getStock()) {
-                    throw new CrmebException("砍价主商品规格库存不足");
+                    throw new CrmebException("拼团主商品规格库存不足");
                 }
 
                 MyRecord record = new MyRecord();
@@ -1168,48 +836,6 @@ public class OrderUtils {
             }
         }
         return recordList;
-    }
-
-
-    /**
-     * 扣减库存
-     */
-    private Boolean deductionsStock(List<StoreCartResponse> cartInfoList, StoreOrder storeOrder, User user) {
-        // 活动商品处理，只会有一条数据
-        if (cartInfoList.size() == 1) {
-            StoreCartResponse cartResponse = cartInfoList.get(0);
-            Integer num = cartResponse.getCartNum();
-            Integer attrValueId = Integer.parseInt(cartResponse.getProductAttrUnique());
-            Integer productId = cartResponse.getProductId();
-            // 秒杀商品扣减库存
-            if (ObjectUtil.isNotNull(cartResponse.getSeckillId()) && cartResponse.getSeckillId() > 0) {
-                Integer seckillId = cartResponse.getSeckillId();
-                return storeSeckillService.decProductStock(seckillId, num, attrValueId, productId);
-            }
-            // 砍价扣减库存
-            if (ObjectUtil.isNotNull(cartResponse.getBargainId()) && cartResponse.getBargainId() > 0) {
-                // 砍价扣减库存
-                Integer bargainId = cartResponse.getBargainId();
-                return storeBargainService.decProductStock(bargainId, num, attrValueId, productId, user.getUid());
-            }
-            // 拼团商品扣减库存
-            if (ObjectUtil.isNotNull(cartResponse.getCombinationId()) && cartResponse.getCombinationId() > 0) {
-                Integer combinationId = cartResponse.getCombinationId();
-                Integer pinkId = cartResponse.getPinkId();
-                return storeCombinationService.decProductStock(storeOrder, num, attrValueId, productId, user);
-            }
-        }
-        // 处理普通商品
-        Boolean execute = transactionTemplate.execute(e -> {
-            for (StoreCartResponse cartResponse : cartInfoList) {
-                storeProductService.decProductStock(
-                        cartResponse.getProductId(),
-                        cartResponse.getCartNum(),
-                        Integer.parseInt(cartResponse.getProductAttrUnique()), Constants.PRODUCT_TYPE_NORMAL);
-            }
-            return Boolean.TRUE;
-        });
-        return execute;
     }
 
     /**
@@ -1322,43 +948,115 @@ public class OrderUtils {
             vipPrice = vipPrice.add(cartResponse.getVipTruePrice().multiply(BigDecimal.valueOf(cartResponse.getCartNum())));
         }
         // 判断是否满额包邮 type=1按件数 2按重量 3按体积
-        Integer storeFreePostageString = Integer.valueOf(systemConfigService.getValueByKey("store_free_postage"));
-        if(storeFreePostageString <= 0){ // 包邮
+        // 全场满额包邮开关
+        String postageSwitchString = systemConfigService.getValueByKey("store_free_postage_switch");
+        // 全场满额包邮金额
+        String storeFreePostageString = systemConfigService.getValueByKey("store_free_postage");
+        if (postageSwitchString.equals("true") && (storeFreePostageString.equals("0") || totalPrice.compareTo(new BigDecimal(storeFreePostageString)) >= 0)) {
+            storePostage = BigDecimal.ZERO;
             storeFreePostage = BigDecimal.ZERO;
-        }else{
-            if(null != userAddress && userAddress.getCityId() > 0){// 有用户地址的情况下
-                int cityId = userAddress.getCityId();
-                List<StoreProductCartProductInfoResponse> spcpInfo =
-                        storeCartResponse.stream().map(StoreCartResponse::getProductInfo).collect(Collectors.toList());
-                List<Integer> tempIds = spcpInfo.stream().map(StoreProductCartProductInfoResponse::getTempId).distinct().collect(Collectors.toList());
-                // 查询运费模版
-                List<ShippingTemplates> shippingTemplates = shippingTemplatesService.getListInIds(tempIds);
-
-                // 包邮
-                List<ShippingTemplatesFree> shippingTempFree = shippingTemplatesFreeService.getListByTempIds(tempIds);
-
-                // 指定区域包邮费用
-                List<ShippingTemplatesRegion> shippingTemplateRegions = shippingTemplatesRegionService.listByIds(tempIds);
-                BigDecimal postPrice;
-                if(!shippingTemplates.get(0).getAppoint() && shippingTemplateRegions.size() > 0){
-                    postPrice = shippingTemplateRegions.get(0).getFirstPrice();
-                }else if(shippingTemplates.get(0).getAppoint()){ // 正常配送和运费
-                    //todo 首重等计算
-                    List<ShippingTemplatesRegion> shippingTemplateRegionsHasCity = shippingTemplatesRegionService.getListInIdsAndCityId(tempIds, cityId);
-                    postPrice = shippingTemplateRegionsHasCity.size() > 0 ?
-                            shippingTemplateRegionsHasCity.get(0).getFirstPrice() : shippingTemplateRegions.get(0).getFirstPrice();
-                }else{
-                    postPrice = shippingTempFree.get(0).getPrice();
-                }
-                storePostage = postPrice;
-            }else{
+        } else{
+            if (ObjectUtil.isNull(userAddress) || userAddress.getCityId() <= 0) {
+                // 用户地址不存在，默认运费为0元
                 storePostage = BigDecimal.ZERO;
+            } else {
+                // 有用户地址的情况下
+                // 运费根据商品计算
+                Map<Integer, MyRecord> proMap = CollUtil.newHashMap();
+                storeCartResponse.stream().forEach(e -> {
+                    Integer proId = e.getProductInfo().getId();
+                    if (proMap.containsKey(proId)) {
+                        MyRecord record = proMap.get(proId);
+                        record.set("totalPrice", record.getBigDecimal("totalPrice").add(e.getTruePrice().multiply(BigDecimal.valueOf(e.getCartNum()))));
+                        record.set("totalNum", record.getInt("totalNum") + e.getCartNum());
+                        BigDecimal weight = e.getProductInfo().getAttrInfo().getWeight().multiply(BigDecimal.valueOf(e.getCartNum()));
+                        record.set("weight", record.getBigDecimal("weight").add(weight));
+                        BigDecimal volume = e.getProductInfo().getAttrInfo().getVolume().multiply(BigDecimal.valueOf(e.getCartNum()));
+                        record.set("volume", record.getBigDecimal("volume").add(volume));
+                    } else {
+                        MyRecord record = new MyRecord();
+                        record.set("totalPrice", e.getTruePrice().multiply(BigDecimal.valueOf(e.getCartNum())));
+                        record.set("totalNum", e.getCartNum());
+                        record.set("tempId", e.getProductInfo().getTempId());
+                        record.set("proId", proId);
+                        BigDecimal weight = e.getProductInfo().getAttrInfo().getWeight().multiply(BigDecimal.valueOf(e.getCartNum()));
+                        record.set("weight", weight);
+                        BigDecimal volume = e.getProductInfo().getAttrInfo().getVolume().multiply(BigDecimal.valueOf(e.getCartNum()));
+                        record.set("volume", volume);
+
+                        proMap.put(proId, record);
+                    }
+                });
+
+                // 指定包邮（单品运费模板）> 指定区域配送（单品运费模板）
+                int cityId = userAddress.getCityId();
+
+                for (Map.Entry<Integer, MyRecord> m : proMap.entrySet()) {
+                    MyRecord value = m.getValue();
+                    Integer tempId = value.getInt("tempId");
+                    ShippingTemplates shippingTemplate = shippingTemplatesService.getById(tempId);
+                    if (shippingTemplate.getAppoint()) {// 指定包邮
+                        // 判断是否在指定包邮区域内
+                        // 必须满足件数 + 金额 才能包邮
+                        ShippingTemplatesFree shippingTemplatesFree = shippingTemplatesFreeService.getByTempIdAndCityId(tempId, cityId);
+                        if (ObjectUtil.isNotNull(shippingTemplatesFree)) { // 在包邮区域内
+                            BigDecimal freeNum = shippingTemplatesFree.getNumber();
+                            BigDecimal multiply = value.getBigDecimal("totalPrice");
+                            if (new BigDecimal(value.getInt("totalNum")).compareTo(freeNum) >= 0 && multiply.compareTo(shippingTemplatesFree.getPrice()) >= 0) {
+                                // 满足件数 + 金额 = 包邮
+                                continue;
+                            }
+                        }
+                    }
+                    // 不满足指定包邮条件，走指定区域配送
+                    ShippingTemplatesRegion shippingTemplatesRegion = shippingTemplatesRegionService.getByTempIdAndCityId(tempId, cityId);
+                    if (ObjectUtil.isNull(shippingTemplatesRegion)) {
+                        throw new CrmebException("计算运费时，未找到全国运费配置");
+                    }
+
+                    // 判断计费方式：件数、重量、体积
+                    switch (shippingTemplate.getType()) {
+                        case 1: // 件数
+                            // 判断件数是否超过首件
+                            Integer num = value.getInt("totalNum");
+                            if (num <= shippingTemplatesRegion.getFirst().intValue()) {
+                                storePostage = storePostage.add(shippingTemplatesRegion.getFirstPrice());
+                            } else {// 超过首件的需要计算续件
+                                int renewalNum = num - shippingTemplatesRegion.getFirst().intValue();
+                                // 剩余件数/续件 = 需要计算的续件费用的次数
+                                BigDecimal divide = new BigDecimal(renewalNum).divide(shippingTemplatesRegion.getRenewal(), 0, BigDecimal.ROUND_UP);
+                                BigDecimal renewalPrice = shippingTemplatesRegion.getRenewalPrice().multiply(divide);
+                                storePostage = storePostage.add(shippingTemplatesRegion.getFirstPrice()).add(renewalPrice);
+                            }
+                            break;
+                        case 2: // 重量
+                            BigDecimal weight = value.getBigDecimal("weight");
+                            if (weight.compareTo(shippingTemplatesRegion.getFirst()) <= 0) {
+                                storePostage = storePostage.add(shippingTemplatesRegion.getFirstPrice());
+                            } else {// 超过首件的需要计算续件
+                                BigDecimal renewalNum = weight.subtract(shippingTemplatesRegion.getFirst());
+                                // 剩余件数/续件 = 需要计算的续件费用的次数
+                                BigDecimal divide = renewalNum.divide(shippingTemplatesRegion.getRenewal(), 0, BigDecimal.ROUND_UP);
+                                BigDecimal renewalPrice = shippingTemplatesRegion.getRenewalPrice().multiply(divide);
+                                storePostage = storePostage.add(shippingTemplatesRegion.getFirstPrice()).add(renewalPrice);
+                            }
+                            break;
+                        case 3: // 体积
+                            BigDecimal volume = value.getBigDecimal("volume");
+                            if (volume.compareTo(shippingTemplatesRegion.getFirst()) <= 0) {
+                                storePostage = storePostage.add(shippingTemplatesRegion.getFirstPrice());
+                            } else {// 超过首件的需要计算续件
+                                BigDecimal renewalNum = volume.subtract(shippingTemplatesRegion.getFirst());
+                                // 剩余件数/续件 = 需要计算的续件费用的次数
+                                BigDecimal divide = renewalNum.divide(shippingTemplatesRegion.getRenewal(), 0, BigDecimal.ROUND_UP);
+                                BigDecimal renewalPrice = shippingTemplatesRegion.getRenewalPrice().multiply(divide);
+                                storePostage = storePostage.add(shippingTemplatesRegion.getFirstPrice()).add(renewalPrice);
+                            }
+                            break;
+                    }
+                }
             }
-            // 判断价格是否超出满额包邮价格
-//            if(storeFreePostage.compareTo(totalPrice) <= -1) storePostage = BigDecimal.ZERO;
         }
-//        storePostage = BigDecimal.TEN;
-//        storeFreePostage = BigDecimal.ONE;
         priceGroupResponse.setStorePostage(storePostage);
         priceGroupResponse.setStoreFreePostage(storeFreePostage);
         priceGroupResponse.setTotalPrice(totalPrice);
@@ -1443,11 +1141,6 @@ public class OrderUtils {
      */
     public void checkDeleteStatus(String orderStatus) {
         //退款状态，持可以添加
-
-//        String [] deleteStatusList = {
-//                Constants.ORDER_STATUS_UNPAID,
-//                Constants.ORDER_STATUS_REFUNDED
-//        };
         String [] deleteStatusList = {
                 Constants.ORDER_STATUS_COMPLETE
         };
@@ -1456,26 +1149,6 @@ public class OrderUtils {
             throw new CrmebException("该订单无法删除");
         }
     }
-
-
-//    /**
-//     * 缓存再次下单数据 todo 再次下单缓存key待统一优化
-//     * @param cacheKey key
-//     * @param orderAgainCache 再次下单数据
-//     */
-//    public void setCacheOrderAgain(String cacheKey, List<StoreCartResponse> orderAgainCache){
-//        String d = JSONObject.toJSONString(orderAgainCache);
-//        redisUtil.set(cacheKey+"", d, Constants.ORDER_CASH_CONFIRM, TimeUnit.MINUTES);
-//    }
-
-//    /**
-//     * 获取再次下单缓存数据 todo 再次下单缓存key待统一优化
-//     * @param cacheKey key
-//     */
-//    public List<StoreCartResponse> getCacheOrderAgain(String cacheKey){
-//        if(!redisUtil.exists(cacheKey)) return null;
-//        return JSONObject.parseArray(redisUtil.get(cacheKey).toString(),StoreCartResponse.class);
-//    }
 
     /**
      * 订单数据缓存进redis订单通用

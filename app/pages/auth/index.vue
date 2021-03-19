@@ -34,7 +34,6 @@
 					});
 				})
 				.catch((err) => {
-					// location.replace("/");
 					console.log('auth错误='+err);
 				});
 		}

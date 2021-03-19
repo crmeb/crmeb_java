@@ -108,7 +108,7 @@
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 	</view>
 </template>
@@ -165,19 +165,24 @@
 			};
 		},
 		computed: mapGetters(['isLogin']),
+		watch:{
+			isLogin:{
+				handler:function(newV,oldV){
+					if(newV){
+						this.getUserInfo();
+						this.getUserExtractBank();
+					}
+				},
+				deep:true
+			}
+		},
 		onLoad() {
 			if (this.isLogin) {
 				this.getUserInfo();
 				this.getUserExtractBank();
 				//this.getBrokerageCommission();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {

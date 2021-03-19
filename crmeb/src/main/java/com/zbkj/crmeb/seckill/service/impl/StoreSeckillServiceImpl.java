@@ -175,16 +175,9 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
                 StoreProductAttrValueResponse response = new StoreProductAttrValueResponse();
                 BeanUtils.copyProperties(e,response);
                 storeProductAttrValueResponse.add(response);
-                // 设置商品秒杀数量和秒杀剩余数量
-//                int limitNum = 0;
-//                if(null != e.getQuotaShow() && e.getQuotaShow()>= 0 && null != e.getQuota() && e.getQuota()>= 0){
-//                    limitNum = e.getQuotaShow() - e.getQuota();
-//                }
-//                storeProductResponse.setLimitLeftNum(limitNum);
                 return e;
             }).collect(Collectors.toList());
             storeProductResponse.setAttrValue(storeProductAttrValueResponse);
-//                }
             // 处理富文本
             StoreProductDescription sd = storeProductDescriptionService.getOne(
                     new LambdaQueryWrapper<StoreProductDescription>()
@@ -354,58 +347,55 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         //轮播图
         storeProduct.setImages(systemAttachmentService.clearPrefix(storeProduct.getImages()));
 
-//        List<StoreProductAttrValueRequest> storeProductAttrValuesRequest = getStoreProductAttrValueRequests(storeProductRequest);
-
         productUtils.calcPriceForAttrValuesSeckill(request, storeProduct);
         int saveCount = dao.updateById(storeProduct);
         // 对attr表做全量更新，删除原有数据保存现有数据
         attrService.removeByProductId(request.getId(),Constants.PRODUCT_TYPE_SECKILL);
         storeProductAttrValueService.removeByProductId(request.getId(),Constants.PRODUCT_TYPE_SECKILL);
-//        if(request.getSpecType()) {
-            request.getAttr().forEach(e->{
-                e.setProductId(request.getId());
-                e.setAttrValues(StringUtils.strip(e.getAttrValues().replace("\"",""),"[]"));
-                e.setType(Constants.PRODUCT_TYPE_SECKILL);
-            });
+        request.getAttr().forEach(e->{
+            e.setProductId(request.getId());
+            e.setAttrValues(StringUtils.strip(e.getAttrValues().replace("\"",""),"[]"));
+            e.setType(Constants.PRODUCT_TYPE_SECKILL);
+        });
         attrService.saveBatch(request.getAttr());
-            if(null != request.getAttrValue() && request.getAttrValue().size() > 0){
-                List<StoreProductAttrValueRequest> storeProductAttrValuesRequest = request.getAttrValue();
-                // 批量设置attrValues对象的商品id
-                storeProductAttrValuesRequest.forEach(e->e.setProductId(request.getId()));
-                List<StoreProductAttrValue> storeProductAttrValues = new ArrayList<>();
-                for (StoreProductAttrValueRequest attrValuesRequest : storeProductAttrValuesRequest) {
-                    StoreProductAttrValue spav = new StoreProductAttrValue();
-                    BeanUtils.copyProperties(attrValuesRequest,spav);
-                    //设置sku字段
-                    if(null != attrValuesRequest.getAttrValue()){
-                        List<String> skuList = new ArrayList<>();
-                        for(Map.Entry<String,String> vo: attrValuesRequest.getAttrValue().entrySet()){
-                            skuList.add(vo.getValue());
-                        }
-                        spav.setSuk(String.join(",",skuList));
+        if(null != request.getAttrValue() && request.getAttrValue().size() > 0){
+            List<StoreProductAttrValueRequest> storeProductAttrValuesRequest = request.getAttrValue();
+            // 批量设置attrValues对象的商品id
+            storeProductAttrValuesRequest.forEach(e->e.setProductId(request.getId()));
+            List<StoreProductAttrValue> storeProductAttrValues = new ArrayList<>();
+            for (StoreProductAttrValueRequest attrValuesRequest : storeProductAttrValuesRequest) {
+                StoreProductAttrValue spav = new StoreProductAttrValue();
+                BeanUtils.copyProperties(attrValuesRequest,spav);
+                //设置sku字段
+                if(null != attrValuesRequest.getAttrValue()){
+                    List<String> skuList = new ArrayList<>();
+                    for(Map.Entry<String,String> vo: attrValuesRequest.getAttrValue().entrySet()){
+                        skuList.add(vo.getValue());
                     }
-                    String attrValue = null;
-                    if(null != attrValuesRequest.getAttrValue() && attrValuesRequest.getAttrValue().size() > 0){
-                        attrValue = JSON.toJSONString(attrValuesRequest.getAttrValue());
-                    }
-                    spav.setAttrValue(attrValue);
-                    spav.setImage(systemAttachmentService.clearPrefix(spav.getImage()));
-                    spav.setType(Constants.PRODUCT_TYPE_SECKILL);
-                    spav.setQuotaShow(spav.getQuota());
-                    storeProductAttrValues.add(spav);
+                    spav.setSuk(String.join(",",skuList));
                 }
-                boolean saveOrUpdateResult = storeProductAttrValueService.saveBatch(storeProductAttrValues);
-                // attrResult整存整取，不做更新
-                storeProductAttrResultService.deleteByProductId(storeProduct.getId(),Constants.PRODUCT_TYPE_SECKILL);
-                StoreProductAttrResult attrResult = new StoreProductAttrResult(
-                        0,
-                        storeProduct.getId(),
-                        systemAttachmentService.clearPrefix(JSON.toJSONString(request.getAttrValue())),
-                        DateUtil.getNowTime(),Constants.PRODUCT_TYPE_SECKILL);
-                storeProductAttrResultService.save(attrResult);
-                if(!saveOrUpdateResult) throw new CrmebException("编辑属性详情失败");
-
+                String attrValue = null;
+                if(null != attrValuesRequest.getAttrValue() && attrValuesRequest.getAttrValue().size() > 0){
+                    attrValue = JSON.toJSONString(attrValuesRequest.getAttrValue());
+                }
+                spav.setAttrValue(attrValue);
+                spav.setImage(systemAttachmentService.clearPrefix(spav.getImage()));
+                spav.setType(Constants.PRODUCT_TYPE_SECKILL);
+                spav.setQuotaShow(spav.getQuota());
+                storeProductAttrValues.add(spav);
             }
+            boolean saveOrUpdateResult = storeProductAttrValueService.saveBatch(storeProductAttrValues);
+            // attrResult整存整取，不做更新
+            storeProductAttrResultService.deleteByProductId(storeProduct.getId(),Constants.PRODUCT_TYPE_SECKILL);
+            StoreProductAttrResult attrResult = new StoreProductAttrResult(
+                    0,
+                    storeProduct.getId(),
+                    systemAttachmentService.clearPrefix(JSON.toJSONString(request.getAttrValue())),
+                    DateUtil.getNowTime(),Constants.PRODUCT_TYPE_SECKILL);
+            storeProductAttrResultService.save(attrResult);
+            if(!saveOrUpdateResult) throw new CrmebException("编辑属性详情失败");
+
+        }
 
         // 处理富文本
         StoreProductDescription spd = new StoreProductDescription(
@@ -416,8 +406,6 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         storeProductDescriptionService.deleteByProductId(storeProduct.getId(),Constants.PRODUCT_TYPE_SECKILL);
         storeProductDescriptionService.save(spd);
 
-        // 处理优惠券关联信息
-//        shipProductCoupons(request, storeProduct);
         return saveCount > 0;
     }
 
@@ -467,8 +455,6 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         if(null != user && null != user.getUid()){
             storeInfo.setUserLike(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),productResponse.getProductId(),true).size() > 0);
             storeInfo.setUserCollect(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),productResponse.getProductId(),false).size() > 0);
-//                user = userService.updateForPromoter(user);
-//                productDetailResponse.setPriceName(getPacketPriceRange(productResponse,user.getIsPromoter()));
         }else{
             storeInfo.setUserLike(false);
             storeInfo.setUserCollect(false);
@@ -494,18 +480,6 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
             skuMap.put(attrValue.getSuk(),attrValue);
         }
         productDetailResponse.setProductValue(skuMap);
-//        // 优品推荐
-//        List<StoreProduct> storeProducts = storeProductService.getRecommendStoreProduct(18);
-//        List<StoreProductRecommendResponse> storeProductRecommendResponses = new ArrayList<>();
-//        for (StoreProduct product:storeProducts) {
-//            StoreProductRecommendResponse sPRecommendResponse = new StoreProductRecommendResponse();
-//            BeanUtils.copyProperties(product,sPRecommendResponse);
-//            sPRecommendResponse.setActivity(null);
-////            sPRecommendResponse.setCheckCoupon(storeCouponService.getListByUser(product.getId()).size() > 0);
-//            storeProductRecommendResponses.add(sPRecommendResponse);
-//        }
-//        productDetailResponse.setGoodList(storeProductRecommendResponses);
-
         return productDetailResponse;
     }
 
@@ -548,10 +522,6 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
             BeanUtils.copyProperties(storeProductAttrValue,atr);
             // 单规格秒杀限量数据处理
             atr.setQuota(storeProductResponse.getQuota());
-//            if(storeProductAttrValuesSkill.size() == 0){ // 初次添加未设置时默认为商品库存
-//                atr.setStock(storeProductResponse.getStock());
-//                atr.setPrice(storeProductResponse.getPrice());
-//            }
             sPAVResponses.add(atr);
         }
 
@@ -592,7 +562,6 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
      */
     @Override
     public HashMap<String,Object> getForH5Index() {
-//        Integer timeSwap = DateUtil.getSecondTimestamp();
         HashMap<String,Object> result = new HashMap<>();
         List<SecKillResponse> response = new ArrayList<>();
         StoreSeckillManger storeSeckillManger = new StoreSeckillManger();
@@ -1054,26 +1023,15 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
                 storeProductService.getByProductId(storeProduct.getProductId());
         storeProductResponse.setSales(currentSeckillProductInfo.getSales());
         storeProductResponse.setFicti(currentSeckillProductInfo.getFicti());
-//        if(storeProduct.getSpecType()){
         StoreProductAttr spaPram = new StoreProductAttr();
         spaPram.setProductId(skillId).setType(Constants.PRODUCT_TYPE_SECKILL);
         storeProductResponse.setAttr(attrService.getByEntity(spaPram));
-//        storeProductResponse.setSliderImage(String.join(",",storeProduct.getImages()));
-//        }else{
-//            storeProductResponse.setAttr(new ArrayList<>());
-//        }
-//        List<StoreProductAttrValue> storeProductAttrValues = storeProductAttrValueService.getListByProductId(storeProduct.getId());
 
         // 注意：数据瓶装步骤：分别查询秒杀和商品本山信息组装sku信息之后，再对比sku属性是否相等来赋值是否秒杀sku信息
         StoreProductAttrValue spavPramSkill = new StoreProductAttrValue();
         spavPramSkill.setProductId(skillId).setType(Constants.PRODUCT_TYPE_SECKILL);
         List<StoreProductAttrValue> storeProductAttrValuesSkill = storeProductAttrValueService.getByEntity(spavPramSkill);
         List<HashMap<String, Object>> attrValuesSkill = genratorSkuInfo(skillId,storeProduct, storeProductAttrValuesSkill, Constants.PRODUCT_TYPE_SECKILL);
-
-//        StoreProductAttrValue spavPramProduct = new StoreProductAttrValue();
-//        spavPramProduct.setProductId(storeProduct.getProductId()).setType(Constants.PRODUCT_TYPE_NORMAL);
-//        List<StoreProductAttrValue> storeProductAttrValuesProduct = storeProductAttrValueService.getByEntity(spavPramProduct);
-//        List<HashMap<String, Object>> attrValuesProduct = genratorSkuInfo(storeProduct.getProductId(),storeProduct, storeProductAttrValuesProduct, Constants.PRODUCT_TYPE_NORMAL);
 
         // H5 端用于生成skuList
         List<StoreProductAttrValueResponse> sPAVResponses = new ArrayList<>();
@@ -1086,7 +1044,6 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
 
         storeProductResponse.setAttrValues(attrValuesSkill);
         storeProductResponse.setAttrValue(sPAVResponses);
-//        if(null != storeProductAttrResult){
         StoreProductDescription sd = storeProductDescriptionService.getOne(
                 new LambdaQueryWrapper<StoreProductDescription>()
                         .eq(StoreProductDescription::getProductId, skillId)
@@ -1094,7 +1051,6 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         if(null != sd){
             storeProductResponse.setContent(null == sd.getDescription()?"":sd.getDescription());
         }
-//        }
         return storeProductResponse;
     }
 

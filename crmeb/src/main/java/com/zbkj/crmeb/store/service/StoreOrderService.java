@@ -146,13 +146,6 @@ public interface StoreOrderService extends IService<StoreOrder> {
     boolean editPrice(StoreOrderEditPriceRequest request);
 
     /**
-     *  确认付款
-     * @param orderId 订单号
-     * @return 确认付款结果
-     */
-    boolean confirmPayed(String orderId);
-
-    /**
      * 线下付款
      * @param orderId 待付款订单id
      * @return 付款结果
@@ -180,13 +173,6 @@ public interface StoreOrderService extends IService<StoreOrder> {
      * @return  用户当天的秒杀商品订单数量
      */
     List<StoreOrder> getUserCurrentBargainOrders(StoreOrder storeOrder);
-
-    /**
-     * 获取砍价商品订单数量（销量）
-     * @param bargainId 砍价商品编号
-     * @return
-     */
-    Integer getCountByBargainId(Integer bargainId);
 
     /**
      * 获取砍价商品订单数量（销量）

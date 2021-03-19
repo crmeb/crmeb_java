@@ -13,10 +13,11 @@ import {
 const state = {
 	token: Cache.get(LOGIN_STATUS) || null,
 	backgroundColor: "#fff",
-	userInfo: null,
+	userInfo: Cache.get(USER_INFO)?JSON.parse(Cache.get(USER_INFO)):null,
 	uid: Cache.get(UID) || null,
 	homeActive: false,
 	chatUrl: Cache.get('chatUrl') || '',
+	authorizeType: ''
 };
 
 const mutations = {
@@ -43,6 +44,7 @@ const mutations = {
 	},
 	UPDATE_USERINFO(state, userInfo) {
 		state.userInfo = userInfo;
+		Cache.set(USER_INFO, userInfo);
 	},
 	OPEN_HOME(state) {
 		state.homeActive = true;
@@ -52,6 +54,9 @@ const mutations = {
 	},
 	SET_CHATURL(state, chatUrl){
 		state.chatUrl = chatUrl;
+	},
+	AuthorizeType(state, authorizeType){
+		state.authorizeType = authorizeType;
 	}
 };
 

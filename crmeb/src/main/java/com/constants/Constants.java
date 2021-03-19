@@ -13,7 +13,7 @@ package com.constants;
  *  +----------------------------------------------------------------------
  */
 public class Constants {
-    public static final long TOKEN_EXPRESS_MINUTES = (60 * 3); //3小时
+    public static final long TOKEN_EXPRESS_MINUTES = (60 * 24); //3小时
 
     public static final int HTTPSTATUS_CODE_SUCCESS = 200;
 

@@ -2,6 +2,7 @@
 	<view>
 		<view class='productList'>
 			<view class='search bg-color acea-row row-between-wrapper'>
+				<view class="iconfont icon-xiangzuo" @click="goback()"></view>
 				<view class='input acea-row row-between-wrapper'><text class='iconfont icon-sousuo'></text>
 					<input placeholder='搜索商品名称' placeholder-class='placeholder' confirm-type='search' name="search" :value='where.keyword'
 					 @confirm="searchSubmit"></input>
@@ -105,6 +106,16 @@
 			this.get_host_product();
 		},
 		methods: {
+			goback(){
+				// #ifdef H5
+				return history.back();
+				// #endif
+				// #ifndef H5
+				return uni.navigateBack({
+					delta: 1,
+				})
+				// #endif
+			},
 			// 去详情页
 			godDetail(item){
 				goShopDetail(item,this.uid).then(res=>{
@@ -144,14 +155,7 @@
 			set_where: function(e) {
 				switch (e) {
 					case 1:
-						// #ifdef H5
-						return history.back();
-						// #endif
-						// #ifndef H5
-						return uni.navigateBack({
-							delta: 1,
-						})
-						// #endif
+					    return;
 						break;
 					case 2:
 						if (this.price == 0) this.price = 1;
@@ -176,11 +180,11 @@
 			//设置where条件
 			setWhere: function() {
 				if (this.price == 0) this.where.priceOrder = '';
-				else if (this.price == 1) this.where.priceOrder = 'desc';
-				else if (this.price == 2) this.where.priceOrder = 'asc';
+				else if (this.price == 1) this.where.priceOrder = 'asc';
+				else if (this.price == 2) this.where.priceOrder = 'desc';
 				if (this.stock == 0) this.where.salesOrder = '';
-				else if (this.stock == 1) this.where.salesOrder = 'desc';
-				else if (this.stock == 2) this.where.salesOrder = 'asc';
+				else if (this.stock == 1) this.where.salesOrder = 'asc';
+				else if (this.stock == 2) this.where.salesOrder = 'desc';
 				this.where.news = this.nows ? 1 : 0;
 			},
 			//查找产品
@@ -222,6 +226,9 @@
 </script>
 
 <style scoped lang="scss">
+	.iconfont{
+		color: #fff;
+	}
 	.productList .search {
 		width: 100%;
 		height: 86rpx;
@@ -234,7 +241,7 @@
 	}
 
 	.productList .search .input {
-		width: 640rpx;
+		// width: 640rpx;
 		height: 60rpx;
 		background-color: #fff;
 		border-radius: 50rpx;
@@ -243,7 +250,7 @@
 	}
 
 	.productList .search .input input {
-		width: 548rpx;
+		width: 528rpx;
 		height: 100%;
 		font-size: 26rpx;
 	}

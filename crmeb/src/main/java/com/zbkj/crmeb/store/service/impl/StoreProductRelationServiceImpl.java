@@ -95,30 +95,6 @@ public class StoreProductRelationServiceImpl extends ServiceImpl<StoreProductRel
     }
 
     /**
-     * 根据产品id获取点赞总数
-     * @param productIdList List<Integer> 产品id
-     * @author Mr.Zhang
-     * @since 2020-05-06
-     * @return HashMap<Integer, Integer>
-     */
-    public HashMap<Integer, Integer> getLikeCountListInProductId(List<Integer> productIdList) {
-        List<StoreProductRelationCountVo> list = getCountInProductId(productIdList, "like");
-        return getCountListInProductId(list);
-    }
-
-    /**
-     * 根据产品id获取收藏总数
-     * @param productIdList List<Integer> 产品id
-     * @author Mr.Zhang
-     * @since 2020-05-06
-     * @return HashMap<Integer, Integer>
-     */
-    public HashMap<Integer, Integer> getCollectCountListInProductId(List<Integer> productIdList) {
-        List<StoreProductRelationCountVo> list = getCountInProductId(productIdList, "collect");
-        return getCountListInProductId(list);
-    }
-
-    /**
      * 添加收藏产品
      * @param request UserCollectAllRequest 新增参数
      * @author Mr.Zhang
@@ -177,21 +153,6 @@ public class StoreProductRelationServiceImpl extends ServiceImpl<StoreProductRel
                 .eq(StoreProductRelation::getUid, uid)
                 .eq(StoreProductRelation::getType, type);
         dao.delete(lambdaQueryWrapper);
-    }
-
-    /**
-     * product_id => count 数据组装
-     * @param list List<StoreProductRelationCountVo> 数据集合
-     * @author Mr.Zhang
-     * @since 2020-05-06
-     * @return HashMap<Integer, Integer>
-     */
-    private HashMap<Integer, Integer> getCountListInProductId(List<StoreProductRelationCountVo> list){
-        HashMap<Integer, Integer> map = new HashMap<>();
-        for (StoreProductRelationCountVo storeProductRelationCountVo : list){
-            map.put(storeProductRelationCountVo.getProductId(), storeProductRelationCountVo.getCount());
-        }
-        return map;
     }
 
     /**

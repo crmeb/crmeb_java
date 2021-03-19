@@ -93,7 +93,11 @@ public class StoreProductController {
     public CommonResult<String> delete(@RequestBody @PathVariable Integer id, @RequestParam(value = "type", required = false, defaultValue = "recycle")String type){
         if(storeProductService.deleteProduct(id, type)){
 //        if(storeProductService.removeById(id)){
-            storeCartService.productStatusNotEnable(id);
+            if (type.equals("recycle")) {
+                storeCartService.productStatusNotEnable(id);
+            } else {
+                storeCartService.productDelete(id);
+            }
             return CommonResult.success();
         }else{
             return CommonResult.failed();

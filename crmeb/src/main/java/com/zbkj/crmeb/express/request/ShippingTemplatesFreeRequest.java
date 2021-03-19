@@ -42,8 +42,9 @@ public class ShippingTemplatesFreeRequest implements Serializable {
     private String title;
 
     @ApiModelProperty(value = "包邮件数", required = true, example = "1")
-    @Min(value = 1, message = "请填写包邮件数")
-    private Integer number;
+//    @Min(value = 1, message = "请填写包邮件数")
+    @DecimalMin(value = "0.1", message = "包邮不能低于0.1")
+    private BigDecimal number;
 
     @ApiModelProperty(value = "包邮金额", required = true, example = "0.1")
     @NotNull(message = "请填写包邮金额")

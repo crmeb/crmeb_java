@@ -57,30 +57,6 @@ public class StoreOrderRefundServiceImpl extends ServiceImpl<StoreOrderDao, Stor
     }
 
     /**
-     * 小程序退款
-     * @param request
-     * @param storeOrder
-     */
-    private void refundMiniWx(StoreOrderRefundRequest request, StoreOrder storeOrder) {
-        WxRefundVo wxRefundVo = new WxRefundVo();
-
-        String appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
-        String mchId = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PAY_ROUTINE_MCH_ID);
-        wxRefundVo.setAppid(appId);
-        wxRefundVo.setMch_id(mchId);
-        wxRefundVo.setNonce_str(DigestUtils.md5Hex(CrmebUtil.getUuid() + CrmebUtil.randomCount(111111, 666666)));
-        wxRefundVo.setOut_trade_no(storeOrder.getOrderId());
-        wxRefundVo.setOut_refund_no(storeOrder.getOrderId());
-        wxRefundVo.setTotal_fee(storeOrder.getPayPrice().multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue());
-        wxRefundVo.setRefund_fee(request.getAmount().multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue());
-        String signKey = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
-        String sign = CrmebUtil.getSign(CrmebUtil.objectToMap(wxRefundVo), signKey);
-        wxRefundVo.setSign(sign);
-        String path = systemConfigService.getValueByKeyException("pay_mini_client_p12");
-        commonRefound(wxRefundVo, path);
-    }
-
-    /**
      * 公共号退款
      * @param request
      * @param storeOrder

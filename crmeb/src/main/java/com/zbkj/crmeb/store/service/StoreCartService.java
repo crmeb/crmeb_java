@@ -85,7 +85,7 @@ public interface StoreCartService extends IService<StoreCart> {
      * @param ids 待删除id
      * @return 返回删除状态
      */
-    boolean deleteCartByIds(List<Integer> ids);
+    boolean deleteCartByIds(List<Long> ids);
 
 
     /**
@@ -107,4 +107,10 @@ public interface StoreCartService extends IService<StoreCart> {
      * @param skuIdList skuIdList
      */
     Boolean productStatusNoEnable(List<Integer> skuIdList);
+
+    /**
+     * 删除商品对应的购物车
+     * @param productId 商品id
+     */
+    Boolean productDelete(Integer productId);
 }

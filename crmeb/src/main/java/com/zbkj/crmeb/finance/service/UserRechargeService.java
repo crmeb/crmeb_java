@@ -36,8 +36,6 @@ public interface UserRechargeService extends IService<UserRecharge> {
 
     Boolean complete(UserRecharge userRecharge);
 
-    BigDecimal getSumBigDecimal(Integer uid);
-
     /**
      * 充值退款
      * @param request 退款参数

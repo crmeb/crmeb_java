@@ -26,6 +26,7 @@
       :visible.sync="editDataConfig.visible"
       append-to-body
       destroy-on-close
+      width="700px"
     >
       <edit
         v-if="editDataConfig.visible"

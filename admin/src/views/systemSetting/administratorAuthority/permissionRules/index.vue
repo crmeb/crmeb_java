@@ -20,9 +20,6 @@ export default {
   mounted() {
   },
   methods: {
-    handleTreeCheckChange(data, checked, indateminate) {
-      console.log(data, checked, indateminate)
-    },
     categoryAdd(pram) {
       const _pram = {
         extra: pram.extra,

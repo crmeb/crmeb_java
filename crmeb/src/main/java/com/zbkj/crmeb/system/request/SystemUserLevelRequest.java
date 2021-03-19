@@ -66,7 +66,7 @@ public class SystemUserLevelRequest implements Serializable {
     private String icon;
 
     @ApiModelProperty(value = "会员卡背景")
-    @NotBlank(message = "会员卡背景不能为空")
+//    @NotBlank(message = "会员卡背景不能为空")
     private String image;
 
     @ApiModelProperty(value = "是否显示 1=显示,0=隐藏")

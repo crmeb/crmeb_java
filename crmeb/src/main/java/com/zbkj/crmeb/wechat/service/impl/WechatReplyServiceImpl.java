@@ -1,24 +1,20 @@
 package com.zbkj.crmeb.wechat.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
-import com.utils.CrmebUtil;
-
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
-import com.zbkj.crmeb.wechat.model.WechatReply;
 import com.zbkj.crmeb.wechat.dao.WechatReplyDao;
+import com.zbkj.crmeb.wechat.model.WechatReply;
 import com.zbkj.crmeb.wechat.request.WechatReplySearchRequest;
 import com.zbkj.crmeb.wechat.service.WechatReplyService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 
 /**

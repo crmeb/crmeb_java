@@ -1,7 +1,7 @@
 package com.zbkj.crmeb.store.service;
 
-import com.common.PageParamRequest;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.common.PageParamRequest;
 import com.zbkj.crmeb.store.model.StoreProductCate;
 import com.zbkj.crmeb.store.request.StoreProductCateSearchRequest;
 
@@ -25,5 +25,4 @@ public interface StoreProductCateService extends IService<StoreProductCate> {
 
     List<StoreProductCate> getByProductId(Integer productId);
 
-//    Integer updateByProductId(StoreProductCate storeProductCate);
 }

@@ -226,7 +226,7 @@
 		</view>
 		<home></home>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<payment :payMode='payMode' :pay_close="pay_close" @onChangeFun='onChangeFun' :order_id="pay_order_id" :totalPrice='totalPrice'></payment>
 	</view>
@@ -658,7 +658,8 @@
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false, //是否隐藏授权
 				id: 0, //订单id
-				uniId: ''
+				uniId: '',
+				utils: this.$util,
 			};
 		},
 		computed: mapGetters(['isLogin', 'chatUrl']),
@@ -676,13 +677,7 @@
 				this.getOrderInfo();
 				this.getUserInfo();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		onHide: function() {
@@ -835,7 +830,6 @@
 						newCartInfo.push(item.info);
 					});
 					that.$set(that, 'cartInfo', newCartInfo);
-					console.log(that.cartInfo)
 					if (res.data.refundStatus != 0) {
 						that.isGoodsReturn = true;
 					};
@@ -961,7 +955,7 @@
 			 */
 			delOrder: function() {
 				let that = this;
-				orderDel(this.order_id).then(res => {
+				orderDel(this.id).then(res => {
 					return that.$util.Tips({
 						title: '删除成功',
 						icon: 'success'

@@ -313,7 +313,7 @@
 .coupon-list .item .text .data .bnt.gray{background-color:#ccc;}
 
 .noCommodity {
-	border-top: 7rpx solid #f5f5f5
+	//border-top: 7rpx solid #f5f5f5
 }
 
 .noCommodity .pictrue {
@@ -719,4 +719,7 @@
 	}
 uni-checkbox:not([disabled]) .uni-checkbox-input:hover{
 	border-color: #d1d1d1;
+}
+.bg-green{
+	background-color: #3CBB45;
 }

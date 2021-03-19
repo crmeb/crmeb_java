@@ -2,7 +2,10 @@
 	<view>
 		<view :style="'height:'+systemH+'px'"></view>
 		<view class='bargain'>
+			<!-- #ifndef APP-PLUS -->
 			<view class='iconfont icon-xiangzuo' v-if='retunTop' @tap='goBack' :style="'top:'+navH+'px'"></view>
+			<!-- #endif -->
+			
 			<view class="header" :class="bargainUid != userInfo.uid ? 'on' : ''">
 				<view class='people' >
 					<!-- :style="'top:'+navH/2+'rpx'" -->
@@ -202,12 +205,26 @@
 			</view>
 			<view class='mask' catchtouchmove="true" v-show='active==true' @tap='close'></view>
 		</view>
+		<!-- 分享按钮 -->
+		<view class="generate-posters acea-row row-middle" :class="posters ? 'on' : ''">
+			<!-- #ifdef APP-PLUS -->
+			<view class="item" @click="appShare('WXSceneSession')">
+				<view class="iconfont icon-weixin3"></view>
+				<view class="">微信好友</view>
+			</view>
+			<view class="item" @click="appShare('WXSenceTimeline')">
+				<view class="iconfont icon-pengyouquan"></view>
+				<view class="">微信朋友圈</view>
+			</view>
+			<!-- #endif -->
+		</view>
+		
 		<!-- 发送给朋友图片 -->
 		<view class="share-box" v-if="H5ShareBox">
 			<image src="/static/images/share-info.png" @click="H5ShareBox = false"></image>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -243,6 +260,12 @@
 	import home from '@/components/home';
 	import parser from "@/components/jyf-parser/jyf-parser";
 	import { silenceBindingSpread } from "@/utils";
+	// #ifdef APP-PLUS
+	import {
+		TOKENNAME,
+		HTTP_REQUEST_URL
+	} from '@/config/app.js';
+	// #endif
 	const app = getApp();
 
 	export default {
@@ -307,6 +330,17 @@
 
 		},
 		computed: mapGetters(['isLogin']),
+		watch: {
+			isLogin: {
+				handler: function(newV, oldV) {
+					if (newV) {
+						this.getBargainDetails();
+						this.addShareBargain();
+					}
+				},
+				deep: true
+			}
+		},
 		/**
 		 * 生命周期函数--监听页面加载
 		 */
@@ -357,13 +391,7 @@
 				// 	'&spid=' + e.detail.uid;
 				// this.$set(that, 'bargainPartake', e.detail.uid);
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true)
-				// #endif
 			}
 			
 
@@ -373,6 +401,39 @@
 			})
 		},
 		methods: {
+			// app分享
+			// #ifdef APP-PLUS
+			appShare(scene) {
+				let that = this
+				console.log(HTTP_REQUEST_URL)
+				let routes = getCurrentPages(); // 获取当前打开过的页面路由数组
+				let curRoute = routes[routes.length - 1].$page.fullPath // 获取当前页面路由，也就是最后一个打开的页面路由
+			
+				uni.share({
+					provider: "weixin",
+					scene: scene,
+					type: 0,
+					href: `${HTTP_REQUEST_URL}${curRoute}`,
+					title: that.bargainInfo.title,
+					imageUrl: that.bargainInfo.image,
+					success: function(res) {
+						uni.showToast({
+							title: '分享成功',
+							icon: 'success'
+						})
+						that.posters = false;
+					},
+					fail: function(err) {
+						uni.showToast({
+							title: '分享失败',
+							icon: 'none',
+							duration: 2000
+						})
+						that.posters = false;
+					}
+				});
+			},
+			// #endif
 			openTap() {
 				this.$set(this,'couponsHidden',!this.couponsHidden);
 			},
@@ -485,6 +546,7 @@
 			},
 			currentBargainUser: function() { //当前用户砍价
 				this.$set(this, 'bargainUid', this.userInfo.uid);
+				this.page = 1;
 				this.setBargain();
 			},
 			setBargain: function() { //参与砍价
@@ -557,14 +619,6 @@
 					that.$set(that, 'bargainUserHelpList', bargainUserHelpList);
 					that.$set(that, 'limitStatus', datas.limit > len);
 					that.$set(that, 'page', that.page + 1);
-					
-					// var bargainUserHelpListNew = [];
-					// var bargainUserHelpList = that.bargainUserHelpList;
-					// var len = res.data.list.length;
-					// bargainUserHelpListNew = bargainUserHelpList.concat(res.data.list);
-					// that.$set(that, 'bargainUserHelpList', res.data.list);
-					// that.$set(that, 'limitStatus', datas.limit > len);
-					// that.$set(that, 'page', (Number(datas.page) + Number(datas.limit)));
 				});
 			},
 			getBargainUserBargainPricePoster: function() {
@@ -641,7 +695,6 @@
 			          configTimeline
 			        )
 			          .then(res => {
-			            console.log(res);
 			          })
 			          .catch(res => {
 			            if (res.is_ready) {
@@ -718,6 +771,38 @@
 	page {
 		background-color: #e93323 !important;
 	}
+	.generate-posters {
+		width: 100%;
+		height: 170rpx;
+		background-color: #fff;
+		position: fixed;
+		left: 0;
+		bottom: 0;
+		z-index: 300;
+		transform: translate3d(0, 100%, 0);
+		transition: all 0.3s cubic-bezier(0.25, 0.5, 0.5, 0.9);
+		border-top: 1rpx solid #eee;
+	}
+	
+	.generate-posters.on {
+		transform: translate3d(0, 0, 0);
+	}
+	
+	.generate-posters .item {
+		flex: 1;
+		text-align: center;
+		font-size: 30rpx;
+	}
+	
+	.generate-posters .item .iconfont {
+		font-size: 80rpx;
+		color: #5eae72;
+	}
+	
+	.generate-posters .item .iconfont.icon-haibao {
+		color: #5391f1;
+	}
+	
 	.bargain .bargainGang .open {
 		font-size: 24rpx;
 		color: #999;
@@ -797,7 +882,7 @@
 		font-size: 20rpx;
 		position: absolute;
 		width: 85%;
-		/* #ifdef MP */
+		/* #ifdef MP  || APP-PLUS */
 		height: 44px;
 		line-height: 44px;
 		/* #endif */
