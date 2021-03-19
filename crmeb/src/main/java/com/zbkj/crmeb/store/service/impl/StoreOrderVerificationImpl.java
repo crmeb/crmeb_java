@@ -1,16 +1,13 @@
 package com.zbkj.crmeb.store.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.ArrayUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.common.PageParamRequest;
 import com.constants.Constants;
 import com.exception.CrmebException;
 import com.utils.DateUtil;
 import com.utils.vo.dateLimitUtilVo;
 import com.zbkj.crmeb.store.dao.StoreOrderDao;
 import com.zbkj.crmeb.store.model.StoreOrder;
-import com.zbkj.crmeb.store.model.StoreOrderInfo;
 import com.zbkj.crmeb.store.request.StoreOrderStaticsticsRequest;
 import com.zbkj.crmeb.store.response.StoreOrderVerificationConfirmResponse;
 import com.zbkj.crmeb.store.response.StoreStaffDetail;
@@ -20,19 +17,15 @@ import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.store.service.StoreOrderVerification;
 import com.zbkj.crmeb.store.utilService.OrderUtils;
 import com.zbkj.crmeb.system.model.SystemAdmin;
-import com.zbkj.crmeb.system.model.SystemStoreStaff;
 import com.zbkj.crmeb.system.service.SystemAdminService;
-import com.zbkj.crmeb.system.service.SystemStoreService;
 import com.zbkj.crmeb.system.service.SystemStoreStaffService;
-import com.zbkj.crmeb.user.model.User;
-import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForVerSuccess;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import javax.annotation.Resource;
-import javax.xml.ws.ServiceMode;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -101,10 +94,6 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
         LambdaQueryWrapper<StoreOrder> lqwReceivedCount = Wrappers.lambdaQuery();
         orderUtils.statusApiByWhere(lqwReceivedCount,2);
         storeStaffTopDetail.setReceivedCount(dao.selectCount(lqwReceivedCount));
-        //订单待评价 数量 verificationCount
-//        LambdaQueryWrapper<StoreOrder> lqwEvaluatedCount = Wrappers.lambdaQuery();
-//        orderUtils.statusApiByWhere(lqwEvaluatedCount,3);
-//        storeStaffTopDetail.setEvaluatedCount(dao.selectCount(lqwEvaluatedCount));
         // 订单待核销数量
         LambdaQueryWrapper<StoreOrder> verificationCount = Wrappers.lambdaQuery();
         orderUtils.statusApiByWhere(verificationCount,3);

@@ -78,8 +78,6 @@ public class CosServiceImpl implements CosService {
             logger.info("上传文件" + id + " -- 结束：" + putObjectResult.getETag());
             //更新数据库
             systemAttachmentService.updateCloudType(id, 4);
-            //删除
-//            file.delete();
         } catch (Exception e) {
             throw new CrmebException(e.getMessage());
         }

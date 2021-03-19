@@ -3,7 +3,6 @@ package com.zbkj.crmeb.system.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.constants.Constants;
-import com.utils.CrmebUtil;
 import com.utils.RedisUtil;
 import com.zbkj.crmeb.system.dao.SystemCityDao;
 import com.zbkj.crmeb.system.model.SystemCity;
@@ -11,13 +10,11 @@ import com.zbkj.crmeb.system.request.SystemCityRequest;
 import com.zbkj.crmeb.system.request.SystemCitySearchRequest;
 import com.zbkj.crmeb.system.service.SystemCityAsyncService;
 import com.zbkj.crmeb.system.service.SystemCityService;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -128,21 +125,6 @@ public class SystemCityServiceImpl extends ServiceImpl<SystemCityDao, SystemCity
             systemCityAsyncService.setListTree();
         }
         return redisUtil.get(Constants.CITY_LIST_TREE);
-    }
-
-    @Override
-    public String getStringNameInId(String cityIdList) {
-        LambdaQueryWrapper<SystemCity> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.select(SystemCity::getCityId, SystemCity::getName);
-        lambdaQueryWrapper.in(SystemCity::getCityId, CrmebUtil.stringToArray(cityIdList));
-        lambdaQueryWrapper.eq(SystemCity::getIsShow, true);
-        List<SystemCity> systemCityList = dao.selectList(lambdaQueryWrapper);
-
-        ArrayList<String> nameList = new ArrayList<>();
-        for (SystemCity systemCity : systemCityList) {
-            nameList.add(systemCity.getName());
-        }
-        return StringUtils.join(nameList, ",");
     }
 
     /**

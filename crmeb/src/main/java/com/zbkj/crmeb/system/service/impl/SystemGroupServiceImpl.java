@@ -1,18 +1,14 @@
 package com.zbkj.crmeb.system.service.impl;
 
-import com.common.PageParamRequest;
-import com.github.pagehelper.PageHelper;
-
-import com.zbkj.crmeb.system.model.SystemGroup;
-import com.zbkj.crmeb.system.dao.SystemGroupDao;
-import com.zbkj.crmeb.system.model.SystemGroupData;
-import com.zbkj.crmeb.system.request.SystemGroupSearchRequest;
-import com.zbkj.crmeb.system.service.SystemGroupService;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.common.PageParamRequest;
+import com.github.pagehelper.PageHelper;
+import com.zbkj.crmeb.system.dao.SystemGroupDao;
+import com.zbkj.crmeb.system.model.SystemGroup;
+import com.zbkj.crmeb.system.request.SystemGroupSearchRequest;
+import com.zbkj.crmeb.system.service.SystemGroupService;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

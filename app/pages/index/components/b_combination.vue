@@ -1,14 +1,14 @@
 <template>
 	<view :class="{borderShow:isBorader}">
 		<view class="combination" v-if="combinationList.length">
-			<view class="title acea-row row-between-wrapper">
-				<view class="acea-row row-middle">
+			<view class="title acea-row row-right">
+				<!-- <view class="acea-row row-middle">
 					<view class="sign">
 						<image src="../../../static/images/sign02.png"></image>
 					</view>
 					<view class="name">拼团惠<text>享超值开团价</text></view>
-				</view>
-				<navigator url="/pages/activity/goods_combination/index" hover-class="none" class="more acea-row row-center-wrapper">超值精选<text class="iconfont icon-xiangyou"></text></navigator>
+				</view> -->
+				<navigator url="/pages/activity/goods_combination/index" hover-class="none" class="more acea-row row-center-wrapper">更多<text class="iconfont icon-xiangyou"></text></navigator>
 			</view>
 			<view class="conter acea-row">
 				<scroll-view scroll-x="true" style="white-space: nowrap; vertical-align: middle;" show-scrollbar="false">
@@ -18,8 +18,9 @@
 								<image :src="item.image"></image>
 							</view>
 							<view class="text lines1">
-								<text class="money">¥<text class="num">{{item.price}}</text></text>
-								<!-- <text class="y_money">¥{{item.otPrice}}</text> -->
+								<view class="name line1">{{item.title}}</view>
+								<view class="money">¥<text class="num">{{item.price}}</text></view>
+								<view class="y_money">¥{{item.otPrice}}</view>
 							</view>
 						</view>
 					</view>
@@ -81,7 +82,7 @@
 	}
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 	.default{
 		width: 690rpx;
 		height: 300rpx;
@@ -95,12 +96,14 @@
 		}
 	}
 	.combination{
-		width: 690rpx;
+		width: 700rpx;
 		background-color: #fff;
 		border-radius: 14rpx;
 		margin: 26rpx auto 0 auto;
 		padding: 25rpx 20rpx 21rpx 20rpx;
-		
+		background-image: url(../../../static/images/pth.png);
+		background-repeat: no-repeat;
+		background-size: 100%;
 		.title {
 			.sign {
 				width: 40rpx;
@@ -127,12 +130,9 @@
 			}
 		
 			.more {
-				width: 122rpx;
 				height: 37rpx;
-				background: linear-gradient(270deg, #1DB0FC 0%, #22CAFD 100%);
-				border-radius: 21rpx;
 				font-size: 22rpx;
-				color: #fff;
+				color: #666666;
 				padding-left: 2rpx;
 		
 				.iconfont {
@@ -141,7 +141,7 @@
 			}
 		}
 		.conter{
-			margin-top: 18rpx;
+			margin-top: 28rpx;
 			.itemCon {
 				display: inline-block;
 				width: 174rpx;
@@ -161,19 +161,25 @@
 				}
 				.text{
 					margin-top: 4rpx;
-					.money{
+					.y_money {
+						font-size: 20rpx;
+						color: #999999;
+						text-decoration: line-through;
+					}
+					.name {
 						font-size: 24rpx;
+						color: #000;
+						margin-top: 14rpx;
+					}
+					.money {
 						color: #FD502F;
+						font-size: 28rpx;
+						height: 100%;
 						font-weight: bold;
-						.num{
+					    margin: 2rpx 0;
+						.num {
 							font-size: 28rpx;
 						}
-					}
-					.y_money{
-						color: #959595;
-						text-decoration: line-through;
-						font-size: 20rpx;
-						margin-left: 8rpx;
 					}
 				}
 			}

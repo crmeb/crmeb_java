@@ -5,7 +5,7 @@
 		   <view class='coupon-list' v-if="coupon.list.length">
 		      <view class='item acea-row row-center-wrapper' v-for="(item,index) in coupon.list" @click="getCouponUser(index,item.id)" :key='index'>
 		        <view class='money acea-row row-column row-center-wrapper' :class='item.isUse?"moneyGray":""'>
-					<view>￥<text class='num'>{{item.money}}</text></view>
+					<view>￥<text class='num'>{{item.money?Number(item.money):''}}</text></view>
 					<view class="pic-num">满{{item.minPrice}}元可用</view>
 				</view>
 		        <view class='text'>

@@ -45,7 +45,7 @@
 									<view class='itemn acea-row row-between-wrapper'>
 										<view>
 											<view class='name line1'>{{child.title}}</view>
-											<view>{{child.price}}</view>
+											<view>{{child.updateTime}}</view>
 										</view>
 										<view class='num font-color' v-if="child.type == 1">+{{child.price}}</view>
 										<view class='num' v-else>-{{child.price}}</view>
@@ -61,7 +61,7 @@
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -113,13 +113,7 @@
 			if (this.isLogin) {
 				this.type = options.type;
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true)
-				// #endif
 			}
 		},
 		onShow: function() {

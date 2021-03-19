@@ -145,9 +145,11 @@ public class OrderTaskServiceImpl implements OrderTaskService {
 //                boolean result = storeOrderTaskService.refundApply(storeOrder);
                 boolean result = storeOrderTaskService.refundOrder(storeOrder);
                 if(!result){
+                    logger.error("订单退款错误：result = " + result);
                     redisUtil.lPush(redisKey, orderId);
                 }
             }catch (Exception e){
+                logger.error("订单退款错误：" + e.getMessage());
                 redisUtil.lPush(redisKey, orderId);
             }
         }
@@ -180,44 +182,6 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                 }
             }catch (Exception e){
                 redisUtil.lPush(redisKey, data);
-            }
-        }
-    }
-
-    /**
-     * 用户已收货
-     * @author Mr.Zhang
-     * @since 2020-07-09
-     */
-    @Override
-    public void takeByUser() {
-        String redisKey = Constants.ORDER_TASK_REDIS_KEY_AFTER_TAKE_BY_USER;
-        Long size = redisUtil.getListSize(redisKey);
-        logger.info("OrderTaskServiceImpl.takeByUser | size:" + size);
-        if(size < 1){
-            return;
-        }
-        for (int i = 0; i < size; i++) {
-            //如果10秒钟拿不到一个数据，那么退出循环
-            Object id = redisUtil.getRightPop(redisKey, 10L);
-            if(null == id){
-                continue;
-            }
-            try{
-                StoreOrder storeOrder = storeOrderService.getByEntityOne(new StoreOrder().setId(Integer.valueOf(id.toString())));
-                boolean result = storeOrderTaskService.takeByUser(storeOrder);
-                if(!result){
-                    redisUtil.lPush(redisKey, id);
-                }else{
-                    // 微信小程序订阅消息通知 确认收货
-                    WechatSendMessageForGetPackage getPackage = new WechatSendMessageForGetPackage(
-                            orderUtils.getPayTypeStrByOrder(storeOrder),orderUtils.getStoreNameAndCarNumString(storeOrder.getId()),
-                            "CRMEB",storeOrder.getUserAddress(), DateUtil.nowDateTimeStr(),storeOrder.getOrderId()
-                    );
-                    wechatSendMessageForMinService.sendGetPackageMessage(getPackage, storeOrder.getUid());
-                }
-            }catch (Exception e){
-                redisUtil.lPush(redisKey, id);
             }
         }
     }

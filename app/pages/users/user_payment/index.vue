@@ -47,7 +47,7 @@
 			</view>
 		</form>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -102,6 +102,18 @@
 			};
 		},
 		computed: mapGetters(['isLogin']),
+		watch:{
+			isLogin:{
+				handler:function(newV,oldV){
+					if(newV){
+						this.getUserInfo();
+						this.getRecharge();
+							this.getUserExtractBank();
+					}
+				},
+				deep:true
+			}
+		},
 		onLoad(options) {
 			// #ifdef H5
 			this.from = this.$wechat.isWeixin() ? "public" : "weixinh5"
@@ -111,13 +123,7 @@
 				this.getRecharge();
 				this.getUserExtractBank();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true)
-				// #endif
 			}
 		},
 		methods: {

@@ -59,8 +59,10 @@ public class ShippingTemplatesController {
     @ApiOperation(value = "新增")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     public CommonResult<String> save(@RequestBody @Validated ShippingTemplatesRequest request){
-        shippingTemplatesService.create(request);
-        return CommonResult.success();
+        if (shippingTemplatesService.create(request)) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed("新增运费模板失败");
     }
 
     /**

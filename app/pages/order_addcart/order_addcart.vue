@@ -113,13 +113,19 @@
 		<productWindow :attr="attr" :isShow='1' :iSplus='1' :iScart='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr"
 		 @ChangeCartNum="ChangeCartNum" @attrVal="attrVal" @iptCartNum="iptCartNum" @goCat="reGoCat" id='product-window'></productWindow>
 		<!-- #ifdef MP -->
-		<authorize :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 
 	</view>
 </template>
 
 <script>
+	// #ifdef APP-PLUS
+	let sysHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
+	// #endif
+	// #ifndef APP-PLUS
+	let sysHeight = 0
+	// #endif
 	import {
 		getCartList,
 		getCartCounts,
@@ -189,20 +195,15 @@
 				attrValue: '', //已选属性
 				attrTxt: '请选择', //属性页面提示
 				cartId: 0,
-				product_id: 0
+				product_id: 0,
+				sysHeight:sysHeight
 			};
 		},
 		computed: mapGetters(['isLogin']),
 		onLoad: function(options) {
 			let that = this;
 			if (that.isLogin == false) {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				that.isAuto = true;
-				that.$set(that, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		onShow: function() {
@@ -593,30 +594,8 @@
 				// let newArr = that.cartList.valid.filter(item => item.attrStatus);
 				that.isAllSelect = newValid.length === arr1.length + arr3.length;
 				that.selectValue = value;
-				console.log(that.selectValue)
 				that.switchSelect();
 			},
-			// checkboxChange: function(event) {
-			// 	let that = this;
-			// 	let value = event.detail.value;
-			// 	let valid = that.cartList.valid;
-			// 	for (let index in valid) {
-			// 		if (that.inArray(valid[index].id, value)){
-			// 			if(valid[index].attrStatus){
-			// 				valid[index].checked = true;
-			// 			}else{
-			// 				valid[index].checked = false;
-			// 			}
-			// 		} else {
-			// 			valid[index].checked = false;
-			// 		} 
-			// 	}
-			// 	that.$set(that.cartList, 'valid', valid);
-			// 	let newArr = that.cartList.valid.filter(item => item.attrStatus);
-			// 	that.isAllSelect = value.length == newArr.length;
-			// 	that.selectValue = value;
-			// 	that.switchSelect();
-			// },
 			inArray: function(search, array) {
 				for (let i in array) {
 					if (array[i] == search) {
@@ -677,6 +656,7 @@
 					that.setCartNum(item.id, item.cartNum, function(data) {
 						that.cartList.valid[index] = item;
 						that.switchSelect();
+						that.getCartNum();
 					});
 				}
 			},
@@ -696,6 +676,7 @@
 				that.setCartNum(item.id, item.cartNum, function(data) {
 					that.cartList.valid[index] = item;
 					that.switchSelect();
+					that.getCartNum();
 				});
 			},
 			setCartNum(cartId, cartNum, successCallback) {
@@ -872,8 +853,8 @@
 			} else {
 				that.getCartList();
 			}
-			if (that.cartList.valid.length == 0 && that.cartList.invalid.length == 0) {
-			//	that.getHostProduct();
+			if (that.cartList.valid.length == 0 && that.cartList.invalid.length == 0 && this.hotPage != 1) {
+				that.getHostProduct();
 			}
 		}
 	}
