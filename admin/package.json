@@ -46,6 +46,7 @@
     "@babel/parser": "^7.9.6",
     "async-validator": "^1.11.2",
     "axios": "0.18.1",
+    "babel-polyfill": "^6.26.0",
     "clipboard": "2.0.4",
     "codemirror": "5.45.0",
     "core-js": "^2.6.11",

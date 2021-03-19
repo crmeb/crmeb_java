@@ -1,8 +1,8 @@
 package com.zbkj.crmeb.user.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.user.model.UserGroup;
-import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
 
@@ -21,8 +21,6 @@ import java.util.List;
 public interface UserGroupService extends IService<UserGroup> {
 
     List<UserGroup> getList(PageParamRequest pageParamRequest);
-
-    String clean(String groupIdValue);
 
     String getGroupNameInId(String groupIdValue);
 }

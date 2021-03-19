@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-form ref="selfForm" :model="selfForm" label-width="100px">
+    <el-form ref="selfForm" :model="selfForm" label-width="120px">
       <el-form-item label="排序" prop="sort" :rules="[{ required: true, message:'排序不能为空', trigger:['blur','change'] }]">
         <el-input-number v-model="selfForm.sort" />
       </el-form-item>
@@ -11,8 +11,7 @@
       >
         <el-switch
           v-model="selfForm.status"
-          active-color="#13ce66"
-          inactive-color="#ff4949"
+
         />
       </el-form-item>
     </el-form>

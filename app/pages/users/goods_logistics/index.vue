@@ -40,7 +40,7 @@
 			<recommend :hostProduct='hostProduct' v-if="hostProduct.length"></recommend>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 	</view>
 </template>
@@ -78,10 +78,27 @@
 				},
 				orderInfo: {},
 				expressList: [],
-				hostProduct: []
+				hostProduct: [],
+				loading: false,
+				goodScroll: true,
+				params: { //精品推荐分页
+					page: 1,
+					limit: 10,
+				},
 			};
 		},
 		computed: mapGetters(['isLogin']),
+		watch:{
+			isLogin:{
+				handler:function(newV,oldV){
+					if(newV){
+						this.getExpress();
+						this.get_host_product();
+					}
+				},
+				deep:true
+			}
+		},
 		onLoad: function (options) {
 		    if (!options.orderId) return this.$util.Tips({title:'缺少订单号'});
 			this.orderId = options.orderId;
@@ -89,13 +106,7 @@
 				this.getExpress();
 				this.get_host_product();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		  },
 		  onReady: function() {
@@ -133,13 +144,43 @@
 			  /**
 			* 获取我的推荐
 			*/
+		   // getGroomList(onloadH) {
+		   // 	this.loading = true
+		   // 	if (!this.goodScroll) return
+		   // 	if (onloadH) {
+		   // 		this.iSshowH = true
+		   // 	}
+		   // 	getGroomList(type, this.params).then(({
+		   // 		data
+		   // 	}) => {
+		   // 		this.iSshowH = false
+		   // 		this.loading = false
+		   // 		this.goodScroll = data.list.length >= this.params.limit
+		   // 		this.params.page++
+		   // 		this.tempArr = this.tempArr.concat(data.list)
+		   // 	})
+		   // }
 			  get_host_product: function () {
+				  	this.loading = true
+				  	if (!this.goodScroll) return
 			    let that = this;
-			    getProductHot().then(function (res) {
-					that.$set(that,'hostProduct',res.data.list);
+			    getProductHot(that.params.page,that.params.limit).then(function (res) {
+							//this.iSshowH = false
+							that.loading = false
+							that.goodScroll = res.data.list.length >= that.params.limit
+							that.params.page++
+							that.hostProduct = that.hostProduct.concat(res.data.list)
+				//	that.$set(that,'hostProduct',res.data.list);
 			    });
 			  },
-		}
+		},
+		// 滚动到底部
+		onReachBottom() {
+		
+			if (this.params.page != 1) {
+				this.get_host_product();
+			}
+		},
 	}
 </script>
 

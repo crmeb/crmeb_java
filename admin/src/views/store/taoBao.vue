@@ -484,7 +484,7 @@
               attr: info.attr || [],
               selectRule: info.selectRule,
               isSub: false,
-              content: info.content,
+              content: this.$selfUtil.replaceImgSrcHttps(info.content),
               specType: info.attr.length ? true : false,
               id: info.id,
               giveIntegral: info.giveIntegral,

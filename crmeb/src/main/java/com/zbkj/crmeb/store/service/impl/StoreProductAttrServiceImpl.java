@@ -1,12 +1,10 @@
 package com.zbkj.crmeb.store.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
-import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
 import com.zbkj.crmeb.store.dao.StoreProductAttrDao;
 import com.zbkj.crmeb.store.model.StoreProductAttr;
@@ -56,31 +54,6 @@ public class StoreProductAttrServiceImpl extends ServiceImpl<StoreProductAttrDao
         BeanUtils.copyProperties(request, model);
         lambdaQueryWrapper.setEntity(model);
         return dao.selectList(lambdaQueryWrapper);
-    }
-
-    @Override
-    public Boolean batchSave(List<StoreProductAttr> storeProductAttrs) {
-        if(null == storeProductAttrs) return false;
-        int count ;
-        for (StoreProductAttr attr : storeProductAttrs) {
-            count = dao.insert(attr);
-            if(count <= 0) throw new CrmebException("新增产品属性失败");
-        }
-        return true;
-    }
-
-    @Override
-    public Boolean batchUpdate(List<StoreProductAttr> storeProductAttrs) {
-        if(null == storeProductAttrs) return false;
-            for (StoreProductAttr storeProductAttr : storeProductAttrs) {
-                UpdateWrapper<StoreProductAttr> lwq = new UpdateWrapper<>();
-                lwq.eq("product_id", storeProductAttr.getProductId());
-                lwq.eq("attr_name", storeProductAttr.getAttrName());
-                lwq.eq("attr_values", storeProductAttr.getAttrValues());
-                lwq.eq("type", storeProductAttr.getType());
-                if(dao.update(storeProductAttr,lwq) < 0) throw new CrmebException("更新产品属性失败");
-            }
-        return true;
     }
 
     /**

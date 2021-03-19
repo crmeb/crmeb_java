@@ -221,26 +221,6 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
         return dao.selectList(lambdaQueryWrapper);
     }
 
-//    /**
-//     * 根据商品id获取可用优惠券列表
-//     * @param productId 获取可用优惠券的商品id
-//     * @return 商品对应的可用优惠券集合
-//     */
-//    @Override
-//    public List<StoreCoupon> getListByProductCanUse(Integer productId) {
-//
-//        List<Integer> categoryIdList = storeProductService.getSecondaryCategoryByProductId(productId);
-//
-//        LambdaQueryWrapper<StoreCoupon> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-//        lambdaQueryWrapper.eq(StoreCoupon::getIsDel, false);
-//        lambdaQueryWrapper.eq(StoreCoupon::getType, 1);
-//        lambdaQueryWrapper.eq(StoreCoupon::getIsLimited, true);
-//        lambdaQueryWrapper.ge(StoreCoupon::getLastTotal, 0);
-//        //有商品id  通用券可以领取，商品券可以领取，分类券可以领取
-//        lambdaQueryWrapper.apply(getPrimaryKeySql(productId));
-//        return dao.selectList(lambdaQueryWrapper);
-//    }
-
     /**
      * 优惠券详情
      * @param id Integer 获取可用优惠券的商品id
@@ -352,7 +332,6 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
     public List<StoreCoupon> findRegisterList() {
         String dateStr = DateUtil.nowDate(Constants.DATE_FORMAT);
         LambdaQueryWrapper<StoreCoupon> lqw = new LambdaQueryWrapper<>();
-//        lqw.gt(StoreCoupon::getLastTotal, 0);
         lqw.eq(StoreCoupon::getType, 2);
         lqw.eq(StoreCoupon::getStatus, true);
         lqw.eq(StoreCoupon::getIsDel, false);
@@ -394,7 +373,9 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
                 //剩余数量大于0 或者不设置上限
                 .and(i -> i.gt(StoreCoupon::getLastTotal, 0).or().eq(StoreCoupon::getIsLimited, false))
                 //领取时间范围, 结束时间为null则是不限时
-                .and(i -> i.isNull(StoreCoupon::getReceiveEndTime).or( p -> p.lt(StoreCoupon::getReceiveStartTime, date).gt(StoreCoupon::getReceiveEndTime, date)));
+                .and(i -> i.isNull(StoreCoupon::getReceiveEndTime).or( p -> p.lt(StoreCoupon::getReceiveStartTime, date).gt(StoreCoupon::getReceiveEndTime, date)))
+                // 用户使用时间范围，结束时间为null则是不限时
+                .and(i -> i.isNull(StoreCoupon::getUseEndTime).or(p -> p.gt(StoreCoupon::getUseEndTime, date)));
         lambdaQueryWrapper.eq(StoreCoupon::getType, 1);
         if(productId > 0){
             //有商品id  通用券可以领取，商品券可以领取，分类券可以领取

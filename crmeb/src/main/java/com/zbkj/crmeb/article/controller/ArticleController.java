@@ -56,7 +56,7 @@ public class ArticleController {
     @ApiImplicitParam(name="keywords", value="搜索关键字")
     public CommonResult<CommonPage<ArticleVo>> getList(@Validated ArticleSearchRequest request,
                                                        @Validated PageParamRequest pageParamRequest){
-        return CommonResult.success(CommonPage.restPage(articleService.getList(request, pageParamRequest)));
+        return CommonResult.success(CommonPage.restPage(articleService.getAdminList(request, pageParamRequest)));
     }
 
     /**

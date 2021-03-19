@@ -208,6 +208,14 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         if (ObjectUtil.isNull(attrValueRequest.getQuota()) || attrValueRequest.getQuota() <= 0) {
             throw new CrmebException("活动限购数量必须大于0");
         }
+        // 可砍价的金额
+        BigDecimal tempPrice = attrValueRequest.getPrice().subtract(attrValueRequest.getMinPrice());
+        // 砍价人数 * 0.01 = 每人砍1分总共钱数
+        BigDecimal multiply = new BigDecimal(request.getPeopleNum()).multiply(new BigDecimal("0.01"));
+        if (tempPrice.compareTo(multiply) < 0) {
+            // 砍价起始金额 - 砍价最低价 >= 砍价人数 * 0.01
+            throw new CrmebException("必须保证每个人最少砍1分钱");
+        }
 
         StoreBargain bargain = new StoreBargain();
         BeanUtils.copyProperties(request, bargain);
@@ -283,7 +291,17 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         if (null == request.getAttrValue() || request.getAttrValue().size() < 1) {
             throw new CrmebException("请选择砍价商品的规格属性");
         }
+
         StoreProductAttrValueRequest attrValueRequest = request.getAttrValue().get(0);
+
+        // 可砍价的金额
+        BigDecimal tempPrice =attrValueRequest.getPrice().subtract(attrValueRequest.getMinPrice());
+        // 砍价人数 * 0.01 = 每人砍1分总共钱数
+        BigDecimal multiply = new BigDecimal(request.getPeopleNum()).multiply(new BigDecimal("0.01"));
+        if (tempPrice.compareTo(multiply) < 0) {
+            // 砍价起始金额 - 砍价最低价 >= 砍价人数 * 0.01
+            throw new CrmebException("必须保证每个人最少砍1分钱");
+        }
 
         StoreBargain bargain = new StoreBargain();
         BeanUtils.copyProperties(request, bargain);
@@ -598,8 +616,11 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         List<StoreBargainUser> historyList = storeBargainUserService.getByEntity(spavBargainUser);
         if (CollUtil.isNotEmpty(historyList)) {
             List<StoreBargainUser> collect = historyList.stream().filter(i -> i.getStatus().equals(BargainConstants.BARGAIN_USER_STATUS_PARTICIPATE)).collect(Collectors.toList());
-            if (CollUtil.isNotEmpty(collect)) throw new CrmebException("请先完成当前砍价活动");
-            // 判断是否达到参与砍价活动上限
+            if (CollUtil.isNotEmpty(collect)) {
+//                throw new CrmebException("请先完成当前砍价活动");
+                return true;
+            }
+//          判断是否达到参与砍价活动上限
             if (historyList.size() >= storeBargain.getNum()) {
                 throw new CrmebException("您已达到当前砍价活动上限");
             }

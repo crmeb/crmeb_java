@@ -431,6 +431,10 @@ public class StoreBargainUserHelpServiceImpl extends ServiceImpl<StoreBargainUse
      * @param helpCount     帮助砍价次数
      * @return
      * 砍价时在设置好的价格区间内以大于20%小于80%之间随机一个价格后 在总金额中减去,砍价最后一位不可随机价格,直接砍价到设置区间的最低价格为准
+     *
+     * 剩余砍价金额 - 剩余砍价次数 * 0.01 = 可砍价金额
+     * 可砍价金额 > 0.01 以大于20%小于80%之间随机一个价格
+     *
      */
     private BigDecimal helpBargain(StoreBargain storeBargain, StoreBargainUser storeBargainUser, Long helpCount) {
         BigDecimal minPrice = storeBargainUser.getBargainPriceMin();//底价
@@ -441,19 +445,36 @@ public class StoreBargainUserHelpServiceImpl extends ServiceImpl<StoreBargainUse
         BigDecimal subtract = price.subtract(minPrice);// 可砍价金额（总）
 
         BigDecimal bargainPrice = ZERO;
+        double retainPrice;// 需要保留的金额
         // 没有砍过
         if (helpCount == 0) {
-            bargainPrice = RandomUtil.randomBigDecimal(subtract.multiply(new BigDecimal(Constants.BARGAIN_TATIO_DOWN)), subtract.multiply(new BigDecimal(Constants.BARGAIN_TATIO_UP)));
-            return bargainPrice.setScale(2, BigDecimal.ROUND_HALF_UP);
+            // 可砍价金额
+            retainPrice = (peopleNum - 1) * 0.01;
+            BigDecimal canBargainPrice = subtract.subtract(new BigDecimal(retainPrice));
+            if (canBargainPrice.compareTo(new BigDecimal("0.01")) > 0) {// 超过0.01
+                bargainPrice = RandomUtil.randomBigDecimal(subtract.multiply(new BigDecimal(Constants.BARGAIN_TATIO_DOWN)), subtract.multiply(new BigDecimal(Constants.BARGAIN_TATIO_UP)));
+                if (bargainPrice.compareTo(new BigDecimal("0.01")) < 0) {
+                    bargainPrice = new BigDecimal("0.01");
+                }
+                return bargainPrice.setScale(2, BigDecimal.ROUND_HALF_UP);
+            }
+            return new BigDecimal("0.01");
         }
         // 最后一次砍价
         if (peopleNum - helpCount.intValue() == 1) {
             return subtract.subtract(userPrice);
         }
         // 其他情况
-        BigDecimal remaining = subtract.subtract(userPrice);
-        bargainPrice = RandomUtil.randomBigDecimal(remaining.multiply(new BigDecimal(Constants.BARGAIN_TATIO_DOWN)), remaining.multiply(new BigDecimal(Constants.BARGAIN_TATIO_UP)));
-        return bargainPrice.setScale(2, BigDecimal.ROUND_HALF_UP);
+        retainPrice = (peopleNum - helpCount.intValue()) * 0.01;
+        BigDecimal remaining = subtract.subtract(userPrice).subtract(new BigDecimal(retainPrice));
+        if (remaining.compareTo(new BigDecimal("0.01")) > 0) {// 超过0.01
+            bargainPrice = RandomUtil.randomBigDecimal(remaining.multiply(new BigDecimal(Constants.BARGAIN_TATIO_DOWN)), remaining.multiply(new BigDecimal(Constants.BARGAIN_TATIO_UP)));
+            if (bargainPrice.compareTo(new BigDecimal("0.01")) < 0) {
+                bargainPrice = new BigDecimal("0.01");
+            }
+            return bargainPrice.setScale(2, BigDecimal.ROUND_HALF_UP);
+        }
+        return new BigDecimal("0.01");
     }
 
     /**

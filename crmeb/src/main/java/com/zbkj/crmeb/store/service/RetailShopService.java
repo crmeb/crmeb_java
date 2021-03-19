@@ -3,15 +3,10 @@ package com.zbkj.crmeb.store.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
-import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.store.request.RetailShopRequest;
-import com.zbkj.crmeb.store.request.RetailShopStairUserRequest;
 import com.zbkj.crmeb.store.response.RetailShopStatisticsResponse;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.response.SpreadUserResponse;
-import com.zbkj.crmeb.user.response.UserResponse;
-
-import java.util.List;
 
 /**
  * 分销业务
@@ -35,20 +30,6 @@ public interface RetailShopService extends IService<User> {
      * @return
      */
     CommonPage<SpreadUserResponse> getSpreadPeopleList(String keywords, String dateLimit, PageParamRequest pageRequest);
-
-    /**
-     * 获取分销头部数据
-     * @param nickName 查询参数
-     * @param dateLimit 时间参数对象
-     */
-    List<UserResponse> getStatisticsData(String nickName, String dateLimit);
-
-    /**
-     * 统计推广人员列表
-     * @param request 查询参数
-     * @return 推广人员集合列表
-     */
-    PageInfo<User> getStairUsers(RetailShopStairUserRequest request, PageParamRequest pageParamRequest);
 
     /**
      * 获取分销配置

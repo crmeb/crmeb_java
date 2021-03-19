@@ -335,6 +335,18 @@ public class UserController {
     public CommonResult<List<UserSpreadBannerResponse>>  getSpreadBannerList(@Validated PageParamRequest pageParamRequest){
         return CommonResult.success(userCenterService.getSpreadBannerList(pageParamRequest));
     }
+
+    /**
+     * 绑定推广人
+     * @param spreadPid 推广id
+     * @return 绑定结果
+     */
+    @ApiOperation(value = "绑定推广人")
+    @RequestMapping(value = "/user/bindSpread", method = RequestMethod.GET)
+    public CommonResult<Boolean> bindsSpread(Integer spreadPid){
+        userService.bindSpread(userService.getInfo(),spreadPid);
+        return CommonResult.success();
+    }
 }
 
 

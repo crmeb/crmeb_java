@@ -39,22 +39,24 @@
 			</div>
 			<!-- #ifdef H5 -->
 			<div v-if="userBool === 1 && isOk == 0 && pinkBool === 0">
-				<div class="teamBnt bg-color-red" v-if="$wechat.isWeixin()" @click="H5ShareBox = true">邀请好友参团</div>
-				<div class="teamBnt bg-color-red" v-else @click="goPoster">邀请好友参团</div>
+				<div class="teamBnt bg-color-red" v-if="$wechat.isWeixin() && pinkT.stopTime>timestamp" @click="H5ShareBox = true">邀请好友参团</div>
+				<div class="teamBnt bg-color-red" v-if='!$wechat.isWeixin() && pinkT.stopTime>timestamp' @click="goPoster">邀请好友参团</div>
 			</div>
 			<!-- <div class="teamBnt bg-color-red" v-if="userBool === 1 && isOk == 0 && pinkBool === 0" @click="goPoster">
 				邀请好友参团
 			</div> -->
 			<!-- #endif -->
 			<!-- #ifdef MP -->
-			<button open-type="share" class="teamBnt bg-color-red" v-if="userBool === 1 && isOk == 0 && pinkBool === 0">邀请好友参团</button>
+			<button open-type="share" class="teamBnt bg-color-red" v-if="userBool === 1 && isOk == 0 && pinkBool === 0 && pinkT.stopTime>timestamp">邀请好友参团</button>
 			<!-- #endif -->
-			<div class="teamBnt bg-color-red" v-else-if="userBool === 0 && pinkBool === 0 && count > 0" @click="pay">我要参团</div>
+			<div class="teamBnt bg-color-hui" v-if="pinkT.stopTime<timestamp && isOk == 0 && pinkBool === 0">拼团已过期</div>
+			<div class="teamBnt bg-color-red" v-else-if="userBool === 0 && pinkBool === 0 && count > 0 && pinkT.stopTime>timestamp" @click="pay">我要参团</div>
 			<div class="teamBnt bg-color-red" v-if="pinkBool === 1 || pinkBool === -1" @click="goDetail(storeCombination.id)">再次开团</div>
 			<div class="cancel" @click="getCombinationRemove" v-if="pinkBool === 0 && userBool === 1">
 				<span class="iconfont icon-guanbi3"></span>
 				取消开团
 			</div>
+			
 			<div class="lookOrder" v-if="pinkBool === 1" @click="goOrder">
 				查看订单信息
 				<span class="iconfont icon-xiangyou"></span>
@@ -93,10 +95,10 @@
 		<!-- 发送给朋友图片 -->
 		<view class="share-box" v-if="H5ShareBox"><image src="/static/images/share-info.png" @click="H5ShareBox = false"></image></view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
-		<!-- <Product-window v-on:changeFun="changeFun" :attr="attr" :limitNum='1' :iSbnt='1'></Product-window> -->
 		<home></home>
+		<!-- <Product-window v-on:changeFun="changeFun" :attr="attr" :limitNum='1' :iSbnt='1'></Product-window> -->
 	</div>
 </template>
 <script>
@@ -162,8 +164,28 @@ export default {
 			H5ShareBox: false, //公众号分享图片
 			isAuto: false, //没有授权的不会自动授权
 			isShowAuth: false, //是否隐藏授权
-			onceNum: 0 //一次可以购买几个
+			onceNum: 0 ,//一次可以购买几个,
+			timestamp: 0 // 当前时间戳
 		};
+	},
+	watch: {
+		isLogin:{
+			handler:function(newV,oldV){
+				if(newV){
+					this.getCombinationPink();
+				}
+			},
+			deep:true
+		},
+		userData:{
+			handler:function(newV,oldV){
+				if(newV){
+					this.userInfo = newV;
+					app.globalData.openPages = '/pages/activity/goods_combination_status/index?id=' + this.pinkId;
+				}
+			},
+			deep:true
+		}
 	},
 	computed: mapGetters({
 		'isLogin':'isLogin',
@@ -173,14 +195,9 @@ export default {
 		var that = this;
 		that.pinkId = options.id;
 		if (that.isLogin == false) {
-			// #ifdef H5 || APP-PLUS
 			toLogin();
-			// #endif 
-			// #ifdef MP
-			that.isAuto = true;
-			that.$set(that, 'isShowAuth', true);
-			// #endif
 		} else {
+			this.timestamp = (new Date()).getTime();
 			// #ifdef H5
 			this.getCombinationPink();
 			// #endif
@@ -196,8 +213,6 @@ export default {
 	 */
 	onShareAppMessage: function() {
 		let that = this;
-		that.close();
-		that.addShareBargain();
 		return {
 			title: '您的好友' + that.userInfo.nickname + '邀请您参团' + that.storeCombination.title,
 			path: app.globalData.openPages,
@@ -505,17 +520,13 @@ export default {
 					if (that.attr.productAttr != 0) that.DefaultSelect();
 				})
 				.catch(err => {
-					this.$util.Tips({
-						title: err
-					});
-					uni.redirectTo({
-						success(){},
-						fail() {
-							uni.navigateTo({
-								url: '/pages/index/index',
-							})
-						}
-					})
+					if(that.isLogin){
+						that.$util.Tips({
+							title: err
+						}, {
+							url: '/pages/index/index'
+						});
+					}
 				});
 		},
 		//#ifdef H5

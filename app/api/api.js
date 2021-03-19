@@ -171,11 +171,19 @@ export function switchH5Login() {
 // #endif
 
 /**
- * 绑定手机号
+ * 换绑手机号
  * 
 */
 export function bindingPhone(data){
-  return request.post('binding',data);
+  return request.post('update/binding',data);
+}
+
+/**
+ * 换绑手机号校验
+ * 
+*/
+export function bindingVerify(data){
+  return request.post('update/binding/verify',data);
 }
 
 /**

@@ -70,10 +70,4 @@ public interface ExpressService extends IService<Express> {
      */
     Express getByCode(String code);
 
-    /**
-     * 打印电子面单
-     * @param cargo 物品名称
-     * @param count 商品数量
-     */
-    Boolean dump(String cargo, Integer count);
 }

@@ -372,7 +372,6 @@ public class ProductServiceImpl implements ProductService {
             for (String attrValue : attrValues) {
                 HashMap<String,Object> attrValueMap = new HashMap<>();
                 attrValueMap.put("attr",attrValue);
-//                attrValueMap.put("check",storeCouponService.getListByProductCanUse(id).size()>0);
                 attrValueMapList.add(attrValueMap);
             }
             attrMap.put("attrValue",attrValueMapList);

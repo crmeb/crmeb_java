@@ -189,7 +189,6 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         LambdaQueryWrapper<StoreCart> lqwStoreList = new LambdaQueryWrapper<>();
         lqwStoreList.eq(StoreCart::getUid,userId);
         lqwStoreList.eq(StoreCart::getType, "product");
-//        lqwStoreList.eq(StoreCart::getI)
         lqwStoreList.in(StoreCart::getId,cartIds);
         lqwStoreList.orderByDesc(StoreCart::getCreateTime);
         return dao.selectList(lqwStoreList);
@@ -298,7 +297,6 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
     @Override
     public BigDecimal setVipPrice(BigDecimal price, Integer userId, boolean isSingle) {
         // 判断会员功能是否开启
-//        Integer memberFuncStatus = Integer.valueOf(systemConfigService.getValueByKey("member_func_status"));
         Integer memberFuncStatus = Integer.valueOf(systemConfigService.getValueByKey("vip_open"));
         if(memberFuncStatus <= 0){
             return price;
@@ -320,7 +318,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
      * @return 删除结果状态
      */
     @Override
-    public boolean deleteCartByIds(List<Integer> ids) {
+    public boolean deleteCartByIds(List<Long> ids) {
         return dao.deleteBatchIds(ids) > 0;
     }
 
@@ -387,6 +385,23 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         lqw.in(StoreCart::getProductAttrUnique, skuIdList);
         lqw.eq(StoreCart::getIsNew, false);
         return update(lqw);
+    }
+
+    /**
+     * 删除商品对应的购物车
+     * @param productId 商品id
+     */
+    @Override
+    public Boolean productDelete(Integer productId) {
+        StoreCart storeCartPram = new StoreCart();
+        storeCartPram.setProductId(productId);
+        List<StoreCart> existStoreCartProducts = getByEntity(storeCartPram);
+        if(null == existStoreCartProducts || existStoreCartProducts.size()==0) return true;
+        List<Long> cartIds = existStoreCartProducts.stream().map(StoreCart::getId).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(cartIds)) {
+            deleteCartByIds(cartIds);
+        }
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////自定义方法

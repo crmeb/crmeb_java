@@ -14,7 +14,6 @@ couponFrom.install = function(Vue, options) {
   instance.$mount(document.createElement('div'))
   document.body.appendChild(instance.$el)
   Vue.prototype.$modalCoupon = function(handle, keyNum, coupons=[], callback, userIds='') {
-    console.log( userIds)
     instance.visible = true
     instance.handle = handle
     instance.keyNum = keyNum

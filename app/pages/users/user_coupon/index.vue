@@ -3,8 +3,8 @@
 		<view class='coupon-list' v-if="couponsList.length">
 			<view class='item acea-row row-center-wrapper' v-for='(item,index) in couponsList' :key="index">
 				<view class='money' :class="item.validStr==='unusable'||item.validStr==='overdue'||item.validStr==='notStart' ? 'moneyGray' : ''">
-					<view>￥<text class='num'>{{item.money}}</text></view>
-					<view class="pic-num">满{{ item.minPrice }}元可用</view>
+					<view>￥<text class='num'>{{item.money?Number(item.money):''}}</text></view>
+					<view class="pic-num">满{{ item.minPrice?Number(item.minPrice):'' }}元可用</view>
 				</view>
 				<view class='text'>
 					<view class='condition line2'>
@@ -26,7 +26,7 @@
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -73,17 +73,21 @@
 			};
 		},
 		computed: mapGetters(['isLogin']),
+		watch: {
+			isLogin: {
+				handler: function(newV, oldV) {
+					if (newV) {
+						this.getUseCoupons();
+					}
+				},
+				deep: true
+			}
+		},
 		onLoad() {
 			if (this.isLogin) {
 				this.getUseCoupons();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true)
-				// #endif
 			}
 		},
 		methods: {

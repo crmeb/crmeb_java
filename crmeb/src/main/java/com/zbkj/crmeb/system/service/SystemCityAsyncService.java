@@ -1,10 +1,5 @@
 package com.zbkj.crmeb.system.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.zbkj.crmeb.system.model.SystemCity;
-import com.zbkj.crmeb.system.request.SystemCityRequest;
-import com.zbkj.crmeb.system.request.SystemCitySearchRequest;
-
 /**
  * SystemCityAsyncService 接口
  * +----------------------------------------------------------------------
@@ -17,8 +12,9 @@ import com.zbkj.crmeb.system.request.SystemCitySearchRequest;
  * | Author: CRMEB Team <admin@crmeb.com>
  * +----------------------------------------------------------------------
  */
-public interface SystemCityAsyncService{
+public interface SystemCityAsyncService {
 
     void async(Integer id);
+
     void setListTree();
 }

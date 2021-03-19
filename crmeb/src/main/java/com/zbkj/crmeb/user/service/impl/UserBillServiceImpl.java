@@ -23,19 +23,20 @@ import com.zbkj.crmeb.store.request.StoreOrderRefundRequest;
 import com.zbkj.crmeb.user.dao.UserBillDao;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserBill;
-import com.zbkj.crmeb.user.request.UserBillDetailListRequest;
 import com.zbkj.crmeb.user.response.BillType;
 import com.zbkj.crmeb.user.response.UserBillResponse;
 import com.zbkj.crmeb.user.service.UserBillService;
 import com.zbkj.crmeb.user.service.UserService;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -95,59 +96,6 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
             queryWrapper.eq("pm", request.getPm());
         }
 
-        return dao.selectList(queryWrapper);
-    }
-
-    /**
-     * 列表
-     * @param request 请求参数
-     * @param monthList List<String> 分页类参数
-     * @author Mr.Zhang
-     * @since 2020-04-28
-     * @return List<UserBill>
-     */
-    @Override
-    public Map<String, Integer> getCountListByMonth(FundsMonitorSearchRequest request, List<String> monthList) {
-
-        HashMap<String, Integer> map = new HashMap<>();
-        QueryWrapper<UserBill> queryWrapper = new QueryWrapper<>();
-        getMonthSql(request, queryWrapper);
-
-        queryWrapper.select("count(id) as uid, create_time");
-        queryWrapper.apply("left(create_time, 7) in (" + StringUtils.join(monthList, ',') + ")");
-        queryWrapper.groupBy("left(create_time, 7)");
-        List<UserBill> userBillList = dao.selectList(queryWrapper);
-
-        if(userBillList.size() < 1){
-            return map;
-        }
-
-        for (UserBill userBill : userBillList) {
-            map.put(DateUtil.dateToStr(userBill.getCreateTime(), Constants.DATE_FORMAT_MONTH), userBill.getUid());
-        }
-        return map;
-    }
-
-    /**
-     * 佣金排行榜
-     * @param type  String 时间范围
-     * @param pageParamRequest PageParamRequest 分页
-     * @author Mr.Zhang
-     * @since 2020-05-25
-     * @return List<LoginResponse>
-     */
-    @Override
-    public List<UserBill> getTopBrokerageListByDate(String type, PageParamRequest pageParamRequest) {
-        QueryWrapper<UserBill> queryWrapper = new QueryWrapper<>();
-
-        dateLimitUtilVo dateLimit = DateUtil.getDateLimit(type);
-        queryWrapper.select("uid", "sum(IF((pm=0), -number, number))AS number");
-        queryWrapper.eq("status", true);
-        queryWrapper.eq("category", Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE);
-        if(!StringUtils.isBlank(dateLimit.getStartTime())){
-            queryWrapper.between("create_time", dateLimit.getStartTime(), dateLimit.getEndTime());
-        }
-        queryWrapper.groupBy("uid").orderByDesc("number");
         return dao.selectList(queryWrapper);
     }
 
@@ -317,11 +265,6 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
             dateLimitUtilVo dateLimit = DateUtil.getDateLimit(date);
             queryWrapper.between("create_time", dateLimit.getStartTime(), dateLimit.getEndTime());
         }
-//        UserBill userBill = dao.selectOne(queryWrapper);
-//        if(null == userBill || null == userBill.getNumber()){
-//            return BigDecimal.ZERO;
-//        }
-//        return userBill.getNumber();
         List<UserBill> userBills = dao.selectList(queryWrapper);
         if (CollUtil.isEmpty(userBills)) {
             return BigDecimal.ZERO;
@@ -382,94 +325,6 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
     }
 
     /**
-     * 反还佣金日志
-     * @author Mr.Zhang
-     * @since 2020-06-08
-     */
-    @Override
-    public void saveRefundBrokeragePriceBill(StoreOrderRefundRequest request, User user) {
-        try{
-            UserBill userBill = new UserBill();
-            userBill.setTitle("退款退佣金");
-            userBill.setUid(user.getUid());
-            userBill.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
-            userBill.setType(Constants.USER_BILL_TYPE_BROKERAGE);
-            userBill.setNumber(request.getAmount());
-            userBill.setLinkId(request.getOrderId().toString());
-            userBill.setBalance(user.getNowMoney().subtract(request.getAmount()));
-            userBill.setPm(0);
-            userBill.setMark("订单退款扣除佣金" + request.getAmount() + "元");
-            save(userBill);
-        }catch (Exception e){
-            throw new CrmebException(e.getMessage());
-        }
-    }
-
-    /**
-     * 反还积分日志
-     * @author Mr.Zhang
-     * @since 2020-06-08
-     */
-    @Override
-    public void saveRefundIntegralBill(StoreOrderRefundRequest request, User user) {
-        try{
-            UserBill userBill = new UserBill();
-            userBill.setTitle("退款扣除积分");
-            userBill.setUid(user.getUid());
-            userBill.setCategory(Constants.USER_BILL_CATEGORY_INTEGRAL);
-            userBill.setType(Constants.USER_BILL_TYPE_GAIN);
-            userBill.setNumber(request.getAmount());
-            userBill.setLinkId(request.getOrderId().toString());
-            userBill.setBalance(user.getNowMoney().subtract(request.getAmount()));
-            userBill.setPm(0);
-            userBill.setMark("订单退款扣除积分" + request.getAmount() + "积分");
-            save(userBill);
-        }catch (Exception e){
-            throw new CrmebException(e.getMessage());
-        }
-    }
-
-    /**
-     * 根据用户id获取对应的佣金数据 分销using
-     * @param userId 用户id
-     * @return 佣金数据
-     */
-    @Override
-    public BigDecimal getDataByUserId(Integer userId) {
-        QueryWrapper<UserBill> qw = new QueryWrapper<>();
-        qw.ge("status", 1);
-        qw.eq("type", "brokerage");
-        qw.eq("pm", 1);
-        qw.eq("uid", userId);
-        qw.select("sum(number) as number");
-        qw.groupBy("uid");
-        BigDecimal number = BigDecimal.valueOf(0);
-        UserBill ub = dao.selectOne(qw);
-        if(null != ub){
-            number = ub.getNumber();
-        }
-        return number;
-    }
-
-    /**
-     * 通过订单获取
-     * @param id 订单id
-     * @param userId 用户id
-     * @param pm 类型
-     * @return
-     */
-    @Override
-    public BigDecimal getIntegerByOrder(Integer id, Integer userId, int pm) {
-        UserBill userBill = new UserBill();
-        userBill.setCategory(Constants.USER_BILL_CATEGORY_INTEGRAL);
-        userBill.setType(Constants.USER_BILL_TYPE_ORDER);
-        userBill.setLinkId(id.toString());
-        userBill.setUid(userId);
-        userBill.setPm(pm);
-        return getIntegerByEntity(userBill);
-    }
-
-    /**
      * 获取资金操作类型
      *
      * @return 操作类型集合，从数据库group by(type)查询获取
@@ -501,26 +356,6 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
     }
 
     /**
-     * 获取佣金总额
-     *
-     * @return 佣金总额
-     */
-    @Override
-    public BigDecimal getSumBrokerage() {
-        LambdaQueryWrapper<UserBill> lqw = Wrappers.lambdaQuery();
-        lqw.eq(UserBill::getType,"brokerage")
-                .eq(UserBill::getCategory,"now_money")
-                .eq(UserBill::getStatus,1)
-                .eq(UserBill::getPm,0)
-                .eq(UserBill::getUid,0);
-        List<UserBill> userBills = dao.selectList(lqw);
-        double sum = 0;
-        if(null != userBills || userBills.size() >0)
-            sum = userBills.stream().mapToDouble(e->e.getNumber().doubleValue()).sum();
-        return BigDecimal.valueOf(sum);
-    }
-
-    /**
      * 根据基本条件查询
      *
      * @param bill 基本参数
@@ -531,41 +366,6 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
         LambdaQueryWrapper<UserBill> lqw = Wrappers.lambdaQuery();
         lqw.setEntity(bill);
         return dao.selectList(lqw);
-    }
-
-    /**
-     * Base serch
-     *
-     * @param request          查询参数
-     * @param pageParamRequest 分页参数
-     * @return 查询结果
-     */
-    @Override
-    public PageInfo<UserBillResponse> getByBaseSearch(Integer userId, UserBillDetailListRequest request, PageParamRequest pageParamRequest) {
-        Page<UserBill> startPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-        LambdaQueryWrapper<UserBill> lqw = Wrappers.lambdaQuery();
-        if(null!= userId && userId > 0) lqw.eq(UserBill::getUid, userId);
-        if(StringUtils.isNotBlank(request.getKeywords())){
-            lqw.like(UserBill::getLinkId, "%"+request.getKeywords()+"%");
-        }
-        if(StringUtils.isNotBlank(request.getDateLimit())){
-            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
-            lqw.between(UserBill::getCreateTime,dateLimit.getStartTime(),dateLimit.getEndTime());
-        }
-//        lqw.eq(UserBill::getCategory, Constants.USER_BILL_CATEGORY_MONEY);
-        lqw.eq(UserBill::getCategory, Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE);
-        lqw.eq(UserBill::getType, Constants.USER_BILL_TYPE_BROKERAGE);
-        lqw.orderByDesc(UserBill::getCreateTime).orderByDesc(UserBill::getId);
-        List<UserBill> userBillsResults = dao.selectList(lqw);
-        List<UserBillResponse> userBillResponseResults = new ArrayList<>();
-        userBillsResults.stream().map(e->{
-            UserBillResponse ub = new UserBillResponse();
-            BeanUtils.copyProperties(e,ub);
-            ub.setNickName(userService.getById(e.getUid()).getNickname());
-            userBillResponseResults.add(ub);
-            return e;
-        }).collect(Collectors.toList());
-        return CommonPage.copyPageInfo(startPage, userBillResponseResults);
     }
 
     /**
@@ -650,17 +450,6 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
 
     /////////////////////////////////////////////////////////////////////// 自定义方法
 
-    private BigDecimal getIntegerByEntity(UserBill userBill) {
-        LambdaQueryWrapper<UserBill> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.setEntity(userBill);
-        List<UserBill> userBillList = dao.selectList(lambdaQueryWrapper);
-        if(null == userBillList || userBillList.size() < 1){
-            return BigDecimal.ZERO;
-        }
-
-        return userBillList.stream().map(UserBill::getNumber).reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
     /**
      * 按照月份获取数据
      * @author Mr.Zhang
@@ -676,35 +465,6 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
 
         queryWrapper.orderByDesc("create_time");
         return dao.selectList(queryWrapper);
-    }
-
-    private ArrayList<String> getTypeList(int type){
-        //0=全部,1=消费,2=充值,3=返佣,4=提现
-        ArrayList<String> typeList = new ArrayList<>();
-        switch (type){
-            case 1:
-                typeList.add(Constants.USER_BILL_TYPE_RECHARGE);
-                typeList.add(Constants.USER_BILL_TYPE_BROKERAGE);
-                typeList.add(Constants.USER_BILL_TYPE_PAY_MONEY);
-                typeList.add(Constants.USER_BILL_TYPE_SYSTEM_ADD);
-                typeList.add(Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
-                typeList.add(Constants.USER_BILL_TYPE_SYSTEM_SUB);
-                break;
-            case 2:
-                typeList.add(Constants.USER_BILL_TYPE_PAY_MONEY);
-                break;
-            case 3:
-                typeList.add(Constants.USER_BILL_TYPE_RECHARGE);
-                typeList.add(Constants.USER_BILL_TYPE_SYSTEM_ADD);
-                break;
-            case 4:
-                typeList.add(Constants.USER_BILL_TYPE_EXTRACT);
-                typeList.add(Constants.USER_BILL_TYPE_RECHARGE);
-                break;
-            default:
-                break;
-        }
-        return typeList;
     }
 
 }

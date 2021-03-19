@@ -14,7 +14,9 @@ import com.zbkj.crmeb.combination.request.StoreCombinationRequest;
 import com.zbkj.crmeb.combination.service.StoreCombinationService;
 import com.zbkj.crmeb.front.response.ProductActivityItemResponse;
 import com.zbkj.crmeb.seckill.model.StoreSeckill;
+import com.zbkj.crmeb.seckill.model.StoreSeckillManger;
 import com.zbkj.crmeb.seckill.request.StoreSeckillRequest;
+import com.zbkj.crmeb.seckill.service.StoreSeckillMangerService;
 import com.zbkj.crmeb.seckill.service.StoreSeckillService;
 import com.zbkj.crmeb.store.model.StoreProduct;
 import com.zbkj.crmeb.store.model.StoreProductAttr;
@@ -65,6 +67,9 @@ public class ProductUtils {
 
     @Autowired
     private StoreSeckillService storeSeckillService;
+
+    @Autowired
+    private StoreSeckillMangerService storeSeckillMangerService;
 
     @Autowired
     private StoreBargainService storeBargainService;
@@ -349,35 +354,6 @@ public class ProductUtils {
         spattr.setAttrValues(attrValues.toString());
         productRequest.setSpecType(false);
         productRequest.setAttr(spaAttes);
-//        if(null == data.optJSONArray("passSubList")){
-//            return productRequest;
-//        }
-//        JSONArray props = data.getJSONArray("passSubList");
-//        if (null == props){
-//            return productRequest;
-//        }
-//        if (props.length() > 0) {
-//            List<StoreProductAttr> spaAttes = new ArrayList<>();
-//            for (int i = 0; i < props.length(); i++) {
-//                JSONObject pItem = props.getJSONObject(i);
-//                Iterator it = pItem.keys();
-//                while (it.hasNext()){
-//                    String key = (String)it.next();
-//                    JSONArray skuItems = pItem.getJSONArray(key);
-//                    List<String> attrValues = new ArrayList<>();
-//                    StoreProductAttr spattr = new StoreProductAttr();
-//                    for (int j = 0; j < skuItems.length(); j++) {
-//                        JSONObject skuItem = skuItems.getJSONObject(j);
-//                        if(null != skuItem.optString("characterValueDisplayName"))
-//                            attrValues.add(skuItem.getString("characterValueDisplayName"));
-//                    }
-//                    spattr.setAttrName(key);
-//                    spattr.setAttrValues(attrValues.toString());
-//                    spaAttes.add(spattr);
-//                }
-//                productRequest.setAttr(spaAttes);
-//            }
-//        }
         return productRequest;
     }
 
@@ -439,33 +415,6 @@ public class ProductUtils {
             sb.append((char) cp);
         }
         return sb.toString();
-    }
-
-    /**
-     * 根据url访问99api后返回对应的平台的产品json数据 带有body参数，暂时无用
-     * @param url
-     * @param body
-     * @return
-     * @throws IOException
-     * @throws JSONException
-     */
-    public JSONObject postRequestFromUrl(String url, String body) throws IOException, JSONException {
-        URL realUrl = new URL(url);
-        URLConnection conn = realUrl.openConnection();
-        conn.setDoOutput(true);
-        conn.setDoInput(true);
-        PrintWriter out = new PrintWriter(conn.getOutputStream());
-        out.print(body);
-        out.flush();
-        InputStream instream = conn.getInputStream();
-        try {
-            BufferedReader rd = new BufferedReader(new InputStreamReader(instream, Charset.forName("UTF-8")));
-            String jsonText = readAll(rd);
-            JSONObject json = new JSONObject(jsonText);
-            return json;
-        } finally {
-            instream.close();
-        }
     }
 
     /**
@@ -575,17 +524,19 @@ public class ProductUtils {
 
         List<Integer> activitys = CrmebUtil.stringToArrayInt(activity);
         for (Integer code : activitys) {
-            if(code == 0){
-
-            }
             if(code == 1){ // 查找秒杀信息
                 List<StoreSeckill> currentSecKills = storeSeckillService.getCurrentSecKillByProductId(productId);
                 if(null != currentSecKills && currentSecKills.size() > 0){
-                    ProductActivityItemResponse seckillResponse = new ProductActivityItemResponse();
-                    seckillResponse.setId(currentSecKills.get(0).getId());
-                    seckillResponse.setTime(DateUtil.getSecondTimestamp(currentSecKills.get(0).getStopTime()));
-                    seckillResponse.setType(Constants.PRODUCT_TYPE_SECKILL+"");
-                    result.put(code,seckillResponse);
+                    // 查询当前秒杀活动时间段配置信息
+                    StoreSeckillManger secKillManager = storeSeckillMangerService.getById(currentSecKills.get(0).getTimeId());
+                    // 将当前时间段转化成时间戳
+                    int secKillEndSecondTimestamp =
+                            DateUtil.getSecondTimestamp(DateUtil.nowDateTime("yyyy-MM-dd " + secKillManager.getEndTime() + ":00:00"));
+                    ProductActivityItemResponse secKillResponse = new ProductActivityItemResponse();
+                    secKillResponse.setId(currentSecKills.get(0).getId());
+                    secKillResponse.setTime(secKillEndSecondTimestamp);
+                    secKillResponse.setType(Constants.PRODUCT_TYPE_SECKILL+"");
+                    result.put(code,secKillResponse);
                 }
             }
             if(code == 2){ // 查找砍价信息
@@ -677,24 +628,6 @@ public class ProductUtils {
         }
     }
 
-
-    /**
-     * 解析json字符串 返回对应对象的数据
-     * @param storeProductRequest
-     * @return
-     */
-//    private List<StoreProductAttrValueRequest> getStoreProductAttrValueRequests(StoreProductRequest storeProductRequest) {
-//        List<StoreProductAttrValueRequest> storeProductAttrValuesRequest = new ArrayList<>();
-//        com.alibaba.fastjson.JSONArray attrJSONArray = com.alibaba.fastjson.JSONArray.parseArray(storeProductRequest.getAttrValue());
-//        for (int i = 0; i < attrJSONArray.size(); i++) {
-//            com.alibaba.fastjson.JSONObject jsonObject = attrJSONArray.getJSONObject(i);
-//            StoreProductAttrValueRequest attrValueRequest =
-//                    com.alibaba.fastjson.JSONObject.parseObject(String.valueOf(jsonObject), StoreProductAttrValueRequest.class);
-//            storeProductAttrValuesRequest.add(attrValueRequest);
-//        }
-//        return storeProductAttrValuesRequest;
-//    }
-
     /**
      * 产品保存和更新时设置attr和attrValues属性
      * @param storeProductRequest 产品属性
@@ -706,29 +639,6 @@ public class ProductUtils {
         attrValues.put("attrValue", storeProductRequest.getAttrValue());
         return attrValues;
     }
-    //    public static void main(String[] args) throws IOException, JSONException {
-//        // 请求示例 url 默认请求参数已经做URL编码
-//        // 淘宝API
-//        String tbUrl = "https://api03.6bqb.com/taobao/detail?apikey=A5E94A9B7EBEBE9BB305680C0EE23885&itemid=16793826526";
-//        // 京东
-//        String jdUrl = "https://api03.6bqb.com/jd/detail?apikey=A5E94A9B7EBEBE9BB305680C0EE23885&itemid=10000017776";
-//        // 苏宁
-//        String snUrl = "https://api03.6bqb.com/suning/detail?apikey=A5E94A9B7EBEBE9BB305680C0EE23885&itemid=10750373914&shopid=0070088010";
-//        // 拼多多
-//        String pddUrl = "https://api03.6bqb.com/pdd/detail?apikey=A5E94A9B7EBEBE9BB305680C0EE23885&itemid=5914165983";
-//        CopyProduct cp = new CopyProduct();
-////        JSONObject tbJson = cp.getRequestFromUrl(tbUrl);
-////        System.out.println("淘宝产品"+tbJson.toString());
-////        JSONObject jdJson = cp.getRequestFromUrl(jdUrl);
-////        System.out.println("京东产品"+jdJson.toString());
-////        JSONObject snJson = cp.getRequestFromUrl(snUrl);
-////        System.out.println("苏宁产品"+snJson.toString());
-//        JSONObject pddJson = cp.getRequestFromUrl(pddUrl);
-//
-//        System.out.println("拼多多产品"+pddJson.toString());
-//
-//        cp.getTaobaoProductInfo("",0);
-//    }
 
     /**
      * 一号通复制商品转公共商品参数

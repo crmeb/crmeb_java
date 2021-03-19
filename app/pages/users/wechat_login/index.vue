@@ -1,10 +1,14 @@
 <template>
-	<view>
+	<view class="page">
 		<view class="system-height" :style="{height:statusBarHeight}"></view>
 		<!-- #ifdef MP -->
 		<view class="title-bar" style="height: 43px;">
-			<view class="icon" @click="back" v-if="!isHome"><image src="../static/left.png" ></image></view>
-			<view class="icon" @click="home" v-else><image src="../static/home.png"></image></view>
+			<view class="icon" @click="back" v-if="!isHome">
+				<image src="../static/left.png"></image>
+			</view>
+			<view class="icon" @click="home" v-else>
+				<image src="../static/home.png"></image>
+			</view>
 			账户登录
 		</view>
 		<!-- #endif -->
@@ -13,13 +17,13 @@
 				<image src="../static/wechat_login.png" mode="widthFix"></image>
 			</view>
 			<view class="btn-wrapper">
-				<button class="bg-red" hover-class="none" @click="isUp=true">手机号登录（账户同步）</button>
 				<!-- #ifdef H5 -->
-				<button hover-class="none"  @click="wechatLogin">微信一键登录</button>
+				<button hover-class="none" @click="wechatLogin" class="bg-green btn1">微信登录</button>
 				<!-- #endif -->
 				<!-- #ifdef MP -->
-				<button hover-class="none" open-type="getUserInfo" @getuserinfo="setUserInfo">微信一键登录</button>
+				<button hover-class="none" open-type="getUserInfo" @getuserinfo="setUserInfo" class="bg-green btn1">微信登录</button>
 				<!-- #endif -->
+				<!-- <button hover-class="none" @click="isUp = true" class="btn2">手机号登录</button> -->
 			</view>
 		</view>
 		<block v-if="isUp">
@@ -36,6 +40,9 @@
 	let statusBarHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
 	import mobileLogin from '@/components/login_mobile/index.vue'
 	import routinePhone from '@/components/login_mobile/routine_phone.vue'
+	import {
+		mapGetters
+	} from "vuex";
 	import {
 		getLogo,
 		silenceAuth,
@@ -56,34 +63,39 @@
 	export default {
 		data() {
 			return {
-				isUp:false,
+				isUp: false,
 				phone: '',
 				statusBarHeight: statusBarHeight,
-				isHome:false,
-				isPhoneBox:false,
-				logoUrl:'',
-				code:'',
-				authKey:'',
-				options:'',
-				userInfo:{},
-				codeNum:0
+				isHome: false,
+				isPhoneBox: false,
+				logoUrl: '',
+				code: '',
+				authKey: '',
+				options: '',
+				userInfo: {},
+				codeNum: 0
 			}
 		},
-		components:{
+		components: {
 			mobileLogin,
 			routinePhone
 		},
+		computed: mapGetters({
+			'authorizeType': 'authorizeType'
+		}),
 		onLoad(options) {
-			getLogo().then(res=>{
-				this.logoUrl = res.data.logo_url
+			console.log('options',options)
+			if (this.authorizeType === 'register') this.isPhoneBox = true
+			getLogo().then(res => {
+				this.logoUrl = res.data.logoUrl
 			})
 			let that = this
 			// #ifdef H5
 			document.body.addEventListener("focusout", () => {
-			　　setTimeout(() => {
-			　　　　const scrollHeight = document.documentElement.scrollTop || document.body.scrollTop || 0;
-			　　　　window.scrollTo(0, Math.max(scrollHeight - 1, 0));
-			　　}, 100);
+				setTimeout(() => {
+					const scrollHeight = document.documentElement.scrollTop || document.body.scrollTop || 0;
+					window.scrollTo(0, Math.max(scrollHeight - 1, 0));
+				}, 100);
 			});
 			const {
 				code,
@@ -91,66 +103,72 @@
 				scope
 			} = options;
 			this.options = options
+			console.log('lalaal',this.options)
 			// 获取确认授权code
 			this.code = code || ''
-			if(code){
-				let spread = app.globalData.spid ? app.globalData.spid : '';
-				//公众号授权登录回调
-				wechat.auth(code, state).then(res => {
-					if (res.key !== undefined && res.key) {
-						that.authKey = res.key;
-						that.isUp = true
-					}else{
-						let time = res.expires_time - that.$Cache.time();
-						that.$store.commit('LOGIN', {
-							token: res.token,
-							time: time
+			if(!code) location.replace(decodeURIComponent(decodeURIComponent(option.query.back_url)));
+			if (code && this.options.scope !== 'snsapi_base') {
+				let spread = app.globalData.spid ? app.globalData.spid : 0;
+				//公众号授权登录回调 wechatAuth(code, Cache.get("spread"), loginType)
+				wechat.auth(code, spread).then(res => {
+					console.log('进来的授权',res)
+					if (res.type === 'register') {
+							this.authKey = res.key;
+							console.log('authKey',this.authKey)
+							this.isUp = true
+					}
+					if(res.type === 'login'){
+						// let time = res.data.expires_time - this.$Cache.time();
+						this.$store.commit('LOGIN', {
+							token: res.data.token,
+							// time: time
 						});
-						that.userInfo = res.userInfo
-						that.$store.commit("SETUID", res.userInfo.uid);
-						that.$store.commit("UPDATE_USERINFO", res.userInfo);
-						that.wechatPhone()
+						// this.$store.commit('SETUID', res.data.userInfo.uid);
+						// this.$store.commit('UPDATE_USERINFO', res.data.userInfo);
+						this.wechatPhone();
+						//location.replace(decodeURIComponent(decodeURIComponent(option.query.back_url)));
 					}
 				}).catch(error => {
-					// location.replace("/");
 				});
 			}
 			// #endif
 			let pages = getCurrentPages();
-			let prePage = pages[pages.length - 2];
-			if(prePage.route == 'pages/order_addcart/order_addcart'){
-				this.isHome = true
-			}else{
-				this.isHome = false
-			}
-			
+			console.log('数据库1',pages)
+			// let prePage = pages[pages.length - 2];
+			// console.log('数据库',prePage)
+			// if (prePage.route == 'pages/order_addcart/order_addcart') {
+			// 	this.isHome = true
+			// } else {
+			// 	this.isHome = false
+			// }
+
 		},
 		methods: {
-			back(){
+			back() {
 				uni.navigateBack();
 			},
-			home(){
+			home() {
 				uni.switchTab({
-					url:'/pages/index/index'
+					url: '/pages/index/index'
 				})
 			},
 			// 弹窗关闭
-			maskClose(){
+			maskClose() {
 				this.isUp = false
 			},
-			bindPhoneClose(data){
-				if(data.isStatus){
+			bindPhoneClose(data) {
+				if (data.isStatus) {
 					this.isPhoneBox = false
 					this.$util.Tips({
-						title:'登录成功',
-						icon:'success'
-					},{
-						tab:3
+						title: '登录成功',
+						icon: 'success'
+					}, {
+						tab: 3
 					})
-				}else{
+				} else {
 					this.isPhoneBox = false
 				}
-				
+
 			},
 			// #ifdef MP
 			// 小程序获取手机号码
@@ -174,7 +192,9 @@
 						iv: iv,
 						code: code,
 						spid: app.globalData.spid,
-						spread: app.globalData.code
+						spread: app.globalData.code,
+						type: 'routine',
+						key: this.authKey
 					})
 					.then(res => {
 						let time = res.data.expires_time - this.$Cache.time();
@@ -194,8 +214,10 @@
 
 					})
 					.catch(res => {
-						console.log(res);
 						uni.hideLoading();
+						that.$util.Tips({
+								title: res
+							});
 					});
 			},
 			/**
@@ -217,7 +239,9 @@
 				});
 			},
 			setUserInfo(e) {
-				uni.showLoading({ title: '正在登录中' });
+				uni.showLoading({
+					title: '正在登录中'
+				});
 				Routine.getCode()
 					.then(code => {
 						this.getWxUser(code);
@@ -226,21 +250,29 @@
 						uni.hideLoading();
 					});
 			},
-			getWxUser(code){
+			getWxUser(code) {
 				let self = this
 				Routine.getUserInfo()
 					.then(res => {
 						let userInfo = res.userInfo;
 						userInfo.code = code;
-						userInfo.spread_spid = app.globalData.spid; //获取推广人ID
-						userInfo.spread_code = app.globalData.code; //获取推广人分享二维码ID
-						Routine.authUserInfo(userInfo)
+						userInfo.spread_spid = app.globalData.spid;//获取推广人ID
+						userInfo.spread_code = app.globalData.code;//获取推广人分享二维码ID
+						userInfo.avatar  = userInfo.userInfo.avatarUrl;
+						userInfo.city  = userInfo.userInfo.city;
+						userInfo.country  = userInfo.userInfo.country;
+						userInfo.nickName  = userInfo.userInfo.nickName;
+						userInfo.province  = userInfo.userInfo.province;
+						userInfo.sex  = userInfo.userInfo.gender;
+						userInfo.type = 'routine'
+						Routine.authUserInfo(userInfo.code, userInfo)
 							.then(res => {
-								if(res.data.key !== undefined && res.data.key){
+								console.log(res)
+								self.authKey = res.data.key;
+								if (res.data.type === 'register') {
 									uni.hideLoading();
-									self.authKey = res.data.key;
 									self.isPhoneBox = true
-								}else{
+								} else {
 									uni.hideLoading();
 									let time = res.data.expires_time - self.$Cache.time();
 									self.$store.commit('LOGIN', {
@@ -248,13 +280,12 @@
 										time: time
 									});
 									self.$util.Tips({
-										title:res,
-										icon:'success'
-									},{
-										tab:3
+										title: res,
+										icon: 'success'
+									}, {
+										tab: 3
 									})
 								}
-								
 							})
 							.catch(res => {
 								uni.hideLoading();
@@ -269,8 +300,8 @@
 						uni.hideLoading();
 					});
 			},
-			
-			
+
+
 			// #endif
 			// #ifdef H5
 			// 获取url后面的参数
@@ -279,35 +310,62 @@
 				var reg_rewrite = new RegExp("(^|/)" + name + "/([^/]*)(/|$)", "i");
 				var r = window.location.search.substr(1).match(reg);
 				var q = window.location.pathname.substr(1).match(reg_rewrite);
-				if(r != null){
-						return unescape(r[2]);
-				}else if(q != null){
-						return unescape(q[2]);
-				}else{
-						return null;
+				if (r != null) {
+					return unescape(r[2]);
+				} else if (q != null) {
+					return unescape(q[2]);
+				} else {
+					return null;
 				}
 			},
 			// 公众号登录
-			wechatLogin(){
-				if(!this.code){
-					this.$wechat.oAuth('','/pages/users/wechat_login/index')
-				}else{
+			wechatLogin() {
+				console.log('微信登录',this.code)
+				console.log('微信登录2',this.options.code)
+				console.log('微信登录3',this.authKey)
+				console.log('isUp2',this.isUp)
+				if (!this.code && this.options.scope !== 'snsapi_base') {
+					this.$wechat.oAuth('snsapi_userinfo', '/pages/users/wechat_login/index');
+				} else {
+					console.log('isUp',this.isUp)
+					// if (this.authKey) {
+					// 	this.isUp = true;
+					// }
+					this.isUp = true;
 				}
+				// wechat.auth(this.code, this.$Cache.get("spread")).then(res => {
+				// 	if (res.data.type === 'register') {
+				// 			this.authKey = res.data.key;
+				// 			this.isUp = true
+				// 	}
+				// 	if(res.data.type === 'login'){
+				// 		let time = res.data.expires_time - this.$Cache.time();
+				// 		this.$store.commit('LOGIN', {
+				// 			token: res.data.token,
+				// 			time: time
+				// 		});
+				// 		this.$store.commit('SETUID', res.data.userInfo.uid);
+				// 		this.$store.commit('UPDATE_USERINFO', res.data.userInfo);
+				// 	//	location.replace(decodeURIComponent(decodeURIComponent(option.query.back_url)));
+				// 	}
+				// }).catch(error => {
+				// 	// location.replace("/");
+				// });
 			},
 			// 输入手机号后的回调
-			wechatPhone(){
-				if(this.options.back_url){
-					let url =  uni.getStorageSync('snRouter')
+			wechatPhone() {
+				if (this.options.back_url) {
+					let url = uni.getStorageSync('snRouter')
 					let self = this
 					this.isUp = false
 					uni.showToast({
-						title:'登录成功',
-						icon:'none'
+						title: '登录成功',
+						icon: 'none'
 					})
-					setTimeout(res=>{
-						location.href = url.indexOf("/pages/index/index") != -1?'/':url
-					},800)
-				}else{
+					setTimeout(res => {
+						location.href = url.indexOf("/pages/index/index") != -1 ? '/' : url
+					}, 800)
+				} else {
 					uni.navigateBack()
 				}
 			}
@@ -316,8 +374,12 @@
 	}
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 	page {
+		background: #fff;
+	}
+
+	.page {
 		background: #fff;
 	}
 
@@ -330,20 +392,23 @@
 
 		.btn-wrapper {
 			margin-top: 86rpx;
+			padding: 0 66rpx;
 
 			button {
 				width: 100%;
 				height: 86rpx;
 				line-height: 86rpx;
 				margin-bottom: 40rpx;
-				color: $theme-color;
-				border: 1px solid $theme-color;
 				border-radius: 120rpx;
 				font-size: 30rpx;
 
-				&.bg-red {
-					background: $theme-color;
+				&.btn1 {
 					color: #fff;
+				}
+
+				&.btn2 {
+					color: #666666;
+					border: 1px solid #666666;
 				}
 			}
 		}
@@ -356,7 +421,8 @@
 		justify-content: center;
 		font-size: 36rpx;
 	}
-	.icon{
+
+	.icon {
 		position: absolute;
 		left: 30rpx;
 		top: 0;
@@ -365,7 +431,8 @@
 		justify-content: center;
 		width: 86rpx;
 		height: 86rpx;
-		image{
+
+		image {
 			width: 50rpx;
 			height: 50rpx;
 		}

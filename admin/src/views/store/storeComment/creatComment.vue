@@ -156,10 +156,10 @@
         this.pics.splice(i, 1)
       },
       submitForm(formName) {
-        this.loadingbtn = true;
         this.formValidate.pics = this.pics.length>0 ? JSON.stringify(this.pics) : ''
         this.$refs[formName].validate((valid) => {
           if (valid) {
+            this.loadingbtn = true;
             replyCreatApi(this.formValidate).then(() => {
               this.$message.success("新增成功")
               setTimeout(() => {

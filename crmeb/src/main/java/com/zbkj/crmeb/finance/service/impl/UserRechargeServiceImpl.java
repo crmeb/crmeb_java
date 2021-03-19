@@ -4,7 +4,6 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
@@ -154,7 +153,8 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
         if(null == routine) routine = BigDecimal.ZERO;
         map.put("routine", routine); //小程序充值
 
-        BigDecimal weChat = dao.getSumByType("weixin");
+//        BigDecimal weChat = dao.getSumByType("weixin");
+        BigDecimal weChat = dao.getSumByType("public");
         if(null == weChat) weChat = BigDecimal.ZERO;
         map.put("weChat", weChat); //公众号充值
 
@@ -217,28 +217,6 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
         }catch (Exception e){
             throw new CrmebException("回调失败！, 更新状态失败！");
         }
-    }
-
-    /**
-     * 充值总金额
-     * @param userId Integer 用户uid
-     * @author Mr.Zhang
-     * @since 2020-05-29
-     * @return UserBill
-     */
-    @Override
-    public BigDecimal getSumBigDecimal(Integer userId) {
-        QueryWrapper<UserRecharge> queryWrapper = new QueryWrapper<>();
-
-
-        queryWrapper.select("sum(price) as price").
-                eq("uid", userId).
-                eq("paid", 1);
-        UserRecharge userRecharge = dao.selectOne(queryWrapper);
-        if(null == userRecharge || null == userRecharge.getPrice()){
-            return BigDecimal.ZERO;
-        }
-        return userRecharge.getPrice();
     }
 
     /**

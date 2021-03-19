@@ -21,7 +21,7 @@
 			<!-- #endif -->
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<view class="canvas" v-if="canvasStatus">
 			<canvas style="width:750px;height:1190px;" canvas-id="canvasOne"></canvas>
@@ -83,19 +83,23 @@
 			};
 		},
 		computed: mapGetters(['isLogin']),
+		watch: {
+			isLogin: {
+				handler: function(newV, oldV) {
+					if (newV) {
+						this.userSpreadBannerList();
+					}
+				},
+				deep: true
+			}
+		},
 		onLoad() {
 			if (this.isLogin) {
 			//	// #ifdef H5
 				this.userSpreadBannerList();
 			//	// #endif
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true)
-				// #endif
 			}
 		},
 		/**

@@ -3,7 +3,7 @@
 		<view class='coupon-window' :class='window==true?"on":""'>
 			<view class='couponWinList'>
 				<view class='item acea-row row-between-wrapper' v-for="(item,index) in couponList" :key="index">
-					<view class='money font-color'>￥<text class='num'>{{item.money}}</text></view>
+					<view class='money font-color'>￥<text class='num'>{{ item.money?Number(item.money):'' }}</text></view>
 					<view class='text'>
 						<view class='name'>购物买{{item.minPrice}}减{{item.money}}</view>
 						<view v-if="item.day>0">领取后{{item.day}}天内可用</view>

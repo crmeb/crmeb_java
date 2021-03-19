@@ -15,7 +15,6 @@ import com.zbkj.crmeb.payment.wechat.WeChatPayService;
 import com.zbkj.crmeb.sms.service.SmsService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserBill;
-import com.zbkj.crmeb.user.model.UserToken;
 import com.zbkj.crmeb.user.request.UserOperateFundsRequest;
 import com.zbkj.crmeb.user.service.UserBillService;
 import com.zbkj.crmeb.user.service.UserService;
@@ -76,9 +75,6 @@ public class RechargePayServiceImpl extends PayService implements RechargePaySer
 
     //订单类
     private UserRecharge userRecharge;
-
-
-
 
     /**
      * 订单支付
@@ -206,31 +202,7 @@ public class RechargePayServiceImpl extends PayService implements RechargePaySer
             userBillService.save(userBill);
             return Boolean.TRUE;
         });
-        if (execute) {
-            //下发模板通知
-//            pushTempMessageRecharge(userRecharge);
-        }
         return execute;
-    }
-
-    /**
-     * 发送模板消息通知
-     */
-    private void pushTempMessageRecharge(UserRecharge userRecharge) {
-        User info = userService.getById(userRecharge.getUid());
-
-        String tempKey = Constants.WE_CHAT_PUBLIC_TEMP_KEY_RECHARGE;
-        if(Constants.PAY_TYPE_WE_CHAT_FROM_PROGRAM.equals(userRecharge.getRechargeType())){
-            tempKey = Constants.WE_CHAT_PROGRAM_TEMP_KEY_RECHARGE;
-        }
-
-        HashMap<String, String> map = new HashMap<>();
-        map.put("rechargeOrderId", userRecharge.getOrderId());
-        map.put("rechargeAmount", userRecharge.getPrice().add(userRecharge.getGivePrice()).toString());
-        map.put("rechargeAfterBalance", info.getNowMoney().toString());
-        map.put("rechargeDate", userRecharge.getOrderId());
-
-        templateMessageService.push(tempKey, map, userRecharge.getUid(), userRecharge.getRechargeType());
     }
 
     /**
@@ -311,7 +283,6 @@ public class RechargePayServiceImpl extends PayService implements RechargePaySer
      * @return String
      */
     private String getProductName(){
-
         return "余额充值" + getUserRecharge().getPrice() + "元!";
     }
 }

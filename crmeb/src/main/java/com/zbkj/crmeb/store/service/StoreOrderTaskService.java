@@ -21,8 +21,6 @@ public interface StoreOrderTaskService {
 
     Boolean complete(StoreOrder storeOrder);
 
-    Boolean takeByUser(StoreOrder storeOrder);
-
     Boolean deleteByUser(StoreOrder storeOrder);
 
     Boolean refundOrder(StoreOrder storeOrder);

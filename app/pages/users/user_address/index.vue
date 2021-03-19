@@ -43,7 +43,7 @@
 			</view>
 		</form>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -102,6 +102,17 @@
 			};
 		},
 		computed: mapGetters(['isLogin']),
+		watch:{
+			isLogin:{
+				handler:function(newV,oldV){
+					if(newV){
+						this.getUserAddress();
+						this.getCityList();
+					}
+				},
+				deep:true
+			}
+		},
 		onLoad(options) {
 			if (this.isLogin) {
 				this.cartId = options.cartId || '';
@@ -120,13 +131,7 @@
 				// 	this.initialize();
 				// }
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true)
-				// #endif
 			}
 		},
 		methods: {

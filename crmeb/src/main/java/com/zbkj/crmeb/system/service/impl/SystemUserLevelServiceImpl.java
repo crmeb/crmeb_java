@@ -66,23 +66,6 @@ public class SystemUserLevelServiceImpl extends ServiceImpl<SystemUserLevelDao, 
     }
 
     /**
-     * 根据等级id获取比其等级小的所有信息
-     * @param levelId integer 等级
-     * @author Mr.Zhang
-     * @since 2020-04-10
-     * @return List<SystemUserLevel>
-     */
-    @Override
-    public List<SystemUserLevel> getGradeListByLevelId(Integer levelId) {
-        SystemUserLevel systemUserLevel = dao.selectById(levelId);
-        LambdaQueryWrapper<SystemUserLevel> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(SystemUserLevel::getIsShow, 1);
-        lambdaQueryWrapper.eq(SystemUserLevel::getIsDel, 0);
-        lambdaQueryWrapper.le(SystemUserLevel::getGrade, systemUserLevel.getGrade());
-        return dao.selectList(lambdaQueryWrapper);
-    }
-
-    /**
      * 新增设置用户等级表
      * @param request SystemUserLevelRequest 新增参数
      * @author Mr.Zhang

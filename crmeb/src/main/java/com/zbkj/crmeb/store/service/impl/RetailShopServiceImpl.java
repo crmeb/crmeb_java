@@ -13,7 +13,6 @@ import com.zbkj.crmeb.finance.response.UserExtractResponse;
 import com.zbkj.crmeb.finance.service.UserExtractService;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.request.RetailShopRequest;
-import com.zbkj.crmeb.store.request.RetailShopStairUserRequest;
 import com.zbkj.crmeb.store.response.RetailShopStatisticsResponse;
 import com.zbkj.crmeb.store.service.RetailShopService;
 import com.zbkj.crmeb.store.service.StoreOrderService;
@@ -21,10 +20,7 @@ import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.user.dao.UserDao;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserBrokerageRecord;
-import com.zbkj.crmeb.user.request.UserSearchRequest;
 import com.zbkj.crmeb.user.response.SpreadUserResponse;
-import com.zbkj.crmeb.user.response.UserResponse;
-import com.zbkj.crmeb.user.service.UserBillService;
 import com.zbkj.crmeb.user.service.UserBrokerageRecordService;
 import com.zbkj.crmeb.user.service.UserService;
 import org.springframework.beans.BeanUtils;
@@ -60,9 +56,6 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
 
     @Autowired
     private StoreOrderService storeOrderService;
-
-    @Autowired
-    private UserBillService userBillService;
 
     @Autowired
     private SystemConfigService systemConfigService;
@@ -137,35 +130,6 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
     }
 
     /**
-     * 获取分销头部数据
-     * @param nickName 查询参数
-     * @param dateLimit 时间参数对象
-     */
-    @Override
-    public List<UserResponse> getStatisticsData(String nickName, String dateLimit) {
-        UserSearchRequest request = new UserSearchRequest();
-        request.setIsPromoter(true);
-        request.setDateLimit(dateLimit);
-        request.setKeywords(nickName);
-
-        PageParamRequest pageParamRequest = new PageParamRequest();
-        pageParamRequest.setLimit(1);
-
-        PageInfo<UserResponse> list = userService.getList(request, pageParamRequest);
-        return list.getList();
-    }
-
-    /**
-     * 统计推广人员列表
-     * @param request 查询参数
-     * @return 推广人员集合列表
-     */
-    @Override
-    public PageInfo<User> getStairUsers(RetailShopStairUserRequest request, PageParamRequest pageParamRequest) {
-        return userService.getUserListBySpreadLevel(request, pageParamRequest);
-    }
-
-    /**
      * 获取分销配置信息
      * @return 返回配置信息
      */
@@ -180,7 +144,6 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
         response.setUserExtractMinPrice(new BigDecimal(systemConfigService.getValueByKey(keys.get(4))));
         response.setUserExtractBank(systemConfigService.getValueByKey(keys.get(5)).replace("\\n","\n"));
         response.setExtractTime(Integer.parseInt(systemConfigService.getValueByKey(keys.get(6))));
-//        response.setStoreBrokeragePrice(new BigDecimal(systemConfigService.getValueByKey(keys.get(7))));
         response.setBrokerageBindind(systemConfigService.getValueByKey(keys.get(7)));
         return response;
     }

@@ -65,38 +65,6 @@ public class WechatMediaServiceImpl implements WechatMediaService {
             map.put("name", file.getOriginalFilename().replace(suffixName, ""));
 
             return map;
-
-//            String mediaId =  response.getString("media_id") ; //媒体文件id
-//            int count = weChatService.getMediaCount(type); //总数
-//
-//            if(count == 0){
-//                throw new CrmebException("素材图片上传失败, 没有从微信服务器上找到相关信息");
-//            }
-//
-//            //获取最新的5个素材来对比
-//            JSONObject info = weChatService.getMediaInfo(type, count-1, 5); //微信返回数据是倒序排序，所以拿到最新的5个即可，这里考虑到并发上传的问题，如果不存在并发只需要拿最新的一个即可
-//            if(null == info){
-//                throw new CrmebException("素材图片上传失败, 没有从微信服务器上找到相关信息1");
-//            }
-//            String mediaUrl = "";
-//            List<MediaDetailVo> list = JSONObject.parseArray(info.toJSONString(), MediaDetailVo.class);
-//            for (MediaDetailVo mediaDetailVo : list) {
-//                if(mediaId.equals(mediaDetailVo.getMediaId())){
-//                    mediaUrl = mediaDetailVo.getUrl();
-//                    break;
-//                }
-//            }
-//
-//            if(StringUtils.isBlank(mediaUrl)){
-//                throw new CrmebException("素材图片上传失败, 没有从微信服务器上找到相关信息2");
-//            }
-//
-//            Map<String, String> map = new HashMap<>();
-//            map.put("mediaId", mediaId);
-//            map.put("mediaUrl", mediaUrl);
-//
-//            return map;
-
         }catch (Exception e){
             throw new CrmebException(e.getMessage());
         }

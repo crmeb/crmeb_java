@@ -365,7 +365,7 @@ export function getChatRecord(to_uid, data) {
  */
 export function spread(puid)
 {
-	return request.post("user/spread",{puid:puid});
+	return request.get("user/bindSpread?spreadPid=" + puid);
 }
 
 /**

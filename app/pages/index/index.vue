@@ -63,52 +63,6 @@
 					</navigator>
 				</block>
 			</view>
-			<!-- 直播 -->
-			<!-- #ifdef MP -->
-			<!-- <block v-if="liveList.length>0">
-				<navigator :url="'plugin-private://wx2b03c6e691cd7370/pages/live-player-plugin?room_id='+liveList[0].roomid" class="live-wrapper"
-				 v-if="liveList.length==1" hover-class="none">
-					<view class="live-top" :class="liveList[0].live_status == 101?'pictrue_log_xl':liveList[0].live_status == 103?'pictrue_log_xl_gray':'pictrue_log_xl_blue'">
-						<block v-if="liveList[0].live_status == 101">
-							<image src="/static/images/live-01.png" mode=""></image>
-							<text>直播中</text>
-						</block>
-						<block v-if="liveList[0].live_status == 103">
-							<image src="/static/images/live-02.png" mode=""></image>
-							<text>已结束</text>
-						</block>
-						<block v-if="liveList[0].live_status == 102">
-							<image src="/static/images/live-03.png" mode=""></image>
-							<text>未开始</text>
-						</block>
-					</view>
-					<image :src="liveList[0].share_img"></image>
-					<view class="live-title line1">{{liveList[0].name}}</view>
-				</navigator>
-				<view class="live-wrapper mores" v-else>
-					<scroll-view scroll-x="true" style="white-space: nowrap; display: flex">
-						<navigator hover-class="none" class="item" v-for="(item,index) in liveList" :key="index" :url="'plugin-private://wx2b03c6e691cd7370/pages/live-player-plugin?room_id='+item.roomid">
-							<view class="live-top" :class="item.type == 1?'pictrue_log_xl':item.type == 2?'pictrue_log_xl_gray':'pictrue_log_xl_blue'">
-								<block v-if="item.live_status == 101">
-									<image src="/static/images/live-01.png" mode=""></image>
-									<text>直播中</text>
-								</block>
-								<block v-if="item.live_status == 103">
-									<image src="/static/images/live-02.png" mode=""></image>
-									<text>已结束</text>
-								</block>
-								<block v-if="item.live_status == 102">
-									<image src="/static/images/live-03.png" mode=""></image>
-									<text>未开始</text>
-								</block>
-							</view>
-							<image :src="item.share_img"></image>
-							<view class="live-title">{{item.name}}</view>
-						</navigator>
-					</scroll-view>
-				</view>
-			</block> -->
-			<!-- #endif -->
 			<!-- 超值爆款 -->
 			<view class="explosion">
 				<view class="hd">
@@ -217,11 +171,11 @@
 					<recommend :hostProduct="hostProduct"></recommend>
 				</view>
 			</block>
-		 
+
 		</view>
-		<coupon-window :window='window' :couponList="couponList" @onColse="onColse"></coupon-window>
+		<!-- <coupon-window :window='window' :couponList="couponList" @onColse="onColse"></coupon-window> -->
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse" :isGoIndex="false"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse" :isGoIndex="false"></authorize> -->
 		<!-- #endif -->
 	</view>
 </template>
@@ -293,7 +247,7 @@
 	} from "@/api/public";
 	// #endif
 	import Loading from '@/components/Loading/index.vue';
-	const arrTemp = ["beforePay","afterPay","refundApply", "beforeRecharge", "createBargain","pink"];
+	const arrTemp = ["beforePay", "afterPay", "refundApply", "beforeRecharge", "createBargain", "pink"];
 	export default {
 		computed: mapGetters(['isLogin', 'uid']),
 		components: {
@@ -361,7 +315,6 @@
 				marTop: 0,
 				childID: 0,
 				loadend: false,
-				loading: false,
 				loadTitle: '加载更多',
 				sortProduct: [],
 				where: {
@@ -388,11 +341,28 @@
 				pageInfo: '', // 精品推荐全数据
 				site_name: '', //首页title
 				iSshowH: false,
-				configApi: {} ,//分享类容配置
+				configApi: {}, //分享类容配置
 				spikeList: [], // 秒杀
 				point: ''
 			}
 		},
+		// watch: {
+		// 	isLogin: {
+		// 		deep: true, //深度监听设置为 true
+		// 		handler: function(newV, oldV) {
+		// 			// 优惠券弹窗
+		// 			var newDates = new Date().toLocaleDateString();
+		// 			if (newV) {
+		// 				try {
+		// 					var oldDate = uni.getStorageSync('oldDate') || '';
+		// 				} catch {}
+		// 				if (oldDate != newDates) {
+		// 					this.getCoupon();
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// },
 		onLoad() {
 			uni.getLocation({
 				type: 'wgs84',
@@ -434,16 +404,18 @@
 			// #ifdef MP
 			getTemlIds() {
 				for (var i in arrTemp) {
-				   this.getTem(arrTemp[i]);
+					this.getTem(arrTemp[i]);
 				}
 			},
-			getTem(data){
-				getTemlIds({type:data}).then(res => {
+			getTem(data) {
+				getTemlIds({
+					type: data
+				}).then(res => {
 					if (res.data) {
 						let arr = res.data.map((item) => {
 							return item.tempId
 						})
-						wx.setStorageSync('tempID'+ data, arr);
+						wx.setStorageSync('tempID' + data, arr);
 					}
 				})
 			},
@@ -487,7 +459,7 @@
 						}, 300)
 						// #endif
 						// #ifdef H5
-						self.prodeuctTop = 18
+						self.prodeuctTop = 26
 						// #endif
 						this.navIndex = e.index
 						let child = this.navTop[e.index].child && this.navTop[e.index].child != 'undefined' ? this.navTop[e.index].child :
@@ -585,11 +557,11 @@
 					// #ifdef H5
 					that.subscribe = res.data.subscribe;
 					// #endif
-					
+
 					this.getGroomList();
-					
+
 					this.shareApi();
-					
+
 					this.getcouponList();
 				})
 			},
@@ -604,6 +576,13 @@
 					// #ifdef MP
 					uni.getSetting({
 						success(res) {
+							// if (!res.authSetting['scope.userInfo']) {
+							// 	that.window = false;
+							// 	that.iShidden = true;
+								
+							// } else {
+							// 	that.window = that.couponList.length ? true : false;
+							// }
 							if (!res.authSetting['scope.userInfo']) {
 								that.window = that.couponList.length ? true : false;
 							} else {
@@ -614,6 +593,11 @@
 					});
 					// #endif
 					// #ifndef MP
+					// if (that.isLogin) {
+					// 	that.window = res.data.length ? true : false;
+					// } else {
+					// 	that.window = false;
+					// }
 					if (that.isLogin) {
 						that.window = false;
 					} else {
@@ -722,24 +706,25 @@
 			// 首发新品详情
 			goDetail(item) {
 				if (item.activityH5 && item.activityH5.type === "2" && !this.isLogin) {
-					// #ifdef H5
-					uni.showModal({
-						title: '提示',
-						content: '您未登录，请登录！',
-						success: function(res) {
-							if (res.confirm) {
-								uni.navigateTo({
-									url: '/pages/users/login/index'
-								})
-							} else if (res.cancel) {}
-						}
-					})
-					// #endif
-					// #ifdef MP
-					this.$set(this, 'isAuto', true);
-					this.$set(this, 'isShowAuth', true);
-					// #endif
-					return
+					toLogin();
+					// // #ifdef H5
+					// uni.showModal({
+					// 	title: '提示',
+					// 	content: '您未登录，请登录！',
+					// 	success: function(res) {
+					// 		if (res.confirm) {
+					// 			uni.navigateTo({
+					// 				url: '/pages/users/login/index'
+					// 			})
+					// 		} else if (res.cancel) {}
+					// 	}
+					// })
+					// // #endif
+					// // #ifdef MP
+					// this.$set(this, 'isAuto', true);
+					// this.$set(this, 'isShowAuth', true);
+					// // #endif
+					// return
 				} else {
 					goShopDetail(item, this.uid).then(res => {
 						uni.navigateTo({
@@ -791,6 +776,7 @@
 			let appSearchH = uni.createSelectorQuery().select(".serch-wrapper");
 			appSearchH.boundingClientRect(function(data) {
 				self.searchH = data.height
+				//console.log(self.searchH)
 			}).exec()
 			// #endif
 		},
@@ -827,10 +813,12 @@
 		// 滚动监听
 		onPageScroll(e) {
 			let self = this
-			if (e.scrollTop >= self.searchH) {
+			if (self.sortProduct.length>4 && e.scrollTop >= self.searchH) {
 				self.isFixed = true
 			} else {
-				self.isFixed = false
+				this.$nextTick(() => {
+					self.isFixed = false
+				})
 			}
 		}
 	}
@@ -853,12 +841,8 @@
 		min-height: 100%;
 		background: linear-gradient(180deg, #fff 0%, #f5f5f5 100%);
 
-		// &.bgf{
-		// 	background: #fff;
-		// }
 		.header {
 			width: 100%;
-			height: 320rpx;
 			background: linear-gradient(90deg, $bg-star 50%, $bg-end 100%);
 
 			.serch-wrapper {
@@ -1561,7 +1545,8 @@
 
 			.index-product-wrapper {
 				margin-top: 40rpx;
-                margin-bottom: 40rpx;
+				margin-bottom: 110rpx;
+
 				&.on {
 					min-height: 1500rpx;
 				}
@@ -1682,7 +1667,9 @@
 
 	.productList {
 		background-color: #fff;
-		/* #ifdef H5 */		padding-bottom: 140rpx;		/* #endif */
+		/* #ifdef H5 */
+		padding-bottom: 140rpx;
+		/* #endif */
 	}
 
 	.productList .list {
@@ -1787,6 +1774,7 @@
 		left: 0;
 		top: 0;
 		background: linear-gradient(90deg, red 50%, #ff5400 100%);
+	
 	}
 
 	.mores-txt {

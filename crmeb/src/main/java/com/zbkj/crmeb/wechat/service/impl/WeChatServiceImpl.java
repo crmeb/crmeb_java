@@ -157,7 +157,8 @@ public class WeChatServiceImpl implements WeChatService {
             //不存在， 去获取
             getToken();
             //存入redis
-            redisUtil.set(WeChatConstants.REDIS_TOKEN_KEY, this.token, this.expires - 100, TimeUnit.SECONDS);
+            redisUtil.set(WeChatConstants.REDIS_TOKEN_KEY, this.token,
+                    WeChatConstants.API_TOKEN_EXPIRES, TimeUnit.SECONDS);
         }else{
             this.token = token;
         }
@@ -173,6 +174,7 @@ public class WeChatServiceImpl implements WeChatService {
         getAppInfo();
         String url = getUrl() + WeChatConstants.API_TOKEN_URI + "&appid=" + this.appId + "&secret=" + this.secret;
         JSONObject data = get(url);
+        System.out.println("Token:getToken:"+data.toJSONString());
         if(!data.containsKey("access_token")){
             throw new CrmebException("微信token获取失败：" + data.getString("errmsg"));
         }
@@ -182,21 +184,21 @@ public class WeChatServiceImpl implements WeChatService {
     }
 
     /**
-     * 设置token
-     * @author Mr.Zhang
-     * @since 2020-04-22
+     * 设置和统一管理刷新小程序token
      */
     private void setProgramToken(){
-        //检测token是否过期， 如果过期，那么重新获取
+        //检测token是否过期， 如果过期，那么重新获取 过期判断逻辑为使用过期时间-100毫秒后存储在redis中
         Object token = redisUtil.get(WeChatConstants.REDIS_PROGRAM_TOKEN_KEY);
-        if(token == null || token.equals("")){
+        if(null == token || token.equals("")){
             //不存在， 去获取
             getProgramToken();
-            //存入redis
-            redisUtil.set(WeChatConstants.REDIS_PROGRAM_TOKEN_KEY, this.programToken, this.programExpires - 100, TimeUnit.SECONDS);
+            //存入redis 指定过期时间为expires_in字段 - 100毫秒
+            redisUtil.set(WeChatConstants.REDIS_PROGRAM_TOKEN_KEY, this.programToken,
+                    WeChatConstants.API_TOKEN_EXPIRES, TimeUnit.SECONDS);
         }else{
             this.programToken = token;
         }
+        System.out.println("Token:setProgramToken:"+this.programToken);
     }
 
     /**
@@ -208,6 +210,7 @@ public class WeChatServiceImpl implements WeChatService {
         getProgramAppInfo();
         String url = getUrl() + WeChatConstants.API_TOKEN_URI + "&appid=" + this.programAppId + "&secret=" + this.programAppSecret;
         JSONObject data = get(url);
+        System.out.println("Token:getProgramToken:"+ data.toJSONString());
         if(!data.containsKey("access_token")){
             throw new CrmebException("微信token获取失败：" + data.getString("errmsg"));
         }
@@ -239,6 +242,7 @@ public class WeChatServiceImpl implements WeChatService {
     private void setUrl(String uri){
         setToken();
         this.url = getUrl() + uri + "?access_token=" + this.token;
+        System.out.println("公众号URl:"+this.url);
     }
 
     /**
@@ -249,6 +253,7 @@ public class WeChatServiceImpl implements WeChatService {
     private void setProgramUrl(String uri){
         setProgramToken();
         this.url = getUrl() + uri + "?access_token=" + this.programToken;
+        System.out.println("小程序URL:"+this.url);
     }
 
     /**
@@ -654,6 +659,12 @@ public class WeChatServiceImpl implements WeChatService {
         }
     }
 
+    /**
+     * 微信小程序，获取二维码【多场景】
+     * @param page 页面地址
+     * @param uri 场景
+     * @return 二维码的Base64 String
+     */
     @Override
     public String qrCode(String page, String uri) {
         setProgramUrl(WeChatConstants.WE_CHAT_CREATE_QRCODE);
@@ -951,51 +962,5 @@ public class WeChatServiceImpl implements WeChatService {
         return this.url;
     }
 
-    /**
-     * 获取微信素材
-     * @author Mr.Zhang
-     * @since 2020-06-03
-     * @return String
-     */
-    @Override
-    public String getMedia() {
-        setUrl(WeChatConstants.PUBLIC_API_MEDIA_GET);
-        return this.url;
-    }
-
-    /**
-     * 获取微信素材
-     * @author Mr.Zhang
-     * @since 2020-06-03
-     * @return String
-     */
-    public JSONObject getMediaInfo(String type, int offset, int count) {
-        setUrl(WeChatConstants.PUBLIC_API_MEDIA_GET);
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("type", type);  //素材的类型，图片（image）、视频（video）、语音 （voice）、图文（news）
-        map.put("offset", offset); //从全部素材的该偏移位置开始返回，0表示从第一个素材 返回
-        map.put("count", count); //返回素材的数量，取值在1到20之间
-        return post(this.url, map);
-    }
-
-    /**
-     * 获取微信素材总数
-     * @author Mr.Zhang
-     * @since 2020-06-03
-     * @return int
-     */
-    public int getMediaCount(String type) {
-        setUrl(WeChatConstants.PUBLIC_API_MEDIA_COUNT);
-        JSONObject jsonObject = get(this.url);
-        MediaCountVo mediaCountVo = JSONObject.toJavaObject(jsonObject, MediaCountVo.class);
-        switch (type){
-            case "image":
-                return mediaCountVo.getImage();
-            case "voice":
-                return mediaCountVo.getVideo();
-            default:
-                return 0;
-        }
-    }
 }
 

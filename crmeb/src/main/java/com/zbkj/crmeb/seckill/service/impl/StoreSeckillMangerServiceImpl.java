@@ -1,16 +1,13 @@
 package com.zbkj.crmeb.seckill.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.common.CommonResult;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.utils.DateUtil;
 import com.zbkj.crmeb.seckill.dao.StoreSeckillMangerDao;
 import com.zbkj.crmeb.seckill.model.StoreSeckillManger;
@@ -90,8 +87,6 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
      */
     @Override
     public boolean deleteLogicById(int id) {
-//        StoreSeckillManger storeSeckillManger = new StoreSeckillManger().setId(id).setIsDel(true);
-//        return dao.updateById(storeSeckillManger) > 0;
         return dao.deleteById(id) > 0;
     }
 
@@ -192,22 +187,12 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
         // 对request中的time做分割后赋值给mode中的start和end属性
         setTimeRangeFromRequest(storeSeckillMangerRequest, storeSeckillManger);
         List<StoreSeckillManger> existTimes = checkTimeRangeUnique(storeSeckillManger);
-        if(existTimes.size() == 0){
-            return updateByCondition(storeSeckillManger);
-        }
-        // 更新时排除自身更新
-        StoreSeckillManger ssm = existTimes.get(0);
-//            if(ssm.getStartTime().equals(storeSeckillManger.getStartTime())
-//                    && ssm.getEndTime().equals(storeSeckillManger.getEndTime())){
-//                return updateByCondition(storeSeckillManger);
-//                // 更新时 时间更改的判断
-//            }else
-        if (!ssm.getStartTime().equals(storeSeckillManger.getStartTime())
-                || !ssm.getEndTime().equals(storeSeckillManger.getEndTime())){
+        if(existTimes.size() > 1){
+            throw new CrmebException("当前时间段的秒杀配置已存在");
+        }else if(existTimes.size() == 1) {
             // 判断开始时间 结束时间 是否被包涵
             LambdaQueryWrapper<StoreSeckillManger> startAndEndExcuseQuery = Wrappers.lambdaQuery();
             startAndEndExcuseQuery.ge(StoreSeckillManger::getStartTime,storeSeckillManger.getStartTime())
-                    .or()
                     .le(StoreSeckillManger::getEndTime,storeSeckillManger.getEndTime());
             List<StoreSeckillManger> storeSeckillMangers = dao.selectList(startAndEndExcuseQuery);
             // 时间区间改大 不存在的情况
@@ -220,7 +205,7 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
                 throw new CrmebException("当前时间段的秒杀配置已存在");
             }
         }else {
-            throw new CrmebException("当前时间段的秒杀配置已存在");
+            return updateByCondition(storeSeckillManger);
         }
     }
 

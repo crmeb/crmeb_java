@@ -31,7 +31,7 @@
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -78,13 +78,7 @@
 			if (this.isLogin) {
 				this.getUserBillList();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true)
-				// #endif
 			}
 		},
 		/**
@@ -116,6 +110,7 @@
 			getUserBillList: function() {
 				let that = this;
 				if (that.loadend) return;
+				
 				if (that.loading) return;
 				that.loading = true;
 				that.loadTitle = "";
@@ -126,7 +121,7 @@
 				}
 				getBillList(data).then(function(res) {
 					let list = res.data.list?res.data.list:[],
-						loadend = list.length < that.limit;
+						loadend = res.data.list < res.data.limit;
 					that.userBillList = that.$util.SplitArray(list, that.userBillList);
 					that.$set(that, 'userBillList', that.userBillList);
 					that.loadend = loadend;
