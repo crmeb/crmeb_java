@@ -34,8 +34,6 @@ public interface StoreCouponService extends IService<StoreCoupon> {
 
     void checkException(StoreCoupon storeCoupon);
 
-//    List<StoreCoupon> getListByProductCanUse(Integer productId);
-
     StoreCouponInfoResponse info(Integer id);
 
     List<StoreCouponFrontResponse> getListByUser(Integer productId, PageParamRequest pageParamRequest, Integer userId);

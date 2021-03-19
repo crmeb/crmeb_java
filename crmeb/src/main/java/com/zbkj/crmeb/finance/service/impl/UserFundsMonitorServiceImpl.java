@@ -62,19 +62,6 @@ public class UserFundsMonitorServiceImpl extends ServiceImpl<UserFundsMonitorDao
         }
         map.put("sort", sort);
         List<UserFundsMonitor> monitorList = dao.getFundsMonitor(map);
-//        if (CollUtil.isEmpty(monitorList)) {
-//            return monitorList;
-//        }
-//        List<Integer> spreadUidList = monitorList.stream().map(UserFundsMonitor::getSpreadUid).distinct().collect(Collectors.toList());
-//        HashMap<Integer, User> mapListInUid = userService.getMapListInUid(spreadUidList);
-//        for (UserFundsMonitor temp: monitorList) {
-//            if (ObjectUtil.isNotNull(temp.getSpreadUid())) {
-//                User user = mapListInUid.get(temp.getSpreadUid());
-//                if (ObjectUtil.isNotNull(user)) {
-//                    temp.setSpreadName(Optional.ofNullable(user.getNickname()).orElse(""));
-//                }
-//            }
-//        }
         return monitorList;
     }
 

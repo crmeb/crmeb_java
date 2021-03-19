@@ -12,11 +12,13 @@ package com.constants;
  *  +----------------------------------------------------------------------
  */
 public class WeChatConstants {
-    //------------------------------------------------公众号------------------------------------------------
+    //------------------------------------------------微信公众号------------------------------------------------
     //微信接口请求地址
     public static final String API_URL = "https://api.weixin.qq.com/";
     //获取token
     public static final String API_TOKEN_URI = "cgi-bin/token?grant_type=client_credential";
+    // 微信token 过期时间，娶了一个中间值 4000 官方的7200不靠谱
+    public static final Long API_TOKEN_EXPIRES = 3000L;
     //微信公众号菜单创建
     public static final String PUBLIC_API_MENU_CREATE_URI = "cgi-bin/menu/create";
     //微信公众号菜单获取
@@ -63,6 +65,7 @@ public class WeChatConstants {
     public static final String PUBLIC_API_KF_MESSAGE_SEND = "cgi-bin/message/custom/send";
 
 
+    //------------------------------------------------微信小程序------------------------------------------------
     //小程序行业消息
     public static final String PUBLIC_API_PROGRAM_CATEGORY = "wxaapi/newtmpl/getcategory";
     //小程序公共模板库

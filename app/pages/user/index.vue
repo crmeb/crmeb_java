@@ -12,6 +12,11 @@
 							请点击授权
 						</view>
 						<!-- #endif -->
+						<!-- #ifdef H5 -->
+						<view class="name" v-if="!userInfo.uid && isWeixin" @tap="openAuto">
+							请点击授权
+						</view>
+						<!-- #endif -->
 						<view class="name" v-if="userInfo.uid">
 							{{userInfo.nickname}}
 							<view class="vip" v-if="userInfo.vip">
@@ -20,7 +25,7 @@
 							</view>
 						</view>
 						<view class="num" v-if="userInfo.phone" @click="goEdit()">
-							<view class="num-txt">ID：{{userInfo.uid}}</view>
+							<view class="num-txt">{{userInfo.phone}}</view>
 							<view class="icon">
 								<image src="/static/images/edit.png" mode=""></image>
 							</view>
@@ -71,9 +76,7 @@
 			 indicator-color="rgba(255,255,255,0.6)" indicator-active-color="#fff">
 				<block v-for="(item,index) in imgUrls" :key="index">
 					<swiper-item>
-						<navigator :url='item.url' class='slide-navigator acea-row row-between-wrapper' hover-class='none'>
-							<image :src="item.pic" class="slide-image"></image>
-						</navigator>
+						<image :src="item.pic" class="slide-image" @click="navito(item.url)"></image>
 					</swiper-item>
 				</block>
 			</swiper>
@@ -92,7 +95,7 @@
 			<!-- #ifdef H5 -->
 			<view class="item" @click="kefuClick">
 				<view class="left">
-					<image src="/static/images/user_menu08.png"></image>
+					<image :src="servicePic"></image>
 					<text>联系客服</text>
 				</view>
 				<view class="iconfont icon-xiangyou"></view>
@@ -101,7 +104,7 @@
 			<!-- #ifdef MP -->
 			<button class="item" open-type='contact' hover-class='none'>
 				<view class="left">
-					<image src="/static/images/user_menu08.png"></image>
+					<image :src="servicePic"></image>
 					<text>联系客服</text>
 				</view>
 				<view class="iconfont icon-xiangyou"></view>
@@ -110,7 +113,7 @@
 		</view>
 		<img src="/static/images/support.png" alt="" class='support'>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 	</view>
 </template>
@@ -129,6 +132,9 @@
 	import {
 		mapGetters
 	} from "vuex";
+	// #ifdef H5
+	import Auth from '@/libs/wechat';
+	// #endif
 	// #ifdef MP
 	import authorize from '@/components/Authorize';
 	// #endif
@@ -184,12 +190,22 @@
 				orderStatusNum: {},
 				userInfo: {},
 				MyMenus: [],
-				wechatUrl: []
+				wechatUrl: [],
+				servicePic: '',
+				// #ifdef H5
+				isWeixin: Auth.isWeixin()
+				//#endif
 			}
 		},
 		onLoad() {
 			let that = this;
 			that.$set(that, 'MyMenus', app.globalData.MyMenus);
+			console.log('user页面',that.isLogin)
+			if (that.isLogin == false) {
+				// #ifdef H5 || APP-PLUS
+				toLogin()
+				// #endif
+			}
 		},
 		onShow: function() {
 			let that = this;
@@ -199,11 +215,7 @@
 				// this.setVisit();
 				this.getOrderData();
 			}else{
-				// #ifdef H5 || APP-PLUS
-				if (that.isLogin == false) {
-					toLogin();
-				}
-				// #endif
+				toLogin();
 			}
 		},
 		methods: {
@@ -213,11 +225,11 @@
 			// 		url:'/pages/user/index'
 			// 	}).then(res=>{})
 			// },
+			navito(e){
+				window.location.href = 'https://' + e;
+			},
 			kefuClick(){
-				location.href = this.wechatUrl[0].wap_url
-				// return this.$util.Tips({
-				// 	title: '客服功能正在开发中......'
-				// });
+				location.href = this.wechatUrl[0].wap_url;
 			},
 			getOrderData(){
 				let that = this;
@@ -246,8 +258,8 @@
 			},
 			// 打开授权
 			openAuto() {
-				this.isAuto = true;
-				this.isShowAuth = true
+				console.log('点击事件','lala')
+				toLogin();
 			},
 			// 授权回调
 			onLoadFun() {
@@ -277,6 +289,7 @@
 			 * 获取个人用户信息
 			 */
 			getUserInfo: function() {
+				const _app = getApp();
 				let that = this;
 				getUserInfo().then(res => {
 					that.userInfo = res.data;
@@ -292,22 +305,27 @@
 				if (this.MyMenus.length) return;
 				getMenuList().then(res => {
 					that.$set(that, 'MyMenus', res.data.routine_my_menus);
-					// location.pathname.indexOf('auth') !== -1
-					// console.log( res.data.routine_my_menus.filter( item => {
-					// 	if( item.url.indexOf('service') !== -1 ) return item.wap_url
-					// }))
-					this.wechatUrl = res.data.routine_my_menus.filter((item) => {
+					that.wechatUrl = res.data.routine_my_menus.filter((item) => {
 						return item.url.indexOf('service') !== -1
 					})
-					console.log(this.wechatUrl)
-					this.imgUrls = res.data.routine_my_banner
+					res.data.routine_my_menus.map((item) => {
+						if(item.url.indexOf('service') !==-1) that.servicePic = item.pic
+					})
+					that.imgUrls = res.data.routine_my_banner
 				});
 			},
 			// 编辑页面
 			goEdit() {
-				uni.navigateTo({
-					url: '/pages/users/user_info/index'
-				})
+				if (this.isLogin == false) {
+					toLogin();
+				} else {
+					uni.navigateTo({
+						url: '/pages/users/user_info/index'
+					})
+				}
+				// uni.navigateTo({
+				// 	url: '/pages/users/user_info/index'
+				// })
 			},
 			// 签到
 			goSignIn() {
@@ -391,13 +409,12 @@
 							.vip {
 								display: flex;
 								align-items: center;
-								height: 36rpx;
-								padding: 0 20rpx;
+								padding: 6rpx 20rpx;
 								background: rgba(0, 0, 0, 0.2);
 								border-radius: 18px;
 								font-size: 20rpx;
 								margin-left: 12rpx;
-								margin-top: 2rpx;
+								// margin-top: 2rpx;
 
 								image {
 									width: 27rpx;

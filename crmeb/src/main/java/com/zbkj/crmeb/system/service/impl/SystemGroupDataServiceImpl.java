@@ -1,21 +1,19 @@
 package com.zbkj.crmeb.system.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageHelper;
-
 import com.utils.CrmebUtil;
-import com.zbkj.crmeb.system.model.SystemGroupData;
 import com.zbkj.crmeb.system.dao.SystemGroupDataDao;
+import com.zbkj.crmeb.system.model.SystemGroupData;
 import com.zbkj.crmeb.system.request.SystemFormItemCheckRequest;
 import com.zbkj.crmeb.system.request.SystemGroupDataRequest;
 import com.zbkj.crmeb.system.request.SystemGroupDataSearchRequest;
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import com.zbkj.crmeb.system.service.SystemFormTempService;
 import com.zbkj.crmeb.system.service.SystemGroupDataService;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -92,13 +90,6 @@ public class SystemGroupDataServiceImpl extends ServiceImpl<SystemGroupDataDao, 
 
         systemGroupData.setValue(value);
 
-//        int sort = 0;
-//        for (SystemFormItemCheckRequest systemFormItemCheckRequest : systemGroupDataRequest.getForm().getFields()) {
-//            if(systemFormItemCheckRequest.getName().equals("sort")){
-//                sort = Integer.parseInt(systemFormItemCheckRequest.getName());
-//                break;
-//            }
-//        }
         systemGroupData.setSort(systemGroupDataRequest.getForm().getSort());
         systemGroupData.setStatus(systemGroupDataRequest.getForm().getStatus());
         return save(systemGroupData);

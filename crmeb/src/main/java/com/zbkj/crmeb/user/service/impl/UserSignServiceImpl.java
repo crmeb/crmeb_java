@@ -22,12 +22,9 @@ import com.zbkj.crmeb.user.vo.UserSignMonthVo;
 import com.zbkj.crmeb.user.vo.UserSignVo;
 import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForIntegral;
-import io.swagger.models.auth.In;
-import org.apache.commons.io.filefilter.IOFileFilter;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
@@ -137,7 +134,13 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
         experienceFundsRequest.setValue(new BigDecimal(configVo.getExperience()));
 
         //更新用户签到天数
-        user.setSignNum(user.getSignNum()+1);
+        // 检测昨天是否签到
+        Boolean yesterdaySign = checkYesterdaySign(user.getUid());
+        if (yesterdaySign) {
+            user.setSignNum(user.getSignNum()+1);
+        } else {
+            user.setSignNum(1);
+        }
         //更新用户积分
         user.setIntegral(user.getIntegral() + integralFundsRequest.getValue().intValue());
         // 更新用户经验
@@ -276,14 +279,21 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
         if(request.getAll() || request.getSign()){
             userSignInfoResponse.setSumSignDay(getCount(user.getUid()));
             userSignInfoResponse.setIsDaySign(checkDaySign(user.getUid()));
-            userSignInfoResponse.setIsYesterdaySign(checkYesterdaySign(user.getUid()));
+            Boolean isYesterdaySign = checkYesterdaySign(user.getUid());
+            userSignInfoResponse.setIsYesterdaySign(isYesterdaySign);
+            if (!isYesterdaySign) {
+                // 今天是否签到
+                Boolean daySign = checkDaySign(user.getUid());
+                if (!daySign) {
+                    userSignInfoResponse.setSignNum(0);
+                }
+            }
         }
 
         //积分
         if(request.getAll() || request.getSign()){
             userSignInfoResponse.setSumIntegral(userBillService.getSumInteger(1, user.getUid(), Constants.USER_BILL_CATEGORY_INTEGRAL, null, null));
             userSignInfoResponse.setDeductionIntegral(userBillService.getSumInteger(0, user.getUid(), Constants.USER_BILL_CATEGORY_INTEGRAL, null, null));
-//            userSignInfoResponse.setYesterdayIntegral(userBillService.getSumInteger(1, user.getUid(), Constants.USER_BILL_CATEGORY_INTEGRAL, Constants.SEARCH_DATE_YESTERDAY, null));
             //实际上是今日获得积分
             userSignInfoResponse.setYesterdayIntegral(userBillService.getSumInteger(1, user.getUid(), Constants.USER_BILL_CATEGORY_INTEGRAL, Constants.SEARCH_DATE_DAY, null));
         }

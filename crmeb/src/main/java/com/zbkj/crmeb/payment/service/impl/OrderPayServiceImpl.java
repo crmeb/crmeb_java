@@ -196,7 +196,6 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
                 case Constants.PAY_TYPE_OFFLINE: //线下支付
                     throw new CrmebException("线下支付未开通");
                 case Constants.PAY_TYPE_YUE: //余额支付 判断余额支付成功CreateOrderResponseVo.ResultCode = 1;
-//                    boolean yuePay = storeOrderService.yuePay(storeOrder, userService.getInfo(),"");
                     boolean yuePay = storeOrderService.yuePay(storeOrder, userService.getInfo(),"");
                     responseVo = responseVo.setResultCode(yuePay + "");
                     break;
@@ -395,58 +394,6 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
                 storeBargainUser.setStatus(3);
                 storeBargainUserService.updateById(storeBargainUser);
             }
-            // 如果是拼团商品，拼团处理
-            // TODO 拼团整体逻辑需调整
-            // TODO 将拼团生成放到订单生成，如果取消订单，则删除生成的拼团的数据
-            // TODO 在这里，只负责将拼团状态改为已完成（用消息列队发送拼团task形式处理）
-//            if (storeOrder.getCombinationId() > 0) {
-//                // 判断拼团团长是否存在
-//                StorePink headPink = new StorePink();
-//                Integer pinkId = storeOrder.getPinkId();
-//                if (pinkId > 0) {
-//                    headPink = storePinkService.getById(pinkId);
-//                    if (ObjectUtil.isNull(headPink) || headPink.getIsRefund().equals(true) || headPink.getStatus() == 3) {
-//                        pinkId = 0;
-//                    }
-//                }
-//                StoreCombination storeCombination = storeCombinationService.getById(storeOrder.getCombinationId());
-//                // 生成拼团表数据
-//                StorePink storePink = new StorePink();
-//                storePink.setUid(user.getUid());
-//                storePink.setAvatar(user.getAvatar());
-//                storePink.setNickname(user.getNickname());
-//                storePink.setOrderId(storeOrder.getOrderId());
-//                storePink.setOrderIdKey(storeOrder.getId());
-//                storePink.setTotalNum(storeOrder.getTotalNum());
-//                storePink.setTotalPrice(storeOrder.getTotalPrice());
-//                storePink.setCid(storeCombination.getId());
-//                storePink.setPid(storeCombination.getProductId());
-//                storePink.setPeople(storeCombination.getPeople());
-//                storePink.setPrice(storeCombination.getPrice());
-//                Integer effectiveTime = storeCombination.getEffectiveTime();// 有效小时数
-//                DateTime dateTime = cn.hutool.core.date.DateUtil.date();
-//                storePink.setAddTime(dateTime.getTime());
-//                if (pinkId > 0) {
-//                    storePink.setStopTime(headPink.getStopTime());
-//                } else {
-//                    DateTime hourTime = cn.hutool.core.date.DateUtil.offsetHour(dateTime, effectiveTime);
-//                    long stopTime =  hourTime.getTime();
-//                    if (stopTime > storeCombination.getStopTime()) {
-//                        stopTime = storeCombination.getStopTime();
-//                    }
-//                    storePink.setStopTime(stopTime);
-//                }
-//                storePink.setKId(pinkId);
-//                storePink.setIsTpl(false);
-//                storePink.setIsRefund(false);
-//                storePink.setStatus(1);
-//                storePinkService.save(storePink);
-//                // 如果是开团，需要更新订单数据
-//                if (storePink.getKId() == 0) {
-//                    storeOrder.setPinkId(storePink.getId());
-//                    storeOrderService.updateById(storeOrder);
-//                }
-//            }
             return Boolean.TRUE;
         });
 
@@ -671,6 +618,13 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
                     }
                 }
                 StoreCombination storeCombination = storeCombinationService.getById(storeOrder.getCombinationId());
+                // 如果拼团人数已满，重新开团
+                if (pinkId > 0) {
+                    Integer count = storePinkService.getCountByKid(pinkId);
+                    if (count >= storeCombination.getPeople()) {
+                        pinkId = 0;
+                    }
+                }
                 // 生成拼团表数据
                 StorePink storePink = new StorePink();
                 storePink.setUid(user.getUid());
@@ -703,10 +657,8 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
                 storePink.setStatus(1);
                 storePinkService.save(storePink);
                 // 如果是开团，需要更新订单数据
-                if (storePink.getKId() == 0) {
-                    storeOrder.setPinkId(storePink.getId());
-                    storeOrderService.updateById(storeOrder);
-                }
+                storeOrder.setPinkId(storePink.getId());
+                storeOrderService.updateById(storeOrder);
             }
 
             return Boolean.TRUE;
@@ -924,13 +876,6 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
         temMap.put("amount2", storeOrder.getPayPrice().toString() + "元");
         temMap.put("thing7", "您的订单已支付成功");
         templateMessageService.pushMiniTemplateMessage(Constants.WE_CHAT_PROGRAM_TEMP_KEY_ORDER_PAY, temMap, userToken.getToken());
-//        String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
-//        if(StringUtils.isNotBlank(storeNameAndCarNumString)){
-//            WechatSendMessageForPaySuccess paySuccess = new WechatSendMessageForPaySuccess(
-//                    storeOrder.getId()+"",storeOrder.getPayPrice()+"",storeOrder.getPayTime()+"","暂无",
-//                    storeOrder.getTotalPrice()+"",storeNameAndCarNumString);
-//            orderUtils.sendWeiChatMiniMessageForPaySuccess(paySuccess, userService.getById(storeOrder).getUid());
-//        }
     }
 
     /**
@@ -960,13 +905,6 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
         Map<Integer, Boolean> couponMap = CollUtil.newHashMap();
         for (StoreOrderInfoVo order : orders) {
             List<StoreProductCoupon> couponsForGiveUser = storeProductCouponService.getListByProductId(order.getProductId());
-//            User currentUser = userService.getById(storeOrder.getUid());
-//            for (StoreProductCoupon storeProductCoupon : couponsForGiveUser) {
-//                StoreCouponUserRequest crp = new StoreCouponUserRequest();
-//                crp.setUid(currentUser.getUid()+"");
-//                crp.setCouponId(storeProductCoupon.getIssueCouponId());
-//                storeCouponUserService.receive(crp);
-//            }
             for (int i = 0; i < couponsForGiveUser.size();) {
                 StoreProductCoupon storeProductCoupon = couponsForGiveUser.get(i);
                 MyRecord record = storeCouponUserService.paySuccessGiveAway(storeProductCoupon.getIssueCouponId(), storeOrder.getUid());
@@ -1088,7 +1026,6 @@ public class OrderPayServiceImpl extends PayService implements OrderPayService {
         if(orderList.size() < 1){
             throw new CrmebException("在订单里没有找到商品数据");
         }
-//        return orderList.get(0).getInfo().getJSONObject("productInfo").getString("store_name");
         return orderList.get(0).getInfo().getProductInfo().getStoreName();
     }
 }

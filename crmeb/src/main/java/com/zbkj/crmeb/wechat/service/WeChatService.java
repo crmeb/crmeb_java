@@ -71,12 +71,6 @@ public interface WeChatService {
 
     String getUploadMedia();
 
-    String getMedia();
-
-    JSONObject getMediaInfo(String type, int offset, int count);
-
-    int getMediaCount(String type);
-
     WeChatProgramAuthorizeLoginGetOpenIdResponse programAuthorizeLogin(String code);
 
     String qrCode(String page, String uri);

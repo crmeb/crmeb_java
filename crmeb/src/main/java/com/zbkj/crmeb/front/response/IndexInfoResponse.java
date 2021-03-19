@@ -44,6 +44,7 @@ public class IndexInfoResponse implements Serializable {
     @ApiModelProperty(value = "活动")
     private IndexInfoItemResponse info;
 
+    // 待优化
     @ApiModelProperty(value = "活动区域图片")
     private List<HashMap<String, Object>> activity;
 

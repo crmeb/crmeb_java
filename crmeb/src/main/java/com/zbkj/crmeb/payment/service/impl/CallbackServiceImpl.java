@@ -141,11 +141,6 @@ public class CallbackServiceImpl implements CallbackService {
             AttachVo attachVo = JSONObject.toJavaObject(JSONObject.parseObject(callbackVo.getAttach()), AttachVo.class);
 
             //判断openid
-//            UserToken userToken = userTokenService.getByOpenid(callbackVo.getOpenid());
-//            if(null == userToken || !userToken.getUid().equals(attachVo.getUserId())){
-//                //用户信息错误
-//                throw new CrmebException("用户信息错误！");
-//            }
             User user = userService.getById(attachVo.getUserId());
             if (ObjectUtil.isNull(user)) {
                 //用户信息错误
@@ -194,6 +189,13 @@ public class CallbackServiceImpl implements CallbackService {
                             }
                         }
                         StoreCombination storeCombination = storeCombinationService.getById(storeOrder.getCombinationId());
+                        // 如果拼团人数已满，重新开团
+                        if (pinkId > 0) {
+                            Integer count = storePinkService.getCountByKid(pinkId);
+                            if (count >= storeCombination.getPeople()) {
+                                pinkId = 0;
+                            }
+                        }
                         // 生成拼团表数据
                         StorePink storePink = new StorePink();
                         storePink.setUid(user.getUid());
@@ -226,10 +228,8 @@ public class CallbackServiceImpl implements CallbackService {
                         storePink.setStatus(1);
                         storePinkService.save(storePink);
                         // 如果是开团，需要更新订单数据
-                        if (storePink.getKId() == 0) {
-                            storeOrder.setPinkId(storePink.getId());
-                            storeOrderService.updateById(storeOrder);
-                        }
+                        storeOrder.setPinkId(storePink.getId());
+                        storeOrderService.updateById(storeOrder);
                     }
 
                     return Boolean.TRUE;

@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.front.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -53,7 +54,6 @@ import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginGetOpenIdResponse;
 import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginUserInfoResponse;
 import com.zbkj.crmeb.wechat.response.WeChatProgramAuthorizeLoginGetOpenIdResponse;
 import com.zbkj.crmeb.wechat.service.WeChatService;
-import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,10 +62,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -347,8 +344,6 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
         if(request.getGrade() == 1){
             //二级推广人
-//            userIdList.addAll(userService.getSpreadPeopleIdList(userIdList));
-//            userSpreadPeopleResponse.setTotalLevel(userIdList.size()); //把二级推广人的id追加到一级推广人集合中
             userIdList.clear();
             userIdList.addAll(secondSpreadIdList);
         }
@@ -407,109 +402,6 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         BigDecimal orderStatusSum = storeOrderService.getSumBigDecimal(info.getUid(), null);
         return new UserBalanceResponse(info.getNowMoney(), recharge, orderStatusSum);
     }
-
-//    /**
-//     * 推广订单
-//     * @author Mr.Zhang
-//     * @since 2020-06-10
-//     * @return UserSpreadOrderResponse;
-//     */
-//    @Override
-//    public UserSpreadOrderResponse getSpreadOrder(PageParamRequest pageParamRequest) {
-//        UserSpreadOrderResponse userSpreadOrderResponse = new UserSpreadOrderResponse();
-//        Integer userId = userService.getUserIdException();
-//        List<Integer> userIdList = new ArrayList<>();
-//        userIdList.add(userId);
-//        userIdList = userService.getSpreadPeopleIdList(userIdList); //拿到一级推广id
-//        if(null == userIdList){
-//            return userSpreadOrderResponse;
-//        }
-//        //查询所有推广人的由于订单获取佣金记录，分页
-//
-//        FundsMonitorSearchRequest request = new FundsMonitorSearchRequest();
-////        request.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
-////        request.setType(Constants.USER_BILL_TYPE_PAY_MONEY);
-//        request.setCategory(Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE);
-//        request.setType(Constants.USER_BILL_TYPE_BROKERAGE);
-//        request.setUserIdList(CollUtil.newArrayList(userId));
-//        request.setLinkId("gt");
-//        request.setPm(1);
-//        List<UserBill> list = userBillService.getList(request, pageParamRequest);
-//        if(null == list){
-//            return userSpreadOrderResponse;
-//        }
-//        CommonPage<UserBill> userBillCommonPage = CommonPage.restPage(list); //拿到分页信息
-//        userSpreadOrderResponse.setCount(userBillCommonPage.getTotal()); //总数
-//
-//        //拿到订单id, 查询订单信息
-//        List<Integer> orderIdList = list.stream().map(i -> Integer.parseInt(i.getLinkId())).distinct().collect(Collectors.toList());
-//        Map<Integer, StoreOrder> orderList = storeOrderService.getMapInId(orderIdList);
-//
-//        //用户信息
-////        userIdList = list.stream().map(UserBill::getUid).distinct().collect(Collectors.toList());
-//        List<StoreOrder> storeOrderList = new ArrayList<>(orderList.values());
-//        userIdList = storeOrderList.stream().map(StoreOrder::getUid).distinct().collect(Collectors.toList());
-//        HashMap<Integer, User> userList = userService.getMapListInUid(userIdList);
-//
-//        //按时间分组数据
-//        List<UserSpreadOrderItemResponse> userSpreadOrderItemResponseList = new ArrayList<>();
-//        for (UserBill userBill : list) {
-//            String date = DateUtil.dateToStr(userBill.getCreateTime(), Constants.DATE_FORMAT_MONTH);
-//            boolean isAdd = false;
-//            String orderId = "";
-//            Integer linkId = Integer.parseInt(userBill.getLinkId());
-//            if(null != orderList && orderList.containsKey(linkId)){
-//                orderId = orderList.get(linkId).getOrderId();
-//            }
-//
-//            UserSpreadOrderItemChildResponse userSpreadOrderItemChildResponse = new UserSpreadOrderItemChildResponse(
-//                    orderId, //订单号
-//                    userBill.getCreateTime(),
-//                    (userBill.getStatus() == 1) ? userBill.getNumber() : BigDecimal.ZERO,
-////                    userList.get(userBill.getUid()).getAvatar(),
-////                    userList.get(userBill.getUid()).getNickname(),
-//                    userList.get(orderList.get(linkId).getUid()).getAvatar(),
-//                    userList.get(orderList.get(linkId).getUid()).getNickname(),
-//                    userBill.getType()
-//            );
-//
-//            //如果在已有的数据中找到当前月份数据则追加
-//            for (UserSpreadOrderItemResponse userSpreadOrderItemResponse: userSpreadOrderItemResponseList) {
-//                if(userSpreadOrderItemResponse.getTime().equals(date)){
-//                    userSpreadOrderItemResponse.getChild().add(userSpreadOrderItemChildResponse);
-//                    isAdd = true;
-//                    break;
-//                }
-//            }
-//
-//            //没月找到则创建一条数据
-//            if(!isAdd){
-//                //创建一个
-//                UserSpreadOrderItemResponse userSpreadOrderItemResponse = new UserSpreadOrderItemResponse();
-//                userSpreadOrderItemResponse.setTime(date);
-//                userSpreadOrderItemResponse.getChild().add(userSpreadOrderItemChildResponse);
-//                userSpreadOrderItemResponseList.add(userSpreadOrderItemResponse);
-//            }
-//        }
-//
-//        List<String> monthList = userSpreadOrderItemResponseList.stream().map(s -> "'" + s.getTime() + "'").collect(Collectors.toList());
-//
-//        if(monthList.size() < 1){
-//            return userSpreadOrderResponse;
-//        }
-//
-//        //获取每个月分的总数
-//        Map<String, Integer> countMap = userBillService.getCountListByMonth(request, monthList);
-//
-//        //统计每月的订单数量
-//        for (UserSpreadOrderItemResponse userSpreadOrderItemResponse: userSpreadOrderItemResponseList) {
-//            userSpreadOrderItemResponse.setCount(countMap.get(userSpreadOrderItemResponse.getTime()));
-//        }
-//
-//        userSpreadOrderResponse.setList(userSpreadOrderItemResponseList);
-//
-//        return userSpreadOrderResponse;
-//    }
 
     /**
      * 推广订单
@@ -692,11 +584,16 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                 User user = userService.getById(userToken.getUid());
                 // 分销绑定
                 if (userService.checkBingSpread(user, spreadUid, "old")) {
+                    Integer oldSprUid = user.getSpreadUid();
+
                     user.setSpreadUid(spreadUid);
                     user.setSpreadTime(DateUtil.nowDateTime());
                     Boolean execute = transactionTemplate.execute(e -> {
                         userService.updateById(user);
-                        userService.updateSpreadCountByUid(spreadUid);
+                        userService.updateSpreadCountByUid(spreadUid, "add");
+                        if (oldSprUid > 0) {
+                            userService.updateSpreadCountByUid(oldSprUid, "sub");
+                        }
                         return Boolean.TRUE;
                     });
                     if (!execute) {
@@ -719,11 +616,15 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                     User user = userService.getById(userToken.getUid());
                     // 分销绑定
                     if (userService.checkBingSpread(user, spreadUid, "old")) {
+                        Integer oldSprUid = user.getSpreadUid();
                         user.setSpreadUid(spreadUid);
                         user.setSpreadTime(DateUtil.nowDateTime());
                         Boolean execute = transactionTemplate.execute(e -> {
                             userService.updateById(user);
-                            userService.updateSpreadCountByUid(spreadUid);
+                            userService.updateSpreadCountByUid(spreadUid, "add");
+                            if (oldSprUid > 0) {
+                                userService.updateSpreadCountByUid(oldSprUid, "sub");
+                            }
                             return Boolean.TRUE;
                         });
                         if (!execute) {
@@ -748,7 +649,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                 user.setSpreadTime(DateUtil.nowDateTime());
                 Boolean execute = transactionTemplate.execute(e -> {
                     userService.updateById(user);
-                    userService.updateSpreadCountByUid(spreadUid);
+                    userService.updateSpreadCountByUid(spreadUid, "add");
                     return Boolean.TRUE;
                 });
                 if (!execute) {
@@ -762,15 +663,28 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             List<StoreCoupon> couponList = storeCouponService.findRegisterList();
             if (CollUtil.isNotEmpty(couponList)) {
                 couponList.forEach(storeCoupon -> {
+                    //是否有固定的使用时间
+                    if(!storeCoupon.getIsFixedTime()){
+                        String endTime = DateUtil.addDay(DateUtil.nowDate(Constants.DATE_FORMAT), storeCoupon.getDay(), Constants.DATE_FORMAT);
+                        storeCoupon.setUseEndTime(DateUtil.strToDate(endTime, Constants.DATE_FORMAT));
+                        storeCoupon.setUseStartTime(DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
+                    }
+
                     StoreCouponUser storeCouponUser = new StoreCouponUser();
                     storeCouponUser.setCouponId(storeCoupon.getId());
-//                storeCouponUser.setUid(userId);
                     storeCouponUser.setName(storeCoupon.getName());
                     storeCouponUser.setMoney(storeCoupon.getMoney());
                     storeCouponUser.setMinPrice(storeCoupon.getMinPrice());
-                    storeCouponUser.setStartTime(storeCoupon.getUseStartTime());
-                    storeCouponUser.setEndTime(storeCoupon.getUseEndTime());
                     storeCouponUser.setUseType(storeCoupon.getUseType());
+                    if (storeCoupon.getIsFixedTime()) {// 使用固定时间
+                        storeCouponUser.setStartTime(storeCoupon.getUseStartTime());
+                        storeCouponUser.setEndTime(storeCoupon.getUseEndTime());
+                    } else {// 没有固定使用时间
+                        Date nowDate = DateUtil.nowDateTime();
+                        storeCouponUser.setStartTime(nowDate);
+                        DateTime dateTime = cn.hutool.core.date.DateUtil.offsetDay(nowDate, storeCoupon.getDay());
+                        storeCouponUser.setEndTime(dateTime);
+                    }
                     storeCouponUser.setType("register");
                     if (storeCoupon.getUseType() > 1) {
                         storeCouponUser.setPrimaryKey(storeCoupon.getPrimaryKey());
@@ -807,10 +721,6 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     @Override
     public String getLogo() {
         String url = systemConfigService.getValueByKey(Constants.CONFIG_KEY_MOBILE_LOGIN_LOGO);
-//        if(StringUtils.isNotBlank(url) && !url.contains("http")){
-//            url = systemConfigService.getValueByKey(Constants.CONFIG_KEY_SITE_URL) + url;
-//            url = url.replace("\\", "/");
-//        }
         return url;
     }
 
@@ -1006,11 +916,15 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                 User user = userService.getById(userToken.getUid());
                 // 分销绑定
                 if (userService.checkBingSpread(user, request.getSpreadPid(), "old")) {
+                    Integer oldSprUid = user.getSpreadUid();
                     user.setSpreadUid(request.getSpreadPid());
                     user.setSpreadTime(DateUtil.nowDateTime());
                     Boolean execute = transactionTemplate.execute(e -> {
                         userService.updateById(user);
-                        userService.updateSpreadCountByUid(request.getSpreadPid());
+                        userService.updateSpreadCountByUid(request.getSpreadPid(), "add");
+                        if (oldSprUid > 0) {
+                            userService.updateSpreadCountByUid(oldSprUid, "sub");
+                        }
                         return Boolean.TRUE;
                     });
                     if (!execute) {
@@ -1026,11 +940,15 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                     User user = userService.getById(userToken.getUid());
                     // 分销绑定
                     if (userService.checkBingSpread(user, request.getSpreadPid(), "old")) {
+                        Integer oldSprUid = user.getSpreadUid();
                         user.setSpreadUid(request.getSpreadPid());
                         user.setSpreadTime(DateUtil.nowDateTime());
                         Boolean execute = transactionTemplate.execute(e -> {
                             userService.updateById(user);
-                            userService.updateSpreadCountByUid(request.getSpreadPid());
+                            userService.updateSpreadCountByUid(request.getSpreadPid(), "add");
+                            if (oldSprUid > 0) {
+                                userService.updateSpreadCountByUid(oldSprUid, "sub");
+                            }
                             return Boolean.TRUE;
                         });
                         if (!execute) {
@@ -1055,7 +973,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                 user.setSpreadTime(DateUtil.nowDateTime());
                 Boolean execute = transactionTemplate.execute(e -> {
                     userService.updateById(user);
-                    userService.updateSpreadCountByUid(request.getSpreadPid());
+                    userService.updateSpreadCountByUid(request.getSpreadPid(), "add");
                     return Boolean.TRUE;
                 });
                 if (!execute) {
@@ -1069,9 +987,15 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             List<StoreCoupon> couponList = storeCouponService.findRegisterList();
             if (CollUtil.isNotEmpty(couponList)) {
                 couponList.forEach(storeCoupon -> {
+                    //是否有固定的使用时间
+                    if(!storeCoupon.getIsFixedTime()){
+                        String endTime = DateUtil.addDay(DateUtil.nowDate(Constants.DATE_FORMAT), storeCoupon.getDay(), Constants.DATE_FORMAT);
+                        storeCoupon.setUseEndTime(DateUtil.strToDate(endTime, Constants.DATE_FORMAT));
+                        storeCoupon.setUseStartTime(DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
+                    }
+
                     StoreCouponUser storeCouponUser = new StoreCouponUser();
                     storeCouponUser.setCouponId(storeCoupon.getId());
-//                storeCouponUser.setUid(userId);
                     storeCouponUser.setName(storeCoupon.getName());
                     storeCouponUser.setMoney(storeCoupon.getMoney());
                     storeCouponUser.setMinPrice(storeCoupon.getMinPrice());

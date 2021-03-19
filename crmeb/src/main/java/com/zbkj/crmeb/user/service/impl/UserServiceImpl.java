@@ -3,6 +3,7 @@ package com.zbkj.crmeb.user.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -28,7 +29,11 @@ import com.zbkj.crmeb.front.request.LoginRequest;
 import com.zbkj.crmeb.front.request.PasswordRequest;
 import com.zbkj.crmeb.front.request.RegisterRequest;
 import com.zbkj.crmeb.front.request.UserBindingRequest;
-import com.zbkj.crmeb.front.response.*;
+import com.zbkj.crmeb.front.response.LoginResponse;
+import com.zbkj.crmeb.front.response.UserCenterOrderStatusNumResponse;
+import com.zbkj.crmeb.front.response.UserCenterResponse;
+import com.zbkj.crmeb.front.response.UserSpreadPeopleItemResponse;
+import com.zbkj.crmeb.front.utils.userUtil;
 import com.zbkj.crmeb.marketing.model.StoreCoupon;
 import com.zbkj.crmeb.marketing.model.StoreCouponUser;
 import com.zbkj.crmeb.marketing.request.StoreCouponUserSearchRequest;
@@ -53,6 +58,7 @@ import com.zbkj.crmeb.user.response.TopDetail;
 import com.zbkj.crmeb.user.response.UserResponse;
 import com.zbkj.crmeb.user.service.*;
 import com.zbkj.crmeb.user.vo.UserOperateFundsVo;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -77,6 +83,7 @@ import java.util.stream.Collectors;
  * | Author: CRMEB Team <admin@crmeb.com>
  * +----------------------------------------------------------------------
  */
+@Slf4j
 @Service
 public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserService {
 
@@ -122,9 +129,13 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     @Autowired
     private TransactionTemplate transactionTemplate;
 
+    @Autowired
+    private userUtil userUtil;
+
     /**
      * 分页显示用户表
-     * @param request 搜索条件
+     *
+     * @param request          搜索条件
      * @param pageParamRequest 分页参数
      */
     @Override
@@ -132,36 +143,36 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         Page<User> pageUser = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
 
-        if(request.getIsPromoter() != null){
+        if (request.getIsPromoter() != null) {
             lambdaQueryWrapper.eq(User::getIsPromoter, request.getIsPromoter());
         }
 
-        if(!StringUtils.isBlank(request.getGroupId())){
+        if (!StringUtils.isBlank(request.getGroupId())) {
             lambdaQueryWrapper.apply(CrmebUtil.getFindInSetSql("group_id", request.getGroupId()));
         }
 
-        if(!StringUtils.isBlank(request.getLabelId())){
+        if (!StringUtils.isBlank(request.getLabelId())) {
             lambdaQueryWrapper.apply(CrmebUtil.getFindInSetSql("tag_id", request.getLabelId()));
         }
 
-        if(!StringUtils.isBlank(request.getLevel())){
+        if (!StringUtils.isBlank(request.getLevel())) {
             lambdaQueryWrapper.in(User::getLevel, CrmebUtil.stringToArray(request.getLevel()));
         }
 
-        if(StringUtils.isNotBlank(request.getUserType())){
+        if (StringUtils.isNotBlank(request.getUserType())) {
             lambdaQueryWrapper.eq(User::getUserType, request.getUserType());
         }
 
-        if(StringUtils.isNotBlank(request.getSex())){
+        if (StringUtils.isNotBlank(request.getSex())) {
             lambdaQueryWrapper.eq(User::getSex, request.getSex());
         }
 
-        if(StringUtils.isNotBlank(request.getCountry())){
+        if (StringUtils.isNotBlank(request.getCountry())) {
             lambdaQueryWrapper.eq(User::getCountry, request.getCountry());
             // 根据省市查询
             if (StrUtil.isNotBlank(request.getCity())) {
-                request.setProvince(request.getProvince().replace("省",""));
-                request.setCity(request.getCity().replace("市",""));
+                request.setProvince(request.getProvince().replace("省", ""));
+                request.setCity(request.getCity().replace("市", ""));
                 lambdaQueryWrapper.likeLeft(User::getAddres, request.getProvince() + "," + request.getCity());
             }
         }
@@ -174,14 +185,14 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             }
         }
 
-        if(request.getStatus() != null){
+        if (request.getStatus() != null) {
             lambdaQueryWrapper.eq(User::getStatus, request.getStatus());
         }
 
         dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
 
-        if(!StringUtils.isBlank(dateLimit.getStartTime())){
-            switch (request.getAccessType()){
+        if (!StringUtils.isBlank(dateLimit.getStartTime())) {
+            switch (request.getAccessType()) {
                 case 1://首次
 //                    lambdaQueryWrapper.between(User::getUpdateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
                     lambdaQueryWrapper.between(User::getCreateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
@@ -200,7 +211,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
                     break;
             }
         }
-        if(request.getKeywords() != null){
+        if (request.getKeywords() != null) {
             String keywords = request.getKeywords();
             lambdaQueryWrapper.and(i -> i.or().like(User::getAccount, keywords) //用户账号
                     .or().like(User::getRealName, keywords) //真实姓名
@@ -220,30 +231,31 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             UserResponse userResponse = new UserResponse();
             BeanUtils.copyProperties(user, userResponse);
             // 获取分组信息
-            if(!StringUtils.isBlank(user.getGroupId())){
+            if (!StringUtils.isBlank(user.getGroupId())) {
                 userResponse.setGroupName(userGroupService.getGroupNameInId(user.getGroupId()));
                 userResponse.setGroupId(user.getGroupId());
             }
 
             // 获取标签信息
-            if(!StringUtils.isBlank(user.getTagId())){
+            if (!StringUtils.isBlank(user.getTagId())) {
                 userResponse.setTagName(userTagService.getGroupNameInId(user.getTagId()));
                 userResponse.setTagId(user.getTagId());
             }
 
             //获取推广人信息
-            if(null == user.getSpreadUid() || user.getSpreadUid() == 0){
+            if (null == user.getSpreadUid() || user.getSpreadUid() == 0) {
                 userResponse.setSpreadNickname("无");
-            }else{
+            } else {
                 userResponse.setSpreadNickname(userDao.selectById(user.getSpreadUid()).getNickname());
             }
             userResponses.add(userResponse);
         }
-        return CommonPage.copyPageInfo(pageUser,userResponses);
+        return CommonPage.copyPageInfo(pageUser, userResponses);
     }
 
     /**
      * 操作资金
+     *
      * @author Mr.Zhang
      * @since 2020-04-10
      */
@@ -251,12 +263,12 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     public boolean updateFounds(UserOperateFundsRequest request, boolean isSaveBill) {
         UserOperateFundsVo userOperateFundsVo = new UserOperateFundsVo(request.getUid(), request.getFoundsCategory(), getFounds(request));
         //增加日志， 创建计算数值之前的数据
-        if(isSaveBill){
+        if (isSaveBill) {
             createUserBill(request, getUserBalance(request));
         }
         Boolean result = userDao.updateFounds(userOperateFundsVo);    //更新数值
 
-        if(request.getFoundsCategory().equals(Constants.USER_BILL_CATEGORY_EXPERIENCE)){
+        if (request.getFoundsCategory().equals(Constants.USER_BILL_CATEGORY_EXPERIENCE)) {
             //经验升级
             upLevel(request.getUid());
         }
@@ -267,16 +279,17 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 操作资金
+     *
      * @author Mr.Zhang
      * @since 2020-04-10
      */
     @Override
     public boolean updateIntegralMoney(UserOperateIntegralMoneyRequest request) {
-        if(null == request.getMoneyValue() || null == request.getIntegralValue()){
+        if (null == request.getMoneyValue() || null == request.getIntegralValue()) {
             throw new CrmebException("至少输入一个金额");
         }
 
-        if(request.getMoneyValue().compareTo(BigDecimal.ZERO) < 1 && request.getIntegralValue() <= 0){
+        if (request.getMoneyValue().compareTo(BigDecimal.ZERO) < 1 && request.getIntegralValue() <= 0) {
             throw new CrmebException("修改值不能等小于等于0");
         }
 
@@ -287,7 +300,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
         Boolean execute = transactionTemplate.execute(e -> {
             // 处理余额
-            if(request.getMoneyValue().compareTo(BigDecimal.ZERO) > 0){
+            if (request.getMoneyValue().compareTo(BigDecimal.ZERO) > 0) {
                 // 生成UserBill
                 UserBill userBill = new UserBill();
                 userBill.setUid(user.getUid());
@@ -298,7 +311,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
                 userBill.setStatus(1);
                 userBill.setCreateTime(DateUtil.nowDateTime());
 
-                if(request.getMoneyType() == 1){// 增加
+                if (request.getMoneyType() == 1) {// 增加
                     userBill.setPm(1);
                     userBill.setType(Constants.USER_BILL_TYPE_SYSTEM_ADD);
                     userBill.setBalance(user.getNowMoney().add(request.getMoneyValue()));
@@ -306,7 +319,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
                     userBillService.save(userBill);
                     operationNowMoney(user.getUid(), request.getMoneyValue(), user.getNowMoney(), "add");
-                }else{
+                } else {
                     userBill.setPm(0);
                     userBill.setType(Constants.USER_BILL_TYPE_SYSTEM_SUB);
                     userBill.setBalance(user.getNowMoney().subtract(request.getMoneyValue()));
@@ -318,7 +331,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             }
 
             // 处理积分
-            if(request.getIntegralValue() > 0){
+            if (request.getIntegralValue() > 0) {
                 // 生成UserBill
                 UserBill userBill = new UserBill();
                 userBill.setUid(user.getUid());
@@ -328,7 +341,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
                 userBill.setNumber(new BigDecimal(request.getIntegralValue()));
                 userBill.setStatus(1);
                 userBill.setCreateTime(DateUtil.nowDateTime());
-                if(request.getIntegralType() == 1){// 增加
+                if (request.getIntegralType() == 1) {// 增加
                     userBill.setPm(1);
                     userBill.setType(Constants.USER_BILL_TYPE_SYSTEM_ADD);
                     userBill.setBalance(new BigDecimal(user.getIntegral() + request.getIntegralValue()));
@@ -336,7 +349,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
                     userBillService.save(userBill);
                     operationIntegral(user.getUid(), request.getIntegralValue(), user.getIntegral(), "add");
-                }else{
+                } else {
                     userBill.setPm(0);
                     userBill.setType(Constants.USER_BILL_TYPE_SYSTEM_SUB);
                     userBill.setBalance(new BigDecimal(user.getIntegral() - request.getIntegralValue()));
@@ -358,6 +371,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 等级升级
+     *
      * @param userId Integer 用户id
      * @author Mr.Zhang
      * @since 2020-04-10
@@ -372,14 +386,14 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         User user = getById(userId);
         SystemUserLevel userLevelConfig = new SystemUserLevel();
         for (SystemUserLevel systemUserLevel : list) {
-            if(user.getExperience() > systemUserLevel.getExperience()){
+            if (user.getExperience() > systemUserLevel.getExperience()) {
                 userLevelConfig = systemUserLevel;
                 continue;
             }
             break;
         }
 
-        if(userLevelConfig.getId() == null){
+        if (userLevelConfig.getId() == null) {
             return;
         }
 
@@ -389,6 +403,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 更新用户信息
+     *
      * @param user 用户参数
      * @return 更新结果
      */
@@ -396,90 +411,90 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     public boolean updateBase(User user) {
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
 //        lambdaUpdateWrapper.setEntity(user);
-        if(null == user.getUid()) return false;
-        lambdaUpdateWrapper.eq(User::getUid,user.getUid());
-        if(StringUtils.isNotBlank(user.getNickname())){
+        if (null == user.getUid()) return false;
+        lambdaUpdateWrapper.eq(User::getUid, user.getUid());
+        if (StringUtils.isNotBlank(user.getNickname())) {
             lambdaUpdateWrapper.set(User::getNickname, user.getNickname());
         }
-        if(StringUtils.isNotBlank(user.getAccount())){
+        if (StringUtils.isNotBlank(user.getAccount())) {
             lambdaUpdateWrapper.set(User::getAccount, user.getAccount());
         }
-        if(StringUtils.isNotBlank(user.getPwd())){
+        if (StringUtils.isNotBlank(user.getPwd())) {
             lambdaUpdateWrapper.set(User::getPwd, user.getPwd());
         }
-        if(StringUtils.isNotBlank(user.getRealName())){
+        if (StringUtils.isNotBlank(user.getRealName())) {
             lambdaUpdateWrapper.set(User::getRealName, user.getRealName());
         }
-        if(StringUtils.isNotBlank(user.getBirthday())){
+        if (StringUtils.isNotBlank(user.getBirthday())) {
             lambdaUpdateWrapper.set(User::getBirthday, user.getBirthday());
         }
-        if(StringUtils.isNotBlank(user.getCardId())){
+        if (StringUtils.isNotBlank(user.getCardId())) {
             lambdaUpdateWrapper.set(User::getCardId, user.getCardId());
         }
-        if(StringUtils.isNotBlank(user.getMark())){
+        if (StringUtils.isNotBlank(user.getMark())) {
             lambdaUpdateWrapper.set(User::getMark, user.getMark());
         }
-        if(null != user.getPartnerId()){
+        if (null != user.getPartnerId()) {
             lambdaUpdateWrapper.set(User::getPartnerId, user.getPartnerId());
         }
-        if(StringUtils.isNotBlank(user.getGroupId())){
+        if (StringUtils.isNotBlank(user.getGroupId())) {
             lambdaUpdateWrapper.set(User::getGroupId, user.getGroupId());
         }
-        if(StringUtils.isNotBlank(user.getTagId())){
+        if (StringUtils.isNotBlank(user.getTagId())) {
             lambdaUpdateWrapper.set(User::getTagId, user.getTagId());
         }
-        if(StringUtils.isNotBlank(user.getAvatar())){
+        if (StringUtils.isNotBlank(user.getAvatar())) {
             lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
         }
-        if(StringUtils.isNotBlank(user.getPhone())){
+        if (StringUtils.isNotBlank(user.getPhone())) {
             lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
         }
-        if(StringUtils.isNotBlank(user.getAddIp())){
+        if (StringUtils.isNotBlank(user.getAddIp())) {
             lambdaUpdateWrapper.set(User::getAddIp, user.getAddIp());
         }
-        if(StringUtils.isNotBlank(user.getLastIp())){
+        if (StringUtils.isNotBlank(user.getLastIp())) {
             lambdaUpdateWrapper.set(User::getLastIp, user.getLastIp());
         }
-        if(null != user.getNowMoney() && user.getNowMoney().compareTo(BigDecimal.ZERO) > 0){
+        if (null != user.getNowMoney() && user.getNowMoney().compareTo(BigDecimal.ZERO) > 0) {
             lambdaUpdateWrapper.set(User::getNowMoney, user.getNowMoney());
         }
-        if(null != user.getBrokeragePrice() && user.getBrokeragePrice().compareTo(BigDecimal.ZERO) > 0){
+        if (null != user.getBrokeragePrice() && user.getBrokeragePrice().compareTo(BigDecimal.ZERO) > 0) {
             lambdaUpdateWrapper.set(User::getBrokeragePrice, user.getBrokeragePrice());
         }
-        if(null != user.getIntegral() && user.getIntegral() >= 0){
+        if (null != user.getIntegral() && user.getIntegral() >= 0) {
             lambdaUpdateWrapper.set(User::getIntegral, user.getIntegral());
         }
-        if(null != user.getExperience() && user.getExperience() > 0){
+        if (null != user.getExperience() && user.getExperience() > 0) {
             lambdaUpdateWrapper.set(User::getExperience, user.getExperience());
         }
-        if(null != user.getSignNum() && user.getSignNum() > 0){
+        if (null != user.getSignNum() && user.getSignNum() > 0) {
             lambdaUpdateWrapper.set(User::getSignNum, user.getSignNum());
         }
-        if(null != user.getStatus()){
+        if (null != user.getStatus()) {
             lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
         }
-        if(null != user.getLevel() && user.getLevel() > 0){
+        if (null != user.getLevel() && user.getLevel() > 0) {
             lambdaUpdateWrapper.set(User::getLevel, user.getLevel());
         }
-        if(null != user.getSpreadUid() && user.getSpreadUid() > 0){
+        if (null != user.getSpreadUid() && user.getSpreadUid() > 0) {
             lambdaUpdateWrapper.set(User::getSpreadUid, user.getSpreadUid());
         }
-        if(null != user.getSpreadTime()){
+        if (null != user.getSpreadTime()) {
             lambdaUpdateWrapper.set(User::getSpreadTime, user.getSpreadTime());
         }
-        if(StringUtils.isNotBlank(user.getUserType())){
+        if (StringUtils.isNotBlank(user.getUserType())) {
             lambdaUpdateWrapper.set(User::getUserType, user.getUserType());
         }
-        if(null != user.getIsPromoter()){
+        if (null != user.getIsPromoter()) {
             lambdaUpdateWrapper.set(User::getIsPromoter, user.getIsPromoter());
         }
-        if(null != user.getPayCount()){
+        if (null != user.getPayCount()) {
             lambdaUpdateWrapper.set(User::getPayCount, user.getPayCount());
         }
-        if(null != user.getSpreadCount()){
+        if (null != user.getSpreadCount()) {
             lambdaUpdateWrapper.set(User::getSpreadCount, user.getSpreadCount());
         }
-        if(StringUtils.isNotBlank(user.getAddres())){
+        if (StringUtils.isNotBlank(user.getAddres())) {
             lambdaUpdateWrapper.set(User::getAddres, user.getAddres());
         }
         return update(lambdaUpdateWrapper);
@@ -489,15 +504,16 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     public boolean userPayCountPlus(User user) {
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(User::getUid, user.getUid());
-        lambdaUpdateWrapper.set(User::getPayCount, user.getPayCount()+1);
+        lambdaUpdateWrapper.set(User::getPayCount, user.getPayCount() + 1);
         return update(lambdaUpdateWrapper);
     }
 
     /**
      * 更新用户金额
-     * @param user 用户
+     *
+     * @param user  用户
      * @param price 金额
-     * @param type 增加add、扣减sub
+     * @param type  增加add、扣减sub
      * @return 更新后的用户对象
      */
     @Override
@@ -517,7 +533,8 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 会员分组
-     * @param id String id
+     *
+     * @param id           String id
      * @param groupIdValue Integer 分组Id
      * @author Mr.Zhang
      * @since 2020-04-28
@@ -532,7 +549,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         idList = idList.stream().distinct().collect(Collectors.toList());
         List<User> list = getListInUid(idList);
         if (CollUtil.isEmpty(list)) throw new CrmebException("没有找到用户信息");
-        if(list.size() < idList.size()){
+        if (list.size() < idList.size()) {
             throw new CrmebException("没有找到用户信息");
         }
         for (User user : list) {
@@ -543,6 +560,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 用户id in list
+     *
      * @param uidList List<Integer> id
      * @author Mr.Zhang
      * @since 2020-04-28
@@ -553,103 +571,91 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         return userDao.selectList(lambdaQueryWrapper);
     }
 
-    /**
-     * 清除会员等级
-     * @param userId Integer id
-     * @author Mr.Zhang
-     * @since 2020-04-28
-     */
-    @Override
-    public boolean cleanLevel(Integer userId) {
-        User user = new User();
-        user.setUid(userId);
-        user.setLevel(0);
-        user.setCleanTime(DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
-        return updateById(user);
-    }
-
-    /**
-     * 手机快速登录, 如果存在则直接登录，不存在注册
-     * @param request RegisterRequest 注册数据
-     * @param ip String ip
-     * @author Mr.Zhang
-     * @since 2020-04-29
-     */
-    @Override
-    public LoginResponse register(RegisterRequest request, String ip) throws Exception {
-        //检测验证码
-        checkValidateCode(request.getPhone(), request.getValidateCode());
-
-        //删除验证码
-        redisUtil.remove(getValidateCodeRedisKey(request.getPhone()));
-
-        //查询手机号信息
-        User user = getUserByAccount(request.getPhone());
-        if(user == null){
-            //此用户不存在，去帮他注册
-            request.setPassword("Abc" + CrmebUtil.randomCount(10000, 99999));
-            user = saveUser(request, ip);
-        }
-
-        //生成token
-        LoginResponse loginResponse = new LoginResponse();
-        loginResponse.setToken(token(user));
-
-        //绑定推广关系
-        bindSpread(user, request.getSpread());
-
-        loginResponse.setUser(user);
-        long time = Constants.TOKEN_EXPRESS_MINUTES * 60;
-
-        loginResponse.setExpiresTime(DateUtil.addSecond(DateUtil.nowDateTime(), (int)time));
-
-        user.setLastLoginTime(DateUtil.nowDateTime());
-        updateById(user);
-        return loginResponse;
-    }
-
-    /**
-     * 账号密码登录
-     * @author Mr.Zhang
-     * @since 2020-04-28
-     */
-    @Override
-    public LoginResponse login(LoginRequest request) throws Exception {
-        User user = getUserByAccount(request.getPhone());
-        if(user == null){
-            throw new CrmebException("此账号未注册");
-        }
-
-        if(!user.getStatus()){
-            throw new CrmebException("此账号被禁用");
-        }
-
-        String password = CrmebUtil.encryptPassword(request.getPassword(), request.getPhone());
-        if(!user.getPwd().equals(password)){
-            throw new CrmebException("密码错误");
-        }
-
-        LoginResponse loginResponse = new LoginResponse();
-        loginResponse.setToken(token(user));
-
-        user.setLastLoginTime(DateUtil.nowDateTime());
-        updateById(user);
-        user.setPwd(null);
-
-        //绑定推广关系
-        bindSpread(user, request.getSpreadPid());
-
-        loginResponse.setUser(user);
-
-        return loginResponse;
-    }
+//    /**
+//     * 手机快速登录, 如果存在则直接登录，不存在注册
+//     *
+//     * @param request RegisterRequest 注册数据
+//     * @param ip      String ip
+//     * @author Mr.Zhang
+//     * @since 2020-04-29
+//     */
+//    @Override
+//    public LoginResponse register(RegisterRequest request, String ip) throws Exception {
+//        //检测验证码
+//        checkValidateCode(request.getPhone(), request.getValidateCode());
+//
+//        //删除验证码
+//        redisUtil.remove(getValidateCodeRedisKey(request.getPhone()));
+//
+//        //查询手机号信息
+//        User user = getUserByAccount(request.getPhone());
+//        if (user == null) {
+//            //此用户不存在，去帮他注册
+//            request.setPassword("Abc" + CrmebUtil.randomCount(10000, 99999));
+//            user = saveUser(request, ip);
+//        }
+//
+//        //生成token
+//        LoginResponse loginResponse = new LoginResponse();
+//        loginResponse.setToken(token(user));
+//
+//        //绑定推广关系
+//        bindSpread(user, request.getSpread());
+//
+//        loginResponse.setUser(user);
+//        long time = Constants.TOKEN_EXPRESS_MINUTES * 60;
+//
+//        loginResponse.setExpiresTime(DateUtil.addSecond(DateUtil.nowDateTime(), (int) time));
+//
+//        user.setLastLoginTime(DateUtil.nowDateTime());
+//        updateById(user);
+//        return loginResponse;
+//    }
+//
+//    /**
+//     * 账号密码登录
+//     *
+//     * @author Mr.Zhang
+//     * @since 2020-04-28
+//     */
+//    @Override
+//    public LoginResponse login(LoginRequest request) throws Exception {
+//        User user = getUserByAccount(request.getPhone());
+//        if (user == null) {
+//            throw new CrmebException("此账号未注册");
+//        }
+//
+//        if (!user.getStatus()) {
+//            throw new CrmebException("此账号被禁用");
+//        }
+//
+//        String password = CrmebUtil.encryptPassword(request.getPassword(), request.getPhone());
+//        if (!user.getPwd().equals(password)) {
+//            throw new CrmebException("密码错误");
+//        }
+//
+//        LoginResponse loginResponse = new LoginResponse();
+//        loginResponse.setToken(token(user));
+//
+//        user.setLastLoginTime(DateUtil.nowDateTime());
+//        updateById(user);
+//        user.setPwd(null);
+//
+//        //绑定推广关系
+//        bindSpread(user, request.getSpreadPid());
+//
+//        loginResponse.setUser(user);
+//
+//        return loginResponse;
+//    }
 
     /**
      * 修改密码
+     *
      * @param request PasswordRequest 密码
+     * @return boolean
      * @author Mr.Zhang
      * @since 2020-04-28
-     * @return boolean
      */
     @Override
     public boolean password(PasswordRequest request) {
@@ -667,6 +673,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 退出
+     *
      * @param token String token
      * @author Mr.Zhang
      * @since 2020-04-28
@@ -678,13 +685,14 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 获取个人资料
+     *
+     * @return User
      * @author Mr.Zhang
      * @since 2020-04-28
-     * @return User
      */
     @Override
     public User getInfo() {
-        if(getUserId() == 0){
+        if (getUserId() == 0) {
             return null;
         }
         return getById(getUserId());
@@ -692,18 +700,19 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 获取个人资料
+     *
+     * @return User
      * @author Mr.Zhang
      * @since 2020-04-28
-     * @return User
      */
     @Override
     public User getUserPromoter() {
         User user = getInfo();
-        if(null == user){
+        if (null == user) {
             return null;
         }
 
-        if(!user.getStatus()){
+        if (!user.getStatus()) {
             user.setIsPromoter(false);
             return user;
         }
@@ -711,54 +720,44 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         //获取分销
         //检测商城是否开启分销功能
         String isOpen = systemConfigService.getValueByKey(Constants.CONFIG_KEY_STORE_BROKERAGE_IS_OPEN);
-        if(StringUtils.isBlank(isOpen) || isOpen.equals("0")){
+        if (StringUtils.isBlank(isOpen) || isOpen.equals("0")) {
             user.setIsPromoter(false);
-        }else{
+        } else {
             String type = systemConfigService.getValueByKey(Constants.CONFIG_KEY_STORE_BROKERAGE_MODEL);
-            if(StringUtils.isBlank(type) || type.equals("2")){
+            if (StringUtils.isBlank(type) || type.equals("2")) {
                 //人人分销
                 user.setIsPromoter(true);
             }
         }
         return user;
     }
+
     /**
      * 获取个人资料
+     *
+     * @return User
      * @author Mr.Zhang
      * @since 2020-04-28
-     * @return User
      */
     @Override
     public User getInfoException() {
         User user = getInfo();
-        if(user == null){
+        if (user == null) {
             throw new CrmebException("用户信息不存在！");
         }
 
-        if(!user.getStatus()){
+        if (!user.getStatus()) {
             throw new CrmebException("用户已经被禁用！");
         }
         return user;
     }
 
-    @Override
-    public User getInfoEmpty() {
-        User user = getInfo();
-        if(user == null){
-            user = new User();
-        }
-
-//        if(!user.getStatus()){
-//            throw new CrmebException("用户已经被禁用！");
-//        }
-        return user;
-    }
-
     /**
      * 获取当前用户id
+     *
+     * @return Integer
      * @author Mr.Zhang
      * @since 2020-04-28
-     * @return Integer
      */
     @Override
     public Integer getUserIdException() {
@@ -767,14 +766,15 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 获取当前用户id
+     *
+     * @return Integer
      * @author Mr.Zhang
      * @since 2020-04-28
-     * @return Integer
      */
     @Override
     public Integer getUserId() {
         Object id = tokenManager.getLocalInfo("id");
-        if(null == id){
+        if (null == id) {
             return 0;
         }
         return Integer.parseInt(id.toString());
@@ -782,16 +782,17 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 按开始结束时间查询新增用户数量
+     *
      * @param date String 时间范围
+     * @return HashMap<String, Object>
      * @author Mr.Zhang
      * @since 2020-05-16
-     * @return HashMap<String, Object>
      */
     @Override
     public Integer getAddUserCountByDate(String date) {
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
 
-        if(StringUtils.isNotBlank(date)){
+        if (StringUtils.isNotBlank(date)) {
             dateLimitUtilVo dateLimit = DateUtil.getDateLimit(date);
             lambdaQueryWrapper.between(User::getCreateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
         }
@@ -800,6 +801,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 按开始结束时间查询每日新增用户数量
+     *
      * @param date String 时间范围
      * @return HashMap<String, Object>
      */
@@ -808,13 +810,13 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         Map<Object, Object> map = new HashMap<>();
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("count(uid) as uid", "left(create_time, 10) as create_time");
-        if(StringUtils.isNotBlank(date)){
+        if (StringUtils.isNotBlank(date)) {
             dateLimitUtilVo dateLimit = DateUtil.getDateLimit(date);
             queryWrapper.between("create_time", dateLimit.getStartTime(), dateLimit.getEndTime());
         }
         queryWrapper.groupBy("left(create_time, 10)").orderByAsc("create_time");
         List<User> list = userDao.selectList(queryWrapper);
-        if(list.size() < 1){
+        if (list.size() < 1) {
             return map;
         }
 
@@ -826,9 +828,10 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 绑定手机号
+     *
+     * @return boolean
      * @author Mr.Zhang
      * @since 2020-04-28
-     * @return boolean
      */
     @Override
     public boolean bind(UserBindingRequest request) {
@@ -840,7 +843,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
         //检测当前手机号是否已经是账号
         User user = getUserByAccount(request.getPhone());
-        if(null != user){
+        if (null != user) {
             throw new CrmebException("此手机号码已被注册");
         }
 
@@ -854,9 +857,10 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 用户中心
+     *
+     * @return UserCenterResponse
      * @author Mr.Zhang
      * @since 2020-04-28
-     * @return UserCenterResponse
      */
     @Override
     public UserCenterResponse getUserCenter() {
@@ -873,22 +877,25 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         userCenterOrderStatusNumResponse.setNoTake(0);
         userCenterResponse.setOrderStatusNum(userCenterOrderStatusNumResponse);
         PageParamRequest pageParamRequest = new PageParamRequest();
-        pageParamRequest.setPage(1); pageParamRequest.setLimit(999);
+        pageParamRequest.setPage(1);
+        pageParamRequest.setLimit(999);
         List<StoreCouponUserResponse> storeCoupons = storeCouponUserService.getListFront(getUserIdException(), pageParamRequest);
-        userCenterResponse.setCouponCount(null != storeCoupons ? storeCoupons.size():0);
+        userCenterResponse.setCouponCount(null != storeCoupons ? storeCoupons.size() : 0);
         userCenterResponse.setLevel(currentUser.getLevel());
 
         // 判断是否开启会员功能
         Integer memberFuncStatus = Integer.valueOf(systemConfigService.getValueByKey("vip_open"));
-        if(memberFuncStatus == 0){
+        if (memberFuncStatus == 0) {
             userCenterResponse.setVip(false);
-        }else{
+        } else {
             userCenterResponse.setVip(userCenterResponse.getLevel() > 0);
             UserLevel userLevel = userLevelService.getUserLevelByUserId(currentUser.getUid());
-            if(null != userLevel){
+            if (null != userLevel) {
                 SystemUserLevel systemUserLevel = systemUserLevelService.getByLevelId(userLevel.getLevelId());
                 userCenterResponse.setVipIcon(systemUserLevel.getIcon());
                 userCenterResponse.setVipName(systemUserLevel.getName());
+            } else {
+                userCenterResponse.setVip(false);
             }
         }
         String rechargeSwitch = systemConfigService.getValueByKey("recharge_switch");
@@ -911,9 +918,10 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 根据用户id获取用户列表 map模式
+     *
+     * @return HashMap<Integer, User>
      * @author Mr.Zhang
      * @since 2020-04-28
-     * @return HashMap<Integer, User>
      */
     @Override
     public HashMap<Integer, User> getMapListInUid(List<Integer> uidList) {
@@ -923,18 +931,19 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 根据用户id获取用户列表 map模式
+     *
+     * @return HashMap<Integer, User>
      * @author Mr.Zhang
      * @since 2020-04-28
-     * @return HashMap<Integer, User>
      */
     @Override
     public HashMap<Integer, User> getMapByList(List<User> list) {
         HashMap<Integer, User> map = new HashMap<>();
-        if(null == list || list.size() < 1){
+        if (null == list || list.size() < 1) {
             return map;
         }
 
-        for (User user: list) {
+        for (User user : list) {
             map.put(user.getUid(), user);
         }
 
@@ -943,6 +952,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 重置连续签到天数
+     *
      * @param userId Integer 用户id
      * @author Mr.Zhang
      * @since 2020-04-28
@@ -956,23 +966,9 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     }
 
     /**
-     * 推广数据接口(昨天的佣金 累计提现金额 当前佣金)
-     * @author Mr.Zhang
-     * @since 2020-06-08
-     */
-    @Override
-    public UserCommissionResponse getCommission() {
-        UserCommissionResponse userCommissionResponse = new UserCommissionResponse();
-        //昨天的佣金
-        userCommissionResponse.setLastDayCount(userBillService.getSumBigDecimal(0, getUserId(), Constants.USER_BILL_CATEGORY_MONEY, Constants.SEARCH_DATE_YESTERDAY, null));
-        userCommissionResponse.setExtractCount(userBillService.getSumBigDecimal(0, getUserId(), Constants.USER_BILL_CATEGORY_MONEY, null, Constants.USER_BILL_TYPE_EXTRACT));
-        userCommissionResponse.setCommissionCount(getInfo().getBrokeragePrice());
-        return userCommissionResponse;
-    }
-
-    /**
      * 会员标签
-     * @param id String id
+     *
+     * @param id         String id
      * @param tagIdValue Integer 标签Id
      * @author Mr.Zhang
      * @since 2020-04-28
@@ -987,7 +983,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         idList = idList.stream().distinct().collect(Collectors.toList());
         List<User> list = getListInUid(idList);
         if (CollUtil.isEmpty(list)) throw new CrmebException("没有找到用户信息");
-        if(list.size() < 1){
+        if (list.size() < 1) {
             throw new CrmebException("没有找到用户信息");
         }
         for (User user : list) {
@@ -998,10 +994,11 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 根据用户id获取自己本身的推广用户
+     *
      * @param userIdList List<Integer> 用户id集合
+     * @return List<User>
      * @author Mr.Zhang
      * @since 2020-05-18
-     * @return List<User>
      */
     @Override
     public List<Integer> getSpreadPeopleIdList(List<Integer> userIdList) {
@@ -1010,7 +1007,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         lambdaQueryWrapper.in(User::getSpreadUid, userIdList); //xx的下线集合
         List<User> list = userDao.selectList(lambdaQueryWrapper);
 
-        if(null == list || list.size() < 1){
+        if (null == list || list.size() < 1) {
             return new ArrayList<>();
         }
         return list.stream().map(User::getUid).distinct().collect(Collectors.toList());
@@ -1018,27 +1015,28 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 根据用户id获取自己本身的推广用户
+     *
+     * @return List<User>
      * @author Mr.Zhang
      * @since 2020-05-18
-     * @return List<User>
      */
     @Override
-   public List<UserSpreadPeopleItemResponse> getSpreadPeopleList(
+    public List<UserSpreadPeopleItemResponse> getSpreadPeopleList(
             List<Integer> userIdList, String keywords, String sortKey, String isAsc, PageParamRequest pageParamRequest) {
 
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
 
         Map<String, Object> map = new HashMap<>();
         map.put("userIdList", userIdList.stream().map(String::valueOf).distinct().collect(Collectors.joining(",")));
-        if(StringUtils.isNotBlank(keywords)){
-            map.put("keywords", "%"+keywords+"%");
+        if (StringUtils.isNotBlank(keywords)) {
+            map.put("keywords", "%" + keywords + "%");
         }
         map.put("sortKey", "create_time");
-        if(StringUtils.isNotBlank(sortKey)){
+        if (StringUtils.isNotBlank(sortKey)) {
             map.put("sortKey", sortKey);
         }
         map.put("sortValue", Constants.SORT_DESC);
-        if(isAsc.toLowerCase().equals(Constants.SORT_ASC)){
+        if (isAsc.toLowerCase().equals(Constants.SORT_ASC)) {
             map.put("sortValue", Constants.SORT_ASC);
         }
 
@@ -1046,9 +1044,9 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     }
 
 
-
     /**
      * 登录用户生成token
+     *
      * @author Mr.Zhang
      * @since 2020-04-29
      */
@@ -1060,19 +1058,20 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 新增一个用户
+     *
      * @param request RegisterRequest 注册信息
-     * @param ip String ip
+     * @param ip      String ip
+     * @return User
      * @author Mr.Zhang
      * @since 2020-04-29
-     * @return User
      */
     private User saveUser(RegisterRequest request, String ip) {
         //检测推广人信息
         User user = new User();
-        if(request.getSpread() != null && request.getSpread() > 0){
+        if (request.getSpread() != null && request.getSpread() > 0) {
 
             User spread = getById(request.getSpread());
-            if(spread != null){
+            if (spread != null) {
                 user.setSpreadUid(request.getSpread());
                 user.setSpreadTime(DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
             }
@@ -1094,34 +1093,36 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         save(user);
 
         // 添加推广关系
-        if(null != request.getSpread() && request.getSpread() > 0){
-            spread(user.getUid(),request.getSpread());
+        if (null != request.getSpread() && request.getSpread() > 0) {
+            spread(user.getUid(), request.getSpread());
         }
         return user;
     }
 
     /**
      * 检测手机验证码
+     *
      * @author Mr.Zhang
      * @since 2020-04-29
      */
     private void checkValidateCode(String phone, String value) {
         Object validateCode = redisUtil.get(getValidateCodeRedisKey(phone));
-        if(validateCode == null){
+        if (validateCode == null) {
             throw new CrmebException("验证码已过期");
         }
 
-        if(!validateCode.toString().equals(value)){
+        if (!validateCode.toString().equals(value)) {
             throw new CrmebException("验证码错误");
         }
     }
 
     /**
      * 检测手机验证码
+     *
      * @param phone String 手机号
+     * @return String
      * @author Mr.Zhang
      * @since 2020-04-29
-     * @return String
      */
     @Override
     public String getValidateCodeRedisKey(String phone) {
@@ -1130,6 +1131,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 通过账号获取用户信息
+     *
      * @author Mr.Zhang
      * @since 2020-04-29
      */
@@ -1141,16 +1143,17 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 手机号注册用户
-     * @param phone 手机号
+     *
+     * @param phone     手机号
      * @param spreadUid 推广人编号
-     * @param clientIp id
+     * @param clientIp  id
      * @return
      */
     @Override
     public User registerPhone(String phone, Integer spreadUid, String clientIp) {
         User user = new User();
         user.setAccount(phone);
-        String password =  "Abc" + CrmebUtil.randomCount(10000, 99999);
+        String password = "Abc" + CrmebUtil.randomCount(10000, 99999);
         user.setPwd(CrmebUtil.encryptPassword(password, phone));
         user.setPhone(phone);
         user.setUserType(Constants.USER_LOGIN_TYPE_H5);
@@ -1175,9 +1178,15 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         List<StoreCoupon> couponList = storeCouponService.findRegisterList();
         if (CollUtil.isNotEmpty(couponList)) {
             couponList.forEach(storeCoupon -> {
+                //是否有固定的使用时间
+                if (!storeCoupon.getIsFixedTime()) {
+                    String endTime = DateUtil.addDay(DateUtil.nowDate(Constants.DATE_FORMAT), storeCoupon.getDay(), Constants.DATE_FORMAT);
+                    storeCoupon.setUseEndTime(DateUtil.strToDate(endTime, Constants.DATE_FORMAT));
+                    storeCoupon.setUseStartTime(DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
+                }
+
                 StoreCouponUser storeCouponUser = new StoreCouponUser();
                 storeCouponUser.setCouponId(storeCoupon.getId());
-//                storeCouponUser.setUid(userId);
                 storeCouponUser.setName(storeCoupon.getName());
                 storeCouponUser.setMoney(storeCoupon.getMoney());
                 storeCouponUser.setMinPrice(storeCoupon.getMinPrice());
@@ -1195,7 +1204,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         Boolean execute = transactionTemplate.execute(e -> {
             save(user);
             if (check) {
-                updateSpreadCountByUid(spreadUid);
+                updateSpreadCountByUid(spreadUid, "add");
             }
             return Boolean.TRUE;
         });
@@ -1218,21 +1227,28 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 更新推广员推广数
+     *
      * @param uid uid
+     * @param type add or sub
      */
-    public Boolean updateSpreadCountByUid(Integer uid) {
+    public Boolean updateSpreadCountByUid(Integer uid, String type) {
         UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.setSql("spread_count = spread_count + 1");
+        if (type.equals("add")) {
+            updateWrapper.setSql("spread_count = spread_count + 1");
+        } else {
+            updateWrapper.setSql("spread_count = spread_count - 1");
+        }
         updateWrapper.eq("uid", uid);
         return update(updateWrapper);
     }
 
     /**
      * 添加/扣减佣金
-     * @param uid 用户id
-     * @param price 金额
+     *
+     * @param uid            用户id
+     * @param price          金额
      * @param brokeragePrice 历史金额
-     * @param type 类型：add—添加，sub—扣减
+     * @param type           类型：add—添加，sub—扣减
      * @return Boolean
      */
     @Override
@@ -1251,10 +1267,11 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 添加/扣减余额
-     * @param uid 用户id
-     * @param price 金额
+     *
+     * @param uid      用户id
+     * @param price    金额
      * @param nowMoney 历史金额
-     * @param type 类型：add—添加，sub—扣减
+     * @param type     类型：add—添加，sub—扣减
      */
     @Override
     public Boolean operationNowMoney(Integer uid, BigDecimal price, BigDecimal nowMoney, String type) {
@@ -1272,10 +1289,11 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 添加/扣减积分
-     * @param uid 用户id
-     * @param integral 积分
+     *
+     * @param uid         用户id
+     * @param integral    积分
      * @param nowIntegral 历史积分
-     * @param type 类型：add—添加，sub—扣减
+     * @param type        类型：add—添加，sub—扣减
      * @return Boolean
      */
     @Override
@@ -1294,10 +1312,11 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * PC后台分销员列表
+     *
      * @param storeBrokerageStatus 分销模式 1-指定分销，2-人人分销
-     * @param keywords 搜索参数
-     * @param dateLimit 时间参数
-     * @param pageRequest 分页参数
+     * @param keywords             搜索参数
+     * @param dateLimit            时间参数
+     * @param pageRequest          分页参数
      * @return PageInfo
      */
     @Override
@@ -1309,11 +1328,6 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         if (storeBrokerageStatus.equals("1")) {
             lqw.eq(User::getIsPromoter, true);
         }
-        // 后台分销员列表不根据时间判断
-//        if (StrUtil.isNotBlank(dateLimit)) {
-//            dateLimitUtilVo dateLimitUtilVo = DateUtil.getDateLimit(dateLimit);
-//            lqw.between(User::getCreateTime, dateLimitUtilVo.getStartTime(), dateLimitUtilVo.getEndTime());
-//        }
         lqw.apply("1 = 1");
         if (StrUtil.isNotBlank(keywords)) {
             lqw.and(i -> i.eq(User::getUid, keywords) //用户账号
@@ -1326,27 +1340,11 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     }
 
     /**
-     * 推广用户数
-     * @param uid 用户id
-     * @param dateLimit 时间参数
-     * @return Integer
-     */
-    @Override
-    public Integer getSpreadNumberByUidAndDateLimit(Integer uid, String dateLimit) {
-        LambdaQueryWrapper<User> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(User::getUid, uid);
-        if (StrUtil.isNotBlank(dateLimit)) {
-            dateLimitUtilVo dateVo = DateUtil.getDateLimit(dateLimit);
-            lqw.between(User::getSpreadTime, dateVo.getStartTime(), dateVo.getEndTime());
-        }
-        return userDao.selectCount(lqw);
-    }
-
-    /**
      * 检测能否绑定关系
-     * @param user 当前用户
+     *
+     * @param user      当前用户
      * @param spreadUid 推广员Uid
-     * @param type 用户类型:new-新用户，old—老用户
+     * @param type      用户类型:new-新用户，old—老用户
      * @return Boolean
      * 1.判断分销功能是否启用
      * 2.判断分销模式
@@ -1359,14 +1357,17 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             return false;
         }
         // 判断分销功能是否启用
-        String isOpen = systemConfigService.getValueByKey(Constants.CONFIG_KEY_DISTRIBUTION_TYPE);
+        String isOpen = systemConfigService.getValueByKey(Constants.CONFIG_KEY_STORE_BROKERAGE_IS_OPEN);
         if (StrUtil.isBlank(isOpen) || isOpen.equals("0")) {
             return false;
         }
         if (type.equals("old")) {
             // 判断分销关系绑定类型（所有、新用户）
-            String bindType = systemConfigService.getValueByKey(Constants.CONFIG_KEY_STORE_BROKERAGE_BIND_TYPE);
+            String bindType = systemConfigService.getValueByKey(Constants.CONFIG_KEY_DISTRIBUTION_TYPE);
             if (StrUtil.isBlank(bindType) || bindType.equals("1")) {
+                return false;
+            }
+            if (user.getSpreadUid().equals(spreadUid)) {
                 return false;
             }
         }
@@ -1389,14 +1390,15 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 日志title
+     *
+     * @return String
      * @author Mr.Zhang
      * @since 2020-04-10
-     * @return String
      */
     private String getTitle(UserOperateFundsRequest request) {
         String operate = (request.getType() == 1) ? "增加" : "减少";
         String founds = "";
-        switch (request.getFoundsCategory()){
+        switch (request.getFoundsCategory()) {
             case Constants.USER_BILL_CATEGORY_INTEGRAL:
                 founds = "积分";
                 break;
@@ -1417,6 +1419,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 资金操作日志增加
+     *
      * @author Mr.Zhang
      * @since 2020-04-10
      */
@@ -1436,14 +1439,15 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 操作资金
+     *
      * @author Mr.Zhang
      * @since 2020-04-10
      */
     private String getFounds(UserOperateFundsRequest request) {
-        if(request.getType() == 1){
+        if (request.getType() == 1) {
             return " +" + request.getValue();
         }
-        if(request.getType() == 0){
+        if (request.getType() == 0) {
             checkFounds(request);
             return " -" + request.getValue();
         }
@@ -1453,17 +1457,18 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 操作资金
+     *
      * @author Mr.Zhang
      * @since 2020-04-10
      */
     private void checkFounds(UserOperateFundsRequest request) {
         BigDecimal value = getUserBalance(request);
-        if(value == null){
+        if (value == null) {
             throw new CrmebException("请选择正确的操作类型");
         }
 
         int result = value.subtract(request.getValue()).compareTo(BigDecimal.ZERO);
-        if(result < 0){
+        if (result < 0) {
             if (request.getFoundsCategory().equals("integral")) {
                 throw new CrmebException("此用户当前积分为 " + value + "， 需要减少的积分不能大于 " + value);
             }
@@ -1473,6 +1478,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 获取用户资金
+     *
      * @author Mr.Zhang
      * @since 2020-04-10
      */
@@ -1481,19 +1487,19 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         User user = getById(request.getUid());
 
         BigDecimal value = null;
-        if(request.getFoundsCategory().equals(Constants.USER_BILL_CATEGORY_INTEGRAL)){
+        if (request.getFoundsCategory().equals(Constants.USER_BILL_CATEGORY_INTEGRAL)) {
             value = new BigDecimal(user.getIntegral());
         }
 
-        if(request.getFoundsCategory().equals(Constants.USER_BILL_CATEGORY_MONEY)){
+        if (request.getFoundsCategory().equals(Constants.USER_BILL_CATEGORY_MONEY)) {
             value = user.getNowMoney();
         }
 
-        if(request.getFoundsCategory().equals(Constants.USER_BILL_CATEGORY_EXPERIENCE)){
+        if (request.getFoundsCategory().equals(Constants.USER_BILL_CATEGORY_EXPERIENCE)) {
             value = new BigDecimal(user.getExperience());
         }
 
-        if(request.getFoundsCategory().equals(Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE)){
+        if (request.getFoundsCategory().equals(Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE)) {
             value = user.getBrokeragePrice();
         }
 
@@ -1503,18 +1509,19 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 获取用户好友关系，spread_uid往下两级的用户信息
+     *
      * @return
      */
-    private List<User> getUserRelation(Integer userId){
+    private List<User> getUserRelation(Integer userId) {
         List<User> userList = new ArrayList<>();
         User currUser = userDao.selectById(userId);
-        if(currUser.getSpreadUid() > 0){
+        if (currUser.getSpreadUid() > 0) {
             User spUser1 = userDao.selectById(currUser.getSpreadUid());
-            if(null != spUser1){
+            if (null != spUser1) {
                 userList.add(spUser1);
-                if(spUser1.getSpreadUid() > 0){
+                if (spUser1.getSpreadUid() > 0) {
                     User spUser2 = userDao.selectById(spUser1.getSpreadUid());
-                    if(null != spUser2){
+                    if (null != spUser2) {
                         userList.add(spUser2);
                     }
                 }
@@ -1525,41 +1532,37 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 根据条件获取会员对应信息列表
+     *
      * @param userId
-     * @param type 0=消费记录，1=积分明细，2=签到记录，3=持有优惠券，4=余额变动，5=好友关系
+     * @param type             0=消费记录，1=积分明细，2=签到记录，3=持有优惠券，4=余额变动，5=好友关系
      * @param pageParamRequest
      * @return
      */
     @Override
     public Object getInfoByCondition(Integer userId, Integer type, PageParamRequest pageParamRequest) {
-        switch (type){
+        switch (type) {
             case 0:
                 StoreOrderSearchRequest sor = new StoreOrderSearchRequest();
                 sor.setUid(userId);
                 return storeOrderService.findPaidListByUid(userId, pageParamRequest);
-//                return storeOrderService.getList(sor, pageParamRequest);
             case 1:
                 FundsMonitorSearchRequest fmsq = new FundsMonitorSearchRequest();
                 fmsq.setUid(userId);
                 fmsq.setCategory(Constants.USER_BILL_CATEGORY_INTEGRAL);
-                return userBillService.getList(fmsq,pageParamRequest);
+                return userBillService.getList(fmsq, pageParamRequest);
             case 2:
                 UserSign userSign = new UserSign();
                 userSign.setUid(userId);
-                return userSignService.getListByCondition(userSign,pageParamRequest);
+                return userSignService.getListByCondition(userSign, pageParamRequest);
             case 3:
                 StoreCouponUserSearchRequest scur = new StoreCouponUserSearchRequest();
                 scur.setUid(userId);
-                PageInfo<StoreCouponUserResponse> pageInfo = storeCouponUserService.getList(scur,pageParamRequest);
-                if(null == pageInfo.getList() || pageInfo.getList().size() < 1){
-                    return new ArrayList<>();
-                }
-                return pageInfo.getList();
+                return storeCouponUserService.findListByUid(userId, pageParamRequest);
             case 4:
                 FundsMonitorSearchRequest fmsqq = new FundsMonitorSearchRequest();
                 fmsqq.setUid(userId);
                 fmsqq.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
-                return userBillService.getList(fmsqq,pageParamRequest);
+                return userBillService.getList(fmsqq, pageParamRequest);
             case 5:
                 return getUserRelation(userId);
         }
@@ -1569,6 +1572,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 会员详情顶部数据
+     *
      * @param userId Integer 用户id
      * @return Object
      */
@@ -1588,6 +1592,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 通过微信信息注册用户
+     *
      * @param thirdUserRequest RegisterThirdUser 三方用户登录注册信息
      * @return User
      */
@@ -1616,51 +1621,40 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         return user;
     }
 
-     /**
-      * 根据用户id集合获取对应用户集合
-      * @param userIds 用户id集合
-      * @return 用户集合
-     */
-    @Override
-    public List<User> getSpreadPeopleList(List<Integer> userIds) {
-        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.in(User::getUid, userIds);
-        List<User> userList = userDao.selectList(lambdaQueryWrapper);
-        return userList;
-    }
-
     /**
      * 添加推广关系
+     *
      * @param currentUserId 当前用户id 被推广人
-     * @param spreadUserId 推广人id
+     * @param spreadUserId  推广人id
      * @return 添加推广关系是否成功
      */
     @Override
     public boolean spread(Integer currentUserId, Integer spreadUserId) {
         // 检查用户是否存在
         User currentUser = userDao.selectById(currentUserId);
-        if(null == currentUser) throw new CrmebException("用户id:"+currentUserId+"不存在");
+        if (null == currentUser) throw new CrmebException("用户id:" + currentUserId + "不存在");
         User spreadUser = userDao.selectById(spreadUserId);
-        if(null == spreadUser) throw new CrmebException("用户id:"+spreadUserId+"不存在");
+        if (null == spreadUser) throw new CrmebException("用户id:" + spreadUserId + "不存在");
         // 检查是否是推广员
-        if(!spreadUser.getIsPromoter()) throw new CrmebException("用户id:"+spreadUserId+"不是推广员身份");
+        if (!spreadUser.getIsPromoter()) throw new CrmebException("用户id:" + spreadUserId + "不是推广员身份");
         // 检查是否已经有推广关系
         LambdaQueryWrapper<User> lmq = new LambdaQueryWrapper<>();
-        lmq.like(User::getPath,spreadUserId);
+        lmq.like(User::getPath, spreadUserId);
         lmq.eq(User::getUid, currentUserId);
         List<User> spreadUsers = userDao.selectList(lmq);
-        if(spreadUsers.size() > 0){
+        if (spreadUsers.size() > 0) {
             throw new CrmebException("推广关系已经存在");
         }
-        currentUser.setPath(currentUser.getPath()+spreadUser.getUid()+"/");
+        currentUser.setPath(currentUser.getPath() + spreadUser.getUid() + "/");
         currentUser.setSpreadUid(spreadUserId);
         currentUser.setSpreadTime(new Date());
-        currentUser.setSpreadCount(currentUser.getSpreadCount()+1);
+        currentUser.setSpreadCount(currentUser.getSpreadCount() + 1);
         return userDao.updateById(currentUser) >= 0;
     }
 
     /**
      * 根据推广级别和其他参数当前用户下的推广列表
+     *
      * @param request 推广列表参数
      * @return 当前用户的推广人列表
      */
@@ -1685,10 +1679,6 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             queryWrapper.and(e -> e.like(User::getNickname, request.getNickName()).or().eq(User::getUid, request.getNickName())
                     .or().eq(User::getPhone, request.getNickName()));
         }
-//        if (StrUtil.isNotBlank(request.getDateLimit())) {
-//            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
-//            queryWrapper.between(User::getCreateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
-//        }
         List<User> userList = userDao.selectList(queryWrapper);
         return CommonPage.copyPageInfo(userPage, userList);
     }
@@ -1743,15 +1733,12 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 根据推广级别和其他参数获取推广列表
+     *
      * @param request 推广层级和推广时间参数
      * @return 推广订单列表
      */
     @Override
     public PageInfo<StoreOrder> getOrderListBySpreadLevel(RetailShopStairUserRequest request, PageParamRequest pageParamRequest) {
-//        List<User> users = getUsersBySpreadLevel(request);
-//        if(users.size() == 0){
-//            return new PageInfo<>();
-//        }
         // 获取推广人列表
         if (ObjectUtil.isNull(request.getType())) {
             request.setType(0);
@@ -1764,14 +1751,12 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         List<Integer> userIds = userList.stream().map(User::getUid).distinct().collect(Collectors.toList());
 
         return storeOrderService.findListByUserIdsForRetailShop(userIds, request, pageParamRequest);
-
-//        Page<StoreOrder> storeOrderPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-//        return CommonPage.copyPageInfo(storeOrderPage, storeOrderService.getOrderByUserIdsForRetailShop(userIds));
     }
 
     /**
      * 获取推广人列表
-     * @param spreadUid  父Uid
+     *
+     * @param spreadUid 父Uid
      * @param type      类型 0 = 全部 1=一级推广人 2=二级推广人
      */
     private List<User> getSpreadListBySpreadIdAndType(Integer spreadUid, Integer type) {
@@ -1798,7 +1783,8 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 获取推广人列表
-     * @param spreadUid  父Uid
+     *
+     * @param spreadUid 父Uid
      */
     private List<User> getSpreadListBySpreadId(Integer spreadUid) {
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
@@ -1808,94 +1794,49 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 根据用户id清除用户当前推广人
+     *
      * @param userId 当前推广人id
      * @return 清除推广结果
      */
     @Override
     public boolean clearSpread(Integer userId) {
+        User teamUser = getById(userId);
         User user = new User();
         user.setUid(userId);
         user.setPath("/0/");
         user.setSpreadUid(0);
         user.setSpreadTime(null);
-        return userDao.updateById(user) > 0;
-    }
-
-    /**
-     * 公用 根据其他参数和推广等级获取对象列表
-     * @param request 查询参数
-     * @return 用户列表
-     */
-    private List<User> getUsersBySpreadLevel(RetailShopStairUserRequest request) {
-        LambdaQueryWrapper<User> lqw = new LambdaQueryWrapper<>();
-//        lqw.eq(User::getUid,request.getUid());
-//        lqw.like(User::getPath, request.getUid());
-        lqw.eq(User::getSpreadUid, request.getUid());
-        if(StringUtils.isNotBlank(request.getDateLimit())){
-            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
-            lqw.between(User::getCreateTime,dateLimit.getStartTime(),dateLimit.getEndTime());
-        }
-        if(StringUtils.isNotBlank(request.getNickName())){
-            lqw.like(User::getNickname, request.getNickName())
-                    .or().eq(User::getPhone, request.getNickName());
-        }
-        String type ;
-        if(null == request.getType()){
-            type = ">= 3";
-        }else {
-            type = request.getType() == 1 ? "= 3":"= 4";
-        }
-        // path长度 减去 将/字符替换掉的长度 = 等级 2=没有 3=一级推广人 4= 二级推广人
-        lqw.last("and (LENGTH(path) - LENGTH(REPLACE(path,'/','')))" + type);
-        return userDao.selectList(lqw);
-    }
-
-    /**
-     * 根据条件是否升级为推广人
-     * @param current 当前用户
-     * @return 是否推广人
-     */
-    @Override
-    public User updateForPromoter(User current) {
-        if(current.getIsPromoter()){
-            return current;
-        }
-        LambdaQueryWrapper<StoreOrder> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(StoreOrder::getPaid, 1);
-        lqw.eq(StoreOrder::getRefundStatus, 0);
-        lqw.eq(StoreOrder::getUid, current.getUid());
-        List<StoreOrder> orders = storeOrderService.list(lqw);
-        BigDecimal price = orders.stream().map(e->e.getPayPrice()).reduce(BigDecimal.ZERO, BigDecimal::add);
-        // 判断是否能成为推广人
-        boolean isPromoter = checkIsPromoter(price);
-        if(isPromoter) {
-            current.setIsPromoter(true);
-            int updateCount = userDao.updateById(current);
-            if(updateCount <= 0) throw new CrmebException("升级推广人时 更新用户信息出错");
-            return current;
-        }
-        return current;
+        Boolean execute = transactionTemplate.execute(e -> {
+            userDao.updateById(user);
+            if (teamUser.getSpreadUid() > 0) {
+                updateSpreadCountByUid(teamUser.getSpreadUid(), "sub");
+            }
+            return Boolean.TRUE;
+        });
+        return execute;
     }
 
     /**
      * 推荐人反拥条件是否成立
+     *
      * @param price 当前价格
      * @return 是否可反拥
      */
     @Override
     public boolean checkIsPromoter(BigDecimal price) {
         String brokerageStatus = systemConfigService.getValueByKey(Constants.CONFIG_KEY_STORE_BROKERAGE_IS_OPEN);
-        if(brokerageStatus.equals("1")){
+        if (brokerageStatus.equals("1")) {
             return false;
-        }else{
-            BigDecimal  brokeragePrice = BigDecimal.valueOf(Integer.parseInt(systemConfigService.getValueByKey("store_brokerage_price")));
+        } else {
+            BigDecimal brokeragePrice = BigDecimal.valueOf(Integer.parseInt(systemConfigService.getValueByKey("store_brokerage_price")));
             return price.compareTo(brokeragePrice) == 1;
         }
     }
 
     /**
      * 推广人排行
-     * @param type String 类型
+     *
+     * @param type             String 类型
      * @param pageParamRequest PageParamRequest 分页
      * @return List<User>
      */
@@ -1906,18 +1847,18 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         queryWrapper.select("count(spread_count) as spread_count, spread_uid")
                 .gt("spread_uid", 0)
                 .eq("status", true);
-        if(StrUtil.isNotBlank(type)){
+        if (StrUtil.isNotBlank(type)) {
             dateLimitUtilVo dateLimit = DateUtil.getDateLimit(type);
             queryWrapper.between("create_time", dateLimit.getStartTime(), dateLimit.getEndTime());
         }
         queryWrapper.groupBy("spread_uid").orderByDesc("spread_count");
         List<User> spreadVoList = userDao.selectList(queryWrapper);
-        if(spreadVoList.size() < 1){
+        if (spreadVoList.size() < 1) {
             return null;
         }
 
         List<Integer> spreadIdList = spreadVoList.stream().map(User::getSpreadUid).collect(Collectors.toList());
-        if(spreadIdList.size() < 1){
+        if (spreadIdList.size() < 1) {
             return null;
         }
 
@@ -1926,15 +1867,15 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         HashMap<Integer, User> userVoList = getMapListInUid(spreadIdList);
 
         //解决排序问题
-        for (User spreadVo: spreadVoList) {
+        for (User spreadVo : spreadVoList) {
             User user = new User();
             User userVo = userVoList.get(spreadVo.getSpreadUid());
             user.setUid(spreadVo.getSpreadUid());
             user.setAvatar(userVo.getAvatar());
             user.setSpreadCount(spreadVo.getSpreadCount());
-            if(StringUtils.isBlank(userVo.getNickname())){
+            if (StringUtils.isBlank(userVo.getNickname())) {
                 user.setNickname(userVo.getPhone().substring(0, 2) + "****" + userVo.getPhone().substring(7));
-            }else{
+            } else {
                 user.setNickname(userVo.getNickname());
             }
 
@@ -1946,6 +1887,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 推广人排行
+     *
      * @param minPayCount int 最小消费次数
      * @param maxPayCount int 最大消费次数
      * @return Integer
@@ -1957,16 +1899,10 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         return userDao.selectCount(lambdaQueryWrapper);
     }
 
-    @Override
-    public List<User> getUserByEntity(User user) {
-        LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        lambdaUpdateWrapper.setEntity(user);
-        return userDao.selectList(lambdaUpdateWrapper);
-    }
-
     /**
      * 消费金钱之后增加经验和积分
-     * @param uid Integer 用户id
+     *
+     * @param uid   Integer 用户id
      * @param price BigDecimal 实际支付金额
      * @return void
      */
@@ -1999,29 +1935,35 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 绑定分销关系
-     * @param user User 用户user类
+     *
+     * @param user      User 用户user类
      * @param spreadUid Integer 推广人id
      * @return void
      */
     @Override
     public void bindSpread(User user, Integer spreadUid) {
-        //新用户会在注册的时候单独绑定，此处只处理登录用户
-        if(null == spreadUid || spreadUid == 0){
-            return;
-        }
-        //如果当前用户没有绑定，并且后台配置人人分销，那么需要绑定
-        if(user.getSpreadUid() > 0){
-            return;
-        }
-
-        String distribution = systemConfigService.getValueByKey(Constants.CONFIG_KEY_DISTRIBUTION_TYPE);
-
-        //人人分销 + 当前已绑定的id和推广人id不一样
-        if(StringUtils.isNotBlank(distribution) && distribution.equals("0") && !user.getSpreadUid().equals(spreadUid)){
-            user.setSpreadUid(spreadUid);
-            user.setSpreadTime(DateUtil.nowDateTime());
-        }
-        updateById(user);
+        userUtil.bindSpread(user,spreadUid);
+//        log.info("绑定推广用户:"+JSON.toJSONString(user));
+//        log.info("推广人id:"+spreadUid);
+//        //新用户会在注册的时候单独绑定，此处只处理登录用户
+//        if (null == spreadUid || spreadUid == 0) {
+//            return;
+//        }
+//        //如果当前用户没有绑定，并且后台配置人人分销，那么需要绑定
+//        if (user.getSpreadUid() > 0) {
+//            log.info("已经存在推广人:"+user.getSpreadUid());
+//            return;
+//        }
+//
+//        String distribution = systemConfigService.getValueByKey(Constants.CONFIG_KEY_DISTRIBUTION_TYPE);
+//
+//        //人人分销 + 当前已绑定的id和推广人id不一样
+//        if (StringUtils.isNotBlank(distribution) && distribution.equals("0") && !user.getSpreadUid().equals(spreadUid)) {
+//            user.setSpreadUid(spreadUid);
+//            user.setSpreadTime(DateUtil.nowDateTime());
+//        }
+//        updateById(user);
+//        log.info("绑定分销员成功"+JSON.toJSONString(user));
     }
 
     @Override
@@ -2033,23 +1975,8 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     }
 
     /**
-     * 获取用户佣金总金额
-     * @return
-     */
-    @Override
-    public BigDecimal getUnCommissionPrice() {
-        LambdaQueryWrapper<User> lq = Wrappers.lambdaQuery();
-        lq.select(User::getBrokeragePrice);
-        List<User> userList = userDao.selectList(lq);
-        double sum = 0;
-        if (CollUtil.isNotEmpty(userList)) {
-            sum = userList.stream().mapToDouble(e -> e.getBrokeragePrice().doubleValue()).sum();
-        }
-        return BigDecimal.valueOf(sum);
-    }
-
-    /**
      * 更新推广人
+     *
      * @param request
      * @return
      */
@@ -2067,6 +1994,8 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         if (user.getSpreadUid().equals(spreadUid)) {
             throw new CrmebException("当前推广人已经是所选人");
         }
+        Integer oldSprUid = user.getSpreadUid();
+
         User spreadUser = getById(spreadUid);
         if (ObjectUtil.isNull(spreadUser)) {
             throw new CrmebException("上级用户不存在");
@@ -2076,14 +2005,23 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         tempUser.setUid(userId);
         tempUser.setSpreadUid(spreadUid);
         tempUser.setSpreadTime(DateUtil.nowDateTime());
-        return updateById(tempUser);
+        Boolean execute = transactionTemplate.execute(e -> {
+            updateById(tempUser);
+            updateSpreadCountByUid(spreadUid, "add");
+            if (oldSprUid > 0) {
+                updateSpreadCountByUid(oldSprUid, "sub");
+            }
+            return Boolean.TRUE;
+        });
+        return execute;
     }
 
     /**
      * 更新用户积分
-     * @param user 用户
+     *
+     * @param user     用户
      * @param integral 积分
-     * @param type 增加add、扣减sub
+     * @param type     增加add、扣减sub
      * @return 更新后的用户对象
      */
     @Override
@@ -2103,8 +2041,9 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 获取分销人员列表
-     * @param keywords 搜索参数
-     * @param dateLimit 时间参数
+     *
+     * @param keywords             搜索参数
+     * @param dateLimit            时间参数
      * @param storeBrokerageStatus 分销状态：1-指定分销，2-人人分销
      * @return
      */
@@ -2129,6 +2068,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
     /**
      * 获取发展会员人数
+     *
      * @param ids       推广人id集合
      * @param dateLimit 时间参数
      * @return Integer
@@ -2152,30 +2092,13 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     @Override
     public void clearGroupByGroupId(String groupId) {
         LambdaUpdateWrapper<User> upw = Wrappers.lambdaUpdate();
-        upw.set(User::getGroupId,"").eq(User::getGroupId,groupId);
+        upw.set(User::getGroupId, "").eq(User::getGroupId, groupId);
         update(upw);
     }
 
     /**
-     * 清除 用户对应 tag
-     *
-     * @param tagIds tagIds
-     */
-    @Override
-    public void clearTagByTagId(String tagIds) {
-        LambdaQueryWrapper<User> lqw = Wrappers.lambdaQuery();
-        lqw.in(User::getTagId,tagIds);
-        List<User> users = userDao.selectList(lqw);
-        users.forEach(e-> {
-            LambdaUpdateWrapper<User> upw = Wrappers.lambdaUpdate();
-            upw.set(User::getGroupId,e.getTagId().replace(tagIds+",",""));
-            update(upw);
-        });
-
-    }
-
-    /**
      * 更新用户
+     *
      * @param userRequest 用户参数
      * @return Boolean
      */

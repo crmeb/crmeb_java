@@ -31,27 +31,6 @@ public class IndexInfoItemResponse implements Serializable {
 
     private static final long serialVersionUID=1L;
 
-    @ApiModelProperty(value = "快速选择简介")
-    private String fastInfo;
-
-    @ApiModelProperty(value = "精品推荐简介")
-    private String bastInfo;
-
-    @ApiModelProperty(value = "首发新品简介")
-    private String firstInfo;
-
-    @ApiModelProperty(value = "促销单品简介")
-    private String salesInfo;
-
-    @ApiModelProperty(value = "快速选择分类个数")
-    private String fastNumber;
-
-    @ApiModelProperty(value = "精品推荐个数")
-    private String bastNumber;
-
-    @ApiModelProperty(value = "首发新品个数")
-    private String firstNumber;
-
     @ApiModelProperty(value = "首页促销单品")
     private String promotionNumber;
 

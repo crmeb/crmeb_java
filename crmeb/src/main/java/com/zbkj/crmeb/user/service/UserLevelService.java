@@ -26,7 +26,6 @@ public interface UserLevelService extends IService<UserLevel> {
 
     boolean level(Integer userId, int levelId);
 
-
     /**
      * 根据用户id获取用户等级
      * @param userId 用户id

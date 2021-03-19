@@ -18,5 +18,6 @@ import com.zbkj.crmeb.store.request.StoreOrderRefundRequest;
  * +----------------------------------------------------------------------
  */
 public interface StoreOrderRefundService extends IService<StoreOrder> {
+
     void refund(StoreOrderRefundRequest request, StoreOrder storeOrder);
 }

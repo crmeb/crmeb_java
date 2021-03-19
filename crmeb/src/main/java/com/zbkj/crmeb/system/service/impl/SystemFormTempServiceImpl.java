@@ -1,21 +1,18 @@
 package com.zbkj.crmeb.system.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
-
 import com.utils.ValidateFormUtil;
-import com.zbkj.crmeb.system.model.SystemConfig;
-import com.zbkj.crmeb.system.model.SystemFormTemp;
 import com.zbkj.crmeb.system.dao.SystemFormTempDao;
+import com.zbkj.crmeb.system.model.SystemFormTemp;
 import com.zbkj.crmeb.system.request.SystemFormCheckRequest;
 import com.zbkj.crmeb.system.request.SystemFormItemCheckRequest;
 import com.zbkj.crmeb.system.request.SystemFormTempSearchRequest;
 import com.zbkj.crmeb.system.service.SystemFormTempService;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.crmeb.system.vo.SystemConfigFormItemConfigRegListVo;
 import com.zbkj.crmeb.system.vo.SystemConfigFormItemVo;
 import com.zbkj.crmeb.system.vo.SystemConfigFormVo;
@@ -23,7 +20,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -101,10 +97,6 @@ public class SystemFormTempServiceImpl extends ServiceImpl<SystemFormTempDao, Sy
 
             systemConfigFormItemVo = JSONObject.parseObject(item, SystemConfigFormItemVo.class);
             String model = systemConfigFormItemVo.get__vModel__(); //字段 name
-
-//            if(!map.containsKey(model)){
-//                throw new CrmebException("模板表单 【" + formTemp.getName() + "】缺少 " + model + "字段的相关信息！");
-//            }
 
             if(systemConfigFormItemVo.get__config__().getRequired() && map.get(model).equals("")){
                 throw new CrmebException(systemConfigFormItemVo.get__config__().getLabel() + "不能为空！");

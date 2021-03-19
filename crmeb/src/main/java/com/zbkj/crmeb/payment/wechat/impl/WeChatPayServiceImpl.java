@@ -38,7 +38,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -250,9 +249,6 @@ public class WeChatPayServiceImpl implements WeChatPayService {
         getCreateOrderRequestVo().setSign(CrmebUtil.getSign(CrmebUtil.objectToMap(getCreateOrderRequestVo()), getSignKey()));
     }
 
-
-
-
     /**
      * 计算价格微信需要以分为单位，所以需要乘以100
      * @author Mr.Zhang
@@ -304,7 +300,6 @@ public class WeChatPayServiceImpl implements WeChatPayService {
             userToken = userTokenService.getTokenByUserId(storeOrder.getUid(), 2);
         }
         if (storeOrder.getIsChannel() == 2) {// H5
-//            userTokenService.getByUid(storeOrder.getUid());
             userToken.setToken("");
         }
 
@@ -378,7 +373,6 @@ public class WeChatPayServiceImpl implements WeChatPayService {
             }
 
             if (storeOrder.getPaid()) {
-//            throw new CrmebException("订单已支付");
                 return Boolean.TRUE;
             }
 
@@ -429,6 +423,13 @@ public class WeChatPayServiceImpl implements WeChatPayService {
                         }
                     }
                     StoreCombination storeCombination = storeCombinationService.getById(storeOrder.getCombinationId());
+                    // 如果拼团人数已满，重新开团
+                    if (pinkId > 0) {
+                        Integer count = storePinkService.getCountByKid(pinkId);
+                        if (count >= storeCombination.getPeople()) {
+                            pinkId = 0;
+                        }
+                    }
                     // 生成拼团表数据
                     StorePink storePink = new StorePink();
                     storePink.setUid(user.getUid());
@@ -461,10 +462,8 @@ public class WeChatPayServiceImpl implements WeChatPayService {
                     storePink.setStatus(1);
                     storePinkService.save(storePink);
                     // 如果是开团，需要更新订单数据
-                    if (storePink.getKId() == 0) {
-                        storeOrder.setPinkId(storePink.getId());
-                        storeOrderService.updateById(storeOrder);
-                    }
+                    storeOrder.setPinkId(storePink.getId());
+                    storeOrderService.updateById(storeOrder);
                 }
                 return Boolean.TRUE;
             });
@@ -524,9 +523,6 @@ public class WeChatPayServiceImpl implements WeChatPayService {
         if (ObjectUtil.isNull(userRecharge)) {
             throw new CrmebException("订单不存在");
         }
-//        if (userRecharge.getPaid()) {
-//            throw new CrmebException("订单已支付");
-//        }
         // 获取用户openId
         // 根据订单支付类型来判断获取公众号openId还是小程序openId
         UserToken userToken = new UserToken();
@@ -619,7 +615,7 @@ public class WeChatPayServiceImpl implements WeChatPayService {
      * 生成微信查询订单对象
      * @return
      */
-    private Map<String, String> getWxChantQueryPayVo(String no, String appId, String mchId, String orderNo) {
+    private Map<String, String> getWxChantQueryPayVo(String orderNo, String appId, String mchId, String signKey) {
         Map<String, String> map = CollUtil.newHashMap();
         map.put("appid", appId);
         map.put("mch_id", mchId);

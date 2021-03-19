@@ -25,14 +25,14 @@
           </div>
         </div>
       </el-form-item>
-      <el-form-item label="用户背景" required prop="image">
-        <div class="upLoadPicBox" @click="modalPicTap('1', 'image')">
-          <div v-if="formValidate.image" class="pictrue"><img :src="formValidate.image"></div>
-          <div v-else class="upLoad">
-            <i class="el-icon-camera cameraIconfont" />
-          </div>
-        </div>
-      </el-form-item>
+      <!--<el-form-item label="用户背景" required prop="image">-->
+        <!--<div class="upLoadPicBox" @click="modalPicTap('1', 'image')">-->
+          <!--<div v-if="formValidate.image" class="pictrue"><img :src="formValidate.image"></div>-->
+          <!--<div v-else class="upLoad">-->
+            <!--<i class="el-icon-camera cameraIconfont" />-->
+          <!--</div>-->
+        <!--</div>-->
+      <!--</el-form-item>-->
       <el-form-item label="是否显示" required>
         <el-radio-group v-model="formValidate.isShow">
           <el-radio :label="true" class="radio">显示</el-radio>

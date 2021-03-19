@@ -83,7 +83,7 @@
 					index:index
 				}
 				this.parentEmit(obj)
-				// this.$parent.currentTab = index //设置swiper的第几页
+				this.$parent.currentTab = index //设置swiper的第几页
 			},
 			// 导航子类点击
 			childTab(tabClick,index){
