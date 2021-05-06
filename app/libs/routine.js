@@ -21,7 +21,7 @@ class Routine
 	/**
 	 * 获取用户信息
 	 */
-	getUserInfo(){
+	getUserProfile(){
 		let  that = this , code = this.getUserCode();
 		return new Promise( (resolve,reject) => {
 			uni.getUserProfile({
