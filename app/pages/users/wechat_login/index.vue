@@ -21,7 +21,7 @@
 				<button hover-class="none" @click="wechatLogin" class="bg-green btn1">微信登录</button>
 				<!-- #endif -->
 				<!-- #ifdef MP -->
-				<button hover-class="none" open-type="getUserInfo" @getuserinfo="setUserInfo" class="bg-green btn1">微信登录</button>
+				<button hover-class="none" @tap="getUserProfile" class="bg-green btn1">微信登录</button>
 				<!-- #endif -->
 				<!-- <button hover-class="none" @click="isUp = true" class="btn2">手机号登录</button> -->
 			</view>
@@ -237,6 +237,25 @@
 						tab: 3
 					})
 				});
+			},
+			getUserProfile() {
+				let self = this;
+				uni.showLoading({
+					title: '正在登录中'
+				});
+				Routine.getUserProfile()
+					.then(res => {
+						Routine.getCode()
+							.then(code => {
+								self.getWxUser(code, res);
+							})
+							.catch(res => {
+								uni.hideLoading();
+							});
+					})
+					.catch(res => {
+						uni.hideLoading();
+					});
 			},
 			setUserInfo(e) {
 				uni.showLoading({
