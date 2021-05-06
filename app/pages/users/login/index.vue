@@ -158,16 +158,12 @@
 					provider: 'apple',
 					timeout: 10000,
 					success(loginRes) {
-						console.log(loginRes, 'loginRes')
-						uni.getUserInfo({
+						uni.getUserProfile({
 							provider: 'apple',
 							success: function(infoRes) {
 								console.log(infoRes.userInfo, 'yyyy')
 								self.appleUserInfo = infoRes.userInfo
 								self.appleLoginApi()
-			
-								console.log(self.$store);
-								console.log(infoRes.userInfo);
 							},
 							fail() {
 								uni.showToast({
@@ -247,10 +243,9 @@
 					provider: 'weixin',
 					success: function(loginRes) {
 						// 获取用户信息
-						uni.getUserInfo({
+						uni.getUserProfile({
 							provider: 'weixin',
 							success: function(infoRes) {
-								console.log(infoRes.userInfo, 'yyyy')
 								self.appUserInfo = infoRes.userInfo
 								self.wxLoginApi()
 			
