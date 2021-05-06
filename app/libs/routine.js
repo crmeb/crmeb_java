@@ -122,17 +122,15 @@ class Routine
 		return new Promise((resolve, reject)=>{
 			login(code,data).then(res=>{
 				if(res.data.type==='login'){
-					// let time = res.data.expiresTime - Cache.time();
-					store.commit('UPDATE_USERINFO', res.data.user);
-					store.commit('LOGIN', {token:res.data.token});
-					// Cache.set(EXPIRES_TIME,res.data.expiresTime,time);
-					Cache.set(USER_INFO,res.data.user);
+					store.commit('LOGIN', {
+						token: res.data.token
+					});
 				}
 				return resolve(res);
 			}).catch(res=>{
 				return reject(res);
 			})
-		})
+		});
 	}
 }
 
