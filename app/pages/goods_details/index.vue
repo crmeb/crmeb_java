@@ -198,7 +198,7 @@
 		<view class="mask"  v-if="posters" @click="closePosters"></view>
 		<view class="mask"  v-if="canvasStatus"  @click="listenerActionClose"></view>
 		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
+		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
 		<!-- 海报展示 -->
 		<view class='poster-pop' v-if="canvasStatus">
@@ -904,7 +904,13 @@
 			setCollect: function() {
 				let that = this;
 				if (this.isLogin === false) {
+					// #ifdef H5 || APP-PLUS
 					toLogin();
+					// #endif 
+					// #ifdef MP
+					this.isAuto = true;
+					this.$set(this, 'isShowAuth', true);
+					// #endif
 				} else {
 					if (this.storeInfo.userCollect) {
 						collectDel(this.storeInfo.id).then(res => {

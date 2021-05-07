@@ -214,7 +214,7 @@
 			<image src="/static/images/share-info.png" @click="H5ShareBox = false"></image>
 		</view>
 		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
+		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
 		<home></home>
 		<product-window :attr='attribute' :limitNum='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr" @ChangeCartNum="ChangeCartNum"
@@ -422,7 +422,13 @@
 						uni.setStorageSync('comGoodsId', options.id);
 					} catch (e) {}
 					// #endif 
+					// #ifdef H5 || APP-PLUS
 					toLogin();
+					// #endif 
+					// #ifdef MP
+					this.isAuto = true;
+					this.$set(this, 'isShowAuth', true);
+					// #endif
 				}
 			} else {
 				try {

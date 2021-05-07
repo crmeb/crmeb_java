@@ -46,7 +46,7 @@ if (vconsole !== undefined && vconsole === md5Crmeb) {
 	let vConsole = new VConsole();
 }
 
-// Auth.isWeixin() && Auth.oAuth();
+Auth.isWeixin() && Auth.oAuth();
 
 // #endif
 

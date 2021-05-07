@@ -175,7 +175,7 @@
 		</view>
 		<!-- <coupon-window :window='window' :couponList="couponList" @onColse="onColse"></coupon-window> -->
 		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse" :isGoIndex="false"></authorize> -->
+		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse" :isGoIndex="false"></authorize>
 		<!-- #endif -->
 	</view>
 </template>
@@ -706,7 +706,13 @@
 			// 首发新品详情
 			goDetail(item) {
 				if (item.activityH5 && item.activityH5.type === "2" && !this.isLogin) {
+					// #ifdef H5 || APP-PLUS
 					toLogin();
+					// #endif 
+					// #ifdef MP
+					this.isAuto = true;
+					this.$set(this, 'isShowAuth', true);
+					// #endif
 					// // #ifdef H5
 					// uni.showModal({
 					// 	title: '提示',

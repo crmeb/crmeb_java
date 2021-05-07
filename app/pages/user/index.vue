@@ -113,7 +113,7 @@
 		</view>
 		<img src="/static/images/support.png" alt="" class='support'>
 		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
+		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
 	</view>
 </template>
@@ -201,11 +201,15 @@
 			let that = this;
 			that.$set(that, 'MyMenus', app.globalData.MyMenus);
 			console.log('user页面',that.isLogin)
-			if (that.isLogin == false) {
-				// #ifdef H5 || APP-PLUS
-				toLogin()
-				// #endif
-			}
+			// if (that.isLogin == false) {
+			// 	// #ifdef H5 || APP-PLUS
+			// 	toLogin();
+			// 	// #endif 
+			// 	// #ifdef MP
+			// 	this.isAuto = true;
+			// 	this.$set(this, 'isShowAuth', true);
+			// 	// #endif
+			// }
 		},
 		onShow: function() {
 			let that = this;
@@ -215,7 +219,13 @@
 				// this.setVisit();
 				this.getOrderData();
 			}else{
+				// #ifdef H5 || APP-PLUS
 				toLogin();
+				// #endif 
+				// #ifdef MP
+				this.isAuto = true;
+				this.$set(this, 'isShowAuth', true);
+				// #endif
 			}
 		},
 		methods: {
@@ -258,8 +268,8 @@
 			},
 			// 打开授权
 			openAuto() {
-				console.log('点击事件','lala')
-				toLogin();
+				this.isAuto = true;
+				this.isShowAuth = true
 			},
 			// 授权回调
 			onLoadFun() {
@@ -317,7 +327,13 @@
 			// 编辑页面
 			goEdit() {
 				if (this.isLogin == false) {
+					// #ifdef H5 || APP-PLUS
 					toLogin();
+					// #endif 
+					// #ifdef MP
+					this.isAuto = true;
+					this.$set(this, 'isShowAuth', true);
+					// #endif
 				} else {
 					uni.navigateTo({
 						url: '/pages/users/user_info/index'
