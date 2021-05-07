@@ -1,8 +1,13 @@
+<!-- <template>
+	<view>
+		<iframe ref="geoPage" width="0" height="0" frameborder="0" style="display:none;"
+			 scrolling="no" src="https://java.crmeb.net">
+		</iframe>
+	</view>
+</template> -->
 <script>
 	import { checkLogin } from "./libs/login";
 	import { HTTP_REQUEST_URL } from './config/app';
-    import Auth from './libs/wechat.js';
-	import Routine from './libs/routine.js';
 
 	export default {
 		globalData: {
@@ -23,16 +28,16 @@
 			      switch (option.scene) {
 			        //扫描小程序码
 			        case 1047:
-					//  let val = that.$util.getUrlParams(decodeURIComponent(option.query.scene));
-			          that.globalData.spid = option.query.scene;
+					  let val = that.$util.getUrlParams(decodeURIComponent(option.query.scene));
+			          that.globalData.code = val.pid;
 			          break;
 			        //长按图片识别小程序码
 			        case 1048:
-			          that.globalData.spid = option.query.scene;
+			          that.globalData.code = option.query.scene;
 			          break;
 			        //手机相册选取小程序码
 			        case 1049:
-			          that.globalData.spid = option.query.scene;
+			          that.globalData.code = option.query.scene;
 			          break;
 			        //直接进入小程序
 			        case 1001:
@@ -47,99 +52,8 @@
 					that.globalData.navHeight = res.statusBarHeight * (750 / res.windowWidth) + 91;
 			    }
 			});
-
-			// #ifdef H5
-			let snsapiBase = 'snsapi_base';
-			let urlData = location.pathname + location.search;
-			if (!that.$store.getters.isLogin && Auth.isWeixin()) {
-				const { code, state, scope } = option.query;
-				if (code && location.pathname.indexOf('/pages/users/wechat_login/index') === -1) {
-					// 存储静默授权code
-					uni.setStorageSync('snsapiCode', code);
-					let spread = that.globalData.spid ? that.globalData.spid : 0;
-					Auth.auth(code, that.$Cache.get('spread'))
-						.then(res => {
-							uni.setStorageSync('snRouter', decodeURIComponent(decodeURIComponent(option.query.back_url)));
-							if (res.type === 'register') {
-								this.$Cache.set('snsapiKey', res.key);
-							}
-							if(res.type === 'login'){
-								// let time = res.data.expires_time - this.$Cache.time();
-								this.$store.commit('LOGIN', {
-									token: res.token,
-									// time: time
-								});
-								// this.$store.commit('SETUID', res.data.userInfo.uid);
-								// this.$store.commit('UPDATE_USERINFO', res.data.userInfo);
-								//location.replace(decodeURIComponent(decodeURIComponent(option.query.back_url)));
-							}
-						})
-						.catch(error => {
-							this.$util.Tips({
-								title: error
-							});
-						});
-				} else {
-					if (!this.$Cache.has('snsapiKey')) {
-						console.log('app.vue页面中',location.pathname.indexOf('/pages/users/wechat_login/index') === -1)
-						//Auth.oAuth(snsapiBase, urlData);
-						if (location.pathname.indexOf('/pages/users/wechat_login/index') === -1) {
-							Auth.oAuth(snsapiBase, urlData);
-						}
-					}
-				}
-			} else {
-				if (option.query.back_url) {
-					location.replace(uni.getStorageSync('snRouter'));
-				}
-			}
-			// #endif
-
-			// #ifdef MP
-			// 小程序静默授权
-			if (!this.$store.getters.isLogin) {
-				let spread = that.globalData.spid ? that.globalData.spid : 0;
-				Routine.getCode()
-					.then(code => {
-						Routine.authUserInfo(code,{'spread_spid': spread}).then(res => {
-								that.$store.commit('AuthorizeType', res.data.type);
-							})
-					})
-					.catch(res => {
-						uni.hideLoading();
-					});
-			}
-			// #endif
-
 		},
 		mounted() {
-		},
-		methods: {
-			// 小程序静默授权
-			silenceAuth(code) {
-				let that = this;
-				let spread = that.globalData.spid ? that.globalData.spid : 0;
-				silenceAuth({
-					code: code,
-					spread_spid: spread,
-					spread_code: that.globalData.code
-				})
-					.then(res => {
-						if (res.data.token !== undefined && res.data.token) {
-							uni.hideLoading();
-							let time = res.data.expires_time - this.$Cache.time();
-							that.$store.commit('LOGIN', {
-								token: res.data.token,
-								time: time
-							});
-							that.$store.commit('SETUID', res.data.userInfo.uid);
-							that.$store.commit('UPDATE_USERINFO', res.data.userInfo);
-						}
-					})
-					.catch(res => {
-						console.log(res);
-					});
-			}
 		},
 		onShow: function() {
 		           // #ifdef H5
@@ -195,4 +109,4 @@
 	  height: 0;
 	  color: transparent;
 	}
-</style>
+</style><!--  -->

@@ -110,7 +110,7 @@
 		<product-window :attr='attribute' :limitNum='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr" @ChangeCartNum="ChangeCartNum"
 		 @attrVal="attrVal" @iptCartNum="iptCartNum"></product-window>
 		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth"></authorize> -->
+		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth"></authorize>
 		<!-- #endif -->
 		<home></home>
 		<!-- 分享按钮 -->
@@ -350,7 +350,13 @@
 				this.getProductReplyList();
 				this.getProductReplyCount();
 			} else {
+				// #ifdef H5 || APP-PLUS
 				toLogin();
+				// #endif 
+				// #ifdef MP
+				this.isAuto = true;
+				this.$set(this, 'isShowAuth', true);
+				// #endif
 			}
 		},
 		methods: {
