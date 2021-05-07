@@ -10,7 +10,8 @@
 			  <button class='item grant' @click="setUserInfo">去授权</button>
 			  <!-- #endif -->
 			  <!-- #ifdef MP -->
-			  <button class='item grant'  type="primary" open-type="getUserInfo" lang="zh_CN" @getuserinfo="setUserInfo">去授权</button>
+			  <!-- <button class='item grant'  type="primary" open-type="getUserInfo" lang="zh_CN" @getuserinfo="setUserInfo">去授权</button> -->
+			  <button hover-class="none" @tap="getUserProfile" class='item grant'>微信登录</button>
 			  <!-- #endif -->
 		   </view>
 		</view>
@@ -58,6 +59,52 @@
 			this.setAuthStatus();
 		},
 		methods:{
+			getUserProfile() {
+				let self = this;
+				uni.showLoading({
+					title: '正在登录中'
+				});
+				Routine.getUserProfile()
+					.then(res => {
+						Routine.getCode()
+							.then(code => {
+								self.getWxUser(code, res);
+							})
+							.catch(res => {
+								uni.hideLoading();
+							});
+					})
+					.catch(res => {
+						uni.hideLoading();
+					});
+			},
+
+			getWxUser(code, res) {
+				let self = this
+				let userInfo = res.userInfo;
+				userInfo.code = code;
+				userInfo.spread_spid = app.globalData.spid; //获取推广人ID
+				userInfo.spread_code = app.globalData.code; //获取推广人分享二维码ID
+				userInfo.avatar = userInfo.userInfo.avatarUrl;
+				userInfo.city = userInfo.userInfo.city;
+				userInfo.country = userInfo.userInfo.country;
+				userInfo.nickName = userInfo.userInfo.nickName;
+				userInfo.province = userInfo.userInfo.province;
+				userInfo.sex = userInfo.userInfo.gender;
+				userInfo.type = 'routine'
+				Routine.authUserInfo(code,userInfo).then(res=>{
+					uni.hideLoading();
+					this.$emit('authColse',false);
+					this.$emit('onLoadFun',this.userInfo);
+				}).catch(res=>{
+					uni.hideLoading();
+					uni.showToast({
+						title:res.message,
+						icon:'none',
+						duration:2000
+					});
+				});
+			},
 			setAuthStatus(){
 				Routine.authorize().then(res=>{
 					if(res.islogin === false)
@@ -71,6 +118,7 @@
 			},
 			getUserInfo(code){
 				Routine.getUserInfo().then(res=>{
+					console.log('res',res);
 					let userInfo = res.userInfo
 					userInfo.code = code;
 					userInfo.spread_spid = app.globalData.spid;//获取推广人ID

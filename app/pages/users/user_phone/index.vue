@@ -19,7 +19,7 @@
 			<button form-type="submit" v-if="!isNew" class="confirmBnt bg-color"  @click="editPwd">保存</button>
 		</view>
 		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
+		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
 	</view>
 </template>
@@ -71,7 +71,13 @@
 				// 	this.$set(this, 'key', res.data.key)
 				// });
 			} else {
+				// #ifdef H5 || APP-PLUS
 				toLogin();
+				// #endif 
+				// #ifdef MP
+				this.isAuto = true;
+				this.$set(this, 'isShowAuth', true);
+				// #endif
 			}
 		},
 		methods: {

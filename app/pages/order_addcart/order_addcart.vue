@@ -113,7 +113,7 @@
 		<productWindow :attr="attr" :isShow='1' :iSplus='1' :iScart='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr"
 		 @ChangeCartNum="ChangeCartNum" @attrVal="attrVal" @iptCartNum="iptCartNum" @goCat="reGoCat" id='product-window'></productWindow>
 		<!-- #ifdef MP -->
-		<!-- <authorize :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
+		<authorize :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
 
 	</view>
@@ -203,7 +203,13 @@
 		onLoad: function(options) {
 			let that = this;
 			if (that.isLogin == false) {
+				// #ifdef H5 || APP-PLUS
 				toLogin();
+				// #endif 
+				// #ifdef MP
+				this.isAuto = true;
+				this.$set(this, 'isShowAuth', true);
+				// #endif
 			}
 		},
 		onShow: function() {

@@ -40,7 +40,7 @@
 			<recommend :hostProduct='hostProduct' v-if="hostProduct.length"></recommend>
 		</view>
 		<!-- #ifdef MP -->
-		<!-- <authorize :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
+		<authorize :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
 	</view>
 </template>
@@ -106,7 +106,13 @@
 				this.getExpress();
 				this.get_host_product();
 			} else {
+				// #ifdef H5 || APP-PLUS
 				toLogin();
+				// #endif 
+				// #ifdef MP
+				this.isAuto = true;
+				this.$set(this, 'isShowAuth', true);
+				// #endif
 			}
 		  },
 		  onReady: function() {
