@@ -65,7 +65,7 @@
 			<view class='mask' @touchmove.stop.prevent="false" :hidden='active==false'></view>
 		</view>
 		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
+		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
 	</view>
 </template>
@@ -128,7 +128,13 @@
 				this.getSignSysteam();
 				this.getSignList();
 			} else {
+				// #ifdef H5 || APP-PLUS
 				toLogin();
+				// #endif 
+				// #ifdef MP
+				this.isAuto = true;
+				this.$set(this, 'isShowAuth', true);
+				// #endif
 			}
 		},
 		methods: {
