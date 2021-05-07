@@ -21,7 +21,7 @@
 				<button hover-class="none" @click="wechatLogin" class="bg-green btn1">微信登录</button>
 				<!-- #endif -->
 				<!-- #ifdef MP -->
-				<button hover-class="none" @tap="getUserProfile" class="bg-green btn1">微信登录</button>
+				<button hover-class="none" open-type="getUserInfo" @getuserinfo="setUserInfo" class="bg-green btn1">微信登录</button>
 				<!-- #endif -->
 				<!-- <button hover-class="none" @click="isUp = true" class="btn2">手机号登录</button> -->
 			</view>
@@ -238,25 +238,6 @@
 					})
 				});
 			},
-			getUserProfile() {
-				let self = this;
-				uni.showLoading({
-					title: '正在登录中'
-				});
-				Routine.getUserProfile()
-					.then(res => {
-						Routine.getCode()
-							.then(code => {
-								self.getWxUser(code, res);
-							})
-							.catch(res => {
-								uni.hideLoading();
-							});
-					})
-					.catch(res => {
-						uni.hideLoading();
-					});
-			},
 			setUserInfo(e) {
 				uni.showLoading({
 					title: '正在登录中'
@@ -269,49 +250,57 @@
 						uni.hideLoading();
 					});
 			},
-			getWxUser(code, res) {
-			let self = this
-			let userInfo = res.userInfo;
-			userInfo.code = code;
-			userInfo.spread_spid = app.globalData.spid; //获取推广人ID
-			userInfo.spread_code = app.globalData.code; //获取推广人分享二维码ID
-			userInfo.avatar = userInfo.userInfo.avatarUrl;
-			userInfo.city = userInfo.userInfo.city;
-			userInfo.country = userInfo.userInfo.country;
-			userInfo.nickName = userInfo.userInfo.nickName;
-			userInfo.province = userInfo.userInfo.province;
-			userInfo.sex = userInfo.userInfo.gender;
-			userInfo.type = 'routine'
-			Routine.authUserInfo(userInfo.code, userInfo)
-				.then(res => {
-					self.authKey = res.data.key;
-					if (res.data.type === 'register') {
+			getWxUser(code) {
+				let self = this
+				Routine.getUserInfo()
+					.then(res => {
+						console.log('res1',res);
+						let userInfo = res.userInfo;
+						userInfo.code = code;
+						userInfo.spread_spid = app.globalData.spid;//获取推广人ID
+						userInfo.spread_code = app.globalData.code;//获取推广人分享二维码ID
+						userInfo.avatar  = userInfo.userInfo.avatarUrl;
+						userInfo.city  = userInfo.userInfo.city;
+						userInfo.country  = userInfo.userInfo.country;
+						userInfo.nickName  = userInfo.userInfo.nickName;
+						userInfo.province  = userInfo.userInfo.province;
+						userInfo.sex  = userInfo.userInfo.gender;
+						userInfo.type = 'routine'
+						Routine.authUserInfo(userInfo.code, userInfo)
+							.then(res => {
+								console.log(res)
+								self.authKey = res.data.key;
+								if (res.data.type === 'register') {
+									uni.hideLoading();
+									self.isPhoneBox = true
+								} else {
+									uni.hideLoading();
+									let time = res.data.expires_time - self.$Cache.time();
+									self.$store.commit('LOGIN', {
+										token: res.data.token,
+										time: time
+									});
+									self.$util.Tips({
+										title: res,
+										icon: 'success'
+									}, {
+										tab: 3
+									})
+								}
+							})
+							.catch(res => {
+								uni.hideLoading();
+								uni.showToast({
+									title: res,
+									icon: 'none',
+									duration: 2000
+								});
+							});
+					})
+					.catch(res => {
 						uni.hideLoading();
-						self.isPhoneBox = true
-					}
-					if (res.data.type === 'login') {
-						uni.hideLoading();
-						self.$store.commit('LOGIN', {
-							token: res.data.token
-						});
-						self.$util.Tips({
-							title: res,
-							icon: 'success'
-						}, {
-							tab: 3
-						})
-					}
-				})
-				.catch(res => {
-					uni.hideLoading();
-					uni.showToast({
-						title: res,
-						icon: 'none',
-						duration: 2000
 					});
-				});
-
-		},
+			},
 
 
 			// #endif

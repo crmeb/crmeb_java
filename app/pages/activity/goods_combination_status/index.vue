@@ -95,7 +95,7 @@
 		<!-- 发送给朋友图片 -->
 		<view class="share-box" v-if="H5ShareBox"><image src="/static/images/share-info.png" @click="H5ShareBox = false"></image></view>
 		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
+		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
 		<home></home>
 		<!-- <Product-window v-on:changeFun="changeFun" :attr="attr" :limitNum='1' :iSbnt='1'></Product-window> -->
@@ -195,7 +195,13 @@ export default {
 		var that = this;
 		that.pinkId = options.id;
 		if (that.isLogin == false) {
+			// #ifdef H5 || APP-PLUS
 			toLogin();
+			// #endif 
+			// #ifdef MP
+			this.isAuto = true;
+			this.$set(this, 'isShowAuth', true);
+			// #endif
 		} else {
 			this.timestamp = (new Date()).getTime();
 			// #ifdef H5

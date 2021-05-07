@@ -224,7 +224,7 @@
 			<image src="/static/images/share-info.png" @click="H5ShareBox = false"></image>
 		</view>
 		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
+		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -391,7 +391,13 @@
 				// 	'&spid=' + e.detail.uid;
 				// this.$set(that, 'bargainPartake', e.detail.uid);
 			} else {
+				// #ifdef H5 || APP-PLUS
 				toLogin();
+				// #endif 
+				// #ifdef MP
+				this.isAuto = true;
+				this.$set(this, 'isShowAuth', true);
+				// #endif
 			}
 			
 
