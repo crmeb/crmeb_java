@@ -47,6 +47,7 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
 
 购买商业版： [http://crmeb.com/web/index/java](http://crmeb.com/web/index/java)
 
+自己搭建后：admin / 123456
 
 ## 主要特点
 ~~~
