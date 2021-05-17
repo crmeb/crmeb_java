@@ -153,37 +153,12 @@ class AuthWechat {
 	/**
 	 * 自动去授权
 	 */
-	oAuth(snsapiBase,url) {
-		if (uni.getStorageSync(WX_AUTH) && store.state.app.token && snsapiBase == 'snsapi_base') return;
+	oAuth() {
+		if (uni.getStorageSync(WX_AUTH) && store.state.app.token) return;
 		const {
 			code
 		} = parseQuery();
-		if (!code || code == uni.getStorageSync('snsapiCode')){
-			return this.toAuth(snsapiBase,url);
-		}else{
-			if(Cache.has('snsapiKey'))
-				return this.auth(code).catch(error=>{
-					uni.showToast({
-						title:error,
-						icon:'none'
-					})
-				})
-		}
-		// if (uni.getStorageSync(WX_AUTH) && store.state.app.token) return;
-		// const {
-		// 	code
-		// } = parseQuery();
-		// if (!code){
-		// 	return this.toAuth(snsapiBase,url);
-		// }else{
-		// 	if(Cache.has('snsapiKey'))
-		// 		return this.auth(code).catch(error=>{
-		// 			uni.showToast({
-		// 				title:error,
-		// 				icon:'none'
-		// 			})
-		// 		})
-		// }
+		if (!code) return this.toAuth();
 	}
 
 	clearAuthStatus() {
@@ -213,7 +188,7 @@ class AuthWechat {
 					Cache.clear(STATE_KEY);
 					// Cache.clear('spread');
 					loginType && Cache.clear(LOGINTYPE);
-					resolve(data);
+					resolve();
 				})
 				.catch(reject);
 		});
@@ -223,43 +198,32 @@ class AuthWechat {
 	 * 获取跳转授权后的地址
 	 * @param {Object} appId
 	 */
-	getAuthUrl(appId,snsapiBase,backUrl) {
-		let url = `${location.origin}${backUrl}`
-				if(url.indexOf('?') == -1){
-							url = url+'?'
-						}else{
-							url = url+'&'
-						}
-				const redirect_uri = encodeURIComponent(
-					`${url}scope=${snsapiBase}&back_url=` +
-					encodeURIComponent(
-						encodeURIComponent(
-							uni.getStorageSync(BACK_URL) ?
-							uni.getStorageSync(BACK_URL) :
-							location.pathname + location.search
-						)
-					)
-				);
-				uni.removeStorageSync(BACK_URL);
-				const state = encodeURIComponent(
-					("" + Math.random()).split(".")[1] + "authorizestate"
-				);
-				uni.setStorageSync(STATE_KEY, state);
-				return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_userinfo&state=${state}#wechat_redirect`;
-				// if(snsapiBase==='snsapi_base'){
-				// 	return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_base&state=${state}#wechat_redirect`;
-				// }else{
-				// 	return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_userinfo&state=${state}#wechat_redirect`;
-				// }
-    }
-	
+	getAuthUrl(appId) {
+		const redirect_uri = encodeURIComponent(
+			`${location.origin}/pages/auth/index?back_url=` +
+			encodeURIComponent(
+				encodeURIComponent(
+					uni.getStorageSync(BACK_URL) ?
+					uni.getStorageSync(BACK_URL) :
+					location.pathname + location.search
+				)
+			)
+		);
+		uni.removeStorageSync(BACK_URL);
+		const state = encodeURIComponent(
+			("" + Math.random()).split(".")[1] + "authorizestate"
+		);
+		uni.setStorageSync(STATE_KEY, state);
+		return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_base&state=${state}#wechat_redirect`;
+	}
+
 	/**
 	 * 跳转自动登录
 	 */
-	toAuth(snsapiBase,backUrl) {
+	toAuth() {
 		let that = this;
 		this.wechat().then(wx => {
-			location.href = this.getAuthUrl(that.initConfig.appId,snsapiBase,backUrl);
+			location.href = this.getAuthUrl(that.initConfig.appId);
 		})
 	}
 
