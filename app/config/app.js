@@ -1,5 +1,5 @@
 
-let domain = 'http://localhost:8080'
+let domain = 'http://127.0.0.1:8080'
 
 module.exports = {
 	// 请求域名 格式： https://您的域名

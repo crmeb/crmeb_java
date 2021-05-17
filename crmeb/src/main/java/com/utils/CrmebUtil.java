@@ -131,8 +131,8 @@ public class CrmebUtil {
      * @param args String[] 字符串数组
      */
     public static void main(String[] args) throws Exception {
-//        System.out.println(encryptPassword("123456", "admin"));
-		System.out.println(decryptPassowrd("", ""));
+        System.out.println(encryptPassword("123456", "admin"));
+//		System.out.println(decryptPassowrd("", ""));
     }
 
     /**
