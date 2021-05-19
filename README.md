@@ -6,10 +6,6 @@
     <b>如果对您有帮助，您可以点右上角 "Star" ❤️  支持一下 谢谢！</b>
 </p>
 
-##  🔥火爆推介
-
-[![多商户](https://gitee.com/stivepeim/img4mk/raw/master/20210428105210.jpg)](https://crmeb.com/web/index/merchant)
-
 ## 项目介绍
 ~~~
 
@@ -154,12 +150,17 @@ CRMEB知识付费项目：https://gitee.com/ZhongBangKeJi/crmeb_zzff_class
 CRMEB打通版：https://gitee.com/ZhongBangKeJi/CRMEB
 
 ~~~
-## 反馈交流
+## 反馈学习交流
 [CRMEB JAVA 技术交流QQ群 1群](<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=XJ79nw1CVADxGTl1Ju0iMxzq9HMIhTR0&jump_from=webapi">点击加群 893839288</a>)
 
 使用中遇到bug 或者问题可以在gitee 上提 [Issues](https://gitee.com/ZhongBangKeJi/crmeb_java/issues)
 
 如果直接点击加群无反应可复制QQ号码手动加入
+
+视频教程
+[B站视频教程 持续更新中](https://space.bilibili.com/388666686)
+[![](https://z3.ax1x.com/2021/05/19/g4J9W6.jpg)](https://space.bilibili.com/388666686)
+
 
 ## 开源版使用须知
 ~~~
