@@ -9,7 +9,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.common.MyRecord;
 import com.constants.Constants;
 import com.exception.CrmebException;
-import com.utils.*;
+import com.utils.CrmebUtil;
+import com.utils.DateUtil;
+import com.utils.RedisUtil;
+import com.utils.WxPayUtil;
 import com.zbkj.crmeb.combination.model.StoreCombination;
 import com.zbkj.crmeb.combination.model.StorePink;
 import com.zbkj.crmeb.combination.service.StoreCombinationService;
@@ -25,7 +28,6 @@ import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.user.model.User;
-import com.zbkj.crmeb.user.model.UserToken;
 import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.user.service.UserTokenService;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -172,7 +174,10 @@ public class CallbackServiceImpl implements CallbackService {
                 }
                 // 添加支付成功redis队列
                 Boolean execute = transactionTemplate.execute(e -> {
-                    storeOrderService.updatePaid(storeOrder.getOrderId());
+//                    storeOrderService.updatePaid(storeOrder.getOrderId());
+                    storeOrder.setPaid(true);
+                    storeOrder.setPayTime(DateUtil.nowDateTime());
+                    storeOrderService.updateById(storeOrder);
                     if (storeOrder.getUseIntegral() > 0) {
                         userService.updateIntegral(user, storeOrder.getUseIntegral(), "sub");
                     }
