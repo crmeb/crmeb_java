@@ -25,7 +25,7 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
 ## 导航栏目
 
  [![帮助手册](https://img.shields.io/badge/%E5%B8%AE%E5%8A%A9%E6%89%8B%E5%86%8C-Java%E5%B8%AE%E5%8A%A9%E6%89%8B%E5%86%8C-orange)](http://help.crmeb.net/crmeb_java/1748037t)
- [![论坛地址](https://img.shields.io/badge/CRMEB-Java%E8%AE%BA%E5%9D%9B-green)](http://bbs.crmeb.net)
+ [![论坛地址](https://img.shields.io/badge/CRMEB-Java%E8%AE%BA%E5%9D%9B-green)](https://q.crmeb.net)
 [![官网地址](https://img.shields.io/badge/CRMEB-%E5%AE%98%E7%BD%91-brightgreen)](https://www.crmeb.com)
  [![服务器](https://img.shields.io/badge/Server-%E6%9C%8D%E5%8A%A1%E5%99%A8-yellowgreen)](https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=dligum2z)
  [![授权价格](https://img.shields.io/badge/authorize-%E6%8E%88%E6%9D%83-red)](http://crmeb.com/web/auth/apply)
