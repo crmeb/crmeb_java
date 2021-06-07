@@ -45,6 +45,15 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
 
 自己搭建后：admin / 123456
 
+## 反馈交流
+技术交流社区：https://q.crmeb.net
+
+[CRMEB JAVA 技术交流QQ群 1群](<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=XJ79nw1CVADxGTl1Ju0iMxzq9HMIhTR0&jump_from=webapi">点击加群 893839288</a>)
+
+使用中遇到bug 或者问题可以在gitee 上提 [Issues](https://gitee.com/ZhongBangKeJi/crmeb_java/issues)
+
+如果直接点击加群无反应可复制QQ号码手动加入
+
 ## 主要特点
 ~~~
 
@@ -154,7 +163,9 @@ CRMEB知识付费项目：https://gitee.com/ZhongBangKeJi/crmeb_zzff_class
 CRMEB打通版：https://gitee.com/ZhongBangKeJi/CRMEB
 
 ~~~
-## 反馈学习交流
+## 反馈交流
+技术交流社区：https://q.crmeb.net
+
 [CRMEB JAVA 技术交流QQ群 1群](<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=XJ79nw1CVADxGTl1Ju0iMxzq9HMIhTR0&jump_from=webapi">点击加群 893839288</a>)
 
 使用中遇到bug 或者问题可以在gitee 上提 [Issues](https://gitee.com/ZhongBangKeJi/crmeb_java/issues)
