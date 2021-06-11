@@ -4,6 +4,7 @@ import com.common.PageParamRequest;
 import com.zbkj.crmeb.store.model.StoreOrderInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zbkj.crmeb.store.request.StoreOrderInfoSearchRequest;
+import com.zbkj.crmeb.store.vo.StoreOrderInfoOldVo;
 import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
 
 import java.util.HashMap;
@@ -25,9 +26,9 @@ public interface StoreOrderInfoService extends IService<StoreOrderInfo> {
 
     List<StoreOrderInfo> getList(StoreOrderInfoSearchRequest request, PageParamRequest pageParamRequest);
 
-    HashMap<Integer, List<StoreOrderInfoVo>> getMapInId(List<Integer> orderIdList);
+    HashMap<Integer, List<StoreOrderInfoOldVo>> getMapInId(List<Integer> orderIdList);
 
-    List<StoreOrderInfoVo> getOrderListByOrderId(Integer orderId);
+    List<StoreOrderInfoOldVo> getOrderListByOrderId(Integer orderId);
 
     /**
      * 批量添加订单详情
@@ -35,4 +36,19 @@ public interface StoreOrderInfoService extends IService<StoreOrderInfo> {
      * @return 保存结果
      */
     boolean saveOrderInfos(List<StoreOrderInfo> storeOrderInfos);
+
+    /**
+     * 通过订单编号和规格号查询
+     * @param uni 规格号
+     * @param orderId 订单编号
+     * @return StoreOrderInfo
+     */
+    StoreOrderInfo getByUniAndOrderId(String uni, Integer orderId);
+
+    /**
+     * 获取订单详情vo列表
+     * @param orderId 订单id
+     * @return List<StoreOrderInfoVo>
+     */
+    List<StoreOrderInfoVo> getVoListByOrderId(Integer orderId);
 }

@@ -107,7 +107,7 @@ public class StoreBargainController {
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     public CommonResult<String> update(@RequestParam Integer id, @RequestBody @Validated StoreBargainRequest storeBargainRequest){
         storeBargainRequest.setId(id);
-        if(storeBargainService.updateBarhain(storeBargainRequest)){
+        if(storeBargainService.updateBargain(storeBargainRequest)){
             return CommonResult.success();
         }else{
             return CommonResult.failed();

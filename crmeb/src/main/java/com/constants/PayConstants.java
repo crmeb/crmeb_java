@@ -25,6 +25,8 @@ public class PayConstants {
     public static final String PAY_CHANNEL_WE_CHAT_H5 = "weixinh5"; //H5唤起微信支付
     public static final String PAY_CHANNEL_WE_CHAT_PUBLIC = "public"; //公众号
     public static final String PAY_CHANNEL_WE_CHAT_PROGRAM = "routine"; //小程序
+    public static final String PAY_CHANNEL_WE_CHAT_APP_IOS = "weixinAppIos"; //微信App支付ios
+    public static final String PAY_CHANNEL_WE_CHAT_APP_ANDROID = "weixinAppAndroid"; //微信App支付android
 
     public static final String WX_PAY_TRADE_TYPE_JS = "JSAPI";
     public static final String WX_PAY_TRADE_TYPE_H5 = "MWEB";

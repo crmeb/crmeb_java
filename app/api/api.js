@@ -120,9 +120,6 @@ export function verifyCode(){
 export function registerVerify(phone){
   return request.post('sendCode', { phone: phone },{noAuth:true},1)
 }
-// export function registerVerify(phone, reset, key, code){
-//   return request.post('register/verify', { phone: phone, type: reset === undefined ? 'reset' : reset, key: key, code: code },{noAuth:true})
-// }
 
 /**
  * 手机号注册

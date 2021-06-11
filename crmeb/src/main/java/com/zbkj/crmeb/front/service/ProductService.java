@@ -6,14 +6,8 @@ import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.category.vo.CategoryTreeVo;
 import com.zbkj.crmeb.front.request.IndexStoreProductSearchRequest;
 import com.zbkj.crmeb.front.request.ProductRequest;
-import com.zbkj.crmeb.front.response.ProductDetailResponse;
-import com.zbkj.crmeb.front.response.ProductResponse;
-import com.zbkj.crmeb.front.response.StoreProductReplayCountResponse;
-import com.zbkj.crmeb.store.model.StoreProductReply;
-import com.zbkj.crmeb.store.response.StoreProductReplyResponse;
-import com.zbkj.crmeb.store.response.StoreProductResponse;
+import com.zbkj.crmeb.front.response.*;
 
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -29,17 +23,49 @@ import java.util.List;
  *  +----------------------------------------------------------------------
 */
 public interface ProductService {
+
     CommonPage<ProductResponse> getIndexProduct(IndexStoreProductSearchRequest request, PageParamRequest pageParamRequest);
 
     List<CategoryTreeVo> getCategory();
 
-    CommonPage<ProductResponse> getList(ProductRequest request, PageParamRequest pageParamRequest);
+    CommonPage<IndexProductResponse> getList(ProductRequest request, PageParamRequest pageParamRequest);
 
-    ProductDetailResponse getDetail(Integer id);
+    /**
+     * 获取商品详情
+     * @param id 商品编号
+     * @param type normal-正常，void-视频
+     * @return 商品详情信息
+     */
+    ProductDetailResponse getDetail(Integer id, String type);
 
-    PageInfo<StoreProductReplyResponse> getReplyList(Integer id, Integer type, PageParamRequest pageParamRequest);
+    /**
+     * 商品评论列表
+     * @param proId 商品编号
+     * @param type 评价等级|0=全部,1=好评,2=中评,3=差评
+     * @param pageParamRequest 分页参数
+     * @return PageInfo<ProductReplyResponse>
+     */
+    PageInfo<ProductReplyResponse> getReplyList(Integer proId, Integer type, PageParamRequest pageParamRequest);
 
     StoreProductReplayCountResponse getReplyCount(Integer id);
 
-    String getPacketPriceRange(StoreProductResponse storeProductResponse,boolean isPromoter);
+    /**
+     * 获取热门推荐商品列表
+     * @param pageRequest 分页参数
+     * @return CommonPage<IndexProductResponse>
+     */
+    CommonPage<IndexProductResponse> getHotProductList(PageParamRequest pageRequest);
+
+    /**
+     * 商品详情评论
+     * @param id 商品id
+     * @return ProductDetailReplyResponse
+     */
+    ProductDetailReplyResponse getProductReply(Integer id);
+
+    /**
+     * 优选商品推荐
+     * @return CommonPage<IndexProductResponse>
+     */
+    CommonPage<IndexProductResponse> getGoodProductList();
 }

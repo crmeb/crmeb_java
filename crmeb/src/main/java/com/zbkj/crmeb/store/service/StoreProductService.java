@@ -5,6 +5,7 @@ import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.front.request.IndexStoreProductSearchRequest;
+import com.zbkj.crmeb.front.request.ProductRequest;
 import com.zbkj.crmeb.store.model.StoreProduct;
 import com.zbkj.crmeb.store.request.StoreProductRequest;
 import com.zbkj.crmeb.store.request.StoreProductSearchRequest;
@@ -188,4 +189,41 @@ public interface StoreProductService extends IService<StoreProduct> {
      * @return Boolean
      */
     Boolean putOnShelf(Integer id);
+
+    /**
+     * 首页商品列表
+     * @param type 类型 【1 精品推荐 2 热门榜单 3首发新品 4促销单品】
+     * @param pageParamRequest 分页参数
+     * @return CommonPage
+     */
+    List<StoreProduct> getIndexProduct(Integer type, PageParamRequest pageParamRequest);
+
+    /**
+     * 获取商品移动端列表
+     * @param request 筛选参数
+     * @param pageRequest 分页参数
+     * @return List
+     */
+    List<StoreProduct> findH5List(ProductRequest request, PageParamRequest pageRequest);
+
+    /**
+     * 获取移动端商品详情
+     * @param id 商品id
+     * @return StoreProduct
+     */
+    StoreProduct getH5Detail(Integer id);
+
+    /**
+     * 获取购物车商品信息
+     * @param productId 商品编号
+     * @return StoreProduct
+     */
+    StoreProduct getCartByProId(Integer productId);
+
+    /**
+     * 根据商品ids获取对应的列表
+     * @param productIdList 商品id列表
+     * @return List<StoreProduct>
+     */
+    List<StoreProduct> findH5ListByProIds(List<Integer> productIdList);
 }

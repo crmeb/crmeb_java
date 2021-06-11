@@ -3,20 +3,20 @@
 		<view class='integral-details'>
 			<view class='header'>
 				<view class='currentScore'>当前积分</view>
-				<view class="scoreNum">{{userInfo.integral||0}}</view>
+				<view class="scoreNum">{{integral.integral||0}}</view>
 				<view class='line'></view>
 				<view class='nav acea-row'>
 					<view class='item'>
-						<view class='num'>{{userInfo.sumIntegral||0}}</view>
+						<view class='num'>{{integral.sumIntegral||0}}</view>
 						<view>累计积分</view>
 					</view>
 					<view class='item'>
-						<view class='num'>{{userInfo.deductionIntegral||0}}</view>
+						<view class='num'>{{integral.deductionIntegral||0}}</view>
 						<view>累计消费</view>
 					</view>
 					<view class='item'>
-						<view class='num'>{{userInfo.yesterdayIntegral||0}}</view>
-						<view>今日获得</view>
+						<view class='num'>{{integral.frozenIntegral||0}}</view>
+						<view>冻结积分</view>
 					</view>
 				</view>
 			</view>
@@ -29,11 +29,11 @@
 					<view class='tip acea-row row-middle'><text class='iconfont icon-shuoming'></text>提示：积分数值的高低会直接影响您的会员等级</view>
 					<view class='item acea-row row-between-wrapper' v-for="(item,index) in integralList" :key="index">
 						<view>
-							<view class='state'>{{item.mark}}</view>
-							<view>{{item.add_time}}</view>
+							<view class='state'>{{item.title}}</view>
+							<view>{{item.updateTime}}</view>
 						</view>
-						<view class='num font-color' v-if="item.pm">+{{item.number}}</view>
-						<view class='num' v-else>-{{item.number}}</view>
+						<view class='num font-color' v-if="item.type===1">+{{item.integral}}</view>
+						<view class='num' v-else>-{{item.integral}}</view>
 					</view>
 					<view class='loadingicon acea-row row-center-wrapper' v-if="integralList.length>0">
 						<text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>{{loadTitle}}
@@ -61,13 +61,13 @@
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 	</view>
 </template>
 
 <script>
-	import { postSignUser, getIntegralList } from '@/api/user.js';
+	import { postIntegralUser, getIntegralList } from '@/api/user.js';
 	import {
 		toLogin
 	} from '@/libs/login.js';
@@ -100,7 +100,7 @@
 				page: 1,
 				limit: 10,
 				integralList: [],
-				userInfo:{},
+				integral:{},
 				loadend: false,
 				loading: false,
 				loadTitle: '加载更多',
@@ -125,13 +125,7 @@
 				this.getUserInfo();
 				this.getIntegralList();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		/**
@@ -154,12 +148,8 @@
 			},
 			getUserInfo: function() {
 				let that = this;
-				postSignUser({
-					sign: 1,
-					integral: 1,
-					all: 1
-				}).then(function(res) {
-					that.$set(that,'userInfo',res.data);
+				postIntegralUser().then(function(res) {
+					that.$set(that,'integral',res.data);
 				});
 			},
 
@@ -266,7 +256,7 @@
 
 	.integral-details .wrapper .nav .item.on {
 		background-color: #fff;
-		color: #e93323;
+		color: $theme-color;
 		font-weight: bold;
 		border-radius: 20rpx 0 0 0;
 	}

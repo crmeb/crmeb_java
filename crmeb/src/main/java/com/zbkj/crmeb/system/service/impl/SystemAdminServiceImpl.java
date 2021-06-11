@@ -345,7 +345,7 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
         try{
             //通过code获取用户信息
             WeChatAuthorizeLoginGetOpenIdResponse response = weChatService.authorizeLogin(code);
-            UserToken userToken = userTokenService.checkToken(response.getOpenId(), Constants.THIRD_ADMIN_LOGIN_TOKEN_TYPE_PUBLIC);
+            UserToken userToken = userTokenService.getByOpenidAndType(response.getOpenId(), Constants.THIRD_ADMIN_LOGIN_TOKEN_TYPE_PUBLIC);
             if(null == userToken){
                 userTokenService.bind(response.getOpenId(), Constants.THIRD_ADMIN_LOGIN_TOKEN_TYPE_PUBLIC, adminId);
             }

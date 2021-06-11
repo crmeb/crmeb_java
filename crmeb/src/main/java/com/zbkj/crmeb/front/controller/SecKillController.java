@@ -3,11 +3,10 @@ package com.zbkj.crmeb.front.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
-import com.zbkj.crmeb.express.model.Express;
 import com.zbkj.crmeb.front.response.SecKillResponse;
-import com.zbkj.crmeb.seckill.model.StoreSeckill;
+import com.zbkj.crmeb.front.response.SeckillIndexResponse;
+import com.zbkj.crmeb.front.response.StoreSecKillH5Response;
 import com.zbkj.crmeb.seckill.response.StoreSeckillDetailResponse;
-import com.zbkj.crmeb.seckill.response.StoreSeckillResponse;
 import com.zbkj.crmeb.seckill.service.StoreSeckillService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -15,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -40,12 +38,22 @@ public class SecKillController {
     StoreSeckillService storeSeckillService;
 
     /**
+     * 秒杀首页数据
+     * @return 可秒杀配置
+     */
+    @ApiOperation(value = "秒杀首页数据")
+    @RequestMapping(value = "/index", method = RequestMethod.GET)
+    public CommonResult<SeckillIndexResponse> index(){
+        return CommonResult.success(storeSeckillService.getIndexInfo());
+    }
+
+    /**
      * 秒杀Index
      * @return 可秒杀配置
      */
     @ApiOperation(value = "秒杀Header")
-    @RequestMapping(value = "/index", method = RequestMethod.GET)
-    public CommonResult<HashMap<String,Object>> index(){
+    @RequestMapping(value = "/header", method = RequestMethod.GET)
+    public CommonResult<List<SecKillResponse>> header(){
         return CommonResult.success(storeSeckillService.getForH5Index());
     }
 
@@ -55,10 +63,8 @@ public class SecKillController {
      */
     @ApiOperation(value = "秒杀列表")
     @RequestMapping(value = "/list/{timeId}", method = RequestMethod.GET)
-    public CommonResult<CommonPage<StoreSeckillResponse>> list(@PathVariable("timeId") String timeId, @ModelAttribute PageParamRequest pageParamRequest){
-        CommonPage<StoreSeckillResponse> secKillCommonPage =
-                CommonPage.restPage(storeSeckillService.getKillListByTimeId(timeId,pageParamRequest,true));
-        return CommonResult.success(secKillCommonPage);
+    public CommonResult<CommonPage<StoreSecKillH5Response>> list(@PathVariable("timeId") String timeId, @ModelAttribute PageParamRequest pageParamRequest){
+        return CommonResult.success(CommonPage.restPage(storeSeckillService.getKillListByTimeId(timeId, pageParamRequest)));
     }
 
 

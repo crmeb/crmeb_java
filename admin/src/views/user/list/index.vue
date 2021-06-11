@@ -11,7 +11,7 @@
               <el-col :xs="24" :sm="24" :md="24" :lg="18" :xl="18">
                 <el-col v-bind="grid">
                   <el-form-item label="用户搜索：">
-                    <el-input v-model="userFrom.keywords" placeholder="请输入" clearable  class="selWidth"/>
+                    <el-input v-model="userFrom.keywords" placeholder="请输入姓名" clearable  class="selWidth"/>
                   </el-form-item>
                 </el-col>
                 <!--<el-col :span="24">-->
@@ -115,12 +115,12 @@
                     <el-form-item label="消费情况：">
                       <el-select v-model="userFrom.payCount" placeholder="请选择"  class="selWidth" clearable>
                         <el-option value="" label="全部"></el-option>
-                        <el-option value="-1" label="0"></el-option>
-                        <el-option value="0" label="1+"></el-option>
-                        <el-option value="1" label="2+"></el-option>
-                        <el-option value="2" label="3+"></el-option>
-                        <el-option value="3" label="4+"></el-option>
-                        <el-option value="4" label="5+"></el-option>
+                        <el-option value="0" label="0"></el-option>
+                        <el-option value="1" label="1+"></el-option>
+                        <el-option value="2" label="2+"></el-option>
+                        <el-option value="3" label="3+"></el-option>
+                        <el-option value="4" label="4+"></el-option>
+                        <el-option value="5" label="5+"></el-option>
                       </el-select>
                     </el-form-item>
                   </el-col>
@@ -189,21 +189,21 @@
               <el-form-item label="近次访问：">
                 <span>{{ props.row.updateTime | filterEmpty }}</span>
               </el-form-item>
-              <el-form-item label="身份证号：">
-                <span>{{ props.row.cardId | filterEmpty }}</span>
-              </el-form-item>
+              <!--<el-form-item label="身份证号：">-->
+                <!--<span>{{ props.row.cardId | filterEmpty }}</span>-->
+              <!--</el-form-item>-->
               <el-form-item label="手机号：">
                 <span>{{ props.row.phone | filterEmpty }}</span>
               </el-form-item>
-              <el-form-item label="真实姓名：">
-                <span>{{ props.row.realName | filterEmpty }}</span>
-              </el-form-item>
+              <!--<el-form-item label="真实姓名：">-->
+                <!--<span>{{ props.row.realName | filterEmpty }}</span>-->
+              <!--</el-form-item>-->
               <el-form-item label="标签：">
                 <span>{{ props.row.tagName | filterEmpty }}</span>
               </el-form-item>
-              <el-form-item label="生日：">
-                <span>{{ props.row.birthday | filterEmpty }}</span>
-              </el-form-item>
+              <!--<el-form-item label="生日：">-->
+                <!--<span>{{ props.row.birthday | filterEmpty }}</span>-->
+              <!--</el-form-item>-->
               <el-form-item label="地址：">
                 <span>{{ props.row.addres | filterEmpty }}</span>
               </el-form-item>
@@ -260,13 +260,21 @@
           min-width="130"
         />
         <el-table-column
-          label="用户类型"
+          label="手机号"
           min-width="100"
         >
           <template slot-scope="scope">
-            <span>{{scope.row.userType | typeFilter}}</span>
+            <span>{{scope.row.phone | filterEmpty}}</span>
           </template>
         </el-table-column>
+        <!--<el-table-column-->
+          <!--label="用户类型"-->
+          <!--min-width="100"-->
+        <!--&gt;-->
+          <!--<template slot-scope="scope">-->
+            <!--<span>{{scope.row.userType | typeFilter}}</span>-->
+          <!--</template>-->
+        <!--</el-table-column>-->
         <el-table-column
           prop="nowMoney"
           label="余额"
@@ -289,6 +297,7 @@
                 <el-dropdown-item @click.native="editPoint(scope.row.uid)">积分余额</el-dropdown-item>
                 <el-dropdown-item @click.native="setBatch('group',scope.row)">设置分组</el-dropdown-item>
                 <el-dropdown-item @click.native="setBatch('label',scope.row)">设置标签</el-dropdown-item>
+                <el-dropdown-item @click.native="setPhone(scope.row)">修改手机号</el-dropdown-item>
                 <el-dropdown-item @click.native="setExtension(scope.row)">修改上级推广人</el-dropdown-item>
                 <el-dropdown-item @click.native="clearSpread(scope.row)" v-if="scope.row.spreadUid && scope.row.spreadUid>0">清除上级推广人</el-dropdown-item>
               </el-dropdown-menu>
@@ -403,7 +412,7 @@
           label="余额"
           required
         >
-          <el-input-number type="text" v-model="PointValidateForm.moneyValue" :max="999999"></el-input-number>
+          <el-input-number type="text" v-model="PointValidateForm.moneyValue" :precision="2" :step="0.1" :min="0" :max="999999"></el-input-number>
         </el-form-item>
         <el-form-item
           label="修改积分"
@@ -418,7 +427,7 @@
           label="积分"
           required
         >
-          <el-input-number type="text" step-strictly v-model="PointValidateForm.integralValue" :max="999999"></el-input-number>
+          <el-input-number type="text" step-strictly v-model="PointValidateForm.integralValue" :min="0" :max="999999"></el-input-number>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -439,7 +448,7 @@
 </template>
 
 <script>
-  import { userListApi, groupListApi, levelListApi, tagListApi, groupPiApi, tagPiApi, foundsApi, updateSpreadApi } from '@/api/user'
+  import { userListApi, groupListApi, levelListApi, tagListApi, groupPiApi, tagPiApi, foundsApi, updateSpreadApi, updatePhoneApi } from '@/api/user'
   import { spreadClearApi } from '@/api/distribution'
   import editFrom from './edit'
   import userDetails from './userDetails'
@@ -638,6 +647,29 @@
       this.getCityList()
     },
     methods: {
+      setPhone(row) {
+        this.$prompt('修改手机号', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputErrorMessage: '请输入修改手机号',
+          inputType: 'text',
+          inputValue: row.phone,
+          inputPlaceholder: '请输入手机号',
+          closeOnClickModal: false,
+          inputValidator: (value) => {
+            if (!value) return '请填写手机号'
+            if (!/^1[3456789]\d{9}$/.test(value)) return '手机号格式不正确!'
+            // if(!value) return '输入不能为空'
+          }
+        }).then(({value}) => {
+          updatePhoneApi({id: row.uid,phone: value}).then(() => {
+            this.$message.success('编辑成功')
+            this.getList();
+          })
+        }).catch(() => {
+          this.$message.info('取消输入')
+        })
+      },
       // 清除
       clearSpread(row) {
         this.$modalSure('解除【' + row.nickname + '】的上级推广人吗').then(() => {
@@ -735,7 +767,7 @@
             _this.couponData.push(item.title)
           })
           _this.selectionList = []
-        },this.userIds)
+        },this.userIds,'user')
       },
       Close() {
         this.Visible = false

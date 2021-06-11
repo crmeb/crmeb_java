@@ -53,43 +53,50 @@
         <el-table-column
           sortable
           prop="spreadCount"
-          label="推广用户数量"
-          min-width="120"
+          label="推广用户(一级)数量"
+          :sort-method="(a,b)=>{return a.spreadCount - b.spreadCount}"
+          min-width="150"
         />
         <el-table-column
           sortable
           label="推广订单数量"
           prop="spreadOrderNum"
+          :sort-method="(a,b)=>{return a.spreadOrderNum - b.spreadOrderNum}"
           min-width="120"
         />
         <el-table-column
           sortable
           label="推广订单金额"
           min-width="120"
+          :sort-method="(a,b)=>{return a.spreadOrderTotalPrice - b.spreadOrderTotalPrice}"
           prop="spreadOrderTotalPrice"
         />
         <el-table-column
           sortable
           label="佣金总金额"
           min-width="120"
+          :sort-method="(a,b)=>{return a.totalBrokeragePrice - b.totalBrokeragePrice}"
           prop="totalBrokeragePrice"
         />
         <el-table-column
           sortable
           label="已提现金额"
           min-width="120"
+          :sort-method="(a,b)=>{return a.extractCountPrice - b.extractCountPrice}"
           prop="extractCountPrice"
         />
         <el-table-column
           sortable
           label="已提现次数"
           min-width="120"
+          :sort-method="(a,b)=>{return a.extractCountNum - b.extractCountNum}"
           prop="extractCountNum"
         />
         <el-table-column
           sortable
           label="未提现金额"
           min-width="120"
+          :sort-method="(a,b)=>{return a.brokeragePrice - b.brokeragePrice}"
           prop="brokeragePrice"
         />
         <el-table-column
@@ -209,11 +216,11 @@
           min-width="120"
           prop="payCount"
         />
-        <el-table-column
-          prop="spreadTime"
-          label="关注时间"
-          min-width="150"
-        />
+        <!--<el-table-column-->
+          <!--prop="spreadTime"-->
+          <!--label="关注时间"-->
+          <!--min-width="150"-->
+        <!--/>-->
       </el-table>
       <el-table
         v-if="onName === 'order'"
@@ -239,7 +246,7 @@
           </template>
         </el-table-column>
         <el-table-column
-          prop="createTime"
+          prop="updateTime"
           label="时间"
           min-width="150"
         />
@@ -247,7 +254,7 @@
           sortable
           label="返佣金额"
           min-width="120"
-          prop="deductionPrice"
+          prop="price"
         />
       </el-table>
       <div class="block">
@@ -322,8 +329,8 @@
           this.cardLists = [
             { name: '分销人员人数', count: res.distributionNum },
             { name: '发展会员人数', count: res.developNum },
-            { name: '订单总数', count: res.orderNum },
-            { name: '订单金额（元）', count: res.orderPriceCount },
+            { name: '推广总数', count: res.orderNum },
+            { name: '推广金额（元）', count: res.orderPriceCount },
             { name: '提现次数', count: res.withdrawCount }
           ]
         })
@@ -423,7 +430,7 @@
         this.tableFrom.page = 1
         this.timeVal = []
         this.spreadStatistics()
-       // this.getList()
+        this.getList()
       },
       // 具体日期
       onchangeTime(e) {

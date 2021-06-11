@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * StoreSeckillMangerServiceImpl 接口实现
@@ -213,21 +212,20 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
 
     // 列表用 格式化time 对前端输出一致
     private void convertTime(List<StoreSeckillManagerResponse> responses, List<StoreSeckillManger> storeSeckillMangers) {
-        storeSeckillMangers.stream().map(e->{
+        storeSeckillMangers.forEach(e -> {
             StoreSeckillManagerResponse r = new StoreSeckillManagerResponse();
-            BeanUtils.copyProperties(e,r);
+            BeanUtils.copyProperties(e, r);
             cTime(e, r);
             responses.add(r);
-            return e;
-        }).collect(Collectors.toList());
+        });
     }
     // 详情用 格式化time 对前端输出一致
     private void cTime(StoreSeckillManger e, StoreSeckillManagerResponse r) {
         String pStartTime = e.getStartTime().toString();
         String pEndTime = e.getEndTime().toString();
-        String startTime = pStartTime.length() == 1? "0"+pStartTime:pStartTime;
-        String endTime = pEndTime.length() == 1? "0"+pEndTime:pEndTime;
-        r.setTime(startTime+":00,"+endTime+":00");
+        String startTime = pStartTime.length() == 1 ? "0" + pStartTime : pStartTime;
+        String endTime = pEndTime.length() == 1 ? "0" + pEndTime : pEndTime;
+        r.setTime(startTime + ":00," + endTime + ":00");
     }
 
     /**
@@ -263,6 +261,29 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
         Integer endTime = Integer.parseInt(timeRage[1].split(":")[0]);
         storeSeckillManger.setStartTime(startTime);
         storeSeckillManger.setEndTime(endTime);
+    }
+
+    /**
+     * 获取移动端列表 (正在进行和马上开始的秒杀)
+     * @return List<StoreSeckillManagerResponse>
+     */
+    @Override
+    public List<StoreSeckillManagerResponse> getH5List() {
+        LambdaQueryWrapper<StoreSeckillManger> lambdaQueryWrapper = Wrappers.lambdaQuery();
+        lambdaQueryWrapper.eq(StoreSeckillManger::getIsDel, false);
+        lambdaQueryWrapper.eq(StoreSeckillManger::getStatus, 1);
+        // 获取当前小时
+        int currentHour = DateUtil.getCurrentHour();
+        lambdaQueryWrapper.gt(StoreSeckillManger::getEndTime, currentHour);
+        lambdaQueryWrapper.orderByAsc(StoreSeckillManger::getStartTime);
+        List<StoreSeckillManger> storeSeckillMangers = dao.selectList(lambdaQueryWrapper);
+        if (CollUtil.isEmpty(storeSeckillMangers)) {
+            return CollUtil.newArrayList();
+        }
+        // 处理数据time格式 适配前端
+        List<StoreSeckillManagerResponse> responses = new ArrayList<>();
+        convertTime(responses, storeSeckillMangers);
+        return responses;
     }
 }
 

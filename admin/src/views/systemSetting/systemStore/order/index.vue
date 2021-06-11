@@ -64,12 +64,12 @@
               <div v-for="(val, i ) in scope.row.productList" :key="i" class="tabBox acea-row row-middle">
                 <div class="demo-image__preview">
                   <el-image
-                    :src="val.info.productInfo.image"
-                    :preview-src-list="[val.info.productInfo.image]"
+                    :src="val.info.image"
+                    :preview-src-list="[val.info.image]"
                   />
                 </div>
-                <span class="tabBox_tit mr10">{{ val.info.productInfo.storeName + ' | ' }}{{ val.info.productInfo.attrInfo.suk ? val.info.productInfo.attrInfo.suk:'-' }}</span>
-                <span class="tabBox_pice">{{ '￥'+ val.info.productInfo.attrInfo.price ? val.info.productInfo.attrInfo.price + ' x '+ val.info.cartNum : '-' }}</span>
+                <span class="tabBox_tit mr10">{{ val.info.productName + ' | ' }}{{ val.info.suk ? val.info.suk:'-' }}</span>
+                <span class="tabBox_pice">{{ '￥'+ val.info.price ? val.info.price + ' x '+ val.info.payNum : '-' }}</span>
               </div>
             </div>
           </template>

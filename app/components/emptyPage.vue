@@ -24,6 +24,7 @@
 		justify-content: center;
 		align-items: center;
 		margin-top: 200rpx;
+		padding-bottom: 60rpx;
 		image{
 			width: 414rpx;
 			height: 240rpx;

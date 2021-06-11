@@ -43,19 +43,19 @@
       >
         <div class="picTxt acea-row row-between-wrapper">
           <div class="pictrue">
-            <img :src="item.info.productInfo.image"/>
+            <img :src="item.info.image"/>
           </div>
           <div class="text">
             <div class="info line2">
-              {{ item.info.productInfo.storeName }}
+              {{ item.info.productName }}
             </div>
-            <div class="attr">{{ item.info.productInfo.attrInfo.suk }}</div>
+            <div class="attr">{{ item.info.sku }}</div>
           </div>
         </div>
         <div class="money">
-          <div class="x-money">￥{{ item.info.productInfo.price }}</div>
-          <div class="num">x{{ item.info.cartNum }}</div>
-          <div class="y-money">￥{{ item.info.productInfo.otPrice }}</div>
+          <div class="x-money">￥{{ item.info.price }}</div>
+          <div class="num">x{{ item.info.payNum }}</div>
+          <!--<div class="y-money">￥{{ item.info.price }}</div>-->
         </div>
       </div>
     </div>
@@ -249,7 +249,7 @@ export default {
     },
     getIndex: function() {
       let that = this;
-      orderDetailApi({id: this.$route.params.id}).then(
+      orderDetailApi({orderNo: this.$route.params.id}).then(
         res => {
           that.orderInfo = res;
           that.types = res.statusStr.key;

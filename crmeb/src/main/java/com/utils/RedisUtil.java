@@ -28,8 +28,6 @@ public class RedisUtil {
     @Autowired
     private RedisTemplate redisTemplate;
 
-
-
     /**
      * 写入缓存
      * @param key string key
@@ -38,7 +36,7 @@ public class RedisUtil {
      * @since 2020-04-13
      * @return bool
      */
-    public boolean set(final String key, Object value) {
+    public boolean set(String key, Object value) {
         boolean result = false;
         try {
             ValueOperations<Serializable, Object> operations = redisTemplate.opsForValue();
@@ -60,7 +58,7 @@ public class RedisUtil {
      * @since 2020-04-13
      * @return bool
      */
-    public boolean set(final String key, Object value, Long expireTime, TimeUnit timeUnit) {
+    public boolean set(String key, Object value, Long expireTime, TimeUnit timeUnit) {
         boolean result = false;
         try {
             ValueOperations<Serializable, Object> operations = redisTemplate.opsForValue();
@@ -78,7 +76,7 @@ public class RedisUtil {
      * @author Mr.Zhang
      * @since 2020-04-13
      */
-    public void remove(final String... keys) {
+    public void remove(String... keys) {
         for (String key : keys) {
             remove(key);
         }
@@ -90,7 +88,7 @@ public class RedisUtil {
      * @author Mr.Zhang
      * @since 2020-04-13
      */
-    public void removePattern(final String pattern) {
+    public void removePattern(String pattern) {
         Set<Serializable> keys = redisTemplate.keys(pattern);
         if (keys.size() > 0) {
             redisTemplate.delete(keys);
@@ -103,12 +101,11 @@ public class RedisUtil {
      * @author Mr.Zhang
      * @since 2020-04-13
      */
-    public void remove(final String key) {
+    public void remove(String key) {
         if (exists(key)) {
             redisTemplate.delete(key);
         }
     }
-
 
     /**
      * 判断缓存中是否有对应的value
@@ -117,7 +114,7 @@ public class RedisUtil {
      * @since 2020-04-13
      * @return bool
      */
-    public boolean exists(final String key) {
+    public boolean exists(String key) {
         return redisTemplate.hasKey(key);
     }
 
@@ -130,7 +127,7 @@ public class RedisUtil {
      * @return Object
      */
 
-    public Object get(final String key) {
+    public Object get(String key) {
         Object result = null;
         ValueOperations<Serializable, Object> operations = redisTemplate.opsForValue();
         result = operations.get(key);

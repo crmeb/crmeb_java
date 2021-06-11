@@ -46,7 +46,7 @@ const marketingRouter = {
           path: 'record',
           component: () => import('@/views/marketing/coupon/record/index'),
           name: 'Record',
-          meta: { title: '会员领取记录', icon: '' }
+          meta: { title: '领取记录', icon: '' }
         }
       ]
     },

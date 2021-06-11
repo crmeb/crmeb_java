@@ -3,12 +3,9 @@
 		<view class="combination" v-if="bargList.length">
 			<view class="title acea-row row-between">
 				<view class="acea-row row-column">
-					<view class="sign">
-						Hi，{{userData.nickname || '亲爱的顾客'}}！
-					</view>
-					<view class="name"><text>你的好友正在邀请你参与砍价</text></view>
+					<image src="../../../static/images/kanjia.png" class="pic"></image>
 				</view>
-				<navigator url="/pages/activity/goods_bargain/index" hover-class="none" class="more acea-row row-center-wrapper">更多<text class="iconfont icon-xiangyou"></text></navigator>
+				<navigator url="/pages/activity/goods_bargain/index" hover-class="none" class="more acea-row row-center-wrapper">GO<text class="iconfont icon-xiangyou"></text></navigator>
 			</view>
 			<view class="conter acea-row">
 				<scroll-view scroll-x="true" style="white-space: nowrap; vertical-align: middle;" show-scrollbar="false">
@@ -21,7 +18,6 @@
 								<view class="name line1">{{item.title}}</view>
 								<view class="money">¥<text class="num">{{item.minPrice}}</text></view>
 								<view class="btn">参与砍价</view>
-								<!-- <view class="y_money">¥{{item.price}}</view> -->
 							</view>
 						</view>
 					</view>
@@ -37,7 +33,7 @@
 		toLogin
 	} from '@/libs/login.js';
 	import {
-		getBargainList
+		getBargainIndexApi
 	} from '@/api/activity.js';
 	import { mapGetters } from 'vuex';
 	export default {
@@ -60,17 +56,13 @@
 		methods: {
 			// 砍价列表
 			getBargainList() {
-				let limit = this.$config.LIMIT;
-				getBargainList({
-					page: 1,
-					limit: limit
-				}).then(res => {
-					this.bargList = res.data.list
+				getBargainIndexApi().then(res => {
+					this.bargList = res.data ? res.data.productList : [];
 				})
 			},
 			bargDetail(item){
 			   uni.navigateTo({
-			   	url: `/pages/activity/goods_bargain_details/index?id=${item.id}&bargain=${this.uid}`
+			   	url: `/pages/activity/goods_bargain_details/index?id=${item.id}&startBargainUid=${this.uid}`
 			   });
 			}
 		}
@@ -78,6 +70,10 @@
 </script>
 
 <style lang="scss" scoped>
+	.pic{
+		width: 130rpx;
+		height: 30rpx;
+	}
 	.default{
 		width: 690rpx;
 		height: 300rpx;
@@ -91,20 +87,19 @@
 		}
 	}
 	.combination{
-		width: 690rpx;
+		width: auto;
 		background-image: url(../../../static/images/kjbj.png);
 		background-repeat: no-repeat;
 		background-size: 100%;
-		// height: 288rpx;
 		background-color: #fff;
 		border-radius: 14rpx;
-		margin: 26rpx auto 0 auto;
+		margin: 30rpx auto 0 auto;
 		padding: 25rpx 20rpx 25rpx 20rpx;
 		
 		.title {
 			.sign {
 				font-size: 32rpx;
-				color: #E93323;
+				color: $theme-color;
 				margin-bottom: 2rpx;
 				font-weight: bold;
 				margin-bottom: 10rpx;
@@ -120,13 +115,17 @@
 			}
 		
 			.more {
-				height: 37rpx;
+				width: 86rpx;
+				height: 40rpx;
+				background: linear-gradient(142deg, #FFE9CE 0%, #FFD6A7 100%);
+				opacity: 1;
+				border-radius: 18px;
 				font-size: 22rpx;
-				color: #666666;
-				padding-left: 2rpx;
-		
+				color: #FE960F;
+				padding-left: 8rpx;
+				font-weight: 800;
 				.iconfont {
-					font-size: 20rpx;
+					font-size: 21rpx;
 				}
 			}
 		}
@@ -134,14 +133,14 @@
 			margin-top: 28rpx;
 			.itemCon {
 				display: inline-block;
-				width: 174rpx;
+				width: 220rpx;
 				margin-right: 24rpx;
 			}
 			.item{
 				width:100%;
 				.pictrue{
 					width: 100%;
-					height: 174rpx;
+					height: 220rpx;
 					border-radius: 6rpx;
 					image{
 						width: 100%;
@@ -152,7 +151,7 @@
 				.text{
 					margin-top: 4rpx;
 					.y_money {
-						font-size: 20rpx;
+						font-size: 24rpx;
 						color: #999999;
 						text-decoration: line-through;
 					}
@@ -166,13 +165,13 @@
 						font-size: 28rpx;
 						height: 100%;
 						font-weight: bold;
-					    margin: 2rpx 0;
+					    margin: 10rpx 0;
 						.num {
 							font-size: 28rpx;
 						}
 					}
 					.btn{
-						width: 174rpx;
+						width: 220rpx;
 						height: 48rpx;
 						line-height: 48rpx;
 						text-align: center;

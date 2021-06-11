@@ -62,7 +62,12 @@ public class CheckFrontToken {
                 "api/front/coupons",
                 "api/front/index",
                 "api/front/bargain/list",
-                "api/front/combination/list"
+                "api/front/combination/list",
+                "api/front/index/product",
+                "api/front/combination/index",
+                "api/front/bargain/index",
+                "/api/front/index"
+
         };
 
         return ArrayUtils.contains(routerList, uri);

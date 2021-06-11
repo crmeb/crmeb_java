@@ -36,7 +36,6 @@
 		},
 		 onLoad: function (options) {
 			 this.type = options.type;
-			 cosole.log('hello')
 		  },
 		    onShow: function () {
 		      let type = this.type;

@@ -218,8 +218,8 @@ public class UserLevelServiceImpl extends ServiceImpl<UserLevelDao, UserLevel> i
                 save(newLevel);
             } else {
                 //有数据，更新即可
-                newLevel.setId(userLevel.getId());
-                updateById(newLevel);
+//                newLevel.setId(userLevel.getId());
+                save(newLevel);
                 // 将原等级删除
                 userLevel.setIsDel(true);
                 updateById(userLevel);

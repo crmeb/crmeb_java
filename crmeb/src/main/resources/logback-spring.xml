@@ -28,21 +28,20 @@
 
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 
-<!--            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>-->
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} -%5p ${PID:-} [%class:%line] : %msg%n</pattern>
-<!--            <pattern>-->
+            <!--<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>-->
+            <pattern>
 
-<!--                <pattern>-->
-<!--                    {-->
-<!--                    "app": "${APP_NAME}",-->
-<!--                    "timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}",-->
-<!--                    "level": "%level",-->
-<!--                    "thread": "%thread",-->
-<!--                    "class": "%logger{40}",-->
-<!--                    "message": "%msg" }-->
-<!--                    %n-->
-<!--                </pattern>-->
-<!--            </pattern>-->
+                <pattern>
+                    {
+                    "app": "${APP_NAME}",
+                    "timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}",
+                    "level": "%level",
+                    "thread": "%thread",
+                    "class": "%logger{40}",
+                    "message": "%msg" }
+                    %n
+                </pattern>
+            </pattern>
             <charset>utf-8</charset>
         </encoder>
     </appender>
@@ -100,20 +99,19 @@
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 
             <!--<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>-->
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} -%5p ${PID:-} [%class:%line] : %msg%n</pattern>
-<!--            <pattern>-->
+            <pattern>
 
-<!--                <pattern>-->
-<!--                    {-->
-<!--                    "app": "${APP_NAME}",-->
-<!--                    "timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}",-->
-<!--                    "level": "%level",-->
-<!--                    "thread": "%thread",-->
-<!--                    "class": "%logger{40}",-->
-<!--                    "message": "%msg" }-->
-<!--                    %n-->
-<!--                </pattern>-->
-<!--            </pattern>-->
+                <pattern>
+                    {
+                    "app": "${APP_NAME}",
+                    "timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}",
+                    "level": "%level",
+                    "thread": "%thread",
+                    "class": "%logger{40}",
+                    "message": "%msg" }
+                    %n
+                </pattern>
+            </pattern>
             <charset>utf-8</charset>
         </encoder>
         <!-- 日志记录器的滚动策略，按日期，按大小记录 -->
@@ -142,20 +140,19 @@
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 
             <!--<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>-->
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} -%5p ${PID:-} [%class:%line] : %msg%n</pattern>
-<!--            <pattern>-->
+            <pattern>
 
-<!--                <pattern>-->
-<!--                    {-->
-<!--                    "app": "${APP_NAME}",-->
-<!--                    "timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}",-->
-<!--                    "level": "%level",-->
-<!--                    "thread": "%thread",-->
-<!--                    "class": "%logger{40}",-->
-<!--                    "message": "%msg" }-->
-<!--                    %n-->
-<!--                </pattern>-->
-<!--            </pattern>-->
+                <pattern>
+                    {
+                    "app": "${APP_NAME}",
+                    "timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}",
+                    "level": "%level",
+                    "thread": "%thread",
+                    "class": "%logger{40}",
+                    "message": "%msg" }
+                    %n
+                </pattern>
+            </pattern>
             <charset>utf-8</charset>
         </encoder>
         <!-- 日志记录器的滚动策略，按日期，按大小记录 -->
@@ -184,20 +181,19 @@
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 
             <!--<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>-->
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} -%5p ${PID:-} [%class:%line] : %msg%n</pattern>
-<!--            <pattern>-->
+            <pattern>
 
-<!--                <pattern>-->
-<!--                    {-->
-<!--                    "app": "${APP_NAME}",-->
-<!--                    "timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}",-->
-<!--                    "level": "%level",-->
-<!--                    "thread": "%thread",-->
-<!--                    "class": "%logger{40}",-->
-<!--                    "message": "%msg" }-->
-<!--                    %n-->
-<!--                </pattern>-->
-<!--            </pattern>-->
+                <pattern>
+                    {
+                    "app": "${APP_NAME}",
+                    "timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}",
+                    "level": "%level",
+                    "thread": "%thread",
+                    "class": "%logger{40}",
+                    "message": "%msg" }
+                    %n
+                </pattern>
+            </pattern>
             <charset>utf-8</charset>
         </encoder>
         <!-- 日志记录器的滚动策略，按日期，按大小记录 -->
@@ -228,9 +224,9 @@
     <!-- 日志输出级别 -->
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
-        <appender-ref ref="DEBUG_FILE" />
-        <appender-ref ref="INFO_FILE" />
-        <appender-ref ref="WARN_FILE" />
+<!--        <appender-ref ref="DEBUG_FILE" />-->
+<!--        <appender-ref ref="INFO_FILE" />-->
+<!--        <appender-ref ref="WARN_FILE" />-->
         <appender-ref ref="ERROR_FILE" />
         <!--<appender-ref ref="LOGSTASH"/>-->
     </root>

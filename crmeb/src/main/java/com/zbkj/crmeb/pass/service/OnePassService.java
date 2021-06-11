@@ -112,4 +112,9 @@ public interface OnePassService {
      * @return Boolean
      */
     Boolean beforeUpdatePhoneValidator(OnePassLoginRequest request);
+
+    /**
+     * 校验一号通账号是否配置
+     */
+    Boolean checkAccount();
 }

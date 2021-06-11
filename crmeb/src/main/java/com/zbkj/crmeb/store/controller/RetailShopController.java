@@ -3,10 +3,10 @@ package com.zbkj.crmeb.store.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
-import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.request.RetailShopRequest;
 import com.zbkj.crmeb.store.request.RetailShopStairUserRequest;
 import com.zbkj.crmeb.store.response.RetailShopStatisticsResponse;
+import com.zbkj.crmeb.store.response.SpreadOrderResponse;
 import com.zbkj.crmeb.store.service.RetailShopService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.response.SpreadUserResponse;
@@ -117,8 +117,8 @@ public class RetailShopController {
      */
     @ApiOperation(value = "根据条件获取推广人订单")
     @RequestMapping(value = "/spread/orderlist", method = RequestMethod.POST)
-    public CommonResult<CommonPage<StoreOrder>> getOrdersBySpreadLevel(@RequestBody @Validated RetailShopStairUserRequest request,
-                                                                       @ModelAttribute PageParamRequest pageParamRequest) {
+    public CommonResult<CommonPage<SpreadOrderResponse>> getOrdersBySpreadLevel(@RequestBody @Validated RetailShopStairUserRequest request,
+                                                                                @ModelAttribute PageParamRequest pageParamRequest) {
         return CommonResult.success(CommonPage.restPage(userService.getOrderListBySpreadLevel(request, pageParamRequest)));
     }
 

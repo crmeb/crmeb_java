@@ -3,25 +3,25 @@
       <el-form-item label="用户编号：">
         <el-input v-model="ruleForm.id" disabled class="selWidth"></el-input>
       </el-form-item>
-      <el-form-item label="真实姓名：">
-        <el-input v-model="ruleForm.realName" class="selWidth"></el-input>
-      </el-form-item>
-      <el-form-item label="手机号码：" prop="phone">
-        <el-input v-model.number="ruleForm.phone" class="selWidth"></el-input>
-      </el-form-item>
-      <el-form-item label="生日：">
-        <el-date-picker
-          v-model="ruleForm.birthday"
-          type="date"
-          class="selWidth"
-          placeholder="选择日期"
-          format="yyyy 年 MM 月 dd 日"
-          value-format="yyyy-MM-dd">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="身份证号：">
-        <el-input v-model="ruleForm.cardId" class="selWidth"></el-input>
-      </el-form-item>
+      <!--<el-form-item label="真实姓名：">-->
+        <!--<el-input v-model="ruleForm.realName" class="selWidth"></el-input>-->
+      <!--</el-form-item>-->
+      <!--<el-form-item label="手机号码：" prop="phone">-->
+        <!--<el-input v-model.number="ruleForm.phone" class="selWidth" readonly></el-input>-->
+      <!--</el-form-item>-->
+      <!--<el-form-item label="生日：">-->
+        <!--<el-date-picker-->
+          <!--v-model="ruleForm.birthday"-->
+          <!--type="date"-->
+          <!--class="selWidth"-->
+          <!--placeholder="选择日期"-->
+          <!--format="yyyy 年 MM 月 dd 日"-->
+          <!--value-format="yyyy-MM-dd">-->
+        <!--</el-date-picker>-->
+      <!--</el-form-item>-->
+      <!--<el-form-item label="身份证号：">-->
+        <!--<el-input v-model="ruleForm.cardId" class="selWidth"></el-input>-->
+      <!--</el-form-item>-->
       <el-form-item label="用户地址：">
         <el-input v-model="ruleForm.addres" class="selWidth"></el-input>
       </el-form-item>
@@ -65,17 +65,17 @@
 <script>
   import { groupListApi, levelListApi, tagListApi, userInfoApi, userUpdateApi } from '@/api/user'
   const defaultObj = {
-    birthday: '',
-    cardId: '',
+   // birthday: '',
+   // cardId: '',
     id : null,
     mark: '',
-    phone: '',
-    realName: '',
+  //  phone: '',
+   // realName: '',
     addres:'',
     groupId: '',
     level: '',
     isPromoter: false,
-    status: false,
+    status: false
   }
   export default {
     name: "UserEdit",
@@ -107,12 +107,12 @@
       userInfo () {
         userInfoApi({ id: this.uid}).then(async res => {
           this.ruleForm = {
-            birthday: res.birthday,
-            cardId: res.cardId,
+           // birthday: res.birthday,
+           // cardId: res.cardId,
             id : res.uid,
             mark: res.mark,
-            phone: res.phone,
-            realName: res.realName,
+           // phone: res.phone,
+           // realName: res.realName,
             status: res.status,
             addres: res.addres,
             groupId: Number(res.groupId) || '',

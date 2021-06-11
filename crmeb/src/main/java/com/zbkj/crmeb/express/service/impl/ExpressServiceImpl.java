@@ -70,7 +70,6 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
         if(StrUtil.isNotBlank(request.getKeywords())){
             lambdaQueryWrapper.like(Express::getCode, request.getKeywords()).or().like(Express::getName, request.getKeywords());
         }
-
         lambdaQueryWrapper.orderByDesc(Express::getSort, Express::getId);
         return dao.selectList(lambdaQueryWrapper);
     }
@@ -181,6 +180,18 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
     }
 
     /**
+     * 通过物流公司名称获取
+     * @param name 物流公司名称
+     */
+    @Override
+    public Express getByName(String name) {
+        LambdaQueryWrapper<Express> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(Express::getName, name);
+        lqw.last(" limit 1");
+        return dao.selectOne(lqw);
+    }
+
+    /**
      * 从平台获取物流公司
      * 并存入数据库
      */
@@ -202,7 +213,7 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
         List<String> codeList = getAllCode();
         jsonArray.forEach(temp -> {
             JSONObject object = (JSONObject) temp;
-            if (StrUtil.isBlank(object.getString("code")) || !codeList.contains(object.getString("code"))) {
+            if (StrUtil.isNotBlank(object.getString("code")) && !codeList.contains(object.getString("code"))) {
                 Express express = new Express();
                 express.setName(Optional.ofNullable(object.getString("name")).orElse(""));
                 express.setCode(Optional.ofNullable(object.getString("code")).orElse(""));

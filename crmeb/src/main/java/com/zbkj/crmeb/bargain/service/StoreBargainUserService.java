@@ -6,6 +6,9 @@ import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.bargain.model.StoreBargainUser;
 import com.zbkj.crmeb.bargain.request.StoreBargainUserSearchRequest;
 import com.zbkj.crmeb.bargain.response.StoreBargainUserResponse;
+import com.zbkj.crmeb.front.request.BargainFrontRequest;
+import com.zbkj.crmeb.front.response.BargainRecordResponse;
+import com.zbkj.crmeb.front.response.BargainUserInfoResponse;
 
 import java.util.List;
 
@@ -27,23 +30,16 @@ public interface StoreBargainUserService extends IService<StoreBargainUser> {
 
     /**
      * 获取砍价商品参与用户列表
-     * @param bargainId
-     * @return
+     * @param bargainId 砍价商品Id
+     * @return List<StoreBargainUser>
      */
     List<StoreBargainUser> getListByBargainId(Integer bargainId);
-
-    /**
-     * 获取砍价商品参与人数
-     * @param id
-     * @return
-     */
-    Long getCountByBargainId(Integer id);
 
     /**
      * 获取砍价商品
      * @param bargainId 砍价商品编号
      * @param uid       参与用户uid
-     * @return
+     * @return StoreBargainUser
      */
     StoreBargainUser getByBargainIdAndUid(Integer bargainId, Integer uid);
 
@@ -51,7 +47,7 @@ public interface StoreBargainUserService extends IService<StoreBargainUser> {
      * 获取砍价中商品
      * @param bargainId 砍价商品编号
      * @param uid       参与用户uid
-     * @return
+     * @return StoreBargainUser
      */
     StoreBargainUser getByBargainIdAndUidAndPink(Integer bargainId, Integer uid);
 
@@ -59,22 +55,32 @@ public interface StoreBargainUserService extends IService<StoreBargainUser> {
      * 获取用户砍价活动列表
      * @param bargainId 砍价商品编号
      * @param uid       参与用户uid
-     * @return
+     * @return StoreBargainUser
      */
     List<StoreBargainUser> getListByBargainIdAndUid(Integer bargainId, Integer uid);
 
     /**
-     * 用户是否参与砍价商品活动
-     * @param bargainId
-     * @param uid
-     * @return
-     */
-    Boolean isExistByBargainIdAndUid(Integer bargainId, Integer uid);
-
-    /**
      * 砍价商品用户根据实体查询
-     * @param bargainUser
-     * @return
+     * @param bargainUser 砍价活动
+     * @return List<StoreBargainUser>
      */
     List<StoreBargainUser> getByEntity(StoreBargainUser bargainUser);
+
+    /**
+     * 获取砍价成功列表Header
+     */
+    List<StoreBargainUser> getHeaderList();
+
+    /**
+     * 获取用户砍价信息
+     * @param bargainFrontRequest 请求参数
+     * @return BargainUserInfoResponse
+     */
+    BargainUserInfoResponse getBargainUserInfo(BargainFrontRequest bargainFrontRequest);
+
+    /**
+     * 砍价记录
+     * @return PageInfo<BargainRecordResponse>
+     */
+    PageInfo<BargainRecordResponse> getRecordList(PageParamRequest pageParamRequest);
 }

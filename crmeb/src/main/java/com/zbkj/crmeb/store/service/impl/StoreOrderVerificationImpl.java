@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.constants.Constants;
 import com.exception.CrmebException;
 import com.utils.DateUtil;
+import com.utils.RedisUtil;
 import com.utils.vo.dateLimitUtilVo;
 import com.zbkj.crmeb.store.dao.StoreOrderDao;
 import com.zbkj.crmeb.store.model.StoreOrder;
@@ -64,7 +65,7 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
     private WechatSendMessageForMinService wechatSendMessageForMinService;
 
     @Autowired
-    private SystemStoreStaffService systemStoreStaffService;
+    private RedisUtil redisUtil;
 
     /**
      * 获取订单核销数据
@@ -169,7 +170,7 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
 
 
     /**
-     * 根据核销码核销订单
+     * 根据核销码核销订单(相当于收货)
      *
      * @param vCode 核销码
      * @return 核销结果
@@ -188,6 +189,9 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
 
         // 小程序订阅消息发送
         if(saveStatus){
+            //后续操作放入redis
+            redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_TAKE_BY_USER, storeOrder.getId());
+
             WechatSendMessageForVerSuccess ver = new WechatSendMessageForVerSuccess(
                     "CRMEB",orderUtils.getStoreNameAndCarNumString(storeOrder.getId()),storeOrder.getOrderId(),
                     DateUtil.nowDateTimeStr(),storeOrder.getPayPrice()+"","暂无","CRMEB"

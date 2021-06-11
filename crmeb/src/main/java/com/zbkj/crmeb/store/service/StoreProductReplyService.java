@@ -4,6 +4,8 @@ import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.github.pagehelper.PageInfo;
+import com.zbkj.crmeb.front.response.ProductDetailReplyResponse;
+import com.zbkj.crmeb.front.response.ProductReplyResponse;
 import com.zbkj.crmeb.store.model.StoreProductReply;
 import com.zbkj.crmeb.store.request.StoreProductReplyAddRequest;
 import com.zbkj.crmeb.store.request.StoreProductReplySearchRequest;
@@ -29,7 +31,12 @@ public interface StoreProductReplyService extends IService<StoreProductReply> {
 
     Integer getSumStar(Integer productId);
 
-    boolean create(StoreProductReplyAddRequest request);
+    /**
+     * 创建订单商品评价
+     * @param request 请求参数
+     * @return Boolean
+     */
+    Boolean create(StoreProductReplyAddRequest request);
 
     /**
      * 添加虚拟评论
@@ -58,15 +65,30 @@ public interface StoreProductReplyService extends IService<StoreProductReply> {
      * 获取商品评论列表
      * @param productId     商品ID
      * @param type          商品类型
-     * @return
+     * @return List<StoreProductReply>
      */
     List<StoreProductReply> getAllByPidAndType(Integer productId, String type);
 
     /**
      * H5商品评论统计
      * @param productId 商品编号
-     * @return
+     * @return MyRecord
      */
     MyRecord getH5Count(Integer productId);
 
+    /**
+     * H5商品详情评论信息
+     * @param proId 商品编号
+     * @return ProductDetailReplyResponse
+     */
+    ProductDetailReplyResponse getH5ProductReply(Integer proId);
+
+    /**
+     * 移动端商品评论列表
+     * @param proId 商品编号
+     * @param type 评价等级|0=全部,1=好评,2=中评,3=差评
+     * @param pageParamRequest 分页参数
+     * @return PageInfo<ProductReplyResponse>
+     */
+    PageInfo<ProductReplyResponse> getH5List(Integer proId, Integer type, PageParamRequest pageParamRequest);
 }

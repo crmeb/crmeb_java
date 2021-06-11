@@ -78,4 +78,10 @@ public interface StoreSeckillMangerService extends IService<StoreSeckillManger> 
     boolean update(Integer id,StoreSeckillMangerRequest storeSeckillMangerRequest);
     void setTimeRangeFromRequest(@Validated @RequestBody StoreSeckillMangerRequest storeSeckillMangerRequest, StoreSeckillManger storeSeckillManger);
     void setTimeRangeFromRequest(@Validated @RequestBody StoreSeckillMangerSearchRequest request, StoreSeckillManger storeSeckillManger);
+
+    /**
+     * 获取移动端列表(正在进行和马上开始的秒杀)
+     * @return List<StoreSeckillManagerResponse>
+     */
+    List<StoreSeckillManagerResponse> getH5List();
 }

@@ -29,4 +29,6 @@ module.exports = {
         CACHE_LONGITUDE: 'LONGITUDE',
         //缓存纬度
         CACHE_LATITUDE: 'LATITUDE',
+		 //app手机信息
+		PLATFORM: 'systemPlatform'
 }
