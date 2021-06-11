@@ -12,22 +12,15 @@ export function getWechatConfig() {
   return request.get("wechat/config",{ url: encodeURIComponent(wechat.signLink()) },{ noAuth: true });
 }
 
-// export function getWechatConfig() {
-//   return request.get(
-//     "wechat/config",
-//     { url: encodeURIComponent(location.href.split('#')[0]) },
-//     { noAuth: true }
-//   );
-// }
-
 /**
  * 获取微信sdk配置
  * @returns {*}
  */
-export function wechatAuth(code, spread, login_type) {
+export function wechatAuth(code, spread) {
+	var reg=/^[0-9]+.?[0-9]*$/; //判断字符串是否为数字 ，判断正整数用/^[1-9]+[0-9]*]*$/
+	spread = reg.test(spread) ? spread : 0;
   return request.get(
-    "wechat/authorize/login",
-    { code, spread_spid:spread, login_type },
+    "wechat/authorize/login?code=" + code + "&spread_spid=" + spread, {},
     { noAuth: true }
   );
 }
@@ -98,14 +91,26 @@ export function getUserPhone(data){
 }
 
 /**
- * 静默授权
+ * APP微信登录
  * @param {Object} data
  */
-export function silenceAuth(data) {
-	//#ifdef MP
-  return request.get("wechat/authorize/program/login", data, { noAuth : true });
-  //#endif
-  //#ifdef H5
-  return request.get("wechat/authorize/login", data, { noAuth : true });
-  //#endif
+export function appAuth(data) {
+	return request.post("wechat/authorize/app/login", data, { noAuth : true });
+}
+
+/**
+ * 苹果登录
+ * @param {Object} data
+ */
+export function appleLogin(data) {
+	return request.post("ios/login", data, { noAuth : true });
+}
+
+
+/**
+ * 苹果绑定手机号
+ * @param {Object} data
+ */
+export function iosBinding(data) {
+	return request.post("ios/binding/phone", data, { noAuth : true });
 }

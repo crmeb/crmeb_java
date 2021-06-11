@@ -45,7 +45,7 @@ public class OrderCreateRequest {
     @ApiModelProperty(value = "支付类型:weixin-微信支付，yue-余额支付，offline-线下支付，alipay-支付包支付")
     private String payType;
 
-    @ApiModelProperty(value = "支付渠道:weixinh5-微信H5支付，public-公众号支付，routine-小程序支付")
+    @ApiModelProperty(value = "支付渠道:weixinh5-微信H5支付，public-公众号支付，routine-小程序支付，weixinAppIos-微信appios支付，weixinAppAndroid-微信app安卓支付")
     private String payChannel;
 
     @ApiModelProperty(value = "是否使用积分")

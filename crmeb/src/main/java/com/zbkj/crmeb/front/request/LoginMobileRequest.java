@@ -33,18 +33,17 @@ public class LoginMobileRequest implements Serializable {
     private static final long serialVersionUID=1L;
 
     @ApiModelProperty(value = "手机号", required = true)
+    @NotBlank(message = "手机号不能为空")
     @Pattern(regexp = RegularConstants.PHONE, message = "手机号码格式错误")
-    @NotBlank
-    @JsonProperty(value = "account")
     private String phone;
 
     @ApiModelProperty(value = "验证码", required = true)
     @Pattern(regexp = RegularConstants.SMS_VALIDATE_CODE_NUM, message = "验证码格式错误，验证码必须为6位数字")
-    @JsonProperty(value = "captcha")
-    private String validateCode;
+    private String captcha;
 
     @ApiModelProperty(value = "推广人id")
-    private Integer spread;
+    @JsonProperty(value = "spread_spid")
+    private Integer spreadPid;
 
 
 

@@ -15,15 +15,9 @@
                               @change="onchangeTime"/>
             </el-form-item>
             <el-form-item label="用户微信昵称：">
-              <el-select v-model="tableFrom.userIdList" style="width: 500px" reserve-keyword multiple remote filterable
-                         :remote-method="remoteMethod" :loading="loading" placeholder="请输入用户微信昵称" clearable @change="seachList">
-                <el-option
-                  v-for="item in options"
-                  :key="item.uid"
-                  :label="item.nickname"
-                  :value="item.uid">
-                </el-option>
-              </el-select>
+              <el-input v-model="tableFrom.keywords" placeholder="请输入用户微信昵称" class="selWidth" size="small">
+                <el-button slot="append" icon="el-icon-search" size="small" @click="getList(1)" />
+              </el-input>
             </el-form-item>
           </el-form>
         </div>
@@ -58,8 +52,8 @@
           sortable
           label="明细数字"
           min-width="120"
-          prop="number"
-          :sort-method="(a,b)=>{return a.number - b.number}"
+          prop="integral"
+          :sort-method="(a,b)=>{return a.integral - b.integral}"
         />
         <el-table-column
           label="备注"
@@ -72,7 +66,7 @@
           prop="nickName"
         />
         <el-table-column
-          prop="createTime"
+          prop="updateTime"
           label="	添加时间"
           min-width="150"
         />
@@ -94,7 +88,6 @@
 
 <script>
   import { integralListApi } from '@/api/marketing'
-  import { userListApi } from '@/api/user'
   import cardsData from '@/components/cards/index'
   export default {
     components: { cardsData },
@@ -111,9 +104,8 @@
         tableFrom: {
           page: 1,
           limit: 20,
-          category: 'integral',
           dateLimit: '',
-          userIdList: []
+          keywords: ''
         },
         userIdList: [],
         userList: [],
@@ -126,19 +118,6 @@
       // this.getUserList()
     },
     methods: {
-      remoteMethod(query) {
-        if (query !== '') {
-          this.loading = true;
-          setTimeout(() => {
-            this.loading = false;
-            userListApi({keywords: query, page: 1, limit: 10}).then(res => {
-              this.options = res.list
-            })
-          }, 200);
-        } else {
-          this.options = [];
-        }
-      },
       seachList() {
         this.tableFrom.page = 1
         this.getList()

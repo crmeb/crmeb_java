@@ -10,14 +10,15 @@ import com.zbkj.crmeb.seckill.request.StoreSeckillMangerSearchRequest;
 import com.zbkj.crmeb.seckill.response.StoreSeckillManagerResponse;
 import com.zbkj.crmeb.seckill.service.StoreSeckillMangerService;
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

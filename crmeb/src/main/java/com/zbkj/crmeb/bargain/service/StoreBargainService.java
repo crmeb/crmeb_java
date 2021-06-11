@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.bargain.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.bargain.model.StoreBargain;
@@ -8,10 +9,14 @@ import com.zbkj.crmeb.bargain.request.StoreBargainRequest;
 import com.zbkj.crmeb.bargain.request.StoreBargainSearchRequest;
 import com.zbkj.crmeb.bargain.response.StoreBargainResponse;
 import com.zbkj.crmeb.front.request.BargainFrontRequest;
-import com.zbkj.crmeb.front.response.BargainDetailResponse;
+import com.zbkj.crmeb.front.response.BargainDetailH5Response;
+import com.zbkj.crmeb.front.response.BargainHeaderResponse;
+import com.zbkj.crmeb.front.response.BargainIndexResponse;
+import com.zbkj.crmeb.front.response.StoreBargainDetailResponse;
 import com.zbkj.crmeb.store.request.StoreProductStockRequest;
 import com.zbkj.crmeb.store.response.StoreProductResponse;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,7 +52,7 @@ public interface StoreBargainService extends IService<StoreBargain> {
     /**
      * 修改砍价商品
      */
-    boolean updateBarhain(StoreBargainRequest storeBargainRequest);
+    boolean updateBargain(StoreBargainRequest storeBargainRequest);
 
     /**
      * 修改砍价商品状态
@@ -61,20 +66,15 @@ public interface StoreBargainService extends IService<StoreBargain> {
 
     /**
      * H5 砍价商品列表
+     * @return PageInfo<StoreBargainDetailResponse>
      */
-    PageInfo<StoreBargainResponse> getH5List(PageParamRequest pageParamRequest);
-
-    /**
-     * H5 获取查看、分享、参与人数
-     * @param id BargainDetailResponse
-     */
-    Map<String, Object> getH5Share(Integer id);
+    PageInfo<StoreBargainDetailResponse> getH5List(PageParamRequest pageParamRequest);
 
     /**
      * H5 获取砍价商品详情信息
      * @return BargainDetailResponse
      */
-    BargainDetailResponse getH5Detail(Integer id);
+    BargainDetailH5Response getH5Detail(Integer id);
 
     /**
      * 获取当前时间的砍价商品
@@ -83,27 +83,16 @@ public interface StoreBargainService extends IService<StoreBargain> {
     List<StoreBargain> getCurrentBargainByProductId(Integer productId);
 
     /**
-     * 参与砍价活动
-     * @return Boolean
+     * 创建砍价活动
+     * @return MyRecord
      */
-    Boolean start(BargainFrontRequest bargainFrontRequest);
+    MyRecord start(BargainFrontRequest bargainFrontRequest);
 
     /**
      * 砍价商品根据实体查询
      * @return Boolean
      */
     List<StoreBargain> getByEntity(StoreBargain storeBargainParam);
-
-    /**
-     * 扣减砍价商品库存
-     * @param bargainId     砍价产品id
-     * @param num           购买商品数量
-     * @param attrValueId   砍价产品规格
-     * @param productId     主商品id
-     * @param uid           用户uid
-     * @return Boolean
-     */
-    Boolean decProductStock(Integer bargainId, Integer num, Integer attrValueId, Integer productId, Integer uid);
 
     /**
      * 添加库存
@@ -140,4 +129,23 @@ public interface StoreBargainService extends IService<StoreBargain> {
      * @param type 类型：add—添加，sub—扣减
      */
     Boolean operationStock(Integer id, Integer num, String type);
+
+    /**
+     * 砍价首页信息
+     * @return BargainIndexResponse
+     */
+    BargainIndexResponse getIndexInfo();
+
+    /**
+     * 获取砍价列表header
+     * @return BargainHeaderResponse
+     */
+    BargainHeaderResponse getHeader();
+
+    /**
+     * 根据id数组获取砍价商品map
+     * @param bargainIdList 砍价商品id数组
+     * @return HashMap<Integer, StoreBargain>
+     */
+    HashMap<Integer, StoreBargain> getMapInId(List<Integer> bargainIdList);
 }

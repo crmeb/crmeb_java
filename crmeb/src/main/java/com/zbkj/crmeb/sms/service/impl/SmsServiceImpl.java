@@ -12,6 +12,7 @@ import com.constants.OnePassConstants;
 import com.constants.SmsConstants;
 import com.exception.CrmebException;
 import com.utils.*;
+import com.zbkj.crmeb.pass.service.OnePassService;
 import com.zbkj.crmeb.pass.vo.OnePassLoginVo;
 import com.zbkj.crmeb.sms.model.SmsRecord;
 import com.zbkj.crmeb.sms.request.SendSmsVo;
@@ -21,7 +22,6 @@ import com.zbkj.crmeb.sms.service.SmsRecordService;
 import com.zbkj.crmeb.sms.service.SmsService;
 import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.user.service.UserService;
-import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +71,9 @@ public class SmsServiceImpl implements SmsService {
 
     @Autowired
     private OnePassUtil onePassUtil;
+
+    @Autowired
+    private OnePassService onePassService;
 
     private static final Logger logger = LoggerFactory.getLogger(SmsServiceImpl.class);
 
@@ -155,40 +158,12 @@ public class SmsServiceImpl implements SmsService {
             map.entrySet().stream().forEach(entry -> param.add(StrUtil.format(SmsConstants.SMS_COMMON_PARAM_FORMAT, entry.getKey()), entry.getValue()));
             System.out.println("============发送短信=========header = " + header);
             result = restTemplateUtil.postFromUrlencoded(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_SEND_URI, param, header);
+            checkResult(result);
         } catch (Exception e) {
             //接口请求异常，需要重新发送
             e.printStackTrace();
+            logger.error(e.getMessage());
             return false;
-        }
-
-        if (StringUtils.isBlank(result)) {
-            //没有拿到数据 需要重新发送
-            return false;
-        }
-
-        JSONObject joResult;
-        try {
-            joResult = checkResult(result);
-        } catch (Exception e1) {
-            joResult = JSONObject.parseObject(result);
-        }
-
-        int resultCode = joResult.getInteger("status");
-        String message = joResult.getString("msg");
-        JSONObject data = joResult.getJSONObject("data");
-        String smsRecodeId = (data.containsKey("id") ? data.getString("id") : "0");
-        sendSmsVo.setContent(data.getString("content"));
-
-        if (resultCode == Constants.HTTPSTATUS_CODE_SUCCESS) {
-            try {
-                // 这里只保存本地记录，之后的短信列表从平台api处查询
-                SmsRecord smsRecord = new SmsRecord(sendSmsVo.getUid(), sendSmsVo.getMobile(), sendSmsVo.getContent(),
-                        "", sendSmsVo.getTemplate().toString(),
-                        resultCode, Integer.parseInt(smsRecodeId), message);
-                smsRecordService.save(smsRecord);
-            } catch (Exception e) {
-                return true;
-            }
         }
         return true;
     }
@@ -211,14 +186,12 @@ public class SmsServiceImpl implements SmsService {
                 try {
                     JSONObject jsonObject = JSONObject.parseObject(data.toString());
                     SendSmsVo smsVo = JSONObject.toJavaObject(jsonObject, SendSmsVo.class);
-//                    SendSmsVo smsVo = JSONObject.toJavaObject(JSONObject.parseObject(data.toString()), SendSmsVo.class);
                     boolean result = sendCode(smsVo);
-                    // 捕捉异常或者发送失败存起来下次继续
-                    if (!result) {
-                        redisUtil.lPush(SmsConstants.SMS_SEND_KEY, data);
-                    }
+                    logger.error("发送短信失败,data = " + data);
                 } catch (Exception e) {
-                    redisUtil.lPush(SmsConstants.SMS_SEND_KEY, data);
+                    e.printStackTrace();
+                    logger.error(e.getMessage());
+                    logger.error("发送短信失败,data = " + data);
                 }
             }
         }
@@ -373,16 +346,35 @@ public class SmsServiceImpl implements SmsService {
      *
      * @param phone 手机号
      * @return Boolean
+     * 1.校验后台是否配置一号通
+     * 2.一号通是否剩余短信条数
+     * 3.发送短信
      */
     @Override
     public Boolean sendCommonCode(String phone) {
-        return pushCodeToList(phone, SmsConstants.SMS_CONFIG_TYPE_VERIFICATION_CODE, null);
+        Boolean checkAccount = onePassService.checkAccount();
+        if (!checkAccount) {
+            throw new CrmebException("发送短信请先登录一号通账号");
+        }
+        JSONObject info = onePassService.info();
+        JSONObject smsObject = info.getJSONObject("sms");
+        Integer open = smsObject.getInteger("open");
+        if (!open.equals(1)) {
+            throw new CrmebException("发送短信请先开通一号通账号服务");
+        }
+        if (smsObject.getInteger("num") <= 0) {
+            throw new CrmebException("一号通账号服务余量不足");
+        }
+
+        return sendSms(phone, SmsConstants.SMS_CONFIG_TYPE_VERIFICATION_CODE, null);
+//        return pushCodeToList(phone, SmsConstants.SMS_CONFIG_TYPE_VERIFICATION_CODE, null);
     }
 
     /**
      * 发送支付成功短信
-     * @param phone 手机号
-     * @param orderNo 订单编号
+     *
+     * @param phone    手机号
+     * @param orderNo  订单编号
      * @param payPrice 支付金额
      * @return Boolean
      */
@@ -396,8 +388,9 @@ public class SmsServiceImpl implements SmsService {
 
     /**
      * 发送管理员下单短信提醒
-     * @param phone 手机号
-     * @param orderNo 订单编号
+     *
+     * @param phone    手机号
+     * @param orderNo  订单编号
      * @param realName 管理员名称
      * @return Boolean
      */
@@ -411,8 +404,9 @@ public class SmsServiceImpl implements SmsService {
 
     /**
      * 发送订单支付成功管理员提醒短信
-     * @param phone 手机号
-     * @param orderNo 订单编号
+     *
+     * @param phone    手机号
+     * @param orderNo  订单编号
      * @param realName 管理员名称
      * @return Boolean
      */
@@ -426,8 +420,9 @@ public class SmsServiceImpl implements SmsService {
 
     /**
      * 发送用户退款管理员提醒短信
-     * @param phone 手机号
-     * @param orderNo 订单编号
+     *
+     * @param phone    手机号
+     * @param orderNo  订单编号
      * @param realName 管理员名称
      * @return Boolean
      */
@@ -441,8 +436,9 @@ public class SmsServiceImpl implements SmsService {
 
     /**
      * 发送用户确认收货管理员提醒短信
-     * @param phone 手机号
-     * @param orderNo 订单编号
+     *
+     * @param phone    手机号
+     * @param orderNo  订单编号
      * @param realName 管理员名称
      * @return Boolean
      */
@@ -456,9 +452,10 @@ public class SmsServiceImpl implements SmsService {
 
     /**
      * 发送订单改价提醒短信
-     * @param phone 手机号
+     *
+     * @param phone   手机号
      * @param orderNo 订单编号
-     * @param price 修改后的支付金额
+     * @param price   修改后的支付金额
      * @return Boolean
      */
     @Override
@@ -471,10 +468,11 @@ public class SmsServiceImpl implements SmsService {
 
     /**
      * 发送订单发货提醒短信
-     * @param phone 手机号
-     * @param nickName 用户昵称
+     *
+     * @param phone     手机号
+     * @param nickName  用户昵称
      * @param storeName 商品名称
-     * @param orderNo 订单编号
+     * @param orderNo   订单编号
      */
     @Override
     public Boolean sendOrderDeliverNotice(String phone, String nickName, String storeName, String orderNo) {
@@ -516,5 +514,100 @@ public class SmsServiceImpl implements SmsService {
             throw new CrmebException("短信平台接口" + jsonObject.getString("msg"));
         }
         return jsonObject;
+    }
+
+    /**
+     * 发送短信
+     * 验证码特殊处理其他的参数自行根据要求处理
+     * 参数处理逻辑 {code:value,code1:value1}
+     *
+     * @param phone String 手机号码
+     * @return boolean
+     */
+    private Boolean sendSms(String phone, Integer tag, HashMap<String, Object> pram) {
+        SendSmsVo sendSmsVo = new SendSmsVo();
+        sendSmsVo.setMobile(phone);
+        if (tag.equals(SmsConstants.SMS_CONFIG_TYPE_VERIFICATION_CODE)) {// 验证码 特殊处理 code
+            //获取短信验证码过期时间
+            String codeExpireStr = systemConfigService.getValueByKey(Constants.CONFIG_KEY_SMS_CODE_EXPIRE);
+            if (StringUtils.isBlank(codeExpireStr) || Integer.parseInt(codeExpireStr) == 0) {
+                codeExpireStr = Constants.NUM_FIVE + "";// 默认5分钟过期
+            }
+            Integer code = CrmebUtil.randomCount(111111, 999999);
+            HashMap<String, Object> justPram = new HashMap<>();
+            justPram.put("code", code);
+            justPram.put("time", codeExpireStr);
+
+            sendSmsVo.setTemplate(SmsConstants.SMS_CONFIG_VERIFICATION_CODE_TEMP_ID);
+            sendSmsVo.setContent(JSONObject.toJSONString(justPram));
+            Boolean aBoolean = commonSendSms(sendSmsVo);
+            if (!aBoolean) {
+                throw new CrmebException("发送短信失败，请联系后台管理员");
+            }
+            // 将验证码存入redis
+            redisUtil.set(userService.getValidateCodeRedisKey(phone), code, Long.valueOf(codeExpireStr), TimeUnit.MINUTES);
+            return aBoolean;
+        }
+        // 以下部分实时性不高暂时还是使用队列发送
+        sendSmsVo.setContent(JSONObject.toJSONString(pram));
+        switch (tag) {
+            case SmsConstants.SMS_CONFIG_TYPE_LOWER_ORDER_SWITCH: // 支付成功短信提醒 pay_price order_id
+                sendSmsVo.setTemplate(SmsConstants.SMS_CONFIG_LOWER_ORDER_SWITCH_TEMP_ID);
+                break;
+            case SmsConstants.SMS_CONFIG_TYPE_DELIVER_GOODS_SWITCH: // 发货短信提醒 nickname store_name
+                sendSmsVo.setTemplate(SmsConstants.SMS_CONFIG_DELIVER_GOODS_SWITCH_TEMP_ID);
+                break;
+            case SmsConstants.SMS_CONFIG_TYPE_CONFIRM_TAKE_OVER_SWITCH: // 确认收货短信提醒 order_id store_name
+                sendSmsVo.setTemplate(SmsConstants.SMS_CONFIG_CONFIRM_TAKE_OVER_SWITCH_TEMP_ID);
+                break;
+            case SmsConstants.SMS_CONFIG_TYPE_ADMIN_LOWER_ORDER_SWITCH: // 用户下单管理员短信提醒 admin_name order_id
+                sendSmsVo.setTemplate(SmsConstants.SMS_CONFIG_ADMIN_LOWER_ORDER_SWITCH_TEMP_ID);
+                break;
+            case SmsConstants.SMS_CONFIG_TYPE_ADMIN_PAY_SUCCESS_SWITCH: // 支付成功管理员短信提醒 admin_name order_id
+                sendSmsVo.setTemplate(SmsConstants.SMS_CONFIG_ADMIN_PAY_SUCCESS_SWITCH_TEMP_ID);
+                break;
+            case SmsConstants.SMS_CONFIG_TYPE_ADMIN_REFUND_SWITCH: // 用户确认收货管理员短信提醒 admin_name order_id
+                sendSmsVo.setTemplate(SmsConstants.SMS_CONFIG_ADMIN_REFUND_SWITCH_TEMP_ID);
+                break;
+            case SmsConstants.SMS_CONFIG_TYPE_ADMIN_CONFIRM_TAKE_OVER_SWITCH: // 用户发起退款管理员短信提醒 admin_name order_id
+                sendSmsVo.setTemplate(SmsConstants.SMS_CONFIG_ADMIN_CONFIRM_TAKE_OVER_SWITCH_TEMP_ID);
+                break;
+            case SmsConstants.SMS_CONFIG_TYPE_PRICE_REVISION_SWITCH: // 改价短信提醒 order_id pay_price
+                sendSmsVo.setTemplate(SmsConstants.SMS_CONFIG_PRICE_REVISION_SWITCH_TEMP_ID);
+                break;
+            case SmsConstants.SMS_CONFIG_TYPE_ORDER_PAY_FALSE: // 订单未支付 order_id
+                sendSmsVo.setTemplate(SmsConstants.SMS_CONFIG_ORDER_PAY_FALSE_TEMP_ID);
+                break;
+        }
+        return commonSendSms(sendSmsVo);
+    }
+
+    /**
+     * 公共发送短信
+     *
+     * @param sendSmsVo 发送短信对象
+     * @return 是否发送成功
+     */
+    private Boolean commonSendSms(SendSmsVo sendSmsVo) {
+        try {
+            String result;
+            String token = onePassUtil.getToken();
+            HashMap<String, String> header = onePassUtil.getCommonHeader(token);
+
+            Map<String, Object> map = (Map<String, Object>) JSONObject.parseObject(sendSmsVo.getContent());
+            MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
+            param.add("phone", sendSmsVo.getMobile());
+            param.add("temp_id", sendSmsVo.getTemplate());
+
+            map.forEach((key, value) -> param.add(StrUtil.format(SmsConstants.SMS_COMMON_PARAM_FORMAT, key), value));
+            logger.info("============发送短信=========header = " + header);
+            result = restTemplateUtil.postFromUrlencoded(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_SEND_URI, param, header);
+            checkResult(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("发送短信失败：" + e.getMessage());
+            return false;
+        }
+        return true;
     }
 }

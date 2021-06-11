@@ -91,7 +91,7 @@
   export default {
     name: 'orderSend',
     props: {
-      orderId: Number
+      orderId: String
     },
     data() {
       return {
@@ -100,7 +100,6 @@
           expressRecordType: '1',
           expressId: '',
           expressCode: '',
-          id: '',
           deliveryName: '',
           deliveryTel: '',
           // expressName: '',
@@ -109,6 +108,7 @@
           toAddr: '',
           toName: '',
           toTel: '',
+          orderNo: ''
         },
         modals: false,
         express: [],
@@ -192,7 +192,7 @@
       },
       // 提交
       putSend(name) {
-        this.formItem.id = this.orderId
+        this.formItem.orderNo = this.orderId;
         this.$refs[name].validate((valid) => {
           if (valid) {
             orderSendApi(this.formItem).then(async => {

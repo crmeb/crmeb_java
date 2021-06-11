@@ -38,11 +38,19 @@
           <el-button size="mini" :loading="loading" type="primary" style="width:100%;margin-bottom:20px;"
                      @click="handleSubmit('formInline')">登录
           </el-button>
-          <div class="acea-row row-center-wrapper">
+          <div class="acea-row row-center-wrapper mb20">
             <el-button size="mini" type="text" style="margin-left: 0" @click="changePassword">忘记密码</el-button>
             <el-divider direction="vertical"></el-divider>
             <el-button size="mini" type="text" style="margin-left: 0" @click="changeReg">注册账户</el-button>
           </div>
+          <el-tooltip class="item" effect="dark" content="
+              一号通为我司一个第三方平台
+              专门提供短信 ， 物流查询，商品复制，电子面单等个性化服务
+              省去了自己单独接入功能的麻烦
+              初次运行代码默认是没有账号的，需要自行注册，
+              登录成功后根据提示购买自己需要用到的服务即可" placement="bottom">
+            <span style="margin-left: 0">平台说明</span>
+          </el-tooltip>
         </el-form>
       </el-col>
     </el-row>

@@ -24,7 +24,7 @@
       <el-col v-bind="grid" class="ivu-mb">
         <el-card :bordered="false" dis-hover :padding="12">
           <div slot="header" class="acea-row row-between-wrapper">
-            <span>用户量访问</span>
+            <span>用户访问量</span>
             <el-tag type="success">昨日</el-tag>
           </div>
           <div class="content" v-if="views">

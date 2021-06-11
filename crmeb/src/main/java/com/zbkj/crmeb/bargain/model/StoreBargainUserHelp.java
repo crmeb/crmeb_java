@@ -3,6 +3,7 @@ package com.zbkj.crmeb.bargain.model;
 import java.math.BigDecimal;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
@@ -52,5 +53,15 @@ public class StoreBargainUserHelp implements Serializable {
     @ApiModelProperty(value = "添加时间")
     private Long addTime;
 
+    @ApiModelProperty(value = "用户昵称")
+    @TableField(exist = false)
+    private String nickname;
 
+    @ApiModelProperty(value = "用户头像")
+    @TableField(exist = false)
+    private String avatar;
+
+    @ApiModelProperty(value = "添加时间(前端用)")
+    @TableField(exist = false)
+    private String addTimeStr;
 }

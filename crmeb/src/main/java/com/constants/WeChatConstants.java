@@ -12,6 +12,17 @@ package com.constants;
  *  +----------------------------------------------------------------------
  */
 public class WeChatConstants {
+
+    //-------------------------------------------微信系统配置------------------------------------------------------------
+    /** 公众号appId key */
+    public static final String WECHAT_PUBLIC_APPID_KEY = "wechat_appid";
+    /** 公众号appSecret key */
+    public static final String WECHAT_PUBLIC_APPSECRET_KEY = "wechat_appsecret";
+
+
+
+
+
     //------------------------------------------------微信公众号------------------------------------------------
     //微信接口请求地址
     public static final String API_URL = "https://api.weixin.qq.com/";

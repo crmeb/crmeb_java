@@ -1,23 +1,19 @@
 package com.zbkj.crmeb.front.controller;
 
+import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.front.request.UserCouponReceiveRequest;
-import com.zbkj.crmeb.marketing.request.StoreCouponUserRequest;
 import com.zbkj.crmeb.marketing.response.StoreCouponUserResponse;
 import com.zbkj.crmeb.marketing.service.StoreCouponUserService;
-import com.zbkj.crmeb.user.service.UserService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 优惠卷控制器
@@ -40,18 +36,19 @@ public class UserCouponController {
     @Autowired
     private StoreCouponUserService storeCouponUserService;
 
-    @Autowired
-    private UserService userService;
-
     /**
      * 我的优惠券
-     * @author Mr.Zhang
-     * @since 2020-05-18
      */
     @ApiOperation(value = "我的优惠券")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<List<StoreCouponUserResponse>>  getList(){
-        return CommonResult.success(storeCouponUserService.getListFront(userService.getUserIdException(), new PageParamRequest()));
+    @ApiImplicitParams({
+            @ApiImplicitParam(name="type", value="类型，usable-可用，unusable-不可用", required = true),
+            @ApiImplicitParam(name="page", value="页码", required = true),
+            @ApiImplicitParam(name="limit", value="每页数量", required = true)
+    })
+    public CommonResult<CommonPage<StoreCouponUserResponse>> getList(@RequestParam(value = "type") String type,
+                                                                     @Validated PageParamRequest pageParamRequest){
+        return CommonResult.success(storeCouponUserService.getMyCouponList(type, pageParamRequest));
     }
 
     /**

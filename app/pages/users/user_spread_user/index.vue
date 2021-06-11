@@ -4,7 +4,7 @@
 			<view class="header">
 				<view class='name acea-row row-center-wrapper'>
 					<view>当前佣金</view>
-					<navigator url='/pages/users/user_spread_money/index?type=1' hover-class="none" class='record'>提现记录<text class='iconfont icon-xiangyou'></text></navigator>
+					<navigator :url="'/pages/users/user_spread_money/index?type=1&extractCount='+spreadInfo.extractCount"  hover-class="none" class='record'>提现记录<text class='iconfont icon-xiangyou'></text></navigator>
 				</view>
 				<view class='num'>{{spreadInfo.commissionCount}}</view>
 				<view class='profit acea-row row-between-wrapper'>
@@ -18,7 +18,7 @@
 					</view>
 				</view>
 			</view>
-			<!-- #ifdef APP-PLUS || H5 -->
+			<!-- #ifdef H5 -->
 			<navigator url="/pages/users/user_cash/index" hover-class="none" class='bnt bg-color'>立即提现</navigator>
 			<!-- #endif -->
 			<!-- #ifdef MP -->
@@ -33,7 +33,7 @@
 					<text class='iconfont icon-tongji'></text>
 					<view>推广人统计</view>
 				</navigator>
-				<navigator url='/pages/users/user_spread_money/index?type=2' hover-class="none" class='item acea-row row-center-wrapper row-column'>
+				<navigator :url="'/pages/users/user_spread_money/index?type=2&commissionCount='+spreadInfo.commissionCount" hover-class="none" class='item acea-row row-center-wrapper row-column'>
 					<text class='iconfont icon-qiandai'></text>
 					<view>佣金明细</view>
 				</navigator>
@@ -52,7 +52,7 @@
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -90,7 +90,7 @@
 			isLogin: {
 				handler: function(newV, oldV) {
 					if (newV) {
-						this.getUserInfo();
+						this.getSpreadInfo();
 					}
 				},
 				deep: true
@@ -100,13 +100,7 @@
 			if (this.isLogin) {
 				this.getSpreadInfo();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {
@@ -213,14 +207,14 @@
 	}
 
 	.my-promotion .list {
-		padding: 0 20rpx 50rpx 20rpx;
+		padding: 0 30rpx 50rpx 30rpx;
 		margin-top: 10rpx;
 	}
 
 	.my-promotion .list .item {
-		width: 345rpx;
+		width: 335rpx;
 		height: 240rpx;
-		border-radius: 20rpx;
+		border-radius: 14rpx;
 		background-color: #fff;
 		margin-top: 20rpx;
 		font-size: 30rpx;

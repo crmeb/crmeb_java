@@ -108,12 +108,13 @@
             />
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="130" fixed="right">
+        <el-table-column label="操作" min-width="180" fixed="right">
           <template slot-scope="scope">
             <el-button type="text" class="mr10" size="small" @click="receive(scope.row)">领取记录</el-button>
             <router-link :to=" { path: '/marketing/coupon/list/save/' + scope.row.id } ">
-              <el-button v-if="scope.row.status" type="text" size="small">复制</el-button>
+              <el-button v-if="scope.row.status" type="text" size="small" class="mr10">复制</el-button>
             </router-link>
+            <el-button type="text" class="mr10" size="small" @click="handleDelMenu(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -179,7 +180,7 @@
 </template>
 
 <script>
-  import { marketingListApi, couponIssueStatusApi, couponUserListApi } from '@/api/marketing'
+  import { marketingListApi, couponIssueStatusApi, couponUserListApi, couponDeleteApi } from '@/api/marketing'
   import { roterPre } from '@/settings'
   export default {
     name: 'CouponList',
@@ -274,7 +275,15 @@
         }).catch(()=>{
           row.status = !row.status
         })
-      }
+      },
+      handleDelMenu(rowData) {
+        this.$confirm('确定删除当前数据?').then(() => {
+          couponDeleteApi({id: rowData.id}).then(data => {
+            this.$message.success('删除成功')
+            this.getList()
+          })
+        })
+      },
     }
   }
 </script>

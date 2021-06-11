@@ -7,7 +7,6 @@ import com.zbkj.crmeb.front.request.UserAddressDelRequest;
 import com.zbkj.crmeb.front.request.UserAddressRequest;
 import com.zbkj.crmeb.user.model.UserAddress;
 import com.zbkj.crmeb.user.service.UserAddressService;
-import com.zbkj.crmeb.user.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -37,31 +36,19 @@ public class UserAddressController {
     @Autowired
     private UserAddressService userAddressService;
 
-    @Autowired
-    private UserService userService;
-
 
     /**
      * 分页显示用户地址
-     * @author Mr.Zhang
-     * @since 2020-04-28
      */
     @ApiOperation(value = "列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public CommonResult<CommonPage<UserAddress>>  getList(PageParamRequest pageParamRequest){
-//        CommonPage<UserAddress> userAddressCommonPage = CommonPage.restPage(userAddressService.getList(pageParamRequest));
-        UserAddress userAddress = new UserAddress();
-        userAddress.setUid(userService.getUserId());
-        userAddress.setIsDel(false);
-        CommonPage<UserAddress> userAddressCommonPage = CommonPage.restPage(userAddressService.getListByUserAddress(userAddress,pageParamRequest));
-        return CommonResult.success(userAddressCommonPage);
+        return CommonResult.success(CommonPage.restPage(userAddressService.getList(pageParamRequest)));
     }
 
     /**
      * 新增用户地址
      * @param request 新增参数
-     * @author Mr.Zhang
-     * @since 2020-04-28
      */
     @ApiOperation(value = "保存")
     @RequestMapping(value = "/edit", method = RequestMethod.POST)
@@ -72,8 +59,6 @@ public class UserAddressController {
     /**
      * 删除用户地址
      * @param request UserAddressDelRequest 参数
-     * @author Mr.Zhang
-     * @since 2020-04-28
      */
     @ApiOperation(value = "删除")
     @RequestMapping(value = "/del", method = RequestMethod.POST)
@@ -86,22 +71,16 @@ public class UserAddressController {
     }
 
     /**
-     * 详情
-     * @param id Integer
-     * @author Mr.Zhang
-     * @since 2020-04-28
+     * 地址详情
      */
-    @ApiOperation(value = "获取单个地址")
+    @ApiOperation(value = "地址详情")
     @RequestMapping(value = "/detail/{id}", method = RequestMethod.GET)
     public CommonResult<UserAddress> info(@PathVariable("id") Integer id){
-        UserAddress userAddress = userAddressService.getById(id);
-        return CommonResult.success(userAddress);
+        return CommonResult.success(userAddressService.getDetail(id));
     }
 
     /**
      * 获取默认地址
-     * @author Mr.Zhang
-     * @since 2020-04-28
      */
     @ApiOperation(value = "获取默认地址")
     @RequestMapping(value = "/default", method = RequestMethod.GET)
@@ -113,8 +92,6 @@ public class UserAddressController {
     /**
      * 设置默认地址
      * @param request UserAddressDelRequest 参数
-     * @author Mr.Zhang
-     * @since 2020-04-28
      */
     @ApiOperation(value = "设置默认地址")
     @RequestMapping(value = "/default/set", method = RequestMethod.POST)

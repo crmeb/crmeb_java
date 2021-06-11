@@ -4,11 +4,10 @@ package com.zbkj.crmeb.front.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
-import com.constants.Constants;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.finance.request.UserExtractRequest;
 import com.zbkj.crmeb.front.request.PasswordRequest;
-import com.zbkj.crmeb.front.request.UserBindingRequest;
+import com.zbkj.crmeb.front.request.UserBindingPhoneUpdateRequest;
 import com.zbkj.crmeb.front.request.UserEditRequest;
 import com.zbkj.crmeb.front.request.UserSpreadPeopleRequest;
 import com.zbkj.crmeb.front.response.*;
@@ -18,6 +17,7 @@ import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import com.zbkj.crmeb.system.service.SystemGroupDataService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserBill;
+import com.zbkj.crmeb.user.model.UserIntegralRecord;
 import com.zbkj.crmeb.user.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -49,6 +49,7 @@ import java.util.Map;
 @RequestMapping("api/front")
 @Api(tags = "用户 -- 用户中心")
 public class UserController {
+
     @Autowired
     private UserService userService;
 
@@ -87,36 +88,30 @@ public class UserController {
     }
 
     /**
-     * 获取用户个人资料
-     * @author Mr.Zhang
-     * @since 2020-04-28
+     * 个人中心-用户信息
      */
-    @ApiOperation(value = "获取个人资料")
+    @ApiOperation(value = "个人中心-用户信息")
     @RequestMapping(value = "/user", method = RequestMethod.GET)
     public CommonResult<UserCenterResponse> getUserCenter(){
         return CommonResult.success(userService.getUserCenter());
     }
 
     /**
-     * 获取用户个人资料
-     * @author Mr.Zhang
-     * @since 2020-04-28
+     * 换绑手机号校验
      */
-    @ApiOperation(value = "当前登录用户信息")
-    @RequestMapping(value = "/userinfo", method = RequestMethod.GET)
-    public CommonResult<User> getInfo(){
-        return CommonResult.success(userService.getUserPromoter());
+    @ApiOperation(value = "换绑手机号校验")
+    @RequestMapping(value = "update/binding/verify", method = RequestMethod.POST)
+    public CommonResult<Boolean> updatePhoneVerify(@RequestBody @Validated UserBindingPhoneUpdateRequest request){
+        return CommonResult.success(userService.updatePhoneVerify(request));
     }
 
     /**
      * 绑定手机号
-     * @author Mr.Zhang
-     * @since 2020-04-28
      */
-    @ApiOperation(value = "绑定手机号")
-    @RequestMapping(value = "/binding", method = RequestMethod.POST)
-    public CommonResult<Boolean> bind(@RequestBody @Validated UserBindingRequest request){
-        return CommonResult.success(userService.bind(request));
+    @ApiOperation(value = "换绑手机号")
+    @RequestMapping(value = "update/binding", method = RequestMethod.POST)
+    public CommonResult<Boolean> updatePhone(@RequestBody @Validated UserBindingPhoneUpdateRequest request){
+        return CommonResult.success(userService.updatePhone(request));
     }
 
     /**
@@ -127,35 +122,17 @@ public class UserController {
     @ApiOperation(value = "获取个人中心菜单")
     @RequestMapping(value = "/menu/user", method = RequestMethod.GET)
     public CommonResult<HashMap<String, Object>> getMenuUser(){
-
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("routine_my_menus", systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_USER_CENTER_MENU));
-        map.put("routine_my_banner", systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_USER_CENTER_BANNER));
-        return CommonResult.success(map);
+        return CommonResult.success(systemGroupDataService.getMenuUser());
     }
 
     /**
      * 推广数据接口(昨天的佣金 累计提现金额 当前佣金)
-     * @author Mr.Zhang
-     * @since 2020-06-08
      */
     @ApiOperation(value = "推广数据接口(昨天的佣金 累计提现金额 当前佣金)")
     @RequestMapping(value = "/commission", method = RequestMethod.GET)
     public CommonResult<UserCommissionResponse> getCommission(){
         return CommonResult.success(userCenterService.getCommission());
     }
-
-//    /**
-//     * 推广佣金明细
-//     * @author Mr.Zhang
-//     * @since 2020-06-08
-//     */
-//    @ApiOperation(value = "推广佣金明细")
-//    @RequestMapping(value = "/spread/commission/{type}", method = RequestMethod.GET)
-//    @ApiImplicitParam(name = "type", value = "类型 佣金类型|0=全部,1=消费,2=充值,3=返佣,4=提现", allowableValues = "range[0,1,2,3，4]", dataType = "int")
-//    public CommonResult<CommonPage<UserSpreadCommissionResponse>> getSpreadCommissionByType(@PathVariable int type, @Validated PageParamRequest pageParamRequest){
-//        return CommonResult.success(CommonPage.restPage(userCenterService.getSpreadCommissionByType(type, pageParamRequest)));
-//    }
 
     /**
      * 推广佣金明细
@@ -194,9 +171,6 @@ public class UserController {
 
     /**
      * 提现记录
-     * @author HZW
-     * @since 2020-10-27
-     * @return
      */
     @ApiOperation(value = "提现记录")
     @RequestMapping(value = "/extract/record", method = RequestMethod.GET)
@@ -205,28 +179,21 @@ public class UserController {
     }
 
     /**
-     * 提现总金额
-     * @author HZW
-     * @since 2020-10-27
-     * @return
+     * 提现用户信息
      */
-    @ApiOperation(value = "提现总金额")
-    @RequestMapping(value = "/extract/totalMoney", method = RequestMethod.GET)
-    public CommonResult<Map<String, BigDecimal>> getTotalMoney(){
-        Map<String, BigDecimal> map = new HashMap<>();
-        map.put("count", userCenterService.getExtractTotalMoney());
-        return CommonResult.success(map);
+    @ApiOperation(value = "提现用户信息")
+    @RequestMapping(value = "/extract/user", method = RequestMethod.GET)
+    public CommonResult<UserExtractCashResponse> getExtractUser(){
+        return CommonResult.success(userCenterService.getExtractUser());
     }
 
     /**
-     * 提现银行/提现最低金额
-     * @author Mr.Zhang
-     * @since 2020-06-08
+     * 提现银行
      */
     @ApiOperation(value = "提现银行/提现最低金额")
     @RequestMapping(value = "/extract/bank", method = RequestMethod.GET)
-    public CommonResult<UserExtractCashResponse> minExtractCash(){
-        return CommonResult.success(userCenterService.minExtractCash());
+    public CommonResult<List<String>> getExtractBank(){
+        return CommonResult.success(userCenterService.getExtractBank());
     }
 
     /**
@@ -236,41 +203,55 @@ public class UserController {
      */
     @ApiOperation(value = "会员等级列表")
     @RequestMapping(value = "/user/level/grade", method = RequestMethod.GET)
-    public CommonResult<CommonPage<SystemUserLevel>>  getUserLevelList(){
-        return CommonResult.success(CommonPage.restPage(userCenterService.getUserLevelList()));
+    public CommonResult<List<SystemUserLevel>> getUserLevelList(){
+        return CommonResult.success(userCenterService.getUserLevelList());
     }
 
     /**
-     * 推广用户
-     * @author Mr.Zhang
-     * @since 2020-05-18
+     * 推广人统计
      */
-    @ApiOperation(value = "推广用户")
+    @ApiOperation(value = "推广人统计")
+    @RequestMapping(value = "/spread/people/count", method = RequestMethod.GET)
+    public CommonResult<UserSpreadPeopleResponse>  getSpreadPeopleCount(){
+        return CommonResult.success(userCenterService.getSpreadPeopleCount());
+    }
+
+    /**
+     * 推广人列表
+     */
+    @ApiOperation(value = "推广人列表")
     @RequestMapping(value = "/spread/people", method = RequestMethod.GET)
-    public CommonResult<UserSpreadPeopleResponse>  getSpreadPeopleList(@Validated UserSpreadPeopleRequest request, @Validated PageParamRequest pageParamRequest){
-        return CommonResult.success(userCenterService.getSpreadPeopleList(request, pageParamRequest));
+    public CommonResult<CommonPage<UserSpreadPeopleItemResponse>> getSpreadPeopleList(@Validated UserSpreadPeopleRequest request, @Validated PageParamRequest pageParamRequest) {
+        List<UserSpreadPeopleItemResponse> spreadPeopleList = userCenterService.getSpreadPeopleList(request, pageParamRequest);
+        CommonPage<UserSpreadPeopleItemResponse> commonPage = CommonPage.restPage(spreadPeopleList);
+        return CommonResult.success(commonPage);
+    }
+
+    /**
+     * 用户积分信息
+     */
+    @ApiOperation(value = "用户积分信息")
+    @RequestMapping(value = "/integral/user", method = RequestMethod.GET)
+    public CommonResult<IntegralUserResponse> getIntegralUser(){
+        return CommonResult.success(userCenterService.getIntegralUser());
     }
 
     /**
      * 积分记录
-     * @author Mr.Zhang
-     * @since 2020-05-18
      */
     @ApiOperation(value = "积分记录")
     @RequestMapping(value = "/integral/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<UserBill>>  getIntegralList(@Validated PageParamRequest pageParamRequest){
-        return CommonResult.success(CommonPage.restPage(userCenterService.getUserBillList(Constants.USER_BILL_CATEGORY_INTEGRAL, pageParamRequest)));
+    public CommonResult<CommonPage<UserIntegralRecord>> getIntegralList(@Validated PageParamRequest pageParamRequest){
+        return CommonResult.success(CommonPage.restPage(userCenterService.getUserIntegralRecordList(pageParamRequest)));
     }
 
     /**
      * 经验记录
-     * @author Mr.Zhang
-     * @since 2020-05-18
      */
     @ApiOperation(value = "经验记录")
     @RequestMapping(value = "/user/expList", method = RequestMethod.GET)
-    public CommonResult<CommonPage<UserBill>>  getExperienceList(@Validated PageParamRequest pageParamRequest){
-        return CommonResult.success(CommonPage.restPage(userCenterService.getUserBillList(Constants.USER_BILL_CATEGORY_EXPERIENCE, pageParamRequest)));
+    public CommonResult<CommonPage<UserBill>> getExperienceList(@Validated PageParamRequest pageParamRequest){
+        return CommonResult.success(CommonPage.restPage(userCenterService.getUserExperienceList(pageParamRequest)));
     }
 
     /**
@@ -300,7 +281,7 @@ public class UserController {
      * @return List<User>
      */
     @ApiOperation(value = "推广人排行")
-    @RequestMapping(value = "rank", method = RequestMethod.GET)
+    @RequestMapping(value = "/rank", method = RequestMethod.GET)
     public CommonResult<List<User>> getTopSpreadPeopleListByDate(@RequestParam(required = false) String type, @Validated PageParamRequest pageParamRequest){
         return CommonResult.success(userCenterService.getTopSpreadPeopleListByDate(type, pageParamRequest));
     }
@@ -310,7 +291,7 @@ public class UserController {
      * @return 优惠券集合
      */
     @ApiOperation(value = "佣金排行")
-    @RequestMapping(value = "brokerage_rank", method = RequestMethod.GET)
+    @RequestMapping(value = "/brokerage_rank", method = RequestMethod.GET)
     public CommonResult<List<User>> getTopBrokerageListByDate(@RequestParam String type, @Validated PageParamRequest pageParamRequest){
         return CommonResult.success(userCenterService.getTopBrokerageListByDate(type, pageParamRequest));
     }
@@ -337,14 +318,14 @@ public class UserController {
     }
 
     /**
-     * 绑定推广人
+     * 绑定推广关系（登录状态）
      * @param spreadPid 推广id
      * @return 绑定结果
      */
-    @ApiOperation(value = "绑定推广人")
+    @ApiOperation(value = "绑定推广关系（登录状态）")
     @RequestMapping(value = "/user/bindSpread", method = RequestMethod.GET)
     public CommonResult<Boolean> bindsSpread(Integer spreadPid){
-        userService.bindSpread(userService.getInfo(),spreadPid);
+        userService.bindSpread(spreadPid);
         return CommonResult.success();
     }
 }

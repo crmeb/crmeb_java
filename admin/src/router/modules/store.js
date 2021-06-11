@@ -35,7 +35,7 @@ const storeRouter = {
         meta: { title: '商品评论', icon: '' }
       },
       {
-        path: 'list/creatProduct/:id?',
+        path: 'list/creatProduct/:id?/:isDisabled?',
         component: () => import('@/views/store/creatStore/index'),
         name: 'SortCreat',
         meta: { title: '商品添加', noCache: true, activeMenu: `/store/index` },

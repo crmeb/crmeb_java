@@ -32,8 +32,8 @@ public class StoreProductReplyAddRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 
-    @ApiModelProperty(value = "订单ID， 移动端必须传递此参数")
-    private Integer oid;
+    @ApiModelProperty(value = "订单编号， 移动端必须传递此参数")
+    private String orderNo;
 
     @ApiModelProperty(value = "用户id， 后端必须传递此参数")
     private Integer userId;

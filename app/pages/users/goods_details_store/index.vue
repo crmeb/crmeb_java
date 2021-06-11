@@ -12,32 +12,36 @@
 				<div class="row-right">
 					<div>
 						<!-- #ifdef H5 -->
-						<a class="store-phone" :href="'tel:' + item.phone"><span class="iconfont icon-dadianhua01"></span></a>
+						<a class="store-phone" :href="'tel:' + item.phone"><span
+								class="iconfont icon-dadianhua01"></span></a>
 						<!-- #endif -->
-						<!-- #ifdef MP || APP-PLUS -->
-						<view class="store-phone" @click="call(item.phone)"><text class="iconfont icon-dadianhua01"></text></view>
+						<!-- #ifdef MP -->
+						<view class="store-phone" @click="call(item.phone)"><text
+								class="iconfont icon-dadianhua01"></text></view>
 						<!-- #endif -->
 					</div>
 					<!-- <div>
 						<a class="store-phone" :href="'tel:' + item.phone"><span class="iconfont icon-dadianhua01"></span></a>
 					</div> -->
 					<div class="store-distance" @click.stop="showMaoLocation(item)">
-						<span class="addressTxt" v-if="item.range">距离{{ item.range }}千米</span>
+						<span class="addressTxt" v-if="item.distance">距离{{ item.distance/1000 }}千米</span>
 						<span class="addressTxt" v-else>查看地图</span>
 						<span class="iconfont icon-youjian"></span>
 					</div>
 				</div>
 			</div>
+
+
 			<Loading :loaded="loaded" :loading="loading"></Loading>
 		</div>
 		<div>
-			<iframe v-if="locationShow && !isWeixin" ref="geoPage" width="0" height="0" frameborder="0" style="display:none;"
+			<!-- <iframe v-if="locationShow && !isWeixin" ref="geoPage" width="0" height="0" frameborder="0" style="display:none;"
 			 scrolling="no" :src="
           'https://apis.map.qq.com/tools/geolocation?key=' +
             mapKey +
             '&referer=myapp'
         ">
-			</iframe>
+			</iframe> -->
 		</div>
 	</div>
 </template>
@@ -111,29 +115,60 @@
 			},
 			selfLocation() {
 				let self = this
-				uni.getLocation({
-					type: 'wgs84',
-					success: function(res) {
-						try {
-							uni.setStorageSync('user_latitude', res.latitude);
-							uni.setStorageSync('user_longitude', res.longitude);
-						} catch {}
+				// #ifdef H5
+				if (self.$wechat.isWeixin()) {
+					self.$wechat.location().then(res => {
+						this.user_latitude = res.latitude;
+						this.user_longitude = res.longitude;
+						uni.setStorageSync('user_latitude', res.latitude);
+						uni.setStorageSync('user_longitude', res.longitude);
 						self.getList();
-					},
-					complete:function() {
-						self.getList();
-					}
-				});
+					})
+				} else {
+				// #endif	
+					uni.getLocation({
+						type: 'wgs84',
+						success: (res) => {
+							try {
+								this.user_latitude = res.latitude;
+								this.user_longitude = res.longitude;
+								uni.setStorageSync('user_latitude', res.latitude);
+								uni.setStorageSync('user_longitude', res.longitude);
+							} catch {}
+							self.getList();
+						},
+						complete: function() {
+							self.getList();
+						}
+					});
+					// #ifdef H5	
+				}
+				// #endif
 			},
 			showMaoLocation(e) {
-				uni.openLocation({
-					latitude: Number(e.latitude),
-					longitude: Number(e.longitude),
-					success: function() {
+				let self = this;
+				// #ifdef H5
+				if (self.$wechat.isWeixin()) {
+					self.$wechat.seeLocation({
+						latitude: Number(e.latitude),
+						longitude: Number(e.longitude)
+					}).then(res => {
 						console.log('success');
-						Number
-					}
-				});
+					})
+				} else {
+					// #endif	
+					uni.openLocation({
+						latitude: Number(e.latitude),
+						longitude: Number(e.longitude),
+						name: e.name,
+						address: `${e.address}-${e.detailedAddress}`,
+						success: function() {
+							console.log('success');
+						}
+					});
+					// #ifdef H5	
+				}
+				// #endif
 			},
 			// 选中门店
 			checked(e) {
@@ -241,9 +276,10 @@
 		border-radius: 50%;
 		display: block;
 		text-align: center;
-		line-height: 50rpx;
+		line-height: 48rpx;
 		background-color: #e83323;
 		margin-bottom: 22rpx;
+		text-decoration: none;
 	}
 
 	.store-distance {

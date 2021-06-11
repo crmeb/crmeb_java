@@ -33,7 +33,7 @@ public class StoreOrderEditPriceRequest {
 
     @ApiModelProperty(value = "订单号")
     @NotBlank(message = "订单号不能为空")
-    private String orderId;
+    private String orderNo;
 
     @ApiModelProperty(value = "订单金额")
     @DecimalMin(value = "0.00", message = "订单金额不能少于0.00")

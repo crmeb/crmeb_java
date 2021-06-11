@@ -66,8 +66,13 @@ public interface ExpressService extends IService<Express> {
     /**
      * 查询快递公司
      * @param code 快递公司编号
-     * @return
+     * @return Express
      */
     Express getByCode(String code);
 
+    /**
+     * 通过物流公司名称获取
+     * @param name 物流公司名称
+     */
+    Express getByName(String name);
 }

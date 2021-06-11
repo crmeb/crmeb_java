@@ -1,33 +1,36 @@
 <template>
+	<!-- v-if="reply.length>0" -->
 	<view class="evaluateWtapper">
 		<view class="evaluateItem" v-for="(item, indexw) in reply" :key="indexw">
-			<view class="pic-text acea-row row-middle">
+			<view class="pic-text acea-row">
 				<view class="pictrue">
 					<image :src="item.avatar"></image>
 				</view>
-				<view class="acea-row row-between-wrapper" style="width: 87%;">
-					<view class="acea-row row-middle">
-						<view class="name line1">{{ item.nickname }}</view>
-						<view class="start" :class="'star' + item.productScore"></view>
+				<view class="content">
+					<view>
+						<view class="acea-row row-between">
+							<view class="acea-row">
+								<view class="name line1">{{ item.nickname }}</view>
+								<view class="start" :class="'star' + item.score"></view>
+							</view>
+							<view class="time">{{ item.createTime }}</view>
+						</view>
+						<view class="sku">规格：{{ item.sku?item.sku:'无' }}</view>
 					</view>
-					<view class="time">{{ item.createTime }}</view>
-					<!-- <view class="time">{{ item.createTime }}</view>
-					<view class="time">{{ item.suk }}</view> -->
-					<!-- <view class="time">{{ item.createTime }} {{ item.sku }}</view> -->
+					
+					<view class="evaluate-infor">{{ item.comment }}</view>
+					<view class="imgList acea-row" v-if="item.pics && item.pics.length && item.pics[0]">
+						<view class="pictrue" v-for="(itemn, indexn) in item.pics" :key="indexn">
+							<image :src="itemn" class="image" @click='getpreviewImage(indexw, indexn)'></image>
+						</view>
+					</view>
+					<view class="reply" v-if="item.merchantReplyContent">
+						<text class="font-color">店小二</text>：{{ item.merchantReplyContent }}
+					</view>
 				</view>
+				
 			</view>
-			<view class="time">规格：{{ item.sku?item.sku:'无' }}</view>
-			<view class="evaluate-infor">{{ item.comment }}</view>
-			<view class="imgList acea-row" v-if="item.pics.length && item.pics[0]">
-				<view class="pictrue" v-for="(itemn, indexn) in item.pics" :key="indexn">
-					<image :src="itemn" class="image" @click='getpreviewImage(indexw, indexn)'></image>
-				</view>
-			</view>
-			<view class="reply" v-if="item.merchantReplyContent">
-				<text class="font-color">店小二</text>：{{
-          item.merchantReplyContent
-        }}
-			</view>
+			
 		</view>
 	</view>
 </template>
@@ -55,7 +58,9 @@
 <style scoped lang='scss'>
 	.evaluateWtapper .evaluateItem {
 		background-color: #fff;
-		padding-bottom: 25rpx;
+		padding: 24rpx;
+		border-bottom-left-radius: 14rpx;
+		border-bottom-right-radius: 14rpx;
 	}
 	
 	.evaluateWtapper .evaluateItem~.evaluateItem {
@@ -65,14 +70,15 @@
 	.evaluateWtapper .evaluateItem .pic-text {
 		font-size: 26rpx;
 		color: #282828;
-		height: 95rpx;
-		padding: 0 30rpx;
+		.content{
+			width: 84%;
+			margin-left: 20rpx;
+		}
 	}
 	
 	.evaluateWtapper .evaluateItem .pic-text .pictrue {
-		width: 56rpx;
-		height: 56rpx;
-		margin-right: 20rpx;
+		width: 62rpx;
+		height: 62rpx;
 	}
 	
 	.evaluateWtapper .evaluateItem .pic-text .pictrue image {
@@ -87,40 +93,47 @@
 	
 	.evaluateWtapper .evaluateItem .time {
 		font-size: 24rpx;
-		color: #82848f;
-		padding: 0 30rpx;
+		color: #999999;
+		
 	}
-	
+	.sku{
+		font-size: 24rpx;
+		color: #999999;
+		margin: 10rpx 0;
+	}
 	.evaluateWtapper .evaluateItem .evaluate-infor {
 		font-size: 28rpx;
-		color: #282828;
-		margin-top: 19rpx;
-		padding: 0 30rpx;
+		color: #333;
+		margin-bottom: 14rpx;
 	}
 	
-	.evaluateWtapper .evaluateItem .imgList {
-		padding: 0 30rpx 0 15rpx;
-		margin-top: 25rpx;
+	.evaluateWtapper .evaluateItem .imgList {/* 
+		padding: 0 24rpx;
+		margin-top: 16rpx; */
 	}
 	
 	.evaluateWtapper .evaluateItem .imgList .pictrue {
-		width: 156rpx;
-		height: 156rpx;
-		margin: 0 0 15rpx 15rpx;
+		width: 102rpx;
+		height: 102rpx;
+		margin-right: 14rpx;
+		border-radius: 14rpx;
+		margin-bottom: 16rpx;
+		/* margin: 0 0 15rpx 15rpx; */
 	}
 	
 	.evaluateWtapper .evaluateItem .imgList .pictrue image {
 		width: 100%;
 		height: 100%;
 		background-color: #f7f7f7;
+		border-radius: 14rpx;
 	}
 	
 	.evaluateWtapper .evaluateItem .reply {
 		font-size: 26rpx;
 		color: #454545;
 		background-color: #f7f7f7;
-		border-radius: 5rpx;
-		margin: 20rpx 30rpx 0 30rpx;
+		border-radius: 14rpx;
+		margin: 20rpx 30rpx 0 0rpx;
 		padding: 20rpx;
 		position: relative;
 	}

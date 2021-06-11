@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
+import com.constants.SysGroupDataConstants;
 import com.github.pagehelper.PageHelper;
 import com.utils.CrmebUtil;
 import com.zbkj.crmeb.system.dao.SystemGroupDataDao;
@@ -46,8 +47,6 @@ public class SystemGroupDataServiceImpl extends ServiceImpl<SystemGroupDataDao, 
 
     @Autowired
     private SystemAttachmentService systemAttachmentService;
-
-
 
     /**
     * 列表
@@ -223,6 +222,18 @@ public class SystemGroupDataServiceImpl extends ServiceImpl<SystemGroupDataDao, 
         t = CrmebUtil.mapToObj(map, cls);
 
         return t;
+    }
+
+    /**
+     * 获取个人中心菜单
+     * @return HashMap<String, Object>
+     */
+    @Override
+    public HashMap<String, Object> getMenuUser() {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("routine_my_menus", getListMapByGid(SysGroupDataConstants.GROUP_DATA_ID_USER_CENTER_MENU));
+        map.put("routine_my_banner", getListMapByGid(SysGroupDataConstants.GROUP_DATA_ID_USER_CENTER_BANNER));
+        return map;
     }
 
 }

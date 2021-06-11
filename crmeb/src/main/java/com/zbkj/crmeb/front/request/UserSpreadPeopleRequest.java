@@ -33,7 +33,7 @@ public class UserSpreadPeopleRequest implements Serializable {
 
     @ApiModelProperty(value = "推荐人类型|0=一级|1=二级", allowableValues = "range[0,1]")
     @Range(min = 0, max = 1, message = "推荐人类型必须在 0（一级），1（二级） 中选择")
-    private int grade = 0;
+    private Integer grade = 0;
 
     @ApiModelProperty(value = "搜索关键字")
     private String keyword;

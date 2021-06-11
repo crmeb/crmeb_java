@@ -44,7 +44,8 @@ export function adminAdd(pram) {
     pwd: pram.pwd,
     realName: pram.realName,
     roles: pram.roles.join(','),
-    status: pram.status
+    status: pram.status,
+    phone: pram.phone
   }
   return request({
     url: '/admin/system/admin/save',

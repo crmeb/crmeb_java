@@ -3,8 +3,8 @@
     <div class="header clearfix">
       <div class="container">
         <el-form inline size="small">
-          <el-form-item label="优惠劵名称：">
-            <el-input v-model="tableFrom.name" placeholder="请输入优惠券名称" class="selWidth" size="small">
+          <el-form-item label="优惠卷名称：">
+            <el-input v-model="tableFrom.keywords" placeholder="请输入优惠券名称" class="selWidth" size="small">
               <el-button slot="append" icon="el-icon-search" size="small" @click="getList(1)" />
             </el-input>
           </el-form-item>
@@ -91,7 +91,7 @@
 </template>
 
 <script>
-import { marketingListApi, couponUserApi } from '@/api/marketing'
+import { marketingListApi, couponUserApi, marketingSendApi } from '@/api/marketing'
 export default {
   name: 'CouponList',
   props: {
@@ -110,6 +110,10 @@ export default {
     userIds: {
       type: String,
       default: ''
+    },
+    userType: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -122,10 +126,8 @@ export default {
       tableFrom: {
         page: 1,
         limit: 10,
-        name: '',
-        // type: 0,
-        isDel: 0,
-        status: 1
+        keywords: '',
+        type: ''
       },
       multipleSelection: [],
       multipleSelectionAll: [],
@@ -145,6 +147,7 @@ export default {
   mounted() {
     this.tableFrom.page = 1
     this.getList()
+    if(!this.couponData) return;
     this.couponData.forEach(row => {
       this.$refs.table.toggleRowSelection(row);
     });
@@ -233,7 +236,8 @@ export default {
     getList(num) {
       this.listLoading = true
       this.tableFrom.page = num ? num : this.tableFrom.page
-      marketingListApi(this.tableFrom).then(res => {
+      this.userType ? this.tableFrom.type = 1 : this.tableFrom.type = 3;
+      marketingSendApi(this.tableFrom).then(res => {
         this.tableData.data = res.list
         this.tableData.total = res.total
         this.listLoading = false

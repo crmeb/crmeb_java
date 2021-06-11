@@ -1,23 +1,25 @@
 <template>
 	<view>
 		<form @submit="formSubmit" report-submit='true'>
-			<view class='addAddress'>
-				<view class='list'>
-					<view class='item acea-row row-between-wrapper'>
+			<view class='addAddress pad30'>
+				<view class='list borRadius14'>
+					<view class='item acea-row row-between-wrapper' style="border: none;">
 						<view class='name'>姓名</view>
-						<input type='text' placeholder='请输入姓名' name='realName' :value="userAddress.realName" placeholder-class='placeholder'></input>
+						<input type='text' placeholder='请输入姓名' placeholder-style="color:#ccc;" name='realName' :value="userAddress.realName"
+							placeholder-class='placeholder'></input>
 					</view>
 					<view class='item acea-row row-between-wrapper'>
 						<view class='name'>联系电话</view>
-						<input type='text' placeholder='请输入联系电话' name="phone" :value='userAddress.phone' placeholder-class='placeholder'></input>
+						<input type='text' placeholder='请输入联系电话' placeholder-style="color:#ccc;" name="phone" :value='userAddress.phone'
+							placeholder-class='placeholder'></input>
 					</view>
 					<view class='item acea-row row-between-wrapper'>
 						<view class='name'>所在地区</view>
 						<view class="address">
-							<picker mode="multiSelector" @change="bindRegionChange" @columnchange="bindMultiPickerColumnChange" :value="valueRegion"
-							 :range="multiArray">
+							<picker mode="multiSelector" @change="bindRegionChange"
+								@columnchange="bindMultiPickerColumnChange" :value="valueRegion" :range="multiArray">
 								<view class='acea-row'>
-									<view class="picker">{{region[0]}}，{{region[1]}}，{{region[2]}}</view>
+									<view class="picker line1">{{region[0]}}，{{region[1]}}，{{region[2]}}</view>
 									<view class='iconfont icon-dizhi font-color'></view>
 								</view>
 							</picker>
@@ -25,12 +27,14 @@
 					</view>
 					<view class='item acea-row row-between-wrapper'>
 						<view class='name'>详细地址</view>
-						<input type='text' placeholder='请填写具体地址' name='detail' placeholder-class='placeholder' :value='userAddress.detail'></input>
+						<input type='text' placeholder='请填写具体地址' placeholder-style="color:#ccc;" name='detail' placeholder-class='placeholder'
+							:value='userAddress.detail'></input>
 					</view>
 				</view>
-				<view class='default acea-row row-middle'>
+				<view class='default acea-row row-middle borRadius14'>
 					<checkbox-group @change='ChangeIsDefault'>
-						<checkbox :checked="userAddress.isDefault" />设置为默认地址</checkbox-group>
+						<checkbox :checked="userAddress.isDefault" />设置为默认地址
+					</checkbox-group>
 				</view>
 
 				<button class='keepBnt bg-color' form-type="submit">立即保存</button>
@@ -43,7 +47,7 @@
 			</view>
 		</form>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -102,26 +106,27 @@
 			};
 		},
 		computed: mapGetters(['isLogin']),
-		watch:{
-			isLogin:{
-				handler:function(newV,oldV){
-					if(newV){
+		watch: {
+			isLogin: {
+				handler: function(newV, oldV) {
+					if (newV) {
 						this.getUserAddress();
 						this.getCityList();
 					}
 				},
-				deep:true
+				deep: true
 			}
 		},
 		onLoad(options) {
 			if (this.isLogin) {
-				this.cartId = options.cartId || '';
-				this.pinkId = options.pinkId || 0;
-				this.couponId = options.couponId || 0;
+				this.preOrderNo = options.preOrderNo || 0;
+				// this.cartId = options.cartId || '';
+				// this.pinkId = options.pinkId || 0;
+				// this.couponId = options.couponId || 0;
 				this.id = options.id || 0;
-				this.secKill = options.secKill || false;
-				this.combination = options.combination || false;
-				this.bargain = options.bargain || false;
+				// this.secKill = options.secKill || false;
+				// this.combination = options.combination || false;
+				// this.bargain = options.bargain || false;
 				uni.setNavigationBarTitle({
 					title: options.id ? '修改地址' : '添加地址'
 				})
@@ -131,13 +136,7 @@
 				// 	this.initialize();
 				// }
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {
@@ -286,9 +285,23 @@
 											that.pinkId = '';
 											that.couponId = '';
 											uni.navigateTo({
-												url: '/pages/users/order_confirm/index?cartId=' + cartId + '&addressId=' + (that.id ? that.id :
-													res.data
-													.id) + '&pinkId=' + pinkId + '&couponId=' + couponId  + '&secKill=' + that.secKill + '&combination=' + that.combination + '&bargain=' + that.bargain
+												url: '/pages/users/order_confirm/index?cartId=' +
+													cartId +
+													'&addressId=' + (
+														that.id ? that
+														.id :
+														res.data
+														.id) +
+													'&pinkId=' +
+													pinkId +
+													'&couponId=' +
+													couponId +
+													'&secKill=' + that
+													.secKill +
+													'&combination=' +
+													that.combination +
+													'&bargain=' + that
+													.bargain
 											});
 										} else {
 											uni.navigateBack({
@@ -307,9 +320,10 @@
 								});
 							},
 							fail: function(res) {
-								if (res.errMsg == 'chooseAddress:cancel') return that.$util.Tips({
-									title: '取消选择'
-								});
+								if (res.errMsg == 'chooseAddress:cancel') return that.$util
+									.Tips({
+										title: '取消选择'
+									});
 							},
 						})
 					},
@@ -361,13 +375,17 @@
 									that.pinkId = '';
 									that.couponId = '';
 									uni.navigateTo({
-										url: '/pages/users/order_confirm/index?cartId=' + cartId + '&addressId=' + (that.id ? that.id :
-											res.data
-											.id) + '&pinkId=' + pinkId + '&couponId=' + couponId  + '&secKill=' + that.secKill + '&combination=' + that.combination + '&bargain=' + that.bargain
+										url: '/pages/users/order_confirm/index?cartId=' +
+											cartId + '&addressId=' + (that.id ? that.id :
+												res.data
+												.id) + '&pinkId=' + pinkId + '&couponId=' +
+											couponId + '&secKill=' + that.secKill +
+											'&combination=' + that.combination + '&bargain=' +
+											that.bargain
 									});
 								} else {
 									uni.navigateTo({
-										url:'/pages/users/user_address_list/index'
+										url: '/pages/users/user_address_list/index'
 									})
 									// history.back();
 								}
@@ -436,16 +454,12 @@
 							icon: 'success'
 						});
 					setTimeout(function() {
-						if (that.cartId) {
-							let cartId = that.cartId;
-							let pinkId = that.pinkId;
-							let couponId = that.couponId;
-							that.cartId = '';
-							that.pinkId = '';
-							that.couponId = '';
-							uni.navigateTo({
-								url: '/pages/users/order_confirm/index?cartId=' + cartId + '&addressId=' + (that.id ? that.id : res.data.id) +'&pinkId=' + pinkId + '&couponId=' + couponId + '&secKill=' + that.secKill + '&combination=' + that.combination + '&bargain=' + that.bargain
-							});
+						if (that.preOrderNo>0) {
+							uni.redirectTo({
+								url: '/pages/users/order_confirm/index?preOrderNo=' + that
+									.preOrderNo + '&addressId=' + (that.id ? that.id : res.data
+										.id)
+							})
 						} else {
 							// #ifdef H5
 							return history.back();
@@ -455,7 +469,29 @@
 								delta: 1,
 							})
 							// #endif
+
 						}
+
+						// if (that.cartId) {
+						// 	let cartId = that.cartId;
+						// 	let pinkId = that.pinkId;
+						// 	let couponId = that.couponId;
+						// 	that.cartId = '';
+						// 	that.pinkId = '';
+						// 	that.couponId = '';
+						// 	uni.navigateTo({
+						// 		url: '/pages/users/order_confirm/index?cartId=' + cartId + '&addressId=' + (that.id ? that.id : res.data.id) +'&pinkId=' + pinkId + '&couponId=' + couponId + '&secKill=' + that.secKill + '&combination=' + that.combination + '&bargain=' + that.bargain
+						// 	});
+						// } else {
+						// 	// #ifdef H5
+						// 	return history.back();
+						// 	// #endif
+						// 	// #ifndef H5
+						// 	return uni.navigateBack({
+						// 		delta: 1,
+						// 	})
+						// 	// #endif
+						// }
 					}, 1000);
 				}).catch(err => {
 					return that.$util.Tips({
@@ -471,38 +507,40 @@
 </script>
 
 <style scoped lang="scss">
+	.addAddress {
+		padding-top: 20rpx;
+	}
+
 	.addAddress .list {
 		background-color: #fff;
+		padding: 0 24rpx;
 	}
 
 	.addAddress .list .item {
-		padding: 30rpx;
 		border-top: 1rpx solid #eee;
+		height: 90rpx;
+		line-height: 90rpx;
 	}
 
 	.addAddress .list .item .name {
-		width: 195rpx;
+		// width: 195rpx;
 		font-size: 30rpx;
 		color: #333;
 	}
 
 	.addAddress .list .item .address {
-		// width: 412rpx;
 		flex: 1;
-		margin-left: 20rpx;
+		margin-left: 50rpx;
 	}
 
 	.addAddress .list .item input {
 		width: 475rpx;
 		font-size: 30rpx;
+		font-weight: 400;
 	}
 
 	.addAddress .list .item .placeholder {
 		color: #ccc;
-	}
-
-	.addAddress .list .item picker {
-		width: 475rpx;
 	}
 
 	.addAddress .list .item picker .picker {
@@ -531,7 +569,7 @@
 		border-radius: 50rpx;
 		text-align: center;
 		line-height: 86rpx;
-		margin: 50rpx auto;
+		margin: 80rpx auto 24rpx auto;
 		font-size: 32rpx;
 		color: #fff;
 	}
@@ -544,7 +582,7 @@
 		line-height: 86rpx;
 		margin: 0 auto;
 		font-size: 32rpx;
-		color: #fe960f;
-		border: 1px solid #fe960f;
+		color: #E93323 ;
+		border: 1px solid #E93323;
 	}
 </style>

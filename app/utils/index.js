@@ -14,9 +14,6 @@ export function silenceBindingSpread() {
 
 	//#ifdef MP
 	let puid = getApp().globalData.spid;
-	if (!puid) {
-		puid = getApp().globalData.code;
-	}
 	//#endif
 
 	puid = parseInt(puid);

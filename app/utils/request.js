@@ -22,7 +22,6 @@ function baseRequest(url, method, data, {
 	if (params != undefined) {
 		header = HEADERPARAMS;
 	}
-	console.log('Url:',Url);
 	if (!noAuth) {
 		//登录过期自动登录
 		if (!store.state.app.token && !checkLogin()) {
@@ -32,9 +31,7 @@ function baseRequest(url, method, data, {
 			});
 		}
 	}
-
 	if (store.state.app.token) header[TOKENNAME] = store.state.app.token;
-
 	return new Promise((reslove, reject) => {
 		uni.request({
 			url: Url + '/api/front/' + url,

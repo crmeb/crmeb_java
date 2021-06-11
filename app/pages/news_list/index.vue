@@ -7,7 +7,7 @@
 					<block v-for="(item,index) in imgUrls" :key="index">
 						<swiper-item>
 							<navigator :url="'/pages/news_details/index?id='+item.id">
-								<image :src="item.imageInput[0]" class="slide-image" />
+								<image :src="item.imageInput" class="slide-image" />
 							</navigator>
 						</swiper-item>
 					</block>
@@ -16,7 +16,7 @@
 			<view class='nav' v-if="navList.length > 0">
 				<scroll-view class="scroll-view_x" scroll-x scroll-with-animation :scroll-left="scrollLeft" style="width:auto;overflow:hidden;">
 					<block v-for="(item,index) in navList" :key="index">
-						<view class='item' :class='active==item.id?"on":""' @click='tabSelect(item.id, index)'>
+						<view class='item borRadius14' :class='active==item.id?"on":""' @click='tabSelect(item.id, index)'>
 							<view>{{item.name}}</view>
 							<view class='line bg-color' v-if="active==item.id"></view>
 						</view>
@@ -25,37 +25,14 @@
 			</view>
 			<view class='list'>
 				<block v-for="(item,index) in articleList" :key="index">
-					<navigator :url='"/pages/news_details/index?id="+item.id' hover-class='none' class='item acea-row row-between-wrapper'
-					 v-if="item.imageInput.length == 1">
+					<navigator :url='"/pages/news_details/index?id="+item.id' hover-class='none' class='item acea-row row-between-wrapper'>
 						<view class='text acea-row row-column-between'>
 							<view class='name line2'>{{item.title}}</view>
 							<view>{{item.createTime}}</view>
 						</view>
 						<view class='pictrue'>
-							<image :src='item.imageInput[0]'></image>
+							<image :src='item.imageInput'></image>
 						</view>
-					</navigator>
-					<navigator :url='"/pages/news_details/index?id="+item.id' hover-class='none' class='item' v-else-if="item.imageInput.length == 2">
-						<view class='title line1'>{{item.title}}</view>
-						<view class='picList acea-row row-between-wrapper'>
-							<block v-for="(itemImg,indexImg) in item.imageInput" :key="indexImg">
-								<view class='pictrue'>
-									<image :src='itemImg'></image>
-								</view>
-							</block>
-						</view>
-						<view class='time'>{{item.createTime}}</view>
-					</navigator>
-					<navigator :url='"/pages/news_details/index?id="+item.id' hover-class='none' class='item' v-else-if="item.imageInput.length > 2">
-						<view class='title line1'>{{item.title}}</view>
-						<view class='picList on acea-row row-between-wrapper'>
-							<block v-for="(itemImg,indexImg) in item.imageInput" :key="indexImg">
-								<view class='pictrue'>
-									<image :src='itemImg'></image>
-								</view>
-							</block>
-						</view>
-						<view class='time'>{{item.createTime}}</view>
 					</navigator>
 				</block>
 			</view>
@@ -194,7 +171,7 @@
 	.newsList .swiper .slide-image {
 		width: 100%;
 		height: 335rpx;
-		border-radius: 6rpx;
+		border-radius: 14rpx;
 	}
 	// #ifdef MP-WEIXIN
 	.newsList .swiper .wx-swiper-dot {
@@ -213,7 +190,6 @@
 		margin-bottom: -15rpx;
 	}
 	// #endif
-	// #ifdef APP-PLUS || H5
 	.newsList .swiper .uni-swiper-dot {
 			width: 12rpx !important;
 			height: 12rpx !important;
@@ -229,9 +205,8 @@
 	.newsList .swiper .uni-swiper-dots.uni-swiper-dots-horizontal {
 		margin-bottom: -15rpx;
 	}
-	// #endif
 	.newsList .nav {
-		padding: 0 30rpx;
+		padding: 0 24rpx;
 		width: 100%;
 		white-space: nowrap;
 		box-sizing: border-box;
@@ -260,7 +235,7 @@
 	}
 
 	.newsList .list .item {
-		margin: 0 30rpx;
+		margin: 0 24rpx;
 		border-bottom: 1rpx solid #f0f0f0;
 		padding: 35rpx 0;
 	}
@@ -273,7 +248,7 @@
 	.newsList .list .item .pictrue image {
 		width: 100%;
 		height: 100%;
-		border-radius: 6rpx;
+		border-radius: 14rpx;
 	}
 
 	.newsList .list .item .text {
