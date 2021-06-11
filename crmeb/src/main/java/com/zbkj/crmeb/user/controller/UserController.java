@@ -1,14 +1,13 @@
 package com.zbkj.crmeb.user.controller;
 
 
-import cn.hutool.core.util.ObjectUtil;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.request.UserOperateIntegralMoneyRequest;
-import com.zbkj.crmeb.user.request.UserRequest;
 import com.zbkj.crmeb.user.request.UserSearchRequest;
+import com.zbkj.crmeb.user.request.UserUpdateRequest;
 import com.zbkj.crmeb.user.request.UserUpdateSpreadRequest;
 import com.zbkj.crmeb.user.response.TopDetail;
 import com.zbkj.crmeb.user.response.UserResponse;
@@ -19,7 +18,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -90,9 +88,24 @@ public class UserController {
      */
     @ApiOperation(value = "修改")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
-    public CommonResult<String> update(@RequestParam Integer id, @RequestBody UserRequest userRequest){
+    public CommonResult<String> update(@RequestParam Integer id, @RequestBody @Validated UserUpdateRequest userRequest){
         userRequest.setUid(id);
         if(userService.updateUser(userRequest)){
+            return CommonResult.success();
+        }else{
+            return CommonResult.failed();
+        }
+    }
+
+    /**
+     * 修改用户手机号
+     * @param id 用户uid
+     * @param phone 手机号
+     */
+    @ApiOperation(value = "修改用户手机号")
+    @RequestMapping(value = "/update/phone", method = RequestMethod.GET)
+    public CommonResult<String> updatePhone(@RequestParam(name = "id") Integer id, @RequestParam(name = "phone") String phone){
+        if(userService.updateUserPhone(id, phone)){
             return CommonResult.success();
         }else{
             return CommonResult.failed();

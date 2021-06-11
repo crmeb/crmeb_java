@@ -417,6 +417,22 @@ public class OnePassServiceImpl implements OnePassService {
     }
 
     /**
+     * 校验一号通账号是否配置
+     */
+    @Override
+    public Boolean checkAccount() {
+        String account = systemConfigService.getValueByKey("sms_account");// 获取配置账号
+        if (StrUtil.isBlank(account)) {
+            return Boolean.FALSE;
+        }
+        String token = systemConfigService.getValueByKey("sms_token"); //获取配置密码
+        if (StrUtil.isBlank(token)) {
+            return Boolean.FALSE;
+        }
+        return Boolean.TRUE;
+    }
+
+    /**
      * 物流、电子面单开通参数校验
      */
     private void expressOpenValidate(ServiceOpenRequest request) {

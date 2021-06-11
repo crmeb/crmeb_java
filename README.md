@@ -19,18 +19,19 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
 网络营销的一款企业应用，更适合企业二次开发。
 
 ~~~~
-
-![](https://gitee.com/stivepeim/img4mk/raw/master/20210205091003.png)
+![](https://gitee.com/stivepeim/img4mk/raw/master/20210611144457.png)
 
 ## 导航栏目
 
- [![帮助手册](https://img.shields.io/badge/%E5%B8%AE%E5%8A%A9%E6%89%8B%E5%86%8C-Java%E5%B8%AE%E5%8A%A9%E6%89%8B%E5%86%8C-orange)](http://help.crmeb.net/crmeb_java/1748037t)
+ <!-- [![帮助手册](https://img.shields.io/badge/%E5%B8%AE%E5%8A%A9%E6%89%8B%E5%86%8C-Java%E5%B8%AE%E5%8A%A9%E6%89%8B%E5%86%8C-orange)](http://help.crmeb.net/crmeb_java/1748037t)
  [![论坛地址](https://img.shields.io/badge/CRMEB-Java%E8%AE%BA%E5%9D%9B-green)](https://q.crmeb.net)
 [![官网地址](https://img.shields.io/badge/CRMEB-%E5%AE%98%E7%BD%91-brightgreen)](https://www.crmeb.com)
  [![服务器](https://img.shields.io/badge/Server-%E6%9C%8D%E5%8A%A1%E5%99%A8-yellowgreen)](https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=dligum2z)
  [![授权价格](https://img.shields.io/badge/authorize-%E6%8E%88%E6%9D%83-red)](http://crmeb.com/web/auth/apply)
   [![GitHub地址](https://img.shields.io/badge/gitHub-gitHub-lightgrey)](https://github.com/crmeb/crmeb_java)
-  [![码云地址](https://img.shields.io/badge/gitee-%E7%A0%81%E4%BA%91-blue)](https://gitee.com/ZhongBangKeJi/crmeb_java)
+  [![码云地址](https://img.shields.io/badge/gitee-%E7%A0%81%E4%BA%91-blue)](https://gitee.com/ZhongBangKeJi/crmeb_java) -->
+
+  ### [帮助手册](https://help.crmeb.net/crmeb_java/1748037) [论坛地址](https://q.crmeb.net) [官网地址](https://www.crmeb.com) [服务器](https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=dligum2z) [授权价格](http://crmeb.com/web/auth/apply) [GitHub地址](https://github.com/crmeb/crmeb_java) [码云地址](https://gitee.com/ZhongBangKeJi/crmeb_java)
 
 ## 预览
 ![二维码预览](https://gitee.com/stivepeim/img4mk/raw/master/20210519104517.jpg)
@@ -72,9 +73,12 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
 ~~~
 
 ## 移动端预览
-![](https://gitee.com/stivepeim/img4mk/raw/master/20210204184108.jpg)
+<!-- ![](https://gitee.com/stivepeim/img4mk/raw/master/20210204184108.jpg)
 ![](https://gitee.com/stivepeim/img4mk/raw/master/20210204184109.jpg)
-![](https://gitee.com/stivepeim/img4mk/raw/master/20210204184110.jpg)
+![](https://gitee.com/stivepeim/img4mk/raw/master/20210204184110.jpg) -->
+![](https://gitee.com/stivepeim/img4mk/raw/master/20210611145305.png)
+![](https://gitee.com/stivepeim/img4mk/raw/master/20210611145407.png)
+![](https://gitee.com/stivepeim/img4mk/raw/master/20210611145443.png)
 
 ## 功能图预览
 ![项目基本功能介绍](https://gitee.com/stivepeim/img4mk/raw/master/20201225180349.jpeg)
@@ -86,22 +90,6 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
 ![复制第三方平台商品](https://gitee.com/stivepeim/img4mk/raw/master/20210202175224.png)
 ![营销功能](https://gitee.com/stivepeim/img4mk/raw/master/20210202175547.png)
 ![自定义表单组件](https://gitee.com/stivepeim/img4mk/raw/master/20210202175013.png)
-<!-- ![商品规格](https://images.gitee.com/uploads/images/2020/0824/154034_745ba403_2012975.png "屏幕截图.png")
-![商品分类](https://images.gitee.com/uploads/images/2020/0824/154123_b4b0adf8_2012975.png "屏幕截图.png")
-![订单管理](https://images.gitee.com/uploads/images/2020/0824/154210_e4c821ed_2012975.png "屏幕截图.png")
-![用户管理](https://images.gitee.com/uploads/images/2020/0824/154353_c5e5f618_2012975.png "屏幕截图.png")
-![用户等级](https://images.gitee.com/uploads/images/2020/0824/154427_77f4e80d_2012975.png "屏幕截图.png")
-![文章管理](https://images.gitee.com/uploads/images/2020/0824/154443_cd6c6a90_2012975.png "屏幕截图.png")
-![微信](https://images.gitee.com/uploads/images/2020/0824/154515_9db27282_2012975.png "屏幕截图.png")
-![优惠券](https://images.gitee.com/uploads/images/2020/0824/154536_8d1d2db2_2012975.png "屏幕截图.png")
-![分销](https://images.gitee.com/uploads/images/2020/0824/154553_0b9f66a4_2012975.png "屏幕截图.png")
-![身份](https://images.gitee.com/uploads/images/2020/0824/154609_e9616963_2012975.png "屏幕截图.png")
-![权限](https://images.gitee.com/uploads/images/2020/0824/154647_f7fb8c69_2012975.png "屏幕截图.png")
-![账号](https://images.gitee.com/uploads/images/2020/0824/154709_db94d36a_2012975.png "屏幕截图.png")
-![系统设置](https://images.gitee.com/uploads/images/2020/0824/154727_fc2e4f49_2012975.png "屏幕截图.png")
-![短信](https://images.gitee.com/uploads/images/2020/0824/154752_5552a5d0_2012975.png "屏幕截图.png")
-![系统设置分类](https://images.gitee.com/uploads/images/2020/0824/154816_db8139fd_2012975.png "屏幕截图.png") -->
-
 
 
 ## 项目源码
@@ -110,7 +98,7 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
 |gitHub| https://github.com/crmeb/crmeb_java|
 |gitee|https://gitee.com/ZhongBangKeJi/crmeb_java|
 
-![](https://gitee.com/stivepeim/img4mk/raw/master/20210205091002.jpeg)
+
 
 ## 运行环境及框架
 ~~~

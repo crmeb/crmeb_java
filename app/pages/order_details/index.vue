@@ -2,46 +2,52 @@
 	<view>
 		<view class='order-details'>
 			<!-- 给header上与data上加on为退款订单-->
-			<view class='header bg-color acea-row row-middle' :class='isGoodsReturn ? "on":""'>
-				<view class='pictrue' v-if="isGoodsReturn==false">
-					<image :src="orderInfo.statusPic"></image>
-				</view>
-				<view class='data' :class='isGoodsReturn ? "on":""'>
-					<view class='state'>{{orderInfo.pstatus.msg}}</view>
-					<view>{{orderInfo.createTime}}</view>
+			<view class='header bg-color' :class='isGoodsReturn ? "on":""'>
+				<view class='picTxt acea-row row-middle'>
+					<view class='pictrue' v-if="isGoodsReturn==false">
+						<image :src="orderInfo.statusPic"></image>
+					</view>
+					<view class='data' :class='isGoodsReturn ? "on":""'>
+						<view class='state'>{{orderInfo.orderStatusMsg}}</view>
+						<view>{{orderInfo.createTime}}</view>
+					</view>
 				</view>
 			</view>
-			<view v-if="isGoodsReturn==false">
+
+			<view v-if="isGoodsReturn==false" class="pad30">
 				<view class='nav'>
 					<view class='navCon acea-row row-between-wrapper'>
-						<view :class="status.type == 0 || status.type == -9 ? 'on':''">待付款</view>
-						<view :class="status.type == 1 ? 'on':''">{{orderInfo.shippingType==1 ? '待发货':'待核销'}}</view>
-						<view :class="status.type == 2 ? 'on':''" v-if="orderInfo.shippingType == 1">待收货</view>
-						<view :class="status.type == 3 ? 'on':''">待评价</view>
-						<view :class="status.type == 4 ? 'on':''">已完成</view>
+						<view :class="!orderInfo.paid ? 'on':''">待付款</view>
+						<view :class="orderInfo.paid && orderInfo.status == 0 ? 'on':''">
+							{{orderInfo.shippingType==1 ? '待发货':'待核销'}}</view>
+						<view :class="orderInfo.status == 1 ? 'on':''" v-if="orderInfo.shippingType == 1">待收货</view>
+						<view :class="orderInfo.status == 2 ? 'on':''">待评价</view>
+						<view :class="orderInfo.status == 3 ? 'on':''">已完成</view>
 					</view>
 					<view class='progress acea-row row-between-wrapper'>
-						<view class='iconfont' :class='(status.type == 0 || status.type == -9  ? "icon-webicon318":"icon-yuandianxiao") + " " + (status.type >= 0 ? "font-color":"")'></view>
-						<view class='line' :class='status.type > 0 ? "bg-color":""'></view>
-						<view class='iconfont' :class='(status.type == 1 ? "icon-webicon318":"icon-yuandianxiao") + " " + (status.type >= 1 ? "font-color":"")'></view>
-						<view class='line' :class='status.type > 1 ? "bg-color":""' v-if="orderInfo.shippingType == 1"></view>
-						<view class='iconfont' :class='(status.type == 2 ? "icon-webicon318":"icon-yuandianxiao") + " " +(status.type >= 2 ? "font-color":"")'
-						 v-if="orderInfo.shippingType == 1"></view>
-						<view class='line' :class='status.type > 2 ? "bg-color":""'></view>
-						<view class='iconfont' :class='(status.type == 3 ? "icon-webicon318":"icon-yuandianxiao") + " " + (status.type >= 3 ? "font-color":"")'></view>
-						<view class='line' :class='status.type > 3 ? "bg-color":""'></view>
-						<view class='iconfont' :class='(status.type == 4 ? "icon-webicon318":"icon-yuandianxiao") + " " + (status.type >= 4 ? "font-color":"")'></view>
+						<view class='iconfont'
+							:class='(!orderInfo.paid ? "icon-webicon318":"icon-yuandianxiao") + " " + ( orderInfo.paid ? "font-color":"")'>
+						</view>
+						<view class='line' :class='orderInfo.paid > 0 ? "bg-color":""'></view>
+						<view class='iconfont'
+							:class='(orderInfo.status == 0 ? "icon-webicon318":"icon-yuandianxiao") + " " + (orderInfo.status >= 0 ? "font-color":"")'>
+						</view>
+						<view class='line' :class='orderInfo.status > 0 ? "bg-color":""'
+							v-if="orderInfo.shippingType == 1"></view>
+						<view class='iconfont'
+							:class='(orderInfo.status == 1 ? "icon-webicon318":"icon-yuandianxiao") + " " +(orderInfo.status >= 1 ? "font-color":"")'
+							v-if="orderInfo.shippingType == 1"></view>
+						<view class='line' :class='orderInfo.status > 1 ? "bg-color":""'></view>
+						<view class='iconfont'
+							:class='(orderInfo.status == 2 ? "icon-webicon318":"icon-yuandianxiao") + " " + (orderInfo.status >= 2 ? "font-color":"")'>
+						</view>
+						<view class='line' :class='orderInfo.status > 2 ? "bg-color":""'></view>
+						<view class='iconfont'
+							:class='(orderInfo.status == 3 ? "icon-webicon318":"icon-yuandianxiao") + " " + (orderInfo.status >= 3 ? "font-color":"")'>
+						</view>
 					</view>
 				</view>
-				<!-- 拒绝退款 -->
-				<view class="refund" v-if="orderInfo.refundReason">
-					<view class="title">
-						<image src="/static/images/shuoming.png" mode=""></image>
-						商家拒绝退款
-					</view>
-					<view class="con">拒绝原因：{{orderInfo.refundReason}}</view>
-				</view>
-				<view class="writeOff" v-if="orderInfo.shippingType == 2 && orderInfo.paid">
+				<view v-if="orderInfo.shippingType == 2 && orderInfo.paid" class="writeOff borRadius14">
 					<view class="title">核销信息</view>
 					<view class="grayBg">
 						<view class="pictrue">
@@ -60,7 +66,7 @@
 								<text class="iconfont icon-shijian"></text>核销时间
 							</view>
 							<view class="info">
-								每日：<text class="time">{{orderInfo.systemStore.dayTime}}</text>
+								每日：<text class="time">{{orderInfo.systemStore.dayTime.replace(',','-')}}</text>
 							</view>
 						</view>
 						<view class="item">
@@ -71,169 +77,190 @@
 						</view>
 					</view>
 				</view>
-				<view class="map acea-row row-between-wrapper" v-if="orderInfo.shippingType == 2">
+				<view v-if="orderInfo.shippingType == 2" class="map acea-row row-between-wrapper borRadius14">
 					<view>自提地址信息</view>
 					<view class="place cart-color acea-row row-center-wrapper" @tap="showMaoLocation">
 						<text class="iconfont icon-weizhi"></text>查看位置
 					</view>
 				</view>
-				<view class='address' v-if="orderInfo.shippingType === 1">
+				<view v-if="orderInfo.shippingType === 1" class='address borRadius14'>
 					<view class='name'>{{orderInfo.realName}}<text class='phone'>{{orderInfo.userPhone}}</text></view>
 					<view>{{orderInfo.userAddress}}</view>
 				</view>
-				<view class='address' v-else style="margin-top:0;">
-					<view class='name' @tap="makePhone">{{orderInfo.systemStore?orderInfo.systemStore.name:''}}<text class='phone'>{{orderInfo.systemStore?orderInfo.systemStore.phone:''}}</text><text
-						 class="iconfont icon-tonghua font-color"></text></view>
+				<view v-else class='address' style="margin-top:15rpx;">
+					<view class='name' @tap="makePhone">{{orderInfo.systemStore?orderInfo.systemStore.name:''}}<text
+							class='phone'>{{orderInfo.systemStore?orderInfo.systemStore.phone:''}}</text><text
+							class="iconfont icon-tonghua font-color"></text></view>
 					<view>{{orderInfo.systemStore?orderInfo.systemStore.detailedAddress:''}}</view>
 				</view>
-				<view class='line' v-if="orderInfo.shippingType === 1">
-					<image src='../../static/images/line.jpg'></image>
-				</view>
-			</view>
-			<orderGoods :evaluate='evaluate' :orderId="order_id" :ids="id" :uniId="uniId" :cartInfo="cartInfo" :jump="true"></orderGoods>
-			<!-- <div class="goodCall" @click="goGoodCall"> -->
-			<!-- #ifdef H5 -->
-			<div class="goodCall" @click="kefuClick">
-				<span class="iconfont icon-kefu"></span><span>联系客服</span>
-			</div>
-			<!-- #endif -->
-			<!-- #ifdef MP -->
-			<div class="goodCall">
-				<button open-type='contact' hover-class='none'>
+
+				<orderGoods :evaluate='evaluate' :productType="orderInfo.type" :orderId="order_id" :ids="id" :uniId="uniId" :cartInfo="cartInfo"
+					:jump="true"></orderGoods>
+				<!-- #ifndef MP -->
+				<div class="goodCall borRadius14" @click="kefuClick">
 					<span class="iconfont icon-kefu"></span><span>联系客服</span>
-				</button>
-			</div>
-			<!-- #endif -->
-			<view class='wrapper'>
-				<view class='item acea-row row-between'>
-					<view>订单编号：</view>
-					<view class='conter acea-row row-middle row-right'>{{orderInfo.orderId}}
-						<!-- #ifndef H5 -->
-						<text class='copy' @tap='copy'>复制</text>
-						<!-- #endif -->
-						<!-- #ifdef H5 -->
-						<text class='copy copy-data' :data-clipboard-text="orderInfo.orderId">复制</text>
-						<!-- #endif -->
-					</view>
-				</view>
-				<view class='item acea-row row-between'>
-					<view>下单时间：</view>
-					<view class='conter'>{{(orderInfo.createTime || 0)}}</view>
-				</view>
-				<view class='item acea-row row-between'>
-					<view>支付状态：</view>
-					<view class='conter' v-if="orderInfo.paid">已支付</view>
-					<view class='conter' v-else>未支付</view>
-				</view>
-				<view class='item acea-row row-between'>
-					<view>支付方式：</view>
-					<view class='conter'>{{orderInfo.pstatus.payType}}</view>
-				</view>
-				<view class='item acea-row row-between' v-if="orderInfo.mark">
-					<view>买家留言：</view>
-					<view class='conter'>{{orderInfo.mark}}</view>
-				</view>
+				</div>
+				<!-- #endif -->
+				<!-- #ifdef MP -->
+				<div class="goodCall borRadius14">
+					<button open-type='contact' hover-class='none'>
+						<span class="iconfont icon-kefu"></span><span>联系客服</span>
+					</button>
+				</div>
+				<!-- #endif -->
 			</view>
-			<!-- 退款订单详情 -->
-			<view class='wrapper' v-if="isGoodsReturn">
-				<view class='item acea-row row-between'>
-					<view>收货人：</view>
-					<view class='conter'>{{orderInfo.realName}}</view>
+
+			<view class="pad30">
+				<view class='nav refund' v-if="orderInfo.refundStatus>0">
+					<view class="title">
+						<image src="/static/images/shuoming.png" mode=""></image>
+						{{orderInfo.refundStatus==1?'商家审核中':orderInfo.refundStatus==2?'商家已退款':'商家拒绝退款'}}
+					</view>
+					<view class="con pad30">{{orderInfo.refundStatus==1 ? "您已成功发起退款申请，请耐心等待商家处理；退款前请与商家协商一致，有助于更好的处理售后问题": orderInfo.refundStatus==2? "退款已成功受理，如商家已寄出商品请尽快退回；感谢您的支持": "拒绝原因：" + orderInfo.refundReason}}</view>
 				</view>
-				<view class='item acea-row row-between'>
-					<view>联系电话：</view>
-					<view class='conter'>{{orderInfo.userPhone}}</view>
-				</view>
-				<view class='item acea-row row-between'>
-					<view>收货地址：</view>
-					<view class='conter'>{{orderInfo.userAddress}}</view>
-				</view>
-			</view>
-			<view v-if="orderInfo.status!=0">
-				<view class='wrapper' v-if='orderInfo.deliveryType=="express"'>
+				<view class='wrapper borRadius14'>
 					<view class='item acea-row row-between'>
-						<view>配送方式：</view>
-						<view class='conter'>发货</view>
+						<view>订单编号：</view>
+						<view class='conter acea-row row-middle row-right'>{{orderInfo.orderId}}
+							<!-- #ifndef H5 -->
+							<text class='copy' @tap='copy'>复制</text>
+							<!-- #endif -->
+							<!-- #ifdef H5 -->
+							<text class='copy copy-data' :data-clipboard-text="orderInfo.orderId">复制</text>
+							<!-- #endif -->
+						</view>
 					</view>
 					<view class='item acea-row row-between'>
-						<view>快递公司：</view>
-						<view class='conter'>{{orderInfo.deliveryName || ''}}</view>
+						<view>下单时间：</view>
+						<view class='conter'>{{(orderInfo.createTime || 0)}}</view>
 					</view>
 					<view class='item acea-row row-between'>
-						<view>快递号：</view>
-						<view class='conter'>{{orderInfo.deliveryId || ''}}</view>
+						<view>支付状态：</view>
+						<view class='conter' v-if="orderInfo.paid">已支付</view>
+						<view class='conter' v-else>未支付</view>
+					</view>
+					<view class='item acea-row row-between'>
+						<view>支付方式：</view>
+						<view class='conter'>{{orderInfo.payTypeStr}}</view>
+					</view>
+					<view class='item acea-row row-between' v-if="orderInfo.mark">
+						<view>买家留言：</view>
+						<view class='conter'>{{orderInfo.mark}}</view>
 					</view>
 				</view>
-				<view class='wrapper' v-else-if='orderInfo.deliveryType=="send"'>
+				<!-- 退款订单详情 "-->
+				<view v-if="isGoodsReturn" class='wrapper borRadius14' >
 					<view class='item acea-row row-between'>
-						<view>配送方式：</view>
-						<view class='conter'>送货</view>
-					</view>
-					<view class='item acea-row row-between'>
-						<view>配送人姓名：</view>
-						<view class='conter'>{{orderInfo.deliveryName || ''}}</view>
+						<view>收货人：</view>
+						<view class='conter'>{{orderInfo.realName}}</view>
 					</view>
 					<view class='item acea-row row-between'>
 						<view>联系电话：</view>
-						<view class='conter acea-row row-middle row-right'>{{orderInfo.deliveryId || ''}}<text class='copy' @tap='goTel'>拨打</text></view>
+						<view class='conter'>{{orderInfo.userPhone}}</view>
 					</view>
-				</view>
-				<view class='wrapper' v-else-if='orderInfo.deliveryType=="fictitious"'>
 					<view class='item acea-row row-between'>
-						<view>虚拟发货：</view>
-						<view class='conter'>已发货，请注意查收</view>
+						<view>收货地址：</view>
+						<view class='conter'>{{orderInfo.userAddress}}</view>
 					</view>
 				</view>
+				<view v-if="orderInfo.status>0">
+					<view class='wrapper borRadius14' v-if='orderInfo.deliveryType=="express"'>
+						<view class='item acea-row row-between'>
+							<view>配送方式：</view>
+							<view class='conter'>发货</view>
+						</view>
+						<view class='item acea-row row-between'>
+							<view>快递公司：</view>
+							<view class='conter'>{{orderInfo.deliveryName || ''}}</view>
+						</view>
+						<view class='item acea-row row-between'>
+							<view>快递号：</view>
+							<view class='conter'>{{orderInfo.deliveryId || ''}}</view>
+						</view>
+					</view>
+					<view class='wrapper borRadius14' v-else-if='orderInfo.deliveryType=="send"'>
+						<view class='item acea-row row-between'>
+							<view>配送方式：</view>
+							<view class='conter'>送货</view>
+						</view>
+						<view class='item acea-row row-between'>
+							<view>配送人姓名：</view>
+							<view class='conter'>{{orderInfo.deliveryName || ''}}</view>
+						</view>
+						<view class='item acea-row row-between'>
+							<view>联系电话：</view>
+							<view class='conter acea-row row-middle row-right'>{{orderInfo.deliveryId || ''}}<text
+									class='copy' @tap='goTel'>拨打</text></view>
+						</view>
+					</view>
+					<view class='wrapper borRadius14' v-else-if='orderInfo.deliveryType=="fictitious"'>
+						<view class='item acea-row row-between'>
+							<view>虚拟发货：</view>
+							<view class='conter'>已发货，请注意查收</view>
+						</view>
+					</view>
+				</view>
+				<view class='wrapper borRadius14'>
+					<view class='item acea-row row-between'>
+						<view>商品总价：</view>
+						<view class='conter'>￥{{orderInfo.proTotalPrice}}</view>
+					</view>
+					<view class='item acea-row row-between' v-if="orderInfo.payPostage > 0">
+						<view>运费：</view>
+						<view class='conter'>￥{{orderInfo.payPostage}}</view>
+					</view>
+					<view class='item acea-row row-between' v-if='orderInfo.couponId'>
+						<view>优惠券抵扣：</view>
+						<view class='conter'>-￥{{orderInfo.couponPrice}}</view>
+					</view>
+					<view class='item acea-row row-between' v-if="orderInfo.useIntegral > 0">
+						<view>积分抵扣：</view>
+							<view class='conter'>-￥{{orderInfo.deductionPrice}}</view>
+					</view>
+					<view class='actualPay acea-row row-right'>实付款：<text
+							class='money font-color'>￥{{orderInfo.payPrice}}</text></view>
+				</view>
+				<view style='height:120rpx;'></view>
+				<view class='footer acea-row row-right row-middle' v-if="isGoodsReturn==false">
+					<view class="qs-btn" v-if="!orderInfo.paid" @click.stop="cancelOrder">取消订单</view>
+					<view class='bnt bg-color' v-if="!orderInfo.paid" @tap='pay_open(orderInfo.orderId)'>立即付款</view>
+					<!-- #ifdef MP -->
+					<view @tap="openSubcribe('/pages/users/goods_return/index?orderId='+orderInfo.orderId)"
+						class='bnt cancel' v-else-if="orderInfo.paid === true && orderInfo.refundStatus === 0 && orderInfo.type!==1 && type==='normal'">申请退款
+					</view>
+					<!-- #endif -->
+					<!-- #ifndef MP -->
+					<navigator hover-class="none" :url="'/pages/users/goods_return/index?orderId='+orderInfo.orderId"
+						class='bnt cancel' v-else-if="orderInfo.paid === true && orderInfo.refundStatus === 0 && orderInfo.type!==1 && type==='normal'">申请退款
+					</navigator>
+					<!-- #endif -->
+					<view class='bnt bg-color' v-if="orderInfo.combinationId > 0" @tap='goJoinPink'>查看拼团</view>
+					<navigator class='bnt cancel' v-if="orderInfo.deliveryType == 'express' && orderInfo.status >0"
+						hover-class='none' :url="'/pages/users/goods_logistics/index?orderId='+ orderInfo.orderId">查看物流
+					</navigator>
+					<view class='bnt bg-color' v-if="orderInfo.status==1" @tap='confirmOrder'>确认收货</view>
+					<view class='bnt cancel' v-if="orderInfo.status==3" @tap='delOrder'>删除订单</view>
+					<view class='bnt bg-color' v-if="orderInfo.status==3 && orderInfo.type!==1" @tap='goOrderConfirm'>再次购买</view>
+				</view>
 			</view>
-			<view class='wrapper'>
-				<view class='item acea-row row-between'>
-					<view>支付金额：</view>
-					<view class='conter'>￥{{orderInfo.totalPrice}}</view>
-				</view>
-				<view class='item acea-row row-between' v-if='orderInfo.couponId'>
-					<view>优惠券抵扣：</view>
-					<view class='conter'>-￥{{orderInfo.couponPrice}}</view>
-				</view>
-				<view class='item acea-row row-between' v-if="orderInfo.useIntegral > 0">
-					<view>积分抵扣：</view>
-					<view class='conter'>-￥{{orderInfo.deductionPrice}}</view>
-				</view>
-				<view class='item acea-row row-between' v-if="orderInfo.payPostage > 0">
-					<view>运费：</view>
-					<view class='conter'>￥{{orderInfo.payPostage}}</view>
-				</view>
-				<view class='actualPay acea-row row-right'>实付款：<text class='money font-color'>￥{{orderInfo.payPrice}}</text></view>
-			</view>
-			<view style='height:120rpx;'></view>
-			<view class='footer acea-row row-right row-middle' v-if="isGoodsReturn==false || status.type == 9">
-				<view class="qs-btn" v-if="status.type == 0 || status.type == -9" @click.stop="cancelOrder">取消订单</view>
-				<view class='bnt bg-color' v-if="status.type==0" @tap='pay_open(orderInfo.orderId)'>立即付款</view>
-				<!-- #ifdef MP -->
-				<view @tap="openSubcribe('/pages/users/goods_return/index?orderId='+orderInfo.orderId)" class='bnt cancel'
-				 v-else-if="orderInfo.paid === true && orderInfo.refundStatus === 0">申请退款</view>
-				<!-- #endif -->
-				<!-- #ifndef MP -->
-				<navigator hover-class="none" :url="'/pages/users/goods_return/index?orderId='+orderInfo.orderId" class='bnt cancel'
-				 v-else-if="orderInfo.paid === true && orderInfo.refundStatus === 0">申请退款</navigator>
-				<!-- #endif -->
-				<view class='bnt bg-color' v-if="status.class_status==1" @tap='goJoinPink'>查看拼团</view>
-				<navigator class='bnt cancel' v-if="orderInfo.deliveryType == 'express' && status.class_status==3 && status.type==2"
-				 hover-class='none' :url="'/pages/users/goods_logistics/index?orderId='+ orderInfo.orderId">查看物流</navigator>
-				<view class='bnt bg-color' v-if="status.class_status==3" @tap='confirmOrder'>确认收货</view>
-				<view class='bnt cancel' v-if="status.type==4" @tap='delOrder'>删除订单</view>
-				<view class='bnt bg-color' v-if="status.class_status==5" @tap='goOrderConfirm'>再次购买</view>
-			</view>
+
+
 		</view>
 		<home></home>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
-		<payment :payMode='payMode' :pay_close="pay_close" @onChangeFun='onChangeFun' :order_id="pay_order_id" :totalPrice='totalPrice'></payment>
+		<payment :payMode='payMode' :pay_close="pay_close" @onChangeFun='onChangeFun' :order_id="pay_order_id"
+			:totalPrice='totalPrice'></payment>
 	</view>
 </template>
 <style scoped lang="scss">
+	.shuoming{
+		width: 32rpx;
+		height: 32rpx;
+	}
 	.goodCall {
-		color: #e93323;
+		color: $theme-color;
 		text-align: center;
 		width: 100%;
 		height: 86rpx;
@@ -255,15 +282,15 @@
 			justify-content: center;
 			height: 86rpx;
 			font-size: 30rpx;
-			color: #e93323;
+			color: $theme-color;
 		}
 
 		/* #endif */
 	}
 
 	.order-details .header {
+		height: 250rpx;
 		padding: 0 30rpx;
-		height: 150rpx;
 	}
 
 	.order-details .header.on {
@@ -301,11 +328,18 @@
 		margin-left: 20rpx;
 	}
 
+	.picTxt {
+		height: 150rpx;
+	}
+
 	.order-details .nav {
 		background-color: #fff;
 		font-size: 26rpx;
 		color: #282828;
-		padding: 25rpx 0;
+		padding: 27rpx 0;
+		width: 100%;
+		border-radius: 14rpx;
+		margin: -100rpx auto 0 auto;
 	}
 
 	.order-details .nav .navCon {
@@ -313,7 +347,7 @@
 	}
 
 	.order-details .nav .on {
-		color: #e93323;
+		color: $theme-color;
 	}
 
 	.order-details .nav .progress {
@@ -337,8 +371,8 @@
 		font-size: 26rpx;
 		color: #868686;
 		background-color: #fff;
-		margin-top: 13rpx;
-		padding: 35rpx 30rpx;
+		margin-top: 15rpx;
+		padding: 30rpx 24rpx;
 	}
 
 	.order-details .address .name {
@@ -365,7 +399,7 @@
 	.order-details .wrapper {
 		background-color: #fff;
 		margin-top: 12rpx;
-		padding: 30rpx;
+		padding: 30rpx 24rpx;
 	}
 
 	.order-details .wrapper .item {
@@ -379,14 +413,14 @@
 
 	.order-details .wrapper .item .conter {
 		color: #868686;
-		width: 460rpx;
+		// width: 490rpx;
 		text-align: right;
 	}
 
 	.order-details .wrapper .item .conter .copy {
 		font-size: 20rpx;
 		color: #333;
-		border-radius: 3rpx;
+		border-radius: 20rpx;
 		border: 1rpx solid #666;
 		padding: 3rpx 15rpx;
 		margin-left: 24rpx;
@@ -415,10 +449,10 @@
 	}
 
 	.order-details .footer .bnt {
-		width: 176rpx;
-		height: 60rpx;
+		width: 158rpx;
+		height: 54rpx;
 		text-align: center;
-		line-height: 60rpx;
+		line-height: 54rpx;
 		border-radius: 50rpx;
 		color: #fff;
 		font-size: 27rpx;
@@ -435,8 +469,8 @@
 
 	.order-details .writeOff {
 		background-color: #fff;
-		margin-top: 13rpx;
-		padding-bottom: 30rpx;
+		margin-top: 15rpx;
+		padding-bottom: 50rpx;
 	}
 
 	.order-details .writeOff .title {
@@ -444,7 +478,7 @@
 		color: #282828;
 		height: 87rpx;
 		border-bottom: 1px solid #f0f0f0;
-		padding: 0 30rpx;
+		padding: 0 24rpx;
 		line-height: 87rpx;
 	}
 
@@ -531,9 +565,9 @@
 		color: #282828;
 		line-height: 86rpx;
 		border-bottom: 1px solid #f0f0f0;
-		margin-top: 13rpx;
+		margin-top: 15rpx;
 		background-color: #fff;
-		padding: 0 30rpx;
+		padding: 0 24rpx;
 	}
 
 	.order-details .map .place {
@@ -558,8 +592,8 @@
 	}
 
 	.refund {
-		padding: 0 30rpx 30rpx;
-		margin-top: 24rpx;
+		padding:  0 !important;
+		margin-top: 15rpx;
 		background-color: #fff;
 
 		.title {
@@ -569,7 +603,9 @@
 			color: #333;
 			height: 86rpx;
 			border-bottom: 1px solid #f5f5f5;
-
+            font-weight: 400;
+			padding: 0 24rpx;
+			
 			image {
 				width: 32rpx;
 				height: 32rpx;
@@ -578,9 +614,9 @@
 		}
 
 		.con {
-			padding-top: 25rpx;
-			font-size: 28rpx;
-			color: #868686;
+			font-size: 25rpx;
+			color: #666666;
+			padding: 30rpx 24rpx;
 		}
 	}
 </style>
@@ -588,7 +624,6 @@
 <script>
 	import {
 		getOrderDetail,
-		orderAgain,
 		orderTake,
 		orderDel,
 		orderCancel,
@@ -597,9 +632,6 @@
 	import {
 		openOrderRefundSubscribe
 	} from '@/utils/SubscribeMessage.js';
-	import {
-		getUserInfo
-	} from '@/api/user.js';
 	import home from '@/components/home';
 	import payment from '@/components/payment';
 	import orderGoods from "@/components/orderGoods";
@@ -660,10 +692,12 @@
 				id: 0, //订单id
 				uniId: '',
 				utils: this.$util,
+				type: 'normal'
 			};
 		},
-		computed: mapGetters(['isLogin', 'chatUrl']),
+		computed: mapGetters(['isLogin', 'chatUrl', 'userInfo']),
 		onLoad: function(options) {
+			options.type == undefined || options.type == null ? this.type = 'normal' : this.type = options.type;
 			if (!options.order_id && !options.uniId) return this.$util.Tips({
 				title: '缺少参数'
 			}, {
@@ -675,15 +709,10 @@
 		onShow() {
 			if (this.isLogin) {
 				this.getOrderInfo();
-				this.getUserInfo();
+				this.payMode[1].number = this.userInfo.nowMoney;
+				this.$set(this, 'payMode', this.payMode);
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		onHide: function() {
@@ -700,6 +729,7 @@
 				});
 			});
 			// #endif
+			 
 		},
 		methods: {
 			kefuClick() {
@@ -801,18 +831,6 @@
 			 */
 			onLoadFun: function() {
 				this.getOrderInfo();
-				this.getUserInfo();
-			},
-			/**
-			 * 获取用户信息
-			 * 
-			 */
-			getUserInfo: function() {
-				let that = this;
-				getUserInfo().then(res => {
-					that.payMode[1].number = res.data.nowMoney;
-					that.$set(that, 'payMode', that.payMode);
-				})
 			},
 			/**
 			 * 获取订单详细信息
@@ -825,22 +843,22 @@
 				});
 				getOrderDetail(that.order_id).then(res => {
 					uni.hideLoading();
-					let _type = res.data.pstatus.type;
 					that.$set(that, 'orderInfo', res.data);
-					that.$set(that, 'evaluate', _type == 3 ? 3 : 0);
+					that.$set(that, 'evaluate', res.data.status == 2 ? 2 : 0);
 					that.$set(that, 'system_store', res.data.systemStore);
 					that.$set(that, 'id', res.data.id);
-					let cartInfo = res.data.cartInfo,
-						newCartInfo = [];
-					cartInfo.forEach((item, index) => {
-						newCartInfo.push(item.info);
-					});
-					that.$set(that, 'cartInfo', newCartInfo);
+					that.$set(that, 'cartInfo', res.data.orderInfoList);
 					if (res.data.refundStatus != 0) {
 						that.isGoodsReturn = true;
 					};
-					that.getOrderStatus();
-					that.markCode(res.data.verifyCode);
+					if (that.orderInfo.shippingType == 2 && that.orderInfo.paid) that.markCode(res.data
+						.verifyCode);
+					if(that.orderInfo.refundStatus>0){
+						uni.setNavigationBarColor({
+						    frontColor: '#ffffff',
+						    backgroundColor: '#666666'
+						})
+					}	
 				}).catch(err => {
 					uni.hideLoading();
 					that.$util.Tips({
@@ -904,7 +922,8 @@
 				if (type == 2 && delivery_type == 'express') status.class_status = 2; //查看物流
 				if (type == 2) status.class_status = 3; //确认收货
 				if (type == 4 || type == 0) status.class_status = 4; //删除订单
-				if (!seckill_id && !bargain_id && !combination_id && (type == 3 || type == 4)) status.class_status = 5; //再次购买
+				if (!seckill_id && !bargain_id && !combination_id && (type == 3 || type == 4)) status.class_status =
+				5; //再次购买
 				this.$set(this, 'status', status);
 			},
 			/**
@@ -921,16 +940,9 @@
 			 * 
 			 */
 			goOrderConfirm: function() {
-				let that = this;
-				orderAgain(that.orderInfo.orderId).then(res => {
-					return uni.navigateTo({
-						url: '/pages/users/order_confirm/index?cartId=' + res.data.cateId + '&again=true&new=true&addAgain=true'
-					});
-				}).catch(err => {
-					return that.$util.Tips({
-						title: err
-					});
-				})
+				this.$Order.getPreOrder("again",[{
+					orderNo: this.order_id
+				}]);
 			},
 			confirmOrder: function() {
 				let that = this;

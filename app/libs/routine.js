@@ -3,7 +3,6 @@ import { checkLogin } from './login';
 import { login } from '../api/public';
 import Cache from '../utils/cache';
 import { STATE_R_KEY, USER_INFO, EXPIRES_TIME, LOGIN_STATUS} from './../config/cache';
-
 class Routine 
 {
 	
@@ -25,16 +24,6 @@ class Routine
 	getUserProfile(){
 		let  that = this , code = this.getUserCode();
 		return new Promise( (resolve,reject) => {
-			// uni.getUserInfo({
-			// 	lang: 'zh_CN',
-			// 	success(user) {
-			// 		if(code) user.code = code;
-			// 		resolve({userInfo:user,islogin:false});
-			// 	},
-			// 	fail(res){
-			// 		reject(res);
-			// 	}
-			// })
 			uni.getUserProfile({
 				lang: 'zh_CN',
 				desc: '用于完善会员资料', // 声明获取用户个人信息后的用途，后续会展示在弹窗中，请谨慎填写
@@ -76,9 +65,6 @@ class Routine
 	async getCode(){
 		let provider = await this.getProvider();
 		return new Promise((resolve,reject)=>{
-			if(Cache.has(STATE_R_KEY)){
-				return resolve(Cache.get(STATE_R_KEY));
-			}
 			uni.login({
 				provider:provider,
 				success(res) {
@@ -130,17 +116,19 @@ class Routine
 			});
 		});
 	}
-	
+	/**
+	 * 小程序登录
+	 */
 	authUserInfo(code,data)
 	{
 		return new Promise((resolve, reject)=>{
 			login(code,data).then(res=>{
-				// let time = res.data.expiresTime - Cache.time();
-				store.commit('UPDATE_USERINFO', res.data.user);
-				store.commit('LOGIN', {token:res.data.token});
-				store.commit('SETUID', res.data.user.uid);
-				// Cache.set(EXPIRES_TIME,res.data.expiresTime,time);
-				Cache.set(USER_INFO,res.data.user);
+				if(res.data.type==='login'){
+					store.commit('LOGIN', {
+						token: res.data.token
+					});
+					store.commit("SETUID", res.data.uid);
+				}
 				return resolve(res);
 			}).catch(res=>{
 				return reject(res);

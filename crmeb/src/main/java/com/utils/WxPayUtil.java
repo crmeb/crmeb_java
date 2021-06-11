@@ -146,6 +146,31 @@ public class WxPayUtil {
     }
 
     /**
+     * 获取sign
+     * @param map      待签名数据
+     * @param signKey 微信签名key
+     * @return String
+     */
+    public static String getSignObject(Map<String, Object> map, String signKey) {
+        // map排序
+        Set<String> keySet = map.keySet();
+        String[] keyArray = keySet.toArray(new String[keySet.size()]);
+        Arrays.sort(keyArray);
+        StringBuilder sb = new StringBuilder();
+        for (String k : keyArray) {
+            if (k.equals(PayConstants.FIELD_SIGN)) {
+                continue;
+            }
+            if (ObjectUtil.isNotNull(map.get(k))) // 参数值为空，则不参与签名
+                sb.append(k).append("=").append(map.get(k)).append("&");
+        }
+        sb.append("key=").append(signKey);
+        String sign = SecureUtil.md5(sb.toString()).toUpperCase();
+        System.out.println("sign ========== " + sign);
+        return sign;
+    }
+
+    /**
      * 获取当前时间戳，单位秒
      * @return  Long
      */

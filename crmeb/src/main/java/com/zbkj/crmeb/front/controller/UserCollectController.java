@@ -5,9 +5,8 @@ import com.common.CommonResult;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.front.request.UserCollectAllRequest;
 import com.zbkj.crmeb.front.request.UserCollectRequest;
-import com.zbkj.crmeb.store.model.StoreProduct;
+import com.zbkj.crmeb.front.response.UserRelationResponse;
 import com.zbkj.crmeb.store.model.StoreProductRelation;
-import com.zbkj.crmeb.store.request.StoreProductRelationSearchRequest;
 import com.zbkj.crmeb.store.service.StoreProductRelationService;
 import com.zbkj.crmeb.user.service.UserService;
 import io.swagger.annotations.Api;
@@ -45,27 +44,17 @@ public class UserCollectController {
     private UserService userService;
 
     /**
-     * 获取收藏产品
-     * @param pageParamRequest 分页参数
-     * @author Mr.Zhang
-     * @since 2020-05-06
+     * 我的收藏列表
      */
-    @ApiOperation(value = "获取收藏产品")
+    @ApiOperation(value = "我的收藏列表")
     @RequestMapping(value = "/user", method = RequestMethod.GET)
-    public CommonResult<CommonPage<StoreProduct>> getList(@Validated PageParamRequest pageParamRequest){
-        StoreProductRelationSearchRequest storeProductRelation = new StoreProductRelationSearchRequest();
-        storeProductRelation.setUid(userService.getUserIdException());
-
-        CommonPage<StoreProduct> storeProductCommonPage =
-                CommonPage.restPage(storeProductRelationService.getList(storeProductRelation, pageParamRequest));
-        return CommonResult.success(storeProductCommonPage);
+    public CommonResult<CommonPage<UserRelationResponse>> getList(@Validated PageParamRequest pageParamRequest){
+        return CommonResult.success(CommonPage.restPage(storeProductRelationService.getUserList(pageParamRequest)));
     }
 
     /**
      * 添加收藏产品
      * @param request StoreProductRelationRequest 新增参数
-     * @author Mr.Zhang
-     * @since 2020-05-06
      */
     @ApiOperation(value = "添加收藏产品")
     @RequestMapping(value = "/add", method = RequestMethod.POST)
@@ -83,8 +72,6 @@ public class UserCollectController {
     /**
      * 添加收藏产品
      * @param request UserCollectAllRequest 新增参数
-     * @author Mr.Zhang
-     * @since 2020-05-06
      */
     @ApiOperation(value = "批量收藏")
     @RequestMapping(value = "/all", method = RequestMethod.POST)
@@ -98,13 +85,24 @@ public class UserCollectController {
 
     /**
      * 取消收藏产品
-     * @author Mr.Zhang
-     * @since 2020-05-06
      */
     @ApiOperation(value = "取消收藏产品")
-    @RequestMapping(value = "/del", method = RequestMethod.POST)
-    public CommonResult<String> delete(@RequestBody @Validated UserCollectRequest request){
-        if(storeProductRelationService.delete(request)){
+    @RequestMapping(value = "/delete", method = RequestMethod.POST)
+    public CommonResult<String> delete(@RequestBody String requestJson){
+        if(storeProductRelationService.delete(requestJson)){
+            return CommonResult.success();
+        }else{
+            return CommonResult.failed();
+        }
+    }
+
+    /**
+     * 取消收藏产品(通过商品)
+     */
+    @ApiOperation(value = "取消收藏产品(通过商品)")
+    @RequestMapping(value = "/cancel/{proId}", method = RequestMethod.POST)
+    public CommonResult<String> cancel(@PathVariable Integer proId){
+        if(storeProductRelationService.deleteByProId(proId)){
             return CommonResult.success();
         }else{
             return CommonResult.failed();

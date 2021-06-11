@@ -53,6 +53,7 @@
 
 <script>
   import { infobyconditionApi, topdetailApi } from '@/api/user'
+  import { integralListApi } from '@/api/marketing'
   export default {
     name: "UserDetails",
     props:{
@@ -97,7 +98,48 @@
     methods: {
       changeType(key) {
         this.tableFrom.type = key
-        this.getInfo()
+        if(key === '1'){
+          this.integral()
+        }else{
+          this.getInfo()
+        }
+      },
+      integral() {
+        this.loading = true
+        integralListApi({ limit:this.tableFrom.limit, page: this.tableFrom.page}, {uid:this.uid}).then(res => {
+          this.tableData.data = res.list
+          this.tableData.total = res.total
+          this.columns = [
+            {
+              title: '来源/用途',
+              key: 'title',
+              minWidth: 120
+            },
+            {
+              title: '积分变化',
+              key: 'integral',
+              minWidth: 120
+            },
+            {
+              title: '变化后积分',
+              key: 'balance',
+              minWidth: 120
+            },
+            {
+              title: '日期',
+              key: 'updateTime',
+              minWidth: 120
+            },
+            {
+              title: '备注',
+              key: 'mark',
+              minWidth: 120
+            }
+          ]
+          this.loading = false
+        }).catch(res => {
+          this.loading = false
+        })
       },
       getInfo() {
         this.tableFrom.userId = this.uid
@@ -137,35 +179,6 @@
                   title: '交易完成时间',
                   key: 'payTime',
                   minWidth: 160
-                }
-              ]
-              break;
-            case '1':
-              this.columns = [
-                {
-                  title: '来源/用途',
-                  key: 'title',
-                  minWidth: 120
-                },
-                {
-                  title: '积分变化',
-                  key: 'number',
-                  minWidth: 120
-                },
-                {
-                  title: '变化后积分',
-                  key: 'balance',
-                  minWidth: 120
-                },
-                {
-                  title: '日期',
-                  key: 'add_time',
-                  minWidth: 120
-                },
-                {
-                  title: '备注',
-                  key: 'mark',
-                  minWidth: 120
                 }
               ]
               break;
@@ -217,7 +230,7 @@
                 },
                 {
                   title: '兑换时间',
-                  key: 'useTime',
+                  key: 'updateTime',
                   minWidth: 120
                 }
               ]

@@ -2,7 +2,6 @@ package com.zbkj.crmeb.user.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.common.PageParamRequest;
-import com.zbkj.crmeb.front.request.UserSignInfoRequest;
 import com.zbkj.crmeb.front.response.UserSignInfoResponse;
 import com.zbkj.crmeb.system.vo.SystemGroupDataSignConfigVo;
 import com.zbkj.crmeb.user.model.UserSign;
@@ -38,5 +37,9 @@ public interface UserSignService extends IService<UserSign> {
 
     List<UserSignMonthVo> getListGroupMonth(PageParamRequest pageParamRequest);
 
-    UserSignInfoResponse getUserInfo(UserSignInfoRequest request);
+    /**
+     * 获取用户签到信息
+     * @return UserSignInfoResponse
+     */
+    UserSignInfoResponse getUserSignInfo();
 }

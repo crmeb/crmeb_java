@@ -9,7 +9,7 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 
 /**
- * 用户地址表
+ * 充值套餐响应对象
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
@@ -23,7 +23,7 @@ import java.io.Serializable;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@ApiModel(value="UserRechargeResponse对象", description="c")
+@ApiModel(value="UserRechargeItemResponse对象", description="充值套餐响应对象")
 public class UserRechargeItemResponse implements Serializable {
 
     private static final long serialVersionUID=1L;

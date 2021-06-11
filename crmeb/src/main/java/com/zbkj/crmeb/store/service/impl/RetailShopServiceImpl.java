@@ -9,6 +9,7 @@ import com.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.zbkj.crmeb.finance.model.UserExtract;
 import com.zbkj.crmeb.finance.response.UserExtractResponse;
 import com.zbkj.crmeb.finance.service.UserExtractService;
 import com.zbkj.crmeb.store.model.StoreOrder;
@@ -79,6 +80,7 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
         PageInfo<User> userPageInfo = userService.getAdminSpreadPeopleList(storeBrokerageStatus, keywords, dateLimit, pageRequest);
 
         if (CollUtil.isEmpty(userPageInfo.getList())) {
+            return CommonPage.restPage(new PageInfo<>());
 //            return CommonPage.restPage(userPageInfo);
         }
         List<User> userList = userPageInfo.getList();
@@ -202,7 +204,9 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
         // 订单金额
         BigDecimal orderPriceCount = storeOrders.stream().map(StoreOrder::getPayPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
         // 提现次数
-        Integer withdrawCount = userExtractService.getListByUserIds(ids).size();
+        List<UserExtract> extractList = userExtractService.getListByUserIds(ids);
+        extractList = extractList.stream().filter(e -> e.getStatus().equals(1)).collect(Collectors.toList());
+        Integer withdrawCount = CollUtil.isEmpty(extractList) ? 0 : extractList.size();
         // 未提现金额
         BigDecimal noWithdrawPrice = userDisList.stream().map(User::getBrokeragePrice).reduce(BigDecimal.ZERO, BigDecimal::add);
 

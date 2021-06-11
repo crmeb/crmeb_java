@@ -13,7 +13,7 @@
             </el-form-item>
             <el-form-item label="领取人：">
               <el-select v-model="tableFromIssue.uid" class="selWidth" reserve-keyword remote filterable
-                         :remote-method="remoteMethod" :loading="loading" placeholder="请输入用户名称" clearable @change="seachList">
+                         :remote-method="remoteMethod" :loading="loading" placeholder="请输入领取人" clearable @change="seachList">
                 <el-option
                   v-for="item in options"
                   :key="item.uid"

@@ -4,7 +4,7 @@
 			<view class="payment-top acea-row row-column row-center-wrapper">
 				<span class="name">我的余额</span>
 				<view class="pic">
-					￥<span class="pic-font">{{ userinfo.nowMoney || 0 }}</span>
+					￥<span class="pic-font">{{ userInfo.nowMoney || 0 }}</span>
 				</view>
 			</view>
 			<view class="payment">
@@ -20,7 +20,7 @@
 						<view class="pic-number">赠送：{{ item.giveMoney }} 元</view>
 					</view>
 					<view class="pic-box pic-box-color acea-row row-center-wrapper" :class="parseFloat(activePic)===parseFloat(picList.length)?'pic-box-color-active':''" @click="picCharge(picList.length)">
-						<input type="number" placeholder="其他" v-model="money" class="pic-box-money pic-number-pic" :class="parseFloat(activePic) === parseFloat(picList.length) ? 'pic-box-color-active' : ''" />
+						<input type="number" placeholder="其他" v-model="money" :maxlength="50000" class="pic-box-money pic-number-pic uni-input" :class="parseFloat(activePic) === parseFloat(picList.length) ? 'pic-box-color-active' : ''" />
 					</view>
 					<view class="tips-box">
 						<view class="tips mt-30">注意事项：</view>
@@ -34,7 +34,7 @@
 						 name="number"></input></view>
 					<view class="tips-title">
 						<view style="font-weight: bold; font-size: 26rpx;">提示：</view>
-						<view style="margin-top: 10rpx;">当前佣金为 <text class='font-color'>￥{{commission || 0}}</text></view>
+						<view style="margin-top: 10rpx;">当前佣金为 <text class='font-color'>￥{{userInfo.brokeragePrice || 0}}</text></view>
 					</view>
 					<view class="tips-box">
 						<view class="tips mt-30">注意事项：</view>
@@ -43,11 +43,11 @@
 						</view>
 					</view>
 				</view>
-				<button class='but bg-color' formType="submit"> {{active ? '立即转入': '立即充值' }}</button>
+				<button class='but' formType="submit"> {{active ? '立即转入': '立即充值' }}</button>
 			</view>
 		</form>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -55,12 +55,11 @@
 
 <script>
 	import {
-		getUserInfo,
 		rechargeRoutine,
 		rechargeWechat,
 		getRechargeApi,
-		extractBank,
-		transferIn
+		transferIn,
+		appWechat
 	} from '@/api/user.js';
 	import { wechatQueryPayResult } from '@/api/order.js';
 	import {
@@ -87,7 +86,6 @@
 				navRecharge: ['账户充值', '佣金转入'],
 				active: 0,
 				number: '',
-				userinfo: {},
 				placeholder: "0.00",
 				from: '',
 				isAuto: false, //没有授权的不会自动授权
@@ -97,18 +95,15 @@
 				money: "",
 				numberPic: '',
 				rechar_id: 0,
-				rechargeAttention: [],
-				commission: 0
+				rechargeAttention: []
 			};
 		},
-		computed: mapGetters(['isLogin']),
+		computed: mapGetters(['isLogin', 'systemPlatform','userInfo']),
 		watch:{
 			isLogin:{
 				handler:function(newV,oldV){
 					if(newV){
-						this.getUserInfo();
 						this.getRecharge();
-							this.getUserExtractBank();
 					}
 				},
 				deep:true
@@ -116,20 +111,12 @@
 		},
 		onLoad(options) {
 			// #ifdef H5
-			this.from = this.$wechat.isWeixin() ? "public" : "weixinh5"
+			this.from = this.$wechat.isWeixin() ? "public" : "weixinh5";
 			// #endif
 			if (this.isLogin) {
-				this.getUserInfo();
 				this.getRecharge();
-				this.getUserExtractBank();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {
@@ -149,12 +136,6 @@
 				}
 			},
 
-			getUserExtractBank: function() {
-				let that = this;
-				extractBank().then(res => {
-					that.commission = res.data.commissionCount;
-				});
-			},
 
 			/**
 			 * 充值额度选择
@@ -178,9 +159,7 @@
 
 
 			onLoadFun: function() {
-				this.getUserInfo();
 				this.getRecharge();
-				this.getUserExtractBank();
 			},
 			// 授权关闭
 			authColse: function(e) {
@@ -188,15 +167,6 @@
 			},
 			navRecharges: function(index) {
 				this.active = index;
-			},
-			/**
-			 * 获取用户信息
-			 */
-			getUserInfo: function() {
-				let that = this;
-				getUserInfo().then(res => {
-					that.$set(that, 'userinfo', res.data);
-				})
 			},
 			/*
 			 * 用户充值
@@ -219,6 +189,10 @@
 								transferIn({
 											price: parseFloat(value)
 								}).then(res => {
+									that.$store.commit("changInfo", {
+										amount1: 'brokeragePrice',
+										amount2: that.$util.$h.Sub(that.userInfo.brokeragePrice, parseFloat(value))
+									});
 									return that.$util.Tips({
 										title: '转入成功',
 										icon: 'success'
@@ -254,10 +228,15 @@
 								title: '充值金额不能为0'
 							});
 						}
+						if (money > 50000) {
+							return that.$util.Tips({
+								title: '充值金额最大值为50000'
+							});
+						}
 					} else {
 						money = this.numberPic
 					}
-					// #ifdef MP || APP-PLUS
+					// #ifdef MP
 					rechargeRoutine({
 						price: money,
 						type: 0,
@@ -272,7 +251,11 @@
 							signType: jsConfig.signType,
 							paySign: jsConfig.paySign,
 							success: function(res) {
-								that.$set(that, 'userinfo.nowMoney', that.$util.$h.Add(value, that.userinfo.nowMoney));
+								that.$store.commit("changInfo", {
+									amount1: 'nowMoney',
+									amount2: that.$util.$h.Add(value, that.userinfo.nowMoney)
+								});
+								//that.$set(that, 'userinfo.nowMoney', that.$util.$h.Add(value, that.userinfo.nowMoney));
 								return that.$util.Tips({
 									title: '支付成功',
 									icon: 'success'
@@ -333,10 +316,12 @@
 						} else {
 							that.$wechat.pay(data)
 								.finally(() => {
-									that.$set(that, 'userinfo.nowMoney', that.$util.$h.Add(value, that.userinfo.nowMoney));
-									wechatQueryPayResult({
-										orderNo: orderNo
-									}).then(res => {
+									that.$store.commit("changInfo", {
+										amount1: 'nowMoney',
+										amount2: that.$util.$h.Add(value, that.userinfo.nowMoney)
+									});
+									// that.$set(that, 'userinfo.nowMoney', that.$util.$h.Add(value, that.userinfo.nowMoney));
+									wechatQueryPayResult(orderNo).then(res => {
 										return that.$util.Tips({
 											title: '支付成功',
 											icon: 'success'
@@ -383,8 +368,8 @@
 		background-color: #fff;
 		border-radius: 10rpx;
 		padding-top: 25rpx;
-		border-top-right-radius: 39rpx;
-		border-top-left-radius: 39rpx;
+		border-top-right-radius: 14rpx;
+		border-top-left-radius: 14rpx;
 	}
 
 	.payment .nav {
@@ -446,8 +431,9 @@
 		font-size: 30rpx;
 		width: 700rpx;
 		height: 86rpx;
-		border-radius: 50rpx;
-		margin: 46rpx auto 0 auto;
+		border-radius: 43rpx;
+		margin: 50rpx auto 0 auto;
+		background: linear-gradient(90deg, #FF7931 0%, #F11B09 100%);
 		line-height: 86rpx;
 	}
 

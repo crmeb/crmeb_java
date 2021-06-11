@@ -32,7 +32,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
         "com.exception",
         "com.common",
         "com.aop"}) //扫描utils包和父包
-@MapperScan(basePackages = "com.zbkj.crmeb.*.dao")
+@MapperScan(basePackages = {"com.zbkj.crmeb.*.dao", "com.zbkj.crmeb.*.*.dao"})
 public class CrmebApplication{
     public static void main(String[] args) {
         SpringApplication.run(CrmebApplication.class, args);

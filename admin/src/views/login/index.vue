@@ -92,6 +92,7 @@
 
 <script>
 import { validUsername } from '@/utils/validate'
+import "@/assets/js/canvas-nest.min.js";
 import { getLoginPicApi, captchaApi, codeCheckApi } from '@/api/user'
 import { getStoreStaff } from '@/libs/public'
 import { getWXCodeByUrl, loginByWxCode } from "@/libs/wechat";
@@ -191,6 +192,15 @@ export default {
   },
   mounted() {
     this.getInfo()
+    this.$nextTick(() => {
+      if (this.screenWidth < 768) {
+        document
+          .getElementsByTagName("canvas")[0]
+          .removeAttribute("class", "index_bg");
+      } else {
+        document.getElementsByTagName("canvas")[0].className = "index_bg";
+      }
+    });
     if (this.loginForm.account === '') {
       this.$refs.account.focus()
     } else if (this.loginForm.pwd === '') {
@@ -199,11 +209,23 @@ export default {
     this.getCaptcha()
     this.agentWeiXinLogin()
   },
+  beforeCreate() {
+    if (this.fullWidth < 768) {
+      document
+        .getElementsByTagName("canvas")[0]
+        .removeAttribute("class", "index_bg");
+    } else {
+      document.getElementsByTagName("canvas")[0].className = "index_bg";
+    }
+  },
   destroyed() {
     // window.removeEventListener('storage', this.afterQRScan)
   },
   beforeDestroy: function() {
     window.removeEventListener('resize', this.handleResize)
+    document
+      .getElementsByTagName("canvas")[0]
+      .removeAttribute("class", "index_bg");
   },
   methods: {
     agentWeiXinLogin(){ // 判断是否需要微信公众号登陆
@@ -237,6 +259,13 @@ export default {
     },
     handleResize(event) {
       this.fullWidth = document.body.clientWidth
+      if (this.fullWidth < 768) {
+        document
+          .getElementsByTagName("canvas")[0]
+          .removeAttribute("class", "index_bg");
+      } else {
+        document.getElementsByTagName("canvas")[0].className = "index_bg";
+      }
     },
     getInfo() {
       getLoginPicApi().then(res => {

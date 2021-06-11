@@ -1,8 +1,7 @@
 package com.zbkj.crmeb.front.vo;
 
 import com.zbkj.crmeb.store.model.StoreOrder;
-import com.zbkj.crmeb.store.response.StoreCartResponse;
-import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
+import com.zbkj.crmeb.store.vo.StoreOrderInfoOldVo;
 import lombok.Data;
 
 import java.util.List;
@@ -22,7 +21,7 @@ import java.util.List;
 @Data
 public class OrderAgainVo {
     private StoreOrder storeOrder;
-    private List<StoreOrderInfoVo> cartInfo;
+    private List<StoreOrderInfoOldVo> cartInfo;
     private OrderAgainItemVo status;
     private String payTime;
     private String addTime;

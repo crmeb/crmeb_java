@@ -73,7 +73,7 @@
 		border-radius: 50rpx;
 		opacity: 0;
 		height: 0;
-		color: #e93323;
+		color: $theme-color;
 		width: 0;
 	}
 

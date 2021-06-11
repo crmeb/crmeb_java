@@ -3,7 +3,7 @@
 		<view class='newsDetail'>
 			<view class='title'>{{articleInfo.title}}</view>
 			<view class='list acea-row row-middle'>
-				<view class='label'>{{articleInfo.categoryName}}</view>
+				<view class='label'>{{articleInfo.author}}</view>
 				<view class='item'></text>{{articleInfo.createTime}}</view>
 				<view class='item'><text class='iconfont icon-liulan'></text>{{articleInfo.visit}}</view>
 			</view>
@@ -144,30 +144,25 @@
 	page {
 		background-color: #fff !important;
 	}
-
+    .newsDetail{
+		padding: 30rpx 0;
+	}
 	.newsDetail .title {
 		padding: 0 30rpx;
 		font-size: 34rpx;
 		color: #282828;
 		font-weight: bold;
-		margin: 45rpx 0 23rpx 0;
 		line-height: 1.5;
 	}
 
 	.newsDetail .list {
-		margin: 0 30rpx;
-		// border-bottom: 1rpx solid #eee;
+		margin: 28rpx 30rpx 0 30rpx;
 		padding-bottom: 25rpx;
 	}
 
 	.newsDetail .list .label {
 		font-size: 30rpx;
 		color: #B1B2B3;
-		// height: 38rpx;
-		// border-radius: 3rpx;
-		// text-align: center;
-		// line-height: 38rpx;
-		// padding: 0 10rpx;
 	}
 
 	.newsDetail .list .item {

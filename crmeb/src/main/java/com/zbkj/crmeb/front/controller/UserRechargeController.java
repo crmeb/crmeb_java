@@ -46,8 +46,6 @@ public class UserRechargeController {
 
     /**
      * 充值额度选择
-     * @author Mr.Zhang
-     * @since 2020-05-18
      */
     @ApiOperation(value = "充值额度选择")
     @RequestMapping(value = "/index", method = RequestMethod.GET)
@@ -57,14 +55,11 @@ public class UserRechargeController {
 
     /**
      * 充值
-     * @author Mr.Zhang
-     * @since 2020-05-18
      */
     @ApiOperation(value = "小程序充值")
     @RequestMapping(value = "/routine", method = RequestMethod.POST)
     public CommonResult<Map<String, Object>> routineRecharge(HttpServletRequest httpServletRequest, @RequestBody @Validated UserRechargeRequest request){
         request.setFromType(Constants.PAY_TYPE_WE_CHAT_FROM_PROGRAM);
-//        UserRechargePaymentResponse responseVo = userCenterService.recharge(request);
         OrderPayResultResponse recharge = userCenterService.recharge(request);
         request.setClientIp(CrmebUtil.getClientIp(httpServletRequest));
 
@@ -76,9 +71,6 @@ public class UserRechargeController {
 
     /**
      * 充值
-     * @author Mr.Zhang
-     * @since 2020-05-18
-     * @return
      */
     @ApiOperation(value = "公众号充值")
     @RequestMapping(value = "/wechat", method = RequestMethod.POST)
@@ -88,11 +80,19 @@ public class UserRechargeController {
     }
 
     /**
-     * 佣金转入余额
-     * @author Mr.Zhang
-     * @since 2020-05-18
+     * App充值
      */
-    @ApiOperation(value = "余额转入")
+    @ApiOperation(value = "App充值")
+    @RequestMapping(value = "/wechat/app", method = RequestMethod.POST)
+    public CommonResult<OrderPayResultResponse> weChatAppRecharge(HttpServletRequest httpServletRequest, @RequestBody @Validated UserRechargeRequest request){
+        request.setClientIp(CrmebUtil.getClientIp(httpServletRequest));
+        return CommonResult.success(userCenterService.recharge(request));
+    }
+
+    /**
+     * 佣金转入余额
+     */
+    @ApiOperation(value = "佣金转入余额")
     @RequestMapping(value = "/transferIn", method = RequestMethod.POST)
     public CommonResult<Boolean> transferIn(@RequestParam(name = "price") BigDecimal price){
         return CommonResult.success(userCenterService.transferIn(price));
@@ -100,7 +100,6 @@ public class UserRechargeController {
 
     /**
      * 用户账单记录
-     * @return
      */
     @ApiOperation(value = "用户账单记录")
     @RequestMapping(value = "/bill/record", method = RequestMethod.GET)

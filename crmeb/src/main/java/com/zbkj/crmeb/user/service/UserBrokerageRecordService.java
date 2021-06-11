@@ -125,4 +125,14 @@ public interface UserBrokerageRecordService extends IService<UserBrokerageRecord
      * @return BigDecimal
      */
     BigDecimal getFreezePrice(Integer uid);
+
+    /**
+     * 获取记录列表
+     * @param linkIds 关联id集合
+     * @param linkType 关联类型
+     * @param uid 用户uid
+     * @param pageParamRequest 分页参数
+     * @return 记录列表
+     */
+    PageInfo<UserBrokerageRecord> findListByLinkIdsAndLinkTypeAndUid(List<String> linkIds, String linkType, Integer uid, PageParamRequest pageParamRequest);
 }

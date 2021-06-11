@@ -2,6 +2,7 @@ package com.zbkj.crmeb.upload.service.impl;
 
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
+import com.constants.Constants;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
@@ -137,9 +138,11 @@ public class AsyncServiceImpl implements AsyncService {
 
 
         try{
+            String webPath = systemConfigService.getValueByKey(Constants.UPLOAD_ROOT_PATH_CONFIG_KEY);
             for (SystemAttachment systemAttachment : systemAttachmentList) {
                 logger.info("AsyncServiceImpl.cos.id " + systemAttachment.getAttId());
-                cosService.upload(cloudVo, systemAttachment.getSattDir(), systemAttachment.getAttDir(), systemAttachment.getAttId(), cosClient);
+//                cosService.upload(cloudVo, systemAttachment.getSattDir(), systemAttachment.getAttDir(), systemAttachment.getAttId(), cosClient);
+                cosService.upload(cloudVo, systemAttachment.getSattDir(), webPath + systemAttachment.getSattDir(), systemAttachment.getAttId(), cosClient);
             }
         }catch (Exception e){
             logger.error("AsyncServiceImpl.cos.fail " + e.getMessage());
@@ -182,10 +185,13 @@ public class AsyncServiceImpl implements AsyncService {
             Auth auth = Auth.create(cloudVo.getAccessKey(), cloudVo.getSecretKey());
             String upToken = auth.uploadToken(cloudVo.getBucketName());
 
+            String webPath = systemConfigService.getValueByKey(Constants.UPLOAD_ROOT_PATH_CONFIG_KEY);
             for (SystemAttachment systemAttachment : systemAttachmentList) {
                 logger.info("AsyncServiceImpl.qCloud.id " + systemAttachment.getAttId());
+//                qiNiuService.upload(uploadManager, cloudVo, upToken,
+//                        systemAttachment.getSattDir(), systemAttachment.getAttDir(), systemAttachment.getAttId());   //异步处理
                 qiNiuService.upload(uploadManager, cloudVo, upToken,
-                        systemAttachment.getSattDir(), systemAttachment.getAttDir(), systemAttachment.getAttId());   //异步处理
+                        systemAttachment.getSattDir(), webPath + systemAttachment.getSattDir(), systemAttachment.getAttId());   //异步处理
             }
         }catch (Exception e){
             logger.error("AsyncServiceImpl.qCloud.fail " + e.getMessage());
@@ -204,9 +210,12 @@ public class AsyncServiceImpl implements AsyncService {
             return;
         }
         try{
+            String webPath = systemConfigService.getValueByKey(Constants.UPLOAD_ROOT_PATH_CONFIG_KEY);
             for (SystemAttachment systemAttachment : systemAttachmentList) {
                 logger.info("AsyncServiceImpl.oss.id " + systemAttachment.getAttId());
-                ossService.upload(cloudVo, systemAttachment.getSattDir(), systemAttachment.getAttDir(),
+//                ossService.upload(cloudVo, systemAttachment.getSattDir(),  systemAttachment.getAttDir(),
+//                        systemAttachment.getAttId()); //异步处理
+                ossService.upload(cloudVo, systemAttachment.getSattDir(),  webPath + systemAttachment.getSattDir(),
                         systemAttachment.getAttId()); //异步处理
             }
         }catch (Exception e){

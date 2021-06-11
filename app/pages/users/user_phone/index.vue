@@ -19,7 +19,7 @@
 			<button form-type="submit" v-if="!isNew" class="confirmBnt bg-color"  @click="editPwd">保存</button>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 	</view>
 </template>
@@ -71,13 +71,7 @@
 				// 	this.$set(this, 'key', res.data.key)
 				// });
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {
@@ -210,7 +204,27 @@
 	}
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+	.shading {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		
+		/* #ifdef APP-VUE */
+		margin-top: 50rpx;
+		/* #endif */
+		/* #ifndef APP-VUE */
+		
+		margin-top: 200rpx;
+		/* #endif */
+		
+		
+		image {
+			width: 180rpx;
+			height: 180rpx;
+		}
+	}
 	page {
 		background-color: #fff !important;
 	}
@@ -249,7 +263,7 @@
 
 	.ChangePassword .list .item .code {
 		font-size: 32rpx;
-		background-color: #fff;
+		// background-color: #fff;
 	}
 
 	.ChangePassword .list .item .code.on {

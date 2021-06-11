@@ -336,16 +336,48 @@ public class WeChatPayServiceImpl implements WeChatPayService {
         // 组装前端预下单参数
         Map<String, String> map = new HashMap<>();
         map.put("appId", unifiedorderVo.getAppid());
-        map.put("nonceStr", WxPayUtil.getNonceStr());
+        map.put("nonceStr", unifiedorderVo.getAppid());
         map.put("package", "prepay_id=".concat(responseVo.getPrepayId()));
         map.put("signType", unifiedorderVo.getSign_type());
-        map.put("timeStamp", Long.toString(WxPayUtil.getCurrentTimestamp()));
+        Long currentTimestamp = WxPayUtil.getCurrentTimestamp();
+        map.put("timeStamp", Long.toString(currentTimestamp));
         String paySign = WxPayUtil.getSign(map, signKey);
         map.put("paySign", paySign);
+        map.put("prepayId", responseVo.getPrepayId());
+        map.put("prepayTime", DateUtil.nowDateTimeStr());
         if (storeOrder.getIsChannel() == 2) {
             map.put("mweb_url", responseVo.getMWebUrl());
         }
+        if (storeOrder.getIsChannel() == 4 || storeOrder.getIsChannel() == 5) {// App
+            map.put("partnerid", mchId);
+            map.put("package", responseVo.getPrepayId());
+            Map<String, Object> appMap = new HashMap<>();
+            appMap.put("appid", unifiedorderVo.getAppid());
+            appMap.put("partnerid", mchId);
+            appMap.put("prepayid", responseVo.getPrepayId());
+            appMap.put("package", "Sign=WXPay");
+            appMap.put("noncestr", unifiedorderVo.getAppid());
+            appMap.put("timestamp", currentTimestamp);
+            logger.info("================================================app支付签名，map = " + appMap);
+            String sign = WxPayUtil.getSignObject(appMap, signKey);
+            logger.info("================================================app支付签名，sign = " + sign);
+            map.put("paySign", sign);
+        }
         return map;
+    }
+
+    public static void main(String[] args) {
+        String signKey = "cd94c0b5fe5ab2d9940bee9cae8391f0";
+        Map<String, String> appMap = new HashMap<>();
+        appMap.put("appid", "wxa83d6fab40cab13f");
+        appMap.put("partnerid", "1519485721");
+        appMap.put("prepayid", "wx23155011418859d4aa5802ca703bd80000");
+        appMap.put("package", "Sign=WXPay");
+        appMap.put("noncestr", "wxa83d6fab40cab13f");
+        appMap.put("timestamp", "1616485811");
+        logger.info("================================================app支付签名，map = " + appMap);
+        String sign = WxPayUtil.getSign(appMap, signKey);
+        logger.info("================================================app支付签名，sign = " + sign);
     }
 
     /**
@@ -533,8 +565,13 @@ public class WeChatPayServiceImpl implements WeChatPayService {
             userToken = userTokenService.getTokenByUserId(userRecharge.getUid(), 2);
         }
         if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_H5)) {// H5
-//            userTokenService.getByUid(storeOrder.getUid());
             userToken.setToken("");
+        }
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_IOS)) {// app ios
+            userToken = userTokenService.getTokenByUserId(userRecharge.getUid(), 5);
+        }
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_ANDROID)) {// app android
+            userToken = userTokenService.getTokenByUserId(userRecharge.getUid(), 6);
         }
 
         if (ObjectUtil.isNull(userToken)) {
@@ -561,6 +598,11 @@ public class WeChatPayServiceImpl implements WeChatPayService {
             mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_MCH_ID);
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
         }
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_IOS) || userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_ANDROID)) {// H5,使用公众号的
+            appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_APP_ID);
+            mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_MCH_ID);
+            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_APP_KEY);
+        }
 
         // 获取微信预下单对象
         CreateOrderRequestVo unifiedorderVo = getUnifiedorderVo(userRecharge, userToken.getToken(), clientIp, appId, mchId, signKey);
@@ -570,14 +612,30 @@ public class WeChatPayServiceImpl implements WeChatPayService {
         // 组装前端预下单参数
         Map<String, String> map = new HashMap<>();
         map.put("appId", unifiedorderVo.getAppid());
-        map.put("nonceStr", WxPayUtil.getNonceStr());
+        map.put("nonceStr", unifiedorderVo.getNonce_str());
         map.put("package", "prepay_id=".concat(responseVo.getPrepayId()));
         map.put("signType", unifiedorderVo.getSign_type());
-        map.put("timeStamp", Long.toString(WxPayUtil.getCurrentTimestamp()));
+        Long currentTimestamp = WxPayUtil.getCurrentTimestamp();
+        map.put("timeStamp", Long.toString(currentTimestamp));
         String paySign = WxPayUtil.getSign(map, signKey);
         map.put("paySign", paySign);
         if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_H5)) {
             map.put("mweb_url", responseVo.getMWebUrl());
+        }
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_IOS) || userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_ANDROID)) {// H5,使用公众号的
+            map.put("partnerid", mchId);
+            map.put("package", responseVo.getPrepayId());
+            Map<String, Object> appMap = new HashMap<>();
+            appMap.put("appid", unifiedorderVo.getAppid());
+            appMap.put("partnerid", mchId);
+            appMap.put("prepayid", responseVo.getPrepayId());
+            appMap.put("package", "Sign=WXPay");
+            appMap.put("noncestr", unifiedorderVo.getNonce_str());
+            appMap.put("timestamp", currentTimestamp);
+            logger.info("================================================app支付签名，map = " + appMap);
+            String sign = WxPayUtil.getSignObject(appMap, signKey);
+            logger.info("================================================app支付签名，sign = " + sign);
+            map.put("paySign", sign);
         }
         return map;
     }
@@ -696,6 +754,10 @@ public class WeChatPayServiceImpl implements WeChatPayService {
         vo.setOpenid(openid);
         if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_H5)){// H5
             vo.setTrade_type(PayConstants.WX_PAY_TRADE_TYPE_H5);
+            vo.setOpenid(null);
+        }
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_IOS) || userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_ANDROID)) {
+            vo.setTrade_type("APP");
             vo.setOpenid(null);
         }
         CreateOrderH5SceneInfoVo createOrderH5SceneInfoVo = new CreateOrderH5SceneInfoVo(

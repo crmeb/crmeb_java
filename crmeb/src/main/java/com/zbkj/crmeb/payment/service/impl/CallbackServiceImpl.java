@@ -391,13 +391,16 @@ public class CallbackServiceImpl implements CallbackService {
     }
 
     private String getSignKey(String appid) {
-        String publicAppid = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
-        String miniAppid = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
+        String publicAppid = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
+        String miniAppid = systemConfigService.getValueByKey(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
         String signKey = "";
-        if (appid.equals(publicAppid)) {
+        if (StrUtil.isBlank(publicAppid) && StrUtil.isBlank(miniAppid)) {
+            throw new CrmebException("pay_weixin_appid或pay_routine_appid不能都为空");
+        }
+        if (StrUtil.isNotBlank(publicAppid) && appid.equals(publicAppid)) {
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
         }
-        if (appid.equals(miniAppid)) {
+        if (StrUtil.isNotBlank(miniAppid) && appid.equals(miniAppid)) {
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
         }
         return signKey;

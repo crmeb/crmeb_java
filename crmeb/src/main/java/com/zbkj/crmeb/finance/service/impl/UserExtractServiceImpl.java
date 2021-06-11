@@ -250,7 +250,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
         wechatSendMessageForMinService.sendCashMessage(cash,userId);
         save(userExtract);
         // 扣除用户总金额
-        return userService.upadteBrokeragePrice(user, toBeWithdrawn.subtract(request.getExtractPrice()));
+        return userService.updateBrokeragePrice(user, toBeWithdrawn.subtract(request.getExtractPrice()));
     }
 
 
@@ -362,6 +362,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
         Boolean execute = false;
 
+        userExtract.setUpdateTime(cn.hutool.core.date.DateUtil.date());
         // 拒绝
         if (status == -1) {//未通过时恢复用户总金额
             userExtract.setFailMsg(backMessage);
@@ -431,6 +432,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     private List<UserExtract> getListByMonth(Integer userId, String date) {
         QueryWrapper<UserExtract> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id", "extract_price", "status", "create_time", "update_time");
         queryWrapper.eq("uid", userId);
         queryWrapper.apply(StrUtil.format(" left(create_time, 7) = '{}'", date));
         queryWrapper.orderByDesc("create_time");

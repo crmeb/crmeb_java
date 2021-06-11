@@ -9,22 +9,22 @@
 								<view>总资产(元)</view>
 								<view class='money'>{{statistics.nowMoney || 0}}</view>
 							</view>
-							<!-- #ifdef APP-PLUS || H5 -->
+							<!-- #ifdef H5 -->
 							<navigator url="/pages/users/user_payment/index" hover-class="none" class='recharge font-color'>充值</navigator>
 							<!-- #endif -->
 							<!-- #ifdef MP -->
-							<view v-if="rechargeSwitch"  @click="openSubscribe('/pages/users/user_payment/index')" class='recharge font-color'>充值</view>
+							<view v-if="userInfo.rechargeSwitch"  @click="openSubscribe('/pages/users/user_payment/index')" class='recharge font-color'>充值</view>
 							<!-- #endif -->
 						</view>
 						<view class='cumulative acea-row row-top'>
-							<!-- #ifdef APP-PLUS || H5 -->
+							<!-- #ifdef H5 -->
 							<view class='item'>
 								<view>累计充值(元)</view>
 								<view class='money'>{{statistics.recharge || 0}}</view>
 							</view>
 							<!-- #endif -->
 							<!-- #ifdef MP -->
-							<view class='item' v-if="rechargeSwitch">
+							<view class='item' v-if="userInfo.rechargeSwitch">
 								<view>累计充值(元)</view>
 								<view class='money'>{{statistics.recharge || 0}}</view>
 							</view>
@@ -49,7 +49,7 @@
 						</view>
 						<view>消费记录</view>
 					</navigator>
-					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=income' v-if="rechargeSwitch">
+					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=income' v-if="userInfo.rechargeSwitch">
 						<view class='pictrue'>
 							<image src='../../../static/images/record3.png'></image>
 						</view>
@@ -121,7 +121,7 @@
 			<recommend :hostProduct="hostProduct" v-if="hostProduct.length"></recommend>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -135,7 +135,6 @@
 		openRechargeSubscribe
 	} from '@/utils/SubscribeMessage.js';
 	import {
-		getUserInfo,
 		userActivity,
 		getuserDalance
 	} from '@/api/user.js';
@@ -160,10 +159,8 @@
 		},
 		data() {
 			return {
-				userInfo: {},
 				hostProduct: [],
 				isClose: false,
-				rechargeSwitch: false,
 				activity: {},
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false ,//是否隐藏授权
@@ -173,12 +170,11 @@
 				hotLimit:10
 			};
 		},
-		computed: mapGetters(['isLogin']),
+		computed: mapGetters(['isLogin', 'userInfo']),
 		watch:{
 			isLogin:{
 				handler:function(newV,oldV){
 					if(newV){
-						this.getUserInfo();
 						this.get_host_product();
 						this.get_activity();
 						this.userDalance();
@@ -189,23 +185,15 @@
 		},
 		onLoad() {
 			if (this.isLogin) {
-				this.getUserInfo();
 				this.get_host_product();
 				this.get_activity();
 				this.userDalance();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {
 			onLoadFun: function() {
-				this.getUserInfo();
 				this.get_host_product();
 				this.get_activity();
 				this.userDalance();
@@ -234,16 +222,6 @@
 				});
 			},
 			// #endif
-			/**
-			 * 获取用户详情
-			 */
-			getUserInfo: function() {
-				let that = this;
-				getUserInfo().then(res => {
-					that.$set(that, 'userInfo', res.data);
-					that.rechargeSwitch = res.data.rechargeSwitch;
-				});
-			},
 			/**
 			 * 获取活动可参与否
 			 */
@@ -278,7 +256,7 @@
 <style scoped lang="scss">
 	.my-account .wrapper {
 		background-color: #fff;
-		padding: 32rpx 0 34rpx 0;
+		padding: 32rpx 0 15rpx 0;
 		margin-bottom: 14rpx;
 	}
 

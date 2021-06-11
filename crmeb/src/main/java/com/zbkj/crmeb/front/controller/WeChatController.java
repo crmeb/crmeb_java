@@ -1,15 +1,14 @@
 package com.zbkj.crmeb.front.controller;
 
-import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson.JSON;
 import com.common.CommonResult;
+import com.zbkj.crmeb.front.request.RegisterAppWxRequest;
+import com.zbkj.crmeb.front.request.WxBindingPhoneRequest;
 import com.zbkj.crmeb.front.response.LoginResponse;
 import com.zbkj.crmeb.front.service.UserCenterService;
 import com.zbkj.crmeb.user.request.RegisterThirdUserRequest;
 import com.zbkj.crmeb.wechat.model.TemplateMessage;
 import com.zbkj.crmeb.wechat.service.TemplateMessageService;
 import com.zbkj.crmeb.wechat.service.WeChatService;
-import com.zbkj.crmeb.wechat.service.WechatProgramMyTempService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -50,23 +49,6 @@ public class WeChatController {
     @Autowired
     private TemplateMessageService templateMessageService;
 
-    @Autowired
-    private WechatProgramMyTempService wechatProgramMyTempService;
-
-    /**
-     * 获取授权页面跳转地址
-     * @author Mr.Zhang
-     * @since 2020-05-25
-     */
-    @ApiOperation(value = "获取授权页面跳转地址")
-    @RequestMapping(value = "/authorize/get", method = RequestMethod.GET)
-    public CommonResult<Object> get(){
-        log.info("获取微信授权页面跳转地址");
-        String authorizeUrl = weChatService.getAuthorizeUrl();
-        log.info("授权地址:"+authorizeUrl);
-        return CommonResult.success(authorizeUrl);
-    }
-
     /**
      * 通过微信code登录
      * @author Mr.Zhang
@@ -76,7 +58,6 @@ public class WeChatController {
     @RequestMapping(value = "/authorize/login", method = RequestMethod.GET)
     public CommonResult<LoginResponse> login(@RequestParam(value = "spread_spid", defaultValue = "0", required = false) Integer spreadUid,
                                              @RequestParam(value = "code") String code){
-        log.info(StrUtil.format("微信登录公共号授权登录:spreadUid={},code={}",spreadUid,code));
         return CommonResult.success(userCenterService.weChatAuthorizeLogin(code, spreadUid));
     }
 
@@ -85,25 +66,32 @@ public class WeChatController {
      * @author Mr.Zhang
      * @since 2020-05-25
      */
-
     @ApiOperation(value = "微信登录小程序授权登录")
     @RequestMapping(value = "/authorize/program/login", method = RequestMethod.POST)
     public CommonResult<LoginResponse> programLogin(@RequestParam String code, @RequestBody @Validated RegisterThirdUserRequest request){
-        log.info(StrUtil.format("微信小程序授权登录:code={},request={}",code, JSON.toJSONString(request)));
         return CommonResult.success(userCenterService.weChatAuthorizeProgramLogin(code, request));
     }
 
+    /**
+     * 微信注册绑定手机号
+     * @author Mr.Zhang
+     * @since 2020-05-25
+     */
+    @ApiOperation(value = "微信注册绑定手机号")
+    @RequestMapping(value = "/register/binding/phone", method = RequestMethod.POST)
+    public CommonResult<LoginResponse> registerBindingPhone(@RequestBody @Validated WxBindingPhoneRequest request){
+        return CommonResult.success(userCenterService.registerBindingPhone(request));
+    }
 
     /**
      * 获取微信公众号js配置
      * @author Mr.Zhang
      * @since 2020-05-25
      */
-    @ApiOperation(value = "获取微信js配置")
+    @ApiOperation(value = "获取微信公众号js配置")
     @RequestMapping(value = "/config", method = RequestMethod.GET)
     @ApiImplicitParam(name = "url", value = "页面地址url")
     public CommonResult<Object> configJs(@RequestParam(value = "url") String url){
-        log.info("获取微信js配置:url:"+url);
         return CommonResult.success(weChatService.getJsSdkConfig(url));
     }
 

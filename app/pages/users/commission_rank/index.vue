@@ -29,11 +29,15 @@
 						<view class="people font-color">￥{{item.brokeragePrice}}</view>
 					</view>
 				</view>
+				<view class='noCommodity' v-if="rankList.length == 0 && (page != 1 || active== 0)">
+					<emptyPage title="暂无排行～"></emptyPage>
+				</view>
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
+		<home></home>
 	</view>
 </template>
 
@@ -45,6 +49,8 @@
 	import {
 		toLogin
 	} from '@/libs/login.js';
+	import home from '@/components/home';
+	import emptyPage from '@/components/emptyPage.vue'
 	import {
 		mapGetters
 	} from "vuex";
@@ -53,6 +59,8 @@
 	// #endif
 	export default {
 		components: {
+			emptyPage,
+			home,
 			// #ifdef MP
 			authorize
 			// #endif
@@ -90,13 +98,7 @@
 				this.getBrokerageRankList();
 				this.getBrokerageRankNumber(this.type);
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {
@@ -179,7 +181,7 @@
 	.CommissionRank .wrapper {
 		width: 710rpx;
 		background-color: #fff;
-		border-radius: 20rpx;
+		border-radius: 14rpx;
 		margin: -76rpx auto 0 auto;
 	}
 
@@ -193,7 +195,8 @@
 	}
 
 	.CommissionRank .wrapper .nav .item.font-color {
-		border-bottom: 4rpx solid #e93323;
+		border-bottom: 4rpx solid $theme-color;
+		margin-top: -2rpx;
 	}
 
 	.CommissionRank .wrapper .list {

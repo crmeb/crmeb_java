@@ -4,13 +4,15 @@ import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
 import com.exception.CrmebException;
+import com.zbkj.crmeb.front.request.CartNumRequest;
 import com.zbkj.crmeb.front.request.CartRequest;
 import com.zbkj.crmeb.front.request.CartResetRequest;
+import com.zbkj.crmeb.front.response.CartInfoResponse;
 import com.zbkj.crmeb.store.model.StoreCart;
-import com.zbkj.crmeb.store.response.StoreCartResponse;
 import com.zbkj.crmeb.store.service.StoreCartService;
-import com.zbkj.crmeb.user.service.UserService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,29 +47,25 @@ public class CartController {
     @Autowired
     private StoreCartService storeCartService;
 
-    @Autowired
-    private UserService userService;
-
     /**
      * 分页显示购物车表
-     * @param pageParamRequest 分页参数
-     * @author Mr.Zhang
-     * @since 2020-05-28
      */
     @ApiOperation(value = "分页列表") //配合swagger使用
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<StoreCartResponse>> getList(@RequestParam Boolean isValid, @Validated PageParamRequest pageParamRequest){
-        StoreCart storeCart = new StoreCart();
-        CommonPage<StoreCartResponse> storeCartCommonPage =
-                CommonPage.restPage(storeCartService.getList(pageParamRequest, isValid));
-        return CommonResult.success(storeCartCommonPage);
+    @ApiImplicitParams({
+            @ApiImplicitParam(name="isValid", value="类型，true-有效商品，false-无效商品", required = true),
+            @ApiImplicitParam(name="page", value="页码", required = true),
+            @ApiImplicitParam(name="limit", value="每页数量", required = true)
+    })
+    public CommonResult<CommonPage<CartInfoResponse>> getList(@RequestParam Boolean isValid, @Validated PageParamRequest pageParamRequest){
+
+        CommonPage<CartInfoResponse> restPage = CommonPage.restPage(storeCartService.getList(pageParamRequest, isValid));
+        return CommonResult.success(restPage);
     }
 
     /**
      * 新增购物车表
      * @param storeCartRequest 新增参数
-     * @author Mr.Zhang
-     * @since 2020-05-28
      */
     @ApiOperation(value = "新增")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
@@ -87,9 +84,7 @@ public class CartController {
 
     /**
      * 删除购物车表
-     * @param ids List<Integer> edit by stivepeim 2020-7-4
-     * @author Mr.Zhang
-     * @since 2020-05-28
+     * @param ids 购物车ids
      */
     @ApiOperation(value = "删除")
     @RequestMapping(value = "/delete", method = RequestMethod.POST)
@@ -105,8 +100,6 @@ public class CartController {
      * 修改商品数量
      * @param id integer id
      * @param number 修改的产品数量
-     * @author Mr.Zhang edit by stivepeim 2020-7-4
-     * @since 2020-05-28
      */
     @ApiOperation(value = "修改")
     @RequestMapping(value = "/num", method = RequestMethod.POST)
@@ -126,16 +119,12 @@ public class CartController {
 
 
     /**
-     * 数量
-     * @author Mr.Zhang
-     * @since 2020-05-28
+     * 获取购物车数量
      */
-    @ApiOperation(value = "数量")
+    @ApiOperation(value = "获取购物车数量")
     @RequestMapping(value = "/count", method = RequestMethod.GET)
-    public CommonResult<Map<Object, Object>> count(@RequestParam(value = "numType", defaultValue = "false") boolean numType ){
-        Map<Object, Object> map = new HashMap<>();
-        map.put("count", storeCartService.getUserCount(userService.getUserIdException(), "product",  numType));
-        return CommonResult.success(map);
+    public CommonResult<Map<String, Integer>> count(@Validated CartNumRequest request){
+        return CommonResult.success(storeCartService.getUserCount(request));
     }
 
     /**

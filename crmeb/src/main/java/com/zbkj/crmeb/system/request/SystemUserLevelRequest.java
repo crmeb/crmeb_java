@@ -35,29 +35,24 @@ public class SystemUserLevelRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 
-    @ApiModelProperty(value = "会员名称")
-    @NotBlank
+    @ApiModelProperty(value = "等级id")
+    private Integer id;
+
+    @ApiModelProperty(value = "等级名称")
+    @NotBlank(message = "等级名称不能为空")
     private String name;
 
-//    @ApiModelProperty(value = "是否为永久会员")
-//    @NotNull
-//    private Boolean isForever;
-
-//    @ApiModelProperty(value = "有效时间")
-//    @NotNull
-//    @Min(value = 0)
-//    private Integer validDate;
-
     @ApiModelProperty(value = "达到多少升级经验")
+    @NotNull(message = "等级经验不能为空")
     private Integer experience;
 
     @ApiModelProperty(value = "会员等级")
     @NotNull(message = "会员等级不能为空")
-    @Min(value = 0)
+    @Min(value = 1)
     private Integer grade;
 
     @ApiModelProperty(value = "享受折扣")
-    @NotNull
+    @NotNull(message = "折扣不能为空")
     @DecimalMin(value = "0.00", message = "请输入正确的金额")
     private BigDecimal discount;
 

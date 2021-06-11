@@ -8,11 +8,14 @@ import com.constants.Constants;
 import com.github.pagehelper.PageHelper;
 import com.utils.DateUtil;
 import com.zbkj.crmeb.store.dao.StoreOrderStatusDao;
+import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.model.StoreOrderStatus;
 import com.zbkj.crmeb.store.request.StoreOrderStatusSearchRequest;
+import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.store.service.StoreOrderStatusService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -37,24 +40,23 @@ public class StoreOrderStatusServiceImpl extends ServiceImpl<StoreOrderStatusDao
     @Resource
     private StoreOrderStatusDao dao;
 
+    @Autowired
+    private StoreOrderService storeOrderService;
+
     /**
     * 列表
     * @param request 请求参数
     * @param pageParamRequest 分页类参数
-    * @author Mr.Zhang
-    * @since 2020-05-28
     * @return List<StoreOrderStatus>
     */
     @Override
     public List<StoreOrderStatus> getList(StoreOrderStatusSearchRequest request, PageParamRequest pageParamRequest) {
+        StoreOrder storeOrder = storeOrderService.getByOderId(request.getOrderNo());
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-
-        //带 StoreOrderStatus 类的多条件查询
-        LambdaQueryWrapper<StoreOrderStatus> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        StoreOrderStatus model = new StoreOrderStatus();
-        BeanUtils.copyProperties(request, model);
-        lambdaQueryWrapper.setEntity(model);
-        return dao.selectList(lambdaQueryWrapper);
+        LambdaQueryWrapper<StoreOrderStatus> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StoreOrderStatus::getOid, storeOrder.getId());
+        lqw.orderByDesc(StoreOrderStatus::getCreateTime);
+        return dao.selectList(lqw);
     }
 
     /**

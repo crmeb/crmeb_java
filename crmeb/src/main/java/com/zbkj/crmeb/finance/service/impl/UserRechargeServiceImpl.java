@@ -4,6 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
@@ -95,9 +97,11 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
         dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
         //带 UserExtract 类的多条件查询
         LambdaQueryWrapper<UserRecharge> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if (ObjectUtil.isNotNull(request.getUid()) && request.getUid() > 0) {
+            lambdaQueryWrapper.eq(UserRecharge::getUid, request.getUid());
+        }
         if(!StringUtils.isBlank(request.getKeywords())){
             lambdaQueryWrapper.and(i -> i.
-                    or().like(UserRecharge::getUid, request.getKeywords()+""). //充值用户UID
                     or().like(UserRecharge::getOrderId, request.getKeywords()) //订单号
             );
         }
@@ -116,6 +120,7 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
 
             lambdaQueryWrapper.between(UserRecharge::getCreateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
         }
+        lambdaQueryWrapper.orderByDesc(UserRecharge::getId);
         List<UserRechargeResponse> responses = new ArrayList<>();
         List<UserRecharge> userRecharges = dao.selectList(lambdaQueryWrapper);
         List<Integer> userIds = userRecharges.stream().map(UserRecharge::getUid).collect(Collectors.toList());
@@ -275,6 +280,21 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
         if (!execute) throw new CrmebException("充值退款-修改提现数据失败！");
         // 成功后发送小程序通知
         return execute;
+    }
+
+    /**
+     * 获取用户累计充值金额
+     * @param uid 用户uid
+     * @return BigDecimal
+     */
+    @Override
+    public BigDecimal getTotalRechargePrice(Integer uid) {
+        QueryWrapper<UserRecharge> query = Wrappers.query();
+        query.select("IFNULL(SUM(price), 0) as price, IFNULL(SUM(give_price), 0) as give_price");
+        query.eq("paid", 1);
+        query.eq("uid", uid);
+        UserRecharge userRecharge = dao.selectOne(query);
+        return userRecharge.getPrice().add(userRecharge.getGivePrice());
     }
 
     private UserBill getRefundBill(UserRecharge userRecharge, BigDecimal nowMoney, BigDecimal refundPrice) {

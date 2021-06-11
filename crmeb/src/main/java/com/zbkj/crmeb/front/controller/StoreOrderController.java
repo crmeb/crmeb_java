@@ -1,12 +1,12 @@
 package com.zbkj.crmeb.front.controller;
 
+import com.common.CommonPage;
 import com.common.CommonResult;
+import com.common.MyRecord;
 import com.common.PageParamRequest;
-import com.utils.CrmebUtil;
 import com.zbkj.crmeb.front.request.*;
-import com.zbkj.crmeb.front.response.ConfirmOrderResponse;
+import com.zbkj.crmeb.front.response.*;
 import com.zbkj.crmeb.front.service.OrderService;
-import com.zbkj.crmeb.front.vo.OrderAgainVo;
 import com.zbkj.crmeb.store.request.StoreProductReplyAddRequest;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 
@@ -43,62 +42,40 @@ public class StoreOrderController {
     private OrderService orderService;
 
     /**
-     * 根据购物车id确认订单
-     * @param request 购物车id集合
-     * @return 订单确认结果
+     * 预下单
      */
-    @ApiOperation(value = "确认订单")
-    @RequestMapping(value = "/confirm", method = RequestMethod.POST)
-    public CommonResult<ConfirmOrderResponse> OrderConForm(@RequestBody @Validated ConfirmOrderRequest request){
-        return CommonResult.success(orderService.confirmOrder(request));
+    @ApiOperation(value = "预下单")
+    @RequestMapping(value = "/pre/order", method = RequestMethod.POST)
+    public CommonResult<Map<String, Object>> preOrder(@RequestBody @Validated PreOrderRequest request) {
+        MyRecord record = orderService.preOrder(request);
+        return CommonResult.success(record);
     }
 
     /**
-     * 生成订单
-     * @param key 订单key或者订单id
-     * @param request 创建订单参数
-     * @return 创建订单后的标识
+     * 加载预下单
      */
-    @ApiOperation(value = "生成订单")
-    @RequestMapping(value = "/create/{key}", method = RequestMethod.POST)
-    public CommonResult<Map<String, Object>> createOrder(@PathVariable String key, @Validated @RequestBody OrderCreateRequest orderRequest, HttpServletRequest request){
-        return CommonResult.success(orderService.createOrder(orderRequest, key));
+    @ApiOperation(value = "加载预下单")
+    @RequestMapping(value = "load/pre/{preOrderNo}", method = RequestMethod.GET)
+    public CommonResult<PreOrderResponse> preOrder(@PathVariable String preOrderNo) {
+        return CommonResult.success(orderService.loadPreOrder(preOrderNo));
     }
 
     /**
      * 根据参数计算订单价格
-     * @param key 订单key
-     * @param request 订单参数
-     * @return 价格数据
      */
-    @ApiOperation(value = "计算价格")
-    @RequestMapping(value = "/computed/{key}", method = RequestMethod.POST)
-    public CommonResult<Object> computed(@PathVariable String key, @Validated @RequestBody OrderComputedRequest request){
-        return CommonResult.success(orderService.computedOrder(request, key));
-
+    @ApiOperation(value = "计算订单价格")
+    @RequestMapping(value = "/computed/price", method = RequestMethod.POST)
+    public CommonResult<ComputedOrderPriceResponse> computedPrice(@Validated @RequestBody OrderComputedPriceRequest request){
+        return CommonResult.success(orderService.computedOrderPrice(request));
     }
 
     /**
-     * 重复下单
-     * @param request 下单参数
-     * @return 下单结果
+     * 创建订单
      */
-    @ApiOperation(value = "再次下单")
-    @RequestMapping(value = "/again", method = RequestMethod.POST)
-    public CommonResult<Object> orderAgain(@Validated @RequestBody OrderAgainRequest request){
-        return CommonResult.success(orderService.againOrder(request));
-    }
-
-    /**
-     * 支付
-     * @param orderPayRequest 支付参数
-     * @return 支付结果
-     */
-    @ApiOperation(value = "支付")
-    @RequestMapping(value = "/pay", method = RequestMethod.POST)
-    public CommonResult<Object> pay(@Validated @RequestBody OrderPayRequest orderPayRequest, HttpServletRequest request){
-        String ip = CrmebUtil.getClientIp(request);
-        return CommonResult.success(orderService.payOrder(orderPayRequest,ip));
+    @ApiOperation(value = "创建订单")
+    @RequestMapping(value = "/create", method = RequestMethod.POST)
+    public CommonResult<Map<String, Object>> createOrder(@Validated @RequestBody CreateOrderRequest orderRequest){
+        return CommonResult.success(orderService.createOrder(orderRequest));
     }
 
     /**
@@ -112,7 +89,7 @@ public class StoreOrderController {
     @ApiImplicitParams ({
         @ApiImplicitParam(name = "type", value = "评价等级|0=未支付,1=待发货,2=待收货,3=待评价,4=已完成,-3=售后/退款", required = true)
     })
-    public CommonResult<List<OrderAgainVo>> orderList(
+    public CommonResult<CommonPage<OrderDetailResponse>> orderList(
             @RequestParam(name = "type") Integer type,
             @ModelAttribute PageParamRequest pageRequest){
         return CommonResult.success(orderService.list(type, pageRequest));
@@ -125,7 +102,7 @@ public class StoreOrderController {
      */
     @ApiOperation(value = "订单详情")
     @RequestMapping(value = "/detail/{orderId}", method = RequestMethod.GET)
-    public CommonResult<Object> orderDetail(@PathVariable String orderId){
+    public CommonResult<StoreOrderDetailResponse> orderDetail(@PathVariable String orderId){
         return CommonResult.success(orderService.detailOrder(orderId));
     }
 
@@ -135,7 +112,7 @@ public class StoreOrderController {
      */
     @ApiOperation(value = "订单头部数量")
     @RequestMapping(value = "/data", method = RequestMethod.GET)
-    public CommonResult<Object> orderData(){
+    public CommonResult<OrderDataResponse> orderData(){
         return CommonResult.success(orderService.orderData());
     }
 
@@ -161,9 +138,6 @@ public class StoreOrderController {
     @ApiOperation(value = "评价订单")
     @RequestMapping(value = "/comment", method = RequestMethod.POST)
     public CommonResult<Boolean> comment(@RequestBody @Validated StoreProductReplyAddRequest request){
-        if(null == request.getOid() || request.getOid() < 1){
-            return CommonResult.validateFailed("订单号参数不能为空");
-        }
         if(orderService.reply(request)){
             return CommonResult.success();
         }else{
@@ -200,6 +174,16 @@ public class StoreOrderController {
     }
 
     /**
+     * 申请订单退款
+     * @param orderId 订单编号
+     */
+    @ApiOperation(value = "订单退款申请")
+    @RequestMapping(value = "/apply/refund/{orderId}", method = RequestMethod.GET)
+    public CommonResult<ApplyRefundOrderInfoResponse> refundApplyOrder(@PathVariable String orderId){
+        return CommonResult.success(orderService.applyRefundOrderInfo(orderId));
+    }
+
+    /**
      * 订单退款申请
      * @param request OrderRefundApplyRequest 订单id
      */
@@ -219,7 +203,7 @@ public class StoreOrderController {
      */
     @ApiOperation(value = "订单退款理由")
     @RequestMapping(value = "/refund/reason", method = RequestMethod.GET)
-    public CommonResult<Object> refundReason(){
+    public CommonResult<List<String>> refundReason(){
         return CommonResult.success(orderService.getRefundReason());
     }
 
@@ -236,7 +220,7 @@ public class StoreOrderController {
 
     @ApiOperation(value = "待评价商品信息查询")
     @RequestMapping(value = "/product", method = RequestMethod.POST)
-    public CommonResult<Object> getOrderProductForReply(@Validated @RequestBody GetProductReply request){
+    public CommonResult<OrderProductReplyResponse> getOrderProductForReply(@Validated @RequestBody GetProductReply request){
         return CommonResult.success(orderService.getReplyProduct(request));
     }
 }

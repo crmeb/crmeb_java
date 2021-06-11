@@ -41,7 +41,6 @@ public class PayController {
 
     /**
      * 订单支付
-     * @return
      */
     @ApiOperation(value = "订单支付")
     @RequestMapping(value = "/payment", method = RequestMethod.POST)
@@ -54,7 +53,6 @@ public class PayController {
      * 查询支付结果
      *
      * @param orderNo |订单编号|String|必填
-     * @return
      */
     @ApiOperation(value = "查询支付结果")
     @RequestMapping(value = "/queryPayResult", method = RequestMethod.GET)

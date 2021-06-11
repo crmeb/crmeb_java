@@ -63,20 +63,20 @@
               >
                 <div class="picTxt acea-row row-between-wrapper">
                   <div class="pictrue">
-                    <img :src="val.info.productInfo.image" />
+                    <img :src="val.info.image" />
                   </div>
                   <div class="text ">
                     <div class="info line2">
-                      {{ val.info.productInfo.storeName }}
+                      {{ val.info.productName }}
                     </div>
-                    <div class="attr" v-if="val.info.productInfo.attrInfo.suk">
-                      {{ val.info.productInfo.attrInfo.suk }}
+                    <div class="attr" v-if="val.info.sku">
+                      {{ val.info.sku }}
                     </div>
                   </div>
                 </div>
                 <div class="money">
-                  <div class="x-money">￥{{ val.info.productInfo.attrInfo.price }}</div>
-                  <div class="num">x{{ val.info.cartNum }}</div>
+                  <div class="x-money">￥{{ val.info.price }}</div>
+                  <div class="num">x{{ val.info.payNum }}</div>
                   <div class="y-money">
                     <!--￥{{ val.info.productInfo.attrInfo.otPrice }}-->
                   </div>
@@ -113,6 +113,13 @@
               >
                 立即退款
               </div>
+              <div
+                class="bnt"
+                @click="modify(item, 3)"
+                v-if="where.status === 'refunding' && item.refundStatus === 1"
+              >
+                拒绝退款
+              </div>
               <!--<div-->
               <!--class="bnt cancel"-->
               <!--v-if="item.pay_type === 'offline' && item.paid === 0"-->
@@ -147,6 +154,7 @@
       :orderInfo="orderInfo"
       v-on:closechange="changeclose($event)"
       :status="status"
+      @getRefuse="getRefuse"
     ></PriceChange>
   </div>
 </template>
@@ -220,13 +228,13 @@
         this.init()
       },
       // 拒绝退款
-      getRefuse(id) {
-        orderRefuseApi(data).then(() =>{
-          that.change = false;
-          that.$dialog.success("已拒绝退款");
-          that.init();
+      getRefuse(id, reason) {
+        orderRefuseApi({ orderNo: id, reason: reason}).then(() =>{
+          this.change = false;
+          this.$dialog.success("已拒绝退款");
+          this.init();
         }).catch((error) => {
-          that.$dialog.error(error.message);
+          this.$dialog.error(error.message);
         });
       },
       async savePrice(opt) {
@@ -247,7 +255,7 @@
             return validatorDefaultCatch(e);
           }
           data.price = price;
-          data.orderId  = opt.orderId;
+          data.orderNo  = opt.orderId;
           editPriceApi(data).then(() =>{
             that.change = false;
             that.$dialog.success("改价成功");
@@ -268,7 +276,7 @@
           }
           data.amount = refundPrice;
           data.type = opt.type;
-          data.orderId  = opt.orderId;
+          data.orderNo  = opt.orderId;
           orderRefundApi(data).then(
             res => {
               that.change = false;
@@ -289,7 +297,7 @@
             return validatorDefaultCatch(e);
           }
           data.mark = remark;
-          data.id = opt.id;
+          data.orderNo = opt.orderId;
           orderMarkApi(data).then(
             res => {
               that.change = false;
@@ -317,8 +325,8 @@
         orderListApi(this.where).then(
           res => {
             this.loading = false;
-            this.loaded = res.list.list.length < this.where.limit;
-            this.list.push.apply(this.list, res.list.list);
+            this.loaded = res.list.length < this.where.limit;
+            this.list.push.apply(this.list, res.list);
             this.where.page = this.where.page + 1;
           },
           err => {
@@ -333,7 +341,7 @@
         }
       },
       toDetail(item) {
-        this.$router.push({ path: "/javaMobile/orderDetail/" + item.id });
+        this.$router.push({ path: "/javaMobile/orderDetail/" + item.orderId });
       },
       offlinePay(item) {
         // setOfflinePay({ order_id: item.order_id }).then(

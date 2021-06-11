@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.user.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.exception.CrmebException;
@@ -46,15 +47,20 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
 
     /**
     * 列表
-    * @author Mr.Zhang
-    * @since 2020-04-28
     * @return List<UserAddress>
     */
     @Override
     public List<UserAddress> getList(PageParamRequest pageParamRequest) {
+        Integer UserId = userService.getUserIdException();
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-        LambdaQueryWrapper<UserAddress> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        return dao.selectList(lambdaQueryWrapper);
+        LambdaQueryWrapper<UserAddress> lqw = Wrappers.lambdaQuery();
+        lqw.select(UserAddress::getId, UserAddress::getRealName, UserAddress::getPhone, UserAddress::getProvince,
+                UserAddress::getCity, UserAddress::getDistrict, UserAddress::getDetail, UserAddress::getIsDefault);
+        lqw.eq(UserAddress::getUid, UserId);
+        lqw.eq(UserAddress::getIsDel, false);
+        lqw.orderByDesc(UserAddress::getIsDefault);
+        lqw.orderByDesc(UserAddress::getId);
+        return dao.selectList(lqw);
     }
 
     /**
@@ -64,7 +70,7 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
      */
     @Override
     public UserAddress getUserAddress(UserAddress address) {
-        LambdaQueryWrapper lq = new LambdaQueryWrapper();
+        LambdaQueryWrapper<UserAddress> lq = Wrappers.lambdaQuery();
         lq.setEntity(address);
         return dao.selectOne(lq);
     }
@@ -72,8 +78,6 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
     /**
      * 创建地址
      * @param request UserAddressRequest 参数
-     * @author Mr.Zhang
-     * @since 2020-04-28
      * @return List<UserAddress>
      */
     @Override
@@ -100,8 +104,6 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
     /**
      * 设置默认
      * @param id Integer id
-     * @author Mr.Zhang
-     * @since 2020-04-28
      * @return UserAddress
      */
     @Override
@@ -118,8 +120,6 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
     /**
      * 删除
      * @param id Integer id
-     * @author Mr.Zhang
-     * @since 2020-04-28
      * @return UserAddress
      */
     @Override
@@ -134,8 +134,6 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
 
     /**
      * 获取默认地址
-     * @author Mr.Zhang
-     * @since 2020-04-28
      * @return UserAddress
      */
     @Override
@@ -151,29 +149,42 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
     public UserAddress getById(Integer addressId) {
         LambdaQueryWrapper<UserAddress> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(UserAddress::getId, addressId);
+        lambdaQueryWrapper.eq(UserAddress::getIsDel, false);
         return dao.selectOne(lambdaQueryWrapper);
     }
 
-
     /**
-     * 根据地址参数获取用户收货地址
-     * @param userAddress
-     * @param pageParamRequest
-     * @return
+     * 获取地址详情
+     * @param id 地址id
+     * @return UserAddress
      */
     @Override
-    public List<UserAddress> getListByUserAddress(UserAddress userAddress, PageParamRequest pageParamRequest) {
-        PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-        LambdaQueryWrapper<UserAddress> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.setEntity(userAddress);
-        return dao.selectList(lambdaQueryWrapper);
+    public UserAddress getDetail(Integer id) {
+        Integer UserId = userService.getUserIdException();
+        LambdaQueryWrapper<UserAddress> lqw = Wrappers.lambdaQuery();
+        lqw.select(UserAddress::getId, UserAddress::getRealName, UserAddress::getPhone, UserAddress::getProvince,
+                UserAddress::getCity, UserAddress::getDistrict, UserAddress::getDetail, UserAddress::getIsDefault);
+        lqw.eq(UserAddress::getId, id);
+        lqw.eq(UserAddress::getUid, UserId);
+        lqw.eq(UserAddress::getIsDel, false);
+        return dao.selectOne(lqw);
+    }
+
+    /**
+     * 获取默认地址
+     * @return UserAddress
+     */
+    @Override
+    public UserAddress getDefaultByUid(Integer uid) {
+        LambdaQueryWrapper<UserAddress> lambdaQueryWrapper = Wrappers.lambdaQuery();
+        lambdaQueryWrapper.eq(UserAddress::getIsDefault, true);
+        lambdaQueryWrapper.eq(UserAddress::getUid, uid);
+        return dao.selectOne(lambdaQueryWrapper);
     }
 
     /**
      * 检测城市id是否合法
      * @param cityId Integer 城市id
-     * @author Mr.Zhang
-     * @since 2020-04-30
      */
     private void checkCity(Integer cityId){
         //检测城市Id是否存在
@@ -186,8 +197,6 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
     /**
      * 取消默认地址
      * @param userId Integer 城市id
-     * @author Mr.Zhang
-     * @since 2020-04-30
      */
     private void cancelDefault(Integer userId){
         //检测城市Id是否存在

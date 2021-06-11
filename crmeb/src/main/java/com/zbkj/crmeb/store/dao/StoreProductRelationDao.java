@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.store.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.zbkj.crmeb.front.response.UserRelationResponse;
 import com.zbkj.crmeb.store.model.StoreProductRelation;
 import com.zbkj.crmeb.store.vo.StoreProductRelationCountVo;
 
@@ -20,6 +21,8 @@ import java.util.List;
  * +----------------------------------------------------------------------
  */
 public interface StoreProductRelationDao extends BaseMapper<StoreProductRelation> {
+
     List<StoreProductRelationCountVo> getCountInProductId(HashMap<String, Object> objectObjectHashMap);
 
+    List<UserRelationResponse> getUserList(Integer uid);
 }

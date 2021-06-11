@@ -2,33 +2,27 @@ package com.zbkj.crmeb.front.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.common.CommonPage;
 import com.common.MyRecord;
 import com.common.PageParamRequest;
+import com.constants.CategoryConstants;
 import com.constants.Constants;
-import com.exception.CrmebException;
+import com.constants.SysConfigConstants;
 import com.github.pagehelper.PageInfo;
 import com.utils.CrmebUtil;
 import com.utils.RedisUtil;
-import com.zbkj.crmeb.category.model.Category;
 import com.zbkj.crmeb.category.service.CategoryService;
 import com.zbkj.crmeb.category.vo.CategoryTreeVo;
 import com.zbkj.crmeb.front.request.IndexStoreProductSearchRequest;
 import com.zbkj.crmeb.front.request.ProductRequest;
-import com.zbkj.crmeb.front.response.ProductActivityItemResponse;
-import com.zbkj.crmeb.front.response.ProductDetailResponse;
-import com.zbkj.crmeb.front.response.ProductResponse;
-import com.zbkj.crmeb.front.response.StoreProductReplayCountResponse;
+import com.zbkj.crmeb.front.response.*;
 import com.zbkj.crmeb.front.service.ProductService;
 import com.zbkj.crmeb.store.model.StoreProduct;
 import com.zbkj.crmeb.store.model.StoreProductAttr;
-import com.zbkj.crmeb.store.request.StoreProductReplySearchRequest;
-import com.zbkj.crmeb.store.response.*;
-import com.zbkj.crmeb.store.service.StoreProductRelationService;
-import com.zbkj.crmeb.store.service.StoreProductReplyService;
-import com.zbkj.crmeb.store.service.StoreProductService;
+import com.zbkj.crmeb.store.model.StoreProductAttrValue;
+import com.zbkj.crmeb.store.response.StoreProductAttrValueResponse;
+import com.zbkj.crmeb.store.service.*;
 import com.zbkj.crmeb.store.utilService.ProductUtils;
 import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.user.model.User;
@@ -44,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
 * IndexServiceImpl 接口实现
@@ -85,6 +78,12 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private RedisUtil redisUtil;
 
+    @Autowired
+    private StoreProductAttrService attrService;
+
+    @Autowired
+    private StoreProductAttrValueService storeProductAttrValueService;
+
     /**
      * 首页产品的轮播图和产品信息
      * @param request IndexStoreProductSearchRequest 参数
@@ -109,13 +108,13 @@ public class ProductServiceImpl implements ProductService {
                         productUtils.getActivityByProduct(storeProduct.getId(), storeProduct.getActivity());
                 List<Integer> activityList = CrmebUtil.stringToArrayInt(storeProduct.getActivity());
                 if (CollUtil.isNotEmpty(activityByProduct) && activityList.size() > 0) {
-                    if(activityList.get(0) == Constants.PRODUCT_TYPE_SECKILL){
+                    if(activityList.get(0).equals(Constants.PRODUCT_TYPE_SECKILL)){
                         productResponse.setActivityH5(activityByProduct.get(Constants.PRODUCT_TYPE_SECKILL));
                     }
-                    if(activityList.get(0) == Constants.PRODUCT_TYPE_BARGAIN){
+                    if(activityList.get(0).equals(Constants.PRODUCT_TYPE_BARGAIN)){
                         productResponse.setActivityH5(activityByProduct.get(Constants.PRODUCT_TYPE_BARGAIN));
                     }
-                    if(activityList.get(0) == Constants.PRODUCT_TYPE_PINGTUAN){
+                    if(activityList.get(0).equals(Constants.PRODUCT_TYPE_PINGTUAN)){
                         productResponse.setActivityH5(activityByProduct.get(Constants.PRODUCT_TYPE_PINGTUAN));
                     }
                 }
@@ -134,13 +133,11 @@ public class ProductServiceImpl implements ProductService {
 
     /**
      * 获取分类
-     * @author Mr.Zhang
-     * @since 2020-06-03
      * @return List<CategoryTreeVo>
      */
     @Override
     public List<CategoryTreeVo> getCategory() {
-        List<CategoryTreeVo> listTree = categoryService.getListTree(Constants.CATEGORY_TYPE_PRODUCT, 1, "");
+        List<CategoryTreeVo> listTree = categoryService.getListTree(CategoryConstants.CATEGORY_TYPE_PRODUCT, 1, "");
         for (int i = 0; i < listTree.size();) {
             CategoryTreeVo categoryTreeVo = listTree.get(i);
             if (!categoryTreeVo.getPid().equals(0)) {
@@ -154,99 +151,132 @@ public class ProductServiceImpl implements ProductService {
 
     /**
      * 商品列表
-     * @author Mr.Zhang
-     * @since 2020-06-03
-     * @return CommonPage<ProductResponse>
+     * @return CommonPage<IndexProductResponse>
      */
     @Override
-    public CommonPage<ProductResponse> getList(ProductRequest request, PageParamRequest pageParamRequest) {
-        IndexStoreProductSearchRequest indexStoreProductSearchRequest = new IndexStoreProductSearchRequest();
-        BeanUtils.copyProperties(request, indexStoreProductSearchRequest);
-        if(request.getCid() != null){
-
-            //查找当前类下的所有子类
-            List<Integer> categoryIdList;
-            List<Category> childVoListByPid = categoryService.getChildVoListByPid(request.getCid());
-            categoryIdList = childVoListByPid.stream().map(Category::getId).collect(Collectors.toList());
-
-            categoryIdList.add(request.getCid());
-            indexStoreProductSearchRequest.setCateId(categoryIdList);
+    public CommonPage<IndexProductResponse> getList(ProductRequest request, PageParamRequest pageRequest) {
+        List<StoreProduct> storeProductList = storeProductService.findH5List(request, pageRequest);
+        if(CollUtil.isEmpty(storeProductList)){
+            return CommonPage.restPage(new ArrayList<>());
         }
-        indexStoreProductSearchRequest.setType(1);
-        indexStoreProductSearchRequest.setKeywords(request.getKeyword());
-        return getIndexProduct(indexStoreProductSearchRequest, pageParamRequest);
+        CommonPage<StoreProduct> storeProductCommonPage = CommonPage.restPage(storeProductList);
+
+        List<IndexProductResponse> productResponseArrayList = new ArrayList<>();
+        for (StoreProduct storeProduct : storeProductList) {
+            IndexProductResponse productResponse = new IndexProductResponse();
+            List<Integer> activityList = CrmebUtil.stringToArrayInt(storeProduct.getActivity());
+            // 活动类型默认：直接跳过
+            if (activityList.get(0).equals(Constants.PRODUCT_TYPE_NORMAL)) {
+                BeanUtils.copyProperties(storeProduct, productResponse);
+                productResponseArrayList.add(productResponse);
+                continue;
+            }
+            // 根据参与活动添加对应商品活动标示
+            HashMap<Integer, ProductActivityItemResponse> activityByProduct =
+                    productUtils.getActivityByProduct(storeProduct.getId(), storeProduct.getActivity());
+            if (CollUtil.isNotEmpty(activityByProduct)) {
+                for (Integer activity : activityList) {
+                    if (activity.equals(Constants.PRODUCT_TYPE_NORMAL)) {
+                        break;
+                    }
+                    if (activity.equals(Constants.PRODUCT_TYPE_SECKILL)) {
+                        ProductActivityItemResponse itemResponse = activityByProduct.get(Constants.PRODUCT_TYPE_SECKILL);
+                        if (ObjectUtil.isNotNull(itemResponse)) {
+                            productResponse.setActivityH5(itemResponse);
+                            break;
+                        }
+                    }
+                    if (activity.equals(Constants.PRODUCT_TYPE_BARGAIN)) {
+                        ProductActivityItemResponse itemResponse = activityByProduct.get(Constants.PRODUCT_TYPE_BARGAIN);
+                        if (ObjectUtil.isNotNull(itemResponse)) {
+                            productResponse.setActivityH5(itemResponse);
+                            break;
+                        }
+                    }
+                    if (activity.equals(Constants.PRODUCT_TYPE_PINGTUAN)) {
+                        ProductActivityItemResponse itemResponse = activityByProduct.get(Constants.PRODUCT_TYPE_PINGTUAN);
+                        if (ObjectUtil.isNotNull(itemResponse)) {
+                            productResponse.setActivityH5(itemResponse);
+                            break;
+                        }
+                    }
+                }
+            }
+            BeanUtils.copyProperties(storeProduct, productResponse);
+            productResponseArrayList.add(productResponse);
+        }
+        CommonPage<IndexProductResponse> productResponseCommonPage = CommonPage.restPage(productResponseArrayList);
+        BeanUtils.copyProperties(storeProductCommonPage, productResponseCommonPage, "list");
+        return productResponseCommonPage;
     }
 
     /**
-     * 商品详情
-     * @author Mr.Zhang Edit by stivpeim 2020-6-30
-     * @since 2020-06-03
-     * @return ProductDetailResponse
+     * 获取商品详情
+     * @param id 商品编号
+     * @param type normal-正常，video-视频
+     * @return 商品详情信息
      */
     @Override
-    public ProductDetailResponse getDetail(Integer id) {
+    public ProductDetailResponse getDetail(Integer id, String type) {
+
         ProductDetailResponse productDetailResponse = new ProductDetailResponse();
-        User user = null;
-        try {
-            StoreProductResponse productResponse = storeProductService.getByProductId(id);
-            StoreProductStoreInfoResponse storeInfo = new StoreProductStoreInfoResponse();
+        // 查询商品
+        StoreProduct storeProduct = storeProductService.getH5Detail(id);
+        productDetailResponse.setProductInfo(storeProduct);
 
-            BeanUtils.copyProperties(productResponse,storeInfo);
-            storeInfo.setActivityAllH5(productUtils.getProductAllActivity(
-                    new StoreProduct().setId(productResponse.getId()).setActivity(productResponse.getActivity())));
+        // 获取商品规格
+        StoreProductAttr spaPram = new StoreProductAttr();
+        spaPram.setProductId(storeProduct.getId()).setType(Constants.PRODUCT_TYPE_NORMAL);
+        List<StoreProductAttr> attrList = attrService.getByEntity(spaPram);
+        // 根据制式设置attr属性
+        List<ProductAttrResponse> skuAttr = getSkuAttr(attrList);
+        productDetailResponse.setProductAttr(skuAttr);
 
-            // 设置点赞和收藏
-            user = userService.getInfo();
-            if(null != user && null != user.getUid()){
-                storeInfo.setUserLike(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),id,true).size() > 0);
-                storeInfo.setUserCollect(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),id,false).size() > 0);
-
-                // 判断是否开启分销
-                String brokerageFuncStatus = systemConfigService.getValueByKey("brokerage_func_status");
-                String storeBrokerageStatus = systemConfigService.getValueByKey("store_brokerage_status");
-                if (brokerageFuncStatus.equals("1")) {
-                    if (storeBrokerageStatus.equals("1")) {
-                        productDetailResponse.setPriceName(getPacketPriceRange(productResponse, user.getIsPromoter()));
-                    } else {
-                        productDetailResponse.setPriceName(getPacketPriceRange(productResponse, true));
-                    }
-                }
-            }else{
-                storeInfo.setUserLike(false);
-                storeInfo.setUserCollect(false);
-            }
-            productDetailResponse.setStoreInfo(storeInfo);
-
-            // 根据制式设置attr属性
-            setSkuAttr(id, productDetailResponse, productResponse);
-            // 根据制式设置sku属性
-            HashMap<String,Object> skuMap = new HashMap<>();
-            for (StoreProductAttrValueResponse attrValue : productResponse.getAttrValue()) {
-                skuMap.put(attrValue.getSuk(),attrValue);
-            }
-            productDetailResponse.setProductValue(skuMap);
-            // 优品推荐
-            List<StoreProduct> storeProducts = storeProductService.getRecommendStoreProduct(18);
-            List<StoreProductRecommendResponse> storeProductRecommendResponses = new ArrayList<>();
-            for (StoreProduct product:storeProducts) {
-                StoreProductRecommendResponse sPRecommendResponse = new StoreProductRecommendResponse();
-                BeanUtils.copyProperties(product,sPRecommendResponse);
-                storeProductRecommendResponses.add(sPRecommendResponse);
-            }
-            productDetailResponse.setGoodList(storeProductRecommendResponses);
-
-            // 商品浏览量+1
-            StoreProduct updateProduct = new StoreProduct();
-            updateProduct.setId(id);
-            updateProduct.setBrowse(productResponse.getBrowse() + 1);
-            storeProductService.updateById(updateProduct);
-        }catch (Exception e){
-            throw new CrmebException(e.getMessage());
+        // 根据制式设置sku属性
+        HashMap<String, Object> skuMap = CollUtil.newHashMap();
+        StoreProductAttrValue spavPram = new StoreProductAttrValue();
+        spavPram.setProductId(id).setType(Constants.PRODUCT_TYPE_NORMAL);
+        List<StoreProductAttrValue> storeProductAttrValues = storeProductAttrValueService.getByEntity(spavPram);
+        for (StoreProductAttrValue storeProductAttrValue : storeProductAttrValues) {
+            StoreProductAttrValueResponse atr = new StoreProductAttrValueResponse();
+            BeanUtils.copyProperties(storeProductAttrValue, atr);
+            skuMap.put(atr.getSuk(), atr);
         }
+        productDetailResponse.setProductValue(skuMap);
+
+        // 用户收藏、分销返佣
+        User user = userService.getInfo();
+        if (ObjectUtil.isNotNull(user)) {
+            // 查询用户是否收藏收藏
+            user = userService.getInfo();
+            productDetailResponse.setUserCollect(storeProductRelationService.getLikeOrCollectByUser(user.getUid(), id,false).size() > 0);
+            // 判断是否开启分销
+            String brokerageFuncStatus = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_KEY_BROKERAGE_FUNC_STATUS);
+            String storeBrokerageStatus = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_STATUS);
+
+            if (brokerageFuncStatus.equals(Constants.COMMON_SWITCH_OPEN)) {// 分销开启
+                if (storeBrokerageStatus.equals(SysConfigConstants.STORE_BROKERAGE_STATUS_APPOINT)) {// 指定分销
+                    productDetailResponse.setPriceName(getPacketPriceRange(storeProduct.getIsSub(), storeProductAttrValues, user.getIsPromoter()));
+                } else {// 人人分销
+                    productDetailResponse.setPriceName(getPacketPriceRange(storeProduct.getIsSub(),storeProductAttrValues, true));
+                }
+            }
+        } else {
+            productDetailResponse.setUserCollect(false);
+        }
+        // 商品活动
+        List<ProductActivityItemResponse> activityAllH5 = productUtils.getProductAllActivity(storeProduct);
+        productDetailResponse.setActivityAllH5(activityAllH5);
+
+        // 商品浏览量+1
+        StoreProduct updateProduct = new StoreProduct();
+        updateProduct.setId(id);
+        updateProduct.setBrowse(storeProduct.getBrowse() + 1);
+        storeProductService.updateById(updateProduct);
 
         // 记录添加(加入到redis队列中)
         HashMap<String, Object> map = CollUtil.newHashMap();
-        map.put("product_id", productDetailResponse.getStoreInfo().getId());
+        map.put("product_id", productDetailResponse.getProductInfo().getId());
         map.put("uid", ObjectUtil.isNotNull(user) ? user.getUid() : 0);
         map.put("type", "visit");
         map.put("add_time", System.currentTimeMillis());
@@ -256,107 +286,224 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * 评论列表
-     * @author Mr.Zhang
-     * @since 2020-06-03
-     * @return List<StoreProductReply>
+     * 商品评论列表
+     * @param proId 商品编号
+     * @param type 评价等级|0=全部,1=好评,2=中评,3=差评
+     * @param pageParamRequest 分页参数
+     * @return PageInfo<ProductReplyResponse>
      */
     @Override
-    public PageInfo<StoreProductReplyResponse> getReplyList(Integer id, Integer type, PageParamRequest pageParamRequest) {
-        StoreProductReplySearchRequest storeProductReplySearchRequest = new StoreProductReplySearchRequest();
-        storeProductReplySearchRequest.setIsDel(false);
-        storeProductReplySearchRequest.setProductId(id.toString());
-        storeProductReplySearchRequest.setType(type);
-        PageInfo<StoreProductReplyResponse> pageInfo = storeProductReplyService.getList(storeProductReplySearchRequest, pageParamRequest);
-        pageInfo.getList().forEach(e -> {
-            String nickname = e.getNickname();
-            if (StrUtil.isNotBlank(nickname)) {
-                if (nickname.length() == 1) {
-                    nickname = nickname.concat("**");
-                } else if (nickname.length() == 2) {
-                    nickname = nickname.substring(0, 1) + "**";
-                } else {
-                    nickname = nickname.substring(0, 1) + "**" + nickname.substring(nickname.length() - 1);
-                }
-                e.setNickname(nickname);
-            }
-        });
-        return pageInfo;
+    public PageInfo<ProductReplyResponse> getReplyList(Integer proId, Integer type, PageParamRequest pageParamRequest) {
+        return storeProductReplyService.getH5List(proId, type, pageParamRequest);
     }
 
     /**
      * 产品评价数量和好评度
-     * @author Mr.Zhang
-     * @since 2020-06-03
      * @return StoreProductReplayCountResponse
      */
     @Override
     public StoreProductReplayCountResponse getReplyCount(Integer id) {
         MyRecord myRecord = storeProductReplyService.getH5Count(id);
-
         Long sumCount = myRecord.getLong("sumCount");
         Long goodCount = myRecord.getLong("goodCount");
         Long inCount = myRecord.getLong("mediumCount");
         Long poorCount = myRecord.getLong("poorCount");
         String replyChance = myRecord.getStr("replyChance");
         Integer replyStar = myRecord.getInt("replyStar");
-
         return new StoreProductReplayCountResponse(sumCount, goodCount, inCount, poorCount, replyChance, replyStar);
     }
 
     /**
      * 获取商品佣金区间
-     * @param storeProductResponse 商品属性
+     * @param isSub 是否单独计算分佣
+     * @param attrValueList 商品属性列表
      * @param isPromoter 是否推荐人
      * @return String 金额区间
      */
-    @Override
-    public String getPacketPriceRange(StoreProductResponse storeProductResponse, boolean isPromoter) {
+    private String getPacketPriceRange(Boolean isSub, List<StoreProductAttrValue> attrValueList, Boolean isPromoter) {
         String priceName = "0";
         if(!isPromoter) return priceName;
-        // 获取拥挤比例
-        String brokerageRatioString = systemConfigService.getValueByKey("store_brokerage_ratio");
-        BigDecimal BrokerRatio = new BigDecimal(brokerageRatioString).divide(BigDecimal.valueOf(100L));
-        BigDecimal maxPrice = null;
-        BigDecimal minPrice = null;
-        // 获取佣金比例区间 todo 这里的对象更换为map后需要重新计算
-        if(storeProductResponse.getIsSub()){ // 是否单独分拥
-            maxPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::max);
-            minPrice = storeProductResponse.getAttrValue().stream().map(e->e.getBrokerage()).reduce(BigDecimal.ZERO,BigDecimal::min);
+        // 获取一级返佣比例
+        String brokerageRatioString = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_RATIO);
+        BigDecimal BrokerRatio = new BigDecimal(brokerageRatioString).divide(new BigDecimal("100"), 2, RoundingMode.DOWN);
+        BigDecimal maxPrice;
+        BigDecimal minPrice;
+        // 获取佣金比例区间
+        if(isSub){ // 是否单独分拥
+            maxPrice = attrValueList.stream().map(StoreProductAttrValue::getBrokerage).reduce(BigDecimal.ZERO,BigDecimal::max);
+            minPrice = attrValueList.stream().map(StoreProductAttrValue::getBrokerage).reduce(BigDecimal.ZERO,BigDecimal::min);
         }else{
-            BigDecimal _maxPrice = storeProductResponse.getAttrValue().stream().map(e->e.getPrice()).reduce(BigDecimal.ZERO,BigDecimal::max);
-            BigDecimal _minPrice = storeProductResponse.getAttrValue().stream().map(e->e.getPrice()).reduce(BigDecimal.ZERO,BigDecimal::min);
+            BigDecimal _maxPrice = attrValueList.stream().map(StoreProductAttrValue::getPrice).reduce(BigDecimal.ZERO,BigDecimal::max);
+            BigDecimal _minPrice = attrValueList.stream().map(StoreProductAttrValue::getPrice).reduce(BigDecimal.ZERO,BigDecimal::min);
             maxPrice = BrokerRatio.multiply(_maxPrice).setScale(2, RoundingMode.HALF_UP);
             minPrice = BrokerRatio.multiply(_minPrice).setScale(2, RoundingMode.HALF_UP);
         }
         if(minPrice.compareTo(BigDecimal.ZERO) == 0 && maxPrice.compareTo(BigDecimal.ZERO) == 0){
             priceName = "0";
-        }else if(minPrice.compareTo(BigDecimal.ZERO) == 0 && maxPrice.compareTo(BigDecimal.ZERO) == 1){
+        }else if(minPrice.compareTo(BigDecimal.ZERO) == 0 && maxPrice.compareTo(BigDecimal.ZERO) > 0){
             priceName = maxPrice.toString();
-        }else if(minPrice.compareTo(BigDecimal.ZERO) == 1 && maxPrice.compareTo(BigDecimal.ZERO) == 1){
+        }else if(minPrice.compareTo(BigDecimal.ZERO) > 0 && maxPrice.compareTo(BigDecimal.ZERO) > 0){
             priceName = minPrice.toString();
-        }else if(minPrice.compareTo(maxPrice) == 0 && minPrice.compareTo(BigDecimal.ZERO) == 0){
-            priceName = maxPrice.toString();
+        }else if(minPrice.compareTo(maxPrice) == 0){
+            priceName = minPrice.toString();
         }else{
             priceName = minPrice.toString() + "~" + maxPrice.toString();
         }
         return priceName;
     }
 
+    /**
+     * 获取热门推荐商品列表
+     * @param pageRequest 分页参数
+     * @return CommonPage<IndexProductResponse>
+     */
+    @Override
+    public CommonPage<IndexProductResponse> getHotProductList(PageParamRequest pageRequest) {
+        List<StoreProduct> storeProductList = storeProductService.getIndexProduct(Constants.INDEX_HOT_BANNER, pageRequest);
+        if(CollUtil.isEmpty(storeProductList)){
+            return CommonPage.restPage(new ArrayList<>());
+        }
+        CommonPage<StoreProduct> storeProductCommonPage = CommonPage.restPage(storeProductList);
+
+        List<IndexProductResponse> productResponseArrayList = new ArrayList<>();
+        for (StoreProduct storeProduct : storeProductList) {
+            IndexProductResponse productResponse = new IndexProductResponse();
+            List<Integer> activityList = CrmebUtil.stringToArrayInt(storeProduct.getActivity());
+            // 活动类型默认：直接跳过
+            if (activityList.get(0).equals(Constants.PRODUCT_TYPE_NORMAL)) {
+                BeanUtils.copyProperties(storeProduct, productResponse);
+                productResponseArrayList.add(productResponse);
+                continue;
+            }
+            // 根据参与活动添加对应商品活动标示
+            HashMap<Integer, ProductActivityItemResponse> activityByProduct =
+                    productUtils.getActivityByProduct(storeProduct.getId(), storeProduct.getActivity());
+            if (CollUtil.isNotEmpty(activityByProduct)) {
+                for (Integer activity : activityList) {
+                    if (activity.equals(Constants.PRODUCT_TYPE_NORMAL)) {
+                        break;
+                    }
+                    if (activity.equals(Constants.PRODUCT_TYPE_SECKILL)) {
+                        ProductActivityItemResponse itemResponse = activityByProduct.get(Constants.PRODUCT_TYPE_SECKILL);
+                        if (ObjectUtil.isNotNull(itemResponse)) {
+                            productResponse.setActivityH5(itemResponse);
+                            break;
+                        }
+                    }
+                    if (activity.equals(Constants.PRODUCT_TYPE_BARGAIN)) {
+                        ProductActivityItemResponse itemResponse = activityByProduct.get(Constants.PRODUCT_TYPE_BARGAIN);
+                        if (ObjectUtil.isNotNull(itemResponse)) {
+                            productResponse.setActivityH5(itemResponse);
+                            break;
+                        }
+                    }
+                    if (activity.equals(Constants.PRODUCT_TYPE_PINGTUAN)) {
+                        ProductActivityItemResponse itemResponse = activityByProduct.get(Constants.PRODUCT_TYPE_PINGTUAN);
+                        if (ObjectUtil.isNotNull(itemResponse)) {
+                            productResponse.setActivityH5(itemResponse);
+                            break;
+                        }
+                    }
+                }
+            }
+            BeanUtils.copyProperties(storeProduct, productResponse);
+            productResponseArrayList.add(productResponse);
+        }
+        CommonPage<IndexProductResponse> productResponseCommonPage = CommonPage.restPage(productResponseArrayList);
+        BeanUtils.copyProperties(storeProductCommonPage, productResponseCommonPage, "list");
+        return productResponseCommonPage;
+    }
+
+    /**
+     * 商品详情评论
+     * @param id 商品id
+     * @return ProductDetailReplyResponse
+     * 评论只有一条，图文
+     * 评价总数
+     * 好评率
+     */
+    @Override
+    public ProductDetailReplyResponse getProductReply(Integer id) {
+        return storeProductReplyService.getH5ProductReply(id);
+    }
+
+    /**
+     * 优选商品推荐
+     * @return CommonPage<IndexProductResponse>
+     */
+    @Override
+    public CommonPage<IndexProductResponse> getGoodProductList() {
+        PageParamRequest pageRequest = new PageParamRequest();
+        pageRequest.setLimit(9);
+        List<StoreProduct> storeProductList = storeProductService.getIndexProduct(Constants.INDEX_RECOMMEND_BANNER, pageRequest);
+        if(CollUtil.isEmpty(storeProductList)){
+            return CommonPage.restPage(new ArrayList<>());
+        }
+        CommonPage<StoreProduct> storeProductCommonPage = CommonPage.restPage(storeProductList);
+
+        List<IndexProductResponse> productResponseArrayList = new ArrayList<>();
+        for (StoreProduct storeProduct : storeProductList) {
+            IndexProductResponse productResponse = new IndexProductResponse();
+            List<Integer> activityList = CrmebUtil.stringToArrayInt(storeProduct.getActivity());
+            // 活动类型默认：直接跳过
+            if (activityList.get(0).equals(Constants.PRODUCT_TYPE_NORMAL)) {
+                BeanUtils.copyProperties(storeProduct, productResponse);
+                productResponseArrayList.add(productResponse);
+                continue;
+            }
+            // 根据参与活动添加对应商品活动标示
+            HashMap<Integer, ProductActivityItemResponse> activityByProduct =
+                    productUtils.getActivityByProduct(storeProduct.getId(), storeProduct.getActivity());
+            if (CollUtil.isNotEmpty(activityByProduct)) {
+                for (Integer activity : activityList) {
+                    if (activity.equals(Constants.PRODUCT_TYPE_NORMAL)) {
+                        break;
+                    }
+                    if (activity.equals(Constants.PRODUCT_TYPE_SECKILL)) {
+                        ProductActivityItemResponse itemResponse = activityByProduct.get(Constants.PRODUCT_TYPE_SECKILL);
+                        if (ObjectUtil.isNotNull(itemResponse)) {
+                            productResponse.setActivityH5(itemResponse);
+                            break;
+                        }
+                    }
+                    if (activity.equals(Constants.PRODUCT_TYPE_BARGAIN)) {
+                        ProductActivityItemResponse itemResponse = activityByProduct.get(Constants.PRODUCT_TYPE_BARGAIN);
+                        if (ObjectUtil.isNotNull(itemResponse)) {
+                            productResponse.setActivityH5(itemResponse);
+                            break;
+                        }
+                    }
+                    if (activity.equals(Constants.PRODUCT_TYPE_PINGTUAN)) {
+                        ProductActivityItemResponse itemResponse = activityByProduct.get(Constants.PRODUCT_TYPE_PINGTUAN);
+                        if (ObjectUtil.isNotNull(itemResponse)) {
+                            productResponse.setActivityH5(itemResponse);
+                            break;
+                        }
+                    }
+                }
+            }
+            BeanUtils.copyProperties(storeProduct, productResponse);
+            productResponseArrayList.add(productResponse);
+        }
+        CommonPage<IndexProductResponse> productResponseCommonPage = CommonPage.restPage(productResponseArrayList);
+        BeanUtils.copyProperties(storeProductCommonPage, productResponseCommonPage, "list");
+        return productResponseCommonPage;
+    }
+
     ///////////////////////////////////////////////////////// 自定义方法
+
     /**
      * 设置制式结构给attr属性
-     * @param id 产品id
-     * @param productDetailResponse 商品详情
-     * @param productResponse 商品本身
+     * @param attrList attr列表
+     * @return List<MyRecord>
      */
-    private void setSkuAttr(Integer id, ProductDetailResponse productDetailResponse, StoreProductResponse productResponse) {
-        List<HashMap<String,Object>> attrMapList = new ArrayList<>();
-        for (StoreProductAttr attr : productResponse.getAttr()) {
-            HashMap<String, Object> attrMap = new HashMap<>();
-            attrMap.put("productId",attr.getProductId());
-            attrMap.put("attrName",attr.getAttrName());
-            attrMap.put("type",attr.getType());
+    private List<ProductAttrResponse> getSkuAttr(List<StoreProductAttr> attrList) {
+        List<ProductAttrResponse> attrResponseList = new ArrayList<>();
+        for (StoreProductAttr attr : attrList) {
+            ProductAttrResponse attrResponse = new ProductAttrResponse();
+            attrResponse.setProductId(attr.getProductId());
+            attrResponse.setAttrName(attr.getAttrName());
+            attrResponse.setType(attr.getType());
             List<String> attrValues = new ArrayList<>();
             String trimAttr = attr.getAttrValues()
                     .replace("[","")
@@ -366,18 +513,10 @@ public class ProductServiceImpl implements ProductService {
             }else{
                 attrValues.add(trimAttr);
             }
-            attrMap.put("attrValues",attrValues);
-            // 设置带有优惠券标识的sku集合
-            List<HashMap<String,Object>> attrValueMapList = new ArrayList<>();
-            for (String attrValue : attrValues) {
-                HashMap<String,Object> attrValueMap = new HashMap<>();
-                attrValueMap.put("attr",attrValue);
-                attrValueMapList.add(attrValueMap);
-            }
-            attrMap.put("attrValue",attrValueMapList);
-            attrMapList.add(attrMap);
+            attrResponse.setAttrValues(attrValues);
+            attrResponseList.add(attrResponse);
         }
-        productDetailResponse.setProductAttr(attrMapList);
+        return attrResponseList;
     }
 }
 

@@ -18,6 +18,16 @@ class Cache {
 	}
 	
 	/**
+	 * 字符串转时间戳
+	 * @param {Object} expiresTime
+	 */
+	strTotime(expiresTime){
+		let expires_time = expiresTime.substring(0, 19);
+		expires_time = expires_time.replace(/-/g, '/');
+		return Math.round(new Date(expires_time).getTime() / 1000);
+	}
+	
+	/**
 	 * 设置过期时间缓存
 	 * @param {Object} key
 	 * @param {Object} expire

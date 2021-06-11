@@ -111,12 +111,19 @@ public class WebConfig implements WebMvcConfigurer {
                 excludePathPatterns("/api/front/user/service/**").
                 excludePathPatterns("/api/front/logistics").
                 excludePathPatterns("/api/front/groom/list/**").
-                excludePathPatterns("/api/front/index").
+//                excludePathPatterns("/api/front/index").
                 excludePathPatterns("/api/front/config").
                 excludePathPatterns("/api/front/category").
                 excludePathPatterns("/api/front/seckill/*").
                 excludePathPatterns("/api/front/seckill/list/*").
                 excludePathPatterns("/api/front/seckill/detail/*").
+                excludePathPatterns("/api/front/ios/*").
+                excludePathPatterns("/api/front/ios/register/binding/phone").
+                excludePathPatterns("api/front/combination/index").
+                excludePathPatterns("api/front/seckill/index").
+                excludePathPatterns("api/front/bargain/index").
+                excludePathPatterns("api/front/combination/index").
+                excludePathPatterns("api/front/index/product/*").
 //                excludePathPatterns("/api/front/cart/count").
                 excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**");
     }

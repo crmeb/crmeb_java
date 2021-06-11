@@ -34,8 +34,6 @@ export function checkPhone(phone) {
 export const Debounce = (fn, t) => {
   const delay = t || 500
   let timer
-  console.log(fn)
-  console.log(typeof fn)
   return function() {
     const args = arguments
     if (timer) {
@@ -47,6 +45,5 @@ export const Debounce = (fn, t) => {
     }, delay)
   }
 }
-
 
 

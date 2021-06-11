@@ -2,21 +2,29 @@ package com.zbkj.crmeb.store.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.common.CommonPage;
 import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.constants.Constants;
 import com.exception.CrmebException;
+import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.bargain.model.StoreBargain;
 import com.zbkj.crmeb.combination.model.StoreCombination;
+import com.zbkj.crmeb.front.request.CartNumRequest;
 import com.zbkj.crmeb.front.request.CartResetRequest;
+import com.zbkj.crmeb.front.response.CartInfoResponse;
 import com.zbkj.crmeb.seckill.model.StoreSeckill;
 import com.zbkj.crmeb.store.dao.StoreCartDao;
 import com.zbkj.crmeb.store.model.StoreCart;
+import com.zbkj.crmeb.store.model.StoreProduct;
 import com.zbkj.crmeb.store.model.StoreProductAttrValue;
 import com.zbkj.crmeb.store.response.StoreCartResponse;
 import com.zbkj.crmeb.store.response.StoreProductCartProductInfoResponse;
@@ -30,7 +38,6 @@ import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserLevel;
 import com.zbkj.crmeb.user.service.UserLevelService;
 import com.zbkj.crmeb.user.service.UserService;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,9 +45,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -83,54 +88,61 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
     * 列表
     * @param pageParamRequest 分页类参数
     * @param isValid 是否失效
-    * @return List<StoreCart>
+    * @return List<CartInfoResponse>
     */
     @Override
-    public List<StoreCartResponse> getList(PageParamRequest pageParamRequest, boolean isValid) {
-        PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+    public PageInfo<CartInfoResponse> getList(PageParamRequest pageParamRequest, boolean isValid) {
+        Integer userId = userService.getUserIdException();
+        Page<StoreCart> page = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         //带 StoreCart 类的多条件查询
         LambdaQueryWrapper<StoreCart> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(StoreCart::getUid, userService.getUserIdException());
+        lambdaQueryWrapper.eq(StoreCart::getUid, userId);
         lambdaQueryWrapper.eq(StoreCart::getStatus, isValid);
         lambdaQueryWrapper.eq(StoreCart::getIsNew, false);
-        lambdaQueryWrapper.orderByDesc(StoreCart::getCreateTime);
+        lambdaQueryWrapper.orderByDesc(StoreCart::getId);
         List<StoreCart> storeCarts = dao.selectList(lambdaQueryWrapper);
-        List<StoreCartResponse> response = new ArrayList<>();
+        if (CollUtil.isEmpty(storeCarts)) {
+            return CommonPage.copyPageInfo(page, new ArrayList<>());
+        }
 
+        List<CartInfoResponse> response = new ArrayList<>();
         for (StoreCart storeCart : storeCarts) {
-            List<StoreProductAttrValue> productAttrValues =
-                    storeProductAttrValueService.getListByProductIdAndAttrId(
-                            storeCart.getProductId(),
-                            storeCart.getProductAttrUnique(),Constants.PRODUCT_TYPE_NORMAL);
-            // 属性不存在证明失效
-            StoreCartResponse storeCartResponse = new StoreCartResponse();
-            if(productAttrValues.size() == 0){
-                BeanUtils.copyProperties(storeCart,storeCartResponse);
-                storeCartResponse.setAttrStatus(false);
-                response.add(storeCartResponse);
+            CartInfoResponse cartInfoResponse = new CartInfoResponse();
+            BeanUtils.copyProperties(storeCart, cartInfoResponse);
+            // 获取商品信息
+            StoreProduct storeProduct = storeProductService.getCartByProId(storeCart.getProductId());
+            cartInfoResponse.setImage(storeProduct.getImage());
+            cartInfoResponse.setStoreName(storeProduct.getStoreName());
+
+            if (!isValid) {// 失效商品直接掠过
+                cartInfoResponse.setAttrStatus(false);
+                response.add(cartInfoResponse);
                 continue ;
             }
-            BeanUtils.copyProperties(storeCart,storeCartResponse);
-            StoreProductResponse product = storeProductService.getByProductId(storeCart.getProductId());
-            StoreProductCartProductInfoResponse p = new StoreProductCartProductInfoResponse();
-            BeanUtils.copyProperties(product,p);
-            storeCartResponse.setProductInfo(p);
-            for (StoreProductAttrValue productAttrValue : productAttrValues) {
-                // 商品是否失效
-                if(StringUtils.isBlank(productAttrValue.getSuk())){
-                    p.setAttrInfo(productAttrValue.setSuk("已失效"));
-                }else{
-                    p.setAttrInfo(productAttrValue);
-                }
-                storeCartResponse.setAttrStatus(productAttrValue.getStock() > 0);
-                storeCartResponse.setTruePrice(productAttrValue.getPrice());
-                storeCartResponse.setVipTruePrice(setVipPrice(productAttrValue.getPrice(),userService.getUserIdException(),false));
-                storeCartResponse.setTrueStock(product.getStock());
-                storeCartResponse.setCostPrice(product.getCost());
-                response.add(storeCartResponse);
+
+            // 获取对应的商品规格信息(只会有一条信息)
+            List<StoreProductAttrValue> attrValueList = storeProductAttrValueService.getListByProductIdAndAttrId(storeCart.getProductId(),
+                    storeCart.getProductAttrUnique(), Constants.PRODUCT_TYPE_NORMAL);
+            // 规格不存在即失效
+            if (CollUtil.isEmpty(attrValueList)) {
+                cartInfoResponse.setAttrStatus(false);
+                response.add(cartInfoResponse);
+                continue ;
             }
+            StoreProductAttrValue attrValue = attrValueList.get(0);
+            // 商品是否失效
+            if (StrUtil.isNotBlank(attrValue.getImage())) {
+                cartInfoResponse.setImage(attrValue.getImage());
+            }
+            cartInfoResponse.setAttrId(attrValue.getId());
+            cartInfoResponse.setSuk(attrValue.getSuk());
+            cartInfoResponse.setPrice(attrValue.getPrice());
+            cartInfoResponse.setAttrId(attrValue.getId());
+            cartInfoResponse.setAttrStatus(attrValue.getStock() > 0);
+            cartInfoResponse.setStock(attrValue.getStock());
+            response.add(cartInfoResponse);
         }
-        return response;
+        return CommonPage.copyPageInfo(page, response);
     }
 
     /**
@@ -196,20 +208,21 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
 
     /**
      * 购物车数量
-     * @param userId Integer 用户id
-     * @param type String 类型
-     * @param numType boolean 数量类型
-     * @author Mr.Zhang
-     * @since 2020-05-28
-     * @return List<StoreCart>
+     * @param request 请求参数
+     * @return Map<String, Integer>
      */
     @Override
-    public Integer getUserCount(Integer userId, String type, boolean numType) {
-        if(numType){
-            return getUserSumByType(userId, type);
-        }else{
-            return getUserCountByType(userId, type);
+    public Map<String, Integer> getUserCount(CartNumRequest request) {
+        Integer userId = userService.getUserIdException();
+        Map<String, Integer> map = new HashMap<>();
+        int num;
+        if (request.getType().equals("total")) {
+            num = getUserCountByStatus(userId, request.getNumType());
+        } else {
+            num = getUserSumByStatus(userId, request.getNumType());
         }
+        map.put("count", num);
+        return map;
     }
 
     /**
@@ -292,12 +305,12 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
      * @param price 原来价格
      * @param userId 会员id
      * @param isSingle 是否普通用户，true普通用户，false会员
-     * @return
+     * @return BigDecimal
      */
     @Override
     public BigDecimal setVipPrice(BigDecimal price, Integer userId, boolean isSingle) {
         // 判断会员功能是否开启
-        Integer memberFuncStatus = Integer.valueOf(systemConfigService.getValueByKey("vip_open"));
+        int memberFuncStatus = Integer.parseInt(systemConfigService.getValueByKey("vip_open"));
         if(memberFuncStatus <= 0){
             return price;
         }
@@ -345,10 +358,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         storeCartPram.setProductId(productId);
         List<StoreCart> existStoreCartProducts = getByEntity(storeCartPram);
         if(null == existStoreCartProducts) return true;
-        existStoreCartProducts = existStoreCartProducts.stream().map(e->{
-            e.setStatus(false);
-            return e;
-        }).collect(Collectors.toList());
+        existStoreCartProducts.forEach(e-> e.setStatus(false));
         return updateBatchById(existStoreCartProducts);
     }
 
@@ -404,43 +414,54 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         return true;
     }
 
+    /**
+     * 通过id和uid获取购物车信息
+     * @param id 购物车id
+     * @param uid 用户uid
+     * @return StoreCart
+     */
+    @Override
+    public StoreCart getByIdAndUid(Long id, Integer uid) {
+        LambdaQueryWrapper<StoreCart> lqw = Wrappers.lambdaQuery();
+        lqw.eq(StoreCart::getId, id);
+        lqw.eq(StoreCart::getUid, uid);
+        lqw.eq(StoreCart::getIsNew, false);
+        lqw.eq(StoreCart::getStatus, true);
+        return dao.selectOne(lqw);
+    }
+
     ///////////////////////////////////////////////////////////////////自定义方法
     /**
-     * 购物车商品种类数量
+     * 购物车商品数量
      * @param userId Integer 用户id
-     * @param type String 类型
-     * @author Mr.Zhang
-     * @since 2020-05-28
+     * @param status Boolean 商品类型：true-有效商品，false-无效商品
      * @return Integer
      */
-    private Integer getUserCountByType(Integer userId, String type) {
+    private Integer getUserCountByStatus(Integer userId, Boolean status) {
         //购物车商品种类数量
         LambdaQueryWrapper<StoreCart> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(StoreCart::getUid, userId)
-                .eq(StoreCart::getType, type)
-                .eq(StoreCart::getIsNew, false);
+        lambdaQueryWrapper.eq(StoreCart::getUid, userId);
+        lambdaQueryWrapper.eq(StoreCart::getStatus, status);
+        lambdaQueryWrapper.eq(StoreCart::getIsNew, false);
         return dao.selectCount(lambdaQueryWrapper);
     }
 
     /**
-     * 购物车商品总数量
+     * 购物车购买商品总数量
      * @param userId Integer 用户id
-     * @param type String 类型
-     * @author Mr.Zhang
-     * @since 2020-05-28
+     * @param status 商品类型：true-有效商品，false-无效商品
      * @return Integer
      */
-    private Integer getUserSumByType(Integer userId, String type) {
+    private Integer getUserSumByStatus(Integer userId, Boolean status) {
         QueryWrapper<StoreCart> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("sum(cart_num) as cart_num")
-                .eq("uid", userId)
-                .eq("type", type)
-                .eq("is_new", false);
+        queryWrapper.select("ifnull(sum(cart_num), 0) as cart_num");
+        queryWrapper.eq("uid", userId);
+        queryWrapper.eq("is_new", false);
+        queryWrapper.eq("status", status);
         StoreCart storeCart = dao.selectOne(queryWrapper);
-        if(null == storeCart || null == storeCart.getCartNum()){
+        if (ObjectUtil.isNull(storeCart)) {
             return 0;
         }
-
         return storeCart.getCartNum();
     }
 
@@ -518,7 +539,6 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
      */
     private String buildCartInfoForBargain(StoreCart storeCartPram) {
         User currentUser = userService.getInfoException();
-        List<String> cacheIdsResult = new ArrayList<>();
         List<StoreCartResponse> storeCartResponses = new ArrayList<>();
         StoreCartResponse storeCartResponse = new StoreCartResponse();
         StoreProductCartProductInfoResponse spcpInfo = new StoreProductCartProductInfoResponse();

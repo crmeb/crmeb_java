@@ -202,3 +202,29 @@ export function onePassTypeFilter(status) {
   }
   return statusMap[status]
 }
+
+/**
+ * @description 视频号商品草稿状态
+ */
+export function editStatusFilter(status) {
+  const statusMap = {
+    1: '未审核',
+    2: '审核中',
+    3: '审核失败',
+    4: '审核成功'
+  }
+  return statusMap[status]
+}
+
+/**
+ * @description 视频号正式商品状态
+ */
+export function videoStatusFilter(status) {
+  const statusMap = {
+    0: '初始值',
+    5: '上架',
+    11: '自主下架',
+    13: '违规下架/风控系统下架'
+  }
+  return statusMap[status]
+}

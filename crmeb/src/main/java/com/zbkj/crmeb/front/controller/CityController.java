@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("api/front/city")
 @Api(tags = "城市服务")
 public class CityController {
+
     @Autowired
     private SystemCityService systemCityService;
 

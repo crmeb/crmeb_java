@@ -6,7 +6,7 @@
           <el-step title="商品信息" />
           <el-step title="商品详情" />
           <el-step title="其他设置" />
-          <el-step title="规格设置" />
+          <!--<el-step title="规格设置" />-->
         </el-steps>
       </div>
       <el-form ref="formValidate" v-loading="fullscreenLoading" class="formValidate mt20" :rules="ruleValidate" :model="formValidate" label-width="120px" @submit.native.prevent>
@@ -14,32 +14,32 @@
           <!-- 商品信息-->
           <el-col v-bind="grid2">
             <el-form-item label="商品名称：" prop="storeName">
-              <el-input v-model="formValidate.storeName" maxlength="249" placeholder="请输入商品名称" />
+              <el-input v-model="formValidate.storeName" maxlength="249" placeholder="请输入商品名称" :disabled="isDisabled"/>
             </el-form-item>
           </el-col>
           <el-col v-bind="grid2">
             <el-form-item label="商品分类：" prop="cateIds">
-              <el-cascader v-model="formValidate.cateIds" :options="merCateList" :props="props2" clearable class="selWidth" :show-all-levels="false" />
+              <el-cascader v-model="formValidate.cateIds" :options="merCateList" :props="props2" clearable class="selWidth" :show-all-levels="false" :disabled="isDisabled"/>
             </el-form-item>
           </el-col>
           <el-col v-bind="grid2">
             <el-form-item label="商品关键字：">
-              <el-input v-model="formValidate.keyword" placeholder="请输入商品关键字" />
+              <el-input v-model="formValidate.keyword" placeholder="请输入商品关键字" :disabled="isDisabled"/>
             </el-form-item>
           </el-col>
           <el-col v-bind="grid2">
             <el-form-item label="单位：" prop="unitName">
-              <el-input v-model="formValidate.unitName" placeholder="请输入单位" />
+              <el-input v-model="formValidate.unitName" placeholder="请输入单位"  :disabled="isDisabled"/>
             </el-form-item>
           </el-col>
           <el-col v-bind="grid2">
             <el-form-item label="商品简介：">
-              <el-input v-model="formValidate.storeInfo" type="textarea"  maxlength="250" :rows="3" placeholder="请输入商品简介" />
+              <el-input v-model="formValidate.storeInfo" type="textarea"  maxlength="250" :rows="3" placeholder="请输入商品简介"  :disabled="isDisabled"/>
             </el-form-item>
           </el-col>
           <el-col v-bind="grid2">
             <el-form-item label="商品封面图：" prop="image">
-              <div class="upLoadPicBox" @click="modalPicTap('1')">
+              <div class="upLoadPicBox" @click="modalPicTap('1')" :disabled="isDisabled">
                 <div v-if="formValidate.image" class="pictrue"><img :src="formValidate.image"></div>
                 <div v-else class="upLoad">
                   <i class="el-icon-camera cameraIconfont" />
@@ -61,9 +61,9 @@
                   @dragend="handleDragEnd($event, item)"
                 >
                   <img :src="item">
-                  <i class="el-icon-error btndel" @click="handleRemove(index)" />
+                  <i v-if="!isDisabled" class="el-icon-error btndel" @click="handleRemove(index)" />
                 </div>
-                <div v-if="formValidate.sliderImages.length<10" class="upLoadPicBox" @click="modalPicTap('2')">
+                <div v-if="formValidate.sliderImages.length<10 && !isDisabled" class="upLoadPicBox" @click="modalPicTap('2')">
                   <div class="upLoad">
                     <i class="el-icon-camera cameraIconfont" />
                   </div>
@@ -74,7 +74,7 @@
           <el-col :span="24">
             <el-form-item label="运费模板：" prop="tempId">
               <div class="acea-row">
-                <el-select v-model="formValidate.tempId" placeholder="请选择" class="selWidthd mr20">
+                <el-select v-model="formValidate.tempId" placeholder="请选择" class="selWidthd mr20" :disabled="isDisabled">
                   <el-option
                     v-for="item in shippingList"
                     :key="item.id"
@@ -82,97 +82,26 @@
                     :value="item.id"
                   />
                 </el-select>
-                <el-button class="mr15" @click="addTem">添加运费模板</el-button>
+                <el-button v-show="!isDisabled" class="mr15" @click="addTem">添加运费模板</el-button>
               </div>
             </el-form-item>
           </el-col>
-          <el-col :span="24">
-            <el-form-item label="优惠券：" class="proCoupon">
-              <div class="acea-row">
-                <el-tag
-                  v-for="(tag, index) in formValidate.coupons"
-                  :key="index"
-                  class="mr10 mb10"
-                  closable
-                  :disable-transitions="false"
-                  @close="handleCloseCoupon(tag)"
-                >
-                  {{ tag.name }}
-                </el-tag>
-                <el-button class="mr15" size="mini" @click="addCoupon">选择优惠券</el-button>
-              </div>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <!-- 商品详情-->
-        <el-row v-show="currentTab === 1">
-          <el-col :span="24">
-            <el-form-item label="商品详情：">
-              <ueditor-from v-model="formValidate.content" :content="formValidate.content" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <!-- 其他设置-->
-        <el-row v-show="currentTab === 2">
-          <el-col :span="24">
-            <el-col v-bind="grid">
-              <el-form-item label="排序：">
-                <el-input-number v-model="formValidate.sort" :max="9999" placeholder="请输入排序" />
-              </el-form-item>
-            </el-col>
-            <el-col v-bind="grid">
-              <el-form-item label="积分：">
-                <el-input-number v-model="formValidate.giveIntegral" placeholder="请输入排序" />
-              </el-form-item>
-            </el-col>
-            <el-col v-bind="grid">
-              <el-form-item label="虚拟销量：">
-                <el-input-number v-model="formValidate.ficti" placeholder="请输入排序" />
-              </el-form-item>
-            </el-col>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="商品推荐：">
-              <el-checkbox-group v-model="checkboxGroup" size="small" @change="onChangeGroup">
-                <el-checkbox v-for="(item, index) in recommend" :key="index" :label="item.value">{{ item.name }}</el-checkbox>
-              </el-checkbox-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="活动优先级：">
-              <div class="color-list acea-row row-middle">
-                <div
-                  class="color-item" :class="activity[item]"
-                  v-for="item in formValidate.activity"
-                  :key="item"
-                  draggable="true"
-                  @dragstart="handleDragStart($event, item)"
-                  @dragover.prevent="handleDragOver($event, item)"
-                  @dragenter="handleDragEnterFont($event, item)"
-                  @dragend="handleDragEnd($event, item)"
-                >{{item}}</div>
-                <div class="tip">可拖动按钮调整活动的优先展示顺序</div>
-              </div>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row v-show="currentTab === 3">
           <el-col :span="24">
             <el-form-item label="商品规格：" props="specType">
-              <el-radio-group v-model="formValidate.specType" @change="onChangeSpec(formValidate.specType)">
+              <el-radio-group v-model="formValidate.specType" @change="onChangeSpec(formValidate.specType)" :disabled="isDisabled">
                 <el-radio :label="false" class="radio">单规格</el-radio>
                 <el-radio :label="true">多规格</el-radio>
               </el-radio-group>
             </el-form-item>
             <el-form-item label="佣金设置：" props="isSub">
-              <el-radio-group v-model="formValidate.isSub" @change="onChangetype(formValidate.isSub)">
+              <el-radio-group v-model="formValidate.isSub" @change="onChangetype(formValidate.isSub)" :disabled="isDisabled">
                 <el-radio :label="true" class="radio">单独设置</el-radio>
                 <el-radio :label="false">默认设置</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
           <!-- 多规格添加-->
-          <el-col v-if="formValidate.specType" :span="24" class="noForm">
+          <el-col v-if="formValidate.specType && !isDisabled" :span="24" class="noForm">
             <el-form-item label="选择规格：" prop="">
               <div class="acea-row">
                 <el-select v-model="formValidate.selectRule">
@@ -233,7 +162,7 @@
             </el-form-item>
           </el-col>
           <!-- 批量设置-->
-          <el-col v-if="formValidate.attr.length>0 && formValidate.specType" :span="24" class="noForm">
+          <el-col v-if="formValidate.attr.length>0 && formValidate.specType && !isDisabled" :span="24" class="noForm">
             <el-form-item label="批量设置：" class="labeltop">
               <el-table :data="oneFormBatch" border class="tabNumWidth" size="mini">
                 <el-table-column align="center" label="图片" min-width="80">
@@ -287,30 +216,30 @@
                 </el-table-column>
                 <el-table-column v-for="(item,iii) in attrValue" :key="iii" :label="formThead[iii].title" align="center" min-width="120">
                   <template slot-scope="scope">
-                    <el-input v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" :min="0" class="priceBox" />
+                    <el-input :disabled="isDisabled" v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" :min="0" class="priceBox" />
                   </template>
                 </el-table-column>
                 <template v-if="formValidate.isSub">
                   <el-table-column align="center" label="一级返佣(元)" min-width="120">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.brokerage" type="number" :min="0" class="priceBox" />
+                      <el-input :disabled="isDisabled" v-model="scope.row.brokerage" type="number" :min="0" class="priceBox" />
                     </template>
                   </el-table-column>
                   <el-table-column align="center" label="二级返佣(元)" min-width="120">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.brokerageTwo" type="number" :min="0" class="priceBox" />
+                      <el-input :disabled="isDisabled" v-model="scope.row.brokerageTwo" type="number" :min="0" class="priceBox" />
                     </template>
                   </el-table-column>
                 </template>
               </el-table>
             </el-form-item>
             <!-- 多规格表格-->
-            <el-form-item v-if="formValidate.attr.length>0 && formValidate.specType" label="商品属性：" class="labeltop">
+            <el-form-item v-if="formValidate.attr.length>0 && formValidate.specType" label="商品属性：" class="labeltop" :class="isDisabled?'disLabel':'disLabelmoren'">
               <el-table :data="ManyAttrValue" border class="tabNumWidth" size="mini">
                 <template v-if="manyTabDate">
                   <el-table-column v-for="(item,iii) in manyTabDate" :key="iii" align="center" :label="manyTabTit[iii].title" min-width="80">
                     <template slot-scope="scope">
-                      <span class="priceBox" v-text="scope.row[iii]" />
+                      <span class="priceBox" v-text="scope.row[iii]"/>
                     </template>
                   </el-table-column>
                 </template>
@@ -326,20 +255,20 @@
                 </el-table-column>
                 <el-table-column v-for="(item,iii) in attrValue" :key="iii" :label="formThead[iii].title" align="center" min-width="120">
                   <template slot-scope="scope">
-                    <el-input v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" class="priceBox" />
+                    <el-input :disabled="isDisabled" v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" class="priceBox" />
                   </template>
                 </el-table-column>
                 <el-table-column align="center" label="一级返佣(元)" min-width="120" v-if="formValidate.isSub">
                   <template slot-scope="scope">
-                    <el-input v-model="scope.row.brokerage" type="number" :min="0" :max="scope.row.price" class="priceBox" />
+                    <el-input :disabled="isDisabled" v-model="scope.row.brokerage" type="number" :min="0" :max="scope.row.price" class="priceBox" />
                   </template>
                 </el-table-column>
                 <el-table-column align="center" label="二级返佣(元)" min-width="120" v-if="formValidate.isSub">
                   <template slot-scope="scope">
-                    <el-input v-model="scope.row.brokerageTwo" type="number" :min="0" :max="scope.row.price" class="priceBox" />
+                    <el-input :disabled="isDisabled" v-model="scope.row.brokerageTwo" type="number" :min="0" :max="scope.row.price" class="priceBox" />
                   </template>
                 </el-table-column>
-                <el-table-column key="3" align="center" label="操作" min-width="80">
+                <el-table-column v-if="!isDisabled" key="3" align="center" label="操作" min-width="80">
                   <template slot-scope="scope">
                     <el-button type="text" class="submission" @click="delAttrTable(scope.$index)">删除</el-button>
                   </template>
@@ -348,10 +277,89 @@
             </el-form-item>
           </el-col>
         </el-row>
+        <!-- 商品详情-->
+        <el-row v-show="currentTab === 1 && !isDisabled">
+          <el-col :span="24">
+            <el-form-item label="商品详情：">
+              <ueditor-from v-model="formValidate.content" :content="formValidate.content" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row v-show="currentTab === 1 && isDisabled">
+          <el-col :span="24">
+            <el-form-item label="商品详情：">
+              <span v-html="formValidate.content || '无'"></span>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <!-- 其他设置-->
+        <el-row v-show="currentTab === 2">
+          <el-col :span="24">
+            <el-col v-bind="grid">
+              <el-form-item label="排序：">
+                <el-input-number v-model="formValidate.sort" :max="9999" placeholder="请输入排序" :disabled="isDisabled" />
+              </el-form-item>
+            </el-col>
+            <el-col v-bind="grid">
+              <el-form-item label="积分：">
+                <el-input-number v-model="formValidate.giveIntegral" placeholder="请输入排序" :disabled="isDisabled" />
+              </el-form-item>
+            </el-col>
+            <el-col v-bind="grid">
+              <el-form-item label="虚拟销量：">
+                <el-input-number v-model="formValidate.ficti" placeholder="请输入排序" :disabled="isDisabled" />
+              </el-form-item>
+            </el-col>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="商品推荐：">
+              <el-checkbox-group v-model="checkboxGroup" size="small" @change="onChangeGroup" :disabled="isDisabled">
+                <el-checkbox v-for="(item, index) in recommend" :key="index" :label="item.value">{{ item.name }}</el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="活动优先级：">
+              <div class="color-list acea-row row-middle">
+                <div
+                  :disabled="isDisabled"
+                  class="color-item" :class="activity[item]"
+                  v-for="item in formValidate.activity"
+                  :key="item"
+                  draggable="true"
+                  @dragstart="handleDragStart($event, item)"
+                  @dragover.prevent="handleDragOver($event, item)"
+                  @dragenter="handleDragEnterFont($event, item)"
+                  @dragend="handleDragEnd($event, item)"
+                >{{item}}</div>
+                <div class="tip">可拖动按钮调整活动的优先展示顺序</div>
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="优惠券：" class="proCoupon">
+              <div class="acea-row">
+                <el-tag
+                  v-if="!isDisabled"
+                  v-for="(tag, index) in formValidate.coupons"
+                  :key="index"
+                  class="mr10 mb10"
+                  :closable="!isDisabled"
+                  :disable-transitions="false"
+                  @close="handleCloseCoupon(tag)"
+                >
+                  {{ tag.name }}
+                </el-tag>
+                <span v-if="isDisabled">无</span>
+                <el-button v-if="!isDisabled" class="mr15" size="mini" @click="addCoupon">选择优惠券</el-button>
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
         <el-form-item>
           <el-button v-show="currentTab>0" type="primary" class="submission" @click="handleSubmitUp">上一步</el-button>
-          <el-button v-show="currentTab<3" type="primary" class="submission" @click="handleSubmitNest('formValidate')">下一步</el-button>
-          <el-button v-show="currentTab===3 || $route.params.id" type="primary" class="submission" @click="handleSubmit('formValidate')">提交</el-button>
+          <el-button v-show="currentTab<2" type="primary" class="submission" @click="handleSubmitNest('formValidate')">下一步</el-button>
+          <el-button v-show="(currentTab===2 || $route.params.id) && !isDisabled" type="primary" class="submission" @click="handleSubmit('formValidate')">提交</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -434,6 +442,7 @@
     components: {Templates, CreatTemplates },
     data() {
       return {
+        isDisabled: this.$route.params.isDisabled==='1'?true:false,
         activity: { '默认': 'red', '秒杀': 'blue', '砍价': 'green', '拼团': 'yellow' },
         props2: {
           children: 'child',
@@ -581,7 +590,7 @@
         }, '')
       },
       setTagsViewTitle() {
-        const title = '编辑商品'
+        const title = this.isDisabled?'商品详情':'编辑商品'
         const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.$route.params.id}` })
         this.$store.dispatch('tagsView/updateVisitedView', route)
       },
@@ -804,6 +813,7 @@
         this.isBtn = false
       },
       clearAttr() {
+        this.isAttr = true
         this.formDynamic.attrsName = ''
         this.formDynamic.attrsVal = ''
       },
@@ -860,7 +870,7 @@
       getInfo () {
         this.fullscreenLoading = true
         productDetailApi(this.$route.params.id).then(async res => {
-          this.isAttr = false;
+          this.isAttr = true;
           let info = res
           this.formValidate = {
             image: this.$selfUtil.setDomain(info.image),
@@ -896,7 +906,7 @@
           let imgss = []
           Object.keys(imgs).map(i => {
             imgss.push(this.$selfUtil.setDomain(imgs[i]))
-           })
+          })
           this.formValidate.sliderImages = [ ...imgss ]
           if(info.isHot) this.checkboxGroup.push('isHot')
           if(info.isGood) this.checkboxGroup.push('isGood')
@@ -940,7 +950,8 @@
       },
       // 点击商品图
       modalPicTap (tit, num, i) {
-        const _this = this
+        const _this = this;
+        if(_this.isDisabled) return;
         this.$modalUpload(function(img) {
           if(tit==='1'&& !num){
             _this.formValidate.image = img[0].sattDir
@@ -1032,40 +1043,55 @@
       },
       // 移动
       handleDragStart (e, item) {
-        this.dragging = item;
+        if(!this.isDisabled) this.dragging = item;
       },
       handleDragEnd (e, item) {
-        this.dragging = null
+        if(!this.isDisabled) this.dragging = null
       },
       handleDragOver (e) {
-        e.dataTransfer.dropEffect = 'move'
+        if(!this.isDisabled) e.dataTransfer.dropEffect = 'move'
       },
       handleDragEnter (e, item) {
-        e.dataTransfer.effectAllowed = 'move'
-        if (item === this.dragging) {
-          return
+        if(!this.isDisabled){
+          e.dataTransfer.effectAllowed = 'move'
+          if (item === this.dragging) {
+            return
+          }
+          const newItems = [...this.formValidate.sliderImages]
+          const src = newItems.indexOf(this.dragging)
+          const dst = newItems.indexOf(item)
+          newItems.splice(dst, 0, ...newItems.splice(src, 1))
+          this.formValidate.sliderImages = newItems;
         }
-        const newItems = [...this.formValidate.sliderImages]
-        const src = newItems.indexOf(this.dragging)
-        const dst = newItems.indexOf(item)
-        newItems.splice(dst, 0, ...newItems.splice(src, 1))
-        this.formValidate.sliderImages = newItems;
       },
       handleDragEnterFont(e, item) {
-        e.dataTransfer.effectAllowed = 'move'
-        if (item === this.dragging) {
-          return
+        if(!this.isDisabled){
+          e.dataTransfer.effectAllowed = 'move'
+          if (item === this.dragging) {
+            return
+          }
+          const newItems = [...this.formValidate.activity]
+          const src = newItems.indexOf(this.dragging)
+          const dst = newItems.indexOf(item)
+          newItems.splice(dst, 0, ...newItems.splice(src, 1))
+          this.formValidate.activity = newItems;
         }
-        const newItems = [...this.formValidate.activity]
-        const src = newItems.indexOf(this.dragging)
-        const dst = newItems.indexOf(item)
-        newItems.splice(dst, 0, ...newItems.splice(src, 1))
-        this.formValidate.activity = newItems;
       }
     }
   }
 </script>
 <style scoped lang="scss">
+  .disLabel{
+    /deep/.el-form-item__label{
+      margin-left: 36px !important;
+    }
+  }
+  .disLabelmoren{
+    /deep/.el-form-item__label{
+      margin-left: 120px !important;
+    }
+  }
+
   .color-item{
     height: 30px;
     line-height: 30px;
@@ -1167,7 +1193,6 @@
     /deep/.el-form-item__label{
       float: none !important;
       display: inline-block !important;
-      margin-left: 120px !important;
       width: auto !important;
     }
   }

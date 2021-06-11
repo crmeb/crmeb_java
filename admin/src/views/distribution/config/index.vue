@@ -17,7 +17,7 @@
         <el-form-item prop="storeBrokerageStatus">
           <span slot="label">
             <span>分销模式：</span>
-            <el-tooltip class="item" effect="dark" content="人人分销”默认每个人都可以分销，“指定分销”仅可后台手动设置推广员，“满额分销”指用户购买商品满足消费金额后自动开启分销" placement="top-start">
+            <el-tooltip class="item" effect="dark" content="人人分销”默认每个人都可以分销，“指定分销”仅可后台手动设置推广员" placement="top-start">
               <i class="el-icon-warning-outline" />
             </el-tooltip>
           </span>

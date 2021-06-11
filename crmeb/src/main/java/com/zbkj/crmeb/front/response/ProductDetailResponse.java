@@ -1,7 +1,9 @@
 package com.zbkj.crmeb.front.response;
 
+import com.common.MyRecord;
 import com.constants.Constants;
 import com.utils.CrmebUtil;
+import com.zbkj.crmeb.store.model.StoreProduct;
 import com.zbkj.crmeb.store.response.StoreProductRecommendResponse;
 import com.zbkj.crmeb.store.response.StoreProductStoreInfoResponse;
 import io.swagger.annotations.ApiModel;
@@ -37,35 +39,39 @@ public class ProductDetailResponse implements Serializable {
 
     private static final long serialVersionUID=1L;
 
-    @ApiModelProperty(value = "商品信息")
-    private StoreProductStoreInfoResponse storeInfo;
+//    @ApiModelProperty(value = "商品信息")
+//    private StoreProductStoreInfoResponse storeInfo;
 
     @ApiModelProperty(value = "产品属性")
-    private List<HashMap<String, Object>> productAttr;
+    private List<ProductAttrResponse> productAttr;
 
     @ApiModelProperty(value = "商品属性详情")
-    private HashMap<String,Object> productValue;
+    private HashMap<String, Object> productValue;
 
     @ApiModelProperty(value = "返佣金额区间")
     private String priceName;
 
-    @ApiModelProperty(value = "拼团，砍价，秒杀商品集合")
-    private String activity;
+    @ApiModelProperty(value = "为移动端特定参数 所有参与的活动")
+    private List<ProductActivityItemResponse> activityAllH5;
 
-    @ApiModelProperty(value = "优品推荐列表")
-    private List<StoreProductRecommendResponse> goodList;
+//    @ApiModelProperty(value = "优品推荐列表")
+//    private List<StoreProductRecommendResponse> goodList;
 
-    @ApiModelProperty(value = "最新评价")
-    private Object reply;
+//    @ApiModelProperty(value = "最新评价")
+//    private Object reply;
 
-    @ApiModelProperty(value = "评价数量")
-    private Integer replyCount;
+//    @ApiModelProperty(value = "评价数量")
+//    private Integer replyCount;
+//
+//    @ApiModelProperty(value = "好评率")
+//    private Integer replyChance;
 
-    @ApiModelProperty(value = "好评率")
-    private Integer replyChance;
+//    @ApiModelProperty(value = "主图base64")
+//    private String base64Image;
 
-    @ApiModelProperty(value = "主图base64")
-    private String base64Image;
+    @ApiModelProperty(value = "商品信息")
+    private StoreProduct productInfo;
 
-
+    @ApiModelProperty(value = "收藏标识")
+    private Boolean userCollect;
 }

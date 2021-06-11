@@ -23,6 +23,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  */
 public interface SystemStoreService extends IService<SystemStore> {
+
     List<SystemStore> getList(String keywords, int status, PageParamRequest pageParamRequest);
 
     /**
@@ -32,8 +33,9 @@ public interface SystemStoreService extends IService<SystemStore> {
      */
     SystemStore getByCondition(SystemStore systemStore);
 
-    boolean updateStatus(Integer id, boolean status);
-    boolean delete(Integer id);
+    Boolean updateStatus(Integer id, boolean status);
+
+    Boolean delete(Integer id);
 
     HashMap<String, Integer> getCount();
 
@@ -41,9 +43,9 @@ public interface SystemStoreService extends IService<SystemStore> {
 
     StoreNearResponse getNearList(StoreNearRequest request, PageParamRequest pageParamRequest);
 
-    boolean create(SystemStoreRequest request);
+    Boolean create(SystemStoreRequest request);
 
-    boolean update(Integer id, SystemStoreRequest request);
+    Boolean update(Integer id, SystemStoreRequest request);
 
     /**
      * 彻底删除

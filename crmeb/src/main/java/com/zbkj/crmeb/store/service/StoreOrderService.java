@@ -1,8 +1,8 @@
 package com.zbkj.crmeb.store.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.common.CommonPage;
 import com.common.PageParamRequest;
-import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.express.vo.ExpressSheetVo;
 import com.zbkj.crmeb.express.vo.LogisticsResultVo;
 import com.zbkj.crmeb.store.model.StoreOrder;
@@ -10,7 +10,6 @@ import com.zbkj.crmeb.store.request.*;
 import com.zbkj.crmeb.store.response.*;
 import com.zbkj.crmeb.system.request.SystemWriteOffOrderSearchRequest;
 import com.zbkj.crmeb.system.response.SystemWriteOffOrderResponse;
-import com.zbkj.crmeb.user.model.User;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,45 +29,56 @@ import java.util.Map;
  */
 public interface StoreOrderService extends IService<StoreOrder> {
 
-    List<StoreOrder> getList(StoreOrderSearchRequest request, PageParamRequest pageParamRequest);
+    /**
+     * 列表（PC）
+     * @param request 请求参数
+     * @param pageParamRequest 分页类参数
+     * @return CommonPage<StoreOrderDetailResponse>
+     */
+    CommonPage<StoreOrderDetailResponse> getAdminList(StoreOrderSearchRequest request, PageParamRequest pageParamRequest);
 
-    StoreOrderResponse getAdminList(StoreOrderSearchRequest request, PageParamRequest pageParamRequest);
-
+    /**
+     * 核销列表
+     * @param request 请求参数
+     * @param pageParamRequest 分页类参数
+     * @author Mr.Zhang
+     * @since 2020-05-28
+     * @return List<StoreOrder>
+     */
     SystemWriteOffOrderResponse getWriteOffList(SystemWriteOffOrderSearchRequest request, PageParamRequest pageParamRequest);
 
+    /**
+     * 累计消费
+     * @param userId Integer 用户id
+     * @author Mr.Zhang
+     * @since 2020-06-10
+     * @return UserBalanceResponse
+     */
     BigDecimal getSumBigDecimal(Integer userId, String date);
 
+    /**
+     * 订单列表返回map
+     * @param orderIdList Integer 订单id
+     * @author Mr.Zhang
+     * @since 2020-06-10
+     * @return Map
+     */
     Map<Integer, StoreOrder> getMapInId(List<Integer> orderIdList);
 
     /**
      * H5订单列表
-     * @param storeOrder 查询参数
+     * @param uid 用户uid
+     * @param status 评价等级|0=未支付,1=待发货,2=待收货,3=待评价,4=已完成,-3=售后/退款
      * @param pageParamRequest 分页参数
      * @return 订单结果列表
      */
-    List<StoreOrder> getUserOrderList(StoreOrder storeOrder, PageParamRequest pageParamRequest);
+    List<StoreOrder> getUserOrderList(Integer uid, Integer status, PageParamRequest pageParamRequest);
     /**
      * 创建订单
      * @param storeOrder 订单参数
      * @return 创建结果
      */
     boolean create(StoreOrder storeOrder);
-
-    /**
-     *  根据参数直接下单
-     * @param userId 用户id
-     * @param productId 产品id
-     * @param cartNum 商品数量
-     * @param productAttrUnique 商品唯一标识
-     * @param type 商品默认类型
-     * @param isNew isNew
-     * @param combinationId 拼团id
-     * @param skillId 秒杀id
-     * @param bargainId 砍价id
-     * @return 是否成功下单
-     */
-    List<String> addCartAgain(Integer userId, Integer productId, Integer cartNum, String productAttrUnique, String type,
-                              boolean isNew, Integer combinationId, Integer skillId, Integer bargainId);
 
     /**
      * 订单基本查询
@@ -85,27 +95,11 @@ public interface StoreOrderService extends IService<StoreOrder> {
     StoreOrder getByEntityOne(StoreOrder storeOrder);
 
     /**
-     * 基本更新
-     * @param storeOrder 更新参数
-     * @return 更新结果
-     */
-    boolean updateByEntity(StoreOrder storeOrder);
-
-    /**
-     * 余额支付
-     * @param storeOrder 待支付订单
-     * @param currentUser 当前用户
-     * @param formId 购买平台标识
-     * @return 支付结果
-     */
-    boolean yuePay(StoreOrder storeOrder, User currentUser, String formId);
-
-    /**
      * h5 top data 工具方法
      * @param status 状态参数
      * @return 查询到的订单结果
      */
-    List<StoreOrder> getTopDataUtil(int status, int userId);
+    Integer getTopDataUtil(Integer status, Integer userId);
 
     int getOrderCount(Integer userId, String date);
 
@@ -113,28 +107,41 @@ public interface StoreOrderService extends IService<StoreOrder> {
 
     boolean refund(StoreOrderRefundRequest request);
 
-    StoreOrderInfoResponse info(Integer id);
+    /**
+     * 订单详情（PC）
+     * @param orderNo 订单编号
+     * @return StoreOrderInfoResponse
+     */
+    StoreOrderInfoResponse info(String orderNo);
 
-    boolean send(StoreOrderSendRequest request);
+    Boolean send(StoreOrderSendRequest request);
 
-    boolean mark(Integer id, String mark);
+    /**
+     * 订单备注
+     * @param orderNo 订单编号
+     * @param mark 备注
+     * @return Boolean
+     */
+    Boolean mark(String orderNo, String mark);
 
-    Boolean refundRefuse(Integer id, String reason);
-
-    RetailShopOrderDataResponse getOrderDataByUserId(Integer userId);
+    /**
+     * 拒绝退款
+     * @param orderNo 订单编号
+     * @param reason String 原因
+     * @return Boolean
+     */
+    Boolean refundRefuse(String orderNo, String reason);
 
     List<StoreOrder> getOrderByUserIdsForRetailShop(List<Integer> ids);
 
     StoreOrder getInfoByEntity(StoreOrder storeOrder);
 
     /**
-     * 根据条件获取
-     * @param storeOrder 订单条件
-     * @return 结果
+     * 获取订单快递信息
+     * @param orderNo 订单编号
+     * @return LogisticsResultVo
      */
-    StoreOrder getInfoJustOrderInfo(StoreOrder storeOrder);
-
-    LogisticsResultVo getLogisticsInfo(Integer id);
+    LogisticsResultVo getLogisticsInfo(String orderNo);
 
     Map<String, String> getStatus(StoreOrder storeOrder);
 
@@ -146,13 +153,6 @@ public interface StoreOrderService extends IService<StoreOrder> {
     boolean editPrice(StoreOrderEditPriceRequest request);
 
     /**
-     * 线下付款
-     * @param orderId 待付款订单id
-     * @return 付款结果
-     */
-    boolean payOrderOffLine(Integer orderId);
-
-    /**
      * 根据时间参数统计订单价格
      * @param dateLimit 时间区间
      * @param type 1=price 2=订单量
@@ -162,34 +162,41 @@ public interface StoreOrderService extends IService<StoreOrder> {
 
     /**
      * 获取用户当天的秒杀数量
-     * @param storeOrder    订单查询参数
-     * @return  用户当天的秒杀商品订单数量
+     *
+     * @param uid 用户uid
+     * @param seckillId 秒杀商品id
+     * @return 用户当天的秒杀商品订单数量
      */
-    List<StoreOrder> getUserCurrentDaySecKillOrders(StoreOrder storeOrder);
+    List<StoreOrder> getUserCurrentDaySecKillOrders(Integer uid, Integer seckillId);
 
     /**
-     * 获取用户当前的砍价订单数量
-     * @param storeOrder    订单查询参数
-     * @return  用户当天的秒杀商品订单数量
+     * 获取用户当前的砍价订单
+     * @param uid    用户uid
+     * @return  用户当前的砍价订单
      */
-    List<StoreOrder> getUserCurrentBargainOrders(StoreOrder storeOrder);
+    List<StoreOrder> getUserCurrentBargainOrders(Integer uid, Integer bargainId);
 
     /**
-     * 获取砍价商品订单数量（销量）
-     * @param bargainId 砍价商品编号
-     * @return
+     * 获取用户当前的拼团订单
+     * @param uid    用户uid
+     * @return  用户当前的拼团订单
      */
-    Integer getCountByBargainIdAndUid(Integer bargainId, Integer uid);
+    List<StoreOrder> getUserCurrentCombinationOrders(Integer uid, Integer combinationId);
 
     StoreOrder getByOderId(String orderId);
 
     /**
      * 获取面单默认配置信息
-     * @return
+     * @return ExpressSheetVo
      */
     ExpressSheetVo getDeliveryInfo();
 
-    PageInfo<StoreOrder> findListByUserIdsForRetailShop(List<Integer> userIds, RetailShopStairUserRequest request, PageParamRequest pageParamRequest);
+    /**
+     * 根据用户uid集合获取订单号集合
+     * @param userIds 用户uid集合
+     * @return 订单号集合
+     */
+    List<StoreOrder> getOrderListStrByUids(List<Integer> userIds, RetailShopStairUserRequest request);
 
     /**
      * 更新支付结果
@@ -197,18 +204,23 @@ public interface StoreOrderService extends IService<StoreOrder> {
      */
     Boolean updatePaid(String orderNo);
 
+    /**
+     * 跟据订单号列表获取订单列表Map
+     * @param orderNoList 订单号列表
+     * @return Map
+     */
     Map<String, StoreOrder> getMapInOrderNo(List<String> orderNoList);
 
     /**
      * 获取推广订单总金额
      * @param orderNoList 订单编号列表
-     * @return
+     * @return BigDecimal
      */
     BigDecimal getSpreadOrderTotalPriceByOrderList(List<String> orderNoList);
 
     /**
      * 获取所有收货订单id集合
-     * @return
+     * @return List<StoreOrder>
      */
     List<StoreOrder> findIdAndUidListByReceipt();
 
@@ -216,7 +228,71 @@ public interface StoreOrderService extends IService<StoreOrder> {
      * 根据用户uid查询所有已支付订单
      * @param userId 用户uid
      * @param pageParamRequest 分页参数
-     * @return
+     * @return List<StoreOrder>
      */
     List<StoreOrder> findPaidListByUid(Integer userId, PageParamRequest pageParamRequest);
+
+    /**
+     * 订单改价
+     * @param request 改价请求对象
+     * @return 改价是否成功
+     */
+    Boolean updatePrice(StoreOrderUpdatePriceRequest request);
+
+    /**
+     * 获取订单总数量
+     * @param uid 用户uid
+     * @return Integer
+     */
+    Integer getOrderCountByUid(Integer uid);
+
+    /**
+     * 获取用户总消费金额
+     * @param userId 用户uid
+     * @return BigDecimal
+     */
+    BigDecimal getSumPayPriceByUid(Integer userId);
+
+    /**
+     * 获取订单数量(时间)
+     * @param uid 用户uid
+     * @return Integer
+     */
+    Integer getOrderCountByUidAndDate(Integer uid, String date);
+
+    /**
+     * 获取用户消费金额(时间)
+     * @param userId 用户uid
+     * @return BigDecimal
+     */
+    BigDecimal getSumPayPriceByUidAndDate(Integer userId, String date);
+
+    /**
+     * 获取砍价订单
+     * @param bargainId 砍价商品id
+     * @param bargainUserId 用户砍价活动id
+     * @return StoreOrder
+     */
+    StoreOrder getByBargainOrder(Integer bargainId, Integer bargainUserId);
+
+    /**
+     * 获取订单状态数量
+     * @param dateLimit 时间端
+     * @return StoreOrderCountItemResponse
+     */
+    StoreOrderCountItemResponse getOrderStatusNum(String dateLimit);
+
+    /**
+     * 获取订单统计数据
+     * @param dateLimit 时间端
+     * @return StoreOrderTopItemResponse
+     */
+    StoreOrderTopItemResponse getOrderData(String dateLimit);
+
+    /**
+     * 订单删除
+     * @param orderNo 订单编号
+     * @return Boolean
+     */
+    Boolean delete(String orderNo);
 }

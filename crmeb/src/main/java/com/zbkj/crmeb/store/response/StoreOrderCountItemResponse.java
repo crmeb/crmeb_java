@@ -25,19 +25,8 @@ import java.io.Serializable;
 @Accessors(chain = true)
 @ApiModel(value="StoreOrderCountItemResponse对象", description="订单状态数量")
 public class StoreOrderCountItemResponse implements Serializable {
-    public StoreOrderCountItemResponse(){}
-    public StoreOrderCountItemResponse(Integer all, Integer unPaid, Integer notShipped, Integer spike, Integer bargain, Integer complete, Integer toBeWrittenOff, Integer refunding, Integer refunded, Integer deleted) {
-        this.all = all;
-        this.unPaid = unPaid;
-        this.notShipped = notShipped;
-        this.spike = spike;
-        this.bargain = bargain;
-        this.complete = complete;
-        this.toBeWrittenOff = toBeWrittenOff;
-        this.refunding = refunding;
-        this.refunded = refunded;
-        this.deleted = deleted;
-    }
+
+    private static final long serialVersionUID = -8605913636959651047L;
 
     @ApiModelProperty(value = "总数")
     private Integer all;

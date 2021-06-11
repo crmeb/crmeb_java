@@ -2,21 +2,17 @@
 	<view>
 		<form  @submit="subRefund" report-submit='true'>
 		  <view class='apply-return'>
-		    <view class='goodsStyle acea-row row-between' v-for="(item,index) in orderInfo.cartInfo" :key="index">
-		        <view class='pictrue'><image :src='item.info.productInfo.image'></image></view>
+		    <view class='goodsStyle acea-row row-between borRadius14' v-for="(item,index) in orderInfo.orderInfoList" :key="index">
+		        <view class='pictrue'><image :src='item.image'></image></view>
 		        <view class='text acea-row row-between'>
-		          <view class='name line2'>{{item.info.productInfo.storeName}}</view>
-		          <view class='money' v-if="item.info.productInfo.attrInfo">
-		              <view>￥{{item.info.productInfo.attrInfo.price}}</view>
-		              <view class='num'>x{{item.info.cartNum}}</view>
-		          </view>
-		          <view class='money' v-else>
-		              <view>￥{{item.info.productInfo.price}}</view>
-		              <view class='num'>x{{item.info.cartNum}}</view>
+		          <view class='name line2'>{{item.storeName}}</view>
+		          <view class='money'>
+		              <view>￥{{item.price}}</view>
+		              <view class='num'>x{{item.cartNum}}</view>
 		          </view>
 		        </view>
 		    </view>
-		    <view class='list'>
+		    <view class='list borRadius14'>
 		        <view class='item acea-row row-between-wrapper'>
 		          <view>退货件数</view>
 		          <view class='num'>{{orderInfo.totalNum}}</view>
@@ -38,7 +34,7 @@
 		          <view>备注说明</view>
 		          <textarea placeholder='填写备注信息，100字以内' class='num' name="refund_reason_wap_explain" placeholder-class='填写备注信息，100字以内'></textarea>
 		        </view>
-		        <view class='item acea-row row-between'>
+		        <view class='item acea-row row-between' style="border: none;">
 		          <view class='title acea-row row-between-wrapper'>
 		              <view>上传凭证</view>
 		              <view class='tip'>( 最多可上传3张 )</view>
@@ -54,17 +50,17 @@
 		              </view>
 		          </view>
 		        </view>
+				<button class='returnBnt bg-color' form-type="submit">申请退款</button>
 		    </view>
-		    <button class='returnBnt bg-color' form-type="submit">申请退款</button>
 		  </view>
 		</form>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 	</view>
 </template>
 <script>
-	import { ordeRefundReason, orderRefundVerify, getOrderDetail} from '@/api/order.js';
+	import { ordeRefundReason, orderRefundVerify, applyRefund} from '@/api/order.js';
 	import {
 		toLogin
 	} from '@/libs/login.js';
@@ -111,13 +107,7 @@
 				this.getOrderInfo();
 				this.getRefundReason();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		  },
 		methods: {
@@ -131,7 +121,7 @@
 			    */
 			    getOrderInfo:function(){
 			      let that=this;
-			      getOrderDetail(that.orderId).then(res=>{
+			      applyRefund(that.orderId).then(res=>{
 					that.$set(that,'orderInfo',res.data);
 			      });
 			    },
@@ -190,22 +180,25 @@
 </script>
 
 <style scoped lang="scss">
-	.apply-return .list{background-color:#fff;margin-top:18rpx;}
-	.apply-return .list .item{margin-left:30rpx;padding-right:30rpx;min-height:90rpx;border-bottom:1rpx solid #eee;font-size:30rpx;color:#333;}
+	.apply-return{
+		padding: 20rpx 30rpx 70rpx 30rpx;
+	}
+	.apply-return .list{background-color:#fff;margin-top:18rpx;padding:0 24rpx 70rpx 24rpx;}
+	.apply-return .list .item{min-height:90rpx;border-bottom:1rpx solid #eee;font-size:30rpx;color:#333;}
 	.apply-return .list .item .num{color:#282828;width:427rpx;text-align:right;}
 	.apply-return .list .item .num .picker .reason{width:385rpx;}
 	.apply-return .list .item .num .picker .iconfont{color:#666;font-size:30rpx;margin-top:2rpx;}
-	.apply-return .list .item.textarea{padding:30rpx 30rpx 30rpx 0;}
+	.apply-return .list .item.textarea{padding:24rpx 0;}
 	.apply-return .list .item textarea{height:100rpx;font-size:30rpx;}
 	.apply-return .list .item .placeholder{color:#bbb;}
 	.apply-return .list .item .title{height:95rpx;width:100%;}
 	.apply-return .list .item .title .tip{font-size:30rpx;color:#bbb;}
 	.apply-return .list .item .upload{padding-bottom:36rpx;}
-	.apply-return .list .item .upload .pictrue{margin:22rpx 23rpx 0 0;width:156rpx;height:156rpx;position:relative;font-size:24rpx;color:#bbb;}
+	.apply-return .list .item .upload .pictrue{border-radius: 14rpx; margin:22rpx 23rpx 0 0;width:156rpx;height:156rpx;position:relative;font-size:24rpx;color:#bbb;}
 	.apply-return .list .item .upload .pictrue:nth-of-type(4n){margin-right:0;}
-	.apply-return .list .item .upload .pictrue image{width:100%;height:100%;border-radius:3rpx;}
+	.apply-return .list .item .upload .pictrue image{width:100%;height:100%;border-radius:14rpx;}
 	.apply-return .list .item .upload .pictrue .icon-guanbi1{position:absolute;font-size:45rpx;top:-10rpx;right:-10rpx;}
 	.apply-return .list .item .upload .pictrue .icon-icon25201{color:#bfbfbf;font-size:50rpx;}
 	.apply-return .list .item .upload .pictrue:nth-last-child(1){border:1rpx solid #ddd;box-sizing:border-box;}
-	.apply-return .returnBnt{font-size:32rpx;color:#fff;width:690rpx;height:86rpx;border-radius:50rpx;text-align:center;line-height:86rpx;margin:43rpx auto;}
+	.apply-return .returnBnt{font-size:32rpx;color:#fff;width:100%;height:86rpx;border-radius:50rpx;text-align:center;line-height:86rpx;margin:43rpx auto;}
 </style>

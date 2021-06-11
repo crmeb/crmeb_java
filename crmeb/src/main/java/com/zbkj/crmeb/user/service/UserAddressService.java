@@ -1,9 +1,9 @@
 package com.zbkj.crmeb.user.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.front.request.UserAddressRequest;
 import com.zbkj.crmeb.user.model.UserAddress;
-import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
 
@@ -21,6 +21,11 @@ import java.util.List;
  */
 public interface UserAddressService extends IService<UserAddress> {
 
+    /**
+     * 用户地址列表
+     * @param pageParamRequest 分页参数
+     * @return List<UserAddress>
+     */
     List<UserAddress> getList(PageParamRequest pageParamRequest);
 
     /**
@@ -41,10 +46,15 @@ public interface UserAddressService extends IService<UserAddress> {
     UserAddress getById(Integer addressId);
 
     /**
-     * 根据地址参数获取用户收货地址
-     * @param userAddress
-     * @param pageParamRequest
-     * @return
+     * 获取地址详情
+     * @param id 地址id
+     * @return UserAddress
      */
-    List<UserAddress> getListByUserAddress(UserAddress userAddress, PageParamRequest pageParamRequest);
+    UserAddress getDetail(Integer id);
+
+    /**
+     * 获取默认地址
+     * @return UserAddress
+     */
+    UserAddress getDefaultByUid(Integer uid);
 }

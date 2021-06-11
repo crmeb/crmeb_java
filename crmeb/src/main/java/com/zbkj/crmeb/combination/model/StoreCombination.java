@@ -1,6 +1,8 @@
 package com.zbkj.crmeb.combination.model;
 
 import java.math.BigDecimal;
+
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -139,4 +141,8 @@ public class StoreCombination implements Serializable {
 
     @ApiModelProperty(value = "虚拟成团百分比")
     private Integer virtualRation;
+
+    @ApiModelProperty(value = "限量百分比")
+    @TableField(exist = false)
+    private Integer quotaPercent;
 }

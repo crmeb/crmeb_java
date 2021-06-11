@@ -3,7 +3,6 @@ package com.zbkj.crmeb.front.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
-import com.zbkj.crmeb.front.request.UserSignInfoRequest;
 import com.zbkj.crmeb.front.response.UserSignInfoResponse;
 import com.zbkj.crmeb.system.vo.SystemGroupDataSignConfigVo;
 import com.zbkj.crmeb.user.service.UserSignService;
@@ -14,7 +13,6 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,8 +44,6 @@ public class UserSignController {
     /**
      * 签到列表
      * @param pageParamRequest 分页参数
-     * @author Mr.Zhang
-     * @since 2020-04-30
      */
     @ApiOperation(value = "分页列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -59,8 +55,6 @@ public class UserSignController {
     /**
      * 签到列表，年月纬度
      * @param pageParamRequest 分页参数
-     * @author Mr.Zhang
-     * @since 2020-04-30
      */
     @ApiOperation(value = "分页列表")
     @RequestMapping(value = "/month", method = RequestMethod.GET)
@@ -71,8 +65,6 @@ public class UserSignController {
 
     /**
      * 配置
-     * @author Mr.Zhang
-     * @since 2020-04-30
      */
     @ApiOperation(value = "配置")
     @RequestMapping(value = "/config", method = RequestMethod.GET)
@@ -83,8 +75,6 @@ public class UserSignController {
 
     /**
      * 查询签到记录表信息
-     * @author Mr.Zhang
-     * @since 2020-04-30
      */
     @ApiOperation(value = "签到")
     @RequestMapping(value = "/integral", method = RequestMethod.GET)
@@ -94,8 +84,6 @@ public class UserSignController {
 
     /**
      * 查询签到记录表信息
-     * @author Mr.Zhang
-     * @since 2020-04-30
      */
     @ApiOperation(value = "详情")
     @RequestMapping(value = "/get", method = RequestMethod.GET)
@@ -104,14 +92,12 @@ public class UserSignController {
     }
 
     /**
-     * 查询签到记录表信息
-     * @author Mr.Zhang
-     * @since 2020-04-30
+     * 签到用户信息
      */
     @ApiOperation(value = "签到用户信息")
     @RequestMapping(value = "/user", method = RequestMethod.POST)
-    public CommonResult<UserSignInfoResponse> getUserInfo(@RequestBody @Validated UserSignInfoRequest request){
-        return CommonResult.success(userSignService.getUserInfo(request));
+    public CommonResult<UserSignInfoResponse> getUserInfo(){
+        return CommonResult.success(userSignService.getUserSignInfo());
     }
 }
 

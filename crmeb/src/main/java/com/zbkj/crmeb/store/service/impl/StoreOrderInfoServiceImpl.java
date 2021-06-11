@@ -6,12 +6,14 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageHelper;
+import com.zbkj.crmeb.front.vo.OrderInfoDetailVo;
 import com.zbkj.crmeb.store.dao.StoreOrderInfoDao;
 import com.zbkj.crmeb.store.model.StoreOrderInfo;
 import com.zbkj.crmeb.store.request.StoreOrderInfoSearchRequest;
 import com.zbkj.crmeb.store.response.StoreCartResponse;
 import com.zbkj.crmeb.store.service.StoreOrderInfoService;
 import com.zbkj.crmeb.store.service.StoreProductReplyService;
+import com.zbkj.crmeb.store.vo.StoreOrderInfoOldVo;
 import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,8 +75,8 @@ public class StoreOrderInfoServiceImpl extends ServiceImpl<StoreOrderInfoDao, St
      * @return HashMap<Integer, StoreCart>
      */
     @Override
-    public HashMap<Integer, List<StoreOrderInfoVo>> getMapInId(List<Integer> orderList){
-        HashMap<Integer, List<StoreOrderInfoVo>> map = new HashMap<>();
+    public HashMap<Integer, List<StoreOrderInfoOldVo>> getMapInId(List<Integer> orderList){
+        HashMap<Integer, List<StoreOrderInfoOldVo>> map = new HashMap<>();
         if(orderList.size() < 1){
             return map;
         }
@@ -86,13 +88,13 @@ public class StoreOrderInfoServiceImpl extends ServiceImpl<StoreOrderInfoDao, St
         }
         for (StoreOrderInfo storeOrderInfo : systemStoreStaffList) {
             //解析商品详情JSON
-            StoreOrderInfoVo StoreOrderInfoVo = new StoreOrderInfoVo();
+            StoreOrderInfoOldVo StoreOrderInfoVo = new StoreOrderInfoOldVo();
             BeanUtils.copyProperties(storeOrderInfo, StoreOrderInfoVo, "info");
-            StoreOrderInfoVo.setInfo(JSON.parseObject(storeOrderInfo.getInfo(), StoreCartResponse.class));
+            StoreOrderInfoVo.setInfo(JSON.parseObject(storeOrderInfo.getInfo(), OrderInfoDetailVo.class));
             if(map.containsKey(storeOrderInfo.getOrderId())){
                 map.get(storeOrderInfo.getOrderId()).add(StoreOrderInfoVo);
             }else{
-                List<StoreOrderInfoVo> storeOrderInfoVoList = new ArrayList<>();
+                List<StoreOrderInfoOldVo> storeOrderInfoVoList = new ArrayList<>();
                 storeOrderInfoVoList.add(StoreOrderInfoVo);
                 map.put(storeOrderInfo.getOrderId(), storeOrderInfoVoList);
             }
@@ -108,7 +110,35 @@ public class StoreOrderInfoServiceImpl extends ServiceImpl<StoreOrderInfoDao, St
      * @return HashMap<Integer, StoreCart>
      */
     @Override
-    public List<StoreOrderInfoVo> getOrderListByOrderId(Integer orderId){
+    public List<StoreOrderInfoOldVo> getOrderListByOrderId(Integer orderId){
+        LambdaQueryWrapper<StoreOrderInfo> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(StoreOrderInfo::getOrderId, orderId);
+        List<StoreOrderInfo> systemStoreStaffList = dao.selectList(lambdaQueryWrapper);
+        if(systemStoreStaffList.size() < 1){
+            return null;
+        }
+
+        List<StoreOrderInfoOldVo> storeOrderInfoVoList = new ArrayList<>();
+        for (StoreOrderInfo storeOrderInfo : systemStoreStaffList) {
+            //解析商品详情JSON
+            StoreOrderInfoOldVo storeOrderInfoVo = new StoreOrderInfoOldVo();
+            BeanUtils.copyProperties(storeOrderInfo, storeOrderInfoVo, "info");
+            storeOrderInfoVo.setInfo(JSON.parseObject(storeOrderInfo.getInfo(), OrderInfoDetailVo.class));
+            storeOrderInfoVo.getInfo().setIsReply(
+                    storeProductReplyService.isReply(storeOrderInfoVo.getUnique(), storeOrderInfoVo.getOrderId()) ? 1 : 0
+            );
+            storeOrderInfoVoList.add(storeOrderInfoVo);
+        }
+        return storeOrderInfoVoList;
+    }
+
+    /**
+     * 根据id集合查询数据，返回 map
+     * @param orderId 订单id
+     * @return HashMap<Integer, StoreCart>
+     */
+    @Override
+    public List<StoreOrderInfoVo> getVoListByOrderId(Integer orderId){
         LambdaQueryWrapper<StoreOrderInfo> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(StoreOrderInfo::getOrderId, orderId);
         List<StoreOrderInfo> systemStoreStaffList = dao.selectList(lambdaQueryWrapper);
@@ -121,10 +151,11 @@ public class StoreOrderInfoServiceImpl extends ServiceImpl<StoreOrderInfoDao, St
             //解析商品详情JSON
             StoreOrderInfoVo storeOrderInfoVo = new StoreOrderInfoVo();
             BeanUtils.copyProperties(storeOrderInfo, storeOrderInfoVo, "info");
-            storeOrderInfoVo.setInfo(JSON.parseObject(storeOrderInfo.getInfo(),StoreCartResponse.class));
-            storeOrderInfoVo.getInfo().setIsReply(
-                    storeProductReplyService.isReply(storeOrderInfoVo.getUnique(), storeOrderInfoVo.getOrderId()) ? 1 : 0
-            );
+            storeOrderInfoVo.setInfo(JSON.parseObject(storeOrderInfo.getInfo(), OrderInfoDetailVo.class));
+            // TODO 商品是否已评论
+//            storeOrderInfoVo.getInfo().setIsReply(
+//                    storeProductReplyService.isReply(storeOrderInfoVo.getUnique(), storeOrderInfoVo.getOrderId()) ? 1 : 0
+//            );
             storeOrderInfoVoList.add(storeOrderInfoVo);
         }
         return storeOrderInfoVoList;
@@ -138,6 +169,21 @@ public class StoreOrderInfoServiceImpl extends ServiceImpl<StoreOrderInfoDao, St
     @Override
     public boolean saveOrderInfos(List<StoreOrderInfo> storeOrderInfos) {
         return saveBatch(storeOrderInfos);
+    }
+
+    /**
+     * 通过订单编号和规格号查询
+     * @param uni 规格号
+     * @param orderId 订单编号
+     * @return StoreOrderInfo
+     */
+    @Override
+    public StoreOrderInfo getByUniAndOrderId(String uni, Integer orderId) {
+        //带 StoreOrderInfo 类的多条件查询
+        LambdaQueryWrapper<StoreOrderInfo> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(StoreOrderInfo::getOrderId, orderId);
+        lambdaQueryWrapper.eq(StoreOrderInfo::getUnique, uni);
+        return dao.selectOne(lambdaQueryWrapper);
     }
 }
 

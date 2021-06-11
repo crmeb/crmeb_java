@@ -85,11 +85,11 @@ export function setDomain(url) {
   url = url ? url.toString() : '';
   // 正则替换存在的转义符
   url = url.replace(/\\/g,'');
-  url = url.replace('http://','https://');
+  url = window.location.protocol==='https:'? url.replace('http://','https://') : url;
   if(url.startsWith('src="')){
     url = url.replaceAll('src="','');
   }
-  if(url.startsWith('//img')){
+  if(url.startsWith('//img') && window.location.protocol==='https:'){
     url = url.replace('//img','https://img');
   }
   return url;

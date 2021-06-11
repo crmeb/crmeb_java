@@ -1,6 +1,6 @@
 package com.zbkj.crmeb.front.response;
 
-import com.zbkj.crmeb.user.model.User;
+import com.zbkj.crmeb.marketing.model.StoreCoupon;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -8,7 +8,6 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -41,32 +40,38 @@ public class IndexInfoResponse implements Serializable {
     @ApiModelProperty(value = "新闻简报消息滚动")
     private List<HashMap<String, Object>> roll;
 
-    @ApiModelProperty(value = "活动")
-    private IndexInfoItemResponse info;
+//    @ApiModelProperty(value = "活动")
+//    private IndexInfoItemResponse info;
 
     // 待优化
-    @ApiModelProperty(value = "活动区域图片")
-    private List<HashMap<String, Object>> activity;
+//    @ApiModelProperty(value = "活动区域图片")
+//    private List<HashMap<String, Object>> activity;
 
-    @ApiModelProperty(value = "首发新品广告图")
-    private HashMap<String, Object> lovely;
+//    @ApiModelProperty(value = "首发新品广告图")
+//    private HashMap<String, Object> lovely;
 
-    @ApiModelProperty(value = "首页促销单品")
-    private List<ProductResponse> benefit;
+//    @ApiModelProperty(value = "首页促销单品")
+//    private List<ProductResponse> benefit;
 
-    @ApiModelProperty(value = "热门榜单")
-    private List<ProductResponse> likeInfo;
+//    @ApiModelProperty(value = "热门榜单")
+//    private List<ProductResponse> likeInfo;
 
     @ApiModelProperty(value = "企业logo")
     private String logoUrl;
 
     @ApiModelProperty(value = "优惠券")
-    private List<HashMap<String, Object>> couponList;
+    private List<StoreCoupon> couponList;
 
-    @ApiModelProperty(value = "是否关注")
-    private boolean subscribe = false;
+    @ApiModelProperty(value = "是否关注公众号")
+    private boolean subscribe;
 
     @ApiModelProperty(value = "首页超值爆款")
     private List<HashMap<String, Object>> explosiveMoney;
+
+    @ApiModelProperty(value = "首页精品推荐图片")
+    private List<HashMap<String, Object>> bastBanner;
+
+    @ApiModelProperty(value = "云智服H5 url")
+    private String yzfUrl;
 
 }
