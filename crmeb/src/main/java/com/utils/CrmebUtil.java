@@ -4,6 +4,7 @@ import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.constants.Constants;
 import com.exception.CrmebException;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.crypto.Cipher;
@@ -131,8 +132,8 @@ public class CrmebUtil {
      * @param args String[] 字符串数组
      */
     public static void main(String[] args) throws Exception {
-        System.out.println(encryptPassword("123456", "admin"));
-//		System.out.println(decryptPassowrd("", ""));
+//        System.out.println(encryptPassword("123456", "admin"));
+		System.out.println(decryptPassowrd("", ""));
     }
 
     /**
@@ -612,12 +613,12 @@ public class CrmebUtil {
     public static BigDecimal getRateBig(BigDecimal b1, BigDecimal b2){
         //计算差值
 
-        if(b2.equals(b1)){
+        if(b2.compareTo(b1) == 0){
             //数值一样，说明没有增长
             return BigDecimal.ZERO;
         }
 
-        if(b2.equals(BigDecimal.ZERO)){
+        if(b2.compareTo(BigDecimal.ZERO) == 0){
             //b2是0
             return b1.setScale(2, BigDecimal.ROUND_UP);
         }
@@ -679,7 +680,7 @@ public class CrmebUtil {
      * @return 生成的随机码
      */
     public static String getOrderNo(String payType){
-        return payType + DateUtil.nowDate(Constants.DATE_TIME_FORMAT_NUM) + randomCount(11111, 99999);
+        return payType + System.currentTimeMillis() + randomCount(11111, 99999);
     }
 
     /**
@@ -835,10 +836,34 @@ public class CrmebUtil {
      * @return  百分比
      */
     public static int percentInstanceIntVal(Integer detailTotalNumber, Integer totalNumber) {
-        Double bfTotalNumber = Double.valueOf(detailTotalNumber);
-        Double zcTotalNumber = Double.valueOf(totalNumber);
-        double percent = bfTotalNumber/zcTotalNumber;
-        double pec = percent * 100;
-        return (int)pec;
+        BigDecimal sales = new BigDecimal(detailTotalNumber);
+        BigDecimal total = new BigDecimal(totalNumber);
+        int percentage = sales.divide(total, 2, BigDecimal.ROUND_UP).multiply(new BigDecimal(100)).intValue();
+        return Math.min(percentage, 100);
+    }
+
+    /**
+     * 百分比计算
+     * @param detailTotalNumber  销售量
+     * @param totalNumber  限量库存
+     * @return  百分比
+     */
+    public static int percentInstanceIntVal(BigDecimal detailTotalNumber, BigDecimal totalNumber) {
+        int percentage = detailTotalNumber.divide(totalNumber, 2, BigDecimal.ROUND_UP).multiply(new BigDecimal(100)).intValue();
+        return Math.min(percentage, 100);
+    }
+
+    /**
+     * Object转List
+     */
+    public static <T> List<T> castList(Object obj, Class<T> clazz) {
+        List<T> result = new ArrayList<>();
+        if(obj instanceof List<?>) {
+            for (Object o : (List<?>) obj) {
+                result.add(clazz.cast(o));
+            }
+            return result;
+        }
+        return null;
     }
 }

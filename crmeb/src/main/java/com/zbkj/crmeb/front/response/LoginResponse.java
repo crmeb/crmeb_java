@@ -33,10 +33,18 @@ public class LoginResponse implements Serializable {
     @ApiModelProperty(value = "用户登录密钥")
     private String token;
 
-    @ApiModelProperty(value = "用户登录密钥到期时间")
-    private Date expiresTime;
+    @ApiModelProperty(value = "状态:login-登录，register-注册,start-注册起始页")
+    private String type;
 
-    @ApiModelProperty(value = "user对象")
-    private User user;
+    @ApiModelProperty(value = "注册key")
+    private String key;
 
+    @ApiModelProperty(value = "登录用户Uid")
+    private Integer uid;
+
+    @ApiModelProperty(value = "登录用户昵称")
+    private String nikeName;
+
+    @ApiModelProperty(value = "登录用户手机号")
+    private String phone;
 }

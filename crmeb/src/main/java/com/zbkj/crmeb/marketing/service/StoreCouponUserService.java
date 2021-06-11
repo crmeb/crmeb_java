@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.marketing.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.common.CommonPage;
 import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageInfo;
@@ -10,7 +11,6 @@ import com.zbkj.crmeb.marketing.request.StoreCouponUserRequest;
 import com.zbkj.crmeb.marketing.request.StoreCouponUserSearchRequest;
 import com.zbkj.crmeb.marketing.response.StoreCouponUserOrder;
 import com.zbkj.crmeb.marketing.response.StoreCouponUserResponse;
-import com.zbkj.crmeb.store.model.StoreOrder;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -50,18 +50,14 @@ public interface StoreCouponUserService extends IService<StoreCouponUser> {
      */
     boolean canUse(Integer id, List<Integer> productIdList, BigDecimal price);
 
-    boolean rollbackByCancelOrder(StoreOrder storeOrder);
-
     HashMap<Integer, StoreCouponUser> getMapByUserId(Integer userId);
 
     /**
      * 根据购物车id获取可用优惠券
-     * @param cartIds 购物车id
+     * @param preOrderNo 预下单订单号
      * @return 可用优惠券集合
      */
-    List<StoreCouponUserOrder> getListByCartIds(List<Integer> cartIds);
-
-    List<StoreCouponUserResponse> getListFront(Integer userId, PageParamRequest pageParamRequest);
+    List<StoreCouponUserOrder> getListByPreOrderNo(String preOrderNo);
 
     /**
      * 优惠券过期定时任务
@@ -77,7 +73,7 @@ public interface StoreCouponUserService extends IService<StoreCouponUser> {
      * 支付成功赠送处理
      * @param couponId 优惠券编号
      * @param uid  用户uid
-     * @return
+     * @return MyRecord
      */
     MyRecord paySuccessGiveAway(Integer couponId, Integer uid);
 
@@ -85,7 +81,21 @@ public interface StoreCouponUserService extends IService<StoreCouponUser> {
      * 根据uid获取列表
      * @param uid uid
      * @param pageParamRequest 分页参数
-     * @return
+     * @return List<StoreCouponUser>
      */
     List<StoreCouponUser> findListByUid(Integer uid, PageParamRequest pageParamRequest);
+
+    /**
+     * 获取可用优惠券数量
+     * @param uid 用户uid
+     */
+    Integer getUseCount(Integer uid);
+
+    /**
+     * 我的优惠券列表
+     * @param type 类型，usable-可用，unusable-不可用
+     * @param pageParamRequest 分页参数
+     * @return CommonPage<StoreCouponUserResponse>
+     */
+    CommonPage<StoreCouponUserResponse> getMyCouponList(String type, PageParamRequest pageParamRequest);
 }

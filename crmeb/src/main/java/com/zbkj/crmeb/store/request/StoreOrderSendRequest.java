@@ -33,9 +33,12 @@ import java.util.Date;
 public class StoreOrderSendRequest {
     private static final long serialVersionUID=1L;
 
-    @ApiModelProperty(value = "订单ID")
-    @Min(value = 1, message = "请选择订单")
+    @ApiModelProperty(value = "订单id")
     private Integer id;
+
+    @ApiModelProperty(value = "订单编号")
+    @NotBlank(message = "订单编号不能为空")
+    private String orderNo;
 
     @ApiModelProperty(value = "类型， 1发货，2送货，3虚拟", allowableValues = "range[1,2,3]")
     @NotBlank(message = "请选择类型")

@@ -80,6 +80,7 @@
           cancelButtonText: '取消',
           inputErrorMessage: this.$route.path.indexOf('group') !== -1?'请输入分组名称':'请输入标签名称',
           inputType: 'text',
+          closeOnClickModal: false,
           inputValue: row ? (this.$route.path.indexOf('group') !== -1?row.groupName:row.name): ''   ,
           inputPlaceholder: this.$route.path.indexOf('group') !== -1?'请输入分组名称':'请输入标签名称',
           inputValidator: (value) => { if(!value) return '输入不能为空'}

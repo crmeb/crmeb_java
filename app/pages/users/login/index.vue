@@ -1,47 +1,37 @@
 <template>
-	<div class="register absolute">
+	<div class="login-wrapper">
 		<div class="shading">
-			<div class="pictrue acea-row row-center-wrapper">
-				<image :src="logoUrl" v-if="logoUrl" />
-				<image src="/static/images/logo2.png" v-else />
-			</div>
+			<!-- <image :src="logoUrl"/> -->
+			<image :src="logoUrl"/>
+			<!-- <image src="/static/images/logo2.png" v-if="!logoUrl" /> -->
 		</div>
 		<div class="whiteBg" v-if="formItem === 1">
-			<div class="title acea-row row-center-wrapper">
-				<div class="item" :class="current === index ? 'on' : ''" v-for="(item, index) in navList" @click="navTap(index)"
-				 :key="index">
-					{{ item }}
-				</div>
-			</div>
-			<div class="list" :hidden="current !== 1">
+			<div class="list" v-if="current !== 1">
 				<form @submit.prevent="submit">
 					<div class="item">
 						<div class="acea-row row-middle">
-							<image src="/static/images/phone_1.png"></image>
-							<input type="text" placeholder="输入手机号码" v-model="account" required />
+							<image src="/static/images/phone_1.png"  style="width: 24rpx; height: 34rpx;"></image>
+							<input type="text" class="texts" placeholder="输入手机号码" v-model="account" required/>
 						</div>
 					</div>
 					<div class="item">
 						<div class="acea-row row-middle">
-							<image src="/static/images/code_2.png"></image>
-							<input type="password" placeholder="填写登录密码" v-model="password" required />
+							<image src="/static/images/code_2.png" style="width: 28rpx; height: 32rpx;"></image>
+							<input type="password" class="texts" placeholder="填写登录密码" v-model="password" required />
 						</div>
 					</div>
 				</form>
-				<!-- <navigator class="forgetPwd" hover-class="none" url="/pages/users/retrievePassword/index">
-					<span class="iconfont icon-wenti"></span>忘记密码
-				</navigator> -->
 			</div>
-			<div class="list" :hidden="current !== 0">
+			<div class="list" v-if="current !== 0 || appLoginStatus || appleLoginStatus">
 				<div class="item">
 					<div class="acea-row row-middle">
-						<image src="/static/images/phone_1.png"></image>
-						<input type="text" placeholder="输入手机号码" v-model="account" />
+						<image src="/static/images/phone_1.png" style="width: 24rpx; height: 34rpx;"></image>
+						<input type="text" class="texts" placeholder="输入手机号码" v-model="account" />
 					</div>
 				</div>
 				<div class="item">
 					<div class="acea-row row-middle">
-						<image src="/static/images/code_2.png"></image>
+						<image src="/static/images/code_2.png" style="width: 28rpx; height: 32rpx;"></image>
 						<input type="text" placeholder="填写验证码" class="codeIput" v-model="captcha" />
 						<button class="code" :disabled="disabled" :class="disabled === true ? 'on' : ''" @click="code">
 							{{ text }}
@@ -50,59 +40,19 @@
 				</div>
 				<div class="item" v-if="isShowCode">
 					<div class="acea-row row-middle">
-						<image src="/static/images/code_2.png"></image>
+						<image src="/static/images/code_2.png" style="width: 28rpx; height: 32rpx;"></image>
 						<input type="text" placeholder="填写验证码" class="codeIput" v-model="codeVal" />
 						<div class="code" @click="again"><img :src="codeUrl" /></div>
 					</div>
 				</div>
 			</div>
-			<div class="logon" @click="loginMobile" :hidden="current !== 0">登录</div>
-			<div class="logon" @click="submit" :hidden="current === 0">登录</div>
-			<div class="tip">
-				<div :hidden="current !== 1">
-					没有账号?
-					<span @click="current = 0" class="font-color-red">快速登录</span>
-				</div>
+			<div class="logon" @click="loginMobile" v-if="current !== 0">登录</div>
+			<div class="logon" @click="submit" v-if="current === 0">登录</div>
+			<div class="tips">
+				<div v-if="current==0" @click="current = 1">快速登录</div>
+				<div v-if="current==1" @click="current = 0">账号登录</div>
 			</div>
 		</div>
-		<!-- <div class="whiteBg" v-else>
-			<div class="title">注册账号</div>
-			<div class="list">
-				<div class="item">
-					<div class="acea-row row-middle">
-						<image src="/static/images/phone_1.png"></image>
-						<input type="text" placeholder="输入手机号码" v-model="account" />
-					</div>
-				</div>
-				<div class="item">
-					<div class="acea-row row-middle">
-						<image src="/static/images/code_2.png"></image>
-						<input type="text" placeholder="填写验证码" class="codeIput" v-model="captcha" />
-						<button class="code" :disabled="disabled" :class="disabled === true ? 'on' : ''" @click="code">
-							{{ text }}
-						</button>
-					</div>
-				</div>
-				<div class="item">
-					<div class="acea-row row-middle">
-						<image src="/static/images/code_1.png"></image>
-						<input type="password" placeholder="填写您的登录密码" v-model="password" />
-					</div>
-				</div>
-				<div class="item" v-if="isShowCode">
-					<div class="acea-row row-middle">
-						<image src="/static/images/code_2.png"></image>
-						<input type="text" placeholder="填写验证码" class="codeIput" v-model="codeVal" />
-						<div class="code" @click="again"><img :src="codeUrl" /></div>
-					</div>
-				</div>
-			</div>
-			<div class="logon" @click="register">注册</div>
-			<div class="tip">
-				已有账号?
-				<span @click="formItem = 1" class="font-color-red">立即登录</span>
-			</div>
-		</div> -->
 		<div class="bottom"></div>
 	</div>
 </template>
@@ -126,7 +76,7 @@
 		validatorDefaultCatch
 	} from "@/utils/dialog";
 	import {
-		getLogo
+		getLogo, appAuth, appleLogin
 	} from "@/api/public";
 	import {
 		VUE_APP_API_URL
@@ -140,7 +90,7 @@
 		data: function() {
 			return {
 				navList: ["快速登录", "账号登录"],
-				current: 0,
+				current: 1,
 				account: "",
 				password: "",
 				captcha: "",
@@ -150,7 +100,13 @@
 				keyCode: "",
 				codeUrl: "",
 				codeVal: "",
-				isShowCode: false
+				isShowCode: false,
+				platform: '',
+				appLoginStatus: false, // 微信登录强制绑定手机号码状态
+				appUserInfo: null, // 微信登录保存的用户信息
+				appleLoginStatus: false, // 苹果登录强制绑定手机号码状态
+				appleUserInfo: null,
+				appleShow: false // 苹果登录版本必须要求ios13以上的
 			};
 		},
 		watch:{
@@ -166,7 +122,143 @@
 			this.getCode();
 			this.getLogoImage();
 		},
+		onLoad() {
+			let self = this
+			uni.getSystemInfo({
+				success: function(res) {
+					if (res.platform.toLowerCase() == 'ios' && res.system.split(' ')[1] >= 13) {
+						self.appleShow = true
+					}
+				}
+			});
+		},
 		methods: {
+			// 苹果登录
+			appleLogin() {
+				let self = this
+				this.account = ''
+				this.captcha = ''
+				uni.showLoading({
+					title: '登录中'
+				})
+				uni.login({
+					provider: 'apple',
+					timeout: 10000,
+					success(loginRes) {
+						uni.getUserInfo({
+							provider: 'apple',
+							success: function(infoRes) {
+								self.appleUserInfo = infoRes.userInfo
+								self.appleLoginApi()
+							},
+							fail() {
+								uni.hideLoading()
+								uni.showToast({
+									title: '获取用户信息失败',
+									icon: 'none',
+									duration: 2000
+								})
+							},
+							complete() {
+								uni.hideLoading()
+							}
+						});
+					},
+					fail(error) {
+						uni.hideLoading()
+						console.log(error)
+					}
+				})
+			},
+			// 苹果登录Api
+			appleLoginApi() {
+				let self = this
+				appleLogin({
+					openId: self.appleUserInfo.openId,
+					email: self.appleUserInfo.email == undefined ? '' :self.appleUserInfo.email,
+					identityToken: self.appleUserInfo.identityToken || ''
+				}).then((res) => {
+					this.$store.commit("LOGIN", {
+						'token': res.data.token
+					});
+					this.getUserInfo(res.data);
+				}).catch(error => {
+					uni.hideLoading();
+					uni.showModal({
+						title: '提示',
+						content: `错误信息${error}`,
+						success: function(res) {
+							if (res.confirm) {
+								console.log('用户点击确定');
+							} else if (res.cancel) {
+								console.log('用户点击取消');
+							}
+						}
+					});
+				})
+			},
+			// App微信登录
+			wxLogin() {
+				let self = this
+				this.account = ''
+				this.captcha = ''
+				uni.showLoading({
+					title: '登录中'
+				})
+				uni.login({
+					provider: 'weixin',
+					success: function(loginRes) {
+						// 获取用户信息
+						uni.getUserInfo({
+							provider: 'weixin',
+							success: function(infoRes) {
+								uni.hideLoading();
+								self.appUserInfo = infoRes.userInfo
+								self.appUserInfo.type = self.platform === 'ios' ? 'iosWx' : 'androidWx'
+								self.wxLoginGo(self.appUserInfo)
+							},
+							fail() {
+								uni.hideLoading();
+								uni.showToast({
+									title: '获取用户信息失败',
+									icon: 'none',
+									duration: 2000
+								})
+							},
+							complete() {
+								uni.hideLoading()
+							}
+						});
+					},
+					fail() {
+						uni.hideLoading()
+						uni.showToast({
+							title: '登录失败',
+							icon: 'none',
+							duration: 2000
+						})
+					}
+				});
+			},
+			wxLoginGo(userInfo) {
+				appAuth(userInfo).then(res => {
+					if (res.data.type === 'register') {
+						uni.navigateTo({
+							url: '/pages/users/app_login/index?authKey='+res.data.key
+						})
+					}
+					if (res.data.type === 'login') {
+						this.$store.commit("LOGIN", {
+							'token': res.data.token
+						});
+						this.getUserInfo(res.data);
+					}
+				}).catch(res => {
+						that.$util.Tips({
+							title: res
+						});
+				});
+			},
 			again() {
 				this.codeUrl =
 					VUE_APP_API_URL +
@@ -177,20 +269,11 @@
 			},
 			getCode() {
 				let that = this
-				// getCodeApi()
-				// 	.then(res => {
-				// 		that.keyCode = res.data.key;
-				// 	})
-				// 	.catch(res => {
-				// 		that.$util.Tips({
-				// 			title: res
-				// 		});
-				// 	});
 			},
 			async getLogoImage() {
 				let that = this;
 				getLogo().then(res => {
-					that.logoUrl = res.data.logoUrl;
+					that.logoUrl = res.data.logoUrl?res.data.logoUrl:'/static/images/logo2.png';
 				});
 			},
 			async loginMobile() {
@@ -208,34 +291,17 @@
 					title: '请输入正确的验证码'
 				});
 				loginMobile({
-						account: that.account,
+						phone: that.account,
 						captcha: that.captcha,
-						spread: that.$Cache.get("spread")
+						spread_spid: that.$Cache.get("spread")
 					})
 					.then(res => {
 						let data = res.data;
 						let newTime = Math.round(new Date() / 1000);
-						that.$store.commit("LOGIN", {
-							'token': data.token
-							// 'time': dayjs(data.expiresTime) - newTime
+						this.$store.commit("LOGIN", {
+							'token': res.data.token
 						});
-						const backUrl = that.$Cache.get(BACK_URL) || "/pages/index/index";
-						that.$Cache.clear(BACK_URL);
-						// getUserInfo().then(res => {
-							that.$store.commit("SETUID", res.data.user.uid);
-							if (backUrl === '/pages/index/index' || backUrl === '/pages/order_addcart/order_addcart' || backUrl ===
-								'/pages/user/index') {
-
-								uni.switchTab({
-									url: backUrl
-								});
-
-							} else {
-								uni.switchTab({
-									url: '/pages/index/index'
-								});
-							}
-						// })
+						that.getUserInfo(data);
 					})
 					.catch(res => {
 						that.$util.Tips({
@@ -290,21 +356,15 @@
 					title: '请输入正确的手机号码'
 				});
 				if (that.formItem == 2) that.type = "register";
-				// phone: that.account
-				// type: that.type,
-				// key: that.keyCode,
-				// code: that.codeVal
 				await registerVerify(that.account)
 					.then(res => {
 						that.$util.Tips({title:res.message});
 						that.sendCode();
 					})
-					.catch(res => {
-						// if (res.data.status === 402) {
-						// 	that.codeUrl = `${VUE_APP_API_URL}/sms_captcha?key=${that.keyCode}`;
-						// 	that.isShowCode = true;
-						// }
-						that.$util.Tips({title:res.message});
+					.catch(err => {
+						return that.$util.Tips({
+							title: err
+						});
 					});
 			},
 			navTap: function(index) {
@@ -329,44 +389,210 @@
 					.then(({
 						data
 					}) => {
-						// let newTime = Math.round(new Date() / 1000);
-						that.$store.commit("LOGIN", {
+						this.$store.commit("LOGIN", {
 							'token': data.token
-							// 'time': dayjs(data.expiresTime) - newTime
 						});
-						const backUrl = that.$Cache.get(BACK_URL) || "/pages/index/index";
-						that.$Cache.clear(BACK_URL);
-						getUserInfo().then(res => {
-							that.$store.commit("SETUID", res.data.uid);
-							if (backUrl === '/pages/index/index' || backUrl === '/pages/order_addcart/order_addcart' || backUrl ==='/pages/user/index') {
-								uni.switchTab({
-									url: backUrl
-								});
-							} else {
-								uni.switchTab({
-									url: '/pages/index/index'
-								});
-							}
-						})
+						that.getUserInfo(data);	
 					})
 					.catch(e => {
 						that.$util.Tips({
 							title: e
 						});
 					});
+			},
+			getUserInfo(data){
+				this.$store.commit("SETUID", data.uid);
+				getUserInfo().then(res => {
+					this.$store.commit("UPDATE_USERINFO", res.data);
+					let backUrl = this.$Cache.get(BACK_URL) || "/pages/index/index";
+					if (backUrl.indexOf('/pages/users/login/index') !== -1) {
+						backUrl = '/pages/index/index';
+					}
+					uni.reLaunch({
+						url: backUrl
+					});
+				})
 			}
 		}
 	};
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
+	page {
+		background: #fff;
+	}
+	.appLogin {
+		margin-top: 60rpx;
+	
+		.hds {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			font-size: 24rpx;
+			color: #B4B4B4;
+	
+			.line {
+				width: 68rpx;
+				height: 1rpx;
+				background: #CCCCCC;
+			}
+	
+			p {
+				margin: 0 20rpx;
+			}
+		}
+	
+		.btn-wrapper {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin-top: 30rpx;
+	
+			.btn {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 68rpx;
+				height: 68rpx;
+				border-radius: 50%;
+			}
+	
+			.apple-btn {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin-left: 30rpx;
+				background: #000;
+				border-radius: 34rpx;
+				font-size: 40rpx;
+	
+				.icon-s-pingguo {
+					color: #fff;
+					font-size: 40rpx;
+				}
+			}
+	
+			.iconfont {
+				font-size: 40rpx;
+				color: #fff;
+			}
+	
+			.wx {
+				margin-right: 30rpx;
+				background-color: #61C64F;
+			}
+	
+			.mima {
+				background-color: #28B3E9;
+			}
+	
+			.yanzheng {
+				background-color: #F89C23;
+			}
+	
+		}
+	}
+	
 	.code img {
 		width: 100%;
 		height: 100%;
 	}
-
+	
 	.acea-row.row-middle {
 		input {
 			margin-left: 20rpx;
+			display: block;
+		}
+	}
+	
+	.login-wrapper {
+		padding: 30rpx;
+	
+		.shading {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 100%;
+	
+			/* #ifdef APP-VUE */
+			margin-top: 50rpx;
+			/* #endif */
+			/* #ifndef APP-VUE */
+	
+			margin-top: 200rpx;
+			/* #endif */
+	
+	
+			image {
+				width: 180rpx;
+				height: 180rpx;
+			}
+		}
+	
+		.whiteBg {
+			margin-top: 100rpx;
+	
+			.list {
+				border-radius: 16rpx;
+				overflow: hidden;
+	
+				.item {
+					border-bottom: 1px solid #F0F0F0;
+					background: #fff;
+	
+					.row-middle {
+						position: relative;
+						padding: 16rpx 45rpx;
+						
+						.texts{
+							flex: 1;
+							font-size: 28rpx;
+							height: 80rpx;
+							line-height: 80rpx;
+							display: flex;
+							justify-content: center;
+							align-items: center;
+						}
+	
+						input {
+							flex: 1;
+							font-size: 28rpx;
+							height: 80rpx;
+							line-height: 80rpx;
+							display: flex;
+							justify-content: center;
+							align-items: center;
+						}
+	
+						.code {
+							position: absolute;
+							right: 30rpx;
+							top: 50%;
+							color: $theme-color;
+							font-size: 26rpx;
+							transform: translateY(-50%);
+						}
+					}
+				}
+			}
+	
+			.logon {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 100%;
+				height: 86rpx;
+				margin-top: 80rpx;
+				background-color: $theme-color;
+				border-radius: 120rpx;
+				color: #FFFFFF;
+				font-size: 30rpx;
+			}
+	
+			.tips {
+				margin: 30rpx;
+				text-align: center;
+				color: #999;
+			}
 		}
 	}
 </style>

@@ -9,8 +9,8 @@
       <div class="description" v-loading="loading">
         <div class="title">用户信息</div>
         <div class="acea-row">
-          <div class="description-term">用户昵称：{{orderDatalist.user?orderDatalist.user.nickname:orderDatalist.realName}}</div>
-          <div class="description-term">绑定电话：{{orderDatalist.user.phone ? orderDatalist.user.phone : '无'}}</div>
+          <div class="description-term">用户昵称：{{orderDatalist.realName}}</div>
+          <div class="description-term">绑定电话：{{orderDatalist.phone ? orderDatalist.phone : '无'}}</div>
         </div>
         <el-divider></el-divider>
         <div class="title">{{orderDatalist.statusStr.key === 'toBeWrittenOff'?'提货信息': '收货信息'}}</div>
@@ -25,8 +25,8 @@
           <div class="description-term">订单编号：{{orderDatalist.orderId}}</div>
           <div class="description-term" style="color: red">订单状态：{{orderDatalist.statusStr.value}}</div>
           <div class="description-term">商品总数：{{orderDatalist.totalNum}}</div>
-          <div class="description-term">商品总价：{{orderDatalist.totalPrice}}</div>
-          <div class="description-term">交付邮费：{{orderDatalist.payPostage}}</div>
+          <div class="description-term">商品总价：{{orderDatalist.proTotalPrice}}</div>
+          <div class="description-term">支付邮费：{{orderDatalist.payPostage}}</div>
           <div class="description-term">优惠券金额：{{orderDatalist.couponPrice}}</div>
           <div class="description-term">实际支付：{{orderDatalist.payPrice}}</div>
           <div class="description-term fontColor3" v-if="orderDatalist.refundPrice">退款金额：{{orderDatalist.refundPrice}}</div>
@@ -34,7 +34,7 @@
           <div class="description-term" v-if="orderDatalist.backIntegral">退回积分：{{orderDatalist.backIntegral}}</div>
           <div class="description-term">创建时间：{{orderDatalist.createTime}}</div>
           <div class="description-term">支付方式：{{orderDatalist.payTypeStr}}</div>
-          <div class="description-term">推广人：{{orderDatalist.spreadInfo.id + ' / ' +orderDatalist.spreadInfo.name}}</div>
+          <div class="description-term">推广人：{{orderDatalist.spreadName | filterEmpty}}</div>
           <div class="description-term" v-if="orderDatalist.shippingType === 2 && orderDatalist.statusStr.key === 'notShipped'">门店名称：{{orderDatalist.storeName}}</div>
           <div class="description-term" v-if="orderDatalist.shippingType === 2 && orderDatalist.statusStr.key === 'notShipped'">核销码：{{orderDatalist.user_phone}}</div>
           <div class="description-term">商家备注：{{orderDatalist.remark}}</div>
@@ -106,7 +106,7 @@ export default {
   name: 'OrderDetail',
   props: {
     orderId: {
-      type: Number,
+      type: String,
       default: 0
     }
   },
@@ -129,13 +129,13 @@ export default {
     },
     // 获取订单物流信息
     getOrderData () {
-      getLogisticsInfoApi({id:this.orderId}).then(async res => {
+      getLogisticsInfoApi({orderNo:this.orderId}).then(async res => {
         this.result = res.list;
       })
     },
     getDetail(id) {
       this.loading = true
-      orderDetailApi({id: id}).then(res => {
+      orderDetailApi({orderNo: id}).then(res => {
         this.orderDatalist = res
         this.loading = false
       }).catch(() => {

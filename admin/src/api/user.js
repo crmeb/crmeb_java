@@ -357,3 +357,14 @@ export function updateSpreadApi(data) {
     data
   })
 }
+
+/**
+ * @description 修改手机号
+ */
+export function updatePhoneApi(params) {
+  return request({
+    url: `/admin/user/update/phone`,
+    method: 'get',
+    params
+  })
+}

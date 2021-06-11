@@ -3,25 +3,20 @@ package com.zbkj.crmeb.store.request;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.constants.Constants;
-import com.utils.CrmebUtil;
 import com.zbkj.crmeb.store.model.StoreProductAttr;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * 商品表
+ * 商品请求对象
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
@@ -36,11 +31,12 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @TableName("eb_store_product")
-@ApiModel(value="StoreProductRequest对象", description="商品表")
+@ApiModel(value="StoreProductRequest对象", description="商品请求对象")
 public class StoreProductRequest implements Serializable {
 
+    private static final long serialVersionUID = -452373239606480650L;
+
     @ApiModelProperty(value = "商品id")
-    @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
     @ApiModelProperty(value = "商户Id(0为总后台管理员创建,不为0的时候是商户后台创建)")
@@ -162,6 +158,7 @@ public class StoreProductRequest implements Serializable {
     private Integer tempId;
 
     @ApiModelProperty(value = "规格 0单 1多")
+    @NotNull(message = "商品规格不能为空")
     private Boolean specType;
 
     @ApiModelProperty(value = "活动显示排序 0=默认，1=秒杀，2=砍价，3=拼团")
@@ -172,7 +169,6 @@ public class StoreProductRequest implements Serializable {
 
     @ApiModelProperty(value = "商品属性详情")
     private List<StoreProductAttrValueRequest> attrValue;
-//    private String attrValue;
 
     @ApiModelProperty(value = "商品分类")
     private List<Integer> cateIds;

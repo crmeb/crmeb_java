@@ -85,4 +85,22 @@ public interface StorePinkService extends IService<StorePink> {
      * @return
      */
     StorePink getByOrderId(String orderId);
+
+    /**
+     * 获取最后3个拼团信息（不同用户）
+     * @return List
+     */
+    List<StorePink> findSizePink(Integer size);
+
+    /**
+     * 获取拼团参与总人数
+     * @return Integer
+     */
+    Integer getTotalPeople();
+
+    /**
+     * 获取拼团详情
+     * @return StorePink
+     */
+    StorePink getByUidAndKid(Integer uid, Integer kid);
 }

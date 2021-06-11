@@ -1,5 +1,9 @@
 <template>
 	<view>
+		<view class="navbar acea-row row-around">
+			<view class="item acea-row row-center-wrapper" :class="{ on: navOn === 'usable' }" @click="onNav('usable')">未使用</view>
+			<view class="item acea-row row-center-wrapper" :class="{ on: navOn === 'unusable' }" @click="onNav('unusable')">已使用/过期</view>
+		</view>
 		<view class='coupon-list' v-if="couponsList.length">
 			<view class='item acea-row row-center-wrapper' v-for='(item,index) in couponsList' :key="index">
 				<view class='money' :class="item.validStr==='unusable'||item.validStr==='overdue'||item.validStr==='notStart' ? 'moneyGray' : ''">
@@ -20,13 +24,16 @@
 				</view>
 			</view>
 		</view>
-		<view class='noCommodity' v-if="!couponsList.length && loading==true">
+		<view class='loadingicon acea-row row-center-wrapper' v-if="couponsList.length">
+		     <text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>{{loadTitle}}
+		  </view>
+		<view class='noCommodity' v-if="!couponsList.length">
 			<view class='pictrue'>
 				<image src='../../../static/images/noCoupon.png'></image>
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -68,6 +75,11 @@
 			return {
 				couponsList: [],
 				loading: false,
+				loadend: false,
+				loadTitle: '加载更多',//提示语
+				page: 1,
+				limit: 20,
+				navOn: 'usable',
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false //是否隐藏授权
 			};
@@ -87,13 +99,7 @@
 			if (this.isLogin) {
 				this.getUseCoupons();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {
@@ -107,21 +113,65 @@
 			authColse: function(e) {
 				this.isShowAuth = e
 			},
+			onNav: function(type) {
+				this.navOn = type;
+				this.couponsList = [];
+				this.page = 1;
+				this.loadend = false;
+				this.getUseCoupons();
+			},
 			/**
 			 * 获取领取优惠券列表
 			 */
 			getUseCoupons: function() {
 				let that = this;
-				getUserCoupons({status:0}).then(res => {
-					that.loading = true;
-					that.$set(that, 'couponsList', res.data || []);
-				})
+				if(this.loadend) return false;
+				if(this.loading) return false;
+				getUserCoupons({ page: that.page, limit: that.limit, type: that.navOn}).then(res => {
+					let list= res.data ? res.data.list : [],loadend=list.length < that.limit;
+					let couponsList = that.$util.SplitArray(list, that.couponsList);
+					that.$set(that,'couponsList',couponsList);
+					that.loadend = loadend;
+					that.loadTitle = loadend ? '我也是有底线的' : '加载更多';
+					that.page = that.page + 1;
+					that.loading = false;
+				}).catch(err=>{
+					  that.loading = false;
+					  that.loadTitle = '加载更多';
+				  });
 			}
-		}
+		},
+		/**
+		  * 页面上拉触底事件的处理函数
+		  */
+		 onReachBottom: function () {
+		   this.getUseCoupons();
+		 }
 	}
 </script>
 
-<style>
+<style lang="scss" scoped>
+	.navbar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 106rpx;
+		background-color: #FFFFFF;
+		z-index: 9;
+	
+		.item {
+			border-top: 5rpx solid transparent;
+			border-bottom: 5rpx solid transparent;
+			font-size: 30rpx;
+			color: #999999;
+	
+			&.on {
+				border-bottom-color: #E93323;
+				color: #282828;
+			}
+		}
+	}
 	.money {
 		display: flex;
 		flex-direction: column;
@@ -131,6 +181,9 @@
 	.pic-num {
 		color: #ffffff;
 		font-size: 24rpx;
+	}
+	.coupon-list {
+		margin-top: 122rpx;
 	}
 	.coupon-list .item .text{
 		height: 100%;
@@ -153,5 +206,8 @@
 		font-size: 18rpx !important;
 		color: #e83323;
 		margin-right: 12rpx;
+	}
+	.noCommodity {
+		margin-top: 300rpx;
 	}
 </style>

@@ -46,9 +46,6 @@ export function getCodeApi() {
 export function registerVerify(phone){
   return request.post('sendCode', { phone: phone },{noAuth:true},1)
 }
-// export function registerVerify(data) {
-//   return request.post("register/verify", data, { noAuth : true });
-// }
 
 /**
  * h5用户手机号注册
@@ -176,7 +173,7 @@ export function spreadCount(type){
 }
 
 /*
- * 推广数据
+ * 推广数据 当前佣金 提现总金额
  * */
 export function getSpreadInfo() {
   return request.get("commission");
@@ -317,6 +314,13 @@ export function rechargeWechat(data) {
 }
 
 /*
+ * app微信充值
+ * */
+export function appWechat(data) {
+  return request.post("recharge/wechat/app", data);
+}
+
+/*
  * 余额充值
  * */
 export function transferIn(data) {
@@ -365,7 +369,7 @@ export function getChatRecord(to_uid, data) {
  */
 export function spread(puid)
 {
-	return request.get("user/bindSpread?spreadPid=" + puid);
+	return request.get("user/bindSpread?spreadPid="+ puid);
 }
 
 /**
@@ -414,5 +418,23 @@ export function getBillList(data)
 	return request.get("recharge/bill/record",data);
 }
 
+/*
+ * 积分中心详情
+ * */
+export function postIntegralUser() {
+  return request.get("integral/user");
+}
 
+/*
+ * 立即提现 冻结期、冻结佣金、可提现佣金、最低可提现金额
+ * */
+export function extractUser() {
+  return request.get("extract/user");
+}
 
+/*
+ * 推广人统计页 推广人数（一级+二级）、一级人数、二级人数
+ * */
+export function spreadPeoCount() {
+  return request.get("spread/people/count");
+}

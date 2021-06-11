@@ -24,12 +24,15 @@
 						</view>
 						<view class="acea-row row-around row-middle">
 							<view class="spotw acea-row row-center" v-for="(item,index) in levelList" :key='index'>
-								<view class="spot" :class="current >item.experience?'past':'' + ' ' + current==item.experience?'on':''"></view>
+								<view class="spot"
+									:class="current >item.experience?'past':'' + ' ' + current==item.experience?'on':''">
+								</view>
 							</view>
 						</view>
 					</view>
 					<view class="numList acea-row row-around row-middle">
-						<view class="item" :class="current >=item.experience?'past':''" v-for="(item,index) in levelList" :key="index">{{item.experience}}</view>
+						<view class="item" :class="current >=item.experience?'past':''"
+							v-for="(item,index) in levelList" :key="index">{{item.experience}}</view>
 					</view>
 				</view>
 				<view class="vipList acea-row">
@@ -88,7 +91,8 @@
 								<view class="info line1">购买商品可获得对应是经验值</view>
 							</view>
 						</view>
-						<navigator url="/pages/goods_cate/goods_cate" class="button" hover-class="none" open-type='switchTab'>去获取</navigator>
+						<navigator url="/pages/goods_cate/goods_cate" class="button" hover-class="none"
+							open-type='switchTab'>去获取</navigator>
 					</view>
 					<!-- <view class="item acea-row row-between-wrapper">
 						<view class="picTxt acea-row row-middle">
@@ -128,7 +132,9 @@
 <script>
 	import home from '@/components/home';
 	import {
-		getUserInfo,
+		mapGetters
+	} from "vuex";
+	import {
 		getlevelInfo,
 		getlevelExpList
 	} from '@/api/user.js';
@@ -136,9 +142,10 @@
 		components: {
 			home
 		},
+		computed: mapGetters(['userInfo']),
 		data() {
 			return {
-				userInfo: '',
+				//userInfo: '',
 				levelInfo: '',
 				levelList: [],
 				current: 0,
@@ -151,35 +158,19 @@
 				expList: []
 			};
 		},
-		onShow() {
-			this.getUserInfo();
+		onLoad() {
+			this.levelInfo = this.userInfo.experience;
 			this.getInfo();
 			this.getlevelList();
 		},
 		methods: {
-			/**
-			 * 获取个人用户信息
-			 */
-			getUserInfo: function() {
-				let that = this;
-				getUserInfo().then(res => {
-					that.$store.commit("SETUID", res.data.uid);
-					that.$store.commit("UPDATE_USERINFO", res.data);
-					that.userInfo = res.data;
-					that.levelInfo = res.data.experience;
-				}).catch(function(res) {
-					return that.$util.Tips({
-						title: res
-					});
-				})
-			},
 			getInfo: function() {
 				let that = this;
 				getlevelInfo().then(res => {
-					let levelList = res.data.list;
+					let levelList = res.data;
 					let list = []
 					that.levelList = levelList;
-					levelList.forEach((item, index) => {
+					levelList.map((item, index) => {
 						if (item.experience <= that.levelInfo) {
 							list.push(item.experience)
 						}
@@ -187,7 +178,8 @@
 					let maxn = Math.max.apply(null, list);
 					that.current = maxn;
 					// 解决len取的值没有时；
-					let levelListLen = levelList[list.length] ? levelList[list.length] : levelList[list.length - 1];
+					let levelListLen = levelList[list.length] ? levelList[list.length] : levelList[list
+						.length - 1];
 					// 解决除数不能为0
 					let divisor = levelListLen.experience - maxn ? levelListLen.experience - maxn : 1;
 					// 每小格所占的百分比
@@ -266,11 +258,13 @@
 						}
 
 						.vip {
-							padding: 2rpx 8rpx;
+							padding: 6rpx 18rpx;
 							border: 1px solid rgba(250, 226, 193, 1);
 							border-radius: 20rpx;
 							font-size: 18rpx;
 							margin-left: 15rpx;
+							display: flex;
+							align-items: center;
 
 							image {
 								width: 20rpx;
@@ -293,7 +287,7 @@
 				border-radius: 23rpx;
 				padding: 22rpx 27rpx;
 				box-sizing: border-box;
-              
+
 				.title {
 					font-size: 24rpx;
 					color: #AE8B4A;
@@ -307,12 +301,15 @@
 
 				.axis {
 					margin: 10rpx 0 15rpx 0;
-                    overflow: hidden;
+					overflow: hidden;
+
 					.bar {
 						width: 630rpx;
-						.spotw{
+
+						.spotw {
 							width: 96rpx;
 						}
+
 						.barCon {
 							width: 100%;
 							height: 3rpx;
@@ -485,7 +482,7 @@
 				.item {
 					height: 122rpx;
 					border-bottom: 1px solid #EEEEEE;
-					
+
 					.text {
 						.name {
 							font-size: 28rpx;
@@ -500,10 +497,11 @@
 
 					.num {
 						font-size: 32rpx;
-						color: #16AC57;
+						color: $theme-color;
 					}
-					.on{
-						color: #E93323;
+
+					.on {
+						color: #16AC57;
 					}
 				}
 			}

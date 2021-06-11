@@ -41,7 +41,7 @@ public class WeChatAuthorizeLoginGetOpenIdResponse implements Serializable {
     @TableField(value = "refresh_token")
     private String refreshToken;
 
-    @ApiModelProperty(value = "过期时间")
+    @ApiModelProperty(value = "用户OpenId")
     @TableField(value = "openid")
     private String openId;
 

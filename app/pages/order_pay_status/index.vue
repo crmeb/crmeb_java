@@ -47,7 +47,7 @@
 			<button @click="goIndex" class='returnBnt cart-color' formType="submit" hover-class='none' v-else>返回首页</button>
 			</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 	</view>
 </template>
@@ -88,16 +88,16 @@
 			};
 		},
 		computed: mapGetters(['isLogin']),
-		// watch:{
-		// 	isLogin:{
-		// 		handler:function(newV,oldV){
-		// 			if(newV){
-		// 				this.getOrderPayInfo();
-		// 			}
-		// 		},
-		// 		deep:true
-		// 	}
-		// },
+		watch:{
+			isLogin:{
+				handler:function(newV,oldV){
+					if(newV){
+						this.getOrderPayInfo();
+					}
+				},
+				deep:true
+			}
+		},
 		onLoad: function(options) {
 			if (!options.order_id) return this.$util.Tips({
 				title: '缺少参数无法查看订单支付状态'
@@ -111,13 +111,7 @@
 			if (this.isLogin) {
 				this.getOrderPayInfo();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {

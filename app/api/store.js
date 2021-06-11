@@ -5,8 +5,8 @@ import request from "@/utils/request.js";
  * @param int id
  * 
  */
-export function getProductDetail(id) {
-	return request.get('product/detail/' + id, {}, {
+export function getProductDetail(id, type) {
+	return request.get('product/detail/' + id + '?type=' + type, {}, {
 		noAuth: true
 	});
 }
@@ -41,15 +41,20 @@ export function collectAdd(id, category) {
 }
 
 /**
- * 删除收藏产品
+ * 取消收藏产品
  * @param int id
- * @param string category product=普通产品,product_seckill=秒杀产品
  */
-export function collectDel(id, category) {
-	return request.post('collect/del', {
-		id: id,
-		'category': category === undefined ? 'product' : category
-	});
+export function collectDel(proId) {
+	return request.post(`collect/cancel/${proId}`);
+}
+
+
+/**
+ * 删除收藏产品
+ * @param string id
+ */
+export function collectDelete(ids) {
+	return request.post(`collect/delete`,ids);
 }
 
 /**
@@ -111,7 +116,7 @@ export function collectAll(id, category) {
  * 
  */
 export function getGroomList(type, data) {
-	return request.get('groom/list/' + type, data, {
+	return request.get('index/product/' + type, data, {
 		noAuth: true
 	});
 }
@@ -162,4 +167,25 @@ export function getSearchKeyword() {
  */
 export function storeListApi(data) {
 	return request.post("store/list", data, {}, 1);
+}
+
+
+/**
+ * 优品推荐
+ * @param object data
+ */
+export function getProductGood() {
+	return request.get('product/good');
+}
+
+/**
+ * 详情页产品评论
+ * @param int id
+ * @param object data
+ * 
+ */
+export function getReplyProduct(id) {
+	return request.get('reply/product/' + id, {
+		noAuth: true
+	})
 }

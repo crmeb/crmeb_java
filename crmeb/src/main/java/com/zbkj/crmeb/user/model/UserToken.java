@@ -41,7 +41,7 @@ public class UserToken implements Serializable {
     @ApiModelProperty(value = "token")
     private String token;
 
-    @ApiModelProperty(value = "类型， 1公众号， 2小程序")
+    @ApiModelProperty(value = "类型， 1公众号， 2小程序, 5AppIos,6AppAndroid,7ios")
     private int type;
 
     @ApiModelProperty(value = "创建时间")

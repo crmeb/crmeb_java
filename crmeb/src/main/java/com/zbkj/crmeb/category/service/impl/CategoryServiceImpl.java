@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.constants.CategoryConstants;
+import com.constants.Constants;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
 import com.utils.CrmebUtil;
@@ -408,6 +409,21 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
         category.setPath(getPathByPId(category.getPid()));
         category.setExtra(systemAttachmentService.clearPrefix(category.getExtra()));
         return save(category);
+    }
+
+    /**
+     * 获取文章分类列表
+     * @return List<Category>
+     */
+    @Override
+    public List<Category> findArticleCategoryList() {
+        LambdaQueryWrapper<Category> lambdaQueryWrapper = Wrappers.lambdaQuery();
+        lambdaQueryWrapper.select(Category::getId, Category::getName);
+        lambdaQueryWrapper.eq(Category::getType, Constants.CATEGORY_TYPE_ARTICLE);
+        lambdaQueryWrapper.eq(Category::getStatus, true);
+        lambdaQueryWrapper.orderByDesc(Category::getSort);
+        lambdaQueryWrapper.orderByAsc(Category::getId);
+        return dao.selectList(lambdaQueryWrapper);
     }
 }
 

@@ -48,5 +48,5 @@
 	.swiper swiper .slide-image{width:100%;height:100%;}
 	.swiper .dots{position:absolute;right:40rpx;bottom:20rpx;}
 	.swiper .dots .dot{width:12rpx;height:12rpx;border:2rpx solid #fff;border-radius:50%;margin-right:15rpx;}
-	.swiper .dots .dot.active{border-color:#e93323;background-color:#e93323;}
+	.swiper .dots .dot.active{border-color:$theme-color;background-color:$theme-color;}
 </style>

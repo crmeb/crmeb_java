@@ -6,7 +6,6 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.parser.Feature;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -20,7 +19,7 @@ import com.github.pagehelper.PageInfo;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.utils.RedisUtil;
-import com.zbkj.crmeb.front.response.SecKillResponse;
+import com.zbkj.crmeb.front.response.*;
 import com.zbkj.crmeb.seckill.dao.StoreSeckillDao;
 import com.zbkj.crmeb.seckill.model.StoreSeckill;
 import com.zbkj.crmeb.seckill.model.StoreSeckillManger;
@@ -29,7 +28,6 @@ import com.zbkj.crmeb.seckill.request.StoreSeckillSearchRequest;
 import com.zbkj.crmeb.seckill.response.StoreSeckillDetailResponse;
 import com.zbkj.crmeb.seckill.response.StoreSeckillManagerResponse;
 import com.zbkj.crmeb.seckill.response.StoreSeckillResponse;
-import com.zbkj.crmeb.seckill.response.StoreSeckillStoreInfoResponse;
 import com.zbkj.crmeb.seckill.service.StoreSeckillMangerService;
 import com.zbkj.crmeb.seckill.service.StoreSeckillService;
 import com.zbkj.crmeb.store.model.*;
@@ -49,7 +47,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -108,17 +105,12 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
     @Autowired
     private RedisUtil redisUtil;
 
-    @Autowired
-    private TransactionTemplate transactionTemplate;
-
     private static final Logger logger = LoggerFactory.getLogger(OrderRefundTask.class);
 
     /**
     * 列表
     * @param request 请求参数
     * @param pageParamRequest 分页类参数
-    * @author Stivepeim
-    * @since 2020-09-17
     * @return List<StoreSeckill>
     */
     @Override
@@ -167,17 +159,6 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
             if(attrs.size() > 0){
                 storeProductResponse.setAttr(attrs);
             }
-
-            List<StoreProductAttrValueResponse> storeProductAttrValueResponse = new ArrayList<>();
-            List<StoreProductAttrValue> storeProductAttrValues =storeProductAttrValueService.getListByProductId(product.getId());
-
-            storeProductAttrValues.stream().map(e->{
-                StoreProductAttrValueResponse response = new StoreProductAttrValueResponse();
-                BeanUtils.copyProperties(e,response);
-                storeProductAttrValueResponse.add(response);
-                return e;
-            }).collect(Collectors.toList());
-            storeProductResponse.setAttrValue(storeProductAttrValueResponse);
             // 处理富文本
             StoreProductDescription sd = storeProductDescriptionService.getOne(
                     new LambdaQueryWrapper<StoreProductDescription>()
@@ -188,8 +169,8 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
             }
             // 添加秒杀配置关系
             List<StoreSeckillManagerResponse> hasTimeIds = storeSeckillMangerServiceList.stream()
-                    .filter(e -> e.getId() == storeProductResponse.getTimeId()).collect(Collectors.toList());
-            if(null != hasTimeIds && hasTimeIds.size() > 0){
+                    .filter(e -> e.getId().equals(storeProductResponse.getTimeId())).collect(Collectors.toList());
+            if (CollUtil.isNotEmpty(hasTimeIds)) {
                 storeProductResponse.setStoreSeckillManagerResponse(hasTimeIds.get(0));
                 storeProductResponse.setCurrentTimeId(currentSkillTimeId);
                 storeProductResponse.setCurrentTime(hasTimeIds.get(0).getTime());
@@ -207,7 +188,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
      * @return 删除结果
      */
     @Override
-    public boolean deleteById(int id) {
+    public Boolean deleteById(Integer id) {
         StoreSeckill skill = new StoreSeckill().setId(id).setIsDel(true);
         return dao.updateById(skill) > 0;
     }
@@ -219,7 +200,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
      * @return 新增结果
      */
     @Override
-    public boolean saveSeckill(StoreSeckillRequest request) {
+    public Boolean saveSeckill(StoreSeckillRequest request) {
         // 过滤掉checked=false的数据
         clearNotCheckedAndValidationPrice(request);
 
@@ -329,7 +310,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
      * @return 更新结果
      */
     @Override
-    public boolean updateSeckill(StoreSeckillRequest request) {
+    public Boolean updateSeckill(StoreSeckillRequest request) {
         // 过滤掉checked=false的数据
         clearNotCheckedAndValidationPrice(request);
 
@@ -417,7 +398,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
      * @return 更新结果
      */
     @Override
-    public boolean updateSecKillStatus(int secKillId, boolean status) {
+    public Boolean updateSecKillStatus(int secKillId, boolean status) {
         StoreSeckill seckill = getById(secKillId);
         if (ObjectUtil.isNull(seckill) || seckill.getIsDel()) {
             throw new CrmebException("秒杀商品不存在");
@@ -441,46 +422,136 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
      * @return 详情
      */
     @Override
-    public StoreSeckillDetailResponse getDetailH5(int skillId) {
+    public StoreSeckillDetailResponse getDetailH5(Integer skillId) {
         StoreSeckillDetailResponse productDetailResponse = new StoreSeckillDetailResponse();
-        StoreProductResponse productResponse = getSkillDetailJustForH5(skillId);
-        StoreSeckillStoreInfoResponse storeInfo = new StoreSeckillStoreInfoResponse();
 
-        BeanUtils.copyProperties(productResponse,storeInfo);
+        // 获取秒杀商品信息
+        StoreSeckill storeSeckill = dao.selectById(skillId);
+        if (ObjectUtil.isNull(storeSeckill) || storeSeckill.getIsDel()) {
+            throw new CrmebException("未找到对应秒杀商品信息");
+        }
+        if (storeSeckill.getStatus().equals(0)) {
+            throw new CrmebException("秒杀商品已下架");
+        }
 
-        storeInfo.setStoreName(productResponse.getTitle());
+        SecKillDetailH5Response detailH5Response = new SecKillDetailH5Response();
+        BeanUtils.copyProperties(storeSeckill, detailH5Response);
+        detailH5Response.setStoreName(storeSeckill.getTitle());
+        detailH5Response.setSliderImage(storeSeckill.getImages());
+        detailH5Response.setStoreInfo(storeSeckill.getInfo());
+        Integer seckillStatus = getSeckillStatus(storeSeckill);
+        detailH5Response.setSeckillStatus(seckillStatus);
+        // 详情
+        StoreProductDescription sd = storeProductDescriptionService.getOne(
+                new LambdaQueryWrapper<StoreProductDescription>()
+                        .eq(StoreProductDescription::getProductId, skillId)
+                        .eq(StoreProductDescription::getType, Constants.PRODUCT_TYPE_SECKILL));
+        if (ObjectUtil.isNotNull(sd)) {
+            detailH5Response.setContent(ObjectUtil.isNull(sd.getDescription()) ? "" : sd.getDescription());
+        }
+        // 获取主商品信息
+        StoreProduct storeProduct = storeProductService.getById(storeSeckill.getProductId());
+        // 秒杀销量 = 原商品销量（包含虚拟销量）
+        detailH5Response.setSales(storeProduct.getSales());
+        detailH5Response.setFicti(storeProduct.getFicti());
+        productDetailResponse.setStoreSeckill(detailH5Response);
+
+        // 获取秒杀商品规格
+        StoreProductAttr spaPram = new StoreProductAttr();
+        spaPram.setProductId(skillId).setType(Constants.PRODUCT_TYPE_SECKILL);
+        List<StoreProductAttr> attrList = attrService.getByEntity(spaPram);
+        // 根据制式设置attr属性
+        List<ProductAttrResponse> skuAttr = getSkuAttr(attrList);
+        productDetailResponse.setProductAttr(skuAttr);
+
+        // 根据制式设置sku属性
+        HashMap<String, Object> skuMap = CollUtil.newHashMap();
+        // 获取主商品sku
+        StoreProductAttrValue spavPram = new StoreProductAttrValue();
+        spavPram.setProductId(storeSeckill.getProductId()).setType(Constants.PRODUCT_TYPE_NORMAL);
+        List<StoreProductAttrValue> storeProductAttrValues = storeProductAttrValueService.getByEntity(spavPram);
+        // 获取秒杀商品sku
+        StoreProductAttrValue spavPram1 = new StoreProductAttrValue();
+        spavPram1.setProductId(storeSeckill.getId()).setType(Constants.PRODUCT_TYPE_SECKILL);
+        List<StoreProductAttrValue> seckillAttrValues = storeProductAttrValueService.getByEntity(spavPram1);
+
+        for (int i = 0; i < storeProductAttrValues.size(); i++) {
+            StoreProductAttrValueResponse atr = new StoreProductAttrValueResponse();
+            StoreProductAttrValue productAttrValue = storeProductAttrValues.get(i);
+            List<StoreProductAttrValue> valueList = seckillAttrValues.stream().filter(e -> {
+                return productAttrValue.getSuk().equals(e.getSuk());
+            }).collect(Collectors.toList());
+            if (CollUtil.isEmpty(valueList)) {
+                BeanUtils.copyProperties(productAttrValue, atr);
+            } else {
+                BeanUtils.copyProperties(valueList.get(0), atr);
+            }
+            skuMap.put(atr.getSuk(), atr);
+        }
+        productDetailResponse.setProductValue(skuMap);
 
         // 设置点赞和收藏
         User user = userService.getInfo();
-        if(null != user && null != user.getUid()){
-            storeInfo.setUserLike(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),productResponse.getProductId(),true).size() > 0);
-            storeInfo.setUserCollect(storeProductRelationService.getLikeOrCollectByUser(user.getUid(),productResponse.getProductId(),false).size() > 0);
+        if(ObjectUtil.isNotNull(user)){
+            productDetailResponse.setUserCollect(storeProductRelationService.getLikeOrCollectByUser(user.getUid(), detailH5Response.getProductId(),false).size() > 0);
         }else{
-            storeInfo.setUserLike(false);
-            storeInfo.setUserCollect(false);
-        }
-        productDetailResponse.setStoreInfo(storeInfo);
-        productDetailResponse.setStatusName(storeInfo.getStatusName());
-        productDetailResponse.setKillStatus(storeInfo.getKillStatus());
-
-        // 根据制式设置attr属性
-       setSkuAttr(skillId, productDetailResponse, productResponse);
-
-        // 单属性时讲attrValueId 赋值给外层方便前端使用
-        if(!productResponse.getSpecType()){
-            productDetailResponse.setAloneAttrValueId(productResponse.getAttrValue().get(0).getId());
-            productResponse.getAttrValue().get(0).setQuota(productResponse.getQuota());
-            productDetailResponse.setQuota(productResponse.getQuota());
-            productDetailResponse.setQuotaShow(productResponse.getQuotaShow());
+            productDetailResponse.setUserCollect(false);
         }
 
-        // 根据制式设置sku属性
-        HashMap<String,Object> skuMap = new HashMap<>();
-        for (StoreProductAttrValueResponse attrValue : productResponse.getAttrValue()) {
-            skuMap.put(attrValue.getSuk(),attrValue);
-        }
-        productDetailResponse.setProductValue(skuMap);
         return productDetailResponse;
+    }
+
+    /**
+     * 获取秒杀规格（公共转换）
+     * @param attrList 秒杀规格列表
+     * @return List<ProductAttrResponse>
+     */
+    private List<ProductAttrResponse> getSkuAttr(List<StoreProductAttr> attrList) {
+        List<ProductAttrResponse> attrResponseList = new ArrayList<>();
+        for (StoreProductAttr attr : attrList) {
+            ProductAttrResponse attrResponse = new ProductAttrResponse();
+            attrResponse.setProductId(attr.getProductId());
+            attrResponse.setAttrName(attr.getAttrName());
+            attrResponse.setType(attr.getType());
+            List<String> attrValues = new ArrayList<>();
+            String trimAttr = attr.getAttrValues()
+                    .replace("[","")
+                    .replace("]","");
+            if(attr.getAttrValues().contains(",")){
+                attrValues = Arrays.asList(trimAttr.split(","));
+            }else{
+                attrValues.add(trimAttr);
+            }
+            attrResponse.setAttrValues(attrValues);
+            attrResponseList.add(attrResponse);
+        }
+        return attrResponseList;
+    }
+
+    /**
+     * 获取秒杀状态
+     * @param storeSeckill 秒杀商品
+     * @return 秒杀状态
+     */
+    private Integer getSeckillStatus(StoreSeckill storeSeckill) {
+        if(storeSeckill.getStatus() == 1 && DateUtil.nowDateTime().compareTo(storeSeckill.getStartTime()) < 0){
+            // 即将开始
+            return 1;
+        }
+        else if(storeSeckill.getStatus() == 0) {
+            // 关闭
+            return 0;
+        }
+        else if(storeSeckill.getStatus() == 1 && DateUtil.nowDateTime().compareTo(storeSeckill.getStartTime())>0
+                && DateUtil.nowDateTime().compareTo(storeSeckill.getStopTime()) < 0) {
+            // 进行中
+            return 2;
+        }
+        else if(storeSeckill.getStatus() == 1 && DateUtil.nowDateTime().compareTo(storeSeckill.getStopTime()) >= 0){
+            // 已结束
+            return -1;
+        }
+        return -2;
     }
 
     /**
@@ -543,7 +614,6 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
 
         storeProductResponse.setAttrValues(attrValuesProduct);
         storeProductResponse.setAttrValue(sPAVResponses);
-//        if(null != storeProductAttrResult){
         StoreProductDescription sd = storeProductDescriptionService.getOne(
                 new LambdaQueryWrapper<StoreProductDescription>()
                         .eq(StoreProductDescription::getProductId, skillId)
@@ -551,52 +621,54 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         if(null != sd){
             storeProductResponse.setContent(null == sd.getDescription()?"":sd.getDescription());
         }
-//        }
         return storeProductResponse;
     }
 
     /**
      * 移动端 获取秒杀配置
-     *
+     * 获取当前时间段 + 下边的6个商品
      * @return 秒杀配置
      */
     @Override
-    public HashMap<String,Object> getForH5Index() {
-        HashMap<String,Object> result = new HashMap<>();
+    public List<SecKillResponse> getForH5Index() {
         List<SecKillResponse> response = new ArrayList<>();
-        StoreSeckillManger storeSeckillManger = new StoreSeckillManger();
-        storeSeckillManger.setIsDel(false);
-        List<StoreSeckillManagerResponse> skillManagerList =
-                storeSeckillMangerService.getList(storeSeckillManger, new PageParamRequest());
-        // 根据当前时间过滤 仅处理正在进行和马上开始的秒杀
         int currentHour = DateUtil.getCurrentHour();
-        List<StoreSeckillManagerResponse> hasSkillTime =
-                skillManagerList.stream().filter(e -> e.getEndTime() > currentHour).collect(Collectors.toList());
-        hasSkillTime.stream()
-                .sorted(Comparator.comparing(StoreSeckillManagerResponse::getStartTime))
-                .map(e->{
-                    // 根据当前秒杀配置id查询是否有商品正在参与次时间段
-                    List<StoreSeckillResponse> existKills = getKillListByTimeId(e.getId() + "", new PageParamRequest(),true);
-                    if(null != existKills && existKills.size() >0){
-                        int secKillEndSecondTimestamp =
-                                DateUtil.getSecondTimestamp(DateUtil.nowDateTime("yyyy-MM-dd " + e.getEndTime() + ":00:00"));
-                        SecKillResponse r = new SecKillResponse(e.getId(),e.getSilderImgs(),e.getStatusName(),
-                                e.getTime(),e.getKillStatus(),secKillEndSecondTimestamp+"");
-                        response.add(r);
-                    }
-            return e;
-        }).collect(Collectors.toList());
-
-        // 当前正在进行中的给前端标示选中状态
-        int selectIndex = 0;
-        for (int i = 0; i < hasSkillTime.size(); i++) {
-            if(currentHour == hasSkillTime.get(i).getEndTime()){
-                selectIndex = i;
+        // 获取所有的秒杀配置
+        List<StoreSeckillManagerResponse> skillManagerList = storeSeckillMangerService.getH5List();
+        // 根据当前时间过滤 仅处理正在进行和马上开始的秒杀
+        skillManagerList.forEach(e->{
+            // 根据当前秒杀配置id查询是否有商品正在参与次时间段
+            Integer proNum = getCountByTimeId(e.getId());
+            if (proNum > 0) {
+                int secKillEndSecondTimestamp = DateUtil.getSecondTimestamp(DateUtil.nowDateTime("yyyy-MM-dd " + e.getEndTime() + ":00:00"));
+                SecKillResponse r = new SecKillResponse(e.getId(),e.getSilderImgs(),e.getStatusName(),
+                        e.getTime(),e.getKillStatus(),secKillEndSecondTimestamp+"");
+                if(e.getStartTime() <= currentHour && currentHour < e.getEndTime()){
+                    r.setIsCheck(true);
+                }
+                response.add(r);
             }
-        }
-        result.put("seckillTime", response);
-        result.put("seckillTimeIndex", selectIndex);
-        return result;
+        });
+
+        return response;
+    }
+
+    /**
+     * 获取秒杀时段商品数量
+     * @param timeId 秒杀时段id
+     * @return Integer
+     */
+    private Integer getCountByTimeId(Integer timeId) {
+        LambdaQueryWrapper<StoreSeckill> lqw = Wrappers.lambdaQuery();
+        lqw.eq(StoreSeckill::getStatus,1);
+        lqw.eq(StoreSeckill::getIsDel,false);
+        lqw.eq(StoreSeckill::getIsShow,true);
+        lqw.eq(StoreSeckill::getTimeId,timeId);
+        String currentDate = DateUtil.nowDate(Constants.DATE_FORMAT_DATE);
+        lqw.le(StoreSeckill::getStartTime, currentDate);
+        lqw.ge(StoreSeckill::getStopTime, currentDate);
+        lqw.orderByDesc(StoreSeckill::getId);
+        return dao.selectCount(lqw);
     }
 
     /**
@@ -606,30 +678,27 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
      * @return 秒杀中的商品
      */
     @Override
-    public List<StoreSeckillResponse> getKillListByTimeId(String timeId,PageParamRequest pageParamRequest,boolean inCurrentTime) {
+    public List<StoreSecKillH5Response> getKillListByTimeId(String timeId, PageParamRequest pageParamRequest) {
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-        List<StoreSeckillResponse> responses = new ArrayList<>();
-        Integer currentTimeSwap = DateUtil.getSecondTimestamp();
         String currentDate = DateUtil.nowDate(Constants.DATE_FORMAT_DATE);
         LambdaQueryWrapper<StoreSeckill> lqw = Wrappers.lambdaQuery();
-        lqw.eq(StoreSeckill::getStatus,1)
-                .eq(StoreSeckill::getIsDel,false)
-                .eq(StoreSeckill::getIsShow,true)
-                .eq(StoreSeckill::getTimeId,timeId);
-        if(inCurrentTime){
-            lqw.le(StoreSeckill::getStartTime, currentDate);
-            lqw.ge(StoreSeckill::getStopTime,currentDate);
-        }
+        lqw.eq(StoreSeckill::getStatus,1);
+        lqw.eq(StoreSeckill::getIsDel,false);
+        lqw.eq(StoreSeckill::getIsShow,true);
+        lqw.eq(StoreSeckill::getTimeId,timeId);
+        lqw.le(StoreSeckill::getStartTime, currentDate);
+        lqw.ge(StoreSeckill::getStopTime,currentDate);
         lqw.orderByDesc(StoreSeckill::getId);
         List<StoreSeckill> storeSeckills = dao.selectList(lqw);
+        if (CollUtil.isEmpty(storeSeckills)) {
+            return CollUtil.newArrayList();
+        }
+        List<StoreSecKillH5Response> responses = new ArrayList<>();
         storeSeckills.forEach(e->{
-            StoreSeckillResponse r = new StoreSeckillResponse();
-            BeanUtils.copyProperties(e,r);
-            r.setImages(CrmebUtil.stringToArrayStr(e.getImages()));
-//            r.setLimitLeftNum(r.getQuotaShow() - e.getQuota());
-            r.setTimeSwap(currentTimeSwap+"");
-            r.setPercent(CrmebUtil.percentInstanceIntVal(e.getQuotaShow() - e.getQuota(), e.getQuotaShow()));
-            responses.add(r);
+            StoreSecKillH5Response response = new StoreSecKillH5Response();
+            BeanUtils.copyProperties(e, response);
+            response.setPercent(CrmebUtil.percentInstanceIntVal(e.getQuotaShow() - e.getQuota(), e.getQuotaShow()));
+            responses.add(response);
         });
         return responses;
     }
@@ -645,51 +714,6 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         LambdaQueryWrapper<StoreSeckill> lqw = Wrappers.lambdaQuery();
         lqw.setEntity(storeSeckill);
         return dao.selectList(lqw);
-    }
-
-    /**
-     * 扣减库存加销量
-     *
-     * @param seckillId   秒杀产品id
-     * @param num         购买商品数量
-     * @param attrValueId 秒杀商品规格
-     * @param productId   主商品id
-     * @return 扣减结果
-     */
-    @Override
-    public Boolean decProductStock(Integer seckillId, Integer num, Integer attrValueId, Integer productId) {
-        // 因为attrvalue表中unique使用Id代替，更新前先查询此表是否存在
-        // 秒杀商品sku
-        StoreProductAttrValue spavPram = new StoreProductAttrValue();
-        spavPram.setProductId(seckillId);
-        spavPram.setType(Constants.PRODUCT_TYPE_SECKILL);
-        spavPram.setId(attrValueId);
-        List<StoreProductAttrValue> existSeckillAttrValues = storeProductAttrValueService.getByEntity(spavPram);
-        if (CollUtil.isEmpty(existSeckillAttrValues)) throw new CrmebException("未找到扣减库存的秒杀商品");
-        StoreProductAttrValue currentSeckillAttrValue = existSeckillAttrValues.get(0);
-        // 对应的主商品sku
-        List<StoreProductAttrValue> currentProAttrValues = storeProductAttrValueService.getListByProductId(productId);
-        List<StoreProductAttrValue> existAttrValues = currentProAttrValues.stream().filter(e ->
-                e.getSuk().equals(currentSeckillAttrValue.getSuk()) && e.getType().equals(Constants.PRODUCT_TYPE_NORMAL))
-                .collect(Collectors.toList());
-        if (CollUtil.isEmpty(existAttrValues)) throw new CrmebException("未找到扣减库存的商品");
-        // 秒杀商品表扣减库存加销量
-        StoreSeckill storeSeckill = getById(seckillId);
-        if (ObjectUtil.isNull(storeSeckill)) throw new CrmebException("未找到对应的秒杀商品");
-        LambdaUpdateWrapper<StoreSeckill> lqwuper = new LambdaUpdateWrapper<>();
-        lqwuper.set(StoreSeckill::getStock, storeSeckill.getStock()-num);
-        lqwuper.set(StoreSeckill::getSales, storeSeckill.getSales()+num);
-        lqwuper.set(StoreSeckill::getQuota, storeSeckill.getQuota()-num);
-        lqwuper.eq(StoreSeckill::getId, seckillId);
-        lqwuper.apply(StrUtil.format(" (stock - {} >= 0) ", num));
-
-        Boolean execute = transactionTemplate.execute(e -> {
-            storeProductAttrValueService.decProductAttrStock(seckillId, attrValueId, num, Constants.PRODUCT_TYPE_SECKILL);
-            storeProductService.decProductStock(productId, num, existAttrValues.get(0).getId(), Constants.PRODUCT_TYPE_NORMAL);
-            update(lqwuper);
-            return Boolean.TRUE;
-        });
-        return execute;
     }
 
     /**
@@ -711,9 +735,8 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         if(currentSsmr.size() == 0){
             return result;
         }
-        List<Integer> skillManagerIds = currentSsmr.stream().map(e -> e.getId()).collect(Collectors.toList());
+        List<Integer> skillManagerIds = currentSsmr.stream().map(StoreSeckillManagerResponse::getId).collect(Collectors.toList());
         // 获取正在秒杀的商品信息
-
         LambdaQueryWrapper<StoreSeckill> lqw = Wrappers.lambdaQuery();
         lqw.eq(StoreSeckill::getProductId,productId);
         lqw.eq(StoreSeckill::getIsDel,false);
@@ -726,12 +749,10 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
     /**
      * 库存变动写入redis队列
      * @param request StoreProductStockRequest 参数对象
-     * @author Mr.Zhang
-     * @since 2020-05-06
-     * @return int
+     * @return Boolean
      */
     @Override
-    public boolean stockAddRedis(StoreProductStockRequest request) {
+    public Boolean stockAddRedis(StoreProductStockRequest request) {
         String _productString = JSON.toJSONString(request);
         redisUtil.lPush(Constants.PRODUCT_SECKILL_STOCK_UPDATE, _productString);
         return true;
@@ -770,7 +791,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
     /**
      * 商品是否存在秒杀活动
      * @param productId 商品编号
-     * @return
+     * @return Boolean
      */
     @Override
     public Boolean isExistActivity(Integer productId) {
@@ -822,10 +843,65 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
             updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
             updateWrapper.setSql(StrUtil.format("quota = quota - {}", num));
             // 扣减时加乐观锁保证库存不为负
-            updateWrapper.last(StrUtil.format(" and (stock - {} >= 0)", num));
+            updateWrapper.last(StrUtil.format(" and (quota - {} >= 0)", num));
         }
         updateWrapper.eq("id", id);
-        return update(updateWrapper);
+        boolean update = update(updateWrapper);
+        if (!update) {
+            throw new CrmebException("更新商品库存失败！商品id = " + id);
+        }
+        return update;
+    }
+
+    /**
+     * 获取秒杀首页信息
+     * 当前时段秒杀信息 + 当前时段秒杀商品6条
+     * @return SeckillIndexResponse
+     */
+    @Override
+    public SeckillIndexResponse getIndexInfo() {
+        StoreSeckillManger storeSeckillManger = new StoreSeckillManger();
+        storeSeckillManger.setIsDel(false);
+        // 根据当前时间过滤 仅处理正在进行的秒杀
+        List<StoreSeckillManger> currentSeckillManagerList = storeSeckillMangerService.getCurrentSeckillManager();
+        if (CollUtil.isEmpty(currentSeckillManagerList)) {
+            return null;
+        }
+        StoreSeckillManger seckillManger = currentSeckillManagerList.get(0);
+
+        // 查询当前时段秒杀商品
+        String currentDate = DateUtil.nowDate(Constants.DATE_FORMAT_DATE);
+        LambdaQueryWrapper<StoreSeckill> lqw = Wrappers.lambdaQuery();
+        lqw.select(StoreSeckill::getId, StoreSeckill::getProductId, StoreSeckill::getImage, StoreSeckill::getTitle, StoreSeckill::getPrice, StoreSeckill::getOtPrice);
+        lqw.eq(StoreSeckill::getStatus,1);
+        lqw.eq(StoreSeckill::getIsDel,false);
+        lqw.eq(StoreSeckill::getIsShow,true);
+        lqw.eq(StoreSeckill::getTimeId, seckillManger.getId());
+        lqw.le(StoreSeckill::getStartTime, currentDate);
+        lqw.ge(StoreSeckill::getStopTime,currentDate);
+        lqw.orderByDesc(StoreSeckill::getId);
+        lqw.last(" limit 6");
+        List<StoreSeckill> seckillList = dao.selectList(lqw);
+        if (CollUtil.isEmpty(seckillList)) {
+            // 如果没有秒杀商品也不展示
+            return null;
+        }
+
+        SeckillIndexResponse response = new SeckillIndexResponse();
+        // 处理秒杀时段信息
+        StoreSeckillManagerResponse managerResponse = new StoreSeckillManagerResponse();
+        BeanUtils.copyProperties(seckillManger, managerResponse);
+        String pStartTime = seckillManger.getStartTime().toString();
+        String pEndTime = seckillManger.getEndTime().toString();
+        String startTime = pStartTime.length() == 1? "0"+pStartTime:pStartTime;
+        String endTime = pEndTime.length() == 1? "0"+pEndTime:pEndTime;
+        managerResponse.setTime(startTime+":00,"+endTime+":00");
+        int secKillEndSecondTimestamp = DateUtil.getSecondTimestamp(DateUtil.nowDateTime("yyyy-MM-dd " + seckillManger.getEndTime() + ":00:00"));
+        SecKillResponse secKillResponse = new SecKillResponse(seckillManger.getId(),seckillManger.getSilderImgs(),managerResponse.getStatusName(),
+                managerResponse.getTime(),managerResponse.getKillStatus(),secKillEndSecondTimestamp+"");
+        response.setSecKillResponse(secKillResponse);
+        response.setProductList(seckillList);
+        return response;
     }
     ///////////////////////////////////////////////////////////////////  自定义方法
 
@@ -880,47 +956,8 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
     }
 
     /**
-     * 设置制式结构给attr属性
-     * @param id 产品id
-     * @param productDetailResponse 商品详情
-     * @param productResponse 商品本身
-     */
-    private void setSkuAttr(Integer id, StoreSeckillDetailResponse productDetailResponse, StoreProductResponse productResponse) {
-        List<HashMap<String,Object>> attrMapList = new ArrayList<>();
-        for (StoreProductAttr attr : productResponse.getAttr()) {
-            HashMap<String, Object> attrMap = new HashMap<>();
-            attrMap.put("productId",attr.getProductId());
-            attrMap.put("attrName",attr.getAttrName());
-//            attrMap.put("type",attr.getType());
-            List<String> attrValues = new ArrayList<>();
-            String trimAttr = attr.getAttrValues()
-                    .replace("[","")
-                    .replace("]","");
-            if(attr.getAttrValues().contains(",")){
-                attrValues = Arrays.asList(trimAttr.split(","));
-            }else{
-                attrValues.add(trimAttr);
-            }
-            attrMap.put("attrValues",attrValues);
-            // 设置带有优惠券标识的sku集合
-            List<HashMap<String,Object>> attrValueMapList = new ArrayList<>();
-            for (String attrValue : attrValues) {
-                HashMap<String,Object> attrValueMap = new HashMap<>();
-                attrValueMap.put("attr",attrValue);
-//                attrValueMap.put("check",storeCouponService.getListByProductCanUse(id).size()>0);
-                attrValueMapList.add(attrValueMap);
-            }
-            attrMap.put("attrValue",attrValueMapList);
-            attrMapList.add(attrMap);
-        }
-        productDetailResponse.setProductAttr(attrMapList);
-    }
-
-
-    /**
      * 检查是否有商品存在同一时段的秒杀
      * @param request   待操作数据
-     * @return          存在结果
      */
     private void checkProductInSeamTime(StoreSeckillRequest request){
         // 查询当前时间段和选择的秒杀时间段是否存在此商品
@@ -962,7 +999,6 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
                     com.alibaba.fastjson.JSONObject.parseArray(attrResult.getResult(), StoreProductAttrValueRequest.class);
             if(null != storeProductAttrValueRequests){
                 for (int i = 0; i < storeProductAttrValueRequests.size(); i++) {
-//                    StoreProductAttrValueRequest storeProductAttrValueRequest = storeProductAttrValueRequests.get(i);
                     HashMap<String, Object> attrValue = new HashMap<>();
                     String currentSku = storeProductAttrValues.get(i).getSuk();
                     List<StoreProductAttrValue> hasCurrentSku =
@@ -997,7 +1033,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
     // 过滤AttrValue数据中checked=false的数据
     private void clearNotCheckedAndValidationPrice(StoreSeckillRequest request){
         if(request.getSpecType()){
-            request.setAttrValue(request.getAttrValue().stream().filter(e-> e.getChecked()).collect(Collectors.toList()));
+            request.setAttrValue(request.getAttrValue().stream().filter(StoreProductAttrValueRequest::getChecked).collect(Collectors.toList()));
         }
         for (StoreProductAttrValueRequest attr : request.getAttrValue()) {
             if((null == attr.getPrice() || attr.getPrice().compareTo(BigDecimal.ZERO) <= 0)
@@ -1006,53 +1042,5 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
             }
         }
     }
-
-    /**
-     * 仅仅获取H5端所需正在秒杀的商品信息
-     * @param skillId 秒杀id
-     * @return 秒杀商品详情
-     */
-    public StoreProductResponse getSkillDetailJustForH5(int skillId) {
-        StoreSeckill storeProduct = dao.selectById(skillId);
-        if(null == storeProduct) throw new CrmebException("未找到对应商品信息");
-        StoreProductResponse storeProductResponse = new StoreProductResponse();
-        BeanUtils.copyProperties(storeProduct, storeProductResponse);
-
-        // 秒杀销量 = 原商品销量（包含虚拟销量）
-        StoreProductResponse currentSeckillProductInfo =
-                storeProductService.getByProductId(storeProduct.getProductId());
-        storeProductResponse.setSales(currentSeckillProductInfo.getSales());
-        storeProductResponse.setFicti(currentSeckillProductInfo.getFicti());
-        StoreProductAttr spaPram = new StoreProductAttr();
-        spaPram.setProductId(skillId).setType(Constants.PRODUCT_TYPE_SECKILL);
-        storeProductResponse.setAttr(attrService.getByEntity(spaPram));
-
-        // 注意：数据瓶装步骤：分别查询秒杀和商品本山信息组装sku信息之后，再对比sku属性是否相等来赋值是否秒杀sku信息
-        StoreProductAttrValue spavPramSkill = new StoreProductAttrValue();
-        spavPramSkill.setProductId(skillId).setType(Constants.PRODUCT_TYPE_SECKILL);
-        List<StoreProductAttrValue> storeProductAttrValuesSkill = storeProductAttrValueService.getByEntity(spavPramSkill);
-        List<HashMap<String, Object>> attrValuesSkill = genratorSkuInfo(skillId,storeProduct, storeProductAttrValuesSkill, Constants.PRODUCT_TYPE_SECKILL);
-
-        // H5 端用于生成skuList
-        List<StoreProductAttrValueResponse> sPAVResponses = new ArrayList<>();
-
-        for (StoreProductAttrValue storeProductAttrValue : storeProductAttrValuesSkill) {
-            StoreProductAttrValueResponse atr = new StoreProductAttrValueResponse();
-            BeanUtils.copyProperties(storeProductAttrValue,atr);
-            sPAVResponses.add(atr);
-        }
-
-        storeProductResponse.setAttrValues(attrValuesSkill);
-        storeProductResponse.setAttrValue(sPAVResponses);
-        StoreProductDescription sd = storeProductDescriptionService.getOne(
-                new LambdaQueryWrapper<StoreProductDescription>()
-                        .eq(StoreProductDescription::getProductId, skillId)
-                        .eq(StoreProductDescription::getType, Constants.PRODUCT_TYPE_SECKILL));
-        if(null != sd){
-            storeProductResponse.setContent(null == sd.getDescription()?"":sd.getDescription());
-        }
-        return storeProductResponse;
-    }
-
 }
 

@@ -3,14 +3,14 @@
 		<view class='bill-details'>
 			<view class='nav acea-row'>
 				<view class='item' :class='type==="all" ? "on":""' @click='changeType("all")'>全部</view>
-				<view class='item' :class='type==="expenditure" ? "on":""' @click='changeType("expenditure")'>支出</view>
-				<view class='item' :class='type==="income" ? "on":""' @click='changeType("income")'>收入</view>
+				<view class='item' :class='type==="expenditure" ? "on":""' @click='changeType("expenditure")'>消费</view>
+				<view class='item' :class='type==="income" ? "on":""' @click='changeType("income")'>充值</view>
 			</view>
 			<view class='sign-record'>
-				<view class='list' v-for="(item,index) in userBillList" :key="index">
+				<view class='list pad30' v-for="(item,index) in userBillList" :key="index">
 					<view class='item'>
 						<view class='data'>{{item.date}}</view>
-						<view class='listn'>
+						<view class='listn borRadius14'>
 							<view class='itemn acea-row row-between-wrapper' v-for="(vo,indexn) in item.list" :key="indexn">
 								<view>
 									<view class='name line1'>{{vo.title}}</view>
@@ -31,7 +31,7 @@
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -78,13 +78,7 @@
 			if (this.isLogin) {
 				this.getUserBillList();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		/**
@@ -154,6 +148,9 @@
 </script>
 
 <style scoped lang='scss'>
+	.sign-record{
+		
+	}
 	.bill-details .nav {
 		background-color: #fff;
 		height: 90rpx;
@@ -169,7 +166,7 @@
 	}
 
 	.bill-details .nav .item.on {
-		color: #e93323;
-		border-bottom: 3rpx solid #e93323;
+		color: $theme-color;
+		border-bottom: 3rpx solid $theme-color;
 	}
 </style>

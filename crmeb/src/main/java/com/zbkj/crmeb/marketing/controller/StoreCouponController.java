@@ -3,18 +3,18 @@ package com.zbkj.crmeb.marketing.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
+import com.common.SearchAndPageRequest;
+import com.zbkj.crmeb.marketing.model.StoreCoupon;
 import com.zbkj.crmeb.marketing.request.StoreCouponRequest;
 import com.zbkj.crmeb.marketing.request.StoreCouponSearchRequest;
 import com.zbkj.crmeb.marketing.response.StoreCouponInfoResponse;
+import com.zbkj.crmeb.marketing.service.StoreCouponService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
-import com.zbkj.crmeb.marketing.service.StoreCouponService;
-import com.zbkj.crmeb.marketing.model.StoreCoupon;
 
 
 /**
@@ -97,6 +97,31 @@ public class StoreCouponController {
     @RequestMapping(value = "/info", method = RequestMethod.POST)
     public CommonResult<StoreCouponInfoResponse> info(@RequestParam Integer id){
         return CommonResult.success(storeCouponService.info(id));
+    }
+
+    /**
+     * 发送优惠券列表
+     * @param searchAndPageRequest 搜索分页参数
+     */
+    @ApiOperation(value = "发送优惠券列表")
+    @RequestMapping(value = "/send/list", method = RequestMethod.GET)
+    public CommonResult<CommonPage<StoreCoupon>>  getSendList(@Validated SearchAndPageRequest searchAndPageRequest){
+        CommonPage<StoreCoupon> storeCouponCommonPage = CommonPage.restPage(storeCouponService.getSendList(searchAndPageRequest));
+        return CommonResult.success(storeCouponCommonPage);
+    }
+
+    /**
+     * 删除优惠券
+     * @param id 优惠券id
+     */
+    @ApiOperation(value = "删除优惠券")
+    @RequestMapping(value = "/delete", method = RequestMethod.POST)
+    public CommonResult<StoreCouponInfoResponse> delete(@RequestParam Integer id){
+        if(storeCouponService.delete(id)){
+            return CommonResult.success("删除成功");
+        }else{
+            return CommonResult.failed("删除失败");
+        }
     }
 }
 

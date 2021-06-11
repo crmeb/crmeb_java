@@ -58,14 +58,6 @@
             <span>{{ scope.row.addres }}</span>
           </template>
         </el-table-column>
-        <el-table-column
-          label="是否关注公众号"
-          min-width="120"
-        >
-          <template slot-scope="scope">
-            <span>{{ scope.row.sex | saxFilter }}</span>
-          </template>
-        </el-table-column>
       </el-table>
       <div class="block">
         <el-pagination

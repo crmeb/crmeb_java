@@ -38,10 +38,13 @@ public class OrderPayRequest {
     @NotNull(message = "支付类型不能为空")
     private String payType;
 
-    @ApiModelProperty(value = "支付渠道:weixinh5-微信H5支付，public-公众号支付，routine-小程序支付")
+    @ApiModelProperty(value = "支付渠道:weixinh5-微信H5支付，public-公众号支付，routine-小程序支付，weixinAppIos-微信appios支付，weixinAppAndroid-微信app安卓支付")
     @NotNull(message = "支付渠道不能为空")
     private String payChannel;
 
     @ApiModelProperty(value = "支付平台")
     private String from;
+
+    @ApiModelProperty(value = "下单时小程序的场景值")
+    private Integer scene;
 }

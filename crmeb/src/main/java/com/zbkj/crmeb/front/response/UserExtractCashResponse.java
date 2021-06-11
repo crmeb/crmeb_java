@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * 提现银行/提现最低金额
+ * 提现用户信息响应对象
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
@@ -25,11 +25,10 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@ApiModel(value="UserExtractCashResponse对象", description="提现银行/提现最低金额")
+@ApiModel(value="UserExtractCashResponse对象", description="提现用户信息响应对象")
 public class UserExtractCashResponse implements Serializable {
     public UserExtractCashResponse(){}
-    public UserExtractCashResponse(List<String> extractBank, String minPrice, BigDecimal commissionCount, BigDecimal brokenCommission, String brokenDay) {
-        this.extractBank = extractBank;
+    public UserExtractCashResponse(String minPrice, BigDecimal commissionCount, BigDecimal brokenCommission, String brokenDay) {
         this.minPrice = minPrice;
         this.commissionCount = commissionCount;
         this.brokenCommission = brokenCommission;
@@ -38,9 +37,8 @@ public class UserExtractCashResponse implements Serializable {
 
     private static final long serialVersionUID=1L;
 
-
-    @ApiModelProperty(value = "提现银行")
-    private List<String> extractBank;
+//    @ApiModelProperty(value = "提现银行")
+//    private List<String> extractBank;
 
     @ApiModelProperty(value = "提现最低金额")
     private String minPrice;

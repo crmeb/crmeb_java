@@ -39,7 +39,7 @@ public class UserOperateIntegralMoneyRequest implements Serializable {
     @ApiModelProperty(value = "积分类型， 1 = 增加， 2 = 减少")
     @NotNull
     @Range(min = 1, max = 2, message = "请选择正确的类型， 【1 = 增加， 2 = 减少】")
-    private int integralType;
+    private Integer integralType;
 
     @ApiModelProperty(value = "积分")
     @Min(value = 0)
@@ -49,11 +49,11 @@ public class UserOperateIntegralMoneyRequest implements Serializable {
     @ApiModelProperty(value = "余额类型， 1 = 增加， 2 = 减少")
     @NotNull
     @Range(min = 1, max = 2, message = "请选择正确的类型， 【1 = 增加， 2 = 减少】")
-    private int moneyType;
+    private Integer moneyType;
 
     @ApiModelProperty(value = "余额")
-    @DecimalMin(value = "0")
-    @DecimalMax(value = "999999")
+    @DecimalMin(value = "0.00")
+    @DecimalMax(value = "999999.99")
     private BigDecimal moneyValue;
 
 }

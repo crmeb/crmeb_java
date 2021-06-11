@@ -118,8 +118,11 @@
         </el-table-column>
         <el-table-column label="操作" min-width="150" fixed="right" align="center">
           <template slot-scope="scope">
+            <router-link :to="{path: '/store/list/creatProduct/' + scope.row.id + '/1'}">
+              <el-button type="text" size="small" class="mr10">详情</el-button>
+            </router-link>
             <router-link :to="{path: '/store/list/creatProduct/' + scope.row.id}">
-              <el-button type="text" size="small" class="mr10" v-if="tableFrom.type !== '5'">编辑</el-button>
+              <el-button type="text" size="small" class="mr10" v-if="tableFrom.type !== '5' && tableFrom.type !== '1'">编辑</el-button>
             </router-link>
             <el-button  v-if="tableFrom.type === '5'" type="text" size="small" @click="handleRestore(scope.row.id, scope.$index)">恢复商品</el-button>
             <el-button type="text" size="small" @click="handleDelete(scope.row.id, tableFrom.type)">{{ tableFrom.type === '5' ? '删除' : '加入回收站' }}</el-button>
@@ -221,9 +224,8 @@ export default {
     // 导出
     exports () {
       productExcelApi({cateId:this.tableFrom.cateId,keywords: this.tableFrom.keywords, type:this.tableFrom.type}).then((res) => {
-        window.open(res.fileName)
+        window.location.href = res.fileName;
       })
-    //  window.open(this.objectUrl + 'admin/export/excel/product?type=1&Authori-zation=' + getToken())
     },
     // 获取商品表单头数量
     goodHeade () {

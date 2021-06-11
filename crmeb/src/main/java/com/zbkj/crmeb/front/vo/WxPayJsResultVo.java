@@ -41,4 +41,10 @@ public class WxPayJsResultVo {
 
     @ApiModelProperty(value = "H5支付跳转链接")
     private String mwebUrl;
+
+    @ApiModelProperty(value = "微信商户号")
+    private String partnerid;
+
+    @ApiModelProperty(value = "拉起收银台的ticket")
+    private String ticket;
 }

@@ -78,11 +78,11 @@
                     <el-form-item label="appid" prop="appid">
                       <el-input v-model="formValidate.appid" placeholder="请填写appid" class="spwidth" />
                     </el-form-item>
-                    <el-form-item label="备用网页" prop="pagepath">
-                      <el-input v-model="formValidate.pagepath" placeholder="请填写备用网页" class="spwidth" />
+                    <el-form-item label="备用网页" prop="url">
+                      <el-input v-model="formValidate.url" placeholder="请填写备用网页" class="spwidth" />
                     </el-form-item>
-                    <el-form-item label="小程序路径" prop="url">
-                      <el-input v-model="formValidate.url" placeholder="请填写小程序路径" class="spwidth" />
+                    <el-form-item label="小程序路径" prop="pagepath">
+                      <el-input v-model="formValidate.pagepath" placeholder="请填写小程序路径" class="spwidth" />
                     </el-form-item>
                   </div>
                   <div v-if="formValidate.type === 'view'">
@@ -144,7 +144,7 @@
             { required: true, message: '请填写appid', trigger: 'blur' }
           ],
           pagepath: [
-            { required: true, message: '请填写备用网页', trigger: 'blur' }
+            { required: true, message: '请填写小程序路径', trigger: 'blur' }
           ],
           url: [
             { required: true, message: '请填写跳转地址', trigger: 'blur' }

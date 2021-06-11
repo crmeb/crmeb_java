@@ -69,6 +69,16 @@ const maintainRouter = {
         icon: 'clipboard'
       },
       hidden: false
+    },
+    {
+      path: 'authCRMEB',
+      name: 'authCRMEB',
+      component: () => import('@/views/maintain/authCRMEB'),
+      meta: {
+        title: '授权',
+        icon: 'clipboard'
+      },
+      hidden: false
     }
   ]
 }
