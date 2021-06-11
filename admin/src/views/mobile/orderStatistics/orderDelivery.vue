@@ -4,7 +4,7 @@
       <div class="order-num acea-row row-between-wrapper">
         <div class="num line1">订单号：{{ orderId }}</div>
         <div class="name line1">
-          <span class="iconfont icon-yonghu2"></span>{{ delivery.user.nickname }}
+          <span class="iconfont icon-yonghu2"></span>{{ delivery.nickname }}
         </div>
       </div>
       <div class="address">
@@ -34,10 +34,10 @@
       <div class="list" v-show="active === 0">
         <div class="item acea-row row-between-wrapper">
           <div>发货方式</div>
-          <select class="mode" v-model="expressId">
+          <select class="mode" v-model="expressCode">
             <option value="">选择快递公司</option>
             <option
-              :value="item.id"
+              :value="item.code"
               v-for="(item, index) in express"
               :key="index"
               >{{ item.name }}</option
@@ -50,7 +50,7 @@
           <input
             type="text"
             placeholder="填写快递单号"
-            v-model="expressCode"
+            v-model="expressNumber"
             class="mode"
           />
         </div>
@@ -61,7 +61,7 @@
           <input
             type="text"
             placeholder="填写送货人"
-            v-model="expressId"
+            v-model="deliveryName"
             class="mode"
           />
         </div>
@@ -70,7 +70,7 @@
           <input
             type="text"
             placeholder="填写送货电话"
-            v-model="expressCode"
+            v-model="deliveryTel"
             class="mode"
           />
         </div>
@@ -111,8 +111,10 @@ export default {
       delivery: {},
       express: [],
       type: "1",
-      expressId: "",
-      expressCode: ""
+      deliveryName: "",
+      expressCode: "",
+      expressNumber: '',
+      deliveryTel: ""
     };
   },
   watch: {
@@ -133,14 +135,16 @@ export default {
     this.getLogistics();
   },
   methods: {
-    changeType: function(item, index) {
+    changeType(item, index) {
       this.active = index;
       this.type = item.type;
-      this.expressId = "";
+      this.deliveryName = "";
+      this.deliveryTel = "";
       this.expressCode = "";
+      this.expressNumber = "";
     },
     getIndex() {
-      orderDetailApi({ id: this.$route.params.id }).then(res => {
+      orderDetailApi({ orderNo: this.orderId }).then(res => {
         this.delivery = res
       }).catch((error)=>{
         this.$dialog.error(error.message);
@@ -152,14 +156,29 @@ export default {
       })
     },
     async saveInfo() {
+      // type: '1',
+      //   expressRecordType: '1',
+      //   expressId: '',
+      //   expressCode: '',
+      //   deliveryName: '',
+      //   deliveryTel: '',
+      //   // expressName: '',
+      //   expressNumber: '',
+      //   expressTempId: '',
+      //   toAddr: '',
+      //   toName: '',
+      //   toTel: '',
+      //   orderNo: ''
+
+
       let that = this,
-        type = that.type,
-        expressId = that.expressId,
-        expressCode = that.expressCode,
+        deliveryName = that.deliveryName,
+        deliveryTel = that.deliveryTel,
         save = {};
-      save.id = that.$route.params.id;
       save.type = that.type;
-      switch (type) {
+      save.orderNo = that.orderId;
+
+      switch (that.type) {
         case "1":
           // try {
           //   await this.$validator({
@@ -169,24 +188,24 @@ export default {
           // } catch (e) {
           //   return validatorDefaultCatch(e);
           // }
-          if( !that.expressId ) return that.$dialog.error('请输入快递公司');
-          if( !that.expressCode ) return that.$dialog.error('请输入快递单号');
-          save.expressId = expressId;
-          save.expressCode = expressCode;
-          save.id = this.$route.params.id;
+          if( !that.expressCode ) return that.$dialog.error('请输入快递公司');
+          if( !that.expressNumber ) return that.$dialog.error('请输入快递单号');
+          save.expressNumber = that.expressNumber;
+          save.expressRecordType = 1;
+          save.expressCode = that.expressCode;
           that.setInfo(save);
           break;
         case "2":
           try {
             await this.$validator({
-              expressId: [required(required.message("发货人姓名"))],
-              expressCode: [required(required.message("发货人电话"))]
-            }).validate({ expressId, expressCode });
+              deliveryName: [required(required.message("发货人姓名"))],
+              deliveryTel: [required(required.message("发货人电话"))]
+            }).validate({ deliveryName, deliveryTel });
           } catch (e) {
             return validatorDefaultCatch(e);
           }
-          save.expressId = expressId;
-          save.expressCode = expressCode;
+          save.deliveryName = deliveryName;
+          save.deliveryTel = deliveryTel;
           that.setInfo(save);
           break;
         case "3":

@@ -1,20 +1,35 @@
 package com.zbkj.crmeb.front.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
+import com.common.CommonPage;
 import com.common.PageParamRequest;
 import com.constants.Constants;
+import com.constants.SysConfigConstants;
+import com.constants.SysGroupDataConstants;
 import com.exception.CrmebException;
 import com.utils.CrmebUtil;
 import com.zbkj.crmeb.front.request.IndexStoreProductSearchRequest;
-import com.zbkj.crmeb.front.response.IndexInfoItemResponse;
 import com.zbkj.crmeb.front.response.IndexInfoResponse;
 import com.zbkj.crmeb.front.response.IndexProductBannerResponse;
+import com.zbkj.crmeb.front.response.IndexProductResponse;
+import com.zbkj.crmeb.front.response.ProductActivityItemResponse;
 import com.zbkj.crmeb.front.service.IndexService;
 import com.zbkj.crmeb.front.service.ProductService;
+import com.zbkj.crmeb.marketing.model.StoreCoupon;
+import com.zbkj.crmeb.marketing.model.StoreCouponUser;
+import com.zbkj.crmeb.marketing.response.StoreCouponFrontResponse;
+import com.zbkj.crmeb.marketing.service.StoreCouponService;
+import com.zbkj.crmeb.marketing.service.StoreCouponUserService;
+import com.zbkj.crmeb.store.model.StoreProduct;
+import com.zbkj.crmeb.store.service.StoreProductService;
+import com.zbkj.crmeb.store.utilService.ProductUtils;
 import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.system.service.SystemGroupDataService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.service.UserService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -49,11 +64,21 @@ public class IndexServiceImpl implements IndexService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private StoreCouponService storeCouponService;
+
+    @Autowired
+    private StoreProductService storeProductService;
+
+    @Autowired
+    private ProductUtils productUtils;
+
+    @Autowired
+    private StoreCouponUserService storeCouponUserService;
+
     /**
      * 首页产品的轮播图和产品信息
      * @param type integer 类型
-     * @author Mr.Zhang
-     * @since 2020-06-02
      * @return HashMap<String, Object>
      */
     @Override
@@ -103,91 +128,51 @@ public class IndexServiceImpl implements IndexService {
 
     /**
      * 首页数据
-     * @author Mr.Zhang
-     * @since 2020-06-02
-     * @return HashMap<String, Object>
+     * banner、金刚区、广告位
      */
     @Override
     public IndexInfoResponse getIndexInfo() {
-        IndexInfoResponse indexInfoResponse =  new IndexInfoResponse();
+        IndexInfoResponse indexInfoResponse = new IndexInfoResponse();
         indexInfoResponse.setBanner(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_BANNER)); //首页banner滚动图
         indexInfoResponse.setMenus(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_MENU)); //导航模块
         indexInfoResponse.setRoll(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_NEWS_BANNER)); //首页滚动新闻
 
-        IndexInfoItemResponse indexInfoItemResponse = new IndexInfoItemResponse();
-
-
-        int limit = Constants.INDEX_LIMIT_DEFAULT;
-
-        IndexStoreProductSearchRequest request = new IndexStoreProductSearchRequest();
-        request.setIsBest(true);
-        PageParamRequest pageParamRequest = new PageParamRequest();
-        pageParamRequest.setLimit(limit);
-
-        indexInfoItemResponse.setBastList(productService.getIndexProduct(request, pageParamRequest).getList()); //精品推荐个数
-
-        request.setIsBest(false);
-        request.setIsNew(true);
-
-        indexInfoItemResponse.setFirstList(productService.getIndexProduct(request, pageParamRequest).getList()); //首发新品个数
-
-        //首页展示的二级分类  排序默认降序
-        indexInfoItemResponse.setFastList(null);
-
-
-        indexInfoResponse.setInfo(indexInfoItemResponse); //首页配置
-
-        indexInfoItemResponse.setBastBanner(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_BEST_BANNER)); //首页精品推荐图片
-
-        request.setIsNew(false);
-        request.setIsBenefit(true);
-        if(!StringUtils.isBlank(indexInfoItemResponse.getPromotionNumber())){
-            pageParamRequest.setLimit(Integer.parseInt(indexInfoItemResponse.getPromotionNumber()));
-        }
-        indexInfoResponse.setBenefit(new ArrayList<>()); //首页促销单品
-
-        if(productService.getIndexProduct(request, pageParamRequest) != null){
-            indexInfoResponse.setBenefit(productService.getIndexProduct(request, pageParamRequest).getList()); //首页促销单品
-        }
-
-        request.setIsBenefit(false);
-        request.setIsHot(true);
-        pageParamRequest.setLimit(limit);
-        indexInfoResponse.setLikeInfo(productService.getIndexProduct(request, pageParamRequest).getList()); //热门榜单
-
-        indexInfoResponse.setLovely(null);//首发新品广告图
-        List<HashMap<String, Object>> lovelyList = systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_NEW_BANNER);
-        if(lovelyList != null && lovelyList.size() > 0){
-            indexInfoResponse.setLovely(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_NEW_BANNER).get(0));//首发新品广告图
-        }
-        indexInfoResponse.setExplosiveMoney(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_EX_BANNER));//首页超值爆款
-
-        indexInfoResponse.setLogoUrl(systemConfigService.getValueByKey(Constants.CONFIG_KEY_SITE_LOGO));
-
+        indexInfoResponse.setLogoUrl(systemConfigService.getValueByKey(Constants.CONFIG_KEY_SITE_LOGO));// 企业logo地址
+        indexInfoResponse.setYzfUrl(systemConfigService.getValueByKey(Constants.CONFIG_KEY_YZF_H5_URL));// 云智服H5 url
+        indexInfoResponse.setSubscribe(false);
         User user = userService.getInfo();
-        if(null != user){
+        if(ObjectUtil.isNotNull(user) && user.getSubscribe()){
             indexInfoResponse.setSubscribe(user.getSubscribe());
         }
+        // 获取首页优惠券列表
+        List<StoreCoupon> couponList = storeCouponService.getHomeIndexCoupon();
+        //获取用户当前已领取未使用的优惠券
+        if (ObjectUtil.isNotNull(user) && CollUtil.isNotEmpty(couponList)) {
+            HashMap<Integer, StoreCouponUser> couponUserMap = storeCouponUserService.getMapByUserId(user.getUid());
+            for (StoreCoupon storeCoupon : couponList) {
+                if (CollUtil.isNotEmpty(couponUserMap) && couponUserMap.containsKey(storeCoupon.getId())) {
+                    storeCoupon.setIsGet(true);
+                }
+            }
+        }
+        indexInfoResponse.setCouponList(couponList);
+
+        indexInfoResponse.setExplosiveMoney(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_EX_BANNER));//首页超值爆款
+        indexInfoResponse.setBastBanner(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_BEST_BANNER)); //首页精品推荐图片
         return indexInfoResponse;
     }
 
-
     /**
      * 热门搜索
-     * @author Mr.Zhang
-     * @since 2020-06-03
      * @return List<HashMap<String, String>>
      */
     @Override
     public List<HashMap<String, Object>> hotKeywords() {
-
-        return systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_KEYWORDS);
+        return systemGroupDataService.getListMapByGid(SysGroupDataConstants.GROUP_DATA_ID_INDEX_KEYWORDS);
     }
 
     /**
      * 微信分享配置
-     * @author Mr.Zhang
-     * @since 2020-05-25
      * @return Object
      */
     @Override
@@ -197,23 +182,73 @@ public class IndexServiceImpl implements IndexService {
         if(info == null){
             throw new CrmebException("请配置公众号分享信息！");
         }
-
-        map.put("img", info.get("wechat_share_img"));
-        map.put("title", info.get("wechat_share_title"));
-        map.put("synopsis", info.get("wechat_share_synopsis"));
+        map.put("img", info.get(SysConfigConstants.CONFIG_KEY_ADMIN_WECHAT_SHARE_IMAGE));
+        map.put("title", info.get(SysConfigConstants.CONFIG_KEY_ADMIN_WECHAT_SHARE_TITLE));
+        map.put("synopsis", info.get(SysConfigConstants.CONFIG_KEY_ADMIN_WECHAT_SHARE_SYNOSIS));
         return map;
     }
 
     /**
-     * 获取公共配置
-     *
-     * @return 公共配置
+     * 获取首页商品列表
+     * @param type 类型 【1 精品推荐 2 热门榜单 3首发新品 4促销单品】
+     * @param pageParamRequest 分页参数
+     * @return List
      */
     @Override
-    public HashMap<String, String> getCommConfig() {
-        HashMap<String,String> result = new HashMap<>();
-        result.put("yzfUrl", systemConfigService.getValueByKey(Constants.CONFIG_KEY_YZF_H5_URL));
-        return result;
+    public CommonPage<IndexProductResponse> findIndexProductList(Integer type, PageParamRequest pageParamRequest) {
+        List<StoreProduct> storeProductList = storeProductService.getIndexProduct(type, pageParamRequest);
+        if(CollUtil.isEmpty(storeProductList)){
+            return CommonPage.restPage(new ArrayList<>());
+        }
+        CommonPage<StoreProduct> storeProductCommonPage = CommonPage.restPage(storeProductList);
+
+        List<IndexProductResponse> productResponseArrayList = new ArrayList<>();
+        for (StoreProduct storeProduct : storeProductList) {
+            IndexProductResponse productResponse = new IndexProductResponse();
+            List<Integer> activityList = CrmebUtil.stringToArrayInt(storeProduct.getActivity());
+            // 活动类型默认：直接跳过
+            if (activityList.get(0).equals(Constants.PRODUCT_TYPE_NORMAL)) {
+                BeanUtils.copyProperties(storeProduct, productResponse);
+                productResponseArrayList.add(productResponse);
+                continue;
+            }
+            // 根据参与活动添加对应商品活动标示
+            HashMap<Integer, ProductActivityItemResponse> activityByProduct =
+                    productUtils.getActivityByProduct(storeProduct.getId(), storeProduct.getActivity());
+            if (CollUtil.isNotEmpty(activityByProduct)) {
+                for (Integer activity : activityList) {
+                    if (activity.equals(Constants.PRODUCT_TYPE_NORMAL)) {
+                        break;
+                    }
+                    if (activity.equals(Constants.PRODUCT_TYPE_SECKILL)) {
+                        ProductActivityItemResponse itemResponse = activityByProduct.get(Constants.PRODUCT_TYPE_SECKILL);
+                        if (ObjectUtil.isNotNull(itemResponse)) {
+                            productResponse.setActivityH5(itemResponse);
+                            break;
+                        }
+                    }
+                    if (activity.equals(Constants.PRODUCT_TYPE_BARGAIN)) {
+                        ProductActivityItemResponse itemResponse = activityByProduct.get(Constants.PRODUCT_TYPE_BARGAIN);
+                        if (ObjectUtil.isNotNull(itemResponse)) {
+                            productResponse.setActivityH5(itemResponse);
+                            break;
+                        }
+                    }
+                    if (activity.equals(Constants.PRODUCT_TYPE_PINGTUAN)) {
+                        ProductActivityItemResponse itemResponse = activityByProduct.get(Constants.PRODUCT_TYPE_PINGTUAN);
+                        if (ObjectUtil.isNotNull(itemResponse)) {
+                            productResponse.setActivityH5(itemResponse);
+                            break;
+                        }
+                    }
+                }
+            }
+            BeanUtils.copyProperties(storeProduct, productResponse);
+            productResponseArrayList.add(productResponse);
+        }
+        CommonPage<IndexProductResponse> productResponseCommonPage = CommonPage.restPage(productResponseArrayList);
+        BeanUtils.copyProperties(storeProductCommonPage, productResponseCommonPage, "list");
+        return productResponseCommonPage;
     }
 }
 

@@ -11,15 +11,16 @@ import com.zbkj.crmeb.store.request.StoreProductStockRequest;
 import com.zbkj.crmeb.store.response.StoreProductResponse;
 import com.zbkj.crmeb.store.response.StoreProductTabsHeader;
 import com.zbkj.crmeb.store.service.StoreCartService;
-import io.swagger.annotations.*;
+import com.zbkj.crmeb.store.service.StoreProductService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
-import com.zbkj.crmeb.store.service.StoreProductService;
 
 import javax.validation.Valid;
 import java.io.IOException;
@@ -92,7 +93,6 @@ public class StoreProductController {
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     public CommonResult<String> delete(@RequestBody @PathVariable Integer id, @RequestParam(value = "type", required = false, defaultValue = "recycle")String type){
         if(storeProductService.deleteProduct(id, type)){
-//        if(storeProductService.removeById(id)){
             if (type.equals("recycle")) {
                 storeCartService.productStatusNotEnable(id);
             } else {
@@ -114,7 +114,6 @@ public class StoreProductController {
     @RequestMapping(value = "/restore/{id}", method = RequestMethod.GET)
     public CommonResult<String> restore(@RequestBody @PathVariable Integer id){
         if(storeProductService.reStoreProduct(id)){
-//            storeCartService.productStatusNotEnable(id);
             return CommonResult.success();
         }else{
             return CommonResult.failed();
@@ -209,28 +208,6 @@ public class StoreProductController {
         }
     }
 
-//    /**
-//     * 修改商品表
-//     * @param id integer id
-//     * @param num integer 排序值
-//     * @author Mr.Zhang
-//     * @since 2020-05-06
-//     */
-//    @ApiOperation(value = "排序数字")
-//    @RequestMapping(value = "/sort", method = RequestMethod.GET)
-//    @ApiImplicitParams({
-//            @ApiImplicitParam(name = "id", value = "id", dataType = "Integer", required = true),
-//            @ApiImplicitParam(name = "num", value = "数值", dataType = "Integer", required = true),
-//    })
-//    public CommonResult<String> sort(@RequestParam(value = "id") Integer id, @RequestParam(value = "num") Integer num){
-//        StoreProduct storeProduct = storeProductService.getById(id);
-//        storeProduct.setSort(num);
-//        if(storeProductService.updateById(storeProduct)){
-//            return CommonResult.success();
-//        }else{
-//            return CommonResult.failed();
-//        }
-//    }
     /**
      * 库存变动
      * @param request StoreProductStockRequest 参数

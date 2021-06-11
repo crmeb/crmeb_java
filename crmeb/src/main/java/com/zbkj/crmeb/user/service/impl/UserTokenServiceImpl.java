@@ -38,7 +38,7 @@ public class UserTokenServiceImpl extends ServiceImpl<UserTokenDao, UserToken> i
      * @return UserToken
      */
     @Override
-    public UserToken checkToken(String token, int type) {
+    public UserToken getByOpenidAndType(String token, int type) {
         LambdaQueryWrapper<UserToken> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(UserToken::getType, type).eq(UserToken::getToken, token);
         return dao.selectOne(lambdaQueryWrapper);

@@ -58,6 +58,7 @@
 
 	.recommend .title {
 		height: 135rpx;
+		line-height: 135rpx;
 		font-size: 28rpx;
 		color: #282828;
 	}
@@ -96,7 +97,7 @@
 	.recommend .recommendList .item .pictrue image {
 		width: 100%;
 		height: 100%;
-		border-radius: 6rpx;
+		border-radius: 14rpx;
 	}
 
 	.recommend .recommendList .item .name {
@@ -108,6 +109,7 @@
 	.recommend .recommendList .item .money {
 		font-size: 20rpx;
 		margin-top: 8rpx;
+		font-weight: 600;
 	}
 
 	.recommend .recommendList .item .money .num {

@@ -48,9 +48,15 @@ public class RegisterThirdUserRequest implements Serializable {
     private String avatar;
 
     @ApiModelProperty(value = "推广人id")
-    @JsonProperty(value = "spread_spid")
-    private Integer spreadPid = 0;
+    @JsonProperty(value = "spread_spid", defaultValue = "0")
+    private Integer spreadPid;
 
     @ApiModelProperty(value = "微信公众号用户头像", required = true)
     private String headimgurl;
+
+    @ApiModelProperty(value = "用户类型:wechat-公众号，routine-小程序，h5-H5,iosWx-苹果微信，androidWx-安卓微信")
+    private String type;
+
+    @ApiModelProperty(value = "用户openId")
+    private String openId;
 }

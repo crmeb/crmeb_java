@@ -3,7 +3,7 @@
     <el-card>
       <div>生成的商品默认是没有上架的，请手动上架商品！
         <span v-if="copyConfig.copyType && copyConfig.copyType==1">您当前剩余{{copyConfig.copyNum}}条采集次数，
-          <router-link :to="{path:'/operation/onePass'}">
+          <router-link :to="{path:'/operation/systemSms/pay?type=copy'}">
             <el-link type="primary" :underline="false">增加采集次数</el-link>
           </router-link>
         </span>
@@ -145,7 +145,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="商品规格：" props="spec_type" label-for="spec_type">
-              <el-table :data="ManyAttrValue" border class="tabNumWidth" size="mini">
+              <el-table :data="formValidate.attrValue" border class="tabNumWidth" size="mini">
                 <template v-if="manyTabDate">
                   <el-table-column v-for="(item,iii) in manyTabDate" :key="iii" align="center"
                                    :label="manyTabTit[iii].title" min-width="80">
@@ -156,19 +156,24 @@
                 </template>
                 <el-table-column align="center" label="图片" min-width="80">
                   <template slot-scope="scope">
-                    <div class="upLoadPicBox" @click="modalPicTap('1','duo',scope.$index)">
-                      <div v-if="scope.row.image" class="pictrue pictrueTab"><img :src="scope.row.image"></div>
-                      <div v-else class="upLoad pictrueTab">
-                        <i class="el-icon-camera cameraIconfont"/>
+                    <el-form-item :rules="[{required: true, message: '请上传图片', trigger: 'change'}]" :prop="'attrValue.'+scope.$index+'.image'">
+                      <div class="upLoadPicBox" @click="modalPicTap('1','duo',scope.$index)">
+                        <div v-if="scope.row.image" class="pictrue pictrueTab"><img :src="scope.row.image"></div>
+                        <div v-else class="upLoad pictrueTab">
+                          <i class="el-icon-camera cameraIconfont"/>
+                        </div>
                       </div>
-                    </div>
+                    </el-form-item>
                   </template>
                 </el-table-column>
                 <el-table-column v-for="(item,iii) in attrValue" :key="iii" :label="formThead[iii].title"
                                  align="center" min-width="120">
                   <template slot-scope="scope">
-                    <el-input v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'"
-                              class="priceBox"/>
+                    <el-form-item :rules="[{required: true, message: '请输入'+formThead[iii].title, trigger: 'blur'}]" :prop="formThead[iii].title!=='商品编号'?'attrValue.'+scope.$index+'.'+iii:''">
+                      <el-input v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" class="priceBox" />
+                    </el-form-item>
+                    <!--<el-input v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'"-->
+                              <!--class="priceBox"/>-->
                   </template>
                 </el-table-column>
                 <el-table-column align="center" label="操作" min-width="80">
@@ -216,8 +221,8 @@
     otPrice: null,
     stock: null,
     barCode: '',
-    weight: null,
-    volume: null
+    weight: 0,
+    volume: 0
   }]
   const objTitle = {
     price: {
@@ -287,6 +292,9 @@
           ],
           keyword: [
             {required: true, message: '请输入商品关键字', trigger: 'blur'}
+          ],
+          attrValue: [
+            { required: true, message: '请上传商品轮播图', type: 'array', trigger: 'change' }
           ]
         },
         grid: {
@@ -330,7 +338,7 @@
     methods: {
       // 删除表格中的属性
       delAttrTable(index) {
-        this.ManyAttrValue.splice(index, 1)
+        this.formValidate.attrValue.splice(index, 1)
       },
       getCopyConfig() {
         copyConfigApi().then(res => {
@@ -341,7 +349,7 @@
       batchAdd() {
         // if (!this.oneFormBatch[0].pic || !this.oneFormBatch[0].price || !this.oneFormBatch[0].cost || !this.oneFormBatch[0].ot_price ||
         //     !this.oneFormBatch[0].stock || !this.oneFormBatch[0].bar_code) return this.$Message.warning('请填写完整的批量设置内容！');
-        for (const val of this.ManyAttrValue) {
+        for (const val of this.formValidate.attrValue) {
           this.$set(val, 'image', this.oneFormBatch[0].image)
           this.$set(val, 'price', this.oneFormBatch[0].price)
           this.$set(val, 'cost', this.oneFormBatch[0].cost)
@@ -359,7 +367,7 @@
           tmp['value' + i] = {title: o.attrName}
           tmpTab['value' + i] = ''
         })
-        this.ManyAttrValue = this.attrFormat(val)
+        this.formValidate.attrValue = this.attrFormat(val)
         this.manyTabTit = tmp
         this.manyTabDate = tmpTab
         this.formThead = Object.assign({}, this.formThead, tmp)
@@ -555,7 +563,7 @@
       },
       // 提交
       handleSubmit(name) {
-        this.formValidate.attr.length ? this.formValidate.attrValue = this.ManyAttrValue : this.formValidate.attrValue = []
+       // this.formValidate.attr.length ? this.formValidate.attrValue = this.ManyAttrValue : this.formValidate.attrValue = []
         this.formValidate.cateId = this.formValidate.cateIds.join(',')
         this.formValidate.sliderImage = JSON.stringify(this.formValidate.sliderImages)
         for (var i = 0; i < this.formValidate.attr.length; i++) {
@@ -598,7 +606,7 @@
             _this.OneattrValue[0].image = img[0].sattDir
           }
           if (tit === '1' && num === 'duo') {
-            _this.ManyAttrValue[i].image = img[0].sattDir
+            _this.this.formValidate.attrValue[i].image = img[0].sattDir
           }
           if (tit === '1' && num === 'pi') {
             _this.oneFormBatch[0].image = img[0].sattDir
@@ -633,6 +641,11 @@
 </script>
 
 <style scoped lang="scss">
+  .formValidate{
+    /deep/ .el-form-item__error{
+      position: static !important;
+    }
+  }
   .selWidth {
     width: 100%;
   }

@@ -72,20 +72,31 @@ public class StoreOrderRefundServiceImpl extends ServiceImpl<StoreOrderDao, Stor
             appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
             mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_MCH_ID);
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
-            path = systemConfigService.getValueByKeyException("pay_routine_client_p12");
+//            path = systemConfigService.getValueByKeyException("pay_routine_client_p12");
+            path = systemConfigService.getValueByKeyException("pay_weixin_certificate_path");
         }
         if (storeOrder.getIsChannel() == 1) {// 小程序
             appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
             mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_MCH_ID);
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
-            path = systemConfigService.getValueByKeyException("pay_mini_client_p12");
+//            path = systemConfigService.getValueByKeyException("pay_mini_client_p12");
+            path = systemConfigService.getValueByKeyException("pay_routine_certificate_path");
         }
         if (storeOrder.getIsChannel() == 2) {// H5, 使用公众号的
             appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
             mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_MCH_ID);
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
-            path = systemConfigService.getValueByKeyException("pay_mini_client_p12");
+//            path = systemConfigService.getValueByKeyException("pay_mini_client_p12");
+            path = systemConfigService.getValueByKeyException("pay_weixin_certificate_path");
         }
+        if (storeOrder.getIsChannel() == 4 || storeOrder.getIsChannel() == 5) {// 微信App
+            appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_APP_ID);
+            mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_MCH_ID);
+            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_APP_KEY);
+//            path = systemConfigService.getValueByKeyException("pay_mini_app_client_p12");
+            path = systemConfigService.getValueByKeyException("pay_weixin_app_certificate_path");
+        }
+
         String apiDomain = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_API_URL);
 
         //统一下单数据

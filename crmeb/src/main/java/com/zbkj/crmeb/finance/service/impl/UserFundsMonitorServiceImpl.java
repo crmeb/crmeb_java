@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.finance.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.github.pagehelper.PageHelper;
@@ -8,8 +9,10 @@ import com.zbkj.crmeb.finance.dao.UserFundsMonitorDao;
 import com.zbkj.crmeb.finance.model.UserFundsMonitor;
 import com.zbkj.crmeb.finance.request.FundsMonitorUserSearchRequest;
 import com.zbkj.crmeb.finance.service.UserFundsMonitorService;
+import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.model.UserBrokerageRecord;
 import com.zbkj.crmeb.user.service.UserBrokerageRecordService;
+import com.zbkj.crmeb.user.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,6 +42,9 @@ public class UserFundsMonitorServiceImpl extends ServiceImpl<UserFundsMonitorDao
     @Autowired
     private UserBrokerageRecordService userBrokerageRecordService;
 
+    @Autowired
+    private UserService userService;
+
     /**
      * 佣金列表
      * @author Mr.Zhang
@@ -62,6 +68,12 @@ public class UserFundsMonitorServiceImpl extends ServiceImpl<UserFundsMonitorDao
         }
         map.put("sort", sort);
         List<UserFundsMonitor> monitorList = dao.getFundsMonitor(map);
+        monitorList.forEach(e -> {
+            if (e.getSpreadUid() > 0) {
+                User spreadUser = userService.getById(e.getSpreadUid());
+                e.setSpreadName(spreadUser.getNickname());
+            }
+        });
         return monitorList;
     }
 

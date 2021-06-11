@@ -4,8 +4,8 @@
 			<view class="title acea-row row-center-wrapper">
 				选择付款方式<text class="iconfont icon-guanbi" @click='close'></text>
 			</view>
-			<view class="item acea-row row-between-wrapper" @click='goPay(item.number || 0 , item.value)' v-for="(item,index) in payMode"
-			 :key="index">
+			<view class="item acea-row row-between-wrapper" @click='goPay(item.number || 0 , item.value)'
+				v-for="(item,index) in payMode" :key="index">
 				<view class="left acea-row row-between-wrapper">
 					<view class="iconfont" :class="item.icon"></view>
 					<view class="text">
@@ -26,8 +26,12 @@
 <script>
 	import {
 		orderPay,
-		wechatOrderPay
+		wechatOrderPay,
+		wechatQueryPayResult
 	} from '@/api/order.js';
+	import {
+		mapGetters
+	} from "vuex";
 	export default {
 		props: {
 			payMode: {
@@ -54,6 +58,7 @@
 
 			};
 		},
+		computed: mapGetters(['systemPlatform']),
 		methods: {
 			close: function() {
 				this.$emit('onChangeFun', {
@@ -71,18 +76,19 @@
 				});
 				uni.showLoading({
 					title: '支付中'
-				}); 
+				});
 				wechatOrderPay({
 					orderNo: that.order_id,
 					// #ifdef MP
 					payChannel: 'routine',
 					// #endif
-					// #ifdef H5 || APP-PLUS
+					// #ifdef H5
 					payChannel: that.$wechat.isWeixin() ? 'public' : 'weixinh5',
 					// #endif
 					payType: paytype
 				}).then(res => {
 					let jsConfig = res.data.jsConfig;
+					that.order_id = res.data.orderNo;
 					switch (res.data.payType) {
 						case 'weixin':
 							// #ifdef MP
@@ -94,14 +100,22 @@
 								paySign: jsConfig.paySign,
 								success: function(ress) {
 									uni.hideLoading();
-									return that.$util.Tips({
-										title: '支付成功',
-										icon: 'success'
-									}, () => {
-										that.$emit('onChangeFun', {
-											action: 'pay_complete'
+									wechatQueryPayResult(that.order_id).then(res => {
+										uni.hideLoading();
+										return that.$util.Tips({
+											title: "支付成功",
+											icon: 'success'
+										}, () => {
+											that.$emit('onChangeFun', {
+												action: 'pay_complete'
+											});
 										});
-									});
+									}).cache(err => {
+										uni.hideLoading();
+										return that.$util.Tips({
+											title: err
+										});
+									})
 								},
 								fail: function(e) {
 									uni.hideLoading();
@@ -115,13 +129,14 @@
 								},
 								complete: function(e) {
 									uni.hideLoading();
-									if (e.errMsg == 'requestPayment:cancel') return that.$util.Tips({
-										title: '取消支付'
-									}, () => {
-										that.$emit('onChangeFun', {
-											action: 'pay_fail'
+									if (e.errMsg == 'requestPayment:cancel') return that.$util
+										.Tips({
+											title: '取消支付'
+										}, () => {
+											that.$emit('onChangeFun', {
+												action: 'pay_fail'
+											});
 										});
-									});
 								},
 							})
 							// #endif
@@ -135,13 +150,13 @@
 							};
 							that.$wechat.pay(datas).then(res => {
 								if (res.errMsg == 'chooseWXPay:cancel') {
+									uni.hideLoading();
 									return that.$util.Tips({
 										title: '支付失败'
 									});
 								} else {
-									wechatQueryPayResult({
-										orderNo: that.order_id
-									}).then(res => {
+									wechatQueryPayResult(that.order_id).then(res => {
+										uni.hideLoading();
 										return that.$util.Tips({
 											title: "支付成功",
 											icon: 'success'
@@ -150,13 +165,19 @@
 												action: 'pay_complete'
 											});
 										});
-									}).cache(errW => {
+									}).cache(err => {
+										uni.hideLoading();
 										return that.$util.Tips({
-											title: errW
+											title: err
 										});
 									})
 								}
 
+							}).cache(errW => {
+								uni.hideLoading();
+								return that.$util.Tips({
+									title: errW
+								});
 							})
 							// #endif
 							break;
@@ -171,18 +192,19 @@
 								});
 							});
 							break;
-					    case 'weixinh5':
-						  uni.hideLoading();
-						  location.replace(jsConfig.mwebUrl + '&redirect_url=' + window.location.protocol + '//' + window.location.host + goPages + '&status=1');
-						  return that.$util.Tips({
-						  	title: "支付中",
-						  	icon: 'success'
-						  }, () => {
-						  	that.$emit('onChangeFun', {
-						  		action: 'pay_complete'
-						  	});
-						  });
-							break;	
+						case 'weixinh5':
+							uni.hideLoading();
+							location.replace(jsConfig.mwebUrl + '&redirect_url=' + window.location.protocol +
+								'//' + window.location.host + goPages + '&status=1');
+							return that.$util.Tips({
+								title: "支付中",
+								icon: 'success'
+							}, () => {
+								that.$emit('onChangeFun', {
+									action: 'pay_complete'
+								});
+							});
+							break;
 					}
 				}).catch(err => {
 					uni.hideLoading();

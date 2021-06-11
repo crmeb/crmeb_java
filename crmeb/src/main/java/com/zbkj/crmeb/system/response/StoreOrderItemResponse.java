@@ -1,11 +1,7 @@
 package com.zbkj.crmeb.system.response;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.zbkj.crmeb.store.response.StoreOrderSpreadInfoResponse;
-import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
-import com.zbkj.crmeb.user.model.User;
+import com.zbkj.crmeb.store.vo.StoreOrderInfoOldVo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -82,7 +78,7 @@ public class StoreOrderItemResponse implements Serializable {
     private String clerkName;
 
     @ApiModelProperty(value = "商品信息")
-    private List<StoreOrderInfoVo> productList = new ArrayList<>();
+    private List<StoreOrderInfoOldVo> productList = new ArrayList<>();
 
     @ApiModelProperty(value = "订单状态")
     private Map<String, String> statusStr;

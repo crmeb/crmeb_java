@@ -266,7 +266,6 @@
 	import {
 		getOrderDetail
 	} from "@/api/order";
-	// import VueCoreImageUpload from "vue-core-image-upload";
 	import easyUpload from '@/components/easy-upload/easy-upload.vue'
 	import {
 		TOKENNAME,
@@ -291,8 +290,6 @@
 	export default {
 		name: NAME,
 		components: {
-			// swiper,
-			// swiperSlide,
 			easyUpload,
 			home
 		},
@@ -482,7 +479,6 @@
 					this.getHistory();
 			},
 			imageuploaded(res) {
-				console.log(res)
 				if (res.status !== 200) return this.$dialog.error(res || "上传图片失败");
 				this.sendMsg(res.data.url, 3);
 			},
@@ -515,7 +511,6 @@
 				this.active = false;
 			},
 			keyup: function() {
-				console.log(this.$refs.input.innerHTML.length);
 				if (this.$refs.input.innerHTML.length > 0) {
 					this.sendColor = true;
 				} else {
@@ -557,13 +552,6 @@
 				}else{
 					this.sendColor = false
 				}
-				// if ($event.keyCode === 13) {
-				// 	$event.preventDefault();
-				// 	if (this.$refs.input.innerHTML) {
-				// 		this.sendMsg(this.$refs.input.innerHTML, 1);
-				// 		this.$refs.input.innerHTML = "";
-				// 	}
-				// }
 				this.height();
 			},
 			start() {
@@ -622,9 +610,6 @@
 					// 	this.$refs.input.blur();
 					// });
 				}
-				// this.$nextTick(function() {
-				// 	window.scrollTo(0, document.documentElement.scrollHeight);
-				// });
 				this.height();
 			},
 			height() {
@@ -771,7 +756,7 @@
 
 	.broadcast_details_pic {
 		font-size: 36rpx;
-		color: #e93323;
+		color: $theme-color;
 		text-align: left;
 	}
 

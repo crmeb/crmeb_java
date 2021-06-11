@@ -2,8 +2,8 @@
 server:
   port: 8080
   domain: #配合swagger使用 # 待部署域名
-  version: CRMEB-JAVA-v1.3.3 # 当前代码版本
-  wechat-api-url:  #请求微信接口中专服务器 仅仅调试时使用
+  version: CRMEB-JAVA-KY-v1.3.3.1 # 当前代码版本
+  wechat-api-url:  #请求微信接口中专服务器
   wechat-js-api-debug: false #微信js api系列是否开启调试模式
   wechat-js-api-beta: true #微信js api是否是beta版本
   asyncConfig: false #是否同步config表数据到redis
@@ -31,15 +31,15 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/crmeb_java?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
+    url: jdbc:mysql://127.0.0.1:3306/crmeb_java_cn?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
     username: root
-    password: password
+    password: 123456
   redis:
     host: 127.0.0.1 #地址
     port: 6379 #端口
-    password: password
-    timeout: 1000 # 连接超时时间（毫秒）
-    database: 0 #默认数据库
+    password: 123456
+    timeout: 30000 # 连接超时时间（毫秒）
+    database: 3 #默认数据库
     jedis:
       pool:
         max-active: 200 # 连接池最大连接数（使用负值表示没有限制）

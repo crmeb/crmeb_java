@@ -1,24 +1,27 @@
 <template>
 	<view>
 		<form @submit="formSubmit" report-submit='true'>
-			<view class='evaluate-con'>
-				<view class='goodsStyle acea-row row-between'>
+			<view class='evaluate-con pad30'>
+				<view class='goodsStyle acea-row row-between borRadius14'>
 					<view class='pictrue'>
 						<image :src='productInfo.image'></image>
 					</view>
 					<view class='text acea-row row-between'>
-						<view class='name line2'>{{productInfo.storeName}}</view>
+						<view>
+							<view class='name line2'>{{productInfo.storeName}}</view>
+							<view class='attr line1' v-if="productInfo.sku">{{productInfo.sku}}</view>
+						</view>
 						<view class='money'>
-							<view>￥{{productInfo.price}}</view>
-							<view class='num'>x{{cart_num}}</view>
+							<view>￥{{productInfo.truePrice}}</view>
+							<view class='num'>x{{productInfo.cartNum}}</view>
 						</view>
 					</view>
 				</view>
-				<view class='score'>
+				<view class='score borRadius14'>
 					<view class='item acea-row row-middle' v-for="(item,indexw) in scoreList" :key="indexw">
 						<view>{{item.name}}</view>
 						<view class='starsList'>
-							<text @click="stars(indexn, indexw)" v-for="(itemn, indexn) in item.stars" :key="indexn" class='iconfont' :class="item.index >= indexn? 'icon-shitixing font-color':'icon-kongxinxing'"></text>
+							<text @click="stars(indexn, indexw)" v-for="(itemn, indexn) in item.stars" :key="indexn" class='iconfont' :class="item.index >= indexn? 'icon-shitixing':'icon-kongxinxing'"></text>
 						</view>
 						<text class='evaluate'>{{item.index === -1 ? "" : item.index + 1 + "分"}}</text>
 					</view>
@@ -27,7 +30,7 @@
 						<view class='list acea-row row-middle'>
 							<view class='pictrue' v-for="(item,index) in picsPath" :key="index">
 								<image :src='item'></image>
-								<text class='iconfont icon-guanbi1 font-color' @click='DelPic(index)'></text>
+								<text class='iconfont icon-guanbi1' @click='DelPic(index)'></text>
 							</view>
 							<view class='pictrue acea-row row-center-wrapper row-column' @click='uploadpic' v-if="picsPath.length < 8">
 								<text class='iconfont icon-icon25201'></text>
@@ -40,7 +43,7 @@
 			</view>
 		</form>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 	</view>
 </template>
@@ -103,26 +106,19 @@
 			}
 		},
 		onLoad(options) {
-			if (!options.unique || !options.uni || !options.id) return this.$util.Tips({
+			if (!options.unique || !options.orderId ) return this.$util.Tips({
 				title: '缺少参数'
 			}, {
 				tab: 3,
 				url: 1
 			});
-			this.unique = options.unique;
-			this.orderId = options.uni;
-			this.id = options.id;
-			this.evaluateId = options.id;
+			this.unique =  Number(options.unique) || 0;
+			this.orderId = options.orderId || 0;
+			this.evaluateId = Number(options.id) || 0;
 			if (this.isLogin) {
 				this.getOrderProduct();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {
@@ -140,12 +136,12 @@
 			getOrderProduct: function() {
 				let that = this;
 				orderProduct({
-					orderId: that.id,
+					orderId: that.evaluateId,
 					uni: that.unique
 				}).then(res => {
-					that.$set(that, 'productInfo', res.data.productInfo);
-					that.$set(that, 'cart_num', res.data.cartNum);
-					that.$set(that, 'productId', res.data.productId);
+					that.$set(that, 'productInfo', res.data);
+					// that.$set(that, 'cart_num', res.data.cartNum);
+					// that.$set(that, 'productId', res.data.productId);
 				});
 			},
 			stars: function(indexn, indexw) {
@@ -159,7 +155,7 @@
 				let that = this,
 					pic = this.picsPath[index];
 				that.picsPath.splice(index, 1);
-				that.$set(that, 'picsPath', that.picsPath);
+				that.pics.splice(index, 1);
 			},
 
 			/**
@@ -196,10 +192,10 @@
 				value.productScore = product_score;
 				value.serviceScore = service_score;
 				value.pics = that.pics.length>0?JSON.stringify(that.pics):'';
-				value.productId = that.productId;
-				value.oid = that.evaluateId;
+				value.productId = that.productInfo.productId;
+				value.orderNo = that.orderId;
 				value.unique = that.unique;
-				value.sku = that.productInfo.attrInfo.suk;
+				value.sku = that.productInfo.sku;
 				uni.showLoading({
 					title: "正在发布评论……"
 				});
@@ -221,16 +217,23 @@
 </script>
 
 <style lang="scss" scoped>
+	.goodsStyle .text .name, .attr{
+		//width: 496rpx;
+	}
+	.icon-shitixing{
+		color: #FFBB00 !important;
+	}
 	.evaluate-con .score {
 		background-color: #fff;
-		border-top: 1rpx solid #f5f5f5;
+		// border-top: 1rpx solid #f5f5f5;
+		margin-top: 20rpx;
 		font-size: 28rpx;
 		color: #282828;
-		padding: 48rpx 30rpx 65rpx 30rpx;
+		padding: 46rpx 24rpx;
 	}
 
 	.evaluate-con .score .item~.item {
-		margin-top: 30rpx;
+		margin-top: 36rpx;
 	}
 
 	.evaluate-con .score .item .starsList {
@@ -252,10 +255,10 @@
 	}
 
 	.evaluate-con .score .textarea {
-		width: 690rpx;
-		background-color: #fafafa;
-		border-radius: 10rpx;
-		margin-top: 48rpx;
+		width: 100%;
+		background-color: #F5F5F5;
+		border-radius: 14rpx;
+		margin-top: 55rpx;
 	}
 
 	.evaluate-con .score .textarea textarea {
@@ -264,6 +267,7 @@
 		width: 100%;
 		box-sizing: border-box;
 		height: 160rpx;
+		width: auto !important;
 	}
 
 	.evaluate-con .score .textarea .placeholder {
@@ -282,6 +286,7 @@
 		position: relative;
 		font-size: 22rpx;
 		color: #bbb;
+		border-radius: 14rpx;
 	}
 
 	.evaluate-con .score .textarea .list .pictrue:nth-last-child(1) {
@@ -292,7 +297,7 @@
 	.evaluate-con .score .textarea .list .pictrue image {
 		width: 100%;
 		height: 100%;
-		border-radius: 3rpx;
+		border-radius: 14rpx;
 	}
 
 	.evaluate-con .score .textarea .list .pictrue .icon-guanbi1 {
@@ -310,7 +315,7 @@
 	.evaluate-con .score .evaluateBnt {
 		font-size: 30rpx;
 		color: #fff;
-		width: 690rpx;
+		width: 100%;
 		height: 86rpx;
 		border-radius: 43rpx;
 		text-align: center;

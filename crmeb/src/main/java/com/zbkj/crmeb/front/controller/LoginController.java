@@ -3,11 +3,9 @@ package com.zbkj.crmeb.front.controller;
 
 import com.common.CheckAdminToken;
 import com.common.CommonResult;
-import com.utils.CrmebUtil;
 import com.utils.ValidateFormUtil;
 import com.zbkj.crmeb.front.request.LoginMobileRequest;
 import com.zbkj.crmeb.front.request.LoginRequest;
-import com.zbkj.crmeb.front.request.RegisterRequest;
 import com.zbkj.crmeb.front.response.LoginResponse;
 import com.zbkj.crmeb.front.service.LoginService;
 import com.zbkj.crmeb.sms.service.SmsService;
@@ -17,7 +15,6 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +38,7 @@ import javax.servlet.http.HttpServletRequest;
 @RequestMapping("api/front")
 @Api(tags = "用户 -- 登录注册")
 public class LoginController {
+
     @Autowired
     private UserService userService;
 
@@ -56,20 +54,15 @@ public class LoginController {
 
     /**
      * 手机号登录接口
-     * @author Mr.Zhang
-     * @since 2020-04-28
      */
     @ApiOperation(value = "手机号登录接口")
     @RequestMapping(value = "/login/mobile", method = RequestMethod.POST)
-    public CommonResult<LoginResponse> phoneLogin(@RequestBody @Validated LoginMobileRequest loginRequest, HttpServletRequest request) throws Exception {
-        String clientIp = CrmebUtil.getClientIp(request);
-        return CommonResult.success(loginService.phoneLogin(loginRequest, clientIp));
+    public CommonResult<LoginResponse> phoneLogin(@RequestBody @Validated LoginMobileRequest loginRequest) throws Exception {
+        return CommonResult.success(loginService.phoneLogin(loginRequest));
     }
 
     /**
      * 账号密码登录
-     * @author Mr.Zhang
-     * @since 2020-04-28
      */
     @ApiOperation(value = "账号密码登录")
     @RequestMapping(value = "/login", method = RequestMethod.POST)
@@ -80,8 +73,6 @@ public class LoginController {
 
     /**
      * 退出登录
-     * @author Mr.Zhang
-     * @since 2020-04-28
      */
     @ApiOperation(value = "退出")
     @RequestMapping(value = "/logout", method = RequestMethod.GET)

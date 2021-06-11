@@ -27,6 +27,7 @@ import com.zbkj.crmeb.category.model.Category;
 import com.zbkj.crmeb.category.service.CategoryService;
 import com.zbkj.crmeb.combination.service.StoreCombinationService;
 import com.zbkj.crmeb.front.request.IndexStoreProductSearchRequest;
+import com.zbkj.crmeb.front.request.ProductRequest;
 import com.zbkj.crmeb.marketing.model.StoreCoupon;
 import com.zbkj.crmeb.marketing.service.StoreCouponService;
 import com.zbkj.crmeb.pass.service.OnePassService;
@@ -311,19 +312,24 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
      */
     @Override
     public boolean save(StoreProductRequest storeProductRequest) {
-        // 判断产品价格必须大于0
-        List<StoreProductAttrValueRequest> attrValue = storeProductRequest.getAttrValue();
-        if (attrValue.size() > 0) {
-            for (StoreProductAttrValueRequest attr : attrValue) {
-                if (attr.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
-                    new CrmebException("商品价格必须大于0");
-                }
+        // 多规格需要校验规格参数
+        if (storeProductRequest.getSpecType()) {
+            if (CollUtil.isEmpty(storeProductRequest.getAttr())) {
+                throw new CrmebException("商品属性不能为空");
             }
+            if (CollUtil.isEmpty(storeProductRequest.getAttrValue())) {
+                throw new CrmebException("商品属性详情不能为空");
+            }
+            // 校验商品属性详情参数
+            checkAttrValue(storeProductRequest.getAttrValue());
         }
 
         StoreProduct storeProduct = new StoreProduct();
         BeanUtils.copyProperties(storeProductRequest, storeProduct);
         storeProduct.setAddTime(DateUtil.getNowTime());
+
+        // 设置Acticity活动
+        productUtils.setProductActivity(storeProductRequest, storeProduct);
 
         //主图
         storeProduct.setImage(systemAttachmentService.clearPrefix(storeProduct.getImage()));
@@ -333,6 +339,9 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
 
         //计算价格
         productUtils.calcPriceForAttrValues(storeProductRequest, storeProduct);
+
+        // 商品活动默认值
+        storeProduct.setActivity("0, 1, 2, 3");
 
         //保存数据
         boolean save = save(storeProduct);
@@ -416,6 +425,50 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         return save;
     }
 
+    /**
+     * 校验商品属性详情参数
+     * @param attrValue 商品属性详情
+     */
+    private void checkAttrValue(List<StoreProductAttrValueRequest> attrValue) {
+        for (StoreProductAttrValueRequest attr : attrValue) {
+            if (CollUtil.isEmpty(attr.getAttrValue())) {
+                throw new CrmebException("商品属性详情sku不能为空");
+            }
+            if (ObjectUtil.isNull(attr.getStock())) {
+                throw new CrmebException("商品属性详情库存不能为空");
+            }
+            if (attr.getStock() < 0) {
+                throw new CrmebException("商品属性详情库存不能小于0");
+            }
+            if (ObjectUtil.isNull(attr.getPrice())) {
+                throw new CrmebException("商品属性详情金额不能为空");
+            }
+            if (attr.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new CrmebException("商品属性详情金额必须大于0");
+            }
+            if (ObjectUtil.isNull(attr.getCost()) || attr.getCost().compareTo(BigDecimal.ZERO) < 0) {
+                throw new CrmebException("商品属性详情成本价 不能为空或者小于0");
+            }
+            if (ObjectUtil.isNull(attr.getOtPrice()) || attr.getOtPrice().compareTo(BigDecimal.ZERO) < 0) {
+                throw new CrmebException("商品属性详情原价 不能为空或者小于0");
+            }
+            if (ObjectUtil.isNull(attr.getWeight()) || attr.getWeight().compareTo(BigDecimal.ZERO) < 0) {
+                throw new CrmebException("商品属性详情重量 不能为空或者小于0");
+            }
+            if (ObjectUtil.isNull(attr.getVolume()) || attr.getVolume().compareTo(BigDecimal.ZERO) < 0) {
+                throw new CrmebException("商品属性详情体积 不能为空或者小于0");
+            }
+//            if (ObjectUtil.isNull(attr.getBrokerage()) || attr.getBrokerage().compareTo(BigDecimal.ZERO) < 0) {
+//                throw new CrmebException("商品属性详情一级返佣 不能为空或者小于0");
+//            }
+//            if (ObjectUtil.isNull(attr.getBrokerageTwo()) || attr.getBrokerageTwo().compareTo(BigDecimal.ZERO) < 0) {
+//                throw new CrmebException("商品属性详情二级返佣 不能为空或者小于0");
+//            }
+//            if (ObjectUtil.isNull(attr.getType())) {
+//                throw new CrmebException("商品属性详情活动类型不能为空");
+//            }
+        }
+    }
 
     /**
      * 更新产品
@@ -424,14 +477,24 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
      */
     @Override
     public boolean update(StoreProductRequest storeProductRequest) {
-        // 判断产品价格必须大于0
-        List<StoreProductAttrValueRequest> attrValue = storeProductRequest.getAttrValue();
-        if (attrValue.size() > 0) {
-            for (StoreProductAttrValueRequest attr : attrValue) {
-                if (attr.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
-                    new CrmebException("商品价格必须大于0");
-                }
+        // 多规格需要校验规格参数
+        if (storeProductRequest.getSpecType()) {
+            if (CollUtil.isEmpty(storeProductRequest.getAttr())) {
+                throw new CrmebException("商品属性不能为空");
             }
+            if (CollUtil.isEmpty(storeProductRequest.getAttrValue())) {
+                throw new CrmebException("商品属性详情不能为空");
+            }
+            // 校验商品属性详情参数
+            checkAttrValue(storeProductRequest.getAttrValue());
+        }
+
+        StoreProduct tempProduct = getById(storeProductRequest.getId());
+        if (ObjectUtil.isNull(tempProduct)) {
+            throw new CrmebException("商品不存在");
+        }
+        if (tempProduct.getIsShow()) {
+            throw new CrmebException("请先下架商品，再进行修改");
         }
 
         StoreProduct storeProduct = new StoreProduct();
@@ -451,8 +514,27 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         int saveCount = dao.updateById(storeProduct);
         // 对attr表做全量更新，删除原有数据保存现有数据
         attrService.removeByProductId(storeProduct.getId(),Constants.PRODUCT_TYPE_NORMAL);
+        List<StoreProductAttrValue> attrValueList = storeProductAttrValueService.getListByProductIdAndAttrId(
+                storeProduct.getId(), null, Constants.PRODUCT_TYPE_NORMAL);
+        Map<String, Integer> valueMap = CollUtil.newHashMap();
+        attrValueList.forEach(e -> {
+            valueMap.put(e.getSuk(), e.getId());
+        });
         storeProductAttrValueService.removeByProductId(storeProduct.getId(),Constants.PRODUCT_TYPE_NORMAL);
-        if(storeProductRequest.getSpecType()) {
+
+        // 处理attr
+        if(storeProductRequest.getSpecType()) {// 多规格
+            storeProductRequest.getAttr().forEach(e -> {
+                e.setProductId(storeProductRequest.getId());
+                e.setAttrValues(StringUtils.strip(e.getAttrValues().replace("\"", ""), "[]"));
+                e.setType(Constants.PRODUCT_TYPE_NORMAL);
+            });
+            attrService.saveOrUpdateBatch(storeProductRequest.getAttr());
+        }
+
+        // 处理attrValue
+
+        if(storeProductRequest.getSpecType()) {// 多规格
             storeProductRequest.getAttr().forEach(e->{
                 e.setProductId(storeProductRequest.getId());
                 e.setAttrValues(StringUtils.strip(e.getAttrValues().replace("\"",""),"[]"));
@@ -481,7 +563,14 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                     spav.setType(Constants.PRODUCT_TYPE_NORMAL);
                     storeProductAttrValues.add(spav);
                 }
-                boolean saveOrUpdateResult = storeProductAttrValueService.saveOrUpdateBatch(storeProductAttrValues);
+                storeProductAttrValues.forEach(e -> {
+                    if (valueMap.containsKey(e.getSuk())) {
+                        e.setId(valueMap.get(e.getSuk()));
+                    }
+                });
+
+                boolean saveOrUpdateResult = storeProductAttrValueService.saveBatch(storeProductAttrValues);
+
                 // attrResult整存整取，不做更新
                 storeProductAttrResultService.deleteByProductId(storeProduct.getId(),Constants.PRODUCT_TYPE_NORMAL);
                 StoreProductAttrResult attrResult = new StoreProductAttrResult(
@@ -507,6 +596,9 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             singleAttrValue.setSuk("默认");
             singleAttrValue.setImage(systemAttachmentService.clearPrefix(singleAttrValue.getImage()));
             singleAttrValue.setType(Constants.PRODUCT_TYPE_NORMAL);
+            if (valueMap.containsKey(singleAttrValue.getSuk())) {
+                singleAttrValue.setId(valueMap.get(singleAttrValue.getSuk()));
+            }
             boolean saveOrUpdateResult = storeProductAttrValueService.save(singleAttrValue);
             if(!saveOrUpdateResult) throw new CrmebException("新增属性详情失败");
         }
@@ -667,23 +759,24 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             }
         }
 
-        if(!StringUtils.isBlank(request.getPriceOrder())){
-            if(request.getPriceOrder().equals(Constants.SORT_DESC)){
-                lambdaQueryWrapper.orderByDesc(StoreProduct::getPrice);
-            }else{
-                lambdaQueryWrapper.orderByAsc(StoreProduct::getPrice);
-            }
-        }
-
-        if(!StringUtils.isBlank(request.getSalesOrder())){
+        if (StrUtil.isNotBlank(request.getSalesOrder())) {
             if(request.getSalesOrder().equals(Constants.SORT_DESC)){
-                lambdaQueryWrapper.orderByDesc(StoreProduct::getSales);
+                lambdaQueryWrapper.last(" order by (sales + ficti) desc, sort desc, id desc");
             }else{
-                lambdaQueryWrapper.orderByAsc(StoreProduct::getSales);
+                lambdaQueryWrapper.last(" order by (sales + ficti) asc, sort asc, id asc");
             }
+        } else {
+            if(!StringUtils.isBlank(request.getPriceOrder())){
+                if(request.getPriceOrder().equals(Constants.SORT_DESC)){
+                    lambdaQueryWrapper.orderByDesc(StoreProduct::getPrice);
+                }else{
+                    lambdaQueryWrapper.orderByAsc(StoreProduct::getPrice);
+                }
+            }
+
+            lambdaQueryWrapper.orderByDesc(StoreProduct::getSort);
+            lambdaQueryWrapper.orderByDesc(StoreProduct::getId);
         }
-        lambdaQueryWrapper.orderByDesc(StoreProduct::getSort);
-        lambdaQueryWrapper.orderByDesc(StoreProduct::getId);
         return dao.selectList(lambdaQueryWrapper);
     }
 
@@ -1080,7 +1173,11 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             updateWrapper.last(StrUtil.format(" and (stock - {} >= 0)", num));
         }
         updateWrapper.eq("id", id);
-        return update(updateWrapper);
+        boolean update = update(updateWrapper);
+        if (!update) {
+            throw new CrmebException("更新普通商品库存失败,商品id = " + id);
+        }
+        return update;
     }
 
     /**
@@ -1136,6 +1233,158 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             return Boolean.TRUE;
         });
         return execute;
+    }
+
+    /**
+     * 首页商品列表
+     * @param type 类型 【1 精品推荐 2 热门榜单 3首发新品 4促销单品】
+     * @param pageParamRequest 分页参数
+     * @return CommonPage
+     */
+    @Override
+    public List<StoreProduct> getIndexProduct(Integer type, PageParamRequest pageParamRequest) {
+        PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+        LambdaQueryWrapper<StoreProduct> lambdaQueryWrapper = Wrappers.lambdaQuery();
+        lambdaQueryWrapper.select(StoreProduct::getId, StoreProduct::getImage, StoreProduct::getStoreName,
+                StoreProduct::getPrice, StoreProduct::getOtPrice, StoreProduct::getActivity);
+        switch (type){
+            case Constants.INDEX_RECOMMEND_BANNER: //精品推荐
+                lambdaQueryWrapper.eq(StoreProduct::getIsBest, true);
+                break;
+            case Constants.INDEX_HOT_BANNER: //热门榜单
+                lambdaQueryWrapper.eq(StoreProduct::getIsHot, true);
+                break;
+            case Constants.INDEX_NEW_BANNER: //首发新品
+                lambdaQueryWrapper.eq(StoreProduct::getIsNew, true);
+                break;
+            case Constants.INDEX_BENEFIT_BANNER: //促销单品
+                lambdaQueryWrapper.eq(StoreProduct::getIsBenefit, true);
+                break;
+            case Constants.INDEX_GOOD_BANNER: // 优选推荐
+                lambdaQueryWrapper.eq(StoreProduct::getIsGood, true);
+                break;
+        }
+
+        lambdaQueryWrapper.eq(StoreProduct::getIsDel, false);
+        lambdaQueryWrapper.gt(StoreProduct::getStock, 0);
+        lambdaQueryWrapper.eq(StoreProduct::getIsShow, true);
+
+        lambdaQueryWrapper.orderByDesc(StoreProduct::getSort);
+        lambdaQueryWrapper.orderByDesc(StoreProduct::getId);
+        return dao.selectList(lambdaQueryWrapper);
+    }
+
+    /**
+     * 获取商品移动端列表
+     * @param request 筛选参数
+     * @param pageRequest 分页参数
+     * @return List
+     */
+    @Override
+    public List<StoreProduct> findH5List(ProductRequest request, PageParamRequest pageRequest) {
+        PageHelper.startPage(pageRequest.getPage(), pageRequest.getLimit());
+        LambdaQueryWrapper<StoreProduct> lqw = Wrappers.lambdaQuery();
+        // id、名称、图片、价格、销量、活动
+        lqw.select(StoreProduct::getId, StoreProduct::getStoreName, StoreProduct::getImage, StoreProduct::getPrice,
+                StoreProduct::getActivity, StoreProduct::getSales, StoreProduct::getFicti, StoreProduct::getUnitName);
+
+        lqw.eq(StoreProduct::getIsDel, false);
+        lqw.eq(StoreProduct::getMerId, false);
+        lqw.gt(StoreProduct::getStock, 0);
+        lqw.eq(StoreProduct::getIsShow, true);
+
+        if (ObjectUtil.isNotNull(request.getCid()) && request.getCid() > 0) {
+            //查找当前类下的所有子类
+            List<Category> childVoListByPid = categoryService.getChildVoListByPid(request.getCid());
+            List<Integer> categoryIdList = childVoListByPid.stream().map(Category::getId).collect(Collectors.toList());
+            categoryIdList.add(request.getCid());
+            lqw.apply(CrmebUtil.getFindInSetSql("cate_id", (ArrayList<Integer>) categoryIdList));
+        }
+
+        if(StrUtil.isNotBlank(request.getKeyword())){
+            if(CrmebUtil.isString2Num(request.getKeyword())){
+                Integer productId = Integer.valueOf(request.getKeyword());
+                lqw.like(StoreProduct::getId, productId);
+            }else{
+                lqw.like(StoreProduct::getStoreName, request.getKeyword());
+            }
+        }
+
+        // 排序部分
+        if (StrUtil.isNotBlank(request.getSalesOrder())) {
+            if(request.getSalesOrder().equals(Constants.SORT_DESC)){
+                lqw.last(" order by (sales + ficti) desc, sort desc, id desc");
+            }else{
+                lqw.last(" order by (sales + ficti) asc, sort asc, id asc");
+            }
+        } else {
+            if(StrUtil.isNotBlank(request.getPriceOrder())){
+                if(request.getPriceOrder().equals(Constants.SORT_DESC)){
+                    lqw.orderByDesc(StoreProduct::getPrice);
+                }else{
+                    lqw.orderByAsc(StoreProduct::getPrice);
+                }
+            }
+
+            lqw.orderByDesc(StoreProduct::getSort);
+            lqw.orderByDesc(StoreProduct::getId);
+        }
+        return dao.selectList(lqw);
+    }
+
+    /**
+     * 获取移动端商品详情
+     * @param id 商品id
+     * @return StoreProduct
+     */
+    @Override
+    public StoreProduct getH5Detail(Integer id) {
+        LambdaQueryWrapper<StoreProduct> lqw = Wrappers.lambdaQuery();
+        lqw.select(StoreProduct::getId, StoreProduct::getImage, StoreProduct::getStoreName, StoreProduct::getSliderImage,
+                StoreProduct::getOtPrice, StoreProduct::getStock, StoreProduct::getSales, StoreProduct::getPrice, StoreProduct::getActivity,
+                StoreProduct::getFicti, StoreProduct::getIsSub, StoreProduct::getStoreInfo, StoreProduct::getBrowse, StoreProduct::getUnitName);
+        lqw.eq(StoreProduct::getId, id);
+        lqw.eq(StoreProduct::getIsDel, false);
+        lqw.eq(StoreProduct::getIsShow, true);
+        StoreProduct storeProduct = dao.selectOne(lqw);
+        if (ObjectUtil.isNull(storeProduct)) {
+            throw new CrmebException(StrUtil.format("未找到编号为{}的商品", id));
+        }
+
+        StoreProductDescription sd = storeProductDescriptionService.getOne(
+                new LambdaQueryWrapper<StoreProductDescription>()
+                        .eq(StoreProductDescription::getProductId, storeProduct.getId())
+                        .eq(StoreProductDescription::getType, Constants.PRODUCT_TYPE_NORMAL));
+        if(ObjectUtil.isNotNull(sd)) {
+            storeProduct.setContent(StrUtil.isBlank(sd.getDescription()) ? "" : sd.getDescription());
+        }
+        return storeProduct;
+    }
+
+    /**
+     * 获取购物车商品信息
+     * @param productId 商品编号
+     * @return StoreProduct
+     */
+    @Override
+    public StoreProduct getCartByProId(Integer productId) {
+        LambdaQueryWrapper<StoreProduct> lqw = Wrappers.lambdaQuery();
+        lqw.select(StoreProduct::getId, StoreProduct::getImage, StoreProduct::getStoreName);
+        lqw.eq(StoreProduct::getId, productId);
+        return dao.selectOne(lqw);
+    }
+
+    /**
+     * 根据商品ids获取对应的列表
+     * @param productIdList 商品id列表
+     * @return List<StoreProduct>
+     */
+    @Override
+    public List<StoreProduct> findH5ListByProIds(List<Integer> productIdList) {
+        LambdaQueryWrapper<StoreProduct> lqw = Wrappers.lambdaQuery();
+        lqw.select(StoreProduct::getId, StoreProduct::getImage, StoreProduct::getStoreName, StoreProduct::getPrice);
+        lqw.in(StoreProduct::getId, productIdList);
+        return dao.selectList(lqw);
     }
 
 }

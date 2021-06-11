@@ -24,4 +24,6 @@ public interface UserDao extends BaseMapper<User> {
     Boolean updateFounds(UserOperateFundsVo userOperateFundsVo);
 
     List<UserSpreadPeopleItemResponse> getSpreadPeopleList(Map<String, Object> map);
+
+    List<User> findAdminList(Map<String, Object> map);
 }

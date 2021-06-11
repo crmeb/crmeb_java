@@ -10,8 +10,7 @@
 			  <button class='item grant' @click="setUserInfo">去授权</button>
 			  <!-- #endif -->
 			  <!-- #ifdef MP -->
-			  <!-- <button class='item grant'  type="primary" open-type="getUserInfo" lang="zh_CN" @getuserinfo="setUserInfo">去授权</button> -->
-			  <button hover-class="none" @tap="getUserProfile" class='item grant'>微信登录</button>
+			  <button class='item grant'  type="primary" open-type="getUserInfo" lang="zh_CN" @getuserinfo="setUserInfo">去授权</button>
 			  <!-- #endif -->
 		   </view>
 		</view>
@@ -59,52 +58,6 @@
 			this.setAuthStatus();
 		},
 		methods:{
-			getUserProfile() {
-				let self = this;
-				uni.showLoading({
-					title: '正在登录中'
-				});
-				Routine.getUserProfile()
-					.then(res => {
-						Routine.getCode()
-							.then(code => {
-								self.getWxUser(code, res);
-							})
-							.catch(res => {
-								uni.hideLoading();
-							});
-					})
-					.catch(res => {
-						uni.hideLoading();
-					});
-			},
-
-			getWxUser(code, res) {
-				let self = this
-				let userInfo = res.userInfo;
-				userInfo.code = code;
-				userInfo.spread_spid = app.globalData.spid; //获取推广人ID
-				userInfo.spread_code = app.globalData.code; //获取推广人分享二维码ID
-				userInfo.avatar = userInfo.userInfo.avatarUrl;
-				userInfo.city = userInfo.userInfo.city;
-				userInfo.country = userInfo.userInfo.country;
-				userInfo.nickName = userInfo.userInfo.nickName;
-				userInfo.province = userInfo.userInfo.province;
-				userInfo.sex = userInfo.userInfo.gender;
-				userInfo.type = 'routine'
-				Routine.authUserInfo(code,userInfo).then(res=>{
-					uni.hideLoading();
-					this.$emit('authColse',false);
-					this.$emit('onLoadFun',this.userInfo);
-				}).catch(res=>{
-					uni.hideLoading();
-					uni.showToast({
-						title:res.message,
-						icon:'none',
-						duration:2000
-					});
-				});
-			},
 			setAuthStatus(){
 				Routine.authorize().then(res=>{
 					if(res.islogin === false)
@@ -118,7 +71,6 @@
 			},
 			getUserInfo(code){
 				Routine.getUserInfo().then(res=>{
-					console.log('res',res);
 					let userInfo = res.userInfo
 					userInfo.code = code;
 					userInfo.spread_spid = app.globalData.spid;//获取推广人ID
@@ -187,7 +139,7 @@
 	.Popup .bottom .item{width:50%;height:80rpx;background-color:#eeeeee;text-align:center;line-height:80rpx;font-size:24rpx;color:#666;margin-top:54rpx;}
 	.Popup .bottom .item.on{width: 100%}
 	.flex{display:flex;}
-	.Popup .bottom .item.grant{font-size:28rpx;color:#fff;font-weight:bold;background-color:#e93323;border-radius:0;padding:0;}
+	.Popup .bottom .item.grant{font-size:28rpx;color:#fff;font-weight:bold;background-color:$theme-color;border-radius:0;padding:0;}
 	.mask{position:fixed;top:0;right:0;left:0;bottom:0;background-color:rgba(0,0,0,0.65);z-index:310;}
 	
 </style>

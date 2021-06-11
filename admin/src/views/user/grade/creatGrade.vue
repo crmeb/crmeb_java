@@ -15,7 +15,7 @@
         <el-input-number  :min="0" :max="100" step-strictly  v-model="formValidate.discount" placeholder="请输入享受折扣"></el-input-number>
       </el-form-item>
       <el-form-item label="经验" prop="experience">
-        <el-input  v-model.number="formValidate.experience" placeholder="请输入经验"></el-input>
+        <el-input-number  v-model.number="formValidate.experience" placeholder="请输入经验" :max="999999" step-strictly></el-input-number>
       </el-form-item>
       <el-form-item label="图标" prop="icon">
         <div class="upLoadPicBox" @click="modalPicTap('1', 'icon')">

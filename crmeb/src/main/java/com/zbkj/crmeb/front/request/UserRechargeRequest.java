@@ -43,7 +43,7 @@ public class UserRechargeRequest implements Serializable {
     @ApiModelProperty(value = "支付方式| weixin = 微信，alipay = 支付宝")
     private String payType = "weixin";
 
-    @ApiModelProperty(value = "来源 | public =  微信公众号, weixinh5 =微信H5支付, routine = 小程序")
+    @ApiModelProperty(value = "来源 | public =  微信公众号, weixinh5 =微信H5支付, routine = 小程序，weixinAppIos-微信appios支付，weixinAppAndroid-微信app安卓支付")
     @JsonProperty(value = "from")
     private String fromType;
 

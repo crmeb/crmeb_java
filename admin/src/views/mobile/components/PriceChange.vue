@@ -3,13 +3,10 @@
     <div class="priceChange" :class="change === true ? 'on' : ''">
       <div class="priceTitle">
         {{
-          status === 0 || status === 2
-            ? orderInfo.refundStatus === 1
-              ? "立即退款"
-              : "一键改价"
-            : "订单备注"
+          status === 0 || status === 2 ? orderInfo.refundStatus === 1 ? "立即退款" : "一键改价" :  status === 1?"订单备注":"拒绝原因"
         }}
-        <span class="iconfont icon-guanbi" @click="close"></span>
+        <i class="el-icon-circle-close iconfonts" @click="close"></i>
+        <!--<span class="iconfont icon-guanbi" @click="close"></span>-->
       </div>
       <div class="listChange" v-if="status === 0 || status === 2">
         <div
@@ -68,6 +65,12 @@
           </div>
         </div>
       </div>
+      <div class="listChange" v-else-if="status === 3">
+        <textarea
+          placeholder="请填写退款原因"
+          v-model="reason" maxlength="100"
+        ></textarea>
+      </div>
       <div class="listChange" v-else>
         <textarea
           :placeholder="
@@ -77,11 +80,11 @@
         ></textarea>
       </div>
       <div class="modify" @click="save">
-        {{ orderInfo.refundStatus === 0 || status === 1 ? "立即修改" : "确认退款" }}
+        {{ orderInfo.refundStatus === 0 || status === 1 || status === 3 ? "立即提交" : "确认退款" }}
       </div>
-      <div class="modify1" @click="refuse" v-if="orderInfo.refundStatus === 1 && status === 2">
-        拒绝退款
-      </div>
+      <!--<div class="modify1" @click="refuse" v-if="orderInfo.refundStatus === 1 && status === 2">-->
+        <!--拒绝退款-->
+      <!--</div>-->
     </div>
     <div class="maskModel" @touchmove.prevent v-show="change === true"></div>
   </div>
@@ -109,7 +112,8 @@
         focus: false,
         price: 0,
         refundPrice: 0,
-        remark: ""
+        remark: "",
+        reason: ''
       };
     },
     watch: {
@@ -131,14 +135,17 @@
         this.$emit("closechange", false);
       },
       save() {
-        this.savePrice({
-          price: this.price,
-          refundPrice: this.refundPrice,
-          type: 1,
-          remark: this.remark,
-          id: this.orderInfo.id,
-          orderId: this.orderInfo.orderId
-        })
+        if(this.status === 3) {
+          this.refuse();
+        }else{
+          this.savePrice({
+            price: this.price,
+            refundPrice: this.refundPrice,
+            type: 1,
+            remark: this.remark,
+            orderId: this.orderInfo.orderId
+          })
+        }
       },
       async savePrice(opt) {
         let that = this,
@@ -159,7 +166,7 @@
             return validatorDefaultCatch(e);
           }
           data.price = price;
-          data.orderId = opt.orderId;
+          data.orderNo = opt.orderId;
           editPriceApi(data).then(() => {
             // that.change = false;
             this.$emit("closechange", false);
@@ -182,7 +189,7 @@
           }
           data.amount = refundPrice;
           data.type = opt.type;
-          data.orderId = opt.id;
+          data.orderNo = opt.orderId;
           orderRefundApi(data).then(
             res => {
               this.$emit("closechange", false);
@@ -205,7 +212,7 @@
             return validatorDefaultCatch(e);
           }
           data.mark = remark;
-          data.id = opt.id;
+          data.orderNo = opt.orderId;
           orderMarkApi(data).then(
             res => {
               this.$emit("closechange", false);
@@ -222,9 +229,16 @@
           );
         }
       },
-      refuse: function () {
-        let that = this;
-        that.$emit("getRefuse", this.orderInfo.id);
+      async refuse() {
+        let reason= this.reason;
+        try {
+          await this.$validator({
+            reason: [required(required.message("备注"))]
+          }).validate({reason});
+        } catch (e) {
+          return validatorDefaultCatch(e);
+        }
+        this.$emit("getRefuse", this.orderInfo.orderId, reason);
       }
     }
   };
@@ -235,7 +249,7 @@
     transform: scale(0);opacity:0;}
   .priceChange.on{opacity:1;transform: scale(1);-webkit-transform:scale(1);-o-transform:scale(1);-moz-transform:scale(1);-ms-transform:scale(1);}
   .priceChange .priceTitle{background:url("../../../assets/imgs/pricetitle.jpg") no-repeat;background-size:100% 100%;width:100%;height:1.6rem;border-radius:0.1rem 0.1rem 0 0;text-align:center;font-size:0.4rem;color:#fff;line-height:1.6rem;position:relative;}
-  .priceChange .priceTitle .iconfont{position:absolute;font-size:0.4rem;right:0.26rem;top:0.23rem;width:0.4rem;height:0.4rem;line-height:0.4rem;}
+  .priceChange .priceTitle .iconfonts{position:absolute;font-size:0.4rem;right:0.26rem;top:0.23rem;width:0.4rem;height:0.4rem;line-height:0.4rem;}
   .priceChange .listChange{padding:0 0.4rem;}
   .priceChange .listChange .item{height:1.03rem;border-bottom:1px solid #e3e3e3;font-size:0.32rem;color:#333;}
   .priceChange .listChange .item .money{color:#666;width:3rem;text-align:right;}

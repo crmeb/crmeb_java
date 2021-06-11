@@ -3,7 +3,7 @@
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <div class="container">
-          <el-form size="small" label-width="100px">
+          <el-form size="small" label-width="100px" inline>
             <el-form-item label="时间选择：" class="width100">
               <el-radio-group v-model="tableFrom.dateLimit" type="button" class="mr20" size="small" @change="selectChange(tableFrom.dateLimit)">
                 <el-radio-button v-for="(item,i) in fromList.fromTxt" :key="i" :label="item.val">{{ item.text }}</el-radio-button>
@@ -17,8 +17,13 @@
                 <!--<el-radio-button label="0">未支付</el-radio-button>-->
               <!--</el-radio-group>-->
             <!--</el-form-item>-->
-            <el-form-item label="关键字：" class="width100">
-              <el-input v-model="tableFrom.keywords" placeholder="微信昵称/姓名/订单号" class="selWidth" size="small" clearable>
+            <el-form-item label="用户id：">
+              <el-input v-model="tableFrom.uid" placeholder="用户id" class="selWidth" size="small" clearable>
+                <el-button slot="append" icon="el-icon-search" size="small" @click="getList(1)" />
+              </el-input>
+            </el-form-item>
+            <el-form-item label="订单号：">
+              <el-input v-model="tableFrom.keywords" placeholder="订单号" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search" size="small" @click="getList(1)" />
               </el-input>
             </el-form-item>
@@ -35,8 +40,8 @@
         highlight-current-row
       >
         <el-table-column
-          prop="id"
-          label="ID"
+          prop="uid"
+          label="UID"
           width="60"
         />
         <el-table-column
@@ -156,7 +161,8 @@
         },
         listLoading: true,
         tableFrom: {
-          paid: '',
+          uid: '',
+         // paid: '',
           dateLimit: '',
           keywords: '',
           page: 1,

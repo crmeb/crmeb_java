@@ -20,7 +20,7 @@
 		getCodeApi,
 		getUserInfo
 	} from "@/api/user";
-	import { getLogo, silenceAuth, getUserPhone } from '@/api/public';
+	import { getLogo, getUserPhone } from '@/api/public';
 	export default{
 		name:'routine_phone',
 		props:{
@@ -51,7 +51,6 @@
 			// #ifdef MP
 			// 小程序获取手机号码
 			getphonenumber(e){
-				console.log(e)
 				uni.showLoading({ title: '加载中' });
 				Routine.getCode()
 					.then(code => {
@@ -67,22 +66,21 @@
 					encryptedData: encryptedData,
 					iv: iv,
 					code: code,
-					spid: app.globalData.spid,
-					spread: app.globalData.code,
 					key:this.authKey,
 					type: 'routine'
 				})
 					.then(res => {
-						let time = res.data.expires_time - this.$Cache.time();
 						this.$store.commit('LOGIN', {
-							token: res.data.token,
-							time: time
+							token: res.data.token
 						});
+						this.$store.commit("SETUID", res.data.uid);
 						this.getUserInfo();
 					})
 					.catch(res => {
-						console.log(res);
 						uni.hideLoading();
+						this.$util.Tips({
+							title: res
+						});
 					});
 			},
 			/**
@@ -93,7 +91,6 @@
 				getUserInfo().then(res => {
 					uni.hideLoading();
 					that.userInfo = res.data
-					that.$store.commit("SETUID", res.data.uid);
 					that.$store.commit("UPDATE_USERINFO", res.data);
 					that.isStatus = true
 					this.close()
@@ -150,7 +147,7 @@
 			height: 86rpx;
 			line-height: 86rpx;
 			margin-top: 60rpx;
-			background: #E93323;
+			background: $theme-color;
 			border-radius: 43rpx;
 			color: #fff;
 			font-size: 28rpx;

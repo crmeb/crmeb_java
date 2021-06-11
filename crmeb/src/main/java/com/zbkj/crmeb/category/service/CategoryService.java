@@ -52,4 +52,10 @@ public interface CategoryService extends IService<Category> {
      * 新增分类表
      */
     Boolean create(CategoryRequest categoryRequest);
+
+    /**
+     * 获取文章分类列表
+     * @return List<Category>
+     */
+    List<Category> findArticleCategoryList();
 }

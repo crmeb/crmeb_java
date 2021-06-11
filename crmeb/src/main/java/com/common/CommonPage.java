@@ -1,10 +1,11 @@
 package com.common;
+
 import com.constants.Constants;
+import com.github.pagehelper.PageInfo;
+import com.zbkj.crmeb.store.response.StoreProductResponse;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
-import com.github.pagehelper.PageInfo;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +60,7 @@ public class CommonPage<T> {
 
     /**
      * 将PageHelper分页后的 PageInfo 转为分页信息
+     * @return
      */
     public static <T> CommonPage<T> restPage(PageInfo<T> pageInfo) {
         CommonPage<T> result = new CommonPage<T>();

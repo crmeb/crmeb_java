@@ -29,4 +29,9 @@ public interface SystemUserLevelService extends IService<SystemUserLevel> {
     boolean update(Integer id, SystemUserLevelRequest request);
 
     SystemUserLevel getByLevelId(Integer levelId);
+
+    /**
+     * 获取系统等级列表（移动端）
+     */
+    List<SystemUserLevel> getH5LevelList();
 }

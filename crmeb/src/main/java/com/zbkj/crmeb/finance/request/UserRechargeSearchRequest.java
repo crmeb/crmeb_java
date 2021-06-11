@@ -36,9 +36,9 @@ public class UserRechargeSearchRequest implements Serializable {
     @ApiModelProperty(value = "搜索关键字")
     private String keywords;
 
-
     @ApiModelProperty(value = "today,yesterday,lately7,lately30,month,year,/yyyy-MM-dd hh:mm:ss,yyyy-MM-dd hh:mm:ss/")
     private String dateLimit;
 
-
+    @ApiModelProperty(value = "用户uid")
+    private Integer uid;
 }

@@ -269,7 +269,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
         if (CollUtil.isEmpty(userBills)) {
             return BigDecimal.ZERO;
         }
-        return userBills.stream().map(UserBill::getNumber).reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2);
+        return userBills.stream().map(UserBill::getNumber).reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, BigDecimal.ROUND_DOWN);
     }
 
     /**
@@ -430,6 +430,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
     public PageInfo<UserBill> nowMoneyBillRecord(Integer uid, String type, PageParamRequest pageRequest) {
         Page<UserBill> billPage = PageHelper.startPage(pageRequest.getPage(), pageRequest.getLimit());
         LambdaQueryWrapper<UserBill> lqw = Wrappers.lambdaQuery();
+        lqw.select(UserBill::getTitle, UserBill::getNumber, UserBill::getBalance, UserBill::getMark, UserBill::getCreateTime, UserBill::getPm);
         lqw.eq(UserBill::getUid, uid);
         lqw.eq(UserBill::getCategory, Constants.USER_BILL_CATEGORY_MONEY);
         switch (type) {
@@ -446,6 +447,26 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
         lqw.orderByDesc(UserBill::getId);
         List<UserBill> billList = dao.selectList(lqw);
         return CommonPage.copyPageInfo(billPage, billList);
+    }
+
+    /**
+     * 获取H5列表
+     *
+     * @param userId   Integer 用户uid
+     * @param category String 类型
+     * @param pageParamRequest 分页类型
+     * @return List<UserBill>
+     */
+    @Override
+    public List<UserBill> getH5List(Integer userId, String category, PageParamRequest pageParamRequest) {
+        PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+        QueryWrapper<UserBill> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id", "pm", "title", "number", "balance", "mark", "create_time");
+        queryWrapper.eq("uid", userId);
+        queryWrapper.eq("category", category);
+        queryWrapper.eq("status", 1);
+        queryWrapper.orderByDesc("create_time");
+        return dao.selectList(queryWrapper);
     }
 
     /////////////////////////////////////////////////////////////////////// 自定义方法

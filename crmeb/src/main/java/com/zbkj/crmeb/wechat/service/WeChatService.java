@@ -55,8 +55,6 @@ public interface WeChatService {
 
     JSONObject getTagsListByUserId(String openId);
 
-    String getAuthorizeUrl();
-
     WeChatAuthorizeLoginGetOpenIdResponse authorizeLogin(String code);
 
     WeChatAuthorizeLoginUserInfoResponse getUserInfo(String openId, String token);
@@ -86,4 +84,6 @@ public interface WeChatService {
     String programAddMyTemp(ProgramAddMyTempVo programAddMyTempVo);
 
     void programDeleteMyTemp(String myTempId);
+
+    String getRoutineAccessToken();
 }

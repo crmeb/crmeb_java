@@ -141,10 +141,6 @@ public class StoreOrder implements Serializable {
     @ApiModelProperty(value = "是否删除")
     private Boolean isDel;
 
-    @ApiModelProperty(value = "唯一id(md5加密)类似id")
-    @TableField(value = "`unique`")
-    private String unique;
-
     @ApiModelProperty(value = "管理员备注")
     private String remark;
 
@@ -168,6 +164,9 @@ public class StoreOrder implements Serializable {
     @ApiModelProperty(value = "砍价id")
     private Integer bargainId;
 
+    @ApiModelProperty(value = "用户砍价活动id")
+    private Integer bargainUserId;
+
     @ApiModelProperty(value = "核销码")
     private String verifyCode;
 
@@ -180,7 +179,7 @@ public class StoreOrder implements Serializable {
     @ApiModelProperty(value = "店员id")
     private Integer clerkId;
 
-    @ApiModelProperty(value = "支付渠道(0-微信公众号,1-微信小程序,2-H5,3-余额)")
+    @ApiModelProperty(value = "支付渠道(0-微信公众号,1-微信小程序,2-H5,3-余额,4-微信AppIos,5-微信AppIos安卓)")
     private Integer isChannel;
 
     @ApiModelProperty(value = "消息提醒")
@@ -194,4 +193,7 @@ public class StoreOrder implements Serializable {
 
     @ApiModelProperty(value = "快递公司简称")
     private String deliveryCode;
+
+    @ApiModelProperty(value = "订单类型:0-普通订单，1-视频号订单")
+    private Integer type;
 }

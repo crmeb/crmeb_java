@@ -112,6 +112,21 @@ class AuthWechat {
 		});
 	} 
 	
+	// 使用微信内置地图查看位置接口；
+	seeLocation(config){
+		return new Promise((resolve, reject) => {
+			this.wechat().then(wx => {
+				this.toPromise(wx.openLocation, config).then(res => {
+					resolve(res);
+				}).catch(err => {
+					reject(err);
+				});
+			}).catch(err => {
+				reject(err);
+			})
+		});
+	}
+	
 	/**
 	 * 微信支付
 	 * @param {Object} config
@@ -153,12 +168,37 @@ class AuthWechat {
 	/**
 	 * 自动去授权
 	 */
-	oAuth() {
-		if (uni.getStorageSync(WX_AUTH) && store.state.app.token) return;
+	oAuth(snsapiBase,url) {
+		if (uni.getStorageSync(WX_AUTH) && store.state.app.token && snsapiBase == 'snsapi_base') return;
 		const {
 			code
 		} = parseQuery();
-		if (!code) return this.toAuth();
+		if (!code || code == uni.getStorageSync('snsapiCode')){
+			return this.toAuth(snsapiBase,url);
+		}else{
+			if(Cache.has('snsapiKey'))
+				return this.auth(code).catch(error=>{
+					uni.showToast({
+						title:error,
+						icon:'none'
+					})
+				})
+		}
+		// if (uni.getStorageSync(WX_AUTH) && store.state.app.token) return;
+		// const {
+		// 	code
+		// } = parseQuery();
+		// if (!code){
+		// 	return this.toAuth(snsapiBase,url);
+		// }else{
+		// 	if(Cache.has('snsapiKey'))
+		// 		return this.auth(code).catch(error=>{
+		// 			uni.showToast({
+		// 				title:error,
+		// 				icon:'none'
+		// 			})
+		// 		})
+		// }
 	}
 
 	clearAuthStatus() {
@@ -171,24 +211,16 @@ class AuthWechat {
 	 */
 	auth(code) {
 		return new Promise((resolve, reject) => {
-			let loginType = Cache.get(LOGINTYPE);
-			wechatAuth(code, Cache.get("spread"), loginType)
+			wechatAuth(code, Cache.get("spread"))
 				.then(({
 					data
 				}) => {
-					// let expires_time = data.expires_time.substring(0, 19);
-					// expires_time = expires_time.replace(/-/g, '/');
-					// expires_time = new Date(expires_time).getTime();
-					// let newTime = Math.round(new Date() / 1000);
-					store.commit("LOGIN", {
-						token: data.token
-						// time: expires_time - newTime
-					});
+					resolve(data);
 					Cache.set(WX_AUTH, code);
 					Cache.clear(STATE_KEY);
 					// Cache.clear('spread');
 					loginType && Cache.clear(LOGINTYPE);
-					resolve();
+					
 				})
 				.catch(reject);
 		});
@@ -198,32 +230,43 @@ class AuthWechat {
 	 * 获取跳转授权后的地址
 	 * @param {Object} appId
 	 */
-	getAuthUrl(appId) {
-		const redirect_uri = encodeURIComponent(
-			`${location.origin}/pages/auth/index?back_url=` +
-			encodeURIComponent(
-				encodeURIComponent(
-					uni.getStorageSync(BACK_URL) ?
-					uni.getStorageSync(BACK_URL) :
-					location.pathname + location.search
-				)
-			)
-		);
-		uni.removeStorageSync(BACK_URL);
-		const state = encodeURIComponent(
-			("" + Math.random()).split(".")[1] + "authorizestate"
-		);
-		uni.setStorageSync(STATE_KEY, state);
-		return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_base&state=${state}#wechat_redirect`;
-	}
-
+	getAuthUrl(appId,snsapiBase,backUrl) {
+		let url = `${location.origin}${backUrl}`
+				if(url.indexOf('?') == -1){
+							url = url+'?'
+						}else{
+							url = url+'&'
+						}
+				const redirect_uri = encodeURIComponent(
+					`${url}scope=${snsapiBase}&back_url=` +
+					encodeURIComponent(
+						encodeURIComponent(
+							uni.getStorageSync(BACK_URL) ?
+							uni.getStorageSync(BACK_URL) :
+							location.pathname + location.search
+						)
+					)
+				);
+				uni.removeStorageSync(BACK_URL);
+				const state = encodeURIComponent(
+					("" + Math.random()).split(".")[1] + "authorizestate"
+				);
+				uni.setStorageSync(STATE_KEY, state);
+				return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_userinfo&state=${state}#wechat_redirect`;
+				// if(snsapiBase==='snsapi_base'){
+				// 	return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_base&state=${state}#wechat_redirect`;
+				// }else{
+				// 	return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_userinfo&state=${state}#wechat_redirect`;
+				// }
+    }
+	
 	/**
 	 * 跳转自动登录
 	 */
-	toAuth() {
+	toAuth(snsapiBase,backUrl) {
 		let that = this;
 		this.wechat().then(wx => {
-			location.href = this.getAuthUrl(that.initConfig.appId);
+			location.href = this.getAuthUrl(that.initConfig.appId,snsapiBase,backUrl);
 		})
 	}
 

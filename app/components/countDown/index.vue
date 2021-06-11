@@ -1,14 +1,14 @@
 <template>
 	<view class="time" :style="justifyLeft">
-		<text class="red" v-if="tipText">{{ tipText }}</text>
-		<text class="styleAll" v-if="isDay === true">{{ day }}</text>
-		<text class="timeTxt red" v-if="dayText">{{ dayText }}</text>
-		<text class="styleAll" :class='isCol?"timeCol":""'>{{ hour }}</text>
-		<text class="timeTxt red" v-if="hourText">{{ hourText }}</text>
-		<text class="styleAll" :class='isCol?"timeCol":""'>{{ minute }}</text>
-		<text class="timeTxt red" v-if="minuteText">{{ minuteText }}</text>
-		<text class="styleAll" :class='isCol?"timeCol":""'>{{ second }}</text>
-		<text class="timeTxt red" v-if="secondText">{{ secondText }}</text>
+		<text class="" v-if="tipText">{{ tipText }}</text>
+		<text class="styleAll p6" v-if="isDay === true" :style="{background:bgColor.bgColor,color:bgColor.Color}">{{ day }}{{bgColor.isDay?'天':''}}</text>
+		<text class="timeTxt" v-if="dayText" :style="{width:bgColor.timeTxtwidth,color:bgColor.bgColor}">{{ dayText }}</text>
+		<text class="styleAll" :class='isCol?"timeCol":""' :style="{background:bgColor.bgColor,color:bgColor.Color,width:bgColor.width}">{{ hour }}</text>
+		<text class="timeTxt" v-if="hourText" :class='isCol?"whit":""' :style="{width:bgColor.timeTxtwidth,color:bgColor.bgColor}">{{ hourText }}</text>
+		<text class="styleAll" :class='isCol?"timeCol":""' :style="{background:bgColor.bgColor,color:bgColor.Color,width:bgColor.width}">{{ minute }}</text>
+		<text class="timeTxt" v-if="minuteText" :class='isCol?"whit":""' :style="{width:bgColor.timeTxtwidth,color:bgColor.bgColor}">{{ minuteText }}</text>
+		<text class="styleAll" :class='isCol?"timeCol":""' :style="{background:bgColor.bgColor,color:bgColor.Color,width:bgColor.width}">{{ second }}</text>
+		<text class="timeTxt" v-if="secondText">{{ secondText }}</text>
 	</view>
 </template>
 
@@ -52,6 +52,10 @@
 			isCol: {
 				type: Boolean,
 				default: false
+			},
+			bgColor: {
+				type: Object,
+				default: null
 			}
 		},
 		data: function() {
@@ -112,7 +116,29 @@
 	};
 </script>
 
-<style>
+<style scoped>
+	.p6{
+		padding: 0 8rpx;
+	}
+	.styleAll{
+		/* color: #fff; */
+		font-size: 24rpx;
+		height: 36rpx;
+		line-height: 36rpx;
+		border-radius: 6rpx;
+		text-align: center;
+		/* padding: 0 6rpx; */
+	}
+	.timeTxt{
+		    text-align: center;
+		    /* width: 16rpx; */
+		    height: 36rpx;
+		    line-height: 36rpx;
+		    display: inline-block;
+	}
+	.whit{
+		color: #fff !important;
+	}
 	.time {
 		display: flex;
 		justify-content: center;
@@ -124,13 +150,13 @@
 	}
 
 	.timeCol {
-		width: 40rpx;
+		/* width: 40rpx;
 		height: 40rpx;
 		line-height: 40rpx;
 		text-align:center;
 		border-radius: 6px;
 		background: #fff;
-		font-size: 24rpx;
+		font-size: 24rpx; */
 		color: #E93323;
 	}
 </style>

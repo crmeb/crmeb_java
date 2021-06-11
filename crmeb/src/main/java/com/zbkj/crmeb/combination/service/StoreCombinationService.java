@@ -8,12 +8,9 @@ import com.zbkj.crmeb.combination.request.StoreCombinationRequest;
 import com.zbkj.crmeb.combination.request.StoreCombinationSearchRequest;
 import com.zbkj.crmeb.combination.request.StorePinkRequest;
 import com.zbkj.crmeb.combination.response.StoreCombinationResponse;
-import com.zbkj.crmeb.front.response.CombinationDetailResponse;
-import com.zbkj.crmeb.front.response.GoPinkResponse;
-import com.zbkj.crmeb.store.model.StoreOrder;
+import com.zbkj.crmeb.front.response.*;
 import com.zbkj.crmeb.store.request.StoreProductStockRequest;
 import com.zbkj.crmeb.store.response.StoreProductResponse;
-import com.zbkj.crmeb.user.model.User;
 
 import java.util.List;
 import java.util.Map;
@@ -72,7 +69,7 @@ public interface StoreCombinationService extends IService<StoreCombination> {
     /**
      * H5拼团商品列表
      */
-    PageInfo<StoreCombination> getH5List(PageParamRequest pageParamRequest);
+    List<StoreCombinationH5Response> getH5List(PageParamRequest pageParamRequest);
 
     /**
      * H5拼团商品详情
@@ -100,16 +97,6 @@ public interface StoreCombinationService extends IService<StoreCombination> {
      * 条件查询
      */
     List<StoreCombination> getByEntity(StoreCombination storeCombination);
-
-    /**
-     * 扣减库存加销量
-     * @param num           商品数量
-     * @param attrValueId   拼团商品规格
-     * @param productId     主商品id
-     * @param user          购买用户
-     * @return Boolean
-     */
-    Boolean decProductStock(StoreOrder storeOrder, Integer num, Integer attrValueId, Integer productId, User user);
 
     /**
      * 添加库存
@@ -146,4 +133,16 @@ public interface StoreCombinationService extends IService<StoreCombination> {
      * @param type 类型：add—添加，sub—扣减
      */
     Boolean operationStock(Integer id, Integer num, String type);
+
+    /**
+     * 拼团首页数据
+     * @return CombinationIndexResponse
+     */
+    CombinationIndexResponse getIndexInfo();
+
+    /**
+     * 拼团列表header
+     * @return CombinationHeaderResponse
+     */
+    CombinationHeaderResponse getHeader();
 }

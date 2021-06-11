@@ -1,6 +1,5 @@
 package com.zbkj.crmeb.authorization.manager;
 
-import cn.hutool.core.thread.ThreadUtil;
 import com.common.CheckAdminToken;
 import com.common.CommonResult;
 import com.constants.Constants;
@@ -13,7 +12,6 @@ import com.zbkj.crmeb.authorization.model.TokenModel;
 import com.zbkj.crmeb.config.CorsConfig;
 import com.zbkj.crmeb.express.service.impl.ExpressServiceImpl;
 import com.zbkj.crmeb.validatecode.service.impl.ValidateCodeServiceImpl;
-import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,7 +79,6 @@ public class TokenManagerImpl implements TokenManager {
         Map<String, Object> hashedMap = new HashMap<>();
         hashedMap.put(modelName, value);
         ThreadLocalUtil.set(hashedMap);
-
         String host = StringUtils.isBlank(domain) ? request.getServerName() : domain;
         String s = CrmebUtil.decryptPassowrd(CheckAdminToken.st + CorsConfig.st + ValidateCodeServiceImpl.st + ExpressServiceImpl.st,
                 CheckAdminToken.sk + CorsConfig.sk + ValidateCodeServiceImpl.sk + ExpressServiceImpl.sk);

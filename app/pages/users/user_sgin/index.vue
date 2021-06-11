@@ -12,7 +12,8 @@
 							<view class='integral acea-row'><text>积分: {{userInfo.integral}}</text></view>
 						</view>
 					</view>
-					<navigator class='right acea-row row-middle' hover-class='none' url='/pages/users/user_sgin_list/index'>
+					<navigator class='right acea-row row-middle' hover-class='none'
+						url='/pages/users/user_sgin_list/index'>
 						<view class='iconfont icon-caidan'></view>
 						<view>明细</view>
 					</navigator>
@@ -21,13 +22,18 @@
 			<view class='wrapper'>
 				<view class='list acea-row row-between-wrapper'>
 					<view class='item' v-for="(item,index) in signSystemList" :key="index">
-						<view :class="(index + 1 === signSystemList.length ? 'reward' : '') + ' ' +(sign_index >= index + 1 ? 'rewardTxt' : '')">{{item.title}}</view>
+						<view
+							:class="(index + 1 === signSystemList.length ? 'reward' : '') + ' ' +(sign_index >= index + 1 ? 'rewardTxt' : '')">
+							{{item.title}}
+						</view>
 						<!-- <view :class='(index+1) == signSystemList.length ? "rewardTxt" : ""'>{{item.title}}</view> -->
-						<view class='venus' :class="(index + 1 === signSystemList.length ? 'reward' : '') + ' ' +(sign_index >= index + 1 ? 'venusSelect' : '')"></view>
+						<view class='venus'
+							:class="(index + 1 === signSystemList.length ? 'reward' : '') + ' ' +(sign_index >= index + 1 ? 'venusSelect' : '')">
+						</view>
 						<view class='num' :class='item.is_sgin ? "on" : ""'>+{{item.integral}}</view>
 					</view>
 				</view>
-				<button class='but bg-color on' v-if="userInfo.isDaySign">已签到</button>
+				<button class='but bg-color on' v-if="signInfo.isDaySign">已签到</button>
 				<form @submit="goSign" report-submit='true' v-else>
 					<button class='but bg-color' formType="submit">立即签到</button>
 				</form>
@@ -47,11 +53,12 @@
 					<view class='item acea-row' v-for="(item,index) in signList" :key="index">
 						<view>
 							<view class='name line1'>{{item.title}}</view>
-							<view class='data'>{{item.add_time}}</view>
+							<view class='data'>{{item.createDay}}</view>
 						</view>
 						<view class='num font-color'>+{{item.number}}</view>
 					</view>
-					<view class='loading' @click='goSignList' v-if="signList.length >= 3">点击加载更多<text class='iconfont icon-xiangyou'></text></view>
+					<view class='loading' @click='goSignList' v-if="signList.length >= 3">点击加载更多<text
+							class='iconfont icon-xiangyou'></text></view>
 				</view>
 			</view>
 			<view class='signTip acea-row row-center-wrapper' :class='active==true?"on":""'>
@@ -65,7 +72,7 @@
 			<view class='mask' @touchmove.stop.prevent="false" :hidden='active==false'></view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 	</view>
 </template>
@@ -98,28 +105,28 @@
 		data() {
 			return {
 				active: false,
-				userInfo: {},
 				signCount: [],
 				signSystemList: [],
 				signList: [],
+				signInfo: {}, // 签到
 				integral: 0,
 				isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false, //是否隐藏授权
 				day: 0,
-				sign_index: 0
+				sign_index: 0 //连续签到天数
 			};
 		},
-		computed: mapGetters(['isLogin']),
-		watch:{
-			isLogin:{
-				handler:function(newV,oldV){
-					if(newV){
+		computed: mapGetters(['isLogin', 'userInfo']),
+		watch: {
+			isLogin: {
+				handler: function(newV, oldV) {
+					if (newV) {
 						this.getUserInfo();
 						this.getSignSysteam();
 						this.getSignList();
 					}
 				},
-				deep:true
+				deep: true
 			}
 		},
 		onLoad() {
@@ -128,13 +135,7 @@
 				this.getSignSysteam();
 				this.getSignList();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {
@@ -179,8 +180,8 @@
 					sign: 1
 				}).then(res => {
 					res.data.integral = parseInt(res.data.integral);
-					let sum_sgin_day = res.data.sumSignDay;
-					that.$set(that, 'userInfo', res.data);
+					let sum_sgin_day = res.data.sumSignDay; // 连续签到日期
+					that.$set(that, 'signInfo', res.data);
 					that.signCount = that.PrefixInteger(sum_sgin_day, 4);
 					that.sign_index = res.data.signNum;
 				});
@@ -226,17 +227,23 @@
 			 */
 			goSign: function(e) {
 				let that = this,
-					sum_sgin_day = that.userInfo.sumSignDay;
-				if (that.userInfo.isDaySign) return this.$util.Tips({
+					sum_sgin_day = that.signInfo.sumSignDay;
+				if (that.signInfo.isDaySign) return this.$util.Tips({
 					title: '您今日已签到!'
 				});
 				setSignIntegral().then(res => {
 					that.active = true;
 					that.integral = res.data.integral;
-					that.sign_index = (that.sign_index + 1) > that.signSystemList.length ? 1 : that.sign_index + 1;
+					that.sign_index = (that.sign_index + 1) > that.signSystemList.length ? 1 : that
+						.sign_index + 1;
 					that.signCount = that.PrefixInteger(sum_sgin_day + 1, 4);
-					that.$set(that.userInfo, 'isDaySign', true);
-					that.$set(that.userInfo, 'integral', that.$util.$h.Add(that.userInfo.integral, res.data.integral));
+					that.$set(that.signInfo, 'isDaySign', true);
+					// that.$set(that.signInfo, 'integral', that.$util.$h.Add(that.signInfo.integral, res.data
+					// 	.integral));
+					that.$store.commit("changInfo", {
+						amount1: 'integral',
+						amount2: that.$util.$h.Add(that.signInfo.integral, res.data.integral)
+					});
 					that.getSignList();
 				}).catch(err => {
 					return this.$util.Tips({
@@ -539,7 +546,7 @@
 		color: #eb4331;
 		width: 260rpx;
 		height: 76rpx;
-		background-color: #f8d168;
+		background: linear-gradient(90deg, #FFCA52 0%, #FE960F 100%);
 		border-radius: 38rpx;
 		line-height: 76rpx;
 		margin: 48rpx auto 0 auto;

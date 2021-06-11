@@ -2,7 +2,6 @@ package com.zbkj.crmeb.payment.service;
 
 import com.zbkj.crmeb.front.request.OrderPayRequest;
 import com.zbkj.crmeb.front.response.OrderPayResultResponse;
-import com.zbkj.crmeb.payment.vo.wechat.CreateOrderResponseVo;
 import com.zbkj.crmeb.store.model.StoreOrder;
 
 /**
@@ -18,11 +17,6 @@ import com.zbkj.crmeb.store.model.StoreOrder;
  * +----------------------------------------------------------------------
  */
 public interface OrderPayService{
-    CreateOrderResponseVo payOrder(Integer orderId, String fromType, String clientIp);
-
-    boolean success(String orderId, Integer userId, String payType);
-
-    void afterPaySuccess();
 
     /**
      * 支付成功处理
@@ -32,8 +26,8 @@ public interface OrderPayService{
 
     /**
      * 余额支付
-     * @param StoreOrder 订单
-     * @return
+     * @param storeOrder 订单
+     * @return Boolean
      */
     Boolean yuePay(StoreOrder storeOrder);
 
@@ -41,7 +35,7 @@ public interface OrderPayService{
      * 订单支付
      * @param orderPayRequest 支付参数
      * @param ip    ip
-     * @return
+     * @return OrderPayResultResponse
      */
     OrderPayResultResponse payment(OrderPayRequest orderPayRequest, String ip);
 }

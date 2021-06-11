@@ -3,58 +3,54 @@ package com.zbkj.crmeb.front.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.MyRecord;
 import com.common.PageParamRequest;
-import com.constants.BrokerageRecordConstants;
-import com.constants.Constants;
-import com.constants.PayConstants;
+import com.constants.*;
 import com.exception.CrmebException;
 import com.github.pagehelper.PageInfo;
-import com.utils.CrmebUtil;
-import com.utils.DateUtil;
+import com.utils.*;
 import com.zbkj.crmeb.finance.model.UserRecharge;
-import com.zbkj.crmeb.finance.request.FundsMonitorSearchRequest;
 import com.zbkj.crmeb.finance.request.UserExtractRequest;
 import com.zbkj.crmeb.finance.service.UserExtractService;
 import com.zbkj.crmeb.finance.service.UserRechargeService;
+import com.zbkj.crmeb.front.request.RegisterAppWxRequest;
 import com.zbkj.crmeb.front.request.UserRechargeRequest;
 import com.zbkj.crmeb.front.request.UserSpreadPeopleRequest;
+import com.zbkj.crmeb.front.request.WxBindingPhoneRequest;
 import com.zbkj.crmeb.front.response.*;
+import com.zbkj.crmeb.front.service.LoginService;
 import com.zbkj.crmeb.front.service.UserCenterService;
 import com.zbkj.crmeb.front.vo.WxPayJsResultVo;
 import com.zbkj.crmeb.marketing.model.StoreCoupon;
 import com.zbkj.crmeb.marketing.model.StoreCouponUser;
 import com.zbkj.crmeb.marketing.service.StoreCouponService;
 import com.zbkj.crmeb.marketing.service.StoreCouponUserService;
-import com.zbkj.crmeb.payment.service.RechargePayService;
 import com.zbkj.crmeb.payment.wechat.WeChatPayService;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.system.model.SystemUserLevel;
-import com.zbkj.crmeb.system.request.SystemUserLevelSearchRequest;
 import com.zbkj.crmeb.system.service.SystemConfigService;
 import com.zbkj.crmeb.system.service.SystemGroupDataService;
 import com.zbkj.crmeb.system.service.SystemUserLevelService;
 import com.zbkj.crmeb.system.vo.SystemGroupDataRechargeConfigVo;
 import com.zbkj.crmeb.user.dao.UserDao;
-import com.zbkj.crmeb.user.model.User;
-import com.zbkj.crmeb.user.model.UserBill;
-import com.zbkj.crmeb.user.model.UserBrokerageRecord;
-import com.zbkj.crmeb.user.model.UserToken;
+import com.zbkj.crmeb.user.model.*;
 import com.zbkj.crmeb.user.request.RegisterThirdUserRequest;
-import com.zbkj.crmeb.user.service.UserBillService;
-import com.zbkj.crmeb.user.service.UserBrokerageRecordService;
-import com.zbkj.crmeb.user.service.UserService;
-import com.zbkj.crmeb.user.service.UserTokenService;
+import com.zbkj.crmeb.user.service.*;
 import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginGetOpenIdResponse;
 import com.zbkj.crmeb.wechat.response.WeChatAuthorizeLoginUserInfoResponse;
 import com.zbkj.crmeb.wechat.response.WeChatProgramAuthorizeLoginGetOpenIdResponse;
 import com.zbkj.crmeb.wechat.service.WeChatService;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -63,6 +59,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -80,6 +77,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements UserCenterService {
+
+    private final Logger logger = LoggerFactory.getLogger(UserCenterServiceImpl.class);
 
     @Autowired
     private UserService userService;
@@ -106,9 +105,6 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     private UserRechargeService userRechargeService;
 
     @Autowired
-    private RechargePayService rechargePayService;
-
-    @Autowired
     private UserTokenService userTokenService;
 
     @Autowired
@@ -129,71 +125,33 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     @Autowired
     private StoreCouponUserService storeCouponUserService;
 
+    @Autowired
+    private RedisUtil redisUtil;
+
+    @Autowired
+    private LoginService loginService;
+
+    @Autowired
+    private UserIntegralRecordService userIntegralRecordService;
+
 
     /**
      * 推广数据接口(昨天的佣金 累计提现金额 当前佣金)
      */
     @Override
     public UserCommissionResponse getCommission() {
-        User user = userService.getInfo();
-        if (ObjectUtil.isNull(user)) {
-            throw new CrmebException("用户数据异常");
-        }
+        User user = userService.getInfoException();
 
         // 昨天得佣金
         BigDecimal yesterdayIncomes = userBrokerageRecordService.getYesterdayIncomes(user.getUid());
         //累计已提取佣金
-        BigDecimal totalMoney = userExtractService.getExtractTotalMoney(userService.getUserIdException());
+        BigDecimal totalMoney = userExtractService.getExtractTotalMoney(user.getUid());
 
         UserCommissionResponse userCommissionResponse = new UserCommissionResponse();
         userCommissionResponse.setLastDayCount(yesterdayIncomes);
         userCommissionResponse.setExtractCount(totalMoney);
         userCommissionResponse.setCommissionCount(user.getBrokeragePrice());
         return userCommissionResponse;
-    }
-
-    /**
-     * 推广佣金明细
-     * @author Mr.Zhang
-     * @since 2020-06-08
-     * @return UserSpreadCommissionResponse
-     */
-    @Override
-    public PageInfo<UserSpreadCommissionResponse> getSpreadCommissionByType(int type, PageParamRequest pageParamRequest) {
-        String category = Constants.USER_BILL_CATEGORY_MONEY;
-        List<String> typeList = CollUtil.newArrayList();
-        switch (type){
-            case 0:
-                typeList.add(Constants.USER_BILL_TYPE_RECHARGE);
-                typeList.add(Constants.USER_BILL_TYPE_PAY_MONEY);
-                typeList.add(Constants.USER_BILL_TYPE_SYSTEM_ADD);
-                typeList.add(Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
-                typeList.add(Constants.USER_BILL_TYPE_SYSTEM_SUB);
-                typeList.add(Constants.USER_BILL_TYPE_PAY_MEMBER);
-                typeList.add(Constants.USER_BILL_TYPE_OFFLINE_SCAN);
-                break;
-            case 1:
-                typeList.add(Constants.USER_BILL_TYPE_PAY_MONEY);
-                typeList.add(Constants.USER_BILL_TYPE_PAY_MEMBER);
-                typeList.add(Constants.USER_BILL_TYPE_OFFLINE_SCAN);
-                typeList.add(Constants.USER_BILL_TYPE_USER_RECHARGE_REFUND);
-                break;
-            case 2:
-                typeList.add(Constants.USER_BILL_TYPE_RECHARGE);
-                typeList.add(Constants.USER_BILL_TYPE_SYSTEM_ADD);
-                break;
-            case 3:
-                category = Constants.USER_BILL_CATEGORY_BROKERAGE_PRICE;
-                typeList.add(Constants.USER_BILL_TYPE_BROKERAGE);
-                break;
-            case 4:
-                typeList.add(Constants.USER_BILL_TYPE_EXTRACT);
-                break;
-            default:
-                break;
-
-        }
-        return userBillService.getListGroupByMonth(userService.getUserIdException(), typeList, pageParamRequest, category);
     }
 
     /**
@@ -259,7 +217,6 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                 throw new  CrmebException("请选择支付方式");
         }
         return userExtractService.extractApply(request);
-//        return userExtractService.create(request, userService.getUserIdException());
     }
 
     /**
@@ -269,33 +226,16 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
      * @return UserExtractCashResponse
      */
     @Override
-    public UserExtractCashResponse minExtractCash() {
-
-        // 提现最低金额
-        String minPrice = systemConfigService.getValueByKeyException(Constants.CONFIG_EXTRACT_MIN_PRICE);
-        // 冻结天数
-        String extractTime = systemConfigService.getValueByKey(Constants.CONFIG_EXTRACT_FREEZING_TIME);
-        // 可提现佣金
-        BigDecimal brokeragePrice = userService.getInfo().getBrokeragePrice();
-        // 冻结佣金
-        BigDecimal freeze = userBrokerageRecordService.getFreezePrice(userService.getUserIdException());
+    public List<String> getExtractBank() {
         // 获取提现银行
         String bank = systemConfigService.getValueByKeyException(Constants.CONFIG_BANK_LIST).replace("\r\n", "\n");
         List<String> bankArr = new ArrayList<>();
         if(bank.indexOf("\n") > 0){
-            for (String s : bank.split("\n")) {
-                bankArr.add(s);
-            }
+            bankArr.addAll(Arrays.asList(bank.split("\n")));
         }else{
             bankArr.add(bank);
         }
-        return new UserExtractCashResponse(
-                bankArr,
-                minPrice,
-                brokeragePrice,
-                freeze,
-                extractTime
-        );
+        return bankArr;
     }
 
     /**
@@ -306,68 +246,32 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
      */
     @Override
     public List<SystemUserLevel> getUserLevelList() {
-        SystemUserLevelSearchRequest request = new SystemUserLevelSearchRequest();
-        request.setIsShow(true);
-        request.setIsDel(false);
-        return systemUserLevelService.getList(request, new PageParamRequest());
+        return systemUserLevelService.getH5LevelList();
     }
 
     /**
      * 推广用户， 我自己推广了哪些用户
-     * @author Mr.Zhang
-     * @since 2020-05-18
-     * @return UserSpreadPeopleResponse
+     * @return List<UserSpreadPeopleItemResponse>
      */
     @Override
-    public UserSpreadPeopleResponse getSpreadPeopleList(UserSpreadPeopleRequest request, PageParamRequest pageParamRequest) {
+    public List<UserSpreadPeopleItemResponse> getSpreadPeopleList(UserSpreadPeopleRequest request, PageParamRequest pageParamRequest) {
         //查询当前用户名下的一级推广员
-        UserSpreadPeopleResponse userSpreadPeopleResponse = new UserSpreadPeopleResponse();
+        Integer userId = userService.getUserIdException();
         List<Integer> userIdList = new ArrayList<>();
-        userIdList.add(userService.getUserIdException());
+        userIdList.add(userId);
         userIdList = userService.getSpreadPeopleIdList(userIdList); //我推广的一级用户id集合
 
         if (CollUtil.isEmpty(userIdList)) {//如果没有一级推广人，直接返回
-            userSpreadPeopleResponse.setCount(0);
-            userSpreadPeopleResponse.setTotal(0);
-            userSpreadPeopleResponse.setTotalLevel(0);
-            return userSpreadPeopleResponse;
+            return new ArrayList<>();
         }
-
-        userSpreadPeopleResponse.setTotal(userIdList.size()); //一级推广人
-        //查询二级推广人
-        List<Integer> secondSpreadIdList = CollUtil.newArrayList();
-        if (CollUtil.isNotEmpty(userIdList)) {
-            secondSpreadIdList = userService.getSpreadPeopleIdList(userIdList);
-        }
-        userSpreadPeopleResponse.setTotalLevel(secondSpreadIdList.size());
-        userSpreadPeopleResponse.setCount(userIdList.size() + secondSpreadIdList.size());
-
-        if(request.getGrade() == 1){
+        if (request.getGrade().equals(1)) {// 二级推广人
+            //查询二级推广人
+            List<Integer> secondSpreadIdList = userService.getSpreadPeopleIdList(userIdList);
             //二级推广人
             userIdList.clear();
             userIdList.addAll(secondSpreadIdList);
         }
-
-        if(userIdList.size() > 0){
-            List<UserSpreadPeopleItemResponse> userSpreadPeopleItemResponseList = userService.getSpreadPeopleList(userIdList, request.getKeyword(), request.getSortKey(), request.getIsAsc(), pageParamRequest);
-            userSpreadPeopleResponse.setSpreadPeopleList(userSpreadPeopleItemResponseList);
-        }
-
-        return userSpreadPeopleResponse;
-    }
-
-    /**
-     * 积分记录
-     * @author Mr.Zhang
-     * @since 2020-06-10
-     * @return List<UserBill>
-     */
-    @Override
-    public List<UserBill> getUserBillList(String category, PageParamRequest pageParamRequest) {
-        FundsMonitorSearchRequest request = new FundsMonitorSearchRequest();
-        request.setUid(userService.getUserIdException());
-        request.setCategory(category);
-        return userBillService.getList(request, pageParamRequest);
+        return userService.getSpreadPeopleList(userIdList, request.getKeyword(), request.getSortKey(), request.getIsAsc(), pageParamRequest);
     }
 
     /**
@@ -379,7 +283,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     @Override
     public UserRechargeResponse getRechargeConfig() {
         UserRechargeResponse userRechargeResponse = new UserRechargeResponse();
-        userRechargeResponse.setRechargeQuota(systemGroupDataService.getListByGid(Constants.GROUP_DATA_ID_RECHARGE_LIST, UserRechargeItemResponse.class));
+        userRechargeResponse.setRechargeQuota(systemGroupDataService.getListByGid(SysGroupDataConstants.GROUP_DATA_ID_RECHARGE_LIST, UserRechargeItemResponse.class));
         String rechargeAttention = systemConfigService.getValueByKey(Constants.CONFIG_RECHARGE_ATTENTION);
         List<String> rechargeAttentionList = new ArrayList<>();
         if(StringUtils.isNotBlank(rechargeAttention)){
@@ -534,6 +438,9 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             vo.setMwebUrl(unifiedorder.get("mweb_url"));
             response.setPayType(PayConstants.PAY_CHANNEL_WE_CHAT_H5);
         }
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_IOS) || userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_ANDROID)) {//
+            vo.setPartnerid(unifiedorder.get("partnerid"));
+        }
         response.setJsConfig(vo);
         response.setOrderNo(userRecharge.getOrderId());
         return response;
@@ -546,170 +453,61 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
      * @return UserSpreadOrderResponse;
      */
     @Override
-    @Transactional(rollbackFor = {RuntimeException.class, Error.class, CrmebException.class})
     public LoginResponse weChatAuthorizeLogin(String code, Integer spreadUid) {
-        try{
-            // 通过code获取获取公众号授权信息
-            WeChatAuthorizeLoginGetOpenIdResponse response = weChatService.authorizeLogin(code);
-            // 获取登录用户
-            User user = publicLogin(response.getOpenId(), response.getAccessToken(), spreadUid);
-            //通过用户id获取登录token信息
-            LoginResponse loginResponse = new LoginResponse();
-            loginResponse.setToken(userService.token(user));
-            user.setPwd(null);
-            loginResponse.setUser(user);
+        // 通过code获取获取公众号授权信息
+        WeChatAuthorizeLoginGetOpenIdResponse response = weChatService.authorizeLogin(code);
+        //检测是否存在
+        UserToken userToken = userTokenService.getByOpenidAndType(response.getOpenId(),  Constants.THIRD_LOGIN_TOKEN_TYPE_PUBLIC);
+        LoginResponse loginResponse = new LoginResponse();
+        if (ObjectUtil.isNotNull(userToken)) {// 已存在，正常登录
+            User user = userService.getById(userToken.getUid());
+            if (!user.getStatus()) {
+                throw new CrmebException("当前账户已禁用，请联系管理员！");
+            }
 
             // 记录最后一次登录时间
             user.setLastLoginTime(DateUtil.nowDateTime());
-            updateById(user);
-            return loginResponse;
-        }catch (Exception e){
-            throw new CrmebException(e.getMessage());
-        }
-    }
-
-    /**
-     * 通过openId登录
-     * @param openId  String 微信公众号通过code取回的openId对象
-     * @param token String code换取的token
-     * @author Mr.Zhang
-     * @since 2020-05-25
-     * @return List<LoginResponse>
-     */
-    private User publicLogin(String openId, String token, Integer spreadUid) {
-        try {
-            //检测是否存在
-            UserToken userToken = userTokenService.checkToken(openId,  Constants.THIRD_LOGIN_TOKEN_TYPE_PUBLIC);
-            if(null != userToken){
-                User user = userService.getById(userToken.getUid());
+            Boolean execute = transactionTemplate.execute(e -> {
                 // 分销绑定
                 if (userService.checkBingSpread(user, spreadUid, "old")) {
-                    Integer oldSprUid = user.getSpreadUid();
-
                     user.setSpreadUid(spreadUid);
                     user.setSpreadTime(DateUtil.nowDateTime());
-                    Boolean execute = transactionTemplate.execute(e -> {
-                        userService.updateById(user);
-                        userService.updateSpreadCountByUid(spreadUid, "add");
-                        if (oldSprUid > 0) {
-                            userService.updateSpreadCountByUid(oldSprUid, "sub");
-                        }
-                        return Boolean.TRUE;
-                    });
-                    if (!execute) {
-                        System.out.println(StrUtil.format("公众号登录绑定分销关系失败，uid={},spreadUid={}", user.getUid(), spreadUid));
-                    }
-                }
-                return user;
-            }
-
-            //没有注册， 获取微信用户信息， 小程序需要前端传入用户信息参数
-            WeChatAuthorizeLoginUserInfoResponse userInfo = weChatService.getUserInfo(openId, token);
-            RegisterThirdUserRequest registerThirdUserRequest = new RegisterThirdUserRequest();
-            BeanUtils.copyProperties(userInfo, registerThirdUserRequest);
-            String unionId = userInfo.getUnionId();
-
-            //看unionid是否已经绑定
-            if(StringUtils.isNotBlank(unionId)){
-                userToken = userTokenService.checkToken(userInfo.getUnionId(), Constants.THIRD_LOGIN_TOKEN_TYPE_UNION_ID);
-                if(null != userToken){
-                    User user = userService.getById(userToken.getUid());
-                    // 分销绑定
-                    if (userService.checkBingSpread(user, spreadUid, "old")) {
-                        Integer oldSprUid = user.getSpreadUid();
-                        user.setSpreadUid(spreadUid);
-                        user.setSpreadTime(DateUtil.nowDateTime());
-                        Boolean execute = transactionTemplate.execute(e -> {
-                            userService.updateById(user);
-                            userService.updateSpreadCountByUid(spreadUid, "add");
-                            if (oldSprUid > 0) {
-                                userService.updateSpreadCountByUid(oldSprUid, "sub");
-                            }
-                            return Boolean.TRUE;
-                        });
-                        if (!execute) {
-                            System.out.println(StrUtil.format("公众号登录绑定分销关系失败，uid={},spreadUid={}", user.getUid(), spreadUid));
-                        }
-                    }
-                    return user;
-                }
-            }
-
-            //TODO 是否需要强制注册用户，1 强制注册，2 需要返回数据给前端，让其输入手机号和验证码
-            User user = userService.registerByThird(registerThirdUserRequest, Constants.USER_LOGIN_TYPE_PUBLIC);
-
-            userTokenService.bind(openId, Constants.THIRD_LOGIN_TOKEN_TYPE_PUBLIC, user.getUid());
-            if(StringUtils.isNotBlank(unionId)) {
-                //有就绑定
-                userTokenService.bind(unionId, Constants.THIRD_LOGIN_TOKEN_TYPE_UNION_ID, user.getUid());
-            }
-            // 分销绑定
-            if (userService.checkBingSpread(user, spreadUid, "new")) {
-                user.setSpreadUid(spreadUid);
-                user.setSpreadTime(DateUtil.nowDateTime());
-                Boolean execute = transactionTemplate.execute(e -> {
-                    userService.updateById(user);
+                    // 处理新旧推广人数据
                     userService.updateSpreadCountByUid(spreadUid, "add");
-                    return Boolean.TRUE;
-                });
-                if (!execute) {
-                    System.out.println(StrUtil.format("公众号登录绑定分销关系失败，uid={},spreadUid={}", user.getUid(), spreadUid));
                 }
+                userService.updateById(user);
+                return Boolean.TRUE;
+            });
+            if (!execute) {
+                logger.error(StrUtil.format("公众号登录绑定分销关系失败，uid={},spreadUid={}", user.getUid(), spreadUid));
             }
-
-            // 赠送优惠券
-            // 查询是否有新人注册赠送优惠券
-            List<StoreCouponUser> couponUserList = CollUtil.newArrayList();
-            List<StoreCoupon> couponList = storeCouponService.findRegisterList();
-            if (CollUtil.isNotEmpty(couponList)) {
-                couponList.forEach(storeCoupon -> {
-                    //是否有固定的使用时间
-                    if(!storeCoupon.getIsFixedTime()){
-                        String endTime = DateUtil.addDay(DateUtil.nowDate(Constants.DATE_FORMAT), storeCoupon.getDay(), Constants.DATE_FORMAT);
-                        storeCoupon.setUseEndTime(DateUtil.strToDate(endTime, Constants.DATE_FORMAT));
-                        storeCoupon.setUseStartTime(DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
-                    }
-
-                    StoreCouponUser storeCouponUser = new StoreCouponUser();
-                    storeCouponUser.setCouponId(storeCoupon.getId());
-                    storeCouponUser.setName(storeCoupon.getName());
-                    storeCouponUser.setMoney(storeCoupon.getMoney());
-                    storeCouponUser.setMinPrice(storeCoupon.getMinPrice());
-                    storeCouponUser.setUseType(storeCoupon.getUseType());
-                    if (storeCoupon.getIsFixedTime()) {// 使用固定时间
-                        storeCouponUser.setStartTime(storeCoupon.getUseStartTime());
-                        storeCouponUser.setEndTime(storeCoupon.getUseEndTime());
-                    } else {// 没有固定使用时间
-                        Date nowDate = DateUtil.nowDateTime();
-                        storeCouponUser.setStartTime(nowDate);
-                        DateTime dateTime = cn.hutool.core.date.DateUtil.offsetDay(nowDate, storeCoupon.getDay());
-                        storeCouponUser.setEndTime(dateTime);
-                    }
-                    storeCouponUser.setType("register");
-                    if (storeCoupon.getUseType() > 1) {
-                        storeCouponUser.setPrimaryKey(storeCoupon.getPrimaryKey());
-                    }
-                    couponUserList.add(storeCouponUser);
-                });
+            try {
+                String token = userService.token(user);
+                loginResponse.setToken(token);
+            } catch (Exception e) {
+                logger.error(StrUtil.format("公众号登录生成token失败，uid={}", user.getUid()));
+                e.printStackTrace();
             }
-
-            // 赠送客户优惠券
-            if (CollUtil.isNotEmpty(couponUserList)) {
-                couponUserList.forEach(couponUser -> {
-                    couponUser.setUid(user.getUid());
-
-                });
-                storeCouponUserService.saveBatch(couponUserList);
-                couponList.forEach(coupon -> {
-                    storeCouponService.deduction(coupon.getId(), 1, coupon.getIsLimited());
-                });
-            }
-
-
-            return user;
-        }catch (Exception e){
-            throw new CrmebException(e.getMessage());
+            loginResponse.setType("login");
+            loginResponse.setUid(user.getUid());
+            loginResponse.setNikeName(user.getNickname());
+            loginResponse.setPhone(user.getPhone());
+            return loginResponse;
         }
+        // 没有用户，走创建用户流程
+        // 从微信获取用户信息，存入Redis中，将key返回给前端，前端在下一步绑定手机号的时候下发
+        WeChatAuthorizeLoginUserInfoResponse userInfo = weChatService.getUserInfo(response.getOpenId(), response.getAccessToken());
+        RegisterThirdUserRequest registerThirdUserRequest = new RegisterThirdUserRequest();
+        BeanUtils.copyProperties(userInfo, registerThirdUserRequest);
+        registerThirdUserRequest.setSpreadPid(spreadUid);
+        registerThirdUserRequest.setType(Constants.USER_LOGIN_TYPE_PUBLIC);
+        registerThirdUserRequest.setOpenId(response.getOpenId());
+        String key = SecureUtil.md5(response.getOpenId());
+        redisUtil.set(key, JSONObject.toJSONString(registerThirdUserRequest), (long) (60 * 2), TimeUnit.MINUTES);
+
+        loginResponse.setType("register");
+        loginResponse.setKey(key);
+        return loginResponse;
     }
 
     /**
@@ -720,45 +518,78 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
      */
     @Override
     public String getLogo() {
-        String url = systemConfigService.getValueByKey(Constants.CONFIG_KEY_MOBILE_LOGIN_LOGO);
-        return url;
+        return systemConfigService.getValueByKey(Constants.CONFIG_KEY_MOBILE_LOGIN_LOGO);
     }
 
     /**
      * 小程序登录
      * @param code String 前端临时授权code
      * @param request RegisterThirdUserRequest 用户信息
-     * @author Mr.Zhang
-     * @since 2020-06-10
-     * @return UserSpreadOrderResponse;
+     * @return LoginResponse
      */
     @Override
     public LoginResponse weChatAuthorizeProgramLogin(String code, RegisterThirdUserRequest request) {
-        try{
-            WeChatProgramAuthorizeLoginGetOpenIdResponse response = weChatService.programAuthorizeLogin(code);
-            System.out.println("小程序登陆成功 = " + JSON.toJSONString(response));
-            User user = programLogin(response.getOpenId(), response.getUnionId(), request);
-            //通过用户id获取登录token信息
-            LoginResponse loginResponse = new LoginResponse();
-            loginResponse.setToken(userService.token(user));
-            user.setPwd(null);
-            loginResponse.setUser(user);
+        WeChatProgramAuthorizeLoginGetOpenIdResponse response = weChatService.programAuthorizeLogin(code);
+        System.out.println("小程序登陆成功 = " + JSON.toJSONString(response));
 
+        //检测是否存在
+        UserToken userToken = userTokenService.getByOpenidAndType(response.getOpenId(), Constants.THIRD_LOGIN_TOKEN_TYPE_PROGRAM);
+        LoginResponse loginResponse = new LoginResponse();
+        if(ObjectUtil.isNotNull(userToken)) {// 已存在，正常登录
+            User user = userService.getById(userToken.getUid());
+            if (!user.getStatus()) {
+                throw new CrmebException("当前账户已禁用，请联系管理员！");
+            }
             // 记录最后一次登录时间
             user.setLastLoginTime(DateUtil.nowDateTime());
-            updateById(user);
+            Boolean execute = transactionTemplate.execute(e -> {
+                // 分销绑定
+                if (userService.checkBingSpread(user, request.getSpreadPid(), "old")) {
+                    user.setSpreadUid(request.getSpreadPid());
+                    user.setSpreadTime(DateUtil.nowDateTime());
+                    // 处理新旧推广人数据
+                    userService.updateSpreadCountByUid(request.getSpreadPid(), "add");
+                }
+                userService.updateById(user);
+                return Boolean.TRUE;
+            });
+            if (!execute) {
+                logger.error(StrUtil.format("小程序登录绑定分销关系失败，uid={},spreadUid={}", user.getUid(), request.getSpreadPid()));
+            }
+
+            try {
+                String token = userService.token(user);
+                loginResponse.setToken(token);
+            } catch (Exception e) {
+                logger.error(StrUtil.format("小程序登录生成token失败，uid={}", user.getUid()));
+                e.printStackTrace();
+            }
+            loginResponse.setType("login");
+            loginResponse.setUid(user.getUid());
+            loginResponse.setNikeName(user.getNickname());
+            loginResponse.setPhone(user.getPhone());
             return loginResponse;
-        }catch (Exception e){
-            throw new CrmebException(e.getMessage());
         }
+
+        if (StrUtil.isBlank(request.getNickName()) && StrUtil.isBlank(request.getAvatar()) && StrUtil.isBlank(request.getHeadimgurl())) {
+            // 返回后，前端去走注册起始页
+            loginResponse.setType("start");
+            return loginResponse;
+        }
+
+        request.setType(Constants.USER_LOGIN_TYPE_PROGRAM);
+        request.setOpenId(response.getOpenId());
+        String key = SecureUtil.md5(response.getOpenId());
+        redisUtil.set(key, JSONObject.toJSONString(request), (long) (60 * 2), TimeUnit.MINUTES);
+        loginResponse.setType("register");
+        loginResponse.setKey(key);
+        return loginResponse;
     }
 
     /**
      * 推广人排行榜
-     * @param type  String 时间范围
+     * @param type  String 时间范围(week-周，month-月)
      * @param pageParamRequest PageParamRequest 分页
-     * @author Mr.Zhang
-     * @since 2020-05-25
      * @return List<LoginResponse>
      */
     @Override
@@ -901,151 +732,14 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     }
 
     /**
-     * 小程序登录
-     * @param openId  String 微信公众号通过code取回的openId对象
-     * @param unionId String unionId
-     * @author Mr.Zhang
-     * @since 2020-05-25
-     * @return List<LoginResponse>
-     */
-    private User programLogin(String openId, String unionId, RegisterThirdUserRequest request) {
-        try {
-            //检测是否存在
-            UserToken userToken = userTokenService.checkToken(openId, Constants.THIRD_LOGIN_TOKEN_TYPE_PROGRAM);
-            if(null != userToken){
-                User user = userService.getById(userToken.getUid());
-                // 分销绑定
-                if (userService.checkBingSpread(user, request.getSpreadPid(), "old")) {
-                    Integer oldSprUid = user.getSpreadUid();
-                    user.setSpreadUid(request.getSpreadPid());
-                    user.setSpreadTime(DateUtil.nowDateTime());
-                    Boolean execute = transactionTemplate.execute(e -> {
-                        userService.updateById(user);
-                        userService.updateSpreadCountByUid(request.getSpreadPid(), "add");
-                        if (oldSprUid > 0) {
-                            userService.updateSpreadCountByUid(oldSprUid, "sub");
-                        }
-                        return Boolean.TRUE;
-                    });
-                    if (!execute) {
-                        System.out.println(StrUtil.format("公众号登录绑定分销关系失败，uid={},spreadUid={}", user.getUid(), request.getSpreadPid()));
-                    }
-                }
-                return user;
-            }
-
-            if(StringUtils.isNotBlank(unionId)) {
-                userToken = userTokenService.checkToken(unionId, Constants.THIRD_LOGIN_TOKEN_TYPE_PROGRAM);
-                if (null != userToken) {
-                    User user = userService.getById(userToken.getUid());
-                    // 分销绑定
-                    if (userService.checkBingSpread(user, request.getSpreadPid(), "old")) {
-                        Integer oldSprUid = user.getSpreadUid();
-                        user.setSpreadUid(request.getSpreadPid());
-                        user.setSpreadTime(DateUtil.nowDateTime());
-                        Boolean execute = transactionTemplate.execute(e -> {
-                            userService.updateById(user);
-                            userService.updateSpreadCountByUid(request.getSpreadPid(), "add");
-                            if (oldSprUid > 0) {
-                                userService.updateSpreadCountByUid(oldSprUid, "sub");
-                            }
-                            return Boolean.TRUE;
-                        });
-                        if (!execute) {
-                            System.out.println(StrUtil.format("公众号登录绑定分销关系失败，uid={},spreadUid={}", user.getUid(), request.getSpreadPid()));
-                        }
-                    }
-                    return user;
-                }
-            }
-
-            //TODO 是否需要强制注册用户，1 强制注册，2 需要返回数据给前端，让其输入手机号和验证码
-            User user = userService.registerByThird(request, Constants.USER_LOGIN_TYPE_PROGRAM);
-
-            userTokenService.bind(openId, Constants.THIRD_LOGIN_TOKEN_TYPE_PROGRAM, user.getUid());
-            if(StringUtils.isNotBlank(unionId)) {
-                //有就绑定
-                userTokenService.bind(unionId, Constants.THIRD_LOGIN_TOKEN_TYPE_UNION_ID, user.getUid());
-            }
-            // 分销绑定
-            if (userService.checkBingSpread(user, request.getSpreadPid(), "new")) {
-                user.setSpreadUid(request.getSpreadPid());
-                user.setSpreadTime(DateUtil.nowDateTime());
-                Boolean execute = transactionTemplate.execute(e -> {
-                    userService.updateById(user);
-                    userService.updateSpreadCountByUid(request.getSpreadPid(), "add");
-                    return Boolean.TRUE;
-                });
-                if (!execute) {
-                    System.out.println(StrUtil.format("公众号登录绑定分销关系失败，uid={},spreadUid={}", user.getUid(), request.getSpreadPid()));
-                }
-            }
-
-            // 赠送优惠券
-            // 查询是否有新人注册赠送优惠券
-            List<StoreCouponUser> couponUserList = CollUtil.newArrayList();
-            List<StoreCoupon> couponList = storeCouponService.findRegisterList();
-            if (CollUtil.isNotEmpty(couponList)) {
-                couponList.forEach(storeCoupon -> {
-                    //是否有固定的使用时间
-                    if(!storeCoupon.getIsFixedTime()){
-                        String endTime = DateUtil.addDay(DateUtil.nowDate(Constants.DATE_FORMAT), storeCoupon.getDay(), Constants.DATE_FORMAT);
-                        storeCoupon.setUseEndTime(DateUtil.strToDate(endTime, Constants.DATE_FORMAT));
-                        storeCoupon.setUseStartTime(DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
-                    }
-
-                    StoreCouponUser storeCouponUser = new StoreCouponUser();
-                    storeCouponUser.setCouponId(storeCoupon.getId());
-                    storeCouponUser.setName(storeCoupon.getName());
-                    storeCouponUser.setMoney(storeCoupon.getMoney());
-                    storeCouponUser.setMinPrice(storeCoupon.getMinPrice());
-                    storeCouponUser.setStartTime(storeCoupon.getUseStartTime());
-                    storeCouponUser.setEndTime(storeCoupon.getUseEndTime());
-                    storeCouponUser.setUseType(storeCoupon.getUseType());
-                    storeCouponUser.setType("register");
-                    if (storeCoupon.getUseType() > 1) {
-                        storeCouponUser.setPrimaryKey(storeCoupon.getPrimaryKey());
-                    }
-                    couponUserList.add(storeCouponUser);
-                });
-            }
-
-            // 赠送客户优惠券
-            if (CollUtil.isNotEmpty(couponUserList)) {
-                couponUserList.forEach(couponUser -> {
-                    couponUser.setUid(user.getUid());
-
-                });
-                storeCouponUserService.saveBatch(couponUserList);
-                couponList.forEach(coupon -> {
-                    storeCouponService.deduction(coupon.getId(), 1, coupon.getIsLimited());
-                });
-            }
-
-            return user;
-        }catch (Exception e){
-            throw new CrmebException(e.getMessage());
-        }
-    }
-
-    /**
      * 提现记录
      * @author HZE
      * @since 2020-10-27
      */
     @Override
     public PageInfo<UserExtractRecordResponse> getExtractRecord(PageParamRequest pageParamRequest) {
-        return userExtractService.getExtractRecord(userService.getUserIdException(), pageParamRequest);
-    }
-
-    /**
-     * 提现总金额
-     * @author HZE
-     * @since 2020-10-27
-     */
-    @Override
-    public BigDecimal getExtractTotalMoney(){
-        return userExtractService.getExtractTotalMoney(userService.getUserIdException());
+        Integer userId = userService.getUserIdException();
+        return userExtractService.getExtractRecord(userId, pageParamRequest);
     }
 
     /**
@@ -1054,11 +748,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
      */
     @Override
     public PageInfo<SpreadCommissionDetailResponse> getSpreadCommissionDetail(PageParamRequest pageParamRequest) {
-        User user = userService.getInfo();
-        if (ObjectUtil.isNull(user)) {
-            throw new CrmebException("用户数据异常");
-        }
-
+        User user = userService.getInfoException();
         return userBrokerageRecordService.findDetailListByUid(user.getUid(), pageParamRequest);
     }
 
@@ -1098,5 +788,307 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
         PageInfo<UserRechargeBillRecordResponse> pageInfo = CommonPage.copyPageInfo(billPageInfo, responseList);
         return CommonPage.restPage(pageInfo);
+    }
+
+    /**
+     * 微信注册绑定手机号
+     * @param request 请求参数
+     * @return 登录信息
+     */
+    @Override
+    public LoginResponse registerBindingPhone(WxBindingPhoneRequest request) {
+        checkBindingPhone(request);
+
+        // 进入创建用户绑定手机号流程
+        Object o = redisUtil.get(request.getKey());
+        if (ObjectUtil.isNull(o)) {
+            throw new CrmebException("用户缓存已过期，请清除缓存重新登录");
+        }
+        RegisterThirdUserRequest registerThirdUserRequest = JSONObject.parseObject(o.toString(), RegisterThirdUserRequest.class);
+
+        boolean isNew = true;
+
+        User user = userService.getByPhone(request.getPhone());
+        if (ObjectUtil.isNull(user)) {
+            user = userService.registerByThird(registerThirdUserRequest);
+            user.setPhone(request.getPhone());
+            user.setAccount(request.getPhone());
+            user.setSpreadUid(0);
+            user.setPwd(CommonUtil.createPwd(request.getPhone()));
+        } else {// 已有账户，关联到之前得账户即可
+            // 查询是否用对应得token
+            int type = 0;
+            switch (request.getType()) {
+                case "public":
+                    type = Constants.THIRD_LOGIN_TOKEN_TYPE_PUBLIC;
+                    break;
+                case "routine":
+                    type = Constants.THIRD_LOGIN_TOKEN_TYPE_PROGRAM;
+                    break;
+            }
+
+            UserToken userToken = userTokenService.getTokenByUserId(user.getUid(), type);
+            if (ObjectUtil.isNotNull(userToken)) {
+                throw new CrmebException("该手机号已被注册");
+            }
+            isNew = false;
+        }
+
+        User finalUser = user;
+        boolean finalIsNew = isNew;
+        Boolean execute = transactionTemplate.execute(e -> {
+            if (finalIsNew) {// 新用户
+                // 分销绑定
+                if (userService.checkBingSpread(finalUser, registerThirdUserRequest.getSpreadPid(), "new")) {
+                    finalUser.setSpreadUid(registerThirdUserRequest.getSpreadPid());
+                    finalUser.setSpreadTime(DateUtil.nowDateTime());
+                    userService.updateSpreadCountByUid(registerThirdUserRequest.getSpreadPid(), "add");
+                }
+                userService.save(finalUser);
+                // 赠送新人券
+                giveNewPeopleCoupon(finalUser.getUid());
+            }
+            switch (request.getType()) {
+                case "public":
+                    userTokenService.bind(registerThirdUserRequest.getOpenId(), Constants.THIRD_LOGIN_TOKEN_TYPE_PUBLIC, finalUser.getUid());
+                    break;
+                case "routine":
+                    userTokenService.bind(registerThirdUserRequest.getOpenId(), Constants.THIRD_LOGIN_TOKEN_TYPE_PROGRAM, finalUser.getUid());
+                    break;
+            }
+            return Boolean.TRUE;
+        });
+        if (!execute) {
+            logger.error("微信用户注册生成失败，nickName = " + registerThirdUserRequest.getNickName());
+        } else if (!isNew){// 老用户绑定推广人
+            if (ObjectUtil.isNotNull(registerThirdUserRequest.getSpreadPid()) && registerThirdUserRequest.getSpreadPid() > 0) {
+                loginService.bindSpread(finalUser, registerThirdUserRequest.getSpreadPid());
+            }
+        }
+        LoginResponse loginResponse = new LoginResponse();
+        try {
+            String token = userService.token(finalUser);
+            loginResponse.setToken(token);
+        } catch (Exception e) {
+            logger.error(StrUtil.format("绑定手机号，自动登录生成token失败，uid={}", finalUser.getUid()));
+            e.printStackTrace();
+        }
+        loginResponse.setType("login");
+        loginResponse.setUid(user.getUid());
+        loginResponse.setNikeName(user.getNickname());
+        loginResponse.setPhone(user.getPhone());
+        return loginResponse;
+    }
+
+    /**
+     * 用户积分记录列表
+     * @param pageParamRequest 分页参数
+     * @return List<UserIntegralRecord>
+     */
+    @Override
+    public List<UserIntegralRecord> getUserIntegralRecordList(PageParamRequest pageParamRequest) {
+        Integer uid = userService.getUserIdException();
+        return userIntegralRecordService.findUserIntegralRecordList(uid, pageParamRequest);
+    }
+
+    /**
+     * 获取用户积分信息
+     * @return IntegralUserResponse
+     */
+    @Override
+    public IntegralUserResponse getIntegralUser() {
+        User user = userService.getInfoException();
+        IntegralUserResponse userSignInfoResponse = new IntegralUserResponse();
+
+        //签到
+        Integer sumIntegral = userIntegralRecordService.getSumIntegral(user.getUid(), IntegralRecordConstants.INTEGRAL_RECORD_TYPE_ADD, "", null);
+        Integer deductionIntegral = userIntegralRecordService.getSumIntegral(user.getUid(), IntegralRecordConstants.INTEGRAL_RECORD_TYPE_SUB, "", IntegralRecordConstants.INTEGRAL_RECORD_LINK_TYPE_ORDER);
+        userSignInfoResponse.setSumIntegral(sumIntegral);
+        userSignInfoResponse.setDeductionIntegral(deductionIntegral);
+        // 冻结积分
+        Integer frozenIntegral = userIntegralRecordService.getFrozenIntegralByUid(user.getUid());
+        userSignInfoResponse.setFrozenIntegral(frozenIntegral);
+        userSignInfoResponse.setIntegral(user.getIntegral());
+        return userSignInfoResponse;
+    }
+
+    /**
+     * 获取用户经验记录
+     * @param pageParamRequest 分页参数
+     * @return List<UserBill>
+     */
+    @Override
+    public List<UserBill> getUserExperienceList(PageParamRequest pageParamRequest) {
+        Integer userId = userService.getUserIdException();
+        return userBillService.getH5List(userId, Constants.USER_BILL_CATEGORY_EXPERIENCE, pageParamRequest);
+    }
+
+    /**
+     * 提现用户信息
+     * @return UserExtractCashResponse
+     */
+    @Override
+    public UserExtractCashResponse getExtractUser() {
+        User user = userService.getInfoException();
+        // 提现最低金额
+        String minPrice = systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_EXTRACT_MIN_PRICE);
+        // 冻结天数
+        String extractTime = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_EXTRACT_FREEZING_TIME);
+        // 可提现佣金
+        BigDecimal brokeragePrice = user.getBrokeragePrice();
+        // 冻结佣金
+        BigDecimal freeze = userBrokerageRecordService.getFreezePrice(user.getUid());
+        return new UserExtractCashResponse(minPrice, brokeragePrice, freeze, extractTime);
+    }
+
+    /**
+     * 推广人列表统计
+     * @return UserSpreadPeopleResponse
+     */
+    @Override
+    public UserSpreadPeopleResponse getSpreadPeopleCount() {
+        //查询当前用户名下的一级推广员
+        UserSpreadPeopleResponse userSpreadPeopleResponse = new UserSpreadPeopleResponse();
+        List<Integer> userIdList = new ArrayList<>();
+        Integer userId = userService.getUserIdException();
+        userIdList.add(userId);
+        userIdList = userService.getSpreadPeopleIdList(userIdList); //我推广的一级用户id集合
+
+        if (CollUtil.isEmpty(userIdList)) {//如果没有一级推广人，直接返回
+            userSpreadPeopleResponse.setCount(0);
+            userSpreadPeopleResponse.setTotal(0);
+            userSpreadPeopleResponse.setTotalLevel(0);
+            return userSpreadPeopleResponse;
+        }
+
+        userSpreadPeopleResponse.setTotal(userIdList.size()); //一级推广人
+        //查询二级推广人
+        List<Integer> secondSpreadIdList = userService.getSpreadPeopleIdList(userIdList);
+        if (CollUtil.isEmpty(secondSpreadIdList)) {
+            userSpreadPeopleResponse.setTotalLevel(0);
+            userSpreadPeopleResponse.setCount(userSpreadPeopleResponse.getTotal());
+            return userSpreadPeopleResponse;
+        }
+        userSpreadPeopleResponse.setTotalLevel(secondSpreadIdList.size());
+        userSpreadPeopleResponse.setCount(userIdList.size() + secondSpreadIdList.size());
+        return userSpreadPeopleResponse;
+    }
+
+    /**
+     * 绑定手机号数据校验
+     */
+    private void checkBindingPhone(WxBindingPhoneRequest request) {
+        if (!request.getType().equals("public") && !request.getType().equals("routine")) {
+            throw new CrmebException("未知的用户类型");
+        }
+        if (request.getType().equals("public")) {
+            if (StrUtil.isBlank(request.getCaptcha())) {
+                throw new CrmebException("验证码不能为空");
+            }
+            boolean matchPhone = ReUtil.isMatch(RegularConstants.PHONE, request.getPhone());
+            if (!matchPhone) {
+                throw new CrmebException("手机号格式错误，请输入正确得手机号");
+            }
+            // 公众号用户校验验证码
+            boolean match = ReUtil.isMatch(RegularConstants.SMS_VALIDATE_CODE_NUM, request.getCaptcha());
+            if (!match) {
+                throw new CrmebException("验证码格式错误，验证码必须为6位数字");
+            }
+            checkValidateCode(request.getPhone(), request.getCaptcha());
+        } else {
+            // 参数校验
+            if (StrUtil.isBlank(request.getCode())) {
+                throw new CrmebException("小程序获取手机号code不能为空");
+            }
+            if (StrUtil.isBlank(request.getEncryptedData())) {
+                throw new CrmebException("小程序获取手机号加密数据不能为空");
+            }
+            if (StrUtil.isBlank(request.getIv())) {
+                throw new CrmebException("小程序获取手机号加密算法的初始向量不能为空");
+            }
+            // 获取appid
+            String programAppId = systemConfigService.getValueByKey("routine_appid");
+            if(StringUtils.isBlank(programAppId)){
+                throw new CrmebException("微信小程序appId未设置");
+            }
+
+            WeChatProgramAuthorizeLoginGetOpenIdResponse response = weChatService.programAuthorizeLogin(request.getCode());
+            System.out.println("小程序登陆成功 = " + JSON.toJSONString(response));
+            String decrypt = WxUtil.decrypt(programAppId, request.getEncryptedData(), response.getSessionKey(), request.getIv());
+            if (StrUtil.isBlank(decrypt)) {
+                throw new CrmebException("微信小程序获取手机号解密失败");
+            }
+            JSONObject jsonObject = JSONObject.parseObject(decrypt);
+            if (StrUtil.isBlank(jsonObject.getString("phoneNumber"))) {
+                throw new CrmebException("微信小程序获取手机号没有有效的手机号");
+            }
+            request.setPhone(jsonObject.getString("phoneNumber"));
+        }
+    }
+
+    /**
+     * 赠送新人券
+     * @param uid 用户uid
+     */
+    private void giveNewPeopleCoupon(Integer uid) {
+        // 查询是否有新人注册赠送优惠券
+        List<StoreCouponUser> couponUserList = CollUtil.newArrayList();
+        List<StoreCoupon> couponList = storeCouponService.findRegisterList();
+        if (CollUtil.isNotEmpty(couponList)) {
+            couponList.forEach(storeCoupon -> {
+                //是否有固定的使用时间
+                if(!storeCoupon.getIsFixedTime()){
+                    String endTime = DateUtil.addDay(DateUtil.nowDate(Constants.DATE_FORMAT), storeCoupon.getDay(), Constants.DATE_FORMAT);
+                    storeCoupon.setUseEndTime(DateUtil.strToDate(endTime, Constants.DATE_FORMAT));
+                    storeCoupon.setUseStartTime(DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
+                }
+
+                StoreCouponUser storeCouponUser = new StoreCouponUser();
+                storeCouponUser.setCouponId(storeCoupon.getId());
+                storeCouponUser.setName(storeCoupon.getName());
+                storeCouponUser.setMoney(storeCoupon.getMoney());
+                storeCouponUser.setMinPrice(storeCoupon.getMinPrice());
+                storeCouponUser.setUseType(storeCoupon.getUseType());
+                if (storeCoupon.getIsFixedTime()) {// 使用固定时间
+                    storeCouponUser.setStartTime(storeCoupon.getUseStartTime());
+                    storeCouponUser.setEndTime(storeCoupon.getUseEndTime());
+                } else {// 没有固定使用时间
+                    Date nowDate = DateUtil.nowDateTime();
+                    storeCouponUser.setStartTime(nowDate);
+                    DateTime dateTime = cn.hutool.core.date.DateUtil.offsetDay(nowDate, storeCoupon.getDay());
+                    storeCouponUser.setEndTime(dateTime);
+                }
+                storeCouponUser.setType("register");
+                if (storeCoupon.getUseType() > 1) {
+                    storeCouponUser.setPrimaryKey(storeCoupon.getPrimaryKey());
+                }
+                storeCouponUser.setType(CouponConstants.STORE_COUPON_USER_TYPE_REGISTER);
+                couponUserList.add(storeCouponUser);
+            });
+        }
+
+        // 赠送客户优惠券
+        if (CollUtil.isNotEmpty(couponUserList)) {
+            couponUserList.forEach(couponUser -> couponUser.setUid(uid));
+            storeCouponUserService.saveBatch(couponUserList);
+            couponList.forEach(coupon -> storeCouponService.deduction(coupon.getId(), 1, coupon.getIsLimited()));
+        }
+    }
+
+    /**
+     * 检测手机验证码
+     * @param phone 手机号
+     * @param code 验证码
+     */
+    private void checkValidateCode(String phone, String code) {
+        Object validateCode = redisUtil.get(SmsConstants.SMS_VALIDATE_PHONE + phone);
+        if(validateCode == null){
+            throw new CrmebException("验证码已过期");
+        }
+        if(!validateCode.toString().equals(code)){
+            throw new CrmebException("验证码错误");
+        }
+        //删除验证码
+        redisUtil.remove(SmsConstants.SMS_VALIDATE_PHONE + phone);
     }
 }

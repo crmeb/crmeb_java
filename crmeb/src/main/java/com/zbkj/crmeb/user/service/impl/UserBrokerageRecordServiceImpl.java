@@ -85,6 +85,7 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
         LambdaQueryWrapper<UserBrokerageRecord> lqw = new LambdaQueryWrapper<>();
         lqw.eq(UserBrokerageRecord::getLinkId, linkId);
         lqw.eq(UserBrokerageRecord::getLinkType, linkType);
+        lqw.last(" limit 1");
         return dao.selectOne(lqw);
     }
 
@@ -134,6 +135,9 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
         lqw.eq(UserBrokerageRecord::getUid, uid);
         dateLimitUtilVo dateLimit = DateUtil.getDateLimit(Constants.SEARCH_DATE_YESTERDAY);
         lqw.between(UserBrokerageRecord::getUpdateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
+        lqw.eq(UserBrokerageRecord::getType, 1);
+        lqw.eq(UserBrokerageRecord::getLinkType, "order");
+        lqw.eq(UserBrokerageRecord::getStatus, 3);
         List<UserBrokerageRecord> recordList = dao.selectList(lqw);
         if (CollUtil.isEmpty(recordList)) {
             return BigDecimal.ZERO;
@@ -348,8 +352,29 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
         return list.stream().map(UserBrokerageRecord::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    /**
+     * 获取记录列表
+     * @param linkIds 关联id集合
+     * @param linkType 关联类型
+     * @return 记录列表
+     */
+    @Override
+    public PageInfo<UserBrokerageRecord> findListByLinkIdsAndLinkTypeAndUid(List<String> linkIds, String linkType, Integer uid, PageParamRequest pageParamRequest) {
+        Page<UserBrokerageRecord> page = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+        LambdaQueryWrapper<UserBrokerageRecord> lqw = new LambdaQueryWrapper<>();
+        lqw.in(UserBrokerageRecord::getLinkId, linkIds);
+        lqw.eq(UserBrokerageRecord::getLinkType, linkType);
+        lqw.eq(UserBrokerageRecord::getStatus, BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
+        lqw.eq(UserBrokerageRecord::getUid, uid);
+        lqw.eq(UserBrokerageRecord::getType, BrokerageRecordConstants.BROKERAGE_RECORD_TYPE_ADD);
+        lqw.orderByDesc(UserBrokerageRecord::getUpdateTime);
+        List<UserBrokerageRecord> list = dao.selectList(lqw);
+        return CommonPage.copyPageInfo(page, list);
+    }
+
     private List<UserBrokerageRecord> getListByUidAndMonth(Integer uid, String month) {
         QueryWrapper<UserBrokerageRecord> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id", "title", "price", "update_time", "type", "status");
         queryWrapper.eq("uid", uid);
         queryWrapper.in("status", BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE
                 , BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_WITHDRAW);

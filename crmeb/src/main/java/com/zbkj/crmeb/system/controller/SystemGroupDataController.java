@@ -3,16 +3,18 @@ package com.zbkj.crmeb.system.controller;
 import com.common.CommonPage;
 import com.common.CommonResult;
 import com.common.PageParamRequest;
-import com.zbkj.crmeb.system.model.SystemGroupData;
+import com.zbkj.crmeb.system.request.SystemFormCheckRequest;
 import com.zbkj.crmeb.system.request.SystemGroupDataRequest;
 import com.zbkj.crmeb.system.request.SystemGroupDataSearchRequest;
-import com.zbkj.crmeb.system.service.SystemGroupDataService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+import com.zbkj.crmeb.system.service.SystemGroupDataService;
+import com.zbkj.crmeb.system.model.SystemGroupData;
 
 
 /**

@@ -2,12 +2,15 @@
 	<view>
 		<view class='productList'>
 			<view class='search bg-color acea-row row-between-wrapper'>
+				<!-- #ifdef H5 -->
 				<view class="iconfont icon-xiangzuo" @click="goback()"></view>
+				<!-- #endif -->
 				<view class='input acea-row row-between-wrapper'><text class='iconfont icon-sousuo'></text>
-					<input placeholder='搜索商品名称' placeholder-class='placeholder' confirm-type='search' name="search" :value='where.keyword'
-					 @confirm="searchSubmit"></input>
+					<input placeholder='搜索商品名称' placeholder-class='placeholder' confirm-type='search' name="search"
+						:value='where.keyword' @confirm="searchSubmit"></input>
 				</view>
-				<view class='iconfont' :class='is_switch==true?"icon-pailie":"icon-tupianpailie"' @click='Changswitch'></view>
+				<view class='iconfont' :class='is_switch==true?"icon-pailie":"icon-tupianpailie"' @click='Changswitch'>
+				</view>
 			</view>
 			<view class='nav acea-row row-middle'>
 				<view class='item' :class='title ? "font-color":""' @click='set_where(1)'>{{title ? title:'默认'}}</view>
@@ -26,22 +29,32 @@
 				<!-- down -->
 				<view class='item' :class='nows ? "font-color":""' @click='set_where(4)'>新品</view>
 			</view>
-			<view class='list acea-row row-between-wrapper' :class='is_switch==true?"":"on"'>
-				<view class='item' :class='is_switch==true?"":"on"' hover-class='none' v-for="(item,index) in productList" :key="index" @click="godDetail(item)">
-					<view class='pictrue' :class='is_switch==true?"":"on"'>
-						<image :src='item.image' :class='is_switch==true?"":"on"'></image>
-						<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activityH5 && item.activityH5.type === '1'">秒杀</span>
-						<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activityH5 && item.activityH5.type === '2'">砍价</span>
-						<span class="pictrue_log_class" :class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'" v-if="item.activityH5 && item.activityH5.type === '3'">拼团</span>
-					</view>
-					<view class='text' :class='is_switch==true?"":"on"'>
-						<view class='name line1'>{{item.storeName}}</view>
-						<view class='money font-color' :class='is_switch==true?"":"on"'>￥<text class='num'>{{item.price}}</text></view>
-						<view class='vip acea-row row-between-wrapper' :class='is_switch==true?"":"on"'>
-							<view class='vip-money' v-if="item.vip_price && item.vip_price > 0">￥{{item.vip_price}}
-								<image src='../../static/images/vip.png'></image>
+			<view :class='is_switch==true?"":"listBox"' v-if="productList.length>0">
+				<view class='list acea-row row-between-wrapper' :class='is_switch==true?"":"on"'>
+					<view class='item' :class='is_switch==true?"":"on"' hover-class='none'
+						v-for="(item,index) in productList" :key="index" @click="godDetail(item)">
+						<view class='pictrue' :class='is_switch==true?"":"on"'>
+							<image :src='item.image' :class='is_switch==true?"":"on"'></image>
+							<span class="pictrue_log_class"
+								:class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'"
+								v-if="item.activityH5 && item.activityH5.type === '1'">秒杀</span>
+							<span class="pictrue_log_class"
+								:class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'"
+								v-if="item.activityH5 && item.activityH5.type === '2'">砍价</span>
+							<span class="pictrue_log_class"
+								:class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'"
+								v-if="item.activityH5 && item.activityH5.type === '3'">拼团</span>
+						</view>
+						<view class='text' :class='is_switch==true?"":"on"'>
+							<view class='name line1'>{{item.storeName}}</view>
+							<view class='money font-color' :class='is_switch==true?"":"on"'>￥<text
+									class='num'>{{item.price}}</text></view>
+							<view class='vip acea-row row-between-wrapper' :class='is_switch==true?"":"on"'>
+								<view class='vip-money' v-if="item.vip_price && item.vip_price > 0">￥{{item.vip_price}}
+									<image src='../../static/images/vip.png'></image>
+								</view>
+								<view>已售{{Number(item.sales) + Number(item.ficti) || 0}}{{item.unitName}}</view>
 							</view>
-							<view>已售{{Number(item.sales) + Number(item.ficti) || 0}}{{item.unitName}}</view>
 						</view>
 					</view>
 				</view>
@@ -65,8 +78,12 @@
 		getProductHot
 	} from '@/api/store.js';
 	import recommend from '@/components/recommend';
-	import {mapGetters} from "vuex";
-	import { goShopDetail } from '@/libs/order.js'
+	import {
+		mapGetters
+	} from "vuex";
+	import {
+		goShopDetail
+	} from '@/libs/order.js'
 	export default {
 		computed: mapGetters(['uid']),
 		components: {
@@ -93,9 +110,9 @@
 				loadTitle: '加载更多',
 				title: '',
 				hostProduct: [],
-				hotPage:1,
-				hotLimit:10,
-				hotScroll:false
+				hotPage: 1,
+				hotLimit: 10,
+				hotScroll: false
 			};
 		},
 		onLoad: function(options) {
@@ -103,10 +120,9 @@
 			this.title = options.title || '';
 			this.$set(this.where, 'keyword', options.searchValue || '');
 			this.get_product_list();
-			this.get_host_product();
 		},
 		methods: {
-			goback(){
+			goback() {
 				// #ifdef H5
 				return history.back();
 				// #endif
@@ -117,10 +133,10 @@
 				// #endif
 			},
 			// 去详情页
-			godDetail(item){
-				goShopDetail(item,this.uid).then(res=>{
+			godDetail(item) {
+				goShopDetail(item, this.uid).then(res => {
 					uni.navigateTo({
-						url:`/pages/goods_details/index?id=${item.id}`
+						url: `/pages/goods_details/index?id=${item.id}`
 					})
 				})
 			},
@@ -140,13 +156,13 @@
 			 */
 			get_host_product: function() {
 				let that = this;
-				if(that.hotScroll) return
+				if (that.hotScroll) return
 				getProductHot(
 					that.hotPage,
 					that.hotLimit,
 				).then(res => {
 					that.hotPage++
-					that.hotScroll = res.data.list.length<that.hotLimit
+					that.hotScroll = res.data.list.length < that.hotLimit
 					that.hostProduct = that.hostProduct.concat(res.data.list)
 					// that.$set(that, 'hostProduct', res.data)
 				});
@@ -155,7 +171,7 @@
 			set_where: function(e) {
 				switch (e) {
 					case 1:
-					    return;
+						return;
 						break;
 					case 2:
 						if (this.price == 0) this.price = 1;
@@ -205,6 +221,9 @@
 					that.loadTitle = loadend ? '已全部加载' : '加载更多';
 					that.$set(that, 'productList', productList);
 					that.$set(that.where, 'page', that.where.page + 1);
+					if (that.productList.length === 0) {
+						this.get_host_product();
+					} 
 				}).catch(err => {
 					that.loading = false;
 					that.loadTitle = '加载更多';
@@ -215,19 +234,23 @@
 
 		},
 		onReachBottom() {
-			if(this.productList.length>0){
+			if (this.productList.length > 0) {
 				this.get_product_list();
-			}else{
+			} else {
 				this.get_host_product();
 			}
-			
+
 		}
 	}
 </script>
 
 <style scoped lang="scss">
-	.iconfont{
+	.iconfont {
 		color: #fff;
+	}
+    .listBox{
+		padding: 20px 15px;
+		margin-top: 154rpx;
 	}
 	.productList .search {
 		width: 100%;
@@ -250,7 +273,12 @@
 	}
 
 	.productList .search .input input {
+		/* #ifdef H5 */
 		width: 528rpx;
+		/* #endif */
+		/* #ifndef H5 */
+		width: 548rpx;
+		/* #endif */
 		height: 100%;
 		font-size: 26rpx;
 	}
@@ -302,34 +330,39 @@
 	}
 
 	.productList .list {
-		padding: 0 20rpx;
-		margin-top: 172rpx;
+		padding: 0 30rpx;
+		margin-top: 192rpx;
+
 	}
 
 	.productList .list.on {
+		border-radius: 14rpx;
+		margin-top: 0 !important;
 		background-color: #fff;
-		border-top: 1px solid #f6f6f6;
+		padding: 40rpx 0 0 0;
+		// margin: 20rpx 0;
+		// background-color: #fff;
 	}
 
 	.productList .list .item {
-		width: 345rpx;
-		margin-top: 20rpx;
+		width: 335rpx;
 		background-color: #fff;
-		border-radius: 20rpx;
+		border-radius: 14rpx;
+		margin-bottom: 20rpx;
 	}
 
 	.productList .list .item.on {
 		width: 100%;
 		display: flex;
-		border-bottom: 1rpx solid #f6f6f6;
-		padding: 30rpx 0;
+		padding: 0 24rpx 50rpx 24rpx;
 		margin: 0;
+		border-radius: 14rpx;
 	}
 
 	.productList .list .item .pictrue {
 		position: relative;
 		width: 100%;
-		height: 345rpx;
+		height: 335rpx;
 	}
 
 	.productList .list .item .pictrue.on {
@@ -348,14 +381,14 @@
 	}
 
 	.productList .list .item .text {
-		padding: 20rpx 17rpx 26rpx 17rpx;
+		padding: 18rpx 20rpx;
 		font-size: 30rpx;
 		color: #222;
 	}
 
 	.productList .list .item .text.on {
-		width: 508rpx;
-		padding: 0 0 0 22rpx;
+		width: 456rpx;
+		padding: 0 0 0 20rpx;
 	}
 
 	.productList .list .item .text .money {
@@ -397,5 +430,6 @@
 	.noCommodity {
 		background-color: #fff;
 		padding-bottom: 30rpx;
+		margin-top: 172rpx;
 	}
 </style>

@@ -56,19 +56,16 @@ public class QrCodeServiceImpl implements QrCodeService {
                         page = m.getValue().toString();
                         continue;
                     }
-                    // scene.append(m.getKey()).append("=").append(m.getValue()).append("&");
-                    scene.append(m.getValue()).append("&");
+                    if (scene.length() > 0) {
+                        scene.append(",");
+                    }
+                    scene.append(m.getKey()).append(":").append(m.getValue());
                 }
             }
         }catch (Exception e){
             throw new CrmebException("url参数错误 " + e.getMessage());
         }
-        String uri = "";
-        if(StringUtils.isNotBlank(scene)){
-            uri = scene.substring(0, scene.length() - 1);
-        }
-
-        map.put("code", weChatService.qrCode(page, uri));
+        map.put("code", weChatService.qrCode(page, scene.length() > 0 ? scene.toString() : ""));
         return map;
     }
 

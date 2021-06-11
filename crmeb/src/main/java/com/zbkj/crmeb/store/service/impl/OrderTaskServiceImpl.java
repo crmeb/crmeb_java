@@ -8,16 +8,16 @@ import com.constants.Constants;
 import com.exception.CrmebException;
 import com.utils.DateUtil;
 import com.utils.RedisUtil;
+import com.zbkj.crmeb.payment.service.OrderPayService;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.model.StoreOrderStatus;
 import com.zbkj.crmeb.store.model.StoreProductReply;
 import com.zbkj.crmeb.store.service.*;
 import com.zbkj.crmeb.store.utilService.OrderUtils;
-import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
+import com.zbkj.crmeb.store.vo.StoreOrderInfoOldVo;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.service.UserService;
 import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
-import com.zbkj.crmeb.wechat.vo.WechatSendMessageForGetPackage;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForOrderCancel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +73,9 @@ public class OrderTaskServiceImpl implements OrderTaskService {
 
     @Autowired
     private TransactionTemplate transactionTemplate;
+
+    @Autowired
+    private OrderPayService orderPayService;
 
     /**
      * 用户取消订单
@@ -187,37 +190,6 @@ public class OrderTaskServiceImpl implements OrderTaskService {
     }
 
     /**
-     * 用户删除订单
-     * @author Mr.Zhang
-     * @since 2020-07-09
-     */
-    @Override
-    public void deleteByUser() {
-        String redisKey = Constants.ORDER_TASK_REDIS_KEY_AFTER_DELETE_BY_USER;
-        Long size = redisUtil.getListSize(redisKey);
-        logger.info("OrderTaskServiceImpl.deleteByUser | size:" + size);
-        if(size < 1){
-            return;
-        }
-        for (int i = 0; i < size; i++) {
-            //如果10秒钟拿不到一个数据，那么退出循环
-            Object data = redisUtil.getRightPop(redisKey, 10L);
-            if(null == data){
-                continue;
-            }
-            try{
-                StoreOrder storeOrder = getJavaBeanStoreOrder(data);
-                boolean result = storeOrderTaskService.deleteByUser(storeOrder);
-                if(!result){
-                    redisUtil.lPush(redisKey, data);
-                }
-            }catch (Exception e){
-                redisUtil.lPush(redisKey, data);
-            }
-        }
-    }
-
-    /**
      * 订单支付成功后置处理
      */
     @Override
@@ -240,7 +212,7 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                     logger.error("OrderTaskServiceImpl.orderPaySuccessAfter | 订单不存在，orderNo: " + data);
                     throw new CrmebException("订单不存在，orderNo: " + data);
                 }
-                boolean result = storeOrderTaskService.paySuccessAfter(storeOrder);
+                boolean result = orderPayService.paySuccess(storeOrder);
                 if(!result){
                     redisUtil.lPush(redisKey, data);
                 }
@@ -345,7 +317,7 @@ public class OrderTaskServiceImpl implements OrderTaskService {
              * ---------------
              */
             // 获取订单详情
-            List<StoreOrderInfoVo> orderInfoVoList = storeOrderInfoService.getOrderListByOrderId(order.getId());
+            List<StoreOrderInfoOldVo> orderInfoVoList = storeOrderInfoService.getOrderListByOrderId(order.getId());
             if (CollUtil.isEmpty(orderInfoVoList)) {
                 logger.error("订单自动完成：无订单详情数据，orderId = " + order.getId());
                 continue;
@@ -353,21 +325,12 @@ public class OrderTaskServiceImpl implements OrderTaskService {
             List<StoreProductReply> replyList = CollUtil.newArrayList();
             User user = userService.getById(order.getUid());
             // 生成评论
-            for (StoreOrderInfoVo orderInfo : orderInfoVoList) {
+            for (StoreOrderInfoOldVo orderInfo : orderInfoVoList) {
                 // 判断是否已评论
                 if (orderInfo.getInfo().getIsReply().equals(1)) {
                     continue;
                 }
                 String replyType = Constants.STORE_REPLY_TYPE_PRODUCT;
-                if (ObjectUtil.isNotNull(orderInfo.getInfo().getSeckillId()) && orderInfo.getInfo().getSeckillId() > 0) {
-                    replyType = Constants.STORE_REPLY_TYPE_SECKILL;
-                }
-                if (ObjectUtil.isNotNull(orderInfo.getInfo().getBargainId()) && orderInfo.getInfo().getBargainId() > 0) {
-                    replyType = Constants.STORE_REPLY_TYPE_BARGAIN;
-                }
-                if (ObjectUtil.isNotNull(orderInfo.getInfo().getCombinationId()) && orderInfo.getInfo().getCombinationId() > 0) {
-                    replyType = Constants.STORE_REPLY_TYPE_PINTUAN;
-                }
                 StoreProductReply reply = new StoreProductReply();
                 reply.setUid(order.getUid());
                 reply.setOid(order.getId());
@@ -380,7 +343,7 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                 reply.setPics("");
                 reply.setNickname(user.getNickname());
                 reply.setAvatar(user.getAvatar());
-                reply.setSku(orderInfo.getInfo().getProductInfo().getAttrInfo().getSuk());
+                reply.setSku(orderInfo.getInfo().getSku());
                 reply.setCreateTime(DateUtil.nowDateTime());
                 replyList.add(reply);
             }

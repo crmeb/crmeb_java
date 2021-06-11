@@ -26,6 +26,8 @@ import java.io.Serializable;
 @ApiModel(value="ProductRequest对象", description="商品搜索")
 public class ProductRequest implements Serializable {
 
+    private static final long serialVersionUID = 3481659942630712958L;
+
     @ApiModelProperty(value = "搜索关键字")
     private String keyword;
 

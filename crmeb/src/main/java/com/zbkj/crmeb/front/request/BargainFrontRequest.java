@@ -30,5 +30,9 @@ public class BargainFrontRequest {
     @NotNull(message = "砍价商品编号不能为空")
     private Integer bargainId;
 
+    @ApiModelProperty(value = "用户砍价活动ID")
+    private Integer bargainUserId;
+
+    @ApiModelProperty(value = "用户砍价活动Uid")
     private Integer bargainUserUid;
 }

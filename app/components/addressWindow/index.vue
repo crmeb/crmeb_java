@@ -45,21 +45,26 @@
 			isLog: {
 				type: Boolean,
 				default: false,
-			},
+			}
 		},
 		data() {
 			return {
 				active: 0,
-				//地址列表
-				addressList: [],
-				is_loading: true
+				is_loading: true,
+				addressList: []
 			};
 		},
 
 		methods: {
 			tapAddress: function(e, addressid) {
 				this.active = e;
-				this.$emit('OnChangeAddress', addressid);
+				let a = {};
+				for (let i = 0, leng = this.addressList.length; i < leng; i++) {
+					if (this.addressList[i].id == addressid) {
+						a = this.addressList[i];
+					}
+				}
+				this.$emit('OnChangeAddress', a);
 			},
 			close: function() {
 				this.$emit('changeClose');
@@ -79,14 +84,18 @@
 					limit: 5
 				}).then(res => {
 					let addressList = res.data.list;
+					that.$set(that, 'addressList', addressList);
+					that.is_loading = false;
+					let defaultAddress = {};
 					//处理默认选中项
+					if(!that.address.addressId) return;
 					for (let i = 0, leng = addressList.length; i < leng; i++) {
 						if (addressList[i].id == that.address.addressId) {
 							that.active = i;
+							defaultAddress = this.addressList[i];
 						}
 					}
-					that.$set(that, 'addressList', addressList);
-					that.is_loading = false;
+					this.$emit('OnDefaultAddress', defaultAddress);
 				})
 			}
 		}

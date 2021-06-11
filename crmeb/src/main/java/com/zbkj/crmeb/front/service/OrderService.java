@@ -1,21 +1,13 @@
 package com.zbkj.crmeb.front.service;
 
+import com.common.CommonPage;
 import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.front.request.*;
-import com.zbkj.crmeb.front.response.ConfirmOrderResponse;
-import com.zbkj.crmeb.front.response.OrderDataResponse;
-import com.zbkj.crmeb.front.response.OrderPayResponse;
+import com.zbkj.crmeb.front.response.*;
+import com.zbkj.crmeb.store.request.StoreProductReplyAddRequest;
 
 import java.util.HashMap;
-
-import com.zbkj.crmeb.front.response.StoreOrderDetailResponse;
-import com.zbkj.crmeb.front.vo.OrderAgainVo;
-import com.zbkj.crmeb.store.model.StoreOrder;
-import com.zbkj.crmeb.store.request.StoreProductReplyAddRequest;
-import com.zbkj.crmeb.store.response.StoreOrderListResponse;
-import org.springframework.web.bind.annotation.RequestParam;
-
 import java.util.List;
 
 /**
@@ -31,42 +23,6 @@ import java.util.List;
  *  +----------------------------------------------------------------------
  */
 public interface OrderService {
-    /**
-     * 订单确认
-     * @return  确认订单信息
-     */
-    ConfirmOrderResponse confirmOrder(ConfirmOrderRequest request);
-
-
-    /**
-     * 创建订单
-     * @param request 创建订单参数
-     * @param key 订单key
-     * @return MyRecord
-     */
-    MyRecord createOrder(OrderCreateRequest request, String key);
-
-    /**
-     * 再次下单
-     * @param request 参数
-     * @return 下单结果
-     */
-    HashMap<String, Object> againOrder(OrderAgainRequest request);
-
-    /**
-     * 计算订单金额
-     * @param request 订单提交参数
-     * @param orderKey 订单key
-     * @return
-     */
-    HashMap<String, Object> computedOrder(OrderComputedRequest request, String orderKey);
-
-    /**
-     * 支付
-     * @param request 支付参数
-     * @return 支付结果
-     */
-    HashMap<String, Object> payOrder(OrderPayRequest request, String ip);
 
     /**
      * 订单列表
@@ -74,7 +30,7 @@ public interface OrderService {
      * @param pageRequest 分页
      * @return 订单集合
      */
-    List<OrderAgainVo> list(Integer type, PageParamRequest pageRequest);
+    CommonPage<OrderDetailResponse> list(Integer type, PageParamRequest pageRequest);
 
     /**
      * 订单详情
@@ -96,7 +52,12 @@ public interface OrderService {
 
     Boolean delete(Integer id);
 
-    boolean reply(StoreProductReplyAddRequest request);
+    /**
+     * 创建订单商品评价
+     * @param request 请求参数
+     * @return Boolean
+     */
+    Boolean reply(StoreProductReplyAddRequest request);
 
     boolean take(Integer id);
 
@@ -106,8 +67,8 @@ public interface OrderService {
 
     /**
      * 订单退款申请Task使用
-     * @param applyList
-     * @return
+     * @param applyList 退款List
+     * @return Boolean
      */
     Boolean refundApplyTask(List<OrderRefundApplyRequest> applyList);
 
@@ -121,12 +82,41 @@ public interface OrderService {
      * @param getProductReply 订单详情参数
      * @return 待评价
      */
-    Object getReplyProduct(GetProductReply getProductReply);
+    OrderProductReplyResponse getReplyProduct(GetProductReply getProductReply);
 
     /**
-     * 更换支付类型
-     * @param payType 支付类型
+     * 获取申请订单退款信息
+     * @param orderId 订单编号
+     * @return ApplyRefundOrderInfoResponse
      */
-    boolean changePayType(String payType,String orderId);
+    ApplyRefundOrderInfoResponse applyRefundOrderInfo(String orderId);
+
+    /**
+     * 订单预下单
+     * @param request 预下单请求参数
+     * @return PreOrderResponse
+     */
+    MyRecord preOrder(PreOrderRequest request);
+
+    /**
+     * 加载预下单信息
+     * @param preOrderNo 预下单号
+     * @return 预下单信息
+     */
+    PreOrderResponse loadPreOrder(String preOrderNo);
+
+    /**
+     * 计算订单价格
+     * @param request 计算订单价格请求对象
+     * @return ComputedOrderPriceResponse
+     */
+    ComputedOrderPriceResponse computedOrderPrice(OrderComputedPriceRequest request);
+
+    /**
+     * 创建订单
+     * @param orderRequest 创建订单请求参数
+     * @return MyRecord 订单编号
+     */
+    MyRecord createOrder(CreateOrderRequest orderRequest);
 
 }

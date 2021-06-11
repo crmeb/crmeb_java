@@ -55,7 +55,7 @@ export function getBargainList(data) {
  * @param object data
 */
 export function getBargainUserList(data){
-  return request.get('bargain/user/list',data);
+  return request.get('bargain/record',data);
 }
 
 
@@ -76,11 +76,12 @@ export function getBargainDetail(id) {
 }
 
 /**
- * 砍价 开启砍价用户信息
+ * 用户砍价信息,注意自己的活动和别人的活动的区别
  */
-export function postBargainStartUser(data) {
-  return request.get("bargain/start/user", data);
+export function getBargainUser(data) {
+  return request.get("bargain/user", data);
 }
+
 
 /**
  * 砍价开启
@@ -108,20 +109,6 @@ export function postBargainHelpPrice(data) {
  */
 export function postBargainHelpList(params,data) {
   return request.get("bargain/help/list?limit="+params.limit+"&page="+params.page, data,{});
-}
-
-/**
- * 砍价 砍价帮总人数、剩余金额、进度条、已经砍掉的价格
- */
-export function postBargainHelpCount(data) {
-  return request.get("bargain/help/count", data,1);
-}
-
-/**
- * 砍价 观看/分享/参与次数
- */
-export function postBargainShare(bargainId) {
-  return request.get("bargain/share/" + bargainId);
 }
 
 /**
@@ -193,5 +180,41 @@ export function scombinationCode(id) {
  * @param int id
 */
 export function getSeckillHeaderApi(){
+  return request.get('seckill/header',{},{noAuth:true});
+}
+
+/**
+ * 首页秒杀产品列表
+*/
+export function getSeckillIndexApi(){
   return request.get('seckill/index',{},{noAuth:true});
+}
+
+
+/**
+ * 首页拼团产品列表
+*/
+export function getCombinationIndexApi(){
+  return request.get('combination/index',{},{noAuth:true});
+}
+
+/**
+ * 首页砍价产品列表
+*/
+export function getBargainIndexApi(){
+  return request.get('bargain/index',{},{noAuth:true});
+}
+
+/**
+ * 首页砍价产品列表
+*/
+export function bargainHeaderApi(){
+  return request.get('bargain/header');
+}
+
+/**
+ * 拼图列表头部
+*/
+export function combinationHeaderApi(){
+  return request.get('combination/header');
 }

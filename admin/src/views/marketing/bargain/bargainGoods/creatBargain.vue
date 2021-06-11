@@ -218,9 +218,6 @@
           <el-form-item label="商品详情：">
             <ueditor-from v-model="formValidate.content" :content="formValidate.content" />
           </el-form-item>
-          <el-form-item label="商品规则：">
-            <ueditor-from v-model="formValidate.rule" :content="formValidate.rule" />
-          </el-form-item>
         </div>
         <el-form-item style="margin-top:30px;">
           <el-button
@@ -300,8 +297,7 @@
     startTime: '',
     stopTime: '',
     timeVal: [],
-    status: 0,
-    rule: ''
+    status: 0
   }
   const objTitle = {
     price: {
@@ -565,8 +561,7 @@
             status: 0,
             num : 1,
             bargainNum : 2,
-            peopleNum : 1,
-            rule : ''
+            peopleNum : 1
           }
           if(res.specType){
             res.attrValues.forEach((row) => {
@@ -614,8 +609,7 @@
             status: res.status,
             num : res.num,
             bargainNum : res.bargainNum,
-            peopleNum : res.peopleNum,
-            rule : res.rule
+            peopleNum : res.peopleNum
           }
           if(res.specType){
             this.ManyAttrValue = res.attrValues;

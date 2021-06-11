@@ -1,12 +1,17 @@
 package com.zbkj.crmeb.store.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.PageParamRequest;
 import com.exception.CrmebException;
+import com.github.pagehelper.PageHelper;
 import com.utils.CrmebUtil;
 import com.zbkj.crmeb.front.request.UserCollectAllRequest;
-import com.zbkj.crmeb.front.request.UserCollectRequest;
+import com.zbkj.crmeb.front.response.UserRelationResponse;
 import com.zbkj.crmeb.store.dao.StoreProductRelationDao;
 import com.zbkj.crmeb.store.model.StoreProduct;
 import com.zbkj.crmeb.store.model.StoreProductRelation;
@@ -14,7 +19,6 @@ import com.zbkj.crmeb.store.request.StoreProductRelationSearchRequest;
 import com.zbkj.crmeb.store.request.StoreProductSearchRequest;
 import com.zbkj.crmeb.store.service.StoreProductRelationService;
 import com.zbkj.crmeb.store.service.StoreProductService;
-import com.zbkj.crmeb.store.vo.StoreProductRelationCountVo;
 import com.zbkj.crmeb.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +26,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,7 +66,7 @@ public class StoreProductRelationServiceImpl extends ServiceImpl<StoreProductRel
     public List<StoreProduct> getList(StoreProductRelationSearchRequest request, PageParamRequest pageParamRequest) {
         //带 StoreProductRelation 类的多条件查询
         LambdaQueryWrapper<StoreProductRelation> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-//        lambdaQueryWrapper.setEntity(request);
+        lambdaQueryWrapper.eq(StoreProductRelation::getUid, request.getUid());
         List<StoreProductRelation> storeProductRelationList = dao.selectList(lambdaQueryWrapper);
         if(storeProductRelationList == null || storeProductRelationList.size() < 1){
             return new ArrayList<>();
@@ -77,21 +80,6 @@ public class StoreProductRelationServiceImpl extends ServiceImpl<StoreProductRel
         StoreProductSearchRequest storeProductSearchRequest = new StoreProductSearchRequest();
         storeProductSearchRequest.setType(1); //上架的商品
         return storeProductService.getList(storeProductSearchRequest, pageParamRequest, productIdList);
-    }
-
-    /**
-     * 根据类型和产品id获取总数
-     * @param productIdList List<Integer> 产品id
-     * @param type String 类型
-     * @author Mr.Zhang
-     * @since 2020-05-06
-     * @return List<StoreProductRelationCountVo>
-     */
-    public List<StoreProductRelationCountVo> getCountInProductId(List<Integer> productIdList, String type) {
-        HashMap<String, Object> objectObjectHashMap = new HashMap<>();
-        objectObjectHashMap.put("productId", productIdList);
-        objectObjectHashMap.put("type", type);
-        return dao.getCountInProductId(objectObjectHashMap);
     }
 
     /**
@@ -128,21 +116,29 @@ public class StoreProductRelationServiceImpl extends ServiceImpl<StoreProductRel
 
     /**
      * 取消收藏产品
-     * @author Mr.Zhang
-     * @since 2020-05-06
      */
     @Override
-    public boolean delete(UserCollectRequest request) {
-        LambdaQueryWrapper<StoreProductRelation> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(StoreProductRelation::getProductId, request.getProductId()).
-                eq(StoreProductRelation::getCategory, request.getCategory());
-        dao.delete(lambdaQueryWrapper);
-        return true;
+    public Boolean delete(String requestJson) {
+        JSONObject jsonObject = JSONObject.parseObject(requestJson);
+        if (StrUtil.isBlank(jsonObject.getString("ids"))) {
+            throw new CrmebException("收藏id不能为空");
+        }
+        List<Integer> idList = CrmebUtil.stringToArray(jsonObject.getString("ids"));
+        if (CollUtil.isEmpty(idList)) {
+            throw new CrmebException("收藏id不能为空");
+        }
+        Integer userId = userService.getUserIdException();
+        LambdaQueryWrapper<StoreProductRelation> lqw = Wrappers.lambdaQuery();
+        lqw.in(StoreProductRelation::getId, idList);
+        lqw.eq(StoreProductRelation::getUid, userId);
+        int delete = dao.delete(lqw);
+        return delete > 0;
     }
 
     /**
      * 取消收藏产品
      * @param request UserCollectAllRequest 参数
+     * @param type 类型
      * @author Mr.Zhang
      * @since 2020-05-06
      */
@@ -183,6 +179,46 @@ public class StoreProductRelationServiceImpl extends ServiceImpl<StoreProductRel
         lqr.eq(StoreProductRelation::getUid, userId);
         lqr.eq(StoreProductRelation::getType,typeValue);
         return dao.selectList(lqr);
+    }
+
+    /**
+     * 获取用户收藏列表
+     * @param pageParamRequest 分页参数
+     * @return List<UserRelationResponse>
+     */
+    @Override
+    public List<UserRelationResponse> getUserList(PageParamRequest pageParamRequest) {
+        PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+        Integer userId = userService.getUserIdException();
+        return dao.getUserList(userId);
+    }
+
+    /**
+     * 获取用户的收藏数量
+     * @param uid 用户uid
+     * @return 收藏数量
+     */
+    @Override
+    public Integer getCollectCountByUid(Integer uid) {
+        LambdaQueryWrapper<StoreProductRelation> lqr = Wrappers.lambdaQuery();
+        lqr.eq(StoreProductRelation::getUid, uid);
+        lqr.eq(StoreProductRelation::getType,"collect");
+        return dao.selectCount(lqr);
+    }
+
+    /**
+     * 根据商品Id取消收藏
+     * @param proId 商品Id
+     * @return Boolean
+     */
+    @Override
+    public Boolean deleteByProId(Integer proId) {
+        Integer userId = userService.getUserIdException();
+        LambdaQueryWrapper<StoreProductRelation> lqw = Wrappers.lambdaQuery();
+        lqw.in(StoreProductRelation::getProductId, proId);
+        lqw.eq(StoreProductRelation::getUid, userId);
+        int delete = dao.delete(lqw);
+        return delete > 0;
     }
 
 }

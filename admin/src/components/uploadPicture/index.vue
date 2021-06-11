@@ -37,8 +37,8 @@
                         </span>
                         <el-dropdown-menu slot="dropdown">
                           <el-dropdown-item @click.native="onAdd(data.id)">添加分类</el-dropdown-item>
-                          <el-dropdown-item v-if="node.label !== '全部分类'" @click.native="onEdit(data.id)">编辑分类</el-dropdown-item>
-                          <el-dropdown-item v-if="node.label !== '全部分类'" @click.native="handleDelete(data.id)">删除分类</el-dropdown-item>
+                          <el-dropdown-item v-if="node.label !== '全部图片'" @click.native="onEdit(data.id)">编辑分类</el-dropdown-item>
+                          <el-dropdown-item v-if="node.label !== '全部图片'" @click.native="handleDelete(data.id)">删除分类</el-dropdown-item>
                         </el-dropdown-menu>
                       </el-dropdown>
                     </span>
@@ -94,7 +94,7 @@
               </el-option>
             </el-select>
           </div>
-          <div class="pictrueList acea-row">
+          <div class="pictrueList acea-row" v-loading="loadingPic">
             <div v-show="isShowPic" class="imagesNo">
               <i class="el-icon-picture" style="font-size: 60px;color: rgb(219, 219, 219);" />
               <span class="imagesNo_sp">图片库为空</span>
@@ -184,6 +184,7 @@ export default {
   },
   data() {
     return {
+      loadingPic: false,
       loading: false,
       modals: false,
       allTreeList:[],
@@ -318,7 +319,7 @@ export default {
     // 表单分类
     handlerGetList() {
       let datas = {
-        name: '全部分类',
+        name: '全部图片',
         id: ''
       }
       treeCategroy(this.treeFrom).then(data => {
@@ -334,7 +335,7 @@ export default {
     // 所有分类
     getList() {
       const data = {
-        name: '全部分类',
+        name: '全部图片',
         id: 10000
       }
       treeCategroy(this.treeFrom).then(res => {
@@ -409,6 +410,7 @@ export default {
     // 文件列表
     getFileList() {
       if ( this.tableData.pid === 10000) this.tableData.pid = 0
+      this.loadingPic = true;
       fileListApi(this.tableData).then(async res => {
         this.pictrueList.list = res.list
         if(this.tableData.page === 1 && this.pictrueList.list.length > 0) this.pictrueList.list[0].localImg = this.localImg
@@ -418,6 +420,9 @@ export default {
           this.isShowPic = true
         }
         this.pictrueList.total = res.total
+        this.loadingPic = false;
+      }).catch(()=>{
+        this.loadingPic = false;
       })
     },
     pageChange(page) {

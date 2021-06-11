@@ -56,8 +56,6 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
      * 分页显示门店
      * @param keywords 搜索条件
      * @param pageParamRequest 分页参数
-     * @author Mr.Zhang
-     * @since 2020-04-17
      */
     @Override
     public List<SystemStore> getList(String keywords, int status, PageParamRequest pageParamRequest) {
@@ -68,7 +66,7 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
         }else if(status == 2){ // 回收站中
             lambdaQueryWrapper.eq(SystemStore::getIsDel, true);
         }else{ // 隐藏中的
-            lambdaQueryWrapper.eq(SystemStore::getIsShow, false).eq(SystemStore::getIsDel, false);;
+            lambdaQueryWrapper.eq(SystemStore::getIsShow, false).eq(SystemStore::getIsDel, false);
         }
         if(!StringUtils.isBlank(keywords)){
             lambdaQueryWrapper.and(i -> i.or().like(SystemStore::getName, keywords)
@@ -88,21 +86,19 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
      */
     @Override
     public SystemStore getByCondition(SystemStore systemStore) {
-        LambdaQueryWrapper<SystemStore> lbaq = new LambdaQueryWrapper<>();
-        lbaq.setEntity(systemStore);
-        return dao.selectOne(lbaq);
+        LambdaQueryWrapper<SystemStore> lqw = new LambdaQueryWrapper<>();
+        lqw.setEntity(systemStore);
+        return dao.selectOne(lqw);
     }
 
     /**
      * 修改门店显示状态
      * @param id integer id
      * @param status 状态
-     * @author Mr.Zhang
-     * @since 2020-04-13
-     * @return bool
+     * @return boolean
      */
     @Override
-    public boolean updateStatus(Integer id, boolean status) {
+    public Boolean updateStatus(Integer id, boolean status) {
         SystemStore systemStore = new SystemStore();
         systemStore.setId(id);
         systemStore.setIsShow(status);
@@ -113,12 +109,10 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
     /**
      * 删除门店自提
      * @param id Integer
-     * @author Mr.Zhang
-     * @since 2020-04-13
-     * @return bool
+     * @return boolean
      */
     @Override
-    public boolean delete(Integer id) {
+    public Boolean delete(Integer id) {
         SystemStore systemStore = new SystemStore();
         systemStore.setId(id);
         systemStore.setIsDel(true);
@@ -128,8 +122,6 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
 
     /**
      * 数量
-     * @author Mr.Zhang
-     * @since 2020-04-13
      * @return HashMap<String, Integer>
      */
     @Override
@@ -143,8 +135,6 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
 
     /**
      * 根据状态获取总数
-     * @author Mr.Zhang
-     * @since 2020-04-13
      * @return HashMap<String, Integer>
      */
     private Integer getCountByStatus(int status) {
@@ -161,8 +151,6 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
     /**
      * 根据id集合查询数据，返回 map
      * @param storeIdList List<Integer> id集合
-     * @author Mr.Zhang
-     * @since 2020-04-17
      * @return HashMap<Integer, SystemStore>
      */
     @Override
@@ -187,8 +175,6 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
      * 附近的提货点
      * @param request StoreNearRequest 经纬度参数
      * @param pageParamRequest PageParamRequest 分页参数
-     * @author Mr.Zhang
-     * @since 2020-06-01
      * @return StoreNearResponse
      */
     @Override
@@ -218,12 +204,10 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
     /**
      * 新增门店自提
      * @param request SystemStoreRequest 新增参数
-     * @author Mr.Zhang
-     * @since 2020-04-13
-     * @return boolean
+     * @return Boolean
      */
     @Override
-    public boolean create(SystemStoreRequest request) {
+    public Boolean create(SystemStoreRequest request) {
         SystemStore systemStore = new SystemStore();
         BeanUtils.copyProperties(request, systemStore);
         clearPrefix(systemStore);
@@ -235,12 +219,10 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
      * 修改门店自提
      * @param id integer id
      * @param request 修改参数
-     * @author Mr.Zhang
-     * @since 2020-04-13
-     * @return boolean
+     * @return Boolean
      */
     @Override
-    public boolean update(Integer id, SystemStoreRequest request) {
+    public Boolean update(Integer id, SystemStoreRequest request) {
         SystemStore systemStore = new SystemStore();
         BeanUtils.copyProperties(request, systemStore);
         systemStore.setId(id);
@@ -279,8 +261,6 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
     /**
      * 去掉图片前缀
      * @param systemStore SystemStore 新增参数
-     * @author Mr.Zhang
-     * @since 2020-04-13
      */
     private void clearPrefix(SystemStore systemStore) {
         systemStore.setImage(systemAttachmentService.clearPrefix(systemStore.getImage()));
@@ -289,8 +269,6 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
     /**
      * 分解经纬度
      * @param systemStore SystemStore 新增参数
-     * @author Mr.Zhang
-     * @since 2020-04-13
      */
     private void splitLat(SystemStore systemStore) {
         if(!StringUtils.isBlank(systemStore.getLatitude())){

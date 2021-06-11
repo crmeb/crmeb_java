@@ -21,7 +21,7 @@ public class SmsConstants {
     public static final String SMS_SEND_KEY = "sms_send_list";
 
     /** 手机验证码redis key */
-    public static final String SMS_VALIDATE_PHONE = "sms_validate_code:";
+    public static final String SMS_VALIDATE_PHONE = "sms:validate:code:";
 
     /**
      * ---------------------

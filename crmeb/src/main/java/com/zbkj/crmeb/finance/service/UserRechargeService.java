@@ -39,7 +39,14 @@ public interface UserRechargeService extends IService<UserRecharge> {
     /**
      * 充值退款
      * @param request 退款参数
-     * @return
+     * @return Boolean
      */
     Boolean refund(UserRechargeRefundRequest request);
+
+    /**
+     * 获取用户累计充值金额
+     * @param uid 用户uid
+     * @return BigDecimal
+     */
+    BigDecimal getTotalRechargePrice(Integer uid);
 }

@@ -1,14 +1,13 @@
 package com.zbkj.crmeb.combination.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.parser.Feature;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.common.CommonPage;
 import com.common.PageParamRequest;
@@ -17,6 +16,7 @@ import com.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.utils.RedisUtil;
 import com.zbkj.crmeb.combination.dao.StoreCombinationDao;
@@ -25,14 +25,12 @@ import com.zbkj.crmeb.combination.model.StorePink;
 import com.zbkj.crmeb.combination.request.StoreCombinationRequest;
 import com.zbkj.crmeb.combination.request.StoreCombinationSearchRequest;
 import com.zbkj.crmeb.combination.request.StorePinkRequest;
-import com.zbkj.crmeb.combination.response.StoreCombinationInfoResponse;
 import com.zbkj.crmeb.combination.response.StoreCombinationResponse;
 import com.zbkj.crmeb.combination.response.StorePinkResponse;
 import com.zbkj.crmeb.combination.service.StoreCombinationService;
 import com.zbkj.crmeb.combination.service.StorePinkService;
 import com.zbkj.crmeb.front.request.OrderRefundApplyRequest;
-import com.zbkj.crmeb.front.response.CombinationDetailResponse;
-import com.zbkj.crmeb.front.response.GoPinkResponse;
+import com.zbkj.crmeb.front.response.*;
 import com.zbkj.crmeb.front.service.OrderService;
 import com.zbkj.crmeb.store.model.*;
 import com.zbkj.crmeb.store.request.StoreProductAttrValueRequest;
@@ -42,6 +40,7 @@ import com.zbkj.crmeb.store.response.StoreProductResponse;
 import com.zbkj.crmeb.store.service.*;
 import com.zbkj.crmeb.store.utilService.ProductUtils;
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
+import com.zbkj.crmeb.system.service.SystemGroupDataService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.service.UserService;
 import org.apache.commons.lang3.StringUtils;
@@ -98,9 +97,6 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
     private StoreProductDescriptionService storeProductDescriptionService;
 
     @Autowired
-    private StoreProductReplyService storeProductReplyService;
-
-    @Autowired
     private UserService userService;
 
     @Autowired
@@ -119,7 +115,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
     private RedisUtil redisUtil;
 
     @Autowired
-    private TransactionTemplate transactionTemplate;
+    private SystemGroupDataService systemGroupDataService;
 
     private static final Logger logger = LoggerFactory.getLogger(StoreCombinationServiceImpl.class);
 
@@ -129,8 +125,6 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
      * @param request          请求参数
      * @param pageParamRequest 分页类参数
      * @return List<StoreCombination>
-     * @author HZW
-     * @since 2020-11-13
      */
     @Override
     public PageInfo<StoreCombinationResponse> getList(StoreCombinationSearchRequest request, PageParamRequest pageParamRequest) {
@@ -177,8 +171,8 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
     /**
      * 新增拼团商品
      *
-     * @param request
-     * @return
+     * @param request 新增请求参数
+     * @return Boolean
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -312,8 +306,8 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
     /**
      * 编辑拼团商品
      *
-     * @param request
-     * @return
+     * @param request 编辑请求参数
+     * @return Boolean
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -432,10 +426,14 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
 
         boolean specType = false;
         StoreProductAttr proPram = new StoreProductAttr();
-        spaPram.setProductId(id).setType(Constants.PRODUCT_TYPE_NORMAL);
+        proPram.setProductId(storeCombination.getProductId()).setType(Constants.PRODUCT_TYPE_NORMAL);
         List<StoreProductAttr> proAttrs = storeProductAttrService.getByEntity(proPram);
         if (proAttrs.size() > 1) {
             specType = true;
+        } else if (proAttrs.size() == 1) {
+            if (!proAttrs.get(0).getAttrValues().equals("默认")) {
+                specType = true;
+            }
         }
         storeProductResponse.setSpecType(specType);
 
@@ -536,10 +534,11 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
      * H5拼团商品列表
      */
     @Override
-    public PageInfo<StoreCombination> getH5List(PageParamRequest pageParamRequest) {
-        Page<StoreCombination> combinationPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-
-        LambdaQueryWrapper<StoreCombination> lqw = new LambdaQueryWrapper<>();
+    public List<StoreCombinationH5Response> getH5List(PageParamRequest pageParamRequest) {
+        PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+        LambdaQueryWrapper<StoreCombination> lqw = Wrappers.lambdaQuery();
+        lqw.select(StoreCombination::getId ,StoreCombination::getProductId ,StoreCombination::getImage ,StoreCombination::getTitle
+                ,StoreCombination::getPeople ,StoreCombination::getOtPrice ,StoreCombination::getPrice ,StoreCombination::getStock);
         lqw.eq(StoreCombination::getIsDel, false);
         lqw.eq(StoreCombination::getIsShow, true);
         long millis = System.currentTimeMillis();
@@ -548,54 +547,95 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         lqw.orderByDesc(StoreCombination::getSort, StoreCombination::getId);
         List<StoreCombination> combinationList = dao.selectList(lqw);
         if (CollUtil.isEmpty(combinationList)) {
-            return CommonPage.copyPageInfo(combinationPage, CollUtil.newArrayList());
+            return CollUtil.newArrayList();
         }
-        return CommonPage.copyPageInfo(combinationPage, combinationList);
+        List<StoreCombinationH5Response> responseList = combinationList.stream().map(e -> {
+            StoreCombinationH5Response response = new StoreCombinationH5Response();
+            BeanUtils.copyProperties(e, response);
+            return response;
+        }).collect(Collectors.toList());
+        return responseList;
     }
 
     /**
      * H5拼团商品详情
      *
      * @param comId 拼团商品编号
-     *              pindAll  拼团团长ID列表
-     *              pink     拼团列表（团长列表）
-     *              pink_ok_list 拼团列表（成功拼团团长列表）
-     *              pink_ok_sum 拼团完成的商品总件数
-     *              reply 评论列表
-     *              replyChance 好评率
-     *              replyCount 评论数量
      * @return CombinationDetailResponse
      */
     @Override
     public CombinationDetailResponse getH5Detail(Integer comId) {
+        CombinationDetailResponse detailResponse = new CombinationDetailResponse();
         StoreCombination storeCombination = getById(comId);
         if (ObjectUtil.isNull(storeCombination) || storeCombination.getIsDel()) {
             throw new CrmebException("对应拼团商品不存在");
         }
-        StoreCombinationInfoResponse infoResponse = new StoreCombinationInfoResponse();
-        BeanUtils.copyProperties(storeCombination, infoResponse);
-        // 设置点赞和收藏
-        User user = userService.getInfo();
-        if (ObjectUtil.isNotNull(user) && ObjectUtil.isNotNull(user.getUid())) {
-            infoResponse.setUserLike(storeProductRelationService.getLikeOrCollectByUser(user.getUid(), storeCombination.getProductId(), true).size() > 0);
-            infoResponse.setUserCollect(storeProductRelationService.getLikeOrCollectByUser(user.getUid(), storeCombination.getProductId(), false).size() > 0);
-        } else {
-            infoResponse.setUserLike(false);
-            infoResponse.setUserCollect(false);
+        if (!storeCombination.getIsShow()) {
+            throw new CrmebException("拼团商品已下架");
         }
-        StoreProduct product = storeProductService.getById(storeCombination.getProductId());
-        infoResponse.setProductPrice(product.getPrice());
-        infoResponse.setTotal(product.getSales() + product.getFicti());
+        CombinationDetailH5Response infoResponse = new CombinationDetailH5Response();
+        BeanUtils.copyProperties(storeCombination, infoResponse);
+        infoResponse.setStoreName(storeCombination.getTitle());
+        infoResponse.setSliderImage(storeCombination.getImages());
+        infoResponse.setStoreInfo(storeCombination.getInfo());
+        // 详情
         StoreProductDescription sd = storeProductDescriptionService.getOne(
                 new LambdaQueryWrapper<StoreProductDescription>()
                         .eq(StoreProductDescription::getProductId, comId)
                         .eq(StoreProductDescription::getType, Constants.PRODUCT_TYPE_PINGTUAN));
-        if (null != sd) {
-            infoResponse.setContent(null == sd.getDescription() ? "" : sd.getDescription());
+        if (ObjectUtil.isNotNull(sd)) {
+            infoResponse.setContent(ObjectUtil.isNull(sd.getDescription()) ? "" : sd.getDescription());
         }
 
-        CombinationDetailResponse detailResponse = new CombinationDetailResponse();
-        detailResponse.setStoreInfo(infoResponse);
+        // 获取主商品信息
+        StoreProduct storeProduct = storeProductService.getById(storeCombination.getProductId());
+        // 拼团销量 = 原商品销量（包含虚拟销量）
+        infoResponse.setSales(storeProduct.getSales());
+        infoResponse.setFicti(storeProduct.getFicti());
+        detailResponse.setStoreCombination(infoResponse);
+
+        // 获取拼团商品规格
+        StoreProductAttr spaPram = new StoreProductAttr();
+        spaPram.setProductId(comId).setType(Constants.PRODUCT_TYPE_PINGTUAN);
+        List<StoreProductAttr> attrList = storeProductAttrService.getByEntity(spaPram);
+        // 根据制式设置attr属性
+        List<ProductAttrResponse> skuAttr = getSkuAttr(attrList);
+        detailResponse.setProductAttr(skuAttr);
+
+        // 根据制式设置sku属性
+        HashMap<String, Object> skuMap = CollUtil.newHashMap();
+        // 获取主商品sku
+        StoreProductAttrValue spavPram = new StoreProductAttrValue();
+        spavPram.setProductId(storeCombination.getProductId()).setType(Constants.PRODUCT_TYPE_NORMAL);
+        List<StoreProductAttrValue> storeProductAttrValues = storeProductAttrValueService.getByEntity(spavPram);
+        // 获取拼团商品sku
+        StoreProductAttrValue spavPram1 = new StoreProductAttrValue();
+        spavPram1.setProductId(storeCombination.getId()).setType(Constants.PRODUCT_TYPE_PINGTUAN);
+        List<StoreProductAttrValue> combinationAttrValues = storeProductAttrValueService.getByEntity(spavPram1);
+
+        for (StoreProductAttrValue productAttrValue : storeProductAttrValues) {
+            StoreProductAttrValueResponse atr = new StoreProductAttrValueResponse();
+            List<StoreProductAttrValue> valueList = combinationAttrValues.stream().filter(e -> productAttrValue.getSuk().equals(e.getSuk())).collect(Collectors.toList());
+            if (CollUtil.isEmpty(valueList)) {
+                BeanUtils.copyProperties(productAttrValue, atr);
+            } else {
+                BeanUtils.copyProperties(valueList.get(0), atr);
+            }
+            if (ObjectUtil.isNull(atr.getQuota())) {
+                atr.setQuota(0);
+            }
+            skuMap.put(atr.getSuk(), atr);
+        }
+        detailResponse.setProductValue(skuMap);
+
+        // 设置点赞和收藏
+        User user = userService.getInfo();
+        if (ObjectUtil.isNotNull(user) && ObjectUtil.isNotNull(user.getUid())) {
+            detailResponse.setUserCollect(storeProductRelationService.getLikeOrCollectByUser(user.getUid(), storeCombination.getProductId(), false).size() > 0);
+        } else {
+            detailResponse.setUserCollect(false);
+        }
+
         detailResponse.setPinkOkSum(0);
         // 拼团团长列表
         List<StorePink> headList = storePinkService.getListByCidAndKid(storeCombination.getId(), 0);
@@ -612,7 +652,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
             // 拼团成功部分
             List<StorePinkResponse> okList = headPinkList.stream().filter(i -> i.getStatus().equals(2)).collect(Collectors.toList());
             if (ObjectUtil.isNotEmpty(okList)) {
-                //拼团完成的商品总件数
+                // 拼团完成的商品总件数
                 List<StorePink> pinkOkList = CollUtil.newArrayList();
                 okList.forEach(e -> {
                     List<StorePink> list = storePinkService.getListByCidAndKid(e.getCid(), e.getId());
@@ -643,8 +683,6 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
                 }
                 return filter;
             }).collect(Collectors.toList());
-            // 拼团团长ID列表
-            List<Integer> pindAll = pinkingList.stream().map(StorePinkResponse::getId).collect(Collectors.toList());
             // 获取还剩几人成团
             pinkingList.forEach(i -> {
                 Integer countPeople = storePinkService.getCountByKid(i.getId());
@@ -652,67 +690,38 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
                 i.setCount(i.getPeople() - countPeople);
             });
 
-            detailResponse.setPindAll(pindAll);
-
             // 所有团长列表
-            detailResponse.setPink(pinkingList);
+            detailResponse.setPinkList(pinkingList);
         }
-
-        // 评论部分
-        Integer replyChance = 100;
-        Integer replyCount = 0;
-        // 获取商品所有评论列表
-        List<StoreProductReply> replyList = storeProductReplyService.getAllByPidAndType(storeCombination.getProductId(), Constants.STORE_REPLY_TYPE_PINTUAN);
-        if (CollUtil.isNotEmpty(replyList)) {
-            replyCount = replyList.size();
-            // 好评列表
-            List<StoreProductReply> goodReplyList = replyList.stream().filter(i -> i.getProductScore().equals(4) || i.getProductScore().equals(5)).collect(Collectors.toList());
-            if (CollUtil.isEmpty(goodReplyList)) {
-                replyChance = 0;
-            } else {
-                replyChance = (goodReplyList.size() / replyCount) * 100;
-            }
-        }
-        detailResponse.setReply(replyList);
-        detailResponse.setReplyChance(replyChance);
-        detailResponse.setReplyCount(replyCount);
-
-        // sku部分
-        detailResponse.setSpecType(false);
-        StoreProductAttr spavAttr = new StoreProductAttr();
-        spavAttr.setProductId(storeCombination.getId());
-        spavAttr.setType(Constants.PRODUCT_TYPE_PINGTUAN);
-        List<StoreProductAttr> attrList = storeProductAttrService.getByEntity(spavAttr);
-        setSkuAttr(attrList, detailResponse);
-        if (CollUtil.isNotEmpty(attrList) && attrList.size() > 1) {
-            detailResponse.setSpecType(true);
-        }
-
-        // 单属性时讲attrValueId 赋值给外层方便前端使用
-        if (!detailResponse.getSpecType()) {
-            detailResponse.setAloneAttrValueId(attrList.get(0).getId());
-        }
-
-        StoreProductAttrValue spavValue = new StoreProductAttrValue();
-        spavValue.setProductId(storeCombination.getId());
-        spavValue.setType(Constants.PRODUCT_TYPE_PINGTUAN);
-        List<StoreProductAttrValue> valueList = storeProductAttrValueService.getByEntity(spavValue);
-
-        // H5 端用于生成skuList
-        List<StoreProductAttrValueResponse> sPAVResponses = new ArrayList<>();
-
-        for (StoreProductAttrValue storeProductAttrValue : valueList) {
-            StoreProductAttrValueResponse atr = new StoreProductAttrValueResponse();
-            BeanUtils.copyProperties(storeProductAttrValue, atr);
-            sPAVResponses.add(atr);
-        }
-        HashMap<String, Object> skuMap = new HashMap<>();
-        for (StoreProductAttrValueResponse attrValue : sPAVResponses) {
-            skuMap.put(attrValue.getSuk(), attrValue);
-        }
-        detailResponse.setProductValue(skuMap);
 
         return detailResponse;
+    }
+
+    /**
+     * 获取秒杀规格（公共转换）
+     * @param attrList 秒杀规格列表
+     * @return List<ProductAttrResponse>
+     */
+    private List<ProductAttrResponse> getSkuAttr(List<StoreProductAttr> attrList) {
+        List<ProductAttrResponse> attrResponseList = new ArrayList<>();
+        for (StoreProductAttr attr : attrList) {
+            ProductAttrResponse attrResponse = new ProductAttrResponse();
+            attrResponse.setProductId(attr.getProductId());
+            attrResponse.setAttrName(attr.getAttrName());
+            attrResponse.setType(attr.getType());
+            List<String> attrValues = new ArrayList<>();
+            String trimAttr = attr.getAttrValues()
+                    .replace("[","")
+                    .replace("]","");
+            if(attr.getAttrValues().contains(",")){
+                attrValues = Arrays.asList(trimAttr.split(","));
+            }else{
+                attrValues.add(trimAttr);
+            }
+            attrResponse.setAttrValues(attrValues);
+            attrResponseList.add(attrResponse);
+        }
+        return attrResponseList;
     }
 
     /**
@@ -743,7 +752,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         User user = userService.getInfo();
 
         GoPinkResponse goPinkResponse = new GoPinkResponse();
-        List<StorePink> pinkList = new ArrayList<>();
+        List<StorePink> pinkList;
         if (teamPink.getKId().equals(0)) {
             pinkList = storePinkService.getListByCidAndKid(teamPink.getCid(), teamPink.getId());
         } else {
@@ -806,6 +815,12 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         goPinkResponse.setIsOk(isOk);
         goPinkResponse.setPinkBool(pinkBool);
         goPinkResponse.setUserBool(userBool);
+        if (userBool == 1) {
+            if (!teamPink.getUid().equals(user.getUid())) {
+                StorePink itemPink = storePinkService.getByUidAndKid(user.getUid(), teamPink.getId());
+                goPinkResponse.setCurrentPinkOrder(itemPink.getOrderId());
+            }
+        }
         goPinkResponse.setPinkAll(pinkResponseList);
         goPinkResponse.setPinkT(storePinkResponse);
         goPinkResponse.setUserInfo(user);
@@ -924,9 +939,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
                 StorePink newHeadPink = pinkList.get(pinkList.size() - 1);
                 newHeadPink.setKId(0);
                 pinkList.remove(pinkList.size() - 1);
-                pinkList.forEach(i -> {
-                    i.setKId(newHeadPink.getId());
-                });
+                pinkList.forEach(i -> i.setKId(newHeadPink.getId()));
                 pinkList.add(newHeadPink);
                 storePinkService.updateBatchById(pinkList);
             }
@@ -943,100 +956,6 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         LambdaQueryWrapper<StoreCombination> lqw = new LambdaQueryWrapper<>();
         lqw.setEntity(storeCombination);
         return dao.selectList(lqw);
-    }
-
-    /**
-     * 扣减库存加销量
-     *
-     * @param num         商品数量
-     * @param attrValueId 拼团商品规格
-     * @param productId   主商品id
-     * @param user        购买用户
-     * @return Boolean
-     */
-    @Override
-    public Boolean decProductStock(StoreOrder storeOrder, Integer num, Integer attrValueId, Integer productId, User user) {
-        // 判断拼团团长是否存在
-        StorePink headPink = new StorePink();
-        if (storeOrder.getPinkId() > 0) {
-            headPink = storePinkService.getById(storeOrder.getPinkId());
-            if (ObjectUtil.isNull(headPink) || headPink.getIsRefund().equals(true) || headPink.getStatus() == 3) {
-                throw new CrmebException("找不到对应的拼团团队信息");
-            }
-        }
-
-        // 拼团商品本身库存扣减
-        StoreProductAttrValue spavPram = new StoreProductAttrValue();
-        spavPram.setProductId(storeOrder.getCombinationId());
-        spavPram.setType(Constants.PRODUCT_TYPE_PINGTUAN);
-        spavPram.setId(attrValueId);
-        List<StoreProductAttrValue> attrvalues = storeProductAttrValueService.getByEntity(spavPram);
-        if (CollUtil.isEmpty(attrvalues)) throw new CrmebException("未找到相关商品属性信息");
-        StoreProductAttrValue combinationAttrValue = attrvalues.get(0);
-        // 对应的主商品sku
-        List<StoreProductAttrValue> currentProAttrValues = storeProductAttrValueService.getListByProductId(productId);
-        List<StoreProductAttrValue> existAttrValues = currentProAttrValues.stream().filter(e ->
-                e.getSuk().equals(combinationAttrValue.getSuk()) && e.getType().equals(Constants.PRODUCT_TYPE_NORMAL))
-                .collect(Collectors.toList());
-        if (CollUtil.isEmpty(existAttrValues)) throw new CrmebException("未找到扣减库存的商品");
-        StoreCombination storeCombination = getById(storeOrder.getCombinationId());
-        // 拼团商品表扣减库存加销量
-        LambdaUpdateWrapper<StoreCombination> lqwuper = new LambdaUpdateWrapper<>();
-        lqwuper.set(StoreCombination::getStock, storeCombination.getStock() - num);
-        lqwuper.set(StoreCombination::getSales, storeCombination.getSales() + num);
-        lqwuper.set(StoreCombination::getQuota, storeCombination.getQuota() - num);
-        lqwuper.eq(StoreCombination::getId, storeOrder.getCombinationId());
-        lqwuper.apply(StrUtil.format(" (stock - {} >= 0) ", num));
-
-        // 生成拼团表数据
-        StorePink storePink = new StorePink();
-        storePink.setUid(user.getUid());
-        storePink.setAvatar(user.getAvatar());
-        storePink.setNickname(user.getNickname());
-        storePink.setOrderId(storeOrder.getOrderId());
-        storePink.setOrderIdKey(storeOrder.getId());
-        storePink.setTotalNum(storeOrder.getTotalNum());
-        storePink.setTotalPrice(storeOrder.getTotalPrice());
-        storePink.setCid(storeCombination.getId());
-        storePink.setPid(storeCombination.getProductId());
-        storePink.setPeople(storeCombination.getPeople());
-        storePink.setPrice(storeCombination.getPrice());
-        Integer effectiveTime = storeCombination.getEffectiveTime();// 有效小时数
-        DateTime dateTime = cn.hutool.core.date.DateUtil.date();
-        storePink.setAddTime(dateTime.getTime());
-        if (ObjectUtil.isNotNull(storeOrder.getPinkId()) && storeOrder.getPinkId() > 0) {
-            storePink.setStopTime(headPink.getStopTime());
-        } else {
-            DateTime hourTime = cn.hutool.core.date.DateUtil.offsetHour(dateTime, effectiveTime);
-            long stopTime = hourTime.getTime();
-            if (stopTime > storeCombination.getStopTime()) {
-                stopTime = storeCombination.getStopTime();
-            }
-            storePink.setStopTime(stopTime);
-        }
-        storePink.setKId(Optional.ofNullable(storeOrder.getPinkId()).orElse(0));
-        storePink.setIsTpl(false);
-        storePink.setIsRefund(false);
-        storePink.setStatus(1);
-
-        Boolean execute = transactionTemplate.execute(e -> {
-            // 拼团规格扣减
-            storeProductAttrValueService.decProductAttrStock(storeOrder.getCombinationId(), attrValueId, num, Constants.PRODUCT_TYPE_PINGTUAN);
-            // 主商品扣减
-            storeProductService.decProductStock(productId, num, existAttrValues.get(0).getId(), Constants.PRODUCT_TYPE_NORMAL);
-            // 拼团商品扣减
-            update(lqwuper);
-
-            storePinkService.save(storePink);
-
-            // 如果是开团，需要更新订单数据
-            if (storePink.getKId() == 0) {
-                storeOrder.setPinkId(storePink.getId());
-                storeOrderService.updateById(storeOrder);
-            }
-            return Boolean.TRUE;
-        });
-        return execute;
     }
 
     /**
@@ -1148,10 +1067,85 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
             updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
             updateWrapper.setSql(StrUtil.format("quota = quota - {}", num));
             // 扣减时加乐观锁保证库存不为负
-            updateWrapper.last(StrUtil.format(" and (stock - {} >= 0)", num));
+            updateWrapper.last(StrUtil.format(" and (quota - {} >= 0)", num));
         }
         updateWrapper.eq("id", id);
-        return update(updateWrapper);
+        boolean update = update(updateWrapper);
+        if (!update) {
+            throw new CrmebException("更新拼团商品库存失败,商品id = " + id);
+        }
+        return update;
+    }
+
+    /**
+     * 拼团首页数据
+     * 拼团数据 + 拼团商品6个
+     * 3个用户头像（最多）
+     * 拼团参与总人数
+     * @return CombinationIndexResponse
+     */
+    @Override
+    public CombinationIndexResponse getIndexInfo() {
+        // 获取最近的3单拼团订单
+        List<StorePink> tempPinkList = storePinkService.findSizePink(3);
+        List<String> avatarList = CollUtil.newArrayList();
+        if (CollUtil.isNotEmpty(tempPinkList)) {
+            // 获取这三个用户头像
+            avatarList = tempPinkList.stream().map(StorePink::getAvatar).collect(Collectors.toList());
+        }
+        // 获取拼团参与总人数
+        Integer totalPeople = storePinkService.getTotalPeople();
+
+        // 获取6个拼团商品
+        LambdaQueryWrapper<StoreCombination> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StoreCombination::getIsDel, false);
+        lqw.eq(StoreCombination::getIsShow, true);
+        lqw.ge(StoreCombination::getStock, 0);
+        long millis = System.currentTimeMillis();
+        lqw.le(StoreCombination::getStartTime, millis);
+        lqw.ge(StoreCombination::getStopTime, millis);
+        lqw.orderByDesc(StoreCombination::getSort, StoreCombination::getId);
+        lqw.last(" limit 6");
+        List<StoreCombination> combinationList = dao.selectList(lqw);
+        if (CollUtil.isEmpty(combinationList)) {
+            return null;
+        }
+        combinationList.forEach(e -> {
+            int percentIntVal = CrmebUtil.percentInstanceIntVal(e.getQuota(), e.getQuotaShow());
+            e.setQuotaPercent(percentIntVal);
+        });
+
+        CombinationIndexResponse response = new CombinationIndexResponse();
+        response.setAvatarList(avatarList);
+        response.setTotalPeople(totalPeople);
+        response.setProductList(combinationList);
+        return response;
+    }
+
+    /**
+     * 拼团列表header
+     * @return CombinationHeaderResponse
+     */
+    @Override
+    public CombinationHeaderResponse getHeader() {
+        // 获取最近的3单拼团订单
+        List<StorePink> tempPinkList = storePinkService.findSizePink(7);
+        List<String> avatarList = CollUtil.newArrayList();
+        if (CollUtil.isNotEmpty(tempPinkList)) {
+            // 获取这三个用户头像
+            avatarList = tempPinkList.stream().map(StorePink::getAvatar).collect(Collectors.toList());
+        }
+        // 获取拼团参与总人数
+        Integer totalPeople = storePinkService.getTotalPeople();
+
+        // 获取拼团列表banner
+        List<HashMap<String, Object>> bannerList = systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_COMBINATION_LIST_BANNNER);
+
+        CombinationHeaderResponse response = new CombinationHeaderResponse();
+        response.setAvatarList(avatarList);
+        response.setTotalPeople(totalPeople);
+        response.setBannerList(bannerList);
+        return response;
     }
 
     /**
@@ -1284,39 +1278,6 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
             }
 
         }
-    }
-
-    /**
-     * 设置制式结构给attr属性
-     */
-    private void setSkuAttr(List<StoreProductAttr> attrList, CombinationDetailResponse detailResponse) {
-        List<HashMap<String, Object>> attrMapList = new ArrayList<>();
-        for (StoreProductAttr attr : attrList) {
-            HashMap<String, Object> attrMap = new HashMap<>();
-            attrMap.put("productId", attr.getProductId());
-            attrMap.put("attrName", attr.getAttrName());
-//            attrMap.put("type",attr.getType());
-            List<String> attrValues = new ArrayList<>();
-            String trimAttr = attr.getAttrValues()
-                    .replace("[", "")
-                    .replace("]", "");
-            if (attr.getAttrValues().contains(",")) {
-                attrValues = Arrays.asList(trimAttr.split(","));
-            } else {
-                attrValues.add(trimAttr);
-            }
-            attrMap.put("attrValues", attrValues);
-
-            List<HashMap<String, Object>> attrValueMapList = new ArrayList<>();
-            for (String attrValue : attrValues) {
-                HashMap<String, Object> attrValueMap = new HashMap<>();
-                attrValueMap.put("attr", attrValue);
-                attrValueMapList.add(attrValueMap);
-            }
-            attrMap.put("attrValue", attrValueMapList);
-            attrMapList.add(attrMap);
-        }
-        detailResponse.setProductAttr(attrMapList);
     }
 
     /**

@@ -1,6 +1,3 @@
-// import {
-// 	SUBSCRIBE_MESSAGE
-// } from '../config/cache.js';
 const arrTemp =  ["beforePay","afterPay","refundApply", "beforeRecharge", "createBargain","pink"];
 
 // export function auth() {
@@ -16,7 +13,6 @@ const arrTemp =  ["beforePay","afterPay","refundApply", "beforeRecharge", "creat
  */
 export function openPaySubscribe() {
 	let tmplIds = uni.getStorageSync('tempID' + arrTemp[0]);
-	console.log(tmplIds)
 	return subscribe(tmplIds);
 }
 

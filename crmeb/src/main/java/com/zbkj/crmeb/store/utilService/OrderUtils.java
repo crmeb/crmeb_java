@@ -10,6 +10,8 @@ import com.common.MyRecord;
 import com.common.PageParamRequest;
 import com.constants.Constants;
 import com.constants.PayConstants;
+import com.constants.SysConfigConstants;
+import com.constants.SysGroupDataConstants;
 import com.exception.CrmebException;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
@@ -46,7 +48,7 @@ import com.zbkj.crmeb.store.model.*;
 import com.zbkj.crmeb.store.request.StoreOrderSearchRequest;
 import com.zbkj.crmeb.store.response.StoreCartResponse;
 import com.zbkj.crmeb.store.service.*;
-import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
+import com.zbkj.crmeb.store.vo.StoreOrderInfoOldVo;
 import com.zbkj.crmeb.system.model.SystemStore;
 import com.zbkj.crmeb.system.response.SystemGroupDataOrderStatusPicResponse;
 import com.zbkj.crmeb.system.service.SystemConfigService;
@@ -60,7 +62,6 @@ import com.zbkj.crmeb.wechat.service.impl.WechatSendMessageForMinService;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForDistrbution;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForPackage;
 import com.zbkj.crmeb.wechat.vo.WechatSendMessageForPaySuccess;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,7 +166,9 @@ public class OrderUtils {
     public static boolean checkPayChannel(String payChannel) {
        if (!payChannel.equals(PayConstants.PAY_CHANNEL_WE_CHAT_H5) &&
                !payChannel.equals(PayConstants.PAY_CHANNEL_WE_CHAT_PROGRAM) &&
-               !payChannel.equals(PayConstants.PAY_CHANNEL_WE_CHAT_PUBLIC)) {
+               !payChannel.equals(PayConstants.PAY_CHANNEL_WE_CHAT_PUBLIC) &&
+               !payChannel.equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_IOS) &&
+               !payChannel.equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_ANDROID)) {
            return false;
        }
        return true;
@@ -175,7 +178,7 @@ public class OrderUtils {
     public OrderAgainVo tidyOrder(StoreOrder storeOrder, boolean detail, boolean isPic){
         OrderAgainVo orderAgainVoResult = new OrderAgainVo();
         orderAgainVoResult.setStoreOrder(storeOrder);
-        List<StoreOrderInfoVo> existOrderList = null;
+        List<StoreOrderInfoOldVo> existOrderList = null;
         if(detail && storeOrder.getId() > 0){
             existOrderList = storeOrderInfoService.getOrderListByOrderId(storeOrder.getId());
             orderAgainVoResult.setCartInfo(existOrderList);
@@ -204,6 +207,8 @@ public class OrderUtils {
             status = new OrderAgainItemVo(-1,"申请退款中","商家审核中,请耐心等待");
         }else if(storeOrder.getRefundStatus() == 2){
             status = new OrderAgainItemVo(-2,"已退款","已为您退款,感谢您的支持");
+        }else if(storeOrder.getRefundStatus() == 3){
+            status = new OrderAgainItemVo(-3,"退款中","正在为您退款,感谢您的支持");
         }else if(storeOrder.getStatus() == 0){
             // todo 秒杀后面在这添加判断
             status = new OrderAgainItemVo(1,"未发货","商家未发货,请耐心等待");
@@ -262,7 +267,7 @@ public class OrderUtils {
 
         // 获取商品状态图片 ignore
         if(isPic){
-            List<SystemGroupDataOrderStatusPicResponse> orderStatusPicList = systemGroupDataService.getListByGid(Constants.GROUP_DATA_ID_ORDER_STATUS_PIC, SystemGroupDataOrderStatusPicResponse.class);// 53 = group id 在groupData中查询数据
+            List<SystemGroupDataOrderStatusPicResponse> orderStatusPicList = systemGroupDataService.getListByGid(SysGroupDataConstants.GROUP_DATA_ID_ORDER_STATUS_PIC, SystemGroupDataOrderStatusPicResponse.class);// 53 = group id 在groupData中查询数据
 
             for (SystemGroupDataOrderStatusPicResponse picList : orderStatusPicList) {
                 if(picList.getOrderStatus() == orderAgainVoResult.getStatus().getType()){
@@ -271,120 +276,7 @@ public class OrderUtils {
                 }
             }
         }
-        String offlinePayStatus = systemConfigService.getValueByKey("offline_pay_status");
-        int offlinePayStatusFlag = StringUtils.isNotBlank(offlinePayStatus) ? Integer.parseInt(offlinePayStatus) : 2;
-        orderAgainVoResult.setOfflinePayStatus(offlinePayStatusFlag);
         return orderAgainVoResult;
-    }
-
-    /**
-     * 缓存订单并做计算
-     * @param request
-     */
-    public ComputeOrderResponse computedOrder(OrderCreateRequest request, ConfirmOrderResponse cor, String orderKey, User currentUser){
-        // 检查订单是否存在
-        if(checkOrderExist(orderKey, currentUser.getUid())) throw new CrmebException(orderKey + "订单已存在");
-
-        // 需要return的自定义变量
-        BigDecimal couponPrice = BigDecimal.ZERO;// 优惠券金额
-        Integer surPlusIntegral = 0;// 剩余积分
-        BigDecimal deductionPrice;// 抵扣金额
-        Integer usedIntegral = 0;// 使用积分
-        BigDecimal payPrice = cor.getPriceGroup().getTotalPrice();// 支付金额
-
-        // 线下支付状态
-        Integer offliePayStatus = Integer.valueOf(systemConfigService.getValueByKey("offline_pay_status"));
-
-        PriceGroupResponse currentOrderPriceGroup;
-
-        // TODO 订单支付类型判断应该在外层
-        List<String> existPayType = getPayType().stream().filter(e->{
-            if(offliePayStatus == 2 && e.equals(Constants.PAY_TYPE_OFFLINE)){
-                return false;
-            }
-            return true;
-        }).distinct().collect(Collectors.toList());
-        if(CollUtil.isEmpty(existPayType)) throw new CrmebException("选择支付方式有误");
-
-        // 检测订单是否重复提交
-        if(checkOrderSubmitAgain(orderKey)) throw new CrmebException("请勿重复提交订单");
-
-        // 判断邮费是否正确
-        BigDecimal payPostage;
-        if(request.getPayType().equals("offline") && systemConfigService.getValueByKey("offline_postage").equals("1")){
-            payPostage = BigDecimal.ZERO;
-        } else if (request.getShippingType().equals(2)) {// 到店自取，不计算运费
-            payPostage = BigDecimal.ZERO;
-        }else{
-            UserAddress ua = new UserAddress();
-            ua.setUid(currentUser.getUid());
-            ua.setId(request.getAddressId());
-            UserAddress currentUserAddress = userAddressService.getUserAddress(ua);
-            currentOrderPriceGroup = getOrderPriceGroup(cor.getCartInfo(), currentUserAddress);
-            payPostage = currentOrderPriceGroup.getStorePostage();
-            payPrice = payPrice.add(payPostage);
-        }
-
-        // 检测优惠券
-        Integer couponId = null != request.getCouponId() ? request.getCouponId() : 0;
-        if(couponId > 0){
-            //取优惠券的信息,看是否需要判断 商品券或者品类券
-            List<Integer> primaryKey = new ArrayList<>();
-            StoreCouponUser storeCouponUser = storeCouponUserService.getById(couponId);
-
-            if (storeCouponUser.getUseType() > 1){
-                //此处拿到所有的商品id
-                primaryKey = cor.getCartInfo().stream().map(StoreCartResponse::getProductId).distinct().collect(Collectors.toList());
-            }
-            boolean couponUseResult = storeCouponUserService.canUse(couponId, primaryKey, payPrice);
-            if(!couponUseResult) throw new CrmebException("使用优惠券失败");
-
-            // 减去优惠券金额  后使用优惠券
-            payPrice = payPrice.subtract(storeCouponUser.getMoney());
-            couponPrice = storeCouponUser.getMoney();
-        }
-
-        // 积分
-        if(null != request.getUseIntegral() && currentUser.getIntegral() > 0){
-            deductionPrice = new BigDecimal(currentUser.getIntegral()).multiply(BigDecimal.valueOf(Double.valueOf(cor.getOther().get("integralRatio").toString())));
-            if(request.getUseIntegral()){
-                // 积分兑换金额小于实际支付金额
-                if(deductionPrice.compareTo(payPrice) < 0){
-                    payPrice = payPrice.subtract(deductionPrice);
-                    usedIntegral = currentUser.getIntegral();
-                }else{
-                    deductionPrice = payPrice;
-                    if(payPrice.compareTo(BigDecimal.ZERO) > 0){
-                        usedIntegral = payPrice.divide(BigDecimal.valueOf(Double.parseDouble(cor.getOther().get("integralRatio").toString())), 0, BigDecimal.ROUND_UP).intValue();
-                        surPlusIntegral = currentUser.getIntegral() - usedIntegral;
-                    }
-                    payPrice = BigDecimal.ZERO;
-                }
-            }
-        }else{
-            deductionPrice = BigDecimal.ZERO;
-            usedIntegral = 0;
-        }
-        if(payPrice.compareTo(BigDecimal.ZERO) <= 0) payPrice = BigDecimal.ZERO;
-
-        ComputeOrderResponse result = new ComputeOrderResponse();
-        // 组装返回数据
-        result.setTotalPrice(cor.getPriceGroup().getTotalPrice());
-        result.setPayPrice(payPrice.setScale(2, BigDecimal.ROUND_CEILING));
-        result.setPayPostage(payPostage.setScale(2, BigDecimal.ROUND_CEILING));
-        result.setCouponPrice(couponPrice.setScale(2, BigDecimal.ROUND_CEILING));
-        result.setDeductionPrice(request.getUseIntegral() ? deductionPrice.setScale(2, BigDecimal.ROUND_CEILING) : BigDecimal.ZERO);
-        result.setUsedIntegral(usedIntegral);
-        result.setSurplusIntegral(surPlusIntegral);
-        // 更新计算后的数据到订单缓存
-        cor.getPriceGroup().setTotalPrice(result.getTotalPrice());
-        cor.getPriceGroup().setPayPrice(result.getPayPrice());
-        cor.getPriceGroup().setPayPostage(result.getPayPostage());
-        cor.getPriceGroup().setCouponPrice(result.getCouponPrice());
-        cor.getPriceGroup().setDeductionPrice(result.getDeductionPrice());
-        cor.getPriceGroup().setUsedIntegral(result.getUsedIntegral());
-        cacheRepliceOrderInfo(orderKey, currentUser.getUid(), cor);
-        return result;
     }
 
     /**
@@ -396,7 +288,7 @@ public class OrderUtils {
      * 先扣减库存，需要使用乐观锁
      * 扣减库存成功后生成订单 + 保存其他数据
      */
-    public StoreOrder createOrder_v131(OrderCreateRequest request, ConfirmOrderResponse cor, String orderKey, User user){
+    public StoreOrder createOrder(OrderCreateRequest request, ConfirmOrderResponse cor, String orderKey, User user){
         // 收货信息
         UserAddress currentUserAddress = new UserAddress();
         // 购买总数量
@@ -516,6 +408,12 @@ public class OrderUtils {
                 case PayConstants.PAY_CHANNEL_WE_CHAT_PROGRAM:// 小程序
                     isChannel = 1;
                     break;
+                case PayConstants.PAY_CHANNEL_WE_CHAT_APP_IOS:// app ios
+                    isChannel = 4;
+                    break;
+                case PayConstants.PAY_CHANNEL_WE_CHAT_APP_ANDROID:// app android
+                    isChannel = 5;
+                    break;
             }
         } else {// 目前只有余额支付
 //            orderNo = CrmebUtil.getOrderNo(Constants.PAY_TYPE_YUE);
@@ -578,7 +476,6 @@ public class OrderUtils {
         storeOrder.setBargainId(request.getBargainId());
         storeOrder.setCost(mapCostPrice);
         storeOrder.setCreateTime(DateUtil.nowDateTime());
-        storeOrder.setUnique(orderKey);
         storeOrder.setShippingType(request.getShippingType());
         storeOrder.setPinkId(request.getPinkId());
         storeOrder.setIsChannel(isChannel);
@@ -865,20 +762,6 @@ public class OrderUtils {
     }
 
     /**
-     * 检查订单是否重复提交
-     * @param orderId 订单id
-     * @return 重复提交结果
-     */
-    public boolean checkOrderSubmitAgain(String orderId){
-        StoreOrderSearchRequest storeOrderSearchRequest = new StoreOrderSearchRequest();
-        storeOrderSearchRequest.setOrderId(orderId+"");
-        storeOrderSearchRequest.setUid(userService.getUserIdException());
-        PageParamRequest pageParamRequest = new PageParamRequest();
-        pageParamRequest.setLimit(999);
-        pageParamRequest.setPage(1);
-        return storeOrderService.getList(storeOrderSearchRequest,pageParamRequest).size() > 0;
-    }
-    /**
      * 封装现有支付方式
      * @return 支付方式集合
      */
@@ -898,7 +781,6 @@ public class OrderUtils {
      */
     public Boolean checkOrderExist(String orderKey, int userId){
         StoreOrder storeOrderPram = new StoreOrder();
-        storeOrderPram.setUnique(orderKey);
         storeOrderPram.setUid(userId);
         List<StoreOrder> existOrderList = storeOrderService.getByEntity(storeOrderPram);
         return existOrderList.size() > 0;
@@ -914,13 +796,10 @@ public class OrderUtils {
         payType = payType.toLowerCase();
         switch (payType){
             case PayConstants.PAY_TYPE_WE_CHAT:
-                result = systemConfigService.getValueByKey("pay_weixin_open").equals("1");
+                result = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_PAY_WEIXIN_OPEN).equals("1");
                 break;
             case PayConstants.PAY_TYPE_YUE:
-                result = (systemConfigService.getValueByKey("balance_func_status").equals("1") && systemConfigService.getValueByKey("yue_pay_status").equals("1"));
-                break;
-            case PayConstants.PAY_TYPE_OFFLINE:
-                result = systemConfigService.getValueByKey("offline_pay_status").equals("1");
+                result = (systemConfigService.getValueByKey(SysConfigConstants.CONFIG_YUE_PAY_STATUS).equals("1"));
                 break;
         }
         return result;
@@ -1073,7 +952,8 @@ public class OrderUtils {
      * @return 缓存结果
      */
     public String cacheSetOrderInfo(Integer userId,ConfirmOrderResponse confirmOrderResponse){
-        String key = DigestUtils.md5Hex(DateUtil.getNowTime().toString());
+//        String key = DigestUtils.md5Hex(DateUtil.getNowTime().toString()+CrmebUtil.getUuid());
+        String key = DateUtil.getNowTime().toString()+CrmebUtil.getUuid();
         redisUtil.set("user_order:" + userId + key, JSONObject.toJSONString(confirmOrderResponse),Constants.ORDER_CASH_CONFIRM, TimeUnit.MINUTES);
         return key;
     }
@@ -1135,22 +1015,6 @@ public class OrderUtils {
     }
 
     /**
-     * 检测订单是否可以删除
-     * @param orderStatus 订单状态
-     * @return 计算后的价格集合
-     */
-    public void checkDeleteStatus(String orderStatus) {
-        //退款状态，持可以添加
-        String [] deleteStatusList = {
-                Constants.ORDER_STATUS_COMPLETE
-        };
-
-        if(!Arrays.asList(deleteStatusList).contains(orderStatus)){
-            throw new CrmebException("该订单无法删除");
-        }
-    }
-
-    /**
      * 订单数据缓存进redis订单通用
      * @param user 订单缓存key
      * @param list 待缓存的订单数据
@@ -1177,7 +1041,7 @@ public class OrderUtils {
      * @param payType
      * @return
      */
-    private String getOrderPayTypeStr(String payType){
+    public String getOrderPayTypeStr(String payType){
         String payTypeStr = null;
         switch (payType){
             case Constants.PAY_TYPE_WE_CHAT:
@@ -1204,12 +1068,13 @@ public class OrderUtils {
      * @param queryWrapper 查询条件
      * @param status 状态
      */
-    public void statusApiByWhere(LambdaQueryWrapper<StoreOrder> queryWrapper, int status){
+    public void statusApiByWhere(LambdaQueryWrapper<StoreOrder> queryWrapper, Integer status){
         switch (status){
             case Constants.ORDER_STATUS_H5_UNPAID: // 未支付
                 queryWrapper.eq(StoreOrder::getPaid, false);
                 queryWrapper.eq(StoreOrder::getStatus, 0);
                 queryWrapper.eq(StoreOrder::getRefundStatus, 0);
+                queryWrapper.eq(StoreOrder::getType, 0);
                 break;
             case Constants.ORDER_STATUS_H5_NOT_SHIPPED: // 待发货
                 queryWrapper.eq(StoreOrder::getPaid, true);
@@ -1255,12 +1120,12 @@ public class OrderUtils {
      * @return          商品名称*购买数量
      */
     public String getStoreNameAndCarNumString(int orderId){
-        List<StoreOrderInfoVo> currentOrderInfo = storeOrderInfoService.getOrderListByOrderId(orderId);
+        List<StoreOrderInfoOldVo> currentOrderInfo = storeOrderInfoService.getOrderListByOrderId(orderId);
         if(currentOrderInfo.size() > 0) {
             StringBuilder sbOrderProduct = new StringBuilder();
-            for (StoreOrderInfoVo storeOrderInfoVo : currentOrderInfo) {
-                sbOrderProduct.append(storeOrderInfoVo.getInfo().getProductInfo().getStoreName() + "*"
-                        + storeOrderInfoVo.getInfo().getCartNum());
+            for (StoreOrderInfoOldVo storeOrderInfoVo : currentOrderInfo) {
+                sbOrderProduct.append(storeOrderInfoVo.getInfo().getProductName() + "*"
+                        + storeOrderInfoVo.getInfo().getPayNum());
             }
             return sbOrderProduct.toString();
         }
@@ -1328,11 +1193,18 @@ public class OrderUtils {
         // 判断秒杀时间段
         StoreSeckill existSecKill = existSecKills.get(0);
         StoreSeckillManger seckillManger = storeSeckillMangerService.getById(existSecKill.getTimeId());
+        // 判断日期是否过期
         String stopTimeStr = DateUtil.dateToStr(existSecKill.getStopTime(),Constants.DATE_FORMAT_DATE);
         Date stopDate = DateUtil.strToDate( stopTimeStr  + " " + seckillManger.getEndTime() +":00:00", Constants.DATE_FORMAT);
         if(DateUtil.getTwoDateDays(DateUtil.nowDateTime(),stopDate) < 0){
             throw new CrmebException("秒杀商品已过期");
         }
+        // 判断是否在秒杀时段内（小时）,秒杀开始时间 <= 当前时间 <= 秒杀结束时间
+        int hour = cn.hutool.core.date.DateUtil.date().getField(Calendar.HOUR_OF_DAY);// 现在的小时
+        if (seckillManger.getStartTime() > hour || seckillManger.getEndTime() < hour) {
+            throw new CrmebException("秒杀商品已过期");
+        }
+
 
         // 判断秒杀商品库存和秒杀限量
         StoreProductAttrValue spavPram = new StoreProductAttrValue()
@@ -1344,31 +1216,31 @@ public class OrderUtils {
         }
         StoreProductAttrValue storeProductAttrValue = currentSecKillAttrValues.get(0); // 仅仅会获取一条数据
         // 当天参与活动次数 -根据用户和秒杀信息查询当天订单判断订单数量
-        StoreOrder soPram = new StoreOrder().setUid(currentUser.getUid()).setSeckillId(storeCartPram.getSeckillId());
-        List<StoreOrder> userCurrentDaySecKillOrders = storeOrderService.getUserCurrentDaySecKillOrders(soPram);
-
-        // 判断是否有待支付订单
-        List<StoreOrder> unPayOrders = userCurrentDaySecKillOrders.stream().filter(e -> !e.getPaid()).collect(Collectors.toList());
-        if(unPayOrders.size() > 0) throw new CrmebException("您有秒杀待支付订单，请支付后再购买");
-
-        // 判断是否达到上线
-        if(null != userCurrentDaySecKillOrders && userCurrentDaySecKillOrders.size() >= existSecKill.getNum()){
-            throw new CrmebException("您已经达到当前秒杀活动上限");
-        }
-
-        // 达到商品限量 sku quota
-        List<Integer> secKillOrderIds = userCurrentDaySecKillOrders.stream().map(StoreOrder::getId).collect(Collectors.toList());
-        HashMap<Integer, List<StoreOrderInfoVo>> storeOrderInfos = storeOrderInfoService.getMapInId(secKillOrderIds);
-        for (int i = 0; i < userCurrentDaySecKillOrders.size(); i++) {
-            StoreOrder storeOrder = userCurrentDaySecKillOrders.get(i);
-            List<StoreOrderInfoVo> storeOrderInfoVos = storeOrderInfos.get(storeOrder.getId());
-            // 判断购买上线 用户当前订单中已经存在的当前秒杀商品
-            int sum = storeOrderInfoVos.stream().mapToInt(e -> e.getInfo().getCartNum()).sum();
-            if(storeCartPram.getSeckillId().equals(storeOrder.getSeckillId())
-                    && storeProductAttrValue.getQuota() < sum){
-                throw new CrmebException("您已经达到当前秒杀活动上限");
-            }
-        }
+//        StoreOrder soPram = new StoreOrder().setUid(currentUser.getUid()).setSeckillId(storeCartPram.getSeckillId());
+//        List<StoreOrder> userCurrentDaySecKillOrders = storeOrderService.getUserCurrentDaySecKillOrders(soPram);
+//
+//        // 判断是否有待支付订单
+//        List<StoreOrder> unPayOrders = userCurrentDaySecKillOrders.stream().filter(e -> !e.getPaid()).collect(Collectors.toList());
+//        if(unPayOrders.size() > 0) throw new CrmebException("您有秒杀待支付订单，请支付后再购买");
+//
+//        // 判断是否达到上线
+//        if(null != userCurrentDaySecKillOrders && userCurrentDaySecKillOrders.size() >= existSecKill.getNum()){
+//            throw new CrmebException("您已经达到当前秒杀活动上限");
+//        }
+//
+//        // 达到商品限量 sku quota
+//        List<Integer> secKillOrderIds = userCurrentDaySecKillOrders.stream().map(StoreOrder::getId).collect(Collectors.toList());
+//        HashMap<Integer, List<StoreOrderInfoOldVo>> storeOrderInfos = storeOrderInfoService.getMapInId(secKillOrderIds);
+//        for (int i = 0; i < userCurrentDaySecKillOrders.size(); i++) {
+//            StoreOrder storeOrder = userCurrentDaySecKillOrders.get(i);
+//            List<StoreOrderInfoOldVo> storeOrderInfoVos = storeOrderInfos.get(storeOrder.getId());
+//            // 判断购买上线 用户当前订单中已经存在的当前秒杀商品
+//            int sum = storeOrderInfoVos.stream().mapToInt(e -> e.getInfo().getPayNum()).sum();
+//            if(storeCartPram.getSeckillId().equals(storeOrder.getSeckillId())
+//                    && storeProductAttrValue.getQuota() < sum){
+//                throw new CrmebException("您已经达到当前秒杀活动上限");
+//            }
+//        }
 
         return existSecKill;
     }
@@ -1414,19 +1286,19 @@ public class OrderUtils {
             throw new CrmebException("当前砍价商品已售罄");
         }
 
-        // 参与活动次数 -根据用户和秒杀信息查询当天订单判断订单数量
-        StoreOrder soPram = new StoreOrder().setUid(currentUser.getUid()).setBargainId(storeCartPram.getBargainId());
-        List<StoreOrder> userCurrentBargainOrders = storeOrderService.getUserCurrentBargainOrders(soPram);
-
-        // 判断是否有待支付订单
-        List<StoreOrder> unPayOrders = userCurrentBargainOrders.stream().filter(e -> !e.getPaid()).collect(Collectors.toList());
-        if(unPayOrders.size() > 0) throw new CrmebException("您有砍价待支付订单，请支付后再购买");
-
-        // 判断是否达到上限
-        List<StoreOrder> noRefundOrders = userCurrentBargainOrders.stream().filter(i -> i.getRefundStatus() != 2).collect(Collectors.toList());
-        if(CollUtil.isNotEmpty(userCurrentBargainOrders) && noRefundOrders.size() >= existBargain.getNum()){
-            throw new CrmebException("您已经达到当前砍价活动上限");
-        }
+//        // 参与活动次数 -根据用户和秒杀信息查询当天订单判断订单数量
+//        StoreOrder soPram = new StoreOrder().setUid(currentUser.getUid()).setBargainId(storeCartPram.getBargainId());
+//        List<StoreOrder> userCurrentBargainOrders = storeOrderService.getUserCurrentBargainOrders(soPram);
+//
+//        // 判断是否有待支付订单
+//        List<StoreOrder> unPayOrders = userCurrentBargainOrders.stream().filter(e -> !e.getPaid()).collect(Collectors.toList());
+//        if(unPayOrders.size() > 0) throw new CrmebException("您有砍价待支付订单，请支付后再购买");
+//
+//        // 判断是否达到上限
+//        List<StoreOrder> noRefundOrders = userCurrentBargainOrders.stream().filter(i -> i.getRefundStatus() != 2).collect(Collectors.toList());
+//        if(CollUtil.isNotEmpty(userCurrentBargainOrders) && noRefundOrders.size() >= existBargain.getNum()){
+//            throw new CrmebException("您已经达到当前砍价活动上限");
+//        }
         MyRecord record = new MyRecord();
         record.set("product", existBargain);
         record.set("attrInfo", storeProductAttrValue);

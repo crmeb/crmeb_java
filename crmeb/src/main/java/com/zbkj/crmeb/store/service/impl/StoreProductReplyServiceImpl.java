@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.store.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -13,11 +14,17 @@ import com.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.utils.CrmebUtil;
 import com.utils.DateUtil;
 import com.utils.RedisUtil;
 import com.utils.vo.dateLimitUtilVo;
+import com.zbkj.crmeb.bargain.model.StoreBargain;
+import com.zbkj.crmeb.combination.model.StoreCombination;
 import com.zbkj.crmeb.front.request.IndexStoreProductSearchRequest;
+import com.zbkj.crmeb.front.response.ProductDetailReplyResponse;
+import com.zbkj.crmeb.front.response.ProductReplyResponse;
+import com.zbkj.crmeb.seckill.model.StoreSeckill;
 import com.zbkj.crmeb.store.dao.StoreProductReplyDao;
 import com.zbkj.crmeb.store.model.StoreOrder;
 import com.zbkj.crmeb.store.model.StoreProduct;
@@ -29,7 +36,7 @@ import com.zbkj.crmeb.store.service.StoreOrderInfoService;
 import com.zbkj.crmeb.store.service.StoreOrderService;
 import com.zbkj.crmeb.store.service.StoreProductReplyService;
 import com.zbkj.crmeb.store.service.StoreProductService;
-import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
+import com.zbkj.crmeb.store.vo.StoreOrderInfoOldVo;
 import com.zbkj.crmeb.system.service.SystemAttachmentService;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.service.UserService;
@@ -38,8 +45,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -80,6 +89,9 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
 
     @Autowired
     private RedisUtil redisUtil;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
 
     /**
@@ -169,55 +181,60 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
 
     /**
      * 商品分数
-     * @author Mr.Zhang
-     * @since 2020-06-03
      * @return Integer
      */
     @Override
     public Integer getSumStar(Integer productId) {
         QueryWrapper<StoreProductReply> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("sum(product_score) as product_score").eq("is_del", 0).eq("product_id", productId);
+        queryWrapper.select("IFNULL(sum(product_score),0) as product_score", "IFNULL(sum(service_score),0) as service_score");
+        queryWrapper.eq("is_del", 0);
+        queryWrapper.eq("product_id", productId);
         StoreProductReply storeProductReply = dao.selectOne(queryWrapper);
-        if(null == storeProductReply){
+        if (ObjectUtil.isNull(storeProductReply)){
             return 0;
         }
-        return storeProductReply.getProductScore();
+        if (storeProductReply.getProductScore() == 0 || storeProductReply.getServiceScore() == 0) {
+            return 0;
+        }
+        // 星数 = （商品评星 + 服务评星） / 2
+        BigDecimal sumScore = new BigDecimal(storeProductReply.getProductScore() + storeProductReply.getServiceScore());
+        BigDecimal divide = sumScore.divide(BigDecimal.valueOf(2L), 0, BigDecimal.ROUND_DOWN);
+        return divide.intValue();
     }
 
     /**
-     * 评论
-     * @author Mr.Zhang
-     * @since 2020-06-03
-     * @return Integer
+     * 创建订单商品评价
+     * @param request 请求参数
+     * @return Boolean
      */
     @Override
-    public boolean create(StoreProductReplyAddRequest request) {
-        try{
-            StoreProductReply storeProductReply = new StoreProductReply();
-            BeanUtils.copyProperties(request, storeProductReply);
-
-            StoreOrder order = getOrder(storeProductReply);
-            Integer count = checkIsReply(storeProductReply);
-
-            //获取用户信息
-            User user = userService.getInfo();
-            storeProductReply.setAvatar(systemAttachmentService.clearPrefix(user.getAvatar()));
-            storeProductReply.setNickname(user.getNickname());
-            if(StringUtils.isNotBlank(request.getPics())){
-                String pics = request.getPics().replace("[\"","").replace("\"]","")
-                        .replace("\"","");
-                storeProductReply.setPics(systemAttachmentService.clearPrefix(ArrayUtils.toString(pics)));
-            }
-//            storeProductReply.setPics( ArrayUtils.toString(request.getPics()));
-            boolean result = save(storeProductReply);
-
-            //修改订单信息
-            completeOrder(storeProductReply, count, order);
-
-            return result;
-        }catch (Exception e){
-            throw new CrmebException("评价失败" + e.getMessage());
+    public Boolean create(StoreProductReplyAddRequest request) {
+        User user = userService.getInfoException();
+        StoreOrder storeOrder = storeOrderService.getByOderId(request.getOrderNo());
+        if (ObjectUtil.isNull(storeOrder) || !storeOrder.getUid().equals(user.getUid())) {
+            throw new CrmebException("该订单不存在");
         }
+        StoreProductReply storeProductReply = new StoreProductReply();
+        BeanUtils.copyProperties(request, storeProductReply);
+        storeProductReply.setOid(storeOrder.getId());
+        Integer count = checkIsReply(storeProductReply);
+        storeProductReply.setAvatar(systemAttachmentService.clearPrefix(user.getAvatar()));
+        storeProductReply.setNickname(user.getNickname());
+        if(StringUtils.isNotBlank(request.getPics())){
+            String pics = request.getPics().replace("[\"","").replace("\"]","")
+                    .replace("\"","");
+            storeProductReply.setPics(systemAttachmentService.clearPrefix(ArrayUtils.toString(pics)));
+        }
+        Boolean execute = transactionTemplate.execute(e -> {
+            boolean result = save(storeProductReply);
+            //修改订单信息
+            completeOrder(storeProductReply, count, storeOrder);
+            return Boolean.TRUE;
+        });
+        if (!execute) {
+            throw new CrmebException("评价订单失败");
+        }
+        return execute;
     }
 
     /**
@@ -310,10 +327,11 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
         if(sumCount > 0 && goodCount > 0){
             replyChance = String.format("%.2f", ((goodCount.doubleValue() / sumCount.doubleValue())));
         }
-        // 评分星数
+        // 评分星数(商品评星 + 服务评星)/2
         Integer replyStar = 0;
         if (sumCount > 0) {
             replyStar = getSumStar(productId);
+
         }
         MyRecord record = new MyRecord();
         record.set("sumCount", sumCount);
@@ -323,6 +341,125 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
         record.set("replyChance", replyChance);
         record.set("replyStar", replyStar);
         return record;
+    }
+
+    /**
+     * H5商品详情评论信息
+     * @param proId 商品编号
+     * @return ProductDetailReplyResponse
+     */
+    @Override
+    public ProductDetailReplyResponse getH5ProductReply(Integer proId) {
+        ProductDetailReplyResponse response = new ProductDetailReplyResponse();
+
+        // 评论总数
+        Integer sumCount = getCountByScore(proId, "all");
+        if (sumCount.equals(0)) {
+            response.setSumCount(0);
+            response.setReplyChance("0");
+            return response;
+        }
+        // 好评总数
+        Integer goodCount = getCountByScore(proId, "good");
+        // 好评率
+        String replyChance = "0";
+        if(sumCount > 0 && goodCount > 0){
+            replyChance = String.format("%.2f", ((goodCount.doubleValue() / sumCount.doubleValue())));
+        }
+
+        // 查询最后一条评论
+        LambdaQueryWrapper<StoreProductReply> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StoreProductReply::getProductId, proId);
+        lqw.eq(StoreProductReply::getIsDel, false);
+        lqw.orderByDesc(StoreProductReply::getId);
+        lqw.last(" limit 1");
+        StoreProductReply storeProductReply = dao.selectOne(lqw);
+        ProductReplyResponse productReplyResponse = new ProductReplyResponse();
+        BeanUtils.copyProperties(storeProductReply, productReplyResponse);
+        // 评价图
+        productReplyResponse.setPics(CrmebUtil.stringToArrayStr(storeProductReply.getPics()));
+        // 昵称
+        String nickname = storeProductReply.getNickname();
+        if (StrUtil.isNotBlank(nickname)) {
+            if (nickname.length() == 1) {
+                nickname = nickname.concat("**");
+            } else if (nickname.length() == 2) {
+                nickname = nickname.substring(0, 1) + "**";
+            } else {
+                nickname = nickname.substring(0, 1) + "**" + nickname.substring(nickname.length() - 1);
+            }
+            productReplyResponse.setNickname(nickname);
+        }
+        // 星数 = （商品评星 + 服务评星） / 2
+        BigDecimal sumScore = new BigDecimal(storeProductReply.getProductScore() + storeProductReply.getServiceScore());
+        BigDecimal divide = sumScore.divide(BigDecimal.valueOf(2L), 0, BigDecimal.ROUND_DOWN);
+        productReplyResponse.setScore(divide.intValue());
+
+        response.setSumCount(sumCount);
+        response.setReplyChance(replyChance);
+        response.setProductReply(productReplyResponse);
+        return response;
+    }
+
+    /**
+     * 移动端商品评论列表
+     * @param proId 商品编号
+     * @param type 评价等级|0=全部,1=好评,2=中评,3=差评
+     * @param pageParamRequest 分页参数
+     * @return PageInfo<ProductReplyResponse>
+     */
+    @Override
+    public PageInfo<ProductReplyResponse> getH5List(Integer proId, Integer type, PageParamRequest pageParamRequest) {
+        Page<StoreProductReply> startPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+
+        //带 StoreProductReply 类的多条件查询
+        LambdaQueryWrapper<StoreProductReply> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StoreProductReply::getIsDel, false);
+        lqw.eq(StoreProductReply::getProductId, proId);
+        //评价等级|0=全部,1=好评,2=中评,3=差评
+        List<Integer> typeList = new ArrayList<>();
+        switch (type){
+            case 1:
+                lqw.apply(" (product_score + service_score) >= 8");
+                break;
+            case 2:
+                lqw.apply(" (product_score + service_score) < 8 and (product_score + service_score) > 4");
+                break;
+            case 3:
+                lqw.apply(" (product_score + service_score) <= 4");
+                break;
+            default:
+                break;
+
+        }
+        lqw.orderByDesc(StoreProductReply::getId);
+        List<StoreProductReply> replyList = dao.selectList(lqw);
+        List<ProductReplyResponse> responseList = new ArrayList<>();
+        for (StoreProductReply productReply : replyList) {
+            ProductReplyResponse productReplyResponse = new ProductReplyResponse();
+            BeanUtils.copyProperties(productReply, productReplyResponse);
+            // 评价图
+            productReplyResponse.setPics(CrmebUtil.stringToArrayStr(productReply.getPics()));
+            // 昵称
+            String nickname = productReply.getNickname();
+            if (StrUtil.isNotBlank(nickname)) {
+                if (nickname.length() == 1) {
+                    nickname = nickname.concat("**");
+                } else if (nickname.length() == 2) {
+                    nickname = nickname.substring(0, 1) + "**";
+                } else {
+                    nickname = nickname.substring(0, 1) + "**" + nickname.substring(nickname.length() - 1);
+                }
+                productReplyResponse.setNickname(nickname);
+            }
+            // 星数 = （商品评星 + 服务评星） / 2
+            BigDecimal sumScore = new BigDecimal(productReply.getProductScore() + productReply.getServiceScore());
+            BigDecimal divide = sumScore.divide(BigDecimal.valueOf(2L), 0, BigDecimal.ROUND_DOWN);
+            productReplyResponse.setScore(divide.intValue());
+
+            responseList.add(productReplyResponse);
+        }
+        return CommonPage.copyPageInfo(startPage, responseList);
     }
 
     // 获取统计数据（好评、中评、差评）
@@ -335,13 +472,16 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
             case "all":
                 break;
             case "good":
-                lqw.in(StoreProductReply::getProductScore, 4, 5);
+                lqw.apply( " (product_score + service_score) >= 8");
+//                lqw.in(StoreProductReply::getProductScore, 4, 5);
                 break;
             case "medium":
-                lqw.eq(StoreProductReply::getProductScore, 3);
+                lqw.apply( " (product_score + service_score) < 8 and (product_score + service_score) > 4");
+//                lqw.eq(StoreProductReply::getProductScore, 3);
                 break;
             case "poor":
-                lqw.in(StoreProductReply::getProductScore, 2, 1);
+                lqw.apply( " (product_score + service_score) <= 4");
+//                lqw.in(StoreProductReply::getProductScore, 2, 1);
                 break;
         }
         return dao.selectCount(lqw);
@@ -386,13 +526,13 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
     private Integer checkIsReply(StoreProductReply storeProductReply) {
 
         //查看商品信息
-        List<StoreOrderInfoVo> orderInfoVoList = storeOrderInfoService.getOrderListByOrderId(storeProductReply.getOid());
+        List<StoreOrderInfoOldVo> orderInfoVoList = storeOrderInfoService.getOrderListByOrderId(storeProductReply.getOid());
         if(null == orderInfoVoList || orderInfoVoList.size() < 1){
             throw new CrmebException("没有找到商品信息");
         }
 
         boolean findResult = false;
-        for (StoreOrderInfoVo orderInfoVo : orderInfoVoList) {
+        for (StoreOrderInfoOldVo orderInfoVo : orderInfoVoList) {
 //            Integer productId = orderInfoVo.getInfo().getInteger("product_id");
             Integer productId = orderInfoVo.getInfo().getProductId();
             if(productId < 1){

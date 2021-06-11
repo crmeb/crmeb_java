@@ -1,131 +1,147 @@
 <template>
 	<view>
 		<view class='shoppingCart copy-data'>
-			<view class='labelNav acea-row row-around row-middle'>
+			<view class='labelNav acea-row row-around'>
 				<view class='item'><text class='iconfont icon-xuanzhong'></text>100%正品保证</view>
 				<view class='item'><text class='iconfont icon-xuanzhong'></text>所有商品精挑细选</view>
 				<view class='item'><text class='iconfont icon-xuanzhong'></text>售后无忧</view>
 			</view>
-			<view class='nav acea-row row-between-wrapper'>
-				<view>购物数量 <text class='num font-color'>{{cartCount}}</text></view>
-				<view v-if="cartList.valid.length > 0 || cartList.invalid.length > 0" class='administrate acea-row row-center-wrapper'
-				 @click='manage'>{{ footerswitch ? '管理' : '取消'}}</view>
-			</view>
-			<view v-if="cartList.valid.length > 0 || cartList.invalid.length > 0">
-				<view class='list'>
-					<checkbox-group @change="checkboxChange">
-						<block v-for="(item,index) in cartList.valid" :key="index">
-							<view class='item acea-row row-between-wrapper'>
-								<!-- #ifndef MP -->
-								<checkbox :value="(item.id).toString()" :checked="item.checked" :disabled="!item.attrStatus && footerswitch" />
-								<!-- #endif -->
-								<!-- #ifdef MP -->
-								<checkbox :value="item.id" :checked="item.checked" :disabled="!item.attrStatus && footerswitch" />
-								<!-- #endif -->
-								<navigator :url='"/pages/goods_details/index?id="+item.productId' hover-class='none' class='picTxt acea-row row-between-wrapper'>
-									<view class='pictrue'>
-										<image v-if="item.productInfo.attrInfo" :src='item.productInfo.attrInfo.image'></image>
-										<image v-else :src='item.productInfo.image'></image>
-									</view>
-									<view class='text'>
-										<view class='line1' :class="item.attrStatus?'':'reColor'">{{item.productInfo.storeName}}</view>
-										<view class='infor line1' v-if="item.productInfo.attrInfo">属性：{{item.productInfo.attrInfo.suk}}</view>
-										<view class='money' v-if="item.attrStatus">￥{{item.truePrice}}</view>
-										<view class="reElection acea-row row-between-wrapper" v-else>
-											<view class="title">请重新选择商品规格</view>
-											<view class="reBnt cart-color acea-row row-center-wrapper" @click.stop="reElection(item)">重选</view>
+			<view class="borRadius14 cartBox">
+				<view
+					v-if="(cartList.valid.length === 0 && cartList.invalid.length === 0) || (cartList.valid.length > 0)"
+					class='nav acea-row row-between-wrapper'>
+					<view>购物数量 <text class='num font-color'>{{cartCount}}</text></view>
+					<view v-if="cartList.valid.length > 0 || cartList.invalid.length > 0"
+						class='administrate acea-row row-center-wrapper' @click='manage'>{{ footerswitch ? '管理' : '取消'}}
+					</view>
+				</view>
+				<view v-if="cartList.valid.length > 0 || cartList.invalid.length > 0" class="pad30">
+					<view class='list'>
+						<checkbox-group @change="checkboxChange">
+							<block v-for="(item,index) in cartList.valid" :key="index">
+								<view class='item acea-row row-between-wrapper'>
+									<!-- #ifndef MP -->
+									<checkbox :value="(item.id).toString()" :checked="item.checked"
+										:disabled="!item.attrStatus && footerswitch" style="margin-right: 10rpx;" />
+									<!-- #endif -->
+									<!-- #ifdef MP -->
+									<checkbox :value="item.id" :checked="item.checked"
+										:disabled="!item.attrStatus && footerswitch" />
+									<!-- #endif -->
+									<navigator :url='"/pages/goods_details/index?id="+item.productId' hover-class='none'
+										class='picTxt acea-row row-between-wrapper'>
+										<view class='pictrue'>
+											<image :src='item.image'></image>
+										</view>
+										<view class='text'>
+											<view class='line1' :class="item.attrStatus?'':'reColor'">{{item.storeName}}
+											</view>
+											<view class='infor line1' v-if="item.suk">属性：{{item.suk}}</view>
+											<view class='money' v-if="item.attrStatus">￥{{item.price}}</view>
+											<!-- <view class='money' v-if="item.attrStatus">￥{{item.truePrice}}</view> -->
+											<view class="reElection acea-row row-between-wrapper" v-else>
+												<view class="title">请重新选择商品规格</view>
+												<view class="reBnt cart-color acea-row row-center-wrapper"
+													@click.stop="reElection(item)">重选</view>
+											</view>
+										</view>
+										<view class='carnum acea-row row-center-wrapper' v-if="item.attrStatus">
+											<view class="reduce" :class="item.numSub ? 'on' : ''"
+												@click.stop='subCart(index)'>-</view>
+											<view class='num'>{{item.cartNum}}</view>
+											<view class="plus" :class="item.numAdd ? 'on' : ''"
+												@click.stop='addCart(index)'>+</view>
+										</view>
+									</navigator>
+								</view>
+							</block>
+						</checkbox-group>
+					</view>
+					<!-- cartList.valid.length===0 && cartList.invalid.length > 0 -->
+					<view v-if="cartList.invalid.length > 0" class='invalidGoods borRadius14'
+						:style="cartList.valid.length===0 && cartList.invalid.length > 0 ? 'position: relative;z-index: 111;top: -120rpx;':'position: static;'">
+						<view class='goodsNav acea-row row-between-wrapper'>
+							<view v-if="cartList.invalid.length > 1 || cartList.valid.length > 0" @click='goodsOpen'>
+								<text class='iconfont'
+									:class='goodsHidden==true?"icon-xiangxia":"icon-xiangshang"'></text>失效商品
+							</view>
+							<view v-else>
+								失效商品
+							</view>
+							<view class='del' @click='unsetCart'><text class='iconfont icon-shanchu1'></text>清空</view>
+						</view>
+						<view class='goodsList' :hidden='goodsHidden'>
+							<block v-for="(item,index) in cartList.invalid" :key='index'>
+								<view class='item acea-row row-between-wrapper'>
+									<view class='invalid'>失效</view>
+									<view class='picTxt acea-row row-between-wrapper'>
+										<view class='pictrue'>
+											<image :src='item.image'></image>
+										</view>
+										<view class='text acea-row row-column-between'>
+											<view class='line1 name'>{{item.storeName}}</view>
+											<view class='infor line1' v-if="item.suk">属性：{{item.suk}}</view>
+											<view class='acea-row row-between-wrapper'>
+												<view class='end'>该商品已失效</view>
+											</view>
 										</view>
 									</view>
-									<view class='carnum acea-row row-center-wrapper' v-if="item.attrStatus">
-										<view class="reduce" :class="item.numSub ? 'on' : ''" @click.stop='subCart(index)'>-</view>
-										<view class='num'>{{item.cartNum}}</view>
-										<!-- <view class="num">
-											<input type="number" v-model="item.cart_num" @click.stop @input="iptCartNum(index)" @blur="blurInput(index)"/>
-										</view> -->
-										<view class="plus" :class="item.numAdd ? 'on' : ''" @click.stop='addCart(index)'>+</view>
-									</view>
-								</navigator>
-							</view>
-						</block>
-					</checkbox-group>
-				</view>
-				<view class='invalidGoods' v-if="cartList.invalid.length > 0">
-					<view class='goodsNav acea-row row-between-wrapper'>
-						<view @click='goodsOpen'><text class='iconfont' :class='goodsHidden==true?"icon-xiangxia":"icon-xiangshang"'></text>失效商品</view>
-						<view class='del' @click='unsetCart'><text class='iconfont icon-shanchu1'></text>清空</view>
+								</view>
+							</block>
+						</view>
 					</view>
-					<view class='goodsList' :hidden='goodsHidden'>
-						<block v-for="(item,index) in cartList.invalid" :key='index'>
-							<view class='item acea-row row-between-wrapper'>
-								<view class='invalid'>失效</view>
-								<view class='pictrue'>
-									<image v-if="item.productInfo.attrInfo" :src='item.productInfo.attrInfo.image'></image>
-									<image v-else :src='item.productInfo.image'></image>
-								</view>
-								<view class='text acea-row row-column-between'>
-									<view class='line1 name'>{{item.productInfo.storeName}}</view>
-									<view class='infor line1' v-if="item.productInfo.attrInfo">属性：{{item.productInfo.attrInfo.suk}}</view>
-									<view class='acea-row row-between-wrapper'>
-										<!-- <view>￥{{item.truePrice}}</view> -->
-										<view class='end'>该商品已失效</view>
-									</view>
-								</view>
-							</view>
-						</block>
+					<!-- <view class='loadingicon acea-row row-center-wrapper' v-if="cartList.valid.length&&!loadend">
+						<text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>{{loadTitle}}
+					</view> -->
+					<view class='loadingicon acea-row row-center-wrapper' v-if="cartList.invalid.length&&loadend">
+						<text class='loading iconfont icon-jiazai'
+							:hidden='loadingInvalid==false'></text>{{loadTitleInvalid}}
 					</view>
 				</view>
-				<view class='loadingicon acea-row row-center-wrapper' v-if="cartList.valid.length&&!loadend">
-					<text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>{{loadTitle}}
-				</view>
-				<view class='loadingicon acea-row row-center-wrapper' v-if="cartList.invalid.length&&loadend">
-					<text class='loading iconfont icon-jiazai' :hidden='loadingInvalid==false'></text>{{loadTitleInvalid}}
-				</view>
-			</view>
-			<view class='noCart' v-if="cartList.valid.length == 0 && cartList.invalid.length == 0">
-				<view class='pictrue'>
-					<image src='../../static/images/noCart.png'></image>
-				</view>
-				<recommend :hostProduct='hostProduct'></recommend>
-			</view>
-			<view style='height:120rpx;color: #F5F5F5;'>{{selectCountPrice}}</view>
-			<view class='footer acea-row row-between-wrapper' v-if="cartList.valid.length > 0">
-				<view>
-					<checkbox-group @change="checkboxAllChange">
-						<checkbox value="all" :checked="!!isAllSelect" /><text class='checkAll'>全选 ({{selectValue.length}})</text>
-					</checkbox-group>
-				</view>
-				<view class='money acea-row row-middle' v-if="footerswitch==true">
-					<text class='font-color'>￥{{selectCountPrice}}</text>
-					<form @submit="subOrder" report-submit='true'>
-						<button class='placeOrder bg-color' formType="submit">立即下单</button>
-					</form>
-				</view>
-				<view class='button acea-row row-middle' v-else>
-					<form @submit="subCollect" report-submit='true'>
-						<button class='bnt cart-color' formType="submit">收藏</button>
-					</form>
-					<form @submit="subDel" report-submit='true'>
-						<button class='bnt' formType="submit">删除</button>
-					</form>
+				<view class='noCart' v-if="cartList.valid.length == 0 && cartList.invalid.length == 0 && canShow">
+					<view class='pictrue'>
+						<image src='../../static/images/noCart.png'></image>
+					</view>
+					<recommend :hostProduct='hostProduct'></recommend>
 				</view>
 			</view>
 		</view>
+		<view class='footer acea-row row-between-wrapper' v-if="cartList.valid.length > 0">
+			<view>
+				<checkbox-group @change="checkboxAllChange">
+					<checkbox value="all" :checked="!!isAllSelect" />
+					<text class='checkAll'>全选({{selectValue.length}})</text>
+				</checkbox-group>
+			</view>
+			<view class='money acea-row row-middle' v-if="footerswitch==true">
+				<text class='font-color'>￥{{selectCountPrice}}</text>
+				<form @submit="subOrder" report-submit='true'>
+					<button class='placeOrder bg-color' formType="submit">立即下单</button>
+				</form>
+			</view>
+			<view class='button acea-row row-middle' v-else>
+				<form @submit="subCollect" report-submit='true'>
+					<button class='bnt cart-color' formType="submit">收藏</button>
+				</form>
+				<form @submit="subDel" report-submit='true'>
+					<button class='bnt' formType="submit">删除</button>
+				</form>
+			</view>
+		</view>
 		<productWindow :attr="attr" :isShow='1' :iSplus='1' :iScart='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr"
-		 @ChangeCartNum="ChangeCartNum" @attrVal="attrVal" @iptCartNum="iptCartNum" @goCat="reGoCat" id='product-window'></productWindow>
+			@ChangeCartNum="ChangeCartNum" @attrVal="attrVal" @iptCartNum="iptCartNum" @goCat="reGoCat"
+			id='product-window'></productWindow>
+		<view class="uni-p-b-96"></view>
+		<view class="uni-p-b-98"></view>
 		<!-- #ifdef MP -->
-		<authorize :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 
 	</view>
 </template>
 
 <script>
-	// #ifdef APP-PLUS
-	let sysHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
-	// #endif
-	// #ifndef APP-PLUS
 	let sysHeight = 0
-	// #endif
 	import {
 		getCartList,
 		getCartCounts,
@@ -160,7 +176,7 @@
 		data() {
 			return {
 				cartCount: 0,
-				goodsHidden: true,
+				goodsHidden: false,
 				footerswitch: true,
 				hostProduct: [],
 				cartList: {
@@ -191,34 +207,29 @@
 					productSelect: {}
 				},
 				productValue: [], //系统属性
-				storeInfo: {},
+				productInfo: {},
 				attrValue: '', //已选属性
 				attrTxt: '请选择', //属性页面提示
 				cartId: 0,
 				product_id: 0,
-				sysHeight:sysHeight
+				sysHeight: sysHeight,
+				canShow: false
 			};
 		},
 		computed: mapGetters(['isLogin']),
 		onLoad: function(options) {
 			let that = this;
 			if (that.isLogin == false) {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		onShow: function() {
+			this.canShow = false
 			if (this.isLogin == true) {
 				this.hotPage = 1;
 				this.hostProduct = [],
-				this.hotScroll = false,
-				this.getHostProduct();
-				this.loadend = false;
+					this.hotScroll = false,
+					this.loadend = false;
 				this.page = 1;
 				this.cartList.valid = [];
 				this.getCartList();
@@ -226,10 +237,8 @@
 				this.pageInvalid = 1;
 				this.cartList.invalid = [];
 				this.getInvalidList();
-				this.getCartNum();
-				this.goodsHidden = true;
+				//this.getCartNum();
 				this.footerswitch = true;
-				this.hostProduct = [];
 				this.hotScroll = false;
 				this.hotPage = 1;
 				this.hotLimit = 10;
@@ -261,13 +270,13 @@
 					return that.$util.Tips({
 						title: "产品库存不足，请选择其它"
 					});
-					
+
 				let q = {
 					id: that.cartId,
 					productId: that.product_id,
 					num: that.attr.productSelect.cart_num,
 					unique: that.attr.productSelect !== undefined ?
-						that.attr.productSelect.unique : that.storeInfo.id
+						that.attr.productSelect.unique : that.productInfo.id
 				};
 				getResetCart(q)
 					.then(function(res) {
@@ -310,8 +319,8 @@
 				getProductDetail(item.productId).then(res => {
 					uni.hideLoading();
 					that.attr.cartAttr = true;
-					let storeInfo = res.data.storeInfo;
-					that.$set(that, 'storeInfo', storeInfo);
+					let productInfo = res.data.productInfo;
+					that.$set(that, 'productInfo', productInfo);
 					that.$set(that.attr, 'productAttr', res.data.productAttr);
 					that.$set(that, 'productValue', res.data.productValue);
 					that.DefaultSelect();
@@ -334,10 +343,10 @@
 					this.$set(this, "attrValue", res);
 					this.$set(this, "attrTxt", "已选择");
 				} else {
-					this.$set(this.attr.productSelect, "image", this.storeInfo.image);
-					this.$set(this.attr.productSelect, "price", this.storeInfo.price);
+					this.$set(this.attr.productSelect, "image", this.productInfo.image);
+					this.$set(this.attr.productSelect, "price", this.productInfo.price);
 					this.$set(this.attr.productSelect, "stock", 0);
-					this.$set(this.attr.productSelect, "unique", this.storeInfo.id);
+					this.$set(this.attr.productSelect, "unique", this.productInfo.id);
 					this.$set(this.attr.productSelect, "cart_num", 0);
 					this.$set(this, "attrValue", "");
 					this.$set(this, "attrTxt", "请选择");
@@ -365,7 +374,7 @@
 					this.$set(
 						this.attr.productSelect,
 						"storeName",
-						this.storeInfo.storeName
+						this.productInfo.storeName
 					);
 					this.$set(this.attr.productSelect, "image", productSelect.image);
 					this.$set(this.attr.productSelect, "price", productSelect.price);
@@ -378,12 +387,12 @@
 					this.$set(
 						this.attr.productSelect,
 						"storeName",
-						this.storeInfo.storeName
+						this.productInfo.storeName
 					);
-					this.$set(this.attr.productSelect, "image", this.storeInfo.image);
-					this.$set(this.attr.productSelect, "price", this.storeInfo.price);
+					this.$set(this.attr.productSelect, "image", this.productInfo.image);
+					this.$set(this.attr.productSelect, "price", this.productInfo.price);
 					this.$set(this.attr.productSelect, "stock", 0);
-					this.$set(this.attr.productSelect, "unique", this.storeInfo.id);
+					this.$set(this.attr.productSelect, "unique", this.productInfo.id);
 					this.$set(this.attr.productSelect, "cart_num", 0);
 					this.$set(this, "attrValue", "");
 					this.$set(this, "attrTxt", "请选择");
@@ -391,15 +400,15 @@
 					this.$set(
 						this.attr.productSelect,
 						"storeName",
-						this.storeInfo.storeName
+						this.productInfo.storeName
 					);
-					this.$set(this.attr.productSelect, "image", this.storeInfo.image);
-					this.$set(this.attr.productSelect, "price", this.storeInfo.price);
-					this.$set(this.attr.productSelect, "stock", this.storeInfo.stock);
+					this.$set(this.attr.productSelect, "image", this.productInfo.image);
+					this.$set(this.attr.productSelect, "price", this.productInfo.price);
+					this.$set(this.attr.productSelect, "stock", this.productInfo.stock);
 					this.$set(
 						this.attr.productSelect,
 						"unique",
-						this.storeInfo.id || ""
+						this.productInfo.id || ""
 					);
 					this.$set(this.attr.productSelect, "cart_num", 1);
 					this.$set(this, "attrValue", "");
@@ -407,7 +416,8 @@
 				}
 			},
 			attrVal(val) {
-				this.$set(this.attr.productAttr[val.indexw], 'index', this.attr.productAttr[val.indexw].attrValues[val.indexn]);
+				this.$set(this.attr.productAttr[val.indexw], 'index', this.attr.productAttr[val.indexw].attrValues[val
+					.indexn]);
 			},
 			/**
 			 * 购物车数量加和数量减
@@ -496,18 +506,29 @@
 					});
 				}
 			},
+			// 立即下单
 			subOrder: function(event) {
+
 				let that = this,
 					selectValue = that.selectValue;
 				if (selectValue.length > 0) {
-					uni.navigateTo({
-						url: '/pages/users/order_confirm/index?new=false&cartId=' + selectValue.join(',')
-					});
+					that.getPreOrder();
 				} else {
 					return that.$util.Tips({
 						title: '请选择产品'
 					});
 				}
+			},
+			/**
+			 * 预下单
+			 */
+			getPreOrder: function() {
+				let shoppingCartId = this.selectValue.map(item => {
+					return {
+						"shoppingCartId": Number(item)
+					}
+				})
+				this.$Order.getPreOrder("shoppingCart", shoppingCartId);
 			},
 			checkboxAllChange: function(event) {
 				let value = event.detail.value;
@@ -517,26 +538,6 @@
 					this.setAllSelectValue(0)
 				}
 			},
-			// setAllSelectValue: function(status) {
-			// 	let that = this;
-			// 	let selectValue = [];
-			// 	let valid = that.cartList.valid;
-			// 	if (valid.length > 0) {
-			// 		for (let index in valid) {
-			// 			if (status == 1) {
-			// 				if(valid[index].attrStatus){
-			// 					valid[index].checked = true;
-			// 					selectValue.push(valid[index].id);
-			// 				}else{
-			// 					valid[index].checked = false;
-			// 				}
-			// 			} else valid[index].checked = false;
-			// 		}
-			// 		that.$set(that.cartList, 'valid', valid);
-			// 		that.selectValue = selectValue;
-			// 		that.switchSelect();
-			// 	}
-			// },
 			setAllSelectValue: function(status) {
 				let that = this;
 				let selectValue = [];
@@ -548,15 +549,15 @@
 								if (item.attrStatus) {
 									item.checked = true;
 									selectValue.push(item.id);
-								} else{
+								} else {
 									item.checked = false;
 								}
-							} else{
+							} else {
 								item.checked = true;
 								selectValue.push(item.id);
 							}
 							that.isAllSelect = true;
-						} else{
+						} else {
 							item.checked = false;
 							that.isAllSelect = false;
 						}
@@ -580,14 +581,14 @@
 							if (item.attrStatus) {
 								item.checked = true;
 								arr1.push(item);
-							} else{
+							} else {
 								item.checked = false;
 							}
-						} else{
+						} else {
 							item.checked = true;
 							arr1.push(item);
 						}
-					} else{
+					} else {
 						item.checked = false;
 						arr2.push(item);
 					}
@@ -620,8 +621,9 @@
 				} else {
 					for (let index in validList) {
 						if (that.inArray(validList[index].id, selectValue)) {
-							selectCountPrice = that.$util.$h.Add(selectCountPrice, that.$util.$h.Mul(validList[index].cartNum, validList[
-								index].truePrice))
+							selectCountPrice = that.$util.$h.Add(selectCountPrice, that.$util.$h.Mul(validList[index]
+								.cartNum, validList[
+									index].price))
 						}
 					}
 					that.selectCountPrice = selectCountPrice;
@@ -670,9 +672,9 @@
 				let that = this;
 				let item = that.cartList.valid[index];
 				item.cartNum = Number(item.cartNum) + 1;
-				let productInfo = item.productInfo;
-				if (productInfo.hasOwnProperty('attrInfo') && item.cartNum >= item.productInfo.attrInfo.stock) {
-					item.cartNum = item.productInfo.attrInfo.stock;
+				let productInfo = item;
+				if (item.cartNum >= item.stock) {
+					item.cartNum = item.stock;
 					item.numAdd = true;
 					item.numSub = false;
 				} else {
@@ -693,76 +695,88 @@
 			},
 			getCartNum: function() {
 				let that = this;
-				getCartCounts().then(res => {
+				getCartCounts(true, 'sum').then(res => {
 					that.cartCount = res.data.count;
 				});
 			},
-			getCartList: function() {
+			getCartData(data) {
+				return new Promise((resolve, reject) => {
+					getCartList(data).then((res) => {
+						resolve(res.data);
+					}).catch(function(err) {
+						this.loading = false;
+						this.canShow = true;
+						this.$util.Tips({
+							title: err
+						});
+					})
+				});
+			},
+			async getCartList() {
+				uni.showLoading({
+					title: '加载中',
+					mask: true
+				});
 				let that = this;
-				if (this.loadend) return false;
-				if (this.loading) return false;
 				let data = {
 					page: that.page,
 					limit: that.limit,
-					isValid : true
+					isValid: true
 				}
-				getCartList(data).then(res => {
-					let valid = res.data.list;
-					let loadend = valid.length < that.limit;
-					let validList = that.$util.SplitArray(valid, that.cartList.valid);
-					let numSub = [{
-						numSub: true
-					}, {
-						numSub: false
-					}];
-					let numAdd = [{
-							numAdd: true
+				getCartCounts(true, 'sum').then(async c => {
+					that.cartCount = c.data.count;
+					if (c.data.count === 0) that.getHostProduct();
+					for (let i = 0; i < Math.ceil(that.cartCount / that.limit); i++) {
+						let cartList = await this.getCartData(data);
+						let valid = cartList.list;
+						let validList = that.$util.SplitArray(valid, that.cartList.valid);
+						let numSub = [{
+							numSub: true
 						}, {
-							numAdd: false
-						}],
-						selectValue = [];
-					if (validList.length > 0) {
-						for (let index in validList) {
-							if (validList[index].cartNum == 1) {
-								validList[index].numSub = true;
-							} else {
-								validList[index].numSub = false;
-							}
-							let productInfo = validList[index].productInfo;
-							
-							let stock = validList[index].productInfo.attrInfo?validList[index].productInfo.attrInfo.stock:0;
-							if (productInfo.hasOwnProperty('attrInfo') && validList[index].cartNum == stock) {
-								validList[index].numAdd = true;
-							} else if (validList[index].cartNum == validList[index].productInfo.stock) {
-								validList[index].numAdd = true;
-							} else {
-								validList[index].numAdd = false;
-							}
-							if(validList[index].attrStatus){
-								validList[index].checked = true;
-								selectValue.push(validList[index].id);
-							}else{
-								validList[index].checked = false;
+							numSub: false
+						}];
+						let numAdd = [{
+								numAdd: true
+							}, {
+								numAdd: false
+							}],
+							selectValue = [];
+						if (validList.length > 0) {
+							for (let index in validList) {
+								if (validList[index].cartNum == 1) {
+									validList[index].numSub = true;
+								} else {
+									validList[index].numSub = false;
+								}
+								let productInfo = validList[index];
+								let stock = validList[index].stock ? validList[index].stock : 0;
+								if (validList[index].cartNum == stock) {
+									validList[index].numAdd = true;
+								} else if (validList[index].cartNum == validList[index].stock) {
+									validList[index].numAdd = true;
+								} else {
+									validList[index].numAdd = false;
+								}
+								if (validList[index].attrStatus) {
+									validList[index].checked = true;
+									selectValue.push(validList[index].id);
+								} else {
+									validList[index].checked = false;
+								}
 							}
 						}
+						that.$set(that.cartList, 'valid', validList);
+						data.page += 1;
+						that.selectValue = selectValue;
+						let newArr = validList.filter(item => item.attrStatus);
+						that.isAllSelect = newArr.length == selectValue.length && newArr.length;
+						that.switchSelect();
 					}
-					that.$set(that.cartList, 'valid', validList);
-					that.loadend = loadend;
-					that.loadTitle = loadend ? '我也是有底线的' : '加载更多';
-					that.page = that.page + 1;
+
 					that.loading = false;
-					// that.goodsHidden = cartList.valid.length <= 0 ? false : true;
-					that.selectValue = selectValue;
-					let newArr = validList.filter(item => item.attrStatus);
-					that.isAllSelect = newArr.length == selectValue.length && newArr.length;
-					that.switchSelect();
-				}).catch(function(err) {
-					that.$util.Tips({
-						title: err
-					});
-					that.loading = false;
-					that.loadTitle = '加载更多';
-				})
+					that.canShow = true;
+					uni.hideLoading();
+				});
 			},
 			getInvalidList: function() {
 				let that = this;
@@ -780,9 +794,9 @@
 					that.$set(that.cartList, 'invalid', invalidList);
 					that.loadendInvalid = loadendInvalid;
 					that.loadTitleInvalid = loadendInvalid ? '我也是有底线的' : '加载更多';
-					
 					that.pageInvalid = that.pageInvalid + 1;
 					that.loadingInvalid = false;
+					//if(invalid.length===0) that.getHostProduct();
 				}).catch(res => {
 					that.loadingInvalid = false;
 					that.loadTitleInvalid = '加载更多';
@@ -813,10 +827,10 @@
 				let newValid = that.cartList.valid.map(item => {
 					if (that.footerswitch) {
 						if (item.attrStatus) {
-							if (item.checked) {	
+							if (item.checked) {
 								arr1.push(item.id);
 							}
-						} else{
+						} else {
 							item.checked = false;
 							arr2.push(item);
 						}
@@ -830,7 +844,7 @@
 				that.cartList.valid = newValid;
 				if (that.footerswitch) {
 					that.isAllSelect = newValid.length === arr1.length + arr2.length;
-				} else{
+				} else {
 					that.isAllSelect = newValid.length === arr1.length;
 				}
 				that.selectValue = arr1;
@@ -847,6 +861,7 @@
 						title: '清除成功'
 					});
 					that.$set(that.cartList, 'invalid', []);
+					that.getHostProduct();
 				}).catch(res => {
 
 				});
@@ -856,8 +871,6 @@
 			let that = this;
 			if (that.loadend) {
 				that.getInvalidList();
-			} else {
-				that.getCartList();
 			}
 			if (that.cartList.valid.length == 0 && that.cartList.invalid.length == 0 && this.hotPage != 1) {
 				that.getHostProduct();
@@ -867,16 +880,39 @@
 </script>
 
 <style scoped lang="scss">
+	.invalidClas {
+		position: relative;
+		z-index: 111;
+		top: -120rpx;
+	}
+
+	.invalidClasNO {
+		position: static;
+		margin-top: 15px;
+	}
+
+	.cartBox {
+		// background-color: #fff;
+	}
+
+	.shoppingCart {
+		/* #ifdef H5 */
+		// padding-bottom: 0;
+		// padding-bottom: constant(safe-area-inset-bottom);  
+		// padding-bottom: env(safe-area-inset-bottom);
+		/* #endif */
+	}
+
 	.shoppingCart .labelNav {
-		height: 76rpx;
-		padding: 0 30rpx;
+		height: 178rpx;
+		padding: 30rpx 30rpx 0 30rpx;
 		font-size: 22rpx;
-		color: #8c8c8c;
+		color: #fff;
 		position: fixed;
 		left: 0;
 		width: 100%;
 		box-sizing: border-box;
-		background-color: #f5f5f5;
+		background-color: $theme-color;
 		z-index: 5;
 		top: 0;
 	}
@@ -887,17 +923,20 @@
 	}
 
 	.shoppingCart .nav {
-		width: 100%;
-		height: 80rpx;
+		width: 92%;
+		height: 90rpx;
 		background-color: #fff;
-		padding: 0 30rpx;
+		padding: 0 24rpx;
+		-webkit-box-sizing: border-box;
 		box-sizing: border-box;
 		font-size: 28rpx;
 		color: #282828;
 		position: fixed;
-		left: 0;
-		z-index: 5;
-		top: 76rpx;
+		left: 30rpx;
+		z-index: 6;
+		top: 94rpx;
+		border-top-left-radius: 14rpx;
+		border-top-right-radius: 14rpx;
 	}
 
 	.shoppingCart .nav .num {
@@ -905,12 +944,8 @@
 	}
 
 	.shoppingCart .nav .administrate {
-		font-size: 26rpx;
-		color: #282828;
-		width: 110rpx;
-		height: 46rpx;
-		border-radius: 6rpx;
-		border: 1px solid #868686;
+		font-size: 28rpx;
+		color: #333333;
 	}
 
 	.shoppingCart .noCart {
@@ -931,17 +966,20 @@
 	}
 
 	.shoppingCart .list {
-		margin-top: 171rpx;
+		width: 100%;
+		margin-top: 178rpx;
+		overflow: hidden;
+		border-bottom-left-radius: 14rpx;
+		border-bottom-right-radius: 14rpx;
 	}
 
 	.shoppingCart .list .item {
-		padding: 25rpx 30rpx;
+		padding: 24rpx;
 		background-color: #fff;
-		margin-bottom: 15rpx;
 	}
 
 	.shoppingCart .list .item .picTxt {
-		width: 627rpx;
+		width: 582rpx;
 		position: relative;
 	}
 
@@ -957,7 +995,7 @@
 	}
 
 	.shoppingCart .list .item .picTxt .text {
-		width: 444rpx;
+		width: 396rpx;
 		font-size: 28rpx;
 		color: #282828;
 	}
@@ -983,14 +1021,15 @@
 
 	.shoppingCart .list .item .picTxt .text .infor {
 		font-size: 24rpx;
-		color: #868686;
+		color: #999999;
 		margin-top: 16rpx;
 	}
 
 	.shoppingCart .list .item .picTxt .text .money {
 		font-size: 32rpx;
-		color: #282828;
+		color: #E93323;
 		margin-top: 28rpx;
+		font-weight: 600;
 	}
 
 	.shoppingCart .list .item .picTxt .carnum {
@@ -1005,7 +1044,7 @@
 		width: 66rpx;
 		text-align: center;
 		height: 100%;
-		line-height: 40rpx;
+		line-height: 44rpx;
 		font-size: 28rpx;
 		color: #a4a4a4;
 	}
@@ -1013,6 +1052,9 @@
 	.shoppingCart .list .item .picTxt .carnum .reduce {
 		border-right: 0;
 		border-radius: 3rpx 0 0 3rpx;
+		border-radius: 22rpx 0rpx 0rpx 22rpx;
+		font-size: 34rpx;
+		line-height: 40rpx;
 	}
 
 	.shoppingCart .list .item .picTxt .carnum .reduce.on {
@@ -1023,6 +1065,9 @@
 	.shoppingCart .list .item .picTxt .carnum .plus {
 		border-left: 0;
 		border-radius: 0 3rpx 3rpx 0;
+		border-radius: 0rpx 22rpx 22rpx 0rpx;
+		font-size: 34rpx;
+		line-height: 40rpx;
 	}
 
 	.shoppingCart .list .item .picTxt .carnum .num {
@@ -1031,15 +1076,20 @@
 
 	.shoppingCart .invalidGoods {
 		background-color: #fff;
+		margin-top: 30rpx;
+		/* #ifdef MP */
+		margin-top: 140rpx;
+		/* #endif */
+
 	}
 
 	.shoppingCart .invalidGoods .goodsNav {
 		width: 100%;
-		height: 66rpx;
-		padding: 0 30rpx;
+		height: 90rpx;
+		padding: 0 24rpx;
 		box-sizing: border-box;
 		font-size: 28rpx;
-		color: #282828;
+		color: #333333;
 	}
 
 	.shoppingCart .invalidGoods .goodsNav .iconfont {
@@ -1050,35 +1100,36 @@
 
 	.shoppingCart .invalidGoods .goodsNav .del {
 		font-size: 26rpx;
-		color: #999;
+		color: #333;
 	}
 
 	.shoppingCart .invalidGoods .goodsNav .del .icon-shanchu1 {
-		color: #999;
+		color: #333;
 		font-size: 33rpx;
 		vertical-align: -2rpx;
 		margin-right: 8rpx;
 	}
 
 	.shoppingCart .invalidGoods .goodsList .item {
-		padding: 20rpx 30rpx;
-		border-top: 1rpx solid #f5f5f5;
+		padding: 24rpx;
+	}
+
+	.shoppingCart .invalidGoods .goodsList .picTxt {
+		width: 576rpx;
 	}
 
 	.shoppingCart .invalidGoods .goodsList .item .invalid {
 		font-size: 22rpx;
-		color: #fff;
-		width: 70rpx;
+		color: #CCCCCC;
 		height: 36rpx;
-		background-color: #aaa;
 		border-radius: 3rpx;
 		text-align: center;
 		line-height: 36rpx;
 	}
 
 	.shoppingCart .invalidGoods .goodsList .item .pictrue {
-		width: 140rpx;
-		height: 140rpx;
+		width: 160rpx;
+		height: 160rpx;
 	}
 
 	.shoppingCart .invalidGoods .goodsList .item .pictrue image {
@@ -1088,7 +1139,7 @@
 	}
 
 	.shoppingCart .invalidGoods .goodsList .item .text {
-		width: 433rpx;
+		width: 396rpx;
 		font-size: 28rpx;
 		color: #999;
 		height: 140rpx;
@@ -1107,35 +1158,44 @@
 		color: #bbb;
 	}
 
-	.shoppingCart .footer {
+	.footer {
 		z-index: 9;
 		width: 100%;
-		height: 96rpx;
-		background-color: #fafafa;
+		height: 100rpx;
+		background-color: #fff;
 		position: fixed;
-		padding: 0 30rpx;
+		padding: 0 24rpx;
 		box-sizing: border-box;
 		border-top: 1rpx solid #eee;
-		// 
+		// border-bottom: 1px solid #EEEEEE;
+		/* #ifdef H5 */
+		bottom: 98rpx;
+		/* #endif */
+		/* #ifdef MP */
 		bottom: 0;
-		// 
-		// #ifndef MP
-		bottom: 50px;
-		// #endif
+		/* #endif */
+		/* #ifndef MP */
+		// bottom: 98rpx;
+		// bottom: calc(98rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		// bottom: calc(98rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
+		/* #endif */
 	}
 
-	.shoppingCart .footer .checkAll {
+	.footer .checkAll {
 		font-size: 28rpx;
 		color: #282828;
-		margin-left: 16rpx;
+		margin-left: 14rpx;
 	}
 
-	// .shoppingCart .footer checkbox .wx-checkbox-input{background-color:#fafafa;}
-	.shoppingCart .footer .money {
+	.footer .money {
 		font-size: 30rpx;
+
+		.font-color {
+			font-weight: 600;
+		}
 	}
 
-	.shoppingCart .footer .placeOrder {
+	.footer .placeOrder {
 		color: #fff;
 		font-size: 30rpx;
 		width: 226rpx;
@@ -1146,7 +1206,7 @@
 		margin-left: 22rpx;
 	}
 
-	.shoppingCart .footer .button .bnt {
+	.footer .button .bnt {
 		font-size: 28rpx;
 		color: #999;
 		border-radius: 50rpx;
@@ -1157,7 +1217,11 @@
 		line-height: 60rpx;
 	}
 
-	.shoppingCart .footer .button form~form {
+	.footer .button form~form {
 		margin-left: 17rpx;
+	}
+
+	.uni-p-b-96 {
+		height: 96rpx;
 	}
 </style>

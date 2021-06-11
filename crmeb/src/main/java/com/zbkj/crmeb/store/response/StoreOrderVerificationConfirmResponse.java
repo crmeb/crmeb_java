@@ -1,10 +1,7 @@
 package com.zbkj.crmeb.store.response;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.zbkj.crmeb.store.model.StoreOrderInfo;
-import com.zbkj.crmeb.store.vo.StoreOrderInfoVo;
+import com.zbkj.crmeb.store.vo.StoreOrderInfoOldVo;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -184,5 +181,5 @@ public class StoreOrderVerificationConfirmResponse {
     private Boolean isSystemDel;
 
     @ApiModelProperty(value = "订单详情")
-    private List<StoreOrderInfoVo> storeOrderInfoVos;
+    private List<StoreOrderInfoOldVo> storeOrderInfoVos;
 }
