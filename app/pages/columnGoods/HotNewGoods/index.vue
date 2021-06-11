@@ -63,7 +63,6 @@ export default {
       if (this.type === "1") {
         this.name = "精品推荐";
         this.icon = "icon-jingpintuijian";
-        // document.title = "精品推荐";
 				uni.setNavigationBarTitle({
 					title:"精品推荐"
 				})

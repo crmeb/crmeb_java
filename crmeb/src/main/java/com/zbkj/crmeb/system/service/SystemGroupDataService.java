@@ -3,7 +3,6 @@ package com.zbkj.crmeb.system.service;
 import com.common.PageParamRequest;
 import com.zbkj.crmeb.system.model.SystemGroupData;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.zbkj.crmeb.system.request.SystemFormCheckRequest;
 import com.zbkj.crmeb.system.request.SystemGroupDataRequest;
 import com.zbkj.crmeb.system.request.SystemGroupDataSearchRequest;
 
@@ -35,4 +34,10 @@ public interface SystemGroupDataService extends IService<SystemGroupData> {
     List<HashMap<String, Object>> getListMapByGid(Integer gid);
 
     <T> T getNormalInfo(Integer groupDataId, Class<T> cls);
+
+    /**
+     * 获取个人中心菜单
+     * @return HashMap<String, Object>
+     */
+    HashMap<String, Object> getMenuUser();
 }

@@ -151,4 +151,14 @@ public interface UserBillService extends IService<UserBill> {
      * @return
      */
     PageInfo<UserBill> nowMoneyBillRecord(Integer uid, String type, PageParamRequest pageRequest);
+
+    /**
+     * 获取H5列表
+     *
+     * @param userId   Integer 用户uid
+     * @param category String 类型
+     * @param pageParamRequest 分页类型
+     * @return List<UserBill>
+     */
+    List<UserBill> getH5List(Integer userId, String category, PageParamRequest pageParamRequest);
 }

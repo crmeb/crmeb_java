@@ -4,13 +4,14 @@ import store from './store'
 import Cache from './utils/cache'
 import util from 'utils/util'
 import configs from './config/app.js'
-
+import * as Order from './libs/order';
 
 Vue.prototype.$util = util;
 Vue.prototype.$config = configs;
 Vue.prototype.$Cache = Cache;
 Vue.prototype.$eventHub = new Vue();
 Vue.config.productionTip = false
+Vue.prototype.$Order = Order;
 
 // #ifdef H5
 import { parseQuery } from "./utils";
@@ -46,7 +47,7 @@ if (vconsole !== undefined && vconsole === md5Crmeb) {
 	let vConsole = new VConsole();
 }
 
-Auth.isWeixin() && Auth.oAuth();
+// Auth.isWeixin() && Auth.oAuth();
 
 // #endif
 

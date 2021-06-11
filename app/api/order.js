@@ -4,10 +4,8 @@ import request from "@/utils/request.js";
  * 获取购物车列表
  * @param numType boolean true 购物车数量,false=购物车产品数量
  */
-export function getCartCounts(numType) {
-	return request.get("cart/count", {
-		numType: numType === undefined ? true : numType
-	});
+export function getCartCounts(numType,type) {
+	return request.get("cart/count?numType=" + numType + "&type=" + type);
 }
 /**
  * 获取购物车列表
@@ -184,8 +182,8 @@ export function orderConfirm(cartId, isNew, addAgain,secKill,combination,bargain
  * @param string price
  * 
  */
-export function getCouponsOrderPrice(data) {
-	return request.get('coupons/order', data)
+export function getCouponsOrderPrice(preOrderNo) {
+	return request.get(`coupons/order/${preOrderNo}`)
 }
 
 /**
@@ -194,8 +192,8 @@ export function getCouponsOrderPrice(data) {
  * @param object data
  * 
  */
-export function orderCreate(key, data) {
-	return request.post('order/create/' + key, data);
+export function orderCreate(data) {
+	return request.post('order/create', data);
 }
 
 /**
@@ -204,8 +202,8 @@ export function orderCreate(key, data) {
  * @param data
  * @returns {*}
  */
-export function postOrderComputed(key, data) {
-	return request.post("order/computed/" + key, data);
+export function postOrderComputed(data) {
+	return request.post("order/computed/price", data);
 }
 
 /**
@@ -229,5 +227,29 @@ export function wechatOrderPay(data) {
  * @param object data
  */
 export function wechatQueryPayResult(data) {
-	return request.get('pay/queryPayResult', data);
+	return request.get('pay/queryPayResult?orderNo=' + data);
+}
+
+/**
+ * 申请退款商品详情
+ * @param object data
+ */
+export function applyRefund(orderId) {
+	return request.get(`order/apply/refund/${orderId}`);
+}
+
+/**
+ * 预下单
+ * @param object data
+ */
+export function preOrderApi(data) {
+	return request.post(`order/pre/order`, data);
+}
+
+/**
+ * 加载预下单
+ * @param object preOrderNo
+ */
+export function loadPreOrderApi(preOrderNo) {
+	return request.get(`order/load/pre/${preOrderNo}`);
 }

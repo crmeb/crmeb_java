@@ -51,7 +51,7 @@
                 >
                   <div class="list-goods-list-item-title" :class="{active:index === current}">¥ <i>{{ item.price }}</i></div>
                   <div class="list-goods-list-item-price" :class="{active:index === current}">
-                    <span>短信条数: {{ item.num }}</span>
+                    <span>{{tableFrom.type | onePassTypeFilter}}条数: {{ item.num }}</span>
                   </div>
                 </div>
               </el-col>

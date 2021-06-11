@@ -273,13 +273,9 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
                 MyRecord record = new MyRecord();
                 record.set("orderNo", storeOrder.getOrderId());
                 record.set("proName", storeCombination.getTitle());
+                record.set("payType", storeOrder.getPayType());
+                record.set("isChannel", storeOrder.getIsChannel());
                 pushMessageOrder(record, tempUser);
-//                map.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "恭喜您拼团成功！我们将尽快为您发货。");
-//                map.put("keyword1", storeOrder.getOrderId());
-//                map.put("keyword2", storeCombination.getTitle());
-//                map.put(Constants.WE_CHAT_TEMP_KEY_END, "感谢你的使用！");
-//
-//                templateMessageService.push(Constants.WE_CHAT_TEMP_KEY_COMBINATION_SUCCESS, map, storeOrder.getUid(), Constants.PAY_TYPE_WE_CHAT_FROM_PUBLIC);
             });
         }
     }
@@ -290,13 +286,17 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
      * @param user 拼团用户
      */
     private void pushMessageOrder(MyRecord record, User user) {
-        if (user.getUserType().equals(UserConstants.USER_TYPE_H5)) {
-            return;
+        if (!record.getStr("payType").equals(Constants.PAY_TYPE_WE_CHAT)) {
+            return ;
         }
+        if (record.getInt("isChannel").equals(2)) {
+            return ;
+        }
+
         UserToken userToken;
         HashMap<String, String> temMap = new HashMap<>();
         // 公众号
-        if (user.getUserType().equals(UserConstants.USER_TYPE_WECHAT)) {
+        if (record.getInt("isChannel").equals(Constants.ORDER_PAY_CHANNEL_PUBLIC)) {
             userToken = userTokenService.getTokenByUserId(user.getUid(), UserConstants.USER_TOKEN_TYPE_WECHAT);
             if (ObjectUtil.isNull(userToken)) {
                 return ;
@@ -353,6 +353,45 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
     public StorePink getByOrderId(String orderId) {
         LambdaQueryWrapper<StorePink> lqw = new LambdaQueryWrapper<>();
         lqw.eq(StorePink::getOrderId, orderId);
+        return dao.selectOne(lqw);
+    }
+
+    /**
+     * 获取最后3个拼团信息（不同用户）
+     * @return List
+     */
+    @Override
+    public List<StorePink> findSizePink(Integer size) {
+        LambdaQueryWrapper<StorePink> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StorePink::getIsRefund, false);
+        lqw.in(StorePink::getStatus, 1, 2);
+        lqw.groupBy(StorePink::getUid);
+        lqw.orderByDesc(StorePink::getId);
+        lqw.last(" limit " + size);
+        return dao.selectList(lqw);
+    }
+
+    /**
+     * 获取拼团参与总人数
+     * @return Integer
+     */
+    @Override
+    public Integer getTotalPeople() {
+        LambdaQueryWrapper<StorePink> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StorePink::getIsRefund, false);
+        lqw.in(StorePink::getStatus, 1, 2);
+        return dao.selectCount(lqw);
+    }
+
+    /**
+     * 获取拼团详情
+     * @return StorePink
+     */
+    @Override
+    public StorePink getByUidAndKid(Integer uid, Integer kid) {
+        LambdaQueryWrapper<StorePink> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StorePink::getUid, uid);
+        lqw.in(StorePink::getKId, kid);
         return dao.selectOne(lqw);
     }
 

@@ -26,13 +26,8 @@ import java.math.BigDecimal;
 @Accessors(chain = true)
 @ApiModel(value="StoreOrderTopItemResponse对象", description="订单九宫格数据")
 public class StoreOrderTopItemResponse implements Serializable {
-    public StoreOrderTopItemResponse() {}
-    public StoreOrderTopItemResponse(Integer count, BigDecimal amount, BigDecimal weChatAmount, BigDecimal yueAmount) {
-        this.count = count;
-        this.amount = amount;
-        this.weChatAmount = weChatAmount;
-        this.yueAmount = yueAmount;
-    }
+
+    private static final long serialVersionUID = -7583407020447771557L;
 
     @ApiModelProperty(value = "订单数量")
     private Integer count;

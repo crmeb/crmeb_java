@@ -2,7 +2,7 @@
 server:
   port: 20001
   domain: #配合swagger使用 # 待部署域名
-  version: CRMEB-JAVA-v1.3.3 # 当前代码版本
+  version: CRMEB-JAVA-KY-v1.3.3.1 # 当前代码版本
   wechat-api-url:
   asyncConfig: false
   asyncWeChatProgramTempList: false
@@ -15,13 +15,13 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/crmeb_java?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
-    username: root
-    password: password
+    url: jdbc:mysql://127.0.0.1:3306/crmeb_java_beta?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
+    username: roor
+    password: 123456
   redis:
     host: 127.0.0.1 #地址
     port: 6379 #端口
-    password: password
+    password: 123456
     timeout: 1000 # 连接超时时间（毫秒）
     database: 0 #默认数据库
     jedis:

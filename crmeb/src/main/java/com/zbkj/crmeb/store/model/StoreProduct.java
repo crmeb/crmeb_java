@@ -2,10 +2,8 @@ package com.zbkj.crmeb.store.model;
 
 import java.math.BigDecimal;
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
 
 import io.swagger.annotations.ApiModel;
@@ -160,4 +158,7 @@ public class StoreProduct implements Serializable {
     @ApiModelProperty(value = "活动显示排序0=默认，1=秒杀，2=砍价，3=拼团")
     private String activity;
 
+    @ApiModelProperty(value = "商品详情")
+    @TableField(exist = false)
+    private String content;
 }

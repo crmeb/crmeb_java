@@ -21,7 +21,7 @@
 			</view>
 		</view>
 		<view class='noCommodity'>
-			<view class='pictrue'  v-if="bastList.length == 0">
+			<view class='pictrue'  v-if="bastList.length == 0 && isbastList">
 				<image src='../../static/images/noSearch.png'></image>
 			</view>
 			<recommend :hostProduct='hostProduct' v-if="bastList.length == 0"></recommend>
@@ -56,7 +56,8 @@
 				loadend: false,
 				loadTitle: '加载更多',
 				hotPage:1,
-				isScroll:true
+				isScroll:true,
+				isbastList: false
 			};
 		},
 		onShow: function() {
@@ -97,6 +98,7 @@
 					that.loadend = loadend;
 					that.loadTitle = loadend ? "😕人家是有底线的~~" : "加载更多";
 					that.page = that.page + 1;
+					that.isbastList = true;
 				}).catch(err => {
 					that.loading = false,
 					that.loadTitle = '加载更多'
@@ -153,10 +155,11 @@
 
 	.searchGood .search {
 		padding-left: 30rpx;
+		background-color: #fff !important;
 	}
 
 	.searchGood .search {
-		margin-top: 20rpx;
+		padding-top: 20rpx;
 	}
 
 	.searchGood .search .input {
@@ -170,7 +173,7 @@
 
 	.searchGood .search .input input {
 		width: 472rpx;
-		font-size: 28rpx;
+		font-size: 26rpx;
 	}
 
 	.searchGood .search .input .placeholder {
@@ -206,7 +209,7 @@
 		color: #454545;
 		padding: 0 21rpx;
 		height: 60rpx;
-		border-radius: 3rpx;
+		border-radius: 30rpx;
 		line-height: 60rpx;
 		border: 1rpx solid #aaa;
 		margin: 0 0 20rpx 20rpx;

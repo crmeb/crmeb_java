@@ -216,17 +216,9 @@ public class StoreSeckillResponse {
     @ApiModelProperty(value = "已抢百分比")
     private Integer percent;
 
-//    @ApiModelProperty(value = "收藏数量")
-//    private Integer collectCount;
-//
-//    @ApiModelProperty(value = "优惠券")
-//    private List<StoreCoupon> coupons;
-//
-//    @ApiModelProperty(value = "优惠券Ids")
-//    private List<Integer> couponIds;
-    /////////////////////////////////////////// 自定义
-//    @JsonIgnore
-    private Integer currentTimeId; // 当前正在秒杀的timeId
+    @ApiModelProperty(value = "当前正在秒杀的timeId")
+    private Integer currentTimeId;
 
-    private String currentTime; // 当前参与的秒杀的时间段
+    @ApiModelProperty(value = "当前参与的秒杀的时间段")
+    private String currentTime;
 }

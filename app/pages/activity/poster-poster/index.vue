@@ -2,9 +2,6 @@
 	<view>
 		<view class='poster-poster'>
 			<view class='tip'><text class='iconfont icon-shuoming'></text>提示：点击图片即可保存至手机相册 </view>
-			<!-- <view class='pictrue'>
-				<image :src='image' mode="widthFix"></image>
-			</view> -->
 			<view class='pictrue' v-if="canvasStatus">
 				<image :src='imagePath'></image>
 			</view>

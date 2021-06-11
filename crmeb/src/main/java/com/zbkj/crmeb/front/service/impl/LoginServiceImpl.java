@@ -2,8 +2,6 @@ package com.zbkj.crmeb.front.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.constants.Constants;
 import com.constants.SmsConstants;
 import com.exception.CrmebException;
@@ -14,10 +12,8 @@ import com.zbkj.crmeb.front.request.LoginMobileRequest;
 import com.zbkj.crmeb.front.request.LoginRequest;
 import com.zbkj.crmeb.front.response.LoginResponse;
 import com.zbkj.crmeb.front.service.LoginService;
-import com.zbkj.crmeb.front.utils.userUtil;
 import com.zbkj.crmeb.user.model.User;
 import com.zbkj.crmeb.user.service.UserService;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +34,6 @@ import java.util.Optional;
  * | Author: CRMEB Team <admin@crmeb.com>
  * +----------------------------------------------------------------------
  */
-@Slf4j
 @Service
 public class LoginServiceImpl implements LoginService {
 
@@ -53,114 +48,109 @@ public class LoginServiceImpl implements LoginService {
     @Autowired
     private RedisUtil redisUtil;
 
-    @Autowired
-    private userUtil userUtil;
-
     /**
      * 账号密码登录
-     * @return
+     *
+     * @return LoginResponse
      */
     @Override
     public LoginResponse login(LoginRequest loginRequest) throws Exception {
-        log.info("移动端登录loginRequest:" + JSON.toJSONString(loginRequest));
-        User user = userService.getUserByAccount(loginRequest.getPhone());
+        User user = userService.getByPhone(loginRequest.getPhone());
         if (ObjectUtil.isNull(user)) {
             throw new CrmebException("此账号未注册");
         }
-        if(!user.getStatus()){
+        if (!user.getStatus()) {
             throw new CrmebException("此账号被禁用");
         }
 
         // 校验密码
         String password = CrmebUtil.encryptPassword(loginRequest.getPassword(), loginRequest.getPhone());
-        if(!user.getPwd().equals(password)){
+        if (!user.getPwd().equals(password)) {
             throw new CrmebException("密码错误");
         }
 
         LoginResponse loginResponse = new LoginResponse();
         String token = userService.token(user);
         loginResponse.setToken(token);
-        user.setPwd(null);
 
         //绑定推广关系
         if (loginRequest.getSpreadPid() > 0) {
-            userUtil.bindSpread(user, loginRequest.getSpreadPid());
-            log.info(StrUtil.format("绑定推广关系成功:user={},loginRequest={}",JSON.toJSONString(user),JSON.toJSONString(loginRequest)));
+            bindSpread(user, loginRequest.getSpreadPid());
         }
 
         // 记录最后一次登录时间
         user.setLastLoginTime(DateUtil.nowDateTime());
         userService.updateById(user);
 
-        loginResponse.setUser(user);
-        long time = Constants.TOKEN_EXPRESS_MINUTES * 60;
-        loginResponse.setExpiresTime(DateUtil.addSecond(DateUtil.nowDateTime(), (int)time));
+        loginResponse.setUid(user.getUid());
+        loginResponse.setNikeName(user.getNickname());
+        loginResponse.setPhone(user.getPhone());
         return loginResponse;
     }
 
     /**
      * 手机号验证码登录
+     *
      * @param loginRequest 登录请求信息
-     * @param clientIp     ip
      * @return LoginResponse
      */
     @Override
-    public LoginResponse phoneLogin(LoginMobileRequest loginRequest, String clientIp) throws Exception {
+    public LoginResponse phoneLogin(LoginMobileRequest loginRequest) throws Exception {
         //检测验证码
-        userUtil.checkValidateCode(loginRequest.getPhone(), loginRequest.getValidateCode());
-
+        checkValidateCode(loginRequest.getPhone(), loginRequest.getCaptcha());
+        Integer spreadPid = Optional.ofNullable(loginRequest.getSpreadPid()).orElse(0);
         //查询手机号信息
-        User user = userService.getUserByAccount(loginRequest.getPhone());
-        Integer spread = Optional.ofNullable(loginRequest.getSpread()).orElse(0);
-        if(ObjectUtil.isNull(user)){
-            //此用户不存在，走新用户注册流程
-            user = userService.registerPhone(loginRequest.getPhone(), spread, clientIp);
+        User user = userService.getByPhone(loginRequest.getPhone());
+        if (ObjectUtil.isNull(user)) {// 此用户不存在，走新用户注册流程
+            user = userService.registerPhone(loginRequest.getPhone(), spreadPid);
         } else {
-            // 正常流程
-            // 绑定推广关系
-            if (spread > 0) {
-                userUtil.bindSpread(user, spread);
+            if (!user.getStatus()) {
+                throw new CrmebException("当前账户已禁用，请联系管理员！");
+            }
+            if (user.getSpreadUid().equals(0) && spreadPid > 0) {
+                // 绑定推广关系
+                bindSpread(user, spreadPid);
+            }
+            // 记录最后一次登录时间
+            user.setLastLoginTime(DateUtil.nowDateTime());
+            boolean b = userService.updateById(user);
+            if (!b) {
+                logger.error("用户登录时，记录最后一次登录时间出错,uid = " + user.getUid());
             }
         }
-
-        // 记录最后一次登录时间
-        user.setLastLoginTime(DateUtil.nowDateTime());
-        userService.updateById(user);
 
         //生成token
         LoginResponse loginResponse = new LoginResponse();
         String token = userService.token(user);
         loginResponse.setToken(token);
-        user.setPwd(null);
-
-        loginResponse.setUser(user);
-        long time = Constants.TOKEN_EXPRESS_MINUTES * 60;
-        loginResponse.setExpiresTime(DateUtil.addSecond(DateUtil.nowDateTime(), (int)time));
+        loginResponse.setUid(user.getUid());
+        loginResponse.setNikeName(user.getNickname());
+        loginResponse.setPhone(user.getPhone());
         return loginResponse;
     }
 
     /**
      * 检测手机验证码
+     *
      * @param phone 手机号
-     * @param code 验证码
+     * @param code  验证码
      */
     private void checkValidateCode(String phone, String code) {
         Object validateCode = redisUtil.get(SmsConstants.SMS_VALIDATE_PHONE + phone);
-        if(validateCode == null){
+        if (ObjectUtil.isNull(validateCode)) {
             throw new CrmebException("验证码已过期");
         }
-
-        if(!validateCode.toString().equals(code)){
+        if (!validateCode.toString().equals(code)) {
             throw new CrmebException("验证码错误");
         }
-
         //删除验证码
         redisUtil.remove(SmsConstants.SMS_VALIDATE_PHONE + phone);
     }
 
     /**
      * 绑定分销关系
-     * @param user User 用户user类
+     *
+     * @param user      User 用户user类
      * @param spreadUid Integer 推广人id
      * @return Boolean
      * 1.判断分销功能是否启用
@@ -170,11 +160,10 @@ public class LoginServiceImpl implements LoginService {
      * 5.满额分销，同上
      * 6.人人分销，可以直接绑定
      */
-    private Boolean bindSpread(User user, Integer spreadUid) {
+    @Override
+    public Boolean bindSpread(User user, Integer spreadUid) {
         Boolean checkBingSpread = userService.checkBingSpread(user, spreadUid, "old");
         if (!checkBingSpread) return false;
-
-        Integer oldSprUid = user.getSpreadUid();
 
         user.setSpreadUid(spreadUid);
         user.setSpreadTime(DateUtil.nowDateTime());
@@ -182,9 +171,6 @@ public class LoginServiceImpl implements LoginService {
         Boolean execute = transactionTemplate.execute(e -> {
             userService.updateById(user);
             userService.updateSpreadCountByUid(spreadUid, "add");
-            if (oldSprUid > 0) {
-                userService.updateSpreadCountByUid(oldSprUid, "sub");
-            }
             return Boolean.TRUE;
         });
         if (!execute) {

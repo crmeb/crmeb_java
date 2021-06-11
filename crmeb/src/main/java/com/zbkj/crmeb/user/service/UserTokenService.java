@@ -19,7 +19,7 @@ import java.util.List;
  */
 public interface UserTokenService extends IService<UserToken> {
 
-    UserToken checkToken(String token, int type);
+    UserToken getByOpenidAndType(String token, int type);
 
     void bind(String openId, int type, Integer uid);
 

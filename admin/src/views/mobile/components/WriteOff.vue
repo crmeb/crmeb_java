@@ -1,7 +1,7 @@
 <template>
   <div v-show="iShidden === false">
     <div class="WriteOff">
-      <div class="pictrue"><img :src="orderInfo.storeOrderInfoVos[0].info.productInfo.image" /></div>
+      <div class="pictrue"><img :src="orderInfo.storeOrderInfoVos[0].info.image" /></div>
       <div class="num acea-row row-center-wrapper">
         {{ orderInfo.orderId }}
         <div class="views" @click="toDetail(orderInfo)">
@@ -37,7 +37,7 @@ export default {
   methods: {
     toDetail: function(item) {
       this.$router.push({
-        path: "/javaMobile/orderDetail/" + item.id + "/looks"
+        path: "/javaMobile/orderDetail/" + item.orderId + "/looks"
       });
     },
     cancel: function() {

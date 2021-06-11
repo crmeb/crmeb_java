@@ -1,32 +1,35 @@
 <template>
 	<view>
-		<view class='return-list' v-if="orderList.length">
-			<view class='goodWrapper' v-for="(item,index) in orderList" :key="index" @click='goOrderDetails(item.storeOrder.orderId)'>
-				<view class='iconfont icon-tuikuanzhong powder' v-if="item.status.type==-1"></view>
-				<view class='iconfont icon-yituikuan' v-if="item.status.type==-2"></view>
-				<view class='orderNum'>订单号：{{item.storeOrder.orderId}}</view>
-				<view class='item acea-row row-between-wrapper' v-for="(item,index) in item.cartInfo" :key="index">
+		<view class='return-list pad30' v-if="orderList.length">
+			<view class='goodWrapper borRadius14' v-for="(item,index) in orderList" :key="index" @click='goOrderDetails(item.orderId)'>
+				<view class='iconfont icon-tuikuanzhong powder' v-if="item.refundStatus==1 || item.refundStatus==3"></view>
+				<view class='iconfont icon-yituikuan' v-if="item.refundStatus==2"></view>
+				<view class='orderNum'>订单号：{{item.orderId}}</view>
+				<view class='item acea-row row-between-wrapper' v-for="(items,index) in item.orderInfoList" :key="index">
 					<view class='pictrue'>
-						<image :src='item.info.productInfo.image'></image>
+						<image :src='items.image'></image>
 					</view>
 					<view class='text'>
 						<view class='acea-row row-between-wrapper'>
-							<view class='name line1'>{{item.info.productInfo.storeName}}</view>
-							<view class='num'>x {{item.info.cartNum}}</view>
+							<view class='name line1'>{{items.storeName}}</view>
+							<view class='num'>x {{items.cartNum}}</view>
 						</view>
-						<view class='attr line1' v-if="item.info.productInfo.attrInfo">{{item.info.productInfo.attrInfo.suk}}</view>
-						<view class='attr line1' v-else>{{item.info.productInfo.storeName}}</view>
-						<view class='money'>￥{{item.info.productInfo.price}}</view>
+						<view class='attr line1' v-if="items.suk">{{items.suk}}</view>
+						<view class='attr line1' v-else>{{items.storeName}}</view>
+						<view class='money'>￥{{items.price}}</view>
 					</view>
 				</view>
-				<view class='totalSum'>共{{item.cartInfo.length || 0}}件商品，总金额 <text class='font-color price'>￥{{item.storeOrder.payPrice}}</text></view>
+				<view class='totalSum'>共{{item.totalNum || 0}}件商品，总金额 <text class='font-color price'>￥{{item.payPrice}}</text></view>
 			</view>
 		</view>
-		<view class='loadingicon acea-row row-center-wrapper'>
+		<view class='loadingicon acea-row row-center-wrapper' v-if="orderList.length">
 			<text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>{{loadTitle}}
 		</view>
+		<view v-if="orderList.length == 0">
+			<emptyPage title="暂无订单~"></emptyPage>
+		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -34,6 +37,7 @@
 
 <script>
 	import home from '@/components/home';
+	import emptyPage from '@/components/emptyPage.vue'
 	import {
 		getOrderList
 	} from '@/api/order.js';
@@ -48,6 +52,7 @@
 	// #endif
 	export default {
 		components: {
+			emptyPage,
 			home,
 			// #ifdef MP
 			authorize
@@ -81,13 +86,7 @@
 			if (this.isLogin) {
 				this.getOrderList();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		/**
@@ -130,7 +129,7 @@
 					page: that.page,
 					limit: that.limit,
 				}).then(res => {
-					let list = res.data || [];
+					let list = res.data.list || [];
 					let loadend = list.length < that.limit;
 					that.orderList = that.$util.SplitArray(list, that.orderList);
 					that.$set(that,'orderList',that.orderList);
@@ -150,17 +149,17 @@
 <style lang="scss" scoped>
 	.return-list .goodWrapper {
 		background-color: #fff;
-		margin-top: 13rpx;
+		margin-top: 20rpx;
 		position: relative;
+		padding: 0rpx 24rpx;
 	}
 
 	.return-list .goodWrapper .orderNum {
-		padding: 0 30rpx;
 		border-bottom: 1px solid #eee;
 		height: 87rpx;
 		line-height: 87rpx;
 		font-size: 30rpx;
-		color: #282828;
+		color: #333333;
 	}
 
 	.return-list .goodWrapper .item {
@@ -183,7 +182,7 @@
 		position: absolute;
 		font-size: 109rpx;
 		top: 7rpx;
-		right: 30rpx;
+		right: 22rpx;
 		color: #ccc;
 	}
 

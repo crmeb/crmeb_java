@@ -3,6 +3,7 @@ package com.zbkj.crmeb.front.service;
 import com.zbkj.crmeb.front.request.LoginMobileRequest;
 import com.zbkj.crmeb.front.request.LoginRequest;
 import com.zbkj.crmeb.front.response.LoginResponse;
+import com.zbkj.crmeb.user.model.User;
 
 /**
  * 移动端登录服务类
@@ -27,5 +28,13 @@ public interface LoginService {
     /**
      * 手机号验证码登录
      */
-    LoginResponse phoneLogin(LoginMobileRequest loginRequest, String clientIp) throws Exception;
+    LoginResponse phoneLogin(LoginMobileRequest loginRequest) throws Exception;
+
+    /**
+     * 老绑定分销关系
+     * @param user User 用户user类
+     * @param spreadUid Integer 推广人id
+     * @return Boolean
+     */
+    Boolean bindSpread(User user, Integer spreadUid);
 }

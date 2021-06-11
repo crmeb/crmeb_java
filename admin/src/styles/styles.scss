@@ -89,6 +89,15 @@
   justify-content: space-around;
   -webkit-justify-content: space-around;
 }
+
+//登录页动画
+.index_bg {
+  width: 100%;
+  height: 100vh;
+  background: rgba(0, 0, 0, .6) !important;
+  z-index: 0 !important;
+}
+
 .divBox{
   padding: 20px;
   box-sizing: border-box;

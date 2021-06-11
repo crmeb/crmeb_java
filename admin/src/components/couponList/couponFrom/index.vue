@@ -6,7 +6,7 @@
       width="896px"
       :before-close="handleClose"
     >
-      <coupon-list v-if="visible" :handle="handle" :userIds="userIds" :couponData="coupons" @getCouponId="getCouponId" :keyNum="keyNum"></coupon-list>
+      <coupon-list v-if="visible" :handle="handle" :userIds="userIds" :couponData="coupons" @getCouponId="getCouponId" :keyNum="keyNum" :userType="userType"></coupon-list>
       <!--<upload-index v-if="visible" :isMore="isMore" @getImage="getImage" />-->
     </el-dialog>
   </div>
@@ -24,7 +24,8 @@
         handle: '',
         keyNum: 0,
         coupons: [],
-        userIds: ''
+        userIds: '',
+        userType: ''
       }
     },
     watch: {

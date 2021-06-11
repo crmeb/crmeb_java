@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.marketing.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
@@ -97,4 +98,8 @@ public class StoreCoupon implements Serializable {
 
     @ApiModelProperty(value = "更新时间")
     private Date updateTime;
+
+    @ApiModelProperty(value = "是否领取")
+    @TableField(exist = false)
+    private Boolean isGet = false;
 }

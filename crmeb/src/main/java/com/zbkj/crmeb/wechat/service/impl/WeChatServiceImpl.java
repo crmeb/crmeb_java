@@ -1,5 +1,7 @@
 package com.zbkj.crmeb.wechat.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.constants.Constants;
@@ -28,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -68,8 +71,6 @@ public class WeChatServiceImpl implements WeChatService {
 
     private String secret; //秘钥
 
-    private Long expires; //过期时间
-
     private String url; //url
 
     private String uuid; //uuid
@@ -85,9 +86,6 @@ public class WeChatServiceImpl implements WeChatService {
     private String programAppSecret; //小程序秘钥
 
     private Object programToken; //小程序token
-
-    private Long programExpires; //小程序过期时间
-
 
     @Value("${server.wechat-api-url}")
     private String weChartApiUrl;
@@ -164,7 +162,6 @@ public class WeChatServiceImpl implements WeChatService {
         }
     }
 
-
     /**
      * 获取token
      * @author Mr.Zhang
@@ -180,7 +177,6 @@ public class WeChatServiceImpl implements WeChatService {
         }
 
         this.token = data.getString("access_token");
-        this.expires = Long.valueOf(data.getString("expires_in"));
     }
 
     /**
@@ -216,7 +212,6 @@ public class WeChatServiceImpl implements WeChatService {
         }
 
         this.programToken = data.getString("access_token");
-        this.programExpires = Long.valueOf(data.getString("expires_in"));
     }
 
     /**
@@ -232,7 +227,6 @@ public class WeChatServiceImpl implements WeChatService {
         }
         return apiUrl;
     }
-
 
     /**
      * 设置url
@@ -292,7 +286,6 @@ public class WeChatServiceImpl implements WeChatService {
         }
     }
 
-
     /**
      * post 请求接口
      * @param url 请求url
@@ -340,6 +333,7 @@ public class WeChatServiceImpl implements WeChatService {
         try{
             byte[] bytes = restTemplateUtil.postJsonDataAndReturnBuffer(url, new JSONObject(data));
             String response = new String(bytes);
+            logger.info("微信生成二维码response = " + response);
             if(StringUtils.contains(response,"errcode")){
                 logger.error("微信生成二维码异常"+response);
                 throw new CrmebException("微信生成二维码异常");
@@ -349,9 +343,7 @@ public class WeChatServiceImpl implements WeChatService {
         }catch (Exception e){
             throw new CrmebException(e.getMessage());
         }
-
     }
-
 
     /**
      * get 请求接口
@@ -367,7 +359,6 @@ public class WeChatServiceImpl implements WeChatService {
         }catch (Exception e){
             throw new CrmebException(e.getMessage());
         }
-
     }
 
     /**
@@ -378,20 +369,15 @@ public class WeChatServiceImpl implements WeChatService {
      * @return JSONObject
      */
     private JSONObject checkResult(JSONObject result){
-
-        if(result.equals("")){
+        if(ObjectUtil.isNull(result)){
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-
-
         if(result.containsKey("errcode") && result.getString("errcode").equals("0")){
             return result;
         }
-
         if(result.containsKey("errmsg")){
             throw new CrmebException("微信接口调用失败：" + result.getString("errcode") + result.getString("errmsg"));
         }
-
         return result;
     }
 
@@ -599,19 +585,6 @@ public class WeChatServiceImpl implements WeChatService {
     }
 
     /**
-     * 获取授权页面跳转地址
-     * @author Mr.Zhang
-     * @since 2020-05-25
-     * @return String
-     */
-    @Override
-    public String getAuthorizeUrl() {
-        getAppInfo();
-        String redirectUri = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_SITE_URL) + WeChatConstants.WE_CHAT_AUTHORIZE_REDIRECT_URI_URL;
-        return WeChatConstants.WE_CHAT_AUTHORIZE_URL.replace("{$appId}", this.appId).replace("{$redirectUri}", redirectUri);
-    }
-
-    /**
      * 通过code获取获取公众号授权信息
      * @author Mr.Zhang
      * @since 2020-05-25
@@ -621,18 +594,30 @@ public class WeChatServiceImpl implements WeChatService {
     public WeChatAuthorizeLoginGetOpenIdResponse authorizeLogin(String code) {
         //通过code获取access_token
         try {
-            getAppInfo();
-
-            String url = getUrl() + WeChatConstants.WE_CHAT_AUTHORIZE_GET_OPEN_ID +
-                    "?appid=" + this.appId +
-                    "&secret=" + this.secret +
-                    "&code=" + code +
-                    "&grant_type=authorization_code";
+            String url = getWxOauth2Url(code);
             JSONObject result = get(url);
             return JSONObject.parseObject(result.toJSONString(), WeChatAuthorizeLoginGetOpenIdResponse.class);
         }catch (Exception e){
             throw new CrmebException(e.getMessage());
         }
+    }
+
+    /**
+     * 获取公众号获取授权信息url
+     * @param code code
+     * @return String
+     */
+    private String getWxOauth2Url(String code) {
+        String appId = systemConfigService.getValueByKey("wechat_appid");
+        if(StringUtils.isBlank(appId)){
+            throw new CrmebException("微信appId未设置");
+        }
+        String secret = systemConfigService.getValueByKey("wechat_appsecret");
+        if(StringUtils.isBlank(secret)){
+            throw new CrmebException("微信secret未设置");
+        }
+        return WeChatConstants.API_URL + WeChatConstants.WE_CHAT_AUTHORIZE_GET_OPEN_ID
+                + StrUtil.format("?appid={}&secret={}&code={}&grant_type=authorization_code", appId, secret, code);
     }
 
     /**
@@ -645,10 +630,18 @@ public class WeChatServiceImpl implements WeChatService {
     public WeChatProgramAuthorizeLoginGetOpenIdResponse programAuthorizeLogin(String code) {
         //通过code获取access_token
         try {
-            getProgramAppInfo();
-            String url = getUrl() + WeChatConstants.WE_CHAT_AUTHORIZE_PROGRAM_GET_OPEN_ID +
-                    "?appid=" + this.programAppId +
-                    "&secret=" + this.programAppSecret +
+            String programAppId = systemConfigService.getValueByKey("routine_appid");
+            if(StringUtils.isBlank(programAppId)){
+                throw new CrmebException("微信小程序appId未设置");
+            }
+            String programAppSecret = systemConfigService.getValueByKey("routine_appsecret");
+            if(StringUtils.isBlank(programAppSecret)){
+                throw new CrmebException("微信小程序secret未设置");
+            }
+
+            String url = WeChatConstants.API_URL + WeChatConstants.WE_CHAT_AUTHORIZE_PROGRAM_GET_OPEN_ID +
+                    "?appid=" + programAppId +
+                    "&secret=" + programAppSecret +
                     "&js_code=" + code +
                     "&grant_type=authorization_code";
             JSONObject result = get(url);
@@ -792,6 +785,11 @@ public class WeChatServiceImpl implements WeChatService {
         post(this.url, map);
     }
 
+    @Override
+    public String getRoutineAccessToken() {
+        setProgramToken();
+        return (String) this.programToken;
+    }
 
     /**
      * 获取微信用户个人信息
@@ -881,8 +879,8 @@ public class WeChatServiceImpl implements WeChatService {
             MessageDigest crypt = MessageDigest.getInstance("SHA-1");
             crypt.reset();
             try {
-                crypt.update(paramString.getBytes("UTF-8"));
-            } catch (UnsupportedEncodingException e) {
+                crypt.update(paramString.getBytes(StandardCharsets.UTF_8));
+            } catch (Exception e) {
                 throw new CrmebException("获取JS SDK配置失败" + e.getMessage());
             }
             this.signature = CrmebUtil.byteToHex(crypt.digest());

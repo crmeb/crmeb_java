@@ -8,7 +8,7 @@
       >
         <el-input v-model="editPram.name"  :maxlength="biztype.value === 1 ? 8 : 20" placeholder="分类名称" />
       </el-form-item>
-      <el-form-item label="URL" v-if="biztype.value!==1">
+      <el-form-item label="URL" v-if="biztype.value!==1 && biztype.value!==3">
         <el-input v-model="editPram.url" placeholder="URL" />
       </el-form-item>
       <el-form-item label="父级" v-if="biztype.value!==3">

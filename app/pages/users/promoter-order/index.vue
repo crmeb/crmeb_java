@@ -10,7 +10,7 @@
 					<view class='iconfont icon-2'></view>
 				</view>
 			</view>
-			<view class='list' v-if="recordList.length>0">
+			<view class='list pad30' v-if="recordList.length>0">
 				<block v-for="(item,index) in recordList" :key="index">
 					<view class='item'>
 						<view class='title acea-row row-column row-center'>
@@ -19,7 +19,7 @@
 						</view>
 						<view class='listn'>
 							<block v-for="(child,indexn) in item.child" :key="indexn">
-								<view class='itenm'>
+								<view class='itenm borRadius14'>
 									<view class='top acea-row row-between-wrapper'>
 										<view class='pictxt acea-row row-between-wrapper'>
 											<view class='pictrue'>
@@ -46,7 +46,7 @@
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 		<home></home>
 	</view>
@@ -92,13 +92,7 @@
 			if (this.isLogin) {
 				this.getRecordOrderList();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {
@@ -160,7 +154,6 @@
 <style scoped lang="scss">
 	.promoter-order .list .item .title {
 		height: 133rpx;
-		padding: 0 30rpx;
 		font-size: 26rpx;
 		color: #999;
 	}
@@ -176,12 +169,11 @@
 	}
 
 	.promoter-order .list .item .listn .itenm~.itenm {
-		margin-top: 12rpx;
+		margin-top: 20rpx;
 	}
 
 	.promoter-order .list .item .listn .itenm .top {
-		margin-left: 30rpx;
-		padding-right: 30rpx;
+		padding: 0 24rpx;
 		border-bottom: 1rpx solid #eee;
 		height: 100rpx;
 	}
@@ -215,7 +207,7 @@
 	}
 
 	.promoter-order .list .item .listn .itenm .bottom {
-		padding: 20rpx 30rpx;
+		padding: 20rpx 24rpx;
 		font-size: 28rpx;
 		color: #666;
 		line-height: 1.6;

@@ -1,12 +1,9 @@
 package com.zbkj.crmeb.bargain.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.common.PageParamRequest;
-import com.github.pagehelper.PageInfo;
 import com.zbkj.crmeb.bargain.model.StoreBargainUserHelp;
 import com.zbkj.crmeb.bargain.response.StoreBargainUserHelpResponse;
 import com.zbkj.crmeb.front.request.BargainFrontRequest;
-import com.zbkj.crmeb.front.response.BargainCountResponse;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,67 +23,70 @@ import java.util.Map;
  */
 public interface StoreBargainUserHelpService extends IService<StoreBargainUserHelp> {
 
+    /**
+     * 列表
+     * @param bargainUserId 砍价活动id
+     * @return List<StoreBargainUserHelpResponse>
+     */
     List<StoreBargainUserHelpResponse> getList(Integer bargainUserId);
 
     /**
      * 获取帮忙砍价好友数量
-     * @param bargainId
-     * @return
+     * @param bargainId 砍价商品Id
+     * @return Long
      */
     Long getHelpCountByBargainId(Integer bargainId);
 
     /**
      * 获取帮忙砍价好友数量
-     * @param bargainId
-     * @param bargainUid
-     * @return
+     * @param bargainId 砍价商品Id
+     * @param bargainUid 砍价用户uid
+     * @return Long
      */
     Long getHelpCountByBargainIdAndBargainUid(Integer bargainId, Integer bargainUid);
 
     /**
-     * H5 获取帮忙好友砍价数据
-     * @param bargainFrontRequest
-     * @return
-     */
-    BargainCountResponse getH5CountByBargainId(BargainFrontRequest bargainFrontRequest);
-
-    /**
-     * H5 帮忙好友砍价信息列表
-     * @param bargainFrontRequest
-     * @param pageParamRequest
-     * @return
-     */
-    PageInfo<StoreBargainUserHelpResponse> getHelpList(BargainFrontRequest bargainFrontRequest, PageParamRequest pageParamRequest);
-
-    /**
      * 砍价
-     * @param bargainFrontRequest
-     * @return
+     * @param bargainFrontRequest 砍价请求参数
+     * @return Map<String, Object>
      */
     Map<String, Object> help(BargainFrontRequest bargainFrontRequest);
-
-    /**
-     * 获取参与砍价人员数量
-     */
-    Long getHelpPeopleCount();
-
-    /**
-     * 获取参与砍价人员数量
-     */
-    Long getHelpPeopleCountByBargainId(Integer bargainId);
 
     /**
      * 获取用户还剩余的砍价金额
      * @param bargainId 砍价商品编号
      * @param bargainUserUid 砍价发起用户uid
-     * @return
+     * @return BigDecimal
      */
     BigDecimal getSurplusPrice(Integer bargainId, Integer bargainUserUid);
 
     /**
-     * 砍价发起用户信息
-     * @param bargainFrontRequest
-     * @return
+     * 获取参与砍价总人数（次）
+     * @return Integer
      */
-    Map<String, String> startUser(BargainFrontRequest bargainFrontRequest);
+    Integer getCount();
+
+    /**
+     * 获取好友助力列表
+     * @param bargainUserId 砍价用户表id
+     * @return List<StoreBargainUserHelp>
+     */
+    List<StoreBargainUserHelp> getHelpListByBargainUserId(Integer bargainUserId);
+
+    /**
+     * 是否帮砍过
+     * @param bargainUserId 用户砍价活动id
+     * @param uid 用户uid
+     * @return Boolean
+     */
+    Boolean getIsHelp(Integer bargainUserId, Integer uid);
+
+    /**
+     * 获取该砍价商品用户的帮砍次数
+     * @param bargainId 砍价商品id
+     * @param uid 用户uid
+     * @param bargainUserIdList 用户参与砍价活动id数组
+     * @return Integer
+     */
+    Integer getHelpCountByBargainIdAndUidInBUserId(Integer bargainId, Integer uid, List<Integer> bargainUserIdList);
 }

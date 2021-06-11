@@ -74,6 +74,12 @@ public class Constants {
     //用户登录方式 小程序
     public static final String USER_LOGIN_TYPE_PROGRAM = "routine";
 
+    // 用户登录方式 App
+    public static final String USER_LOGIN_TYPE_IOS_WX = "iosWx";
+    public static final String USER_LOGIN_TYPE_ANDROID_WX = "androidWx";
+
+    // 用户登录方式 App
+    public static final String USER_LOGIN_TYPE_IOS = "ios";
 
 
     //用户默认头像
@@ -180,6 +186,10 @@ public class Constants {
     public static final String CONFIG_KEY_PAY_ROUTINE_APP_SECRET = "pay_routine_appsecret"; //小程序秘钥
     public static final String CONFIG_KEY_PAY_ROUTINE_APP_KEY = "pay_routine_key"; //小程序支付key
 
+    public static final String CONFIG_KEY_PAY_WE_CHAT_APP_APP_ID = "pay_weixin_app_appid"; //公众号appId
+    public static final String CONFIG_KEY_PAY_WE_CHAT_APP_MCH_ID = "pay_weixin_app_mchid"; //公众号配的商户号
+    public static final String CONFIG_KEY_PAY_WE_CHAT_APP_APP_KEY = "pay_weixin_app_key"; //公众号支付key
+
     public static final String CONFIG_KEY_RECHARGE_MIN_AMOUNT = "store_user_min_recharge"; //最小充值金额
 //    public static final String CONFIG_KEY_PROGRAM_LOGO = "routine_logo"; //小程序logo
 //    public static final String CONFIG_KEY_PUBLIC_LOGO = "wechat_avatar"; //公众号logo
@@ -198,7 +208,8 @@ public class Constants {
     public static final String CONFIG_KEY_STORE_BROKERAGE_USER_EXTRACT_MIN_PRICE = "user_extract_min_price"; //提现最低金额
     public static final String CONFIG_KEY_STORE_BROKERAGE_MODEL = "store_brokerage_status"; //分销模式1-指定分销2-人人分销
     public static final String CONFIG_KEY_STORE_BROKERAGE_USER_EXTRACT_BANK = "user_extract_bank"; //提现银行卡
-    public static final String CONFIG_KEY_STORE_BROKERAGE_EXTRACT_TIME = "extract_time"; //冻结时间
+    public static final String CONFIG_KEY_STORE_BROKERAGE_EXTRACT_TIME = "extract_time"; //佣金冻结时间
+    public static final String CONFIG_KEY_STORE_INTEGRAL_EXTRACT_TIME = "freeze_integral_day"; //积分冻结时间
     public static final String CONFIG_KEY_STORE_BROKERAGE_PERSON_PRICE = "store_brokerage_price"; //人人分销满足金额
     public static final String CONFIG_KEY_STORE_BROKERAGE_IS_OPEN = "brokerage_func_status"; //分销启用
     public static final String CONFIG_KEY_STORE_BROKERAGE_BIND_TYPE = "brokerageBindind"; //分销关系绑定0-所有游湖，2-新用户
@@ -224,6 +235,9 @@ public class Constants {
     public static final int THIRD_LOGIN_TOKEN_TYPE_PROGRAM  = 2; //小程序
     public static final int THIRD_LOGIN_TOKEN_TYPE_UNION_ID  = 3; //unionid
     public static final int THIRD_ADMIN_LOGIN_TOKEN_TYPE_PUBLIC  = 4; //后台登录公众号
+    public static final int THIRD_LOGIN_TOKEN_TYPE_IOS_WX  = 5; //ios 微信
+    public static final int THIRD_LOGIN_TOKEN_TYPE_ANDROID_WX = 6; //android微信
+    public static final int THIRD_LOGIN_TOKEN_TYPE_IOS  = 7; //ios
 
 
     // 商品类型 活动类型 0=商品，1=秒杀，2=砍价，3=拼团 attrResult表用到
@@ -235,6 +249,8 @@ public class Constants {
     public static final String PRODUCT_TYPE_BARGAIN_STR = "砍价";
     public static final Integer PRODUCT_TYPE_PINGTUAN= 3;
     public static final String PRODUCT_TYPE_PINGTUAN_STR= "拼团";
+    public static final Integer PRODUCT_TYPE_COMPONENT= 4;
+    public static final String PRODUCT_TYPE_COMPONENT_STR= "组件";
     public static final Integer PRODUCT_TYPE_GROUP = 0;
 
 
@@ -260,6 +276,7 @@ public class Constants {
     public static final Integer GROUP_DATA_ID_INDEX_EX_BANNER = 70; //首页超值爆款
     public static final Integer GROUP_DATA_ID_INDEX_KEYWORDS = 71; //热门搜索
     public static final Integer GROUP_DATA_ID_ADMIN_LOGIN_BANNER_IMAGE_LIST = 72; //后台登录页面轮播图
+    public static final Integer GROUP_DATA_ID_COMBINATION_LIST_BANNNER = 73; //拼团列表banner
 
 
 
@@ -297,6 +314,7 @@ public class Constants {
     public static final int INDEX_NEW_BANNER = 3; //首页首发新品推荐Banner图片
     public static final int INDEX_BENEFIT_BANNER = 4; //首页促销单品推荐Banner图片
     public static final int INDEX_LIMIT_DEFAULT = 3; //首页默认list分页条数
+    public static final int INDEX_GOOD_BANNER = 5; //优选推荐
 
     public static final String INDEX_BAST_LIMIT = "bastNumber"; //精品推荐个数
     public static final String INDEX_FIRST_LIMIT = "firstNumber"; //首发新品个数
@@ -446,6 +464,10 @@ public class Constants {
     //支付渠道 订单表
     public static final int ORDER_PAY_CHANNEL_PUBLIC = 0; //公众号
     public static final int ORDER_PAY_CHANNEL_PROGRAM = 1; //小程序
+    public static final int ORDER_PAY_CHANNEL_H5 = 2; //H5
+    public static final int ORDER_PAY_CHANNEL_YUE = 3; //余额
+    public static final int ORDER_PAY_CHANNEL_APP_IOS = 4; //app-ios
+    public static final int ORDER_PAY_CHANNEL_APP_ANDROID = 5; //app-android
 
     //微信消息模板 tempKey
     public static final String WE_CHAT_TEMP_KEY_FIRST = "first";
@@ -461,12 +483,12 @@ public class Constants {
     public static final String WE_CHAT_PUBLIC_TEMP_KEY_RECHARGE = "OPENTM200565260";// 充值成功
 
     // 小程序服务通知
-    public static final String WE_CHAT_PROGRAM_TEMP_KEY_COMBINATION_SUCCESS = "5164";
-    public static final String WE_CHAT_PROGRAM_TEMP_KEY_BARGAIN_SUCCESS = "2920";
-    public static final String WE_CHAT_PROGRAM_TEMP_KEY_EXPRESS = "467";
-    public static final String WE_CHAT_PROGRAM_TEMP_KEY_DELIVERY = "14198";
-    public static final String WE_CHAT_PROGRAM_TEMP_KEY_ORDER_PAY = "516";
-    public static final String WE_CHAT_PROGRAM_TEMP_KEY_ORDER_RECEIVING = "9283";
+    public static final String WE_CHAT_PROGRAM_TEMP_KEY_COMBINATION_SUCCESS = "5164";// 拼团成功
+    public static final String WE_CHAT_PROGRAM_TEMP_KEY_BARGAIN_SUCCESS = "2920";// 砍价成功
+    public static final String WE_CHAT_PROGRAM_TEMP_KEY_EXPRESS = "467";// 订单发货提醒
+    public static final String WE_CHAT_PROGRAM_TEMP_KEY_DELIVERY = "14198";// 订单配送通知
+    public static final String WE_CHAT_PROGRAM_TEMP_KEY_ORDER_PAY = "516";// 订单支付成功通知
+    public static final String WE_CHAT_PROGRAM_TEMP_KEY_ORDER_RECEIVING = "9283";// 订单收货通知
     public static final String WE_CHAT_PROGRAM_TEMP_KEY_RECHARGE = "OPENTM200565260";
 
 
@@ -526,4 +548,9 @@ public class Constants {
 
     // 订单取消Key
     public static final String ORDER_AUTO_CANCEL_KEY = "order_auto_cancel_key";
+
+    /** 公共开关：0关闭 */
+    public static final String COMMON_SWITCH_CLOSE = "0";
+    /** 公共开关：1开启 */
+    public static final String COMMON_SWITCH_OPEN = "1";
 }

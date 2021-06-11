@@ -59,7 +59,7 @@
           :default-sort = "{prop: 'brokerage', order: 'descending'}"
           prop="brokerage"
           label="账户佣金"
-          min-width="200"
+          min-width="100"
         />
         <el-table-column
           sortable

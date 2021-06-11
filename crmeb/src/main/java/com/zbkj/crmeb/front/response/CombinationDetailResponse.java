@@ -33,11 +33,8 @@ public class CombinationDetailResponse implements Serializable {
 
     private static final long serialVersionUID=1L;
 
-    @ApiModelProperty(value = "拼团团长ID列表")
-    private List<Integer> pindAll;
-
     @ApiModelProperty(value = "拼团列表")
-    private List<StorePinkResponse> pink;
+    private List<StorePinkResponse> pinkList;
 
     @ApiModelProperty(value = "拼团成功列表")
     private List<StorePinkResponse> pinkOkList;
@@ -46,27 +43,14 @@ public class CombinationDetailResponse implements Serializable {
     private Integer pinkOkSum;
 
     @ApiModelProperty(value = "拼团商品信息")
-    private StoreCombinationInfoResponse storeInfo;
-
-    @ApiModelProperty(value = "回复")
-    private List<StoreProductReply> reply;
-
-    @ApiModelProperty(value = "好评率")
-    private Integer replyChance;
-
-    @ApiModelProperty(value = "评论数量")
-    private Integer replyCount;
+    private CombinationDetailH5Response storeCombination;
 
     @ApiModelProperty(value = "商品规格")
-    private List<HashMap<String,Object>> productAttr;
+    private List<ProductAttrResponse> productAttr;
 
     @ApiModelProperty(value = "商品规格值")
-//    private List<StoreProductAttrValue> productValue;
     private HashMap<String,Object> productValue;
 
-    @ApiModelProperty(value = "商品单双规格")
-    private Boolean specType;
-
-    @ApiModelProperty(value = "拼团单属性AttrValueId")
-    private Integer aloneAttrValueId;
+    @ApiModelProperty(value = "收藏标识")
+    private Boolean userCollect;
 }

@@ -1,28 +1,29 @@
 <template>
 	<div>
 		<view class='flash-sale'>
+			<!-- #ifdef H5 -->
+			<view class='iconfont icon-xiangzuo' @tap='goBack' :style="'top:'+ (navH/2) +'rpx'" v-if="returnShow"></view>
+			<!-- #endif -->
 			<view class="saleBox"></view>
-			<!-- banner -->
-			<!-- <navigator :url='item.url' class='slide-navigator acea-row row-between-wrapper' hover-class='none'>
-				<image :src="item.pic" class="slide-image" lazy-load></image>
-			</navigator> -->
-			<view class="header" v-if="timeList.length">
+			<view class="header" v-if="dataList.length">
 				<swiper indicator-dots="true" autoplay="true" :circular="circular" interval="3000" duration="1500"
-				 indicator-color="rgba(255,255,255,0.6)" indicator-active-color="#fff">
-					<block v-for="(item,index) in timeList[active].slide" :key="index">
-						<swiper-item>
-							<image :src="item.sattDir" class="slide-image" lazy-load></image>
+					indicator-color="rgba(255,255,255,0.6)" indicator-active-color="#fff">
+					<block v-for="(items,index) in dataList[active].slide" :key="index">
+						<swiper-item class="borRadius14">
+							<image :src="items.sattDir" class="slide-image borRadius14" lazy-load></image>
 						</swiper-item>
 					</block>
 				</swiper>
+
 			</view>
 			<view class="seckillList acea-row row-between-wrapper">
 				<view class="priceTag">
 					<image src="/static/images/priceTag.png"></image>
 				</view>
 				<view class='timeLsit'>
-					<scroll-view class="scroll-view_x" scroll-x scroll-with-animation :scroll-left="scrollLeft" style="width:auto;overflow:hidden;height:106rpx;">
-						<block v-for="(item,index) in timeList" :key='index'>
+					<scroll-view class="scroll-view_x" scroll-x scroll-with-animation :scroll-left="scrollLeft"
+						style="width:auto;overflow:hidden;">
+						<block v-for="(item,index) in dataList" :key='index'>
 							<view @tap='settimeList(item,index)' class='item' :class="active == index?'on':''">
 								<view class='time'>{{item.time.split(',')[0]}}</view>
 								<view class="state">{{item.statusName}}</view>
@@ -31,7 +32,7 @@
 					</scroll-view>
 				</view>
 			</view>
-			<view class='list' v-if='seckillList.length>0'>
+			<view class='list pad30' v-if='seckillList.length>0'>
 				<block v-for="(item,index) in seckillList" :key='index'>
 					<view class='item acea-row row-between-wrapper' @tap='goDetails(item)'>
 						<view class='pictrue'>
@@ -39,11 +40,12 @@
 						</view>
 						<view class='text acea-row row-column-around'>
 							<view class='name line1'>{{item.title}}</view>
-							<view class='money'>￥
+							<view class='money'><text class="font-color">￥</text>
 								<text class='num font-color'>{{item.price}}</text>
 								<text class="y_money">￥{{item.otPrice}}</text>
 							</view>
-							<view class="limit">限量 <text class="limitPrice">{{item.quotaShow}} {{item.unitName}}</text></view>
+							<view class="limit">限量 <text class="limitPrice">{{item.quota}} {{item.unitName}}</text>
+							</view>
 							<view class="progress">
 								<view class='bg-reds' :style="'width:'+item.percent+'%;'"></view>
 								<view class='piece'>已抢{{item.percent}}%</view>
@@ -70,7 +72,8 @@
 		getSeckillHeaderApi,
 		getSeckillList
 	} from '../../../api/activity.js';
-	import home from '@/components/home/index.vue'
+	import home from '@/components/home/index.vue';
+	let app = getApp();
 	export default {
 		components: {
 			home
@@ -80,11 +83,10 @@
 				circular: true,
 				autoplay: true,
 				interval: 500,
-				// duration: 500,
 				topImage: '',
 				seckillList: [],
 				timeList: [],
-				active: 5,
+				active: 0,
 				scrollLeft: 0,
 				interval: 0,
 				status: 1,
@@ -96,31 +98,36 @@
 				loading: false,
 				loadend: false,
 				pageloading: false,
-				seckillHeader: []
+				dataList: [],
+				returnShow: true,
+				navH: ''
 			}
 		},
 		onLoad() {
+			var pages = getCurrentPages();
+			this.returnShow = pages.length===1?false:true;
+			// #ifdef H5
+			this.navH = app.globalData.navHeight-18;
+			// #endif
 			this.getSeckillConfig();
 		},
 		methods: {
+			goBack: function() {
+				uni.navigateBack();
+			},
 			getSeckillConfig: function() {
 				let that = this;
 				getSeckillHeaderApi().then(res => {
-					res.data.seckillTime.map(item => {
+					res.data.map(item => {
 						item.slide = JSON.parse(item.slide)
 					})
-					that.timeList = res.data.seckillTime;
-					that.active = res.data.seckillTimeIndex;
-					if (that.timeList.length) {
-						that.scrollLeft = (that.active - 1.37) * 100
-						setTimeout(function() {
-							that.loading = true
-						}, 2000);
-						that.seckillList = [],
-							that.page = 1
-						that.status = that.timeList[that.active].status
-						that.getSeckillList();
-					}
+					that.dataList = res.data;
+					that.getSeckillList();
+					that.seckillList = [];
+					that.page = 1;
+					that.status = that.dataList[that.active].status;
+					that.getSeckillList();
+
 				});
 			},
 			getSeckillList: function() {
@@ -132,7 +139,7 @@
 				if (that.loadend) return;
 				if (that.pageloading) return;
 				this.pageloading = true
-				getSeckillList(that.timeList[that.active].id, data).then(res => {
+				getSeckillList(that.dataList[that.active].id, data).then(res => {
 					var seckillList = res.data.list;
 					var loadend = seckillList.length < that.limit;
 					that.page++;
@@ -155,16 +162,16 @@
 					that.countDownHour = "00";
 				that.countDownMinute = "00";
 				that.countDownSecond = "00";
-				that.status = that.timeList[that.active].status;
+				that.status = that.dataList[that.active].status;
 				that.loadend = false;
 				that.page = 1;
 				that.seckillList = [];
 				// wxh.time(e.currentTarget.dataset.stop, that);
 				that.getSeckillList();
 			},
-			goDetails(item){
+			goDetails(item) {
 				uni.navigateTo({
-					url: '/pages/activity/goods_seckill_details/index?id=' + item.id + '&time=' + this.timeList[this.active].timeSwap + '&status=' + this.status + '&productId=' + item.productId
+					url: '/pages/activity/goods_seckill_details/index?id=' + item.id
 				})
 			}
 		},
@@ -181,22 +188,42 @@
 	page {
 		background-color: #F5F5F5 !important;
 	}
+</style>
+<style scoped lang="scss">
 
+   .icon-xiangzuo {
+		font-size: 40rpx;
+		color: #fff;
+		position: fixed;
+		left: 30rpx;
+		z-index: 99;
+		transform: translateY(-20%);
+	}
 	.flash-sale .header {
 		width: 710rpx;
-		height: 300rpx;
-		margin: -215rpx auto 0 auto;
-		border-radius: 20rpx;
+		height: 330rpx;
+		margin: -276rpx auto 0 auto;
+		border-radius: 14rpx;
+		overflow: hidden;
+		swiper{
+			height: 330rpx !important;
+			border-radius: 14rpx;
+			overflow: hidden;
+		}
 	}
 
 	.flash-sale .header image {
 		width: 100%;
 		height: 100%;
-		border-radius: 20rpx;
+		border-radius: 14rpx;
+		overflow: hidden;
+		img{
+			border-radius: 14rpx;
+		}
 	}
 
 	.flash-sale .seckillList {
-		padding: 0 20rpx;
+		padding: 25rpx;
 	}
 
 	.flash-sale .seckillList .priceTag {
@@ -210,9 +237,8 @@
 	}
 
 	.flash-sale .timeLsit {
-		width: 610rpx;
+		width: 596rpx;
 		white-space: nowrap;
-		margin: 10rpx 0;
 	}
 
 	.flash-sale .timeLsit .item {
@@ -220,10 +246,9 @@
 		font-size: 20rpx;
 		color: #666;
 		text-align: center;
-		padding: 11rpx 0;
 		box-sizing: border-box;
-		height: 96rpx;
-		margin-right: 35rpx;
+		margin-right: 30rpx;
+		width: 130rpx;
 	}
 
 	.flash-sale .timeLsit .item .time {
@@ -233,13 +258,15 @@
 	}
 
 	.flash-sale .timeLsit .item.on .time {
-		color: #E93323;
+		color: $theme-color;
 	}
 
 	.flash-sale .timeLsit .item.on .state {
-		width: 90rpx;
 		height: 30rpx;
+		line-height: 30rpx;
 		border-radius: 15rpx;
+		width: 128rpx;
+		/* padding: 0 12rpx; */
 		background: linear-gradient(90deg, rgba(252, 25, 75, 1) 0%, rgba(252, 60, 32, 1) 100%);
 		color: #fff;
 	}
@@ -269,11 +296,11 @@
 	.flash-sale .list .item {
 		height: 230rpx;
 		position: relative;
-		width: 710rpx;
+		/* width: 710rpx; */
 		margin: 0 auto 20rpx auto;
 		background-color: #fff;
-		border-radius: 20rpx;
-		padding: 0 25rpx;
+		border-radius: 14rpx;
+		padding: 25rpx 24rpx;
 	}
 
 	.flash-sale .list .item .pictrue {
@@ -290,7 +317,7 @@
 	}
 
 	.flash-sale .list .item .text {
-		width: 460rpx;
+		width: 440rpx;
 		font-size: 30rpx;
 		color: #333;
 		height: 166rpx;
@@ -302,7 +329,7 @@
 
 	.flash-sale .list .item .text .money {
 		font-size: 30rpx;
-		color: #E93323;
+		color: $theme-color;
 	}
 
 	.flash-sale .list .item .text .money .num {
@@ -330,7 +357,7 @@
 
 	.flash-sale .list .item .text .progress {
 		overflow: hidden;
-		background-color: #FFEFEF;
+		background-color: #EEEEEE;
 		width: 260rpx;
 		border-radius: 18rpx;
 		height: 18rpx;
@@ -369,7 +396,10 @@
 
 	.flash-sale .saleBox {
 		width: 100%;
-		height: 230rpx;
+		height: 298rpx;
+		/* #ifdef MP */
+		height: 300rpx;
+		/* #endif */
 		background: rgba(233, 51, 35, 1);
 		border-radius: 0 0 50rpx 50rpx;
 	}

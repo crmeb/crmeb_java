@@ -44,7 +44,6 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
     @Autowired
     private SystemConfigService systemConfigService;
 
-
     /**
      * 保存文件
      * @param file FileResultVo 文件信息
@@ -140,7 +139,7 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
      */
     @Override
     public String prefixImage(String path) {
-        //TODO 如果那些域名不需要加，则跳过
+        // 如果那些域名不需要加，则跳过
         return path.replace("crmebimage/", getCdnUrl() + "/crmebimage/");
     }
 

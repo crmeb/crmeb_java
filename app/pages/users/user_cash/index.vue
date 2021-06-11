@@ -108,7 +108,7 @@
 			</view>
 		</view>
 		<!-- #ifdef MP -->
-		<authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize>
+		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
 	</view>
 </template>
@@ -117,8 +117,7 @@
 	import {
 		extractCash,
 		extractBank,
-		getUserInfo,
-		brokerageCommission
+		extractUser
 	} from '@/api/user.js';
 	import {
 		toLogin
@@ -169,8 +168,8 @@
 			isLogin:{
 				handler:function(newV,oldV){
 					if(newV){
-						this.getUserInfo();
 						this.getUserExtractBank();
+						this.getExtractUser();
 					}
 				},
 				deep:true
@@ -178,17 +177,10 @@
 		},
 		onLoad() {
 			if (this.isLogin) {
-				this.getUserInfo();
 				this.getUserExtractBank();
-				//this.getBrokerageCommission();
+				this.getExtractUser();
 			} else {
-				// #ifdef H5 || APP-PLUS
 				toLogin();
-				// #endif 
-				// #ifdef MP
-				this.isAuto = true;
-				this.$set(this, 'isShowAuth', true);
-				// #endif
 			}
 		},
 		methods: {
@@ -218,13 +210,12 @@
 			  this.qrcodeUrlZ = "";
 			},
 			onLoadFun: function() {
-				this.getUserInfo();
 				this.getUserExtractBank();
-			//	this.getBrokerageCommission();
 			},
-			getBrokerageCommission: function(){
-				brokerageCommission().then(res=>{
+			getExtractUser(){
+				extractUser().then(res=>{
 					this.commission = res.data;
+					this.minPrice = res.data.minPrice;
 				})
 			},
 			// 授权关闭
@@ -234,20 +225,9 @@
 			getUserExtractBank: function() {
 				let that = this;
 				extractBank().then(res => {
-					let array = res.data.extractBank;
+					let array = res.data;
 					array.unshift("请选择银行");
 					that.$set(that, 'array', array);
-					that.minPrice = res.data.minPrice;
-					that.commission = res.data;
-				});
-			},
-			/**
-			 * 获取个人用户信息
-			 */
-			getUserInfo: function() {
-				let that = this;
-				getUserInfo().then(res => {
-					that.userInfo = res.data;
 				});
 			},
 			swichNav: function(current) {
@@ -255,6 +235,15 @@
 			},
 			bindPickerChange: function(e) {
 				this.index = e.detail.value;
+			},
+			moneyInput(e) {
+				//正则表达试
+								e.target.value = (e.target.value.match(/^\d*(\.?\d{0,2})/g)[0]) || null
+								//重新赋值给input
+								this.$nextTick(() => {
+									this.money= e.target.value
+								})
+				
 			},
 			subCash: function(e) {
 				let that = this,
@@ -289,13 +278,15 @@
 					if (value.money.length == 0) return this.$util.Tips({
 						title: '请填写提现金额'
 					});
+					if (!(/^(\d?)+(\.\d{0,2})?$/.test(value.money))) return this.$util.Tips({
+						title: '提现金额保留2位小数'
+					});
 					if (value.money < that.minPrice) return this.$util.Tips({
 						title: '提现金额不能低于' + that.minPrice
 					});
 					if(this.isCommitted==false){
 						  this.isCommitted=true;
 					extractCash(value).then(res => {
-						that.getUserInfo();
 						return this.$util.Tips({
 							title: "提现成功",
 							icon: 'success'
@@ -337,7 +328,7 @@
 		width: 40rpx;
 		height: 40rpx;
 		border-radius: 50%;
-		border: 2rpx solid #e93323;
+		border: 2rpx solid $theme-color;
 		text-align: center;
 		line-height: 37rpx;
 		margin: 0 auto 6rpx auto;
@@ -346,9 +337,9 @@
 	}
 	
 	.cash-withdrawal .nav .item .iconfont.on {
-		background-color: #e93323;
+		background-color: $theme-color;
 		color: #fff;
-		border-color: #e93323;
+		border-color: $theme-color;
 	}
 	
 	.cash-withdrawal .nav .item .line {

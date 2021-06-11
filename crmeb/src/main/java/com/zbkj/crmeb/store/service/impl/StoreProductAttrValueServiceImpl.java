@@ -75,8 +75,7 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
     public List<StoreProductAttrValue> getListByProductId(Integer productId) {
         LambdaQueryWrapper<StoreProductAttrValue> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(StoreProductAttrValue::getProductId, productId);
-        List<StoreProductAttrValue> ll = dao.selectList(lambdaQueryWrapper);
-        return ll;
+        return dao.selectList(lambdaQueryWrapper);
     }
 
     /**
@@ -93,8 +92,7 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
         if(null != attrId){
             lambdaQueryWrapper.eq(StoreProductAttrValue::getId, attrId);
         }
-        List<StoreProductAttrValue> ll = dao.selectList(lambdaQueryWrapper);
-        return ll;
+        return dao.selectList(lambdaQueryWrapper);
     }
 
     /**
@@ -226,13 +224,20 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
             updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
             if (type > 0) {
                 updateWrapper.setSql(StrUtil.format("quota = quota - {}", num));
+                // 扣减时加乐观锁保证库存不为负
+                updateWrapper.last(StrUtil.format("and (quota - {} >= 0)", num));
+            } else {
+                // 扣减时加乐观锁保证库存不为负
+                updateWrapper.last(StrUtil.format("and (stock - {} >= 0)", num));
             }
-            // 扣减时加乐观锁保证库存不为负
-            updateWrapper.last(StrUtil.format("and (stock - {} >= 0)", num));
         }
         updateWrapper.eq("id", id);
         updateWrapper.eq("type", type);
-        return update(updateWrapper);
+        boolean update = update(updateWrapper);
+        if (!update) {
+            throw new CrmebException("更新商品attrValue失败，attrValueId = " + id);
+        }
+        return update;
     }
 }
 

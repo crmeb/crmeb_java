@@ -31,14 +31,12 @@ public class FrontTokenInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         response.setCharacterEncoding("UTF-8");
         String token = checkFrontToken.getTokenFormRequest(request);
-
         if(token == null || token.isEmpty()){
             //判断路由，部分路由不管用户是否登录都可以访问
             boolean result = checkFrontToken.checkRouter(RequestUtil.getUri(request));
             if(result){
                 return true;
             }
-
             response.getWriter().write(JSONObject.toJSONString(CommonResult.unauthorized()));
             return false;
         }

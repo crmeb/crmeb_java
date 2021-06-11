@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 /**
  * 订单 列表
- * @param pram
+ * @param prams
  */
 export function orderListApi(params) {
   return request({
@@ -12,10 +12,32 @@ export function orderListApi(params) {
   })
 }
 
+/**
+ * 订单 列表 获取各状态数量
+ * @param params
+ */
+export function orderStatusNumApi(params) {
+  return request({
+    url: '/admin/store/order/status/num',
+    method: 'get',
+    params
+  })
+}
 
 /**
+ * 订单 列表 数据统计
+ * @param params
+ */
+export function orderListDataApi(params) {
+  return request({
+    url: '/admin/store/order/list/data',
+    method: 'get',
+    params
+  })
+}
+/**
  * 订单 删除
- * @param pram
+ * @param params
  */
 export function orderDeleteApi(params) {
   return request({
@@ -27,7 +49,7 @@ export function orderDeleteApi(params) {
 
 /**
  * 订单 编辑
- * @param pram
+ * @param prams
  */
 export function orderUpdateApi(data, params) {
   return request({
@@ -40,7 +62,7 @@ export function orderUpdateApi(data, params) {
 
 /**
  * 订单 记录
- * @param pram
+ * @param prams
  */
 export function orderLogApi(params) {
   return request({
@@ -52,7 +74,7 @@ export function orderLogApi(params) {
 
 /**
  * 订单 详情
- * @param pram
+ * @param prams
  */
 export function orderDetailApi(params) {
   return request({
@@ -64,7 +86,7 @@ export function orderDetailApi(params) {
 
 /**
  * 订单 备注
- * @param pram
+ * @param prams
  */
 export function orderMarkApi(params) {
   return request({
@@ -76,7 +98,7 @@ export function orderMarkApi(params) {
 
 /**
  * 订单 发货
- * @param pram
+ * @param prams
  */
 export function orderSendApi(data) {
   return request({
@@ -88,7 +110,7 @@ export function orderSendApi(data) {
 
 /**
  * 订单 拒绝退款
- * @param pram
+ * @param prams
  */
 export function orderRefuseApi(params) {
   return request({
@@ -100,7 +122,7 @@ export function orderRefuseApi(params) {
 
 /**
  * 订单 立即退款
- * @param pram
+ * @param prams
  */
 export function orderRefundApi(params) {
   return request({
@@ -112,7 +134,7 @@ export function orderRefundApi(params) {
 
 /**
  * 订单 核销订单
- * @param pram
+ * @param prams
  */
 export function writeUpdateApi(vCode) {
   return request({
@@ -123,7 +145,7 @@ export function writeUpdateApi(vCode) {
 
 /**
  * 订单 核销码查询待核销订单
- * @param pram
+ * @param prams
  */
 export function writeConfirmApi(vCode) {
   return request({
@@ -193,5 +215,26 @@ export function getLogisticsInfoApi(params) {
     url: `/admin/store/order/getLogisticsInfo`,
     method: 'get',
     params
+  })
+}
+
+/**
+ *视频号物流公司
+ */
+export function companyGetListApi() {
+  return request({
+    url: `/admin/pay/component/delivery/company/get/list`,
+    method: 'get'
+  })
+}
+
+/**
+ *视频号物流公司
+ */
+export function videoSendApi(data) {
+  return request({
+    url: `/admin/store/order/video/send`,
+    method: 'post',
+    data
   })
 }

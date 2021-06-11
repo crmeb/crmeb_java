@@ -1,14 +1,17 @@
 package com.zbkj.crmeb.store.service;
 
-import com.common.PageParamRequest;
-import com.zbkj.crmeb.front.request.CartResetRequest;
-import com.zbkj.crmeb.store.model.StoreCart;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.common.PageParamRequest;
+import com.github.pagehelper.PageInfo;
+import com.zbkj.crmeb.front.request.CartNumRequest;
+import com.zbkj.crmeb.front.request.CartResetRequest;
+import com.zbkj.crmeb.front.response.CartInfoResponse;
+import com.zbkj.crmeb.store.model.StoreCart;
 import com.zbkj.crmeb.store.response.StoreCartResponse;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * StoreCartService 接口
@@ -30,7 +33,7 @@ public interface StoreCartService extends IService<StoreCart> {
      * @param isValid 是否失效
      * @return 购物车列表
      */
-    List<StoreCartResponse> getList(PageParamRequest pageParamRequest, boolean isValid);
+    PageInfo<CartInfoResponse> getList(PageParamRequest pageParamRequest, boolean isValid);
 
     /**
      * 根据用户id和购物车ids查询购物车集合
@@ -57,12 +60,10 @@ public interface StoreCartService extends IService<StoreCart> {
 
     /**
      * 获取当前购物车数量
-     * @param userId 用户id
-     * @param type product
-     * @param numType 是否获取产品数量
+     * @param request 请求参数
      * @return 数量
      */
-    Integer getUserCount(Integer userId, String type, boolean numType);
+    Map<String, Integer> getUserCount(CartNumRequest request);
 
     /**
      * 新增购物车数据
@@ -75,8 +76,8 @@ public interface StoreCartService extends IService<StoreCart> {
      * 设置会员价
      * @param price 原来价格
      * @param userId 会员id
-     * @param isSingle
-     * @return
+     * @param isSingle 是否普通用户，true普通用户，false会员
+     * @return BigDecimal
      */
     BigDecimal setVipPrice(BigDecimal price,Integer userId,boolean isSingle);
 
@@ -113,4 +114,12 @@ public interface StoreCartService extends IService<StoreCart> {
      * @param productId 商品id
      */
     Boolean productDelete(Integer productId);
+
+    /**
+     * 通过id和uid获取购物车信息
+     * @param id 购物车id
+     * @param uid 用户uid
+     * @return StoreCart
+     */
+    StoreCart getByIdAndUid(Long id, Integer uid);
 }
