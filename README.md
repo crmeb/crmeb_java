@@ -136,10 +136,8 @@ WEB PC 项目运行环境
 
 ## 素材说明
 建议使用自己的素材文件，我们提供基础浏览素材 链接
-<!-- :https://pan.baidu.com/s/1i5TOV2fP6hkO0OHWgyrY8A 密码:m8de -->
 
-[下载素材](https://pan.baidu.com/s/1Q-68qmThAh21X18ciH_Gjg)
-密码: 9gcq
+https://help.crmeb.net/crmeb_java/2312166
 
 ## 版本更新日志
 http://bbs.crmeb.net/thread-5725-1-1.html
