@@ -34,7 +34,7 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
   ### [帮助手册](https://help.crmeb.net/crmeb_java/1748037) [论坛地址](https://q.crmeb.net) [官网地址](https://www.crmeb.com) [服务器](https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=dligum2z) [授权价格](http://crmeb.com/web/auth/apply) [GitHub地址](https://github.com/crmeb/crmeb_java) [码云地址](https://gitee.com/ZhongBangKeJi/crmeb_java)
 
 ## 预览
-![二维码预览](https://gitee.com/stivepeim/img4mk/raw/master/20210623110648.jpg)
+![二维码预览](https://gitee.com/stivepeim/img4mk/raw/master/20210624103552.jpg)
 
 移动端：[https://java.crmeb.net](https://java.crmeb.net)
 
