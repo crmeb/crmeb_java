@@ -20,7 +20,6 @@ import com.zbkj.crmeb.finance.model.UserRecharge;
 import com.zbkj.crmeb.finance.request.UserExtractRequest;
 import com.zbkj.crmeb.finance.service.UserExtractService;
 import com.zbkj.crmeb.finance.service.UserRechargeService;
-import com.zbkj.crmeb.front.request.RegisterAppWxRequest;
 import com.zbkj.crmeb.front.request.UserRechargeRequest;
 import com.zbkj.crmeb.front.request.UserSpreadPeopleRequest;
 import com.zbkj.crmeb.front.request.WxBindingPhoneRequest;
@@ -496,7 +495,8 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         }
         // 没有用户，走创建用户流程
         // 从微信获取用户信息，存入Redis中，将key返回给前端，前端在下一步绑定手机号的时候下发
-        WeChatAuthorizeLoginUserInfoResponse userInfo = weChatService.getUserInfo(response.getOpenId(), response.getAccessToken());
+//        WeChatAuthorizeLoginUserInfoResponse userInfo = weChatService.getUserInfo(response.getOpenId(), response.getAccessToken());
+        WeChatAuthorizeLoginUserInfoResponse userInfo = weChatService.getUserInfo(response.getAccessToken(), response.getOpenId());
         RegisterThirdUserRequest registerThirdUserRequest = new RegisterThirdUserRequest();
         BeanUtils.copyProperties(userInfo, registerThirdUserRequest);
         registerThirdUserRequest.setSpreadPid(spreadUid);
