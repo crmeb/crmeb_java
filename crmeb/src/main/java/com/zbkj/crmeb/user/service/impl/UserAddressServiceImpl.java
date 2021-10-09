@@ -1,5 +1,6 @@
 package com.zbkj.crmeb.user.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -88,7 +89,20 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
         userAddress.setCityId(request.getAddress().getCityId());
         userAddress.setDistrict(request.getAddress().getDistrict());
         userAddress.setProvince(request.getAddress().getProvince());
+        // 添加地址时cityId和城市名称不能同时为空，如果id为空，必须用城市名称自查后set CityId
+        if(request.getAddress().getCityId() == 0 && StringUtils.isBlank(request.getAddress().getCity())){
+            throw new CrmebException("请选择正确城市数据");
+        }
+        if(StringUtils.isNotBlank(request.getAddress().getCity()) && request.getAddress().getCityId() == 0){
+            SystemCity currentCity = systemCityService.getCityByCityName(request.getAddress().getCity());
+            if(ObjectUtil.isNull(currentCity)) throw new CrmebException("当前城市未找到！");
 
+            userAddress.setCityId(currentCity.getCityId());
+        }
+
+        //if(request.getAddress().getCityId() > 0 && StringUtils.isNotBlank(request.getAddress().getCity())){
+        checkCity(userAddress.getCityId());
+        //}
         if(request.getAddress().getCityId() > 0 && StringUtils.isNotBlank(request.getAddress().getCity())){
             checkCity(userAddress.getCityId());
         }

@@ -32,4 +32,10 @@ public interface SystemCityService extends IService<SystemCity> {
     List<Integer> getCityIdList();
 
     SystemCity getCityByCityId(Integer cityId);
+    /**
+     * 根据城市名称获取城市详细数据
+     * @param cityName 城市名称
+     * @return 城市数据
+     */
+    SystemCity getCityByCityName(String cityName);
 }
