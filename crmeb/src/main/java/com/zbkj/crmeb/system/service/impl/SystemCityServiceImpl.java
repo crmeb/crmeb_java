@@ -1,6 +1,7 @@
 package com.zbkj.crmeb.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.constants.Constants;
 import com.utils.RedisUtil;
@@ -172,6 +173,21 @@ public class SystemCityServiceImpl extends ServiceImpl<SystemCityDao, SystemCity
      */
     public void asyncRedis(Integer pid){
         systemCityAsyncService.async(pid);
+    }
+
+    /**
+     * 根据城市名称获取城市详细数据
+     * @author 大粽子
+     * @param cityName 城市名称
+     * @return 城市数据
+     */
+    @Override
+    public SystemCity getCityByCityName(String cityName) {
+        LambdaQueryWrapper<SystemCity> systemCityLambdaQueryWrapper = Wrappers.lambdaQuery();
+        systemCityLambdaQueryWrapper
+                .eq(SystemCity::getName,cityName)
+                .eq(SystemCity::getIsShow,1);
+        return getOne(systemCityLambdaQueryWrapper);
     }
 }
 
