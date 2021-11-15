@@ -533,6 +533,30 @@ export default {
 		}
 		return value;
 	},
+	/**根据格式组装公共参数
+	 * @param {Object} value
+	 */
+	formatMpQrCodeData(value){
+		let values = value.split(',');
+		let result = {};
+		if(values.length === 2){
+			let v1 = values[0].split(":");
+			if (v1[0] === 'pid') {
+				result.spread = v1[1];
+			} else{
+				result.id = v1[1];
+			}
+			let v2 = values[1].split(":");
+			if (v2[0] === 'pid') {
+				result.spread = v2[1];
+			}else{
+				result.id = v2[1];
+			}
+		}else{
+			result = values[0].split(":")[1];
+		}
+		return result;
+	},
 	// #endif
 	/*
 	 * 合并数组

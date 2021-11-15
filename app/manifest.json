@@ -1,6 +1,6 @@
 {
     "name" : "crmeb",
-    "appid" : "__UNI__66E0853",
+    "appid" : "__UNI__E8BDBA5",
     "description" : "crmeb商城",
     "versionName" : "1.0.0",
     "versionCode" : 1001,
@@ -99,11 +99,7 @@
         },
         "domain" : "",
         "sdkConfigs" : {
-            "maps" : {
-                "qqmap" : {
-                    "key" : "map key"
-                }
-            }
+            "maps" : {}
         },
         "optimization" : {
             "treeShaking" : {
