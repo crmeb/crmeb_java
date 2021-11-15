@@ -456,6 +456,12 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         detailH5Response.setFicti(storeProduct.getFicti());
         productDetailResponse.setStoreSeckill(detailH5Response);
 
+        StoreSeckillManger seckillManger = storeSeckillMangerService.getById(storeSeckill.getTimeId());
+        if (ObjectUtil.isNotNull(seckillManger)) {
+            int secKillEndSecondTimestamp = DateUtil.getSecondTimestamp(DateUtil.nowDateTime("yyyy-MM-dd " + seckillManger.getEndTime() + ":00:00"));
+            detailH5Response.setTimeSwap(secKillEndSecondTimestamp + "");
+        }
+
         // 获取秒杀商品规格
         StoreProductAttr spaPram = new StoreProductAttr();
         spaPram.setProductId(skillId).setType(Constants.PRODUCT_TYPE_SECKILL);
