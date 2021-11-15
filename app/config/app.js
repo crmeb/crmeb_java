@@ -1,5 +1,5 @@
 
-let domain = 'http://127.0.0.1:8080'
+let domain = 'https://api.dev.java.crmeb.net/'
 
 module.exports = {
 	// 请求域名 格式： https://您的域名

@@ -18,7 +18,8 @@
                 width: 375px;
                 height: 667px;
                 background-color: #fff;
-                box-sizing: content-box;
+                /* box-sizing: content-box; */
+				box-sizing: border-box;
                 border: none;
             }
 			
@@ -39,20 +40,15 @@
             window.isPC = true;
             window.onload = function(){
                 /* 监听电脑浏览器窗口尺寸改变 */
-                window.onresize = function(){
-                    /* 窗口宽度 小于或等于420px 时，跳转回H5页面 */
-                    if(window.innerWidth <= 420){
-                      // window.location.pathname = 'https://java.crmeb.net/';
-                    /* 若你的项目未设置根目录（默认为 / 时），则使用下方代码 */
-                     window.location.pathname = '';
-                    }
-                }
+				if(window.innerWidth <= 420){
+					window.location.pathname = '/';
+				}
             }
         </script>
     </head>
     <body>
        <!-- <iframe src="https://java.crmeb.net/"></iframe> -->
        <!--若你的项目未设置根目录（默认为 / 时），则使用下方代码-->
-		<iframe src="/"></iframe>
+		<iframe src="/" id="iframe"></iframe>
     </body>
 </html>
