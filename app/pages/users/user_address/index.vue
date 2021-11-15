@@ -6,29 +6,30 @@
 					<view class='item acea-row row-between-wrapper' style="border: none;">
 						<view class='name'>姓名</view>
 						<input type='text' placeholder='请输入姓名' placeholder-style="color:#ccc;" name='realName' :value="userAddress.realName"
-							placeholder-class='placeholder'></input>
+							placeholder-class='placeholder' maxlength="4"></input>
 					</view>
 					<view class='item acea-row row-between-wrapper'>
 						<view class='name'>联系电话</view>
-						<input type='text' placeholder='请输入联系电话' placeholder-style="color:#ccc;" name="phone" :value='userAddress.phone'
-							placeholder-class='placeholder'></input>
+						<input type='number' placeholder='请输入联系电话' placeholder-style="color:#ccc;" name="phone" :value='userAddress.phone'
+							placeholder-class='placeholder' maxlength="11"></input>
 					</view>
-					<view class='item acea-row row-between-wrapper'>
+					<view class='item acea-row row-between-wrapper relative'>
 						<view class='name'>所在地区</view>
 						<view class="address">
 							<picker mode="multiSelector" @change="bindRegionChange"
 								@columnchange="bindMultiPickerColumnChange" :value="valueRegion" :range="multiArray">
 								<view class='acea-row'>
 									<view class="picker line1">{{region[0]}}，{{region[1]}}，{{region[2]}}</view>
-									<view class='iconfont icon-dizhi font-color'></view>
+									<view class='iconfont icon-xiangyou abs_right'></view>
 								</view>
 							</picker>
 						</view>
 					</view>
-					<view class='item acea-row row-between-wrapper'>
+					<view class='item acea-row row-between-wrapper relative'>
 						<view class='name'>详细地址</view>
 						<input type='text' placeholder='请填写具体地址' placeholder-style="color:#ccc;" name='detail' placeholder-class='placeholder'
-							:value='userAddress.detail'></input>
+							v-model='userAddress.detail' maxlength="18"></input>
+							<view class='iconfont icon-dizhi font-color abs_right' @tap="chooseLocation"></view>
 					</view>
 				</view>
 				<view class='default acea-row row-middle borRadius14'>
@@ -49,7 +50,7 @@
 		<!-- #ifdef MP -->
 		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
 		<!-- #endif -->
-		<home></home>
+		<!-- <home></home> -->
 	</view>
 </template>
 
@@ -67,12 +68,12 @@
 	import {
 		mapGetters
 	} from "vuex";
-	import wPicker from "@/components/wPicker/w-picker.vue";
 	// #ifdef MP
 	import authorize from '@/components/Authorize';
 	// #endif
 	import home from '@/components/home';
 	// import city from '@/utils/cityData';
+	let app = getApp();
 	export default {
 		components: {
 			// #ifdef MP
@@ -102,7 +103,7 @@
 				defaultRegionCode: '440113',
 				bargain: false, //是否是砍价
 				combination: false, //是否是拼团
-				secKill: false //是否是秒杀
+				secKill: false, //是否是秒杀
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -120,39 +121,42 @@
 		onLoad(options) {
 			if (this.isLogin) {
 				this.preOrderNo = options.preOrderNo || 0;
-				// this.cartId = options.cartId || '';
-				// this.pinkId = options.pinkId || 0;
-				// this.couponId = options.couponId || 0;
 				this.id = options.id || 0;
-				// this.secKill = options.secKill || false;
-				// this.combination = options.combination || false;
-				// this.bargain = options.bargain || false;
 				uni.setNavigationBarTitle({
 					title: options.id ? '修改地址' : '添加地址'
 				})
 				this.getUserAddress();
-				this.getCityList();
-				// if(this.district && this.district.length){
-				// 	this.initialize();
-				// }
+				if(this.$Cache.has('cityList')){
+					//检测城市数据是否存在缓存，有的话从缓存取，没有的话请求接口
+					this.district = this.$Cache.getItem('cityList')
+					this.initialize();
+				}else{
+					this.getCityList();
+				}
 			} else {
 				toLogin();
 			}
 		},
 		methods: {
-			// 回去地址数据
+			// #ifdef APP-PLUS
+			// 获取选择的地区
+			handleGetRegion(region) {
+				this.region = region
+			},
+			// #endif
+			// 获取地址数据
 			getCityList: function() {
 				let that = this;
 				getCity().then(res => {
-					this.district = res.data
+					this.district = res.data;
+					let oneDay = 24 * 3600 * 1000;
+					// this.$Cache.set('cityList', JSON.stringify(res.data)); //设置不过期时间的方法 
+					this.$Cache.setItem({name:'cityList',value:res.data,expires:oneDay * 7});  //设置七天过期时间
 					that.initialize();
 				})
 			},
 			initialize: function() {
-				let that = this,
-					province = [],
-					city = [],
-					area = [];
+				let that = this,province = [],city = [],area = [];
 				if (that.district.length) {
 					let cityChildren = that.district[0].child || [];
 					let areaChildren = cityChildren.length ? (cityChildren[0].child || []) : [];
@@ -216,7 +220,7 @@
 
 						break;
 				}
-				// #ifdef MP
+				// #ifdef MP || APP-PLUS
 				this.$set(this.multiArray, 0, multiArray[0]);
 				this.$set(this.multiArray, 1, multiArray[1]);
 				this.$set(this.multiArray, 2, multiArray[2]);
@@ -224,9 +228,6 @@
 				// #ifdef H5
 				this.multiArray = multiArray;
 				// #endif
-
-
-
 				this.multiIndex = multiIndex
 				// this.setData({ multiArray: multiArray, multiIndex: multiIndex});
 			},
@@ -253,6 +254,13 @@
 					that.$set(that, 'region', region);
 					that.city_id = res.data.cityId
 				});
+			},
+			chooseLocation: function () {
+				uni.chooseLocation({
+					success: (res) => {
+						this.$set(this.userAddress,'detail',res.address.replace(/.+?(省|市|自治区|自治州|县|区)/g,''));
+					}
+				})
 			},
 			// 导入共享地址（小程序）
 			getWxAddress: function() {
@@ -456,9 +464,7 @@
 					setTimeout(function() {
 						if (that.preOrderNo>0) {
 							uni.redirectTo({
-								url: '/pages/users/order_confirm/index?preOrderNo=' + that
-									.preOrderNo + '&addressId=' + (that.id ? that.id : res.data
-										.id)
+								url: '/pages/users/order_confirm/index?preOrderNo=' + that.preOrderNo + '&addressId=' + (that.id ? that.id : res.data.id)
 							})
 						} else {
 							// #ifdef H5
@@ -469,29 +475,7 @@
 								delta: 1,
 							})
 							// #endif
-
 						}
-
-						// if (that.cartId) {
-						// 	let cartId = that.cartId;
-						// 	let pinkId = that.pinkId;
-						// 	let couponId = that.couponId;
-						// 	that.cartId = '';
-						// 	that.pinkId = '';
-						// 	that.couponId = '';
-						// 	uni.navigateTo({
-						// 		url: '/pages/users/order_confirm/index?cartId=' + cartId + '&addressId=' + (that.id ? that.id : res.data.id) +'&pinkId=' + pinkId + '&couponId=' + couponId + '&secKill=' + that.secKill + '&combination=' + that.combination + '&bargain=' + that.bargain
-						// 	});
-						// } else {
-						// 	// #ifdef H5
-						// 	return history.back();
-						// 	// #endif
-						// 	// #ifndef H5
-						// 	return uni.navigateBack({
-						// 		delta: 1,
-						// 	})
-						// 	// #endif
-						// }
 					}, 1000);
 				}).catch(err => {
 					return that.$util.Tips({
@@ -510,7 +494,6 @@
 	.addAddress {
 		padding-top: 20rpx;
 	}
-
 	.addAddress .list {
 		background-color: #fff;
 		padding: 0 24rpx;
@@ -548,10 +531,6 @@
 		font-size: 30rpx;
 	}
 
-	.addAddress .list .item picker .iconfont {
-		font-size: 43rpx;
-	}
-
 	.addAddress .default {
 		padding: 0 30rpx;
 		height: 90rpx;
@@ -584,5 +563,16 @@
 		font-size: 32rpx;
 		color: #E93323 ;
 		border: 1px solid #E93323;
+	}
+	.relative{
+		position: relative;
+	}
+	.icon-dizhi{
+		font-size: 44rpx;
+		z-index: 100;
+	}
+	.abs_right{
+		position: absolute;
+		right:0;
 	}
 </style>

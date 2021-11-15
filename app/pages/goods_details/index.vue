@@ -269,6 +269,7 @@
 		getProductGood,
 		getReplyProduct
 	} from '@/api/store.js';
+	import { spread } from "@/api/user";
 	import {
 		getCoupons
 	} from '@/api/api.js';
@@ -425,38 +426,48 @@
 			if (pages.length <= 1) {
 				that.retunTop = false
 			}
-			// #ifdef MP
 			that.navH = app.globalData.navHeight;
+			// #ifdef MP || APP-PLUS
+			// 小程序链接进入获取绑定关系id
+			setTimeout(()=>{
+				if(options.spread){
+					app.globalData.spread = options.spread;
+					spread(options.spread).then(res => {})
+				}
+			},2000)
 			// #endif
-			// #ifndef MP
-			that.navH = 96;
-			// #endif
-			if (options.id == 'undefined') {
-				that.id = 0
-			} else {
-				that.id = options.id;
+			uni.getSystemInfo({
+				success: function(res) {
+					that.height = res.windowHeight;
+				},
+			});
+			if (!options.scene && !options.id) {
+				this.showSkeleton = false;
+				this.$util.Tips({
+					title: '缺少参数无法查看商品'
+				}, {
+					url: '/pages/index/index'
+				});
+				return;
+			}
+			if (options.hasOwnProperty('id') || options.scene) {
+				if (options.scene) { // 仅仅小程序扫码进入
+					let qrCodeValue = that.$util.getUrlParams(decodeURIComponent(options.scene));
+					let mapeMpQrCodeValue = that.$util.formatMpQrCodeData(qrCodeValue);
+					app.globalData.spread = mapeMpQrCodeValue.spread;
+					this.id = mapeMpQrCodeValue.id;
+					setTimeout(()=>{
+						spread(mapeMpQrCodeValue.spread).then(res => {}).catch(res => {})
+					},2000)
+					
+				} else {
+					this.id = options.id;
+				}
 				options.type == undefined || options.type == null ? that.type = 'normal' : that.type = options.type;
 				that.$store.commit("PRODUCT_TYPE", that.type);
 			}
-			uni.getSystemInfo({
-				success: function(res) {
-					that.height = res.windowHeight
-					//res.windowHeight:获取整个窗口高度为px，*2为rpx；98为头部占据的高度；
-				},
-			});
-			//扫码携带参数处理
-			// #ifdef MP
-			if (!options.scene && options.id == 'undefined')  return this.$util.Tips({
-				title: '缺少参数无法查看商品'
-			}, {
-				tab: 3,
-				url: 1
-			});
-			options.scene ? this.id = app.globalData.id : this.id = options.id;
-			// #endif
 			this.getGoodsDetails();
 			this.getCouponList();
-			this.isLogin && silenceBindingSpread();
 			this.getProductReplyList();
 			this.getProductReplyCount();
 			this.getGoods();

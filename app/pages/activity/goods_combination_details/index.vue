@@ -276,6 +276,7 @@
 	import {
 		getProductCode
 	} from '@/api/store.js'
+	import { spread } from "@/api/user";
 	export default {
 		components: {
 			shareRedPackets,
@@ -417,18 +418,27 @@
 				},
 			});
 			if (options.hasOwnProperty('id') || options.scene) {
-				options.scene ? this.id = app.globalData.id : this.id = options.id;
-				// app.globalData.openPages = '/pages/activity/goods_combination_details/index?id=' + this.id + '&spid=' + this.userInfo.uid;
+				if (options.scene) { // 仅仅小程序扫码进入
+					let qrCodeValue = this.$util.getUrlParams(decodeURIComponent(options.scene));
+					let mapeMpQrCodeValue = this.$util.formatMpQrCodeData(qrCodeValue);
+				    app.globalData.spread = mapeMpQrCodeValue.spread;
+				    this.id = mapeMpQrCodeValue.id;
+				    setTimeout(()=>{
+				    	spread(mapeMpQrCodeValue.spread).then(res => {}).catch(res => {})
+				    },2000)
+				}else{
+					this.id = options.id;
+				}
 				if (this.isLogin) {
 					this.combinationDetail();
 				} else {
-					// #ifdef H5
+					// #ifdef H5 || APP-PLUS
 					try {
 						uni.setStorageSync('comGoodsId', options.id);
 					} catch (e) {}
 					// #endif 
 					this.$Cache.set('login_back_url',
-						`/pages/activity/goods_combination_details/index?id=${options.id}&spid=${options.spid?options.spid:0}`
+						`/pages/activity/goods_combination_details/index?id=${options.id}&spread=${options.pid?options.pid:0}`
 					);
 					toLogin();
 				}
@@ -448,7 +458,6 @@
 					})
 				}
 			};
-		    this.isLogin && silenceBindingSpread();
 		},
 		methods: {
 			getProductReplyCount: function() {
