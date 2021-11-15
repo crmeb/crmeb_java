@@ -1,6 +1,5 @@
 <template>
-	<!-- v-if="reply.length>0" -->
-	<view class="evaluateWtapper">
+	<view class="evaluateWtapper" v-if="reply.length > 0">
 		<view class="evaluateItem" v-for="(item, indexw) in reply" :key="indexw">
 			<view class="pic-text acea-row">
 				<view class="pictrue">
@@ -39,7 +38,7 @@
 		props: {
 			reply: {
 				type: Array,
-				default: () => []
+				default: []
 			}
 		},
 		data: function() {

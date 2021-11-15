@@ -112,7 +112,6 @@
 				</view>
 			</view>
 		</view>
-		<!-- <shareRedPackets :sharePacket="sharePacket" @listenerActionSheet="listenerActionSheet" @closeChange="closeChange"></shareRedPackets> -->
 		<product-window :attr='attribute' :limitNum='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr" @ChangeCartNum="ChangeCartNum"
 		 @attrVal="attrVal" @iptCartNum="iptCartNum"></product-window>
 		<!-- #ifdef MP -->
@@ -200,6 +199,7 @@
 		toLogin
 	} from '@/libs/login.js';
 	import { silenceBindingSpread } from "@/utils";
+	import { spread } from "@/api/user";
 	export default {
 		data() {
 			return {
@@ -311,7 +311,7 @@
 			}
 		},
 		onLoad(options) {
-			let that = this
+			let that = this;
 			that.$store.commit("PRODUCT_TYPE", 'normal');
 			let statusBarHeight = '';
 			var pages = getCurrentPages();
@@ -330,16 +330,38 @@
 			let menuButtonInfo = uni.getMenuButtonBoundingClientRect()
 			this.meunHeight = menuButtonInfo.height
 			this.backH = (that.navH / 2) + (this.meunHeight / 2)
-			
+			setTimeout(()=>{
+				if(options.spread){
+					app.globalData.spread = options.spread;
+					spread(options.spread).then(res => {})
+				}
+			},2000)
+			if (!options.scene && !options.id){
+				this.showSkeleton = false;
+				this.$util.Tips({
+					title: '缺少参数无法查看商品'
+				}, {
+					url: '/pages/index/index'
+				});
+				return;
+			}
+			if (options.hasOwnProperty('id') || options.scene){
+				if (options.scene) { // 仅仅小程序扫码进入
+					let qrCodeValue = this.$util.getUrlParams(decodeURIComponent(options.scene));
+					let mapeMpQrCodeValue = this.$util.formatMpQrCodeData(qrCodeValue);
+				    app.globalData.spread = mapeMpQrCodeValue.spread;
+				    this.id = mapeMpQrCodeValue.id;
+				    setTimeout(()=>{
+				    	spread(mapeMpQrCodeValue.spread).then(res => {}).catch(res => {})
+				    },2000)
+				}else{
+					this.id = options.id;
+				}
+			}
 			// #endif
-			if (!options.scene && options.id == 'undefined')  return this.$util.Tips({
-				title: '缺少参数无法查看商品'
-			}, {
-				tab: 3,
-				url: 1
-			});
-			options.scene ? this.id = app.globalData.id : this.id = options.id;
+			
 			if (this.isLogin) {
+				this.id = options.id;
 				this.getSeckillDetail();
 			} else {
 				this.$Cache.set('login_back_url',
@@ -372,7 +394,7 @@
 					limit: 3,
 					type: 0,
 				}).then(res => {
-					this.reply = res.data.list ? [res.data.list[0]] : [];
+					this.reply = res.data.list;
 				})
 			},
 			getProductReplyCount: function() {
