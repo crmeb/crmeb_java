@@ -1,8 +1,5 @@
 package com.zbkj.crmeb.front.response;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -92,4 +89,7 @@ public class SecKillDetailH5Response implements Serializable {
 
     @ApiModelProperty(value = "商品详情")
     private String content;
+
+    @ApiModelProperty(value = "结束时间（前端用）")
+    private String timeSwap;
 }
