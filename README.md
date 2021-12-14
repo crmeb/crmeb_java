@@ -96,10 +96,15 @@ CRMEB JAVA 技术交流QQ群 1群 🈵️
 
 # 商业版特色小功能
 ## 页面设计
-![页面设计](https://article.biliimg.com/bfs/article/9bf0f8d9765af9f07a80ea5b8d94851f12eb7b10.gif)
+
+![页面设计](https://image.java.crmeb.net/crmebimage/public/maintain/2021/12/14/19a3e00460cd4d64a770264731bc900dy3q6c4ywcg.gif)
 
 ## 一键换色
-![一键换色](https://article.biliimg.com/bfs/article/43db5fca813d6fbd9e67c01288a889233a2f1719.gif)
+![一键换色](https://image.java.crmeb.net/crmebimage/public/maintain/2021/12/14/1cd62b4180154f979c24eb5e696789cabcsoyw8qhx.gif)
+
+## WEB PC 更多便捷操作方式
+
+![](https://image.java.crmeb.net/crmebimage/public/maintain/2021/12/14/5bd7415b287f4de0b2d4027e19beb06aetzqqxh32e.gif)
 
 ## 开源 & 商业对比
 
