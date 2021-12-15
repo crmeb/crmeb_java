@@ -106,22 +106,6 @@ CRMEB JAVA 技术交流QQ群 1群 🈵️
 
 ![](https://image.java.crmeb.net/crmebimage/public/maintain/2021/12/14/5bd7415b287f4de0b2d4027e19beb06aetzqqxh32e.gif)
 
-## 开源 & 商业对比
-
-![](https://gitee.com/stivepeim/img4mk/raw/master/202112141527721.png)
-
-![](https://gitee.com/stivepeim/img4mk/raw/master/202112141528555.png)
-
-![](https://gitee.com/stivepeim/img4mk/raw/master/202112141529424.png)
-
-![](https://gitee.com/stivepeim/img4mk/raw/master/202112141529079.png)
-
-![](https://gitee.com/stivepeim/img4mk/raw/master/202112141530935.png)
-
-![](https://gitee.com/stivepeim/img4mk/raw/master/202112141530963.png)
-
-![](https://gitee.com/stivepeim/img4mk/raw/master/202112141531305.png)
-
 ## 项目源码
 
 | 平台| 源码地址|
