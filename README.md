@@ -21,24 +21,24 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
 ~~~~
 ![](https://gitee.com/stivepeim/img4mk/raw/master/20210611144457.png)
 
-## 导航栏目
-
- <!-- [![帮助手册](https://img.shields.io/badge/%E5%B8%AE%E5%8A%A9%E6%89%8B%E5%86%8C-Java%E5%B8%AE%E5%8A%A9%E6%89%8B%E5%86%8C-orange)](http://help.crmeb.net/crmeb_java/1748037t)
- [![论坛地址](https://img.shields.io/badge/CRMEB-Java%E8%AE%BA%E5%9D%9B-green)](https://q.crmeb.net)
-[![官网地址](https://img.shields.io/badge/CRMEB-%E5%AE%98%E7%BD%91-brightgreen)](https://www.crmeb.com)
- [![服务器](https://img.shields.io/badge/Server-%E6%9C%8D%E5%8A%A1%E5%99%A8-yellowgreen)](https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=dligum2z)
- [![授权价格](https://img.shields.io/badge/authorize-%E6%8E%88%E6%9D%83-red)](http://crmeb.com/web/auth/apply)
-  [![GitHub地址](https://img.shields.io/badge/gitHub-gitHub-lightgrey)](https://github.com/crmeb/crmeb_java)
-  [![码云地址](https://img.shields.io/badge/gitee-%E7%A0%81%E4%BA%91-blue)](https://gitee.com/ZhongBangKeJi/crmeb_java) -->
-
-  ### [帮助手册](https://help.crmeb.net/crmeb_java/1748037) [论坛地址](https://q.crmeb.net) [官网地址](https://www.crmeb.com) [服务器](https://promotion.aliyun.com/ntms/yunparter/invite.html?userCode=dligum2z) [授权价格](http://crmeb.com/web/auth/apply) [GitHub地址](https://github.com/crmeb/crmeb_java) [码云地址](https://gitee.com/ZhongBangKeJi/crmeb_java)
-
 ## 预览
 ![二维码预览](https://gitee.com/stivepeim/img4mk/raw/master/20210624103552.jpg)
 
+帮助手册：[https://doc.crmeb.com/web/java/crmeb_java](https://doc.crmeb.com/web/java/crmeb_java)
+
+论坛地址：[https://q.crmeb.net](https://q.crmeb.net)
+
+官网地址：[https://www.crmeb.com](https://www.crmeb.com)
+
+授权价格：[http://crmeb.com/web/auth/apply](http://crmeb.com/web/auth/apply) 
+
+GitHub地址：[https://github.com/crmeb/crmeb_java](https://github.com/crmeb/crmeb_java) 
+
+码云地址： [https://gitee.com/ZhongBangKeJi/crmeb_java](https://gitee.com/ZhongBangKeJi/crmeb_java)
+
 移动端：[https://java.crmeb.net](https://java.crmeb.net)
 
-后台：[https://admin.java.crmeb.net](https://admin.java.crmeb.net)   
+WEBPC管理端：[https://admin.java.crmeb.net](https://admin.java.crmeb.net)   
 
 账号密码：后台账号 demo  密码 crmeb.com
 
