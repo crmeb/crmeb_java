@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.SystemPermissionsDao">
+
+    <select id="findPermissionByUserId" resultType="com.zbkj.common.model.system.SystemPermissions" parameterType="Integer" >
+		SELECT p.id,p.pid,p.name,p.path
+		FROM eb_system_permissions p
+		right join eb_system_role_permissions rp on rp.pid = p.id
+		right join eb_system_role r on rp.rid = r.id
+		right join eb_system_admin a on FIND_IN_SET(r.id, a.roles)
+		where  p.is_delte = 0 and r.`status` = 1 and a.id = #{userId}
+		GROUP BY p.id;
+	</select>
+
+
+</mapper>

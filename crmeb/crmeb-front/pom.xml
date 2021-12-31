@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>crmeb</artifactId>
+        <groupId>com.zbkj</groupId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>crmeb-front</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <crmeb-service>0.0.1-SNAPSHOT</crmeb-service>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.zbkj</groupId>
+            <artifactId>crmeb-service</artifactId>
+            <version>${crmeb-service}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!--打包配置-->
+        <finalName>Crmeb-front</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal><!--可以把依赖的包都打包到生成的Jar包中-->
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+
+        <resources>
+            <!--            <resource>-->
+            <!--                <directory>src/main/resources</directory>-->
+            <!--                &lt;!&ndash; 处理文件时替换文件中的变量 &ndash;&gt;-->
+            <!--                <filtering>true</filtering>-->
+            <!--                <excludes>-->
+            <!--                    &lt;!&ndash; 打包时排除文件 &ndash;&gt;-->
+            <!--&lt;!&ndash;                    <exclude>application.yml</exclude>&ndash;&gt;-->
+            <!--                    <exclude>application-{profile}.yml</exclude>-->
+            <!--&lt;!&ndash;                    <exclude>application-beta.yml</exclude>&ndash;&gt;-->
+            <!--&lt;!&ndash;                    <exclude>application-prod.yml</exclude>&ndash;&gt;-->
+            <!--                </excludes>-->
+            <!--            </resource>-->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+            <!--            <resource>-->
+            <!--                <directory>src/main/resources.${spring.profiles.active}</directory>-->
+            <!--                <filtering>false</filtering>-->
+            <!--            </resource>-->
+            <!--这个元素描述了项目相关的所有资源路径列表，例如和项目相关的属性文件，这些资源被包含在最终的打包文件里。-->
+            <resource>
+                <!--   描述存放资源的目录，该路径相对POM路径-->
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.xml</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
+
+</project>
