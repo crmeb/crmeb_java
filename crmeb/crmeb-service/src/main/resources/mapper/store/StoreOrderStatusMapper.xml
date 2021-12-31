@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.StoreOrderStatusDao">
+
+    <select id="getRefundOrderAmountByDate" resultType="java.math.BigDecimal">
+        SELECT IFNULL(sum(o.refund_price),0) FROM `eb_store_order_status` os
+        left join eb_store_order o on os.oid = o.id
+        where date_format(os.create_time, '%Y-%m-%d') = #{date}
+        and os.change_type = 'refund_price'
+    </select>
+
+</mapper>
