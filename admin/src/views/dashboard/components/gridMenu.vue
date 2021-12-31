@@ -1,7 +1,7 @@
 <template>
   <div class="divBox">
     <el-row :gutter="24" class="dashboard-console-grid">
-        <el-col v-bind="grid" class="ivu-mb">
+        <el-col v-bind="grid" class="ivu-mb" v-if="checkPermi(['admin:user:list'])">
             <el-card :bordered="false">
                 <router-link :to="{path:'/user/index'}">
                     <i class="el-icon-user" style="color:#69c0ff" />
@@ -9,7 +9,7 @@
                 </router-link>
             </el-card>
         </el-col>
-        <el-col v-bind="grid" class="ivu-mb">
+        <el-col v-bind="grid" class="ivu-mb" v-if="checkPermi(['admin:system:config:info'])">
             <el-card :bordered="false">
                 <router-link :to="{path:'/operation/setting'}">
                     <i class="el-icon-setting" style="color:#95de64" />
@@ -17,7 +17,7 @@
                 </router-link>
             </el-card>
         </el-col>
-        <el-col v-bind="grid" class="ivu-mb">
+        <el-col v-bind="grid" class="ivu-mb" v-if="checkPermi(['admin:product:list'])">
             <el-card :bordered="false">
                 <router-link :to="{path:'/store/index'}">
                     <i class="el-icon-goods" style="color:#ff9c6e" />
@@ -25,7 +25,7 @@
                 </router-link>
             </el-card>
         </el-col>
-        <el-col v-bind="grid" class="ivu-mb">
+        <el-col v-bind="grid" class="ivu-mb" v-if="checkPermi(['admin:order:list'])">
             <el-card :bordered="false">
                 <router-link :to="{path:'/order/index'}">
                     <i class="el-icon-s-order" style="color:#b37feb" />
@@ -33,7 +33,7 @@
                 </router-link>
             </el-card>
         </el-col>
-        <el-col v-bind="grid" class="ivu-mb">
+        <el-col v-bind="grid" class="ivu-mb" v-if="checkPermi(['admin:pass:login'])">
             <el-card :bordered="false">
                 <router-link :to="{path:'/operation/systemSms/config'}">
                     <i class="el-icon-message" style="color:#ffd666" />
@@ -41,7 +41,7 @@
                 </router-link>
             </el-card>
         </el-col>
-        <el-col v-bind="grid" class="ivu-mb">
+        <el-col v-bind="grid" class="ivu-mb" v-if="checkPermi(['admin:article:list'])">
             <el-card :bordered="false">
                 <router-link :to="{path:'/content/articleManager'}">
                     <i class="el-icon-notebook-1" style="color:#5cdbd3" />
@@ -49,7 +49,7 @@
                 </router-link>
             </el-card>
         </el-col>
-        <el-col v-bind="grid" class="ivu-mb">
+        <el-col v-bind="grid" class="ivu-mb" v-if="checkPermi(['admin:retail:list'])">
             <el-card :bordered="false">
                 <router-link :to="{path:'/distribution/index'}">
                     <i class="el-icon-s-finance" style="color:#ff85c0" />
@@ -57,7 +57,7 @@
                 </router-link>
             </el-card>
         </el-col>
-        <el-col v-bind="grid" class="ivu-mb">
+        <el-col v-bind="grid" class="ivu-mb" v-if="checkPermi(['admin:coupon:list'])">
             <el-card :bordered="false">
                 <router-link :to="{path:'/marketing/coupon/list'}">
                     <i class="el-icon-s-ticket" style="color:#ffc069" />
@@ -69,6 +69,7 @@
   </div>
 </template>
 <script>
+import { checkPermi } from "@/utils/permission"; 
     export default {
         data () {
             return {
@@ -80,12 +81,15 @@
                     xs: 8
                 }
             }
+        },
+        methods:{
+          checkPermi
         }
     }
 </script>
 <style lang="scss" scoped>
   .ivu-mb{
-    margin-bottom: 10px;
+    // margin-bottom: 10px;
   }
   .divBox {
     padding: 0 20px !important;

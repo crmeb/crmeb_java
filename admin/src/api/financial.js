@@ -1,3 +1,13 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import request from '@/utils/request'
 
 /**
@@ -109,19 +119,6 @@ export function monitorListApi(params) {
 }
 
 /**
- * 资金监控 佣金详细记录
- * @param pram
- */
-export function monitorListDetailApi(userId, params) {
-  return request({
-    url: `/admin/finance/founds/monitor/list/user/detail/${userId}`,
-    method: 'get',
-    params
-  })
-}
-
-
-/**
  * 资金监控 明细类型
  * @param pram
  */
@@ -138,8 +135,9 @@ export function monitorListOptionApi() {
  */
 export function brokerageListApi(params) {
   return request({
-    url: '/admin/finance/founds/monitor/list/user',
+    url: '/admin/finance/founds/monitor/brokerage/record',
     method: 'get',
     params
   })
 }
+
