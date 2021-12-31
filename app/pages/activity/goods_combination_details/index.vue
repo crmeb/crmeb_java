@@ -534,7 +534,7 @@
 					that.attribute.productAttr = res.data.productAttr || [];
 					that.productValue = res.data.productValue;
 					that.onceNum = res.data.storeCombination.onceNum;
-					that.DefaultSelect();
+					
 					//	that.PromotionCode = res.data.storeInfo.code_base
 					// #ifdef H5
 					that.setShare();
@@ -548,8 +548,19 @@
 					// #ifndef H5
 					that.downloadFilestoreImage();
 					// #endif
+					let productAttr = res.data.productAttr.map(item => {
+					return {
+						attrName : item.attrName,
+						attrValues: item.attrValues.split(','),
+						id:item.id,
+						isDel:item.isDel,
+						productId:item.productId,
+						type:item.type
+					 }
+					});
+					that.$set(that.attribute,'productAttr',productAttr);
 					// that.setProductSelect();
-
+					that.DefaultSelect();
 					
 					setTimeout(function() {
 						that.infoScroll();
