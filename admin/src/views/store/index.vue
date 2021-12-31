@@ -1,34 +1,35 @@
 <template>
-  <div class="divBox">
+  <div class="divBox relative">
     <el-card class="box-card">
       <div slot="header" class="clearfix">
-        <el-tabs v-model="tableFrom.type" @tab-click="seachList">
+        <el-tabs v-model="tableFrom.type" @tab-click="seachList" v-if="checkPermi(['admin:product:tabs:headers'])">
           <el-tab-pane :label="item.name +'('+item.count +')' " :name="item.type.toString()" v-for="(item,index) in headeNum" :key="index"/>
         </el-tabs>
-        <div class="container">
+        <div class="container mt-1">
           <el-form inline size="small">
             <el-form-item label="商品分类：">
               <el-cascader v-model="tableFrom.cateId" :options="merCateList" :props="props" clearable class="selWidth mr20" @change="seachList" size="small"/>
             </el-form-item>
             <el-form-item label="商品搜索：">
               <el-input v-model="tableFrom.keywords" placeholder="请输入商品名称，关键字，商品ID" class="selWidth" size="small" clearable>
-                <el-button slot="append" icon="el-icon-search" @click="seachList" size="small"/>
+                <el-button slot="append" icon="el-icon-search" @click="seachList" size="small" v-hasPermi="['admin:product:list']" />
               </el-input>
             </el-form-item>
           </el-form>
         </div>
         <router-link :to=" { path:'/store/list/creatProduct' } ">
-          <el-button size="small" type="primary" class="mr10">添加商品</el-button>
+          <el-button size="small" type="primary" class="mr10" v-hasPermi="['admin:product:save']">添加商品</el-button>
         </router-link>
-        <el-button size="small" type="success" class="mr10" @click="onCopy">商品采集</el-button>
-        <el-button size="small" @click="exports">导出</el-button>
+        <el-button size="small" type="success" class="mr10" @click="onCopy" v-hasPermi="['admin:product:save']">商品采集</el-button>
+        <el-button size="small" icon="el-icon-upload2" @click="exports" v-hasPermi="['admin:export:excel:product']">导出</el-button>
       </div>
       <el-table
         v-loading="listLoading"
         :data="tableData.data"
         style="width: 100%"
         size="mini"
-        highlight-current-row
+        :highlight-current-row="true"
+        :header-cell-style=" {fontWeight:'bold'}"
       >
         <el-table-column type="expand">
           <template slot-scope="props">
@@ -67,36 +68,52 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="storeName"
-          label="商品名称"
-          min-width="200"
-        />
+        <el-table-column label="商品名称" 
+        prop="storeName" 
+        min-width="300" 
+        :show-overflow-tooltip="true">
+        </el-table-column>
         <el-table-column
           prop="price"
           label="商品售价"
           min-width="90"
+          align="center"
         />
         <el-table-column
           prop="sales"
           label="销量"
           min-width="90"
+          align="center"
         />
         <el-table-column
           prop="stock"
           label="库存"
           min-width="90"
+          align="center"
         />
         <el-table-column
           prop="sort"
           label="排序"
           min-width="70"
+          align="center"
         />
+        
         <el-table-column
-          label="状态"
-          min-width="150"
+          label="添加时间"
+          min-width="120"
+          align="center"
         >
           <template slot-scope="scope">
+            <span>{{scope.row.addTime | formatDate}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="状态"
+          min-width="80"
+          fixed="right"
+        >
+          <template slot-scope="scope" 
+          v-if="checkPermi(['admin:product:up','admin:product:down'])">
             <el-switch
               :disabled="Number(tableFrom.type) > 2"
               v-model="scope.row.isShow"
@@ -108,24 +125,16 @@
             />
           </template>
         </el-table-column>
-        <el-table-column
-          label="操作时间"
-          min-width="120"
-        >
-          <template slot-scope="scope">
-            <span>{{scope.row.addTime | formatDate}}</span>
-          </template>
-        </el-table-column>
         <el-table-column label="操作" min-width="150" fixed="right" align="center">
           <template slot-scope="scope">
             <router-link :to="{path: '/store/list/creatProduct/' + scope.row.id + '/1'}">
-              <el-button type="text" size="small" class="mr10">详情</el-button>
+              <el-button type="text" size="small" class="mr10" v-hasPermi="['admin:product:info']">详情</el-button>
             </router-link>
             <router-link :to="{path: '/store/list/creatProduct/' + scope.row.id}">
-              <el-button type="text" size="small" class="mr10" v-if="tableFrom.type !== '5' && tableFrom.type !== '1'">编辑</el-button>
+              <el-button type="text" size="small" class="mr10" v-if="tableFrom.type !== '5' && tableFrom.type !== '1'" v-hasPermi="['admin:product:update']">编辑</el-button>
             </router-link>
-            <el-button  v-if="tableFrom.type === '5'" type="text" size="small" @click="handleRestore(scope.row.id, scope.$index)">恢复商品</el-button>
-            <el-button type="text" size="small" @click="handleDelete(scope.row.id, tableFrom.type)">{{ tableFrom.type === '5' ? '删除' : '加入回收站' }}</el-button>
+            <el-button  v-if="tableFrom.type === '5'" type="text" size="small" @click="handleRestore(scope.row.id, scope.$index)" v-hasPermi="['admin:product:restore']">恢复商品</el-button>
+            <el-button type="text" size="small" @click="handleDelete(scope.row.id, tableFrom.type)" v-hasPermi="['admin:product:delete']">{{ tableFrom.type === '5' ? '删除' : '加入回收站' }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -141,7 +150,6 @@
         />
       </div>
     </el-card>
-
     <el-dialog
       title="复制淘宝、天猫、京东、苏宁"
       :visible.sync="dialogVisible"
@@ -158,6 +166,7 @@
 import { productLstApi, productDeleteApi, categoryApi, putOnShellApi, offShellApi, productHeadersApi, productExportApi, restoreApi, productExcelApi } from '@/api/store'
 import { getToken } from '@/utils/auth'
 import taoBao from './taoBao'
+import { checkPermi } from "@/utils/permission"; // 权限判断函数
 export default {
   name: 'ProductList',
   components: { taoBao },
@@ -186,15 +195,17 @@ export default {
       categoryList: [],
       merCateList: [],
       objectUrl: process.env.VUE_APP_BASE_API,
-      dialogVisible: false
+      dialogVisible: false,
     }
   },
   mounted() {
     this.goodHeade()
     this.getList()
     this.getCategorySelect()
+    this.checkedCities = this.$cache.local.has('goods_stroge') ? this.$cache.local.getJSON('goods_stroge') : this.checkedCities;
   },
   methods: {
+    checkPermi,
     handleRestore(id) {
       this.$modalSure("恢复商品").then(() => {
         restoreApi(id)
@@ -240,7 +251,6 @@ export default {
       categoryApi({ status: -1, type: 1 }).then(res => {
         this.merCateList = res
       }).catch(res => {
-        this.$message.error(res.message)
         this.$message.error(res.message)
       })
     },
@@ -290,12 +300,17 @@ export default {
         }).catch(()=>{
           row.isShow = !row.isShow
         })
-    }
+    },
+   
   }
 }
 </script>
 
 <style scoped lang="scss">
+   .el-table__body {
+    width: 100%;
+    table-layout: fixed !important;
+  }
   .taoBaoModal{
   //  z-index: 3333 !important;
   }
@@ -314,5 +329,8 @@ export default {
   }
   .seachTiele{
     line-height: 30px;
+  }
+  .relative{
+    position: relative;
   }
 </style>

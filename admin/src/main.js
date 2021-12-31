@@ -1,21 +1,27 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import Vue from 'vue'
 import '@babel/polyfill'
 // import 'babel-polyfill'
 import Cookies from 'js-cookie'
-
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
-
 import Element from 'element-ui'
 import './styles/element-variables.scss'
-
 import '@/styles/index.scss' // global css
-
 import "@/assets/iconfont/iconfont";
 import "@/assets/iconfont/iconfont.css";
-
 import VueAwesomeSwiper from 'vue-awesome-swiper'
 import 'swiper/dist/css/swiper.css'
 import "vue-ydui/dist/ydui.base.css";
+import { parseTime, resetForm, addDateRange, selectDictLabel, selectDictLabels, handleTree } from "@/utils/parsing";
 // 懒加载
 import VueLazyload from 'vue-lazyload'
 
@@ -30,8 +36,7 @@ import couponFrom from './components/couponList/couponFrom'
 import articleFrom from './components/articleList/articleFrom'
 import UploadIndex from '@/components/uploadPicture/index.vue'
 import UploadFile from '@/components/Upload/uploadFile.vue'
-import ueditorFrom from '@/components/ueditorFrom'
-import VueUeditorWrap from 'vue-ueditor-wrap'
+// import VueUeditorWrap from 'vue-ueditor-wrap'
 import iconFrom from './components/iconFrom'
 import TimeSelect from '@/components/TimeSelect'
 import dialog from "@/libs/dialog";
@@ -43,6 +48,7 @@ import util from '@/utils/utils'
 import modalAttr from '@/libs/modal-attr'
 import modalIcon from '@/libs/modal-icon'
 import { modalSure } from '@/libs/public'
+import timeOptions from "@/libs/timeOptions";
 import { loadScriptQueue } from '@/components/FormGenerator/utils/loadScript'
 import './icons' // icon
 import './permission' // permission control
@@ -52,6 +58,10 @@ import { parseQuery } from "@/utils";
 import * as Auth from '@/libs/wechat';
 import * as constants from '@/utils/constants.js'
 import * as selfUtil from '@/utils/ZBKJIutil.js';
+import SettingMer from "@/utils/settingMer";
+import plugins from './plugins'
+import directive from './directive' //directive
+
 Vue.use(VueLazyload, {
   preLoad: 1.3,
   error: require('./assets/imgs/no.png'),
@@ -65,12 +75,13 @@ Vue.use(goodListFrom)
 Vue.use(couponFrom)
 Vue.use(articleFrom)
 Vue.use(VueAwesomeSwiper)
-Vue.component('vue-ueditor-wrap', VueUeditorWrap)
+Vue.use(plugins)
+Vue.use(directive)
+
 Vue.component('attrFrom', attrFrom)
 Vue.component('UploadIndex', UploadIndex)
 Vue.component('SelfUpload', SelfUpload)
 Vue.component('iconFrom', iconFrom)
-Vue.component('ueditorFrom', ueditorFrom)
 Vue.component('uploadFile', UploadFile)
 Vue.component('timeSelect', TimeSelect)
 Vue.prototype.$modalSure = modalSure
@@ -82,9 +93,13 @@ Vue.prototype.$wechat = Auth;
 Vue.prototype.$util = util;
 Vue.prototype.$constants = constants;
 Vue.prototype.$selfUtil = selfUtil;
+Vue.prototype.$timeOptions = timeOptions;
 Vue.prototype.$validator = function(rule) {
   return new schema(rule);
 };
+Vue.prototype.handleTree = handleTree
+Vue.prototype.parseTime = parseTime 
+Vue.prototype.resetForm = resetForm 
 
 let cookieName = "VCONSOLE";
 let query = parseQuery();
@@ -193,6 +208,11 @@ function newVue(attrs, main, html) {
 String.prototype.replaceAll = function(s1, s2) {
   return this.replace(new RegExp(s1, "gm"), s2);
 }
+
+// 添加crmeb chat 统计
+var __s = document.createElement('script');
+__s.src=`${SettingMer.apiBaseURL}/public/jsconfig/getcrmebchatconfig`;
+document.head.appendChild(__s);
 
 new Vue({
   el: '#app',

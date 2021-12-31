@@ -4,7 +4,7 @@
       title="上传图片"
       :visible.sync="visible"
       width="950px"
-      :modal="false"
+      :modal="booleanVal"
       append-to-body
       :before-close="handleClose"
     >
@@ -24,7 +24,8 @@ export default {
       callback: function() {},
       isMore: '',
       modelName: '',
-      ISmodal: false
+      ISmodal: false,
+      booleanVal: false
     }
   },
   watch: {

@@ -14,15 +14,15 @@
             </el-form-item>
             <el-form-item label="关键字：">
               <el-input v-model="tableFrom.keywords" placeholder="请输入关键字" class="selWidth" size="small" clearable>
-                <el-button slot="append" icon="el-icon-search" size="small" @click="seachList" />
+                <el-button slot="append" icon="el-icon-search" size="small" @click="seachList" v-hasPermi="['admin:wechat:keywords:reply:info:keywords']" />
               </el-input>
             </el-form-item>
           </el-form>
           <router-link :to="{path: '/appSetting/publicAccount/wxReply/keyword/save'}">
-            <el-button size="small" type="primary">添加关键字</el-button>
+            <el-button size="small" type="primary" v-hasPermi="['admin:wechat:keywords:reply:save']">添加关键字</el-button>
           </router-link>
         </div>
-      </div>
+      </div>  
       <el-table
         v-loading="listLoading"
         :data="tableData.data"
@@ -53,7 +53,7 @@
           label="是否显示"
           min-width="100"
         >
-          <template slot-scope="scope">
+          <template slot-scope="scope" v-if="checkPermi(['admin:wechat:keywords:reply:status'])">
             <el-switch
               v-model="scope.row.status"
               :active-value="true"
@@ -67,9 +67,11 @@
         <el-table-column label="操作" min-width="100">
           <template slot-scope="scope">
             <router-link :to="{path: '/appSetting/publicAccount/wxReply/keyword/save/' + scope.row.id}">
-              <el-button type="text" size="small">编辑</el-button>
+              <el-button type="text" size="small" 
+              v-if="scope.row.keywords !=='subscribe' && scope.row.keywords !=='default'" 
+              v-hasPermi="['admin:wechat:keywords:reply:info']">编辑</el-button>
             </router-link>
-            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)">删除</el-button>
+            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)" v-hasPermi="['admin:wechat:keywords:reply:delete']">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -91,6 +93,7 @@
 <script>
 import { replyListApi, replyDeleteApi, replyUpdateApi, replyStatusApi } from '@/api/wxApi'
 import { getToken } from '@/utils/auth'
+import { checkPermi } from "@/utils/permission"; 
 export default {
   name: 'WechatKeyword',
   data() {
@@ -112,6 +115,7 @@ export default {
     this.getList()
   },
   methods: {
+    checkPermi,
     seachList() {
       this.tableFrom.page = 1
       this.getList()

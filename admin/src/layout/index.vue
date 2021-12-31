@@ -12,7 +12,7 @@
         <settings />
       </right-panel>
     </div>
-    <div class="open-image" @click="clear" v-if="openImage"><img src="@/assets/imgs/pc1.jpg" alt=""></div>
+    <div class="open-image" @click="clear" v-if="openImage"><img src="@/assets/imgs/pc1.png" alt=""></div>
   </div>
 </template>
 
@@ -108,7 +108,7 @@ export default {
     top: 0;
     right: 0;
     z-index: 9;
-    width: calc(100% - #{$sideBarWidth});
+    width: calc(100% - #{$base-sidebar-width});
     transition: width 0.28s;
   }
 

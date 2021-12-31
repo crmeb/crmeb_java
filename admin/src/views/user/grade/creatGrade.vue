@@ -1,65 +1,56 @@
 <template>
   <el-dialog
+    v-if="dialogVisible"
     title="用户等级"
     :visible.sync="dialogVisible"
     width="500px"
-    :before-close="handleClose">
-    <el-form :model="formValidate" :rules="rules" ref="formValidate" label-width="100px" class="demo-ruleForm" v-loading="loading">
+    :before-close="handleClose" >
+    <el-form :model="user" :rules="rules" ref="user" label-width="100px" class="demo-ruleForm" v-loading="loading">
       <el-form-item label="等级名称" prop="name">
-        <el-input v-model="formValidate.name" placeholder="请输入等级名称"></el-input>
+        <el-input v-model="user.name" placeholder="请输入等级名称"></el-input>
       </el-form-item>
       <el-form-item label="等级" prop="grade">
-        <el-input  v-model.number="formValidate.grade" placeholder="请输入等级"></el-input>
+        <el-input  v-model.number="user.grade" placeholder="请输入等级"></el-input>
       </el-form-item>
       <el-form-item label="享受折扣(%)" prop="discount">
-        <el-input-number  :min="0" :max="100" step-strictly  v-model="formValidate.discount" placeholder="请输入享受折扣"></el-input-number>
+        <el-input-number  :min="0" :max="100" step-strictly  v-model="user.discount" placeholder="请输入享受折扣"></el-input-number>
       </el-form-item>
       <el-form-item label="经验" prop="experience">
-        <el-input-number  v-model.number="formValidate.experience" placeholder="请输入经验" :max="999999" step-strictly></el-input-number>
+        <el-input-number  v-model.number="user.experience" placeholder="请输入经验" :min="0" step-strictly></el-input-number>
       </el-form-item>
       <el-form-item label="图标" prop="icon">
         <div class="upLoadPicBox" @click="modalPicTap('1', 'icon')">
-          <div v-if="formValidate.icon" class="pictrue"><img :src="formValidate.icon"></div>
+          <div v-if="user.icon" class="pictrue"><img :src="user.icon"></div>
+          <div v-else-if="formValidate.icon" class="pictrue"><img :src="formValidate.icon"></div>
           <div v-else class="upLoad">
             <i class="el-icon-camera cameraIconfont" />
           </div>
         </div>
       </el-form-item>
-      <!--<el-form-item label="用户背景" required prop="image">-->
-        <!--<div class="upLoadPicBox" @click="modalPicTap('1', 'image')">-->
-          <!--<div v-if="formValidate.image" class="pictrue"><img :src="formValidate.image"></div>-->
-          <!--<div v-else class="upLoad">-->
-            <!--<i class="el-icon-camera cameraIconfont" />-->
-          <!--</div>-->
-        <!--</div>-->
-      <!--</el-form-item>-->
-      <el-form-item label="是否显示" required>
-        <el-radio-group v-model="formValidate.isShow">
-          <el-radio :label="true" class="radio">显示</el-radio>
-          <el-radio :label="false">隐藏</el-radio>
-        </el-radio-group>
-      </el-form-item>
     </el-form>
     <span slot="footer" class="dialog-footer">
-      <el-button @click="resetForm('formValidate')">取 消</el-button>
-      <el-button type="primary" @click="submitForm('formValidate')">确 定</el-button>
+      <el-button @click="resetForm('user')">取 消</el-button>
+      <el-button type="primary" @click="submitForm('formValidate')" v-hasPermi="['admin:system:user:level:update','admin:system:user:level:save']">确 定</el-button>
     </span>
   </el-dialog>
 </template>
 
 <script>
   import { levelSaveApi, levelInfoApi, levelUpdateApi } from '@/api/user'
+  import {Debounce} from '@/utils/validate'
   const obj = {
     name:'',
     grade: 1,
     discount: '',
     icon: '',
     image: '',
-    isShow: true,
     id: null
   }
   export default {
     name: "CreatGrade",
+    props:{
+      'user':Object
+    },
     data() {
       return {
         dialogVisible: false,
@@ -85,16 +76,18 @@
           ],
           image: [
             {  required: true, message: '请上传用户背景', trigger: 'change' }
-          ]
+          ],
         }
       }
     },
     methods:{
       // 点击商品图
       modalPicTap (tit, num) {
-        const _this = this
+         const _this = this
         this.$modalUpload(function(img) {
           tit==='1'&& num === 'icon' ? _this.formValidate.icon = img[0].sattDir : _this.formValidate.image = img[0].sattDir
+          this.$set(_this.user,'icon', _this.formValidate.icon);
+          this.$set(_this.user,'isShow', false);
         },tit , 'user')
       },
       info(id) {
@@ -107,14 +100,26 @@
         })
       },
       handleClose() {
-        this.dialogVisible = false
-        this.$refs['formValidate'].resetFields();
+         this.$nextTick(() => {
+          this.$refs.user.resetFields();
+        })
+        this.dialogVisible = false;
+        // this.user = Object.assign({}, '')
       },
-      submitForm(formName) {
-        this.$refs[formName].validate((valid) => {
+      submitForm:Debounce(function(formName) {
+        this.$refs.user.validate((valid) => {
           if (valid) {
             this.loading = true
-            this.formValidate.id ? levelUpdateApi({id:this.formValidate.id}, this.formValidate).then(res => {
+            let data = {
+              discount:this.user.discount,
+              experience:this.user.experience,
+              grade:this.user.grade,
+              icon:this.user.icon,
+              id:this.user.id,
+              isShow:this.user.isShow,
+              name:this.user.name
+            };
+            this.user.id ? levelUpdateApi(this.user.id, data).then(res => {
               this.$message.success('编辑成功')
               this.loading = false
               this.handleClose()
@@ -122,22 +127,28 @@
               this.$parent.getList()
             }).catch(() => {
               this.loading = false
-            }): levelSaveApi(this.formValidate).then(res => {
+            }): levelSaveApi(this.user).then(res => {
               this.$message.success('添加成功')
               this.loading = false
               this.handleClose()
+              this.formValidate = Object.assign({},obj)
               this.$parent.getList()
             }).catch(() => {
               this.loading = false
+              this.formValidate = Object.assign({},obj)
             })
           } else {
             return false;
           }
         });
-      },
+      }),
       resetForm(formName) {
-        this.dialogVisible = false
-        this.$refs[formName].resetFields();
+        
+        // this[formName] = {};
+         this.$nextTick(() => {
+          this.$refs.user.resetFields();
+        })
+        this.dialogVisible = false;
       }
     }
   }

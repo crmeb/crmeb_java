@@ -1,3 +1,13 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 /**
  * Created by PanJiaChen on 16/11/18.
  */
@@ -142,3 +152,25 @@ const attrs = Object.keys(baseAttr).reduce((attrs, key) => {
   return attrs;
 }, {});
 export default attrs;
+
+/**
+ * 函数防抖 (只执行最后一次点击)
+ * @param fn
+ * @param delay
+ * @returns {Function}
+ * @constructor
+ */
+ export const Debounce = (fn, t) => {
+	const delay = t || 500
+	let timer
+	return function() {
+		const args = arguments
+		if (timer) {
+			clearTimeout(timer)
+		}
+		timer = setTimeout(() => {
+			timer = null
+			fn.apply(this, args)
+		}, delay)
+	}
+}

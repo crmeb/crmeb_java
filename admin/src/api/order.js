@@ -1,3 +1,13 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import request from '@/utils/request'
 
 /**
@@ -178,11 +188,11 @@ export function statisticsDataApi(params) {
 /**
  * 一键改价
  */
-export function editPriceApi(params) {
+export function updatePriceApi(data) {
   return request({
-    url: `/admin/store/order/editPrice`,
-    method: 'get',
-    params
+    url: `admin/store/order/update/price`,
+    method: 'post',
+    data
   })
 }
 
@@ -236,5 +246,15 @@ export function videoSendApi(data) {
     url: `/admin/store/order/video/send`,
     method: 'post',
     data
+  })
+}
+
+/**
+ *打印小票
+ */
+ export function orderPrint(id) {
+  return request({
+    url: `/admin/yly/print/${id}`,
+    method: 'get',
   })
 }

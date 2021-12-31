@@ -17,7 +17,7 @@
             </el-form-item>
           </el-form>
         </div>
-        <cards-data :cardLists="cardLists"></cards-data>
+        <!-- <cards-data :cardLists="cardLists"></cards-data> -->
       </div>
       <el-table
         v-loading="listLoading"
@@ -100,21 +100,33 @@
           prop="brokeragePrice"
         />
         <el-table-column
+          sortable
+          label="冻结中佣金"
+          min-width="120"
+          :sort-method="(a,b)=>{return a.freezeBrokeragePrice - b.freezeBrokeragePrice}"
+          prop="freezeBrokeragePrice"
+        />
+        <el-table-column
+          prop="promoterTime"
+          label="成为推广员时间"
+          min-width="150"
+        />
+        <el-table-column
           prop="spreadNickname"
           label="上级推广人"
           min-width="150"
         />
         <el-table-column label="操作" min-width="150" fixed="right" align="center">
           <template slot-scope="scope">
-            <el-button type="text" size="small" class="mr10" @click="onSpread(scope.row.uid, 'man','推广人')">推广人</el-button>
+            <el-button type="text" size="small" class="mr10" @click="onSpread(scope.row.uid, 'man','推广人')" v-hasPermi="['admin:retail:spread:list']">推广人</el-button>
             <el-dropdown>
               <span class="el-dropdown-link">
                 更多<i class="el-icon-arrow-down el-icon--right" />
               </span>
               <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item @click.native="onSpreadOrder(scope.row.uid, 'order','推广订单')">推广订单</el-dropdown-item>
+                <el-dropdown-item @click.native="onSpreadOrder(scope.row.uid, 'order','推广订单')" v-if="checkPermi(['admin:retail:spread:order:list'])">推广订单</el-dropdown-item>
                 <!--<el-dropdown-item @click.native="onSpreadType(scope.row.uid)">推广方式</el-dropdown-item>-->
-                <el-dropdown-item @click.native="clearSpread(scope.row)" v-if="scope.row.spreadNickname && scope.row.spreadNickname!=='无'">清除上级推广人</el-dropdown-item>
+                <el-dropdown-item @click.native="clearSpread(scope.row)" v-if="scope.row.spreadNickname && scope.row.spreadNickname!=='无'" v-hasPermi="['admin:retail:spread:clean']">清除上级推广人</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
           </template>
@@ -275,6 +287,7 @@
 <script>
   import { promoterListApi, spreadStatisticsApi, spreadListApi, spreadOrderListApi, spreadClearApi } from '@/api/distribution'
   import cardsData from '@/components/cards/index'
+  import { checkPermi } from "@/utils/permission"; // 权限判断函数
   export default {
     name: 'AccountsUser',
     components: { cardsData },
@@ -315,26 +328,27 @@
       }
     },
     mounted() {
-      this.spreadStatistics()
+      // this.spreadStatistics()
       this.getList()
     },
     methods: {
+      checkPermi,
       seachList() {
         this.tableFrom.page = 1
         this.getList()
       },
       // 统计
-      spreadStatistics() {
-        spreadStatisticsApi({ dateLimit: this.tableFrom.dateLimit, keywords: this.tableFrom.nickName}).then((res) => {
-          this.cardLists = [
-            { name: '分销人员人数', count: res.distributionNum },
-            { name: '发展会员人数', count: res.developNum },
-            { name: '推广总数', count: res.orderNum },
-            { name: '推广金额（元）', count: res.orderPriceCount },
-            { name: '提现次数', count: res.withdrawCount }
-          ]
-        })
-      },
+      // spreadStatistics() {
+      //   spreadStatisticsApi({ dateLimit: this.tableFrom.dateLimit, keywords: this.tableFrom.nickName}).then((res) => {
+      //     this.cardLists = [
+      //       { name: '分销人员人数', count: res.distributionNum },
+      //       { name: '发展会员人数', count: res.developNum },
+      //       { name: '推广订单总数', count: res.orderNum },
+      //       { name: '推广订单金额（元）', count: res.orderPriceCount },
+      //       { name: '提现次数', count: res.withdrawCount }
+      //     ]
+      //   })
+      // },
       // 清除
       clearSpread(row) {
         this.$modalSure('解除【' + row.nickname + '】的上级推广人吗').then(() => {
@@ -429,7 +443,7 @@
         this.tableFrom.dateLimit = tab
         this.tableFrom.page = 1
         this.timeVal = []
-        this.spreadStatistics()
+        // this.spreadStatistics()
         this.getList()
       },
       // 具体日期

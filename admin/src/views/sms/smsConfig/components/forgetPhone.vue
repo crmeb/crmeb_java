@@ -50,7 +50,7 @@
       </template>
       <el-form-item class="maxInpt">
         <el-button v-if="current === 0" type="primary"  @click="handleSubmit1('formInline',current)" class="mb20 width100">下一步</el-button>
-        <el-button  v-if="current === 1" type="primary"  @click="handleSubmit2('formInline',current)" class="mb20 width100">提交</el-button>
+        <el-button  v-if="current === 1" type="primary"  @click="handleSubmit2('formInline',current)" class="mb20 width100" v-hasPermi="['admin:pass:update:phone']">提交</el-button>
         <el-button  v-if="current === 2" type="primary"  @click="handleSubmit('formInline',current)" class="mb20 width100">登录</el-button>
         <el-button @click="returns('formInline')" class="width100" style="margin-left: 0px;">返回</el-button>
       </el-form-item>

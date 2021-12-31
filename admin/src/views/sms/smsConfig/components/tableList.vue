@@ -8,7 +8,7 @@
     </el-tabs>
     <!--短信列表-->
     <div class="note" v-if="(tableFrom.type==='sms' && sms.open === 1) || (tableFrom.type==='expr_query' && query.open === 1) || (tableFrom.type==='copy' && copy.open === 1) || (tableFrom.type==='expr_dump' && dump.open === 1)">
-      <div class="filter-container mb20" v-if="tableFrom.type === 'sms'">
+      <div class="filter-container flex-between mb20" v-if="tableFrom.type === 'sms'">
         <div class="demo-input-suffix">
           <span class="seachTiele">短信状态：</span>
           <el-radio-group v-model="tableFrom.status" size="small" @change="getList" class="mr20">
@@ -17,18 +17,20 @@
             <el-radio-button label="2">失败</el-radio-button>
             <el-radio-button label="0">发送中</el-radio-button>
           </el-radio-group>
-          <router-link :to="{path: '/operation/systemSms/template'}">
-            <el-button type="primary" size="mini" class="mr20">短信模板</el-button>
-          </router-link>
-          <el-button size="mini" @click="editSign">修改签名</el-button>
         </div>
+        <div>
+            <router-link :to="{path: '/operation/systemSms/template'}">
+              <el-button type="primary"  class="mr20" v-hasPermi="['admin:sms:temps']">短信模板</el-button>
+            </router-link>
+            <el-button  @click="editSign" v-hasPermi="['admin:sms:modify:sign']">修改签名</el-button>
+          </div>
       </div>
       <el-table
         v-loading="listLoading"
         :data="tableData.data"
         style="width: 100%"
-        size="mini"
         highlight-current-row
+        :header-cell-style=" {fontWeight:'bold'}"
       >
         <el-table-column
           v-for="(item, index) in columns2" :key="index"
@@ -149,6 +151,7 @@
           <el-input
             v-model="formInline.phone"
             placeholder="请输入您的手机号"
+            :disabled="true"
             prefix-icon="el-icon-phone-outline"
           >
           </el-input>
@@ -166,8 +169,11 @@
               prefix-icon="el-icon-message"
               style="width: 90%"
             />
-            <el-button size="mini" :disabled=!this.canClick @click="cutDown">{{cutNUm}}</el-button>
+            <el-button size="mini" :disabled=!this.canClick @click="cutDown" v-hasPermi="['admin:pass:send:code']">{{cutNUm}}</el-button>
           </div>
+        </el-form-item>
+        <el-form-item>
+          <el-alert title="短信签名提交后需要审核才会生效，请耐心等待或者联系客服" type="success"></el-alert>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -181,6 +187,8 @@
 import { smsLstApi, serviceOpenApi, exportTempApi, expressAllApi, captchaApi, smsSignApi  } from '@/api/sms'
 import * as commFilter from '@/filters/commFilter';
 import Template from "../../../appSetting/wxAccount/wxTemplate/index";
+import { checkPermi } from "@/utils/permission"; // 权限判断函数
+import {Debounce} from '@/utils/validate'
 export default {
   name: 'TableList',
   props: {
@@ -310,10 +318,11 @@ export default {
     editSign(){
       this.formInline.account = this.accountInfo.account;
       this.formInline.sign = this.accountInfo.sms.sign;
+      this.formInline.phone = this.accountInfo.phone;
       this.dialogVisible = true;
     },
     //修改签名
-    handleSubmit (name) {
+    handleSubmit:Debounce(function(name) {
       this.$refs[name].validate((valid) => {
         if (valid) {
           smsSignApi(this.formInline).then(async res => {
@@ -325,7 +334,7 @@ export default {
           return false;
         }
       })
-    },
+    }),
     // 短信验证码
     cutDown () {
       if (this.formInline.phone) {
@@ -397,7 +406,7 @@ export default {
     },
     // 物流公司
     exportTempAllList () {
-      expressAllApi().then(async res => {
+      expressAllApi({type:'elec'}).then(async res => {
         this.exportList = res;
       })
     },
@@ -443,7 +452,30 @@ export default {
     getList() {
       this.listLoading = true
       smsLstApi(this.tableFrom).then(res => {
-        this.tableData.data = res.data
+        this.tableData.data = res.data;
+        if(this.tableFrom.type == 'sms'){
+          let obj = new Object();
+          let newArr = new Array();
+          res.data.forEach(item=>{
+            obj = item;
+            switch(item.status) {
+              case 0:
+                  obj.status = '发送中'
+                  break;
+              case 1:
+                  obj.status = '成功'
+                  break;
+              case 2:
+                  obj.status = '失败'
+                  break;
+              case 3:
+                  obj.status = '全部'
+                  break;
+            }
+            newArr.push(obj);
+            this.tableData.data = newArr;
+          })
+        }
         this.tableData.total = res.count
         switch (this.tableFrom.type) {
           case 'sms':
@@ -464,11 +496,11 @@ export default {
                 key: 'add_time',
                 minWidth: 150
               },
-              {
-                title: '状态码',
-                key: '_resultcode',
-                minWidth: 100
-              }
+              // {
+              //   title: '状态',
+              //   key: 'status',
+              //   minWidth: 100
+              // }
             ]
             break;
           case 'expr_dump':
@@ -653,5 +685,9 @@ export default {
    .ivu-form-item-content{
     text-align: left !important;
   }
+  }
+  .flex-between{
+    display: flex;
+    justify-content: space-between;
   }
 </style>

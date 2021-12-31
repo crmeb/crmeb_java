@@ -124,6 +124,7 @@
 <style scoped lang="scss">
   .order-index{
     background: #f5f5f5;
+    margin-top: -50px;
   }
   .order-index .header{background:url("../../../assets/imgs/orderIndex.png") no-repeat;background-size:100% 100%;width:100%;height:3.02rem;padding:0.45rem 0.3rem 0 0.3rem;}
   .order-index .header .item{flex:1;-webkit-flex:1;-o-flex:1;-ms-flex:1;text-align:center;font-size:0.24rem;color:#fff;}

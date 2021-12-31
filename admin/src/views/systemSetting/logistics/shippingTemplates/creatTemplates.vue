@@ -36,30 +36,30 @@
             </template>
           </el-table-column>
           <el-table-column min-width="130px" align="center" :label="columns.title" prop="first">
-            <template scope="scope">
+            <template slot-scope="scope">
               <el-form-item :rules="rules.first" :prop="'region.'+scope.$index+'.first'">
                 <el-input-number v-model="scope.row.first" controls-position="right" :step-strictly="ruleForm.type===1?true:false" :min="ruleForm.type===1?1:0.1"/>
               </el-form-item>
             </template>
           </el-table-column>
           <el-table-column min-width="120px" align="center" label="运费（元）" prop="firstPrice">
-            <template scope="scope">
+            <template slot-scope="scope">
               <el-form-item :rules="rules.firstPrice" :prop="'region.'+scope.$index+'.firstPrice'">
-                <el-input-number v-model="scope.row.firstPrice" controls-position="right" />
+                <el-input-number v-model="scope.row.firstPrice" controls-position="right" :min="0" />
               </el-form-item>
             </template>
           </el-table-column>
           <el-table-column min-width="120px" align="center" :label="columns.title2" prop="renewal">
-            <template scope="scope">
+            <template slot-scope="scope">
               <el-form-item :rules="rules.renewal" :prop="'region.'+scope.$index+'.renewal'">
                 <el-input-number v-model="scope.row.renewal" controls-position="right" :step-strictly="ruleForm.type===1?true:false" :min="ruleForm.type===1?1:0.1"/>
               </el-form-item>
             </template>
           </el-table-column>
           <el-table-column class-name="status-col" align="center" label="续费（元）" min-width="120" prop="renewalPrice">
-            <template scope="scope">
+            <template slot-scope="scope">
               <el-form-item :rules="rules.renewalPrice" :prop="'region.'+scope.$index+'.renewalPrice'">
-                <el-input-number v-model="scope.row.renewalPrice" controls-position="right" />
+                <el-input-number v-model="scope.row.renewalPrice" controls-position="right" :min="0" />
               </el-form-item>
             </template>
           </el-table-column>
@@ -266,6 +266,10 @@ export default {
     }
   },
   mounted() {
+    setTimeout(()=>{
+      let cityList = JSON.parse(sessionStorage.getItem('cityList'));
+      this.cityList = cityList;
+    },1000);
   },
   methods: {
     changType(type) {
@@ -383,13 +387,9 @@ export default {
     // 列表
     getCityList() {
       logistics.cityListTree().then(res => {
-        // console.integralLog(res, 'getCityList')
-        res.forEach((el, index) => {
-          el.child.forEach((cel, j) => {
-            delete cel.child
-          })
-        })
-        this.cityList = res
+        sessionStorage.setItem('cityList',JSON.stringify(res));
+        let cityList = JSON.parse(sessionStorage.getItem('cityList'));
+        this.cityList = cityList;
       }).catch(res => {
         this.$message.error(res.message)
       })

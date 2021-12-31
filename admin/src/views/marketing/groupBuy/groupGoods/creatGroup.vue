@@ -226,7 +226,7 @@
         <!-- 商品详情-->
         <div v-show="currentTab === 2">
           <el-form-item label="商品详情：">
-            <ueditor-from v-model="formValidate.content" :content="formValidate.content" />
+            <Tinymce v-model="formValidate.content"></Tinymce>
           </el-form-item>
         </div>
         <el-form-item style="margin-top:30px;">
@@ -258,6 +258,7 @@
             class="submission"
             size="small"
             @click="handleSubmit('formValidate')"
+            v-hasPermi="['admin:combination:update']"
           >提交</el-button>
         </el-form-item>
       </el-form>
@@ -267,11 +268,14 @@
 </template>
 
 <script>
+  import Tinymce from '@/components/Tinymce/index'
   import {  productDetailApi, categoryApi } from '@/api/store'
   import { shippingTemplatesList } from '@/api/logistics'
   import { getSeckillList } from '@/libs/public'
   import {  combinationSaveApi, combinationUpdateApi, combinationInfoApi } from '@/api/marketing'
   import CreatTemplates from '@/views/systemSetting/logistics/shippingTemplates/creatTemplates'
+  import {formatDates} from "@/utils";
+  import {Debounce} from '@/utils/validate'
   const defaultObj = {
     image: '',
     images: '',
@@ -337,7 +341,7 @@
   }
   export default {
     name: "creatSeckill",
-    components: { CreatTemplates },
+    components: { CreatTemplates,Tinymce },
     data() {
       return {
         pickerOptions: {
@@ -459,8 +463,10 @@
         const tmp = {}
         const tmpTab = {}
         this.formValidate.attr.forEach((o, i) => {
-          tmp['value' + i] = { title: o.attrName }
-          tmpTab['value' + i] = ''
+          // tmp['value' + i] = { title: o.attrName }
+          // tmpTab['value' + i] = ''
+          tmp[o.attrName] = { title: o.attrName };
+          tmpTab[o.attrName] = '';
         })
         this.manyTabTit = tmp
         this.manyTabDate = tmpTab
@@ -568,7 +574,7 @@
             stopTime: res.stopTime || '',
             timeVal: [],
             status: 0,
-            isShow: false,
+              isShow: false,
             num : 1,
             isHost : false,
             people : 2,
@@ -578,24 +584,28 @@
             isPostage: false
           }
           if(res.specType){
-            res.attrValues.forEach((row) => {
+            res.attrValue.forEach((row) => {
               row.quota = row.stock;
+              row.attrValue = JSON.parse(row.attrValue);
+              for (let attrValueKey in row.attrValue) {
+                row[attrValueKey] = row.attrValue[attrValueKey];
+              }
             });
             this.$nextTick(() => {
-              res.attrValues.forEach((row) => {
+              res.attrValue.forEach((row) => {
                 row.image = this.$selfUtil.setDomain(row.image)
                 this.$refs.multipleTable.toggleRowSelection(row, true);
                 this.$set(row, 'checked', true)
               });
             });
-            this.ManyAttrValue = res.attrValues
-            this.multipleSelection = res.attrValues
+            this.ManyAttrValue = res.attrValue
+            this.multipleSelection = res.attrValue
           }else{
             res.attrValue.forEach((row) => {
               row.quota = row.stock;
             });
             this.ManyAttrValue = res.attrValue
-            this.formValidate.attr = []
+            this.formValidate.attr = res.attr
           }
           this.fullscreenLoading = false
         }).catch(res => {
@@ -620,7 +630,8 @@
             productId: res.productId,
             giveIntegral: res.giveIntegral,
             ficti: res.ficti,
-            timeVal: res.startTimeStr && res.stopTimeStr ? [res.startTimeStr, res.stopTimeStr] : [],
+            // timeVal: res.startTimeStr && res.stopTimeStr ? [res.startTimeStr, res.stopTimeStr] : [],
+            timeVal: res.startTime && res.stopTime ? [formatDates(new Date(res.startTime), 'yyyy-MM-dd'), formatDates(new Date(res.stopTime), 'yyyy-MM-dd')] : [],
             status: res.status,
             isShow: res.isShow,
             num : res.num,
@@ -630,15 +641,20 @@
             virtualRation : res.virtualRation,
             effectiveTime : res.effectiveTime,
             isPostage: false,
-            startTime: res.startTimeStr || '',
-            stopTime: res.stopTimeStr || ''
+            startTime: res.startTime || '',
+            stopTime: res.stopTime || '',
+            id: res.id
           }
           if(res.specType){
-            this.ManyAttrValue = res.attrValues;
+            this.ManyAttrValue = res.attrValue;
             this.$nextTick(() => {
               this.ManyAttrValue.forEach((item, index) => {
                 item.image = this.$selfUtil.setDomain(item.image)
-                if (item.checked) {
+                item.attrValue = JSON.parse(item.attrValue);
+                for (let attrValueKey in item.attrValue) {
+                  item[attrValueKey] = item.attrValue[attrValueKey];
+                }
+                if (item.id) {
                   this.$set(item, 'price', item.price)
                   this.$set(item, 'quota', item.quota)
                   this.$nextTick(() => {
@@ -649,7 +665,7 @@
             });
           }else{
             this.ManyAttrValue = res.attrValue
-            this.formValidate.attr = []
+            // this.formValidate.attr = []
           }
           this.fullscreenLoading = false
         }).catch(res => {
@@ -667,14 +683,19 @@
         });
       },
       // 提交
-      handleSubmit(name) {
+      handleSubmit:Debounce(function(name) {
         if(!this.formValidate.specType){
-          this.formValidate.attr = []
+          // this.formValidate.attr = []
           this.formValidate.attrValue = this.ManyAttrValue
         }else{
-          this.formValidate.attrValue = this.multipleSelection
+          this.formValidate.attrValue = this.multipleSelection;
         }
+        this.formValidate.attrValue.forEach(item=>{
+          item.attrValue = JSON.stringify(item.attrValue);
+        });
         this.formValidate.images = JSON.stringify(this.formValidate.imagelist);
+        this.formValidate.startTime = this.formValidate.timeVal[0];
+        this.formValidate.stopTime = this.formValidate.timeVal[1];
         // this.formValidate.virtualRation = Math.floor((this.formValidate.people - this.formValidate.peopleNum) / this.formValidate.people * 100)
         this.$refs[name].validate((valid) => {
           if (valid) {
@@ -724,7 +745,7 @@
           }
         });
 
-      },
+      }),
       handleSubmitUp() {
         if (this.currentTab-- < 0) this.currentTab = 0;
       },

@@ -48,7 +48,10 @@ export default {
     },
     routes() {
       return this.$store.state.permission.routes
-    }
+    },
+     theme() {
+      return this.$store.state.settings.theme;
+    },
   },
   watch: {
     $route() {
@@ -202,11 +205,12 @@ export default {
 
 <style lang="scss" scoped>
 .tags-view-container {
-  padding: 6px 0;
+  padding: 10px 0;
   width: 100%;
-  background: #f5f7f9;
-  border-bottom: 1px solid #d8dce5;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .12), 0 0 3px 0 rgba(0, 0, 0, .04);
+  // background: #f5f7f9;
+  background: #f5f5f5;
+  // border-bottom: 1px solid #d8dce5;
+  // box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .12), 0 0 3px 0 rgba(0, 0, 0, .04);
   .tags-view-wrapper {
     .tags-view-item {
       display: inline-block;
@@ -219,27 +223,28 @@ export default {
       background: #fff;
       padding: 0 8px;
       font-size: 12px;
-      margin-left: 5px;
+      margin-left: 10px;
+      border-radius: 3px;
       &:first-of-type {
-        margin-left: 15px;
+        margin-left: 20px;
       }
       &:last-of-type {
-        margin-right: 15px;
+        margin-right: 20px;
       }
       &.active {
         background-color: #fff;
-        color: #498ff7;
+        color: #1890FF;
         border-color: #fff;
-        &::before {
-          content: '';
-          background: #fff;
-          display: inline-block;
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          position: relative;
-          margin-right: 2px;
-        }
+        // &::before {
+        //   content: '';
+        //   background: #fff;
+        //   display: inline-block;
+        //   width: 8px;
+        //   height: 8px;
+        //   border-radius: 50%;
+        //   position: relative;
+        //   margin-right: 2px;
+        // }
       }
     }
   }

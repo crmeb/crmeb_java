@@ -10,20 +10,20 @@
               </el-radio-group>
               <el-date-picker v-model="timeVal" value-format="yyyy-MM-dd" format="yyyy-MM-dd" size="small" type="daterange" placement="bottom-end" placeholder="自定义时间" style="width: 250px;" @change="onchangeTime" />
             </el-form-item>
-            <!--<el-form-item label="明细类型：">-->
-              <!--<el-select  class="selWidth" v-model="tableFrom.type" filterable clearable placeholder="请选择" @change="getList(1)">-->
-                <!--<el-option-->
-                  <!--v-for="(item, index) in optionList"-->
-                  <!--:key="index"-->
-                  <!--:label="item.title"-->
-                  <!--:value="item.type"-->
-                <!--/>-->
-              <!--</el-select>-->
-            <!--</el-form-item>-->
-            <el-form-item label="关键字：" class="width100">
+            <el-form-item label="关键字" class="width100">
               <el-input v-model="tableFrom.keywords" placeholder="微信昵称/ID" class="selWidth" size="small" clearable>
                 <el-button slot="append" icon="el-icon-search" size="small" @click="getList(1)" />
               </el-input>
+            </el-form-item>
+            <el-form-item label="明细类型">
+              <el-select v-model="tableFrom.title" size="small" clearable placeholder="请选择" @change="selectType">
+                <el-option
+                  v-for="item in options"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value">
+                </el-option>
+              </el-select>
             </el-form-item>
           </el-form>
         </div>
@@ -47,12 +47,15 @@
           min-width="130"
         />
         <el-table-column
-          prop="number"
           label="金额"
-          sortable
-          :sort-method="(a,b)=>{return a.number - b.number}"
           min-width="120"
-        />
+        >
+          <template slot-scope="scope">
+            <div>
+              <span :class="scope.row.pm == 1 ? 'color_red': 'color_green'">{{scope.row.pm == 1 ? '+' : '-' }}{{scope.row.number}}</span>
+            </div>
+          </template>>
+        </el-table-column>
         <el-table-column
           label="明细类型"
           min-width="100"
@@ -97,28 +100,27 @@
         },
         listLoading: true,
         tableFrom: {
-         // type: '',
+          title: '',
           dateLimit: '',
           keywords: '',
           page: 1,
-          limit: 20
+          limit: 20,
         },
         categoryId: '',
         fromList: this.$constants.fromList,
-        optionList: []
+        options:[
+          {value: 'recharge',label: '充值支付'},
+          {value: 'admin',label: '后台操作'},
+          {value: 'productRefund',label: '商品退款'},
+          {value: 'payProduct',label: '购买商品'},
+        ]
       }
     },
     mounted() {
       // this.getTypes()
-      this.getOptionList()
       this.getList()
     },
     methods: {
-      getOptionList() {
-        monitorListOptionApi().then(res => {
-          this.optionList = res
-        })
-      },
       selectChange(tab) {
         this.tableFrom.dateLimit = tab
         this.timeVal = []
@@ -152,6 +154,9 @@
       handleSizeChange(val) {
         this.tableFrom.limit = val
         this.getList()
+      },
+      selectType(e){
+        this.getList();
       }
     }
   }
@@ -160,5 +165,11 @@
 <style scoped>
   .selWidth{
     width: 300px;
+  }
+  .color_red{
+    color:#F5222D;
+  }
+  .color_green{
+    color:#7ABE5C;
   }
 </style>
