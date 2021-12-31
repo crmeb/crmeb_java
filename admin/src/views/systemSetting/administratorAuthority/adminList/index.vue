@@ -31,10 +31,10 @@
       </el-form>
       <el-form inline @submit.native.prevent>
         <el-form-item>
-          <el-button size="mini" type="primary" @click="handlerOpenEdit(0)">添加管理员</el-button>
+          <el-button size="mini" type="primary" @click="handlerOpenEdit(0)" v-hasPermi="['admin:system:admin:save']">添加管理员</el-button>
         </el-form-item>
       </el-form>
-      <el-table :data="listData.list" size="mini">
+      <el-table :data="listData.list" size="mini" :header-cell-style=" {fontWeight:'bold'}">
         <el-table-column
           prop="id"
           label="ID"
@@ -48,8 +48,8 @@
           </template>
         </el-table-column>
         <el-table-column label="身份" prop="realName" min-width="230">
-          <template slot-scope="scope">
-            <el-tag size="small" type="info" v-for="(item, index) in scope.row.roleNames.split(',')" class="mr5">{{ item }}</el-tag>
+          <template slot-scope="scope" v-if="scope.row.roleNames">
+            <el-tag size="small" type="info" v-for="(item, index) in scope.row.roleNames.split(',')" :key="index" class="mr5">{{ item }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="最后登录时间" prop="lastTime" min-width="180">
@@ -66,7 +66,7 @@
           label="状态"
           min-width="100"
         >
-          <template slot-scope="scope">
+          <template slot-scope="scope"  v-if="checkPermi(['admin:system:admin:update:status'])">
             <el-switch
               v-model="scope.row.status"
               :active-value="true"
@@ -81,7 +81,7 @@
           label="是否接收短信"
           min-width="100"
         >
-          <template slot-scope="scope">
+          <template slot-scope="scope" v-if="checkPermi(['admin:system:admin:update:sms'])">
             <el-switch
               v-model="scope.row.isSms"
               :active-value="true"
@@ -104,8 +104,8 @@
               <span>-</span>
             </template>
             <template v-else>
-              <el-button type="text" size="mini" @click="handlerOpenEdit(1,scope.row)">编辑</el-button>
-              <el-button type="text" size="mini" @click="handlerOpenDel(scope.row)">删除</el-button>
+              <el-button type="text" size="mini" @click="handlerOpenEdit(1,scope.row)" v-hasPermi="['admin:system:admin:info']">编辑</el-button>
+              <el-button type="text" size="mini" @click="handlerOpenDel(scope.row)" v-hasPermi="['admin:system:admin:delete']">删除</el-button>
             </template>
           </template>
         </el-table-column>
@@ -140,6 +140,7 @@
 import * as systemAdminApi from '@/api/systemadmin.js'
 import * as roleApi from '@/api/role.js'
 import edit from './edit'
+import { checkPermi } from "@/utils/permission"; // 权限判断函数
 export default {
   // name: "index"
   components: { edit },
@@ -174,6 +175,7 @@ export default {
     this.handleGetRoleList()
   },
   methods: {
+    checkPermi,
     onchangeIsShow(row) {
       systemAdminApi.updateStatusApi({id: row.id, status: row.status})
         .then(async () => {

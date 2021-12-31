@@ -436,6 +436,7 @@ export default {
   .public-wrapper .conter{padding:0 0.3rem;}
   .public-wrapper .conter .item{border-bottom:1px solid #f7f7f7;height:0.7rem;font-size:0.24rem;}
   .public-wrapper .conter .item .turnover{color:#d84242;}
+  .statistical-page {margin-top:-50px;}
   .statistical-page .navs{width:100%;height:0.96rem;background-color:#fff;overflow:hidden;line-height:0.96rem;position:fixed;top:0;left:0;z-index:9;}
   .statistical-page .navs .list{overflow-y:hidden;overflow-x:auto;white-space: nowrap;-webkit-overflow-scrolling: touch;
     width: 100%;}

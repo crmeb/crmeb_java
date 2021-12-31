@@ -15,7 +15,6 @@ const ruleTrigger = {
 
 function renderFrom(h) {
   const { formConfCopy } = this
-
   return (
     <el-row gutter={formConfCopy.gutter}>
       <el-form
@@ -47,7 +46,6 @@ function renderFormItem(h, elementList) {
   return elementList.map(scheme => {
     const config = scheme.__config__
     const layout = layouts[config.layout]
-
     if (layout) {
       return layout.call(this, h, scheme)
     }
@@ -80,21 +78,51 @@ function buildListeners(scheme) {
 
   return listeners
 }
-
 const layouts = {
   colFormItem(h, scheme) {
     const config = scheme.__config__
     const listeners = buildListeners.call(this, scheme)
     let labelWidth = config.labelWidth ? `${config.labelWidth}px` : null
     if (config.showLabel === false) labelWidth = '0'
-    return (
-      <el-col span={config.span}>
-        <el-form-item label-width={labelWidth} prop={scheme.__vModel__}
-          label={config.showLabel ? config.label : ''}>
-          <render conf={scheme} {...{ on: listeners }} />
-        </el-form-item>
-      </el-col>
-    )
+    if(config.tips && !config.tipsIsLink){
+      return (
+        <el-col span={config.span}>
+          <el-form-item label-width={labelWidth} prop={scheme.__vModel__}
+            label={config.showLabel ? config.label : ''}>
+            <el-tooltip effect="dark" placement="top-start" style="padding:10px 5px 0 0;">
+                <i class="el-icon-warning-outline" />
+                <div slot="content" style="max-width:400px;">{config.tipsDesc}</div>
+             </el-tooltip>
+            <render conf={scheme} {...{ on: listeners }} />
+          </el-form-item>
+        </el-col>
+      )
+    }else if(config.tips && config.tipsIsLink){
+      return (
+        <el-col span={config.span}>
+          <el-form-item label-width={labelWidth} prop={scheme.__vModel__}
+            label={config.showLabel ? config.label : ''}>
+            <el-tooltip effect="dark" placement="top-start" style="padding:10px 5px 0 0;">
+                <i class="el-icon-warning-outline" />
+                <div slot="content" style="max-width:400px;">
+                  <a href={config.tipsLink} target="_blank">{config.tipsDesc}</a>
+                </div>
+             </el-tooltip>
+            <render conf={scheme} {...{ on: listeners }} />
+          </el-form-item>
+        </el-col>
+      )
+    }else{
+      return (
+        <el-col span={config.span}>
+          <el-form-item label-width={labelWidth} prop={scheme.__vModel__}
+            label={config.showLabel ? config.label : ''}>
+            <render conf={scheme} {...{ on: listeners }} />
+          </el-form-item>
+        </el-col>
+      )
+    }
+    
   },
   rowFormItem(h, scheme) {
     let child = renderChildren.apply(this, arguments)

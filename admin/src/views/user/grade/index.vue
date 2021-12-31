@@ -2,23 +2,7 @@
   <div class="divBox">
     <el-card class="box-card">
       <div slot="header" class="clearfix">
-        <div class="container">
-          <el-form :inline="true" size="small">
-            <el-form-item label="用户状态：" class="mr10">
-              <el-select v-model="tableFrom.isShow" clearable  placeholder="请选择用户状态" @change="seachList"  class="selWidth">
-                <el-option label="全部" value=""></el-option>
-                <el-option label="显示" value="true"></el-option>
-                <el-option label="隐藏" value="false"></el-option>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="等级名称：">
-              <el-input v-model="tableFrom.name" placeholder="请输入等级名称"  class="selWidth" clearable>
-                <el-button slot="append" icon="el-icon-search"  @click="seachList" size="small"/>
-              </el-input>
-            </el-form-item>
-          </el-form>
-        </div>
-        <el-button  type="primary" class="mr10" @click="add" size="small">添加用户等级</el-button>
+        <el-button  type="primary" class="mr10" @click="add" size="small" v-hasPermi="['admin:system:user:level:save']">添加用户等级</el-button>
       </div>
       <el-table
         v-loading="listLoading"
@@ -45,11 +29,11 @@
         <el-table-column
           prop="name"
           label="等级名称"
-          min-width="150"
+          min-width="100"
         />
         <el-table-column
-          prop="grade"
-          label="等级"
+          prop="experience"
+          label="经验"
           min-width="100"
         />
         <el-table-column
@@ -58,46 +42,37 @@
           min-width="100"
         />
         <el-table-column
-          label="是否显示"
-          min-width="150"
+          label="状态"
+          min-width="100"
         >
-          <template slot-scope="scope">
+          <template slot-scope="scope" v-if="checkPermi(['admin:system:user:level:use'])">
             <el-switch
               v-model="scope.row.isShow"
               :active-value="true"
               :inactive-value="false"
-              active-text="显示"
-              inactive-text="隐藏"
-              @change="onchangeIsShow(scope.row)"
+              active-text="开启"
+              inactive-text="关闭"
+              disabled
+              @click.native="onchangeIsShow(scope.row)"
             />
           </template>
         </el-table-column>
         <el-table-column label="操作" min-width="120" fixed="right" align="center">
           <template slot-scope="scope">
-            <el-button type="text" size="small" @click="edit(scope.row.id)" class="mr10">编辑</el-button>
-            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)">删除</el-button>
+            <el-button type="text" size="small" @click="edit(scope.row)" class="mr10" v-hasPermi="['admin:system:user:level:update']">编辑</el-button>
+            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)" v-hasPermi="['admin:system:user:level:delete']">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
-      <div class="block">
-        <el-pagination
-          :page-sizes="[20, 40, 60, 80]"
-          :page-size="tableFrom.limit"
-          :current-page="tableFrom.page"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="tableData.total"
-          @size-change="handleSizeChange"
-          @current-change="pageChange"
-        />
-      </div>
     </el-card>
-    <creat-grade ref="grades"></creat-grade>
+    <creat-grade ref="grades" :user="userInfo"></creat-grade>
   </div>
 </template>
 
 <script>
   import { userListApi, groupListApi, levelListApi, levelUseApi, levelDeleteApi } from '@/api/user'
   import creatGrade from './creatGrade'
+  import { checkPermi } from "@/utils/permission"; // 权限判断函数
   export default {
     name: 'Grade',
     filters: {
@@ -114,16 +89,10 @@
     data() {
       return {
         listLoading: true,
+        userInfo:{},
         tableData: {
           data: [],
-          total: 0
-        },
-        tableFrom: {
-          isShow: '',
-          name: '',
-          page: 1,
-          limit: 20,
-          isDel: 0
+          total: 0,
         }
       }
     },
@@ -131,57 +100,68 @@
       this.getList()
     },
     methods: {
+      checkPermi,
       seachList() {
-        this.tableFrom.page = 1
         this.getList()
       },
       add() {
         this.$refs.grades.dialogVisible = true
+        this.userInfo = {};
       },
       edit(id) {
+        // this.$refs.grades.info(id)
+        this.userInfo = id;
         this.$refs.grades.dialogVisible = true
-        this.$refs.grades.info(id)
       },
       // 列表
       getList() {
         this.listLoading = true
-        levelListApi(this.tableFrom).then(res => {
-          this.tableData.data = res.list
-          this.tableData.total = res.total
+        levelListApi().then(res => {
+          this.tableData.data = res
           this.listLoading = false
         }).catch(() => {
           this.listLoading = false
         })
       },
-      pageChange(page) {
-        this.tableFrom.page = page
-        this.getList()
-      },
-      handleSizeChange(val) {
-        this.tableFrom.limit = val
-        this.getList()
-      },
       // 删除
       handleDelete(id, idx) {
-        this.$modalSure('删除吗？所有用户已经关联的数据都会清除').then(() => {
-          levelDeleteApi({id:id}).then(() => {
+        this.$modalSure('删除吗？删除会导致对应用户等级数据清空，请谨慎操作！').then(() => {
+          levelDeleteApi(id).then(() => {
             this.$message.success('删除成功')
             this.tableData.data.splice(idx, 1)
           })
         })
       },
       onchangeIsShow(row) {
-        levelUseApi({id: row.id, value:row.isShow}).then(() => {
-          this.$message.success('修改成功')
-          this.getList()
-        }).catch(()=>{
+        if(row.isShow == false){
           row.isShow = !row.isShow
-        })
+          levelUseApi({id: row.id, isShow:row.isShow}).then(() => {
+            this.$message.success('修改成功')
+            this.getList()
+          }).catch(()=>{
+            row.isShow = !row.isShow
+          })
+        }else{
+          this.$modalSure('该操作会导致对应用户等级隐藏，请谨慎操作').then(() => {
+            row.isShow = !row.isShow
+            levelUseApi({id: row.id, isShow:row.isShow}).then(() => {
+              this.$message.success('修改成功')
+              this.getList()
+            }).catch(()=>{
+              row.isShow = !row.isShow
+            })
+          })
+        }
       }
     }
   }
 </script>
 
 <style scoped lang="scss">
-
+  .el-switch.is-disabled {
+    opacity: 1;
+  }
+  ::v-deep .el-switch__label {
+    cursor: pointer !important;;
+  }
 </style>

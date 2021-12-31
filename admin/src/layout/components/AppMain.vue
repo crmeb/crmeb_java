@@ -27,13 +27,13 @@ export default {
         {
           title: '社区',
           key: '2',
-          href: 'http://bbs.crmeb.net',
+          href: 'https://q.crmeb.net/?categoryId=122&sequence=0',
           blankTarget: true
         },
         {
           title: '文档',
           key: '3',
-          href: 'https://help.crmeb.net',
+          href: 'https://help.crmeb.net/crmeb_java/1748037',
           blankTarget: true
         }
       ],
@@ -70,7 +70,7 @@ export default {
 }
 
 .fixed-header+.app-main {
-  padding-top: 95px;
+  padding-top: 50px;
 }
 
 .hasTagsView {
@@ -82,7 +82,7 @@ export default {
   }
 
   .fixed-header+.app-main {
-    padding-top: 95px;
+    padding-top: 80px;
   }
 }
 .el-popup-parent--hidden {

@@ -1,20 +1,17 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import { asyncRoutes, constantRoutes } from '@/router'
-import * as categoryApi from '@/api/categoryApi.js'
 import * as roleApi from '@/api/roleApi.js'
 import * as Auth from '@/libs/wechat';
-
-/**
- * Use meta.role to determine if the current user has permission
- * @param roles
- * @param route
- */
-// function hasPermission(roles, route) {
-//   if (route.meta && route.meta.roles) {
-//     return roles.some(role => route.meta.roles.includes(role))
-//   } else {
-//     return true
-//   }
-// }
+import {formatRoutes} from '@/utils/parsing'
 
 /**
  * Filter asynchronous routing tables by recursion
@@ -26,28 +23,20 @@ export function filterAsyncRoutes(routes, roles) {
 
   routes.forEach(route => {
     const tmp = { ...route }
-    // if (hasPermission(roles, tmp)) {
     if (tmp.child) {
       tmp.child = filterAsyncRoutes(tmp.child, roles)
     }
     res.push(tmp)
-    // }
   })
 
   return res
-  // let res = []
-  // for(let i=0; i< menuData.length; i++){
-  //   let menu = menuData[i]
-  //   res.push(...routes.filter(route => {
-  //     return menu === route.name
-  //   }))
-  // }
-  // return res
 }
 
 const state = {
   routes: [],
-  addRoutes: []
+  addRoutes: [],
+  topbarRouters: [],
+  sidebarRouters: []
 }
 
 const mutations = {
@@ -55,7 +44,13 @@ const mutations = {
     state.addRoutes = routes
     // state.routes = constantRoutes.concat(routes)
     state.routes = routes
-  }
+  },
+  SET_TOPBAR_ROUTES: (state, routes) => {
+    state.topbarRouters = routes
+  },
+  SET_SIDEBAR_ROUTERS: (state, routes) => {
+    state.sidebarRouters = routes
+  },
 }
 
 const actions = {
@@ -63,14 +58,22 @@ const actions = {
     return new Promise(async resolve => {
       let accessedRoutes = []
       let menus= []
-      const { rules } = await roleApi.getRoleById(roleid)
-      // const menus = await categoryApi.categroyByIds({ ids: rules })
-      const menusAll = await roleApi.menuListApi()
+      // const { rules } = await roleApi.getRoleById(roleid)
+      let menusAll = await roleApi.menuListApi()
+      menusAll = formatRoutes(menusAll)
+      
       !Auth.isPhone() ? menus = menusAll.filter(item => item.url !== '/javaMobile') : menus = menusAll.filter(item => item.url === '/javaMobile')
       const _routerResult = comRouter(menus, asyncRoutes)
-      accessedRoutes = filterAsyncRoutes(_routerResult, rules)
+      accessedRoutes = filterAsyncRoutes(_routerResult)
       // todo 这里控制是否过滤路由，经测试有些菜单不能予以设置，比如系统设置等等
+      this.state.settings.showSettings = false
       commit('SET_ROUTES', menus)
+      commit('SET_TOPBAR_ROUTES', menus)
+      if(this.state.settings.topNav){
+        commit('SET_SIDEBAR_ROUTERS', state.sidebarRouters.length ? state.sidebarRouters : menus[0].child)
+      }else{
+        commit('SET_SIDEBAR_ROUTERS', menus)
+      }
       // resolve(menus)
       // commit('SET_ROUTES', accessedRoutes)
       resolve(accessedRoutes)

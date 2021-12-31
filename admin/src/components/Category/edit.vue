@@ -21,14 +21,16 @@
       </el-form-item>
       <el-form-item label="分类图标(180*180)" v-if="biztype.value === 1 || biztype.value === 3">
         <div class="upLoadPicBox" @click="modalPicTap('1')">
-          <div v-if="editPram.extra" class="pictrue"><img :src="editPram.extra"></div>
+          <div v-if="editPram.extra" class="pictrue">
+            <img :src="editPram.extra">
+          </div>
           <div v-else class="upLoad">
             <i class="el-icon-camera cameraIconfont" />
           </div>
         </div>
       </el-form-item>
       <el-form-item label="排序">
-        <el-input-number v-model="editPram.sort"/>
+        <el-input-number v-model="editPram.sort" :min="0"/>
       </el-form-item>
       <el-form-item label="状态">
         <el-switch v-model="editPram.status"  active-text="显示"
@@ -38,7 +40,7 @@
         <el-input v-model="editPram.extra" type="textarea" placeholder="扩展字段" />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" :loading="loadingBtn" @click="handlerSubmit('editPram')">确定</el-button>
+        <el-button type="primary" :loading="loadingBtn" @click="handlerSubmit('editPram')" v-hasPermi="['admin:category:update']">确定</el-button>
         <el-button @click="close">取消</el-button>
       </el-form-item>
     </el-form>
