@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.UserVisitRecordDao">
+    <!-- 获取活跃用户数 -->
+    <select id="getActiveUserNumByDate" resultType="java.lang.Integer">
+        select count(*) from
+        (SELECT uid,count(id) as visits FROM `eb_user_visit_record` where uid > 0 and date = #{date} group by uid) as a
+        where a.visits > 1
+    </select>
+
+    <select id="getActiveUserNumByPeriod" resultType="java.lang.Integer">
+        select count(*) from
+        (SELECT uid,count(id) as visits FROM `eb_user_visit_record` where uid > 0 and date between #{startDate} and #{endDate} group by uid) as a
+        where a.visits > 1
+    </select>
+</mapper>

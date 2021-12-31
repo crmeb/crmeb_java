@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.UserDao">
+
+    <select id="getSpreadPeopleList" resultType="com.zbkj.common.response.UserSpreadPeopleItemResponse" parameterType="map">
+        SELECT u.uid,u.nickname, u.avatar, DATE_FORMAT(u.spread_time, '%Y-%m-%d %H:%i:%s') AS `time`, u.spread_count AS childCount FROM eb_user AS u
+         where 1 = 1
+        <if test="userIdList != null and userIdList !='' ">
+            and u.uid in (${userIdList})
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and ( u.real_name like #{keywords, jdbcType=VARCHAR} or u.nickname like #{keywords, jdbcType=VARCHAR})
+        </if>
+        ORDER BY ${sortKey} ${sortValue}
+    </select>
+
+    <select id="findAdminList" resultType="com.zbkj.common.model.user.User" parameterType="Map">
+        SELECT u.* FROM eb_user AS u
+        <if test='userType != null and userType != "" and userType == "wechat"'>
+            INNER JOIN eb_user_token AS ut on u.uid = ut.uid and ut.type = 1
+        </if>
+        <if test='userType != null and userType != "" and userType == "routine"'>
+            INNER JOIN eb_user_token AS ut on u.uid = ut.uid and ut.type = 2
+        </if>
+        where 1 = 1
+        <if test="isPromoter != null and isPromoter !='' or isPromoter == 0 ">
+            and u.is_promoter = ${isPromoter}
+        </if>
+        <if test="groupId != null and groupId !='' ">
+            and u.group_id in (${groupId})
+        </if>
+         <if test="tagIdSql != null and tagIdSql !='' ">
+            and ${tagIdSql}
+        </if>
+        <if test="level != null and level !='' ">
+            and u.level in (${level})
+        </if>
+        <if test="sex != null and sex !='' or sex == 0">
+            and u.sex = ${sex}
+        </if>
+        <if test="country != null and country !='' ">
+            and u.country = #{country}
+        </if>
+        <if test="addres != null and addres !='' ">
+            and u.addres like '%${addres}'
+        </if>
+        <if test="payCount != null and payCount !='' or payCount == 0 ">
+            <if test="payCount &lt;= 0">
+                and u.pay_count = 0
+            </if>
+            <if test="payCount > 0">
+                and u.pay_count >= ${payCount}
+            </if>
+        </if>
+        <if test="status != null and status !='' or status == 0 ">
+            and u.`status` = ${status}
+        </if>
+        <if test="startTime != null and startTime != '' and accessType != null and accessType != ''">
+            <choose>
+                <when test="accessType = 1">
+                    and create_time between #{startTime} and #{endTime}
+                    and create_time = last_login_time
+                </when>
+                <when test="accessType = 2">
+                    and last_login_time between #{startTime} and #{endTime}
+                </when>
+                <when test="accessType = 3">
+                    and last_login_time not between #{startTime} and #{endTime}
+                </when>
+                <otherwise>
+                    and create_time between #{startTime} and #{endTime}
+                </otherwise>
+            </choose>
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and ( u.phone like #{keywords, jdbcType=VARCHAR} or u.nickname like "%"#{keywords, jdbcType=VARCHAR}"%" or u.mark like #{keywords, jdbcType=VARCHAR})
+        </if>
+        ORDER BY u.uid desc
+    </select>
+</mapper>

@@ -1,0 +1,42 @@
+# CRMEB 相关配置
+crmeb:
+  version: CRMEB-JAVA-SY-v2.0 # 当前代码版本
+  domain: #配合swagger使用 # 待部署域名
+  wechat-api-url:  #请求微信接口中专服务器
+  wechat-js-api-debug: false #微信js api系列是否开启调试模式
+  wechat-js-api-beta: true #微信js api是否是beta版本
+  asyncConfig: false #是否同步config表数据到redis
+  asyncWeChatProgramTempList: false #是否同步小程序公共模板库
+  imagePath: /www/wwwroot/api.dev.admin.net/ # 服务器图片路径配置 斜杠结尾
+
+server:
+  port: 20010
+
+spring:
+  profiles:
+    #  配置的环境
+    active: dev
+    #  数据库配置
+  servlet:
+    multipart:
+      max-file-size: 50MB #设置单个文件大小
+      max-request-size: 50MB #设置单次请求文件的总大小
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/crmeb_java_dev?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
+    username: root
+    password: 123456
+  redis:
+    host: 127.0.0.1 #地址
+    port: 6379 #端口
+    password: 123456
+    timeout: 10000 # 连接超时时间（毫秒）
+    database: 10 #默认数据库
+    jedis:
+      pool:
+        max-active: 200 # 连接池最大连接数（使用负值表示没有限制）
+        max-wait: -1 # 连接池最大阻塞等待时间（使用负值表示没有限制）
+        max-idle: 10 # 连接池中的最大空闲连接
+        min-idle: 0 # 连接池中的最小空闲连接
+        time-between-eviction-runs: -1 #逐出扫描的时间间隔(毫秒) 如果为负数,则不运行逐出线程, 默认-1

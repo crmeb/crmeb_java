@@ -79,7 +79,7 @@ endSecond=$(date --date="$endTime" +%s);
 
 total=$((endSecond-startSecond))
 # shellcheck disable=SC2027
-echo "本次启动耗时： "$total"s"
+echo "本次运行时间： "$total"s"
 # shellcheck disable=SC2086
 echo "当前时间："$endTime
 
