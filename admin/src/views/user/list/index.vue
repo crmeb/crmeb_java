@@ -1,5 +1,5 @@
 <template>
-  <div class="divBox">
+  <div class="divBox relative">
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <el-tabs v-model="loginType" @tab-click="getList(1)">
@@ -11,16 +11,9 @@
               <el-col :xs="24" :sm="24" :md="24" :lg="18" :xl="18">
                 <el-col v-bind="grid">
                   <el-form-item label="用户搜索：">
-                    <el-input v-model="userFrom.keywords" placeholder="请输入姓名" clearable  class="selWidth"/>
+                    <el-input v-model="userFrom.keywords" placeholder="请输入姓名或手机号" clearable  class="selWidth"/>
                   </el-form-item>
                 </el-col>
-                <!--<el-col :span="24">-->
-                  <!--<el-col v-bind="grid">-->
-                    <!--<el-form-item label="会员搜索：">-->
-                      <!--<el-input v-model="userFrom.keywords" placeholder="请输入" clearable  class="selWidth"/>-->
-                    <!--</el-form-item>-->
-                  <!--</el-col>-->
-                <!--</el-col>-->
               </el-col>
               <template v-if="collapse">
                 <el-col  :xs="24" :sm="24" :md="24" :lg="18" :xl="18">
@@ -61,8 +54,52 @@
                       <el-cascader :options="addresData" :props="propsCity" filterable v-model="address" @change="handleChange" clearable  class="selWidth"></el-cascader>
                     </el-form-item>
                   </el-col>
+                  <el-col v-bind="grid">
+                    <el-form-item label="消费情况：">
+                      <el-select v-model="userFrom.payCount" placeholder="请选择"  class="selWidth" clearable>
+                        <el-option value="" label="全部"></el-option>
+                        <el-option value="0" label="0"></el-option>
+                        <el-option value="1" label="1+"></el-option>
+                        <el-option value="2" label="2+"></el-option>
+                        <el-option value="3" label="3+"></el-option>
+                        <el-option value="4" label="4+"></el-option>
+                        <el-option value="5" label="5+"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                  <el-col v-bind="grid">
+                    <el-form-item label="时间选择：" class="timeBox">
+                      <el-date-picker
+                        v-model="timeVal"
+                        align="right"
+                        unlink-panels
+                        value-format="yyyy-MM-dd"
+                        format="yyyy-MM-dd"
+                        size="small"
+                        type="daterange"
+                        placement="bottom-end"
+                        placeholder="自定义时间"
+                        class="selWidth"
+                        :picker-options="pickerOptions" 
+                        @change="onchangeTime"
+                      />
+                    </el-form-item>
+                  </el-col>
                 </el-col>
+                <!-- <el-col :xs="24" :sm="24" :md="24" :lg="18" :xl="18">
+                  
+                </el-col> -->
                 <el-col :xs="24" :sm="24" :md="24" :lg="18" :xl="18">
+                  <el-col v-bind="grid">
+                    <el-form-item label="访问情况：">
+                      <el-select v-model="userFrom.accessType" placeholder="请选择"  class="selWidth" clearable>
+                        <el-option :value="0" label="全部"></el-option>
+                        <el-option :value="1" label="首次访问"></el-option>
+                        <el-option :value="2" label="时间段访问过"></el-option>
+                        <el-option :value="3" label="时间段未访问"></el-option>
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
                   <el-col v-bind="grid">
                     <el-form-item label="性别：">
                       <el-radio-group v-model="userFrom.sex" type="button"  class="selWidth">
@@ -100,51 +137,9 @@
                     </el-form-item>
                   </el-col>
                 </el-col>
-                <el-col :xs="24" :sm="24" :md="24" :lg="18" :xl="18">
-                  <el-col v-bind="grid">
-                    <el-form-item label="访问情况：">
-                      <el-select v-model="userFrom.accessType" placeholder="请选择"  class="selWidth" clearable>
-                        <el-option :value="0" label="全部"></el-option>
-                        <el-option :value="1" label="首次访问"></el-option>
-                        <el-option :value="2" label="时间段访问过"></el-option>
-                        <el-option :value="3" label="时间段未访问"></el-option>
-                      </el-select>
-                    </el-form-item>
-                  </el-col>
-                  <el-col v-bind="grid">
-                    <el-form-item label="消费情况：">
-                      <el-select v-model="userFrom.payCount" placeholder="请选择"  class="selWidth" clearable>
-                        <el-option value="" label="全部"></el-option>
-                        <el-option value="0" label="0"></el-option>
-                        <el-option value="1" label="1+"></el-option>
-                        <el-option value="2" label="2+"></el-option>
-                        <el-option value="3" label="3+"></el-option>
-                        <el-option value="4" label="4+"></el-option>
-                        <el-option value="5" label="5+"></el-option>
-                      </el-select>
-                    </el-form-item>
-                  </el-col>
-                </el-col>
-                <el-col :xs="24" :sm="24" :md="24" :lg="18" :xl="18">
-                  <el-col v-bind="grid">
-                    <el-form-item label="时间选择：" class="timeBox">
-                      <el-date-picker
-                        v-model="timeVal"
-                        align="right"
-                        unlink-panels
-                        value-format="yyyy-MM-dd"
-                        format="yyyy-MM-dd"
-                        size="small"
-                        type="daterange"
-                        placement="bottom-end"
-                        placeholder="自定义时间"
-                        class="selWidth"
-                        :picker-options="pickerOptions"
-                        @change="onchangeTime"
-                      />
-                    </el-form-item>
-                  </el-col>
-                </el-col>
+                <!-- <el-col :xs="24" :sm="24" :md="24" :lg="18" :xl="18">
+                  
+                </el-col> -->
               </template>
               <el-col  :xs="24" :sm="24" :md="24" :lg="6" :xl="6" class="text-right userFrom">
                 <el-form-item>
@@ -163,10 +158,11 @@
             </el-row>
           </el-form>
         </div>
-        <el-button class="mr10" size="small" @click="onSend">发送优惠券</el-button>
-        <!--<el-button v-show="loginType === 'wechat'" size="mini" class="mr10" @click="sendNews">发送文章</el-button>-->
-        <el-button class="mr10" size="small" @click="setBatch('group')">批量设置分组</el-button>
-        <el-button class="mr10" size="small" @click="setBatch('label')">批量设置标签</el-button>
+        <div class="btn_bt">
+          <el-button class="mr10" size="small" @click="onSend" type="primary" v-hasPermi="['admin:coupon:user:receive']">发送优惠券</el-button>
+          <el-button class="mr10" size="small" @click="setBatch('group')">批量设置分组</el-button>
+          <el-button class="mr10" size="small" @click="setBatch('label')">批量设置标签</el-button>
+        </div>
       </div>
       <el-table
         ref="table"
@@ -187,23 +183,14 @@
                 <span>{{ props.row.createTime | filterEmpty }}</span>
               </el-form-item>
               <el-form-item label="近次访问：">
-                <span>{{ props.row.updateTime | filterEmpty }}</span>
+                <span>{{ props.row.lastLoginTime | filterEmpty }}</span>
               </el-form-item>
-              <!--<el-form-item label="身份证号：">-->
-                <!--<span>{{ props.row.cardId | filterEmpty }}</span>-->
-              <!--</el-form-item>-->
               <el-form-item label="手机号：">
                 <span>{{ props.row.phone | filterEmpty }}</span>
               </el-form-item>
-              <!--<el-form-item label="真实姓名：">-->
-                <!--<span>{{ props.row.realName | filterEmpty }}</span>-->
-              <!--</el-form-item>-->
               <el-form-item label="标签：">
                 <span>{{ props.row.tagName | filterEmpty }}</span>
               </el-form-item>
-              <!--<el-form-item label="生日：">-->
-                <!--<span>{{ props.row.birthday | filterEmpty }}</span>-->
-              <!--</el-form-item>-->
               <el-form-item label="地址：">
                 <span>{{ props.row.addres | filterEmpty }}</span>
               </el-form-item>
@@ -222,7 +209,8 @@
           label="ID"
           min-width="80"
         />
-        <el-table-column label="头像" min-width="80">
+        <el-table-column 
+        label="头像" min-width="80">
           <template slot-scope="scope">
             <div class="demo-image__preview">
               <el-image
@@ -235,7 +223,7 @@
         </el-table-column>
         <el-table-column
           label="姓名"
-          min-width="130"
+          min-width="160"
         >
           <template slot-scope="scope">
             <span>{{scope.row.nickname | filterEmpty  }} | {{scope.row.sex | sexFilter}}</span>
@@ -287,19 +275,20 @@
         />
         <el-table-column label="操作" min-width="130" fixed="right" align="center">
           <template slot-scope="scope">
-            <el-button type="text" @click="editUser(scope.row.uid)" size="small">编辑</el-button>
+            <el-button type="text" @click="editUser(scope.row.uid)" size="small" v-hasPermi="['admin:user:infobycondition']">编辑</el-button>
             <el-dropdown trigger="click">
               <span class="el-dropdown-link">
                 更多<i class="el-icon-arrow-down el-icon--right" />
               </span>
               <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item @click.native="onDetails(scope.row.uid)">账户详情</el-dropdown-item>
-                <el-dropdown-item @click.native="editPoint(scope.row.uid)">积分余额</el-dropdown-item>
-                <el-dropdown-item @click.native="setBatch('group',scope.row)">设置分组</el-dropdown-item>
-                <el-dropdown-item @click.native="setBatch('label',scope.row)">设置标签</el-dropdown-item>
-                <el-dropdown-item @click.native="setPhone(scope.row)">修改手机号</el-dropdown-item>
-                <el-dropdown-item @click.native="setExtension(scope.row)">修改上级推广人</el-dropdown-item>
-                <el-dropdown-item @click.native="clearSpread(scope.row)" v-if="scope.row.spreadUid && scope.row.spreadUid>0">清除上级推广人</el-dropdown-item>
+                <el-dropdown-item @click.native="onDetails(scope.row.uid)" v-if="checkPermi(['admin:user:topdetail'])">账户详情</el-dropdown-item>
+                <el-dropdown-item @click.native="editPoint(scope.row.uid)" v-if="checkPermi(['admin:user:operate:founds'])">积分余额</el-dropdown-item>
+                <el-dropdown-item @click.native="setBatch('group',scope.row)" v-if="checkPermi(['admin:user:group'])">设置分组</el-dropdown-item>
+                <el-dropdown-item @click.native="setBatch('label',scope.row)" v-if="checkPermi(['admin:user:tag'])">设置标签</el-dropdown-item>
+                <el-dropdown-item @click.native="setPhone(scope.row)" v-if="checkPermi(['admin:user:update:phone'])">修改手机号</el-dropdown-item>
+                <el-dropdown-item @click.native="onLevel(scope.row.uid,scope.row.level)" v-if="checkPermi(['admin:user:update:level'])">修改用户等级</el-dropdown-item>
+                <el-dropdown-item @click.native="setExtension(scope.row)"  v-if="checkPermi(['admin:user:update:spread'])">修改上级推广人</el-dropdown-item>
+                <el-dropdown-item @click.native="clearSpread(scope.row)" v-if="scope.row.spreadUid && scope.row.spreadUid>0 && checkPermi(['admin:retail:spread:clean'])">清除上级推广人</el-dropdown-item>
               </el-dropdown-menu>
             </el-dropdown>
           </template>
@@ -373,7 +362,7 @@
           :rules="[{ required: true, message: '请选择用户标签', trigger: 'change' }]"
           v-else
         >
-          <el-select v-model="dynamicValidateForm.groupId" placeholder="请选择标签" style="width: 80%" filterable multiple>
+          <el-select v-model="dynamicValidateForm.groupId" placeholder="请选择标签" style="width: 80%" filterable>
             <el-option :value="item.id" v-for="(item, index) in labelLists" :key="index" :label="item.name"></el-option>
           </el-select>
         </el-form-item>
@@ -444,6 +433,14 @@
       :before-close="Close">
       <user-details ref="userDetails" :uid="uid" v-if="Visible"></user-details>
     </el-dialog>
+    <!-- 用户等级 -->
+    <el-dialog
+      title="设置"
+      :visible.sync="levelVisible"
+      width="600px"
+      :before-close="Close">
+      <level-edit :levelInfo="levelInfo" :levelList="levelList"></level-edit>
+    </el-dialog>
   </div>
 </template>
 
@@ -452,12 +449,15 @@
   import { spreadClearApi } from '@/api/distribution'
   import editFrom from './edit'
   import userDetails from './userDetails'
+  import levelEdit from './level'
   import userList from '@/components/userList'
   import * as logistics from '@/api/logistics.js'
   import Cookies from 'js-cookie'
+  import { checkPermi } from "@/utils/permission"; // 权限判断函数
+  import {Debounce} from '@/utils/validate'
   export default {
     name: 'UserIndex',
-    components:{ editFrom, userDetails,userList },
+    components:{ editFrom, userDetails,userList ,levelEdit},
     filters: {
       sexFilter(status) {
         const statusMap = {
@@ -479,65 +479,8 @@
         ruleInline: {},
         extensionVisible: false,
         userVisible: false,
-        pickerOptions: {
-          shortcuts: [
-            {
-              text: '今天',
-              onClick(picker) {
-                const end = new Date()
-                const start = new Date()
-                start.setTime(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))
-                picker.$emit('pick', [start, end])
-              }
-            },
-            {
-              text: '昨天',
-              onClick(picker) {
-                const end = new Date()
-                const start = new Date()
-                start.setTime(start.setTime(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 1)))
-                end.setTime(end.setTime(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())))
-                picker.$emit('pick', [start, end])
-              }
-            },
-            {
-              text: '最近7天',
-              onClick(picker) {
-                const end = new Date()
-                const start = new Date()
-                start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
-                picker.$emit('pick', [start, end])
-              }
-            },
-            {
-              text: '最近30天',
-              onClick(picker) {
-                const end = new Date()
-                const start = new Date()
-                start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
-                picker.$emit('pick', [start, end])
-              }
-            },
-            {
-              text: '本月',
-              onClick(picker) {
-                const end = new Date()
-                const start = new Date()
-                start.setTime(start.setTime(new Date(new Date().getFullYear(), new Date().getMonth(), 1)))
-                picker.$emit('pick', [start, end])
-              }
-            },
-            {
-              text: '本年',
-              onClick(picker) {
-                const end = new Date()
-                const start = new Date()
-                start.setTime(start.setTime(new Date(new Date().getFullYear(), 0, 1)))
-                picker.$emit('pick', [start, end])
-              }
-            }
-          ]
-        },
+        levelInfo:'',
+        pickerOptions: this.$timeOptions,
         loadingBtn: false,
         PointValidateForm: {
           integralType: 2,
@@ -551,6 +494,7 @@
         visible: false,
         userIds: '',
         dialogVisible: false,
+        levelVisible:false,
         levelData: [],
         groupData: [],
         labelData: [],
@@ -604,20 +548,6 @@
           sm: 24,
           xs: 24
         },
-        grid2: {
-          xl: 18,
-          lg: 16,
-          md: 12,
-          sm: 24,
-          xs: 24
-        },
-        grid3: {
-          xl: 8,
-          lg: 12,
-          md: 12,
-          sm: 24,
-          xs: 24
-        },
         levelList: [],
         labelLists: [],
         groupList: [],
@@ -636,8 +566,14 @@
         keyNum: 0,
         address: [],
         multipleSelectionAll: [],
-        idKey:'uid'
+        idKey:'uid',
+        uid:'',
       }
+    },
+    activated(){
+      this.userFrom.keywords = '';
+      this.loginType = '0';
+      this.getList(1);
     },
     mounted() {
       this.getList()
@@ -647,6 +583,7 @@
       this.getCityList()
     },
     methods: {
+      checkPermi,
       setPhone(row) {
         this.$prompt('修改手机号', {
           confirmButtonText: '确定',
@@ -658,7 +595,7 @@
           closeOnClickModal: false,
           inputValidator: (value) => {
             if (!value) return '请填写手机号'
-            if (!/^1[3456789]\d{9}$/.test(value)) return '手机号格式不正确!'
+            // if (!/^1[3456789]\d{9}$/.test(value)) return '手机号格式不正确!'
             // if(!value) return '输入不能为空'
           }
         }).then(({value}) => {
@@ -738,15 +675,15 @@
         this.getList()
       },
       // 列表
-      getCityList() {
-        logistics.cityListTree().then(res => {
-          res.forEach((el, index) => {
-            el.child.forEach((cel, j) => {
-              delete cel.child
-            })
-          })
+      async getCityList() {
+        let res = await logistics.cityListTree();
+        //res.forEach((el, index) => {
+        //     el.child.forEach((cel, j) => {
+        //       delete cel.child
+        //     })
+        //   }) 
           this.addresData = res
-        })
+        // })
       },
       // 发送文章
       sendNews() {
@@ -771,11 +708,25 @@
       },
       Close() {
         this.Visible = false
+        this.levelVisible = false;
       },
       // 账户详情
       onDetails(id){
         this.uid = id
         this.Visible = true
+      },
+      // 等级
+      onLevel(id,level){
+        var userLevel = new Object();
+        this.levelList.forEach(item=>{
+          if(item.id == level){
+            userLevel.gradeLevel = item.grade;
+          }
+        })
+        userLevel.uid = id;
+        userLevel.level = level;
+        this.levelInfo = userLevel;
+        this.levelVisible = true;
       },
       // 积分余额
       editPoint(id) {
@@ -783,7 +734,7 @@
         this.VisiblePoint = true
       },
       // 积分余额
-      submitPointForm(formName){
+      submitPointForm:Debounce(function(formName){
         this.$refs[formName].validate((valid) => {
           if (valid) {
             this.PointValidateForm.uid = this.uid
@@ -800,7 +751,7 @@
             return false
           }
         })
-      },
+      }),
       // 积分余额
       handlePointClose() {
         this.VisiblePoint = false
@@ -920,9 +871,9 @@
       },
       // 等级列表
       levelLists () {
-        levelListApi({ page: 1, limit: 9999}).then(async res => {
-          this.levelList = res.list
-          localStorage.setItem('levelKey', JSON.stringify(res.list))
+        levelListApi().then(async res => {
+          this.levelList = res
+         localStorage.setItem('levelKey', JSON.stringify(res))
         })
       },
       // 列表
@@ -944,6 +895,7 @@
         }).catch(() => {
           this.listLoading = false
         })
+        this.checkedCities = this.$cache.local.has('user_stroge') ? this.$cache.local.getJSON('user_stroge') : this.checkedCities;
       },
       // 设置选中的方法
       setSelectRow() {
@@ -1039,7 +991,7 @@
           }).catch(()=>{
             row.isShow = !row.isShow
           })
-      }
+      },
     }
   }
 </script>
@@ -1092,5 +1044,12 @@
   .ivu-ml-8{
     font-size: 12px;
     color: #1682e6;
+  }
+  .btn_bt{
+    border-top:1px dashed #ccc;
+    padding-top: 20px;
+  }
+  .relative{
+    position: relative;
   }
 </style>

@@ -39,6 +39,7 @@
         v-loading="Loading"
         :data="issueData.data"
         style="width: 100%"
+        :header-cell-style=" {fontWeight:'bold'}"
       >
         <el-table-column
           prop="couponId"

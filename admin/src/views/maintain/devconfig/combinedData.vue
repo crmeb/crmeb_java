@@ -11,21 +11,22 @@
             </el-form-item>
           </el-form>
         </div>
-        <el-button size="mini" type="primary" @click="handlerOpenEdit({},0)">添加数据组</el-button>
+        <el-button size="mini" type="primary" @click="handlerOpenEdit({},0)" v-hasPermi="['admin:system:group:save']">添加数据组</el-button>
       </div>
       <el-table
         :data="dataList.list"
         style="width: 100%;margin-bottom: 20px;"
         size="mini"
         highlight-current-row
+        :header-cell-style=" {fontWeight:'bold'}"
       >
         <el-table-column label="数据组名称" prop="name"  min-width="150"/>
         <el-table-column label="简介" prop="info" min-width="150"/>
         <el-table-column label="操作" fixed="right" min-width="180">
           <template slot-scope="scope">
-            <el-button size="small" type="text" @click="handleDataList(scope.row)">数据列表</el-button>
-            <el-button size="small" type="text" @click="handlerOpenEdit(scope.row, 1)">编辑</el-button>
-            <el-button size="small" type="text" @click="handleDelete(scope.row)">删除</el-button>
+            <el-button size="small" type="text" @click="handleDataList(scope.row)" v-hasPermi="['admin:system:group:data:list']">数据列表</el-button>
+            <el-button size="small" type="text" @click="handlerOpenEdit(scope.row, 1)" v-hasPermi="['admin:system:group:info','admin:system:group:update']">编辑</el-button>
+            <el-button size="small" type="text" @click="handleDelete(scope.row)"  v-hasPermi="['admin:system:group:delete']">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

@@ -7,12 +7,8 @@
       <el-form-item
         label="状态"
         prop="status"
-        :rules="[{ required: true, message:'正确操作状态', trigger:['change'] }]"
-      >
-        <el-switch
-          v-model="selfForm.status"
-
-        />
+        :rules="[{ required: true, message:'正确操作状态', trigger:['change'] }]">
+        <el-switch  v-model="selfForm.status"/>
       </el-form-item>
     </el-form>
     <parser
@@ -30,6 +26,7 @@
 import parser from '@/components/FormGenerator/components/parser/Parser'
 import * as systemGroupDataApi from '@/api/systemGroupData.js'
 import * as systemFormConfigApi from '@/api/systemFormConfig.js'
+import {Debounce} from '@/utils/validate'
 export default {
   // name: "combineEdit"
   components: { parser },
@@ -71,9 +68,9 @@ export default {
         this.formConf = JSON.parse(data.content)
       })
     },
-    handlerSubmit(formValue) {
+    handlerSubmit:Debounce(function(formValue) {
       this.isCreate === 0 ? this.handlerSave(formValue) : this.handlerEdit(formValue)
-    },
+    }),
     handlerSave(formValue) {
       const _pram = this.buildFormPram(formValue)
       systemGroupDataApi.groupDataSave(_pram).then(data => {

@@ -28,6 +28,10 @@ export const inputComponents = [
       tagIcon: 'input',
       defaultValue: undefined,
       required: true,
+      tips:false, //tooltip描述是否开启
+      tipsDesc:'', //tooltip描述内容
+      tipsIsLink:false,//是否开启描述链接
+      tipsLink:'', //描述链接
       layout: 'colFormItem',
       span: 24,
       document: 'https://element.eleme.cn/#/zh-CN/component/input',
@@ -41,7 +45,7 @@ export const inputComponents = [
     },
     // 其余的为可直接写在组件标签上的属性
     placeholder: '请输入',
-    style: { width: '100%' },
+    style: { width: '95%' },
     clearable: true,
     'prefix-icon': '',
     'suffix-icon': '',
@@ -59,6 +63,10 @@ export const inputComponents = [
       tagIcon: 'textarea',
       defaultValue: undefined,
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       layout: 'colFormItem',
       span: 24,
       regList: [],
@@ -71,7 +79,7 @@ export const inputComponents = [
       minRows: 4,
       maxRows: 4
     },
-    style: { width: '100%' },
+    style: { width: '95%' },
     maxlength: null,
     'show-word-limit': false,
     readonly: false,
@@ -89,6 +97,10 @@ export const inputComponents = [
       layout: 'colFormItem',
       span: 24,
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       regList: [],
       document: 'https://element.eleme.cn/#/zh-CN/component/input'
     },
@@ -119,6 +131,10 @@ export const inputComponents = [
       span: 24,
       layout: 'colFormItem',
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       regList: [],
       document: 'https://element.eleme.cn/#/zh-CN/component/input-number'
     },
@@ -164,6 +180,10 @@ export const selectComponents = [
       layout: 'colFormItem',
       span: 24,
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       regList: [],
       changeTag: true,
       document: 'https://element.eleme.cn/#/zh-CN/component/select'
@@ -191,11 +211,15 @@ export const selectComponents = [
       labelWidth: null,
       tag: 'el-cascader',
       tagIcon: 'cascader',
-      layout: 'colFormItem',
+      layout: 'colFormItem', 
       defaultValue: [],
       dataType: 'dynamic',
       span: 24,
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       regList: [],
       changeTag: true,
       document: 'https://element.eleme.cn/#/zh-CN/component/cascader'
@@ -240,7 +264,13 @@ export const selectComponents = [
       optionType: 'default',
       regList: [],
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       border: false,
+      // bindInput:false, //是否开启绑定输入
+      // bindValve:'', //绑定输入内容
       document: 'https://element.eleme.cn/#/zh-CN/component/radio'
     },
     __slot__: {
@@ -268,6 +298,10 @@ export const selectComponents = [
       layout: 'colFormItem',
       optionType: 'default',
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       regList: [],
       changeTag: true,
       border: false,
@@ -299,6 +333,10 @@ export const selectComponents = [
       labelWidth: null,
       layout: 'colFormItem',
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       regList: [],
       changeTag: true,
       document: 'https://element.eleme.cn/#/zh-CN/component/switch'
@@ -323,6 +361,10 @@ export const selectComponents = [
       layout: 'colFormItem',
       labelWidth: null,
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       regList: [],
       changeTag: true,
       document: 'https://element.eleme.cn/#/zh-CN/component/slider'
@@ -345,6 +387,10 @@ export const selectComponents = [
       layout: 'colFormItem',
       labelWidth: null,
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       regList: [],
       changeTag: true,
       document: 'https://element.eleme.cn/#/zh-CN/component/time-picker'
@@ -370,6 +416,10 @@ export const selectComponents = [
       layout: 'colFormItem',
       defaultValue: null,
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       regList: [],
       changeTag: true,
       document: 'https://element.eleme.cn/#/zh-CN/component/time-picker'
@@ -395,6 +445,10 @@ export const selectComponents = [
       layout: 'colFormItem',
       defaultValue: null,
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       regList: [],
       changeTag: true,
       document: 'https://element.eleme.cn/#/zh-CN/component/time-picker'
@@ -417,6 +471,10 @@ export const selectComponents = [
       span: 24,
       layout: 'colFormItem',
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       regList: [],
       changeTag: true,
       document: 'https://element.eleme.cn/#/zh-CN/component/date-picker'
@@ -440,6 +498,10 @@ export const selectComponents = [
       showLabel: true,
       labelWidth: null,
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       layout: 'colFormItem',
       regList: [],
       changeTag: true,
@@ -467,6 +529,10 @@ export const selectComponents = [
       labelWidth: null,
       layout: 'colFormItem',
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       regList: [],
       changeTag: true,
       document: 'https://element.eleme.cn/#/zh-CN/component/rate'
@@ -489,6 +555,10 @@ export const selectComponents = [
       labelWidth: null,
       layout: 'colFormItem',
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       regList: [],
       changeTag: true,
       document: 'https://element.eleme.cn/#/zh-CN/component/color-picker'
@@ -502,12 +572,16 @@ export const selectComponents = [
     __config__: {
       label: '上传文件',
       tag: 'upload-file',
-      tagIcon: 'uploadPicture',
+      tagIcon: 'uploadPicture', 
       layout: 'colFormItem',
       defaultValue: null,
       showLabel: true,
       labelWidth: null,
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       span: 24,
       showTip: false,
       buttonText: '点击上传',
@@ -515,7 +589,7 @@ export const selectComponents = [
       changeTag: true,
       // fileSize: 2,
       // sizeUnit: 'MB',
-      document: 'https://element.eleme.cn/#/zh-CN/component/upload'
+      document: 'https://element.eleme.cn/#/zh-CN/component/upload' 
     },
     __slot__: {
       'list-type': true
@@ -541,6 +615,10 @@ export const selectComponents = [
       showLabel: true,
       labelWidth: null,
       required: true,
+      tips:false,
+      tipsDesc:'',
+      tipsIsLink:false,
+      tipsLink:'', 
       span: 24,
       showTip: false,
       buttonText: '',
@@ -561,25 +639,31 @@ export const selectComponents = [
     // 'list-type': 'text',
     multiple: false
   },
-  {
-    __config__: {
-      label: '富文本编辑器',
-      tag: 'ueditor-from',
-      tagIcon: 'ueditorFrom',
-      layout: 'colFormItem',
-      defaultValue: null,
-      showLabel: true,
-      labelWidth: null,
-      required: false,
-      span: 24,
-      showTip: false,
-      regList: [],
-      changeTag: true,
-    },
-    height: 300, // 编辑器高度
-    name: 'ueditor',
-    disabled: false
-  }
+  // {
+  //   __config__: {
+  //     label: '富文本编辑器',
+  //     tag: 'tinymce',
+  //     tagIcon: 'rich-text',
+  //     layout: 'colFormItem',
+  //     defaultValue: null,
+  //     showLabel: true,
+  //     labelWidth: null,
+  //     required: false,
+  //     tips:false,
+  //     tipsDesc:'',
+  //     tipsIsLink:false,
+  //     tipsLink:'', 
+  //     span: 24,
+  //     showTip: false,
+  //     regList: [],
+  //     document: "http://tinymce.ax-z.cn",
+  //     renderKey: 1636077154813,
+  //     changeTag: true,
+  //   },
+  //   height: 300, // 编辑器高度
+  //   name: 'tinymce',
+  //   disabled: false
+  // }
 ]
 
 // 布局型组件 【左面板】

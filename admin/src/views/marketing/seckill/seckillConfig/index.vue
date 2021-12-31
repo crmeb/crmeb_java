@@ -17,7 +17,7 @@
             </el-form-item>
           </el-form>
         </div>
-        <el-button size="mini" type="primary" @click="add">添加秒杀配置</el-button>
+        <el-button size="mini" type="primary" @click="add" v-hasPermi="['admin:seckill:manger:save']">添加秒杀配置</el-button>
       </div>
       <el-table
         v-loading="listLoading"
@@ -25,6 +25,7 @@
         style="width: 100%"
         size="mini"
         ref="multipleTable"
+        :header-cell-style=" {fontWeight:'bold'}"
       >
         <el-table-column
           prop="id"
@@ -77,7 +78,7 @@
           label="状态"
           min-width="150"
         >
-          <template slot-scope="scope">
+          <template slot-scope="scope" v-if="checkPermi(['admin:seckill:manger:update:status'])">
             <el-switch
               v-model="scope.row.status"
               :active-value="1"
@@ -95,10 +96,10 @@
         />
         <el-table-column label="操作" min-width="150" fixed="right" align="center">
           <template slot-scope="scope">
-            <el-button type="text" size="small" @click="handleEdit(scope.row.id)">编辑</el-button>
-            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)"  class="mr10">删除</el-button>
+            <el-button type="text" size="small" @click="handleEdit(scope.row.id)" v-hasPermi="['admin:seckill:manger:info','admin:seckill:manger:update']">编辑</el-button>
+            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)"  class="mr10" v-hasPermi="['admin:seckill:manger:delete']">删除</el-button>
             <router-link :to="{ path:'/marketing/seckill/creatSeckill/creat/' + scope.row.id}">
-              <el-button type="text" size="small">添加商品</el-button>
+              <el-button type="text" size="small" v-hasPermi="['admin:seckill:save']">添加商品</el-button>
             </router-link>
           </template>
         </el-table-column>
@@ -140,6 +141,8 @@
   import zbParser from '@/components/FormGenerator/components/parser/ZBParser'
   import { configSaveForm, configInfo } from '@/api/systemConfig.js'
   import { seckillListApi, seckillUpdateApi, seckillInfoApi, seckillSaveApi, seckillDeleteApi, seckillConfigStatusApi } from '@/api/marketing'
+  import { checkPermi } from "@/utils/permission"; // 权限判断函数
+  import {Debounce} from '@/utils/validate'
   export default {
     name: "SeckillConfig",
     components: { zbParser },
@@ -170,6 +173,7 @@
      this.getList()
     },
     methods: {
+      checkPermi,
       resetForm(formValue) {
         this.dialogVisible = false
       },
@@ -225,14 +229,14 @@
         })
       },
       // 提交
-      handlerSubmit(formValue) {
+      handlerSubmit:Debounce(function(formValue) {
        if(formValue.time.split(',')[0].split(':')[0] > formValue.time.split(',')[1].split(':')[0]) return this.$message.error('请填写正确的时间范围')
         this.isCreate === 0 ? seckillSaveApi(formValue).then(res => {
           this.isSuccess()
         }) : seckillUpdateApi({id: this.seckillId}, formValue).then(res => {
           this.isSuccess()
         })
-      },
+      }),
       isSuccess(){
         this.$message.success('操作成功')
         this.dialogVisible = false

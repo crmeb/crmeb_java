@@ -18,7 +18,7 @@ export default {
 
     if (icon) {
       const ic = 'el-icon-' + icon
-      vnodes.push(<i class={ic}/>)
+      vnodes.push(<i style="color:#ffffff;" class={ic}/>)
     }
 
     if (title) {

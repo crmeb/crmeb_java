@@ -1,3 +1,13 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import axios from 'axios'
 import { MessageBox, Message } from 'element-ui'
 import store from '@/store'
@@ -30,30 +40,15 @@ service.interceptors.request.use(
 
 // response interceptor
 service.interceptors.response.use(
-  /**
-   * If you want to get http information such as headers or status
-   * Please return  response => response
-  */
-
-  /**
-   * Determine the request status by custom code
-   * Here is just an example
-   * You can also judge the status by HTTP Status Code
-   */
   response => {
     const res = response.data
     // if the custom code is not 20000, it is judged as an error.
     if (res.code === 401) {
       // to re-login
-      MessageBox.confirm('您已经登出，您可以取消停留在这个页面，或重新登录', '退出', {
-        confirmButtonText: '或重新登录',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        store.dispatch('user/resetToken').then(() => {
-          location.reload()
-        })
-      })
+      Message.error('无效的会话，或者登录已过期，请重新登录。');
+      location.href = '/login';
+    }else if(res.code === 403){
+      Message.error('没有权限访问。');
     }
     if (res.code !== 200  && res.code !== 401) {
       if (isPhone()) { //移动端
@@ -65,8 +60,6 @@ service.interceptors.response.use(
         duration: 5 * 1000
       })
       return Promise.reject()
-      // 50008: Illegal token; 50012: Other clients logged in; 50014: Token expired;
-      // return Promise.reject(new Error(res.message || 'Error'))
     } else {
       return res.data
     }

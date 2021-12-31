@@ -13,7 +13,7 @@
       class="remarks acea-row row-between-wrapper"
       v-if="$route.params.goname != 'looks'"
     >
-      <span class="iconfont icon-zhinengkefu-"></span>
+      <span class="iconfont iconios-flag"></span>
       <input
         type="button"
         class="line1"
@@ -25,12 +25,11 @@
       />
     </div>
     <div class="orderingUser acea-row row-middle">
-      <span class="iconfont icon-yonghu2"></span>{{ orderInfo.realName }}
+      <span class="iconfont iconmd-contact"></span>{{ orderInfo.realName }}
     </div>
     <div class="address">
       <div class="name">
-        {{ orderInfo.realName
-        }}<span class="phone">{{ orderInfo.userPhone }}</span>
+        {{ orderInfo.realName}}<span class="phone">{{ orderInfo.userPhone }}</span>
       </div>
       <div>{{ orderInfo.userAddress }}</div>
     </div>
@@ -49,7 +48,7 @@
             <div class="info line2">
               {{ item.info.productName }}
             </div>
-            <div class="attr">{{ item.info.sku }}</div>
+            <div class="attr overflow">{{ item.info.sku }}</div>
           </div>
         </div>
         <div class="money">
@@ -61,17 +60,13 @@
     </div>
     <div class="public-total">
       共{{ orderInfo.totalNum }}件商品，应支付
-      <span class="money">￥{{ orderInfo.payPrice }}</span> ( 邮费 ¥{{
-      orderInfo.payPostage
-      }}
-      )
+      <span class="money">￥{{ orderInfo.payPrice }}</span> ( 邮费 ¥{{orderInfo.payPostage }})
     </div>
     <div class="wrapper">
       <div class="item acea-row row-between">
         <div>订单编号：</div>
         <div class="conter acea-row row-middle row-right">
-          {{ orderInfo.orderId
-          }}
+          {{ orderInfo.orderId }}
           <span
           class="copy copy-data"
           :data-clipboard-text="orderInfo.orderId"
@@ -86,7 +81,7 @@
       <div class="item acea-row row-between">
         <div>支付状态：</div>
         <div class="conter">
-          {{ orderInfo.paid == 1 ? "已支付" : "未支付" }}
+          {{ orderInfo.statusStr.value }}
         </div>
       </div>
       <div class="item acea-row row-between">
@@ -369,13 +364,13 @@ export default {
   .pos-order-goods .goods .picTxt .pictrue img{width:100%;height:100%;border-radius:0.06rem;}
   .pos-order-goods .goods .picTxt .text{width:3.65rem;height:1.3rem;}
   .pos-order-goods .goods .picTxt .text .info{font-size:0.28rem;color:#282828;}
-  .pos-order-goods .goods .picTxt .text .attr{font-size:0.2rem;color:#999;height: 0.8rem;
-    line-height: 0.8rem;}
+  .pos-order-goods .goods .picTxt .text .attr{font-size:0.2rem;color:#999;height: 0.8rem; line-height: 0.8rem;}
+  .overflow{overflow: hidden;text-overflow: ellipsis;	white-space: nowrap;width: 5rem;}
   .pos-order-goods .goods .money{width:1.64rem;text-align:right;font-size:0.28rem;}
   .pos-order-goods .goods .money .x-money{color:#282828;}
   .pos-order-goods .goods .money .num{color:#ff9600;margin:0.05rem 0;}
   .pos-order-goods .goods .money .y-money{color:#999;text-decoration:line-through;}
-  .order-details .header{padding:0 0.3rem;height:1.5rem;}
+  .order-details .header{padding:0 0.3rem;height:1.5rem;margin-top: -50px;}
   .order-details .header.on{background-color:#666!important;}
   .order-details .header .pictrue{width:1.1rem;height:1.1rem;}
   .order-details .header .pictrue img{width:100%;height:100%;}

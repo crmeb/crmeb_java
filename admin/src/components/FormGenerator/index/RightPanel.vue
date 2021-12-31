@@ -508,8 +508,25 @@
           <el-form-item v-if="activeData.__config__.required !== undefined" label="是否必填">
             <el-switch v-model="activeData.__config__.required" />
           </el-form-item>
-
-          <template v-if="activeData.__config__.layoutTree">
+          <el-form-item v-if="activeData.__config__.tips !== undefined" label="开启描述">
+            <el-switch v-model="activeData.__config__.tips" /> 
+          </el-form-item>
+          <el-form-item v-if="activeData.__config__.tips" label="描述内容">
+            <el-input v-model="activeData.__config__.tipsDesc" placeholder="请输入描述" /> 
+          </el-form-item>
+          <el-form-item v-if="activeData.__config__.tips" label="描述链接">
+            <el-switch v-model="activeData.__config__.tipsIsLink" /> 
+          </el-form-item>
+          <el-form-item v-if="activeData.__config__.tipsIsLink" label="链接地址">
+            <el-input v-model="activeData.__config__.tipsLink" placeholder="请输入链接地址" /> 
+          </el-form-item>
+          <!-- <el-form-item v-if="activeData.__config__.bindInput !== undefined" label="绑定输入">
+            <el-switch v-model="activeData.__config__.bindInput" />
+          </el-form-item>
+           <el-form-item v-if="activeData.__config__.bindInput" label="绑定内容">
+            <el-input v-model="activeData.__config__.bindValve" placeholder="请输入内容" />
+          </el-form-item> -->
+          <template v-if="activeData.__config__.layoutTree"> 
             <el-divider>布局结构树</el-divider>
             <el-tree
               :data="[activeData.__config__]"
