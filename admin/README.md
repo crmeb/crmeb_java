@@ -69,7 +69,6 @@ utils 自定义工具js 独立命名，一般不用新建文件夹
 ├── public                         # 静态资源
 │   ├── favicon.ico                # favicon图标
 │   └── index.html                 # html 模板
-│   └── UEditor                    # 富文本编辑器插件
 ├── src                            # 源代码
 │   ├── api                        # 所有请求
 │   │    └──user.js                # 有关登录/用户的接口
@@ -112,15 +111,16 @@ utils 自定义工具js 独立命名，一般不用新建文件夹
 │   │    └──RightPanel        # 右侧设置按钮，设置导航相关
 │   │    └──Screenfull        # 全屏
 │   │    └──SvgIcon           # svg图标 
-│   │    └──Tinymce           # 颜色选择
+│   │    └──Tinymce           # 富文本编辑器
 │   │    └──ThemePicker       # 右侧设置按钮，设置组题颜色
 │   │    └──templatesFrom     # 运费模板
-│   │    └──ueditorFrom       # 富文本编辑器
 │   │    └──uploadPicture     # 上传图片组件
 │   │    └──Upload            # 上传文件组件
 │   │    └──UploadExcel       # 下载Excel
 │   │    └──userList          # 用户列表
+│   │    └──TopNav            # 顶部一级导航
 │   │    └──TimeSelect        # 时间段选择
+│   │    └──verifition        # 滑块验证
 │   ├── layouts               # 导航布局
 │   │    ├──index             # 主页面
 │   │    ├──components        # 导航组件

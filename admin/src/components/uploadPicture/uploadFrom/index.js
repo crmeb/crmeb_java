@@ -13,11 +13,12 @@ uploadFrom.install = function(Vue, options) {
   const instance = new ToastConstructor()
   instance.$mount(document.createElement('div'))
   document.body.appendChild(instance.$el)
-  Vue.prototype.$modalUpload = function(callback, isMore, modelName) {
+  Vue.prototype.$modalUpload = function(callback, isMore, modelName, boolean) {
     instance.visible = true
     instance.callback = callback
     instance.isMore = isMore
     instance.modelName = modelName
+    instance.booleanVal = boolean
   }
 }
 export default uploadFrom

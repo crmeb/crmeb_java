@@ -27,18 +27,40 @@ const layouts = {
     if (this.formConf.unFocusedComponentBorder) className += ' unfocus-bordered'
     let labelWidth = config.labelWidth ? `${config.labelWidth}px` : null
     if (config.showLabel === false) labelWidth = '0'
-    return (
-      <el-col span={config.span} class={className}
-        nativeOnClick={event => { activeItem(element); event.stopPropagation() }}>
-        <el-form-item label-width={labelWidth}
-          label={config.showLabel ? config.label : ''} required={config.required}>
-          <render key={config.renderKey} conf={element} onInput={ event => {
-            this.$set(config, 'defaultValue', event)
-          }} />
-        </el-form-item>
-        {components.itemBtns.apply(this, arguments)}
-      </el-col>
-    )
+    if(config.tips == undefined){
+      this.$set(config,'tips',false);//如果以前的表单没有tooltip配置，就赋值一个默认值用来读取
+    }
+    if(config.tips){
+      return (
+        <el-col span={config.span} class={className}
+          nativeOnClick={event => { activeItem(element); event.stopPropagation() }}>
+          <el-form-item label-width={labelWidth}
+            label={config.showLabel ? config.label : ''} required={config.required}>
+            <el-tooltip effect="dark" placement="top-start" style="padding:10px 5px 0 0;">
+              <i class="el-icon-warning-outline" />
+              <div slot="content" style="max-width:400px;">{config.tipsDesc}</div>
+           </el-tooltip>
+            <render key={config.renderKey} conf={element} onInput={ event => {
+              this.$set(config, 'defaultValue', event)
+            }} />
+          </el-form-item>
+          {components.itemBtns.apply(this, arguments)}
+        </el-col>
+      )
+    }else{
+      return (
+        <el-col span={config.span} class={className}
+          nativeOnClick={event => { activeItem(element); event.stopPropagation() }}>
+          <el-form-item label-width={labelWidth}
+            label={config.showLabel ? config.label : ''} required={config.required}>
+            <render key={config.renderKey} conf={element} onInput={ event => {
+              this.$set(config, 'defaultValue', event)
+            }} />
+          </el-form-item>
+          {components.itemBtns.apply(this, arguments)}
+        </el-col>
+      )
+    }
   },
   rowFormItem(h, element, index, parent) {
     const { activeItem } = this.$listeners

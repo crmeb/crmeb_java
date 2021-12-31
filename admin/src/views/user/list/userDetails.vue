@@ -1,13 +1,13 @@
 <template>
   <div>
-    <div class="acea-row row-middle" v-if="psInfo">
-      <div class="avatar mr15"><img :src="psInfo.user.avatar"></div>
+    <div class="acea-row row-middle border_bottom pb-24" v-if="psInfo">
+      <div class="avatar mr20"><img :src="psInfo.user.avatar"></div>
       <div class="dashboard-workplace-header-tip">
       <p class="dashboard-workplace-header-tip-title" v-text="psInfo.user.nickname || '-'"></p>
       <div class="dashboard-workplace-header-tip-desc">
-      <span class="dashboard-workplace-header-tip-desc-sp">余额: {{ psInfo.balance }}</span>
-      <span class="dashboard-workplace-header-tip-desc-sp">总计订单: {{ psInfo.allOrderCount }}</span>
-      <span class="dashboard-workplace-header-tip-desc-sp">总消费金额: {{ psInfo.allConsumeCount }}</span>
+      <span class="dashboard-workplace-header-tip-desc-sp pb-1">余额: {{ psInfo.balance }}</span>
+      <span class="dashboard-workplace-header-tip-desc-sp pb-1">总计订单: {{ psInfo.allOrderCount }}</span>
+      <span class="dashboard-workplace-header-tip-desc-sp pb-1">总消费金额: {{ psInfo.allConsumeCount }}</span>
       <span class="dashboard-workplace-header-tip-desc-sp">积分: {{ psInfo.integralCount }}</span>
       <span class="dashboard-workplace-header-tip-desc-sp">本月订单: {{ psInfo.mothOrderCount }}</span>
       <span class="dashboard-workplace-header-tip-desc-sp">本月消费金额: {{ psInfo.mothConsumeCount }}</span>
@@ -27,11 +27,12 @@
         </el-menu>
       </el-col>
       <el-col :span="20">
-        <el-table :data="tableData.data" class="tabNumWidth" size="mini"  v-loading="loading" max-height="400">
+        <el-table :data="tableData.data" class="tabNumWidth"  v-loading="loading" max-height="400">
           <el-table-column
             :prop="item.key"
             :label="item.title"
             width="item.minWidth"
+            :show-overflow-tooltip="true"
             v-for="(item, index) in columns" :key="index"
           />
         </el-table>
@@ -196,7 +197,7 @@
                 },
                 {
                   title: '签到时间',
-                  key: 'createDay',
+                  key: 'createTime',
                   minWidth: 120
                 },
                 {
@@ -295,11 +296,19 @@
       },
       pageChange(page) {
         this.tableFrom.page = page
-        this.getInfo()
+        if(this.tableFrom.type === '1'){
+          this.integral()
+        }else{
+          this.getInfo()
+        }
       },
       handleSizeChange(val) {
         this.tableFrom.limit = val
-        this.getInfo()
+        if(this.tableFrom.type === '1'){
+          this.integral()
+        }else{
+          this.getInfo()
+        }
       },
       getHeader() {
         topdetailApi({userId : this.uid}).then(res => {
@@ -312,8 +321,8 @@
 
 <style scoped lang="scss">
   .avatar{
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     overflow: hidden;
     margin-left: 18px;
@@ -339,8 +348,10 @@
         margin-top: -12px;
         &-title {
           font-size: 13px;
-          color: #000000;
-          margin-bottom: 12px;
+          font-weight: 600;
+          color: rgba(0, 0, 0, 0.85);
+          line-height: 18px;
+          padding: 10px 0 10px;
         }
 
         &-desc {
@@ -375,5 +386,17 @@
         }
       }
     }
+  }
+  .pb-1{
+    padding-bottom: 10px;
+  }
+  .mr20{
+    margin: 0 20px;
+  }
+  .border_bottom{
+    border-bottom: 1px solid #E7EAEC;
+  }
+  .pb-24{
+    padding-bottom: 24px;
   }
 </style>

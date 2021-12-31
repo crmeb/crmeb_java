@@ -1,3 +1,13 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import request from '@/utils/request'
 
 export function login(data) {
@@ -44,6 +54,18 @@ export function userUpdateApi(params, data) {
     url: `/admin/user/update`,
     method: 'post',
     params,
+    data
+  })
+}
+
+/**
+ * 会员管理等级 修改
+ * @param pram
+ */
+ export function userLevelUpdateApi( data) {
+  return request({
+    url: `/admin/user/update/level`,
+    method: 'post',
     data
   })
 }
@@ -136,11 +158,10 @@ export function userDeleteApi(params) {
  * 会员等级 列表
  * @param pram
  */
-export function levelListApi(params) {
+export function levelListApi() {
   return request({
     url: `/admin/system/user/level/list`,
-    method: 'get',
-    params
+    method: 'get'
   })
 }
 
@@ -158,13 +179,13 @@ export function levelSaveApi(data) {
 
 /**
  * 会员等级 编辑
- * @param pram
+ *  @param pram
  */
-export function levelUpdateApi(params, data) {
+ export function levelUpdateApi(params, data) {
   return request({
-    url: `/admin/system/user/level/update`,
+    url: `/admin/system/user/level/update/${params}`,
     method: 'post',
-    params,
+    // params,
     data
   })
 }
@@ -185,11 +206,10 @@ export function levelInfoApi(params) {
  * 会员等级 删除
  * @param pram
  */
-export function levelDeleteApi(params) {
+ export function levelDeleteApi(id) {
   return request({
-    url: `/admin/system/user/level/delete`,
-    method: 'get',
-    params
+    url: `/admin/system/user/level/delete/${id}`,
+    method: 'post'
   })
 }
 
@@ -197,11 +217,11 @@ export function levelDeleteApi(params) {
  * 会员等级 是否显示
  * @param pram
  */
-export function levelUseApi(params) {
+export function levelUseApi(data) {
   return request({
     url: `/admin/system/user/level/use`,
-    method: 'get',
-    params
+    method: 'post',
+    data
   })
 }
 

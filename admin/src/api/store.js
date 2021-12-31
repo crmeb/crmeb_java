@@ -1,3 +1,13 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import request from '@/utils/request'
 
 /**
@@ -286,5 +296,17 @@ export function copyConfigApi() {
   return request({
     url: `/admin/store/product/copy/config`,
     method: 'post'
+  })
+}
+
+/**
+ * 订单数据 导出
+ * @param pram
+ */
+ export function orderExcelApi(params) {
+  return request({
+    url: `/admin/export/excel/order`,
+    method: 'get',
+    params
   })
 }
