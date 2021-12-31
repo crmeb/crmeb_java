@@ -85,11 +85,8 @@
             </div>
           </template>
           <div class="public-total">
-            共{{ item.totalNum }}件商品，应支付
-            <span class="money">￥{{ item.payPrice }}</span> ( 邮费 ¥{{
-            item.totalPostage
-            }}
-            )
+            共{{ item.totalNum ? item.totalNum : 1 }}件商品，应支付
+            <span class="money">￥{{ item.payPrice }}</span> ( 邮费 ¥{{item.totalPostage ? item.totalPostage : 0}})
           </div>
           <div class="operation acea-row row-between-wrapper">
             <div class="more">
@@ -102,7 +99,7 @@
               <!--            </div>-->
             </div>
             <div class="acea-row row-middle">
-              <div class="bnt" @click="modify(item, 0)" v-if="where.status === 'unPaid'">
+              <div class="bnt" @click="modify(item, 0)" v-if="!item.isAlterPrice && item.paid == false">
                 一键改价
               </div>
               <div class="bnt" @click="modify(item, 1)">订单备注</div>
@@ -367,12 +364,12 @@
   .pos-order-goods .goods .picTxt .text{width:3.65rem;height:1.3rem;}
   .pos-order-goods .goods .picTxt .text .info{font-size:0.28rem;color:#282828;}
   .pos-order-goods .goods .picTxt .text .attr{font-size:0.2rem;color:#999;height: 0.8rem;
-    line-height: 0.8rem;}
+    line-height: 0.8rem;width: 5rem;overflow: hidden;text-overflow: ellipsis;	white-space: nowrap;}
   .pos-order-goods .goods .money{width:1.64rem;text-align:right;font-size:0.28rem;height: 1.3rem;}
   .pos-order-goods .goods .money .x-money{color:#282828;}
   .pos-order-goods .goods .money .num{color:#ff9600;margin:0.05rem 0;}
   .pos-order-goods .goods .money .y-money{color:#999;text-decoration:line-through;}
-  .pos-order-list{background: #f5f5f5;}
+  .pos-order-list{background: #f5f5f5;margin-top: -50px;}
   .pos-order-list .nav{width:100%;height:0.96rem;background-color:#fff;font-size:0.3rem;color:#282828;position:fixed;top:0;left:0;z-index: 66;}
   .pos-order-list .nav .item.on{color:#2291f8;}
   .pos-order-list .list{margin-top:0.2rem;}

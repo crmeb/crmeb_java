@@ -87,6 +87,7 @@ import { smsTempLstApi, tempCreateApi } from '@/api/sms'
 import { roterPre } from '@/settings'
 import { mapGetters } from 'vuex'
 import zbParser from '@/components/FormGenerator/components/parser/ZBParser'
+import {Debounce} from '@/utils/validate'
 export default {
   name: 'SmsTemplate',
   components: { zbParser },
@@ -144,14 +145,14 @@ export default {
       this.dialogVisible = false
       this.editData = {}
     },
-    handlerSubmit(formValue) {
+    handlerSubmit:Debounce(function(formValue) {
       tempCreateApi(formValue).then(data => {
         this.$message.success('新增成功')
         this.dialogVisible = false
         this.editData = {}
         this.getList()
       })
-    },
+    }),
     add() {
       this.dialogVisible = true
     },

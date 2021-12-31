@@ -12,8 +12,8 @@
           </el-form>
         </div>
         <div class="acea-row">
-          <el-button size="small" type="primary" @click="add">添加商品规格</el-button>
-          <el-button size="small" @click="handleDeleteAll">批量删除</el-button>
+          <el-button size="small" type="primary" @click="add" v-hasPermi="['admin:product:rule:save']">添加商品规格</el-button>
+          <el-button size="small" @click="handleDeleteAll" v-hasPermi="['admin:product:rule:delete']">批量删除</el-button>
         </div>
       </div>
       <el-table
@@ -57,8 +57,8 @@
         </el-table-column>
         <el-table-column label="操作" min-width="120" align="center">
           <template slot-scope="scope">
-            <el-button type="text" size="small" @click="onEdit(scope.row)" class="mr10">编辑</el-button>
-            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)">删除</el-button>
+            <el-button type="text" size="small" @click="onEdit(scope.row)" class="mr10" v-hasPermi="['admin:product:rule:update','admin:product:rule:info']">编辑</el-button>
+            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)" v-hasPermi="['admin:product:rule:delete']">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -76,7 +76,6 @@
     </el-card>
   </div>
 </template>
-
 <script>
 import { templateListApi, attrDeleteApi } from '@/api/store'
 export default {

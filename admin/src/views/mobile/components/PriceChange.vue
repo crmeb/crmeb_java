@@ -92,7 +92,7 @@
 <script>
   import {required, num} from "@/utils/validate";
   import {validatorDefaultCatch} from "@/libs/dialog";
-  import { orderMarkApi, editPriceApi, orderRefundApi } from '@/api/order';
+  import { orderMarkApi, updatePriceApi, orderRefundApi } from '@/api/order';
   export default {
     name: "PriceChange",
     components: {},
@@ -165,9 +165,9 @@
           } catch (e) {
             return validatorDefaultCatch(e);
           }
-          data.price = price;
+          data.payPrice = price;
           data.orderNo = opt.orderId;
-          editPriceApi(data).then(() => {
+          updatePriceApi(data).then(() => {
             // that.change = false;
             this.$emit("closechange", false);
             that.$dialog.success("改价成功");

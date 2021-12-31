@@ -1,10 +1,10 @@
 <template>
   <div class="divBox">
     <el-card class="box-card">
-      <div slot="header" class="clearfix">
+      <div class="clearfix">
         <div class="container">
           <el-form size="small" label-width="100px">
-            <el-form-item label="时间选择：" class="width100">
+            <el-form-item label="时间选择：" class="width100"> 
               <el-radio-group v-model="tableFrom.dateLimit" type="button" class="mr20" size="small" @change="selectChange(tableFrom.dateLimit)">
                 <el-radio-button v-for="(item,i) in fromList.fromTxt" :key="i" :label="item.val">{{ item.text }}</el-radio-button>
               </el-radio-group>
@@ -33,9 +33,13 @@
             </el-form-item>
           </el-form>
         </div>
-        <cards-data :cardLists="cardLists"></cards-data>
       </div>
-      <el-table
+    </el-card>
+    <div class="mt20">
+      <cards-data :cardLists="cardLists" v-if="checkPermi(['admin:finance:apply:balance'])"></cards-data>
+    </div>
+    <el-card class="box-card">
+       <el-table
         v-loading="listLoading"
         :data="tableData.data"
         style="width: 100%"
@@ -119,8 +123,8 @@
             <span class="spBlock">{{ scope.row.status | extractStatusFilter }}</span>
             <span v-if="scope.row.status === -1">拒绝原因：{{scope.row.failMsg}}</span>
             <template v-if="scope.row.status === 0">
-              <el-button type="danger" icon="el-icon-close" size="mini" @click="onExamine(scope.row.id)">未通过</el-button>
-              <el-button type="primary" icon="el-icon-check" size="mini" @click="ok(scope.row.id)">通过</el-button>
+              <el-button type="danger" icon="el-icon-close" size="mini" @click="onExamine(scope.row.id)" v-hasPermi="['admin:finance:apply:apply']">未通过</el-button>
+              <el-button type="primary" icon="el-icon-check" size="mini" @click="ok(scope.row.id)" v-hasPermi="['admin:finance:apply:apply']">通过</el-button>
             </template>
           </template>
         </el-table-column>
@@ -139,7 +143,7 @@
         />
         <el-table-column label="操作" min-width="80" fixed="right" align="center">
           <template slot-scope="scope">
-            <el-button v-if="scope.row.status !== 1" type="text" size="small" @click="handleEdit(scope.row)">编辑</el-button>
+            <el-button v-if="scope.row.status !== 1" type="text" size="small" @click="handleEdit(scope.row)" v-hasPermi="['admin:finance:apply:update']">编辑</el-button>
             <span v-else>无</span>
           </template>
         </el-table-column>
@@ -155,7 +159,7 @@
           @current-change="pageChange"
         />
       </div>
-    </el-card>
+     </el-card>
 
     <!--编辑-->
     <el-dialog
@@ -198,6 +202,8 @@
   import { applyListApi, applyBalanceApi, applyUpdateApi, applyStatusApi } from '@/api/financial'
   import cardsData from '@/components/cards/index'
   import zbParser from '@/components/FormGenerator/components/parser/ZBParser'
+  import { checkPermi } from "@/utils/permission"; // 权限判断函数
+  import {Debounce} from '@/utils/validate'
   export default {
     name: 'AccountsExtract',
     components: {
@@ -234,6 +240,7 @@
       this.getBalance()
     },
     methods: {
+      checkPermi,
       resetForm(){
         this.dialogVisible = false;
       },
@@ -244,7 +251,7 @@
         this.isCreate = 1;
         this.editData = JSON.parse(JSON.stringify(row));
       },
-      handlerSubmit(formValue) {
+      handlerSubmit:Debounce(function(formValue) {
         formValue.id = this.applyId;
         formValue.extractType = this.extractType;
         applyUpdateApi(formValue).then(data => {
@@ -252,7 +259,7 @@
           this.dialogVisible = false
           this.getList()
         })
-      },
+      }),
       handleClose() {
         this.dialogVisible = false
         this.editData = {}
@@ -297,10 +304,10 @@
       getBalance() {
         applyBalanceApi({dateLimit: this.tableFrom.dateLimit}).then(res => {
           this.cardLists = [
-            { name: '待提现金额', count: res.toBeWithdrawn },
-            { name: '佣金总金额', count: res.commissionTotal },
-            { name: '已提现金额', count: res.withdrawn },
-            { name: '未提现金额', count: res.unDrawn }
+            { name: '待提现金额', count: res.toBeWithdrawn,color:'#1890FF',class:'one',icon:'iconzhichujine1' },
+            { name: '佣金总金额', count: res.commissionTotal,color:'#A277FF',class:'two',icon:'iconzhifuyongjinjine1' },
+            { name: '已提现金额', count: res.withdrawn,color:'#EF9C20',class:'three',icon:'iconyingyee1' },
+            { name: '未提现金额', count: res.unDrawn,color:'#1BBE6B',class:'four',icon:'iconyuezhifujine2' }
           ]
         })
       },

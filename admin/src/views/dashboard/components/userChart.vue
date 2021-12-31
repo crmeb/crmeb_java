@@ -1,27 +1,14 @@
 <template>
   <div class="divBox">
     <el-row :gutter="24">
-      <el-col :xl="16" :lg="12" :md="24" :sm="24" :xs="24" class="ivu-mb mb10 dashboard-console-visit">
+      <el-col class="ivu-mb mb10 dashboard-console-visit">
         <el-card :bordered="false" dis-hover>
           <div slot="header">
             <div class="acea-row row-middle">
-              <el-avatar icon="el-icon-s-operation" size="small" style="color:#1890ff;background:#e6f7ff;font-size: 13px"/>
-              <span class="ivu-pl-8">用户</span>
+              <div class="header_title">用户统计</div>
             </div>
           </div>
           <echarts-from ref="userChart" :echartsTitle="line" :xAxis="xAxis" :seriesData="series" v-if="infoList"></echarts-from>
-        </el-card>
-      </el-col>
-      <el-col :xl="8" :lg="12" :md="24" :sm="24" :xs="24">
-        <el-card :bordered="false" dis-hover class="dashboard-console-visit">
-          <div slot="header">
-            <div class="acea-row row-middle">
-              <el-avatar icon="el-icon-picture-outline-round" size="small" style="color:#1890ff;background:#e6f7ff;font-size: 13px" />
-              <span class="ivu-pl-8">购买用户统计</span>
-            </div>
-          </div>
-          <echarts-from ref="visitChart" :echartsTitle="circle" :legendData="legendData"
-                        :seriesData="seriesUser" v-if="chartBuy"></echarts-from>
         </el-card>
       </el-col>
     </el-row>
@@ -29,7 +16,7 @@
 </template>
 
 <script>
-  import {chartUserApi, chartBuyApi} from '@/api/dashboard';
+  import {chartUserApi} from '@/api/dashboard';
   import echartsFrom from '@/components/echarts/index';
 
   export default {
@@ -83,41 +70,6 @@
           // this.bing_xdata = res.bing_xdata;
         })
       },
-      // 用户购买统计
-      getRank() {
-        chartBuyApi().then(async res => {
-          this.chartBuy = res
-          this.legendData = ["未消费用户", "消费一次用户", "留存客户", "回流客户"]
-          this.seriesUser = [{
-            "name": "未消费用户",
-            "value": res.zero,
-            "itemStyle": {
-              "color": "#5cadff"
-            }
-          },
-            {
-              "name": "消费一次用户",
-              "value": res.one,
-              "itemStyle": {
-                "color": "#b37feb"
-              }
-            },
-            {
-              "name": "留存客户",
-              "value": res.history,
-              "itemStyle": {
-                "color": "#19be6b"
-              }
-            },
-            {
-              "name": "回流客户",
-              "value": res.back,
-              "itemStyle": {
-                "color": "#ff9900"
-              }
-            }]
-        })
-      },
       // 监听页面宽度变化，刷新表格
       handleResize() {
         if (this.infoList && this.series.length !== 0) this.$refs.userChart.handleResize();
@@ -126,7 +78,6 @@
     },
     mounted() {
       this.getStatistics();
-      this.getRank();
     },
     beforeDestroy() {
       if (this.visitChart) {
@@ -143,6 +94,23 @@
       width: 22px;
       height: 22px;
       line-height: 22px;
+    }
+  }
+  .header_title{
+    font-size: 16px;
+    font-family: PingFangSC-Semibold, PingFang SC;
+    font-weight: 600;
+    color: #000000;
+    padding-left:8px;
+    position: relative;
+    &::before{
+      position: absolute;
+      content: '';
+      width: 2px;
+      height: 18px;
+      background: #1890FF;
+      top:0;
+      left:0;
     }
   }
   .ivu-pl-8{

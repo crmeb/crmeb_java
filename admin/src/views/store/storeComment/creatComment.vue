@@ -62,6 +62,7 @@
 
 <script>
   import { replyCreatApi, replyEditApi, replyInfoApi } from '@/api/store'
+  import {Debounce} from '@/utils/validate'
   const defaultObj= {
     avatar: '',
     comment: '',
@@ -155,7 +156,7 @@
       handleRemove (i) {
         this.pics.splice(i, 1)
       },
-      submitForm(formName) {
+      submitForm:Debounce(function(formName) {
         this.formValidate.pics = this.pics.length>0 ? JSON.stringify(this.pics) : ''
         this.$refs[formName].validate((valid) => {
           if (valid) {
@@ -174,7 +175,7 @@
             return false;
           }
         });
-      },
+      }),
       resetForm(formName) {
         this.$refs[formName].resetFields()
         this.pics=[]

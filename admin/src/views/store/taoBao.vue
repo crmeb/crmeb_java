@@ -1,10 +1,10 @@
 <template>
   <div class="Box">
     <el-card>
-      <div>生成的商品默认是没有上架的，请手动上架商品！
+      <div class="line-ht">生成的商品默认是没有上架的，请手动上架商品！
         <span v-if="copyConfig.copyType && copyConfig.copyType==1">您当前剩余{{copyConfig.copyNum}}条采集次数，
           <router-link :to="{path:'/operation/systemSms/pay?type=copy'}">
-            <el-link type="primary" :underline="false">增加采集次数</el-link>
+            <span style="color:#1890ff;">增加采集次数</span>
           </router-link>
         </span>
         <el-link v-if="copyConfig.copyType && copyConfig.copyType!=1" type="primary" :underline="false"
@@ -29,7 +29,7 @@
         <el-col :span="24" v-if="copyConfig.copyType">
           <el-form-item label="链接地址：">
             <el-input v-model="url" placeholder="请输入链接地址" class="selWidth" size="small">
-              <el-button slot="append" icon="el-icon-search" @click="add" size="small"/>
+              <el-button slot="append" icon="el-icon-search" @click="add" size="small" v-hasPermi="['admin:product:copy:product','admin:product:import:product']" />
             </el-input>
           </el-form-item>
         </el-col>
@@ -59,16 +59,6 @@
           <el-col v-bind="grid">
             <el-form-item label="单位：" prop="unitName">
               <el-input v-model="formValidate.unitName" placeholder="请输入单位" class="selWidth"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col v-bind="grid">
-            <el-form-item label="积分：">
-              <el-input-number v-model="formValidate.giveIntegral" placeholder="请输入排序" class="selWidth"/>
-            </el-form-item>
-          </el-col>
-          <el-col v-bind="grid">
-            <el-form-item label="虚拟销量：">
-              <el-input-number v-model="formValidate.ficti" placeholder="请输入排序" class="selWidth"/>
             </el-form-item>
           </el-col>
           <el-col v-bind="grid">
@@ -186,13 +176,47 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="商品详情：">
-              <ueditor-from v-model="formValidate.content" :content="formValidate.content"/>
+              <Tinymce v-model="formValidate.content"></Tinymce>
             </el-form-item>
           </el-col>
           <el-col :span="24">
+            <template>
+              <el-row :gutter="24">
+                <el-col :span="24">
+                  <template>
+                    <el-row :gutter="24">
+                      <el-col :span="8">
+                      <el-form-item label="排序：">
+                        <el-input-number v-model="formValidate.sort" :max="9999" placeholder="请输入排序" :disabled="isDisabled" />
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="8">
+                      <el-form-item label="积分：">
+                        <el-input-number v-model="formValidate.giveIntegral" placeholder="请输入排序" :disabled="isDisabled" />
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="8">
+                      <el-form-item label="虚拟销量：">
+                        <el-input-number v-model="formValidate.ficti" placeholder="请输入排序" :disabled="isDisabled" />
+                      </el-form-item>
+                    </el-col>
+                    </el-row>
+                  </template>
+                </el-col>
+                <el-col :span="24">
+                  <el-form-item label="商品推荐：">
+                    <el-checkbox-group v-model="checkboxGroup" size="small" @change="onChangeGroup" :disabled="isDisabled">
+                      <el-checkbox v-for="(item, index) in recommend" :key="index" :label="item.value">{{ item.name }}</el-checkbox>
+                    </el-checkbox-group>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </template>
+          </el-col>
+
+          <el-col :span="24">
             <el-form-item>
-              <el-button type="primary" :loading="modal_loading" class="submission"
-                         @click="handleSubmit('formValidate')">提交
+              <el-button type="primary" :loading="modal_loading" class="submission" @click="handleSubmit('formValidate')">提交
               </el-button>
             </el-form-item>
           </el-col>
@@ -213,7 +237,10 @@
     productCreateApi,
     copyConfigApi
   } from '@/api/store';
+  import { goodDesignList } from "@/api/systemGroup";
+  import Tinymce from '@/components/Tinymce/index'
   import {shippingTemplatesList} from '@/api/logistics'
+  import {Debounce} from '@/utils/validate'
   const defaultObj = [{
     image: '',
     price: null,
@@ -222,7 +249,7 @@
     stock: null,
     barCode: '',
     weight: 0,
-    volume: 0
+    volume: 0,
   }]
   const objTitle = {
     price: {
@@ -249,6 +276,7 @@
   }
   export default {
     name: 'taoBao',
+    components: {Tinymce },
     data() {
       return {
         loading: false,
@@ -264,6 +292,8 @@
           multiple: true,
           emitPath: false
         },
+        checkboxGroup: [], //
+        recommend: [],
         modal_loading: false,
         ManyAttrValue: [Object.assign({}, defaultObj[0])], // 多规格
         imgList: [],
@@ -277,6 +307,7 @@
         url: '',
         modalPic: false,
         isChoice: '',
+        isDisabled:false,
         ruleInline: {
           storeName: [
             {required: true, message: '请输入商品名称', trigger: 'blur'}
@@ -334,6 +365,7 @@
     mounted() {
       this.productGetTemplate();
       this.getCopyConfig();
+      this.getGoodsType()
     },
     methods: {
       // 删除表格中的属性
@@ -344,6 +376,13 @@
         copyConfigApi().then(res => {
           this.copyConfig = res
         })
+      },
+       onChangeGroup() {
+        this.checkboxGroup.includes('isGood') ? this.formValidate.isGood = true : this.formValidate.isGood = false
+        this.checkboxGroup.includes('isBenefit') ? this.formValidate.isBenefit = true : this.formValidate.isBenefit = false
+        this.checkboxGroup.includes('isBest') ? this.formValidate.isBest = true : this.formValidate.isBest = false
+        this.checkboxGroup.includes('isNew') ? this.formValidate.isNew = true : this.formValidate.isNew = false
+        this.checkboxGroup.includes('isHot') ? this.formValidate.isHot = true : this.formValidate.isHot = false
       },
       // 批量添加
       batchAdd() {
@@ -364,8 +403,10 @@
         const tmp = {}
         const tmpTab = {}
         this.formValidate.attr.forEach((o, i) => {
-          tmp['value' + i] = {title: o.attrName}
-          tmpTab['value' + i] = ''
+          // tmp['value' + i] = {title: o.attrName}
+          // tmpTab['value' + i] = ''
+          tmp[o.attrName] = { title: o.attrName };
+          tmpTab[o.attrName] = '';
         })
         this.formValidate.attrValue = this.attrFormat(val)
         this.manyTabTit = tmp
@@ -404,9 +445,12 @@
                       if (!rep4['attrValue']) rep4['attrValue'] = {}
                       rep4['attrValue'][rep3[0]] = rep3.length > 1 ? rep3[1] : ''
                     })
-                    Object.values(rep4.attrValue).forEach((v, i) => {
-                      rep4['value' + i] = v
-                    })
+                    // Object.values(rep4.attrValue).forEach((v, i) => {
+                    //   rep4['value' + i] = v
+                    // })
+                    for (let attrValueKey in rep4.attrValue) {
+                      rep4[attrValueKey] = rep4.attrValue[attrValueKey];
+                    }
                     res.push(rep4)
                   }
                 })
@@ -431,9 +475,9 @@
                   brokerage_two: 0,
                   attrValue: {[v['attrName']]: vv}
                 }
-                Object.values(res[kk].attrValue).forEach((v, i) => {
-                  res[kk]['value' + i] = v
-                })
+                for (let attrValueKey in res[kk].attrValue) {
+                  res[kk][attrValueKey] = res[kk].attrValue[attrValueKey];
+                }
               })
             })
             data.push(dataArr.join('$&'))
@@ -450,6 +494,7 @@
       // 删除图片
       handleRemove(i) {
         this.formValidate.sliderImages.splice(i, 1);
+        this.$forceUpdate();
       },
       // 选择主图
       checked(item, index) {
@@ -498,7 +543,12 @@
               giveIntegral: info.giveIntegral,
               ficti: info.ficti
             }
-            let imgs = JSON.parse(info.sliderImage)
+            if(info.isHot) this.checkboxGroup.push('isHot')
+            if(info.isGood) this.checkboxGroup.push('isGood')
+            if(info.isBenefit) this.checkboxGroup.push('isBenefit')
+            if(info.isBest) this.checkboxGroup.push('isBest')
+            if(info.isNew) this.checkboxGroup.push('isNew')
+              let imgs = JSON.parse(info.sliderImage)
             let imgss = []
             Object.keys(imgs).map(i => {
               imgss.push(this.$selfUtil.setDomain(imgs[i]))
@@ -562,17 +612,21 @@
         }
       },
       // 提交
-      handleSubmit(name) {
+      handleSubmit:Debounce(function(name) {
+        let pram = JSON.parse(JSON.stringify(this.formValidate));
        // this.formValidate.attr.length ? this.formValidate.attrValue = this.ManyAttrValue : this.formValidate.attrValue = []
-        this.formValidate.cateId = this.formValidate.cateIds.join(',')
-        this.formValidate.sliderImage = JSON.stringify(this.formValidate.sliderImages)
-        for (var i = 0; i < this.formValidate.attr.length; i++) {
-          this.formValidate.attr[i].attrValues = JSON.stringify(this.formValidate.attr[i].attrValue)
-        }
+        pram.attr.forEach(item => {
+          item.attrValues = item.attrValue.join(",");
+        });
+        pram.cateId = pram.cateIds.join(',')
+        pram.sliderImage = JSON.stringify(pram.sliderImages);
+        pram.attrValue.forEach(itemData => {
+          itemData.attrValue = JSON.stringify(itemData.attrValue);
+        });
         this.$refs[name].validate((valid) => {
           if (valid) {
             this.modal_loading = true
-            productCreateApi(this.formValidate).then(async res => {
+            productCreateApi(pram).then(async res => {
               this.$message.success('新增成功');
               this.$emit('handleCloseMod', false)
               this.modal_loading = false
@@ -580,13 +634,13 @@
               this.modal_loading = false
             })
           } else {
-            if (!this.formValidate.storeName || !this.formValidate.cateId || !this.formValidate.keyword
-              || !this.formValidate.unitName || !this.formValidate.image) {
+            if (!pram.storeName || !pram.cateId || !pram.keyword
+              || !pram.unitName || !pram.image) {
               this.$message.warning("请填写完整商品信息！");
             }
           }
         })
-      },
+      }),
       // 点击商品图
       modalPicTap(tit, num, i) {
         const _this = this
@@ -606,7 +660,7 @@
             _this.OneattrValue[0].image = img[0].sattDir
           }
           if (tit === '1' && num === 'duo') {
-            _this.this.formValidate.attrValue[i].image = img[0].sattDir
+            _this.formValidate.attrValue[i].image = img[0].sattDir
           }
           if (tit === '1' && num === 'pi') {
             _this.oneFormBatch[0].image = img[0].sattDir
@@ -635,7 +689,48 @@
         const dst = newItems.indexOf(item)
         newItems.splice(dst, 0, ...newItems.splice(src, 1))
         this.formValidate.slider_image = newItems
-      }
+      },
+      getGoodsType(){
+        /** 让商品推荐列表的name属性与页面设置tab的name匹配**/
+        goodDesignList({gid:70}).then((response)=>{
+          let list = response.list;
+          let arr = [];
+          let arr1 = [];
+          const listArr = [{ name: '是否热卖', value: 'isHot' }];
+          let typeLists = [ 
+            { name: '', value: 'isGood',type:'2' },  //精品推荐1  热门榜单2 首发新品3 促销单品4 
+            { name: '', value: 'isBenefit' ,type:'4'}, 
+            { name: '', value: 'isBest',type:'1' }, 
+            { name: '', value: 'isNew',type:'3' }];
+          list.forEach((item)=>{
+            let obj = {};
+            obj.value = JSON.parse(item.value);
+            obj.id = item.id;
+            obj.gid = item.gid;
+            obj.status = item.status;
+            arr.push(obj);
+          })
+          arr.forEach((item1)=>{
+            let obj1 = {};
+            obj1.name = item1.value.fields[1].value;
+            obj1.status = item1.status;
+            obj1.type = item1.value.fields[3].value;
+            arr1.push(obj1);
+          })
+          typeLists.forEach((item)=>{
+            arr1.forEach((item1)=>{
+              if(item.type == item1.type){
+                listArr.push({
+                  name:item1.name,
+                  value:item.value,
+                  type:item.type
+                })
+              }
+            })
+          })
+          this.recommend = listArr
+        })
+      },
     }
   }
 </script>
@@ -648,6 +743,10 @@
   }
   .selWidth {
     width: 100%;
+  }
+
+  .line-ht{
+    line-height: 28px;
   }
 
   .lunBox {

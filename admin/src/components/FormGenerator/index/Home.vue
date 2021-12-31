@@ -52,9 +52,9 @@
 <!--                <el-button icon="el-icon-view" type="text" @click="showJson">-->
 <!--                  查看json-->
 <!--                </el-button>-->
-<!--                <el-button icon="el-icon-download" type="text" @click="download">-->
-<!--                  导出vue文件-->
-<!--                </el-button>-->
+               <!-- <el-button icon="el-icon-download" type="text" @click="download"> -->
+               <!-- 导出vue文件 -->
+               <!-- </el-button> -->
 <!--                <el-button class="copy-btn-main" icon="el-icon-document-copy" type="text" @click="copy">-->
 <!--                  复制代码-->
 <!--                </el-button>-->
@@ -77,7 +77,7 @@
             <el-input v-model="selfForm.info" placeholder="描述" />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="handlerSaveJSON('selfForm')">保存</el-button>
+            <el-button type="primary" @click="handlerSaveJSON('selfForm')" v-hasPermi="['admin:system:form:update']">保存</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -168,7 +168,7 @@ import {
   getDrawingList, saveDrawingList, getIdGlobal, saveIdGlobal, getFormConf, getFormConfSelf
 } from '../utils/db'
 import loadBeautifier from '../utils/loadBeautifier'
-
+import {Debounce} from '@/utils/validate'
 let beautifier
 const emptyActiveData = { style: {}, autosize: {}}
 let oldActiveId
@@ -416,7 +416,7 @@ export default {
       this.AssembleFormData()
       this.jsonDrawerVisible = true
     },
-    handlerSaveJSON(form) {
+    handlerSaveJSON:Debounce(function(form) {
       // this.AssembleFormData()
       // loadBeautifier(btf => {
       //   beautifier = btf
@@ -434,7 +434,7 @@ export default {
         this.selfForm.content = JSON.stringify(formConfig)
         this.$emit('getFormConfigDataResult', this.selfForm)
       })
-    },
+    }),
     download() {
       this.dialogVisible = true
       this.showFileName = true

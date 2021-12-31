@@ -31,10 +31,8 @@
         <template slot-scope="scope">
           <div class="demo-image__preview">
             <el-image
-              v-for="(item, index) in scope.row.imageInput"
-              :key="index"
               style="width: 36px; height: 36px"
-              :src="item"
+              :src="scope.row.imageInput"
               :preview-src-list="imgList"
             />
           </div>
@@ -121,11 +119,11 @@
       handlerGetListData(pram) {
         articleApi.ListArticle(pram).then(data => {
           this.listData = data
-          this.listData.list.map((item) => {
-            item.imageInput.map(i => {
-              this.imgList.push(i)
-            })
-          })
+          // this.listData.list.map((item) => {
+          //   item.imageInput.map(i => {
+          //     this.imgList.push(i)
+          //   })
+          // })
         })
       },
       handlerGetCategoryTreeData() {

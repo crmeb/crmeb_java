@@ -60,7 +60,7 @@
         min-Width="120"/>
       <el-table-column label="身份" prop="realName" min-width="230">
         <template slot-scope="scope">
-          <el-tag size="small" type="info" v-for="(item, index) in scope.row.roleNames.split(',')" class="mr5">{{ item }}</el-tag>
+          <el-tag size="small" type="info" v-for="(item, index) in scope.row.roleNames.split(',')" :key="index" class="mr5">{{ item }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="最后登录时间" prop="lastTime" min-width="180">

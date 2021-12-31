@@ -37,7 +37,7 @@ export default {
     },
     editData: {
       type: Object
-    }
+    },
   },
   data() {
     return {
