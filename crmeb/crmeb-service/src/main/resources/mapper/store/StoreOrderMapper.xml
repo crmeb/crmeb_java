@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.StoreOrderDao">
+
+    <select id="getTotalPrice" resultType="java.math.BigDecimal">
+        select sum(pay_price) from eb_store_order where ${where} and refund_status = 0
+    </select>
+    <select id="getRefundPrice" resultType="java.math.BigDecimal">
+        select sum(refund_price) from eb_store_order where ${where} and refund_status = 2
+    </select>
+    <select id="getRefundTotal" resultType="java.lang.Integer">
+        select count(id) from eb_store_order where ${where} and refund_status = 2
+    </select>
+    <select id="getOrderVerificationDetail" parameterType="com.zbkj.common.request.PageParamRequest"
+            resultType="com.zbkj.common.response.StoreStaffDetail">
+        select sum(o.`pay_price`) as price, count(o.`id`) as count, DATE_FORMAT(o.`create_time`, '%Y-%m-%d') as time
+        from `eb_store_order` o
+        where o.`is_del` = 0 and o.`paid` = 1 and o.`refund_status` = 0
+        <if test="null != startTime and startTime != ''">
+            and o.create_time >= #{ startTime }
+        </if>
+        <if test="null != endTime and endTime != ''">
+            and o.create_time &lt; #{ endTime }
+        </if>
+        GROUP by DATE_FORMAT(o.`create_time`, '%Y-%m-%d') order by o.`create_time` desc limit #{ page },#{ limit };
+    </select>
+    <select id="getOrderStatisticsPriceDetail" parameterType="com.zbkj.common.request.StoreDateRangeSqlPram"
+            resultType="com.zbkj.common.response.StoreOrderStatisticsChartItemResponse">
+        select sum(o.pay_price) as num,date_format(o.create_time, '%Y-%m-%d') as time
+        from eb_store_order o
+        where o.is_del >= 0 and o.paid >= 1 and o.refund_status >= 0
+        and o.create_time >= #{ startTime }
+        and o.create_time &lt; #{ endTime }
+        group by date_format(o.create_time, '%Y-%m-%d')
+        order by o.create_time desc;
+    </select>
+    <select id="getOrderStatisticsOrderCountDetail" parameterType="com.zbkj.common.request.StoreDateRangeSqlPram"
+            resultType="com.zbkj.common.response.StoreOrderStatisticsChartItemResponse">
+        select count(id) as num, date_format(o.create_time, '%Y-%m-%d') as time
+        from eb_store_order o
+        where o.is_del >= 0 and o.paid >= 1 and o.refund_status >= 0
+        and o.create_time >= #{ startTime }
+        and o.create_time &lt; #{ endTime }
+        group by date_format(o.create_time, '%Y-%m-%d')
+        order by o.create_time asc;
+    </select>
+
+    <select id="getBrokerageData" resultType="com.zbkj.common.response.OrderBrokerageData">
+        select count(*) as num, sum(o.pay_price) as price
+        from eb_store_order as o
+        right join eb_user_brokerage_record as br on br.link_id = o.order_id and br.status = 3 and br.uid = #{spreadId}
+        where o.uid = #{uid} and o.status > 1;
+    </select>
+</mapper>

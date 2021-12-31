@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.StoreProductAttrDao">
+    <update id="updateByProductId" parameterType="com.zbkj.common.model.product.StoreProductAttr">
+        update eb_store_product_attr
+        <set>
+            attr_name = #{ attrName },
+            attr_values = #{ attrValues },
+            type = #{ type }
+        </set>
+         where product_id = #{ productId, jdbcType=INTEGER}
+    </update>
+</mapper>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.SystemMenuDao">
+
+    <select id="findPermissionByUserId" resultType="com.zbkj.common.model.system.SystemMenu" parameterType="Integer" >
+		SELECT m.*
+		FROM eb_system_menu m
+		right join eb_system_role_menu rm on rm.menu_id = m.id
+		right join eb_system_role r on rm.rid = r.id
+		right join eb_system_admin a on FIND_IN_SET(r.id, a.roles)
+		where  m.is_delte = 0 and r.`status` = 1 and a.id = #{userId}
+		GROUP BY m.id
+	</select>
+
+	<select id="getMenusByUserId" resultType="com.zbkj.common.model.system.SystemMenu" parameterType="Integer" >
+		SELECT m.*
+		FROM eb_system_menu m
+		right join eb_system_role_menu rm on rm.menu_id = m.id
+		right join eb_system_role r on rm.rid = r.id
+		right join eb_system_admin a on FIND_IN_SET(r.id, a.roles)
+		where  m.is_delte = 0 and r.`status` = 1 and m.menu_type != 'A' and m.is_show = 1 and a.id = #{userId}
+		GROUP BY m.id
+	</select>
+
+</mapper>

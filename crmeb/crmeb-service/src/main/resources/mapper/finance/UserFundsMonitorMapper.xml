@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.UserFundsMonitorDao">
+    <select id="getFundsMonitor" resultType="com.zbkj.common.vo.UserFundsMonitor" parameterType="map">
+         SELECT u.uid, u.nickname, u.now_money, u.brokerage_price AS brokerage,u.create_time,u.spread_uid,
+         IF(( Sum(b.price) ) IS NULL, 0.00, Sum(b.price)) AS total_brokerage,
+--          IF(( Sum(e.extract_price) ) IS NULL, 0.00, Sum(e.extract_price)) AS total_extract
+        (SELECT if(Sum( e.extract_price ) IS NULL, 0.00, Sum( e.extract_price ) ) from eb_user_extract e where e.uid = u.uid and e.`status` = 1 ) AS total_extract
+        FROM eb_user AS u
+         LEFT JOIN eb_user_brokerage_record AS b ON u.uid = b.uid AND b.link_type = 'order' AND b.`type` = 1 AND b.`status` = 3
+--          LEFT JOIN eb_user_extract AS e ON u.`uid` = e.uid AND e.STATUS = 1
+         where 1 = 1
+            <if test="keywords != '' and keywords != null ">
+                and ( u.uid like #{keywords} or u.nickname like #{keywords, jdbcType=VARCHAR})
+            </if>
+            <if test="max != null and max > 0">
+                and  #{max, jdbcType=DECIMAL} >= u.brokerage_price
+            </if>
+            <if test="min != null and min > 0">
+                and  u.brokerage_price >= #{min, jdbcType=DECIMAL}
+            </if>
+         GROUP  BY u.uid
+         order by total_brokerage ${sort}
+    </select>
+</mapper>
