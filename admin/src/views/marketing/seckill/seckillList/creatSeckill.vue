@@ -127,7 +127,7 @@
                   <el-option
                     v-for="item in seckillTime"
                     :key="item.id"
-                    :label="item.time"
+                    :label="item.name + ' | ' + item.time"
                     :value="item.id">
                   </el-option>
                 </el-select>
@@ -157,9 +157,9 @@
                     width="55">
                   </el-table-column>
                   <template v-if="manyTabDate && formValidate.specType">
-                    <el-table-column v-for="(item,iii) in manyTabDate" :key="iii" align="center" :label="manyTabTit[iii].title" min-width="80">
+                    <el-table-column v-for="(item,iii) in manyTabDate" :key="iii" align="center" :label="manyTabTit[iii].title" min-width="100">
                       <template slot-scope="scope">
-                        <span class="priceBox" v-text="scope.row[iii]" />
+                        <span class="priceBox" v-text="scope.row[iii]"  />
                       </template>
                     </el-table-column>
                   </template>
@@ -173,7 +173,7 @@
                       </div>
                     </template>
                   </el-table-column>
-                  <el-table-column v-for="(item,iii) in attrValue" :key="iii" :label="formThead[iii].title" align="center" min-width="140">
+                  <el-table-column v-for="(item,iii) in attrValue" :key="iii" :label="formThead[iii].title" align="center" min-width="145">
                     <template slot-scope="scope">
                       <el-input-number
                         size="small"
@@ -205,7 +205,7 @@
         <!-- 商品详情-->
         <div v-show="currentTab === 2">
           <el-form-item label="商品详情：">
-            <ueditor-from v-model="formValidate.content" :content="formValidate.content" />
+             <Tinymce v-model="formValidate.content"></Tinymce>
           </el-form-item>
         </div>
         <el-form-item style="margin-top:30px;">
@@ -237,6 +237,7 @@
             class="submission"
             size="small"
             @click="handleSubmit('formValidate')"
+            v-hasPermi="['admin:seckill:update']"
           >提交</el-button>
         </el-form-item>
       </el-form>
@@ -246,11 +247,13 @@
 </template>
 
 <script>
+  import Tinymce from '@/components/Tinymce/index'
   import {  productDetailApi, categoryApi } from '@/api/store'
   import { shippingTemplatesList } from '@/api/logistics'
   import { getSeckillList } from '@/libs/public'
   import {  seckillStoreSaveApi, seckillStoreUpdateApi, seckillStoreInfoApi } from '@/api/marketing'
   import CreatTemplates from '@/views/systemSetting/logistics/shippingTemplates/creatTemplates'
+  import {Debounce} from '@/utils/validate'
   const defaultObj = {
     image: '',
     images: '',
@@ -280,7 +283,7 @@
     content: '',
     specType: false,
     id: 0,
-    timeId: '',
+    timeId: 1,
     startTime: '',
     stopTime: '',
     timeVal: [],
@@ -314,7 +317,7 @@
   }
   export default {
     name: "creatSeckill",
-    components: { CreatTemplates },
+    components: { CreatTemplates,Tinymce },
     data() {
       return {
         pickerOptions: {
@@ -421,8 +424,10 @@
         const tmp = {}
         const tmpTab = {}
         this.formValidate.attr.forEach((o, i) => {
-          tmp['value' + i] = { title: o.attrName }
-          tmpTab['value' + i] = ''
+          // tmp['value' + i] = { title: o.attrName }
+          // tmpTab['value' + i] = ''
+          tmp[o.attrName] = { title: o.attrName };
+          tmpTab[o.attrName] = '';
         })
         this.manyTabTit = tmp
         this.manyTabDate = tmpTab
@@ -525,6 +530,7 @@
             isShow: info.isShow,
             tempId: info.tempId,
             attr: info.attr,
+            attrValue: info.attrValue,
             selectRule: info.selectRule,
             content: info.content,
             specType: info.specType,
@@ -539,29 +545,32 @@
             num: 1
           }
           if(info.specType){
-            info.attrValues.forEach((row) => {
-              row.quota = row.stock;
-            });
             this.$nextTick(() => {
-              info.attrValues.forEach((row) => {
+              info.attrValue.forEach((row) => {
+                row.quota = row.stock;
+                row.attrValue = JSON.parse(row.attrValue);
+                for (let attrValueKey in row.attrValue) {
+                  row[attrValueKey] = row.attrValue[attrValueKey];
+                }
                 row.image = this.$selfUtil.setDomain(row.image)
                 this.$refs.multipleTable.toggleRowSelection(row, true);
-                this.$set(row, 'checked', true)
+                // this.$set(row, 'checked', true)
               });
             });
-            this.ManyAttrValue = info.attrValues
-            this.multipleSelection = info.attrValues
+
+            this.ManyAttrValue = info.attrValue
+            this.multipleSelection = info.attrValue
           }else{
             info.attrValue.forEach((row) => {
               row.quota = row.stock;
             });
            this.ManyAttrValue = info.attrValue
-           this.formValidate.attr = []
+           // this.formValidate.attr = []
           }
           this.fullscreenLoading = false
         }).catch(res => {
           this.fullscreenLoading = false
-        })
+        });
       },
       getSekllProdect(id) {
         this.fullscreenLoading = true
@@ -570,14 +579,17 @@
           this.formValidate = {
             image: this.$selfUtil.setDomain(info.image),
             imagess: JSON.parse(info.sliderImage),
-            title: info.title,
-            info: info.info,
+            // title: info.title,
+            title: info.storeName,
+            // info: info.info,
+            info: info.storeInfo,
             quota: info.quota,
             unitName: info.unitName,
             sort: info.sort,
             isShow: info.isShow,
             tempId: info.tempId,
             attr: info.attr,
+            attrValue: info.attrValue,
             selectRule: info.selectRule,
             content: info.content,
             specType: info.specType,
@@ -585,18 +597,25 @@
             giveIntegral: info.giveIntegral,
             ficti: info.ficti,
             timeId: Number(info.timeId),
-            startTime: info.startTime || '',
-            stopTime: info.stopTime || '',
+            // startTime: info.startTime || '',
+            startTime: info.startTimeStr || '',
+            // stopTime: info.stopTime || '',
+            stopTime: info.stopTimeStr || '',
             status: info.status,
             num: info.num,
-            timeVal: info.startTime && info.stopTime ? [info.startTime, info.stopTime] : []
+            timeVal: info.startTimeStr && info.stopTimeStr ? [info.startTimeStr, info.stopTimeStr] : [],
+            id: info.id
           }
           if(info.specType){
-            this.ManyAttrValue = info.attrValues;
+            this.ManyAttrValue = info.attrValue;
             this.$nextTick(() => {
               this.ManyAttrValue.forEach((item, index) => {
+                item.attrValue = JSON.parse(item.attrValue);
+                for (let attrValueKey in item.attrValue) {
+                  item[attrValueKey] = item.attrValue[attrValueKey];
+                }
                 item.image = this.$selfUtil.setDomain(item.image)
-                if (item.checked) {
+                if (item.id) { // 设置自动选中逻辑，只要id存在
                   this.$set(item, 'price', item.price)
                   this.$set(item, 'quota', item.quota)
                   this.$nextTick(() => {
@@ -607,7 +626,7 @@
             });
           }else{
             this.ManyAttrValue = info.attrValue
-            this.formValidate.attr = []
+            // this.formValidate.attr = []
           }
           this.fullscreenLoading = false
         }).catch(res => {
@@ -625,17 +644,20 @@
         });
       },
       // 提交
-      handleSubmit(name) {
+      handleSubmit:Debounce(function(name) {
         if(!this.formValidate.specType){
-          this.formValidate.attr = []
+          // this.formValidate.attr = []
           this.formValidate.attrValue = this.ManyAttrValue
         }else{
-          this.multipleSelection.forEach((row) => {
-            this.$set(row, 'checked', true)
-          });
+          // this.multipleSelection.forEach((row) => {
+          //   this.$set(row, 'checked', true)
+          // });
           this.formValidate.attrValue = this.multipleSelection
         }
         this.formValidate.images = JSON.stringify(this.formValidate.imagess)
+        this.formValidate.attrValue.forEach(item => {
+          item.attrValue = JSON.stringify(item.attrValue);
+        });
         this.$refs[name].validate((valid) => {
             if (valid) {
               this.fullscreenLoading = true;
@@ -684,7 +706,7 @@
             }
           });
 
-      },
+      }),
       handleSubmitUp() {
         if (this.currentTab-- < 0) this.currentTab = 0;
       },

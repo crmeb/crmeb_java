@@ -14,7 +14,7 @@
             </el-form-item>
           </el-form>
         </div>
-        <el-button size="mini" type="primary" @click="handlerEditData({},0)" v-if="!selectModel">创建表单</el-button>
+        <el-button size="mini" type="primary" @click="handlerEditData({},0)" v-if="!selectModel" v-hasPermi="['admin:system:form:save']">创建表单</el-button>
       </div>
       <el-table
         :data="dataList.list"
@@ -22,6 +22,7 @@
         size="mini"
         class="table"
         @current-change="handleCurrentRowChange"
+        :header-cell-style=" {fontWeight:'bold'}"
       >
         <el-table-column label="ID" prop="id" width="80"/>
         <el-table-column label="名称" prop="name" min-width="180"/>
@@ -29,7 +30,7 @@
         <el-table-column label="更新时间" prop="updateTime" min-width="200" />
         <el-table-column v-if="!selectModel" label="操作" min-width="80" fixed="right">
           <template slot-scope="scope">
-            <el-button type="text" size="small" @click="handlerEditData(scope.row,1)">编辑</el-button>
+            <el-button type="text" size="small" @click="handlerEditData(scope.row,1)" v-hasPermi="['admin:system:form:info']">编辑</el-button>
           </template>
         </el-table-column>
       </el-table>

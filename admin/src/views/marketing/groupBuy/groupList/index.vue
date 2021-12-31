@@ -1,8 +1,8 @@
 <template>
   <div class="divBox">
-    <el-card class="box-card mb15">
-      <cards-data :cardLists="cardLists"></cards-data>
-    </el-card>
+    <div class="mt10">
+      <cards-data :cardLists="cardLists" v-if="checkPermi(['admin:combination:statistics'])"></cards-data>
+    </div>
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <div class="container">
@@ -30,6 +30,7 @@
         size="mini"
         ref="multipleTable"
         highlight-current-row
+        :header-cell-style=" {fontWeight:'bold'}"
       >
         <el-table-column
           prop="id"
@@ -55,31 +56,36 @@
         <el-table-column
           label="开团时间"
           prop="addTime"
-          min-width="100"
+          min-width="130"
         />
-        <el-table-column
-          label="拼团商品"
-          prop="title"
-          min-width="100"
-        />
+        <el-table-column 
+        label="拼团商品" 
+        prop="title" 
+        min-width="300" 
+        :show-overflow-tooltip="true">
+        </el-table-column>
         <el-table-column
           label="几人团"
           prop="people"
           min-width="100"
+          align="center"
         />
         <el-table-column
           label="几人参加"
           prop="countPeople"
           min-width="100"
+          align="center"
         />
         <el-table-column
           prop="stopTime"
           label="结束时间"
           min-width="130"
+          align="center"
         />
         <el-table-column
           label="拼团状态"
           min-width="150"
+          align="center"
         >
           <template slot-scope="scope">
             <el-tag :type="scope.row.status | groupColorFilter">{{scope.row.status | groupStatusFilter}}</el-tag>
@@ -164,6 +170,7 @@
 <script>
   import { combineListApi, combineStatisticsApi,combineOrderPinkApi } from '@/api/marketing'
   import cardsData from '@/components/cards/index'
+  import { checkPermi } from "@/utils/permission"; // 权限判断函数
   export default {
     name: "groupList",
     components: {
@@ -197,6 +204,7 @@
       this.getList();
     },
     methods:{
+      checkPermi,
       handleClose(){
         this.dialogVisible = false
       },
@@ -250,8 +258,8 @@
       getStatistics() {
         combineStatisticsApi().then(res => {
           this.cardLists = [
-            { name: '参与人数(人)', count: res.countPeople },
-            { name: '成团数量(个)', count: res.countTeam }
+            { name: '参与人数(人)', count: res.countPeople,color:'#1890FF',class:'one',icon:'iconleijiyonghushu' },
+            { name: '成团数量(个)', count: res.countTeam,color:'#A277FF',class:'two',icon:'iconxinzengyonghu' }
           ]
         }).catch(() => {
           this.listLoading = false
@@ -262,5 +270,25 @@
 </script>
 
 <style scoped>
-
+   .el-table__body {
+    width: 100%;
+    table-layout: fixed !important;
+  }
+.text_overflow{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+}
+.pup_card{
+  width: 200px;
+  border-radius: 5px;
+  padding: 5px;
+  box-sizing: border-box;
+  font-size: 12px;
+  line-height: 16px;
+}
+.mt10{
+  margin-top: 10px;
+}
 </style>

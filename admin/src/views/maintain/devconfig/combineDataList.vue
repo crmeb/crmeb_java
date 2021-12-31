@@ -20,7 +20,8 @@
         <!--        </el-form-item>-->
       </el-form>
     </div>
-    <el-button type="primary" size="mini" @click="handlerOpenEditData({},0)" v-if="((formData.id==55 || formData.name==='签到天数配置') && dataList.list.length<7) || (formData.id!=55|| formData.name!=='签到天数配置')">添加数据</el-button>
+    <el-button type="primary" size="mini" @click="handlerOpenEditData({},0)" v-hasPermi="['admin:system:group:data:save']">添加数据</el-button>
+    <!-- v-if="((formData.id==55 || formData.name==='签到天数配置') && dataList.list.length<7) || (formData.id!=55|| formData.name!=='签到天数配置')" -->
     <el-dialog
       :title="editDataConfig.isCreate === 0?'添加数据':'编辑数据'"
       :visible.sync="editDataConfig.visible"
@@ -39,6 +40,7 @@
     <el-table
       :data="dataList.list"
       style="width: 100%;margin-bottom: 20px;"
+      :header-cell-style=" {fontWeight:'bold'}"
     >
       <el-table-column label="编号" prop="id" />
       <el-table-column
@@ -65,8 +67,8 @@
       </el-table-column>
       <el-table-column label="操作" width="200">
         <template slot-scope="scope">
-          <el-button type="text" size="small" @click="handlerOpenEditData(scope.row,1)">编辑</el-button>
-          <el-button type="text" size="small" @click="handlerDelete(scope.row)">删除</el-button>
+          <el-button type="text" size="small" @click="handlerOpenEditData(scope.row,1)" v-hasPermi="['admin:system:group:data:update','admin:system:group:data:info']">编辑</el-button>
+          <el-button type="text" size="small" @click="handlerDelete(scope.row)" v-if="formMark !== 99" v-hasPermi="['admin:system:group:data:delete']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -110,7 +112,8 @@ export default {
         editData: {}
       },
       formConf: { fields: [] },
-      dataList: { list: [], total: 0 }
+      dataList: { list: [], total: 0 },
+      formMark:0
     }
   },
   mounted() {
@@ -145,6 +148,7 @@ export default {
     handlerGetFormConfig() { // 获取表单配置后生成table列
       const _pram = { id: this.formData.formId }
       systemFormConfigApi.getFormConfigInfo(_pram).then(data => {
+        this.formMark = parseInt(data.id);
         this.formConf = JSON.parse(data.content)
       })
     },

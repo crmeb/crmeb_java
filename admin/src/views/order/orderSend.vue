@@ -12,7 +12,7 @@
         <el-form-item label="发货类型：" prop="expressId">
           <el-radio-group v-model="formItem.expressRecordType" @change="changeRadio(formItem.expressRecordType)">
             <el-radio label="1">手动填写</el-radio>
-            <el-radio label="2">电子面单打印</el-radio>
+            <el-radio label="2" v-if="checkPermi(['admin:order:sheet:info'])">电子面单打印</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="快递公司：" prop="expressCode">
@@ -67,10 +67,16 @@
           <el-input v-model="formItem.deliveryTel" placeholder="请输入送货人电话" style="width:80%;"></el-input>
         </el-form-item>
       </div>
+      <div>
+        <el-form-item label="" >
+          <div style="color:#CECECE;">顺丰请输入单号：收件人或寄件人手机号后四位</div>
+          <div style="color:#CECECE;">例如：SF000000000000:3941</div>
+        </el-form-item>
+      </div>
     </el-form>
     <div slot="footer">
-      <el-button size="mini" type="primary" @click="putSend('formItem')">提交</el-button>
-      <el-button size="mini" @click="cancel('formItem')">取消</el-button>
+      <el-button  type="primary" @click="putSend('formItem')">提交</el-button>
+      <el-button  @click="cancel('formItem')">取消</el-button>
     </div>
   </el-dialog>
 </template>
@@ -78,7 +84,8 @@
 <script>
   import {orderSendApi, sheetInfoApi} from '@/api/order'
   import {expressAllApi, exportTempApi} from '@/api/sms'
-
+  import { checkPermi } from "@/utils/permission"; // 权限判断函数
+  import {Debounce} from '@/utils/validate'
   const validatePhone = (rule, value, callback) => {
     if (!value) {
       return callback(new Error('请填写手机号'));
@@ -146,6 +153,7 @@
     mounted() {
     },
     methods: {
+      checkPermi,
       // 默认信息
       sheetInfo() {
         sheetInfoApi().then(async res => {
@@ -191,7 +199,7 @@
         })
       },
       // 提交
-      putSend(name) {
+      putSend:Debounce(function(name) {
         this.formItem.orderNo = this.orderId;
         this.$refs[name].validate((valid) => {
           if (valid) {
@@ -205,7 +213,7 @@
             this.$message.error('请填写信息');
           }
         })
-      },
+      }),
       handleClose() {
         this.cancel('formItem');
       },

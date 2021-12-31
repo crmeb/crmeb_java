@@ -27,19 +27,9 @@
               <div v-if="formValidate.type === 'news'">
                 <div class="newsBox">
                   <!--<div class="news_pic mb15" style="backgroundImage: url('@/assets/imgs/mobilefoot.png');backgroundSize:'100% 100%'}" />-->
-                 <div class="news_pic mb15" :style="{backgroundImage: 'url(' + (formValidate.contents.articleData.imageInput?formValidate.contents.articleData.imageInput[0]:'') + ')',backgroundSize:'100% 100%'}" />
+                 <div class="news_pic mb15" :style="{backgroundImage: 'url(' + (formValidate.contents.articleData.imageInput?formValidate.contents.articleData.imageInput:'') + ')',backgroundSize:'100% 100%'}" />
                   <span class="news_sp">{{ formValidate.contents.articleData.title }}</span>
                 </div>
-                <!--<div v-for="(j, i) in formValidate.contents.list" :key="i">-->
-                  <!--<div v-if="i === 0">-->
-                    <!--<div class="news_pic mb15" :style="{backgroundImage: 'url(' + (j.image_input) + ')',backgroundSize:'100% 100%'}" />-->
-                    <!--<span class="news_sp">{{ j.title }}</span>-->
-                  <!--</div>-->
-                  <!--<div v-else class="news_cent">-->
-                    <!--<span v-if="j.synopsis" class="news_sp1">{{ j.title }}</span>-->
-                    <!--<div v-if="j.image_input.length!==0" class="news_cent_img"><img :src="j.image_input"></div>-->
-                  <!--</div>-->
-                <!--</div>-->
               </div>
             </div>
           </div>
@@ -141,6 +131,7 @@
                 type="primary"
                 class="ml50"
                 @click="submenus('formValidate')"
+                v-hasPermi="['admin:wechat:keywords:reply:update']"
               >保存并发布
               </el-button>
             </div>
@@ -155,6 +146,7 @@
 import { getToken } from '@/utils/auth'
 import { replySaveApi, replyEditApi, replyInfoApi, replyListApi, keywordsInfoApi, replyUpdateApi } from '@/api/wxApi'
 import { wechatUploadApi } from '@/api/systemSetting'
+import {Debounce} from '@/utils/validate'
 export default {
   name: 'Index',
   components: { },
@@ -381,7 +373,7 @@ export default {
       this.val = ''
     },
     // 保存
-    submenus(name) {
+    submenus:Debounce(function(name) {
       this.$refs[name].validate((valid) => {
         if (valid) {
           this.formValidate.keywords = this.labelarr.join(',')
@@ -398,15 +390,19 @@ export default {
             })
           } else {
             this.$route.path.indexOf('follow') !== -1 ? this.formValidate.keywords = 'subscribe' : this.formValidate.keywords ='default'
-            replyUpdateApi({id:this.formValidate.id}, this.formValidate).then(async res => {
+            this.formValidate.id !== null ?  replyUpdateApi({id:this.formValidate.id}, this.formValidate).then(async res => {
               this.$message.success('操作成功')
+            }) : replySaveApi(this.formValidate).then(async res => {
+              this.operation()
+            }).catch(res => {
+              this.$message.error(res.message)
             })
           }
         } else {
           return false
         }
       })
-    },
+    }),
     // 保存成功操作
     operation() {
       this.$modalSure('继续添加').then(() => {

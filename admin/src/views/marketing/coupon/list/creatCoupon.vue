@@ -49,7 +49,7 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="使用有效期限（天）" prop="day" v-if="!ruleForm.isFixedTime">
-          <el-input-number v-model="ruleForm.day" :min="0" label="描述文字"></el-input-number>
+          <el-input-number v-model="ruleForm.day" :min="0" :max="999" label="描述文字"></el-input-number>
         </el-form-item>
         <el-form-item label="使用有效期限" prop="resource" v-if="ruleForm.isFixedTime">
           <el-date-picker
@@ -109,7 +109,7 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item>
-          <el-button size="mini" type="primary" @click="submitForm('ruleForm')" :loading="loading">立即创建</el-button>
+          <el-button size="mini" type="primary" @click="submitForm('ruleForm')" :loading="loading" v-hasPermi="['admin:coupon:save']">立即创建</el-button>
           <!--<el-button @click="resetForm('ruleForm')">重置</el-button>-->
         </el-form-item>
       </el-form>
@@ -120,13 +120,15 @@
 <script>
   import { couponSaveApi, couponInfoApi } from '@/api/marketing'
   import { categoryApi } from '@/api/store'
+  import {Debounce} from '@/utils/validate'
   export default {
     name: "creatCoupon",
     data() {
       return {
         pickerOptions: {
           disabledDate(time) {
-            return time.getTime() < new Date().setTime(new Date().getTime() - 3600 * 1000 * 24);
+            // return time.getTime() < new Date().setTime(new Date().getTime() - 3600 * 1000 * 24); //不限制未来时间
+            return time.getTime() < Date.now() - 8.64e7 || time.getTime() > Date.now() + 600 * 8.64e7; //限制未来时间
           }
         },
         loading: false,
@@ -246,7 +248,7 @@
           _this.ruleForm.checked = row
         },'many',_this.ruleForm.checked)
       },
-      submitForm(formName) {
+      submitForm:Debounce(function(formName) {
        if( (this.ruleForm.isFixedTime && !this.termTime) || this.ruleForm.isFixedTime && !this.termTime.length) return this.$message.warning("请选择使用有效期限")
        if( (this.ruleForm.isForever && !this.isForeverTime) || (this.ruleForm.isForever && !this.isForeverTime.length)) return this.$message.warning("请选择请选择领取时间")
         if( this.ruleForm.useType === 2 ) this.ruleForm.primaryKey = this.ruleForm.checked.map(item => {return item.id}).join(',')
@@ -274,7 +276,8 @@
             return false;
           }
         });
-      },
+      }),
+      
     }
   }
 </script>

@@ -5,7 +5,7 @@
         <el-form inline>
           <el-form-item>
             <el-input v-model="tableFrom.keywords" placeholder="请输入用户名称" class="selWidth">
-              <el-button slot="append" icon="el-icon-search" @click="getList" />
+              <el-button slot="append" icon="el-icon-search" @click="search" />
             </el-input>
           </el-form-item>
         </el-form>
@@ -17,7 +17,7 @@
         size="small"
       >
         <el-table-column label="" width="40">
-          <template scope="scope">
+          <template slot-scope="scope">
             <el-radio v-model="templateRadio" :label="scope.row.uid" @change.native="getTemplateRow(scope.$index,scope.row)">&nbsp</el-radio>
           </template>
         </el-table-column>
@@ -31,7 +31,7 @@
           label="微信用户名称"
           min-width="130"
         />
-        <el-table-column label="客服头像" min-width="80">
+        <el-table-column label="用户头像" min-width="80">
           <template slot-scope="scope">
             <div class="demo-image__preview">
               <el-image
@@ -121,6 +121,17 @@ export default {
     getList() {
       this.loading = true
       userListApi(this.tableFrom).then(res => {
+        this.tableData.data = res.list
+        this.tableData.total = res.total
+        this.loading = false
+      }).catch(res => {
+        this.$message.error(res.message)
+        this.loading = false
+      })
+    },
+    search(){
+       this.loading = true
+      userListApi({keywords:this.tableFrom.keywords}).then(res => {
         this.tableData.data = res.list
         this.tableData.total = res.total
         this.loading = false

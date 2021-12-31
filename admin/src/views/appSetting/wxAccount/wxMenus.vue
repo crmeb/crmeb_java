@@ -47,7 +47,7 @@
           <div v-if="checkedMenuId !== null">
             <div class="dividerTitle acea-row row-between row-bottom">
               <span class="title">菜单信息</span>
-              <el-button slot="extra" size="small" type="danger" @click="deltMenus">删除</el-button>
+              <el-button slot="extra" size="small" type="danger" @click="deltMenus" v-hasPermi="['admin:wechat:menu:public:delete']">删除</el-button>
               <el-divider />
             </div>
             <el-col :span="24" class="userAlert">
@@ -95,7 +95,10 @@
             </el-col>
           </div>
           <el-col v-if="isTrue" :span="24">
-            <el-button size="mini" type="primary" style="display: block;margin: 10px auto;" @click="submenus('formValidate')">保存并发布</el-button>
+            <el-button size="mini" type="primary" 
+            style="display: block;margin: 10px auto;"
+             @click="submenus('formValidate')"
+             v-hasPermi="['admin:wechat:menu:public:create']">保存并发布</el-button>
           </el-col>
         </el-col>
       </el-row>
@@ -105,6 +108,7 @@
 
 <script>
   import { wechatMenuApi, wechatMenuAddApi } from '@/api/wxApi'
+  import {Debounce} from '@/utils/validate'
   export default {
     name: 'WechatMenus',
     data() {
@@ -191,7 +195,7 @@
         })
       },
       // 点击保存提交
-      submenus(name) {
+      submenus:Debounce(function(name) {
         if (this.isTrue && !this.checkedMenuId && this.checkedMenuId !== 0) {
           this.putData()
         } else {
@@ -203,7 +207,7 @@
             }
           })
         }
-      },
+      }),
       // 新增data
       putData() {
         const data = {

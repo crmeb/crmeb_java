@@ -1,3 +1,13 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import Vue from 'vue'
 import Router from 'vue-router'
 
@@ -46,7 +56,9 @@ import mobileRouter from './modules/mobile'
  * constantRoutes
  * a base page that does not have permission requirements
  * all roles can be accessed
+ *
  */
+
 export const constantRoutes = [
   // 商品
   storeRouter,
@@ -70,39 +82,7 @@ export const constantRoutes = [
   maintainRouter,
   //移动端管理
   mobileRouter,
-  // 数据
-  {
-    path: '/datas',
-    component: Layout,
-    redirect: '/datas',
-    name: 'Datas',
-    meta: {
-      title: '数据',
-      icon: 'clipboard'
-    },
-    children: [
-      {
-        path: 'transaction',
-        component: () => import('@/views/datas/transaction/index'),
-        name: 'Transaction',
-        meta: { title: '交易数据', icon: '' },
-        children: [
-          {
-            path: 'transactionorder',
-            component: () => import('@/views/datas/transaction/order/index'),
-            name: 'transactionOrder',
-            meta: { title: '订单统计', icon: '' }
-          },
-          {
-            path: 'transactiongoods',
-            component: () => import('@/views/datas/transaction/goods/index'),
-            name: 'transactionGoods',
-            meta: { title: '商品统计', icon: '' }
-          }
-        ]
-      }
-    ]
-  },
+  
   {
     path: '/404',
     component: () => import('@/views/error-page/404'),
@@ -149,7 +129,7 @@ export const constantRoutes = [
         component: () => import('@/views/dashboard/index'),
         name: 'Dashboard',
         meta: { title: '主页', icon: 'dashboard', affix: true }
-      }
+      },
     ]
   },
   {

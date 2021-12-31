@@ -1,34 +1,20 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import request from '@/utils/request'
 
-// 订单量
-export function statisticsOrderApi() {
+// 首页数据概览
+export function viewModelApi() {
   return request({
-    url: '/admin/statistics/home/order',
-    method: 'get'
-  })
-}
-
-// 销售额
-export function statisticsSalesApi() {
-  return request({
-    url: '/admin/statistics/home/sales',
-    method: 'get'
-  })
-}
-
-// 新增用户
-export function statisticsUserApi() {
-  return request({
-    url: '/admin/statistics/home/user',
-    method: 'get'
-  })
-}
-
-// 用户访问量
-export function statisticsViewsApi() {
-  return request({
-    url: '/admin/statistics/home/views',
-    method: 'get'
+    url: '/admin/statistics/home/index',
+    method: 'GET',
   })
 }
 
@@ -77,5 +63,13 @@ export function chartOrderYearApi() {
   return request({
     url: '/admin/statistics/home/chart/order/year',
     method: 'get'
+  })
+}
+
+// 首页经营数据
+export function businessData() {
+  return request({
+    url: '/admin/statistics/home/operating/data',
+    method: 'get',
   })
 }

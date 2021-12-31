@@ -37,6 +37,7 @@
 <script>
 import formConfigList from '@/views/maintain/formConfig'
 import * as systemGroupApi from '@/api/systemGroup'
+import {Debounce} from '@/utils/validate'
 export default {
   // name: "combinedDataEdit"
   components: { formConfigList },
@@ -81,12 +82,12 @@ export default {
       this.editPram.formId = this.selectedFormConfigData.id
       this.selectFormDialogConfig.visible = false
     },
-    handlerSubmit(form) {
+    handlerSubmit:Debounce(function(form) {
       this.$refs[form].validate(result => {
         if (!result) return
         this.isCreate === 0 ? this.handlerSave(this.editPram) : this.handlerEdit(this.editPram)
       })
-    },
+    }),
     handlerSave(pram) {
       systemGroupApi.groupSave(pram).then(data => {
         this.$message.success('添加组合数据成功')

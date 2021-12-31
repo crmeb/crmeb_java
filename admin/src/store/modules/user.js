@@ -1,3 +1,13 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import { login, logout, getInfo } from '@/api/user'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import router, { resetRouter } from '@/router'
@@ -11,7 +21,8 @@ const state = {
   avatar: '',
   introduction: '',
   roles: [],
-  isLogin: Cookies.get('isLogin')
+  isLogin: Cookies.get('isLogin'),
+  permissions:[],
 }
 
 const mutations = {
@@ -33,7 +44,10 @@ const mutations = {
   },
   SET_ROLES: (state, roles) => {
     state.roles = roles
-  }
+  },
+  SET_PERMISSIONS: (state, permissions) => {
+    state.permissions = permissions
+  },
 }
 
 const actions = {
@@ -74,7 +88,6 @@ const actions = {
           reject('Verification failed, please Login again.')
         }
         const { roles, account } = data
-
         // roles must be a non-empty array
         if (!roles || roles.length <= 0) {
           reject('getInfo: roles must be a non-null array!')
@@ -85,7 +98,9 @@ const actions = {
         commit('SET_NAME', account)
         // commit('SET_AVATAR', avatar)
         commit('SET_AVATAR', 'http://kaifa.crmeb.net/system/images/admin_logo.png')
+
         commit('SET_INTRODUCTION', 'CRMEB admin')
+        commit('SET_PERMISSIONS', data.permissionsList) //权限标识
         resolve(data)
       }).catch(error => {
         reject(error)
@@ -99,9 +114,10 @@ const actions = {
       logout(state.token).then(() => {
         commit('SET_TOKEN', '')
         commit('SET_ROLES', [])
+        commit('SET_PERMISSIONS', [])
         removeToken()
         resetRouter()
-        localStorage.clear();
+        // localStorage.clear();
         Cookies.remove('storeStaffList')
         Cookies.remove('JavaInfo')
         sessionStorage.removeItem('token')
