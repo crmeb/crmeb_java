@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.SystemStoreDao">
+
+    <select id="getNearList" resultType="com.zbkj.common.vo.SystemStoreNearVo" parameterType="com.zbkj.common.request.StoreNearRequest">
+        SELECT *, (round(6367000 * 2 * asin(sqrt(pow(sin(((latitude * pi()) / 180 - (${latitude} * pi()) / 180) / 2), 2) + cos((${latitude} * pi()) / 180) * cos((latitude * pi()) / 180) * pow(sin(((longitude * pi()) / 180 - (${longitude} * pi()) / 180) / 2), 2))))) AS distance
+        FROM eb_system_store WHERE is_show = 1 and is_del = 0
+         ORDER BY distance asc
+    </select>
+</mapper>

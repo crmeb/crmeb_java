@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.service.dao.ShippingTemplatesFreeDao">
+
+    <select id="getListGroup" resultType="com.zbkj.common.request.ShippingTemplatesFreeRequest" parameterType="integer">
+                SELECT group_concat(`city_id`) AS city_id, title, `number`, price, uniqid FROM eb_shipping_templates_free where temp_id = #{tempId, jdbcType=INTEGER} GROUP BY `uniqid` ORDER BY id ASC
+    </select>
+</mapper>

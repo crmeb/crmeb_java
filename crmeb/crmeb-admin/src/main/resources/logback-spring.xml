@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+    <!-- 根据需要自行配置 -->
+    <property name="APP_NAME" value="Crmeb"/>
+    <property name="log.path" value="./crmeb_log"></property>
+
+    <!--"@timestamp": "2019-06-27T09:59:41.897+08:00",-->
+    <!--"@version": "1",-->
+    <!--"message": "queryAllEveryDayDataRate",-->
+    <!--"logger_name": "com.example.demo.controller.GetAllSummaryDataController",-->
+    <!--"thread_name": "http-nio-8000-exec-1",-->
+    <!--"level": "INFO",-->
+    <!--"level_value": 20000-->
+
+    <!--<property name="CONSOLE_LOG_PATTERN"-->
+    <!--value="{ %d{yyyy-MM-dd HH:mm:ss.SSS}-->
+    <!--${APP_NAME} %highlight(%-5level)-->
+    <!--%yellow(%X{X-B3-TraceId}),-->
+    <!--%green(%X{X-B3-SpanId}),-->
+    <!--%blue(%X{X-B3-ParentSpanId})-->
+    <!--%yellow(%thread)-->
+    <!--%green(%logger)-->
+    <!--%msg%n}"/>-->
+
+
+    <!-- 控制台输出 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+
+            <!--<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>-->
+            <pattern>
+
+                <pattern>
+                    {
+                    "app": "${APP_NAME}",
+                    "timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}",
+                    "level": "%level",
+                    "thread": "%thread",
+                    "class": "%logger{40}",
+                    "message": "%msg" }
+                    %n
+                </pattern>
+            </pattern>
+            <charset>utf-8</charset>
+        </encoder>
+    </appender>
+
+
+
+    <!--输出到文件-->
+
+    <!-- 时间滚动输出 level为 DEBUG 日志 -->
+    <appender name="DEBUG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 正在记录的日志文件的路径及文件名 -->
+        <file>${log.path}/log_debug.log</file>
+        <!--日志文件输出格式-->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+
+            <!--<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>-->
+            <pattern>
+
+                <pattern>
+                    {
+                    "app": "${APP_NAME}",
+                    "timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}",
+                    "level": "%level",
+                    "thread": "%thread",
+                    "class": "%logger{40}",
+                    "message": "%msg" }
+                    %n
+                </pattern>
+            </pattern>
+            <charset>utf-8</charset>
+        </encoder>
+        <!-- 日志记录器的滚动策略，按日期，按大小记录 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 日志归档 -->
+            <fileNamePattern>${log.path}/debug/log-debug-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!--日志文件保留天数-->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <!-- 此日志文件只记录debug级别的 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>debug</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- 时间滚动输出 level为 INFO 日志 -->
+    <appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 正在记录的日志文件的路径及文件名 -->
+        <file>${log.path}/log_info.log</file>
+        <!--日志文件输出格式-->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+
+            <!--<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>-->
+            <pattern>
+
+                <pattern>
+                    {
+                    "app": "${APP_NAME}",
+                    "timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}",
+                    "level": "%level",
+                    "thread": "%thread",
+                    "class": "%logger{40}",
+                    "message": "%msg" }
+                    %n
+                </pattern>
+            </pattern>
+            <charset>utf-8</charset>
+        </encoder>
+        <!-- 日志记录器的滚动策略，按日期，按大小记录 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 每天日志归档路径以及格式 -->
+            <fileNamePattern>${log.path}/info/log-info-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!--日志文件保留天数-->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <!-- 此日志文件只记录info级别的 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>info</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- 时间滚动输出 level为 WARN 日志 -->
+    <appender name="WARN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 正在记录的日志文件的路径及文件名 -->
+        <file>${log.path}/log_warn.log</file>
+        <!--日志文件输出格式-->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+
+            <!--<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>-->
+            <pattern>
+
+                <pattern>
+                    {
+                    "app": "${APP_NAME}",
+                    "timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}",
+                    "level": "%level",
+                    "thread": "%thread",
+                    "class": "%logger{40}",
+                    "message": "%msg" }
+                    %n
+                </pattern>
+            </pattern>
+            <charset>utf-8</charset>
+        </encoder>
+        <!-- 日志记录器的滚动策略，按日期，按大小记录 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/warn/log-warn-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!--日志文件保留天数-->
+            <maxHistory>2</maxHistory>
+        </rollingPolicy>
+        <!-- 此日志文件只记录warn级别的 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>warn</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+
+    <!-- 时间滚动输出 level为 ERROR 日志 -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 正在记录的日志文件的路径及文件名 -->
+        <file>${log.path}/log_error.log</file>
+        <!--日志文件输出格式-->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+
+            <!--<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>-->
+            <pattern>
+
+                <pattern>
+                    {
+                    "app": "${APP_NAME}",
+                    "timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}",
+                    "level": "%level",
+                    "thread": "%thread",
+                    "class": "%logger{40}",
+                    "message": "%msg" }
+                    %n
+                </pattern>
+            </pattern>
+            <charset>utf-8</charset>
+        </encoder>
+        <!-- 日志记录器的滚动策略，按日期，按大小记录 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/error/log-error-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!--日志文件保留天数-->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <!-- 此日志文件只记录ERROR级别的 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <appender name="LOGSTASH" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder"/>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${APP_NAME}-%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+
+    </appender>
+    <!-- 日志输出级别 -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="DEBUG_FILE" />
+        <appender-ref ref="INFO_FILE" />
+        <appender-ref ref="WARN_FILE" />
+        <appender-ref ref="ERROR_FILE" />
+        <appender-ref ref="LOGSTASH"/>
+    </root>
+</configuration>
