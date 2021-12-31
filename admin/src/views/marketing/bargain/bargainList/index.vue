@@ -26,6 +26,7 @@
         style="width: 100%"
         size="mini"
         ref="multipleTable"
+        :header-cell-style=" {fontWeight:'bold'}"
       >
         <el-table-column
           prop="id"
@@ -53,11 +54,14 @@
           prop="addTime"
           min-width="150"
         />
-        <el-table-column
-          label="砍价商品"
-          prop="title"
-          min-width="100"
-        />
+        <el-table-column label="砍价商品" prop="title" min-width="300">
+          <template slot-scope="scope">
+            <el-popover trigger="hover" placement="right" :open-delay="800">
+              <div class="text_overflow" slot="reference">{{scope.row.title}}</div>
+              <div class="pup_card">{{scope.row.title}}</div>
+            </el-popover>
+          </template>
+        </el-table-column>
         <el-table-column
           label="最低价"
           prop="bargainPriceMin"
@@ -241,5 +245,22 @@
 </script>
 
 <style scoped>
-
+   .el-table__body {
+    width: 100%;
+    table-layout: fixed !important;
+  }
+   .text_overflow{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 400px;
+  }
+  .pup_card{
+    width: 200px;
+    border-radius: 5px;
+    padding: 5px;
+    box-sizing: border-box;
+    font-size: 12px;
+    line-height: 16px;
+  }
 </style>

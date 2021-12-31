@@ -9,7 +9,7 @@
           <el-form-item label="作者" prop="author" :rules="[{required:true, message:'请填作者', trigger:['blur','change']}]">
             <el-input v-model="pram.author" placeholder="作者" maxlength="20"/>
           </el-form-item>
-          <el-form-item label="文章分类">
+          <el-form-item label="文章分类" :rules="[{required:true, message:'请选择分类', trigger:['blur','change']}]">
             <el-select v-model="pram.cid" placeholder="请选择" style="width:100%;">
               <el-option
                 v-for="item in categoryTreeData"
@@ -27,29 +27,11 @@
               </div>
             </div>
           </el-form-item>
-          <!--<el-form-item label="微信公众号封面" prop="imageInput" :rules="[{ required: true, message: '请上传图文封面', trigger: 'change' }]">-->
-          <!--<div class="upLoadPicBox">-->
-          <!--<div v-if="pram.imageInput" class="pictrue"><img :src="pram.imageInput"></div>-->
-          <!--<el-upload-->
-          <!--v-else-->
-          <!--class="upload-demo mr10 mb15"-->
-          <!--action-->
-          <!--:http-request="handleUploadForm"-->
-          <!--:headers="myHeaders"-->
-          <!--:show-file-list="false"-->
-          <!--multiple-->
-          <!--&gt;-->
-          <!--<div class="upLoad">-->
-          <!--<i class="el-icon-camera cameraIconfont" />-->
-          <!--</div>-->
-          <!--</el-upload>-->
-          <!--</div>-->
-          <!--</el-form-item>-->
           <el-form-item label="文章简介" prop="synopsis" :rules="[{required:true, message:'请填写文章简介', trigger:['blur','change']}]">
             <el-input v-model="pram.synopsis" maxlength="100" type="textarea" :rows="2" resize="none" placeholder="文章简介" />
           </el-form-item>
           <el-form-item label="文章内容" prop="content" :rules="[{required:true, message:'请填写文章内容', trigger:['blur','change']}]">
-            <ueditor-from v-model="pram.content" :content="pram.content" />
+            <Tinymce v-model="pram.content"></Tinymce>
           </el-form-item>
           <el-form-item label="是否Banner">
             <el-switch v-model="pram.isBanner" />
@@ -57,12 +39,8 @@
           <el-form-item label="是否热门">
             <el-switch v-model="pram.isHot" />
           </el-form-item>
-          <!--<el-form-item label="原文链接">-->
-          <!--<p>原文链接选填，填写之后在图文左下方会出现此链接</p>-->
-          <!--<el-input v-model="pram.url" placeholder="原文链接" />-->
-          <!--</el-form-item>-->
           <el-form-item>
-            <el-button type="primary" :loading="loading" @click="handerSubmit('pram')">保存</el-button>
+            <el-button type="primary" :loading="loading" @click="handerSubmit('pram')" v-hasPermi="['admin:article:update']">保存</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -77,6 +55,7 @@ import * as articleApi from '@/api/article.js'
 import * as selfUtil from '@/utils/ZBKJIutil.js'
 import { fileImageApi } from '@/api/systemSetting'
 import { getToken } from '@/utils/auth'
+import {Debounce} from '@/utils/validate'
 export default {
   // name: "edit",
   components: { Tinymce },
@@ -96,7 +75,7 @@ export default {
       pram: {
         author: null,
         cid: null,
-        content: null,
+        content: '', //<span>My Document\'s Title</span>
         imageInput: '',
         isBanner: false,
         isHot: null,
@@ -110,7 +89,9 @@ export default {
         // mediaId: null
       },
       editData: {},
-      myHeaders: { 'X-Token': getToken() }
+      myHeaders: { 'X-Token': getToken() },
+      editorContentLaebl:"",
+      // basicForm:{editorContent:""}
     }
   },
   created() {
@@ -126,29 +107,8 @@ export default {
   methods: {
     getInfo (){
       categoryApi.articleInfoApi({ id: this.$route.params.id }).then(data => {
-        this.editData = data
-        this.hadlerInitEditData()
-      })
-    },
-    // 上传
-    handleUploadForm(param){
-      const formData = new FormData()
-      formData.append('media', param.file)
-      let loading = this.$loading({
-        lock: true,
-        text: '上传中，请稍候...',
-        spinner: 'el-icon-loading',
-        background: 'rgba(0, 0, 0, 0.7)'
-      })
-      fileImageApi(formData, {type: 'image'}).then(res => {
-        loading.close()
-        this.pram.mediaId = res.mediaId
-
-        // this.formValidate.contents.mediaId = res.mediaId
-        // this.formValidate.contents.srcUrl = res.url
-        this.$message.success('上传成功')
-      }).catch(() => {
-        loading.close()
+          this.editData = data
+          this.hadlerInitEditData()
       })
     },
     modalPicTap(tit) {
@@ -182,7 +142,7 @@ export default {
         localStorage.setItem('articleClass', JSON.stringify(data.list))
       })
     },
-    handerSubmit(form) {
+    handerSubmit:Debounce(function(form) {
       this.$refs[form].validate(valid => {
         if (!valid) return
         if (!this.$route.params.id) {
@@ -191,7 +151,7 @@ export default {
           this.handlerUpdate()
         }
       })
-    },
+    }),
     handlerUpdate() {
       this.loading = true
       this.pram.cid = Array.isArray(this.pram.cid) ? this.pram.cid[0] : this.pram.cid

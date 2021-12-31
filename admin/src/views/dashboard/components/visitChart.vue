@@ -1,20 +1,21 @@
 <template>
     <div class="divBox">
-        <el-row :gutter="24">
-            <el-col san="24" class="ivu-mb">
+        <el-row :gutter="24" v-if="checkPermi(['admin:statistics:home:chart:order','admin:statistics:home:chart:order:week','admin:statistics:home:chart:order:month','admin:statistics:home:chart:order:year'])" >
+            <el-col san="24">
                 <el-card :bordered="false" class="dashboard-console-visit">
                     <div slot="header">
                         <div class="acea-row row-between-wrapper">
                             <div class="acea-row row-middle">
-                                <el-avatar icon="el-icon-s-data" size="small" style="color:#1890ff;background:#e6f7ff;font-size: 13px" />
-                                <span class="ivu-pl-8">订单</span>
+                                <!-- <el-avatar icon="el-icon-s-data" size="small" style="color:#1890ff;background:#e6f7ff;font-size: 13px" />
+                                <span class="ivu-pl-8">订单</span> -->
+                                <div class="header_title">订单统计</div>
                             </div>
                             <div class="checkTime">
-                                <el-radio-group v-model="visitDate" class="ivu-mr-8">
-                                    <el-radio label="last30" @change="handleChangeVisitType">30天</el-radio>
-                                    <el-radio label="week" @change="handleChangeWeek">周</el-radio>
-                                    <el-radio label="month" @change="handleChangeMonth">月</el-radio>
-                                    <el-radio label="year" @change="handleChangeYear">年</el-radio>
+                                <el-radio-group v-model="visitDate" class="ivu-mr-8" @change="radioChange">
+                                    <el-radio-button label="last30">30天</el-radio-button>
+                                    <el-radio-button label="week">周</el-radio-button>
+                                    <el-radio-button label="month">月</el-radio-button>
+                                    <el-radio-button label="year">年</el-radio-button>
                                 </el-radio-group>
                             </div>
                         </div>
@@ -29,6 +30,7 @@
 <script>
   import { chartOrder30Api, chartOrderWeekApi, chartOrderMonthApi, chartOrderYearApi } from '@/api/dashboard';
   import echartsFrom from '@/components/echarts/index';
+  import { checkPermi } from "@/utils/permission"; // 权限判断函数
 
   export default {
     components: {echartsFrom},
@@ -93,6 +95,23 @@
       ]
     },
     methods: {
+      checkPermi,
+      radioChange(val){
+        switch (val) {
+          case 'week':
+            this.handleChangeWeek();
+            break;
+          case 'month':
+            this.handleChangeMonth();
+            break;
+          case 'year':
+            this.handleChangeYear();
+            break;
+          default:
+            this.handleChangeVisitType();
+            break;
+        }
+      },
       // 时间改变
       handleChangeVisitType() {
         this.xAxis = []
@@ -113,27 +132,8 @@
             name:"订单金额",
             type:"bar",
             itemStyle:{
-              "normal":{
-                "color":{
-                  "x":0,
-                  "y":0,
-                  "x2":0,
-                  "y2":1,
-                  "colorStops":[
-                    {
-                      "offset":0,
-                      "color":"#69cdff"
-                    },
-                    {
-                      "offset":0.5,
-                      "color":"#3eb3f7"
-                    },
-                    {
-                      "offset":1,
-                      "color":"#1495eb"
-                    }
-                  ]
-                }
+              normal:{
+                  color:'#5B8FF9',
               }
             },
             data: pices
@@ -141,29 +141,11 @@
             {
               name:"订单数",
               type:"line",
+              smooth: true,
               itemStyle:{
-                "normal":{
-                  "color":{
-                    "x":0,
-                    "y":0,
-                    "x2":0,
-                    "y2":1,
-                    "colorStops":[
-                      {
-                        "offset":0,
-                        "color":"#6fdeab"
-                      },
-                      {
-                        "offset":0.5,
-                        "color":"#44d693"
-                      },
-                      {
-                        "offset":1,
-                        "color":"#2cc981"
-                      }
-                    ]
-                  }
-                }
+                normal:{
+                  color:'#4BCAD5',
+              }
               },
               yAxisIndex: 1,
               data: qualitys
@@ -198,27 +180,8 @@
               name :"上周金额",
               type:"bar",
               itemStyle:{
-                "normal":{
-                  "color":{
-                    "x":0,
-                    "y":0,
-                    "x2":0,
-                    "y2":1,
-                    "colorStops":[
-                      {
-                        "offset":0,
-                        "color":"#69cdff"
-                      },
-                      {
-                        "offset":0.5,
-                        "color":"#3eb3f7"
-                      },
-                      {
-                        "offset":1,
-                        "color":"#1495eb"
-                      }
-                    ]
-                  }
+                normal:{
+                  color:'#5B8FF9',
                 }
               },
               data: prePrice
@@ -227,57 +190,16 @@
               name:"本周金额",
               type:"bar",
               itemStyle:{
-                "normal":{
-                  "color":{
-                    "x":0,
-                    "y":0,
-                    "x2":0,
-                    "y2":1,
-                    "colorStops":[
-                      {
-                        "offset":0,
-                        "color":"#69cdff"
-                      },
-                      {
-                        "offset":0.5,
-                        "color":"#3eb3f7"
-                      },
-                      {
-                        "offset":1,
-                        "color":"#1495eb"
-                      }
-                    ]
-                  }
-                }
+                normal:{color:'#4BCAD5',}
               },
               data: price
             },
             {
               name:"上周订单数",
               type:"line",
+              smooth: true,
               itemStyle:{
-                "normal":{
-                  "color":{
-                    "x":0,
-                    "y":0,
-                    "x2":0,
-                    "y2":1,
-                    "colorStops":[
-                      {
-                        "offset":0,
-                        "color":"#6fdeab"
-                      },
-                      {
-                        "offset":0.5,
-                        "color":"#44d693"
-                      },
-                      {
-                        "offset":1,
-                        "color":"#2cc981"
-                      }
-                    ]
-                  }
-                }
+                normal:{color:'#E6A23C',}
               },
               yAxisIndex: 1,
               data: preQuality
@@ -285,29 +207,9 @@
             {
               name:"本周订单数",
               type:"line",
+              smooth: true,
               itemStyle:{
-                "normal":{
-                  "color":{
-                    "x":0,
-                    "y":0,
-                    "x2":0,
-                    "y2":1,
-                    "colorStops":[
-                      {
-                        "offset":0,
-                        "color":"#6fdeab"
-                      },
-                      {
-                        "offset":0.5,
-                        "color":"#44d693"
-                      },
-                      {
-                        "offset":1,
-                        "color":"#2cc981"
-                      }
-                    ]
-                  }
-                }
+                normal:{color:'#768A9C',}
               },
               yAxisIndex: 1,
               data: qualitys
@@ -344,26 +246,7 @@
               type:"bar",
               itemStyle:{
                 "normal":{
-                  "color":{
-                    "x":0,
-                    "y":0,
-                    "x2":0,
-                    "y2":1,
-                    "colorStops":[
-                      {
-                        "offset":0,
-                        "color":"#69cdff"
-                      },
-                      {
-                        "offset":0.5,
-                        "color":"#3eb3f7"
-                      },
-                      {
-                        "offset":1,
-                        "color":"#1495eb"
-                      }
-                    ]
-                  }
+                  color:'#5B8FF9',
                 }
               },
               data: prePrice
@@ -373,26 +256,7 @@
               type:"bar",
               itemStyle:{
                 "normal":{
-                  "color":{
-                    "x":0,
-                    "y":0,
-                    "x2":0,
-                    "y2":1,
-                    "colorStops":[
-                      {
-                        "offset":0,
-                        "color":"#69cdff"
-                      },
-                      {
-                        "offset":0.5,
-                        "color":"#3eb3f7"
-                      },
-                      {
-                        "offset":1,
-                        "color":"#1495eb"
-                      }
-                    ]
-                  }
+                  color:'#4BCAD5'
                 }
               },
               data: price
@@ -400,28 +264,10 @@
             {
               name:"上月订单数",
               type:"line",
+              smooth: true,
               itemStyle:{
                 "normal":{
-                  "color":{
-                    "x":0,
-                    "y":0,
-                    "x2":0,
-                    "y2":1,
-                    "colorStops":[
-                      {
-                        "offset":0,
-                        "color":"#6fdeab"
-                      },
-                      {
-                        "offset":0.5,
-                        "color":"#44d693"
-                      },
-                      {
-                        "offset":1,
-                        "color":"#2cc981"
-                      }
-                    ]
-                  }
+                  color:'#E6A23C'
                 }
               },
               yAxisIndex: 1,
@@ -430,28 +276,10 @@
             {
               name:"本月订单数",
               type:"line",
+              smooth: true,
               itemStyle:{
                 "normal":{
-                  "color":{
-                    "x":0,
-                    "y":0,
-                    "x2":0,
-                    "y2":1,
-                    "colorStops":[
-                      {
-                        "offset":0,
-                        "color":"#6fdeab"
-                      },
-                      {
-                        "offset":0.5,
-                        "color":"#44d693"
-                      },
-                      {
-                        "offset":1,
-                        "color":"#2cc981"
-                      }
-                    ]
-                  }
+                  color:'#768A9C'
                 }
               },
               yAxisIndex: 1,
@@ -483,32 +311,13 @@
           for (let key  in res.quality) {
             qualitys.push(Number(res.quality[key]))
           }
-          this.series = [
+          this.series = [ ////let col = ["#B37FEB", "#FFAB2B", "#1890FF", "#00C050"];
             {
               name:"去年金额",
               type:"bar",
               itemStyle:{
                 "normal":{
-                  "color":{
-                    "x":0,
-                    "y":0,
-                    "x2":0,
-                    "y2":1,
-                    "colorStops":[
-                      {
-                        "offset":0,
-                        "color":"#69cdff"
-                      },
-                      {
-                        "offset":0.5,
-                        "color":"#3eb3f7"
-                      },
-                      {
-                        "offset":1,
-                        "color":"#1495eb"
-                      }
-                    ]
-                  }
+                  color:'#5B8FF9'
                 }
               },
               data: prePrice
@@ -518,26 +327,7 @@
               type:"bar",
               itemStyle:{
                 "normal":{
-                  "color":{
-                    "x":0,
-                    "y":0,
-                    "x2":0,
-                    "y2":1,
-                    "colorStops":[
-                      {
-                        "offset":0,
-                        "color":"#69cdff"
-                      },
-                      {
-                        "offset":0.5,
-                        "color":"#3eb3f7"
-                      },
-                      {
-                        "offset":1,
-                        "color":"#1495eb"
-                      }
-                    ]
-                  }
+                  color:'#4BCAD5'
                 }
               },
               data: price
@@ -545,28 +335,10 @@
             {
               name:"去年订单数",
               type:"line",
+              smooth: true,
               itemStyle:{
                 "normal":{
-                  "color":{
-                    "x":0,
-                    "y":0,
-                    "x2":0,
-                    "y2":1,
-                    "colorStops":[
-                      {
-                        "offset":0,
-                        "color":"#6fdeab"
-                      },
-                      {
-                        "offset":0.5,
-                        "color":"#44d693"
-                      },
-                      {
-                        "offset":1,
-                        "color":"#2cc981"
-                      }
-                    ]
-                  }
+                  color:'#E6A23C'
                 }
               },
               yAxisIndex: 1,
@@ -575,28 +347,10 @@
             {
               name:"今年订单数",
               type:"line",
+              smooth: true,
               itemStyle:{
                 "normal":{
-                  "color":{
-                    "x":0,
-                    "y":0,
-                    "x2":0,
-                    "y2":1,
-                    "colorStops":[
-                      {
-                        "offset":0,
-                        "color":"#6fdeab"
-                      },
-                      {
-                        "offset":0.5,
-                        "color":"#44d693"
-                      },
-                      {
-                        "offset":1,
-                        "color":"#2cc981"
-                      }
-                    ]
-                  }
+                  color:'#768A9C'
                 }
               },
               yAxisIndex: 1,
@@ -621,6 +375,23 @@
       width: 22px;
       height: 22px;
       line-height: 22px;
+    }
+  }
+  .header_title{
+    font-size: 16px;
+    font-family: PingFangSC-Semibold, PingFang SC;
+    font-weight: 600;
+    color: #000000;
+    padding-left:8px;
+    position: relative;
+    &::before{
+      position: absolute;
+      content: '';
+      width: 2px;
+      height: 18px;
+      background: #1890FF;
+      top:0;
+      left:0;
     }
   }
   .checkTime{

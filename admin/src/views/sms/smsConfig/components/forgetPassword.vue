@@ -24,7 +24,7 @@
               prefix-icon="el-icon-message"
               style="width: 90%"
             />
-            <el-button size="mini" :disabled=!this.canClick @click="cutDown">{{cutNUm}}</el-button>
+            <el-button size="mini" :disabled=!this.canClick @click="cutDown" v-hasPermi="['admin:pass:send:code']">{{cutNUm}}</el-button>
           </div>
         </el-form-item>
       </template>

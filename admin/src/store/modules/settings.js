@@ -1,22 +1,33 @@
-import variables from '@/styles/element-variables.scss'
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import defaultSettings from '@/settings'
-
-const { showSettings, tagsView, fixedHeader, sidebarLogo } = defaultSettings
-
+import Cache from '@/plugins/cache'
+const { showSettings, tagsView, fixedHeader, sidebarLogo,topNav,sideTheme,navIcon } = defaultSettings
+const storageSetting = Cache.local.has('layout-setting') ? Cache.local.getJSON('layout-setting') : '';
 const state = {
-  theme: variables.theme,
+  theme: storageSetting.theme || '#409EFF',
+  sideTheme:storageSetting.sideTheme || sideTheme,
+  topNav:storageSetting.topNav === undefined ? topNav : storageSetting.topNav,
   showSettings: showSettings,
-  tagsView: tagsView,
-  fixedHeader: fixedHeader,
-  sidebarLogo: sidebarLogo
+  tagsView: storageSetting.tagsView === undefined ? tagsView : storageSetting.tagsView,
+  fixedHeader: storageSetting.fixedHeader === undefined ? fixedHeader : storageSetting.fixedHeader,
+  sidebarLogo: storageSetting.sidebarLogo === undefined ? sidebarLogo : storageSetting.sidebarLogo,
+  navIcon: storageSetting.navIcon === undefined ? navIcon : storageSetting.navIcon
 }
-
 const mutations = {
   CHANGE_SETTING: (state, { key, value }) => {
     if (state.hasOwnProperty(key)) {
       state[key] = value
     }
-  }
+  },
 }
 
 const actions = {

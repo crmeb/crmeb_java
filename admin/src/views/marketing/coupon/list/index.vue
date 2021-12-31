@@ -11,12 +11,12 @@
             </el-select>
             <span class="seachTiele">优惠券名称：</span>
             <el-input v-model="tableFrom.name" placeholder="请输入优惠券名称" class="selWidth" clearable>
-              <el-button slot="append" icon="el-icon-search" @click="seachList" />
+              <el-button slot="append" icon="el-icon-search" size="small" @click="seachList" />
             </el-input>
           </div>
         </div>
         <router-link :to=" { path: '/marketing/coupon/list/save' } ">
-          <el-button size="small" type="primary">添加优惠劵</el-button>
+          <el-button size="small" type="primary" v-hasPermi="['admin:coupon:save']">添加优惠劵</el-button>
         </router-link>
       </div>
       <el-table
@@ -24,6 +24,7 @@
         :data="tableData.data"
         style="width: 100%"
         size="mini"
+        :header-cell-style=" {fontWeight:'bold'}"
       >
         <el-table-column
           prop="id"
@@ -97,7 +98,7 @@
           label="是否开启"
           min-width="100"
         >
-          <template slot-scope="scope">
+          <template slot-scope="scope" v-if="checkPermi(['admin:coupon:update:status'])">
             <el-switch
               v-model="scope.row.status"
               :active-value="true"
@@ -110,11 +111,11 @@
         </el-table-column>
         <el-table-column label="操作" min-width="180" fixed="right">
           <template slot-scope="scope">
-            <el-button type="text" class="mr10" size="small" @click="receive(scope.row)">领取记录</el-button>
+            <el-button type="text" class="mr10" size="small" @click="receive(scope.row)" v-hasPermi="['admin:coupon:user:list']">领取记录</el-button>
             <router-link :to=" { path: '/marketing/coupon/list/save/' + scope.row.id } ">
-              <el-button v-if="scope.row.status" type="text" size="small" class="mr10">复制</el-button>
+              <el-button v-if="scope.row.status" type="text" size="small" class="mr10" v-hasPermi="['admin:coupon:info']">复制</el-button>
             </router-link>
-            <el-button type="text" class="mr10" size="small" @click="handleDelMenu(scope.row)">删除</el-button>
+            <el-button type="text" class="mr10" size="small" @click="handleDelMenu(scope.row)" v-hasPermi="['admin:coupon:delete']">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -182,6 +183,7 @@
 <script>
   import { marketingListApi, couponIssueStatusApi, couponUserListApi, couponDeleteApi } from '@/api/marketing'
   import { roterPre } from '@/settings'
+  import { checkPermi } from "@/utils/permission"; // 权限判断函数
   export default {
     name: 'CouponList',
     data() {
@@ -215,6 +217,7 @@
       this.getList()
     },
     methods: {
+      checkPermi,
       seachList() {
         this.tableFrom.page = 1
         this.getList()
@@ -291,9 +294,14 @@
 <style scoped lang="scss">
   .selWidth{
     width: 350px !important;
+    height: 40px;
+  }
+  ::v-deep .el-input--medium .el-input__inner{
+    height: 40px;
+    line-height: 40px;
   }
   .seachTiele{
-    line-height: 35px;
+    line-height: 40px;
   }
   .fa{
     color: #0a6aa1;

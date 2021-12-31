@@ -1,44 +1,31 @@
 <template>
   <div class="navbar">
-    <hamburger id="hamburger-container" :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
-
-    <breadcrumb id="breadcrumb-container" class="breadcrumb-container" />
-
+    <hamburger
+      id="hamburger-container"
+      :is-active="sidebar.opened"
+      class="hamburger-container"
+      @toggleClick="toggleSideBar"
+    />
+    <breadcrumb id="breadcrumb-container" class="breadcrumb-container"/>
     <div class="right-menu">
-      <template v-if="device!=='mobile'">
+      <template v-if="device !== 'mobile'">
         <search id="header-search" class="right-menu-item" />
-
-        <error-log class="errLog-container right-menu-item hover-effect" />
-
         <screenfull id="screenfull" class="right-menu-item hover-effect" />
-
       </template>
-
-      <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click">
+      <el-dropdown
+        class="avatar-container right-menu-item hover-effect" trigger="click">
         <div class="avatar-wrapper">
-          {{JavaInfo.account}}<i class="el-icon-arrow-down el-icon--right"></i>
-          <!--<img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">-->
-          <!--<i class="el-icon-caret-bottom" />-->
+          {{ JavaInfo.realName}}<i class="el-icon-arrow-down el-icon--right"></i>
         </div>
         <el-dropdown-menu slot="dropdown">
-          <!--          <router-link to="/profile/index">-->
-          <!--            <el-dropdown-item>Profile</el-dropdown-item>-->
-          <!--          </router-link>-->
           <router-link to="/">
             <el-dropdown-item>主页</el-dropdown-item>
           </router-link>
-          <router-link :to=" { path: '/maintain/user' } " v-if="!isPhone">
+          <router-link :to="{ path: '/maintain/user' }" v-if="!isPhone">
             <el-dropdown-item>个人中心</el-dropdown-item>
           </router-link>
-          <!--<el-dropdown-item @click.native="onUnbundling">解绑账号</el-dropdown-item>-->
-          <!--          <a target="_blank" href="https://github.com/PanJiaChen/vue-element-admin/">-->
-          <!--            <el-dropdown-item>Github</el-dropdown-item>-->
-          <!--          </a>-->
-          <!--          <a target="_blank" href="https://panjiachen.github.io/vue-element-admin-site/#/">-->
-          <!--            <el-dropdown-item>Docs</el-dropdown-item>-->
-          <!--          </a>-->
-          <el-dropdown-item divided @click.native="logout">
-            <span style="display:block;">退出</span>
+          <el-dropdown-item @click.native="logout">
+            <span>退出</span>
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
@@ -47,52 +34,51 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-import Breadcrumb from '@/components/Breadcrumb'
-import Hamburger from '@/components/Hamburger'
-import ErrorLog from '@/components/ErrorLog'
-import Screenfull from '@/components/Screenfull'
-import Search from '@/components/HeaderSearch'
-import { unbindApi } from '@/api/wxApi'
-import Cookies from 'js-cookie'
+import { mapGetters } from "vuex";
+import Breadcrumb from "@/components/Breadcrumb";
+import Hamburger from "@/components/Hamburger";
+import Screenfull from "@/components/Screenfull";
+import Search from "@/components/HeaderSearch";
+import { unbindApi } from "@/api/wxApi";
+import Cookies from "js-cookie";
 export default {
   components: {
     Breadcrumb,
     Hamburger,
-    ErrorLog,
     Screenfull,
-    Search
+    Search,
   },
   data() {
     return {
       isPhone: this.$wechat.isPhone(),
-      JavaInfo: JSON.parse(Cookies.get('JavaInfo')),
+      JavaInfo: JSON.parse(Cookies.get("JavaInfo")),
+    };
+  },
+  watch: {
+    show(value) {
+      if (value && !this.clickNotClose) {
+        this.addEventClick()
+      }
+      if (value) {
+        addClass(document.body, 'showRightPanel')
+      } else {
+        removeClass(document.body, 'showRightPanel')
+      }
     }
   },
   computed: {
-    ...mapGetters([
-      'sidebar',
-      'avatar',
-      'device'
-    ])
+    ...mapGetters(["sidebar", "avatar", "device"]),
   },
   methods: {
-    onUnbundling() {
-      this.$modalSure('解绑微信吗').then(() => {
-        unbindApi().then(() => {
-          this.$message.success('解绑成功')
-        })
-      })
-    },
     toggleSideBar() {
-      this.$store.dispatch('app/toggleSideBar')
+      this.$store.dispatch("app/toggleSideBar");
     },
     async logout() {
-      await this.$store.dispatch('user/logout')
-      this.$router.push(`/login?redirect=${this.$route.fullPath}`)
-    }
-  }
-}
+      await this.$store.dispatch("user/logout");
+      this.$router.push(`/login?redirect=${this.$route.fullPath}`);
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>
@@ -101,23 +87,28 @@ export default {
   overflow: hidden;
   position: relative;
   background: #fff;
-  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+  // box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
 
   .hamburger-container {
     line-height: 46px;
     height: 100%;
     float: left;
     cursor: pointer;
-    transition: background .3s;
-    -webkit-tap-highlight-color:transparent;
+    transition: background 0.3s;
+    -webkit-tap-highlight-color: transparent;
 
     &:hover {
-      background: rgba(0, 0, 0, .025)
+      background: rgba(0, 0, 0, 0.025);
     }
   }
 
   .breadcrumb-container {
     float: left;
+  }
+
+  .topmenu-container {
+    position: absolute;
+    left: 50px;
   }
 
   .errLog-container {
@@ -144,10 +135,10 @@ export default {
 
       &.hover-effect {
         cursor: pointer;
-        transition: background .3s;
+        transition: background 0.3s;
 
         &:hover {
-          background: rgba(0, 0, 0, .025)
+          background: rgba(0, 0, 0, 0.025);
         }
       }
     }

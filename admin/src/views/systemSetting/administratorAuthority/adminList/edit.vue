@@ -37,7 +37,7 @@
         <el-switch v-model="pram.status" :active-value="true" :inactive-value="false" />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="handlerSubmit('pram')">{{ isCreate===0?'確定':'更新' }}</el-button>
+        <el-button type="primary" @click="handlerSubmit('pram')" v-hasPermi="['admin:system:admin:update','admin:system:admin:save']">{{ isCreate===0?'確定':'更新' }}</el-button>
         <el-button @click="close">取消</el-button>
       </el-form-item>
     </el-form>
@@ -47,6 +47,7 @@
 <script>
 import * as roleApi from '@/api/role.js'
 import * as systemAdminApi from '@/api/systemadmin.js'
+import {Debounce} from '@/utils/validate'
 export default {
   // name: "edit"
   components: { },
@@ -97,14 +98,11 @@ export default {
       roleList: [],
       rules: {
         account: [{ required: true, message: '请填管理员账号', trigger: ['blur', 'change'] }],
-        // level: null,
         pwd: [{ required: true, message: '请填管理员密码', trigger: ['blur', 'change'] }],
         repwd: [{ required: true, message: '确认密码密码', validator: validatePass, trigger: ['blur', 'change'] }],
         realName: [{ required: true, message: '管理员姓名', trigger: ['blur', 'change'] }],
-        roles: [{ required: true, message: '管理员身份', type: 'array', trigger: ['blur', 'change'] }],
-        phone: [
-          { validator: validatePhone, trigger: 'blur' }
-        ]
+        roles: [{ required: true, message: '管理员身份', trigger: ['blur', 'change'] }],
+        phone: [ { required: true, message: '请输入手机号', trigger: ['blur', 'change']} ]
       }
     }
   },
@@ -123,7 +121,14 @@ export default {
         status: 1
       }
       roleApi.getRoleList(_pram).then(data => {
-        this.roleList = data
+        this.roleList = data;
+        let arr = [];
+        data.list.forEach(item=>{
+          arr.push(item.id);
+        })
+        if(!arr.includes(Number.parseInt(this.pram.roles))){
+          this.$set(this.pram,'roles',[]);
+        }
       })
     },
     initEditData() {
@@ -133,8 +138,10 @@ export default {
       this.pram.realName = realName
       const _roles = []
       if (roles.length > 0 && !roles.includes(',')) {
+        //如果权限id集合有长度并且是只有一个，就将它Push进_roles这个数组
         _roles.push(Number.parseInt(roles))
       } else {
+        //否则就将多个id集合解构以后push进roles并且转换为整型
         _roles.push(...roles.split(',').map(item => Number.parseInt(item)))
       }
       this.pram.roles = _roles
@@ -144,7 +151,7 @@ export default {
       this.rules.pwd = []
       this.rules.repwd = []
     },
-    handlerSubmit(form) {
+    handlerSubmit:Debounce(function(form) {
       this.$refs[form].validate(valid => {
         if (!valid) return
         if (this.isCreate === 0) {
@@ -153,7 +160,7 @@ export default {
           this.handlerEdit()
         }
       })
-    },
+    }),
     handlerSave() {
       systemAdminApi.adminAdd(this.pram).then(data => {
         this.$message.success('创建管理员成功')

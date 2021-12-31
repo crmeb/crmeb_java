@@ -11,7 +11,7 @@
       </el-form-item>
     </el-form>
     <div slot="footer">
-      <el-button size="mini" type="primary" @click="putSend('formItem')">提交</el-button>
+      <el-button size="mini" type="primary" @click="putSend('formItem')" v-hasPermi="['admin:order:video:send']">提交</el-button>
       <el-button size="mini" @click="cancel('formItem')">取消</el-button>
     </div>
   </el-dialog>
@@ -19,6 +19,7 @@
 
 <script>
   import {videoSendApi, sheetInfoApi, companyGetListApi} from '@/api/order'
+  import {Debounce} from '@/utils/validate'
   const validatePhone = (rule, value, callback) => {
     if (!value) {
       return callback(new Error('请填写手机号'));
@@ -67,7 +68,7 @@
         })
       },
       // 提交
-      putSend(name) {
+      putSend:Debounce(function(name) {
         this.formItem.orderNo = this.orderId;
         this.$refs[name].validate((valid) => {
           if (valid) {
@@ -81,7 +82,7 @@
             this.$message.error('请填写信息');
           }
         })
-      },
+      }),
       handleClose() {
         this.cancel('formItem');
       },
