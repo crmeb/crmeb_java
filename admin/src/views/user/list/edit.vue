@@ -3,35 +3,11 @@
       <el-form-item label="用户编号：">
         <el-input v-model="ruleForm.id" disabled class="selWidth"></el-input>
       </el-form-item>
-      <!--<el-form-item label="真实姓名：">-->
-        <!--<el-input v-model="ruleForm.realName" class="selWidth"></el-input>-->
-      <!--</el-form-item>-->
-      <!--<el-form-item label="手机号码：" prop="phone">-->
-        <!--<el-input v-model.number="ruleForm.phone" class="selWidth" readonly></el-input>-->
-      <!--</el-form-item>-->
-      <!--<el-form-item label="生日：">-->
-        <!--<el-date-picker-->
-          <!--v-model="ruleForm.birthday"-->
-          <!--type="date"-->
-          <!--class="selWidth"-->
-          <!--placeholder="选择日期"-->
-          <!--format="yyyy 年 MM 月 dd 日"-->
-          <!--value-format="yyyy-MM-dd">-->
-        <!--</el-date-picker>-->
-      <!--</el-form-item>-->
-      <!--<el-form-item label="身份证号：">-->
-        <!--<el-input v-model="ruleForm.cardId" class="selWidth"></el-input>-->
-      <!--</el-form-item>-->
       <el-form-item label="用户地址：">
         <el-input v-model="ruleForm.addres" class="selWidth"></el-input>
       </el-form-item>
       <el-form-item label="用户备注：">
         <el-input v-model="ruleForm.mark" type="textarea" class="selWidth"></el-input>
-      </el-form-item>
-      <el-form-item label="用户等级：">
-        <el-select v-model="ruleForm.level" placeholder="请选择"  class="selWidth" clearable filterable>
-          <el-option :value="item.id" v-for="(item, index) in levelList" :key="index" :label="item.name"></el-option>
-        </el-select>
       </el-form-item>
       <el-form-item label="用户分组：">
         <el-select v-model="ruleForm.groupId" placeholder="请选择"  class="selWidth" clearable filterable>
@@ -56,7 +32,7 @@
         </el-radio-group>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
+        <el-button type="primary" @click="submitForm('ruleForm')" v-hasPermi="['admin:user:update']">提交</el-button>
         <el-button @click="resetForm('ruleForm')">取消</el-button>
       </el-form-item>
     </el-form>
@@ -64,6 +40,7 @@
 
 <script>
   import { groupListApi, levelListApi, tagListApi, userInfoApi, userUpdateApi } from '@/api/user'
+  import {Debounce} from '@/utils/validate'
   const defaultObj = {
    // birthday: '',
    // cardId: '',
@@ -137,11 +114,11 @@
       },
       // 等级列表
       levelLists () {
-        levelListApi({ page: 1, limit: 9999, isShow: 1, isDel: 0}).then(async res => {
+        levelListApi().then(async res => {
           this.levelList = res.list
         })
       },
-      submitForm(formName) {
+      submitForm:Debounce(function(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
             this.ruleForm.tagId=this.labelData.join(',')
@@ -154,7 +131,7 @@
             return false;
           }
         });
-      },
+      }),
       resetForm(formName) {
         this.$refs[formName].resetFields();
         this.$emit('resetForm');

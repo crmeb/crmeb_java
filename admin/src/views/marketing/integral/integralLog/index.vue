@@ -15,7 +15,7 @@
                               @change="onchangeTime"/>
             </el-form-item>
             <el-form-item label="用户微信昵称：">
-              <el-input v-model="tableFrom.keywords" placeholder="请输入用户微信昵称" class="selWidth" size="small">
+              <el-input v-model="tableFrom.keywords" placeholder="请输入用户昵称" class="selWidth" size="small">
                 <el-button slot="append" icon="el-icon-search" size="small" @click="getList(1)" />
               </el-input>
             </el-form-item>
@@ -26,10 +26,10 @@
       <el-table
         v-loading="listLoading"
         :data="tableData.data"
-        style="width: 100%"
-        size="mini"
+        size="small"
         class="table"
         highlight-current-row
+        :header-cell-style=" {fontWeight:'bold'}"
       >
         <el-table-column
           prop="id"
@@ -61,7 +61,7 @@
           prop="mark"
         />
         <el-table-column
-          label="用户微信昵称"
+          label="用户昵称"
           min-width="120"
           prop="nickName"
         />

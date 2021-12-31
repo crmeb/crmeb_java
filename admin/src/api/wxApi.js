@@ -1,8 +1,16 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import request from '@/utils/request'
 
-// TODO 微信沟通难度大暂放 呵呵
-
-export function menuCreate(data) {
+export function menuCreate(data) { 
   return request({
     url: '/admin/wechat/menu/public/create',
     method: 'post',
@@ -358,6 +366,36 @@ export function unbindApi() {
 export function tempAsyncApi() {
   return request({
     url: `/admin/wechat/program/my/temp/async`,
+    method: 'get'
+  })
+}
+
+/**
+ * 公众号模板消息同步
+ */
+ export function wechatAsyncApi() {
+  return request({
+    url: `/admin/wechat/template/whcbqhn/sync`,
+    method: 'post'
+  })
+}
+
+/**
+ * 小程序模板消息同步
+ */
+ export function routineAsyncApi() {
+  return request({
+    url: `/admin/wechat/template/routine/sync`,
+    method: 'post'
+  })
+}
+
+/**
+ * 小程序源码下载
+ */
+ export function wechatCodeDownload() {
+  return request({
+    url: `/admin/wechat/code/download`,
     method: 'get'
   })
 }

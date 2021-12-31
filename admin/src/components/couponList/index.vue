@@ -69,7 +69,7 @@
       </el-table-column>
       <el-table-column v-if="handle==='send'" label="操作" min-width="120" fixed="right" align="center">
         <template slot-scope="scope">
-          <el-button type="text" size="small" class="mr10" @click="sendGrant(scope.row.id)">发送</el-button>
+          <el-button type="text" size="small" class="mr10" @click="sendGrant(scope.row.id)" v-hasPermi="['admin:coupon:user:receive']">发送</el-button>
         </template>
       </el-table-column>
     </el-table>
