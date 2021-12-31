@@ -323,7 +323,9 @@
 					res.data.routine_my_menus.map((item) => {
 						if (item.url.indexOf('service') !== -1) that.servicePic = item.pic
 					})
-					that.imgUrls = res.data.routine_my_banner
+					if(res.data.routine_my_banner){
+						that.imgUrls = res.data.routine_my_banner
+					}
 				});
 			},
 			// 编辑页面
