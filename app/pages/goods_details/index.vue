@@ -507,7 +507,7 @@
 			return {
 				title: that.productInfo.storeName || '',
 				imageUrl: that.productInfo.image || '',
-				path: '/pages/goods_details/index?id=' + that.id + '&spid=' + that.uid,
+				path: '/pages/goods_details/index?id=' + that.id + '&spread=' + that.uid,
 			}
 		},
 		// #endif
@@ -769,11 +769,17 @@
 					uni.setNavigationBarTitle({
 						title: productInfo.storeName.substring(0, 7) + "..."
 					})
-					// var navList = ['商品', '评价', '详情'];
-					// if (goodArray.length) {
-					// 	navList.splice(2, 0, '推荐')
-					// }
-					//that.$set(that, 'navList', navList);
+					let productAttr = this.attr.productAttr.map(item => {
+					return {
+						attrName : item.attrName,
+						attrValues: item.attrValues.split(','),
+						id:item.id,
+						isDel:item.isDel,
+						productId:item.productId,
+						type:item.type
+					 }
+					});
+					this.$set(this.attr,'productAttr',productAttr);
 					if (that.isLogin) {
 						that.getCartCount();
 						//#ifdef H5
