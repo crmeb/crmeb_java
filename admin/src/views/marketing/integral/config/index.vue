@@ -16,6 +16,7 @@
 <script>
   import zbParser from '@/components/FormGenerator/components/parser/ZBParser'
   import { configSaveForm, configInfo } from '@/api/systemConfig.js'
+  import {Debounce} from '@/utils/validate'
   export default {
     name: "integralconfig",
     components: { zbParser },
@@ -34,7 +35,7 @@
       resetForm(formValue) {
         this.editData = {}
       },
-      handlerSubmit(data) {
+      handlerSubmit:Debounce(function(data) {
         const tempArr = []
         for (var key in data) {
           const obj = {}
@@ -53,7 +54,7 @@
           this.getFormInfo()
           this.$message.success('操作成功')
         })
-      },
+      }),
       // 获取表单详情
       getFormInfo() {
         configInfo({ id: this.formId }).then(res => {

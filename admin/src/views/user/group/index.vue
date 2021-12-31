@@ -2,7 +2,7 @@
   <div class="divBox">
     <el-card class="box-card">
       <div slot="header" class="clearfix">
-        <el-button size="small" type="primary" @click="onAdd(null)">{{$route.path.indexOf('group') !== -1?'添加用户分组':'添加用户标签'}}</el-button>
+        <el-button size="small" type="primary" @click="onAdd(null)" v-hasPermi="['admin:user:group:save','admin:user:tag:save']">{{$route.path.indexOf('group') !== -1?'添加用户分组':'添加用户标签'}}</el-button>
       </div>
       <el-table
         v-loading="listLoading"
@@ -30,8 +30,8 @@
         <!--/>-->
         <el-table-column label="操作" min-width="120" fixed="right" align="center">
           <template slot-scope="scope">
-            <el-button class="mr10" type="text" size="small" @click="onAdd(scope.row)">编辑</el-button>
-            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)" disable>删除</el-button>
+            <el-button class="mr10" type="text" size="small" @click="onAdd(scope.row)" v-hasPermi="['admin:user:group:update','admin:user:tag:update']">编辑</el-button>
+            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)" disable v-hasPermi="['admin:user:group:delete','admin:user:tag:delete']">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -81,7 +81,7 @@
           inputErrorMessage: this.$route.path.indexOf('group') !== -1?'请输入分组名称':'请输入标签名称',
           inputType: 'text',
           closeOnClickModal: false,
-          inputValue: row ? (this.$route.path.indexOf('group') !== -1?row.groupName:row.name): ''   ,
+          inputValue: row ? (this.$route.path.indexOf('group') !== -1?row.groupName:row.name): '',
           inputPlaceholder: this.$route.path.indexOf('group') !== -1?'请输入分组名称':'请输入标签名称',
           inputValidator: (value) => { if(!value) return '输入不能为空'}
         }).then(({value}) => {

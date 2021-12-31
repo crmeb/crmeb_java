@@ -100,6 +100,7 @@
 
 .divBox{
   padding: 20px;
+  // padding: 0 20px 20px;
   box-sizing: border-box;
   .el-pagination{
     display: flex;
@@ -138,6 +139,9 @@
   .el-dialog__footer{
     display: none !important;
   }
+}
+.el-dialog__footer{
+  border-top:1px solid #dcdfe6;
 }
 .el-message-box__wrapper{
   overflow: auto;
@@ -253,6 +257,9 @@ table .el-image{
 .mr20{
   margin-right: 20px;
 }
+.mr15{
+  margin-right: 15px;
+}
 .ml40 {
   margin-left: 40px !important;
 }
@@ -297,6 +304,7 @@ table .el-image{
   border-bottom:1px solid #dcdfe6;
   padding-bottom: 20px !important;
 }
+
 //点击上传图样式（弹窗）
 .publicPicBox{
   display: inline-block;
@@ -406,7 +414,9 @@ table .el-image{
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-
+.el-image-viewer__close{
+  color: #fff;
+}
 .statistical-page .mpvue-calendar{min-width:100%;}
 .statistical-page .mpvue-calendar table{margin:0;}
 .statistical-page .mpvue-calendar td{border-right:1px solid #fff;padding:0;width:14%!important;}
@@ -426,3 +436,5 @@ table .el-image{
   background-color:#a0dcf9;
 }
 .statistical-page .mc-today-element .calendar-date{border-radius:0;background-color:unset;}
+
+

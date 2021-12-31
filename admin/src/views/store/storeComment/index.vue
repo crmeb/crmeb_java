@@ -26,19 +26,9 @@
                 <el-button slot="append" icon="el-icon-search"  @click="seachList" size="small"/>
               </el-input>
             </el-form-item>
-              <!--<el-select v-model="uids" class="selWidth" reserve-keyword multiple remote filterable-->
-                         <!--:remote-method="remoteMethod" :loading="loading" placeholder="请输入用户名称" clearable @change="seachList">-->
-                <!--<el-option-->
-                  <!--v-for="item in options"-->
-                  <!--:key="item.uid"-->
-                  <!--:label="item.nickname"-->
-                  <!--:value="item.uid">-->
-                <!--</el-option>-->
-              <!--</el-select>-->
-
           </el-form>
         </div>
-        <el-button size="small" type="primary" @click="add">添加虚拟评论</el-button>
+        <el-button size="small" type="primary" @click="add" v-hasPermi="['admin:product:reply:save']">添加虚拟评论</el-button>
       </div>
       <el-table
         v-loading="listLoading"
@@ -52,7 +42,7 @@
           label="ID"
           width="50"
         />
-        <el-table-column label="商品信息" min-width="300">
+        <el-table-column label="商品信息" min-width="400">
           <template slot-scope="scope">
             <div class="demo-image__preview acea-row row-middle" v-if="scope.row.storeProduct">
               <el-image
@@ -68,7 +58,7 @@
         <el-table-column
           prop="nickname"
           label="用户名称"
-          min-width="200"
+          min-width="100"
         />
         <el-table-column
           prop="productScore"
@@ -113,8 +103,8 @@
         </el-table-column>
         <el-table-column label="操作" min-width="120" fixed="right" align="center">
           <template slot-scope="scope">
-            <el-button type="text" size="small" @click="reply(scope.row.id)" class="mr10">回复</el-button>
-            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)">删除</el-button>
+            <el-button type="text" size="small" @click="reply(scope.row.id)" class="mr10" v-hasPermi="['admin:product:reply:comment']">回复</el-button>
+            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)" v-hasPermi="['admin:product:reply:delete']">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

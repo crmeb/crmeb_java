@@ -1,3 +1,13 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import Layout from '@/layout'
 
 const operationRouter = {
@@ -18,6 +28,15 @@ const operationRouter = {
       meta: {
         title: '系统设置',
         icon: 'clipboard'
+      }
+    },
+    {
+      path:'notification',
+      name:'notification',
+      component: () => import('@/views/systemSetting/notification'),
+      meta:{
+        title:'消息通知',
+        icon:'clipboard'
       }
     },
     {
@@ -43,7 +62,7 @@ const operationRouter = {
           path: 'identityManager',
           component: () => import('@/views/systemSetting/administratorAuthority/identityManager'),
           name: 'identityManager',
-          meta: { title: '身份管理', icon: '' }
+          meta: { title: '角色管理', icon: '' }
         },
         {
           path: 'adminList',
@@ -56,76 +75,6 @@ const operationRouter = {
           component: () => import('@/views/systemSetting/administratorAuthority/permissionRules'),
           name: 'promiseRules',
           meta: { title: '权限规则', icon: '' }
-        }
-      ]
-    },
-    {
-      path: 'logistics',
-      name: 'Logistics',
-      alwaysShow: true,
-      redirect: '/logistics/cityList',
-      component: () => import('@/views/systemSetting/administratorAuthority'),
-      meta: {
-        title: '物流设置',
-        icon: 'clipboard',
-        roles: ['admin']
-      },
-      children: [
-        {
-          path: 'cityList',
-          component: () => import('@/views/systemSetting/logistics/cityList'),
-          name: 'cityList',
-          meta: { title: '城市数据', icon: '' }
-        },
-        {
-          path: 'companyList',
-          component: () => import('@/views/systemSetting/logistics/companyList'),
-          name: 'companyList',
-          meta: { title: '物流公司', icon: '' }
-        },
-        {
-          path: 'shippingTemplates',
-          component: () => import('@/views/systemSetting/logistics/shippingTemplates'),
-          name: 'shippingTemplates',
-          meta: { title: '运费模板', icon: '' }
-        },
-        {
-          path: 'logisticsConfig',
-          component: () => import('@/views/systemSetting/logistics/config'),
-          name: 'logisticsConfig',
-          meta: { title: '物流配置', icon: '' }
-        }
-      ]
-    },
-    {
-      path: 'systemStore',
-      name: 'SystemStore',
-      alwaysShow: true,
-      redirect: '/systemStore/point',
-      component: () => import('@/views/systemSetting/systemStore'),
-      meta: {
-        title: '提货点设置',
-        icon: 'clipboard',
-        roles: ['admin']
-      },
-      children: [
-        {
-          path: 'point',
-          component: () => import('@/views/systemSetting/systemStore/point'),
-          name: 'point',
-          meta: { title: '提货点', icon: '' }
-        },
-        {
-          path: 'clerkList',
-          component: () => import('@/views/systemSetting/systemStore/clerkList'),
-          name: 'clerkList',
-          meta: { title: '核销员', icon: '' }
-        },
-        {
-          path: 'order',
-          component: () => import('@/views/systemSetting/systemStore/order'),
-          name: 'order',
-          meta: { title: '核销订单', icon: '' }
         }
       ]
     },
@@ -166,30 +115,50 @@ const operationRouter = {
       ]
     },
     {
-      path: 'storeService',
-      component: () => import('@/views/systemSetting/storeService'),
-      name: 'StoreService',
+      path: 'deliverGoods',
+      name: 'deliverGoods',
+      alwaysShow: true,
+      component: () => import('@/views/systemSetting/deliverGoods'),
       meta: {
-        title: '客服管理',
-        icon: 'clipboard',
+        title: '发货设置',
         roles: ['admin']
       },
       children: [
         {
-          path: 'list',
-          component: () => import('@/views/systemSetting/storeService/chatRoom'),
-          name: 'StoreServiceList',
-          meta: { title: '客服列表', noCache: true }
+          path: 'takeGoods',
+          component: () => import('@/views/systemSetting/deliverGoods/takeGoods'),
+          name: 'takeGoods',
+          meta: { title: '提货设置', noCache: true,roles: ['admin'] },
+          children: [
+            {
+              path: 'deliveryAddress',
+              component: () => import('@/views/systemSetting/deliverGoods/takeGoods/deliveryAddress'),
+              name: 'deliveryAddress',
+              meta: { title: '提货点', icon: '' }
+            },
+            {
+              path: 'collateOrder',
+              component: () => import('@/views/systemSetting/deliverGoods/takeGoods/collateOrder'),
+              name: 'collateOrder',
+              meta: { title: '核销订单', icon: '' }
+            },
+            {
+              path: 'collateUser',
+              component: () => import('@/views/systemSetting/deliverGoods/takeGoods/collateUser'),
+              name: 'collateUser',
+              meta: { title: '核销员', icon: '' }
+            },
+          ]
         },
         {
-          path: 'chatRoom',
-          component: () => import('@/views/systemSetting/storeService/list'),
-          name: 'ChatRoom',
-          meta: { title: '聊天室', noCache: true }
-        }
+          path: 'freightSet',
+          component: () => import('@/views/systemSetting/deliverGoods/freightSet'),
+          name: 'freightSet',
+          meta: { title: '运费模板', noCache: true }
+        },
       ]
     },
   ]
 }
 
-export default operationRouter
+export default operationRouter  //collate

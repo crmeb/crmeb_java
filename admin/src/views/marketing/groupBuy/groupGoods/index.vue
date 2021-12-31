@@ -18,9 +18,9 @@
           </el-form>
         </div>
         <router-link :to=" { path:'/marketing/groupBuy/creatGroup' }">
-          <el-button size="mini" type="primary" class="mr10">添加拼团商品</el-button>
+          <el-button size="mini" type="primary" class="mr10" v-hasPermi="['admin:combination:save']">添加拼团商品</el-button>
         </router-link>
-        <el-button size="mini" class="mr10" @click="exportList">导出</el-button>
+        <el-button size="mini" class="mr10" @click="exportList" v-hasPermi="['admin:export:excel:combiantion']">导出</el-button>
       </div>
       <el-table
         v-loading="listLoading"
@@ -28,6 +28,7 @@
         style="width: 100%"
         size="mini"
         ref="multipleTable"
+        :header-cell-style=" {fontWeight:'bold'}"
       >
         <el-table-column
           prop="id"
@@ -45,45 +46,55 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column
-          label="拼团名称"
-          prop="title"
-          min-width="100"
-        />
+        <el-table-column label="拼团名称" prop="title" min-width="300">
+          <template slot-scope="scope">
+            <el-popover trigger="hover" placement="right" :open-delay="800">
+              <div class="text_overflow" slot="reference">{{scope.row.title}}</div>
+              <div class="pup_card">{{scope.row.title}}</div>
+            </el-popover>
+          </template>
+        </el-table-column>
         <el-table-column
           label="原价"
           prop="otPrice"
           min-width="100"
+          align="center"
         />
         <el-table-column
           label="拼团价"
           prop="price"
           min-width="100"
+          align="center"
         />
         <el-table-column
           label="拼团人数"
           prop="countPeople"
           min-width="100"
+          align="center"
         />
         <el-table-column
           label="参与人数"
           prop="countPeopleAll"
           min-width="100"
+          align="center"
         />
         <el-table-column
           label="成团数量"
           prop="countPeoplePink"
           min-width="100"
+          align="center"
         />
         <el-table-column
           label="限量"
           min-width="100"
           prop="quotaShow"
+          align="center"
         />
         <el-table-column
           label="限量剩余"
           prop="remainingQuota"
           min-width="100"
+          align="center"
         />
         <el-table-column
           prop="stopTime"
@@ -98,7 +109,7 @@
           label="拼团状态"
           min-width="150"
         >
-          <template slot-scope="scope">
+          <template slot-scope="scope" v-if="checkPermi(['admin:combination:update:status'])">
             <el-switch
               v-model="scope.row.isShow"
               :active-value="true"
@@ -112,9 +123,9 @@
         <el-table-column label="操作" min-width="150" fixed="right" align="center">
           <template slot-scope="scope">
             <router-link :to="{ path:'/marketing/groupBuy/creatGroup/' + scope.row.id}">
-              <el-button type="text" size="small">编辑</el-button>
+              <el-button type="text" size="small" v-hasPermi="['admin:combination:info']">编辑</el-button>
             </router-link>
-            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)"  class="mr10">删除</el-button>
+            <el-button type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)"  class="mr10" v-hasPermi="['admin:combination:delete']">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -136,6 +147,7 @@
 <script>
   import { combinationListApi, combinationDeleteApi, combinationStatusApi, exportcombiantionApi } from '@/api/marketing'
   import { formatDates } from '@/utils/index';
+  import { checkPermi } from "@/utils/permission"; // 权限判断函数
   export default {
     name: "index",
     filters: {
@@ -165,6 +177,7 @@
       this.getList()
     },
     methods: {
+      checkPermi,
       //导出
       exportList(){
         exportcombiantionApi({keywords: this.tableFrom.keywords, isShow:this.tableFrom.isShow}).then((res) => {
@@ -214,5 +227,22 @@
 </script>
 
 <style scoped>
-
+.el-table__body {
+  width: 100%;
+  table-layout: fixed !important;
+}
+.text_overflow{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+}
+.pup_card{
+  width: 200px;
+  border-radius: 5px;
+  padding: 5px;
+  box-sizing: border-box;
+  font-size: 12px;
+  line-height: 16px;
+}
 </style>

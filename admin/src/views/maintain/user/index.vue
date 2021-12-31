@@ -14,7 +14,7 @@
         <el-form-item label="新密码" prop="pwd">
           <el-input
             v-model="pram.pwd"
-            placeholder="管理员密码,不更改可以不填写"
+            placeholder="管理员密码"
             clearable
             @input="handlerPwdInput"
             @clear="handlerPwdInput"
@@ -35,6 +35,7 @@
 <script>
   import * as systemAdminApi from '@/api/systemadmin.js'
   import Cookies from 'js-cookie'
+  import {Debounce} from '@/utils/validate'
   export default {
     name: "index",
     data() {
@@ -47,15 +48,16 @@
           callback()
         }
       }
+      const JavaInfo = JSON.parse(Cookies.get('JavaInfo'));
       return {
         password: '',
         JavaInfo: JSON.parse(Cookies.get('JavaInfo')),
         pram: {
-          account: JSON.parse(Cookies.get('JavaInfo')).account,
+          account:JavaInfo.account,
           pwd: null,
           repwd: null,
-          realName: null,
-          id: JSON.parse(Cookies.get('JavaInfo')).id
+          realName: JavaInfo.realName,
+          id: JavaInfo.id
         },
         roleList: [],
         rules: {
@@ -63,7 +65,6 @@
           pwd: [{ required: true, message: '请填管理员密码', trigger: ['blur', 'change'] }],
           repwd: [{ required: true, message: '确认密码密码', validator: validatePass, trigger: ['blur', 'change'] }],
           realName: [{ required: true, message: '管理员姓名', trigger: ['blur', 'change'] }],
-          roles: [{ required: true, message: '管理员身份', trigger: ['blur', 'change'] }]
         }
       }
     },
@@ -71,17 +72,18 @@
       close(formName) {
         this.$refs[formName].resetFields();
       },
-      handlerSubmit(formName) {
+      handlerSubmit:Debounce(function(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
             systemAdminApi.adminUpdate(this.pram).then(data => {
               this.$message.success('提交成功')
+              this.$router.go(-1)
             })
           } else {
             return false;
           }
         });
-      },
+      }),
       handlerPwdInput(val) {
         if (!val) {
           this.rules.pwd = []
