@@ -164,8 +164,8 @@
 				that.$util.uploadImageOne({
 					url: 'user/upload/image',
 					name: 'multipart',
-					model: "user",
-					pid: 7
+					model: "maintain",
+					pid: 0
 				}, function(res) {
 					that.newAvatar = res.data.url;
 				});

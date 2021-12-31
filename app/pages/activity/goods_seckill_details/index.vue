@@ -315,7 +315,6 @@
 			that.$store.commit("PRODUCT_TYPE", 'normal');
 			let statusBarHeight = '';
 			var pages = getCurrentPages();
-			//that.returnShow = pages.length === 1 ? false : true;
 			//设置商品列表高度
 			uni.getSystemInfo({
 				success: function(res) {
@@ -324,18 +323,29 @@
 					//res.windowHeight:获取整个窗口高度为px，*2为rpx；98为头部占据的高度；
 				},
 			});
-			this.isLogin && silenceBindingSpread();
+			// #ifndef APP-PLUS
 			this.navH = app.globalData.navHeight
+			// #endif
+			// #ifdef APP-PLUS
+			this.navH = 90
+			// #endif
 			// #ifdef MP
 			let menuButtonInfo = uni.getMenuButtonBoundingClientRect()
 			this.meunHeight = menuButtonInfo.height
 			this.backH = (that.navH / 2) + (this.meunHeight / 2)
+			
+			// #ifdef MP || APP-NVUE
+			// 小程序链接进入获取绑定关系id
+			// if(options.spread) app.globalData.spread = options.spread; 
 			setTimeout(()=>{
 				if(options.spread){
 					app.globalData.spread = options.spread;
 					spread(options.spread).then(res => {})
 				}
 			},2000)
+			// #endif
+			that.$set(that,'theme',that.$Cache.get('theme')); //用户从分享卡片进入的场景下获取主题色配置
+			// #endif
 			if (!options.scene && !options.id){
 				this.showSkeleton = false;
 				this.$util.Tips({
@@ -358,14 +368,12 @@
 					this.id = options.id;
 				}
 			}
-			// #endif
 			
 			if (this.isLogin) {
-				this.id = options.id;
 				this.getSeckillDetail();
 			} else {
 				this.$Cache.set('login_back_url',
-					'/pages/activity/goods_seckill_details/index?id=' + this.id + '&spread=' + app.globalData.spid?app.globalData.spid:0);
+					'/pages/activity/goods_seckill_details/index?id=' + this.id + '&spread=' + app.globalData.spread?app.globalData.spread:0);
 				toLogin();
 			}
 			this.$nextTick(() => {
@@ -380,6 +388,7 @@
 					.exec();
 				// #endif
 			})
+			silenceBindingSpread();
 		},
 		methods: {
 			kefuClick(){
@@ -444,6 +453,17 @@
 					
 					this.getProductReplyList();
 					this.getProductReplyCount();
+					let productAttr = res.data.productAttr.map(item => {
+					return {
+						attrName : item.attrName,
+						attrValues: item.attrValues.split(','),
+						id:item.id,
+						isDel:item.isDel,
+						productId:item.productId,
+						type:item.type
+					 }
+					});
+					this.$set(this.attribute,'productAttr',productAttr);
 					// #ifdef H5
 					that.storeImage = that.storeInfo.image;
 					that.make();
