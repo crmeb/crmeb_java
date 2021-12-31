@@ -2,6 +2,7 @@ import {
 	TOKENNAME,
 	HTTP_REQUEST_URL
 } from '../config/app.js';
+import {HTTP_ADMIN_URL} from '@/config/app.js';
 import store from '../store';
 import {
 	pathToBase64
@@ -452,8 +453,7 @@ export default {
 				uni.showLoading({
 					title: '图片上传中',
 				});
-				let urlPath = HTTP_REQUEST_URL + '/api/front/' + uploadUrl + "?model=" + model +
-					"&pid=" + pid;
+				let urlPath = HTTP_ADMIN_URL + '/admin/upload/image' + "?model=" + model + "&pid=" + pid
 				let localPath = res.tempFilePaths[0];
 				uni.uploadFile({
 					url: urlPath,
