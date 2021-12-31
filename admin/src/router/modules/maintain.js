@@ -1,3 +1,13 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 /** When your routing table is too long, you can split it into small modules **/
 
 import Layout from '@/layout'
@@ -79,7 +89,33 @@ const maintainRouter = {
         icon: 'clipboard'
       },
       hidden: false
-    }
+    },//sensitiveList
+    {
+      path: 'logistics',
+      name: 'Logistics',
+      alwaysShow: true,
+      redirect: '/logistics/cityList',
+      component: () => import('@/views/maintain'),
+      meta: {
+        title: '物流设置',
+        icon: 'clipboard',
+        roles: ['admin']
+      },
+      children: [
+        {
+          path: 'cityList',
+          component: () => import('@/views/maintain/logistics/cityList'),
+          name: 'cityList',
+          meta: { title: '城市数据', icon: '' }
+        },
+        {
+          path: 'companyList',
+          component: () => import('@/views/maintain/logistics/companyList'),
+          name: 'companyList',
+          meta: { title: '物流公司', icon: '' }
+        },
+      ]
+    },
   ]
 }
 

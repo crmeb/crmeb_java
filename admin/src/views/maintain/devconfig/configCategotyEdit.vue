@@ -53,6 +53,7 @@
 <script>
 import * as categoryApi from '@/api/categoryApi.js'
 import * as selfUtil from '@/utils/ZBKJIutil.js'
+import {Debounce} from '@/utils/validate'
 export default {
   // name: "configCategotyEdit"
   props: {
@@ -120,12 +121,12 @@ export default {
         this.editPram.extra = extra
       }
     },
-    handlerSubmit(formName) {
+    handlerSubmit:Debounce(function(formName) {
       this.$refs[formName].validate((valid) => {
         if (!valid) return
         this.handlerSaveOrUpdate(this.isCreate === 0)
       })
-    },
+    }),
     handlerSaveOrUpdate(isSave) {
       if (isSave) {
         this.editPram.pid = this.prent.id

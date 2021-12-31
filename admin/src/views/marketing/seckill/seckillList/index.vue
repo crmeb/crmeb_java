@@ -31,7 +31,7 @@
           </el-form>
         </div>
         <router-link :to=" { path:'/marketing/seckill/creatSeckill/creat' }">
-          <el-button size="small" type="primary" class="mr10">添加秒杀商品</el-button>
+          <el-button size="small" type="primary" class="mr10" v-hasPermi="['admin:seckill:save']">添加秒杀商品</el-button>
         </router-link>
       </div>
       <el-table
@@ -40,6 +40,7 @@
         style="width: 100%"
         size="mini"
         ref="multipleTable"
+        :header-cell-style=" {fontWeight:'bold'}"
       >
         <el-table-column
           prop="id"
@@ -75,16 +76,9 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column
-          label="活动标题"
-          prop="title"
-          min-width="180"
-        />
-        <el-table-column
-          label="活动简介"
-          min-width="180"
-          prop="info"
-        />
+        <el-table-column label="商品标题" prop="title" min-width="300" :show-overflow-tooltip="true">
+        </el-table-column>
+        <el-table-column label="活动简介" min-width="300" prop="info" :show-overflow-tooltip="true"></el-table-column>
         <el-table-column
           label="原价"
           prop="otPrice"
@@ -111,10 +105,16 @@
           prop="statusName"
         />
         <el-table-column
-          label="状态"
+          label="创建时间"
+          prop="createTime"
           min-width="150"
+        />
+        <el-table-column
+          label="状态"
+          min-width="80"
+          fixed="right"
         >
-          <template slot-scope="scope">
+          <template slot-scope="scope" v-if="checkPermi(['admin:seckill:update:status'])">
             <el-switch
               v-model="scope.row.status"
               :active-value="1"
@@ -125,17 +125,17 @@
             />
           </template>
         </el-table-column>
-        <el-table-column
-          label="创建时间"
-          prop="createTime"
-          min-width="150"
-        />
-        <el-table-column label="操作" min-width="150" fixed="right" align="center">
+        <el-table-column label="操作" min-width="120" fixed="right" align="center">
           <template slot-scope="scope">
             <router-link :to="{ path:'/marketing/seckill/creatSeckill/updeta/' + scope.row.productId + '/' + scope.row.id}">
-              <el-button type="text" size="small">编辑</el-button>
+              <el-button type="text" size="small" v-hasPermi="['admin:seckill:info']">编辑</el-button>
             </router-link>
-            <el-button v-if="scope.row.killStatus !== 2 " type="text" size="small" @click="handleDelete(scope.row.id, scope.$index)"  class="mr10">删除</el-button>
+            <el-button v-if="scope.row.killStatus !== 2 " 
+            type="text" size="small" 
+            @click="handleDelete(scope.row.id, scope.$index)"  
+            class="mr10"
+            v-hasPermi="['admin:seckill:delete']"
+            >删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -157,6 +157,7 @@
 <script>
   import { seckillStoreListApi, seckillStoreDeleteApi, seckillStoreUpdateApi, seckillStoreStatusApi } from '@/api/marketing'
   import { getSeckillList } from '@/libs/public'
+  import { checkPermi } from "@/utils/permission"; // 权限判断函数
   export default {
     name: "SeckillList",
     data() {
@@ -184,6 +185,7 @@
       this.getList()
     },
     methods: {
+      checkPermi,
       // 订单删除
       handleDelete(id, idx) {
         this.$modalSure().then(() => {
@@ -227,5 +229,8 @@
 </script>
 
 <style scoped>
-
+   .el-table__body {
+    width: 100%;
+    table-layout: fixed !important;
+  }
 </style>

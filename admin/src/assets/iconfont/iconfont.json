@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "22329862",
+      "name": "drag2",
+      "font_class": "drag2",
+      "unicode": "e6ac",
+      "unicode_decimal": 59052
+    },
+    {
       "icon_id": "15811115",
       "name": "line-add commodity",
       "font_class": "line-addcommodity",

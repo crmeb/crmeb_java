@@ -13,7 +13,7 @@
           <i class="el-icon-document-checked cameraIconfont" />
         </div>
       </div>
-      <el-button v-else size="mini" type="primary">点击上传</el-button>
+      <el-button v-else size="mini" type="primary"  v-hasPermi="['admin:upload:file']">点击上传</el-button>
     </el-upload>
   </div>
 </template>

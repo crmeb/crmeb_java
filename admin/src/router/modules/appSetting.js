@@ -1,3 +1,13 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import Layout from '@/layout'
 
 const appSettingRouter = {
@@ -63,52 +73,8 @@ const appSettingRouter = {
             }
           ]
         },
-        {
-          path: 'template/:type?',
-          component: () => import('@/views/appSetting/wxAccount/wxTemplate'),
-          name: 'wxTemplate',
-          meta: { title: '微信模板消息', icon: '' }
-        }
       ]
     },
-    {
-      path: 'publicRoutine',
-      name: 'PublicRoutine',
-      component: () => import('@/views/appSetting/routine'),
-      meta: {
-        title: '小程序',
-        icon: 'clipboard',
-        roles: ['admin'],
-        hidden: true
-      },
-      children: [
-        {
-          path: 'template/:type?',
-          component: () => import('@/views/appSetting/wxAccount/wxTemplate'),
-          name: 'RoutineTemplate',
-          meta: { title: '小程序订阅消息', icon: '' }
-        },
-        {
-          path: 'routineTemplate',
-          component: () => import('@/views/appSetting/routine/myTemplate'),
-          name: 'RoutineTemplate',
-          meta: { title: '我的模板', icon: '' }
-        },
-        {
-          path: 'publicRoutineTemplate',
-          component: () => import('@/views/appSetting/routine/publicTemplate/index.vue'),
-          name: 'PublicRoutineTemplate',
-          meta: { title: '公共模板', icon: '' }
-        },
-        {
-          path: 'creatPublicTemplate/:tid/:id/:myId?',
-          component: () => import('@/views/appSetting/routine/publicTemplate/creatPublicTemplate.vue'),
-          name: 'CreatPublicTemplate',
-          meta: { title: '添加公共模板', icon: '', activeMenu: `/appSetting/publicRoutine/publicRoutineTemplate` },
-          hidden: true
-        }
-      ]
-    }
   ]
 }
 

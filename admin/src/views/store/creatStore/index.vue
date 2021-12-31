@@ -23,7 +23,7 @@
             </el-form-item>
           </el-col>
           <el-col v-bind="grid2">
-            <el-form-item label="商品关键字：">
+            <el-form-item label="商品关键字：" prop="keyword">
               <el-input v-model="formValidate.keyword" placeholder="请输入商品关键字" :disabled="isDisabled"/>
             </el-form-item>
           </el-col>
@@ -33,7 +33,7 @@
             </el-form-item>
           </el-col>
           <el-col v-bind="grid2">
-            <el-form-item label="商品简介：">
+            <el-form-item label="商品简介：" prop="storeInfo">
               <el-input v-model="formValidate.storeInfo" type="textarea"  maxlength="250" :rows="3" placeholder="请输入商品简介"  :disabled="isDisabled"/>
             </el-form-item>
           </el-col>
@@ -61,7 +61,7 @@
                   @dragend="handleDragEnd($event, item)"
                 >
                   <img :src="item">
-                  <i v-if="!isDisabled" class="el-icon-error btndel" @click="handleRemove(index)" />
+                  <i v-if="!isDisabled" class="el-icon-error btndel" @click="handleRemove(index)"/>
                 </div>
                 <div v-if="formValidate.sliderImages.length<10 && !isDisabled" class="upLoadPicBox" @click="modalPicTap('2')">
                   <div class="upLoad">
@@ -71,10 +71,9 @@
               </div>
             </el-form-item>
           </el-col>
-          <el-col :span="24">
+          <el-col :xs="18" :sm="18" :md="18" :lg="12" :xl="12">
             <el-form-item label="运费模板：" prop="tempId">
-              <div class="acea-row">
-                <el-select v-model="formValidate.tempId" placeholder="请选择" class="selWidthd mr20" :disabled="isDisabled">
+              <el-select v-model="formValidate.tempId" placeholder="请选择" class="mr20" :disabled="isDisabled" style="width:100%;">
                   <el-option
                     v-for="item in shippingList"
                     :key="item.id"
@@ -82,9 +81,10 @@
                     :value="item.id"
                   />
                 </el-select>
-                <el-button v-show="!isDisabled" class="mr15" @click="addTem">添加运费模板</el-button>
-              </div>
             </el-form-item>
+          </el-col>
+          <el-col :xs="6" :sm="6" :md="6" :lg="12" :xl="12">
+            <el-button v-show="!isDisabled" class="mr15" @click="addTem">运费模板</el-button>
           </el-col>
           <el-col :span="24">
             <el-form-item label="商品规格：" props="specType">
@@ -163,7 +163,7 @@
           </el-col>
           <!-- 批量设置-->
           <el-col v-if="formValidate.attr.length>0 && formValidate.specType && !isDisabled" :span="24" class="noForm">
-            <el-form-item label="批量设置：" class="labeltop">
+            <el-form-item label="批量设置：">
               <el-table :data="oneFormBatch" border class="tabNumWidth" size="mini">
                 <el-table-column align="center" label="图片" min-width="80">
                   <template slot-scope="scope">
@@ -177,7 +177,7 @@
                 </el-table-column>
                 <el-table-column v-for="(item,iii) in attrValue" :key="iii" :label="formThead[iii].title" align="center" min-width="120">
                   <template slot-scope="scope">
-                    <el-input v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" :min="0" class="priceBox" />
+                    <el-input v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" :min="0" class="priceBox" @keyup.native='keyupEvent($event,oneFormBatch,scope.$index,iii, 1)' />
                   </template>
                 </el-table-column>
                 <template v-if="formValidate.isSub">
@@ -216,7 +216,7 @@
                 </el-table-column>
                 <el-table-column v-for="(item,iii) in attrValue" :key="iii" :label="formThead[iii].title" align="center" min-width="120">
                   <template slot-scope="scope">
-                    <el-input :disabled="isDisabled" v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" :min="0" class="priceBox" />
+                    <el-input :disabled="isDisabled" v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" :min="0" class="priceBox" @keyup.native='keyupEvent($event,oneFormBatch,scope.$index,iii, 2)' />
                   </template>
                 </el-table-column>
                 <template v-if="formValidate.isSub">
@@ -232,6 +232,10 @@
                   </el-table-column>
                 </template>
               </el-table>
+            </el-form-item>
+           <!-- <div>manyTabDate:{{manyTabDate}}</div> -->
+            <el-form-item label="全部sku：" v-if="$route.params.id && showAll">
+              <el-button type="default" @click="showAllSku()" :disabled="isDisabled">展示</el-button>
             </el-form-item>
             <!-- 多规格表格-->
             <el-form-item v-if="formValidate.attr.length>0 && formValidate.specType" label="商品属性：" class="labeltop" :class="isDisabled?'disLabel':'disLabelmoren'">
@@ -255,7 +259,8 @@
                 </el-table-column>
                 <el-table-column v-for="(item,iii) in attrValue" :key="iii" :label="formThead[iii].title" align="center" min-width="120">
                   <template slot-scope="scope">
-                    <el-input :disabled="isDisabled" v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" class="priceBox" />
+<!--                    <span>scope.row:{{scope.row}}</span>-->
+                    <el-input :disabled="isDisabled" v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" class="priceBox" @keyup.native='keyupEvent($event,oneFormBatch,scope.$index,iii, 3)' />
                   </template>
                 </el-table-column>
                 <el-table-column align="center" label="一级返佣(元)" min-width="120" v-if="formValidate.isSub">
@@ -281,7 +286,7 @@
         <el-row v-show="currentTab === 1 && !isDisabled">
           <el-col :span="24">
             <el-form-item label="商品详情：">
-              <ueditor-from v-model="formValidate.content" :content="formValidate.content" />
+               <Tinymce v-model="formValidate.content"></Tinymce>
             </el-form-item>
           </el-col>
         </el-row>
@@ -297,17 +302,17 @@
           <el-col :span="24">
             <el-col v-bind="grid">
               <el-form-item label="排序：">
-                <el-input-number v-model="formValidate.sort" :max="9999" placeholder="请输入排序" :disabled="isDisabled" />
+                <el-input-number v-model="formValidate.sort" :min="0" placeholder="请输入排序" :disabled="isDisabled" />
               </el-form-item>
             </el-col>
             <el-col v-bind="grid">
               <el-form-item label="积分：">
-                <el-input-number v-model="formValidate.giveIntegral" placeholder="请输入排序" :disabled="isDisabled" />
+                <el-input-number v-model="formValidate.giveIntegral" :min="0" placeholder="请输入排序" :disabled="isDisabled" />
               </el-form-item>
             </el-col>
             <el-col v-bind="grid">
               <el-form-item label="虚拟销量：">
-                <el-input-number v-model="formValidate.ficti" placeholder="请输入排序" :disabled="isDisabled" />
+                <el-input-number v-model="formValidate.ficti" :min="0" placeholder="请输入排序" :disabled="isDisabled" />
               </el-form-item>
             </el-col>
           </el-col>
@@ -340,7 +345,6 @@
             <el-form-item label="优惠券：" class="proCoupon">
               <div class="acea-row">
                 <el-tag
-                  v-if="!isDisabled"
                   v-for="(tag, index) in formValidate.coupons"
                   :key="index"
                   class="mr10 mb10"
@@ -350,14 +354,14 @@
                 >
                   {{ tag.name }}
                 </el-tag>
-                <span v-if="isDisabled">无</span>
-                <el-button v-if="!isDisabled" class="mr15" size="mini" @click="addCoupon">选择优惠券</el-button>
+                <!-- <span v-if="formValidate.couponIds == null">无</span> -->
+                <el-button v-if="!isDisabled" class="mr15" @click="addCoupon">选择优惠券</el-button>
               </div>
             </el-form-item>
           </el-col>
         </el-row>
         <el-form-item>
-          <el-button v-show="currentTab>0" type="primary" class="submission" @click="handleSubmitUp">上一步</el-button>
+          <el-button v-show="currentTab>0" class="submission priamry_border" @click="handleSubmitUp">上一步</el-button>
           <el-button v-show="currentTab<2" type="primary" class="submission" @click="handleSubmitNest('formValidate')">下一步</el-button>
           <el-button v-show="(currentTab===2 || $route.params.id) && !isDisabled" type="primary" class="submission" @click="handleSubmit('formValidate')">提交</el-button>
         </el-form-item>
@@ -368,14 +372,19 @@
 </template>
 
 <script>
+  import Tinymce from '@/components/Tinymce/index'
   import { templateListApi, productCreateApi, categoryApi, productDetailApi, productUpdateApi } from '@/api/store'
+  import { marketingSendApi} from '@/api/marketing';
   import { shippingTemplatesList } from '@/api/logistics'
+  import { goodDesignList } from "@/api/systemGroup";
   import { clearTreeData } from '@/utils/ZBKJIutil'
   import CreatTemplates from '@/views/systemSetting/logistics/shippingTemplates/creatTemplates'
   import Templates from "../../appSetting/wxAccount/wxTemplate/index";
+  import {Debounce} from '@/utils/validate'
   const defaultObj = {
     image: '',
     sliderImages: [],
+    videoLink:'',
     sliderImage: '',
     storeName: '',
     storeInfo: '',
@@ -436,10 +445,9 @@
       title: '体积(m³)'
     }
   }
-  const proOptions = [{ name: '是否热卖', value: 'isHot' }, { name: '优品推荐', value: 'isGood' }, { name: '促销单品', value: 'isBenefit' }, { name: '是否精品', value: 'isBest' }, { name: '是否新品', value: 'isNew' }]
   export default {
     name: 'ProductProductAdd',
-    components: {Templates, CreatTemplates },
+    components: {Templates, CreatTemplates,Tinymce },
     data() {
       return {
         isDisabled: this.$route.params.isDisabled==='1'?true:false,
@@ -452,7 +460,7 @@
           emitPath: false
         },
         checkboxGroup: [],
-        recommend: proOptions,
+        recommend: [],
         tabs: [],
         fullscreenLoading: false,
         props: { multiple: true },
@@ -475,7 +483,7 @@
         manyTabTit: {},
         manyTabDate: {},
         grid2: {
-          xl: 10,
+          xl: 12,
           lg: 12,
           md: 12,
           sm: 24,
@@ -534,7 +542,9 @@
         },
         tempRoute: {},
         keyNum: 0,
-        isAttr: false
+        isAttr: false,
+        showAll:false,
+        videoLink: "",
       }
     },
     computed: {
@@ -552,7 +562,7 @@
     watch: {
       'formValidate.attr': {
         handler: function(val) {
-          if (this.formValidate.specType && this.isAttr) this.watCh(val)
+          if (this.formValidate.specType && this.isAttr) this.watCh(val) //重要！！！
         },
         immediate: false,
         deep: true
@@ -572,8 +582,40 @@
       }
       this.getCategorySelect()
       this.getShippingList()
+      this.getGoodsType()
     },
     methods: {
+      keyupEvent(e,array,index,row,num){
+        e.target.value=e.target.value.replace(/[^\d.]/g, '');
+        e.target.value=e.target.value.replace(/\.{2,}/g, '.');
+        e.target.value=e.target.value.replace(/^\./g, '0.');
+        e.target.value=e.target.value.replace(/^\d*\.\d*\./g, e.target.value.substring(0,e.target.value.length-1));
+        e.target.value=e.target.value.replace(/^0[^\.]+/g, '0')
+        e.target.value=e.target.value.replace(/^(\d+)\.(\d\d).*$/, '$1.$2')
+        switch (num) {
+          case 1:
+            if(row == 'stock'){
+              this.oneFormBatch[index][row]=parseInt(e.target.value)
+            }else{
+              this.oneFormBatch[index][row]=e.target.value
+            }
+            break;
+          case 2:
+            if(row == 'stock'){
+              this.OneattrValue[index][row]=parseInt(e.target.value)
+            }else{
+              this.OneattrValue[index][row]=e.target.value
+            }
+            break;
+          default:
+            if(row == 'stock'){
+              this.ManyAttrValue[index][row]=parseInt(e.target.value)
+            }else{
+              this.ManyAttrValue[index][row]=e.target.value
+            }
+            break;
+        }
+      },
       handleCloseCoupon(tag) {
         this.isAttr = true
         this.formValidate.coupons.splice(this.formValidate.coupons.indexOf(tag), 1)
@@ -605,15 +647,17 @@
         const tmp = {}
         const tmpTab = {}
         this.formValidate.attr.forEach((o, i) => {
-          tmp['value' + i] = { title: o.attrName }
-          tmpTab['value' + i] = ''
-        })
-        this.ManyAttrValue = this.attrFormat(val)
+          // tmp['value' + i] = { title: o.attrName }
+          // tmpTab['value' + i] = ''
+          tmp[o.attrName] = { title: o.attrName };
+          tmpTab[o.attrName] = '';
+        });
+        this.ManyAttrValue = this.attrFormat(val);
         this.ManyAttrValue.forEach((val, index) => {
           const key = Object.values(val.attrValue).sort().join('/')
           if (this.attrInfo[key]) this.ManyAttrValue[index] = this.attrInfo[key]
         })
-        this.attrInfo = {}
+        this.attrInfo = [];
         this.ManyAttrValue.forEach((val) => {
           this.attrInfo[Object.values(val.attrValue).sort().join('/')] = val
         })
@@ -630,6 +674,7 @@
             arr.forEach((v, i) => {
               if (i === 0) data = arr[i]['attrValue']
               const tmp = []
+              if(!data) return;
               data.forEach(function(vv) {
                 arr[i + 1] && arr[i + 1]['attrValue'] && arr[i + 1]['attrValue'].forEach(g => {
                   const rep2 = (i !== 0 ? '' : arr[i]['attrName'] + '_') + vv + '$&' + arr[i + 1]['attrName'] + '_' + g
@@ -648,13 +693,13 @@
                       brokerage_two: 0
                     }
                     rep2.split('$&').forEach((h, k) => {
-                      const rep3 = h.split('_')
+                      const rep3 = h.split('_');
                       if (!rep4['attrValue']) rep4['attrValue'] = {}
                       rep4['attrValue'][rep3[0]] = rep3.length > 1 ? rep3[1] : ''
                     })
-                    Object.values(rep4.attrValue).forEach((v, i) => {
-                      rep4['value' + i] = v
-                    })
+                    for (let attrValueKey in rep4.attrValue) {
+                      rep4[attrValueKey] = rep4.attrValue[attrValueKey];
+                    }
                     res.push(rep4)
                   }
                 })
@@ -679,9 +724,12 @@
                   brokerage_two: 0,
                   attrValue: { [v['attrName']]: vv }
                 }
-                Object.values(res[kk].attrValue).forEach((v, i) => {
-                  res[kk]['value' + i] = v
-                })
+                // Object.values(res[kk].attrValue).forEach((v, i) => {
+                //   res[kk]['value' + i] = v
+                // })
+                for (let attrValueKey in res[kk].attrValue) {
+                  res[kk][attrValueKey] = res[kk].attrValue[attrValueKey];
+                }
               })
             })
             data.push(dataArr.join('$&'))
@@ -722,13 +770,19 @@
               })
             })
           }
-          this.formValidate.attr = data
-        })
+          this.formValidate.attr = data;
+        });
       },
       // 商品分类；
       getCategorySelect() {
         categoryApi({ status: -1, type: 1 }).then(res => {
           this.merCateList = this.filerMerCateList(res)
+          let newArr = [];
+          res.forEach((value,index) => {
+            newArr[index] = value;
+            if(value.child) newArr[index].child = value.child.filter(item => item.status === true)
+          }) //过滤商品分类设置为隐藏的子分类不出现在树形列表里
+          this.merCateList = this.filerMerCateList(newArr)
         })
       },
       filerMerCateList(treeData) {
@@ -860,17 +914,27 @@
             /* eslint-disable */
             hash[next] ? '' : hash[next] = true && item.push(next);
             return item
-          }, [])
+          }, []);
           this.formValidate.attr[idx].inputVisible = false
         } else {
           this.$message.warning('请添加属性');
         }
       },
+      //点击展示所有多规格属性
+      showAllSku(){
+          if(this.isAttr == false){
+            this.isAttr = true;
+            if (this.formValidate.specType && this.isAttr) this.watCh(this.formValidate.attr) //重要！！！
+          }else if(this.isAttr == true){
+            this.isAttr = false;
+            this.getInfo();
+          }
+      },
       // 详情
       getInfo () {
         this.fullscreenLoading = true
         productDetailApi(this.$route.params.id).then(async res => {
-          this.isAttr = true;
+          // this.isAttr = true;
           let info = res
           this.formValidate = {
             image: this.$selfUtil.setDomain(info.image),
@@ -891,6 +955,7 @@
             isBest: info.isBest,
             tempId: info.tempId,
             attr: info.attr,
+            attrValue: info.attrValue,
             selectRule: info.selectRule,
             isSub: info.isSub,
             content: this.$selfUtil.replaceImgSrcHttps(info.content),
@@ -902,6 +967,24 @@
             couponIds: info.couponIds,
             activity: info.activityStr ? info.activityStr.split(',') : ['默认','秒杀','砍价','拼团']
           }
+          marketingSendApi({type:3}).then(res=>{
+            if(this.formValidate.couponIds !== null){
+              let ids = this.formValidate.couponIds.toString();
+              let arr = res.list;
+              let obj = {};
+              for (let i in arr) {
+                obj[arr[i].id] = arr[i];
+              }
+              let strArr = ids.split(',');
+              let newArr = [];
+              for (let item of strArr) {
+                if (obj[item]) {
+                  newArr.push(obj[item]);
+                }
+              }
+              this.$set(this.formValidate,'coupons',newArr); //在编辑回显时，让返回数据中的优惠券id，通过接口匹配显示,
+            }
+          })
           let imgs = JSON.parse(info.sliderImage)
           let imgss = []
           Object.keys(imgs).map(i => {
@@ -921,35 +1004,55 @@
                 attrValue: item.attrValues.split(',')
               }
             })
-            this.ManyAttrValue = info.attrValues;
+            this.ManyAttrValue = info.attrValue;
             this.ManyAttrValue.forEach((val) => {
-              val.image = this.$selfUtil.setDomain(val.image)
-              this.attrInfo[Object.values(val.attrValue).sort().join('/')] = val
+              val.image = this.$selfUtil.setDomain(val.image);
+              val.attrValue = JSON.parse(val.attrValue);
+              this.attrInfo[Object.values(val.attrValue).sort().join('/')] = val;
             })
+            /***多规格商品如果被删除过sku，优先展示api返回的数据,否则会有没有删除的错觉***/
+            let manyAttr = this.attrFormat(this.formValidate.attr)
+            if(manyAttr.length !== this.ManyAttrValue.length){
+              this.$set(this,'showAll',true)
+              this.isAttr = false;
+            }else{
+              this.isAttr = true;
+            }
+            /*******/
             const tmp = {}
             const tmpTab = {}
             this.formValidate.attr.forEach((o, i) => {
-              tmp['value' + i] = { title: o.attrName }
-              tmpTab['value' + i] = ''
+              // tmp['value' + i] = { title: o.attrName }
+              // tmpTab['value' + i] = ''
+              tmp[o.attrName] = { title: o.attrName };
+              tmpTab[o.attrName] = '';
             })
+
+            // 此处手动实现后台原本value0 value1的逻辑
+            this.formValidate.attrValue.forEach(item => {
+              for (let attrValueKey in item.attrValue) {
+               item[attrValueKey] = item.attrValue[attrValueKey];
+              }
+            });
+
             this.manyTabTit = tmp
             this.manyTabDate = tmpTab
             this.formThead = Object.assign({}, this.formThead, tmp)
           }else{
             this.OneattrValue = info.attrValue
-            this.formValidate.attr = []
+            // this.formValidate.attr = [] //单规格商品规格设置为空
           }
           this.fullscreenLoading = false
         }).catch(res => {
           this.fullscreenLoading = false
           this.$message.error(res.message);
-        })
+        });
       },
       handleRemove (i) {
         this.formValidate.sliderImages.splice(i, 1)
       },
       // 点击商品图
-      modalPicTap (tit, num, i) {
+      modalPicTap (tit, num, i,status) {
         const _this = this;
         if(_this.isDisabled) return;
         this.$modalUpload(function(img) {
@@ -993,18 +1096,31 @@
         })
       },
       // 提交
-      handleSubmit (name) {
+      handleSubmit:Debounce(function(name) {
         this.onChangeGroup()
         if( this.formValidate.specType && this.formValidate.attr.length < 1 ) return this.$message.warning("请填写多规格属性！");
         this.formValidate.cateId = this.formValidate.cateIds.join(',')
         this.formValidate.sliderImage = JSON.stringify(this.formValidate.sliderImages)
         if(this.formValidate.specType){
-          this.formValidate.attrValue=this.ManyAttrValue
-          for (var i = 0; i < this.formValidate.attr.length; i++) {
-            this.formValidate.attr[i].attrValues = this.formValidate.attr[i].attrValue.join(',')
+          this.formValidate.attrValue=this.ManyAttrValue;
+          this.formValidate.attr = this.formValidate.attr.map((item) =>{
+            return {
+              attrName:item.attrName,
+              id:item.id,
+              attrValues:item.attrValue.join(','),
+            }
+          })
+          for (var i = 0; i < this.formValidate.attrValue.length; i++) {
+            this.$set(this.formValidate.attrValue[i],'id',0);
+            this.$set(this.formValidate.attrValue[i],'productId',0);
+            this.$set(this.formValidate.attrValue[i],'attrValue',JSON.stringify(this.formValidate.attrValue[i].attrValue)); //
+            delete this.formValidate.attrValue[i].value0
           }
         }else{
-          this.formValidate.attr = []
+          this.formValidate.attr = [{attrName:'规格',attrValues:'默认',id: this.$route.params.id? this.formValidate.attr[0].id : 0}]
+          this.OneattrValue.map(item => {
+            this.$set(item, 'attrValue', JSON.stringify({'规格':'默认'}))
+          })
           this.formValidate.attrValue=this.OneattrValue
         }
         this.$refs[name].validate((valid) => {
@@ -1033,8 +1149,8 @@
               this.$message.warning("请填写完整商品信息！");
             }
           }
-        })
-      },
+        });
+      }),
       // 表单验证
       validate (prop, status, error) {
         if (status === false) {
@@ -1076,7 +1192,47 @@
           newItems.splice(dst, 0, ...newItems.splice(src, 1))
           this.formValidate.activity = newItems;
         }
-      }
+      },
+      getGoodsType(){
+        /** 让商品推荐列表的name属性与页面设置tab的name匹配**/
+        goodDesignList({gid:70}).then((response)=>{
+          let list = response.list;
+          let arr = [],arr1 = [];
+          const listArr = [{ name: '是否热卖', value: 'isGood' }];
+          let typeLists = [ 
+            { name: '', value: 'isHot',type:'2' },   //热门榜单 
+            { name: '', value: 'isBenefit' ,type:'4'}, //促销单品
+            { name: '', value: 'isBest',type:'1' }, //精品推荐
+            { name: '', value: 'isNew',type:'3' }]; //首发新品
+          list.forEach((item)=>{
+            let obj = {};
+            obj.value = JSON.parse(item.value);
+            obj.id = item.id;
+            obj.gid = item.gid;
+            obj.status = item.status;
+            arr.push(obj);
+          })
+          arr.forEach((item1)=>{
+            let obj1 = {};
+            obj1.name = item1.value.fields[1].value;
+            obj1.status = item1.status;
+            obj1.type = item1.value.fields[3].value;
+            arr1.push(obj1);
+          })
+          typeLists.forEach((item)=>{
+            arr1.forEach((item1)=>{
+              if(item.type == item1.type){
+                listArr.push({
+                  name:item1.name,
+                  value:item.value,
+                  type:item.type
+                })
+              }
+            })
+          })
+          this.recommend = listArr
+        })
+      },
     }
   }
 </script>
@@ -1091,7 +1247,10 @@
       margin-left: 120px !important;
     }
   }
-
+  .priamry_border{
+    border: 1px solid #1890FF;
+    color: #1890FF;
+  }
   .color-item{
     height: 30px;
     line-height: 30px;
@@ -1180,6 +1339,10 @@
       width: 100%;
       height: 100%;
     }
+    video{
+      width: 100%;
+      height: 100%;
+    }
   }
   .btndel{
     position: absolute;
@@ -1196,4 +1359,35 @@
       width: auto !important;
     }
   }
+  .iview-video-style {
+  width: 300px;
+  height: 180px;
+  border-radius: 10px;
+  background-color: #707070;
+  margin: 0 120px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.iview-video-style .iconv {
+  color: #fff;
+  line-height: 180px;
+  width: 50px;
+  height: 50px;
+  display: inherit;
+  font-size: 26px;
+  position: absolute;
+  top: -74px;
+  left: 50%;
+  margin-left: -25px;
+}
+
+.iview-video-style .mark {
+  position: absolute;
+  width: 100%;
+  height: 30px;
+  top: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
 </style>
