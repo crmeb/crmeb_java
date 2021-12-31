@@ -4,7 +4,7 @@
       <div class="order-num acea-row row-between-wrapper">
         <div class="num line1">订单号：{{ orderId }}</div>
         <div class="name line1">
-          <span class="iconfont icon-yonghu2"></span>{{ delivery.nickname }}
+          <span class="iconfont iconios-contact"></span>{{ delivery.nikeName }}
         </div>
       </div>
       <div class="address">

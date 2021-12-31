@@ -8,18 +8,26 @@
           <div class="dashboard-workplace-header-tip">
             <div class="dashboard-workplace-header-tip-title">{{ smsAccount }}，祝您每一天开心！</div>
             <div class="dashboard-workplace-header-tip-desc">
-              <span class="mr10" @click="onChangePassswordIndex">修改密码</span>
-              <span class="mr10" @click="onChangePhone">修改手机号</span>
-              <span @click="signOut" class="mr10">退出登录</span>
-              <el-tooltip class="item" effect="dark" content="
+              <span class="mr10" @click="onChangePassswordIndex" v-if="checkPermi(['admin:pass:update:password'])">修改密码</span>
+              <span class="mr10" @click="onChangePhone" v-if="checkPermi(['admin:pass:update:phone'])">修改手机号</span>
+              <span @click="signOut" class="mr10" v-if="checkPermi(['admin:pass:logout'])">退出登录</span>
+              <!-- <el-tooltip class="item" effect="dark" content="
               一号通为我司一个第三方平台
               专门提供短信 ， 物流查询，商品复制，电子面单等个性化服务
               省去了自己单独接入功能的麻烦
               初次运行代码默认是没有账号的，需要自行注册，
               登录成功后根据提示购买自己需要用到的服务即可" placement="right">
                 <span class="mr10">平台说明</span>
-              </el-tooltip>
-
+              </el-tooltip> -->
+              <template>
+                <el-popover trigger="hover" placement="right" >
+                  <span class="mr10" slot="reference">平台说明</span>
+                  <div class="pup_card">
+                    一号通为我司一个第三方平台专门提供短信 ， 物流查询，商品复制，电子面单等个性化服务省去了自己单独接入功能的麻烦初次运行代码默认是没有账号的，需要自行注册，
+                    登录成功后根据提示购买自己需要用到的服务即可
+                  </div>
+                </el-popover>
+              </template>
             </div>
           </div>
         </div>
@@ -29,22 +37,22 @@
               <div class="header-extra">
                 <p class="mb5"><span>短信条数</span></p>
                 <p class="mb5">{{sms.num || 0}}</p>
-                <el-button size="mini" type="primary" @click="sms.open ===0?onOpen('sms'):mealPay('sms')" v-text="sms.open ===0?'开通服务':'套餐购买'"></el-button>
+                <el-button size="mini" type="primary" @click="sms.open ===0?onOpen('sms'):mealPay('sms')" v-text="sms.open ===0?'开通服务':'套餐购买'" v-hasPermi="['admin:pass:meal:code', 'admin:pass:service:open']"></el-button>
               </div>
               <div class="header-extra">
                 <p class="mb5"><span>采集次数</span></p>
                 <p class="mb5">{{copy.num || 0}}</p>
-                <el-button size="mini" type="primary" @click="copy.open ===0?onOpen('copy'):mealPay('copy')" v-text="copy.open ===0?'开通服务':'套餐购买'"></el-button>
+                <el-button size="mini" type="primary" @click="copy.open ===0?onOpen('copy'):mealPay('copy')" v-text="copy.open ===0?'开通服务':'套餐购买'" v-hasPermi="['admin:pass:meal:code', 'admin:pass:service:open']"></el-button>
               </div>
               <div class="header-extra">
                 <p class="mb5"><span>物流查询次数</span></p>
                 <p class="mb5">{{query.num || 0}}</p>
-                <el-button size="mini" type="primary" @click="query.open ===0?onOpen('expr_query'):mealPay('expr_query')" v-text="query.open ===0?'开通服务':'套餐购买'"></el-button>
+                <el-button size="mini" type="primary" @click="query.open ===0?onOpen('expr_query'):mealPay('expr_query')" v-text="query.open ===0?'开通服务':'套餐购买'" v-hasPermi="['admin:pass:meal:code', 'admin:pass:service:open']"></el-button>
               </div>
               <div class="header-extra" style="border: none;">
                 <p class="mb5"><span>面单打印次数</span> </p>
                 <p class="mb5">{{dump.num || 0}}</p>
-                <el-button size="mini" type="primary" @click="dump.open ===0?onOpen('expr_dump'):mealPay('expr_dump')" v-text="dump.open ===0?'开通服务':'套餐购买'"></el-button>
+                <el-button size="mini" type="primary" @click="dump.open ===0?onOpen('expr_dump'):mealPay('expr_dump')" v-text="dump.open ===0?'开通服务':'套餐购买'" v-hasPermi="['admin:pass:meal:code', 'admin:pass:service:open']"></el-button>
               </div>
             </div>
           </div>
@@ -70,6 +78,7 @@ import forgetPassword from './components/forgetPassword';
 import forgetPhone from './components/forgetPhone';
 import { logoutApi, smsNumberApi, smsInfoApi } from '@/api/sms'
 import { mapGetters } from 'vuex'
+import { checkPermi } from "@/utils/permission"; // 权限判断函数
 export default {
   name: 'SmsConfig',
   components: { tableList, loginFrom, registerFrom, forgetPassword, forgetPhone },
@@ -91,7 +100,7 @@ export default {
       query: { open: 0 }, // 物流查询
       dump: { open: 0 }, // 电子面单打印
       copy: { open: 0 }, // 商品采集,
-      infoData: {}
+      infoData: {},
     }
   },
   computed: {
@@ -108,6 +117,7 @@ export default {
     // }
   },
   methods: {
+    checkPermi,
     // 开通服务
     openService (val) {
       this.getNumber();
@@ -303,4 +313,17 @@ export default {
     font-size: 12px;
     color: #808695;
   }
+  .text_overflow{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pup_card{
+  width: 240px;
+  border-radius: 5px;
+  padding: 5px;
+  box-sizing: border-box;
+  font-size: 12px;
+  line-height: 16px;
+}
 </style>

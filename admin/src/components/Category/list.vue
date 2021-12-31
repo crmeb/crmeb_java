@@ -5,7 +5,6 @@
         ref="tree"
         :data="treeList"
         show-checkbox
-        check-strictly
         node-key="id"
         @check="getCurrentNode"
         :default-checked-keys="selectModelKeysNew"
@@ -23,12 +22,6 @@
                     <el-option label="全部" :value="-1"></el-option>
                     <el-option label="显示" :value="1"></el-option>
                     <el-option label="不显示" :value="0"></el-option>
-                    <!--<el-option-->
-                      <!--v-for="item in constants.roleListStatus"-->
-                      <!--:key="item.value"-->
-                      <!--:label="item.label"-->
-                      <!--:value="item.value"-->
-                    <!--/>-->
                   </el-select>
                 </el-form-item>
                 <el-form-item label="名称：">
@@ -38,7 +31,7 @@
                 </el-form-item>
               </el-form>
             </div>
-            <el-button size="mini" type="primary" @click="handleAddMenu({id:0,name:'顶层目录'})">新增{{ biztype.name }}</el-button>
+            <el-button size="mini" type="primary" @click="handleAddMenu({id:0,name:'顶层目录'})" v-hasPermi="['admin:category:save']" >新增{{ biztype.name }}</el-button>
           </div>
           <el-table
             ref="treeList"
@@ -49,7 +42,7 @@
             row-key="id"
             :tree-props="{children: 'child', hasChildren: 'hasChildren'}"
           >
-            <el-table-column prop="name" label="名称" min-width="200">
+            <el-table-column prop="name" label="名称" min-width="240">
               <template slot-scope="scope">
                 {{ scope.row.name }} | {{ scope.row.id }}
               </template>
@@ -70,7 +63,9 @@
                       style="width: 36px; height: 36px"
                       :src="scope.row.extra"
                       :preview-src-list="[scope.row.extra]"
+                      v-if="scope.row.extra"
                     />
+                    <img style="width: 36px; height: 36px" v-else :src="defaultImg" alt="">
                   </div>
                 </template>
               </el-table-column>
@@ -84,7 +79,8 @@
                 label="状态"
                 min-width="150"
               >
-                <template slot-scope="scope">
+              <!--  -->
+                <template slot-scope="scope" v-if="checkPermi(['admin:category:update:status'])">
                   <el-switch
                     v-model="scope.row.status"
                     :active-value="true"
@@ -95,11 +91,7 @@
                   />
                 </template>
               </el-table-column>
-              <!--<el-table-column label="启用状态" width="150">-->
-                <!--<template slot-scope="scope">-->
-                  <!--<span>{{ scope.row.status | filterYesOrNo }}</span>-->
-                <!--</template>-->
-              <!--</el-table-column>-->
+             
               <el-table-column label="操作" min-width="200" fixed="right">
                 <template slot-scope="scope">
                   <el-button
@@ -108,8 +100,8 @@
                     size="small"
                     @click="handleAddMenu(scope.row)"
                   >添加子目录</el-button>
-                  <el-button type="text"  size="small" @click="handleEditMenu(scope.row)">编辑</el-button>
-                  <el-button type="text"  size="small" @click="handleDelMenu(scope.row)">删除</el-button>
+                  <el-button type="text"  size="small" @click="handleEditMenu(scope.row)"  v-hasPermi="['admin:category:info']">编辑</el-button>
+                  <el-button type="text"  size="small" @click="handleDelMenu(scope.row)"  v-hasPermi="['admin:category:delete']">删除</el-button>
                 </template>
               </el-table-column>
             </template>
@@ -141,6 +133,7 @@ import * as categoryApi from '@/api/categoryApi.js'
 import info from './info'
 import edit from './edit'
 import * as selfUtil from '@/utils/ZBKJIutil.js'
+import { checkPermi, checkRole } from "@/utils/permission";
 export default {
   // name: "list"
   components: { info, edit },
@@ -163,9 +156,6 @@ export default {
       type: Boolean,
       default: false
     },
-    // selectModelKeys: {
-    //   type: String
-    // },
     selectModelKeys: {
       type: Array
     },
@@ -179,9 +169,9 @@ export default {
       treeProps: {
         label: 'name',
         children: 'child',
-        expandTrigger: 'hover',
-        checkStrictly: true,
-        emitPath: false
+        // expandTrigger: 'hover',
+        // checkStrictly: false,
+        // emitPath: false
       },
       // treeCheckedKeys:[],// 选择模式下的属性结构默认选中
       multipleSelection: [],
@@ -205,7 +195,8 @@ export default {
       viewInfoConfig: {
         data: null,
         visible: false
-      }
+      },
+      defaultImg:require('@/assets/imgs/moren.jpg')
     }
   },
   mounted() {
@@ -217,6 +208,7 @@ export default {
     // }
   },
   methods: {
+    checkPermi, //权限控制
     onchangeIsShow(row){
       categoryApi.categroyUpdateStatus( row.id ).then(() => {
         this.$message.success('修改成功')
@@ -241,7 +233,7 @@ export default {
     getCurrentNode(data) {
       let node = this.$refs.tree.getNode(data);
       this.childNodes(node);
-      this.parentNodes(node);
+      // this.parentNodes(node);
       //是否编辑的表示
       // this.ruleForm.isEditorFlag = true;
       //编辑时候使用
@@ -320,7 +312,7 @@ export default {
       // this.multipleSelection =  checkedKeys.concat(halfCheckedKeys)
       this.multipleSelection = checkedKeys
       this.$emit('rulesSelect', this.multipleSelection)
-    }
+    },
   }
 }
 </script>

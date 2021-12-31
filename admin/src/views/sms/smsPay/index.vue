@@ -1,19 +1,18 @@
 <template>
-  <div class="divBox">
+  <div class="divBox relative">
     <el-card class="box-card">
-      <router-link :to="{path:'/operation/onePass'}">
-        <el-button class="mb35" size="mini" icon="el-icon-arrow-left">返回</el-button>
-      </router-link>
-
       <el-tabs v-model="tableFrom.type" @tab-click="onChangeType" class="mb20">
         <el-tab-pane label="短信" name="sms"></el-tab-pane>
         <el-tab-pane label="商品采集" name="copy"></el-tab-pane>
         <el-tab-pane label="物流查询" name="expr_query"></el-tab-pane>
         <el-tab-pane label="电子面单打印" name="expr_dump"></el-tab-pane>
       </el-tabs>
+      <router-link :to="{path:'/operation/onePass'}">
+          <el-button class="link_abs" size="mini" icon="el-icon-arrow-left">返回</el-button>
+        </router-link>
       <el-row v-loading="fullscreenLoading" :gutter="16">
         <el-col :span="24" class="ivu-text-left mb20">
-          <el-col :xs="12" :sm="6" :md="4" :lg="3" class="mr20">
+          <el-col :xs="12" :sm="6" :md="4" :lg="2" class="mr20">
             <span class="ivu-text-right ivu-block">短信账户名称：</span>
           </el-col>
           <el-col :xs="11" :sm="13" :md="19" :lg="20">
@@ -21,7 +20,7 @@
           </el-col>
         </el-col>
         <el-col :span="24" class="ivu-text-left mb20">
-          <el-col :xs="12" :sm="6" :md="4" :lg="3" class="mr20">
+          <el-col :xs="12" :sm="6" :md="4" :lg="2" class="mr20">
             <span class="ivu-text-right ivu-block">当前剩余条数：</span>
           </el-col>
           <el-col :xs="11" :sm="13" :md="19" :lg="20">
@@ -29,7 +28,7 @@
           </el-col>
         </el-col>
         <el-col :span="24" class="ivu-text-left mb20">
-          <el-col :xs="12" :sm="6" :md="4" :lg="3" class="mr20">
+          <el-col :xs="12" :sm="6" :md="4" :lg="2" class="mr20">
             <span class="ivu-text-right ivu-block">选择套餐：</span>
           </el-col>
           <el-col :xs="11" :sm="13" :md="19" :lg="20">
@@ -37,9 +36,8 @@
               <el-col
                 v-for="(item, index) in list"
                 :key="index"
-                :xxl="4"
-                :xl="8"
-                :lg="8"
+                :xl="6"
+                :lg="6"
                 :md="12"
                 :sm="24"
                 :xs="24"
@@ -59,7 +57,7 @@
           </el-col>
         </el-col>
         <el-col v-if="checkList" :span="24" class="ivu-text-left mb20">
-          <el-col :xs="12" :sm="6" :md="4" :lg="3" class="mr20">
+          <el-col :xs="12" :sm="6" :md="4" :lg="2" class="mr20">
             <span class="ivu-text-right ivu-block">充值条数：</span>
           </el-col>
           <el-col :xs="11" :sm="13" :md="19" :lg="20">
@@ -67,7 +65,7 @@
           </el-col>
         </el-col>
         <el-col v-if="checkList" :span="24" class="ivu-text-left mb20">
-          <el-col :xs="12" :sm="6" :md="4" :lg="3" class="mr20">
+          <el-col :xs="12" :sm="6" :md="4" :lg="2" class="mr20">
             <span class="ivu-text-right ivu-block">支付金额：</span>
           </el-col>
           <el-col :xs="11" :sm="13" :md="19" :lg="20">
@@ -75,7 +73,7 @@
           </el-col>
         </el-col>
         <el-col :span="24" class="ivu-text-left mb20">
-          <el-col :xs="12" :sm="6" :md="4" :lg="3" class="mr20">
+          <el-col :xs="12" :sm="6" :md="4" :lg="2" class="mr20">
             <span class="ivu-text-right ivu-block">付款方式：</span>
           </el-col>
           <el-col :xs="11" :sm="13" :md="19" :lg="20">
@@ -83,7 +81,7 @@
           </el-col>
         </el-col>
         <el-col :span="24">
-          <el-col :xs="12" :sm="6" :md="4" :lg="3" class="mr20">&nbsp;</el-col>
+          <el-col :xs="12" :sm="6" :md="4" :lg="2" class="mr20">&nbsp;</el-col>
           <el-col :xs="11" :sm="13" :md="19" :lg="20">
             <div class="list-goods-list-item-code mr20">
 <!--              <img :src="code.code_url">-->
@@ -128,7 +126,7 @@ export default {
   },
   mounted() {
     if (!this.isLogin) {
-      this.$router.push('/operation/onePass?url=' + this.$route.path)
+      // this.$router.push('/operation/onePass?url=' + this.$route.path)
     } else {
       this.getNumber()
       this.getPrice()
@@ -231,9 +229,13 @@ export default {
   }
   .list-goods-list-item{
     border: 1px solid #DADFE6;
-    padding: 20px 10px;
+    height: 118px;
     box-sizing: border-box;
-    border-radius:3px;
+    border-radius:4px;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
   }
   .list-goods-list{
     &-item{
@@ -252,7 +254,7 @@ export default {
         font-size: 16px;
         font-weight: bold;
         color: #0091FF;
-        margin-bottom: 3px;
+        margin-bottom: 15px;
         i{
           font-size: 30px;
           font-style: normal;
@@ -260,7 +262,7 @@ export default {
       }
       &-desc{
         font-size: 14px;
-        color: #808695;
+        color: #303133;
       }
       &-price{
         font-size: 14px;
@@ -291,5 +293,13 @@ export default {
         }
       }
     }
+  }
+  .relative{
+    position: relative;
+  }
+  .link_abs{
+    position: absolute;
+    top: 36px;
+    right: 40px;
   }
 </style>
