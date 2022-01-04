@@ -1,6 +1,6 @@
 # CRMEB 相关配置
 crmeb:
-  version: CRMEB-JAVA-KY-v1.3.2 # 当前代码版本
+  version: CRMEB-JAVA-KY-v1.3.4 # 当前代码版本
 
 server:
   port: 20011

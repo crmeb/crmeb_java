@@ -1,6 +1,6 @@
 # CRMEB 相关配置
 crmeb:
-  version: CRMEB-JAVA-KY-v1.3.2 # 当前代码版本
+  version: CRMEB-JAVA-KY-v1.3.4 # 当前代码版本
   domain: #配合swagger使用 # 待部署域名
   wechat-api-url:  #请求微信接口中专服务器
   wechat-js-api-debug: false #微信js api系列是否开启调试模式
