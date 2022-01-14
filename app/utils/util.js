@@ -453,7 +453,7 @@ export default {
 				uni.showLoading({
 					title: '图片上传中',
 				});
-				let urlPath = HTTP_ADMIN_URL + '/admin/upload/image' + "?model=" + model + "&pid=" + pid
+				let urlPath = HTTP_ADMIN_URL + '/api/admin/upload/image' + "?model=" + model + "&pid=" + pid
 				let localPath = res.tempFilePaths[0];
 				uni.uploadFile({
 					url: urlPath,
