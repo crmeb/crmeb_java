@@ -1,12 +1,12 @@
 
-let domain = 'https://xxx.xxx'
+let domain = 'xxx.xxx'
 
 module.exports = {
 	// 请求域名 格式： https://您的域名
 	// #ifdef MP
 		HTTP_REQUEST_URL: domain,
 	// #endif
-	HTTP_ADMIN_URL:'https://xxx.xxx.xxx', //PC后台的API请求地址，上传图片用
+	HTTP_ADMIN_URL:'xxx.xxx.xxx', //PC后台的API请求地址，上传图片用
 	// #ifdef H5
 		//H5接口是浏览器地址
 		// HTTP_REQUEST_URL: window.location.protocol+"//"+window.location.host,
