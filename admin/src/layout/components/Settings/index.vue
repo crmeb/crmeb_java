@@ -126,7 +126,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/deep/ .el-switch{
+::v-deep .el-switch{
   width: 40px;
 }
 .drawer-container {
