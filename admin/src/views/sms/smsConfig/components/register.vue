@@ -167,7 +167,7 @@ export default {
   .captcha{
     display: flex;
     align-items: flex-start;
-    /deep/.el-form-item__content{
+    ::v-deep.el-form-item__content{
       width: 100%;
     }
   }
@@ -213,7 +213,7 @@ export default {
     color: $dark_gray;
     cursor: pointer;
     user-select: none;
-    /deep/.svg-icon {
+    ::v-deep.svg-icon {
       vertical-align: 0.3em;
     }
   }
