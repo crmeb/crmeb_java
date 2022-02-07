@@ -1,5 +1,5 @@
 import request from "@/utils/request.js";
-
+import Cache from "@/utils/cache.js"
 /**
  * 获取用户信息
  * 
@@ -437,4 +437,23 @@ export function extractUser() {
  * */
 export function spreadPeoCount() {
   return request.get("spread/people/count");
+}
+
+/*
+统计
+*
+*/
+export function computeUser(){
+	uni.request({
+	    url: document.location.protocol + '//shop.crmeb.net/index.php/admin/server.upgrade_api/updatewebinfo',
+		method:'POST',
+		data: {
+	        host:window.location.host,
+			https:document.location.protocol,
+			version:'CRMEB-JAVA-KY-V2.0',
+			ip:Cache.has('Ip') ? Cache.get('Ip') : ''
+	    },
+		dataType:'json',
+	    success: (res) => {}
+	});
 }
