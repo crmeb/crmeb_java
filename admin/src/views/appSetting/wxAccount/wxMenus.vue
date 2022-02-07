@@ -312,7 +312,7 @@
 
 <style scoped lang="scss">
   .menuBox{
-    /deep/.el-button{
+    ::v-deep.el-button{
       border: none;
       background: bottom;
       padding: 0 !important;

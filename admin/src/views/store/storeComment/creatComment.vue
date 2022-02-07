@@ -217,7 +217,7 @@
 
 <style scoped lang="scss">
   .productScore{
-    /deep/.el-rate{
+    ::v-deep.el-rate{
       line-height: 2.4;
     }
   }

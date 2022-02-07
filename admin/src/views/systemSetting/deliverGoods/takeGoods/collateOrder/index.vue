@@ -241,7 +241,7 @@
 
 <style lang="scss" scoped>
   .demo-table-expand{
-    /deep/ label{
+    ::v-deep label{
       width: 83px !important;
     }
   }

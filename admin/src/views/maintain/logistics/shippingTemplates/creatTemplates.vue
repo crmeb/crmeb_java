@@ -496,12 +496,12 @@ export default {
     width: 50%;
   }
   .noBox{
-    /deep/.el-form-item__content{
+    ::v-deep.el-form-item__content{
       margin-left: 0 !important;
     }
   }
   .tempBox{
-    /deep/.el-input-number--mini{
+    ::v-deep.el-input-number--mini{
      width: 100px !important;
     }
   }

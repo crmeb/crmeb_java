@@ -212,7 +212,7 @@ export default {
       font-size: 12px;
       color: #606266;
     }
-    /deep/ .el-divider--horizontal {
+    ::v-deep .el-divider--horizontal {
       margin: 12px 0 !important;
     }
   }
