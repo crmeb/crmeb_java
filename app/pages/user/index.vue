@@ -125,22 +125,12 @@
 <script>
 	let sysHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
 	import Cache from '@/utils/cache';
-	import {
-		BACK_URL
-	} from '@/config/cache';
-	import {
-		getMenuList
-		// setVisit
-	} from '@/api/user.js';
-	import {
-		orderData
-	} from '@/api/order.js';
-	import {
-		toLogin
-	} from '@/libs/login.js';
-	import {
-		mapGetters
-	} from "vuex";
+	import {BACK_URL} from '@/config/cache';
+	import {getMenuList} from '@/api/user.js';
+	import {orderData} from '@/api/order.js';
+	import {toLogin} from '@/libs/login.js';
+	import {getCity} from '@/api/api.js';
+	import {mapGetters} from "vuex";
 	// #ifdef H5
 	import Auth from '@/libs/wechat';
 	// #endif
@@ -218,6 +208,7 @@
 			that.$set(that, 'pageHeight', app.globalData.windowHeight);
 			// #endif
 			that.$set(that, 'MyMenus', app.globalData.MyMenus);
+			if (!this.$Cache.has('cityList')) this.getCityList();
 			if (that.isLogin == false) {
 				// #ifdef H5
 				toLogin()
@@ -355,6 +346,18 @@
 					this.openAuto()
 					// #endif
 				}
+			},
+			// 获取地址数据
+			getCityList: function() {
+				let that = this;
+				getCity().then(res => {
+					let oneDay = 24 * 3600 * 1000;
+					this.$Cache.setItem({
+						name: 'cityList',
+						value: res.data,
+						expires: oneDay * 7
+					}); //设置七天过期时间
+				})
 			}
 		}
 	}
