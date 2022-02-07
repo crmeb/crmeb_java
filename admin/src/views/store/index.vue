@@ -315,12 +315,12 @@ export default {
   //  z-index: 3333 !important;
   }
   .demo-table-expand{
-    /deep/ label{
+    ::v-deep label{
       width: 82px;
     }
   }
   .demo-table-expand{
-    /deep/ .el-form-item__content{
+    ::v-deep .el-form-item__content{
       width: 77%;
     }
   }

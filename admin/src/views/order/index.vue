@@ -640,7 +640,7 @@
     table-layout: fixed !important;
   }
   .demo-table-expand{
-    /deep/label{
+    ::v-deeplabel{
       width: 83px !important;
     }
   }

@@ -90,7 +90,7 @@
 
 <style scoped lang="scss">
   .acea-row{
-    /deep/.el-avatar--small {
+    ::v-deep.el-avatar--small {
       width: 22px;
       height: 22px;
       line-height: 22px;
@@ -118,7 +118,7 @@
     font-size: 14px;
   }
   .dashboard-console-visit {
-    /deep/.el-card__header{
+    ::v-deep.el-card__header{
       padding: 14px 20px !important;
     }
     ul {

@@ -1238,12 +1238,12 @@
 </script>
 <style scoped lang="scss">
   .disLabel{
-    /deep/.el-form-item__label{
+    ::v-deep.el-form-item__label{
       margin-left: 36px !important;
     }
   }
   .disLabelmoren{
-    /deep/.el-form-item__label{
+    ::v-deep.el-form-item__label{
       margin-left: 120px !important;
     }
   }
@@ -1271,7 +1271,7 @@
     background-color: #ed4014;
   }
   .proCoupon{
-    /deep/.el-form-item__content{
+    ::v-deep.el-form-item__content{
       margin-top: 5px;
     }
   }
@@ -1284,30 +1284,30 @@
     }
   }
   .noLeft{
-    /deep/.el-form-item__content{
+    ::v-deep.el-form-item__content{
       margin-left: 0 !important;
     }
   }
   .tabNumWidth{
-    /deep/.el-input-number--medium{
+    ::v-deep.el-input-number--medium{
       width: 121px !important;
     }
-    /deep/.el-input-number__increase{
+    ::v-deep.el-input-number__increase{
       width: 20px !important;
       font-size: 12px !important;
     }
-    /deep/.el-input-number__decrease{
+    ::v-deep.el-input-number__decrease{
       width: 20px !important;
       font-size: 12px !important;
     }
-    /deep/.el-input-number--medium .el-input__inner {
+    ::v-deep.el-input-number--medium .el-input__inner {
       padding-left: 25px !important;
       padding-right: 25px !important;
     }
-    /deep/ thead{
+    ::v-deep thead{
       line-height: normal !important;
     }
-    /deep/ .el-table .cell{
+    ::v-deep .el-table .cell{
       line-height: normal !important;
     }
   }
@@ -1353,7 +1353,7 @@
     top: -4px;
   }
   .labeltop{
-    /deep/.el-form-item__label{
+    ::v-deep.el-form-item__label{
       float: none !important;
       display: inline-block !important;
       width: auto !important;

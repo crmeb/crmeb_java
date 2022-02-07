@@ -999,7 +999,7 @@
 <style scoped lang="scss">
   /*.timeBox{*/
     /*width: 100%;*/
-    /*/deep/.el-form-item__content{*/
+    /*::v-deep.el-form-item__content{*/
       /*width: 87% !important;*/
     /*}*/
   /*}*/
@@ -1034,10 +1034,10 @@
   }
   .container{
     min-width: 821px;
-    /deep/.el-form-item{
+    ::v-deep.el-form-item{
       width: 100%;
     }
-    /deep/.el-form-item__content{
+    ::v-deep.el-form-item__content{
       width: 72%;
     }
   }
