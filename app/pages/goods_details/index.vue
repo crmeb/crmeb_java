@@ -279,6 +279,7 @@
 	import {
 		toLogin
 	} from '@/libs/login.js';
+	import {computeUser} from "@/api/user.js";
 	import {
 		mapGetters
 	} from "vuex";
@@ -427,6 +428,9 @@
 				that.retunTop = false
 			}
 			that.navH = app.globalData.navHeight;
+			// #ifdef H5
+			computeUser();
+			// #endif
 			// #ifdef MP || APP-PLUS
 			// 小程序链接进入获取绑定关系id
 			setTimeout(()=>{
