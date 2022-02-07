@@ -605,7 +605,7 @@ export default {
 
 <style lang="scss" scoped>
   /*@aaa: ~'>>>';*/
-  .order_box /deep/.ivu-form-item-content{
+  .order_box ::v-deep.ivu-form-item-content{
     margin-left: 50px!important;
   }
   .maxInpt{

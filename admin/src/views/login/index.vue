@@ -590,7 +590,7 @@ export default {
     color: $dark_gray;
     cursor: pointer;
     user-select: none;
-    /deep/.svg-icon {
+    ::v-deep.svg-icon {
       vertical-align: 0.3em;
     }
   }

@@ -311,7 +311,7 @@ export default {
       width: auto !important;
       height: 30px !important;
     }
-    /deep/.el-image__inner, .el-image__placeholder, .el-image__error {
+    ::v-deep.el-image__inner, .el-image__placeholder, .el-image__error {
       width: auto !important;
     }
   }

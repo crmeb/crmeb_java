@@ -737,7 +737,7 @@
 
 <style scoped lang="scss">
   .formValidate{
-    /deep/ .el-form-item__error{
+    ::v-deep .el-form-item__error{
       position: static !important;
     }
   }
