@@ -5,10 +5,9 @@ startTime=`date +'%Y-%m-%d %H:%M:%S'`
 
 #接口项目站点路径（目录按照各自配置）
 APP_PATH=/www/wwwroot/api.java.crmeb.net
-#APP_PATH=/Library/WebServer/Documents/zhongbang/java/crmeb/target
 
 #jar包文件名称
-APP_NAME=$APP_PATH/Crmeb.jar
+APP_NAME=$APP_PATH/Crmeb-front.jar
 
 #日志文件名称
 LOG_FILE=$APP_PATH/crmeb_out.log
@@ -48,7 +47,7 @@ if test -e $APP_NAME;then
   #通过检测日志来判断
   while [ -f $LOG_FILE ]
   do
-      success=`grep "Started CrmebApplication in " $LOG_FILE`
+      success=`grep "Started CrmebFrontApplication in " $LOG_FILE`
       if [[ "$success" != "" ]]
       then
 #          echo "Crmeb start ........."
@@ -84,43 +83,9 @@ echo "本次运行时间： "$total"s"
 echo "当前时间："$endTime
 
 
-  #消息推送到企业微信群
-  curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=4f7df494-cece-49c2-8e04-60610c937b4a' \
-   -H 'Content-Type: application/json' \
-   -d '
-   {
-    "msgtype": "text",
-    "text": {
-        "content": "Api项目部署成功！\n 耗时：'$total's \n 当前时间：'"$endTime"'",
-        "mentioned_list":["@all"]
-    }
-  }'
-
-##实时查看启动日志
-#  #tail -f $LOG_FILE
-#  pid1=;
-#  while [[ $pid1 = "" ]]
-#  do
-#    sleep 5
-#    pid1=`ps -ef|grep $APP_NAME | grep -v grep | awk '{print $2}'`
-#  done
-#
-#  sleep 5
-#  echo "发布成功！"
-#
-#  #消息推送到企业微信群
-#  curl 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=4f7df494-cece-49c2-8e04-60610c937b4a' \
-#   -H 'Content-Type: application/json' \
-#   -d '
-#   {
-#    "msgtype": "text",
-#    "text": {
-#        "content": "Api项目部署成功！",
-#        "mentioned_list":["@all"]
-#    }
-#  }'
+ 
 else
   echo '$APP_NAME 文件不存在,请检查。'
 fi
 
-#在 $APP_NAME 同级目录下运行  ./start.sh 命令即可启动项目。
+#在 $APP_NAME 同级目录下运行  ./startAdmin.sh 命令即可启动项目。
