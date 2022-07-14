@@ -19,10 +19,10 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
 网络营销的一款企业应用，更适合企业二次开发。
 
 ~~~~
-![](https://gitee.com/stivepeim/img4mk/raw/master/20210611144457.png)
+![](/crmeb/crmebimage/crmebimage/demoimage/01qiyejiangxiang.webp)
 
 ## 预览
-![二维码预览](https://gitee.com/stivepeim/img4mk/raw/master/20210624103552.jpg)
+![二维码预览](/crmeb/crmebimage/crmebimage/demoimage/02yulan.jpg)
 
 帮助手册：[https://doc.crmeb.com/web/java/crmeb_java](https://doc.crmeb.com/web/java/crmeb_java)
 
@@ -76,35 +76,32 @@ CRMEB JAVA 技术交流QQ群 1群 🈵️
 
 ## 移动端预览
 
-<!-- ![](https://gitee.com/stivepeim/img4mk/raw/master/20210204184108.jpg)
-![](https://gitee.com/stivepeim/img4mk/raw/master/20210204184109.jpg)
-![](https://gitee.com/stivepeim/img4mk/raw/master/20210204184110.jpg) -->
-![](https://gitee.com/stivepeim/img4mk/raw/master/20210611145305.png)
-![](https://gitee.com/stivepeim/img4mk/raw/master/20210611145407.png)
-![](https://gitee.com/stivepeim/img4mk/raw/master/20210611145443.png)
+![](/crmeb/crmebimage/crmebimage/demoimage/03-mobile-01.png)
+![](/crmeb/crmebimage/crmebimage/demoimage/04-mobile-02.png)
+![](/crmeb/crmebimage/crmebimage/demoimage/05-mobile-03.png)
 
 ## 功能图预览
-![项目基本功能介绍](https://gitee.com/stivepeim/img4mk/raw/master/20201225180349.jpeg)
+![项目基本功能介绍](/crmeb/crmebimage/crmebimage/demoimage/06-optionList.jpg)
 
 ## WEB PC 管理端预览
-![控制台](https://gitee.com/stivepeim/img4mk/raw/master/20210202174310.png)
-![商品管理](https://gitee.com/stivepeim/img4mk/raw/master/20210202174420.png)
-![订单管理](https://gitee.com/stivepeim/img4mk/raw/master/20210202174559.png)
-![复制第三方平台商品](https://gitee.com/stivepeim/img4mk/raw/master/20210202175224.png)
-![营销功能](https://gitee.com/stivepeim/img4mk/raw/master/20210202175547.png)
-![自定义表单组件](https://gitee.com/stivepeim/img4mk/raw/master/20210202175013.png)
+![控制台](/crmeb/crmebimage/crmebimage/demoimage/07-pc-01.png)
+![商品管理](/crmeb/crmebimage/crmebimage/demoimage/08-pc-02.png)
+![订单管理](/crmeb/crmebimage/crmebimage/demoimage/09-pc-03.png)
+![复制第三方平台商品](/crmeb/crmebimage/crmebimage/demoimage/10-pc-04.png)
+![营销功能](/crmeb/crmebimage/crmebimage/demoimage/11-pc-05.png)
+![自定义表单组件](/crmeb/crmebimage/crmebimage/demoimage/12-pc-06.png)
 
 # 商业版特色小功能
 ## 页面设计
 
-![页面设计](https://image.java.crmeb.net/crmebimage/public/maintain/2021/12/14/19a3e00460cd4d64a770264731bc900dy3q6c4ywcg.gif)
+![页面设计](/crmeb/crmebimage/crmebimage/demoimage/13yemiandesiner.gif)
 
 ## 一键换色
-![一键换色](https://image.java.crmeb.net/crmebimage/public/maintain/2021/12/14/1cd62b4180154f979c24eb5e696789cabcsoyw8qhx.gif)
+![一键换色](/crmeb/crmebimage/crmebimage/demoimage/13yemiandesiner.gif)
 
 ## WEB PC 更多便捷操作方式
 
-![](https://image.java.crmeb.net/crmebimage/public/maintain/2021/12/14/5bd7415b287f4de0b2d4027e19beb06aetzqqxh32e.gif)
+![](/crmeb/crmebimage/crmebimage/demoimage/14yijianhuanse.gif)
 
 ## 项目源码
 
@@ -188,7 +185,7 @@ CRMEB JAVA 技术交流QQ群 1群 🈵️
 
 ## 联系客服
 
-![联系客服](https://gitee.com/stivepeim/img4mk/raw/master/20210109110102.jpg)
+![联系客服](/crmeb/crmebimage/crmebimage/demoimage/17lianxikefu.png)
 
 ## 版权信息
 本项目包含的第三方源码和二进制文件之版权信息另行标注。
