@@ -97,11 +97,11 @@ CRMEB JAVA 技术交流QQ群 1群 🈵️
 ![页面设计](/crmeb/crmebimage/crmebimage/demoimage/13yemiandesiner.gif)
 
 ## 一键换色
-![一键换色](/crmeb/crmebimage/crmebimage/demoimage/13yemiandesiner.gif)
+![一键换色](/crmeb/crmebimage/crmebimage/demoimage/14yijianhuanse.gif)
 
 ## WEB PC 更多便捷操作方式
 
-![](/crmeb/crmebimage/crmebimage/demoimage/14yijianhuanse.gif)
+![](/crmeb/crmebimage/crmebimage/demoimage/15webPCadmin.gif)
 
 ## 项目源码
 
