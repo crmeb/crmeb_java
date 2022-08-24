@@ -1,0 +1,11 @@
+-- 自动生成新增菜单SQL 这里仅仅是新增菜单数据，实际开发中需要分配对应权限才可以正常使用
+-- 菜单目录SQL menu_type = M-目录，C-菜单，A-按钮
+    INSERT INTO `eb_system_menu` (`pid`, `name`,`perms`,`component`, `menu_type`) VALUES (0,'${moduleName}','${moduleName}:${pathName}','','C');
+-- 目录菜单id 用于按钮新增时作为父ID
+    set @parentId = @@identity;
+-- 所在表的CRUD菜单 根据自己需求修改添加
+    INSERT INTO `eb_system_menu` (`pid`, `name`,`perms`,`component`, `menu_type`) SELECT @parentId,'DATA_LIST','${moduleName}:${pathName}:list','${moduleName}/${pathName}/list','A';
+    INSERT INTO `eb_system_menu` (`pid`, `name`,`perms`,`component`, `menu_type`) SELECT @parentId,'DATA_INFO','${moduleName}:${pathName}:info','${moduleName}:${pathName}/info','A';
+    INSERT INTO `eb_system_menu` (`pid`, `name`,`perms`,`component`, `menu_type`) SELECT @parentId,'DATA_EDITE','${moduleName}:${pathName}:update','${moduleName}:${pathName}/info','A';
+    INSERT INTO `eb_system_menu` (`pid`, `name`,`perms`,`component`, `menu_type`) SELECT @parentId,'DATA_SAVE','${moduleName}:${pathName}:save','','A';
+    INSERT INTO `eb_system_menu` (`pid`, `name`,`perms`,`component`, `menu_type`) SELECT @parentId,'DATA_DELETE','${moduleName}:${pathName}:delete','','A';

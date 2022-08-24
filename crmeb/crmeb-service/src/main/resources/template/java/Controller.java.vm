@@ -1,0 +1,103 @@
+package ${package}.${moduleName}.controller;
+
+import java.util.Arrays;
+import java.util.Map;
+
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import ${package}.${moduleName}.entity.${className}Entity;
+import ${package}.${moduleName}.service.${className}Service;
+import ${mainPath}.common.utils.PageUtils;
+import ${mainPath}.common.utils.R;
+
+
+
+
+/**
+ * ${comments} 控制器
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: ${author}
+ * +----------------------------------------------------------------------
+ * ｜ @date ${datetime}
+ * +----------------------------------------------------------------------
+ * ｜ @date ${email}
+ * +----------------------------------------------------------------------
+ */
+@RestController
+@RequestMapping("${moduleName}/${pathName}")
+public class ${className}Controller {
+    @Autowired
+    private ${className}Service ${classname}Service;
+
+    /**
+     * 列表信息
+     */
+    @RequestMapping("/list")
+    @PreAuthorize("${moduleName}:${pathName}:list")
+    public CommonResult<CommonPage<${classname}>> list(@RequestParam Map<String, Object> params){
+        CommonPage<${classname}> page = CommonPage.restPag(${classname}Service.queryPage(params));
+
+        return CommonResult.success(page);
+    }
+
+
+    /**
+     * 详情数据
+     */
+    @RequestMapping("/info/{${pk.attrname}}")
+    @PreAuthorize("${moduleName}:${pathName}:info")
+    public CommonResult<${classname}> info(@PathVariable("${pk.attrname}") ${pk.attrType} ${pk.attrname}){
+		${className}Entity ${classname} = ${classname}Service.getById(${pk.attrname});
+
+        return CommonResult.success(${classname});
+    }
+
+    /**
+     * 新增数据
+     */
+    @RequestMapping("/save")
+    @PreAuthorize("${moduleName}:${pathName}:save")
+    public CommonResult<String> save(@RequestBody ${className}Entity ${classname}){
+        if (${classname}Service.save(${classname})) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
+    }
+
+    /**
+     * 修改数据
+     */
+    @RequestMapping("/update")
+    @PreAuthorize("${moduleName}:${pathName}:update")
+    public CommonResult<String> update(@RequestBody ${className}Entity ${classname}){
+        if (${classname}Service.updateById(${classname})) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
+    }
+
+    /**
+     * 删除:根据id集合
+     */
+    @RequestMapping("/delete")
+    @PreAuthorize("${moduleName}:${pathName}:delete")
+    public CommonResult<String> delete(@RequestBody ${pk.attrType}[] ${pk.attrname}s){
+        if (${classname}Service.removeByIds(Arrays.asList(${pk.attrname}))) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
+    }
+
+}

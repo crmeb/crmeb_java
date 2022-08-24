@@ -1,16 +1,15 @@
 package com.zbkj.common.utils;
 
-import com.zbkj.common.constants.Constants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.vo.ImageMergeUtilVo;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import java.awt.*;
-import java.io.*;
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
@@ -19,7 +18,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------

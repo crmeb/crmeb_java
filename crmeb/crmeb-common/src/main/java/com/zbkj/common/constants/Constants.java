@@ -5,7 +5,7 @@ package com.zbkj.common.constants;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -107,12 +107,10 @@ public class Constants {
     public static final Integer PRODUCT_SELECT_CATEGORY_NUM_MAX = 10;
 
     //上传类型
-//    public static final String UPLOAD_TYPE_IMAGE = "image";
     public static final String UPLOAD_TYPE_IMAGE = "crmebimage";
 
     //上传类型
     public static final String UPLOAD_TYPE_FILE = "file";
-//    public static final String UPLOAD_ROOT_PATH_CONFIG_KEY = "upload_root_path";//上传地址
     public static final String UPLOAD_MODEL_PATH_EXCEL = "excel";// excel
 
     //图片上传
@@ -123,8 +121,6 @@ public class Constants {
     public static final String UPLOAD_FILE_EXT_STR_CONFIG_KEY = "file_ext_str";
     //最大上传文件
     public static final String UPLOAD_FILE_MAX_SIZE_CONFIG_KEY = "file_max_size";
-
-    public static final int UPLOAD_TYPE_USER = 7; //用户上传
 
     // 移动端文章顶部的banner图最大数量 配置数据最小3最大10
     public static final String ARTICLE_BANNER_LIMIT = "news_slides_limit";
@@ -147,11 +143,6 @@ public class Constants {
     //商品库存redis key
     public static final String PRODUCT_STOCK_LIST = "product_stock_list";
 
-
-    //sku库存变动队列key
-//    public static final String SKU_STOCK_UPDATE = "product_stock_update";
-    //sku库存redis key
-//    public static final String SKU_STOCK_LIST = "product_stock_list";
 
     //消息模板队列key
     public static final String WE_CHAT_MESSAGE_KEY_PUBLIC = "we_chat_public_message_list";
