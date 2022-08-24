@@ -1,0 +1,54 @@
+package ${package}.${moduleName}.service.impl;
+
+import org.springframework.stereotype.Service;
+import java.util.Map;
+import com.baomidou.mybatisplus.core.conditions.pageQueryUtils.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import ${mainPath}.common.utils.PageUtils;
+import ${mainPath}.common.utils.Query;
+
+import ${package}.${moduleName}.dao.${className}Dao;
+import ${package}.${moduleName}.entity.${className}Entity;
+import ${package}.${moduleName}.service.${className}Service;
+
+
+/**
+ * ${comments} 接口实现类
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * @author: ${author}
+ * +----------------------------------------------------------------------
+ * @date ${datetime}
+ * +----------------------------------------------------------------------
+ * @email ${email}
+ * +----------------------------------------------------------------------
+ */
+
+@Service("${classname}Service")
+public class ${className}ServiceImpl extends ServiceImpl<${className}Dao, ${className}Entity> implements ${className}Service {
+
+    /**
+     * ${className}列表查询
+     * @param request 默认是是体类 根据自己需求修改或者创建自己的request
+     * @param pageParamRequest 分页参数对象
+     * @return
+     */
+    @Override
+    public PageUtils queryPage(${className}Entity request, PageParamRequest pageParamRequest) {
+        PageHelper.startPage(pageParamRequest.getPageNum(), pageParamRequest.getPageSize());
+
+        //列表查询 ${className} 类的多条件查询
+        LambdaQueryWrapper<${className}> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        ${className} model = new ${className}();
+        BeanUtils.copyProperties(request, model);
+        lambdaQueryWrapper.setEntity(model);
+        return dao.selectList(lambdaQueryWrapper);
+    }
+
+}
