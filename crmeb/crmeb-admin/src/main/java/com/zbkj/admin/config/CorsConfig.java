@@ -10,7 +10,7 @@ import org.springframework.web.filter.CorsFilter;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -21,16 +21,20 @@ import org.springframework.web.filter.CorsFilter;
 public class CorsConfig{
     private CorsConfiguration buildConfig() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.addAllowedOrigin("*"); //允许任何域名
-        corsConfiguration.addAllowedHeader("*"); //允许任何头
-        corsConfiguration.addAllowedMethod("*"); //允许任何方法
+        //允许任何域名
+        corsConfiguration.addAllowedOrigin("*");
+        //允许任何头
+        corsConfiguration.addAllowedHeader("*");
+        //允许任何方法
+        corsConfiguration.addAllowedMethod("*");
         return corsConfiguration;
     }
 
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", buildConfig()); //注册
+        //注册
+        source.registerCorsConfiguration("/**", buildConfig());
         return new CorsFilter(source);
     }
 }
