@@ -1,0 +1,77 @@
+<template>
+  <!-- 基于 Element UI 新增和修改弹窗 -->
+  <el-dialog
+    :title="!dataForm.${pk.attrname} ? '添加-ADD' : '修改-EDITE'"
+    :close-on-click-modal="false"
+    :visible.sync="visible">
+    <!-- 新增和创建表单表单 -->
+    <el-form :model="dataForm" :rules="dataRule" ref="dataForm" @keyup.enter.native="dataSubmit()" label-width="80px">
+#foreach($column in $columns)
+#if($column.columnName != $pk.columnName)
+    <el-form-item label="${column.comments}" prop="${column.attrname}">
+      <el-input v-model="dataForm.${column.attrname}" placeholder="${column.comments}"></el-input>
+    </el-form-item>
+#end
+#end
+    </el-form>
+    <span slot="footer" class="dialog-footer">
+      <el-button @click="visible = false">取消</el-button>
+      <el-button type="primary" @click="dataSubmit()">确定</el-button>
+    </span>
+  </el-dialog>
+</template>
+
+<script>
+  import * as api from './.${pathName}api.js'
+  export default {
+    data () {
+      return {
+        visible: false,
+        dataForm: {
+#foreach($column in $columns)
+#if($column.columnName == $pk.columnName)
+          ${column.attrname}: 0,
+#else
+          ${column.attrname}: '' #if($velocityCount != $columns.size()), #end
+
+#end
+#end
+        },
+        dataRule: {
+#foreach($column in $columns)
+#if($column.columnName != $pk.columnName)
+          ${column.attrname}: [
+            { required: true, message: '${column.comments}  为必填项', trigger: 'blur' }
+          ]#if($velocityCount != $columns.size()),#end
+
+#end
+#end
+        }
+      }
+    },
+    methods: {
+      init (id) { // 初始化表单验证规则
+        this.dataForm.${pk.attrname} = id || 0
+        this.visible = true
+        this.$nextTick(() => {
+          this.$refs['dataForm'].resetFields()
+          if (this.dataForm.${pk.attrname}) {
+            api.${pathName}DetailApi(${pk.attrname}).then(res => {
+                this.dataForm = res;
+            })
+          }
+        })
+      },
+      // 表单数据提交
+      dataSubmit () {
+        #[[this.$refs['dataForm'].validate((valid) => {]]#
+          if (valid) {
+                  api.${className}CreateApi().then(res =>{
+                      // TODO 保存数据
+                  });
+          }
+        })
+      }
+    }
+  }
+</script>

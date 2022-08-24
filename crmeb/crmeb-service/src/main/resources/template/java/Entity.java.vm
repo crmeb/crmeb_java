@@ -1,0 +1,44 @@
+package ${package}.${moduleName}.entity;
+
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
+	#if(${hasBigDecimal})
+	import java.math.BigDecimal;
+	#end
+import java.io.Serializable;
+import java.util.Date;
+import lombok.Data;
+
+/**
+ * ${comments} Entity 实体类
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * @author: ${author}
+ * +----------------------------------------------------------------------
+ * @date ${datetime}
+ * +----------------------------------------------------------------------
+ * @email ${email}
+ * +----------------------------------------------------------------------
+ */
+@Data
+@TableName("${tableName}")
+public class ${className}Entity implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	#foreach ($column in $columns)
+		/**
+			 * $column.comments
+			 */
+		#if($column.columnName == $pk.columnName)
+		@TableId
+		#end
+	private $column.attrType $column.attrname;
+	#end
+
+}
