@@ -25,7 +25,7 @@ import org.springframework.web.filter.CorsFilter;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -77,7 +77,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //    }
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    protected void configure(AuthenticationManagerBuilder auth) {
         auth.authenticationProvider(new CustomAuthenticationProvider(new UserDetailServiceImpl()));
     }
 
@@ -110,14 +110,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             // 跨域预检请求
 //            .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-            // 对于登录login 验证码captchaImage 和其他放行的目录 允许匿名访问"/citylife/front/**"
-            .antMatchers("/api/admin/login", "/api/admin/validate/code/get").permitAll()
-            .antMatchers("/api/admin/getLoginPic").permitAll()
+                // 对于登录login 验证码captchaImage 和其他放行的目录 允许匿名访问"/citylife/front/**"
+                .antMatchers("/api/admin/login", "/api/admin/validate/code/get").permitAll()
+                .antMatchers("/api/admin/getLoginPic").permitAll()
                 // 放行资源路径
-            .antMatchers("/"+ Constants.UPLOAD_TYPE_IMAGE +"/**").anonymous()
+                .antMatchers("/"+ Constants.UPLOAD_TYPE_IMAGE +"/**").anonymous()
                 // 放行图片、文件上传
-            .antMatchers("/api/admin/upload/image").permitAll()
-            .antMatchers("/api/admin/upload/file").permitAll()
+                .antMatchers("/api/admin/upload/image").permitAll()
+                .antMatchers("/api/admin/upload/file").permitAll()
+                // 代码生成器
+                .antMatchers("/api/codegen/code").permitAll()
 //            .antMatchers("/wx/user/*/login","/citylife/nocheck/**").anonymous()
             .antMatchers(
                     HttpMethod.GET,

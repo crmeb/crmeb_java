@@ -1,0 +1,71 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
+import request from '@/utils/request'
+
+/**
+ * 新增${className}
+ * @param pram
+ */
+export function ${className}CreateApi(data) {
+    return request({
+        url: '${moduleName}/${pathName}/save',
+        method: 'POST',
+        data
+    })
+}
+
+/**
+ * ${pathName}更新
+ * @param pram
+ */
+export function ${pathName}UpdateApi(data) {
+    return request({
+        url: '${moduleName}/${pathName}/update',
+        method: 'POST',
+        data
+    })
+}
+
+/**
+ * ${pathName}详情
+ * @param pram
+ */
+export function ${pathName}DetailApi(id) {
+    return request({
+        url: `${moduleName}/${pathName}/info/${id}`,
+        method: 'GET'
+    })
+}
+
+/**
+ * ${pathName}删除
+ * @param pram
+ */
+export function ${pathName}DeleteApi(id) {
+    return request({
+        url: `${moduleName}/${pathName}/delete/${id}`,
+        method: 'get'
+    })
+}
+
+
+/**
+ * ${pathName}列表
+ * @param pram
+ */
+export function ${pathName}ListApi(params) {
+    return request({
+        url: '${moduleName}/${pathName}/list',
+        method: 'GET',
+        params
+    })
+}
+

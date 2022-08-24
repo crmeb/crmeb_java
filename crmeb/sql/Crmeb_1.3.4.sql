@@ -7210,7 +7210,7 @@ INSERT INTO `eb_system_config` VALUES (7757, 'site_name', 'site_name', 77, '一�
 INSERT INTO `eb_system_config` VALUES (7758, 'site_url', 'site_url', 77, 'https://app.net', 0, '2021-12-25 12:18:52', '2021-12-25 12:18:52');
 INSERT INTO `eb_system_config` VALUES (7759, 'seo_title', 'seo_title', 77, '一码秦川', 0, '2021-12-25 12:18:52', '2021-12-25 12:18:52');
 INSERT INTO `eb_system_config` VALUES (7760, 'news_slides_limit', 'news_slides_limit', 77, '3', 0, '2021-12-25 12:18:52', '2021-12-25 12:18:52');
-INSERT INTO `eb_system_config` VALUES (7761, 'front_api_url', 'front_api_url', 77, 'http://127.0.0.1', 0, '2021-12-25 12:18:52', '2021-12-25 12:18:52');
+INSERT INTO `eb_system_config` VALUES (7761, 'front_api_url', 'front_api_url', 77, 'http://127.0.0.1:8081', 0, '2021-12-25 12:18:52', '2021-12-25 12:18:52');
 INSERT INTO `eb_system_config` VALUES (7777, 'wechat_appid', 'wechat_appid', 65, '11111111111', 0, '2021-12-25 12:26:14', '2021-12-25 12:26:14');
 INSERT INTO `eb_system_config` VALUES (7778, 'wechat_appsecret', 'wechat_appsecret', 65, '11111111111', 0, '2021-12-25 12:26:14', '2021-12-25 12:26:14');
 INSERT INTO `eb_system_config` VALUES (7779, 'field101', 'field101', 65, 'crmebJava', 0, '2021-12-25 12:26:14', '2021-12-25 12:26:14');
@@ -7221,12 +7221,12 @@ INSERT INTO `eb_system_config` VALUES (7783, 'wechat_qrcode', 'wechat_qrcode', 6
 INSERT INTO `eb_system_config` VALUES (7784, 'wechat_share_title', 'wechat_share_title', 65, '一码秦川', 0, '2021-12-25 12:26:14', '2021-12-25 12:26:14');
 INSERT INTO `eb_system_config` VALUES (7785, 'wechat_share_synopsis', 'wechat_share_synopsis', 65, '一码秦川', 0, '2021-12-25 12:26:14', '2021-12-25 12:26:14');
 INSERT INTO `eb_system_config` VALUES (7786, 'h5_avatar', 'h5_avatar', 65, 'crmebimage/public/operation/2021/12/25/0427b90c74b64a03ae3e7e5c628ef7d69038aimgou.jpg', 0, '2021-12-25 12:26:14', '2021-12-25 12:26:14');
-INSERT INTO `eb_system_config` VALUES (7802, 'api_url', 'api_url', 64, 'https://127.0.0.1', 0, '2021-12-25 16:53:20', '2021-12-25 16:53:20');
+INSERT INTO `eb_system_config` VALUES (7802, 'api_url', 'api_url', 64, 'https://127.0.0.1:8080', 0, '2021-12-25 16:53:20', '2021-12-25 16:53:20');
 INSERT INTO `eb_system_config` VALUES (7803, 'site_logo_lefttop', 'site_logo_lefttop', 64, 'crmebimage/public/operation/2021/12/25/6d292f4a663a453e8bcc9410eda89db55z1vksp7fx.png', 0, '2021-12-25 16:53:20', '2021-12-25 16:53:20');
 INSERT INTO `eb_system_config` VALUES (7804, 'site_logo_square', 'site_logo_square', 64, 'crmebimage/public/maintain/2021/12/25/8cf6cd4fd29c4a59a094ba028c8f3f4czyd21fctzc.png', 0, '2021-12-25 16:53:20', '2021-12-25 16:53:20');
 INSERT INTO `eb_system_config` VALUES (7805, 'site_logo_login', 'site_logo_login', 64, 'crmebimage/public/maintain/2021/12/25/8cf6cd4fd29c4a59a094ba028c8f3f4czyd21fctzc.png', 0, '2021-12-25 16:53:20', '2021-12-25 16:53:20');
 INSERT INTO `eb_system_config` VALUES (7806, 'admin_login_bg_pic', 'admin_login_bg_pic', 64, 'crmebimage/public/maintain/2021/12/25/0016d1efa86d41e38e76801a7cd743c6wcupy21hvb.jpg', 0, '2021-12-25 16:53:20', '2021-12-25 16:53:20');
-INSERT INTO `eb_system_config` VALUES (7807, 'localUploadUrl', 'localUploadUrl', 108, 'https://127.0.0.1', 0, '2021-12-30 15:17:28', '2021-12-30 15:17:28');
+INSERT INTO `eb_system_config` VALUES (7807, 'localUploadUrl', 'localUploadUrl', 108, 'https://127.0.0.1:8080', 0, '2021-12-30 15:17:28', '2021-12-30 15:17:28');
 INSERT INTO `eb_system_config` VALUES (7808, 'image_ext_str', 'image_ext_str', 108, 'jpg,jpeg,gif,png,bmp,PNG,JPG,mp4', 0, '2021-12-30 15:17:28', '2021-12-30 15:17:28');
 INSERT INTO `eb_system_config` VALUES (7809, 'image_max_size', 'image_max_size', 108, '10', 0, '2021-12-30 15:17:28', '2021-12-30 15:17:28');
 INSERT INTO `eb_system_config` VALUES (7810, 'file_ext_str', 'file_ext_str', 108, 'zip,doc,docx,xls,xlsx,pdf,mp3,wma,wav,amr,mp4', 0, '2021-12-30 15:17:28', '2021-12-30 15:17:28');
@@ -7816,6 +7816,7 @@ INSERT INTO `eb_system_menu` VALUES (401, 40, '会员标签详情', '', 'admin:u
 INSERT INTO `eb_system_menu` VALUES (402, 344, '获取微信公众号js配置', '', 'admin:wechat:config', '', 'A', 0, 1, 0, '2021-12-13 10:38:24', '2021-12-13 10:38:24');
 INSERT INTO `eb_system_menu` VALUES (403, 344, '微信素材上传', '', 'admin:wechat:media:upload', '', 'A', 0, 1, 0, '2021-12-13 10:38:50', '2021-12-13 10:38:50');
 INSERT INTO `eb_system_menu` VALUES (404, 13, '敏感操作日志', '', 'admin:log:sensitive:list', '/maintain/sensitiveLog', 'C', 0, 1, 1, '2021-12-13 17:54:06', '2021-12-13 18:12:17');
+INSERT INTO `eb_system_menu` VALUES (405, 13, '代码生成', '', '', '/codegen/codegenList', 'C', 0, 1, 1, '2022-08-23 18:07:37', '2022-08-23 18:07:37');
 
 -- ----------------------------
 -- Table structure for eb_system_notification
