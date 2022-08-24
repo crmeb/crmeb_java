@@ -1,28 +1,24 @@
 package com.zbkj.common.model.express;
 
-import java.math.BigDecimal;
-
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import java.io.Serializable;
-import java.util.Date;
-
-import com.sun.org.apache.xpath.internal.operations.Bool;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
-import lombok.experimental.FieldDefaults;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  *  运费模版区域
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------

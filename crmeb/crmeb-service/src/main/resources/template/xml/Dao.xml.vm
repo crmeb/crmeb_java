@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="${package}.${moduleName}.dao.${className}Dao">
+
+	<!-- 根据包名 模块名 以及类名 生成Mapper XML 配置文件 -->
+    <resultMap type="${package}.${moduleName}.entity.${className}Entity" id="${classname}Map">
+#foreach($column in $columns)
+        <result property="${column.attrname}" column="${column.columnName}"/>
+#end
+    </resultMap>
+
+
+</mapper>

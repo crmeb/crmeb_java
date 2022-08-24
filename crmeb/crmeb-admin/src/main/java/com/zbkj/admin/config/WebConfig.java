@@ -1,9 +1,9 @@
 package com.zbkj.admin.config;
 
-import com.zbkj.common.constants.Constants;
-import com.zbkj.common.interceptor.SwaggerInterceptor;
 import com.zbkj.admin.filter.ResponseFilter;
 import com.zbkj.common.config.CrmebConfig;
+import com.zbkj.common.constants.Constants;
+import com.zbkj.common.interceptor.SwaggerInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -15,14 +15,12 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.handler.MappedInterceptor;
 
-import java.io.File;
-
 /**
  * token验证拦截器
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2020 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -82,6 +80,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     }
 
+    @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/");
@@ -93,16 +92,15 @@ public class WebConfig implements WebMvcConfigurer {
         /** 本地文件上传路径 */
         registry.addResourceHandler(Constants.UPLOAD_TYPE_IMAGE + "/**")
                 .addResourceLocations("file:" + crmebConfig.getImagePath() + "/" + Constants.UPLOAD_TYPE_IMAGE + "/");
-
     }
 
     @Bean
-    public FilterRegistrationBean filterRegister()
-    {
+    public FilterRegistrationBean filterRegister() {
         //注册过滤器
         FilterRegistrationBean registration = new FilterRegistrationBean(responseFilter());
         // 仅仅api前缀的请求才会拦截
-        registration.addUrlPatterns("/api/*");
+        registration.addUrlPatterns("/api/admin/*");
+        registration.addUrlPatterns("/api/front/*");
         return registration;
     }
 
