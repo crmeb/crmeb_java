@@ -273,8 +273,8 @@ public class RestTemplateUtil {
 
         SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(
                 sslContext,
-                new String[]{"TLSv1"},
-                null,
+//                new String[]{"TLSv1"},
+//                null,
                 new DefaultHostnameVerifier());
 
         BasicHttpClientConnectionManager connManager = new BasicHttpClientConnectionManager(
