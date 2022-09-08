@@ -142,6 +142,7 @@ public class GenCodeUtils {
             Template tpl = Velocity.getTemplate(template, "UTF-8");
             tpl.merge(context, sw);
             try {
+                zip.finish();
                 zip.putNextEntry(new ZipEntry(getFileName(template, tableEntity.getClassName(), config.getString("package"), config.getString("moduleName"))));
                 IOUtils.write(sw.toString(), zip, "UTF-8");
                 IOUtils.closeQuietly(sw);
