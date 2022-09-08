@@ -29,6 +29,7 @@ import operationRouter from './modules/operation'
 import appSettingRouter from './modules/appSetting'
 import maintainRouter from './modules/maintain'
 import mobileRouter from './modules/mobile'
+import codegen from './modules/codegen'
 
 
 /**
@@ -82,7 +83,9 @@ export const constantRoutes = [
   maintainRouter,
   //移动端管理
   mobileRouter,
-  
+  // 代码生成
+  codegen,
+
   {
     path: '/404',
     component: () => import('@/views/error-page/404'),
