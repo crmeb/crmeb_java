@@ -26,7 +26,7 @@ JAVA版商城系统是基于Java(SpringBoot) + Vue(Element UI) + UniApp开发的
 
 帮助手册：[https://doc.crmeb.com/web/java/crmeb_java](https://doc.crmeb.com/web/java/crmeb_java)
 
-论坛地址：[https://www.crmeb.com/ask/thread/list?id=151](https://www.crmeb.com/ask/thread/list?id=151)
+论坛地址：[https://www.crmeb.com/ask/thread/list?id=152](https://www.crmeb.com/ask/thread/list?id=152)
 
 官网地址：[https://www.crmeb.com](https://www.crmeb.com)
 
@@ -47,7 +47,7 @@ WEBPC管理端：[https://admin.java.crmeb.net](https://admin.java.crmeb.net)
 自己搭建后：admin / 123456
 
 ## 反馈交流
-技术交流社区：https://www.crmeb.com/ask/thread/list?id=151
+技术交流社区：https://www.crmeb.com/ask/thread/list?id=152
 
 CRMEB JAVA 技术交流QQ群 1群 🈵️
 
