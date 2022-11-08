@@ -314,7 +314,7 @@ public class OrderServiceImpl implements OrderService {
 
         Boolean execute = transactionTemplate.execute(e -> {
             storeOrderService.updateById(existStoreOrder);
-            storeOrderStatusService.createLog(existStoreOrder.getId(), Constants.ORDER_LOG_REFUND_APPLY, "用户申请退款原因：" + request.getExplain());
+            storeOrderStatusService.createLog(existStoreOrder.getId(), Constants.ORDER_LOG_REFUND_APPLY, "用户申请退款原因：" + request.getText());
             return Boolean.TRUE;
         });
 
