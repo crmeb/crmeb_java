@@ -25,11 +25,11 @@
 [帮助文档](https://doc.crmeb.com/java/crmeb_java) |
 [技术社区](https://www.crmeb.com/ask/)
 
-[comment]: <> ([宽屏预览]&#40;https://gitee.com/ZhongBangKeJi/CRMEB/blob/master/README.md&#41;)
+[comment]: <> ([宽屏预览]&#40;https://gitee.com/ZhongBangKeJi/crmeb_java/blob/master/README.md&#41;)
 
 </div>
 <div align="center" >
-    <a href="https://gitee.com/ZhongBangKeJi/CRMEB/blob/master/README.md">宽 屏 预 览</a>
+    <a href="https://gitee.com/ZhongBangKeJi/crmeb_java/blob/master/README.md">宽 屏 预 览</a>
 </div>
 
 <div align="center">
@@ -130,7 +130,7 @@ CRMEB JAVA 技术交流QQ群 2群 482685880 🔥<a target="_blank" href="https:/
 3:crmeb     Api            Java SpringBoot + mybatisPlus<br>
 4:接口文档   Api对应的接口文档也可以部署项目后查看<br>
 
-视频教程 B站视频教程 持续更新中 [点击观看 💻](https://www.bilibili.com/video/BV1bP4y1n76P/?vd_source=40854aeda5bba4b8766afd5a99623b16)
+视频教程 B站视频教程 持续更新中 [点击观看 💻🖥️](https://www.bilibili.com/video/BV1bP4y1n76P/?vd_source=40854aeda5bba4b8766afd5a99623b16)
 
 
 ### 商业版
