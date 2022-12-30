@@ -100,9 +100,7 @@ WEBPC管理端：https://admin.java.crmeb.net<br>
 ### 系统文档
 安装文档、产品介绍、技术文档：https://doc.crmeb.com/java/crmeb_java
 
-### 反馈交流
-技术交流社区：https://www.crmeb.com/ask/thread/list?id=152
-
+### 技术交流群
 CRMEB JAVA 技术交流QQ群 1群 🈵️<br>
 CRMEB JAVA 技术交流QQ群 2群 482685880 🔥<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=Ss382XU1MITXy9B-qx15GC3G7WVaImIG&jump_from=webapi"><img border="0" src="//pub.idqqimg.com/wpa/images/group.png" alt="CRMEB Java技术交流2群" title="CRMEB Java技术交流2群"> 点击添加群 482685880</a>
 
@@ -132,8 +130,7 @@ CRMEB JAVA 技术交流QQ群 2群 482685880 🔥<a target="_blank" href="https:/
 3:crmeb     Api            Java SpringBoot + mybatisPlus<br>
 4:接口文档   Api对应的接口文档也可以部署项目后查看<br>
 
-视频教程 B站视频教程 持续更新中
-https://www.bilibili.com/video/BV1bP4y1n76P/?vd_source=40854aeda5bba4b8766afd5a99623b16
+视频教程 B站视频教程 持续更新中 [点击观看 💻](https://www.bilibili.com/video/BV1bP4y1n76P/?vd_source=40854aeda5bba4b8766afd5a99623b16)
 
 
 ### 商业版
