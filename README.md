@@ -53,7 +53,7 @@ Java项目运行环境<br>
 移动端 uniapp 开发 使用 HbuilderX 开发
 
 # **系统演示：**
-![](../CRMEBJava/crmeb/crmebimage/crmebimage/demoimage/c1.jpg)
+![](crmeb/crmebimage/crmebimage/demoimage/c1.jpg)
 移动端：https://java.crmeb.net<br>
 WEBPC管理端：https://admin.java.crmeb.net<br>
 账号密码： demo/crmeb.com<br>
@@ -86,12 +86,12 @@ CRMEB JAVA 技术交流QQ群 1群 🈵️
 视频教程 B站视频教程 持续更新中
 
 ## **商业版**
-![](../CRMEBJava/crmeb/crmebimage/crmebimage/demoimage/c2.jpg)
+![](crmeb/crmebimage/crmebimage/demoimage/c2.jpg)
 购买商业版： http://crmeb.com/web/index/java<br>
 多商户Java版：http://s.crmeb.com/goods_detail/750<br>
 
 ## **联系客服**
-![](../CRMEBJava/crmeb/crmebimage/crmebimage/demoimage/kefu.jpg)
+![](crmeb/crmebimage/crmebimage/demoimage/kefu.jpg)
 
 ## 特别鸣谢
 核心开发团队<br>
