@@ -108,20 +108,33 @@ CRMEB JAVA 技术交流QQ群 2群 482685880 🔥<a target="_blank" href="https:/
 
 使用中遇到bug 或者问题可以在gitee 上提 Issues
 如果直接点击加群无反应可复制QQ号码手动加入
-<!-- 移动端预览
+### 移动端预览
+![](crmeb/crmebimage/crmebimage/demoimage/03-mobile-01.png)
+![](crmeb/crmebimage/crmebimage/demoimage/04-mobile-02.png)
+![](crmeb/crmebimage/crmebimage/demoimage/05-mobile-03.png)
+### 功能图预览
+![](crmeb/crmebimage/crmebimage/demoimage/06-optionList.jpg)
+### WEB PC管理端预览
+![](crmeb/crmebimage/crmebimage/demoimage/07-pc-01.png)
+![](crmeb/crmebimage/crmebimage/demoimage/08-pc-02.png)
+![](crmeb/crmebimage/crmebimage/demoimage/09-pc-03.png)
+![](crmeb/crmebimage/crmebimage/demoimage/10-pc-04.png)
+![](crmeb/crmebimage/crmebimage/demoimage/11-pc-05.png)
+![](crmeb/crmebimage/crmebimage/demoimage/12-pc-06.png)
+![](crmeb/crmebimage/crmebimage/demoimage/13yemiandesiner.gif)
+![](crmeb/crmebimage/crmebimage/demoimage/14yijianhuanse.gif)
+![](crmeb/crmebimage/crmebimage/demoimage/15webPCadmin.gif)
 
-功能图预览 -->
 
-<!-- WEB PC管理端预览 -->
 ### 项目代码包介绍
 1:admin     WEB程序         PC端管理端 VUE + ElementUi<br>
 2:app       移动商城         UniApp标准开发(H5 + 微信小程序)<br>
 3:crmeb     Api            Java SpringBoot + mybatisPlus<br>
 4:接口文档   Api对应的接口文档也可以部署项目后查看<br>
 
-<iframe src="//player.bilibili.com/player.html?aid=892852049&bvid=BV1bP4y1n76P&cid=473716805&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
-
 视频教程 B站视频教程 持续更新中
+https://www.bilibili.com/video/BV1bP4y1n76P/?vd_source=40854aeda5bba4b8766afd5a99623b16
+
 
 ### 商业版
 <!-- ![](crmeb/crmebimage/crmebimage/demoimage/c2.jpg) -->
@@ -134,11 +147,15 @@ CRMEB JAVA 技术交流QQ群 2群 482685880 🔥<a target="_blank" href="https:/
 
 
 ### 特别鸣谢
-核心开发团队<br>
-产品：木子刀客<br>
-技术：❄指缝de阳光，怪兽的猫，大粽子，乡关何处<br>
-UI：被子横盖显得高🐰<br>
-测试：请叫我绵绵🐏<br>
+核心开发团队
+
+产品：木子刀客
+
+技术：❄指缝de阳光，怪兽的猫，大粽子，乡关何处
+
+UI：被子横盖显得高🐰
+
+测试：请叫我绵绵🐏
 
 ### 使用须知
 1.允许用于个人学习、毕业设计、教学案例、公益事业、商业使用;<br>
