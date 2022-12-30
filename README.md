@@ -3,7 +3,7 @@
 </div>
 <div align="center">
 
-CRMEB开源商城系统Java版
+# CRMEB开源商城系统Java版
 
 </div>
 <div align="center" >
@@ -33,7 +33,7 @@ CRMEB开源商城系统Java版
 </div>
 
 <div align="center">
-    <h3> 如果对您有帮助，您可以点右上角 "Star" ❤️ 支持一下 谢谢！</h3>
+    如果对您有帮助，您可以点右上角 "Star" ❤️ 支持一下 谢谢！
 </div>
 
 ### 介绍：
@@ -120,6 +120,7 @@ CRMEB JAVA 技术交流QQ群 2群 482685880 🔥<a target="_blank" href="https:/
 4:接口文档   Api对应的接口文档也可以部署项目后查看<br>
 
 <iframe src="//player.bilibili.com/player.html?aid=892852049&bvid=BV1bP4y1n76P&cid=473716805&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
+
 视频教程 B站视频教程 持续更新中
 
 ### 商业版
