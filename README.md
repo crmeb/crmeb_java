@@ -10,12 +10,6 @@
     <a href="http://www.crmeb.com">
         <img src="https://img.shields.io/badge/Licence-GPL3.0-green.svg?style=flat" />
     </a>
-    <a href='https://gitee.com/ZhongBangKeJi/crmeb_java/members'>
-        <img src='https://gitee.com/ZhongBangKeJi/crmeb_java/badge/fork.svg?theme=dark' alt='fork'></img>
-    </a>
-   <a href='https://gitee.com/ZhongBangKeJi/crmeb_java/stargazers'>
-        <img src='https://gitee.com/ZhongBangKeJi/crmeb_java/badge/star.svg?theme=dark' alt='star'></img>
-    </a>
 </div>
 
 <div align="center">
