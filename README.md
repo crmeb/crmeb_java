@@ -139,7 +139,9 @@ CRMEB JAVA 技术交流QQ群 2群 482685880 🔥<a target="_blank" href="https:/
 多商户Java版：http://s.crmeb.com/goods_detail/750<br>
 
 ### 联系客服
-<img src="https://javaqn.crmeb.net/crmebimage/gitee/kefu.jpg" style="width:200px" />
+[![](/crmeb/crmebimage/crmebimage/demoimage/duoshanghu_kefu.jpg)](http://s.crmeb.com/goods_detail/750)
+[![](/crmeb/crmebimage/crmebimage/demoimage/danshanghu_kefu.jpg)](http://s.crmeb.com/goods_detail/714)
+
 
 
 
