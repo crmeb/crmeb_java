@@ -84,6 +84,10 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 
 移动端 uniapp 开发 使用 HbuilderX 开发
 
+### 官方论坛
+![输入图片说明](crmeb/crmebimage/crmebimage/%E5%AE%98%E6%96%B9%E7%A4%BE%E5%8C%BA@2x.jpg)
+产品BUG、优化建议，欢迎社区反馈：[https://www.crmeb.com/ask/thread/list/152](https://www.crmeb.com/ask/thread/list/152)
+
 ### 系统演示：
 ![](crmeb/crmebimage/crmebimage/demoimage/c1.jpg)
 移动端：https://java.crmeb.net<br>
