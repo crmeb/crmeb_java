@@ -1,12 +1,12 @@
 package com.zbkj.common.interceptor;
 
+import cn.hutool.core.codec.Base64;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
-import sun.misc.BASE64Decoder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -52,7 +52,7 @@ public class SwaggerInterceptor extends HandlerInterceptorAdapter {
     public boolean httpBasicAuth(String authorization) throws IOException {
         if(check){
             if (authorization != null && authorization.split(" ").length == 2) {
-                String userAndPass = new String(new BASE64Decoder().decodeBuffer(authorization.split(" ")[1]));
+                String userAndPass = Base64.decodeStr(authorization.split(" ")[1]);
                 String username = userAndPass.split(":").length == 2 ? userAndPass.split(":")[0] : null;
                 String password = userAndPass.split(":").length == 2 ? userAndPass.split(":")[1] : null;
                 return this.username.equals(username) && this.password.equals(password);
