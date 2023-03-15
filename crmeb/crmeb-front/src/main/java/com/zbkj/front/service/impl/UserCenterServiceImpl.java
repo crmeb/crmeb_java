@@ -951,10 +951,10 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
      * 绑定手机号数据校验
      */
     private void checkBindingPhone(WxBindingPhoneRequest request) {
-        if (!request.getType().equals("public") && !request.getType().equals("routine") && !request.getType().equals("iosWx") && !request.getType().equals("androidWx")) {
+        if (!"public".equals(request.getType()) && !"routine".equals(request.getType()) && !"iosWx".equals(request.getType()) && !"androidWx".equals(request.getType())) {
             throw new CrmebException("未知的用户类型");
         }
-        if (request.getType().equals("public")) {
+        if ("public".equals(request.getType())) {
             if (StrUtil.isBlank(request.getCaptcha())) {
                 throw new CrmebException("验证码不能为空");
             }

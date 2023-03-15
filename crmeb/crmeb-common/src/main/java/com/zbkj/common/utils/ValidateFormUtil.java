@@ -40,37 +40,37 @@ public class ValidateFormUtil {
             List<String> val = CrmebUtil.stringToArrayStrRegex(value, ":");
 
             ////必填
-            if(val.get(0).equals("required") && val.get(1).equals("true")){
+            if("required".equals(val.get(0)) && "true".equals(val.get(1))){
                 isRequire(systemConfig.getValue(), systemConfig.getTitle());
                 continue;
             }
 
             //数字
-            if(val.get(0).equals("number") && val.get(1).equals("true")){
+            if("number".equals(val.get(0)) && "true".equals(val.get(1))){
                 isNumber(systemConfig.getValue(), systemConfig.getTitle());
                 continue;
             }
 
             //最大值
-            if(val.get(0).equals("max")){
+            if("max".equals(val.get(0))){
                 isNumber(systemConfig.getValue(), systemConfig.getTitle());
                 continue;
             }
 
             //最小值
-            if(val.get(0).equals("min")){
+            if("min".equals(val.get(0))){
                 isNumber(systemConfig.getValue(), systemConfig.getTitle());
                 continue;
             }
 
             //邮箱
-            if(val.get(0).equals("email") && val.get(1).equals("true")){
+            if("email".equals(val.get(0)) && "true".equals(val.get(1))){
                 isEmail(systemConfig.getValue(), systemConfig.getTitle());
                 continue;
             }
 
             //手机
-            if(val.get(0).equals("phone") && val.get(1).equals("true")){
+            if("phone".equals(val.get(0)) && "true".equals(val.get(1))){
                 isPhone(systemConfig.getValue(), systemConfig.getTitle());
             }
         }
