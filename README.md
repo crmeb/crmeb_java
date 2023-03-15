@@ -94,6 +94,10 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 WEBPC管理端：https://admin.java.crmeb.net<br>
 账号密码： demo/crmeb.com<br>
 
+自己搭建演示账号
+移动端 18292417675 / crmeb@123456
+管理端 admin / 123456
+
 ### 官方论坛
 产品BUG、优化建议，欢迎社区反馈：https://www.crmeb.com/ask/thread/list/152
 
