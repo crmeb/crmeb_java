@@ -76,7 +76,7 @@ public class LogisticsServiceImpl implements LogisticService {
             return JSONObject.toJavaObject(result, LogisticsResultVo.class);
         }
         String logisticsType = systemConfigService.getValueByKeyException("logistics_type");
-        if (logisticsType.equals("1")) {// 平台查询
+        if ("1".equals(logisticsType)) {// 平台查询
             OnePassLogisticsQueryVo queryVo = onePassService.exprQuery(expressNo, com);
             if (ObjectUtil.isNull(queryVo)) {
                 return resultVo;
@@ -86,11 +86,11 @@ public class LogisticsServiceImpl implements LogisticService {
             String jsonString = JSONObject.toJSONString(resultVo);
             saveCache(JSONObject.parseObject(jsonString));
         }
-        if (logisticsType.equals("2")) {// 阿里云查询
+        if ("2".equals(logisticsType)) {// 阿里云查询
             String appCode = systemConfigService.getValueByKey(Constants.CONFIG_KEY_LOGISTICS_APP_CODE);
 
             // 顺丰请输入单号 : 收件人或寄件人手机号后四位。例如：123456789:1234
-            if (StrUtil.isNotBlank(com) && com.equals("shunfengkuaiyun")) {
+            if (StrUtil.isNotBlank(com) && "shunfengkuaiyun".equals(com)) {
                 expressNo = expressNo.concat(":").concat(StrUtil.sub(phone, 7, -1));
             }
             String url = Constants.LOGISTICS_API_URL + "?no=" + expressNo;
@@ -162,7 +162,7 @@ public class LogisticsServiceImpl implements LogisticService {
      * @since 2020-07-06
      */
     private void checkResult(JSONObject data) {
-        if (!data.getString("status").equals("0")){
+        if (!"0".equals(data.getString("status"))){
             throw new CrmebException(data.getString("msg"));
         }
     }

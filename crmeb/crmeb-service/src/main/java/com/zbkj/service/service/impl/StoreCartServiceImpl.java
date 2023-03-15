@@ -154,7 +154,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         Integer userId = userService.getUserIdException();
         Map<String, Integer> map = new HashMap<>();
         int num;
-        if (request.getType().equals("total")) {
+        if ("total".equals(request.getType())) {
             num = getUserCountByStatus(userId, request.getNumType());
         } else {
             num = getUserSumByStatus(userId, request.getNumType());
