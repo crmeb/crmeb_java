@@ -285,7 +285,7 @@ public class CallbackServiceImpl implements CallbackService {
     public String weChatRefund(String xmlInfo) {
         MyRecord notifyRecord = new MyRecord();
         MyRecord refundRecord = refundNotify(xmlInfo, notifyRecord);
-        if (refundRecord.getStr("status").equals("fail")) {
+        if ("fail".equals(refundRecord.getStr("status"))) {
             logger.error("微信退款回调失败==>" + refundRecord.getColumns() + ", rawData==>" + xmlInfo + ", data==>" + notifyRecord);
             return refundRecord.getStr("returnXml");
         }

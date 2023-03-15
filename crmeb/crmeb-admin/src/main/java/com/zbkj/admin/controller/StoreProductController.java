@@ -90,7 +90,7 @@ public class StoreProductController {
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     public CommonResult<String> delete(@RequestBody @PathVariable Integer id, @RequestParam(value = "type", required = false, defaultValue = "recycle")String type) {
         if (storeProductService.deleteProduct(id, type)) {
-            if (type.equals("recycle")) {
+            if ("recycle".equals(type)) {
                 storeCartService.productStatusNotEnable(id);
             } else {
                 storeCartService.productDelete(id);
