@@ -7,7 +7,7 @@ crmeb:
   wechat-js-api-beta: true #微信js api是否是beta版本
   asyncConfig: false #是否同步config表数据到redis
   asyncWeChatProgramTempList: false #是否同步小程序公共模板库
-  imagePath: /Users/stivepeim/Documents/ZBKJ/OpenSource/CRMEBJava/crmeb/crmebimage/ # 服务器图片路径配置 斜杠结尾
+  imagePath: /当前项目更根目录的素材文件(绝对路径)/crmebimage/ # 服务器图片路径配置 斜杠结尾
   database: mysql
 
 # 配置端口
@@ -23,7 +23,6 @@ server:
 spring:
   profiles:
   #  配置的环境
-#    active: #spring.profiles.active#
     active:
   servlet:
     multipart:
@@ -39,14 +38,14 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://118.178.234.105:3306/crmeb_os?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
-    username: crmeb_os
-    password: cGEfaaRDbwd6cc2k
+    url: jdbc:mysql://127.0.0.1:3306/crmeb?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
+    username: crmeb
+    password: 111111
 
   redis:
-    host: 118.178.234.105 #地址
+    host: 127.0.0.1 #地址
     port: 6379 #端口
-    password: 1qazxsw2
+    password: 111111
     timeout: 30000 # 连接超时时间（毫秒）
     database: 15  #默认数据库
     jedis:

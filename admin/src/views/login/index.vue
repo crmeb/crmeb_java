@@ -134,8 +134,8 @@ export default {
         }
       },
       loginForm: {
-        account: 'demo', // admin
-        pwd: 'crmeb.com',
+        account: 'admin', // admin
+        pwd: '123456',
         key: '',
         code: '',
         wxCode: ''
