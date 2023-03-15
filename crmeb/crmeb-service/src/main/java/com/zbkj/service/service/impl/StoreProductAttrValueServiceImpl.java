@@ -126,14 +126,14 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
     @Override
     public Boolean operationStock(Integer id, Integer num, String operationType, Integer type) {
         UpdateWrapper<StoreProductAttrValue> updateWrapper = new UpdateWrapper<>();
-        if (operationType.equals("add")) {
+        if ("add".equals(operationType)) {
             updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
             if (type > 0) {
                 updateWrapper.setSql(StrUtil.format("quota = quota + {}", num));
             }
         }
-        if (operationType.equals("sub")) {
+        if ("sub".equals(operationType)) {
             updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
             if (type > 0) {
