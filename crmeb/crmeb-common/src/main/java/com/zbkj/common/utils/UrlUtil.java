@@ -41,7 +41,7 @@ public class UrlUtil {
             return entity;
         }
         url = url.trim();
-        if (url.equals("")) {
+        if ("".equals(url)) {
             return entity;
         }
         String[] urlParts = url.split("\\?");
