@@ -744,12 +744,12 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
     @Override
     public Boolean operationStock(Integer id, Integer num, String type) {
         UpdateWrapper<StoreBargain> updateWrapper = new UpdateWrapper<>();
-        if (type.equals("add")) {
+        if ("add".equals(type)) {
             updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
             updateWrapper.setSql(StrUtil.format("quota = quota + {}", num));
         }
-        if (type.equals("sub")) {
+        if ("sub".equals(type)) {
             updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
             updateWrapper.setSql(StrUtil.format("quota = quota - {}", num));
@@ -887,7 +887,7 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         }
 
         // 回滚商品库存/销量 并更新
-        boolean isPlus = storeProductStockRequest.getOperationType().equals("add");
+        boolean isPlus = "add".equals(storeProductStockRequest.getOperationType());
         int productStock = isPlus ? existProduct.getStock() + storeProductStockRequest.getNum() : existProduct.getStock() - storeProductStockRequest.getNum();
         existProduct.setStock(productStock);
         existProduct.setSales(existProduct.getSales() - storeProductStockRequest.getNum());

@@ -59,7 +59,7 @@ public class ShippingTemplatesFreeServiceImpl extends ServiceImpl<ShippingTempla
 
         for (ShippingTemplatesFreeRequest shippingTemplatesFreeRequest : shippingTemplatesFreeRequestList) {
             String uniqueKey = DigestUtils.md5Hex(shippingTemplatesFreeRequest.toString());
-            if(shippingTemplatesFreeRequest.getCityId().equals("all") || shippingTemplatesFreeRequest.getCityId().equals("0")){
+            if("all".equals(shippingTemplatesFreeRequest.getCityId()) || "0".equals(shippingTemplatesFreeRequest.getCityId())){
                 cityIdList = getCityIdList();
             }else{
                 cityIdList = CrmebUtil.stringToArray(shippingTemplatesFreeRequest.getCityId());
