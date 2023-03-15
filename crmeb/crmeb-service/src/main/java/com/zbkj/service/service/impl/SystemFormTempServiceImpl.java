@@ -88,7 +88,7 @@ public class SystemFormTempServiceImpl extends ServiceImpl<SystemFormTempDao, Sy
             systemConfigFormItemVo = JSONObject.parseObject(item, SystemConfigFormItemVo.class);
             String model = systemConfigFormItemVo.get__vModel__(); //字段 name
 
-            if(systemConfigFormItemVo.get__config__().getRequired() && map.get(model).equals("")) {
+            if(systemConfigFormItemVo.get__config__().getRequired() && "".equals(map.get(model))) {
                 throw new CrmebException(systemConfigFormItemVo.get__config__().getLabel() + "不能为空！");
             }
             //正则验证

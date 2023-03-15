@@ -193,16 +193,16 @@ public class UploadServiceImpl implements UploadService {
                 try{
                     // 构造一个带指定Zone对象的配置类, 默认华东
                     Configuration cfg = new Configuration(Region.huadong());
-                    if(cloudVo.getRegion().equals("huabei")){
+                    if("huabei".equals(cloudVo.getRegion())){
                         cfg = new Configuration(Region.huabei());
                     }
-                    if(cloudVo.getRegion().equals("huanan")){
+                    if("huanan".equals(cloudVo.getRegion())){
                         cfg = new Configuration(Region.huanan());
                     }
-                    if(cloudVo.getRegion().equals("beimei")){
+                    if("beimei".equals(cloudVo.getRegion())){
                         cfg = new Configuration(Region.beimei());
                     }
-                    if(cloudVo.getRegion().equals("dongnanya")){
+                    if("dongnanya".equals(cloudVo.getRegion())){
                         cfg = new Configuration(Region.xinjiapo());
                     }
 
@@ -266,7 +266,7 @@ public class UploadServiceImpl implements UploadService {
                 break;
         }
         systemAttachmentService.save(systemAttachment);
-        if (!fileIsSave.equals("1")) {
+        if (!"1".equals(fileIsSave)) {
             // 删除本地文件
             file.delete();
         }
@@ -380,7 +380,7 @@ public class UploadServiceImpl implements UploadService {
         }
         // 判断是否保存本地
         String fileIsSave = systemConfigService.getValueByKeyException("file_is_save");
-        if (fileIsSave.equals("1")) {
+        if ("1".equals(fileIsSave)) {
             multipartFile.transferTo(file);
         }
 
@@ -401,16 +401,16 @@ public class UploadServiceImpl implements UploadService {
                 try{
                     // 构造一个带指定Zone对象的配置类, 默认华东
                     Configuration cfg = new Configuration(Region.huadong());
-                    if(cloudVo.getRegion().equals("huabei")){
+                    if("huabei".equals(cloudVo.getRegion())){
                         cfg = new Configuration(Region.huabei());
                     }
-                    if(cloudVo.getRegion().equals("huanan")){
+                    if("huanan".equals(cloudVo.getRegion())){
                         cfg = new Configuration(Region.huanan());
                     }
-                    if(cloudVo.getRegion().equals("beimei")){
+                    if("beimei".equals(cloudVo.getRegion())){
                         cfg = new Configuration(Region.beimei());
                     }
-                    if(cloudVo.getRegion().equals("dongnanya")){
+                    if("dongnanya".equals(cloudVo.getRegion())){
                         cfg = new Configuration(Region.xinjiapo());
                     }
 
