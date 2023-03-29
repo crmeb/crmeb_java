@@ -30,14 +30,13 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.jdbc.Driver
-#    url: jdbc:mysql://121.196.17.222:3306/crmeb_java_beta?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
-    url: jdbc:mysql://127.0.0.1:3306/crmeb_java_beta?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
-    username: root
-    password: 123456
+    url: jdbc:mysql://127.0.0.1:3306/crmeb?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
+    username: crmeb
+    password: 111111
   redis:
     host: 127.0.0.1 #地址
     port: 6379 #端口
-    password: 123456
+    password: 111111
     timeout: 10000 # 连接超时时间（毫秒）
     database: 3 #默认数据库
     jedis:
