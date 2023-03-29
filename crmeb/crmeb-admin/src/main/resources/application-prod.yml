@@ -24,13 +24,13 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/crmeb_java?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
-    username: root
-    password: 123456
+    url: jdbc:mysql://127.0.0.1:3306/crmeb?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
+    username: crmeb
+    password: 1111111
   redis:
     host: 127.0.0.1 #地址
     port: 6379 #端口
-    password: 123456
+    password: 111111
     timeout: 10000 # 连接超时时间（毫秒）
     database: 15 #默认数据库
     jedis:
@@ -62,5 +62,5 @@ swagger:
   basic:
     enable: true #是否开启界面
     check: true #是否打开验证
-    username: crmeb #访问swagger的账号
-    password: crmeb.com #访问swagger的密码
+    username:  #访问swagger的账号
+    password:  #访问swagger的密码
