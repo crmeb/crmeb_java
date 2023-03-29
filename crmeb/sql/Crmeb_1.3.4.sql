@@ -1,6 +1,7 @@
 /**
     默认账号
-    admin / 123456
+    管理端：admin / 123456
+    商城端：18292417675 / crmeb@123456
 */
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
@@ -8644,6 +8645,7 @@ CREATE TABLE `eb_user`  (
   INDEX `is_promoter`(`is_promoter`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
 
+INSERT INTO `eb_user` VALUES (1, '18292417675', 'f6mcpGQ8NEmwbab2TlkpUg==', '', '', '', '', NULL, '', '', '大粽子', 'crmebimage/public/maintain/2023/02/23/1c0fa967eb764d918f064744cc51dc70a6f2bj3sha.jpg', '18292417675', '', '', 0.00, 0.00, 0, 0, 0, 1, 0, 0, NULL, '', 0, 0, 0, '', 0, '', '2023-03-15 17:41:12', '2023-03-15 17:48:11', '2023-03-15 17:42:44', NULL, '/0/', 0, NULL, 1, 'CN', NULL);
 -- ----------------------------
 -- Table structure for eb_user_address
 -- ----------------------------
