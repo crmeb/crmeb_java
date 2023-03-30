@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -118,8 +119,12 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private StoreSeckillService storeSeckillService;
 
-    @Autowired
     private StoreCombinationService storeCombinationService;
+
+    @Autowired
+    public void setStoreCombinationService(ApplicationContext applicationContext) {
+        this.storeCombinationService = applicationContext.getBean(StoreCombinationService.class);
+    }
 
     @Autowired
     private StoreBargainService storeBargainService;
