@@ -450,7 +450,8 @@ export function computeUser(){
 		data: {
 	        host:window.location.host,
 			https:document.location.protocol,
-			version:'CRMEB-JAVA-KY-V2.0',
+			version:'CRMEB-JAVA-KY-V1.3.4',
+			version_code:'gitee',
 			ip:Cache.has('Ip') ? Cache.get('Ip') : ''
 	    },
 		dataType:'json',
