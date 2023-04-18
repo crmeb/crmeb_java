@@ -7175,7 +7175,7 @@ INSERT INTO `eb_system_config` VALUES (7370, 'routine_appid', 'routine_appid', 6
 INSERT INTO `eb_system_config` VALUES (7371, 'routine_appsecret', 'routine_appsecret', 66, '11111111111', 0, '2021-12-03 14:35:04', '2021-12-03 14:35:04');
 INSERT INTO `eb_system_config` VALUES (7372, 'routine_name', 'routine_name', 66, '一码秦川', 0, '2021-12-03 14:35:04', '2021-12-03 14:35:04');
 INSERT INTO `eb_system_config` VALUES (7519, 'yzf_h5_url', 'yzf_h5_url', 76, 'https://cschat.antcloud.com.cn/index.htm', 0, '2021-12-10 12:15:43', '2021-12-10 12:15:43');
-INSERT INTO `eb_system_config` VALUES (7520, 'consumer_hotline', 'consumer_hotline', 76, '400-8888-794', 0, '2021-12-10 12:15:43', '2021-12-10 12:15:43');
+INSERT INTO `eb_system_config` VALUES (7520, 'consumer_hotline', 'consumer_hotline', 76, '13800000000', 0, '2021-12-10 12:15:43', '2021-12-10 12:15:43');
 INSERT INTO `eb_system_config` VALUES (7521, 'telephone_service_switch', 'telephone_service_switch', 76, 'true', 0, '2021-12-10 12:15:43', '2021-12-10 12:15:43');
 INSERT INTO `eb_system_config` VALUES (7602, 'ylyprint_app_id', 'ylyprint_app_id', 143, '11111111111', 0, '2021-12-10 16:52:39', '2021-12-10 16:52:39');
 INSERT INTO `eb_system_config` VALUES (7603, 'ylyprint_app_secret', 'ylyprint_app_secret', 143, '11111111111', 0, '2021-12-10 16:52:39', '2021-12-10 16:52:39');
