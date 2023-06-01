@@ -106,7 +106,8 @@ WEBPC管理端：https://admin.java.crmeb.net<br>
 
 ### 技术交流群
 CRMEB JAVA 技术交流QQ群 1群 🈵️<br>
-CRMEB JAVA 技术交流QQ群 2群 482685880 🔥<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=Ss382XU1MITXy9B-qx15GC3G7WVaImIG&jump_from=webapi"><img border="0" src="//pub.idqqimg.com/wpa/images/group.png" alt="CRMEB Java技术交流2群" title="CRMEB Java技术交流2群"> 点击添加群 482685880</a>
+CRMEB JAVA 技术交流QQ群 2群 🈵️<br>
+CRMEB JAVA 技术交流QQ群 3群 640230510 🔥 <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=wdIifKeQm_YvjaeGClMn-ikC8-CeMYSE&jump_from=webapi&authKey=CeTLiRWEjqwjVTWY1Jd9Izlv17eUK4NYcic8/Zu/WFA1Ty5dq+a34Ywk6CI+gpdy"><img border="0" src="//pub.idqqimg.com/wpa/images/group.png" alt="CRMEB Java技术交流3群" title="CRMEB Java技术交流3群"></a>
 
 使用中遇到bug 或者问题可以在gitee 上提 Issues
 如果直接点击加群无反应可复制QQ号码手动加入
