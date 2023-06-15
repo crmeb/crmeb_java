@@ -100,10 +100,10 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
      */
     @Override
     public Boolean add(SystemMenuRequest request) {
-        if (request.getMenuType().equals("C") && StrUtil.isEmpty(request.getComponent())) {
+        if ("C".equals(request.getMenuType()) && StrUtil.isEmpty(request.getComponent())) {
             throw new CrmebException("菜单类型的组件路径不能为空");
         }
-        if (request.getMenuType().equals("A") && StrUtil.isEmpty(request.getPerms())) {
+        if ("A".equals(request.getMenuType()) && StrUtil.isEmpty(request.getPerms())) {
             throw new CrmebException("按钮类型的权限表示不能为空");
         }
         SystemMenu systemMenu = new SystemMenu();
@@ -125,7 +125,7 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
     public Boolean deleteById(Integer id) {
         SystemMenu systemMenu = getInfoById(id);
         systemMenu.setIsDelte(true);
-        if (systemMenu.getMenuType().equals("A")) {
+        if ("A".equals(systemMenu.getMenuType())) {
             boolean update = updateById(systemMenu);
             if (update) {
                 redisUtil.delete(CACHE_LIST_KEY);
@@ -159,10 +159,10 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
         if (ObjectUtil.isNull(request.getId())) {
             throw new CrmebException("系统菜单id不能为空");
         }
-        if (request.getMenuType().equals("C") && StrUtil.isEmpty(request.getComponent())) {
+        if ("C".equals(request.getMenuType()) && StrUtil.isEmpty(request.getComponent())) {
             throw new CrmebException("菜单类型的组件路径不能为空");
         }
-        if (request.getMenuType().equals("A") && StrUtil.isEmpty(request.getPerms())) {
+        if ("A".equals(request.getMenuType()) && StrUtil.isEmpty(request.getPerms())) {
             throw new CrmebException("按钮类型的权限表示不能为空");
         }
         SystemMenu systemMenu = new SystemMenu();

@@ -282,7 +282,7 @@ public class OrderTaskServiceImpl implements OrderTaskService {
         // 根据订单状态表判断订单是否可以自动完成
         for (StoreOrder order : orderList) {
             StoreOrderStatus orderStatus = storeOrderStatusService.getLastByOrderId(order.getId());
-            if (!orderStatus.getChangeType().equals("user_take_delivery")) {
+            if (!"user_take_delivery".equals(orderStatus.getChangeType())) {
                 logger.error("订单自动完成：订单记录最后一条不是收货状态，orderId = " + order.getId());
                 continue ;
             }
