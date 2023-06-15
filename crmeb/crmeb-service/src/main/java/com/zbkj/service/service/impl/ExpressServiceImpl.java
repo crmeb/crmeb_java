@@ -133,7 +133,7 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
     public List<Express> findAll(String type) {
         LambdaQueryWrapper<Express> lqw = new LambdaQueryWrapper<>();
         lqw.eq(Express::getIsShow, true);
-        if (type.equals("elec")) {
+        if ("elec".equals(type)) {
             lqw.eq(Express::getStatus, true);
         }
         lqw.orderByDesc(Express::getSort);
