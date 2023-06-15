@@ -1,23 +1,19 @@
 package com.zbkj.common.utils;
 
+import cn.hutool.core.codec.Base64;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
+import cn.hutool.crypto.symmetric.DES;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.zbkj.common.constants.Constants;
-import com.zbkj.common.exception.CrmebException;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
-import java.security.Security;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -37,43 +33,26 @@ import java.util.regex.Pattern;
  */
 public class CrmebUtil {
 
-    public static String encryptPassword(String pwd, String key){
-        try {
-            Security.addProvider(new com.sun.crypto.provider.SunJCE());
-            Key _key = getDESSercretKey(key);
-            Cipher cipher = Cipher.getInstance("DES");
-            cipher.init(Cipher.ENCRYPT_MODE, _key);
-            byte[] data = pwd.getBytes(StandardCharsets.UTF_8);
-            byte[] result = cipher.doFinal(data);
-            return new sun.misc.BASE64Encoder().encode(result);
-        }catch (Exception e){
-            throw new CrmebException("密码处理异常");
-        }
+    public static String encryptPassword(String pwd, String key) {
+        DES des = new DES(getDESSercretKey(key));
+        byte[] result = des.encrypt(pwd);
+        return Base64.encode(result);
     }
 
     /**
      * 解密密码
      */
-    public static String decryptPassowrd(String pwd, String key)
-            throws Exception {
-        Security.addProvider(new com.sun.crypto.provider.SunJCE());
-        Key aKey = getDESSercretKey(key);
-        Cipher cipher = Cipher.getInstance("DES");
-        cipher.init(Cipher.DECRYPT_MODE, aKey);
-
-        byte[] data = new sun.misc.BASE64Decoder().decodeBuffer(pwd);
-        byte[] result = cipher.doFinal(data);
-
-        return new String(result, StandardCharsets.UTF_8);
+    public static String decryptPassowrd(String pwd, String key) {
+        DES des = new DES(getDESSercretKey(key));
+        return des.decryptStr(pwd);
     }
 
     /**
      * 获得DES加密秘钥
      * @param key
      * @return
-     * @throws UnsupportedEncodingException
      */
-    public static SecretKey getDESSercretKey(String key) throws UnsupportedEncodingException {
+    public static byte[] getDESSercretKey(String key) {
         byte[] result = new byte[8];
         byte[] keys = null;
         keys = key.getBytes(StandardCharsets.UTF_8);
@@ -84,7 +63,7 @@ public class CrmebUtil {
                 result[i] = 0x01;
             }
         }
-        return new SecretKeySpec(result, "DES");
+        return result;
     }
 
     /**
@@ -134,8 +113,24 @@ public class CrmebUtil {
      * @param args String[] 字符串数组
      */
     public static void main(String[] args) throws Exception {
+//        System.out.println(encryptPassword("123456", "admin"));
+//		System.out.println(decryptPassowrd("", ""));
+
+        String key = "123456";
+        String data = "中国123ABCabc";
+        System.out.println("原始数据：" + data);
+        String encryptPassword = encryptPassword(data, key);
+        System.out.println("加密结果：" + encryptPassword);
+        String decryptPassowrd = decryptPassowrd(encryptPassword, key);
+        System.out.println("解密结果：" + decryptPassowrd);
+        // 执行结果如下：
+        // 原始数据：中国123ABCabc
+        // 加密结果：5JNGj04iE/XUuTZM75zMrA==
+        // 解密结果：中国123ABCabc
+
         System.out.println(encryptPassword("crmeb@123456", "18292417675"));
-//		System.out.println(decryptPassowrd("Ffg0LtOQNyWU1//Y16+72A==", "18292417675"));
+        // 执行结果：f6mcpGQ8NEmwbab2TlkpUg==
+        // 与 SQL 中的数据一致
     }
 
     /**
