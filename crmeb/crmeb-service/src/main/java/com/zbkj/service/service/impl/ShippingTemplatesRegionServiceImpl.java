@@ -69,7 +69,7 @@ public class ShippingTemplatesRegionServiceImpl extends ServiceImpl<ShippingTemp
         for (ShippingTemplatesRegionRequest shippingTemplatesRegionRequest : shippingTemplatesRegionRequestList) {
             String uniqueKey = DigestUtils.md5Hex(shippingTemplatesRegionRequest.toString());
 
-            if(shippingTemplatesRegionRequest.getCityId().equals("all") || shippingTemplatesRegionRequest.getCityId().equals("0")){
+            if("all".equals(shippingTemplatesRegionRequest.getCityId()) || "0".equals(shippingTemplatesRegionRequest.getCityId())){
                 cityIdList = getCityIdList();
             }else{
                 cityIdList = CrmebUtil.stringToArray(shippingTemplatesRegionRequest.getCityId());

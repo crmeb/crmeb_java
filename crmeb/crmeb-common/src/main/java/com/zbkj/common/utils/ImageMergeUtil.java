@@ -73,7 +73,7 @@ public class ImageMergeUtil {
             File file = new File(fileName);
             BufferedImage read = ImageIO.read(file);
 
-            if(bufferedImage == null || bufferedImage.equals("")){
+            if(bufferedImage == null || "".equals(bufferedImage)){
                 imageMergeUtilVo.setX(0);
                 imageMergeUtilVo.setY(0);
                 //创建新的画布，宽高以第一个图为准

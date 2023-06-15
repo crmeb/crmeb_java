@@ -24,13 +24,13 @@ public class RequestMethod {
     }
 
     private static boolean CCIsNull(String client_id, String client_secret) {
-        if (ClientId != null && ClientSecret != null && !ClientId.equals("") && !ClientSecret.equals(""))
+        if (ClientId != null && ClientSecret != null && !"".equals(ClientId) && !"".equals(ClientSecret))
             return true;
         return false;
     }
 
     public String getCodeOpen(String redirect_uri) {
-        if (ClientId != null && !ClientId.equals(""))
+        if (ClientId != null && !"".equals(ClientId))
             return UtilUrl.openType + "?response_type=code&client_id=" + ClientId + "&redirect_uri=" + redirect_uri + "&state=1";
         return example;
     }

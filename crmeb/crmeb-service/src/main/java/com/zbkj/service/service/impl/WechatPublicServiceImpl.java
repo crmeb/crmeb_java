@@ -36,7 +36,7 @@ public class WechatPublicServiceImpl implements WechatPublicService {
     @Override
     public Object getCustomizeMenus() {
         Object list = redisUtil.get(WeChatConstants.REDIS_PUBLIC_MENU_KEY);
-        if (list == null || list.equals("")) {
+        if (list == null || "".equals(list)) {
             //如果没有， 去读取
             JSONObject tagsList = wechatNewService.getPublicCustomMenu();
             redisUtil.set(WeChatConstants.REDIS_PUBLIC_MENU_KEY, tagsList);

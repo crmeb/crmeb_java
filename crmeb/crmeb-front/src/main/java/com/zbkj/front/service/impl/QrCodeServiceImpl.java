@@ -50,7 +50,7 @@ public class QrCodeServiceImpl implements QrCodeService {
                 Map<Object, Object> dataMap = JSONObject.toJavaObject(data, Map.class);
 
                 for (Map.Entry<Object, Object> m : dataMap.entrySet()) {
-                    if(m.getKey().equals("path")){
+                    if("path".equals(m.getKey())){
                         //前端路由， 不需要拼参数
                         page = m.getValue().toString();
                         continue;

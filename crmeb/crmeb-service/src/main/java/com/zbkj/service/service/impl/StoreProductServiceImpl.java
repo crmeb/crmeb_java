@@ -688,7 +688,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
      */
     private List<String> getProductActivityList(String activityStr) {
         List<String> activityList = CollUtil.newArrayList();
-        if (activityStr.equals("0, 1, 2, 3")) {
+        if ("0, 1, 2, 3".equals(activityStr)) {
             activityList.add(Constants.PRODUCT_TYPE_NORMAL_STR);
             activityList.add(Constants.PRODUCT_TYPE_SECKILL_STR);
             activityList.add(Constants.PRODUCT_TYPE_BARGAIN_STR);
@@ -975,7 +975,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         }
 
         // 回滚商品库存/销量 并更新
-        boolean isPlus = storeProductStockRequest.getOperationType().equals("add");
+        boolean isPlus = "add".equals(storeProductStockRequest.getOperationType());
         int productStock = isPlus ? existProduct.getStock() + storeProductStockRequest.getNum() : existProduct.getStock() - storeProductStockRequest.getNum();
         existProduct.setStock(productStock);
         existProduct.setSales(existProduct.getSales() - storeProductStockRequest.getNum());
@@ -1003,7 +1003,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             throw new CrmebException("请先进行采集商品配置");
         }
         int copyNum = 0;
-        if (copyType.equals("1")) {// 一号通
+        if ("1".equals(copyType)) {// 一号通
             JSONObject info = onePassService.info();
             copyNum = Optional.ofNullable(info.getJSONObject("copy").getInteger("num")).orElse(0);
         }
@@ -1035,11 +1035,11 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
     @Override
     public Boolean operationStock(Integer id, Integer num, String type) {
         UpdateWrapper<StoreProduct> updateWrapper = new UpdateWrapper<>();
-        if (type.equals("add")) {
+        if ("add".equals(type)) {
             updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
         }
-        if (type.equals("sub")) {
+        if ("sub".equals(type)) {
             updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
             // 扣减时加乐观锁保证库存不为负

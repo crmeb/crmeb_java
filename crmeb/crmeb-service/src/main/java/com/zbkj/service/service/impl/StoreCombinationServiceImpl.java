@@ -966,12 +966,12 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
     @Override
     public Boolean operationStock(Integer id, Integer num, String type) {
         UpdateWrapper<StoreCombination> updateWrapper = new UpdateWrapper<>();
-        if (type.equals("add")) {
+        if ("add".equals(type)) {
             updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
             updateWrapper.setSql(StrUtil.format("quota = quota + {}", num));
         }
-        if (type.equals("sub")) {
+        if ("sub".equals(type)) {
             updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
             updateWrapper.setSql(StrUtil.format("quota = quota - {}", num));
@@ -1074,7 +1074,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         }
 
         // 回滚商品库存/销量 并更新
-        boolean isPlus = storeProductStockRequest.getOperationType().equals("add");
+        boolean isPlus = "add".equals(storeProductStockRequest.getOperationType());
         int productStock = isPlus ? existCombination.getStock() + storeProductStockRequest.getNum() : existCombination.getStock() - storeProductStockRequest.getNum();
         existCombination.setStock(productStock);
         existCombination.setSales(existCombination.getSales() - storeProductStockRequest.getNum());

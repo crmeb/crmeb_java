@@ -108,7 +108,7 @@ public class WeChatPayServiceImpl implements WeChatPayService {
         }
         // 切割字符串，判断是支付订单还是充值订单
         String pre = StrUtil.subPre(orderNo, 5);
-        if (pre.equals("order")) {// 支付订单
+        if ("order".equals(pre)) {// 支付订单
             StoreOrder storeOrder = storeOrderService.getByOderId(orderNo);
             if (ObjectUtil.isNull(storeOrder)) {
                 throw new CrmebException("订单不存在");
@@ -253,12 +253,12 @@ public class WeChatPayServiceImpl implements WeChatPayService {
         String appId = "";
         String mchId = "";
         String signKey = "";
-        if (userRecharge.getRechargeType().equals("public")) {// 公众号
+        if ("public".equals(userRecharge.getRechargeType())) {// 公众号
             appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
             mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_MCH_ID);
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
         }
-        if (userRecharge.getRechargeType().equals("routine")) {// 小程序
+        if ("routine".equals(userRecharge.getRechargeType())) {// 小程序
             appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
             mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_MCH_ID);
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
@@ -423,11 +423,11 @@ public class WeChatPayServiceImpl implements WeChatPayService {
                 throw new CrmebException("微信下单失败！");
             }
             CreateOrderResponseVo responseVo = CrmebUtil.mapToObj(map, CreateOrderResponseVo.class);
-            if (responseVo.getReturnCode().toUpperCase().equals("FAIL")) {
+            if ("FAIL".equals(responseVo.getReturnCode().toUpperCase())) {
                 throw new CrmebException("微信下单失败1！" +  responseVo.getReturnMsg());
             }
 
-            if (responseVo.getResultCode().toUpperCase().equals("FAIL")) {
+            if ("FAIL".equals(responseVo.getResultCode().toUpperCase())) {
                 throw new CrmebException("微信下单失败2！" + responseVo.getErrCodeDes());
             }
 
