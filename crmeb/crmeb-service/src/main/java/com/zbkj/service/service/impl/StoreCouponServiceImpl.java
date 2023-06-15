@@ -165,7 +165,7 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
         }
 
         //看是否过期
-        if (!(storeCoupon.getReceiveEndTime() == null || storeCoupon.getReceiveEndTime().equals(""))) {
+        if (!(storeCoupon.getReceiveEndTime() == null || "".equals(storeCoupon.getReceiveEndTime()))) {
             //非永久可领取
             String date = DateUtil.nowDateTimeStr();
             int result = DateUtil.compareDate(date, DateUtil.dateToStr(storeCoupon.getReceiveEndTime(), Constants.DATE_FORMAT), Constants.DATE_FORMAT);

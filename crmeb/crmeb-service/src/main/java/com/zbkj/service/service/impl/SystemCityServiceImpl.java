@@ -129,7 +129,7 @@ public class SystemCityServiceImpl extends ServiceImpl<SystemCityDao, SystemCity
     public List<Integer> getCityIdList() {
         Object data = redisUtil.get(Constants.CITY_LIST_LEVEL_1);
         List<Integer> collect;
-        if (data == null || data.equals("")) {
+        if (data == null || "".equals(data)) {
             LambdaQueryWrapper<SystemCity> lambdaQueryWrapper = new LambdaQueryWrapper<>();
             lambdaQueryWrapper.select(SystemCity::getCityId);
             lambdaQueryWrapper.eq(SystemCity::getLevel, 1);
