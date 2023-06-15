@@ -233,9 +233,9 @@ public class OrderPayServiceImpl implements OrderPayService {
         // 分销员逻辑
         if (!user.getIsPromoter()) {
             String funcStatus = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_KEY_BROKERAGE_FUNC_STATUS);
-            if (funcStatus.equals("1")) {
+            if ("1".equals(funcStatus)) {
                 String broQuota = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_QUOTA);
-                if (!broQuota.equals("-1") && storeOrder.getPayPrice().compareTo(new BigDecimal(broQuota)) >= 0) {// -1 不成为分销员
+                if (!"-1".equals(broQuota) && storeOrder.getPayPrice().compareTo(new BigDecimal(broQuota)) >= 0) {// -1 不成为分销员
                     user.setIsPromoter(true);
                     user.setPromoterTime(cn.hutool.core.date.DateUtil.date());
                 }
@@ -413,7 +413,7 @@ public class OrderPayServiceImpl implements OrderPayService {
     private List<UserBrokerageRecord> assignCommission(StoreOrder storeOrder) {
         // 检测商城是否开启分销功能
         String isOpen = systemConfigService.getValueByKey(Constants.CONFIG_KEY_STORE_BROKERAGE_IS_OPEN);
-        if(StrUtil.isBlank(isOpen) || isOpen.equals("0")){
+        if(StrUtil.isBlank(isOpen) || "0".equals(isOpen)){
             return CollUtil.newArrayList();
         }
         // 营销产品不参与
@@ -535,7 +535,7 @@ public class OrderPayServiceImpl implements OrderPayService {
         }
         // 判断分销模式
         String model = systemConfigService.getValueByKey(Constants.CONFIG_KEY_STORE_BROKERAGE_MODEL);
-        if (StrUtil.isNotBlank(model) && model.equals("1") && !spreadUser.getIsPromoter()) {
+        if (StrUtil.isNotBlank(model) && "1".equals(model) && !spreadUser.getIsPromoter()) {
             // 指定分销模式下：不是推广员不参与分销
             return recordList;
         }
@@ -549,7 +549,7 @@ public class OrderPayServiceImpl implements OrderPayService {
         if (ObjectUtil.isNull(spreadSpreadUser)) {
             return recordList;
         }
-        if (StrUtil.isNotBlank(model) && model.equals("1") && !spreadSpreadUser.getIsPromoter()) {
+        if (StrUtil.isNotBlank(model) && "1".equals(model) && !spreadSpreadUser.getIsPromoter()) {
             // 指定分销模式下：不是推广员不参与分销
             return recordList;
         }
@@ -926,10 +926,10 @@ public class OrderPayServiceImpl implements OrderPayService {
         integralRecord.setTitle(IntegralRecordConstants.BROKERAGE_RECORD_TITLE_ORDER);
         integralRecord.setIntegral(integral);
         integralRecord.setBalance(balance);
-        if (type.equals("order")){
+        if ("order".equals(type)){
             integralRecord.setMark(StrUtil.format("用户付款成功,订单增加{}积分", integral));
         }
-        if (type.equals("product")) {
+        if ("product".equals(type)) {
             integralRecord.setMark(StrUtil.format("用户付款成功,商品增加{}积分", integral));
         }
         integralRecord.setStatus(IntegralRecordConstants.INTEGRAL_RECORD_STATUS_CREATE);
@@ -1002,7 +1002,7 @@ public class OrderPayServiceImpl implements OrderPayService {
             for (int i = 0; i < couponsForGiveUser.size();) {
                 StoreProductCoupon storeProductCoupon = couponsForGiveUser.get(i);
                 MyRecord record = storeCouponUserService.paySuccessGiveAway(storeProductCoupon.getIssueCouponId(), storeOrder.getUid());
-                if (record.getStr("status").equals("fail")) {
+                if ("fail".equals(record.getStr("status"))) {
                     logger.error(StrUtil.format("支付成功领取优惠券失败，失败原因：{}", record.getStr("errMsg")));
                     couponsForGiveUser.remove(i);
                     continue;

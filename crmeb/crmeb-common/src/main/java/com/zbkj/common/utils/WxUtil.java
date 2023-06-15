@@ -55,7 +55,7 @@ public class WxUtil {
         if(ObjectUtil.isNull(result)){
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if(result.containsKey("errcode") && result.getString("errcode").equals("0")){
+        if(result.containsKey("errcode") && "0".equals(result.getString("errcode"))){
             return result;
         }
         if(result.containsKey("errmsg")){
