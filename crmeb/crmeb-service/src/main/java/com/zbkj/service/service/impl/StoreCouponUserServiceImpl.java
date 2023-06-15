@@ -299,11 +299,11 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
         LambdaQueryWrapper<StoreCouponUser> lqw = new LambdaQueryWrapper<>();
 
         lqw.eq(StoreCouponUser::getUid, userId);
-        if (type.equals("usable")) {
+        if ("usable".equals(type)) {
             lqw.eq(StoreCouponUser::getStatus, CouponConstants.STORE_COUPON_USER_STATUS_USABLE);
             lqw.orderByDesc(StoreCouponUser::getId);
         }
-        if (type.equals("unusable")) {
+        if ("unusable".equals(type)) {
             lqw.gt(StoreCouponUser::getStatus, CouponConstants.STORE_COUPON_USER_STATUS_USABLE);
             lqw.last(StrUtil.format(" order by case `status` when {} then {} when {} then {} when {} then {} end", 0, 1, 1, 2, 2, 3));
         }

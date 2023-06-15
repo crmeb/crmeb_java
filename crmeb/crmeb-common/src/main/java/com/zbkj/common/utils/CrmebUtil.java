@@ -396,7 +396,7 @@ public class CrmebUtil {
         }
 
         ip = request.getRemoteAddr();
-        if(ip.equals("0:0:0:0:0:0:0:1")){
+        if("0:0:0:0:0:0:0:1".equals(ip)){
             //本地 localhost访问 ipv6
             ip = "127.0.0.1";
         }
@@ -419,11 +419,11 @@ public class CrmebUtil {
             return false;
         }
 
-        if(ip.equals("unKnown")){
+        if("unKnown".equals(ip)){
             return false;
         }
 
-        if(ip.equals("unknown")){
+        if("unknown".equals(ip)){
             return false;
         }
 

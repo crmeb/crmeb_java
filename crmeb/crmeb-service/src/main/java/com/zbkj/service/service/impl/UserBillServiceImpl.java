@@ -70,7 +70,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
         if (request.getSort() == null) {
             queryWrapper.orderByDesc("create_time");
         }else{
-            if (request.getSort().equals("asc")) {
+            if ("asc".equals(request.getSort())) {
                 queryWrapper.orderByAsc("number");
             }else{
                 queryWrapper.orderByDesc("number");
@@ -123,7 +123,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
 
         //关联id
         if (StringUtils.isNotBlank(request.getLinkId())) {
-            if (request.getLinkId().equals("gt")) {
+            if ("gt".equals(request.getLinkId())) {
                 queryWrapper.ne("link_id", 0);
             }else{
                 queryWrapper.eq("link_id", request.getLinkId());
