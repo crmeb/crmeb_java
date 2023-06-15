@@ -68,13 +68,13 @@ public class OrderUtils {
         payType = payType.toLowerCase();
         switch (payType){
             case PayConstants.PAY_TYPE_WE_CHAT:
-                result = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_PAY_WEIXIN_OPEN).equals("1");
+                result = "1".equals(systemConfigService.getValueByKey(SysConfigConstants.CONFIG_PAY_WEIXIN_OPEN));
                 break;
             case PayConstants.PAY_TYPE_YUE:
-                result = (systemConfigService.getValueByKey(SysConfigConstants.CONFIG_YUE_PAY_STATUS).equals("1"));
+                result = ("1".equals(systemConfigService.getValueByKey(SysConfigConstants.CONFIG_YUE_PAY_STATUS)));
                 break;
             case PayConstants.PAY_TYPE_ALI_PAY:
-                result = (systemConfigService.getValueByKey(SysConfigConstants.CONFIG_ALI_PAY_STATUS).equals("1"));
+                result = ("1".equals(systemConfigService.getValueByKey(SysConfigConstants.CONFIG_ALI_PAY_STATUS)));
                 break;
         }
         return result;

@@ -390,7 +390,7 @@ public class OnePassServiceImpl implements OnePassService {
         params.add("num", expressNo);
         JSONObject post = onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_EXPRESS_QUEARY_URI, params, header);
         String dataStr = post.getString("data");
-        if (StrUtil.isBlank(dataStr) || dataStr.equals("[]")) {
+        if (StrUtil.isBlank(dataStr) || "[]".equals(dataStr)) {
             return null;
         }
         JSONObject jsonObject = post.getJSONObject("data");
