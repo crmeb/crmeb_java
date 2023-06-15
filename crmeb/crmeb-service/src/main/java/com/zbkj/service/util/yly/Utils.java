@@ -29,7 +29,7 @@ public class Utils {
     }
 
     public static boolean isNull(String content) {
-        if (content != null && !content.equals(""))
+        if (content != null && !"".equals(content))
             return false;
         return true;
     }

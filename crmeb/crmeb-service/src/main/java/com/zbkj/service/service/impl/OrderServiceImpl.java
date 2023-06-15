@@ -947,7 +947,7 @@ public class OrderServiceImpl implements OrderService {
             }
             // 自提开关是否打开
             String storeSelfMention = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_KEY_STORE_SELF_MENTION);
-            if (storeSelfMention.equals("false")) {
+            if ("false".equals(storeSelfMention)) {
                 throw new CrmebException("请先联系管理员开启门店自提");
             }
             SystemStore systemStore = systemStoreService.getById(request.getStoreId());
@@ -1337,12 +1337,12 @@ public class OrderServiceImpl implements OrderService {
     private OrderInfoVo validatePreOrderRequest(PreOrderRequest request, User user) {
         OrderInfoVo orderInfoVo = new OrderInfoVo();
         List<OrderInfoDetailVo> detailVoList = CollUtil.newArrayList();
-        if (request.getPreOrderType().equals("shoppingCart")) {// 购物车购买
+        if ("shoppingCart".equals(request.getPreOrderType())) {// 购物车购买
             detailVoList = validatePreOrderShopping(request, user);
             List<Long> cartIdList = request.getOrderDetails().stream().map(PreOrderDetailRequest::getShoppingCartId).distinct().collect(Collectors.toList());
             orderInfoVo.setCartIdList(cartIdList);
         }
-        if (request.getPreOrderType().equals("buyNow")) {// 立即购买
+        if ("buyNow".equals(request.getPreOrderType())) {// 立即购买
             // 立即购买只会有一条详情
             PreOrderDetailRequest detailRequest = request.getOrderDetails().get(0);
             if (detailRequest.getSeckillId() > 0) {// 秒杀
@@ -1414,7 +1414,7 @@ public class OrderServiceImpl implements OrderService {
                 detailVoList.add(detailVo);
             }
         }
-        if (request.getPreOrderType().equals("again")) {// 再次购买
+        if ("again".equals(request.getPreOrderType())) {// 再次购买
             PreOrderDetailRequest detailRequest = request.getOrderDetails().get(0);
             detailVoList = validatePreOrderAgain(detailRequest, user);
         }
@@ -1896,7 +1896,7 @@ public class OrderServiceImpl implements OrderService {
         // 全场满额包邮金额
         String storeFreePostageString = systemConfigService.getValueByKey(SysConfigConstants.STORE_FEE_POSTAGE);
         BigDecimal storePostage = BigDecimal.ZERO;
-        if (postageSwitchString.equals("true") && (storeFreePostageString.equals("0") || orderInfoVo.getProTotalFee().compareTo(new BigDecimal(storeFreePostageString)) >= 0)) {
+        if ("true".equals(postageSwitchString) && ("0".equals(storeFreePostageString) || orderInfoVo.getProTotalFee().compareTo(new BigDecimal(storeFreePostageString)) >= 0)) {
             storePostage = BigDecimal.ZERO;
         } else if (ObjectUtil.isNull(userAddress) || userAddress.getCityId() <= 0) {
             // 用户地址不存在，默认运费为0元

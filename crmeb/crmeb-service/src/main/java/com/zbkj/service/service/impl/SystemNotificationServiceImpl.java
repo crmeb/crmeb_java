@@ -131,7 +131,7 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
     public NotificationInfoResponse getDetail(NotificationInfoRequest request) {
         SystemNotification notification = getByIdException(request.getId());
         NotificationInfoResponse response = new NotificationInfoResponse();
-        if (request.getDetailType().equals("wechat")) {
+        if ("wechat".equals(request.getDetailType())) {
             if (notification.getIsWechat().equals(0)) {
                 throw new CrmebException("请先配置公众号模板消息");
             }
@@ -139,7 +139,7 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
             BeanUtils.copyProperties(templateMessage, response);
             response.setStatus(notification.getIsWechat());
         }
-        if (request.getDetailType().equals("routine")) {
+        if ("routine".equals(request.getDetailType())) {
             if (notification.getIsRoutine().equals(0)) {
                 throw new CrmebException("请先配置小程序订阅消息");
             }
@@ -147,7 +147,7 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
             BeanUtils.copyProperties(templateMessage, response);
             response.setStatus(notification.getIsRoutine());
         }
-        if (request.getDetailType().equals("sms")) {
+        if ("sms".equals(request.getDetailType())) {
             if (notification.getIsSms().equals(0)) {
                 throw new CrmebException("请先配置短信模板");
             }
@@ -193,11 +193,11 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
      */
     @Override
     public Boolean modify(NotificationUpdateRequest request) {
-        if (!request.getDetailType().equals("sms") && StrUtil.isEmpty(request.getTempId())) {
+        if (!"sms".equals(request.getDetailType()) && StrUtil.isEmpty(request.getTempId())) {
             throw new CrmebException("模板id不能为空");
         }
         SystemNotification notification = getByIdException(request.getId());
-        if (request.getDetailType().equals("wechat")) {
+        if ("wechat".equals(request.getDetailType())) {
             if (notification.getIsWechat().equals(0)) {
                 throw new CrmebException("请先为通知配置公众号模板");
             }
@@ -217,7 +217,7 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
                 return Boolean.TRUE;
             });
         }
-        if (request.getDetailType().equals("routine")) {
+        if ("routine".equals(request.getDetailType())) {
             if (notification.getIsRoutine().equals(0)) {
                 throw new CrmebException("请先为通知配置小程序订阅模板");
             }
@@ -237,7 +237,7 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
                 return Boolean.TRUE;
             });
         }
-        if (request.getDetailType().equals("sms") && !notification.getIsSms().equals(request.getStatus())) {
+        if ("sms".equals(request.getDetailType()) && !notification.getIsSms().equals(request.getStatus())) {
             notification.setIsSms(request.getStatus());
             return updateById(notification);
         }
