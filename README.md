@@ -125,10 +125,9 @@ CRMEB JAVA 技术交流QQ群 3群 640230510 🔥 <a target="_blank" href="https:
 ![](crmeb/crmebimage/crmebimage/demoimage/10-pc-04.png)
 ![](crmeb/crmebimage/crmebimage/demoimage/11-pc-05.png)
 ![](crmeb/crmebimage/crmebimage/demoimage/12-pc-06.png)
-![页面设计Gif](crmeb/crmebimage/crmebimage/demoimage/13yemiandesiner.gif)
-![一键换色，适配各行各业](crmeb/crmebimage/crmebimage/demoimage/14yijianhuanse.gif)
-![web PC 管理端](crmeb/crmebimage/crmebimage/demoimage/15webPCadmin.gif)
-
+![输入图片说明](crmeb/crmebimage/crmebimage/demoimage/13yemiandesiner.gif)
+![输入图片说明](crmeb/crmebimage/crmebimage/demoimage/14yijianhuanse.gif)
+![输入图片说明](crmeb/crmebimage/crmebimage/demoimage/15webPCadmin.gif)
 
 ### 项目代码包介绍
 1:admin     WEB程序         PC端管理端 VUE + ElementUi<br>
