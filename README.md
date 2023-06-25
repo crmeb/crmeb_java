@@ -145,8 +145,8 @@ CRMEB JAVA 技术交流QQ群 3群 640230510 🔥 <a target="_blank" href="https:
 多商户Java版：http://s.crmeb.com/goods_detail/750<br>
 
 ### 联系客服
-[![](/crmeb/crmebimage/crmebimage/demoimage/duoshanghu_kefu.jpg)](http://s.crmeb.com/goods_detail/750)
-[![](/crmeb/crmebimage/crmebimage/demoimage/danshanghu_kefu.jpg)](http://s.crmeb.com/goods_detail/714)
+[![](/crmeb/crmebimage/crmebimage/demoimage/duoshanghu_kefu.jpg)](https://www.crmeb.com/user/goods_detail/750)
+[![](/crmeb/crmebimage/crmebimage/demoimage/danshanghu_kefu.jpg)](https://www.crmeb.com/user/goods_detail/714)
 
 
 
