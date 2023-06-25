@@ -128,6 +128,7 @@ CRMEB JAVA 技术交流QQ群 3群 640230510 🔥 <a target="_blank" href="https:
 ![](crmeb/crmebimage/crmebimage/demoimage/13yemiandesiner.gif)
 ![](crmeb/crmebimage/crmebimage/demoimage/14yijianhuanse.gif)
 ![](crmeb/crmebimage/crmebimage/demoimage/15webPCadmin.gif)
+![输入图片说明](crmeb/crmebimage/crmebimage/demoimage/13yemiandesiner.gif)
 
 
 ### 项目代码包介绍
