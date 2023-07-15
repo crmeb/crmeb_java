@@ -37,32 +37,33 @@
     如果对您有帮助，您可以点右上角 "Star" ❤️ 支持一下 谢谢！
 </div>
 
-### 介绍：
+---
 
-CRMEB Java版商城系统是一款基于Java + Uni-app 开发的新零售社交电商系统，能够真正帮助企业基于微信公众号、小程序、移动端等，实现会员管理、数据分析,精准营销的电子商务管理系统。
+### 📖 简介：
+
+CRMEB 开源商城系统Java版，基于Java+Vue+Uni-app开发，在微信公众号、小程序、H5移动端都能使用，代码全开源无加密，独立部署，二开很方便，还支持免费商用，能满足企业新零售、分销推广、拼团、砍价、秒杀等多种经营需求，自用、做二开项目都很合适。
 
 CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 
 
 系统代码全开源无加密，独立部署、二开方便，适用于企业新零售、分销、拼团、砍价，秒杀等各种业务需求。
 
-![](/crmeb/crmebimage/crmebimage/demoimage/gitee-java.jpg)
+---
 
-### 系统亮点：
-> 1:有详细的代码注释，有完整系统手册。<br>
-> 2:基于 SpringBoot 框架开发业界主流。<br>
-> 3:【前端】Web PC 管理端 vue + element UI。 <br>
-> 4:【前端】移动端使用 UniApp 框架，前后端分离开发。<br>
-> 5:标准RESTful 接口、标准数据传输，逻辑层次更明确，更多的提高api复用。<br>
-> 6:支持Redis队列，降低流量高峰，解除耦合，高可用。<br>
-> 7:无缝事件机制，行为扩展更方便，方便二次开发。<br>
-> 8:数据导出，方便个性化分析。<br>
-> 9:数据统计分析,使用ECharts图表统计，实现用户、产品、订单、资金等统计分析。<br>
-> 10:权限管理，后台多种角色，多重身份权限管理，权限可以控制到按钮级别的操作。<br>
-> 11:Vue表单生成控件，拖拽配置表单，减少前端重复表单工作量，提高前端开发效率。<br>
+### 💡 系统亮点：
+>1.SpringBoot 框架开发业界主流。<br>
+>2.【前端】Web PC 管理端 Vue + Element UI。<br>
+>3.【前端】移动端使用 Uni-app 框架，前后端分离开发。<br>
+>4.标准RESTful 接口、标准数据传输，逻辑层次更明确，更多的提高api复用。<br>
+>5.支持Redis队列，降低流量高峰，解除耦合，高可用。<br>
+>6.数据导出，方便个性化分析。<br>
+>7.数据统计分析,使用ECharts图表统计，实现用户、产品、订单、资金等统计分析。<br>
+>8.Spring Security 权限管理，后台多种角色，多重身份权限管理，权限可以控制到按钮级别的操作。<br>
+>9.Vue表单生成控件，拖拽配置表单，减少前端重复表单工作量，提高前端开发效率。<br>
 
+---
 
-### 运行环境及框架：
+### 💻 运行环境及框架：
 ~~~
 1.	移动端uniapp开发框架 可生成H5 公众号 微信小程序
 2.	WEB Pc 管理后台使用Vue + Element UI 开发 兼容主流浏览器 ie11+
@@ -71,7 +72,7 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 5.	运行条件 Java 1.8 Mysql5.7
 ~~~
 
-### Java项目框架 和 WEB PC 项目运行环境
+### 🔧 Java项目框架 和 WEB PC 项目运行环境
 ~~~
 1.SpringBoot 2.2.6.RELEASE<br>
 2.Maven 3.6.1<br>
@@ -83,11 +84,15 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 8.element ui 2.13<br>
 ~~~
 
-移动端 uniapp 开发 使用 HbuilderX 开发
+### 🧭 项目代码包介绍
+~~~
+1. admin     WEB程序         PC端管理端 VUE + ElementUi<br>
+2. app       移动商城         UniApp标准开发(H5 + 微信小程序)<br>
+3. crmeb     Api            Java SpringBoot + mybatisPlus<br>
+4. 接口文档   Api对应的接口文档也可以部署项目后查看<br>
+~~~
 
-### 官方论坛
-![输入图片说明](crmeb/crmebimage/crmebimage/%E5%AE%98%E6%96%B9%E7%A4%BE%E5%8C%BA@2x.jpg)
-产品BUG、优化建议，欢迎社区反馈：[https://www.crmeb.com/ask/thread/list/152](https://www.crmeb.com/ask/thread/list/152)
+移动端 uniapp 开发 使用 HbuilderX 开发
 
 ### 系统演示：
 ![](crmeb/crmebimage/crmebimage/demoimage/c1.jpg)
@@ -99,16 +104,20 @@ WEBPC管理端：https://admin.java.crmeb.net<br>
 移动端 18292417675 / crmeb@123456
 管理端 admin / 123456
 
-### 官方论坛
-产品BUG、优化建议，欢迎社区反馈：https://www.crmeb.com/ask/thread/list/152
+[想了解CRMEB开源商城系统Java版整体框架，你可以戳这里快速掌握！](https://doc.crmeb.com/java/crmeb_java/2049)
 
-### 系统文档
-安装文档、产品介绍、技术文档：https://doc.crmeb.com/java/crmeb_java
+### 系统资料
+需要系统文档的朋友看过来，安装文档、产品介绍、技术文档...你想要的我都有！
+[https://doc.crmeb.com/java/crmeb_java](https://doc.crmeb.com/java/crmeb_java)
 
-### 技术交流群
-CRMEB JAVA 技术交流QQ群 1群 🈵️<br>
-CRMEB JAVA 技术交流QQ群 2群 🈵️<br>
-CRMEB JAVA 技术交流QQ群 3群 640230510 🔥 <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=wdIifKeQm_YvjaeGClMn-ikC8-CeMYSE&jump_from=webapi&authKey=CeTLiRWEjqwjVTWY1Jd9Izlv17eUK4NYcic8/Zu/WFA1Ty5dq+a34Ywk6CI+gpdy"><img border="0" src="//pub.idqqimg.com/wpa/images/group.png" alt="CRMEB Java技术交流3群" title="CRMEB Java技术交流3群"></a>
+
+要安装系统，跟着视频更顺畅！CRMEB开源商城系统Java版安装视频，给你奉上！
+视频教程 B站视频教程 持续更新中 [点击观看 💻🖥️](https://www.bilibili.com/video/BV1bP4y1n76P/?vd_source=40854aeda5bba4b8766afd5a99623b16)
+
+### UI界面
+#### 核心功能
+![](crmeb/crmebimage/crmebimage/demoimage/javaop2.jpg)
+
 
 使用中遇到bug 或者问题可以在gitee 上提 Issues
 如果直接点击加群无反应可复制QQ号码手动加入
@@ -116,8 +125,7 @@ CRMEB JAVA 技术交流QQ群 3群 640230510 🔥 <a target="_blank" href="https:
 ![](crmeb/crmebimage/crmebimage/demoimage/03-mobile-01.png)
 ![](crmeb/crmebimage/crmebimage/demoimage/04-mobile-02.png)
 ![](crmeb/crmebimage/crmebimage/demoimage/05-mobile-03.png)
-### 功能图预览
-![](crmeb/crmebimage/crmebimage/demoimage/06-optionList.jpg)
+
 ### WEB PC管理端预览
 ![](crmeb/crmebimage/crmebimage/demoimage/07-pc-01.png)
 ![](crmeb/crmebimage/crmebimage/demoimage/08-pc-02.png)
@@ -130,24 +138,27 @@ CRMEB JAVA 技术交流QQ群 3群 640230510 🔥 <a target="_blank" href="https:
 ![](crmeb/crmebimage/crmebimage/demoimage/14yijianhuanse-min.gif)
 ![](crmeb/crmebimage/crmebimage/demoimage/15webPCadmin-min.gif)
 
-### 项目代码包介绍
-1:admin     WEB程序         PC端管理端 VUE + ElementUi<br>
-2:app       移动商城         UniApp标准开发(H5 + 微信小程序)<br>
-3:crmeb     Api            Java SpringBoot + mybatisPlus<br>
-4:接口文档   Api对应的接口文档也可以部署项目后查看<br>
-
-视频教程 B站视频教程 持续更新中 [点击观看 💻🖥️](https://www.bilibili.com/video/BV1bP4y1n76P/?vd_source=40854aeda5bba4b8766afd5a99623b16)
 
 
-### 商业版
-<!-- ![](crmeb/crmebimage/crmebimage/demoimage/c2.jpg) -->
-购买商业版： http://crmeb.com/web/index/java<br>
-多商户Java版：http://s.crmeb.com/goods_detail/750<br>
 
-### 联系客服
-[![](/crmeb/crmebimage/crmebimage/demoimage/duoshanghu_kefu.jpg)](https://www.crmeb.com/user/goods_detail/750)
-[![](/crmeb/crmebimage/crmebimage/demoimage/danshanghu_kefu.jpg)](https://www.crmeb.com/user/goods_detail/714)
 
+### CRMEB互动
+#### 技术娱乐
+代码写累了？那就歇会吧！扫码让你开心一刻！
+![](crmeb/crmebimage/crmebimage/demoimage/crmebdouyin.jpg)
+
+
+#### 技术社区
+找方法、提bug、看官方消息、拿活跃大奖！
+https://www.crmeb.com/ask/thread/list/152
+
+
+#### 技术交流
+跟着官方，不迷路！欢迎扫码加入CRMEB 开源项目群，一手消息及资源，尽在掌握！
+CRMEB JAVA 技术交流QQ群 1群 🈵️<br>
+CRMEB JAVA 技术交流QQ群 2群 🈵️<br>
+CRMEB JAVA 技术交流QQ群 3群 640230510 🈵️ 群已满，扫描二维码进企业微信。
+![](crmeb/crmebimage/crmebimage/demoimage/cus01.jpg)
 
 
 
