@@ -153,11 +153,12 @@ https://www.crmeb.com/ask/thread/list/152
 
 
 #### 技术交流
-跟着官方，不迷路！欢迎扫码加入CRMEB 开源项目群，一手消息及资源，尽在掌握！
+跟着官方，不迷路！欢迎扫码加入CRMEB 开源项目群，一手消息及资源，尽在掌握！<br>
 CRMEB JAVA 技术交流QQ群 1群 🈵️<br>
 CRMEB JAVA 技术交流QQ群 2群 🈵️<br>
-CRMEB JAVA 技术交流QQ群 3群 640230510 🈵️ 群已满，扫描二维码进企业微信。
-![](crmeb/crmebimage/crmebimage/demoimage/cus01.jpg)
+CRMEB JAVA 技术交流QQ群 3群 640230510 🈵️ 群已满<br>
+扫描二维码进CRMEB开源商城系统开发，QQ频道欢迎扫码加入，一起交流学习。<br>
+![](crmeb/crmebimage/crmebimage/demoimage/qqcus.jpg)
 使用中遇到bug 或者问题可以在gitee 上提 Issues
 
 
