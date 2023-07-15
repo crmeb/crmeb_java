@@ -157,7 +157,7 @@ https://www.crmeb.com/ask/thread/list/152
 CRMEB JAVA 技术交流QQ群 1群 🈵️<br>
 CRMEB JAVA 技术交流QQ群 2群 🈵️<br>
 CRMEB JAVA 技术交流QQ群 3群 640230510 🈵️ 群已满<br>
-扫描二维码进CRMEB开源商城系统开发，QQ频道欢迎扫码加入，一起交流学习。<br>
+CRMEB开源商城系统开发QQ频道已开启，欢迎扫码加入，一起交流学习。<br>
 ![](crmeb/crmebimage/crmebimage/demoimage/qqcus.jpg)
 使用中遇到bug 或者问题可以在gitee 上提 Issues
 
