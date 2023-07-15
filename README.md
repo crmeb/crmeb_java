@@ -119,8 +119,7 @@ WEBPC管理端：https://admin.java.crmeb.net<br>
 ![](crmeb/crmebimage/crmebimage/demoimage/javaop2.jpg)
 
 
-使用中遇到bug 或者问题可以在gitee 上提 Issues
-如果直接点击加群无反应可复制QQ号码手动加入
+
 ### 移动端预览
 ![](crmeb/crmebimage/crmebimage/demoimage/03-mobile-01.png)
 ![](crmeb/crmebimage/crmebimage/demoimage/04-mobile-02.png)
@@ -159,6 +158,7 @@ CRMEB JAVA 技术交流QQ群 1群 🈵️<br>
 CRMEB JAVA 技术交流QQ群 2群 🈵️<br>
 CRMEB JAVA 技术交流QQ群 3群 640230510 🈵️ 群已满，扫描二维码进企业微信。
 ![](crmeb/crmebimage/crmebimage/demoimage/cus01.jpg)
+使用中遇到bug 或者问题可以在gitee 上提 Issues
 
 
 
