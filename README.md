@@ -51,7 +51,7 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 ---
 
 ### 💡 系统亮点：
->1.SpringBoot 框架开发业界主流。<br>
+>1.SpringBoot 框架开发业界主流。  </br>
 >2.【前端】Web PC 管理端 Vue + Element UI。<br>
 >3.【前端】移动端使用 Uni-app 框架，前后端分离开发。<br>
 >4.标准RESTful 接口、标准数据传输，逻辑层次更明确，更多的提高api复用。<br>
@@ -75,24 +75,24 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 
 ### 🔧 Java项目框架 和 WEB PC 项目运行环境
 ~~~
-1.SpringBoot 2.2.6.RELEASE<br>
-2.Maven 3.6.1<br>
-3.swagger-bootstrap-ui 1.0<br>
-4.Mybatis Plus 3.3.1<br>
-5.npm 6<br>
-6.node 14<br>
-7.vue 2.x<br>
-8.element ui 2.13<br>
+1. SpringBoot 2.2.6.RELEASE
+2. Maven 3.6.1
+3. swagger-bootstrap-ui 1.0
+4. Mybatis Plus 3.3.1
+5. npm 6
+6. node 14
+7. vue 2.x
+8. element ui 2.13
 ~~~
 
 ---
 
 ### 🧭 项目代码包介绍
 ~~~
-1. admin     WEB程序         PC端管理端 VUE + ElementUi<br>
-2. app       移动商城         UniApp标准开发(H5 + 微信小程序)<br>
-3. crmeb     Api            Java SpringBoot + mybatisPlus<br>
-4. 接口文档   Api对应的接口文档也可以部署项目后查看<br>
+1. admin     WEB程序         PC端管理端 VUE + ElementUi
+2. app       移动商城         UniApp标准开发(H5 + 微信小程序)
+3. crmeb     Api            Java SpringBoot + mybatisPlus
+4. 接口文档   Api对应的接口文档也可以部署项目后查看
 ~~~
 
 移动端 uniapp 开发 使用 HbuilderX 开发
