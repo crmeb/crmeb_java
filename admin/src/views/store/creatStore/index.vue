@@ -177,7 +177,7 @@
                 </el-table-column>
                 <el-table-column v-for="(item,iii) in attrValue" :key="iii" :label="formThead[iii].title" align="center" min-width="120">
                   <template slot-scope="scope">
-                    <el-input v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" :min="0" class="priceBox" @keyup.native="keyupEvent(iii, scope.row[iii], scope.$index, 1)"/>
+                    <el-input v-model="scope.row[iii]" maxlength="9" min="0.01" class="priceBox" @blur="keyupEvent(iii, scope.row[iii], scope.$index, 1)"/>
                   </template>
                 </el-table-column>
                 <template v-if="formValidate.isSub">
@@ -216,7 +216,7 @@
                 </el-table-column>
                 <el-table-column v-for="(item,iii) in attrValue" :key="iii" :label="formThead[iii].title" align="center" min-width="120">
                   <template slot-scope="scope">
-                    <el-input :disabled="isDisabled" v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" :min="0" class="priceBox" @keyup.native="keyupEvent(iii, scope.row[iii], scope.$index, 2)" />
+                    <el-input :disabled="isDisabled" v-model="scope.row[iii]" maxlength="9" min="0.01" class="priceBox" @blur="keyupEvent(iii, scope.row[iii], scope.$index, 2)" />
                   </template>
                 </el-table-column>
                 <template v-if="formValidate.isSub">
@@ -260,7 +260,8 @@
                 <el-table-column v-for="(item,iii) in attrValue" :key="iii" :label="formThead[iii].title" align="center" min-width="120">
                   <template slot-scope="scope">
 <!--                    <span>scope.row:{{scope.row}}</span>-->
-                    <el-input :disabled="isDisabled" v-model="scope.row[iii]" :type="formThead[iii].title==='商品编号'?'text':'number'" class="priceBox" @keyup.native="keyupEvent(iii, scope.row[iii], scope.$index, 3)" />
+                    <el-input :disabled="isDisabled" maxlength="9" min="0.01"
+                               v-model="scope.row[iii]" class="priceBox" @blur="keyupEvent(iii, scope.row[iii], scope.$index, 3)" />
                   </template>
                 </el-table-column>
                 <el-table-column align="center" label="一级返佣(元)" min-width="120" v-if="formValidate.isSub">
@@ -587,30 +588,37 @@
     methods: {
       // 校验输入框不能输入0，保留2位小数，库存为正整数
       keyupEvent(key, val, index, num) {
+        if (key === 'barCode') return;
         var re = /^\D*([0-9]\d*\.?\d{0,2})?.*$/;
         switch (num) {
           case 1:
-            if (val <= 0) {
-              this.oneFormBatch[index][key] = 0.01;
+            if (val == 0) {
+              this.oneFormBatch[index][key] = key === 'stock' ? 0 : 0.01;
             } else {
               this.oneFormBatch[index][key] =
-                key === 'stock' ? parseInt(val) : this.$set(this.oneFormBatch[index], key, val.replace(re, '$1'));
+                key === 'stock'
+                  ? parseInt(val)
+                  : this.$set(this.oneFormBatch[index], key, val.toString().replace(re, '$1'));
             }
             break;
           case 2:
-            if (val <= 0) {
-              this.OneattrValue[index][key] = 0.01;
+            if (val == 0) {
+              this.OneattrValue[index][key] = key === 'stock' ? 0 : 0.01;
             } else {
               this.OneattrValue[index][key] =
-                key === 'stock' ? parseInt(val) : this.$set(this.OneattrValue[index], key, val.replace(re, '$1'));
+                key === 'stock'
+                  ? parseInt(val)
+                  : this.$set(this.OneattrValue[index], key, val.toString().replace(re, '$1'));
             }
             break;
           default:
-            if (val <= 0) {
-              this.ManyAttrValue[index][key] = 0.01;
+            if (val == 0) {
+              this.ManyAttrValue[index][key] = key === 'stock' ? 0 : 0.01;
             } else {
               this.ManyAttrValue[index][key] =
-                key === 'stock' ? parseInt(val) : this.$set(this.ManyAttrValue[index], key, val.replace(re, '$1'));
+                key === 'stock'
+                  ? parseInt(val)
+                  : this.$set(this.ManyAttrValue[index], key, val.toString().replace(re, '$1'));
             }
             break;
         }
