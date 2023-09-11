@@ -9,7 +9,7 @@
 </div>
 <div align="center" >
     <a href="http://www.crmeb.com">
-        <img src="https://img.shields.io/badge/Licence-GPL3.0-green.svg?style=flat" />
+        <img src="https://img.shields.io/badge/License-GPL3.0-green.svg?style=flat" />
     </a>
     <a href='https://gitee.com/ZhongBangKeJi/crmeb_java/members'>
         <img src='https://gitee.com/ZhongBangKeJi/crmeb_java/badge/fork.svg?theme=dark' alt='fork'></img>
