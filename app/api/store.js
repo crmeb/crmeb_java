@@ -175,7 +175,7 @@ export function storeListApi(data) {
  * @param object data
  */
 export function getProductGood() {
-	return request.get('product/good');
+	return request.get('product/good',{},{ noAuth : true});
 }
 
 /**
@@ -185,7 +185,7 @@ export function getProductGood() {
  * 
  */
 export function getReplyProduct(id) {
-	return request.get('reply/product/' + id, {
+	return request.get('reply/product/' + id, {},{
 		noAuth: true
 	})
 }
