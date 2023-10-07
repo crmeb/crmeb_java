@@ -1,4 +1,4 @@
-package com.zbkj.common.acpect;
+package com.zbkj.admin.acpect;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -29,7 +29,7 @@ public class ControllerAspect {
 
     Logger logger = LoggerFactory.getLogger(ControllerAspect.class);
 
-    @Pointcut("execution(* com.zbkj.crmeb.system.controller.*.*(..))")
+    @Pointcut("execution(* com.zbkj.admin.controller.*.*(..))")
     private void pointCutMethodController() {
 
     }
