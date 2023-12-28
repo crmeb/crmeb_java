@@ -151,7 +151,7 @@ WEBPC管理端：https://admin.java.crmeb.net<br>
 ### 📲 CRMEB互动
 #### 技术娱乐
 代码写累了？那就歇会吧！扫码让你开心一刻！
-![](crmeb/crmebimage/crmebimage/demoimage/crmebdouyin.jpg)
+![](crmeb/crmebimage/crmebimage/demoimage/wellcomJavaGroup.jpg)
 
 
 #### 📈 技术社区
