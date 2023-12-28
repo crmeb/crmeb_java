@@ -148,9 +148,8 @@ WEBPC管理端：https://admin.java.crmeb.net<br>
 
 
 ---
-### 📲 CRMEB互动
-#### 技术娱乐
-代码写累了？那就歇会吧！扫码让你开心一刻！
+### 📲 CRMEB开源技术交流群
+扫码进群可领取开源版接口文档、产品功能清单、高清UI设计图、思维脑图！
 ![](crmeb/crmebimage/crmebimage/demoimage/wellcomJavaGroup.jpg)
 
 
