@@ -11,7 +11,7 @@
         <if test="keywords != '' and keywords != null ">
             and ( u.real_name like #{keywords, jdbcType=VARCHAR} or u.nickname like #{keywords, jdbcType=VARCHAR})
         </if>
-        ORDER BY ${sortKey} ${sortValue}
+        ORDER BY #{sortKey} #{sortValue}
     </select>
 
     <select id="findAdminList" resultType="com.zbkj.common.model.user.User" parameterType="Map">
@@ -24,32 +24,32 @@
         </if>
         where 1 = 1
         <if test="isPromoter != null and isPromoter !='' or isPromoter == 0 ">
-            and u.is_promoter = ${isPromoter}
+            and u.is_promoter = #{isPromoter}
         </if>
         <if test="groupId != null and groupId !='' ">
-            and u.group_id in (${groupId})
+            and u.group_id in (#{groupId})
         </if>
          <if test="tagIdSql != null and tagIdSql !='' ">
             and ${tagIdSql}
         </if>
         <if test="level != null and level !='' ">
-            and u.level in (${level})
+            and u.level in (#{level})
         </if>
         <if test="sex != null and sex !='' or sex == 0">
-            and u.sex = ${sex}
+            and u.sex = #{sex}
         </if>
         <if test="country != null and country !='' ">
             and u.country = #{country}
         </if>
         <if test="addres != null and addres !='' ">
-            and u.addres like '%${addres}'
+            and u.addres like concat('%',#{addres}, '%')
         </if>
         <if test="payCount != null and payCount !='' or payCount == 0 ">
             <if test="payCount &lt;= 0">
                 and u.pay_count = 0
             </if>
             <if test="payCount > 0">
-                and u.pay_count >= ${payCount}
+                and u.pay_count >= #{payCount}
             </if>
         </if>
         <if test="status != null and status !='' or status == 0 ">
