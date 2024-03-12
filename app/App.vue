@@ -186,6 +186,11 @@
 	@import 'static/iconfont/iconfont.css';
 	@import 'static/css/guildford.css';
 	@import 'static/css/style.scss';
+	
+	// #ifdef APP
+	@import 'static/iconfont/iconfont.css';
+	@import 'static/iconfont/iconfont-app.css';
+	// #endif
 
 	/* 条件编译，仅在H5平台生效 */
 	// #ifdef H5

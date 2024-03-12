@@ -1,5 +1,8 @@
 <template>
 	<view>
+		<!-- #ifdef APP-->
+		<view class='status_1'></view>
+		<!-- #endif -->
 		<view class='line'>
 			<image src='../../../static/images/line.jpg' v-if="addressList.length"></image>
 		</view>
@@ -44,9 +47,16 @@
 			<view class='addressBnt wxbnt' @click='getWxAddress'><text class='iconfont icon-weixin2'></text>导入微信地址</view>
 			<!-- #endif -->
 			<!-- #ifdef H5-->
+			
 			<view class='addressBnt bg-color' :class="this.$wechat.isWeixin()?'':'on'" @click='addAddress'><text class='iconfont icon-tianjiadizhi'></text>添加新地址</view>
 			<view v-if="this.$wechat.isWeixin()" class='addressBnt wxbnt' @click='getAddress'><text class='iconfont icon-weixin2'></text>导入微信地址</view>
 			<!-- #endif -->
+			
+			
+			<!-- #ifdef APP-->
+			<view class='addressBnt on bg-color' @click='addAddress'><text class='iconfont icon-tianjiadizhi'></text>添加新地址</view>
+			<!-- #endif -->
+			
 		</view>
 		<!-- #ifdef MP -->
 		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
@@ -457,5 +467,11 @@
 
 	 .footer .addressBnt.wxbnt {
 		background-color: #fe960f;
+	}
+	.status_1{
+		display: flex;
+		width: 750rpx;
+		// background-color: #E93323;
+		height: var(--status-bar-height);
 	}
 </style>
