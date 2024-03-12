@@ -408,6 +408,16 @@
 					if (backUrl.indexOf('/pages/users/login/index') !== -1) {
 						backUrl = '/pages/index/index';
 					}
+					
+					// #ifdef APP  
+						uni.reLaunch({
+							url: "/pages/index/index"
+						});
+						return
+					// #endif
+					
+					console.log(69999);
+					console.log(backUrl);
 					uni.reLaunch({
 						url: backUrl
 					});
