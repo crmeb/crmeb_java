@@ -949,7 +949,7 @@
 					mark: that.mark,
 					storeId: that.system_store.id || 0,
 					shippingType: that.$util.$h.Add(that.shippingType, 1),
-					payChannel: that.payChannel
+					payChannel: that.payChannel||'weixinh5'
 
 				};
 				if (data.payType == 'yue' && parseFloat(that.userInfo.nowMoney) < parseFloat(that.totalPrice))
