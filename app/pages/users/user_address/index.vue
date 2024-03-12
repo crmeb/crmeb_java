@@ -1,5 +1,8 @@
 <template>
 	<view>
+		<!-- #ifdef APP-->
+		<view class='status'></view>
+		<!-- #endif -->
 		<form @submit="formSubmit" report-submit='true'>
 			<view class='addAddress pad30'>
 				<view class='list borRadius14'>
@@ -575,4 +578,12 @@
 		position: absolute;
 		right:0;
 	}
+	
+	.status{
+		display: flex;
+		width: 750rpx;
+		// background-color: #E93323;
+		height: var(--status-bar-height);
+	}
+	
 </style>
