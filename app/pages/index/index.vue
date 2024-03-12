@@ -1,7 +1,7 @@
 <template>
 	<view>
 		<view class="page-index" :class="{'bgf':navIndex >0}">
-			<!-- #ifdef H5 -->
+		<!-- #ifdef H5||APP --> 
 			<view class="header">
 				<view class="serch-wrapper flex">
 					<view class="logo">
@@ -10,21 +10,6 @@
 					<navigator url="/pages/goods_search/index" class="input" hover-class="none"><text
 							class="iconfont icon-xiazai5"></text>
 						搜索商品</navigator>
-				</view>
-			</view>
-			<!-- #endif -->
-			<!-- #ifdef MP -->
-			<view class="mp-header">
-				<view class="sys-head" :style="{ height: statusBarHeight }"></view>
-				<view class="serch-box" style="height: 40px;">
-					<view class="serch-wrapper flex">
-						<view class="logo">
-							<image :src="logoUrl" mode=""></image>
-						</view>
-						<navigator url="/pages/goods_search/index" class="input" hover-class="none"><text
-								class="iconfont icon-xiazai5"></text>
-							搜索商品</navigator>
-					</view>
 				</view>
 			</view>
 			<!-- #endif -->
@@ -247,6 +232,7 @@
 		},
 		data() {
 			return {
+				pageHeight: 0,
 				loaded: false,
 				loading: false,
 				isAuto: false, //没有授权的不会自动授权
@@ -1006,14 +992,14 @@
 			}
 		}
 
-		/* #ifdef MP */
+		/* #ifdef MP||APP */
 		.mp-header {
 			z-index: 999;
 			position: fixed;
 			left: 0;
 			top: 0;
 			width: 100%;
-			/* #ifdef H5 */
+			/* #ifdef H5||APP */
 			padding-bottom: 20rpx;
 			/* #endif */
 			background-color: $theme-color;
@@ -1032,7 +1018,7 @@
 				.input {
 					display: flex;
 					align-items: center;
-					/* #ifdef MP */
+					/* #ifdef MP||APP */
 					width: 305rpx;
 					/* #endif */
 					height: 50rpx;

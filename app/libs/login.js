@@ -17,10 +17,20 @@ function prePage(){
 export const toLogin = Debounce(_toLogin,800)
 
 export function _toLogin(push, pathLogin) {
+	console.log(43333);  //修改
 	
 	store.commit("LOGOUT");
 	let path = prePage();
 	let login_back_url = Cache.get(BACK_URL);
+	
+	// #ifdef APP    //修改
+		uni.navigateTo({
+			url: '/pages/users/login/index'
+		})
+		return
+	// #endif
+	
+	
 	// #ifdef H5
 	// path = location.href;
 	path = location.pathname + location.search;
