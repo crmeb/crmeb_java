@@ -150,6 +150,7 @@
 
 <style lang="scss">
 	page {
+		margin-top: var(--status-bar-height);
 		background-color: #fff !important;
 	}
 
