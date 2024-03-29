@@ -135,8 +135,8 @@
 
 <style scoped lang="scss">
 	.productSort .header {
-		width: 100%;
-		height: 96rpx;
+		margin-top:var(--status-bar-height);
+		height: 78rpx;
 		background-color: #fff;
 		position: fixed;
 		left: 0;
