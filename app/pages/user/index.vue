@@ -1,5 +1,5 @@
 <template>
-	<view class="new-users copy-data" :style="{height:pageHeight}">
+	<view class="new-users copy-data" ><!-- 去掉了   :style="{height:pageHeight}" -->
 		<view class="mid" style="flex:1;overflow: hidden;">
 			<scroll-view scroll-y="true" style="height: 100%;">
 				<view class="bg"></view>
@@ -391,6 +391,7 @@
 	}
 
 	.new-users {
+		//margin-top: var(--status-bar-height);
 		display: flex;
 		flex-direction: column;
 		height: 100%;

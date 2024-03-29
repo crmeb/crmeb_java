@@ -1,7 +1,7 @@
 <template>
 	<view>
 		<view class="page-index" :class="{'bgf':navIndex >0}">
-		<!-- #ifdef H5||APP --> 
+			<!-- #ifdef H5||APP||MP-WEIXIN -->
 			<view class="header">
 				<view class="serch-wrapper flex">
 					<view class="logo">
@@ -37,8 +37,8 @@
 					</view>
 					<text class='line'>|</text>
 					<view class='swipers'>
-						<swiper :indicator-dots="indicatorDots" :autoplay="autoplay" interval="2500" duration="500" vertical="true"
-						 circular="true">
+						<swiper :indicator-dots="indicatorDots" :autoplay="autoplay" interval="2500" duration="500"
+							vertical="true" circular="true">
 							<block v-for="(item,index) in roll" :key='index'>
 								<swiper-item>
 									<navigator class='item' :url='item.url' hover-class='none'>
@@ -79,11 +79,16 @@
 							</navigator>
 						</view>
 						<view class="listBox acea-row">
-							<view class="list" :class='item.isUse ? "listHui" : "listActive" ' v-for="(item, index) in couponList.slice(0,2)" :key="index">
-								<view class="tit line1" :class='item.isUse ? "pricehui" : "titActive" '>{{item.name}}</view>
-								<view class="price" :class='item.isUse ? "pricehui" : "icon-color" '>{{item.money?Number(item.money):''}}<text class="yuan">元</text></view>
-								<view class="ling" v-if="!item.isUse" :class='item.isUse ? "pricehui" : "icon-color" '  @click="getCoupon(item.id,index)">领取</view>
-								<view class="ling" v-else :class='item.isUse ? "pricehui fonthui" : "icon-color" '>已领取</view>
+							<view class="list" :class='item.isUse ? "listHui" : "listActive" '
+								v-for="(item, index) in couponList.slice(0,2)" :key="index">
+								<view class="tit line1" :class='item.isUse ? "pricehui" : "titActive" '>{{item.name}}
+								</view>
+								<view class="price" :class='item.isUse ? "pricehui" : "icon-color" '>
+									{{item.money?Number(item.money):''}}<text class="yuan">元</text></view>
+								<view class="ling" v-if="!item.isUse" :class='item.isUse ? "pricehui" : "icon-color" '
+									@click="getCoupon(item.id,index)">领取</view>
+								<view class="ling" v-else :class='item.isUse ? "pricehui fonthui" : "icon-color" '>已领取
+								</view>
 								<view class="priceM">满{{item.minPrice?Number(item.minPrice):''}}元可用</view>
 							</view>
 						</view>
@@ -608,7 +613,7 @@
 			get_host_product: function() {
 				let that = this;
 				that.loading = true;
-			
+
 				if (that.hotScroll) return
 				getProductHot(
 					that.hotPage,
@@ -673,7 +678,7 @@
 	}
 </style>
 <style lang="scss">
-	.notice{
+	.notice {
 		width: 100%;
 		height: 70rpx;
 		border-radius: 10rpx;
@@ -681,22 +686,27 @@
 		margin-bottom: 25rpx;
 		line-height: 70rpx;
 		padding: 0 14rpx;
+
 		.line {
 			color: #CCCCCC;
 		}
-		.pic{
+
+		.pic {
 			width: 130rpx;
 			height: 36rpx;
-			image{
+
+			image {
 				width: 100%;
 				height: 100%;
 				display: block !important;
 			}
 		}
+
 		.swipers {
 			height: 100%;
 			width: 444rpx;
 			overflow: hidden;
+
 			swiper {
 				height: 100%;
 				width: 100%;
@@ -705,11 +715,13 @@
 				color: #333333;
 			}
 		}
+
 		.iconfont {
 			color: #999999;
 			font-size: 20rpx;
-		} 
+		}
 	}
+
 	.couponIndex {
 		width: auto;
 		height: 238rpx;
@@ -717,7 +729,7 @@
 		background-size: 100% 100%;
 		padding-left: 42rpx;
 		margin-bottom: 30rpx;
-		
+
 		.titBox {
 			padding: 47rpx 0;
 			text-align: center;
@@ -732,12 +744,13 @@
 			.tit2 {
 				color: #FFEBD2;
 				font-size: 22rpx;
-				margin:10rpx 0 26rpx 0;
+				margin: 10rpx 0 26rpx 0;
 			}
 
 			.tit3 {
 				color: #FFDAAF;
 				font-size: 24rpx;
+
 				.iconfont {
 					font-size: 20rpx;
 				}
@@ -782,9 +795,11 @@
 				.pricehui {
 					color: #B2B2B2;
 				}
-                .fonthui{
+
+				.fonthui {
 					background-color: #F5F5F5 !important;
 				}
+
 				.yuan {
 					font-size: 24rpx;
 				}
@@ -818,7 +833,7 @@
 		/* #ifdef H5*/
 		top: var(--window-top);
 		/* #endif */
-		
+
 		z-index: 99;
 		flex-direction: row;
 		margin: 0px;
@@ -948,12 +963,20 @@
 		background: linear-gradient(180deg, #fff 0%, #f5f5f5 100%);
 
 		.header {
+			position: sticky;
+			top: 0;
+			z-index: 200000;
 			width: 100%;
 			background-color: $theme-color;
 			padding: 28rpx 30rpx;
 
 			.serch-wrapper {
+				margin-top: var(--status-bar-height);
 				align-items: center;
+				
+				/* #ifdef MP-WEIXIN */
+				width: 75%;
+				/* #endif */
 
 
 				.logo {
@@ -1355,5 +1378,17 @@
 		height: 304rpx;
 		background: linear-gradient(180deg, #E93323 0%, #F5F5F5 100%, #751A12 100%);
 		// border-radius: 0 0 30rpx 30rpx;
+
+
+	}
+
+	.stats {
+		position: absolute;
+		left: 0px;
+		top: 0px;
+		z-index: 2000000;
+		width: 750rpx;
+		height: var(--status-bar-height);
+		background: #ffffff;
 	}
 </style>

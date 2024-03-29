@@ -1376,6 +1376,7 @@
 
 <style scoped lang="scss">
 	.product-con {
+		
 		height: 100%;
 	}
 
@@ -1846,6 +1847,7 @@
 	}
 
 	.icon-xiangzuo {
+		margin-top: var(--status-bar-height);
 		/* #ifdef H5 */
 		top: 20rpx !important;
 		/* #endif */
