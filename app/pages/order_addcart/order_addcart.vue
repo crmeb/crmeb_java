@@ -9,13 +9,13 @@
 			<view class="borRadius14 cartBox">
 				<view
 					v-if="(cartList.valid.length === 0 && cartList.invalid.length === 0) || (cartList.valid.length > 0)"
-					class='nav acea-row row-between-wrapper'>
+					class='nav acea-row row-between-wrapper my_nav'>
 					<view>购物数量 <text class='num font-color'>{{cartCount}}</text></view>
 					<view v-if="cartList.valid.length > 0 || cartList.invalid.length > 0"
 						class='administrate acea-row row-center-wrapper' @click='manage'>{{ footerswitch ? '管理' : '取消'}}
 					</view>
 				</view>
-				<view v-if="cartList.valid.length > 0 || cartList.invalid.length > 0" class="pad30">
+				<view v-if="cartList.valid.length > 0 || cartList.invalid.length > 0" class="pad30 my_nav_top">
 					<view class='list'>
 						<checkbox-group @change="checkboxChange">
 							<block v-for="(item,index) in cartList.valid" :key="index">
@@ -904,6 +904,7 @@
 	}
 
 	.shoppingCart .labelNav {
+		position: sticky;
 		height: 178rpx;
 		padding: 30rpx 30rpx 0 30rpx;
 		font-size: 22rpx;
@@ -915,6 +916,13 @@
 		background-color: $theme-color;
 		z-index: 5;
 		top: 0;
+
+		/* #ifdef MP-WEIXIN */
+		// top: calc(44px + 88rpx);
+		height: calc(178rpx + 44px + 45rpx);
+		padding-top: calc(44px + 50rpx);
+		// background-color: #282828;
+		/* #endif */
 	}
 
 	.shoppingCart .labelNav .item .iconfont {
@@ -1223,5 +1231,18 @@
 
 	.uni-p-b-96 {
 		height: 96rpx;
+	}
+
+	.my_nav {
+		/* #ifdef MP-WEIXIN */
+		top: calc(44px + 88rpx + 50rpx) !important;
+		// background-color: #00aaff;
+		/* #endif */
+	}
+	.my_nav_top{
+		/* #ifdef MP-WEIXIN */
+		margin-top: calc(44px + 88rpx + 30rpx + 105rpx) !important;
+		// background-color: #00aaff;
+		/* #endif */
 	}
 </style>
