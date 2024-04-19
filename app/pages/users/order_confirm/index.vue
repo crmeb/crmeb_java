@@ -359,7 +359,6 @@
 		 * 生命周期函数--监听页面隐藏
 		 */
 		// onHide: function() {
-		// 	console.log(999);
 		// 	this.isClose = true
 		// },
 		methods: {
