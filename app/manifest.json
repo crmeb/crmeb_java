@@ -1,7 +1,7 @@
 {
-    "name" : "何天",
+    "name" : "CRMEB Java 商城",
     "appid" : "__UNI__E0D9AB1",
-    "description" : "crmeb商城",
+    "description" : "CRMEB Java 商城",
     "versionName" : "1.0.0",
     "versionCode" : 1001,
     "transformPx" : false,
@@ -61,25 +61,25 @@
                     "amap" : {
                         "__platform__" : [ "ios", "android" ],
                         "appkey_ios" : "",
-                        "appkey_android" : "2D2BZ-G5635-3JDIH-QY5R3-HI43Z-ARFNB"
+                        "appkey_android" : "111111"
                     }
                 },
                 "payment" : {
                     "weixin" : {
                         "__platform__" : [ "ios", "android" ],
-                        "appid" : "wxe2fc3c6a514c613a",
+                        "appid" : "111111",
                         "UniversalLinks" : ""
                     }
                 },
                 "share" : {
                     "weixin" : {
-                        "appid" : "wxe2fc3c6a514c613a",
+                        "appid" : "111111",
                         "UniversalLinks" : ""
                     }
                 },
                 "oauth" : {
                     "weixin" : {
-                        "appid" : "wxe2fc3c6a514c613a",
+                        "appid" : "111111",
                         "UniversalLinks" : ""
                     }
                 }
@@ -122,7 +122,7 @@
     "quickapp" : {},
     /* 小程序特有相关 */
     "mp-weixin" : {
-        "appid" : "wxd29e5ba4ccbcca2f",
+        "appid" : "111111",
         "setting" : {
             "urlCheck" : true,
             "minified" : true,

@@ -8,7 +8,7 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 //移动端商城API
-let domain = 'https://api.front.javademo.hdq.xbdzz.cn'
+let domain = 'http://your Front API domain'
 
 module.exports = {
 	// 请求域名 格式： https://您的域名
@@ -17,7 +17,7 @@ module.exports = {
 	// #ifdef MP
 		HTTP_REQUEST_URL: domain,
 	// #endif
-	HTTP_ADMIN_URL:'https://api.admin.javademo.hdq.xbdzz.cn', //PC后台的API请求地址，上传图片用,影响h5上传头像
+	HTTP_ADMIN_URL:'http://your h5 domain', //PC后台的API请求地址，上传图片用,影响h5上传头像
 	// #ifdef H5
 		//H5接口是浏览器地址
 		// HTTP_REQUEST_URL: window.location.protocol+"//"+window.location.host,
