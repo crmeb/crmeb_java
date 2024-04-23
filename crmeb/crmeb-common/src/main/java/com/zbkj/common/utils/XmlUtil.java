@@ -8,17 +8,19 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
+import org.xml.sax.InputSource;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +31,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -66,26 +68,50 @@ public class XmlUtil {
     /**
      * 将发送消息封装成对应的xml格式
      */
-    public static HashMap<String, Object> xmlToMap(String strxml) throws Exception {
-        strxml = strxml.replaceFirst("encoding=\".*\"", "encoding=\"UTF-8\"");
+//    public static HashMap<String, Object> xmlToMap(String strxml) throws Exception {
+//        strxml = strxml.replaceFirst("encoding=\".*\"", "encoding=\"UTF-8\"");
+//
+//        HashMap<String, Object> map = new HashMap<>();
+//        SAXReader reader = new SAXReader();
+//        InputStream inputStream = new ByteArrayInputStream(strxml.getBytes(StandardCharsets.UTF_8));
+//
+//        if (StringUtils.isBlank(strxml)) {
+//            return null;
+//        }
+//
+//        Document document = reader.read(inputStream);
+//        Element root = document.getRootElement();
+//        List<Element> list = root.elements();
+//
+//        for (Element e : list) {
+//            map.put(e.getName(), e.getText());
+//        }
+//        inputStream.close();
+//
+//        return map;
+//    }
 
-        HashMap<String, Object> map = new HashMap<>();
-        SAXReader reader = new SAXReader();
-        InputStream inputStream = new ByteArrayInputStream(strxml.getBytes(StandardCharsets.UTF_8));
+    public static HashMap<String, Object> xmlToMap(String strxml) {
+        strxml = strxml.replaceFirst("encoding=\".*\"", "encoding=\"UTF-8\"");
 
         if (StringUtils.isBlank(strxml)) {
             return null;
         }
-
-        Document document = reader.read(inputStream);
-        Element root = document.getRootElement();
-        List<Element> list = root.elements();
-
-        for (Element e : list) {
-            map.put(e.getName(), e.getText());
+        HashMap<String, Object> map = new HashMap<>();
+        try {
+            DocumentBuilder documentBuilder = WXPayXmlUtil.newDocumentBuilder();
+            org.w3c.dom.Document document = documentBuilder.parse(new InputSource(new StringReader(strxml)));
+            org.w3c.dom.Element element = document.getDocumentElement();
+            NodeList nodeList = element.getChildNodes();
+            for (int i = 0; i < nodeList.getLength(); i++) {
+                Node node = nodeList.item(i);
+                if (node.getNodeType() == Node.ELEMENT_NODE) {
+                    map.put(node.getNodeName(), node.getTextContent());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        inputStream.close();
-
         return map;
     }
 
