@@ -9,7 +9,6 @@
 3. Swagger 2.9.2
 4. Mybatis Plus 3.3.1
 
-
 # 部署
 1. 拿到jar包，上传到web目录下，（宝塔配置的域名指向的web目录下即可）
 2. 在 jar包同级目录下运行 `start.sh (运行命令为 ./start.sh )` 脚本即可启动项目
