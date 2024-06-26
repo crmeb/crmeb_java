@@ -99,7 +99,8 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 
 ---
 
-![](crmeb/crmebimage/crmebimage/demoimage/gitee-广告_java多商户.jpg)
+[![](crmeb/crmebimage/crmebimage/demoimage/gitee-广告_java多商户.jpg)](https://www.crmeb.com/ask/thread/46123)
+
 
 ### 🎬 系统演示：
 ![](crmeb/crmebimage/crmebimage/demoimage/c1.jpg)
