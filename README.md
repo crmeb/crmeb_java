@@ -9,7 +9,7 @@
 </div>
 <div align="center" >
     <a href="http://www.crmeb.com">
-        <img src="https://img.shields.io/badge/License-GPL3.0-green.svg?style=flat" />
+        <img src="https://img.shields.io/badge/License-apache2.0-green.svg?style=flat" />
     </a>
     <a href='https://gitee.com/ZhongBangKeJi/crmeb_java/members'>
         <img src='https://gitee.com/ZhongBangKeJi/crmeb_java/badge/fork.svg?theme=dark' alt='fork'></img>
@@ -197,7 +197,7 @@ UI: 被子横盖显得高🐰
 ---
 ### 🪪 版权信息
 本项目包含的第三方源码和二进制文件之版权信息另行标注。<br>
-版权所有Copyright © 2017-2022 by CRMEB (https://www.crmeb.com)<br>
+版权所有Copyright © 2017-2024 by CRMEB (https://www.crmeb.com)<br>
 All rights reserved。<br>
 CRMEB® 商标和著作权所有者为西安众邦网络科技有限公司。<br>
 
