@@ -136,7 +136,7 @@ WEBPC管理端：https://admin.java.crmeb.net<br>
 <!-- ![](crmeb/crmebimage/crmebimage/demoimage/03-mobile-01.png)
 ![](crmeb/crmebimage/crmebimage/demoimage/04-mobile-02.png)
 ![](crmeb/crmebimage/crmebimage/demoimage/05-mobile-03.png) -->
-![](crmeb/crmebimage/crmebimage/demoimage/javaFrontU.jpg)
+![](crmeb/crmebimage/crmebimage/demoimage/javaFrontUI.jpg)
 
 ### WEB PC管理端预览
 <!-- ![](crmeb/crmebimage/crmebimage/demoimage/07-pc-01.png)
