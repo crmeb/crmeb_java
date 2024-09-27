@@ -4,7 +4,7 @@
 </div>
 <div align="center">
 
-# CRMEB开源商城系统Java版
+CRMEB开源商城系统Java版
 
 </div>
 <div align="center" >
