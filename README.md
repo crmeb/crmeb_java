@@ -104,7 +104,7 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 
 ---
 
-[![](crmeb/crmebimage/crmebimage/demoimage/gitee-广告_java多商户.jpg)](https://www.crmeb.com/ask/thread/50719)
+[![](crmeb/crmebimage/crmebimage/demoimage/gitee-广告_java多商户.jpg)](https://www.crmeb.com/index/java_merchant)
 
 
 ### 🎬 系统演示：
