@@ -22,6 +22,8 @@ export function _toLogin(push, pathLogin) {
 	let path = prePage();
 	let login_back_url = Cache.get(BACK_URL);
 	
+	if(path.indexOf('login') > -1) return
+
 	// #ifdef APP
 		uni.navigateTo({
 			url: '/pages/users/login/index'
