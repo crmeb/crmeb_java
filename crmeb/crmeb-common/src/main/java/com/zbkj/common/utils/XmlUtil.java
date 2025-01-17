@@ -12,6 +12,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.parsers.DocumentBuilder;
@@ -46,13 +47,14 @@ public class XmlUtil {
         InputStream in = null;
         try {
             in = request.getInputStream();
+            setReaderFeature(reader);
             Document doc = reader.read(in);
             Element root = doc.getRootElement();
             List<Element> list = root.elements();
             for (Element element : list) {
                 map.put(element.getName(), element.getText());
             }
-        } catch (IOException | DocumentException e) {
+        } catch (IOException | DocumentException | SAXException e) {
             e.printStackTrace();
         } finally {
             try {
@@ -91,6 +93,12 @@ public class XmlUtil {
 //        return map;
 //    }
 
+    public static void setReaderFeature(SAXReader reader) throws SAXException {
+        reader.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        reader.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        reader.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        reader.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+    }
     public static HashMap<String, Object> xmlToMap(String strxml) {
         strxml = strxml.replaceFirst("encoding=\".*\"", "encoding=\"UTF-8\"");
 
