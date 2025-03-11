@@ -201,6 +201,14 @@ var __s = document.createElement('script');
 __s.src=`${SettingMer.apiBaseURL}/public/jsconfig/getcrmebchatconfig`;
 document.head.appendChild(__s);
 
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://cdn.oss.9gt.net/js/es.js?version=JAVA-KY-v1.3.4";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})()
+
 new Vue({
   el: '#app',
   router,
