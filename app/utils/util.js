@@ -1,13 +1,69 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+import animationType from '@/utils/animationType.js'
 import {
 	TOKENNAME,
 	HTTP_REQUEST_URL
 } from '../config/app.js';
-import {HTTP_ADMIN_URL} from '@/config/app.js';
 import store from '../store';
 import {
 	pathToBase64
 } from '@/plugin/image-tools/index.js';
+import util from 'utils/util'
+// #ifdef APP-PLUS
+import permision from "./permission.js"
+// #endif
+
 export default {
+	/**
+	 * 链接地址跳转
+	 * @param {Object} url 链接地址
+	 */
+	navigateTo(url) {
+		if (url.indexOf("http") !== -1) {
+			// #ifdef H5
+			location.href = url
+			// #endif
+			// #ifdef APP-PLUS || MP
+			uni.navigateTo({
+				url: '/pages/users/web_page/index?webUel=' + encodeURIComponent(url)
+			})
+			// #endif
+		} else {
+			if (['/pages/goods_cate/goods_cate', '/pages/order_addcart/order_addcart', '/pages/user/index',
+					'/pages/discover_index/index', '/pages/index/index'
+				].indexOf(url) == -1) {
+				uni.navigateTo({
+					animationType: animationType.type,
+					animationDuration: animationType.duration,
+					url: url
+				})
+			} else {
+				uni.switchTab({
+					animationType: animationType.type,
+					animationDuration: animationType.duration,
+					url: url
+				})
+			}
+		}
+	},
+	/**
+	 * 对象转数组
+	 * @param data 对象
+	 * @returns {*[]}
+	 */
+	objToArr(data) {
+		let obj = Object.keys(data).sort();
+		let m = obj.map(key => data[key]);
+		return m;
+	},
 	/**
 	 * opt  object | string
 	 * to_url object | string
@@ -324,7 +380,7 @@ export default {
 	 * @param string count 剩余人数
 	 * @param function successFn 回调函数
 	 */
-	activityCanvas: function(arrImages, storeName, price, people, count,num,successFn) {
+	activityCanvas: function(arrImages, storeName, price, people, count, num, successFn) {
 		let that = this;
 		let rain = 2;
 		const context = uni.createCanvasContext('activityCanvas');
@@ -339,33 +395,34 @@ export default {
 			src: arrImages[0],
 			success: function(res) {
 				context.drawImage(arrImages[0], 0, 0, 594, 850);
-				context.setFontSize(14*rain);
+				context.setFontSize(14 * rain);
 				context.setFillStyle('#333333');
-				that.canvasWraptitleText(context, storeName, 110*rain, 110*rain, 230*rain, 30*rain, 1)
-				context.drawImage(arrImages[2], 68*rain, 194*rain, 160*rain, 160*rain);
+				that.canvasWraptitleText(context, storeName, 110 * rain, 110 * rain, 230 * rain, 30 *
+					rain, 1)
+				context.drawImage(arrImages[2], 68 * rain, 194 * rain, 160 * rain, 160 * rain);
 				context.save();
 
-				context.setFontSize(14*rain);
+				context.setFontSize(14 * rain);
 				context.setFillStyle('#fc4141');
-				context.fillText('￥', 157*rain, 145*rain);
+				context.fillText('￥', 157 * rain, 145 * rain);
 
-				context.setFontSize(24*rain);
+				context.setFontSize(24 * rain);
 				context.setFillStyle('#fc4141');
-				context.fillText(price, 170*rain, 145*rain);
+				context.fillText(price, 170 * rain, 145 * rain);
 
-				context.setFontSize(10*rain);
+				context.setFontSize(10 * rain);
 				context.setFillStyle('#fff');
-				context.fillText(people, 118*rain, 143*rain);
+				context.fillText(people, 118 * rain, 143 * rain);
 
 
-				context.setFontSize(12*rain);
+				context.setFontSize(12 * rain);
 				context.setFillStyle('#666666');
 				context.setTextAlign('center');
-				context.fillText( count , (167-num)*rain, 166*rain);
+				context.fillText(count, (167 - num) * rain, 166 * rain);
 
-				that.handleBorderRect(context, 27*rain, 94*rain, 75*rain, 75*rain, 6*rain);
+				that.handleBorderRect(context, 27 * rain, 94 * rain, 75 * rain, 75 * rain, 6 * rain);
 				context.clip();
-				context.drawImage(arrImages[1], 27*rain, 94*rain, 75*rain, 75*rain);
+				context.drawImage(arrImages[1], 27 * rain, 94 * rain, 75 * rain, 75 * rain);
 				context.draw(true, function() {
 					uni.canvasToTempFilePath({
 						canvasId: 'activityCanvas',
@@ -422,6 +479,71 @@ export default {
 		ctx.closePath();
 	},
 
+	/**
+	 * 小程序头像获取上传
+	 * @param uploadUrl 上传接口地址
+	 * @param filePath 上传文件路径 
+	 * @param successCallback success回调 
+	 * @param errorCallback err回调
+	 */
+	uploadImgs(filePath, opt, successCallback, errorCallback) {
+		let that = this;
+		if (typeof opt === 'string') {
+			let url = opt;
+			opt = {};
+			opt.url = url;
+		}
+		let count = opt.count || 1,
+			sizeType = opt.sizeType || ['compressed'],
+			sourceType = opt.sourceType || ['album', 'camera'],
+			is_load = opt.is_load || true,
+			uploadUrl = opt.url || '',
+			inputName = opt.name || 'pics',
+			pid = opt.pid,
+			model = opt.model;
+		let urlPath = HTTP_REQUEST_URL + '/api/front/upload/image' + "?model=" + model +
+			"&pid=" + pid
+		uni.uploadFile({
+			url: urlPath,
+			filePath: filePath,
+			name: inputName,
+			formData: {
+				'filename': inputName
+			},
+			header: {
+				// #ifdef MP
+				"Content-Type": "multipart/form-data",
+				// #endif
+				[TOKENNAME]: store.state.app.token
+			},
+			success: function(res) {
+				uni.hideLoading();
+				if (res.statusCode == 403) {
+					that.Tips({
+						title: res.data
+					});
+				} else {
+					let data = res.data ? JSON.parse(res.data) : {};
+					if (data.code == 200) {
+						successCallback && successCallback(data)
+					} else {
+						errorCallback && errorCallback(data);
+						that.Tips({
+							title: data.message
+						});
+					}
+				}
+			},
+			fail: function(res) {
+				console.log('res', res)
+				uni.hideLoading();
+				that.Tips({
+					title: '上传图片失败'
+				});
+			}
+		})
+	},
+
 	/*
 	 * 单图上传
 	 * @param object opt
@@ -453,7 +575,8 @@ export default {
 				uni.showLoading({
 					title: '图片上传中',
 				});
-				let urlPath = HTTP_ADMIN_URL + '/api/admin/upload/image' + "?model=" + model + "&pid=" + pid
+				let urlPath = HTTP_REQUEST_URL + '/api/front/upload/image' + "?model=" + model +
+					"&pid=" + pid
 				let localPath = res.tempFilePaths[0];
 				uni.uploadFile({
 					url: urlPath,
@@ -492,14 +615,12 @@ export default {
 						});
 					}
 				})
-				// pathToBase64(res.tempFilePaths[0])
-				// 	.then(imgBase64 => {
-				// 		console.log(imgBase64);
-
-				// 	})
-				// 	.catch(error => {
-				// 		console.error(error)
-				// 	})
+			},
+			fail: function(err) {
+				that.Tips({
+					title: err.errMsg
+				});
+				console.log('选择图片失败：', err);
 			}
 		})
 	},
@@ -536,24 +657,24 @@ export default {
 	/**根据格式组装公共参数
 	 * @param {Object} value
 	 */
-	formatMpQrCodeData(value){
+	formatMpQrCodeData(value) {
 		let values = value.split(',');
 		let result = {};
-		if(values.length === 2){
+		if (values.length === 2) {
 			let v1 = values[0].split(":");
 			if (v1[0] === 'pid') {
 				result.spread = v1[1];
-			} else{
+			} else {
 				result.id = v1[1];
 			}
 			let v2 = values[1].split(":");
 			if (v2[0] === 'pid') {
 				result.spread = v2[1];
-			}else{
+			} else {
 				result.id = v2[1];
 			}
-		}else{
-			result = values[0].split(":")[1];
+		} else {
+			result.spread = values[0].split(":")[1];
 		}
 		return result;
 	},
@@ -657,44 +778,80 @@ export default {
 	},
 	// 获取地理位置;
 	$L: {
-		async getLocation() {
-			// #ifdef MP-WEIXIN || MP-TOUTIAO || MP-QQ
-			let status = await this.getSetting();
-			if (status === 2) {
-				this.openSetting();
-				return;
-			}
-			// #endif
+		getLocation() {
+			return new Promise(async (resolve, reject) => {
+				// #ifdef APP-PLUS
+				let status = await this.checkPermission();
+				if (status !== 1) {
+					uni.removeStorageSync('user_latitude');
+					uni.removeStorageSync('user_longitude');
+					resolve(status);
+					return;
+				}
+				// #endif
 
-			this.doGetLocation();
+				// #ifdef MP
+				let status = await this.getSetting();
+				if (status === 2) {
+					uni.removeStorageSync('user_latitude');
+					uni.removeStorageSync('user_longitude');
+					this.Tips({
+						title: '获取当前定位遇到困难，如需定位请开启权限'
+					});
+					//this.openSetting();
+					resolve(status);
+					return;
+				}
+				// #endif
+
+				let Location = await this.doGetLocation();
+				resolve(Location);
+			});
 		},
 		doGetLocation() {
-			uni.getLocation({
-				success: (res) => {
-					uni.removeStorageSync('CACHE_LONGITUDE');
-					uni.removeStorageSync('CACHE_LATITUDE');
-					uni.setStorageSync('CACHE_LONGITUDE', res.longitude);
-					uni.setStorageSync('CACHE_LATITUDE', res.latitude);
-				},
-				fail: (err) => {
-					// #ifdef MP-BAIDU
-					if (err.errCode === 202 || err.errCode === 10003) { // 202模拟器 10003真机 user deny
-						this.openSetting();
+			return new Promise((resolve, reject) => {
+				uni.getLocation({
+					type: 'wgs84',
+					// altitude: true,
+					// geocode: true,
+					success: (res) => {
+						uni.setStorageSync('user_latitude', res.latitude);
+						uni.setStorageSync('user_longitude', res.longitude);
+						resolve(res);
+					},
+					complete: (res) => {
+						uni.setStorageSync('user_latitude', res.latitude);
+						uni.setStorageSync('user_longitude', res.longitude);
+						resolve(res);
+					},
+					fail: (err) => {
+						uni.removeStorageSync('user_latitude');
+						uni.removeStorageSync('user_longitude');
+						reject(err);
+						// #ifdef MP-BAIDU
+						if (err.errCode === 202 || err.errCode ===
+							10003) { // 202模拟器 10003真机 user deny
+							this.openSetting();
+						}
+						// #endif
+						// #ifndef MP-BAIDU
+						if (err.errMsg.indexOf("auth deny") >= 0) {
+							uni.showToast({
+								title: '访问位置被拒绝',
+								icon: 'none',
+								duration: 2000
+							});
+						} else {
+							uni.showToast({
+								title: err.errMsg,
+								icon: 'none',
+								duration: 2000
+							});
+						}
+						// #endif
 					}
-					// #endif
-					// #ifndef MP-BAIDU
-					if (err.errMsg.indexOf("auth deny") >= 0) {
-						uni.showToast({
-							title: "访问位置被拒绝"
-						})
-					} else {
-						uni.showToast({
-							title: err.errMsg
-						})
-					}
-					// #endif
-				}
-			})
+				})
+			});
 		},
 		getSetting: function() {
 			return new Promise((resolve, reject) => {
@@ -713,6 +870,9 @@ export default {
 				});
 			});
 		},
+		/**
+		 * 开启权限提示
+		 */
 		openSetting: function() {
 			uni.openSetting({
 				success: (res) => {
@@ -726,30 +886,34 @@ export default {
 		async checkPermission() {
 			let status = permision.isIOS ? await permision.requestIOS('location') :
 				await permision.requestAndroid('android.permission.ACCESS_FINE_LOCATION');
-
+			let pages = getCurrentPages();
+			let prePage = pages[pages.length - 1].route;
 			if (status === null || status === 1) {
 				status = 1;
 			} else if (status === 2) {
-				uni.showModal({
-					content: "系统定位已关闭",
-					confirmText: "确定",
-					showCancel: false,
-					success: function(res) {}
-				})
+				if (prePage === 'pages/users/user_address/index')
+					uni.showModal({
+						content: "系统定位已关闭",
+						confirmText: "确定",
+						showCancel: false,
+						success: function(res) {}
+					})
 			} else if (status.code) {
-				uni.showModal({
-					content: status.message
-				})
+				if (prePage === 'pages/users/user_address/index')
+					uni.showModal({
+						content: status.message
+					})
 			} else {
-				uni.showModal({
-					content: "需要定位权限",
-					confirmText: "设置",
-					success: function(res) {
-						if (res.confirm) {
-							permision.gotoAppSetting();
+				if (prePage === 'pages/users/user_address/index')
+					uni.showModal({
+						content: "需要定位权限",
+						confirmText: "设置",
+						success: function(res) {
+							if (res.confirm) {
+								permision.gotoAppSetting();
+							}
 						}
-					}
-				})
+					})
 			}
 			return status;
 		},

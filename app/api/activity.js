@@ -1,6 +1,16 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
+
 import request from "@/utils/request.js";
-/**
- * 
+/*
  * 所有活动接口 包括：拼团，砍价，秒杀
  * 
 */
@@ -18,7 +28,7 @@ export function getCombinationList(data) {
  * 
 */
 export function getCombinationDetail(id) {
-  return request.get('combination/detail/'+id);
+  return request.get('combination/detail/'+id,{},{noAuth:true});
 }
 
 /**
@@ -72,7 +82,7 @@ export function bargainUserCancel(bargainId){
  * 砍价产品详情
  */
 export function getBargainDetail(id) {
-  return request.get("bargain/detail/" + id);
+  return request.get("bargain/detail/" + id,{},{noAuth:true});
 }
 
 /**
@@ -133,7 +143,7 @@ export function getSeckillList(time,data){
  * @param int id
 */
 export function getSeckillDetail(id){
-  return request.get('seckill/detail/'+id);
+  return request.get('seckill/detail/'+id,{},{noAuth:true});
 }
 
 /**
@@ -209,12 +219,13 @@ export function getBargainIndexApi(){
  * 首页砍价产品列表
 */
 export function bargainHeaderApi(){
-  return request.get('bargain/header');
+  return request.get('bargain/header',{},{noAuth:true});
 }
 
 /**
  * 拼图列表头部
 */
 export function combinationHeaderApi(){
-  return request.get('combination/header');
+  return request.get('combination/header',{},{noAuth:true});
 }
+

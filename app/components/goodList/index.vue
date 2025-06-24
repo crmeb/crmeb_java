@@ -4,6 +4,7 @@
 			<view @click="goDetail(item)" class='item acea-row row-between-wrapper' hover-class="none">
 				<view class='pictrue'>
 					<image :src='item.image'></image>
+					<view :style="{ backgroundImage: `url(${item.activityStyle})` }" class="border-picture"></view>
 					<span class="pictrue_log pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '1'">秒杀</span>
 					<span class="pictrue_log pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '2'">砍价</span>
 					<span class="pictrue_log pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '3'">拼团</span>
@@ -11,14 +12,19 @@
 				<view class='underline'>
 					<view class='text'>
 						<view class='line1'>{{item.storeName}}</view>
-						<view class='money font-color'>￥<text class='num'>{{item.price}}</text></view>
+						<view class='money'>￥<text class='num'>{{item.price}}</text></view>
 						<view class='vip-money acea-row row-middle' v-if="item.vip_price && item.vip_price > 0">￥{{item.vip_price || 0}}
-							<image src='../../static/images/vip.png'></image><text class='num'>已售{{Number(item.sales) + Number(item.ficti) || 0}}{{item.unitName}}</text>
+							<image :src="urlDomain+'crmebimage/perset/staticImg/vip.png'"></image>
+							<text class='num' v-if="status == 0">已售{{Number(item.sales) || 0}}{{item.unitName}}</text>
+							<text class="num line_thr" v-if="status == 1">{{item.otPrice}}</text>
 						</view>
-						<view class='vip-money acea-row row-middle' v-else><text class='num'>已售{{Number(item.sales) + Number(item.ficti) || 0}}{{item.unitName}}</text></view>
+						<view class='vip-money acea-row row-middle' v-else>
+							<text class='num' v-if="status == 0">已售{{Number(item.sales)|| 0}}{{item.unitName}}</text>
+							<text class="num line_thr" v-if="status == 1">￥{{item.otPrice}}</text>
+						</view>
 					</view>
 				</view>
-				<view class='iconfont icon-gouwuche cart-color acea-row row-center-wrapper'></view>
+				<view class='iconfont icon-gengduo3'></view>
 			</view>
 		</block>
 	</view>
@@ -27,6 +33,7 @@
 <script>
 	import {mapGetters} from "vuex";
 	import { goShopDetail } from '@/libs/order.js'
+	import animationType from '@/utils/animationType.js'
 	export default {
 		computed: mapGetters(['uid']),
 		props: {
@@ -43,14 +50,16 @@
 		},
 		data() {
 			return {
-
+				urlDomain: this.$Cache.get("imgHost"),
 			};
 		},
 		methods: {
 			goDetail(item){
 				goShopDetail(item,this.uid).then(res=>{
 					uni.navigateTo({
-						url:`/pages/goods_details/index?id=${item.id}`
+						animationType: 'zoom-fade-out',
+						animationDuration: 200,
+						url:`/pages/goods/goods_details/index?id=${item.id}`
 					})
 				})
 			}
@@ -64,7 +73,12 @@
 		position: relative;
 		padding-left: 30rpx;
 	}
-
+	.money {
+		font-size: 26rpx;
+		font-weight: bold;
+		margin-top: 50rpx;
+		@include price_color(theme);
+	}
 	.goodList .item .pictrue {
 		width: 180rpx;
 		height: 180rpx;
@@ -101,12 +115,6 @@
 		width: 489rpx;
 	}
 
-	.goodList .item .text .money {
-		font-size: 26rpx;
-		font-weight: bold;
-		margin-top: 50rpx;
-	}
-
 	.goodList .item .text .money .num {
 		font-size: 34rpx;
 	}
@@ -139,5 +147,8 @@
 		border-radius: 50%;
 		font-size: 30rpx;
 		bottom: 38rpx;
+	}
+	.line_thr{
+		text-decoration: line-through;
 	}
 </style>

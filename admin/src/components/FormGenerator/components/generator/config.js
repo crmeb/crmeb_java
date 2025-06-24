@@ -1,6 +1,3 @@
-import { getToken } from '@/utils/auth'
-import SettingMer from '@/utils/settingMer'
-
 // 表单属性【右面板】
 export const formConf = {
   formRef: 'elForm',
@@ -12,8 +9,8 @@ export const formConf = {
   gutter: 15,
   disabled: false,
   span: 24,
-  formBtns: true
-}
+  formBtns: true,
+};
 
 // 输入型组件 【左面板】
 export const inputComponents = [
@@ -28,20 +25,20 @@ export const inputComponents = [
       tagIcon: 'input',
       defaultValue: undefined,
       required: true,
-      tips:false, //tooltip描述是否开启
-      tipsDesc:'', //tooltip描述内容
-      tipsIsLink:false,//是否开启描述链接
-      tipsLink:'', //描述链接
+      tips: false, //tooltip描述是否开启
+      tipsDesc: '', //tooltip描述内容
+      tipsIsLink: false, //是否开启描述链接
+      tipsLink: '', //描述链接
       layout: 'colFormItem',
       span: 24,
       document: 'https://element.eleme.cn/#/zh-CN/component/input',
       // 正则校验规则
-      regList: []
+      regList: [],
     },
     // 组件的插槽属性
     __slot__: {
       prepend: '',
-      append: ''
+      append: '',
     },
     // 其余的为可直接写在组件标签上的属性
     placeholder: '请输入',
@@ -52,7 +49,7 @@ export const inputComponents = [
     maxlength: null,
     'show-word-limit': false,
     readonly: false,
-    disabled: false
+    disabled: false,
   },
   {
     __config__: {
@@ -63,27 +60,27 @@ export const inputComponents = [
       tagIcon: 'textarea',
       defaultValue: undefined,
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       layout: 'colFormItem',
       span: 24,
       regList: [],
       changeTag: true,
-      document: 'https://element.eleme.cn/#/zh-CN/component/input'
+      document: 'https://element.eleme.cn/#/zh-CN/component/input',
     },
     type: 'textarea',
     placeholder: '请输入',
     autosize: {
       minRows: 4,
-      maxRows: 4
+      maxRows: 4,
     },
     style: { width: '95%' },
     maxlength: null,
     'show-word-limit': false,
     readonly: false,
-    disabled: false
+    disabled: false,
   },
   {
     __config__: {
@@ -97,16 +94,16 @@ export const inputComponents = [
       layout: 'colFormItem',
       span: 24,
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       regList: [],
-      document: 'https://element.eleme.cn/#/zh-CN/component/input'
+      document: 'https://element.eleme.cn/#/zh-CN/component/input',
     },
     __slot__: {
       prepend: '',
-      append: ''
+      append: '',
     },
     placeholder: '请输入',
     'show-password': true,
@@ -117,7 +114,7 @@ export const inputComponents = [
     maxlength: null,
     'show-word-limit': false,
     readonly: false,
-    disabled: false
+    disabled: false,
   },
   {
     __config__: {
@@ -131,12 +128,12 @@ export const inputComponents = [
       span: 24,
       layout: 'colFormItem',
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       regList: [],
-      document: 'https://element.eleme.cn/#/zh-CN/component/input-number'
+      document: 'https://element.eleme.cn/#/zh-CN/component/input-number',
     },
     placeholder: '',
     min: undefined,
@@ -145,8 +142,8 @@ export const inputComponents = [
     'step-strictly': false,
     precision: undefined,
     'controls-position': '',
-    disabled: false
-  }
+    disabled: false,
+  },
   // {
   //   __config__: {
   //     label: '编辑器',
@@ -165,7 +162,7 @@ export const inputComponents = [
   //   height: 300, // 编辑器高度
   //   branding: false // 隐藏右下角品牌烙印
   // }
-]
+];
 
 // 选择型组件 【左面板】
 export const selectComponents = [
@@ -180,29 +177,32 @@ export const selectComponents = [
       layout: 'colFormItem',
       span: 24,
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       regList: [],
       changeTag: true,
-      document: 'https://element.eleme.cn/#/zh-CN/component/select'
+      document: 'https://element.eleme.cn/#/zh-CN/component/select',
     },
     __slot__: {
-      options: [{
-        label: '选项一',
-        value: 1
-      }, {
-        label: '选项二',
-        value: 2
-      }]
+      options: [
+        {
+          label: '选项一',
+          value: 1,
+        },
+        {
+          label: '选项二',
+          value: 2,
+        },
+      ],
     },
     placeholder: '请选择',
     style: { width: '100%' },
     clearable: true,
     disabled: false,
     filterable: false,
-    multiple: false
+    multiple: false,
   },
   {
     __config__: {
@@ -211,29 +211,33 @@ export const selectComponents = [
       labelWidth: null,
       tag: 'el-cascader',
       tagIcon: 'cascader',
-      layout: 'colFormItem', 
+      layout: 'colFormItem',
       defaultValue: [],
       dataType: 'dynamic',
       span: 24,
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       regList: [],
       changeTag: true,
-      document: 'https://element.eleme.cn/#/zh-CN/component/cascader'
+      document: 'https://element.eleme.cn/#/zh-CN/component/cascader',
     },
-    options: [{
-      id: 1,
-      value: 1,
-      label: '选项1',
-      children: [{
-        id: 2,
-        value: 2,
-        label: '选项1-1'
-      }]
-    }],
+    options: [
+      {
+        id: 1,
+        value: 1,
+        label: '选项1',
+        children: [
+          {
+            id: 2,
+            value: 2,
+            label: '选项1-1',
+          },
+        ],
+      },
+    ],
     placeholder: '请选择',
     style: { width: '100%' },
     props: {
@@ -241,14 +245,14 @@ export const selectComponents = [
         multiple: false,
         label: 'label',
         value: 'value',
-        children: 'children'
-      }
+        children: 'children',
+      },
     },
     'show-all-levels': true,
     disabled: false,
     clearable: true,
     filterable: false,
-    separator: '/'
+    separator: '/',
   },
   {
     __config__: {
@@ -264,27 +268,30 @@ export const selectComponents = [
       optionType: 'default',
       regList: [],
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       border: false,
       // bindInput:false, //是否开启绑定输入
       // bindValve:'', //绑定输入内容
-      document: 'https://element.eleme.cn/#/zh-CN/component/radio'
+      document: 'https://element.eleme.cn/#/zh-CN/component/radio',
     },
     __slot__: {
-      options: [{
-        label: '选项一',
-        value: 1
-      }, {
-        label: '选项二',
-        value: 2
-      }]
+      options: [
+        {
+          label: '选项一',
+          value: 1,
+        },
+        {
+          label: '选项二',
+          value: 2,
+        },
+      ],
     },
     style: {},
     size: 'medium',
-    disabled: false
+    disabled: false,
   },
   {
     __config__: {
@@ -298,29 +305,32 @@ export const selectComponents = [
       layout: 'colFormItem',
       optionType: 'default',
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       regList: [],
       changeTag: true,
       border: false,
-      document: 'https://element.eleme.cn/#/zh-CN/component/checkbox'
+      document: 'https://element.eleme.cn/#/zh-CN/component/checkbox',
     },
     __slot__: {
-      options: [{
-        label: '选项一',
-        value: 1
-      }, {
-        label: '选项二',
-        value: 2
-      }]
+      options: [
+        {
+          label: '选项一',
+          value: 1,
+        },
+        {
+          label: '选项二',
+          value: 2,
+        },
+      ],
     },
     style: {},
     size: 'medium',
     min: null,
     max: null,
-    disabled: false
+    disabled: false,
   },
   {
     __config__: {
@@ -333,13 +343,13 @@ export const selectComponents = [
       labelWidth: null,
       layout: 'colFormItem',
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       regList: [],
       changeTag: true,
-      document: 'https://element.eleme.cn/#/zh-CN/component/switch'
+      document: 'https://element.eleme.cn/#/zh-CN/component/switch',
     },
     style: {},
     disabled: false,
@@ -348,7 +358,7 @@ export const selectComponents = [
     'active-color': null,
     'inactive-color': null,
     'active-value': true,
-    'inactive-value': false
+    'inactive-value': false,
   },
   {
     __config__: {
@@ -361,20 +371,20 @@ export const selectComponents = [
       layout: 'colFormItem',
       labelWidth: null,
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       regList: [],
       changeTag: true,
-      document: 'https://element.eleme.cn/#/zh-CN/component/slider'
+      document: 'https://element.eleme.cn/#/zh-CN/component/slider',
     },
     disabled: false,
     min: 0,
     max: 100,
     step: 1,
     'show-stops': false,
-    range: false
+    range: false,
   },
   {
     __config__: {
@@ -387,23 +397,23 @@ export const selectComponents = [
       layout: 'colFormItem',
       labelWidth: null,
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       regList: [],
       changeTag: true,
-      document: 'https://element.eleme.cn/#/zh-CN/component/time-picker'
+      document: 'https://element.eleme.cn/#/zh-CN/component/time-picker',
     },
     placeholder: '请选择',
     style: { width: '100%' },
     disabled: false,
     clearable: true,
     'picker-options': {
-      selectableRange: '00:00:00-23:59:59'
+      selectableRange: '00:00:00-23:59:59',
     },
     format: 'HH:mm:ss',
-    'value-format': 'HH:mm:ss'
+    'value-format': 'HH:mm:ss',
   },
   {
     __config__: {
@@ -416,13 +426,13 @@ export const selectComponents = [
       layout: 'colFormItem',
       defaultValue: null,
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       regList: [],
       changeTag: true,
-      document: 'https://element.eleme.cn/#/zh-CN/component/time-picker'
+      document: 'https://element.eleme.cn/#/zh-CN/component/time-picker',
     },
     style: { width: '100%' },
     disabled: false,
@@ -432,7 +442,7 @@ export const selectComponents = [
     'start-placeholder': '开始时间',
     'end-placeholder': '结束时间',
     format: 'HH:mm:ss',
-    'value-format': 'HH:mm:ss'
+    'value-format': 'HH:mm:ss',
   },
   {
     __config__: {
@@ -445,20 +455,20 @@ export const selectComponents = [
       layout: 'colFormItem',
       defaultValue: null,
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       regList: [],
       changeTag: true,
-      document: 'https://element.eleme.cn/#/zh-CN/component/time-picker'
+      document: 'https://element.eleme.cn/#/zh-CN/component/time-picker',
     },
     style: { width: '100%' },
     disabled: false,
     clearable: true,
     placeholder: '请选择',
     format: 'HH:mm',
-    'value-format': 'HH:mm'
+    'value-format': 'HH:mm',
   },
   {
     __config__: {
@@ -471,13 +481,13 @@ export const selectComponents = [
       span: 24,
       layout: 'colFormItem',
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       regList: [],
       changeTag: true,
-      document: 'https://element.eleme.cn/#/zh-CN/component/date-picker'
+      document: 'https://element.eleme.cn/#/zh-CN/component/date-picker',
     },
     placeholder: '请选择',
     type: 'date',
@@ -486,7 +496,7 @@ export const selectComponents = [
     clearable: true,
     format: 'yyyy-MM-dd',
     'value-format': 'yyyy-MM-dd',
-    readonly: false
+    readonly: false,
   },
   {
     __config__: {
@@ -498,14 +508,14 @@ export const selectComponents = [
       showLabel: true,
       labelWidth: null,
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       layout: 'colFormItem',
       regList: [],
       changeTag: true,
-      document: 'https://element.eleme.cn/#/zh-CN/component/date-picker'
+      document: 'https://element.eleme.cn/#/zh-CN/component/date-picker',
     },
     style: { width: '100%' },
     type: 'daterange',
@@ -516,7 +526,7 @@ export const selectComponents = [
     clearable: true,
     format: 'yyyy-MM-dd',
     'value-format': 'yyyy-MM-dd',
-    readonly: false
+    readonly: false,
   },
   {
     __config__: {
@@ -529,20 +539,20 @@ export const selectComponents = [
       labelWidth: null,
       layout: 'colFormItem',
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       regList: [],
       changeTag: true,
-      document: 'https://element.eleme.cn/#/zh-CN/component/rate'
+      document: 'https://element.eleme.cn/#/zh-CN/component/rate',
     },
     style: {},
     max: 5,
     'allow-half': false,
     'show-text': false,
     'show-score': false,
-    disabled: false
+    disabled: false,
   },
   {
     __config__: {
@@ -555,33 +565,33 @@ export const selectComponents = [
       labelWidth: null,
       layout: 'colFormItem',
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       regList: [],
       changeTag: true,
-      document: 'https://element.eleme.cn/#/zh-CN/component/color-picker'
+      document: 'https://element.eleme.cn/#/zh-CN/component/color-picker',
     },
     'show-alpha': false,
     'color-format': '',
     disabled: false,
-    size: 'medium'
+    size: 'medium',
   },
   {
     __config__: {
       label: '上传文件',
       tag: 'upload-file',
-      tagIcon: 'uploadPicture', 
+      tagIcon: 'uploadPicture',
       layout: 'colFormItem',
       defaultValue: null,
       showLabel: true,
       labelWidth: null,
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       span: 24,
       showTip: false,
       buttonText: '点击上传',
@@ -589,10 +599,10 @@ export const selectComponents = [
       changeTag: true,
       // fileSize: 2,
       // sizeUnit: 'MB',
-      document: 'https://element.eleme.cn/#/zh-CN/component/upload' 
+      document: 'https://element.eleme.cn/#/zh-CN/component/upload',
     },
     __slot__: {
-      'list-type': true
+      'list-type': true,
     },
     accept: '',
     // headers: { 'Authori-zation': getToken() },
@@ -615,10 +625,10 @@ export const selectComponents = [
       showLabel: true,
       labelWidth: null,
       required: true,
-      tips:false,
-      tipsDesc:'',
-      tipsIsLink:false,
-      tipsLink:'', 
+      tips: false,
+      tipsDesc: '',
+      tipsIsLink: false,
+      tipsLink: '',
       span: 24,
       showTip: false,
       buttonText: '',
@@ -626,10 +636,10 @@ export const selectComponents = [
       changeTag: true,
       // fileSize: 2,
       // sizeUnit: 'MB',
-      document: 'https://element.eleme.cn/#/zh-CN/component/upload'
+      document: 'https://element.eleme.cn/#/zh-CN/component/upload',
     },
     __slot__: {
-      'list-type': true
+      'list-type': true,
     },
     // action: 'https://jsonplaceholder.typicode.com/posts/',
     disabled: true,
@@ -637,7 +647,7 @@ export const selectComponents = [
     name: 'file',
     // 'auto-upload': true,
     // 'list-type': 'text',
-    multiple: false
+    multiple: false,
   },
   // {
   //   __config__: {
@@ -652,7 +662,7 @@ export const selectComponents = [
   //     tips:false,
   //     tipsDesc:'',
   //     tipsIsLink:false,
-  //     tipsLink:'', 
+  //     tipsLink:'',
   //     span: 24,
   //     showTip: false,
   //     regList: [],
@@ -664,7 +674,7 @@ export const selectComponents = [
   //   name: 'tinymce',
   //   disabled: false
   // }
-]
+];
 
 // 布局型组件 【左面板】
 export const layoutComponents = [
@@ -675,11 +685,11 @@ export const layoutComponents = [
       label: '行容器',
       layoutTree: true,
       children: [],
-      document: 'https://element.eleme.cn/#/zh-CN/component/layout'
+      document: 'https://element.eleme.cn/#/zh-CN/component/layout',
     },
     type: 'default',
     justify: 'start',
-    align: 'top'
+    align: 'top',
   },
   {
     __config__: {
@@ -692,10 +702,10 @@ export const layoutComponents = [
       defaultValue: undefined,
       span: 24,
       layout: 'colFormItem',
-      document: 'https://element.eleme.cn/#/zh-CN/component/button'
+      document: 'https://element.eleme.cn/#/zh-CN/component/button',
     },
     __slot__: {
-      default: '主要按钮'
+      default: '主要按钮',
     },
     type: 'primary',
     icon: 'el-icon-search',
@@ -703,6 +713,6 @@ export const layoutComponents = [
     size: 'medium',
     plain: false,
     circle: false,
-    disabled: false
-  }
-]
+    disabled: false,
+  },
+];

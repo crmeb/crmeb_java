@@ -1,4 +1,3 @@
-
 /**
  * 用于生成表单校验，指定正则规则的触发方式。
  * 未在此处声明无触发方式的组件将不生成rule！！
@@ -14,6 +13,5 @@ export default {
   'el-date-picker': 'change',
   'el-rate': 'change',
   tinymce: 'blur',
-  'time-select': 'change'
-
-}
+  'time-select': 'change',
+};

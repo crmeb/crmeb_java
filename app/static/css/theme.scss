@@ -1,0 +1,182 @@
+/*
+@mixin 指令允许我们定义一个可以在整个样式表中重复使用的样式。
+*/
+
+//主色
+@mixin main_color($color) { 
+	color: $color;
+	[data-theme = "theme1"] & {color: $main-color-theme1 !important;}
+	[data-theme = "theme2"] & {color: $main-color-theme2 !important;}	
+	[data-theme = "theme3"] & {color: $main-color-theme3 !important;}
+	[data-theme = "theme4"] & {color: $main-color-theme4 !important;}
+	[data-theme = "theme5"] & {color: $main-color-theme5 !important;}
+}
+
+//辅色
+@mixin second_color($color) { 
+	color: $color;
+	[data-theme = "theme1"] & {color: $second-color-theme1 !important;}
+	[data-theme = "theme2"] & {color: $second-color-theme2 !important;}	
+	[data-theme = "theme3"] & {color: $second-color-theme3 !important;}
+	[data-theme = "theme4"] & {color: $second-color-theme4 !important;}
+	[data-theme = "theme5"] & {color: $second-color-theme5 !important;}
+}
+
+//价格色
+@mixin price_color($color) { 
+	color: $color;
+	[data-theme = "theme1"] & {color: $price-color-theme1 !important;}
+	[data-theme = "theme2"] & {color: $price-color-theme2 !important;}	
+	[data-theme = "theme3"] & {color: $price-color-theme3 !important;}
+	[data-theme = "theme4"] & {color: $price-color-theme4 !important;}
+	[data-theme = "theme5"] & {color: $price-color-theme5 !important;}
+}
+
+//左侧按钮
+@mixin left_color($color) { 
+	background-color: $color;
+	[data-theme = "theme1"] & {background-color: $left-button-color1 !important;}
+	[data-theme = "theme2"] & {background-color: $left-button-color2 !important;}	
+	[data-theme = "theme3"] & {background-color: $left-button-color3 !important;}
+	[data-theme = "theme4"] & {background-color: $left-button-color4 !important;}
+	[data-theme = "theme5"] & {background-color: $left-button-color5 !important;}
+}
+// 详情页优惠券
+@mixin coupons_border_color($color) { 
+	border: $color;
+	[data-theme = "theme1"] & {border: $coupons-border1;}
+	[data-theme = "theme2"] & {border: $coupons-border2;}	
+	[data-theme = "theme3"] & {border: $coupons-border3;}
+	[data-theme = "theme4"] & {border: $coupons-border4;}
+	[data-theme = "theme5"] & {border: $coupons-border5;}
+}
+
+//分类页二级菜单按钮
+@mixin cate-two-btn($color) { 
+	background-color: $color;
+	[data-theme = "theme1"] & {background-color: $nav-two-btn1 !important;}
+	[data-theme = "theme2"] & {background-color: $nav-two-btn2 !important;}	
+	[data-theme = "theme3"] & {background-color: $nav-two-btn3 !important;}
+	[data-theme = "theme4"] & {background-color: $nav-two-btn4 !important;}
+	[data-theme = "theme5"] & {background-color: $nav-two-btn5 !important;}
+}
+
+@mixin white_left_border{ 
+	border-left-color: #fff !important;
+}
+
+@mixin white_right_border{ 
+	border-right-color: #fff !important;
+}
+
+
+//tab下划线
+@mixin tab_border_bottom($color) {
+	border-bottom: $color;
+	[data-theme = "theme1"] & {border-bottom: $tab-border-bottom1 !important;}
+	[data-theme = "theme2"] & {border-bottom: $tab-border-bottom2 !important;}	
+	[data-theme = "theme3"] & {border-bottom: $tab-border-bottom3 !important;}
+	[data-theme = "theme4"] & {border-bottom: $tab-border-bottom4 !important;}
+	[data-theme = "theme5"] & {border-bottom: $tab-border-bottom5 !important;}
+}
+
+// 优惠券淡色
+@mixin coupons_light_color($color) { 
+	background-color: $color;
+	[data-theme = "theme1"] & {background-color: $coupons-light-color1 !important;}
+	[data-theme = "theme2"] & {background-color: $coupons-light-color2 !important;}	
+	[data-theme = "theme3"] & {background-color: $coupons-light-color3 !important;}
+	[data-theme = "theme4"] & {background-color: $coupons-light-color4 !important;}
+	[data-theme = "theme5"] & {background-color: $coupons-light-color5 !important;}
+}
+
+
+//主色背景
+@mixin main_bg_color($color) { 
+	background-color: $color;
+	[data-theme = "theme1"] & {background-color: $main-color-theme1 !important;}
+	[data-theme = "theme2"] & {background-color: $main-color-theme2 !important;}	
+	[data-theme = "theme3"] & {background-color: $main-color-theme3 !important;}
+	[data-theme = "theme4"] & {background-color: $main-color-theme4 !important;}
+	[data-theme = "theme5"] & {background-color: $main-color-theme5 !important;}
+}
+
+
+// 主渐变色
+@mixin linear-gradient($color) {
+	 background:$color;
+	 [data-theme = "theme1"] & {background: linear-gradient($main-gradient-color1);}
+	 [data-theme = "theme2"] & {background: linear-gradient($main-gradient-color2);}
+	 [data-theme = "theme3"] & {background: linear-gradient($main-gradient-color3);}
+	 [data-theme = "theme4"] & {background: linear-gradient($main-gradient-color4);}
+	 [data-theme = "theme5"] & {background: linear-gradient($main-gradient-color5);}
+}
+
+//辅渐变色
+@mixin second-gradient($color) {
+	 background:$color;
+	 [data-theme = "theme1"] & {background: linear-gradient($second-gradient-color1); }
+	 [data-theme = "theme2"] & {background: linear-gradient($second-gradient-color2); }
+	 [data-theme = "theme3"] & {background: linear-gradient($second-gradient-color3);}
+	 [data-theme = "theme4"] & {background: linear-gradient($second-gradient-color4);}
+	 [data-theme = "theme5"] & {background: linear-gradient($second-gradient-color5); }
+}
+
+// 首页渐变
+@mixin index-gradient($color) {
+	 background:$color;
+	 [data-theme = "theme1"] & {background: -webkit-linear-gradient($index-gradient-color1);}
+	 [data-theme = "theme2"] & {background: -webkit-linear-gradient($index-gradient-color2);}
+	 [data-theme = "theme3"] & {background: -webkit-linear-gradient($index-gradient-color3);}
+	 [data-theme = "theme4"] & {background: -webkit-linear-gradient($index-gradient-color4);}
+	 [data-theme = "theme5"] & {background: -webkit-linear-gradient($index-gradient-color5);}
+}
+
+
+@mixin seckill-gradient($color) {
+	 background:$color;
+	 [data-theme = "theme1"] & {background: -webkit-linear-gradient($miaosha-grradient-color1); }
+	 [data-theme = "theme2"] & {background: -webkit-linear-gradient($miaosha-grradient-color2);}
+	 [data-theme = "theme3"] & {background: -webkit-linear-gradient($miaosha-grradient-color3);}
+	 [data-theme = "theme4"] & {background: -webkit-linear-gradient($miaosha-grradient-color4); }
+	 [data-theme = "theme5"] & {background: -webkit-linear-gradient($miaosha-grradient-color5); }
+}
+
+@mixin coupons-gradient($color) {
+	 background-image:$color;
+	 [data-theme = "theme1"] & {background-image: -webkit-linear-gradient($coupons-gradient-color1); }
+	 [data-theme = "theme2"] & {background-image: -webkit-linear-gradient($coupons-gradient-color2); }
+	 [data-theme = "theme3"] & {background-image: -webkit-linear-gradient($index-gradient-color3); }
+	 [data-theme = "theme4"] & {background-image: -webkit-linear-gradient($coupons-gradient-color4);}
+	 [data-theme = "theme5"] & {background-image: -webkit-linear-gradient($coupons-gradient-color5); }
+}
+
+//砍价按钮 bargain-btn-color1
+@mixin bargain-btn($color) {
+	 background-image:$color;
+	 [data-theme = "theme1"] & {background-image: -webkit-linear-gradient($bargain-btn-color1); }
+	 [data-theme = "theme2"] & {background-image: -webkit-linear-gradient($bargain-btn-color2); }
+	 [data-theme = "theme3"] & {background-image: -webkit-linear-gradient($bargain-btn-color3);}
+	 [data-theme = "theme4"] & {background-image: -webkit-linear-gradient($bargain-btn-color4);}
+	 [data-theme = "theme5"] & {background-image: -webkit-linear-gradient($bargain-btn-color5); }
+}
+
+ //砍价弹框小三角
+ @mixin bragin-border-rate($color) {
+	 border-color:$color;
+	 [data-theme = "theme1"] & {border-color: $bragin-border-rate1;}
+	 [data-theme = "theme2"] & {border-color: $bragin-border-rate2;}	
+	 [data-theme = "theme3"] & {border-color: $bragin-border-rate3;}
+	 [data-theme = "theme4"] & {border-color: $bragin-border-rate4;}
+	 [data-theme = "theme5"] & {border-color: $bragin-border-rate5;}
+ }
+ 
+ // 手机登录渐变色
+ @mixin logn-gradient($color) {
+ 	 background:$color;
+ 	 [data-theme = "theme1"] & {background: -webkit-linear-gradient($logn-gradient-color1) !important;}
+ 	 [data-theme = "theme2"] & {background: -webkit-linear-gradient($logn-gradient-color2) !important;}
+ 	 [data-theme = "theme3"] & {background: -webkit-linear-gradient($logn-gradient-color3) !important;}
+ 	 [data-theme = "theme4"] & {background: -webkit-linear-gradient($logn-gradient-color4) !important;}
+ 	 [data-theme = "theme5"] & {background: -webkit-linear-gradient($logn-gradient-color5) !important;}
+ }

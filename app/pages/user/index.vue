@@ -1,182 +1,168 @@
 <template>
-	<view class="new-users copy-data" ><!-- 去掉了   :style="{height:pageHeight}" -->
-		<view class="mid" style="flex:1;overflow: hidden;">
-			<scroll-view scroll-y="true" style="height: 100%;">
-				<view class="bg"></view>
-				<view class="head pad30">
-					<view class="user-card">
-						<view class="user-info">
-							<image class="avatar" :src='userInfo.avatar' v-if="userInfo.avatar && uid"
-								@click="goEdit()"></image>
-							<image v-else class="avatar" src="/static/images/f.png" mode="" @click="goEdit()"></image>
-							<view class="info">
-								<view class="name" v-if="!uid" @tap="openAuto">
-									请点击登录
-								</view>
-								<view class="name" v-if="uid">
-									{{userInfo.nickname}}
-									<view class="vip" v-if="userInfo.vip">
-										<image :src="userInfo.vipIcon" alt="">
-											<view style="margin-left: 10rpx;" class="vip-txt">{{userInfo.vipName || ''}}
-											</view>
+	<view :data-theme="theme">
+		<view class="new-users copy-data">
+			<view class="mid" style="flex:1;overflow: hidden;">
+				<scroll-view scroll-y="true">
+					<view class="bg"></view>
+					<view class="head pad30">
+						<view class="user-card">
+							<view class="user-info" @click="goEdit()">
+								<image class="avatar" :src='userInfo.avatar' v-if="userInfo.avatar && uid"></image>
+								<image v-else class="avatar" :src="urlDomain+'crmebimage/perset/staticImg/f.png'" mode=""></image>
+								<view class="info">
+									<view class="name" v-if="!isLogin" @tap="openAuto">
+										请点击登录
 									</view>
-								</view>
-								<view class="num" v-if="userInfo.phone && uid" @click="goEdit()">
-									<view class="num-txt">{{userInfo.phone}}</view>
-									<view class="icon">
-										<image src="/static/images/edit.png" mode=""></image>
+									<view class="name" v-if="userInfo && uid">
+										{{userInfo && userInfo.nickname && uid ? userInfo.nickname : ''}}
+										<view class="vip" v-if="userInfo.vip">
+											<image :src="userInfo.vipIcon" alt="">
+												<view style="margin-left: 10rpx;" class="vip-txt">{{userInfo.vipName|| ''}}
+												</view>
+										</view>
 									</view>
-								</view>
-								<view class="phone" v-if="!userInfo.phone && isLogin" @tap="bindPhone">绑定手机号</view>
-							</view>
-						</view>
-						<view class="num-wrapper">
-							<view class="num-item" @click="goMenuPage('/pages/users/user_money/index')">
-								<text
-									class="num">{{userInfo.nowMoney && uid ?Number(userInfo.nowMoney).toFixed(2):0}}</text>
-								<view class="txt">余额</view>
-							</view>
-							<view class="num-item" @click="goMenuPage('/pages/users/user_integral/index')">
-								<text class="num">{{userInfo.integral && uid ? userInfo.integral: 0}}</text>
-								<view class="txt">积分</view>
-							</view>
-							<view class="num-item" @click="goMenuPage('/pages/users/user_coupon/index')">
-								<text class="num">{{userInfo.couponCount && uid ? userInfo.couponCount : 0}}</text>
-								<view class="txt">优惠券</view>
-							</view>
-							<view class="num-item" @click="goMenuPage('/pages/users/user_goods_collection/index')">
-								<text class="num">{{userInfo.collectCount && uid ? userInfo.collectCount : 0}}</text>
-								<view class="txt">收藏</view>
-							</view>
-						</view>
-						<!-- <view class="sign" @click="goSignIn">签到</view> -->
-					</view>
-					<view class="order-wrapper">
-						<view class="order-hd flex">
-							<view class="left">订单中心</view>
-							<navigator class="right flex" hover-class="none" url="/pages/users/order_list/index"
-								open-type="navigate">
-								查看全部
-								<text class="iconfont icon-xiangyou"></text>
-							</navigator>
-						</view>
-						<view class="order-bd">
-							<block v-for="(item,index) in orderMenu" :key="index">
-								<navigator class="order-item" hover-class="none" :url="item.url">
-									<view class="pic">
-										<image :src="item.img" mode=""></image>
-										<text class="order-status-num" v-if="item.num > 0">{{ item.num }}</text>
+									<view class="num" v-if="userInfo && userInfo.phone && uid">
+										<view class="num-txt">{{userInfo.phone}}</view>
+										<view class="icon">
+											<image :src="urlDomain+'crmebimage/perset/staticImg/edit.png'" mode=""></image>
+										</view>
 									</view>
-									<view class="txt">{{item.title}}</view>
-								</navigator>
-							</block>
-						</view>
-					</view>
-				</view>
-				<view class="contenBox">
-					<!-- 轮播 -->
-					<view class="slider-wrapper" v-if="imgUrls.length>0">
-						<swiper indicator-dots="true" :autoplay="autoplay" :circular="circular" :interval="interval"
-							:duration="duration" indicator-color="rgba(255,255,255,0.6)" indicator-active-color="#fff">
-							<block v-for="(item,index) in imgUrls" :key="index">
-								<swiper-item class="borRadius14">
-									<image :src="item.pic" class="slide-image" @click="navito(item.url)"></image>
-								</swiper-item>
-							</block>
-						</swiper>
-					</view>
-
-					<!-- 会员菜单 -->
-					<view class="user-menus" style="margin-top: 20rpx;">
-						<view class="menu-title">我的服务</view>
-						<view class="list-box">
-							<block v-for="(item,index) in MyMenus" :key="index">
-								<navigator class="item" :url="item.url" hover-class="none"
-									v-if="!(item.url =='/pages/service/index' || (item.url =='/pages/users/user_spread_user/index' && !userInfo.isPromoter))">
-									<image :src="item.pic"></image>
-									<text>{{item.name}}</text>
-								</navigator>
-							</block>
-							<!-- #ifndef MP -->
-							<view class="item" @click="kefuClick">
-								<image :src="servicePic"></image>
-								<text>联系客服</text>
+									<view class="phone" v-if="!userInfo.phone && isLogin" @tap.stop="bindPhone">绑定手机号</view>
+									<!-- #ifdef APP-PLUS -->
+									<text class="iconfont icon-shezhi app_set" @click.stop="appUpdate()"></text>
+									<!-- #endif -->
+								</view>
 							</view>
-							<!-- #endif -->
-							<!-- #ifdef MP -->
-							<button class="item" open-type='contact' hover-class='none'>
-								<image :src="servicePic"></image>
-								<text>联系客服</text>
-							</button>
-							<!-- #endif -->
+							<view class="num-wrapper">
+								<view class="num-item" @click="goMenuPage('/pages/users/user_money/index')">
+									<text class="num">{{userInfo.nowMoney && uid ? userInfo.nowMoney:0}}</text>
+									<view class="txt">余额</view>
+								</view>
+								<view class="num-item" @click="goMenuPage('/pages/users/user_integral/index')">
+									<text class="num">{{userInfo.integral && uid ? userInfo.integral: 0}}</text>
+									<view class="txt">积分</view>
+								</view>
+								<view class="num-item" @click="goMenuPage('/pages/users/user_coupon/index')">
+									<text class="num">{{userInfo.couponCount && uid ? userInfo.couponCount : 0}}</text>
+									<view class="txt">优惠券</view>
+								</view>
+								<view class="num-item" @click="goMenuPage('/pages/users/user_goods_collection/index')">
+									<text class="num">{{userInfo.collectCount && uid ? userInfo.collectCount : 0}}</text>
+									<view class="txt">收藏</view>
+								</view>
+							</view>
+						</view>
+						<view class="order-wrapper">
+							<view class="order-hd flex">
+								<view class="left">订单中心</view>
+								<view class="right flex" @click="menusTap('/pages/users/order_list/index')">查看全部
+									<text class="iconfont icon-xiangyou"></text> 
+								</view>
+							</view>
+							<view class="order-bd">
+								<block v-for="(item,index) in orderMenu" :key="index">
+									<view class="order-item" @click="menusTap(item.url)"> 
+										<view class="pic">
+											<text class="iconfont pic_status" :class="item.img"></text>
+											<text class="order-status-num" v-if="item.num > 0">{{ item.num }}</text>
+										</view>
+										<view class="txt">{{item.title}}</view>
+									</view>
+								</block>
+							</view>
 						</view>
 					</view>
-					<image src="/static/images/support.png" alt="" class='support'>
-					<view class="uni-p-b-98"></view>
-				</view>
-
-			</scroll-view>
+					<view class="contenBox" id="pageIndex">
+						<!-- 轮播 -->
+						<view class="slider-wrapper" @click.native="bindEdit('userBanner')" v-if="imgUrls != null && imgUrls.length > 0">
+							<swiper v-if="imgUrls.length>0" indicator-dots="true" :autoplay="autoplay" :circular="circular" :interval="interval"
+								:duration="duration" indicator-color="rgba(255,255,255,0.6)" indicator-active-color="#fff">
+								<block v-for="(item,index) in imgUrls" :key="index">
+									<swiper-item class="borRadius14">
+										<image :src="item.pic" class="slide-image" @click="navito(item.url)"></image>
+									</swiper-item>
+								</block>
+							</swiper>
+						</view>
+						<!-- 会员菜单 -->
+						<view class="user-menus" style="margin-top: 20rpx;" @click.native="bindEdit('userMenus')">
+							<view class="menu-title">我的服务</view>
+							<view class="list-box">
+								<block v-for="(item,index) in MyMenus" :key="index">
+									<view class="item" @click="menusTap(item.url)"
+										v-if="!(item.url =='/pages/service/index' || (item.url =='/pages/promoter/user_spread_user/index' && !userInfo.isPromoter))">
+										<image :src="item.pic"></image>
+										<text>{{item.name}}</text>
+									</view>
+								</block>
+								<!-- #ifndef MP -->
+								<view class="item" @click="onClickService">
+									<image :src="servicePic"></image>
+									<text>联系客服</text>
+								</view>
+								<!-- #endif -->
+								<!-- #ifdef MP -->
+								<!--  v-if="chatConfig.telephone_service_switch" -->
+								<button class="item" hover-class='none' @click="onClickService" v-if="chatConfig.telephone_service_switch === 'open'">
+									<image :src="servicePic"></image>
+									<text>联系客服</text>
+								</button>
+								<template v-else>
+									<button class="item" open-type='contact' hover-class='none' v-if="chatConfig.wx_chant_independent==='open'">
+										<image :src="servicePic"></image>
+										<text>联系客服</text>
+									</button>
+									<button class="item" hover-class='none' @click="wxChatService"  v-else>
+										<image :src="servicePic"></image>
+										<text>联系客服</text>
+									</button>
+								</template>
+								<!-- #endif -->
+							</view>
+						</view>
+						<image :src="copyImage" alt="" class='support'>
+					</view>
+				</scroll-view>
+			</view>
 		</view>
-		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
-		<!-- #endif -->
+		<pageFooter></pageFooter>
 	</view>
 </template>
 <script>
 	let sysHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
+	import pageFooter from '@/components/pageFooter/index.vue'
 	import Cache from '@/utils/cache';
+	import {goPage} from '@/libs/iframe.js'
 	import {BACK_URL} from '@/config/cache';
-	import {getMenuList} from '@/api/user.js';
+	import {getMenuList, copyrightApi} from '@/api/user.js';
 	import {orderData} from '@/api/order.js';
+	import {getCity, tokenIsExistApi} from '@/api/api.js';
 	import {toLogin} from '@/libs/login.js';
-	import {getCity} from '@/api/api.js';
 	import {mapGetters} from "vuex";
+	import {
+		getCityList
+	} from "@/utils";
 	// #ifdef H5
 	import Auth from '@/libs/wechat';
 	// #endif
-	// #ifdef MP
-	import authorize from '@/components/Authorize';
-	// #endif
+	import {getShare} from '@/api/public.js';
+	import {setThemeColor} from '@/utils/setTheme.js'
+	import animationType from '@/utils/animationType.js'
 	const app = getApp();
 	export default {
-		components: {
-			// #ifdef MP
-			authorize
-			// #endif
+		components:{
+					pageFooter
 		},
-		computed: mapGetters(['isLogin', 'chatUrl', 'userInfo', 'uid']),
+		computed: mapGetters(['isLogin', 'chatUrl', 'uid','bottomNavigationIsCustom']),
 		data() {
 			return {
-				orderMenu: [{
-						img: '/static/images/order1.png',
-						title: '待付款',
-						url: '/pages/users/order_list/index?status=0',
-						num: 0
-					},
-					{
-						img: '/static/images/order2.png',
-						title: '待发货',
-						url: '/pages/users/order_list/index?status=1',
-						num: 0
-					},
-					{
-						img: '/static/images/order3.png',
-						title: '待收货',
-						url: '/pages/users/order_list/index?status=2',
-						num: 0
-					},
-					{
-						img: '/static/images/order4.png',
-						title: '待评价',
-						url: '/pages/users/order_list/index?status=3',
-						num: 0
-					},
-					{
-						img: '/static/images/order5.png',
-						title: '售后/退款',
-						url: '/pages/users/user_return_list/index',
-						num: 0
-					},
+				urlDomain: this.$Cache.get("imgHost"),
+				orderMenu: [
+					{img: 'icon-daifukuan',title: '待付款',url: '/pages/users/order_list/index?status=0',num: 0},
+					{img: 'icon-daifahuo',title: '待发货',url: '/pages/users/order_list/index?status=1',num: 0},
+					{img: 'icon-daishouhuo',title: '待收货',url: '/pages/users/order_list/index?status=2',num: 0},
+					{img: 'icon-daipingjia',title: '待评价',url: '/pages/users/order_list/index?status=3',num: 0},
+					{img: 'icon-a-shouhoutuikuan',title: '售后/退款',url: '/pages/users/user_return_list/index',num: 0},
 				],
 				imgUrls: [],
 				userMenu: [],
@@ -189,62 +175,196 @@
 				orderStatusNum: {},
 				MyMenus: [],
 				wechatUrl: [],
-				servicePic: '/static/images/customer.png',
+				servicePic: `${this.$Cache.get("imgHost")}crmebimage/perset/staticImg/customer.png`,
 				sysHeight: sysHeight,
 				// #ifdef MP
 				pageHeight: '100%',
 				// #endif
-				// #ifdef H5
+				// #ifdef H5 || APP-PLUS
 				pageHeight: app.globalData.windowHeight,
 				// #endif
 				// #ifdef H5
-				isWeixin: Auth.isWeixin()
+				isWeixin: Auth.isWeixin(),
 				//#endif
+				configApi: {}, //分享类容配置
+				theme: '',
+				bgColor:'#e93323',
+				chatConfig:{
+					consumer_hotline:'',
+					telephone_service_switch:'close',
+					wx_chant_independent:'open'
+				} ,//客服配置
+				userInfo: {},
+				copyImage: '',//版权图片
 			}
 		},
 		onLoad() {
+			app.globalData.theme = this.$Cache.get('theme')
+			if(app.globalData.isIframe){
+				setTimeout(()=>{
+					let active;
+					document.getElementById('pageIndex').children.forEach(dom=>{
+						dom.addEventListener('click', (e)=>{
+							e.stopPropagation();
+							e.preventDefault();
+							if(dom === active) return;
+							dom.classList.add('borderShow');
+							active && active.classList.remove('borderShow');
+							active = dom;
+						})
+					})
+				});
+			}
 			let that = this;
-			// #ifdef H5
+			// #ifdef H5 || APP-PLUS
 			that.$set(that, 'pageHeight', app.globalData.windowHeight);
 			// #endif
 			that.$set(that, 'MyMenus', app.globalData.MyMenus);
-			if (!this.$Cache.has('cityList')) this.getCityList();
-			if (that.isLogin == false) {
-				// #ifdef H5
-				toLogin()
-				// #endif
-			}
+			that.$set(that,'chatConfig',Cache.getItem('chatConfig'));
+			// #ifdef H5
+			that.shareApi();
+			// #endif
+			that.bgColor = setThemeColor();
+			 // #ifdef APP-PLUS
+			setTimeout(()=>{
+			 	uni.setNavigationBarColor({
+			 		frontColor: '#ffffff',
+			 		backgroundColor:that.bgColor,   
+			 	});
+			 },500)
+			 // #endif
+			 // #ifdef MP
+			 uni.setNavigationBarColor({
+			 	frontColor: '#ffffff',
+			 	backgroundColor:that.bgColor,   
+			 });
+			 // #endif
 		},
 		onShow: function() {
-			let that = this;
+			this.getMyMenus();
+			this.getTokenIsExist();
+			this.copyrightImage();
+			this.theme = this.$Cache.get('theme')
+			app.globalData.theme = this.$Cache.get('theme')
+			if (!this.$Cache.getItem('cityList')) getCityList();
+			!this.$store.state.app.bottomNavigationIsCustom&&uni.showTabBar();
 			// #ifdef H5
+			let that = this;
 			uni.getSystemInfo({
 				success: function(res) {
 					that.pageHeight = res.windowHeight + 'px'
 				}
 			});
 			// #endif
-			if (that.isLogin) {
-				this.getMyMenus();
-				// this.setVisit();
-				this.getOrderData();
-				this.$store.dispatch('USERINFO');
-			} else {
-				toLogin();
-			}
+			// #ifdef MP
+			let  query  = uni.createSelectorQuery(); 
+			let dom = query.select('.new-users');
+			// #endif
 		},
 		methods: {
-			// 记录会员访问
-			// setVisit(){
-			// 	setVisit({
-			// 		url:'/pages/user/index'
-			// 	}).then(res=>{})
-			// },
-			navito(e) {
-				window.location.href = 'https://' + e;
+			//校验token是否有效,true为有效，false为无效
+			getTokenIsExist() {
+				tokenIsExistApi().then(res => {
+					let tokenIsExist = res.data;
+					if (this.isLogin && tokenIsExist) {
+						this.getOrderData();
+						this.$store.dispatch('USERINFO').then(res => {
+							this.userInfo = res;
+						});
+					}else{
+						this.$store.commit("LOGOUT");
+						this.$store.commit('UPDATE_LOGIN', '');
+						this.$store.commit('UPDATE_USERINFO', {});
+					}
+				})
 			},
-			kefuClick() {
-				location.href = this.chatUrl;
+			//获取授权图片
+			copyrightImage() {
+				copyrightApi().then(res => {
+					if (res.data) {
+						this.copyImage = res.data.companyImage;
+					} else {
+						this.copyImage = `${this.urlDomain}crmebimage/perset/staticImg/support.png`;
+					}
+				}).catch(err => {
+					return this.$util.Tips({
+						title: err
+					})
+				});
+			},
+			bindEdit(name) {
+				if (app.globalData.isIframe) {
+					window.parent.postMessage(
+						{
+							name: name
+						},
+						'*'
+					);
+					return;
+				}
+			},
+			menusTap(url) {
+				if (!this.isLogin) {
+					this.openAuto(); 
+				}else{
+					goPage().then(res => {
+						uni.navigateTo({
+							animationType: animationType.type,
+							animationDuration: animationType.duration,
+							url: url
+						})
+					})
+				}
+			},
+			navito(url) {
+				if(url.indexOf("http") !== -1){
+					// #ifdef H5
+					location.href = url
+					// #endif
+					// #ifdef APP-PLUS || MP
+					uni.navigateTo({
+						url: '/pages/users/web_page/index?webUel=' + url
+					})
+					// #endif
+				}else{
+					if(['/pages/goods_cate/goods_cate','/pages/order_addcart/order_addcart','/pages/user/index'].indexOf(url) == -1){
+						uni.navigateTo({
+							url:url
+						})
+					}else{
+						uni.switchTab({
+							url:url
+						})
+					}
+				}
+			},
+            onClickService() {
+				if(this.chatConfig.telephone_service_switch === 'open'){
+					uni.makePhoneCall({
+					    phoneNumber: this.chatConfig.consumer_hotline //仅为示例
+					});
+				}else{
+					// #ifdef APP-PLUS
+					uni.navigateTo({
+						animationType: animationType.type,
+						animationDuration: animationType.duration,
+						url: '/pages/users/web_page/index?webUel=' + this.chatUrl + '&title=客服'
+					})
+					// #endif
+					// #ifndef APP-PLUS
+					if (!app.globalData.isIframe) {
+						location.href = this.chatUrl;
+					}else{
+						return false
+					}
+					// #endif
+				}
+			},
+			wxChatService(){
+				let chatUrlArr = this.chatUrl.split('?')
+				uni.navigateTo({
+					url:`/pages/users/web_page/index?webUel=${chatUrlArr[0]}&title=客服&${chatUrlArr[1]}`
+				})
 			},
 			getOrderData() {
 				let that = this;
@@ -276,26 +396,11 @@
 				Cache.set(BACK_URL, '')
 				toLogin();
 			},
-			// 授权回调
-			onLoadFun() {
-				this.getMyMenus();
-				// this.setVisit();
-				this.getOrderData();
-			},
-			Setting: function() {
-				uni.openSetting({
-					success: function(res) {
-						console.log(res.authSetting)
-					}
-				});
-			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
-			},
 			// 绑定手机
 			bindPhone() {
 				uni.navigateTo({
+					animationType: animationType.type,
+					animationDuration: animationType.duration,
 					url: '/pages/users/app_login/index'
 				})
 			},
@@ -305,7 +410,7 @@
 			 */
 			getMyMenus: function() {
 				let that = this;
-				if (this.MyMenus.length) return;
+				// if (this.MyMenus.length) return;
 				getMenuList().then(res => {
 					that.$set(that, 'MyMenus', res.data.routine_my_menus);
 					that.wechatUrl = res.data.routine_my_menus.filter((item) => {
@@ -314,50 +419,65 @@
 					res.data.routine_my_menus.map((item) => {
 						if (item.url.indexOf('service') !== -1) that.servicePic = item.pic
 					})
+					// that.imgUrls = res.data.routine_my_banner
 					if(res.data.routine_my_banner){
 						that.imgUrls = res.data.routine_my_banner
 					}
+				}).catch(err=>{
+					console.log(err);
 				});
 			},
 			// 编辑页面
 			goEdit() {
 				if (this.isLogin == false) {
-					toLogin();
+					this.openAuto();
 				} else {
 					uni.navigateTo({
-						url: '/pages/users/user_info/index'
+						animationType: animationType.type,
+						animationDuration: animationType.duration,
+						url: '/pages/infos/user_info/index'
 					})
 				}
 			},
-			// 签到
-			goSignIn() {
-				uni.navigateTo({
-					url: '/pages/users/user_sgin/index'
-				})
-			},
-			// goMenuPage
 			goMenuPage(url) {
 				if (this.isLogin) {
 					uni.navigateTo({
+						animationType: animationType.type,
+						animationDuration: animationType.duration,
 						url
 					})
 				} else {
-					// #ifdef MP
 					this.openAuto()
-					// #endif
 				}
 			},
-			// 获取地址数据
-			getCityList: function() {
-				let that = this;
-				getCity().then(res => {
-					let oneDay = 24 * 3600 * 1000;
-					this.$Cache.setItem({
-						name: 'cityList',
-						value: res.data,
-						expires: oneDay * 7
-					}); //设置七天过期时间
+			appUpdate(){
+				uni.navigateTo({
+					url:'/pages/users/app_update/app_update',
+					animationType: animationType.type,
+					animationDuration: animationType.duration,
 				})
+			},
+			shareApi: function() {
+				getShare().then(res => {
+					this.$set(this, 'configApi', res.data);
+					// #ifdef H5
+					this.setOpenShare(res.data);
+					// #endif
+				})
+			},
+			// 微信分享；
+			setOpenShare: function(data) {
+				let that = this;
+				if (that.$wechat.isWeixin()) {
+					let configAppMessage = {
+						desc: data.synopsis,
+						title: data.title,
+						link: location.href,
+						imgUrl: data.img
+					};
+					that.$wechat.wechatEvevt(["updateAppMessageShareData", "updateTimelineShareData"],
+						configAppMessage);
+				}
 			}
 		}
 	}
@@ -368,19 +488,21 @@
 	body {
 		height: 100%;
 	}
-
+	.mp-header{
+		@include main_bg_color(theme);
+	}
 	.bg {
 		position: absolute;
 		left: 0;
 		top: 0;
 		width:100%;
 		height: 420rpx;
-		background-image: url('~@/static/images/user_bg.png');
+		background-image: url('../../static/images/user_bg.png');
 		background-repeat: no-repeat;
 		background-size: 100% 100%;
 	}
 	.contenBox {
-		padding: 0 30rpx;
+		padding: 0 30rpx 100rpx 30rpx;
 	}
 
 	.support {
@@ -391,7 +513,6 @@
 	}
 
 	.new-users {
-		//margin-top: var(--status-bar-height);
 		display: flex;
 		flex-direction: column;
 		height: 100%;
@@ -413,9 +534,7 @@
 		}
 
 		.head {
-			background: linear-gradient(360deg, rgba(255, 121, 49, 0) 0%, rgba(248, 74, 29, 0.82) 39%, #E93323 100%);
-			// padding: 0 30rpx;
-
+			@include index-gradient(theme);
 			.user-card {
 				position: relative;
 				width: 100%;
@@ -439,6 +558,7 @@
 						justify-content: space-between;
 						margin-left: 20rpx;
 						padding: 15rpx 0;
+						position: relative;
 
 						.name {
 							display: flex;
@@ -460,6 +580,13 @@
 									height: 27rpx;
 								}
 							}
+						}
+						.app_set{
+							position: absolute;
+							font-size: 36rpx;
+							color: #fff;
+							top: 40rpx;
+							right: 20rpx;
 						}
 
 						.num {
@@ -647,19 +774,33 @@
 		.phone {
 			color: #fff;
 		}
-
+		.pic_status{
+			font-size: 43rpx;
+			@include main_color(theme);
+		}
 		.order-status-num {
-
-			min-width: 12rpx;
+			min-width: 13rpx;
 			background-color: #fff;
-			color: #ee5a52;
+			@include main_color(theme);
 			border-radius: 15px;
 			position: absolute;
 			right: -14rpx;
 			top: -15rpx;
 			font-size: 20rpx;
 			padding: 0 8rpx;
-			border: 1px solid #ee5a52;
+			@include coupons_border_color(theme);
 		}
+		
+	}
+	.sub_btn{
+		width: 690rpx;
+		height: 86rpx;
+		line-height: 86rpx;
+		margin-top: 60rpx;
+		background: $theme-color;
+		border-radius: 43rpx;
+		color: #fff;
+		font-size: 28rpx;
+		text-align: center;
 	}
 </style>

@@ -1,7 +1,7 @@
 <template>
 	<view class="lottie-bg">
 		<view id="lottie">
-			<image src="/static/img/live-logo.gif" rel="preload" />
+			<image :src="urlDomain+'crmebimage/perset/staticImg/live-logo.gif'" rel="preload" />
 		</view>
 	</view>
 </template>
@@ -13,6 +13,11 @@
 	} from "@/api/user";
 	export default {
 		name: "Auth",
+		data(){
+			return{
+				urlDomain: this.$Cache.get("imgHost"),
+			}
+		},
 		mounted() {
 
 		},

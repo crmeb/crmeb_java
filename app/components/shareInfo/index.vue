@@ -1,7 +1,7 @@
 <template>
 	<view v-if="shareInfoStatus" class="poster-first">
 	    <view class="mask-share">
-			<image src="/static/images/share-info.png" @click="shareInfoClose" @touchmove.stop.prevent="false"></image>
+			<image :src="urlDomain+'crmebimage/perset/staticImg/share-info.png'" @click="shareInfoClose" @touchmove.stop.prevent="false"></image>
 	    </view>
 	  </view>
 </template>
@@ -16,7 +16,9 @@ export default {
 		    }
 	},
   data: function() {
-    return {};
+    return {
+		urlDomain: this.$Cache.get("imgHost"),
+	};
   },
   mounted: function() {},
   methods: {

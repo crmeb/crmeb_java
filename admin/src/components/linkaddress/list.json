@@ -1,0 +1,135 @@
+{
+  "status": 200,
+  "msg": "ok",
+  "data": [
+    {
+      "id": 1,
+      "pid": 0,
+      "type": "link",
+      "name": "商城页面",
+      "title": "商城页面",
+      "expand": true,
+      "children": [
+        {
+          "id": 5,
+          "pid": 1,
+          "type": "link",
+          "name": "商城链接",
+          "title": "商城链接",
+          "expand": true,
+          "children": []
+        },
+        {
+          "id": 6,
+          "pid": 1,
+          "type": "marketing_link",
+          "name": "营销链接",
+          "title": "营销链接",
+          "expand": true,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "pid": 0,
+      "type": "product",
+      "name": "商品页面",
+      "title": "商品页面",
+      "expand": true,
+      "children": [
+        {
+          "id": 8,
+          "pid": 2,
+          "type": "product_category",
+          "name": "商品分类",
+          "title": "商品分类",
+          "expand": true,
+          "children": []
+        },
+        {
+          "id": 9,
+          "pid": 2,
+          "type": "product",
+          "name": "商品",
+          "title": "商品",
+          "expand": true,
+          "children": []
+        },
+        {
+          "id": 10,
+          "pid": 2,
+          "type": "seckill",
+          "name": "秒杀商品",
+          "title": "秒杀商品",
+          "expand": true,
+          "children": []
+        },
+        {
+          "id": 11,
+          "pid": 2,
+          "type": "bargain",
+          "name": "砍价商品",
+          "title": "砍价商品",
+          "expand": true,
+          "children": []
+        },
+        {
+          "id": 12,
+          "pid": 2,
+          "type": "combination",
+          "name": "拼团商品",
+          "title": "拼团商品",
+          "expand": true,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "pid": 0,
+      "type": "article",
+      "name": "文章页面",
+      "title": "文章页面",
+      "expand": true,
+      "children": [
+        {
+          "id": 14,
+          "pid": 3,
+          "type": "news",
+          "name": "文章",
+          "title": "文章",
+          "expand": true,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "pid": 0,
+      "type": "custom",
+      "name": "自定义",
+      "title": "自定义",
+      "expand": true,
+      "children": [
+        {
+          "id": 15,
+          "pid": 4,
+          "type": "custom",
+          "name": "自定义链接",
+          "title": "自定义链接",
+          "expand": true,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "pid": 0,
+      "type": "micro",
+      "name": "微页面",
+      "title": "微页面",
+      "expand": false
+    }
+  ]
+}

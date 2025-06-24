@@ -1,14 +1,14 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import request from '@/utils/request'
+import request from '@/utils/request';
 
 /**
  * 绑定产品
@@ -17,13 +17,13 @@ import request from '@/utils/request'
 export function bindProduct(pram) {
   const data = {
     id: pram.id,
-    productId: pram.productId
-  }
+    productId: pram.productId,
+  };
   return request({
     url: '/admin/article/bind/product',
     method: 'POST',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
@@ -33,13 +33,13 @@ export function bindProduct(pram) {
  */
 export function DelArticle(pram) {
   const data = {
-    id: pram.id
-  }
+    id: pram.id,
+  };
   return request({
     url: '/admin/article/delete',
     method: 'GET',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
@@ -49,13 +49,13 @@ export function DelArticle(pram) {
  */
 export function InfoArticle(id) {
   const data = {
-    id: id
-  }
+    id: id,
+  };
   return request({
     url: '/admin/article/info',
     method: 'get',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
@@ -68,13 +68,13 @@ export function ListArticle(pram) {
     keywords: pram.keywords,
     cid: pram.cid,
     page: pram.page,
-    limit: pram.limit
-  }
+    limit: pram.limit,
+  };
   return request({
     url: '/admin/article/list',
     method: 'GET',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
@@ -95,13 +95,13 @@ export function AddArticle(pram) {
     sort: pram.sort,
     synopsis: pram.synopsis,
     title: pram.title,
-    url: pram.url
-  }
+    url: pram.url,
+  };
   return request({
     url: '/admin/article/save',
     method: 'post',
-    data: data
-  })
+    data: data,
+  });
 }
 
 /**
@@ -122,12 +122,12 @@ export function UpdateArticle(pram) {
     sort: pram.sort,
     synopsis: pram.synopsis,
     title: pram.title,
-    url: pram.url
-  }
+    url: pram.url,
+  };
   return request({
     url: '/admin/article/update',
     method: 'post',
     params: { id: pram.id },
-    data: data
-  })
+    data: data,
+  });
 }

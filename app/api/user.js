@@ -1,5 +1,16 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import request from "@/utils/request.js";
 import Cache from "@/utils/cache.js"
+
 /**
  * 获取用户信息
  * 
@@ -23,7 +34,6 @@ export function userShare(){
 export function loginH5(data) {
   return request.post("login", data, { noAuth : true });
 }
-
 /**
  * h5用户手机号登录
  * @param data object 用户手机号 也只能
@@ -68,7 +78,7 @@ export function registerReset(data) {
  *
  */
 export function getMenuList() {
-  return request.get("menu/user");
+  return request.get("menu/user",'',{ noAuth : true });
 }
 
 /*
@@ -408,6 +418,24 @@ export function getuserDalance()
 	return request.get("user/balance");
 }
 
+/*
+统计
+*
+*/
+export function computeUser(){
+	uni.request({
+	    url: document.location.protocol + '//shop.crmeb.net/index.php/admin/server.upgrade_api/updatewebinfo',
+		method:'POST',
+		data: {
+	        host:window.location.host,
+			https:document.location.protocol,
+			version:'CRMEB-JAVA-SY-V2.0',
+			ip:Cache.has('Ip') ? Cache.get('Ip') : ''
+	    },
+		dataType:'json',
+	    success: (res) => {}
+	});
+}
 
 /**
  * 账单记录；
@@ -439,22 +467,9 @@ export function spreadPeoCount() {
   return request.get("spread/people/count");
 }
 
-/*
-统计
-*
+/**
+ * 版权信息
 */
-export function computeUser(){
-	uni.request({
-	    url: document.location.protocol + '//shop.crmeb.net/index.php/admin/server.upgrade_api/updatewebinfo',
-		method:'POST',
-		data: {
-	        host:window.location.host,
-			https:document.location.protocol,
-			version:'CRMEB-JAVA-KY-V1.3.4',
-			version_code:'gitee',
-			ip:Cache.has('Ip') ? Cache.get('Ip') : ''
-	    },
-		dataType:'json',
-	    success: (res) => {}
-	});
+export function copyrightApi(){
+  return request.get(`copyright/info`,{},{noAuth:true});
 }

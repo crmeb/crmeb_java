@@ -1,7 +1,18 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import store from '../store';
 import { checkLogin } from './login';
 import { login } from '../api/public';
 import Cache from '../utils/cache';
+import { spread } from "@/api/user";
 import { STATE_R_KEY, USER_INFO, EXPIRES_TIME, LOGIN_STATUS} from './../config/cache';
 class Routine 
 {
@@ -16,6 +27,35 @@ class Routine
 		if(isAuth)
 			code = await this.getCode();
 		return code;
+	}
+	
+	/**
+	 * 小程序基础库版本号比较
+	 */
+	compareVersion(v1, v2) {
+	  v1 = v1.split('.')
+	  v2 = v2.split('.')
+	  const len = Math.max(v1.length, v2.length)
+	
+	  while (v1.length < len) {
+	    v1.push('0')
+	  }
+	  while (v2.length < len) {
+	    v2.push('0')
+	  }
+	
+	  for (let i = 0; i < len; i++) {
+	    const num1 = parseInt(v1[i])
+	    const num2 = parseInt(v2[i])
+	
+	    if (num1 > num2) {
+	      return 1
+	    } else if (num1 < num2) {
+	      return -1
+	    }
+	  }
+	
+	  return 0
 	}
 	
 	/**

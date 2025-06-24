@@ -1,45 +1,44 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import request from '@/utils/request'
+import request from '@/utils/request';
 
 export function systemConfigCheck(pram) {
   const data = {
-    name: pram.name
-  }
+    name: pram.name,
+  };
   return request({
     url: '/admin/system/config/check',
     method: 'GET',
-    params: data
-  })
+    params: data,
+  });
 }
 
 export function systemConfigInfo(pram) {
   const data = {
-    formId: pram.id
-  }
+    formId: pram.id,
+  };
   return request({
     url: '/admin/system/config/info',
     method: 'GET',
-    params: data
-  })
+    params: data,
+  });
 }
 
 export function systemConfigSave(pram) {
   return request({
     url: '/admin/system/config/save/form',
     method: 'POST',
-    data: pram
-  })
+    data: pram,
+  });
 }
-
 
 /**
  * 文件上传
@@ -50,8 +49,8 @@ export function fileFileApi(data, params) {
     url: '/admin/upload/file',
     method: 'POST',
     params,
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -63,8 +62,8 @@ export function fileImageApi(data, params) {
     url: '/admin/upload/image',
     method: 'POST',
     params,
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -75,8 +74,8 @@ export function fileListApi(params) {
   return request({
     url: '/admin/system/attachment/list',
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -86,8 +85,8 @@ export function fileListApi(params) {
 export function fileDeleteApi(id) {
   return request({
     url: `/admin/system/attachment/delete/${id}`,
-    method: 'get'
-  })
+    method: 'get',
+  });
 }
 
 /**
@@ -98,10 +97,9 @@ export function attachmentMoveApi(data) {
   return request({
     url: `/admin/system/attachment/move`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
-
 
 /**
  * 微信上传图片
@@ -112,7 +110,6 @@ export function wechatUploadApi(data, params) {
     url: `/admin/wechat/media/upload`,
     method: 'post',
     data,
-    params
-  })
+    params,
+  });
 }
-
