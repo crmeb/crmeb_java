@@ -1,18 +1,22 @@
 package com.zbkj.front.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.SmsConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.request.LoginMobileRequest;
 import com.zbkj.common.request.LoginRequest;
+import com.zbkj.common.response.LoginConfigResponse;
 import com.zbkj.common.response.LoginResponse;
 import com.zbkj.common.token.FrontTokenComponent;
 import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.front.service.LoginService;
+import com.zbkj.service.service.SystemConfigService;
 import com.zbkj.service.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +32,7 @@ import java.util.Optional;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -51,6 +55,8 @@ public class LoginServiceImpl implements LoginService {
 
     @Autowired
     private FrontTokenComponent tokenComponent;
+    @Autowired
+    private SystemConfigService systemConfigService;
 
     /**
      * 账号密码登录
@@ -83,7 +89,8 @@ public class LoginServiceImpl implements LoginService {
         }
 
         // 记录最后一次登录时间
-        user.setLastLoginTime(DateUtil.nowDateTime());
+        user.setLastLoginTime(CrmebDateUtil.nowDateTime());
+        user.setUpdateTime(DateUtil.date());
         userService.updateById(user);
 
         loginResponse.setUid(user.getUid());
@@ -116,7 +123,8 @@ public class LoginServiceImpl implements LoginService {
                 bindSpread(user, spreadPid);
             }
             // 记录最后一次登录时间
-            user.setLastLoginTime(DateUtil.nowDateTime());
+            user.setLastLoginTime(CrmebDateUtil.nowDateTime());
+            user.setUpdateTime(DateUtil.date());
             boolean b = userService.updateById(user);
             if (!b) {
                 logger.error("用户登录时，记录最后一次登录时间出错,uid = " + user.getUid());
@@ -170,7 +178,8 @@ public class LoginServiceImpl implements LoginService {
         if (!checkBingSpread) return false;
 
         user.setSpreadUid(spreadUid);
-        user.setSpreadTime(DateUtil.nowDateTime());
+        user.setSpreadTime(CrmebDateUtil.nowDateTime());
+        user.setUpdateTime(DateUtil.date());
 
         Boolean execute = transactionTemplate.execute(e -> {
             userService.updateById(user);
@@ -185,10 +194,39 @@ public class LoginServiceImpl implements LoginService {
 
     /**
      * 推出登录
+     *
      * @param request HttpServletRequest
      */
     @Override
     public void loginOut(HttpServletRequest request) {
         tokenComponent.logout(request);
+    }
+
+    /**
+     * 校验token是否有效
+     *
+     * @return true 有效， false 无效
+     */
+    @Override
+    public Boolean tokenIsExist() {
+        Integer userId = userService.getUserId();
+        return userId > 0;
+    }
+
+    /**
+     * 获取登录配置
+     */
+    @Override
+    public LoginConfigResponse getLoginConfig() {
+        String routinePhoneVerification = systemConfigService.getValueByKey(Constants.WECHAT_ROUTINE_PHONE_VERIFICATION);
+        String publicLoginType = systemConfigService.getValueByKey(Constants.WECHAT_PUBLIC_LOGIN_TYPE);
+        String mobileLoginLogo = systemConfigService.getValueByKey(Constants.CONFIG_KEY_MOBILE_LOGIN_LOGO);
+        String siteName = systemConfigService.getValueByKey(Constants.CONFIG_KEY_SITE_NAME);
+        LoginConfigResponse response = new LoginConfigResponse();
+        response.setPublicLoginType(publicLoginType);
+        response.setRoutinePhoneVerification(routinePhoneVerification);
+        response.setMobileLoginLogo(mobileLoginLogo);
+        response.setSiteName(siteName);
+        return response;
     }
 }

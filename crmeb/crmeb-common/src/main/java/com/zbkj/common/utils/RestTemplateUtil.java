@@ -21,14 +21,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import java.io.FileInputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -37,7 +40,7 @@ import java.util.Objects;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -78,8 +81,11 @@ public class RestTemplateUtil {
     public String getData(String url, Map<String, String> param) {
         // 请勿轻易改变此提交方式，大部分的情况下，提交方式都是表单提交
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        return restTemplate.getForEntity(url, String.class, param).getBody();
+        for (Map.Entry<String, String> entry : param.entrySet()) {
+            headers.add(entry.getKey(), entry.getValue());
+        }
+        RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.GET, URI.create(url));
+        return restTemplate.exchange(requestEntity, String.class).getBody();
     }
 
     /**
@@ -442,5 +448,37 @@ public class RestTemplateUtil {
 //        requestFactory.setReadTimeout(30*1000);
 //        restTemplate = new RestTemplate(requestFactory);
         return restTemplate.postForEntity(url, requestEntity, String.class).getBody();
+    }
+
+    /**
+     * 发送GET请求 支持header
+     * @param url
+     * @return
+     */
+
+    public JSONObject getDataForm(String url, MultiValueMap<String, Object> params, Map<String, String> header) {
+        // 构建带参数的 URL
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url);
+        if (CollUtil.isNotEmpty(params)) {
+            for (Map.Entry<String, List<Object>> entry : params.entrySet()) {
+                for (Object value : entry.getValue()) {
+                    builder.queryParam(entry.getKey(), value);
+                }
+            }
+        }
+        String finalUrl = builder.build().toUriString();
+
+        // 设置请求头
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36");
+        if (CollUtil.isNotEmpty(header)) {
+            for (Map.Entry<String, String> entry : header.entrySet()) {
+                headers.add(entry.getKey(), entry.getValue());
+            }
+        }
+
+        // 发送 GET 请求
+        HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+        return restTemplate.exchange(finalUrl, HttpMethod.GET, requestEntity, JSONObject.class).getBody();
     }
 }

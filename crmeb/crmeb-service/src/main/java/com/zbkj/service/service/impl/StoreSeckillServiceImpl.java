@@ -23,7 +23,7 @@ import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.*;
 import com.zbkj.common.response.*;
 import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -116,14 +116,17 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         if (null != request.getStatus()) {
             lambdaQueryWrapper.eq(StoreSeckill::getStatus,request.getStatus());
         }
-        if (StringUtils.isNotBlank(request.getKeywords())) {
-            lambdaQueryWrapper.like(StoreSeckill::getTitle,request.getKeywords())
-                    .or().like(StoreSeckill::getId,request.getKeywords());
-        }
         if (null != request.getTimeId()) {
             lambdaQueryWrapper.eq(StoreSeckill::getTimeId,request.getTimeId());
         }
         lambdaQueryWrapper.eq(StoreSeckill::getIsDel,false);
+        if (StringUtils.isNotBlank(request.getKeywords())) {
+            lambdaQueryWrapper.and(wrapper -> wrapper
+                    .like(StoreSeckill::getTitle,request.getKeywords())
+                    .or()
+                    .like(StoreSeckill::getId,request.getKeywords())
+            );
+        }
         lambdaQueryWrapper.orderByDesc(StoreSeckill::getSort).orderByDesc(StoreSeckill::getId);
         List<StoreSeckill> storeProducts = dao.selectList(lambdaQueryWrapper);
         List<StoreSeckillResponse> storeProductResponses = new ArrayList<>();
@@ -244,8 +247,8 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         // 轮播图
         storeSeckill.setImages(systemAttachmentService.clearPrefix(storeSeckill.getImages()));
         // 设置秒杀开始时间和结束时间
-        storeSeckill.setStartTime(DateUtil.strToDate(request.getStartTime(), Constants.DATE_FORMAT_DATE));
-        storeSeckill.setStopTime(DateUtil.strToDate(request.getStopTime(), Constants.DATE_FORMAT_DATE));
+        storeSeckill.setStartTime(CrmebDateUtil.strToDate(request.getStartTime(), Constants.DATE_FORMAT_DATE));
+        storeSeckill.setStopTime(CrmebDateUtil.strToDate(request.getStopTime(), Constants.DATE_FORMAT_DATE));
 
         //计算价格
         List<StoreProductAttrValueAddRequest> attrValueAddRequestList = request.getAttrValue();
@@ -336,8 +339,8 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
 
         StoreSeckill seckill = new StoreSeckill();
         BeanUtils.copyProperties(request, seckill);
-        seckill.setStartTime(DateUtil.strToDate(request.getStartTime(),Constants.DATE_FORMAT_DATE));
-        seckill.setStopTime(DateUtil.strToDate(request.getStopTime(),Constants.DATE_FORMAT_DATE));
+        seckill.setStartTime(CrmebDateUtil.strToDate(request.getStartTime(),Constants.DATE_FORMAT_DATE));
+        seckill.setStopTime(CrmebDateUtil.strToDate(request.getStopTime(),Constants.DATE_FORMAT_DATE));
 
         //主图
         seckill.setImage(systemAttachmentService.clearPrefix(seckill.getImage()));
@@ -476,7 +479,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         BeanUtils.copyProperties(storeSeckill, detailH5Response);
         detailH5Response.setStoreName(storeSeckill.getTitle());
         detailH5Response.setSliderImage(storeSeckill.getImages());
-        detailH5Response.setStoreInfo(storeSeckill.getInfo());
+//        detailH5Response.setStoreInfo(storeSeckill.getInfo());
         // 详情
         StoreProductDescription sd = storeProductDescriptionService.getOne(
                 new LambdaQueryWrapper<StoreProductDescription>()
@@ -504,7 +507,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
 
         StoreSeckillManger seckillManger = storeSeckillMangerService.getById(storeSeckill.getTimeId());
         if (ObjectUtil.isNotNull(seckillManger)) {
-            int secKillEndSecondTimestamp = DateUtil.getSecondTimestamp(DateUtil.nowDateTime("yyyy-MM-dd " + seckillManger.getEndTime() + ":00:00"));
+            int secKillEndSecondTimestamp = CrmebDateUtil.getSecondTimestamp(CrmebDateUtil.nowDateTime("yyyy-MM-dd " + seckillManger.getEndTime() + ":00:00"));
             detailH5Response.setTimeSwap(secKillEndSecondTimestamp + "");
         }
         Integer seckillStatus = getSeckillStatus(storeSeckill, seckillManger);
@@ -567,7 +570,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
             String ymdStart = cn.hutool.core.date.DateUtil.date(storeSeckill.getStartTime()).toString(Constants.DATE_FORMAT_DATE);
             String startTimeStr = seckillManger.getStartTime() < 10 ? "0" + seckillManger.getStartTime() : seckillManger.getStartTime().toString();
             DateTime startTime = cn.hutool.core.date.DateUtil.parse(ymdStart + " " + startTimeStr + ":00:00");
-            Date nowDateTime = DateUtil.nowDateTime();
+            Date nowDateTime = CrmebDateUtil.nowDateTime();
             if (nowDateTime.compareTo(startTime) <= 0) {
                 // 即将开始
                 return 1;
@@ -604,7 +607,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         BeanUtils.copyProperties(storeSeckill, infoResponse);
 
         infoResponse.setStoreName(storeSeckill.getTitle());
-        infoResponse.setStoreInfo(storeSeckill.getInfo());
+//        infoResponse.setStoreInfo(storeSeckill.getInfo());
         infoResponse.setSliderImage(String.join(",",storeSeckill.getImages()));
         infoResponse.setStartTimeStr(cn.hutool.core.date.DateUtil.format(storeSeckill.getStartTime(), Constants.DATE_FORMAT_DATE));
         infoResponse.setStopTimeStr(cn.hutool.core.date.DateUtil.format(storeSeckill.getStopTime(), Constants.DATE_FORMAT_DATE));
@@ -654,7 +657,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
     @Override
     public List<SecKillResponse> getForH5Index() {
         List<SecKillResponse> response = new ArrayList<>();
-        int currentHour = DateUtil.getCurrentHour();
+        int currentHour = CrmebDateUtil.getCurrentHour();
         // 获取所有的秒杀配置
         List<StoreSeckillManagerResponse> skillManagerList = storeSeckillMangerService.getH5List();
         // 根据当前时间过滤 仅处理正在进行和马上开始的秒杀
@@ -662,7 +665,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
             // 根据当前秒杀配置id查询是否有商品正在参与次时间段
             Integer proNum = getCountByTimeId(e.getId());
             if (proNum > 0) {
-                int secKillEndSecondTimestamp = DateUtil.getSecondTimestamp(DateUtil.nowDateTime("yyyy-MM-dd " + e.getEndTime() + ":00:00"));
+                int secKillEndSecondTimestamp = CrmebDateUtil.getSecondTimestamp(CrmebDateUtil.nowDateTime("yyyy-MM-dd " + e.getEndTime() + ":00:00"));
                 SecKillResponse r = new SecKillResponse(e.getId(),e.getSilderImgs(),e.getStatusName(),
                         e.getTime(),e.getKillStatus(),secKillEndSecondTimestamp+"");
                 if (e.getStartTime() <= currentHour && currentHour < e.getEndTime()) {
@@ -686,7 +689,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         lqw.eq(StoreSeckill::getIsDel,false);
         lqw.eq(StoreSeckill::getIsShow,true);
         lqw.eq(StoreSeckill::getTimeId,timeId);
-        String currentDate = DateUtil.nowDate(Constants.DATE_FORMAT_DATE);
+        String currentDate = CrmebDateUtil.nowDate(Constants.DATE_FORMAT_DATE);
         lqw.le(StoreSeckill::getStartTime, currentDate);
         lqw.ge(StoreSeckill::getStopTime, currentDate);
         lqw.orderByDesc(StoreSeckill::getId);
@@ -702,7 +705,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
     @Override
     public List<StoreSecKillH5Response> getKillListByTimeId(String timeId, PageParamRequest pageParamRequest) {
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-        String currentDate = DateUtil.nowDate(Constants.DATE_FORMAT_DATE);
+        String currentDate = CrmebDateUtil.nowDate(Constants.DATE_FORMAT_DATE);
         LambdaQueryWrapper<StoreSeckill> lqw = Wrappers.lambdaQuery();
         lqw.eq(StoreSeckill::getStatus,1);
         lqw.eq(StoreSeckill::getIsDel,false);
@@ -829,12 +832,12 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
     @Override
     public Boolean operationStock(Integer id, Integer num, String type) {
         UpdateWrapper<StoreSeckill> updateWrapper = new UpdateWrapper<>();
-        if ("add".equals(type)) {
+        if (type.equals("add")) {
             updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
             updateWrapper.setSql(StrUtil.format("quota = quota + {}", num));
         }
-        if ("sub".equals(type)) {
+        if (type.equals("sub")) {
             updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
             updateWrapper.setSql(StrUtil.format("quota = quota - {}", num));
@@ -864,9 +867,12 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
             return null;
         }
         StoreSeckillManger seckillManger = currentSeckillManagerList.get(0);
+        if (seckillManger.getStatus().equals(0)) {// 秒杀时段关闭直接返回
+            return null;
+        }
 
         // 查询当前时段秒杀商品
-        String currentDate = DateUtil.nowDate(Constants.DATE_FORMAT_DATE);
+        String currentDate = CrmebDateUtil.nowDate(Constants.DATE_FORMAT_DATE);
         LambdaQueryWrapper<StoreSeckill> lqw = Wrappers.lambdaQuery();
         lqw.select(StoreSeckill::getId, StoreSeckill::getProductId, StoreSeckill::getImage, StoreSeckill::getTitle, StoreSeckill::getPrice, StoreSeckill::getOtPrice);
         lqw.eq(StoreSeckill::getStatus,1);
@@ -892,7 +898,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         String startTime = pStartTime.length() == 1 ? "0" + pStartTime:pStartTime;
         String endTime = pEndTime.length() == 1 ? "0" + pEndTime : pEndTime;
         managerResponse.setTime(startTime + ":00," + endTime + ":00");
-        int secKillEndSecondTimestamp = DateUtil.getSecondTimestamp(DateUtil.nowDateTime("yyyy-MM-dd " + seckillManger.getEndTime() + ":00:00"));
+        int secKillEndSecondTimestamp = CrmebDateUtil.getSecondTimestamp(CrmebDateUtil.nowDateTime("yyyy-MM-dd " + seckillManger.getEndTime() + ":00:00"));
         SecKillResponse secKillResponse = new SecKillResponse(seckillManger.getId(),seckillManger.getSilderImgs(),managerResponse.getStatusName(),
                 managerResponse.getTime(),managerResponse.getKillStatus(),secKillEndSecondTimestamp+"");
         response.setSecKillResponse(secKillResponse);
@@ -916,7 +922,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         }
 
         // 回滚商品库存/销量 并更新
-        boolean isPlus = "add".equals(storeProductStockRequest.getOperationType());
+        boolean isPlus = storeProductStockRequest.getOperationType().equals("add");
         int productStock = isPlus ? existProduct.getStock() + storeProductStockRequest.getNum() : existProduct.getStock() - storeProductStockRequest.getNum();
         existProduct.setStock(productStock);
         existProduct.setSales(existProduct.getSales() - storeProductStockRequest.getNum());

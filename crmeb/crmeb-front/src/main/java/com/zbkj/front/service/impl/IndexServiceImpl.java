@@ -5,9 +5,11 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.zbkj.common.page.CommonPage;
+import com.zbkj.common.response.CopyrightConfigInfoResponse;
 import com.zbkj.common.response.IndexInfoResponse;
 import com.zbkj.common.response.IndexProductResponse;
 import com.zbkj.common.response.ProductActivityItemResponse;
+import com.zbkj.common.response.pagelayout.PageLayoutBottomNavigationResponse;
 import com.zbkj.common.vo.MyRecord;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.constants.Constants;
@@ -35,7 +37,7 @@ import java.util.List;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -63,6 +65,9 @@ public class IndexServiceImpl implements IndexService {
     @Autowired
     private UserVisitRecordService userVisitRecordService;
 
+    @Autowired
+    private ActivityStyleService activityStyleService;
+
     /**
      * 首页数据
      * banner、金刚区、广告位
@@ -78,6 +83,7 @@ public class IndexServiceImpl implements IndexService {
         indexInfoResponse.setYzfUrl(systemConfigService.getValueByKey(Constants.CONFIG_KEY_YZF_H5_URL));// 云智服H5 url
         indexInfoResponse.setConsumerHotline(systemConfigService.getValueByKey(Constants.CONFIG_KEY_CONSUMER_HOTLINE));// 客服电话
         indexInfoResponse.setTelephoneServiceSwitch(systemConfigService.getValueByKey(Constants.CONFIG_KEY_TELEPHONE_SERVICE_SWITCH));// 客服电话服务
+        indexInfoResponse.setWxChatIndependent(systemConfigService.getValueByKey(Constants.CONFIG_KEY_WX_CHAT_INDEPENDENT));
         indexInfoResponse.setCategoryPageConfig(systemConfigService.getValueByKey(Constants.CONFIG_CATEGORY_CONFIG));// 商品分类页配置
         indexInfoResponse.setIsShowCategory(systemConfigService.getValueByKey(Constants.CONFIG_IS_SHOW_CATEGORY));// 是否隐藏一级分类
         indexInfoResponse.setExplosiveMoney(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_EX_BANNER));//首页超值爆款
@@ -138,6 +144,10 @@ public class IndexServiceImpl implements IndexService {
         if(CollUtil.isEmpty(storeProductList)) {
             return CommonPage.restPage(new ArrayList<>());
         }
+
+        // 查询活动边框配置信息, 并赋值给商品response 重复添加的商品数据会根据数据添加持续覆盖后的为准
+        storeProductList = activityStyleService.makeActivityBorderStyle(storeProductList);
+
         CommonPage<StoreProduct> storeProductCommonPage = CommonPage.restPage(storeProductList);
 
         List<IndexProductResponse> productResponseArrayList = new ArrayList<>();
@@ -184,6 +194,7 @@ public class IndexServiceImpl implements IndexService {
             BeanUtils.copyProperties(storeProduct, productResponse);
             productResponseArrayList.add(productResponse);
         }
+
         CommonPage<IndexProductResponse> productResponseCommonPage = CommonPage.restPage(productResponseArrayList);
         BeanUtils.copyProperties(storeProductCommonPage, productResponseCommonPage, "list");
         return productResponseCommonPage;
@@ -195,7 +206,7 @@ public class IndexServiceImpl implements IndexService {
      */
     @Override
     public SystemConfig getColorConfig() {
-        return systemConfigService.getColorConfig();
+        return systemConfigService.getChangeColor();
     }
 
     /**
@@ -221,6 +232,32 @@ public class IndexServiceImpl implements IndexService {
     public String getImageDomain() {
         String localUploadUrl = systemConfigService.getValueByKey("localUploadUrl");
         return StrUtil.isBlank(localUploadUrl) ? "" : localUploadUrl;
+    }
+
+    /**
+     * 获取公司版权图片
+     */
+    @Override
+    public CopyrightConfigInfoResponse getCopyrightInfo() {
+        String copyrightCompanyImage = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_COPYRIGHT_COMPANY_IMAGE);
+        String copyrightCompanyName = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_COPYRIGHT_COMPANY_INFO);
+        CopyrightConfigInfoResponse response = new CopyrightConfigInfoResponse();
+        response.setCompanyName(copyrightCompanyName);
+        response.setCompanyImage(copyrightCompanyImage);
+        return response;
+    }
+
+    /**
+     * 获取底部导航信息
+     */
+    @Override
+    public PageLayoutBottomNavigationResponse getBottomNavigationInfo() {
+        String isCustom = systemConfigService.getValueByKey(Constants.CONFIG_BOTTOM_NAVIGATION_IS_CUSTOM);
+        List<HashMap<String, Object>> bnList = systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_BOTTOM_NAVIGATION);
+        PageLayoutBottomNavigationResponse response = new PageLayoutBottomNavigationResponse();
+        response.setIsCustom(isCustom);
+        response.setBottomNavigationList(bnList);
+        return response;
     }
 }
 

@@ -1,5 +1,6 @@
 package com.zbkj.service.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -31,7 +32,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -110,6 +111,7 @@ public class SystemGroupDataServiceImpl extends ServiceImpl<SystemGroupDataDao, 
         systemGroupData.setValue(value);
         systemGroupData.setSort(request.getForm().getSort());
         systemGroupData.setStatus(request.getForm().getStatus());
+        systemGroupData.setUpdateTime(DateUtil.date());
         return updateById(systemGroupData);
     }
 

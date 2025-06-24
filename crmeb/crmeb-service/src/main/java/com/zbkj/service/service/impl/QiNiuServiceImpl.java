@@ -22,7 +22,7 @@ import java.io.File;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -66,20 +66,14 @@ public class QiNiuServiceImpl implements QiNiuService {
     }
 
     @Override
-    public void uploadFile(UploadManager uploadManager, CloudVo cloudVo, String upToken, String webPth, String localFile, File file) {
+    public void uploadFile(UploadManager uploadManager, String upToken, String webPth, String localFile, File file) {
         try {
-            logger.info("上传文件开始：" + localFile);
-
-//            File file = new File(localFile);
             if(!file.exists()){
-                logger.info("上传文件" + localFile + "不存在：");
+                logger.error("上传文件" + localFile + "不存在：");
                 return;
             }
-
-//            Response put = uploadManager.put(localFile, webPth, upToken);
             Response put = uploadManager.put(file, webPth, upToken);
             put.close();
-            logger.info("上传文件 -- 结束：" + put.address);
         } catch (QiniuException ex) {
             throw new CrmebException(ex.getMessage());
         }

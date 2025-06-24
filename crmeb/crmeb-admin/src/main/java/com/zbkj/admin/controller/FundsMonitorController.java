@@ -1,12 +1,12 @@
 package com.zbkj.admin.controller;
 
+import com.zbkj.common.model.user.UserBrokerageRecord;
 import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.response.CommonResult;
-import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.BrokerageRecordRequest;
 import com.zbkj.common.request.FundsMonitorRequest;
+import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.response.MonitorResponse;
-import com.zbkj.common.model.user.UserBrokerageRecord;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.service.service.UserBillService;
 import com.zbkj.service.service.UserFundsMonitorService;
 import io.swagger.annotations.Api;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -52,7 +52,7 @@ public class FundsMonitorController {
     @PreAuthorize("hasAuthority('admin:finance:monitor:list')")
     @ApiOperation(value = "资金监控")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<MonitorResponse>>  getList(@Validated FundsMonitorRequest request, @Validated PageParamRequest pageParamRequest){
+    public CommonResult<CommonPage<MonitorResponse>> getList(@Validated FundsMonitorRequest request, @Validated PageParamRequest pageParamRequest){
         CommonPage<MonitorResponse> userExtractCommonPage = CommonPage.restPage(userBillService.fundMonitoring(request, pageParamRequest));
         return CommonResult.success(userExtractCommonPage);
     }

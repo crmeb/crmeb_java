@@ -20,7 +20,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -47,7 +47,7 @@ public interface StoreCouponUserService extends IService<StoreCouponUser> {
     HashMap<Integer, StoreCouponUser> getMapByUserId(Integer userId);
 
     /**
-     * 根据购物车id获取可用优惠券
+     * 当前订单可用优惠券
      * @param preOrderNo 预下单订单号
      * @return 可用优惠券集合
      */

@@ -1,26 +1,27 @@
 package com.zbkj.service.service.impl;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.TaskConstants;
 import com.zbkj.common.exception.CrmebException;
+import com.zbkj.common.model.combination.StorePink;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.system.SystemAdmin;
 import com.zbkj.common.request.StoreOrderStaticsticsRequest;
 import com.zbkj.common.response.StoreOrderVerificationConfirmResponse;
 import com.zbkj.common.response.StoreStaffDetail;
 import com.zbkj.common.response.StoreStaffTopDetail;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.utils.SecurityUtil;
+import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.common.vo.LoginUserVo;
-import com.zbkj.common.vo.dateLimitUtilVo;
 import com.zbkj.service.dao.StoreOrderDao;
 import com.zbkj.service.delete.OrderUtils;
-import com.zbkj.service.service.StoreOrderInfoService;
-import com.zbkj.service.service.StoreOrderService;
-import com.zbkj.service.service.StoreOrderVerification;
+import com.zbkj.service.service.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -60,6 +61,8 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
     @Autowired
     private RedisUtil redisUtil;
 
+    @Autowired
+    private StorePinkService storePinkService;
     /**
      * 获取订单核销数据
      */
@@ -102,12 +105,12 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
         storeStaffTopDetail.setRefundCount(dao.selectCount(lqwRefundCount));
 
         // 获取今日，昨日，本月，订单金额
-        String dayStart = DateUtil.nowDateTime(Constants.DATE_FORMAT_START);
-        String dayEnd = DateUtil.nowDateTime(Constants.DATE_FORMAT_END);
-        String yesterdayStart = DateUtil.addDay(dayStart,-1,Constants.DATE_FORMAT_START);
-        String yesterdayEnd = DateUtil.addDay(dayEnd,-1,Constants.DATE_FORMAT_END);
-        String monthStart = DateUtil.nowDateTime(Constants.DATE_FORMAT_MONTH_START);
-        String monthEnd = DateUtil.getMonthEndDay();
+        String dayStart = CrmebDateUtil.nowDateTime(Constants.DATE_FORMAT_START);
+        String dayEnd = CrmebDateUtil.nowDateTime(Constants.DATE_FORMAT_END);
+        String yesterdayStart = CrmebDateUtil.addDay(dayStart,-1,Constants.DATE_FORMAT_START);
+        String yesterdayEnd = CrmebDateUtil.addDay(dayEnd,-1,Constants.DATE_FORMAT_END);
+        String monthStart = CrmebDateUtil.nowDateTime(Constants.DATE_FORMAT_MONTH_START);
+        String monthEnd = CrmebDateUtil.getMonthEndDay();
 
         // 今日订单数量
         LambdaQueryWrapper<StoreOrder> lqwTodayCount = Wrappers.lambdaQuery();
@@ -155,7 +158,7 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
     @Override
     public List<StoreStaffDetail> getOrderVerificationDetail(StoreOrderStaticsticsRequest request) {
         request.setPage((request.getPage() - 1) * request.getLimit());
-        dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
+        DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
         request.setStartTime(dateLimit.getStartTime());
         request.setEndTime(dateLimit.getEndTime());
         return dao.getOrderVerificationDetail(request);
@@ -177,8 +180,13 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
         // 添加核销人员后执行核销操作
         StoreOrder storeOrder = new StoreOrder();
         BeanUtils.copyProperties(existOrder,storeOrder);
+        if (ObjectUtil.isNotNull(storeOrder.getCombinationId()) && storeOrder.getCombinationId() > 0) {
+            StorePink storePink = storePinkService.getById(storeOrder.getPinkId());
+            if (storePink.getStatus() != 2) throw new CrmebException("当前订单正在拼团中不能核销！");
+        }
         storeOrder.setStatus(Constants.ORDER_STATUS_INT_BARGAIN);
         storeOrder.setClerkId(currentAdmin.getId());
+        storeOrder.setUpdateTime(DateUtil.date());
         boolean saveStatus = dao.updateById(storeOrder) > 0;
 
         // 小程序订阅消息发送

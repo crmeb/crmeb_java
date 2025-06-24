@@ -3,6 +3,7 @@ package com.zbkj.front.service;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.request.LoginMobileRequest;
 import com.zbkj.common.request.LoginRequest;
+import com.zbkj.common.response.LoginConfigResponse;
 import com.zbkj.common.response.LoginResponse;
 
 import javax.servlet.http.HttpServletRequest;
@@ -12,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -23,6 +24,7 @@ public interface LoginService {
 
     /**
      * 账号密码登录
+     *
      * @return LoginResponse
      */
     LoginResponse login(LoginRequest loginRequest);
@@ -34,7 +36,8 @@ public interface LoginService {
 
     /**
      * 老绑定分销关系
-     * @param user User 用户user类
+     *
+     * @param user      User 用户user类
      * @param spreadUid Integer 推广人id
      * @return Boolean
      */
@@ -42,7 +45,20 @@ public interface LoginService {
 
     /**
      * 推出登录
+     *
      * @param request HttpServletRequest
      */
     void loginOut(HttpServletRequest request);
+
+    /**
+     * 校验token是否有效
+     *
+     * @return true 有效， false 无效
+     */
+    Boolean tokenIsExist();
+
+    /**
+     * 获取登录配置
+     */
+    LoginConfigResponse getLoginConfig();
 }

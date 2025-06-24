@@ -1,15 +1,16 @@
 package com.zbkj.common.utils;
 
+import com.zbkj.common.constants.Constants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.vo.ImageMergeUtilVo;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.*;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -48,7 +49,6 @@ public class ImageMergeUtil {
         try {
             UploadUtil.setModelPath(model);
             UploadUtil.setExtStr(ext);
-//            UploadUtil.setType(Constants.UPLOAD_TYPE_IMAGE);
 
             //文件名
             String newFileName = UploadUtil.fileName(ext);
@@ -73,7 +73,7 @@ public class ImageMergeUtil {
             File file = new File(fileName);
             BufferedImage read = ImageIO.read(file);
 
-            if(bufferedImage == null || "".equals(bufferedImage)){
+            if(bufferedImage == null || bufferedImage.equals("")){
                 imageMergeUtilVo.setX(0);
                 imageMergeUtilVo.setY(0);
                 //创建新的画布，宽高以第一个图为准

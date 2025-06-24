@@ -1,8 +1,13 @@
 package com.zbkj.service.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.constants.SysConfigConstants;
+import com.zbkj.common.constants.UploadConstants;
 import com.zbkj.common.exception.CrmebException;
+import com.zbkj.common.result.CommonResultCode;
 import com.zbkj.common.vo.CloudVo;
 import com.zbkj.common.vo.FileResultVo;
 import com.zbkj.common.vo.UploadCommonVo;
@@ -15,7 +20,7 @@ import com.qiniu.storage.Region;
 import com.qiniu.storage.UploadManager;
 import com.qiniu.util.Auth;
 import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.UploadUtil;
 import com.zbkj.common.model.system.SystemAttachment;
 import com.zbkj.common.config.CrmebConfig;
@@ -38,7 +43,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -68,6 +73,9 @@ public class UploadServiceImpl implements UploadService {
     @Autowired
     CrmebConfig crmebConfig;
 
+    @Autowired
+    private JdCloudService jdCloudService;
+
     /**
      * 图片上传
      * @param multipartFile 文件
@@ -76,201 +84,15 @@ public class UploadServiceImpl implements UploadService {
      * @return FileResultVo
      */
     @Override
-    public FileResultVo imageUpload(MultipartFile multipartFile, String model, Integer pid) throws IOException {
-        if (null == multipartFile || multipartFile.isEmpty()) {
-            throw new CrmebException("上传的文件对象不存在...");
+    public FileResultVo imageUpload(MultipartFile multipartFile, String model, Integer pid) {
+        FileResultVo fileResultVo = new FileResultVo();
+        try {
+            fileResultVo = commonUpload(multipartFile, model, pid, UploadConstants.UPLOAD_FILE_KEYWORD);
+        } catch (IOException e) {
+            logger.error("图片上传IO异常，{}", e.getMessage());
+            throw new CrmebException("图片上传 IO异常");
         }
-
-//        String rootPath = (systemConfigService.getValueByKey(Constants.UPLOAD_ROOT_PATH_CONFIG_KEY) + "/").replace(" ", "").replace("//", "/");
-        String rootPath = crmebConfig.getImagePath().replace(" ", "").replace("//", "/");
-        UploadUtil.setModelPath(model);
-        String modelPath = "public/" + model + "/";
-        String extStr = systemConfigService.getValueByKey(Constants.UPLOAD_IMAGE_EXT_STR_CONFIG_KEY);
-        int size = Integer.parseInt(systemConfigService.getValueByKey(Constants.UPLOAD_IMAGE_MAX_SIZE_CONFIG_KEY));
-        String type = Constants.UPLOAD_TYPE_IMAGE + "/";
-
-        UploadCommonVo uploadCommonVo = new UploadCommonVo();
-        uploadCommonVo.setRootPath(rootPath);
-        uploadCommonVo.setModelPath(modelPath);
-        uploadCommonVo.setExtStr(extStr);
-        uploadCommonVo.setSize(size);
-        uploadCommonVo.setType(type);
-
-        // 文件名
-        String fileName = multipartFile.getOriginalFilename();
-        System.out.println("fileName = " + fileName);
-        // 文件后缀名
-        String extName = FilenameUtils.getExtension(fileName);
-        if (StringUtils.isEmpty(extName)) {
-            throw new RuntimeException("文件类型未定义不能上传...");
-        }
-
-        if (fileName.length() > 99) {
-            fileName = StrUtil.subPre(fileName, 90).concat(".").concat(extName);
-        }
-
-        // 文件大小验证
-        // 文件分隔符转化为当前系统的格式
-        float fileSize = (float)multipartFile.getSize() / 1024 / 1024;
-        String fs = String.format("%.2f", fileSize);
-        if( fileSize > uploadCommonVo.getSize()){
-            throw new CrmebException("最大允许上传" + uploadCommonVo.getSize() + " MB的文件, 当前文件大小为 " + fs + " MB");
-        }
-
-        // 判断文件的后缀名是否符合规则
-        if (StringUtils.isNotEmpty(uploadCommonVo.getExtStr())) {
-            // 切割文件扩展名
-            List<String> extensionList = CrmebUtil.stringToArrayStr(uploadCommonVo.getExtStr());
-            if (extensionList.size() > 0) {
-                //判断
-                if (!extensionList.contains(extName)) {
-                    throw new CrmebException("上传文件的类型只能是：" + uploadCommonVo.getExtStr());
-                }
-            } else {
-                throw new CrmebException("上传文件的类型只能是：" + uploadCommonVo.getExtStr());
-            }
-        }
-
-        // 变更文件名
-        String newFileName = UploadUtil.fileName(extName);
-        // 创建目标文件的名称，规则：  子目录/年/月/日.后缀名
-        // 文件分隔符转化为当前系统的格式
-        // 文件分隔符转化为当前系统的格式
-        String webPath = uploadCommonVo.getType() + uploadCommonVo.getModelPath() + DateUtil.nowDate(Constants.DATE_FORMAT_DATE).replace("-", "/") + "/";
-        String destPath = FilenameUtils.separatorsToSystem(uploadCommonVo.getRootPath() + webPath) + newFileName;
-        // 创建文件
-        File file = UploadUtil.createFile(destPath);
-
-        // 拼装返回的数据
-        FileResultVo resultFile = new FileResultVo();
-        resultFile.setFileSize(multipartFile.getSize());
-        resultFile.setFileName(fileName);
-        resultFile.setExtName(extName);
-//        resultFile.setServerPath(destPath);
-        resultFile.setUrl(webPath + newFileName);
-        resultFile.setType(multipartFile.getContentType());
-
-        //图片上传类型 1本地 2七牛云 3OSS 4COS, 默认本地
-        String uploadType = systemConfigService.getValueByKeyException("uploadType");
-        Integer uploadTypeInt = Integer.parseInt(uploadType);
-        String pre;
-        CloudVo cloudVo = new CloudVo();
-
-        resultFile.setType(resultFile.getType().replace("image/", ""));
-        SystemAttachment systemAttachment = new SystemAttachment();
-        systemAttachment.setName(resultFile.getFileName());
-//        systemAttachment.setAttDir(resultFile.getUrl());
-        systemAttachment.setSattDir(resultFile.getUrl());
-        systemAttachment.setAttSize(resultFile.getFileSize().toString());
-        systemAttachment.setAttType(resultFile.getType());
-        systemAttachment.setImageType(1);   //图片上传类型 1本地 2七牛云 3OSS 4COS, 默认本地
-//        systemAttachment.setAttDir(resultFile.getServerPath()); // 服务器上存储的绝对地址， 上传到云的时候使用
-        systemAttachment.setPid(pid);
-
-        if (uploadTypeInt.equals(1)) {
-            // 保存文件
-            multipartFile.transferTo(file);
-            systemAttachmentService.save(systemAttachment);
-            return resultFile;
-        }
-        // 判断是否保存本地
-        String fileIsSave = systemConfigService.getValueByKeyException("file_is_save");
-        multipartFile.transferTo(file);
-        switch (uploadTypeInt) {
-            case 1:
-                // 保存文件
-//                multipartFile.transferTo(file);
-                break;
-            case 2:
-                systemAttachment.setImageType(2);
-                pre = "qn";
-                cloudVo.setDomain(systemConfigService.getValueByKeyException(pre+"UploadUrl"));
-                cloudVo.setAccessKey(systemConfigService.getValueByKeyException(pre+"AccessKey"));
-                cloudVo.setSecretKey(systemConfigService.getValueByKeyException(pre+"SecretKey"));
-                cloudVo.setBucketName(systemConfigService.getValueByKeyException(pre+"StorageName"));
-                cloudVo.setRegion(systemConfigService.getValueByKeyException(pre+"StorageRegion"));
-
-                try{
-                    // 构造一个带指定Zone对象的配置类, 默认华东
-                    Configuration cfg = new Configuration(Region.huadong());
-                    if("huabei".equals(cloudVo.getRegion())){
-                        cfg = new Configuration(Region.huabei());
-                    }
-                    if("huanan".equals(cloudVo.getRegion())){
-                        cfg = new Configuration(Region.huanan());
-                    }
-                    if("beimei".equals(cloudVo.getRegion())){
-                        cfg = new Configuration(Region.beimei());
-                    }
-                    if("dongnanya".equals(cloudVo.getRegion())){
-                        cfg = new Configuration(Region.xinjiapo());
-                    }
-
-                    // 其他参数参考类注释
-                    UploadManager uploadManager = new UploadManager(cfg);
-                    // 生成上传凭证，然后准备上传
-                    Auth auth = Auth.create(cloudVo.getAccessKey(), cloudVo.getSecretKey());
-                    String upToken = auth.uploadToken(cloudVo.getBucketName());
-
-                    String webPathQn = crmebConfig.getImagePath();
-                    logger.info("AsyncServiceImpl.qCloud.id " + systemAttachment.getAttId());
-//                    qiNiuService.uploadFile(uploadManager, cloudVo, upToken,
-//                            systemAttachment.getSattDir(), webPathQn + "/" + systemAttachment.getSattDir(), systemAttachment.getAttId());   //异步处理
-                    qiNiuService.uploadFile(uploadManager, cloudVo, upToken,
-                            systemAttachment.getSattDir(), webPathQn + "/" + systemAttachment.getSattDir(), file);   //异步处理
-                }catch (Exception e){
-                    logger.error("AsyncServiceImpl.qCloud.fail " + e.getMessage());
-                }
-                break;
-            case 3:
-                systemAttachment.setImageType(3);
-                pre = "al";
-                cloudVo.setDomain(systemConfigService.getValueByKeyException(pre+"UploadUrl"));
-                cloudVo.setAccessKey(systemConfigService.getValueByKeyException(pre+"AccessKey"));
-                cloudVo.setSecretKey(systemConfigService.getValueByKeyException(pre+"SecretKey"));
-                cloudVo.setBucketName(systemConfigService.getValueByKeyException(pre+"StorageName"));
-                cloudVo.setRegion(systemConfigService.getValueByKeyException(pre+"StorageRegion"));
-                try{
-                    String webPathAl = crmebConfig.getImagePath();
-                    logger.info("AsyncServiceImpl.oss.id " + systemAttachment.getAttId());
-                    ossService.upload(cloudVo, systemAttachment.getSattDir(),  webPathAl + "/" + systemAttachment.getSattDir(),
-                            file);
-                }catch (Exception e){
-                    logger.error("AsyncServiceImpl.oss fail " + e.getMessage());
-                }
-                break;
-            case 4:
-                systemAttachment.setImageType(4);
-                pre = "tx";
-                cloudVo.setDomain(systemConfigService.getValueByKeyException(pre+"UploadUrl"));
-                cloudVo.setAccessKey(systemConfigService.getValueByKeyException(pre+"AccessKey"));
-                cloudVo.setSecretKey(systemConfigService.getValueByKeyException(pre+"SecretKey"));
-                cloudVo.setBucketName(systemConfigService.getValueByKeyException(pre+"StorageName"));
-                cloudVo.setRegion(systemConfigService.getValueByKeyException(pre+"StorageRegion"));
-                // 1 初始化用户身份信息(secretId, secretKey)
-                COSCredentials cred = new BasicCOSCredentials(cloudVo.getAccessKey(), cloudVo.getSecretKey());
-                // 2 设置bucket的区域, COS地域的简称请参照 https://cloud.tencent.com/document/product/436/6224
-                ClientConfig clientConfig = new ClientConfig(new com.qcloud.cos.region.Region(cloudVo.getRegion()));
-                // 3 生成 cos 客户端。
-                COSClient cosClient = new COSClient(cred, clientConfig);
-
-                try{
-                    String webPathTx = crmebConfig.getImagePath();
-                    logger.info("AsyncServiceImpl.cos.id " + systemAttachment.getAttId());
-                    cosService.uploadFile(cloudVo, systemAttachment.getSattDir(), webPathTx + "/" + systemAttachment.getSattDir(), systemAttachment.getAttId(), cosClient);
-                }catch (Exception e){
-                    logger.error("AsyncServiceImpl.cos.fail " + e.getMessage());
-                }finally {
-                    cosClient.shutdown();
-                }
-                break;
-        }
-        systemAttachmentService.save(systemAttachment);
-        if (!"1".equals(fileIsSave)) {
-            // 删除本地文件
-            file.delete();
-        }
-        return resultFile;
+        return fileResultVo;
     }
 
     /**
@@ -283,68 +105,94 @@ public class UploadServiceImpl implements UploadService {
      */
     @Override
     public FileResultVo fileUpload(MultipartFile multipartFile, String model, Integer pid) throws IOException {
-        String rootPath = (crmebConfig.getImagePath() + "/").replace(" ", "").replace("//", "/");
-        UploadUtil.setModelPath(model);
-        String modelPath = "public/" + model + "/";
-        String extStr = systemConfigService.getValueByKey(Constants.UPLOAD_FILE_EXT_STR_CONFIG_KEY);
-        int size = Integer.parseInt(systemConfigService.getValueByKey(Constants.UPLOAD_FILE_MAX_SIZE_CONFIG_KEY));
-        String type = Constants.UPLOAD_TYPE_FILE + "/";
-
-        UploadCommonVo uploadCommonVo = new UploadCommonVo();
-        uploadCommonVo.setRootPath(rootPath);
-        uploadCommonVo.setModelPath(modelPath);
-        uploadCommonVo.setExtStr(extStr);
-        uploadCommonVo.setSize(size);
-        uploadCommonVo.setType(type);
-
-        if (null == multipartFile || multipartFile.isEmpty()) {
-            throw new CrmebException("上传的文件对象不存在...");
+        FileResultVo fileResultVo = new FileResultVo();
+        try {
+            fileResultVo = commonUpload(multipartFile, model, pid, UploadConstants.UPLOAD_FILE_KEYWORD);
+        } catch (IOException e) {
+            logger.error("文件上传IO异常，{}", e.getMessage());
+            throw new CrmebException("文件上传 IO异常");
         }
-        // 文件名
-        String fileName = multipartFile.getOriginalFilename();
-        System.out.println("fileName = " + fileName);
+        return fileResultVo;
+    }
+
+    /**
+     * 上传校验
+     *
+     * @param fileName 文件名称
+     * @param fileSize 文件大小
+     * @return 后缀名
+     */
+    private String uploadValidate(String fileName, float fileSize, String fileType, String contentType) {
         // 文件后缀名
-        String extName = FilenameUtils.getExtension(fileName);
-        if (StringUtils.isEmpty(extName)) {
-            throw new RuntimeException("文件类型未定义不能上传...");
+        String extName = FilenameUtils.getExtension(fileName).toLowerCase();
+        if (StrUtil.isEmpty(extName)) {
+            if (StrUtil.isNotBlank(contentType)) {
+                extName = contentType.split("/")[1];
+            } else {
+                throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "文件类型未定义，无法上传...");
+            }
         }
 
+        String extStr = systemConfigService.getValueByKey(fileType.equals(UploadConstants.UPLOAD_AFTER_FILE_KEYWORD) ? SysConfigConstants.UPLOAD_FILE_EXT_STR_CONFIG_KEY : SysConfigConstants.UPLOAD_IMAGE_EXT_STR_CONFIG_KEY);
+        // 判断文件的后缀名是否符合规则
+        if (StrUtil.isNotBlank(extStr)) {
+            // 切割文件扩展名
+            List<String> extensionList = CrmebUtil.stringToArrayStr(extStr);
+            if (CollUtil.isNotEmpty(extensionList)) {
+                //判断
+                if (!extensionList.contains(extName)) {
+                    throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "上载文件类型只能为：" + extStr);
+                }
+            } else {
+                throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "上载文件类型只能为：" + extStr);
+            }
+        }
+        // 文件大小验证
+        int size = Integer.parseInt(systemConfigService.getValueByKey(fileType.equals(UploadConstants.UPLOAD_AFTER_FILE_KEYWORD) ? SysConfigConstants.UPLOAD_FILE_MAX_SIZE_CONFIG_KEY : SysConfigConstants.UPLOAD_IMAGE_MAX_SIZE_CONFIG_KEY));
+        String fs = String.format("%.2f", fileSize);
+        if (fileSize > size) {
+            throw new CrmebException(CommonResultCode.VALIDATE_FAILED, StrUtil.format("最大允许上传 {} MB文件，当前文件大小为 {} MB", size, fs));
+        }
+        return extName;
+    }
+
+
+    /**
+     * 公共上传
+     *
+     * @param multipartFile 文件
+     * @param model         模块 用户user,商品product,微信wechat,文章article,系统system
+     * @param pid           分类ID 0编辑器,1商品图片,2拼团图片,3砍价图片,4秒杀图片,5文章图片,6组合数据图,7前台用户,8微信系列
+     * @param fileType      文件类型
+     * @return FileResultVo
+     * @throws IOException IOE异常
+     */
+    private FileResultVo commonUpload(MultipartFile multipartFile, String model, Integer pid, String fileType) throws IOException {
+        if (ObjectUtil.isNull(multipartFile) || multipartFile.isEmpty()) {
+            throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "上载的文件对象不存在...");
+        }
+        // 校验
+        String fileName = multipartFile.getOriginalFilename();
+        float fileSize = (float) multipartFile.getSize() / 1024 / 1024;
+        // 文件后缀名
+        String extName = uploadValidate(fileName, fileSize, fileType, multipartFile.getContentType());
         if (fileName.length() > 99) {
             fileName = StrUtil.subPre(fileName, 90).concat(".").concat(extName);
         }
 
-        //文件大小验证
-        // 文件分隔符转化为当前系统的格式
-        float fileSize = (float)multipartFile.getSize() / 1024 / 1024;
-        String fs = String.format("%.2f", fileSize);
-        if( fileSize > uploadCommonVo.getSize()){
-            throw new CrmebException("最大允许上传" + uploadCommonVo.getSize() + " MB的文件, 当前文件大小为 " + fs + " MB");
-        }
+        // 服务器存储地址
+        String rootPath = crmebConfig.getImagePath().trim();
+        // 模块
+        String modelPath = "public/" + model + "/";
+        // 类型
+        String type = (fileType.equals(UploadConstants.UPLOAD_FILE_KEYWORD) ? UploadConstants.UPLOAD_FILE_KEYWORD : UploadConstants.UPLOAD_AFTER_FILE_KEYWORD) + "/";
 
-        // 判断文件的后缀名是否符合规则
-//        isContains(extName);
-        if (StringUtils.isNotEmpty(uploadCommonVo.getExtStr())) {
-            // 切割文件扩展名
-            List<String> extensionList = CrmebUtil.stringToArrayStr(uploadCommonVo.getExtStr());
-
-            if (extensionList.size() > 0) {
-                //判断
-                if (!extensionList.contains(extName)) {
-                    throw new CrmebException("上传文件的类型只能是：" + uploadCommonVo.getExtStr());
-                }
-            } else {
-                throw new CrmebException("上传文件的类型只能是：" + uploadCommonVo.getExtStr());
-            }
-        }
-
-        //文件名
+        // 变更文件名
         String newFileName = UploadUtil.fileName(extName);
-        // 创建目标文件的名称，规则请看destPath方法
-        //规则：  子目录/年/月/日.后缀名
+        // 创建目标文件的名称，规则：  子目录/年/月/日.后缀名
+        String webPath = type + modelPath + CrmebDateUtil.nowDate("yyyy/MM/dd") + "/";
         // 文件分隔符转化为当前系统的格式
-        // 文件分隔符转化为当前系统的格式
-        String webPath = uploadCommonVo.getType() + uploadCommonVo.getModelPath() + DateUtil.nowDate(Constants.DATE_FORMAT_DATE).replace("-", "/") + "/";
-        String destPath = FilenameUtils.separatorsToSystem(uploadCommonVo.getRootPath() + webPath) + newFileName;
+        String destPath = FilenameUtils.separatorsToSystem(rootPath + webPath) + newFileName;
         // 创建文件
         File file = UploadUtil.createFile(destPath);
 
@@ -353,66 +201,58 @@ public class UploadServiceImpl implements UploadService {
         resultFile.setFileSize(multipartFile.getSize());
         resultFile.setFileName(fileName);
         resultFile.setExtName(extName);
-//        resultFile.setServerPath(destPath);
         resultFile.setUrl(webPath + newFileName);
         resultFile.setType(multipartFile.getContentType());
+        if (fileType.equals(UploadConstants.UPLOAD_FILE_KEYWORD)) {
+            resultFile.setType(resultFile.getType().replace("image/", ""));
+        } else {
+            resultFile.setType(resultFile.getType().replace("file/", ""));
+        }
 
-        //图片上传类型 1本地 2七牛云 3OSS 4COS, 默认本地
-        String uploadType = systemConfigService.getValueByKeyException("uploadType");
-        Integer uploadTypeInt = Integer.parseInt(uploadType);
-        String pre;
-        CloudVo cloudVo = new CloudVo();
-
-        resultFile.setType(resultFile.getType().replace("file/", ""));
         SystemAttachment systemAttachment = new SystemAttachment();
         systemAttachment.setName(resultFile.getFileName());
         systemAttachment.setSattDir(resultFile.getUrl());
         systemAttachment.setAttSize(resultFile.getFileSize().toString());
         systemAttachment.setAttType(resultFile.getType());
-        systemAttachment.setImageType(1);   //图片上传类型 1本地 2七牛云 3OSS 4COS, 默认本地，任务轮询数据库放入云服务
+        systemAttachment.setImageType(1);   //图片上传类型 1本地 2七牛云 3OSS 4COS, 默认本地
         systemAttachment.setPid(pid);
 
+        //图片上传类型 1本地 2七牛云 3OSS 4COS, 默认本地
+        String uploadType = systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_UPLOAD_TYPE);
+        Integer uploadTypeInt = Integer.parseInt(uploadType);
         if (uploadTypeInt.equals(1)) {
             // 保存文件
             multipartFile.transferTo(file);
             systemAttachmentService.save(systemAttachment);
             return resultFile;
         }
+        CloudVo cloudVo = new CloudVo();
         // 判断是否保存本地
-        String fileIsSave = systemConfigService.getValueByKeyException("file_is_save");
-        if ("1".equals(fileIsSave)) {
-            multipartFile.transferTo(file);
-        }
-
+        String fileIsSave = systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_FILE_IS_SAVE);
+        multipartFile.transferTo(file);
         switch (uploadTypeInt) {
-            case 1:
-                // 保存文件
-                multipartFile.transferTo(file);
-                break;
             case 2:
                 systemAttachment.setImageType(2);
-                pre = "qn";
-                cloudVo.setDomain(systemConfigService.getValueByKeyException(pre+"UploadUrl"));
-                cloudVo.setAccessKey(systemConfigService.getValueByKeyException(pre+"AccessKey"));
-                cloudVo.setSecretKey(systemConfigService.getValueByKeyException(pre+"SecretKey"));
-                cloudVo.setBucketName(systemConfigService.getValueByKeyException(pre+"StorageName"));
-                cloudVo.setRegion(systemConfigService.getValueByKeyException(pre+"StorageRegion"));
-
-                try{
+                cloudVo.setDomain(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_QN_UPLOAD_URL));
+                cloudVo.setAccessKey(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_QN_ACCESS_KEY));
+                cloudVo.setSecretKey(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_QN_SECRET_KEY));
+                cloudVo.setBucketName(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_QN_STORAGE_NAME));
+                cloudVo.setRegion(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_QN_STORAGE_REGION));
+                try {
                     // 构造一个带指定Zone对象的配置类, 默认华东
-                    Configuration cfg = new Configuration(Region.huadong());
-                    if("huabei".equals(cloudVo.getRegion())){
-                        cfg = new Configuration(Region.huabei());
-                    }
-                    if("huanan".equals(cloudVo.getRegion())){
-                        cfg = new Configuration(Region.huanan());
-                    }
-                    if("beimei".equals(cloudVo.getRegion())){
-                        cfg = new Configuration(Region.beimei());
-                    }
-                    if("dongnanya".equals(cloudVo.getRegion())){
-                        cfg = new Configuration(Region.xinjiapo());
-                    }
+                    Configuration cfg = new Configuration(Region.autoRegion());
+//                    if (cloudVo.getRegion().equals("huabei")) {
+//                        cfg = new Configuration(Region.huabei());
+//                    }
+//                    if (cloudVo.getRegion().equals("huanan")) {
+//                        cfg = new Configuration(Region.huanan());
+//                    }
+//                    if (cloudVo.getRegion().equals("beimei")) {
+//                        cfg = new Configuration(Region.beimei());
+//                    }
+//                    if (cloudVo.getRegion().equals("dongnanya")) {
+//                        cfg = new Configuration(Region.xinjiapo());
+//                    }
 
                     // 其他参数参考类注释
                     UploadManager uploadManager = new UploadManager(cfg);
@@ -421,57 +261,65 @@ public class UploadServiceImpl implements UploadService {
                     String upToken = auth.uploadToken(cloudVo.getBucketName());
 
                     String webPathQn = crmebConfig.getImagePath();
-                    logger.info("AsyncServiceImpl.qCloud.id " + systemAttachment.getAttId());
-                    qiNiuService.uploadFile(uploadManager, cloudVo, upToken,
-                            systemAttachment.getSattDir(), webPathQn + "/" + systemAttachment.getSattDir(), file);
-                }catch (Exception e){
+                    qiNiuService.uploadFile(uploadManager, upToken,
+                            systemAttachment.getSattDir(), webPathQn + "/" + systemAttachment.getSattDir(), file);   //异步处理
+                } catch (Exception e) {
                     logger.error("AsyncServiceImpl.qCloud.fail " + e.getMessage());
                 }
                 break;
             case 3:
                 systemAttachment.setImageType(3);
-                pre = "al";
-                cloudVo.setDomain(systemConfigService.getValueByKeyException(pre+"UploadUrl"));
-                cloudVo.setAccessKey(systemConfigService.getValueByKeyException(pre+"AccessKey"));
-                cloudVo.setSecretKey(systemConfigService.getValueByKeyException(pre+"SecretKey"));
-                cloudVo.setBucketName(systemConfigService.getValueByKeyException(pre+"StorageName"));
-                cloudVo.setRegion(systemConfigService.getValueByKeyException(pre+"StorageRegion"));
-                try{
+                cloudVo.setDomain(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_AL_UPLOAD_URL));
+                cloudVo.setAccessKey(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_AL_ACCESS_KEY));
+                cloudVo.setSecretKey(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_AL_SECRET_KEY));
+                cloudVo.setBucketName(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_AL_STORAGE_NAME));
+                cloudVo.setRegion(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_AL_STORAGE_REGION));
+                try {
                     String webPathAl = crmebConfig.getImagePath();
-                    logger.info("AsyncServiceImpl.oss.id " + systemAttachment.getAttId());
-                    ossService.upload(cloudVo, systemAttachment.getSattDir(),  webPathAl + "/" + systemAttachment.getSattDir(),
+                    ossService.upload(cloudVo, systemAttachment.getSattDir(), webPathAl + "/" + systemAttachment.getSattDir(),
                             file);
-                }catch (Exception e){
+                } catch (Exception e) {
                     logger.error("AsyncServiceImpl.oss fail " + e.getMessage());
                 }
                 break;
             case 4:
                 systemAttachment.setImageType(4);
-                pre = "tx";
-                cloudVo.setDomain(systemConfigService.getValueByKeyException(pre+"UploadUrl"));
-                cloudVo.setAccessKey(systemConfigService.getValueByKeyException(pre+"AccessKey"));
-                cloudVo.setSecretKey(systemConfigService.getValueByKeyException(pre+"SecretKey"));
-                cloudVo.setBucketName(systemConfigService.getValueByKeyException(pre+"StorageName"));
-                cloudVo.setRegion(systemConfigService.getValueByKeyException(pre+"StorageRegion"));
+                cloudVo.setDomain(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_TX_UPLOAD_URL));
+                cloudVo.setAccessKey(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_TX_ACCESS_KEY));
+                cloudVo.setSecretKey(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_TX_SECRET_KEY));
+                cloudVo.setBucketName(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_TX_STORAGE_NAME));
+                cloudVo.setRegion(systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_TX_STORAGE_REGION));
                 // 1 初始化用户身份信息(secretId, secretKey)
                 COSCredentials cred = new BasicCOSCredentials(cloudVo.getAccessKey(), cloudVo.getSecretKey());
                 // 2 设置bucket的区域, COS地域的简称请参照 https://cloud.tencent.com/document/product/436/6224
                 ClientConfig clientConfig = new ClientConfig(new com.qcloud.cos.region.Region(cloudVo.getRegion()));
                 // 3 生成 cos 客户端。
                 COSClient cosClient = new COSClient(cred, clientConfig);
-
-                try{
+                try {
                     String webPathTx = crmebConfig.getImagePath();
-                    logger.info("AsyncServiceImpl.cos.id " + systemAttachment.getAttId());
-                    cosService.uploadFile(cloudVo, systemAttachment.getSattDir(), webPathTx + "/" + systemAttachment.getSattDir(), file, cosClient);
-                }catch (Exception e){
+                    cosService.uploadFile(cloudVo, systemAttachment.getSattDir(), webPathTx + "/" + systemAttachment.getSattDir(), systemAttachment.getAttId(), cosClient);
+                } catch (Exception e) {
                     logger.error("AsyncServiceImpl.cos.fail " + e.getMessage());
-                }finally {
+                } finally {
                     cosClient.shutdown();
+                }
+                break;
+            case 5: // 京东云存储
+                systemAttachment.setImageType(5);
+                String bucket = systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_JD_BUCKET_NAME);
+                try {
+                    String webPathTx = crmebConfig.getImagePath();
+                    jdCloudService.uploadFile(systemAttachment.getSattDir(), webPathTx + "/" + systemAttachment.getSattDir(), bucket);
+                } catch (Exception e) {
+                    logger.error("AsyncServiceImpl.cos.fail " + e.getMessage());
                 }
                 break;
         }
         systemAttachmentService.save(systemAttachment);
+        if (!fileIsSave.equals("1")) {
+            // 删除本地文件
+            file.delete();
+        }
         return resultFile;
     }
 }

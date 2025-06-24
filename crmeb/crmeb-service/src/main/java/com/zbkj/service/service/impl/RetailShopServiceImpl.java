@@ -3,17 +3,17 @@ package com.zbkj.service.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.request.PageParamRequest;
-import com.zbkj.common.exception.CrmebException;
-import com.zbkj.common.request.RetailShopRequest;
-import com.zbkj.common.response.SpreadUserResponse;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.zbkj.common.response.UserExtractResponse;
+import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserBrokerageRecord;
+import com.zbkj.common.page.CommonPage;
+import com.zbkj.common.request.PageParamRequest;
+import com.zbkj.common.request.RetailShopRequest;
+import com.zbkj.common.response.SpreadUserResponse;
+import com.zbkj.common.response.UserExtractResponse;
 import com.zbkj.service.dao.UserDao;
 import com.zbkj.service.service.*;
 import org.springframework.beans.BeanUtils;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -154,15 +154,12 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
         int ration = retailShopRequest.getStoreBrokerageTwo() + retailShopRequest.getStoreBrokerageRatio();
         if (ration > 100 || ration < 0) throw new CrmebException("返佣比例加起来不能超过100%");
 
-//        List<String> keys = initKeys();
         systemConfigService.updateOrSaveValueByName("brokerage_func_status", retailShopRequest.getBrokerageFuncStatus().toString());
-//        systemConfigService.updateOrSaveValueByName("store_brokerage_status", retailShopRequest.getStoreBrokerageStatus());
         systemConfigService.updateOrSaveValueByName("store_brokerage_ratio", retailShopRequest.getStoreBrokerageRatio().toString());
         systemConfigService.updateOrSaveValueByName("store_brokerage_two", retailShopRequest.getStoreBrokerageTwo().toString());
         systemConfigService.updateOrSaveValueByName("user_extract_min_price", retailShopRequest.getUserExtractMinPrice().toString());
         systemConfigService.updateOrSaveValueByName("user_extract_bank", retailShopRequest.getUserExtractBank());
         systemConfigService.updateOrSaveValueByName("extract_time", retailShopRequest.getExtractTime().toString());
-//        systemConfigService.updateOrSaveValueByName(keys.get(7), retailShopRequest.getStoreBrokeragePrice().toString());
         systemConfigService.updateOrSaveValueByName("brokerage_bindind", retailShopRequest.getBrokerageBindind().toString());
         systemConfigService.updateOrSaveValueByName("store_brokerage_quota", retailShopRequest.getStoreBrokerageQuota().toString());
         systemConfigService.updateOrSaveValueByName("store_brokerage_is_bubble", retailShopRequest.getStoreBrokerageIsBubble().toString());

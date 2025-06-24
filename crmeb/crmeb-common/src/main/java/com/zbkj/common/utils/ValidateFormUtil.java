@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -40,37 +40,37 @@ public class ValidateFormUtil {
             List<String> val = CrmebUtil.stringToArrayStrRegex(value, ":");
 
             ////必填
-            if("required".equals(val.get(0)) && "true".equals(val.get(1))){
+            if(val.get(0).equals("required") && val.get(1).equals("true")){
                 isRequire(systemConfig.getValue(), systemConfig.getTitle());
                 continue;
             }
 
             //数字
-            if("number".equals(val.get(0)) && "true".equals(val.get(1))){
+            if(val.get(0).equals("number") && val.get(1).equals("true")){
                 isNumber(systemConfig.getValue(), systemConfig.getTitle());
                 continue;
             }
 
             //最大值
-            if("max".equals(val.get(0))){
+            if(val.get(0).equals("max")){
                 isNumber(systemConfig.getValue(), systemConfig.getTitle());
                 continue;
             }
 
             //最小值
-            if("min".equals(val.get(0))){
+            if(val.get(0).equals("min")){
                 isNumber(systemConfig.getValue(), systemConfig.getTitle());
                 continue;
             }
 
             //邮箱
-            if("email".equals(val.get(0)) && "true".equals(val.get(1))){
+            if(val.get(0).equals("email") && val.get(1).equals("true")){
                 isEmail(systemConfig.getValue(), systemConfig.getTitle());
                 continue;
             }
 
             //手机
-            if("phone".equals(val.get(0)) && "true".equals(val.get(1))){
+            if(val.get(0).equals("phone") && val.get(1).equals("true")){
                 isPhone(systemConfig.getValue(), systemConfig.getTitle());
             }
         }

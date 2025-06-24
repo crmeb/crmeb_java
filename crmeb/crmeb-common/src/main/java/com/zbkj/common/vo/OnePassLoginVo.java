@@ -6,12 +6,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
+import javax.validation.constraints.NotBlank;
+
 /**
  * 一号通登录对象
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -26,13 +28,9 @@ public class OnePassLoginVo {
 
     private static final long serialVersionUID=1L;
 
-    @ApiModelProperty(value = "一号通账号")
-    private String account;
+    @ApiModelProperty(value = "access_key一号通后台AccessKey管理获得", required = true)
+    private String accessKey;
 
-    /**
-     * secret = md5(账号+md5(密码))
-     */
-    @ApiModelProperty(value = "一号通密钥")
-    private String secret;
-
+    @ApiModelProperty(value = "secret_key一号通后台AccessKey管理获得", required = true)
+    private String secretKey;
 }

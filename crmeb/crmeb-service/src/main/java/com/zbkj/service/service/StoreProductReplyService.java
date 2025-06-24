@@ -17,7 +17,7 @@ import com.zbkj.common.model.product.StoreProductReply;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -91,4 +91,9 @@ public interface StoreProductReplyService extends IService<StoreProductReply> {
      * @param request 回复参数
      */
     Boolean comment(StoreProductReplyCommentRequest request);
+
+    /**
+     * 获取统计数据（好评、中评、差评）
+     */
+    Integer getCountByScore(Integer productId, String type);
 }

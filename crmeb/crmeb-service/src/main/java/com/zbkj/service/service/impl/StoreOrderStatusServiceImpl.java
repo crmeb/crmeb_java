@@ -9,7 +9,7 @@ import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.request.StoreOrderStatusSearchRequest;
 import com.github.pagehelper.PageHelper;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.order.StoreOrderStatus;
 import com.zbkj.service.dao.StoreOrderStatusDao;
@@ -28,7 +28,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -97,7 +97,7 @@ public class StoreOrderStatusServiceImpl extends ServiceImpl<StoreOrderStatusDao
         storeOrderStatus.setOid(orderId);
         storeOrderStatus.setChangeType(type);
         storeOrderStatus.setChangeMessage(message);
-        storeOrderStatus.setCreateTime(DateUtil.nowDateTime());
+        storeOrderStatus.setCreateTime(CrmebDateUtil.nowDateTime());
         return save(storeOrderStatus);
     }
 
