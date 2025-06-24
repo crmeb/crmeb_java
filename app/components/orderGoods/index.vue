@@ -13,7 +13,7 @@
 						<view class='num'>x {{item.payNum ? item.payNum : item.cartNum}}</view>
 					</view>
 					<view class='attr line1' v-if="item.sku">{{item.sku}}</view>
-					<view class='money font-color'>￥{{item.price}}</view>
+					<view class='money'>￥{{item.vipPrice ? item.vipPrice : item.price}}</view>
 					<view class='evaluate' v-if='item.isReply==0 && evaluate==2' @click.stop="evaluateTap(item)">评价
 					</view>
 					<view class='evaluate' v-else-if="item.isReply==1">已评价</view>
@@ -79,14 +79,14 @@
 		methods: {
 			evaluateTap(item) {
 				uni.navigateTo({
-					url: "/pages/users/goods_comment_con/index?unique=" + item.attrId + "&orderId=" + this.orderId + '&id=' + this.ids
+					url: "/pages/goods/goods_comment_con/index?unique=" + item.attrId + "&orderId=" + this.orderId + '&id=' + this.ids
 				})
 			},
 			jumpCon: function(id) {
 				let type = this.productType==0?'normal':'video'
 				if (this.jump) {
 					uni.navigateTo({
-						url: `/pages/goods_details/index?id=${id}&type=${type}`
+						url: `/pages/goods/goods_details/index?id=${id}&type=${type}`
 					})
 				}
 			}
@@ -99,7 +99,9 @@
 		background-color: #fff;
 		margin-top: 15rpx;
 	}
-
+	.money{
+		@include price_color(theme);
+	}
 	.orderGoods .total {
 		width: 100%;
 		height: 86rpx;

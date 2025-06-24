@@ -1,5 +1,6 @@
 <template>
-	<view class="evaluateWtapper" v-if="reply.length > 0">
+	<!-- v-if="reply.length>0" -->
+	<view class="evaluateWtapper" v-if="reply.length>0">
 		<view class="evaluateItem" v-for="(item, indexw) in reply" :key="indexw">
 			<view class="pic-text acea-row">
 				<view class="pictrue">
@@ -24,7 +25,7 @@
 						</view>
 					</view>
 					<view class="reply" v-if="item.merchantReplyContent">
-						<text class="font-color">店小二</text>：{{ item.merchantReplyContent }}
+						<text class="font_color">店小二</text>：{{ item.merchantReplyContent }}
 					</view>
 				</view>
 				
@@ -38,7 +39,7 @@
 		props: {
 			reply: {
 				type: Array,
-				default: []
+				default: () => []
 			}
 		},
 		data: function() {
@@ -147,5 +148,8 @@
 		position: absolute;
 		top: -14rpx;
 		left: 40rpx;
+	}
+	.font_color{
+		@include main_color(theme);
 	}
 </style>

@@ -1,7 +1,15 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 // #ifdef H5
 import WechatJSSDK from "@/plugin/jweixin-module/index.js";
-
-
 import {
 	getWechatConfig,
 	wechatAuth
@@ -17,6 +25,7 @@ import {
 } from '@/utils';
 import store from '@/store';
 import Cache from '@/utils/cache';
+import util from '@/utils/util'
 
 class AuthWechat {
 
@@ -29,17 +38,17 @@ class AuthWechat {
 		this.initConfig = {};
 
 	}
-	
-	isAndroid(){
+
+	isAndroid() {
 		let u = navigator.userAgent;
 		return u.indexOf('Android') > -1 || u.indexOf('Adr') > -1;
 	}
-	
+
 	signLink() {
 		if (typeof window.entryUrl === 'undefined' || window.entryUrl === '') {
-			  	window.entryUrl = location.href.split('#')[0]
-			}
-		return  /(Android)/i.test(navigator.userAgent) ? location.href.split('#')[0] : window.entryUrl;
+			window.entryUrl = location.href.split('#')[0]
+		}
+		return /(Android)/i.test(navigator.userAgent) ? location.href.split('#')[0] : window.entryUrl;
 	}
 
 
@@ -58,7 +67,10 @@ class AuthWechat {
 						resolve(this.instance);
 					})
 				}).catch(err => {
-					console.log('微信分享配置失败',err);
+					util.Tips({
+						title: '请正确配置公众号后使用！' + err
+					});
+					console.log('微信分享配置失败', err);
 					this.status = false;
 					reject(err);
 				});
@@ -97,11 +109,13 @@ class AuthWechat {
 		});
 	}
 
-    // 获取经纬度；
-	location(){
+	// 获取经纬度；
+	location() {
 		return new Promise((resolve, reject) => {
 			this.wechat().then(wx => {
-				this.toPromise(wx.getLocation,{type: 'wgs84'}).then(res => {
+				this.toPromise(wx.getLocation, {
+					type: 'wgs84'
+				}).then(res => {
 					resolve(res);
 				}).catch(err => {
 					reject(err);
@@ -110,10 +124,10 @@ class AuthWechat {
 				reject(err);
 			})
 		});
-	} 
-	
+	}
+
 	// 使用微信内置地图查看位置接口；
-	seeLocation(config){
+	seeLocation(config) {
 		return new Promise((resolve, reject) => {
 			this.wechat().then(wx => {
 				this.toPromise(wx.openLocation, config).then(res => {
@@ -126,7 +140,7 @@ class AuthWechat {
 			})
 		});
 	}
-	
+
 	/**
 	 * 微信支付
 	 * @param {Object} config
@@ -144,7 +158,7 @@ class AuthWechat {
 			});
 		});
 	}
-	
+
 	toPromise(fn, config = {}) {
 		return new Promise((resolve, reject) => {
 			fn({
@@ -168,19 +182,19 @@ class AuthWechat {
 	/**
 	 * 自动去授权
 	 */
-	oAuth(snsapiBase,url) {
+	oAuth(snsapiBase, url) {
 		if (uni.getStorageSync(WX_AUTH) && store.state.app.token && snsapiBase == 'snsapi_base') return;
 		const {
 			code
 		} = parseQuery();
-		if (!code || code == uni.getStorageSync('snsapiCode')){
-			return this.toAuth(snsapiBase,url);
-		}else{
-			if(Cache.has('snsapiKey'))
-				return this.auth(code).catch(error=>{
+		if (!code || code == uni.getStorageSync('snsapiCode')) {
+			return this.toAuth(snsapiBase, url);
+		} else {
+			if (Cache.has('snsapiKey'))
+				return this.auth(code).catch(error => {
 					uni.showToast({
-						title:error,
-						icon:'none'
+						title: error,
+						icon: 'none'
 					})
 				})
 		}
@@ -211,7 +225,7 @@ class AuthWechat {
 	 */
 	auth(code) {
 		return new Promise((resolve, reject) => {
-			wechatAuth(code, Cache.get("spread"))
+			wechatAuth(code, Cache.get('spread'))
 				.then(({
 					data
 				}) => {
@@ -220,7 +234,7 @@ class AuthWechat {
 					Cache.clear(STATE_KEY);
 					// Cache.clear('spread');
 					loginType && Cache.clear(LOGINTYPE);
-					
+
 				})
 				.catch(reject);
 		});
@@ -230,43 +244,43 @@ class AuthWechat {
 	 * 获取跳转授权后的地址
 	 * @param {Object} appId
 	 */
-	getAuthUrl(appId,snsapiBase,backUrl) {
+	getAuthUrl(appId, snsapiBase, backUrl) {
 		let url = `${location.origin}${backUrl}`
-				if(url.indexOf('?') == -1){
-							url = url+'?'
-						}else{
-							url = url+'&'
-						}
-				const redirect_uri = encodeURIComponent(
-					`${url}scope=${snsapiBase}&back_url=` +
-					encodeURIComponent(
-						encodeURIComponent(
-							uni.getStorageSync(BACK_URL) ?
-							uni.getStorageSync(BACK_URL) :
-							location.pathname + location.search
-						)
-					)
-				);
-				uni.removeStorageSync(BACK_URL);
-				const state = encodeURIComponent(
-					("" + Math.random()).split(".")[1] + "authorizestate"
-				);
-				uni.setStorageSync(STATE_KEY, state);
-				return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_userinfo&state=${state}#wechat_redirect`;
-				// if(snsapiBase==='snsapi_base'){
-				// 	return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_base&state=${state}#wechat_redirect`;
-				// }else{
-				// 	return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_userinfo&state=${state}#wechat_redirect`;
-				// }
-    }
-	
+		if (url.indexOf('?') == -1) {
+			url = url + '?'
+		} else {
+			url = url + '&'
+		}
+		const redirect_uri = encodeURIComponent(
+			`${url}scope=${snsapiBase}&back_url=` +
+			encodeURIComponent(
+				encodeURIComponent(
+					uni.getStorageSync(BACK_URL) ?
+					uni.getStorageSync(BACK_URL) :
+					location.pathname + location.search
+				)
+			)
+		);
+		uni.removeStorageSync(BACK_URL);
+		const state = encodeURIComponent(
+			("" + Math.random()).split(".")[1] + "authorizestate"
+		);
+		uni.setStorageSync(STATE_KEY, state);
+		return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_userinfo&state=${state}#wechat_redirect`;
+		// if(snsapiBase==='snsapi_base'){
+		// 	return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_base&state=${state}#wechat_redirect`;
+		// }else{
+		// 	return `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirect_uri}&response_type=code&scope=snsapi_userinfo&state=${state}#wechat_redirect`;
+		// }
+	}
+
 	/**
 	 * 跳转自动登录
 	 */
-	toAuth(snsapiBase,backUrl) {
+	toAuth(snsapiBase, backUrl) {
 		let that = this;
 		this.wechat().then(wx => {
-			location.href = this.getAuthUrl(that.initConfig.appId,snsapiBase,backUrl);
+			location.href = this.getAuthUrl(that.initConfig.appId, snsapiBase, backUrl);
 		})
 	}
 
@@ -292,7 +306,7 @@ class AuthWechat {
 					})
 				},
 				success(res) {
-					return resolve(res,2222);
+					return resolve(res, 2222);
 				}
 			};
 			Object.assign(configDefault, config);

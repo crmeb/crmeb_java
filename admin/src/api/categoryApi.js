@@ -1,14 +1,14 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import request from '@/utils/request'
+import request from '@/utils/request';
 
 /**
  * 新增分类
@@ -22,13 +22,13 @@ export function addCategroy(pram) {
     sort: pram.sort,
     status: pram.status,
     type: pram.type,
-    url: pram.url
-  }
+    url: pram.url,
+  };
   return request({
     url: '/admin/category/save',
     method: 'POST',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
@@ -37,13 +37,13 @@ export function addCategroy(pram) {
  */
 export function infoCategroy(pram) {
   const data = {
-    id: pram.id
-  }
+    id: pram.id,
+  };
   return request({
     url: '/admin/category/info',
     method: 'GET',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
@@ -52,13 +52,13 @@ export function infoCategroy(pram) {
  */
 export function deleteCategroy(pram) {
   const data = {
-    id: pram.id
-  }
+    id: pram.id,
+  };
   return request({
     url: '/admin/category/delete',
     method: 'GET',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
@@ -72,14 +72,13 @@ export function listCategroy(pram) {
     page: pram.page,
     pid: pram.pid,
     status: pram.status,
-    type: pram.type
-
-  }
+    type: pram.type,
+  };
   return request({
     url: '/admin/category/list',
     method: 'GET',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
@@ -90,13 +89,13 @@ export function treeCategroy(pram) {
   const data = {
     type: pram.type,
     status: pram.status,
-    name: pram.name
-  }
+    name: pram.name,
+  };
   return request({
     url: '/admin/category/list/tree',
     method: 'GET',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
@@ -112,13 +111,13 @@ export function updateCategroy(pram) {
     status: pram.status,
     type: pram.type,
     url: pram.url,
-    id: pram.id
-  }
+    id: pram.id,
+  };
   return request({
     url: '/admin/category/update',
     method: 'POST',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
@@ -127,13 +126,13 @@ export function updateCategroy(pram) {
  */
 export function categroyByIds(pram) {
   const data = {
-    ids: pram.ids
-  }
+    ids: pram.ids,
+  };
   return request({
     url: '/admin/category/list/ids',
     method: 'GET',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
@@ -143,8 +142,8 @@ export function categroyByIds(pram) {
 export function categroyUpdateStatus(id) {
   return request({
     url: `/admin/category/updateStatus/${id}`,
-    method: 'GET'
-  })
+    method: 'GET',
+  });
 }
 
 /**
@@ -155,6 +154,6 @@ export function articleInfoApi(params) {
   return request({
     url: `/admin/article/info`,
     method: 'GET',
-    params
-  })
+    params,
+  });
 }

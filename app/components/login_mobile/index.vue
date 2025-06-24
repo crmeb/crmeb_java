@@ -1,15 +1,28 @@
 <template>
-	<view v-if="isUp">
+	<view v-if="isUp" :data-theme="theme">
 		<view class="mobile-bg" v-if="isShow" @click="close"></view>
-		<view class="mobile-mask animated" :class="{slideInUp:isUp}" :style="{position:isPos?'fixed':'static'}">
+		<view class="mobile-mask" :class="[{slideInUp:isUp},{animated:isPos}]"
+			:style="{position:isPos?'fixed':'static'}">
 			<view class="input-item">
-				<input type="text" v-model="account" placeholder="输入手机号" />
+				<view class="item">
+					<input class="ipt" type="number" v-model="account" placeholder-class='placeholder'
+						placeholder="输入手机号" maxlength="11" />
+				</view>
+
 			</view>
 			<view class="input-item">
-				<input type="text" v-model="codeNum" placeholder="输入验证码" />
-				<button class="code" :disabled="disabled" @click="code">{{text}}</button>
+				<view class="item acea-row row-between-wrapper">
+					<input class="ipt codeIput" type="number" v-model="codeNum" placeholder-class='placeholder'
+						placeholder="输入验证码" maxlength="6" />
+					<view class="line">
+
+					</view>
+					<button class="code font-num" :disabled="disabled" @click="code">{{text}}</button>
+				</view>
 			</view>
-			<view class="sub_btn" @click="loginBtn">{{(!userInfo.phone && isLogin) || (userInfo.phone && isLogin)?'立即绑定':'立即登录'}}</view>
+			<view class="sub_btn" @click="loginBtn">
+				{{(!userInfo.phone && isLogin) || (userInfo.phone && isLogin)?'立即绑定':'立即登录'}}
+			</view>
 		</view>
 	</view>
 </template>
@@ -18,13 +31,14 @@
 	const app = getApp();
 	import sendVerifyCode from "@/mixins/SendVerifyCode";
 	import Routine from '@/libs/routine';
-	import {mapGetters} from "vuex";
+	import {
+		mapGetters
+	} from "vuex";
 	import {
 		loginMobile,
 		registerVerify,
 		getCodeApi,
 		getUserInfo,
-		phoneSilenceAuth,
 		phoneWxSilenceAuth
 	} from "@/api/user";
 	import {
@@ -37,7 +51,7 @@
 	const BACK_URL = "login_back_url";
 	export default {
 		name: 'login_mobile',
-		computed: mapGetters(['userInfo','isLogin']),
+		computed: mapGetters(['userInfo', 'isLogin']),
 		props: {
 			isUp: {
 				type: Boolean,
@@ -51,6 +65,7 @@
 				type: Boolean,
 				default: true
 			},
+			// 是否定位
 			isPos: {
 				type: Boolean,
 				default: true
@@ -62,10 +77,21 @@
 			platform: {
 				type: String,
 				default: '',
+			},
+			//小程序code值
+			wxCode: {
+				type: String,
+				default: '',
+			},
+			// 小程序绑定手机号，isPhone其他手机号绑定
+			loginConfig:{
+				type: String,
+				default: '',
 			}
 		},
 		data() {
 			return {
+				theme: app.globalData.theme,
 				keyCode: '',
 				account: '',
 				codeNum: '',
@@ -77,7 +103,7 @@
 			//this.getCode();
 		},
 		onLoad() {
-			
+
 		},
 		methods: {
 			// 获取验证码
@@ -130,20 +156,15 @@
 					title: '请输入正确的验证码'
 				});
 				uni.showLoading({
-					title: !this.userInfo.phone && this.isLogin?'正在绑定中':'正在登录中'
+					title: !this.userInfo.phone && this.isLogin ? '正在绑定中' : '正在登录中'
 				});
 				if (!this.userInfo.phone && this.isLogin) {
 					iosBinding({
 						captcha: that.codeNum,
 						phone: that.account
 					}).then(res => {
-						that.$util.Tips({
-							title: '绑定手机号成功',
-							icon: 'success'
-						}, {
-							tab: 3
-						})
-						that.isApp = 1;
+						that.isApp = 0;
+						that.onSuccess();
 						that.getUserInfo();
 					}).catch(error => {
 						uni.hideLoading()
@@ -158,12 +179,20 @@
 						// #ifdef H5
 						type: 'public',
 						// #endif
+						// #ifdef MP
+						type: 'routine',
+						code: this.wxCode,
+						// #endif
+						// #ifdef APP-PLUS
+						type: that.platform === 'ios' ? 'iosWx' : 'androidWx',
+						// #endif
 						key: that.authKey
 					}).then(res => {
 						that.$store.commit('LOGIN', {
 							token: res.data.token
 						});
 						that.$store.commit("SETUID", res.data.uid);
+						that.onSuccess();
 						that.getUserInfo();
 					}).catch(error => {
 						uni.hideLoading()
@@ -173,26 +202,35 @@
 					})
 				}
 			},
-			// #ifdef MP
-			phoneSilenceAuth(code) {
-				let self = this
-				phoneSilenceAuth({
-					code: code,
-					spid: app.globalData.spid,
-					spread: app.globalData.code,
-					phone: this.account,
-					captcha: this.codeNum
-				}).then(res => {
-					this.$store.commit('LOGIN', res.data.token);
-					this.$store.commit("SETUID", res.data.uid);
-					this.getUserInfo();
-				}).catch(error => {
-					self.$util.Tips({
-						title: error
-					})
-				})
+			/**
+			 * 登录成功后的方法
+			 */
+			onSuccess(){
+				uni.hideLoading();
+				let backUrl = this.$Cache.get(BACK_URL) || "/pages/index/index";
+				// #ifdef MP
+				this.$util.Tips({
+					title: '绑定手机号成功'
+				}, {
+					tab: 4,
+					url: backUrl
+				});
+				this.close();
+				// #endif
+				// #ifdef H5
+				this.$emit('wechatPhone', true)
+				// #endif
+				// #ifdef APP-PLUS
+				if (this.isApp == 0) {
+					if (backUrl.indexOf('/pages/users/login/index') !== -1) {
+						backUrl = '/pages/index/index';
+					}
+					uni.reLaunch({
+						url: backUrl
+					});
+				}
+				// #endif
 			},
-			// #endif
 			/**
 			 * 获取个人用户信息
 			 */
@@ -201,25 +239,13 @@
 				getUserInfo().then(res => {
 					uni.hideLoading();
 					that.$store.commit("UPDATE_USERINFO", res.data);
-					// #ifdef MP 
-					that.$util.Tips({
-						title: '登录成功',
-						icon: 'success'
-					}, {
-						tab: 3
-					})
-					that.close()
-					// #endif
-					// #ifdef H5
-					that.$emit('wechatPhone', true)
-					// #endif
 				});
 			},
 		}
 	}
 </script>
 
-<style lang="stylus" scoped>
+<style lang="scss" scoped>
 	.mobile-bg {
 		position: fixed;
 		left: 0;
@@ -239,50 +265,69 @@
 		left: 0;
 		bottom: 0;
 		width: 100%;
-		padding: 67rpx 30rpx;
+		padding: 67rpx 72rpx;
 		background: #fff;
 
 		.input-item {
 			display: flex;
 			justify-content: space-between;
-			width: 100%;
-			height: 86rpx;
+			width: 606rpx;
+			height: 88rpx;
 			margin-bottom: 38rpx;
 
-			input {
-				flex: 1;
-				display: block;
+			.codeIput {
+				width: 300rpx !important;
+			}
+
+			.ipt {
+				width: 100%;
 				height: 100%;
-				padding-left: 40rpx;
-				border-radius: 43rpx;
-				border: 1px solid #DCDCDC;
+				font-size: 32rpx;
+			}
+
+			.item {
+				width: 100%;
+				background: #F5F5F5;
+				flex: 1;
+				height: 100%;
+				padding: 0 32rpx 0 48rpx;
+				border-radius: 45rpx;
+				font-size: 28rpx;
+				font-family: PingFang SC-Regular, PingFang SC;
+				font-weight: 400;
+				color: #333333;
+				line-height: 40px;
+
+				.placeholder {
+					color: #BBBBBB;
+					font-size: 28rpx;
+				}
+			}
+
+			.line {
+				width: 2rpx;
+				height: 28rpx;
+				background: #CCCCCC;
 			}
 
 			.code {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				width: 220rpx;
-				height: 86rpx;
-				margin-left: 30rpx;
-				background: rgba(233, 51, 35, 0.05);
+				background: none;
 				font-size: 28rpx;
-				color: $theme-color;
+				@include main_color(theme);
 				border-radius: 43rpx;
 
 				&[disabled] {
-					background: rgba(0, 0, 0, 0.05);
 					color: #999;
 				}
 			}
 		}
 
 		.sub_btn {
-			width: 690rpx;
+			width: 100%;
 			height: 86rpx;
 			line-height: 86rpx;
 			margin-top: 60rpx;
-			background: #E93323;
+			@include main_bg_color(theme);
 			border-radius: 43rpx;
 			color: #fff;
 			font-size: 28rpx;

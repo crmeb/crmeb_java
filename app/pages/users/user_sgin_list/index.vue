@@ -1,5 +1,5 @@
 <template>
-	<view>
+	<view :data-theme="theme">
 		<view class='sign-record'>
 		   <view class='list pad30' v-for="(item,index) in signList" :key="index">
 		      <view class='item'>
@@ -10,7 +10,7 @@
 		                  <view class='name line1'>{{itemn.title}}</view>
 		                  <view>{{itemn.createDay}}</view>
 		               </view>
-		               <view class='num font-color'>+{{itemn.number}}</view>
+		               <view class='num font_color'>+{{itemn.number}}</view>
 		            </view>
 		         </view>
 		      </view>
@@ -19,9 +19,6 @@
 		        <text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>{{loadtitle}}
 		     </view>
 		</view>
-		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
-		<!-- #endif -->
 	</view>
 </template>
 
@@ -29,15 +26,8 @@
 	import { getSignMonthList } from '@/api/user.js';
 	import { toLogin } from '@/libs/login.js';
 	 import { mapGetters } from "vuex";
-	 // #ifdef MP
-	 import authorize from '@/components/Authorize';
-	 // #endif
+	 let app = getApp();
 	export default {
-		components: {
-			// #ifdef MP
-			authorize
-			// #endif
-		},
 		data() {
 			return {
 				loading:false,
@@ -46,8 +36,7 @@
 				    page:1,
 				    limit:8,
 				    signList:[],
-					isAuto: false, //没有授权的不会自动授权
-					isShowAuth: false //是否隐藏授权
+					theme:app.globalData.theme,
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -73,17 +62,6 @@
 		  },
 		methods: {
 			  /**
-			   * 
-			   * 授权回调
-			  */
-			  onLoadFun:function(){
-			    this.getSignMoneList();
-			  },
-			  // 授权关闭
-			  authColse:function(e){
-			  	this.isShowAuth = e
-			  },
-			  /**
 			     * 获取签到记录列表
 			    */
 			    getSignMoneList:function(){
@@ -99,7 +77,7 @@
 					that.$set(that,'signList',that.signList);
 					that.loadend = loadend;
 					that.loading = false;
-					that.loadtitle = loadend ? "哼😕~我也是有底线的~" : "加载更多"
+					that.loadtitle = loadend ? "我也是有底线的~" : "加载更多"
 			      }).catch(err=>{
 					that.loading = false;
 					that.loadtitle = '加载更多';
@@ -109,5 +87,8 @@
 	}
 </script>
 
-<style>
+<style lang="scss">
+	.font_color{
+		@include main_color(theme);
+	}
 </style>

@@ -1,13 +1,13 @@
 <template>
-	<view>
+	<view :data-theme="theme">
 		<view class="navbar acea-row row-around">
 			<view class="item acea-row row-center-wrapper" :class="{ on: navOn === 'usable' }" @click="onNav('usable')">未使用</view>
 			<view class="item acea-row row-center-wrapper" :class="{ on: navOn === 'unusable' }" @click="onNav('unusable')">已使用/过期</view>
 		</view>
 		<view class='coupon-list' v-if="couponsList.length">
 			<view class='item acea-row row-center-wrapper' v-for='(item,index) in couponsList' :key="index">
-				<view class='money' :class="item.validStr==='unusable'||item.validStr==='overdue'||item.validStr==='notStart' ? 'moneyGray' : ''">
-					<view>￥<text class='num'>{{item.money?Number(item.money):''}}</text></view>
+				<view class='money' :class="item.validStr==='unusable'||item.validStr==='overdue'||item.validStr==='notStart' ? 'moneyGray' : 'main_bg'">
+					<view>￥<text class='num':style="[{'font-size':item.money.length>=7?'42rpx':'60rpx'}]" >{{item.money?Number(item.money):''}}</text></view>
 					<view class="pic-num">满{{ item.minPrice?Number(item.minPrice):'' }}元可用</view>
 				</view>
 				<view class='text'>
@@ -19,7 +19,7 @@
 					</view>
 					<view class='data acea-row row-between-wrapper'>
 						<view>{{item.useStartTimeStr}}~{{item.useEndTimeStr}}</view>
-						<view class='bnt' :class="item.validStr==='unusable'||item.validStr==='overdue'||item.validStr==='notStart'?'gray':'bg-color'">{{item.validStr | validStrFilter}}</view>
+						<view class='bnt' :class="item.validStr==='unusable'||item.validStr==='overdue'||item.validStr==='notStart'?'gray':'bg_color'">{{item.validStr | validStrFilter}}</view>
 					</view>
 				</view>
 			</view>
@@ -29,13 +29,9 @@
 		  </view>
 		<view class='noCommodity' v-if="!couponsList.length">
 			<view class='pictrue'>
-				<image src='../../../static/images/noCoupon.png'></image>
+				<image :src="urlDomain+'crmebimage/perset/staticImg/noCoupon.png'"></image>
 			</view>
 		</view>
-		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
-		<!-- #endif -->
-		<home></home>
 	</view>
 </template>
 
@@ -49,17 +45,8 @@
 	import {
 		mapGetters
 	} from "vuex";
-	// #ifdef MP
-	import authorize from '@/components/Authorize';
-	// #endif
-	import home from '@/components/home';
+	let app = getApp();
 	export default {
-		components: {
-			// #ifdef MP
-			authorize,
-			// #endif
-			home
-		},
 		filters: {
 		    validStrFilter(status) {
 		      const statusMap = {
@@ -73,6 +60,7 @@
 		},
 		data() {
 			return {
+				urlDomain: this.$Cache.get("imgHost"),
 				couponsList: [],
 				loading: false,
 				loadend: false,
@@ -80,8 +68,7 @@
 				page: 1,
 				limit: 20,
 				navOn: 'usable',
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false //是否隐藏授权
+				theme:app.globalData.theme,
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -103,16 +90,6 @@
 			}
 		},
 		methods: {
-			/**
-			 * 授权回调
-			 */
-			onLoadFun: function() {
-				this.getUseCoupons();
-			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
-			},
 			onNav: function(type) {
 				this.navOn = type;
 				this.couponsList = [];
@@ -132,7 +109,7 @@
 					let couponsList = that.$util.SplitArray(list, that.couponsList);
 					that.$set(that,'couponsList',couponsList);
 					that.loadend = loadend;
-					that.loadTitle = loadend ? '我也是有底线的' : '加载更多';
+					that.loadTitle = loadend ? '我也是有底线的~' : '加载更多';
 					that.page = that.page + 1;
 					that.loading = false;
 				}).catch(err=>{
@@ -165,19 +142,22 @@
 			border-bottom: 5rpx solid transparent;
 			font-size: 30rpx;
 			color: #999999;
-	
-			&.on {
-				border-bottom-color: #E93323;
-				color: #282828;
+			&.on{
+				@include tab_border_bottom(theme);
+				@include main_color(theme);
 			}
 		}
 	}
+	
+	
 	.money {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
 	}
-
+	.bg_color{
+		@include main_bg_color(theme);
+	}
 	.pic-num {
 		color: #ffffff;
 		font-size: 24rpx;
@@ -199,15 +179,17 @@
 		padding: 2rpx 10rpx;
 		-webkit-box-sizing: border-box;
 		box-sizing: border-box;
-		background: rgba(255, 247, 247, 1);
-		border: 1px solid rgba(232, 51, 35, 1);
+		@include coupons_border_color(theme);
 		opacity: 1;
 		border-radius: 20rpx;
 		font-size: 18rpx !important;
-		color: #e83323;
+		@include main_color(theme);
 		margin-right: 12rpx;
 	}
 	.noCommodity {
 		margin-top: 300rpx;
+	}
+	.main_bg{
+		@include main_bg_color(theme);
 	}
 </style>

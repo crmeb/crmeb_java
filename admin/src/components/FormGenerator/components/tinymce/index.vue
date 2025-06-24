@@ -3,33 +3,33 @@
 </template>
 
 <script>
-import loadTinymce from '@/components/FormGenerator/utils/loadTinymce'
-import { plugins, toolbar } from './config'
-import { debounce } from 'throttle-debounce'
-
-let num = 1
+import loadTinymce from '@/components/FormGenerator/utils/loadTinymce';
+import { plugins, toolbar } from './config';
+import { debounce } from 'throttle-debounce';
+import { uploadImage } from '@/utils/ZBKJIutil';
+let num = 1;
 
 export default {
   props: {
     id: {
       type: String,
       default: () => {
-        num === 10000 && (num = 1)
-        return `tinymce${+new Date()}${num++}`
-      }
+        num === 10000 && (num = 1);
+        return `tinymce${+new Date()}${num++}`;
+      },
     },
     value: {
       type: [String, Number, Boolean],
-      default: ''
-    }
+      default: '',
+    },
   },
   data() {
     return {
-      tinymceId: this.id
-    }
+      tinymceId: this.id,
+    };
   },
   mounted() {
-    loadTinymce(tinymce => {
+    loadTinymce((tinymce) => {
       import('./zh_CN').then(() => {
         tinymce.init({
           selector: `#${this.tinymceId}`,
@@ -49,45 +49,59 @@ export default {
           default_link_target: '_blank',
           link_title: false,
           nonbreaking_force_tab: true,
-          init_instance_callback: editor => {
-            if (this.value) editor.setContent(this.value)
-            this.vModel(editor)
-          }
-        })
-      })
-    })
+          // paste_data_images: true,
+          init_instance_callback: (editor) => {
+            if (this.value) editor.setContent(this.value);
+            this.vModel(editor);
+          },
+          images_upload_handler: async (blobInfo, succFun, failFun) => {
+            var file = blobInfo.blob(); //转化为易于理解的file对象
+            const formData = new FormData();
+            const data = {
+              model: 'product',
+              pid: 0,
+            };
+            formData.append('multipart', file);
+            try {
+              let res = await uploadImage(formData, data);
+              succFun(res.url);
+            } catch (e) {}
+          },
+        });
+      });
+    });
   },
   destroyed() {
-    this.destroyTinymce()
+    this.destroyTinymce();
   },
   methods: {
     vModel(editor) {
       // 控制连续写入时setContent的触发频率
-      const debounceSetContent = debounce(250, editor.setContent)
+      const debounceSetContent = debounce(250, editor.setContent);
       this.$watch('value', (val, prevVal) => {
         if (editor && val !== prevVal && val !== editor.getContent()) {
-          if (typeof val !== 'string') val = val.toString()
-          debounceSetContent.call(editor, val)
+          if (typeof val !== 'string') val = val.toString();
+          debounceSetContent.call(editor, val);
         }
-      })
+      });
 
       editor.on('change keyup undo redo', () => {
-        this.$emit('input', editor.getContent())
-      })
+        this.$emit('input', editor.getContent());
+      });
     },
     destroyTinymce() {
-      if (!window.tinymce) return
-      const tinymce = window.tinymce.get(this.tinymceId)
+      if (!window.tinymce) return;
+      const tinymce = window.tinymce.get(this.tinymceId);
       if (tinymce) {
-        tinymce.destroy()
+        tinymce.destroy();
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>
-.textarea{
+.textarea {
   visibility: hidden;
 }
 </style>

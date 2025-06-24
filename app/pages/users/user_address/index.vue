@@ -1,20 +1,17 @@
 <template>
-	<view>
-		<!-- #ifdef APP-->
-		<view class='status'></view>
-		<!-- #endif -->
+	<view :data-theme="theme">
 		<form @submit="formSubmit" report-submit='true'>
 			<view class='addAddress pad30'>
 				<view class='list borRadius14'>
 					<view class='item acea-row row-between-wrapper' style="border: none;">
 						<view class='name'>姓名</view>
-						<input type='text' placeholder='请输入姓名' placeholder-style="color:#ccc;" name='realName' :value="userAddress.realName"
-							placeholder-class='placeholder' maxlength="4"></input>
+						<input type='text' placeholder='请输入姓名' placeholder-style="color:#ccc;" name='realName'
+							:value="userAddress.realName" placeholder-class='placeholder' maxlength="20"></input>
 					</view>
 					<view class='item acea-row row-between-wrapper'>
 						<view class='name'>联系电话</view>
-						<input type='number' placeholder='请输入联系电话' placeholder-style="color:#ccc;" name="phone" :value='userAddress.phone'
-							placeholder-class='placeholder' maxlength="11"></input>
+						<input type='number' placeholder='请输入联系电话' placeholder-style="color:#ccc;" name="phone"
+							:value='userAddress.phone' placeholder-class='placeholder' maxlength="11"></input>
 					</view>
 					<view class='item acea-row row-between-wrapper relative'>
 						<view class='name'>所在地区</view>
@@ -30,9 +27,9 @@
 					</view>
 					<view class='item acea-row row-between-wrapper relative'>
 						<view class='name'>详细地址</view>
-						<input type='text' placeholder='请填写具体地址' placeholder-style="color:#ccc;" name='detail' placeholder-class='placeholder'
-							v-model='userAddress.detail' maxlength="18"></input>
-							<view class='iconfont icon-dizhi font-color abs_right' @tap="chooseLocation"></view>
+						<input type='text' placeholder='请填写具体地址' placeholder-style="color:#ccc;" name='detail'
+							placeholder-class='placeholder' v-model='userAddress.detail' maxlength="100"></input>
+						<view class='iconfont icon-dizhi font_color abs_right' @tap="chooseLocation"></view>
 					</view>
 				</view>
 				<view class='default acea-row row-middle borRadius14'>
@@ -41,7 +38,7 @@
 					</checkbox-group>
 				</view>
 
-				<button class='keepBnt bg-color' form-type="submit">立即保存</button>
+				<button class='keepBnt bg_color' form-type="submit">立即保存</button>
 				<!-- #ifdef MP -->
 				<view class="wechatAddress" v-if="!id" @click="getWxAddress">导入微信地址</view>
 				<!-- #endif -->
@@ -50,10 +47,7 @@
 				<!-- #endif -->
 			</view>
 		</form>
-		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
-		<!-- #endif -->
-		<!-- <home></home> -->
+		<view v-show="showLoading" class="bg-fixed"></view>
 	</view>
 </template>
 
@@ -63,6 +57,9 @@
 		getAddressDetail
 	} from '@/api/user.js';
 	import {
+		getCityList
+	} from "@/utils";
+	import {
 		getCity
 	} from '@/api/api.js';
 	import {
@@ -71,22 +68,17 @@
 	import {
 		mapGetters
 	} from "vuex";
-	// #ifdef MP
-	import authorize from '@/components/Authorize';
-	// #endif
-	import home from '@/components/home';
-	// import city from '@/utils/cityData';
+	import {
+		Debounce
+	} from '@/utils/validate.js'
+	import atModel from '@/components/accredit/index.vue';
 	let app = getApp();
 	export default {
 		components: {
-			// #ifdef MP
-			authorize,
-			// #endif
-			home
+			atModel
 		},
 		data() {
 			return {
-				regionDval: ['浙江省', '杭州市', '滨江区'],
 				cartId: '', //购物车id
 				pinkId: 0, //拼团id
 				couponId: 0, //优惠券id
@@ -96,17 +88,15 @@
 				}, //地址详情
 				region: ['省', '市', '区'],
 				valueRegion: [0, 0, 0],
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
 				district: [],
 				multiArray: [],
 				multiIndex: [0, 0, 0],
 				cityId: 0,
-				defaultRegion: ['广东省', '广州市', '番禺区'],
-				defaultRegionCode: '440113',
 				bargain: false, //是否是砍价
 				combination: false, //是否是拼团
 				secKill: false, //是否是秒杀
+				theme: app.globalData.theme,
+				showLoading: false
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -115,13 +105,28 @@
 				handler: function(newV, oldV) {
 					if (newV) {
 						this.getUserAddress();
-						this.getCityList();
 					}
 				},
 				deep: true
 			}
 		},
 		onLoad(options) {
+			if (this.$Cache.getItem('cityList')) {
+				//检测城市数据缓存是否过期，有的话从缓存取，没有的话请求接口
+				this.district = this.$Cache.getItem('cityList');
+				this.initialize();
+			} else {
+				this.showLoading = true;
+				uni.showLoading({
+					title: '数据加载中...'
+				});
+				getCityList().then(res=>{
+					this.district = res
+					this.initialize();
+					uni.hideLoading();
+					this.showLoading = false;
+				})
+			}
 			if (this.isLogin) {
 				this.preOrderNo = options.preOrderNo || 0;
 				this.id = options.id || 0;
@@ -129,13 +134,6 @@
 					title: options.id ? '修改地址' : '添加地址'
 				})
 				this.getUserAddress();
-				if(this.$Cache.has('cityList')){
-					//检测城市数据是否存在缓存，有的话从缓存取，没有的话请求接口
-					this.district = this.$Cache.getItem('cityList')
-					this.initialize();
-				}else{
-					this.getCityList();
-				}
 			} else {
 				toLogin();
 			}
@@ -147,31 +145,44 @@
 				this.region = region
 			},
 			// #endif
-			// 获取地址数据
-			getCityList: function() {
+			getUserAddress: function() {
+				if (!this.id) return false;
 				let that = this;
-				getCity().then(res => {
-					this.district = res.data;
-					let oneDay = 24 * 3600 * 1000;
-					// this.$Cache.set('cityList', JSON.stringify(res.data)); //设置不过期时间的方法 
-					this.$Cache.setItem({name:'cityList',value:res.data,expires:oneDay * 7});  //设置七天过期时间
-					that.initialize();
-				})
+				getAddressDetail(this.id).then(res => {
+					if(res.data){
+						let region = [res.data.province, res.data.city, res.data.district];
+						that.$set(that, 'userAddress', res.data);
+						that.$set(that, 'region', region);
+						that.city_id = res.data.cityId;
+					}
+				});
 			},
 			initialize: function() {
 				let that = this,province = [],city = [],area = [];
 				if (that.district.length) {
 					let cityChildren = that.district[0].child || [];
 					let areaChildren = cityChildren.length ? (cityChildren[0].child || []) : [];
-					that.district.forEach(function(item) {
+					that.district.forEach(function(item,i) {
 						province.push(item.name);
+						if (item.name === that.region[0]) {
+							that.valueRegion[0] = i
+							that.multiIndex[0] = i
+						}
 					});
-					cityChildren.forEach(function(item) {
+					that.district[this.valueRegion[0]].child.forEach((item,i)=>{
 						city.push(item.name);
-					});
-					areaChildren.forEach(function(item) {
+						if (that.region[1] == item.name) {
+							that.valueRegion[1] = i
+							that.multiIndex[1] = i
+						}
+					})
+					that.district[this.valueRegion[0]].child[this.valueRegion[1]].child.forEach((item,i)=>{
 						area.push(item.name);
-					});
+						if (that.region[2] == item.name) {
+							that.valueRegion[2] = i
+							that.multiIndex[2] = i
+						}
+					})
 					this.multiArray = [province, city, area]
 				}
 			},
@@ -181,13 +192,15 @@
 						child: []
 					},
 					city = province.child[multiIndex[1]] || {
+						child: []
+					},
+					area = city.child[multiIndex[2]] || {
 						cityId: 0
 					},
 					multiArray = this.multiArray,
 					value = e.detail.value;
-
 				this.region = [multiArray[0][value[0]], multiArray[1][value[1]], multiArray[2][value[2]]]
-				this.cityId = city.cityId
+				this.cityId = area.cityId;
 				this.valueRegion = [0, 0, 0]
 				this.initialize();
 			},
@@ -234,35 +247,22 @@
 				this.multiIndex = multiIndex
 				// this.setData({ multiArray: multiArray, multiIndex: multiIndex});
 			},
-			// 授权回调
-			onLoadFun: function() {
-				this.getUserAddress();
-			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
-			},
 			toggleTab(str) {
 				this.$refs[str].show();
 			},
 			onConfirm(val) {
 				this.region = val.checkArr[0] + '-' + val.checkArr[1] + '-' + val.checkArr[2];
 			},
-			getUserAddress: function() {
-				if (!this.id) return false;
-				let that = this;
-				getAddressDetail(this.id).then(res => {
-					let region = [res.data.province, res.data.city, res.data.district];
-					that.$set(that, 'userAddress', res.data);
-					that.$set(that, 'region', region);
-					that.city_id = res.data.cityId
-				});
-			},
-			chooseLocation: function () {
-				uni.chooseLocation({
-					success: (res) => {
-						this.$set(this.userAddress,'detail',res.address.replace(/.+?(省|市|自治区|自治州|县|区)/g,''));
-					}
+			//选择地位地址
+			chooseLocation: function() {
+				this.$util.$L.getLocation().then(res=>{
+					uni.chooseLocation({
+						latitude: uni.getStorageSync('user_latitude'),
+						longitude: uni.getStorageSync('user_longitude'),
+						success: (res) => {
+							this.$set(this.userAddress, 'detail', res.name);
+						}
+					})
 				})
 			},
 			// 导入共享地址（小程序）
@@ -296,7 +296,7 @@
 											that.pinkId = '';
 											that.couponId = '';
 											uni.navigateTo({
-												url: '/pages/users/order_confirm/index?cartId=' +
+												url: '/pages/order/order_confirm/index?cartId=' +
 													cartId +
 													'&addressId=' + (
 														that.id ? that
@@ -386,7 +386,7 @@
 									that.pinkId = '';
 									that.couponId = '';
 									uni.navigateTo({
-										url: '/pages/users/order_confirm/index?cartId=' +
+										url: '/pages/order/order_confirm/index?cartId=' +
 											cartId + '&addressId=' + (that.id ? that.id :
 												res.data
 												.id) + '&pinkId=' + pinkId + '&couponId=' +
@@ -421,7 +421,7 @@
 			 * 提交用户添加地址
 			 * 
 			 */
-			formSubmit: function(e) {
+			formSubmit: Debounce(function(e) {
 				let that = this,
 					value = e.detail.value;
 				if (!value.realName) return that.$util.Tips({
@@ -465,9 +465,11 @@
 							icon: 'success'
 						});
 					setTimeout(function() {
-						if (that.preOrderNo>0) {
+						if (that.preOrderNo > 0) {
 							uni.redirectTo({
-								url: '/pages/users/order_confirm/index?preOrderNo=' + that.preOrderNo + '&addressId=' + (that.id ? that.id : res.data.id)
+								url: '/pages/order/order_confirm/index?preOrderNo=' + that
+									.preOrderNo + '&addressId=' + (that.id ? that.id : res
+										.data.id)
 							})
 						} else {
 							// #ifdef H5
@@ -485,7 +487,7 @@
 						title: err
 					});
 				})
-			},
+			}),
 			ChangeIsDefault: function(e) {
 				this.$set(this.userAddress, 'isDefault', !this.userAddress.isDefault);
 			}
@@ -494,9 +496,20 @@
 </script>
 
 <style scoped lang="scss">
+	.bg-fixed{
+		width: 100%;
+		height: 750rpx;
+		position: absolute;
+		top: 0;
+	}
 	.addAddress {
 		padding-top: 20rpx;
 	}
+
+	.bg_color {
+		@include main_bg_color(theme);
+	}
+
 	.addAddress .list {
 		background-color: #fff;
 		padding: 0 24rpx;
@@ -564,26 +577,39 @@
 		line-height: 86rpx;
 		margin: 0 auto;
 		font-size: 32rpx;
-		color: #E93323 ;
-		border: 1px solid #E93323;
+		// color: #E93323 ;
+		@include main_color(theme);
+		@include coupons_border_color(theme);
 	}
-	.relative{
+
+	.font_color {
+		@include main_color(theme);
+	}
+
+	.relative {
 		position: relative;
 	}
-	.icon-dizhi{
+
+	.icon-dizhi {
 		font-size: 44rpx;
 		z-index: 100;
 	}
-	.abs_right{
+
+	.abs_right {
 		position: absolute;
-		right:0;
+		right: 0;
 	}
-	
-	.status{
-		display: flex;
-		width: 750rpx;
-		// background-color: #E93323;
-		height: var(--status-bar-height);
+
+	/deep/ checkbox .uni-checkbox-input.uni-checkbox-input-checked {
+		@include main_bg_color(theme);
+		@include coupons_border_color(theme);
+		color: #fff !important
 	}
-	
+
+	/deep/ checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+		@include main_bg_color(theme);
+		@include coupons_border_color(theme);
+		color: #fff !important;
+		margin-right: 0 !important;
+	}
 </style>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48px" height="40px" viewBox="0 0 48 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>light</title>
+    <defs>
+        <rect id="path-1" x="0" y="0" width="48" height="40" rx="4"></rect>
+        <rect id="path-3" x="0" y="0" width="48" height="40" rx="4"></rect>
+    </defs>
+    <g id="后台" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="light">
+            <g id="Rectangle-18">
+                <g id="path-2-link" fill="#000000" fill-rule="nonzero">
+                    <rect id="path-2" x="0" y="0" width="48" height="40" rx="4"></rect>
+                </g>
+                <g id="path-2-link" fill="#F0F2F5">
+                    <rect id="path-2" x="0" y="0" width="48" height="40" rx="4"></rect>
+                </g>
+            </g>
+            <g id="Rectangle-11-Clipped">
+                <mask id="mask-2" fill="white">
+                    <use xlink:href="#path-1"></use>
+                </mask>
+                <g id="path-2"></g>
+                <rect id="Rectangle-11" fill="#FFFFFF" fill-rule="nonzero" mask="url(#mask-2)" x="0" y="0" width="48" height="10"></rect>
+            </g>
+            <g id="Rectangle-18-Clipped">
+                <mask id="mask-4" fill="white">
+                    <use xlink:href="#path-3"></use>
+                </mask>
+                <g id="path-2"></g>
+                <rect id="Rectangle-18" fill="#2B68C9" fill-rule="nonzero" mask="url(#mask-4)" x="0" y="0" width="16" height="40"></rect>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -1,7 +1,7 @@
 <template>
-	<view>
+	<view :data-theme="theme">
 		<block v-if="bargain.length>0">
-			<div class="bargain-record pad30" ref="container">
+			<div class="bargain-record" ref="container">
 				<div class="item borRadius14" v-for="(item, index) in bargain" :key="index">
 					<div class="picTxt acea-row row-between-wrapper">
 						<div class="pictrue">
@@ -12,28 +12,30 @@
 							<count-down :justify-left="'justify-content:left'" :bgColor="bgColor" :is-day="true" :tip-text="'倒计时 '" :day-text="'天'"
 							 :hour-text="' 时 '" :minute-text="' 分 '"
 							 :second-text="' 秒 '" :datatime="item.stopTime/1000" v-if="item.status === 1"></count-down>
-							<div class="successTxt font-color-red" v-else-if="item.status === 3">砍价成功</div>
+							<div class="successTxt font_color" v-else-if="item.status === 3 && item.isDel === false">砍价成功</div>
+							<div class="successTxt " v-else-if="item.status === 3 && item.isDel === true && item.isPay === false">砍价失败</div>
 							<div class="endTxt" v-else>活动已结束</div>
 							<div class="money">
-								已砍至<span class="symbol font-color-red">￥</span><span class="num font-color-red">{{ item.surplusPrice }}</span>
+								已砍至<span class="symbol font_color">￥</span><span class="num font_color">{{ item.surplusPrice }}</span>
 							</div>
 						</div>
 					</div>
 					<div class="bottom acea-row row-between-wrapper">
 						<div class="purple" v-if="item.status === 1">活动进行中</div>
-						<div class="success" v-else-if="item.status === 3">砍价成功</div>
+						<div class="success" v-else-if="item.status === 3 && item.isDel === false">砍价成功</div>
+						<div class="end" v-else-if="item.status === 3 && item.isDel === true && item.isPay === false">砍价失败</div>
 						<div class="end" v-else>活动已结束</div>
 						<div class="acea-row row-middle row-right">
-							<div class="bnt bg-color-red" v-if="item.status === 3 && !item.isOrder" @click="goConfirm(item)">
+							<div class="bnt bg_color" v-if="item.status === 3 && !item.isOrder" @click="goConfirm(item)">
 								去付款
 							</div>
-							<div class="bnt bg-color-red" v-if="item.status === 3 && !item.isDel && item.isOrder && !item.isPay" @click="goPay(item.surplusPrice,item.orderNo)">
+							<div class="bnt bg_color" v-if="item.status === 3 && !item.isDel && item.isOrder && !item.isPay" @click="goPay(item.surplusPrice,item.orderNo)">
 								立即付款
 							</div>
-							<div class="bnt bg-color-red" v-if="item.status === 1" @click="goDetail(item.id)">
+							<div class="bnt bg_color" v-if="item.status === 1" @click="goDetail(item.id)">
 								继续砍价
 							</div>
-							<div class="bnt bg-color-red" v-if="item.status === 2" @click="goList">重开一个</div>
+							<div class="bnt bg_color" v-if="item.status === 2" @click="goList">重开一个</div>
 						</div>
 					</div>
 				</div>
@@ -43,8 +45,7 @@
 		<block v-if="bargain.length == 0">
 			<emptyPage title="暂无砍价记录～"></emptyPage>
 		</block>
-		<home></home>
-		<payment :payMode='payMode' :pay_close="pay_close" @onChangeFun='onChangeFun' :order_id="pay_order_id" :totalPrice='totalPrice'></payment>
+		<payment :pay_close="pay_close" @onChangeFun='onChangeFun' :order_id="pay_order_id" :totalPrice='totalPrice'></payment>
 	</view>
 </template>
 <script>
@@ -55,18 +56,17 @@
 		getBargainUserCancel
 	} from "@/api/activity";
 	import Loading from "@/components/Loading";
-	import home from '@/components/home';
 	import payment from '@/components/payment';
-	import {
-		mapGetters
-	} from "vuex";
+	import {mapGetters} from "vuex";
+	import {setThemeColor} from '@/utils/setTheme.js'
+	import animationType from '@/utils/animationType.js'
+	let app = getApp();
 	export default {
 		name: "BargainRecord",
 		components: {
 			CountDown,
 			Loading,
 			emptyPage,
-			home,
 			payment
 		},
 		props: {},
@@ -101,19 +101,16 @@
 				],
 				pay_close: false,
 				pay_order_id: '',
-				totalPrice: '0'
+				totalPrice: '0',
+				theme:app.globalData.theme
 			};
-		},
-		onLoad: function() {
-			this.getBargainUserList();
-			// this.$scroll(this.$refs.container, () => {
-			//   !this.loadingList && this.getBargainUserList();
-			// });
 		},
 		onShow() {
 			if (this.isLogin) {
 				this.payMode[1].number = this.userInfo.nowMoney;
 				this.$set(this, 'payMode', this.payMode);
+				this.getBargainUserList();
+				this.bgColor.Color = setThemeColor();
 			} else {
 				toLogin();
 			}
@@ -168,18 +165,21 @@
 					toLogin();
 				} else {
 					uni.navigateTo({
+						animationType: animationType.type,						animationDuration: animationType.duration,
 						url: `/pages/activity/goods_bargain_details/index?id=${item.id}&startBargainUid=${this.uid}&storeBargainId=${item.bargainUserId}`
 					})
 				}
 			},
 			goDetail: function(id) {
 				uni.navigateTo({
+					animationType: animationType.type,					animationDuration: animationType.duration,
 					url: `/pages/activity/goods_bargain_details/index?id=${id}&startBargainUid=${this.uid}`
 				})
 			},
 			// 砍价列表
 			goList: function() {
 				uni.navigateTo({
+					animationType: animationType.type,					animationDuration: animationType.duration,
 					url: '/pages/activity/goods_bargain/index'
 				})
 			},
@@ -228,9 +228,18 @@
 		}
 	};
 </script>
-
+<style lang="scss">
+	page {
+		@include main_bg_color(theme);
+		height: 100vh;
+		overflow: auto;
+	}
+</style>
 <style lang="scss" scoped>
 	/*砍价记录*/
+	.bargain-record{
+		padding: 0 30rpx 15rpx;
+	}
 	.bargain-record .item .picTxt .text .time {
 		height: 36rpx;
 		line-height: 36rpx;
@@ -326,7 +335,12 @@
 		text-align: center;
 		line-height: 60upx;
 	}
-
+	.bg_color{
+		@include main_bg_color(theme);
+	}
+	.font_color{
+		@include price_color(theme);
+	}
 	.bargain-record .item .bottom .bnt.cancel {
 		color: #aaa;
 		border: 1px solid #ddd;

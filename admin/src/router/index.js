@@ -1,36 +1,35 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import Vue from 'vue'
-import Router from 'vue-router'
+import Vue from 'vue';
+import Router from 'vue-router';
 
-Vue.use(Router)
+Vue.use(Router);
 
 /* Layout */
-import Layout from '@/layout'
+import Layout from '@/layout';
 
 /* Router Modules */
 // import componentsRouter from './modules/components'
-import storeRouter from './modules/store'
-import orderRouter from './modules/order'
-import userRouter from './modules/user'
-import distributionRouter from './modules/distribution'
-import marketingRouter from './modules/marketing'
-import financialRouter from './modules/financial'
-import contentRouter from './modules/content'
-import operationRouter from './modules/operation'
-import appSettingRouter from './modules/appSetting'
-import maintainRouter from './modules/maintain'
-import mobileRouter from './modules/mobile'
-import codegen from './modules/codegen'
-
+import storeRouter from './modules/store';
+import orderRouter from './modules/order';
+import userRouter from './modules/user';
+import distributionRouter from './modules/distribution';
+import marketingRouter from './modules/marketing';
+import financialRouter from './modules/financial';
+import contentRouter from './modules/content';
+import operationRouter from './modules/operation';
+import appSettingRouter from './modules/appSetting';
+import maintainRouter from './modules/maintain';
+import mobileRouter from './modules/mobile';
+import designRouter from './modules/design';
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -83,13 +82,17 @@ export const constantRoutes = [
   maintainRouter,
   //移动端管理
   mobileRouter,
-  // 代码生成
-  codegen,
-
+  //装修
+  designRouter,
   {
     path: '/404',
     component: () => import('@/views/error-page/404'),
-    hidden: true
+    hidden: true,
+  },
+  {
+    path: '/page/design/creatDevise/:id?/:type?',
+    component: () => import('@/views/design/devise/creatDevise'),
+    hidden: true,
   },
   {
     path: '/redirect',
@@ -98,29 +101,29 @@ export const constantRoutes = [
     children: [
       {
         path: '/redirect/:path(.*)',
-        component: () => import('@/views/redirect/index')
-      }
-    ]
+        component: () => import('@/views/redirect/index'),
+      },
+    ],
   },
   {
     path: '/auth-send',
     component: () => import('@/views/mobile/auth-send'),
-    hidden: true
+    hidden: true,
   },
   {
     path: '/login',
     component: () => import('@/views/login/index'),
-    hidden: true
+    hidden: true,
   },
   {
     path: '/auth-redirect',
     component: () => import('@/views/login/auth-redirect'),
-    hidden: true
+    hidden: true,
   },
   {
     path: '/401',
     component: () => import('@/views/error-page/401'),
-    hidden: true
+    hidden: true,
   },
   {
     path: '/',
@@ -128,43 +131,42 @@ export const constantRoutes = [
     redirect: '/dashboard',
     children: [
       {
-        path: 'dashboard',
+        path: '/dashboard',
         component: () => import('@/views/dashboard/index'),
         name: 'Dashboard',
-        meta: { title: '主页', icon: 'dashboard', affix: true }
+        meta: { title: '主页', icon: 'dashboard', isAffix: true },
       },
-    ]
+    ],
   },
   {
     path: '/setting/uploadPicture',
     component: () => import('@/components/uploadPicture/index.vue'),
-    name: 'uploadPicture'
+    name: 'uploadPicture',
   },
   // 404 page must be placed at the end !!!
-  { path: '*', redirect: '/404', hidden: true }
-]
+  { path: '*', redirect: '/404', hidden: true },
+];
 
 /**
  * asyncRoutes
  * the routes that need to be dynamically loaded based on user roles
  */
-export const asyncRoutes = [
+export const asyncRoutes = [];
 
-]
+const createRouter = () =>
+  new Router({
+    // mode: 'history', // require service support
+    mode: 'history',
+    scrollBehavior: () => ({ y: 0 }),
+    routes: constantRoutes,
+  });
 
-const createRouter = () => new Router({
-  // mode: 'history', // require service support
-  mode: 'history',
-  scrollBehavior: () => ({ y: 0 }),
-  routes: constantRoutes
-})
-
-const router = createRouter()
+const router = createRouter();
 
 // Detail see: https://github.com/vuejs/vue-router/issues/1234#issuecomment-357941465
 export function resetRouter() {
-  const newRouter = createRouter()
-  router.matcher = newRouter.matcher // reset router
+  const newRouter = createRouter();
+  router.matcher = newRouter.matcher; // reset router
 }
 
-export default router
+export default router;

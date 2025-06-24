@@ -1,3 +1,13 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
 import request from "@/utils/request.js";
 /**
  * 公共接口 ，优惠券接口 , 行业此讯 , 手机号码注册
@@ -226,4 +236,75 @@ export function getLiveList(page,limit) {
  */
 export function getQrcode(data) {
   return request.post('qrcode/get',data,{ noAuth: true });
+}
+
+/**
+ * 获取主题换色配置
+ */
+export function getTheme() {
+  return request.get('index/color/config',{},{noAuth:true});
+}
+ 
+/**
+ * 获取主题换色配置
+ */
+export function getAppVersion() {
+  return request.get('index/get/version',{},{noAuth:true});
+}
+
+/**
+ * 获取全局本地图片域名
+ */
+export function getImageDomain() {
+  return request.get('image/domain',{},{noAuth:true});
+}
+
+/**
+ * 商品排行榜
+*/
+export function productRank(){
+  return request.get('product/leaderboard',{},{noAuth:true});
+}
+
+/**
+ * 校验token是否有效
+*/
+export function tokenIsExistApi(){
+  return request.post(`token/is/exist`,{},{noAuth:true});
+}
+
+/**
+ * 获取登录配置
+*/
+export function loginConfigApi(){
+  return request.get(`login/config`,{},{noAuth:true});
+}
+
+/**
+ * 获取底部导航信息
+*/
+export function getBottomNavigationApi(){
+  return request.get(`get/bottom/navigation`,{},{noAuth:true});
+}
+/**
+ * 首页装修
+*/
+export function pagediyInfoApi(id){
+  return request.get(`pagediy/info/${id}`,{},{noAuth:true});
+}
+/**
+ * 首页 第二级商品分类
+ *
+*/
+export function getCategoryTwo(id)
+{
+  return request.get(`categorybypid/${id}`,{},{ noAuth : true});
+}
+/**
+ * 获取备案设置
+ *
+*/
+export function getConfigCopyright(id)
+{
+  return request.get(`config/get/copyright`,{},{ noAuth : true},{},true);
 }
