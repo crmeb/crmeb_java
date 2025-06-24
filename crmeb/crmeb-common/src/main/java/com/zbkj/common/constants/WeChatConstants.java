@@ -4,7 +4,7 @@ package com.zbkj.common.constants;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -250,8 +250,8 @@ public class WeChatConstants {
     public static final String WECHAT_PUBLIC_MENU_CREATE_URL = "https://api.weixin.qq.com/cgi-bin/menu/create?access_token={}";
     /** 公众号删除自定义菜单的url */
     public static final String WECHAT_PUBLIC_MENU_DELETE_URL = "https://api.weixin.qq.com/cgi-bin/menu/delete?access_token={}";
-    /** 企业号上传其他类型永久素材的url */
-    public static final String WECHAT_PUBLIC_QYAPI_ADD_MATERIAL_URL = "https://qyapi.weixin.qq.com/cgi-bin/material/add_material?type={}&access_token={}";
+    /** 公众号上传其他类型永久素材的url */
+    public static final String WECHAT_PUBLIC_QYAPI_ADD_MATERIAL_URL = "https://api.weixin.qq.com/cgi-bin/material/add_material?type={}&access_token={}";
     /** 公众号获取模板列表（自己的） */
     public static final String WECHAT_PUBLIC_GET_ALL_PRIVATE_TEMPLATE_URL = "https://api.weixin.qq.com/cgi-bin/template/get_all_private_template?access_token={}";
     /** 公众号删除模板（自己的） */
@@ -283,105 +283,5 @@ public class WeChatConstants {
     public static final String REDIS_PUBLIC_JS_API_TICKET = "wechat_js_api_ticket";
     public static final Long REDIS_PUBLIC_JS_API_TICKET_EXPRESS = 7100L;
 
-    /**
-     * --------------------------------------------------------------------------------------------------------
-     * 以下为视频号相关部分
-     * --------------------------------------------------------------------------------------------------------
-     */
 
-    /*------------------------------------------ 申请接入接口 START ---------------------------------------*/
-
-    /* 申请接入申请 */
-    public static final String WECHAT_SHOP_REGISTER_APPLY = "https://api.weixin.qq.com/shop/register/apply?access_token={}";
-    /* 获取接入状态 */
-    public static final String WECHAT_SHOP_REGISTER_CHECK = "https://api.weixin.qq.com/shop/register/check?access_token={}";
-
-    /*------------------------------------------ 申请接入接口 END ---------------------------------------*/
-
-
-    /*------------------------------------------ 接入商品前必须接口 START ---------------------------------------*/
-    /** 获取商品类目(自定义交易组件) */
-    public static final String WECHAT_SHOP_CAT_GET_URL = "https://api.weixin.qq.com/shop/cat/get?access_token={}";
-    /** 上传图片 **/
-    public static final String WECHAT_SHOP_IMG_UPLOAD = "https://api.weixin.qq.com/shop/img/upload?&access_token={}";
-    /** 上传品牌信息 */
-    public static final String WECHAT_SHOP_AUDIT_AUDIT_BRAND = "https://api.weixin.qq.com/shop/audit/audit_brand?&access_token={}";
-    /** 上传类目资质 */
-    public static final String WECHAT_SHOP_AUDIT_AUDIT_CATEGORY = "https://api.weixin.qq.com/shop/audit/audit_category?&access_token={}";
-    /** 查询类目审核结果 */
-    public static final String WECHAT_SHOP_AUDIT_RESULT= "https://api.weixin.qq.com/shop/audit/result?access_token={}";
-    /** 获取小程序提交过的入驻资质信息 */
-    public static final String WECHAT_SHOP_AUDIT_GET_MINIAPP_CERTIFICATE= "https://api.weixin.qq.com/shop/audit/get_miniapp_certificate?access_token={}";
-    /*------------------------------------------ 接入商品前必须接口 END ---------------------------------------*/
-
-
-    /*------------------------------------------ 商家入驻接口 START ---------------------------------------*/
-    /** 获取类目列表 */
-    public static final String WECHAT_SHOP_ACCOUNT_GET_CATEGORY_LIST = "https://api.weixin.qq.com/shop/account/get_category_list?access_token={}";
-    /** 获取品牌列表 */
-    public static final String WECHAT_SHOP_ACCOUNT_GET_BRAND_LIST = "https://api.weixin.qq.com/shop/account/get_brand_list?access_token={}";
-    /** 更新商家信息 */
-    public static final String WECHAT_SHOP_ACCOUNT_UPDATE_INFO = "https://api.weixin.qq.com/shop/account/update_info?access_token={}";
-    /** 获取商家信息 */
-    public static final String WECHAT_SHOP_ACCOUNT_GET_INFO = "https://api.weixin.qq.com/shop/account/get_info?access_token={}";
-    /*------------------------------------------ 商家入驻接口 END ---------------------------------------*/
-
-    /*------------------------------------------ SPU 接口 START ---------------------------------------*/
-//    /** 获取品牌列表(自定义交易组件) */
-//    public static final String WECHAT_SHOP_BRAND_GET_URL = "https://api.weixin.qq.com/shop/account/get_brand_list?access_token={}";
-    /** 添加商品(自定义交易组件) */
-    public static final String WECHAT_SHOP_SPU_ADD_URL = "https://api.weixin.qq.com/shop/spu/add?access_token={}";
-    /** 删除商品(自定义交易组件) */
-    public static final String WECHAT_SHOP_SPU_DEL_URL = "https://api.weixin.qq.com/shop/spu/del?access_token={}";
-    /** 撤回商品审核(自定义交易组件) */
-    public static final String WECHAT_SHOP_SPU_DEL_AUDIT_URL = "https://api.weixin.qq.com/shop/spu/del_audit?access_token={}";
-    /** 获取商品(自定义交易组件) */
-    public static final String WECHAT_SHOP_SPU_GET_URL = "https://api.weixin.qq.com/shop/spu/get?access_token={}";
-    /** 获取商品列表(自定义交易组件) */
-    public static final String WECHAT_SHOP_SPU_GET_LIST_URL = "https://api.weixin.qq.com/shop/spu/get_list?access_token={}";
-    /** 更新商品(自定义交易组件) */
-    public static final String WECHAT_SHOP_SPU_UPDATE_URL = "https://api.weixin.qq.com/shop/spu/update?access_token={}";
-    /** 上架商品(自定义交易组件) */
-    public static final String WECHAT_SHOP_SPU_LISTING_URL = "https://api.weixin.qq.com/shop/spu/listing?access_token={}";
-    /** 下架商品(自定义交易组件) */
-    public static final String WECHAT_SHOP_SPU_DELISTING_URL = "https://api.weixin.qq.com/shop/spu/delisting?access_token={}";
-    /** 检查场景值是否在支付校验范围内(自定义交易组件) */
-    public static final String WECHAT_SHOP_SCENE_CHECK_URL = "https://api.weixin.qq.com/shop/scene/check?access_token={}";
-    /*------------------------------------------ SPU 接口 END ---------------------------------------*/
-
-    /*------------------------------------------ 订单 接口 START ---------------------------------------*/
-    /** 生成订单并获取ticket(自定义交易组件) */
-    public static final String WECHAT_SHOP_ORDER_ADD_URL = "https://api.weixin.qq.com/shop/order/add?access_token={}";
-    /** 同步订单支付结果(自定义交易组件) */
-    public static final String WECHAT_SHOP_ORDER_PAY_URL = "https://api.weixin.qq.com/shop/order/pay?access_token={}";
-    /** 获取订单(自定义交易组件) */
-    public static final String WECHAT_SHOP_ORDER_GET_URL = "https://api.weixin.qq.com/shop/order/get?access_token={}";
-    /*------------------------------------------ 订单 接口 END ---------------------------------------*/
-
-    /*------------------------------------------ 物流 接口 START ---------------------------------------*/
-    /** 获取快递公司列表(自定义交易组件) */
-    public static final String WECHAT_SHOP_DELIVERY_GET_COMPANY_LIST_URL = "https://api.weixin.qq.com/shop/delivery/get_company_list?access_token={}";
-    /** 订单发货(自定义交易组件) */
-    public static final String WECHAT_SHOP_DELIVERY_SEND_URL = "https://api.weixin.qq.com/shop/delivery/send?access_token={}";
-    /** 订单确认收货(自定义交易组件) */
-    public static final String WECHAT_SHOP_DELIVERY_RECIEVE_URL = "https://api.weixin.qq.com/shop/delivery/recieve?access_token={}";
-    /*------------------------------------------ 物流 接口 END ---------------------------------------*/
-
-    /*------------------------------------------ 售后 接口 START ---------------------------------------*/
-    /** 创建售后(自定义交易组件) */
-    public static final String WECHAT_SHOP_AFTERSALE_ADD_URL = "https://api.weixin.qq.com/shop/aftersale/add?access_token={}";
-    /** 获取售后(自定义交易组件) */
-    public static final String WECHAT_SHOP_AFTERSALE_GET_URL = "https://api.weixin.qq.com/shop/aftersale/get?access_token={}";
-    /** 更新售后(自定义交易组件) */
-    public static final String WECHAT_SHOP_AFTERSALE_UPDATE_URL = "https://api.weixin.qq.com/shop/aftersale/update?access_token={}";
-    /*------------------------------------------ 售后 接口 END ---------------------------------------*/
-
-
-    /** 自定义组件，商品类型 redis key */
-    public static final String REDIS_WECHAT_SHOP_CAT_KEY = "wechat_shop_cat";
-
-    /** 微信小程序回调，商品审核回调事件 */
-    public static final String WECAHT_CALLBACK_EVENT_SPU_AUDIT = "open_product_spu_audit";
-    /** 微信小程序回调，品牌审核回调事件 */
-    public static final String WECAHT_CALLBACK_EVENT_BRAND_AUDIT = "open_product_brand_audit";
 }

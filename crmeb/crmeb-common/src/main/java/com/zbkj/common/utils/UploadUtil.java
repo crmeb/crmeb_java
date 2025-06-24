@@ -2,6 +2,7 @@ package com.zbkj.common.utils;
 
 import cn.hutool.core.util.RandomUtil;
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.constants.UploadConstants;
 import com.zbkj.common.exception.CrmebException;
 import org.apache.commons.io.FilenameUtils;
 
@@ -13,7 +14,7 @@ import java.io.IOException;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -27,7 +28,7 @@ public class UploadUtil {
     private static String rootPath  = "";
 
     //类型
-    private static String type = "/" + Constants.UPLOAD_TYPE_IMAGE;
+    private static String type = "/" + UploadConstants.UPLOAD_FILE_KEYWORD;
 
 
     //模块
@@ -139,7 +140,8 @@ public class UploadUtil {
      */
     public static String getWebPath() {
         // 文件分隔符转化为当前系统的格式
-        return getModelPath() + DateUtil.nowDate(Constants.DATE_FORMAT_DATE).replace("-", "/") + "/";
+        return getModelPath() + CrmebDateUtil.nowDate(Constants.DATE_FORMAT_DATE).replace("-", "/") + "/";
+
 //        return getType() + getModelPath() + DateUtil.nowDate(Constants.DATE_FORMAT_DATE).replace("-", "/") + "/";
     }
 }

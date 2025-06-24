@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.constants.UploadConstants;
 import com.zbkj.common.exception.CrmebException;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
@@ -18,7 +19,7 @@ import java.util.List;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -72,7 +73,7 @@ public class ExportUtil {
         aliasMap.forEach((key, value) -> writer.addHeaderAlias(key, value));
         // 合并单元格后的标题行，使用默认标题样式
         writer.merge(aliasMap.size() - 1, title);
-        writer.merge(aliasMap.size() - 1, StrUtil.format("生成时间:{}", DateUtil.nowDateTimeStr()));
+        writer.merge(aliasMap.size() - 1, StrUtil.format("生成时间:{}", CrmebDateUtil.nowDateTimeStr()));
         //设置宽度自适应
         writer.setColumnWidth(-1, 22);
         // 一次性写出内容，使用默认样式，强制输出标题
@@ -91,7 +92,7 @@ public class ExportUtil {
             throw new CrmebException("请检查上传参数，上传参数不能为空");
         }
         UploadUtil.setRootPath(rootPath);
-        UploadUtil.setModelPath(Constants.UPLOAD_TYPE_IMAGE +"/"+Constants.UPLOAD_TYPE_FILE+"/"+modelPath);
+        UploadUtil.setModelPath(UploadConstants.UPLOAD_FILE_KEYWORD +"/"+UploadConstants.DOWNLOAD_FILE_KEYWORD+"/"+modelPath);
 //        UploadUtil.setType(type);
     }
 

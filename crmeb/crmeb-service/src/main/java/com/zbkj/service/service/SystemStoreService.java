@@ -15,7 +15,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -55,9 +55,10 @@ public interface SystemStoreService extends IService<SystemStore> {
 
     /**
      * 表头数量
+     * @param keywords 搜索条件:门店名称、门店电话
      * @return HashMap<String, Integer>
      */
-    HashMap<String, Integer> getCount();
+    HashMap<String, Integer> getCount(String keywords);
 
     HashMap<Integer, SystemStore> getMapInId(List<Integer> storeIdList);
 

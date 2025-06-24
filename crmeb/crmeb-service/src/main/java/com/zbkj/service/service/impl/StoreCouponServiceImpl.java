@@ -1,27 +1,31 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zbkj.common.request.PageParamRequest;
-import com.zbkj.common.request.SearchAndPageRequest;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.CouponConstants;
 import com.zbkj.common.exception.CrmebException;
-import com.github.pagehelper.PageHelper;
-import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.utils.DateUtil;
 import com.zbkj.common.model.category.Category;
 import com.zbkj.common.model.coupon.StoreCoupon;
 import com.zbkj.common.model.coupon.StoreCouponUser;
+import com.zbkj.common.model.product.StoreProduct;
+import com.zbkj.common.page.CommonPage;
+import com.zbkj.common.request.PageParamRequest;
+import com.zbkj.common.request.SearchAndPageRequest;
 import com.zbkj.common.request.StoreCouponRequest;
 import com.zbkj.common.request.StoreCouponSearchRequest;
 import com.zbkj.common.response.StoreCouponFrontResponse;
 import com.zbkj.common.response.StoreCouponInfoResponse;
-import com.zbkj.common.model.product.StoreProduct;
+import com.zbkj.common.utils.CrmebUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.service.dao.StoreCouponDao;
 import com.zbkj.service.service.*;
 import org.springframework.beans.BeanUtils;
@@ -40,7 +44,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -116,13 +120,13 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
 
         storeCoupon.setLastTotal(storeCoupon.getTotal());
         if (!request.getIsForever()) {
-            storeCoupon.setReceiveStartTime(DateUtil.nowDateTime()); //开始时间设置为当前时间
+            storeCoupon.setReceiveStartTime(CrmebDateUtil.nowDateTime()); //开始时间设置为当前时间
         }else{
             if (storeCoupon.getReceiveStartTime() == null || storeCoupon.getReceiveEndTime() == null) {
                 throw new CrmebException("请选择领取时间范围！");
             }
 
-            int compareDate = DateUtil.compareDate(DateUtil.dateToStr(storeCoupon.getReceiveStartTime(), Constants.DATE_FORMAT), DateUtil.dateToStr(storeCoupon.getReceiveEndTime(), Constants.DATE_FORMAT), Constants.DATE_FORMAT);
+            int compareDate = CrmebDateUtil.compareDate(CrmebDateUtil.dateToStr(storeCoupon.getReceiveStartTime(), Constants.DATE_FORMAT), CrmebDateUtil.dateToStr(storeCoupon.getReceiveEndTime(), Constants.DATE_FORMAT), Constants.DATE_FORMAT);
             if (compareDate > -1) {
                 throw new CrmebException("请选择正确的领取时间范围！");
             }
@@ -165,10 +169,10 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
         }
 
         //看是否过期
-        if (!(storeCoupon.getReceiveEndTime() == null || "".equals(storeCoupon.getReceiveEndTime()))) {
+        if (!(storeCoupon.getReceiveEndTime() == null || storeCoupon.getReceiveEndTime().equals(""))) {
             //非永久可领取
-            String date = DateUtil.nowDateTimeStr();
-            int result = DateUtil.compareDate(date, DateUtil.dateToStr(storeCoupon.getReceiveEndTime(), Constants.DATE_FORMAT), Constants.DATE_FORMAT);
+            String date = CrmebDateUtil.nowDateTimeStr();
+            int result = CrmebDateUtil.compareDate(date, CrmebDateUtil.dateToStr(storeCoupon.getReceiveEndTime(), Constants.DATE_FORMAT), Constants.DATE_FORMAT);
             if (result == 1) {
                 //过期了
                 throw new CrmebException("已超过优惠券领取最后期限！");
@@ -255,7 +259,7 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
      */
     @Override
     public List<StoreCoupon> findRegisterList() {
-        String dateStr = DateUtil.nowDate(Constants.DATE_FORMAT);
+        String dateStr = CrmebDateUtil.nowDate(Constants.DATE_FORMAT);
         LambdaQueryWrapper<StoreCoupon> lqw = new LambdaQueryWrapper<>();
         lqw.eq(StoreCoupon::getType, 2);
         lqw.eq(StoreCoupon::getStatus, true);
@@ -273,7 +277,7 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
             // 判断是否达到可领取时间
             if (ObjectUtil.isNotNull(coupon.getReceiveStartTime())) {
                 //非永久可领取
-                int result = DateUtil.compareDate(dateStr, DateUtil.dateToStr(coupon.getReceiveStartTime(), Constants.DATE_FORMAT), Constants.DATE_FORMAT);
+                int result = CrmebDateUtil.compareDate(dateStr, CrmebDateUtil.dateToStr(coupon.getReceiveStartTime(), Constants.DATE_FORMAT), Constants.DATE_FORMAT);
                 if (result == -1) {
                     // 未开始
                     return false;
@@ -282,7 +286,7 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
 
             // 是否有领取结束时间
             if (ObjectUtil.isNotNull(coupon.getReceiveEndTime())) {
-                int compareDate = DateUtil.compareDate(dateStr, DateUtil.dateToStr(coupon.getReceiveEndTime(), Constants.DATE_FORMAT), Constants.DATE_FORMAT);
+                int compareDate = CrmebDateUtil.compareDate(dateStr, CrmebDateUtil.dateToStr(coupon.getReceiveEndTime(), Constants.DATE_FORMAT), Constants.DATE_FORMAT);
                 if (compareDate > 0) {
                     return false;
                 }
@@ -316,7 +320,7 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
             lqw.like(StoreCoupon::getName, request.getKeywords());
         }
         lqw.and(o -> o.eq(StoreCoupon::getIsLimited, false).or().ge(StoreCoupon::getLastTotal, 0));
-        lqw.and(o -> o.isNull(StoreCoupon::getReceiveEndTime).or().gt(StoreCoupon::getReceiveEndTime, DateUtil.nowDate(Constants.DATE_FORMAT)));
+        lqw.and(o -> o.isNull(StoreCoupon::getReceiveEndTime).or().gt(StoreCoupon::getReceiveEndTime, CrmebDateUtil.nowDate(Constants.DATE_FORMAT)));
         lqw.orderByDesc(StoreCoupon::getSort, StoreCoupon::getId);
         return dao.selectList(lqw);
     }
@@ -333,22 +337,25 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
             throw new CrmebException("优惠券不存在");
         }
         coupon.setIsDel(true);
+        coupon.setUpdateTime(DateUtil.date());
         return dao.updateById(coupon) > 0;
     }
 
     /**
      * 移动端优惠券列表
-     * @param type 类型，1-通用，2-商品，3-品类
-     * @param productId 产品id，搜索产品指定优惠券
+     *
+     * @param type             类型，1-通用，2-商品，3-品类
+     * @param productId        产品id，搜索产品指定优惠券
      * @param pageParamRequest 分页参数
-     * @return List<StoreCouponFrontResponse>
+     * @return PageInfo<StoreCouponFrontResponse>
      */
     @Override
-    public List<StoreCouponFrontResponse> getH5List(Integer type, Integer productId, PageParamRequest pageParamRequest) {
+    public PageInfo<StoreCouponFrontResponse> getH5List(Integer type, Integer productId, PageParamRequest pageParamRequest) {
         // 获取优惠券列表
-        List<StoreCoupon> list = getListByReceive(type, productId, pageParamRequest);
-        if (ObjectUtil.isNull(list)) {
-            return null;
+        PageInfo<StoreCoupon> pageInfo = getListByReceive(type, productId, pageParamRequest);
+        List<StoreCoupon> list = pageInfo.getList();
+        if (CollUtil.isEmpty(list)) {
+            return CommonPage.copyPageInfo(pageInfo, new ArrayList<>());
         }
         //获取用户当前已领取未使用的优惠券
         HashMap<Integer, StoreCouponUser> couponUserMap = null;
@@ -372,12 +379,12 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
             }
 
             // 更改使用时间格式，去掉时分秒
-            response.setUseStartTimeStr(DateUtil.dateToStr(storeCoupon.getUseStartTime(), Constants.DATE_FORMAT_DATE));
-            response.setUseEndTimeStr(DateUtil.dateToStr(storeCoupon.getUseEndTime(), Constants.DATE_FORMAT_DATE));
+            response.setUseStartTimeStr(CrmebDateUtil.dateToStr(storeCoupon.getUseStartTime(), Constants.DATE_FORMAT_DATE));
+            response.setUseEndTimeStr(CrmebDateUtil.dateToStr(storeCoupon.getUseEndTime(), Constants.DATE_FORMAT_DATE));
             storeCouponFrontResponseArrayList.add(response);
         }
 
-        return storeCouponFrontResponseArrayList;
+        return CommonPage.copyPageInfo(pageInfo, storeCouponFrontResponseArrayList);
     }
 
     /**
@@ -397,16 +404,17 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
         StoreCoupon storeCoupon = new StoreCoupon();
         storeCoupon.setId(id);
         storeCoupon.setStatus(status);
+        storeCoupon.setUpdateTime(DateUtil.date());
         return updateById(storeCoupon);
     }
 
     /**
      * 用户可领取的优惠券
-     * @return List<StoreCoupon>
+     *
+     * @return PageInfo<StoreCoupon>
      */
-    private List<StoreCoupon> getListByReceive(Integer type, Integer productId, PageParamRequest pageParamRequest) {
-        PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-        Date date = DateUtil.nowDateTime();
+    private PageInfo<StoreCoupon> getListByReceive(Integer type, Integer productId, PageParamRequest pageParamRequest) {
+        Date date = CrmebDateUtil.nowDateTime();
         //带 StoreCoupon 类的多条件查询
         LambdaQueryWrapper<StoreCoupon> lqw = new LambdaQueryWrapper<>();
         lqw.eq(StoreCoupon::getIsDel, false);
@@ -435,7 +443,9 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
         }
 
         lqw.orderByDesc(StoreCoupon::getSort).orderByDesc(StoreCoupon::getId);
-        return dao.selectList(lqw);
+        Page<StoreCoupon> page = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+        List<StoreCoupon> list = dao.selectList(lqw);
+        return CommonPage.copyPageInfo(page, list);
     }
 
     private void getPrimaryKeySql(LambdaQueryWrapper<StoreCoupon> lambdaQueryWrapper, String productIdStr) {
@@ -443,7 +453,7 @@ public class StoreCouponServiceImpl extends ServiceImpl<StoreCouponDao, StoreCou
             return;
         }
 
-        List<Integer> categoryIdList = storeProductService.getSecondaryCategoryByProductId(productIdStr);
+        List<Integer> categoryIdList = storeProductService.getProductAllCategoryIdByProductIds(CrmebUtil.stringToArray(productIdStr));
         lambdaQueryWrapper.and(i -> i.and(
                 //通用券  商品券  品类券
                 t -> t.eq(StoreCoupon::getUseType, 1)

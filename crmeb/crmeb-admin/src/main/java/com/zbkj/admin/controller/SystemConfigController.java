@@ -1,9 +1,10 @@
 package com.zbkj.admin.controller;
 
-import com.zbkj.common.response.CommonResult;
 import com.zbkj.common.model.system.SystemConfig;
-import com.zbkj.common.request.SystemConfigAdminRequest;
+import com.zbkj.common.request.SaveConfigRequest;
 import com.zbkj.common.request.SystemFormCheckRequest;
+import com.zbkj.common.response.AdminSiteLogoResponse;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.service.service.SystemConfigService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -14,7 +15,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
 
 
 /**
@@ -22,7 +22,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -38,87 +38,93 @@ public class SystemConfigController {
     @Autowired
     private SystemConfigService systemConfigService;
 
-    /**
-     * 查询配置表信息
-     * @param formId Integer
-     */
     @PreAuthorize("hasAuthority('admin:system:config:info')")
-    @ApiOperation(value = "详情")
+    @ApiOperation(value = "表单详情")
     @RequestMapping(value = "/info", method = RequestMethod.GET)
     public CommonResult<HashMap<String, String>> info(@RequestParam(value = "formId") Integer formId) {
         return CommonResult.success(systemConfigService.info(formId));
     }
 
-
-    /**
-     * 整体保存表单数据
-     * @param systemFormCheckRequest SystemFormCheckRequest 新增参数
-     */
     @PreAuthorize("hasAuthority('admin:system:config:save:form')")
     @ApiOperation(value = "整体保存表单数据")
     @RequestMapping(value = "/save/form", method = RequestMethod.POST)
     public CommonResult<String> saveFrom(@RequestBody @Validated SystemFormCheckRequest systemFormCheckRequest) {
         if (systemConfigService.saveForm(systemFormCheckRequest)) {
-            return CommonResult.success();
+            return CommonResult.success("表单保存成功");
         }
-        return CommonResult.failed();
+        return CommonResult.failed("表单保存失败");
     }
 
-    /**
-     * 检测表单name是否存在
-     * @param name name
-     */
-    @PreAuthorize("hasAuthority('admin:system:config:check')")
-    @ApiOperation(value = "检测表单name是否存在")
-    @RequestMapping(value = "/check", method = RequestMethod.GET)
-    public CommonResult<Boolean> check(@RequestParam String name) {
-        return CommonResult.success(systemConfigService.checkName(name));
+    @PreAuthorize("hasAuthority('admin:system:config:upload:type')")
+    @ApiOperation(value = "获取文件存储类型")
+    @RequestMapping(value = "/get/upload/type", method = RequestMethod.GET)
+    public CommonResult<SystemConfig> getFileUploadType() {
+        return CommonResult.success(systemConfigService.getFileUploadType());
     }
 
-    /**
-     * 配置表中仅仅存储对应的配置
-     * @param key 配置表中的配置字段
-     * @param value 对应的值
-     */
-    @PreAuthorize("hasAuthority('admin:system:config:saveuniq')")
-    @ApiOperation(value = "表单配置中仅仅存储")
-    @RequestMapping(value = "/saveuniq", method = RequestMethod.POST)
-    public CommonResult<Boolean> justSaveUniq(@RequestParam String key, @RequestParam String value) {
-        return CommonResult.success(systemConfigService.updateOrSaveValueByName(key, value));
+//    @PreAuthorize("hasAuthority('admin:system:config:site:logo')")
+    @ApiOperation(value = "获取管理端logo")
+    @RequestMapping(value = "/get/site/logo", method = RequestMethod.GET)
+    public CommonResult<AdminSiteLogoResponse> getSiteLogo() {
+        return CommonResult.success(systemConfigService.getSiteLogo());
     }
 
-    /**
-     * 根据key获取表单配置数据
-     * @param key 配置表的的字段
-     */
-    @PreAuthorize("hasAuthority('admin:system:config:getuniq')")
-    @ApiOperation(value = "表单配置根据key获取")
-    @RequestMapping(value = "/getuniq", method = RequestMethod.GET)
-    public CommonResult<Object> justGetUniq(@RequestParam String key) {
-        return CommonResult.success(systemConfigService.getValueByKey(key),"success");
+    @PreAuthorize("hasAuthority('admin:system:config:tx:map:key')")
+    @ApiOperation(value = "获取腾讯地图key")
+    @RequestMapping(value = "/get/tx/map/key", method = RequestMethod.GET)
+    public CommonResult<SystemConfig> getTxMapKey() {
+        return CommonResult.success(systemConfigService.getTxMapKey());
     }
 
-    /**
-     * 根据key获取配置
-     */
-    @PreAuthorize("hasAuthority('admin:system:config:get')")
-    @ApiOperation(value = "根据key获取配置")
-    @RequestMapping(value = "/get", method = RequestMethod.GET)
-    public CommonResult<List<SystemConfig>> getByKey(@RequestParam String key) {
-        return CommonResult.success(systemConfigService.getListByKey(key));
+    @PreAuthorize("hasAuthority('admin:system:config:home:page:list:style')")
+    @ApiOperation(value = "获取移动端首页列表样式")
+    @RequestMapping(value = "/get/home/page/list/style", method = RequestMethod.GET)
+    public CommonResult<SystemConfig> getHomePageSaleListStyle() {
+        return CommonResult.success(systemConfigService.getHomePageSaleListStyle());
     }
 
-    /**
-     * 更新配置信息
-     */
-    @PreAuthorize("hasAuthority('admin:system:config:update')")
-    @ApiOperation(value = "更新配置信息")
-    @RequestMapping(value = "/update", method = RequestMethod.POST)
-    public CommonResult<List<SystemConfig>> getByKey(@RequestBody @Validated List<SystemConfigAdminRequest> requestList) {
-        if (systemConfigService.updateByList(requestList)) {
-            return CommonResult.success();
+    @PreAuthorize("hasAuthority('admin:system:config:home:page:list:style:save')")
+    @ApiOperation(value = "保存移动端首页列表样式")
+    @RequestMapping(value = "/save/home/page/list/style", method = RequestMethod.POST)
+    public CommonResult<String> saveHomePageSaleListStyle(@RequestBody SaveConfigRequest request) {
+        if (systemConfigService.saveHomePageSaleListStyle(request)) {
+            return CommonResult.success("保存成功");
         }
-        return CommonResult.failed();
+        return CommonResult.failed("保存失败");
+    }
+
+    @PreAuthorize("hasAuthority('admin:system:config:auth:host:get')")
+    @ApiOperation(value = "获取授权地址")
+    @RequestMapping(value = "/get/auth/host", method = RequestMethod.GET)
+    public CommonResult<SystemConfig> getAuthHost() {
+        return CommonResult.success(systemConfigService.getAuthHost());
+    }
+
+    @PreAuthorize("hasAuthority('admin:system:config:change:color:get')")
+    @ApiOperation(value = "获取主题色")
+    @RequestMapping(value = "/get/change/color", method = RequestMethod.GET)
+    public CommonResult<SystemConfig> getChangeColor() {
+        return CommonResult.success(systemConfigService.getChangeColor());
+    }
+
+    @PreAuthorize("hasAuthority('admin:system:config:change:color:save')")
+    @ApiOperation(value = "保存主题色")
+    @RequestMapping(value = "/save/change/color", method = RequestMethod.POST)
+    public CommonResult<String> saveChangeColor(@RequestBody SaveConfigRequest request) {
+        if (systemConfigService.saveChangeColor(request)) {
+            return CommonResult.success("保存成功");
+        }
+        return CommonResult.failed("保存失败");
+    }
+
+    @PreAuthorize("hasAuthority('admin:system:config:clear:cache')")
+    @ApiOperation(value = "清除config缓存")
+    @RequestMapping(value = "/clear/cache", method = RequestMethod.POST)
+    public CommonResult<String> clearCache() {
+        if (systemConfigService.clearCache()) {
+            return CommonResult.success("清除成功");
+        }
+        return CommonResult.failed("清除失败");
     }
 }
 

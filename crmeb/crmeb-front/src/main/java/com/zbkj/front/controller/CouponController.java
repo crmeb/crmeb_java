@@ -1,9 +1,10 @@
 package com.zbkj.front.controller;
 
-import com.zbkj.common.response.CommonResult;
+import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.response.StoreCouponFrontResponse;
 import com.zbkj.common.response.StoreCouponUserOrder;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.service.service.StoreCouponService;
 import com.zbkj.service.service.StoreCouponUserService;
 import io.swagger.annotations.Api;
@@ -23,7 +24,7 @@ import java.util.List;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -45,8 +46,9 @@ public class CouponController {
 
     /**
      * 分页显示优惠券表
-     * @param type 类型，1-通用，2-商品，3-品类
-     * @param productId 产品id，搜索产品指定优惠券
+     *
+     * @param type             类型，1-通用，2-商品，3-品类
+     * @param productId        产品id，搜索产品指定优惠券
      * @param pageParamRequest 分页参数
      */
     @ApiOperation(value = "分页列表")
@@ -57,14 +59,11 @@ public class CouponController {
             @ApiImplicitParam(name="page", value="页码", required = true),
             @ApiImplicitParam(name="limit", value="每页数量", required = true)
     })
-    public CommonResult<List<StoreCouponFrontResponse>>  getList(@RequestParam(value = "type", defaultValue = "0") int type,
-            @RequestParam(value = "productId", defaultValue = "0") int productId, @Validated PageParamRequest pageParamRequest) {
-        return CommonResult.success(storeCouponService.getH5List(type, productId, pageParamRequest));
+    public CommonResult<CommonPage<StoreCouponFrontResponse>> getList(@RequestParam(value = "type", defaultValue = "0") int type,
+                                                                      @RequestParam(value = "productId", defaultValue = "0") int productId, @Validated PageParamRequest pageParamRequest) {
+        return CommonResult.success(CommonPage.restPage(storeCouponService.getH5List(type, productId, pageParamRequest)));
     }
 
-    /**
-     * 根据购物车id获取可用优惠券
-     */
     @ApiOperation(value = "当前订单可用优惠券")
     @RequestMapping(value = "coupons/order/{preOrderNo}", method = RequestMethod.GET)
     public CommonResult<List<StoreCouponUserOrder>> getCouponsListByPreOrderNo(@PathVariable String preOrderNo) {

@@ -10,7 +10,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -67,7 +67,7 @@ public interface StoreProductAttrValueService extends IService<StoreProductAttrV
      * @param operationType 类型：add—添加，sub—扣减
      * @param type 活动类型 0=商品，1=秒杀，2=砍价，3=拼团
      */
-    Boolean operationStock(Integer id, Integer num, String operationType, Integer type);
+    Boolean operationStock(Integer id, Integer num, String operationType, Integer type, Integer version);
 
     /**
      * 删除商品规格属性值
@@ -84,4 +84,23 @@ public interface StoreProductAttrValueService extends IService<StoreProductAttrV
      * @return List
      */
     List<StoreProductAttrValue> getListByProductIdAndType(Integer productId, Integer type);
+
+    /**
+     * 根据商品id和attrIdList获取 商品属性列表集合
+     * @param productId 商品id
+     * @param attrIdList 属性idList
+     * @return 商品属性集合
+     */
+    List<StoreProductAttrValue> getByProductIdAndAttrIdList(Integer productId, List<Integer> attrIdList);
+
+    /**
+     * 添加/扣减库存
+     * @param id 秒杀商品id
+     * @param num 数量
+     * @param operationType 类型：add—添加，sub—扣减
+     * @param version 版本
+     */
+    Boolean operationStock(Integer id, Integer num, String operationType, Integer version);
+
+
 }

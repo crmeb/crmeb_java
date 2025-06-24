@@ -1,12 +1,14 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.zbkj.common.constants.PayConstants;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.constants.Constants;
@@ -14,12 +16,12 @@ import com.zbkj.common.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.zbkj.common.utils.DateUtil;
-import com.zbkj.common.vo.dateLimitUtilVo;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.model.finance.UserRecharge;
 import com.zbkj.common.request.UserRechargeSearchRequest;
 import com.zbkj.common.response.UserRechargeResponse;
 import com.zbkj.common.model.user.User;
+import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.service.dao.UserRechargeDao;
 import com.zbkj.service.service.UserRechargeService;
 import com.zbkj.service.service.UserService;
@@ -38,7 +40,7 @@ import java.util.stream.Collectors;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -65,7 +67,7 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
     public PageInfo<UserRechargeResponse> getList(UserRechargeSearchRequest request, PageParamRequest pageParamRequest) {
         Page<UserRecharge> userRechargesList = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
 
-        dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
+        DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
         //带 UserExtract 类的多条件查询
         LambdaQueryWrapper<UserRecharge> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         if (ObjectUtil.isNotNull(request.getUid()) && request.getUid() > 0) {
@@ -80,7 +82,7 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
         //时间范围
         if (StrUtil.isNotBlank(dateLimit.getStartTime()) && StrUtil.isNotBlank(dateLimit.getEndTime())) {
             //判断时间
-            int compareDateResult = DateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), Constants.DATE_FORMAT);
+            int compareDateResult = CrmebDateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), Constants.DATE_FORMAT);
             if(compareDateResult == -1){
                 throw new CrmebException("开始时间不能大于结束时间！");
             }
@@ -186,7 +188,8 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
     @Override
     public Integer getTotalPeople() {
         QueryWrapper<UserRecharge> wrapper = Wrappers.query();
-        wrapper.select("id");
+        //wrapper.select("id");
+        wrapper.select(" ANY_VALUE(id) AS id ");
         wrapper.eq("paid", 1);
         wrapper.groupBy("uid");
         List<UserRecharge> list = dao.selectList(wrapper);
@@ -216,7 +219,8 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
     @Override
     public Integer getRechargeUserNumByDate(String date) {
         QueryWrapper<UserRecharge> wrapper = Wrappers.query();
-        wrapper.select("id");
+        //wrapper.select("id");
+        wrapper.select(" ANY_VALUE(id) AS id ");
         wrapper.eq("paid", 1);
         wrapper.apply("date_format(create_time, '%Y-%m-%d') = {0}", date);
         wrapper.groupBy("uid");
@@ -236,7 +240,8 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
     @Override
     public Integer getRechargeUserNumByPeriod(String startDate, String endDate) {
         QueryWrapper<UserRecharge> wrapper = Wrappers.query();
-        wrapper.select("id");
+        //wrapper.select("id");
+        wrapper.select(" ANY_VALUE(id) AS id ");
         wrapper.eq("paid", 1);
         wrapper.apply("date_format(create_time, '%Y-%m-%d') between {0} and {1}", startDate, endDate);
         wrapper.groupBy("uid");
@@ -245,6 +250,33 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
             return 0;
         }
         return list.size();
+    }
+
+    /**
+     * 获取待上传微信发货管理订单
+     */
+    @Override
+    public List<UserRecharge> findAwaitUploadWechatList() {
+        DateTime date = cn.hutool.core.date.DateUtil.date();
+        DateTime offsetMinute = cn.hutool.core.date.DateUtil.offsetMinute(date, -10);
+        LambdaQueryWrapper<UserRecharge> lqw = Wrappers.lambdaQuery();
+        lqw.eq(UserRecharge::getPaid, 1);
+        lqw.eq(UserRecharge::getIsWechatShipping, 0);
+        lqw.eq(UserRecharge::getRechargeType, PayConstants.PAY_CHANNEL_WE_CHAT_PROGRAM);
+        lqw.le(UserRecharge::getPayTime, offsetMinute);
+        return dao.selectList(lqw);
+    }
+
+    /**
+     * 获取订单
+     * @param outTradeNo 商户系统内部的订单号
+     */
+    @Override
+    public UserRecharge getByOutTradeNo(String outTradeNo) {
+        LambdaQueryWrapper<UserRecharge> lqw = Wrappers.lambdaQuery();
+        lqw.eq(UserRecharge::getOutTradeNo, outTradeNo);
+        lqw.last(" limit 1");
+        return dao.selectOne(lqw);
     }
 }
 

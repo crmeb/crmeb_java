@@ -3,13 +3,17 @@ package com.zbkj.service.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.crypto.SecureUtil;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.zbkj.common.constants.Constants;
 import com.zbkj.common.request.*;
+import com.zbkj.common.request.onepass.OnePassLoginRequest;
+import com.zbkj.common.request.onepass.OnePassShipmentCancelOrderRequest;
+import com.zbkj.common.request.onepass.OnePassShipmentCreateOrderRequest;
 import com.zbkj.common.vo.MyRecord;
 import com.zbkj.common.constants.OnePassConstants;
 import com.zbkj.common.exception.CrmebException;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.utils.ValidateFormUtil;
 import com.zbkj.common.model.express.Express;
@@ -17,8 +21,11 @@ import com.zbkj.common.vo.OnePassLoginVo;
 import com.zbkj.common.vo.OnePassLogisticsQueryVo;
 import com.zbkj.service.service.ExpressService;
 import com.zbkj.service.service.OnePassService;
+import com.zbkj.service.service.StoreOrderService;
 import com.zbkj.service.service.SystemConfigService;
 import com.zbkj.service.util.OnePassUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -46,6 +53,8 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class OnePassServiceImpl implements OnePassService {
 
+    private final Logger logger = LoggerFactory.getLogger(OnePassServiceImpl.class);
+
     @Autowired
     private SystemConfigService systemConfigService;
 
@@ -61,88 +70,165 @@ public class OnePassServiceImpl implements OnePassService {
     @Autowired
     private ExpressService expressService;
 
+    @Autowired
+    private StoreOrderService storeOrderService;
+
     /**
-     * 获取用户验证码
+     * 保存一号通应用信息
      *
-     * @param phone 手机号
+     * @param request 一号通服务中申请的应用信息
+     * @return 保存结果
      */
     @Override
-    public Object sendUserCode(String phone, Integer types) {
-        ValidateFormUtil.isPhoneException(phone);
-        MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-        map.add("phone", phone);
-        if (ObjectUtil.isNotNull(types)) {
-            map.add("types", types);
-        }
-        return onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.REGISTER_CAPTCHA_URI, map, null);
+    public Boolean saveOnePassApplicationInfo(OnePassLoginRequest request) {
+        setConfigSmsInfo(request.getAccessKey(), request.getSecretKey());
+        return Boolean.TRUE;
     }
 
     /**
-     * 注册用户
+     * 获取一号通应用信息
      *
-     * @param registerRequest 注册参数
-     * @return String
+     * @return 一号通应用信息
      */
     @Override
-    public String register(OnePassRegisterRequest registerRequest) {
-        ValidateFormUtil.isPhoneException(registerRequest.getPhone());
-        MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-        map.add("account", registerRequest.getAccount());
-        map.add("password", SecureUtil.md5(registerRequest.getPassword()));
-        map.add("phone", registerRequest.getPhone());
-        map.add("verify_code", registerRequest.getCode());
-        map.add("url", registerRequest.getDomain());
-        JSONObject post = onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.USER_REGISTER_URI, map, null);
+    public OnePassLoginRequest getOnePassApplicationInfo() {
+        return getConfigSmsInfo();
+    }
 
-        // 获取token存入Redis
-        String accessToken = OnePassConstants.ONE_PASS_USER_TOKEN_PREFIX.concat(post.getJSONObject("data").getString("access_token"));
-        Long expiresIn = post.getJSONObject("data").getLong("expires_in");
-        expiresIn = expiresIn - DateUtil.getTime();
-        String secret = SecureUtil.md5(registerRequest.getPhone() + SecureUtil.md5(registerRequest.getPassword()));
-        redisUtil.set(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, secret), accessToken, expiresIn, TimeUnit.SECONDS);
+    /**
+     * 商家寄件
+     *
+     * @param request 寄件请求对象
+     * @return 寄件返回数据
+     */
+    @Override
+    public JSONObject shipmentCreateOrder(OnePassShipmentCreateOrderRequest request) {
+        OnePassLoginVo loginVo = onePassUtil.getLoginVo();
+        String accessToken = onePassUtil.getToken(loginVo);
+        HashMap<String, String> header = onePassUtil.getCommonHeader(accessToken);
+        setOnePassShipmentCallbackURL(request);
+        MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
+        param.add("kuaidicom", request.getKuaidicom());
+        param.add("man_name", request.getManName());
+        param.add("phone",request.getPhone());
+        param.add("address",request.getAddress());
+        param.add("send_real_name",request.getSendRealName());
+        param.add("send_phone",request.getSendPhone());
+        param.add("send_address",request.getSendAddress());
+        param.add("call_back_url",request.getCallBackUrl());
+        param.add("cargo",request.getCargo());
+        param.add("service_type",request.getServiceType());
+        param.add("payment",request.getPayment());
+        param.add("weight",request.getWeight());
+        param.add("remark",request.getRemark());
+        param.add("day_type",request.getDayType());
+        param.add("pickup_start_time",request.getPickupStartTime());
+        param.add("pickup_end_time",request.getPickupEndTime());
+        param.add("channel_sw",request.getChannelSw());
+        param.add("valins_pay",request.getValinsPay());
+        param.add("real_name",request.getRealName());
+        param.add("send_id_card_type",request.getSendIdCardType());
+        param.add("send_id_card",request.getSendIdCard());
+        param.add("password_signing",request.getPasswordSigning());
+        param.add("op",request.getOp());
+        param.add("return_type",request.getReturnType());
+        param.add("siid",request.getSiid());
+        param.add("tempid",request.getTempid());
+        logger.info("一号通-商家寄件:参数:{}", param);
+        JSONObject jsonObject = onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_SHIPMENT_CREATE_ORDER_URI, param, header);
+        logger.info("一号通-商家寄件:结果:{}", jsonObject);
+        return jsonObject.getJSONObject("data");
+    }
 
-        //更新配置
-        setConfigSmsInfo(registerRequest.getPhone(), registerRequest.getPassword());
-        return post.getString("msg");
+    /**
+     * 取消商家寄件
+     *
+     * @param request 取消商家寄件请求对象
+     * @return 取消寄件返回对象
+     */
+    @Override
+    public JSONObject shipmentCancelOrder(OnePassShipmentCancelOrderRequest request) {
+        OnePassLoginVo loginVo = onePassUtil.getLoginVo();
+        String accessToken = onePassUtil.getToken(loginVo);
+        HashMap<String, String> header = onePassUtil.getCommonHeader(accessToken);
+
+        MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
+        param.add("task_id", request.getTaskId());
+        param.add("order_id", request.getOrderId());
+        param.add("cancel_msg",request.getCancelMsg());
+        JSONObject jsonObject = onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_SHIPMENT_CANCEL_ORDER_URI, param, header);
+        logger.info("一号通-商家取消寄件 :{}", jsonObject);
+        return jsonObject.getJSONObject("data");
+    }
+
+    /**
+     * 获取商家寄件所需的快递公司列表
+     *
+     * @return 商家寄件功能对应的快递公司列表
+     */
+    @Override
+    public JSONObject shipmentComs() {
+        OnePassLoginVo loginVo = onePassUtil.getLoginVo();
+        String accessToken = onePassUtil.getToken(loginVo);
+        HashMap<String, String> header = onePassUtil.getCommonHeader(accessToken);
+        JSONObject jsonObject = onePassUtil.getData(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_SHIPMENT_GET_KUAIDI_COMS_URI, header);
+        logger.info("一号通-商家寄件-物流地址 :{}", jsonObject);
+        return jsonObject;
+    }
+
+    /**
+     * 商家寄件功能对应的回调
+     * order_success	下单成功回调
+     * order_take	取件回调
+     * order_cancel	用户主动取消回调
+     * order_fail	下单失败回调
+     * order_receipt	快递签收回调
+     * @return 回调数据
+     */
+    @Override
+    public Boolean shipmentCallBackMethod(String type, String data) {
+        logger.info("一号通-商家寄件-回调:type:{}", type);
+        logger.info("一号通-商家寄件-回调:data:{}", data);
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject = JSON.parseObject(com.zbkj.common.utils.OnePassUtil.decrypt(data));
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("一号通商家寄件 解密数据失败:{}", e.getMessage());
+        }
+        switch (type){
+            case "order_success":
+                break;
+            case "order_take": // 取件回调
+                storeOrderService.expressForOnePassShipmentTakeCallBack(jsonObject);
+                break;
+            case "order_cancel":
+            case "order_fail": // 下单失败回调 清理掉所有商家寄件的数据
+                storeOrderService.expressForOnePassShipmentCancelCallBack(jsonObject);
+                break;
+            case "order_receipt": // todo 一号通新增接口，后期可以规划和订单签收结果合并
+                break;
+
+        }
+
+        return Boolean.TRUE;
     }
 
     /**
      * 用户登录
      */
     @Override
-    public MyRecord login(OnePassLoginRequest request) {
+    public Boolean login(OnePassLoginRequest request) {
         MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
-        param.add("account", request.getAccount());
-        String secret = SecureUtil.md5(request.getAccount() + SecureUtil.md5(request.getPassword()));
-        param.add("secret", secret);
+        param.add(OnePassConstants.ONE_PASS_ACCESS_KEY, request.getAccessKey());
+        param.add(OnePassConstants.ONE_PASS_SECRET_KEY, request.getSecretKey());
         JSONObject jsonObject = onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.USER_LOGIN_URI, param, null);
-        setConfigSmsInfo(request.getAccount(), request.getPassword());
 
         String accessToken = OnePassConstants.ONE_PASS_USER_TOKEN_PREFIX.concat(jsonObject.getJSONObject("data").getString("access_token"));
         Long expiresIn = jsonObject.getJSONObject("data").getLong("expires_in");
-        expiresIn = expiresIn - DateUtil.getTime();
-        redisUtil.set(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, secret), accessToken, expiresIn, TimeUnit.SECONDS);
-        MyRecord record = new MyRecord();
-        record.set("account", request.getAccount());
-        return record;
-    }
-
-    /**
-     * 判断是否登录
-     */
-    @Override
-    public MyRecord isLogin() {
-        OnePassLoginVo loginVo;
-        MyRecord record = new MyRecord();
-        try {
-            loginVo = onePassUtil.getLoginVo();
-        } catch (Exception e) {
-            return record.set("status", false);
-        }
-        onePassUtil.getToken(loginVo);
-        record.set("status", true);
-        record.set("info", loginVo.getAccount());
-        return record;
+        expiresIn = expiresIn - CrmebDateUtil.getTime();
+        redisUtil.set(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, request.getAccessKey()), accessToken, expiresIn, TimeUnit.SECONDS);
+        return true;
     }
 
     /**
@@ -154,13 +240,13 @@ public class OnePassServiceImpl implements OnePassService {
         // 判断是否开通电子面单
         JSONObject dump = info.getJSONObject("dump");
         Integer open = dump.getInteger("open");
-        if (open.equals(1)) {
-            String exportSiid = systemConfigService.getValueByKey("config_export_siid");// 打印机编号
-            if (StrUtil.isBlank(exportSiid)) {
-                dump.put("open", 0);
-                info.put("dump", dump);
-            }
-        }
+//        if (open.equals(1)) {
+//            String exportSiid = systemConfigService.getValueByKey("config_export_siid");// 打印机编号
+//            if (StrUtil.isBlank(exportSiid)) {
+//                dump.put("open", 0);
+//                info.put("dump", dump);
+//            }
+//        }
         return info;
     }
 
@@ -170,127 +256,10 @@ public class OnePassServiceImpl implements OnePassService {
         HashMap<String, String> header = onePassUtil.getCommonHeader(accessToken);
         JSONObject jsonObject = onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.USER_INFO_URI, null, header);
         JSONObject data = jsonObject.getJSONObject("data");
-        data.put("account", loginVo.getAccount());
+        data.put("account", loginVo.getAccessKey());
         return data;
     }
 
-    /**
-     * 用户注销
-     */
-    @Override
-    public Boolean logOut() {
-        OnePassLoginVo loginVo = onePassUtil.getLoginVo();
-        boolean exists = redisUtil.exists(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getSecret()));
-        if (exists) {
-            redisUtil.delete(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getSecret()));
-        }
-        setConfigSmsInfo("", "");
-        return true;
-    }
-
-    /**
-     * 修改密码
-     *
-     * @param request 修改密码参数
-     * @return Boolean
-     */
-    @Override
-    public Boolean updatePassword(OnePassUpdateRequest request) {
-        ValidateFormUtil.isPhoneException(request.getPhone());
-        MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-        map.add("account", request.getAccount());
-        map.add("password", SecureUtil.md5(request.getPassword()));
-        map.add("phone", request.getPhone());
-        map.add("verify_code", request.getCode());
-        onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.USER_UPDATE_PASSWORD_URI, map, null);
-
-        setConfigSmsInfo("", "");
-        return true;
-    }
-
-    /**
-     * 修改用户手机
-     *
-     * @param request 修改手机参数
-     * @return Boolean
-     */
-    @Override
-    public Boolean updatePhone(OnePassUpdateRequest request) {
-        ValidateFormUtil.isPhoneException(request.getPhone());
-        MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-        map.add("account", request.getAccount());
-        map.add("phone", request.getPhone());
-        map.add("verify_code", request.getCode());
-
-        OnePassLoginVo loginVo = onePassUtil.getLoginVo();
-        String token = onePassUtil.getToken(loginVo);
-        HashMap<String, String> header = onePassUtil.getCommonHeader(token);
-        onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.USER_UPDATE_PHONE_URI, map, header);
-        onePassUtil.removeToken(loginVo);
-        setConfigSmsInfo("", "");
-        return true;
-    }
-
-    /**
-     * 套餐列表
-     *
-     * @param type 套餐类型：sms,短信；expr_query,物流查询；expr_dump,电子面单；copy,产品复制
-     * @return JSONObject
-     */
-    @Override
-    public JSONObject mealList(String type) {
-        if (!validateMealType(type)) throw new CrmebException("请选择正确的套餐类型");
-
-        MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
-        params.add("type", type);
-        String token = onePassUtil.getToken();
-        HashMap<String, String> header = onePassUtil.getCommonHeader(token);
-
-        JSONObject jsonObject = onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_MEAL_LIST_URI, params, header);
-        return jsonObject.getJSONObject("data");
-    }
-
-    /**
-     * 套餐购买
-     *
-     * @param request 购买参数
-     */
-    @Override
-    public JSONObject mealCode(MealCodeRequest request) {
-        if (!validateMealType(request.getType())) throw new CrmebException("请选择正确的套餐类型");
-        // 获取用户详情
-        String token = onePassUtil.getToken();
-        HashMap<String, String> header = onePassUtil.getCommonHeader(token);
-        JSONObject jsonObject = onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.USER_INFO_URI, null, header);
-        JSONObject data = jsonObject.getJSONObject("data");
-
-        boolean isGrant = false;
-        switch (request.getType()) {
-            case OnePassConstants.ONE_PASS_MEAL_TYPE_SMS:
-                isGrant = data.getJSONObject("sms").getInteger("open").equals(1);
-                break;
-            case OnePassConstants.ONE_PASS_MEAL_TYPE_EXPR:
-                isGrant = data.getJSONObject("query").getInteger("open").equals(1);
-                break;
-            case OnePassConstants.ONE_PASS_MEAL_TYPE_DUMP:
-                isGrant = data.getJSONObject("dump").getInteger("open").equals(1);
-                break;
-            case OnePassConstants.ONE_PASS_MEAL_TYPE_COPY:
-                isGrant = data.getJSONObject("copy").getInteger("open").equals(1);
-                break;
-        }
-        if (!isGrant) throw new CrmebException("请先开通对应的服务");
-
-        MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
-        params.add("meal_id", request.getMealId());
-        params.add("price", request.getPrice());
-        params.add("num", request.getNum());
-        params.add("type", request.getType());
-        params.add("pay_type", request.getPayType());
-
-        JSONObject post = onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_MEAL_CODE_URI, params, header);
-        return post.getJSONObject("data");
-    }
 
     /**
      * 服务开通
@@ -320,35 +289,7 @@ public class OnePassServiceImpl implements OnePassService {
         return open;
     }
 
-    /**
-     * 用量记录
-     * @param request 用量记录查询参数
-     */
-    @Override
-    public JSONObject userRecord(OnePassUserRecordRequest request) {
-        if (!validateMealType(request.getType())) throw new CrmebException("请选择正确的记录类型");
-        MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
-        params.add("type", request.getType());
-        params.add("page", request.getPage());
-        params.add("limit", request.getLimit());
-        if (OnePassConstants.ONE_PASS_MEAL_TYPE_SMS.equals(request.getType())) {
-//            int status = 3;// 查询全部状态
-            if (ObjectUtil.isNotNull(request.getStatus()) && request.getStatus() != 3) {
-                params.add("status", request.getStatus());
-            }
-        }
-        String token = onePassUtil.getToken();
-        HashMap<String, String> header = onePassUtil.getCommonHeader(token);
-        JSONObject jsonObject = onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_USER_RECORD_URI, params, header);
-        return jsonObject.getJSONObject("data");
-    }
 
-    /**
-     * 复制平台商品
-     * @param url 商品链接
-     * 平台复制商品示例
-     * {"msg":"ok","data":{"image":"http://img.alicdn.com/imgextra/i2/2201504973406/O1CN01C7wCJe1b1zdtDz50j_!!2201504973406.jpg","store_info":"豹纹衣身,潮酷有型","give_integral":0,"cost":0,"temp_id":"","description_images":["http://img.alicdn.com/imgextra/i3/2201504973406/O1CN01tGSA611b1zaDd3sOk_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01zrSHcP1b1zaPZB9IR_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i2/2201504973406/O1CN01X8KO5g1b1zaJcCOaN_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i2/2201504973406/O1CN01cS03ht1b1zaNO9kKJ_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01cCfVkZ1b1zaLXTr3v_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i4/2201504973406/O1CN01zqsHfb1b1zaONUmg7_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01pD7WGr1b1zaLujJVA_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i4/2201504973406/O1CN01hB0cth1b1zaONVO6K_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i4/2201504973406/O1CN01aAWvO51b1zaLNWxzL_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i4/2201504973406/O1CN01DweEqg1b1zaLXSBBL_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01bk0dqy1b1zaMlYKrE_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01PwOQL41b1zaJFfOVL_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01Npc2Nx1b1zaLXSmZ2_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i3/2201504973406/O1CN01CYZLU51b1zaDd2fZG_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01tXnKqb1b1zaJcAqxs_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i3/2201504973406/O1CN0145DNqP1b1zaLuhZRf_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01QBjDyr1b1zaPZ9wTi_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i3/2201504973406/O1CN01120POL1b1zaNOAHdT_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01C0YYiq1b1zaLNXdZZ_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i4/2201504973406/O1CN01txpuLk1b1zaNO9LQZ_!!2201504973406.jpg"],"description":"<img src=\"http://img.alicdn.com/imgextra/i3/2201504973406/O1CN01tGSA611b1zaDd3sOk_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01zrSHcP1b1zaPZB9IR_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i2/2201504973406/O1CN01X8KO5g1b1zaJcCOaN_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i2/2201504973406/O1CN01cS03ht1b1zaNO9kKJ_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01cCfVkZ1b1zaLXTr3v_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i4/2201504973406/O1CN01zqsHfb1b1zaONUmg7_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01pD7WGr1b1zaLujJVA_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i4/2201504973406/O1CN01hB0cth1b1zaONVO6K_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i4/2201504973406/O1CN01aAWvO51b1zaLNWxzL_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i4/2201504973406/O1CN01DweEqg1b1zaLXSBBL_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01bk0dqy1b1zaMlYKrE_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01PwOQL41b1zaJFfOVL_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01Npc2Nx1b1zaLXSmZ2_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i3/2201504973406/O1CN01CYZLU51b1zaDd2fZG_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01tXnKqb1b1zaJcAqxs_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i3/2201504973406/O1CN0145DNqP1b1zaLuhZRf_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01QBjDyr1b1zaPZ9wTi_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i3/2201504973406/O1CN01120POL1b1zaNOAHdT_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i1/2201504973406/O1CN01C0YYiq1b1zaLNXdZZ_!!2201504973406.jpg\"><img src=\"http://img.alicdn.com/imgextra/i4/2201504973406/O1CN01txpuLk1b1zaNO9LQZ_!!2201504973406.jpg\">","cate_id":"","slider_image":["http://img.alicdn.com/imgextra/i2/2201504973406/O1CN01C7wCJe1b1zdtDz50j_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i4/2201504973406/O1CN01y07EFV1b1zaLru5es_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i3/2201504973406/O1CN01dvxZXQ1b1zaJFgGWj_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i2/2201504973406/O1CN0178H0r51b1zaLrvZ56_!!2201504973406.jpg","http://img.alicdn.com/imgextra/i3/2201504973406/O1CN01Rw9wYQ1b1zaPznzFQ_!!2201504973406.jpg"],"soure_link":"","attrs":[],"unit_name":"件","postage":0,"video_link":"","price":0,"store_name":"CacheCache短袖t恤女装2019新款潮豹纹牛油果绿抹茶绿古着感少女","ficti":0,"keyword":"","stock":0,"add_time":0,"items":[{"detail":["160/84A/S","165/88A/M","170/92A/L","175/96A/XL"],"value":"尺码"},{"detail":["蜡黄色/757"],"value":"主要颜色"}],"ot_price":0,"info":{"header":[{"minWidth":120,"title":"尺码","align":"center","key":"value1"},{"minWidth":120,"title":"主要颜色","align":"center","key":"value2"},{"minWidth":80,"slot":"pic","title":"图片","align":"center"},{"minWidth":95,"slot":"price","title":"售价","align":"center"},{"minWidth":95,"slot":"cost","title":"成本价","align":"center"},{"minWidth":95,"slot":"ot_price","title":"原价","align":"center"},{"minWidth":95,"slot":"stock","title":"库存","align":"center"},{"minWidth":120,"slot":"bar_code","title":"商品编号","align":"center"},{"minWidth":95,"slot":"weight","title":"重量(KG)","align":"center"},{"minWidth":95,"slot":"volume","title":"体积(m³)","align":"center"},{"minWidth":70,"slot":"action","title":"操作","align":"center"}],"attr":[{"detail":["160/84A/S","165/88A/M","170/92A/L","175/96A/XL"],"value":"尺码"},{"detail":["蜡黄色/757"],"value":"主要颜色"}],"value":[{"brokerage":0,"cost":0,"value2":"蜡黄色/757","value1":"160/84A/S","weight":0,"pic":"","volume":0,"brokerage_two":0,"price":0,"bar_code":"","detail":{"主要颜色":"蜡黄色/757","尺码":"160/84A/S"},"stock":0,"ot_price":0},{"brokerage":0,"cost":0,"value2":"蜡黄色/757","value1":"165/88A/M","weight":0,"pic":"","volume":0,"brokerage_two":0,"price":0,"bar_code":"","detail":{"主要颜色":"蜡黄色/757","尺码":"165/88A/M"},"stock":0,"ot_price":0},{"brokerage":0,"cost":0,"value2":"蜡黄色/757","value1":"170/92A/L","weight":0,"pic":"","volume":0,"brokerage_two":0,"price":0,"bar_code":"","detail":{"主要颜色":"蜡黄色/757","尺码":"170/92A/L"},"stock":0,"ot_price":0},{"brokerage":0,"cost":0,"value2":"蜡黄色/757","value1":"175/96A/XL","weight":0,"pic":"","volume":0,"brokerage_two":0,"price":0,"bar_code":"","detail":{"主要颜色":"蜡黄色/757","尺码":"175/96A/XL"},"stock":0,"ot_price":0}]}},"status":200}
-     */
     @Override
     public JSONObject copyGoods(String url) {
         HashMap<String, String> header = onePassUtil.getCommonHeader(onePassUtil.getToken());
@@ -390,45 +331,39 @@ public class OnePassServiceImpl implements OnePassService {
         params.add("num", expressNo);
         JSONObject post = onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_EXPRESS_QUEARY_URI, params, header);
         String dataStr = post.getString("data");
-        if (StrUtil.isBlank(dataStr) || "[]".equals(dataStr)) {
+        if (StrUtil.isBlank(dataStr) || dataStr.equals("[]")) {
             return null;
         }
         JSONObject jsonObject = post.getJSONObject("data");
         return JSONObject.toJavaObject(jsonObject, OnePassLogisticsQueryVo.class);
     }
 
-    /**
-     * 修改手机号——验证账号密码
-     * @return Boolean
-     */
-    @Override
-    public Boolean beforeUpdatePhoneValidator(OnePassLoginRequest request) {
-        OnePassLoginVo loginVo = onePassUtil.getLoginVo();
-        if (!loginVo.getAccount().equals(request.getAccount())) {
-            throw new CrmebException("账号不匹配");
-        }
-        String secret = SecureUtil.md5(request.getAccount() + SecureUtil.md5(request.getPassword()));
-        if (!loginVo.getSecret().equals(secret)) {
-            throw new CrmebException("密码不匹配");
-        }
-        return Boolean.TRUE;
-    }
 
     /**
      * 校验一号通账号是否配置
      */
     @Override
     public Boolean checkAccount() {
-        String account = systemConfigService.getValueByKey("sms_account");// 获取配置账号
+        String account = systemConfigService.getValueByKey(OnePassConstants.ONE_PASS_ACCESS_KEY);// 获取配置账号
         if (StrUtil.isBlank(account)) {
             return Boolean.FALSE;
         }
-        String token = systemConfigService.getValueByKey("sms_token"); //获取配置密码
+        String token = systemConfigService.getValueByKey(OnePassConstants.ONE_PASS_SECRET_KEY); //获取配置密码
         if (StrUtil.isBlank(token)) {
             return Boolean.FALSE;
         }
         return Boolean.TRUE;
     }
+
+
+
+
+
+
+
+
+
+    ///////////////////////////////////////////////////// 工具方法
 
     /**
      * 物流、电子面单开通参数校验
@@ -536,19 +471,37 @@ public class OnePassServiceImpl implements OnePassService {
     }
 
     /**
-     * 更新sms配置信息
+     * 配置一号通应用 appid 和 密钥信息
      *
-     * @param account  账号
-     * @param password 密码
-     * @author Mr.Zhang
-     * @since 2020-04-16
+     * @param accessKey  账号
+     * @param secretKey 密码
      */
-    private void setConfigSmsInfo(String account, String password) {
-        boolean accountResult = systemConfigService.updateOrSaveValueByName("sms_account", account);
-        boolean tokenResult = systemConfigService.updateOrSaveValueByName("sms_token", password);
+    private void setConfigSmsInfo(String accessKey, String secretKey) {
+        boolean accountResult = systemConfigService.updateOrSaveValueByName(OnePassConstants.ONE_PASS_ACCESS_KEY, accessKey);
+        boolean tokenResult = systemConfigService.updateOrSaveValueByName(OnePassConstants.ONE_PASS_SECRET_KEY, secretKey);
 
         if (!accountResult || !tokenResult) {
             throw new CrmebException("数据更新失败！");
         }
     }
+
+
+    /**
+     * 获取一号通 应用配置信息
+     * @return 应用配置
+     */
+    private OnePassLoginRequest getConfigSmsInfo() {
+        OnePassLoginRequest onePassLoginRequest = new OnePassLoginRequest();
+        onePassLoginRequest.setAccessKey(systemConfigService.getValueByKey(OnePassConstants.ONE_PASS_ACCESS_KEY));
+        onePassLoginRequest.setSecretKey(systemConfigService.getValueByKey(OnePassConstants.ONE_PASS_SECRET_KEY));
+        return onePassLoginRequest;
+    }
+
+    /**
+     * 一号通 商家发货 获取预置好的回调地址
+     */
+    private void setOnePassShipmentCallbackURL(OnePassShipmentCreateOrderRequest request){
+        request.setCallBackUrl(systemConfigService.getValueByKey(Constants.CONFIG_KEY_API_URL) + OnePassConstants.ONE_PASS_API_SHIPMENT_CALLBACK_URI);
+    }
+
 }

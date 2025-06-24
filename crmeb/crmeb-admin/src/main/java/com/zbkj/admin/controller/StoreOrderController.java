@@ -3,6 +3,7 @@ package com.zbkj.admin.controller;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.*;
 import com.zbkj.common.response.*;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.common.vo.ExpressSheetVo;
 import com.zbkj.common.vo.LogisticsResultVo;
 import com.zbkj.service.service.StoreOrderService;
@@ -25,7 +26,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -64,8 +65,9 @@ public class StoreOrderController {
     @RequestMapping(value = "/status/num", method = RequestMethod.GET)
     public CommonResult<StoreOrderCountItemResponse> getOrderStatusNum(
             @RequestParam(value = "dateLimit", defaultValue = "") String dateLimit,
-            @RequestParam(value = "type", defaultValue = "2") @Range(min = 0, max = 2, message = "未知的订单类型") Integer type) {
-        return CommonResult.success(storeOrderService.getOrderStatusNum(dateLimit, type));
+            @RequestParam(value = "type", defaultValue = "2") @Range(min = 0, max = 2, message = "未知的订单类型") Integer type,
+            @RequestParam(value = "orderId", defaultValue = "") String orderNo) {
+        return CommonResult.success(storeOrderService.getOrderStatusNum(dateLimit, type, orderNo));
     }
 
     /**
@@ -137,11 +139,8 @@ public class StoreOrderController {
     @PreAuthorize("hasAuthority('admin:order:send')")
     @ApiOperation(value = "发送货")
     @RequestMapping(value = "/send", method = RequestMethod.POST)
-    public CommonResult<Boolean> send(@RequestBody @Validated StoreOrderSendRequest request) {
-        if (storeOrderService.send(request)) {
-            return CommonResult.success();
-        }
-        return CommonResult.failed();
+    public CommonResult<String> send(@RequestBody @Validated StoreOrderSendRequest request) {
+         return CommonResult.success(storeOrderService.send(request));
     }
 
     /**
@@ -150,7 +149,7 @@ public class StoreOrderController {
     @PreAuthorize("hasAuthority('admin:order:refund')")
     @ApiOperation(value = "退款")
     @RequestMapping(value = "/refund", method = RequestMethod.GET)
-    public CommonResult<Boolean> send(@Validated StoreOrderRefundRequest request) {
+    public CommonResult<Boolean> refund(@Validated StoreOrderRefundRequest request) {
         return CommonResult.success(storeOrderService.refund(request));
     }
 
@@ -258,6 +257,16 @@ public class StoreOrderController {
     @RequestMapping(value = "/sheet/info", method = RequestMethod.GET)
     public CommonResult<ExpressSheetVo> getDeliveryInfo() {
         return CommonResult.success(storeOrderService.getDeliveryInfo());
+    }
+
+    @PreAuthorize("hasAuthority('admin:order:tracking:number:update')")
+    @ApiOperation(value = "更改订单运单号")
+    @RequestMapping(value = "/update/tracking/number", method = RequestMethod.POST)
+    public CommonResult<Boolean> updateTrackingNumber(@RequestBody @Validated StoreOrderSendRequest request) {
+        if (storeOrderService.updateTrackingNumber(request)) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
     }
 
 }

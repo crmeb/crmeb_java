@@ -1,12 +1,12 @@
 package com.zbkj.admin.controller;
 
 import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.response.CommonResult;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.StoreSeckillAddRequest;
 import com.zbkj.common.request.StoreSeckillSearchRequest;
-import com.zbkj.common.response.StoreSeckillResponse;
 import com.zbkj.common.response.StoreProductInfoResponse;
+import com.zbkj.common.response.StoreSeckillResponse;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.service.service.StoreSeckillService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -46,7 +46,7 @@ public class StoreSeckillController {
     @PreAuthorize("hasAuthority('admin:seckill:list')")
     @ApiOperation(value = "分页列表") //配合swagger使用
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<StoreSeckillResponse>>  getList(@Validated StoreSeckillSearchRequest request, @Validated PageParamRequest pageParamRequest) {
+    public CommonResult<CommonPage<StoreSeckillResponse>> getList(@Validated StoreSeckillSearchRequest request, @Validated PageParamRequest pageParamRequest) {
         CommonPage<StoreSeckillResponse> storeSeckillCommonPage =
                 CommonPage.restPage(storeSeckillService.getList(request, pageParamRequest));
         return CommonResult.success(storeSeckillCommonPage);

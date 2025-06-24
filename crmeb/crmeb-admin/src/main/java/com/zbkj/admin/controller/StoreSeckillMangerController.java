@@ -1,11 +1,11 @@
 package com.zbkj.admin.controller;
 
 import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.response.CommonResult;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.StoreSeckillMangerRequest;
 import com.zbkj.common.request.StoreSeckillMangerSearchRequest;
 import com.zbkj.common.response.StoreSeckillManagerResponse;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.service.service.StoreSeckillMangerService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -47,7 +47,7 @@ public class StoreSeckillMangerController {
     @PreAuthorize("hasAuthority('admin:seckill:manger:list')")
     @ApiOperation(value = "分页列表") //配合swagger使用
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<StoreSeckillManagerResponse>>  getList(
+    public CommonResult<CommonPage<StoreSeckillManagerResponse>> getList(
             @Validated StoreSeckillMangerSearchRequest request, @Validated PageParamRequest pageParamRequest) {
         return CommonResult.success(CommonPage.restPage(storeSeckillMangerService.getList(request, pageParamRequest)));
     }
@@ -117,9 +117,9 @@ public class StoreSeckillMangerController {
    @RequestMapping(value = "/update/status/{id}", method = RequestMethod.POST)
    @ApiImplicitParams({
            @ApiImplicitParam(name = "id", value = "商品id", dataType = "int", required = true),
-           @ApiImplicitParam(name = "status", value = "状态", dataType = "boolean", required = true)
+           @ApiImplicitParam(name = "status", value = "状态", dataType = "string", required = true)
    })
-   public CommonResult<Object> updateStatus(@PathVariable(value = "id") Integer id, Boolean status) {
+   public CommonResult<Object> updateStatus(@PathVariable(value = "id") Integer id, String status) {
         return CommonResult.success(storeSeckillMangerService.updateStatus(id,status));
    }
 

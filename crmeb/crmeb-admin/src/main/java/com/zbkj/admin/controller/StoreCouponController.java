@@ -1,13 +1,13 @@
 package com.zbkj.admin.controller;
 
+import com.zbkj.common.model.coupon.StoreCoupon;
 import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.response.CommonResult;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.SearchAndPageRequest;
-import com.zbkj.common.model.coupon.StoreCoupon;
 import com.zbkj.common.request.StoreCouponRequest;
 import com.zbkj.common.request.StoreCouponSearchRequest;
 import com.zbkj.common.response.StoreCouponInfoResponse;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.service.service.StoreCouponService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -48,7 +48,7 @@ public class StoreCouponController {
     @PreAuthorize("hasAuthority('admin:coupon:list')")
     @ApiOperation(value = "分页列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<StoreCoupon>>  getList(@Validated StoreCouponSearchRequest request, @Validated PageParamRequest pageParamRequest) {
+    public CommonResult<CommonPage<StoreCoupon>> getList(@Validated StoreCouponSearchRequest request, @Validated PageParamRequest pageParamRequest) {
         CommonPage<StoreCoupon> storeCouponCommonPage = CommonPage.restPage(storeCouponService.getList(request, pageParamRequest));
         return CommonResult.success(storeCouponCommonPage);
     }
@@ -116,7 +116,7 @@ public class StoreCouponController {
     @RequestMapping(value = "/delete", method = RequestMethod.POST)
     public CommonResult<StoreCouponInfoResponse> delete(@RequestParam Integer id) {
         if (storeCouponService.delete(id)) {
-            return CommonResult.success("删除成功");
+            return CommonResult.success();
         } else {
             return CommonResult.failed("删除失败");
         }

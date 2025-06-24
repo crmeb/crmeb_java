@@ -4,23 +4,26 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUnit;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.zbkj.common.constants.*;
 import com.zbkj.common.exception.CrmebException;
+import com.zbkj.common.model.product.StoreProduct;
+import com.zbkj.common.model.sms.SmsTemplate;
+import com.zbkj.common.model.system.SystemNotification;
+import com.zbkj.common.model.user.*;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.model.bargain.StoreBargain;
 import com.zbkj.common.model.combination.StoreCombination;
 import com.zbkj.common.model.combination.StorePink;
 import com.zbkj.common.model.coupon.StoreCouponUser;
+import com.zbkj.common.model.seckill.StoreSeckill;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.order.StoreOrderInfo;
 import com.zbkj.common.model.product.StoreProductAttrValue;
-import com.zbkj.common.model.seckill.StoreSeckill;
-import com.zbkj.common.model.sms.SmsTemplate;
 import com.zbkj.common.model.system.SystemAdmin;
-import com.zbkj.common.model.system.SystemNotification;
-import com.zbkj.common.model.user.*;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.service.delete.OrderUtils;
 import com.zbkj.service.service.*;
 import org.slf4j.Logger;
@@ -41,7 +44,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -52,6 +55,9 @@ import java.util.stream.Collectors;
 public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
     //日志
     private static final Logger logger = LoggerFactory.getLogger(StoreOrderTaskServiceImpl.class);
+
+    @Autowired
+    private RedisUtil redisUtil;
 
     @Autowired
     private StoreOrderService storeOrderService;
@@ -79,6 +85,9 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
 
     @Autowired
     private StoreCombinationService storeCombinationService;
+
+    @Autowired
+    private UserBillService userBillService;
 
     @Autowired
     private TransactionTemplate transactionTemplate;
@@ -142,15 +151,23 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             * 5、回滚积分
             * */
 
-            //写订单日志
-            storeOrderStatusService.createLog(storeOrder.getId(), "cancel_order", "取消订单");
-            // 退优惠券
-            if (storeOrder.getCouponId() > 0 ) {
-                StoreCouponUser couponUser = couponUserService.getById(storeOrder.getCouponId());
-                couponUser.setStatus(CouponConstants.STORE_COUPON_USER_STATUS_USABLE);
-                couponUserService.updateById(couponUser);
-            }
-            return rollbackStock(storeOrder);
+            Boolean execute = transactionTemplate.execute(e -> {
+                //写订单日志
+                storeOrderStatusService.createLog(storeOrder.getId(), "cancel_order", "取消订单");
+                // 退优惠券
+                if (storeOrder.getCouponId() > 0) {
+                    StoreCouponUser couponUser = couponUserService.getById(storeOrder.getCouponId());
+                    couponUser.setStatus(CouponConstants.STORE_COUPON_USER_STATUS_USABLE);
+                    couponUser.setUpdateTime(DateUtil.date());
+                    couponUserService.updateById(couponUser);
+                }
+                Boolean rollbackStock = rollbackStock(storeOrder);
+                if (!rollbackStock) {
+                    throw new CrmebException("回滚库存失败");
+                }
+                return Boolean.TRUE;
+            });
+            return execute;
         }catch (Exception e){
             return false;
         }
@@ -193,51 +210,60 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             if(null != storeOrder.getSeckillId() && storeOrder.getSeckillId() > 0){
                 // 秒杀只会有一个商品
                 StoreOrderInfo orderInfo = orderInfoList.get(0);
-                StoreSeckill storeSeckill = storeSeckillService.getByIdException(storeOrder.getSeckillId());
+                StoreSeckill storeSeckill = storeSeckillService.getById(storeOrder.getSeckillId());
                 storeSeckillService.operationStock(storeOrder.getSeckillId(), orderInfo.getPayNum(), "add");
-                attrValueService.operationStock(orderInfo.getAttrValueId(), orderInfo.getPayNum(), "add", Constants.PRODUCT_TYPE_SECKILL);
-                storeProductService.operationStock(storeSeckill.getProductId(), orderInfo.getPayNum(), "add");
+                StoreProductAttrValue seckillAttrValue = attrValueService.getByIdAndProductIdAndType(orderInfo.getAttrValueId(), storeSeckill.getId(), Constants.PRODUCT_TYPE_SECKILL);
+                attrValueService.operationStock(seckillAttrValue.getId(), orderInfo.getPayNum(), "add", Constants.PRODUCT_TYPE_SECKILL, seckillAttrValue.getVersion());
+                StoreProduct storeProduct = storeProductService.getById(storeSeckill.getProductId());
+                storeProductService.operationStock(storeProduct.getId(), orderInfo.getPayNum(), "add", storeProduct.getVersion());
                 List<StoreProductAttrValue> attrValueList = attrValueService.getListByProductIdAndType(storeSeckill.getProductId(), Constants.PRODUCT_TYPE_NORMAL);
                 attrValueList.forEach(e -> {
                     if (e.getSuk().equals(orderInfo.getSku())) {
-                        attrValueService.operationStock(e.getId(), orderInfo.getPayNum(), "add", Constants.PRODUCT_TYPE_NORMAL);
+                        attrValueService.operationStock(e.getId(), orderInfo.getPayNum(), "add", Constants.PRODUCT_TYPE_NORMAL, e.getVersion());
                     }
                 });
             } else if (ObjectUtil.isNotNull(storeOrder.getBargainId()) && storeOrder.getBargainId() > 0) { // 砍价商品回滚销量库存
                 StoreOrderInfo orderInfo = orderInfoList.get(0);
-                StoreBargain storeBargain = storeBargainService.getByIdException(storeOrder.getBargainId());
+                StoreBargain storeBargain = storeBargainService.getById(storeOrder.getBargainId());
                 storeBargainService.operationStock(storeBargain.getId(), orderInfo.getPayNum(), "add");
-                attrValueService.operationStock(orderInfo.getAttrValueId(), orderInfo.getPayNum(), "add", Constants.PRODUCT_TYPE_BARGAIN);
-                storeProductService.operationStock(storeBargain.getProductId(), orderInfo.getPayNum(), "add");
+                StoreProductAttrValue bargainAttrValue = attrValueService.getByIdAndProductIdAndType(orderInfo.getAttrValueId(), storeBargain.getId(), Constants.PRODUCT_TYPE_BARGAIN);
+                attrValueService.operationStock(bargainAttrValue.getId(), orderInfo.getPayNum(), "add", Constants.PRODUCT_TYPE_BARGAIN, bargainAttrValue.getVersion());
+                StoreProduct storeProduct = storeProductService.getById(storeBargain.getProductId());
+                storeProductService.operationStock(storeProduct.getId(), orderInfo.getPayNum(), "add", storeProduct.getVersion());
                 List<StoreProductAttrValue> attrValueList = attrValueService.getListByProductIdAndType(storeBargain.getProductId(), Constants.PRODUCT_TYPE_NORMAL);
                 attrValueList.forEach(e -> {
                     if (e.getSuk().equals(orderInfo.getSku())) {
-                        attrValueService.operationStock(e.getId(), orderInfo.getPayNum(), "add", Constants.PRODUCT_TYPE_NORMAL);
+                        attrValueService.operationStock(e.getId(), orderInfo.getPayNum(), "add", Constants.PRODUCT_TYPE_NORMAL, e.getVersion());
                     }
                 });
             } else if (ObjectUtil.isNotNull(storeOrder.getCombinationId()) && storeOrder.getCombinationId() > 0) { // 拼团商品回滚销量库存
                 StoreOrderInfo orderInfo = orderInfoList.get(0);
-                StoreCombination storeCombination = storeCombinationService.getByIdException(storeOrder.getCombinationId());
+                StoreCombination storeCombination = storeCombinationService.getById(storeOrder.getCombinationId());
                 storeCombinationService.operationStock(storeCombination.getId(), orderInfo.getPayNum(), "add");
-                attrValueService.operationStock(orderInfo.getAttrValueId(), orderInfo.getPayNum(), "add", Constants.PRODUCT_TYPE_PINGTUAN);
-                storeProductService.operationStock(storeCombination.getProductId(), orderInfo.getPayNum(), "add");
+                StoreProductAttrValue combinationAttrValue = attrValueService.getByIdAndProductIdAndType(orderInfo.getAttrValueId(), storeCombination.getId(), Constants.PRODUCT_TYPE_PINGTUAN);
+                attrValueService.operationStock(combinationAttrValue.getId(), orderInfo.getPayNum(), "add", Constants.PRODUCT_TYPE_PINGTUAN, combinationAttrValue.getVersion());
+                StoreProduct storeProduct = storeProductService.getById(storeCombination.getProductId());
+                storeProductService.operationStock(storeProduct.getId(), orderInfo.getPayNum(), "add", storeProduct.getVersion());
                 List<StoreProductAttrValue> attrValueList = attrValueService.getListByProductIdAndType(storeCombination.getProductId(), Constants.PRODUCT_TYPE_NORMAL);
                 attrValueList.forEach(e -> {
                     if (e.getSuk().equals(orderInfo.getSku())) {
-                        attrValueService.operationStock(e.getId(), orderInfo.getPayNum(), "add", Constants.PRODUCT_TYPE_NORMAL);
+                        attrValueService.operationStock(e.getId(), orderInfo.getPayNum(), "add", Constants.PRODUCT_TYPE_NORMAL, e.getVersion());
                     }
                 });
-            } else { // 正常商品回滚销量库存
+            }
+            else { // 正常商品回滚销量库存
                 for (StoreOrderInfo orderInfoVo : orderInfoList) {
-                    storeProductService.operationStock(orderInfoVo.getProductId(), orderInfoVo.getPayNum(), "add");
-                    attrValueService.operationStock(orderInfoVo.getAttrValueId(), orderInfoVo.getPayNum(), "add", Constants.PRODUCT_TYPE_NORMAL);
+                    StoreProduct storeProduct = storeProductService.getById(orderInfoVo.getProductId());
+                    storeProductService.operationStock(storeProduct.getId(), orderInfoVo.getPayNum(), "add", storeProduct.getVersion());
+                    StoreProductAttrValue productAttrValue = attrValueService.getById(orderInfoVo.getAttrValueId());
+                    attrValueService.operationStock(productAttrValue.getId(), orderInfoVo.getPayNum(), "add", Constants.PRODUCT_TYPE_NORMAL, productAttrValue.getVersion());
                 }
             }
-        }catch (Exception e){
-//            throw new CrmebException(e.getMessage());
+        } catch (Exception e) {
             logger.error("回滚库存失败，error = " + e.getMessage());
-            return true;
+            return false;
         }
+
         return true;
     }
 
@@ -295,7 +321,9 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             }
         });
         List<UserIntegralRecord> addIntegralList = integralRecordList.stream().filter(e -> ObjectUtil.isNull(e.getId())).collect(Collectors.toList());
-        List<UserIntegralRecord> updateIntegralList = integralRecordList.stream().filter(e -> ObjectUtil.isNotNull(e.getId())).collect(Collectors.toList());
+        List<UserIntegralRecord> updateIntegralList = integralRecordList.stream()
+                .filter(e -> ObjectUtil.isNotNull(e.getId()))
+                .collect(Collectors.toList());
 
         StoreOrder tempOrder = new StoreOrder();
         tempOrder.setId(storeOrder.getId());
@@ -309,6 +337,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
                 //创建、冻结期佣金置为失效状态
                 if (r.getStatus() < BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE) {
                     r.setStatus(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_INVALIDATION);
+                    r.setUpdateTime(DateUtil.date());
                     brokerageRecordList.add(r);
                 }
             });
@@ -319,6 +348,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             storeOrderStatusService.saveRefund(storeOrder.getId(), storeOrder.getRefundPrice(), "成功");
 
             // 更新用户数据
+            user.setUpdateTime(DateUtil.date());
             userService.updateById(user);
 
             // 积分部分
@@ -339,8 +369,12 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             userLevelService.downLevel(user);
 
             // 回滚库存
-            rollbackStock(storeOrder);
+            Boolean rollbackStock = rollbackStock(storeOrder);
+            if (!rollbackStock) {
+                throw new CrmebException("回滚库存失败");
+            }
 
+            tempOrder.setUpdateTime(DateUtil.date());
             storeOrderService.updateById(tempOrder);
 
             // 拼团状态处理
@@ -355,6 +389,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             if (storeOrder.getCouponId() > 0 ) {
                 StoreCouponUser couponUser = couponUserService.getById(storeOrder.getCouponId());
                 couponUser.setStatus(CouponConstants.STORE_COUPON_USER_STATUS_USABLE);
+                couponUser.setUpdateTime(DateUtil.date());
                 couponUserService.updateById(couponUser);
             }
             return Boolean.TRUE;
@@ -396,7 +431,10 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             return Boolean.FALSE;
         }
         storeOrder.setIsDel(true).setIsSystemDel(true);
-        Boolean execute = transactionTemplate.execute(e -> {
+        Boolean execute = false;
+
+        execute = transactionTemplate.execute(e -> {
+            storeOrder.setUpdateTime(DateUtil.date());
             storeOrderService.updateById(storeOrder);
             //写订单日志
             storeOrderStatusService.createLog(storeOrder.getId(), "cancel", "到期未支付系统自动取消");
@@ -404,14 +442,17 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             if (storeOrder.getCouponId() > 0 ) {
                 StoreCouponUser couponUser = couponUserService.getById(storeOrder.getCouponId());
                 couponUser.setStatus(CouponConstants.STORE_COUPON_USER_STATUS_USABLE);
+                couponUser.setUpdateTime(DateUtil.date());
                 couponUserService.updateById(couponUser);
+            }
+            // 回滚库存
+            Boolean rollbackStock = rollbackStock(storeOrder);
+            if (!rollbackStock) {
+                throw new CrmebException("回滚库存失败");
             }
             return Boolean.TRUE;
         });
-        if (execute) {
-            // 回滚库存
-            rollbackStock(storeOrder);
-        }
+
         return execute;
     }
 
@@ -446,16 +487,15 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
                 thawTime = dateTime.getTime();
             }
             record.setThawTime(thawTime);
+            record.setUpdateTime(DateUtil.date());
         }
 
         // 获取积分记录
         List<UserIntegralRecord> integralRecordList = userIntegralRecordService.findListByOrderIdAndUid(storeOrder.getOrderId(), storeOrder.getUid());
+
         logger.info("收货处理积分条数：" + integralRecordList.size());
         List<UserIntegralRecord> userIntegralRecordList = integralRecordList.stream().filter(e -> e.getType().equals(IntegralRecordConstants.INTEGRAL_RECORD_TYPE_ADD)).collect(Collectors.toList());
         for (UserIntegralRecord record : userIntegralRecordList) {
-            if (!record.getStatus().equals(IntegralRecordConstants.INTEGRAL_RECORD_STATUS_CREATE)) {
-                throw new CrmebException(StrUtil.format("订单收货task处理，订单积分记录不是创建状态，id={}", orderId));
-            }
             // 佣金进入冻结期
             record.setStatus(IntegralRecordConstants.INTEGRAL_RECORD_STATUS_FROZEN);
             // 计算解冻时间
@@ -465,6 +505,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
                 thawTime = dateTime.getTime();
             }
             record.setThawTime(thawTime);
+            record.setUpdateTime(DateUtil.date());
         }
 
         Boolean execute = transactionTemplate.execute(e -> {
@@ -529,7 +570,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             temMap.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "您购买的商品已确认收货！");
             temMap.put("keyword1", storeOrder.getOrderId());
             temMap.put("keyword2", "已收货");
-            temMap.put("keyword3", DateUtil.nowDateTimeStr());
+            temMap.put("keyword3", CrmebDateUtil.nowDateTimeStr());
             temMap.put("keyword4", "详情请进入订单查看");
             temMap.put(Constants.WE_CHAT_TEMP_KEY_END, "感谢你的使用。");
             templateMessageService.pushTemplateMessage(notification.getWechatId(), temMap, userToken.getToken());
@@ -554,7 +595,7 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
 //        temMap.put("thing1", storeNameAndCarNumString);
 //        temMap.put("thing5", "您购买的商品已确认收货！");
             temMap.put("character_string6", storeOrder.getOrderId());
-            temMap.put("date5", DateUtil.nowDateTimeStr());
+            temMap.put("date5", CrmebDateUtil.nowDateTimeStr());
             temMap.put("thing2", storeNameAndCarNumString);
             templateMessageService.pushMiniTemplateMessage(notification.getRoutineId(), temMap, userToken.getToken());
         }

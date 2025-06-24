@@ -1,14 +1,15 @@
 package com.zbkj.front.controller;
 
 
-import com.zbkj.common.page.CommonPage;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.common.model.system.SystemUserLevel;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserExperienceRecord;
 import com.zbkj.common.model.user.UserIntegralRecord;
+import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.*;
 import com.zbkj.common.response.*;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.front.service.UserCenterService;
 import com.zbkj.service.service.SystemGroupDataService;
 import com.zbkj.service.service.UserService;
@@ -30,7 +31,7 @@ import java.util.Map;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -299,6 +300,7 @@ public class UserController {
         userService.bindSpread(spreadPid);
         return CommonResult.success();
     }
+
 }
 
 
