@@ -7,19 +7,17 @@
 </template>
 
 <script>
-  import UploadIndex from '@/components/uploadPicture/index.vue'
+import UploadIndex from '@/components/uploadPicture/index.vue';
 
-  export default {
-    name: "index",
-    data(){
-      return {
-        pictureType: 'maintain'
-      }
-    },
-    components: {UploadIndex},
-  }
+export default {
+  name: 'index',
+  data() {
+    return {
+      pictureType: 'maintain',
+    };
+  },
+  components: { UploadIndex },
+};
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

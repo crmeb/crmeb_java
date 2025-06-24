@@ -1,30 +1,34 @@
 <template>
   <div class="components-container">
-    <el-form ref="editPram" :model="editPram" label-width="100px">
-      <el-form-item label="父级">
+    <el-form ref="editPram" :model="editPram" label-width="75px">
+      <el-form-item label="父级：">
         <!--          <span>{{ prent.name}}</span>-->
         <el-cascader
           v-model="editPram.pid"
           :options="allTreeList"
           :props="categoryProps"
           disabled
-          style="width:100%"
+          style="width: 100%"
         />
       </el-form-item>
       <el-form-item
-        label="分类名称"
+        label="分类名称："
         prop="name"
-        :rules="[{ required:true,message:'请输入分类名称',trigger:['blur','change'] }]"
+        :rules="[{ required: true, message: '请输入分类名称', trigger: ['blur', 'change'] }]"
       >
         <el-input v-model="editPram.name" placeholder="分类名称" />
       </el-form-item>
-      <el-form-item label="英文名称" prop="url" :rules="[{required:true,message:'英文名称不能为空',trigger:['blur','change']}]">
+      <el-form-item
+        label="英文名称："
+        prop="url"
+        :rules="[{ required: true, message: '英文名称不能为空', trigger: ['blur', 'change'] }]"
+      >
         <el-input v-model="editPram.url" placeholder="URL" />
       </el-form-item>
-      <el-form-item label="排序">
-        <el-input-number v-model="editPram.sort" :min="1" :max="10" />
+      <el-form-item label="排序：">
+        <el-input-number controls-position="right" v-model="editPram.sort" :min="1" :max="10" />
       </el-form-item>
-      <el-form-item label="状态">
+      <el-form-item label="状态：">
         <el-switch v-model="editPram.status" :active-value="true" :inactive-value="false" />
       </el-form-item>
       <!--        这里的类型是无限极分类的类型不能当做配置分类的类型，使用下面的扩展字段实现原有业务中的类型-->
@@ -42,35 +46,35 @@
       <!--        </el-radio-group>-->
       <!--        &lt;!&ndash;          <el-input type="textarea" v-model="editPram.extra" placeholder="扩展字段"/>&ndash;&gt;-->
       <!--      </el-form-item>-->
-      <el-form-item>
-        <el-button size="mini" type="primary" @click="handlerSubmit('editPram')">确定</el-button>
-        <el-button size="mini" @click="close">取消</el-button>
+      <el-form-item class="dialog-footer-inner">
+        <el-button @click="close">取消</el-button>
+        <el-button type="primary" @click="handlerSubmit('editPram')">确定</el-button>
       </el-form-item>
     </el-form>
   </div>
 </template>
 
 <script>
-import * as categoryApi from '@/api/categoryApi.js'
-import * as selfUtil from '@/utils/ZBKJIutil.js'
-import {Debounce} from '@/utils/validate'
+import * as categoryApi from '@/api/categoryApi.js';
+import * as selfUtil from '@/utils/ZBKJIutil.js';
+import { Debounce } from '@/utils/validate';
 export default {
   // name: "configCategotyEdit"
   props: {
     prent: {
       type: Object,
-      default: 0
+      default: 0,
     },
     isCreate: {
       type: Number,
-      default: 0
+      default: 0,
     },
     editData: {
-      type: Object
+      type: Object,
     },
     allTreeList: {
-      type: Array
-    }
+      type: Array,
+    },
   },
   data() {
     return {
@@ -83,7 +87,7 @@ export default {
         status: true,
         type: this.$constants.categoryType[5].value,
         url: null,
-        id: 0
+        id: 0,
       },
       categoryProps: {
         value: 'id',
@@ -91,61 +95,59 @@ export default {
         children: 'child',
         expandTrigger: 'hover',
         checkStrictly: true,
-        emitPath: false
+        emitPath: false,
       },
-      parentOptions: []
-    }
+      parentOptions: [],
+    };
   },
   mounted() {
-    this.initEditData()
+    this.initEditData();
   },
   methods: {
     close() {
-      this.$emit('hideEditDialog')
+      this.$emit('hideEditDialog');
     },
     initEditData() {
-      this.parentOptions = selfUtil.addTreeListLabelForCasCard(this.allTreeList)
+      this.parentOptions = selfUtil.addTreeListLabelForCasCard(this.allTreeList);
       if (this.isCreate !== 1) {
-        const { id } = this.prent
-        this.editPram.pid = id
+        const { id } = this.prent;
+        this.editPram.pid = id;
       } else {
-        const { extra, name, pid, sort, status, type, url, id } = this.editData
+        const { extra, name, pid, sort, status, type, url, id } = this.editData;
         // this.editPram.extra = extra
-        this.editPram.name = name
-        this.editPram.pid = pid
-        this.editPram.sort = sort
-        this.editPram.status = status
-        this.editPram.type = type
-        this.editPram.url = url
-        this.editPram.id = id
-        this.editPram.extra = extra
+        this.editPram.name = name;
+        this.editPram.pid = pid;
+        this.editPram.sort = sort;
+        this.editPram.status = status;
+        this.editPram.type = type;
+        this.editPram.url = url;
+        this.editPram.id = id;
+        this.editPram.extra = extra;
       }
     },
-    handlerSubmit:Debounce(function(formName) {
+    handlerSubmit: Debounce(function (formName) {
       this.$refs[formName].validate((valid) => {
-        if (!valid) return
-        this.handlerSaveOrUpdate(this.isCreate === 0)
-      })
+        if (!valid) return;
+        this.handlerSaveOrUpdate(this.isCreate === 0);
+      });
     }),
     handlerSaveOrUpdate(isSave) {
       if (isSave) {
-        this.editPram.pid = this.prent.id
-        categoryApi.addCategroy(this.editPram).then(data => {
-          this.$emit('hideEditDialog')
-          this.$message.success('创建分类成功')
-        })
+        this.editPram.pid = this.prent.id;
+        categoryApi.addCategroy(this.editPram).then((data) => {
+          this.$emit('hideEditDialog');
+          this.$message.success('创建分类成功');
+        });
       } else {
-        this.editPram.pid = Array.isArray(this.editPram.pid) ? this.editPram.pid[0] : this.editPram.pid
-        categoryApi.updateCategroy(this.editPram).then(data => {
-          this.$emit('hideEditDialog')
-          this.$message.success('更新分类成功')
-        })
+        this.editPram.pid = Array.isArray(this.editPram.pid) ? this.editPram.pid[0] : this.editPram.pid;
+        categoryApi.updateCategroy(this.editPram).then((data) => {
+          this.$emit('hideEditDialog');
+          this.$message.success('更新分类成功');
+        });
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

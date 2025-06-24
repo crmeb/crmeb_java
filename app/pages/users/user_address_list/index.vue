@@ -1,15 +1,12 @@
 <template>
-	<view>
-		<!-- #ifdef APP-->
-		<view class='status_1'></view>
-		<!-- #endif -->
+	<view :data-theme="theme">
 		<view class='line'>
-			<image src='../../../static/images/line.jpg' v-if="addressList.length"></image>
+			<image :src="urlDomain+'crmebimage/perset/staticImg/line.jpg'" v-if="addressList.length"></image>
 		</view>
 		<view class='address-management' :class='addressList.length < 1 && page > 1 ? "fff":""'>
 			<radio-group class="radio-group" @change="radioChange" v-if="addressList.length">
 				<view class='item borRadius14' v-for="(item,index) in addressList" :key="index">
-					<view class='address' @click='goOrder(item.id)'>
+					<view class='address' @click='goOrder(item)'>
 						<view class='consignee'>收货人：{{item.realName}}<text class='phone'>{{item.phone}}</text></view>
 						<view>收货地址：{{item.province}}{{item.city}}{{item.district}}{{item.detail}}</view>
 					</view>
@@ -36,32 +33,33 @@
 			</view>
 			<view class='noCommodity' v-if="addressList.length < 1 && page > 1">
 				<view class='pictrue'>
-					<image src='../../../static/images/noAddress.png'></image>
+					<image :src="urlDomain+'crmebimage/perset/staticImg/noAddress.png'"></image>
 				</view>
 			</view>
 			<view style='height:120rpx;'></view>
 		</view>
 		<view class='footer acea-row row-between-wrapper'>
+			<!-- #ifdef APP-PLUS -->
+			<view class='addressBnt bg_color on' @click='addAddress'><text
+					class='iconfont icon-tianjiadizhi'></text>添加新地址</view>
+			<!-- #endif -->
 			<!-- #ifdef MP-->
-			<view class='addressBnt bg-color' @click='addAddress'><text class='iconfont icon-tianjiadizhi'></text>添加新地址</view>
-			<view class='addressBnt wxbnt' @click='getWxAddress'><text class='iconfont icon-weixin2'></text>导入微信地址</view>
+			<view class='addressBnt bg_color' @click='addAddress'><text class='iconfont icon-tianjiadizhi'></text>添加新地址
+			</view>
+			<view class='addressBnt wxbnt' @click='getWxAddress'><text class='iconfont icon-weixin2'></text>导入微信地址
+			</view>
 			<!-- #endif -->
 			<!-- #ifdef H5-->
-			
-			<view class='addressBnt bg-color' :class="this.$wechat.isWeixin()?'':'on'" @click='addAddress'><text class='iconfont icon-tianjiadizhi'></text>添加新地址</view>
-			<view v-if="this.$wechat.isWeixin()" class='addressBnt wxbnt' @click='getAddress'><text class='iconfont icon-weixin2'></text>导入微信地址</view>
+			<view class='addressBnt bg_color' :class="this.$wechat.isWeixin()?'':'on'" @click='addAddress'><text
+					class='iconfont icon-tianjiadizhi'></text>添加新地址</view>
+			<view v-if="this.$wechat.isWeixin()" class='addressBnt wxbnt' @click='getAddress'><text
+					class='iconfont icon-weixin2'></text>导入微信地址</view>
 			<!-- #endif -->
-			
-			
-			<!-- #ifdef APP-->
-			<view class='addressBnt on bg-color' @click='addAddress'><text class='iconfont icon-tianjiadizhi'></text>添加新地址</view>
-			<!-- #endif -->
-			
 		</view>
 		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
+		<atModel v-if="locationStatus" :locationType="true" @closeModel="modelCancel" @confirmModel="confirmModel"
+			:content="locationContent"></atModel>
 		<!-- #endif -->
-		<home></home>
 	</view>
 </template>
 
@@ -76,22 +74,18 @@
 	import {
 		toLogin
 	} from '@/libs/login.js';
+	import atModel from '@/components/accredit/index.vue';
 	import {
 		mapGetters
 	} from "vuex";
-	// #ifdef MP
-	import authorize from '@/components/Authorize';
-	// #endif
-	import home from '@/components/home';
+	let app = getApp();
 	export default {
 		components: {
-			// #ifdef MP
-			authorize,
-			// #endif
-			home
+			atModel
 		},
 		data() {
 			return {
+				urlDomain: this.$Cache.get("imgHost"),
 				addressList: [],
 				cartId: '',
 				pinkId: 0,
@@ -101,32 +95,28 @@
 				loadTitle: '加载更多',
 				page: 1,
 				limit: 20,
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
 				bargain: false, //是否是砍价
 				combination: false, //是否是拼团
 				secKill: false, //是否是秒杀
+				theme: app.globalData.theme,
+				locationContent: '授权位置信息，提供完整服务',
+				locationStatus: false
 			};
 		},
 		computed: mapGetters(['isLogin']),
-		watch:{
-			isLogin:{
-				handler:function(newV,oldV){
-					if(newV){
+		watch: {
+			isLogin: {
+				handler: function(newV, oldV) {
+					if (newV) {
 						this.getUserAddress(true);
 					}
 				},
-				deep:true
+				deep: true
 			}
 		},
 		onLoad(options) {
 			if (this.isLogin) {
 				this.preOrderNo = options.preOrderNo || 0;
-				// this.pinkId = options.pinkId || 0;
-				// this.couponId = options.couponId || 0;
-				// this.secKill = options.secKill || false;
-				// this.combination = options.combination || false;
-				// this.bargain = options.bargain || false;
 				this.getAddressList(true);
 			} else {
 				toLogin();
@@ -137,12 +127,22 @@
 			that.getAddressList(true);
 		},
 		methods: {
-			onLoadFun: function() {
-				this.getAddressList();
+			modelCancel() {
+				this.locationStatus = false;
 			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
+			confirmModel() {
+				uni.getLocation({
+					type: 'gcj02',
+					altitude: true,
+					geocode: true,
+					success: function(res) {
+						try {
+							uni.setStorageSync('user_latitude', res.latitude);
+							uni.setStorageSync('user_longitude', res.longitude);
+						} catch {}
+					}
+				});
+				this.locationStatus = false;
 			},
 			/*
 			 * 导入微信地址（小程序）
@@ -161,7 +161,7 @@
 								addressP.cityId = 0;
 								editAddress({
 									address: addressP,
-									isDefault: true,
+									isDefault: false,
 									realName: res.userName,
 									postCode: res.postalCode,
 									phone: res.telNumber,
@@ -169,12 +169,13 @@
 									id: 0
 									//type: 1//区别城市id（导入微信地址无城市id需要后台自己查找）;
 								}).then(res => {
-									that.$util.Tips({
-										title: "添加成功",
-										icon: 'success'
-									}, function() {
+									setTimeout(() => {
 										that.getAddressList(true);
-									});
+										that.$util.Tips({
+											title: "添加成功",
+											icon: 'success'
+										});
+									}, 0)
 								}).catch(err => {
 									return that.$util.Tips({
 										title: err
@@ -182,9 +183,10 @@
 								});
 							},
 							fail: function(res) {
-								if (res.errMsg == 'chooseAddress:cancel') return that.$util.Tips({
-									title: '取消选择'
-								});
+								if (res.errMsg == 'chooseAddress:cancel') return that.$util
+									.Tips({
+										title: '取消选择'
+									});
 							},
 						})
 					},
@@ -227,16 +229,16 @@
 							},
 							detail: userInfo.detailInfo,
 							postCode: userInfo.postalCode,
-							isDefault: true
+							isDefault: false,
 						})
 						.then(() => {
-							that.$util.Tips({
-								title: "添加成功",
-								icon: 'success'
-							}, function() {
-								// close();
+							setTimeout(() => {
 								that.getAddressList(true);
-							});
+								that.$util.Tips({
+									title: "添加成功",
+									icon: 'success'
+								});
+							}, 0)
 						})
 						.catch(err => {
 							// close();
@@ -244,6 +246,10 @@
 								title: err || "添加失败"
 							});
 						});
+				}).catch(err => {
+					that.$util.Tips({
+						title: err.errMsg || "添加失败"
+					});
 				});
 			},
 			/**
@@ -270,7 +276,7 @@
 					that.addressList = that.$util.SplitArray(list, that.addressList);
 					that.$set(that, 'addressList', that.addressList);
 					that.loadend = loadend;
-					that.loadTitle = loadend ? '我也是有底线的' : '加载更多';
+					that.loadTitle = loadend ? '我也是有底线的~' : '加载更多';
 					that.page = that.page + 1;
 					that.loading = false;
 				}).catch(err => {
@@ -316,8 +322,10 @@
 				this.pinkId = '';
 				this.couponId = '';
 				uni.navigateTo({
-					url: '/pages/users/user_address/index?id=' + id + '&cartId=' + cartId + '&pinkId=' + pinkId + '&couponId=' +
-						couponId + '&secKill' + this.secKill + '&combination=' + this.combination + '&bargain=' + this.bargain
+					url: '/pages/users/user_address/index?id=' + id + '&cartId=' + cartId + '&pinkId=' +
+						pinkId + '&couponId=' +
+						couponId + '&secKill' + this.secKill + '&combination=' + this.combination +
+						'&bargain=' + this.bargain
 				})
 			},
 			/**
@@ -329,19 +337,31 @@
 				if (address == undefined) return that.$util.Tips({
 					title: '您删除的地址不存在!'
 				});
-				delAddress(address.id).then(res => {
-					that.$util.Tips({
-						title: '删除成功',
-						icon: 'success'
-					}, function() {
-						that.addressList.splice(index, 1);
-						that.$set(that, 'addressList', that.addressList);
-					});
-				}).catch(err => {
-					return that.$util.Tips({
-						title: err
-					});
-				});
+				uni.showModal({
+					content: '确定删除该地址',
+					cancelText: "取消", // 取消按钮的文字  
+					confirmText: "确定", // 确认按钮文字  
+					showCancel: true, // 是否显示取消按钮，默认为 true
+					confirmColor: '#f55850',
+					success: (res) => {
+						if (res.confirm) {
+							delAddress(address.id).then(res => {
+								that.addressList.splice(index, 1);
+								that.$set(that, 'addressList', that.addressList);
+								that.$util.Tips({
+									title: '删除成功',
+									icon: 'success'
+								});
+							}).catch(err => {
+								return that.$util.Tips({
+									title: err
+								});
+							});
+						} else {
+
+						}
+					},
+				})
 			},
 			/**
 			 * 新增地址
@@ -357,13 +377,14 @@
 					url: '/pages/users/user_address/index?preOrderNo=' + this.preOrderNo
 				})
 			},
-			goOrder: function(id) {
-				if(this.preOrderNo){
+			goOrder: function(item) {
+				if (this.preOrderNo) {
 					uni.redirectTo({
-						url: '/pages/users/order_confirm/index?is_address=1&preOrderNo=' + this.preOrderNo + '&addressId=' +  id 
+						url: '/pages/order/order_confirm/index?is_address=1&preOrderNo=' + this.preOrderNo +
+							'&addressId=' + item.id
 					})
 				}
-			}
+			},
 		},
 		onReachBottom: function() {
 			this.getAddressList();
@@ -372,23 +393,30 @@
 </script>
 
 <style lang="scss" scoped>
-	.address-management{
+	.address-management {
 		padding: 20rpx 30rpx;
 	}
+
 	.address-management.fff {
 		background-color: #fff;
 		height: 1300rpx
 	}
 
+	.bg_color {
+		@include main_bg_color(theme);
+	}
+
 	.line {
 		width: 100%;
 		height: 3rpx;
+
 		image {
 			width: 100%;
 			height: 100%;
 			display: block;
 		}
 	}
+
 	.address-management .item {
 		background-color: #fff;
 		padding: 0 20rpx;
@@ -434,7 +462,7 @@
 		font-size: 38rpx;
 	}
 
-	 .footer {
+	.footer {
 		position: fixed;
 		width: 100%;
 		background-color: #fff;
@@ -444,7 +472,7 @@
 		box-sizing: border-box;
 	}
 
-    .footer .addressBnt {
+	.footer .addressBnt {
 		width: 330rpx;
 		height: 76rpx;
 		border-radius: 50rpx;
@@ -454,24 +482,28 @@
 		color: #fff;
 	}
 
-	 .footer .addressBnt.on {
+	.footer .addressBnt.on {
 		width: 690rpx;
 		margin: 0 auto;
 	}
 
-	 .footer .addressBnt .iconfont {
+	.footer .addressBnt .iconfont {
 		font-size: 35rpx;
 		margin-right: 8rpx;
 		vertical-align: -1rpx;
 	}
 
-	 .footer .addressBnt.wxbnt {
-		background-color: #fe960f;
+	.footer .addressBnt.wxbnt {
+		@include left_color(theme);
 	}
-	.status_1{
-		display: flex;
-		width: 750rpx;
-		// background-color: #E93323;
-		height: var(--status-bar-height);
+
+	/deep/ radio .wx-radio-input.wx-radio-input-checked {
+		@include main_bg_color(theme);
+		@include coupons_border_color(theme);
+	}
+
+	/deep/ radio .uni-radio-input.uni-radio-input-checked {
+		@include main_bg_color(theme);
+		border: none !important;
 	}
 </style>

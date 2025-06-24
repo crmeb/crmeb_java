@@ -1,59 +1,69 @@
-let callbacks = []
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
+let callbacks = [];
 
 function loadedTinymce() {
   // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2144
   // check is successfully downloaded script
-  return window.tinymce
+  return window.tinymce;
 }
 
 const dynamicLoadScript = (src, callback) => {
-  const existingScript = document.getElementById(src)
-  const cb = callback || function() {}
+  const existingScript = document.getElementById(src);
+  const cb = callback || function () {};
 
   if (!existingScript) {
-    const script = document.createElement('script')
-    script.src = src // src url for the third-party library being loaded.
-    script.id = src
-    document.body.appendChild(script)
-    callbacks.push(cb)
-    const onEnd = 'onload' in script ? stdOnEnd : ieOnEnd
-    onEnd(script)
+    const script = document.createElement('script');
+    script.src = src; // src url for the third-party library being loaded.
+    script.id = src;
+    document.body.appendChild(script);
+    callbacks.push(cb);
+    const onEnd = 'onload' in script ? stdOnEnd : ieOnEnd;
+    onEnd(script);
   }
 
   if (existingScript && cb) {
     if (loadedTinymce()) {
-      cb(null, existingScript)
+      cb(null, existingScript);
     } else {
-      callbacks.push(cb)
+      callbacks.push(cb);
     }
   }
 
   function stdOnEnd(script) {
-    script.onload = function() {
+    script.onload = function () {
       // this.onload = null here is necessary
       // because even IE9 works not like others
-      this.onerror = this.onload = null
+      this.onerror = this.onload = null;
       for (const cb of callbacks) {
-        cb(null, script)
+        cb(null, script);
       }
-      callbacks = null
-    }
-    script.onerror = function() {
-      this.onerror = this.onload = null
-      cb(new Error('Failed to load ' + src), script)
-    }
+      callbacks = null;
+    };
+    script.onerror = function () {
+      this.onerror = this.onload = null;
+      cb(new Error('Failed to load ' + src), script);
+    };
   }
 
   function ieOnEnd(script) {
-    script.onreadystatechange = function() {
-      if (this.readyState !== 'complete' && this.readyState !== 'loaded') return
-      this.onreadystatechange = null
+    script.onreadystatechange = function () {
+      if (this.readyState !== 'complete' && this.readyState !== 'loaded') return;
+      this.onreadystatechange = null;
       for (const cb of callbacks) {
-        cb(null, script) // there is no way to catch loading errors in IE8
+        cb(null, script); // there is no way to catch loading errors in IE8
       }
-      callbacks = null
-    }
+      callbacks = null;
+    };
   }
-}
+};
 
-export default dynamicLoadScript
+export default dynamicLoadScript;

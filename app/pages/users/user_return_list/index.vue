@@ -14,29 +14,23 @@
 							<view class='name line1'>{{items.storeName}}</view>
 							<view class='num'>x {{items.cartNum}}</view>
 						</view>
-						<view class='attr line1' v-if="items.suk">{{items.suk}}</view>
-						<view class='attr line1' v-else>{{items.storeName}}</view>
+						<view class='attr line1' v-if="items.sku">{{items.sku}}</view>
 						<view class='money'>￥{{items.price}}</view>
 					</view>
 				</view>
-				<view class='totalSum'>共{{item.totalNum || 0}}件商品，总金额 <text class='font-color price'>￥{{item.payPrice}}</text></view>
+				<view class='totalSum'>共{{item.totalNum || 0}}件商品，总金额 <text class=' price'>￥{{item.payPrice}}</text></view>
 			</view>
 		</view>
 		<view class='loadingicon acea-row row-center-wrapper' v-if="orderList.length">
 			<text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>{{loadTitle}}
 		</view>
-		<view v-if="orderList.length == 0">
+		<view v-if="orderList.length == 0 && !loading">
 			<emptyPage title="暂无订单~"></emptyPage>
 		</view>
-		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
-		<!-- #endif -->
-		<home></home>
 	</view>
 </template>
 
 <script>
-	import home from '@/components/home';
 	import emptyPage from '@/components/emptyPage.vue'
 	import {
 		getOrderList
@@ -47,16 +41,9 @@
 	import {
 		mapGetters
 	} from "vuex";
-	// #ifdef MP
-	import authorize from '@/components/Authorize';
-	// #endif
 	export default {
 		components: {
-			emptyPage,
-			home,
-			// #ifdef MP
-			authorize
-			// #endif
+			emptyPage
 		},
 		data() {
 			return {
@@ -66,9 +53,7 @@
 				orderList: [], //订单数组
 				orderStatus: -3, //订单状态
 				page: 1,
-				limit: 20,
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false //是否隐藏授权
+				limit: 20
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -96,13 +81,6 @@
 			this.getOrderList();
 		},
 		methods: {
-			onLoadFun() {
-				this.getOrderList();
-			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
-			},
 			/**
 			 * 去订单详情
 			 */
@@ -111,7 +89,7 @@
 					title: '缺少订单号无法查看订单详情'
 				});
 				uni.navigateTo({
-					url: '/pages/order_details/index?order_id=' + order_id + '&isReturen=1'
+					url: '/pages/order/order_details/index?order_id=' + order_id + '&isReturen=1'
 				})
 			},
 
@@ -135,7 +113,7 @@
 					that.$set(that,'orderList',that.orderList);
 					that.loadend = loadend;
 					that.loading = false;
-					that.loadTitle = loadend ? "我也是有底线的" : '加载更多';
+					that.loadTitle = loadend ? "我也是有底线的~" : '加载更多';
 					that.page = that.page + 1;
 				}).catch(err => {
 					that.loading = false;
@@ -176,6 +154,7 @@
 	.return-list .goodWrapper .totalSum .price {
 		font-size: 28rpx;
 		font-weight: bold;
+		@include price_color(theme);
 	}
 
 	.return-list .goodWrapper .iconfont {

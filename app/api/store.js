@@ -1,3 +1,14 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
+
 import request from "@/utils/request.js";
 
 /**
@@ -81,6 +92,16 @@ export function getCategoryList() {
  */
 export function getProductslist(data) {
 	return request.get('products', data, {
+		noAuth: true
+	});
+}
+
+/**
+ * 商品列表(个别分类模型使用)
+ * @param object data
+ */
+export function productList(data) {
+	return request.get('product/list', data, {
 		noAuth: true
 	});
 }
@@ -175,7 +196,9 @@ export function storeListApi(data) {
  * @param object data
  */
 export function getProductGood() {
-	return request.get('product/good',{},{ noAuth : true});
+	return request.get('product/good',{},{
+		noAuth: true
+	});
 }
 
 /**
@@ -185,7 +208,24 @@ export function getProductGood() {
  * 
  */
 export function getReplyProduct(id) {
-	return request.get('reply/product/' + id, {},{
+	return request.get('reply/product/' + id,{}, {
 		noAuth: true
 	})
+}
+
+/**
+ * 获取商品的sku
+ * @returns {*}
+ */
+export function getAttr(id) {
+  return request.get("product/sku/detail/" + id);
+}
+/**
+ * 根据商品id集合查询对应商品
+ * @param {string} ids
+ */
+export function productByidsApi(ids) {
+	return request.get(`product/byids/${ids}`,{}, {
+		noAuth: true
+	});
 }

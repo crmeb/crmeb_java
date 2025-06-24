@@ -5,9 +5,9 @@
 			<view class="info-box">
 				<image :src="logoUrl"></image>
 				<view class="title">获取授权</view>
-				<view class="txt">获取微信的手机号授权</view>
+				<view class="txt">获取手机号授权</view>
 			</view>
-			<button class="sub_btn" open-type="getPhoneNumber" @getphonenumber="getphonenumber">获取微信手机号</button>
+			<button class="sub_btn" open-type="getPhoneNumber" @getphonenumber="getphonenumber">获取手机号</button>
 		</view>
 	</view>
 </template>
