@@ -1,6 +1,6 @@
 <template>
 	<view class="empty-box">
-		<image src="../static/images/empty-box.png"></image>
+		<image :src="urlDomain+'crmebimage/perset/staticImg/empty-box.png'"></image>
 		<view class="txt">{{title}}</view>
 	</view>
 </template>
@@ -13,6 +13,11 @@
 				default: '暂无记录',
 			},
 		},
+		data(){
+			return{
+				urlDomain: this.$Cache.get("imgHost"),
+			}
+		}
 	}
 	
 </script>

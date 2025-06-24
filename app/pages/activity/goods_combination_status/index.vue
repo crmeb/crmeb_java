@@ -1,13 +1,14 @@
 <template>
+	<div :data-theme="theme">
 	<div class="group-con">
 		<div class="header acea-row row-between-wrapper">
-			<div class="pictrue"><img :src="storeCombination.image" /></div>
+			<div class="pictrue"><image :src="storeCombination.image" /></div>
 			<div class="text">
 				<div class="line1" v-text="storeCombination.title"></div>
-				<div class="money">
+				<div class="money font_price">
 					￥
 					<span class="num" v-text="storeCombination.price || 0"></span>
-					<span class="team cart-color">{{storeCombination.people +'人拼'}}</span>
+					<span class="team cart-color">{{storeCombination.people?storeCombination.people:0 }}人拼</span>
 				</div>
 			</div>
 			<div v-if="pinkBool === -1" class="iconfont icon-pintuanshibai"></div>
@@ -30,14 +31,15 @@
 			<div class="list acea-row row-middle"
 				:class="[pinkBool === 1 || pinkBool === -1 ? 'result' : '', iShidden ? 'on' : '']">
 				<div class="pinkT">
-					<div class="pictrue"><img :src="pinkT.avatar" /></div>
+					<div class="pictrue"><image :src="pinkT.avatar" /></div>
 					<div class="chief">团长</div>
 				</div>
 				<block v-if="pinkAll.length > 0">
-					<div class="pictrue" v-for="(item, index) in pinkAll" :key="index"><img :src="item.avatar" /></div>
+					<div class="pictrue" v-for="(item, index) in pinkAll" :key="index"><image :src="item.avatar" /></div>
 				</block>
-				<div class="pictrue" v-for="index in count" :key="index"><img class="img-none"
-						src="/static/images/vacancy.png" /></div>
+				<div class="pictrue" v-for="index in count" :key="index">
+					<image class="img-none" :src="urlDomain+'crmebimage/perset/activityImg/vacancy.png'" />
+				</div>
 			</div>
 			<div v-if="(pinkBool === 1 || pinkBool === -1) && count > 9" class="lookAll acea-row row-center-wrapper"
 				@click="lookAll">
@@ -80,20 +82,33 @@
 			<div class="list acea-row row-middle">
 				<div class="item" v-for="(item, index) in storeCombinationHost" :key="index" @click="goDetail(item.id)">
 					<div class="pictrue">
-						<img :src="item.image" />
+						<image :src="item.image" />
 						<div class="team" v-text="item.people + '人团'"></div>
 					</div>
 					<div class="name line1" v-text="item.title"></div>
-					<div class="money font-color-red" v-text="'￥' + item.price"></div>
+					<div class="money font_price" v-text="'￥' + item.price"></div>
 				</div>
 			</div>
 		</div>
-		<product-window :attr="attr" :limitNum="1" :iSbnt="1" @myevent="onMyEvent" @ChangeAttr="ChangeAttr"
+		<product-window :attr="attr" :onceNum="onceNum" :limitNum="1" :iSbnt="1" @myevent="onMyEvent" @ChangeAttr="ChangeAttr"
 			@ChangeCartNum="ChangeCartNum" @iptCartNum="iptCartNum" @attrVal="attrVal" @goCat="goPay"></product-window>
+		<!-- 分享按钮 -->
+		<view class="generate-posters acea-row row-middle" :class="posters ? 'on' : ''"> 
+			<!-- #ifdef APP-PLUS -->
+			<view class="item" @click="appShare('WXSceneSession')">
+				<view class="iconfont icon-weixin3"></view>
+				<view class="">微信好友</view>
+			</view>
+			<view class="item" @click="appShare('WXSenceTimeline')">
+				<view class="iconfont icon-pengyouquan"></view>
+				<view class="">微信朋友圈</view>
+			</view>
+			<!-- #endif -->
+		</view>
 		<view class="mask" v-if="posters || canvasStatus" @click="listenerActionClose"></view>
 		<!-- 发送给朋友图片 -->
 		<view class="share-box" v-if="H5ShareBox">
-			<image src="/static/images/share-info.png" @click="H5ShareBox = false"></image>
+			<image :src="urlDomain+'crmebimage/perset/staticImg/share-info.png'" @click="H5ShareBox = false"></image>
 		</view>
 		<!-- 海报展示 -->
 		<view class='poster-pop' v-if="canvasStatus">
@@ -111,17 +126,16 @@
 			<canvas canvas-id="qrcode" :style="{width: `${qrcodeSize}px`, height: `${qrcodeSize}px`}"
 				style="opacity: 0;" />
 		</view>
-
-		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
-		<!-- #endif -->
-		<home></home>
+		</div>
 	</div>
 </template>
 <script>
 	import CountDown from '@/components/countDown';
 	import ProductWindow from '@/components/productWindow';
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js';
+	import {
+		tokenIsExistApi
+	} from '@/api/api.js';
 	import {
 		imageBase64
 	} from "@/api/public";
@@ -139,25 +153,26 @@
 	import {
 		postCartAdd
 	} from '@/api/store';
-	// #ifdef MP
-	import authorize from '@/components/Authorize';
+	// #ifdef APP-PLUS
+	import {
+		HTTP_H5_URL
+	} from '@/config/app.js';
 	// #endif
-	import home from '@/components/home';
 	const NAME = 'GroupRule';
+	import {
+		silenceBindingSpread
+	} from "@/utils";
 	const app = getApp();
 	export default {
 		name: NAME,
 		components: {
 			CountDown,
-			ProductWindow,
-			home,
-			// #ifdef MP
-			authorize
-			// #endif
+			ProductWindow
 		},
 		props: {},
 		data: function() {
 			return {
+				urlDomain: this.$Cache.get("imgHost"),
 				bgColor: {
 					'bgColor': '#333333',
 					'Color': '#fff',
@@ -171,7 +186,7 @@
 				userBool: 0, //判断当前用户是否在团内|0=未在,1=在
 				pinkAll: [], //团员
 				pinkT: [], //团长信息
-				storeCombination: {}, //拼团产品
+				storeCombination: null, //拼团产品
 				storeCombinationHost: [], //拼团推荐
 				pinkId: 0,
 				count: 0, //拼团剩余人数
@@ -210,20 +225,23 @@
 				PromotionCode: '', //二维码
 				canvasStatus: false,
 				imgTop: '', //商品图base64位
-				imagePath: '' // 海报图片
+				imagePath: '', // 海报图片
+				theme:app.globalData.theme,
+				vacancyPic: require('../static/vacancy.png'),
+				tokenIsExist: app.globalData.tokenIsExist ,//登录是否失效
+				openPages: '' //分享链接
 			};
 		},
 		watch: {
-			userData: {
+			isLogin: {
 				handler: function(newV, oldV) {
 					if (newV) {
-						this.userInfo = newV;
-						app.globalData.openPages = '/pages/activity/goods_combination_status/index?id=' + this.pinkId +
-							"&spread=" + this.uid;
+						this.getCombinationPink();
+						if(parseInt(app.globalData.spread)>0)silenceBindingSpread()
 					}
 				},
 				deep: true
-			}
+			},
 		},
 		computed: mapGetters({
 			'isLogin': 'isLogin',
@@ -231,21 +249,40 @@
 			'uid': 'uid'
 		}),
 		onLoad(options) {
-			var that = this;
-			that.pinkId = options.id;
-			if (that.isLogin == false) {
-				toLogin();
-			} else {
+			this.loadend = false;
+			this.loading = false;
+			this.combinationMore();
+			this.$set(this,'theme',this.$Cache.get('theme'));
+			this.pinkId = options.id;
+			if(options.spread) app.globalData.spread = options.spread;
+			switch (this.theme) {
+				case 'theme1':
+					this.posterbackgd = require('../images/bargain_post1.png')  // 因为跨域不能使用网络图片，
+					break;
+				case 'theme2':
+					this.posterbackgd = require('../images/bargain_post2.png') 
+					break;
+				case 'theme3':
+					this.posterbackgd = require('../images/bargain_post3.png') 
+					break;
+				case 'theme4':
+					this.posterbackgd = require('../images/bargain_post4.png') 
+					break;
+				case 'theme5':
+					this.posterbackgd = require('../images/bargain_post5.png') 
+					break;
+			}
+			if (this.isLogin) {
 				this.timestamp = (new Date()).getTime();
 				this.getCombinationPink();
+				if(parseInt(app.globalData.spread)>0)silenceBindingSpread()
+			}else{
+				this.$Cache.set('login_back_url',
+					`/pages/activity/goods_combination_status/index?id=${options.id}&spread=${app.globalData.spread?app.globalData.spread:0}`
+				);
+				toLogin();
 			}
 		},
-		onShow() {},
-		mounted: function() {
-			this.combinationMore();
-		},
-		// link: window.location.protocol + '//' + window.location.host +
-		// 	'/pages/activity/goods_combination_status/index?id=' + that.pinkId + "&spread=" + this.uid,
 		//#ifdef MP
 		/**
 		 * 用户点击右上角分享
@@ -254,12 +291,53 @@
 			let that = this;
 			return {
 				title: '您的好友' + that.userInfo.nickname + '邀请您参团' + that.storeCombination.title,
-				path: app.globalData.openPages,
+				path: that.openPages,
 				imageUrl: that.storeCombination.image
 			};
 		},
 		//#endif
 		methods: {
+			//校验token是否有效,true为有效，false为无效
+			getTokenIsExist() {
+				//校验token是否有效,true为有效，false为无效
+				this.$LoginAuth.getTokenIsExist().then(data => {
+						this.combinationMore();
+					if (data) {
+						this.timestamp = (new Date()).getTime();
+						this.getCombinationPink();
+						silenceBindingSpread()
+					}else{
+						toLogin();
+					}
+				});
+			},
+			// app分享
+			// #ifdef APP-PLUS
+			appShare(scene) {
+				let that = this
+				let routes = getCurrentPages(); // 获取当前打开过的页面路由数组
+				let curRoute = routes[routes.length - 1].$page.fullPath // 获取当前页面路由，也就是最后一个打开的页面路由
+				uni.share({
+					provider: "weixin",
+					scene: scene,
+					type: 0,
+					href: `${HTTP_H5_URL}${curRoute}`,
+					title: '您的好友' + that.userInfo.nickname + '邀请您参团' + that.storeCombination.title,
+					imageUrl: that.storeCombination.image,
+					success: function(res) {
+						that.posters = false;
+					},
+					fail: function(err) {
+						uni.showToast({
+							title: '分享失败',
+							icon: 'none',
+							duration: 2000
+						})
+						that.posters = false;
+					}
+				});
+			},
+			// #endif
 			// 分享关闭
 			listenerActionClose: function() {
 				this.posters = false;
@@ -292,16 +370,6 @@
 							title: res
 						});
 					});
-			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e;
-			},
-			// 授权后回调
-			onLoadFun: function(e) {
-				this.userInfo = e;
-				app.globalData.openPages = '/pages/activity/goods_combination_status/index?id=' + this.pinkId;
-				this.getCombinationPink();
 			},
 			/**
 			 * 购物车手动填写
@@ -364,9 +432,13 @@
 				}
 			},
 			ChangeCartNum: function(res) {
-				//changeValue:是否 加|减
 				//获取当前变动属性
 				let productSelect = this.productValue[this.attrValue];
+				if (this.onceNum === productSelect.cart_num) {
+					return this.$util.Tips({
+						title: `该商品每次限购${this.onceNum}${this.storeCombination.unitName}`
+					});
+				}
 				if (this.cart_num) {
 					productSelect.cart_num = this.cart_num;
 					this.attr.productSelect.cart_num = this.cart_num;
@@ -534,11 +606,15 @@
 					});
 				}
 				//#endif
+
+				//#ifdef APP-PLUS
+				this.posters = true;
+				//#endif
 			},
 			goOrder: function() {
 				var that = this;
 				uni.navigateTo({
-					url: '/pages/order_details/index?order_id=' + that.currentPinkOrder
+					url: '/pages/order/order_details/index?order_id=' + that.currentPinkOrder
 				});
 			},
 			//拼团列表
@@ -588,6 +664,8 @@
 				var that = this;
 				getCombinationPink(that.pinkId)
 					.then(res => {
+						that.openPages = '/pages/activity/goods_combination_status/index?id=' + that.pinkId +
+							"&spread=" + that.uid;	
 						let storeCombination = res.data.storeCombination;
 						res.data.pinkT.stop_time = parseInt(res.data.pinkT.stopTime);
 						that.$set(that, 'storeCombination', storeCombination);
@@ -639,7 +717,7 @@
 							'onMenuShareTimeline'
 						], configTimeline)
 						.then(res => {
-							console.log(res);
+							
 						})
 						.catch(res => {
 							if (res.is_ready) {
@@ -679,6 +757,37 @@
 	};
 </script>
 <style lang="scss" scoped>
+	.generate-posters {
+		width: 100%;
+		height: 170rpx;
+		background-color: #fff;
+		position: fixed;
+		left: 0;
+		bottom: 0;
+		z-index: 300;
+		transform: translate3d(0, 100%, 0);
+		transition: all 0.3s cubic-bezier(0.25, 0.5, 0.5, 0.9);
+		border-top: 1rpx solid #eee;
+	}
+	
+	.generate-posters.on {
+		transform: translate3d(0, 0, 0);
+	}
+	
+	.generate-posters .item {
+		flex: 1;
+		text-align: center;
+		font-size: 30rpx;
+	}
+	
+	.generate-posters .item .iconfont {
+		font-size: 80rpx;
+		color: #5eae72;
+	}
+	
+	.generate-posters .item .iconfont.icon-haibao {
+		color: #5391f1;
+	}
 	.pinkT {
 		position: relative;
 
@@ -686,7 +795,7 @@
 			position: absolute;
 			width: 72rpx;
 			height: 30rpx;
-			background-color: #E93323;
+			@include main_bg_color(theme);
 			border-radius: 15rpx;
 			font-size: 20rpx;
 			line-height: 30rpx;
@@ -696,7 +805,9 @@
 			color: #fff;
 		}
 	}
-
+	.bg-color-red{
+		@include main_bg_color(theme);
+	}
 	.canvas {
 		position: fixed;
 		opacity: 0;
@@ -745,11 +856,11 @@
 	
 	/*开团*/
 	.group-con .header {
-		width: 100%;
 		height: 186rpx;
 		background-color: #fff;
 		border-top: 1px solid #f5f5f5;
-		padding: 0 30rpx;
+		margin: 20rpx 30rpx 0;
+		border-radius: 14rpx;
 		position: relative;
 	}
 
@@ -766,7 +877,7 @@
 		height: 140rpx;
 	}
 
-	.group-con .header .pictrue img {
+	.group-con .header .pictrue image {
 		width: 100%;
 		height: 100%;
 		border-radius: 6rpx;
@@ -795,16 +906,20 @@
 		font-size: 20rpx;
 		vertical-align: 4rpx;
 		margin-left: 15rpx;
+		@include main_color(theme);
+		@include coupons_border_color(theme);
 	}
 
 	.group-con .wrapper {
 		background-color: #fff;
-		margin-top: 20rpx;
-		padding: 2rpx 0 35rpx 0;
+		margin: 20rpx 30rpx 0;
+		border-radius: 14rpx;
+		padding-bottom: 20rpx;
 	}
 
 	.group-con .wrapper .title {
 		margin-top: 30rpx;
+		padding-top: 30rpx;
 	}
 
 	.group-con .wrapper .title .line {
@@ -866,14 +981,14 @@
 		margin: 0 0 29rpx 35rpx;
 	}
 
-	.group-con .wrapper .list .pictrue img {
+	.group-con .wrapper .list .pictrue image {
 		width: 100%;
 		height: 100%;
 		border-radius: 50%;
-		border: 2rpx solid #e93323;
+		@include coupons_border_color(theme);
 	}
 
-	.group-con .wrapper .list .pictrue img.img-none {
+	.group-con .wrapper .list .pictrue image.img-none {
 		border: none;
 	}
 
@@ -897,6 +1012,7 @@
 		line-height: 86rpx;
 		color: #fff;
 		margin: 21rpx auto 0 auto;
+		
 	}
 
 	.group-con .wrapper .cancel,
@@ -905,6 +1021,7 @@
 		font-size: 24rpx;
 		color: #282828;
 		padding-top: 30rpx;
+		padding-bottom:30rpx;
 	}
 
 	.group-con .wrapper .cancel .iconfont {
@@ -922,7 +1039,8 @@
 
 	.group-con .group-recommend {
 		background-color: #fff;
-		margin-top: 25rpx;
+		margin: 20rpx 30rpx 0;
+		border-radius: 14rpx;
 	}
 
 	.group-con .group-recommend .title {
@@ -948,17 +1066,17 @@
 	}
 
 	.group-con .group-recommend .list .item {
-		width: 210rpx;
+		width: 190rpx;
 		margin: 0 0 25rpx 30rpx;
 	}
 
 	.group-con .group-recommend .list .item .pictrue {
 		width: 100%;
-		height: 210rpx;
+		height: 190rpx;
 		position: relative;
 	}
 
-	.group-con .group-recommend .list .item .pictrue img {
+	.group-con .group-recommend .list .item .pictrue image {
 		width: 100%;
 		height: 100%;
 		border-radius: 10rpx;
@@ -975,9 +1093,7 @@
 		border-radius: 0 18rpx 18rpx 0;
 		font-size: 20rpx;
 		color: #fff;
-		background-image: linear-gradient(to right, #fb5445 0%, #e93323 100%);
-		background-image: -webkit-linear-gradient(to right, #fb5445 0%, #e93323 100%);
-		background-image: -moz-linear-gradient(to right, #fb5445 0%, #e93323 100%);
+		@include main_bg_color(theme);
 	}
 
 	.group-con .group-recommend .list .item .name {
@@ -1003,5 +1119,8 @@
 			width: 100%;
 			height: 100%;
 		}
+	}
+	.font_price{
+		@include price_color(theme);
 	}
 </style>

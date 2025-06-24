@@ -1,36 +1,36 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import request from '@/utils/request'
+import request from '@/utils/request';
 
 export function login(data) {
   return request({
     url: '/admin/login',
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 export function getInfo(token) {
   return request({
     url: '/admin/getAdminInfoByToken',
     method: 'get',
-    params: { token }
-  })
+    params: { token },
+  });
 }
 
 export function logout() {
   return request({
     url: '/admin/logout',
-    method: 'get'
-  })
+    method: 'get',
+  });
 }
 
 /**
@@ -41,8 +41,8 @@ export function userListApi(params) {
   return request({
     url: `/admin/user/list`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -54,20 +54,20 @@ export function userUpdateApi(params, data) {
     url: `/admin/user/update`,
     method: 'post',
     params,
-    data
-  })
+    data,
+  });
 }
 
 /**
  * 会员管理等级 修改
  * @param pram
  */
- export function userLevelUpdateApi( data) {
+export function userLevelUpdateApi(data) {
   return request({
     url: `/admin/user/update/level`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -78,8 +78,8 @@ export function userInfoApi(params) {
   return request({
     url: `/admin/user/info`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -90,8 +90,8 @@ export function infobyconditionApi(params) {
   return request({
     url: `/admin/user/infobycondition`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -102,8 +102,8 @@ export function topdetailApi(params) {
   return request({
     url: `/admin/user/topdetail`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -114,8 +114,8 @@ export function groupPiApi(params) {
   return request({
     url: `/admin/user/group`,
     method: 'post',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -126,8 +126,8 @@ export function tagPiApi(params) {
   return request({
     url: `/admin/user/tag`,
     method: 'post',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -138,8 +138,8 @@ export function foundsApi(params) {
   return request({
     url: `/admin/user/operate/founds`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -150,8 +150,8 @@ export function userDeleteApi(params) {
   return request({
     url: `/admin/user/delete`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -161,8 +161,8 @@ export function userDeleteApi(params) {
 export function levelListApi() {
   return request({
     url: `/admin/system/user/level/list`,
-    method: 'get'
-  })
+    method: 'get',
+  });
 }
 
 /**
@@ -173,21 +173,21 @@ export function levelSaveApi(data) {
   return request({
     url: `/admin/system/user/level/save`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 /**
  * 会员等级 编辑
  *  @param pram
  */
- export function levelUpdateApi(params, data) {
+export function levelUpdateApi(params, data) {
   return request({
     url: `/admin/system/user/level/update/${params}`,
     method: 'post',
     // params,
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -198,19 +198,19 @@ export function levelInfoApi(params) {
   return request({
     url: `/admin/system/user/level/info`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
  * 会员等级 删除
  * @param pram
  */
- export function levelDeleteApi(id) {
+export function levelDeleteApi(id) {
   return request({
     url: `/admin/system/user/level/delete/${id}`,
-    method: 'post'
-  })
+    method: 'post',
+  });
 }
 
 /**
@@ -221,8 +221,8 @@ export function levelUseApi(data) {
   return request({
     url: `/admin/system/user/level/use`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -233,8 +233,8 @@ export function tagListApi(params) {
   return request({
     url: `/admin/user/tag/list`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -245,8 +245,8 @@ export function tagSaveApi(data) {
   return request({
     url: `/admin/user/tag/save`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -258,8 +258,8 @@ export function tagUpdateApi(params, data) {
     url: `/admin/user/tag/update`,
     method: 'post',
     params,
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -270,8 +270,8 @@ export function tagInfoApi(params) {
   return request({
     url: `/admin/user/tag/info`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -282,8 +282,8 @@ export function tagDeleteApi(params) {
   return request({
     url: `/admin/user/tag/delete`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -294,8 +294,8 @@ export function groupListApi(params) {
   return request({
     url: `/admin/user/group/list`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -306,8 +306,8 @@ export function groupSaveApi(data) {
   return request({
     url: `/admin/user/group/save`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -319,8 +319,8 @@ export function groupUpdateApi(params, data) {
     url: `/admin/user/group/update`,
     method: 'post',
     params,
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -331,8 +331,8 @@ export function groupInfoApi(params) {
   return request({
     url: `/admin/user/group/info`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -343,8 +343,8 @@ export function groupDeleteApi(params) {
   return request({
     url: `/admin/user/group/delete`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -353,8 +353,8 @@ export function groupDeleteApi(params) {
 export function getLoginPicApi() {
   return request({
     url: `/admin/getLoginPic`,
-    method: 'get'
-  })
+    method: 'get',
+  });
 }
 
 /**
@@ -363,8 +363,8 @@ export function getLoginPicApi() {
 export function captchaApi() {
   return request({
     url: `/admin/validate/code/get`,
-    method: 'get'
-  })
+    method: 'get',
+  });
 }
 
 /**
@@ -374,8 +374,8 @@ export function updateSpreadApi(data) {
   return request({
     url: `/admin/user/update/spread`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -385,6 +385,17 @@ export function updatePhoneApi(params) {
   return request({
     url: `/admin/user/update/phone`,
     method: 'get',
-    params
-  })
+    params,
+  });
+}
+
+/**
+ * 查询是否需要开启图形验证码
+ * @returns {*}
+ */
+export function captchaconfigApi() {
+  return request({
+    url: `/admin/validate/code/getcaptchaconfig`,
+    method: 'get',
+  });
 }

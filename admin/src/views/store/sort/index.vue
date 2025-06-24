@@ -5,17 +5,15 @@
 </template>
 
 <script>
-  import categoryList from '@/components/Category/list'
-  export default {
-    components: { categoryList },
-    data() {
-      return {
-        constants: this.$constants
-      }
-    }
-  }
+import categoryList from '@/components/Category/list';
+export default {
+  components: { categoryList },
+  data() {
+    return {
+      constants: this.$constants,
+    };
+  },
+};
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

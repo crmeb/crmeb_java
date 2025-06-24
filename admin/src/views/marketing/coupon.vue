@@ -1,15 +1,9 @@
 <template>
-  <div>
-    营销
-  </div>
+  <div>营销</div>
 </template>
 
 <script>
-export default {
-
-}
+export default {};
 </script>
 
-<style lang="sass" scoped>
-
-</style>
+<style lang="sass" scoped></style>

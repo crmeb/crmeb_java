@@ -1,24 +1,37 @@
 <template>
-	<view class="appBox">
-		<div class="shading">
-			<image :src="logoUrl" v-if="logoUrl" />
-			<image src="/static/images/logo2.png" v-else />
-		</div>
-		<mobileLogin :isUp="isUp" :isShow="isShow" :platform="platform" :isPos="isPos" :appleShow="appleShow" :authKey="authKey" @wechatPhone="wechatPhone"></mobileLogin>
+	<view class="wrapper" :data-theme="theme">
+		<view class="bag"></view>
+		<view class="system-height" :style="{height:statusBarHeight}"></view>
+		<!-- #ifdef MP -->
+		<view class="title-bar" style="height: 43px;">
+			<view class="icon" @click="back" v-if="!isHome">
+				<image class="img" :src="urlDomain+'crmebimage/perset/usersImg/left.png'"></image>
+			</view>
+			<view class="icon" @click="home" v-else>
+				<image class="img" :src="urlDomain+'crmebimage/perset/usersImg/home.png'"></image>
+			</view>
+			账户登录
+		</view>
+		<!-- #endif -->
+		<view class="appBox">
+			<view class="phone_name">绑定手机号</view>
+			<view class="phone_tips">登录注册需绑定手机号</view>
+			<mobileLogin :isUp="isUp" :isShow="isShow" :platform="platform" :isPos="isPos" :appleShow="appleShow"
+				:authKey="authKey" @wechatPhone="wechatPhone" :wxCode="wxCode"></mobileLogin>
+		</view>
 	</view>
 </template>
 
 <script>
 	const app = getApp();
+	let statusBarHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
 	import sendVerifyCode from "@/mixins/SendVerifyCode";
 	import Routine from '@/libs/routine';
 	import {
 		loginMobile,
 		registerVerify,
 		getCodeApi,
-		getUserInfo,
-		phoneSilenceAuth,
-		phoneWxSilenceAuth
+		getUserInfo
 	} from "@/api/user";
 	import {
 		bindingPhone
@@ -27,10 +40,13 @@
 		getUserPhone
 	} from '@/api/public';
 	import mobileLogin from '@/components/login_mobile/index.vue'
+
 	export default {
 		name: 'login_mobile',
 		data() {
 			return {
+				urlDomain: this.$Cache.get("imgHost"),
+				theme: app.globalData.theme,
 				options: '',
 				keyCode: '',
 				account: '',
@@ -41,8 +57,9 @@
 				isShow: false,
 				isPos: false,
 				platform: '', // 手机平台
-				appleShow: '' //是否是苹果登录
-				
+				appleShow: '', //是否是苹果登录
+				statusBarHeight: statusBarHeight,
+				wxCode: '' //小程序code值
 			}
 		},
 		components: {
@@ -70,10 +87,21 @@
 			that.options = options
 			if (options.authKey) that.authKey = options.authKey
 			if (options.appleShow) that.appleShow = options.appleShow
+			if (options.code) that.wxCode = options.code
 		},
 		methods: {
+			// 返回
+			back() {
+				uni.navigateBack();
+			},
+			// 跳入首页
+			home() {
+				uni.switchTab({
+					url: '/pages/index/index'
+				})
+			},
 			wechatPhone() {
-			this.$Cache.clear('snsapiKey');
+				this.$Cache.clear('snsapiKey');
 				if (this.options.back_url) {
 					let url = uni.getStorageSync('snRouter');
 					url = url.indexOf('/pages/index/index') != -1 ? '/' : url;
@@ -129,28 +157,6 @@
 			close() {
 				this.$emit('close', false)
 			},
-			// #ifdef MP
-			phoneSilenceAuth(code) {
-				let self = this
-				phoneSilenceAuth({
-					code: code,
-					spid: app.globalData.spid,
-					spread: app.globalData.code,
-					phone: this.account,
-					captcha: this.codeNum
-				}).then(res => {
-					this.$store.commit('LOGIN', {
-						token: res.data.token
-					});
-					this.$store.commit("SETUID", res.data.uid);
-					this.getUserInfo();
-				}).catch(error => {
-					self.$util.Tips({
-						title: error
-					})
-				})
-			},
-			// #endif
 			/**
 			 * 获取个人用户信息
 			 */
@@ -180,17 +186,76 @@
 
 <style>
 	page {
+		background: #fff;
 		height: 100%;
 	}
 </style>
 <style lang="scss" scoped>
+	.wrapper {
+		background: #fff;
+		height: 100%;
+		position: relative;
+
+		.bag {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 750rpx;
+			height: 460rpx;
+			@include logn-gradient(theme);
+		}
+	}
+
+	.title-bar {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 36rpx;
+	}
+
+	.icon {
+		position: absolute;
+		left: 30rpx;
+		top: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 86rpx;
+		height: 86rpx;
+
+		.img {
+			width: 50rpx;
+			height: 50rpx;
+		}
+	}
+
+	.phone {
+		&_name {
+			padding: 0 72rpx;
+			font-size: 48rpx;
+			font-weight: 500;
+			color: #333333;
+			line-height: 68rpx;
+			margin-bottom: 16rpx;
+		}
+
+		&_tips {
+			font-size: 28rpx;
+			font-weight: 400;
+			color: #333333;
+			line-height: 40rpx;
+			padding: 0 72rpx;
+		}
+	}
+
 	.appBox {
 		background-color: #fff;
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
 		overflow: hidden;
+		margin-top: 146rpx;
 	}
 
 	.shading {

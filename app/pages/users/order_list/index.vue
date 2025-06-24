@@ -1,5 +1,5 @@
 <template>
-	<view>
+	<view :data-theme="theme">
 		<view class='my-order'>
 			<view class='header bg-color'>
 				<view class='picTxt acea-row row-between-wrapper'>
@@ -40,18 +40,9 @@
 						<view class='title acea-row row-between-wrapper'>
 							<view class="acea-row row-middle">
 								<text class="sign cart-color acea-row row-center-wrapper" v-if="item.activityType !== '普通' && item.activityType !== '核销'">{{item.activityType}}</text>
-								<!-- <text class="sign cart-color acea-row row-center-wrapper" v-if="item.bargainId != 0">砍价</text>
-								<text class="sign cart-color acea-row row-center-wrapper" v-else-if="item.storeOrder.combinationId != 0">拼团</text>
-								<text class="sign cart-color acea-row row-center-wrapper" v-else-if="item.storeOrder.seckillId != 0">秒杀</text> -->
 								<view>{{item.createTime}}</view>
 							</view>
 							<view class='font-color'>{{item.orderStatus}}</view>
-							<!-- <view v-if="item.status?item.status.type == 0:0" class='font-color'>待付款</view>
-							<view v-else-if="item.status?item.status.type == 1:0 && item.storeOrder.shippingType==1" class='font-color'>待发货</view>
-							<view v-else-if="item.status?item.status.type == 2:0 && item.storeOrder.shippingType==1" class='font-color'>待收货</view>
-							<view v-else-if="item.status?item.status.type == 3:0 && item.storeOrder.shippingType==1" class='font-color'>待评价</view>
-							<view v-else-if="item.status?item.status.type == 4:0 && item.storeOrder.shippingType==1" class='font-color'>已完成</view>
-							<view v-else-if="item.storeOrder.shippingType==2" class='font-color'>待核销</view> -->
 						</view>
 						<view class='item-info acea-row row-between row-top' v-for="(items,index) in item.orderInfoList" :key="index">
 							<view class='pictrue'>
@@ -76,16 +67,6 @@
 						<view class='bnt bg-color' v-else-if="item.status==2" @click='goOrderDetails(item.orderId)'>去评价</view>
 						<view class='bnt cancelBnt' v-if="item.status == 3" @click='delOrder(item.id,index)'>删除订单</view>
 					</view>
-					<!-- <view class='bottom acea-row row-right row-middle'>
-						<view class='bnt cancelBnt' v-if="item.status?item.status.type==0:0 || item.status?item.status.type == 9:0" @click='cancelOrder(index,item.id)'>取消订单</view>
-						<view class='bnt bg-color' v-if="item.status?item.status.type == 0:0" @click='goPay(item.payPrice,item.orderId)'>立即付款</view>
-						<view class='bnt bg-color' v-else-if="item.status?item.status.type == 1:0 || item.status?item.status.type == 9:0" @click='goOrderDetails(item.orderId)'>查看详情</view>
-						<view class='bnt bg-color' v-else-if="item.status?item.status.type == 2:0 && item.status.deliveryType" @click='goOrderDetails(item.orderId)'>查看详情</view>
-						<view class='bnt bg-color' v-else-if="item.status?item.status.type == 3:0" @click='goOrderDetails(item.orderId)'>去评价</view>
-						<view class='bnt bg-color' v-else-if="item.storeOrder.seckillId < 1 && item.storeOrder.bargainId < 1 && item.storeOrder.combinationId < 1 && item.status?item.status.type == 4:0"
-						 @click='goOrderDetails(item.orderId)'>再次购买</view>
-						<view class='bnt cancelBnt' v-if="item.status?item.status.type == 4:0" @click='delOrder(item.id,index)'>删除订单</view>
-					</view> -->
 				</view>
 			</view>
 			<view class='loadingicon acea-row row-center-wrapper' v-if="orderList.length>0">
@@ -126,18 +107,13 @@
 	import {
 		mapGetters
 	} from "vuex";
-	// #ifdef MP
-	import authorize from '@/components/Authorize';
-	// #endif
 	import emptyPage from '@/components/emptyPage.vue'
+	let app = getApp();
 	export default {
 		components: {
 			payment,
 			home,
 			emptyPage,
-			// #ifdef MP
-			authorize
-			// #endif
 		},
 		data() {
 			return {
@@ -162,12 +138,13 @@
 						title: '可用余额:',
 						number: 0
 					}
-				],
+				], 
 				pay_close: false,
 				pay_order_id: '',
 				totalPrice: '0',
 				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false //是否隐藏授权
+				isShowAuth: false ,//是否隐藏授权
+				theme:app.globalData.theme,
 			};
 		},
 		computed: mapGetters(['isLogin', 'userInfo']),
@@ -297,7 +274,7 @@
 				openOrderSubscribe().then(() => {
 					uni.hideLoading();
 					uni.navigateTo({
-						url: '/pages/order_details/index?order_id=' + order_id
+						url: '/pages/order/order_details/index?order_id=' + order_id
 					})
 				}).catch(() => {
 					uni.hideLoading();
@@ -305,7 +282,7 @@
 				// #endif  
 				// #ifndef MP
 				uni.navigateTo({
-					url: '/pages/order_details/index?order_id=' + order_id
+					url: '/pages/order/order_details/index?order_id=' + order_id
 				})
 				// #endif
 			},
@@ -458,9 +435,11 @@
 	.my-order .list .item .title .sign {
 		font-size: 24rpx;
 		padding: 0 13rpx;
-		height: 36rpx;
+		height: 40rpx;
 		margin-right: 15rpx;
 		border-radius: 18rpx;
+		@include coupons_border_color(theme);
+		@include main_color(theme);
 	}
 
 	.my-order .list .item .item-info {
@@ -547,4 +526,7 @@
 		width: 100%;
 		height: 100%;
 	}
+	// .bg-color {
+	// 	@include main_bg_color(theme);
+	// }
 </style>

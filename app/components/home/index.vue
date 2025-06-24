@@ -10,8 +10,8 @@
 				<view class="pictrue">
 					<image :src="
               homeActive === true
-                ? '/static/images/close.gif'
-                : '/static/images/open.gif'
+                ? `${urlDomain}crmebimage/perset/staticImg/close.gif`
+                : `${urlDomain}/crmebimage/perset/staticImg/open.gif`
             "
 					 class="image" />
 				</view>
@@ -28,6 +28,7 @@
 		props: {},
 		data: function() {
 			return {
+				urlDomain: this.$Cache.get("imgHost"),
 				top: "500"
 			};
 		},
@@ -53,7 +54,7 @@
 	};
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 	.pictrueBox {
 		width: 130rpx;
 		height: 120rpx;
@@ -86,7 +87,8 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		background: #f44939 !important;
+		/* background: #f44939 !important; */
+		@include main_bg_color(theme);
 	}
 
 	.home .homeCon .iconfont {
@@ -104,6 +106,7 @@
 	}
 
 	.home .pictrue .image {
+		@include main_bg_color(theme);
 		width: 100%;
 		height: 100%;
 		border-radius: 50%;

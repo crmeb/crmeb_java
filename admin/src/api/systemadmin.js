@@ -1,50 +1,50 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import request from '@/utils/request'
+import request from '@/utils/request';
 
 export function getMenu() {
   return request({
     url: '/admin/system/role/testMenu',
-    method: 'GET'
-  })
+    method: 'GET',
+  });
 }
 
 export function adminDel(pram) {
   const data = {
-    id: pram.id
-  }
+    id: pram.id,
+  };
   return request({
     url: '/admin/system/admin/delete',
     method: 'GET',
-    params: data
-  })
+    params: data,
+  });
 }
 
 export function adminInfo(pram) {
   const data = {
-    id: pram.id
-  }
+    id: pram.id,
+  };
   return request({
     url: '/admin/system/admin/info',
     method: 'GET',
-    params: data
-  })
+    params: data,
+  });
 }
 
 export function adminList(params) {
   return request({
     url: '/admin/system/admin/list',
     method: 'GET',
-    params
-  })
+    params,
+  });
 }
 
 export function adminAdd(pram) {
@@ -55,31 +55,31 @@ export function adminAdd(pram) {
     realName: pram.realName,
     roles: pram.roles.join(','),
     status: pram.status,
-    phone: pram.phone
-  }
+    phone: pram.phone,
+  };
   return request({
     url: '/admin/system/admin/save',
     method: 'POST',
-    data: data
-  })
+    data: data,
+  });
 }
 
 export function adminUpdate(pram) {
   const data = {
     account: pram.account,
-    level: pram.level,
+    phone: pram.phone,
     pwd: pram.pwd,
-    roles:pram.roles,
+    roles: pram.roles,
     realName: pram.realName,
     status: pram.status,
     id: pram.id,
-    isDel: pram.isDel
-  }
+    isDel: pram.isDel,
+  };
   return request({
     url: '/admin/system/admin/update',
     method: 'POST',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -90,8 +90,8 @@ export function updateStatusApi(params) {
   return request({
     url: `/admin/system/admin/updateStatus`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -102,84 +102,84 @@ export function updateIsSmsApi(params) {
   return request({
     url: `/admin/system/admin/update/isSms`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
  * 权限规则菜单列表
  * @param pram
  */
- export function menuListApi(params) {
+export function menuListApi(params) {
   const data = {
     menuType: params.menuType, //菜单类型:M-目录，C-菜单，A-按钮
     name: params.name, //菜单名称
-  }
+  };
   return request({
     url: `/admin/system/menu/list`,
     method: 'get',
-    params:data
-  })
+    params: data,
+  });
 }
 
 /**
  * 权限规则新增菜单
  * @param data
  */
- export function menuAdd(data) {
+export function menuAdd(data) {
   let systemMenuRequest = data;
   return request({
     url: `/admin/system/menu/add`,
     method: 'post',
-    data:systemMenuRequest
-  })
+    data: systemMenuRequest,
+  });
 }
 
 /**
  * 权限规则删除菜单
  * @param data
  */
- export function menuDelete(id) {
+export function menuDelete(id) {
   return request({
     url: `/admin/system/menu/delete/${id}`,
     method: 'post',
-  })
+  });
 }
 
 /**
  * 权限规则菜单详情
  * @param data
  */
- export function menuInfo(id) {
+export function menuInfo(id) {
   return request({
     url: `/admin/system/menu/info/${id}`,
     method: 'get',
-  })
+  });
 }
 
 /**
  * 权限规则菜单修改
  * @param data
  */
- export function menuUpdate(data) {
+export function menuUpdate(data) {
   let systemMenuRequest = data;
   return request({
     url: `/admin/system/menu/update`,
     method: 'post',
-    data:systemMenuRequest
-  })
+    data: systemMenuRequest,
+  });
 }
 
 /**
  * 权限规则修改菜单显示状态
  * @param data
  */
- export function menuUpdateShowStatus(params) {
+export function menuUpdateShowStatus(params) {
   return request({
     url: `/admin/system/menu/updateShowStatus`,
     method: 'post',
-    params
-  })
+    params,
+  });
 }
 
 //
@@ -187,10 +187,32 @@ export function updateIsSmsApi(params) {
  * 权限规则菜单详情
  * @param data
  */
- export function sensitiveListApi(params) {
+export function sensitiveListApi(params) {
   return request({
     url: `/admin/log/sensitive/list`,
     method: 'get',
-    params
-  })
+    params,
+  });
+}
+/**
+ * 修改登录用户信息
+ * @param data
+ */
+export function adminNameUpdateApi(data) {
+  return request({
+    url: `/admin/login/admin/update`,
+    method: 'post',
+    data,
+  });
+}
+/**
+ * 修改登录密码
+ * @param data
+ */
+export function adminPwdUpdateApi(data) {
+  return request({
+    url: `/admin/login/update/password`,
+    method: 'post',
+    data,
+  });
 }
