@@ -2,18 +2,19 @@ package com.zbkj.common.response;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * StoreSeckillMsnsgerResponse
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -32,17 +33,17 @@ public class StoreSeckillManagerResponse {
     // 秒杀状态【仅仅前端用】 killStatus 1=即将开始 0=关闭 2=进行中 -1=已结束
     public String getStatusName() {
         String _statusName = null;
-        int currentHour = DateUtil.getCurrentHour();
-        if(status == 1 && currentHour < startTime){
+        int currentHour = CrmebDateUtil.getCurrentHour();
+        if(Objects.equals(status, "'1'") && currentHour < startTime){
             _statusName = "即将开始";
         }
-        else if(status == 0) {
+        else if(Objects.equals(status, "'0'")) {
             _statusName = "关闭";
         }
-        else if(status == 1 && currentHour < endTime) {
+        else if(Objects.equals(status, "'1'") && currentHour < endTime) {
             _statusName = "进行中";
         }
-        else if(status == 1 && currentHour >= endTime) {
+        else if(Objects.equals(status, "'1'") && currentHour >= endTime) {
             _statusName = "已结束";
         }
         return _statusName;
@@ -50,21 +51,22 @@ public class StoreSeckillManagerResponse {
 
     public Integer getKillStatus() {
         Integer _killStatus = null;
-        if(status == 1 && DateUtil.getCurrentHour() < startTime){
+        if(Objects.equals(status, "'1'") && CrmebDateUtil.getCurrentHour() < startTime){
             _killStatus = 1;
         }
-        else if(status == 0) {
+        else if(Objects.equals(status, "'0'")) {
             _killStatus = 0;
         }
-        else if(status == 1 && DateUtil.getCurrentHour() >= startTime
-                && DateUtil.getCurrentHour() < endTime) {
+        else if(Objects.equals(status, "'1'") && CrmebDateUtil.getCurrentHour() >= startTime
+                && CrmebDateUtil.getCurrentHour() < endTime) {
             _killStatus = 2;
         }
-        else if(status == 1 && DateUtil.getCurrentHour() >= endTime) {
+        else if(Objects.equals(status, "'1'") && CrmebDateUtil.getCurrentHour() >= endTime) {
             _killStatus = -1;
         }
         return _killStatus;
     }
+
 
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
@@ -93,7 +95,7 @@ public class StoreSeckillManagerResponse {
     private Integer sort;
 
     @ApiModelProperty(value = "状态 0=关闭 1=开启")
-    private Integer status;
+    private String status;
 
     @ApiModelProperty(value = "创建时间")
     private Date createTime;
@@ -106,4 +108,5 @@ public class StoreSeckillManagerResponse {
 
     @ApiModelProperty(value = "秒杀状态String 未开始/进行中/活动已结束")
     private String statusName;
+
 }

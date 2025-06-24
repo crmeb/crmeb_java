@@ -15,14 +15,14 @@ import com.zbkj.common.response.UserBillResponse;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.zbkj.common.utils.DateUtil;
-import com.zbkj.common.vo.dateLimitUtilVo;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.request.FundsMonitorRequest;
 import com.zbkj.common.request.FundsMonitorSearchRequest;
 import com.zbkj.common.response.MonitorResponse;
 import com.zbkj.common.request.StoreOrderRefundRequest;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserBill;
+import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.service.dao.UserBillDao;
 import com.zbkj.service.service.UserBillService;
 import org.apache.commons.lang3.StringUtils;
@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -70,7 +70,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
         if (request.getSort() == null) {
             queryWrapper.orderByDesc("create_time");
         }else{
-            if ("asc".equals(request.getSort())) {
+            if (request.getSort().equals("asc")) {
                 queryWrapper.orderByAsc("number");
             }else{
                 queryWrapper.orderByDesc("number");
@@ -101,9 +101,9 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
 
         //时间范围
         if (StringUtils.isNotBlank(request.getDateLimit())) {
-            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
             //判断时间
-            int compareDateResult = DateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), Constants.DATE_FORMAT);
+            int compareDateResult = CrmebDateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), Constants.DATE_FORMAT);
             if (compareDateResult == -1) {
                 throw new CrmebException("开始时间不能大于结束时间！");
             }
@@ -123,7 +123,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
 
         //关联id
         if (StringUtils.isNotBlank(request.getLinkId())) {
-            if ("gt".equals(request.getLinkId())) {
+            if (request.getLinkId().equals("gt")) {
                 queryWrapper.ne("link_id", 0);
             }else{
                 queryWrapper.eq("link_id", request.getLinkId());
@@ -172,7 +172,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
             queryWrapper.eq("type", type);
         }
         if (null != date) {
-            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(date);
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(date);
             queryWrapper.between("create_time", dateLimit.getStartTime(), dateLimit.getEndTime());
         }
         List<UserBill> userBills = dao.selectList(queryWrapper);
@@ -216,7 +216,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
         }
         //时间范围
         if (StrUtil.isNotBlank(request.getDateLimit())) {
-            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
             map.put("startTime", dateLimit.getStartTime());
             map.put("endTime", dateLimit.getEndTime());
         }

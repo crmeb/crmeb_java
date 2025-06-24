@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -170,8 +170,8 @@ public class SmsServiceImpl implements SmsService {
         }
         OnePassLoginVo loginVo = onePassUtil.getLoginVo();
         SendSmsVo smsVo = new SendSmsVo();
-        smsVo.setUid(loginVo.getAccount());
-        smsVo.setToken(loginVo.getSecret());
+        smsVo.setUid(loginVo.getAccessKey());
+        smsVo.setToken(loginVo.getSecretKey());
         smsVo.setMobile(phone);
         smsVo.setTemplate(msgTempId);
         smsVo.setParam(JSONObject.toJSONString(mapPram));
@@ -179,7 +179,7 @@ public class SmsServiceImpl implements SmsService {
     }
 
     /**
-     * 添加待发送消息到redis队列
+     * 组装发送对象
      *
      * @param phone     手机号
      * @param tempKey   模板key
@@ -192,8 +192,8 @@ public class SmsServiceImpl implements SmsService {
         }
         OnePassLoginVo loginVo = onePassUtil.getLoginVo();
         SendSmsVo smsVo = new SendSmsVo();
-        smsVo.setUid(loginVo.getAccount());
-        smsVo.setToken(loginVo.getSecret());
+        smsVo.setUid(loginVo.getAccessKey());
+        smsVo.setToken(loginVo.getSecretKey());
         smsVo.setMobile(phone);
         smsVo.setTemplate(msgTempId);
         smsVo.setParam(JSONObject.toJSONString(mapPram));
@@ -231,6 +231,7 @@ public class SmsServiceImpl implements SmsService {
         param.add("temp_type", 0);// 查询所有类型模板
         JSONObject post = postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_TEMP_LIST_URI, param, header);
         JSONObject jsonObject = post.getJSONObject("data");
+        logger.warn("短信模板响应JsonObject = {}", jsonObject);
         JSONArray jsonArray = jsonObject.getJSONArray("data");
         MyRecord myRecord = new MyRecord();
         if (CollUtil.isEmpty(jsonArray)) {
@@ -253,7 +254,7 @@ public class SmsServiceImpl implements SmsService {
             return record;
         }).collect(Collectors.toList());
 
-        myRecord.set("count", recordList.size());
+        myRecord.set("count", jsonObject.getInteger("count"));
         myRecord.set("data", recordList);
         return myRecord;
     }
@@ -344,7 +345,9 @@ public class SmsServiceImpl implements SmsService {
         if (smsObject.getInteger("num") <= 0) {
             throw new CrmebException("一号通账号服务余量不足");
         }
-
+        if (redisUtil.exists(SmsConstants.SMS_VALIDATE_PHONE_NUM + phone)) {
+            throw new CrmebException("您的短信发送过于频繁，请稍后再试");
+        }
         return sendSms(phone, SmsConstants.SMS_CONFIG_TYPE_VERIFICATION_CODE, null);
     }
 
@@ -529,6 +532,7 @@ public class SmsServiceImpl implements SmsService {
             }
             // 将验证码存入redis
             redisUtil.set(userService.getValidateCodeRedisKey(phone), code, Long.valueOf(codeExpireStr), TimeUnit.MINUTES);
+            redisUtil.set(SmsConstants.SMS_VALIDATE_PHONE_NUM + phone, 1, 60L);
             return aBoolean;
         }
         // 以下部分实时性不高暂时还是使用队列发送

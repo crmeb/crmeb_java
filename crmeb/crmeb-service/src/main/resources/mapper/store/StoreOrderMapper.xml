@@ -11,6 +11,61 @@
     <select id="getRefundTotal" resultType="java.lang.Integer">
         select count(id) from eb_store_order where ${where} and refund_status = 2
     </select>
+    <select id="findFrontList" resultType="com.zbkj.common.model.order.StoreOrder" parameterType="Map">
+        select * from eb_store_order
+        where
+        uid = #{uid}
+        <if test="status != null ">
+            <choose>
+                <when test="status == 0">
+                    and `status` = 0
+                    and `paid` = 0
+                    and `refund_status` = 0
+                    and `type` = 0
+                </when>
+                <when test="status == 1">
+                    and `status` = 0
+                    and `paid` = 1
+                    and `refund_status` = 0
+                </when>
+                <when test="status == 2">
+                    and `status` = 1
+                    and `paid` = 1
+                    and `refund_status` = 0
+                </when>
+                <when test="status == 3">
+                    and `status` = 2
+                    and `paid` = 1
+                    and `refund_status` = 0
+                </when>
+                <when test="status == 4">
+                    and `status` = 3
+                    and `paid` = 1
+                    and `refund_status` = 0
+                </when>
+                <when test="status == -1">
+                    and `paid` = 1
+                    and `refund_status` in(1,3)
+                </when>
+                <when test="status == -2">
+                    and `paid` = 1
+                    and `refund_status` = 2
+                </when>
+                <when test="status == -3">
+                    and `paid` = 1
+                    and `refund_status` in(1,2,3)
+                </when>
+            </choose>
+        </if>
+        and is_del = 0
+        and is_system_del = 0
+        <if test="keywords != null and keywords !='' ">
+            and (order_id like CONCAT('%',#{keywords},'%')
+            or
+            order_id in (select order_no from eb_store_order_info where product_name like CONCAT('%',#{keywords},'%')))
+        </if>
+        order by id desc
+    </select>
     <select id="getOrderVerificationDetail" parameterType="com.zbkj.common.request.PageParamRequest"
             resultType="com.zbkj.common.response.StoreStaffDetail">
         select sum(o.`pay_price`) as price, count(o.`id`) as count, DATE_FORMAT(o.`create_time`, '%Y-%m-%d') as time

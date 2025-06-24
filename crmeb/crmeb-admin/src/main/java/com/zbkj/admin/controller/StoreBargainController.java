@@ -1,7 +1,6 @@
 package com.zbkj.admin.controller;
 
 import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.response.CommonResult;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.StoreBargainRequest;
 import com.zbkj.common.request.StoreBargainSearchRequest;
@@ -10,6 +9,7 @@ import com.zbkj.common.response.StoreBargainResponse;
 import com.zbkj.common.response.StoreBargainUserHelpResponse;
 import com.zbkj.common.response.StoreBargainUserResponse;
 import com.zbkj.common.response.StoreProductInfoResponse;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.service.service.StoreBargainService;
 import com.zbkj.service.service.StoreBargainUserHelpService;
 import com.zbkj.service.service.StoreBargainUserService;
@@ -29,7 +29,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -59,7 +59,7 @@ public class StoreBargainController {
     @PreAuthorize("hasAuthority('admin:bargain:list')")
     @ApiOperation(value = "分页显示砍价商品列表") //配合swagger使用
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<StoreBargainResponse>>  getList(@Validated StoreBargainSearchRequest request, @Validated PageParamRequest pageParamRequest){
+    public CommonResult<CommonPage<StoreBargainResponse>> getList(@Validated StoreBargainSearchRequest request, @Validated PageParamRequest pageParamRequest){
         CommonPage<StoreBargainResponse> storeBargainCommonPage = CommonPage.restPage(storeBargainService.getList(request, pageParamRequest));
         return CommonResult.success(storeBargainCommonPage);
     }

@@ -1,7 +1,9 @@
 package com.zbkj.admin.manager;
 
 import com.alibaba.fastjson.JSONObject;
-import com.zbkj.common.response.CommonResult;
+
+import com.zbkj.common.result.CommonResult;
+import com.zbkj.common.result.CommonResultCode;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
@@ -30,7 +32,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler, Serializa
         httpServletResponse.setContentType("application/json");
         httpServletResponse.setCharacterEncoding("utf-8");
         try {
-            httpServletResponse.getWriter().print(JSONObject.toJSONString(CommonResult.forbidden()));
+            httpServletResponse.getWriter().print(JSONObject.toJSONString(CommonResult.failed(CommonResultCode.FORBIDDEN)));
         } catch (IOException ioException) {
             ioException.printStackTrace();
         }

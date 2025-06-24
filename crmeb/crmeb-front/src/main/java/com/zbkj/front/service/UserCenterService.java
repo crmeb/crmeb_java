@@ -1,12 +1,12 @@
 package com.zbkj.front.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.github.pagehelper.PageInfo;
 import com.zbkj.common.model.system.SystemUserLevel;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserExperienceRecord;
 import com.zbkj.common.model.user.UserIntegralRecord;
 import com.zbkj.common.page.CommonPage;
+import com.github.pagehelper.PageInfo;
 import com.zbkj.common.request.*;
 import com.zbkj.common.response.*;
 
@@ -18,7 +18,7 @@ import java.util.List;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -181,6 +181,13 @@ public interface UserCenterService extends IService<User> {
     List<UserIntegralRecord> getUserIntegralRecordList(PageParamRequest pageParamRequest);
 
     /**
+     * 微信app登录
+     * @param request 请求参数
+     * @return 登录响应体
+     */
+    LoginResponse appLogin(RegisterAppWxRequest request);
+
+    /**
      * 获取用户积分信息
      * @return IntegralUserResponse
      */
@@ -204,4 +211,5 @@ public interface UserCenterService extends IService<User> {
      * @return UserSpreadPeopleResponse
      */
     UserSpreadPeopleResponse getSpreadPeopleCount();
+
 }

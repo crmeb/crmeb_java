@@ -1,9 +1,9 @@
 package com.zbkj.front.controller;
 
 import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.response.CommonResult;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.response.UserSignInfoResponse;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.common.vo.SystemGroupDataSignConfigVo;
 import com.zbkj.common.vo.UserSignMonthVo;
 import com.zbkj.common.vo.UserSignVo;
@@ -26,7 +26,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -48,7 +48,7 @@ public class UserSignController {
      */
     @ApiOperation(value = "分页列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<UserSignVo>>  getList(@Validated PageParamRequest pageParamRequest) {
+    public CommonResult<CommonPage<UserSignVo>> getList(@Validated PageParamRequest pageParamRequest) {
         CommonPage<UserSignVo> userSignCommonPage = CommonPage.restPage(userSignService.getList(pageParamRequest));
         return CommonResult.success(userSignCommonPage);
     }

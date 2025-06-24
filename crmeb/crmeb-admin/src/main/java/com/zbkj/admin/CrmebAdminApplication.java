@@ -15,7 +15,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -27,6 +27,12 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @Configuration
 @EnableTransactionManagement
 @SpringBootApplication(exclude = DataSourceAutoConfiguration.class) //去掉数据源
+//@ComponentScan(basePackages={"com.utils",
+//        "com.zbkj.crmeb",
+//        "com.exception",
+//        "com.common",
+//        "com.aop"}) //扫描utils包和父包
+//@MapperScan(basePackages = {"com.zbkj.crmeb.*.dao", "com.zbkj.crmeb.*.*.dao"})
 @ComponentScan(basePackages = {"com.zbkj"})
 @MapperScan(basePackages = {"com.zbkj.**.dao"})
 public class CrmebAdminApplication {

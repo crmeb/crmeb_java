@@ -4,26 +4,23 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.github.pagehelper.PageInfo;
-import com.zbkj.common.constants.CategoryConstants;
-import com.zbkj.common.constants.Constants;
-import com.zbkj.common.constants.RedisConstatns;
-import com.zbkj.common.constants.SysConfigConstants;
-import com.zbkj.common.model.product.StoreProduct;
-import com.zbkj.common.model.product.StoreProductAttr;
-import com.zbkj.common.model.product.StoreProductAttrValue;
-import com.zbkj.common.model.record.UserVisitRecord;
-import com.zbkj.common.model.system.SystemUserLevel;
-import com.zbkj.common.model.user.User;
+import com.zbkj.common.constants.*;
 import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.ProductListRequest;
 import com.zbkj.common.request.ProductRequest;
 import com.zbkj.common.response.*;
+import com.zbkj.common.vo.MyRecord;
+import com.zbkj.common.request.PageParamRequest;
+import com.github.pagehelper.PageInfo;
 import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.vo.CategoryTreeVo;
-import com.zbkj.common.vo.MyRecord;
+import com.zbkj.common.model.record.UserVisitRecord;
+import com.zbkj.common.model.product.StoreProduct;
+import com.zbkj.common.model.product.StoreProductAttr;
+import com.zbkj.common.model.product.StoreProductAttrValue;
+import com.zbkj.common.model.system.SystemUserLevel;
+import com.zbkj.common.model.user.User;
 import com.zbkj.front.service.ProductService;
 import com.zbkj.service.delete.ProductUtils;
 import com.zbkj.service.service.*;
@@ -36,13 +33,14 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
 * IndexServiceImpl 接口实现
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -91,6 +89,9 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private UserVisitRecordService userVisitRecordService;
 
+    @Autowired
+    private ActivityStyleService activityStyleService;
+
     /**
      * 获取分类
      * @return List<CategoryTreeVo>
@@ -120,6 +121,9 @@ public class ProductServiceImpl implements ProductService {
             return CommonPage.restPage(new ArrayList<>());
         }
         CommonPage<StoreProduct> storeProductCommonPage = CommonPage.restPage(storeProductList);
+
+        // 查询活动边框配置信息, 并赋值给商品response 重复添加的商品数据会根据数据添加持续覆盖后的为准
+        storeProductList = activityStyleService.makeActivityBorderStyle(storeProductList);
 
         List<IndexProductResponse> productResponseArrayList = new ArrayList<>();
         for (StoreProduct storeProduct : storeProductList) {
@@ -188,8 +192,12 @@ public class ProductServiceImpl implements ProductService {
         ProductDetailResponse productDetailResponse = new ProductDetailResponse();
         // 查询商品
         StoreProduct storeProduct = storeProductService.getH5Detail(id);
+        // 查询活动边框配置信息, 并赋值给商品response 重复添加的商品数据会根据数据添加持续覆盖后的为准
+        storeProduct.setActivityStyle(activityStyleService.makeActivityBackgroundStyle(storeProduct));
+
         if (ObjectUtil.isNotNull(userLevel)) {
-            storeProduct.setVipPrice(storeProduct.getPrice());
+            BigDecimal vipPrice = storeProduct.getPrice().multiply(new BigDecimal(userLevel.getDiscount())).divide(new BigDecimal(100), 2 ,BigDecimal.ROUND_HALF_UP);
+            storeProduct.setVipPrice(vipPrice);
         }
         productDetailResponse.setProductInfo(storeProduct);
 
@@ -206,7 +214,8 @@ public class ProductServiceImpl implements ProductService {
             BeanUtils.copyProperties(storeProductAttrValue, atr);
             // 设置会员价
             if (ObjectUtil.isNotNull(userLevel)) {
-                atr.setVipPrice(atr.getPrice());
+                BigDecimal vipPrice = atr.getPrice().multiply(new BigDecimal(userLevel.getDiscount())).divide(new BigDecimal(100), 2 ,BigDecimal.ROUND_HALF_UP);
+                atr.setVipPrice(vipPrice);
             }
             skuMap.put(atr.getSuk(), atr);
         }
@@ -239,6 +248,11 @@ public class ProductServiceImpl implements ProductService {
         updateProduct.setBrowse(storeProduct.getBrowse() + 1);
         storeProductService.updateById(updateProduct);
 
+        // 商品浏览量统计(每日/商城)
+        String yesterdayStr = DateUtil.date().toString(Constants.DATE_FORMAT_DATE);
+        redisUtil.incrAndCreate(RedisConstatns.PRO_PAGE_VIEW_KEY + yesterdayStr);
+        // 商品浏览量统计(每日/个体)
+        redisUtil.incrAndCreate(StrUtil.format(RedisConstatns.PRO_PRO_PAGE_VIEW_KEY, yesterdayStr, id));
         // 保存用户访问记录
         if (userService.getUserId() > 0) {
             UserVisitRecord visitRecord = new UserVisitRecord();
@@ -370,6 +384,10 @@ public class ProductServiceImpl implements ProductService {
         if (CollUtil.isEmpty(storeProductList)) {
             return CommonPage.restPage(new ArrayList<>());
         }
+
+        // 查询活动边框配置信息, 并赋值给商品response 重复添加的商品数据会根据数据添加持续覆盖后的为准
+        storeProductList = activityStyleService.makeActivityBorderStyle(storeProductList);
+
         CommonPage<StoreProduct> storeProductCommonPage = CommonPage.restPage(storeProductList);
 
         List<IndexProductResponse> productResponseArrayList = new ArrayList<>();
@@ -538,5 +556,55 @@ public class ProductServiceImpl implements ProductService {
         return storeProductService.getLeaderboard();
     }
 
+
+    /**
+     * 根据商品id集合 加载对应商品
+     *
+     * @param proIdList id集合
+     * @return id集合对应的商品列表
+     */
+    @Override
+    public List<IndexProductResponse> getProductByIds(List<Integer> proIdList) {
+        List<StoreProduct> byIdsAndLabel = storeProductService.findByIds(proIdList, "front");
+        List<IndexProductResponse> productFrontResponses = byIdsAndLabel.stream().map(productItem -> {
+            IndexProductResponse response = new IndexProductResponse();
+            BeanUtils.copyProperties(productItem, response);
+            return response;
+        }).collect(Collectors.toList());
+        productFrontResponses.forEach(e -> {
+            // 评论总数
+            Integer sumCount = storeProductReplyService.getCountByScore(e.getId(), ProductConstants.PRODUCT_REPLY_TYPE_ALL);
+            // 好评总数
+            Integer goodCount = storeProductReplyService.getCountByScore(e.getId(), ProductConstants.PRODUCT_REPLY_TYPE_GOOD);
+
+
+            String replyChance = "0";
+            if (sumCount > 0 && goodCount > 0) {
+                replyChance = String.format("%.2f", ((goodCount.doubleValue() / sumCount.doubleValue())));
+            }
+            e.setReplyNum(sumCount);
+            e.setPositiveRatio(replyChance);
+            e.setSales(e.getSales() + e.getFicti());
+        });
+
+        // 查询活动边框配置信息, 并赋值给商品response 重复添加的商品数据会根据数据添加持续覆盖后的为准
+        List<StoreProduct> products = new ArrayList<>();
+        productFrontResponses.forEach(response -> {
+            StoreProduct product = new StoreProduct();
+            BeanUtils.copyProperties(response, product);
+            products.add(product);
+        });
+        List<StoreProduct> makeProductList = activityStyleService.makeActivityBorderStyle(products);
+
+        makeProductList.forEach(p -> {
+            productFrontResponses.stream().map(resProduct -> {
+                if (p.getId().equals(resProduct.getId())) {
+                    resProduct.setActivityStyle(p.getActivityStyle());
+                }
+                return resProduct;
+            }).collect(Collectors.toList());
+        });
+        return productFrontResponses;
+    }
 }
 

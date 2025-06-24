@@ -2,7 +2,7 @@ package com.zbkj.service.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.zbkj.common.constants.Constants;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.model.finance.UserRecharge;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserBill;
@@ -22,7 +22,7 @@ import java.math.BigDecimal;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -52,7 +52,7 @@ public class RechargePayServiceImpl implements RechargePayService {
     @Override
     public Boolean paySuccess(UserRecharge userRecharge) {
         userRecharge.setPaid(true);
-        userRecharge.setPayTime(DateUtil.nowDateTime());
+        userRecharge.setPayTime(CrmebDateUtil.nowDateTime());
 
         User user = userService.getById(userRecharge.getUid());
 
@@ -70,7 +70,7 @@ public class RechargePayServiceImpl implements RechargePayService {
         userBill.setBalance(balance);
         userBill.setMark(StrUtil.format("余额增加了{}元", payPrice));
         userBill.setStatus(1);
-        userBill.setCreateTime(DateUtil.nowDateTime());
+        userBill.setCreateTime(CrmebDateUtil.nowDateTime());
 
         Boolean execute = transactionTemplate.execute(e -> {
             // 订单变动

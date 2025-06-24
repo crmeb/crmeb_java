@@ -19,7 +19,7 @@ import java.util.Date;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -60,6 +60,7 @@ public class StoreCouponRequest implements Serializable {
     private String primaryKey;
 
     @ApiModelProperty(value = "最低消费，0代表不限制", required = true)
+    @DecimalMax(value = "99999.99", message = "最低消费 面值不能大于99999.99")
     private BigDecimal minPrice;
 
     @ApiModelProperty(value = "是否固定领取时间， 默认0 否， 1是", required = true)

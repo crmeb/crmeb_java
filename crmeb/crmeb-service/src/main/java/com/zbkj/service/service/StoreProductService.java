@@ -1,13 +1,14 @@
 package com.zbkj.service.service;
 
+import com.alipay.api.domain.Product;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.pagehelper.PageInfo;
 import com.zbkj.common.model.product.StoreProduct;
 import com.zbkj.common.request.*;
 import com.zbkj.common.response.StoreProductInfoResponse;
 import com.zbkj.common.response.StoreProductResponse;
 import com.zbkj.common.response.StoreProductTabsHeader;
 import com.zbkj.common.vo.MyRecord;
-import com.github.pagehelper.PageInfo;
 import org.json.JSONException;
 
 import java.io.IOException;
@@ -18,7 +19,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -64,6 +65,14 @@ public interface StoreProductService extends IService<StoreProduct> {
     StoreProductResponse getByProductId(Integer id);
 
     /**
+     * 通过ID获取商品列表
+     *
+     * @param proIdsList 商品ID列表
+     * @param label      admin-管理端，front-移动端
+     */
+    List<StoreProduct> findByIds(List<Integer> proIdsList, String label);
+
+    /**
      * 商品详情（管理端）
      * @param id 商品id
      * @return StoreProductInfoResponse
@@ -74,7 +83,7 @@ public interface StoreProductService extends IService<StoreProduct> {
      * 获取tabsHeader对应数量
      * @return List
      */
-    List<StoreProductTabsHeader> getTabsHeader();
+    List<StoreProductTabsHeader> getTabsHeader(StoreProductHeaderRequest request);
 
     /**
      * 根据其他平台url导入产品信息
@@ -83,8 +92,6 @@ public interface StoreProductService extends IService<StoreProduct> {
      * @return 待导入的商品信息
      */
     StoreProductRequest importProductFromUrl(String url, int tag) throws IOException, JSONException;
-
-    List<Integer> getSecondaryCategoryByProductId(String productId);
 
     /**
      * 删除商品
@@ -131,7 +138,7 @@ public interface StoreProductService extends IService<StoreProduct> {
      * @param num 数量
      * @param type 类型：add—添加，sub—扣减
      */
-    Boolean operationStock(Integer id, Integer num, String type);
+    Boolean operationStock(Integer id, Integer num, String type, Integer version);
 
     /**
      * 下架
@@ -219,4 +226,25 @@ public interface StoreProductService extends IService<StoreProduct> {
      * @return List
      */
     List<StoreProduct> getLeaderboard();
+
+    /**
+     * 是否有商品使用运费模板
+     * @return Boolean
+     */
+    Boolean isUseShippingTemplateId(Integer templateId);
+
+    /**
+     * 获取商品所用的分类（包含父级分类）
+     * @param productIdList 商品ID列表
+     * @return 商品分类及所有父级分类ID
+     */
+    List<Integer> getProductAllCategoryIdByProductIds(List<Integer> productIdList);
+
+    /**
+     * 快捷添加库存
+     *
+     * @param request 添加库存参数
+     * @return Boolean
+     */
+    Boolean quickAddStock(ProductAddStockRequest request);
 }

@@ -1,6 +1,7 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -11,7 +12,7 @@ import com.zbkj.common.request.StoreSeckillMangerRequest;
 import com.zbkj.common.request.StoreSeckillMangerSearchRequest;
 import com.zbkj.common.response.StoreSeckillManagerResponse;
 import com.github.pagehelper.PageHelper;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.model.seckill.StoreSeckillManger;
 import com.zbkj.service.dao.StoreSeckillMangerDao;
 import com.zbkj.service.service.StoreSeckillMangerService;
@@ -31,7 +32,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -60,7 +61,9 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
         //带 StoreSeckillManger 类的多条件查询
         LambdaQueryWrapper<StoreSeckillManger> lambdaQueryWrapper = Wrappers.lambdaQuery();
         if(null != request.getName()) lambdaQueryWrapper.like(StoreSeckillManger::getName, request.getName());
-        if(null != request.getStatus()) lambdaQueryWrapper.eq(StoreSeckillManger::getStatus, request.getStatus());
+        if(null != request.getStatus() && !"".equals(request.getStatus())) {
+            lambdaQueryWrapper.eq(StoreSeckillManger::getStatus, request.getStatus());
+        }
 
         lambdaQueryWrapper.orderByAsc(StoreSeckillManger::getSort);
 
@@ -90,6 +93,7 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
      */
     private List<StoreSeckillManger> checkTimeRangeUnique(StoreSeckillManger storeSeckillManger) {
         LambdaQueryWrapper<StoreSeckillManger> lqTimeUnique = Wrappers.lambdaQuery();
+        // 开始时间大于等于 开始时间小于等于
         lqTimeUnique.ge(StoreSeckillManger::getStartTime, storeSeckillManger.getStartTime());
         lqTimeUnique.lt(StoreSeckillManger::getStartTime, storeSeckillManger.getEndTime());
         lqTimeUnique.or();
@@ -119,6 +123,7 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
         if(null != storeSeckillManger.getStatus()) ssm.setStatus(storeSeckillManger.getStatus());
         if(null != storeSeckillManger.getStartTime()) ssm.setStartTime(storeSeckillManger.getStartTime());
         if(null != storeSeckillManger.getEndTime()) ssm.setEndTime(storeSeckillManger.getEndTime());
+        ssm.setUpdateTime(DateUtil.date());
         return dao.updateById(ssm) > 0;
     }
 
@@ -144,7 +149,7 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
      */
     @Override
     public List<StoreSeckillManger> getCurrentSeckillManager() {
-        int currentHour = DateUtil.getCurrentHour();
+        int currentHour = CrmebDateUtil.getCurrentHour();
         LambdaQueryWrapper<StoreSeckillManger> lqw = Wrappers.lambdaQuery();
         lqw.le(StoreSeckillManger::getStartTime,currentHour).gt(StoreSeckillManger::getEndTime,currentHour);
         return dao.selectList(lqw);
@@ -158,8 +163,9 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
      * @return 结果
      */
     @Override
-    public Boolean updateStatus(Integer id, Boolean status) {
-        StoreSeckillManger ssm = new StoreSeckillManger().setId(id).setStatus(status ? 1 : 0);
+    public Boolean updateStatus(Integer id, String status) {
+        StoreSeckillManger ssm = new StoreSeckillManger().setId(id).setStatus(status);
+        ssm.setUpdateTime(DateUtil.date());
         return dao.updateById(ssm) > 0;
     }
 
@@ -185,11 +191,13 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
             startAndEndExcuseQuery.ge(StoreSeckillManger::getStartTime,storeSeckillManger.getStartTime())
                     .le(StoreSeckillManger::getEndTime,storeSeckillManger.getEndTime());
             List<StoreSeckillManger> storeSeckillMangers = dao.selectList(startAndEndExcuseQuery);
+            // 判断是否被扩大
+            LambdaQueryWrapper<StoreSeckillManger> startAndEndExcuseQueryIn = Wrappers.lambdaQuery();
+            startAndEndExcuseQueryIn.le(StoreSeckillManger::getStartTime,storeSeckillManger.getStartTime())
+                    .ge(StoreSeckillManger::getEndTime,storeSeckillManger.getEndTime());
+            List<StoreSeckillManger> storeSeckillMangersIn = dao.selectList(startAndEndExcuseQueryIn);
             // 时间区间改大 不存在的情况
-            if(CollUtil.isEmpty(storeSeckillMangers) && storeSeckillMangers.size() == 0){
-                return updateByCondition(storeSeckillManger);
-                // 时间区间改小 id一样且仅仅存在一条
-            }else if(storeSeckillMangers.size() == 1 && storeSeckillMangers.get(0).getId().equals(id)){
+            if(storeSeckillMangers.size() <= 1 && storeSeckillMangersIn.size() <= 1){ //storeSeckillMangers.get(0).getId().equals(id)
                 return updateByCondition(storeSeckillManger);
             }else{
                 throw new CrmebException("当前时间段的秒杀配置已存在");
@@ -243,9 +251,9 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
     public List<StoreSeckillManagerResponse> getH5List() {
         LambdaQueryWrapper<StoreSeckillManger> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.eq(StoreSeckillManger::getIsDel, false);
-        lambdaQueryWrapper.eq(StoreSeckillManger::getStatus, 1);
+        lambdaQueryWrapper.eq(StoreSeckillManger::getStatus, "'1'");
         // 获取当前小时
-        int currentHour = DateUtil.getCurrentHour();
+        int currentHour = CrmebDateUtil.getCurrentHour();
         lambdaQueryWrapper.gt(StoreSeckillManger::getEndTime, currentHour);
         lambdaQueryWrapper.orderByAsc(StoreSeckillManger::getStartTime);
         List<StoreSeckillManger> storeSeckillMangers = dao.selectList(lambdaQueryWrapper);

@@ -1,14 +1,18 @@
 package com.zbkj.front.controller;
 
 
+import com.zbkj.common.model.category.Category;
 import com.zbkj.common.model.product.StoreProduct;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.ProductListRequest;
 import com.zbkj.common.request.ProductRequest;
 import com.zbkj.common.response.*;
+import com.zbkj.common.result.CommonResult;
+import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.common.vo.CategoryTreeVo;
 import com.zbkj.front.service.ProductService;
+import com.zbkj.service.service.CategoryService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -24,7 +28,7 @@ import java.util.List;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -39,6 +43,9 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private CategoryService categoryService;
 
     /**
      * 热门商品推荐
@@ -65,6 +72,12 @@ public class ProductController {
     @RequestMapping(value = "/category", method = RequestMethod.GET)
     public CommonResult<List<CategoryTreeVo>> getCategory() {
         return CommonResult.success(productService.getCategory());
+    }
+
+    @ApiOperation(value = "根据pid获取子分类")
+    @RequestMapping(value = "/categorybypid/{pid}", method = RequestMethod.GET)
+    public CommonResult<List<Category>> getCategoryByPid(@PathVariable Integer pid) {
+        return CommonResult.success(categoryService.getChildVoStatusOnListByPid(pid));
     }
 
     /**
@@ -140,6 +153,12 @@ public class ProductController {
     @RequestMapping(value = "/product/leaderboard", method = RequestMethod.GET)
     public CommonResult<List<StoreProduct>> getLeaderboard() {
         return CommonResult.success(productService.getLeaderboard());
+    }
+
+    @ApiOperation(value = "根据商品id集合查询对应商品")
+    @RequestMapping(value = "/product/byids/{ids}", method = RequestMethod.GET)
+    public CommonResult<List<IndexProductResponse>> getProductByIds(@PathVariable String ids) {
+        return CommonResult.success(productService.getProductByIds(CrmebUtil.stringToArray(ids)));
     }
 }
 

@@ -3,12 +3,14 @@ package com.zbkj.service.dao;
 import com.zbkj.common.model.combination.StorePink;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
+import java.util.List;
+
 /**
  * 拼团表 Mapper 接口
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -17,4 +19,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface StorePinkDao extends BaseMapper<StorePink> {
 
+    List<StorePink> selectSizePink(Integer size);
 }

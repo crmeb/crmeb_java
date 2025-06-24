@@ -1,13 +1,15 @@
 # CRMEB 相关配置
 crmeb:
-  version: CRMEB-JAVA-KY-v1.3.4 # 当前代码版本
+  version: CRMEB-JAVA-KY-v1.4 # 当前代码版本
   domain: #配合swagger使用 # 待部署域名
   wechat-api-url:  #请求微信接口中专服务器
   wechat-js-api-debug: false #微信js api系列是否开启调试模式
   wechat-js-api-beta: true #微信js api是否是beta版本
-  asyncConfig: false #是否同步config表数据到redis
+  asyncConfig: true #是否同步config表数据到redis
   asyncWeChatProgramTempList: false #是否同步小程序公共模板库
-  imagePath: /www/wwwroot/your Crmeb-admin.jar Path/ # 服务器图片路径配置 斜杠结尾
+  imagePath: /你的站点绝对路径 建议jar包位置/ # 服务器图片路径配置 斜杠结尾
+  captchaOn: false # 是否开启行为验证码
+  demoSite: true # 是否演示站点 所有手机号码都会掩码
 
 server:
   port: 20008
@@ -30,8 +32,8 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/crmeb?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
-    username: crmeb
+    url: jdbc:mysql://127.0.0.1:3306/crmeb_java_beta?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
+    username: crmeb_java_beta
     password: 111111
   redis:
     host: 127.0.0.1 #地址

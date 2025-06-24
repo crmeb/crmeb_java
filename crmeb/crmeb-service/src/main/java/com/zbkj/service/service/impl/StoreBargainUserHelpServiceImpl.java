@@ -13,7 +13,7 @@ import com.zbkj.common.constants.UserConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.system.SystemNotification;
 import com.zbkj.common.request.BargainFrontRequest;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.model.bargain.StoreBargain;
 import com.zbkj.common.model.bargain.StoreBargainUser;
 import com.zbkj.common.model.bargain.StoreBargainUserHelp;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -91,7 +91,7 @@ public class StoreBargainUserHelpServiceImpl extends ServiceImpl<StoreBargainUse
         List<StoreBargainUserHelpResponse> list = helpList.stream().map(help -> {
             StoreBargainUserHelpResponse helpResponse = new StoreBargainUserHelpResponse();
             BeanUtils.copyProperties(help, helpResponse);
-            helpResponse.setAddTime(DateUtil.timestamp2DateStr(help.getAddTime(), Constants.DATE_FORMAT));
+            helpResponse.setAddTime(CrmebDateUtil.timestamp2DateStr(help.getAddTime(), Constants.DATE_FORMAT));
             User user = userService.getById(help.getUid());
             helpResponse.setAvatar(user.getAvatar());
             helpResponse.setNickname(user.getNickname());

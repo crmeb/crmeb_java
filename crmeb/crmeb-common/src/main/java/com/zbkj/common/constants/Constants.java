@@ -5,7 +5,7 @@ package com.zbkj.common.constants;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -49,6 +49,7 @@ public class Constants {
     public static final String DATE_FORMAT_START_PEREND = "00:00:00";
     public static final String DATE_FORMAT_END_PEREND = "23:59:59";
     public static final String DATE_FORMAT_HHMM = "yyyy-MM-dd HH:mm";
+    public static final String DATE_FORMAT_RFC_3339 = "yyyy-MM-dd'T'HH:mm:ssXXX";
 
     //后台管理员操作资金mark
     public static final String USER_BILL_OPERATE_LOG_TITLE = "{$title}{$operate}了{$value}{$founds}";
@@ -106,11 +107,8 @@ public class Constants {
     //商品最多选择的分类数量
     public static final Integer PRODUCT_SELECT_CATEGORY_NUM_MAX = 10;
 
-    //上传类型
-    public static final String UPLOAD_TYPE_IMAGE = "crmebimage";
 
     //上传类型
-    public static final String UPLOAD_TYPE_FILE = "file";
     public static final String UPLOAD_MODEL_PATH_EXCEL = "excel";// excel
 
     //图片上传
@@ -121,6 +119,8 @@ public class Constants {
     public static final String UPLOAD_FILE_EXT_STR_CONFIG_KEY = "file_ext_str";
     //最大上传文件
     public static final String UPLOAD_FILE_MAX_SIZE_CONFIG_KEY = "file_max_size";
+
+    public static final int UPLOAD_TYPE_USER = 7; //用户上传
 
     // 移动端文章顶部的banner图最大数量 配置数据最小3最大10
     public static final String ARTICLE_BANNER_LIMIT = "news_slides_limit";
@@ -144,6 +144,11 @@ public class Constants {
     public static final String PRODUCT_STOCK_LIST = "product_stock_list";
 
 
+    //sku库存变动队列key
+//    public static final String SKU_STOCK_UPDATE = "product_stock_update";
+    //sku库存redis key
+//    public static final String SKU_STOCK_LIST = "product_stock_list";
+
     //消息模板队列key
     public static final String WE_CHAT_MESSAGE_KEY_PUBLIC = "we_chat_public_message_list";
     public static final String WE_CHAT_MESSAGE_KEY_PROGRAM = "we_chat_program_message_list";
@@ -163,7 +168,7 @@ public class Constants {
     public static final String CONFIG_KEY_SITE_LOGO = "mobile_top_logo"; //logo地址
     public static final String CONFIG_KEY_MOBILE_LOGIN_LOGO = "mobile_login_logo"; // 移动端登录 logo
     public static final String CONFIG_KEY_SITE_NAME = "site_name"; //网站名称
-    public static final String CONFIG_SITE_TENG_XUN_MAP_KEY = "tengxun_map_key"; //腾讯地图key
+//    public static final String CONFIG_SITE_TENG_XUN_MAP_KEY = "tengxun_map_key"; //腾讯地图key
     public static final String CONFIG_BANK_LIST = "user_extract_bank"; //可提现银行
     public static final String CONFIG_EXTRACT_FREEZING_TIME = "extract_time"; //提现冻结时间
     public static final String CONFIG_EXTRACT_MIN_PRICE = "user_extract_min_price"; //提现最低金额
@@ -183,6 +188,8 @@ public class Constants {
     public static final String CONFIG_KEY_PAY_WE_CHAT_APP_APP_KEY = "pay_weixin_app_key"; //公众号支付key
 
     public static final String CONFIG_KEY_RECHARGE_MIN_AMOUNT = "store_user_min_recharge"; //最小充值金额
+    /** 底部导航—是否自定义 */
+    public static final String CONFIG_BOTTOM_NAVIGATION_IS_CUSTOM = "bottom_navigation_is_custom";
 //    public static final String CONFIG_KEY_PROGRAM_LOGO = "routine_logo"; //小程序logo
 //    public static final String CONFIG_KEY_PUBLIC_LOGO = "wechat_avatar"; //公众号logo
 
@@ -194,6 +201,8 @@ public class Constants {
     public static final String CONFIG_KEY_CONSUMER_HOTLINE = "consumer_hotline";
     // 客服电话服务开关
     public static final String CONFIG_KEY_TELEPHONE_SERVICE_SWITCH = "telephone_service_switch";
+    // 微信客服额外开关
+    public static final String CONFIG_KEY_WX_CHAT_INDEPENDENT = "wx_chat_independent";
     //商品分类页配置
     public static final String CONFIG_CATEGORY_CONFIG = "category_page_config"; //商品分类页配置
     public static final String CONFIG_IS_SHOW_CATEGORY = "is_show_category"; //是否隐藏一级分类
@@ -285,6 +294,7 @@ public class Constants {
     public static final Integer GROUP_DATA_ID_INDEX_KEYWORDS = 71; //热门搜索
     public static final Integer GROUP_DATA_ID_ADMIN_LOGIN_BANNER_IMAGE_LIST = 72; //后台登录页面轮播图
     public static final Integer GROUP_DATA_ID_COMBINATION_LIST_BANNNER = 73; //拼团列表banner
+    public static final Integer GROUP_DATA_ID_BOTTOM_NAVIGATION = 74; //首页自定义导航
 
 
 
@@ -442,6 +452,7 @@ public class Constants {
     public static final String ORDER_STATUS_STR_SPIKE_KEY = "send"; //待收货 KEY
     public static final String ORDER_LOG_REFUND_PRICE = "refund_price"; //退款
     public static final String ORDER_LOG_EXPRESS = "express"; //快递
+    public static final String ORDER_LOG_SHIPMENT = "shipment"; //一号通商家发货
     public static final String ORDER_LOG_DELIVERY = "delivery"; //送货
     public static final String ORDER_LOG_DELIVERY_GOODS = "delivery_goods"; //送货
     public static final String ORDER_LOG_REFUND_REFUSE = "refund_refuse"; //不退款
@@ -560,7 +571,24 @@ public class Constants {
     /** 公共开关：1开启 */
     public static final String COMMON_SWITCH_OPEN = "1";
 
+    /** 自定义表单开关：关闭 */
+    public static final String CONFIG_FORM_SWITCH_CLOSE = "'0'";
+    /** 自定义表单开关：开启 */
+    public static final String CONFIG_FORM_SWITCH_OPEN = "'1'";
+
     /** 公共JS配置 */
     // CRMEB chat 统计
-    public  static final String JS_CONFIG_CRMEB_CHAT_TONGJI="crmeb_tongji_js";
+    public  static final String JS_CONFIG_CRMEB_CHAT_TONGJI = "crmeb_tongji_js";
+
+    /** 小程序源码包文件名 */
+    public static final String WECHAT_SOURCE_CODE_FILE_NAME = "/mp-weixin-target.zip";
+
+    /** 小程序手机号授权验证类型 */
+    public static final String WECHAT_ROUTINE_PHONE_VERIFICATION = "routine_phone_verification";
+
+    /** 公众号登录方式 */
+    public static final String WECHAT_PUBLIC_LOGIN_TYPE = "wechat_public_login_type";
+
+    /** 管理后台账号登录错误数量keu **/
+    public static final String ADMIN_ACCOUNT_LOGIN_ERROR_NUM_KEY = "admin:account:login:error:{}";
 }

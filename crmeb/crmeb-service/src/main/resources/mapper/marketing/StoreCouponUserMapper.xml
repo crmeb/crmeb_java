@@ -2,4 +2,28 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zbkj.service.dao.StoreCouponUserDao">
 
+
+    <select id="getListByPreOrderNo" resultType="com.zbkj.common.model.coupon.StoreCouponUser" parameterType="Map">
+        SELECT *
+        FROM eb_store_coupon_user
+        where
+        `status` = 0
+        AND min_price &lt;= #{maxPrice}
+        AND start_time &lt; #{date} AND end_time &gt; #{date}
+        AND uid = #{uid}
+        AND (use_type = 1
+                 or (use_type = 2 and
+        <foreach collection="productIds" item="proId" open="(" close=")" index="index" separator="or">
+            find_in_set(#{proId}, primary_key)
+        </foreach>
+                 )
+                 or (use_type = 3 and
+        <foreach collection="categoryIdList" item="cateId" open="(" close=")" index="index" separator="or">
+            find_in_set(#{cateId}, primary_key)
+        </foreach>
+                 )
+            )
+        order by id desc
+    </select>
+
 </mapper>

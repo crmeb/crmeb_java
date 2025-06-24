@@ -1,10 +1,12 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson.JSONObject;
+
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.TaskConstants;
 import com.zbkj.common.exception.CrmebException;
@@ -14,8 +16,9 @@ import com.zbkj.common.model.finance.UserRecharge;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.wechat.WechatPayInfo;
+
 import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.utils.WxPayUtil;
 import com.zbkj.common.vo.AttachVo;
@@ -31,6 +34,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
+import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.Security;
@@ -42,7 +46,7 @@ import java.util.*;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -169,7 +173,8 @@ public class CallbackServiceImpl implements CallbackService {
                 // 添加支付成功redis队列
                 Boolean execute = transactionTemplate.execute(e -> {
                     storeOrder.setPaid(true);
-                    storeOrder.setPayTime(DateUtil.nowDateTime());
+                    storeOrder.setPayTime(CrmebDateUtil.nowDateTime());
+                    storeOrder.setUpdateTime(DateUtil.date());
                     storeOrderService.updateById(storeOrder);
                     if (storeOrder.getUseIntegral() > 0) {
                         userService.updateIntegral(user, storeOrder.getUseIntegral(), "sub");
@@ -228,6 +233,7 @@ public class CallbackServiceImpl implements CallbackService {
                         storePinkService.save(storePink);
                         // 如果是开团，需要更新订单数据
                         storeOrder.setPinkId(storePink.getId());
+                        storeOrder.setUpdateTime(DateUtil.date());
                         storeOrderService.updateById(storeOrder);
                     }
 
@@ -244,10 +250,7 @@ public class CallbackServiceImpl implements CallbackService {
             }
             // 充值
             if (Constants.SERVICE_PAY_TYPE_RECHARGE.equals(attachVo.getType())) {
-                UserRecharge userRecharge = new UserRecharge();
-                userRecharge.setOrderId(callbackVo.getOutTradeNo());
-                userRecharge.setUid(attachVo.getUserId());
-                userRecharge = userRechargeService.getInfoByEntity(userRecharge);
+                UserRecharge userRecharge = userRechargeService.getByOutTradeNo(callbackVo.getOutTradeNo());
                 if(ObjectUtil.isNull(userRecharge)){
                     throw new CrmebException("没有找到订单信息");
                 }
@@ -276,6 +279,30 @@ public class CallbackServiceImpl implements CallbackService {
         return sb.toString();
     }
 
+
+    /**
+     * 将request中的参数转换成Map
+     * @param request
+     * @return
+     */
+    private Map<String, String> convertRequestParamsToMap(HttpServletRequest request) {
+        Map<String, String> retMap = new HashMap<String, String>();
+        Map requestParams = request.getParameterMap();
+        for (Iterator iter = requestParams.keySet().iterator(); iter.hasNext();) {
+            String name = (String) iter.next();
+            String[] values = (String[]) requestParams.get(name);
+            String valueStr = "";
+            for (int i = 0; i < values.length; i++) {
+                valueStr = (i == values.length - 1) ? valueStr + values[i]
+                        : valueStr + values[i] + ",";
+            }
+            //乱码解决，这段代码在出现乱码时使用。如果mysign和sign不相等也可以使用这段代码转化
+            //valueStr = new String(valueStr.getBytes("ISO-8859-1"), "gbk");
+            retMap.put(name, valueStr);
+        }
+        return retMap;
+    }
+
     /**
      * 微信退款回调
      * @param xmlInfo 微信回调json
@@ -285,7 +312,7 @@ public class CallbackServiceImpl implements CallbackService {
     public String weChatRefund(String xmlInfo) {
         MyRecord notifyRecord = new MyRecord();
         MyRecord refundRecord = refundNotify(xmlInfo, notifyRecord);
-        if ("fail".equals(refundRecord.getStr("status"))) {
+        if (refundRecord.getStr("status").equals("fail")) {
             logger.error("微信退款回调失败==>" + refundRecord.getColumns() + ", rawData==>" + xmlInfo + ", data==>" + notifyRecord);
             return refundRecord.getStr("returnXml");
         }
@@ -305,6 +332,7 @@ public class CallbackServiceImpl implements CallbackService {
             return refundRecord.getStr("returnXml");
         }
         storeOrder.setRefundStatus(2);
+        storeOrder.setUpdateTime(DateUtil.date());
         boolean update = storeOrderService.updateById(storeOrder);
         if (update) {
             // 退款task

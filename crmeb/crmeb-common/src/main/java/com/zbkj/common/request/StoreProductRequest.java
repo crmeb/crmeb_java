@@ -18,7 +18,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -52,9 +52,9 @@ public class StoreProductRequest implements Serializable {
     @NotNull(message = "商品名称不能为空")
     private String storeName;
 
-    @ApiModelProperty(value = "商品简介")
-    @NotNull(message = "商品简介不能为空")
-    private String storeInfo;
+//    @ApiModelProperty(value = "商品简介")
+//    @NotNull(message = "商品简介不能为空")
+//    private String storeInfo;
 
     @ApiModelProperty(value = "关键字")
     @NotNull(message = "关键字不能为空")

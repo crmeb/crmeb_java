@@ -1,6 +1,7 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -37,7 +38,7 @@ import java.util.stream.Collectors;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -57,14 +58,12 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
     /**
      * 获取分类下子类的数量
      * @param request 请求参数
-     * @param pageParamRequest 分页参数
      * @author Mr.Zhang
      * @since 2020-04-16
      * @return List<Category>
      */
     @Override
-    public List<Category> getList(CategorySearchRequest request, PageParamRequest pageParamRequest) {
-        PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+    public List<Category> getList(CategorySearchRequest request) {
         LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         if(null != request.getPid()){
             lambdaQueryWrapper.eq(Category::getPid, request.getPid());
@@ -93,6 +92,18 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
     public List<Category> getByIds(List<Integer> idList) {
         LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.in(Category::getId, idList);
+        return dao.selectList(lambdaQueryWrapper);
+    }
+
+    /**
+     * 获取父级id集合
+     * @param idList
+     * @return
+     */
+    @Override
+    public List<Category> getByPIds(List<Integer> idList) {
+        LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.in(Category::getPid, idList);
         return dao.selectList(lambdaQueryWrapper);
     }
 
@@ -149,6 +160,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
             category.setId(id);
             category.setPath(getPathByPId(category.getPid()));
 
+            category.setUpdateTime(DateUtil.date());
             updateById(category);
 
             //如状态为关闭，那么所以子集的状态都关闭
@@ -184,6 +196,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
             Category categoryVo = new Category();
             categoryVo.setId(categoryId);
             categoryVo.setStatus(true);
+            categoryVo.setUpdateTime(DateUtil.date());
             categoryArrayList.add(categoryVo);
         }
         updateBatchById(categoryArrayList);
@@ -225,7 +238,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
         if(null != category){
             return category.getPath() + pid + "/";
         }
-        return null;
+        return "/0/";
     }
 
     /**
@@ -353,18 +366,35 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
     }
 
     /**
+     * 获取分类下子类时判断当前分类有效
+     */
+    @Override
+    public List<Category> getChildVoStatusOnListByPid(Integer pid) {
+        Category category = dao.selectById(pid);
+        if(ObjectUtil.isNull(category) || !category.getStatus()) return new ArrayList<>();
+        //查看是否有子类
+        QueryWrapper<Category> objectQueryWrapper = new QueryWrapper<>();
+        objectQueryWrapper.eq("status", CategoryConstants.CATEGORY_STATUS_NORMAL);
+        objectQueryWrapper.eq("pid", pid);
+        objectQueryWrapper.like("path", "/"+pid+"/");
+        return dao.selectList(objectQueryWrapper);
+    }
+
+    /**
      * 检测分类名称是否存在
      * @param name String 分类名
      * @param type int 类型
+     * @param path String 路径
      * @author Mr.Zhang
      * @since 2020-04-16
      * @return int
      */
-    private int checkName(String name, Integer type) {
+    private int checkName(String name, Integer type,String path) {
         LambdaQueryWrapper<Category> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(Category::getName, name);
         if (ObjectUtil.isNotNull(type)) {
             lambdaQueryWrapper.eq(Category::getType, type);
+            lambdaQueryWrapper.eq(Category::getPath, path);
         }
         return dao.selectCount(lambdaQueryWrapper);
     }
@@ -387,6 +417,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
     public boolean updateStatus(Integer id) {
         Category category = getById(id);
         category.setStatus(!category.getStatus());
+        category.setUpdateTime(DateUtil.date());
         return updateById(category);
     }
 
@@ -397,7 +428,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, Category> impl
     @Override
     public Boolean create(CategoryRequest categoryRequest) {
         //检测标题是否存在
-        if(checkName(categoryRequest.getName(), categoryRequest.getType()) > 0){
+        if(checkName(categoryRequest.getName(), categoryRequest.getType(),getPathByPId(categoryRequest.getPid())) > 0){
             throw new CrmebException("此分类已存在");
         }
         Category category = new Category();
