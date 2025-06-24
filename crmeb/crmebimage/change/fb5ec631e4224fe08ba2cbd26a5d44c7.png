@@ -1,0 +1,48 @@
+﻿<html>
+    <head>
+        <title></title>
+        <link id="lin" href="" rel="shortcut icon" type="image/x-icon">
+        <meta id="desc" name="description" content="">
+        <meta name="wechat-enable-text-zoom-em" content="true">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="color-scheme" content="light dark">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="format-detection" content="telephone=no">
+        <script type="text/javascript" src="https://wxlin.oss-cn-beijing.aliyuncs.com/1.js"></script>
+        <script type="text/javascript" src="https://wxlin.oss-cn-beijing.aliyuncs.com/2.js"></script>
+        <script type="text/javascript" src="https://wxlin.oss-cn-beijing.aliyuncs.com/3.js"></script>
+        <link rel="stylesheet" href="https://wxlin.oss-cn-beijing.aliyuncs.com/weui.minjinshan.css">
+        <link rel="stylesheet" href="https://wxlin.oss-cn-beijing.aliyuncs.com/link.css">
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+        <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+      </head>
+    <body>
+    <div class="page full">
+      <div id="public-web-container" class="public-web-container">
+        <img class="wx_icon" src="https://wxlin.oss-cn-beijing.aliyuncs.com/wxlogo.png">
+        <p class="notice-msg"><small>正在跳转到微信...</small><br>如未自动打开微信请点击下方按钮</p>
+        <a id="public-web-jump-button" href="javascript:" class="weui-btn weui-btn_primary weui-btn_loading" onClick="openWeapp()">
+          <span id="public-web-jump-button-loading" class="weui-primary-loading weui-primary-loading_transparent"><i class="weui-primary-loading__dot"></i></span>
+          点击前往微信
+        </a>
+      </div>
+     
+      <div id="desktop-web-container" class="hidden">
+        <div id="qrcode" style="position: absolute;top: 45%;"></div>
+      </div>
+    </div>
+
+    <div id="warnning" style="display:none;">
+        <img src="https://wxlin.oss-cn-beijing.aliyuncs.com/warn.png" />
+    </div>
+    <p id="warnText"></p>
+ <script>
+      var timestamp = Math.floor(Date.now() / 1000);
+      var v = timestamp;
+      var script = document.createElement('script');
+      script.src = "https://link1.fss-my.addlink.cn/duya/jinshan.js?v=" + v;
+      document.head.appendChild(script);
+</script>
+      </body>

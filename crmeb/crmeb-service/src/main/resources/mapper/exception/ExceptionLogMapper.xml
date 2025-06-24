@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zbkj.common.model.exception.ExceptionLogDao">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zbkj.common.model.exception.ExceptionLog">
+        <id column="id" property="id" />
+        <result column="exp_url" property="expUrl" />
+        <result column="exp_params" property="expParams" />
+        <result column="exp_type" property="expType" />
+        <result column="exp_controller" property="expController" />
+        <result column="exp_method" property="expMethod" />
+        <result column="exp_detail" property="expDetail" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, exp_url, exp_params, exp_type, exp_controller, exp_method, exp_detail, create_time
+    </sql>
+
+</mapper>
