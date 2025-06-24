@@ -1,11 +1,11 @@
 <template>
-	<view>
+	<view :data-theme="theme">
 		<view class='cash-withdrawal'>
 			<view class='nav acea-row'>
 				<view v-for="(item,index) in navList" :key="index" class='item font-color' @click="swichNav(index)">
-					<view class='line bg-color' :class='currentTab==index ? "on":""'></view>
+					<view class='line bg_color' :class='currentTab==index ? "on":""'></view>
 					<view class='iconfont' :class='item.icon+" "+(currentTab==index ? "on":"")'></view>
-					<view>{{item.name}}</view>
+					<view class="tab_text">{{item.name}}</view>
 				</view>
 			</view>
 			<view class='wrapper'>
@@ -13,11 +13,15 @@
 					<form @submit="subCash" report-submit='true'>
 						<view class='item acea-row row-between-wrapper'>
 							<view class='name'>持卡人</view>
-							<view class='input'><input placeholder='请输入持卡人姓名' placeholder-class='placeholder' name="name"></input></view>
+							<view class='input'>
+								<input placeholder='请输入持卡人姓名' placeholder-class='placeholder' name="name" maxlength="20"></input>
+							</view>
 						</view>
 						<view class='item acea-row row-between-wrapper'>
 							<view class='name'>卡号</view>
-							<view class='input'><input type='number' placeholder='请填写卡号' placeholder-class='placeholder' name="cardum"></input></view>
+							<view class='input'>
+								<input type='number' placeholder='请填写卡号' placeholder-class='placeholder' name="cardum" maxlength="19"></input>
+							</view>
 						</view>
 						<view class='item acea-row row-between-wrapper'>
 							<view class='name'>银行</view>
@@ -45,11 +49,15 @@
 					<form @submit="subCash" report-submit='true'>
 						<view class='item acea-row row-between-wrapper'>
 							<view class='name'>账号</view>
-							<view class='input'><input placeholder='请填写您的微信账号' placeholder-class='placeholder' name="name"></input></view>
+							<view class='input'>
+								<input placeholder='请填写您的微信账号' placeholder-class='placeholder' name="name" maxlength="20"></input>
+							</view>
 						</view>
 						<view class='item acea-row row-between-wrapper'>
 							<view class='name'>提现</view>
-							<view class='input'><input :placeholder='"最低提现金额"+minPrice' placeholder-class='placeholder' name="money" type='digit'></input></view>
+							<view class='input'>
+								<input :placeholder='"最低提现金额"+minPrice' placeholder-class='placeholder' name="money" type='digit' maxlength="5"></input>
+							</view>
 						</view>
 						<view class='item acea-row row-top row-between'>
 							<view class='name'>收款码</view>
@@ -73,43 +81,8 @@
 						<button formType="submit" class='bnt bg-color'>提现</button>
 					</form>
 				</view>
-				<view :hidden='currentTab != 2' class='list'>
-					<form @submit="subCash" report-submit='true'>
-						<view class='item acea-row row-between-wrapper'>
-							<view class='name'>账号</view>
-							<view class='input'><input placeholder='请填写您的支付宝账号' placeholder-class='placeholder' name="name"></input></view>
-						</view>
-						<view class='item acea-row row-between-wrapper'>
-							<view class='name'>提现</view>
-							<view class='input'><input :placeholder='"最低提现金额"+minPrice' placeholder-class='placeholder' name="money" type='digit'></input></view>
-						</view>
-						<view class='item acea-row row-top row-between'>
-							<view class='name'>收款码</view>
-							<view class="input acea-row">
-								<view class="picEwm" v-if="qrcodeUrlZ">
-									<image :src="qrcodeUrlZ"></image>
-									<text class='iconfont icon-guanbi1 font-color' @click='DelPicZ'></text>
-								</view>
-								<view class='pictrue acea-row row-center-wrapper row-column' @click='uploadpic("Z")' v-else>
-								  <text class='iconfont icon-icon25201'></text>
-								  <view>上传图片</view>
-								</view>
-							</view>
-						</view>
-						<view class='tip'>
-							当前可提现金额: <text class="price">￥{{commission.commissionCount}},</text>冻结佣金：￥{{commission.brokenCommission}}
-						</view>
-						<view class='tip'>
-							说明: 每笔佣金的冻结期为{{commission.brokenDay}}天，到期后可提现
-						</view>
-						<button formType="submit" class='bnt bg-color'>提现</button>
-					</form>
-				</view>
 			</view>
 		</view>
-		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
-		<!-- #endif -->
 	</view>
 </template>
 
@@ -125,15 +98,9 @@
 	import {
 		mapGetters
 	} from "vuex";
-	// #ifdef MP
-	import authorize from '@/components/Authorize';
-	// #endif
+	import {Debounce} from '@/utils/validate.js'
+	let app = getApp();
 	export default {
-		components: {
-			// #ifdef MP
-			authorize
-			// #endif
-		},
 		data() {
 			return {
 				navList: [{
@@ -144,10 +111,6 @@
 						'name': '微信',
 						'icon': 'icon-weixin2'
 					},
-					{
-						'name': '支付宝',
-						'icon': 'icon-icon34'
-					}
 				],
 				currentTab: 0,
 				index: 0,
@@ -155,12 +118,11 @@
 				minPrice: 0.00, //最低提现金额
 				userInfo: [],
 				isClone: false,
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
 				commission:{},
 				qrcodeUrlW:"",
 				qrcodeUrlZ:"",
-				isCommitted: false //防止多次提交
+				isCommitted: false, //防止多次提交
+				theme:app.globalData.theme,
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -187,7 +149,7 @@
 			uploadpic: function (type) {
 			  let that = this;
 			  that.$util.uploadImageOne({
-			  	url: 'user/upload/image',
+			  	url: 'upload/image',
 			  	name: 'multipart',
 			  	model: "user",
 			  	pid: 1
@@ -209,18 +171,11 @@
 			DelPicZ: function () {
 			  this.qrcodeUrlZ = "";
 			},
-			onLoadFun: function() {
-				this.getUserExtractBank();
-			},
 			getExtractUser(){
 				extractUser().then(res=>{
 					this.commission = res.data;
 					this.minPrice = res.data.minPrice;
 				})
-			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
 			},
 			getUserExtractBank: function() {
 				let that = this;
@@ -245,7 +200,7 @@
 								})
 				
 			},
-			subCash: function(e) {
+			subCash: Debounce(function(e) {
 				let that = this,
 					value = e.detail.value;
 					if (that.currentTab == 0) { //银行卡
@@ -267,13 +222,6 @@
 						});
 						value.wechat = value.name;
 						value.qrcodeUrl = that.qrcodeUrlW;
-					} else if (that.currentTab == 2) { //支付宝
-						value.extractType = 'alipay';
-						if (value.name.length == 0) return this.$util.Tips({
-							title: '请填写账号'
-						});
-						value.alipayCode = value.name;
-						value.qrcodeUrl = that.qrcodeUrlZ;
 					}
 					if (value.money.length == 0) return this.$util.Tips({
 						title: '请填写提现金额'
@@ -290,7 +238,7 @@
 						return this.$util.Tips({
 							title: "提现成功",
 							icon: 'success'
-						},{ tab: 2, url: '/pages/users/user_spread_user/index' });
+						},{ tab: 2, url: '/pages/promoter/user_spread_user/index' });
 						this.isCommitted=false;
 					}).catch(err => {
 						 this.isCommitted=false;
@@ -299,7 +247,7 @@
 						});
 					});
 				}
-			}
+			})
 		}
 	}
 </script>
@@ -328,7 +276,8 @@
 		width: 40rpx;
 		height: 40rpx;
 		border-radius: 50%;
-		border: 2rpx solid $theme-color;
+		@include coupons_border_color(theme);
+		@include main_color(theme);
 		text-align: center;
 		line-height: 37rpx;
 		margin: 0 auto 6rpx auto;
@@ -337,9 +286,10 @@
 	}
 	
 	.cash-withdrawal .nav .item .iconfont.on {
-		background-color: $theme-color;
-		color: #fff;
-		border-color: $theme-color;
+		@include main_bg_color(theme);
+		color: #fff !important;
+		@include coupons_border_color(theme);
+		// border-color: $theme-color;
 	}
 	
 	.cash-withdrawal .nav .item .line {
@@ -348,7 +298,12 @@
 		margin: 0 auto;
 		transition: height 0.3s;
 	}
-	
+	.tab_text{
+		@include main_color(theme);
+	}
+	.bg_color{
+		@include main_bg_color(theme);
+	}
 	.cash-withdrawal .nav .item .line.on {
 		height: 39rpx;
 	}
@@ -425,6 +380,7 @@
 		border-radius: 50rpx;
 		line-height: 90rpx;
 		margin: 64rpx auto;
+		@include main_bg_color(theme);
 	}
 	
 	.cash-withdrawal .wrapper .list .tip2 {
@@ -454,6 +410,6 @@
 	}
 	
 	.price {
-		color: $theme-color;
+		@include price_color(theme);
 	}
 </style>

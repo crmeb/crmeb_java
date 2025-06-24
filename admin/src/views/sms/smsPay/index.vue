@@ -7,9 +7,9 @@
         <el-tab-pane label="物流查询" name="expr_query"></el-tab-pane>
         <el-tab-pane label="电子面单打印" name="expr_dump"></el-tab-pane>
       </el-tabs>
-      <router-link :to="{path:'/operation/onePass'}">
-          <el-button class="link_abs" size="mini" icon="el-icon-arrow-left">返回</el-button>
-        </router-link>
+      <router-link :to="{ path: '/operation/onePass' }">
+        <el-button class="link_abs"  icon="el-icon-arrow-left">返回</el-button>
+      </router-link>
       <el-row v-loading="fullscreenLoading" :gutter="16">
         <el-col :span="24" class="ivu-text-left mb20">
           <el-col :xs="12" :sm="6" :md="4" :lg="2" class="mr20">
@@ -33,23 +33,17 @@
           </el-col>
           <el-col :xs="11" :sm="13" :md="19" :lg="20">
             <el-row :gutter="20">
-              <el-col
-                v-for="(item, index) in list"
-                :key="index"
-                :xl="6"
-                :lg="6"
-                :md="12"
-                :sm="24"
-                :xs="24"
-              >
+              <el-col v-for="(item, index) in list" :key="index" :xl="6" :lg="6" :md="12" :sm="24" :xs="24">
                 <div
                   class="list-goods-list-item mb15"
-                  :class="{active:index === current}"
-                  @click="check(item,index)"
+                  :class="{ active: index === current }"
+                  @click="check(item, index)"
                 >
-                  <div class="list-goods-list-item-title" :class="{active:index === current}">¥ <i>{{ item.price }}</i></div>
-                  <div class="list-goods-list-item-price" :class="{active:index === current}">
-                    <span>{{tableFrom.type | onePassTypeFilter}}条数: {{ item.num }}</span>
+                  <div class="list-goods-list-item-title" :class="{ active: index === current }">
+                    ¥ <i>{{ item.price }}</i>
+                  </div>
+                  <div class="list-goods-list-item-price" :class="{ active: index === current }">
+                    <span>{{ tableFrom.type | onePassTypeFilter }}条数: {{ item.num }}</span>
                   </div>
                 </div>
               </el-col>
@@ -72,19 +66,21 @@
             <span class="list-goods-list-item-number">￥{{ checkList.price }}</span>
           </el-col>
         </el-col>
-        <el-col :span="24" class="ivu-text-left mb20">
+        <el-col :span="24" class="ivu-text-left mb20" v-if="code">
           <el-col :xs="12" :sm="6" :md="4" :lg="2" class="mr20">
             <span class="ivu-text-right ivu-block">付款方式：</span>
           </el-col>
           <el-col :xs="11" :sm="13" :md="19" :lg="20">
-            <span class="list-goods-list-item-pay">微信支付<i v-if="code.invalid">{{ '  （ 支付码过期时间：' + code.invalid + ' ）' }}</i></span>
+            <span class="list-goods-list-item-pay"
+              >微信支付<i v-if="code.invalid">{{ '  （ 支付码过期时间：' + code.invalid + ' ）' }}</i></span
+            >
           </el-col>
         </el-col>
         <el-col :span="24">
           <el-col :xs="12" :sm="6" :md="4" :lg="2" class="mr20">&nbsp;</el-col>
           <el-col :xs="11" :sm="13" :md="19" :lg="20">
             <div class="list-goods-list-item-code mr20">
-<!--              <img :src="code.code_url">-->
+              <!--              <img :src="code.code_url">-->
               <div id="payQrcode"></div>
             </div>
           </el-col>
@@ -95,10 +91,10 @@
 </template>
 
 <script>
-import { smsNumberApi, smsPriceApi, payCodeApi, smsInfoApi } from '@/api/sms'
-import { isLogin } from '@/libs/public'
-import { mapGetters } from 'vuex'
-import QRcode from 'qrcodejs2'
+import { smsNumberApi, smsPriceApi, payCodeApi, smsInfoApi } from '@/api/sms';
+import { isLogin } from '@/libs/public';
+import { mapGetters } from 'vuex';
+import QRcode from 'qrcodejs2';
 export default {
   name: 'SmsPay',
   data() {
@@ -111,16 +107,14 @@ export default {
       fullscreenLoading: false,
       code: {},
       tableFrom: {
-        type: 'sms'
+        type: 'sms',
       },
-    }
+    };
   },
   computed: {
-    ...mapGetters([
-      'isLogin'
-    ])
+    ...mapGetters(['isLogin']),
   },
-  created () {
+  created() {
     this.tableFrom.type = this.$route.query.type;
     this.onIsLogin();
   },
@@ -128,79 +122,84 @@ export default {
     if (!this.isLogin) {
       // this.$router.push('/operation/onePass?url=' + this.$route.path)
     } else {
-      this.getNumber()
-      this.getPrice()
+      this.getNumber();
+      this.getPrice();
     }
   },
   methods: {
-    onChangeType (val) {
+    onChangeType(val) {
       this.current = 0;
       this.getPrice();
-      this.getNumber()
+      this.getNumber();
     },
     // 查看是否登录
     onIsLogin() {
-      this.fullscreenLoading = true
-      this.$store.dispatch('user/isLogin').then(async res => {
-        const data = res
-        if (!data.status) {
-          this.$message.warning('请先登录')
-          this.$router.push('/operation/onePass?url=' + this.$route.path)
-        } else {
-          this.getNumber()
-          this.getPrice()
-        }
-        this.fullscreenLoading = false
-      }).catch(res => {
-        this.$router.push('/operation/onePass?url=' + this.$route.path)
-        this.fullscreenLoading = false
-      })
+      this.fullscreenLoading = true;
+      this.$store
+        .dispatch('user/isLogin')
+        .then(async (res) => {
+          const data = res;
+          if (!data.status) {
+            this.$message.warning('请先登录');
+            this.$router.push('/operation/onePass?url=' + this.$route.path);
+          } else {
+            this.getNumber();
+            this.getPrice();
+          }
+          this.fullscreenLoading = false;
+        })
+        .catch((res) => {
+          this.$router.push('/operation/onePass?url=' + this.$route.path);
+          this.fullscreenLoading = false;
+        });
     },
     // 剩余条数
     getNumber() {
-      smsInfoApi().then(async res => {
+      smsInfoApi().then(async (res) => {
         let data = res;
         this.account = data.account;
         switch (this.tableFrom.type) {
           case 'sms':
-            this.numbers = data.sms.num
+            this.numbers = data.sms.num;
             break;
           case 'copy':
-            this.numbers = data.copy.num
+            this.numbers = data.copy.num;
             break;
           case 'expr_dump':
-            this.numbers = data.dump.num
+            this.numbers = data.dump.num;
             break;
           default:
-            this.numbers = data.query.num
+            this.numbers = data.query.num;
             break;
         }
-      })
+      });
     },
     // 支付套餐
     getPrice() {
-      this.fullscreenLoading = true
-      smsPriceApi(this.tableFrom).then(async res => {
-        setTimeout(() => {
-          this.fullscreenLoading = false
-        }, 800)
-        const data = res
-        this.list = data.data
-        this.checkList = this.list[0]
-        this.getCode(this.checkList)
-      }).catch(() => {
-        this.fullscreenLoading = false
-      })
+      this.fullscreenLoading = true;
+      smsPriceApi(this.tableFrom)
+        .then(async (res) => {
+          setTimeout(() => {
+            this.fullscreenLoading = false;
+          }, 800);
+          const data = res;
+          this.list = data.data;
+          this.checkList = this.list[0];
+          this.getCode(this.checkList);
+        })
+        .catch(() => {
+          this.fullscreenLoading = false;
+        });
     },
     // 选中
     check(item, index) {
-      this.fullscreenLoading = true
-      this.current = index
+      this.fullscreenLoading = true;
+      this.current = index;
       setTimeout(() => {
-        this.getCode(item)
-        this.checkList = item
-        this.fullscreenLoading = false
-      }, 800)
+        this.getCode(item);
+        this.checkList = item;
+        this.fullscreenLoading = false;
+      }, 800);
     },
     // 支付码
     getCode(item) {
@@ -209,97 +208,103 @@ export default {
         mealId: item.id,
         price: item.price,
         num: item.num,
-        type: this.tableFrom.type
-      }
-      payCodeApi(data).then(async res => {
-        this.code = res
-        document.getElementById('payQrcode').innerHTML = '';
-        new QRcode('payQrcode', { width:135, height:135,text: res.qr_code})
-      })
-    }
-  }
-}
+        type: this.tableFrom.type,
+      };
+      payCodeApi(data)
+        .then(async (res) => {
+          this.code = res;
+          document.getElementById('payQrcode').innerHTML = '';
+          new QRcode('payQrcode', { width: 135, height: 135, text: res.qr_code });
+        })
+        .catch((err) => {
+          this.$router.push({ path: '/operation/onePass', query: { type: this.tableFrom.type } });
+          this.code = {};
+          document.getElementById('payQrcode').innerHTML = '';
+        });
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>
-  .active{
-    background: #0091FF;
-    box-shadow:0px 6px 20px 0px rgba(0, 145, 255, 0.3);
-    color: #fff !important;
-  }
-  .list-goods-list-item{
-    border: 1px solid #DADFE6;
-    height: 118px;
-    box-sizing: border-box;
-    border-radius:4px;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    align-items: center;
-  }
-  .list-goods-list{
-    &-item{
-      text-align: center;
-      position: relative;
-      cursor: pointer;
-      img{
-        width: 60%;
+.active {
+  background: #0091ff;
+  box-shadow: 0px 6px 20px 0px rgba(0, 145, 255, 0.3);
+  color: #fff !important;
+}
+.list-goods-list-item {
+  border: 1px solid #dadfe6;
+  height: 118px;
+  box-sizing: border-box;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+.list-goods-list {
+  &-item {
+    text-align: center;
+    position: relative;
+    cursor: pointer;
+    img {
+      width: 60%;
+    }
+    .ivu-tag {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+    &-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #0091ff;
+      margin-bottom: 15px;
+      i {
+        font-size: 30px;
+        font-style: normal;
       }
-      .ivu-tag{
-        position: absolute;
-        top: 10px;
-        right: 10px;
+    }
+    &-desc {
+      font-size: 14px;
+      color: #303133;
+    }
+    &-price {
+      font-size: 14px;
+      color: #000000;
+      s {
+        color: #c5c8ce;
       }
-      &-title{
-        font-size: 16px;
-        font-weight: bold;
-        color: #0091FF;
-        margin-bottom: 15px;
-        i{
-          font-size: 30px;
-          font-style: normal;
-        }
+    }
+    &-number {
+      font-size: 14px;
+      color: #ed4014;
+    }
+    &-pay {
+      font-size: 14px;
+      color: #00c050;
+      i {
+        font-size: 12px;
+        font-style: normal;
+        color: #6d7278;
       }
-      &-desc{
-        font-size: 14px;
-        color: #303133;
-      }
-      &-price{
-        font-size: 14px;
-        color: #000000;
-        s{
-          color: #c5c8ce;
-        }
-      }
-      &-number{
-        font-size: 14px;
-        color: #ED4014;
-      }
-      &-pay{
-        font-size: 14px;
-        color: #00C050;
-        i{
-          font-size: 12px;
-          font-style: normal;
-          color: #6D7278;
-        }
-      }
-      &-code{
-        width: 130px;
-        height: 130px;
-        img{
-          width: 100%;
-          height: 100%;
-        }
+    }
+    &-code {
+      width: 130px;
+      height: 130px;
+      img {
+        width: 100%;
+        height: 100%;
       }
     }
   }
-  .relative{
-    position: relative;
-  }
-  .link_abs{
-    position: absolute;
-    top: 36px;
-    right: 40px;
-  }
+}
+.relative {
+  position: relative;
+}
+.link_abs {
+  position: absolute;
+  top: 36px;
+  right: 40px;
+}
 </style>

@@ -1,435 +1,517 @@
 <template>
-	<view>
-		<view class="page-index" :class="{'bgf':navIndex >0}">
-			<!-- #ifdef H5||APP||MP-WEIXIN -->
-			<view class="header">
-				<view class="serch-wrapper flex">
-					<view class="logo">
-						<image :src="logoUrl" mode=""></image>
+	<view id="home" :data-theme="theme" :style="[pageStyle]">
+		<tui-skeleton v-if="showSkeleton"></tui-skeleton>
+		<!-- 有网内容 -->
+		<view v-if="!errorNetwork">
+			<view class="page-index tui-skeleton page_count" :class="{'bgf':navIndex >0}"
+				:style="{visibility: showSkeleton ? 'hidden' : 'visible'}">
+				<!-- 组合组件 -->
+				<homeComb v-if="showHomeComb" :bgInfo="bgInfo" :dataConfig="homeCombData" @changeTab="changeTab" :isScrolled="isScrolled"
+					:navIndex="navIndex"></homeComb>
+				<!-- 顶部搜索框 -->
+				<headerSearch :isScrolled="isScrolled" v-if="showHeaderSerch" :dataConfig="headerSerchCombData"></headerSearch>
+				<!-- 分类 -->
+				<cateNav v-if="showCateNav" :dataConfig="cateNavData" @changeTab="changeTab"></cateNav>
+				<view class="page_content skeleton">
+					<view v-if="navIndex === 0">
+						<view v-for="(item, index) in styleConfig" :key="index">
+							<!-- 新闻简报 -->
+							<news v-if="item.name == 'news'&&!item.isHide" :dataConfig="item"></news>
+							<!-- 导航组 -->
+							<menus v-if="item.name == 'menus'&&!item.isHide" :dataConfig="item"></menus>
+							<!-- 文章列表 -->
+							<articleList v-if="item.name == 'homeArticle'&&!item.isHide" :dataConfig="item"></articleList>
+							<!-- 秒杀 -->
+							<seckill-data v-if="item.name == 'seckill'&&!item.isHide" :dataConfig="item"></seckill-data>
+							<!-- 优惠券 -->
+							<coupon v-if="item.name == 'homeCoupons'&&!item.isHide" :dataConfig="item"></coupon>
+							<!-- 图片魔方 -->
+							<pictureCube v-if="item.name == 'pictureCube'&&!item.isHide" :dataConfig="item"></pictureCube>
+							<!-- 热区 -->
+							<hotSpot v-if="item.name == 'homeHotspot'&&!item.isHide" :dataConfig="item"></hotSpot>
+							<!-- 轮播图 -->
+							<swiperBg v-if="item.name == 'swiperBg'&&!item.isHide" :dataConfig="item"></swiperBg>
+							<!-- 视频 -->
+							<shortVideo v-if="item.name == 'video'&&!item.isHide" :dataConfig="item"></shortVideo>
+							<!-- 拼团 -->
+							<group v-if="item.name == 'group'&&!item.isHide" :dataConfig="item"></group>
+							<!-- 砍价 -->
+							<bargain v-if="item.name == 'bargain'&&!item.isHide" :dataConfig="item"></bargain>
+							<!-- 辅助线 -->
+							<guide v-if="item.name == 'guide'&&!item.isHide" :dataConfig="item"></guide>
+							<!-- 富文本-->
+							<rich-text-editor v-if="item.name == 'richTextEditor'&&!item.isHide"
+								:dataConfig="item"></rich-text-editor>
+							<!-- 辅助空白-->
+							<blank-page v-if="item.name == 'blankPage'&&!item.isHide" :dataConfig="item"></blank-page>
+							<!-- 标题 -->
+							<home-title v-if="item.name == 'titles'&&!item.isHide" :dataConfig="item"></home-title>
+							<!-- 商品列表 -->
+							<goodList v-if="item.name == 'goodList'&&!item.isHide" :dataConfig="item" @detail="goDetail"></goodList>
+							<!-- 选项卡商品列表-->
+							<homeTab v-if="item.name == 'homeTab'&&!item.isHide" :dataConfig="item" @detail="goDetail"></homeTab>
+						</view>
 					</view>
-					<navigator url="/pages/goods_search/index" class="input" hover-class="none"><text
-							class="iconfont icon-xiazai5"></text>
-						搜索商品</navigator>
-				</view>
-			</view>
-			<!-- #endif -->
-			<!-- 首页展示 -->
-			<view class="page_content" :style="'margin-top:'+(marTop)+'px;'" v-if="navIndex == 0">
-				<view class="mp-bg"></view>
-				<!-- banner -->
-				<view class="swiper" v-if="imgUrls.length">
-					<swiper indicator-dots="true" :autoplay="true" :circular="circular" :interval="interval"
-						:duration="duration" indicator-color="rgba(255,255,255,0.6)" indicator-active-color="#fff">
-						<block v-for="(item,index) in imgUrls" :key="index">
-							<swiper-item>
-								<navigator :url='item.url' class='slide-navigator acea-row row-between-wrapper'
-									hover-class='none'>
-									<image :src="item.pic" class="slide-image" lazy-load></image>
-								</navigator>
-							</swiper-item>
-						</block>
-					</swiper>
-				</view>
-				<!-- 新闻简报 -->
-				<view class='notice acea-row row-middle row-between' v-if="roll.length">
-					<view class="pic">
-						<image src="/static/images/xinjian.png"></image>
-					</view>
-					<text class='line'>|</text>
-					<view class='swipers'>
-						<swiper :indicator-dots="indicatorDots" :autoplay="autoplay" interval="2500" duration="500"
-							vertical="true" circular="true">
-							<block v-for="(item,index) in roll" :key='index'>
-								<swiper-item>
-									<navigator class='item' :url='item.url' hover-class='none'>
-										<view class='line1'>{{item.info}}</view>
-									</navigator>
-								</swiper-item>
-							</block>
-						</swiper>
-					</view>
-					<view class="iconfont icon-xiangyou"></view>
-				</view>
-				<!-- menu -->
-				<view class='nav acea-row' v-if="menus.length">
-					<block v-for="(item,index) in menus" :key="index">
-						<navigator class='item' v-if="item.show == '1'" :url='item.url' open-type='switchTab'
-							hover-class='none'>
-							<view class='pictrue'>
-								<image :src='item.pic'></image>
-							</view>
-							<view class="menu-txt">{{item.name}}</view>
-						</navigator>
-						<navigator class='item' v-else :url='item.url' hover-class='none'>
-							<view class='pictrue'>
-								<image :src='item.pic'></image>
-							</view>
-							<view class="menu-txt">{{item.name}}</view>
-						</navigator>
-					</block>
-				</view>
-				<!-- 优惠券 -->
-				<view class="couponIndex" v-if="couponList.length>0">
-					<view class="acea-row" style="height: 100%;">
-						<view class="titBox">
-							<view class="tit1">领取优惠券</view>
-							<view class="tit2">福利大礼包，省了又省</view>
-							<navigator class='item' url='/pages/users/user_get_coupon/index' hover-class='none'>
-								<view class="tit3">查看全部 <text class="iconfont icon-xiangyou"></text></view>
+
+					<!-- 分类页-->
+					<view class="productList" v-if="navIndex === 1 && sortList.length>0">
+						<view class="sort acea-row" :class="sortList.length ? '' : 'no_pad'"
+							:style="{ marginTop: sortMarTop + 'px' }">
+							<navigator hover-class="none"
+								:url="'/pages/goods/goods_list/index?cid=' + item.id + '&title=' + item.name"
+								class="item" v-for="(item, index) in sortList" :key="index" v-if="index<9">
+								<view class="pictrue">
+									<image :src="item.extra" class='slide-image tui-skeleton-rect'></image>
+								</view>
+								<view class="text">{{ item.name }}</view>
 							</navigator>
-						</view>
-						<view class="listBox acea-row">
-							<view class="list" :class='item.isUse ? "listHui" : "listActive" '
-								v-for="(item, index) in couponList.slice(0,2)" :key="index">
-								<view class="tit line1" :class='item.isUse ? "pricehui" : "titActive" '>{{item.name}}
+							<view class="item" @click="bindMore()" v-if="sortList.length >= 9">
+								<view class="pictrues acea-row row-center-wrapper">
+									<text class="iconfont icon-gengduo2"></text>
 								</view>
-								<view class="price" :class='item.isUse ? "pricehui" : "icon-color" '>
-									{{item.money?Number(item.money):''}}<text class="yuan">元</text></view>
-								<view class="ling" v-if="!item.isUse" :class='item.isUse ? "pricehui" : "icon-color" '
-									@click="getCoupon(item.id,index)">领取</view>
-								<view class="ling" v-else :class='item.isUse ? "pricehui fonthui" : "icon-color" '>已领取
-								</view>
-								<view class="priceM">满{{item.minPrice?Number(item.minPrice):''}}元可用</view>
+								<view class="text">更多</view>
 							</view>
 						</view>
-
 					</view>
-				</view>
-				<!-- 活动-->
-				<a_seckill></a_seckill>
-				<b_combination></b_combination>
-				<c_bargain></c_bargain>
-
-				<!-- 首页推荐 -->
-				<!-- :class="iSshowH?'on':''" -->
-				<view class="sticky-box" :style="'top:'+(marTop)+'px;'">
-					<scroll-view class="scroll-view_H" style="width: 100%;" scroll-x="true" scroll-with-animation
-						:scroll-left="tabsScrollLeft" @scroll="scroll">
-						<view class="tab nav-bd" id="tab_list">
-							<view id="tab_item" :class="{ 'active': listActive == index}" class="item"
-								v-for="(item, index) in explosiveMoney" :key="index" @click="ProductNavTab(item,index)">
-								<view class="txt">{{item.name}}</view>
-								<view class="label">{{item.info}}</view>
-							</view>
+					<!-- 推荐商品，分类商品列表-->
+					<recommend v-if="categoryId>0" ref="recommendIndex" :categoryId='categoryId'
+						:isShowTitle="isShowTitle" @getRecommendLength="getRecommendLength"></recommend>
+					<view class='noCommodity' v-if="isNoCommodity&& navIndex > 0">
+						<view class='pictrue'>
+							<image :src="urlDomain+'crmebimage/perset/staticImg/noShopper.png'"></image>
 						</view>
-					</scroll-view>
+						<text class="text-ccc">暂无商品</text>
+					</view>
+					<!-- 备案设置 -->
+					<!-- #ifdef H5 -->
+					<copyRight></copyRight>
+					<!-- #endif -->
+					<!-- 底部导航距离，做兼容处理的-->
+					<view class="footerBottom-h10"></view>
+					<view class="footerBottom"></view>
 				</view>
 
-				<!-- 首发新品 -->
-				<view class="index-product-wrapper" :class="iSshowH?'on':''">
-					<view class="list-box animated" :class='tempArr.length > 0?"fadeIn on":""'>
-						<view class="item" v-for="(item,index) in tempArr" :key="index" @click="goDetail(item)">
-							<view class="pictrue">
-								<span class="pictrue_log pictrue_log_class"
-									v-if="item.activityH5 && item.activityH5.type === '1'">秒杀</span>
-								<span class="pictrue_log pictrue_log_class"
-									v-if="item.activityH5 && item.activityH5.type === '2'">砍价</span>
-								<span class="pictrue_log pictrue_log_class"
-									v-if="item.activityH5 && item.activityH5.type === '3'">拼团</span>
-								<image :src="item.image" mode=""></image>
-							</view>
-							<view class="text-info">
-								<view class="title line1">{{item.storeName}}</view>
-								<view class="old-price"><text>¥{{item.otPrice}}</text></view>
-								<view class="price">
-									<text>￥</text>{{item.price}}
-									<view class="txt" v-if="item.checkCoupon">券</view>
-								</view>
-							</view>
-						</view>
-					</view>
-					<view class='loadingicon acea-row row-center-wrapper' v-if="goodScroll">
-						<text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>
-					</view>
-					<view class="mores-txt flex" v-if="!goodScroll">
-						<text>我是有底线的</text>
-					</view>
-				</view>
+				<!-- #ifdef MP -->
+				<aTip :isCustom="true" :text="wxText" :borderR="5"></aTip>
+				<!-- #endif -->
 			</view>
 		</view>
+		<!-- 断网内容 -->
+		<view v-else>
+			<view class="error-network">
+				<image class="img" src="./error-network.png"></image>
+				<view class="title">网络连接断开</view>
+				<view class="con">
+					<view class="label">请检查情况：</view>
+					<view class="item">· 在设置中是否已开启网络权限</view>
+					<view class="item">· 当前是否处于弱网环境</view>
+					<view class="item">· 版本是否过低，升级试试吧</view>
+				</view>
+				<view class="btn" @click="reconnect">重新连接</view>
+			</view>
+		</view>
+		<!-- 底部 -->
+		<pageFooter></pageFooter>
 	</view>
 </template>
 
 <script>
-	import Auth from '@/libs/wechat';
+	// +----------------------------------------------------------------------
+	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+	// +----------------------------------------------------------------------
+	// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+	// +----------------------------------------------------------------------
+	// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+	// +----------------------------------------------------------------------
+	// | Author: CRMEB Team <admin@crmeb.com>
+	// +----------------------------------------------------------------------
+	import tuiSkeleton from '@/components/base/tui-skeleton.vue';
 	import Cache from '../../utils/cache';
-	var statusBarHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
-	let app = getApp();
+	import homeComb from '@/components/homeIndex/homeComb';
+	import recommend from "@/components/base/recommend.vue";
+	import seckillData from "@/components/homeIndex/seckill.vue";
+	import aTip from './components/addTips.vue';
+	import coupon from "@/components/homeIndex/coupon.vue";
+	import menus from "@/components/homeIndex/menus.vue";
+	import pictureCube from '@/components/homeIndex/pictureCube'
+	import news from '@/components/homeIndex/news'
+	import goodList from '@/components/homeIndex/goodList'
+	import guide from '@/components/homeIndex/guide';
+	import articleList from '@/components/homeIndex/articleList'
+	import swiperBg from '@/components/homeIndex/swiperBg'
+	import headerSearch from '@/components/homeIndex/headerSearch';
+	import cateNav from '@/components/homeIndex/cateNav';
+	import richTextEditor from '@/components/homeIndex/richTextEditor';
+	import shortVideo from '@/components/homeIndex/video';
+	import homeTab from '@/components/homeIndex/homeTab';
+	import blankPage from '@/components/homeIndex/blankPage';
+	import homeTitle from '@/components/homeIndex/title';
+	import hotSpot from '@/components/homeIndex/hotSpot.vue';
+	import group from "@/components/homeIndex/group.vue";
+	import bargain from "@/components/homeIndex/bargain.vue";
+	import pageFooter from "@/components/pageFooter/index.vue";
+	import copyRight from './components/copyRight.vue';
 	import {
 		getIndexData,
-		getCoupons,
-		setCouponReceive
+		getTheme,
+		getAppVersion,
+		getCategoryTwo,
+		pagediyInfoApi
 	} from '@/api/api.js';
-	// #ifdef MP-WEIXIN
+	// #ifdef MP-WEIXIN || APP-PLUS
 	import {
 		getTemlIds
 	} from '@/api/api.js';
-	// import {
-	// 	SUBSCRIBE_MESSAGE,
-	// 	TIPS_KEY
-	// } from '@/config/cache';
-	// #endif
-	// #ifdef H5  
-	import {
-		follow
-	} from '@/api/public.js';
 	// #endif
 	import {
 		getShare
 	} from '@/api/public.js';
-	import a_seckill from './components/a_seckill';
-	import b_combination from './components/b_combination';
-	import c_bargain from './components/c_bargain';
-	import goodList from '@/components/goodList';
-	import promotionGood from '@/components/promotionGood';
-	import couponWindow from '@/components/couponWindow';
-	import ClipboardJS from "@/plugin/clipboard/clipboard.js";
-	import {
-		goShopDetail
-	} from '@/libs/order.js'
 	import {
 		mapGetters
 	} from "vuex";
-	import tabNav from '@/components/tabNav.vue'
-	import countDown from '@/components/countDown';
 	import {
-		getCategoryList,
-		getProductslist,
-		getProductHot,
-		getGroomList
-	} from '@/api/store.js';
-	// import {
-	// 	setVisit
-	// } from '@/api/user.js'
-	import recommend from '@/components/recommend';
-	// #ifdef MP
-	import authorize from '@/components/Authorize';
-	// #endif
+		silenceBindingSpread,
+	} from '@/utils/index.js';
+	import animationType from '@/utils/animationType.js'
 	import {
-		silenceBindingSpread
-	} from '@/utils';
-	// #ifndef MP
-	import {
-		kefuConfig
-	} from "@/api/public";
-	import {
-		getWechatConfig
-	} from "@/api/public";
-	// #endif
-	import Loading from '@/components/Loading/index.vue';
-	const arrTemp = ["beforePay", "afterPay", "refundApply", "beforeRecharge", "createBargain", "pink"];
+		goProductDetail
+	} from "../../libs/order";
+
+	const arrTemp = ["beforePay", "afterPay", "createBargain", "pink"];
+	var statusBarHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
+	let app = getApp();
 	export default {
-		computed: mapGetters(['isLogin', 'uid']),
+		computed: mapGetters(['isLogin', 'uid', 'bottomNavigationIsCustom']),
 		components: {
-			tabNav,
-			goodList,
-			promotionGood,
-			couponWindow,
-			countDown,
-			a_seckill,
-			b_combination,
-			c_bargain,
+			tuiSkeleton,
+			aTip,
+			homeComb,
 			recommend,
-			// #ifdef MP
-			authorize,
-			// #endif
-			Loading
+			seckillData,
+			pageFooter,
+			coupon,
+			menus,
+			pictureCube,
+			news,
+			goodList,
+			articleList,
+			swiperBg,
+			headerSearch,
+			cateNav,
+			guide,
+			richTextEditor,
+			shortVideo,
+			homeTab,
+			blankPage,
+			homeTitle,
+			hotSpot,
+			group,
+			bargain,
+			copyRight
 		},
 		data() {
 			return {
-				pageHeight: 0,
-				loaded: false,
-				loading: false,
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
+				urlDomain: this.$Cache.get("imgHost"),
+				isNoCommodity: false,
+				isScrolled: false, //是否开始滚动
+				categoryId: 0,
+				showSkeleton: true, //骨架屏显示隐藏
+				isNodes: 0, //控制什么时候开始抓取元素节点,只要数值改变就重新抓取
 				statusBarHeight: statusBarHeight,
-				navIndex: 0,
-				navTop: [],
-				followUrl: "",
-				followHid: true,
-				followCode: false,
-				logoUrl: "",
-				imgUrls: [],
-				itemNew: [],
-				menus: [],
-				bastInfo: '',
-				fastInfo: '',
-				fastList: [],
-				firstInfo: '',
-				salesInfo: '',
-				indicatorDots: false,
-				circular: true,
-				autoplay: true,
-				interval: 3000,
-				duration: 500,
-				window: false,
-				iShidden: false,
-				navH: "",
-				newGoodsBananr: '',
-				couponList: [],
-				liveList: [],
-				hotList: [{
-					pic: '/static/images/hot_001.png'
-				}, {
-					pic: '/static/images/hot_002.png'
-				}, {
-					pic: '/static/images/hot_003.png'
-				}],
+				navIndex: 0, //判断首页显示内容，1显示分类页和商品，0首页
 				ProductNavindex: 0,
-				marTop: 0,
-				childID: 0,
-				loadend: false,
-				loadTitle: '加载更多',
 				sortProduct: [],
-				where: {
-					cid: 0,
-					page: 1,
-					limit: 10,
-				},
-				is_switch: true,
-				hotPage: 1,
-				hotLimit: 10,
-				hotScroll: false,
-				explosiveMoney: [],
-				prodeuctTop: 0,
-				searchH: 0,
-				isFixed: false,
-				goodType: 0, //精品推荐Type
-				goodScroll: true, //精品推荐开关
-				params: { //精品推荐分页
-					page: 1,
-					limit: 10,
-				},
-				tempArr: [], //精品推荐临时数组
-				roll: [], // 新闻简报
 				site_name: '', //首页title
-				iSshowH: false,
 				configApi: {}, //分享类容配置
-				spikeList: [], // 秒杀
-				point: '',
-				privacyStatus: false, // 隐私政策是否同意过
-				tabsScrollLeft: 0, // tabs当前偏移量
-				scrollLeft: 0,
-				lineColor: 'red',
-				lineStyle: {}, // 下划线位置--动态甲酸
 				listActive: 0, // 当前选中项
+				theme: app.globalData.theme,
+				imgHost: '', //图片域名地址
+				appUpdate: {},
+				wxText: "点击添加到我的小程序，微信首页下拉即可访问商城。",
+				locationContent: '授权位置信息，提供完整服务',
+				sortMpTop: 0,
+				// #ifdef APP-PLUS || MP
+				isFixed: true,
+				// #endif
+				// #ifdef H5
+				isFixed: false,
+				// #endif
+				domOffsetTop: 50,
+				prodeuctTop: 30,
+				sortList: [],
+				sortMarTop: 0,
+				navHeight: 38,
+				domHeight: 0,
+				cateNavActive: 0,
+				couponModal: false,
+				styleConfig: [], //DIY数据
+				diyId: 0, //DIYID
+				smallPage: false, //是否微页面
+				isHeaderSerch: false,
+				homeCombData: {}, //组合组件数据
+				showCateNav: false, //是否显示分类导航组件
+				cateNavData: {}, //分类导航组件数据
+				showHomeComb: false, //是否显示组合
+				showHeaderSerch: false, //是否显示搜索框
+				headerSerchCombData: {}, //搜索框对象
+				isShowTitle: false, //是否显示头部标题，同时也判断是否展示分类下的商品列表
+				bgColor: '', //背景颜色
+				bgPic: '', //背景图片
+				bgTabVal: '', //背景图片样式
+				windowHeight: 0,
+				pageStyle: {},
+				isDefault: 1, //是否首页，1是，0不是
+				errorNetwork: false, //是否有网络
+				bgInfo:{
+					colorPicker:'#f5f5f5',
+					isBgColor:1,
+				},
+			}
+		},
+		//下拉刷新
+		onPullDownRefresh() {
+			// #ifdef APP-PLUS
+			setTimeout(() => {
+				uni.reLaunch({
+					url: "/pages/index/index"
+				});
+				uni.stopPullDownRefresh();
+			}, 1000)
+			// #endif
+		},
+		onLoad(options) {
+			// #ifdef APP-PLUS
+			//app刚进入检测有无网络
+			this.snycNetWork();
+			this.getInitTheme();
+			//APP版本检测
+			this.appVersionConfig();
+			// #endif
 
-				duration: 0.2 // 下划线动画时长
+			if (options.spread) this.$Cache.set('spread',options.spread);
+			if (options.scene) {
+				let qrCodeValue = this.$util.getUrlParams(decodeURIComponent(options.scene));
+				let mapeMpQrCodeValue = this.$util.formatMpQrCodeData(qrCodeValue);
+				app.globalData.spread = mapeMpQrCodeValue.spread;
 			}
-		},
-		watch: {
-			ProductNavindex(newVal) { // 监听当前选中项
-				this.setTabList()
-			},
-			listActive(newVal) { // 监听当前选中项
-				this.setTabList()
-			}
-		},
-		mounted() {
-			this.setTabList()
-		},
-		onLoad() {
-			var that = this;
-			// 获取系统信息
-			uni.getSystemInfo({
-				success(res) {
-					that.$store.commit("SYSTEM_PLATFORM", res.platform);
-				}
-			});
-			uni.getLocation({
-				type: 'gcj02',
-				altitude: true,
-				geocode: true,
-				success: function(res) {
-					try {
-						uni.setStorageSync('user_latitude', res.latitude);
-						uni.setStorageSync('user_longitude', res.longitude);
-					} catch {}
-				}
-			});
-			let self = this
-			// #ifdef MP
-			// 获取小程序头部高度
-			this.navH = app.globalData.navHeight;
-			let info = uni.createSelectorQuery().select(".mp-header");
-			info.boundingClientRect(function(data) {
-				self.marTop = data.height
-				self.poTop = Number(data.height) + 84
-			}).exec()
-			// #endif
-			// #ifndef MP
-			this.navH = 0;
-			// #endif
-			this.isLogin && silenceBindingSpread();
-			// Promise.all([this.getAllCategory(), this.getIndexConfig()
-			// 	// , this.setVisit()
-			// ]);
+
+			//获取浏览器id
+			let diyid = 0;
+			//check
+			diyid = options.id ? options.id : 0;
+			//diy数据加载
+			this.diyData(diyid, false);
+
+			//首页数据加载
 			this.getIndexConfig();
-			// #ifdef MP
-			this.getTemlIds()
-			// #endif
-		},
-		onShow() {
-			let self = this
-			uni.setNavigationBarTitle({
-				title: self.site_name
+
+			let that = this;
+			this.$nextTick(function() {
+				uni.getSystemInfo({
+					success: function(res) {
+						that.windowHeight = res.windowHeight;
+					}
+				});
 			})
 		},
-		methods: {
-			getCoupon: function(id, index) {
-				let that = this;
-				//领取优惠券
-				setCouponReceive(id).then(function(res) {
-					that.$set(that.couponList[index], 'isUse', true);
-					that.$util.Tips({
-						title: '领取成功'
-					});
-				}, function(res) {
-					return that.$util.Tips({
-						title: res
-					});
-				})
-			},
-			clickSort(index) {
-				this.listActive = index
-			},
-			// scroll-view滑动事件
-			scroll(e) {
-				this.scrollLeft = e.detail.scrollLeft;
-			},
-			setTabList() {
+		onShow() {
+			// 分类样式3、4跳回首页tabbar处理
+			!this.bottomNavigationIsCustom&&uni.showTabBar()
+			let self = this;
+			// #ifdef APP-PLUS
+			setTimeout(() => {
+				if (self.appUpdate.openUpgrade == 'true') {
+					self.appVersionConfig();
+				}
+			}, 1000)
+			// #endif
+			//分销关系绑定，分享需要开启分销员开关，才能绑定成功
+			this.getTokenIsExist();
+		},
+		// 滚动监听
+		onPageScroll(e) {
+			// 传入scrollTop值并触发所有easy-loadimage组件下的滚动监听事件
+			uni.$emit('scroll');
+			if (e.scrollTop > this.domOffsetTop) {
+				this.isScrolled = true;
+			}
+			if (e.scrollTop < this.domOffsetTop) {
 				this.$nextTick(() => {
-					//this.setLine()
-					this.scrollIntoView()
+					this.isScrolled = false;
+				});
+			}
+		},
+		methods: {
+			//校验token是否有效,true为有效，false为无效
+			getTokenIsExist() {
+				this.$LoginAuth.getTokenIsExist().then(data => {
+					if (data) {
+						//绑定关系
+						silenceBindingSpread();
+					}
+				});
+			},
+			getInitTheme() {
+				let that = this;
+				// 主题变色
+				getTheme().then(resP => {
+					this.$Cache.set('theme', `theme${Number(resP.data.value)}`);
 				})
 			},
-			// 计算tabs位置
-			scrollIntoView() { // item滚动
-				let lineLeft = 0;
-				this.getElementData('#tab_list', (data) => {
-					let list = data[0]
-					this.getElementData(`#tab_item`, (data) => {
-						let el = data[this.listActive]
-						lineLeft = el.width / 2 + (-list.left) + el.left - list.width / 2 - this.scrollLeft
-						this.tabsScrollLeft = this.scrollLeft + lineLeft
+			//app刚进入检测有无网络
+			snycNetWork() {
+				uni.getNetworkType({
+					success: res => {
+						//res.networkType === 'none'无网络
+						this.errorNetwork = res.networkType === 'none';
+						//如果没有网络，清除骨架屏
+						if (this.errorNetwork) this.reloadData();
+					}
+				});
+			},
+			// 断网后重新链接
+			reconnect() {
+				uni.getNetworkType({
+					success: res => {
+						this.errorNetwork = res.networkType === 'none';
+						if (!this.errorNetwork) {
+							setTimeout(() => {
+								uni.reLaunch({
+									url: "/pages/index/index"
+								});
+							}, 1000)
+						}
+					}
+				});
+			},
+			/**
+			 * 获取DIY
+			 * @param {number} id
+			 * @param {boolean} type 区分是否是微页面
+			 */
+			diyData(id, type) {
+				let that = this;
+				that.styleConfig = []
+				uni.showLoading({
+					title: '加载中...'
+				});
+				pagediyInfoApi(id).then(res => {
+					that.errorNetwork = false;
+					uni.setNavigationBarTitle({
+						title: res.data.title
+					});
+					uni.setNavigationBarColor({
+						//必须要16进制小写
+						frontColor: res.data.titleColor,
+						backgroundColor: res.data.titleBgColor.toString().toLowerCase(),
 					})
+					let data = res.data;
+					that.diyId = res.data.id;
+					that.isDefault = data.isDefault; //是否是首页，1是，0不是
+					that.styleConfig = that.$util.objToArr(res.data.value);
+					this.bgInfo.isBgColor=data.isBgColor
+					this.bgInfo.colorPicker=data.colorPicker
+					that.pageStyle = {
+						'background-color': data.isBgColor === 1 ? res.data.colorPicker : '',
+						'background-image': data.isBgPic === 1 ? `url(${res.data.bgPic})` : '',
+						'background-repeat': res.data.bgTabVal === 1 ? 'repeat-y' : 'no-repeat',
+						'background-size': res.data.bgTabVal === 2 ? 'cover' : 'contain'
+					};
+					uni.hideLoading();
+					if (type) {
+						that.styleConfig.forEach((item) => {
+							if (item.name == 'headerSerch' || item.name == 'homeComb' || item.name ==
+								'tabNav') {
+								that.styleConfig.splice(index, 1);
+							}
+						});
+					} else {
+						that.styleConfig.forEach((item) => {
+							if (item.name === 'tabNav'&&!item.isHide) {
+								that.showCateNav = true;
+								that.cateNavData = item;
+							}
+							if (item.name === 'homeComb'&&!item.isHide) {
+								that.showHomeComb = true
+								that.homeCombData = item;
+							}
+							if (item.name === 'headerSerch'&&!item.isHide) {
+								that.showHeaderSerch = true
+								that.headerSerchCombData = item;
+							}
+						});
+					}
+					setTimeout(() => {
+						that.isNodes++;
+					}, 100);
+				}).catch(err => {
+					return that.$util.Tips({
+						title: err
+					});
+					uni.hideLoading();
+				});
+			},
+			bindMore() {
+				uni.setStorageSync('categoryId', this.categoryId);
+				uni.switchTab({
+					url: `/pages/goods_cate/goods_cate`
 				})
 			},
-			//  计算下划线位置
-			setLine() {
-				let lineWidth = 0,
-					lineLeft = 0
-				this.getElementData(`#tab_item`, (data) => {
-					let el = data[this.listActive]
-					lineWidth = el.width / 2
-					// lineLeft = el.width * (this.currentIndex + 0.5)  // 此种只能针对每个item长度一致的
-					lineLeft = el.width / 2 + (-data[0].left) + el.left
-					this.lineStyle = {
-						width: `${lineWidth}px`,
-						transform: `translateX(${lineLeft}px) translateX(-50%)`,
-						transitionDuration: `${this.duration}s`
-					};
+			getRecommendLength(e) {
+				this.isNoCommodity = e == 0 ? true : false;
+			},
+			// 导航分类切换
+			changeTab(index, item) {
+				//type=0微页面，1分类，2首页
+				this.cateNavActive = index;
+				if (item.type == 1) {
+					this.navIndex = 1;
+					if (!item.val) {
+						this.sortList = [];
+						this.categoryId = 0;
+						this.$util.Tips({
+							title: "请在平台端选择商品分类！确保加载商品分类数据。"
+						});
+						return;
+					} else {
+						getCategoryTwo(item.val).then(res => {
+							this.sortList = res.data;
+							// #ifdef H5
+							self.sortMarTop = 10;
+							// #endif
+						});
+						this.categoryId = item.val;
+						this.isShowTitle = false;
+					}
+				} else if (item.type == 0) {
+					this.navIndex = 0;
+					this.isShowTitle = true;
+					this.categoryId = 0;
+					if (!item.val) {
+						return this.$util.Tips({
+							title: "请在平台端选择微页面链接！确保加载微页面数据。"
+						});
+					} else {
+						this.styleConfig = [];
+						this.diyData(item.val, true);
+					}
+				} else {
+					this.categoryId = 0;
+					this.navIndex = 0;
+					this.styleConfig = [];
+					this.diyData(item.val, false);
+				}
+			},
+			toNewsList() {
+				uni.navigateTo({
+					animationType: animationType.type,
+					animationDuration: animationType.duration,
+					url: '/pages/goods/news_list/index'
 				})
+			},
+			//清除骨架屏
+			reloadData() {
+				this.showSkeleton = false;
 			},
 			getElementData(el, callback) {
 				uni.createSelectorQuery().in(this).selectAll(el).boundingClientRect().exec((data) => {
@@ -441,7 +523,16 @@
 					url: '/pages/users/web_page/index?webUel=https://admin.java.crmeb.net/useragreement/xieyi.html&title=协议内容'
 				})
 			},
-			// #ifdef MP
+			// #ifdef APP-PLUS
+			xieyiApp() {
+				uni.navigateTo({
+					animationType: animationType.type,
+					animationDuration: animationType.duration,
+					url: '/pages/users/web_page/index?webUel=https://admin.java.crmeb.net/useragreement/xieyi.html&title=协议内容'
+				})
+			},
+			// #endif
+			// #ifdef MP || APP-PLUS
 			getTemlIds() {
 				for (var i in arrTemp) {
 					this.getTem(arrTemp[i]);
@@ -457,82 +548,98 @@
 						})
 						wx.setStorageSync('tempID' + data, arr);
 					}
-				})
+				});
 			},
 			// #endif
 			// 首页数据
 			getIndexConfig: function() {
 				let that = this;
 				getIndexData().then(res => {
-					uni.setNavigationBarTitle({
-						title: '首页'
-					})
-					that.$set(that, "logoUrl", res.data.logoUrl);
-					that.$set(that, "site_name", '首页');
-					that.$set(that, "imgUrls", res.data.banner);
-					that.$set(that, "menus", res.data.menus);
-					that.$set(that, "roll", res.data.roll ? res.data.roll : []);
-					// #ifdef H5
+					let imgHost = res.data.logoUrl.split('crmebimage')[0];
+					that.imgHost = imgHost;
+					that.$Cache.set('imgHost', imgHost );
+					// #ifdef H5 || APP-PLUS
 					that.$store.commit("SET_CHATURL", res.data.yzfUrl);
 					Cache.set('chatUrl', res.data.yzfUrl);
 					// #endif
-					that.$set(that, "explosiveMoney", res.data.explosiveMoney);
-					that.goodType = res.data.explosiveMoney[0].type
-					this.getGroomList();
-					this.shareApi();
-					this.getcouponList();
-					// #ifdef H5
-					// that.subscribe = res.data.subscribe;
-					// #endif
-
-				})
-			},
-			getcouponList() {
-				let that = this;
-				getCoupons({
-					page: 1,
-					limit: 6
-				}).then(res => {
-					that.$set(that, "couponList", res.data);
-					// 小程序判断用户是否授权；
-					// #ifdef MP
-					uni.getSetting({
-						success(res) {
-							if (!res.authSetting['scope.userInfo']) {
-								that.window = that.couponList.length ? true : false;
-							} else {
-								that.window = false;
-								that.iShidden = true;
-							}
+					that.$Cache.setItem({
+						name: 'categoryConfig',
+						value: {
+							categoryConfig: res.data.categoryPageConfig,
+							isShowCategory: res.data.isShowCategory
 						}
 					});
-					// #endif
-					// #ifndef MP
-					if (that.isLogin) {
-						that.window = false;
-					} else {
-						that.window = res.data.length ? true : false;
-					}
-					// #endif
+					Cache.setItem({
+						name: 'chatConfig',
+						value: {
+							consumer_hotline: res.data.consumerHotline,
+							telephone_service_switch: res.data.telephoneServiceSwitch,
+							wx_chant_independent:res.data.wxChatIndependent
+						}
+					});
+					this.reloadData();
 				}).catch(err => {
 					return this.$util.Tips({
 						title: err
 					});
 				});
 			},
+			appVersionConfig() {
+				var that = this;
+				//app升级
+				// 获取本地应用资源版本号
+				getAppVersion().then(res => {
+					that.$set(that.appUpdate, 'androidAddress', res.data.androidAddress);
+					that.$set(that.appUpdate, 'appVersion', res.data.appVersion);
+					that.$set(that.appUpdate, 'iosAddress', res.data.iosAddress);
+					that.$set(that.appUpdate, 'openUpgrade', res.data.openUpgrade);
+					plus.runtime.getProperty(plus.runtime.appid, function(inf) {
+						let nowVersion = (inf.version).split('.').join('');
+						let appVersion = (res.data.appVersion).split('.').join('');
+						uni.getSystemInfo({
+							success: (res) => {
+								if (appVersion > nowVersion) {
+									uni.showModal({
+										title: '更新提示',
+										content: '发现新版本，是否前去下载?',
+										showCancel: that.appUpdate.openUpgrade == '1' ?
+											true : false,
+										cancelColor: '#eeeeee',
+										confirmColor: '#FF0000',
+										success(response) {
+											if (response.confirm) {
+												switch (res.platform) {
+													case "android":
+														plus.runtime.openURL(that
+															.appUpdate
+															.androidAddress);
+														break;
+													case "ios":
+														plus.runtime.openURL(encodeURI(
+															that.appUpdate
+															.iosAddress));
+														break;
+												}
+
+											}
+										}
+									});
+								}
+							}
+						})
+					});
+				})
+			},
 			shareApi: function() {
 				getShare().then(res => {
 					this.$set(this, 'configApi', res.data);
+					this.$set(this, "site_name", res.data.title);
+					uni.setNavigationBarTitle({
+						title: this.site_name
+					})
 					// #ifdef H5
 					this.setOpenShare(res.data);
 					// #endif
-				})
-			},
-			getChatUrL() {
-				kefuConfig().then(res => {
-					let data = res.data;
-					this.$store.commit("SET_CHATURL", data.yzfUrl);
-					Cache.set('chatUrl', data.yzfUrl);
 				})
 			},
 			// 微信分享；
@@ -549,92 +656,23 @@
 						configAppMessage);
 				}
 			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
+			stopTouchMove() {
+				return true //禁止新闻swiper手动滑动
 			},
-			// 授权回调
-			onLoadFun() {
-
+			closeDialog() {
+				this.couponModal = false;
+				this.$Cache.clear('newGift');
 			},
-			// 首发新品切换
-			ProductNavTab(item, index) {
-				this.listActive = index
-				this.goodType = item.type
-				this.listActive = index
-				this.ProductNavindex = index
-				this.tempArr = []
-				this.params.page = 1
-				this.goodScroll = true
-				let onloadH = true
-				this.getGroomList(onloadH)
-			},
-			// 首发新品详情
 			goDetail(item) {
-				if (item.activityH5 && item.activityH5.type === "2" && !this.isLogin) {
-					toLogin();
-				} else {
-					goShopDetail(item, this.uid).then(res => {
-						uni.navigateTo({
-							url: `/pages/goods_details/index?id=${item.id}`
-						})
-					})
-				}
-			},
-			// 分类详情
-			godDetail(item) {
-				goShopDetail(item, this.uid).then(res => {
-					uni.navigateTo({
-						url: `/pages/goods_details/index?id=${item.id}`
-					})
-				})
-			},
-			// 精品推荐
-			getGroomList(onloadH) {
-				this.loading = true
-				let type = this.goodType;
-				if (!this.goodScroll) return
-				if (onloadH) {
-					this.iSshowH = true
-				}
-				getGroomList(type, this.params).then(({
-					data
-				}) => {
-					this.iSshowH = false
-					this.loading = false
-					this.goodScroll = data.list.length >= this.params.limit
-					this.params.page++
-					this.tempArr = this.tempArr.concat(data.list)
-				})
-			},
-			/**
-			 * 获取我的推荐
-			 */
-			get_host_product: function() {
-				let that = this;
-				that.loading = true;
-
-				if (that.hotScroll) return
-				getProductHot(
-					that.hotPage,
-					that.hotLimit,
-				).then(res => {
-					that.hotPage++
-					that.hotScroll = res.data.list.length < that.hotLimit
-					that.hostProduct = that.hostProduct.concat(res.data.list)
-				});
+				goProductDetail(item.id, 0, '')
 			},
 		},
 		mounted() {
-			let self = this
-			// #ifdef H5
-			//self.getChatUrL();
-			// 获取H5 搜索框高度
-			let appSearchH = uni.createSelectorQuery().select(".serch-wrapper");
-			appSearchH.boundingClientRect(function(data) {
-				self.searchH = data.height
-			}).exec()
-			// #endif
+			let query = uni.createSelectorQuery().in(this);
+			query.select("#home").boundingClientRect();
+			query.exec(res => {
+				this.domHeight = res[0].height;
+			})
 		},
 		/**
 		 * 用户点击右上角分享
@@ -647,27 +685,13 @@
 				desc: this.configApi.synopsis,
 				path: '/pages/index/index'
 			};
-		},
+		}
 		// #endif
-		onReachBottom() {
-			if (this.navIndex == 0) {
-				// 首页加载更多
-				if (this.params.page != 1) {
-					this.getGroomList();
-				}
-			} else {
-				// 分类栏目加载更多
-				if (this.sortProduct.length > 0) {
-					//this.get_product_list();
-				} else {
-					this.get_host_product();
-				}
-			}
-		},
 	}
 </script>
 <style>
 	page {
+		height: auto;
 		display: flex;
 		flex-direction: column;
 		height: 100%;
@@ -677,571 +701,151 @@
 
 	}
 </style>
-<style lang="scss">
-	.notice {
-		width: 100%;
-		height: 70rpx;
-		border-radius: 10rpx;
-		background-color: #fff;
-		margin-bottom: 25rpx;
-		line-height: 70rpx;
-		padding: 0 14rpx;
-
-		.line {
-			color: #CCCCCC;
-		}
-
-		.pic {
-			width: 130rpx;
-			height: 36rpx;
-
-			image {
-				width: 100%;
-				height: 100%;
-				display: block !important;
-			}
-		}
-
-		.swipers {
-			height: 100%;
-			width: 444rpx;
-			overflow: hidden;
-
-			swiper {
-				height: 100%;
-				width: 100%;
-				overflow: hidden;
-				font-size: 22rpx;
-				color: #333333;
-			}
-		}
-
-		.iconfont {
-			color: #999999;
-			font-size: 20rpx;
-		}
-	}
-
-	.couponIndex {
-		width: auto;
-		height: 238rpx;
-		background-image: url('~@/static/images/yhjsy.png');
-		background-size: 100% 100%;
-		padding-left: 42rpx;
-		margin-bottom: 30rpx;
-
-		.titBox {
-			padding: 47rpx 0;
-			text-align: center;
-			height: 100%;
-
-			.tit1 {
-				color: #FFEBD2;
-				font-size: 34rpx;
-				font-weight: 600;
-			}
-
-			.tit2 {
-				color: #FFEBD2;
-				font-size: 22rpx;
-				margin: 10rpx 0 26rpx 0;
-			}
-
-			.tit3 {
-				color: #FFDAAF;
-				font-size: 24rpx;
-
-				.iconfont {
-					font-size: 20rpx;
-				}
-			}
-		}
-
-		.listBox {
-			padding: 14rpx 0;
-
-			.listActive {
-				background-image: url('~@/static/images/lingyhj.png');
-				background-size: 100% 100%;
-			}
-
-			.listHui {
-				background-image: url('~@/static/images/weiling.png');
-				background-size: 100% 100%;
-			}
-
-			.list {
-				width: 170rpx;
-				height: 210rpx;
-				padding: 16rpx 0;
-				text-align: center;
-				margin-left: 24rpx;
-
-				.tit {
-					font-size: 18rpx;
-					padding: 0 26rpx;
-				}
-
-				.titActive {
-					color: #C99959;
-				}
-
-				.price {
-					font-size: 46rpx;
-					font-weight: 900;
-					margin-top: 4rpx;
-				}
-
-				.pricehui {
-					color: #B2B2B2;
-				}
-
-				.fonthui {
-					background-color: #F5F5F5 !important;
-				}
-
-				.yuan {
-					font-size: 24rpx;
-				}
-
-				.ling {
-					font-size: 24rpx;
-					margin-top: 9.5rpx;
-					width: 102rpx;
-					height: 36rpx;
-					line-height: 36rpx;
-					background-color: #FFE5C7;
-					border-radius: 28rpx;
-					margin: auto;
-				}
-
-				.priceM {
-					color: #FFDAAF;
-					font-size: 22rpx;
-					margin-top: 14rpx;
-				}
-			}
-		}
-	}
-
-	.sticky-box {
-		/* #ifndef APP-PLUS-NVUE */
-		display: flex;
-		position: -webkit-sticky;
-		/* #endif */
-		position: sticky;
-		/* #ifdef H5*/
-		top: var(--window-top);
-		/* #endif */
-
-		z-index: 99;
-		flex-direction: row;
-		margin: 0px;
-		background: #f5f5f5;
-		padding: 30rpx 0;
-	}
-
-	.listAll {
-		width: 20%;
-		text-indent: 62rpx;
-		font-size: 30rpx;
-		border-left: 1px #eee solid;
-		margin: 1% 0;
-		padding: 5rpx;
-		position: relative;
-
-		image {
-			position: absolute;
-			left: 20rpx;
-			top: 8rpx;
-		}
-	}
-
-	.tab {
-		position: relative;
-		display: flex;
-		font-size: 28rpx;
-		white-space: nowrap;
-
-		&__item {
-			flex: 1;
-			padding: 0 20rpx;
-			text-align: center;
-			height: 60rpx;
-			line-height: 60rpx;
-			color: #666;
-
-			&.active {
-				color: #09C2C9;
-			}
-		}
-	}
-
-	.tab__line {
-		display: block;
-		height: 6rpx;
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		z-index: 1;
-		border-radius: 3rpx;
-		position: relative;
-		background: #2FC6CD;
-	}
-
-	.scroll-view_H {
-		/* 文本不会换行，文本会在在同一行上继续，直到遇到 <br> 标签为止。 */
-		white-space: nowrap;
-		width: 100%;
-	}
-
-
-	.privacy-wrapper {
-		z-index: 999;
+<style lang="scss" scoped>
+	.error-network {
 		position: fixed;
 		left: 0;
 		top: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 		width: 100%;
 		height: 100%;
-		background: #7F7F7F;
+		padding-top: 40rpx;
+		background: #fff;
+		padding-top: 30%;
 
-		.privacy-box {
-			position: absolute;
-			left: 50%;
-			top: 50%;
-			transform: translate(-50%, -50%);
-			width: 560rpx;
-			padding: 50rpx 45rpx 0;
-			background: #fff;
-			border-radius: 20rpx;
+		.img {
+			width: 414rpx;
+			height: 336rpx;
+		}
 
-			.title {
-				text-align: center;
-				font-size: 32rpx;
-				text-align: center;
-				color: #333;
-				font-weight: 700;
+		.title {
+			position: relative;
+			top: -40rpx;
+			font-size: 32rpx;
+			color: #666;
+		}
+
+		.con {
+			font-size: 24rpx;
+			color: #999;
+
+			.label {
+				margin-bottom: 20rpx;
 			}
 
-			.content {
-				margin-top: 20rpx;
-				line-height: 1.5;
-				font-size: 26rpx;
-				color: #666;
-				text-indent: 54rpx;
-
-				i {
-					font-style: normal;
-					color: $theme-color;
-				}
+			.item {
+				margin-bottom: 20rpx;
 			}
+		}
 
-			.btn-box {
-				margin-top: 40rpx;
-				text-align: center;
-				font-size: 30rpx;
-
-				.btn-item {
-					height: 82rpx;
-					line-height: 82rpx;
-					background: linear-gradient(90deg, #F67A38 0%, #F11B09 100%);
-					color: #fff;
-					border-radius: 41rpx;
-				}
-
-				.btn {
-					padding: 30rpx 0;
-				}
-			}
+		.btn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 508rpx;
+			height: 86rpx;
+			margin-top: 100rpx;
+			border: 1px solid #d74432;
+			color: #e93323;
+			font-size: 30rpx;
+			border-radius: 120rpx;
 		}
 	}
 
-	.page-index {
-		display: flex;
-		flex-direction: column;
-		min-height: 100%;
-		background: linear-gradient(180deg, #fff 0%, #f5f5f5 100%);
+	.ysize {
+		background-size: 100%;
+	}
 
-		.header {
-			position: sticky;
-			top: 0;
-			z-index: 200000;
-			width: 100%;
-			background-color: $theme-color;
-			padding: 28rpx 30rpx;
+	.fullsize {
+		background-size: 100% 100%;
+	}
 
-			.serch-wrapper {
-				margin-top: var(--status-bar-height);
-				align-items: center;
-				
-				/* #ifdef MP-WEIXIN */
-				width: 75%;
-				/* #endif */
+	.repeat {
+		background-repeat: repeat;
+	}
 
+	.noRepeat {
+		background-repeat: no-repeat;
+	}
 
-				.logo {
-					width: 118rpx;
-					height: 42rpx;
-					margin-right: 24rpx;
-				}
+	.noCommodity {
+		margin-top: 30%;
+	}
 
-				image {
-					width: 118rpx;
-					height: 42rpx;
-				}
+	.icon-gengduo1 {
+		color: #F8F8F8;
+	}
 
-				.input {
-					display: flex;
-					align-items: center;
-					width: 546rpx;
-					height: 58rpx;
-					padding: 0 0 0 30rpx;
-					background: rgba(247, 247, 247, 1);
-					border: 1px solid rgba(241, 241, 241, 1);
-					border-radius: 29rpx;
-					color: #BBBBBB;
-					font-size: 26rpx;
-
-					.iconfont {
-						margin-right: 20rpx;
-						font-size: 26rpx;
-						color: #666666;
-					}
-				}
-			}
-
-			.tabNav {
-				padding-top: 24rpx;
-			}
-		}
-
-		/* #ifdef MP||APP */
-		.mp-header {
-			z-index: 999;
-			position: fixed;
-			left: 0;
-			top: 0;
-			width: 100%;
-			/* #ifdef H5||APP */
-			padding-bottom: 20rpx;
-			/* #endif */
-			background-color: $theme-color;
-
-			.serch-wrapper {
-				height: 100%;
-				align-items: center;
-				padding: 0 50rpx 0 53rpx;
-
-				image {
-					width: 118rpx;
-					height: 42rpx;
-					margin-right: 30rpx;
-				}
-
-				.input {
-					display: flex;
-					align-items: center;
-					/* #ifdef MP||APP */
-					width: 305rpx;
-					/* #endif */
-					height: 50rpx;
-					padding: 0 0 0 30rpx;
-					background: rgba(247, 247, 247, 1);
-					border: 1px solid rgba(241, 241, 241, 1);
-					border-radius: 29rpx;
-					color: #BBBBBB;
-					font-size: 28rpx;
-
-					.iconfont {
-						margin-right: 20rpx;
-					}
-				}
-			}
-		}
-
-		/* #endif */
-
-		.page_content {
-			background-color: #f5f5f5;
-			/* #ifdef H5 */
-			// margin-top: 20rpx !important;
-			/* #endif */
-			padding: 0 30rpx;
-
-			.swiper {
-				position: relative;
-				width: 100%;
-				height: 280rpx;
-				margin: 0 auto;
-				border-radius: 10rpx;
-				overflow: hidden;
-				margin-bottom: 25rpx;
-				/* #ifdef MP */
-				z-index: 10;
-				margin-top: 20rpx;
-
-				/* #endif */
-				swiper,
-				.swiper-item,
-				image {
-					width: 100%;
-					height: 280rpx;
-					border-radius: 10rpx;
-				}
-			}
-
-			.nav {
-				padding-bottom: 26rpx;
-				background: #fff;
-				opacity: 1;
-				border-radius: 14rpx;
-				width: 100%;
-				margin-bottom: 30rpx;
-
-				.item {
-					display: flex;
-					flex-direction: column;
-					align-items: center;
-					justify-content: center;
-					width: 20%;
-					margin-top: 30rpx;
-
-					image {
-						width: 82rpx;
-						height: 82rpx;
-					}
-				}
-			}
-
-
-			.nav-bd {
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-
-				.item {
-					display: flex;
-					flex-direction: column;
-					align-items: center;
-					justify-content: center;
-
-					.txt {
-						font-size: 32rpx;
-						color: #282828;
-					}
-
-					.label {
-						display: flex;
-						align-items: center;
-						justify-content: center;
-						width: 124rpx;
-						height: 32rpx;
-						margin-top: 5rpx;
-						font-size: 24rpx;
-						color: #999;
-					}
-
-					&.active {
-						color: $theme-color;
-
-						.txt {
-							color: $theme-color;
-						}
-
-						.label {
-							background: linear-gradient(90deg, $bg-star 0%, $bg-end 100%);
-							border-radius: 16rpx;
-							color: #fff;
-						}
-					}
-				}
-			}
-
-			.index-product-wrapper {
-				margin-bottom: 110rpx;
-
-				&.on {
-					min-height: 1500rpx;
-				}
-
-				.list-box {
-					display: flex;
-					flex-wrap: wrap;
-					justify-content: space-between;
-
-					.item {
-						width: 335rpx;
-						margin-bottom: 20rpx;
-						background-color: #fff;
-						border-radius: 10rpx;
-						overflow: hidden;
-
-						image {
-							width: 100%;
-							height: 330rpx;
-						}
-
-						.text-info {
-							padding: 10rpx 20rpx 15rpx;
-
-							.title {
-								color: #222222;
-							}
-
-							.old-price {
-								margin-top: 8rpx;
-								font-size: 26rpx;
-								color: #AAAAAA;
-								text-decoration: line-through;
-
-								text {
-									margin-right: 2px;
-									font-size: 20rpx;
-								}
-							}
-
-							.price {
-								display: flex;
-								align-items: flex-end;
-								color: $theme-color;
-								font-size: 34rpx;
-								font-weight: 800;
-
-								text {
-									padding-bottom: 4rpx;
-									font-size: 24rpx;
-									font-weight: 800;
-								}
-
-								.txt {
-									display: flex;
-									align-items: center;
-									justify-content: center;
-									width: 28rpx;
-									height: 28rpx;
-									margin-left: 15rpx;
-									margin-bottom: 10rpx;
-									border: 1px solid $theme-color;
-									border-radius: 4rpx;
-									font-size: 22rpx;
-									font-weight: normal;
-								}
-							}
-						}
-					}
-
-					&.on {
-						display: flex;
-					}
-				}
-			}
-		}
+	.pageIndex {
+		padding: 0 24rpx;
 	}
 
 	.productList {
-		/* #ifdef H5 */
-		padding-bottom: 140rpx;
-		/* #endif */
+		background-color: #F5F5F5;
+		margin-top: 20rpx;
+
+		// min-height: 70vh;
+		.sort {
+			width: 710rpx;
+			max-height: 380rpx;
+			background: rgba(255, 255, 255, 1);
+			border-radius: 16rpx;
+			padding: 0rpx 0rpx 20rpx 0rpx !important;
+			flex-wrap: wrap;
+			margin: 25rpx auto 0 auto;
+
+			&.no_pad {
+				padding: 0;
+			}
+
+			.item {
+				width: 20%;
+				margin-top: 20rpx;
+				text-align: center;
+
+				.pictrues {
+					width: 90rpx;
+					height: 90rpx;
+					background: #F5F5F5;
+					border-radius: 50%;
+					margin: 0 auto;
+				}
+
+				.pictrue {
+					width: 90rpx;
+					height: 90rpx;
+					background: #F5F5F5;
+					border-radius: 50%;
+					margin: 0 auto;
+				}
+
+				.slide-image {
+					width: 90rpx;
+					height: 90rpx;
+					border-radius: 50%;
+					overflow: hidden;
+				}
+
+				/deep/ .easy-loadimage,
+				uni-image,
+				.easy-loadimage {
+					width: 90rpx;
+					height: 90rpx;
+					display: inline-block;
+				}
+
+				.text {
+					color: #272727;
+					font-size: 24rpx;
+					margin-top: 10rpx;
+					// overflow: hidden;
+					white-space: nowrap;
+					text-overflow: ellipsis;
+				}
+			}
+		}
 	}
 
 	.productList .list {
@@ -1258,86 +862,49 @@
 		margin-top: 20rpx;
 		background-color: #fff;
 		border-radius: 10rpx;
+
+		.name {
+			display: flex;
+			align-items: center;
+
+			.name_text {
+				display: inline-block;
+				max-width: 200rpx;
+			}
+		}
 	}
 
-	.productList .list .item.on {
-		width: 100%;
+	.page-index {
 		display: flex;
-		border-bottom: 1rpx solid #f6f6f6;
-		padding: 30rpx 0;
-		margin: 0;
-	}
+		flex-direction: column;
+		min-height: 100%;
 
-	.productList .list .item .pictrue {
-		position: relative;
-		width: 100%;
-		height: 345rpx;
-	}
+		.page_content {
+			overflow: hidden;
 
-	.productList .list .item .pictrue.on {
-		width: 180rpx;
-		height: 180rpx;
-	}
+			// background-color: #f5f5f5;
+			.swiper {
+				position: relative;
+				width: 100%;
+				height: 246rpx;
+				margin: 0 auto;
+				border-radius: 10rpx;
+				overflow: hidden;
+				margin-bottom: 25rpx;
+				/* #ifdef MP */
+				margin-top: 20rpx;
 
-	.productList .list .item .pictrue image {
-		width: 100%;
-		height: 100%;
-		border-radius: 20rpx 20rpx 0 0;
-	}
-
-	.productList .list .item .pictrue image.on {
-		border-radius: 6rpx;
-	}
-
-	.productList .list .item .text {
-		padding: 20rpx 17rpx 26rpx 17rpx;
-		font-size: 30rpx;
-		color: #222;
-	}
-
-	.productList .list .item .text.on {
-		width: 508rpx;
-		padding: 0 0 0 22rpx;
-	}
-
-	.productList .list .item .text .money {
-		font-size: 26rpx;
-		font-weight: bold;
-		margin-top: 8rpx;
-	}
-
-	.productList .list .item .text .money.on {
-		margin-top: 50rpx;
-	}
-
-	.productList .list .item .text .money .num {
-		font-size: 34rpx;
-	}
-
-	.productList .list .item .text .vip {
-		font-size: 22rpx;
-		color: #aaa;
-		margin-top: 7rpx;
-	}
-
-	.productList .list .item .text .vip.on {
-		margin-top: 12rpx;
-	}
-
-	.productList .list .item .text .vip .vip-money {
-		font-size: 24rpx;
-		color: #282828;
-		font-weight: bold;
-	}
-
-	.productList .list .item .text .vip .vip-money image {
-		width: 46rpx;
-		height: 21rpx;
-		margin-left: 4rpx;
-	}
-
-	.pictrue {
-		position: relative;
+				/* #endif */
+				swiper,
+				swiper-item,
+				.slide-image,
+				image {
+					width: 100%;
+					height: 246rpx;
+					border-radius: 10rpx;
+				}
+			}
+		}
 	}
 
 	.fixed {
@@ -1349,46 +916,12 @@
 
 	}
 
-	.mores-txt {
-		width: 100%;
-		align-items: center;
-		justify-content: center;
-		height: 70rpx;
-		color: #999;
-		font-size: 24rpx;
-
-		.iconfont {
-			margin-top: 2rpx;
-			font-size: 20rpx;
-		}
-	}
-
 	.menu-txt {
 		font-size: 24rpx;
 		color: #454545;
 	}
 
-	.mp-bg {
-		position: absolute;
-		left: 0;
-		/* #ifdef H5 */
-		top: 98rpx;
-		/* #endif */
-		width: 100%;
-		height: 304rpx;
-		background: linear-gradient(180deg, #E93323 0%, #F5F5F5 100%, #751A12 100%);
-		// border-radius: 0 0 30rpx 30rpx;
-
-
-	}
-
-	.stats {
-		position: absolute;
-		left: 0px;
-		top: 0px;
-		z-index: 2000000;
-		width: 750rpx;
-		height: var(--status-bar-height);
-		background: #ffffff;
+	.footerBottom-h10 {
+		height: 20rpx;
 	}
 </style>

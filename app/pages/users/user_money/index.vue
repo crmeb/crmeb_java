@@ -1,5 +1,5 @@
 <template>
-	<view>
+	<view :data-theme="theme">
 		<view class='my-account'>
 			<view class='wrapper'>
 				<view class='header'>
@@ -9,26 +9,13 @@
 								<view>总资产(元)</view>
 								<view class='money'>{{statistics.nowMoney || 0}}</view>
 							</view>
-							<!-- #ifdef H5 -->
-							<navigator url="/pages/users/user_payment/index" hover-class="none" class='recharge font-color'>充值</navigator>
-							<!-- #endif -->
-							<!-- #ifdef MP -->
-							<view v-if="userInfo.rechargeSwitch"  @click="openSubscribe('/pages/users/user_payment/index')" class='recharge font-color'>充值</view>
-							<!-- #endif -->
-						</view>
+							<view v-if="userInfo.rechargeSwitch"  @click="openSubscribe('/pages/users/user_payment/index')" class='recharge font_color'>充值</view>
+					    </view>
 						<view class='cumulative acea-row row-top'>
-							<!-- #ifdef H5 -->
-							<view class='item'>
-								<view>累计充值(元)</view>
-								<view class='money'>{{statistics.recharge || 0}}</view>
-							</view>
-							<!-- #endif -->
-							<!-- #ifdef MP -->
 							<view class='item' v-if="userInfo.rechargeSwitch">
 								<view>累计充值(元)</view>
 								<view class='money'>{{statistics.recharge || 0}}</view>
 							</view>
-							<!-- #endif -->
 							<view class='item'>
 								<view>累计消费(元)</view>
 								<view class='money'>{{statistics.orderStatusSum || 0}}</view>
@@ -39,25 +26,25 @@
 				<view class='nav acea-row row-middle'>
 					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=all'>
 						<view class='pictrue'>
-							<image src='../../../static/images/record1.png'></image>
+							<text class="iconfont icon-s-zhangdanjilu icon_txt"></text>
 						</view>
 						<view>账单记录</view>
 					</navigator>
 					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=expenditure'>
 						<view class='pictrue'>
-							<image src='../../../static/images/record2.png'></image>
+							<text class="iconfont icon-s-xiaofeijilu icon_txt"></text>
 						</view>
 						<view>消费记录</view>
 					</navigator>
 					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=income' v-if="userInfo.rechargeSwitch">
 						<view class='pictrue'>
-							<image src='../../../static/images/record3.png'></image>
+							<text class="iconfont icon-s-chongzhijilu icon_txt"></text>
 						</view>
 						<view>充值记录</view>
 					</navigator>
 					<navigator class='item' hover-class='none' url='/pages/users/user_integral/index'>
 						<view class='pictrue'>
-							<image src='../../../static/images/record4.png'></image>
+							<text class="iconfont icon-jifenzhongxin icon_txt"></text>
 						</view>
 						<view>积分中心</view>
 					</navigator>
@@ -69,7 +56,7 @@
 							<view>赚积分抵现金</view>
 						</view>
 						<view class='pictrue'>
-							<image src='../../../static/images/gift.png'></image>
+							<image :src="urlDomain+'crmebimage/perset/staticImg/gift.png'"></image>
 						</view>
 					</navigator>
 					<navigator class='item on acea-row row-between-wrapper' hover-class='none' url='/pages/users/user_get_coupon/index'>
@@ -78,96 +65,40 @@
 							<view>满减享优惠</view>
 						</view>
 						<view class='pictrue'>
-							<image src='../../../static/images/money.png'></image>
+							<image :src="urlDomain+'crmebimage/perset/staticImg/money.png'"></image>
 						</view>
 					</navigator>
 				</view>
-				<!-- <view class='list'>
-					<view class='item acea-row row-between-wrapper'>
-						<view class='picTxt acea-row row-between-wrapper'>
-							<view class='iconfont icon-hebingxingzhuang'></view>
-							<view class='text'>
-								<view class='line1'>最新拼团活动</view>
-								<view class='infor line1'>最新的优惠商品上架拼团</view>
-							</view>
-						</view>
-						<navigator hover-class='none' url='/pages/activity/goods_combination/index' class='bnt' v-if="activity.is_pink">立即参与</navigator>
-						<view class='bnt end' v-else>已结束</view>
-					</view>
-					<view class='item acea-row row-between-wrapper'>
-						<view class='picTxt acea-row row-between-wrapper'>
-							<view class='iconfont icon-miaosha yellow'></view>
-							<view class='text'>
-								<view class='line1'>当前限时秒杀</view>
-								<view class='infor line1'>最新商品秒杀进行中</view>
-							</view>
-						</view>
-						<navigator hover-class='none' url='/pages/activity/goods_seckill/index' class='bnt' v-if="activity.is_seckill">立即参与</navigator>
-						<view class='bnt end' v-else>已结束</view>
-					</view>
-					<view class='item acea-row row-between-wrapper'>
-						<view class='picTxt acea-row row-between-wrapper'>
-							<view class='iconfont icon-kanjia1 green'></view>
-							<view class='text'>
-								<view class='line1'>砍价活动</view>
-								<view class='infor line1'>呼朋唤友来砍价</view>
-							</view>
-						</view>
-						<navigator hover-class='none' url='/pages/activity/goods_bargain/index' class='bnt' v-if="activity.is_bargin">立即参与</navigator>
-						<view class='bnt end' v-else>已结束</view>
-					</view>
-				</view> -->
 			</view>
-			<recommend :hostProduct="hostProduct" v-if="hostProduct.length"></recommend>
+			<recommend ref="recommendIndex" @getRecommendLength="getRecommendLength"></recommend>
+			<view class='noCommodity' v-if="isNoCommodity">
+				<view class='pictrue'>
+					<image :src="urlDomain+'crmebimage/perset/staticImg/noSearch.png'"></image>
+				</view>
+			</view>
 		</view>
-		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
-		<!-- #endif -->
-		<home></home>
 	</view>
 </template>
 
 <script>
-	import {
-		getProductHot
-	} from '@/api/store.js';
-	import {
-		openRechargeSubscribe
-	} from '@/utils/SubscribeMessage.js';
-	import {
-		userActivity,
-		getuserDalance
-	} from '@/api/user.js';
-	import {
-		toLogin
-	} from '@/libs/login.js';
-	import {
-		mapGetters
-	} from "vuex";
+	import {userActivity,getuserDalance} from '@/api/user.js';
+	import {toLogin} from '@/libs/login.js';
+	import {mapGetters} from "vuex";
 	import recommend from '@/components/recommend/index';
-	// #ifdef MP
-	import authorize from '@/components/Authorize';
-	// #endif
-	import home from '@/components/home';
+	let app = getApp();
 	export default {
 		components: {
-			recommend,
-			// #ifdef MP
-			authorize,
-			// #endif
-			home
+			recommend
 		},
 		data() {
 			return {
+				urlDomain: this.$Cache.get("imgHost"),
 				hostProduct: [],
 				isClose: false,
 				activity: {},
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false ,//是否隐藏授权
-				hotScroll:false,
 				statistics:{},
-				hotPage:1,
-				hotLimit:10
+				theme:app.globalData.theme,
+				isNoCommodity: false // 是否显示缺省图
 			};
 		},
 		computed: mapGetters(['isLogin', 'userInfo']),
@@ -175,7 +106,6 @@
 			isLogin:{
 				handler:function(newV,oldV){
 					if(newV){
-						this.get_host_product();
 						this.get_activity();
 						this.userDalance();
 					}
@@ -185,7 +115,21 @@
 		},
 		onLoad() {
 			if (this.isLogin) {
-				this.get_host_product();
+				// #ifdef H5
+				var url = window.location.search;
+				if(url){
+					var theRequest = new Object();
+					if (url.indexOf("?") != -1) {
+					    var str = url.substr(1);
+					    var strs = str.split("&");
+					    for (var i = 0; i < strs.length; i++) {
+							theRequest[strs[i].split('=')[0]] = decodeURI(strs[i].split('=')[1]);
+					    }
+					}
+					this.orderId = theRequest.out_trade_no; //返回的订单号
+					// this.alipayQueryPay();
+				}
+				// #endif
 				this.get_activity();
 				this.userDalance();
 			} else {
@@ -193,8 +137,10 @@
 			}
 		},
 		methods: {
+			getRecommendLength(e) {
+				this.isNoCommodity = e == 0 ? true : false;
+			},
 			onLoadFun: function() {
-				this.get_host_product();
 				this.get_activity();
 				this.userDalance();
 			},
@@ -207,21 +153,11 @@
 			authColse: function(e) {
 				this.isShowAuth = e
 			},
-			// #ifdef MP
 			openSubscribe: function(page) {
-				uni.showLoading({
-					title: '正在加载',
-				})
-				openRechargeSubscribe().then(res => {
-					uni.hideLoading();
-					uni.navigateTo({
-						url: page,
-					});
-				}).catch(() => {
-					uni.hideLoading();
+				uni.navigateTo({
+					url: page,
 				});
 			},
-			// #endif
 			/**
 			 * 获取活动可参与否
 			 */
@@ -230,25 +166,10 @@
 				// userActivity().then(res => {
 				// 	that.$set(that, "activity", res.data);
 				// })
-			},
-			/**
-			 * 获取我的推荐
-			 */
-			get_host_product: function() {
-				let that = this;
-				if(that.hotScroll) return
-				getProductHot(
-					that.hotPage,
-					that.hotLimit,
-				).then(res => {
-					that.hotPage++
-					that.hotScroll = res.data.list.length<that.hotLimit
-					that.hostProduct = that.hostProduct.concat(res.data.list)
-				});
 			}
 		},
 		onReachBottom() {
-			this.get_host_product();
+			this.$refs.recommendIndex.get_host_product();
 		}
 	}
 </script>
@@ -263,7 +184,7 @@
 	.my-account .wrapper .header {
 		width: 690rpx;
 		height: 330rpx;
-		background-image: linear-gradient(to right, #f33b2b 0%, #f36053 100%);
+		@include main_bg_color(theme);
 		border-radius: 16rpx;
 		margin: 0 auto;
 		box-sizing: border-box;
@@ -300,7 +221,14 @@
 		text-align: center;
 		line-height: 54rpx;
 	}
-
+	
+	.font_color{
+		@include main_color(theme);
+	}
+	.icon_txt{
+		font-size: 43rpx;
+		@include main_color(theme);
+	}
 	.my-account .wrapper .header .headerCon .cumulative {
 		margin-top: 46rpx;
 	}

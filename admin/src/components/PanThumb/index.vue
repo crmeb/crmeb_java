@@ -1,12 +1,12 @@
 <template>
-  <div :style="{zIndex:zIndex,height:height,width:width}" class="pan-item">
+  <div :style="{ zIndex: zIndex, height: height, width: width }" class="pan-item">
     <div class="pan-info">
       <div class="pan-info-roles-container">
         <slot />
       </div>
     </div>
     <!-- eslint-disable-next-line -->
-    <div :style="{backgroundImage: `url(${image})`}" class="pan-thumb"></div>
+    <div :style="{ backgroundImage: `url(${image})` }" class="pan-thumb"></div>
   </div>
 </template>
 
@@ -16,22 +16,22 @@ export default {
   props: {
     image: {
       type: String,
-      required: true
+      required: true,
     },
     zIndex: {
       type: Number,
-      default: 1
+      default: 1,
     },
     width: {
       type: String,
-      default: '150px'
+      default: '150px',
     },
     height: {
       type: String,
-      default: '150px'
-    }
-  }
-}
+      default: '150px',
+    },
+  },
+};
 </script>
 
 <style scoped>

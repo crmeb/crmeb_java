@@ -5,19 +5,17 @@
 </template>
 
 <script>
-import configList from '@/components/FormGenerator/index/Home.vue'
+import configList from '@/components/FormGenerator/index/Home.vue';
 export default {
   components: { configList },
   // name: "configList",
   props: {
     prentData: {
       type: Object,
-      default: {}
-    }
-  }
-}
+      default: {},
+    },
+  },
+};
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

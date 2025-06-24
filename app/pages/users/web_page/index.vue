@@ -22,6 +22,9 @@
 		},
 		onLoad(option) {
 			if(option.webUel) this.url = option.webUel;
+			// 蚂蚁智能客服场景参数
+			if(option.tntInstId) this.url += `?tntInstId=${option.tntInstId}`;
+			if(option.scene) this.url += `&scene=${option.scene}`;
 			uni.setNavigationBarTitle({
 				title: option.title
 			})

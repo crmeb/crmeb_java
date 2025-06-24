@@ -1,12 +1,12 @@
 /**
-* v-dialogDrag 弹窗拖拽
-* Copyright (c) 2019 ruoyi
-*/
+ * v-dialogDrag 弹窗拖拽
+ * Copyright (c) 2019 ruoyi
+ */
 
 export default {
   bind(el, binding, vnode, oldVnode) {
-    const value = binding.value
-    if (value == false) return
+    const value = binding.value;
+    if (value == false) return;
     // 获取拖拽内容头部
     const dialogHeaderEl = el.querySelector('.el-dialog__header');
     const dragDom = el.querySelector('.el-dialog');
@@ -38,7 +38,7 @@ export default {
       } else {
         styL = +sty.left.replace(/\px/g, '');
         styT = +sty.top.replace(/\px/g, '');
-      };
+      }
 
       // 鼠标拖拽事件
       document.onmousemove = function (e) {
@@ -46,19 +46,18 @@ export default {
         const l = e.clientX - disX;
         const t = e.clientY - disY;
 
-        let finallyL = l + styL
-        let finallyT = t + styT
+        let finallyL = l + styL;
+        let finallyT = t + styT;
 
         // 移动当前元素
         dragDom.style.left = `${finallyL}px`;
         dragDom.style.top = `${finallyT}px`;
-
       };
 
       document.onmouseup = function (e) {
         document.onmousemove = null;
         document.onmouseup = null;
       };
-    }
-  }
+    };
+  },
 };
