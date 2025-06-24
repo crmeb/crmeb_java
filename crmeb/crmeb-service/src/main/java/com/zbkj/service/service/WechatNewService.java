@@ -1,6 +1,7 @@
 package com.zbkj.service.service;
 
 import com.alibaba.fastjson.JSONObject;
+import com.zbkj.common.request.SaveConfigRequest;
 import com.zbkj.common.response.WeChatJsSdkConfigResponse;
 import com.zbkj.common.token.WeChatOauthToken;
 import com.zbkj.common.vo.*;
@@ -13,7 +14,7 @@ import java.util.Map;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -71,6 +72,14 @@ public interface WechatNewService {
      */
     String createQrCode(String page, String scene);
 
+
+    /**
+     * 生成小程序码
+     *
+     * @param jsonObject
+     * @return 小程序码
+     */
+    String createQrCode(JSONObject jsonObject);
     /**
      * 微信预下单接口(统一下单)
      * @param unifiedorderVo 预下单请求对象
@@ -178,4 +187,5 @@ public interface WechatNewService {
      * @return 小程序订阅消息模板编号（自己的）
      */
     String apiAddRoutineTemplate(String tempKey, List<Integer> kidList);
+
 }

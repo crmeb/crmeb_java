@@ -18,8 +18,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.utils.DateUtil;
-import com.zbkj.common.vo.dateLimitUtilVo;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.model.bargain.StoreBargain;
 import com.zbkj.common.model.bargain.StoreBargainUser;
 import com.zbkj.common.model.bargain.StoreBargainUserHelp;
@@ -27,6 +26,7 @@ import com.zbkj.common.request.StoreBargainUserSearchRequest;
 import com.zbkj.common.response.StoreBargainUserResponse;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.user.User;
+import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.service.dao.StoreBargainUserDao;
 import com.zbkj.service.service.*;
 import org.springframework.beans.BeanUtils;
@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -84,8 +84,8 @@ public class StoreBargainUserServiceImpl extends ServiceImpl<StoreBargainUserDao
             lqw.eq(StoreBargainUser::getStatus, request.getStatus());
         }
         if (StrUtil.isNotBlank(request.getDateLimit())) {
-            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
-            lqw.between(StoreBargainUser::getAddTime, DateUtil.dateStr2Timestamp(dateLimit.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN), DateUtil.dateStr2Timestamp(dateLimit.getEndTime(), Constants.DATE_TIME_TYPE_END));
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
+            lqw.between(StoreBargainUser::getAddTime, CrmebDateUtil.dateStr2Timestamp(dateLimit.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN), CrmebDateUtil.dateStr2Timestamp(dateLimit.getEndTime(), Constants.DATE_TIME_TYPE_END));
         }
         lqw.orderByDesc(StoreBargainUser::getId);
         List<StoreBargainUser> bargainUserList = dao.selectList(lqw);
@@ -95,7 +95,7 @@ public class StoreBargainUserServiceImpl extends ServiceImpl<StoreBargainUserDao
         List<StoreBargainUserResponse> list = bargainUserList.stream().map(bargainUser -> {
             StoreBargainUserResponse bargainUserResponse = new StoreBargainUserResponse();
             BeanUtils.copyProperties(bargainUser, bargainUserResponse);
-            bargainUserResponse.setAddTime(DateUtil.timestamp2DateStr(bargainUser.getAddTime(), Constants.DATE_FORMAT));
+            bargainUserResponse.setAddTime(CrmebDateUtil.timestamp2DateStr(bargainUser.getAddTime(), Constants.DATE_FORMAT));
             bargainUserResponse.setNowPrice(bargainUser.getBargainPrice().subtract(bargainUser.getPrice()));
             // 查询用户信息
             User user = userService.getById(bargainUser.getUid());
@@ -105,7 +105,7 @@ public class StoreBargainUserServiceImpl extends ServiceImpl<StoreBargainUserDao
             StoreBargain storeBargain = storeBargainService.getById(bargainUser.getBargainId());
             bargainUserResponse.setTitle(storeBargain.getTitle());
 
-            bargainUserResponse.setDataTime(DateUtil.timestamp2DateStr(storeBargain.getStopTime(), Constants.DATE_FORMAT));
+            bargainUserResponse.setDataTime(CrmebDateUtil.timestamp2DateStr(storeBargain.getStopTime(), Constants.DATE_FORMAT));
             bargainUserResponse.setPeopleNum(storeBargain.getPeopleNum());
             // 剩余砍价次数
             Long helpCount = storeBargainUserHelpService.getHelpCountByBargainIdAndBargainUid(storeBargain.getId(), bargainUser.getId());
@@ -161,13 +161,14 @@ public class StoreBargainUserServiceImpl extends ServiceImpl<StoreBargainUserDao
      */
     @Override
     public List<StoreBargainUser> getHeaderList() {
-        LambdaQueryWrapper<StoreBargainUser> lqw = Wrappers.lambdaQuery();
-        lqw.eq(StoreBargainUser::getStatus, 3);
-        lqw.eq(StoreBargainUser::getIsDel, false);
-        lqw.groupBy(StoreBargainUser::getUid);
-        lqw.orderByDesc(StoreBargainUser::getId);
-        lqw.last(" limit 10");
-        return dao.selectList(lqw);
+//        LambdaQueryWrapper<StoreBargainUser> lqw = Wrappers.lambdaQuery();
+//        lqw.eq(StoreBargainUser::getStatus, 3);
+//        lqw.eq(StoreBargainUser::getIsDel, false);
+//        lqw.groupBy(StoreBargainUser::getUid);
+//        lqw.orderByDesc(StoreBargainUser::getId);
+//        lqw.last(" limit 10");
+//        return dao.selectList(lqw);
+        return dao.selectHeaderList();
     }
 
     /**

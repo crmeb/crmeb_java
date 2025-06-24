@@ -1,6 +1,7 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -11,6 +12,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.constants.ProductConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.product.StoreProduct;
@@ -25,11 +27,11 @@ import com.zbkj.common.response.ProductDetailReplyResponse;
 import com.zbkj.common.response.ProductReplyResponse;
 import com.zbkj.common.response.StoreProductReplyResponse;
 import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.vo.MyRecord;
 import com.zbkj.common.vo.StoreOrderInfoOldVo;
-import com.zbkj.common.vo.dateLimitUtilVo;
+import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.service.dao.StoreProductReplyDao;
 import com.zbkj.service.service.*;
 import org.apache.commons.lang3.ArrayUtils;
@@ -50,7 +52,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -94,7 +96,6 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
     */
     @Override
     public PageInfo<StoreProductReplyResponse> getList(StoreProductReplySearchRequest request, PageParamRequest pageParamRequest) {
-        Page<StoreProductReply> pageStoreReply = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         //带 StoreProductReply 类的多条件查询
         LambdaQueryWrapper<StoreProductReply> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(StoreProductReply::getIsDel, false);
@@ -112,10 +113,11 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
             lambdaQueryWrapper.like(StoreProductReply::getNickname,request.getNickname());
         }
         if (StringUtils.isNotBlank(request.getDateLimit())) {
-            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
             lambdaQueryWrapper.between(StoreProductReply::getCreateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
         }
         lambdaQueryWrapper.orderByDesc(StoreProductReply::getId);
+        Page<StoreProductReply> pageStoreReply = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         List<StoreProductReply> dataList = dao.selectList(lambdaQueryWrapper);
         List<StoreProductReplyResponse> dataResList = new ArrayList<>();
         for (StoreProductReply productReply : dataList) {
@@ -176,6 +178,8 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
         }
         Boolean execute = transactionTemplate.execute(e -> {
             save(storeProductReply);
+            //修改订单详情信息
+            storeOrderInfoService.updateReply(storeOrder.getId(),storeProductReply.getProductId(),storeProductReply.getUnique());
             //修改订单信息
             completeOrder(storeProductReply, count, storeOrder);
             return Boolean.TRUE;
@@ -401,32 +405,59 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
         LambdaUpdateWrapper<StoreProductReply> lup = new LambdaUpdateWrapper<>();
         lup.eq(StoreProductReply::getId, request.getIds());
         lup.set(StoreProductReply::getMerchantReplyContent, request.getMerchantReplyContent());
-        lup.set(StoreProductReply::getMerchantReplyTime, DateUtil.getNowTime());
+        lup.set(StoreProductReply::getMerchantReplyTime, CrmebDateUtil.getNowTime());
         lup.set(StoreProductReply::getIsReply, true);
         return update(lup);
     }
 
-    // 获取统计数据（好评、中评、差评）
-    private Integer getCountByScore(Integer productId, String type) {
+
+    /**
+     * 获取统计数据（好评、中评、差评）
+     */
+    @Override
+    public Integer getCountByScore(Integer productId, String type) {
         LambdaQueryWrapper<StoreProductReply> lqw = new LambdaQueryWrapper<>();
         lqw.eq(StoreProductReply::getProductId, productId);
         lqw.eq(StoreProductReply::getIsDel, false);
 
         switch (type) {
-            case "all":
+            case ProductConstants.PRODUCT_REPLY_TYPE_ALL:
                 break;
-            case "good":
-                lqw.apply( " (product_score + service_score) >= 8");
+            case ProductConstants.PRODUCT_REPLY_TYPE_GOOD:
+                lqw.apply(" (product_score + service_score) >= 8");
                 break;
-            case "medium":
-                lqw.apply( " (product_score + service_score) < 8 and (product_score + service_score) > 4");
+            case ProductConstants.PRODUCT_REPLY_TYPE_MEDIUM:
+                lqw.apply(" (product_score + service_score) < 8 and (product_score + service_score) > 4");
                 break;
-            case "poor":
-                lqw.apply( " (product_score + service_score) <= 4");
+            case ProductConstants.PRODUCT_REPLY_TYPE_POOR:
+                lqw.apply(" (product_score + service_score) <= 4");
                 break;
         }
         return dao.selectCount(lqw);
     }
+
+
+//    // 获取统计数据（好评、中评、差评）
+//    private Integer getCountByScore(Integer productId, String type) {
+//        LambdaQueryWrapper<StoreProductReply> lqw = new LambdaQueryWrapper<>();
+//        lqw.eq(StoreProductReply::getProductId, productId);
+//        lqw.eq(StoreProductReply::getIsDel, false);
+//
+//        switch (type) {
+//            case "all":
+//                break;
+//            case "good":
+//                lqw.apply( " (product_score + service_score) >= 8");
+//                break;
+//            case "medium":
+//                lqw.apply( " (product_score + service_score) < 8 and (product_score + service_score) > 4");
+//                break;
+//            case "poor":
+//                lqw.apply( " (product_score + service_score) <= 4");
+//                break;
+//        }
+//        return dao.selectCount(lqw);
+//    }
 
     /**
      * 如果所有的都已评价，那么订单完成
@@ -440,6 +471,7 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
         if (replyCount.equals(count)) {
             //全部商品都已评价
             storeOrder.setStatus(Constants.ORDER_STATUS_INT_COMPLETE);
+            storeOrder.setUpdateTime(DateUtil.date());
             storeOrderService.updateById(storeOrder);
             redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_COMPLETE_BY_USER, storeOrder.getId());
         }

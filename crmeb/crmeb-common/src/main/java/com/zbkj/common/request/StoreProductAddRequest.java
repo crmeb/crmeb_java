@@ -19,7 +19,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -53,10 +53,10 @@ public class StoreProductAddRequest implements Serializable {
     @Length(max = 128, message = "商品名称长度不能超过128个字符")
     private String storeName;
 
-    @ApiModelProperty(value = "商品简介", required = true)
-    @NotBlank(message = "商品简介不能为空")
-    @Length(max = 256, message = "商品简介长度不能超过256个字符")
-    private String storeInfo;
+//    @ApiModelProperty(value = "商品简介", required = true)
+//    @NotBlank(message = "商品简介不能为空")
+//    @Length(max = 256, message = "商品简介长度不能超过256个字符")
+//    private String storeInfo;
 
     @ApiModelProperty(value = "关键字", required = true)
     @Length(max = 255, message = "关键字长度不能超过255个字符")

@@ -1,7 +1,9 @@
 package com.zbkj.front.filter;
 
 
+import com.zbkj.common.config.CrmebConfig;
 import com.zbkj.common.utils.RequestUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -14,7 +16,7 @@ import java.nio.charset.StandardCharsets;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -24,6 +26,9 @@ import java.nio.charset.StandardCharsets;
  */
 //@Component
 public class ResponseFilter implements Filter {
+
+    @Autowired
+    CrmebConfig crmebConfig;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
@@ -38,7 +43,7 @@ public class ResponseFilter implements Filter {
 
             try {
                 HttpServletRequest req = (HttpServletRequest) request;
-                str = new ResponseRouter().filter(str, RequestUtil.getUri(req));
+                str = new ResponseRouter().filter(str, RequestUtil.getUri(req), crmebConfig);
             } catch (Exception e) {
                 e.printStackTrace();
             }

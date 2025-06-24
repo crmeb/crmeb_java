@@ -1,19 +1,22 @@
 package com.zbkj.admin.controller;
 
+import com.zbkj.common.model.system.SystemGroup;
 import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.response.CommonResult;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.SystemGroupRequest;
 import com.zbkj.common.request.SystemGroupSearchRequest;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.service.service.SystemGroupService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.*;
-import com.zbkj.common.model.system.SystemGroup;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 
 /**
@@ -21,7 +24,7 @@ import com.zbkj.common.model.system.SystemGroup;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -45,7 +48,7 @@ public class SystemGroupController {
     @PreAuthorize("hasAuthority('admin:system:group:list')")
     @ApiOperation(value = "分页列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<SystemGroup>>  getList(@Validated SystemGroupSearchRequest request, @Validated PageParamRequest pageParamRequest) {
+    public CommonResult<CommonPage<SystemGroup>> getList(@Validated SystemGroupSearchRequest request, @Validated PageParamRequest pageParamRequest) {
         CommonPage<SystemGroup> systemGroupCommonPage = CommonPage.restPage(systemGroupService.getList(request, pageParamRequest));
         return CommonResult.success(systemGroupCommonPage);
     }

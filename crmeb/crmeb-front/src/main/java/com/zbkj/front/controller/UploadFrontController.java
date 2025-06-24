@@ -1,6 +1,6 @@
 package com.zbkj.front.controller;
 
-import com.zbkj.common.response.CommonResult;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.common.vo.FileResultVo;
 import com.zbkj.service.service.UploadService;
 import io.swagger.annotations.Api;
@@ -23,7 +23,7 @@ import java.io.IOException;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -48,7 +48,7 @@ public class UploadFrontController {
             @ApiImplicitParam(name = "model", value = "模块 用户user,商品product,微信wechat,news文章"),
             @ApiImplicitParam(name = "pid", value = "分类ID 0编辑器,1商品图片,2拼团图片,3砍价图片,4秒杀图片,5文章图片,6组合数据图,7前台用户,8微信系列 ", allowableValues = "range[0,1,2,3,4,5,6,7,8]")
     })
-    public CommonResult<FileResultVo> image(MultipartFile multipart,@RequestParam(value = "model") String model,
+    public CommonResult<FileResultVo> image(MultipartFile multipart, @RequestParam(value = "model") String model,
                                             @RequestParam(value = "pid") Integer pid) throws IOException {
         return CommonResult.success(uploadService.imageUpload(multipart, model, pid));
     }

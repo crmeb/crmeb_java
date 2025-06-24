@@ -22,7 +22,7 @@ import java.math.BigDecimal;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -41,9 +41,7 @@ public class StoreOrderRefundServiceImpl extends ServiceImpl<StoreOrderDao, Stor
     private WechatNewService wechatNewService;
 
     /**
-     * 退款 需要优化
-     * @author Mr.Zhang
-     * @since 2020-06-03
+     * 退款
      */
     @Override
     public void refund(StoreOrderRefundRequest request, StoreOrder storeOrder) {
@@ -51,7 +49,7 @@ public class StoreOrderRefundServiceImpl extends ServiceImpl<StoreOrderDao, Stor
     }
 
     /**
-     * 公共号退款
+     * 公众号退款
      * @param request
      * @param storeOrder
      */
@@ -82,6 +80,13 @@ public class StoreOrderRefundServiceImpl extends ServiceImpl<StoreOrderDao, Stor
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
 //            path = systemConfigService.getValueByKeyException("pay_mini_client_p12");
             path = systemConfigService.getValueByKeyException("pay_weixin_certificate_path");
+        }
+        if (storeOrder.getIsChannel() == 4 || storeOrder.getIsChannel() == 5) {// 微信App
+            appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_APP_ID);
+            mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_MCH_ID);
+            signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_APP_KEY);
+//            path = systemConfigService.getValueByKeyException("pay_mini_app_client_p12");
+            path = systemConfigService.getValueByKeyException("pay_weixin_app_certificate_path");
         }
 
         String apiDomain = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_API_URL);

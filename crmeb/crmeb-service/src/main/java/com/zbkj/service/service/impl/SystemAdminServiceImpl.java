@@ -1,6 +1,7 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -36,7 +37,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -154,6 +155,7 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
             String pwd = CrmebUtil.encryptPassword(systemAdminRequest.getPwd(), systemAdminRequest.getAccount());
             systemAdmin.setPwd(pwd);
         }
+        systemAdmin.setUpdateTime(DateUtil.date());
         return updateById(systemAdmin);
     }
 
@@ -185,6 +187,7 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
             return true;
         }
         systemAdmin.setStatus(status);
+        systemAdmin.setUpdateTime(DateUtil.date());
         return updateById(systemAdmin);
     }
 
@@ -223,6 +226,7 @@ public class SystemAdminServiceImpl extends ServiceImpl<SystemAdminDao, SystemAd
             throw new CrmebException("请先为管理员添加手机号!");
         }
         systemAdmin.setIsSms(!systemAdmin.getIsSms());
+        systemAdmin.setUpdateTime(DateUtil.date());
         return updateById(systemAdmin);
     }
 

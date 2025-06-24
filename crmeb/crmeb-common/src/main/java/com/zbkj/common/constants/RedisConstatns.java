@@ -5,7 +5,7 @@ package com.zbkj.common.constants;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -24,4 +24,7 @@ public class RedisConstatns {
     /** 商品加购量（每日） */
     public static final String PRO_ADD_CART_KEY = "statistics:product:add_cart:";
     public static final String PRO_PRO_ADD_CART_KEY = "statistics:product:pro_add_cart:{}:{}";
+
+    /** 微信小程序运力缓存Key **/
+    public static final String WECHAT_MINI_DELIVERY_KEY = "wechat_delivery";
 }

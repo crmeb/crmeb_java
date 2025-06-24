@@ -1,15 +1,12 @@
 package com.zbkj.admin.controller;
 
+import com.zbkj.common.model.product.StoreProduct;
 import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.response.CommonResult;
-import com.zbkj.common.request.PageParamRequest;
-import com.zbkj.common.request.StoreCopyProductRequest;
-import com.zbkj.common.request.StoreProductAddRequest;
-import com.zbkj.common.request.StoreProductRequest;
-import com.zbkj.common.request.StoreProductSearchRequest;
+import com.zbkj.common.request.*;
 import com.zbkj.common.response.StoreProductInfoResponse;
 import com.zbkj.common.response.StoreProductResponse;
 import com.zbkj.common.response.StoreProductTabsHeader;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.service.service.StoreCartService;
 import com.zbkj.service.service.StoreProductService;
 import io.swagger.annotations.Api;
@@ -34,7 +31,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -66,6 +63,13 @@ public class StoreProductController {
         return CommonResult.success(CommonPage.restPage(storeProductService.getAdminList(request, pageParamRequest)));
     }
 
+    @PreAuthorize("hasAuthority('admin:product:listbyids')")
+    @ApiOperation(value = "根据id集合获取商品列表") //配合swagger使用
+    @RequestMapping(value = "/listids/{ids}", method = RequestMethod.GET)
+    public CommonResult<CommonPage<StoreProduct>> getListByIds(@PathVariable(value = "ids") List<Integer> ids) {
+        return CommonResult.success(CommonPage.restPage(storeProductService.getListInIds(ids)));
+    }
+
     /**
      * 新增商品
      * @param request 新增参数
@@ -90,7 +94,7 @@ public class StoreProductController {
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     public CommonResult<String> delete(@RequestBody @PathVariable Integer id, @RequestParam(value = "type", required = false, defaultValue = "recycle")String type) {
         if (storeProductService.deleteProduct(id, type)) {
-            if ("recycle".equals(type)) {
+            if (type.equals("recycle")) {
                 storeCartService.productStatusNotEnable(id);
             } else {
                 storeCartService.productDelete(id);
@@ -148,8 +152,8 @@ public class StoreProductController {
     @PreAuthorize("hasAuthority('admin:product:tabs:headers')")
    @ApiOperation(value = "商品表头数量")
    @RequestMapping(value = "/tabs/headers", method = RequestMethod.GET)
-   public CommonResult<List<StoreProductTabsHeader>> getTabsHeader() {
-        return CommonResult.success(storeProductService.getTabsHeader());
+   public CommonResult<List<StoreProductTabsHeader>> getTabsHeader(@Validated StoreProductHeaderRequest request) {
+        return CommonResult.success(storeProductService.getTabsHeader(request));
    }
 
 
@@ -211,6 +215,17 @@ public class StoreProductController {
     public CommonResult<Map<String, Object>> copyProduct(@RequestBody @Valid StoreCopyProductRequest request) {
         return CommonResult.success(storeProductService.copyProduct(request.getUrl()));
     }
+
+    @PreAuthorize("hasAuthority('admin:product:quick:stock:add')")
+    @ApiOperation(value = "快捷添加库存")
+    @RequestMapping(value = "/quick/stock/add", method = RequestMethod.POST)
+    public CommonResult<String> quickAddStock(@RequestBody @Validated ProductAddStockRequest request) {
+        if (storeProductService.quickAddStock(request)) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
+    }
+
 }
 
 

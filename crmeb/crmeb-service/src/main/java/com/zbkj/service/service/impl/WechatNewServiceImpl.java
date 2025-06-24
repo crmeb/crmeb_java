@@ -13,6 +13,7 @@ import com.zbkj.common.constants.WeChatConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.wechat.WechatExceptions;
 import com.zbkj.common.model.wechat.WechatPayInfo;
+import com.zbkj.common.request.SaveConfigRequest;
 import com.zbkj.common.response.WeChatJsSdkConfigResponse;
 import com.zbkj.common.token.WeChatOauthToken;
 import com.zbkj.common.utils.CrmebUtil;
@@ -43,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -145,7 +146,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(data)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (data.containsKey("errcode") && !"0".equals(data.getString("errcode"))) {
+        if (data.containsKey("errcode") && !data.getString("errcode").equals("0")) {
             if (data.containsKey("errmsg")) {
                 // 保存到微信异常表
                 wxExceptionDispose(data, "微信获取开放平台access_token异常");
@@ -169,7 +170,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(data)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (data.containsKey("errcode") && !"0".equals(data.getString("errcode"))) {
+        if (data.containsKey("errcode") && !data.getString("errcode").equals("0")) {
             if (data.containsKey("errmsg")) {
                 // 保存到微信异常表
                 wxExceptionDispose(data, "微信获取开放平台用户信息异常");
@@ -198,7 +199,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(data)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (data.containsKey("errcode") && !"0".equals(data.getString("errcode"))) {
+        if (data.containsKey("errcode") && !data.getString("errcode").equals("0")) {
             if (data.containsKey("errmsg")) {
                 // 保存到微信异常表
                 wxExceptionDispose(data, "微信小程序登录凭证校验异常");
@@ -261,7 +262,7 @@ public class WechatNewServiceImpl implements WechatNewService {
             JSONObject data = JSONObject.parseObject(response);
             // 保存到微信异常表
             wxExceptionDispose(data, "微信小程序生成小程序码异常");
-            if ("40001".equals(data.getString("errcode"))) {
+            if (data.getString("errcode").equals("40001")) {
                 redisUtil.delete(WeChatConstants.REDIS_WECAHT_MINI_ACCESS_TOKEN_KEY);
                 miniAccessToken = getMiniAccessToken();
                 url = StrUtil.format(WeChatConstants.WECHAT_MINI_QRCODE_UNLIMITED_URL, miniAccessToken);
@@ -269,6 +270,54 @@ public class WechatNewServiceImpl implements WechatNewService {
                 response = new String(bytes);
                 if (StringUtils.contains(response,"errcode")) {
                     logger.error("微信生成小程序码重试异常"+response);
+                    JSONObject data2 = JSONObject.parseObject(response);
+                    // 保存到微信异常表
+                    wxExceptionDispose(data2, "微信小程序重试生成小程序码异常");
+                } else {
+                    try {
+                        return CrmebUtil.getBase64Image(Base64.encodeBase64String(bytes));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        throw new CrmebException("微信小程序码转换Base64异常");
+                    }
+                }
+            }
+            throw new CrmebException("微信生成二维码异常");
+        }
+        try {
+            return CrmebUtil.getBase64Image(Base64.encodeBase64String(bytes));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new CrmebException("微信小程序码转换Base64异常");
+        }
+    }
+
+    /**
+     * 生成小程序码
+     *
+     * @param jsonObject  微信端参数
+     * @return 小程序码
+     */
+    @Override
+    public String createQrCode(JSONObject jsonObject) {
+        String miniAccessToken = getMiniAccessToken();
+        String url = StrUtil.format(WeChatConstants.WECHAT_MINI_QRCODE_UNLIMITED_URL, miniAccessToken);
+        logger.info("微信小程序码生成参数:{}", jsonObject);
+        byte[] bytes = restTemplateUtil.postJsonDataAndReturnBuffer(url, jsonObject);
+        String response = new String(bytes);
+        if (StringUtils.contains(response, "errcode")) {
+            logger.error("微信生成小程序码异常" + response);
+            JSONObject data = JSONObject.parseObject(response);
+            // 保存到微信异常表
+            wxExceptionDispose(data, "微信小程序生成小程序码异常");
+            if (data.getString("errcode").equals("40001")) {
+                redisUtil.secondDelete(WeChatConstants.REDIS_WECAHT_MINI_ACCESS_TOKEN_KEY);
+                miniAccessToken = getMiniAccessToken();
+                url = StrUtil.format(WeChatConstants.WECHAT_MINI_QRCODE_UNLIMITED_URL, miniAccessToken);
+                bytes = restTemplateUtil.postJsonDataAndReturnBuffer(url, jsonObject);
+                response = new String(bytes);
+                if (StringUtils.contains(response, "errcode")) {
+                    logger.error("微信生成小程序码重试异常" + response);
                     JSONObject data2 = JSONObject.parseObject(response);
                     // 保存到微信异常表
                     wxExceptionDispose(data2, "微信小程序重试生成小程序码异常");
@@ -310,7 +359,7 @@ public class WechatNewServiceImpl implements WechatNewService {
             WechatPayInfo wechatPayInfo = createWechatPayInfo(unifiedorderVo);
 
             CreateOrderResponseVo responseVo = CrmebUtil.mapToObj(map, CreateOrderResponseVo.class);
-            if ("FAIL".equals(responseVo.getReturnCode().toUpperCase())) {
+            if (responseVo.getReturnCode().toUpperCase().equals("FAIL")) {
                 // 保存到微信异常表
                 wxPayExceptionDispose(map, "微信支付预下单异常");
                 wechatPayInfo.setErrCode(map.get("return_code").toString());
@@ -318,7 +367,7 @@ public class WechatNewServiceImpl implements WechatNewService {
                 throw new CrmebException("微信下单失败1！" +  responseVo.getReturnMsg());
             }
 
-            if ("FAIL".equals(responseVo.getResultCode().toUpperCase())) {
+            if (responseVo.getResultCode().toUpperCase().equals("FAIL")) {
                 wxPayExceptionDispose(map, "微信支付预下单业务异常");
                 wechatPayInfo.setErrCode(map.get("err_code").toString());
                 wechatPayInfoService.save(wechatPayInfo);
@@ -381,16 +430,16 @@ public class WechatNewServiceImpl implements WechatNewService {
                 throw new CrmebException("微信订单查询失败！");
             }
             record.setColums(map);
-            if ("FAIL".equals(record.getStr("return_code").toUpperCase())) {
+            if (record.getStr("return_code").toUpperCase().equals("FAIL")) {
                 wxPayQueryExceptionDispose(record, "微信支付查询订单通信异常");
                 throw new CrmebException("微信订单查询失败1！" +  record.getStr("return_msg"));
             }
 
-            if ("FAIL".equals(record.getStr("result_code").toUpperCase())) {
+            if (record.getStr("result_code").toUpperCase().equals("FAIL")) {
                 wxPayQueryExceptionDispose(record, "微信支付查询订单结果异常");
                 throw new CrmebException("微信订单查询失败2！" + record.getStr("err_code") + record.getStr("err_code_des"));
             }
-            if (!"SUCCESS".equals(record.getStr("trade_state").toUpperCase())) {
+            if (!record.getStr("trade_state").toUpperCase().equals("SUCCESS")) {
                 wxPayQueryExceptionDispose(record, "微信支付查询订单状态异常");
                 throw new CrmebException("微信订单支付失败3！" + record.getStr("trade_state"));
             }
@@ -417,7 +466,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(data)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (data.containsKey("errcode") && !"0".equals(data.getString("errcode"))) {
+        if (data.containsKey("errcode") && !data.getString("errcode").equals("0")) {
             if (data.containsKey("errmsg")) {
                 wxExceptionDispose(data, "微信公众号发送模板消息异常");
                 throw new CrmebException("微信接口调用失败：" + data.getString("errcode") + data.getString("errmsg"));
@@ -441,15 +490,15 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(data)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (data.containsKey("errcode") && !"0".equals(data.getString("errcode"))) {
-            if ("40001".equals(data.getString("errcode"))) {
+        if (data.containsKey("errcode") && !data.getString("errcode").equals("0")) {
+            if (data.getString("errcode").equals("40001")) {
                 wxExceptionDispose(data, "微信小程序发送订阅消息异常");
                 redisUtil.delete(WeChatConstants.REDIS_WECAHT_MINI_ACCESS_TOKEN_KEY);
                 accessToken = getMiniAccessToken();
                 url = StrUtil.format(WeChatConstants.WECHAT_MINI_SEND_SUBSCRIBE_URL, accessToken);
                 result = restTemplateUtil.postJsonData(url, messAge);
                 JSONObject data2 = JSONObject.parseObject(result);
-                if (data2.containsKey("errcode") && !"0".equals(data2.getString("errcode"))) {
+                if (data2.containsKey("errcode") && !data2.getString("errcode").equals("0")) {
                     if (data2.containsKey("errmsg")) {
                         wxExceptionDispose(data2, "微信小程序发送订阅消息重试异常");
                         throw new CrmebException("微信接口调用失败：" + data2.getString("errcode") + data2.getString("errmsg"));
@@ -479,7 +528,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(result)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (result.containsKey("errcode") && "0".equals(result.getString("errcode"))) {
+        if (result.containsKey("errcode") && result.getString("errcode").equals("0")) {
             return result;
         }
         if (result.containsKey("errmsg")) {
@@ -504,7 +553,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(jsonObject)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (jsonObject.containsKey("errcode") && "0".equals(jsonObject.getString("errcode"))) {
+        if (jsonObject.containsKey("errcode") && jsonObject.getString("errcode").equals("0")) {
             return Boolean.TRUE;
         }
         if (jsonObject.containsKey("errmsg")) {
@@ -526,7 +575,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(result)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (result.containsKey("errcode") && "0".equals(result.getString("errcode"))) {
+        if (result.containsKey("errcode") && result.getString("errcode").equals("0")) {
             return Boolean.TRUE;
         }
         if (result.containsKey("errmsg")) {
@@ -571,12 +620,12 @@ public class WechatNewServiceImpl implements WechatNewService {
         }
 
         WxRefundResponseVo responseVo = CrmebUtil.mapToObj(map, WxRefundResponseVo.class);
-        if ("FAIL".equals(responseVo.getReturnCode().toUpperCase())) {
+        if (responseVo.getReturnCode().toUpperCase().equals("FAIL")) {
             wxPayExceptionDispose(map, "微信申请退款异常1");
             throw new CrmebException("微信申请退款失败1！" +  responseVo.getReturnMsg());
         }
 
-        if ("FAIL".equals(responseVo.getResultCode().toUpperCase())) {
+        if (responseVo.getResultCode().toUpperCase().equals("FAIL")) {
             wxPayExceptionDispose(map, "微信申请退款业务异常");
             throw new CrmebException("微信申请退款失败2！" + responseVo.getErrCodeDes());
         }
@@ -596,7 +645,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(jsonObject)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (jsonObject.containsKey("errcode") && !"0".equals(jsonObject.getString("errcode"))) {
+        if (jsonObject.containsKey("errcode") && !jsonObject.getString("errcode").equals("0")) {
             if (jsonObject.containsKey("errmsg")) {
                 // 保存到微信异常表
                 wxExceptionDispose(jsonObject, StrUtil.format("获取我的公众号模板消息列表异常"));
@@ -625,7 +674,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(data)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (data.containsKey("errcode") && !"0".equals(data.getString("errcode"))) {
+        if (data.containsKey("errcode") && !data.getString("errcode").equals("0")) {
             if (data.containsKey("errmsg")) {
                 wxExceptionDispose(data, "删除微信公众号模板消息异常");
                 throw new CrmebException("微信接口调用失败：" + data.getString("errcode") + data.getString("errmsg"));
@@ -651,7 +700,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(data)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (data.containsKey("errcode") && !"0".equals(data.getString("errcode"))) {
+        if (data.containsKey("errcode") && !data.getString("errcode").equals("0")) {
             if (data.containsKey("errmsg")) {
                 wxExceptionDispose(data, "添加公众号模板消息异常");
                 throw new CrmebException("微信接口调用失败：" + data.getString("errcode") + data.getString("errmsg"));
@@ -672,7 +721,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(jsonObject)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (jsonObject.containsKey("errcode") && !"0".equals(jsonObject.getString("errcode"))) {
+        if (jsonObject.containsKey("errcode") && !jsonObject.getString("errcode").equals("0")) {
             if (jsonObject.containsKey("errmsg")) {
                 // 保存到微信异常表
                 wxExceptionDispose(jsonObject, StrUtil.format("获取小程序当前帐号下的个人模板列表异常"));
@@ -700,7 +749,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(data)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (data.containsKey("errcode") && !"0".equals(data.getString("errcode"))) {
+        if (data.containsKey("errcode") && !data.getString("errcode").equals("0")) {
             if (data.containsKey("errmsg")) {
                 wxExceptionDispose(data, "删除微信小程序订阅消息异常");
                 throw new CrmebException("微信接口调用失败：" + data.getString("errcode") + data.getString("errmsg"));
@@ -722,7 +771,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(jsonObject)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (jsonObject.containsKey("errcode") && !"0".equals(jsonObject.getString("errcode"))) {
+        if (jsonObject.containsKey("errcode") && !jsonObject.getString("errcode").equals("0")) {
             if (jsonObject.containsKey("errmsg")) {
                 // 保存到微信异常表
                 wxExceptionDispose(jsonObject, "获取小程序平台上的标准模板异常");
@@ -754,7 +803,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(data)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (data.containsKey("errcode") && !"0".equals(data.getString("errcode"))) {
+        if (data.containsKey("errcode") && !data.getString("errcode").equals("0")) {
             if (data.containsKey("errmsg")) {
                 wxExceptionDispose(data, "添加小程序订阅消息异常");
                 throw new CrmebException("微信接口调用失败：" + data.getString("errcode") + data.getString("errmsg"));
@@ -762,6 +811,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         }
         return data.getString("priTmplId");
     }
+
 
     /**
      * 获取JS-SDK的签名
@@ -794,7 +844,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(data)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (data.containsKey("errcode") && !"0".equals(data.getString("errcode"))) {
+        if (data.containsKey("errcode") && !data.getString("errcode").equals("0")) {
             if (data.containsKey("errmsg")) {
                 // 保存到微信异常表
                 wxExceptionDispose(data, "微信获取JS-SDK的ticket异常");
@@ -819,7 +869,7 @@ public class WechatNewServiceImpl implements WechatNewService {
         if (ObjectUtil.isNull(data)) {
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if (data.containsKey("errcode") && !"0".equals(data.getString("errcode"))) {
+        if (data.containsKey("errcode") && !data.getString("errcode").equals("0")) {
             if (data.containsKey("errmsg")) {
                 // 保存到微信异常表
                 wxExceptionDispose(data, StrUtil.format("微信获取accessToken异常，{}端", type));
@@ -853,7 +903,7 @@ public class WechatNewServiceImpl implements WechatNewService {
     private void wxPayExceptionDispose(HashMap<String, Object> map, String remark) {
         WechatExceptions wechatExceptions = new WechatExceptions();
         String returnCode = (String) map.get("return_code");
-        if ("FAIL".equals(returnCode.toUpperCase())) {
+        if (returnCode.toUpperCase().equals("FAIL")) {
             wechatExceptions.setErrcode("-100");
             wechatExceptions.setErrmsg(map.get("return_msg").toString());
         } else {
@@ -874,13 +924,13 @@ public class WechatNewServiceImpl implements WechatNewService {
      */
     private void wxPayQueryExceptionDispose(MyRecord record, String remark) {
         WechatExceptions wechatExceptions = new WechatExceptions();
-        if ("FAIL".equals(record.getStr("return_code").toUpperCase())) {
+        if (record.getStr("return_code").toUpperCase().equals("FAIL")) {
             wechatExceptions.setErrcode("-200");
             wechatExceptions.setErrmsg(record.getStr("return_msg"));
-        } else if ("FAIL".equals(record.getStr("result_code").toUpperCase())) {
+        } else if (record.getStr("result_code").toUpperCase().equals("FAIL")) {
             wechatExceptions.setErrcode(record.getStr("err_code"));
             wechatExceptions.setErrmsg(record.getStr("err_code_des"));
-        } else if (!"SUCCESS".equals(record.getStr("trade_state").toUpperCase())) {
+        } else if (!record.getStr("trade_state").toUpperCase().equals("SUCCESS")) {
             wechatExceptions.setErrcode("-201");
             wechatExceptions.setErrmsg(record.getStr("trade_state"));
         }

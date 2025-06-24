@@ -13,7 +13,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -46,6 +46,13 @@ public interface SystemAttachmentService extends IService<SystemAttachment> {
     String prefixImage(String path);
 
     /**
+     * 给前端上传的文件加前缀
+     * @param path 路径
+     * @return 替换后的
+     */
+    String prefixUploadf(String path);
+
+    /**
      * 给文件加前缀
      * @param path String 路径
      * @return String
@@ -76,4 +83,16 @@ public interface SystemAttachmentService extends IService<SystemAttachment> {
      * @param move 参数
      */
     Boolean updateAttrId(SystemAttachmentMoveRequest move);
+
+    /**
+     * 获取cdn url
+     * @return String
+     */
+    String getCdnUrl();
+
+    /**
+     * 删除附件
+     * @param idList 附件ID列表
+     */
+    Boolean deleteByIds(List<Integer> idList);
 }

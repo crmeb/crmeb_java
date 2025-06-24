@@ -1,5 +1,6 @@
 package com.zbkj.common.response;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -13,7 +14,7 @@ import java.math.BigDecimal;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -48,6 +49,12 @@ public class IndexProductResponse {
     @ApiModelProperty(value = "虚拟销量")
     private Integer ficti;
 
+    @ApiModelProperty(value = "好评率")
+    private String positiveRatio;
+
+    @ApiModelProperty(value = "评论数量")
+    private Integer replyNum;
+
     @ApiModelProperty(value = "单位名")
     private String unitName;
 
@@ -65,4 +72,8 @@ public class IndexProductResponse {
 
     @ApiModelProperty(value = "展示图")
     private String flatPattern;
+
+    @ApiModelProperty(value = "活动边框 列表中是边框 详情中是背景图")
+    @TableField(exist = false)
+    private String activityStyle;
 }

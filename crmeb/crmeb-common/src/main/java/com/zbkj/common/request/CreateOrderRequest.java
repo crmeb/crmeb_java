@@ -16,7 +16,7 @@ import java.io.Serializable;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -46,13 +46,13 @@ public class CreateOrderRequest implements Serializable {
     @ApiModelProperty(value = "优惠券编号")
     private Integer couponId;
 
-    @ApiModelProperty(value = "支付类型:weixin-微信支付，yue-余额支付,alipay-支付宝支付")
-    @NotBlank(message = "支付类型不能为空")
-    private String payType;
-
-    @ApiModelProperty(value = "支付渠道:weixinh5-微信H5支付，public-公众号支付，routine-小程序支付，weixinAppIos-微信appios支付，weixinAppAndroid-微信app安卓支付,alipay-支付宝支付，appAliPay-App支付宝支付")
-    @NotBlank(message = "支付渠道不能为空")
-    private String payChannel;
+//        @ApiModelProperty(value = "支付类型:weixin-微信支付，yue-余额支付,alipay-支付宝支付")
+//        @NotBlank(message = "支付类型不能为空")
+//        private String payType;
+//
+//        @ApiModelProperty(value = "支付渠道:weixinh5-微信H5支付，public-公众号支付，routine-小程序支付，weixinAppIos-微信appios支付，weixinAppAndroid-微信app安卓支付,alipay-支付宝支付，appAliPay-App支付宝支付")
+//        @NotBlank(message = "支付渠道不能为空")
+//        private String payChannel;
 
     @ApiModelProperty(value = "是否使用积分")
     @NotNull(message = "是否使用积分不能为空")

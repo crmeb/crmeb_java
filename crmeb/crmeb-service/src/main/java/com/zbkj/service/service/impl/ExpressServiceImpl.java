@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -93,6 +93,7 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
         }
         Express express = new Express();
         BeanUtils.copyProperties(expressRequest, express);
+
         return updateById(express);
     }
 
@@ -133,7 +134,7 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
     public List<Express> findAll(String type) {
         LambdaQueryWrapper<Express> lqw = new LambdaQueryWrapper<>();
         lqw.eq(Express::getIsShow, true);
-        if ("elec".equals(type)) {
+        if (type.equals("elec")) {
             lqw.eq(Express::getStatus, true);
         }
         lqw.orderByDesc(Express::getSort);
@@ -149,9 +150,15 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
     public JSONObject template(String com) {
         String token = onePassUtil.getToken();
         HashMap<String, String> header = onePassUtil.getCommonHeader(token);
-        MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
-        param.add("com", com);
-        return onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_EXPRESS_TEMP_URI, param, header);
+        return onePassUtil.getData(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_EXPRESS_TEMP_URI
+                +"?com="+com+"&is_shipment=1", header);
+    }
+
+    @Override
+    public JSONObject templateFor(String com, String type, String is_shipment, String page, String limit) {
+        String token = onePassUtil.getToken();
+        HashMap<String, String> header = onePassUtil.getCommonHeader(token);
+        return onePassUtil.getData(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_EXPRESS_DUMP_RECORD_URI +"?com="+com+"&type="+type+"&is_shipment="+is_shipment+"&page="+page+"&limit="+limit, header);
     }
 
     /**
@@ -200,9 +207,9 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
         MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
         //        param.add("type", 1);// 快递类型：1，国内运输商；2，国际运输商；3，国际邮政 不传获取全部
         param.add("page", 0);
-        param.add("limit", 1000);
+        param.add("limit", 9999);
 
-        JSONObject post = onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_EXPRESS_URI, param, header);
+        JSONObject post = onePassUtil.getFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_EXPRESS_URI, param, header);
         System.out.println("OnePass Express ALL post = " + post);
         JSONObject jsonObject = post.getJSONObject("data");
         JSONArray jsonArray = jsonObject.getJSONArray("data");
@@ -210,8 +217,8 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
 
         List<Express> expressList = CollUtil.newArrayList();
         List<String> codeList = getAllCode();
-        jsonArray.forEach(temp -> {
-            JSONObject object = (JSONObject) temp;
+        for (int i = 0; i < jsonArray.size(); i++) {
+            JSONObject object = jsonArray.getJSONObject(i);
             if (StrUtil.isNotBlank(object.getString("code")) && !codeList.contains(object.getString("code"))) {
                 Express express = new Express();
                 express.setName(Optional.ofNullable(object.getString("name")).orElse(""));
@@ -235,7 +242,8 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
                 }
                 expressList.add(express);
             }
-        });
+        }
+
 
         if (CollUtil.isNotEmpty(expressList)) {
             boolean saveBatch = saveBatch(expressList);

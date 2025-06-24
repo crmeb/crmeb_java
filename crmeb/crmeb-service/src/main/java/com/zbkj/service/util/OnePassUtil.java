@@ -1,17 +1,19 @@
 package com.zbkj.service.util;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.zbkj.common.constants.OnePassConstants;
 import com.zbkj.common.exception.CrmebException;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.utils.RestTemplateUtil;
 import com.zbkj.common.vo.OnePassLoginVo;
 import com.zbkj.service.service.SystemConfigService;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -26,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -36,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class OnePassUtil {
 
+    private static final Logger logger = LoggerFactory.getLogger(OnePassUtil.class);
     @Autowired
     private SystemConfigService systemConfigService;
     @Autowired
@@ -49,18 +52,18 @@ public class OnePassUtil {
      * @return
      */
     public OnePassLoginVo getLoginVo() {
-        String account = systemConfigService.getValueByKey("sms_account");// 获取配置账号
-        if (StrUtil.isBlank(account)) {
-            throw new CrmebException("请配置一号通账号！");
+        String accessKey = systemConfigService.getValueByKey(OnePassConstants.ONE_PASS_ACCESS_KEY);// 获取配置账号
+        if (StrUtil.isBlank(accessKey)) {
+            throw new CrmebException("请配置一号通 应用对应的 accessKey");
         }
-        String token = systemConfigService.getValueByKey("sms_token"); //获取配置密码
-        if (StrUtil.isBlank(token)) {
-            throw new CrmebException("请配置一号通密码！");
+        String secretKey = systemConfigService.getValueByKey(OnePassConstants.ONE_PASS_SECRET_KEY); //获取配置密码
+        if (StrUtil.isBlank(secretKey)) {
+            throw new CrmebException("请配置一号通 应用对应的 secretKey");
         }
-        String secret = SecureUtil.md5(account + SecureUtil.md5(token));
+//        String secret = SecureUtil.md5(account + SecureUtil.md5(token));
         OnePassLoginVo loginVo = new OnePassLoginVo();
-        loginVo.setAccount(account);
-        loginVo.setSecret(secret);
+        loginVo.setAccessKey(accessKey);
+        loginVo.setSecretKey(secretKey);
         return loginVo;
     }
 
@@ -68,22 +71,22 @@ public class OnePassUtil {
      * 获取一号通token
      */
     public String getToken(OnePassLoginVo loginVo) {
-        boolean exists = redisUtil.exists(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getSecret()));
+        boolean exists = redisUtil.exists(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getAccessKey()));
         if (exists) {
-            Object token = redisUtil.get(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getSecret()));
+            Object token = redisUtil.get(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getAccessKey()));
             return token.toString();
         }
         // 缓存中不存在token，重新获取，存入缓存
         MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-        map.add("account", loginVo.getAccount());
-        map.add("secret", loginVo.getSecret());
+        map.add(OnePassConstants.ONE_PASS_ACCESS_KEY, loginVo.getAccessKey());
+        map.add(OnePassConstants.ONE_PASS_SECRET_KEY, loginVo.getSecretKey());
         JSONObject jsonObject = postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.USER_LOGIN_URI, map, null);
         String accessToken = "";
-        Long expiresIn = 0L;
+        Integer expiresIn = 0;
         accessToken = OnePassConstants.ONE_PASS_USER_TOKEN_PREFIX.concat(jsonObject.getJSONObject("data").getString("access_token"));
-        expiresIn = jsonObject.getJSONObject("data").getLong("expires_in");
-        expiresIn = expiresIn - DateUtil.getTime();
-        redisUtil.set(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getSecret()), accessToken, expiresIn, TimeUnit.SECONDS);
+        expiresIn = jsonObject.getJSONObject("data").getInteger("expires_in");
+        expiresIn = expiresIn - 1000;
+        redisUtil.set(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getAccessKey()), accessToken, Long.valueOf(expiresIn), TimeUnit.SECONDS);
         return accessToken;
     }
 
@@ -94,22 +97,22 @@ public class OnePassUtil {
      */
     public String getToken() {
         OnePassLoginVo loginVo = getLoginVo();
-        boolean exists = redisUtil.exists(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getSecret()));
+        boolean exists = redisUtil.exists(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getAccessKey()));
         if (exists) {
-            Object token = redisUtil.get(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getSecret()));
+            Object token = redisUtil.get(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getAccessKey()));
             return token.toString();
         }
         // 缓存中不存在token，重新获取，存入缓存
         MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-        map.add("account", loginVo.getAccount());
-        map.add("secret", loginVo.getSecret());
+        map.add(OnePassConstants.ONE_PASS_ACCESS_KEY, loginVo.getAccessKey());
+        map.add(OnePassConstants.ONE_PASS_SECRET_KEY, loginVo.getSecretKey());
         JSONObject jsonObject = postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.USER_LOGIN_URI, map, null);
         String accessToken = "";
         Long expiresIn = 0L;
         accessToken = OnePassConstants.ONE_PASS_USER_TOKEN_PREFIX.concat(jsonObject.getJSONObject("data").getString("access_token"));
         expiresIn = jsonObject.getJSONObject("data").getLong("expires_in");
-        expiresIn = expiresIn - DateUtil.getTime();
-        redisUtil.set(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getSecret()), accessToken, expiresIn, TimeUnit.SECONDS);
+        expiresIn = expiresIn - CrmebDateUtil.getTime();
+        redisUtil.set(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getAccessKey()), accessToken, expiresIn, TimeUnit.SECONDS);
         return accessToken;
     }
 
@@ -117,9 +120,9 @@ public class OnePassUtil {
      * 清除token
      */
     public void removeToken(OnePassLoginVo loginVo) {
-        boolean exists = redisUtil.exists(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getSecret()));
+        boolean exists = redisUtil.exists(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getAccessKey()));
         if (exists) {
-            redisUtil.delete(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getSecret()));
+            redisUtil.delete(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getAccessKey()));
         }
     }
 
@@ -128,9 +131,9 @@ public class OnePassUtil {
      */
     public void removeToken() {
         OnePassLoginVo loginVo = getLoginVo();
-        boolean exists = redisUtil.exists(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getSecret()));
+        boolean exists = redisUtil.exists(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getAccessKey()));
         if (exists) {
-            redisUtil.delete(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getSecret()));
+            redisUtil.delete(StrUtil.format(OnePassConstants.ONE_PASS_TOKEN_KEY_PREFIX, loginVo.getAccessKey()));
         }
     }
 
@@ -139,6 +142,21 @@ public class OnePassUtil {
      */
     public JSONObject postFrom(String url, MultiValueMap<String, Object> param, Map<String, String> header) {
         String result = restTemplateUtil.postFromUrlencoded(url, param, header);
+        logger.info("OnePass-postForm:{}", result);
+        return checkResult(result);
+    }
+
+    public JSONObject getFrom(String url, MultiValueMap<String, Object> param, Map<String, String> header) {
+        JSONObject jsonObject = restTemplateUtil.getDataForm(url, param, header);
+        return checkResult(jsonObject);
+    }
+
+    /**
+     * post请求from表单模式提交
+     */
+    public JSONObject getData(String url, Map<String, String> header) {
+        String result = restTemplateUtil.getData(url, header);
+        logger.info("OnePass-postForm:{}", result);
         return checkResult(result);
     }
 
@@ -159,6 +177,16 @@ public class OnePassUtil {
             jsonObject = JSONObject.parseObject(result);
         } catch (Exception e) {
             throw new CrmebException("一号通平台接口异常！");
+        }
+        if (OnePassConstants.ONE_PASS_ERROR_CODE.equals(jsonObject.getInteger("status"))) {
+            throw new CrmebException("一号通平台接口" + jsonObject.getString("msg"));
+        }
+        return jsonObject;
+    }
+
+    private JSONObject checkResult(JSONObject jsonObject) {
+        if (ObjectUtil.isNull(jsonObject)) {
+            throw new CrmebException("一号通平台接口异常，没任何数据返回！");
         }
         if (OnePassConstants.ONE_PASS_ERROR_CODE.equals(jsonObject.getInteger("status"))) {
             throw new CrmebException("一号通平台接口" + jsonObject.getString("msg"));

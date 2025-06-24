@@ -1,6 +1,7 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -85,7 +86,7 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
             lqw.like(SystemMenu::getName, request.getName());
         }
         if (StrUtil.isNotEmpty(request.getMenuType())) {
-            lqw.eq(SystemMenu::getName, request.getMenuType());
+            lqw.eq(SystemMenu::getMenuType, request.getMenuType());
         }
         lqw.eq(SystemMenu::getIsDelte, false);
         lqw.orderByDesc(SystemMenu::getSort);
@@ -100,10 +101,10 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
      */
     @Override
     public Boolean add(SystemMenuRequest request) {
-        if ("C".equals(request.getMenuType()) && StrUtil.isEmpty(request.getComponent())) {
+        if (request.getMenuType().equals("C") && StrUtil.isEmpty(request.getComponent())) {
             throw new CrmebException("菜单类型的组件路径不能为空");
         }
-        if ("A".equals(request.getMenuType()) && StrUtil.isEmpty(request.getPerms())) {
+        if (request.getMenuType().equals("A") && StrUtil.isEmpty(request.getPerms())) {
             throw new CrmebException("按钮类型的权限表示不能为空");
         }
         SystemMenu systemMenu = new SystemMenu();
@@ -125,7 +126,8 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
     public Boolean deleteById(Integer id) {
         SystemMenu systemMenu = getInfoById(id);
         systemMenu.setIsDelte(true);
-        if ("A".equals(systemMenu.getMenuType())) {
+        if (systemMenu.getMenuType().equals("A")) {
+            systemMenu.setUpdateTime(DateUtil.date());
             boolean update = updateById(systemMenu);
             if (update) {
                 redisUtil.delete(CACHE_LIST_KEY);
@@ -134,13 +136,14 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
         }
         List<SystemMenu> childList = findAllChildListByPid(id);
         if (CollUtil.isEmpty(childList)) {
+            systemMenu.setUpdateTime(DateUtil.date());
             boolean update = updateById(systemMenu);
             if (update) {
                 redisUtil.delete(CACHE_LIST_KEY);
             }
             return update;
         }
-        childList.forEach(e -> e.setIsDelte(true));
+        childList.forEach(e -> e.setIsDelte(true).setUpdateTime(DateUtil.date()));
         childList.add(systemMenu);
         boolean updateBatch = updateBatchById(childList);
         if (updateBatch) {
@@ -159,14 +162,15 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
         if (ObjectUtil.isNull(request.getId())) {
             throw new CrmebException("系统菜单id不能为空");
         }
-        if ("C".equals(request.getMenuType()) && StrUtil.isEmpty(request.getComponent())) {
+        if (request.getMenuType().equals("C") && StrUtil.isEmpty(request.getComponent())) {
             throw new CrmebException("菜单类型的组件路径不能为空");
         }
-        if ("A".equals(request.getMenuType()) && StrUtil.isEmpty(request.getPerms())) {
+        if (request.getMenuType().equals("A") && StrUtil.isEmpty(request.getPerms())) {
             throw new CrmebException("按钮类型的权限表示不能为空");
         }
         SystemMenu systemMenu = new SystemMenu();
         BeanUtils.copyProperties(request, systemMenu);
+        systemMenu.setUpdateTime(DateUtil.date());
         boolean update = updateById(systemMenu);
         if (update) {
             redisUtil.delete(CACHE_LIST_KEY);
@@ -197,6 +201,7 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
     public Boolean updateShowStatus(Integer id) {
         SystemMenu systemMenu = getInfoById(id);
         systemMenu.setIsShow(!systemMenu.getIsShow());
+        systemMenu.setUpdateTime(DateUtil.date());
         boolean update = updateById(systemMenu);
         if (update) {
             redisUtil.delete(CACHE_LIST_KEY);

@@ -2,6 +2,7 @@ package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -36,7 +37,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -90,6 +91,9 @@ public class WeChatPayServiceImpl implements WeChatPayService {
     @Autowired
     private StorePinkService storePinkService;
 
+//    @Autowired
+//    private PayComponentOrderService componentOrderService;
+
     @Autowired
     private WechatNewService wechatNewService;
 
@@ -108,7 +112,7 @@ public class WeChatPayServiceImpl implements WeChatPayService {
         }
         // 切割字符串，判断是支付订单还是充值订单
         String pre = StrUtil.subPre(orderNo, 5);
-        if ("order".equals(pre)) {// 支付订单
+        if (pre.equals("order")) {// 支付订单
             StoreOrder storeOrder = storeOrderService.getByOderId(orderNo);
             if (ObjectUtil.isNull(storeOrder)) {
                 throw new CrmebException("订单不存在");
@@ -174,6 +178,12 @@ public class WeChatPayServiceImpl implements WeChatPayService {
                 if (storeOrder.getUseIntegral() > 0) {
                     userService.updateIntegral(user, storeOrder.getUseIntegral(), "sub");
                 }
+//                if (storeOrder.getType().equals(1)) {
+//                    PayComponentOrder componentOrder = componentOrderService.getByOrderNo(orderNo);
+//                    componentOrder.setTransactionId(record.getStr("transaction_id"));
+//                    componentOrder.setTimeEnd(record.getStr("time_end"));
+//                    componentOrderService.updateById(componentOrder);
+//                }
                 // 处理拼团
                 if (storeOrder.getCombinationId() > 0) {
                     // 判断拼团团长是否存在
@@ -226,6 +236,7 @@ public class WeChatPayServiceImpl implements WeChatPayService {
                     storePinkService.save(storePink);
                     // 如果是开团，需要更新订单数据
                     storeOrder.setPinkId(storePink.getId());
+                    storeOrder.setUpdateTime(DateUtil.date());
                     storeOrderService.updateById(storeOrder);
                 }
                 return Boolean.TRUE;
@@ -253,18 +264,18 @@ public class WeChatPayServiceImpl implements WeChatPayService {
         String appId = "";
         String mchId = "";
         String signKey = "";
-        if ("public".equals(userRecharge.getRechargeType())) {// 公众号
+        if (userRecharge.getRechargeType().equals("public")) {// 公众号
             appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_ID);
             mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_MCH_ID);
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_WE_CHAT_APP_KEY);
         }
-        if ("routine".equals(userRecharge.getRechargeType())) {// 小程序
+        if (userRecharge.getRechargeType().equals("routine")) {// 小程序
             appId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_ID);
             mchId = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_MCH_ID);
             signKey = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_PAY_ROUTINE_APP_KEY);
         }
         // 生成查询订单对象
-        Map<String, String> payVo = getWxChantQueryPayVo(orderNo, appId, mchId, signKey);
+        Map<String, String> payVo = getWxChantQueryPayVo(userRecharge.getOutTradeNo(), appId, mchId, signKey);
         // 查询订单信息
         MyRecord record = wechatNewService.payOrderQuery(payVo);
         // 支付成功处理
@@ -338,10 +349,12 @@ public class WeChatPayServiceImpl implements WeChatPayService {
         Long currentTimestamp = WxPayUtil.getCurrentTimestamp();
         map.put("timeStamp", Long.toString(currentTimestamp));
         String paySign = WxPayUtil.getSign(map, signKey);
+        map.put("outTradeNo", unifiedorderVo.getOut_trade_no());
         map.put("paySign", paySign);
         if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_H5)) {
             map.put("mweb_url", responseVo.getMWebUrl());
         }
+
         return map;
     }
 
@@ -423,11 +436,11 @@ public class WeChatPayServiceImpl implements WeChatPayService {
                 throw new CrmebException("微信下单失败！");
             }
             CreateOrderResponseVo responseVo = CrmebUtil.mapToObj(map, CreateOrderResponseVo.class);
-            if ("FAIL".equals(responseVo.getReturnCode().toUpperCase())) {
+            if (responseVo.getReturnCode().toUpperCase().equals("FAIL")) {
                 throw new CrmebException("微信下单失败1！" +  responseVo.getReturnMsg());
             }
 
-            if ("FAIL".equals(responseVo.getResultCode().toUpperCase())) {
+            if (responseVo.getResultCode().toUpperCase().equals("FAIL")) {
                 throw new CrmebException("微信下单失败2！" + responseVo.getErrCodeDes());
             }
 

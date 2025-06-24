@@ -5,6 +5,7 @@ import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.model.express.ShippingTemplates;
 import com.zbkj.common.request.ShippingTemplatesRequest;
 import com.zbkj.common.request.ShippingTemplatesSearchRequest;
+import com.zbkj.common.response.ShippingTemplatesInfoResponse;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ import java.util.List;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -45,5 +46,5 @@ public interface ShippingTemplatesService extends IService<ShippingTemplates> {
      * @param id 模板id
      * @return ShippingTemplates
      */
-    ShippingTemplates getInfo(Integer id);
+    ShippingTemplatesInfoResponse getInfo(Integer id);
 }

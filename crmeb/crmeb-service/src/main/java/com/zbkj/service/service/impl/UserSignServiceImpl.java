@@ -1,6 +1,7 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -20,7 +21,7 @@ import com.zbkj.common.response.UserSignInfoResponse;
 import com.zbkj.common.vo.UserSignMonthVo;
 import com.zbkj.common.vo.UserSignVo;
 import com.github.pagehelper.PageHelper;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.vo.SystemGroupDataSignConfigVo;
 import com.zbkj.service.dao.UserSignDao;
 import com.zbkj.service.service.*;
@@ -39,7 +40,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -109,14 +110,14 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
             user.setSignNum(0);
         } else {
             // 判断是否重复签到
-            String lastDate = DateUtil.dateToStr(lastUserSign.getCreateDay(), Constants.DATE_FORMAT_DATE);
-            String nowDate = DateUtil.nowDate(Constants.DATE_FORMAT_DATE);
+            String lastDate = CrmebDateUtil.dateToStr(lastUserSign.getCreateDay(), Constants.DATE_FORMAT_DATE);
+            String nowDate = CrmebDateUtil.nowDate(Constants.DATE_FORMAT_DATE);
             //对比今天数据
-            if (DateUtil.compareDate(lastDate, nowDate, Constants.DATE_FORMAT_DATE) == 0) {
+            if (CrmebDateUtil.compareDate(lastDate, nowDate, Constants.DATE_FORMAT_DATE) == 0) {
                 throw new CrmebException("今日已签到。不可重复签到");
             }
-            String nextDate = DateUtil.addDay(lastUserSign.getCreateDay(), 1, Constants.DATE_FORMAT_DATE);
-            int compareDate = DateUtil.compareDate(nextDate, nowDate, Constants.DATE_FORMAT_DATE);
+            String nextDate = CrmebDateUtil.addDay(lastUserSign.getCreateDay(), 1, Constants.DATE_FORMAT_DATE);
+            int compareDate = CrmebDateUtil.compareDate(nextDate, nowDate, Constants.DATE_FORMAT_DATE);
             if (compareDate != 0) {
                 //不相等，所以不是连续签到,重置签到次数
                 user.setSignNum(0);
@@ -153,7 +154,7 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
         userSign.setNumber(configVo.getIntegral());
         userSign.setType(Constants.SIGN_TYPE_INTEGRAL);
         userSign.setBalance(user.getIntegral() + configVo.getIntegral());
-        userSign.setCreateDay(DateUtil.strToDate(DateUtil.nowDate(Constants.DATE_FORMAT_DATE), Constants.DATE_FORMAT_DATE));
+        userSign.setCreateDay(CrmebDateUtil.strToDate(CrmebDateUtil.nowDate(Constants.DATE_FORMAT_DATE), Constants.DATE_FORMAT_DATE));
 
         // 生成用户积分记录
         UserIntegralRecord integralRecord = new UserIntegralRecord();
@@ -190,6 +191,7 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
             //更新用户经验信息
             userExperienceRecordService.save(experienceRecord);
             //更新用户 签到天数、积分、经验
+            user.setUpdateTime(DateUtil.date());
             userService.updateById(user);
             // 用户升级
             userLevelService.upLevel(user);
@@ -254,7 +256,7 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
         }
 
         for (UserSign userSign : userSignList) {
-            String date = DateUtil.dateToStr(userSign.getCreateDay(), Constants.DATE_FORMAT_MONTH);
+            String date = CrmebDateUtil.dateToStr(userSign.getCreateDay(), Constants.DATE_FORMAT_MONTH);
             UserSignVo userSignVo = new UserSignVo(userSign.getTitle(), userSign.getNumber(), userSign.getCreateDay());
             boolean findResult = false;
             if (signMonthVoArrayList.size() > 0) {
@@ -323,7 +325,7 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
      * @since 2020-05-29
      */
     private Boolean checkDaySign(Integer userId) {
-        List<UserSign> userSignList = getInfoByDay(userId, DateUtil.nowDate(Constants.DATE_FORMAT_DATE));
+        List<UserSign> userSignList = getInfoByDay(userId, CrmebDateUtil.nowDate(Constants.DATE_FORMAT_DATE));
         return userSignList.size() != 0;
     }
 
@@ -336,8 +338,8 @@ public class UserSignServiceImpl extends ServiceImpl<UserSignDao, UserSign> impl
      * @since 2020-05-29
      */
     private Boolean checkYesterdaySign(Integer userId) {
-        String day = DateUtil.nowDate(Constants.DATE_FORMAT_DATE);
-        String yesterday = DateUtil.addDay(day, -1, Constants.DATE_FORMAT_DATE);
+        String day = CrmebDateUtil.nowDate(Constants.DATE_FORMAT_DATE);
+        String yesterday = CrmebDateUtil.addDay(day, -1, Constants.DATE_FORMAT_DATE);
         List<UserSign> userSignList = getInfoByDay(userId, yesterday);
         return userSignList.size() != 0;
     }

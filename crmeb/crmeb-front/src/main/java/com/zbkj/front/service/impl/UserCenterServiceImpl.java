@@ -2,6 +2,7 @@ package com.zbkj.front.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
@@ -29,7 +30,6 @@ import com.zbkj.front.service.LoginService;
 import com.zbkj.front.service.UserCenterService;
 import com.zbkj.service.dao.UserDao;
 import com.zbkj.service.service.*;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -38,6 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -45,15 +46,15 @@ import java.util.stream.Collectors;
 
 /**
  * 用户中心 服务实现类
- *  +----------------------------------------------------------------------
- *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
- *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
- *  +----------------------------------------------------------------------
- *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
- *  +----------------------------------------------------------------------
- *  | Author: CRMEB Team <admin@crmeb.com>
- *  +----------------------------------------------------------------------
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
  */
 @Service
 public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements UserCenterService {
@@ -120,6 +121,8 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     @Autowired
     private FrontTokenComponent tokenComponent;
 
+    @Autowired
+    private SCRMUtils scrmUtils;
 
     /**
      * 推广数据接口(昨天的佣金 累计提现金额 当前佣金)
@@ -141,6 +144,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 推广佣金/提现总和
+     *
      * @return BigDecimal
      */
     @Override
@@ -155,7 +159,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
         //累计提现
         if (type == 4) {
-            return userExtractService.getWithdrawn(null,null);
+            return userExtractService.getWithdrawn(null, null);
         }
 
         return BigDecimal.ZERO;
@@ -163,45 +167,47 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 提现申请
+     *
      * @return Boolean
      */
     @Override
     public Boolean extractCash(UserExtractRequest request) {
         switch (request.getExtractType()) {
             case "weixin":
-                if (StringUtils.isBlank(request.getWechat())) {
-                    throw new  CrmebException("请填写微信号！");
+                if (StrUtil.isBlank(request.getWechat())) {
+                    throw new CrmebException("请填写微信号！");
                 }
                 request.setAlipayCode(null);
                 request.setBankCode(null);
                 request.setBankName(null);
                 break;
             case "alipay":
-                if (StringUtils.isBlank(request.getAlipayCode())) {
-                    throw new  CrmebException("请填写支付宝账号！");
+                if (StrUtil.isBlank(request.getAlipayCode())) {
+                    throw new CrmebException("请填写支付宝账号！");
                 }
                 request.setWechat(null);
                 request.setBankCode(null);
                 request.setBankName(null);
                 break;
             case "bank":
-                if (StringUtils.isBlank(request.getBankName())) {
-                    throw new  CrmebException("请填写银行名称！");
+                if (StrUtil.isBlank(request.getBankName())) {
+                    throw new CrmebException("请填写银行名称！");
                 }
-                if (StringUtils.isBlank(request.getBankCode())) {
-                    throw new  CrmebException("请填写银行卡号！");
+                if (StrUtil.isBlank(request.getBankCode())) {
+                    throw new CrmebException("请填写银行卡号！");
                 }
                 request.setWechat(null);
                 request.setAlipayCode(null);
                 break;
             default:
-                throw new  CrmebException("请选择支付方式");
+                throw new CrmebException("请选择支付方式");
         }
         return userExtractService.extractApply(request);
     }
 
     /**
      * 提现银行/提现最低金额
+     *
      * @return UserExtractCashResponse
      */
     @Override
@@ -211,7 +217,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         List<String> bankArr = new ArrayList<>();
         if (bank.indexOf("\n") > 0) {
             bankArr.addAll(Arrays.asList(bank.split("\n")));
-        }else{
+        } else {
             bankArr.add(bank);
         }
         return bankArr;
@@ -219,6 +225,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 会员等级列表
+     *
      * @return List<UserLevel>
      */
     @Override
@@ -228,6 +235,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 推广用户， 我自己推广了哪些用户
+     *
      * @return List<UserSpreadPeopleItemResponse>
      */
     @Override
@@ -244,21 +252,20 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         if (request.getGrade().equals(1)) {// 二级推广人
             //查询二级推广人
             List<Integer> secondSpreadIdList = userService.getSpreadPeopleIdList(userIdList);
+            if (CollUtil.isEmpty(secondSpreadIdList)) {
+                return new ArrayList<>();
+            }
             //二级推广人
             userIdList.clear();
             userIdList.addAll(secondSpreadIdList);
         }
         List<UserSpreadPeopleItemResponse> spreadPeopleList = userService.getSpreadPeopleList(userIdList, request.getKeyword(), request.getSortKey(), request.getIsAsc(), pageParamRequest);
-        spreadPeopleList.forEach(e -> {
-            OrderBrokerageData brokerageData = storeOrderService.getBrokerageData(e.getUid(), userId);
-            e.setOrderCount(brokerageData.getNum());
-            e.setNumberCount(brokerageData.getPrice());
-        });
         return spreadPeopleList;
     }
 
     /**
      * 充值额度选择
+     *
      * @return UserRechargeResponse
      */
     @Override
@@ -267,7 +274,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         userRechargeResponse.setRechargeQuota(systemGroupDataService.getListByGid(SysGroupDataConstants.GROUP_DATA_ID_RECHARGE_LIST, UserRechargeItemResponse.class));
         String rechargeAttention = systemConfigService.getValueByKey(Constants.CONFIG_RECHARGE_ATTENTION);
         List<String> rechargeAttentionList = new ArrayList<>();
-        if (StringUtils.isNotBlank(rechargeAttention)) {
+        if (StrUtil.isNotBlank(rechargeAttention)) {
             rechargeAttentionList = CrmebUtil.stringToArrayStrRegex(rechargeAttention, "\n");
         }
         userRechargeResponse.setRechargeAttention(rechargeAttentionList);
@@ -276,6 +283,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 用户资金统计
+     *
      * @return UserBalanceResponse
      */
     @Override
@@ -283,12 +291,12 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         User info = userService.getInfo();
         BigDecimal recharge = userBillService.getSumBigDecimal(1, info.getUid(), Constants.USER_BILL_CATEGORY_MONEY, null, null);
         BigDecimal orderStatusSum = userBillService.getSumBigDecimal(0, info.getUid(), Constants.USER_BILL_CATEGORY_MONEY, null, null);
-//        BigDecimal orderStatusSum = storeOrderService.getSumBigDecimal(info.getUid(), null);
         return new UserBalanceResponse(info.getNowMoney(), recharge, orderStatusSum);
     }
 
     /**
      * 推广订单
+     *
      * @return UserSpreadOrderResponse;
      */
     @Override
@@ -327,7 +335,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             userSpreadOrderItemChildResponse.setNickname(userMap.get(orderUid).getNickname());
             userSpreadOrderItemChildResponse.setType("返佣");
 
-            String month = DateUtil.dateToStr(record.getUpdateTime(), Constants.DATE_FORMAT_MONTH);
+            String month = CrmebDateUtil.dateToStr(record.getUpdateTime(), Constants.DATE_FORMAT_MONTH);
             if (monthList.contains(month)) {
                 //如果在已有的数据中找到当前月份数据则追加
                 for (UserSpreadOrderItemResponse userSpreadOrderItemResponse : userSpreadOrderItemResponseList) {
@@ -348,7 +356,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
         // 获取月份总订单数
         Map<String, Integer> countMap = userBrokerageRecordService.getSpreadCountByUidAndMonth(user.getUid(), monthList);
-        for (UserSpreadOrderItemResponse userSpreadOrderItemResponse: userSpreadOrderItemResponseList) {
+        for (UserSpreadOrderItemResponse userSpreadOrderItemResponse : userSpreadOrderItemResponseList) {
             userSpreadOrderItemResponse.setCount(countMap.get(userSpreadOrderItemResponse.getTime()));
         }
 
@@ -358,6 +366,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 充值
+     *
      * @return UserSpreadOrderResponse;
      */
     @Override
@@ -392,10 +401,6 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         userRecharge.setPrice(request.getPrice());
         userRecharge.setGivePrice(request.getGivePrice());
         userRecharge.setRechargeType(request.getFromType());
-        boolean save = userRechargeService.save(userRecharge);
-        if (!save) {
-            throw new CrmebException("生成充值订单失败!");
-        }
 
         OrderPayResultResponse response = new OrderPayResultResponse();
         MyRecord record = new MyRecord();
@@ -413,13 +418,23 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             vo.setMwebUrl(unifiedorder.get("mweb_url"));
             response.setPayType(PayConstants.PAY_CHANNEL_WE_CHAT_H5);
         }
+        if (userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_IOS) || userRecharge.getRechargeType().equals(PayConstants.PAY_CHANNEL_WE_CHAT_APP_ANDROID)) {//
+            vo.setPartnerid(unifiedorder.get("partnerid"));
+        }
         response.setJsConfig(vo);
         response.setOrderNo(userRecharge.getOrderId());
+
+        userRecharge.setOutTradeNo(unifiedorder.get("outTradeNo"));
+        boolean save = userRechargeService.save(userRecharge);
+        if (!save) {
+            throw new CrmebException("生成充值订单失败!");
+        }
         return response;
     }
 
     /**
      * 微信登录
+     *
      * @return LoginResponse;
      */
     @Override
@@ -427,7 +442,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         // 通过code获取获取公众号授权信息
         WeChatOauthToken oauthToken = wechatNewService.getOauth2AccessToken(code);
         //检测是否存在
-        UserToken userToken = userTokenService.getByOpenidAndType(oauthToken.getOpenId(),  Constants.THIRD_LOGIN_TOKEN_TYPE_PUBLIC);
+        UserToken userToken = userTokenService.getByOpenidAndType(oauthToken.getOpenId(), Constants.THIRD_LOGIN_TOKEN_TYPE_PUBLIC);
         LoginResponse loginResponse = new LoginResponse();
         if (ObjectUtil.isNotNull(userToken)) {// 已存在，正常登录
             User user = userService.getById(userToken.getUid());
@@ -436,15 +451,16 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             }
 
             // 记录最后一次登录时间
-            user.setLastLoginTime(DateUtil.nowDateTime());
+            user.setLastLoginTime(CrmebDateUtil.nowDateTime());
             Boolean execute = transactionTemplate.execute(e -> {
                 // 分销绑定
                 if (userService.checkBingSpread(user, spreadUid, "old")) {
                     user.setSpreadUid(spreadUid);
-                    user.setSpreadTime(DateUtil.nowDateTime());
+                    user.setSpreadTime(CrmebDateUtil.nowDateTime());
                     // 处理新旧推广人数据
                     userService.updateSpreadCountByUid(spreadUid, "add");
                 }
+                user.setUpdateTime(DateUtil.date());
                 userService.updateById(user);
                 return Boolean.TRUE;
             });
@@ -482,6 +498,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 获取微信授权logo
+     *
      * @return String;
      */
     @Override
@@ -491,7 +508,8 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 小程序登录
-     * @param code String 前端临时授权code
+     *
+     * @param code    String 前端临时授权code
      * @param request RegisterThirdUserRequest 用户信息
      * @return LoginResponse
      */
@@ -509,15 +527,16 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                 throw new CrmebException("当前账户已禁用，请联系管理员！");
             }
             // 记录最后一次登录时间
-            user.setLastLoginTime(DateUtil.nowDateTime());
+            user.setLastLoginTime(CrmebDateUtil.nowDateTime());
             Boolean execute = transactionTemplate.execute(e -> {
                 // 分销绑定
                 if (userService.checkBingSpread(user, request.getSpreadPid(), "old")) {
                     user.setSpreadUid(request.getSpreadPid());
-                    user.setSpreadTime(DateUtil.nowDateTime());
+                    user.setSpreadTime(CrmebDateUtil.nowDateTime());
                     // 处理新旧推广人数据
                     userService.updateSpreadCountByUid(request.getSpreadPid(), "add");
                 }
+                user.setUpdateTime(DateUtil.date());
                 userService.updateById(user);
                 return Boolean.TRUE;
             });
@@ -544,7 +563,9 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             loginResponse.setType("start");
             return loginResponse;
         }
-
+        if (StrUtil.isBlank(request.getNickName())) {
+            request.setNickName("");
+        }
         request.setType(Constants.USER_LOGIN_TYPE_PROGRAM);
         request.setOpenId(response.getOpenId());
         String key = SecureUtil.md5(response.getOpenId());
@@ -556,7 +577,8 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 推广人排行榜
-     * @param type  String 时间范围(week-周，month-月)
+     *
+     * @param type             String 时间范围(week-周，month-月)
      * @param pageParamRequest PageParamRequest 分页
      * @return List<LoginResponse>
      */
@@ -567,7 +589,8 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 佣金排行榜
-     * @param type  String 时间范围
+     *
+     * @param type             String 时间范围
      * @param pageParamRequest PageParamRequest 分页
      * @return List<User>
      */
@@ -579,7 +602,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             return null;
         }
         // 解决0元排行问题
-        for (int i = 0; i < recordList.size();) {
+        for (int i = 0; i < recordList.size(); ) {
             UserBrokerageRecord userBrokerageRecord = recordList.get(i);
             if (userBrokerageRecord.getPrice().compareTo(BigDecimal.ZERO) < 1) {
                 recordList.remove(i);
@@ -597,7 +620,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
         //解决排序问题
         List<User> userList = CollUtil.newArrayList();
-        for (UserBrokerageRecord record: recordList) {
+        for (UserBrokerageRecord record : recordList) {
             User user = new User();
             User userVo = userVoList.get(record.getUid());
 
@@ -606,7 +629,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             user.setBrokeragePrice(record.getPrice());
             if (StrUtil.isBlank(userVo.getNickname())) {
                 user.setNickname(userVo.getPhone().substring(0, 2) + "****" + userVo.getPhone().substring(7));
-            }else{
+            } else {
                 user.setNickname(userVo.getNickname());
             }
             userList.add(user);
@@ -616,6 +639,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 推广海报图
+     *
      * @return List<SystemGroupData>
      */
     @Override
@@ -625,7 +649,8 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 当前用户在佣金排行第几名
-     * @param type  String 时间范围
+     *
+     * @param type String 时间范围
      * @return 优惠券集合
      */
     @Override
@@ -643,7 +668,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         for (int i = 0; i < recordList.size(); i++) {
             if (recordList.get(i).getUid().equals(userId)) {
                 number = i + 1;
-                break ;
+                break;
             }
         }
         return number;
@@ -651,6 +676,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 佣金转入余额
+     *
      * @return Boolean
      */
     @Override
@@ -679,7 +705,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         userBill.setBalance(user.getNowMoney().add(price));
         userBill.setMark(StrUtil.format("佣金转余额,增加{}", price));
         userBill.setStatus(1);
-        userBill.setCreateTime(DateUtil.nowDateTime());
+        userBill.setCreateTime(CrmebDateUtil.nowDateTime());
 
         // userBrokerage转出记录
         UserBrokerageRecord brokerageRecord = new UserBrokerageRecord();
@@ -692,7 +718,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         brokerageRecord.setBalance(user.getNowMoney().add(price));
         brokerageRecord.setMark(StrUtil.format("佣金转余额，减少{}", price));
         brokerageRecord.setStatus(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
-        brokerageRecord.setCreateTime(DateUtil.nowDateTime());
+        brokerageRecord.setCreateTime(CrmebDateUtil.nowDateTime());
 
         Boolean execute = transactionTemplate.execute(e -> {
             // 扣佣金
@@ -717,6 +743,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 推广佣金明细
+     *
      * @param pageParamRequest 分页参数
      */
     @Override
@@ -727,6 +754,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 用户账单记录（现金）
+     *
      * @param type 记录类型：all-全部，expenditure-支出，income-收入
      * @return CommonPage
      */
@@ -742,7 +770,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         // 获取年-月
         Map<String, List<UserBill>> map = CollUtil.newHashMap();
         list.forEach(i -> {
-            String month = StrUtil.subPre(DateUtil.dateToStr(i.getCreateTime(), Constants.DATE_FORMAT), 7);
+            String month = StrUtil.subPre(CrmebDateUtil.dateToStr(i.getCreateTime(), Constants.DATE_FORMAT), 7);
             if (map.containsKey(month)) {
                 map.get(month).add(i);
             } else {
@@ -759,12 +787,14 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             responseList.add(response);
         });
 
-        PageInfo<UserRechargeBillRecordResponse> pageInfo = CommonPage.copyPageInfo(billPageInfo, responseList);
+        List<UserRechargeBillRecordResponse> collect = responseList.stream().sorted(Comparator.comparing(s -> cn.hutool.core.date.DateUtil.parse(s.getDate(), "yyyy-MM").getTime(), Comparator.reverseOrder())).collect(Collectors.toList());
+        PageInfo<UserRechargeBillRecordResponse> pageInfo = CommonPage.copyPageInfo(billPageInfo, collect);
         return CommonPage.restPage(pageInfo);
     }
 
     /**
      * 微信注册绑定手机号
+     *
      * @param request 请求参数
      * @return 登录信息
      */
@@ -798,6 +828,12 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                 case "routine":
                     type = Constants.THIRD_LOGIN_TOKEN_TYPE_PROGRAM;
                     break;
+                case "iosWx":
+                    type = Constants.THIRD_LOGIN_TOKEN_TYPE_IOS_WX;
+                    break;
+                case "androidWx":
+                    type = Constants.THIRD_LOGIN_TOKEN_TYPE_ANDROID_WX;
+                    break;
             }
 
             UserToken userToken = userTokenService.getTokenByUserId(user.getUid(), type);
@@ -814,7 +850,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                 // 分销绑定
                 if (userService.checkBingSpread(finalUser, registerThirdUserRequest.getSpreadPid(), "new")) {
                     finalUser.setSpreadUid(registerThirdUserRequest.getSpreadPid());
-                    finalUser.setSpreadTime(DateUtil.nowDateTime());
+                    finalUser.setSpreadTime(CrmebDateUtil.nowDateTime());
                     userService.updateSpreadCountByUid(registerThirdUserRequest.getSpreadPid(), "add");
                 }
                 userService.save(finalUser);
@@ -827,6 +863,12 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                     break;
                 case "routine":
                     userTokenService.bind(registerThirdUserRequest.getOpenId(), Constants.THIRD_LOGIN_TOKEN_TYPE_PROGRAM, finalUser.getUid());
+                    break;
+                case "iosWx":
+                    userTokenService.bind(registerThirdUserRequest.getOpenId(), Constants.THIRD_LOGIN_TOKEN_TYPE_IOS_WX, finalUser.getUid());
+                    break;
+                default:
+                    userTokenService.bind(registerThirdUserRequest.getOpenId(), Constants.THIRD_LOGIN_TOKEN_TYPE_ANDROID_WX, finalUser.getUid());
                     break;
             }
             return Boolean.TRUE;
@@ -850,11 +892,17 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         loginResponse.setUid(user.getUid());
         loginResponse.setNikeName(user.getNickname());
         loginResponse.setPhone(user.getPhone());
+        try {
+            scrmUtils.addUserForSCRM(user.getPhone(), user.getNickname());
+        } catch (Exception e) {
+            logger.error("SCRM用户同步失败: phone={}, nickname={}", user.getPhone(), user.getNickname(), e);
+        }
         return loginResponse;
     }
 
     /**
      * 用户积分记录列表
+     *
      * @param pageParamRequest 分页参数
      * @return List<UserIntegralRecord>
      */
@@ -865,7 +913,72 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     }
 
     /**
+     * 微信app登录
+     *
+     * @param request 请求参数
+     * @return 登录响应体
+     */
+    @Override
+    public LoginResponse appLogin(RegisterAppWxRequest request) {
+        //检测是否存在
+        UserToken userToken = null;
+        if (request.getType().equals(Constants.USER_LOGIN_TYPE_IOS_WX)) {
+            userToken = userTokenService.getByOpenidAndType(request.getOpenId(), Constants.THIRD_LOGIN_TOKEN_TYPE_IOS_WX);
+        }
+        if (request.getType().equals(Constants.USER_LOGIN_TYPE_ANDROID_WX)) {
+            userToken = userTokenService.getByOpenidAndType(request.getOpenId(), Constants.THIRD_LOGIN_TOKEN_TYPE_ANDROID_WX);
+        }
+        LoginResponse loginResponse = new LoginResponse();
+        if (ObjectUtil.isNotNull(userToken)) {// 已存在，正常登录
+            User user = userService.getById(userToken.getUid());
+            if (!user.getStatus()) {
+                throw new CrmebException("当前账户已禁用，请联系管理员！");
+            }
+
+            // 记录最后一次登录时间
+            user.setLastLoginTime(CrmebDateUtil.nowDateTime());
+            user.setUpdateTime(DateUtil.date());
+            Boolean execute = transactionTemplate.execute(e -> {
+                userService.updateById(user);
+                return Boolean.TRUE;
+            });
+            if (!execute) {
+                logger.error(StrUtil.format("APP微信登录记录最后一次登录时间失败，uid={}", user.getUid()));
+            }
+            try {
+                String token = tokenComponent.createToken(user);
+                loginResponse.setToken(token);
+            } catch (Exception e) {
+                logger.error(StrUtil.format("APP微信登录生成token失败，uid={}", user.getUid()));
+                e.printStackTrace();
+            }
+            loginResponse.setType("login");
+            loginResponse.setUid(user.getUid());
+            return loginResponse;
+        }
+        // 没有用户，走创建用户流程
+        // 从微信获取用户信息，存入Redis中，将key返回给前端，前端在下一步绑定手机号的时候下发
+        RegisterThirdUserRequest registerThirdUserRequest = new RegisterThirdUserRequest();
+        registerThirdUserRequest.setSpreadPid(0);
+        registerThirdUserRequest.setType(request.getType());
+        registerThirdUserRequest.setOpenId(request.getOpenId());
+        registerThirdUserRequest.setNickName(request.getNickName());
+        registerThirdUserRequest.setSex(request.getGender());
+        registerThirdUserRequest.setProvince(request.getProvince());
+        registerThirdUserRequest.setCity(request.getCity());
+        registerThirdUserRequest.setCountry(request.getCountry());
+        registerThirdUserRequest.setAvatar(request.getAvatarUrl());
+        String key = SecureUtil.md5(request.getOpenId());
+        redisUtil.set(key, JSONObject.toJSONString(registerThirdUserRequest), (long) (60 * 2), TimeUnit.MINUTES);
+
+        loginResponse.setType("register");
+        loginResponse.setKey(key);
+        return loginResponse;
+    }
+
+    /**
      * 获取用户积分信息
+     *
      * @return IntegralUserResponse
      */
     @Override
@@ -875,7 +988,10 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
         //签到
         Integer sumIntegral = userIntegralRecordService.getSumIntegral(user.getUid(), IntegralRecordConstants.INTEGRAL_RECORD_TYPE_ADD, "", null);
-        Integer deductionIntegral = userIntegralRecordService.getSumIntegral(user.getUid(), IntegralRecordConstants.INTEGRAL_RECORD_TYPE_SUB, "", IntegralRecordConstants.INTEGRAL_RECORD_LINK_TYPE_ORDER);
+        ArrayList<String> linkTypeList = new ArrayList<>();
+        linkTypeList.add(IntegralRecordConstants.INTEGRAL_RECORD_LINK_TYPE_ORDER);
+        linkTypeList.add(IntegralRecordConstants.INTEGRAL_RECORD_LINK_TYPE_SYSTEM);
+        Integer deductionIntegral = userIntegralRecordService.getSumIntegral(user.getUid(), IntegralRecordConstants.INTEGRAL_RECORD_TYPE_SUB, "", linkTypeList);
         userSignInfoResponse.setSumIntegral(sumIntegral);
         userSignInfoResponse.setDeductionIntegral(deductionIntegral);
         // 冻结积分
@@ -887,6 +1003,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 获取用户经验记录
+     *
      * @param pageParamRequest 分页参数
      * @return List<UserExperienceRecord>
      */
@@ -898,6 +1015,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 提现用户信息
+     *
      * @return UserExtractCashResponse
      */
     @Override
@@ -916,6 +1034,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 推广人列表统计
+     *
      * @return UserSpreadPeopleResponse
      */
     @Override
@@ -951,10 +1070,10 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
      * 绑定手机号数据校验
      */
     private void checkBindingPhone(WxBindingPhoneRequest request) {
-        if (!"public".equals(request.getType()) && !"routine".equals(request.getType()) && !"iosWx".equals(request.getType()) && !"androidWx".equals(request.getType())) {
+        if (!request.getType().equals("public") && !request.getType().equals("routine") && !request.getType().equals("iosWx") && !request.getType().equals("androidWx")) {
             throw new CrmebException("未知的用户类型");
         }
-        if ("public".equals(request.getType())) {
+        if (request.getType().equals("public") || request.getType().equals("iosWx") || request.getType().equals("androidWx")) {
             if (StrUtil.isBlank(request.getCaptcha())) {
                 throw new CrmebException("验证码不能为空");
             }
@@ -969,39 +1088,54 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             }
             checkValidateCode(request.getPhone(), request.getCaptcha());
         } else {
-            // 参数校验
-            if (StrUtil.isBlank(request.getCode())) {
-                throw new CrmebException("小程序获取手机号code不能为空");
-            }
-            if (StrUtil.isBlank(request.getEncryptedData())) {
-                throw new CrmebException("小程序获取手机号加密数据不能为空");
-            }
-            if (StrUtil.isBlank(request.getIv())) {
-                throw new CrmebException("小程序获取手机号加密算法的初始向量不能为空");
-            }
-            // 获取appid
-            String programAppId = systemConfigService.getValueByKey(WeChatConstants.WECHAT_MINI_APPID);
-            if (StringUtils.isBlank(programAppId)) {
-                throw new CrmebException("微信小程序appId未设置");
-            }
+            if (StrUtil.isNotBlank(request.getCaptcha())) {
+                if (StrUtil.isBlank(request.getPhone())) {
+                    throw new CrmebException("手机号不能为空");
+                }
+                boolean matchPhone = ReUtil.isMatch(RegularConstants.PHONE_TWO, request.getPhone());
+                if (!matchPhone) {
+                    throw new CrmebException("手机号格式错误，请输入正确得手机号");
+                }
+                boolean match = ReUtil.isMatch(RegularConstants.VALIDATE_CODE_NUM_SIX, request.getCaptcha());
+                if (!match) {
+                    throw new CrmebException("验证码格式错误，验证码必须为6位数字");
+                }
+                checkValidateCode(request.getPhone(), request.getCaptcha());
+            } else {
+                // 参数校验
+                if (StrUtil.isBlank(request.getCode())) {
+                    throw new CrmebException("小程序获取手机号code不能为空");
+                }
+                if (StrUtil.isBlank(request.getEncryptedData())) {
+                    throw new CrmebException("小程序获取手机号加密数据不能为空");
+                }
+                if (StrUtil.isBlank(request.getIv())) {
+                    throw new CrmebException("小程序获取手机号加密算法的初始向量不能为空");
+                }
+                // 获取appid
+                String programAppId = systemConfigService.getValueByKey(WeChatConstants.WECHAT_MINI_APPID);
+                if (StrUtil.isBlank(programAppId)) {
+                    throw new CrmebException("微信小程序appId未设置");
+                }
 
-            WeChatMiniAuthorizeVo response = wechatNewService.miniAuthCode(request.getCode());
-//            WeChatMiniAuthorizeVo response = weChatService.programAuthorizeLogin(request.getCode());
-            System.out.println("小程序登陆成功 = " + JSON.toJSONString(response));
-            String decrypt = WxUtil.decrypt(programAppId, request.getEncryptedData(), response.getSessionKey(), request.getIv());
-            if (StrUtil.isBlank(decrypt)) {
-                throw new CrmebException("微信小程序获取手机号解密失败");
+                WeChatMiniAuthorizeVo response = wechatNewService.miniAuthCode(request.getCode());
+                System.out.println("小程序登陆成功 = " + JSON.toJSONString(response));
+                String decrypt = WxUtil.decrypt(programAppId, request.getEncryptedData(), response.getSessionKey(), request.getIv());
+                if (StrUtil.isBlank(decrypt)) {
+                    throw new CrmebException("微信小程序获取手机号解密失败");
+                }
+                JSONObject jsonObject = JSONObject.parseObject(decrypt);
+                if (StrUtil.isBlank(jsonObject.getString("phoneNumber"))) {
+                    throw new CrmebException("微信小程序获取手机号没有有效的手机号");
+                }
+                request.setPhone(jsonObject.getString("phoneNumber"));
             }
-            JSONObject jsonObject = JSONObject.parseObject(decrypt);
-            if (StrUtil.isBlank(jsonObject.getString("phoneNumber"))) {
-                throw new CrmebException("微信小程序获取手机号没有有效的手机号");
-            }
-            request.setPhone(jsonObject.getString("phoneNumber"));
         }
     }
 
     /**
      * 赠送新人券
+     *
      * @param uid 用户uid
      */
     private void giveNewPeopleCoupon(Integer uid) {
@@ -1012,9 +1146,9 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             couponList.forEach(storeCoupon -> {
                 //是否有固定的使用时间
                 if (!storeCoupon.getIsFixedTime()) {
-                    String endTime = DateUtil.addDay(DateUtil.nowDate(Constants.DATE_FORMAT), storeCoupon.getDay(), Constants.DATE_FORMAT);
-                    storeCoupon.setUseEndTime(DateUtil.strToDate(endTime, Constants.DATE_FORMAT));
-                    storeCoupon.setUseStartTime(DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
+                    String endTime = CrmebDateUtil.addDay(CrmebDateUtil.nowDate(Constants.DATE_FORMAT), storeCoupon.getDay(), Constants.DATE_FORMAT);
+                    storeCoupon.setUseEndTime(CrmebDateUtil.strToDate(endTime, Constants.DATE_FORMAT));
+                    storeCoupon.setUseStartTime(CrmebDateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
                 }
 
                 StoreCouponUser storeCouponUser = new StoreCouponUser();
@@ -1027,7 +1161,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                     storeCouponUser.setStartTime(storeCoupon.getUseStartTime());
                     storeCouponUser.setEndTime(storeCoupon.getUseEndTime());
                 } else {// 没有固定使用时间
-                    Date nowDate = DateUtil.nowDateTime();
+                    Date nowDate = CrmebDateUtil.nowDateTime();
                     storeCouponUser.setStartTime(nowDate);
                     DateTime dateTime = cn.hutool.core.date.DateUtil.offsetDay(nowDate, storeCoupon.getDay());
                     storeCouponUser.setEndTime(dateTime);
@@ -1051,8 +1185,9 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 检测手机验证码
+     *
      * @param phone 手机号
-     * @param code 验证码
+     * @param code  验证码
      */
     private void checkValidateCode(String phone, String code) {
         Object validateCode = redisUtil.get(SmsConstants.SMS_VALIDATE_PHONE + phone);

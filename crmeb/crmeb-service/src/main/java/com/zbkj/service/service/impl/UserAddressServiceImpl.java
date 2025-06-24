@@ -1,20 +1,21 @@
 package com.zbkj.service.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zbkj.common.request.PageParamRequest;
-import com.zbkj.common.exception.CrmebException;
-import com.zbkj.common.request.UserAddressRequest;
 import com.github.pagehelper.PageHelper;
+import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.system.SystemCity;
 import com.zbkj.common.model.user.UserAddress;
+import com.zbkj.common.request.PageParamRequest;
+import com.zbkj.common.request.UserAddressRequest;
 import com.zbkj.service.dao.UserAddressDao;
 import com.zbkj.service.service.SystemCityService;
 import com.zbkj.service.service.UserAddressService;
 import com.zbkj.service.service.UserService;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -47,9 +48,10 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
     private UserService userService;
 
     /**
-    * 列表
-    * @return List<UserAddress>
-    */
+     * 列表
+     *
+     * @return List<UserAddress>
+     */
     @Override
     public List<UserAddress> getList(PageParamRequest pageParamRequest) {
         Integer UserId = userService.getUserIdException();
@@ -66,6 +68,7 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
 
     /**
      * 创建地址
+     *
      * @param request UserAddressRequest 参数
      * @return List<UserAddress>
      */
@@ -79,17 +82,20 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
         userAddress.setProvince(request.getAddress().getProvince());
 
         // 添加地址时cityId和城市名称不能同时为空，如果id为空，必须用城市名称自查后set CityId
-        if (request.getAddress().getCityId() == 0 && StringUtils.isBlank(request.getAddress().getCity())) {
+        if (request.getAddress().getCityId() == 0 && StrUtil.isBlank(request.getAddress().getDistrict())) {
             throw new CrmebException("请选择正确城市数据");
         }
-        if (StringUtils.isNotBlank(request.getAddress().getCity()) && request.getAddress().getCityId() == 0) {
-            SystemCity currentCity = systemCityService.getCityByCityName(request.getAddress().getCity());
-            if (ObjectUtil.isNull(currentCity)) throw new CrmebException("当前城市未找到！");
-
+        if (StrUtil.isNotBlank(request.getAddress().getCity()) && request.getAddress().getCityId() == 0) {
+            SystemCity systemCity = systemCityService.getCityByCityName(request.getAddress().getCity());
+            if (ObjectUtil.isNull(systemCity)) {
+                throw new CrmebException("当前城市未找到");
+            }
+            SystemCity currentCity = systemCityService.getByAreaNameAndPid(request.getAddress().getDistrict(), systemCity.getCityId());
+            if (ObjectUtil.isNull(currentCity)) throw new CrmebException("当前城市区域未找到！");
             userAddress.setCityId(currentCity.getCityId());
         }
 
-        if (request.getAddress().getCityId() > 0 && StringUtils.isNotBlank(request.getAddress().getCity())) {
+        if (request.getAddress().getCityId() > 0 && StrUtil.isNotBlank(request.getAddress().getDistrict())) {
             checkCity(userAddress.getCityId());
         }
         userAddress.setUid(userService.getUserIdException());
@@ -103,6 +109,7 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
 
     /**
      * 设置默认
+     *
      * @param id Integer id
      * @return UserAddress
      */
@@ -114,11 +121,13 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
         userAddress.setId(id);
         userAddress.setUid(userService.getUserIdException());
         userAddress.setIsDefault(true);
+        userAddress.setUpdateTime(DateUtil.date());
         return updateById(userAddress);
     }
 
     /**
      * 删除
+     *
      * @param id Integer id
      * @return UserAddress
      */
@@ -134,6 +143,7 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
 
     /**
      * 获取默认地址
+     *
      * @return UserAddress
      */
     @Override
@@ -142,6 +152,7 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
         LambdaQueryWrapper<UserAddress> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(UserAddress::getIsDefault, true);
         lambdaQueryWrapper.eq(UserAddress::getUid, userService.getUserId());
+        lambdaQueryWrapper.eq(UserAddress::getIsDel, false);
         return dao.selectOne(lambdaQueryWrapper);
     }
 
@@ -155,6 +166,7 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
 
     /**
      * 获取地址详情
+     *
      * @param id 地址id
      * @return UserAddress
      */
@@ -172,6 +184,7 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
 
     /**
      * 获取默认地址
+     *
      * @return UserAddress
      */
     @Override
@@ -184,11 +197,12 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
 
     /**
      * 检测城市id是否合法
+     *
      * @param cityId Integer 城市id
      */
     private void checkCity(Integer cityId) {
         //检测城市Id是否存在
-        SystemCity systemCity = systemCityService.getCityByCityId(cityId);
+        SystemCity systemCity = systemCityService.getByAreaId(cityId);
         if (ObjectUtil.isNull(systemCity)) {
             throw new CrmebException("请选择正确的城市");
         }
@@ -196,6 +210,7 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
 
     /**
      * 取消默认地址
+     *
      * @param userId Integer 城市id
      */
     private void cancelDefault(Integer userId) {
