@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -10,7 +10,7 @@
 
 /** When your routing table is too long, you can split it into small modules **/
 
-import Layout from '@/layout'
+import Layout from '@/layout';
 
 const maintainRouter = {
   path: '/maintain',
@@ -19,7 +19,7 @@ const maintainRouter = {
   name: 'maintain',
   meta: {
     title: '维护',
-    icon: 'clipboard'
+    icon: 'clipboard',
   },
   children: [
     {
@@ -28,7 +28,7 @@ const maintainRouter = {
       component: () => import('@/views/maintain'),
       meta: {
         title: '开发配置',
-        icon: 'clipboard'
+        icon: 'clipboard',
       },
       children: [
         {
@@ -37,8 +37,8 @@ const maintainRouter = {
           component: () => import('@/views/maintain/devconfig/configCategroy'),
           meta: {
             title: '配置分类',
-            icon: 'clipboard'
-          }
+            icon: 'clipboard',
+          },
         },
         {
           path: 'combineddata',
@@ -46,8 +46,8 @@ const maintainRouter = {
           component: () => import('@/views/maintain/devconfig/combinedData'),
           meta: {
             title: '组合数据',
-            icon: 'clipboard'
-          }
+            icon: 'clipboard',
+          },
         },
         {
           path: 'formConfig',
@@ -55,20 +55,30 @@ const maintainRouter = {
           component: () => import('@/views/maintain/formConfig/index'),
           meta: {
             title: '表单配置',
-            icon: 'clipboard'
-          }
-        }
-      ]
+            icon: 'clipboard',
+          },
+        },
+      ],
     },
     {
       path: 'user',
-      name: 'user',
+      name: 'MaintainUser',
       component: () => import('@/views/maintain/user'),
       meta: {
         title: '个人中心',
-        icon: 'clipboard'
+        icon: 'clipboard',
       },
-      hidden: true
+      hidden: true,
+    },
+    {
+      path: 'update',
+      name: 'MaintainUpdate',
+      component: () => import('@/views/maintain/user/update'),
+      meta: {
+        title: '修改密码',
+        icon: 'clipboard',
+      },
+      hidden: true,
     },
     {
       path: 'picture',
@@ -76,20 +86,10 @@ const maintainRouter = {
       component: () => import('@/views/maintain/picture'),
       meta: {
         title: '素材管理',
-        icon: 'clipboard'
+        icon: 'clipboard',
       },
-      hidden: false
+      hidden: false,
     },
-    {
-      path: 'authCRMEB',
-      name: 'authCRMEB',
-      component: () => import('@/views/maintain/authCRMEB'),
-      meta: {
-        title: '授权',
-        icon: 'clipboard'
-      },
-      hidden: false
-    },//sensitiveList
     {
       path: 'logistics',
       name: 'Logistics',
@@ -99,24 +99,58 @@ const maintainRouter = {
       meta: {
         title: '物流设置',
         icon: 'clipboard',
-        roles: ['admin']
+        roles: ['admin'],
       },
       children: [
         {
           path: 'cityList',
           component: () => import('@/views/maintain/logistics/cityList'),
           name: 'cityList',
-          meta: { title: '城市数据', icon: '' }
+          meta: { title: '城市数据', icon: '' },
         },
         {
           path: 'companyList',
           component: () => import('@/views/maintain/logistics/companyList'),
           name: 'companyList',
-          meta: { title: '物流公司', icon: '' }
+          meta: { title: '物流公司', icon: '' },
         },
-      ]
+      ],
     },
-  ]
-}
+    {
+      path: 'clearCache',
+      name: 'clearCache',
+      component: () => import('@/views/maintain/clearCache'),
+      meta: {
+        title: '缓存清除',
+        icon: 'clipboard',
+      },
+      hidden: false,
+    },
+    {
+      path: 'schedule',
+      name: 'schedule',
+      component: () => import('@/views/maintain/schedule'),
+      meta: {
+        title: '定时任务管理',
+        icon: 'clipboard',
+        roles: ['admin'],
+      },
+      children: [
+        {
+          path: 'list',
+          component: () => import('@/views/maintain/schedule/list'),
+          name: 'list',
+          meta: { title: '定时任务', icon: '' },
+        },
+        {
+          path: 'logList',
+          component: () => import('@/views/maintain/schedule/logList'),
+          name: 'logList',
+          meta: { title: '定时任务日志', icon: '' },
+        },
+      ],
+    },
+  ],
+};
 
-export default maintainRouter
+export default maintainRouter;

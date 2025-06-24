@@ -1,122 +1,84 @@
 <template>
-  <div :class="classObj" class="app-wrapper">
-    <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
-    <sidebar class="sidebar-container" />
-    <div :class="{hasTagsView:needTagsView}" class="main-container">
-      <div :class="{'fixed-header':fixedHeader}">
-        <navbar />
-        <tags-view v-if="needTagsView" />
-      </div>
-      <app-main />
-      <right-panel v-if="showSettings">
-        <settings />
-      </right-panel>
-    </div>
-    <div class="open-image" @click="clear" v-if="openImage"><img src="@/assets/imgs/pc1.png" alt=""></div>
-  </div>
+  <!-- 根据头部菜单是否显示来判断显示哪个组件 -->
+  <Mains v-if="headMenuNoShow" />
+  <!-- 根据主题配置中的布局类型来判断显示哪个组件 -->
+  <Classic v-else-if="getThemeConfig.layout === 'classic'" />
+  <Defaults v-else-if="getThemeConfig.layout === 'defaults'" />
+  <Transverse v-else-if="getThemeConfig.layout === 'transverse'" />
+  <Columns v-else-if="getThemeConfig.layout === 'columns'" />
 </template>
 
 <script>
-import RightPanel from '@/components/RightPanel'
-import { AppMain, Navbar, Settings, Sidebar, TagsView } from './components'
-import ResizeMixin from './mixin/ResizeHandler'
-import { mapState } from 'vuex'
+import { Local } from '@/utils/storage.js';
+import { mapMutations } from 'vuex';
+import { getNewTagList } from '@/utils/util';
 
 export default {
-  name: 'Layout',
-  data(){
-    return {
-      openImage: true
-    }
-  },
+  name: 'layout',
   components: {
-    AppMain,
-    Navbar,
-    RightPanel,
-    Settings,
-    Sidebar,
-    TagsView
+    Defaults: () => import('@/layout/main/defaults.vue'),
+    Classic: () => import('@/layout/main/classic.vue'),
+    Transverse: () => import('@/layout/main/transverse.vue'),
+    Columns: () => import('@/layout/main/columns.vue'),
+    Mains: () => import('@/layout/component/main.vue'),
   },
-  mixins: [ResizeMixin],
+  data() {
+    return {
+      headMenuNoShow: false,
+    };
+  },
   computed: {
-    ...mapState({
-      sidebar: state => state.app.sidebar,
-      device: state => state.app.device,
-      showSettings: state => state.settings.showSettings,
-      needTagsView: state => state.settings.tagsView,
-      fixedHeader: state => state.settings.fixedHeader
-    }),
-    classObj() {
-      return {
-        hideSidebar: !this.sidebar.opened,
-        openSidebar: this.sidebar.opened,
-        withoutAnimation: this.sidebar.withoutAnimation,
-        mobile: this.device === 'mobile'
-      }
-    }
+    // 获取布局配置信息
+    getThemeConfig() {
+      return this.$store.state.themeConfig.themeConfig;
+    },
+    tagNavList() {
+      return this.$store.state.menu.tagNavList;
+    },
+    routesList() {
+      return this.$store.state.user.menuList;
+    },
+  },
+  watch: {
+    $route(newRoute) {
+      this.headMenuNoShow = this.$route.meta.fullScreen;
+      const { name, query, params, meta, path } = newRoute;
+      this.addTag({
+        route: { name, query, params, meta, path },
+        type: 'push',
+      });
+      this.setBreadCrumb(newRoute);
+      this.setTagNavList(getNewTagList(this.tagNavList, newRoute));
+    },
+  },
+  created() {
+    this.headMenuNoShow = this.$route.meta.fullScreen;
+    this.onLayoutResize();
+    window.addEventListener('resize', this.onLayoutResize, { passive: true });
   },
   methods: {
-    clear () {
-      this.openImage = false;
+    ...mapMutations('menu', ['setBreadCrumb', 'setTagNavList', 'addTag', 'setLocal', 'setHomeRoute', 'closeTag']),
+
+    // 窗口大小改变时(适配移动端)
+    onLayoutResize() {
+      if (!Local.get('oldLayout')) Local.set('oldLayout', this.$store.state.themeConfig.themeConfig.layout);
+      const clientWidth = document.body.clientWidth;
+      if (clientWidth < 1000) {
+        this.$store.state.themeConfig.themeConfig.isCollapse = false;
+        this.bus.$emit('layoutMobileResize', {
+          layout: 'defaults',
+          clientWidth,
+        });
+      } else {
+        this.bus.$emit('layoutMobileResize', {
+          layout: Local.get('oldLayout') ? Local.get('oldLayout') : this.$store.state.themeConfig.themeConfig.layout,
+          clientWidth,
+        });
+      }
     },
-    handleClickOutside() {
-      this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
-    }
-  }
-}
+  },
+  distroyed() {
+    window.removeEventListener('resize', this.onLayoutResize);
+  },
+};
 </script>
-
-<style lang="scss" scoped>
-  @import "~@/styles/mixin.scss";
-  @import "~@/styles/variables.scss";
-  .open-image {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    background-color: rgba(0,0,0,0.6);
-    height: 100%;
-    width: 100%;
-    top: 0;
-    left: 0;
-    z-index: 999999;
-  }
-  .app-wrapper {
-    @include clearfix;
-    position: relative;
-    height: 100%;
-    width: 100%;
-
-    &.mobile.openSidebar {
-      position: fixed;
-      top: 0;
-    }
-  }
-
-  .drawer-bg {
-    background: #000;
-    opacity: 0.3;
-    width: 100%;
-    top: 0;
-    height: 100%;
-    position: absolute;
-    z-index: 999;
-  }
-
-  .fixed-header {
-    position: fixed;
-    top: 0;
-    right: 0;
-    z-index: 9;
-    width: calc(100% - #{$base-sidebar-width});
-    transition: width 0.28s;
-  }
-
-  .hideSidebar .fixed-header {
-    width: calc(100% - 54px)
-  }
-
-  .mobile .fixed-header {
-    width: 100%;
-  }
-</style>

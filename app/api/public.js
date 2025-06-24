@@ -1,3 +1,14 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
+
 import request from "@/utils/request.js";
 import wechat from "@/libs/wechat.js";
 import {
@@ -75,14 +86,6 @@ export function copyWords() {
 }
 
 /**
- * 首页 获取客服地址
- * @returns {*}
- */
-export function kefuConfig() {
-  return request.get("config", {}, { noAuth: true });
-}
-
-/**
  * 微信（公众号，小程序）绑定手机号
  * @param {Object} data
  */
@@ -99,18 +102,16 @@ export function appAuth(data) {
 }
 
 /**
- * 苹果登录
- * @param {Object} data
- */
-export function appleLogin(data) {
-	return request.post("ios/login", data, { noAuth : true });
-}
-
-
-/**
  * 苹果绑定手机号
  * @param {Object} data
  */
 export function iosBinding(data) {
 	return request.post("ios/binding/phone", data, { noAuth : true });
+}
+/**
+ * IOS绑定手机号 -注册后使用
+ * @param {Object} data
+ */
+export function iosRegisterBinding(data) {
+	return request.post("ios/register/binding/phone", data, { noAuth : true });
 }

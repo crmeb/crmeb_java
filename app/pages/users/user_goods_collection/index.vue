@@ -1,30 +1,46 @@
 <template>
-	<view>
-		<view class="hdbj"></view>
+	<view :data-theme="theme">
 		<view class='collectionGoods' v-if="collectProductList.length">
 			<!-- #ifdef  H5 || MP-->
 			<view class='nav acea-row row-between-wrapper'>
-				<view>当前共 <text class='num font-color'>{{ totals }}</text>件商品</view>
+				<view>当前共 <text class='num font_color'>{{ totals }}</text>件商品</view>
 				<view class='administrate acea-row row-center-wrapper' @click='manage'>{{ footerswitch ? '管理' : '取消'}}
 				</view>
 			</view>
 			<!-- #endif -->
 			<view class="list">
 				<checkbox-group @change="checkboxChange" class="centent">
+					<!-- #ifndef APP-PLUS-->
 					<view v-for="(item,index) in collectProductList" :key="index" class='item acea-row row-middle'>
 						<checkbox :value="item.id.toString()" :checked="item.checked" v-if="!footerswitch"
 							style="margin-right: 10rpx;" />
-						<navigator :url='"/pages/goods_details/index?id="+item.productId' hover-class='none'
+						<navigator :url='"/pages/goods/goods_details/index?id="+item.productId' hover-class='none'
 							class="acea-row">
 							<view class='pictrue'>
 								<image :src="item.image"></image>
 							</view>
 							<view>
 								<view class='name line1'>{{item.storeName}}</view>
-								<view class='money font-color'>￥{{item.price}}</view>
+								<view class='money'>￥{{item.price}}</view>
 							</view>
 						</navigator>
 					</view>
+					<!-- #endif -->
+					<!-- #ifdef APP-PLUS -->
+					<view v-for="(item,index) in collectProductList" :key="index" :data-index="index"
+						class='item acea-row row-middle order-item'>
+						<navigator :url='"/pages/goods/goods_details/index?id="+item.productId' hover-class='none' class="acea-row">
+							<view class='pictrue'>
+								<image :src="item.image"></image>
+							</view>
+							<view>
+								<view class='name line1'>{{item.storeName}}</view>
+								<view class='money'>￥{{item.price}}</view>
+							</view>
+						</navigator>
+						<view class="remove borRadius14" @tap="delCollection(item.id)">删除</view>
+					</view>
+					<!-- #endif -->
 				</checkbox-group>
 			</view>
 			<view class='loadingicon acea-row row-center-wrapper'>
@@ -32,9 +48,9 @@
 			</view>
 			<view v-if="!footerswitch" class='footer acea-row row-between-wrapper'>
 				<view>
-					<checkbox-group @change="checkboxAllChange">
+					<checkbox-group @change="checkboxAllChange" class="acea-row row-middle">
 						<checkbox value="all" :checked="!!isAllSelect" />
-						<text class='checkAll'>全选</text>
+						<text @click="isAllSelectChange" class='checkAll'>{{isAllSelect?'取消':'全选'}}</text>
 					</checkbox-group>
 				</view>
 				<view class='button acea-row row-middle'>
@@ -46,14 +62,10 @@
 		</view>
 		<view class='noCommodity' v-else-if="!collectProductList.length && page > 1">
 			<view class='pictrue'>
-				<image src='../static/noCollection.png'></image>
+				<image :src="urlDomain+'crmebimage/perset/usersImg/noCollection.png'"></image>
 			</view>
-			<recommend :hostProduct="hostProduct"></recommend>
+			<recommend ref="recommendIndex"></recommend>
 		</view>
-		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
-		<!-- #endif -->
-		<home></home>
 	</view>
 </template>
 
@@ -70,46 +82,35 @@
 		toLogin
 	} from '@/libs/login.js';
 	import recommend from '@/components/recommend';
-	// #ifdef MP
-	import authorize from '@/components/Authorize';
-	// #endif
-	import home from '@/components/home';
+	let app = getApp();
 	export default {
 		components: {
-			recommend,
-			// #ifdef MP
-			authorize,
-			// #endif
-			home
+			recommend
 		},
 		data() {
 			return {
+				urlDomain: this.$Cache.get("imgHost"),
 				footerswitch: true,
-				hostProduct: [],
 				loadTitle: '加载更多',
 				loading: false,
 				loadend: false,
 				collectProductList: [],
 				limit: 8,
 				page: 1,
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
-				hotScroll: false,
-				hotPage: 1,
-				hotLimit: 10,
 				isAllSelect: false, //全选
 				selectValue: [], //选中的数据
 				delBtnWidth: 80, //左滑默认宽度
-				totals: 0
+				totals: 0,
+				theme:app.globalData.theme,
 			};
 		},
 		computed: mapGetters(['isLogin']),
 		onLoad() {
+			let that = this;
 			if (this.isLogin) {
 				this.loadend = false;
 				this.page = 1;
 				this.collectProductList = [];
-				this.get_user_collect_product();
 			} else {
 				toLogin();
 			}
@@ -121,35 +122,6 @@
 			this.get_user_collect_product();
 		},
 		methods: {
-			// #ifdef MP
-			drawStart(e) {
-				var touch = e.touches[0];
-				this.startX = touch.clientX;
-			},
-			//触摸滑动
-			drawMove(e) {
-				var touch = e.touches[0];
-				var item = this.collectProductList[e.currentTarget.dataset.index];
-				var disX = this.startX - touch.clientX;
-				if (disX >= 20) {
-					if (disX > this.delBtnWidth) {
-						disX = this.delBtnWidth;
-					}
-					this.$set(this.collectProductList[e.currentTarget.dataset.index], 'right', disX);
-				} else {
-					this.$set(this.collectProductList[e.currentTarget.dataset.index], 'right', 0);
-				}
-			},
-			//触摸滑动结束
-			drawEnd(e) {
-				var item = this.collectProductList[e.currentTarget.dataset.index];
-				if (item.right >= this.delBtnWidth / 2) {
-					this.$set(this.collectProductList[e.currentTarget.dataset.index], 'right', this.delBtnWidth);
-				} else {
-					this.$set(this.collectProductList[e.currentTarget.dataset.index], 'right', 0);
-				}
-			},
-			// #endif
 			manage: function() {
 				this.footerswitch = !this.footerswitch;
 			},
@@ -176,6 +148,14 @@
 					this.setAllSelectValue(0)
 				}
 			},
+			isAllSelectChange(){
+				this.isAllSelect=!this.isAllSelect
+				if(this.isAllSelect){
+					this.setAllSelectValue(1)
+				}else{
+					this.setAllSelectValue(0)
+				}
+			},
 			setAllSelectValue: function(status) {
 				let selectValue = [];
 				if (this.collectProductList.length > 0) {
@@ -191,17 +171,6 @@
 					});
 					this.selectValue = selectValue.toString();
 				}
-			},
-			/**
-			 * 授权回调
-			 */
-			onLoadFun: function() {
-				this.get_user_collect_product();
-				this.get_host_product();
-			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
 			},
 			/**
 			 * 获取收藏产品
@@ -225,9 +194,8 @@
 					that.collectProductList = that.$util.SplitArray(collectProductList, that
 						.collectProductList);
 					that.$set(that, 'collectProductList', that.collectProductList);
-					if (that.collectProductList.length === 0) that.get_host_product();
 					that.loadend = loadend;
-					that.loadTitle = loadend ? '我也是有底线的' : '加载更多';
+					that.loadTitle = loadend ? '我也是有底线的~' : '加载更多';
 					that.page = that.page + 1;
 					that.loading = false;
 				}).catch(err => {
@@ -258,7 +226,7 @@
 						title: '取消收藏成功',
 						icon: 'success'
 					});
-					// this.collectProductList = this.collectProductList.filter(item=>item!==this.selectValue)
+					this.selectValue = [];
 					this.collectProductList = [];
 					this.loadend = false;
 					this.page = 1;
@@ -269,43 +237,22 @@
 					})
 				});
 			},
-			/**
-			 * 获取我的推荐
-			 */
-			get_host_product: function() {
-				let that = this;
-				if (that.hotScroll) return
-				getProductHot(
-					that.hotPage,
-					that.hotLimit,
-				).then(res => {
-					that.hotPage++
-					that.hotScroll = res.data.list.length < that.hotLimit
-					that.hostProduct = that.hostProduct.concat(res.data.list)
-				});
-			}
 		},
 		/**
 		 * 页面上拉触底事件的处理函数
 		 */
 		onReachBottom() {
 			this.get_user_collect_product();
-			this.get_host_product();
+			this.$refs.recommendIndex.get_host_product();
 		}
 	}
 </script>
 
 <style scoped lang="scss">
-
-	.hdbj {
-		width: 100%;
-		height: 30rpx;
-		background-color: #f5f5f5;
-		z-index: 999999;
-		position: fixed;
-		top: 0;
+	.money{
+		font-size: 26rpx;
+		@include price_color(theme);
 	}
-
 	.order-item {
 		width: 100%;
 		display: flex;
@@ -316,12 +263,12 @@
 
 	.remove {
 		width: 120rpx;
-		height: 100%;
-		background-color: $theme-color;
-		color: white;
+		height: 40rpx;
+		@include main_bg_color(theme);
+		color: #fff;
 		position: absolute;
-		top: 0;
-		right: -160rpx;
+		bottom: 30rpx;
+		right: 60rpx;
 		display: flex;
 		justify-content: center;
 		align-items: center;
@@ -350,10 +297,18 @@
 
 		.list {
 			padding: 30rpx;
+			/* #ifndef APP-PLUS*/
 			margin-top: 90rpx;
+			/* #endif */
+			/* #ifdef MP  */
+			//margin-top: 0rpx;
+			/* #endif */
 
 			.name {
 				width: 434rpx;
+				/* #ifdef APP-PLUS */
+				width: 486rpx;
+				/* #endif */
 				margin-bottom: 56rpx;
 			}
 		}
@@ -399,10 +354,6 @@
 		width: 100%;
 	}
 
-	.collectionGoods .item .text .money {
-		font-size: 26rpx;
-	}
-
 	.collectionGoods .item .text .delete {
 		font-size: 26rpx;
 		color: #282828;
@@ -433,7 +384,11 @@
 		/* #ifdef H5 || MP */
 		bottom: 0rpx;
 		/* #endif */
-		/* #ifndef MP */
+		/* #ifdef APP-PLUS */
+		bottom: 0;
+
+		/* #endif */
+		/* #ifndef MP || APP-PLUS */
 		// bottom: 98rpx;
 		// bottom: calc(98rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
 		// bottom: calc(98rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
@@ -454,5 +409,20 @@
 			text-align: center;
 			line-height: 60rpx;
 		}
+	}
+	.font_color{
+		@include main_color(theme);
+	}
+	/deep/ checkbox .uni-checkbox-input.uni-checkbox-input-checked {
+		@include main_bg_color(theme);
+		@include coupons_border_color(theme);
+		color: #fff!important
+	}
+	
+	/deep/ checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+		@include main_bg_color(theme);
+		@include coupons_border_color(theme);
+		color: #fff!important;
+		margin-right: 0 !important;
 	}
 </style>

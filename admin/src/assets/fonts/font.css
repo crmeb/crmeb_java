@@ -1,0 +1,19 @@
+@font-face {
+  font-family: 'dinProSemiBold';
+  src: url('./D-DIN-PRO-600-SemiBold.otf');
+}
+@font-face {
+  font-family: 'dinProRegular';
+  src: url('./D-DIN-PRO-400-Regular.otf');
+}
+
+.semiBold {
+  font-family: 'dinProSemiBold';
+}
+.regular {
+  font-family: 'dinProRegular';
+}
+.pingFang {
+  font-family: 'PingFang SC, PingFang SC';
+  font-weight: 500;
+}

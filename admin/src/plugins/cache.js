@@ -29,7 +29,7 @@ const sessionCache = {
   },
   remove(key) {
     sessionStorage.removeItem(key);
-  }
+  },
 };
 const localCache = {
   set(key, value) {
@@ -63,38 +63,37 @@ const localCache = {
   remove(key) {
     localStorage.removeItem(key);
   },
-	// 检测缓存是否存在
-	has(key)
-	{
-		return localStorage.getItem(key) ? true:false;
-	},
-  setItem(params){
+  // 检测缓存是否存在
+  has(key) {
+    return localStorage.getItem(key) ? true : false;
+  },
+  setItem(params) {
     let obj = {
-        name:'',
-        value:'',
-        expires:"",
-        startTime:new Date().getTime()
-    }
+      name: '',
+      value: '',
+      expires: '',
+      startTime: new Date().getTime(),
+    };
     let options = {};
     //将obj和传进来的params合并
-    Object.assign(options,obj,params);
-    if(options.expires){
-    //如果options.expires设置了的话
-    //以options.name为key，options为值放进去
-        localStorage.setItem(options.name,JSON.stringify(options));
-    }else{
-    //如果options.expires没有设置，就判断一下value的类型
-         let type = Object.prototype.toString.call(options.value);
-         //如果value是对象或者数组对象的类型，就先用JSON.stringify转一下，再存进去
-        if(Object.prototype.toString.call(options.value) == '[object Object]'){
-            options.value = JSON.stringify(options.value);
-        }
-        if(Object.prototype.toString.call(options.value) == '[object Array]'){
-            options.value = JSON.stringify(options.value);
-        }
-        localStorage.setItem(options.name,options.value);
+    Object.assign(options, obj, params);
+    if (options.expires) {
+      //如果options.expires设置了的话
+      //以options.name为key，options为值放进去
+      localStorage.setItem(options.name, JSON.stringify(options));
+    } else {
+      //如果options.expires没有设置，就判断一下value的类型
+      let type = Object.prototype.toString.call(options.value);
+      //如果value是对象或者数组对象的类型，就先用JSON.stringify转一下，再存进去
+      if (Object.prototype.toString.call(options.value) == '[object Object]') {
+        options.value = JSON.stringify(options.value);
+      }
+      if (Object.prototype.toString.call(options.value) == '[object Array]') {
+        options.value = JSON.stringify(options.value);
+      }
+      localStorage.setItem(options.name, options.value);
     }
-  }
+  },
 };
 
 export default {
@@ -105,5 +104,5 @@ export default {
   /**
    * 本地缓存
    */
-  local: localCache
+  local: localCache,
 };

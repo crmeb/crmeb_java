@@ -3,17 +3,26 @@
 		<view class="product-window"
 			:class="(attr.cartAttr === true ? 'on' : '') + ' ' + (iSbnt?'join':'') + ' ' + (iScart?'joinCart':'')">
 			<view class="textpic acea-row row-between-wrapper">
-				<view class="pictrue">
+				<view class="pictrue" @click="showImg()">
 					<image :src="attr.productSelect.image"></image>
 				</view>
 				<view class="text">
 					<view class="line1">
 						{{ attr.productSelect.storeName }}
 					</view>
-					<view class="money font-color">
-						￥<text class="num">{{ attr.productSelect.price }}</text>
-						<text class="stock" v-if='isShow'>库存: {{ attr.productSelect.stock }}</text>
-						<text class='stock' v-if="limitNum">限量: {{attr.productSelect.quota}}</text>
+					<view class="money">
+						<view class="flex align-baseline">
+							￥<text class="num">{{ attr.productSelect.price }}</text>
+							<view class="flex pl-2"
+								v-if="attr.productSelect.vipPrice && attr.productSelect.vipPrice > 0">
+								<image :src="urlDomain+'crmebimage/perset/staticImg/vip_badge.png'" class="vip_icon"></image>
+								<text class='vip_money skeleton-rect'>￥{{attr.productSelect.vipPrice}}</text>
+							</view>
+						</view>
+						<view>
+							<text class="stock" v-if='isShow'>库存: {{ attr.productSelect.stock }}</text>
+							<text class='stock' v-if="limitNum">限量: {{attr.productSelect.quota}}</text>
+						</view>
 					</view>
 				</view>
 				<view class="iconfont icon-guanbi" @click="closeAttr"></view>
@@ -40,27 +49,23 @@
 						</view>
 						<view class='item num'>
 							<input type="number" v-model="attr.productSelect.cart_num"
-								data-name="productSelect.cart_num"
-								@input="bindCode(attr.productSelect.cart_num)"></input>
+								data-name="productSelect.cart_num" @input="bindCode(attr.productSelect.cart_num)"
+								maxlength="3"></input>
 						</view>
-						<view v-if="iSplus" class="item plus" :class="
-				      attr.productSelect.cart_num >= attr.productSelect.stock
-				        ? 'on'
-				        : ''
-				    " @click="CartNumAdd">
+						<view v-if="iSplus" class="item plus" :class="attr.productSelect.cart_num >= attr.productSelect.stock? 'on': ''" @click="CartNumAdd">
 							+
 						</view>
 						<view v-else class='item plus'
-							:class='(attr.productSelect.cart_num >= attr.productSelect.quota) || (attr.productSelect.cart_num >= attr.productSelect.stock) || (attr.productSelect.cart_num >= attr.productSelect.num)? "on":""'
+							:class='(attr.productSelect.cart_num === onceNum) || (attr.productSelect.cart_num >= attr.productSelect.quota) || (attr.productSelect.cart_num >= attr.productSelect.stock) || (attr.productSelect.cart_num >= attr.productSelect.num)? "on":""'
 							@click='CartNumAdd'>+</view>
 					</view>
 				</view>
 			</view>
-			<view class="joinBnt bg-color" v-if="iSbnt && attr.productSelect.stock>0 &&attr.productSelect.quota>0"
+			<view class="joinBnt bg_color" v-if="iSbnt && attr.productSelect.stock>0 &&attr.productSelect.quota>0"
 				@click="goCat">我要参团</view>
 			<view class="joinBnt on"
 				v-else-if="(iSbnt && attr.productSelect.quota<=0)||(iSbnt &&attr.productSelect.stock<=0)">已售罄</view>
-			<view class="joinBnt bg-color" v-if="iScart && attr.productSelect.stock" @click="goCat">确定</view>
+			<view class="joinBnt bg_color" v-if="iScart && attr.productSelect.stock" @click="goCat">确定</view>
 			<!-- <view class="joinBnt bg-color" v-if="iSbnt && attr.productSelect.stock && attr.productSelect.quota" @click="goCat">确定</view> -->
 			<view class="joinBnt on" v-else-if="(iScart && !attr.productSelect.stock)">已售罄</view>
 		</view>
@@ -70,11 +75,15 @@
 
 <script>
 	export default {
-
 		props: {
 			attr: {
 				type: Object,
 				default: () => {}
+			},
+			//一次最多可买几个，活动商品中使用
+			onceNum: {
+				type: Number,
+				value: 1
 			},
 			limitNum: {
 				type: Number,
@@ -98,9 +107,11 @@
 			}
 		},
 		data() {
-			return {};
+			return {
+				urlDomain: this.$Cache.get("imgHost"),
+			};
 		},
-		mounted() {},
+		created() {},
 		methods: {
 			goCat: function() {
 				this.$emit('goCat');
@@ -128,10 +139,7 @@
 					indexn: indexn
 				});
 				this.$set(this.attr.productAttr[indexw], 'index', this.attr.productAttr[indexw].attrValues[indexn]);
-				let value = that
-					.getCheckedValue()
-					// .sort()
-					.join(",");
+				let value = that.getCheckedValue().join(",");
 				that.$emit("ChangeAttr", value);
 
 			},
@@ -147,7 +155,10 @@
 					}
 				}
 				return value;
-			}
+			},
+			showImg() {
+				this.$emit('getImg');
+			},
 		}
 	}
 </script>
@@ -161,9 +172,10 @@
 		background-color: #fff;
 		z-index: 77;
 		border-radius: 16rpx 16rpx 0 0;
-		padding-bottom: 140rpx;
+		padding-bottom: 100rpx;
+		padding-bottom: calc(env(safe-area-inset-bottom) + 100rpx);
 		transform: translate3d(0, 100%, 0);
-		transition: all .3s cubic-bezier(.25, .5, .5, .9);
+		transition: all .2s cubic-bezier(0, 0, .25, 1);
 	}
 
 	.product-window.on {
@@ -204,16 +216,18 @@
 
 	.product-window .textpic .text .money {
 		font-size: 24rpx;
-		margin-top: 40rpx;
+		margin-top: 23rpx;
+		@include price_color(theme);
 	}
 
 	.product-window .textpic .text .money .num {
+		font-family: PingFang SC;
 		font-size: 36rpx;
+		font-weight: 600;
 	}
 
 	.product-window .textpic .text .money .stock {
 		color: #999;
-		margin-left: 18rpx;
 	}
 
 	.product-window .textpic .iconfont {
@@ -225,7 +239,7 @@
 	}
 
 	.product-window .rollTop {
-		max-height: 500rpx;
+		max-height: 62vh; 
 		overflow: auto;
 		margin-top: 36rpx;
 	}
@@ -255,9 +269,9 @@
 	}
 
 	.product-window .productWinList .item .listn .itemn.on {
-		color: $theme-color;
-		background: rgba(255, 244, 243, 1);
-		border-color: $theme-color;
+		@include main_color(theme);
+		@include coupons_border_color(theme);
+		@include cate-two-btn(theme);
 	}
 
 	.product-window .productWinList .item .listn .itemn.limit {
@@ -266,7 +280,8 @@
 	}
 
 	.product-window .cart {
-		margin-top: 36rpx;
+		margin-top: 50rpx;
+		margin-bottom: 30rpx;
 		padding: 0 30rpx;
 	}
 
@@ -277,7 +292,6 @@
 
 	.product-window .cart .carnum {
 		height: 54rpx;
-		margin-top: 24rpx;
 	}
 
 	.product-window .cart .carnum view {
@@ -337,8 +351,41 @@
 		margin: 21rpx auto 0 auto;
 	}
 
+	.align-baseline {
+		align-items: baseline;
+	}
+
+	.bg_color {
+		@include main-bg_color(theme);
+	}
+
 	.product-window .joinBnt.on {
 		background-color: #bbb;
 		color: #fff;
+	}
+
+	.align-center {
+		align-items: center;
+	}
+
+	.vip_icon {
+		width: 44rpx;
+		height: 28rpx;
+	}
+
+	.vip_money {
+		background: #FFE7B9;
+		border-radius: 4px;
+		font-size: 22rpx;
+		color: #333;
+		line-height: 28rpx;
+		text-align: center;
+		padding: 0 6rpx;
+		box-sizing: border-box;
+		margin-left: -4rpx;
+	}
+
+	.pl-2 {
+		padding-left: 20rpx;
 	}
 </style>

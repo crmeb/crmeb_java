@@ -13,16 +13,16 @@
 					<!-- <view class='item acea-row row-center-wrapper' v-for="(item,index) in coupon.list" :key='index'> -->
 					<view class='item acea-row row-center-wrapper' v-for="(item,index) in coupon.list"
 						@click="getCouponUser(index,item.id)" :key='index'>
-						<view class='money acea-row row-column row-center-wrapper' :class='item.isUse?"moneyGray":""'>
-							<view>￥<text class='num'>{{item.money?Number(item.money):''}}</text></view>
+						<view class='money acea-row row-column row-center-wrapper' :class='item.isUse?"moneyGray":"main_bg"'>
+							<view>￥<text class='num' :style="[{'font-size':item.money.length>=7?'42rpx':'60rpx'}]" >{{item.money?Number(item.money):''}}</text></view>
 							<view class="pic-num">满{{item.minPrice}}元可用</view>
 						</view>
 						<view class='text'>
 							<view class='condition line2'>
-								<span class='line-title' :class='item.isUse?"gray":""' v-if='item.useType===1'>通用</span>
-								<span class='line-title' :class='item.isUse?"gray":""'
+								<span class='line-title' :class='item.isUse?"gray":"select"' v-if='item.useType===1'>通用</span>
+								<span class='line-title' :class='item.isUse?"gray":"select"'
 									v-else-if='item.useType===3'>品类</span>
-								<span class='line-title' :class='item.isUse?"gray":""' v-else>商品</span>
+								<span class='line-title' :class='item.isUse?"gray":"select"' v-else>商品</span>
 								<span>{{item.name}}</span>
 							</view>
 							<view class='data acea-row row-between-wrapper'>
@@ -31,14 +31,14 @@
 									{{ item.useStartTimeStr&& item.useEndTimeStr ? item.useStartTimeStr + " - " + item.useEndTimeStr : ""}}
 								</view>
 								<view class='bnt gray' v-if="item.isUse">{{item.use_title || '已领取'}}</view>
-								<view class='bnt bg-color' v-else>{{coupon.statusTile || '立即领取'}}</view>
+								<view class='bnt main_bg' v-else>{{coupon.statusTile || '立即领取'}}</view>
 							</view>
 						</view>
 					</view>
 				</block>
 				<!-- 无优惠券 -->
 				<view class='pictrue' v-else>
-					<image src='../../static/images/noCoupon.png'></image>
+					<image :src="urlDomain+'crmebimage/perset/staticImg/noCoupon.png'"></image>
 				</view>
 			</view>
 			
@@ -70,17 +70,21 @@
 				default: function() {
 					return '';
 				}
+			},
+			typeNum:{
+				type:Number,
+				default:0
 			}
 		},
 		data() {
 			return {
-               type: 1
+				urlDomain: this.$Cache.get("imgHost"),
+               type: 1,
 			};
 		},
-
 		methods: {
 			close: function() {
-				this.type = 1
+				this.type = this.typeNum;
 				this.$emit('ChangCouponsClone');
 			},
 			getCouponUser: function(index, id) {
@@ -96,6 +100,10 @@
 							that.$emit('ChangCouponsUseState', index);
 							that.$util.Tips({
 								title: "领取成功"
+							}, function(res) {
+								return that.$util.Tips({
+									title: res
+								});
 							});
 							that.$emit('ChangCoupons', list[index]);
 						})
@@ -106,8 +114,8 @@
 				}
 			},
 			setType: function(type) {
-				this.type = type;
 				this.$emit('tabCouponType', type);
+				this.type = type;
 			}
 		}
 	}
@@ -177,7 +185,7 @@
 		width: 90rpx;
 		padding: 0 10rpx;
 		box-sizing: border-box;
-		background: rgba(255, 247, 247, 1);
+		background: #fff;
 		border: 1px solid rgba(232, 51, 35, 1);
 		opacity: 1;
 		border-radius: 20rpx;
@@ -212,7 +220,7 @@
 	}
 
 	.nav .acea-row.on {
-		border-bottom-color: #E93323;
+		@include tab_border_bottom(theme);
 		color: #282828;
 	}
 
@@ -231,5 +239,13 @@
 
 	.coupon-list .item .money {
 		font-weight: normal;
+	}
+	
+	.main_bg{
+		@include main_bg_color(theme);
+	}
+	.select{
+		@include main_color(theme);
+		@include coupons_border_color(theme);
 	}
 </style>

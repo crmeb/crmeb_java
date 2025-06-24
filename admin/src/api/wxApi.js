@@ -1,40 +1,40 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import request from '@/utils/request'
+import request from '@/utils/request';
 
-export function menuCreate(data) { 
+export function menuCreate(data) {
   return request({
     url: '/admin/wechat/menu/public/create',
     method: 'post',
-    params: data
-  })
+    params: data,
+  });
 }
 
 export function menuDelete(data) {
   return request({
     url: '/admin/wechat/menu/public/delete',
     method: 'post',
-    params: data
-  })
+    params: data,
+  });
 }
 
 export function menuInfo(pram) {
   const data = {
-    isAsync: pram.isAsync
-  }
+    isAsync: pram.isAsync,
+  };
   return request({
     url: '/admin/wechat/menu/public/get',
     method: 'post',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
@@ -45,8 +45,8 @@ export function wechatTemplateListApi(params) {
   return request({
     url: `/admin/wechat/template/list`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -57,8 +57,8 @@ export function wechatTemplateSaveApi(data) {
   return request({
     url: `/admin/wechat/template/save`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -69,8 +69,8 @@ export function wechatTemplateUpdateApi(id, data) {
   return request({
     url: `/admin/wechat/template/update/${id}`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -80,8 +80,8 @@ export function wechatTemplateUpdateApi(id, data) {
 export function wechatTemplateInfoApi(id) {
   return request({
     url: `/admin/wechat/template/info/${id}`,
-    method: 'get'
-  })
+    method: 'get',
+  });
 }
 
 /**
@@ -92,8 +92,8 @@ export function wechatTemplateStatusApi(id, params) {
   return request({
     url: `/admin/wechat/template/update/status/${id}`,
     method: 'post',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -103,8 +103,8 @@ export function wechatTemplateStatusApi(id, params) {
 export function wechatTemplateDeleteApi(id) {
   return request({
     url: `/admin/wechat/template/delete/${id}`,
-    method: 'get'
-  })
+    method: 'get',
+  });
 }
 
 /**
@@ -115,8 +115,8 @@ export function replyListApi(params) {
   return request({
     url: `/admin/wechat/keywords/reply/list`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -127,8 +127,8 @@ export function replySaveApi(data) {
   return request({
     url: `/admin/wechat/keywords/reply/save`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -139,8 +139,8 @@ export function replyStatusApi(params) {
   return request({
     url: `/admin/wechat/keywords/reply/status`,
     method: 'post',
-    params
-  })
+    params,
+  });
 }
 /**
  * 关键字回复 编辑
@@ -151,8 +151,8 @@ export function replyUpdateApi(params, data) {
     url: `/admin/wechat/keywords/reply/update`,
     method: 'post',
     params,
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -163,8 +163,8 @@ export function replyInfoApi(params) {
   return request({
     url: `/admin/wechat/keywords/reply/info`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -175,8 +175,8 @@ export function replyDeleteApi(params) {
   return request({
     url: `/admin/wechat/keywords/reply/delete`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -187,8 +187,8 @@ export function keywordsInfoApi(params) {
   return request({
     url: `/admin/wechat/keywords/reply/info/keywords`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -199,8 +199,8 @@ export function wechatMenuApi(params) {
   return request({
     url: `/admin/wechat/menu/public/get`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -211,8 +211,8 @@ export function wechatMenuAddApi(data) {
   return request({
     url: `/admin/wechat/menu/public/create`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -222,8 +222,8 @@ export function publicTempListApi(params) {
   return request({
     url: `/admin/wechat/program/public/temp/list`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -232,8 +232,8 @@ export function publicTempListApi(params) {
 export function categoryApi() {
   return request({
     url: `/admin/wechat/program/category`,
-    method: 'get'
-  })
+    method: 'get',
+  });
 }
 
 /**
@@ -243,8 +243,8 @@ export function getWeChatKeywordsByTidApi(params) {
   return request({
     url: `/admin/wechat/program/getWeChatKeywordsByTid`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -254,8 +254,8 @@ export function publicTempInfoApi(params) {
   return request({
     url: `/admin/wechat/program/public/temp/info`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -265,8 +265,8 @@ export function myTempListApi(params) {
   return request({
     url: `/admin/wechat/program/my/temp/list`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -276,8 +276,8 @@ export function myTempInfoApi(params) {
   return request({
     url: `/admin/wechat/program/my/temp/info`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -287,8 +287,8 @@ export function myTempSaveApi(data) {
   return request({
     url: `/admin/wechat/program/my/temp/save`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -299,8 +299,8 @@ export function myTempUpdateApi(params, data) {
     url: `/admin/wechat/program/my/temp/update`,
     method: 'post',
     params,
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -310,10 +310,9 @@ export function myTempStatusApi(params) {
   return request({
     url: `/admin/wechat/program/my/temp/update/status`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
-
 
 /**
  * 小程序 我的模板修改应用场景
@@ -322,8 +321,8 @@ export function myTempTypeApi(params) {
   return request({
     url: `/admin/wechat/program/my/temp/update/type`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -334,8 +333,8 @@ export function getWechatConfig() {
   return request({
     url: `/admin/wechat/config`,
     method: 'get',
-    params:{ url: encodeURIComponent(location.href.split('#')[0]) } // for Test
-  })
+    params: { url: encodeURIComponent(location.href.split('#')[0]) }, // for Test
+  });
 }
 
 /**
@@ -346,8 +345,8 @@ export function wechatAuth(code) {
   return request({
     url: `/admin/authorize/login`,
     method: 'get',
-    params: { code }
-  })
+    params: { code },
+  });
 }
 
 /**
@@ -356,8 +355,8 @@ export function wechatAuth(code) {
 export function unbindApi() {
   return request({
     url: `/admin/unbind`,
-    method: 'get'
-  })
+    method: 'get',
+  });
 }
 
 /**
@@ -366,36 +365,55 @@ export function unbindApi() {
 export function tempAsyncApi() {
   return request({
     url: `/admin/wechat/program/my/temp/async`,
-    method: 'get'
-  })
+    method: 'get',
+  });
 }
 
 /**
  * 公众号模板消息同步
  */
- export function wechatAsyncApi() {
+export function wechatAsyncApi() {
   return request({
     url: `/admin/wechat/template/whcbqhn/sync`,
-    method: 'post'
-  })
+    method: 'post',
+  });
 }
 
 /**
  * 小程序模板消息同步
  */
- export function routineAsyncApi() {
+export function routineAsyncApi() {
   return request({
     url: `/admin/wechat/template/routine/sync`,
-    method: 'post'
-  })
+    method: 'post',
+  });
 }
 
 /**
  * 小程序源码下载
  */
- export function wechatCodeDownload() {
+export function wechatCodeDownload() {
   return request({
     url: `/admin/wechat/code/download`,
-    method: 'get'
-  })
+    method: 'get',
+  });
+}
+/**
+ * 获取微信小程序发货开关
+ */
+export function wechatGetShippingSwitchApi() {
+  return request({
+    url: `/admin/wechat/menu/get/shipping/switch`,
+    method: 'get',
+  });
+}
+/**
+ * 更新微信小程序发货开关
+ */
+export function wechatUpdateShippingSwitchApi(data) {
+  return request({
+    url: `/admin/wechat/menu/update/shipping/switch`,
+    method: 'post',
+    data,
+  });
 }

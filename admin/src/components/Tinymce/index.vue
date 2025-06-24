@@ -1,47 +1,52 @@
 <template>
-  <div :class="{fullscreen:fullscreen}" class="tinymce-container editor-container">
+  <div :class="{ fullscreen: fullscreen }" class="tinymce-container editor-container">
     <textarea :id="tinymceId" class="tinymce-textarea" />
-    <div class="editor-custom-btn-container">
-      <editorImage color="#1890ff" class="editor-upload-btn" @successCBK="imageSuccessCBK" />
-    </div>
   </div>
 </template>
 
 <script>
-import editorImage from './components/EditorImage'
-import plugins from './plugins'
-import toolbar from './toolbar'
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+import plugins from './plugins';
+import toolbar from './toolbar';
+import { uploadImage } from '@/utils/ZBKJIutil';
 
 export default {
   name: 'Tinymce',
-  components: { editorImage },
   props: {
     id: {
       type: String,
-      default: function() {
-        return 'vue-tinymce-' + +new Date() + ((Math.random() * 1000).toFixed(0) + '')
-      }
+      default: function () {
+        return 'vue-tinymce-' + +new Date() + ((Math.random() * 1000).toFixed(0) + '');
+      },
     },
     value: {
       type: String,
-      default: ''
+      default: '',
     },
     toolbar: {
       type: Array,
       required: false,
       default() {
-        return []
-      }
+        return [];
+      },
     },
     menubar: {
       type: String,
-      default: 'file edit insert view format table'
+      default: 'file edit insert view format table',
     },
     height: {
       type: Number,
       required: false,
-      default: 400
-    }
+      default: 400,
+    },
   },
   data() {
     return {
@@ -50,44 +55,43 @@ export default {
       tinymceId: this.id,
       fullscreen: false,
       languageTypeList: {
-        'en': 'en',
-        'zh': 'zh_CN'
-      }
-    }
+        en: 'en',
+        zh: 'zh_CN',
+      },
+    };
   },
   computed: {
     language() {
-      // return this.languageTypeList[this.$store.getters.language]
-      return this.languageTypeList['zh']
-    }
+      // return this.languageTypeList[this.$product.getters.language]
+      return this.languageTypeList['zh'];
+    },
   },
   watch: {
     value(val) {
       if (!this.hasChange && this.hasInit) {
-        this.$nextTick(() =>
-          window.tinymce.get(this.tinymceId).setContent(val || ''))
+        this.$nextTick(() => window.tinymce.get(this.tinymceId).setContent(val || ''));
       }
     },
     language() {
-      this.destroyTinymce()
-      this.$nextTick(() => this.initTinymce())
-    }
+      this.destroyTinymce();
+      this.$nextTick(() => this.initTinymce());
+    },
   },
   mounted() {
-    this.initTinymce()
+    this.initTinymce();
   },
   activated() {
-    this.initTinymce()
+    this.initTinymce();
   },
   deactivated() {
-    this.destroyTinymce()
+    this.destroyTinymce();
   },
   destroyed() {
-    this.destroyTinymce()
+    this.destroyTinymce();
   },
   methods: {
     initTinymce() {
-      const _this = this
+      const _this = this;
       window.tinymce.init({
         language: this.language,
         selector: `#${this.tinymceId}`,
@@ -107,66 +111,94 @@ export default {
         default_link_target: '_blank',
         link_title: false,
         convert_urls: false, //防止路径被转化为相对路径
+        paste_data_images: true, // 默认是false的，记得要改为true才能粘贴
         nonbreaking_force_tab: true, // inserting nonbreaking space &nbsp; need Nonbreaking Space Plugin
-        init_instance_callback: editor => {
+        init_instance_callback: (editor) => {
           if (_this.value) {
-            editor.setContent(_this.value)
+            editor.setContent(_this.value);
           }
-          _this.hasInit = true
+          _this.hasInit = true;
           editor.on('NodeChange Change KeyUp SetContent', () => {
-            this.hasChange = true
-            this.$emit('input', editor.getContent())
-          })
+            this.hasChange = true;
+            this.$emit('input', editor.getContent());
+          });
         },
         setup(editor) {
-          editor.on('FullscreenStateChanged', (e) => {
-            _this.fullscreen = e.state
-          })
-        }
-      })
+          editor.addButton('Upload', {
+            icon: 'image',
+            tooltip: '上传图片',
+            onclick: function () {
+              _this.modalPicTap('2');
+            },
+          });
+        },
+        images_upload_handler: async (blobInfo, succFun, failFun) => {
+          var file = blobInfo.blob(); //转化为易于理解的file对象
+          const formData = new FormData();
+          const data = {
+            model: 'product',
+            pid: 0,
+          };
+          formData.append('multipart', file);
+          try {
+            let res = await uploadImage(formData, data);
+            succFun(res.url);
+          } catch (e) {}
+        },
+      });
+    },
+    modalPicTap(tit) {
+      const _this = this;
+      this.$modalUpload(
+        function (img) {
+          if (!img) return;
+          let arr = [];
+          if (img.length > 10) return this.$message.warning('最多选择10张图片！');
+          img.map((item) => {
+            arr.push(item.sattDir);
+          });
+          _this.imageSuccessCBK(arr);
+        },
+        tit,
+        'content',
+      );
     },
     destroyTinymce() {
-      const tinymce = window.tinymce.get(this.tinymceId)
+      const tinymce = window.tinymce.get(this.tinymceId);
       if (this.fullscreen) {
-        tinymce.execCommand('mceFullScreen')
+        tinymce.execCommand('mceFullScreen');
       }
 
       if (tinymce) {
-        tinymce.destroy()
+        tinymce.destroy();
       }
     },
     setContent(value) {
-      window.tinymce.get(this.tinymceId).setContent(value)
+      window.tinymce.get(this.tinymceId).setContent(value);
     },
     getContent() {
-      window.tinymce.get(this.tinymceId).getContent()
+      window.tinymce.get(this.tinymceId).getContent();
     },
     imageSuccessCBK(arr) {
       const _this = this;
       arr.forEach((v) => {
-        if (this.getFileType(v) == "video") {
-          window.tinymce
-            .get(_this.tinymceId)
-            .insertContent(
-              `<video class="wscnph" src="${v}" controls muted></video>`
-            );
+        if (this.getFileType(v) == 'video') {
+          window.tinymce.get(_this.tinymceId).insertContent(`<video class="wscnph" src="${v}" controls muted></video>`);
         } else {
-          window.tinymce
-            .get(_this.tinymceId)
-            .insertContent(`<img class="wscnph" src="${v}" />`);
+          window.tinymce.get(_this.tinymceId).insertContent(`<img class="wscnph" src="${v}" />`);
         }
       });
     },
     getFileType(fileName) {
       // 后缀获取
-      let suffix = "";
+      let suffix = '';
       // 获取类型结果
-      let result = "";
+      let result = '';
       try {
-        const flieArr = fileName.split(".");
+        const flieArr = fileName.split('.');
         suffix = flieArr[flieArr.length - 1];
       } catch (err) {
-        suffix = "";
+        suffix = '';
       }
       // fileName无后缀返回 false
       if (!suffix) {
@@ -174,33 +206,23 @@ export default {
       }
       suffix = suffix.toLocaleLowerCase();
       // 图片格式
-      const imglist = ["png", "jpg", "jpeg", "bmp", "gif"];
+      const imglist = ['png', 'jpg', 'jpeg', 'bmp', 'gif'];
       // 进行图片匹配
       result = imglist.find((item) => item === suffix);
       if (result) {
-        return "image";
+        return 'image';
       }
       // 匹配 视频
-      const videolist = [
-        "mp4",
-        "m2v",
-        "mkv",
-        "rmvb",
-        "wmv",
-        "avi",
-        "flv",
-        "mov",
-        "m4v",
-      ];
+      const videolist = ['mp4', 'm2v', 'mkv', 'rmvb', 'wmv', 'avi', 'flv', 'mov', 'm4v'];
       result = videolist.find((item) => item === suffix);
       if (result) {
-        return "video";
+        return 'video';
       }
       // 其他 文件类型
-      return "other";
+      return 'other';
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped>
@@ -208,7 +230,7 @@ export default {
   position: relative;
   line-height: normal;
 }
-.tinymce-container>>>.mce-fullscreen {
+.tinymce-container >>> .mce-fullscreen {
   z-index: 10000;
 }
 .tinymce-textarea {

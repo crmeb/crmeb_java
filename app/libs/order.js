@@ -1,8 +1,16 @@
-import {
-	preOrderApi
-} from '@/api/order.js';
-import util from 'utils/util'
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
 
+import {preOrderApi} from '@/api/order.js';
+import util from 'utils/util'
+import animationType from '@/utils/animationType.js'
 /**
  * 去商品详情
  */
@@ -36,7 +44,7 @@ export function getPreOrder(preOrderType, orderDetails) {
 			"orderDetails": orderDetails
 		}).then(res => {
 			uni.navigateTo({
-				url: '/pages/users/order_confirm/index?preOrderNo=' + res.data.preOrderNo
+				url: '/pages/order/order_confirm/index?preOrderNo=' + res.data.preOrderNo
 			});
 		}).catch(err => {
 			return util.Tips({

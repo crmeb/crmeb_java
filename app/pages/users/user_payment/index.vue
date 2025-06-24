@@ -1,8 +1,8 @@
 <template>
-	<view>
+	<view :data-theme="theme" class="user_payment">
 		<form @submit="submitSub" report-submit='true'>
 			<view class="payment-top acea-row row-column row-center-wrapper">
-				<span class="name">我的余额</span>
+				<span class="name1">我的余额</span>
 				<view class="pic">
 					￥<span class="pic-font">{{ userInfo.nowMoney || 0 }}</span>
 				</view>
@@ -20,7 +20,7 @@
 						<view class="pic-number">赠送：{{ item.giveMoney }} 元</view>
 					</view>
 					<view class="pic-box pic-box-color acea-row row-center-wrapper" :class="parseFloat(activePic)===parseFloat(picList.length)?'pic-box-color-active':''" @click="picCharge(picList.length)">
-						<input type="number" placeholder="其他" v-model="money" :maxlength="50000" class="pic-box-money pic-number-pic uni-input" :class="parseFloat(activePic) === parseFloat(picList.length) ? 'pic-box-color-active' : ''" />
+						<input type="number" placeholder="其他" v-model="money" maxlength="5" class="pic-box-money pic-number-pic uni-input" :class="parseFloat(activePic) === parseFloat(picList.length) ? 'pic-box-color-active' : ''" @blur="addMoney()" />
 					</view>
 					<view class="tips-box">
 						<view class="tips mt-30">注意事项：</view>
@@ -30,7 +30,8 @@
 					</view>
 				</view>
 				<view class="tip" v-else>
-					<view class='input'><text>￥</text><input placeholder="0.00" type='number' placeholder-class='placeholder' :value="number"
+					<view class='input'><text>￥</text>
+					<input placeholder="0.00" type='number' placeholder-class='placeholder' :value="number"
 						 name="number"></input></view>
 					<view class="tips-title">
 						<view style="font-weight: bold; font-size: 26rpx;">提示：</view>
@@ -43,13 +44,30 @@
 						</view>
 					</view>
 				</view>
+				<!-- #ifndef  MP-->
+				<view class='wrapper borRadius14  px-30'  v-if='!active'>
+					<view class='item'>
+						<view>支付方式</view>
+						<view class='list'>
+							<view class='payItem acea-row row-middle' :class='curActive==index ?"on":""'
+								@tap='payItem(index)' v-for="(item,index) in cartArr" :key='index'
+								v-if="item.payStatus===1">
+								<view class='name acea-row row-center-wrapper'>
+									<view class='iconfont animated'
+										:class='(item.icon) + " " + (animated==true&&active==index ?"bounceIn":"")'>
+									</view>
+									{{item.name}}
+								</view>
+								<view class='tip'>{{item.title}}</view>
+							</view>
+						</view>
+					</view>
+				</view>
+				<!-- #endif -->
 				<button class='but' formType="submit"> {{active ? '立即转入': '立即充值' }}</button>
+				<view class="alipaysubmit" v-html="formContent"></view>
 			</view>
 		</form>
-		<!-- #ifdef MP -->
-		<!-- <authorize @onLoadFun="onLoadFun" :isAuto="isAuto" :isShowAuth="isShowAuth" @authColse="authColse"></authorize> -->
-		<!-- #endif -->
-		<home></home>
 	</view>
 </template>
 
@@ -59,26 +77,18 @@
 		rechargeWechat,
 		getRechargeApi,
 		transferIn,
-		appWechat
+		appWechat,
 	} from '@/api/user.js';
-	import { wechatQueryPayResult } from '@/api/order.js';
+	import { wechatQueryPayResult,getOrderPayConfig} from '@/api/order.js';
 	import {
 		toLogin
 	} from '@/libs/login.js';
 	import {
 		mapGetters
 	} from "vuex";
-	// #ifdef MP
-	import authorize from '@/components/Authorize';
-	// #endif
-	import home from '@/components/home';
+	import {Debounce} from '@/utils/validate.js'
+	let app = getApp();
 	export default {
-		components: {
-			// #ifdef MP
-			authorize,
-			// #endif
-			home
-		},
 		data() {
 			let that = this;
 			return {
@@ -88,14 +98,32 @@
 				number: '',
 				placeholder: "0.00",
 				from: '',
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
 				picList: [],
 				activePic: 0,
 				money: "",
 				numberPic: '',
 				rechar_id: 0,
-				rechargeAttention: []
+				rechargeAttention: [],
+				theme:app.globalData.theme,
+				//支付方式
+				cartArr: [{
+						"name": "微信支付",
+						"icon": "icon-weixin2",
+						value: 'weixin',
+						title: '微信快捷支付',
+						// #ifdef APP
+						payStatus: 0,
+						// #endif
+						// #ifndef APP
+						payStatus: 1,
+						// #endif
+					},
+				],
+				payType: 'weixin', //支付方式
+				openType: 1, //优惠券打开方式 1=使用
+				curActive: 0, //支付方式切换
+				animated: false,
+				formContent:''
 			};
 		},
 		computed: mapGetters(['isLogin', 'systemPlatform','userInfo']),
@@ -113,14 +141,17 @@
 			// #ifdef H5
 			this.from = this.$wechat.isWeixin() ? "public" : "weixinh5";
 			// #endif
+			// #ifdef APP-PLUS
+			this.from = this.systemPlatform === 'ios' ? 'weixinAppIos' : 'weixinAppAndroid';
+			// #endif
 			if (this.isLogin) {
 				this.getRecharge();
+				this.payConfig();
 			} else {
 				toLogin();
 			}
 		},
 		methods: {
-
 			/**
 			 * 选择金额
 			 */
@@ -156,24 +187,32 @@
 						});
 					});
 			},
-
-
-			onLoadFun: function() {
-				this.getRecharge();
-			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
+			// 支付配置
+			payConfig(){
+				getOrderPayConfig().then(res=>{
+					this.cartArr[0].payStatus = res.data.payWechatOpen ? 1 : 0;
+					// #ifndef MP
+					// this.cartArr[1].payStatus = res.data.aliPayStatus ? 1 : 0;
+					// #endif
+					if(this.$wechat.isWeixin()) this.cartArr.pop();
+				})
 			},
 			navRecharges: function(index) {
 				this.active = index;
 			},
+			payItem: function(e) {
+				let that = this;
+				let active = e;
+				that.curActive = active;
+				that.animated = true;
+				that.payType = that.cartArr[active].value;
+			},
 			/*
 			 * 用户充值
 			 */
-			submitSub: function(e) {
+			submitSub: Debounce(function(e) {
 				let that = this
-				let value = e.detail.value.number;
+				let value = e.detail.value.number ? e.detail.value.number :that.numberPic;
 				// 转入余额
 				if (that.active) {
 					if (parseFloat(value) < 0 || parseFloat(value) == NaN || value == undefined || value == "") {
@@ -236,131 +275,176 @@
 					} else {
 						money = this.numberPic
 					}
-					// #ifdef MP
-					rechargeRoutine({
-						price: money,
-						type: 0,
-						rechar_id: this.rechar_id
-					}).then(res => {
-						uni.hideLoading();
-						let jsConfig = res.data.data.jsConfig;
-						uni.requestPayment({
-							timeStamp: jsConfig.timeStamp,
-							nonceStr: jsConfig.nonceStr,
-							package: jsConfig.packages,
-							signType: jsConfig.signType,
-							paySign: jsConfig.paySign,
-							success: function(res) {
-								that.$store.commit("changInfo", {
-									amount1: 'nowMoney',
-									amount2: that.$util.$h.Add(value, that.userinfo.nowMoney)
-								});
-								//that.$set(that, 'userinfo.nowMoney', that.$util.$h.Add(value, that.userinfo.nowMoney));
-								return that.$util.Tips({
-									title: '支付成功',
-									icon: 'success'
-								}, {
-									tab: 5,
-									url: '/pages/users/user_money/index'
-								});
-							},
-							fail: function(err) {
-								return that.$util.Tips({
-									title: '支付失败'
-								});
-							},
-							complete: function(res) {
-								if (res.errMsg == 'requestPayment:cancel') return that.$util.Tips({
-									title: '取消支付'
-								});
-							}
-						})
-					}).catch(err => {
-						uni.hideLoading();
-						return that.$util.Tips({
-							title: err
-						})
-					});
-					// #endif
-					// #ifdef H5 
-					rechargeWechat({
-						price: money,
-						from: that.from,
-						rechar_id: that.rechar_id,
-						payType: 0
-					}).then(res => {
-						let jsConfig = res.data.jsConfig;
-						let orderNo = res.data.orderNo;
-						let data = {
-							timestamp:jsConfig.timeStamp,
-							nonceStr:jsConfig.nonceStr,
-							package:jsConfig.packages,
-							signType:jsConfig.signType,
-							paySign:jsConfig.paySign
-						};
-						if (that.from == "weixinh5") {
-							let domain = encodeURIComponent(location.href.split('/pages')[0]);
-							let urls = jsConfig.mwebUrl + '&redirect_url='+ domain + '/pages/users/user_money/index';
-							location.replace(urls);
-							return that.$util.Tips({
-								tab: 5,
-								url: '/pages/users/user_money/index'
-							});
-							// return that.$util.Tips({
-							// 	title: '支付成功',
-							// 	icon: 'success'
-							// }, {
-							// 	tab: 5,
-							// 	url: '/pages/users/user_money/index'
-							// });
-						} else {
-							that.$wechat.pay(data)
-								.finally(() => {
+					switch (that.payType){
+						case 'weixin':
+						// #ifdef APP-PLUS
+						appWechat({
+							from: that.from,
+							price: money,
+							type: 0,
+							rechar_id: this.rechar_id
+						}).then(res => {
+							uni.hideLoading();
+							let jsConfig = res.data.jsConfig;
+							uni.requestPayment({
+								provider: 'wxpay',
+								orderInfo: {
+									"appid": jsConfig.appId, // 微信开放平台 - 应用 - AppId，注意和微信小程序、公众号 AppId 可能不一致
+									"noncestr": jsConfig.nonceStr, // 随机字符串
+									"package": "Sign=WXPay", // 固定值
+									"partnerid": jsConfig.partnerid, // 微信支付商户号
+									"prepayid": jsConfig.packages, // 统一下单订单号 
+									"timestamp": Number(jsConfig.timeStamp), // 时间戳（单位：秒）
+									"sign": this.systemPlatform === 'ios' ? 'MD5' : jsConfig.paySign // 签名，这里用的 MD5 签名
+								}, //订单数据 【注意微信的订单信息，键值应该全部是小写，不能采用驼峰命名】
+								success: function(res) {
 									that.$store.commit("changInfo", {
 										amount1: 'nowMoney',
-										amount2: that.$util.$h.Add(value, that.userinfo.nowMoney)
+										amount2: that.$util.$h.Add(value, that.userInfo.nowMoney)
 									});
-									// that.$set(that, 'userinfo.nowMoney', that.$util.$h.Add(value, that.userinfo.nowMoney));
-									wechatQueryPayResult(orderNo).then(res => {
-										return that.$util.Tips({
-											title: '支付成功',
-											icon: 'success'
-										}, {
-											tab: 5,
-											url: '/pages/users/user_money/index'
-										});
-									}).cache(err => {
-										return that.$util.Tips({
-											title: err
-										});
-									})
-								})
-								.catch(function(err) {
+									return that.$util.Tips({
+										title: '支付成功',
+										icon: 'success'
+									}, {
+										tab: 5,
+										url: '/pages/users/user_money/index'
+									});
+								},
+								fail: function(err) {
 									return that.$util.Tips({
 										title: '支付失败'
 									});
-								});
-						}
-					}).catch(res=>{
-						uni.hideLoading();
-						return that.$util.Tips({
-							title: res
+								},
+								complete: function(res) {
+									if (res.errMsg == 'requestPayment:cancel') return that.$util.Tips({
+										title: '取消支付'
+									});
+								}
+							})
+						}).catch(err => {
+							uni.hideLoading();
+							return that.$util.Tips({
+								title: err
+							})
 						});
-					})
-					// #endif
+						// #endif
+						
+						// #ifdef MP
+						rechargeRoutine({
+							price: money,
+							type: 0,
+							rechar_id: this.rechar_id
+						}).then(res => {
+							uni.hideLoading();
+							let jsConfig = res.data.data.jsConfig;
+							uni.requestPayment({
+								timeStamp: jsConfig.timeStamp,
+								nonceStr: jsConfig.nonceStr,
+								package: jsConfig.packages,
+								signType: jsConfig.signType,
+								paySign: jsConfig.paySign,
+								success: function(res) {
+									that.$store.commit("changInfo", {
+										amount1: 'nowMoney',
+										amount2: that.$util.$h.Add(value, that.userInfo.nowMoney)
+									});
+									return that.$util.Tips({
+										title: '支付成功',
+										icon: 'success'
+									}, {
+										tab: 5,
+										url: '/pages/users/user_money/index'
+									});
+								},
+								fail: function(err) {
+									return that.$util.Tips({
+										title: '支付失败'
+									});
+								},
+								complete: function(res) {
+									if (res.errMsg == 'requestPayment:cancel') return that.$util.Tips({
+										title: '取消支付'
+									});
+								}
+							})
+						}).catch(err => {
+							uni.hideLoading();
+							return that.$util.Tips({
+								title: err
+							})
+						});
+						// #endif
+						// #ifdef H5
+							rechargeWechat({
+								price: money,
+								from: that.from,
+								rechar_id: that.rechar_id,
+								payType: 0
+							}).then(res => {
+								let jsConfig = res.data.jsConfig;
+								let orderNo = res.data.orderNo;
+								let data = {
+									timestamp:jsConfig.timeStamp,
+									nonceStr:jsConfig.nonceStr,
+									package:jsConfig.packages,
+									signType:jsConfig.signType,
+									paySign:jsConfig.paySign
+								};
+								if (that.from == "weixinh5") {
+									uni.hideLoading();
+									that.$util.Tips({
+										title: '支付成功'
+									}, {
+										tab: 5,
+										url:'/pages/users/user_money/index'
+									});
+									setTimeout(() => {
+										location.href = jsConfig.mwebUrl;
+									}, 100)
+								} else {
+									that.$wechat.pay(data)
+										.finally(() => {
+											that.$store.commit("changInfo", {
+												amount1: 'nowMoney',
+												amount2: that.$util.$h.Add(value, that.userInfo.nowMoney)
+											});
+											return that.$util.Tips({
+												title: '支付成功',
+												icon: 'success'
+											}, {
+												tab: 5,
+												url: '/pages/users/user_money/index'
+											});
+										})
+										.catch(function(err) {
+											return that.$util.Tips({
+												title: '支付失败'
+											});
+										});
+								}
+							}).catch(res=>{
+								uni.hideLoading();
+								return that.$util.Tips({
+									title: res
+								});
+							})
+							// #endif
+							break;
+					}
 				}
+			}),
+			addMoney(){
+				this.money = this.money.replace(/[^\d]/g,'').replace(/^0{1,}/g,'');
 			}
 		}
 	}
 </script>
 
 <style lang="scss">
-	page {
-		width: 100%;
-		height: 100%;
+	.user_payment{
+		height: 100vh;
 		background-color: #fff;
 	}
-
 	.payment {
 		position: relative;
 		top: -60rpx;
@@ -385,7 +469,7 @@
 
 	.payment .nav .item.on {
 		font-weight: bold;
-		border-bottom: 4rpx solid #e83323;
+		@include tab_border_bottom(theme);
 	}
 
 	.payment .input {
@@ -423,7 +507,7 @@
 		font-size: 26rpx;
 		color: #888888;
 		padding: 0 30rpx;
-		margin-top: 25rpx;
+		// margin-top: 25rpx;
 	}
 
 	.payment .but {
@@ -433,16 +517,16 @@
 		height: 86rpx;
 		border-radius: 43rpx;
 		margin: 50rpx auto 0 auto;
-		background: linear-gradient(90deg, #FF7931 0%, #F11B09 100%);
+		@include linear-gradient(theme);
 		line-height: 86rpx;
 	}
 
 	.payment-top {
 		width: 100%;
 		height: 350rpx;
-		background-color: #e83323;
+		@include main_bg_color(theme);
 
-		.name {
+		.name1 {
 			font-size: 26rpx;
 			color: rgba(255, 255, 255, 0.8);
 			margin-top: -38rpx;
@@ -495,7 +579,7 @@
 
 	}
     .pic-box-color-active {
-			background-color: #ec3323 !important;
+			@include linear-gradient(theme);
 			color: #fff !important;
 	}
 	.tips-box {
@@ -522,5 +606,72 @@
 		margin-top: 20rpx;
 		font-size: 24rpx;
 		color: #333;
+	}
+	.wrapper .item textarea {
+		background-color: #f9f9f9;
+		width: auto !important;
+		height: 140rpx;
+		border-radius: 14rpx;
+		margin-top: 30rpx;
+		padding: 15rpx;
+		box-sizing: border-box;
+		font-weight: 400;
+	}
+	.px-30{
+		padding-left: 30rpx;
+		padding-rigt: 30rpx;
+	}
+	 .wrapper .item .placeholder {
+		color: #ccc;
+	}
+	
+	.wrapper .item .list {
+		margin-top: 35rpx;
+	}
+	
+	.wrapper .item .list .payItem {
+		border: 1px solid #eee;
+		border-radius: 14rpx;
+		height: 86rpx;
+		width: 95%;
+		box-sizing: border-box;
+		margin-top: 20rpx;
+		font-size: 28rpx;
+		color: #282828;
+	}
+	
+	.wrapper .item .list .payItem.on {
+		// border-color: #fc5445;
+		@include coupons_border_color(theme);
+		color: $theme-color;
+	}
+	
+	.name {
+		width: 50%;
+		text-align: center;
+		border-right: 1px solid #eee;
+	}
+	.name .iconfont {
+		width: 44rpx;
+		height: 44rpx;
+		border-radius: 50%;
+		text-align: center;
+		line-height: 44rpx;
+		background-color: #fe960f;
+		color: #fff;
+		font-size: 30rpx;
+		margin-right: 15rpx;
+	}
+	.name .iconfont.icon-weixin2 {
+		background-color: #41b035;
+	}
+	.name .iconfont.icon-zhifubao {
+		background-color: #00AAEA;
+	}
+	.payItem .tip {
+		width: 49%;
+		text-align: center;
+		font-size: 26rpx;
+		color: #aaa;
 	}
 </style>

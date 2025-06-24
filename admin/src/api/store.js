@@ -1,14 +1,14 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import request from '@/utils/request'
+import request from '@/utils/request';
 
 /**
  * 新增商品
@@ -18,8 +18,8 @@ export function productCreateApi(data) {
   return request({
     url: '/admin/store/product/save',
     method: 'POST',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -30,8 +30,8 @@ export function productUpdateApi(data) {
   return request({
     url: '/admin/store/product/update',
     method: 'POST',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -41,8 +41,8 @@ export function productUpdateApi(data) {
 export function productDetailApi(id) {
   return request({
     url: `/admin/store/product/info/${id}`,
-    method: 'GET'
-  })
+    method: 'GET',
+  });
 }
 
 /**
@@ -53,18 +53,19 @@ export function productDeleteApi(id, type) {
   return request({
     url: `/admin/store/product/delete/${id}`,
     method: 'get',
-    params:{type:type}
-  })
+    params: { type: type },
+  });
 }
 
 /**
  * 商品列表 表头数量
  */
-export function productHeadersApi() {
+export function productHeadersApi(params) {
   return request({
     url: '/admin/store/product/tabs/headers',
-    method: 'GET'
-  })
+    method: 'GET',
+    params,
+  });
 }
 
 /**
@@ -75,8 +76,8 @@ export function productLstApi(params) {
   return request({
     url: '/admin/store/product/list',
     method: 'GET',
-    params
-  })
+    params,
+  });
 }
 /**
  * 商品分类
@@ -86,8 +87,8 @@ export function categoryApi(params) {
   return request({
     url: '/admin/category/list/tree',
     method: 'GET',
-    params
-  })
+    params,
+  });
 }
 /**
  * 商品上架
@@ -96,8 +97,8 @@ export function categoryApi(params) {
 export function putOnShellApi(id) {
   return request({
     url: `/admin/store/product/putOnShell/${id}`,
-    method: 'GET'
-  })
+    method: 'GET',
+  });
 }
 /**
  * 商品下架
@@ -106,8 +107,8 @@ export function putOnShellApi(id) {
 export function offShellApi(id) {
   return request({
     url: `/admin/store/product/offShell/${id}`,
-    method: 'GET'
-  })
+    method: 'GET',
+  });
 }
 /**
  * 商品规格 列表
@@ -117,8 +118,19 @@ export function templateListApi(params) {
   return request({
     url: '/admin/store/product/rule/list',
     method: 'GET',
-    params
-  })
+    params,
+  });
+}
+/**
+ * 增加库存
+ * @param pram
+ */
+export function stockAddApi(data) {
+  return request({
+    url: '/admin/store/product/quick/stock/add',
+    method: 'POST',
+    data,
+  });
 }
 /**
  * 商品规格 删除
@@ -127,8 +139,8 @@ export function templateListApi(params) {
 export function attrDeleteApi(id) {
   return request({
     url: `/admin/store/product/rule/delete/${id}`,
-    method: 'get'
-  })
+    method: 'get',
+  });
 }
 /**
  * 商品规格 新增
@@ -138,8 +150,8 @@ export function attrCreatApi(data) {
   return request({
     url: '/admin/store/product/rule/save',
     method: 'POST',
-    data
-  })
+    data,
+  });
 }
 /**
  * 商品规格 编辑
@@ -149,8 +161,8 @@ export function attrEditApi(data) {
   return request({
     url: '/admin/store/product/rule/update',
     method: 'POST',
-    data
-  })
+    data,
+  });
 }
 /**
  * 商品规格 详情
@@ -159,8 +171,8 @@ export function attrEditApi(data) {
 export function attrInfoApi(id) {
   return request({
     url: `admin/store/product/rule/info/${id}`,
-    method: 'GET'
-  })
+    method: 'GET',
+  });
 }
 /**
  * 商品评论 列表
@@ -170,8 +182,8 @@ export function replyListApi(params) {
   return request({
     url: '/admin/store/product/reply/list',
     method: 'GET',
-    params
-  })
+    params,
+  });
 }
 /**
  * 商品评论 新增
@@ -181,8 +193,8 @@ export function replyCreatApi(data) {
   return request({
     url: '/admin/store/product/reply/save',
     method: 'POST',
-    data
-  })
+    data,
+  });
 }
 /**
  * 商品评论 编辑
@@ -192,8 +204,8 @@ export function replyEditApi(data) {
   return request({
     url: '/admin/store/product/reply/update',
     method: 'POST',
-    data
-  })
+    data,
+  });
 }
 /**
  * 商品评论 详情
@@ -202,8 +214,8 @@ export function replyEditApi(data) {
 export function replyInfoApi(id) {
   return request({
     url: `/admin/store/product/reply/info/${id}`,
-    method: 'GET'
-  })
+    method: 'GET',
+  });
 }
 /**
  * 商品评论 删除
@@ -212,8 +224,8 @@ export function replyInfoApi(id) {
 export function replyDeleteApi(id) {
   return request({
     url: `/admin/store/product/reply/delete/${id}`,
-    method: 'GET'
-  })
+    method: 'GET',
+  });
 }
 
 /**
@@ -224,8 +236,8 @@ export function replyCommentApi(data) {
   return request({
     url: `/admin/store/product/reply/comment`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -236,8 +248,8 @@ export function productExportApi(params) {
   return request({
     url: `/admin/export/excel/product`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -248,10 +260,9 @@ export function importProductApi(params) {
   return request({
     url: `/admin/store/product/importProduct`,
     method: 'post',
-    params
-  })
+    params,
+  });
 }
-
 
 /**
  * 商品复制 一号通
@@ -261,8 +272,8 @@ export function copyProductApi(data) {
   return request({
     url: `/admin/store/product/copy/product`,
     method: 'post',
-    data
-  })
+    data,
+  });
 }
 
 /**
@@ -272,8 +283,8 @@ export function copyProductApi(data) {
 export function restoreApi(id) {
   return request({
     url: `/admin/store/product/restore/${id}`,
-    method: 'get'
-  })
+    method: 'get',
+  });
 }
 
 /**
@@ -284,8 +295,8 @@ export function productExcelApi(params) {
   return request({
     url: `/admin/export/excel/product`,
     method: 'get',
-    params
-  })
+    params,
+  });
 }
 
 /**
@@ -295,18 +306,28 @@ export function productExcelApi(params) {
 export function copyConfigApi() {
   return request({
     url: `/admin/store/product/copy/config`,
-    method: 'post'
-  })
+    method: 'post',
+  });
 }
 
 /**
  * 订单数据 导出
  * @param pram
  */
- export function orderExcelApi(params) {
+export function orderExcelApi(params) {
   return request({
     url: `/admin/export/excel/order`,
     method: 'get',
-    params
-  })
+    params,
+  });
+}
+/**
+ * 根据商品id集合查询商品列表
+ * @param pram
+ */
+export function productListbyidsApi(ids) {
+  return request({
+    url: `/admin/store/product/listids/${ids}`,
+    method: 'get',
+  });
 }

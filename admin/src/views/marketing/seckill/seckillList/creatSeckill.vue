@@ -1,51 +1,54 @@
 <template>
   <div class="divBox">
-    <el-card class="box-card">
-      <div slot="header" class="clearfix">
-        <el-steps :active="currentTab" align-center finish-status="success">
-          <el-step title="选择秒杀商品" />
-          <el-step title="填写基础信息" />
-          <el-step title="修改商品详情" />
-        </el-steps>
-      </div>
+    <pages-header
+      ref="pageHeader"
+      :title="$route.params.id ? '编辑商品' : '添加商品'"
+      backUrl="/marketing/seckill/list"
+    ></pages-header>
+    <el-card class="box-card mt14">
+      <el-tabs class="list-tabs" v-model="currentTab" @tab-click="tabsHandleClick">
+        <el-tab-pane label="选择商品" name="0" v-if="!$route.params.id"></el-tab-pane>
+        <el-tab-pane label="基础信息" name="1"></el-tab-pane>
+        <el-tab-pane label="商品详情" name="2"></el-tab-pane>
+      </el-tabs>
       <el-form
         ref="formValidate"
         v-loading="fullscreenLoading"
         class="formValidate mt20"
         :rules="ruleValidate"
         :model="formValidate"
-        label-width="150px"
+        label-width="130px"
         @submit.native.prevent
       >
         <!-- 秒杀商品-->
-        <div v-show="currentTab === 0">
+        <div v-show="currentTab == 0 && !$route.params.id">
           <el-form-item label="选择商品：" prop="image">
             <div class="upLoadPicBox" @click="changeGood">
-              <div v-if="formValidate.image" class="pictrue"><img :src="formValidate.image"></div>
+              <div v-if="formValidate.image" class="pictrue"><img :src="formValidate.image" /></div>
               <div v-else class="upLoad">
-                <i class="el-icon-camera cameraIconfont"/>
+                <i class="el-icon-camera cameraIconfont" />
               </div>
             </div>
           </el-form-item>
         </div>
         <!-- 商品信息-->
-        <div v-show="currentTab === 1">
+        <div v-show="currentTab == 1">
           <el-row :gutter="24">
-            <el-col :span="24">
+            <el-col v-bind="grid2">
               <el-form-item label="商品主图：" prop="image">
                 <div class="upLoadPicBox" @click="modalPicTap('1')">
-                  <div v-if="formValidate.image" class="pictrue"><img :src="formValidate.image"></div>
+                  <div v-if="formValidate.image" class="pictrue"><img :src="formValidate.image" /></div>
                   <div v-else class="upLoad">
                     <i class="el-icon-camera cameraIconfont" />
                   </div>
                 </div>
               </el-form-item>
             </el-col>
-            <el-col :span="24">
+            <el-col v-bind="grid2">
               <el-form-item label="商品轮播图：" prop="imagess">
                 <div class="acea-row">
                   <div
-                    v-for="(item,index) in formValidate.imagess"
+                    v-for="(item, index) in formValidate.imagess"
                     :key="index"
                     class="pictrue"
                     draggable="true"
@@ -54,10 +57,11 @@
                     @dragenter="handleDragEnter($event, item)"
                     @dragend="handleDragEnd($event, item)"
                   >
-                    <img :src="item">
+                    <img v-if="item.split('.')[item.split('.').length - 1] !== 'mp4'" :src="item" />
+                    <video v-else :src="item" />
                     <i class="el-icon-error btndel" @click="handleRemove(index)" />
                   </div>
-                  <div v-if="formValidate.imagess.length<10" class="upLoadPicBox" @click="modalPicTap('2')">
+                  <div v-if="formValidate.imagess.length < 10" class="upLoadPicBox" @click="modalPicTap('2')">
                     <div class="upLoad">
                       <i class="el-icon-camera cameraIconfont" />
                     </div>
@@ -65,36 +69,21 @@
                 </div>
               </el-form-item>
             </el-col>
-            <el-col :span="24">
+            <el-col v-bind="grid2">
               <el-form-item label="商品标题：" prop="title">
-                <el-input v-model="formValidate.title" maxlength="249" placeholder="请输入商品名称" />
+                <el-input v-model="formValidate.title" class="selWidth" maxlength="249" placeholder="请输入商品名称" />
               </el-form-item>
             </el-col>
-            <el-col :span="24">
-              <el-form-item label="秒杀活动简介：">
-                <el-input v-model="formValidate.info" type="textarea" maxlength="250"  :rows="3" placeholder="请输入商品简介" />
-              </el-form-item>
-            </el-col>
-            <!--<el-col v-bind="grid2">-->
-              <!--<el-form-item label="商品分类：" prop="cateIds">-->
-                <!--<el-cascader v-model="formValidate.cateIds" :options="merCateList" :props="props2" clearable class="selWidth" :show-all-levels="false" />-->
-              <!--</el-form-item>-->
-            <!--</el-col>-->
             <el-col v-bind="grid2">
               <el-form-item label="单位：" prop="unitName">
-                <el-input v-model="formValidate.unitName" placeholder="请输入单位" class="selWidth"/>
+                <el-input v-model="formValidate.unitName" placeholder="请输入单位" class="selWidth" />
               </el-form-item>
             </el-col>
             <el-col v-bind="grid2">
               <el-form-item label="运费模板：" prop="tempId">
                 <div class="acea-row">
-                  <el-select v-model="formValidate.tempId" placeholder="请选择"  class="selWidth">
-                  <el-option
-                      v-for="item in shippingList"
-                      :key="item.id"
-                      :label="item.name"
-                      :value="item.id"
-                    />
+                  <el-select v-model="formValidate.tempId" placeholder="请选择" class="selWidth">
+                    <el-option v-for="item in shippingList" :key="item.id" :label="item.name" :value="item.id" />
                   </el-select>
                   <!--<el-button class="mr15" @click="addTem">添加运费模板</el-button>-->
                 </div>
@@ -102,7 +91,15 @@
             </el-col>
             <el-col v-bind="grid2">
               <el-form-item label="当天参与活动次数：" prop="num">
-                <el-input-number v-model="formValidate.num" :step="1" step-strictly :min="1" placeholder="请输入活动次数" class="selWidth"/>
+                <el-input-number
+                  controls-position="right"
+                  v-model="formValidate.num"
+                  :step="1"
+                  step-strictly
+                  :min="1"
+                  placeholder="请输入活动次数"
+                  class="selWidth"
+                />
               </el-form-item>
             </el-col>
             <el-col v-bind="grid2">
@@ -128,7 +125,8 @@
                     v-for="item in seckillTime"
                     :key="item.id"
                     :label="item.name + ' | ' + item.time"
-                    :value="item.id">
+                    :value="item.id"
+                  >
                   </el-option>
                 </el-select>
               </el-form-item>
@@ -149,48 +147,58 @@
                   :data="ManyAttrValue"
                   tooltip-effect="dark"
                   style="width: 100%"
-                  @selection-change="handleSelectionChange">
-                  <el-table-column
-                    type="selection"
-                    key="1"
-                    v-if="formValidate.specType"
-                    width="55">
-                  </el-table-column>
+                  @selection-change="handleSelectionChange"
+                >
+                  <el-table-column type="selection" key="1" v-if="formValidate.specType" width="55"> </el-table-column>
                   <template v-if="manyTabDate && formValidate.specType">
-                    <el-table-column v-for="(item,iii) in manyTabDate" :key="iii" align="center" :label="manyTabTit[iii].title" min-width="100">
+                    <el-table-column
+                      v-for="(item, iii) in manyTabDate"
+                      :key="iii"
+                      :label="manyTabTit[iii].title"
+                      min-width="100"
+                    >
                       <template slot-scope="scope">
-                        <span class="priceBox" v-text="scope.row[iii]"  />
+                        <span class="priceBox" v-text="scope.row[iii]" />
                       </template>
                     </el-table-column>
                   </template>
-                  <el-table-column align="center" label="图片" min-width="80">
+                  <el-table-column label="图片" min-width="80">
                     <template slot-scope="scope">
-                      <div class="upLoadPicBox" @click="modalPicTap('1','duo',scope.$index)">
-                        <div v-if="scope.row.image" class="pictrue tabPic"><img :src="scope.row.image"></div>
+                      <div class="upLoadPicBox" @click="modalPicTap('1', 'duo', scope.$index)">
+                        <div v-if="scope.row.image" class="pictrue tabPic"><img :src="scope.row.image" /></div>
                         <div v-else class="upLoad tabPic">
                           <i class="el-icon-camera cameraIconfont" />
                         </div>
                       </div>
                     </template>
                   </el-table-column>
-                  <el-table-column v-for="(item,iii) in attrValue" :key="iii" :label="formThead[iii].title" align="center" min-width="145">
+                  <el-table-column
+                    v-for="(item, iii) in attrValue"
+                    :key="iii"
+                    :label="formThead[iii].title"
+                    min-width="145"
+                  >
                     <template slot-scope="scope">
                       <el-input-number
+                        controls-position="right"
                         size="small"
                         v-if="formThead[iii].title === '秒杀价'"
                         v-model="scope.row[iii]"
                         :min="0"
-                        :precision="2" :step="0.1"
+                        :precision="2"
+                        :step="0.1"
                         class="priceBox"
                       />
                       <el-input-number
+                        controls-position="right"
                         size="small"
                         v-else-if="formThead[iii].title === '限量'"
                         v-model="scope.row[iii]"
                         type="number"
                         :min="1"
                         :max="scope.row.stock"
-                        :step="1" step-strictly
+                        :step="1"
+                        step-strictly
                         class="priceBox"
                       />
                       <span v-else v-text="scope.row[iii]" class="priceBox" />
@@ -203,42 +211,38 @@
           </el-row>
         </div>
         <!-- 商品详情-->
-        <div v-show="currentTab === 2">
+        <div v-show="currentTab == 2">
           <el-form-item label="商品详情：">
-             <Tinymce v-model="formValidate.content"></Tinymce>
+            <Tinymce v-model="formValidate.content"></Tinymce>
           </el-form-item>
         </div>
-        <el-form-item style="margin-top:30px;">
+        <el-form-item style="margin-top: 30px">
           <el-button
-            v-show="(!$route.params.id && currentTab > 0) || ($route.params.id && currentTab===2)"
-            type="primary"
+            v-show="(!$route.params.id && currentTab > 0) || ($route.params.id && currentTab == 2)"
             class="submission"
             size="small"
             @click="handleSubmitUp"
-          >上一步</el-button>
+            >上一步</el-button
+          >
           <el-button
             v-show="currentTab == 0"
-            type="primary"
-            class="submission"
+            class="submission onePrimary"
             size="small"
             @click="handleSubmitNest1('formValidate')"
-          >下一步</el-button>
+            >下一步</el-button
+          >
+          <el-button v-show="currentTab == 1" class="submission" size="small" @click="handleSubmitNest2('formValidate')"
+            >下一步</el-button
+          >
           <el-button
-            v-show="currentTab == 1"
-            type="primary"
-            class="submission"
-            size="small"
-            @click="handleSubmitNest2('formValidate')"
-          >下一步</el-button>
-          <el-button
-            v-show="currentTab===2"
             :loading="loading"
             type="primary"
             class="submission"
             size="small"
             @click="handleSubmit('formValidate')"
             v-hasPermi="['admin:seckill:update']"
-          >提交</el-button>
+            >提交</el-button
+          >
         </el-form-item>
       </el-form>
     </el-card>
@@ -247,27 +251,27 @@
 </template>
 
 <script>
-  import Tinymce from '@/components/Tinymce/index'
-  import {  productDetailApi, categoryApi } from '@/api/store'
-  import { shippingTemplatesList } from '@/api/logistics'
-  import { getSeckillList } from '@/libs/public'
-  import {  seckillStoreSaveApi, seckillStoreUpdateApi, seckillStoreInfoApi } from '@/api/marketing'
-  import CreatTemplates from '@/views/systemSetting/logistics/shippingTemplates/creatTemplates'
-  import {Debounce} from '@/utils/validate'
-  const defaultObj = {
-    image: '',
-    images: '',
-    imagess: [],
-    title: '',
-    info: '',
-    num: 1,
-    unitName: '',
-    sort: 0,
-    giveIntegral: 0,
-    ficti: 0,
-    isShow: false,
-    tempId: '',
-    attrValue: [{
+import Tinymce from '@/components/Tinymce/index';
+import { productDetailApi, categoryApi } from '@/api/store';
+import { shippingTemplatesList } from '@/api/logistics';
+import { getSeckillList } from '@/libs/public';
+import { seckillStoreSaveApi, seckillStoreUpdateApi, seckillStoreInfoApi } from '@/api/marketing';
+import CreatTemplates from '@/views/systemSetting/deliverGoods/freightSet/creatTemplates';
+import { Debounce } from '@/utils/validate';
+const defaultObj = {
+  image: '',
+  images: '',
+  imagess: [],
+  title: '',
+  num: 1,
+  unitName: '',
+  sort: 0,
+  giveIntegral: 0,
+  ficti: 0,
+  isShow: false,
+  tempId: '',
+  attrValue: [
+    {
       image: '',
       price: 0,
       cost: 0,
@@ -277,253 +281,238 @@
       barCode: '',
       weight: 0,
       volume: 0,
-    }],
-    attr: [],
-    selectRule: '',
-    content: '',
-    specType: false,
-    id: 0,
-    timeId: 1,
-    startTime: '',
-    stopTime: '',
-    timeVal: [],
-    status: 0
-  }
-  const objTitle = {
-    price: {
-      title: '秒杀价'
     },
-    cost: {
-      title: '成本价'
+  ],
+  attr: [],
+  selectRule: '',
+  content: '',
+  specType: false,
+  id: 0,
+  timeId: 1,
+  startTime: '',
+  stopTime: '',
+  timeVal: [],
+  status: 0,
+};
+const objTitle = {
+  price: {
+    title: '秒杀价',
+  },
+  cost: {
+    title: '成本价',
+  },
+  otPrice: {
+    title: '原价',
+  },
+  stock: {
+    title: '库存',
+  },
+  quota: {
+    title: '限量',
+  },
+  barCode: {
+    title: '商品编号',
+  },
+  weight: {
+    title: '重量（KG）',
+  },
+  volume: {
+    title: '体积(m³)',
+  },
+};
+export default {
+  name: 'creatSeckill',
+  components: { CreatTemplates, Tinymce },
+  data() {
+    return {
+      pickerOptions: {
+        disabledDate(time) {
+          return time.getTime() < new Date().setTime(new Date().getTime() - 3600 * 1000 * 24);
+        },
+      },
+      props2: {
+        children: 'child',
+        label: 'name',
+        value: 'id',
+        multiple: true,
+        emitPath: false,
+      },
+      grid2: {
+        xl: 24,
+        lg: 24,
+        md: 24,
+        sm: 24,
+        xs: 24,
+      },
+      currentTab: 0,
+      formThead: Object.assign({}, objTitle),
+      formValidate: Object.assign({}, defaultObj),
+      loading: false,
+      fullscreenLoading: false,
+      merCateList: [], // 商户分类筛选
+      shippingList: [], // 运费模板
+      seckillTime: [],
+      ruleValidate: {
+        productId: [{ required: true, message: '请选择商品', trigger: 'change' }],
+        title: [{ required: true, message: '请输入商品标题', trigger: 'blur' }],
+        attrValue: [{ required: true, message: '请选择商品属相', trigger: 'change', type: 'array', min: '1' }],
+        num: [{ required: true, message: '请输入活动次数', trigger: 'blur' }],
+        unitName: [{ required: true, message: '请输入单位', trigger: 'blur' }],
+        tempId: [{ required: true, message: '请选择运费模板', trigger: 'change' }],
+        timeId: [{ required: true, message: '请选择活动时间', trigger: 'change' }],
+        image: [{ required: true, message: '请选择商品', trigger: 'change' }],
+        imagess: [{ required: true, message: '请上传商品轮播图', type: 'array', trigger: 'change' }],
+        specType: [{ required: true, message: '请选择商品规格', trigger: 'change' }],
+        timeVal: [{ required: true, message: '请选择活动日期', trigger: 'change', type: 'array' }],
+      },
+      manyTabDate: {},
+      manyTabTit: {},
+      attrInfo: {},
+      tempRoute: {},
+      multipleSelection: [],
+      productId: 0,
+      OneattrValue: [Object.assign({}, defaultObj.attrValue[0])], // 单规格
+      ManyAttrValue: [Object.assign({}, defaultObj.attrValue[0])], // 多规格
+    };
+  },
+  computed: {
+    attrValue() {
+      const obj = Object.assign({}, defaultObj.attrValue[0]);
+      delete obj.image;
+      return obj;
     },
-    otPrice: {
-      title: '原价'
-    },
-    stock: {
-      title: '库存'
-    },
-    quota: {
-      title: "限量",
-    },
-    barCode: {
-      title: '商品编号'
-    },
-    weight: {
-      title: '重量（KG）'
-    },
-    volume: {
-      title: '体积(m³)'
+  },
+  created() {
+    this.$watch('formValidate.attr', this.watCh);
+    this.tempRoute = Object.assign({}, this.$route);
+  },
+  mounted() {
+    getSeckillList("'1'").then((res) => {
+      this.seckillTime = res.list;
+    });
+    this.formValidate.imagess = [];
+    if (this.$route.params.id) {
+      this.setTagsViewTitle();
+      this.getInfo();
+      this.currentTab = '1';
     }
-  }
-  export default {
-    name: "creatSeckill",
-    components: { CreatTemplates,Tinymce },
-    data() {
-      return {
-        pickerOptions: {
-          disabledDate(time) {
-            return time.getTime() < new Date().setTime(new Date().getTime() - 3600 * 1000 * 24);
+    this.getShippingList();
+    this.getCategorySelect();
+  },
+  methods: {
+    tabsHandleClick(tab, event) {
+      this.currentTab = tab.name;
+      if (!this.$route.params.id && tab.index == 1) this.getProdect(this.productId);
+    },
+    watCh(val) {
+      const tmp = {};
+      const tmpTab = {};
+      this.formValidate.attr.forEach((o, i) => {
+        // tmp['value' + i] = { title: o.attrName }
+        // tmpTab['value' + i] = ''
+        tmp[o.attrName] = { title: o.attrName };
+        tmpTab[o.attrName] = '';
+      });
+      this.manyTabTit = tmp;
+      this.manyTabDate = tmpTab;
+      this.formThead = Object.assign({}, this.formThead, tmp);
+    },
+    handleRemove(i) {
+      this.formValidate.imagess.splice(i, 1);
+    },
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
+    },
+    // 点击商品图
+    modalPicTap(tit, num, i) {
+      const _this = this;
+      this.$modalUpload(
+        function (img) {
+          if (tit === '1' && !num) {
+            _this.formValidate.image = img[0].sattDir;
+            _this.ManyAttrValue[0].image = img[0].sattDir;
           }
-        },
-        props2: {
-          children: 'child',
-          label: 'name',
-          value: 'id',
-          multiple: true,
-          emitPath: false
-        },
-        grid2: {
-          xl: 8,
-          lg: 10,
-          md: 12,
-          sm: 24,
-          xs: 24
-        },
-        currentTab: 0,
-        formThead: Object.assign({}, objTitle),
-        formValidate: Object.assign({}, defaultObj),
-        loading: false,
-        fullscreenLoading: false,
-        merCateList: [], // 商户分类筛选
-        shippingList: [], // 运费模板
-        seckillTime: [],
-        ruleValidate: {
-          productId: [
-            { required: true, message: '请选择商品', trigger: 'change' }
-          ],
-          title: [
-            { required: true, message: '请输入商品标题', trigger: 'blur' }
-          ],
-          attrValue: [
-            { required: true, message: '请选择商品属相', trigger: 'change', type: 'array', min: '1' }
-          ],
-          num: [
-            { required: true, message: '请输入活动次数', trigger: 'blur' }
-          ],
-          unitName: [
-            { required: true, message: '请输入单位', trigger: 'blur' }
-          ],
-          info: [
-            { required: true, message: '请输入秒杀商品简介', trigger: 'blur' }
-          ],
-          tempId: [
-            { required: true, message: '请选择运费模板', trigger: 'change' }
-          ],
-          timeId: [
-            { required: true, message: '请选择活动时间', trigger: 'change' }
-          ],
-          image: [
-            { required: true, message: '请上传商品图', trigger: 'change' }
-          ],
-          imagess: [
-            { required: true, message: '请上传商品轮播图', type: 'array', trigger: 'change' }
-          ],
-          specType: [
-            { required: true, message: '请选择商品规格', trigger: 'change' }
-          ],
-          timeVal:[
-            { required: true, message: '请选择活动日期', trigger: 'change', type: 'array'}
-          ]
-        },
-        manyTabDate: {},
-        manyTabTit: {},
-        attrInfo: {},
-        tempRoute: {},
-        multipleSelection: [],
-        productId: 0,
-        OneattrValue: [Object.assign({}, defaultObj.attrValue[0])], // 单规格
-        ManyAttrValue: [Object.assign({}, defaultObj.attrValue[0])], // 多规格
-      }
-    },
-    computed: {
-      attrValue() {
-        const obj = Object.assign({}, defaultObj.attrValue[0])
-        delete obj.image
-        return obj
-      }
-    },
-    created() {
-      this.$watch('formValidate.attr', this.watCh)
-      this.tempRoute = Object.assign({}, this.$route)
-    },
-    mounted() {
-      getSeckillList(1).then((res) => {
-        this.seckillTime = res.list
-      })
-      this.formValidate.imagess = []
-      if ( this.$route.params.id ) {
-        this.setTagsViewTitle()
-        this.getInfo()
-        this.currentTab = 1
-      }
-      this.getShippingList()
-      this.getCategorySelect()
-    },
-    methods: {
-      watCh(val) {
-        const tmp = {}
-        const tmpTab = {}
-        this.formValidate.attr.forEach((o, i) => {
-          // tmp['value' + i] = { title: o.attrName }
-          // tmpTab['value' + i] = ''
-          tmp[o.attrName] = { title: o.attrName };
-          tmpTab[o.attrName] = '';
-        })
-        this.manyTabTit = tmp
-        this.manyTabDate = tmpTab
-        this.formThead = Object.assign({}, this.formThead, tmp)
-      },
-      handleRemove (i) {
-        this.formValidate.imagess.splice(i, 1)
-      },
-      handleSelectionChange(val) {
-        this.multipleSelection = val;
-      },
-      // 点击商品图
-      modalPicTap (tit, num, i) {
-        const _this = this
-        this.$modalUpload(function(img) {
-          if(tit==='1'&& !num){
-            _this.formValidate.image = img[0].sattDir
-            _this.ManyAttrValue[0].image = img[0].sattDir
-          }
-          if(tit==='2'&& !num){
-            if(img.length>10) return this.$message.warning("最多选择10张图片！");
-            if(img.length + _this.formValidate.imagess.length > 10) return this.$message.warning("最多选择10张图片！");
+          if (tit === '2' && !num) {
+            if (img.length > 10) return this.$message.warning('最多选择10张图片！');
+            if (img.length + _this.formValidate.imagess.length > 10) return this.$message.warning('最多选择10张图片！');
             img.map((item) => {
-              _this.formValidate.imagess.push(item.sattDir)
+              _this.formValidate.imagess.push(item.sattDir);
             });
           }
-          if(tit==='1'&& num === 'duo' ){
-            _this.ManyAttrValue[i].image = img[0].sattDir
+          if (tit === '1' && num === 'duo') {
+            _this.ManyAttrValue[i].image = img[0].sattDir;
           }
-        },tit, 'content')
-      },
-      // 具体日期
-      onchangeTime(e) {
-        this.formValidate.timeVal = e;
-        this.formValidate.startTime = e ? e[0] : "";
-        this.formValidate.stopTime = e ? e[1] : "";
-      },
-      changeGood(){
-        const _this = this
-        this.$modalGoodList(function(row) {
-          _this.formValidate.image = row.image
-          _this.productId = row.id
-         // _this.formValidate.productId = row.id
-        })
-      },
-      handleSubmitNest1() {
-        if (!this.formValidate.image) {
-          return this.$message.warning("请选择商品！");
-        } else {
-          this.currentTab++;
-          if (!this.$route.params.id) this.getProdect(this.productId);
+        },
+        tit,
+        'content',
+      );
+    },
+    // 具体日期
+    onchangeTime(e) {
+      this.formValidate.timeVal = e;
+      this.formValidate.startTime = e ? e[0] : '';
+      this.formValidate.stopTime = e ? e[1] : '';
+    },
+    changeGood() {
+      const _this = this;
+      this.$modalGoodList(function (row) {
+        _this.formValidate.image = row.image;
+        _this.productId = row.id;
+        // _this.formValidate.productId = row.id
+        if (!_this.$route.params.id) _this.getProdect(row.id);
+      });
+    },
+    handleSubmitNest1() {
+      if (!this.formValidate.image) {
+        return this.$message.warning('请选择商品！');
+      } else {
+        this.currentTab++;
+        this.currentTab = this.currentTab.toString();
+      }
+    },
+    // 商品分类；
+    getCategorySelect() {
+      categoryApi({ status: -1, type: 1 }).then((res) => {
+        this.merCateList = this.filerMerCateList(res);
+      });
+    },
+    filerMerCateList(treeData) {
+      return treeData.map((item) => {
+        if (!item.child) {
+          item.disabled = true;
         }
-      },
-      // 商品分类；
-      getCategorySelect() {
-        categoryApi({ status: -1, type: 1 }).then(res => {
-          this.merCateList = this.filerMerCateList(res)
-        })
-      },
-      filerMerCateList(treeData) {
-        return treeData.map((item) => {
-          if(!item.child){
-            item.disabled = true
-          }
-          item.label = item.name
-          return item
-        })
-      },
-      // 运费模板；
-      getShippingList() {
-        shippingTemplatesList(this.tempData).then(res => {
-          this.shippingList = res.list
-        })
-      },
-      // 运费模板
-      addTem() {
-        this.$refs.addTemplates.dialogVisible = true
-        this.$refs.addTemplates.getCityList()
-      },
-      // 商品详情
-      getInfo () {
-        if(!this.$route.params.id){
-          this.getProdect(this.productId)
-        }else{
-          this.getSekllProdect(this.$route.params.id)
-        }
-      },
-      getProdect(id) {
-        this.fullscreenLoading = true
-        productDetailApi(id).then(async res => {
-          let info = res
+        item.label = item.name;
+        return item;
+      });
+    },
+    // 运费模板；
+    getShippingList() {
+      shippingTemplatesList(this.tempData).then((res) => {
+        this.shippingList = res.list;
+      });
+    },
+    // 运费模板
+    addTem() {
+      this.$refs.addTemplates.dialogVisible = true;
+      this.$refs.addTemplates.getCityList();
+    },
+    // 商品详情
+    getInfo() {
+      if (!this.$route.params.id) {
+        this.getProdect(this.productId);
+      } else {
+        this.getSekllProdect(this.$route.params.id);
+      }
+    },
+    getProdect(id) {
+      this.fullscreenLoading = true;
+      productDetailApi(id)
+        .then(async (res) => {
+          let info = res;
           this.formValidate = {
             image: this.$selfUtil.setDomain(info.image),
             imagess: JSON.parse(info.sliderImage),
             title: info.storeName,
-            info: info.storeInfo,
             quota: '',
             unitName: info.unitName,
             sort: info.sort,
@@ -537,14 +526,18 @@
             productId: info.id,
             giveIntegral: info.giveIntegral,
             ficti: info.ficti,
-            timeId: this.$route.params.id ? Number(info.timeId) : this.$route.params.timeId ? Number(this.$route.params.timeId) : '',
+            timeId: this.$route.params.id
+              ? Number(info.timeId)
+              : this.$route.params.timeId
+              ? Number(this.$route.params.timeId)
+              : '',
             startTime: info.startTime || '',
             stopTime: info.stopTime || '',
             timeVal: [],
             status: 0,
-            num: 1
-          }
-          if(info.specType){
+            num: 1,
+          };
+          if (info.specType) {
             this.$nextTick(() => {
               info.attrValue.forEach((row) => {
                 row.quota = row.stock;
@@ -552,37 +545,36 @@
                 for (let attrValueKey in row.attrValue) {
                   row[attrValueKey] = row.attrValue[attrValueKey];
                 }
-                row.image = this.$selfUtil.setDomain(row.image)
+                row.image = this.$selfUtil.setDomain(row.image);
                 this.$refs.multipleTable.toggleRowSelection(row, true);
                 // this.$set(row, 'checked', true)
               });
             });
 
-            this.ManyAttrValue = info.attrValue
-            this.multipleSelection = info.attrValue
-          }else{
+            this.ManyAttrValue = info.attrValue;
+            this.multipleSelection = info.attrValue;
+          } else {
             info.attrValue.forEach((row) => {
               row.quota = row.stock;
             });
-           this.ManyAttrValue = info.attrValue
-           // this.formValidate.attr = []
+            this.ManyAttrValue = info.attrValue;
+            // this.formValidate.attr = []
           }
-          this.fullscreenLoading = false
-        }).catch(res => {
-          this.fullscreenLoading = false
+          this.fullscreenLoading = false;
+        })
+        .catch((res) => {
+          this.fullscreenLoading = false;
         });
-      },
-      getSekllProdect(id) {
-        this.fullscreenLoading = true
-        seckillStoreInfoApi({id:id}).then(async res => {
-          let info = res
+    },
+    getSekllProdect(id) {
+      this.fullscreenLoading = true;
+      seckillStoreInfoApi({ id: id })
+        .then(async (res) => {
+          let info = res;
           this.formValidate = {
             image: this.$selfUtil.setDomain(info.image),
             imagess: JSON.parse(info.sliderImage),
-            // title: info.title,
             title: info.storeName,
-            // info: info.info,
-            info: info.storeInfo,
             quota: info.quota,
             unitName: info.unitName,
             sort: info.sort,
@@ -604,9 +596,9 @@
             status: info.status,
             num: info.num,
             timeVal: info.startTimeStr && info.stopTimeStr ? [info.startTimeStr, info.stopTimeStr] : [],
-            id: info.id
-          }
-          if(info.specType){
+            id: info.id,
+          };
+          if (info.specType) {
             this.ManyAttrValue = info.attrValue;
             this.$nextTick(() => {
               this.ManyAttrValue.forEach((item, index) => {
@@ -614,224 +606,251 @@
                 for (let attrValueKey in item.attrValue) {
                   item[attrValueKey] = item.attrValue[attrValueKey];
                 }
-                item.image = this.$selfUtil.setDomain(item.image)
-                if (item.id) { // 设置自动选中逻辑，只要id存在
-                  this.$set(item, 'price', item.price)
-                  this.$set(item, 'quota', item.quota)
+                item.image = this.$selfUtil.setDomain(item.image);
+                if (item.id) {
+                  // 设置自动选中逻辑，只要id存在
+                  this.$set(item, 'price', item.price);
+                  this.$set(item, 'quota', item.quota);
                   this.$nextTick(() => {
-                    this.$refs.multipleTable.toggleRowSelection(item, true)
-                  })
+                    this.$refs.multipleTable.toggleRowSelection(item, true);
+                  });
                 }
-              })
+              });
             });
-          }else{
-            this.ManyAttrValue = info.attrValue
+          } else {
+            this.ManyAttrValue = info.attrValue;
             // this.formValidate.attr = []
           }
-          this.fullscreenLoading = false
-        }).catch(res => {
-          this.fullscreenLoading = false
+          this.fullscreenLoading = false;
         })
-      },
-      handleSubmitNest2(name) {
-        this.$refs[name].validate((valid) => {
-          if (valid) {
-            if(this.formValidate.specType && this.multipleSelection.length ===0 ) return this.$message.warning("请填选择至少一个商品属性！");
-            this.currentTab++;
-          } else {
-            return false;
-          }
+        .catch((res) => {
+          this.fullscreenLoading = false;
         });
-      },
-      // 提交
-      handleSubmit:Debounce(function(name) {
-        if(!this.formValidate.specType){
-          // this.formValidate.attr = []
-          this.formValidate.attrValue = this.ManyAttrValue
-        }else{
-          // this.multipleSelection.forEach((row) => {
-          //   this.$set(row, 'checked', true)
-          // });
-          this.formValidate.attrValue = this.multipleSelection
+    },
+    handleSubmitNest2(name) {
+      this.$refs[name].validate((valid) => {
+        if (valid) {
+          if (this.formValidate.specType && this.multipleSelection.length === 0)
+            return this.$message.warning('请选择至少一个商品属性！');
+          this.currentTab++;
+          this.currentTab = this.currentTab.toString();
+        } else {
+          return false;
         }
-        this.formValidate.images = JSON.stringify(this.formValidate.imagess)
-        this.formValidate.attrValue.forEach(item => {
-          item.attrValue = JSON.stringify(item.attrValue);
-        });
-        this.$refs[name].validate((valid) => {
-            if (valid) {
-              this.fullscreenLoading = true;
-              this.loading = true;
-              this.$route.params.id
-                ? seckillStoreUpdateApi({id: this.$route.params.id}, this.formValidate)
-                  .then(async () => {
-                    this.fullscreenLoading = false;
-                    this.$message.success('编辑成功');
-                    this.$router.push({
-                      path: "/marketing/seckill/list",
-                    });
-                    this.$refs[name].resetFields();
-                    this.formValidate.images = [];
-                    this.loading = false;
-                  })
-                  .catch(() => {
-                    this.fullscreenLoading = false;
-                    this.loading = false;
-                  })
-                : seckillStoreSaveApi(this.formValidate)
-                  .then(async (res) => {
-                    this.fullscreenLoading = false;
-                    this.$message.success('新增成功');
-                    this.$router.push({
-                      path: "/marketing/seckill/list",
-                    });
-                    this.$refs[name].resetFields();
-                    this.formValidate.images = [];
-                    this.loading = false;
-                  })
-                  .catch(() => {
-                    this.fullscreenLoading = false;
-                    this.loading = false;
-                  });
-            } else {
-              if (
-                !this.formValidate.storeName ||
-                !this.formValidate.unitName ||
-                !this.formValidate.store_info ||
-                !this.formValidate.image ||
-                !this.formValidate.images
-              ) {
-                this.$message.warning("请填写完整商品信息！");
-              }
-            }
-          });
-
-      }),
-      handleSubmitUp() {
-        if (this.currentTab-- < 0) this.currentTab = 0;
-      },
-      setTagsViewTitle() {
-        const title = '编辑秒杀商品'
-        const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.$route.params.id}` })
-        this.$store.dispatch('tagsView/updateVisitedView', route)
-      },
-      // 移动
-      handleDragStart (e, item) {
-        this.dragging = item;
-      },
-      handleDragEnd (e, item) {
-        this.dragging = null
-      },
-      handleDragOver (e) {
-        e.dataTransfer.dropEffect = 'move'
-      },
-      handleDragEnter (e, item) {
-        e.dataTransfer.effectAllowed = 'move'
-        if (item === this.dragging) {
-          return
-        }
-        const newItems = [...this.formValidate.imagess]
-        const src = newItems.indexOf(this.dragging)
-        const dst = newItems.indexOf(item)
-        newItems.splice(dst, 0, ...newItems.splice(src, 1))
-        this.formValidate.imagess = newItems;
+      });
+    },
+    // 提交
+    handleSubmit: Debounce(function (name) {
+      if (!this.formValidate.specType) {
+        // this.formValidate.attr = []
+        this.formValidate.attrValue = this.ManyAttrValue;
+      } else {
+        // this.multipleSelection.forEach((row) => {
+        //   this.$set(row, 'checked', true)
+        // });
+        this.formValidate.attrValue = this.multipleSelection;
       }
-    }
-  }
+      this.formValidate.images = JSON.stringify(this.formValidate.imagess);
+      this.formValidate.attrValue.forEach((item) => {
+        item.attrValue = JSON.stringify(item.attrValue);
+      });
+      this.$refs[name].validate((valid) => {
+        if (valid) {
+          this.fullscreenLoading = true;
+          this.loading = true;
+          this.$route.params.id
+            ? seckillStoreUpdateApi({ id: this.$route.params.id }, this.formValidate)
+                .then(async () => {
+                  this.fullscreenLoading = false;
+                  this.$message.success('编辑成功');
+                  this.$router.push({
+                    path: '/marketing/seckill/list',
+                  });
+                  this.$refs[name].resetFields();
+                  this.formValidate.images = [];
+                  this.loading = false;
+                })
+                .catch(() => {
+                  this.fullscreenLoading = false;
+                  this.loading = false;
+                })
+            : seckillStoreSaveApi(this.formValidate)
+                .then(async (res) => {
+                  this.fullscreenLoading = false;
+                  this.$message.success('新增成功');
+                  this.$router.push({
+                    path: '/marketing/seckill/list',
+                  });
+                  this.$refs[name].resetFields();
+                  this.formValidate.images = [];
+                  this.loading = false;
+                })
+                .catch(() => {
+                  this.fullscreenLoading = false;
+                  this.loading = false;
+                });
+        } else {
+          if (
+            !this.formValidate.storeName ||
+            !this.formValidate.unitName ||
+            !this.formValidate.store_info ||
+            !this.formValidate.image ||
+            !this.formValidate.images
+          ) {
+            this.$message.warning('请填写完整商品信息！');
+          }
+        }
+      });
+    }),
+    handleSubmitUp() {
+      if (this.currentTab-- < 0) this.currentTab = 0;
+      this.currentTab = this.currentTab.toString();
+    },
+    setTagsViewTitle() {
+      const title = '编辑秒杀商品';
+      const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.$route.params.id}` });
+      this.$store.dispatch('tagsView/updateVisitedView', route);
+    },
+    // 移动
+    handleDragStart(e, item) {
+      this.dragging = item;
+    },
+    handleDragEnd(e, item) {
+      this.dragging = null;
+    },
+    handleDragOver(e) {
+      e.dataTransfer.dropEffect = 'move';
+    },
+    handleDragEnter(e, item) {
+      e.dataTransfer.effectAllowed = 'move';
+      if (item === this.dragging) {
+        return;
+      }
+      const newItems = [...this.formValidate.imagess];
+      const src = newItems.indexOf(this.dragging);
+      const dst = newItems.indexOf(item);
+      newItems.splice(dst, 0, ...newItems.splice(src, 1));
+      this.formValidate.imagess = newItems;
+    },
+  },
+};
 </script>
 
 <style scoped lang="scss">
-  .labeltop{
-    ::v-deep.el-input-number--small{
-      /*width: 172px !important;*/
-      min-width: 132px !important;
-    }
+.divBox {
+  overflow-y: scroll;
+  height: 700px;
+}
+
+.labeltop {
+  ::v-deepel-input-number--small {
+    /*width: 172px !important;*/
+    min-width: 132px !important;
+  }
+}
+
+.proCoupon {
+  ::v-deepel-form-item__content {
+    margin-top: 5px;
+  }
+}
+
+.tabPic {
+  width: 40px !important;
+  height: 40px !important;
+
+  img {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.noLeft {
+  ::v-deepel-form-item__content {
+    margin-left: 0 !important;
+  }
+}
+
+.tabNumWidth {
+  ::v-deepel-input-number--medium {
+    width: 121px !important;
   }
 
-  .proCoupon{
-    ::v-deep.el-form-item__content{
-      margin-top: 5px;
-    }
+  ::v-deepel-input-number__increase {
+    width: 20px !important;
+    font-size: 12px !important;
   }
-  .tabPic{
-    width: 40px !important;
-    height: 40px !important;
-    img{
-      width: 100%;
-      height: 100%;
-    }
+
+  ::v-deepel-input-number__decrease {
+    width: 20px !important;
+    font-size: 12px !important;
   }
-  .noLeft{
-    ::v-deep.el-form-item__content{
-      margin-left: 0 !important;
-    }
+
+  ::v-deepel-input-number--medium .el-input__inner {
+    padding-left: 25px !important;
+    padding-right: 25px !important;
   }
-  .tabNumWidth{
-    ::v-deep.el-input-number--medium{
-      width: 121px !important;
-    }
-    ::v-deep.el-input-number__increase{
-      width: 20px !important;
-      font-size: 12px !important;
-    }
-    ::v-deep.el-input-number__decrease{
-      width: 20px !important;
-      font-size: 12px !important;
-    }
-    ::v-deep.el-input-number--medium .el-input__inner {
-      padding-left: 25px !important;
-      padding-right: 25px !important;
-    }
-    ::v-deep thead{
-      line-height: normal !important;
-    }
-    ::v-deep .el-table .cell{
-      line-height: normal !important;
-    }
+
+  ::v-deep thead {
+    line-height: normal !important;
   }
-  .selWidth{
-    width: 80%;
+
+  ::v-deep .el-table .cell {
+    line-height: normal !important;
   }
-  .selWidthd{
-    width: 300px;
+}
+
+.selWidth {
+  width: 460px !important;
+}
+
+.selWidthd {
+  width: 300px;
+}
+
+.button-new-tag {
+  height: 28px;
+  line-height: 26px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.input-new-tag {
+  width: 90px;
+  margin-left: 10px;
+  vertical-align: bottom;
+}
+
+.pictrue {
+  width: 60px;
+  height: 60px;
+  border: 1px dotted rgba(0, 0, 0, 0.1);
+  margin-right: 10px;
+  position: relative;
+  cursor: pointer;
+
+  img {
+    width: 100%;
+    height: 100%;
   }
-  .button-new-tag {
-    height: 28px;
-    line-height: 26px;
-    padding-top: 0;
-    padding-bottom: 0;
-  }
-  .input-new-tag {
-    width: 90px;
-    margin-left: 10px;
-    vertical-align: bottom;
-  }
-  .pictrue{
-    width: 60px;
-    height: 60px;
-    border: 1px dotted rgba(0,0,0,0.1);
-    margin-right: 10px;
-    position: relative;
-    cursor: pointer;
-    img{
-      width: 100%;
-      height: 100%;
-    }
-  }
-  .btndel{
-    position: absolute;
-    z-index: 1;
-    width :20px !important;
-    height: 20px !important;
-    left: 46px;
-    top: -4px;
-  }
-  .labeltop{
-    ::v-deep.el-form-item__label{
-      /*float: none !important;*/
-      /*display: inline-block !important;*/
-      /*margin-left: 120px !important;*/
-      /*width: auto !important;*/
-    }
-  }
+}
+
+.btndel {
+  position: absolute;
+  z-index: 1;
+  width: 20px !important;
+  height: 20px !important;
+  left: 43px;
+  top: 1px;
+}
+
+::v-deep .el-tabs__nav-scroll {
+  margin-top: -20px;
+}
+.onePrimary {
+  margin-left: 0 !important;
+}
+::v-deep .el-table .cell {
+    padding-right: 0 !important;
+}
 </style>

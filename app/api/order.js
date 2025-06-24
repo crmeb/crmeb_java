@@ -1,3 +1,14 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
+
 import request from "@/utils/request.js";
 
 /**
@@ -76,7 +87,7 @@ export function orderComment(data) {
  * @param object data
  */
 export function orderPay(data) {
-	return request.post('order/pay', data);
+	return request.post('pay/payment', data);
 }
 
 /**
@@ -215,20 +226,13 @@ export function qrcodeApi(data) {
 }
 
 /**
- * 微信订单支付
- * @param object data
- */
-export function wechatOrderPay(data) {
-	return request.post('pay/payment', data);
-}
-
-/**
  * 微信查询支付结果
  * @param object data
  */
 export function wechatQueryPayResult(data) {
 	return request.get('pay/queryPayResult?orderNo=' + data);
 }
+
 
 /**
  * 申请退款商品详情
@@ -252,4 +256,19 @@ export function preOrderApi(data) {
  */
 export function loadPreOrderApi(preOrderNo) {
 	return request.get(`order/load/pre/${preOrderNo}`);
+}
+
+/**
+ * 获取支付配置
+ * @param object preOrderNo
+ */
+export function getPayConfig(preOrderNo) {
+	return request.get(`order/get/pay/config`);
+}
+/**
+ * 获取支付配置
+ * 
+ */
+export function getOrderPayConfig() {
+	return request.get(`pay/get/config`);
 }
