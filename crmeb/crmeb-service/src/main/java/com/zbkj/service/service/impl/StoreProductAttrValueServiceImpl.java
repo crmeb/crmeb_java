@@ -22,7 +22,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -121,19 +121,23 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
      * @param num 数量
      * @param operationType 类型：add—添加，sub—扣减
      * @param type 活动类型 0=商品，1=秒杀，2=砍价，3=拼团
+     * @param version 版本号
      * @return Boolean
      */
     @Override
-    public Boolean operationStock(Integer id, Integer num, String operationType, Integer type) {
+    public Boolean operationStock(Integer id, Integer num, String operationType, Integer type, Integer version) {
         UpdateWrapper<StoreProductAttrValue> updateWrapper = new UpdateWrapper<>();
-        if ("add".equals(operationType)) {
+        if (operationType.equals("quick_add")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
+        }
+        if (operationType.equals("add")) {
             updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
             if (type > 0) {
                 updateWrapper.setSql(StrUtil.format("quota = quota + {}", num));
             }
         }
-        if ("sub".equals(operationType)) {
+        if (operationType.equals("sub")) {
             updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
             if (type > 0) {
@@ -145,8 +149,35 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
                 updateWrapper.last(StrUtil.format("and (stock - {} >= 0)", num));
             }
         }
+        updateWrapper.setSql("version = version + 1");
         updateWrapper.eq("id", id);
         updateWrapper.eq("type", type);
+        updateWrapper.eq("version", version);
+        boolean update = update(updateWrapper);
+        if (!update) {
+            throw new CrmebException("更新商品attrValue失败，attrValueId = " + id);
+        }
+        return update;
+    }
+
+    @Override
+    public Boolean operationStock(Integer id, Integer num, String operationType, Integer version) {
+        UpdateWrapper<StoreProductAttrValue> updateWrapper = new UpdateWrapper<>();
+        if (operationType.equals("quick_add")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
+        }
+        if (operationType.equals("add")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
+        }
+        if (operationType.equals("sub")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
+
+        }
+        updateWrapper.setSql("version = version + 1");
+        updateWrapper.eq("id", id);
+        updateWrapper.eq("version", version);
         boolean update = update(updateWrapper);
         if (!update) {
             throw new CrmebException("更新商品attrValue失败，attrValueId = " + id);
@@ -180,6 +211,21 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
         LambdaQueryWrapper<StoreProductAttrValue> lqw = Wrappers.lambdaQuery();
         lqw.eq(StoreProductAttrValue::getProductId, productId);
         lqw.eq(StoreProductAttrValue::getType, type);
+        lqw.eq(StoreProductAttrValue::getIsDel, false);
+        return dao.selectList(lqw);
+    }
+
+    /**
+     * 根据商品id和attrIdList获取 商品属性列表集合
+     * @param productId 商品id
+     * @param attrIdList 属性idList
+     * @return 商品属性集合
+     */
+    @Override
+    public List<StoreProductAttrValue> getByProductIdAndAttrIdList(Integer productId, List<Integer> attrIdList) {
+        LambdaQueryWrapper<StoreProductAttrValue> lqw = Wrappers.lambdaQuery();
+        lqw.eq(StoreProductAttrValue::getProductId, productId);
+        lqw.in(StoreProductAttrValue::getId, attrIdList);
         lqw.eq(StoreProductAttrValue::getIsDel, false);
         return dao.selectList(lqw);
     }

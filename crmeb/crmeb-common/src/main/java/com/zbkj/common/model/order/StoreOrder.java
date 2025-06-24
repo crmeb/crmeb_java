@@ -19,7 +19,7 @@ import java.util.Date;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -120,7 +120,7 @@ public class StoreOrder implements Serializable {
     @ApiModelProperty(value = "快递名称/送货人姓名")
     private String deliveryName;
 
-    @ApiModelProperty(value = "发货类型")
+    @ApiModelProperty(value = "发货类型 express 发货，send 送货，fictitious虚拟")
     private String deliveryType;
 
     @ApiModelProperty(value = "快递单号/手机号")
@@ -208,4 +208,19 @@ public class StoreOrder implements Serializable {
 
     @ApiModelProperty(value = "商户系统内部的订单号,32个字符内、可包含字母, 其他说明见商户订单号")
     private String outTradeNo;
+
+    @ApiModelProperty(value = "商家寄件单号图片")
+    private String shipmentPic;
+
+    @ApiModelProperty(value = "商家寄件订单任务id")
+    private String shipmentTaskId;
+
+    @ApiModelProperty(value = "商家寄件订单单号")
+    private String shipmentOrderId;
+
+    @ApiModelProperty(value = "商家寄件快递单号")
+    private String shipmentNum;
+
+    @ApiModelProperty(value = "发货记录类型，1快递、2送货, 3虚拟发货")
+    private String expressRecordType;
 }

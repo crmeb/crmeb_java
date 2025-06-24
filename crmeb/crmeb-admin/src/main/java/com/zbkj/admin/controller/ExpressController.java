@@ -1,22 +1,22 @@
 package com.zbkj.admin.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.zbkj.common.model.express.Express;
 import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.response.CommonResult;
-import com.zbkj.common.request.PageParamRequest;
-import com.zbkj.common.request.ExpressUpdateRequest;
 import com.zbkj.common.request.ExpressSearchRequest;
+import com.zbkj.common.request.ExpressUpdateRequest;
 import com.zbkj.common.request.ExpressUpdateShowRequest;
+import com.zbkj.common.request.PageParamRequest;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.service.service.ExpressService;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import com.zbkj.common.model.express.Express;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ import java.util.List;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -51,8 +51,8 @@ public class ExpressController {
     @ApiOperation(value = "分页列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ApiImplicitParam(name="keywords", value="搜索关键字")
-    public CommonResult<CommonPage<Express>>  getList(@Validated ExpressSearchRequest request,
-                                                      @ModelAttribute PageParamRequest pageParamRequest) {
+    public CommonResult<CommonPage<Express>> getList(@Validated ExpressSearchRequest request,
+                                                     @ModelAttribute PageParamRequest pageParamRequest) {
         CommonPage<Express> expressCommonPage = CommonPage.restPage(expressService.getList(request, pageParamRequest));
         return CommonResult.success(expressCommonPage);
     }
@@ -91,9 +91,11 @@ public class ExpressController {
     @RequestMapping(value = "/sync/express", method = RequestMethod.POST)
     public CommonResult<String> syncExpress() {
         if (expressService.syncExpress()) {
-            return CommonResult.success();
+            CommonResult<String> success = CommonResult.success();
+            success.setMessage("同步物流公司成功");
+            return success;
         }
-        return CommonResult.failed();
+        return CommonResult.failed("同步物流公司失败");
     }
 
 
@@ -130,6 +132,16 @@ public class ExpressController {
     public CommonResult<JSONObject> template(@RequestParam(value = "com") String com) {
         return CommonResult.success(expressService.template(com));
     }
+
+//    /**
+//     * 获取电子面单模版
+//     */
+//    @ApiOperation(value = "查询 电子面单 模版列表")
+//    @RequestMapping(value = "/templatedianzi", method = RequestMethod.GET)
+//    @ApiImplicitParam(name="com", value="快递公司编号", required = true)
+//    public CommonResult<JSONObject> templateDZ(@RequestParam(value = "com") String com) {
+//        return CommonResult.success(expressService.templateFor(com));
+//    }
 }
 
 

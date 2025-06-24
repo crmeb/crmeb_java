@@ -1,23 +1,23 @@
 package com.zbkj.common.model.express;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import java.io.Serializable;
-import java.util.Date;
-
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
+import java.io.Serializable;
+import java.util.Date;
+
 /**
  *  运费模版对象
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -40,11 +40,11 @@ public class ShippingTemplates implements Serializable {
     @ApiModelProperty(value = "模板名称")
     private String name;
 
-    @ApiModelProperty(value = "计费方式")
+    @ApiModelProperty(value = "计费方式 0（未选择），1(按件数), 2(按重量)，3(按体积)")
     private Integer type;
 
-    @ApiModelProperty(value = "指定包邮")
-    private Boolean appoint;
+    @ApiModelProperty(value = "包邮类型：0-全国包邮，1-部分包邮，2-自定义")
+    private Integer appoint;
 
     @ApiModelProperty(value = "排序")
     private Integer sort;

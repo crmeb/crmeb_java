@@ -19,7 +19,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -94,11 +94,14 @@ public class StoreOrderDetailResponse implements Serializable {
     @ApiModelProperty(value = "用户姓名")
     private String realName;
 
-//    @ApiModelProperty(value = "备注")
-//    private String mark;
+    @ApiModelProperty(value = "商品总价")
+    private BigDecimal proTotalPrice;
 
-//    @ApiModelProperty(value = "订单总价")
-//    private BigDecimal totalPrice;
+    @ApiModelProperty(value = "优惠券金额")
+    private BigDecimal couponPrice;
+
+    @ApiModelProperty(value = "改价前支付金额")
+    private BigDecimal beforePayPrice;
 
     @ApiModelProperty(value = "支付状态")
     private Boolean paid;
@@ -108,4 +111,13 @@ public class StoreOrderDetailResponse implements Serializable {
 
     @ApiModelProperty(value = "是否改价,0-否，1-是")
     private Boolean isAlterPrice;
+
+    @ApiModelProperty(value = "商家寄件单号图片")
+    private String shipmentPic;
+
+    @ApiModelProperty(value = "商家寄件订单任务id")
+    private String shipmentTaskId;
+
+    @ApiModelProperty(value = "商家寄件订单单号")
+    private String shipmentOrderId;
 }

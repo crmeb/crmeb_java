@@ -1,5 +1,6 @@
 package com.zbkj.common.request;
 
+import com.zbkj.common.annotation.StringContains;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -15,7 +16,7 @@ import java.io.Serializable;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -39,8 +40,10 @@ public class UserSpreadPeopleRequest implements Serializable {
     private String keyword;
 
     @ApiModelProperty(value = "排序, 排序|childCount=团队排序,numberCount=金额排序,orderCount=订单排序", allowableValues = "range[childCount,numberCount,orderCount]")
+    @StringContains(limitValues = {"childCount", "numberCount", "orderCount"}, message = "未知的排序规则")
     private String sortKey;
 
     @ApiModelProperty(value = "排序值 DESC ASC")
+    @StringContains(limitValues = {"DESC", "ASC"}, message = "未知的排序值")
     private String isAsc = "DESC";
 }

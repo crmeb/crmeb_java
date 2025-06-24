@@ -1,5 +1,6 @@
 package com.zbkj.service.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -44,7 +45,7 @@ import java.util.stream.Stream;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -136,6 +137,7 @@ public class SystemRoleServiceImpl extends ServiceImpl<SystemRoleDao, SystemRole
             return true;
         }
         role.setStatus(status);
+        role.setUpdateTime(DateUtil.date());
         return updateById(role);
     }
 
@@ -214,6 +216,7 @@ public class SystemRoleServiceImpl extends ServiceImpl<SystemRoleDao, SystemRole
             return roleMenu;
         }).collect(Collectors.toList());
         return transactionTemplate.execute(e -> {
+            systemRole.setUpdateTime(DateUtil.date());
             updateById(systemRole);
             systemRoleMenuService.deleteByRid(systemRole.getId());
             systemRoleMenuService.saveBatch(roleMenuList, 100);

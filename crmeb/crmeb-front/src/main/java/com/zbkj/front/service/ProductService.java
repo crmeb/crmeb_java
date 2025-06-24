@@ -16,7 +16,7 @@ import java.util.List;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -103,4 +103,11 @@ public interface ProductService {
      * @return List
      */
     List<StoreProduct> getLeaderboard();
+
+    /**
+     * 根据商品id集合 加载对应商品
+     * @param proIdList id集合
+     * @return id集合对应的商品列表
+     */
+    List<IndexProductResponse> getProductByIds(List<Integer> proIdList);
 }

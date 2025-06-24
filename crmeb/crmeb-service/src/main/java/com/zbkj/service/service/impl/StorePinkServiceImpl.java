@@ -10,6 +10,7 @@ import com.zbkj.common.constants.NotifyConstants;
 import com.zbkj.common.model.system.SystemNotification;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.OrderRefundApplyRequest;
+import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.common.vo.MyRecord;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.constants.Constants;
@@ -18,8 +19,7 @@ import com.zbkj.common.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.zbkj.common.utils.DateUtil;
-import com.zbkj.common.vo.dateLimitUtilVo;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.model.combination.StoreCombination;
 import com.zbkj.common.model.combination.StorePink;
 import com.zbkj.common.request.StorePinkSearchRequest;
@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -96,8 +96,8 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
             lqw.eq(StorePink::getStatus, request.getStatus());
         }
         if (StrUtil.isNotBlank(request.getDateLimit())) {
-            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
-            lqw.between(StorePink::getAddTime, DateUtil.dateStr2Timestamp(dateLimit.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN), DateUtil.dateStr2Timestamp(dateLimit.getEndTime(), Constants.DATE_TIME_TYPE_END));
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
+            lqw.between(StorePink::getAddTime, CrmebDateUtil.dateStr2Timestamp(dateLimit.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN), CrmebDateUtil.dateStr2Timestamp(dateLimit.getEndTime(), Constants.DATE_TIME_TYPE_END));
         }
         lqw.eq(StorePink::getKId, 0);
         lqw.orderByDesc(StorePink::getId);
@@ -110,8 +110,8 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
             BeanUtils.copyProperties(pink, storePinkResponse);
             Integer countPeople = getCountByKidAndCid(pink.getCid(), pink.getId());
             storePinkResponse.setCountPeople(countPeople);
-            storePinkResponse.setAddTime(DateUtil.timestamp2DateStr(pink.getAddTime(), Constants.DATE_FORMAT));
-            storePinkResponse.setStopTime(DateUtil.timestamp2DateStr(pink.getStopTime(), Constants.DATE_FORMAT));
+            storePinkResponse.setAddTime(CrmebDateUtil.timestamp2DateStr(pink.getAddTime(), Constants.DATE_FORMAT));
+            storePinkResponse.setStopTime(CrmebDateUtil.timestamp2DateStr(pink.getStopTime(), Constants.DATE_FORMAT));
             StoreCombination combination = storeCombinationService.getById(pink.getCid());
             storePinkResponse.setTitle(combination.getTitle());
             return storePinkResponse;
@@ -365,13 +365,14 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
      */
     @Override
     public List<StorePink> findSizePink(Integer size) {
-        LambdaQueryWrapper<StorePink> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(StorePink::getIsRefund, false);
-        lqw.in(StorePink::getStatus, 1, 2);
-        lqw.groupBy(StorePink::getUid);
-        lqw.orderByDesc(StorePink::getId);
-        lqw.last(" limit " + size);
-        return dao.selectList(lqw);
+//        LambdaQueryWrapper<StorePink> lqw = new LambdaQueryWrapper<>();
+//        lqw.eq(StorePink::getIsRefund, false);
+//        lqw.in(StorePink::getStatus, 1, 2);
+//        lqw.groupBy(StorePink::getUid);
+//        lqw.orderByDesc(StorePink::getId);
+//        lqw.last(" limit " + size);
+//        return dao.selectList(lqw);
+        return dao.selectSizePink(size);
     }
 
     /**

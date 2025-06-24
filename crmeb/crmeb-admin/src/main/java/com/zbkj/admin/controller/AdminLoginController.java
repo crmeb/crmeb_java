@@ -1,12 +1,15 @@
 package com.zbkj.admin.controller;
 
+import com.zbkj.admin.service.AdminLoginService;
+import com.zbkj.common.request.AdminAccountDetectionRequest;
+import com.zbkj.common.request.LoginAdminUpdatePasswordRequest;
+import com.zbkj.common.request.LoginAdminUpdateRequest;
 import com.zbkj.common.request.SystemAdminLoginRequest;
-import com.zbkj.common.response.CommonResult;
 import com.zbkj.common.response.MenusResponse;
 import com.zbkj.common.response.SystemAdminResponse;
 import com.zbkj.common.response.SystemLoginResponse;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.admin.service.AdminLoginService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +27,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -45,7 +48,7 @@ public class AdminLoginController {
     public CommonResult<SystemLoginResponse> SystemAdminLogin(@RequestBody @Validated SystemAdminLoginRequest systemAdminLoginRequest, HttpServletRequest request) {
         String ip = CrmebUtil.getClientIp(request);
         SystemLoginResponse systemAdminResponse = adminLoginService.login(systemAdminLoginRequest, ip);
-        return CommonResult.success(systemAdminResponse, "login success");
+        return CommonResult.success(systemAdminResponse);
     }
 
     @PreAuthorize("hasAuthority('admin:logout')")
@@ -53,7 +56,7 @@ public class AdminLoginController {
     @GetMapping(value = "/logout")
     public CommonResult<SystemAdminResponse> SystemAdminLogout() {
         adminLoginService.logout();
-        return CommonResult.success("logout success");
+        return CommonResult.success();
     }
 
     @PreAuthorize("hasAuthority('admin:info')")
@@ -83,4 +86,30 @@ public class AdminLoginController {
         return CommonResult.success(adminLoginService.getMenus());
     }
 
+
+    @ApiOperation(value="账号登录检测")
+    @RequestMapping(value = "/login/account/detection", method = RequestMethod.POST)
+    public CommonResult<Integer> accountDetection(@RequestBody @Validated AdminAccountDetectionRequest request) {
+        return CommonResult.success(adminLoginService.accountDetection(request.getAccount()));
+    }
+
+    @PreAuthorize("hasAuthority('admin:update:name')")
+    @ApiOperation(value="修改登录用户信息")
+    @RequestMapping(value = "/login/admin/update", method = RequestMethod.POST)
+    public CommonResult<SystemLoginResponse> loginAdminUpdate(@RequestBody @Validated LoginAdminUpdateRequest request) {
+        if (adminLoginService.loginAdminUpdate(request)) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
+    }
+
+    @PreAuthorize("hasAuthority('admin:update:password')")
+    @ApiOperation(value="修改登录用户密码")
+    @RequestMapping(value = "/login/update/password", method = RequestMethod.POST)
+    public CommonResult<SystemLoginResponse> loginAdminUpdatePwd(@RequestBody @Validated LoginAdminUpdatePasswordRequest request) {
+        if (adminLoginService.loginAdminUpdatePwd(request)) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
+    }
 }

@@ -1,5 +1,6 @@
 package com.zbkj.service.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -26,7 +27,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -88,7 +89,7 @@ public class SystemFormTempServiceImpl extends ServiceImpl<SystemFormTempDao, Sy
             systemConfigFormItemVo = JSONObject.parseObject(item, SystemConfigFormItemVo.class);
             String model = systemConfigFormItemVo.get__vModel__(); //字段 name
 
-            if(systemConfigFormItemVo.get__config__().getRequired() && "".equals(map.get(model))) {
+            if(systemConfigFormItemVo.get__config__().getRequired() && map.get(model).equals("")) {
                 throw new CrmebException(systemConfigFormItemVo.get__config__().getLabel() + "不能为空！");
             }
             //正则验证
@@ -129,6 +130,7 @@ public class SystemFormTempServiceImpl extends ServiceImpl<SystemFormTempDao, Sy
         SystemFormTemp systemFormTemp = new SystemFormTemp();
         BeanUtils.copyProperties(systemFormTempRequest, systemFormTemp);
         systemFormTemp.setId(id);
+        systemFormTemp.setUpdateTime(DateUtil.date());
         return updateById(systemFormTemp);
     }
 

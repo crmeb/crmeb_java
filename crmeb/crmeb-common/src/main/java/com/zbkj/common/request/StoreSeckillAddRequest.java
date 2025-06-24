@@ -18,7 +18,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -53,10 +53,10 @@ public class StoreSeckillAddRequest {
     @Length(max = 255, message = "活动标题长度不能超过255个字符")
     private String title;
 
-    @ApiModelProperty(value = "简介", required = true)
-    @NotBlank(message = "简介不能为空")
-    @Length(max = 255, message = "简介长度不能超过255个字符")
-    private String info;
+//    @ApiModelProperty(value = "简介", required = true)
+//    @NotBlank(message = "简介不能为空")
+//    @Length(max = 255, message = "简介长度不能超过255个字符")
+//    private String info;
 
     @ApiModelProperty(value = "单位名", required = true)
     @NotBlank(message = "单位名不能为空")

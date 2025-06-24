@@ -1,8 +1,9 @@
 package com.zbkj.front.controller;
 
 import com.zbkj.common.request.OrderPayRequest;
-import com.zbkj.common.response.CommonResult;
 import com.zbkj.common.response.OrderPayResultResponse;
+import com.zbkj.common.response.PayConfigResponse;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.service.service.OrderPayService;
 import com.zbkj.service.service.WeChatPayService;
@@ -20,7 +21,7 @@ import javax.servlet.http.HttpServletRequest;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -38,6 +39,14 @@ public class PayController {
 
     @Autowired
     private OrderPayService orderPayService;
+
+
+
+    @ApiOperation(value = "获取支付配置")
+    @RequestMapping(value = "/get/config", method = RequestMethod.GET)
+    public CommonResult<PayConfigResponse> getPayConfig() {
+        return CommonResult.success(orderPayService.getPayConfig());
+    }
 
     /**
      * 订单支付

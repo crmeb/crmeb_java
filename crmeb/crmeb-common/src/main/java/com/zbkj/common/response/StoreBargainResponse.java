@@ -13,7 +13,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -80,8 +80,8 @@ public class StoreBargainResponse {
     @ApiModelProperty(value = "反多少积分")
     private Integer giveIntegral;
 
-    @ApiModelProperty(value = "砍价活动简介")
-    private String info;
+//    @ApiModelProperty(value = "砍价活动简介")
+//    private String info;
 
     @ApiModelProperty(value = "成本价")
     private BigDecimal cost;

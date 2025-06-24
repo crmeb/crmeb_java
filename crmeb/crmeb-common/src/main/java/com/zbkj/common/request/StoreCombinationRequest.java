@@ -9,6 +9,7 @@ import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -61,9 +62,9 @@ public class StoreCombinationRequest implements Serializable {
     @Max(value = 99999, message = "拼团人数不能大于99999")
     private Integer people;
 
-    @ApiModelProperty(value = "简介")
+//    @ApiModelProperty(value = "简介")
 //    @NotNull(message = "拼团简介不能为空")
-    private String info;
+//    private String info;
 
     @ApiModelProperty(value = "活动状态")
     @NotNull(message = "活动状态不能为空")
@@ -107,6 +108,7 @@ public class StoreCombinationRequest implements Serializable {
     private List<StoreProductAttrAddRequest> attr;
 
     @ApiModelProperty(value = "商品属性详情")
+    @NotEmpty(message = "商品属性不能为空")
     private List<StoreProductAttrValueAddRequest> attrValue;
 
     @ApiModelProperty(value = "商品描述")

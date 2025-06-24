@@ -2,7 +2,7 @@ package com.zbkj.admin.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.zbkj.common.constants.WeChatConstants;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.utils.XmlUtil;
 import com.zbkj.common.model.article.Article;
@@ -29,7 +29,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -157,7 +157,7 @@ public class WeChatMessageServiceImpl implements WeChatMessageService {
         return "<xml>\n" +
                 "  <ToUserName><![CDATA["+fromUserName+"]]></ToUserName>\n" +
                 "  <FromUserName><![CDATA["+toUserName+"]]></FromUserName>\n" +
-                "  <CreateTime>"+ DateUtil.getNowTime() +"</CreateTime>\n" +
+                "  <CreateTime>"+ CrmebDateUtil.getNowTime() +"</CreateTime>\n" +
                 "  <MsgType><![CDATA[news]]></MsgType>\n" +
                 "  <ArticleCount>1</ArticleCount>\n" +
                 "  <Articles>\n" +
