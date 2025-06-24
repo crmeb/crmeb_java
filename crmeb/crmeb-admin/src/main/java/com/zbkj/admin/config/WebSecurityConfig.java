@@ -5,6 +5,7 @@ import com.zbkj.admin.manager.AuthenticationEntryPointImpl;
 import com.zbkj.admin.manager.CustomAccessDeniedHandler;
 import com.zbkj.admin.manager.CustomAuthenticationProvider;
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.constants.UploadConstants;
 import com.zbkj.service.service.impl.UserDetailServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -25,7 +26,7 @@ import org.springframework.web.filter.CorsFilter;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -77,7 +78,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //    }
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) {
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(new CustomAuthenticationProvider(new UserDetailServiceImpl()));
     }
 
@@ -110,16 +111,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             // 跨域预检请求
 //            .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // 对于登录login 验证码captchaImage 和其他放行的目录 允许匿名访问"/citylife/front/**"
-                .antMatchers("/api/admin/login", "/api/admin/validate/code/get").permitAll()
-                .antMatchers("/api/admin/getLoginPic").permitAll()
+            // 对于登录login 验证码captchaImage 和其他放行的目录 允许匿名访问"/citylife/front/**"
+            .antMatchers("/api/admin/login", "/api/admin/validate/code/get").permitAll()
+            .antMatchers("/api/admin/getLoginPic").permitAll()
+            .antMatchers("/api/admin/login/account/detection").permitAll()
+            .antMatchers("/api/admin/validate/code/getcaptchaconfig").permitAll()
                 // 放行资源路径
-                .antMatchers("/"+ Constants.UPLOAD_TYPE_IMAGE +"/**").anonymous()
+            .antMatchers("/"+ UploadConstants.UPLOAD_FILE_KEYWORD +"/**").permitAll()
+            .antMatchers("/"+ UploadConstants.DOWNLOAD_FILE_KEYWORD +"/**").permitAll()
+            .antMatchers("/"+ UploadConstants.UPLOAD_AFTER_FILE_KEYWORD +"/**").permitAll()
                 // 放行图片、文件上传
-                .antMatchers("/api/admin/upload/image").permitAll()
-                .antMatchers("/api/admin/upload/file").permitAll()
-                // 代码生成器
-                .antMatchers("/api/codegen/code").permitAll()
+            .antMatchers("/api/admin/upload/image").permitAll()
+            .antMatchers("/api/admin/upload/file").permitAll()
 //            .antMatchers("/wx/user/*/login","/citylife/nocheck/**").anonymous()
             .antMatchers(
                     HttpMethod.GET,
@@ -140,7 +143,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/druid/**").anonymous()
             .antMatchers("/captcha/get", "/captcha/check").anonymous()
             .antMatchers("/api/admin/payment/callback/**").anonymous()
-            .antMatchers("/api/public/**").anonymous()
+            .antMatchers("/api/public/**").permitAll()
             // 除上面外的所有请求全部需要鉴权认证
             .anyRequest().authenticated()
             .and()

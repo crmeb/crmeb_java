@@ -19,7 +19,7 @@ import com.zbkj.common.exception.CrmebException;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.model.bargain.StoreBargain;
 import com.zbkj.common.model.bargain.StoreBargainUser;
@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -132,9 +132,9 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         for (StoreBargain storeBargain : storeBargainList) {
             StoreBargainResponse storeBargainResponse = new StoreBargainResponse();
             BeanUtils.copyProperties(storeBargain, storeBargainResponse);
-            storeBargainResponse.setStartTime(DateUtil.timestamp2DateStr(storeBargain.getStartTime(), Constants.DATE_FORMAT_DATE));
-            storeBargainResponse.setStopTime(DateUtil.timestamp2DateStr(storeBargain.getStopTime(), Constants.DATE_FORMAT_DATE));
-            storeBargainResponse.setAddTime(DateUtil.timestamp2DateStr(storeBargain.getAddTime(), Constants.DATE_FORMAT));
+            storeBargainResponse.setStartTime(CrmebDateUtil.timestamp2DateStr(storeBargain.getStartTime(), Constants.DATE_FORMAT_DATE));
+            storeBargainResponse.setStopTime(CrmebDateUtil.timestamp2DateStr(storeBargain.getStopTime(), Constants.DATE_FORMAT_DATE));
+            storeBargainResponse.setAddTime(CrmebDateUtil.timestamp2DateStr(storeBargain.getAddTime(), Constants.DATE_FORMAT));
             List<StoreBargainUser> bargainUserList = storeBargainUserService.getListByBargainId(storeBargain.getId());
             if (CollUtil.isEmpty(bargainUserList)) {
                 storeBargainResponse.setCountPeopleAll(0L);
@@ -228,8 +228,8 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         bargain.setImage(systemAttachmentService.clearPrefix(request.getImage()));
         bargain.setImages(systemAttachmentService.clearPrefix(request.getImages()));
         // 活动开始结束时间
-        bargain.setStartTime(DateUtil.dateStr2Timestamp(request.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN));
-        bargain.setStopTime(DateUtil.dateStr2Timestamp(request.getStopTime(), Constants.DATE_TIME_TYPE_END));
+        bargain.setStartTime(CrmebDateUtil.dateStr2Timestamp(request.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN));
+        bargain.setStopTime(CrmebDateUtil.dateStr2Timestamp(request.getStopTime(), Constants.DATE_TIME_TYPE_END));
         bargain.setAddTime(System.currentTimeMillis());
         // 砍价商品价格
         bargain.setPrice(attrValueRequest.getPrice());
@@ -318,8 +318,8 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         bargain.setImage(systemAttachmentService.clearPrefix(request.getImage()));
         bargain.setImages(systemAttachmentService.clearPrefix(request.getImages()));
         // 活动开始结束时间
-        bargain.setStartTime(DateUtil.dateStr2Timestamp(request.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN));
-        bargain.setStopTime(DateUtil.dateStr2Timestamp(request.getStopTime(), Constants.DATE_TIME_TYPE_END));
+        bargain.setStartTime(CrmebDateUtil.dateStr2Timestamp(request.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN));
+        bargain.setStopTime(CrmebDateUtil.dateStr2Timestamp(request.getStopTime(), Constants.DATE_TIME_TYPE_END));
 
         // 砍价商品价格
         bargain.setPrice(attrValueRequest.getPrice());
@@ -744,12 +744,12 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
     @Override
     public Boolean operationStock(Integer id, Integer num, String type) {
         UpdateWrapper<StoreBargain> updateWrapper = new UpdateWrapper<>();
-        if ("add".equals(type)) {
+        if (type.equals("add")) {
             updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
             updateWrapper.setSql(StrUtil.format("quota = quota + {}", num));
         }
-        if ("sub".equals(type)) {
+        if (type.equals("sub")) {
             updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
             updateWrapper.setSql(StrUtil.format("quota = quota - {}", num));
@@ -772,7 +772,7 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
     @Override
     public BargainIndexResponse getIndexInfo() {
         LambdaQueryWrapper<StoreBargain> lqw = Wrappers.lambdaQuery();
-        lqw.select(StoreBargain::getId, StoreBargain::getProductId, StoreBargain::getTitle, StoreBargain::getMinPrice, StoreBargain::getPrice, StoreBargain::getImage);
+        lqw.select(StoreBargain::getId, StoreBargain::getProductId, StoreBargain::getTitle, StoreBargain::getMinPrice, StoreBargain::getPrice, StoreBargain::getImage, StoreBargain::getSales);
         lqw.eq(StoreBargain::getStatus, true);
         lqw.eq(StoreBargain::getIsDel, false);
         lqw.gt(StoreBargain::getStock, 0);
@@ -887,7 +887,7 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         }
 
         // 回滚商品库存/销量 并更新
-        boolean isPlus = "add".equals(storeProductStockRequest.getOperationType());
+        boolean isPlus = storeProductStockRequest.getOperationType().equals("add");
         int productStock = isPlus ? existProduct.getStock() + storeProductStockRequest.getNum() : existProduct.getStock() - storeProductStockRequest.getNum();
         existProduct.setStock(productStock);
         existProduct.setSales(existProduct.getSales() - storeProductStockRequest.getNum());

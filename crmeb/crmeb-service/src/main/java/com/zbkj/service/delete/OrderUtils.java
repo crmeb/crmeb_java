@@ -21,7 +21,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -68,13 +68,13 @@ public class OrderUtils {
         payType = payType.toLowerCase();
         switch (payType){
             case PayConstants.PAY_TYPE_WE_CHAT:
-                result = "1".equals(systemConfigService.getValueByKey(SysConfigConstants.CONFIG_PAY_WEIXIN_OPEN));
+                result = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_PAY_WEIXIN_OPEN).equals("1");
                 break;
             case PayConstants.PAY_TYPE_YUE:
-                result = ("1".equals(systemConfigService.getValueByKey(SysConfigConstants.CONFIG_YUE_PAY_STATUS)));
+                result = (systemConfigService.getValueByKey(SysConfigConstants.CONFIG_YUE_PAY_STATUS).equals("1"));
                 break;
             case PayConstants.PAY_TYPE_ALI_PAY:
-                result = ("1".equals(systemConfigService.getValueByKey(SysConfigConstants.CONFIG_ALI_PAY_STATUS)));
+                result = (systemConfigService.getValueByKey(SysConfigConstants.CONFIG_ALI_PAY_STATUS).equals("1"));
                 break;
         }
         return result;

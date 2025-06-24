@@ -2,4 +2,19 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zbkj.service.dao.StorePinkDao">
 
+    <select id="selectSizePink" resultType="com.zbkj.common.model.combination.StorePink">
+        SELECT
+            p.id, p.uid, p.order_id, p.order_id_key, p.total_num, p.total_price,
+            p.cid, p.pid, p.people, p.price, p.add_time, p.stop_time, p.k_id,
+            p.is_tpl, p.is_refund, p.status, p.nickname, p.avatar, p.is_virtual
+        FROM eb_store_pink p
+                 INNER JOIN (
+            SELECT uid, MAX(id) AS max_id
+            FROM eb_store_pink
+            WHERE is_refund = 'false' AND status IN (1, 2)
+            GROUP BY uid
+        ) AS tmp ON p.uid = tmp.uid AND p.id = tmp.max_id
+        ORDER BY p.id DESC
+            LIMIT #{size};
+    </select>
 </mapper>

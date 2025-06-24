@@ -2,7 +2,10 @@ package com.zbkj.service.service.impl;
 
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.TaskConstants;
@@ -11,7 +14,7 @@ import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.order.StoreOrderStatus;
 import com.zbkj.common.model.product.StoreProductReply;
 import com.zbkj.common.model.user.User;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.vo.StoreOrderInfoOldVo;
 import com.zbkj.service.service.*;
@@ -28,7 +31,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -66,6 +69,9 @@ public class OrderTaskServiceImpl implements OrderTaskService {
 
     @Autowired
     private OrderPayService orderPayService;
+
+    @Autowired
+    private SystemConfigService systemConfigService;
 
     /**
      * 用户取消订单
@@ -160,7 +166,11 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                 continue;
             }
             try {
-                StoreOrder storeOrder = getJavaBeanStoreOrder(data);
+                StoreOrder storeOrder = storeOrderService.getById(Integer.valueOf(data.toString()));
+                if (ObjectUtil.isNull(storeOrder)) {
+                    logger.error("OrderTaskServiceImpl.orderPaySuccessAfter | 订单不存在，orderId: " + data);
+                    throw new CrmebException("订单不存在，orderId: " + data);
+                }
                 boolean result = storeOrderTaskService.complete(storeOrder);
                 if (!result) {
                     redisUtil.lPush(redisKey, data);
@@ -282,14 +292,14 @@ public class OrderTaskServiceImpl implements OrderTaskService {
         // 根据订单状态表判断订单是否可以自动完成
         for (StoreOrder order : orderList) {
             StoreOrderStatus orderStatus = storeOrderStatusService.getLastByOrderId(order.getId());
-            if (!"user_take_delivery".equals(orderStatus.getChangeType())) {
+            if (!orderStatus.getChangeType().equals("user_take_delivery")) {
                 logger.error("订单自动完成：订单记录最后一条不是收货状态，orderId = " + order.getId());
                 continue ;
             }
             // 判断是否到自动完成时间（收货时间向后偏移7天）
-            String comTime = DateUtil.addDay(orderStatus.getCreateTime(), 7, Constants.DATE_FORMAT);
-            int compareDate = DateUtil.compareDate(comTime, DateUtil.nowDateTime(Constants.DATE_FORMAT), Constants.DATE_FORMAT);
-            if (compareDate < 0) {
+            String comTime = CrmebDateUtil.addDay(orderStatus.getCreateTime(), 7, Constants.DATE_FORMAT);
+            int compareDate = CrmebDateUtil.compareDate(comTime, CrmebDateUtil.nowDateTime(Constants.DATE_FORMAT), Constants.DATE_FORMAT);
+            if (compareDate > 0) {
                 continue ;
             }
 
@@ -313,15 +323,7 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                     continue;
                 }
                 String replyType = Constants.STORE_REPLY_TYPE_PRODUCT;
-//                if (ObjectUtil.isNotNull(orderInfo.getInfo().getSeckillId()) && orderInfo.getInfo().getSeckillId() > 0) {
-//                    replyType = Constants.STORE_REPLY_TYPE_SECKILL;
-//                }
-//                if (ObjectUtil.isNotNull(orderInfo.getInfo().getBargainId()) && orderInfo.getInfo().getBargainId() > 0) {
-//                    replyType = Constants.STORE_REPLY_TYPE_BARGAIN;
-//                }
-//                if (ObjectUtil.isNotNull(orderInfo.getInfo().getCombinationId()) && orderInfo.getInfo().getCombinationId() > 0) {
-//                    replyType = Constants.STORE_REPLY_TYPE_PINTUAN;
-//                }
+
                 StoreProductReply reply = new StoreProductReply();
                 reply.setUid(order.getUid());
                 reply.setOid(order.getId());
@@ -335,11 +337,13 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                 reply.setNickname(user.getNickname());
                 reply.setAvatar(user.getAvatar());
                 reply.setSku(orderInfo.getInfo().getSku());
-                reply.setCreateTime(DateUtil.nowDateTime());
+                reply.setCreateTime(CrmebDateUtil.nowDateTime());
                 replyList.add(reply);
             }
             order.setStatus(Constants.ORDER_STATUS_INT_COMPLETE);
             Boolean execute = transactionTemplate.execute(e -> {
+                System.out.println("操作的订单ID：" + order.getId());
+                order.setUpdateTime(DateUtil.date());
                 storeOrderService.updateById(order);
                 storeProductReplyService.saveBatch(replyList);
                 return Boolean.TRUE;
@@ -350,5 +354,35 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                 logger.error("订单自动完成：更新数据库失败，orderId = " + order.getId());
             }
         }
+    }
+
+    /**
+     * 订单自动收货
+     */
+    @Override
+    public void autoTakeDelivery() {
+        int day = 14;
+        String autoDay = systemConfigService.getValueByKey("auto_take_delivery_day");
+        if (StrUtil.isNotBlank(autoDay) && Integer.parseInt(autoDay) >= 1) {
+            day = Integer.parseInt(autoDay);
+        }
+        DateTime dateTime = cn.hutool.core.date.DateUtil.offsetDay(cn.hutool.core.date.DateUtil.date(), -day);
+        List<StoreOrder> storeOrderList = storeOrderService.findAwaitTakeDeliveryOrderList(dateTime.toString());
+
+        storeOrderList.forEach(order -> {
+            try {
+                //已收货，待评价
+                order.setStatus(Constants.ORDER_STATUS_INT_BARGAIN);
+                order.setUpdateTime(DateUtil.date());
+                boolean result = storeOrderService.updateById(order);
+                if (result) {
+                    //后续操作放入redis
+                    redisUtil.lPush(TaskConstants.ORDER_TASK_REDIS_KEY_AFTER_TAKE_BY_USER, order.getId());
+                }
+            } catch (Exception e) {
+                logger.error("自动收货异常：订单号:{},异常信息={}", order.getOrderId(), e.getMessage());
+            }
+        });
+
     }
 }

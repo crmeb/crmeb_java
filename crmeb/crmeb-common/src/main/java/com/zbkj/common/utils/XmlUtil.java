@@ -12,7 +12,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.parsers.DocumentBuilder;
@@ -32,7 +31,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2023 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -47,14 +46,13 @@ public class XmlUtil {
         InputStream in = null;
         try {
             in = request.getInputStream();
-            setReaderFeature(reader);
             Document doc = reader.read(in);
             Element root = doc.getRootElement();
             List<Element> list = root.elements();
             for (Element element : list) {
                 map.put(element.getName(), element.getText());
             }
-        } catch (IOException | DocumentException | SAXException e) {
+        } catch (IOException | DocumentException e) {
             e.printStackTrace();
         } finally {
             try {
@@ -93,12 +91,6 @@ public class XmlUtil {
 //        return map;
 //    }
 
-    public static void setReaderFeature(SAXReader reader) throws SAXException {
-        reader.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        reader.setFeature("http://xml.org/sax/features/external-general-entities", false);
-        reader.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-        reader.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-    }
     public static HashMap<String, Object> xmlToMap(String strxml) {
         strxml = strxml.replaceFirst("encoding=\".*\"", "encoding=\"UTF-8\"");
 

@@ -17,8 +17,8 @@ import com.zbkj.common.response.UserIntegralRecordResponse;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.zbkj.common.utils.DateUtil;
-import com.zbkj.common.vo.dateLimitUtilVo;
+import com.zbkj.common.utils.CrmebDateUtil;
+import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserIntegralRecord;
 import com.zbkj.service.dao.UserIntegralRecordDao;
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -150,9 +150,9 @@ public class UserIntegralRecordServiceImpl extends ServiceImpl<UserIntegralRecor
         }
         //时间范围
         if (StrUtil.isNotBlank(request.getDateLimit())) {
-            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
             //判断时间
-            int compareDateResult = DateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), Constants.DATE_FORMAT);
+            int compareDateResult = CrmebDateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), Constants.DATE_FORMAT);
             if (compareDateResult == -1) {
                 throw new CrmebException("开始时间不能大于结束时间！");
             }
@@ -184,21 +184,21 @@ public class UserIntegralRecordServiceImpl extends ServiceImpl<UserIntegralRecor
      * @param uid 用户uid
      * @param type 类型：1-增加，2-扣减
      * @param date 日期
-     * @param linkType 关联类型
+     * @param linkTypeList 关联类型
      * @return 积分总数
      */
     @Override
-    public Integer getSumIntegral(Integer uid, Integer type, String date, String linkType) {
+    public Integer getSumIntegral(Integer uid, Integer type, String date, List<String> linkTypeList) {
         QueryWrapper<UserIntegralRecord> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("sum(integral) as integral");
         queryWrapper.eq("uid", uid);
         queryWrapper.eq("type", type);
-        if (StrUtil.isNotBlank(linkType)) {
-            queryWrapper.eq("link_type", linkType);
+        if (CollUtil.isNotEmpty(linkTypeList)) {
+            queryWrapper.in("link_type", linkTypeList);
         }
         queryWrapper.eq("status", IntegralRecordConstants.INTEGRAL_RECORD_STATUS_COMPLETE);
         if (StrUtil.isNotBlank(date)) {
-            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(date);
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(date);
             queryWrapper.between("update_time", dateLimit.getStartTime(), dateLimit.getEndTime());
         }
         UserIntegralRecord integralRecord = dao.selectOne(queryWrapper);

@@ -1,6 +1,7 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -35,7 +36,7 @@ import java.util.stream.Stream;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -181,6 +182,7 @@ public class TemplateMessageServiceImpl extends ServiceImpl<TemplateMessageDao, 
             throw new CrmebException("此模板" + id + " 不存在或者已删除");
         }
         templateMessage.setStatus(status);
+        templateMessage.setUpdateTime(DateUtil.date());
         return updateById(templateMessage);
     }
 
@@ -204,6 +206,7 @@ public class TemplateMessageServiceImpl extends ServiceImpl<TemplateMessageDao, 
         templateMessageList.forEach(e -> {
             String templateId = wechatNewService.apiAddPublicTemplate(e.getTempKey());
             e.setTempId(templateId);
+            e.setUpdateTime(DateUtil.date());
         });
         return updateBatchById(templateMessageList);
     }
@@ -231,6 +234,7 @@ public class TemplateMessageServiceImpl extends ServiceImpl<TemplateMessageDao, 
             List<Integer> kidList = getRoutineKidList(e.getContent(), templateKeyVoList);
             String priTmplId = wechatNewService.apiAddRoutineTemplate(e.getTempKey(), kidList);
             e.setTempId(priTmplId);
+            e.setUpdateTime(DateUtil.date());
         });
         return updateBatchById(templateMessageList);
     }

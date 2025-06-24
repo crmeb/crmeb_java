@@ -16,7 +16,7 @@ import lombok.experimental.Accessors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -53,8 +53,8 @@ public class StoreSeckillManger implements Serializable {
     @ApiModelProperty(value = "排序")
     private Integer sort;
 
-    @ApiModelProperty(value = "状态 0=关闭 1=开启")
-    private Integer status;
+    @ApiModelProperty(value = "状态 '0'=关闭 '1'=开启")
+    private String status;
 
     @ApiModelProperty(value = "创建时间")
     private Date createTime;

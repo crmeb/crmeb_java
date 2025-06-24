@@ -1,7 +1,10 @@
 package com.zbkj.service.service.impl;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.common.vo.OrderInfoDetailVo;
@@ -14,6 +17,7 @@ import com.zbkj.service.service.StoreProductReplyService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -26,7 +30,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -191,5 +195,28 @@ public class StoreOrderInfoServiceImpl extends ServiceImpl<StoreOrderInfoDao, St
         lambdaQueryWrapper.eq(StoreOrderInfo::getUnique, uni);
         return dao.selectOne(lambdaQueryWrapper);
     }
+
+    /**
+     * 根据订单id、商品id、商品唯一id更新回复状态
+     *
+     * @param orderId  订单id
+     * @param productId  商品id
+     * @param unique  商品唯一id
+     * @return
+     */
+    @Override
+    public void updateReply(Integer orderId, Integer productId, String unique) {
+        LambdaQueryWrapper<StoreOrderInfo> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(StoreOrderInfo::getOrderId, orderId);
+        lambdaQueryWrapper.eq(StoreOrderInfo::getProductId, productId);
+        lambdaQueryWrapper.eq(StoreOrderInfo::getUnique, unique);
+        StoreOrderInfo storeOrderInfo = dao.selectOne(lambdaQueryWrapper);
+        if (ObjectUtil.isNotNull(storeOrderInfo)) {
+            storeOrderInfo.setIsReply(Boolean.TRUE);
+            storeOrderInfo.setUpdateTime(DateUtil.date());
+            dao.updateById(storeOrderInfo);
+        }
+    }
+
 }
 

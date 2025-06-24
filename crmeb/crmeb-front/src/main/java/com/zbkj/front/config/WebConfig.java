@@ -19,7 +19,7 @@ import org.springframework.web.servlet.handler.MappedInterceptor;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -76,19 +76,32 @@ public class WebConfig implements WebMvcConfigurer {
                 excludePathPatterns("/api/front/groom/list/**").
                 excludePathPatterns("/api/front/config").
                 excludePathPatterns("/api/front/category").
+                excludePathPatterns("/api/front/categorybypid/*").
                 excludePathPatterns("/api/front/seckill/*").
                 excludePathPatterns("/api/front/seckill/list/*").
                 excludePathPatterns("/api/front/seckill/detail/*").
+                excludePathPatterns("/api/front/seckill/detail").
                 excludePathPatterns("/api/front/ios/*").
                 excludePathPatterns("/api/front/ios/register/binding/phone").
-                excludePathPatterns("api/front/combination/index").
-                excludePathPatterns("api/front/seckill/index").
-                excludePathPatterns("api/front/bargain/index").
-                excludePathPatterns("api/front/combination/index").
-                excludePathPatterns("api/front/index/product/*").
-                excludePathPatterns("api/front/index/color/config").
-                excludePathPatterns("api/front/image/domain").
-                excludePathPatterns("api/front/product/leaderboard").
+                excludePathPatterns("/api/front/combination/index").
+                excludePathPatterns("/api/front/seckill/index").
+                excludePathPatterns("/api/front/bargain/index").
+                excludePathPatterns("/api/front/bargain/header").
+                excludePathPatterns("/api/front/bargain/detail").
+                excludePathPatterns("/api/front/index/product/*").
+                excludePathPatterns("/api/front/index/color/config").
+                excludePathPatterns("/api/front/image/domain").
+                excludePathPatterns("/api/front/product/leaderboard").
+                excludePathPatterns("/api/front/product/byids/**").
+                excludePathPatterns("/api/front/token/is/exist").
+                excludePathPatterns("/api/front/login/config").
+                excludePathPatterns("/api/front/copyright/info").
+                excludePathPatterns("/api/front/get/bottom/navigation").
+                excludePathPatterns("/api/front/agreement/**").
+                excludePathPatterns("/api/front/pagediy/**").
+                excludePathPatterns("/api/front/menu/user").
+                excludePathPatterns("/api/front/combination/header").
+                excludePathPatterns("/api/front/combination/detail").
                 excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**");
     }
 

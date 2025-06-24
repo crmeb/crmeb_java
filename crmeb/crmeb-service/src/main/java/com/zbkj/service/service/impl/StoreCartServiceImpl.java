@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -154,7 +154,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         Integer userId = userService.getUserIdException();
         Map<String, Integer> map = new HashMap<>();
         int num;
-        if ("total".equals(request.getType())) {
+        if (request.getType().equals("total")) {
             num = getUserCountByStatus(userId, request.getNumType());
         } else {
             num = getUserSumByStatus(userId, request.getNumType());
@@ -191,8 +191,14 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         if (existCarts.size() > 0) { // 购物车添加数量
             StoreCart forUpdateStoreCart = existCarts.get(0);
             forUpdateStoreCart.setCartNum(forUpdateStoreCart.getCartNum() + storeCartRequest.getCartNum());
+            forUpdateStoreCart.setUpdateTime(DateUtil.date());
             boolean updateResult = updateById(forUpdateStoreCart);
             if (!updateResult) throw new CrmebException("添加购物车失败");
+
+            // 商品加购量统计(每日/商城)
+            redisUtil.incrAndCreate(RedisConstatns.PRO_ADD_CART_KEY + todayStr);
+            // 商品加购量统计(每日/个体)
+            redisUtil.incrAndCreate(StrUtil.format(RedisConstatns.PRO_PRO_ADD_CART_KEY, todayStr, storeCartRequest.getProductId()));
             return forUpdateStoreCart.getId()+"";
         } else {// 新增购物车数据
             StoreCart storeCart = new StoreCart();
@@ -200,6 +206,10 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
             storeCart.setUid(currentUser.getUid());
             storeCart.setType("product");
             if (dao.insert(storeCart) <= 0) throw new CrmebException("添加购物车失败");
+            // 商品加购量统计(每日/商城)
+            redisUtil.incrAndCreate(RedisConstatns.PRO_ADD_CART_KEY + todayStr);
+            // 商品加购量统计(每日/个体)
+            redisUtil.incrAndCreate(StrUtil.format(RedisConstatns.PRO_PRO_ADD_CART_KEY, todayStr, storeCartRequest.getProductId()));
             return storeCart.getId()+"";
         }
     }
@@ -236,7 +246,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         storeCartPram.setProductId(productId);
         List<StoreCart> existStoreCartProducts = getByEntity(storeCartPram);
         if (null == existStoreCartProducts) return true;
-        existStoreCartProducts.forEach(e-> e.setStatus(false));
+        existStoreCartProducts.forEach(e-> e.setStatus(false).setUpdateTime(DateUtil.date()));
         return updateBatchById(existStoreCartProducts);
     }
 
@@ -255,6 +265,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
             throw new CrmebException("数量不合法");
         storeCart.setCartNum(resetRequest.getNum());
         storeCart.setProductAttrUnique(resetRequest.getUnique() + "");
+        storeCart.setUpdateTime(DateUtil.date());
         boolean updateResult = dao.updateById(storeCart) > 0;
         if (!updateResult) throw new CrmebException("重选添加购物车失败");
         productStatusEnableFlag(resetRequest.getId(), true);
@@ -268,6 +279,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
      */
     @Override
     public Boolean productStatusNoEnable(List<Integer> skuIdList) {
+        if(ObjectUtil.isEmpty(skuIdList)) return true;
         LambdaUpdateWrapper<StoreCart> lqw = new LambdaUpdateWrapper<>();
         lqw.set(StoreCart::getStatus, true);
         lqw.in(StoreCart::getProductAttrUnique, skuIdList);
@@ -339,6 +351,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         if (ObjectUtil.isNull(storeCart)) throw new CrmebException("当前购物车不存在");
         if (storeCart.getCartNum().equals(number)) return true;
         storeCart.setCartNum(number);
+        storeCart.setUpdateTime(DateUtil.date());
         return updateById(storeCart);
     }
 
@@ -390,6 +403,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         if(ObjectUtil.isNull(existStoreCartProducts)) return false;
         existStoreCartProducts = existStoreCartProducts.stream().map(e->{
             e.setStatus(flag);
+            e.setUpdateTime(DateUtil.date());
             return e;
         }).collect(Collectors.toList());
         return updateBatchById(existStoreCartProducts);

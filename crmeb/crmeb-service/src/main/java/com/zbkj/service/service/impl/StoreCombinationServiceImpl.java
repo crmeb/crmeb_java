@@ -8,34 +8,33 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import com.zbkj.common.constants.Constants;
+import com.zbkj.common.constants.ProductConstants;
+import com.zbkj.common.exception.CrmebException;
+import com.zbkj.common.model.combination.StoreCombination;
+import com.zbkj.common.model.combination.StorePink;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.product.StoreProduct;
 import com.zbkj.common.model.product.StoreProductAttr;
 import com.zbkj.common.model.product.StoreProductAttrValue;
 import com.zbkj.common.model.product.StoreProductDescription;
+import com.zbkj.common.model.record.UserVisitRecord;
+import com.zbkj.common.model.user.User;
 import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.constants.Constants;
-import com.zbkj.common.constants.ProductConstants;
-import com.zbkj.common.exception.CrmebException;
-import com.github.pagehelper.Page;
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import com.zbkj.common.request.*;
 import com.zbkj.common.response.*;
 import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
-import com.zbkj.common.model.combination.StoreCombination;
-import com.zbkj.common.model.combination.StorePink;
-import com.zbkj.common.model.record.UserVisitRecord;
-import com.zbkj.common.model.user.User;
 import com.zbkj.service.dao.StoreCombinationDao;
 import com.zbkj.service.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -48,7 +47,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -91,12 +90,8 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
     @Autowired
     private StoreOrderService storeOrderService;
 
-    private OrderService orderService;
-
     @Autowired
-    public void setOrderService(ApplicationContext applicationContext) {
-        this.orderService = applicationContext.getBean(OrderService.class);
-    }
+    private OrderService orderService;
 
     @Autowired
     private RedisUtil redisUtil;
@@ -154,7 +149,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
                 combinationResponse.setCountPeopleAll(pinkList.size());
                 combinationResponse.setCountPeoplePink(successTeam.size());
             }
-            combinationResponse.setStopTimeStr(DateUtil.timestamp2DateStr(combination.getStopTime(), Constants.DATE_FORMAT_DATE));
+            combinationResponse.setStopTimeStr(CrmebDateUtil.timestamp2DateStr(combination.getStopTime(), Constants.DATE_FORMAT_DATE));
             return combinationResponse;
         }).collect(Collectors.toList());
 
@@ -180,7 +175,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         StoreCombination storeCombination = new StoreCombination();
         BeanUtils.copyProperties(request, storeCombination);
         // 校验结束时间
-        Long stopTime = DateUtil.dateStr2Timestamp(request.getStopTime(), Constants.DATE_TIME_TYPE_END);
+        Long stopTime = CrmebDateUtil.dateStr2Timestamp(request.getStopTime(), Constants.DATE_TIME_TYPE_END);
         if (stopTime <= System.currentTimeMillis()) {
             throw new CrmebException("活动结束时间不能小于当前时间");
         }
@@ -190,7 +185,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         storeCombination.setImage(systemAttachmentService.clearPrefix(request.getImage()));
         storeCombination.setImages(systemAttachmentService.clearPrefix(request.getImages()));
         // 活动开始结束时间
-        storeCombination.setStartTime(DateUtil.dateStr2Timestamp(request.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN));
+        storeCombination.setStartTime(CrmebDateUtil.dateStr2Timestamp(request.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN));
         storeCombination.setStopTime(stopTime);
         storeCombination.setAddTime(System.currentTimeMillis());
         storeCombination.setSales(0);
@@ -290,8 +285,8 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         storeCombination.setImage(systemAttachmentService.clearPrefix(request.getImage()));
         storeCombination.setImages(systemAttachmentService.clearPrefix(request.getImages()));
         // 活动开始结束时间
-        storeCombination.setStartTime(DateUtil.dateStr2Timestamp(request.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN));
-        storeCombination.setStopTime(DateUtil.dateStr2Timestamp(request.getStopTime(), Constants.DATE_TIME_TYPE_END));
+        storeCombination.setStartTime(CrmebDateUtil.dateStr2Timestamp(request.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN));
+        storeCombination.setStopTime(CrmebDateUtil.dateStr2Timestamp(request.getStopTime(), Constants.DATE_TIME_TYPE_END));
 
         List<StoreProductAttrValueAddRequest> attrValueAddRequestList = request.getAttrValue();
         // 计算价格
@@ -401,9 +396,11 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         storeProductResponse.setAttr(attrs);
         storeProductResponse.setSliderImage(String.join(",", storeCombination.getImages()));
 
-        boolean specType = false;
-        if (attrs.size() > 1) {
-            specType = true;
+        boolean specType = true;
+        if (attrs.size() == 1) {
+            if (attrs.get(0).getAttrValues().equals("默认")) {
+                specType = false;
+            }
         }
         storeProductResponse.setSpecType(specType);
 
@@ -486,8 +483,8 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
     public List<StoreCombinationH5Response> getH5List(PageParamRequest pageParamRequest) {
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         LambdaQueryWrapper<StoreCombination> lqw = Wrappers.lambdaQuery();
-        lqw.select(StoreCombination::getId ,StoreCombination::getProductId ,StoreCombination::getImage ,StoreCombination::getTitle
-                ,StoreCombination::getPeople ,StoreCombination::getOtPrice ,StoreCombination::getPrice ,StoreCombination::getStock);
+        lqw.select(StoreCombination::getId, StoreCombination::getProductId, StoreCombination::getImage, StoreCombination::getTitle
+                , StoreCombination::getPeople, StoreCombination::getOtPrice, StoreCombination::getPrice, StoreCombination::getStock);
         lqw.eq(StoreCombination::getIsDel, false);
         lqw.eq(StoreCombination::getIsShow, true);
         long millis = System.currentTimeMillis();
@@ -526,7 +523,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         BeanUtils.copyProperties(storeCombination, infoResponse);
         infoResponse.setStoreName(storeCombination.getTitle());
         infoResponse.setSliderImage(storeCombination.getImages());
-        infoResponse.setStoreInfo(storeCombination.getInfo());
+//        infoResponse.setStoreInfo(storeCombination.getInfo());
         // 详情
         StoreProductDescription sd = storeProductDescriptionService.getOne(
                 new LambdaQueryWrapper<StoreProductDescription>()
@@ -694,7 +691,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
             pinkList.add(storePinkService.getById(teamPink.getKId()));
         }
         //拼团剩余人数
-        int count = teamPink.getPeople() - ( CollUtil.isEmpty(pinkList) ? 0 : pinkList.size() );
+        int count = teamPink.getPeople() - (CollUtil.isEmpty(pinkList) ? 0 : pinkList.size());
 
         if (teamPink.getStatus() == 2) {//已完成
             isOk = 1;
@@ -966,12 +963,12 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
     @Override
     public Boolean operationStock(Integer id, Integer num, String type) {
         UpdateWrapper<StoreCombination> updateWrapper = new UpdateWrapper<>();
-        if ("add".equals(type)) {
+        if (type.equals("add")) {
             updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
             updateWrapper.setSql(StrUtil.format("quota = quota + {}", num));
         }
-        if ("sub".equals(type)) {
+        if (type.equals("sub")) {
             updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
             updateWrapper.setSql(StrUtil.format("quota = quota - {}", num));
@@ -991,6 +988,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
      * 拼团数据 + 拼团商品6个
      * 3个用户头像（最多）
      * 拼团参与总人数
+     *
      * @return CombinationIndexResponse
      */
     @Override
@@ -1033,6 +1031,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
 
     /**
      * 拼团列表header
+     *
      * @return CombinationHeaderResponse
      */
     @Override
@@ -1074,7 +1073,7 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         }
 
         // 回滚商品库存/销量 并更新
-        boolean isPlus = "add".equals(storeProductStockRequest.getOperationType());
+        boolean isPlus = storeProductStockRequest.getOperationType().equals("add");
         int productStock = isPlus ? existCombination.getStock() + storeProductStockRequest.getNum() : existCombination.getStock() - storeProductStockRequest.getNum();
         existCombination.setStock(productStock);
         existCombination.setSales(existCombination.getSales() - storeProductStockRequest.getNum());

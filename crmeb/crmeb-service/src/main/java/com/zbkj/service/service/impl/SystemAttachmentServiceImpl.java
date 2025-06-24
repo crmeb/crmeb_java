@@ -1,15 +1,19 @@
 package com.zbkj.service.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zbkj.common.request.PageParamRequest;
+import com.github.pagehelper.PageHelper;
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.constants.SysConfigConstants;
+import com.zbkj.common.constants.UploadConstants;
+import com.zbkj.common.model.system.SystemAttachment;
+import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.SystemAttachmentMoveRequest;
 import com.zbkj.common.request.SystemAttachmentRequest;
-import com.github.pagehelper.PageHelper;
 import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.model.system.SystemAttachment;
 import com.zbkj.service.dao.SystemAttachmentDao;
 import com.zbkj.service.service.SystemAttachmentService;
 import com.zbkj.service.service.SystemConfigService;
@@ -26,7 +30,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -53,6 +57,7 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
         SystemAttachment systemAttachment = new SystemAttachment();
         systemAttachment.setAttId(attId);
         systemAttachment.setImageType(type);
+        systemAttachment.setUpdateTime(DateUtil.date());
         updateById(systemAttachment);
     }
 
@@ -68,7 +73,7 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
         LambdaQueryWrapper<SystemAttachment> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(SystemAttachment::getPid, pid);
         if(StringUtils.isNotEmpty(attType)){
-            lambdaQueryWrapper.in(SystemAttachment::getAttType, StringUtils.split(attType,","));
+            lambdaQueryWrapper.in(SystemAttachment::getAttType, CrmebUtil.stringToArrayStr(attType));
         }
         lambdaQueryWrapper.orderByDesc(SystemAttachment::getAttId);
         return dao.selectList(lambdaQueryWrapper);
@@ -82,7 +87,13 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
     @Override
     public String prefixImage(String path) {
         // 如果那些域名不需要加，则跳过
-        return path.replace(Constants.UPLOAD_TYPE_IMAGE+"/", getCdnUrl() + "/"+ Constants.UPLOAD_TYPE_IMAGE+"/");
+        return path.replace(UploadConstants.UPLOAD_FILE_KEYWORD+"/", getCdnUrl() + "/"+ UploadConstants.UPLOAD_FILE_KEYWORD+"/");
+    }
+
+    @Override
+    public String prefixUploadf(String path) {
+        // 如果那些域名不需要加，则跳过
+        return path.replace("crmebimage/" + UploadConstants.UPLOAD_AFTER_FILE_KEYWORD+"/", getCdnUrl() + "/" +"crmebimage/" + UploadConstants.UPLOAD_AFTER_FILE_KEYWORD+"/");
     }
 
     /**
@@ -92,37 +103,15 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
      */
     @Override
     public String prefixFile(String path) {
-        if (path.contains("file/excel")) {
+        if (path.contains(Constants.WECHAT_SOURCE_CODE_FILE_NAME)) {
             String cdnUrl = systemConfigService.getValueByKey("local" + "UploadUrl");
-            return path.replace("file/", cdnUrl + "/file/");
+            return path.replace("crmebimage/", cdnUrl + "/crmebimage/");
         }
-        return path.replace("file/", getCdnUrl() + "/file/");
-    }
-
-    /**
-     * 获取cdn url
-     * @return String
-     */
-    private String getCdnUrl() {
-//        return asyncService.getCurrentBaseUrl();
-        String uploadType = systemConfigService.getValueByKeyException("uploadType");
-        //获取配置信息
-        int type = Integer.parseInt(uploadType);
-        String pre = "local";
-        switch (type) {
-            case 2:
-                pre = "qn";
-                break;
-            case 3:
-                pre = "al";
-                break;
-            case 4:
-                pre = "tx";
-                break;
-            default:
-                break;
+        if (path.contains("downloadf/excel")) {
+            String cdnUrl = systemConfigService.getValueByKey("local" + "UploadUrl");
+            return path.replace("crmebimage/downloadf/", cdnUrl + "/crmebimage/downloadf/");
         }
-        return systemConfigService.getValueByKey(pre+"UploadUrl");
+        return path.replace("crmebimage/file/", getCdnUrl() + "/crmebimage/file/");
     }
 
     /**
@@ -137,6 +126,9 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
         }
         Constants.CND_URL = getCdnUrl();
         if(path.contains(getCdnUrl() + "/")){
+            if (path.contains("callback/alipay")) {
+                return path;
+            }
             return path.replace(getCdnUrl() + "/", "");
         }
 
@@ -162,6 +154,7 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
     public Boolean edit(SystemAttachmentRequest systemAttachmentRequest) {
         SystemAttachment systemAttachment = new SystemAttachment();
         BeanUtils.copyProperties(systemAttachmentRequest, systemAttachment);
+        systemAttachment.setUpdateTime(DateUtil.date());
         return updateById(systemAttachment);
     }
 
@@ -175,6 +168,47 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
         lup.in(SystemAttachment::getAttId, CrmebUtil.stringToArray(move.getAttrId()));
         lup.set(SystemAttachment::getPid, move.getPid());
         return update(lup);
+    }
+
+    /**
+     * 获取cdn url
+     *
+     * @return String
+     */
+    @Override
+    public String getCdnUrl() {
+        String uploadType = systemConfigService.getValueByKeyException(SysConfigConstants.CONFIG_UPLOAD_TYPE);
+        //获取配置信息
+        int type = Integer.parseInt(uploadType);
+        String uploadUrl = SysConfigConstants.CONFIG_LOCAL_UPLOAD_URL;
+        switch (type) {
+            case 2:
+                uploadUrl = SysConfigConstants.CONFIG_QN_UPLOAD_URL;
+                break;
+            case 3:
+                uploadUrl = SysConfigConstants.CONFIG_AL_UPLOAD_URL;
+                break;
+            case 4:
+                uploadUrl = SysConfigConstants.CONFIG_TX_UPLOAD_URL;
+                break;
+            case 5:
+                uploadUrl = SysConfigConstants.CONFIG_JD_UPLOAD_URL;
+                break;
+            default:
+                break;
+        }
+        return systemConfigService.getValueByKey(uploadUrl);
+    }
+
+    /**
+     * 删除附件
+     * @param idList 附件ID列表
+     */
+    @Override
+    public Boolean deleteByIds(List<Integer> idList) {
+        LambdaUpdateWrapper<SystemAttachment> wrapper = Wrappers.lambdaUpdate();
+        wrapper.in(SystemAttachment::getAttId, idList);
+        return remove(wrapper);
     }
 }
 

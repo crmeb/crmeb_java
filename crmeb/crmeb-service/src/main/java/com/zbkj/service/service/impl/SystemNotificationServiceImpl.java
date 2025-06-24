@@ -1,6 +1,7 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -131,7 +132,7 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
     public NotificationInfoResponse getDetail(NotificationInfoRequest request) {
         SystemNotification notification = getByIdException(request.getId());
         NotificationInfoResponse response = new NotificationInfoResponse();
-        if ("wechat".equals(request.getDetailType())) {
+        if (request.getDetailType().equals("wechat")) {
             if (notification.getIsWechat().equals(0)) {
                 throw new CrmebException("请先配置公众号模板消息");
             }
@@ -139,7 +140,7 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
             BeanUtils.copyProperties(templateMessage, response);
             response.setStatus(notification.getIsWechat());
         }
-        if ("routine".equals(request.getDetailType())) {
+        if (request.getDetailType().equals("routine")) {
             if (notification.getIsRoutine().equals(0)) {
                 throw new CrmebException("请先配置小程序订阅消息");
             }
@@ -147,7 +148,7 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
             BeanUtils.copyProperties(templateMessage, response);
             response.setStatus(notification.getIsRoutine());
         }
-        if ("sms".equals(request.getDetailType())) {
+        if (request.getDetailType().equals("sms")) {
             if (notification.getIsSms().equals(0)) {
                 throw new CrmebException("请先配置短信模板");
             }
@@ -193,11 +194,11 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
      */
     @Override
     public Boolean modify(NotificationUpdateRequest request) {
-        if (!"sms".equals(request.getDetailType()) && StrUtil.isEmpty(request.getTempId())) {
+        if (!request.getDetailType().equals("sms") && StrUtil.isEmpty(request.getTempId())) {
             throw new CrmebException("模板id不能为空");
         }
         SystemNotification notification = getByIdException(request.getId());
-        if ("wechat".equals(request.getDetailType())) {
+        if (request.getDetailType().equals("wechat")) {
             if (notification.getIsWechat().equals(0)) {
                 throw new CrmebException("请先为通知配置公众号模板");
             }
@@ -208,6 +209,7 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
             return transactionTemplate.execute(e -> {
                 if (!templateMessage.getTempId().equals(request.getTempId())) {
                     templateMessage.setTempId(request.getTempId());
+                    templateMessage.setUpdateTime(DateUtil.date());
                     templateMessageService.updateById(templateMessage);
                 }
                 if (!notification.getIsWechat().equals(request.getStatus())) {
@@ -217,7 +219,7 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
                 return Boolean.TRUE;
             });
         }
-        if ("routine".equals(request.getDetailType())) {
+        if (request.getDetailType().equals("routine")) {
             if (notification.getIsRoutine().equals(0)) {
                 throw new CrmebException("请先为通知配置小程序订阅模板");
             }
@@ -228,6 +230,7 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
             return transactionTemplate.execute(e -> {
                 if (!templateMessage.getTempId().equals(request.getTempId())) {
                     templateMessage.setTempId(request.getTempId());
+                    templateMessage.setUpdateTime(DateUtil.date());
                     templateMessageService.updateById(templateMessage);
                 }
                 if (!notification.getIsRoutine().equals(request.getStatus())) {
@@ -237,7 +240,7 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
                 return Boolean.TRUE;
             });
         }
-        if ("sms".equals(request.getDetailType()) && !notification.getIsSms().equals(request.getStatus())) {
+        if (request.getDetailType().equals("sms") && !notification.getIsSms().equals(request.getStatus())) {
             notification.setIsSms(request.getStatus());
             return updateById(notification);
         }

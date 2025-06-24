@@ -17,7 +17,7 @@ import java.util.List;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -198,8 +198,6 @@ public class StoreOrderDetailInfoResponse implements Serializable {
 //    private List<String> pVerifyCodes;
     @ApiModelProperty(value = "系统门店信息")
     private SystemStore systemStore;
-    @ApiModelProperty(value = "腾讯地图key")
-    private String mapKey;
     @ApiModelProperty(value = "订单状态图标")
     private String statusPic;
     @ApiModelProperty(value = "订单详情")

@@ -1,6 +1,7 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -8,7 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.constants.Constants;
 import com.github.pagehelper.PageHelper;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.model.system.SystemUserLevel;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserLevel;
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -112,9 +113,9 @@ public class UserLevelServiceImpl extends ServiceImpl<UserLevelDao, UserLevel> i
         newLevel.setLevelId(userLevelConfig.getId());
         newLevel.setDiscount(userLevelConfig.getDiscount());
 
-        Date date = DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT);
+        Date date = CrmebDateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT);
         String mark = Constants.USER_LEVEL_UP_LOG_MARK.replace("【{$userName}】", user.getNickname()).
-                replace("{$date}", DateUtil.dateToStr(date, Constants.DATE_FORMAT)).
+                replace("{$date}", CrmebDateUtil.dateToStr(date, Constants.DATE_FORMAT)).
                 replace("{$levelName}", userLevelConfig.getName());
         newLevel.setMark(mark);
 
@@ -122,6 +123,7 @@ public class UserLevelServiceImpl extends ServiceImpl<UserLevelDao, UserLevel> i
         user.setLevel(userLevelConfig.getId());
         return transactionTemplate.execute(e -> {
             save(newLevel);
+            user.setUpdateTime(DateUtil.date());
             userService.updateById(user);
             return Boolean.TRUE;
         });
@@ -168,9 +170,9 @@ public class UserLevelServiceImpl extends ServiceImpl<UserLevelDao, UserLevel> i
         newLevel.setLevelId(userLevelConfig.getId());
         newLevel.setDiscount(userLevelConfig.getDiscount());
 
-        Date date = DateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT);
+        Date date = CrmebDateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT);
         String mark = Constants.USER_LEVEL_OPERATE_LOG_MARK.replace("【{$userName}】", user.getNickname()).
-                replace("{$date}", DateUtil.dateToStr(date, Constants.DATE_FORMAT)).
+                replace("{$date}", CrmebDateUtil.dateToStr(date, Constants.DATE_FORMAT)).
                 replace("{$levelName}", userLevelConfig.getName());
         newLevel.setMark(mark);
 
@@ -178,6 +180,7 @@ public class UserLevelServiceImpl extends ServiceImpl<UserLevelDao, UserLevel> i
         user.setLevel(userLevelConfig.getId());
         return transactionTemplate.execute(e -> {
             save(newLevel);
+            user.setUpdateTime(DateUtil.date());
             userService.updateById(user);
             return Boolean.TRUE;
         });

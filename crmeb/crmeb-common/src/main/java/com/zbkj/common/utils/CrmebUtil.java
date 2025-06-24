@@ -1,21 +1,34 @@
 package com.zbkj.common.utils;
 
-import cn.hutool.core.codec.Base64;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
-import cn.hutool.crypto.symmetric.DES;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.zbkj.common.config.CrmebConfig;
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.exception.CrmebException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import java.security.Security;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,35 +37,56 @@ import java.util.regex.Pattern;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
  * | Author: CRMEB Team <admin@crmeb.com>
  * +----------------------------------------------------------------------
  */
+@Component
 public class CrmebUtil {
 
-    public static String encryptPassword(String pwd, String key) {
-        DES des = new DES(getDESSercretKey(key));
-        byte[] result = des.encrypt(pwd);
-        return Base64.encode(result);
+    @Autowired
+    CrmebConfig crmebConfig;
+
+    public static String encryptPassword(String pwd, String key){
+        try {
+            Security.addProvider(new com.sun.crypto.provider.SunJCE());
+            Key _key = getDESSercretKey(key);
+            Cipher cipher = Cipher.getInstance("DES");
+            cipher.init(Cipher.ENCRYPT_MODE, _key);
+            byte[] data = pwd.getBytes(StandardCharsets.UTF_8);
+            byte[] result = cipher.doFinal(data);
+            return java.util.Base64.getEncoder().encodeToString(result);
+        }catch (Exception e){
+            throw new CrmebException("密码处理异常");
+        }
     }
 
     /**
      * 解密密码
      */
-    public static String decryptPassowrd(String pwd, String key) {
-        DES des = new DES(getDESSercretKey(key));
-        return des.decryptStr(pwd);
+    public static String decryptPassowrd(String pwd, String key)
+            throws Exception {
+        Security.addProvider(new com.sun.crypto.provider.SunJCE());
+        Key aKey = getDESSercretKey(key);
+        Cipher cipher = Cipher.getInstance("DES");
+        cipher.init(Cipher.DECRYPT_MODE, aKey);
+
+        byte[] data = java.util.Base64.getDecoder().decode(pwd);
+        byte[] result = cipher.doFinal(data);
+
+        return new String(result, StandardCharsets.UTF_8);
     }
 
     /**
      * 获得DES加密秘钥
      * @param key
      * @return
+     * @throws UnsupportedEncodingException
      */
-    public static byte[] getDESSercretKey(String key) {
+    public static SecretKey getDESSercretKey(String key) throws UnsupportedEncodingException {
         byte[] result = new byte[8];
         byte[] keys = null;
         keys = key.getBytes(StandardCharsets.UTF_8);
@@ -63,7 +97,7 @@ public class CrmebUtil {
                 result[i] = 0x01;
             }
         }
-        return result;
+        return new SecretKeySpec(result, "DES");
     }
 
     /**
@@ -113,24 +147,8 @@ public class CrmebUtil {
      * @param args String[] 字符串数组
      */
     public static void main(String[] args) throws Exception {
-//        System.out.println(encryptPassword("123456", "admin"));
-//		System.out.println(decryptPassowrd("", ""));
-
-        String key = "123456";
-        String data = "中国123ABCabc";
-        System.out.println("原始数据：" + data);
-        String encryptPassword = encryptPassword(data, key);
-        System.out.println("加密结果：" + encryptPassword);
-        String decryptPassowrd = decryptPassowrd(encryptPassword, key);
-        System.out.println("解密结果：" + decryptPassowrd);
-        // 执行结果如下：
-        // 原始数据：中国123ABCabc
-        // 加密结果：5JNGj04iE/XUuTZM75zMrA==
-        // 解密结果：中国123ABCabc
-
-        System.out.println(encryptPassword("crmeb@123456", "18292417675"));
-        // 执行结果：f6mcpGQ8NEmwbab2TlkpUg==
-        // 与 SQL 中的数据一致
+        //System.out.println(encryptPassword("crmeb@123456", "18292417675"));
+		System.out.println(decryptPassowrd("9n8S0bwrG6iXHK3vXWqppA==", "admin"));
     }
 
     /**
@@ -391,7 +409,7 @@ public class CrmebUtil {
         }
 
         ip = request.getRemoteAddr();
-        if("0:0:0:0:0:0:0:1".equals(ip)){
+        if(ip.equals("0:0:0:0:0:0:0:1")){
             //本地 localhost访问 ipv6
             ip = "127.0.0.1";
         }
@@ -414,11 +432,11 @@ public class CrmebUtil {
             return false;
         }
 
-        if("unKnown".equals(ip)){
+        if(ip.equals("unKnown")){
             return false;
         }
 
-        if("unknown".equals(ip)){
+        if(ip.equals("unknown")){
             return false;
         }
 
@@ -729,7 +747,7 @@ public class CrmebUtil {
     /**
      * unicode编码转换为汉字
      * @param unicodeStr 待转化的编码
-     * @return 返回转化后的汉子
+     * @return 返回转化后的汉字
      */
     public static String UnicodeToCN(String unicodeStr) {
         Pattern pattern = Pattern.compile("(\\\\u(\\p{XDigit}{4}))");
@@ -877,10 +895,14 @@ public class CrmebUtil {
      * 手机号脱敏处理
      * @param phone 手机号
      */
-    public static String maskMobile(String phone) {
+    public String maskMobile(String phone) {
         if (StrUtil.isBlank(phone)) {
             return "";
         }
-        return phone.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2");
+        if(crmebConfig.getDemoSite()){
+            return phone.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2");
+        }
+        return phone;
     }
+
 }

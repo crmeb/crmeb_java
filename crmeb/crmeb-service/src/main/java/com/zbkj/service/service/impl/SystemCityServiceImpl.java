@@ -1,6 +1,7 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -54,7 +55,7 @@ public class SystemCityServiceImpl extends ServiceImpl<SystemCityDao, SystemCity
      */
     @Override
     public Object getList(SystemCitySearchRequest request) {
-        Object list = redisUtil.hmGet(Constants.CITY_LIST, request.getParentId().toString());
+        Object list = redisUtil.get(Constants.CITY_LIST);
         if (ObjectUtil.isNull(list)) {
             //城市数据，异步同步到redis，第一次拿不到数据，去数据库读取
             list = getList(request.getParentId());
@@ -85,6 +86,7 @@ public class SystemCityServiceImpl extends ServiceImpl<SystemCityDao, SystemCity
         SystemCity systemCity = getById(id);
         systemCity.setId(id);
         systemCity.setIsShow(status);
+        systemCity.setUpdateTime(DateUtil.date());
         boolean result = updateById(systemCity);
         if (result) {
             asyncRedis(systemCity.getParentId());
@@ -102,6 +104,7 @@ public class SystemCityServiceImpl extends ServiceImpl<SystemCityDao, SystemCity
         SystemCity systemCity = new SystemCity();
         BeanUtils.copyProperties(request, systemCity);
         systemCity.setId(id);
+        systemCity.setUpdateTime(DateUtil.date());
         boolean result = updateById(systemCity);
         if (result) {
             asyncRedis(request.getParentId());
@@ -129,7 +132,7 @@ public class SystemCityServiceImpl extends ServiceImpl<SystemCityDao, SystemCity
     public List<Integer> getCityIdList() {
         Object data = redisUtil.get(Constants.CITY_LIST_LEVEL_1);
         List<Integer> collect;
-        if (data == null || "".equals(data)) {
+        if (data == null || data.equals("")) {
             LambdaQueryWrapper<SystemCity> lambdaQueryWrapper = new LambdaQueryWrapper<>();
             lambdaQueryWrapper.select(SystemCity::getCityId);
             lambdaQueryWrapper.eq(SystemCity::getLevel, 1);
@@ -178,6 +181,32 @@ public class SystemCityServiceImpl extends ServiceImpl<SystemCityDao, SystemCity
                 .eq(SystemCity::getIsShow,1)
                 .eq(SystemCity::getLevel, 1);
         return getOne(systemCityLambdaQueryWrapper);
+    }
+
+    /**
+     * 根据区名获取数据
+     */
+    @Override
+    public SystemCity getByAreaNameAndPid(String areaName, Integer pid) {
+        LambdaQueryWrapper<SystemCity> lqw = Wrappers.lambdaQuery();
+        lqw.eq(SystemCity::getName, areaName);
+        lqw.eq(SystemCity::getIsShow,1);
+        lqw.eq(SystemCity::getLevel, 2);
+        lqw.eq(SystemCity::getParentId, pid);
+        return getOne(lqw);
+    }
+
+    /**
+     * 通过区域id获取
+     * @param areaId 区域Id
+     * @return SystemCity
+     */
+    @Override
+    public SystemCity getByAreaId(Integer areaId) {
+        LambdaQueryWrapper<SystemCity> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(SystemCity::getCityId, areaId);
+        lqw.eq(SystemCity::getIsShow, 1);
+        return getOne(lqw);
     }
 }
 

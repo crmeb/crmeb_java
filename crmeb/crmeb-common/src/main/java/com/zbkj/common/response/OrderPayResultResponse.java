@@ -13,7 +13,7 @@ import lombok.experimental.Accessors;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -40,9 +40,4 @@ public class OrderPayResultResponse {
     @ApiModelProperty(value = "订单编号")
     private String orderNo;
 
-    @ApiModelProperty(value = "订单支付宝支付")
-    private String alipayRequest;
-
-    @ApiModelProperty(value = "支付宝调起支付参数对象（app支付专用）")
-    private AliPayJsResultVo aliPayConfig;
 }

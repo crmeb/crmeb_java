@@ -1,12 +1,14 @@
 package com.zbkj.service.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.pagehelper.PageHelper;
+import com.zbkj.common.exception.CrmebException;
+import com.zbkj.common.model.user.UserTag;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.UserTagRequest;
-import com.github.pagehelper.PageHelper;
 import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.model.user.UserTag;
 import com.zbkj.service.dao.UserTagDao;
 import com.zbkj.service.service.UserService;
 import com.zbkj.service.service.UserTagService;
@@ -23,7 +25,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -73,9 +75,29 @@ public class UserTagServiceImpl extends ServiceImpl<UserTagDao, UserTag> impleme
      */
     @Override
     public Boolean create(UserTagRequest userTagRequest) {
+        if (isExistName(userTagRequest.getName(), null)) {
+            throw new CrmebException("标签名称已存在");
+        }
         UserTag userTag = new UserTag();
         BeanUtils.copyProperties(userTagRequest, userTag);
         return save(userTag);
+    }
+
+    /**
+     * 是否存在用户标签
+     * @param tagName 标签名称
+     * @param id 标签ID
+     */
+    private Boolean isExistName(String tagName, Integer id) {
+        LambdaQueryWrapper<UserTag> lqw = new LambdaQueryWrapper<>();
+        lqw.select(UserTag::getId);
+        lqw.eq(UserTag::getName, tagName);
+        if (ObjectUtil.isNotNull(id)) {
+            lqw.ne(UserTag::getId, id);
+        }
+        lqw.last(" limit 1");
+        UserTag userTag = dao.selectOne(lqw);
+        return ObjectUtil.isNotNull(userTag);
     }
 
     /**
@@ -86,7 +108,7 @@ public class UserTagServiceImpl extends ServiceImpl<UserTagDao, UserTag> impleme
     public Boolean delete(Integer id) {
         boolean remove = removeById(id);
         if (remove) {
-            userService.clearGroupByGroupId(id+"");
+            userService.clearGroupByGroupId(id.toString());
         }
         return remove;
     }
@@ -98,6 +120,9 @@ public class UserTagServiceImpl extends ServiceImpl<UserTagDao, UserTag> impleme
      */
     @Override
     public Boolean updateTag(Integer id, UserTagRequest userTagRequest) {
+        if (isExistName(userTagRequest.getName(), id)) {
+            throw new CrmebException("标签名称已存在");
+        }
         UserTag userTag = new UserTag();
         BeanUtils.copyProperties(userTagRequest, userTag);
         userTag.setId(id);

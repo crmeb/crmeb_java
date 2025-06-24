@@ -1,23 +1,24 @@
 package com.zbkj.common.model.product;
 
-import java.math.BigDecimal;
-
-import com.baomidou.mybatisplus.annotation.*;
-
-import java.io.Serializable;
-
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
+import java.io.Serializable;
+import java.math.BigDecimal;
+
 /**
  * 商品表
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -28,13 +29,10 @@ import lombok.experimental.Accessors;
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @TableName("eb_store_product")
-@ApiModel(value="StoreProduct对象", description="商品表")
+@ApiModel(value = "StoreProduct对象", description = "商品表")
 public class StoreProduct implements Serializable {
 
-    private static final long serialVersionUID=1L;
-
-    public StoreProduct() {
-    }
+    private static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "商品id")
     @TableId(value = "id", type = IdType.AUTO)
@@ -53,7 +51,7 @@ public class StoreProduct implements Serializable {
     private String storeName;
 
     @ApiModelProperty(value = "商品简介")
-    private String storeInfo;
+    private String storeInfo = "";
 
     @ApiModelProperty(value = "关键字")
     private String keyword;
@@ -166,4 +164,11 @@ public class StoreProduct implements Serializable {
     @ApiModelProperty(value = "商品详情")
     @TableField(exist = false)
     private String content;
+
+    @ApiModelProperty(value = "并发版本控制")
+    private Integer version;
+
+    @ApiModelProperty(value = "活动边框 列表中是边框 详情中是背景图")
+    @TableField(exist = false)
+    private String activityStyle;
 }

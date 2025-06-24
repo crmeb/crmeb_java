@@ -4,9 +4,9 @@ import com.zbkj.common.model.wechat.TemplateMessage;
 import com.zbkj.common.request.RegisterAppWxRequest;
 import com.zbkj.common.request.RegisterThirdUserRequest;
 import com.zbkj.common.request.WxBindingPhoneRequest;
-import com.zbkj.common.response.CommonResult;
 import com.zbkj.common.response.LoginResponse;
 import com.zbkj.common.response.WeChatJsSdkConfigResponse;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.front.service.UserCenterService;
 import com.zbkj.service.service.SystemNotificationService;
 import com.zbkj.service.service.WechatNewService;
@@ -29,7 +29,7 @@ import java.util.Map;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -54,7 +54,7 @@ public class WeChatController {
     /**
      * 通过微信code登录
      */
-    @ApiOperation(value = "微信登录公共号授权登录")
+    @ApiOperation(value = "微信登录公众号授权登录")
     @RequestMapping(value = "/authorize/login", method = RequestMethod.GET)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "spread_spid", value = "推荐人id", dataType = "Integer"),
@@ -72,6 +72,15 @@ public class WeChatController {
     @RequestMapping(value = "/authorize/program/login", method = RequestMethod.POST)
     public CommonResult<LoginResponse> programLogin(@RequestParam String code, @RequestBody @Validated RegisterThirdUserRequest request){
         return CommonResult.success(userCenterService.weChatAuthorizeProgramLogin(code, request));
+    }
+
+    /**
+     * 微信登录App授权登录
+     */
+    @ApiOperation(value = "微信登录App授权登录")
+    @RequestMapping(value = "/authorize/app/login", method = RequestMethod.POST)
+    public CommonResult<LoginResponse> appLogin(@RequestBody @Validated RegisterAppWxRequest request){
+        return CommonResult.success(userCenterService.appLogin(request));
     }
 
     /**

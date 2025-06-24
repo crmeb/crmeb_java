@@ -19,7 +19,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -82,14 +82,20 @@ public class StoreOrderInfoResponse implements Serializable {
     @ApiModelProperty(value = "0 未退款 1 申请中 2 已退款")
     private Integer refundStatus;
 
+    @ApiModelProperty(value = "发货记录类型，1正常、2电子面单,3商家发货 发货类型必传 =3 时根据描述填写必填字段，注意为了方便本身不做必填校验")
+    private String expressRecordType;
+
     @ApiModelProperty(value = "快递名称/送货人姓名")
     private String deliveryName;
 
-    @ApiModelProperty(value = "发货类型")
+    @ApiModelProperty(value = "发货类型 express 发货，send 送货，fictitious虚拟")
     private String deliveryType;
 
     @ApiModelProperty(value = "快递单号/手机号")
     private String deliveryId;
+
+    @ApiModelProperty(value = "快递公司简称")
+    private String deliveryCode;
 
     @ApiModelProperty(value = "备注")
     private String mark;
@@ -141,4 +147,22 @@ public class StoreOrderInfoResponse implements Serializable {
 
     @ApiModelProperty(value = "退款时间")
     private Date refundReasonTime;
+
+    @ApiModelProperty(value = "退款图片")
+    private String refundReasonWapImg;
+
+    @ApiModelProperty(value = "商家寄件单号图片")
+    private String shipmentPic;
+
+    @ApiModelProperty(value = "商家寄件订单任务id")
+    private String shipmentTaskId;
+
+    @ApiModelProperty(value = "商家寄件订单单号")
+    private String shipmentOrderId;
+
+    @ApiModelProperty(value = "商家寄件快递单号")
+    private String shipmentNum;
+
+    @ApiModelProperty(value = "订单类型")
+    private String orderTypeText;
 }

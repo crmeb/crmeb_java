@@ -6,7 +6,7 @@ import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.CategoryRequest;
 import com.zbkj.common.request.CategorySearchRequest;
 import com.zbkj.common.request.PageParamRequest;
-import com.zbkj.common.response.CommonResult;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.common.vo.CategoryTreeVo;
 import com.zbkj.service.service.CategoryService;
@@ -29,7 +29,7 @@ import java.util.List;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -49,18 +49,16 @@ public class CategoryController {
     private SystemAttachmentService systemAttachmentService;
 
     /**
-     * 分页显示分类表
+     * 显示分类表
      * @param request 搜索条件
-     * @param pageParamRequest 分页参数
      * @author Mr.Zhang
      * @since 2020-04-16
      */
     @PreAuthorize("hasAuthority('admin:category:list')")
-    @ApiOperation(value = "分页分类列表")
+    @ApiOperation(value = "分类列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<Category>>  getList(@ModelAttribute CategorySearchRequest request, @ModelAttribute PageParamRequest pageParamRequest) {
-        CommonPage<Category> categoryCommonPage = CommonPage.restPage(categoryService.getList(request, pageParamRequest));
-        return CommonResult.success(categoryCommonPage);
+    public CommonResult<List<Category>> getList(@ModelAttribute CategorySearchRequest request) {
+        return CommonResult.success(categoryService.getList(request));
     }
 
     /**

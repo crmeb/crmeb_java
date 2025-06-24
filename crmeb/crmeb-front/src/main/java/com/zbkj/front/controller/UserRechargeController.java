@@ -4,10 +4,10 @@ import com.zbkj.common.constants.Constants;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.UserRechargeRequest;
-import com.zbkj.common.response.CommonResult;
 import com.zbkj.common.response.OrderPayResultResponse;
 import com.zbkj.common.response.UserRechargeBillRecordResponse;
 import com.zbkj.common.response.UserRechargeFrontResponse;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.front.service.UserCenterService;
 import io.swagger.annotations.Api;
@@ -28,7 +28,7 @@ import java.util.Map;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -73,6 +73,16 @@ public class UserRechargeController {
     @ApiOperation(value = "公众号充值")
     @RequestMapping(value = "/wechat", method = RequestMethod.POST)
     public CommonResult<OrderPayResultResponse> weChatRecharge(HttpServletRequest httpServletRequest, @RequestBody @Validated UserRechargeRequest request) {
+        request.setClientIp(CrmebUtil.getClientIp(httpServletRequest));
+        return CommonResult.success(userCenterService.recharge(request));
+    }
+
+    /**
+     * App充值
+     */
+    @ApiOperation(value = "App充值")
+    @RequestMapping(value = "/wechat/app", method = RequestMethod.POST)
+    public CommonResult<OrderPayResultResponse> weChatAppRecharge(HttpServletRequest httpServletRequest, @RequestBody @Validated UserRechargeRequest request) {
         request.setClientIp(CrmebUtil.getClientIp(httpServletRequest));
         return CommonResult.success(userCenterService.recharge(request));
     }

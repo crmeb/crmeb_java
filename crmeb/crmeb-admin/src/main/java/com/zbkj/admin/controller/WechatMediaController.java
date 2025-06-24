@@ -1,6 +1,7 @@
 package com.zbkj.admin.controller;
 
-import com.zbkj.common.response.CommonResult;
+
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.service.service.WechatMediaService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

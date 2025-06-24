@@ -1,6 +1,7 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -41,7 +42,7 @@ import java.util.stream.Collectors;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -151,6 +152,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
         String visit = StrUtil.isNotBlank(article.getVisit()) ? article.getVisit() : "0";
         int num = Integer.parseInt(visit) + 1;
         article.setVisit(String.valueOf(num));
+        article.setUpdateTime(DateUtil.date());
         dao.updateById(article);
         return articleResponse;
     }
@@ -250,6 +252,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
         article.setId(id);
         article.setImageInput(systemAttachmentService.clearPrefix(article.getImageInput()));
         article.setContent(systemAttachmentService.clearPrefix(article.getContent()));
+        article.setUpdateTime(DateUtil.date());
         return updateById(article);
     }
 

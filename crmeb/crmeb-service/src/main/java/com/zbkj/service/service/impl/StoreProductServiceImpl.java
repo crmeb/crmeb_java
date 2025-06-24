@@ -6,27 +6,33 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.Feature;
+import com.alipay.api.domain.Product;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.constants.ProductConstants;
+import com.zbkj.common.enums.MethodType;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.category.Category;
 import com.zbkj.common.model.coupon.StoreCoupon;
 import com.zbkj.common.model.product.*;
+import com.zbkj.common.model.system.SystemAdmin;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.*;
 import com.zbkj.common.response.*;
+import com.zbkj.common.result.CommonResultCode;
+import com.zbkj.common.result.ProductResultCode;
 import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.vo.MyRecord;
-import com.github.pagehelper.Page;
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import com.zbkj.service.dao.StoreProductDao;
 import com.zbkj.service.delete.ProductUtils;
 import com.zbkj.service.service.*;
@@ -41,12 +47,13 @@ import org.springframework.transaction.support.TransactionTemplate;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -114,6 +121,9 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
     @Autowired
     private TransactionTemplate transactionTemplate;
 
+    @Autowired
+    private ActivityStyleService activityStyleService;
+
     private static final Logger logger = LoggerFactory.getLogger(StoreProductServiceImpl.class);
 
     /**
@@ -161,7 +171,6 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             default:
                 break;
         }
-
         //关键字搜索
         if (StrUtil.isNotBlank(request.getKeywords())) {
             lambdaQueryWrapper.and(i -> i
@@ -169,8 +178,30 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                     .or().like(StoreProduct::getStoreName, request.getKeywords())
                     .or().like(StoreProduct::getKeyword, request.getKeywords()));
         }
-        lambdaQueryWrapper.apply(StringUtils.isNotBlank(request.getCateId()), "FIND_IN_SET ('" + request.getCateId() + "', cate_id)");
-        lambdaQueryWrapper.orderByDesc(StoreProduct::getSort).orderByDesc(StoreProduct::getId);
+        if(StringUtils.isNotBlank(request.getCateId())){
+            List<Integer> cateIds = Arrays.stream(request.getCateId().split(",")).map(Integer::valueOf).distinct().collect(Collectors.toList());
+            lambdaQueryWrapper.in(StoreProduct::getCateId, cateIds);
+        }
+        // 新增销量排行和价格排行
+        if (StrUtil.isNotBlank(request.getSalesOrder())) {
+            if (request.getSalesOrder().equals(Constants.SORT_DESC)) {
+                lambdaQueryWrapper.last(" order by (sales + ficti) desc, sort desc, id desc");
+            } else {
+                lambdaQueryWrapper.last(" order by (sales + ficti) asc, sort asc, id asc");
+            }
+        } else {
+            if (StrUtil.isNotBlank(request.getPriceOrder())) {
+                if (request.getPriceOrder().equals(Constants.SORT_DESC)) {
+                    lambdaQueryWrapper.orderByDesc(StoreProduct::getPrice);
+                } else {
+                    lambdaQueryWrapper.orderByAsc(StoreProduct::getPrice);
+                }
+            }
+
+            lambdaQueryWrapper.orderByDesc(StoreProduct::getSort);
+            lambdaQueryWrapper.orderByDesc(StoreProduct::getId);
+        }
+//        lambdaQueryWrapper.orderByDesc(StoreProduct::getSort).orderByDesc(StoreProduct::getId);
 
         Page<StoreProduct> storeProductPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         List<StoreProduct> storeProducts = dao.selectList(lambdaQueryWrapper);
@@ -251,7 +282,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         StoreProduct storeProduct = new StoreProduct();
         BeanUtils.copyProperties(request, storeProduct);
         storeProduct.setId(null);
-        storeProduct.setAddTime(DateUtil.getNowTime());
+        storeProduct.setAddTime(CrmebDateUtil.getNowTime());
         storeProduct.setIsShow(false);
 
         // 设置Acticity活动
@@ -341,7 +372,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             if (CollUtil.isNotEmpty(request.getCouponIds())) {
                 List<StoreProductCoupon> couponList = new ArrayList<>();
                 for (Integer couponId : request.getCouponIds()) {
-                    StoreProductCoupon spc = new StoreProductCoupon(storeProduct.getId(), couponId, DateUtil.getNowTime());
+                    StoreProductCoupon spc = new StoreProductCoupon(storeProduct.getId(), couponId, CrmebDateUtil.getNowTime());
                     couponList.add(spc);
                 }
                 storeProductCouponService.saveBatch(couponList);
@@ -358,6 +389,9 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
      * @return sku
      */
     private String getSku(String attrValue) {
+        if (StrUtil.isEmpty(attrValue)) {
+            throw new CrmebException("商品属性值不能为空");
+        }
         LinkedHashMap<String, String> linkedHashMap = JSONObject.parseObject(attrValue, LinkedHashMap.class, Feature.OrderedField);
         Iterator<Map.Entry<String, String>> iterator = linkedHashMap.entrySet().iterator();
         List<String> strings = CollUtil.newArrayList();
@@ -528,7 +562,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                 storeProductCouponService.deleteByProductId(storeProduct.getId());
                 List<StoreProductCoupon> couponList = new ArrayList<>();
                 for (Integer couponId : storeProductRequest.getCouponIds()) {
-                    StoreProductCoupon spc = new StoreProductCoupon(storeProduct.getId(), couponId, DateUtil.getNowTime());
+                    StoreProductCoupon spc = new StoreProductCoupon(storeProduct.getId(), couponId, CrmebDateUtil.getNowTime());
                     couponList.add(spc);
                 }
                 storeProductCouponService.saveBatch(couponList);
@@ -638,6 +672,18 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
     }
 
     /**
+     * 通过ID获取商品列表
+     *
+     * @param proIdsList 商品ID列表
+     * @param label      admin-管理端，front-移动端
+     */
+    @Override
+    public List<StoreProduct> findByIds(List<Integer> proIdsList, String label) {
+        return findByIdsAndLabel(proIdsList, label);
+    }
+
+
+    /**
      * 商品详情（管理端）
      * @param id 商品id
      * @return StoreProductInfoResponse
@@ -688,7 +734,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
      */
     private List<String> getProductActivityList(String activityStr) {
         List<String> activityList = CollUtil.newArrayList();
-        if ("0, 1, 2, 3".equals(activityStr)) {
+        if (activityStr.equals("0, 1, 2, 3")) {
             activityList.add(Constants.PRODUCT_TYPE_NORMAL_STR);
             activityList.add(Constants.PRODUCT_TYPE_SECKILL_STR);
             activityList.add(Constants.PRODUCT_TYPE_BARGAIN_STR);
@@ -719,7 +765,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
      * @return List
      */
     @Override
-    public List<StoreProductTabsHeader> getTabsHeader() {
+    public List<StoreProductTabsHeader> getTabsHeader(StoreProductHeaderRequest request) {
         List<StoreProductTabsHeader> headers = new ArrayList<>();
         StoreProductTabsHeader header1 = new StoreProductTabsHeader(0,"出售中商品",1);
         StoreProductTabsHeader header2 = new StoreProductTabsHeader(0,"仓库中商品",2);
@@ -767,6 +813,18 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                 default:
                     break;
             }
+            //关键字搜索
+            if (StrUtil.isNotBlank(request.getKeywords())) {
+                lambdaQueryWrapper.and(i -> i
+                        .or().eq(StoreProduct::getId, request.getKeywords())
+                        .or().like(StoreProduct::getStoreName, request.getKeywords())
+                        .or().like(StoreProduct::getKeyword, request.getKeywords()));
+            }
+            //分类搜索
+            if(StringUtils.isNotBlank(request.getCateId())){
+                List<Integer> cateIds = Arrays.stream(request.getCateId().split(",")).map(Integer::valueOf).distinct().collect(Collectors.toList());
+                lambdaQueryWrapper.in(StoreProduct::getCateId, cateIds);
+            }
             List<StoreProduct> storeProducts = dao.selectList(lambdaQueryWrapper);
             h.setCount(storeProducts.size());
         }
@@ -802,56 +860,6 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                 redisUtil.lPush(redisKey, data);
             }
         }
-    }
-
-    /**
-     * 根据商品id取出二级分类
-     * @param productIdStr String 商品分类
-     * @return List<Integer>
-     */
-    @Override
-    public List<Integer> getSecondaryCategoryByProductId(String productIdStr) {
-        List<Integer> idList = new ArrayList<>();
-
-        if (StringUtils.isBlank(productIdStr)) {
-            return idList;
-        }
-        List<Integer> productIdList = CrmebUtil.stringToArray(productIdStr);
-        LambdaQueryWrapper<StoreProduct> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.in(StoreProduct::getId, productIdList);
-        List<StoreProduct> productList = dao.selectList(lambdaQueryWrapper);
-        if (productIdList.size() < 1) {
-            return idList;
-        }
-
-        //把所有的分类id写入集合
-        for (StoreProduct storeProduct : productList) {
-            List<Integer> categoryIdList = CrmebUtil.stringToArray(storeProduct.getCateId());
-            idList.addAll(categoryIdList);
-        }
-
-        //去重
-        List<Integer> cateIdList = idList.stream().distinct().collect(Collectors.toList());
-        if (cateIdList.size() < 1) {
-            return idList;
-        }
-
-        //取出所有的二级分类
-        List<Category> categoryList = categoryService.getByIds(cateIdList);
-        if (categoryList.size() < 1) {
-            return idList;
-        }
-
-        for (Category category: categoryList) {
-            List<Integer> parentIdList = CrmebUtil.stringToArrayByRegex(category.getPath(), "/");
-            if (parentIdList.size() > 2) {
-                Integer secondaryCategoryId = parentIdList.get(2);
-                if (secondaryCategoryId > 0) {
-                    idList.add(secondaryCategoryId);
-                }
-            }
-        }
-        return idList;
     }
 
     /**
@@ -948,12 +956,10 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
     @Override
     public Boolean reStoreProduct(Integer productId) {
         LambdaUpdateWrapper<StoreProduct> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper.set(StoreProduct::getIsRecycle, 0);
         lambdaUpdateWrapper.eq(StoreProduct::getId, productId);
-        lambdaUpdateWrapper.set(StoreProduct::getIsRecycle, false);
         return update(lambdaUpdateWrapper);
     }
-
-    ///////////////////////////////////////////自定义方法
 
     /**
      * 扣减库存任务操作
@@ -975,7 +981,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         }
 
         // 回滚商品库存/销量 并更新
-        boolean isPlus = "add".equals(storeProductStockRequest.getOperationType());
+        boolean isPlus = storeProductStockRequest.getOperationType().equals("add");
         int productStock = isPlus ? existProduct.getStock() + storeProductStockRequest.getNum() : existProduct.getStock() - storeProductStockRequest.getNum();
         existProduct.setStock(productStock);
         existProduct.setSales(existProduct.getSales() - storeProductStockRequest.getNum());
@@ -1003,7 +1009,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             throw new CrmebException("请先进行采集商品配置");
         }
         int copyNum = 0;
-        if ("1".equals(copyType)) {// 一号通
+        if (copyType.equals("1")) {// 一号通
             JSONObject info = onePassService.info();
             copyNum = Optional.ofNullable(info.getJSONObject("copy").getInteger("num")).orElse(0);
         }
@@ -1033,19 +1039,24 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
      * @param type 类型：add—添加，sub—扣减
      */
     @Override
-    public Boolean operationStock(Integer id, Integer num, String type) {
+    public Boolean operationStock(Integer id, Integer num, String type, Integer version) {
         UpdateWrapper<StoreProduct> updateWrapper = new UpdateWrapper<>();
-        if ("add".equals(type)) {
+        if (type.equals("quick_add")) {
+            updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
+        }
+        if (type.equals("add")) {
             updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
         }
-        if ("sub".equals(type)) {
+        if (type.equals("sub")) {
             updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
             updateWrapper.setSql(StrUtil.format("sales = sales + {}", num));
             // 扣减时加乐观锁保证库存不为负
             updateWrapper.last(StrUtil.format(" and (stock - {} >= 0)", num));
         }
+        updateWrapper.setSql("version = version + 1");
         updateWrapper.eq("id", id);
+//        updateWrapper.eq("version", version);
         boolean update = update(updateWrapper);
         if (!update) {
             throw new CrmebException("更新普通商品库存失败,商品id = " + id);
@@ -1121,7 +1132,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         LambdaQueryWrapper<StoreProduct> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.select(StoreProduct::getId, StoreProduct::getImage, StoreProduct::getStoreName,
-                StoreProduct::getPrice, StoreProduct::getOtPrice, StoreProduct::getActivity);
+                StoreProduct::getPrice, StoreProduct::getOtPrice, StoreProduct::getActivity, StoreProduct::getCateId);
         switch (type) {
             case Constants.INDEX_RECOMMEND_BANNER: //精品推荐
                 lambdaQueryWrapper.eq(StoreProduct::getIsBest, true);
@@ -1163,29 +1174,30 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         // id、名称、图片、价格、销量、活动
         lqw.select(StoreProduct::getId, StoreProduct::getStoreName, StoreProduct::getImage, StoreProduct::getPrice,
                 StoreProduct::getActivity, StoreProduct::getSales, StoreProduct::getFicti, StoreProduct::getUnitName,
-                StoreProduct::getFlatPattern, StoreProduct::getStock);
+                StoreProduct::getFlatPattern, StoreProduct::getStock, StoreProduct::getCateId);
 
         lqw.eq(StoreProduct::getIsRecycle, false);
         lqw.eq(StoreProduct::getIsDel, false);
         lqw.eq(StoreProduct::getMerId, false);
         lqw.gt(StoreProduct::getStock, 0);
         lqw.eq(StoreProduct::getIsShow, true);
-
-        if (ObjectUtil.isNotNull(request.getCid()) && request.getCid() > 0) {
+        if (ObjectUtil.isNotNull(request.getCid()) && !request.getCid().isEmpty()) {
+            List<Integer> cidList = Stream.of(request.getCid().split(",")).map(Integer::valueOf).collect(Collectors.toList());
             //查找当前类下的所有子类
-            List<Category> childVoListByPid = categoryService.getChildVoListByPid(request.getCid());
-            List<Integer> categoryIdList = childVoListByPid.stream().map(Category::getId).collect(Collectors.toList());
-            categoryIdList.add(request.getCid());
+            List<Category> childVoListByPids = categoryService.getByPIds(cidList);
+            List<Integer> categoryIdList = childVoListByPids.stream().map(Category::getId).collect(Collectors.toList());
+            categoryIdList.addAll(cidList);
             lqw.apply(CrmebUtil.getFindInSetSql("cate_id", (ArrayList<Integer>) categoryIdList));
         }
 
         if (StrUtil.isNotBlank(request.getKeyword())) {
-            if (CrmebUtil.isString2Num(request.getKeyword())) {
-                Integer productId = Integer.valueOf(request.getKeyword());
-                lqw.like(StoreProduct::getId, productId);
-            } else {
-                lqw.like(StoreProduct::getStoreName, request.getKeyword());
-            }
+//            if (CrmebUtil.isString2Num(request.getKeyword())) {
+//                Integer productId = Integer.valueOf(request.getKeyword());
+//                lqw.like(StoreProduct::getId, productId);
+//            } else {
+            lqw.and(i -> i.like(StoreProduct::getStoreName, request.getKeyword())
+                    .or().like(StoreProduct::getKeyword, request.getKeyword()));
+//            }
         }
 
         // 排序部分
@@ -1208,7 +1220,11 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             lqw.orderByDesc(StoreProduct::getId);
         }
         PageHelper.startPage(pageRequest.getPage(), pageRequest.getLimit());
-        return dao.selectList(lqw);
+        List<StoreProduct> storeProducts = dao.selectList(lqw);
+        storeProducts.forEach(storeProduct -> {
+            storeProduct.setSales(storeProduct.getSales() + storeProduct.getFicti());
+        });
+        return storeProducts;
     }
 
     /**
@@ -1221,7 +1237,8 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         LambdaQueryWrapper<StoreProduct> lqw = Wrappers.lambdaQuery();
         lqw.select(StoreProduct::getId, StoreProduct::getImage, StoreProduct::getStoreName, StoreProduct::getSliderImage,
                 StoreProduct::getOtPrice, StoreProduct::getStock, StoreProduct::getSales, StoreProduct::getPrice, StoreProduct::getActivity,
-                StoreProduct::getFicti, StoreProduct::getIsSub, StoreProduct::getStoreInfo, StoreProduct::getBrowse, StoreProduct::getUnitName);
+                StoreProduct::getFicti, StoreProduct::getIsSub, StoreProduct::getBrowse, StoreProduct::getUnitName,
+                StoreProduct::getBarCode, StoreProduct::getCateId);
         lqw.eq(StoreProduct::getId, id);
         lqw.eq(StoreProduct::getIsRecycle, false);
         lqw.eq(StoreProduct::getIsDel, false);
@@ -1351,10 +1368,157 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         if (count < 4) {
             return CollUtil.newArrayList();
         }
-        queryWrapper.select("id", "store_name", "image", "price", "ot_price", "(sales + ficti) as sales");
+        queryWrapper.select("id", "store_name", "image", "price", "ot_price", "(sales + ficti) as sales, cate_id");
         queryWrapper.orderByDesc("sales");
-        return dao.selectList(queryWrapper);
+        List<StoreProduct> storeProducts = dao.selectList(queryWrapper);
+        // 查询活动边框配置信息, 并赋值给商品response 重复添加的商品数据会根据数据添加持续覆盖后的为准
+        storeProducts = activityStyleService.makeActivityBorderStyle(storeProducts);
+        return  storeProducts;
     }
 
+    /**
+     * 是否有商品使用运费模板
+     * @return Boolean
+     */
+    @Override
+    public Boolean isUseShippingTemplateId(Integer templateId) {
+        LambdaQueryWrapper<StoreProduct> lqw = Wrappers.lambdaQuery();
+        lqw.eq(StoreProduct::getTempId, templateId);
+        lqw.eq(StoreProduct::getIsDel, false);
+        return dao.selectCount(lqw) > 0;
+    }
+
+    /**
+     * 获取商品所用的分类（包含父级分类）
+     * @param productIdList 商品ID列表
+     * @return 商品分类及所有父级分类ID
+     */
+    @Override
+    public List<Integer> getProductAllCategoryIdByProductIds(List<Integer> productIdList) {
+        List<Integer> idList = new ArrayList<>();
+
+        if (CollUtil.isEmpty(productIdList)) {
+            return idList;
+        }
+        LambdaQueryWrapper<StoreProduct> lqw = new LambdaQueryWrapper<>();
+        lqw.select(StoreProduct::getId, StoreProduct::getCateId);
+        lqw.in(StoreProduct::getId, productIdList);
+        List<StoreProduct> productList = dao.selectList(lqw);
+        if (CollUtil.isEmpty(productList)) {
+            return idList;
+        }
+        //把所有的分类id写入集合
+        for (StoreProduct storeProduct : productList) {
+            List<Integer> categoryIdList = CrmebUtil.stringToArray(storeProduct.getCateId());
+            idList.addAll(categoryIdList);
+        }
+
+        //去重
+        List<Integer> cateIdList = idList.stream().distinct().collect(Collectors.toList());
+
+        List<Category> categoryList = categoryService.getByIds(cateIdList);
+        if (CollUtil.isEmpty(categoryList)) {
+            return idList;
+        }
+
+        for (Category category: categoryList) {
+            List<Integer> parentIdList = CrmebUtil.stringToArrayByRegex(category.getPath(), "/");
+            if (CollUtil.isNotEmpty(parentIdList)) {
+                for (Integer parentId : parentIdList) {
+                    if (parentId > 0) {
+                        idList.add(parentId);
+                    }
+                }
+            }
+        }
+
+        return idList.stream().distinct().collect(Collectors.toList());
+    }
+
+    /**
+     * 快捷添加库存
+     *
+     * @param request 添加库存参数
+     * @return Boolean
+     */
+    @Override
+    public Boolean quickAddStock(ProductAddStockRequest request) {
+        StoreProduct storeProduct = dao.selectById(request.getId());
+        if (storeProduct == null) {
+            throw new CrmebException(ProductResultCode.PRODUCT_NOT_EXIST);
+        }
+        List<ProductAttrValueAddStockRequest> valueStockList = request.getAttrValueList();
+        List<Integer> attrIdList = valueStockList.stream().map(ProductAttrValueAddStockRequest::getId).distinct().collect(Collectors.toList());
+        if (attrIdList.size() != valueStockList.size()) {
+            throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "有重复的商品规格属性ID");
+        }
+        List<StoreProductAttrValue> valueList = storeProductAttrValueService.getByProductIdAndAttrIdList(request.getId(), attrIdList);
+        if (CollUtil.isEmpty(valueList) || valueList.size() != attrIdList.size()) {
+            throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "商品规格属性ID数组数据异常，请刷新后再试");
+        }
+        for (ProductAttrValueAddStockRequest value : valueStockList) {
+            for (StoreProductAttrValue attrValue : valueList) {
+                if (attrValue.getId().equals(value.getId())) {
+                    value.setVersion(attrValue.getVersion());
+                    break;
+                }
+            }
+        }
+        int totalStock = valueStockList.stream().mapToInt(ProductAttrValueAddStockRequest::getAddStock).sum();
+        return transactionTemplate.execute(e -> {
+            operationStock(storeProduct.getId(), totalStock, "quick_add",storeProduct.getVersion());
+            valueStockList.forEach(valueStock -> {
+                storeProductAttrValueService.operationStock(valueStock.getId(), valueStock.getAddStock(),
+                        "quick_add",valueStock.getVersion());
+            });
+            return Boolean.TRUE;
+        });
+
+    }
+
+
+
+    ///////////////////////////////////////////自定义方法
+
+    /**
+     * 通过ID获取商品列表
+     *
+     * @param proIdsList 商品ID列表
+     * @param label      admin-管理端，front-移动端
+     */
+    private List<StoreProduct> findByIdsAndLabel(List<Integer> proIdsList, String label) {
+        LambdaQueryWrapper<StoreProduct> lqw = Wrappers.lambdaQuery();
+        lqw.in(StoreProduct::getId, proIdsList);
+        if (label.equals("front")) {
+            getForSaleWhere(lqw);
+        }
+
+//拼接Sql
+        StringBuilder builder = new StringBuilder();
+        builder.append("order by field(id,");
+        int length = proIdsList.size();
+        for(int i= 0; i<length; i++) {
+            if (i == 0) {
+                builder.append(proIdsList.get(i));
+            } else {
+                builder.append(",")
+                        .append(proIdsList.get(i));
+            }
+            if (i == length - 1) {
+                builder.append(")");
+            }
+        }
+        lqw.last(builder.toString());
+        return dao.selectList(lqw);
+    }
+
+    /**
+     * 获取出售中商品的Where条件
+     */
+    private void getForSaleWhere(LambdaQueryWrapper<StoreProduct> lqw) {
+        lqw.eq(StoreProduct::getIsDel, false);
+        lqw.eq(StoreProduct::getIsRecycle, false);
+        lqw.eq(StoreProduct::getIsShow, true);
+    }
 }
 

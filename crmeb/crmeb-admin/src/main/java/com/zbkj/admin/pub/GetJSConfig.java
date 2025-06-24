@@ -1,6 +1,7 @@
 package com.zbkj.admin.pub;
 
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.result.CommonResult;
 import com.zbkj.service.service.SystemConfigService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -30,5 +31,17 @@ public class GetJSConfig {
     @RequestMapping(value = "/getcrmebchatconfig", method = RequestMethod.GET)
     public String set(){
         return systemConfigService.getValueByKey(Constants.JS_CONFIG_CRMEB_CHAT_TONGJI);
+    }
+
+    @ApiOperation(value = "获取移动端域名")
+    @RequestMapping(value = "/get/front/domain", method = RequestMethod.GET)
+    public CommonResult<String> getFrontDomain() {
+        return CommonResult.success(systemConfigService.getFrontDomain());
+    }
+
+    @ApiOperation(value = "获取平台当前的素材地址")
+    @RequestMapping(value = "/get/admin/mediadomain", method = RequestMethod.GET)
+    public CommonResult<String> getMediaDomain() {
+        return CommonResult.success(systemConfigService.getMediaDomain());
     }
 }
