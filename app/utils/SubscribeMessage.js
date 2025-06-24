@@ -1,4 +1,14 @@
-const arrTemp =  ["beforePay","afterPay","refundApply", "beforeRecharge", "createBargain","pink"];
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+
+const arrTemp =  ["beforePay","afterPay", "createBargain","pink"];
 
 // export function auth() {
 // 	let tmplIds = {};
@@ -34,27 +44,12 @@ export function openOrderSubscribe() {
 // 	return subscribe(tmplIds);
 // }
 
-/**
- * 订单退款
- */
-export function openOrderRefundSubscribe() {
-	let tmplIds = uni.getStorageSync('tempID' + arrTemp[2]);
-	return subscribe(tmplIds);
-}
-
-/**
- * 充值成功
- */
-export function openRechargeSubscribe() {
-	let tmplIds = uni.getStorageSync('tempID' + arrTemp[3]);
-	return subscribe(tmplIds);
-}
 
 /**
  * 砍价成功
  */
 export function openBargainSubscribe() {
-	let tmplIds = uni.getStorageSync('tempID' + arrTemp[4]);
+	let tmplIds = uni.getStorageSync('tempID' + arrTemp[2]);
 	return subscribe(tmplIds);
 }
 
@@ -63,7 +58,7 @@ export function openBargainSubscribe() {
  * 拼团成功
  */
 export function openPinkSubscribe() {
-	let tmplIds = uni.getStorageSync('tempID' + arrTemp[5]);
+	let tmplIds = uni.getStorageSync('tempID' + arrTemp[3]);
 	return subscribe(tmplIds);
 }
 // /**

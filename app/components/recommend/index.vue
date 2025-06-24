@@ -6,25 +6,44 @@
 			<text class='iconfont icon-zhuangshixian lefticon'></text>
 		</view>
 		<view class='recommendList acea-row row-between-wrapper'>
-			<view class='item' v-for="(item,index) in hostProduct" :key="index" hover-class='none' @tap="goDetail(item)">
+			<view class='item' v-for="(item,index) in tempArr" :key="index" hover-class='none'
+				@tap="goDetail(item)">
 				<view class='pictrue'>
 					<image :src='item.image'></image>
-					<span class="pictrue_log_big pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '1'">秒杀</span>
-					<span class="pictrue_log_big pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '2'">砍价</span>
-					<span class="pictrue_log_big pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '3'">拼团</span>
+					<view :style="{ backgroundImage: `url(${item.activityStyle})` }" class="border-picture"></view>
+					<span class="pictrue_log_big pictrue_log_class"
+						v-if="item.activityH5 && item.activityH5.type === '1'">秒杀</span>
+					<span class="pictrue_log_big pictrue_log_class"
+						v-if="item.activityH5 && item.activityH5.type === '2'">砍价</span>
+					<span class="pictrue_log_big pictrue_log_class"
+						v-if="item.activityH5 && item.activityH5.type === '3'">拼团</span>
 				</view>
 				<view class='name line1'>{{item.storeName}}</view>
-				<view class='money font-color'>￥<text class='num'>{{item.price}}</text></view>
+				<view class='money'>￥<text class='num'>{{item.price}}</text></view>
 			</view>
 		</view>
+	    <view class='loadingicon acea-row row-center-wrapper' :hidden='loading==false'>
+	    	<text class='loading iconfont icon-jiazai'></text>
+	    </view>
+	    <view class="mores-txt flex" v-if="goodScroll">
+	    	<text>我也是有底线的~</text>
+	    </view>
 	</view>
 </template>
 
 <script>
-	import {mapGetters} from "vuex";
-	import { goShopDetail } from '@/libs/order.js'
+	import {
+		mapGetters
+	} from "vuex";
+	import {
+		goShopDetail
+	} from '@/libs/order.js'
+	import animationType from '@/utils/animationType.js'
+	import {
+		getProductHot
+	} from '@/api/store.js';
 	export default {
-	computed: mapGetters(['uid']),
+		computed: mapGetters(['uid']),
 		props: {
 			hostProduct: {
 				type: Array,
@@ -33,17 +52,50 @@
 				}
 			}
 		},
+		mounted() {
+			this.params.page = 1;
+			this.goodScroll = false;
+			this.tempArr = [];
+			this.get_host_product();
+		},
 		data() {
 			return {
-
+				goodScroll: false,
+				params: { //精品推荐分页
+					page: 1,
+					limit: 10
+				},
+				loading: false,
+				tempArr: []
 			};
 		},
 
 		methods: {
-			goDetail(item){
-				goShopDetail(item,this.uid).then(res=>{
+			/**
+			 * 获取我的推荐
+			 */
+			get_host_product: function() {
+				if (this.goodScroll) return;
+				this.loading = true
+				getProductHot(
+					this.params.page,
+					this.params.limit
+				).then((res) => {
+					this.$set(this.params, 'page', this.params.page + 1);
+					this.goodScroll = this.params.page > res.data.totalPage;
+					this.tempArr = this.tempArr.concat(res.data.list || []);
+                    this.$emit('getRecommendLength', this.tempArr.length);
+					this.loading = false
+				}).catch(err => {
+					this.loading = false
+				});
+			},
+			goDetail(item) {
+				goShopDetail(item, this.uid).then(res => {
 					uni.navigateTo({
-						url:`/pages/goods_details/index?id=${item.id}`
+						animationType: animationType.type,
+						animationDuration: animationType.duration,
+						url: `/pages/goods/goods_details/index?id=${item.id}`
 					})
 				})
 			}
@@ -52,6 +104,19 @@
 </script>
 
 <style scoped lang="scss">
+	.mores-txt {
+		width: 100%;
+		align-items: center;
+		justify-content: center;
+		height: 70rpx;
+		color: #999;
+		font-size: 24rpx;
+	
+		.iconfont {
+			margin-top: 2rpx;
+			font-size: 20rpx;
+		}
+	}
 	.recommend {
 		background-color: #fff;
 	}
@@ -78,9 +143,6 @@
 
 	.recommend .recommendList {
 		padding: 0 30rpx;
-		/* #ifdef H5 */
-		padding-bottom: 50rpx;
-		/* #endif */
 	}
 
 	.recommend .recommendList .item {
@@ -106,10 +168,11 @@
 		margin-top: 20rpx;
 	}
 
-	.recommend .recommendList .item .money {
+	.money {
 		font-size: 20rpx;
 		margin-top: 8rpx;
 		font-weight: 600;
+		@include price_color(theme);
 	}
 
 	.recommend .recommendList .item .money .num {

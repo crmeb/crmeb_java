@@ -1,29 +1,30 @@
 <template>
   <div class="components-container">
-    <el-form ref="editPram" :model="editPram" label-width="100px">
+    <el-form ref="editPram" :model="editPram" label-width="90px">
       <el-form-item
-        label="数据组名称"
+        label="数据组名称："
         prop="name"
-        :rules="[{ required:true, message:'填写数据组名称', trigger:['blur','change'] }]"
+        :rules="[{ required: true, message: '填写数据组名称', trigger: ['blur', 'change'] }]"
       >
         <el-input v-model="editPram.name" placeholder="数据组名称" clearable />
       </el-form-item>
       <el-form-item
-        label="数据简介"
+        label="数据简介："
         prop="info"
-        :rules="[{ required:true, message:'填写数据简介', trigger:['blur','change'] }]"
+        :rules="[{ required: true, message: '填写数据简介', trigger: ['blur', 'change'] }]"
       >
         <el-input v-model="editPram.info" placeholder="数据简介" clearable />
       </el-form-item>
       <el-form-item
-        label="表单数据ID"
+        label="表单数据ID："
         prop="formId"
-        :rules="[{ required:true, message:'请选择表单数据', trigger:['change'] }]"
+        :rules="[{ required: true, message: '请选择表单数据', trigger: ['change'] }]"
       >
         <span>{{ editPram.formId }}</span>
         <el-button type="primary" @click="selectFormDialogConfig.visible = true">选择模板数据</el-button>
       </el-form-item>
-      <el-form-item>
+      <el-form-item class="dialog-footer-inner">
+        <el-button @click="closeDialog">取消</el-button>
         <el-button type="primary" class="btn-width100" @click="handlerSubmit('editPram')">确定</el-button>
       </el-form-item>
     </el-form>
@@ -31,25 +32,24 @@
       <form-config-list select-model @selectedRowData="handlerSelectedRowData" />
     </el-dialog>
   </div>
-
 </template>
 
 <script>
-import formConfigList from '@/views/maintain/formConfig'
-import * as systemGroupApi from '@/api/systemGroup'
-import {Debounce} from '@/utils/validate'
+import formConfigList from '@/views/maintain/formConfig';
+import * as systemGroupApi from '@/api/systemGroup';
+import { Debounce } from '@/utils/validate';
 export default {
   // name: "combinedDataEdit"
   components: { formConfigList },
   props: {
     isCreate: {
       type: Number,
-      default: 0
+      default: 0,
     },
     editData: {
       type: Object,
-      default: {}
-    }
+      default: {},
+    },
   },
   data() {
     return {
@@ -57,53 +57,59 @@ export default {
         formId: null,
         info: null,
         name: null,
-        id: null
+        id: null,
       },
       selectedFormConfigData: {},
       selectFormDialogConfig: {
-        visible: false
-      }
-    }
+        visible: false,
+      },
+    };
   },
   mounted() {
-    this.handlerInitEditData()
+    this.handlerInitEditData();
   },
   methods: {
+    closeDialog() {
+      this.$emit('closeDialog');
+    },
     handlerInitEditData() {
-      if (this.isCreate !== 1) return
-      const { id, name, info, formId, createTime, updateTime } = this.editData
-      this.editPram.id = id
-      this.editPram.name = name
-      this.editPram.info = info
-      this.editPram.formId = formId
+      if (this.isCreate !== 1) return;
+      const { id, name, info, formId, createTime, updateTime } = this.editData;
+      this.editPram.id = id;
+      this.editPram.name = name;
+      this.editPram.info = info;
+      this.editPram.formId = formId;
     },
     handlerSelectedRowData(rowData) {
-      this.selectedFormConfigData = rowData
-      this.editPram.formId = this.selectedFormConfigData.id
-      this.selectFormDialogConfig.visible = false
+      this.selectedFormConfigData = rowData;
+      this.editPram.formId = this.selectedFormConfigData.id;
+      this.selectFormDialogConfig.visible = false;
     },
-    handlerSubmit:Debounce(function(form) {
-      this.$refs[form].validate(result => {
-        if (!result) return
-        this.isCreate === 0 ? this.handlerSave(this.editPram) : this.handlerEdit(this.editPram)
-      })
+    handlerSubmit: Debounce(function (form) {
+      this.$refs[form].validate((result) => {
+        if (!result) return;
+        this.isCreate === 0 ? this.handlerSave(this.editPram) : this.handlerEdit(this.editPram);
+      });
     }),
     handlerSave(pram) {
-      systemGroupApi.groupSave(pram).then(data => {
-        this.$message.success('添加组合数据成功')
-        this.$emit('hideDialog')
-      })
+      systemGroupApi.groupSave(pram).then((data) => {
+        this.$message.success('添加组合数据成功');
+        this.$emit('hideDialog');
+      });
     },
     handlerEdit(pram) {
-      systemGroupApi.groupEdit(pram).then(data => {
-        this.$message.success('编辑组合数据成功')
-        this.$emit('hideDialog')
-      })
-    }
-  }
-}
+      systemGroupApi.groupEdit(pram).then((data) => {
+        this.$message.success('编辑组合数据成功');
+        this.$emit('hideDialog');
+      });
+    },
+  },
+};
 </script>
 
-<style scoped>
-
+<style lang="scss" scoped>
+::v-deep .el-dialog__body {
+  padding: 0;
+  height: 600px;
+}
 </style>

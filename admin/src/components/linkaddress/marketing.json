@@ -1,0 +1,92 @@
+{
+  "status": 200,
+  "msg": "ok",
+  "data": {
+    "list": [
+      {
+        "id": 22,
+        "cate_id": 6,
+        "type": 2,
+        "name": "砍价记录",
+        "url": "/pages/activity/bargain/index",
+        "param": " ",
+        "example": "/pages/activity/bargain/index",
+        "status": 1,
+        "sort": 0,
+        "add_time": 1626837579
+      },
+      {
+        "id": 25,
+        "cate_id": 6,
+        "type": 0,
+        "name": "我的优惠券",
+        "url": "/pages/users/user_coupon/index",
+        "param": " ",
+        "example": "/pages/users/user_coupon/index",
+        "status": 1,
+        "sort": 0,
+        "add_time": 1626837579
+      },
+      {
+        "id": 27,
+        "cate_id": 6,
+        "type": 4,
+        "name": "积分详情",
+        "url": "/pages/users/user_integral/index",
+        "param": " ",
+        "example": "/pages/users/user_integral/index",
+        "status": 1,
+        "sort": 0,
+        "add_time": 1626837579
+      },
+      {
+        "id": 31,
+        "cate_id": 6,
+        "type": 2,
+        "name": "砍价列表",
+        "url": "/pages/activity/goods_bargain/index",
+        "param": " ",
+        "example": "/pages/activity/goods_bargain/index",
+        "status": 1,
+        "sort": 0,
+        "add_time": 1626837579
+      },
+      {
+        "id": 32,
+        "cate_id": 6,
+        "type": 1,
+        "name": "秒杀列表",
+        "url": "/pages/activity/goods_seckill/index",
+        "param": " ",
+        "example": "/pages/activity/goods_seckill/index",
+        "status": 1,
+        "sort": 0,
+        "add_time": 1626837579
+      },
+      {
+        "id": 34,
+        "cate_id": 6,
+        "type": 3,
+        "name": "拼团列表",
+        "url": "/pages/activity/goods_combination/index",
+        "param": " ",
+        "example": "/pages/activity/goods_combination/index",
+        "status": 1,
+        "sort": 0,
+        "add_time": 1626837579
+      },
+      {
+        "id": 41,
+        "cate_id": 6,
+        "type": 0,
+        "name": "优惠券列表",
+        "url": "/pages/users/user_get_coupon/index",
+        "param": " ",
+        "example": "/pages/users/user_get_coupon/index",
+        "status": 1,
+        "sort": 0,
+        "add_time": 1626837579
+      }
+    ]
+  }
+}

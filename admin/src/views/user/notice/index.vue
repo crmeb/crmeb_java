@@ -1,15 +1,10 @@
 <template>
-  <div>
-    用户通知
-  </div>
+  <div>用户通知</div>
 </template>
 
 <script>
-export default {
-
-}
+export default {};
 </script>
 
-<style lang="sass" scoped>
-
-</style>>
+<style lang="sass" scoped></style>
+>

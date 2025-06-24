@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-drawer v-bind="$attrs" append-to-body v-on="$listeners" @opened="onOpen" @close="onClose">
-      <div class="action-bar" :style="{'text-align': 'left'}">
+      <div class="action-bar" :style="{ 'text-align': 'left' }">
         <span class="bar-btn" @click="refresh">
           <i class="el-icon-refresh" />
           刷新
@@ -25,15 +25,15 @@
 </template>
 
 <script>
-import { beautifierConf } from '../utils/index'
-import ClipboardJS from 'clipboard'
-import { saveAs } from 'file-saver'
-import loadMonaco from '../utils/loadMonaco'
-import loadBeautifier from '../utils/loadBeautifier'
+import { beautifierConf } from '../utils/index';
+import ClipboardJS from 'clipboard';
+import { saveAs } from 'file-saver';
+import loadMonaco from '../utils/loadMonaco';
+import loadBeautifier from '../utils/loadBeautifier';
 // import * as monaco from "monaco-editor";
 
-let beautifier
-let monaco
+let beautifier;
+let monaco;
 
 export default {
   components: {},
@@ -42,50 +42,50 @@ export default {
       type: String,
       required: true,
       beautifier: null,
-      jsonEditor: null
-    }
+      jsonEditor: null,
+    },
   },
   data() {
-    return {}
+    return {};
   },
   computed: {},
   watch: {},
   created() {},
   mounted() {
-    window.addEventListener('keydown', this.preventDefaultSave)
+    window.addEventListener('keydown', this.preventDefaultSave);
     const clipboard = new ClipboardJS('.copy-json-btn', {
-      text: trigger => {
+      text: (trigger) => {
         this.$notify({
           title: '成功',
           message: '代码已复制到剪切板，可粘贴。',
-          type: 'success'
-        })
-        return this.beautifierJson
-      }
-    })
-    clipboard.on('error', e => {
-      this.$message.error('代码复制失败')
-    })
+          type: 'success',
+        });
+        return this.beautifierJson;
+      },
+    });
+    clipboard.on('error', (e) => {
+      this.$message.error('代码复制失败');
+    });
   },
   beforeDestroy() {
-    window.removeEventListener('keydown', this.preventDefaultSave)
+    window.removeEventListener('keydown', this.preventDefaultSave);
   },
   methods: {
     preventDefaultSave(e) {
       if (e.key === 's' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
+        e.preventDefault();
       }
     },
     onOpen() {
-      loadBeautifier(btf => {
-        beautifier = btf
-        this.beautifierJson = beautifier.js(this.jsonStr, beautifierConf.js)
+      loadBeautifier((btf) => {
+        beautifier = btf;
+        this.beautifierJson = beautifier.js(this.jsonStr, beautifierConf.js);
 
-        loadMonaco(val => {
-          monaco = val
-          this.setEditorValue('editorJson', this.beautifierJson)
-        })
-      })
+        loadMonaco((val) => {
+          monaco = val;
+          this.setEditorValue('editorJson', this.beautifierJson);
+        });
+      });
       // monaco.editor.create(document.getElementById("editorJson"), {
       //   value: [
       //     "function x() {",
@@ -101,47 +101,47 @@ export default {
     onClose() {},
     setEditorValue(id, codeStr) {
       if (this.jsonEditor) {
-        this.jsonEditor.setValue(codeStr)
+        this.jsonEditor.setValue(codeStr);
       } else {
         this.jsonEditor = monaco.editor.create(document.getElementById(id), {
           value: codeStr,
           theme: 'vs-dark',
           language: 'json',
-          automaticLayout: true
-        })
+          automaticLayout: true,
+        });
         // ctrl + s 刷新
-        this.jsonEditor.onKeyDown(e => {
+        this.jsonEditor.onKeyDown((e) => {
           if (e.keyCode === 49 && (e.metaKey || e.ctrlKey)) {
-            this.refresh()
+            this.refresh();
           }
-        })
+        });
       }
     },
     exportJsonFile() {
       this.$prompt('文件名:', '导出文件', {
         inputValue: `${+new Date()}.json`,
         closeOnClickModal: false,
-        inputPlaceholder: '请输入文件名'
+        inputPlaceholder: '请输入文件名',
       }).then(({ value }) => {
-        if (!value) value = `${+new Date()}.json`
-        const codeStr = this.jsonEditor.getValue()
-        const blob = new Blob([codeStr], { type: 'text/plain;charset=utf-8' })
-        saveAs(blob, value)
-      })
+        if (!value) value = `${+new Date()}.json`;
+        const codeStr = this.jsonEditor.getValue();
+        const blob = new Blob([codeStr], { type: 'text/plain;charset=utf-8' });
+        saveAs(blob, value);
+      });
     },
     refresh() {
       try {
-        this.$emit('refresh', JSON.parse(this.jsonEditor.getValue()))
+        this.$emit('refresh', JSON.parse(this.jsonEditor.getValue()));
       } catch (error) {
         this.$notify({
           title: '错误',
           message: 'JSON格式错误，请检查',
-          type: 'error'
-        })
+          type: 'error',
+        });
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>
@@ -152,7 +152,7 @@ export default {
 }
 @include action-bar;
 
-.json-editor{
+.json-editor {
   height: calc(100vh - 33px);
 }
 </style>

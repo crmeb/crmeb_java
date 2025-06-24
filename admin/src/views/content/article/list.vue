@@ -1,55 +1,38 @@
 <template>
   <div class="divBox">
-    <el-card class="box-card">
+    <el-card :bordered="false" shadow="never" class="ivu-mt" :body-style="{ padding: 0 }">
+      <div class="padding-add">
+        <el-form inline size="small">
+          <el-form-item label="文章分类：">
+            <el-select
+              v-model="listPram.cid"
+              clearable
+              class="selWidth"
+              placeholder="请选择文章分类"
+              @change="handerSearch"
+            >
+              <el-option v-for="item in categoryTreeData" :key="item.id" :label="item.name" :value="item.id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="关键词：">
+            <el-input v-model="listPram.keywords" placeholder="请输入关键词" class="selWidth" size="small" clearable>
+            </el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handerSearch" size="small">搜索</el-button>
+            <el-button size="small" @click="handleReset">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+    </el-card>
+    <el-card class="box-card mt14">
       <div slot="header" class="clearfix">
-        <div class="container">
-          <el-form inline size="small">
-            <el-form-item label="文章分类：">
-              <el-select
-                v-model="listPram.cid"
-                clearable
-                class="selWidth"
-                placeholder="请选择文章分类"
-                @change="handerSearch"
-              >
-                <el-option
-                  v-for="item in categoryTreeData"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                >
-                </el-option>
-              </el-select>
-            </el-form-item>
-            <el-form-item label="关键词：">
-              <el-input
-                v-model="listPram.keywords"
-                placeholder="请输入关键词"
-                class="selWidth"
-                size="small"
-                clearable
-              >
-                <el-button
-                  slot="append"
-                  icon="el-icon-search"
-                  @click="handerSearch"
-                  size="small"
-                />
-              </el-input>
-            </el-form-item>
-          </el-form>
-        </div>
         <router-link :to="{ path: '/content/articleCreat' }">
-          <el-button size="small" type="primary" class="mr10" v-hasPermi="['admin:article:save']">添加文章</el-button>
+          <el-button type="primary" class="mr10" v-hasPermi="['admin:article:save']">添加文章</el-button>
         </router-link>
       </div>
-      <el-table
-        v-loading="listLoading"
-        :data="listData.list"
-        size="mini"
-        class="table"
-        highlight-current-row
-        :header-cell-style=" {fontWeight:'bold'}">
+      <el-table v-loading="listLoading" :data="listData.list" size="mini" class="table" highlight-current-row>
         <el-table-column prop="id" label="ID" min-width="50" />
         <el-table-column label="图片" min-width="80">
           <template slot-scope="scope">
@@ -74,32 +57,15 @@
           </template>
         </el-table-column>
         <el-table-column prop="author" label="作者" min-width="180" />
-        <el-table-column
-          prop="synopsis"
-          label="文章简介"
-          show-overflow-tooltip
-          min-width="250"
-        />
+        <el-table-column prop="synopsis" label="文章简介" show-overflow-tooltip min-width="250" />
         <el-table-column prop="updateTime" label="更新时间" min-width="180" />
-        <el-table-column
-          label="操作"
-          min-width="100"
-          fixed="right"
-          align="center"
-        >
+        <el-table-column label="操作" width="100" fixed="right">
           <template slot-scope="scope">
-            <router-link
-              :to="{ path: '/content/articleCreat/' + scope.row.id }"
-            >
-              <el-button size="small" type="text" class="mr10" v-hasPermi="['admin:article:info']">编辑</el-button>
+            <router-link :to="{ path: '/content/articleCreat/' + scope.row.id }">
+              <a v-hasPermi="['admin:article:info']">编辑</a>
             </router-link>
-            <el-button
-              type="text"
-              size="small"
-              @click="handlerDelete(scope.row)"
-              v-hasPermi="['admin:article:delete']"
-              >删除</el-button
-            >
+            <el-divider direction="vertical"></el-divider>
+            <a @click="handlerDelete(scope.row)" v-hasPermi="['admin:article:delete']">删除</a>
           </template>
         </el-table-column>
       </el-table>
@@ -110,6 +76,7 @@
         :total="listData.total"
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
+        background
       />
     </el-card>
     <el-dialog
@@ -133,10 +100,10 @@
 </template>
 
 <script>
-import * as articleApi from "@/api/article.js";
-import * as categoryApi from "@/api/categoryApi.js";
-import * as selfUtil from "@/utils/ZBKJIutil.js";
-import edit from "./edit";
+import * as articleApi from '@/api/article.js';
+import * as categoryApi from '@/api/categoryApi.js';
+import * as selfUtil from '@/utils/ZBKJIutil.js';
+import edit from './edit';
 export default {
   // name: "list",
   components: { edit },
@@ -158,10 +125,10 @@ export default {
       listLoading: true,
       categoryTreeData: [],
       categoryProps: {
-        value: "id",
-        label: "name",
-        children: "child",
-        expandTrigger: "hover",
+        value: 'id',
+        label: 'name',
+        children: 'child',
+        expandTrigger: 'hover',
         checkStrictly: true,
         emitPath: false,
       },
@@ -172,10 +139,16 @@ export default {
     this.handlerGetTreeList();
   },
   methods: {
+    //重置
+    handleReset() {
+      this.listPram.cid = null;
+      this.listPram.keywords = null;
+      this.handlerGetListData(this.listPram);
+    },
     handlerGetTreeList() {
-      categoryApi.listCategroy({ type: 3, status: "" }).then((data) => {
-        this.categoryTreeData = data.list;
-        localStorage.setItem("articleClass", JSON.stringify(data.list));
+      categoryApi.listCategroy({ type: 3, status: '' }).then((data) => {
+        this.categoryTreeData = data;
+        localStorage.setItem('adminArticleClassify', JSON.stringify(data));
       });
     },
     handerSearch() {
@@ -183,10 +156,10 @@ export default {
       this.handlerGetListData(this.listPram);
     },
     handlerGetListData(pram) {
-      this.listLoading = true
+      this.listLoading = true;
       articleApi.ListArticle(pram).then((data) => {
         this.listData = data;
-        this.listLoading = false
+        this.listLoading = false;
       });
     },
     handlerOpenEdit(isEdit, editData) {
@@ -210,9 +183,9 @@ export default {
       this.editDialogConfig.visible = false;
     },
     handlerDelete(rowData) {
-      this.$confirm("确定删除当前数据", "提示").then((result) => {
+      this.$modalSure('删除当前数据').then((result) => {
         articleApi.DelArticle(rowData).then((data) => {
-          this.$message.success("删除数据成功");
+          this.$message.success('删除数据成功');
           this.handlerGetListData(this.listPram);
         });
       });

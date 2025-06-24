@@ -4,11 +4,11 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1">
-        <title>CRMEB</title>
+        <title>加载中...</title>
         <meta name="Copyright" content="helang">
        <!-- <link rel="shortcut icon" type="image/png" href="/uniapp-extend/static/logo.png"> -->
-        <meta name="keywords" content="CRMEB">
-        <meta name="description" content="CRMEB">
+        <meta name="keywords" content="加载中...">
+        <meta name="description" content="加载中...">
         <style type="text/css">
             body{
                 margin: 0;
@@ -40,20 +40,19 @@
             window.isPC = true;
             window.onload = function(){
                 /* 监听电脑浏览器窗口尺寸改变 */
-				if(window.innerWidth <= 420){
+				if(window.innerWidth <= 430){
 					window.location.pathname = '/';
 				}
             }
         </script>
     </head>
     <body>
-       <!-- <iframe src="https://java.crmeb.net/"></iframe> -->
        <!--若你的项目未设置根目录（默认为 / 时），则使用下方代码-->
 		<iframe src="/" id="iframe"></iframe>
 		<script src="https://pv.sohu.com/cityjson?ie=utf-8"></script>
 		<script type="text/javascript">
-		      var Ip=returnCitySN['cip']
-		      localStorage.setItem('Ip', Ip)
+		      // var Ip=returnCitySN['cip']
+		      // localStorage.setItem('Ip', Ip)
 		</script>
     </body>
 </html>

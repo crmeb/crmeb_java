@@ -1,70 +1,74 @@
 <template>
-	<div>
-		<view class='flash-sale'>
-			<!-- #ifdef H5 -->
-			<view class='iconfont icon-xiangzuo' @tap='goBack' :style="'top:'+ (navH/2) +'rpx'" v-if="returnShow"></view>
-			<!-- #endif -->
-			<view class="saleBox"></view>
-			<view class="header" v-if="dataList.length">
-				<swiper indicator-dots="true" autoplay="true" :circular="circular" interval="3000" duration="1500"
-					indicator-color="rgba(255,255,255,0.6)" indicator-active-color="#fff">
-					<block v-for="(items,index) in dataList[active].slide" :key="index">
-						<swiper-item class="borRadius14">
-							<image :src="items.sattDir" class="slide-image borRadius14" lazy-load></image>
-						</swiper-item>
-					</block>
-				</swiper>
-
-			</view>
-			<view class="seckillList acea-row row-between-wrapper">
-				<view class="priceTag">
-					<image src="/static/images/priceTag.png"></image>
-				</view>
-				<view class='timeLsit'>
-					<scroll-view class="scroll-view_x" scroll-x scroll-with-animation :scroll-left="scrollLeft"
-						style="width:auto;overflow:hidden;">
-						<block v-for="(item,index) in dataList" :key='index'>
-							<view @tap='settimeList(item,index)' class='item' :class="active == index?'on':''">
-								<view class='time'>{{item.time.split(',')[0]}}</view>
-								<view class="state">{{item.statusName}}</view>
-							</view>
+	<view :data-theme="theme">
+		<skeleton :show="showSkeleton" :isNodes="isNodes" ref="skeleton" loading="chiaroscuro" selector="skeleton"
+			bgcolor="#FFF"></skeleton>
+		<view class="skeleton" :style="{visibility: showSkeleton ? 'hidden' : 'visible'}">
+			<view class="combinationBj"></view>
+			<view class='flash-sale'>
+				<!-- #ifdef H5 -->
+				<view class='iconfont icon-xiangzuo' @tap='goBack' :style="'top:'+ (navH/2) +'rpx'" v-if="returnShow"></view>
+				<!-- #endif -->
+				<view class="saleBox"></view>
+				<view class="header skeleton-rect" v-if="dataList.length">
+					<swiper indicator-dots="true" autoplay="true" :circular="circular" interval="3000" duration="1500"
+						indicator-color="rgba(255,255,255,0.6)" indicator-active-color="#fff">
+						<block v-for="(items,index) in dataList[active].slide" :key="index">
+							<swiper-item class="borRadius14">
+								<image :src="items.sattDir" class="slide-image borRadius14" lazy-load></image>
+							</swiper-item>
 						</block>
-					</scroll-view>
+					</swiper>
+			
+				</view>
+				<view class="seckillList acea-row row-between-wrapper">
+					<view class="priceTag skeleton-rect">
+						<image :src="urlDomain+'crmebimage/perset/staticImg/priceTag.png'"></image>
+					</view>
+					<view class='timeLsit'>
+						<scroll-view class="scroll-view_x" scroll-x scroll-with-animation :scroll-left="scrollLeft"
+							style="width:auto;overflow:hidden;">
+							<block v-for="(item,index) in dataList" :key='index'>
+								<view @tap='settimeList(item,index)' class='item' :class="active == index?'on':''">
+									<view class='time'>{{item.time.split(',')[0]}}</view>
+									<view class="state">{{item.statusName}}</view>
+								</view>
+							</block>
+						</scroll-view>
+					</view>
+				</view>
+				<view class='list pad30' v-if='seckillList.length>0'>
+					<block v-for="(item,index) in seckillList" :key='index'>
+						<view class='item acea-row row-between-wrapper' @tap='goDetails(item)'>
+							<view class='pictrue skeleton-rect'>
+								<image :src='item.image'></image>
+							</view>
+							<view class='text acea-row row-column-around'>
+								<view class='name line1 skeleton-rect'>{{item.title}}</view>
+								<view class='money skeleton-rect'><text class="font_color">￥</text>
+									<text class='num font_color'>{{item.price}}</text>
+									<text class="y_money">￥{{item.otPrice}}</text>
+								</view>
+								<view class="limit skeleton-rect">限量 <text class="limitPrice">{{item.quota}} {{item.unitName}}</text>
+								</view>
+								<view class="progress skeleton-rect">
+									<view class='bg-reds' :style="'width:'+item.percent+'%;'"></view>
+									<view class='piece'>已抢{{item.percent}}%</view>
+								</view>
+							</view>
+							<view class='grab bg_color' v-if="status == 2">马上抢</view>
+							<view class='grab bg_color' v-else-if="status == 1">未开始</view>
+							<view class='grab bg-color-hui' v-else>已结束</view>
+						</view>
+					</block>
 				</view>
 			</view>
-			<view class='list pad30' v-if='seckillList.length>0'>
-				<block v-for="(item,index) in seckillList" :key='index'>
-					<view class='item acea-row row-between-wrapper' @tap='goDetails(item)'>
-						<view class='pictrue'>
-							<image :src='item.image'></image>
-						</view>
-						<view class='text acea-row row-column-around'>
-							<view class='name line1'>{{item.title}}</view>
-							<view class='money'><text class="font-color">￥</text>
-								<text class='num font-color'>{{item.price}}</text>
-								<text class="y_money">￥{{item.otPrice}}</text>
-							</view>
-							<view class="limit">限量 <text class="limitPrice">{{item.quota}} {{item.unitName}}</text>
-							</view>
-							<view class="progress">
-								<view class='bg-reds' :style="'width:'+item.percent+'%;'"></view>
-								<view class='piece'>已抢{{item.percent}}%</view>
-							</view>
-						</view>
-						<view class='grab bg-color' v-if="status == 2">马上抢</view>
-						<view class='grab bg-color' v-else-if="status == 1">未开始</view>
-						<view class='grab bg-color-hui' v-else>已结束</view>
-					</view>
-				</block>
+			<view class='noCommodity' v-if="seckillList.length == 0 && (page != 1 || active== 0)">
+				<view class='pictrue'>
+					<image :src="urlDomain+'crmebimage/perset/staticImg/noShopper.png'"></image>
+				</view>
 			</view>
-		</view>
-		<view class='noCommodity' v-if="seckillList.length == 0 && (page != 1 || active== 0)">
-			<view class='pictrue'>
-				<image src='../../../static/images/noShopper.png'></image>
-			</view>
-		</view>
-		<home></home>
-	</div>
+		</view>	
+	</view>
 </template>
 
 <script>
@@ -72,14 +76,14 @@
 		getSeckillHeaderApi,
 		getSeckillList
 	} from '../../../api/activity.js';
-	import home from '@/components/home/index.vue';
+	import animationType from '@/utils/animationType.js'
 	let app = getApp();
 	export default {
-		components: {
-			home
-		},
 		data() {
 			return {
+				urlDomain: this.$Cache.get("imgHost"),
+				showSkeleton: true, //骨架屏显示隐藏
+				isNodes: 0, //控制什么时候开始抓取元素节点,只要数值改变就重新抓取
 				circular: true,
 				autoplay: true,
 				interval: 500,
@@ -94,16 +98,21 @@
 				countDownMinute: "00",
 				countDownSecond: "00",
 				page: 1,
-				limit: 4,
+				limit: 10,
 				loading: false,
 				loadend: false,
 				pageloading: false,
 				dataList: [],
 				returnShow: true,
-				navH: ''
+				navH: '',
+				theme:app.globalData.theme
 			}
 		},
 		onLoad() {
+			let that = this;
+			setTimeout(() => {
+				this.isNodes++;
+			}, 500);
 			var pages = getCurrentPages();
 			this.returnShow = pages.length===1?false:true;
 			// #ifdef H5
@@ -117,13 +126,22 @@
 			},
 			getSeckillConfig: function() {
 				let that = this;
+				//if(that.showSkeleton) that.dataList = [{slide:''}]
+				that.seckillList = [{image:'',otPrice:'',percent:'',price:'',title:''}];
 				getSeckillHeaderApi().then(res => {
+					if(res.data == ''){
+						this.$util.Tips({
+							title: '暂无秒杀活动'
+						}, {
+							url: '/pages/index/index'
+						});
+						return;
+					}
+					that.seckillList = [];
 					res.data.map(item => {
 						item.slide = JSON.parse(item.slide)
 					})
 					that.dataList = res.data;
-					that.getSeckillList();
-					that.seckillList = [];
 					that.page = 1;
 					that.status = that.dataList[that.active].status;
 					that.getSeckillList();
@@ -138,48 +156,76 @@
 				};
 				if (that.loadend) return;
 				if (that.pageloading) return;
-				this.pageloading = true
+				that.pageloading = true
 				getSeckillList(that.dataList[that.active].id, data).then(res => {
+					// that.seckillList = [];
 					var seckillList = res.data.list;
 					var loadend = seckillList.length < that.limit;
+					that.seckillList = that.seckillList.concat(seckillList);
 					that.page++;
-					that.seckillList = that.seckillList.concat(seckillList),
-						that.page = that.page;
+					that.page = that.page;
 					that.pageloading = false;
 					that.loadend = loadend;
+					// #ifdef H5
+					that.setShare();
+					// #endif
+					setTimeout(() => {
+						that.showSkeleton = false
+					}, 1000)
 				}).catch(err => {
 					that.pageloading = false
 				});
 			},
 			settimeList: function(item, index) {
-				var that = this;
-				this.active = index
-				if (that.interval) {
-					clearInterval(that.interval);
-					that.interval = null
+				if(index !== this.active){
+					var that = this;
+					this.active = index
+					if (that.interval) {
+						clearInterval(that.interval);
+						that.interval = null
+					}
+					that.interval = 0,
+						that.countDownHour = "00";
+					that.countDownMinute = "00";
+					that.countDownSecond = "00";
+					that.status = that.dataList[that.active].status;
+					that.loadend = false;
+					that.page = 1;
+					that.seckillList = [];
+					// wxh.time(e.currentTarget.dataset.stop, that);
+					that.getSeckillList();
 				}
-				that.interval = 0,
-					that.countDownHour = "00";
-				that.countDownMinute = "00";
-				that.countDownSecond = "00";
-				that.status = that.dataList[that.active].status;
-				that.loadend = false;
-				that.page = 1;
-				that.seckillList = [];
-				// wxh.time(e.currentTarget.dataset.stop, that);
-				that.getSeckillList();
 			},
 			goDetails(item) {
 				uni.navigateTo({
+					animationType: animationType.type,					animationDuration: animationType.duration,
 					url: '/pages/activity/goods_seckill_details/index?id=' + item.id
 				})
-			}
+			},
+			setShare: function() {
+				this.$wechat.isWeixin() &&
+					this.$wechat.wechatEvevt([
+						"updateAppMessageShareData",
+						"updateTimelineShareData",
+						"onMenuShareAppMessage",
+						"onMenuShareTimeline"
+					], {
+						desc: this.seckillList[0].title,
+						title: this.seckillList[0].title,
+						link: location.href,
+						imgUrl:this.seckillList[0].image 
+					}).then(res => {
+					}).catch(err => {
+						console.log(err);
+					});
+			},
 		},
 		/**
 		 * 页面上拉触底事件的处理函数
 		 */
 		onReachBottom: function() {
-			this.getSeckillList();
+			var that = this;
+			that.getSeckillList();
 		}
 	}
 </script>
@@ -258,7 +304,7 @@
 	}
 
 	.flash-sale .timeLsit .item.on .time {
-		color: $theme-color;
+		@include main_color(theme);
 	}
 
 	.flash-sale .timeLsit .item.on .state {
@@ -266,8 +312,7 @@
 		line-height: 30rpx;
 		border-radius: 15rpx;
 		width: 128rpx;
-		/* padding: 0 12rpx; */
-		background: linear-gradient(90deg, rgba(252, 25, 75, 1) 0%, rgba(252, 60, 32, 1) 100%);
+		@include main_bg_color(theme);
 		color: #fff;
 	}
 
@@ -329,7 +374,7 @@
 
 	.flash-sale .list .item .text .money {
 		font-size: 30rpx;
-		color: $theme-color;
+		@include price_color(theme);
 	}
 
 	.flash-sale .list .item .text .money .num {
@@ -368,7 +413,7 @@
 		width: 0;
 		height: 100%;
 		transition: width 0.6s ease;
-		background: linear-gradient(90deg, rgba(233, 51, 35, 1) 0%, rgba(255, 137, 51, 1) 100%);
+		@include second-gradient(theme);
 	}
 
 	.flash-sale .list .item .text .progress .piece {
@@ -393,14 +438,16 @@
 		bottom: 30rpx;
 		background: #bbbbbb;
 	}
-
+	.bg_color{
+		@include main_bg_color(theme);
+	}
 	.flash-sale .saleBox {
 		width: 100%;
 		height: 298rpx;
 		/* #ifdef MP */
 		height: 300rpx;
 		/* #endif */
-		background: rgba(233, 51, 35, 1);
+		@include main_bg_color(theme);
 		border-radius: 0 0 50rpx 50rpx;
 	}
 </style>

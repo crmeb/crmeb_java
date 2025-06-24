@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -16,9 +16,9 @@
 export function paidFilter(status) {
   const statusMap = {
     true: '已支付',
-    false: '未支付'
-  }
-  return statusMap[status]
+    false: '未支付',
+  };
+  return statusMap[status];
 }
 
 /**
@@ -27,14 +27,14 @@ export function paidFilter(status) {
  */
 export function orderStatusFilter(status) {
   const statusMap = {
-    '0': '待发货',
-    '1': '待收货',
-    '2': '待评价',
-    '3': '已完成',
+    0: '待发货',
+    1: '待收货',
+    2: '已收货',
+    3: '待评价',
     '-2': '已退款',
-    '-1': '退款中'
-  }
-  return statusMap[status]
+    '-1': '退款中',
+  };
+  return statusMap[status];
 }
 
 /**
@@ -43,10 +43,33 @@ export function orderStatusFilter(status) {
  */
 export function refundStatusFilter(status) {
   const statusMap = {
-    '0': '未退款',
-    '1': '申请中',
-    '2': '已退款',
-    '3': '退款中'
-  }
-  return statusMap[status]
+    0: '未退款',
+    1: '申请中',
+    2: '已退款',
+    3: '退款中',
+  };
+  return statusMap[status];
+}
+
+/**
+ * @description 支付方式
+ */
+export function payTypeFilter(status) {
+  const statusMap = {
+    weixin: '微信',
+    alipay: '支付宝',
+    yue: '余额',
+  };
+  return statusMap[status] || '-';
+}
+
+/**
+ * @description 订单类型
+ */
+export function orderTypeFilter(status) {
+  const statusMap = {
+    1: '普通订单',
+    2: '核销订单',
+  };
+  return statusMap[status];
 }

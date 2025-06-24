@@ -1,63 +1,63 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2021 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import request from '@/utils/request'
+import request from '@/utils/request';
 
 /**
  * 新增
- * @param 
+ * @param
  */
 export function addRole(pram) {
   const data = {
     level: pram.level,
     roleName: pram.roleName,
     status: pram.status,
-    rules: pram.rules
-  }
+    rules: pram.rules,
+  };
   // data.rules = pram.rules.join(',')
   return request({
     url: '/admin/system/role/save',
     method: 'POST',
-    data: data
-  })
+    data: data,
+  });
 }
 
 /**
  * 删除
- * @param 
+ * @param
  */
 export function delRole(pram) {
   const data = {
-    id: pram.id
-  }
+    id: pram.id,
+  };
   return request({
     url: '/admin/system/role/delete',
     method: 'GET',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
  * 详情
- * @param 
+ * @param
  */
 export function getInfo(pram) {
   return request({
     url: `/admin/system/role/info/${pram}`,
     method: 'GET',
-  })
+  });
 }
 
 /**
  * 分页列表
- * @param 
+ * @param
  */
 export function getRoleList(pram) {
   const data = {
@@ -68,53 +68,53 @@ export function getRoleList(pram) {
     limit: pram.limit,
     roleName: pram.roleName,
     rules: pram.rules,
-    status: pram.status
-  }
+    status: pram.status,
+  };
   return request({
     url: '/admin/system/role/list',
     method: 'get',
-    params: data
-  })
+    params: data,
+  });
 }
 
 /**
  * 修改
- * @param 
+ * @param
  */
 export function updateRole(pram) {
   const data = {
     id: pram.id,
     roleName: pram.roleName,
     rules: pram.rules,
-    status: pram.status
-  }
+    status: pram.status,
+  };
   return request({
     url: '/admin/system/role/update',
     method: 'post',
-    params: {id: pram.id},
-    data: data
-  })
+    params: { id: pram.id },
+    data: data,
+  });
 }
 
 /**
  * 修改身份状态
- * @param 
+ * @param
  */
 export function updateRoleStatus(pram) {
   return request({
     url: '/admin/system/role/updateStatus',
     method: 'get',
-    params: {id: pram.id,status:pram.status},
-  })
+    params: { id: pram.id, status: pram.status },
+  });
 }
 
 /**
  * 缓存菜单
- * @param 
+ * @param
  */
- export function menuCacheList(pram) {
+export function menuCacheList(pram) {
   return request({
     url: '/admin/system/menu/cache/tree',
     method: 'get',
-  })
+  });
 }

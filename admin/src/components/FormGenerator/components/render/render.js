@@ -1,24 +1,28 @@
 function vModel(self, dataObject, defaultValue) {
-  dataObject.props.value = defaultValue
-
-  dataObject.on.input = val => {
-    self.$emit('input', val)
-  }
+  dataObject.props.value = defaultValue;
+  dataObject.on.input = (val) => {
+    // 2024 12 05 添加所有的input 不得全部为空格
+    let trimmedVal = val
+    if(typeof(val) == 'string'){
+      trimmedVal = String(val).trim();
+    }
+    self.$emit('input', trimmedVal);
+  };
 }
 
-const componentChild = {}
+const componentChild = {};
 /**
  * 将./slots中的文件挂载到对象componentChild上
  * 文件名为key，对应JSON配置中的__config__.tag
  * 文件内容为value，解析JSON配置中的__slot__
  */
-const slotsFiles = require.context('./slots', true, /\.js$/)
-const keys = slotsFiles.keys() || []
-keys.forEach(key => {
-  const tag = key.replace(/^\.\/(.*)\.\w+$/, '$1')
-  const value = slotsFiles(key).default
-  componentChild[tag] = value
-})
+const slotsFiles = require.context('./slots', true, /\.js$/);
+const keys = slotsFiles.keys() || [];
+keys.forEach((key) => {
+  const tag = key.replace(/^\.\/(.*)\.\w+$/, '$1');
+  const value = slotsFiles(key).default;
+  componentChild[tag] = value;
+});
 
 export default {
   render(h) {
@@ -26,34 +30,34 @@ export default {
       attrs: {},
       props: {},
       on: {},
-      style: {}
-    }
-    const confClone = JSON.parse(JSON.stringify(this.conf))
-    const children = []
+      style: {},
+    };
+    const confClone = JSON.parse(JSON.stringify(this.conf));
+    const children = [];
 
-    const childObjs = componentChild[confClone.__config__.tag]
+    const childObjs = componentChild[confClone.__config__.tag];
     if (childObjs) {
-      Object.keys(childObjs).forEach(key => {
-        const childFunc = childObjs[key]
+      Object.keys(childObjs).forEach((key) => {
+        const childFunc = childObjs[key];
         if (confClone.__slot__ && confClone.__slot__[key]) {
-          children.push(childFunc(h, confClone, key))
+          children.push(childFunc(h, confClone, key));
         }
-      })
+      });
     }
 
-    Object.keys(confClone).forEach(key => {
-      const val = confClone[key]
+    Object.keys(confClone).forEach((key) => {
+      const val = confClone[key];
       if (key === '__vModel__') {
-        vModel(this, dataObject, confClone.__config__.defaultValue)
+        vModel(this, dataObject, confClone.__config__.defaultValue);
       } else if (dataObject[key]) {
-        dataObject[key] = { ...dataObject[key], ...val }
+        dataObject[key] = { ...dataObject[key], ...val };
       } else {
-        dataObject.attrs[key] = val
+        dataObject.attrs[key] = val;
       }
-    })
-    delete dataObject.attrs.__config__
-    delete dataObject.attrs.__slot__
-    return h(this.conf.__config__.tag, dataObject, children)
+    });
+    delete dataObject.attrs.__config__;
+    delete dataObject.attrs.__slot__;
+    return h(this.conf.__config__.tag, dataObject, children);
   },
-  props: ['conf']
-}
+  props: ['conf'],
+};

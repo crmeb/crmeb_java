@@ -8,6 +8,14 @@
       append-to-body
       :before-close="handleClose"
     >
+      <el-button
+        class="selfDialogClose"
+        type="text"
+        icon="el-icon-close"
+        circle
+        @click="handleClose"
+        size="medium"
+      ></el-button>
       <upload-index v-if="visible" :isMore="isMore" :modelName="modelName" @getImage="getImage" />
     </el-dialog>
   </div>
@@ -21,12 +29,12 @@ export default {
   data() {
     return {
       visible: false,
-      callback: function() {},
+      callback: function () {},
       isMore: '',
       modelName: '',
       ISmodal: false,
-      booleanVal: false
-    }
+      booleanVal: false,
+    };
   },
   watch: {
     // show() {
@@ -35,16 +43,29 @@ export default {
   },
   methods: {
     handleClose() {
-      this.visible = false
+      this.visible = false;
     },
     getImage(img) {
-      this.callback(img)
-      this.visible = false
-    }
-  }
-}
+      this.callback(img);
+      this.visible = false;
+    },
+  },
+};
 </script>
 
-<style scoped>
-
+<style lang="scss" scoped>
+/* 统一组件中的特殊组件 */
+::v-deep .el-dialog__header {
+  display: none !important;
+}
+.selfDialogClose {
+  display: inline-block;
+  position: absolute;
+  right: 0;
+  top: 3px;
+  pointer-events: auto;
+  z-index: 999;
+  font-size: 16px;
+  color: #363f4d;
+}
 </style>

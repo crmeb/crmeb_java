@@ -1,0 +1,63 @@
+.devise_head {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 66px;
+  padding: 0 20px;
+  z-index: 999;
+  background: linear-gradient(90deg, #0550ff 0%, #009dff 100%);
+  color: #fff;
+  .row-baseline {
+    align-items: baseline;
+  }
+  .back {
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .v_line {
+    display: inline-block;
+    width: 1px;
+    height: 16px;
+    background: #eee;
+    opacity: 0.5;
+    margin: 0 16px;
+  }
+  .title {
+    font-size: 16px;
+    font-weight: bold;
+  }
+  .edit {
+    display: inline-block;
+    font-size: 12px;
+    margin-left: 10px;
+    cursor: pointer;
+  }
+  .ht_btn {
+    width: 74px;
+    height: 32px;
+    line-height: 30px;
+    display: inline-block;
+    white-space: nowrap;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid #fff;
+    color: #fff;
+    text-align: center;
+    box-sizing: border-box;
+    outline: none;
+    font-size: 12px;
+    border-radius: 4px;
+    .iconfont {
+      color: #fff;
+      font-size: 14px;
+      margin-left: -4px;
+    }
+  }
+  .mx_12 {
+    margin: 0 12px;
+  }
+}
+::v-deep .el-icon-error {
+  color: #ccc !important;
+}
