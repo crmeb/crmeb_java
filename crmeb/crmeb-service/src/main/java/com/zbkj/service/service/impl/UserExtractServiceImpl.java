@@ -2,30 +2,31 @@ package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.request.PageParamRequest;
-import com.zbkj.common.constants.BrokerageRecordConstants;
-import com.zbkj.common.constants.Constants;
-import com.zbkj.common.exception.CrmebException;
-import com.zbkj.common.response.UserExtractRecordResponse;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.zbkj.common.utils.DateUtil;
-import com.zbkj.common.vo.dateLimitUtilVo;
+import com.zbkj.common.constants.BrokerageRecordConstants;
+import com.zbkj.common.constants.Constants;
+import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.finance.UserExtract;
+import com.zbkj.common.model.user.User;
+import com.zbkj.common.model.user.UserBrokerageRecord;
+import com.zbkj.common.page.CommonPage;
+import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.UserExtractRequest;
 import com.zbkj.common.request.UserExtractSearchRequest;
 import com.zbkj.common.response.BalanceResponse;
+import com.zbkj.common.response.UserExtractRecordResponse;
 import com.zbkj.common.response.UserExtractResponse;
-import com.zbkj.common.model.user.User;
-import com.zbkj.common.model.user.UserBrokerageRecord;
+import com.zbkj.common.utils.CrmebDateUtil;
+import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.service.dao.UserExtractDao;
 import com.zbkj.service.service.*;
 import org.apache.commons.lang3.StringUtils;
@@ -45,17 +46,17 @@ import java.util.stream.Collectors;
 import static java.math.BigDecimal.ZERO;
 
 /**
-*  UserExtractServiceImpl 接口实现
-*  +----------------------------------------------------------------------
- *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
- *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
- *  +----------------------------------------------------------------------
- *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
- *  +----------------------------------------------------------------------
- *  | Author: CRMEB Team <admin@crmeb.com>
- *  +----------------------------------------------------------------------
-*/
+ * UserExtractServiceImpl 接口实现
+ * +----------------------------------------------------------------------
+ * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+ * +----------------------------------------------------------------------
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * +----------------------------------------------------------------------
+ * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+ * +----------------------------------------------------------------------
+ * | Author: CRMEB Team <admin@crmeb.com>
+ * +----------------------------------------------------------------------
+ */
 @Service
 public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtract> implements UserExtractService {
 
@@ -79,13 +80,14 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
 
     /**
-    * 列表
-    * @param request 请求参数
-    * @param pageParamRequest 分页类参数
-    * @author Mr.Zhang
-    * @since 2020-05-11
-    * @return List<UserExtract>
-    */
+     * 列表
+     *
+     * @param request          请求参数
+     * @param pageParamRequest 分页类参数
+     * @return List<UserExtract>
+     * @author Mr.Zhang
+     * @since 2020-05-11
+     */
     @Override
     public List<UserExtract> getList(UserExtractSearchRequest request, PageParamRequest pageParamRequest) {
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
@@ -95,11 +97,11 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
         if (!StringUtils.isBlank(request.getKeywords())) {
             lambdaQueryWrapper.and(i -> i.
                     or().like(UserExtract::getWechat, request.getKeywords()).   //微信号
-                    or().like(UserExtract::getRealName, request.getKeywords()). //名称
-                    or().like(UserExtract::getBankCode, request.getKeywords()). //银行卡
-                    or().like(UserExtract::getBankAddress, request.getKeywords()). //开户行
-                    or().like(UserExtract::getAlipayCode, request.getKeywords()). //支付宝
-                    or().like(UserExtract::getFailMsg, request.getKeywords()) //失败原因
+                            or().like(UserExtract::getRealName, request.getKeywords()). //名称
+                            or().like(UserExtract::getBankCode, request.getKeywords()). //银行卡
+                            or().like(UserExtract::getBankAddress, request.getKeywords()). //开户行
+                            or().like(UserExtract::getAlipayCode, request.getKeywords()). //支付宝
+                            or().like(UserExtract::getFailMsg, request.getKeywords()) //失败原因
             );
         }
 
@@ -115,7 +117,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
         //时间范围
         if (StringUtils.isNotBlank(request.getDateLimit())) {
-            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
             lambdaQueryWrapper.between(UserExtract::getCreateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
         }
 
@@ -126,10 +128,12 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
         if (CollUtil.isEmpty(extractList)) {
             return extractList;
         }
-        List<Integer> uidList = extractList.stream().map(o -> o.getUid()).distinct().collect(Collectors.toList());
+        List<Integer> uidList = extractList.stream().map(UserExtract::getUid).distinct().collect(Collectors.toList());
         HashMap<Integer, User> userMap = userService.getMapListInUid(uidList);
         for (UserExtract userExtract : extractList) {
-            userExtract.setNickName(Optional.ofNullable(userMap.get(userExtract.getUid()).getNickname()).orElse(""));
+            User user = userMap.get(userExtract.getUid());
+            String nickName = user != null ? Optional.ofNullable(user.getNickname()).orElse("") : "";
+            userExtract.setNickName(nickName);
         }
         return extractList;
     }
@@ -149,7 +153,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
         String startTime = "";
         String endTime = "";
         if (StringUtils.isNotBlank(dateLimit)) {
-            dateLimitUtilVo dateRage = DateUtil.getDateLimit(dateLimit);
+            DateLimitUtilVo dateRage = CrmebDateUtil.getDateLimit(dateLimit);
             startTime = dateRage.getStartTime();
             endTime = dateRage.getEndTime();
         }
@@ -171,9 +175,10 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     /**
      * 提现总金额
+     *
+     * @return BalanceResponse
      * @author Mr.Zhang
      * @since 2020-05-11
-     * @return BalanceResponse
      */
     @Override
     public BigDecimal getWithdrawn(String startTime, String endTime) {
@@ -182,9 +187,10 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     /**
      * 审核中总金额
+     *
+     * @return BalanceResponse
      * @author Mr.Zhang
      * @since 2020-05-11
-     * @return BalanceResponse
      */
     private BigDecimal getWithdrawning(String startTime, String endTime) {
         return getSum(null, 0, startTime, endTime);
@@ -192,14 +198,15 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     /**
      * 根据状态获取总额
+     *
      * @return BigDecimal
      */
     private BigDecimal getSum(Integer userId, int status, String startTime, String endTime) {
         LambdaQueryWrapper<UserExtract> lqw = Wrappers.lambdaQuery();
         if (null != userId) {
-            lqw.eq(UserExtract::getUid,userId);
+            lqw.eq(UserExtract::getUid, userId);
         }
-        lqw.eq(UserExtract::getStatus,status);
+        lqw.eq(UserExtract::getStatus, status);
         if (StringUtils.isNotBlank(startTime) && StringUtils.isNotBlank(endTime)) {
             lqw.between(UserExtract::getCreateTime, startTime, endTime);
         }
@@ -213,6 +220,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     /**
      * 获取用户对应的提现数据
+     *
      * @param userId 用户id
      * @return 提现数据
      */
@@ -221,7 +229,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
         QueryWrapper<UserExtract> qw = new QueryWrapper<>();
         qw.select("SUM(extract_price) as extract_price,count(id) as id, uid");
         qw.ge("status", 1);
-        qw.eq("uid",userId);
+        qw.eq("uid", userId);
         qw.groupBy("uid");
         UserExtract ux = dao.selectOne(qw);
         UserExtractResponse uexr = new UserExtractResponse();
@@ -229,7 +237,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
         if (null != ux) {
             uexr.setExtractCountNum(ux.getId()); // 这里的id其实是数量，借变量传递
             uexr.setExtractCountPrice(ux.getExtractPrice());
-        }else{
+        } else {
             uexr.setExtractCountNum(0); // 这里的id其实是数量，借变量传递
             uexr.setExtractCountPrice(ZERO);
         }
@@ -281,11 +289,12 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
             brokerageRecord.setBalance(user.getBrokeragePrice().add(userExtract.getExtractPrice()));
             brokerageRecord.setMark(StrUtil.format("提现申请拒绝返还佣金{}", userExtract.getExtractPrice()));
             brokerageRecord.setStatus(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
-            brokerageRecord.setCreateTime(DateUtil.nowDateTime());
+            brokerageRecord.setCreateTime(CrmebDateUtil.nowDateTime());
 
             execute = transactionTemplate.execute(e -> {
                 // 返还佣金
                 userService.operationBrokerage(userExtract.getUid(), userExtract.getExtractPrice(), user.getBrokeragePrice(), "add");
+                userExtract.setUpdateTime(DateUtil.date());
                 updateById(userExtract);
                 userBrokerageRecordService.save(brokerageRecord);
                 return Boolean.TRUE;
@@ -300,8 +309,10 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
                 throw new CrmebException("对应的佣金记录不存在");
             }
             execute = transactionTemplate.execute(e -> {
+                userExtract.setUpdateTime(DateUtil.date());
                 updateById(userExtract);
                 brokerageRecord.setStatus(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
+                brokerageRecord.setUpdateTime(DateUtil.date());
                 userBrokerageRecordService.updateById(brokerageRecord);
                 return Boolean.TRUE;
             });
@@ -311,7 +322,8 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     /**
      * 获取提现记录列表
-     * @param userId 用户uid
+     *
+     * @param userId           用户uid
      * @param pageParamRequest 分页参数
      * @return PageInfo
      */
@@ -329,7 +341,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
         }
         ArrayList<UserExtractRecordResponse> userExtractRecordResponseList = CollectionUtil.newArrayList();
         for (UserExtract userExtract : list) {
-            String date = DateUtil.dateToStr(userExtract.getCreateTime(), Constants.DATE_FORMAT_MONTH);
+            String date = CrmebDateUtil.dateToStr(userExtract.getCreateTime(), Constants.DATE_FORMAT_MONTH);
             userExtractRecordResponseList.add(new UserExtractRecordResponse(date, getListByMonth(userId, date)));
         }
 
@@ -347,6 +359,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     /**
      * 获取用户提现总金额
+     *
      * @param userId 用户uid
      * @return BigDecimal
      */
@@ -358,6 +371,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     /**
      * 提现申请
+     *
      * @return Boolean
      */
     @Override
@@ -401,7 +415,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
         brokerageRecord.setBalance(money.subtract(userExtract.getExtractPrice()));
         brokerageRecord.setMark(StrUtil.format("提现申请扣除佣金{}", userExtract.getExtractPrice()));
         brokerageRecord.setStatus(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_WITHDRAW);
-        brokerageRecord.setCreateTime(DateUtil.nowDateTime());
+        brokerageRecord.setCreateTime(CrmebDateUtil.nowDateTime());
 
         Boolean execute = transactionTemplate.execute(e -> {
             // 保存提现记录
@@ -420,7 +434,8 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     /**
      * 修改提现申请
-     * @param id 申请id
+     *
+     * @param id                 申请id
      * @param userExtractRequest 具体参数
      */
     @Override
@@ -428,11 +443,13 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
         UserExtract userExtract = new UserExtract();
         BeanUtils.copyProperties(userExtractRequest, userExtract);
         userExtract.setId(id);
+        userExtract.setUpdateTime(DateUtil.date());
         return updateById(userExtract);
     }
 
     /**
      * 提现申请待审核数量
+     *
      * @return Integer
      */
     @Override

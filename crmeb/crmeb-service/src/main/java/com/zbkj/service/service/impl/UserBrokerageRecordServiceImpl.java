@@ -1,6 +1,7 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -15,12 +16,12 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.common.utils.ArrayUtil;
-import com.zbkj.common.utils.DateUtil;
-import com.zbkj.common.vo.dateLimitUtilVo;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.request.BrokerageRecordRequest;
 import com.zbkj.common.request.RetailShopStairUserRequest;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserBrokerageRecord;
+import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.service.dao.UserBrokerageRecordDao;
 import com.zbkj.service.service.UserBrokerageRecordService;
 import com.zbkj.service.service.UserService;
@@ -41,7 +42,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -115,6 +116,7 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
 
             // 分佣
             Boolean execute = transactionTemplate.execute(e -> {
+                record.setUpdateTime(DateUtil.date());
                 updateById(record);
                 userService.operationBrokerage(record.getUid(), record.getPrice(), user.getBrokeragePrice(), "add");
                 return Boolean.TRUE;
@@ -136,7 +138,7 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
         LambdaQueryWrapper<UserBrokerageRecord> lqw = new LambdaQueryWrapper<>();
         lqw.select(UserBrokerageRecord::getPrice);
         lqw.eq(UserBrokerageRecord::getUid, uid);
-        dateLimitUtilVo dateLimit = DateUtil.getDateLimit(Constants.SEARCH_DATE_YESTERDAY);
+        DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(Constants.SEARCH_DATE_YESTERDAY);
         lqw.between(UserBrokerageRecord::getUpdateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
         lqw.eq(UserBrokerageRecord::getType, 1);
         lqw.eq(UserBrokerageRecord::getLinkType, "order");
@@ -169,7 +171,7 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
 
         List<SpreadCommissionDetailResponse> responseList = CollUtil.newArrayList();
         for (UserBrokerageRecord record : list) {
-            String month = DateUtil.dateToStr(record.getUpdateTime(), Constants.DATE_FORMAT_MONTH);
+            String month = CrmebDateUtil.dateToStr(record.getUpdateTime(), Constants.DATE_FORMAT_MONTH);
             responseList.add(new SpreadCommissionDetailResponse(month, getListByUidAndMonth(uid, month)));
         }
         return CommonPage.copyPageInfo(recordPage, responseList);
@@ -230,7 +232,7 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
             lqw.like(UserBrokerageRecord::getLinkId, request.getNickName());
         }
         if (StrUtil.isNotBlank(request.getDateLimit())) {
-            dateLimitUtilVo dateLimit = DateUtil.getDateLimit(request.getDateLimit());
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
             lqw.between(UserBrokerageRecord::getUpdateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
         }
 
@@ -259,7 +261,7 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
             return map;
         }
         list.forEach(record -> {
-            map.put(DateUtil.dateToStr(record.getUpdateTime(), Constants.DATE_FORMAT_MONTH), record.getUid());
+            map.put(CrmebDateUtil.dateToStr(record.getUpdateTime(), Constants.DATE_FORMAT_MONTH), record.getUid());
         });
         return map;
     }
@@ -275,7 +277,7 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
         queryWrapper.select("uid", "sum(price) AS price");
         queryWrapper.eq("link_type", BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_ORDER);
         queryWrapper.eq("status", BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
-        dateLimitUtilVo dateLimit = DateUtil.getDateLimit(type);
+        DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(type);
         if(!StringUtils.isBlank(dateLimit.getStartTime())){
             queryWrapper.between("update_time", dateLimit.getStartTime(), dateLimit.getEndTime());
         }
@@ -312,7 +314,7 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
         lqw.eq(UserBrokerageRecord::getType, BrokerageRecordConstants.BROKERAGE_RECORD_TYPE_ADD);
         lqw.eq(UserBrokerageRecord::getStatus, BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
         if (StrUtil.isNotBlank(dateLimit)) {
-            dateLimitUtilVo dateLimitVo = DateUtil.getDateLimit(dateLimit);
+            DateLimitUtilVo dateLimitVo = CrmebDateUtil.getDateLimit(dateLimit);
             lqw.between(UserBrokerageRecord::getUpdateTime, dateLimitVo.getStartTime(), dateLimitVo.getEndTime());
         }
         List<UserBrokerageRecord> list = dao.selectList(lqw);
@@ -334,7 +336,7 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
         lqw.eq(UserBrokerageRecord::getType, BrokerageRecordConstants.BROKERAGE_RECORD_TYPE_SUB);
         lqw.eq(UserBrokerageRecord::getStatus, BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
         if (StrUtil.isNotBlank(dateLimit)) {
-            dateLimitUtilVo dateLimitVo = DateUtil.getDateLimit(dateLimit);
+            DateLimitUtilVo dateLimitVo = CrmebDateUtil.getDateLimit(dateLimit);
             lqw.between(UserBrokerageRecord::getUpdateTime, dateLimitVo.getStartTime(), dateLimitVo.getEndTime());
         }
         List<UserBrokerageRecord> list = dao.selectList(lqw);

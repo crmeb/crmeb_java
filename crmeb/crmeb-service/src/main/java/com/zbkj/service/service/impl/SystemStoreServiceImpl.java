@@ -1,18 +1,18 @@
 package com.zbkj.service.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zbkj.common.request.PageParamRequest;
-import com.zbkj.common.constants.Constants;
+import com.github.pagehelper.PageHelper;
 import com.zbkj.common.exception.CrmebException;
+import com.zbkj.common.model.system.SystemStore;
+import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.StoreNearRequest;
 import com.zbkj.common.request.SystemStoreRequest;
 import com.zbkj.common.response.StoreNearResponse;
-import com.zbkj.common.vo.SystemStoreNearVo;
-import com.github.pagehelper.PageHelper;
 import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.model.system.SystemStore;
+import com.zbkj.common.vo.SystemStoreNearVo;
 import com.zbkj.service.dao.SystemStoreDao;
 import com.zbkj.service.service.SystemAttachmentService;
 import com.zbkj.service.service.SystemConfigService;
@@ -32,7 +32,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -104,6 +104,7 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
             return true;
         }
         systemStore.setIsShow(status);
+        systemStore.setUpdateTime(DateUtil.date());
         return updateById(systemStore);
     }
 
@@ -117,20 +118,22 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
         SystemStore systemStore = new SystemStore();
         systemStore.setId(id);
         systemStore.setIsDel(true);
+        systemStore.setUpdateTime(DateUtil.date());
         dao.updateById(systemStore);
         return true;
     }
 
     /**
      * 数量
+     * @param keywords 搜索条件:门店名称、门店电话
      * @return HashMap<String, Integer>
      */
     @Override
-    public HashMap<String, Integer> getCount() {
+    public HashMap<String, Integer> getCount(String keywords) {
         HashMap<String, Integer> map = new HashMap<>();
-        map.put("show", getCountByStatus(1));// 显示中
-        map.put("hide", getCountByStatus(0));// 隐藏
-        map.put("recycle", getCountByStatus(2));// 回收站
+        map.put("show", getCountByStatus(1, keywords));// 显示中
+        map.put("hide", getCountByStatus(0, keywords));// 隐藏
+        map.put("recycle", getCountByStatus(2, keywords));// 回收站
         return map;
     }
 
@@ -138,12 +141,16 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
      * 根据状态获取总数
      * @return HashMap<String, Integer>
      */
-    private Integer getCountByStatus(Integer status) {
+    private Integer getCountByStatus(Integer status, String keywords) {
         LambdaQueryWrapper<SystemStore> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         if (status == 2) {
             lambdaQueryWrapper.eq(SystemStore::getIsDel, true);
         } else {
             lambdaQueryWrapper.eq(SystemStore::getIsShow, status).eq(SystemStore::getIsDel, false);
+        }
+        if (!StringUtils.isBlank(keywords)) {
+            lambdaQueryWrapper.and(i -> i.or().like(SystemStore::getName, keywords)
+                    .or().like(SystemStore::getPhone, keywords));
         }
         lambdaQueryWrapper.orderByDesc(SystemStore::getUpdateTime).orderByDesc(SystemStore::getId);
         return dao.selectCount(lambdaQueryWrapper);
@@ -181,13 +188,16 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
     @Override
     public StoreNearResponse getNearList(StoreNearRequest request, PageParamRequest pageParamRequest) {
         StoreNearResponse storeNearResponse = new StoreNearResponse();
-        storeNearResponse.setTengXunMapKey(systemConfigService.getValueByKey(Constants.CONFIG_SITE_TENG_XUN_MAP_KEY));
 
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
 
         List<SystemStoreNearVo> storeNearVoArrayList = new ArrayList<>();
 
         if (StringUtils.isNotBlank(request.getLatitude()) && StringUtils.isNotBlank(request.getLongitude())) {
+            if (!request.getLatitude().matches("^(90(\\.0+)?|([1-8]?\\d)(\\.\\d+)?)$")
+                    || !request.getLongitude().matches("^(180(\\.0+)?|(1[0-7]?\\d|[1-9]?\\d)(\\.\\d+)?)$")) {
+                throw new CrmebException("经纬度坐标输入有误");
+            }
             storeNearVoArrayList = dao.getNearList(request);
         } else {
             List<SystemStore> list = getList(null, 1, pageParamRequest);
@@ -229,6 +239,7 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
         systemStore.setId(id);
         splitLat(systemStore);
         clearPrefix(systemStore);
+        systemStore.setUpdateTime(DateUtil.date());
         return updateById(systemStore);
     }
 
@@ -256,6 +267,7 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
         if (ObjectUtil.isNull(systemStore)) throw new CrmebException("提货点不存在!");
         if (!systemStore.getIsDel()) return Boolean.TRUE;
         systemStore.setIsDel(false);
+        systemStore.setUpdateTime(DateUtil.date());
         return updateById(systemStore);
     }
 
@@ -289,8 +301,8 @@ public class SystemStoreServiceImpl extends ServiceImpl<SystemStoreDao, SystemSt
     private void splitLat(SystemStore systemStore) {
         if (!StringUtils.isBlank(systemStore.getLatitude())) {
             List<String> list = CrmebUtil.stringToArrayStr(systemStore.getLatitude());
-            systemStore.setLatitude(list.get(0));
-            systemStore.setLongitude(list.get(1));
+            systemStore.setLongitude(list.get(0));
+            systemStore.setLatitude(list.get(1));
         }
     }
 

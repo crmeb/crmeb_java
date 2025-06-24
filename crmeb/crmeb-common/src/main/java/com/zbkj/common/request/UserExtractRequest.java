@@ -19,7 +19,7 @@ import java.math.BigDecimal;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -29,10 +29,10 @@ import java.math.BigDecimal;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@ApiModel(value="UserExtractRequest对象", description="用户提现")
+@ApiModel(value = "UserExtractRequest对象", description = "用户提现")
 public class UserExtractRequest implements Serializable {
 
-    private static final long serialVersionUID=1L;
+    private static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "姓名")
     @NotBlank(message = "提现用户名称必须填写")
@@ -57,7 +57,7 @@ public class UserExtractRequest implements Serializable {
     @ApiModelProperty(value = "提现金额")
     @JsonProperty(value = "money")
     @NotNull(message = "请输入提现金额")
-    @DecimalMin(value = "0.1", message = "提现金额不能小于0.1")
+    @DecimalMin(value = "0.01", message = "提现金额不能小于0.01")
     private BigDecimal extractPrice;
 
     @ApiModelProperty(value = "微信号")

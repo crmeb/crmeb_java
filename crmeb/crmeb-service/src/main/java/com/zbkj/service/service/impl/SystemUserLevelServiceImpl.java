@@ -1,5 +1,6 @@
 package com.zbkj.service.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -26,7 +27,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -156,6 +157,7 @@ public class SystemUserLevelServiceImpl extends ServiceImpl<SystemUserLevelDao, 
         systemUserLevel.setIcon(systemAttachmentService.clearPrefix(request.getIcon()));
         systemUserLevel.setIsShow(level.getIsShow());
         return transactionTemplate.execute(e -> {
+            systemUserLevel.setUpdateTime(DateUtil.date());
             dao.updateById(systemUserLevel);
             // 删除对应的用户等级数据
             userLevelService.deleteByLevelId(id);
@@ -200,6 +202,7 @@ public class SystemUserLevelServiceImpl extends ServiceImpl<SystemUserLevelDao, 
         }
         level.setIsDel(true);
         return transactionTemplate.execute(e -> {
+            level.setUpdateTime(DateUtil.date());
             dao.updateById(level);
             // 删除对应的用户等级数据
             userLevelService.deleteByLevelId(id);
@@ -224,9 +227,11 @@ public class SystemUserLevelServiceImpl extends ServiceImpl<SystemUserLevelDao, 
         }
         level.setIsShow(request.getIsShow());
         if (request.getIsShow()) {// 启用直接保存
+            level.setUpdateTime(DateUtil.date());
             return dao.updateById(level) > 0 ? Boolean.TRUE : Boolean.FALSE;
         }
         return transactionTemplate.execute(e -> {
+            level.setUpdateTime(DateUtil.date());
             dao.updateById(level);
             // 删除对应的用户等级数据
             userLevelService.deleteByLevelId(request.getId());

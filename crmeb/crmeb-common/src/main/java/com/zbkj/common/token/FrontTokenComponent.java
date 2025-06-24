@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -166,15 +166,24 @@ public class FrontTokenComponent {
                 "api/front/index",
                 "api/front/bargain/list",
                 "api/front/combination/list",
+                "api/front/seckill/list",
                 "api/front/index/product",
                 "api/front/combination/index",
                 "api/front/bargain/index",
+                "api/front/seckill/index",
                 "api/front/index/color/config",
                 "api/front/product/list",
                 "api/front/product/sku/detail",
                 "api/front/index/get/version",
                 "api/front/image/domain",
-                "api/front/product/leaderboard"
+                "api/front/product/leaderboard",
+                "api/front/menu/user",
+                "api/front/combination/header",
+                "api/front/combination/detail",
+                "api/front/bargain/header",
+                "api/front/bargain/detail",
+                "api/front/seckill/header",
+                "api/front/seckill/detail"
         };
 
         return ArrayUtils.contains(routerList, uri);
@@ -196,4 +205,5 @@ public class FrontTokenComponent {
             return false;
         }
     }
+
 }

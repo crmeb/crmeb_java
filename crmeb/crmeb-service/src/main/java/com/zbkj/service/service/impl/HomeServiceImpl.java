@@ -1,16 +1,15 @@
 package com.zbkj.service.service.impl;
 
 import com.zbkj.common.constants.Constants;
-import com.zbkj.common.model.order.StoreOrder;
+import com.zbkj.common.response.HomeOperatingDataResponse;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.response.HomeRateResponse;
-import com.zbkj.common.utils.DateUtil;
-import com.zbkj.service.service.HomeService;
-import com.zbkj.service.service.StoreOrderService;
-import com.zbkj.service.service.UserService;
-import com.zbkj.service.service.UserVisitRecordService;
+import com.zbkj.common.model.order.StoreOrder;
+import com.zbkj.service.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 /**
@@ -18,7 +17,7 @@ import java.util.*;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -36,6 +35,18 @@ public class HomeServiceImpl implements HomeService {
 
     @Autowired
     private UserVisitRecordService userVisitRecordService;
+
+    @Autowired
+    private StoreProductService storeProductService;
+
+    @Autowired
+    private UserRechargeService userRechargeService;
+
+    @Autowired
+    private UserBrokerageRecordService brokerageRecordService;
+
+    @Autowired
+    private UserExtractService userExtractService;
 
     /**
      * 用户曲线图
@@ -117,7 +128,7 @@ public class HomeServiceImpl implements HomeService {
      */
     private Map<Object, Object> dataFormat(Map<Object, Object> countGroupDate, String dateLimit) {
         Map<Object, Object> map = new LinkedHashMap<>();
-        List<String> listDate = DateUtil.getListDate(dateLimit);
+        List<String> listDate = CrmebDateUtil.getListDate(dateLimit);
 
         String[] weekList = new String[]{"周一", "周二", "周三", "周四", "周五", "周六", "周日"};
 
@@ -162,11 +173,11 @@ public class HomeServiceImpl implements HomeService {
         List<Object> listDate = new ArrayList<>();
         String year = "";
         if (dateLimit.equals(Constants.SEARCH_DATE_YEAR)) {
-            year = DateUtil.nowYear();
+            year = CrmebDateUtil.nowYear();
         }
 
         if (dateLimit.equals(Constants.SEARCH_DATE_PRE_YEAR)) {
-            year = DateUtil.lastYear();
+            year = CrmebDateUtil.lastYear();
         }
 
         //处理年
@@ -295,6 +306,28 @@ public class HomeServiceImpl implements HomeService {
         response.setYesterdayOrderNum(storeOrderService.getOrderNumByDate(yesterday));
         response.setNewUserNum(userService.getRegisterNumByDate(today));
         response.setYesterdayNewUserNum(userService.getRegisterNumByDate(yesterday));
+        return response;
+    }
+
+    /**
+     * 经营数据：
+     * 1.待发货订单，2.退款中订单，3.待核销订单，4.库存预警
+     * 5.上架商品数，6.库存中商品数，7.提现待审核，8.账户充值
+     * @return HomeOperatingDataResponse
+     */
+    @Override
+    public HomeOperatingDataResponse operatingData() {
+        HomeOperatingDataResponse response = new HomeOperatingDataResponse();
+        response.setNotShippingOrderNum(storeOrderService.getNotShippingNum());
+        response.setRefundingOrderNum(storeOrderService.getRefundingNum());
+        response.setNotWriteOffOrderNum(storeOrderService.getNotWriteOffNum());
+        response.setVigilanceInventoryNum(storeProductService.getVigilanceInventoryNum());
+        response.setOnSaleProductNum(storeProductService.getOnSaleNum());
+        response.setNotSaleProductNum(storeProductService.getNotSaleNum());
+        response.setNotAuditNum(userExtractService.getNotAuditNum());
+        BigDecimal totalRechargeAmount = userRechargeService.getTotalPrice();
+        BigDecimal BrokerageToYueAmount = brokerageRecordService.getTotalYuePrice();
+        response.setTotalRechargeAmount(totalRechargeAmount.add(BrokerageToYueAmount));
         return response;
     }
 

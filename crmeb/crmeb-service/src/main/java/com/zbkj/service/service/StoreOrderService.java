@@ -1,12 +1,14 @@
 package com.zbkj.service.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.zbkj.common.model.order.StoreOrder;
+import com.github.pagehelper.PageInfo;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.*;
 import com.zbkj.common.response.*;
 import com.zbkj.common.vo.ExpressSheetVo;
 import com.zbkj.common.vo.LogisticsResultVo;
+import com.zbkj.common.model.order.StoreOrder;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -17,7 +19,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -59,6 +61,7 @@ public interface StoreOrderService extends IService<StoreOrder> {
      * @return 订单结果列表
      */
     List<StoreOrder> getUserOrderList(Integer uid, Integer status, PageParamRequest pageParamRequest);
+    PageInfo<StoreOrder> getUserOrderList_2_3(String keywords, Integer uid, Integer status, PageParamRequest pageParamRequest);
     /**
      * 创建订单
      * @param storeOrder 订单参数
@@ -91,7 +94,7 @@ public interface StoreOrderService extends IService<StoreOrder> {
      */
     StoreOrderInfoResponse info(String orderNo);
 
-    Boolean send(StoreOrderSendRequest request);
+    String send(StoreOrderSendRequest request);
 
     /**
      * 订单备注
@@ -238,9 +241,10 @@ public interface StoreOrderService extends IService<StoreOrder> {
      * 获取订单状态数量
      * @param dateLimit 时间端
      * @param type 订单类型：0普通订单，1-视频号订单, 2-全部订单
+     * @param orderNo 订单号
      * @return StoreOrderCountItemResponse
      */
-    StoreOrderCountItemResponse getOrderStatusNum(String dateLimit, Integer type);
+    StoreOrderCountItemResponse getOrderStatusNum(String dateLimit, Integer type, String orderNo);
 
     /**
      * 获取订单统计数据
@@ -255,6 +259,13 @@ public interface StoreOrderService extends IService<StoreOrder> {
      * @return Boolean
      */
     Boolean delete(String orderNo);
+
+//    /**
+//     * 视频订单发货
+//     * @param request 发货请求参数
+//     * @return Boolean
+//     */
+//    Boolean videoSend(VideoOrderSendRequest request);
 
     /**
      * 通过日期获取商品交易件数
@@ -378,4 +389,36 @@ public interface StoreOrderService extends IService<StoreOrder> {
      * @param spreadId 推广人uid
      */
     OrderBrokerageData getBrokerageData(Integer uid, Integer spreadId);
+
+    /**
+     * 获取待收货订单
+     * @param sendTime 发货时间
+     * @return List
+     */
+    List<StoreOrder> findAwaitTakeDeliveryOrderList(String sendTime);
+
+    /**
+     * 更改订单运单号
+     */
+    Boolean updateTrackingNumber(StoreOrderSendRequest request);
+
+    /**
+     * 一号通商家寄件 寄件
+     * @param request 寄件请求数据
+     * @param storeOrder 当前操作订单数据
+     */
+    void expressForOnePassShipment(StoreOrderSendRequest request, StoreOrder storeOrder);
+
+    /**
+     * 一号通商家寄件 快递揽件回调
+     * @param jsonObject 回调结果
+     */
+    void expressForOnePassShipmentTakeCallBack(JSONObject jsonObject);
+
+
+    /**
+     * 一号通商家寄件 取消寄件回调
+     * @param jsonObject 回调结果
+     */
+    void expressForOnePassShipmentCancelCallBack(JSONObject jsonObject);
 }

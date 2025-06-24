@@ -10,7 +10,7 @@ import org.apache.commons.codec.binary.Base64;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -55,7 +55,7 @@ public class WxUtil {
         if(ObjectUtil.isNull(result)){
             throw new CrmebException("微信平台接口异常，没任何数据返回！");
         }
-        if(result.containsKey("errcode") && "0".equals(result.getString("errcode"))){
+        if(result.containsKey("errcode") && result.getString("errcode").equals("0")){
             return result;
         }
         if(result.containsKey("errmsg")){

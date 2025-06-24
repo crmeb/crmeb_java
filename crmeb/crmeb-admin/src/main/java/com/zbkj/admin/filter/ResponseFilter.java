@@ -1,7 +1,11 @@
 package com.zbkj.admin.filter;
 
 
+import com.zbkj.common.config.CrmebConfig;
 import com.zbkj.common.utils.RequestUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.web.FilterInvocation;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -14,7 +18,7 @@ import java.nio.charset.StandardCharsets;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -25,20 +29,32 @@ import java.nio.charset.StandardCharsets;
 //@Component
 public class ResponseFilter implements Filter {
 
+
+    @Autowired
+    CrmebConfig crmebConfig;
+
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
+    public void doFilter(ServletRequest servletRequest, ServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
         ResponseWrapper wrapperResponse = new ResponseWrapper((HttpServletResponse) response);//转换成代理类
+        FilterInvocation fi = new FilterInvocation(servletRequest, wrapperResponse, filterChain);
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+
+        //OPTIONS请求直接放行
+        if(request.getMethod().equals(HttpMethod.OPTIONS.toString())){
+            fi.getChain().doFilter(fi.getRequest(), fi.getResponse());
+            return;
+        }
         // 这里只拦截返回，直接让请求过去，如果在请求前有处理，可以在这里处理
-        filterChain.doFilter(request, wrapperResponse);
+        filterChain.doFilter(servletRequest, wrapperResponse);
         byte[] content = wrapperResponse.getContent();//获取返回值
         //判断是否有值
         if (content.length > 0) {
             String str = new String(content, StandardCharsets.UTF_8);
 
             try {
-                HttpServletRequest req = (HttpServletRequest) request;
-                str = new ResponseRouter().filter(str, RequestUtil.getUri(req));
+                HttpServletRequest req = (HttpServletRequest) servletRequest;
+                str = new ResponseRouter().filter(str, RequestUtil.getUri(req), crmebConfig);
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -2,6 +2,7 @@ package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.zbkj.common.config.CrmebConfig;
+import com.zbkj.common.constants.UploadConstants;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.exception.CrmebException;
@@ -10,7 +11,7 @@ import com.zbkj.common.response.StoreOrderDetailResponse;
 import com.zbkj.common.response.StoreProductResponse;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.ExportUtil;
 import com.zbkj.common.response.StoreBargainResponse;
 import com.zbkj.common.response.StoreCombinationResponse;
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -90,15 +91,15 @@ public class ExcelServiceImpl implements ExcelService {
         }).collect(Collectors.toList());
 
         // 上传设置
-        ExportUtil.setUpload(crmebConfig.getImagePath(), Constants.UPLOAD_MODEL_PATH_EXCEL, Constants.UPLOAD_TYPE_FILE);
+        ExportUtil.setUpload(crmebConfig.getImagePath(), Constants.UPLOAD_MODEL_PATH_EXCEL, UploadConstants.DOWNLOAD_FILE_KEYWORD);
 
         // 文件名
-        String fileName = "砍价".concat(DateUtil.nowDateTime(Constants.DATE_TIME_FORMAT_NUM)).concat(CrmebUtil.randomCount(111111111, 999999999).toString()).concat(".xlsx");
+        String fileName = "砍价".concat(CrmebDateUtil.nowDateTime(Constants.DATE_TIME_FORMAT_NUM)).concat(CrmebUtil.randomCount(111111111, 999999999).toString()).concat(".xlsx");
 
         //自定义标题别名
         LinkedHashMap<String, String> aliasMap = new LinkedHashMap<>();
         aliasMap.put("title", "砍价活动名称");
-        aliasMap.put("info", "砍价活动简介");
+//        aliasMap.put("info", "砍价活动简介");
         aliasMap.put("price", "砍价金额");
         aliasMap.put("bargainNum", "用户每次砍价的次数");
         aliasMap.put("status", "砍价状态");
@@ -129,15 +130,15 @@ public class ExcelServiceImpl implements ExcelService {
             CombinationProductExcelVo vo = new CombinationProductExcelVo();
             BeanUtils.copyProperties(temp, vo);
             vo.setIsShow(temp.getIsShow() ? "开启" : "关闭");
-            vo.setStopTime(DateUtil.timestamp2DateStr(temp.getStopTime(), Constants.DATE_FORMAT_DATE));
+            vo.setStopTime(CrmebDateUtil.timestamp2DateStr(temp.getStopTime(), Constants.DATE_FORMAT_DATE));
             return vo;
         }).collect(Collectors.toList());
 
         // 上传设置
-        ExportUtil.setUpload(crmebConfig.getImagePath(), Constants.UPLOAD_MODEL_PATH_EXCEL, Constants.UPLOAD_TYPE_FILE);
+        ExportUtil.setUpload(crmebConfig.getImagePath(), Constants.UPLOAD_MODEL_PATH_EXCEL, UploadConstants.DOWNLOAD_FILE_KEYWORD);
 
         // 文件名
-        String fileName = "拼团".concat(DateUtil.nowDateTime(Constants.DATE_TIME_FORMAT_NUM)).concat(CrmebUtil.randomCount(111111111, 999999999).toString()).concat(".xlsx");
+        String fileName = "拼团".concat(CrmebDateUtil.nowDateTime(Constants.DATE_TIME_FORMAT_NUM)).concat(CrmebUtil.randomCount(111111111, 999999999).toString()).concat(".xlsx");
 
         //自定义标题别名
         LinkedHashMap<String, String> aliasMap = new LinkedHashMap<>();
@@ -185,7 +186,7 @@ public class ExcelServiceImpl implements ExcelService {
         for (StoreProductResponse product : list ) {
             ProductExcelVo vo = new ProductExcelVo();
             vo.setStoreName(product.getStoreName());
-            vo.setStoreInfo(product.getStoreInfo());
+//            vo.setStoreInfo(product.getStoreInfo());
             vo.setCateName(CrmebUtil.getValueByIndex(categoryNameList, product.getCateId()));
             vo.setPrice("￥" + product.getPrice());
             vo.setStock(product.getStock().toString());
@@ -200,15 +201,15 @@ public class ExcelServiceImpl implements ExcelService {
          * ===============================
          */
         // 上传设置
-        ExportUtil.setUpload(crmebConfig.getImagePath(), Constants.UPLOAD_MODEL_PATH_EXCEL, Constants.UPLOAD_TYPE_FILE);
+        ExportUtil.setUpload(crmebConfig.getImagePath(), Constants.UPLOAD_MODEL_PATH_EXCEL, UploadConstants.DOWNLOAD_FILE_KEYWORD);
 
         // 文件名
-        String fileName = "商品导出_".concat(DateUtil.nowDateTime(Constants.DATE_TIME_FORMAT_NUM)).concat(CrmebUtil.randomCount(111111111, 999999999).toString()).concat(".xlsx");
+        String fileName = "商品导出_".concat(CrmebDateUtil.nowDateTime(Constants.DATE_TIME_FORMAT_NUM)).concat(CrmebUtil.randomCount(111111111, 999999999).toString()).concat(".xlsx");
 
         //自定义标题别名
         LinkedHashMap<String, String> aliasMap = new LinkedHashMap<>();
         aliasMap.put("storeName", "商品名称");
-        aliasMap.put("storeInfo", "商品简介");
+//        aliasMap.put("storeInfo", "商品简介");
         aliasMap.put("cateName", "商品分类");
         aliasMap.put("price", "价格");
         aliasMap.put("stock", "库存");
@@ -238,7 +239,7 @@ public class ExcelServiceImpl implements ExcelService {
         List<OrderExcelVo> voList = CollUtil.newArrayList();
         for (StoreOrderDetailResponse order: list ) {
             OrderExcelVo vo = new OrderExcelVo();
-            vo.setCreateTime(DateUtil.dateToStr(order.getCreateTime(), "yyyy-MM-dd HH:mm:ss"));
+            vo.setCreateTime(CrmebDateUtil.dateToStr(order.getCreateTime(), "yyyy-MM-dd HH:mm:ss"));
             vo.setOrderId(order.getOrderId());
             vo.setOrderType(order.getOrderType());
             vo.setPayPrice(order.getPayPrice().toString());
@@ -255,10 +256,10 @@ public class ExcelServiceImpl implements ExcelService {
           ===============================
          */
         // 上传设置
-        ExportUtil.setUpload(crmebConfig.getImagePath(), Constants.UPLOAD_MODEL_PATH_EXCEL, Constants.UPLOAD_TYPE_FILE);
+         ExportUtil.setUpload(crmebConfig.getImagePath(), Constants.UPLOAD_MODEL_PATH_EXCEL, UploadConstants.DOWNLOAD_FILE_KEYWORD);
 
         // 文件名
-        String fileName = "订单导出_".concat(DateUtil.nowDateTime(Constants.DATE_TIME_FORMAT_NUM)).concat(CrmebUtil.randomCount(111111111, 999999999).toString()).concat(".xlsx");
+        String fileName = "订单导出_".concat(CrmebDateUtil.nowDateTime(Constants.DATE_TIME_FORMAT_NUM)).concat(CrmebUtil.randomCount(111111111, 999999999).toString()).concat(".xlsx");
 
         //自定义标题别名
         LinkedHashMap<String, String> aliasMap = new LinkedHashMap<>();

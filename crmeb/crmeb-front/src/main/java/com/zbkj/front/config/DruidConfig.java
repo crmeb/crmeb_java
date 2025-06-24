@@ -16,7 +16,7 @@ import javax.sql.DataSource;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -35,18 +35,20 @@ public class DruidConfig {
         servletRegistrationBean.addInitParameter("loginUsername", "kf"); // 用户名
         servletRegistrationBean.addInitParameter("loginPassword", "654321"); // 密码
         servletRegistrationBean.addInitParameter("resetEnable", "true"); // 是否可以重置数据源
-        return servletRegistrationBean ;
+        return servletRegistrationBean;
     }
+
     @Bean
     public FilterRegistrationBean filterRegistrationBean() {
-        FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean() ;
+        FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean();
         filterRegistrationBean.setFilter(new WebStatFilter());
 
         filterRegistrationBean.addUrlPatterns("/*"); // 所有请求进行监控处理
         //不必监控的请求
         filterRegistrationBean.addInitParameter("exclusions", "*.html,*.png,*.ico,*.js,*.gif,*.jpg,*.css,/druid/*");
-        return filterRegistrationBean ;
+        return filterRegistrationBean;
     }
+
     @Bean("dataSource")
     @ConfigurationProperties(prefix = "spring.datasource")
     public DataSource druidDataSource() {

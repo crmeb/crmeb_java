@@ -14,7 +14,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -57,7 +57,7 @@ public interface StoreSeckillMangerService extends IService<StoreSeckillManger> 
      * @param status 待更新状态
      * @return 结果
      */
-    Boolean updateStatus(Integer id, Boolean status);
+    Boolean updateStatus(Integer id, String status);
 
     /**
      * 更新秒杀配置

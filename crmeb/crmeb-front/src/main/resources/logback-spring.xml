@@ -3,7 +3,8 @@
     <!-- 根据需要自行配置 -->
     <springProperty scope="context" name="LOG_PORT" source="server.port"/>
     <property name="APP_NAME" value="Crmeb"/>
-    <property name="log.path" value="../crmeb_front_log/${LOG_PORT}}"/>
+    <!--<property name="log.path" value="/www/wwwroot/crmeb_front_log/${LOG_PORT}}"></property>-->
+    <property name="log.path" value="crmeb_front_log/${LOG_PORT}}"></property>
 
     <!--"@timestamp": "2019-06-27T09:59:41.897+08:00",-->
     <!--"@version": "1",-->

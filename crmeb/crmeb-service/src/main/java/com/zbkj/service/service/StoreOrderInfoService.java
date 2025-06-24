@@ -14,7 +14,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -71,4 +71,14 @@ public interface StoreOrderInfoService extends IService<StoreOrderInfo> {
      * @return BigDecimal
      */
     BigDecimal getSalesByDateAndProductId(String date, Integer proId);
+
+    /**
+     * 根据订单id、商品id、商品唯一id更新回复状态
+     *
+     * @param orderId  订单id
+     * @param productId  商品id
+     * @param unique  商品唯一id
+     * @return
+     */
+    void updateReply(Integer orderId, Integer productId, String unique);
 }

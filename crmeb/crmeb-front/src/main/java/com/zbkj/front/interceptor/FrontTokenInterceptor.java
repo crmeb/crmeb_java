@@ -1,7 +1,8 @@
 package com.zbkj.front.interceptor;
 
 import com.alibaba.fastjson.JSONObject;
-import com.zbkj.common.response.CommonResult;
+import com.zbkj.common.result.CommonResult;
+import com.zbkj.common.result.CommonResultCode;
 import com.zbkj.common.token.FrontTokenComponent;
 import com.zbkj.common.utils.RequestUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -38,13 +39,13 @@ public class FrontTokenInterceptor implements HandlerInterceptor {
             if(result){
                 return true;
             }
-            response.getWriter().write(JSONObject.toJSONString(CommonResult.unauthorized()));
+            response.getWriter().write(JSONObject.toJSONString(CommonResult.failed(CommonResultCode.UNAUTHORIZED)));
             return false;
         }
 
         Boolean result = frontTokenComponent.check(token, request);
         if(!result){
-            response.getWriter().write(JSONObject.toJSONString(CommonResult.unauthorized()));
+            response.getWriter().write(JSONObject.toJSONString(CommonResult.failed(CommonResultCode.PERMISSION_EXPIRATION)));
             return false;
         }
         return true;

@@ -1,6 +1,6 @@
 package com.zbkj.admin.vo;
 
-import com.zbkj.common.utils.DateUtil;
+import com.zbkj.common.utils.CrmebDateUtil;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -12,7 +12,7 @@ import lombok.experimental.Accessors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -31,7 +31,7 @@ public class BaseMessageVo{
     protected String FromUserName;
 
     @ApiModelProperty(value = "消息创建时间 （整型）")
-    protected Long CreateTime = DateUtil.getTime();
+    protected Long CreateTime = CrmebDateUtil.getTime();
 
     @ApiModelProperty(value = "消息类型，文本为text")
     protected String MsgType = "text";
