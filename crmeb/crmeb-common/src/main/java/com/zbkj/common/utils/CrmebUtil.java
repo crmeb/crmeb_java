@@ -128,7 +128,7 @@ public class CrmebUtil {
         // 加密结果：5JNGj04iE/XUuTZM75zMrA==
         // 解密结果：中国123ABCabc
 
-        System.out.println(encryptPassword("crmeb@123456", "18292417675"));
+        System.out.println(encryptPassword("crmeb_123456", "18292417675"));
         // 执行结果：f6mcpGQ8NEmwbab2TlkpUg==
         // 与 SQL 中的数据一致
     }
