@@ -114,7 +114,7 @@ WEBPC管理端：https://admin.java.crmeb.net<br>
 账号密码： demo/crmeb.com<br>
 
 自己搭建演示账号
-移动端 18292417675 / crmeb@123456
+移动端 18292417675 / Crmeb_123456
 管理端 admin / 123456
 
 [想了解CRMEB开源商城系统Java版整体框架，你可以戳这里快速掌握！](https://doc.crmeb.com/java/crmeb_java/2049)
