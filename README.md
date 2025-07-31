@@ -104,11 +104,11 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 
 ---
 
-[![](crmeb/crmebimage/crmebimage/demoimage/gitee-广告_java多商户.jpg)](https://www.crmeb.com/index/java_merchant)
+[![](crmeb/crmebimage/demoimage/gitee-广告_java多商户.jpg)](https://www.crmeb.com/index/java_merchant)
 
 
 ### 🎬 系统演示：
-![](crmeb/crmebimage/crmebimage/demoimage/c1.jpg)
+![](crmeb/crmebimage/demoimage/c1.jpg)
 移动端：https://java.crmeb.net<br>
 WEBPC管理端：https://admin.java.crmeb.net<br>
 账号密码： demo/crmeb.com<br>
@@ -133,34 +133,34 @@ WEBPC管理端：https://admin.java.crmeb.net<br>
 
 ### 💟 UI界面
 #### 核心功能
-![](crmeb/crmebimage/crmebimage/demoimage/javaop2.jpg)
+![](crmeb/crmebimage/demoimage/javaop2.jpg)
 
 
 
 ### 📱 移动端预览
-<!-- ![](crmeb/crmebimage/crmebimage/demoimage/03-mobile-01.png)
-![](crmeb/crmebimage/crmebimage/demoimage/04-mobile-02.png)
-![](crmeb/crmebimage/crmebimage/demoimage/05-mobile-03.png) -->
-![](crmeb/crmebimage/crmebimage/demoimage/001front.jpg)
+<!-- ![](crmeb/crmebimage/demoimage/03-mobile-01.png)
+![](crmeb/crmebimage/demoimage/04-mobile-02.png)
+![](crmeb/crmebimage/demoimage/05-mobile-03.png) -->
+![](crmeb/crmebimage/demoimage/001front.jpg)
 
 ### WEB PC管理端预览
-<!-- ![](crmeb/crmebimage/crmebimage/demoimage/07-pc-01.png)
-![](crmeb/crmebimage/crmebimage/demoimage/08-pc-02.png)
-![](crmeb/crmebimage/crmebimage/demoimage/09-pc-03.png)
-![](crmeb/crmebimage/crmebimage/demoimage/10-pc-04.png)
-![](crmeb/crmebimage/crmebimage/demoimage/11-pc-05.png)
-![](crmeb/crmebimage/crmebimage/demoimage/12-pc-06.png) -->
-![](crmeb/crmebimage/crmebimage/demoimage/001admin.jpg)
+<!-- ![](crmeb/crmebimage/demoimage/07-pc-01.png)
+![](crmeb/crmebimage/demoimage/08-pc-02.png)
+![](crmeb/crmebimage/demoimage/09-pc-03.png)
+![](crmeb/crmebimage/demoimage/10-pc-04.png)
+![](crmeb/crmebimage/demoimage/11-pc-05.png)
+![](crmeb/crmebimage/demoimage/12-pc-06.png) -->
+![](crmeb/crmebimage/demoimage/001admin.jpg)
 
-![](crmeb/crmebimage/crmebimage/demoimage/13yemiandesiner-min.gif)
-![](crmeb/crmebimage/crmebimage/demoimage/14yijianhuanse-min.gif)
-![](crmeb/crmebimage/crmebimage/demoimage/15webPCadmin-min.gif)
+![](crmeb/crmebimage/demoimage/13yemiandesiner-min.gif)
+![](crmeb/crmebimage/demoimage/14yijianhuanse-min.gif)
+![](crmeb/crmebimage/demoimage/15webPCadmin-min.gif)
 
 
 ---
 ### 📲 CRMEB开源技术交流群
 扫码进群可领取开源版接口文档、产品功能清单、高清UI设计图、思维脑图！
-![](crmeb/crmebimage/crmebimage/demoimage/wellcomJavaGroup.jpg)
+![](crmeb/crmebimage/demoimage/wellcomJavaGroup.jpg)
 
 
 #### 📈 技术社区
