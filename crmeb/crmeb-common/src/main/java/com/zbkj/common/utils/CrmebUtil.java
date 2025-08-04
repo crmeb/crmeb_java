@@ -116,19 +116,20 @@ public class CrmebUtil {
 //        System.out.println(encryptPassword("123456", "admin"));
 //		System.out.println(decryptPassowrd("", ""));
 
-        String key = "123456";
-        String data = "中国123ABCabc";
-        System.out.println("原始数据：" + data);
-        String encryptPassword = encryptPassword(data, key);
-        System.out.println("加密结果：" + encryptPassword);
-        String decryptPassowrd = decryptPassowrd(encryptPassword, key);
-        System.out.println("解密结果：" + decryptPassowrd);
+//        String key = "123456";
+//        String data = "中国123ABCabc";
+//        System.out.println("原始数据：" + data);
+//        String encryptPassword = encryptPassword(data, key);
+//        System.out.println("加密结果：" + encryptPassword);
+//        String decryptPassowrd = decryptPassowrd(encryptPassword, key);
+//        System.out.println("解密结果：" + decryptPassowrd);
         // 执行结果如下：
         // 原始数据：中国123ABCabc
         // 加密结果：5JNGj04iE/XUuTZM75zMrA==
         // 解密结果：中国123ABCabc
 
-        System.out.println(encryptPassword("crmeb@123456", "18292417675"));
+//        System.out.println(encryptPassword("Crmeb_123456", "18292417675"));
+        System.out.println(decryptPassowrd("c7Nwx1WsDdewbab2TlkpUg==", "18292417675"));
         // 执行结果：f6mcpGQ8NEmwbab2TlkpUg==
         // 与 SQL 中的数据一致
     }
