@@ -1,0 +1,34 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-CrmebAdminApplication<crmeb-admin>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.zbkj.admin.CrmebAdminApplication",
+            "projectName": "crmeb-admin",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-YlyUtil<crmeb-service>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.zbkj.service.util.YlyUtil",
+            "projectName": "crmeb-service",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-CrmebFrontApplication<crmeb-front>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.zbkj.front.CrmebFrontApplication",
+            "projectName": "crmeb-front",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

@@ -39,7 +39,7 @@ spring:
   profiles:
   #  配置的环境
 #    active: #spring.profiles.active#
-    active:
+    active: dev
   servlet:
     multipart:
       max-file-size: 50MB #设置单个文件大小
@@ -54,39 +54,44 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/single_open?serverTimezone=UTC
-    username: single_open
-    password: 111111
+    url: jdbc:mysql://192.168.33.10:3306/crmeb?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
+    username: root
+    password: 123456
   # quartz
   quartz:
-    properties:
-      org:
-        quartz:
-          scheduler:
-            instanceName: quartzScheduler
-            #            instanceName: clusteredScheduler
-            instanceId: AUTO
-          jobStore:
-            class: org.quartz.impl.jdbcjobstore.JobStoreTX
-            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
-            tablePrefix: QRTZ_
-            isClustered: false
-            clusterCheckinInterval: 10000
-            useProperties: false
-          #            dataSource: crmeb_java_beta
-          threadPool:
-            class: org.quartz.simpl.SimpleThreadPool
-            threadCount: 10
-            threadPriority: 5
-            threadsInheritContextClassLoaderOfInitializingThread: true
-    #数据库方式
-    job-store-type: JDBC
+    enable: false
+    auto-startup: false
+    startup-delay: 1000000
+
+  # quartz:
+  #   properties:
+  #     org:
+  #       quartz:
+  #         scheduler:
+  #           instanceName: quartzScheduler
+  #           #            instanceName: clusteredScheduler
+  #           instanceId: AUTO
+  #         jobStore:
+  #           class: org.quartz.impl.jdbcjobstore.JobStoreTX
+  #           driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+  #           tablePrefix: QRTZ_
+  #           isClustered: false
+  #           clusterCheckinInterval: 10000
+  #           useProperties: false
+  #         #            dataSource: crmeb_java_beta
+  #         threadPool:
+  #           class: org.quartz.simpl.SimpleThreadPool
+  #           threadCount: 10
+  #           threadPriority: 5
+  #           threadsInheritContextClassLoaderOfInitializingThread: true
+  #   #数据库方式
+  #   job-store-type: JDBC
 
 
   redis:
-    host: 127.0.0.1 #地址
+    host: 192.168.33.10 #地址
     port: 6379 #端口
-    password: 111111
+    password: 123456
     timeout: 30000 # 连接超时时间（毫秒）
     database: 6  #默认数据库
     jedis:

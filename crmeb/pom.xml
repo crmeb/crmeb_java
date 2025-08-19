@@ -308,7 +308,11 @@
             <artifactId>jwks-rsa</artifactId>
             <version>0.9.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.38</version>
+        </dependency>
     </dependencies>
     </dependencyManagement>
 
@@ -328,6 +332,13 @@
                         <verbose/>
                     </compilerArguments>
                     <!-- <failOnMissingWebXml>false</failOnMissingWebXml> -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.38</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
         </plugins>

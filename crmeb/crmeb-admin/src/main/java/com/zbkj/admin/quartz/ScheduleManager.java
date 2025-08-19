@@ -50,14 +50,19 @@ public class ScheduleManager {
     public void createScheduleJob(ScheduleJob scheduleJob) {
         try {
             //构建job信息
-            JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class).withIdentity(getJobKey(scheduleJob)).build();
+            JobDetail jobDetail = JobBuilder.newJob(QuartzJob.class).withIdentity(
+                getJobKey(scheduleJob)
+            ).build();
 
             //表达式调度构建器，可以根据scheduleJob修改withMisfireHandling方法，但是使用异步执行定时任务，没必要
-            CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule(scheduleJob.getCronExpression())
-                    .withMisfireHandlingInstructionFireAndProceed();
+            CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule(
+                scheduleJob.getCronExpression()
+            ).withMisfireHandlingInstructionFireAndProceed();
 
             //按新的cronExpression表达式构建一个新的trigger
-            CronTrigger trigger = TriggerBuilder.newTrigger().withIdentity(getTriggerKey(scheduleJob)).withSchedule(scheduleBuilder).build();
+            CronTrigger trigger = TriggerBuilder.newTrigger().withIdentity(
+                getTriggerKey(scheduleJob)
+            ).withSchedule(scheduleBuilder).build();
 
             //放入参数，运行时的方法可以获取
             jobDetail.getJobDataMap().put(QuartzJob.JOB_PARAM_KEY, scheduleJob);

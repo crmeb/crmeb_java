@@ -26,13 +26,23 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableSwagger2
 @Configuration
 @EnableTransactionManagement
-@SpringBootApplication(exclude = DataSourceAutoConfiguration.class) //去掉数据源
-//@ComponentScan(basePackages={"com.utils",
-//        "com.zbkj.crmeb",
-//        "com.exception",
-//        "com.common",
-//        "com.aop"}) //扫描utils包和父包
-//@MapperScan(basePackages = {"com.zbkj.crmeb.*.dao", "com.zbkj.crmeb.*.*.dao"})
+@SpringBootApplication(
+    exclude = DataSourceAutoConfiguration.class
+    , scanBasePackages={
+        "com.zbkj.common.*", 
+        "com.zbkj.common.utils.*"
+    }
+) //去掉数据源
+@ComponentScan({
+    "com.utils",
+    "com.zbkj.crmeb",
+    "com.exception",
+    "com.common",
+    "com.aop",
+    "com.zbkj.common", 
+    "com.zbkj.common.utils"
+}) //扫描utils包和父包
+@MapperScan(basePackages = {"com.zbkj.crmeb.*.dao", "com.zbkj.crmeb.*.*.dao"})
 @ComponentScan(basePackages = {"com.zbkj"})
 @MapperScan(basePackages = {"com.zbkj.**.dao"})
 public class CrmebAdminApplication {
