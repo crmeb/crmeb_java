@@ -12,7 +12,7 @@ crmeb:
   demoSite: true # 是否演示站点 所有手机号码都会掩码
 
 server:
-  port: 20500
+  port: 8080
 
 spring:
   profiles:
