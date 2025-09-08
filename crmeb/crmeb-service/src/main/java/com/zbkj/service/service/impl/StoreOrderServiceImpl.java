@@ -138,8 +138,6 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     @Autowired
     private SmsTemplateService smsTemplateService;
 
-    @Autowired
-    private CrmebUtil crmebUtil;
 
 //    @Autowired
 //    private WechatOrderShippingService wechatOrderShippingService;
@@ -650,8 +648,8 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         storeOrderInfoResponse.setProTotalPrice(storeOrder.getTotalPrice().subtract(storeOrder.getTotalPostage()));
 
         // 手机号脱敏处理
-        storeOrderInfoResponse.setUserPhone(crmebUtil.maskMobile(storeOrderInfoResponse.getUserPhone()));
-        storeOrderInfoResponse.setPhone(crmebUtil.maskMobile(storeOrderInfoResponse.getPhone()));
+        storeOrderInfoResponse.setUserPhone(CrmebUtil.maskMobile(storeOrderInfoResponse.getUserPhone()));
+        storeOrderInfoResponse.setPhone(CrmebUtil.maskMobile(storeOrderInfoResponse.getPhone()));
         return storeOrderInfoResponse;
     }
 
