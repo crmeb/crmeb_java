@@ -124,8 +124,6 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     @Autowired
     private SCRMUtils scrmUtils;
 
-    @Autowired
-    private CrmebUtil crmebUtil;
 
 
     /**
@@ -219,7 +217,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             } else {
                 userResponse.setSpreadNickname(userDao.selectById(user.getSpreadUid()).getNickname());
             }
-            userResponse.setPhone(crmebUtil.maskMobile(userResponse.getPhone()));
+            userResponse.setPhone(CrmebUtil.maskMobile(userResponse.getPhone()));
             userResponses.add(userResponse);
         }
         return CommonPage.copyPageInfo(pageUser, userResponses);
