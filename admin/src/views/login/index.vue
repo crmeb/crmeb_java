@@ -134,8 +134,8 @@ export default {
         }
       },
       loginForm: {
-        account: 'admin', // admin
-        pwd: '123456',
+        account: '', 
+        pwd: '',
         key: '',
         code: '',
         wxCode: ''
