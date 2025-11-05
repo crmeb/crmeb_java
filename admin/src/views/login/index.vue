@@ -123,8 +123,8 @@ export default {
         },
       },
       loginForm: {
-        account: 'demo',
-        pwd: 'crmeb.com',
+        account: '',
+        pwd: '',
         captchaVO: {},
       },
       loginRules: {
