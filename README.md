@@ -43,9 +43,6 @@ CRMEB开源商城系统Java版
 
 
 ---
-
-### 📖 项目介绍：
-
 ### 📖 项目介绍：
 
 CRMEB开源商城系统Java版，是一款基于Apache-2.0协议发布的开源电商解决方案。代码全开源无加密，可免费商用，适合各类企业及开发者快速构建多端一体化商城。
@@ -131,10 +128,10 @@ H5端：https://java.crmeb.net<br>
 您还可以在 [CRMEB技术社区](https://www.crmeb.com/ask/thread/list/152) 中提交Bug、交流解决方案、获取官方更新动态，CRMEB技术社区伴您一路前行。
 
 
-[![](crmeb/crmebimage/demoimage/251201/251201002.jpg)](https://www.crmeb.com/index/java_merchant)
+[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201002.jpg)](https://www.crmeb.com/index/java_merchant)
 
-[![](crmeb/crmebimage/demoimage/251201/251201005.jpg)](https://www.crmeb.com/index/java_merchant)
+[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201005.jpg)](https://www.crmeb.com/index/java_merchant)
 
-[![](crmeb/crmebimage/demoimage/251201/251201004.jpg)](https://www.crmeb.com/index/java_merchant)
+[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201004.jpg)](https://www.crmeb.com/index/java_merchant)
 
 [![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201001.gif)](https://www.crmeb.com/index/java_merchant)
