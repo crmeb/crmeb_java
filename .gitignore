@@ -6,13 +6,3 @@ crmeb/LOG_HOME_IS_UNDEFINED
 *.
 *.
 .DS_Store
-
-# Claude Code local settings
-.claude/
-
-# Large demo images (store in Gitee releases instead)
-crmeb/crmebimage/demoimage/
-
-# Large archive files
-*.zip
-app(1).zip
