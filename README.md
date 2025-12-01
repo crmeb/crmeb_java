@@ -58,11 +58,11 @@ CRMEB开源商城系统Java版，是一款基于Apache-2.0协议发布的开源�
 10余种营销功能能充分满足日常需求，包括拼团、砍价、秒杀、优惠券、签到、积分、等级会员、余额充值、分销裂变、活动边框、氛围图等，可灵活设置活动规则。
 
 #### 可视化页面DIY装修
-系统支持页面DIY设计，内置21种组件可自由拖拽设置，无需编码即可快速搭建个性化页面。
-图片热区：在一张图片中，为不同位置添加不同的跳转链接。
-图片魔方：一个组件，6种布局样式可选，能灵活满足使用需求。
-导航跳转：不仅能跳转商城内部页面，也能根据具体的运营环境跳转小程序、H5等。
-每种组件都有多种样式可选，组件细节支持自由调整。
+系统支持页面DIY设计，内置21种组件可自由拖拽设置，无需编码即可快速搭建个性化页面。<br>
+图片热区：在一张图片中，为不同位置添加不同的跳转链接。<br>
+图片魔方：一个组件，6种布局样式可选，能灵活满足使用需求。<br>
+导航跳转：不仅能跳转商城内部页面，也能根据具体的运营环境跳转小程序、H5等。<br>
+每种组件都有多种样式可选，组件细节支持自由调整。<br>
 
 #### 社区共建计划
 我们致力于打造开发者友好生态，开放源码、持续更新功能模块，并欢迎开发者提交优化建议或贡献代码。通过共享技术成果，降低行业重复造轮子成本，推动开源电商系统的可持续发展。
@@ -72,7 +72,7 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 
 系统代码全开源无加密，独立部署、二开方便，适用于企业新零售、分销、拼团、砍价，秒杀等各种业务需求。
 
-[![](crmeb/crmebimage/demoimage/251201/251201003.jpg)](https://www.crmeb.com/index/java_merchant)
+[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201003.jpg)](https://www.crmeb.com/index/java_merchant)
 ---
 
 ### 统优势
@@ -92,9 +92,38 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 ---
 
 ### 技术特点
-运行环境及框架（现有内容）</br>
-Java项目框架 和 WEB PC 项目运行环境（现有内容）</br>
-项目代码包介绍（现有内容）</br>
+#### 💻 运行环境及框架：
+~~~
+1.	移动端uniapp开发框架 可生成H5 公众号 微信小程序
+2.	WEB Pc 管理后台使用Vue + Element UI 开发 兼容主流浏览器 ie11+
+3.	后台服务 Java SpringBoot + Mybatis-plus + Mysql + redis
+4.	运行环境 linux和windows等都支持,只要有Java环境和对应的数据库 redis
+5.	运行条件 Java 1.8 Mysql5.7
+~~~
+
+#### 🔧 Java项目框架 和 WEB PC 项目运行环境
+~~~
+1. SpringBoot 2.2.6.RELEASE
+2. Maven 3.6.1
+3. swagger-bootstrap-ui 1.0
+4. Mybatis Plus 3.3.1
+5. npm 6
+6. node 14
+7. vue 2.x
+8. element ui 2.13
+~~~
+
+---
+
+#### 🧭 项目代码包介绍
+~~~
+1. admin     WEB程序         PC端管理端 VUE + ElementUi
+2. app       移动商城         UniApp标准开发(H5 + 微信小程序)
+3. crmeb     Api            Java SpringBoot + mybatisPlus
+4. 接口文档   Api对应的接口文档也可以部署项目后查看
+~~~
+
+移动端 uniapp 开发 使用 HbuilderX 开发
 
 ---
 
@@ -111,13 +140,13 @@ H5端：https://java.crmeb.net<br>
 ### 项目资料
 资料支持<br>
 使用文档：https://doc.crmeb.com/java/crmeb_java/1868<br>
-接口文档：<br>
+接口文档：https://s.apifox.cn/f6079100-abee-40fe-959d-846e44f1a048<br>
 数据字典：https://doc.crmeb.com/java/crmeb_java/5410<br>
-二开文档：<br>
+二开文档：https://doc.crmeb.com/java<br>
 技术社区：https://www.crmeb.com/ask/thread/list/152<br>
 
 安装教程<br>
-快速安装视频教程：点击查看（加安装视频链接跳转）<br>
+快速安装视频教程：  [点击查看](https://doc.crmeb.com/java/crmeb_java/2154)<br>
 安装步骤详解：https://doc.crmeb.com/java/crmeb_java/2154<br>
 
 ---
