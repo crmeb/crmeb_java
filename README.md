@@ -75,7 +75,8 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 [![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201003.jpg)](https://www.crmeb.com/index/java_merchant)
 ---
 
-### 统优势
+
+### 系统优势
 #### 成熟稳定的架构
 后端：SpringBoot + SpringSecurity，前端：Vue + ElementUI（PC管理端）与uni-app（移动端），多端并行开发，结构清晰。
 #### 规范的接口设计
@@ -121,9 +122,9 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 2. app       移动商城         UniApp标准开发(H5 + 微信小程序)
 3. crmeb     Api            Java SpringBoot + mybatisPlus
 4. 接口文档   Api对应的接口文档也可以部署项目后查看
+5. 移动端 uniapp 开发 使用 HbuilderX 开发
 ~~~
 
-移动端 uniapp 开发 使用 HbuilderX 开发
 
 ---
 
@@ -146,7 +147,8 @@ H5端：https://java.crmeb.net<br>
 技术社区：https://www.crmeb.com/ask/thread/list/152<br>
 
 安装教程<br>
-快速安装视频教程：  [点击查看](https://doc.crmeb.com/java/crmeb_java/2154)<br>
+快速安装视频教程：  [点击查看](https://www.bilibili.com/video/BV1MAiiY5EtP/?spm_id_from=333.1387.search.video_card.click&vd_source=9cea4dcdafd21c93762100c496e0f2a3)<br>
+
 安装步骤详解：https://doc.crmeb.com/java/crmeb_java/2154<br>
 
 ---
