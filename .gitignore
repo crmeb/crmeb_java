@@ -6,3 +6,14 @@ crmeb/LOG_HOME_IS_UNDEFINED
 *.
 *.
 .DS_Store
+
+# Large files
+*.zip
+*.sql
+*.dump
+*.tar.gz
+*.rar
+*.7z
+
+# Working directories
+.claude/
