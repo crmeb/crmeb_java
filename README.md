@@ -9,7 +9,7 @@ CRMEB开源商城系统Java版
 </div>
 
 <div align="center" >
-    <a href="http://www.crmeb.com">
+    <a href="http://www.crmeb.com?from=giteejava">
         <img src="https://img.shields.io/badge/License-apache2.0-green.svg?style=flat" />
     </a>
     <a href='https://gitee.com/ZhongBangKeJi/crmeb_java/members'>
@@ -24,10 +24,10 @@ CRMEB开源商城系统Java版
 
 <div align="center">
 
-[官网](https://www.crmeb.com/) |
+[官网](https://www.crmeb.com/?from=giteejava) |
 [在线体验](https://admin.java.crmeb.net) |
 [帮助文档](https://doc.crmeb.com/java/crmeb_java) |
-[技术社区](https://www.crmeb.com/ask/)
+[技术社区](https://www.crmeb.com/ask?from=giteejava)
 
 [comment]: <> ([宽屏预览]&#40;https://gitee.com/ZhongBangKeJi/crmeb_java/blob/master/README.md&#41;)
 
@@ -202,7 +202,7 @@ UI: 被子横盖显得高🐰
 ---
 ### 🪪 版权信息
 本项目包含的第三方源码和二进制文件之版权信息另行标注。<br>
-版权所有Copyright © 2017-2024 by CRMEB (https://www.crmeb.com)<br>
+版权所有Copyright © 2017-2024 by CRMEB (https://www.crmeb.com?from=giteejava)<br>
 All rights reserved。<br>
 CRMEB® 商标和著作权所有者为西安众邦网络科技有限公司。<br>
 
