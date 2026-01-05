@@ -9,7 +9,7 @@ CRMEB开源商城系统Java版
 </div>
 
 <div align="center" >
-    <a href="http://www.crmeb.com">
+    <a href="http://www.crmeb.com?from=giteejava">
         <img src="https://img.shields.io/badge/License-apache2.0-green.svg?style=flat" />
     </a>
     <a href='https://gitee.com/ZhongBangKeJi/crmeb_java/members'>
@@ -24,10 +24,10 @@ CRMEB开源商城系统Java版
 
 <div align="center">
 
-[官网](https://www.crmeb.com/) |
+[官网](https://www.crmeb.com/?from=giteejava) |
 [在线体验](https://admin.java.crmeb.net) |
 [帮助文档](https://doc.crmeb.com/java/crmeb_java) |
-[技术社区](https://www.crmeb.com/ask/)
+[技术社区](https://www.crmeb.com/ask?from=giteejava)
 
 [comment]: <> ([宽屏预览]&#40;https://gitee.com/ZhongBangKeJi/crmeb_java/blob/master/README.md&#41;)
 
