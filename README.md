@@ -72,7 +72,7 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 
 系统代码全开源无加密，独立部署、二开方便，适用于企业新零售、分销、拼团、砍价，秒杀等各种业务需求。
 
-[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201003.jpg)](https://www.crmeb.com/index/java_merchant)
+[![](crmeb/crmebimage/demoimage/251201003.jpg)](https://www.crmeb.com/index/java_merchant)
 ---
 
 
@@ -159,10 +159,10 @@ H5端：https://java.crmeb.net<br>
 您还可以在 [CRMEB技术社区](https://www.crmeb.com/ask/thread/list/152) 中提交Bug、交流解决方案、获取官方更新动态，CRMEB技术社区伴您一路前行。
 
 
-[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201002.jpg)](https://www.crmeb.com/index/java_merchant)
+[![](crmeb/crmebimage/demoimage/251201002.jpg)](https://www.crmeb.com/index/java_merchant)
 
-[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201005.jpg)](https://www.crmeb.com/index/java_merchant)
+[![](crmeb/crmebimage/demoimage/251201005.jpg)](https://www.crmeb.com/index/java_merchant)
 
-[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201004.jpg)](https://www.crmeb.com/index/java_merchant)
+[![](crmeb/crmebimage/demoimage/251201004.jpg)](https://www.crmeb.com/index/java_merchant)
 
 <!-- [![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201001.gif)](https://www.crmeb.com/index/java_merchant) -->
