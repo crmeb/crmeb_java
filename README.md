@@ -165,4 +165,4 @@ H5端：https://java.crmeb.net<br>
 
 [![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201004.jpg)](https://www.crmeb.com/index/java_merchant)
 
-[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201001.gif)](https://www.crmeb.com/index/java_merchant)
+<!-- [![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201001.gif)](https://www.crmeb.com/index/java_merchant) -->
