@@ -9,7 +9,7 @@ CRMEB开源商城系统Java版
 </div>
 
 <div align="center" >
-    <a href="http://www.crmeb.com">
+    <a href="http://www.crmeb.com?from=giteejava">
         <img src="https://img.shields.io/badge/License-apache2.0-green.svg?style=flat" />
     </a>
     <a href='https://gitee.com/ZhongBangKeJi/crmeb_java/members'>
@@ -24,10 +24,10 @@ CRMEB开源商城系统Java版
 
 <div align="center">
 
-[官网](https://www.crmeb.com/) |
+[官网](https://www.crmeb.com/?from=giteejava) |
 [在线体验](https://admin.java.crmeb.net) |
 [帮助文档](https://doc.crmeb.com/java/crmeb_java) |
-[技术社区](https://www.crmeb.com/ask/)
+[技术社区](https://www.crmeb.com/ask?from=giteejava)
 
 [comment]: <> ([宽屏预览]&#40;https://gitee.com/ZhongBangKeJi/crmeb_java/blob/master/README.md&#41;)
 
@@ -72,7 +72,7 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 
 系统代码全开源无加密，独立部署、二开方便，适用于企业新零售、分销、拼团、砍价，秒杀等各种业务需求。
 
-[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201003.jpg)](https://www.crmeb.com/index/java_merchant)
+[![](crmeb/crmebimage/demoimage/251201003.jpg)](https://www.crmeb.com/index/java_merchant)
 ---
 
 
@@ -153,16 +153,15 @@ H5端：https://java.crmeb.net<br>
 
 ---
 ### CRMEB开源技术交流
-欢迎加入CRMEB开源技术交流群，扫码进群免费领取接口文档、功能清单、UI设计图、思维导图等资源！
+欢迎加入CRMEB开源技术交流群，扫码进群免费领取接口文档、功能清单、思维导图等资源！
 ![](crmeb/crmebimage/demoimage/wellcomJavaGroup.jpg)
 
 您还可以在 [CRMEB技术社区](https://www.crmeb.com/ask/thread/list/152) 中提交Bug、交流解决方案、获取官方更新动态，CRMEB技术社区伴您一路前行。
 
 
-[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201002.jpg)](https://www.crmeb.com/index/java_merchant)
+[![](crmeb/crmebimage/demoimage/251201002.jpg)](https://www.crmeb.com/index/java_merchant)
 
-[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201005.jpg)](https://www.crmeb.com/index/java_merchant)
+[![](crmeb/crmebimage/demoimage/251201005.jpg)](https://www.crmeb.com/index/java_merchant)
 
-[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201004.jpg)](https://www.crmeb.com/index/java_merchant)
+[![](crmeb/crmebimage/demoimage/251201004.jpg)](https://www.crmeb.com/index/java_merchant)
 
-[![](https://crmebjavasingle.oss-cn-beijing.aliyuncs.com/crmebimage/251201001.gif)](https://www.crmeb.com/index/java_merchant)
