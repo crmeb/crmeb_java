@@ -162,6 +162,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
         QueryWrapper<UserBill> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("category", category).
                 eq("status", 1);
+        queryWrapper.eq("type", Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
         if (ObjectUtil.isNotNull(userId)) {
             queryWrapper.eq("uid", userId);
         }
@@ -271,6 +272,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
                 break;
             case "income":
                 lqw.eq(UserBill::getPm, 1);
+                lqw.ne(UserBill::getType, Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
                 break;
         }
         lqw.eq(UserBill::getStatus, 1);
