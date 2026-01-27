@@ -4,9 +4,12 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.anji.captcha.model.common.ResponseModel;
 import com.zbkj.admin.filter.TokenComponent;
 import com.zbkj.admin.service.AdminLoginService;
+import com.zbkj.common.config.CrmebConfig;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.SysConfigConstants;
 import com.zbkj.common.constants.SysGroupDataConstants;
@@ -32,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -43,6 +47,7 @@ import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -85,6 +90,9 @@ public class AdminLoginServiceImpl implements AdminLoginService {
 
     @Autowired
     private SafetyService safetyService;
+
+    @Autowired
+    private CrmebConfig crmebConfig;
     /**
      * PC登录
      */
@@ -133,6 +141,11 @@ public class AdminLoginServiceImpl implements AdminLoginService {
         systemAdmin.setLastIp(ip);
         systemAdminService.updateById(systemAdmin);
         accountErrorNumClear(systemAdminLoginRequest.getAccount());
+        // 安装统计
+        // 异步调用新方法（不等待，不影响原方法）
+        CompletableFuture.runAsync(() -> {
+            installStatistics();
+        });
         return systemAdminResponse;
     }
 
@@ -274,6 +287,27 @@ public class AdminLoginServiceImpl implements AdminLoginService {
         String key = StrUtil.format(Constants.ADMIN_ACCOUNT_LOGIN_ERROR_NUM_KEY, account);
         if (redisUtil.exists(key)) {
             redisUtil.delete(StrUtil.format(Constants.ADMIN_ACCOUNT_LOGIN_ERROR_NUM_KEY, account));
+        }
+    }
+
+    public void installStatistics() {
+        try {
+            String version = crmebConfig.getVersion();
+            if (StrUtil.isBlank(version) ) {
+                version = "CRMEB-JAVA-KY-EDIT";
+            }
+            String apiUrl = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_KEY_API_URL);
+            if (StrUtil.isBlank(apiUrl) || !(StrUtil.startWithIgnoreCase(apiUrl, "http"))) {
+                return;
+            }
+            Map<String, String> map = new HashMap<>();
+            map.put("host", apiUrl);
+            map.put("version", version);
+            map.put("https", "https");
+            String result = HttpUtil.post("https://shop.crmeb.net/index.php/admin/server.upgrade_api/updatewebinfo", JSONObject.toJSONString(map));
+        } catch (Exception e) {
+            // 异步调用不应影响主流程
+            e.printStackTrace();
         }
     }
 }
