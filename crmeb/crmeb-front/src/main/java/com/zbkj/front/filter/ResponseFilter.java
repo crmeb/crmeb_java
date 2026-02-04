@@ -50,7 +50,7 @@ public class ResponseFilter implements Filter {
             //把返回值输出到客户端
             ServletOutputStream outputStream = response.getOutputStream();
             if (str.length() > 0) {
-                outputStream.write(str.getBytes());
+                outputStream.write(str.getBytes(StandardCharsets.UTF_8));
                 outputStream.flush();
                 outputStream.close();
                 //最后添加这一句，输出到客户端
