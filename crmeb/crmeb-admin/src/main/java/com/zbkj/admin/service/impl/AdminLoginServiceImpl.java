@@ -141,11 +141,6 @@ public class AdminLoginServiceImpl implements AdminLoginService {
         systemAdmin.setLastIp(ip);
         systemAdminService.updateById(systemAdmin);
         accountErrorNumClear(systemAdminLoginRequest.getAccount());
-        // 安装统计
-        // 异步调用新方法（不等待，不影响原方法）
-        CompletableFuture.runAsync(() -> {
-            installStatistics();
-        });
         return systemAdminResponse;
     }
 
@@ -290,24 +285,4 @@ public class AdminLoginServiceImpl implements AdminLoginService {
         }
     }
 
-    public void installStatistics() {
-        try {
-            String version = crmebConfig.getVersion();
-            if (StrUtil.isBlank(version) ) {
-                version = "CRMEB-JAVA-KY-EDIT";
-            }
-            String apiUrl = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_KEY_API_URL);
-            if (StrUtil.isBlank(apiUrl) || !(StrUtil.startWithIgnoreCase(apiUrl, "http"))) {
-                return;
-            }
-            Map<String, String> map = new HashMap<>();
-            map.put("host", apiUrl);
-            map.put("version", version);
-            map.put("https", "https");
-            String result = HttpUtil.post("https://shop.crmeb.net/index.php/admin/server.upgrade_api/updatewebinfo", JSONObject.toJSONString(map));
-        } catch (Exception e) {
-            // 异步调用不应影响主流程
-            e.printStackTrace();
-        }
-    }
 }
