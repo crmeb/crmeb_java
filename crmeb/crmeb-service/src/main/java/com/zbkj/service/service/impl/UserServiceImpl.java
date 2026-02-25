@@ -121,10 +121,6 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     @Autowired
     private SystemAttachmentService systemAttachmentService;
 
-    @Autowired
-    private SCRMUtils scrmUtils;
-
-
 
     /**
      * 分页显示用户表
@@ -809,11 +805,6 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         });
         if (!execute) {
             throw new CrmebException("创建用户失败!");
-        }
-        try {
-            scrmUtils.addUserForSCRM(user.getPhone(), user.getNickname());
-        } catch (Exception e) {
-            logger.error("SCRM用户同步失败: phone={}, nickname={}", user.getPhone(), user.getNickname(), e);
         }
         return user;
     }

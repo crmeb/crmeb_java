@@ -121,9 +121,6 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
     @Autowired
     private FrontTokenComponent tokenComponent;
 
-    @Autowired
-    private SCRMUtils scrmUtils;
-
     /**
      * 推广数据接口(昨天的佣金 累计提现金额 当前佣金)
      */
@@ -892,11 +889,6 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         loginResponse.setUid(user.getUid());
         loginResponse.setNikeName(user.getNickname());
         loginResponse.setPhone(user.getPhone());
-        try {
-            scrmUtils.addUserForSCRM(user.getPhone(), user.getNickname());
-        } catch (Exception e) {
-            logger.error("SCRM用户同步失败: phone={}, nickname={}", user.getPhone(), user.getNickname(), e);
-        }
         return loginResponse;
     }
 
