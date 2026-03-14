@@ -1,4 +1,4 @@
- 
+
 <div align="center" >
     <img src="https://images.gitee.com/uploads/images/2021/1109/164354_0aafe3d2_892944.gif" />
 </div>
@@ -29,7 +29,7 @@ CRMEB开源商城系统Java版
 [帮助文档](https://doc.crmeb.com/java/crmeb_java) |
 [技术社区](https://www.crmeb.com/ask?from=giteejava)
 
-[comment]: <> ([宽屏预览]&#40;https://gitee.com/ZhongBangKeJi/crmeb_java/blob/master/README.md&#41;)
+[comment]: <> "[宽屏预览]&#40;https://gitee.com/ZhongBangKeJi/crmeb_java/blob/master/README.md&#41;"
 
 </div>
 
@@ -71,9 +71,6 @@ CRMEB开源商城PHP：https://gitee.com/ZhongBangKeJi/CRMEB
 
 
 系统代码全开源无加密，独立部署、二开方便，适用于企业新零售、分销、拼团、砍价，秒杀等各种业务需求。
-
-[![](crmeb/crmebimage/demoimage/251201003.jpg)](https://www.crmeb.com/index/java_merchant)
----
 
 
 ### 系统优势
