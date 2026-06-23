@@ -9,6 +9,13 @@
               </el-option>
             </el-select>
           </el-form-item>
+          <el-form-item label="用户搜索：">
+            <UserSearchInput ref="userSearchInput" v-model="tableFrom" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" size="small" @click="getList(1)">搜索</el-button>
+            <el-button size="small" @click="handleReset">重置</el-button>
+          </el-form-item>
         </el-form>
       </div>
     </el-card>
@@ -64,6 +71,8 @@ export default {
       listLoading: true,
       tableFrom: {
         type: '',
+        content: '',
+        searchType: 'all',
         page: 1,
         limit: 20,
       },
@@ -119,6 +128,18 @@ export default {
         .catch((res) => {
           this.$message.error(res.message);
         });
+    },
+    //重置
+    handleReset() {
+      this.tableFrom.content = '';
+      this.tableFrom.searchType = 'all';
+      this.tableFrom.type = ''
+      this.getList();
+    },
+    // 搜索
+    seachList() {
+      this.tableFrom.page = 1;
+      this.getList();
     },
   },
 };

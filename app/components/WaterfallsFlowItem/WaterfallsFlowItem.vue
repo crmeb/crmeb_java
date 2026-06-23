@@ -35,7 +35,7 @@
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
-	// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+	// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 	// +----------------------------------------------------------------------
 	// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 	// +----------------------------------------------------------------------
@@ -132,8 +132,8 @@
 
 			.pictrue {
 
-				/deep/image,
-				/deep/.easy-loadimage,
+				::v-deep image,
+				::v-deep .easy-loadimage,
 				uni-image {
 					width: 100%;
 					height: 100%;
@@ -224,7 +224,7 @@
 		border-radius: 16rpx 16rpx 0 0;
 		overflow: hidden;
 
-		/deep/.easy-loadimage,
+		::v-deep .easy-loadimage,
 		uni-image,
 		image {
 			height: 330rpx;

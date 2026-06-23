@@ -5,28 +5,27 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.request.CartNumRequest;
-import com.zbkj.common.request.CartRequest;
-import com.zbkj.common.request.CartResetRequest;
-import com.zbkj.common.request.PageParamRequest;
-import com.zbkj.common.constants.Constants;
-import com.zbkj.common.constants.RedisConstatns;
-import com.zbkj.common.exception.CrmebException;
-import com.zbkj.common.response.CartInfoResponse;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.zbkj.common.utils.RedisUtil;
+import com.zbkj.common.constants.Constants;
+import com.zbkj.common.constants.RedisConstatns;
+import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.cat.StoreCart;
 import com.zbkj.common.model.product.StoreProduct;
 import com.zbkj.common.model.product.StoreProductAttrValue;
 import com.zbkj.common.model.system.SystemUserLevel;
 import com.zbkj.common.model.user.User;
+import com.zbkj.common.page.CommonPage;
+import com.zbkj.common.request.CartNumRequest;
+import com.zbkj.common.request.CartRequest;
+import com.zbkj.common.request.CartResetRequest;
+import com.zbkj.common.request.PageParamRequest;
+import com.zbkj.common.response.CartInfoResponse;
+import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.service.dao.StoreCartDao;
 import com.zbkj.service.service.*;
 import org.springframework.beans.BeanUtils;
@@ -46,7 +45,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -73,6 +72,7 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
 
     @Autowired
     private RedisUtil redisUtil;
+
 
     /**
     * 列表
@@ -126,6 +126,11 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
                 continue ;
             }
             StoreProductAttrValue attrValue = attrValueList.get(0);
+            if (ObjectUtil.isNull(attrValue) || !attrValue.getIsShow()) {
+                cartInfoResponse.setAttrStatus(false);
+                response.add(cartInfoResponse);
+                continue ;
+            }
             if (StrUtil.isNotBlank(attrValue.getImage())) {
                 cartInfoResponse.setImage(attrValue.getImage());
             }
@@ -242,12 +247,16 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
      */
     @Override
     public Boolean productStatusNotEnable(Integer productId) {
-        StoreCart storeCartPram = new StoreCart();
-        storeCartPram.setProductId(productId);
-        List<StoreCart> existStoreCartProducts = getByEntity(storeCartPram);
-        if (null == existStoreCartProducts) return true;
-        existStoreCartProducts.forEach(e-> e.setStatus(false).setUpdateTime(DateUtil.date()));
-        return updateBatchById(existStoreCartProducts);
+        //StoreCart storeCartPram = new StoreCart();
+        //storeCartPram.setProductId(productId);
+        //List<StoreCart> existStoreCartProducts = getByEntity(storeCartPram);
+        //if (null == existStoreCartProducts) return true;
+        //existStoreCartProducts.forEach(e-> e.setStatus(false).setUpdateTime(DateUtil.date()));
+        //return updateBatchById(existStoreCartProducts);
+        LambdaUpdateWrapper<StoreCart> update = Wrappers.lambdaUpdate();
+        update.set(StoreCart::getStatus, false);
+        update.eq(StoreCart::getProductId, productId);
+        return update(update);
     }
 
     /**
@@ -355,6 +364,18 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
         return updateById(storeCart);
     }
 
+    /**
+     * 通过用户id删除
+     *
+     * @param uid 用户ID
+     */
+    @Override
+    public Boolean deleteByUid(Integer uid) {
+        LambdaUpdateWrapper<StoreCart> wrapper = Wrappers.lambdaUpdate();
+        wrapper.eq(StoreCart::getUid, uid);
+        return remove(wrapper);
+    }
+
     ///////////////////////////////////////////////////////////////////自定义方法
     /**
      * 购物车商品数量（条数）
@@ -378,16 +399,17 @@ public class StoreCartServiceImpl extends ServiceImpl<StoreCartDao, StoreCart> i
      * @return Integer
      */
     private Integer getUserSumByStatus(Integer userId, Boolean status) {
-        QueryWrapper<StoreCart> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("ifnull(sum(cart_num), 0) as cart_num");
-        queryWrapper.eq("uid", userId);
-        queryWrapper.eq("is_new", false);
-        queryWrapper.eq("status", status);
-        StoreCart storeCart = dao.selectOne(queryWrapper);
-        if (ObjectUtil.isNull(storeCart)) {
-            return 0;
-        }
-        return storeCart.getCartNum();
+        //QueryWrapper<StoreCart> queryWrapper = new QueryWrapper<>();
+        //queryWrapper.select("ifnull(sum(cart_num), 0) as cart_num");
+        //queryWrapper.eq("uid", userId);
+        //queryWrapper.eq("is_new", false);
+        //queryWrapper.eq("status", status);
+        //StoreCart storeCart = dao.selectOne(queryWrapper);
+        //if (ObjectUtil.isNull(storeCart)) {
+        //    return 0;
+        //}
+        //return storeCart.getCartNum();
+        return dao.getUserCartSumByStatus(userId, status);
     }
 
     /**

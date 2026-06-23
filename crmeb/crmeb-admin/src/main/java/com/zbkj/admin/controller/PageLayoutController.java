@@ -3,12 +3,14 @@ package com.zbkj.admin.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.zbkj.common.response.pagelayout.PageLayoutBottomNavigationResponse;
 import com.zbkj.common.result.CommonResult;
+import com.zbkj.common.vo.SplashAdConfigVo;
 import com.zbkj.service.service.PageLayoutService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -22,7 +24,7 @@ import java.util.Map;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -139,6 +141,29 @@ public class PageLayoutController {
         return CommonResult.failed();
     }
 
+    /**
+     * 分类页配置
+     */
+    @PreAuthorize("hasAuthority('admin:page:layout:category:config')")
+    @ApiOperation(value = "获取分类页配置")
+    @RequestMapping(value = "/category/config", method = RequestMethod.GET)
+    public CommonResult<Map<String, Object>> categoryConfig() {
+        return CommonResult.success(pageLayoutService.getCategoryConfig());
+    }
+
+    /**
+     * 分类页配置保存
+     */
+    @PreAuthorize("hasAuthority('admin:page:layout:category:config:save')")
+    @ApiOperation(value = "分类页配置保存")
+    @RequestMapping(value = "/category/config/save", method = RequestMethod.POST)
+    public CommonResult<Object> categoryConfigSave(@RequestBody JSONObject jsonObject) {
+        if (pageLayoutService.categoryConfigSave(jsonObject)) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
+    }
+
     @PreAuthorize("hasAuthority('admin:page:layout:bottom:navigation')")
     @ApiOperation(value = "页面底部导航")
     @RequestMapping(value = "/bottom/navigation/get", method = RequestMethod.GET)
@@ -154,5 +179,23 @@ public class PageLayoutController {
             return CommonResult.success();
         }
         return CommonResult.failed();
+    }
+
+    @PreAuthorize("hasAuthority('admin:page:layout:splash:ad:get')")
+    @ApiOperation(value = "获取开屏广告配置")
+    @RequestMapping(value = "/splash/ad/get", method = RequestMethod.GET)
+    public CommonResult<SplashAdConfigVo> getSplashAdConfig() {
+        return CommonResult.success(pageLayoutService.getSplashAdConfig());
+    }
+
+    @PreAuthorize("hasAuthority('admin:page:layout:splash:ad:save')")
+    @ApiOperation(value = "编辑开屏广告配置")
+    @RequestMapping(value = "/splash/ad/save", method = RequestMethod.POST)
+    public CommonResult<Object> splashAdConfigSave(@RequestBody @Validated SplashAdConfigVo configVo) {
+        if (pageLayoutService.splashAdConfigSave(configVo)) {
+            return CommonResult.success("编辑成功");
+        }
+        return CommonResult.failed("编辑失败");
+
     }
 }

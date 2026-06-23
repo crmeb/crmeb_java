@@ -90,11 +90,6 @@ export const constantRoutes = [
     hidden: true,
   },
   {
-    path: '/page/design/creatDevise/:id?/:type?',
-    component: () => import('@/views/design/devise/creatDevise'),
-    hidden: true,
-  },
-  {
     path: '/redirect',
     component: Layout,
     hidden: true,

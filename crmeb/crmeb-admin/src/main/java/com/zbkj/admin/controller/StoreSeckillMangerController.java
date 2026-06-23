@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -117,9 +117,9 @@ public class StoreSeckillMangerController {
    @RequestMapping(value = "/update/status/{id}", method = RequestMethod.POST)
    @ApiImplicitParams({
            @ApiImplicitParam(name = "id", value = "商品id", dataType = "int", required = true),
-           @ApiImplicitParam(name = "status", value = "状态", dataType = "string", required = true)
+           @ApiImplicitParam(name = "status", value = "状态", dataType = "boolean", required = true)
    })
-   public CommonResult<Object> updateStatus(@PathVariable(value = "id") Integer id, String status) {
+   public CommonResult<Object> updateStatus(@PathVariable(value = "id") Integer id, Boolean status) {
         return CommonResult.success(storeSeckillMangerService.updateStatus(id,status));
    }
 

@@ -227,7 +227,7 @@ export default {
   watch: {
     'formValidate.attr': {
       handler: function (val) {
-        this.watCh(val); //重要！！！
+        if( this.formValidate.specType) this.watCh(val); //重要！！！
       },
       immediate: false,
       deep: true,

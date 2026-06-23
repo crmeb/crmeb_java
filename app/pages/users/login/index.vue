@@ -44,6 +44,14 @@
 					</div>
 				</div>
 			</div>
+			<view class="protocol acea-row row-between-wrapper">
+				<checkbox-group class="checkgroup acea-row" @change='isAgree=!isAgree'  style="align-items: end;">
+					<checkbox class="checkbox" :checked="isAgree ? true : false" />
+					<text class="protocol_text">我已阅读并同意<text  @click="userAgree('userinfo')"
+							class="font_pro">《用户协议》</text>和<text   @click="userAgree('userprivacyinfo')"
+							class="font_pro">《隐私政策》</text></text>
+				</checkbox-group>
+			</view>
 			<div class="logon bg_color" @click="loginMobile" v-if="current !== 0">登录</div>
 			<div class="logon bg_color" @click="submit" v-if="current === 0">登录</div>
 			<!-- #ifndef APP-PLUS -->
@@ -69,9 +77,9 @@
 					<view class="btn yanzheng" v-if="current == 0" @click="current =1">
 						<span class="iconfont icon-s-yanzhengmadenglu1"></span>
 					</view>
-					<!-- <view class="btn apple-btn" @click="appleLogin" v-if="appleShow">
+					<view class="btn apple-btn" @click="appleLogin" v-if="appleShow">
 						<view class="iconfont icon-s-pingguo"></view>
-					</view> -->
+					</view>
 				</view>
 			</view>
 			<!-- #endif -->
@@ -96,7 +104,7 @@
 	let app = getApp();
 	import attrs, {required,alpha_num,chs_phone} from "@/utils/validate";
 	import {validatorDefaultCatch} from "@/utils/dialog";
-	import {appAuth} from "@/api/public";
+	import {appAuth, appleLogin} from "@/api/public";
 	import {VUE_APP_API_URL} from "@/utils";
 	import Routine from '@/libs/routine';
 	import {Debounce} from '@/utils/validate.js'
@@ -113,6 +121,7 @@
 		},
 		data: function() {
 			return {
+				isAgree: false,
 				urlDomain: this.$Cache.get("imgHost"),
 				navList: ["快速登录", "账号登录"],
 				current: 1,
@@ -168,6 +177,9 @@
 				if (!that.account) return that.$util.Tips({
 					title: '请填写手机号码'
 				});
+				if (!this.isAgree) return this.$util.Tips({
+					title: '请勾选用户隐私协议'
+				});
 				if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(that.account)) return that.$util.Tips({
 					title: '请输入正确的手机号码'
 				});
@@ -188,74 +200,80 @@
 				goToAgreement(type)
 			},
 			// 苹果登录
-			// appleLogin() {
-			// 	let self = this
-			// 	this.account = ''
-			// 	this.captcha = ''
-			// 	uni.showLoading({
-			// 		title: '登录中'
-			// 	})
-			// 	uni.login({
-			// 		provider: 'apple',
-			// 		timeout: 10000,
-			// 		success(loginRes) {
-			// 			uni.getUserInfo({
-			// 				provider: 'apple',
-			// 				success: function(infoRes) {
-			// 					self.appleUserInfo = infoRes.userInfo
-			// 					self.appleLoginApi()
-			// 				},
-			// 				fail() {
-			// 					uni.hideLoading()
-			// 					uni.showToast({
-			// 						title: '获取用户信息失败',
-			// 						icon: 'none',
-			// 						duration: 2000
-			// 					})
-			// 				},
-			// 				complete() {
-			// 					uni.hideLoading()
-			// 				}
-			// 			});
-			// 		},
-			// 		fail(error) {
-			// 			uni.hideLoading()
-			// 			console.log(error)
-			// 		}
-			// 	})
-			// },
+			appleLogin() {
+				let self = this
+				this.account = ''
+				this.captcha = ''
+				if (!self.isAgree) return self.$util.Tips({
+					title: '请勾选用户隐私协议'
+				});
+				uni.showLoading({
+					title: '登录中'
+				})
+				uni.login({
+					provider: 'apple',
+					timeout: 10000,
+					success(loginRes) {
+						uni.getUserInfo({
+							provider: 'apple',
+							success: function(infoRes) {
+								self.appleUserInfo = infoRes.userInfo
+								self.appleLoginApi()
+							},
+							fail() {
+								uni.hideLoading()
+								uni.showToast({
+									title: '获取用户信息失败',
+									icon: 'none',
+									duration: 2000
+								})
+							},
+							complete() {
+								uni.hideLoading()
+							}
+						});
+					},
+					fail(error) {
+						uni.hideLoading()
+						console.log(error)
+					}
+				})
+			},
 			// 苹果登录Api
-			// appleLoginApi() {
-			// 	let self = this
-			// 	appleLogin({
-			// 		openId: self.appleUserInfo.openId,
-			// 		email: self.appleUserInfo.email == undefined ? '' :self.appleUserInfo.email,
-			// 		identityToken: self.appleUserInfo.identityToken || ''
-			// 	}).then((res) => {
-			// 		this.$store.commit("LOGIN", {
-			// 			'token': res.data.token
-			// 		});
-			// 		this.getUserInfo(res.data);
-			// 	}).catch(error => {
-			// 		uni.hideLoading();
-			// 		uni.showModal({
-			// 			title: '提示',
-			// 			content: `错误信息${error}`,
-			// 			success: function(res) {
-			// 				if (res.confirm) {
-			// 					console.log('用户点击确定');
-			// 				} else if (res.cancel) {
-			// 					console.log('用户点击取消');
-			// 				}
-			// 			}
-			// 		});
-			// 	})
-			// },
+			appleLoginApi() {
+				let self = this
+				appleLogin({
+					openId: self.appleUserInfo.openId,
+					email: self.appleUserInfo.email == undefined ? '' :self.appleUserInfo.email,
+					identityToken: self.appleUserInfo.identityToken || ''
+				}).then((res) => {
+					this.$store.commit("LOGIN", {
+						'token': res.data.token
+					});
+					this.getUserInfo(res.data);
+				}).catch(error => {
+					uni.hideLoading();
+					uni.showModal({
+						title: '提示',
+						content: `错误信息${error}`,
+						success: function(res) {
+							if (res.confirm) {
+								console.log('用户点击确定');
+							} else if (res.cancel) {
+								console.log('用户点击取消');
+							}
+						}
+					});
+				})
+			},
 			// App微信登录
 			wxLogin:Debounce(function() {
 				let self = this
 				this.account = ''
 				this.captcha = ''
+				if (!self.isAgree) return self.$util.Tips({
+					title: '请勾选用户隐私协议' 
+				});
 				uni.showLoading({
 					title: '登录中'
 				}) 
@@ -336,6 +354,9 @@
 				if (!/^[\w\d]+$/i.test(that.captcha)) return that.$util.Tips({
 					title: '请输入正确的验证码'
 				});
+				if (!that.isAgree) return that.$util.Tips({
+					title: '请勾选用户隐私协议'
+				});
 				uni.showLoading({
 					title: '登录中'
 				})
@@ -368,6 +389,9 @@
 				});
 				if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(that.account)) return that.$util.Tips({
 					title: '请输入正确的手机号码'
+				});
+				if (!that.isAgree) return that.$util.Tips({
+					title: '请勾选用户隐私协议'
 				});
 				if (!that.captcha) return that.$util.Tips({
 					title: '请填写验证码'
@@ -405,6 +429,9 @@
 				if (!that.account) return that.$util.Tips({
 					title: '请填写手机号码'
 				});
+				if (!that.isAgree) return that.$util.Tips({
+					title: '请勾选用户隐私协议'
+				});
 				if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(that.account)) return that.$util.Tips({
 					title: '请输入正确的手机号码'
 				});
@@ -425,6 +452,9 @@
 				});
 				if (!that.password) return that.$util.Tips({
 					title: '请填写密码'
+				});
+				if (!that.isAgree) return that.$util.Tips({
+					title: '请勾选用户隐私协议'
 				});
 				uni.showLoading({
 					title: '登录中'

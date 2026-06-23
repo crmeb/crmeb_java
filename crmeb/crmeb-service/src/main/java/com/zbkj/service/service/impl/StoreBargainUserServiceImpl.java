@@ -3,10 +3,14 @@ package com.zbkj.service.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.zbkj.common.constants.DateConstants;
+import com.zbkj.common.constants.UserConstants;
+import com.zbkj.common.model.combination.StorePink;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.BargainFrontRequest;
 import com.zbkj.common.request.PageParamRequest;
@@ -17,6 +21,7 @@ import com.zbkj.common.response.BargainUserInfoResponse;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.zbkj.common.result.CommonResultCode;
 import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.model.bargain.StoreBargain;
@@ -26,6 +31,7 @@ import com.zbkj.common.request.StoreBargainUserSearchRequest;
 import com.zbkj.common.response.StoreBargainUserResponse;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.user.User;
+import com.zbkj.common.utils.ValidateFormUtil;
 import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.service.dao.StoreBargainUserDao;
 import com.zbkj.service.service.*;
@@ -44,7 +50,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -73,34 +79,54 @@ public class StoreBargainUserServiceImpl extends ServiceImpl<StoreBargainUserDao
     /**
     * 分页展示砍价参与用户列表
     * @param request 请求参数
-    * @param pageParamRequest 分页类参数
     * @return List<StoreBargainUser>
     */
     @Override
-    public PageInfo<StoreBargainUserResponse> getList(StoreBargainUserSearchRequest request, PageParamRequest pageParamRequest) {
-        Page<StoreBargainUser> startPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-        LambdaQueryWrapper<StoreBargainUser> lqw = new LambdaQueryWrapper<>();
-        if (ObjectUtil.isNotNull(request.getStatus())) {
-            lqw.eq(StoreBargainUser::getStatus, request.getStatus());
-        }
+    public PageInfo<StoreBargainUserResponse> getList(StoreBargainUserSearchRequest request) {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("status", request.getStatus());
+        //时间范围
         if (StrUtil.isNotBlank(request.getDateLimit())) {
             DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
-            lqw.between(StoreBargainUser::getAddTime, CrmebDateUtil.dateStr2Timestamp(dateLimit.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN), CrmebDateUtil.dateStr2Timestamp(dateLimit.getEndTime(), Constants.DATE_TIME_TYPE_END));
+            //判断时间
+            int compareDateResult = CrmebDateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), DateConstants.DATE_FORMAT);
+            if (compareDateResult == -1) {
+                throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "开始时间不能大于结束时间！");
+            }
+            if (StrUtil.isNotBlank(dateLimit.getStartTime())) {
+                map.put("startTime",  CrmebDateUtil.dateStr2Timestamp(dateLimit.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN));
+                map.put("endTime", CrmebDateUtil.dateStr2Timestamp(dateLimit.getEndTime(), Constants.DATE_TIME_TYPE_END));
+            }
         }
-        lqw.orderByDesc(StoreBargainUser::getId);
-        List<StoreBargainUser> bargainUserList = dao.selectList(lqw);
-        if (CollUtil.isEmpty(bargainUserList)) {
+        if (StrUtil.isNotBlank(request.getContent())) {
+            ValidateFormUtil.validatorUserCommonSearch(request);
+            String keywords = URLUtil.decode(request.getContent());
+            switch (request.getSearchType()) {
+                case UserConstants.USER_SEARCH_TYPE_ALL:
+                    map.put("keywords", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_UID:
+                    map.put("uid", Integer.valueOf(request.getContent()));
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_NICKNAME:
+                    map.put("nickname", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_PHONE:
+                    map.put("phone", request.getContent());
+                    break;
+            }
+        }
+        Page<StoreBargainUser> startPage = PageHelper.startPage(request.getPage(), request.getLimit());
+        List<StoreBargainUserResponse> responseList = dao.selectBargainUserList(map);
+
+        if (CollUtil.isEmpty(responseList)) {
             return CommonPage.copyPageInfo(startPage, CollUtil.newArrayList());
         }
-        List<StoreBargainUserResponse> list = bargainUserList.stream().map(bargainUser -> {
+        List<StoreBargainUserResponse> list = responseList.stream().map(bargainUser -> {
             StoreBargainUserResponse bargainUserResponse = new StoreBargainUserResponse();
             BeanUtils.copyProperties(bargainUser, bargainUserResponse);
-            bargainUserResponse.setAddTime(CrmebDateUtil.timestamp2DateStr(bargainUser.getAddTime(), Constants.DATE_FORMAT));
+            bargainUserResponse.setAddTime(CrmebDateUtil.timestamp2DateStr(Long.valueOf(bargainUser.getAddTime()), Constants.DATE_FORMAT));
             bargainUserResponse.setNowPrice(bargainUser.getBargainPrice().subtract(bargainUser.getPrice()));
-            // 查询用户信息
-            User user = userService.getById(bargainUser.getUid());
-            bargainUserResponse.setAvatar(user.getAvatar());
-            bargainUserResponse.setNickname(user.getNickname());
             // 查询砍价商品信息
             StoreBargain storeBargain = storeBargainService.getById(bargainUser.getBargainId());
             bargainUserResponse.setTitle(storeBargain.getTitle());
@@ -161,13 +187,6 @@ public class StoreBargainUserServiceImpl extends ServiceImpl<StoreBargainUserDao
      */
     @Override
     public List<StoreBargainUser> getHeaderList() {
-//        LambdaQueryWrapper<StoreBargainUser> lqw = Wrappers.lambdaQuery();
-//        lqw.eq(StoreBargainUser::getStatus, 3);
-//        lqw.eq(StoreBargainUser::getIsDel, false);
-//        lqw.groupBy(StoreBargainUser::getUid);
-//        lqw.orderByDesc(StoreBargainUser::getId);
-//        lqw.last(" limit 10");
-//        return dao.selectList(lqw);
         return dao.selectHeaderList();
     }
 

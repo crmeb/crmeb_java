@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.hibernate.validator.constraints.Length;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
@@ -19,7 +20,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -104,9 +105,11 @@ public class StoreCombinationRequest implements Serializable {
     @Min(value = 0, message = "虚拟成团数量不能小于0")
     private Integer virtualRation;
 
+    @Valid
     @ApiModelProperty(value = "商品属性")
     private List<StoreProductAttrAddRequest> attr;
 
+    @Valid
     @ApiModelProperty(value = "商品属性详情")
     @NotEmpty(message = "商品属性不能为空")
     private List<StoreProductAttrValueAddRequest> attrValue;

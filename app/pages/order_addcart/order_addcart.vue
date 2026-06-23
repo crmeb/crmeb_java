@@ -17,7 +17,7 @@
 				<!-- #ifndef APP-PLUS -->
 				<view class="nav_title" :style="{ top: homeTop + 'rpx' }">购物车</view>
 				<!-- #endif -->
-				<!-- #ifdef H5 || APP-PLUS -->
+				<!-- #ifdef H5 -->
 				<view class="right_select" :style="{ top: homeTop + 'rpx' }" @tap="showNav">
 					<text class="iconfont icon-gengduo2"></text>
 				</view>
@@ -37,15 +37,14 @@
 				<view class='item'><text class='iconfont icon-xuanzhong'></text>售后无忧</view>
 			</view>
 			<view class="borRadius14 cartBox">
-				<view
-					v-if="(cartList.valid.length === 0 && cartList.invalid.length === 0) || (cartList.valid.length > 0)"
+				<view v-if="(cartList.valid.length === 0 && cartList.invalid.length === 0) || (cartList.valid.length > 0)"
 					class='nav acea-row row-between-wrapper'>
 					<view>购物数量 <text class='num font_color'>{{cartCount}}</text></view>
 					<view v-if="cartList.valid.length > 0 || cartList.invalid.length > 0"
 						class='administrate acea-row row-center-wrapper' @click='manage'>{{ footerswitch ? '管理' : '取消'}}
 					</view>
 				</view>
-				<view v-if="cartList.valid.length > 0 || cartList.invalid.length > 0" class="pad30">
+				<view v-if="cartList.valid.length > 0 || cartList.invalid.length > 0" class="p-30">
 					<view class='list'>
 						<checkbox-group @change="checkboxChange">
 							<block v-for="(item,index) in cartList.valid" :key="index">
@@ -55,8 +54,7 @@
 										:disabled="!item.attrStatus && footerswitch" style="margin-right: 10rpx;" />
 									<!-- #endif -->
 									<!-- #ifdef MP -->
-									<checkbox :value="item.id" :checked="item.checked"
-										:disabled="!item.attrStatus && footerswitch" />
+									<checkbox :value="item.id" :checked="item.checked" :disabled="!item.attrStatus && footerswitch" />
 									<!-- #endif -->
 									<navigator :url='"/pages/goods/goods_details/index?id="+item.productId' hover-class='none'
 										class='picTxt acea-row row-between-wrapper'>
@@ -67,19 +65,19 @@
 											<view class='line1' :class="item.attrStatus?'':'reColor'">{{item.storeName}}
 											</view>
 											<view class='infor line1' v-if="item.suk">属性：{{item.suk}}</view>
-											<view class='money mt-28' v-if="item.attrStatus">￥{{item.vipPrice ? item.vipPrice :item.price}}</view>
+											<view class='money mt-28' v-if="item.attrStatus">￥{{item.vipPrice ? item.vipPrice :item.price}}
+											</view>
 											<view class="reElection acea-row row-between-wrapper" v-else>
 												<view class="title">请重新选择商品规格</view>
-												<view class="reBnt cart-color acea-row row-center-wrapper"
-													@click.stop="reElection(item)">重选</view>
+												<view class="reBnt cart-color acea-row row-center-wrapper" @click.stop="reElection(item)">
+													重选
+												</view>
 											</view>
 										</view>
 										<view class='carnum acea-row row-center-wrapper' v-if="item.attrStatus">
-											<view class="reduce" :class="item.numSub ? 'on' : ''"
-												@click.stop='subCart(index)'>-</view>
+											<view class="reduce" :class="item.numSub ? 'on' : ''" @click.stop='subCart(index)'>-</view>
 											<view class='num'>{{item.cartNum}}</view>
-											<view class="plus" :class="item.numAdd ? 'on' : ''"
-												@click.stop='addCart(index)'>+</view>
+											<view class="plus" :class="item.numAdd ? 'on' : ''" @click.stop='addCart(index)'>+</view>
 										</view>
 									</navigator>
 								</view>
@@ -90,8 +88,7 @@
 						:style="cartList.valid.length===0 && cartList.invalid.length > 0 ? 'position: relative;z-index: 111;top: -120rpx;':'position: static;'">
 						<view class='goodsNav acea-row row-between-wrapper'>
 							<view v-if="cartList.invalid.length > 1 || cartList.valid.length > 0" @click='goodsOpen'>
-								<text class='iconfont'
-									:class='goodsHidden==true?"icon-xiangxia":"icon-xiangshang"'></text>失效商品
+								<text class='iconfont' :class='goodsHidden==true?"icon-xiangxia":"icon-xiangshang"'></text>失效商品
 							</view>
 							<view v-else>
 								失效商品
@@ -121,12 +118,14 @@
 					<!-- #ifdef H5 -->
 					<view style="height:240rpx;"></view>
 					<!-- #endif -->
-					<!-- #ifdef MP || APP-PLUS -->
-					<view style="height:120rpx;"></view>
+					<!-- #ifdef APP-PLUS -->
+					<view style="height:300rpx;"></view>
+					<!-- #endif -->
+					<!-- #ifdef MP -->
+					<view style="height:300rpx;"></view>
 					<!-- #endif -->
 					<view class='loadingicon acea-row row-center-wrapper' v-if="cartList.invalid.length&&loadend">
-						<text class='loading iconfont icon-jiazai'
-							:hidden='loadingInvalid==false'></text>{{loadTitleInvalid}}
+						<text class='loading iconfont icon-jiazai' :hidden='loadingInvalid==false'></text>{{loadTitleInvalid}}
 					</view>
 				</view>
 				<view class='noCart' v-if="(cartList.valid.length == 0 && cartList.invalid.length == 0 && canShow) || !isLogin">
@@ -142,7 +141,8 @@
 			</view>
 		</view>
 		<!-- <view style="height:260rpx;"></view> -->
-		<view class='footer acea-row row-between-wrapper' v-if="cartList.valid.length > 0" :class="bottomNavigationIsCustom?'bottom-custom':''">
+		<view class='footer acea-row row-between-wrapper' v-if="cartList.valid.length > 0"
+			:class="bottomNavigationIsCustom?'bottom-custom':''">
 			<view>
 				<checkbox-group @change="checkboxAllChange">
 					<checkbox value="all" :checked="!!isAllSelect" />
@@ -164,9 +164,9 @@
 				</form>
 			</view>
 		</view>
-		<productWindow :attr="attr" :isShow='1' :iSplus='1' :iScart='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr"
-			@ChangeCartNum="ChangeCartNum" @attrVal="attrVal" @iptCartNum="iptCartNum" @goCat="reGoCat"
-			id='product-window'></productWindow>
+		<productWindow v-if="isOpenAttr" :attr="attr" :isShow='1' :iSplus='1' :iScart='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr"
+			@ChangeCartNum="ChangeCartNum" @attrVal="attrVal" @iptCartNum="iptCartNum" @goCat="reGoCat" id='product-window'>
+		</productWindow>
 		<view class="uni-p-b-96"></view>
 		<view class="uni-p-b-98"></view>
 		<pageFooter></pageFooter>
@@ -195,8 +195,12 @@
 		collectAll,
 		getProductDetail
 	} from '@/api/store.js';
-	import {getShare} from '@/api/public.js';
-	import {mapGetters} from "vuex";
+	import {
+		getShare
+	} from '@/api/public.js';
+	import {
+		mapGetters
+	} from "vuex";
 	import recommend from '@/components/recommend';
 	import productWindow from '@/components/productWindow';
 	import animationType from '@/utils/animationType.js'
@@ -253,21 +257,37 @@
 				sysHeight: sysHeight,
 				canShow: false,
 				configApi: {}, //分享类容配置
-				theme:app.globalData.theme,
-				navH:"",
+				theme: app.globalData.theme,
+				navH: "",
 				homeTop: 20,
-				currentPage:false,
-				selectNavList:[
-					{name:'首页',icon:'icon-shouye8',url:'/pages/index/index'},
-					{name:'搜索',icon:'icon-sousuo6',url:'/pages/goods/goods_search/index'},
-					{name:'我的收藏',icon:'icon-shoucang3',url:'/pages/users/user_goods_collection/index'},
-					{name:'个人中心',icon:'icon-gerenzhongxin1',url:'/pages/user/index'},
+				currentPage: false,
+				selectNavList: [{
+						name: '首页',
+						icon: 'icon-shouye8',
+						url: '/pages/index/index'
+					},
+					{
+						name: '搜索',
+						icon: 'icon-sousuo6',
+						url: '/pages/goods/goods_search/index'
+					},
+					{
+						name: '我的收藏',
+						icon: 'icon-shoucang3',
+						url: '/pages/users/user_goods_collection/index'
+					},
+					{
+						name: '个人中心',
+						icon: 'icon-gerenzhongxin1',
+						url: '/pages/user/index'
+					},
 				],
 				tokenIsExist: false, //校验token是否有效
+				isOpenAttr: false, // 是否允许打开规格弹窗
 			};
 		},
-		
-		computed: mapGetters(['isLogin','bottomNavigationIsCustom']),
+
+		computed: mapGetters(['isLogin', 'bottomNavigationIsCustom']),
 		onLoad: function(options) {
 			//检查token是否有效
 			this.getTokenIsExist();
@@ -299,7 +319,12 @@
 			this.canShow = false
 			if (this.isLogin && this.tokenIsExist) {
 				this.getIndex();
-			};
+			} else {
+				this.cartList = {
+					valid: [],
+					invalid: []
+				}
+			}
 		},
 		methods: {
 			//校验token是否有效,true为有效，false为无效
@@ -313,7 +338,7 @@
 				})
 			},
 			//首次进入加载的接口
-			getIndex(){
+			getIndex() {
 				this.hotPage = 1;
 				this.hostProduct = [],
 					this.hotScroll = false,
@@ -333,7 +358,7 @@
 						valid: [],
 						invalid: []
 					},
-				this.isAllSelect = false; //全选
+					this.isAllSelect = false; //全选
 				this.selectValue = []; //选中的数据
 				this.selectCountPrice = 0.00;
 				this.cartCount = 0;
@@ -362,6 +387,7 @@
 				getResetCart(q)
 					.then(function(res) {
 						that.attr.cartAttr = false;
+						that.isOpenAttr = false
 						that.$util.Tips({
 							title: "添加购物车成功",
 							success: () => {
@@ -381,6 +407,7 @@
 			},
 			onMyEvent: function() {
 				this.$set(this.attr, 'cartAttr', false);
+				this.isOpenAttr = false
 			},
 			reElection: function(item) {
 				this.getGoodsDetails(item)
@@ -400,21 +427,24 @@
 				getProductDetail(item.productId).then(res => {
 					uni.hideLoading();
 					that.attr.cartAttr = true;
+					that.isOpenAttr = true
 					let productInfo = res.data.productInfo;
 					that.$set(that, 'productInfo', productInfo);
 					// that.$set(that.attr, 'productAttr', res.data.productAttr);
 					that.$set(that, 'productValue', res.data.productValue);
 					let productAttr = res.data.productAttr.map(item => {
-					return {
-						attrName : item.attrName,
-						attrValues: item.attrValues.split(','),
-						id:item.id,
-						isDel:item.isDel,
-						productId:item.productId,
-						type:item.type
-					 }
+						return {
+							attrName: item.attrName,
+							attrValues: item.attrValues.split(','),
+							id: item.id,
+							isDel: item.isDel,
+							productId: item.productId,
+							type: item.type,
+							optionList: item.optionList || [],
+							isShowImage: item.isShowImage
+						}
 					});
-					this.$set(that.attr,'productAttr',productAttr);
+					this.$set(that.attr, 'productAttr', productAttr);
 					that.DefaultSelect();
 				}).catch(err => {
 					uni.hideLoading();
@@ -431,6 +461,14 @@
 					this.$set(this.attr.productSelect, "price", productSelect.price);
 					this.$set(this.attr.productSelect, "stock", productSelect.stock);
 					this.$set(this.attr.productSelect, "unique", productSelect.id);
+					this.$set(this.attr.productSelect, 'isShow', productSelect.isShow);
+					// 后台传入的规格不展示时视为库存为0
+					if (!this.attr.productSelect.isShow) {
+						this.$set(this.attr.productSelect, "stock", 0);
+						this.$util.Tips({
+							title: "请重新选择其它规格"
+						});
+					}
 					this.$set(this.attr.productSelect, "cart_num", 1);
 					this.$set(this, "attrValue", res);
 					this.$set(this, "attrTxt", "已选择");
@@ -451,17 +489,40 @@
 			DefaultSelect: function() {
 				let productAttr = this.attr.productAttr;
 				let value = [];
-				for (let key in this.productValue) {
-					if (this.productValue[key].stock > 0) {
-						value = this.attr.productAttr.length ? key.split(",") : [];
-						break;
+				// 按 id 升序排序
+				const sortedArray = Object.entries(this.productValue)
+					.sort(([, a], [, b]) => a.id - b.id)
+					.map(([key, value]) => ({
+						key,
+						...value
+					}));
+				// 默认规格设置
+				for (let i=0; i<sortedArray.length; i++) {
+					const attrItem = sortedArray[i]
+					if (attrItem.stock > 0 && attrItem.isShow) {
+						if (value.length == 0) {
+							value = this.attr.productAttr.length ? attrItem.key.split(",") : [];
+						}
+						if (attrItem.isDefault) {
+							value = this.attr.productAttr.length ? attrItem.key.split(",") : [];
+							break
+						}
 					}
 				}
+				// for (let key in this.productValue) {
+				// 	if (value.length == 0) {
+				// 		value = this.attr.productAttr.length ? key.split(",") : [];
+				// 	}
+				// 	if (this.productValue[key].isDefault) {
+				// 		value = this.attr.productAttr.length ? key.split(",") : [];
+				// 		break;
+				// 	}
+				// }
 				for (let i = 0; i < productAttr.length; i++) {
 					this.$set(productAttr[i], "index", value[i]);
 				}
 				//sort();排序函数:数字-英文-汉字；
-				let productSelect = this.productValue[value.sort().join(",")];
+				let productSelect = this.productValue[value.join(",")];
 				if (productSelect && productAttr.length) {
 					this.$set(
 						this.attr.productSelect,
@@ -473,7 +534,8 @@
 					this.$set(this.attr.productSelect, "stock", productSelect.stock);
 					this.$set(this.attr.productSelect, "unique", productSelect.id);
 					this.$set(this.attr.productSelect, "cart_num", 1);
-					this.$set(this, "attrValue", value.sort().join(","));
+					// this.$set(this, "attrValue", value.sort().join(","));
+					this.$set(this, "attrValue", value.join(","));
 					this.$set(this, "attrTxt", "已选择");
 				} else if (!productSelect && productAttr.length) {
 					this.$set(
@@ -864,7 +926,7 @@
 							}
 						}
 						that.$set(that.cartList, 'valid', validList);
-						data.page +=1;
+						data.page += 1;
 						that.selectValue = selectValue;
 						let newArr = validList.filter(item => item.attrStatus);
 						that.isAllSelect = newArr.length == selectValue.length && newArr.length;
@@ -976,27 +1038,28 @@
 			},
 			returns: function() {
 				uni.switchTab({
-					url:'/pages/index/index'
+					url: '/pages/index/index'
 				})
 			},
-			showNav(){
+			showNav() {
 				this.currentPage = !this.currentPage;
 			},
 			//下拉导航页面跳转
-			linkPage(url){
-				if(url == '/pages/index/index' || url == '/pages/user/index'){
+			linkPage(url) {
+				if (url == '/pages/index/index' || url == '/pages/user/index') {
 					uni.switchTab({
 						url
 					})
-				}else{
+				} else {
 					uni.navigateTo({
-						animationType: animationType.type,						animationDuration: animationType.duration,
+						animationType: animationType.type,
+						animationDuration: animationType.duration,
 						url
 					})
 				}
 				this.currentPage = false
 			},
-			touchStart(){
+			touchStart() {
 				this.currentPage = false;
 			}
 		},
@@ -1027,7 +1090,8 @@
 	.cartBox {
 		// background-color: #fff;
 	}
-	.cart_nav{
+
+	.cart_nav {
 		position: fixed;
 		@include main_bg_color(theme);
 		top: 0;
@@ -1035,21 +1099,24 @@
 		z-index: 99;
 		width: 100%;
 	}
+
 	.navbarCon {
 		position: absolute;
 		bottom: 0;
 		height: 100rpx;
 		width: 100%;
 	}
+
 	.h5_back {
 		color: #fff;
 		position: fixed;
-		left:20rpx;
+		left: 20rpx;
 		font-size: 32rpx;
 		text-align: center;
 		line-height: 58rpx;
 	}
-	.select_nav{
+
+	.select_nav {
 		width: 170rpx !important;
 		height: 60rpx !important;
 		border-radius: 33rpx;
@@ -1061,10 +1128,12 @@
 		z-index: 1000;
 		left: 14rpx;
 	}
-	.px-20{
+
+	.px-20 {
 		padding: 0 20rpx 0;
 	}
-	.nav_line{
+
+	.nav_line {
 		content: '';
 		display: inline-block;
 		width: 1px;
@@ -1075,17 +1144,20 @@
 		right: 0;
 		margin: auto;
 	}
-	.container_detail{
+
+	.container_detail {
 		/* #ifdef MP */
-		margin-top:32rpx;
+		margin-top: 32rpx;
 		/* #endif */
 	}
-	.tab_nav{
+
+	.tab_nav {
 		width: 100%;
 		height: 48px;
-		padding:0 30rpx 0;
+		padding: 0 30rpx 0;
 	}
-	.nav_title{
+
+	.nav_title {
 		width: 200rpx;
 		height: 58rpx;
 		line-height: 58rpx;
@@ -1097,14 +1169,16 @@
 		right: 0;
 		margin: auto;
 	}
-	.right_select{
+
+	.right_select {
 		position: fixed;
 		right: 20rpx;
 		color: #fff;
 		text-align: center;
 		line-height: 58rpx;
 	}
-	.dialog_nav{
+
+	.dialog_nav {
 		position: fixed;
 		/* #ifdef MP */
 		left: 14rpx;
@@ -1117,7 +1191,8 @@
 		box-shadow: 0px 0px 16rpx rgba(0, 0, 0, 0.08);
 		z-index: 999;
 		border-radius: 14rpx;
-		&::before{
+
+		&::before {
 			content: '';
 			width: 0;
 			height: 0;
@@ -1125,18 +1200,20 @@
 			/* #ifdef MP */
 			left: 0;
 			right: 0;
-			margin:auto;
+			margin: auto;
 			/* #endif */
 			/* #ifdef H5 || APP-PLUS */
 			right: 8px;
 			/* #endif */
-			top:-9px;
+			top: -9px;
 			border-bottom: 10px solid #fff;
-			border-left: 10px solid transparent;    /*transparent 表示透明*/
+			border-left: 10px solid transparent;
+			/*transparent 表示透明*/
 			border-right: 10px solid transparent;
 		}
 	}
-	.dialog_nav_item{
+
+	.dialog_nav_item {
 		width: 100%;
 		height: 84rpx;
 		line-height: 84rpx;
@@ -1146,31 +1223,39 @@
 		font-size: 28rpx;
 		color: #333;
 		position: relative;
-		.iconfont{
+
+		.iconfont {
 			font-size: 32rpx;
+			background-color: e4df0;
 		}
-		&::after{
+
+		&::after {
 			content: '';
 			position: absolute;
-			width:86px;
+			width: 86px;
 			height: 1px;
 			background-color: #EEEEEE;
 			bottom: 0;
 			right: 0;
 		}
 	}
-	.pl-20{
+
+	.pl-20 {
 		padding-left: 20rpx;
 	}
-	.px-20{
+
+	.px-20 {
 		padding: 0 20rpx 0;
 	}
-	.justify-center{
+
+	.justify-center {
 		justify-content: center;
 	}
+
 	.align-center {
 		align-items: center;
 	}
+
 	.shoppingCart {
 		/* #ifdef H5 */
 		// padding-bottom: 0;
@@ -1183,7 +1268,7 @@
 
 	.shoppingCart .labelNav {
 		height: 178rpx;
-		padding: 30rpx 30rpx 0 ;
+		padding: 30rpx 30rpx 0;
 		font-size: 22rpx;
 		color: #fff;
 		width: 100%;
@@ -1206,7 +1291,7 @@
 		box-sizing: border-box;
 		font-size: 28rpx;
 		color: #282828;
-		margin: -90rpx auto 0 ;
+		margin: -90rpx auto 0;
 		z-index: 6;
 		border-top-left-radius: 14rpx;
 		border-top-right-radius: 14rpx;
@@ -1251,7 +1336,7 @@
 		border-bottom-left-radius: 14rpx;
 		border-bottom-right-radius: 14rpx;
 	}
-	
+
 
 	.shoppingCart .list .item {
 		padding: 24rpx;
@@ -1309,19 +1394,24 @@
 		font-size: 32rpx;
 		font-weight: 600;
 		@include price_color(theme);
-		.price-color{
+
+		.price-color {
 			@include price_color(theme);
 		}
 	}
-	.mt-28{
+
+	.mt-28 {
 		margin-top: 28rpx;
 	}
-	.bg_color{
+
+	.bg_color {
 		@include main_bg_color(theme);
 	}
-	.font_color{
+
+	.font_color {
 		@include main_color(theme);
 	}
+
 	.shoppingCart .list .item .picTxt .carnum {
 		height: 47rpx;
 		position: absolute;
@@ -1454,7 +1544,7 @@
 		box-sizing: border-box;
 		border-top: 1rpx solid #eee;
 		bottom: var(--window-bottom);
-		
+
 	}
 
 	.footer .checkAll {
@@ -1492,7 +1582,8 @@
 		text-align: center;
 		line-height: 60rpx;
 	}
-	.btn_cart_color{
+
+	.btn_cart_color {
 		font-size: 14px;
 		border-radius: 25px;
 		width: 80px;
@@ -1502,6 +1593,7 @@
 		@include coupons_border_color(theme);
 		@include main_color(theme);
 	}
+
 	.footer .button form~form {
 		margin-left: 17rpx;
 	}
@@ -1509,20 +1601,25 @@
 	.uni-p-b-96 {
 		height: 96rpx;
 	}
-	/deep/ checkbox .uni-checkbox-input.uni-checkbox-input-checked {
+
+	::v-deep  checkbox .uni-checkbox-input.uni-checkbox-input-checked {
 		@include main_bg_color(theme);
 		border: none !important;
-		color: #fff!important
+		color: #fff !important
 	}
-	
-	/deep/ checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+
+	::v-deep  checkbox .wx-checkbox-input.wx-checkbox-input-checked {
 		@include main_bg_color(theme);
 		border: none !important;
-		color: #fff!important;
+		color: #fff !important;
 		margin-right: 0 !important;
 	}
-	.bottom-custom{
-		bottom: calc(98rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+
+	.bottom-custom {
+		bottom: calc(98rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
 		bottom: calc(98rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
+	}
+	.p-30 {
+		padding: 0 30rpx;
 	}
 </style>

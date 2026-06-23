@@ -1,7 +1,7 @@
 <template>
 	<view>
 		<view class='coupon-list-window' :class='coupon.coupon==true?"on":""'>
-			<view v-if="!orderShow"  class="nav acea-row row-around">
+			<view v-if="!orderShow" class="nav acea-row row-around">
 				<view :class="['acea-row', 'row-middle', type === 1 ? 'on' : '']" @click="setType(1)">通用券</view>
 				<view :class="['acea-row', 'row-middle', type === 2 ? 'on' : '']" @click="setType(2)">商品券</view>
 				<view :class="['acea-row', 'row-middle', type === 3 ? 'on' : '']" @click="setType(3)">品类券</view>
@@ -14,14 +14,15 @@
 					<view class='item acea-row row-center-wrapper' v-for="(item,index) in coupon.list"
 						@click="getCouponUser(index,item.id)" :key='index'>
 						<view class='money acea-row row-column row-center-wrapper' :class='item.isUse?"moneyGray":"main_bg"'>
-							<view>￥<text class='num' :style="[{'font-size':item.money.length>=7?'42rpx':'60rpx'}]" >{{item.money?Number(item.money):''}}</text></view>
+							<view>￥<text class='num'
+									:style="[{'font-size':item.money.length>=7?'42rpx':'60rpx'}]">{{item.money?Number(item.money):''}}</text>
+							</view>
 							<view class="pic-num">满{{item.minPrice}}元可用</view>
 						</view>
 						<view class='text'>
 							<view class='condition line2'>
 								<span class='line-title' :class='item.isUse?"gray":"select"' v-if='item.useType===1'>通用</span>
-								<span class='line-title' :class='item.isUse?"gray":"select"'
-									v-else-if='item.useType===3'>品类</span>
+								<span class='line-title' :class='item.isUse?"gray":"select"' v-else-if='item.useType===3'>品类</span>
 								<span class='line-title' :class='item.isUse?"gray":"select"' v-else>商品</span>
 								<span>{{item.name}}</span>
 							</view>
@@ -41,7 +42,7 @@
 					<image :src="urlDomain+'crmebimage/perset/staticImg/noCoupon.png'"></image>
 				</view>
 			</view>
-			
+
 		</view>
 		<view class='mask' catchtouchmove="true" :hidden='coupon.coupon==false' @click='close'></view>
 	</view>
@@ -71,16 +72,23 @@
 					return '';
 				}
 			},
-			typeNum:{
-				type:Number,
-				default:0
+			typeNum: {
+				type: Number,
+				default: 0
+			},
+			firstType: {
+				type: Number,
+				default: 1
 			}
 		},
 		data() {
 			return {
 				urlDomain: this.$Cache.get("imgHost"),
-               type: 1,
+				type: 1,
 			};
+		},
+		mounted() {
+			this.type = this.firstType
 		},
 		methods: {
 			close: function() {
@@ -106,6 +114,10 @@
 								});
 							});
 							that.$emit('ChangCoupons', list[index]);
+						}).catch(err => {
+							that.$util.Tips({
+								title: '请登录'
+							});
 						})
 						break;
 					case 1:
@@ -122,6 +134,9 @@
 </script>
 
 <style scoped lang="scss">
+	.mask {
+		z-index: 100;
+	}
 	.coupon-list-window {
 		position: fixed;
 		bottom: 0;
@@ -240,11 +255,12 @@
 	.coupon-list .item .money {
 		font-weight: normal;
 	}
-	
-	.main_bg{
+
+	.main_bg {
 		@include main_bg_color(theme);
 	}
-	.select{
+
+	.select {
 		@include main_color(theme);
 		@include coupons_border_color(theme);
 	}

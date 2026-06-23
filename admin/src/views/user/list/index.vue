@@ -10,90 +10,115 @@
           :label-position="labelPosition"
           label-width="75px"
         >
-          <div class="acea-row search-form row-between">
-            <div class="search-form-box">
-              <el-form-item label="用户搜索：">
-                <el-input v-model="userFrom.keywords" placeholder="请输入姓名或手机号" clearable class="selWidth" />
-              </el-form-item>
-              <el-form-item label="用户等级：">
-                <el-select v-model="levelData" placeholder="请选择" class="selWidth" clearable filterable multiple>
-                  <el-option
-                    :value="item.id"
-                    v-for="(item, index) in levelList"
-                    :key="index"
-                    :label="item.name"
-                  ></el-option>
-                </el-select>
-              </el-form-item>
-            </div>
-            <el-form-item class="search-form-sub" v-if="!collapse">
-              <el-button type="primary" icon="ios-search" label="default" @click="userSearchs">搜索</el-button>
-              <el-button class="ResetSearch mr14" @click="reset('userFrom')" size="small">重置</el-button>
-              <a class="ivu-ml-8" @click="collapse = !collapse">
-                <template v-if="!collapse"> 展开 <i class="el-icon-arrow-down"></i> </template>
-                <template v-else> 收起 <i class="el-icon-arrow-up"></i> </template>
-              </a>
-            </el-form-item>
-          </div>
-          <div v-if="collapse" class="acea-row search-form">
-            <div class="search-form-box">
-              <el-form-item label="用户分组：">
-                <el-select v-model="groupData" placeholder="请选择" class="selWidth" clearable filterable multiple>
-                  <el-option
-                    :value="item.id"
-                    v-for="(item, index) in groupList"
-                    :key="index"
-                    :label="item.groupName"
-                  ></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="用户标签：">
-                <el-select v-model="labelData" placeholder="请选择" class="selWidth" clearable filterable multiple>
-                  <el-option
-                    :value="item.id"
-                    v-for="(item, index) in labelLists"
-                    :key="index"
-                    :label="item.name"
-                  ></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="国家：">
-                <el-select
-                  v-model="userFrom.country"
-                  placeholder="请选择"
-                  class="selWidth"
-                  clearable
-                  @on-change="changeCountry"
-                >
-                  <el-option value="" label="全部"></el-option>
-                  <el-option value="CN" label="中国"></el-option>
-                  <el-option value="OTHER" label="国外"></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="省份：">
-                <el-cascader
-                  :options="addresData"
-                  :props="propsCity"
-                  filterable
-                  v-model="address"
-                  @change="handleChange"
-                  clearable
-                  class="selWidth"
-                ></el-cascader>
-              </el-form-item>
-              <el-form-item label="消费情况：">
-                <el-select v-model="userFrom.payCount" placeholder="请选择" class="selWidth" clearable>
-                  <el-option value="" label="全部"></el-option>
-                  <el-option value="0" label="0"></el-option>
-                  <el-option value="1" label="1+"></el-option>
-                  <el-option value="2" label="2+"></el-option>
-                  <el-option value="3" label="3+"></el-option>
-                  <el-option value="4" label="4+"></el-option>
-                  <el-option value="5" label="5+"></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="时间选择：">
-                <el-date-picker
+          <div class="search-box flex flex-between">
+            <div class="acea-row search-form">
+              <div class="search-form-box">
+                <el-form-item label="用户搜索：">
+                  <UserSearchInput ref="userSearchInput" v-model="userFrom" @searchList="userSearchs" />
+                </el-form-item>
+                <el-form-item label="用户标签：">
+                  <el-select
+                    v-model="labelData"
+                    @visible-change="userSearchs"
+                    @remove-tag="userSearchs"
+                    @clear="userSearchs"
+                    placeholder="请选择"
+                    class="selWidth"
+                    clearable
+                    filterable
+                    multiple
+                  >
+                    <el-option
+                      :value="item.id"
+                      v-for="(item, index) in labelLists"
+                      :key="index"
+                      :label="item.name"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="消费情况：">
+                  <el-select
+                    v-model="userFrom.payCount"
+                    @visible-change="userSearchs"
+                    @clear="userSearchs"
+                    placeholder="请选择"
+                    class="selWidth"
+                    clearable
+                  >
+                    <!-- <el-option value="" label="全部"></el-option> -->
+                    <el-option value="0" label="0"></el-option>
+                    <el-option value="1" label="1+"></el-option>
+                    <el-option value="2" label="2+"></el-option>
+                    <el-option value="3" label="3+"></el-option>
+                    <el-option value="4" label="4+"></el-option>
+                    <el-option value="5" label="5+"></el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="用户分组：" v-if="collapse">
+                  <el-select
+                    v-model="groupData"
+                    @visible-change="userSearchs"
+                    @remove-tag="userSearchs"
+                    @clear="userSearchs"
+                    placeholder="请选择"
+                    class="selWidth"
+                    clearable
+                    filterable
+                    multiple
+                  >
+                    <el-option
+                      :value="item.id"
+                      v-for="(item, index) in groupList"
+                      :key="index"
+                      :label="item.groupName"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="国家：" v-if="collapse">
+                  <el-select
+                    v-model="userFrom.country"
+                    @visible-change="userSearchs"
+                    @clear="userSearchs"
+                    placeholder="请选择"
+                    class="selWidth"
+                    clearable
+                    @on-change="changeCountry"
+                  >
+                    <!-- <el-option value="" ></el-option> -->
+                    <el-option value="CN" label="中国"></el-option>
+                    <el-option value="OTHER" label="国外"></el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="省份：" v-if="collapse">
+                  <el-cascader
+                    :options="addresData"
+                    :props="propsCity"
+                    filterable
+                    v-model="address"
+                    @clear="userSearchs"
+                    @change="handleChange"
+                    clearable
+                    class="selWidth"
+                  ></el-cascader>
+                </el-form-item>
+                <el-form-item label="访问情况：" v-if="collapse">
+                  <el-select
+                    v-model="userFrom.accessType"
+                    @visible-change="userSearchs"
+                    @clear="userSearchs"
+                    placeholder="请选择"
+                    class="selWidth"
+                    clearable
+                  >
+                    <!-- <el-option :value="0" label="全部"></el-option> -->
+                    <el-option :value="1" label="首次访问"></el-option>
+                    <el-option :value="2" label="时间段访问过"></el-option>
+                    <el-option :value="3" label="时间段未访问"></el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="时间选择：" v-if="collapse && userFrom.accessType">
+                  <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
+                  <!-- <el-date-picker
                   v-model="timeVal"
                   align="right"
                   unlink-panels
@@ -107,41 +132,46 @@
                   @change="onchangeTime"
                   start-placeholder="开始时间"
                   end-placeholder="结束时间"
-                />
-              </el-form-item>
-              <el-form-item label="访问情况：">
-                <el-select v-model="userFrom.accessType" placeholder="请选择" class="selWidth" clearable>
-                  <el-option :value="0" label="全部"></el-option>
-                  <el-option :value="1" label="首次访问"></el-option>
-                  <el-option :value="2" label="时间段访问过"></el-option>
-                  <el-option :value="3" label="时间段未访问"></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="性别：">
-                <el-select v-model="userFrom.sex" placeholder="请选择" class="selWidth">
-                  <el-option :value="''" label="全部"></el-option>
-                  <el-option :value="0" label="未知"></el-option>
-                  <el-option :value="1" label="男"></el-option>
-                  <el-option :value="2" label="女"></el-option>
-                  <el-option :value="3" label="保密"></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="身份：">
-                <el-select v-model="userFrom.isPromoter" placeholder="请选择" class="selWidth">
-                  <el-option :value="''" label="全部"></el-option>
-                  <el-option :value="1" label="推广员"></el-option>
-                  <el-option :value="0" label="普通用户"></el-option>
-                </el-select>
+                /> -->
+                </el-form-item>
+                <el-form-item label="性别：" v-if="collapse">
+                  <el-select
+                    v-model="userFrom.sex"
+                    @visible-change="userSearchs"
+                    @clear="userSearchs"
+                    placeholder="请选择"
+                    class="selWidth"
+                  >
+                    <el-option :value="0" label="未知"></el-option>
+                    <el-option :value="1" label="男"></el-option>
+                    <el-option :value="2" label="女"></el-option>
+                    <el-option :value="3" label="保密"></el-option>
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="身份：" v-if="collapse">
+                  <el-select
+                    v-model="userFrom.isPromoter"
+                    @visible-change="userSearchs"
+                    @clear="userSearchs"
+                    placeholder="请选择"
+                    class="selWidth"
+                  >
+                    <el-option :value="1" label="推广员"></el-option>
+                    <el-option :value="0" label="普通用户"></el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </div>
+            <div class="search-btn-group-box">
+              <el-form-item class="search-form-sub">
+                <el-button type="primary" icon="ios-search" label="default" @click="userSearchs">搜索</el-button>
+                <el-button class="ResetSearch mr14" @click="reset('userFrom')" size="small">重置</el-button>
+                <a class="ivu-ml-8" @click="collapse = !collapse">
+                  <template v-if="!collapse"> 展开 <i class="el-icon-arrow-down"></i> </template>
+                  <template v-else> 收起 <i class="el-icon-arrow-up"></i> </template>
+                </a>
               </el-form-item>
             </div>
-            <el-form-item class="search-form-sub-bottom">
-              <el-button type="primary" icon="ios-search" label="default" @click="userSearchs">搜索</el-button>
-              <el-button class="ResetSearch mr14" @click="reset('userFrom')" size="small">重置</el-button>
-              <a class="ivu-ml-8" @click="collapse = !collapse">
-                <template v-if="!collapse"> 展开 <i class="el-icon-arrow-down"></i> </template>
-                <template v-else> 收起 <i class="el-icon-arrow-up"></i> </template>
-              </a>
-            </el-form-item>
           </div>
         </el-form>
       </div>
@@ -212,12 +242,10 @@
         </el-table-column>
         <el-table-column label="姓名" min-width="160" v-if="checkedCities.includes('姓名')">
           <template slot-scope="scope">
-            <span>{{ scope.row.nickname | filterEmpty }} | {{ scope.row.sex | sexFilter }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="用户等级" min-width="100" v-if="checkedCities.includes('用户等级')">
-          <template slot-scope="scope">
-            <span>{{ scope.row.level | levelFilter | filterEmpty }}</span>
+            <span :class="isRedFont(scope.row)"
+              >{{ scope.row.nickname | filterEmpty }} | {{ scope.row.sex | sexFilter }}
+              {{ scope.row.isLogoff ? '| (已注销)' : '' }}</span
+            >
           </template>
         </el-table-column>
         <el-table-column prop="groupName" label="分组" min-width="100" v-if="checkedCities.includes('分组')">
@@ -255,11 +283,6 @@
                 >
                 <el-dropdown-item @click.native="setPhone(scope.row)" v-if="checkPermi(['admin:user:update:phone'])"
                   >修改手机号</el-dropdown-item
-                >
-                <el-dropdown-item
-                  @click.native="onLevel(scope.row.uid, scope.row.level)"
-                  v-if="checkPermi(['admin:user:update:level'])"
-                  >修改用户等级</el-dropdown-item
                 >
                 <el-dropdown-item
                   @click.native="setExtension(scope.row)"
@@ -438,10 +461,6 @@
     </el-dialog>
     <!--账户详情-->
     <user-details ref="userDetailFrom" :userNo="uid"></user-details>
-    <!-- 用户等级 -->
-    <el-dialog title="设置" :visible.sync="levelVisible" width="540px" :before-close="Close">
-      <level-edit :levelInfo="levelInfo" :levelList="levelList"></level-edit>
-    </el-dialog>
   </div>
 </template>
 
@@ -449,7 +468,6 @@
 import {
   userListApi,
   groupListApi,
-  levelListApi,
   tagListApi,
   groupPiApi,
   tagPiApi,
@@ -460,7 +478,6 @@ import {
 import { spreadClearApi } from '@/api/distribution';
 import editFrom from './edit';
 import userDetails from './userDetails';
-import levelEdit from './level';
 import userList from '@/components/userList';
 import * as logistics from '@/api/logistics.js';
 import Cookies from 'js-cookie';
@@ -468,7 +485,7 @@ import { checkPermi } from '@/utils/permission'; // 权限判断函数
 import { Debounce } from '@/utils/validate';
 export default {
   name: 'UserIndex',
-  components: { editFrom, userDetails, userList, levelEdit },
+  components: { editFrom, userDetails, userList },
   filters: {
     sexFilter(status) {
       const statusMap = {
@@ -490,7 +507,6 @@ export default {
       ruleInline: {},
       extensionVisible: false,
       userVisible: false,
-      levelInfo: '',
       pickerOptions: this.$timeOptions,
       loadingBtn: false,
       PointValidateForm: {
@@ -505,8 +521,6 @@ export default {
       visible: false,
       userIds: '',
       dialogVisible: false,
-      levelVisible: false,
-      levelData: [],
       groupData: [],
       labelData: [],
       selData: [],
@@ -534,22 +548,23 @@ export default {
         data: [],
         total: 0,
       },
-      loginType: '',
+      loginType: '0',
       userFrom: {
+        searchType: 'all',
+        content: '',
         labelId: '',
         userType: '',
         sex: '',
         isPromoter: '',
         country: '',
         payCount: '',
-        accessType: 0,
+        accessType: '',
         dateLimit: '',
         keywords: '',
         province: '',
         city: '',
         page: 1,
         limit: 20,
-        level: '',
         groupId: '',
       },
       grid: {
@@ -559,7 +574,6 @@ export default {
         sm: 24,
         xs: 24,
       },
-      levelList: [],
       labelLists: [],
       groupList: [],
       selectedData: [],
@@ -579,10 +593,22 @@ export default {
       idKey: 'uid',
       card_select_show: false,
       checkAll: false,
-      checkedCities: ['ID', '头像', '姓名', '用户等级', '分组', '推荐人', '手机号', '余额', '积分'],
-      columnData: ['ID', '头像', '姓名', '用户等级', '分组', '推荐人', '手机号', '余额', '积分'],
+      checkedCities: ['ID', '头像', '姓名', '分组', '推荐人', '手机号', '余额', '积分'],
+      columnData: ['ID', '头像', '姓名', '分组', '推荐人', '手机号', '余额', '积分'],
       isIndeterminate: true,
     };
+  },
+  computed: {
+    // 是否注销
+    isRedFont() {
+      return (info) => {
+        if (info.isLogoff) {
+          return 'red-fonts';
+        } else {
+          return '';
+        }
+      };
+    },
   },
   activated() {
     this.userFrom.keywords = '';
@@ -592,7 +618,6 @@ export default {
   mounted() {
     this.getList();
     this.groupLists();
-    this.levelLists();
     this.getTagList();
     if (checkPermi(['admin:system:city:list:tree'])) this.getCityList();
   },
@@ -666,27 +691,28 @@ export default {
     },
     reset(formName) {
       this.userFrom = {
+        searchType: 'all',
+        content: '',
         labelId: '',
         userType: '',
         sex: '',
         isPromoter: '',
         country: '',
         payCount: '',
-        accessType: 0,
+        accessType: '',
         dateLimit: '',
         keywords: '',
         province: '',
         city: '',
         page: 1,
-        limit: 15,
-        level: '',
+        limit: 20,
         groupId: '',
       };
       this.address = [];
-      this.levelData = [];
       this.groupData = [];
       this.labelData = [];
       this.timeVal = [];
+      this.$refs.userSearchInput.clearInput(); // 清空用户搜索输入框
       this.getList();
     },
     // 列表
@@ -727,27 +753,11 @@ export default {
         'user',
       );
     },
-    Close() {
-      this.levelVisible = false;
-    },
     // 账户详情
     onDetails(id) {
       this.uid = id;
       this.$refs.userDetailFrom.getUserDetail(id);
       this.$refs.userDetailFrom.dialogUserDetail = true;
-    },
-    // 等级
-    onLevel(id, level) {
-      var userLevel = new Object();
-      this.levelList.forEach((item) => {
-        if (item.id == level) {
-          userLevel.gradeLevel = item.grade;
-        }
-      });
-      userLevel.uid = id;
-      userLevel.level = level;
-      this.levelInfo = userLevel;
-      this.levelVisible = true;
     },
     // 积分余额
     editPoint(id) {
@@ -871,11 +881,13 @@ export default {
     handleChange(value) {
       this.userFrom.province = value[0];
       this.userFrom.city = value[1];
+      this.userSearchs();
     },
     // 具体日期
     onchangeTime(e) {
       this.timeVal = e;
       this.userFrom.dateLimit = e ? this.timeVal.join(',') : '';
+      this.userSearchs();
     },
     // 分组列表
     groupLists() {
@@ -889,20 +901,12 @@ export default {
         this.labelLists = res.list;
       });
     },
-    // 等级列表
-    levelLists() {
-      levelListApi().then(async (res) => {
-        this.levelList = res;
-        localStorage.setItem('single-admin-levelKey', JSON.stringify(res));
-      });
-    },
     // 列表
     getList(num) {
       this.listLoading = true;
       this.userFrom.page = num ? num : this.userFrom.page;
       this.userFrom.userType = this.loginType;
       if (this.loginType == 0) this.userFrom.userType = '';
-      this.userFrom.level = this.levelData.join(',');
       this.userFrom.groupId = this.groupData.join(',');
       this.userFrom.labelId = this.labelData.join(',');
       userListApi(this.userFrom)
@@ -1150,9 +1154,12 @@ export default {
   height: 600px;
 }
 .search-box {
-  position: absolute;
-  top: 20px;
-  right: 0;
+  // position: absolute;
+  // top: 20px;
+  // right: 0;
+  .search-btn-group-box {
+    flex-shrink: 0;
+  }
 }
 ::v-deep .search-form {
   position: relative;
@@ -1161,5 +1168,11 @@ export default {
   position: absolute;
   right: 0;
   bottom: 0;
+}
+.red-fonts {
+  color: #ed4014;
+}
+.flex-between {
+  justify-content: space-between;
 }
 </style>

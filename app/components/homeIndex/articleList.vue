@@ -1,17 +1,17 @@
 <template>
 	<!-- 文章列表 -->
 	<view>
-		<view class="articleList" :style="[boxStyle]" v-if="articleList.length">
+		<view class="articleList" :style="[boxStyle]" v-if="articleList.length && articleListData.length">
 			<view v-if="listStyle">
 				<navigator :url='"/pages/news/news_details/index?id="+item.id' hover-class='none' :style="[itemStyle]"
 					 v-for="(item,index) in articleList" :key='index'
 					class="item acea-row row-between-wrapper">
 					<view class="pictrue">
-						<easy-loadimage :image-src="item.imageInput" :radius="dataConfig.contentStyle.val"></easy-loadimage>
+						<easy-loadimage :image-src="articleListData[index].imageInput" :radius="dataConfig.contentStyle.val"></easy-loadimage>
 					</view>
 					<view class="text">
-						<view class="name line2" :style="[titleColor]">{{item.title}}</view>
-						<view class="time" :style="[timeColor]">{{item.updateTime}}</view>
+						<view class="name line2" :style="[titleColor]">{{articleListData[index].title}}</view>
+						<view class="time" :style="[timeColor]">{{articleListData[index].createTime}}</view>
 					</view>
 				</navigator>
 			</view>
@@ -20,11 +20,11 @@
 					:style="[itemStyle]" v-for="(item,index) in articleList" :key='index'
 					class="item acea-row row-between-wrapper">
 					<view class="text">
-						<view class="name line2" :style="[titleColor]">{{item.title}}</view>
-						<view class="time" :style="[timeColor]">{{item.updateTime}}</view>
+						<view class="name line2" :style="[titleColor]">{{articleListData[index].title}}</view>
+						<view class="time" :style="[timeColor]">{{articleListData[index].createTime}}</view>
 					</view>
 					<view class="pictrue">
-						<easy-loadimage :image-src="item.imageInput" :radius="dataConfig.contentStyle.val"></easy-loadimage>
+						<easy-loadimage :image-src="articleListData[index].imageInput" :radius="dataConfig.contentStyle.val"></easy-loadimage>
 					</view>
 				</navigator>
 			</view>
@@ -35,13 +35,14 @@
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
-	// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+	// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 	// +----------------------------------------------------------------------
 	// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
 	import easyLoadimage from '@/components/base/easy-loadimage.vue';
+	import {getArticleList} from '@/api/api.js'
 	export default {
 		name: 'homeArticle',
 		props: {
@@ -51,7 +52,10 @@
 			},
 		},
 		data() {
-			return {}
+			return {
+				cid: 0,
+				articleListData: [], // 文章列表数据
+			}
 		},
 		components: {
 			easyLoadimage
@@ -93,6 +97,23 @@
 				return {
 					'color': this.dataConfig.titleColor.color[0].item
 				}
+			}
+		},
+		created() {
+			// 获取cid
+			this.cid = this.dataConfig.selectConfig.articleList[0].cid
+			// 获取文章列表数据
+			this.getArticleListData()
+			
+		},
+		methods: {
+			// 获取文章列表
+			getArticleListData() {
+				getArticleList(this.cid).then(res =>{
+					this.articleListData = res.data.list
+				}).catch(err => {
+					console.log(err.message)
+				})
 			}
 		}
 	}

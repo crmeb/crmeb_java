@@ -17,7 +17,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -129,10 +129,9 @@ public interface UserBrokerageRecordService extends IService<UserBrokerageRecord
     /**
      * 佣金记录列表
      * @param request 筛选条件
-     * @param pageParamRequest 分页参数
      * @return PageInfo
      */
-    PageInfo<UserBrokerageRecord> getAdminList(BrokerageRecordRequest request, PageParamRequest pageParamRequest);
+    PageInfo<UserBrokerageRecord> getAdminList(BrokerageRecordRequest request);
 
     /**
      * 根据日期获取支付佣金金额（确认到账佣金）
@@ -146,4 +145,13 @@ public interface UserBrokerageRecordService extends IService<UserBrokerageRecord
      * @return BigDecimal
      */
     BigDecimal getTotalYuePrice();
+
+    /**
+     * 订单佣金冻结
+     *
+     * @param orderNo 订单号
+     * @param freezeDay 冻结天数
+     * @return
+     */
+    Boolean brokerageFrozen(String orderNo, Integer freezeDay);
 }

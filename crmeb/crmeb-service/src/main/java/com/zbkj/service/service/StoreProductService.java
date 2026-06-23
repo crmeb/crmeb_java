@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.common.model.product.StoreProduct;
 import com.zbkj.common.request.*;
+import com.zbkj.common.response.CopyProductResponse;
 import com.zbkj.common.response.StoreProductInfoResponse;
 import com.zbkj.common.response.StoreProductResponse;
 import com.zbkj.common.response.StoreProductTabsHeader;
@@ -19,7 +20,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -130,7 +131,7 @@ public interface StoreProductService extends IService<StoreProduct> {
      * @param url 商品链接
      * @return
      */
-    MyRecord copyProduct(String url);
+    CopyProductResponse copyProduct(String url);
 
     /**
      * 添加/扣减库存
@@ -247,4 +248,12 @@ public interface StoreProductService extends IService<StoreProduct> {
      * @return Boolean
      */
     Boolean quickAddStock(ProductAddStockRequest request);
+
+    /**
+     * 判断商品是否使用服务保障
+     *
+     * @param gid 服务保障id
+     * @return Boolean
+     */
+    Boolean isUseGuarantee(Integer gid);
 }

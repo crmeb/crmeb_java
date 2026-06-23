@@ -324,11 +324,12 @@ public class OnePassServiceImpl implements OnePassService {
      * @return OnePassLogisticsQueryVo
      */
     @Override
-    public OnePassLogisticsQueryVo exprQuery(String expressNo, String com) {
+    public OnePassLogisticsQueryVo exprQuery(String expressNo, String com, String phone) {
         HashMap<String, String> header = onePassUtil.getCommonHeader(onePassUtil.getToken());
         MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
         params.add("com", com);
         params.add("num", expressNo);
+        params.add("phone", phone);
         JSONObject post = onePassUtil.postFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_EXPRESS_QUEARY_URI, params, header);
         String dataStr = post.getString("data");
         if (StrUtil.isBlank(dataStr) || dataStr.equals("[]")) {

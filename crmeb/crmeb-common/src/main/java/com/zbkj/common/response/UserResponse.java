@@ -14,7 +14,7 @@ import java.util.Date;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -148,4 +148,7 @@ public class UserResponse {
 
     @ApiModelProperty(value = "是否关注公众号")
     private Boolean subscribe;
+
+    @ApiModelProperty(value = "是否注销")
+    private Boolean isLogoff;
 }

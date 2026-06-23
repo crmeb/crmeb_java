@@ -7,7 +7,7 @@
     <el-row :gutter="20" v-loading="loadingPic">
       <el-col
         v-bind="grid"
-        v-hasPermi="['merchant:category:list:tree']"
+        v-hasPermi="['admin:category:list:tree']"
         :style="{ width: !pictureType ? '23%' : '17%' }"
       >
         <div class="Nav">
@@ -45,16 +45,16 @@
                         <el-dropdown-menu slot="dropdown">
                           <el-dropdown-item
                             @click.native="onAdd(data.id)"
-                            v-if="node.label !== '全部图片' && checkPermi(['merchant:category:save'])"
+                            v-if="node.label !== '全部图片'"
                             >添加分类</el-dropdown-item
                           >
                           <el-dropdown-item
-                            v-if="node.label !== '全部图片' && checkPermi(['merchant:category:update'])"
+                            v-if="node.label !== '全部图片'"
                             @click.native="onEdit(data.id)"
                             >编辑分类</el-dropdown-item
                           >
                           <el-dropdown-item
-                            v-if="node.label !== '全部图片' && checkPermi(['merchant:category:delete'])"
+                            v-if="node.label !== '全部图片'"
                             @click.native="handleOpenDelete(data.id)"
                             >删除分类</el-dropdown-item
                           >
@@ -78,12 +78,12 @@
 
             <!--素材管理-->
             <div class="acea-row">
-              <div v-if="typeDate === 'pic' && checkPermi(['merchant:upload:image', 'merchant:upload:file'])">
-                <el-button class="mr10" type="primary" @click="handleChangeImage">上传图片 </el-button>
+              <div v-if="typeDate === 'pic'">
+                <el-button class="mr10 mb20" type="primary" @click="handleChangeImage">上传图片 </el-button>
               </div>
 
               <el-upload
-                v-if="typeDate !== 'pic' && checkPermi(['merchant:upload:image', 'merchant:upload:file'])"
+                v-if="typeDate !== 'pic'"
                 class="upload-demo"
                 action
                 :http-request="handleUploadForm"
@@ -92,16 +92,16 @@
                 :show-file-list="false"
                 multiple
               >
-                <el-button class="mr10" type="primary">上传视频</el-button>
+                <el-button class="mr10 mb20" type="primary">上传视频</el-button>
               </el-upload>
-              <div v-hasPermi="['merchant:attachment:delete']">
+              <div v-hasPermi="['admin:system:attachment:delete']">
                 <el-button class="mr10" @click.stop="editPicList(typeDate)"
                   >{{ typeDate === 'pic' ? '删除图片' : '删除视频' }}
                 </el-button>
               </div>
             </div>
             <el-select
-              v-hasPermi="['merchant:attachment:move']"
+              v-hasPermi="['admin:system:attachment:move']"
               v-model="sleOptions.attachment_category_name"
               v-if="pictureType"
               :placeholder="typeDate === 'pic' ? '图片移动至' : '视频移动至'"
@@ -613,9 +613,8 @@ export default {
       let regexs = /（(.+?)）/g; // 中文小括号
     }
     this.pictureType ? (this.tableData.limit = 18) : (this.tableData.limit = 18);
-    // if (this.$route && this.$route.query.field === 'dialog') import('../internal.js');
-    if (checkPermi(['merchant:category:list:tree'])) this.getList();
-    if (checkPermi(['merchant:attachment:list'])) this.getFileList();
+    if (checkPermi(['admin:category:list:tree'])) this.getList();
+    this.getFileList();
   },
   mounted() {
     if (this.pictureType) {

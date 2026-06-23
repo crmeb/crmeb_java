@@ -1,23 +1,22 @@
 package com.zbkj.service.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.zbkj.common.request.PageParamRequest;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.common.model.combination.StoreCombination;
+import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.StoreCombinationRequest;
 import com.zbkj.common.request.StoreCombinationSearchRequest;
 import com.zbkj.common.request.StorePinkRequest;
 import com.zbkj.common.response.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * StorePinkService
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -58,11 +57,6 @@ public interface StoreCombinationService extends IService<StoreCombination> {
      * 修改拼团商品状态
      */
     Boolean updateCombinationShow(Integer id, Boolean isShow);
-
-    /**
-     * admin拼团统计
-     */
-    Map<String, Object> getAdminStatistics();
 
     /**
      * H5拼团商品列表

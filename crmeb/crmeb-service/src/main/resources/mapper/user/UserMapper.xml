@@ -71,7 +71,6 @@
             <choose>
                 <when test="accessType == 1">
                     and create_time between #{startTime} and #{endTime}
-                    and create_time = last_login_time
                 </when>
                 <when test="accessType == 2">
                     and last_login_time between #{startTime} and #{endTime}
@@ -85,8 +84,47 @@
             </choose>
         </if>
         <if test="keywords != '' and keywords != null ">
-            and ( u.phone like CONCAT('%',#{keywords},'%') or u.nickname like CONCAT('%',#{keywords},'%') or u.mark like CONCAT('%',#{keywords},'%'))
+            and (
+            u.uid like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and u.uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
         </if>
         ORDER BY u.uid desc
+    </select>
+    <select id="findRetailPeopleList" resultType="com.zbkj.common.model.user.User">
+        SELECT uid,nickname,real_name,phone,avatar,spread_count,brokerage_price,spread_uid,promoter_time
+        FROM eb_user
+        where is_logoff = 0 and is_promoter = 1
+        <if test="startTime != null and startTime != ''">
+            and create_time between #{startTime} and #{endTime}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            uid like CONCAT('%',#{keywords},'%') or
+            nickname like CONCAT('%',#{keywords},'%') or
+            phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and phone like CONCAT('%',#{phone},'%')
+        </if>
+        ORDER BY uid desc
+
     </select>
 </mapper>

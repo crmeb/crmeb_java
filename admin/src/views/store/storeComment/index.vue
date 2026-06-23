@@ -4,19 +4,7 @@
       <div class="padding-add">
         <el-form :inline="true">
           <el-form-item label="时间选择：">
-            <el-date-picker
-              @change="onchangeTime"
-              v-model="timeVal"
-              value-format="yyyy-MM-dd"
-              format="yyyy-MM-dd"
-              size="small"
-              type="daterange"
-              placement="bottom-end"
-              placeholder="自定义时间"
-              class="selWidth"
-              start-placeholder="开始时间"
-              end-placeholder="结束时间"
-            ></el-date-picker>
+            <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
           </el-form-item>
           <el-form-item label="评价状态：" class="mr10">
             <el-select
@@ -41,9 +29,8 @@
             >
             </el-input>
           </el-form-item>
-          <el-form-item label="用户名称：">
-            <el-input v-model="tableFrom.nickname" placeholder="请输入用户名称" class="selWidth" size="small" clearable>
-            </el-input>
+          <el-form-item label="用户搜索：" label-for="nickname">
+            <UserSearchInput v-model="tableFrom" />
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="seachList" size="small">搜索</el-button>
@@ -132,6 +119,7 @@ import creatComment from './creatComment.vue';
 import { categoryApi, replyListApi, replyDeleteApi, replyCommentApi } from '@/api/store';
 import { formatDates } from '@/utils/index';
 import { userListApi } from '@/api/user';
+import { search } from 'core-js/fn/symbol';
 export default {
   name: 'StoreComment',
   filters: {
@@ -163,6 +151,8 @@ export default {
         limit: 20,
         isReply: '',
         dateLimit: '',
+        searchType: 'all',
+        content: '',
         // uid: '',
         nickname: '',
         productSearch: '',
@@ -194,7 +184,7 @@ export default {
       this.tableFrom.nickname = '';
       this.tableFrom.productSearch = '';
       this.tableFrom.dateLimit = '';
-      this.timeVal = [];
+      (this.tableFrom.searchType = 'all'), (this.tableFrom.content = ''), (this.timeVal = []);
       this.getList();
     },
     remoteMethod(query) {

@@ -3,10 +3,12 @@ package com.zbkj.service.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.zbkj.common.constants.UserConstants;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.constants.Constants;
@@ -22,6 +24,7 @@ import com.zbkj.common.response.MonitorResponse;
 import com.zbkj.common.request.StoreOrderRefundRequest;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserBill;
+import com.zbkj.common.utils.ValidateFormUtil;
 import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.service.dao.UserBillDao;
 import com.zbkj.service.service.UserBillService;
@@ -41,7 +44,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -162,7 +165,7 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
         QueryWrapper<UserBill> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("category", category).
                 eq("status", 1);
-        queryWrapper.eq("type", Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
+        queryWrapper.ne("type", Constants.USER_BILL_TYPE_PAY_PRODUCT_REFUND);
         if (ObjectUtil.isNotNull(userId)) {
             queryWrapper.eq("uid", userId);
         }
@@ -205,15 +208,29 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
     /**
      * 资金监控
      * @param request 查询参数
-     * @param pageParamRequest 分页参数
      * @return PageInfo
      */
     @Override
-    public PageInfo<MonitorResponse> fundMonitoring(FundsMonitorRequest request, PageParamRequest pageParamRequest) {
-        Page<UserBill> billPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+    public PageInfo<MonitorResponse> fundMonitoring(FundsMonitorRequest request) {
+        Page<UserBill> billPage = PageHelper.startPage(request.getPage(), request.getLimit());
         Map<String, Object> map = new HashMap<>();
-        if (StrUtil.isNotBlank(request.getKeywords())) {
-            map.put("keywords", StrUtil.format("%{}%", request.getKeywords()));
+        if (StrUtil.isNotBlank(request.getContent())) {
+            ValidateFormUtil.validatorUserCommonSearch(request);
+            String keywords = URLUtil.decode(request.getContent());
+            switch (request.getSearchType()) {
+                case UserConstants.USER_SEARCH_TYPE_ALL:
+                    map.put("keywords", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_UID:
+                    map.put("uid", Integer.valueOf(request.getContent()));
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_NICKNAME:
+                    map.put("nickname", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_PHONE:
+                    map.put("phone", request.getContent());
+                    break;
+            }
         }
         //时间范围
         if (StrUtil.isNotBlank(request.getDateLimit())) {
@@ -236,8 +253,10 @@ public class UserBillServiceImpl extends ServiceImpl<UserBillDao, UserBill> impl
                 case "payProduct" :
                     map.put("title", "购买商品");
                     break;
+                case "transferIn" :
+                    map.put("title", "佣金转余额");
+                    break;
             }
-
         }
         List<UserBillResponse> userBillResponses = dao.fundMonitoring(map);
         if (CollUtil.isEmpty(userBillResponses)) {

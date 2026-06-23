@@ -3,12 +3,12 @@
 		<view class='money skeleton-rect'>
 			<view class="price-box">
 				<view class="price">
-					<span class="price-icon">￥</span>{{productInfo.price}}
+					<span class="price-icon">￥</span>{{activityPrice}}
 				</view>
-				<view class="vip-price" v-if="productInfo.vipPrice">
+				<view class="vip-price" v-if="activityVipPrice">
 					<image :src="urlDomain+'crmebimage/perset/staticImg/vip_badge.png'" class="vip_icon"></image>
 					<view
-						class='vip_money skeleton-rect'>￥{{productInfo.vipPrice}}</view>
+						class='vip_money skeleton-rect'>￥{{activityVipPrice}}</view>
 				</view>
 			</view>
 		</view>
@@ -23,6 +23,16 @@
 			productInfo: {
 				type: Object,
 				default: () => {},
+			},
+			// 氛围图价格
+			activityPrice: {
+				type: String,
+				default: '0.00',
+			},
+			// 氛围图vip价格
+			activityVipPrice: {
+				type: String,
+				default: ''
 			}
 		},
 		data() {

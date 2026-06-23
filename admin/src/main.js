@@ -26,6 +26,8 @@ import '@/assets/iconfont/iconfont-weapp-icon.css';
 import VueAwesomeSwiper from 'vue-awesome-swiper';
 import 'swiper/dist/css/swiper.css';
 import 'vue-ydui/dist/ydui.base.css';
+import Viewer from 'v-viewer';
+import 'viewerjs/dist/viewer.css';
 import { parseTime, resetForm, addDateRange, selectDictLabel, selectDictLabels, handleTree } from '@/utils/parsing';
 // 懒加载
 import VueLazyload from 'vue-lazyload';
@@ -42,6 +44,8 @@ import couponFrom from './components/couponList/couponFrom';
 import articleFrom from './components/articleList/articleFrom';
 import UploadIndex from '@/components/uploadPicture/index.vue';
 import UploadFile from '@/components/Upload/uploadFile.vue';
+import common_wrapper from '@/views/design/theme_editor/components/mobilePage/common_wrapper.vue';
+import Pagination from '@/components/Pagination';
 // import VueUeditorWrap from 'vue-ueditor-wrap'
 import iconFrom from './components/iconFrom';
 import TimeSelect from '@/components/TimeSelect';
@@ -52,10 +56,12 @@ import Debounce from './libs/debounce.js'; //防抖自定义指令
 // 切勿更改 此组件为表单生成中使用的图片上传组件
 import SelfUpload from '@/components/uploadPicture/forGenrator/index.vue';
 import util from '@/utils/utils';
+import modalParserFrom from '@/libs/modal-parserFrom';
 import modalAttr from '@/libs/modal-attr';
 import modalIcon from '@/libs/modal-icon';
 import modalPrompt from '@/libs/modal-prompt';
 import { modalSure } from '@/libs/public';
+import { HandlePrice } from '@/utils/public';
 import timeOptions from '@/libs/timeOptions';
 import { loadScriptQueue } from '@/components/FormGenerator/utils/loadScript';
 import './icons'; // icon
@@ -88,6 +94,11 @@ Vue.use(goodListFrom);
 Vue.use(couponFrom);
 Vue.use(articleFrom);
 Vue.use(VueAwesomeSwiper);
+Vue.use(Viewer, {
+  defaultOptions: {
+    zIndex: 9999,
+  },
+});
 Vue.use(plugins);
 Vue.use(directive);
 
@@ -97,7 +108,11 @@ Vue.component('SelfUpload', SelfUpload);
 Vue.component('iconFrom', iconFrom);
 Vue.component('uploadFile', UploadFile);
 Vue.component('timeSelect', TimeSelect);
+Vue.component('common_wrapper', common_wrapper);
+Vue.component('Pagination', Pagination);
+Vue.prototype.$modalParserFrom = modalParserFrom;
 Vue.prototype.$modalSure = modalSure;
+Vue.prototype.$HandlePrice = HandlePrice;
 Vue.prototype.$modalAttr = modalAttr;
 Vue.prototype.$modalIcon = modalIcon;
 Vue.prototype.$modalPrompt = modalPrompt;
@@ -169,7 +184,7 @@ window.addEventListener('message', init, false);
 var _hmt = _hmt || [];
 (function () {
   var hm = document.createElement('script');
-  hm.src = 'https://cdn.oss.9gt.net/js/es.js?version=JAVA-SY-v2.3';
+  hm.src = 'https://cdn.oss.9gt.net/js/es.js?version=JAVA-SY-v2.4';
   var s = document.getElementsByTagName('script')[0];
   s.parentNode.insertBefore(hm, s);
 })();

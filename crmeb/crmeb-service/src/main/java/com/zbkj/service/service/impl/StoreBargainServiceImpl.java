@@ -8,27 +8,28 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.request.*;
-import com.zbkj.common.response.*;
-import com.zbkj.common.vo.MyRecord;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.zbkj.common.constants.BargainConstants;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.ProductConstants;
 import com.zbkj.common.exception.CrmebException;
-import com.github.pagehelper.Page;
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
-import com.zbkj.common.utils.CrmebDateUtil;
-import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.model.bargain.StoreBargain;
 import com.zbkj.common.model.bargain.StoreBargainUser;
-import com.zbkj.common.model.record.UserVisitRecord;
 import com.zbkj.common.model.product.StoreProduct;
 import com.zbkj.common.model.product.StoreProductAttr;
 import com.zbkj.common.model.product.StoreProductAttrValue;
 import com.zbkj.common.model.product.StoreProductDescription;
+import com.zbkj.common.model.record.UserVisitRecord;
 import com.zbkj.common.model.user.User;
+import com.zbkj.common.page.CommonPage;
+import com.zbkj.common.request.*;
+import com.zbkj.common.response.*;
+import com.zbkj.common.utils.CrmebDateUtil;
+import com.zbkj.common.utils.CrmebUtil;
+import com.zbkj.common.utils.RedisUtil;
+import com.zbkj.common.vo.MyRecord;
 import com.zbkj.service.dao.StoreBargainDao;
 import com.zbkj.service.service.*;
 import org.slf4j.Logger;
@@ -50,7 +51,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -98,6 +99,11 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
 
     @Autowired
     private UserVisitRecordService userVisitRecordService;
+    @Autowired
+    private StoreProductAttrOptionService productAttrOptionService;
+    @Autowired
+    private StoreProductGuaranteeService guaranteeService;
+
 
     private static final Logger logger = LoggerFactory.getLogger(StoreBargainServiceImpl.class);
 
@@ -209,9 +215,13 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
             throw new CrmebException("请选择砍价商品的规格属性");
         }
         StoreProductAttrValueAddRequest attrValueRequest = request.getAttrValue().get(0);
-        if (ObjectUtil.isNull(attrValueRequest.getQuota()) || attrValueRequest.getQuota() <= 0) {
-            throw new CrmebException("活动限购数量必须大于0");
+        if (attrValueRequest.getStock() <= 0) {
+            throw new CrmebException("库存不足的规格不能参与砍价活动");
         }
+        if (ObjectUtil.isNull(attrValueRequest.getQuota()) || attrValueRequest.getQuota() > attrValueRequest.getStock()) {
+            throw new CrmebException("请规范活动限购数量：必须小于等于库存数量");
+        }
+
         // 可砍价的金额
         BigDecimal tempPrice = attrValueRequest.getPrice().subtract(attrValueRequest.getMinPrice());
         // 砍价人数 * 0.01 = 每人砍1分总共钱数
@@ -302,6 +312,12 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         }
 
         StoreProductAttrValueAddRequest attrValueRequest = request.getAttrValue().get(0);
+        if (attrValueRequest.getStock() <= 0) {
+            throw new CrmebException("库存不足的规格不能参与砍价活动");
+        }
+        if (ObjectUtil.isNull(attrValueRequest.getQuota()) || attrValueRequest.getQuota() > attrValueRequest.getStock()) {
+            throw new CrmebException("请规范活动限购数量：必须小于等于库存数量");
+        }
 
         // 可砍价的金额
         BigDecimal tempPrice =attrValueRequest.getPrice().subtract(attrValueRequest.getMinPrice());
@@ -440,19 +456,22 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
 
         // 查询attr
         List<StoreProductAttr> attrs = attrService.getListByProductIdAndType(storeBargain.getId(), ProductConstants.PRODUCT_TYPE_BARGAIN);
+        attrs.forEach(e -> {
+            e.setOptionList(productAttrOptionService.findListByAttrId(e.getId()));
+        });
         storeProductResponse.setAttr(attrs);
         storeProductResponse.setSliderImage(String.join(",",storeBargain.getImages()));
-
-        boolean specType = false;
-        if (attrs.size() > 1) {
-            specType = true;
-        }
-        storeProductResponse.setSpecType(specType);
 
         // 注意：数据瓶装步骤：分别查询砍价和商品本身信息组装sku信息之后，再对比sku属性是否相等来赋值是否砍价sku信息
         List<StoreProductAttrValue> bargainAttrValueList = attrValueService.getListByProductIdAndType(bargainId, ProductConstants.PRODUCT_TYPE_BARGAIN);
         // 查询主商品sku
         List<StoreProductAttrValue> attrValueList = attrValueService.getListByProductIdAndType(storeBargain.getProductId(), Constants.PRODUCT_TYPE_NORMAL);
+
+        boolean specType = false;
+        if (attrValueList.size() > 1) {
+            specType = true;
+        }
+        storeProductResponse.setSpecType(specType);
 
         List<AttrValueResponse> valueResponseList = attrValueList.stream().map(e -> {
             AttrValueResponse valueResponse = new AttrValueResponse();
@@ -527,6 +546,12 @@ public class StoreBargainServiceImpl extends ServiceImpl<StoreBargainDao, StoreB
         BargainDetailH5Response detailH5Response = new BargainDetailH5Response();
         BeanUtils.copyProperties(storeBargain, detailH5Response);
         StoreProduct storeProduct = storeProductService.getById(storeBargain.getProductId());
+
+        // 查询商品保障服务信息
+        if (StrUtil.isNotBlank(storeProduct.getGuaranteeIds())) {
+            detailH5Response.setGuaranteeList(guaranteeService.findByIdList(CrmebUtil.stringToArray(storeProduct.getGuaranteeIds())));
+        }
+
         if (storeProduct.getIsDel()) {
             detailH5Response.setMasterStatus("delete");
         } else if (!storeProduct.getIsShow()) {

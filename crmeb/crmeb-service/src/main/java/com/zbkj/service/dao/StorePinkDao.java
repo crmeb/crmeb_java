@@ -3,6 +3,7 @@ package com.zbkj.service.dao;
 import com.zbkj.common.model.combination.StorePink;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -10,7 +11,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -20,4 +21,8 @@ import java.util.List;
 public interface StorePinkDao extends BaseMapper<StorePink> {
 
     List<StorePink> selectSizePink(Integer size);
+
+    List<StorePink> selectPinkList(HashMap<String, Object> map);
+
+    Integer selectPinkListNum(HashMap<String, Object> map);
 }

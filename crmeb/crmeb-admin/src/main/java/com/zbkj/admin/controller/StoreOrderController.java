@@ -1,5 +1,7 @@
 package com.zbkj.admin.controller;
 
+import com.zbkj.common.annotation.LogControllerAnnotation;
+import com.zbkj.common.enums.MethodType;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.*;
 import com.zbkj.common.response.*;
@@ -26,7 +28,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -48,13 +50,12 @@ public class StoreOrderController {
     /**
      * 分页显示订单表
      *  @param request          搜索条件
-     * @param pageParamRequest 分页参数
      */
     @PreAuthorize("hasAuthority('admin:order:list')")
     @ApiOperation(value = "分页列表") //配合swagger使用
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<StoreOrderDetailResponse>> getList(@Validated StoreOrderSearchRequest request, @Validated PageParamRequest pageParamRequest) {
-        return CommonResult.success(storeOrderService.getAdminList(request, pageParamRequest));
+    public CommonResult<CommonPage<StoreOrderDetailResponse>> getList(@Validated StoreOrderSearchRequest request) {
+        return CommonResult.success(storeOrderService.getAdminList(request));
     }
 
     /**
@@ -63,11 +64,8 @@ public class StoreOrderController {
     @PreAuthorize("hasAuthority('admin:order:status:num')")
     @ApiOperation(value = "获取订单各状态数量")
     @RequestMapping(value = "/status/num", method = RequestMethod.GET)
-    public CommonResult<StoreOrderCountItemResponse> getOrderStatusNum(
-            @RequestParam(value = "dateLimit", defaultValue = "") String dateLimit,
-            @RequestParam(value = "type", defaultValue = "2") @Range(min = 0, max = 2, message = "未知的订单类型") Integer type,
-            @RequestParam(value = "orderId", defaultValue = "") String orderNo) {
-        return CommonResult.success(storeOrderService.getOrderStatusNum(dateLimit, type, orderNo));
+    public CommonResult<StoreOrderCountItemResponse> getOrderStatusNum(@Validated StoreOrderTabsNumRequest request) {
+        return CommonResult.success(storeOrderService.getOrderStatusNum(request));
     }
 
     /**
@@ -84,6 +82,7 @@ public class StoreOrderController {
     /**
      * 订单删除
      */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.DELETE, description = "删除订单")
     @PreAuthorize("hasAuthority('admin:order:delete')")
     @ApiOperation(value = "订单删除")
     @RequestMapping(value = "/delete", method = RequestMethod.GET)
@@ -98,6 +97,7 @@ public class StoreOrderController {
     /**
      * 备注订单
      */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "备注订单")
     @PreAuthorize("hasAuthority('admin:order:mark')")
     @ApiOperation(value = "备注")
     @RequestMapping(value = "/mark", method = RequestMethod.POST)
@@ -112,6 +112,7 @@ public class StoreOrderController {
     /**
      * 修改订单(改价)
      */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "修改订单价格")
     @PreAuthorize("hasAuthority('admin:order:update:price')")
     @ApiOperation(value = "修改订单(改价)")
     @RequestMapping(value = "/update/price", method = RequestMethod.POST)
@@ -136,6 +137,7 @@ public class StoreOrderController {
     /**
      * 发送货
      */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "修改订单价格")
     @PreAuthorize("hasAuthority('admin:order:send')")
     @ApiOperation(value = "发送货")
     @RequestMapping(value = "/send", method = RequestMethod.POST)
@@ -146,6 +148,7 @@ public class StoreOrderController {
     /**
      * 退款
      */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "订单退款")
     @PreAuthorize("hasAuthority('admin:order:refund')")
     @ApiOperation(value = "退款")
     @RequestMapping(value = "/refund", method = RequestMethod.GET)
@@ -156,6 +159,7 @@ public class StoreOrderController {
     /**
      * 拒绝退款
      */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "订单拒绝退款")
     @PreAuthorize("hasAuthority('admin:order:refund:refuse')")
     @ApiOperation(value = "拒绝退款")
     @RequestMapping(value = "/refund/refuse", method = RequestMethod.GET)
@@ -209,6 +213,7 @@ public class StoreOrderController {
      * @author stivepeim
      * @since 2020-09-01
      */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "核销码核销订单")
     @PreAuthorize("hasAuthority('admin:order:write:update')")
     @ApiOperation(value = "核销码核销订单")
     @RequestMapping(value = "/writeUpdate/{vCode}", method = RequestMethod.GET)
@@ -259,11 +264,30 @@ public class StoreOrderController {
         return CommonResult.success(storeOrderService.getDeliveryInfo());
     }
 
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "更改订单运单号")
     @PreAuthorize("hasAuthority('admin:order:tracking:number:update')")
     @ApiOperation(value = "更改订单运单号")
     @RequestMapping(value = "/update/tracking/number", method = RequestMethod.POST)
     public CommonResult<Boolean> updateTrackingNumber(@RequestBody @Validated StoreOrderSendRequest request) {
         if (storeOrderService.updateTrackingNumber(request)) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
+    }
+
+    // ===================================================================
+    // 以下为视频订单部分
+    // ===================================================================
+
+    /**
+     * 发货
+     */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "视频号订单发货")
+    @PreAuthorize("hasAuthority('admin:order:video:send')")
+    @ApiOperation(value = "视频号订单｜发送货")
+    @RequestMapping(value = "/video/send", method = RequestMethod.POST)
+    public CommonResult<Boolean> videoSend(@RequestBody @Validated VideoOrderSendRequest request) {
+        if (storeOrderService.videoSend(request)) {
             return CommonResult.success();
         }
         return CommonResult.failed();

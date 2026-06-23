@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -41,7 +41,16 @@ let cartArr = [{
 		title: '可用余额:',
 		payStatus: 1,
 		userBalance: ''
+	},
+	// #ifndef MP
+	{
+		name: "支付宝支付",
+		icon: "icon-zhifubao",
+		value: 'alipay',
+		title: '支付宝快捷支付',
+		payStatus: 1,
 	}
+	// #endif
 ];
 const state = {
 	token: Cache.get(LOGIN_STATUS) || '',
@@ -100,7 +109,7 @@ const mutations = {
 		state.userInfo[payload.amount1] = payload.amount2;
 		Cache.set(USER_INFO, state.userInfo);
 	},
-	//商品类型，用于区分一般商品
+	//商品类型，用于区分视频号商品与一般商品
 	PRODUCT_TYPE(state, productType) {
 		state.productType = productType;
 		Cache.set('productType', productType);
@@ -141,14 +150,14 @@ const actions = {
 				cartArr[1].payStatus = data.yuePayStatus ? 1 : 0;
 				cartArr[1].userBalance = data.userBalance ? data.userBalance : 0;
 				// #ifdef H5
-				// if (Auth.isWeixin()) {
-				// 	cartArr[2].payStatus = 0;
-				// } else {
-				// 	cartArr[2].payStatus = data.aliPayStatus ? 1 : 0;
-				// }
+				if (Auth.isWeixin()) {
+					cartArr[2].payStatus = 0;
+				} else {
+					cartArr[2].payStatus = data.aliPayStatus ? 1 : 0;
+				}
 				// #endif
 				// #ifdef APP-PLUS
-				// cartArr[2].payStatus = data.aliPayStatus ? 1 : 0;
+				cartArr[2].payStatus = data.aliPayStatus ? 1 : 0;
 				// #endif
 				let cartArrs = cartArr.filter(e => e.payStatus === 1);
 				reslove({

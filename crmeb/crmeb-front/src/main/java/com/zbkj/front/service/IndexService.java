@@ -8,6 +8,7 @@ import com.zbkj.common.response.IndexInfoResponse;
 import com.zbkj.common.response.IndexProductResponse;
 import com.zbkj.common.response.pagelayout.PageLayoutBottomNavigationResponse;
 import com.zbkj.common.vo.MyRecord;
+import com.zbkj.common.vo.SplashAdConfigVo;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +18,7 @@ import java.util.List;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -78,4 +79,10 @@ public interface IndexService{
      * 获取底部导航信息
      */
     PageLayoutBottomNavigationResponse getBottomNavigationInfo();
+
+    /**
+     * 获取开屏广告信息
+     */
+    SplashAdConfigVo getSplashAdInfo();
+
 }

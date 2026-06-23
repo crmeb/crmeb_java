@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -55,6 +55,31 @@ export default {
 		}
 	},
 	/**
+	 * 跳转路径封装函数，兼容主题组件链接格式
+	 * @param {String} url 跳转路径
+	 */
+	JumpPath(url) {
+		if (!url) return;
+		url = url.toString();
+		let arr = url.split("@APPID=");
+		if (arr.length > 1) {
+			// #ifdef MP
+			uni.navigateToMiniProgram({
+				appId: arr[arr.length - 1],
+				path: arr[0],
+				envVersion: "release"
+			});
+			// #endif
+			// #ifndef MP
+			this.Tips({
+				title: "h5与app端不支持跳转外部小程序"
+			});
+			// #endif
+			return;
+		}
+		this.navigateTo(url);
+	},
+	/**
 	 * 对象转数组
 	 * @param data 对象
 	 * @returns {*[]}
@@ -63,6 +88,25 @@ export default {
 		let obj = Object.keys(data).sort();
 		let m = obj.map(key => data[key]);
 		return m;
+	},
+	getWXStatusHeight() {
+		const systemInfo = uni.getSystemInfoSync ? uni.getSystemInfoSync() : {};
+		let menuButtonInfo = {};
+		// #ifdef MP
+		if (uni.getMenuButtonBoundingClientRect) {
+			menuButtonInfo = uni.getMenuButtonBoundingClientRect();
+		}
+		// #endif
+		return {
+			statusBarHeight: systemInfo.statusBarHeight || 0,
+			menuButtonInfo: {
+				top: menuButtonInfo.top || 0,
+				bottom: menuButtonInfo.bottom || (systemInfo.statusBarHeight || 0),
+				height: menuButtonInfo.height || 0,
+				width: menuButtonInfo.width || 0,
+				right: menuButtonInfo.right || 0,
+			},
+		};
 	},
 	/**
 	 * opt  object | string

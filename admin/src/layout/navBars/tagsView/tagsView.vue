@@ -146,8 +146,6 @@ export default {
     },
     // 当前的 tagsView 项点击时
     onTagsClick(v, k) {
-      console.log(v);
-
       this.tagsRoutePath = v.path;
       this.tagsRefsIndex = k;
       this.$router.push(v);

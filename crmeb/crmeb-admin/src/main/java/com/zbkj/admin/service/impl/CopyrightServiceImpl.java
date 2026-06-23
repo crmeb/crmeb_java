@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -38,7 +38,8 @@ public class CopyrightServiceImpl implements CopyrightService {
     private CrmebConfig crmebConfig;
     @Autowired
     private RestTemplateUtil restTemplateUtil;
-
+    @Autowired
+    private SystemAttachmentService systemAttachmentService;
 
     private static final String CRMEB_COPYRIGHT_URL = "https://authorize.crmeb.net/api/auth_cert_query?domain_name={}&label={}&version={}";
     private static final String CRMEB_COPYRIGHT_URL_DATA = "data";
@@ -76,13 +77,32 @@ public class CopyrightServiceImpl implements CopyrightService {
 
         response.setStatus(dataJson.getInteger(CRMEB_COPYRIGHT_URL_STATUS));
         response.setCopyright(dataJson.getString(CRMEB_COPYRIGHT_URL_COPYRIGHT));
-        if (!dataJson.getInteger(CRMEB_COPYRIGHT_URL_STATUS).equals(1)) {
-            return response;
-        }
+//        if (!dataJson.getInteger(CRMEB_COPYRIGHT_URL_STATUS).equals(1)) {
+//            return response;
+//        }
         response.setAuthCode(dataJson.getString(CRMEB_COPYRIGHT_URL_AUTHCODE));
         response.setCompanyName(systemConfigService.getValueByKey(SysConfigConstants.CONFIG_COPYRIGHT_COMPANY_INFO));
         response.setCompanyImage(systemConfigService.getValueByKey(SysConfigConstants.CONFIG_COPYRIGHT_COMPANY_IMAGE));
         return response;
     }
 
+    /**
+     * 编辑公司版权信息
+     */
+    @Override
+    @Transactional
+    public Boolean updateCompanyInfo(CopyrightUpdateInfoRequest request) {
+        Boolean update = systemConfigService.updateOrSaveValueByName(SysConfigConstants.CONFIG_COPYRIGHT_COMPANY_INFO, request.getCompanyName());
+        String path = StrUtil.isNotBlank(request.getCompanyImage()) ? request.getCompanyImage() : "";
+        Boolean update1 = systemConfigService.updateOrSaveValueByName(SysConfigConstants.CONFIG_COPYRIGHT_COMPANY_IMAGE, path);
+        return update && update1;
+    }
+
+    /**
+     * 获取商户版权信息
+     */
+    @Override
+    public String getCompanyInfo() {
+        return systemConfigService.getValueByKey(SysConfigConstants.CONFIG_COPYRIGHT_COMPANY_INFO);
+    }
 }

@@ -2,7 +2,7 @@
   <div class="divBox">
     <pages-header
       ref="pageHeader"
-      :title="$route.params.id ? '编辑商品' : '添加商品'"
+      :title="$route.params.id ? ($route.params.type && formValidate.id > 0 ? '商品详情' : '编辑商品') : '添加商品'"
       backUrl="/marketing/seckill/list"
     ></pages-header>
     <el-card class="box-card mt14">
@@ -59,9 +59,13 @@
                   >
                     <img v-if="item.split('.')[item.split('.').length - 1] !== 'mp4'" :src="item" />
                     <video v-else :src="item" />
-                    <i class="el-icon-error btndel" @click="handleRemove(index)" />
+                    <i v-show="!$route.params.type" class="el-icon-error btndel" @click="handleRemove(index)" />
                   </div>
-                  <div v-if="formValidate.imagess.length < 10" class="upLoadPicBox" @click="modalPicTap('2')">
+                  <div
+                    v-if="formValidate.imagess.length < 10 && !$route.params.type"
+                    class="upLoadPicBox"
+                    @click="modalPicTap('2')"
+                  >
                     <div class="upLoad">
                       <i class="el-icon-camera cameraIconfont" />
                     </div>
@@ -71,18 +75,34 @@
             </el-col>
             <el-col v-bind="grid2">
               <el-form-item label="商品标题：" prop="title">
-                <el-input v-model="formValidate.title" class="selWidth" maxlength="249" placeholder="请输入商品名称" />
+                <el-input
+                  :disabled="Boolean($route.params.type)"
+                  v-model="formValidate.title"
+                  class="selWidth"
+                  maxlength="249"
+                  placeholder="请输入商品名称"
+                />
               </el-form-item>
             </el-col>
             <el-col v-bind="grid2">
               <el-form-item label="单位：" prop="unitName">
-                <el-input v-model="formValidate.unitName" placeholder="请输入单位" class="selWidth" />
+                <el-input
+                  :disabled="Boolean($route.params.type)"
+                  v-model="formValidate.unitName"
+                  placeholder="请输入单位"
+                  class="selWidth"
+                />
               </el-form-item>
             </el-col>
             <el-col v-bind="grid2">
               <el-form-item label="运费模板：" prop="tempId">
                 <div class="acea-row">
-                  <el-select v-model="formValidate.tempId" placeholder="请选择" class="selWidth">
+                  <el-select
+                    :disabled="Boolean($route.params.type)"
+                    v-model="formValidate.tempId"
+                    placeholder="请选择"
+                    class="selWidth"
+                  >
                     <el-option v-for="item in shippingList" :key="item.id" :label="item.name" :value="item.id" />
                   </el-select>
                   <!--<el-button class="mr15" @click="addTem">添加运费模板</el-button>-->
@@ -92,6 +112,7 @@
             <el-col v-bind="grid2">
               <el-form-item label="当天参与活动次数：" prop="num">
                 <el-input-number
+                  :disabled="Boolean($route.params.type)"
                   controls-position="right"
                   v-model="formValidate.num"
                   :step="1"
@@ -105,6 +126,7 @@
             <el-col v-bind="grid2">
               <el-form-item label="活动日期：" prop="timeVal">
                 <el-date-picker
+                  :disabled="Boolean($route.params.type)"
                   class="selWidth"
                   v-model="formValidate.timeVal"
                   value-format="yyyy-MM-dd"
@@ -120,7 +142,12 @@
             </el-col>
             <el-col v-bind="grid2">
               <el-form-item label="活动时间：" prop="timeId">
-                <el-select v-model="formValidate.timeId" placeholder="请选择" class="selWidth">
+                <el-select
+                  :disabled="Boolean($route.params.type)"
+                  v-model="formValidate.timeId"
+                  placeholder="请选择"
+                  class="selWidth"
+                >
                   <el-option
                     v-for="item in seckillTime"
                     :key="item.id"
@@ -133,7 +160,7 @@
             </el-col>
             <el-col :span="24">
               <el-form-item label="活动状态：" required>
-                <el-radio-group v-model="formValidate.status">
+                <el-radio-group :disabled="Boolean($route.params.type)" v-model="formValidate.status">
                   <el-radio :label="0" class="radio">关闭</el-radio>
                   <el-radio :label="1">开启</el-radio>
                 </el-radio-group>
@@ -149,7 +176,14 @@
                   style="width: 100%"
                   @selection-change="handleSelectionChange"
                 >
-                  <el-table-column type="selection" key="1" v-if="formValidate.specType" width="55"> </el-table-column>
+                  <el-table-column
+                    type="selection"
+                    :selectable="checkSelectable"
+                    key="1"
+                    v-if="formValidate.specType"
+                    width="55"
+                  >
+                  </el-table-column>
                   <template v-if="manyTabDate && formValidate.specType">
                     <el-table-column
                       v-for="(item, iii) in manyTabDate"
@@ -180,6 +214,7 @@
                   >
                     <template slot-scope="scope">
                       <el-input-number
+                        :disabled="Boolean($route.params.type)"
                         controls-position="right"
                         size="small"
                         v-if="formThead[iii].title === '秒杀价'"
@@ -190,12 +225,13 @@
                         class="priceBox"
                       />
                       <el-input-number
+                        :disabled="Boolean($route.params.type)"
                         controls-position="right"
                         size="small"
                         v-else-if="formThead[iii].title === '限量'"
                         v-model="scope.row[iii]"
                         type="number"
-                        :min="1"
+                        :min="minQuota(scope.row)"
                         :max="scope.row.stock"
                         :step="1"
                         step-strictly
@@ -213,7 +249,8 @@
         <!-- 商品详情-->
         <div v-show="currentTab == 2">
           <el-form-item label="商品详情：">
-            <Tinymce v-model="formValidate.content"></Tinymce>
+            <Tinymce v-if="!$route.params.type" v-model="formValidate.content"></Tinymce>
+            <div v-else v-html="formValidate.content"></div>
           </el-form-item>
         </div>
         <el-form-item style="margin-top: 30px">
@@ -235,6 +272,7 @@
             >下一步</el-button
           >
           <el-button
+            v-if="!$route.params.type"
             :loading="loading"
             type="primary"
             class="submission"
@@ -381,13 +419,23 @@ export default {
       delete obj.image;
       return obj;
     },
+    // 限量最小值
+    minQuota() {
+      return (data) => {
+        if (data.stock) {
+          return 1;
+        } else {
+          return 0;
+        }
+      };
+    },
   },
   created() {
     this.$watch('formValidate.attr', this.watCh);
     this.tempRoute = Object.assign({}, this.$route);
   },
   mounted() {
-    getSeckillList("'1'").then((res) => {
+    getSeckillList(1).then((res) => {
       this.seckillTime = res.list;
     });
     this.formValidate.imagess = [];
@@ -400,9 +448,17 @@ export default {
     this.getCategorySelect();
   },
   methods: {
+    // 规格表格不可选择项
+    checkSelectable(row, index) {
+      if (this.$route.params.type && this.formValidate.id > 0) {
+        return false;
+      } else {
+        return true;
+      }
+    },
     tabsHandleClick(tab, event) {
       this.currentTab = tab.name;
-      if (!this.$route.params.id && tab.index == 1) this.getProdect(this.productId);
+      // if (!this.$route.params.id && tab.index == 1) this.getProdect(this.productId);
     },
     watCh(val) {
       const tmp = {};
@@ -425,6 +481,7 @@ export default {
     },
     // 点击商品图
     modalPicTap(tit, num, i) {
+      if (this.$route.params.type) return;
       const _this = this;
       this.$modalUpload(
         function (img) {
@@ -651,9 +708,11 @@ export default {
         this.formValidate.attrValue = this.multipleSelection;
       }
       this.formValidate.images = JSON.stringify(this.formValidate.imagess);
-      this.formValidate.attrValue.forEach((item) => {
-        item.attrValue = JSON.stringify(item.attrValue);
-      });
+      if (typeof this.formValidate.attrValue[0].attrValue == 'object') {
+        this.formValidate.attrValue.forEach((item) => {
+          item.attrValue = JSON.stringify(item.attrValue);
+        });
+      }
       this.$refs[name].validate((valid) => {
         if (valid) {
           this.fullscreenLoading = true;
@@ -851,6 +910,6 @@ export default {
   margin-left: 0 !important;
 }
 ::v-deep .el-table .cell {
-    padding-right: 0 !important;
+  padding-right: 0 !important;
 }
 </style>

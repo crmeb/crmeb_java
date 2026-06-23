@@ -4,6 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.zbkj.common.constants.GroupConfigConstants;
+import com.zbkj.common.model.system.GroupConfig;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.response.CopyrightConfigInfoResponse;
 import com.zbkj.common.response.IndexInfoResponse;
@@ -21,6 +23,8 @@ import com.zbkj.common.model.record.UserVisitRecord;
 import com.zbkj.common.model.product.StoreProduct;
 import com.zbkj.common.model.system.SystemConfig;
 import com.zbkj.common.model.user.User;
+import com.zbkj.common.vo.SplashAdConfigVo;
+import com.zbkj.common.vo.SplashAdDataVo;
 import com.zbkj.front.service.IndexService;
 import com.zbkj.service.delete.ProductUtils;
 import com.zbkj.service.service.*;
@@ -30,6 +34,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -37,7 +42,7 @@ import java.util.List;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -67,6 +72,11 @@ public class IndexServiceImpl implements IndexService {
 
     @Autowired
     private ActivityStyleService activityStyleService;
+    @Autowired
+    private GroupConfigService groupConfigService;
+    @Autowired
+    private SystemAttachmentService systemAttachmentService;
+
 
     /**
      * 首页数据
@@ -79,7 +89,7 @@ public class IndexServiceImpl implements IndexService {
         indexInfoResponse.setMenus(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_MENU)); //导航模块
         indexInfoResponse.setRoll(systemGroupDataService.getListMapByGid(Constants.GROUP_DATA_ID_INDEX_NEWS_BANNER)); //首页滚动新闻
 
-        indexInfoResponse.setLogoUrl(systemConfigService.getValueByKey(Constants.CONFIG_KEY_SITE_LOGO));// 企业logo地址
+        indexInfoResponse.setLogoUrl(systemAttachmentService.getCdnUrl());// logo地址 DIY 已经替代,返回域名
         indexInfoResponse.setYzfUrl(systemConfigService.getValueByKey(Constants.CONFIG_KEY_YZF_H5_URL));// 云智服H5 url
         indexInfoResponse.setConsumerHotline(systemConfigService.getValueByKey(Constants.CONFIG_KEY_CONSUMER_HOTLINE));// 客服电话
         indexInfoResponse.setTelephoneServiceSwitch(systemConfigService.getValueByKey(Constants.CONFIG_KEY_TELEPHONE_SERVICE_SWITCH));// 客服电话服务
@@ -259,5 +269,43 @@ public class IndexServiceImpl implements IndexService {
         response.setBottomNavigationList(bnList);
         return response;
     }
+
+    /**
+     * 获取开屏广告信息
+     */
+    @Override
+    public SplashAdConfigVo getSplashAdInfo() {
+        List<String> keyList = new ArrayList<>();
+        keyList.add(SysConfigConstants.SPLASH_AD_SWITCH);
+        keyList.add(SysConfigConstants.SPLASH_AD_SHOW_TIME);
+        keyList.add(SysConfigConstants.SPLASH_AD_SHOW_INTERVAL);
+        MyRecord myRecord = systemConfigService.getValuesByKeyList(keyList);
+        SplashAdConfigVo configVo = new SplashAdConfigVo();
+        Integer splashAdSwitch = myRecord.getInt(SysConfigConstants.SPLASH_AD_SWITCH);
+        configVo.setSplashAdSwitch(splashAdSwitch);
+        if (splashAdSwitch.equals(0)) {
+            configVo.setSplashAdSwitch(splashAdSwitch);
+            return configVo;
+        }
+        configVo.setSplashAdShowTime(myRecord.getInt(SysConfigConstants.SPLASH_AD_SHOW_TIME));
+        configVo.setSplashAdShowInterval(myRecord.getInt(SysConfigConstants.SPLASH_AD_SHOW_INTERVAL));
+
+        List<GroupConfig> configList = groupConfigService.findByTag(GroupConfigConstants.TAG_SPLASH_AD_DATA, Constants.SORT_ASC, null);
+        if (CollUtil.isEmpty(configList)) {
+            configVo.setAdList(new ArrayList<>());
+        } else {
+            Iterator<GroupConfig> iterator = configList.iterator();
+            List<SplashAdDataVo> voList = new ArrayList<>();
+            while (iterator.hasNext()) {
+                GroupConfig config = iterator.next();
+                SplashAdDataVo vo = new SplashAdDataVo();
+                BeanUtils.copyProperties(config, vo);
+                voList.add(vo);
+            }
+            configVo.setAdList(voList);
+        }
+        return configVo;
+    }
+
 }
 

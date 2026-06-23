@@ -14,7 +14,7 @@ import java.io.Serializable;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -25,7 +25,7 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @ApiModel(value="StoreProductReplySearchRequest对象", description="商品评论查询对象")
-public class StoreProductReplySearchRequest implements Serializable {
+public class StoreProductReplySearchRequest extends UserCommonSearchRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 
@@ -34,9 +34,6 @@ public class StoreProductReplySearchRequest implements Serializable {
 
     @ApiModelProperty(value = "0未回复1已回复")
     private Boolean isReply;
-
-    @ApiModelProperty(value = "用户名称(支持模糊搜索)")
-    private String nickname;
 
     @ApiModelProperty(value = "时间区间")
     private String dateLimit;

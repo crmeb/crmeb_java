@@ -1,74 +1,86 @@
 <template>
   <div>
-    <div class="operationFloor">
-      <div class="imgBox" @mouseup.left.stop="changeStop()">
-        <div ref="container" class="container" id="img-box-container">
-          <img
-            ref="backgroundImg"
-            :src="imgs[0].img"
-            ondragstart="return false;"
-            oncontextmenu="return false;"
-            onselect="document.selection.empty();"
-            alt="img"
-            @mousedown.left.stop="mouseDown($event)"
-          />
-          <!--draw hotpot-->
-          <div
-            v-show="caseShow"
-            :style="{
-              width: areaWidth + 'px',
-              height: areaHeight + 'px',
-              left: starX + 'px',
-              top: starY + 'px',
-            }"
-            class="area"
-          />
-          <!--be hotpot-->
-          <AreaBox
-            v-for="(item, index) in areaData"
-            :area-data-index="index"
-            :key="'area' + index"
-            :link="item.link"
-            :title="item.title"
-            :type="parseInt(item.type)"
-            :area-init.sync="item"
-            :parent-width="parentWidth"
-            :parent-height="parentHeight"
-            @delAreaBox="delAreaBox"
-            @addURL="addURL"
-          />
-        </div>
-      </div>
-      <!-- 热区链接配置 -->
-      <div class="form">
-        <div class="acea-row row-middle">
-          <div class="mb12 titleTop acea-row row-middle">
-            <span>热区管理</span>
-            <span class="ml5 iconfont iconrequwenzitishi"></span>
-            <img class="ml5" src="@/assets/imgs/qipaokuang.png" alt="" />
-            <div class="ml5 title-text">可框选热区范围，双击设置热区信息</div>
+    <el-dialog
+      title="编辑热区"
+      :visible.sync="dialogVisible"
+      fullscreen
+      append-to-body
+      custom-class="hotpot-dialog"
+      @opened="openModal"
+      @close="handleDialogClose"
+    >
+      <div class="operationFloor">
+        <div class="imgBox" @mouseup.left.stop="changeStop()">
+          <div ref="container" class="container" id="img-box-container">
+            <img
+              ref="backgroundImg"
+              :src="imageSrc"
+              ondragstart="return false;"
+              oncontextmenu="return false;"
+              onselect="document.selection.empty();"
+              alt="img"
+              @mousedown.left.stop="mouseDown($event)"
+            />
+            <!--draw hotpot-->
+            <div
+              v-show="caseShow"
+              :style="{
+                width: areaWidth + 'px',
+                height: areaHeight + 'px',
+                left: starX + 'px',
+                top: starY + 'px',
+              }"
+              class="area"
+            />
+            <!--be hotpot-->
+            <AreaBox
+              v-for="(item, index) in areaData"
+              :area-data-index="index"
+              :key="'area' + index"
+              :link="item.link"
+              :title="item.title"
+              :type="parseInt(item.type)"
+              :area-init.sync="item"
+              :parent-width="parentWidth"
+              :parent-height="parentHeight"
+              @delAreaBox="delAreaBox"
+              @addURL="addURL"
+            />
           </div>
         </div>
-        <el-button type="primary" size="small" @click="addAreaBox">添加热区</el-button>
-        <el-button size="small" @click="resetAreaBox">重置</el-button>
-        <div v-for="(item, index) in areaData" :key="index" class="form-row">
-          <!-- <span class="iconfont iconrequbianji"></span> -->
-          <el-input :maxlength="6" class="item-input" v-model="item.name"></el-input>
-          <div class="form-item label">
-            <div @click="getLink(index)">
-              <el-input :value="item.link" class="toLink" :style="linkInputStyle" readonly placeholder="选择跳转链接">
-                <i class="iconfont iconlianjietubiao" slot="suffix"> </i>
-              </el-input>
+        <!-- 热区链接配置 -->
+        <div class="form">
+          <div class="acea-row row-middle">
+            <div class="mb12 titleTop acea-row row-middle">
+              <span>热区管理</span>
+              <span class="ml5 iconfont iconrequwenzitishi"></span>
+              <img class="ml5" src="@/assets/imgs/qipaokuang.png" alt="" />
+              <div class="ml5 title-text">可框选热区范围，双击设置热区信息</div>
             </div>
           </div>
-          <i class="el-icon-delete" @click="delAreaBox(index)" />
+          <div class="actions">
+            <el-button type="primary" size="small" @click="addAreaBox">添加热区</el-button>
+            <el-button size="small" @click="resetAreaBox">重置</el-button>
+          </div>
+          <div v-for="(item, index) in areaData" :key="index" class="form-row">
+            <!-- <span class="iconfont iconrequbianji"></span> -->
+            <el-input :maxlength="6" class="item-input" v-model="item.name"></el-input>
+            <div class="form-item label">
+              <div @click="getLink(index)">
+                <el-input :value="item.link" class="toLink" :style="linkInputStyle" readonly placeholder="选择跳转链接">
+                  <i class="iconfont iconlianjietubiao" slot="suffix"> </i>
+                </el-input>
+              </div>
+            </div>
+            <i class="el-icon-delete" @click="delAreaBox(index)" />
+          </div>
         </div>
       </div>
-      <div class="btn-footer">
-        <el-button @click="btnDialog(0)">取消</el-button>
-        <el-button type="primary" @click="btnDialog(1)">确定</el-button>
+      <div slot="footer" class="dialog-actions">
+        <el-button @click="cancelAreaData">取消</el-button>
+        <el-button type="primary" @click="saveAreaData">确定</el-button>
       </div>
-    </div>
+    </el-dialog>
     <linkaddress ref="linkaddres" @linkUrl="linkUrl"></linkaddress>
   </div>
 </template>
@@ -89,8 +101,8 @@ export default {
      * @type {ImgData}
      */
     imgs: {
-      type: Array, // 图片
-      default: () => '',
+      type: [String, Array], // 图片
+      default: '',
     },
     /**
      * @description 是否为热门汤品
@@ -116,7 +128,7 @@ export default {
       type: Object, // 对象类型
       default: () => ({
         // 默认值为一个包含width属性的对象
-        width: '250px',
+        width: '260px',
         height: '32px',
         borderRadius: '4px',
       }),
@@ -183,7 +195,7 @@ export default {
        * @description 默认宽度
        * @type {number}
        */
-      defaultWidth: 456,
+      defaultWidth: 750,
       /**
        * @description 当前显示的图片索引
        * @type {number}
@@ -192,15 +204,22 @@ export default {
       nowNum: 0,
     };
   },
-  computed: {},
+  computed: {
+    imageSrc() {
+      if (Array.isArray(this.imgs)) {
+        const first = this.imgs[0] || {};
+        return first.img || first.url || first.att_dir || first.sattDir || '';
+      }
+      return this.imgs || '';
+    },
+  },
   watch: {
     imgAreaData(val) {
-      this.areaData = [...val];
+      this.areaData = [...(val || [])];
     },
   },
   mounted() {
-    this.areaData = [...this.imgAreaData];
-    this.openModal();
+    this.areaData = [...(this.imgAreaData || [])];
   },
   methods: {
     //添加热区
@@ -218,7 +237,7 @@ export default {
         name: `热区${this.nowNum}`,
         areaWidth: 114,
         areaHeight: 114,
-        nowImgWidth: 456,
+        nowImgWidth: this.defaultWidth,
         link: '',
       });
     },
@@ -227,28 +246,24 @@ export default {
       this.nowNum = 0;
       this.areaData = [];
     },
-    btnDialog(type) {
-      if (type === 0) {
-        this.$modalSure('关闭？')
-          .then((_) => {
-            this.$emit('dialogChange', type, this.areaData);
-            this.imgAreaData.length == 0 && (this.nowNum = 0);
-            done();
-          })
-          .catch((_) => {});
-      } else {
-        this.$emit('dialogChange', type, this.areaData);
-      }
+    cancelAreaData() {
+      this.areaData = [...this.imgAreaData];
+      this.dialogVisible = false;
+    },
+    saveAreaData() {
+      this.$emit('saveAreaData', this.areaData);
+      this.dialogVisible = false;
+    },
+    handleDialogClose() {
+      document.onmousemove = null;
+      this.caseShow = false;
     },
     openModal() {
-      // this.$nextTick(() => {});
-      setTimeout(() => {
-        const parentDiv = document.querySelector('#img-box-container');
-        //获取元素的宽高
+      this.$nextTick(() => {
+        const parentDiv = this.$refs.container;
         this.parentWidth = this.defaultWidth;
-        // this.parentWidth = parentDiv.clientWidth;
-        this.parentHeight = parentDiv.clientHeight || 450;
-      }, 500);
+        this.parentHeight = parentDiv ? parentDiv.clientHeight : 450;
+      });
     },
     closeModal() {
       this.$Modal.confirm({
@@ -354,7 +369,7 @@ export default {
       // 打开添加链接的模态框
       // this.$refs.linkaddres.currenType = 'link';
       // this.$refs.linkaddres.mockData('link');
-      this.$refs.linkaddres.dialogVisible = true;
+      this.$refs.linkaddres.modals = true;
     },
     /**
      * @description 处理链接地址的输入事件
@@ -385,12 +400,9 @@ export default {
 .operationFloor {
   display: flex;
   position: relative;
-  padding-bottom: 20px;
-  .btn-footer {
-    position: absolute;
-    bottom: 20px;
-    right: 0;
-  }
+  gap: 24px;
+  height: calc(100vh - 138px);
+  overflow: hidden;
   .header {
     .titleBox {
       display: flex;
@@ -417,18 +429,26 @@ export default {
   }
 
   .imgBox {
-    width: 466px;
-    height: 456px;
-    overflow-y: scroll;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+    height: 100%;
+    overflow: auto;
+    background: #f7f8fa;
 
     .container {
       position: relative;
+      align-self: flex-start;
+      border: 1px solid #ebeef5;
+      background: #fff;
     }
 
     img {
       cursor: crosshair;
       display: block;
-      width: 456px;
+      width: 750px;
+      max-width: none;
     }
 
     .area {
@@ -445,15 +465,22 @@ export default {
 
 .form {
   font-size: 12px;
-  margin-left: 24px;
-  width: 420px;
-  height: 400px;
+  flex: 0 0 420px;
+  height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
+  padding: 4px 4px 80px 0;
+  box-sizing: border-box;
+  .actions {
+    margin-bottom: 8px;
+  }
   .form-row {
     display: flex;
-    margin: 20px 0;
+    margin: 12px 0;
     align-items: center;
+    padding: 12px;
+    background: #f9f9f9;
+    border-radius: 4px;
     .form-item {
       display: flex;
       justify-content: space-between;
@@ -519,5 +546,35 @@ export default {
 }
 ::v-deep .el-input__inner {
   padding: 0 8px !important;
+}
+::v-deep .hotpot-dialog {
+  .el-dialog__body {
+    height: calc(100vh - 110px);
+    padding: 16px 24px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  .el-dialog__footer {
+    padding: 10px 24px 16px;
+    border-top: 1px solid #ebeef5;
+  }
+}
+.dialog-actions {
+  text-align: right;
+}
+</style>
+
+<style lang="scss">
+.hotpot-dialog {
+  .el-dialog__body {
+    height: calc(100vh - 110px);
+    padding: 16px 24px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  .el-dialog__footer {
+    padding: 10px 24px 16px;
+    border-top: 1px solid #ebeef5;
+  }
 }
 </style>

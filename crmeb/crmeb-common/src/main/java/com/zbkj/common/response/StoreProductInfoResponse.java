@@ -1,6 +1,7 @@
 package com.zbkj.common.response;
 
 import com.zbkj.common.model.product.StoreProductAttr;
+import com.zbkj.common.model.product.StoreProductGuarantee;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -15,7 +16,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -163,4 +164,7 @@ public class StoreProductInfoResponse implements Serializable {
 
     @ApiModelProperty(value = "展示图")
     private String flatPattern;
+
+    @ApiModelProperty(value = "保障服务列表")
+    private List<StoreProductGuarantee> guaranteeList;
 }

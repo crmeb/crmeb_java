@@ -19,7 +19,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -120,4 +120,13 @@ public class StoreOrderDetailResponse implements Serializable {
 
     @ApiModelProperty(value = "商家寄件订单单号")
     private String shipmentOrderId;
+
+    @ApiModelProperty(value = "商品总价")
+    private BigDecimal totalPrice;
+
+    @ApiModelProperty(value = "原始邮费")
+    private BigDecimal totalPostage;
+
+    @ApiModelProperty(value = "实际支付邮费")
+    private BigDecimal payPostage;
 }

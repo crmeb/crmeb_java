@@ -15,13 +15,13 @@
 						</view>
 						<!-- #endif -->
 						<!-- #ifdef H5 || APP-PLUS -->
-						<view id="home" class="home acea-row row-center-wrapper iconfont icon-xiangzuo h5_back" :class="opacity>0.5?'on':''"
-							:style="{ top: homeTop + 'rpx' }" v-if="returnShow" @tap="returns">
+						<view id="home" class="home acea-row row-center-wrapper iconfont icon-xiangzuo h5_back"
+							:class="opacity>0.5?'on':''" :style="{ top: homeTop + 'rpx' }" v-if="returnShow" @tap="returns">
 						</view>
 						<!-- #endif -->
 						<view class="header flex justify-between align-center">
-							<view class="item" :class="navActive === index ? 'on' : ''" v-for="(item,index) in navList"
-								:key='index' @tap="tap(item,index)">
+							<view class="item" :class="navActive === index ? 'on' : ''" v-for="(item,index) in navList" :key='index'
+								@tap="tap(item,index)">
 								{{ item }}
 							</view>
 						</view>
@@ -34,27 +34,28 @@
 				</view>
 			</view>
 			<view class="dialog_nav" :style='"top:"+navH+"rpx;"' v-show="currentPage">
-				<view class="dialog_nav_item" :class="item.after" v-for="(item,index) in selectNavList" :key="index" @click="linkPage(item.url)">
+				<view class="dialog_nav_item" :class="item.after" v-for="(item,index) in selectNavList" :key="index"
+					@click="linkPage(item.url)">
 					<text class="iconfont" :class="item.icon"></text>
 					<text class="pl-20">{{item.name}}</text>
 				</view>
 			</view>
 			<view class='product-con'>
-				<scroll-view :scroll-top="scrollTop" scroll-y='true' scroll-with-animation="true" :style="'height:'+height+'px;'"
-				 @scroll="scroll">
+				<scroll-view :scroll-top="scrollTop" scroll-y='true' scroll-with-animation="true"
+					:style="'height:'+height+'px;'" @scroll="scroll">
 					<view id="past0">
-						<productConSwiper :imgUrls='imgUrls' class="skeleton-rect"  :videoline="videoLink"
-							></productConSwiper>
+						<productConSwiper :imgUrls='imgUrls' class="skeleton-rect" :videoline="videoLink"></productConSwiper>
 						<view class='nav acea-row row-between-wrapper mb30 skeleton-rect'>
-							<view class='money'>￥<text class='num'>{{storeInfo.price}}</text><text class='y-money'>￥{{storeInfo.otPrice}}</text></view>
+							<view class='money'>￥<text class='num'>{{attribute.productSelect.price}}</text><text
+									class='y-money'>￥{{attribute.productSelect.otPrice}}</text></view>
 							<view class='acea-row row-middle'>
 								<view class='time flex' v-if="status == 2">
 									<view>
 										<text class="iconfont icon-miaosha1"></text>
 										<text class="pl-06" style="font-size: 26rpx;">距结束:</text>
 									</view>
-									<countDown :bgColor="bgColor" :is-day="false" :tip-text="' '" :day-text="' '" :hour-text="' : '" :minute-text="' : '" :second-text="' '"
-									 :datatime="datatime"></countDown>
+									<countDown :bgColor="bgColor" :is-day="false" :tip-text="' '" :day-text="' '" :hour-text="' : '"
+										:minute-text="' : '" :second-text="' '" :datatime="datatime"></countDown>
 								</view>
 							</view>
 						</view>
@@ -65,28 +66,49 @@
 									<view class='iconfont icon-fenxiang' @click="listenerActionSheet"></view>
 								</view>
 								<view class='label acea-row row-middle'>
-									<view class='stock skeleton-rect'>累计销售：{{parseFloat(storeInfo.sales) + parseFloat(storeInfo.ficti) || 0}}{{storeInfo.unitName}}</view>
-									<view class="skeleton-rect">限量: {{ attribute.productSelect.quota ? attribute.productSelect.quota : 0 }} {{storeInfo.unitName}}</view>
+									<view class='stock skeleton-rect'>
+										累计销售：{{parseFloat(storeInfo.sales) + parseFloat(storeInfo.ficti) || 0}}{{storeInfo.unitName}}</view>
+									<view class="skeleton-rect">限量:
+										{{ attribute.productSelect.quota ? attribute.productSelect.quota : 0 }} {{storeInfo.unitName}}
+									</view>
 								</view>
 							</view>
-							<view class='attribute mb30 borRadius14' @click="selecAttr">
-								<view class="acea-row row-between-wrapper">
-									<view class="line1 skeleton-rect">{{attrTxt}}：
-										<text class='atterTxt'>{{attrValue}}</text>
+							<view class='attribute mb30 borRadius14'>
+								<!-- 规格 -->
+								<view class="p-24" @click="selecAttr">
+									<view class="acea-row row-between-wrapper">
+										<view class="line1 skeleton-rect">{{attrTxt}}：
+											<text class='atterTxt'>{{attrValue}}</text>
+										</view>
+										<view class='iconfont icon-jiantou'></view>
 									</view>
-									<view class='iconfont icon-jiantou'></view>
+									<view class="acea-row row-between-wrapper" style="margin-top:7px;padding-left:55px;"
+										v-if="skuImage.length > 1">
+										<view class="flex">
+											<image :src="item" v-for="(item,index) in skuImage.slice(0,4)" :key="index" class="attrImg">
+											</image>
+										</view>
+										<view class="switchTxt">共{{skuArr.length}}种规格可选</view>
+									</view>
 								</view>
-								<view class="acea-row row-between-wrapper" style="margin-top:7px;padding-left:55px;" v-if="skuArr.length > 1">
-									<view class="flex">
-										<image :src="item.image" v-for="(item,index) in skuArr.slice(0,4)" :key="index" class="attrImg"></image>
+								<!-- 服务保障 -->
+								<view v-if="guaranteeList.length > 0" class="acea-row row-between-wrapper p-24"
+									@click="handleToGgle(true)">
+									<view class="line1 skeleton-fillet">
+										<text class="">保&nbsp;&nbsp;&nbsp;障：</text>
+										<text class="atterTxt skeleton-fillet" v-for="(item, index) in guaranteeList"
+											:key="index">{{ item.name }} ·
+										</text>
 									</view>
-									<view class="switchTxt">共{{skuArr.length}}种规格可选</view>
+									<view class="iconfont icon-jiantou"></view>
 								</view>
 							</view>
 							<view class='userEvaluation' id="past1">
-								<view class='title acea-row row-between-wrapper' :style="replyCount==0?'border-bottom-left-radius:14rpx;border-bottom-right-radius:14rpx;':''">
+								<view class='title acea-row row-between-wrapper'
+									:style="replyCount==0?'border-bottom-left-radius:14rpx;border-bottom-right-radius:14rpx;':''">
 									<view>用户评价({{replyCount}})</view>
-									<navigator class='praise' hover-class='none' :url="'/pages/goods/goods_comment_list/index?productId='+ storeInfo.productId">
+									<navigator class='praise' hover-class='none'
+										:url="'/pages/goods/goods_comment_list/index?productId='+ storeInfo.productId">
 										<text class='font_color'>{{replyChance}}%</text>好评率
 										<text class='iconfont icon-jiantou'></text>
 									</navigator>
@@ -115,11 +137,12 @@
 						<view>客服</view>
 					</button>
 					<template v-else>
-						<button open-type="contact" hover-class='none' class='item skeleton-rect' v-if="chatConfig.wx_chant_independent=='open'">
+						<button open-type="contact" hover-class='none' class='item skeleton-rect'
+							v-if="chatConfig.wx_chant_independent=='open'">
 							<view class='iconfont icon-kefu'></view>
 							<view>客服</view>
 						</button>
-						<button class="item" hover-class='none' @click="wxChatService"  v-else>
+						<button class="item" hover-class='none' @click="wxChatService" v-else>
 							<view class='iconfont icon-kefu'></view>
 							<text>联系客服</text>
 						</button>
@@ -137,40 +160,42 @@
 						<view>收藏</view>
 					</view>
 					<view class="bnt acea-row skeleton-rect" v-if="dataShow == 0">
-						<view class="joinCart bnts" @tap="openAlone"  v-if="masterStatus !=='soldOut'">单独购买</view>
-						<view class="bg-color-hui bnts radius"  v-if="masterStatus =='soldOut'">单独购买</view>
+						<view class="joinCart bnts" @tap="openAlone" v-if="masterStatus !=='soldOut'">单独购买</view>
+						<view class="bg-color-hui bnts radius" v-if="masterStatus =='soldOut'">单独购买</view>
 						<view class="buy bnts">立即购买</view>
 					</view>
-					<view class="bnt acea-row skeleton-rect" v-if="status == 2 && attribute.productSelect.quota>0 &&  datatime > new Date().getTime()/1000">
+					<view class="bnt acea-row skeleton-rect"
+						v-if="status == 2 && attribute.productSelect.quota>0 &&  datatime > new Date().getTime()/1000">
 						<view class="joinCart bnts" @tap="openAlone" v-if="masterStatus !=='soldOut'">单独购买</view>
-						<view class="bg-color-hui bnts radius"  v-if="masterStatus =='soldOut'">单独购买</view>
+						<view class="bg-color-hui bnts radius" v-if="masterStatus =='soldOut'">单独购买</view>
 						<view class="buy bnts" @tap="goCat">立即购买</view>
 					</view>
-					<view class="bnt acea-row skeleton-rect" v-if="status == 2 && (attribute.productSelect.quota <= 0) &&  datatime > new Date().getTime()/1000">
+					<view class="bnt acea-row skeleton-rect"
+						v-if="status == 2 && (attribute.productSelect.quota <= 0) &&  datatime > new Date().getTime()/1000">
 						<view class="joinCart bnts" @tap="openAlone" v-if="masterStatus !=='soldOut'">单独购买</view>
-						<view class="bg-color-hui bnts radius"  v-if="masterStatus =='soldOut'">单独购买</view>
+						<view class="bg-color-hui bnts radius" v-if="masterStatus =='soldOut'">单独购买</view>
 						<view class="bnts bg-color-hui">已售罄</view>
 					</view>
 					<view class="bnt acea-row skeleton-rect" v-if="status == 0">
 						<view class="joinCart bnts" @tap="openAlone" v-if="masterStatus !=='soldOut'">单独购买</view>
-						<view class="bg-color-hui bnts radius"  v-if="masterStatus =='soldOut'">单独购买</view>
+						<view class="bg-color-hui bnts radius" v-if="masterStatus =='soldOut'">单独购买</view>
 						<view class="buy bnts bg-color-hui">已关闭</view>
 					</view>
 					<view class="bnt acea-row skeleton-rect" v-if="status == 1">
 						<view class="joinCart bnts" @tap="openAlone" v-if="masterStatus !=='soldOut'">单独购买</view>
-						<view class="bg-color-hui bnts radius"  v-if="masterStatus =='soldOut'">单独购买</view>
+						<view class="bg-color-hui bnts radius" v-if="masterStatus =='soldOut'">单独购买</view>
 						<view class="buy bnts bg-color-hui">未开始</view>
 					</view>
 					<view class="bnt acea-row skeleton-rect" v-if="status == 2 && new Date().getTime()/1000 - datatime >=0">
 						<view class="joinCart bnts" @tap="openAlone" v-if="masterStatus !=='soldOut'">单独购买</view>
-						<view class="bg-color-hui bnts radius"  v-if="masterStatus =='soldOut'">单独购买</view>
+						<view class="bg-color-hui bnts radius" v-if="masterStatus =='soldOut'">单独购买</view>
 						<view class="buy bnts bg-color-hui">已结束</view>
 					</view>
 				</view>
 			</view>
 			<!-- <shareRedPackets :sharePacket="sharePacket" @listenerActionSheet="listenerActionSheet" @closeChange="closeChange"></shareRedPackets> -->
-			<product-window :attr='attribute' :limitNum='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr" @ChangeCartNum="ChangeCartNum"
-			 @attrVal="attrVal" @iptCartNum="iptCartNum" @getImg="showImg"></product-window>
+			<product-window :attr='attribute' :limitNum='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr"
+				@ChangeCartNum="ChangeCartNum" @attrVal="attrVal" @iptCartNum="iptCartNum" @getImg="showImg"></product-window>
 			<!-- 分享按钮 -->
 			<view class="generate-posters" :class="posters ? 'on' : ''">
 				<view class="generateCon acea-row row-middle">
@@ -220,22 +245,49 @@
 				<view class="generateClose acea-row row-center-wrapper" @click="posterImageClose">取消</view>
 			</view>
 			<cus-previewImg ref="cusPreviewImg" :list="skuArr" @changeSwitch="changeSwitch" />
-			<view class="mask"  v-if="posters" @click="closePosters"></view>
-			<view class="mask"  v-if="canvasStatus"  @click="listenerActionClose"></view>
+			<view class="mask" v-if="posters" @click="closePosters"></view>
+			<view class="mask" v-if="canvasStatus" @click="listenerActionClose"></view>
 			<view class="mask_transparent" v-if="currentPage" @touchmove="hideNav" @click="hideNav()"></view>
 			<!-- 海报展示 -->
 			<view class='poster-pop' v-if="canvasStatus">
 				<image :src='posterImage'></image>
 			</view>
-			<view class="canvas"  v-else>
+			<view class="canvas" v-else>
 				<canvas style="width:750px;height:1190px;" canvas-id="firstCanvas"></canvas>
-				<canvas canvas-id="qrcode" :style="{width: `${qrcodeSize}px`, height: `${qrcodeSize}px`}"/>
+				<canvas canvas-id="qrcode" :style="{width: `${qrcodeSize}px`, height: `${qrcodeSize}px`}" />
 			</view>
 			<!-- 发送给朋友图片 -->
 			<view class="share-box" v-if="H5ShareBox">
 				<image :src="urlDomain+'crmebimage/perset/staticImg/share-info.png'" @click="H5ShareBox = false"></image>
 			</view>
-		</view>	
+			<!-- 保障服务弹窗 -->
+			<view class="guarantee-pop-box">
+				<uni-popup ref="guaranteePopup" :safe-area="false" type="bottom" borderRadius="20px 20px 0 0">
+					<view class="ensure">
+						<view class="title">
+							保障服务
+							<view class="close-box" @click="handleToGgle(false)">
+								<view class="iconfont icon-guanbi f-s-24"></view>
+							</view>
+						</view>
+						<view class="list">
+							<view class="item acea-row" v-for="(item, index) in guaranteeList" :key="index">
+								<view class="pictrue">
+									<text class="iconfont icon-gou1"></text>
+								</view>
+								<view class="text">
+									<view class="name">{{ item.name }}</view>
+									<view>{{ item.content }}</view>
+								</view>
+							</view>
+						</view>
+						<view class="activityBtn bnt" @click="handleToGgle(false)">
+							确定
+						</view>
+					</view>
+				</uni-popup>
+			</view>
+		</view>
 
 	</view>
 </template>
@@ -245,7 +297,7 @@
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
 	import {
 		HTTP_H5_URL
-	 } from '@/config/app.js';
+	} from '@/config/app.js';
 	import {
 		mapGetters
 	} from "vuex";
@@ -264,13 +316,16 @@
 	import userEvaluation from '@/components/userEvaluation/index.vue'
 	import cusPreviewImg from '@/components/cus-previewImg/cus-previewImg.vue'
 	// #ifdef MP
-	import { base64src } from '@/utils/base64src.js'
+	import {
+		base64src
+	} from '@/utils/base64src.js'
 	import {
 		getQrcode
 	} from '@/api/api.js';
 	// #endif
 	import parser from "@/components/jyf-parser/jyf-parser";
-	import countDown from '@/components/countDown';
+	// import countDown from '@/components/countDown';
+	import countDown from "@/pages/activity/components/countDown";
 	import shareRedPackets from '@/components/shareRedPackets';
 	import {
 		imageBase64
@@ -278,8 +333,12 @@
 	import {
 		toLogin
 	} from '@/libs/login.js';
-	import { silenceBindingSpread } from "@/utils";
-	import { spread } from "@/api/user";
+	import {
+		silenceBindingSpread
+	} from "@/utils";
+	import {
+		spread
+	} from "@/api/user";
 	export default {
 		data() {
 			return {
@@ -354,11 +413,11 @@
 				posterImage: '', //海报路径
 				posterbackgd: `${this.$Cache.get("imgHost")}crmebimage/perset/staticImg/posterbackgd.png`,
 				actionSheetHidden: false,
-				cart_num:'',
+				cart_num: '',
 				attrTxt: '',
 				qrcodeSize: 600,
-				imagePath:'',//海报路径
-				imgTop:'',
+				imagePath: '', //海报路径
+				imgTop: '',
 				H5ShareBox: false, //公众号分享图片
 				sharePacket: {
 					isState: true, //默认不显示
@@ -369,25 +428,50 @@
 				homeTop: 20,
 				navbarRight: 0,
 				userCollect: false,
-				theme:app.globalData.theme,
-				skuArr:[],
-				currentPage:false,
-				selectSku:{},
-				selectNavList:[
-					{name:'首页',icon:'icon-shouye8',url:'/pages/index/index',after:'dialog_after'},
-					{name:'搜索',icon:'icon-sousuo6',url:'/pages/goods/goods_search/index',after:'dialog_after'},
-					{name:'购物车',icon:'icon-gouwuche7',url:'/pages/order_addcart/order_addcart',after:'dialog_after'},
-					{name:'我的收藏',icon:'icon-shoucang3',url:'/pages/users/user_goods_collection/index',after:'dialog_after'},
-					{name:'个人中心',icon:'icon-gerenzhongxin1',url:'/pages/user/index'},
+				theme: app.globalData.theme,
+				skuArr: [],
+				currentPage: false,
+				selectSku: {},
+				selectNavList: [{
+						name: '首页',
+						icon: 'icon-shouye8',
+						url: '/pages/index/index',
+						after: 'dialog_after'
+					},
+					{
+						name: '搜索',
+						icon: 'icon-sousuo6',
+						url: '/pages/goods/goods_search/index',
+						after: 'dialog_after'
+					},
+					{
+						name: '购物车',
+						icon: 'icon-gouwuche7',
+						url: '/pages/order_addcart/order_addcart',
+						after: 'dialog_after'
+					},
+					{
+						name: '我的收藏',
+						icon: 'icon-shoucang3',
+						url: '/pages/users/user_goods_collection/index',
+						after: 'dialog_after'
+					},
+					{
+						name: '个人中心',
+						icon: 'icon-gerenzhongxin1',
+						url: '/pages/user/index'
+					},
 				],
-				chatConfig:{
-					consumer_hotline:'',
-					telephone_service_switch:'close',
-					wx_chant_independent:'open'
+				chatConfig: {
+					consumer_hotline: '',
+					telephone_service_switch: 'close',
+					wx_chant_independent: 'open'
 				}, //客服配置
-				masterStatus:'',
-				openPages: '' ,//分享地址
+				masterStatus: '',
+				openPages: '', //分享地址
 				videoLink: '',
+				guaranteeList: [], // 保障服务列表
+				skuImage: [], //规格小图
 			}
 		},
 		components: {
@@ -395,19 +479,19 @@
 			productConSwiper,
 			'productWindow': productWindow,
 			userEvaluation,
-			cusPreviewImg ,
+			cusPreviewImg,
 			"jyf-parser": parser,
 			countDown
 		},
-		computed: mapGetters(['isLogin','uid','chatUrl']),
-		watch:{
-			isLogin:{
-				handler:function(newV,oldV){
-					if(newV){
+		computed: mapGetters(['isLogin', 'uid', 'chatUrl']),
+		watch: {
+			isLogin: {
+				handler: function(newV, oldV) {
+					if (newV) {
 						this.getSeckillDetail();
 					}
 				},
-				deep:true
+				deep: true
 			}
 		},
 		onLoad(options) {
@@ -418,7 +502,7 @@
 			that.$store.commit("PRODUCT_TYPE", 'normal');
 			let statusBarHeight = '';
 			var pages = getCurrentPages();
-			that.$set(that,'chatConfig',that.$Cache.getItem('chatConfig'));
+			that.$set(that, 'chatConfig', that.$Cache.getItem('chatConfig'));
 			//that.returnShow = pages.length === 1 ? false : true;
 			//设置商品列表高度
 			uni.getSystemInfo({
@@ -438,10 +522,10 @@
 			let menuButtonInfo = uni.getMenuButtonBoundingClientRect()
 			this.meunHeight = menuButtonInfo.height
 			this.backH = (that.navH / 2) + (this.meunHeight / 2)
-	
-			that.$set(that,'theme',that.$Cache.get('theme')); //用户从分享卡片进入的场景下获取主题色配置
+
+			that.$set(that, 'theme', that.$Cache.get('theme')); //用户从分享卡片进入的场景下获取主题色配置
 			// #endif
-			if (!options.scene && !options.id){
+			if (!options.scene && !options.id) {
 				this.showSkeleton = false;
 				this.$util.Tips({
 					title: '缺少参数无法查看商品'
@@ -458,8 +542,8 @@
 				this.id = mapeMpQrCodeValue.id ? mapeMpQrCodeValue.id : '';
 				app.globalData.spread = mapeMpQrCodeValue.spread;
 			}
-			if(options.spread) app.globalData.spread = options.spread;
-			
+			if (options.spread) app.globalData.spread = options.spread;
+
 			this.getSeckillDetail();
 			this.$nextTick(() => {
 				// #ifdef MP
@@ -473,20 +557,28 @@
 					.exec();
 				// #endif
 			})
-			if(this.isLogin && parseInt(app.globalData.spread)>0){
+			if (this.isLogin && parseInt(app.globalData.spread) > 0) {
 				silenceBindingSpread()
 			}
 		},
 		methods: {
-			wxChatService(){
+			wxChatService() {
 				let chatUrlArr = this.chatUrl.split('?')
 				uni.navigateTo({
-					url:`/pages/users/web_page/index?webUel=${chatUrlArr[0]}&title=客服&${chatUrlArr[1]}`
+					url: `/pages/users/web_page/index?webUel=${chatUrlArr[0]}&title=客服&${chatUrlArr[1]}`
 				})
+			},
+			// 保障协议弹出框
+			handleToGgle(type) {
+				if (type) {
+					this.$refs.guaranteePopup.open()
+				} else {
+					this.$refs.guaranteePopup.close()
+				}
 			},
 			// app分享
 			// #ifdef APP-PLUS
-			appShare(scene){
+			appShare(scene) {
 				let that = this
 				let routes = getCurrentPages(); // 获取当前打开过的页面路由数组
 				let curRoute = routes[routes.length - 1].$page.fullPath // 获取当前页面路由，也就是最后一个打开的页面路由
@@ -496,39 +588,39 @@
 					type: 0,
 					href: `${HTTP_H5_URL}${curRoute}&spread=${that.uid}`,
 					title: that.storeInfo.storeName,
-					summary:app.globalData.companyName,
+					summary: app.globalData.companyName,
 					imageUrl: that.storeInfo.image,
-					success: function (res) {
+					success: function(res) {
 						that.posters = false;
 					},
-					fail: function (err) {
+					fail: function(err) {
 						uni.showToast({
-							title:'分享失败',
-							icon:'none',
-							duration:2000
+							title: '分享失败',
+							icon: 'none',
+							duration: 2000
 						})
 						that.posters = false;
 					}
 				});
 			},
 			// #endif
-            onClickService(){
-				if(this.chatConfig.telephone_service_switch === 'open'){
+			onClickService() {
+				if (this.chatConfig.telephone_service_switch === 'open') {
 					uni.makePhoneCall({
-					    phoneNumber: this.chatConfig.consumer_hotline //仅为示例
+						phoneNumber: this.chatConfig.consumer_hotline //仅为示例
 					});
-				}else{
+				} else {
 					// #ifdef APP-PLUS
 					uni.navigateTo({
 						url: '/pages/users/web_page/index?webUel=' + this.chatUrl + '&title=客服'
-					})  
+					})
 					// #endif
 					// #ifndef APP-PLUS
 					location.href = this.chatUrl;
 					// #endif
 				}
 			},
-			closePosters:function(){
+			closePosters: function() {
 				this.posters = false;
 			},
 			getProductReplyList: function() {
@@ -550,14 +642,14 @@
 			/**
 			 * 购物车手动填写
 			 * 
-			*/
-			iptCartNum: function (e) {
-				this.$set(this.attribute.productSelect, 'cart_num', e?e:1);
+			 */
+			iptCartNum: function(e) {
+				this.$set(this.attribute.productSelect, 'cart_num', e ? e : 1);
 				this.$set(this, "cart_num", e);
 				if (e > 1) {
 					return this.$util.Tips({
 						title: `该商品每次限购1${this.storeInfo.unitName}`
-					}); 
+					});
 				}
 			},
 			// 后退
@@ -568,6 +660,7 @@
 				let that = this;
 				getSeckillDetail(that.id).then(res => {
 					this.dataShow = 1;
+					that.$set(that, 'guaranteeList', res.data.guaranteeList || []);
 					this.masterStatus = res.data.masterStatus;
 					this.storeInfo = res.data.storeSeckill;
 					this.userCollect = res.data.userCollect;
@@ -584,7 +677,7 @@
 					this.productValue = res.data.productValue;
 					this.personNum = res.data.storeSeckill.quota;
 					this.attribute.productSelect.num = res.data.storeSeckill.num;
-					for(let key in res.data.productValue){
+					for (let key in res.data.productValue) {
 						let obj = res.data.productValue[key];
 						that.skuArr.push(obj)
 					}
@@ -592,23 +685,26 @@
 					this.getProductReplyList();
 					this.getProductReplyCount();
 					let productAttr = res.data.productAttr.map(item => {
-					return {
-						attrName : item.attrName,
-						attrValues: item.attrValues.split(','),
-						id:item.id,
-						isDel:item.isDel,
-						productId:item.productId,
-						type:item.type
-					 }
+						return {
+							attrName: item.attrName,
+							attrValues: item.attrValues.split(','),
+							id: item.id,
+							isDel: item.isDel,
+							productId: item.productId,
+							type: item.type,
+							optionList: item.optionList || [],
+							isShowImage: item.isShowImage
+						}
 					});
-					this.$set(this.attribute,'productAttr',productAttr);
-					
-					
+					this.$set(this.attribute, 'productAttr', productAttr);
+					// 获取suk小图
+					that.getSkuImage()
+
 					// #ifdef H5
 					that.storeImage = that.storeInfo.image;
 					that.make();
 					that.setShare();
-					that.getImageBase64(that.storeInfo.image); 
+					that.getImageBase64(that.storeInfo.image);
 					// #endif
 					// #ifdef MP
 					that.getQrcode();
@@ -621,49 +717,17 @@
 					setTimeout(function() {
 						that.infoScroll();
 					}, 1000);
-					that.openPages = '/pages/activity/goods_seckill_details/index?id=' + that.id + '&spread=' + that.uid ;
-				    setTimeout(() => {
-				    	that.showSkeleton = false
-				    }, 1000)
+					that.openPages = '/pages/activity/goods_seckill_details/index?id=' + that.id + '&spread=' + that.uid;
+					setTimeout(() => {
+						that.showSkeleton = false
+					}, 1000)
 				}).catch(err => {
 					that.$util.Tips({
-						title:err
-					},{
-						tab:3
+						title: err
+					}, {
+						tab: 3
 					})
 				});
-			},
-			getFileType(fileName) {
-				// 后缀获取
-				let suffix = '';
-				// 获取类型结果
-				let result = '';
-				try {
-					const flieArr = fileName.split('.');
-					suffix = flieArr[flieArr.length - 1];
-				} catch (err) {
-					suffix = '';
-				}
-				// fileName无后缀返回 false
-				if (!suffix) {
-					return false;
-				}
-				suffix = suffix.toLocaleLowerCase();
-				// 图片格式
-				const imglist = ['png', 'jpg', 'jpeg', 'bmp', 'gif'];
-				// 进行图片匹配
-				result = imglist.find(item => item === suffix);
-				if (result) {
-					return 'image';
-				}
-				// 匹配 视频
-				const videolist = ['mp4', 'm2v', 'mkv', 'rmvb', 'wmv', 'avi', 'flv', 'mov', 'm4v'];
-				result = videolist.find(item => item === suffix);
-				if (result) {
-					return 'video';
-				}
-				// 其他 文件类型
-				return 'other';
 			},
 			setShare: function() {
 				this.$wechat.isWeixin() &&
@@ -677,8 +741,7 @@
 						title: this.storeInfo.storeName,
 						link: location.href,
 						imgUrl: this.storeInfo.image
-					}).then(res => {
-					}).catch(err => {
+					}).then(res => {}).catch(err => {
 						console.log(err);
 					});
 			},
@@ -687,13 +750,32 @@
 			 * 
 			 */
 			DefaultSelect: function() {
-				let self = this, productAttr = self.attribute.productAttr,value = [];
-				for (var key in self.productValue) {
-					if (self.productValue[key].quota > 0) {
-						value = productAttr.length ? key.split(",") : [];
-						break;
+				let self = this,
+					productAttr = self.attribute.productAttr,
+					value = [];
+				// 按 id 升序排序
+				const sortedArray = Object.entries(self.productValue)
+					.sort(([, a], [, b]) => a.id - b.id)
+					.map(([key, value]) => ({
+						key,
+						...value
+					}));
+				// 默认规格设置
+				for (let i = 0; i < sortedArray.length; i++) {
+					const attrItem = sortedArray[i]
+					if (attrItem.quota > 0) {
+						if (value.length == 0) {
+							value = productAttr.length ? attrItem.key.split(",") : [];
+							break
+						}
 					}
 				}
+				// for (var key in self.productValue) {
+				// 	if (self.productValue[key].quota > 0) {
+				// 		value = productAttr.length ? key.split(",") : [];
+				// 		break;
+				// 	}
+				// }
 				for (let i = 0; i < value.length; i++) {
 					self.$set(productAttr[i], "index", value[i]);
 				}
@@ -707,14 +789,15 @@
 					);
 					self.$set(self.attribute.productSelect, "image", productSelect.image);
 					self.$set(self.attribute.productSelect, "price", productSelect.price);
+					self.$set(self.attribute.productSelect, "otPrice", productSelect.otPrice);
 					self.$set(self.attribute.productSelect, "stock", productSelect.stock);
 					self.$set(self.attribute.productSelect, "unique", productSelect.id);
-                    self.$set(self.attribute.productSelect, "quota", productSelect.quota);
+					self.$set(self.attribute.productSelect, "quota", productSelect.quota);
 					self.$set(self.attribute.productSelect, "quotaShow", productSelect.quotaShow);
 					self.$set(self.attribute.productSelect, "cart_num", 1);
 					self.$set(self, "attrValue", value.join(","));
 					this.$set(self, "attrTxt", "已选择")
-						self.attrValue = value.join(",")
+					self.attrValue = value.join(",")
 				} else if (!productSelect && productAttr.length) {
 					self.$set(
 						self.attribute.productSelect,
@@ -753,7 +836,7 @@
 			selecAttr: function() {
 				this.attribute.cartAttr = true
 			},
-			showNav(){
+			showNav() {
 				this.currentPage = !this.currentPage;
 			},
 			onMyEvent: function() {
@@ -801,7 +884,7 @@
 					}
 					this.$set(this, "cart_num", num.cart_num);
 					this.$set(this.attribute.productSelect, "cart_num", num.cart_num);
-			
+
 				} else {
 					num.cart_num--;
 					if (num.cart_num < 1) {
@@ -820,12 +903,13 @@
 			 * 
 			 */
 			ChangeAttr: function(res) {
-				this.$set(this,'cart_num',1);
+				this.$set(this, 'cart_num', 1);
 				let productSelect = this.productValue[res];
 				this.$set(this, "selectSku", productSelect);
 				if (productSelect) {
 					this.$set(this.attribute.productSelect, "image", productSelect.image);
 					this.$set(this.attribute.productSelect, "price", productSelect.price);
+					this.$set(this.attribute.productSelect, "otPrice", productSelect.otPrice);
 					this.$set(this.attribute.productSelect, "stock", productSelect.stock);
 					this.$set(this.attribute.productSelect, "unique", productSelect.id);
 					this.$set(this.attribute.productSelect, "cart_num", 1);
@@ -863,8 +947,8 @@
 						break
 					}
 				}
-				if(that.currentPage == true){
-					that.$set(that,'currentPage',false);
+				if (that.currentPage == true) {
+					that.$set(that, 'currentPage', false);
 				}
 			},
 			tap: function(item, index) {
@@ -944,16 +1028,17 @@
 				//只有关闭属性弹窗时进行加入购物车
 				if (this.attribute.cartAttr === true && this.isOpen == false) return this.isOpen = true
 				//如果有属性,没有选择,提示用户选择
-				if (this.attribute.productAttr.length && productSelect === undefined && this.isOpen == true) return app.$util.Tips({
-					title: '请选择属性'
-				});
-				
-				this.$Order.getPreOrder("buyNow",[{
-						"attrValueId": parseFloat(this.attribute.productSelect.unique),
-						"seckillId": parseFloat(this.id),
-						"productNum": parseFloat(this.cart_num ? this.cart_num : this.attribute.productSelect.cart_num),
-						"productId": parseFloat(this.storeInfo.productId)
-					}]);
+				if (this.attribute.productAttr.length && productSelect === undefined && this.isOpen == true) return app.$util
+					.Tips({
+						title: '请选择属性'
+					});
+
+				this.$Order.getPreOrder("buyNow", [{
+					"attrValueId": parseFloat(this.attribute.productSelect.unique),
+					"seckillId": parseFloat(this.id),
+					"productNum": parseFloat(this.cart_num ? this.cart_num : this.attribute.productSelect.cart_num),
+					"productId": parseFloat(this.storeInfo.productId)
+				}]);
 			},
 			/**
 			 * 分享打开
@@ -1002,11 +1087,45 @@
 					},
 				});
 			},
-			getImageBase64:function(images){
+			getImageBase64: function(images) {
 				let that = this;
-				imageBase64({url:images}).then(res=>{
-					that.$set(that,'imgTop',res.data.code);
+				imageBase64({
+					url: images
+				}).then(res => {
+					that.$set(that, 'imgTop', res.data.code);
 				})
+			},
+			getFileType(fileName) {
+				// 后缀获取
+				let suffix = '';
+				// 获取类型结果
+				let result = '';
+				try {
+					const flieArr = fileName.split('.');
+					suffix = flieArr[flieArr.length - 1];
+				} catch (err) {
+					suffix = '';
+				}
+				// fileName无后缀返回 false
+				if (!suffix) {
+					return false;
+				}
+				suffix = suffix.toLocaleLowerCase();
+				// 图片格式
+				const imglist = ['png', 'jpg', 'jpeg', 'bmp', 'gif'];
+				// 进行图片匹配
+				result = imglist.find(item => item === suffix);
+				if (result) {
+					return 'image';
+				}
+				// 匹配 视频
+				const videolist = ['mp4', 'm2v', 'mkv', 'rmvb', 'wmv', 'avi', 'flv', 'mov', 'm4v'];
+				result = videolist.find(item => item === suffix);
+				if (result) {
+					return 'video';
+				}
+				// 其他 文件类型
+				return 'other';
 			},
 			// 小程序关闭分享弹窗；
 			goFriend: function() {
@@ -1024,13 +1143,13 @@
 				that.posters = false;
 				let arrImagesUrl = '';
 				let arrImagesUrlTop = '';
-				if(!that.PromotionCode){
+				if (!that.PromotionCode) {
 					uni.hideLoading();
 					that.$util.Tips({
 						title: that.errT
 					});
-					return 
-				} 
+					return
+				}
 				setTimeout(() => {
 					if (!that.imgTop) {
 						uni.hideLoading();
@@ -1048,25 +1167,26 @@
 						let storeName = that.storeInfo.storeName;
 						let price = that.storeInfo.price;
 						setTimeout(() => {
-							that.$util.PosterCanvas(arrImages, storeName, price, that.storeInfo.otPrice,function(tempFilePath) {
+							that.$util.PosterCanvas(arrImages, storeName, price, that.storeInfo.otPrice, function(
+								tempFilePath) {
 								that.posterImage = tempFilePath;
 								that.canvasStatus = true;
 								uni.hideLoading();
-							});	
+							});
 						}, 500);
 					}
-				});		
+				});
 			},
 			// 小程序二维码
-			getQrcode(){
+			getQrcode() {
 				let that = this;
 				let data = {
 					pid: that.uid,
 					id: that.id,
 					path: 'pages/activity/goods_seckill_details/index'
 				}
-				getQrcode(data).then(res=>{
-					base64src(res.data.code,Date.now(), res => {
+				getQrcode(data).then(res => {
+					base64src(res.data.code, Date.now(), res => {
 						that.PromotionCode = res;
 					});
 				}).catch(err => {
@@ -1075,7 +1195,7 @@
 			},
 			// 生成二维码；
 			make() {
-				let href = location.href.split('?')[0] + "?id="+ this.id + "&spread="  + this.uid;
+				let href = location.href.split('?')[0] + "?id=" + this.id + "&spread=" + this.uid;
 				uQRCode.make({
 					canvasId: 'qrcode',
 					text: href,
@@ -1084,9 +1204,8 @@
 					success: res => {
 						this.PromotionCode = res;
 					},
-					complete: (res) => {
-					},
-					fail:res=>{
+					complete: (res) => {},
+					fail: res => {
 						this.$util.Tips({
 							title: '海报二维码生成失败！'
 						});
@@ -1166,7 +1285,7 @@
 						href.indexOf("?") === -1 ?
 						href + "?spread=" + this.uid :
 						href + "&spread=" + this.uid;
-					
+
 					let configAppMessage = {
 						desc: app.globalData.companyName,
 						title: data.storeName,
@@ -1176,71 +1295,97 @@
 					this.$wechat.wechatEvevt(["updateAppMessageShareData", "updateTimelineShareData"], configAppMessage)
 				}
 			},
-			hideNav(){
+			hideNav() {
 				this.currentPage = false;
 			},
 			//下拉导航页面跳转
-			linkPage(url){
-				if(url == '/pages/index/index' || url == '/pages/order_addcart/order_addcart' || url == '/pages/user/index'){
+			linkPage(url) {
+				if (url == '/pages/index/index' || url == '/pages/order_addcart/order_addcart' || url == '/pages/user/index') {
 					uni.switchTab({
 						url
 					})
-				}else{
+				} else {
 					uni.navigateTo({
 						url
 					})
 				}
 				this.currentPage = false
 			},
-			showImg(index){
+			showImg(index) {
 				this.$refs.cusPreviewImg.open(this.selectSku.suk)
 			},
-			changeSwitch(e){
+			changeSwitch(e) {
 				let productSelect = this.skuArr[e];
-				this.$set(this,'selectSku',productSelect);
+				this.$set(this, 'selectSku', productSelect);
 				var skuList = productSelect.suk.split(',');
-				skuList.forEach((i,index)=>{
-					this.$set(this.attribute.productAttr[index],'index',skuList[index]);
+				skuList.forEach((i, index) => {
+					this.$set(this.attribute.productAttr[index], 'index', skuList[index]);
 				})
 				if (productSelect) {
 					this.$set(this.attribute.productSelect, "image", productSelect.image);
 					this.$set(this.attribute.productSelect, "price", productSelect.price);
+					this.$set(this.attribute.productSelect, "otPrice", productSelect.otPrice);
 					this.$set(this.attribute.productSelect, "stock", productSelect.stock);
 					this.$set(this.attribute.productSelect, "unique", productSelect.id);
-				    this.$set(this.attribute.productSelect, "quota", productSelect.quota);
+					this.$set(this.attribute.productSelect, "quota", productSelect.quota);
 					this.$set(this.attribute.productSelect, "quotaShow", productSelect.quotaShow);
 					this.$set(this.attribute.productSelect, "cart_num", 1);
 					this.$set(this, "attrTxt", "已选择")
 					this.$set(this, "attrValue", productSelect.suk)
 				}
-			}
+			},
+			// 获取suk小图
+			getSkuImage() {
+				let sku = []
+				let skuTable = []
+				this.attribute.productAttr.map((item) => {
+					item.optionList.map(items => {
+						if (items.image) sku.push(items.image)
+					});
+				})
+				const uniqueData = sku.filter((item, index, self) =>
+					index === self.findIndex((t) => t === item))
+			
+				if (uniqueData.length > 0) {
+					this.skuImage = uniqueData
+				} else {
+					for (let key in this.productValue) {
+						let obj = this.productValue[key];
+						skuTable.push(obj.image);
+					}
+					this.skuImage = skuTable.filter((item, index, self) =>
+						index === self.findIndex((t) => t === item))
+				}
+			},
 		},
-	    //#ifdef MP
-	    onShareAppMessage() {
-	    	let that = this;
-	    	return {
-	    		title: that.storeInfo.title,
-	    		path: app.globalData.openPages,
-	    		imageUrl: that.storeInfo.image
-	    	};
-	    },
-	    //#endif
+		//#ifdef MP
+		onShareAppMessage() {
+			let that = this;
+			return {
+				title: that.storeInfo.title,
+				path: app.globalData.openPages,
+				imageUrl: that.storeInfo.image
+			};
+		},
+		//#endif
 	}
 </script>
 
 <style scoped lang="scss">
-	.pl-06{
+	.pl-06 {
 		padding-left: 6rpx;
 	}
-	.pr-14{
+
+	.pr-14 {
 		padding-right: 14rpx;
 	}
-	.select_nav{
+
+	.select_nav {
 		width: 170rpx !important;
 		height: 60rpx !important;
 		border-radius: 33rpx;
 		background: rgba(255, 255, 255, 0.3);
-		border: 1px solid rgba(0,0,0,0.07);
+		border: 1px solid rgba(0, 0, 0, 0.07);
 		color: #000;
 		position: fixed;
 		font-size: 18px;
@@ -1248,10 +1393,12 @@
 		z-index: 1000;
 		left: 14rpx;
 	}
-	.px-20{
+
+	.px-20 {
 		padding: 0 20rpx 0;
 	}
-	.nav_line{
+
+	.nav_line {
 		content: '';
 		display: inline-block;
 		width: 1px;
@@ -1262,9 +1409,11 @@
 		right: 0;
 		margin: auto;
 	}
-	.bgwhite{
+
+	.bgwhite {
 		background: #fff;
 	}
+
 	.input {
 		display: flex;
 		align-items: center;
@@ -1285,46 +1434,52 @@
 		right: 0;
 		margin: auto;
 		background: #fff;
+
 		.iconfont {
 			margin-right: 20rpx;
 			font-size: 26rpx;
 			color: #666666;
 		}
 	}
-	.container_detail{
+
+	.container_detail {
 		/* #ifdef MP */
-		margin-top:32rpx;
+		margin-top: 32rpx;
 		/* #endif */
 	}
-	.tab_nav{
+
+	.tab_nav {
 		width: 100%;
 		height: 48px;
-		padding:0 30rpx 0;
+		padding: 0 30rpx 0;
 	}
+
 	.h5_back {
 		color: #000;
 		position: fixed;
-		left:20rpx;
+		left: 20rpx;
 		font-size: 32rpx;
 		text-align: center;
 		width: 58rpx;
 		height: 58rpx;
 		background: rgba(255, 255, 255, 0.3);
-		border: 1px solid rgba(0,0,0,0.1);
+		border: 1px solid rgba(0, 0, 0, 0.1);
 		border-radius: 50%;
 	}
-	.right_select{
+
+	.right_select {
 		width: 58rpx;
 		height: 58rpx;
 		background: rgba(255, 255, 255, 0.3);
-		border: 1px solid rgba(0,0,0,0.1);
+		border: 1px solid rgba(0, 0, 0, 0.1);
 		border-radius: 50%;
 		position: fixed;
 		right: 20rpx;
 		text-align: center;
 		line-height: 58rpx;
 	}
-	.dialog_nav{
+
+	.dialog_nav {
 		position: absolute;
 		/* #ifdef MP */
 		left: 14rpx;
@@ -1337,7 +1492,8 @@
 		box-shadow: 0px 0px 16rpx rgba(0, 0, 0, 0.08);
 		z-index: 310;
 		border-radius: 14rpx;
-		&::before{
+
+		&::before {
 			content: '';
 			width: 0;
 			height: 0;
@@ -1345,18 +1501,20 @@
 			/* #ifdef MP */
 			left: 0;
 			right: 0;
-			margin:auto;
+			margin: auto;
 			/* #endif */
 			/* #ifdef H5 || APP-PLUS */
 			right: 8px;
 			/* #endif */
-			top:-9px;
+			top: -9px;
 			border-bottom: 10px solid #F5F5F5;
-			border-left: 10px solid transparent;    /*transparent 表示透明*/
+			border-left: 10px solid transparent;
+			/*transparent 表示透明*/
 			border-right: 10px solid transparent;
 		}
 	}
-	.dialog_nav_item{
+
+	.dialog_nav_item {
 		width: 100%;
 		height: 84rpx;
 		line-height: 84rpx;
@@ -1366,40 +1524,48 @@
 		font-size: 28rpx;
 		color: #333;
 		position: relative;
-		.iconfont{
+
+		.iconfont {
 			font-size: 32rpx;
 		}
 	}
-	.dialog_after{
-		::after{
+
+	.dialog_after {
+		::after {
 			content: '';
 			position: absolute;
-			width:86px;
+			width: 86px;
 			height: 1px;
 			background-color: #EEEEEE;
 			bottom: 0;
 			right: 0;
 		}
 	}
-	.justify-center{
+
+	.justify-center {
 		justify-content: center;
 	}
+
 	.align-center {
 		align-items: center;
 	}
-	.pl-20{
+
+	.pl-20 {
 		padding-left: 20rpx;
 	}
-	.userEvaluation{
-		i{
+
+	.userEvaluation {
+		i {
 			display: inline-block;
 		}
 	}
-	.product-con{
-		.line1{
+
+	.product-con {
+		.line1 {
 			width: 600rpx;
 		}
 	}
+
 	.share-box {
 		z-index: 1000;
 		position: fixed;
@@ -1407,12 +1573,13 @@
 		top: 0;
 		width: 100%;
 		height: 100%;
-	
+
 		image {
 			width: 100%;
 			height: 100%;
 		}
 	}
+
 	.generate-posters {
 		width: 100%;
 		height: 318rpx;
@@ -1424,25 +1591,25 @@
 		transform: translate3d(0, 100%, 0);
 		transition: all 0.3s cubic-bezier(0.25, 0.5, 0.5, 0.9);
 		border-top: 1rpx solid #eee;
-		
+
 		.generateCon {
 			height: 220rpx;
 		}
-		
+
 		.generateClose {
 			height: 98rpx;
 			font-size: 28rpx;
 			color: #333333;
 			border-top: 1px solid #eee;
 		}
-		
+
 		.item {
 			.pictrue {
 				width: 96rpx;
 				height: 96rpx;
 				border-radius: 50%;
 				margin: 0 auto 6rpx auto;
-		
+
 				image {
 					width: 100%;
 					height: 100%;
@@ -1451,26 +1618,26 @@
 			}
 		}
 	}
-	
+
 	.generate-posters.on {
 		transform: translate3d(0, 0, 0);
 	}
-	
+
 	.generate-posters .item {
 		flex: 1;
 		text-align: center;
 		font-size: 30rpx;
 	}
-	
+
 	.generate-posters .item .iconfont {
 		font-size: 80rpx;
 		color: #5eae72;
 	}
-	
+
 	.generate-posters .item .iconfont.icon-haibao {
 		color: #5391f1;
 	}
-	
+
 	.generate-posters .item .iconfont.icon-haowuquan1 {
 		color: #ff954d;
 	}
@@ -1486,7 +1653,7 @@
 		/* #ifdef MP */
 		width: 360rpx;
 		/* #endif */
-		height: 100rpx; 
+		height: 100rpx;
 		position: fixed;
 		left: 0;
 		right: 0;
@@ -1623,10 +1790,10 @@
 		width: 100%;
 		box-sizing: border-box;
 		background-color: #fff;
-		z-index: 99;
+		z-index: 277;
 		border-top: 1rpx solid #f0f0f0;
 		height: 100rpx;
-		height: calc(100rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		height: calc(100rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
 		height: calc(100rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
 	}
 
@@ -1676,15 +1843,19 @@
 		border-radius: 50rpx 0 0 50rpx;
 		@include left_color(theme);
 	}
-	.radius{
+
+	.radius {
 		border-radius: 50rpx 0 0 50rpx !important;
 	}
-	.bg_color{
+
+	.bg_color {
 		@include main_bg_color(theme);
 	}
-	.font_color{
+
+	.font_color {
 		@include main_color(theme);
 	}
+
 	.product-con .footer .bnt .buy {
 		border-radius: 0 50rpx 50rpx 0;
 		// background-image: linear-gradient(to right, #fa6514 0%, #e93323 100%);
@@ -1700,12 +1871,13 @@
 		background: #bbbbbb !important;
 		border-radius: 0 50rpx 50rpx 0;
 	}
+
 	.canvas {
-		position:fixed;
+		position: fixed;
 		z-index: -5;
 		opacity: 0;
 	}
-	
+
 	.poster-pop {
 		width: 450rpx;
 		height: 714rpx;
@@ -1716,13 +1888,13 @@
 		top: 50%;
 		margin-top: -357rpx;
 	}
-	
+
 	.poster-pop image {
 		width: 100%;
 		height: 100%;
 		display: block;
 	}
-	
+
 	.poster-pop .close {
 		width: 46rpx;
 		height: 75rpx;
@@ -1731,7 +1903,7 @@
 		top: -73rpx;
 		display: block;
 	}
-	
+
 	.poster-pop .save-poster {
 		background-color: #df2d0a;
 		font-size: ：22rpx;
@@ -1741,14 +1913,14 @@
 		line-height: 76rpx;
 		width: 100%;
 	}
-	
+
 	.poster-pop .keep {
 		color: #fff;
 		text-align: center;
 		font-size: 25rpx;
 		margin-top: 10rpx;
 	}
-	
+
 	.mask {
 		position: fixed;
 		top: 0;
@@ -1758,21 +1930,23 @@
 		background-color: rgba(0, 0, 0, 0.6);
 		z-index: 9;
 	}
-	.mask_transparent{
+
+	.mask_transparent {
 		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background:transparent;
+		background: transparent;
 		z-index: 300;
 	}
+
 	.home-nav {
 		/* #ifdef H5 */
 		top: 20rpx !important;
 		/* #endif */
 	}
-	
+
 	.home-nav {
 		color: #fff;
 		position: fixed;
@@ -1783,30 +1957,33 @@
 		left: 33rpx;
 		background: rgba(190, 190, 190, 0.5);
 		border-radius: 50%;
-		&.on{
+
+		&.on {
 			background: unset;
 			color: #333;
 		}
 	}
-	
+
 	.home-nav .line {
 		width: 1rpx;
 		height: 24rpx;
 		background: rgba(255, 255, 255, 0.25);
 	}
-	
+
 	.home-nav .icon-xiangzuo {
 		width: auto;
 		font-size: 28rpx;
 	}
-	.attrImg{
+
+	.attrImg {
 		width: 66rpx;
 		height: 66rpx;
 		border-radius: 6rpx;
 		display: block;
 		margin-right: 14rpx;
 	}
-	.switchTxt{
+
+	.switchTxt {
 		height: 60rpx;
 		flex: 1;
 		line-height: 60rpx;
@@ -1815,5 +1992,103 @@
 		padding-right: 0 24rpx 0;
 		border-radius: 8rpx;
 		text-align: center;
+	}
+
+	.ensure {
+		width: 100%;
+		background-color: #fff;
+		border-top-left-radius: 40rpx;
+		border-top-right-radius: 40rpx;
+		padding-bottom: 22rpx;
+		padding-top: 38rpx;
+		padding-bottom: calc(22rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		padding-bottom: calc(22rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
+
+		.title {
+			font-size: 32rpx;
+			color: #282828;
+			text-align: center;
+			margin: 0 0 36rpx 0;
+			position: relative;
+
+			.close-box {
+				position: absolute;
+				right: 30rpx;
+				top: 8rpx;
+			}
+		}
+
+		.list {
+			max-height: 60vh;
+			margin: 0 30rpx 20rpx;
+			overflow: scroll;
+
+			.item {
+				margin-bottom: 40rpx;
+				flex-wrap: nowrap;
+
+				.pictrue {
+					width: 36rpx;
+					height: 36rpx;
+					border-radius: 50%;
+					margin-right: 30rpx;
+
+					::v-deep image,
+					.easy-loadimage,
+					image,
+					uni-image {
+						width: 100%;
+						height: 100%;
+						border-radius: 50%;
+					}
+				}
+
+				.text {
+					// width: 618rpx;
+					color: #999999;
+					font-size: 28rpx;
+
+					.name {
+						color: #333333;
+						font-weight: bold;
+						margin-bottom: 20rpx;
+					}
+				}
+			}
+		}
+
+		.bnt,
+		.activityBtn {
+			width: 690rpx;
+			height: 86rpx;
+			text-align: center;
+			line-height: 86rpx;
+			border-radius: 43rpx;
+			font-size: 30rpx;
+			color: #fff;
+			margin: 0 auto;
+		}
+
+		.icon-gou1 {
+			@include main_color(theme);
+		}
+
+		.bnt {
+			@include main_bg_color(theme);
+		}
+	}
+
+	.product-con .attribute {
+		padding: 0;
+
+		.line1 {
+			width: 600rpx;
+		}
+	}
+
+	.guarantee-pop-box {
+		position: fixed;
+		bottom: 0;
+		z-index: 999;
 	}
 </style>

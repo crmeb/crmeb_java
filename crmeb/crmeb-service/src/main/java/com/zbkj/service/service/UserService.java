@@ -16,7 +16,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -28,10 +28,9 @@ public interface UserService extends IService<User> {
     /**
      * 用户分页列表
      * @param request 查询参数
-     * @param pageParamRequest 分页参数
      * @return PageInfo
      */
-    PageInfo<UserResponse> getList(UserSearchRequest request, PageParamRequest pageParamRequest);
+    PageInfo<UserResponse> getList(UserSearchRequest request);
 
     /**
      * 操作积分、余额
@@ -219,12 +218,10 @@ public interface UserService extends IService<User> {
 
     /**
      * PC后台分销员列表
-     * @param keywords 搜索参数
-     * @param dateLimit 时间参数
-     * @param pageRequest 分页参数
+     * @param request 请求参数
      * @return
      */
-    PageInfo<User> getAdminSpreadPeopleList(String keywords, String dateLimit, PageParamRequest pageRequest);
+    PageInfo<User> getAdminSpreadPeopleList(RetailShopSearchRequest request);
 
     /**
      * 清除User Group id
@@ -323,4 +320,8 @@ public interface UserService extends IService<User> {
      */
     User getInfoByUid(Integer id);
 
+    /**
+     * 用户注销
+     */
+    Boolean logoff();
 }

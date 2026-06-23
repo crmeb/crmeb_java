@@ -3,28 +3,39 @@
     <el-card :bordered="false" shadow="never" class="ivu-mt" :body-style="{ padding: 0 }">
       <div class="padding-add">
         <el-form inline size="small" label-width="75px">
+          <el-form-item label="订单号码：">
+            <el-input
+              v-model="tableFrom.orderNo"
+              @blur="seachList"
+              @clear="seachList"
+              placeholder="请输入订单号"
+              class="selWidth"
+              size="small"
+              clearable
+            >
+            </el-input>
+          </el-form-item>
+          <el-form-item label="用户搜索：" label-for="nickname">
+            <UserSearchInput v-model="tableFrom" @searchList="seachList" />
+          </el-form-item>
+          <el-form-item label="创建时间：">
+            <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
+          </el-form-item>
           <el-form-item label="订单类型：">
             <el-select v-model="tableFrom.type" placeholder="状态" class="selWidth" @change="seachList">
               <el-option v-for="(item, i) in options" :key="i" :label="item.label" :value="item.value"></el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="时间选择：">
-            <el-date-picker
-              v-model="timeVal"
-              value-format="yyyy-MM-dd"
-              format="yyyy-MM-dd"
-              size="small"
-              type="daterange"
-              placement="bottom-end"
-              placeholder="自定义时间"
+          <el-form-item label="物流单号：">
+            <el-input
+              v-model="tableFrom.deliveryId"
+              @blur="seachList"
+              @clear="seachList"
+              placeholder="请输入物流单号"
               class="selWidth"
-              @change="onchangeTime"
-              start-placeholder="开始时间"
-              end-placeholder="结束时间"
-            />
-          </el-form-item>
-          <el-form-item label="订单号码：">
-            <el-input v-model="tableFrom.orderNo" placeholder="请输入订单号" class="selWidth" size="small" clearable>
+              size="small"
+              clearable
+            >
             </el-input>
           </el-form-item>
           <el-form-item>
@@ -154,8 +165,8 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="下单时间" min-width="150" v-if="checkedCities.includes('下单时间')" />
-        <el-table-column label="操作" width="200" fixed="right" >
+        <el-table-column prop="createTime" label="创建时间" min-width="150" v-if="checkedCities.includes('创建时间')" />
+        <el-table-column label="操作" width="200" fixed="right" :render-header="renderHeader">
           <template slot-scope="scope">
             <template>
               <a @click="onOrderDetails(scope.row.orderId)" v-if="checkPermi(['admin:order:info'])">详情</a>
@@ -249,6 +260,19 @@
         />
       </div>
     </el-card>
+    <div class="card_abs" v-show="card_select_show">
+      <template>
+        <div class="cell_ht">
+          <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange"
+            >全选</el-checkbox
+          >
+          <el-button type="text" @click="checkSave()">保存</el-button>
+        </div>
+        <el-checkbox-group v-model="checkedCities" @change="handleCheckedCitiesChange">
+          <el-checkbox v-for="item in columnData" :label="item" :key="item" class="check_cell">{{ item }}</el-checkbox>
+        </el-checkbox-group>
+      </template>
+    </div>
     <!--编辑-->
     <el-dialog title="编辑订单" :visible.sync="dialogVisible" width="500px" :before-close="handleClose">
       <zb-parser
@@ -294,6 +318,9 @@
       :expressListElec="expressListElec"
       :orderDetail="orderDetail"
     ></order-send>
+
+    <!-- 发送货视频号商品 -->
+    <order-video-send ref="videoSend" :orderId="orderId" @submitFail="getList"></order-video-send>
 
     <!--拒绝退款-->
     <el-dialog
@@ -346,6 +373,7 @@ import {
 import zbParser from '@/components/FormGenerator/components/parser/ZBParser';
 import detailsFrom from './orderDetail';
 import orderSend from './orderSend';
+import orderVideoSend from './orderVideoSend';
 import { storeStaffListApi } from '@/api/storePoint';
 import Cookies from 'js-cookie';
 import { isWriteOff } from '@/utils';
@@ -358,6 +386,7 @@ export default {
     zbParser,
     detailsFrom,
     orderSend,
+    orderVideoSend,
   },
   data() {
     return {
@@ -369,6 +398,10 @@ export default {
         {
           value: 0,
           label: '普通订单',
+        },
+        {
+          value: 1,
+          label: '视频号订单',
         },
       ],
       RefuseVisible: false,
@@ -401,6 +434,9 @@ export default {
         status: 'all',
         dateLimit: '',
         orderNo: '',
+        deliveryId: '', // 物流单号
+        searchType: 'all',
+        content: '',
         page: 1,
         limit: 20,
         type: 2,
@@ -424,8 +460,8 @@ export default {
       active: false,
       card_select_show: false,
       checkAll: false,
-      checkedCities: ['订单号', '订单类型', '收货人', '商品信息', '实际支付', '支付方式', '订单状态', '下单时间'],
-      columnData: ['订单号', '订单类型', '收货人', '商品信息', '实际支付', '支付方式', '订单状态', '下单时间'],
+      checkedCities: ['订单号', '订单类型', '收货人', '商品信息', '实际支付', '支付方式', '订单状态', '创建时间'],
+      columnData: ['订单号', '订单类型', '收货人', '商品信息', '实际支付', '支付方式', '订单状态', '创建时间'],
       isIndeterminate: true,
       expressListNormal: [], //全部物流公司 normal
       expressListElec: [], //全部物流公司 elec
@@ -445,6 +481,9 @@ export default {
       this.tableFrom.type = 2;
       this.tableFrom.dateLimit = '';
       this.tableFrom.orderNo = '';
+      this.tableFrom.deliveryId = '';
+      this.tableFrom.content = '';
+      this.tableFrom.searchType = 'all';
       this.timeVal = [];
       this.getList();
       this.getOrderStatusNum();
@@ -722,7 +761,10 @@ export default {
       orderStatusNumApi({
         dateLimit: this.tableFrom.dateLimit,
         type: this.tableFrom.type,
-        orderId: this.tableFrom.orderNo,
+        orderNo: this.tableFrom.orderNo,
+        deliveryId: this.tableFrom.deliveryId,
+        searchType: this.tableFrom.searchType,
+        content: this.tableFrom.content,
       }).then((res) => {
         this.orderChartType = res;
       });
@@ -739,12 +781,28 @@ export default {
       let data = {
         dateLimit: this.tableFrom.dateLimit,
         orderNo: this.tableFrom.orderNo,
+        deliveryId: this.tableFrom.deliveryId,
         status: this.tableFrom.status,
         type: this.tableFrom.type,
       };
       orderExcelApi(data).then((res) => {
         window.open(res.fileName);
       });
+    },
+    renderHeader(h) {
+      return (
+        <p>
+          <span style="padding-right:5px;">操作</span>
+          <i class="el-icon-setting" onClick={() => this.handleAddItem()}></i>
+        </p>
+      );
+    },
+    handleAddItem() {
+      if (this.card_select_show) {
+        this.$set(this, 'card_select_show', false);
+      } else if (!this.card_select_show) {
+        this.$set(this, 'card_select_show', true);
+      }
     },
     handleCheckAllChange(val) {
       this.checkedCities = val ? this.columnData : [];

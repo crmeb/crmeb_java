@@ -390,7 +390,7 @@
 		/* #endif */
 		/* #ifndef MP || APP-PLUS */
 		// bottom: 98rpx;
-		// bottom: calc(98rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		// bottom: calc(98rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
 		// bottom: calc(98rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
 		/* #endif */
 		.checkAll {
@@ -413,13 +413,13 @@
 	.font_color{
 		@include main_color(theme);
 	}
-	/deep/ checkbox .uni-checkbox-input.uni-checkbox-input-checked {
+	::v-deep  checkbox .uni-checkbox-input.uni-checkbox-input-checked {
 		@include main_bg_color(theme);
 		@include coupons_border_color(theme);
 		color: #fff!important
 	}
 	
-	/deep/ checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+	::v-deep  checkbox .wx-checkbox-input.wx-checkbox-input-checked {
 		@include main_bg_color(theme);
 		@include coupons_border_color(theme);
 		color: #fff!important;

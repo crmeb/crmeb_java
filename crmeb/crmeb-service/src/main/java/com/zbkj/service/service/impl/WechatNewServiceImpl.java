@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -812,6 +812,26 @@ public class WechatNewServiceImpl implements WechatNewService {
         return data.getString("priTmplId");
     }
 
+    /**
+     * 获取微信小程序发货开关
+     */
+    @Override
+    public CommonSeparateConfigVo getShippingSwitch() {
+        String value = systemConfigService.getValueByKey(WeChatConstants.CONFIG_WECHAT_ROUTINE_SHIPPING_SWITCH);
+        CommonSeparateConfigVo vo = new CommonSeparateConfigVo();
+        vo.setKey(WeChatConstants.CONFIG_WECHAT_ROUTINE_SHIPPING_SWITCH);
+        vo.setValue(StrUtil.isNotBlank(value) ? value : "0");
+        return vo;
+    }
+
+    /**
+     * 更新微信小程序发货开关
+     */
+    @Override
+    public Boolean updateShippingSwitch(SaveConfigRequest request) {
+        String value = StrUtil.isNotBlank(request.getValue()) ? request.getValue() : "0";
+        return systemConfigService.updateOrSaveValueByName(WeChatConstants.CONFIG_WECHAT_ROUTINE_SHIPPING_SWITCH, value);
+    }
 
     /**
      * 获取JS-SDK的签名

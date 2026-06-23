@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -77,8 +77,10 @@ public class LogisticsServiceImpl implements LogisticService {
         }
         String logisticsType = systemConfigService.getValueByKeyException("logistics_type");
         if (logisticsType.equals("1")) {// 平台查询
-            OnePassLogisticsQueryVo queryVo = onePassService.exprQuery(expressNo, com);
+            OnePassLogisticsQueryVo queryVo = onePassService.exprQuery(expressNo, com, phone);
             if (ObjectUtil.isNull(queryVo)) {
+                resultVo.setNumber(expressNo);
+                resultVo.setExpName(com);
                 return resultVo;
             }
             // 一号通vo转公共返回vo

@@ -4,7 +4,8 @@
       <div class="padding-add">
         <el-form size="small" label-width="75px">
           <el-form-item class="mr10" label="时间选择：">
-            <el-date-picker
+            <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
+            <!-- <el-date-picker
               v-model="timeVal"
               value-format="yyyy-MM-dd"
               format="yyyy-MM-dd"
@@ -16,9 +17,12 @@
               @change="onchangeTime"
               start-placeholder="开始时间"
               end-placeholder="结束时间"
-            />
+            /> -->
           </el-form-item>
-          <el-form-item label="关键字：">
+          <el-form-item label="用户搜索：">
+            <UserSearchInput ref="userSearchInput" v-model="tableFrom" />
+          </el-form-item>
+          <!-- <el-form-item label="关键词搜索：">
             <el-input
               v-model="tableFrom.keywords"
               placeholder="请输入姓名、电话、UID"
@@ -27,7 +31,7 @@
               clearable
             >
             </el-input>
-          </el-form-item>
+          </el-form-item> -->
           <div class="ml30">
             <el-button type="primary" size="small" @click="seachList">搜索</el-button>
             <el-button size="small" @click="handleReset">重置</el-button>
@@ -309,7 +313,8 @@ export default {
       listLoading: true,
       tableFrom: {
         dateLimit: '',
-        keywords: '',
+        content: '',
+        searchType: 'all',
         page: 1,
         limit: 20,
       },
@@ -350,7 +355,8 @@ export default {
     //重置
     handleReset() {
       this.tableFrom.dateLimit = '';
-      this.tableFrom.keywords = '';
+      this.tableFrom.content = '';
+      this.tableFrom.searchType = 'all';
       this.timeVal = [];
       this.getList();
     },

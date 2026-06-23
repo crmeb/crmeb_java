@@ -5,7 +5,8 @@
         <div class="container">
           <el-form inline size="small" label-width="70px">
             <el-form-item label="时间选择：">
-              <el-date-picker
+              <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
+              <!-- <el-date-picker
                 v-model="timeVal"
                 value-format="yyyy-MM-dd"
                 format="yyyy-MM-dd"
@@ -17,7 +18,7 @@
                 @change="onchangeTime"
                 start-placeholder="开始时间"
                 end-placeholder="结束时间"
-              />
+              /> -->
             </el-form-item>
             <el-form-item label="提现状态：">
               <el-select class="selWidth" @change="getList(1)" v-model="tableFrom.status" placeholder="请选择">

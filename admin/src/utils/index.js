@@ -88,6 +88,16 @@ export function parseTime(time, cFormat) {
   return time_str;
 }
 
+export function isPicUpload(file) {
+  const type = file && file.type ? file.type : '';
+  return /^image\//.test(type);
+}
+
+export function isVideoUpload(file) {
+  const type = file && file.type ? file.type : '';
+  return /^video\//.test(type);
+}
+
 /**
  * @param {number} time
  * @param {string} option
@@ -421,4 +431,23 @@ export function getImageDimensions(imageUrl) {
     img.onload = () => resolve({ width: img.width, height: img.height });
     img.onerror = () => reject(new Error('无法加载图片'));
   });
+}
+export function arraysEqual(arr1, arr2) {
+  // 如果两个数组的长度不同，直接返回 false
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+
+  // 将两个数组分别排序
+  const sortedArr1 = arr1.slice().sort();
+  const sortedArr2 = arr2.slice().sort();
+
+  // 比较排序后的数组
+  for (let i = 0; i < sortedArr1.length; i++) {
+    if (sortedArr1[i] !== sortedArr2[i]) {
+      return false;
+    }
+  }
+
+  return true;
 }

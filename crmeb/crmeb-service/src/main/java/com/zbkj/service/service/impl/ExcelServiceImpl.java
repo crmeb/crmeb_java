@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -227,10 +227,9 @@ public class ExcelServiceImpl implements ExcelService {
      */
     @Override
     public String exportOrder(StoreOrderSearchRequest request) {
-        PageParamRequest pageParamRequest = new PageParamRequest();
-        pageParamRequest.setPage(Constants.DEFAULT_PAGE);
-        pageParamRequest.setLimit(Constants.EXPORT_MAX_LIMIT);
-        CommonPage<StoreOrderDetailResponse> adminList = storeOrderService.getAdminList(request, pageParamRequest);
+        request.setPage(Constants.DEFAULT_PAGE);
+        request.setLimit(Constants.EXPORT_MAX_LIMIT);
+        CommonPage<StoreOrderDetailResponse> adminList = storeOrderService.getAdminList(request);
         List<StoreOrderDetailResponse> list = adminList.getList();
         if(list.size() < 1){
             throw new CrmebException("没有可导出的数据！");

@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -12,7 +13,9 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.constants.DateConstants;
 import com.zbkj.common.constants.ProductConstants;
+import com.zbkj.common.constants.UserConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.product.StoreProduct;
@@ -26,12 +29,14 @@ import com.zbkj.common.request.StoreProductReplySearchRequest;
 import com.zbkj.common.response.ProductDetailReplyResponse;
 import com.zbkj.common.response.ProductReplyResponse;
 import com.zbkj.common.response.StoreProductReplyResponse;
-import com.zbkj.common.utils.CrmebUtil;
+import com.zbkj.common.result.CommonResultCode;
 import com.zbkj.common.utils.CrmebDateUtil;
+import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.common.utils.RedisUtil;
+import com.zbkj.common.utils.ValidateFormUtil;
+import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.common.vo.MyRecord;
 import com.zbkj.common.vo.StoreOrderInfoOldVo;
-import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.service.dao.StoreProductReplyDao;
 import com.zbkj.service.service.*;
 import org.apache.commons.lang3.ArrayUtils;
@@ -45,14 +50,14 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 /**
  * StoreProductReplyServiceImpl 接口实现
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -86,39 +91,80 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
 
     @Autowired
     private TransactionTemplate transactionTemplate;
+    @Autowired
+    private SystemConfigService systemConfigService;
 
 
     /**
     * 列表
     * @param request 请求参数
-    * @param pageParamRequest 分页类参数
     * @return List<StoreProductReply>
     */
     @Override
-    public PageInfo<StoreProductReplyResponse> getList(StoreProductReplySearchRequest request, PageParamRequest pageParamRequest) {
-        //带 StoreProductReply 类的多条件查询
-        LambdaQueryWrapper<StoreProductReply> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(StoreProductReply::getIsDel, false);
-        if (ObjectUtil.isNotNull(request.getIsReply())) {
-            lambdaQueryWrapper.eq(StoreProductReply::getIsReply, request.getIsReply());
-        }
-        if (StrUtil.isNotBlank(request.getProductSearch())) {
-            List<StoreProduct> storeProducts = storeProductService.likeProductName(request.getProductSearch());
-            if (CollUtil.isNotEmpty(storeProducts)) {
-                List<Integer> productIds = storeProducts.stream().map(StoreProduct::getId).collect(Collectors.toList());
-                lambdaQueryWrapper.in(StoreProductReply::getProductId, productIds);
+    public PageInfo<StoreProductReplyResponse> getList(StoreProductReplySearchRequest request) {
+        ////带 StoreProductReply 类的多条件查询
+        //LambdaQueryWrapper<StoreProductReply> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        //lambdaQueryWrapper.eq(StoreProductReply::getIsDel, false);
+        //if (ObjectUtil.isNotNull(request.getIsReply())) {
+        //    lambdaQueryWrapper.eq(StoreProductReply::getIsReply, request.getIsReply());
+        //}
+        //if (StrUtil.isNotBlank(request.getProductSearch())) {
+        //    List<StoreProduct> storeProducts = storeProductService.likeProductName(request.getProductSearch());
+        //    if (CollUtil.isNotEmpty(storeProducts)) {
+        //        List<Integer> productIds = storeProducts.stream().map(StoreProduct::getId).collect(Collectors.toList());
+        //        lambdaQueryWrapper.in(StoreProductReply::getProductId, productIds);
+        //    }
+        //}
+        //if (StringUtils.isNotBlank(request.getNickname())) {
+        //    lambdaQueryWrapper.like(StoreProductReply::getNickname,request.getNickname());
+        //}
+        //if (StringUtils.isNotBlank(request.getDateLimit())) {
+        //    DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
+        //    lambdaQueryWrapper.between(StoreProductReply::getCreateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
+        //}
+        //lambdaQueryWrapper.orderByDesc(StoreProductReply::getId);
+        Map<String, Object> map = CollUtil.newHashMap();
+        if (StrUtil.isNotBlank(request.getContent())) {
+            ValidateFormUtil.validatorUserCommonSearch(request);
+            String keywords = URLUtil.decode(request.getContent());
+            switch (request.getSearchType()) {
+                case UserConstants.USER_SEARCH_TYPE_ALL:
+                    map.put("keywords", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_UID:
+                    map.put("uid", Integer.valueOf(request.getContent()));
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_NICKNAME:
+                    map.put("nickname", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_PHONE:
+                    map.put("phone", request.getContent());
+                    break;
             }
         }
-        if (StringUtils.isNotBlank(request.getNickname())) {
-            lambdaQueryWrapper.like(StoreProductReply::getNickname,request.getNickname());
-        }
-        if (StringUtils.isNotBlank(request.getDateLimit())) {
+        //时间范围
+        if (StrUtil.isNotBlank(request.getDateLimit())) {
             DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
-            lambdaQueryWrapper.between(StoreProductReply::getCreateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
+            //判断时间
+            int compareDateResult = CrmebDateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), DateConstants.DATE_FORMAT);
+            if (compareDateResult == -1) {
+                throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "开始时间不能大于结束时间！");
+            }
+            if (StrUtil.isNotBlank(dateLimit.getStartTime())) {
+                map.put("startTime", dateLimit.getStartTime());
+                map.put("endTime", dateLimit.getEndTime());
+            }
         }
-        lambdaQueryWrapper.orderByDesc(StoreProductReply::getId);
-        Page<StoreProductReply> pageStoreReply = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-        List<StoreProductReply> dataList = dao.selectList(lambdaQueryWrapper);
+        if (ObjectUtil.isNotNull(request.getIsReply())) {
+            map.put("isReply", request.getIsReply() ? 1 :0);
+        }
+        if (StrUtil.isNotBlank(request.getProductSearch())) {
+            map.put("productSearch", URLUtil.decode(request.getProductSearch()));
+        }
+
+        Page<StoreProductReply> pageStoreReply = PageHelper.startPage(request.getPage(), request.getLimit());
+        //List<StoreProductReply> dataList = dao.selectList(lambdaQueryWrapper);
+        List<StoreProductReply> dataList = dao.selectReplyList(map);
         List<StoreProductReplyResponse> dataResList = new ArrayList<>();
         for (StoreProductReply productReply : dataList) {
             StoreProductReplyResponse productReplyResponse = new StoreProductReplyResponse();
@@ -171,6 +217,7 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
         Integer count = checkIsReply(storeProductReply);
         storeProductReply.setAvatar(systemAttachmentService.clearPrefix(user.getAvatar()));
         storeProductReply.setNickname(user.getNickname());
+        storeProductReply.setUid(user.getUid());
         if (StringUtils.isNotBlank(request.getPics())) {
             String pics = request.getPics().replace("[\"","").replace("\"]","")
                     .replace("\"","");
@@ -435,30 +482,6 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
         }
         return dao.selectCount(lqw);
     }
-
-
-//    // 获取统计数据（好评、中评、差评）
-//    private Integer getCountByScore(Integer productId, String type) {
-//        LambdaQueryWrapper<StoreProductReply> lqw = new LambdaQueryWrapper<>();
-//        lqw.eq(StoreProductReply::getProductId, productId);
-//        lqw.eq(StoreProductReply::getIsDel, false);
-//
-//        switch (type) {
-//            case "all":
-//                break;
-//            case "good":
-//                lqw.apply( " (product_score + service_score) >= 8");
-//                break;
-//            case "medium":
-//                lqw.apply( " (product_score + service_score) < 8 and (product_score + service_score) > 4");
-//                break;
-//            case "poor":
-//                lqw.apply( " (product_score + service_score) <= 4");
-//                break;
-//        }
-//        return dao.selectCount(lqw);
-//    }
-
     /**
      * 如果所有的都已评价，那么订单完成
      * @author Mr.Zhang

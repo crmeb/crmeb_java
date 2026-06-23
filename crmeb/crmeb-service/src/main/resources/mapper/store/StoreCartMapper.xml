@@ -2,4 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zbkj.service.dao.StoreCartDao">
 
+    <select id="getUserCartSumByStatus" resultType="java.lang.Integer">
+        SELECT IFNULL(SUM(c.cart_num), 0)
+        FROM eb_store_cart c
+            LEFT JOIN eb_store_product_attr_value a ON c.product_attr_unique = a.id
+        WHERE c.uid = #{userId}
+          AND c.is_new = 0
+          AND c.status = #{status}
+          AND a.is_del = 0
+          AND a.is_show = 1
+    </select>
 </mapper>

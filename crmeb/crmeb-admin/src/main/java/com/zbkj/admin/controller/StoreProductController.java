@@ -1,8 +1,12 @@
 package com.zbkj.admin.controller;
 
+import com.zbkj.common.annotation.CustomResponseAnnotation;
+import com.zbkj.common.annotation.LogControllerAnnotation;
+import com.zbkj.common.enums.MethodType;
 import com.zbkj.common.model.product.StoreProduct;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.*;
+import com.zbkj.common.response.CopyProductResponse;
 import com.zbkj.common.response.StoreProductInfoResponse;
 import com.zbkj.common.response.StoreProductResponse;
 import com.zbkj.common.response.StoreProductTabsHeader;
@@ -31,7 +35,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -74,6 +78,7 @@ public class StoreProductController {
      * 新增商品
      * @param request 新增参数
      */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.ADD, description = "新增商品")
     @PreAuthorize("hasAuthority('admin:product:save')")
     @ApiOperation(value = "新增商品")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
@@ -89,6 +94,7 @@ public class StoreProductController {
      * 删除商品表
      * @param id Integer
      */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.DELETE, description = "删除商品")
     @PreAuthorize("hasAuthority('admin:product:delete')")
     @ApiOperation(value = "删除")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
@@ -109,6 +115,7 @@ public class StoreProductController {
      * 恢复已删除商品表
      * @param id Integer
      */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "恢复回收站商品")
     @PreAuthorize("hasAuthority('admin:product:restore')")
     @ApiOperation(value = "恢复商品")
     @RequestMapping(value = "/restore/{id}", method = RequestMethod.GET)
@@ -124,6 +131,7 @@ public class StoreProductController {
      * 商品修改
      * @param storeProductRequest 商品参数
      */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "修改商品")
     @PreAuthorize("hasAuthority('admin:product:update')")
     @ApiOperation(value = "商品修改")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
@@ -160,6 +168,7 @@ public class StoreProductController {
     /**
      * 上架
      */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "上架商品")
     @PreAuthorize("hasAuthority('admin:product:up')")
     @ApiOperation(value = "上架")
     @RequestMapping(value = "/putOnShell/{id}", method = RequestMethod.GET)
@@ -174,6 +183,7 @@ public class StoreProductController {
     /**
      * 下架
      */
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "下架商品")
     @PreAuthorize("hasAuthority('admin:product:down')")
     @ApiOperation(value = "下架")
     @RequestMapping(value = "/offShell/{id}", method = RequestMethod.GET)
@@ -212,7 +222,7 @@ public class StoreProductController {
     @PreAuthorize("hasAuthority('admin:product:copy:product')")
     @ApiOperation(value = "复制平台商品")
     @RequestMapping(value = "/copy/product", method = RequestMethod.POST)
-    public CommonResult<Map<String, Object>> copyProduct(@RequestBody @Valid StoreCopyProductRequest request) {
+    public CommonResult<CopyProductResponse> copyProduct(@RequestBody @Valid StoreCopyProductRequest request) {
         return CommonResult.success(storeProductService.copyProduct(request.getUrl()));
     }
 

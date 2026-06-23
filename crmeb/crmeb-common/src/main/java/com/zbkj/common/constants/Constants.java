@@ -5,7 +5,7 @@ package com.zbkj.common.constants;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -64,6 +64,9 @@ public class Constants {
 
     //用户登token redis存储前缀
     public static final String USER_TOKEN_REDIS_KEY_PREFIX = "TOKEN_USER:";
+
+    // front 同一用户token集合
+    public static final String FRONT_USER_TOKEN_SET_KEY = "FRONT_USER_TOKEN:{}";
 
 
     //用户登录方式 h5

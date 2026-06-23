@@ -75,7 +75,7 @@ const marketingRouter = {
           meta: { title: '砍价商品', icon: '' },
         },
         {
-          path: 'creatBargain/:id?',
+          path: 'creatBargain/:id?/:type?',
           component: () => import('@/views/marketing/bargain/bargainGoods/creatBargain'),
           name: 'creatBargain',
           meta: { title: '砍价商品', icon: '', noCache: true, activeMenu: `/marketing/bargain/bargainGoods` },
@@ -134,7 +134,7 @@ const marketingRouter = {
           meta: { title: '秒杀商品', icon: '', noCache: true, activeMenu: `/marketing/seckill/list` },
         },
         {
-          path: 'creatSeckill/:name?/:timeId?/:id?',
+          path: 'creatSeckill/:name?/:timeId?/:id?/:type?',
           component: () => import('@/views/marketing/seckill/seckillList/creatSeckill'),
           name: 'CreatSeckill',
           meta: { title: '添加秒杀商品', icon: '', noCache: true, activeMenu: `/marketing/seckill/list` },
@@ -158,63 +158,6 @@ const marketingRouter = {
           component: () => import('@/views/marketing/integral/integralLog/index'),
           name: 'integralLog',
           meta: { title: '积分日志', icon: '' },
-        },
-      ],
-    },
-    {
-      path: 'atmosphere',
-      name: 'atmosphere',
-      meta: {
-        title: '活动氛围',
-        noCache: true,
-      },
-      component: () => import('@/views/marketing/atmosphere/index'),
-      children: [
-        {
-          path: 'list',
-          name: `atmosphereList`,
-          meta: {
-            title: '氛围列表',
-            noCache: true,
-          },
-          component: () => import('@/views/marketing/atmosphere/atmosphereList/list'),
-        },
-        {
-          path: 'add/:id?',
-          name: `addAtmosphere`,
-          meta: {
-            title: '添加活动氛围',
-            noCache: true,
-            activeMenu: `/marketing/atmosphere/list`,
-          },
-          component: () => import('@/views/marketing/atmosphere/atmosphereList/addAtmosphere'),
-        },
-      ],
-    },
-    {
-      path: 'border',
-      name: 'border',
-      meta: { title: '活动边框', icon: '' },
-      component: () => import('@/views/marketing/border/index'),
-      children: [
-        {
-          path: 'list',
-          name: `borderList`,
-          meta: {
-            title: '活动边框列表',
-            noCache: true,
-          },
-          component: () => import('@/views/marketing/atmosphere/atmosphereList/list'),
-        },
-        {
-          path: 'add/:id?',
-          name: `addBorder`,
-          meta: {
-            title: '添加活动边框',
-            noCache: true,
-            activeMenu: `/marketing/border/list`,
-          },
-          component: () => import('@/views/marketing/atmosphere/atmosphereList/addAtmosphere'),
         },
       ],
     },

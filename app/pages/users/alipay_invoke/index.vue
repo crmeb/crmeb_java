@@ -26,7 +26,7 @@
 		<!-- #ifdef H5 -->
 		<view v-show="hintShow" class="hint" @click="hintShow = false">
 			<view>点击右上角<text class="iconfont icon-gengduo"></text></view>
-			<view>选择 在浏览器 打开，去支付</view>
+			<view>选择 在浏览器 打开，去支付宝支付</view>
 		</view>
 		<!-- #endif -->
 	</view>
@@ -38,6 +38,7 @@
 	import {mapGetters} from 'vuex';
 	import {toLogin} from '@/libs/login.js';
 	import { orderPay } from '@/api/order.js';
+	import { alipayFull} from '@/api/user.js';
 	export default {
 		data() {
 			return {
@@ -100,6 +101,26 @@
 								});
 							}, 2000);
 					})
+				}else{ 
+					this.link = location.protocol + '//' + window.location.host + `/pages/users/alipay_invoke/index?price=${price}&rechar_id=${rechar_id}&type=users`;
+					alipayFull({
+						from: 'alipay',
+						price: price,
+						payType: 'alipay',
+						rechar_id: rechar_id
+					}).then(res => {
+						//h5支付
+						uni.hideLoading();
+						that.$nextTick(() => {
+							document.forms['punchout_form'].submit();
+						})
+					}).catch(res=>{
+						uni.hideLoading();
+						return that.$util.Tips({
+							title: res
+						});
+					})
+					
 				}
 			
 			}

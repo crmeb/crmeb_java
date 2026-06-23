@@ -2,7 +2,6 @@ package com.zbkj.admin.controller;
 
 import com.zbkj.common.model.product.StoreProductReply;
 import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.StoreProductReplyAddRequest;
 import com.zbkj.common.request.StoreProductReplyCommentRequest;
 import com.zbkj.common.request.StoreProductReplySearchRequest;
@@ -23,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -42,15 +41,13 @@ public class StoreProductReplyController {
     /**
      * 分页显示评论表
      * @param request 搜索条件
-     * @param pageParamRequest 分页参数
      */
     @PreAuthorize("hasAuthority('admin:product:reply:list')")
     @ApiOperation(value = "分页列表") //配合swagger使用
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<StoreProductReplyResponse>> getList(@Validated StoreProductReplySearchRequest request,
-                                                                       @Validated PageParamRequest pageParamRequest) {
+    public CommonResult<CommonPage<StoreProductReplyResponse>> getList(@Validated StoreProductReplySearchRequest request) {
         CommonPage<StoreProductReplyResponse> storeProductReplyCommonPage =
-                CommonPage.restPage(storeProductReplyService.getList(request, pageParamRequest));
+                CommonPage.restPage(storeProductReplyService.getList(request));
         return CommonResult.success(storeProductReplyCommonPage);
     }
 
@@ -101,14 +98,15 @@ public class StoreProductReplyController {
      * @param request  StoreProductReplyCommentRequest 回复参数
      */
     @PreAuthorize("hasAuthority('admin:product:reply:comment')")
-   @ApiOperation(value = "回复")
-   @RequestMapping(value = "/comment", method = RequestMethod.POST)
-   public CommonResult<String> comment(@RequestBody StoreProductReplyCommentRequest request) {
+    @ApiOperation(value = "回复")
+    @RequestMapping(value = "/comment", method = RequestMethod.POST)
+    public CommonResult<String> comment(@RequestBody StoreProductReplyCommentRequest request) {
        if (storeProductReplyService.comment(request)) {
            return CommonResult.success();
        }
        return CommonResult.failed();
-   }
+    }
+
 }
 
 

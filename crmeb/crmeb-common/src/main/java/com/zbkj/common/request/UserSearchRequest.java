@@ -8,8 +8,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
@@ -17,7 +15,7 @@ import java.io.Serializable;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -29,13 +27,9 @@ import java.io.Serializable;
 @Accessors(chain = true)
 @TableName("eb_user")
 @ApiModel(value="User对象", description="用户表")
-public class UserSearchRequest implements Serializable {
+public class UserSearchRequest extends UserCommonSearchRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
-
-
-    @ApiModelProperty(value = "关键字")
-    private String keywords;
 
     @ApiModelProperty(value = "时间")
     private String dateLimit;
@@ -63,8 +57,7 @@ public class UserSearchRequest implements Serializable {
     private String level;
 
     //时间类型
-    @ApiModelProperty(value = "访问情况， 0 = 全部， 1 = 首次， 2 = 访问过， 3 = 未访问", allowableValues = "range[0,1,2,3]")
-    @NotNull(message = "访问情况不能为空")
+    @ApiModelProperty(value = "访问情况： 1 = 首次， 2 = 访问过， 3 = 未访问", allowableValues = "range[0,1,2,3]")
     private Integer accessType = 0;
 
     @ApiModelProperty(value = "国家，中国CN，其他OTHER")

@@ -110,12 +110,11 @@ export function couponUserListApi(params) {
  * 积分日志 列表
  * @param pram
  */
-export function integralListApi(params, data) {
+export function integralListApi(params) {
   return request({
     url: '/admin/user/integral/list',
-    method: 'post',
+    method: 'get',
     params,
-    data,
   });
 }
 
@@ -429,12 +428,22 @@ export function combineListApi(params) {
   });
 }
 
+// /**
+//  * 拼团列表 统计
+//  */
+// export function combineStatisticsApi(params) {
+//   return request({
+//     url: `/admin/store/combination/statistics`,
+//     method: 'get',
+//     params,
+//   });
+// }
 /**
- * 拼团列表 统计
+ * 拼团列表 状态统计
  */
-export function combineStatisticsApi(params) {
+export function combineListCountApi(params) {
   return request({
-    url: `/admin/store/combination/statistics`,
+    url: `/admin/store/combination/combine/list/count`,
     method: 'get',
     params,
   });
@@ -472,6 +481,121 @@ export function exportcombiantionApi(params) {
   });
 }
 
+/**
+ * 视频号 草稿列表
+ */
+export function draftListApi(params) {
+  return request({
+    url: `/admin/pay/component/product/draft/list`,
+    method: 'get',
+    params,
+  });
+}
+
+/**
+ * 视频号 商品列表
+ */
+export function videoProductListApi(params) {
+  return request({
+    url: `/admin/pay/component/product/list`,
+    method: 'get',
+    params,
+  });
+}
+
+/**
+ * 视频号 类目
+ */
+export function catListApi(params) {
+  return request({
+    url: `/admin/pay/component/cat/get/list`,
+    method: 'get',
+  });
+}
+
+/**
+ * 视频号 添加
+ */
+export function videoAddApi(data) {
+  return request({
+    url: `/admin/pay/component/product/add`,
+    method: 'post',
+    data,
+  });
+}
+
+/**
+ * 视频号 编辑
+ */
+export function videoUpdateApi(data) {
+  return request({
+    url: `/admin/pay/component/product/update`,
+    method: 'post',
+    data,
+  });
+}
+
+/**
+ * 视频号 上架
+ */
+export function videoUpApi(proId) {
+  return request({
+    url: `/admin/pay/component/product/listing/${proId}`,
+    method: 'post',
+  });
+}
+
+/**
+ * 视频号 下架
+ */
+export function videoDownApi(proId) {
+  return request({
+    url: `/admin/pay/component/product/delisting/${proId}`,
+    method: 'post',
+  });
+}
+
+/**
+ * 视频号 删除
+ */
+export function videoDelApi(proId) {
+  return request({
+    url: `/admin/pay/component/product/delete/${proId}`,
+    method: 'post',
+  });
+}
+
+/**
+ * 视频号 草稿商品详情
+ */
+export function draftInfoApi(id) {
+  return request({
+    url: `/admin/pay/component/product/draft/get/${id}`,
+    method: 'get',
+  });
+}
+
+/**
+ * 视频号 草稿商品编辑
+ */
+export function draftUpdateApi(data) {
+  return request({
+    url: `/admin/pay/component/product/update`,
+    method: 'post',
+    data,
+  });
+}
+
+/**
+ * 视频号 草稿商品编辑
+ */
+export function shopImgUploadApi(data) {
+  return request({
+    url: `/admin/pay/component/shop/img/upload`,
+    method: 'post',
+    data,
+  });
+}
 /**
  * @description 活动样式
  */

@@ -18,7 +18,7 @@ import java.math.BigDecimal;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -171,4 +171,7 @@ public class StoreProduct implements Serializable {
     @ApiModelProperty(value = "活动边框 列表中是边框 详情中是背景图")
     @TableField(exist = false)
     private String activityStyle;
+
+    @ApiModelProperty(value = "保障服务ids(英文逗号拼接)")
+    private String guaranteeIds;
 }

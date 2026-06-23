@@ -4,7 +4,8 @@ import com.zbkj.admin.model.ScheduleJob;
 import com.zbkj.admin.model.ScheduleJobLog;
 import com.zbkj.admin.service.ScheduleJobLogService;
 import com.zbkj.admin.service.ScheduleJobService;
-
+import com.zbkj.common.annotation.LogControllerAnnotation;
+import com.zbkj.common.enums.MethodType;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.ScheduleJobLogSearchRequest;
@@ -26,7 +27,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -51,6 +52,7 @@ public class ScheduleJobController {
         return CommonResult.success(scheduleJobService.getAll());
     }
 
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "添加定时任务")
     @PreAuthorize("hasAuthority('admin:schedule:job:add')")
     @ApiOperation(value = "添加定时任务")
     @RequestMapping(value = "/add", method = RequestMethod.POST)
@@ -61,6 +63,7 @@ public class ScheduleJobController {
         return CommonResult.failed();
     }
 
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "定时任务编辑")
     @PreAuthorize("hasAuthority('admin:schedule:job:update')")
     @ApiOperation(value = "定时任务编辑")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
@@ -71,6 +74,7 @@ public class ScheduleJobController {
         return CommonResult.failed();
     }
 
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "暂停定时任务")
     @PreAuthorize("hasAuthority('admin:schedule:job:suspend')")
     @ApiOperation(value = "暂停定时任务")
     @RequestMapping(value = "/suspend/{jobId}", method = RequestMethod.POST)
@@ -81,6 +85,7 @@ public class ScheduleJobController {
         return CommonResult.failed();
     }
 
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "启动定时任务")
     @PreAuthorize("hasAuthority('admin:schedule:job:start')")
     @ApiOperation(value = "启动定时任务")
     @RequestMapping(value = "/start/{jobId}", method = RequestMethod.POST)
@@ -91,6 +96,7 @@ public class ScheduleJobController {
         return CommonResult.failed();
     }
 
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "删除定时任务")
     @PreAuthorize("hasAuthority('admin:schedule:job:delete')")
     @ApiOperation(value = "删除定时任务")
     @RequestMapping(value = "/delete/{jobId}", method = RequestMethod.POST)
@@ -101,6 +107,7 @@ public class ScheduleJobController {
         return CommonResult.failed();
     }
 
+    @LogControllerAnnotation(intoDB = true, methodType = MethodType.UPDATE, description = "立即执行定时任务（一次）")
     @PreAuthorize("hasAuthority('admin:schedule:job:trig')")
     @ApiOperation(value = "立即执行定时任务（一次）")
     @RequestMapping(value = "/trig/{jobId}", method = RequestMethod.POST)

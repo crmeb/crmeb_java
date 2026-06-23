@@ -2,6 +2,7 @@ package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
@@ -10,11 +11,9 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.constants.DateConstants;
 import com.zbkj.common.exception.CrmebException;
-import com.zbkj.common.model.product.StoreProduct;
-import com.zbkj.common.model.product.StoreProductAttr;
-import com.zbkj.common.model.product.StoreProductAttrValue;
-import com.zbkj.common.model.product.StoreProductDescription;
+import com.zbkj.common.model.product.*;
 import com.zbkj.common.model.record.UserVisitRecord;
 import com.zbkj.common.model.seckill.StoreSeckill;
 import com.zbkj.common.model.seckill.StoreSeckillManger;
@@ -47,7 +46,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -98,6 +97,10 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
 
     @Autowired
     private UserVisitRecordService userVisitRecordService;
+    @Autowired
+    private StoreProductAttrOptionService productAttrOptionService;
+    @Autowired
+    private StoreProductGuaranteeService guaranteeService;
 
     /**
     * 列表
@@ -218,8 +221,12 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
      */
     @Override
     public Boolean deleteById(Integer id) {
-        StoreSeckill skill = new StoreSeckill().setId(id).setIsDel(true);
-        return dao.updateById(skill) > 0;
+        StoreSeckill seckill = getByIdException(id);
+        if (seckill.getStatus().equals(1)) {
+            throw new CrmebException("活动开启中，商品不支持删除");
+        }
+        seckill.setIsDel(true);
+        return dao.updateById(seckill) > 0;
     }
 
     /**
@@ -231,8 +238,11 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
     @Override
     public Boolean saveSeckill(StoreSeckillAddRequest request) {
         request.getAttrValue().forEach(e -> {
-            if ((ObjectUtil.isNull(e.getQuota()) || e.getQuota() <= 0)) {
-                throw new CrmebException("请正确输入限量");
+            if (e.getStock() <= 0) {
+                throw new CrmebException("库存不足的规格不能参与秒杀活动");
+            }
+            if ((ObjectUtil.isNull(e.getQuota()) || e.getQuota() > e.getStock())) {
+                throw new CrmebException("请规范活动限购数量：必须小于等于库存数量");
             }
         });
 
@@ -326,6 +336,14 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
      */
     @Override
     public Boolean updateSeckill(StoreSeckillAddRequest request) {
+        request.getAttrValue().forEach(e -> {
+            if (e.getStock() <= 0) {
+                throw new CrmebException("库存不足的规格不能参与秒杀活动");
+            }
+            if ((ObjectUtil.isNull(e.getQuota()) || e.getQuota() > e.getStock())) {
+                throw new CrmebException("请规范活动限购数量：必须小于等于库存数量");
+            }
+        });
 
         StoreSeckill storeSeckill = getById(request.getId());
         if (ObjectUtil.isNull(storeSeckill) || storeSeckill.getIsDel()) {
@@ -490,6 +508,11 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
         }
         // 获取主商品信息
         StoreProduct storeProduct = storeProductService.getById(storeSeckill.getProductId());
+
+        // 查询商品保障服务信息
+        if (StrUtil.isNotBlank(storeProduct.getGuaranteeIds())) {
+            productDetailResponse.setGuaranteeList(guaranteeService.findByIdList(CrmebUtil.stringToArray(storeProduct.getGuaranteeIds())));
+        }
         // 主商品状态
         if (storeProduct.getIsDel()) {
             productDetailResponse.setMasterStatus("delete");
@@ -516,6 +539,16 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
 
         // 获取秒杀商品规格
         List<StoreProductAttr> attrList = attrService.getListByProductIdAndType(skillId, Constants.PRODUCT_TYPE_SECKILL);
+        // 获取主商品规格属性
+        List<StoreProductAttr> masterAttrList = attrService.getListByProductIdAndType(storeProduct.getId(), Constants.PRODUCT_TYPE_NORMAL);
+        HashMap<String, List<StoreProductAttrOption>> optionMap = CollUtil.newHashMap();
+        masterAttrList.forEach(attr -> {
+            List<StoreProductAttrOption> optionList = productAttrOptionService.findListByAttrId(attr.getId());
+            optionMap.put(attr.getAttrName(), optionList);
+        });
+        attrList.forEach(attr -> {
+            attr.setOptionList(optionMap.get(attr.getAttrName()));
+        });
         // 根据制式设置attr属性
         productDetailResponse.setProductAttr(attrList);
 
@@ -567,29 +600,35 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
             return 0;
         }
         if (storeSeckill.getStatus() == 1) {
-            String ymdStart = cn.hutool.core.date.DateUtil.date(storeSeckill.getStartTime()).toString(Constants.DATE_FORMAT_DATE);
-            String startTimeStr = seckillManger.getStartTime() < 10 ? "0" + seckillManger.getStartTime() : seckillManger.getStartTime().toString();
-            DateTime startTime = cn.hutool.core.date.DateUtil.parse(ymdStart + " " + startTimeStr + ":00:00");
-            Date nowDateTime = CrmebDateUtil.nowDateTime();
-            if (nowDateTime.compareTo(startTime) <= 0) {
-                // 即将开始
-                return 1;
-            }
-            String ymdEnd = cn.hutool.core.date.DateUtil.date(storeSeckill.getStopTime()).toString(Constants.DATE_FORMAT_DATE);
-            String endTimeStr = seckillManger.getStartTime() < 10 ? "0" + seckillManger.getEndTime() : seckillManger.getEndTime().toString();
-            DateTime stopTime = cn.hutool.core.date.DateUtil.parse(ymdEnd + " " + endTimeStr + ":00:00");
-            if (nowDateTime.compareTo(stopTime) >= 0) {
-                // 已结束
-                return -1;
-            }
-            if (nowDateTime.compareTo(startTime) > 0 && nowDateTime.compareTo(stopTime) < 0) {
-                // 进行中
+
+            DateTime dateTime = DateUtil.date();
+            // 当前日期
+            int nowDate = Integer.parseInt(dateTime.toString(DateConstants.DATE_FORMAT_NUM));
+            // 当前时间
+            int nowTime = Integer.parseInt(dateTime.toString("HH"));
+
+            // 秒杀开始日期
+            int startDate = Integer.parseInt(DateUtil.date(storeSeckill.getStartTime()).toString(DateConstants.DATE_FORMAT_NUM));
+            // 秒杀开始时间
+            Integer startTime = seckillManger.getStartTime();
+
+
+            // 秒杀结束日期
+            int stopDate = Integer.parseInt(DateUtil.date(storeSeckill.getStopTime()).toString(DateConstants.DATE_FORMAT_NUM));
+            // 秒杀结束时间
+            Integer stopTime = seckillManger.getEndTime();
+
+            if (startDate <= nowDate && nowDate <= stopDate && startTime <= nowTime && nowTime <= stopTime) {
                 return 2;
             }
+            if (stopDate < nowDate || (nowDate == stopDate && nowTime > stopTime)) {
+                return -1;
+            }
+            return 1;
         }
-
         return -2;
     }
+
 
     /**
      * 秒杀商品详情 管理端
@@ -615,6 +654,9 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
 
         // 查询attr
         List<StoreProductAttr> attrList = attrService.getListByProductIdAndType(skillId, Constants.PRODUCT_TYPE_SECKILL);
+        attrList.forEach(e -> {
+            e.setOptionList(productAttrOptionService.findListByAttrId(e.getId()));
+        });
         infoResponse.setAttr(attrList);
 
         // 注意：数据瓶装步骤：分别查询秒杀和商品本山信息组装sku信息之后，再对比sku属性是否相等来赋值是否秒杀sku信息
@@ -867,7 +909,7 @@ public class StoreSeckillServiceImpl extends ServiceImpl<StoreSeckillDao, StoreS
             return null;
         }
         StoreSeckillManger seckillManger = currentSeckillManagerList.get(0);
-        if (seckillManger.getStatus().equals(0)) {// 秒杀时段关闭直接返回
+        if (seckillManger.getStatus().equals(Boolean.FALSE)) {// 秒杀时段关闭直接返回
             return null;
         }
 

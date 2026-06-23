@@ -26,7 +26,7 @@
 			<view class='loadingicon acea-row row-center-wrapper'>
 				<text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>{{loadTitle}}
 			</view>
-			<view class='noCommodity' v-if="!(type==0&&replyData.sumCount||type==1&&replyData.goodCount||type==2&&replyData.inCount||type==3&&replyData.poorCount) && page > 1">
+			<view class='noCommodity' v-if="!replyData.sumCount && page > 1">
 				<view class='pictrue'>
 					<image :src="urlDomain+'crmebimage/perset/usersImg/noEvaluate.png'"></image>
 				</view>

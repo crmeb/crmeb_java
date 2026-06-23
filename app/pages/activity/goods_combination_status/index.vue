@@ -1,7 +1,7 @@
 <template>
 	<div :data-theme="theme">
 	<div class="group-con">
-		<div class="header acea-row row-between-wrapper">
+		<div v-if="storeCombination" class="header acea-row row-between-wrapper">
 			<div class="pictrue"><image :src="storeCombination.image" /></div>
 			<div class="text">
 				<div class="line1" v-text="storeCombination.title"></div>
@@ -130,7 +130,8 @@
 	</div>
 </template>
 <script>
-	import CountDown from '@/components/countDown';
+	// import CountDown from '@/components/countDown';
+	import CountDown from "@/pages/activity/components/countDown";
 	import ProductWindow from '@/components/productWindow';
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js';
 	import {
@@ -481,12 +482,32 @@
 			DefaultSelect() {
 				let productAttr = this.attr.productAttr,
 					value = [];
-				for (var key in this.productValue) {
-					if (this.productValue[key].quota > 0) {
-						value = this.attr.productAttr.length ? key.split(',') : [];
-						break;
+				// 按 id 升序排序
+				const sortedArray = Object.entries(this.productValue)
+					.sort(([, a], [, b]) => a.id - b.id)
+					.map(([key, value]) => ({
+						key,
+						...value
+					}));
+				// 默认规格设置
+				for (let i=0; i<sortedArray.length; i++) {
+					const attrItem = sortedArray[i]
+					if (attrItem.stock > 0 && attrItem.isShow) {
+						if (value.length == 0) {
+							value = this.attr.productAttr.length ? attrItem.key.split(",") : [];
+						}
+						if (attrItem.isDefault) {
+							value = this.attr.productAttr.length ? attrItem.key.split(",") : [];
+							break
+						}
 					}
-				}
+				}	
+				// for (var key in this.productValue) {
+				// 	if (this.productValue[key].quota > 0) {
+				// 		value = this.attr.productAttr.length ? key.split(',') : [];
+				// 		break;
+				// 	}
+				// }
 				for (let i = 0; i < productAttr.length; i++) {
 					this.$set(productAttr[i], 'index', value[i]);
 				}
@@ -680,6 +701,13 @@
 						that.$set(that, 'userInfo', res.data.userInfo);
 						that.onceNum = storeCombination.onceNum;
 						that.attr.productAttr = storeCombination.productAttr;
+						// 没有 opentionList 字段则置空
+						that.attr.productAttr.forEach(item => {
+							if (!item.optionList) {
+								item.optionList = []
+								item.isShowImage = false
+							}
+						})
 						that.productValue = storeCombination.productValue;
 						//#ifdef H5
 						this.getImageBase64(storeCombination.image);

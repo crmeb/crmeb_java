@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -53,6 +53,26 @@ export function getLogo()
 export function login(code,data) {
   return request.post("wechat/authorize/program/login?code="+code, data, { noAuth : true });
 }
+
+/**
+ * 静默授权，标准版个人中心使用
+ */
+export function silenceAuth(data) {
+	// #ifdef MP
+	return request.get("v2/wechat/silence_auth", data, { noAuth: true });
+	// #endif
+	// #ifdef H5
+	return request.get("v2/wechat/auth_type", data, { noAuth: true });
+	// #endif
+}
+
+/**
+ * 公众号授权，标准版个人中心使用
+ */
+export function wechatAuthV2(code, spread) {
+	return request.get("v2/wechat/auth", { code, spread }, { noAuth: true });
+}
+
 /**
  * 分享
  * @returns {*}
@@ -67,6 +87,13 @@ export function getShare() {
  */
 export function follow() {
   return request.get("wechat/follow", {}, { noAuth: true });
+}
+
+/**
+ * 获取关注状态，主题关注组件使用；接口未提供时先按标准版地址保留
+ */
+export function getSubscribe() {
+  return request.get("subscribe", {}, { noAuth: true });
 }
 
 /**
@@ -100,6 +127,15 @@ export function getUserPhone(data){
 export function appAuth(data) {
 	return request.post("wechat/authorize/app/login", data, { noAuth : true });
 }
+
+/**
+ * 苹果登录
+ * @param {Object} data
+ */
+export function appleLogin(data) {
+	return request.post("ios/login", data, { noAuth : true });
+}
+
 
 /**
  * 苹果绑定手机号

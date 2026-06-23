@@ -2,4 +2,69 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zbkj.service.dao.UserBrokerageRecordDao">
 
+    <select id="getBrokerageRecordList" resultType="com.zbkj.common.model.user.UserBrokerageRecord">
+        SELECT ubr.*
+        FROM eb_user_brokerage_record AS ubr
+        left join eb_user as u on ubr.uid = u.uid
+        <where>
+            <choose>
+                <!-- 当 type 不为空时 -->
+                <when test=" type != null">
+                    <choose>
+                        <!-- 订单返佣 (type=1) -->
+                        <when test=" type == 1">
+                            AND ubr.link_type = 'order'
+                            AND ubr.status = 3
+                            AND ubr.type = 1
+                        </when>
+                        <!-- 申请提现 (type=2) -->
+                        <when test=" type == 2">
+                            AND ubr.link_type = 'withdraw'
+                            AND ubr.status = 5
+                            AND type = 2
+                        </when>
+                        <!-- 提现失败 (type=3) -->
+                        <when test=" type == 3">
+                            AND ubr.link_type = 'withdraw'
+                            AND ubr.status = 3
+                            AND ubr.type = 1
+                        </when>
+                        <!-- 提现成功 (type=4) -->
+                        <when test=" type == 4">
+                            AND ubr.link_type = 'withdraw'
+                            AND ubr.status = 3
+                            AND ubr.type = 2
+                        </when>
+                        <!-- 佣金转余额 (type=5) -->
+                        <when test=" type == 5">
+                            AND ubr.link_type = 'yue'
+                            AND ubr.status = 3
+                            AND ubr.type = 2
+                        </when>
+                    </choose>
+                </when>
+                <!-- 当 type 为空时 -->
+                <otherwise>
+                    AND ubr.status IN (3, 5)
+                </otherwise>
+            </choose>
+            <if test="keywords != '' and keywords != null ">
+                and (
+                ubr.uid like CONCAT('%',#{keywords},'%') or
+                u.nickname like CONCAT('%',#{keywords},'%') or
+                u.phone like CONCAT('%',#{keywords},'%')
+                )
+            </if>
+            <if test="uid != null ">
+                and ubr.uid = #{uid}
+            </if>
+            <if test="nickname != '' and nickname != null ">
+                and u.nickname like CONCAT('%',#{nickname},'%')
+            </if>
+            <if test="phone != '' and phone != null ">
+                and u.phone like CONCAT('%',#{phone},'%')
+            </if>
+        </where>
+        order by ubr.update_time, ubr.id desc
+    </select>
 </mapper>

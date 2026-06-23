@@ -76,6 +76,31 @@ const appSettingRouter = {
         },
       ],
     },
+    {
+      path: 'publicRoutine',
+      name: 'PublicRoutine',
+      component: () => import('@/views/appSetting/routine'),
+      meta: {
+        title: '小程序',
+        icon: 'clipboard',
+        roles: ['admin'],
+        hidden: true,
+      },
+      children: [
+        {
+          path: 'download',
+          component: () => import('@/views/appSetting/routine/download/index.vue'),
+          name: 'download',
+          meta: { title: '小程序下载', icon: '' },
+        },
+        {
+          path: 'deliveryManagement',
+          component: () => import('@/views/appSetting/routine/deliveryManagement/index.vue'),
+          name: 'deliveryManagement',
+          meta: { title: '发货管理', icon: '' },
+        },
+      ],
+    },
   ],
 };
 

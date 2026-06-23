@@ -27,12 +27,6 @@ const userRouter = {
       meta: { title: '用户管理', icon: '' },
     },
     {
-      path: 'grade',
-      component: () => import('@/views/user/grade/index'),
-      name: 'Grade',
-      meta: { title: '用户等级', icon: '' },
-    },
-    {
       path: 'label',
       component: () => import('@/views/user/group/index'),
       name: 'Label',

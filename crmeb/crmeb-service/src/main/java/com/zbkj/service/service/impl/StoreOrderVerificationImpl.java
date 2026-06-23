@@ -2,10 +2,13 @@ package com.zbkj.service.service.impl;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.constants.PayConstants;
 import com.zbkj.common.constants.TaskConstants;
+import com.zbkj.common.constants.WeChatConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.combination.StorePink;
 import com.zbkj.common.model.order.StoreOrder;
@@ -36,7 +39,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -60,7 +63,10 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
 
     @Autowired
     private RedisUtil redisUtil;
-
+    @Autowired
+    private SystemConfigService systemConfigService;
+    @Autowired
+    private WechatOrderShippingService wechatOrderShippingService;
     @Autowired
     private StorePinkService storePinkService;
     /**
@@ -193,6 +199,13 @@ public class StoreOrderVerificationImpl implements StoreOrderVerification {
         if(saveStatus){
             //后续操作放入redis
             redisUtil.lPush(TaskConstants.ORDER_TASK_REDIS_KEY_AFTER_TAKE_BY_USER, storeOrder.getId());
+            // 小程序发货管理
+            if (storeOrder.getPayType().equals(PayConstants.PAY_TYPE_WE_CHAT) && storeOrder.getIsChannel().equals(1)) {
+                String shippingSwitch = systemConfigService.getValueByKey(WeChatConstants.CONFIG_WECHAT_ROUTINE_SHIPPING_SWITCH);
+                if (StrUtil.isNotBlank(shippingSwitch) && shippingSwitch.equals("1")) {
+                    wechatOrderShippingService.uploadVerifyShippingInfo(storeOrder.getOrderId());
+                }
+            }
         }
         return saveStatus;
     }

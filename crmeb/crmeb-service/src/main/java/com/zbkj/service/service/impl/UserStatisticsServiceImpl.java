@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -49,6 +50,29 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
     @Autowired
     private UserVisitRecordService userVisitRecordService;
 
+    /**
+     * 获取总数据
+     * 累计用户数
+     * 累计充值人数
+     * 累计充值金额（佣金转余额也算）
+     * 累计消费金额
+     * @return UserTotalResponse
+     */
+    @Override
+    public UserTotalResponse getTotalDate() {
+        Integer totalUserNum = userService.getTotalNum();
+        Integer totalRechargePeople = userRechargeService.getTotalPeople();
+        BigDecimal totalRechargeAmount = userRechargeService.getTotalPrice();
+        BigDecimal BrokerageToYueAmount = brokerageRecordService.getTotalYuePrice();
+        BigDecimal totalAmount = storeOrderService.getTotalPrice();
+
+        UserTotalResponse response = new UserTotalResponse();
+        response.setUserNum(totalUserNum);
+        response.setRechargePeopleNum(totalRechargePeople);
+        response.setRechargeTotalAmount(totalRechargeAmount.add(BrokerageToYueAmount));
+        response.setConsumptionAmount(totalAmount);
+        return response;
+    }
 
     /**
      * 用户概览数据
@@ -326,6 +350,20 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
         return getCommonResponse(intervalDate, intervalDate2);
     }
 
+    /**
+     * 获取用户性别数据
+     * @return List
+     */
+    @Override
+    public List<UserSexDataResponse> getSexData() {
+        List<User> userList = userService.getSexData();
+        return userList.stream().map(e -> {
+            UserSexDataResponse response = new UserSexDataResponse();
+            response.setSex(e.getSex());
+            response.setNum(e.getPayCount());
+            return response;
+        }).collect(Collectors.toList());
+    }
 
     /**
      * 获取用户渠道数据
@@ -342,6 +380,53 @@ public class UserStatisticsServiceImpl implements UserStatisticsService {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * 获取用户区域数据
+     * @return List
+     */
+    @Override
+    public List<UserAreaDataResponse> getAreaData() {
+        List<String> areaList = getAreaList();
+        // 获取所有的用户id跟地址
+        List<User> userList = userService.findIdAndAddresList();
+        // 根据省份分割用户
+        Map<String, List<Integer>> areaMap = CollUtil.newHashMap();
+        areaList.forEach(e -> {
+            areaMap.put(e, CollUtil.newArrayList());
+        });
+        areaList.forEach(e -> {
+            for (int i = 0; i < userList.size();) {
+                User user = userList.get(i);
+                if (user.getAddres().contains(e)) {
+                    areaMap.get(e).add(user.getUid());
+                    userList.remove(i);
+                    continue;
+                }
+                i++;
+            }
+        });
+        areaMap.put("其他", userList.stream().map(User::getUid).collect(Collectors.toList()));
+        // 查询其它数据
+        List<UserAreaDataResponse> responseList = areaMap.entrySet().stream().map(e -> {
+            UserAreaDataResponse response = new UserAreaDataResponse();
+            response.setArea(e.getKey());
+            List<Integer> uidList = e.getValue();
+            if (CollUtil.isEmpty(uidList)) {
+                response.setUserNum(0);
+                response.setPayUserNum(0);
+                response.setPayAmount(new BigDecimal("0.00"));
+            } else {
+                // 累计用户数量
+                response.setUserNum(uidList.size());
+                // 成交用户数量
+                response.setPayUserNum(storeOrderService.getOrderPayUserNumByUidList(uidList));
+                // 支付金额
+                response.setPayAmount(storeOrderService.getPayOrderAmountByUidList(uidList));
+            }
+            return response;
+        }).collect(Collectors.toList());
+        return responseList;
+    }
 
     /**
      * 用户概览数据列表（导出使用）

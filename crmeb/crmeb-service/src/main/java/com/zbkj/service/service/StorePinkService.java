@@ -5,8 +5,10 @@ import com.github.pagehelper.PageInfo;
 import com.zbkj.common.model.combination.StorePink;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zbkj.common.request.StorePinkSearchRequest;
+import com.zbkj.common.response.StorePinkAdminHeaderResponse;
 import com.zbkj.common.response.StorePinkAdminListResponse;
 import com.zbkj.common.response.StorePinkDetailResponse;
+import com.zbkj.common.vo.MyRecord;
 
 import java.util.List;
 
@@ -15,7 +17,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -27,10 +29,9 @@ public interface StorePinkService extends IService<StorePink> {
     /**
      * 获取拼团列表
      * @param request
-     * @param pageParamRequest
      * @return
      */
-    PageInfo<StorePinkAdminListResponse> getList(StorePinkSearchRequest request, PageParamRequest pageParamRequest);
+    PageInfo<StorePinkAdminListResponse> getList(StorePinkSearchRequest request);
 
     /**
      * 获取拼团列表Cid
@@ -97,4 +98,13 @@ public interface StorePinkService extends IService<StorePink> {
      * @return Integer
      */
     Integer getTotalPeople();
+
+    /**
+     *  获取拼团记录的表头数量
+     *
+     * 状态：1进行中，2已完成，3未完成
+     * @param request request
+     * @return StorePinkAdminHeaderResponse
+     */
+    StorePinkAdminHeaderResponse getListHeaderCount(StorePinkSearchRequest request);
 }

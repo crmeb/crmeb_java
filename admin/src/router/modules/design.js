@@ -13,7 +13,7 @@ import Layout from '@/layout';
 const designRouter = {
   path: '/design',
   component: Layout,
-  redirect: '/design/devise',
+  redirect: '/design/mall_theme',
   name: 'design',
   meta: {
     title: '装修',
@@ -29,6 +29,41 @@ const designRouter = {
       },
     },
     {
+      path: 'mall_theme',
+      name: 'mallTheme',
+      component: () => import('@/views/design/mall_theme/index'),
+      meta: {
+        title: '商城主题',
+      },
+    },
+    {
+      path: 'my_theme',
+      name: 'myTheme',
+      component: () => import('@/views/design/my_theme/index'),
+      meta: {
+        title: '我的主题',
+      },
+    },
+    {
+      path: 'micro_theme',
+      name: 'microTheme',
+      component: () => import('@/views/design/micro_theme/index'),
+      meta: {
+        title: '专题页面',
+      },
+    },
+    {
+      path: 'edit_theme',
+      name: 'editTheme',
+      hidden: true,
+      component: () => import('@/views/design/edit_theme/index'),
+      meta: {
+        title: '主题风格',
+        fullScreen: true,
+        activeMenu: '/design/mall_theme',
+      },
+    },
+    {
       path: 'viewDesign',
       name: 'viewDesign',
       component: () => import('@/views/design/viewDesign/index'),
@@ -37,11 +72,11 @@ const designRouter = {
       },
     },
     {
-      path: 'devise',
-      name: 'devise',
-      component: () => import('@/views/design/devise/index'),
+      path: 'advertisement',
+      name: 'advertisement',
+      component: () => import('@/views/design/advertisement/index'),
       meta: {
-        title: '首页装修',
+        title: '开屏广告',
       },
     },
   ],

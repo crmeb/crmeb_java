@@ -4,21 +4,21 @@
 			<skeleton :show="showSkeleton" :isNodes="isNodes" ref="skeleton" loading="chiaroscuro" selector="skeleton"
 				bgcolor="#FFF"></skeleton>
 			<view class="skeleton" :style="{visibility: showSkeleton ? 'hidden' : 'visible'}">
-				<view class='header acea-row row-center-wrapper'>
+				<view class='header acea-row row-center-wrapper' :style="{top: iStatusBarHeight + 'px'}">
 					<view class='acea-row row-between-wrapper input'>
 						<text class='iconfont icon-sousuo'></text>
 						<input type='text' placeholder='点击搜索商品信息' @confirm="searchSubmitValue" confirm-type='search' name="search"
 						 placeholder-class='placeholder' maxlength="20"></input>
 					</view>
 				</view>
-				<view class='aside' :style="{bottom: tabbarH + 'px',height: height + 'rpx'}">
+				<view class='aside' :style="{top: iStatusBarHeight + 'px', bottom: tabbarH + 'px',height: height + 'rpx'}">
 					<scroll-view scroll-y="true" scroll-with-animation='true' style="height: 100%;">
 						<view class='item acea-row row-center-wrapper' :class='index==navActive?"on":""' v-for="(item,index) in productList"
 					 :key="index" @click='tap(index,"b"+index)'><text class="skeleton-rect">{{item.name}}</text></view>
 					 </scroll-view>
 					
 				</view>
-				<view class='conter'>
+				<view class='conter' :style="{top: iStatusBarHeight + 'px'}">
 					<scroll-view scroll-y="true" :scroll-into-view="toView" :style='"height:"+height+"rpx;margin-top: 96rpx;"' @scroll="scroll"
 					 scroll-with-animation='true'>
 						<block v-for="(item,index) in productList" :key="index">
@@ -65,10 +65,14 @@
 				hightArr: [],
 				toView: "",
 				tabbarH: 0,
-				theme:'theme1'
+				theme:'theme1',
+				iStatusBarHeight: 0, // 状态栏高度
 			}
 		},
 		created() {
+			// #ifdef APP-PLUS
+			this.iStatusBarHeight = uni.getSystemInfoSync().statusBarHeight;
+			// #endif
 			let _self = this;
 			uni.getStorage({
 			    key: 'theme',
@@ -235,6 +239,7 @@
 	}
 	
 	.productSort .conter {
+		position: relative;
 		margin: 96rpx 0 0 180rpx;
 		padding: 0 14rpx;
 		background-color: #fff;

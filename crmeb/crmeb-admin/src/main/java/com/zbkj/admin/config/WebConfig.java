@@ -23,7 +23,7 @@ import java.io.File;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -98,6 +98,14 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addResourceHandler(UploadConstants.UPLOAD_AFTER_FILE_KEYWORD + "/**")
                 .addResourceLocations("file:" +crmebConfig.getImagePath() + "/" + UploadConstants.UPLOAD_AFTER_FILE_KEYWORD + "/" );
+
+        /** 主题导出下载路径 */
+        registry.addResourceHandler("/theme/download/**")
+                .addResourceLocations("file:" + crmebConfig.getImagePath() + "/" + UploadConstants.UPLOAD_FILE_KEYWORD + "/theme/download/");
+
+        /** 主题导入图片路径 */
+        registry.addResourceHandler("/uploads/theme/**")
+                .addResourceLocations("file:" + crmebConfig.getImagePath() + "/uploads/theme/");
 
     }
 

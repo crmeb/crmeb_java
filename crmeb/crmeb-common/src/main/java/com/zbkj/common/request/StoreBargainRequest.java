@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.hibernate.validator.constraints.Length;
 
+import javax.validation.Valid;
 import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -17,7 +18,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -115,10 +116,12 @@ public class StoreBargainRequest implements Serializable {
     @Max(value = 9999, message = "砍价人数最多9999")
     private Integer peopleNum;
 
+    @Valid
     @ApiModelProperty(value = "商品属性")
     @NotEmpty(message = "商品属性不能为空")
     private List<StoreProductAttrAddRequest> attr;
 
+    @Valid
     @ApiModelProperty(value = "商品属性详情")
     @NotEmpty(message = "商品属性详情不能为空")
     private List<StoreProductAttrValueAddRequest> attrValue;

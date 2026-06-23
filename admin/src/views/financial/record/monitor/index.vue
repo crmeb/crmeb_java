@@ -4,7 +4,8 @@
       <div class="padding-add">
         <el-form inline size="small" label-width="70px">
           <el-form-item label="时间选择：">
-            <el-date-picker
+            <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
+            <!-- <el-date-picker
               v-model="timeVal"
               value-format="yyyy-MM-dd"
               format="yyyy-MM-dd"
@@ -16,12 +17,15 @@
               @change="onchangeTime"
               start-placeholder="开始时间"
               end-placeholder="结束时间"
-            />
+            /> -->
           </el-form-item>
-          <el-form-item label="关键字：">
+          <el-form-item label="用户搜索：">
+            <UserSearchInput ref="userSearchInput" v-model="tableFrom" />
+          </el-form-item>
+          <!-- <el-form-item label="关键字：">
             <el-input v-model="tableFrom.keywords" placeholder="微信昵称/ID" class="selWidth" size="small" clearable>
             </el-input>
-          </el-form-item>
+          </el-form-item> -->
           <el-form-item label="明细类型：">
             <el-select
               class="selWidth"
@@ -96,7 +100,8 @@ export default {
       tableFrom: {
         title: '',
         dateLimit: '',
-        keywords: '',
+        content: '',
+        searchType: 'all',
         page: 1,
         limit: 20,
       },
@@ -107,6 +112,7 @@ export default {
         { value: 'admin', label: '后台操作' },
         { value: 'productRefund', label: '商品退款' },
         { value: 'payProduct', label: '购买商品' },
+        { value: 'transferIn', label: '佣金转入' },
       ],
     };
   },
@@ -119,7 +125,8 @@ export default {
     handleReset() {
       this.tableFrom.title = '';
       this.tableFrom.dateLimit = '';
-      this.tableFrom.keywords = '';
+      this.tableFrom.content = '';
+      this.tableFrom.searchType = 'all';
       this.timeVal = [];
       this.getList();
     },

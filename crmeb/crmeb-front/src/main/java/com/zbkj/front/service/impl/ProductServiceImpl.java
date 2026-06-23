@@ -4,23 +4,23 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.zbkj.common.constants.*;
-import com.zbkj.common.page.CommonPage;
-import com.zbkj.common.request.ProductListRequest;
-import com.zbkj.common.request.ProductRequest;
-import com.zbkj.common.response.*;
-import com.zbkj.common.vo.MyRecord;
-import com.zbkj.common.request.PageParamRequest;
 import com.github.pagehelper.PageInfo;
-import com.zbkj.common.utils.CrmebUtil;
-import com.zbkj.common.utils.RedisUtil;
-import com.zbkj.common.vo.CategoryTreeVo;
-import com.zbkj.common.model.record.UserVisitRecord;
+import com.zbkj.common.constants.*;
 import com.zbkj.common.model.product.StoreProduct;
 import com.zbkj.common.model.product.StoreProductAttr;
 import com.zbkj.common.model.product.StoreProductAttrValue;
+import com.zbkj.common.model.record.UserVisitRecord;
 import com.zbkj.common.model.system.SystemUserLevel;
 import com.zbkj.common.model.user.User;
+import com.zbkj.common.page.CommonPage;
+import com.zbkj.common.request.PageParamRequest;
+import com.zbkj.common.request.ProductListRequest;
+import com.zbkj.common.request.ProductRequest;
+import com.zbkj.common.response.*;
+import com.zbkj.common.utils.CrmebUtil;
+import com.zbkj.common.utils.RedisUtil;
+import com.zbkj.common.vo.CategoryTreeVo;
+import com.zbkj.common.vo.MyRecord;
 import com.zbkj.front.service.ProductService;
 import com.zbkj.service.delete.ProductUtils;
 import com.zbkj.service.service.*;
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -81,6 +81,9 @@ public class ProductServiceImpl implements ProductService {
     private StoreProductAttrValueService storeProductAttrValueService;
 
     @Autowired
+    private PayComponentProductService componentProductService;
+
+    @Autowired
     private SystemUserLevelService systemUserLevelService;
 
     @Autowired
@@ -91,6 +94,10 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ActivityStyleService activityStyleService;
+    @Autowired
+    private StoreProductGuaranteeService guaranteeService;
+    @Autowired
+    private StoreProductAttrOptionService productAttrOptionService;
 
     /**
      * 获取分类
@@ -182,6 +189,9 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public ProductDetailResponse getDetail(Integer id, String type) {
+        if (StrUtil.isNotBlank(type) && "video".equals(type)) {// 视频号商品
+            return componentProductService.getH5Detail(id);
+        }
         // 获取用户
         User user = userService.getInfo();
         SystemUserLevel userLevel = null;
@@ -194,6 +204,10 @@ public class ProductServiceImpl implements ProductService {
         StoreProduct storeProduct = storeProductService.getH5Detail(id);
         // 查询活动边框配置信息, 并赋值给商品response 重复添加的商品数据会根据数据添加持续覆盖后的为准
         storeProduct.setActivityStyle(activityStyleService.makeActivityBackgroundStyle(storeProduct));
+        // 查询商品保障服务信息
+        if (StrUtil.isNotBlank(storeProduct.getGuaranteeIds())) {
+            productDetailResponse.setGuaranteeList(guaranteeService.findByIdList(CrmebUtil.stringToArray(storeProduct.getGuaranteeIds())));
+        }
 
         if (ObjectUtil.isNotNull(userLevel)) {
             BigDecimal vipPrice = storeProduct.getPrice().multiply(new BigDecimal(userLevel.getDiscount())).divide(new BigDecimal(100), 2 ,BigDecimal.ROUND_HALF_UP);
@@ -203,12 +217,21 @@ public class ProductServiceImpl implements ProductService {
 
         // 获取商品规格
         List<StoreProductAttr> attrList = attrService.getListByProductIdAndType(storeProduct.getId(), Constants.PRODUCT_TYPE_NORMAL);
+        attrList.forEach(attr -> {
+            attr.setOptionList(productAttrOptionService.findListByAttrId(attr.getId()));
+        });
         // 根据制式设置attr属性
         productDetailResponse.setProductAttr(attrList);
 
         // 根据制式设置sku属性
-        HashMap<String, Object> skuMap = CollUtil.newHashMap();
+        HashMap<String, StoreProductAttrValueResponse> skuMap = CollUtil.newHashMap();
         List<StoreProductAttrValue> storeProductAttrValues = storeProductAttrValueService.getListByProductIdAndType(storeProduct.getId(), Constants.PRODUCT_TYPE_NORMAL);
+
+        // sku默认逻辑补充
+        long defaultCount = storeProductAttrValues.stream().filter(e -> e.getIsDefault().equals(true)).count();
+        if (defaultCount < 1) {
+            storeProductAttrValues.get(0).setIsDefault(true);
+        }
         for (StoreProductAttrValue storeProductAttrValue : storeProductAttrValues) {
             StoreProductAttrValueResponse atr = new StoreProductAttrValueResponse();
             BeanUtils.copyProperties(storeProductAttrValue, atr);
@@ -285,11 +308,14 @@ public class ProductServiceImpl implements ProductService {
 
         // 获取商品规格
         List<StoreProductAttr> attrList = attrService.getListByProductIdAndType(storeProduct.getId(), Constants.PRODUCT_TYPE_NORMAL);
+        attrList.forEach(attr -> {
+            attr.setOptionList(productAttrOptionService.findListByAttrId(attr.getId()));
+        });
         // 根据制式设置attr属性
         productDetailResponse.setProductAttr(attrList);
 
         // 根据制式设置sku属性
-        HashMap<String, Object> skuMap = CollUtil.newHashMap();
+        HashMap<String, StoreProductAttrValueResponse> skuMap = CollUtil.newHashMap();
         List<StoreProductAttrValue> storeProductAttrValues = storeProductAttrValueService.getListByProductIdAndType(storeProduct.getId(), Constants.PRODUCT_TYPE_NORMAL);
         for (StoreProductAttrValue storeProductAttrValue : storeProductAttrValues) {
             StoreProductAttrValueResponse atr = new StoreProductAttrValueResponse();

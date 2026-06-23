@@ -46,7 +46,7 @@
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
-	// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+	// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 	// +----------------------------------------------------------------------
 	// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 	// +----------------------------------------------------------------------
@@ -81,7 +81,8 @@
 				formContent: '',
 				isShow: false,
 				userBalance: '', //余额
-				isBuy: false //是否可以点击购买
+				isBuy: false ,//是否可以点击购买
+				isPaid: false, // 是否点击了立即支付
 			}
 		},
 		computed: {
@@ -94,21 +95,18 @@
 		mounted() {
 			this.payConfig();
 		},
+		onUnload() {  
+			if (!this.isPaid) {
+				this.unPayBack()
+			}
+		},  
 		methods: {
 			// 支付配置
 			payConfig() {
 				uni.hideLoading();
 				// 支付方式
 				store.dispatch('getPayConfig').then((res) => {
-					console.log(res.payConfig);
 					this.cartArr = res.payConfig;
-					// #ifdef APP
-					res.payConfig.forEach(val=>{
-						if(val.value==='weixin'){
-							val.payStatus=0
-						}
-					})
-					// #endif
 					this.userBalance = res.userBalance;
 					if (this.cartArr.length) {
 						this.active = 0;
@@ -199,6 +197,67 @@
 									'&status=1';
 							}, 100)
 							uni.hideLoading();
+							break;
+						case 'alipay':
+							//#ifdef H5
+							if (this.$wechat.isWeixin()) {
+								uni.redirectTo({
+									url: `/pages/users/alipay_invoke/index?id=${orderNo}&type=order`
+								});
+							} else {
+								//h5支付
+								uni.hideLoading();
+								that.formContent = res.data.alipayRequest;
+								uni.setStorage({
+									key: 'orderNo',
+									data: orderNo
+								});
+								that.$nextTick(() => {
+									document.forms['punchout_form'].submit();
+								})
+							}
+							//#endif
+							// #ifdef APP-PLUS
+							let alipayRequest = res.data.alipayRequest;
+							uni.requestPayment({
+								provider: 'alipay',
+								orderInfo: alipayRequest,
+								success: (e) => {
+									uni.showToast({
+										title: "支付成功"
+									})
+									setTimeout(res => {
+										uni.navigateTo({
+											url: '/pages/users/alipay_return/alipay_return?out_trade_no=' +
+												orderNo +
+												'&payChannel=' +
+												'appAlipay'
+										})
+									}, 1000)
+								},
+								fail: (e) => {
+									console.log(e, '失败');
+									uni.showModal({
+										content: "支付失败",
+										showCancel: false,
+										success: function(res) {
+											if (res.confirm) {
+												//点击确认的操作
+												uni.navigateTo({
+													url: '/pages/users/alipay_return/alipay_return?out_trade_no=' +
+														orderNo +
+														'&payChannel=' +
+														'appAlipay'
+												})
+											}
+										}
+									})
+								},
+								complete: () => {
+									uni.hideLoading();
+								},
+							});
+							// #endif
 							break;
 					}
 				}).catch(err => {
@@ -352,7 +411,7 @@
 						"timestamp": Number(jsConfig.timeStamp), // 时间戳（单位：秒）
 						"sign": this.systemPlatform === 'ios' ? 'MD5' : jsConfig
 							.paySign // 签名，这里用的 MD5 签名
-					}, //订单数据 【注意微信的订单信息，键值应该全部是小写，不能采用驼峰命名】
+					}, //微信、支付宝订单数据 【注意微信的订单信息，键值应该全部是小写，不能采用驼峰命名】
 					success: function(res) {
 						wechatQueryPayResult(orderNo).then(res => {
 							uni.hideLoading();
@@ -398,6 +457,7 @@
 			//立即支付
 			toOrderPay: Debounce(function() {
 				this.getPayCheck();
+				this.isPaid = true
 				if (Number(this.payPrice) > Number(this.userBalance) && this.payType === 'yue') return this.$util
 					.Tips({
 						title: '余额的金额不够，请切换支付方式'
@@ -407,7 +467,13 @@
 				});
 				this.isBuy = true;
 				this.getOrderPay(this.orderNo, '支付成功')
-			})
+			}),
+			// 未支付多级返回
+			unPayBack() {  
+				uni.navigateBack({  
+					delta: 1 
+				});  
+			}  
 		},
 	}
 </script>

@@ -16,8 +16,13 @@
 		      </view>
 		   </view>
 		    <view class='loadingicon acea-row row-center-wrapper'>
-		        <text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>{{loadtitle}}
-		     </view>
+		        <text class='loading iconfont icon-jiazai' :hidden='loading==false'></text>
+						<text v-if="count!=0">{{loadtitle}}</text>
+		    </view>
+				<view class="flex-column-center" v-if="count==0">
+					<img class="no-sign-img" :src="urlDomain+'crmebimage/perset/staticImg/noSign.png'" alt="" />
+					<text class="no-sign-text">暂无签到记录~</text>
+				</view>
 		</view>
 	</view>
 </template>
@@ -37,6 +42,8 @@
 				    limit:8,
 				    signList:[],
 					theme:app.globalData.theme,
+				urlDomain: this.$Cache.get("imgHost"),
+				count: 0, // 签到记录总数
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -73,6 +80,7 @@
 			      getSignMonthList({ page: that.page, limit: that.limit }).then(res=>{
 			        let list = res.data.list;
 			        let loadend = list.length < that.limit;
+							this.count = res.data.total
 			        that.signList = that.$util.SplitArray(list, that.signList);
 					that.$set(that,'signList',that.signList);
 					that.loadend = loadend;
@@ -88,7 +96,22 @@
 </script>
 
 <style lang="scss">
+	.sign-record {
+		.no-sign-img {
+			width: 100%;
+			// height: 360rpx;
+		}
+		.no-sign-text {
+			color: #ccc;
+		}
+	}
 	.font_color{
 		@include main_color(theme);
+	}
+	.flex-column-center {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 	}
 </style>

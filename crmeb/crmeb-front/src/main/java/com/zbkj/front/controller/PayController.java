@@ -5,6 +5,7 @@ import com.zbkj.common.response.OrderPayResultResponse;
 import com.zbkj.common.response.PayConfigResponse;
 import com.zbkj.common.result.CommonResult;
 import com.zbkj.common.utils.CrmebUtil;
+import com.zbkj.service.service.AliPayService;
 import com.zbkj.service.service.OrderPayService;
 import com.zbkj.service.service.WeChatPayService;
 import io.swagger.annotations.Api;
@@ -21,7 +22,7 @@ import javax.servlet.http.HttpServletRequest;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -40,6 +41,8 @@ public class PayController {
     @Autowired
     private OrderPayService orderPayService;
 
+    @Autowired
+    private AliPayService aliPayService;
 
 
     @ApiOperation(value = "获取支付配置")
@@ -67,5 +70,16 @@ public class PayController {
     @RequestMapping(value = "/queryPayResult", method = RequestMethod.GET)
     public CommonResult<Boolean> queryPayResult(@RequestParam String orderNo) {
         return CommonResult.success(weChatPayService.queryPayResult(orderNo));
+    }
+
+    /**
+     * 查询支付结果(支付宝)
+     *
+     * @param orderNo |订单编号|String|必填
+     */
+    @ApiOperation(value = "查询支付结果(支付宝)")
+    @RequestMapping(value = "/queryAliPayResult", method = RequestMethod.GET)
+    public CommonResult<Boolean> queryAliPayResult(@RequestParam String orderNo) {
+        return CommonResult.success(aliPayService.queryPayResult(orderNo));
     }
 }

@@ -15,6 +15,7 @@ import com.zbkj.common.model.bargain.StoreBargainUser;
 import com.zbkj.common.model.cat.StoreCart;
 import com.zbkj.common.model.category.Category;
 import com.zbkj.common.model.combination.StoreCombination;
+import com.zbkj.common.model.combination.StorePink;
 import com.zbkj.common.model.coupon.StoreCouponUser;
 import com.zbkj.common.model.express.Express;
 import com.zbkj.common.model.express.ShippingTemplates;
@@ -34,6 +35,9 @@ import com.zbkj.common.model.system.SystemStore;
 import com.zbkj.common.model.system.SystemUserLevel;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserAddress;
+import com.zbkj.common.model.wechat.video.PayComponentOrder;
+import com.zbkj.common.model.wechat.video.PayComponentProduct;
+import com.zbkj.common.model.wechat.video.PayComponentProductSku;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.*;
 import com.zbkj.common.response.*;
@@ -65,7 +69,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -165,6 +169,18 @@ public class OrderServiceImpl implements OrderService {
     private StoreSeckillMangerService storeSeckillMangerService;
 
     @Autowired
+    private PayComponentProductService componentProductService;
+
+    @Autowired
+    private PayComponentProductSkuService componentProductSkuService;
+
+    @Autowired
+    private PayComponentOrderService componentOrderService;
+
+    @Autowired
+    private WechatVideoDeliveryService wechatVideoDeliveryService;
+
+    @Autowired
     private ExpressService expressService;
 
     @Autowired
@@ -178,6 +194,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private CategoryService categoryService;
+    @Autowired
+    private StorePinkService storePinkService;
 
     /**
      * 发送后台管理员下单提醒通知短信
@@ -266,6 +284,25 @@ public class OrderServiceImpl implements OrderService {
         if (!storeOrder.getStatus().equals(Constants.ORDER_STATUS_INT_SPIKE)) {
             throw new CrmebException("订单状态错误");
         }
+        if (storeOrder.getType().equals(1)) {// 视频号订单
+            PayComponentOrder componentOrder = componentOrderService.getByOrderNo(storeOrder.getOrderId());
+            if (ObjectUtil.isNull(componentOrder)) {
+                throw new CrmebException("没有找到视频号订单");
+            }
+            if (!componentOrder.getStatus().equals(30)) {
+                throw new CrmebException("视频号订单不是待收货状态");
+            }
+            // 微信组件部分收货
+            ShopOrderCommonVo shopOrderCommonVo = new ShopOrderCommonVo();
+            shopOrderCommonVo.setOutOrderId(componentOrder.getOrderNo());
+            shopOrderCommonVo.setOpenid(componentOrder.getOpenid());
+            Boolean recieve = wechatVideoDeliveryService.shopDeliveryRecieve(shopOrderCommonVo);
+            if (!recieve) {
+                throw new CrmebException("自定义组件订单收货失败");
+            }
+            componentOrder.setStatus(100);
+            componentOrderService.updateById(componentOrder);
+        }
 
         //已收货，待评价
         storeOrder.setStatus(Constants.ORDER_STATUS_INT_BARGAIN);
@@ -332,7 +369,7 @@ public class OrderServiceImpl implements OrderService {
         existStoreOrder.setUpdateTime(DateUtil.date());
         Boolean execute = transactionTemplate.execute(e -> {
             storeOrderService.updateById(existStoreOrder);
-            storeOrderStatusService.createLog(existStoreOrder.getId(), Constants.ORDER_LOG_REFUND_APPLY, "用户申请退款原因：" + request.getExplain());
+            storeOrderStatusService.createLog(existStoreOrder.getId(), Constants.ORDER_LOG_REFUND_APPLY, "用户申请退款原因：" + request.getText());
             return Boolean.TRUE;
         });
 
@@ -455,7 +492,8 @@ public class OrderServiceImpl implements OrderService {
             infoResponse.setOrderInfoList(infoResponseList);
             responseList.add(infoResponse);
         }
-
+//        CommonPage<OrderDetailResponse> detailPage = CommonPage.restPage(responseList);
+//        BeanUtils.copyProperties(storeOrderCommonPage, detailPage, "list");
         return CommonPage.copyPageInfo(orderPageInfo, responseList);
     }
 
@@ -535,6 +573,20 @@ public class OrderServiceImpl implements OrderService {
         if (!storeOrder.getUid().equals(currentUser.getUid())) {
             throw new CrmebException("订单不存在");
         }
+        if (storeOrder.getType().equals(1)) {
+            PayComponentOrder componentOrder = componentOrderService.getByOrderNo(orderId);
+            if (ObjectUtil.isNull(componentOrder)) {
+                throw new CrmebException("视频号订单不存在");
+            }
+        }
+        Integer pinkStatus = 0;
+        if (storeOrder.getPinkId() > 0) {
+            StorePink teamPink = storePinkService.getById(storeOrder.getPinkId());
+            if (ObjectUtil.isNotNull(teamPink)) {
+                pinkStatus = teamPink.getStatus();
+            }
+        }
+        storeOrderDetailResponse.setPinkStatus(pinkStatus);
 
         BeanUtils.copyProperties(storeOrder, storeOrderDetailResponse);
         MyRecord orderStatusVo = getOrderStatusVo(storeOrder);
@@ -948,6 +1000,15 @@ public class OrderServiceImpl implements OrderService {
         String orderVoString = redisUtil.get(key).toString();
         OrderInfoVo orderInfoVo = JSONObject.parseObject(orderVoString, OrderInfoVo.class);
 
+//        // 检测支付方式
+//        if (!orderUtils.checkPayType(request.getPayType())) throw new CrmebException("暂不支持该支付方式，请刷新页面或者联系管理员");
+//
+//        if (request.getPayType().equals(PayConstants.PAY_TYPE_WE_CHAT)) {
+//            // 检测支付渠道
+//            if (StrUtil.isBlank(request.getPayChannel())) throw new CrmebException("支付渠道不能为空!");
+//            if (!OrderUtils.checkPayChannel(request.getPayChannel())) throw new CrmebException("支付渠道不存在!");
+//        }
+
         // 校验商品库存
         List<MyRecord> skuRecordList = validateProductStock(orderInfoVo, user);
 
@@ -1059,6 +1120,34 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
+//        // 支付渠道 默认：余额支付
+//        int isChannel = 3;
+//        if (request.getPayType().equals(PayConstants.PAY_TYPE_WE_CHAT)) {
+//            switch (request.getPayChannel()) {
+//                case PayConstants.PAY_CHANNEL_WE_CHAT_H5:// H5
+//                    isChannel = 2;
+//                    break;
+//                case PayConstants.PAY_CHANNEL_WE_CHAT_PUBLIC:// 公众号
+//                    isChannel = 0;
+//                    break;
+//                case PayConstants.PAY_CHANNEL_WE_CHAT_PROGRAM:// 小程序
+//                    isChannel = 1;
+//                    break;
+//                case PayConstants.PAY_CHANNEL_WE_CHAT_APP_IOS:// app ios
+//                    isChannel = 4;
+//                    break;
+//                case PayConstants.PAY_CHANNEL_WE_CHAT_APP_ANDROID:// app android
+//                    isChannel = 5;
+//                    break;
+//            }
+//        }
+//        if (request.getPayType().equals(PayConstants.PAY_TYPE_ALI_PAY)) {
+//            isChannel = 6;
+//            if (request.getPayChannel().equals(PayConstants.PAY_CHANNEL_ALI_APP_PAY)) {
+//                isChannel = 7;
+//            }
+//        }
+
         StoreOrder storeOrder = new StoreOrder();
         storeOrder.setUid(user.getUid());
         storeOrder.setOrderId(orderNo);
@@ -1143,8 +1232,15 @@ public class OrderServiceImpl implements OrderService {
                 storeProductAttrValueService.operationStock(skuRecord.getInt("activityAttrValueId"), skuRecord.getInt("num"), "sub", Constants.PRODUCT_TYPE_PINGTUAN, skuRecord.getInt("activityAttrValueVersion"));
                 // 拼团商品扣库存
                 storeCombinationService.operationStock(skuRecord.getInt("activityId"), skuRecord.getInt("num"), "sub");
-            }
-            else { // 普通商品
+            } else if (storeOrder.getType().equals(1)) {// 视频号扣库存
+                MyRecord skuRecord = skuRecordList.get(0);
+                // 商品规格表扣库存
+                storeProductAttrValueService.operationStock(skuRecord.getInt("attrValueId"), skuRecord.getInt("num"), "sub", Constants.PRODUCT_TYPE_COMPONENT, skuRecord.getInt("attrValueVersion"));
+                // 视频商品规格表扣库存
+                componentProductSkuService.operationStock(skuRecord.getInt("skuId"), skuRecord.getInt("num"), "sub", skuRecord.getInt("skuVersion"));
+                // 视频号商品扣库存
+                componentProductService.operationStock(skuRecord.getInt("productId"), skuRecord.getInt("num"), "sub");
+            } else { // 普通商品
                 for (MyRecord skuRecord : skuRecordList) {
                     // 普通商品口库存
                     storeProductService.operationStock(skuRecord.getInt("productId"), skuRecord.getInt("num"), "sub", skuRecord.getInt("productVersion"));
@@ -1303,7 +1399,49 @@ public class OrderServiceImpl implements OrderService {
             recordList.add(record);
             return recordList;
         }
+        if (orderInfoVo.getIsVideo()) {// 视频号订单
+            // 查询商品信息
+            OrderInfoDetailVo detailVo = orderInfoVo.getOrderDetailList().get(0);
+            PayComponentProduct product = componentProductService.getById(detailVo.getProductId());
+            if (ObjectUtil.isNull(product)) {
+                throw new CrmebException("商品信息不存在，请刷新后重新选择");
+            }
+            if (product.getIsDel()) {
+                throw new CrmebException("商品已删除，请刷新后重新选择");
+            }
+            if (!product.getStatus().equals(5)) {
+                throw new CrmebException("商品已下架，请刷新后重新选择");
+            }
+            if (product.getStock().equals(0) || product.getStock() < detailVo.getPayNum()) {
+                throw new CrmebException("商品库存不足，请刷新后重新选择");
+            }
+            // 查询商品规格属性值信息
+            StoreProductAttrValue attrValue = attrValueService.getByIdAndProductIdAndType(detailVo.getAttrValueId(), detailVo.getProductId(), Constants.PRODUCT_TYPE_COMPONENT);
+            if (ObjectUtil.isNull(attrValue)) {
+                throw new CrmebException("商品规格信息不存在，请刷新后重新选择");
+            }
+            if (attrValue.getStock().equals(0) || attrValue.getStock() < detailVo.getPayNum()) {
+                throw new CrmebException("商品规格库存不足，请刷新后重新选择");
+            }
+            // 查询视频商品规格属性值
+            PayComponentProductSku productSku = componentProductSkuService.getByProIdAndAttrValueId(product.getId(), attrValue.getId());
+            if (ObjectUtil.isNull(productSku)) {
+                throw new CrmebException("商品sku信息不存在，请刷新后重新选择");
+            }
+            if (productSku.getStockNum().equals(0) || productSku.getStockNum() < detailVo.getPayNum()) {
+                throw new CrmebException("商品sku库存不足，请刷新后重新选择");
+            }
 
+            MyRecord record = new MyRecord();
+            record.set("productId", product.getId());
+            record.set("attrValueId", detailVo.getAttrValueId());
+            record.set("attrValueVersion", attrValue.getVersion());
+            record.set("num", detailVo.getPayNum());
+            record.set("skuId", productSku.getId());
+            record.set("skuVersion", productSku.getVersion());
+            recordList.add(record);
+            return recordList;
+        }
         // 普通商品
         List<OrderInfoDetailVo> orderDetailList = orderInfoVo.getOrderDetailList();
         orderDetailList.forEach(e -> {
@@ -1399,6 +1537,9 @@ public class OrderServiceImpl implements OrderService {
                 if (ObjectUtil.isNull(attrValue)) {
                     throw new CrmebException("商品规格信息不存在，请刷新后重新选择");
                 }
+                if (!attrValue.getIsShow()) {
+                    throw new CrmebException("商品规格信息无效，请刷新后重新选择");
+                }
                 if (attrValue.getStock() < detailRequest.getProductNum()) {
                     throw new CrmebException("商品规格库存不足，请刷新后重新选择");
                 }
@@ -1420,11 +1561,11 @@ public class OrderServiceImpl implements OrderService {
                 detailVo.setIsSub(storeProduct.getIsSub());
                 detailVo.setProductType(Constants.PRODUCT_TYPE_NORMAL);
                 detailVo.setVipPrice(detailVo.getPrice());
+                detailVo.setGiveIntegral(storeProduct.getGiveIntegral());
                 if (ObjectUtil.isNotNull(userLevel)) {
                     BigDecimal vipPrice = detailVo.getPrice().multiply(new BigDecimal(userLevel.getDiscount())).divide(new BigDecimal("100"), 2, BigDecimal.ROUND_HALF_UP);
                     detailVo.setVipPrice(vipPrice);
                 }
-                detailVo.setGiveIntegral(storeProduct.getGiveIntegral());
                 detailVoList.add(detailVo);
             }
         }
@@ -1432,8 +1573,74 @@ public class OrderServiceImpl implements OrderService {
             PreOrderDetailRequest detailRequest = request.getOrderDetails().get(0);
             detailVoList = validatePreOrderAgain(detailRequest, user);
         }
+        if (request.getPreOrderType().equals("video")) {// 视频号商品下单
+            // 视频号暂时只能购买一个商品
+            PreOrderDetailRequest detailRequest = request.getOrderDetails().get(0);
+            detailVoList = validatePreOrderVideo(detailRequest);
+            orderInfoVo.setIsVideo(true);
+        }
         orderInfoVo.setOrderDetailList(detailVoList);
         return orderInfoVo;
+    }
+
+    /**
+     * 视频号下单校验
+     * 暂时只支持都买一种商品
+     *
+     * @param detailRequest 请求参数
+     * @return
+     */
+    private List<OrderInfoDetailVo> validatePreOrderVideo(PreOrderDetailRequest detailRequest) {
+        if (ObjectUtil.isNull(detailRequest.getProductId())) {
+            throw new CrmebException("商品编号不能为空");
+        }
+        if (ObjectUtil.isNull(detailRequest.getAttrValueId())) {
+            throw new CrmebException("商品规格属性值不能为空");
+        }
+        if (ObjectUtil.isNull(detailRequest.getProductNum()) || detailRequest.getProductNum() <= 0) {
+            throw new CrmebException("购买数量必须大于0");
+        }
+        // 查询商品信息
+        PayComponentProduct product = componentProductService.getById(detailRequest.getProductId());
+        if (ObjectUtil.isNull(product)) {
+            throw new CrmebException("商品信息不存在，请刷新后重新选择");
+        }
+        if (product.getIsDel()) {
+            throw new CrmebException("商品已删除，请刷新后重新选择");
+        }
+        if (!product.getStatus().equals(5)) {
+            throw new CrmebException("商品已下架，请刷新后重新选择");
+        }
+        if (product.getStock() < detailRequest.getProductNum()) {
+            throw new CrmebException("商品库存不足，请刷新后重新选择");
+        }
+        // 查询商品规格属性值信息
+        StoreProductAttrValue attrValue = attrValueService.getByIdAndProductIdAndType(detailRequest.getAttrValueId(), detailRequest.getProductId(), Constants.PRODUCT_TYPE_COMPONENT);
+        if (ObjectUtil.isNull(attrValue)) {
+            throw new CrmebException("商品规格信息不存在，请刷新后重新选择");
+        }
+        if (!attrValue.getIsShow()) {
+            throw new CrmebException("商品规格信息无效，请刷新后重新选择");
+        }
+        if (attrValue.getStock() < detailRequest.getProductNum()) {
+            throw new CrmebException("商品规格库存不足，请刷新后重新选择");
+        }
+        OrderInfoDetailVo detailVo = new OrderInfoDetailVo();
+        detailVo.setProductId(product.getId());
+        detailVo.setProductName(product.getTitle());
+        detailVo.setAttrValueId(attrValue.getId());
+        detailVo.setSku(attrValue.getSuk());
+        detailVo.setPrice(attrValue.getPrice());
+        detailVo.setPayNum(detailRequest.getProductNum());
+        detailVo.setImage(attrValue.getImage());
+        detailVo.setVolume(attrValue.getVolume());
+        detailVo.setWeight(attrValue.getWeight());
+        detailVo.setTempId(product.getTempId());
+        detailVo.setIsSub(product.getIsSub());
+        detailVo.setProductType(Constants.PRODUCT_TYPE_COMPONENT);
+        List<OrderInfoDetailVo> detailVoList = CollUtil.newArrayList();
+        detailVoList.add(detailVo);
+        return detailVoList;
     }
 
     /**
@@ -1476,6 +1683,9 @@ public class OrderServiceImpl implements OrderService {
             StoreProductAttrValue attrValue = attrValueService.getByIdAndProductIdAndType(Integer.valueOf(storeCart.getProductAttrUnique()), storeCart.getProductId(), Constants.PRODUCT_TYPE_NORMAL);
             if (ObjectUtil.isNull(attrValue)) {
                 throw new CrmebException("商品规格信息不存在，请刷新后重新选择");
+            }
+            if (!attrValue.getIsShow()) {
+                throw new CrmebException("商品规格信息无效，请刷新后重新选择");
             }
             if (attrValue.getStock() < storeCart.getCartNum()) {
                 throw new CrmebException("商品规格库存不足，请刷新后重新选择");
@@ -1520,6 +1730,9 @@ public class OrderServiceImpl implements OrderService {
         StoreProductAttrValue seckillAttrValue = storeProductAttrValueService.getByIdAndProductIdAndType(detailRequest.getAttrValueId(), seckillId, Constants.PRODUCT_TYPE_SECKILL);
         if (ObjectUtil.isNull(seckillAttrValue)) {
             throw new CrmebException("秒杀商品规格不存在");
+        }
+        if (!seckillAttrValue.getIsShow()) {
+            throw new CrmebException("商品规格信息无效");
         }
         commonValidateSeckill(storeSeckill, seckillAttrValue, user, detailRequest.getProductNum());
 
@@ -1627,6 +1840,9 @@ public class OrderServiceImpl implements OrderService {
         StoreProductAttrValue bargainAttrValue = storeProductAttrValueService.getByIdAndProductIdAndType(detailRequest.getAttrValueId(), bargainId, Constants.PRODUCT_TYPE_BARGAIN);
         if (ObjectUtil.isNull(bargainAttrValue)) {
             throw new CrmebException("砍价商品规格不存在");
+        }
+        if (!bargainAttrValue.getIsShow()) {
+            throw new CrmebException("商品规格信息无效");
         }
         commonValidateBargain(storeBargain, bargainAttrValue, detailRequest.getBargainUserId(), user, detailRequest.getProductNum());
 
@@ -1740,6 +1956,9 @@ public class OrderServiceImpl implements OrderService {
         StoreProductAttrValue combinationAttrValue = storeProductAttrValueService.getByIdAndProductIdAndType(detailRequest.getAttrValueId(), combinationId, Constants.PRODUCT_TYPE_PINGTUAN);
         if (ObjectUtil.isNull(combinationAttrValue)) {
             throw new CrmebException("拼团商品规格不存在");
+        }
+        if (!combinationAttrValue.getIsShow()) {
+            throw new CrmebException("商品规格信息无效");
         }
         commonValidateCombination(storeCombination, combinationAttrValue, user, detailRequest.getProductNum());
 
@@ -1874,6 +2093,9 @@ public class OrderServiceImpl implements OrderService {
             if (ObjectUtil.isNull(attrValue)) {
                 throw new CrmebException("商品规格信息不存在，请刷新后重新选择");
             }
+            if (!attrValue.getIsShow()) {
+                throw new CrmebException("商品规格信息无效，请刷新后重新选择");
+            }
             if (attrValue.getStock() < detailVo.getPayNum()) {
                 throw new CrmebException("商品规格库存不足，请刷新后重新选择");
             }
@@ -2006,6 +2228,9 @@ public class OrderServiceImpl implements OrderService {
                     } else {// 超过首件的需要计算续件
                         int renewalNum = num - shippingTemplatesRegion.getFirst().intValue();
                         // 剩余件数/续件 = 需要计算的续件费用的次数
+//                        BigDecimal divide = BigDecimal.valueOf(renewalNum).divide(shippingTemplatesRegion.getRenewal(), 0, BigDecimal.ROUND_UP);
+//                        BigDecimal renewalPrice = shippingTemplatesRegion.getRenewalPrice().multiply(divide);
+//                        storePostage = storePostage.add(shippingTemplatesRegion.getFirstPrice()).add(renewalPrice);
                         BigDecimal renewalPrice = shippingTemplatesRegion.getRenewalPrice().multiply(new BigDecimal(String.valueOf(renewalNum)).divide(shippingTemplatesRegion.getRenewal(), 0, RoundingMode.UP));
                         storePostage = storePostage.add(shippingTemplatesRegion.getFirstPrice()).add(renewalPrice);
                         postageFee = shippingTemplatesRegion.getFirstPrice().add(renewalPrice);
@@ -2021,7 +2246,7 @@ public class OrderServiceImpl implements OrderService {
                                 orderInfoVo.setFreightFee(postageFee);
                                 break;
                             }
-                            // 更新运费计算公式 2025-4-15
+                            // 更新运费计算公式 2024-4-15
                             BigDecimal multiply = postageFee.multiply(new BigDecimal(orderInfoDetailVo.getPayNum().toString())).divide(new BigDecimal(tempNum.toString()), 2, RoundingMode.UP);
                             if (postageFee.compareTo(multiply) < 0) {
                                 multiply = postageFee;
@@ -2041,6 +2266,9 @@ public class OrderServiceImpl implements OrderService {
                     } else {// 超过首件的需要计算续件
                         BigDecimal renewalNum = surplus.subtract(shippingTemplatesRegion.getFirst());
                         // 剩余件数/续件 = 需要计算的续件费用的次数
+//                        BigDecimal divide = renewalNum.divide(shippingTemplatesRegion.getRenewal(), 0, BigDecimal.ROUND_UP);
+//                        BigDecimal renewalPrice = shippingTemplatesRegion.getRenewalPrice().multiply(divide);
+//                        storePostage = storePostage.add(shippingTemplatesRegion.getFirstPrice()).add(renewalPrice);
                         BigDecimal renewalPrice = shippingTemplatesRegion.getRenewalPrice().multiply(renewalNum.divide(shippingTemplatesRegion.getRenewal(), 0, RoundingMode.UP));
                         storePostage = storePostage.add(shippingTemplatesRegion.getFirstPrice()).add(renewalPrice);
                         postageFee = shippingTemplatesRegion.getFirstPrice().add(renewalPrice);
@@ -2057,7 +2285,7 @@ public class OrderServiceImpl implements OrderService {
                                 break;
                             }
                             BigDecimal wv = shippingTemplate.getType().equals(2) ? orderInfoDetailVo1.getWeight() : orderInfoDetailVo1.getVolume();
-                            // 更新运费计算公式 2025-4-15
+                            // 更新运费计算公式 2024-4-15
                             BigDecimal multiply = postageFee.multiply(wv.multiply(new BigDecimal(orderInfoDetailVo1.getPayNum().toString()))).divide(tempSurplus, 2, RoundingMode.HALF_UP);
                             if (postageFee.compareTo(multiply) < 0) {
                                 multiply = postageFee;

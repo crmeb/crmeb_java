@@ -106,4 +106,132 @@
         right join eb_user_brokerage_record as br on br.link_id = o.order_id and br.status = 3 and br.uid = #{spreadId}
         where o.uid = #{uid} and o.status > 1;
     </select>
+    <select id="getAdminOrderCount" resultType="java.lang.Integer">
+        select count(*)
+        from eb_store_order as o
+                 left join eb_user as u on o.uid = u.uid
+        where o.is_system_del = 0
+        <choose>
+            <when test='status == "unPaid"'>
+                and o.paid = 0 and o.status = 0 and o.is_del = 0
+            </when>
+            <when test='status == "notShipped"'>
+                and o.paid = 1 and o.status = 0 and o.refund_status = 0 and o.shipping_type = 1 and o.is_del = 0
+            </when>
+            <when test='status == "spike"'>
+                and o.paid = 1 and o.status = 1 and o.refund_status = 0 and o.is_del = 0
+            </when>
+            <when test='status == "bargain"'>
+                and o.paid = 1 and o.status = 2 and  o.refund_status = 0 and o.is_del = 0
+            </when>
+            <when test='status == "complete"'>
+                and o.paid = 1 and o.status = 3 and  o.refund_status = 0 and o.is_del = 0
+            </when>
+            <when test='status == "toBeWrittenOff"'>
+                and o.paid = 1 and o.status = 0 and o.refund_status = 0 and o.shipping_type = 2 and o.is_del = 0
+            </when>
+            <when test='status == "refunding"'>
+                and o.paid = 1 and  o.refund_status in (1,3) and o.is_del = 0
+            </when>
+            <when test='status == "refunded"'>
+                and o.paid = 1  and o.refund_status = 2 and o.is_del = 0
+            </when>
+            <when test='status == "deleted"'>
+                and o.is_del = 1
+            </when>
+        </choose>
+
+        <if test="orderNo != null and orderNo !=''">
+            and o.order_id like CONCAT('%',#{orderNo},'%')
+        </if>
+        <if test="deliveryId != null and deliveryId !=''">
+            and o.delivery_id like CONCAT('%',#{deliveryId},'%')
+        </if>
+        <if test="type != null">
+            and o.type = #{type}
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and o.create_time between #{startTime} and #{endTime}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            o.uid like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and o.uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+    </select>
+    <select id="getAdminOrderList" resultType="com.zbkj.common.model.order.StoreOrder">
+        select o.* from eb_store_order as o
+        left join eb_user as u on o.uid = u.uid
+        where o.is_system_del = 0
+        <choose>
+            <when test='status == "unPaid"'>
+                and o.paid = 0 and o.status = 0 and o.is_del = 0
+            </when>
+            <when test='status == "notShipped"'>
+                and o.paid = 1 and o.status = 0 and o.refund_status = 0 and o.shipping_type = 1 and o.is_del = 0
+            </when>
+            <when test='status == "spike"'>
+                and o.paid = 1 and o.status = 1 and o.refund_status = 0 and o.is_del = 0
+            </when>
+            <when test='status == "bargain"'>
+                and o.paid = 1 and o.status = 2 and  o.refund_status = 0 and o.is_del = 0
+            </when>
+            <when test='status == "complete"'>
+                and o.paid = 1 and o.status = 3 and  o.refund_status = 0 and o.is_del = 0
+            </when>
+            <when test='status == "toBeWrittenOff"'>
+                and o.paid = 1 and o.status = 0 and o.refund_status = 0 and o.shipping_type = 2 and o.is_del = 0
+            </when>
+            <when test='status == "refunding"'>
+                and o.paid = 1 and  o.refund_status in (1,3) and o.is_del = 0
+            </when>
+            <when test='status == "refunded"'>
+                and o.paid = 1  and o.refund_status = 2 and o.is_del = 0
+            </when>
+            <when test='status == "deleted"'>
+                and o.is_del = 1
+            </when>
+        </choose>
+
+        <if test="orderNo != null and orderNo !=''">
+            and o.order_id like CONCAT('%',#{orderNo},'%')
+        </if>
+        <if test="deliveryId != null and deliveryId !=''">
+            and o.delivery_id like CONCAT('%',#{deliveryId},'%')
+        </if>
+        <if test="type != null">
+            and o.type = #{type}
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and o.create_time between #{startTime} and #{endTime}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            o.uid like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and o.uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        order by o.id desc
+    </select>
 </mapper>

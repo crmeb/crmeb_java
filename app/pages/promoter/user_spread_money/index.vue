@@ -19,8 +19,9 @@
 							<view class='listn borRadius14'>
 								<block v-for="(child,indexn) in item.list" :key="indexn">
 									<view class='itemn acea-row row-between-wrapper'>
-										<view>
+										<view class="left-box">
 											<view class='name line1'>{{child.status | statusFilter}}</view>
+											<view class="remark font_color"> {{child.failMsg || ''}}</view>
 											<view>{{child.createTime}}</view>
 										</view>
 										<view class='num font_color' v-if="child.status == -1">+{{child.extractPrice}}
@@ -87,7 +88,9 @@
 		mapGetters
 	} from "vuex";
 	import emptyPage from '@/components/emptyPage.vue'
-	import {setThemeColor} from '@/utils/setTheme.js'
+	import {
+		setThemeColor
+	} from '@/utils/setTheme.js'
 	const app = getApp();
 	export default {
 		components: {
@@ -113,9 +116,9 @@
 				recordType: 0,
 				statuss: false,
 				extractCount: 0,
-				theme:app.globalData.theme,
-				commissionCount:0,
-				bgColor:'#e93323'
+				theme: app.globalData.theme,
+				commissionCount: 0,
+				bgColor: '#e93323'
 			};
 		},
 		computed: mapGetters(['isLogin']),
@@ -131,7 +134,7 @@
 			that.bgColor = setThemeColor();
 			uni.setNavigationBarColor({
 				frontColor: '#ffffff',
-				backgroundColor:that.bgColor,
+				backgroundColor: that.bgColor,
 			});
 		},
 		onShow: function() {
@@ -222,16 +225,43 @@
 </script>
 
 <style scoped lang="scss">
+	.sign-record .list .item .listn .itemn {
+		height: auto;
+		padding: 24rpx;
+		flex-wrap: nowrap;
+
+		.left-box {
+			flex-shrink: 1;
+			min-width: 0;
+
+			.name {
+				width: auto;
+				margin-bottom: 0;
+			}
+
+			.remark {
+				min-width: 0;
+			}
+		}
+
+		.num {
+			flex-shrink: 0;
+		}
+	}
+
 	.commission-details .promoterHeader .headerCon .money {
 		font-size: 36rpx;
 	}
-	.promoterHeader{
+
+	.promoterHeader {
 		@include main_bg_color(theme);
 	}
+
 	.commission-details .promoterHeader .headerCon .money .num {
 		font-family: 'Guildford Pro';
 	}
-	.font_color{
+
+	.font_color {
 		color: #E93323 !important;
 	}
 </style>

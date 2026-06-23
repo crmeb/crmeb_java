@@ -5,6 +5,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -14,6 +15,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.zbkj.common.config.CrmebConfig;
 import com.zbkj.common.constants.*;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.coupon.StoreCoupon;
@@ -25,6 +27,9 @@ import com.zbkj.common.model.user.*;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.*;
 import com.zbkj.common.response.*;
+import com.zbkj.common.result.CommonResultCode;
+import com.zbkj.common.result.LoginResultCode;
+import com.zbkj.common.result.UserResultCode;
 import com.zbkj.common.token.FrontTokenComponent;
 import com.zbkj.common.utils.*;
 import com.zbkj.common.vo.DateLimitUtilVo;
@@ -49,7 +54,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -121,16 +126,25 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     @Autowired
     private SystemAttachmentService systemAttachmentService;
 
+    @Autowired
+    private CrmebConfig crmebConfig;
+    @Autowired
+    private StoreCartService storeCartService;
+    @Autowired
+    private SystemStoreStaffService systemStoreStaffService;
+    @Autowired
+    private UserAddressService userAddressService;
+    @Autowired
+    private UserTokenService userTokenService;
 
     /**
      * 分页显示用户表
      *
      * @param request          搜索条件
-     * @param pageParamRequest 分页参数
      */
     @Override
-    public PageInfo<UserResponse> getList(UserSearchRequest request, PageParamRequest pageParamRequest) {
-        Page<User> pageUser = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+    public PageInfo<UserResponse> getList(UserSearchRequest request) {
+        Page<User> pageUser = PageHelper.startPage(request.getPage(), request.getLimit());
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         Map<String, Object> map = CollUtil.newHashMap();
 
@@ -187,8 +201,23 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             map.put("endTime", dateLimit.getEndTime());
             map.put("accessType", request.getAccessType());
         }
-        if (request.getKeywords() != null) {
-            map.put("keywords", request.getKeywords());
+        if (StrUtil.isNotBlank(request.getContent())) {
+            ValidateFormUtil.validatorUserCommonSearch(request);
+            String keywords = URLUtil.decode(request.getContent());
+            switch (request.getSearchType()) {
+                case UserConstants.USER_SEARCH_TYPE_ALL:
+                    map.put("keywords", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_UID:
+                    map.put("uid", Integer.valueOf(request.getContent()));
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_NICKNAME:
+                    map.put("nickname", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_PHONE:
+                    map.put("phone", request.getContent());
+                    break;
+            }
         }
         List<User> userList = userDao.findAdminList(map);
         List<UserResponse> userResponses = new ArrayList<>();
@@ -213,7 +242,10 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             } else {
                 userResponse.setSpreadNickname(userDao.selectById(user.getSpreadUid()).getNickname());
             }
-            userResponse.setPhone(CrmebUtil.maskMobile(userResponse.getPhone()));
+            // 手机号脱敏处理
+            if (crmebConfig.getDemoSite()) {
+                userResponse.setPhone(CrmebUtil.maskMobile(userResponse.getPhone()));
+            }
             userResponses.add(userResponse);
         }
         return CommonPage.copyPageInfo(pageUser, userResponses);
@@ -397,6 +429,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(User::getAccount, request.getPhone());
+        lambdaQueryWrapper.eq(User::getIsLogoff, false);
         User user = userDao.selectOne(lambdaQueryWrapper);
 
         //密码
@@ -897,30 +930,45 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     /**
      * PC后台分销员列表
      *
-     * @param keywords             搜索参数
-     * @param dateLimit            时间参数
-     * @param pageRequest          分页参数
+     * @param request 分销员分页列表查询请求对象
      * @return PageInfo
      */
     @Override
-    public PageInfo<User> getAdminSpreadPeopleList(String keywords, String dateLimit, PageParamRequest pageRequest) {
-        Page<User> pageUser = PageHelper.startPage(pageRequest.getPage(), pageRequest.getLimit());
-        LambdaQueryWrapper<User> lqw = new LambdaQueryWrapper<>();
-        // id,头像，昵称，姓名，电话，推广用户数，推广订单数，推广订单额，佣金总金额，已提现金额，提现次数，未提现金额，上级推广人
-        lqw.select(User::getUid, User::getNickname, User::getRealName, User::getPhone, User::getAvatar,
-                User::getSpreadCount, User::getBrokeragePrice, User::getSpreadUid, User::getPromoterTime);
-        lqw.eq(User::getIsPromoter, true);
-        if (StrUtil.isNotBlank(keywords)) {
-            lqw.and(i -> i.eq(User::getUid, keywords) //用户账号
-                    .or().like(User::getNickname, keywords) //昵称
-                    .or().like(User::getPhone, keywords)); //手机号码
+    public PageInfo<User> getAdminSpreadPeopleList(RetailShopSearchRequest request) {
+        Map<String, Object> map = CollUtil.newHashMap();
+        if (StrUtil.isNotBlank(request.getContent())) {
+            ValidateFormUtil.validatorUserCommonSearch(request);
+            String keywords = URLUtil.decode(request.getContent());
+            switch (request.getSearchType()) {
+                case UserConstants.USER_SEARCH_TYPE_ALL:
+                    map.put("keywords", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_UID:
+                    map.put("uid", Integer.valueOf(request.getContent()));
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_NICKNAME:
+                    map.put("nickname", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_PHONE:
+                    map.put("phone", request.getContent());
+                    break;
+            }
         }
-        if (StrUtil.isNotBlank(dateLimit)) {
-            DateLimitUtilVo dateLimitUtilVo = CrmebDateUtil.getDateLimit(dateLimit);
-            lqw.between(User::getPromoterTime, dateLimitUtilVo.getStartTime(), dateLimitUtilVo.getEndTime());
+        //时间范围
+        if (StrUtil.isNotBlank(request.getDateLimit())) {
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
+            //判断时间
+            int compareDateResult = CrmebDateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), DateConstants.DATE_FORMAT);
+            if (compareDateResult == -1) {
+                throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "开始时间不能大于结束时间！");
+            }
+            if (StrUtil.isNotBlank(dateLimit.getStartTime())) {
+                map.put("startTime", dateLimit.getStartTime());
+                map.put("endTime", dateLimit.getEndTime());
+            }
         }
-        lqw.orderByDesc(User::getUid);
-        List<User> userList = userDao.selectList(lqw);
+        Page<User> pageUser = PageHelper.startPage(request.getPage(), request.getLimit());
+        List<User> userList = userDao.findRetailPeopleList(map);
         return CommonPage.copyPageInfo(pageUser, userList);
     }
 
@@ -1016,16 +1064,12 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             case 0:
                 return storeOrderService.findPaidListByUid(userId, pageParamRequest);
             case 1:
-                AdminIntegralSearchRequest fmsq = new AdminIntegralSearchRequest();
-                fmsq.setUid(userId);
-                return userIntegralRecordService.findAdminList(fmsq, pageParamRequest);
+                return userIntegralRecordService.findUserIntegralRecordList(userId, pageParamRequest);
             case 2:
                 UserSign userSign = new UserSign();
                 userSign.setUid(userId);
                 return userSignService.getListByCondition(userSign, pageParamRequest);
             case 3:
-                StoreCouponUserSearchRequest scur = new StoreCouponUserSearchRequest();
-                scur.setUid(userId);
                 return storeCouponUserService.findListByUid(userId, pageParamRequest);
             case 4:
                 FundsMonitorSearchRequest fmsqq = new FundsMonitorSearchRequest();
@@ -1192,6 +1236,52 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
 
         return CommonPage.copyPageInfo(recordPageInfo, responseList);
     }
+
+//    /**
+//     * 根据推广级别和其他参数获取推广列表
+//     *
+//     * @param request 推广层级和推广时间参数
+//     * @return 推广订单列表
+//     */
+//    @Override
+//    public PageInfo<SpreadOrderResponse> getOrderListBySpreadLevel(RetailShopStairUserRequest request, PageParamRequest pageParamRequest) {
+//        // 获取推广人列表
+//        if (ObjectUtil.isNull(request.getType())) {
+//            request.setType(0);
+//        }
+//        List<User> userList = getSpreadListBySpreadIdAndType(request.getUid(), request.getType());
+//        if (CollUtil.isEmpty(userList)) {
+//            return new PageInfo<>();
+//        }
+//
+//        List<Integer> userIds = userList.stream().map(User::getUid).distinct().collect(Collectors.toList());
+//        // 获取推广人订单号集合
+//        List<StoreOrder> orderList = storeOrderService.getOrderListStrByUids(userIds, request);
+//        if (CollUtil.isEmpty(orderList)) {
+//            return new PageInfo<>();
+//        }
+//        List<String> orderNoList = CollUtil.newArrayList();
+//        Map<String, StoreOrder> orderMap = CollUtil.newHashMap();
+//        orderList.forEach(e -> {
+//            orderNoList.add(e.getOrderId());
+//            orderMap.put(e.getOrderId(), e);
+//        });
+//        // 获取用户佣金记录
+//        PageInfo<UserBrokerageRecord> recordPageInfo = userBrokerageRecordService.findListByLinkIdsAndLinkTypeAndUid(orderNoList, BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_ORDER, request.getUid(), pageParamRequest);
+//        List<SpreadOrderResponse> responseList = recordPageInfo.getList().stream().map(e -> {
+//            SpreadOrderResponse response = new SpreadOrderResponse();
+//            StoreOrder storeOrder = orderMap.get(e.getLinkId());
+//            response.setId(storeOrder.getId());
+//            response.setOrderId(storeOrder.getOrderId());
+//            response.setRealName(storeOrder.getRealName());
+//            response.setUserPhone(storeOrder.getUserPhone());
+//            response.setPrice(e.getPrice());
+//            response.setUpdateTime(e.getUpdateTime());
+//            return response;
+//        }).collect(Collectors.toList());
+//
+//        return CommonPage.copyPageInfo(recordPageInfo, responseList);
+//    }
 
     /**
      * 获取推广人列表
@@ -1449,13 +1539,35 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     @Override
     public Boolean updateUser(UserUpdateRequest userRequest) {
         User tempUser = getById(userRequest.getUid());
-        User user = new User();
-        BeanUtils.copyProperties(userRequest, user);
-        if (!tempUser.getIsPromoter() && user.getIsPromoter()) {
-            user.setPromoterTime(cn.hutool.core.date.DateUtil.date());
+        if (ObjectUtil.isNull(tempUser)) {
+            throw new CrmebException(UserResultCode.USER_NOT_EXIST);
         }
-        user.setUpdateTime(DateUtil.date());
-        return updateById(user);
+        if (tempUser.getIsLogoff()) {
+            throw new CrmebException(UserResultCode.USER_LOGOFF);
+        }
+        LambdaUpdateWrapper<User> wrapper = Wrappers.lambdaUpdate();
+
+        // 使用更简洁的条件设置方式
+        wrapper.set(StrUtil.isNotBlank(userRequest.getTagId()), User::getTagId, userRequest.getTagId())
+                .set(StrUtil.isNotBlank(userRequest.getBirthday()), User::getBirthday, userRequest.getBirthday())
+                .set(StrUtil.isNotBlank(userRequest.getRealName()), User::getRealName, userRequest.getRealName())
+                .set(StrUtil.isNotBlank(userRequest.getAddres()), User::getAddres, userRequest.getAddres())
+                .set(StrUtil.isNotBlank(userRequest.getGroupId()), User::getGroupId, userRequest.getGroupId())
+                .set(StrUtil.isNotBlank(userRequest.getMark()), User::getMark, userRequest.getMark())
+                .set(ObjectUtil.isNotNull(userRequest.getStatus()), User::getStatus, userRequest.getStatus())
+                .set(ObjectUtil.isNotNull(userRequest.getIsPromoter()), User::getIsPromoter, userRequest.getIsPromoter());
+
+        // 推广员状态变更的特殊处理
+        if (userRequest.getIsPromoter() && !tempUser.getIsPromoter()) {
+            wrapper.set(User::getPromoterTime, DateUtil.date());
+        }
+        wrapper.eq(User::getUid, tempUser.getUid());
+        boolean update = update(wrapper);
+        if (update && tempUser.getStatus() && !userRequest.getStatus()) {
+            // 用户禁用时，清除token
+            tokenComponet.clearUserToken(tempUser.getUid());
+        }
+        return update;
     }
 
     /**
@@ -1467,6 +1579,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     public User getByPhone(String phone) {
         LambdaQueryWrapper<User> lqw = new LambdaQueryWrapper<>();
         lqw.eq(User::getPhone, phone);
+        lqw.eq(User::getIsLogoff,false);
         return userDao.selectOne(lqw);
     }
 
@@ -1717,6 +1830,58 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
             throw new CrmebException("用户不存在");
         }
         return user;
+    }
+
+    /**
+     * 用户注销
+     * 1.eb_store_cart
+     * 3.eb_store_product_relation
+     * 4.eb_system_store_staff
+     * 7.eb_user_token
+     */
+    @Override
+    public Boolean logoff() {
+        Integer userId = getUserIdException();
+        User user = getById(userId);
+        if (ObjectUtil.isNull(user)) {
+            throw new CrmebException(LoginResultCode.LOGIN_EXPIRE);
+        }
+        if (user.getIsLogoff()) {
+            throw new CrmebException(UserResultCode.USER_LOGOFF);
+        }
+        user.setIsLogoff(true);
+        user.setLogoffTime(DateUtil.date());
+        user.setTagId("");
+        user.setIsPromoter(false);
+        user.setAccount("");
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            userTokenService.deleteByUid(user.getUid());
+            storeCartService.deleteByUid(user.getUid());
+            storeProductRelationService.deleteByUid(user.getUid());
+            systemStoreStaffService.deleteByUid(user.getUid());
+            if (user.getSpreadUid() > 0) {
+                updateSpreadCountByUid(user.getSpreadUid(), "sub");
+                user.setSpreadUid(0);
+            }
+            if (user.getSpreadCount() > 0) {
+                batchRemoveSpreadUid(user.getUid());
+                user.setSpreadCount(0);
+            }
+            boolean update = updateById(user);
+            if (!update) {
+                logger.error("更新用户注销状态失败，用户id： {}", user.getUid());
+                e.setRollbackOnly();
+                return update;
+            }
+
+            return Boolean.TRUE;
+        });
+        if (!execute) {
+            throw new CrmebException(UserResultCode.USER_LOGOFF_FAILED);
+        }
+        tokenComponet.clearUserToken(user.getUid());
+        return execute;
     }
 
     /**

@@ -20,7 +20,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -32,10 +32,9 @@ public interface StoreCouponUserService extends IService<StoreCouponUser> {
     /**
      * 优惠券发放记录
      * @param request 查询参数
-     * @param pageParamRequest 分页参数
      * @return PageInfo
      */
-    PageInfo<StoreCouponUserResponse> getList(StoreCouponUserSearchRequest request, PageParamRequest pageParamRequest);
+    PageInfo<StoreCouponUserResponse> getList(StoreCouponUserSearchRequest request);
 
     /**
      * PC领取优惠券

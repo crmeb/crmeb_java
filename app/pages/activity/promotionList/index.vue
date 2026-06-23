@@ -113,7 +113,7 @@
 	}
 </script>
 <style lang="scss">
-	/deep/ .quality-recommend {
+	::v-deep  .quality-recommend {
 		background-color: #f5f5f5;
 	}
 	.saleBox{

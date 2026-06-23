@@ -331,3 +331,70 @@ export function productListbyidsApi(ids) {
     method: 'get',
   });
 }
+/**
+ * 保障服务列表
+ */
+export function guaranteeListApi(params) {
+  return request({
+    url: `/admin/store/product/guarantee/list`,
+    method: 'get',
+    params,
+  });
+}
+/**
+ * 保障服务添加
+ */
+export function guaranteeAddApi(data) {
+  return request({
+    url: `/admin/store/product/guarantee/add`,
+    method: 'post',
+    data: data,
+  });
+}
+/**
+ * 保障服务删除
+ */
+export function guaranteeDelApi(id) {
+  return request({
+    url: `/admin/store/product/guarantee/delete/${id}`,
+    method: 'post',
+  });
+}
+/**
+ * 保障服务修改
+ */
+export function guaranteeUpdateApi(data) {
+  return request({
+    url: `/admin/store/product/guarantee/update`,
+    method: 'post',
+    data: data,
+  });
+}
+/**
+ * 保障服务显示状态修改
+ */
+export function guaranteeUpdateShowApi(id) {
+  return request({
+    url: `/admin/store/product/guarantee/update/show/${id}`,
+    method: 'post',
+  });
+}
+/**
+ * 商品评论配置获取
+ */
+export function getCommentSettingApi() {
+  return request({
+    url: `/admin/store/product/reply/manage/get`,
+    method: 'get',
+  });
+}
+/**
+ * 商品评论配置提交
+ */
+export function setCommentSettingApi(data) {
+  return request({
+    url: `/admin/store/product/reply/manage/set`,
+    method: 'post',
+    data
+  });
+}

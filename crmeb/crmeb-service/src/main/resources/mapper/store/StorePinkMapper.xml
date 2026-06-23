@@ -17,4 +17,68 @@
         ORDER BY p.id DESC
             LIMIT #{size};
     </select>
+    <select id="selectPinkList" resultType="com.zbkj.common.model.combination.StorePink">
+        SELECT sp.*
+        FROM eb_store_pink AS sp
+        left join eb_store_product pro on pro.id = sp.pid
+        left join eb_user u on u.uid = sp.uid
+        <where>
+        <if test="status != null and status !='' ">
+            sp.status = #{status}
+        </if>
+        <if test="productName != null and productName !='' ">
+            and pro.store_name like CONCAT('%',#{productName},'%')
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and sp.add_time between #{startTime} and #{endTime}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            u.uid like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and u.uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        </where>
+        ORDER BY sp.id desc
+    </select>
+    <select id="selectPinkListNum" resultType="java.lang.Integer">
+        SELECT count(*)
+        FROM eb_store_pink AS sp
+        left join eb_store_product pro on pro.id = sp.pid
+        left join eb_user u on u.uid = sp.uid
+        where sp.status = #{status}
+            <if test="productName != null and productName !='' ">
+                and pro.store_name like CONCAT('%',#{productName},'%')
+            </if>
+            <if test="startTime != null and startTime != ''">
+                and sp.add_time between #{startTime} and #{endTime}
+            </if>
+            <if test="keywords != '' and keywords != null ">
+                and (
+                u.uid like CONCAT('%',#{keywords},'%') or
+                u.nickname like CONCAT('%',#{keywords},'%') or
+                u.phone like CONCAT('%',#{keywords},'%')
+                )
+            </if>
+            <if test="uid != null ">
+                and u.uid = #{uid}
+            </if>
+            <if test="nickname != '' and nickname != null ">
+                and u.nickname like CONCAT('%',#{nickname},'%')
+            </if>
+            <if test="phone != '' and phone != null ">
+                and u.phone like CONCAT('%',#{phone},'%')
+            </if>
+        ORDER BY sp.id desc
+    </select>
 </mapper>

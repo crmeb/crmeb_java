@@ -49,7 +49,8 @@
 	</view>
 </template>
 <script>
-	import CountDown from "@/components/countDown";
+	// import CountDown from "@/components/countDown";
+	import CountDown from "@/pages/activity/components/countDown";
 	import emptyPage from '@/components/emptyPage.vue'
 	import {
 		getBargainUserList,
@@ -230,7 +231,7 @@
 </script>
 <style lang="scss">
 	page {
-		@include main_bg_color(theme);
+		// @include main_bg_color(theme);
 		height: 100vh;
 		overflow: auto;
 	}

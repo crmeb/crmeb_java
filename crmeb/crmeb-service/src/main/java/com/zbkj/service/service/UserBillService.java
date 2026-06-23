@@ -18,7 +18,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -59,10 +59,9 @@ public interface UserBillService extends IService<UserBill> {
      * 资金监控
      *
      * @param request          查询参数
-     * @param pageParamRequest 分页参数
      * @return PageInfo
      */
-    PageInfo<MonitorResponse> fundMonitoring(FundsMonitorRequest request, PageParamRequest pageParamRequest);
+    PageInfo<MonitorResponse> fundMonitoring(FundsMonitorRequest request);
 
     /**
      * 用户账单记录（现金）

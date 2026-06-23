@@ -13,7 +13,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -65,6 +65,14 @@ public interface SystemAttachmentService extends IService<SystemAttachment> {
      * @return String
      */
     String clearPrefix(String path);
+
+    /**
+     * 清除 cdn url， 在保存数据的时候使用
+     * @param path String 文件路径
+     * @param cdnUrl String cdnUrl
+     * @return String
+     */
+    String clearPrefix(String path, String cdnUrl);
 
     /**
      * 新增附件

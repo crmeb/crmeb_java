@@ -17,7 +17,7 @@ import java.math.BigDecimal;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -29,7 +29,7 @@ import java.math.BigDecimal;
 @Accessors(chain = true)
 @TableName("eb_store_pink")
 @ApiModel(value="StorePink对象", description="拼团表")
-public class StorePinkSearchRequest implements Serializable {
+public class StorePinkSearchRequest extends UserCommonSearchRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 
@@ -38,5 +38,8 @@ public class StorePinkSearchRequest implements Serializable {
 
     @ApiModelProperty(value = "today,yesterday,lately7,lately30,month,year,/yyyy-MM-dd hh:mm:ss,yyyy-MM-dd hh:mm:ss/")
     private String dateLimit;
+
+    @ApiModelProperty(value = "商品名称")
+    private String ProductName;
 
 }

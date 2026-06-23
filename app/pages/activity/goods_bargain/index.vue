@@ -77,7 +77,8 @@
 	import {
 		openBargainSubscribe
 	} from '@/utils/SubscribeMessage.js';
-	import countDown from '@/components/countDown';
+	// import countDown from '@/components/countDown';
+	import countDown from "@/pages/activity/components/countDown";
 	import {
 		toLogin
 	} from '@/libs/login.js';

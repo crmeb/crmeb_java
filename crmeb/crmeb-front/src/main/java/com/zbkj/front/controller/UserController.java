@@ -31,7 +31,7 @@ import java.util.Map;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -301,6 +301,14 @@ public class UserController {
         return CommonResult.success();
     }
 
+    @ApiOperation(value = "用户注销")
+    @RequestMapping(value = "/user/logoff", method = RequestMethod.POST)
+    public CommonResult<String> logoff() {
+        if (userService.logoff()) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
+    }
 }
 
 

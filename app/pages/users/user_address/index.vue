@@ -71,7 +71,8 @@
 	import {
 		Debounce
 	} from '@/utils/validate.js'
-	import atModel from '@/components/accredit/index.vue';
+	import atModel from '@/pages/users/components/accredit/index.vue'
+	// import atModel from '@/components/accredit/index.vue'
 	let app = getApp();
 	export default {
 		components: {
@@ -600,13 +601,13 @@
 		right: 0;
 	}
 
-	/deep/ checkbox .uni-checkbox-input.uni-checkbox-input-checked {
+	::v-deep  checkbox .uni-checkbox-input.uni-checkbox-input-checked {
 		@include main_bg_color(theme);
 		@include coupons_border_color(theme);
 		color: #fff !important
 	}
 
-	/deep/ checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+	::v-deep  checkbox .wx-checkbox-input.wx-checkbox-input-checked {
 		@include main_bg_color(theme);
 		@include coupons_border_color(theme);
 		color: #fff !important;

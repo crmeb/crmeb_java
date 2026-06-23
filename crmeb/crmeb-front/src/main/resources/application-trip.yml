@@ -1,6 +1,6 @@
 # CRMEB 相关配置
 crmeb:
-  version: CRMEB-JAVA-KY-v1.4 # 当前代码版本
+  version: CRMEB-JAVA-SY-v2.4 # 当前代码版本
   domain: #配合swagger使用 # 待部署域名
   wechat-api-url:  #请求微信接口中专服务器
   wechat-js-api-debug: false #微信js api系列是否开启调试模式
@@ -20,19 +20,19 @@ spring:
     active: prod
   servlet:
     multipart:
-      max-file-size: 50MB #设置单个文件大小
-      max-request-size: 50MB #设置单次请求文件的总大小
+      max-file-size: 100MB #设置单个文件大小
+      max-request-size: 100MB #设置单次请求文件的总大小
     #  数据库配置
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/java_trip?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
     username: java_trip
-    password: 111111
+    password: T4QhkBH5kbXs4WKr
   redis:
     host: 127.0.0.1 #地址
     port: 6379 #端口
-    password: 111111
+    password: redis_dMtNMj
     timeout: 10000 # 连接超时时间（毫秒）
     database: 5 #默认数据库
     jedis:

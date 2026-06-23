@@ -228,7 +228,7 @@
               </template>
             </el-table-column>
             <el-table-column
-              :prop="currenType === 'product' ? 'storeName' : 'name'"
+              :prop="currenType === 'product' ? 'storeName' : 'title'"
               :label="currenType === 'product' ? '商品名称' : '标题名称'"
               :show-overflow-tooltip="true"
               max-width="250"
@@ -278,7 +278,7 @@
 </template>
 
 <script>
-import { pagediyListApi } from '@/api/pagediy';
+import { getMicroPageList } from '@/api/theme';
 import { productLstApi, categoryApi } from '@/api/store';
 import { seckillStoreListApi, combinationListApi, bargainListApi } from '@/api/marketing';
 import { ListArticle } from '@/api/article';
@@ -315,12 +315,14 @@ export default {
       },
       radioData: '',
       linkId: 0,
-      tableList: [],
+      tableList: {
+        list: [],
+        total: 0,
+      },
       params: {
         page: 1,
         limit: 20,
         keywords: '',
-        type: 1,
         name: '',
       },
       columns: [
@@ -351,6 +353,16 @@ export default {
       categorytitle: '',
     };
   },
+  computed: {
+    modals: {
+      get() {
+        return this.dialogVisible;
+      },
+      set(value) {
+        this.dialogVisible = value;
+      },
+    },
+  },
   mounted() {
     this.mockData('link');
   },
@@ -358,12 +370,27 @@ export default {
     getProductList() {
       this.lodingList = true;
       productLstApi(this.params).then((res) => {
-        this.tableList = res;
+        this.tableList = this.normalizeTableList(res);
         this.lodingList = false;
       });
     },
+    handleCheckChange(data = {}) {
+      this.params.keywords = '';
+      this.currenId = '';
+      this.currenUrl = '';
+      this.linkId = 0;
+      this.radioData = '';
+      this.categorytitle = '';
+      this.currenType = data.type || 'link';
+      this.mockData(this.currenType);
+    },
     handleNodeClick(data) {
       this.params.keywords = '';
+      this.currenId = '';
+      this.currenUrl = '';
+      this.linkId = 0;
+      this.radioData = '';
+      this.categorytitle = '';
       this.$set(this, 'currenType', data.type);
       this.mockData(data.type);
     },
@@ -376,7 +403,7 @@ export default {
       } else if (type == 'product_category') {
         this.lodingList = true;
         categoryApi({ type: 1, status: -1 }).then((res) => {
-          this.tableList.list = res;
+          this.tableList = this.normalizeTableList(res);
           this.lodingList = false;
         });
       } else if (type == 'product') {
@@ -384,31 +411,31 @@ export default {
       } else if (type == 'seckill') {
         this.lodingList = true;
         seckillStoreListApi(this.params).then((res) => {
-          this.tableList = res;
+          this.tableList = this.normalizeTableList(res);
           this.lodingList = false;
         });
       } else if (type == 'bargain') {
         this.lodingList = true;
         bargainListApi(this.params).then((res) => {
-          this.tableList = res;
+          this.tableList = this.normalizeTableList(res);
           this.lodingList = false;
         });
       } else if (type == 'combination') {
         this.lodingList = true;
         combinationListApi(this.params).then((res) => {
-          this.tableList = res;
+          this.tableList = this.normalizeTableList(res);
           this.lodingList = false;
         });
       } else if (type == 'news') {
         this.lodingList = true;
         ListArticle(this.params).then((res) => {
-          this.tableList = res;
+          this.tableList = this.normalizeTableList(res);
           this.lodingList = false;
         });
       } else if (type == 'micro') {
         this.lodingList = true;
-        pagediyListApi(this.params).then((res) => {
-          this.tableList = res;
+        getMicroPageList(this.params).then((res) => {
+          this.tableList = this.normalizeTableList(res);
           this.lodingList = false;
         });
       }
@@ -445,8 +472,16 @@ export default {
       this.currenUrl = item.url;
     },
     singleElection(row) {
-      this.linkId = row.id;
-      if (row.name) this.categorytitle = row.name;
+      this.linkId = row.id || row.value;
+      this.categorytitle = row.name || row.title || row.label || row.storeName || '';
+    },
+    normalizeTableList(res) {
+      const list = Array.isArray(res) ? res : res.list || (res.data && res.data.list) || res.data || [];
+      return {
+        ...res,
+        list: Array.isArray(list) ? list : [],
+        total: res.total || res.count || (res.data && (res.data.total || res.data.count)) || (Array.isArray(list) ? list.length : 0),
+      };
     },
     handleSubmit(name) {
       switch (this.currenType) {
@@ -466,7 +501,10 @@ export default {
           this.$emit('linkUrl', '/pages/news/news_details/index?id=' + this.linkId);
           break;
         case 'product_category':
-          this.$emit('linkUrl', '/pages/goods/goods_list/index?cid=' + this.linkId + '&title=' + this.categorytitle);
+          this.$emit(
+            'linkUrl',
+            '/pages/goods/goods_list/index?cid=' + this.linkId + '&title=' + encodeURIComponent(this.categorytitle),
+          );
           break;
         case 'custom':
           this.$emit('linkUrl', this.customDate.url);

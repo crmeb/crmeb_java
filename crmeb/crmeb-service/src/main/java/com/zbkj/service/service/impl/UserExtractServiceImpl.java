@@ -50,7 +50,7 @@ import static java.math.BigDecimal.ZERO;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -331,8 +331,8 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
     public PageInfo<UserExtractRecordResponse> getExtractRecord(Integer userId, PageParamRequest pageParamRequest) {
         Page<UserExtract> userExtractPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         QueryWrapper<UserExtract> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select( "ANY_VALUE(create_time) as create_time");
         queryWrapper.eq("uid", userId);
-
         queryWrapper.groupBy("left(create_time, 7)");
         queryWrapper.orderByDesc("left(create_time, 7)");
         List<UserExtract> list = dao.selectList(queryWrapper);
@@ -350,7 +350,7 @@ public class UserExtractServiceImpl extends ServiceImpl<UserExtractDao, UserExtr
 
     private List<UserExtract> getListByMonth(Integer userId, String date) {
         QueryWrapper<UserExtract> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("id", "extract_price", "status", "create_time", "update_time");
+        queryWrapper.select("id", "extract_price", "fail_msg", "status", "create_time", "update_time");
         queryWrapper.eq("uid", userId);
         queryWrapper.apply(StrUtil.format(" left(create_time, 7) = '{}'", date));
         queryWrapper.orderByDesc("create_time");

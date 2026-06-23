@@ -126,9 +126,10 @@
 				this.getUserInfo();
 				this.getSignSysteam();
 				this.getSignList();
-			} else {
-				toLogin();
-			}
+			} 
+			// else {
+			// 	toLogin();
+			// }
 		},
 		methods: {
 			/**

@@ -25,5 +25,35 @@
             )
         order by id desc
     </select>
+    <select id="findCouponReceiveRecordList" resultType="com.zbkj.common.model.coupon.StoreCouponUser">
+        SELECT scu.*
+        FROM eb_store_coupon_user AS scu
+        left join eb_user as u on scu.uid = u.uid
+        <where>
+            <if test="name != '' and name != null ">
+                and scu.name = #{name}
+            </if>
+            <if test="status != null">
+                and scu.status = #{status}
+            </if>
+            <if test="keywords != '' and keywords != null ">
+                and (
+                scu.uid like CONCAT('%',#{keywords},'%') or
+                u.nickname like CONCAT('%',#{keywords},'%') or
+                u.phone like CONCAT('%',#{keywords},'%')
+                )
+            </if>
+            <if test="uid != null ">
+                and scu.uid = #{uid}
+            </if>
+            <if test="nickname != '' and nickname != null ">
+                and u.nickname like CONCAT('%',#{nickname},'%')
+            </if>
+            <if test="phone != '' and phone != null ">
+                and u.phone like CONCAT('%',#{phone},'%')
+            </if>
+        </where>
+        order by scu.id desc
+    </select>
 
 </mapper>

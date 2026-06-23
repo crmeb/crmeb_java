@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -51,10 +51,10 @@ function baseRequest(url, method, data, {
 			success: (res) => {
 				if (noVerify)
 					reslove(res.data, res);
-				else if (res.data.code == 200)
+				else if (res.data.code == 200 || res.data.code == 0)
 					reslove(res.data, res);
 				else if ([410000, 410001, 410002, 401,402].indexOf(res.data.code) !== -1) {
-					toLogin();
+					if (!noAuth) toLogin();
 					reject(res.data);
 				}else if (res.data.code == 500){
 					reject(res.data.message || '系统异常');

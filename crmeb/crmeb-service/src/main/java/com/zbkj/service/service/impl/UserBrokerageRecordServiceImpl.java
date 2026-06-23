@@ -1,12 +1,16 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.zbkj.common.constants.UserConstants;
+import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.constants.BrokerageRecordConstants;
@@ -21,6 +25,7 @@ import com.zbkj.common.request.BrokerageRecordRequest;
 import com.zbkj.common.request.RetailShopStairUserRequest;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserBrokerageRecord;
+import com.zbkj.common.utils.ValidateFormUtil;
 import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.service.dao.UserBrokerageRecordDao;
 import com.zbkj.service.service.UserBrokerageRecordService;
@@ -34,6 +39,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +48,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -159,6 +165,9 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
     public PageInfo<SpreadCommissionDetailResponse> findDetailListByUid(Integer uid, PageParamRequest pageParamRequest) {
         Page<UserBrokerageRecord> recordPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         QueryWrapper<UserBrokerageRecord> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select(
+                "ANY_VALUE(update_time) as update_time"
+        );
         queryWrapper.eq("uid", uid);
         queryWrapper.in("status", BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE
                 , BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_WITHDRAW);
@@ -249,7 +258,7 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
     @Override
     public Map<String, Integer> getSpreadCountByUidAndMonth(Integer uid, List<String> monthList) {
         QueryWrapper<UserBrokerageRecord> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("count(id) as uid, update_time");
+        queryWrapper.select("count(id) as uid, ANY_VALUE(update_time) as update_time");
         queryWrapper.eq("uid", uid);
         queryWrapper.eq("link_type", BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_ORDER);
         queryWrapper.eq("status", BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
@@ -368,46 +377,34 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
     /**
      * 佣金记录列表
      * @param request 筛选条件
-     * @param pageParamRequest 分页参数
      * @return PageInfo
      */
     @Override
-    public PageInfo<UserBrokerageRecord> getAdminList(BrokerageRecordRequest request, PageParamRequest pageParamRequest) {
-        Page<UserBrokerageRecord> page = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-        LambdaQueryWrapper<UserBrokerageRecord> lqw = new LambdaQueryWrapper<>();
-        if (ObjectUtil.isNotNull(request.getType())) {
-            switch (request.getType()) {
-                case 1:// 订单返佣
-                    lqw.eq(UserBrokerageRecord::getLinkType, BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_ORDER);
-                    lqw.eq(UserBrokerageRecord::getStatus, BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
-                    lqw.eq(UserBrokerageRecord::getType, BrokerageRecordConstants.BROKERAGE_RECORD_TYPE_ADD);
+    public PageInfo<UserBrokerageRecord> getAdminList(BrokerageRecordRequest request) {
+        Map<String, Object> map = CollUtil.newHashMap();
+        if (StrUtil.isNotBlank(request.getContent())) {
+            ValidateFormUtil.validatorUserCommonSearch(request);
+            String keywords = URLUtil.decode(request.getContent());
+            switch (request.getSearchType()) {
+                case UserConstants.USER_SEARCH_TYPE_ALL:
+                    map.put("keywords", keywords);
                     break;
-                case 2:// 申请提现
-                    lqw.eq(UserBrokerageRecord::getLinkType, BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_WITHDRAW);
-                    lqw.eq(UserBrokerageRecord::getStatus, BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_WITHDRAW);
-                    lqw.eq(UserBrokerageRecord::getType, BrokerageRecordConstants.BROKERAGE_RECORD_TYPE_SUB);
+                case UserConstants.USER_SEARCH_TYPE_UID:
+                    map.put("uid", Integer.valueOf(request.getContent()));
                     break;
-                case 3:// 提现失败
-                    lqw.eq(UserBrokerageRecord::getLinkType, BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_WITHDRAW);
-                    lqw.eq(UserBrokerageRecord::getStatus, BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
-                    lqw.eq(UserBrokerageRecord::getType, BrokerageRecordConstants.BROKERAGE_RECORD_TYPE_ADD);
+                case UserConstants.USER_SEARCH_TYPE_NICKNAME:
+                    map.put("nickname", keywords);
                     break;
-                case 4:// 提现成功
-                    lqw.eq(UserBrokerageRecord::getLinkType, BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_WITHDRAW);
-                    lqw.eq(UserBrokerageRecord::getStatus, BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
-                    lqw.eq(UserBrokerageRecord::getType, BrokerageRecordConstants.BROKERAGE_RECORD_TYPE_SUB);
-                    break;
-                case 5:// 佣金转余额
-                    lqw.eq(UserBrokerageRecord::getLinkType, BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_YUE);
-                    lqw.eq(UserBrokerageRecord::getStatus, BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE);
-                    lqw.eq(UserBrokerageRecord::getType, BrokerageRecordConstants.BROKERAGE_RECORD_TYPE_SUB);
+                case UserConstants.USER_SEARCH_TYPE_PHONE:
+                    map.put("phone", request.getContent());
                     break;
             }
-        } else {
-            lqw.in(UserBrokerageRecord::getStatus, BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_COMPLETE, BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_WITHDRAW);
         }
-        lqw.orderByDesc(UserBrokerageRecord::getUpdateTime, UserBrokerageRecord::getId);
-        List<UserBrokerageRecord> list = dao.selectList(lqw);
+        if (ObjectUtil.isNotNull(request.getType())) {
+            map.put("type", request.getType());
+        }
+        Page<UserBrokerageRecord> page = PageHelper.startPage(request.getPage(), request.getLimit());
+        List<UserBrokerageRecord> list = dao.getBrokerageRecordList(map);
         return CommonPage.copyPageInfo(page, list);
     }
 
@@ -439,6 +436,43 @@ public class UserBrokerageRecordServiceImpl extends ServiceImpl<UserBrokerageRec
         queryWrapper.eq("type", 2);
         queryWrapper.eq("status", 3);
         return dao.selectOne(queryWrapper).getPrice();
+    }
+
+    /**
+     * 订单佣金冻结
+     * @param orderNo 订单号
+     * @param freezeDay 冻结天数
+     * @return
+     */
+    @Override
+    public Boolean brokerageFrozen(String orderNo, Integer freezeDay) {
+        // 获取佣金记录
+        List<UserBrokerageRecord> recordList = findListByLinkIdAndLinkType(orderNo, BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_ORDER);
+        if (CollUtil.isEmpty(recordList)) {
+            return Boolean.TRUE;
+        }
+        logger.info("收货处理佣金条数：" + recordList.size());
+        for (UserBrokerageRecord record : recordList) {
+            if (!record.getStatus().equals(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_CREATE)) {
+                continue;
+            }
+            // 佣金进入冻结期
+            record.setStatus(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_FROZEN);
+            record.setFrozenTime(freezeDay);
+            // 计算解冻时间
+            long thawTime = DateUtil.current(false);
+            if (record.getFrozenTime() > 0) {
+                DateTime dateTime = DateUtil.offsetDay(new Date(), freezeDay);
+                thawTime = dateTime.getTime();
+            }
+            record.setThawTime(thawTime);
+            record.setUpdateTime(DateUtil.date());
+        }
+        // 分佣-佣金进入冻结期
+        if (CollUtil.isNotEmpty(recordList)) {
+            return updateBatchById(recordList);
+        }
+        return Boolean.TRUE;
     }
 
     /**

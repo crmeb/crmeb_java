@@ -16,7 +16,10 @@
               <el-option label="已过期" value="2" />
             </el-select>
           </el-form-item>
-          <el-form-item label="领取人：">
+          <el-form-item label="用户搜索：">
+            <UserSearchInput ref="userSearchInput" v-model="tableFromIssue" />
+          </el-form-item>
+          <!-- <el-form-item label="领取人：">
             <el-select
               v-model="tableFromIssue.uid"
               class="selWidth"
@@ -31,7 +34,7 @@
             >
               <el-option v-for="item in options" :key="item.uid" :label="item.nickname" :value="item.uid"> </el-option>
             </el-select>
-          </el-form-item>
+          </el-form-item> -->
           <el-form-item label="优惠劵：" class="mr10">
             <el-input v-model="tableFromIssue.name" placeholder="请输入优惠劵" class="selWidth" clearable></el-input>
           </el-form-item>
@@ -121,6 +124,8 @@ export default {
         uid: '',
         name: '',
         status: '',
+        content: '',
+        searchType: 'all',
       },
       issueData: {
         data: [],
@@ -139,6 +144,8 @@ export default {
       this.tableFromIssue.status = '';
       this.tableFromIssue.name = '';
       this.tableFromIssue.uid = '';
+      this.tableFromIssue.content = '';
+      this.tableFromIssue.searchType = 'all';
       this.getIssueList();
     },
     remoteMethod(query) {

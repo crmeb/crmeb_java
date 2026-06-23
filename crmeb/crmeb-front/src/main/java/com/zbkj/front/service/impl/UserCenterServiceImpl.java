@@ -9,6 +9,14 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alipay.api.AlipayApiException;
+import com.alipay.api.AlipayClient;
+import com.alipay.api.DefaultAlipayClient;
+import com.alipay.api.domain.AlipayTradeAppPayModel;
+import com.alipay.api.domain.AlipayTradeWapPayModel;
+import com.alipay.api.request.AlipayTradeAppPayRequest;
+import com.alipay.api.request.AlipayTradeWapPayRequest;
+import com.alipay.api.response.AlipayTradeAppPayResponse;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.common.constants.*;
@@ -38,8 +46,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
-
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -49,7 +58,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -257,6 +266,11 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             userIdList.addAll(secondSpreadIdList);
         }
         List<UserSpreadPeopleItemResponse> spreadPeopleList = userService.getSpreadPeopleList(userIdList, request.getKeyword(), request.getSortKey(), request.getIsAsc(), pageParamRequest);
+//        spreadPeopleList.forEach(e -> {
+//            OrderBrokerageData brokerageData = storeOrderService.getBrokerageData(e.getUid(), userId);
+//            e.setOrderCount(brokerageData.getNum());
+//            e.setNumberCount(brokerageData.getPrice());
+//        });
         return spreadPeopleList;
     }
 
@@ -288,6 +302,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         User info = userService.getInfo();
         BigDecimal recharge = userBillService.getSumBigDecimal(1, info.getUid(), Constants.USER_BILL_CATEGORY_MONEY, null, null);
         BigDecimal orderStatusSum = userBillService.getSumBigDecimal(0, info.getUid(), Constants.USER_BILL_CATEGORY_MONEY, null, null);
+//        BigDecimal orderStatusSum = storeOrderService.getSumBigDecimal(info.getUid(), null);
         return new UserBalanceResponse(info.getNowMoney(), recharge, orderStatusSum);
     }
 
@@ -815,6 +830,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             user.setAccount(request.getPhone());
             user.setSpreadUid(0);
             user.setPwd(CommonUtil.createPwd(request.getPhone()));
+            user.setAvatar(systemConfigService.getValueByKey(Constants.USER_DEFAULT_AVATAR_CONFIG_KEY));
         } else {// 已有账户，关联到之前得账户即可
             // 查询是否用对应得token
             int type = 0;
@@ -839,7 +855,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
             }
             isNew = false;
         }
-
+        user.setLastLoginTime(CrmebDateUtil.nowDateTime());
         User finalUser = user;
         boolean finalIsNew = isNew;
         Boolean execute = transactionTemplate.execute(e -> {
@@ -1056,6 +1072,149 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
         userSpreadPeopleResponse.setTotalLevel(secondSpreadIdList.size());
         userSpreadPeopleResponse.setCount(userIdList.size() + secondSpreadIdList.size());
         return userSpreadPeopleResponse;
+    }
+
+    /**
+     * 支付宝充值
+     */
+    @Override
+    public OrderPayResultResponse aliPayRecharge(UserRechargeRequest request) {
+        request.setPayType(Constants.PAY_TYPE_ALI_PAY);
+
+        //验证金额是否为最低金额
+        String rechargeMinAmountStr = systemConfigService.getValueByKeyException(Constants.CONFIG_KEY_RECHARGE_MIN_AMOUNT);
+        BigDecimal rechargeMinAmount = new BigDecimal(rechargeMinAmountStr);
+        int compareResult = rechargeMinAmount.compareTo(request.getPrice());
+        if (compareResult > 0) {
+            throw new CrmebException("充值金额不能低于" + rechargeMinAmountStr);
+        }
+
+        request.setGivePrice(BigDecimal.ZERO);
+
+        if (request.getGroupDataId() > 0) {
+            SystemGroupDataRechargeConfigVo systemGroupData = systemGroupDataService.getNormalInfo(request.getGroupDataId(), SystemGroupDataRechargeConfigVo.class);
+            if (ObjectUtil.isNull(systemGroupData)) {
+                throw new CrmebException("您选择的充值方式已下架");
+            }
+            //售价和赠送
+            request.setPrice(systemGroupData.getPrice());
+            request.setGivePrice(systemGroupData.getGiveMoney());
+
+        }
+        User currentUser = userService.getInfoException();
+        //生成系统订单
+        UserRecharge userRecharge = new UserRecharge();
+        userRecharge.setUid(currentUser.getUid());
+        userRecharge.setOrderId(CrmebUtil.getOrderNo("recharge"));
+        userRecharge.setPrice(request.getPrice());
+        userRecharge.setGivePrice(request.getGivePrice());
+        userRecharge.setRechargeType(request.getFromType());
+        userRecharge.setOutTradeNo(userRecharge.getOutTradeNo());
+        boolean save = userRechargeService.save(userRecharge);
+        if (!save) {
+            throw new CrmebException("生成充值订单失败!");
+        }
+
+        //获得初始化的AlipayClient
+        String aliPayAppid = systemConfigService.getValueByKey(AlipayConfig.APPID);
+        String aliPayPrivateKey = systemConfigService.getValueByKey(AlipayConfig.RSA_PRIVATE_KEY);
+        String aliPayPublicKey = systemConfigService.getValueByKey(AlipayConfig.ALIPAY_PUBLIC_KEY);
+        AlipayClient alipayClient = new DefaultAlipayClient(AlipayConfig.URL, aliPayAppid, aliPayPrivateKey, AlipayConfig.FORMAT, AlipayConfig.CHARSET, aliPayPublicKey, AlipayConfig.SIGNTYPE);
+
+        OrderPayResultResponse response = new OrderPayResultResponse();
+        //商户订单号，商户网站订单系统中唯一订单号，必填
+        String out_trade_no = userRecharge.getOrderId();
+        //付款金额，必填
+        String total_amount = userRecharge.getPrice().toString();
+        //订单名称，必填
+        String subject = "crmeb商城订单";
+        // 该笔订单允许的最晚付款时间，逾期将关闭交易。取值范围：1m～15d。m-分钟，h-小时，d-天，1c-当天（1c-当天的情况下，无论交易何时创建，都在0点关闭）。 该参数数值不接受小数点， 如 1.5h，可转换为 90m。
+        String timeout_express = "30m";
+
+        if (request.getFromType().equals("appAliPay")) {
+            //实例化具体API对应的request类,类名称和接口名称对应,当前调用接口名称：alipay.trade.app.pay
+            AlipayTradeAppPayRequest payRequest = new AlipayTradeAppPayRequest();
+            //SDK已经封装掉了公共参数，这里只需要传入业务参数。以下方法为sdk的model入参方式(model和biz_content同时存在的情况下取biz_content)。
+            AlipayTradeAppPayModel model = new AlipayTradeAppPayModel();
+            model.setSubject(subject);
+            model.setOutTradeNo(out_trade_no);
+            model.setTimeoutExpress(timeout_express);
+            model.setTotalAmount(total_amount);
+            model.setProductCode("QUICK_MSECURITY_PAY");
+
+//            HashMap<String, String> map = CollUtil.newHashMap();
+//            map.put("type", Constants.SERVICE_PAY_TYPE_RECHARGE);
+//            String jsonString = JSONObject.toJSONString(map);
+//            String encode;
+            String encode = "type=" + Constants.SERVICE_PAY_TYPE_RECHARGE;
+            try {
+                encode = URLEncoder.encode(encode, "utf-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                throw new CrmebException("支付宝参数UrlEncode异常");
+            }
+            model.setPassbackParams(encode);
+
+            payRequest.setBizModel(model);
+            payRequest.setNotifyUrl(systemConfigService.getValueByKey(AlipayConfig.notify_url));
+
+            //请求
+            String result;
+            try {
+                //这里和普通的接口调用不同，使用的是sdkExecute
+                AlipayTradeAppPayResponse aaa = alipayClient.sdkExecute(payRequest);
+                result = aaa.getBody();
+            } catch (AlipayApiException e) {
+                logger.error("生成支付宝app支付请求异常," + e.getErrMsg());
+                throw new CrmebException(e.getErrMsg());
+            }
+            logger.info("支付宝app result = " + result);
+            response.setAlipayRequest(result);
+            response.setOrderNo(userRecharge.getOrderId());
+            return response;
+        }
+
+        //设置请求参数
+        AlipayTradeWapPayRequest alipayRequest = new AlipayTradeWapPayRequest();
+        alipayRequest.setReturnUrl(systemConfigService.getValueByKey(AlipayConfig.recharge_return_url));
+        alipayRequest.setNotifyUrl(systemConfigService.getValueByKey(AlipayConfig.notify_url));
+
+        AlipayTradeWapPayModel model = new AlipayTradeWapPayModel();
+        model.setOutTradeNo(out_trade_no);
+        model.setSubject(subject);
+        model.setTotalAmount(total_amount);
+//            model.setBody(body);
+        model.setTimeoutExpress(timeout_express);
+        model.setProductCode("QUICK_WAP_PAY");
+        model.setQuitUrl(systemConfigService.getValueByKey(AlipayConfig.recharge_quit_url));
+
+//        HashMap<String, String> map = CollUtil.newHashMap();
+//        map.put("type", Constants.SERVICE_PAY_TYPE_RECHARGE);
+//        String jsonString = JSONObject.toJSONString(map);
+//        String encode;
+        String encode = "type=" + Constants.SERVICE_PAY_TYPE_RECHARGE;
+        try {
+            encode = URLEncoder.encode(encode, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            throw new CrmebException("支付宝参数UrlEncode异常");
+        }
+        model.setPassbackParams(encode);
+        alipayRequest.setBizModel(model);
+
+        logger.info("alipayRequest = " + alipayRequest);
+        //请求
+        String result = null;
+        try {
+            result = alipayClient.pageExecute(alipayRequest).getBody();
+        } catch (AlipayApiException e) {
+            logger.error("支付宝订单生成失败," + e.getErrMsg());
+            throw new CrmebException(e.getErrMsg());
+        }
+        logger.info("result = " + result);
+        response.setAlipayRequest(result);
+        response.setOrderNo(userRecharge.getOrderId());
+        return response;
     }
 
     /**

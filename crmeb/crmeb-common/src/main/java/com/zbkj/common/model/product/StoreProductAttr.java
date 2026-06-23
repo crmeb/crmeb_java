@@ -1,9 +1,12 @@
 package com.zbkj.common.model.product;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
+import java.util.List;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -15,7 +18,7 @@ import lombok.experimental.Accessors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -49,4 +52,11 @@ public class StoreProductAttr implements Serializable {
 
     @ApiModelProperty(value = "是否删除,0-否，1-是")
     private Boolean isDel;
+
+    @ApiModelProperty(value = "是否展示规格图片")
+    private Boolean isShowImage;
+
+    @ApiModelProperty(value = "商品规格属性列表")
+    @TableField(exist = false)
+    private List<StoreProductAttrOption> optionList;
 }

@@ -1,0 +1,31 @@
+## 1.3.6（2025-07-18）
+- 修复 nvue 页面，样式错误问题
+## 1.3.5（2025-06-11）
+- 修复 第一次执行不显示动画的问题
+## 1.3.4（2025-04-16）
+- 修复 页面数据更新到底动画复原的问题
+- 修复 示例页面打开报错的问题
+## 1.3.3（2024-04-23）
+- 修复 当元素会受变量影响自动隐藏的bug
+## 1.3.2（2023-05-04）
+- 修复 NVUE 平台报错的问题
+## 1.3.1（2021-11-23）
+- 修复 init 方法初始化问题
+## 1.3.0（2021-11-19）
+- 优化 组件UI，并提供设计资源，详见:[https://uniapp.dcloud.io/component/uniui/resource](https://uniapp.dcloud.io/component/uniui/resource)
+- 文档迁移，详见:[https://uniapp.dcloud.io/component/uniui/uni-transition](https://uniapp.dcloud.io/component/uniui/uni-transition)
+## 1.2.1（2021-09-27）
+- 修复 init 方法不生效的 Bug
+## 1.2.0（2021-07-30）
+- 组件兼容 vue3，如何创建 vue3 项目，详见 [uni-app 项目支持 vue3 介绍](https://ask.dcloud.net.cn/article/37834)
+## 1.1.1（2021-05-12）
+- 新增 示例地址
+- 修复 示例项目缺少组件的 Bug
+## 1.1.0（2021-04-22）
+- 新增 通过方法自定义动画
+- 新增 custom-class 非 NVUE 平台支持自定义 class 定制样式
+- 优化 动画触发逻辑，使动画更流畅
+- 优化 支持单独的动画类型
+- 优化 文档示例
+## 1.0.2（2021-02-05）
+- 调整为 uni_modules 目录规范

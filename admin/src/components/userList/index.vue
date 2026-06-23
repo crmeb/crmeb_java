@@ -1,12 +1,17 @@
 <template>
   <div class="divBox">
-    <el-card class="box-card">
+    <el-card class="box-card" shadow="never">
       <div slot="header" class="clearfix mt5">
         <el-form inline>
-          <el-form-item label="用户名称：">
+          <el-form-item label="用户搜索：">
+            <UserSearchInput ref="userSearchInput" v-model="tableFrom" />
+          </el-form-item>
+          <el-button type="primary" icon="ios-search" label="default" @click="userSearchs">搜索</el-button>
+          <el-button class="ResetSearch mr14" @click="reset()" size="small">重置</el-button>
+          <!-- <el-form-item label="用户名称：">
             <el-input v-model="tableFrom.keywords" placeholder="请输入用户名称" class="selWidth"> </el-input>
             <el-button class="ml30" type="primary" @click="search">搜索</el-button>
-          </el-form-item>
+          </el-form-item> -->
         </el-form>
       </div>
       <el-table v-loading="loading" :data="tableData.data" width="800px" size="small">
@@ -91,7 +96,9 @@ export default {
       tableFrom: {
         page: 1,
         limit: 10,
-        keywords: '',
+        searchType: 'all',
+        content: '',
+        // keywords: '',
       },
     };
   },
@@ -138,6 +145,20 @@ export default {
     },
     handleSizeChange(val) {
       this.tableFrom.limit = val;
+      this.getList();
+    },
+    // 搜索
+    userSearchs() {
+      this.tableFrom.page = 1;
+      this.getList();
+    },
+    // 重置
+    reset() {
+      this.tableFrom = {
+        searchType: 'all',
+        content: '',
+      }
+      this.$refs.userSearchInput.clearInput()
       this.getList();
     },
   },

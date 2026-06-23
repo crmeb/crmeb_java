@@ -5,6 +5,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zbkj.common.config.CrmebConfig;
@@ -18,6 +19,7 @@ import com.zbkj.common.request.SystemFormItemCheckRequest;
 import com.zbkj.common.response.AdminSiteLogoResponse;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.vo.ExpressSheetVo;
+import com.zbkj.common.vo.MyRecord;
 import com.zbkj.service.dao.SystemConfigDao;
 import com.zbkj.service.service.SystemAttachmentService;
 import com.zbkj.service.service.SystemConfigService;
@@ -37,7 +39,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -64,6 +66,42 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
 
     @Autowired
     private TransactionTemplate transactionTemplate;
+
+    /**
+     * 通过key数组获取Record对象
+     * @param keyList key列表
+     * @return MyRecord
+     */
+    @Override
+    public MyRecord getValuesByKeyList(List<String> keyList) {
+        if (CollUtil.isEmpty(keyList)) {
+            return null;
+        }
+        MyRecord record = new MyRecord();
+        if (!crmebConfig.isAsyncConfig()) {
+            QueryWrapper<SystemConfig> query = Wrappers.query();
+            query.select("name", "ANY_VALUE(value) as value", "MAX(id) as id");
+            query.in("name", keyList);
+            query.eq("status", false);
+            query.groupBy("name");
+            query.orderByDesc("id");
+            List<SystemConfig> systemConfigList = dao.selectList(query);
+            keyList.forEach(k -> {
+                SystemConfig systemConfig = systemConfigList.stream().filter(config -> config.getName().equals(k)).findFirst().orElse(null);
+                if (ObjectUtil.isNotNull(systemConfig)) {
+                    record.set(systemConfig.getName(), systemConfig.getValue());
+                } else {
+                    record.set(k, "");
+                }
+            });
+            return record;
+        }
+        keyList.forEach(k -> {
+            String value = get(k);
+            record.set(k, value);
+        });
+        return record;
+    }
 
     /**
      * 根据menu name 获取 value
@@ -265,6 +303,14 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
     }
 
     /**
+     * 获取小程序下载地址
+     */
+    @Override
+    public SystemConfig getMiniDownloadUrl() {
+        return getConfigByNameException(Constants.CONFIG_KEY_SITE_URL);
+    }
+
+    /**
      * 保存移动端首页列表样式
      */
     @Override
@@ -402,6 +448,25 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
 
     }
 
+    /**
+     * 获取各种文字协议
+     *
+     * @return String
+     */
+    @Override
+    public String getAgreementByKey(String agreementName) {
+        if (ObjectUtil.isEmpty(agreementName)) {
+            return "Key Not Empty";
+        }
+        LambdaQueryWrapper<SystemConfig> lqw = Wrappers.lambdaQuery();
+        lqw.eq(SystemConfig::getName, agreementName);
+        lqw.eq(SystemConfig::getStatus, 0);
+        SystemConfig systemConfig = dao.selectOne(lqw);
+        if (ObjectUtil.isNull(systemConfig)) {
+            return "";
+        }
+        return systemConfig.getValue();
+    }
 
     /**
      * 获取移动端域名

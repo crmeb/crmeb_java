@@ -190,12 +190,12 @@
           <el-input v-model="formItem.deliveryTel" placeholder="请输入送货人电话"></el-input>
         </el-form-item>
       </div>
-      <div>
+      <!-- <div>
         <el-form-item label="">
           <div style="color: #cecece">顺丰请输入单号：收件人或寄件人手机号后四位</div>
           <div style="color: #cecece">例如：SF000000000000:3941</div>
         </el-form-item>
-      </div>
+      </div> -->
     </el-form>
     <div slot="footer">
       <el-button @click="cancel('formItem')">取消</el-button>

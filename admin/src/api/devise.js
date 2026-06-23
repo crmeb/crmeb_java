@@ -1,13 +1,21 @@
 import request from '@/utils/request';
-
 /**
- * 提现申请 列表
- * @param pram
+ * 获取开屏广告
  */
-export function diyListApi(params) {
+export function splashGetApi() {
   return request({
-    url: '/admin/pagediy/list',
+    url: '/admin/page/layout/splash/ad/get',
     method: 'get',
-    params,
+  });
+}
+/**
+ * 编辑开屏广告
+ * @param data
+ */
+export function splashSaveApi(data) {
+  return request({
+    url: '/admin/page/layout/splash/ad/save',
+    method: 'post',
+    data: data,
   });
 }

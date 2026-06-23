@@ -129,6 +129,20 @@
                 </div>
               </div>
             </el-form-item>
+            <el-form-item label="保障服务：" prop="guarantee">
+              <el-select
+                v-model="guaranteeIdsList"
+                multiple
+                collapse-tags
+                placeholder="请选择"
+                class="from-ipt-width"
+                @change="updateGuaranteeIds"
+                :disabled="isDisabled"
+              >
+                <el-option v-for="item in guaranteeList" :key="item.id" :label="item.name" :value="item.id">
+                </el-option>
+              </el-select>
+            </el-form-item>
           </el-col>
           <el-col>
             <el-form-item label="主图视频：">
@@ -175,303 +189,19 @@
             </el-form-item>
           </el-col>
         </el-row>
-        <el-row v-show="currentTab == 1">
-          <el-col :span="24">
-            <el-form-item label="商品规格：" props="specType">
-              <el-radio-group
-                v-model="formValidate.specType"
-                @change="onChangeSpec(formValidate.specType)"
-                :disabled="isDisabled"
-              >
-                <el-radio :label="false" class="radio">单规格</el-radio>
-                <el-radio :label="true">多规格</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item label="佣金设置：" props="isSub">
-              <el-radio-group
-                v-model="formValidate.isSub"
-                @change="onChangetype(formValidate.isSub)"
-                :disabled="isDisabled"
-              >
-                <el-radio :label="true" class="radio">单独设置</el-radio>
-                <el-radio :label="false">默认设置</el-radio>
-              </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <!-- 多规格添加-->
-          <el-col v-if="formValidate.specType && !isDisabled" :span="24" class="noForm">
-            <el-form-item label="选择规格：" prop="">
-              <div class="acea-row">
-                <el-select v-model="formValidate.selectRule" @change="confirm">
-                  <el-option v-for="item in ruleList" :key="item.id" :label="item.ruleName" :value="item.id" />
-                </el-select>
-                <el-button class="ml10" @click="addRule">添加规格</el-button>
-              </div>
-            </el-form-item>
-            <el-form-item>
-              <div v-for="(item, index) in formValidate.attr" :key="index">
-                <div class="acea-row row-middle">
-                  <span class="mr5">{{ item.attrName }}</span
-                  ><i class="el-icon-circle-close" @click="handleRemoveAttr(index)" />
-                </div>
-                <div class="rulesBox">
-                  <el-tag
-                    v-for="(j, indexn) in item.attrValue"
-                    :key="indexn"
-                    closable
-                    size="medium"
-                    :disable-transitions="false"
-                    class="mb5 mr10"
-                    @close="handleClose(item.attrValue, indexn, index)"
-                  >
-                    {{ j }}
-                  </el-tag>
-                  <template v-if="!$route.params.isCopy">
-                    <el-input
-                      v-if="item.inputVisible"
-                      ref="saveTagInput"
-                      v-model="item.attrValue.attrsVal"
-                      class="input-new-tag"
-                      size="small"
-                      @keyup.enter.native="createAttr(item.attrValue.attrsVal, index)"
-                      @blur="createAttr(item.attrValue.attrsVal, index)"
-                    />
-                    <el-button v-else class="button-new-tag" size="small" @click="showInput(item)">+ 添加</el-button>
-                  </template>
-                </div>
-              </div>
-            </el-form-item>
-            <el-col v-if="isBtn">
-              <div class="acea-row">
-                <el-form-item label="规格：" class="inputWid">
-                  <el-input v-model="formDynamic.attrsName" placeholder="请输入规格" />
-                </el-form-item>
-                <el-form-item label="规格值：" class="inputWid">
-                  <el-input v-model="formDynamic.attrsVal" placeholder="请输入规格值" />
-                </el-form-item>
-                <el-form-item class="noLeft">
-                  <el-button type="primary" @click="createAttrName">确定</el-button>
-                  <el-button @click="offAttrName">取消</el-button>
-                </el-form-item>
-              </div>
-            </el-col>
-            <el-form-item v-if="!isBtn && !$route.params.isCopy">
-              <el-button type="primary" icon="md-add" class="mr15" @click="addBtn">添加新规格</el-button>
-            </el-form-item>
-          </el-col>
-          <!-- 批量设置-->
-          <el-col v-if="formValidate.attr.length > 0 && formValidate.specType && !isDisabled" :span="24" class="noForm">
-            <el-form-item label="批量设置：">
-              <el-table :data="oneFormBatch" border class="tabNumWidth" size="mini">
-                <el-table-column label="图片" min-width="80">
-                  <template slot-scope="scope">
-                    <div class="upLoadPicBox" @click="modalPicTap('1', 'pi')">
-                      <div v-if="scope.row.image" class="pictrue tabPic">
-                        <el-image :preview-src-list="isDisabled ? [scope.row.image] : []" :src="scope.row.image" />
-                      </div>
-                      <div v-else class="upLoad tabPic">
-                        <i class="el-icon-camera cameraIconfont" />
-                      </div>
-                    </div>
-                  </template>
-                </el-table-column>
-                <el-table-column
-                  v-for="(item, iii) in attrValue"
-                  :key="iii"
-                  :label="formThead[iii].title"
-                  min-width="120"
-                >
-                  <template slot-scope="scope">
-                    <el-input
-                      v-model="scope.row[iii]"
-                      :type="formThead[iii].title === '商品编号' ? 'text' : 'number'"
-                      :min="0"
-                      class="priceBox"
-                      @keyup.native="keyupEvent(iii, scope.row[iii], scope.$index, 1)"
-                    />
-                  </template>
-                </el-table-column>
-                <template v-if="formValidate.isSub">
-                  <el-table-column label="一级返佣(元)" min-width="120">
-                    <template slot-scope="scope">
-                      <el-input
-                        v-model="scope.row.brokerage"
-                        type="number"
-                        :min="0"
-                        :max="scope.row.price"
-                        class="priceBox"
-                      />
-                    </template>
-                  </el-table-column>
-                  <el-table-column label="二级返佣(元)" min-width="120">
-                    <template slot-scope="scope">
-                      <el-input
-                        v-model="scope.row.brokerageTwo"
-                        type="number"
-                        :min="0"
-                        :max="scope.row.price"
-                        class="priceBox"
-                      />
-                    </template>
-                  </el-table-column>
-                </template>
-                <el-table-column label="操作" width="80">
-                  <template>
-                    <a class="submission" @click="batchAdd">批量添加</a>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </el-form-item>
-          </el-col>
-          <el-col :xl="24" :lg="24" :md="24" :sm="24" :xs="24">
-            <!-- 单规格表格-->
-            <el-form-item v-if="formValidate.specType === false">
-              <el-table :data="OneattrValue" border class="tabNumWidth" size="mini">
-                <el-table-column label="图片" min-width="80">
-                  <template slot-scope="scope">
-                    <div class="upLoadPicBox" @click="modalPicTap('1', 'dan', 'pi')">
-                      <div v-if="formValidate.image" class="pictrue tabPic">
-                        <el-image :preview-src-list="isDisabled ? [scope.row.image] : []" :src="scope.row.image" />
-                      </div>
-                      <div v-else class="upLoad tabPic">
-                        <i class="el-icon-camera cameraIconfont" />
-                      </div>
-                    </div>
-                  </template>
-                </el-table-column>
-                <el-table-column
-                  v-for="(item, iii) in attrValue"
-                  :key="iii"
-                  :label="formThead[iii].title"
-                  min-width="120"
-                >
-                  <template slot-scope="scope">
-                    <el-input
-                      :disabled="isDisabled"
-                      v-model="scope.row[iii]"
-                      :type="formThead[iii].title === '商品编号' ? 'text' : 'number'"
-                      :min="0"
-                      class="priceBox"
-                      @keyup.native="keyupEvent(iii, scope.row[iii], scope.$index, 2)"
-                    />
-                  </template>
-                </el-table-column>
-                <template v-if="formValidate.isSub">
-                  <el-table-column label="一级返佣(元)" min-width="120">
-                    <template slot-scope="scope">
-                      <el-input
-                        :disabled="isDisabled"
-                        v-model="scope.row.brokerage"
-                        type="number"
-                        :min="0"
-                        class="priceBox"
-                      />
-                    </template>
-                  </el-table-column>
-                  <el-table-column label="二级返佣(元)" min-width="120">
-                    <template slot-scope="scope">
-                      <el-input
-                        :disabled="isDisabled"
-                        v-model="scope.row.brokerageTwo"
-                        type="number"
-                        :min="0"
-                        class="priceBox"
-                      />
-                    </template>
-                  </el-table-column>
-                </template>
-              </el-table>
-            </el-form-item>
-            <!-- <div>manyTabDate:{{manyTabDate}}</div> -->
-            <el-form-item label="全部sku：" v-if="$route.params.id && showAll">
-              <el-button type="default" @click="showAllSku()" :disabled="isDisabled">展示</el-button>
-            </el-form-item>
-            <!-- 多规格表格-->
-            <el-form-item
-              v-if="formValidate.attr.length > 0 && formValidate.specType"
-              label="商品属性："
-              class="labeltop"
-              :class="isDisabled ? 'disLabel' : 'disLabelmoren'"
-            >
-              <el-table :data="ManyAttrValue" border class="tabNumWidth" size="mini">
-                <template v-if="manyTabDate">
-                  <el-table-column
-                    v-for="(item, iii) in manyTabDate"
-                    :key="iii"
-                    :label="manyTabTit[iii].title"
-                    min-width="80"
-                  >
-                    <template slot-scope="scope">
-                      <span class="priceBox" v-text="scope.row[iii]" />
-                    </template>
-                  </el-table-column>
-                </template>
-                <el-table-column label="图片" min-width="80">
-                  <template slot-scope="scope">
-                    <div class="upLoadPicBox" @click="modalPicTap('1', 'duo', scope.$index)">
-                      <div v-if="scope.row.image" class="pictrue tabPic">
-                        <el-image
-                          class="preview-src"
-                          :preview-src-list="isDisabled ? [scope.row.image] : []"
-                          :src="scope.row.image"
-                        />
-                      </div>
-                      <div v-else class="upLoad tabPic">
-                        <i class="el-icon-camera cameraIconfont" />
-                      </div>
-                    </div>
-                  </template>
-                </el-table-column>
-                <el-table-column
-                  v-for="(item, iii) in attrValue"
-                  :key="iii"
-                  :label="formThead[iii].title"
-                  min-width="120"
-                >
-                  <template slot-scope="scope">
-                    <!--                    <span>scope.row:{{scope.row}}</span>-->
-                    <el-input
-                      :disabled="isDisabled"
-                      v-model="scope.row[iii]"
-                      :type="formThead[iii].title === '商品编号' ? 'text' : 'number'"
-                      class="priceBox"
-                      @keyup.native="keyupEvent(iii, scope.row[iii], scope.$index, 3)"
-                    />
-                  </template>
-                </el-table-column>
-                <el-table-column label="一级返佣(元)" min-width="120" v-if="formValidate.isSub">
-                  <template slot-scope="scope">
-                    <el-input
-                      :disabled="isDisabled"
-                      v-model="scope.row.brokerage"
-                      type="number"
-                      :min="0"
-                      :max="scope.row.price"
-                      class="priceBox"
-                    />
-                  </template>
-                </el-table-column>
-                <el-table-column label="二级返佣(元)" min-width="120" v-if="formValidate.isSub">
-                  <template slot-scope="scope">
-                    <el-input
-                      :disabled="isDisabled"
-                      v-model="scope.row.brokerageTwo"
-                      type="number"
-                      :min="0"
-                      :max="scope.row.price"
-                      class="priceBox"
-                    />
-                  </template>
-                </el-table-column>
-                <el-table-column v-if="!isDisabled" key="3" label="操作" min-width="80">
-                  <template slot-scope="scope">
-                    <a class="submission" @click="delAttrTable(scope.$index)">删除</a>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <creatAttr
+          v-if="currentTab == 1"
+          v-model="formValidate"
+          :oneFormBatch="oneFormBatch"
+          :isDisabled="isDisabled"
+          :formThead="formThead"
+          :manyTabDate="manyTabDate"
+          :OneattrValue="OneattrValue"
+          :ManyAttrValue="ManyAttrValue"
+          :manyTabTit="manyTabTit"
+          @changeManyAttrValue="changeManyAttrValue"
+          @handleBatchDel="handleBatchDel"
+        ></creatAttr>
         <!-- 商品详情-->
         <el-row v-show="currentTab == 2 && !isDisabled">
           <el-col :span="24">
@@ -594,12 +324,21 @@
 
 <script>
 import Tinymce from '@/components/Tinymce/index';
-import { templateListApi, productCreateApi, categoryApi, productDetailApi, productUpdateApi } from '@/api/store';
+import {
+  templateListApi,
+  productCreateApi,
+  categoryApi,
+  productDetailApi,
+  productUpdateApi,
+  guaranteeListApi,
+} from '@/api/store';
 import { marketingSendApi } from '@/api/marketing';
 import { shippingTemplatesList } from '@/api/logistics';
 import { goodDesignList } from '@/api/systemGroup';
+import { arraysEqual } from '@/utils';
 import { clearTreeData } from '@/utils/ZBKJIutil';
 import CreatTemplates from '@/views/systemSetting/deliverGoods/freightSet/creatTemplates';
+import creatAttr from '../components/creatAttr';
 import Templates from '../../appSetting/wxAccount/wxTemplate/index';
 import { Debounce } from '@/utils/validate';
 import { copyConfigApi, copyProductApi } from '@/api/store';
@@ -626,13 +365,13 @@ const defaultObj = {
   attrValue: [
     {
       image: '',
-      price: 0,
-      cost: 0,
-      otPrice: 0,
-      stock: 0,
+      price: void 0,
+      cost: void 0,
+      otPrice: void 0,
+      stock: void 0,
       barCode: '',
-      weight: 0,
-      volume: 0,
+      weight: void 0,
+      volume: void 0,
     },
   ],
   attr: [],
@@ -643,6 +382,7 @@ const defaultObj = {
   id: 0,
   couponIds: [],
   coupons: [],
+  guaranteeIds: '', // 服务保障id字符串
   activity: ['默认', '秒杀', '砍价', '拼团'],
 };
 const objTitle = {
@@ -670,7 +410,7 @@ const objTitle = {
 };
 export default {
   name: 'SortCreat',
-  components: { Templates, CreatTemplates, Tinymce },
+  components: { Templates, CreatTemplates, Tinymce, creatAttr },
   data() {
     return {
       htmlKey: 0,
@@ -752,6 +492,10 @@ export default {
       videoLink: '',
       copyConfig: {},
       url: '',
+      guaranteeList: [], // 服务保障列表
+      guaranteeIdsList: [], // 服务保障选择id列表
+      // 批量添加数据
+      oneFormBatch: [Object.assign({}, defaultObj.attrValue[0])],
     };
   },
   computed: {
@@ -760,26 +504,30 @@ export default {
       delete obj.image;
       return obj;
     },
-    oneFormBatch() {
-      const obj = [Object.assign({}, defaultObj.attrValue[0])];
-      delete obj[0].barCode;
-      return obj;
-    },
   },
   watch: {
-    'formValidate.attr': {
-      handler: function (val) {
-        this.watCh(val); //重要！！！
-      },
-      immediate: false,
-      deep: true,
-    },
+    // 'formValidate.attr': {
+    //   handler: function (val) {
+    //     // 如果是多规格商品
+    //     if (this.formValidate.specType) {
+    //       // 生成规格属性表头
+    //       this.generateHeader(val);
+    //       // 生成规格属性数据
+    //       this.ManyAttrValue = this.generateAttr(val);
+    //     }
+    //     // if (this.formValidate.specType) this.watCh(val); //重要！！！
+    //   },
+    //   immediate: false,
+    //   deep: true,
+    // },
   },
   created() {
     this.tempRoute = Object.assign({}, this.$route);
     if (this.$route.params.id && this.formValidate.specType) {
-      this.$watch('formValidate.attr', this.watCh);
+      // this.$watch('formValidate.attr', this.watCh);
     }
+    // 获取服务保障列表
+    this.getGuaranteeList();
   },
   mounted() {
     this.getCopyConfig();
@@ -799,7 +547,7 @@ export default {
         this.copyConfig.copyType == 1
           ? copyProductApi({ url: this.url })
               .then((res) => {
-                let info = res.info;
+                let info = res;
                 this.formValidate = {
                   image: this.$selfUtil.setDomain(info.image),
                   sliderImage: info.sliderImage,
@@ -825,7 +573,14 @@ export default {
                   id: info.id,
                   giveIntegral: info.giveIntegral,
                   ficti: info.ficti,
+                  activity: ['默认', '秒杀', '砍价', '拼团'],
                 };
+                if (info.specType) {
+                  // 设置多规格商品属性数据
+                  this.generateManyAttr();
+                } else {
+                  this.OneattrValue = info.attrValue;
+                }
                 if (info.isHot) this.checkboxGroup.push('isHot');
                 if (info.isGood) this.checkboxGroup.push('isGood');
                 if (info.isBenefit) this.checkboxGroup.push('isBenefit');
@@ -839,6 +594,8 @@ export default {
                 this.formValidate.sliderImages = imgss;
                 if (this.formValidate.attr.length) {
                   this.oneFormBatch[0].image = this.$selfUtil.setDomain(info.image);
+                  this.oneFormBatch[0].brokerage = 0; // 设置采集商品的默认一级佣金
+                  this.oneFormBatch[0].brokerageTwo = 0; // 设置采集商品的默认二级佣金
                   for (var i = 0; i < this.formValidate.attr.length; i++) {
                     this.formValidate.attr[i].attrValue = JSON.parse(this.formValidate.attr[i].attrValues);
                   }
@@ -875,7 +632,15 @@ export default {
                   id: res.id,
                   giveIntegral: res.giveIntegral,
                   ficti: res.ficti,
+                  activity: ['默认', '秒杀', '砍价', '拼团'],
                 };
+                if (info.specType) {
+                  // 设置多规格商品属性数据
+                  this.generateManyAttr();
+                } else {
+                  this.OneattrValue = info.attrValue;
+                  // this.formValidate.attr = [] //单规格商品规格设置为空
+                }
                 let imgs = JSON.parse(res.sliderImage);
                 let imgss = [];
                 Object.keys(imgs).map((i) => {
@@ -957,135 +722,11 @@ export default {
       this.checkboxGroup.includes('isNew') ? (this.formValidate.isNew = true) : (this.formValidate.isNew = false);
       this.checkboxGroup.includes('isHot') ? (this.formValidate.isHot = true) : (this.formValidate.isHot = false);
     },
-    watCh(val) {
-      const tmp = {};
-      const tmpTab = {};
-      this.formValidate.attr.forEach((o, i) => {
-        tmp[o.attrName] = { title: o.attrName };
-        tmpTab[o.attrName] = '';
-      });
-      this.ManyAttrValue = this.attrFormat(val);
-      this.ManyAttrValue.forEach((val, index) => {
-        const key = Object.values(val.attrValue).sort().join('/');
-        if (this.attrInfo[key]) this.ManyAttrValue[index] = this.attrInfo[key];
-      });
-      this.attrInfo = [];
-      this.ManyAttrValue.forEach((val) => {
-        this.attrInfo[Object.values(val.attrValue).sort().join('/')] = val;
-      });
-      this.manyTabTit = tmp;
-      this.manyTabDate = tmpTab;
-      this.formThead = Object.assign({}, this.formThead, tmp);
-    },
-    attrFormat(arr) {
-      let data = [];
-      const res = [];
-      return format(arr);
-      function format(arr) {
-        if (arr.length > 1) {
-          arr.forEach((v, i) => {
-            if (i === 0) data = arr[i]['attrValue'];
-            const tmp = [];
-            if (!data) return;
-            data.forEach(function (vv) {
-              arr[i + 1] &&
-                arr[i + 1]['attrValue'] &&
-                arr[i + 1]['attrValue'].forEach((g) => {
-                  const rep2 = (i !== 0 ? '' : arr[i]['attrName'] + '_') + vv + '$&' + arr[i + 1]['attrName'] + '_' + g;
-                  tmp.push(rep2);
-                  if (i === arr.length - 2) {
-                    const rep4 = {
-                      image: '',
-                      price: 0,
-                      cost: 0,
-                      otPrice: 0,
-                      stock: 0,
-                      barCode: '',
-                      weight: 0,
-                      volume: 0,
-                      brokerage: 0,
-                      brokerage_two: 0,
-                    };
-                    rep2.split('$&').forEach((h, k) => {
-                      const rep3 = h.split('_');
-                      if (!rep4['attrValue']) rep4['attrValue'] = {};
-                      rep4['attrValue'][rep3[0]] = rep3.length > 1 ? rep3[1] : '';
-                    });
-                    for (let attrValueKey in rep4.attrValue) {
-                      rep4[attrValueKey] = rep4.attrValue[attrValueKey];
-                    }
-                    res.push(rep4);
-                  }
-                });
-            });
-            data = tmp.length ? tmp : [];
-          });
-        } else {
-          const dataArr = [];
-          arr.forEach((v, k) => {
-            v['attrValue'].forEach((vv, kk) => {
-              dataArr[kk] = v['attrName'] + '_' + vv;
-              res[kk] = {
-                image: '',
-                price: 0,
-                cost: 0,
-                otPrice: 0,
-                stock: 0,
-                barCode: '',
-                weight: 0,
-                volume: 0,
-                brokerage: 0,
-                brokerage_two: 0,
-                attrValue: { [v['attrName']]: vv },
-              };
-              for (let attrValueKey in res[kk].attrValue) {
-                res[kk][attrValueKey] = res[kk].attrValue[attrValueKey];
-              }
-            });
-          });
-          data.push(dataArr.join('$&'));
-        }
-        return res;
-      }
-    },
     // 运费模板
     addTem() {
       this.$refs.addTemplates.dialogVisible = true;
       this.$refs.addTemplates.getCityList();
     },
-    // 添加规则；
-    addRule() {
-      const _this = this;
-      this.$modalAttr(this.formDynamics, function () {
-        _this.productGetRule();
-      });
-    },
-    // 选择规格
-    onChangeSpec(num) {
-      this.isAttr = true;
-      if (num) this.productGetRule();
-    },
-    // 选择属性确认
-    confirm() {
-      this.isAttr = true;
-      if (!this.formValidate.selectRule) {
-        return this.$message.warning('请选择属性');
-      }
-      const data = [];
-      this.ruleList.forEach((item) => {
-        if (item.id === this.formValidate.selectRule) {
-          item.ruleValue.forEach((i) => {
-            data.push({
-              attrName: i.value,
-              attrValue: i.detail,
-            });
-          });
-        }
-        this.formValidate.attr = data;
-      });
-    },
-    //采集
-    getCollect() {},
     // 商品分类；
     getCategorySelect() {
       categoryApi({ status: -1, type: 1 }).then((res) => {
@@ -1145,125 +786,6 @@ export default {
         this.shippingList = res.list;
       });
     },
-    showInput(item) {
-      this.$set(item, 'inputVisible', true);
-    },
-    onChangetype(item) {
-      if (item === 1) {
-        this.OneattrValue.map((item) => {
-          this.$set(item, 'brokerage', null);
-          this.$set(item, 'brokerageTwo', null);
-        });
-        this.ManyAttrValue.map((item) => {
-          this.$set(item, 'brokerage', null);
-          this.$set(item, 'brokerageTwo', null);
-        });
-      } else {
-        this.OneattrValue.map((item) => {
-          delete item.brokerage;
-          delete item.brokerageTwo;
-          this.$set(item, 'brokerage', null);
-          this.$set(item, 'brokerageTwo', null);
-        });
-        this.ManyAttrValue.map((item) => {
-          delete item.brokerage;
-          delete item.brokerageTwo;
-        });
-      }
-    },
-    // 删除表格中的属性
-    delAttrTable(index) {
-      this.ManyAttrValue.splice(index, 1);
-    },
-    // 批量添加
-    batchAdd() {
-      // if (!this.oneFormBatch[0].pic || !this.oneFormBatch[0].price || !this.oneFormBatch[0].cost || !this.oneFormBatch[0].ot_price ||
-      //     !this.oneFormBatch[0].stock || !this.oneFormBatch[0].bar_code) return this.$Message.warning('请填写完整的批量设置内容！');
-      for (const val of this.ManyAttrValue) {
-        this.$set(val, 'image', this.oneFormBatch[0].image);
-        this.$set(val, 'price', this.oneFormBatch[0].price);
-        this.$set(val, 'cost', this.oneFormBatch[0].cost);
-        this.$set(val, 'otPrice', this.oneFormBatch[0].otPrice);
-        this.$set(val, 'stock', this.oneFormBatch[0].stock);
-        this.$set(val, 'barCode', this.oneFormBatch[0].barCode);
-        this.$set(val, 'weight', this.oneFormBatch[0].weight);
-        this.$set(val, 'volume', this.oneFormBatch[0].volume);
-        this.$set(val, 'brokerage', this.oneFormBatch[0].brokerage);
-        this.$set(val, 'brokerageTwo', this.oneFormBatch[0].brokerageTwo);
-      }
-    },
-    // 添加按钮
-    addBtn() {
-      this.clearAttr();
-      this.isBtn = true;
-    },
-    // 取消
-    offAttrName() {
-      this.isBtn = false;
-    },
-    clearAttr() {
-      this.isAttr = true;
-      this.formDynamic.attrsName = '';
-      this.formDynamic.attrsVal = '';
-    },
-    // 删除规格
-    handleRemoveAttr(index) {
-      this.isAttr = true;
-      this.formValidate.attr.splice(index, 1);
-      this.manyFormValidate.splice(index, 1);
-    },
-    // 删除属性
-    handleClose(item, index, attrIndex) {
-      if (index === 0 && item.length === 1) this.handleRemoveAttr(attrIndex);
-      item.splice(index, 1);
-    },
-    // 添加规则名称
-    createAttrName() {
-      this.isAttr = true;
-      if (this.formDynamic.attrsName && this.formDynamic.attrsVal) {
-        const data = {
-          attrName: this.formDynamic.attrsName,
-          attrValue: [this.formDynamic.attrsVal],
-        };
-        this.formValidate.attr.push(data);
-        var hash = {};
-        this.formValidate.attr = this.formValidate.attr.reduce(function (item, next) {
-          /* eslint-disable */
-          hash[next.attrName] ? '' : (hash[next.attrName] = true && item.push(next));
-          return item;
-        }, []);
-        this.clearAttr();
-        this.isBtn = false;
-      } else {
-        this.$Message.warning('请添加完整的规格！');
-      }
-    },
-    // 添加属性
-    createAttr(num, idx) {
-      this.isAttr = true;
-      if (num) {
-        this.formValidate.attr[idx].attrValue.push(num);
-        var hash = {};
-        this.formValidate.attr[idx].attrValue = this.formValidate.attr[idx].attrValue.reduce(function (item, next) {
-          /* eslint-disable */
-          hash[next] ? '' : (hash[next] = true && item.push(next));
-          return item;
-        }, []);
-        this.formValidate.attr[idx].inputVisible = false;
-      } else {
-        // this.$message.warning('请添加属性');
-      }
-    },
-    //点击展示所有多规格属性
-    showAllSku() {
-      if (this.isAttr == false) {
-        this.isAttr = true;
-        if (this.formValidate.specType && this.isAttr) this.watCh(this.formValidate.attr); //重要！！！
-      } else if (this.isAttr == true) {
-        this.isAttr = false;
-        this.getInfo();
-      }
-    },
     // 详情
     getInfo() {
       this.fullscreenLoading = true;
@@ -1301,6 +823,8 @@ export default {
             couponIds: info.couponIds,
             activity: info.activity ? info.activity : ['默认', '秒杀', '砍价', '拼团'],
           };
+          // 获取服务保障被选id列表
+          this.getGuranteeIdsList(info.guaranteeList);
           marketingSendApi({ type: 3 }).then((res) => {
             if (this.formValidate.couponIds !== null) {
               let ids = this.formValidate.couponIds.toString();
@@ -1337,46 +861,8 @@ export default {
           if (info.isNew) this.checkboxGroup.push('isNew');
           this.productGetRule();
           if (info.specType) {
-            this.formValidate.attr = info.attr.map((item) => {
-              return {
-                attrName: item.attrName,
-                attrValue: item.attrValues.split(','),
-              };
-            });
-            this.ManyAttrValue = info.attrValue;
-            this.ManyAttrValue.forEach((val) => {
-              val.image = this.$selfUtil.setDomain(val.image);
-              val.attrValue = JSON.parse(val.attrValue);
-              this.attrInfo[Object.values(val.attrValue).sort().join('/')] = val;
-            });
-            /***多规格商品如果被删除过sku，优先展示api返回的数据,否则会有没有删除的错觉***/
-            let manyAttr = this.attrFormat(this.formValidate.attr);
-            if (manyAttr.length !== this.ManyAttrValue.length) {
-              this.$set(this, 'showAll', true);
-              this.isAttr = false;
-            } else {
-              this.isAttr = true;
-            }
-            /*******/
-            const tmp = {};
-            const tmpTab = {};
-            this.formValidate.attr.forEach((o, i) => {
-              // tmp['value' + i] = { title: o.attrName }
-              // tmpTab['value' + i] = ''
-              tmp[o.attrName] = { title: o.attrName };
-              tmpTab[o.attrName] = '';
-            });
-
-            // 此处手动实现后台原本value0 value1的逻辑
-            this.formValidate.attrValue.forEach((item) => {
-              for (let attrValueKey in item.attrValue) {
-                item[attrValueKey] = item.attrValue[attrValueKey];
-              }
-            });
-
-            this.manyTabTit = tmp;
-            this.manyTabDate = tmpTab;
-            this.formThead = Object.assign({}, this.formThead, tmp);
+            // 设置多规格商品属性数据
+            this.generateManyAttr();
           } else {
             this.OneattrValue = info.attrValue;
             // this.formValidate.attr = [] //单规格商品规格设置为空
@@ -1466,28 +952,48 @@ export default {
       }
       this.formValidate.sliderImage = JSON.stringify(this.formValidate.sliderImages);
       if (this.formValidate.specType) {
-        this.formValidate.attrValue = this.ManyAttrValue;
+        this.formValidate.attrValue = this.ManyAttrValue.slice(1);
         this.formValidate.attr = this.formValidate.attr.map((item) => {
           return {
             attrName: item.attrName,
             id: item.id,
-            attrValue: item.attrValue,
-            attrValues: item.attrValue.join(','),
+            attrValues: item.optionList.map((val) => val.value).join(','),
+            isShowImage: item.isShowImage || false,
+            optionList: item.optionList || [{ value: '默认' }],
           };
         });
-        for (var i = 0; i < this.formValidate.attrValue.length; i++) {
-          this.$set(this.formValidate.attrValue[i], 'id', 0);
-          this.$set(this.formValidate.attrValue[i], 'productId', 0);
-          let attrValues = this.formValidate.attrValue[i].attrValue;
-          this.$set(this.formValidate.attrValue[i], 'attrValue', JSON.stringify(attrValues));
-          delete this.formValidate.attrValue[i].value0;
+        if (typeof (this.formValidate.attrValue[0].attrValue) == 'object') {
+          this.formValidate.attrValue.forEach((item) => {
+            item.attrValue = JSON.stringify(item.attrValue);
+          });
+        }
+        // 如果不是采集商品
+        if (!this.$route.params.isCopy) {
+          for (var i = 0; i < this.formValidate.attrValue.length; i++) {
+            this.$set(this.formValidate.attrValue[i], 'id', 0);
+            this.$set(this.formValidate.attrValue[i], 'productId', 0);
+            let attrValues = this.formValidate.attrValue[i].attrValue;
+            // this.$set(this.formValidate.attrValue[i], 'attrValue', JSON.stringify(attrValues));
+            delete this.formValidate.attrValue[i].value0;
+          }
         }
       } else {
         this.formValidate.attr = [
-          { attrName: '规格', attrValues: '默认', id: this.$route.params.id ? this.formValidate.attr[0].id : 0 },
+          {
+            attrName: '规格',
+            attrValues: '默认',
+            id: this.$route.params.id ? this.formValidate.attr[0].id : 0,
+            isShowImage: false,
+            optionList: [{ value: '默认' }],
+          },
         ];
         this.OneattrValue.map((item) => {
           this.$set(item, 'attrValue', JSON.stringify({ 规格: '默认' }));
+          // 如果佣金设置为默认
+          if (!this.formValidate.isSub) {
+            this.$set(item, 'brokerage', 0);
+            this.$set(item, 'brokerageTwo', 0);
+          }
           //this.$set(item, 'productId', 0);
         });
         this.formValidate.attrValue = this.OneattrValue;
@@ -1672,6 +1178,68 @@ export default {
       }
       // 其他 文件类型
       return 'other';
+    },
+    // 获取服务保障列表
+    getGuaranteeList() {
+      guaranteeListApi({
+        isShow: 1,
+      })
+        .then((res) => {
+          this.guaranteeList = res;
+        })
+        .catch((err) => {
+          this.$message.error(err.message);
+        });
+    },
+    // 获取被选服务保障id列表
+    getGuranteeIdsList(list) {
+      if (list) {
+        this.guaranteeIdsList = list.map((item) => {
+          return item.id;
+        });
+      }
+    },
+    // 修改服务保障
+    updateGuaranteeIds(list) {
+      this.formValidate.guaranteeIds = list.join(',');
+    },
+    // 回调规格生成表格数据 多规格
+    changeManyAttrValue(e) {
+      // rows数组第一项 新增默认数据 oneFormBatch
+      this.ManyAttrValue = e;
+    },
+    //批量清空规格中的批量数据
+    handleBatchDel() {
+      this.oneFormBatch = [
+        {
+          image: '',
+          price: void 0,
+          cost: void 0,
+          otPrice: void 0,
+          stock: void 0,
+          weight: void 0,
+          volume: void 0,
+          brokerage: void 0,
+          brokerageTwo: void 0,
+          barCode: '',
+        },
+      ];
+    },
+    // 设置多规格商品的表格数据
+    generateManyAttr() {
+      // 多规格属性赋值
+      this.ManyAttrValue = this.formValidate.attrValue;
+      this.ManyAttrValue.forEach((val) => {
+        val.image = this.$selfUtil.setDomain(val.image);
+        val.attrValue = JSON.parse(val.attrValue);
+      });
+      this.ManyAttrValue = [...this.oneFormBatch, ...this.ManyAttrValue];
+      // 此处手动实现后台原本value0 value1的逻辑
+      this.formValidate.attrValue.forEach((item) => {
+        for (let attrValueKey in item.attrValue) {
+          item[attrValueKey] = item.attrValue[attrValueKey];
+        }
+      });
     },
   },
 };

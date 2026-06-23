@@ -18,12 +18,16 @@ import com.zbkj.common.model.bargain.StoreBargain;
 import com.zbkj.common.model.combination.StoreCombination;
 import com.zbkj.common.model.combination.StorePink;
 import com.zbkj.common.model.coupon.StoreCouponUser;
+import com.zbkj.common.model.wechat.video.PayComponentOrder;
+import com.zbkj.common.model.wechat.video.PayComponentProduct;
+import com.zbkj.common.model.wechat.video.PayComponentProductSku;
 import com.zbkj.common.model.seckill.StoreSeckill;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.order.StoreOrderInfo;
 import com.zbkj.common.model.product.StoreProductAttrValue;
 import com.zbkj.common.model.system.SystemAdmin;
 import com.zbkj.common.utils.RedisUtil;
+import com.zbkj.common.vo.ShopOrderPayVo;
 import com.zbkj.service.delete.OrderUtils;
 import com.zbkj.service.service.*;
 import org.slf4j.Logger;
@@ -37,6 +41,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -44,7 +49,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -120,6 +125,21 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
     private UserLevelService userLevelService;
 
     @Autowired
+    private PayComponentOrderService componentOrderService;
+
+    @Autowired
+    private WechatVideoOrderService wechatVideoOrderService;
+
+    @Autowired
+    private PayComponentOrderProductService componentOrderProductService;
+
+    @Autowired
+    private PayComponentProductService componentProductService;
+
+    @Autowired
+    private PayComponentProductSkuService componentProductSkuService;
+
+    @Autowired
     private StoreProductAttrValueService attrValueService;
 
     @Autowired
@@ -133,6 +153,9 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
 
     @Autowired
     private SmsTemplateService smsTemplateService;
+    @Autowired
+    private AsyncService asyncService;
+
 
     /**
      * 用户取消订单
@@ -179,18 +202,18 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
      * @since 2020-07-09
      */
     @Override
-    @Transactional(rollbackFor = {RuntimeException.class, Error.class, CrmebException.class})
     public Boolean complete(StoreOrder storeOrder) {
         /*
          * 1、修改订单状态 （用户操作的时候已处理）
          * 2、写订单日志
          * */
-        try{
-            storeOrderStatusService.createLog(storeOrder.getId(), "check_order_over", "用户评价");
-            return true;
-        }catch (Exception e){
-            return false;
-        }
+        Boolean execute = transactionTemplate.execute(e -> {
+            storeOrderStatusService.createLog(storeOrder.getId(), "check_order_over", "订单已完成");
+            return Boolean.TRUE;
+        });
+        // 异步处理佣金冻结
+        asyncService.brokerageFreezeByNode(storeOrder.getOrderId(), "complete");
+        return execute;
     }
 
     /**
@@ -250,8 +273,29 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
                         attrValueService.operationStock(e.getId(), orderInfo.getPayNum(), "add", Constants.PRODUCT_TYPE_NORMAL, e.getVersion());
                     }
                 });
-            }
-            else { // 正常商品回滚销量库存
+            } else if (storeOrder.getType().equals(1)) {// 视频订单自动取消
+                // 获取视频订单信息
+                for (StoreOrderInfo orderInfoVo : orderInfoList) {
+                    Integer payNum = orderInfoVo.getPayNum();
+                    Integer attrValueId = orderInfoVo.getAttrValueId();
+                    PayComponentProduct componentProduct = componentProductService.getById(orderInfoVo.getProductId());
+//                    componentProduct.setSales(componentProduct.getSales() - payNum);
+                    PayComponentProductSku productSku = componentProductSkuService.getByProIdAndAttrValueId(orderInfoVo.getProductId(), attrValueId);
+//                    productSku.setStockNum(productSku.getStockNum() + payNum);
+                    StoreProductAttrValue productAttrValue = attrValueService.getById(attrValueId);
+//                    productAttrValue.setStock(productAttrValue.getStock() + payNum);
+//                    productAttrValue.setSales(productAttrValue.getSales() - payNum);
+//                    componentProductService.updateById(componentProduct);
+//                    componentProductSkuService.updateById(productSku);
+//                    attrValueService.updateById(productAttrValue);
+
+                    componentProductSkuService.operationStock(productSku.getId(), payNum, "add", productSku.getVersion());
+                    componentProductService.operationStock(componentProduct.getId(), payNum, "add");
+                    attrValueService.operationStock(productAttrValue.getId(), payNum, "add", Constants.PRODUCT_TYPE_COMPONENT, productAttrValue.getVersion());
+                }
+                return true;
+
+            } else { // 正常商品回滚销量库存
                 for (StoreOrderInfo orderInfoVo : orderInfoList) {
                     StoreProduct storeProduct = storeProductService.getById(orderInfoVo.getProductId());
                     storeProductService.operationStock(storeProduct.getId(), orderInfoVo.getPayNum(), "add", storeProduct.getVersion());
@@ -394,6 +438,15 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             }
             return Boolean.TRUE;
         });
+
+        // 视频号订单创建售后
+        try {
+            componentOrderService.createAfterSale(storeOrder.getOrderId());
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 视频号订单售后部分失败
+            logger.error("视频号订单售后部分处理失败，message = " + e.getMessage());
+        }
         return execute;
     }
 
@@ -433,26 +486,53 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
         storeOrder.setIsDel(true).setIsSystemDel(true);
         Boolean execute = false;
 
-        execute = transactionTemplate.execute(e -> {
-            storeOrder.setUpdateTime(DateUtil.date());
-            storeOrderService.updateById(storeOrder);
-            //写订单日志
-            storeOrderStatusService.createLog(storeOrder.getId(), "cancel", "到期未支付系统自动取消");
-            // 退优惠券
-            if (storeOrder.getCouponId() > 0 ) {
-                StoreCouponUser couponUser = couponUserService.getById(storeOrder.getCouponId());
-                couponUser.setStatus(CouponConstants.STORE_COUPON_USER_STATUS_USABLE);
-                couponUser.setUpdateTime(DateUtil.date());
-                couponUserService.updateById(couponUser);
+        if (storeOrder.getType().equals(1)) {
+            // 视频订单修改状态
+            PayComponentOrder componentOrder = componentOrderService.getByOrderNo(storeOrder.getOrderId());
+            ShopOrderPayVo shopOrderPayVo = new ShopOrderPayVo();
+            shopOrderPayVo.setOutOrderId(componentOrder.getOrderNo());
+            shopOrderPayVo.setOpenid(componentOrder.getOpenid());
+            shopOrderPayVo.setActionType(4);// 超时未支付
+            Boolean shopOrderPay = wechatVideoOrderService.shopOrderPay(shopOrderPayVo);
+            if (!shopOrderPay) {
+                logger.error("视频号订单自动取消失败，订单号 = " + storeOrder.getOrderId());
+                return Boolean.FALSE;
             }
-            // 回滚库存
-            Boolean rollbackStock = rollbackStock(storeOrder);
-            if (!rollbackStock) {
-                throw new CrmebException("回滚库存失败");
-            }
-            return Boolean.TRUE;
-        });
-
+            componentOrder.setStatus(250);
+            execute = transactionTemplate.execute(e -> {
+                storeOrder.setUpdateTime(DateUtil.date());
+                storeOrderService.updateById(storeOrder);
+                componentOrderService.updateById(componentOrder);
+                //写订单日志
+                storeOrderStatusService.createLog(storeOrder.getId(), "cancel", "到期未支付系统自动取消");
+                // 回滚库存
+                Boolean rollbackStock = rollbackStock(storeOrder);
+                if (!rollbackStock) {
+                    throw new CrmebException("回滚库存失败");
+                }
+                return Boolean.TRUE;
+            });
+        } else {
+            execute = transactionTemplate.execute(e -> {
+                storeOrder.setUpdateTime(DateUtil.date());
+                storeOrderService.updateById(storeOrder);
+                //写订单日志
+                storeOrderStatusService.createLog(storeOrder.getId(), "cancel", "到期未支付系统自动取消");
+                // 退优惠券
+                if (storeOrder.getCouponId() > 0 ) {
+                    StoreCouponUser couponUser = couponUserService.getById(storeOrder.getCouponId());
+                    couponUser.setStatus(CouponConstants.STORE_COUPON_USER_STATUS_USABLE);
+                    couponUser.setUpdateTime(DateUtil.date());
+                    couponUserService.updateById(couponUser);
+                }
+                // 回滚库存
+                Boolean rollbackStock = rollbackStock(storeOrder);
+                if (!rollbackStock) {
+                    throw new CrmebException("回滚库存失败");
+                }
+                return Boolean.TRUE;
+            });
+        }
         return execute;
     }
 
@@ -472,31 +552,30 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
         User user = userService.getById(storeOrder.getUid());
 
         // 获取佣金记录
-        List<UserBrokerageRecord> recordList = userBrokerageRecordService.findListByLinkIdAndLinkType(storeOrder.getOrderId(), BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_ORDER);
-        logger.info("收货处理佣金条数：" + recordList.size());
-        for (UserBrokerageRecord record : recordList) {
-            if (!record.getStatus().equals(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_CREATE)) {
-                throw new CrmebException(StrUtil.format("订单收货task处理，订单佣金记录不是创建状态，id={}", orderId));
-            }
-            // 佣金进入冻结期
-            record.setStatus(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_FROZEN);
-            // 计算解冻时间
-            Long thawTime = cn.hutool.core.date.DateUtil.current(false);
-            if (record.getFrozenTime() > 0) {
-                DateTime dateTime = cn.hutool.core.date.DateUtil.offsetDay(new Date(), record.getFrozenTime());
-                thawTime = dateTime.getTime();
-            }
-            record.setThawTime(thawTime);
-            record.setUpdateTime(DateUtil.date());
-        }
+        //List<UserBrokerageRecord> recordList = userBrokerageRecordService.findListByLinkIdAndLinkType(storeOrder.getOrderId(), BrokerageRecordConstants.BROKERAGE_RECORD_LINK_TYPE_ORDER);
+        //logger.info("收货处理佣金条数：" + recordList.size());
+        //for (UserBrokerageRecord record : recordList) {
+        //    if (!record.getStatus().equals(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_CREATE)) {
+        //        throw new CrmebException(StrUtil.format("订单收货task处理，订单佣金记录不是创建状态，id={}", orderId));
+        //    }
+        //    // 佣金进入冻结期
+        //    record.setStatus(BrokerageRecordConstants.BROKERAGE_RECORD_STATUS_FROZEN);
+        //    // 计算解冻时间
+        //    Long thawTime = cn.hutool.core.date.DateUtil.current(false);
+        //    if (record.getFrozenTime() > 0) {
+        //        DateTime dateTime = cn.hutool.core.date.DateUtil.offsetDay(new Date(), record.getFrozenTime());
+        //        thawTime = dateTime.getTime();
+        //    }
+        //    record.setThawTime(thawTime);
+        //    record.setUpdateTime(DateUtil.date());
+        //}
 
         // 获取积分记录
         List<UserIntegralRecord> integralRecordList = userIntegralRecordService.findListByOrderIdAndUid(storeOrder.getOrderId(), storeOrder.getUid());
-
         logger.info("收货处理积分条数：" + integralRecordList.size());
         List<UserIntegralRecord> userIntegralRecordList = integralRecordList.stream().filter(e -> e.getType().equals(IntegralRecordConstants.INTEGRAL_RECORD_TYPE_ADD)).collect(Collectors.toList());
         for (UserIntegralRecord record : userIntegralRecordList) {
-            // 佣金进入冻结期
+            // 积分进入冻结期
             record.setStatus(IntegralRecordConstants.INTEGRAL_RECORD_STATUS_FROZEN);
             // 计算解冻时间
             Long thawTime = cn.hutool.core.date.DateUtil.current(false);
@@ -512,9 +591,9 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             // 日志
             storeOrderStatusService.createLog(storeOrder.getId(), "user_take_delivery", Constants.ORDER_STATUS_STR_TAKE);
             // 分佣-佣金进入冻结期
-            if (CollUtil.isNotEmpty(recordList)) {
-                userBrokerageRecordService.updateBatchById(recordList);
-            }
+            //if (CollUtil.isNotEmpty(recordList)) {
+            //    userBrokerageRecordService.updateBatchById(recordList);
+            //}
             // 积分进入冻结期
             if (CollUtil.isNotEmpty(userIntegralRecordList)) {
                 userIntegralRecordService.updateBatchById(userIntegralRecordList);
@@ -522,6 +601,10 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             return Boolean.TRUE;
         });
         if (execute) {
+
+            // 异步处理佣金冻结
+            asyncService.brokerageFreezeByNode(storeOrder.getOrderId(), "receipt");
+
             // 发送用户确认收货管理员提醒短信
             SystemNotification notification = systemNotificationService.getByMark(NotifyConstants.RECEIPT_GOODS_ADMIN_MARK);
             if (notification.getIsSms().equals(1)) {

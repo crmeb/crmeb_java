@@ -41,7 +41,7 @@
 
 <script>
 	import {
-		getArticleDetails
+		getArticleDetails 
 	} from '@/api/api.js';
 	import {
 		getProductDetail

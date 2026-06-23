@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<skeleton :show="showSkeleton" :isNodes="isNodes" ref="skeleton" loading="chiaroscuro" selector="skeleton"
 			bgcolor="#FFF"></skeleton>
 		<view class="product-con skeleton" :style="{visibility: showSkeleton ? 'hidden' : 'visible'}">
@@ -15,16 +15,15 @@
 						<!-- #endif -->
 						<!-- #ifdef H5 || APP-PLUS -->
 						<view id="home" class="home acea-row row-center-wrapper iconfont icon-xiangzuo h5_back"
-							:class="opacity>0.5?'on':''" :style="{ top: homeTop + 'rpx' }" v-if="returnShow"
-							@tap="returns">
+							:class="opacity>0.5?'on':''" :style="{ top: homeTop + 'rpx' }" v-if="returnShow" @tap="returns">
 						</view>
 						<!-- #endif -->
 						<!-- 头部tab标题 -->
 						<!-- #ifdef H5  || APP-PLUS-->
 						<view class="tab_nav" v-show="opacity > 0.6">
 							<view class="header flex justify-between align-center">
-								<view class="item" :class="navActive === index ? 'on' : ''" v-for="(item,index) in navList"
-									:key='index' @tap="tap(index)">
+								<view class="item" :class="navActive === index ? 'on' : ''" v-for="(item,index) in navList" :key='index'
+									@tap="tap(index)">
 									{{ item }}
 								</view>
 							</view>
@@ -45,27 +44,49 @@
 					<text class="pl-20">{{item.name}}</text>
 				</view>
 			</view>
-			<view class="detail_container">
-				<scroll-view :scroll-top="scrollTop" scroll-y='true' scroll-with-animation="true"
-					:style='"height:"+height+"px;"' @scroll="scroll">
-					<view id="past0">
-						<productConSwiper class="skeleton-rect" :imgUrls="sliderImage" :videoline="videoLink"
-							@videoPause="videoPause"></productConSwiper>
+				<view class="detail_container" @touchstart="touchStart">
+					<scroll-view :scroll-top="scrollTop" scroll-y='true' scroll-with-animation="true"
+						:style='"height:"+height+"px;"' @scroll="scroll">
+						<PageDesign
+							v-if="diyDataReady"
+							:diyData="diyData"
+							:productData="diyProductInfo"
+							:priceData="diyPriceData"
+							:skuList="diySkuList"
+							:reply="reply"
+							:replyCount="replyCount"
+							:replyChance="replyChance"
+							:productId="id"
+							:couponList="couponDeaultType"
+							:activity="activityH5"
+							:attr="attr"
+							:attrTxt="attrTxt"
+							:attrValue="attrValue"
+							:isShowPaidVip="isShowPaidVip"
+							@changeSpec="onChangeSpecFromPageDesign"
+							@showSpecModal="selecAttr"
+							@share="listenerActionSheet"
+							@showCoupon="couponTap"
+							@openModal="openModal"
+							@goActivity="goActivity"
+						></PageDesign>
+						<block v-else>
+						<view id="past0">
+						<productConSwiper class="skeleton-rect" :imgUrls="sliderImage" :videoline="videoLink"></productConSwiper>
 						<!-- 氛围图card -->
-						<activity-style v-if="productInfo.activityStyle" :productInfo="productInfo"></activity-style>
+						<activity-style v-if="productInfo.activityStyle" :activityPrice="activityPrice" :activityVipPrice="activityVipPrice"
+							:productInfo="productInfo"></activity-style>
 						<view class="pad30">
 							<view class='wrapper mb30 borRadius14'>
 								<view class='share acea-row row-between row-bottom share-icon-box'>
 									<view class='x-money skeleton-rect flex align-baseline' v-if="!productInfo.activityStyle">￥
 										<text class='num font-44'>{{attr.productSelect.price}}</text>
-										<view class="flex  pl-2"
-											v-if="attr.productSelect.vipPrice && attr.productSelect.vipPrice > 0">
+										<view class="flex  pl-2" v-if="attr.productSelect.vipPrice && attr.productSelect.vipPrice > 0">
 											<image :src="urlDomain+'crmebimage/perset/staticImg/vip_badge.png'" class="vip_icon"></image>
-											<text
-												class='vip_money skeleton-rect'>￥{{attr.productSelect.vipPrice}}</text>
+											<text class='vip_money skeleton-rect'>￥{{attr.productSelect.vipPrice}}</text>
 										</view>
 									</view>
-									<view class='iconfont icon-fenxiang share-icon'  @click="listenerActionSheet"></view>
+									<view class='iconfont icon-fenxiang share-icon' @click="listenerActionSheet"></view>
 								</view>
 								<view class='introduce skeleton-rect share-introduce'>{{productInfo.storeName}}</view>
 								<view class='label acea-row row-between-wrapper'>
@@ -76,10 +97,10 @@
 										销量:{{Math.floor(productInfo.sales) + Math.floor(productInfo.ficti) || 0}}{{productInfo.unitName || ''}}
 									</view>
 								</view>
-								<view v-if="defaultCoupon.length>0 && type=='normal'"
-									class='coupon acea-row row-between-wrapper' @click='couponTap'>
+								<view v-if="couponDeaultType.length>0 && type=='normal'" class='coupon acea-row row-between-wrapper'
+									@click='couponTap'>
 									<view class='hide line1 acea-row skeleton-rect'>优惠券：
-										<view class='activity'>满{{defaultCoupon[0].minPrice}}减{{defaultCoupon[0].money}}
+										<view class='activity'>满{{couponDeaultType[0].minPrice}}减{{couponDeaultType[0].money}}
 										</view>
 									</view>
 									<view class='iconfont icon-jiantou'></view>
@@ -87,8 +108,7 @@
 								<view class="coupon acea-row row-between-wrapper" v-if="activityH5.length">
 									<view class="line1 acea-row">
 										<text class="activityName skeleton-rect">活&nbsp;&nbsp;&nbsp;动：</text>
-										<view v-for='(item,index) in activityH5' :key='index' @click="goActivity(item)"
-											class="activityBox">
+										<view v-for='(item,index) in activityH5' :key='index' @click="goActivity(item)" class="activityBox">
 											<view v-if="item.type === '1'" class="skeleton-rect"
 												:class="index==0?'activity_pin':'' || index==1?'activity_miao':'' || index==2?'activity_kan':''">
 												<text class="iconfonts iconfont icon-miaosha1"></text>
@@ -110,20 +130,34 @@
 									</view>
 								</view>
 							</view>
-							<view class='attribute mb30 borRadius14' @click="selecAttr">
-								<view class="acea-row row-between-wrapper">
-									<view class="line1 skeleton-rect">{{attrTxt}}：
-										<text class='atterTxt'>{{attrValue}}</text>
+							<view class='attribute mb30 borRadius14'>
+								<!-- 规格选择 -->
+								<view class="p-24" @click="selecAttr">
+									<view class="acea-row row-between-wrapper">
+										<view class="line1 skeleton-rect">{{attrTxt}}：
+											<text class='atterTxt'>{{attrValue}}</text>
+										</view>
+										<view class='iconfont icon-jiantou'></view>
 									</view>
-									<view class='iconfont icon-jiantou'></view>
+									<view class="acea-row row-between-wrapper" style="margin-top:7px;padding-left:55px;"
+										v-if="skuImage.length > 1">
+										<view class="flex">
+											<image :src="item" v-for="(item,index) in skuImage.slice(0,4)" :key="index" class="attrImg">
+											</image>
+										</view>
+										<view class="switchTxt">共{{skuArr.length}}种规格可选</view>
+									</view>
 								</view>
-								<view class="acea-row row-between-wrapper" style="margin-top:7px;padding-left:55px;"
-									v-if="skuArr.length > 1">
-									<view class="flex">
-										<image :src="item.image" v-for="(item,index) in skuArr.slice(0,4)" :key="index"
-											class="attrImg"></image>
+								<!-- 服务保障 -->
+								<view v-if="guaranteeList.length > 0" class="acea-row row-between-wrapper p-24"
+									@click="handleToGgle(true)">
+									<view class="line1 skeleton-fillet">
+										<text class="">保&nbsp;&nbsp;&nbsp;障：</text>
+										<text class="atterTxt skeleton-fillet" v-for="(item, index) in guaranteeList"
+											:key="index">{{ item.name }} ·
+										</text>
 									</view>
-									<view class="switchTxt">共{{skuArr.length}}种规格可选</view>
+									<view class="iconfont icon-jiantou"></view>
 								</view>
 							</view>
 							<view class='userEvaluation' id="past1">
@@ -148,13 +182,12 @@
 									<image :src="urlDomain+'crmebimage/perset/staticImg/xyou.png'"></image>
 								</view>
 								<view class="slider-banner banner">
-									<swiper indicator-dots="true" :autoplay="autoplay" :circular="circular"
-										:interval="interval" :duration="duration" indicator-color="#999"
-										:indicator-active-color="indicatorBg" :style="'height:'+clientHeight+'px'">
+									<swiper indicator-dots="true" :autoplay="autoplay" :circular="circular" :interval="interval"
+										:duration="duration" indicator-color="#999" :indicator-active-color="indicatorBg"
+										:style="'height:'+clientHeight+'px'">
 										<swiper-item v-for="(item,indexw) in good_list" :key="indexw">
 											<view class="list acea-row row-middle" :id="'list'+indexw">
-												<view class="item" v-for="(val,indexn) in item.list" :key="indexn"
-													@click="goDetail(val)">
+												<view class="item" v-for="(val,indexn) in item.list" :key="indexn" @click="goDetail(val)">
 													<view class="pictrue">
 														<image :src="val.image"></image>
 														<span class="pictrue_log pictrue_log_class"
@@ -185,10 +218,27 @@
 							<jyf-parser :html="description" ref="article" :tag-style="tagStyle"></jyf-parser>
 						</view>
 					</view>
-					<view style='height:120rpx;'></view>
-				</scroll-view>
-			</view>
-			<view class='footer acea-row row-between-wrapper'>
+						<view style='height:120rpx;'></view>
+						</block>
+					</scroll-view>
+				</view>
+				<productBottom
+					v-if="diyDataReady"
+					:diyData="diyData"
+					:storeInfo="diyProductInfo"
+					:CartCount="CartCount"
+					:noGoods="noGoods"
+					:attr="attr"
+					:presale_pay_status="2"
+					:animated="animated"
+					:routineContact="0"
+					@setCollect="setCollect"
+					@goCart="goCart"
+					@joinCart="joinCart"
+					@goBuy="goBuy"
+					@share="listenerActionSheet"
+				></productBottom>
+				<view v-else class='legacy-product-footer acea-row row-between-wrapper'>
 				<!-- #ifdef MP -->
 				<button hover-class='none' class='item skeleton-rect' @click="onClickService"
 					v-if="chatConfig.telephone_service_switch === 'open'">
@@ -196,11 +246,12 @@
 					<view>客服</view>
 				</button>
 				<template v-else>
-					<button open-type="contact" hover-class='none' class='item skeleton-rect' v-if="chatConfig.wx_chant_independent=='open'">
+					<button open-type="contact" hover-class='none' class='item skeleton-rect'
+						v-if="chatConfig.wx_chant_independent=='open'">
 						<view class='iconfont icon-kefu'></view>
 						<view>客服</view>
 					</button>
-					<button class="item" hover-class='none' @click="wxChatService"  v-else>
+					<button class="item" hover-class='none' @click="wxChatService" v-else>
 						<view class='iconfont icon-kefu'></view>
 						<text>联系客服</text>
 					</button>
@@ -218,9 +269,8 @@
 						<view class='iconfont icon-shoucang' v-else></view>
 						<view>收藏</view>
 					</view>
-					<navigator open-type='switchTab' class="animated item skeleton-rect"
-						:class="animated==true?'bounceIn':''" url='/pages/order_addcart/order_addcart'
-						hover-class="none">
+					<navigator open-type='switchTab' class="animated item skeleton-rect" :class="animated==true?'bounceIn':''"
+						url='/pages/order_addcart/order_addcart' hover-class="none">
 						<view class='iconfont icon-gouwuche1'>
 							<text v-if="Math.floor(CartCount)>0" class='num bg_color'>{{CartCount}}</text>
 						</view>
@@ -235,32 +285,33 @@
 					<view class="bnt acea-row skeleton-rect" v-else>
 						<form @submit="joinCart" report-submit="true"><button class="joinCart bnts"
 								form-type="submit">加入购物车</button></form>
-						<form @submit="goBuy" report-submit="true"><button class="buy bnts"
-								form-type="submit">立即购买</button>
+						<form @submit="goBuy" report-submit="true"><button class="buy bnts" form-type="submit">立即购买</button>
 						</form>
 					</view>
 				</block>
-				<view class="bnt bntVideo acea-row skeleton-rect"
-					v-if="attr.productSelect.stock <= 0 && type === 'video'">
+				<view class="bnt bntVideo acea-row skeleton-rect" v-if="attr.productSelect.stock <= 0 && type === 'video'">
 					<form report-submit="true"><button class="bnts bg-color-hui" form-type="submit">已售罄</button>
 					</form>
 				</view>
-				<view class="bnt bntVideo acea-row skeleton-rect"
-					v-if="attr.productSelect.stock > 0 && type === 'video'">
+				<view class="bnt bntVideo acea-row skeleton-rect" v-if="attr.productSelect.stock > 0 && type === 'video'">
 					<form @submit="goBuy" report-submit="true"><button class="buy bnts" form-type="submit">立即购买</button>
 					</form>
 				</view>
 			</view>
-			<shareRedPackets :sharePacket="sharePacket" @listenerActionSheet="listenerActionSheet"
-				@showShare="showShare"></shareRedPackets>
+			<shareRedPackets :sharePacket="sharePacket" @listenerActionSheet="listenerActionSheet" @showShare="showShare">
+			</shareRedPackets>
 			<!-- 组件 -->
 			<productWindow :attr="attr" :isShow='1' :iSplus='1' @myevent="onMyEvent" @ChangeAttr="ChangeAttr"
 				@ChangeCartNum="ChangeCartNum" @attrVal="attrVal" @iptCartNum="iptCartNum" id='product-window'
 				@getImg="showImg">
 			</productWindow>
-			<couponListWindow :coupon='coupon' :typeNum="couponDeaultType[0].useType"
-				@ChangCouponsClone="ChangCouponsClone" @ChangCoupons="ChangCoupons"
-				@ChangCouponsUseState="ChangCouponsUseState" @tabCouponType="tabCouponType"></couponListWindow>
+			<!-- 优惠券弹窗 -->
+			<block v-if="couponDeaultType.length">
+				<couponListWindow :coupon='coupon' :typeNum="couponDeaultType[0].useType"
+					:firstType="couponDeaultType[0].useType" @ChangCouponsClone="ChangCouponsClone" @ChangCoupons="ChangCoupons"
+					@ChangCouponsUseState="ChangCouponsUseState" @tabCouponType="tabCouponType">
+				</couponListWindow>
+			</block>
 			<!-- 分享按钮 -->
 			<view class="generate-posters" :class="posters ? 'on' : ''">
 				<view class="generateCon acea-row row-middle">
@@ -313,7 +364,6 @@
 				@shareFriend="listenerActionSheet" />
 			<view class="mask" v-if="posters" @click="closePosters"></view>
 			<view class="mask" v-if="canvasStatus"></view>
-			<view class="mask_transparent" v-if="currentPage" @touchmove="hideNav" @click="hideNav()"></view>
 			<!-- 海报展示 -->
 			<view class='poster-pop' v-if="canvasStatus">
 				<image :src='imagePath'></image>
@@ -326,12 +376,40 @@
 			<view class="share-box" v-if="H5ShareBox">
 				<image :src="urlDomain+'crmebimage/perset/staticImg/share-info.png'" @click="H5ShareBox = false"></image>
 			</view>
+			<!-- 保障服务弹窗 -->
+			<view class="guarantee-pop-box">
+				<uni-popup ref="guaranteePopup" :safe-area="false" type="bottom" borderRadius="20px 20px 0 0">
+					<view class="ensure">
+						<view class="title">
+							保障服务
+							<view class="close-box" @click="handleToGgle(false)">
+								<view class="iconfont icon-guanbi f-s-24"></view>
+							</view>
+						</view>
+						<view class="list">
+							<view class="item acea-row" v-for="(item, index) in guaranteeList" :key="index">
+								<view class="pictrue">
+									<text class="iconfont icon-gou1"></text>
+								</view>
+								<view class="text">
+									<view class="name">{{ item.name }}</view>
+									<view>{{ item.content }}</view>
+								</view>
+							</view>
+						</view>
+						<view class="activityBtn bnt" @click="handleToGgle(false)">
+							确定
+						</view>
+					</view>
+				</uni-popup>
+			</view>
 		</view>
 	</view>
 </template>
 
 <script>
 	import activityStyle from "./components/activityStyle.vue";
+	import tuiSkeleton from "@/components/base/tui-skeleton.vue";
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
 	import store from '@/store';
 	import {
@@ -350,10 +428,11 @@
 		getProductGood,
 		getReplyProduct
 	} from '@/api/store.js';
-	import {
-		getCoupons,
-		tokenIsExistApi
-	} from '@/api/api.js';
+		import {
+			getCoupons,
+			tokenIsExistApi,
+			getThemeInfo
+		} from '@/api/api.js';
 	import {
 		getCartCounts
 	} from '@/api/order.js';
@@ -394,9 +473,13 @@
 	import {
 		Debounce
 	} from '@/utils/validate.js'
-		import navBar from '@/components/navBar';
-	export default {
-		components: {
+	import colors from '@/mixins/color';
+	import navBar from '@/components/navBar';
+		import PageDesign from '@/subpackage/diyComponents/pageDesign.vue';
+		import productBottom from '@/subpackage/diyComponents/productBottom.vue';
+		export default {
+			mixins: [colors],
+			components: {
 			productConSwiper,
 			couponListWindow,
 			productWindow,
@@ -404,9 +487,12 @@
 			shareRedPackets,
 			cusPreviewImg,
 			"jyf-parser": parser,
-			activityStyle,
-			navBar
-		},
+				activityStyle,
+				navBar,
+				tuiSkeleton,
+				PageDesign,
+				productBottom
+			},
 		data() {
 			let that = this;
 			return {
@@ -428,9 +514,13 @@
 				reply: [], //评论列表
 				productInfo: {}, //商品详情
 				productValue: [], //系统属性
+				guaranteeList: [], // 保障服务列表
 				couponList: [], //优惠券
-				cart_num: 1, //购买数量
-				isAuto: false, //没有授权的不会自动授权
+					cart_num: 1, //购买数量
+					diyData: {},
+					noGoods: false,
+					isShowPaidVip: false,
+					isAuto: false, //没有授权的不会自动授权
 				isShowAuth: false, //是否隐藏授权
 				isOpen: false, //是否打开属性组件
 				actionSheetHidden: true,
@@ -489,7 +579,7 @@
 				navbarRight: 0,
 				userCollect: false,
 				returnShow: true, //判断顶部返回是否出现
-				type: "", 
+				type: "", //视频号普通商品类型
 				theme: app.globalData.theme,
 				indicatorBg: '',
 				shareStatus: true,
@@ -529,12 +619,13 @@
 				chatConfig: {
 					consumer_hotline: '',
 					telephone_service_switch: 'close',
-					wx_chant_independent:'open'
+					wx_chant_independent: 'open'
 				}, //客服配置
 				defaultCoupon: [],
-				couponDeaultType: [{
-					useType: 1
-				}],
+				// couponDeaultType: [{
+				// 	useType: 1
+				// }],
+				couponDeaultType: [],
 				//优惠券分页数据
 				where: {
 					page: 1,
@@ -543,9 +634,70 @@
 					type: 0
 				},
 				couponType: 0, //优惠券类型 类型，1-通用，2-商品，3-品类
+				skuImage: [], //规格小图
+				activityPrice: 0, // 氛围图价格
+				activityVipPrice: 0 // 氛围图vip价格
 			};
 		},
-		computed: mapGetters(['isLogin', 'uid', 'chatUrl', 'productType']),
+			computed: {
+				...mapGetters(['isLogin', 'uid', 'chatUrl', 'productType']),
+				diyDataReady() {
+					return this.diyData && Object.keys(this.diyData).length > 0;
+				},
+				diyProtectionList() {
+					return (this.guaranteeList || []).map((item) => ({
+						...item,
+						title: item.title || item.name,
+					}));
+				},
+				diyProductInfo() {
+					const productInfo = this.productInfo || {};
+					const productSelect = this.attr.productSelect || {};
+					const sales = Math.floor(Number(productInfo.sales) || 0) + Math.floor(Number(productInfo.ficti) || 0);
+					const sliderImages = this.sliderImage.length ? this.sliderImage : this.parseSliderImage(productInfo.sliderImage);
+					return {
+						...productInfo,
+						store_name: productInfo.storeName || productInfo.store_name || '',
+						store_info: productInfo.storeInfo || productInfo.store_info || '',
+						slider_image: sliderImages.length ? sliderImages : (productInfo.image ? [productInfo.image] : []),
+						video_link: this.videoLink || productInfo.videoLink || productInfo.video_link || '',
+						description: this.description || productInfo.content || productInfo.description || '',
+						unit_name: productInfo.unitName || productInfo.unit_name || '',
+						ot_price: productSelect.otPrice || productInfo.otPrice || productInfo.ot_price || 0,
+						vip_price: productSelect.vipPrice || productInfo.vipPrice || productInfo.vip_price || 0,
+						real_price: productSelect.price || productInfo.price || 0,
+						price: productSelect.price || productInfo.price || 0,
+						fsales: sales,
+						userCollect: this.userCollect,
+						protection_list: this.diyProtectionList,
+						label_list: productInfo.labelList || productInfo.label_list || [],
+						cart_button: this.type === 'normal',
+						presale: false,
+					};
+				},
+				diyPriceData() {
+					const productInfo = this.productInfo || {};
+					const productSelect = this.attr.productSelect || {};
+					return {
+						price: productSelect.price || productInfo.price || 0,
+						real_price: productSelect.price || productInfo.price || 0,
+						ot_price: productSelect.otPrice || productInfo.otPrice || 0,
+						vip_price: productSelect.vipPrice || productInfo.vipPrice || 0,
+						member_price: productSelect.vipPrice || productInfo.vipPrice || 0,
+						stock: productSelect.stock || productInfo.stock || 0,
+						unit_name: productInfo.unitName || '',
+					};
+				},
+				diySkuList() {
+					return (this.skuArr || []).map((item) => ({
+						...item,
+						unique: item.unique || item.id,
+						ot_price: item.otPrice || item.ot_price || 0,
+						vip_price: item.vipPrice || item.vip_price || 0,
+						real_price: item.price || item.real_price || 0,
+					}));
+				},
+			},
 		watch: {
 			productInfo: {
 				handler: function() {
@@ -582,7 +734,7 @@
 				},
 			});
 
-			//获取浏览器中的参数，商品id ，normal普通商品
+			//获取浏览器中的参数，商品id video视频号商品，normal普通商品
 			if (!options.scene && !options.id) {
 				this.showSkeleton = false;
 				this.$util.Tips({
@@ -618,8 +770,9 @@
 			computeUser();
 			// #endif
 
-			if (options.spread) this.$Cache.set('spread',options.spread);
+			if (options.spread) this.$Cache.set('spread', options.spread);
 
+			this.getDiyData(); //商品详情主题配置
 			this.getGoodsDetails(); //商品详情
 			this.getCouponType(); //获取默认的 优惠券类型
 			this.getProductReplyList(); //评论列表
@@ -634,12 +787,12 @@
 				// #ifdef MP
 				const menuButton = uni.getMenuButtonBoundingClientRect();
 				const query = uni.createSelectorQuery().in(this);
-				query
-					.select('#home')
-					.boundingClientRect(data => {
-						this.homeTop = menuButton.top * 2 + menuButton.height - data.height;
-					})
-					.exec();
+					query
+						.select('#home')
+						.boundingClientRect(data => {
+							this.homeTop = menuButton.top * 2 + menuButton.height - (data ? data.height : 0);
+						})
+						.exec();
 				// #endif
 				// #ifdef APP-PLUS
 				this.homeTop = 60;
@@ -669,18 +822,65 @@
 			uni.$emit('scroll');
 		},
 		methods: {
+			getDiyData() {
+				let previewThemeId = uni.getStorageSync('previewThemeId');
+				let data = {};
+				if (previewThemeId) data.theme_id = previewThemeId;
+				getThemeInfo('detail', data).then((res) => {
+					this.$set(this, 'diyData', res.data || {});
+				}).catch(() => {
+					this.$set(this, 'diyData', {});
+				});
+			},
+			parseSliderImage(value) {
+				if (!value) return [];
+				if (Array.isArray(value)) return value;
+				try {
+					const list = JSON.parse(value);
+					return Array.isArray(list) ? list : [];
+				} catch (e) {
+					return typeof value === 'string' ? value.split(',').filter(Boolean) : [];
+				}
+			},
+			onChangeSpecFromPageDesign(item) {
+				if (item && item.suk) {
+					let values = item.suk.split(',');
+					if (this.attr.productAttr && this.attr.productAttr.length === values.length) {
+						values.forEach((value, index) => {
+							this.$set(this.attr.productAttr[index], 'index', value);
+						});
+					}
+					this.ChangeAttr(item.suk);
+				} else {
+					this.selecAttr();
+				}
+			},
+			openModal(type) {
+				if (type === 'protection') {
+					this.handleToGgle(true);
+				}
+			},
+			goCart() {
+				uni.switchTab({
+					url: '/pages/order_addcart/order_addcart'
+				});
+			},
+      //滚动
+      touchStart() {
+        this.currentPage = false;
+      },
 			//独立客服跳转
-			wxChatService(){
+			wxChatService() {
 				let chatUrlArr = this.chatUrl.split('?')
 				uni.navigateTo({
-					url:`/pages/users/web_page/index?webUel=${chatUrlArr[0]}&title=客服&${chatUrlArr[1]}`
+					url: `/pages/users/web_page/index?webUel=${chatUrlArr[0]}&title=客服&${chatUrlArr[1]}`
 				})
 			},
 			//校验token是否有效,true为有效，false为无效
 			getTokenIsExist() {
 				this.$LoginAuth.getTokenIsExist().then(data => {
 					if (data) {
-						this.getCouponList(1); //优惠券列表 类型，1-通用，2-商品，3-品类
+						this.getCouponList(0); //优惠券列表 类型，1-通用，2-商品，3-品类
 						this.getCartCount(true); //购物车数量
 						//绑定关系
 						silenceBindingSpread();
@@ -808,7 +1008,7 @@
 				// 砍价
 				if (item.activityH5 && item.activityH5.type == 2) {
 					uni.redirectTo({
-						url: `/pages/activity/goods_bargain_details/index?id=${item.activityH5.id}&bargain=${this.uid}`
+						url: `/pages/activity/goods_bargain_details/index?id=${item.activityH5.id}&startBargainUid=${this.uid}`
 					})
 					return
 				}
@@ -821,15 +1021,19 @@
 				}
 				// 秒杀
 				if (item.activityH5 && item.activityH5.type == 1) {
-					debugger
 					uni.redirectTo({
 						url: `/pages/activity/goods_seckill_details/index?id=${item.activityH5.id}`
 					})
 					return
 				}
 			},
+			// 关闭优惠券弹窗，重置优惠券列表
 			ChangCouponsClone: function() {
 				this.$set(this.coupon, 'coupon', false)
+				this.initCouponList()
+				this.$set(this.coupon, 'type', 0);
+				this.couponType = 0; //优惠券类型
+				this.getCouponList(0);
 			},
 			/**
 			 * 购物车数量加和数量减
@@ -874,11 +1078,21 @@
 				if (productSelect) {
 					this.$set(this.attr.productSelect, "image", productSelect.image);
 					this.$set(this.attr.productSelect, "price", productSelect.price);
+					this.activityPrice = productSelect.price
 					this.$set(this.attr.productSelect, "stock", productSelect.stock);
 					this.$set(this.attr.productSelect, "unique", productSelect.id);
 					this.$set(this.attr.productSelect, "cart_num", 1);
 					this.$set(this.attr.productSelect, "vipPrice", productSelect.vipPrice);
+					this.activityVipPrice = productSelect.vipPrice
 					this.$set(this.attr.productSelect, 'otPrice', productSelect.otPrice);
+					this.$set(this.attr.productSelect, 'isShow', productSelect.isShow);
+					// 后台传入的规格不展示时视为库存为0
+					if (!this.attr.productSelect.isShow) {
+						this.$set(this.attr.productSelect, "stock", 0);
+						this.$util.Tips({
+							title: "请重新选择其它规格"
+						});
+					}
 					this.$set(this, "attrValue", res);
 					this.$set(this, "attrTxt", "已选择");
 				} else {
@@ -889,6 +1103,7 @@
 					this.$set(this.attr.productSelect, "cart_num", 1);
 					this.$set(this.attr.productSelect, "vipPrice", this.productInfo.vipPrice);
 					this.$set(this.attr.productSelect, 'otPrice', this.productInfo.otPrice);
+					this.$set(this.attr.productSelect, 'isShow', false);
 					this.$set(this, "attrValue", "");
 					this.$set(this, "attrTxt", "请选择");
 				}
@@ -907,12 +1122,12 @@
 				let that = this;
 				if (!that.good_list.length) return;
 				let view = uni.createSelectorQuery().in(this).select("#list0");
-				view.fields({
-					size: true,
-				}, data => {
-					that.$set(that, 'clientHeight', data.height + 20)
-				}).exec();
-			},
+					view.fields({
+						size: true,
+					}, data => {
+						that.$set(that, 'clientHeight', data ? data.height + 20 : 0)
+					}).exec();
+				},
 			/**
 			 * 优品推荐
 			 * 
@@ -957,20 +1172,20 @@
 				getProductDetail(that.id, that.type).then(res => {
 					let productInfo = res.data.productInfo;
 					// 字符串数组转数组；
-					let arrayImg = productInfo.sliderImage;
-					let sliderImage = JSON.parse(arrayImg);
+					let sliderImage = that.parseSliderImage(productInfo.sliderImage);
 					if (that.getFileType(sliderImage[0]) == 'video') {
 						//判断轮播图第一张是否是视频，如果是，就赋值给videoLink，并且将其在轮播图中删除
 						this.$set(this, 'videoLink', sliderImage[0]);
 						sliderImage.splice(0, 1);
 					}
 					that.$set(that, 'sliderImage', sliderImage);
-					console.log(this.sliderImage);
 					that.$set(that, 'productInfo', productInfo);
 					that.$set(that, 'description', productInfo.content);
 					that.$set(that, 'userCollect', res.data.userCollect);
 					that.$set(that.attr, 'productAttr', res.data.productAttr);
 					that.$set(that, 'productValue', res.data.productValue);
+					that.$set(that, 'guaranteeList', res.data.guaranteeList || []);
+					that.$set(that, 'skuArr', []);
 					for (let key in res.data.productValue) {
 						let obj = res.data.productValue[key];
 						that.skuArr.push(obj)
@@ -992,17 +1207,20 @@
 							id: item.id,
 							isDel: item.isDel,
 							productId: item.productId,
-							type: item.type
+							type: item.type,
+							optionList: item.optionList || [],
+							isShowImage: item.isShowImage
 						}
 					});
 					this.$set(this.attr, 'productAttr', productAttr);
-
+					// 获取suk小图
+					this.getSkuImage()
 					// var navList = ['商品', '评价', '详情'];
 					// if (goodArray.length) {
 					// 	navList.splice(2, 0, '推荐')
 					// }
 					//that.$set(that, 'navList', navList);
-					
+
 					//无需登录即可分享
 					that.getCartCount();
 					//#ifdef H5
@@ -1024,9 +1242,9 @@
 					// #endif
 					that.DefaultSelect();
 					this.showSkeleton = false
-					setTimeout(() => {
-						this.defaultCoupon = this.coupon.list;
-					}, 1000)
+					// setTimeout(() => {
+					// 	this.defaultCoupon = this.coupon.list;
+					// }, 1000)
 				}).catch(err => {
 					//状态异常返回上级页面
 					that.$util.Tips({
@@ -1065,8 +1283,8 @@
 					// }
 					query.select(idView).boundingClientRect();
 					query.exec(function(res) {
-						var top = res[0].top;
-						var height = res[0].height;
+						var top = res && res[0] ? res[0].top : 0;
+						var height = res && res[0] ? res[0].height : 0;
 						topArr.push(top);
 						heightArr.push(height);
 						that.$set(that, 'topArr', topArr);
@@ -1081,11 +1299,24 @@
 			DefaultSelect: function() {
 				let productAttr = this.attr.productAttr;
 				let value = [];
-				//默认选中每种规格的第一个
-				for (let key in this.productValue) {
-					if (this.productValue[key].stock > 0) {
-						value = this.attr.productAttr.length ? key.split(",") : [];
-						break;
+				// 按 id 升序排序
+				const sortedArray = Object.entries(this.productValue)
+					.sort(([, a], [, b]) => a.id - b.id)
+					.map(([key, value]) => ({
+						key,
+						...value
+					}));
+				// 默认规格设置
+				for (let i = 0; i < sortedArray.length; i++) {
+					const attrItem = sortedArray[i]
+					if (attrItem.stock > 0 && attrItem.isShow) {
+						if (value.length == 0) {
+							value = this.attr.productAttr.length ? attrItem.key.split(",") : [];
+						}
+						if (attrItem.isDefault) {
+							value = this.attr.productAttr.length ? attrItem.key.split(",") : [];
+							break
+						}
 					}
 				}
 				for (let i = 0; i < value.length; i++) {
@@ -1098,6 +1329,8 @@
 					this.$set(this.attr.productSelect, "storeName", this.productInfo.storeName);
 					this.$set(this.attr.productSelect, "image", productSelect.image);
 					this.$set(this.attr.productSelect, "price", productSelect.price);
+					this.activityPrice = productSelect.price
+					this.activityVipPrice = productSelect.vipPrice
 					this.$set(this.attr.productSelect, "stock", productSelect.stock);
 					this.$set(this.attr.productSelect, "unique", productSelect.id);
 					this.$set(this.attr.productSelect, "cart_num", 1);
@@ -1163,19 +1396,26 @@
 				let dataList = await getCoupons({
 					productId: this.id
 				});
-				if (dataList.length) {
-					this.couponDeaultType = dataList.data;
-					this.$set(this.coupon, 'type', dataList);
+				// if (dataList.length) {
+				// 	this.couponDeaultType = dataList.data;
+				// 	this.$set(this.coupon, 'type', dataList);
+				// }
+				if (dataList.data.list.length) {
+					this.couponDeaultType = dataList.data.list;
+					this.$set(this.coupon, 'type', dataList.data);
 				}
-
 			},
-			//切换优惠券头部
-			tabCouponType(type) {
+			// 重置优惠券列表
+			initCouponList() {
 				this.loadend = false;
 				this.loading = false;
 				this.where.page = 1;
 				this.where.limit = 999;
 				this.$set(this.coupon, 'list', []);
+			},
+			//切换优惠券头部
+			tabCouponType(type) {
+				this.initCouponList()
 				this.$set(this.coupon, 'type', type);
 				this.couponType = type; //优惠券类型
 				this.getCouponList(type);
@@ -1220,15 +1460,18 @@
 			 */
 			couponTap: function() {
 				let that = this;
-				if (that.isLogin === false) {
-					toLogin();
-				} else {
-					// this.loadend = false;
-					// this.loading = false;
-					// this.$set(that.coupon, 'list', []);
-					// //that.getCouponList(this.couponDeaultType[0].useType); //打开弹框默认请求商品券
-					that.$set(that.coupon, 'coupon', true);
-				}
+				if (!this.couponDeaultType.length) return;
+				// if (that.isLogin === false) {
+				// 	toLogin();
+				// } else {
+				// this.loadend = false;
+				// this.loading = false;
+				// this.$set(that.coupon, 'list', []);
+				// //that.getCouponList(this.couponDeaultType[0].useType); //打开弹框默认请求商品券
+				this.initCouponList()
+				this.getCouponList(this.couponDeaultType[0].useType)
+				that.$set(that.coupon, 'coupon', true);
+				// }
 			},
 			onMyEvent: function() {
 				this.$set(this.attr, 'cartAttr', false);
@@ -1268,10 +1511,15 @@
 					that.attr.productAttr.length &&
 					productSelect.stock === 0 &&
 					that.isOpen === true
-				)
+				) {
 					return that.$util.Tips({
 						title: "产品库存不足，请选择其它"
 					});
+				} else if (that.attr.productSelect.stock == 0 && that.isOpen === true) {
+					return that.$util.Tips({
+						title: "请选择其它规格"
+					});
+				}
 				if (num === 1) {
 					let q = {
 						productId: parseFloat(that.id),
@@ -1620,9 +1868,15 @@
 				if (productSelect) {
 					this.$set(this.attr.productSelect, "image", productSelect.image);
 					this.$set(this.attr.productSelect, "price", productSelect.price);
+					this.activityPrice = productSelect.price
 					this.$set(this.attr.productSelect, "stock", productSelect.stock);
+					// 后台传入的规格不展示时视为库存为0
+					if (!productSelect.isShow) {
+						this.$set(this.attr.productSelect, "stock", 0);
+					}
 					this.$set(this.attr.productSelect, "unique", productSelect.id);
 					this.$set(this.attr.productSelect, "vipPrice", productSelect.vipPrice);
+					this.activityVipPrice = productSelect.vipPrice
 					this.$set(this, "attrTxt", "已选择");
 					this.$set(this, "attrValue", productSelect.suk)
 				}
@@ -1659,24 +1913,54 @@
 				// 其他 文件类型
 				return 'other';
 			},
-			videoPause() {
+			// 保障协议弹出框
+			handleToGgle(type) {
+				if (type) {
+					this.$refs.guaranteePopup.open()
+				} else {
+					this.$refs.guaranteePopup.close()
+				}
+			},
+			// 获取suk小图
+			getSkuImage() {
+				let sku = []
+				let skuTable = []
+				this.attr.productAttr.map((item) => {
+					item.optionList.map(items => {
+						if (items.image) sku.push(items.image)
+					});
+				})
+				const uniqueData = sku.filter((item, index, self) =>
+					index === self.findIndex((t) => t === item))
 
-			}
+				if (uniqueData.length > 0) {
+					this.skuImage = uniqueData
+				} else {
+					for (let key in this.productValue) {
+						let obj = this.productValue[key];
+						skuTable.push(obj.image);
+					}
+					this.skuImage = skuTable.filter((item, index, self) =>
+						index === self.findIndex((t) => t === item))
+				}
+			},
 		},
 	}
 </script>
 
 <style scoped lang="scss">
-	.lang{
+	.lang {
 		width: 170rpx !important;
 		height: 60rpx !important;
 		border-radius: 33rpx;
 	}
-	.circle{
+
+	.circle {
 		width: 58rpx !important;
 		height: 58rpx !important;
 		border-radius: 50%;
 	}
+
 	.product-con {
 		height: 100%;
 	}
@@ -1698,7 +1982,7 @@
 		height: 60rpx !important;
 		border-radius: 33rpx;
 		background: rgba(255, 255, 255, 0.3);
-		border: 1px solid rgba(0,0,0,0.07);
+		border: 1px solid rgba(0, 0, 0, 0.07);
 		color: #000;
 		position: fixed;
 		font-size: 18px;
@@ -1945,7 +2229,9 @@
 		}
 	}
 
-	.attribute {
+	.product-con .attribute {
+		padding: 0;
+
 		.line1 {
 			width: 600rpx;
 		}
@@ -2070,8 +2356,7 @@
 		color: #ff954d;
 	}
 
-	.product-con .footer {
-		padding: 0 20rpx 0 30rpx;
+	.product-con .legacy-product-footer {
 		position: fixed;
 		bottom: 0;
 		width: 100%;
@@ -2080,59 +2365,80 @@
 		z-index: 277;
 		border-top: 1rpx solid #f0f0f0;
 		height: 100rpx;
-		height: calc(100rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		height: calc(100rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
 		height: calc(100rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
+		flex-wrap: nowrap;
 	}
 
-	.product-con .footer .item {
+	.product-con .legacy-product-footer .item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 		font-size: 18rpx;
 		color: #666;
+		margin-right: 30rpx;
+		flex-shrink: 0;
+		line-height: 24rpx;
 	}
 
-	.product-con .footer .item .iconfont {
+	.product-con .legacy-product-footer .item .iconfont {
 		text-align: center;
-		font-size: 40rpx;
+		font-size: 34rpx;
+		line-height: 40rpx;
 	}
 
-	.product-con .footer .item .iconfont.icon-shoucang1 {
+	.product-con .legacy-product-footer .item .iconfont.icon-shoucang1 {
 		@include main_color(theme);
 	}
 
-	.product-con .footer .item .iconfont.icon-gouwuche1 {
+	.product-con .legacy-product-footer .item .iconfont.icon-gouwuche1 {
 		font-size: 40rpx;
 		position: relative;
 	}
 
-	.product-con .footer .item .iconfont.icon-gouwuche1 .num {
+	.product-con .legacy-product-footer .item .iconfont.icon-gouwuche1 .num {
 		color: #fff;
 		position: absolute;
 		font-size: 18rpx;
-		padding: 2rpx 8rpx 3rpx;
-		border-radius: 200rpx;
-		top: -10rpx;
-		right: -10rpx;
+		width: 28rpx;
+		height: 28rpx;
+		padding: 0;
+		border-radius: 50%;
+		line-height: 28rpx;
+		text-align: center;
+		box-sizing: border-box;
+		top: -12rpx;
+		right: -16rpx;
 	}
 
-	.product-con .footer .bnt {
-		width: 444rpx;
+	.product-con .legacy-product-footer .bnt {
+		flex: 1;
+		min-width: 0;
 		height: 76rpx;
+		flex-wrap: nowrap;
 	}
 
-	.product-con .footer .bnt .bnts {
-		width: 222rpx;
+	.product-con .legacy-product-footer .bnt .bnts {
+		width: 100%;
 		text-align: center;
 		line-height: 76rpx;
 		color: #fff;
 		font-size: 28rpx;
+		border-radius: 50rpx;
 	}
 
-	.product-con .footer .bnt .joinCart {
-		border-radius: 50rpx 0 0 50rpx;
+	.product-con .legacy-product-footer .bnt form {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.product-con .legacy-product-footer .bnt .joinCart {
+		margin-right: 20rpx;
 		@include left_color(theme);
 	}
 
-	.product-con .footer .bnt .buy {
-		border-radius: 0 50rpx 50rpx 0;
+	.product-con .legacy-product-footer .bnt .buy {
 		@include main_bg_color(theme);
 	}
 
@@ -2320,6 +2626,7 @@
 		position: fixed;
 		z-index: -5;
 		opacity: 0;
+		color: j7addc;
 	}
 
 	.poster-pop {
@@ -2487,16 +2794,6 @@
 		}
 	}
 
-	.mask_transparent {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: transparent;
-		z-index: 300;
-	}
-
 	.px-12 {
 		padding-left: 12rpx;
 		padding-right: 12rpx;
@@ -2528,15 +2825,112 @@
 		border-radius: 8rpx;
 		text-align: center;
 	}
-	.share-icon-box{
+
+	.share-icon-box {
 		position: relative;
-		.share-icon{
+
+		.share-icon {
 			position: absolute;
 			right: -15rpx;
 			top: 20rpx;
 		}
 	}
-	.share-introduce{
+
+	.share-introduce {
 		padding-right: 16rpx;
+	}
+
+	.ensure {
+		width: 100%;
+		background-color: #fff;
+		border-top-left-radius: 40rpx;
+		border-top-right-radius: 40rpx;
+		padding-bottom: 22rpx;
+		padding-top: 38rpx;
+		padding-bottom: calc(22rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		padding-bottom: calc(22rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
+
+		.title {
+			font-size: 32rpx;
+			color: #282828;
+			text-align: center;
+			margin: 0 0 36rpx 0;
+			position: relative;
+
+			.close-box {
+				position: absolute;
+				right: 30rpx;
+				top: 8rpx;
+			}
+		}
+
+		.list {
+			max-height: 60vh;
+			margin: 0 30rpx 20rpx;
+			overflow: scroll;
+
+			.item {
+				margin-bottom: 40rpx;
+				flex-wrap: nowrap;
+
+				.pictrue {
+					width: 36rpx;
+					height: 36rpx;
+					border-radius: 50%;
+					margin-right: 30rpx;
+
+					::v-deep image,
+					.easy-loadimage,
+					image,
+					uni-image {
+						width: 100%;
+						height: 100%;
+						border-radius: 50%;
+					}
+				}
+
+				.text {
+					// width: 618rpx;
+					color: #999999;
+					font-size: 28rpx;
+
+					.name {
+						color: #333333;
+						font-weight: bold;
+						margin-bottom: 20rpx;
+					}
+				}
+			}
+		}
+
+		.bnt,
+		.activityBtn {
+			width: 690rpx;
+			height: 86rpx;
+			text-align: center;
+			line-height: 86rpx;
+			border-radius: 43rpx;
+			font-size: 30rpx;
+			color: #fff;
+			margin: 0 auto;
+		}
+
+		.icon-gou1 {
+			@include main_color(theme);
+		}
+
+		.bnt {
+			@include main_bg_color(theme);
+		}
+	}
+
+	.guarantee-pop-box {
+		position: fixed;
+		bottom: 0;
+		z-index: 999;
+	}
+
+	.ensure.on {
+		transform: translate3d(0, 0, 0);
 	}
 </style>

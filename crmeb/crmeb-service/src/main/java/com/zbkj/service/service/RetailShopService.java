@@ -1,9 +1,11 @@
 package com.zbkj.service.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.pagehelper.PageInfo;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.RetailShopRequest;
+import com.zbkj.common.request.RetailShopSearchRequest;
 import com.zbkj.common.response.SpreadUserResponse;
 import com.zbkj.common.model.user.User;
 
@@ -12,7 +14,7 @@ import com.zbkj.common.model.user.User;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -23,12 +25,10 @@ public interface RetailShopService extends IService<User> {
 
     /**
      * 分销员列表
-     * @param keywords 搜索参数
-     * @param dateLimit 时间参数
-     * @param pageRequest 分页参数
+     *
      * @return CommonPage
      */
-    CommonPage<SpreadUserResponse> getSpreadPeopleList(String keywords, String dateLimit, PageParamRequest pageRequest);
+    PageInfo<SpreadUserResponse> getSpreadPeopleList(RetailShopSearchRequest request);
 
     /**
      * 获取分销配置

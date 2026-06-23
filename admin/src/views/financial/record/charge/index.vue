@@ -5,7 +5,8 @@
         <div class="container">
           <el-form size="small" label-width="70px" inline>
             <el-form-item label="时间选择：">
-              <el-date-picker
+              <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
+              <!-- <el-date-picker
                 v-model="timeVal"
                 value-format="yyyy-MM-dd"
                 format="yyyy-MM-dd"
@@ -17,11 +18,10 @@
                 @change="onchangeTime"
                 start-placeholder="开始时间"
                 end-placeholder="结束时间"
-              />
+              /> -->
             </el-form-item>
-            <el-form-item label="用户ID：">
-              <el-input v-model="tableFrom.uid" placeholder="用户id" class="selWidth" size="small" clearable>
-              </el-input>
+            <el-form-item label="用户搜索：" label-for="nickname">
+              <UserSearchInput v-model="tableFrom" />
             </el-form-item>
             <el-form-item label="订单号：">
               <el-input v-model="tableFrom.keywords" placeholder="订单号" class="selWidth" size="small" clearable>
@@ -36,7 +36,7 @@
       </div>
     </el-card>
     <div class="mt14">
-      <cards-data :card-lists="cardLists" v-if="checkPermi(['admin:recharge:balance'])" />
+      <!-- <cards-data :card-lists="cardLists" v-if="checkPermi(['admin:recharge:balance'])" /> -->
     </div>
     <el-card class="box-card">
       <el-table
@@ -137,7 +137,8 @@ export default {
       },
       listLoading: true,
       tableFrom: {
-        uid: '',
+        searchType: 'all',
+        content: '',
         // paid: '',
         dateLimit: '',
         keywords: '',
@@ -150,7 +151,7 @@ export default {
   },
   mounted() {
     this.getList();
-    this.getStatistics();
+    // this.getStatistics();
   },
   methods: {
     checkPermi,
@@ -159,6 +160,8 @@ export default {
       this.tableFrom.uid = '';
       this.tableFrom.dateLimit = '';
       this.tableFrom.keywords = '';
+      this.tableFrom.searchType = 'all',
+      this.tableFrom.content = '',
       this.timeVal = [];
       this.getList();
     },
