@@ -165,7 +165,7 @@ crmeb_java
 
 欢迎加入CRMEB开源技术交流群，扫码进群免费领取接口文档、功能清单、思维导图等资源！
 
-![](crmeb/crmebimage/demoimage/wellcomJavaGroup.jpg)
+![](crmeb/crmebimage/theme-cate/wellcomJavaGroup.jpg)
 
 您还可以在 [CRMEB技术社区](https://www.crmeb.com/ask/thread/list/152) 中提交Bug、交流解决方案、获取官方更新动态。
 
