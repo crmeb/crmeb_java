@@ -36,26 +36,6 @@
                     ></el-option>
                   </el-select>
                 </el-form-item>
-                <el-form-item label="用户等级：">
-                  <el-select
-                    v-model="levelData"
-                    @visible-change="userSearchs"
-                    @remove-tag="userSearchs"
-                    @clear="userSearchs"
-                    placeholder="请选择"
-                    class="selWidth"
-                    clearable
-                    filterable
-                    multiple
-                  >
-                    <el-option
-                      :value="item.id"
-                      v-for="(item, index) in levelList"
-                      :key="index"
-                      :label="item.name"
-                    ></el-option>
-                  </el-select>
-                </el-form-item>
                 <el-form-item label="消费情况：">
                   <el-select
                     v-model="userFrom.payCount"
@@ -268,11 +248,6 @@
             >
           </template>
         </el-table-column>
-        <el-table-column label="用户等级" min-width="100" v-if="checkedCities.includes('用户等级')">
-          <template slot-scope="scope">
-            <span>{{ scope.row.level | levelFilter | filterEmpty }}</span>
-          </template>
-        </el-table-column>
         <el-table-column prop="groupName" label="分组" min-width="100" v-if="checkedCities.includes('分组')">
           <template slot-scope="scope">
             <span>{{ scope.row.groupName || '-' }}</span>
@@ -308,11 +283,6 @@
                 >
                 <el-dropdown-item @click.native="setPhone(scope.row)" v-if="checkPermi(['admin:user:update:phone'])"
                   >修改手机号</el-dropdown-item
-                >
-                <el-dropdown-item
-                  @click.native="onLevel(scope.row.uid, scope.row.level)"
-                  v-if="checkPermi(['admin:user:update:level'])"
-                  >修改用户等级</el-dropdown-item
                 >
                 <el-dropdown-item
                   @click.native="setExtension(scope.row)"
@@ -491,10 +461,6 @@
     </el-dialog>
     <!--账户详情-->
     <user-details ref="userDetailFrom" :userNo="uid"></user-details>
-    <!-- 用户等级 -->
-    <el-dialog title="设置" :visible.sync="levelVisible" width="540px" :before-close="Close">
-      <level-edit :levelInfo="levelInfo" :levelList="levelList"></level-edit>
-    </el-dialog>
   </div>
 </template>
 
@@ -502,7 +468,6 @@
 import {
   userListApi,
   groupListApi,
-  levelListApi,
   tagListApi,
   groupPiApi,
   tagPiApi,
@@ -513,7 +478,6 @@ import {
 import { spreadClearApi } from '@/api/distribution';
 import editFrom from './edit';
 import userDetails from './userDetails';
-import levelEdit from './level';
 import userList from '@/components/userList';
 import * as logistics from '@/api/logistics.js';
 import Cookies from 'js-cookie';
@@ -521,7 +485,7 @@ import { checkPermi } from '@/utils/permission'; // 权限判断函数
 import { Debounce } from '@/utils/validate';
 export default {
   name: 'UserIndex',
-  components: { editFrom, userDetails, userList, levelEdit },
+  components: { editFrom, userDetails, userList },
   filters: {
     sexFilter(status) {
       const statusMap = {
@@ -543,7 +507,6 @@ export default {
       ruleInline: {},
       extensionVisible: false,
       userVisible: false,
-      levelInfo: '',
       pickerOptions: this.$timeOptions,
       loadingBtn: false,
       PointValidateForm: {
@@ -558,8 +521,6 @@ export default {
       visible: false,
       userIds: '',
       dialogVisible: false,
-      levelVisible: false,
-      levelData: [],
       groupData: [],
       labelData: [],
       selData: [],
@@ -604,7 +565,6 @@ export default {
         city: '',
         page: 1,
         limit: 20,
-        level: '',
         groupId: '',
       },
       grid: {
@@ -614,7 +574,6 @@ export default {
         sm: 24,
         xs: 24,
       },
-      levelList: [],
       labelLists: [],
       groupList: [],
       selectedData: [],
@@ -634,8 +593,8 @@ export default {
       idKey: 'uid',
       card_select_show: false,
       checkAll: false,
-      checkedCities: ['ID', '头像', '姓名', '用户等级', '分组', '推荐人', '手机号', '余额', '积分'],
-      columnData: ['ID', '头像', '姓名', '用户等级', '分组', '推荐人', '手机号', '余额', '积分'],
+      checkedCities: ['ID', '头像', '姓名', '分组', '推荐人', '手机号', '余额', '积分'],
+      columnData: ['ID', '头像', '姓名', '分组', '推荐人', '手机号', '余额', '积分'],
       isIndeterminate: true,
     };
   },
@@ -659,7 +618,6 @@ export default {
   mounted() {
     this.getList();
     this.groupLists();
-    this.levelLists();
     this.getTagList();
     if (checkPermi(['admin:system:city:list:tree'])) this.getCityList();
   },
@@ -748,11 +706,9 @@ export default {
         city: '',
         page: 1,
         limit: 20,
-        level: '',
         groupId: '',
       };
       this.address = [];
-      this.levelData = [];
       this.groupData = [];
       this.labelData = [];
       this.timeVal = [];
@@ -797,27 +753,11 @@ export default {
         'user',
       );
     },
-    Close() {
-      this.levelVisible = false;
-    },
     // 账户详情
     onDetails(id) {
       this.uid = id;
       this.$refs.userDetailFrom.getUserDetail(id);
       this.$refs.userDetailFrom.dialogUserDetail = true;
-    },
-    // 等级
-    onLevel(id, level) {
-      var userLevel = new Object();
-      this.levelList.forEach((item) => {
-        if (item.id == level) {
-          userLevel.gradeLevel = item.grade;
-        }
-      });
-      userLevel.uid = id;
-      userLevel.level = level;
-      this.levelInfo = userLevel;
-      this.levelVisible = true;
     },
     // 积分余额
     editPoint(id) {
@@ -961,20 +901,12 @@ export default {
         this.labelLists = res.list;
       });
     },
-    // 等级列表
-    levelLists() {
-      levelListApi().then(async (res) => {
-        this.levelList = res;
-        localStorage.setItem('single-admin-levelKey', JSON.stringify(res));
-      });
-    },
     // 列表
     getList(num) {
       this.listLoading = true;
       this.userFrom.page = num ? num : this.userFrom.page;
       this.userFrom.userType = this.loginType;
       if (this.loginType == 0) this.userFrom.userType = '';
-      this.userFrom.level = this.levelData.join(',');
       this.userFrom.groupId = this.groupData.join(',');
       this.userFrom.labelId = this.labelData.join(',');
       userListApi(this.userFrom)
