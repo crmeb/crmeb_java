@@ -13,7 +13,7 @@ import com.zbkj.common.vo.OnePassLogisticsQueryVo;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -97,7 +97,7 @@ public interface OnePassService {
      * @param com   快递公司简写
      * @return OnePassLogisticsQueryVo
      */
-    OnePassLogisticsQueryVo exprQuery(String expressNo, String com);
+    OnePassLogisticsQueryVo exprQuery(String expressNo, String com, String phone);
 
     /**
      * 校验一号通账号是否配置

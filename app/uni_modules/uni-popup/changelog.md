@@ -1,0 +1,102 @@
+## 1.9.11（2025-08-20）
+- 修复 uni-popup-dialog组件设置 borderRadius 不生效的 Bug
+## 1.9.10（2025-07-18）
+- 修复 nvue 下弹窗样式错乱的问题 ，更新依赖 uni-transition 组件
+- 更新 示例取消 borderRadius 属性 ，如需内容圆角，用户应该直接在内容插槽中实现
+## 1.9.9（2025-06-11）
+- 修复 uni-popup-dialog 中 setVal 方法报错的问题
+- 修复 uni-popup-dialog 数据双向绑定问题。
+## 1.9.8（2025-04-16）
+- 修复 更新组件示例 ，解决更新数据或保存项目导致弹窗消失的问题
+## 1.9.7（2025-04-14）
+- 修复 uni-popup-dialog 弹出框在vue3中双向绑定问题
+## 1.9.6（2025-01-08）
+- 修复 示例中过期图片地址
+## 1.9.5（2024-10-15）
+- 修复 微信小程序中的getSystemInfo警告
+## 1.9.2（2024-09-21）
+- 修复 uni-popup在android上的重复点击弹出位置不正确的bug
+## 1.9.1（2024-04-02）
+- 修复 uni-popup-dialog vue3下使用value无法进行绑定的bug(双向绑定兼容旧写法)
+## 1.9.0（2024-03-28）
+- 修复 uni-popup-dialog 双向绑定时初始化逻辑修正
+## 1.8.9（2024-03-20）
+- 修复 uni-popup-dialog 数据输入时修正为双向绑定
+## 1.8.8（2024-02-20）
+- 修复 uni-popup 在微信小程序下出现文字向上闪动的bug
+## 1.8.7（2024-02-02）
+- 新增 uni-popup-dialog 新增属性focus：input模式下，是否自动自动聚焦
+## 1.8.6（2024-01-30）
+- 新增 uni-popup-dialog 新增属性maxLength:限制输入框字数
+## 1.8.5（2024-01-26）
+- 新增 uni-popup-dialog 新增属性showClose:控制关闭按钮的显示
+## 1.8.4（2023-11-15）
+- 新增 uni-popup 支持uni-app-x 注意暂时仅支持 `maskClick` `@open` `@close`
+## 1.8.3（2023-04-17）
+- 修复 uni-popup 重复打开时的 bug
+## 1.8.2（2023-02-02）
+- uni-popup-dialog 组件新增 inputType 属性
+## 1.8.1（2022-12-01）
+- 修复 nvue 下 v-show 报错
+## 1.8.0（2022-11-29）
+- 优化 主题样式
+## 1.7.9（2022-04-02）
+- 修复 弹出层内部无法滚动的bug
+## 1.7.8（2022-03-28）
+- 修复 小程序中高度错误的bug
+## 1.7.7（2022-03-17）
+- 修复 快速调用open出现问题的Bug
+## 1.7.6（2022-02-14）
+- 修复 safeArea 属性不能设置为false的bug
+## 1.7.5（2022-01-19）
+- 修复 isMaskClick 失效的bug
+## 1.7.4（2022-01-19）
+- 新增 cancelText \ confirmText 属性 ，可自定义文本
+- 新增 maskBackgroundColor 属性 ，可以修改蒙版颜色
+- 优化 maskClick属性 更新为 isMaskClick ，解决微信小程序警告的问题
+## 1.7.3（2022-01-13）
+- 修复 设置 safeArea 属性不生效的bug
+## 1.7.2（2021-11-26）
+- 优化 组件示例
+## 1.7.1（2021-11-26）
+- 修复 vuedoc 文字错误
+## 1.7.0（2021-11-19）
+- 优化 组件UI，并提供设计资源，详见:[https://uniapp.dcloud.io/component/uniui/resource](https://uniapp.dcloud.io/component/uniui/resource)
+- 文档迁移，详见:[https://uniapp.dcloud.io/component/uniui/uni-popup](https://uniapp.dcloud.io/component/uniui/uni-popup)
+## 1.6.2（2021-08-24）
+- 新增 支持国际化
+## 1.6.1（2021-07-30）
+- 优化 vue3下事件警告的问题
+## 1.6.0（2021-07-13）
+- 组件兼容 vue3，如何创建vue3项目，详见 [uni-app 项目支持 vue3 介绍](https://ask.dcloud.net.cn/article/37834)
+## 1.5.0（2021-06-23）
+- 新增 mask-click 遮罩层点击事件
+## 1.4.5（2021-06-22）
+- 修复 nvue 平台中间弹出后，点击内容，再点击遮罩无法关闭的Bug
+## 1.4.4（2021-06-18）
+- 修复 H5平台中间弹出后，点击内容，再点击遮罩无法关闭的Bug
+## 1.4.3（2021-06-08）
+- 修复 错误的 watch 字段
+- 修复 safeArea 属性不生效的问题
+- 修复 点击内容，再点击遮罩无法关闭的Bug
+## 1.4.2（2021-05-12）
+- 新增 组件示例地址
+## 1.4.1（2021-04-29）
+- 修复 组件内放置 input 、textarea 组件，无法聚焦的问题
+## 1.4.0 （2021-04-29）
+- 新增 type 属性的 left\right 值，支持左右弹出
+- 新增 open(String:type) 方法参数 ，可以省略 type 属性 ，直接传入类型打开指定弹窗
+- 新增 backgroundColor 属性，可定义主窗口背景色,默认不显示背景色
+- 新增 safeArea 属性，是否适配底部安全区
+- 修复 App\h5\微信小程序底部安全区占位不对的Bug
+- 修复 App 端弹出等待的Bug
+- 优化 提升低配设备性能，优化动画卡顿问题
+- 优化 更简单的组件自定义方式
+## 1.2.9（2021-02-05）
+- 优化 组件引用关系，通过uni_modules引用组件
+## 1.2.8（2021-02-05）
+- 调整为uni_modules目录规范
+## 1.2.7（2021-02-05）
+- 调整为uni_modules目录规范
+- 新增 支持 PC 端
+- 新增 uni-popup-message 、uni-popup-dialog扩展组件支持 PC 端

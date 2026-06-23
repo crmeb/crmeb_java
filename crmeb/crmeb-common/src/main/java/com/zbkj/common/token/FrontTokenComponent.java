@@ -3,20 +3,19 @@ package com.zbkj.common.token;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.zbkj.common.constants.Constants;
-import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.utils.RequestUtil;
 import com.zbkj.common.vo.LoginUserVo;
 import org.apache.commons.lang3.ArrayUtils;
+import org.springframework.boot.test.context.TestComponent;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -24,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -87,7 +86,11 @@ public class FrontTokenComponent {
      */
     public String createToken(User user) {
         String token = UUID.randomUUID().toString().replace("-", "");
-        redisUtil.set(getTokenKey(token), user.getUid(), Constants.TOKEN_EXPRESS_MINUTES, TimeUnit.MINUTES);
+        String tokenKey = getTokenKey(token);
+        redisUtil.set(tokenKey, user.getUid(), Constants.TOKEN_EXPRESS_MINUTES, TimeUnit.MINUTES);
+
+        // 用户token加入redis的set集合
+        redisUtil.addSet(StrUtil.format(Constants.FRONT_USER_TOKEN_SET_KEY, user.getUid()), token);
         return token;
     }
 
@@ -160,6 +163,27 @@ public class FrontTokenComponent {
 
     //路由在此处，则返回true，无论用户是否登录都可以访问
     public boolean checkRouter(String uri) {
+        if (uri != null && uri.startsWith("api/front/theme_info")) {
+            return true;
+        }
+        if (uri != null && uri.equals("api/front/theme/product")) {
+            return true;
+        }
+        if (uri != null && uri.equals("api/front/theme/coupon")) {
+            return true;
+        }
+        if (uri != null && uri.equals("api/front/theme/seckill")) {
+            return true;
+        }
+        if (uri != null && uri.equals("api/front/theme/combination")) {
+            return true;
+        }
+        if (uri != null && uri.equals("api/front/theme/bargain")) {
+            return true;
+        }
+        if (uri != null && uri.equals("api/front/theme/article")) {
+            return true;
+        }
         String[] routerList = {
                 "api/front/product/detail",
                 "api/front/coupons",
@@ -206,4 +230,30 @@ public class FrontTokenComponent {
         }
     }
 
+    public void clearToken() {
+        HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
+        String token = getToken(request);
+        if (StrUtil.isBlank(token)) {
+            return;
+        }
+        String tokenKey = getTokenKey(token);
+        if (redisUtil.exists(tokenKey)) {
+            redisUtil.delete(tokenKey);
+        }
+    }
+
+    public void clearUserToken(Integer uid) {
+        Set<Object> setAll = redisUtil.sGet(StrUtil.format(Constants.FRONT_USER_TOKEN_SET_KEY, uid));
+        List<String> keyList = new ArrayList<>();
+        for (Object member : setAll) {
+            keyList.add(member.toString());
+        }
+        // 清除用户所有token
+        keyList.forEach(key -> {
+            String tokenKey = Constants.USER_TOKEN_REDIS_KEY_PREFIX + key;
+            redisUtil.delete(tokenKey);
+        });
+        // 清除用户token集合
+        redisUtil.delete(StrUtil.format(Constants.FRONT_USER_TOKEN_SET_KEY, uid));
+    }
 }

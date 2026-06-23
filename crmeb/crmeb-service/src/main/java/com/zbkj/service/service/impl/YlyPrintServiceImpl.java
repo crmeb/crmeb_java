@@ -9,6 +9,9 @@ import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.request.YlyPrintRequest;
 import com.zbkj.common.request.YlyPrintRequestGoods;
 import com.zbkj.common.vo.StoreOrderInfoOldVo;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import com.zbkj.service.service.StoreOrderInfoService;
 import com.zbkj.service.service.StoreOrderService;
 import com.zbkj.service.service.SystemConfigService;
@@ -27,7 +30,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -76,7 +79,7 @@ public class YlyPrintServiceImpl implements YlyPrintService {
             goods.add(new YlyPrintRequestGoods(storeOrderInfo.getInfo().getProductName()
                     ,storeOrderInfo.getInfo().getPrice().toString(),
                     storeOrderInfo.getInfo().getPayNum()+"",
-                    exitOrder.getPayPrice().toString()));
+                    storeOrderInfo.getInfo().getPrice().multiply(BigDecimal.valueOf(storeOrderInfo.getInfo().getPayNum())).setScale(2, RoundingMode.HALF_UP).toString()));
         }
 
         YlyPrintRequest ylyPrintRequest = new YlyPrintRequest();

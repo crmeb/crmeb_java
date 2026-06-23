@@ -17,10 +17,7 @@ import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.combination.StoreCombination;
 import com.zbkj.common.model.combination.StorePink;
 import com.zbkj.common.model.order.StoreOrder;
-import com.zbkj.common.model.product.StoreProduct;
-import com.zbkj.common.model.product.StoreProductAttr;
-import com.zbkj.common.model.product.StoreProductAttrValue;
-import com.zbkj.common.model.product.StoreProductDescription;
+import com.zbkj.common.model.product.*;
 import com.zbkj.common.model.record.UserVisitRecord;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.page.CommonPage;
@@ -47,7 +44,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -104,6 +101,11 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
 
     @Autowired
     private UserVisitRecordService userVisitRecordService;
+
+    @Autowired
+    private StoreProductAttrOptionService productAttrOptionService;
+    @Autowired
+    private StoreProductGuaranteeService guaranteeService;
 
     private static final Logger logger = LoggerFactory.getLogger(StoreCombinationServiceImpl.class);
 
@@ -169,6 +171,14 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
                 throw new CrmebException("单规格商品属性值不能大于1");
             }
         }
+        request.getAttrValue().forEach(e -> {
+            if (e.getStock() <= 0) {
+                throw new CrmebException("库存不足的规格不能参与拼团活动");
+            }
+            if ((ObjectUtil.isNull(e.getQuota()) || e.getQuota() > e.getStock())) {
+                throw new CrmebException("请规范活动限购数量：必须小于等于库存数量");
+            }
+        });
         // 过滤掉checked=false的数据
 //        clearNotCheckedAndValidationPrice(request);
 
@@ -267,6 +277,15 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
      */
     @Override
     public Boolean updateCombination(StoreCombinationRequest request) {
+        request.getAttrValue().forEach(e -> {
+            if (e.getStock() <= 0) {
+                throw new CrmebException("库存不足的规格不能参与拼团活动");
+            }
+            if ((ObjectUtil.isNull(e.getQuota()) || e.getQuota() > e.getStock())) {
+                throw new CrmebException("请规范活动限购数量：必须小于等于库存数量");
+            }
+        });
+
         if (ObjectUtil.isNull(request.getId())) {
             throw new CrmebException("拼团商品id不能为空");
         }
@@ -393,20 +412,21 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
 
         // 查询attr
         List<StoreProductAttr> attrs = storeProductAttrService.getListByProductIdAndType(id, Constants.PRODUCT_TYPE_PINGTUAN);
+        attrs.forEach(e -> {
+            e.setOptionList(productAttrOptionService.findListByAttrId(e.getId()));
+        });
         storeProductResponse.setAttr(attrs);
         storeProductResponse.setSliderImage(String.join(",", storeCombination.getImages()));
-
-        boolean specType = true;
-        if (attrs.size() == 1) {
-            if (attrs.get(0).getAttrValues().equals("默认")) {
-                specType = false;
-            }
-        }
-        storeProductResponse.setSpecType(specType);
 
         List<StoreProductAttrValue> comAttrValueList = storeProductAttrValueService.getListByProductIdAndType(id, ProductConstants.PRODUCT_TYPE_PINGTUAN);
         // 查询主商品sku
         List<StoreProductAttrValue> attrValueList = storeProductAttrValueService.getListByProductIdAndType(storeCombination.getProductId(), Constants.PRODUCT_TYPE_NORMAL);
+
+        boolean specType = false;
+        if (attrValueList.size() > 1) {
+            specType = true;
+        }
+        storeProductResponse.setSpecType(specType);
 
         List<AttrValueResponse> valueResponseList = attrValueList.stream().map(e -> {
             AttrValueResponse valueResponse = new AttrValueResponse();
@@ -455,25 +475,6 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         StoreCombination storeCombination = new StoreCombination();
         storeCombination.setId(id).setIsShow(isShow);
         return updateById(storeCombination);
-    }
-
-    /**
-     * admin拼团统计
-     */
-    @Override
-    public Map<String, Object> getAdminStatistics() {
-        StorePink spavPink = new StorePink();
-        spavPink.setKId(0);
-        List<StorePink> pinkList = storePinkService.getByEntity(spavPink);
-        Map<String, Object> map = CollUtil.newHashMap();
-        map.put("countPeople", 0);
-        map.put("countTeam", 0);
-        if (CollUtil.isNotEmpty(pinkList)) {
-            map.put("countPeople", storePinkService.count());
-            long countTeam = pinkList.stream().filter(i -> i.getStatus() == 2).count();
-            map.put("countTeam", countTeam);
-        }
-        return map;
     }
 
     /**
@@ -535,6 +536,11 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
 
         // 获取主商品信息
         StoreProduct storeProduct = storeProductService.getById(storeCombination.getProductId());
+
+        // 查询商品保障服务信息
+        if (StrUtil.isNotBlank(storeProduct.getGuaranteeIds())) {
+            detailResponse.setGuaranteeList(guaranteeService.findByIdList(CrmebUtil.stringToArray(storeProduct.getGuaranteeIds())));
+        }
         // 主商品状态
         if (storeProduct.getIsDel()) {
             detailResponse.setMasterStatus("delete");
@@ -553,8 +559,17 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
 
         // 获取拼团商品规格
         List<StoreProductAttr> attrList = storeProductAttrService.getListByProductIdAndType(comId, Constants.PRODUCT_TYPE_PINGTUAN);
+        // 获取主商品规格属性
+        List<StoreProductAttr> masterAttrList = storeProductAttrService.getListByProductIdAndType(storeProduct.getId(), Constants.PRODUCT_TYPE_NORMAL);
+        HashMap<String, List<StoreProductAttrOption>> optionMap = CollUtil.newHashMap();
+        masterAttrList.forEach(attr -> {
+            List<StoreProductAttrOption> optionList = productAttrOptionService.findListByAttrId(attr.getId());
+            optionMap.put(attr.getAttrName(), optionList);
+        });
+        attrList.forEach(attr -> {
+            attr.setOptionList(optionMap.get(attr.getAttrName()));
+        });
         // 根据制式设置attr属性
-//        List<ProductAttrResponse> skuAttr = getSkuAttr(attrList);
         detailResponse.setProductAttr(attrList);
 
         // 根据制式设置sku属性
@@ -761,6 +776,18 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
         spavAttr.setProductId(storeCombination.getId());
         spavAttr.setType(Constants.PRODUCT_TYPE_PINGTUAN);
         List<StoreProductAttr> attrList = storeProductAttrService.getByEntity(spavAttr);
+
+        // 获取主商品规格属性
+        List<StoreProductAttr> masterAttrList = storeProductAttrService.getListByProductIdAndType(storeCombination.getProductId(), Constants.PRODUCT_TYPE_NORMAL);
+        HashMap<String, List<StoreProductAttrOption>> optionMap = CollUtil.newHashMap();
+        masterAttrList.forEach(attr -> {
+            List<StoreProductAttrOption> optionList = productAttrOptionService.findListByAttrId(attr.getId());
+            optionMap.put(attr.getAttrName(), optionList);
+        });
+        attrList.forEach(attr -> {
+            attr.setOptionList(optionMap.get(attr.getAttrName()));
+        });
+
         List<HashMap<String, Object>> skuAttrList = getSkuAttrList(attrList);
         detailResponse.setProductAttr(skuAttrList);
         if (CollUtil.isNotEmpty(attrList) && attrList.size() > 1) {
@@ -1120,6 +1147,8 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
             HashMap<String, Object> attrMap = new HashMap<>();
             attrMap.put("productId", attr.getProductId());
             attrMap.put("attrName", attr.getAttrName());
+            attrMap.put("isShowImage", attr.getIsShowImage());
+            attrMap.put("optionList", attr.getOptionList());
             List<String> attrValues = new ArrayList<>();
             String trimAttr = attr.getAttrValues()
                     .replace("[", "")

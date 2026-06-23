@@ -4,7 +4,8 @@
       <div class="padding-add">
         <el-form ref="tableFrom" :model="tableFrom" size="small" :inline="true" @submit.native.prevent>
           <el-form-item label="创建时间：" prop="date">
-            <el-date-picker
+            <optionDateTimePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDateTimePicker>
+            <!-- <el-date-picker
               style="width: 260px"
               v-model="timeVal"
               type="datetimerange"
@@ -14,8 +15,8 @@
               end-placeholder="结束日期"
               @change="onchangeTime"
               :default-time="['00:00:00', '23:59:59']"
-            >
-            </el-date-picker>
+            > 
+            </el-date-picker> -->
           </el-form-item>
           <el-form-item label="活动状态：" prop="status">
             <el-select
@@ -133,9 +134,12 @@
 import { atuosphereList, atmosphereDelete, atmosphereStatusApi } from '@/api/marketing';
 import { checkPermi } from '@/utils/permission';
 import { handleDeleteTable } from '@/libs/public'; // 权限判断函数
+import optionDateTimePicker from '@/components/optionDateTimePicker'
 export default {
   name: 'HoneyList',
-  components: {},
+  components: {
+    optionDateTimePicker
+  },
   data() {
     return {
       props: { multiple: false, emitPath: false },
@@ -185,6 +189,7 @@ export default {
       this.timeVal = e;
       this.tableFrom.starttime = e ? e[0] : '';
       this.tableFrom.endtime = e ? e[1] : '';
+      this.getList(1)
     },
     reset(formName) {
       this.timeVal = [];

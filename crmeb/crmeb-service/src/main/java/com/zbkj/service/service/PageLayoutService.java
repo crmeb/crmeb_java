@@ -3,6 +3,7 @@ package com.zbkj.service.service;
 import com.alibaba.fastjson.JSONObject;
 import com.zbkj.common.response.pagelayout.PageLayoutBottomNavigationResponse;
 import com.zbkj.common.vo.MyRecord;
+import com.zbkj.common.vo.SplashAdConfigVo;
 
 import java.util.HashMap;
 
@@ -11,7 +12,7 @@ import java.util.HashMap;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -76,6 +77,19 @@ public interface PageLayoutService {
     Boolean indexTableSave(JSONObject jsonObject);
 
     /**
+     * 获取分类页配置
+     * @return MyRecord
+     */
+    MyRecord getCategoryConfig();
+
+    /**
+     * 分类页配置保存
+     * @param jsonObject 配置数据
+     * @return Boolean
+     */
+    Boolean categoryConfigSave(JSONObject jsonObject);
+
+    /**
      * 获取页面底部导航信息
      */
     PageLayoutBottomNavigationResponse getBottomNavigation();
@@ -85,4 +99,14 @@ public interface PageLayoutService {
      * @return 保存结果
      */
     Boolean bottomNavigationSave(JSONObject jsonObject);
+
+    /**
+     * 获取开屏广告配置
+     */
+    SplashAdConfigVo getSplashAdConfig();
+
+    /**
+     * 编辑开屏广告配置
+     */
+    Boolean splashAdConfigSave(SplashAdConfigVo configVo);
 }

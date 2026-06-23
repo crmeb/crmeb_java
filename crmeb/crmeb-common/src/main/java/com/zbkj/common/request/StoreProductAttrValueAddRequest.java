@@ -6,10 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
@@ -18,7 +15,7 @@ import java.math.BigDecimal;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -93,7 +90,8 @@ public class StoreProductAttrValueAddRequest implements Serializable {
     private BigDecimal brokerageTwo;
 
     @ApiModelProperty(value = "attr_values 创建更新时的属性对应", required = true, example = "{\"尺码\":\"2XL\",\"颜色\":\"DX027白色\"}")
-    @NotBlank(message = "attr_values不能为空")
+    @NotBlank(message = "attrValue不能为空")
+    @Pattern(regexp = "^(?!.*\\\\{2,}[^{]).*$", message = "attrValue包含多余的反斜杠转义字符")
     private String attrValue;
 
     @ApiModelProperty(value = "活动限购数量|活动商品专用字段")
@@ -110,4 +108,12 @@ public class StoreProductAttrValueAddRequest implements Serializable {
 
     @ApiModelProperty(value = "商品条码")
     private String barCode;
+
+    @ApiModelProperty(value = "是否默认")
+    private Boolean isDefault;
+
+    @ApiModelProperty(value = "是否显示")
+    private Boolean isShow;
+
+
 }

@@ -1,15 +1,29 @@
 <template>
 	<view class="page" :data-theme="theme" :style="{height:winHeight + 'px'}">
-		<cate v-show="currentPage == 'one'"></cate>
+		<view class="cart-nav" :style="{ height: iStatusBarHeight + 'px'}"></view>
+		<cate v-if="currentPage == 'one'"></cate>
+		<contracted v-if="currentPage == 'two'" ref="classTwo"></contracted>
+		<optimization v-if="currentPage == 'three'" :showSlide="showSlide" ref="classThree"></optimization>
+		<fresh v-if="currentPage == 'four'" :showSlide="showSlide" ref="classFour"></fresh>
 		<pageFooter v-if="footerShow"></pageFooter>
 	</view>
 </template>
 <script>
 	import pageFooter from '@/components/pageFooter/index.vue'
 	import cate from './components/default_cate';
+	import optimization from './components/optimization';
+	import contracted from './components/contracted';
+	import fresh from './components/fresh';
 	import {getShare} from '@/api/public.js';
+	import {getThemeInfo} from '@/api/api.js';
 	import {mapGetters} from 'vuex';
 	const app = getApp();
+	const categoryPageMap = {
+		'1': 'one',
+		'2': 'two',
+		'3': 'three',
+		'4': 'four',
+	};
 	export default {
 		data() {
 			return {
@@ -19,31 +33,19 @@
 				showSlide:true,
 				winHeight:'',
 				configApi: {}, //分享类容配置
+				iStatusBarHeight: 0, // 状态栏高度
 			}
 		},
 		computed: mapGetters(['isLogin', 'uid']),
 		onLoad(){
 			let that = this;
-			let config = that.$Cache.getItem('categoryConfig');
+			let config = that.$Cache.getItem('categoryConfig') || {};
+			// #ifdef APP-PLUS
+			this.iStatusBarHeight = uni.getSystemInfoSync().statusBarHeight;
+			// #endif
 			that.showSlide = config.isShowCategory == 'true'? true : false;
-			switch (config.categoryConfig) {
-				case '1':
-					that.$set(that,'currentPage','one');
-					break;
-				case '2':
-					that.$set(that,'currentPage','two');
-					break;
-				case '3':
-					that.$set(that,'currentPage','three');
-					uni.hideTabBar()
-					this.footerShow=false
-					break;
-				case '4':
-					that.$set(that,'currentPage','four');
-					uni.hideTabBar()
-					this.footerShow=false
-					break;
-			}
+			that.applyCategoryStatus(config.categoryConfig);
+			that.getThemeCategory();
 			uni.getSystemInfo({
 			    success: function (res) {
 			        that.winHeight = res.windowHeight;
@@ -83,7 +85,7 @@
 			}
 		},
 		components:{
-			cate,pageFooter
+			cate,optimization,contracted,fresh,pageFooter
 		},
 		methods:{
 			shareApi: function() {
@@ -93,6 +95,27 @@
 					this.setOpenShare(res.data);
 					// #endif
 				})
+			},
+			getThemeCategory() {
+				let data = {};
+				let previewThemeId = uni.getStorageSync('previewThemeId');
+				if (previewThemeId) data.theme_id = previewThemeId;
+				getThemeInfo('category', data).then((res) => {
+					if (res.data && res.data.status) {
+						this.applyCategoryStatus(res.data.status);
+					}
+				}).catch(() => {});
+			},
+			applyCategoryStatus(status) {
+				let currentPage = categoryPageMap[String(status)];
+				if (!currentPage) return;
+				this.$set(this, 'currentPage', currentPage);
+				if (currentPage == 'three' || currentPage == 'four') {
+					uni.hideTabBar();
+					this.footerShow = false;
+				} else {
+					this.footerShow = true;
+				}
 			},
 			// 微信分享；
 			setOpenShare: function(data) {
@@ -126,5 +149,12 @@
 	.page{
 		background: #fff;
 		height: 100% !important;
+	}
+	.cart-nav {
+		position: fixed;
+		z-index: 99;
+		top: 0;
+		width: 100%;
+		background-color: #fff;
 	}
 </style>

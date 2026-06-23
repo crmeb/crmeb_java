@@ -24,6 +24,7 @@ service.interceptors.request.use(
   (config) => {
     // 发送请求之前做的
     const token = !store.getters.token ? sessionStorage.getItem('token') : store.getters.token;
+    config.headers['X-Source'] = 'df07addc462f7f8f';
     if (token) {
       config.headers['Authori-zation'] = token;
     }
@@ -50,7 +51,7 @@ service.interceptors.response.use(
     } else if (res.code === 403) {
       Message.error('没有权限访问。');
     }
-    if (res.code !== 200 && res.code !== 401) {
+    if (![0, 200].includes(res.code) && res.code !== 401) {
       if (isPhone()) {
         //移动端
         return Promise.reject(res || 'Error');

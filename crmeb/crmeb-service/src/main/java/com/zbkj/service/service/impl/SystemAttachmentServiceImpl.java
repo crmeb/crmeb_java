@@ -1,6 +1,7 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -30,7 +31,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -87,13 +88,13 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
     @Override
     public String prefixImage(String path) {
         // 如果那些域名不需要加，则跳过
-        return path.replace(UploadConstants.UPLOAD_FILE_KEYWORD+"/", getCdnUrl() + "/"+ UploadConstants.UPLOAD_FILE_KEYWORD+"/");
+        return prefixRelativePath(path, UploadConstants.UPLOAD_FILE_KEYWORD + "/", getCdnUrl());
     }
 
     @Override
     public String prefixUploadf(String path) {
         // 如果那些域名不需要加，则跳过
-        return path.replace("crmebimage/" + UploadConstants.UPLOAD_AFTER_FILE_KEYWORD+"/", getCdnUrl() + "/" +"crmebimage/" + UploadConstants.UPLOAD_AFTER_FILE_KEYWORD+"/");
+        return prefixRelativePath(path, "crmebimage/" + UploadConstants.UPLOAD_AFTER_FILE_KEYWORD + "/", getCdnUrl());
     }
 
     /**
@@ -105,13 +106,93 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
     public String prefixFile(String path) {
         if (path.contains(Constants.WECHAT_SOURCE_CODE_FILE_NAME)) {
             String cdnUrl = systemConfigService.getValueByKey("local" + "UploadUrl");
-            return path.replace("crmebimage/", cdnUrl + "/crmebimage/");
+            return prefixRelativePath(path, "crmebimage/", cdnUrl);
         }
         if (path.contains("downloadf/excel")) {
             String cdnUrl = systemConfigService.getValueByKey("local" + "UploadUrl");
-            return path.replace("crmebimage/downloadf/", cdnUrl + "/crmebimage/downloadf/");
+            return prefixRelativePath(path, "crmebimage/downloadf/", cdnUrl);
         }
-        return path.replace("crmebimage/file/", getCdnUrl() + "/crmebimage/file/");
+        return prefixRelativePath(path, "crmebimage/file/", getCdnUrl());
+    }
+
+    private String prefixRelativePath(String data, String pathKeyword, String prefix) {
+        if (StringUtils.isBlank(data) || StringUtils.isBlank(pathKeyword) || StringUtils.isBlank(prefix)) {
+            return data;
+        }
+
+        String normalizedPrefix = trimEndSlash(prefix);
+        String replacement = normalizedPrefix + "/" + pathKeyword;
+        StringBuilder builder = new StringBuilder(data.length());
+        int searchStart = 0;
+        int index = data.indexOf(pathKeyword);
+        while (index >= 0) {
+            if (isCompleteUrlPath(data, index)) {
+                builder.append(data, searchStart, index).append(pathKeyword);
+            } else if (hasRelativeStartSlash(data, index)) {
+                builder.append(data, searchStart, index - 1).append(replacement);
+            } else {
+                builder.append(data, searchStart, index).append(replacement);
+            }
+            searchStart = index + pathKeyword.length();
+            index = data.indexOf(pathKeyword, searchStart);
+        }
+        builder.append(data.substring(searchStart));
+        return builder.toString();
+    }
+
+    private boolean hasRelativeStartSlash(String data, int pathIndex) {
+        return pathIndex > 0
+                && data.charAt(pathIndex - 1) == '/'
+                && (pathIndex == 1 || isUrlBoundaryChar(data.charAt(pathIndex - 2)));
+    }
+
+    private boolean isCompleteUrlPath(String data, int pathIndex) {
+        if (pathIndex <= 0 || data.charAt(pathIndex - 1) != '/') {
+            return false;
+        }
+        return hasSchemeBeforePath(data, pathIndex, "http://")
+                || hasSchemeBeforePath(data, pathIndex, "https://")
+                || hasProtocolRelativeBeforePath(data, pathIndex);
+    }
+
+    private boolean hasSchemeBeforePath(String data, int pathIndex, String scheme) {
+        int schemeIndex = data.lastIndexOf(scheme, pathIndex);
+        return schemeIndex >= 0 && !hasUrlBoundary(data, schemeIndex, pathIndex);
+    }
+
+    private boolean hasProtocolRelativeBeforePath(String data, int pathIndex) {
+        int tokenStart = findUrlTokenStart(data, pathIndex);
+        return pathIndex - tokenStart > 2 && data.startsWith("//", tokenStart);
+    }
+
+    private int findUrlTokenStart(String data, int pathIndex) {
+        for (int i = pathIndex - 1; i >= 0; i--) {
+            if (isUrlBoundaryChar(data.charAt(i))) {
+                return i + 1;
+            }
+        }
+        return 0;
+    }
+
+    private boolean hasUrlBoundary(String data, int startIndex, int endIndex) {
+        for (int i = startIndex; i < endIndex; i++) {
+            if (isUrlBoundaryChar(data.charAt(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isUrlBoundaryChar(char value) {
+        return value == '"' || value == '\'' || value == '<' || value == '>' || Character.isWhitespace(value);
+    }
+
+    private String trimEndSlash(String value) {
+        String result = value.trim();
+        while (result.endsWith("/")) {
+            result = result.substring(0, result.length() - 1);
+        }
+        return result;
     }
 
     /**
@@ -130,6 +211,24 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
                 return path;
             }
             return path.replace(getCdnUrl() + "/", "");
+        }
+
+        return path;
+    }
+
+    /**
+     * 清除 cdn url， 在保存数据的时候使用
+     *
+     * @param path String 文件路径
+     * @return String
+     */
+    @Override
+    public String clearPrefix(String path, String cdnUrl) {
+        if (StrUtil.isBlank(path)) {
+            return path;
+        }
+        if (path.contains(cdnUrl + "/")) {
+            return path.replace(cdnUrl + "/", "");
         }
 
         return path;
@@ -211,4 +310,3 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
         return remove(wrapper);
     }
 }
-

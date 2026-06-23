@@ -3,10 +3,13 @@ package com.zbkj.service.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.zbkj.common.constants.DateConstants;
+import com.zbkj.common.constants.UserConstants;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.AdminIntegralSearchRequest;
 import com.zbkj.common.request.PageParamRequest;
@@ -17,7 +20,9 @@ import com.zbkj.common.response.UserIntegralRecordResponse;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.zbkj.common.result.CommonResultCode;
 import com.zbkj.common.utils.CrmebDateUtil;
+import com.zbkj.common.utils.ValidateFormUtil;
 import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserIntegralRecord;
@@ -33,6 +38,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -40,7 +46,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -127,55 +133,87 @@ public class UserIntegralRecordServiceImpl extends ServiceImpl<UserIntegralRecor
     /**
      * PC后台列表
      * @param request 搜索条件
-     * @param pageParamRequest 分页参数
      * @return 记录列表
      */
     @Override
-    public PageInfo<UserIntegralRecordResponse> findAdminList(AdminIntegralSearchRequest request, PageParamRequest pageParamRequest) {
-        Page<UserIntegralRecordResponse> page = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-        LambdaQueryWrapper<UserIntegralRecord> lqw = Wrappers.lambdaQuery();
-        lqw.select(UserIntegralRecord::getId, UserIntegralRecord::getTitle, UserIntegralRecord::getBalance, UserIntegralRecord::getIntegral,
-                UserIntegralRecord::getMark, UserIntegralRecord::getUid, UserIntegralRecord::getUpdateTime);
-        lqw.eq(UserIntegralRecord::getStatus, IntegralRecordConstants.INTEGRAL_RECORD_STATUS_COMPLETE);
-        if (ObjectUtil.isNotNull(request.getUid())) {
-            lqw.eq(UserIntegralRecord::getUid, request.getUid());
-        }
-        if (StrUtil.isNotBlank(request.getKeywords())) {
-            List<Integer> idList = userService.findIdListLikeName(request.getKeywords());
-            if (CollUtil.isNotEmpty(idList)) {
-                lqw.in(UserIntegralRecord::getUid, idList);
-            } else {
-                return CommonPage.copyPageInfo(page, CollUtil.newArrayList());
+    public PageInfo<UserIntegralRecordResponse> findAdminList(AdminIntegralSearchRequest request) {
+        Page<UserIntegralRecordResponse> page = PageHelper.startPage(request.getPage(), request.getLimit());
+        Map<String, Object> map = CollUtil.newHashMap();
+        if (StrUtil.isNotBlank(request.getContent())) {
+            ValidateFormUtil.validatorUserCommonSearch(request);
+            String keywords = URLUtil.decode(request.getContent());
+            switch (request.getSearchType()) {
+                case UserConstants.USER_SEARCH_TYPE_ALL:
+                    map.put("keywords", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_UID:
+                    map.put("uid", Integer.valueOf(request.getContent()));
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_NICKNAME:
+                    map.put("nickname", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_PHONE:
+                    map.put("phone", request.getContent());
+                    break;
             }
         }
         //时间范围
         if (StrUtil.isNotBlank(request.getDateLimit())) {
             DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
             //判断时间
-            int compareDateResult = CrmebDateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), Constants.DATE_FORMAT);
+            int compareDateResult = CrmebDateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), DateConstants.DATE_FORMAT);
             if (compareDateResult == -1) {
-                throw new CrmebException("开始时间不能大于结束时间！");
+                throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "开始时间不能大于结束时间！");
             }
-
-            lqw.between(UserIntegralRecord::getUpdateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
-        }
-        lqw.orderByDesc(UserIntegralRecord::getUpdateTime);
-        List<UserIntegralRecord> list = dao.selectList(lqw);
-        if (CollUtil.isEmpty(list)) {
-            return CommonPage.copyPageInfo(page, CollUtil.newArrayList());
-        }
-        List<UserIntegralRecordResponse> responseList = list.stream().map(i -> {
-            UserIntegralRecordResponse response = new UserIntegralRecordResponse();
-            BeanUtils.copyProperties(i, response);
-            // 获取用户昵称
-            User user = userService.getById(i.getUid());
-            if (ObjectUtil.isNotNull(user)) {
-                response.setNickName(user.getNickname());
-            } else {
-                response.setNickName("");
+            if (StrUtil.isNotBlank(dateLimit.getStartTime())) {
+                map.put("startTime", dateLimit.getStartTime());
+                map.put("endTime", dateLimit.getEndTime());
             }
-            return response;
-        }).collect(Collectors.toList());
+        }
+        List<UserIntegralRecordResponse> responseList = dao.findRecordPageList(map);
+        //LambdaQueryWrapper<UserIntegralRecord> lqw = Wrappers.lambdaQuery();
+        //lqw.select(UserIntegralRecord::getId, UserIntegralRecord::getTitle, UserIntegralRecord::getBalance, UserIntegralRecord::getIntegral,
+        //        UserIntegralRecord::getMark, UserIntegralRecord::getUid, UserIntegralRecord::getUpdateTime);
+        //lqw.eq(UserIntegralRecord::getStatus, IntegralRecordConstants.INTEGRAL_RECORD_STATUS_COMPLETE);
+        //if (ObjectUtil.isNotNull(request.getUid())) {
+        //    lqw.eq(UserIntegralRecord::getUid, request.getUid());
+        //}
+        //if (StrUtil.isNotBlank(request.getKeywords())) {
+        //    List<Integer> idList = userService.findIdListLikeName(request.getKeywords());
+        //    if (CollUtil.isNotEmpty(idList)) {
+        //        lqw.in(UserIntegralRecord::getUid, idList);
+        //    } else {
+        //        return CommonPage.copyPageInfo(page, CollUtil.newArrayList());
+        //    }
+        //}
+        ////时间范围
+        //if (StrUtil.isNotBlank(request.getDateLimit())) {
+        //    DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
+        //    //判断时间
+        //    int compareDateResult = CrmebDateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), Constants.DATE_FORMAT);
+        //    if (compareDateResult == -1) {
+        //        throw new CrmebException("开始时间不能大于结束时间！");
+        //    }
+        //
+        //    lqw.between(UserIntegralRecord::getUpdateTime, dateLimit.getStartTime(), dateLimit.getEndTime());
+        //}
+        //lqw.orderByDesc(UserIntegralRecord::getUpdateTime);
+        //List<UserIntegralRecord> list = dao.selectList(lqw);
+        //if (CollUtil.isEmpty(list)) {
+        //    return CommonPage.copyPageInfo(page, CollUtil.newArrayList());
+        //}
+        //List<UserIntegralRecordResponse> responseList = list.stream().map(i -> {
+        //    UserIntegralRecordResponse response = new UserIntegralRecordResponse();
+        //    BeanUtils.copyProperties(i, response);
+        //    // 获取用户昵称
+        //    User user = userService.getById(i.getUid());
+        //    if (ObjectUtil.isNotNull(user)) {
+        //        response.setNickName(user.getNickname());
+        //    } else {
+        //        response.setNickName("");
+        //    }
+        //    return response;
+        //}).collect(Collectors.toList());
         return CommonPage.copyPageInfo(page, responseList);
     }
 
@@ -218,7 +256,6 @@ public class UserIntegralRecordServiceImpl extends ServiceImpl<UserIntegralRecor
     public List<UserIntegralRecord> findUserIntegralRecordList(Integer uid, PageParamRequest pageParamRequest) {
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         LambdaQueryWrapper<UserIntegralRecord> lqw = Wrappers.lambdaQuery();
-        lqw.select(UserIntegralRecord::getId, UserIntegralRecord::getTitle, UserIntegralRecord::getType, UserIntegralRecord::getIntegral, UserIntegralRecord::getUpdateTime);
         lqw.eq(UserIntegralRecord::getUid, uid);
         lqw.eq(UserIntegralRecord::getStatus, IntegralRecordConstants.INTEGRAL_RECORD_STATUS_COMPLETE);
         lqw.orderByDesc(UserIntegralRecord::getUpdateTime);

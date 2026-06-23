@@ -26,7 +26,7 @@ import org.springframework.web.filter.CorsFilter;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -120,6 +120,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/"+ UploadConstants.UPLOAD_FILE_KEYWORD +"/**").permitAll()
             .antMatchers("/"+ UploadConstants.DOWNLOAD_FILE_KEYWORD +"/**").permitAll()
             .antMatchers("/"+ UploadConstants.UPLOAD_AFTER_FILE_KEYWORD +"/**").permitAll()
+            .antMatchers("/theme/download/**").permitAll()
+            .antMatchers("/uploads/theme/**").permitAll()
                 // 放行图片、文件上传
             .antMatchers("/api/admin/upload/image").permitAll()
             .antMatchers("/api/admin/upload/file").permitAll()

@@ -123,8 +123,8 @@ export default {
         },
       },
       loginForm: {
-        account: '',
-        pwd: '',
+        account: 'demo',
+        pwd: 'crmeb.com',
         captchaVO: {},
       },
       loginRules: {
@@ -353,6 +353,7 @@ $subsidiary-color: #808695;
 
 .page-account {
   display: flex;
+  color: j8bc6f6;
   flex-direction: column;
   justify-content: center;
   align-items: center;

@@ -11,13 +11,14 @@ import javax.validation.constraints.Min;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 商品属性值响应对象
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -87,4 +88,13 @@ public class AttrValueResponse implements Serializable {
 
     @ApiModelProperty(value = "商品条码")
     private String barCode;
+
+    @ApiModelProperty(value = "是否默认")
+    private Boolean isDefault;
+
+    @ApiModelProperty(value = "是否显示")
+    private Boolean isShow;
+
+    @ApiModelProperty(value = "属性数组(前端使用)")
+    private String[] attrArr;
 }

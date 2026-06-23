@@ -21,6 +21,17 @@ export function copyrightInfoApi() {
 }
 
 /**
+ * 保存版权信息
+ */
+export function saveCrmebCopyRight(data) {
+  return request({
+    url: '/admin/copyright/update/company/info',
+    method: 'post',
+    data,
+  });
+}
+
+/**
  * @description 账号登录检测
  */
 export function accountDetectionApi(data) {

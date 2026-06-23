@@ -26,17 +26,18 @@
     <!--编辑框-->
 
     <!-- 修改框 -->
-    <el-dialog title="设置热区" :visible.sync="editBoxShow" width="540px" :append-to-body="true">
-      <el-form>
-        <el-form-item label="热区跳转链接:">
-          <div @click="getLink">
-            <el-input v-model="link" readonly><i class="iconfont iconlianjietubiao" slot="suffix"> </i></el-input>
-          </div>
-        </el-form-item>
-      </el-form>
+    <el-dialog title="设置热区" :visible.sync="editBoxShow" width="560px" append-to-body custom-class="hotpot-area-dialog">
+      <div class="area-set">
+        <div class="area-label">热区跳转链接：</div>
+        <div class="area-content">
+          <el-input v-model="url" readonly placeholder="选择跳转链接">
+            <i class="iconfont iconlianjietubiao" slot="suffix" @click="getLink"> </i>
+          </el-input>
+        </div>
+      </div>
       <span slot="footer" class="dialog-footer">
         <el-button @click="editBoxShow = false">取消</el-button>
-        <el-button type="primary" @click="editBoxShow = false">确定</el-button>
+        <el-button type="primary" @click="addURL">确定</el-button>
       </span>
     </el-dialog>
     <linkaddress ref="linkaddres" @linkUrl="linkUrl"></linkaddress>
@@ -115,7 +116,7 @@ export default {
   methods: {
     getLink() {
       // 打开添加链接的模态框
-      this.$refs.linkaddres.dialogVisible = true;
+      this.$refs.linkaddres.modals = true;
     },
     handleClose(done) {
       this.$confirm('确认关闭？', '提示', { type: 'warning' })
@@ -157,8 +158,12 @@ export default {
       }
     },
     linkUrl(e) {
-      // 将链接地址存储到对应的数据项中
-      this.$emit('addURL', this.areaDataIndex, e);
+      this.url = e;
+    },
+    addURL() {
+      if (!this.url) return this.$message.error('请选择跳转链接');
+      this.$emit('addURL', this.areaDataIndex, this.url);
+      this.editBoxShow = false;
     },
     // 开始拖动限制范围
     mouseDownLint(e) {

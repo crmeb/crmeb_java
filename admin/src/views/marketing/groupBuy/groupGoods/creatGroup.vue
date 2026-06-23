@@ -294,7 +294,7 @@
                         v-else-if="formThead[iii].title === '限量'"
                         v-model="scope.row[iii]"
                         type="number"
-                        :min="1"
+                        :min="minQuota(scope.row)"
                         :disabled="Boolean($route.params.type)"
                         :max="scope.row.stock"
                         :step="1"
@@ -489,6 +489,16 @@ export default {
       delete obj.image;
       return obj;
     },
+    // 限量最小值
+    minQuota() {
+      return (data) => {
+        if (data.stock) {
+          return 1
+        } else {
+          return 0
+        }
+      }
+    },
   },
   created() {
     this.$watch('formValidate.attr', this.watCh);
@@ -517,7 +527,7 @@ export default {
     },
     tabsHandleClick(tab, event) {
       this.currentTab = tab.name;
-      if (!this.$route.params.id && tab.index == 1) this.getProdect(this.productId);
+      // if (!this.$route.params.id && tab.index == 1) this.getProdect(this.productId);
     },
     handleSelectionChange(val) {
       val.map((item) => {
@@ -772,9 +782,11 @@ export default {
       } else {
         this.formValidate.attrValue = this.multipleSelection;
       }
-      this.formValidate.attrValue.forEach((item) => {
-        item.attrValue = JSON.stringify(item.attrValue);
-      });
+      if (typeof this.formValidate.attrValue[0].attrValue == 'object') {
+        this.formValidate.attrValue.forEach((item) => {
+          item.attrValue = JSON.stringify(item.attrValue);
+        });
+      }
       this.formValidate.images = JSON.stringify(this.formValidate.imagelist);
       this.formValidate.startTime = this.formValidate.timeVal[0];
       this.formValidate.stopTime = this.formValidate.timeVal[1];

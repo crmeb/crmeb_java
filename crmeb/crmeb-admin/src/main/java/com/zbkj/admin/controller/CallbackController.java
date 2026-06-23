@@ -10,13 +10,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+
 
 /**
  * 支付回调
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -42,6 +44,17 @@ public class CallbackController {
         String response = callbackService.weChat(request);
         System.out.println("微信支付回调 response ===> " + response);
         return response;
+    }
+
+    /**
+     * 支付宝支付回调
+     */
+    @ApiOperation(value = "支付宝支付回调 ")
+    @RequestMapping(value = "/alipay", method = RequestMethod.POST)
+    public String aliPay(HttpServletRequest request){
+        //支付宝支付回调
+        System.out.println("支付宝支付回调 request ===> " + request.getParameterMap());
+        return callbackService.aliPay(request);
     }
 
     /**

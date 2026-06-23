@@ -29,7 +29,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -48,14 +48,12 @@ public class UserController {
     /**
      * 分页显示用户表
      * @param request 搜索条件
-     * @param pageParamRequest 分页参数
      */
     @PreAuthorize("hasAuthority('admin:user:list')")
     @ApiOperation(value = "分页列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<UserResponse>> getList(@ModelAttribute @Validated UserSearchRequest request,
-                                                          @ModelAttribute PageParamRequest pageParamRequest) {
-        CommonPage<UserResponse> userCommonPage = CommonPage.restPage(userService.getList(request, pageParamRequest));
+    public CommonResult<CommonPage<UserResponse>> getList(@Validated UserSearchRequest request) {
+        CommonPage<UserResponse> userCommonPage = CommonPage.restPage(userService.getList(request));
         return CommonResult.success(userCommonPage);
     }
 

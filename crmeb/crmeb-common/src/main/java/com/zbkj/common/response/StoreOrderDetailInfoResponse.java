@@ -17,7 +17,7 @@ import java.util.List;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -202,6 +202,9 @@ public class StoreOrderDetailInfoResponse implements Serializable {
     private String statusPic;
     @ApiModelProperty(value = "订单详情")
     private List<OrderInfoResponse> orderInfoList;
+
+    @ApiModelProperty(value = "拼团状态:0-非拼团订单，1-进行中,2-已完成,3-未完成")
+    private Integer pinkStatus;
 
 //    @ApiModelProperty(value = "订单ID")
 //    private Integer id;

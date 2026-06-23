@@ -292,11 +292,12 @@ export default {
       this.paginationData.page = 1;
       this.paginationData.type = val - 1;
       if (val != 0) {
-        if (this.paginationData.type == '1') {
-          this.getIntergralList();
-        } else {
-          this.getListData();
-        }
+        this.getListData();
+        // if (this.paginationData.type == '1') {
+        //   this.getIntergralList();
+        // } else {
+        //   this.getListData();
+        // }
       }
     },
   },

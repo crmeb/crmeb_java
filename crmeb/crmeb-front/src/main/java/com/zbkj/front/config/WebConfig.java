@@ -19,7 +19,7 @@ import org.springframework.web.servlet.handler.MappedInterceptor;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -57,7 +57,7 @@ public class WebConfig implements WebMvcConfigurer {
         //前端用户登录token
         registry.addInterceptor(frontTokenInterceptor()).
                 addPathPatterns("/api/front/**").
-                excludePathPatterns("/api/front/index").
+                excludePathPatterns("/api/front/index/**").
                 excludePathPatterns("/api/front/qrcode/**").
                 excludePathPatterns("/api/front/login/mobile").
                 excludePathPatterns("/api/front/login").
@@ -77,17 +77,8 @@ public class WebConfig implements WebMvcConfigurer {
                 excludePathPatterns("/api/front/config").
                 excludePathPatterns("/api/front/category").
                 excludePathPatterns("/api/front/categorybypid/*").
-                excludePathPatterns("/api/front/seckill/*").
-                excludePathPatterns("/api/front/seckill/list/*").
-                excludePathPatterns("/api/front/seckill/detail/*").
-                excludePathPatterns("/api/front/seckill/detail").
                 excludePathPatterns("/api/front/ios/*").
                 excludePathPatterns("/api/front/ios/register/binding/phone").
-                excludePathPatterns("/api/front/combination/index").
-                excludePathPatterns("/api/front/seckill/index").
-                excludePathPatterns("/api/front/bargain/index").
-                excludePathPatterns("/api/front/bargain/header").
-                excludePathPatterns("/api/front/bargain/detail").
                 excludePathPatterns("/api/front/index/product/*").
                 excludePathPatterns("/api/front/index/color/config").
                 excludePathPatterns("/api/front/image/domain").
@@ -99,9 +90,30 @@ public class WebConfig implements WebMvcConfigurer {
                 excludePathPatterns("/api/front/get/bottom/navigation").
                 excludePathPatterns("/api/front/agreement/**").
                 excludePathPatterns("/api/front/pagediy/**").
+                excludePathPatterns("/api/front/theme/product").
+                excludePathPatterns("/api/front/theme/coupon").
+                excludePathPatterns("/api/front/theme/combination").
+                excludePathPatterns("/api/front/theme/bargain").
+                excludePathPatterns("/api/front/theme/article").
+                excludePathPatterns("/api/front/theme_info").
+                excludePathPatterns("/api/front/theme_info/**").
                 excludePathPatterns("/api/front/menu/user").
+                excludePathPatterns("/api/front/user/sign/config").
+
+                excludePathPatterns("/api/front/seckill/**").
+
+                excludePathPatterns("/api/front/bargain/index").
+                excludePathPatterns("/api/front/bargain/header").
+                excludePathPatterns("/api/front/bargain/list").
+                excludePathPatterns("/api/front/bargain/detail/*").
+
+                excludePathPatterns("/api/front/combination/index").
+                excludePathPatterns("/api/front/combination/list").
                 excludePathPatterns("/api/front/combination/header").
-                excludePathPatterns("/api/front/combination/detail").
+                excludePathPatterns("/api/front/combination/detail/*").
+
+                excludePathPatterns("/api/front/splash/ad/info").
+
                 excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**");
     }
 

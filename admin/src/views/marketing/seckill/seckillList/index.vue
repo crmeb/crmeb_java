@@ -101,9 +101,15 @@
         <el-table-column label="操作" width="120" fixed="right">
           <template slot-scope="scope">
             <router-link
-              :to="{ path: '/marketing/seckill/creatSeckill/updeta/' + scope.row.productId + '/' + scope.row.id }"
+              :to="{
+                path: scope.row.status
+                  ? '/marketing/seckill/creatSeckill/updeta/' + scope.row.productId + '/' + scope.row.id + '/info'
+                  : '/marketing/seckill/creatSeckill/updeta/' + scope.row.productId + '/' + scope.row.id,
+              }"
             >
-              <a v-hasPermi="['admin:seckill:info']">编辑</a>
+              <a v-hasPermi="['admin:seckill:info']">
+                {{ scope.row.status ? '详情' : '编辑' }}
+              </a>
             </router-link>
             <template>
               <el-divider direction="vertical"></el-divider>

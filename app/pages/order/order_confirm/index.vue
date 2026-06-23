@@ -1,11 +1,11 @@
 <template>
 	<view :data-theme="theme">
 		<!-- #ifndef APP-PLUS-->
-		<view v-if="productType==='video'" class='cart_nav'>
+		<view class='cart_nav'>
 			<nav-bar :navTitle='navTitle' @getNavH='getNavH'></nav-bar>
 		</view>
-
 		<!-- #endif -->
+		
 		<view class='order-submission' :style="'margin-top:'+(marTop)+'rpx;'">
 			<view class="allAddress" :style="store_self_mention ? '':'padding-top:0;'">
 				<view class="nav acea-row">
@@ -115,7 +115,7 @@
 							</view>
 						</view>
 						<textarea v-if="coupon.coupon===false" placeholder-class='placeholder' @input='bindHideKeyboard'
-						 :maxlength="150"	value="" name="mark" placeholder='请添加备注（150字以内）'></textarea>
+							:maxlength="150" value="" name="mark" placeholder='请添加备注（150字以内）'></textarea>
 					</view>
 				</view>
 				<view class='moneyList borRadius14'>
@@ -221,12 +221,7 @@
 						"icon": "icon-weixin2",
 						value: 'weixin',
 						title: '微信快捷支付',
-						// #ifdef APP
-						payStatus: 0,
-						// #endif
-						// #ifndef APP
 						payStatus: 1,
-						// #endif
 					},
 					{
 						"name": "余额支付",
@@ -234,7 +229,16 @@
 						value: 'yue',
 						title: '可用余额:',
 						payStatus: 1,
+					},
+					// #ifndef MP
+					{
+						"name": "支付宝支付",
+						"icon": "icon-zhifubao",
+						value: 'alipay',
+						title: '支付宝快捷支付',
+						payStatus: 1,
 					}
+					// #endif
 				],
 				payType: 'weixin', //支付方式
 				openType: 1, //优惠券打开方式 1=使用
@@ -600,7 +604,7 @@
 					this.orderNo = res.data.orderNo;
 					console.log(res.data.orderNo);
 					uni.navigateTo({
-						url:`/pages/order/order_payment/index?orderNo=${this.orderNo}&payPrice=${this.orderInfoVo.payFee}`
+						url: `/pages/order/order_payment/index?orderNo=${this.orderNo}&payPrice=${this.orderInfoVo.payFee}`
 					})
 				}).catch(err => {
 					uni.hideLoading();
@@ -954,7 +958,7 @@
 		position: fixed;
 		bottom: 0;
 		left: 0;
-		height: calc(100rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		height: calc(100rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
 		height: calc(100rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
 	}
 
@@ -973,13 +977,13 @@
 		opacity: 0
 	}
 
-	/deep/ checkbox .uni-checkbox-input.uni-checkbox-input-checked {
+	::v-deep  checkbox .uni-checkbox-input.uni-checkbox-input-checked {
 		@include main_bg_color(theme);
 		border: none !important;
 		color: #fff !important
 	}
 
-	/deep/ checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+	::v-deep  checkbox .wx-checkbox-input.wx-checkbox-input-checked {
 		@include main_bg_color(theme);
 		border: none !important;
 		color: #fff !important;

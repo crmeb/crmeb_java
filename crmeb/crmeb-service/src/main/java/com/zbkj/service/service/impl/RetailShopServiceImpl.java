@@ -6,14 +6,17 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.zbkj.common.constants.SysConfigConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserBrokerageRecord;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.RetailShopRequest;
+import com.zbkj.common.request.RetailShopSearchRequest;
 import com.zbkj.common.response.SpreadUserResponse;
 import com.zbkj.common.response.UserExtractResponse;
+import com.zbkj.common.vo.MyRecord;
 import com.zbkj.service.dao.UserDao;
 import com.zbkj.service.service.*;
 import org.springframework.beans.BeanUtils;
@@ -30,7 +33,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -57,18 +60,15 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
 
     /**
      * 获取分销列表
-     * @param keywords 搜索参数
-     * @param dateLimit 时间参数
-     * @param pageRequest 分页参数
+     * @param request 分销员分页列表查询请求对象
      */
     @Override
-    public CommonPage<SpreadUserResponse> getSpreadPeopleList(String keywords, String dateLimit, PageParamRequest pageRequest) {
-        Page<User> pageUserPage = PageHelper.startPage(pageRequest.getPage(), pageRequest.getLimit());
+    public PageInfo<SpreadUserResponse> getSpreadPeopleList(RetailShopSearchRequest request) {
         // id,头像，昵称，姓名，电话，推广用户数，推广订单数，推广订单额，佣金总金额，已提现金额，提现次数，未提现金额，上级推广人
-        PageInfo<User> userPageInfo = userService.getAdminSpreadPeopleList(keywords, dateLimit, pageRequest);
+        PageInfo<User> userPageInfo = userService.getAdminSpreadPeopleList(request);
 
         if (CollUtil.isEmpty(userPageInfo.getList())) {
-            return CommonPage.restPage(new PageInfo<>());
+            return CommonPage.copyPageInfo(userPageInfo, CollUtil.newArrayList());
         }
         List<User> userList = userPageInfo.getList();
         List<SpreadUserResponse> responseList = CollUtil.newArrayList();
@@ -116,10 +116,7 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
             }
             responseList.add(userResponse);
         });
-        PageInfo<SpreadUserResponse> responsePageInfo = CommonPage.copyPageInfo(pageUserPage, responseList);
-        responsePageInfo.setTotal(userPageInfo.getTotal());
-        responsePageInfo.setPages(userPageInfo.getPages());
-        return CommonPage.restPage(responsePageInfo);
+        return CommonPage.copyPageInfo(userPageInfo, responseList);
     }
 
     /**
@@ -128,18 +125,30 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
      */
     @Override
     public RetailShopRequest getManageInfo() {
-//        List<String> keys = initKeys();
+        List<String> keys = CollUtil.newArrayList();
+        keys.add(SysConfigConstants.CONFIG_KEY_BROKERAGE_FUNC_STATUS);
+        keys.add(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_RATIO);
+        keys.add(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_TWO);
+        keys.add(SysConfigConstants.CONFIG_EXTRACT_MIN_PRICE);
+        keys.add(SysConfigConstants.CONFIG_EXTRACT_BANK);
+        keys.add(SysConfigConstants.CONFIG_EXTRACT_FREEZING_TIME);
+        keys.add(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_QUOTA);
+        keys.add(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_IS_BUBBLE);
+        keys.add(SysConfigConstants.CONFIG_KEY_BROKERAGE_BINDIND);
+        keys.add(SysConfigConstants.RETAIL_STORE_BROKERAGE_SHARE_NODE);
+        MyRecord record = systemConfigService.getValuesByKeyList(keys);
+
         RetailShopRequest response = new RetailShopRequest();
-        response.setBrokerageFuncStatus(Integer.parseInt(systemConfigService.getValueByKey("brokerage_func_status")));
-//        response.setStoreBrokerageStatus(systemConfigService.getValueByKey(keys.get(1)));
-        response.setStoreBrokerageRatio(Integer.parseInt(systemConfigService.getValueByKey("store_brokerage_ratio")));
-        response.setStoreBrokerageTwo(Integer.parseInt(systemConfigService.getValueByKey("store_brokerage_two")));
-        response.setUserExtractMinPrice(new BigDecimal(systemConfigService.getValueByKey("user_extract_min_price")));
-        response.setUserExtractBank(systemConfigService.getValueByKey("user_extract_bank").replace("\\n","\n"));
-        response.setExtractTime(Integer.parseInt(systemConfigService.getValueByKey("extract_time")));
-        response.setStoreBrokerageQuota(Integer.parseInt(systemConfigService.getValueByKey("store_brokerage_quota")));
-        response.setStoreBrokerageIsBubble(Integer.parseInt(systemConfigService.getValueByKey("store_brokerage_is_bubble")));
-        response.setBrokerageBindind(Integer.parseInt(systemConfigService.getValueByKey("brokerage_bindind")));
+        response.setBrokerageFuncStatus(Integer.parseInt(record.getStr(SysConfigConstants.CONFIG_KEY_BROKERAGE_FUNC_STATUS)));
+        response.setStoreBrokerageRatio(Integer.parseInt(record.getStr(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_RATIO)));
+        response.setStoreBrokerageTwo(Integer.parseInt(record.getStr(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_TWO)));
+        response.setUserExtractMinPrice(new BigDecimal(record.getStr(SysConfigConstants.CONFIG_EXTRACT_MIN_PRICE)));
+        response.setUserExtractBank(record.getStr(SysConfigConstants.CONFIG_EXTRACT_BANK).replace("\\n","\n"));
+        response.setExtractTime(Integer.parseInt(record.getStr(SysConfigConstants.CONFIG_EXTRACT_FREEZING_TIME)));
+        response.setStoreBrokerageQuota(Integer.parseInt(record.getStr(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_QUOTA)));
+        response.setStoreBrokerageIsBubble(Integer.parseInt(record.getStr(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_IS_BUBBLE)));
+        response.setBrokerageBindind(Integer.parseInt(record.getStr(SysConfigConstants.CONFIG_KEY_BROKERAGE_BINDIND)));
+        response.setStoreBrokerageShareNode(record.getStr(SysConfigConstants.RETAIL_STORE_BROKERAGE_SHARE_NODE));
         return response;
     }
 
@@ -154,15 +163,16 @@ public class RetailShopServiceImpl extends ServiceImpl<UserDao, User> implements
         int ration = retailShopRequest.getStoreBrokerageTwo() + retailShopRequest.getStoreBrokerageRatio();
         if (ration > 100 || ration < 0) throw new CrmebException("返佣比例加起来不能超过100%");
 
-        systemConfigService.updateOrSaveValueByName("brokerage_func_status", retailShopRequest.getBrokerageFuncStatus().toString());
-        systemConfigService.updateOrSaveValueByName("store_brokerage_ratio", retailShopRequest.getStoreBrokerageRatio().toString());
-        systemConfigService.updateOrSaveValueByName("store_brokerage_two", retailShopRequest.getStoreBrokerageTwo().toString());
-        systemConfigService.updateOrSaveValueByName("user_extract_min_price", retailShopRequest.getUserExtractMinPrice().toString());
-        systemConfigService.updateOrSaveValueByName("user_extract_bank", retailShopRequest.getUserExtractBank());
-        systemConfigService.updateOrSaveValueByName("extract_time", retailShopRequest.getExtractTime().toString());
-        systemConfigService.updateOrSaveValueByName("brokerage_bindind", retailShopRequest.getBrokerageBindind().toString());
-        systemConfigService.updateOrSaveValueByName("store_brokerage_quota", retailShopRequest.getStoreBrokerageQuota().toString());
-        systemConfigService.updateOrSaveValueByName("store_brokerage_is_bubble", retailShopRequest.getStoreBrokerageIsBubble().toString());
+        systemConfigService.updateOrSaveValueByName(SysConfigConstants.CONFIG_KEY_BROKERAGE_FUNC_STATUS, retailShopRequest.getBrokerageFuncStatus().toString());
+        systemConfigService.updateOrSaveValueByName(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_RATIO, retailShopRequest.getStoreBrokerageRatio().toString());
+        systemConfigService.updateOrSaveValueByName(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_TWO, retailShopRequest.getStoreBrokerageTwo().toString());
+        systemConfigService.updateOrSaveValueByName(SysConfigConstants.CONFIG_EXTRACT_MIN_PRICE, retailShopRequest.getUserExtractMinPrice().toString());
+        systemConfigService.updateOrSaveValueByName(SysConfigConstants.CONFIG_EXTRACT_BANK, retailShopRequest.getUserExtractBank());
+        systemConfigService.updateOrSaveValueByName(SysConfigConstants.CONFIG_EXTRACT_FREEZING_TIME, retailShopRequest.getExtractTime().toString());
+        systemConfigService.updateOrSaveValueByName(SysConfigConstants.CONFIG_KEY_BROKERAGE_BINDIND, retailShopRequest.getBrokerageBindind().toString());
+        systemConfigService.updateOrSaveValueByName(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_QUOTA, retailShopRequest.getStoreBrokerageQuota().toString());
+        systemConfigService.updateOrSaveValueByName(SysConfigConstants.CONFIG_KEY_STORE_BROKERAGE_IS_BUBBLE, retailShopRequest.getStoreBrokerageIsBubble().toString());
+        systemConfigService.updateOrSaveValueByName(SysConfigConstants.RETAIL_STORE_BROKERAGE_SHARE_NODE, retailShopRequest.getStoreBrokerageShareNode());
         return true;
     }
 

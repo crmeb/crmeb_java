@@ -4,7 +4,8 @@
       <div class="padding-add">
         <el-form inline size="small" label-width="75px">
           <el-form-item label="时间选择：">
-            <el-date-picker
+            <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
+            <!-- <el-date-picker
               v-model="timeVal"
               value-format="yyyy-MM-dd"
               format="yyyy-MM-dd"
@@ -16,9 +17,19 @@
               @change="onchangeTime"
               start-placeholder="开始时间"
               end-placeholder="结束时间"
-            />
+            /> -->
           </el-form-item>
-          <el-form-item label="拼团状态：">
+          <el-form-item label="商品搜索：">
+            <el-input v-model="tableFrom.productName" placeholder="请输入商品名字" class="selWidth"></el-input>
+          </el-form-item>
+          <el-form-item label="团长搜索：">
+            <UserSearchInput ref="userSearchInput" v-model="tableFrom" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" size="small" @click="getList(1)">搜索</el-button>
+            <el-button size="small" @click="handleReset">重置</el-button>
+          </el-form-item>
+          <!-- <el-form-item label="拼团状态：">
             <el-select
               v-model="tableFrom.status"
               placeholder="请选择"
@@ -30,14 +41,25 @@
               <el-option label="已成功" :value="2" />
               <el-option label="未完成" :value="3" />
             </el-select>
-          </el-form-item>
+          </el-form-item> -->
         </el-form>
       </div>
     </el-card>
     <div class="mt14">
-      <cards-data :cardLists="cardLists" v-if="checkPermi(['admin:combination:statistics'])"></cards-data>
+      <!-- <cards-data :cardLists="cardLists" v-if="checkPermi(['admin:combination:statistics'])"></cards-data> -->
     </div>
     <el-card class="box-card">
+      <el-tabs v-model="tableFrom.status" @tab-click="getList(1)">
+        <el-tab-pane name="2">
+          <span slot="label">已成功({{successNum}})</span>
+        </el-tab-pane>
+        <el-tab-pane name="1">
+          <span slot="label">进行中({{ingNum}})</span>
+        </el-tab-pane>
+        <el-tab-pane name="3">
+          <span slot="label">未完成({{failNum}})</span>
+        </el-tab-pane>
+      </el-tabs>
       <el-table
         class="table"
         v-loading="listLoading"
@@ -130,7 +152,7 @@
 </template>
 
 <script>
-import { combineListApi, combineStatisticsApi, combineOrderPinkApi } from '@/api/marketing';
+import { combineListApi, combineListCountApi, combineOrderPinkApi } from '@/api/marketing';
 import cardsData from '@/components/cards/index';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
 export default {
@@ -142,6 +164,9 @@ export default {
     return {
       listLoadingPink: false,
       dialogVisible: false,
+      failNum: 0,
+      ingNum: 0,
+      successNum: 0,
       tableDataPink: {
         data: [],
       },
@@ -152,7 +177,10 @@ export default {
       listLoading: false,
       tableFrom: {
         dateLimit: '',
-        status: '',
+        status: '2',
+        content: '',
+        searchType: 'all',
+        productName: '',
         page: 1,
         limit: 20,
       },
@@ -162,7 +190,7 @@ export default {
     };
   },
   mounted() {
-    this.getStatistics();
+    // this.getStatistics();
     this.getList();
   },
   methods: {
@@ -203,7 +231,8 @@ export default {
       this.listLoading = true;
       this.tableFrom.page = num ? num : this.tableFrom.page;
       combineListApi(this.tableFrom)
-        .then((res) => {
+      .then((res) => {
+          this.getListCount();
           this.tableData.data = res.list;
           this.tableData.total = res.total;
           this.listLoading = false;
@@ -211,6 +240,14 @@ export default {
         .catch(() => {
           this.listLoading = false;
         });
+    },
+    // 列表统计
+    getListCount() {
+      combineListCountApi(this.tableFrom).then((res) => {
+        this.failNum = res.failNum;
+        this.ingNum = res.ingNum;
+        this.successNum = res.successNum;
+      });
     },
     pageChange(page) {
       this.tableFrom.page = page;
@@ -238,6 +275,21 @@ export default {
         .catch(() => {
           this.listLoading = false;
         });
+    },
+    //重置
+    handleReset() {
+      this.timeVal = []
+      this.tableFrom.dateLimit = '';
+      this.tableFrom.keywords = '';
+      this.tableFrom.content = '';
+      this.tableFrom.searchType = 'all';
+      this.tableFrom.productName = '';
+      this.getList();
+    },
+    // 搜索
+    seachList() {
+      this.tableFrom.page = 1;
+      this.getList();
     },
   },
 };

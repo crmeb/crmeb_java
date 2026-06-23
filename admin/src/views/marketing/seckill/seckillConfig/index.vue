@@ -11,8 +11,8 @@
               @change="getList(1)"
               clearable
             >
-              <el-option label="关闭" value="'0'" />
-              <el-option label="开启" value="'1'" />
+              <el-option label="关闭" :value="false" />
+              <el-option label="开启" :value="true" />
             </el-select>
           </el-form-item>
           <el-form-item label="秒杀名称：">
@@ -59,8 +59,8 @@
             <el-switch
               v-if="checkPermi(['admin:seckill:manger:update:status'])"
               v-model="scope.row.status"
-              active-value="'1'"
-              inactive-value="'0'"
+              :active-value="true"
+              :inactive-value="false"
               active-text="开启"
               inactive-text="关闭"
               @change="onchangeIsShow(scope.row)"

@@ -9,10 +9,10 @@
 								<view>总资产(元)</view>
 								<view class='money'>{{statistics.nowMoney || 0}}</view>
 							</view>
-							<view v-if="userInfo.rechargeSwitch"  @click="openSubscribe('/pages/users/user_payment/index')" class='recharge font_color'>充值</view>
+							<view v-if="showRecharge"  @click="openSubscribe('/pages/users/user_payment/index')" class='recharge font_color'>充值</view>
 					    </view>
 						<view class='cumulative acea-row row-top'>
-							<view class='item' v-if="userInfo.rechargeSwitch">
+							<view class='item' v-if="showRecharge">
 								<view>累计充值(元)</view>
 								<view class='money'>{{statistics.recharge || 0}}</view>
 							</view>
@@ -36,7 +36,7 @@
 						</view>
 						<view>消费记录</view>
 					</navigator>
-					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=income' v-if="userInfo.rechargeSwitch">
+					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=income' v-if="showRecharge">
 						<view class='pictrue'>
 							<text class="iconfont icon-s-chongzhijilu icon_txt"></text>
 						</view>
@@ -84,6 +84,7 @@
 	import {userActivity,getuserDalance} from '@/api/user.js';
 	import {toLogin} from '@/libs/login.js';
 	import {mapGetters} from "vuex";
+	import { alipayQueryPayResult } from '@/api/order.js';
 	import recommend from '@/components/recommend/index';
 	let app = getApp();
 	export default {
@@ -101,7 +102,17 @@
 				isNoCommodity: false // 是否显示缺省图
 			};
 		},
-		computed: mapGetters(['isLogin', 'userInfo']),
+		computed: {
+			...mapGetters(['isLogin', 'userInfo']),
+			showRecharge() {
+				// #ifdef MP
+				return this.userInfo && this.userInfo.rechargeSwitch;
+				// #endif
+				// #ifndef MP
+				return true;
+				// #endif
+			}
+		},
 		watch:{
 			isLogin:{
 				handler:function(newV,oldV){
@@ -127,7 +138,7 @@
 					    }
 					}
 					this.orderId = theRequest.out_trade_no; //返回的订单号
-					// this.alipayQueryPay();
+					this.alipayQueryPay();
 				}
 				// #endif
 				this.get_activity();
@@ -139,6 +150,26 @@
 		methods: {
 			getRecommendLength(e) {
 				this.isNoCommodity = e == 0 ? true : false;
+			},
+			/**
+			 * 支付宝充值结果查询
+			 */
+			alipayQueryPay() {
+				uni.showLoading({
+					title: '查询中...'
+				});
+				alipayQueryPayResult(this.orderId).then(res => {
+					this.userDalance();
+					return this.$util.Tips({
+						title: '充值成功'
+					});
+					uni.hideLoading();
+				}).catch(err => {
+					uni.hideLoading();
+					return this.$util.Tips({
+						title: err
+					});
+				})
 			},
 			onLoadFun: function() {
 				this.get_activity();

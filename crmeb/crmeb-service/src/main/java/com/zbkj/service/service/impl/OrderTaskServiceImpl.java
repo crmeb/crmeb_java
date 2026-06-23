@@ -7,15 +7,22 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.constants.SysConfigConstants;
 import com.zbkj.common.constants.TaskConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.order.StoreOrder;
+import com.zbkj.common.model.order.StoreOrderInfo;
 import com.zbkj.common.model.order.StoreOrderStatus;
 import com.zbkj.common.model.product.StoreProductReply;
 import com.zbkj.common.model.user.User;
+import com.zbkj.common.model.wechat.video.PayComponentOrder;
 import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
+import com.zbkj.common.vo.MyRecord;
+import com.zbkj.common.vo.ShopOrderCommonVo;
 import com.zbkj.common.vo.StoreOrderInfoOldVo;
 import com.zbkj.service.service.*;
 import org.slf4j.Logger;
@@ -24,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,7 +39,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -69,6 +77,12 @@ public class OrderTaskServiceImpl implements OrderTaskService {
 
     @Autowired
     private OrderPayService orderPayService;
+
+    @Autowired
+    private PayComponentOrderService componentOrderService;
+
+    @Autowired
+    private WechatVideoDeliveryService wechatVideoDeliveryService;
 
     @Autowired
     private SystemConfigService systemConfigService;
@@ -296,8 +310,20 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                 logger.error("订单自动完成：订单记录最后一条不是收货状态，orderId = " + order.getId());
                 continue ;
             }
-            // 判断是否到自动完成时间（收货时间向后偏移7天）
-            String comTime = CrmebDateUtil.addDay(orderStatus.getCreateTime(), 7, Constants.DATE_FORMAT);
+            // 获取默认好评开关、时间、内容；
+            ArrayList<String> keyList = new ArrayList<>();
+            keyList.add(SysConfigConstants.CONFIG_AUTO_REPLY_SWITCH);
+            keyList.add(SysConfigConstants.CONFIG_AUTO_REPLY_TIME);
+            keyList.add(SysConfigConstants.CONFIG_AUTO_REPLY_CONTENT);
+            MyRecord record = systemConfigService.getValuesByKeyList(keyList);
+            if (record.get(SysConfigConstants.CONFIG_AUTO_REPLY_SWITCH).equals("'0'")) {
+                logger.error("默认好评开关关闭");
+                return;
+            }
+            String content = record.get(SysConfigConstants.CONFIG_AUTO_REPLY_CONTENT).toString();
+            int time = Integer.parseInt(record.get(SysConfigConstants.CONFIG_AUTO_REPLY_TIME));
+            // 判断是否到自动完成时间
+            String comTime = CrmebDateUtil.addDay(orderStatus.getCreateTime(), time, Constants.DATE_FORMAT);
             int compareDate = CrmebDateUtil.compareDate(comTime, CrmebDateUtil.nowDateTime(Constants.DATE_FORMAT), Constants.DATE_FORMAT);
             if (compareDate > 0) {
                 continue ;
@@ -315,6 +341,7 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                 continue;
             }
             List<StoreProductReply> replyList = CollUtil.newArrayList();
+            List<Integer> orderInfoIds = CollUtil.newArrayList();
             User user = userService.getById(order.getUid());
             // 生成评论
             for (StoreOrderInfoOldVo orderInfo : orderInfoVoList) {
@@ -323,7 +350,15 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                     continue;
                 }
                 String replyType = Constants.STORE_REPLY_TYPE_PRODUCT;
-
+//                if (ObjectUtil.isNotNull(orderInfo.getInfo().getSeckillId()) && orderInfo.getInfo().getSeckillId() > 0) {
+//                    replyType = Constants.STORE_REPLY_TYPE_SECKILL;
+//                }
+//                if (ObjectUtil.isNotNull(orderInfo.getInfo().getBargainId()) && orderInfo.getInfo().getBargainId() > 0) {
+//                    replyType = Constants.STORE_REPLY_TYPE_BARGAIN;
+//                }
+//                if (ObjectUtil.isNotNull(orderInfo.getInfo().getCombinationId()) && orderInfo.getInfo().getCombinationId() > 0) {
+//                    replyType = Constants.STORE_REPLY_TYPE_PINTUAN;
+//                }
                 StoreProductReply reply = new StoreProductReply();
                 reply.setUid(order.getUid());
                 reply.setOid(order.getId());
@@ -332,20 +367,26 @@ public class OrderTaskServiceImpl implements OrderTaskService {
                 reply.setReplyType(replyType);
                 reply.setProductScore(5);
                 reply.setServiceScore(5);
-                reply.setComment("");
+                reply.setComment(content);
                 reply.setPics("");
                 reply.setNickname(user.getNickname());
                 reply.setAvatar(user.getAvatar());
                 reply.setSku(orderInfo.getInfo().getSku());
                 reply.setCreateTime(CrmebDateUtil.nowDateTime());
                 replyList.add(reply);
+                orderInfoIds.add(orderInfo.getId());
             }
             order.setStatus(Constants.ORDER_STATUS_INT_COMPLETE);
+
+            LambdaUpdateWrapper<StoreOrderInfo> update = Wrappers.lambdaUpdate();
+            update.in(StoreOrderInfo::getId, orderInfoIds);
+            update.set(StoreOrderInfo::getIsReply, 1);
             Boolean execute = transactionTemplate.execute(e -> {
                 System.out.println("操作的订单ID：" + order.getId());
                 order.setUpdateTime(DateUtil.date());
                 storeOrderService.updateById(order);
                 storeProductReplyService.saveBatch(replyList);
+                storeOrderInfoService.update(update);
                 return Boolean.TRUE;
             });
             if (execute) {
@@ -371,6 +412,25 @@ public class OrderTaskServiceImpl implements OrderTaskService {
 
         storeOrderList.forEach(order -> {
             try {
+                if (order.getType().equals(1)) {// 视频号订单
+                    PayComponentOrder componentOrder = componentOrderService.getByOrderNo(order.getOrderId());
+                    if (ObjectUtil.isNull(componentOrder)) {
+                        throw new CrmebException("没有找到视频号订单");
+                    }
+                    if (!componentOrder.getStatus().equals(30)) {
+                        throw new CrmebException("视频号订单不是待收货状态");
+                    }
+                    // 微信组件部分收货
+                    ShopOrderCommonVo shopOrderCommonVo = new ShopOrderCommonVo();
+                    shopOrderCommonVo.setOutOrderId(componentOrder.getOrderNo());
+                    shopOrderCommonVo.setOpenid(componentOrder.getOpenid());
+                    Boolean recieve = wechatVideoDeliveryService.shopDeliveryRecieve(shopOrderCommonVo);
+                    if (!recieve) {
+                        throw new CrmebException("自定义组件订单收货失败");
+                    }
+                    componentOrder.setStatus(100);
+                    componentOrderService.updateById(componentOrder);
+                }
                 //已收货，待评价
                 order.setStatus(Constants.ORDER_STATUS_INT_BARGAIN);
                 order.setUpdateTime(DateUtil.date());

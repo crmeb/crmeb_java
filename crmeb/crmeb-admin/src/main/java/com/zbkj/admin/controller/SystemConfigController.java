@@ -22,7 +22,7 @@ import java.util.HashMap;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -81,6 +81,13 @@ public class SystemConfigController {
     @RequestMapping(value = "/get/home/page/list/style", method = RequestMethod.GET)
     public CommonResult<SystemConfig> getHomePageSaleListStyle() {
         return CommonResult.success(systemConfigService.getHomePageSaleListStyle());
+    }
+
+    @PreAuthorize("hasAuthority('admin:system:config:mini:download:url')")
+    @ApiOperation(value = "获取小程序下载地址")
+    @RequestMapping(value = "/get/mini/download/url", method = RequestMethod.GET)
+    public CommonResult<SystemConfig> getMiniDownloadUrl() {
+        return CommonResult.success(systemConfigService.getMiniDownloadUrl());
     }
 
     @PreAuthorize("hasAuthority('admin:system:config:home:page:list:style:save')")

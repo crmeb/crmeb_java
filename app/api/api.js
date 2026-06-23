@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -260,6 +260,144 @@ export function getImageDomain() {
 }
 
 /**
+ * 获取主题信息
+ */
+export function getThemeInfo(type, data) {
+  return request.get(`theme_info/${type}`, data || {}, { noAuth: true });
+}
+
+/**
+ * 获取DIY签到信息，接口未提供时先按标准版地址保留
+ */
+export function getSign() {
+  return request.get('v2/diy/sign', {}, { noAuth: true });
+}
+
+/**
+ * 获取主题商品列表
+ */
+function toThemeProductParams(data = {}) {
+  const params = { ...data };
+  if (params.cate_id !== undefined && params.cate_ids === undefined) {
+    params.cate_ids = params.cate_id;
+  }
+  if (params.priceOrder && params.order === undefined) {
+    params.order = 2;
+    params.sort = params.priceOrder === 'asc' ? 1 : 2;
+  }
+  if (params.salesOrder && params.order === undefined) {
+    params.order = 1;
+    params.sort = params.salesOrder === 'asc' ? 1 : 2;
+  }
+  delete params.cate_id;
+  delete params.priceOrder;
+  delete params.salesOrder;
+  delete params.store_label_id;
+  delete params.brand_id;
+  return params;
+}
+
+export function getThemeProduct(data) {
+  return request.get('theme/product', toThemeProductParams(data), { noAuth: true });
+}
+
+/**
+ * 获取主题文章列表
+ */
+export function getThemeArticle(data = {}) {
+  const params = {};
+  if (data.cid !== undefined) params.cid = data.cid;
+  if (data.page !== undefined) params.page = data.page;
+  if (data.limit !== undefined) params.limit = data.limit;
+  return request.get('theme/article', params, { noAuth: true });
+}
+
+/**
+ * 获取主题优惠券列表
+ */
+export function getThemeCoupon(data = {}) {
+  const params = {};
+  if (data.limit !== undefined) params.limit = data.limit;
+  return request.get('theme/coupon', params, { noAuth: true });
+}
+
+function toThemeLimitParams(data = {}) {
+  const params = {};
+  if (data.limit !== undefined) params.limit = data.limit;
+  return params;
+}
+
+/**
+ * 获取主题秒杀商品列表
+ */
+export function getThemeSeckill(data = {}) {
+  return request.get('theme/seckill', toThemeLimitParams(data), { noAuth: true });
+}
+
+/**
+ * 获取主题砍价商品列表
+ */
+export function getThemeBargain(data = {}) {
+  return request.get('theme/bargain', toThemeLimitParams(data), { noAuth: true });
+}
+
+/**
+ * 获取主题拼团商品列表
+ */
+export function getThemeCombination(data = {}) {
+  return request.get('theme/combination', toThemeLimitParams(data), { noAuth: true });
+}
+
+/**
+ * 获取主题用户信息，接口未提供时先按标准版地址保留
+ */
+export function getThemeUser() {
+  return request.get('theme/user', {}, { noAuth: false });
+}
+
+/**
+ * 新人礼列表，接口未提供时先按标准版地址保留
+ */
+export function newcomerList(data) {
+  return request.get('newcomer/list', data, { noAuth: true });
+}
+
+/**
+ * 商品分类版本号
+ */
+export function getCategoryVersion() {
+  return request.get('category_version', {}, { noAuth: true });
+}
+
+/**
+ * 获取订阅消息 id，标准版首页使用；接口未提供时先按标准版地址保留
+ */
+export function getTempIds() {
+  return request.get("wechat/temp_ids", {}, { noAuth: true });
+}
+
+/**
+ * 获取首页 DIY，标准版首页兼容接口
+ */
+export function getDiy(id) {
+  return request.get(`v2/diy/get_diy/default${id ? "?id=" + id : ""}`, {}, { noAuth: true });
+}
+
+/**
+ * 获取版权信息
+ */
+export function getCrmebCopyRight() {
+  return request.get("copyright", {}, { noAuth: true });
+}
+
+/**
+ * 获取 DIY 版本
+ */
+export function getDiyVersion(name) {
+  return request.get(`v2/diy/get_version/${name}`, {}, { noAuth: true });
+}
+
+/**
  * 商品排行榜
 */
 export function productRank(){
@@ -287,6 +425,12 @@ export function getBottomNavigationApi(){
   return request.get(`get/bottom/navigation`,{},{noAuth:true});
 }
 /**
+ * 协议详情
+*/
+export function agreementInfo(info){
+  return request.get(`agreement/${info}`,{},{noAuth:true});
+}
+/**
  * 首页装修
 */
 export function pagediyInfoApi(id){
@@ -307,4 +451,12 @@ export function getCategoryTwo(id)
 export function getConfigCopyright(id)
 {
   return request.get(`config/get/copyright`,{},{ noAuth : true},{},true);
+}
+
+/*
+ * 获取开屏广告
+ */
+export function getOpenAdvApi()
+{
+  return request.get(`splash/ad/info`,{},{ noAuth : true});
 }

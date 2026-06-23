@@ -75,7 +75,7 @@ const marketingRouter = {
           meta: { title: '砍价商品', icon: '' },
         },
         {
-          path: 'creatBargain/:id?',
+          path: 'creatBargain/:id?/:type?',
           component: () => import('@/views/marketing/bargain/bargainGoods/creatBargain'),
           name: 'creatBargain',
           meta: { title: '砍价商品', icon: '', noCache: true, activeMenu: `/marketing/bargain/bargainGoods` },
@@ -134,7 +134,7 @@ const marketingRouter = {
           meta: { title: '秒杀商品', icon: '', noCache: true, activeMenu: `/marketing/seckill/list` },
         },
         {
-          path: 'creatSeckill/:name?/:timeId?/:id?',
+          path: 'creatSeckill/:name?/:timeId?/:id?/:type?',
           component: () => import('@/views/marketing/seckill/seckillList/creatSeckill'),
           name: 'CreatSeckill',
           meta: { title: '添加秒杀商品', icon: '', noCache: true, activeMenu: `/marketing/seckill/list` },
@@ -158,6 +158,32 @@ const marketingRouter = {
           component: () => import('@/views/marketing/integral/integralLog/index'),
           name: 'integralLog',
           meta: { title: '积分日志', icon: '' },
+        },
+      ],
+    },
+    {
+      path: 'videoChannel',
+      component: () => import('@/views/marketing/integral/index'),
+      name: 'videoChannel',
+      meta: { title: '视频号管理', icon: '' },
+      children: [
+        {
+          path: 'list',
+          component: () => import('@/views/marketing/videoChannel/videoList/index'),
+          name: 'VideoChannelList',
+          meta: { title: '商品列表', icon: '', noCache: true },
+        },
+        {
+          path: 'creatVideoChannel/:id?',
+          component: () => import('@/views/marketing/videoChannel/draftList/creatVideoChannel'),
+          name: 'CreatVideoChannel',
+          meta: { title: '添加视频号商品', icon: '', noCache: true, activeMenu: `/marketing/videoChannel/draftList` },
+        },
+        {
+          path: 'draftList',
+          component: () => import('@/views/marketing/videoChannel/draftList/index'),
+          name: 'draftList',
+          meta: { title: '草稿列表', icon: '', noCache: true },
         },
       ],
     },

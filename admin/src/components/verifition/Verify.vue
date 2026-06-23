@@ -149,18 +149,13 @@ export default {
     },
     /**
      * i18n
-     * @description 兼容vue-i18n 调用$t来转换ok
+     * @description Java 项目未接入 vue-i18n，直接读取组件内置文案
      * @param {String} text-被转换的目标
      * @return {String} i18n的结果
      * */
     i18n(text) {
-      if (this.$t) {
-        return this.$t(text);
-      } else {
-        // 兼容不存在的语言
-        const i18n = this.$options.i18n.messages[this.locale] || this.$options.i18n.messages['en-US'];
-        return i18n[text];
-      }
+      const i18n = this.$options.i18n.messages[this.locale] || this.$options.i18n.messages['en-US'];
+      return i18n[text] || text;
     },
     /**
      * refresh

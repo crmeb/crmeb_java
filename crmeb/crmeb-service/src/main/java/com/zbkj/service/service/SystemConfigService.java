@@ -6,15 +6,17 @@ import com.zbkj.common.request.SaveConfigRequest;
 import com.zbkj.common.request.SystemFormCheckRequest;
 import com.zbkj.common.response.AdminSiteLogoResponse;
 import com.zbkj.common.vo.ExpressSheetVo;
+import com.zbkj.common.vo.MyRecord;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * SystemConfigService 接口
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -22,6 +24,13 @@ import java.util.HashMap;
  * +----------------------------------------------------------------------
  */
 public interface SystemConfigService extends IService<SystemConfig> {
+
+    /**
+     * 通过key数组获取Record对象
+     * @param keyList key列表
+     * @return MyRecord
+     */
+    MyRecord getValuesByKeyList(List<String> keyList);
 
     /**
      * 根据menu name 获取 value
@@ -88,6 +97,11 @@ public interface SystemConfigService extends IService<SystemConfig> {
     SystemConfig getHomePageSaleListStyle();
 
     /**
+     * 获取小程序下载地址
+     */
+    SystemConfig getMiniDownloadUrl();
+
+    /**
      * 保存移动端首页列表样式
      */
     Boolean saveHomePageSaleListStyle(SaveConfigRequest request);
@@ -112,6 +126,11 @@ public interface SystemConfigService extends IService<SystemConfig> {
      */
     Boolean saveChangeColor(SaveConfigRequest request);
 
+    /**
+     * 获取各种文字协议
+     * @return String
+     */
+    String getAgreementByKey(String agreementName);
 
     /**
      * 获取移动端域名
@@ -125,4 +144,5 @@ public interface SystemConfigService extends IService<SystemConfig> {
      * @return 素材域名
      */
     String getMediaDomain();
+
 }

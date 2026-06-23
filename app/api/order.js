@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -233,6 +233,13 @@ export function wechatQueryPayResult(data) {
 	return request.get('pay/queryPayResult?orderNo=' + data);
 }
 
+/**
+ * 支付宝查询支付结果
+ * @param object data
+ */
+export function alipayQueryPayResult(data) {
+	return request.get('pay/queryAliPayResult?orderNo=' + data);
+}
 
 /**
  * 申请退款商品详情

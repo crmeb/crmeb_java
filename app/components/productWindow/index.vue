@@ -13,8 +13,7 @@
 					<view class="money">
 						<view class="flex align-baseline">
 							￥<text class="num">{{ attr.productSelect.price }}</text>
-							<view class="flex pl-2"
-								v-if="attr.productSelect.vipPrice && attr.productSelect.vipPrice > 0">
+							<view class="flex pl-2" v-if="attr.productSelect.vipPrice && attr.productSelect.vipPrice > 0">
 								<image :src="urlDomain+'crmebimage/perset/staticImg/vip_badge.png'" class="vip_icon"></image>
 								<text class='vip_money skeleton-rect'>￥{{attr.productSelect.vipPrice}}</text>
 							</view>
@@ -30,11 +29,54 @@
 			<view class="rollTop">
 				<view class="productWinList">
 					<view class="item" v-for="(item, indexw) in attr.productAttr" :key="indexw">
-						<view class="title">{{ item.attrName }}</view>
-						<view class="listn acea-row row-middle">
-							<view class="itemn" :class="item.index === itemn ? 'on' : ''"
-								v-for="(itemn, indexn) in item.attrValues" @click="tapAttr(indexw, indexn)"
-								:key="indexn">
+						<view class="flex flex-between-center">
+							<view class="title">{{ item.attrName }}</view>
+							<!-- 如果传规格图片，会出现规格样式切换选择-->
+							<view class="fs-24 text--w111-666 flex-y-center mr-32" v-show="gridShow == 1 && item.isShowImage"
+								@tap="toggleGridAttr(0)">
+								<text class="iconfont icon-liebiao1 fs-28"></text>
+								<text class="pl-6 line-heightOne">列表</text>
+							</view>
+							<view class="fs-24 text--w111-666 flex-y-center mr-32" v-show="gridShow == 0 && item.isShowImage"
+								@tap="toggleGridAttr(1)">
+								<text class="iconfont icon-liebiao2 fs-28"></text>
+								<text class="pl-6 line-heightOne">宫格</text>
+							</view>
+						</view>
+						<!-- 大图样式 isShowImage规格图是否展示-->
+						<view class="pl-32 mt-32" v-show="gridShow == 1 && item.isShowImage">
+							<scroll-view scroll-x="true" class="white-nowrap vertical-middle w-686" show-scrollbar="false">
+								<view class="flex">
+									<view class="inline-block mr-12" v-for="(itemn, indexn) in item.optionList" :key="indexn"
+										@click="tapAttr(indexw, indexn)">
+										<view class="grid-item-box"
+											:class="item.index === itemn.value ? isMarketingGoods?'red-active':'grid-active' : ''">
+											<view class="w-full h-192 relative">
+												<image class="w-full h-192 block" :src="itemn.image" mode="aspectFill"></image>
+												<view class="proview-icon flex-center" @tap.stop="proviewImg(itemn.image)">
+													<text class="iconfont icon-zhankai fs-24 text--w111-fff"></text>
+												</view>
+											</view>
+											<view class="flex-1 bg--w111-f5f5f5 tname text-center flex-center fs-24">{{itemn.value}}
+											</view>
+										</view>
+									</view>
+								</view>
+							</scroll-view>
+						</view>
+						<!-- 小图样式 -->
+						<view v-show="(gridShow == 0 && item.isShowImage) || !item.isShowImage" class="listn acea-row row-middle">
+							<view class="itemn flex"
+								:class="item.index === itemn.value ? 'on' : ''"
+								v-for="(itemn, indexn) in item.optionList" @click="tapAttr(indexw, indexn,item)" :key="indexn">
+								<image v-if="itemn.image && item.isShowImage" class="attr-img" :src="itemn.image" alt="" srcset="" />
+								<text class="option-name">{{ itemn.value }}</text>
+							</view>
+						</view>
+						<!-- 旧商品无optionList -->
+						<view v-if="item.optionList && item.optionList.length == 0" class="listn acea-row row-middle">
+							<view class="itemn old-padding" :class="item.index === itemn ? 'on' : ''" v-for="(itemn, indexn) in item.attrValues"
+								@click="tapAttr(indexw, indexn)" :key="indexn">
 								{{ itemn }}
 							</view>
 						</view>
@@ -43,16 +85,15 @@
 				<view class="cart acea-row row-between-wrapper">
 					<view class="title">数量</view>
 					<view class="carnum acea-row row-left">
-						<view class="item reduce" :class="attr.productSelect.cart_num <= 1 ? 'on' : ''"
-							@click="CartNumDes">
+						<view class="item reduce" :class="attr.productSelect.cart_num <= 1 ? 'on' : ''" @click="CartNumDes">
 							-
 						</view>
 						<view class='item num'>
-							<input type="number" v-model="attr.productSelect.cart_num"
-								data-name="productSelect.cart_num" @input="bindCode(attr.productSelect.cart_num)"
-								maxlength="3"></input>
+							<input type="number" v-model="attr.productSelect.cart_num" data-name="productSelect.cart_num"
+								@input="bindCode(attr.productSelect.cart_num)" maxlength="3"></input>
 						</view>
-						<view v-if="iSplus" class="item plus" :class="attr.productSelect.cart_num >= attr.productSelect.stock? 'on': ''" @click="CartNumAdd">
+						<view v-if="iSplus" class="item plus"
+							:class="attr.productSelect.cart_num >= attr.productSelect.stock? 'on': ''" @click="CartNumAdd">
 							+
 						</view>
 						<view v-else class='item plus'
@@ -104,14 +145,21 @@
 			iScart: {
 				type: Number,
 				value: 0
+			},
+			// 是否是拼团、秒杀、积分商品，用红色不用主题色
+			isMarketingGoods: {
+			  type: Boolean,
+			  default: () => false
 			}
 		},
 		data() {
 			return {
 				urlDomain: this.$Cache.get("imgHost"),
+				gridShow: 1, //宫格还是列样式选择
 			};
 		},
-		created() {},
+		created() {
+		},
 		methods: {
 			goCat: function() {
 				this.$emit('goCat');
@@ -141,7 +189,6 @@
 				this.$set(this.attr.productAttr[indexw], 'index', this.attr.productAttr[indexw].attrValues[indexn]);
 				let value = that.getCheckedValue().join(",");
 				that.$emit("ChangeAttr", value);
-
 			},
 			//获取被选中属性；
 			getCheckedValue: function() {
@@ -159,18 +206,33 @@
 			showImg() {
 				this.$emit('getImg');
 			},
+			//选择规格值样式
+			toggleGridAttr(type) {
+				this.gridShow = type;
+			},
+			// 点击贵供图查看图片
+			proviewImg(img){
+			  uni.previewImage({
+			    current: 0,
+			    urls: [img]
+			  });
+			},
 		}
 	}
 </script>
 
 <style scoped lang="scss">
+	.mask {
+		z-index: 100;
+	}
+
 	.product-window {
 		position: fixed;
 		bottom: 0;
 		width: 100%;
 		left: 0;
 		background-color: #fff;
-		z-index: 77;
+		z-index: 101;
 		border-radius: 16rpx 16rpx 0 0;
 		padding-bottom: 100rpx;
 		padding-bottom: calc(env(safe-area-inset-bottom) + 100rpx);
@@ -239,7 +301,7 @@
 	}
 
 	.product-window .rollTop {
-		max-height: 62vh; 
+		max-height: 62vh;
 		overflow: auto;
 		margin-top: 36rpx;
 	}
@@ -262,10 +324,20 @@
 		border: 1px solid #F2F2F2;
 		font-size: 26rpx;
 		color: #282828;
-		padding: 7rpx 33rpx;
-		border-radius: 40rpx;
+		display: flex;
+		align-items: center;
+		border-radius: 8rpx;
 		margin: 20rpx 0 0 14rpx;
 		background-color: #F2F2F2;
+		min-height: 56rpx;
+
+		.attr-img {
+			margin: 0 -8rpx 0 4rpx;
+		}
+
+		.option-name {
+			margin: 4rpx 12rpx 4rpx;
+		}
 	}
 
 	.product-window .productWinList .item .listn .itemn.on {
@@ -387,5 +459,66 @@
 
 	.pl-2 {
 		padding-left: 20rpx;
+	}
+
+	.grid-item-box {
+		width: 196rpx;
+		border: 2rpx solid #F5F5F5;
+		border-radius: 8rpx;
+		overflow: hidden;
+
+		image {
+			border-radius: 8rpx 8rpx 0 0;
+		}
+
+		.tname {
+			width: 196rpx;
+			border-radius: 0 0 8rpx 8rpx;
+			padding: 4rpx 12rpx;
+			height: 74rpx;
+			line-height: 37rpx;
+			display: -webkit-box;
+			/* 旧版弹性盒子 */
+			overflow: hidden;
+			text-overflow: ellipsis;
+			-webkit-line-clamp: 2;
+			/* 显示两行 */
+			-webkit-box-orient: vertical;
+			/* 垂直方向排列 */
+			word-break: break-all;
+			/* 允许单词断行 */
+			white-space: normal;
+			/* 允许文字折行 */
+		}
+	}
+	.attr-img {
+		width: 48rpx;
+		height: 48rpx;
+		margin-right: 12rpx;
+		border-radius: 8rpx;
+	}
+	.groupOn {
+		background: #FCEAE9 !important;
+		border: 1px solid #E93323 !important;
+		color: #E93323 !important;
+	}
+	.grid-active{
+	  @include coupons_border_color(theme);
+	  .tname{
+	    @include main_color(theme);
+	    @include coupons_light_color(theme);
+	  }
+	}
+	.proview-icon{
+	  position: absolute;
+	  top: 8rpx;
+	  right: 8rpx;
+	  width: 36rpx;
+	  height: 36rpx;
+	  background: rgba(51, 51, 51, 0.15);
+	  border-radius: 50%;
+	}
+	.old-padding {
+		padding: 2px 6px 2px;
 	}
 </style>

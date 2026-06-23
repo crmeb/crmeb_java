@@ -91,6 +91,16 @@ const maintainRouter = {
       hidden: false,
     },
     {
+      path: 'authCRMEB',
+      name: 'authCRMEB',
+      component: () => import('@/views/maintain/authCRMEB'),
+      meta: {
+        title: '授权',
+        icon: 'clipboard',
+      },
+      hidden: false,
+    }, //sensitiveList
+    {
       path: 'logistics',
       name: 'Logistics',
       alwaysShow: true,
@@ -115,6 +125,25 @@ const maintainRouter = {
           meta: { title: '物流公司', icon: '' },
         },
       ],
+    },
+    {
+      path: 'sensitiveLog',
+      name: 'sensitiveLog',
+      component: () => import('@/views/maintain/sensitiveList'),
+      meta: {
+        title: '敏感操作日志',
+        icon: 'clipboard',
+      },
+      hidden: false,
+    },
+    {
+      path: 'systemState',
+      name: 'systemState',
+      component: () => import('@/views/maintain/systemState/index'),
+      meta: {
+        title: '系统状态',
+        icon: 'clipboard',
+      },
     },
     {
       path: 'clearCache',

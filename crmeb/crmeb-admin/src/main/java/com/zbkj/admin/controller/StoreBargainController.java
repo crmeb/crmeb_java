@@ -29,7 +29,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -142,13 +142,12 @@ public class StoreBargainController {
     /**
      * 分页显示砍价列表
      * @param request 搜索条件
-     * @param pageParamRequest 分页参数
      */
     @PreAuthorize("hasAuthority('admin:bargain:user:list')")
     @ApiOperation(value = "分页显示砍价列表") //配合swagger使用
     @RequestMapping(value = "/bargain_list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<StoreBargainUserResponse>> getBargainUserList(@Validated StoreBargainUserSearchRequest request, @Validated PageParamRequest pageParamRequest){
-        CommonPage<StoreBargainUserResponse> bargainUserCommonPage = CommonPage.restPage(storeBargainUserService.getList(request, pageParamRequest));
+    public CommonResult<CommonPage<StoreBargainUserResponse>> getBargainUserList(@Validated StoreBargainUserSearchRequest request){
+        CommonPage<StoreBargainUserResponse> bargainUserCommonPage = CommonPage.restPage(storeBargainUserService.getList(request));
         return CommonResult.success(bargainUserCommonPage);
     }
 

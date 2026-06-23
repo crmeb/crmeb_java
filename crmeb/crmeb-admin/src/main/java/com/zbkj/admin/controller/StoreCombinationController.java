@@ -5,10 +5,7 @@ import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.StoreCombinationRequest;
 import com.zbkj.common.request.StoreCombinationSearchRequest;
 import com.zbkj.common.request.StorePinkSearchRequest;
-import com.zbkj.common.response.StoreCombinationResponse;
-import com.zbkj.common.response.StorePinkAdminListResponse;
-import com.zbkj.common.response.StorePinkDetailResponse;
-import com.zbkj.common.response.StoreProductInfoResponse;
+import com.zbkj.common.response.*;
 import com.zbkj.common.result.CommonResult;
 import com.zbkj.service.service.StoreCombinationService;
 import com.zbkj.service.service.StorePinkService;
@@ -21,14 +18,13 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 拼团商品表 前端控制器
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -133,25 +129,21 @@ public class StoreCombinationController {
     }
 
     /**
-     * 拼团统计
-     */
-    @PreAuthorize("hasAuthority('admin:combination:statistics')")
-    @ApiOperation(value = "拼团统计")
-    @RequestMapping(value = "/statistics", method = RequestMethod.GET)
-    public CommonResult<Map<String, Object>> statistics() {
-        Map<String, Object> map = storeCombinationService.getAdminStatistics();
-        return CommonResult.success(map);
-    }
-
-    /**
      * 拼团列表
      */
     @PreAuthorize("hasAuthority('admin:combination:combine:list')")
     @ApiOperation(value = "拼团列表")
     @RequestMapping(value = "/combine/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<StorePinkAdminListResponse>> getCombineList(@Validated StorePinkSearchRequest request, @Validated PageParamRequest pageParamRequest){
-        CommonPage<StorePinkAdminListResponse> responseCommonPage = CommonPage.restPage(storePinkService.getList(request, pageParamRequest));
+    public CommonResult<CommonPage<StorePinkAdminListResponse>> getCombineList(@Validated StorePinkSearchRequest request){
+        CommonPage<StorePinkAdminListResponse> responseCommonPage = CommonPage.restPage(storePinkService.getList(request));
         return CommonResult.success(responseCommonPage);
+    }
+
+    @PreAuthorize("hasAuthority('admin:combination:combine:list:count')")
+    @ApiOperation(value = "拼团记录头部 对应活动进程数量") //配合swagger使用
+    @RequestMapping(value = "/combine/list/count", method = RequestMethod.GET)
+    public CommonResult<StorePinkAdminHeaderResponse> getListStatusCount(StorePinkSearchRequest request) {
+        return CommonResult.success(storePinkService.getListHeaderCount(request));
     }
 
     /**

@@ -82,8 +82,14 @@
         </el-table-column>
         <el-table-column label="操作" width="130" fixed="right">
           <template slot-scope="scope">
-            <router-link :to="{ path: '/marketing/bargain/creatBargain/' + scope.row.id }">
-              <a type="text" size="small" v-hasPermi="['admin:bargain:info']">编辑</a>
+            <router-link :to="{ 
+              path: scope.row.status
+                  ? '/marketing/bargain/creatBargain/' + scope.row.id + '/info'
+                  : '/marketing/bargain/creatBargain/' + scope.row.id,
+               }">
+              <a type="text" size="small" v-hasPermi="['admin:bargain:info']">
+                {{ scope.row.status ? '详情' : '编辑' }}
+              </a>
             </router-link>
             <el-divider direction="vertical"></el-divider>
             <a @click="handleDelete(scope.row.id, scope.$index)" v-hasPermi="['admin:bargain:delete']">删除</a>

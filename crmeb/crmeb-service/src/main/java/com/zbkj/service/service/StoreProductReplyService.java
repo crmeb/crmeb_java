@@ -1,6 +1,9 @@
 package com.zbkj.service.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.github.pagehelper.PageInfo;
+import com.zbkj.common.model.product.StoreProductReply;
+import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.StoreProductReplyAddRequest;
 import com.zbkj.common.request.StoreProductReplyCommentRequest;
 import com.zbkj.common.request.StoreProductReplySearchRequest;
@@ -8,16 +11,13 @@ import com.zbkj.common.response.ProductDetailReplyResponse;
 import com.zbkj.common.response.ProductReplyResponse;
 import com.zbkj.common.response.StoreProductReplyResponse;
 import com.zbkj.common.vo.MyRecord;
-import com.zbkj.common.request.PageParamRequest;
-import com.github.pagehelper.PageInfo;
-import com.zbkj.common.model.product.StoreProductReply;
 
 /**
  * StoreProductReplyService 接口
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -29,10 +29,9 @@ public interface StoreProductReplyService extends IService<StoreProductReply> {
     /**
      * 商品评论列表
      * @param request 请求参数
-     * @param pageParamRequest 分页参数
      * @return PageInfo
      */
-    PageInfo<StoreProductReplyResponse> getList(StoreProductReplySearchRequest request, PageParamRequest pageParamRequest);
+    PageInfo<StoreProductReplyResponse> getList(StoreProductReplySearchRequest request);
 
     /**
      * 创建订单商品评价
@@ -96,4 +95,5 @@ public interface StoreProductReplyService extends IService<StoreProductReply> {
      * 获取统计数据（好评、中评、差评）
      */
     Integer getCountByScore(Integer productId, String type);
+
 }

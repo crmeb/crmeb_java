@@ -232,7 +232,7 @@ export default {
     },
     handleDeleteAll() {
       if (!this.multipleSelectionAll.length) return this.$message.warning('请选择商品规格');
-      let data=[];
+      const data = [];
       this.multipleSelectionAll.map((item) => {
         data.push(item.id);
       });

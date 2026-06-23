@@ -106,6 +106,20 @@ export function isArray(arg) {
   return Array.isArray(arg);
 }
 
+export function formatDate(date, fmt) {
+  if (!date) return '';
+  const value = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(value.getTime())) return '';
+  const pad = (num) => String(num).padStart(2, '0');
+  return (fmt || 'yyyy-MM-dd hh:mm:ss')
+    .replace('yyyy', value.getFullYear())
+    .replace('MM', pad(value.getMonth() + 1))
+    .replace('dd', pad(value.getDate()))
+    .replace('hh', pad(value.getHours()))
+    .replace('mm', pad(value.getMinutes()))
+    .replace('ss', pad(value.getSeconds()));
+}
+
 const bindMessage = (fn, message) => {
   fn.message = (field) => message.replace('%s', field || '');
 };

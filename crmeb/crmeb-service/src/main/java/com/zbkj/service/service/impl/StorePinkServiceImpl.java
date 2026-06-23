@@ -3,13 +3,18 @@ package com.zbkj.service.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.zbkj.common.constants.DateConstants;
 import com.zbkj.common.constants.NotifyConstants;
 import com.zbkj.common.model.system.SystemNotification;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.OrderRefundApplyRequest;
+import com.zbkj.common.response.StorePinkAdminHeaderResponse;
+import com.zbkj.common.result.CommonResultCode;
+import com.zbkj.common.utils.ValidateFormUtil;
 import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.common.vo.MyRecord;
 import com.zbkj.common.request.PageParamRequest;
@@ -45,7 +50,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -83,25 +88,52 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
     /**
     * 列表
     * @param request 请求参数
-    * @param pageParamRequest 分页类参数
     * @author HZW
     * @since 2020-11-13
     * @return List<StorePink>
     */
     @Override
-    public PageInfo<StorePinkAdminListResponse> getList(StorePinkSearchRequest request, PageParamRequest pageParamRequest) {
-        Page<StorePink> pinkPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-        LambdaQueryWrapper<StorePink> lqw = new LambdaQueryWrapper<>();
-        if (ObjectUtil.isNotNull(request.getStatus())) {
-            lqw.eq(StorePink::getStatus, request.getStatus());
+    public PageInfo<StorePinkAdminListResponse> getList(StorePinkSearchRequest request) {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("status", request.getStatus());
+        if (StrUtil.isNotBlank(request.getProductName())) {
+            map.put("productName", URLUtil.decode(request.getProductName()));
         }
+        // 默认列表查团长，kId为0
+        map.put("kId", 0);
+        //时间范围
         if (StrUtil.isNotBlank(request.getDateLimit())) {
             DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
-            lqw.between(StorePink::getAddTime, CrmebDateUtil.dateStr2Timestamp(dateLimit.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN), CrmebDateUtil.dateStr2Timestamp(dateLimit.getEndTime(), Constants.DATE_TIME_TYPE_END));
+            //判断时间
+            int compareDateResult = CrmebDateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), DateConstants.DATE_FORMAT);
+            if (compareDateResult == -1) {
+                throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "开始时间不能大于结束时间！");
+            }
+            if (StrUtil.isNotBlank(dateLimit.getStartTime())) {
+                map.put("startTime",  CrmebDateUtil.dateStr2Timestamp(dateLimit.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN));
+                map.put("endTime", CrmebDateUtil.dateStr2Timestamp(dateLimit.getEndTime(), Constants.DATE_TIME_TYPE_END));
+            }
         }
-        lqw.eq(StorePink::getKId, 0);
-        lqw.orderByDesc(StorePink::getId);
-        List<StorePink> storePinks = dao.selectList(lqw);
+        if (StrUtil.isNotBlank(request.getContent())) {
+            ValidateFormUtil.validatorUserCommonSearch(request);
+            String keywords = URLUtil.decode(request.getContent());
+            switch (request.getSearchType()) {
+                case UserConstants.USER_SEARCH_TYPE_ALL:
+                    map.put("keywords", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_UID:
+                    map.put("uid", Integer.valueOf(request.getContent()));
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_NICKNAME:
+                    map.put("nickname", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_PHONE:
+                    map.put("phone", request.getContent());
+                    break;
+            }
+        }
+        Page<StorePink> pinkPage = PageHelper.startPage(request.getPage(), request.getLimit());
+        List<StorePink> storePinks = dao.selectPinkList(map);
         if (CollUtil.isEmpty(storePinks)) {
             return CommonPage.copyPageInfo(pinkPage, CollUtil.newArrayList());
         }
@@ -365,13 +397,6 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
      */
     @Override
     public List<StorePink> findSizePink(Integer size) {
-//        LambdaQueryWrapper<StorePink> lqw = new LambdaQueryWrapper<>();
-//        lqw.eq(StorePink::getIsRefund, false);
-//        lqw.in(StorePink::getStatus, 1, 2);
-//        lqw.groupBy(StorePink::getUid);
-//        lqw.orderByDesc(StorePink::getId);
-//        lqw.last(" limit " + size);
-//        return dao.selectList(lqw);
         return dao.selectSizePink(size);
     }
 
@@ -386,6 +411,66 @@ public class StorePinkServiceImpl extends ServiceImpl<StorePinkDao, StorePink> i
         lqw.in(StorePink::getStatus, 1, 2);
         return dao.selectCount(lqw);
     }
+
+    /**
+     *  获取拼团记录的表头数量
+     *
+     * 状态：状态：1进行中，2已完成，3未完成
+     * @param request request
+     * @return StorePinkAdminHeaderResponse
+     */
+    @Override
+    public StorePinkAdminHeaderResponse getListHeaderCount(StorePinkSearchRequest request) {
+        StorePinkAdminHeaderResponse headerCount = new StorePinkAdminHeaderResponse();
+        headerCount.setIngNum(getListHeaderNum(request, 1));
+        headerCount.setSuccessNum(getListHeaderNum(request, 2));
+        headerCount.setFailNum(getListHeaderNum(request, 3));
+        return headerCount;
+
+    }
+
+    private Integer getListHeaderNum(StorePinkSearchRequest request, int status) {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("status", status);
+        if (StrUtil.isNotBlank(request.getProductName())) {
+            map.put("productName", URLUtil.decode(request.getProductName()));
+        }
+        // 默认列表查团长，kId为0
+        map.put("kId", 0);
+        //时间范围
+        if (StrUtil.isNotBlank(request.getDateLimit())) {
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
+            //判断时间
+            int compareDateResult = CrmebDateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), DateConstants.DATE_FORMAT);
+            if (compareDateResult == -1) {
+                throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "开始时间不能大于结束时间！");
+            }
+            if (StrUtil.isNotBlank(dateLimit.getStartTime())) {
+                map.put("startTime",  CrmebDateUtil.dateStr2Timestamp(dateLimit.getStartTime(), Constants.DATE_TIME_TYPE_BEGIN));
+                map.put("endTime", CrmebDateUtil.dateStr2Timestamp(dateLimit.getEndTime(), Constants.DATE_TIME_TYPE_END));
+            }
+        }
+        if (StrUtil.isNotBlank(request.getContent())) {
+            ValidateFormUtil.validatorUserCommonSearch(request);
+            String keywords = URLUtil.decode(request.getContent());
+            switch (request.getSearchType()) {
+                case UserConstants.USER_SEARCH_TYPE_ALL:
+                    map.put("keywords", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_UID:
+                    map.put("uid", Integer.valueOf(request.getContent()));
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_NICKNAME:
+                    map.put("nickname", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_PHONE:
+                    map.put("phone", request.getContent());
+                    break;
+            }
+        }
+        return dao.selectPinkListNum(map);
+    }
+
 
     private Integer getCountByKidAndCid(Integer cid, Integer kid) {
         LambdaQueryWrapper<StorePink> lqw = new LambdaQueryWrapper<>();

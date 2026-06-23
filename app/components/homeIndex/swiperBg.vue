@@ -35,7 +35,7 @@
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
-	// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+	// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 	// +----------------------------------------------------------------------
 	// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 	// +----------------------------------------------------------------------
@@ -247,7 +247,7 @@
 
 			// 圆形指示点
 			&.circular {
-				/deep/.uni-swiper-dot {
+				::v-deep .uni-swiper-dot {
 					width: 10rpx;
 					height: 10rpx;
 				}
@@ -255,7 +255,7 @@
 
 			// 方形指示点
 			&.square {
-				/deep/.uni-swiper-dot {
+				::v-deep .uni-swiper-dot {
 					width: 20rpx;
 					height: 5rpx;
 					border-radius: 3rpx;
@@ -263,22 +263,22 @@
 			}
 
 			&.nodoc {
-				/deep/.uni-swiper-dot {
+				::v-deep .uni-swiper-dot {
 					display: none;
 				}
 			}
 		}
 	}
 
-	/deep/.dot0 .uni-swiper-dots-horizontal {
+	::v-deep .dot0 .uni-swiper-dots-horizontal {
 		left: 10%;
 	}
 
-	/deep/.dot1 .uni-swiper-dots-horizontal {
+	::v-deep .dot1 .uni-swiper-dots-horizontal {
 		left: 50%;
 	}
 
-	/deep/.dot2 .uni-swiper-dots-horizontal {
+	::v-deep .dot2 .uni-swiper-dots-horizontal {
 		left: 90%;
 	}
 

@@ -280,6 +280,9 @@
 						<!-- 						<view class='cutOff on'>您也可以砍价低价拿哦，快去挑选心仪的商品吧~</view> -->
 						<view @tap='currentBargainUser' class='tipBnt'>我也要参与</view>
 					</view>
+					<view class="close_box">
+						<text class='iconfont icon-cha2 close' @tap='close'></text>
+					</view>
 				</view>
 			</view>
 			<view class='mask' catchtouchmove="true" v-show='active==true || posters==true || canvasStatus'></view>
@@ -339,7 +342,8 @@
 	import {toLogin} from '@/libs/login.js';
 	import {mapGetters} from "vuex";
 	import { getImageDomain } from '@/api/api.js'
-	import countDown from '@/components/countDown';
+	// import countDown from '@/components/countDown';
+	import countDown from "@/pages/activity/components/countDown";
 	import parser from "@/components/jyf-parser/jyf-parser";
 	import {
 		silenceBindingSpread
@@ -1628,6 +1632,15 @@
 				}
 			}
 
+		}
+		.close_box {
+			position: absolute;
+			color: #FFF;
+			bottom: -100rpx;
+			left: 225rpx;
+			.iconfont {
+				font-size: 52rpx;
+			}
 		}
 
 	}

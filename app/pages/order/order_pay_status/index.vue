@@ -22,6 +22,7 @@
 					<view class='itemCom' v-if="order_pay_info.payType=='weixin'">微信支付</view>
 					<view class='itemCom' v-else-if="order_pay_info.payType=='yue'">余额支付</view>
 					<view class='itemCom' v-else-if="order_pay_info.payType=='offline'">线下支付</view>
+					<view class='itemCom' v-else-if="order_pay_info.payType=='alipay'">支付宝支付</view>
 				</view>
 				<view class='item acea-row row-between-wrapper'>
 					<view>支付金额</view>

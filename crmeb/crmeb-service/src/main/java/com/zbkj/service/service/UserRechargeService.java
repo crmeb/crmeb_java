@@ -16,7 +16,7 @@ import java.util.List;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -28,10 +28,9 @@ public interface UserRechargeService extends IService<UserRecharge> {
     /**
      * 充值记录列表
      * @param request 请求参数
-     * @param pageParamRequest 分页参数
      * @return PageInfo
      */
-    PageInfo<UserRechargeResponse> getList(UserRechargeSearchRequest request, PageParamRequest pageParamRequest);
+    PageInfo<UserRechargeResponse> getList(UserRechargeSearchRequest request);
 
     /**
      * 充值统计

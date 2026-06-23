@@ -8,7 +8,7 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import * as product from '@/api/store';
+import { themeProductCategory } from '@/api/theme';
 
 const state = {
   adminProductClassify: localStorage.getItem('adminProductClassify')
@@ -28,11 +28,11 @@ const actions = {
   /** 平台商品分类 **/
   getAdminProductClassify({ commit, dispatch }) {
     return new Promise((resolve, reject) => {
-      product
-        .categoryApi({ status: -1, type: 1 })
+      themeProductCategory({ status: -1 })
         .then(async (res) => {
-          commit('SET_AdminProductClassify', changeNodes(res));
-          resolve(res);
+          const list = res.data || [];
+          commit('SET_AdminProductClassify', changeNodes(list));
+          resolve(list);
         })
         .catch((error) => {
           reject(error);

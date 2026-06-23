@@ -165,3 +165,16 @@ export function knowUserSmsCaptchaApi(data) {
     data,
   });
 }
+/**
+ *  通过名字查询表单模板
+ */
+export function getFormTempByNameApi(pram) {
+  const data = {
+    name: pram.name,
+  };
+  return request({
+    url: '/admin/system/form/temp/name/info',
+    method: 'GET',
+    params: data,
+  });
+}

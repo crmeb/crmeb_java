@@ -1,7 +1,7 @@
 // +---------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +---------------------------------------------------------------------
-// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +---------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +---------------------------------------------------------------------
@@ -18,9 +18,13 @@ import global from './libs/global.js'
 import apps from './libs/apps.js' //校验登录是否失效
 import * as Order from './libs/order';
 import skeleton from './components/skeleton/index.vue'
+import easyLoadimage from '@/components/base/easy-loadimage.vue'
+import BaseMoney from './components/BaseMoney.vue'
 import * as filters from '@/filters'
 
 Vue.component('skeleton', skeleton)
+Vue.component('easyLoadimage', easyLoadimage)
+Vue.component('BaseMoney', BaseMoney)
 
 Vue.prototype.$util = util;
 Vue.prototype.$config = configs;

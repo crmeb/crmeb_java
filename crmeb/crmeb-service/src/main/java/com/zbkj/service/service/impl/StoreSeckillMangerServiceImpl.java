@@ -32,7 +32,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -61,7 +61,7 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
         //带 StoreSeckillManger 类的多条件查询
         LambdaQueryWrapper<StoreSeckillManger> lambdaQueryWrapper = Wrappers.lambdaQuery();
         if(null != request.getName()) lambdaQueryWrapper.like(StoreSeckillManger::getName, request.getName());
-        if(null != request.getStatus() && !"".equals(request.getStatus())) {
+        if(null != request.getStatus()) {
             lambdaQueryWrapper.eq(StoreSeckillManger::getStatus, request.getStatus());
         }
 
@@ -163,7 +163,7 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
      * @return 结果
      */
     @Override
-    public Boolean updateStatus(Integer id, String status) {
+    public Boolean updateStatus(Integer id, Boolean status) {
         StoreSeckillManger ssm = new StoreSeckillManger().setId(id).setStatus(status);
         ssm.setUpdateTime(DateUtil.date());
         return dao.updateById(ssm) > 0;
@@ -251,7 +251,7 @@ public class StoreSeckillMangerServiceImpl extends ServiceImpl<StoreSeckillMange
     public List<StoreSeckillManagerResponse> getH5List() {
         LambdaQueryWrapper<StoreSeckillManger> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.eq(StoreSeckillManger::getIsDel, false);
-        lambdaQueryWrapper.eq(StoreSeckillManger::getStatus, "'1'");
+        lambdaQueryWrapper.eq(StoreSeckillManger::getStatus, Boolean.TRUE);
         // 获取当前小时
         int currentHour = CrmebDateUtil.getCurrentHour();
         lambdaQueryWrapper.gt(StoreSeckillManger::getEndTime, currentHour);

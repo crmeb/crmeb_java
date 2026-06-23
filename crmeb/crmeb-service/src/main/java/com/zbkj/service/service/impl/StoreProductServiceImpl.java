@@ -6,7 +6,6 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.Feature;
-import com.alipay.api.domain.Product;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -17,20 +16,17 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.common.constants.Constants;
-import com.zbkj.common.constants.ProductConstants;
-import com.zbkj.common.enums.MethodType;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.category.Category;
 import com.zbkj.common.model.coupon.StoreCoupon;
 import com.zbkj.common.model.product.*;
-import com.zbkj.common.model.system.SystemAdmin;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.*;
 import com.zbkj.common.response.*;
 import com.zbkj.common.result.CommonResultCode;
 import com.zbkj.common.result.ProductResultCode;
-import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.common.utils.CrmebDateUtil;
+import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.vo.MyRecord;
 import com.zbkj.service.dao.StoreProductDao;
@@ -53,7 +49,7 @@ import java.util.stream.Stream;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -124,7 +120,18 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
     @Autowired
     private ActivityStyleService activityStyleService;
 
+    @Autowired
+    private StoreProductGuaranteeService guaranteeService;
+    @Autowired
+    private StoreProductAttrOptionService productAttrOptionService;
+
     private static final Logger logger = LoggerFactory.getLogger(StoreProductServiceImpl.class);
+
+    private void applyCateIdFilter(LambdaQueryWrapper<StoreProduct> lambdaQueryWrapper, String cateId) {
+        if (StringUtils.isNotBlank(cateId)) {
+            lambdaQueryWrapper.apply(CrmebUtil.getFindInSetSql("cate_id", cateId));
+        }
+    }
 
     /**
      * 获取产品列表Admin
@@ -178,10 +185,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                     .or().like(StoreProduct::getStoreName, request.getKeywords())
                     .or().like(StoreProduct::getKeyword, request.getKeywords()));
         }
-        if(StringUtils.isNotBlank(request.getCateId())){
-            List<Integer> cateIds = Arrays.stream(request.getCateId().split(",")).map(Integer::valueOf).distinct().collect(Collectors.toList());
-            lambdaQueryWrapper.in(StoreProduct::getCateId, cateIds);
-        }
+        applyCateIdFilter(lambdaQueryWrapper, request.getCateId());
         // 新增销量排行和价格排行
         if (StrUtil.isNotBlank(request.getSalesOrder())) {
             if (request.getSalesOrder().equals(Constants.SORT_DESC)) {
@@ -278,6 +282,12 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                 throw new CrmebException("单规格商品属性值不能大于1");
             }
         }
+        // 校验规格属性
+        request.getAttr().forEach(attr -> {
+            if (CollUtil.isEmpty(attr.getOptionList())) {
+                throw new CrmebException("规格属性值不能为空");
+            }
+        });
 
         StoreProduct storeProduct = new StoreProduct();
         BeanUtils.copyProperties(request, storeProduct);
@@ -288,6 +298,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         // 设置Acticity活动
         storeProduct.setActivity(getProductActivityStr(request.getActivity()));
 
+        String cdnUrl = systemAttachmentService.getCdnUrl();
         //主图
         storeProduct.setImage(systemAttachmentService.clearPrefix(storeProduct.getImage()));
 
@@ -333,12 +344,26 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         }
 
         List<StoreProductAttrAddRequest> addRequestList = request.getAttr();
-        List<StoreProductAttr> attrList = addRequestList.stream().map(e -> {
+        List<StoreProductAttr> attrList = new ArrayList<>();
+        Map<String, List<StoreProductAttrOption>> optionMap = new HashMap<>();
+
+        addRequestList.forEach(e -> {
             StoreProductAttr attr = new StoreProductAttr();
             BeanUtils.copyProperties(e, attr);
             attr.setType(Constants.PRODUCT_TYPE_NORMAL);
-            return attr;
-        }).collect(Collectors.toList());
+            // 处理规格属性
+            List<ProductAttrOptionAddRequest> optionRequestList = e.getOptionList();
+            List<StoreProductAttrOption> attrOptionList = optionRequestList.stream().map(optionRequest -> {
+                StoreProductAttrOption option = new StoreProductAttrOption();
+                option.setOptionName(optionRequest.getOptionName());
+                option.setSort(ObjectUtil.isNotNull(optionRequest.getSort()) ? optionRequest.getSort() : 0);
+                option.setImage(StrUtil.isNotBlank(optionRequest.getImage()) ? systemAttachmentService.clearPrefix(optionRequest.getImage(), cdnUrl) : "");
+                return option;
+            }).collect(Collectors.toList());
+
+            attrList.add(attr);
+            optionMap.put(attr.getAttrName(), attrOptionList);
+        });
 
         List<StoreProductAttrValue> attrValueList = attrValueAddRequestList.stream().map(e -> {
             StoreProductAttrValue attrValue = new StoreProductAttrValue();
@@ -361,8 +386,19 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             save(storeProduct);
 
             attrList.forEach(attr -> attr.setProductId(storeProduct.getId()));
-            attrValueList.forEach(value -> value.setProductId(storeProduct.getId()));
             attrService.saveBatch(attrList);
+
+            // 保存规格属性选项
+            attrList.forEach(attr -> {
+                List<StoreProductAttrOption> optionList = optionMap.get(attr.getAttrName());
+                optionList.forEach(option -> {
+                    option.setProductId(attr.getProductId());
+                    option.setAttrId(attr.getId());
+                });
+                productAttrOptionService.saveBatch(optionList);
+            });
+
+            attrValueList.forEach(value -> value.setProductId(storeProduct.getId()));
             storeProductAttrValueService.saveBatch(attrValueList);
 
             spd.setProductId(storeProduct.getId());
@@ -448,6 +484,12 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                 throw new CrmebException("单规格商品属性值不能大于1");
             }
         }
+        // 校验规格属性
+        storeProductRequest.getAttr().forEach(attr -> {
+            if (CollUtil.isEmpty(attr.getOptionList())) {
+                throw new CrmebException("规格属性值不能为空");
+            }
+        });
 
         StoreProduct tempProduct = getById(storeProductRequest.getId());
         if (ObjectUtil.isNull(tempProduct)) {
@@ -476,6 +518,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         // 设置Activity活动
         storeProduct.setActivity(getProductActivityStr(storeProductRequest.getActivity()));
 
+        String cdnUrl = systemAttachmentService.getCdnUrl();
         //主图
         storeProduct.setImage(systemAttachmentService.clearPrefix(storeProduct.getImage()));
 
@@ -492,20 +535,39 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
 
         // attr部分
         List<StoreProductAttrAddRequest> addRequestList = storeProductRequest.getAttr();
-        List<StoreProductAttr> attrAddList = CollUtil.newArrayList();
-        List<StoreProductAttr> attrUpdateList = CollUtil.newArrayList();
-        addRequestList.forEach(e -> {
+        List<StoreProductAttr> attrList = new ArrayList<>();
+        Map<String, List<StoreProductAttrOption>> optionMap = new HashMap<>();
+
+        addRequestList.forEach(attrRequest -> {
             StoreProductAttr attr = new StoreProductAttr();
-            BeanUtils.copyProperties(e, attr);
-            if (ObjectUtil.isNull(attr.getId())) {
-                attr.setProductId(storeProduct.getId());
-                attr.setType(Constants.PRODUCT_TYPE_NORMAL);
-                attrAddList.add(attr);
-            } else {
-                attr.setIsDel(false);
-                attrUpdateList.add(attr);
-            }
+            BeanUtils.copyProperties(attrRequest, attr);
+            attr.setProductId(storeProduct.getId());
+            List<ProductAttrOptionAddRequest> optionRequestList = attrRequest.getOptionList();
+            List<StoreProductAttrOption> attrOptionList = optionRequestList.stream().map(optionRequest -> {
+                StoreProductAttrOption option = new StoreProductAttrOption();
+                option.setProductId(storeProduct.getId());
+                option.setOptionName(optionRequest.getOptionName());
+                option.setSort(ObjectUtil.isNotNull(optionRequest.getSort()) ? optionRequest.getSort() : 0);
+                option.setImage(StrUtil.isNotBlank(optionRequest.getImage()) ? systemAttachmentService.clearPrefix(optionRequest.getImage(), cdnUrl) : "");
+                return option;
+            }).collect(Collectors.toList());
+            attrList.add(attr);
+            optionMap.put(attr.getAttrName(), attrOptionList);
         });
+        //List<StoreProductAttr> attrAddList = CollUtil.newArrayList();
+        //List<StoreProductAttr> attrUpdateList = CollUtil.newArrayList();
+        //addRequestList.forEach(e -> {
+        //    StoreProductAttr attr = new StoreProductAttr();
+        //    BeanUtils.copyProperties(e, attr);
+        //    if (ObjectUtil.isNull(attr.getId())) {
+        //        attr.setProductId(storeProduct.getId());
+        //        attr.setType(Constants.PRODUCT_TYPE_NORMAL);
+        //        attrAddList.add(attr);
+        //    } else {
+        //        attr.setIsDel(false);
+        //        attrUpdateList.add(attr);
+        //    }
+        //});
 
         // attrValue部分
         List<StoreProductAttrValue> attrValueAddList = CollUtil.newArrayList();
@@ -539,14 +601,24 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
 
             // 先删除原用attr+value
             attrService.deleteByProductIdAndType(storeProduct.getId(), Constants.PRODUCT_TYPE_NORMAL);
+            productAttrOptionService.deleteByProductUpdate(storeProduct.getId());
             storeProductAttrValueService.deleteByProductIdAndType(storeProduct.getId(), Constants.PRODUCT_TYPE_NORMAL);
 
-            if (CollUtil.isNotEmpty(attrAddList)) {
-                attrService.saveBatch(attrAddList);
-            }
-            if (CollUtil.isNotEmpty(attrUpdateList)) {
-                attrService.saveOrUpdateBatch(attrUpdateList);
-            }
+            //if (CollUtil.isNotEmpty(attrAddList)) {
+            //    attrService.saveBatch(attrAddList);
+            //}
+            //if (CollUtil.isNotEmpty(attrUpdateList)) {
+            //    attrService.saveOrUpdateBatch(attrUpdateList);
+            //}
+
+            attrService.saveBatch(attrList);
+            attrList.forEach(attr -> {
+                List<StoreProductAttrOption> optionList = optionMap.get(attr.getAttrName());
+                optionList.forEach(option -> {
+                    option.setAttrId(attr.getId());
+                });
+                productAttrOptionService.saveBatch(optionList);
+            });
 
             if (CollUtil.isNotEmpty(attrValueAddList)) {
                 storeProductAttrValueService.saveBatch(attrValueAddList);
@@ -703,12 +775,17 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         storeProductResponse.setActivity(activityList);
 
         List<StoreProductAttr> attrList = attrService.getListByProductIdAndType(storeProduct.getId(), Constants.PRODUCT_TYPE_NORMAL);
+        attrList.forEach(attr -> {
+            List<StoreProductAttrOption> optionList = productAttrOptionService.findListByAttrId(attr.getId());
+            attr.setOptionList(optionList);
+        });
         storeProductResponse.setAttr(attrList);
 
         List<StoreProductAttrValue> attrValueList = storeProductAttrValueService.getListByProductIdAndType(storeProduct.getId(), Constants.PRODUCT_TYPE_NORMAL);
         List<AttrValueResponse> valueResponseList = attrValueList.stream().map(e -> {
             AttrValueResponse valueResponse = new AttrValueResponse();
             BeanUtils.copyProperties(e, valueResponse);
+            valueResponse.setAttrArr(e.getSuk().split(","));
             return valueResponse;
         }).collect(Collectors.toList());
         storeProductResponse.setAttrValue(valueResponseList);
@@ -723,6 +800,11 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         if (CollUtil.isNotEmpty(storeProductCoupons)) {
             List<Integer> ids = storeProductCoupons.stream().map(StoreProductCoupon::getIssueCouponId).collect(Collectors.toList());
             storeProductResponse.setCouponIds(ids);
+        }
+        // 保障服务
+        if (StrUtil.isNotBlank(storeProduct.getGuaranteeIds())) {
+            List<StoreProductGuarantee> guaranteeList = guaranteeService.findByIdList(CrmebUtil.stringToArray(storeProduct.getGuaranteeIds()));
+            storeProductResponse.setGuaranteeList(guaranteeList);
         }
         return storeProductResponse;
     }
@@ -821,10 +903,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
                         .or().like(StoreProduct::getKeyword, request.getKeywords()));
             }
             //分类搜索
-            if(StringUtils.isNotBlank(request.getCateId())){
-                List<Integer> cateIds = Arrays.stream(request.getCateId().split(",")).map(Integer::valueOf).distinct().collect(Collectors.toList());
-                lambdaQueryWrapper.in(StoreProduct::getCateId, cateIds);
-            }
+            applyCateIdFilter(lambdaQueryWrapper, request.getCateId());
             List<StoreProduct> storeProducts = dao.selectList(lambdaQueryWrapper);
             h.setCount(storeProducts.size());
         }
@@ -1025,11 +1104,19 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
      * @return MyRecord
      */
     @Override
-    public MyRecord copyProduct(String url) {
-        JSONObject jsonObject = onePassService.copyGoods(url);
-        StoreProductRequest storeProductRequest = ProductUtils.onePassCopyTransition(jsonObject);
-        MyRecord record = new MyRecord();
-        return record.set("info", storeProductRequest);
+    public CopyProductResponse copyProduct(String url) {
+        //JSONObject jsonObject = onePassService.copyGoods(url);
+        //StoreProductRequest storeProductRequest = ProductUtils.onePassCopyTransition(jsonObject);
+        //MyRecord record = new MyRecord();
+        //return record.set("info", storeProductRequest);
+        CopyProductResponse copyProductResponse ;
+        try {
+            JSONObject jsonObject = onePassService.copyGoods(url);
+            copyProductResponse = ProductUtils.onePassCopyTransition(jsonObject);
+        } catch (Exception e) {
+            throw new CrmebException("一号通采集商品异常：" + e.getMessage());
+        }
+        return copyProductResponse;
     }
 
     /**
@@ -1174,7 +1261,8 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         // id、名称、图片、价格、销量、活动
         lqw.select(StoreProduct::getId, StoreProduct::getStoreName, StoreProduct::getImage, StoreProduct::getPrice,
                 StoreProduct::getActivity, StoreProduct::getSales, StoreProduct::getFicti, StoreProduct::getUnitName,
-                StoreProduct::getFlatPattern, StoreProduct::getStock, StoreProduct::getCateId);
+                StoreProduct::getFlatPattern, StoreProduct::getStock, StoreProduct::getCateId,
+                StoreProduct::getOtPrice, StoreProduct::getSpecType);
 
         lqw.eq(StoreProduct::getIsRecycle, false);
         lqw.eq(StoreProduct::getIsDel, false);
@@ -1188,6 +1276,10 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
             List<Integer> categoryIdList = childVoListByPids.stream().map(Category::getId).collect(Collectors.toList());
             categoryIdList.addAll(cidList);
             lqw.apply(CrmebUtil.getFindInSetSql("cate_id", (ArrayList<Integer>) categoryIdList));
+        }
+
+        if (StrUtil.isNotBlank(request.getStoreName())) {
+            lqw.like(StoreProduct::getStoreName, request.getStoreName());
         }
 
         if (StrUtil.isNotBlank(request.getKeyword())) {
@@ -1238,7 +1330,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         lqw.select(StoreProduct::getId, StoreProduct::getImage, StoreProduct::getStoreName, StoreProduct::getSliderImage,
                 StoreProduct::getOtPrice, StoreProduct::getStock, StoreProduct::getSales, StoreProduct::getPrice, StoreProduct::getActivity,
                 StoreProduct::getFicti, StoreProduct::getIsSub, StoreProduct::getBrowse, StoreProduct::getUnitName,
-                StoreProduct::getBarCode, StoreProduct::getCateId);
+                StoreProduct::getBarCode, StoreProduct::getCateId, StoreProduct::getGuaranteeIds);
         lqw.eq(StoreProduct::getId, id);
         lqw.eq(StoreProduct::getIsRecycle, false);
         lqw.eq(StoreProduct::getIsDel, false);
@@ -1476,7 +1568,23 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
 
     }
 
+    /**
+     * 判断商品是否使用服务保障
+     *
+     * @param gid 服务保障id
+     * @return Boolean
+     */
+    @Override
+    public Boolean isUseGuarantee(Integer gid) {
+        LambdaQueryWrapper<StoreProduct> lqw = Wrappers.lambdaQuery();
+        lqw.select(StoreProduct::getId);
+        lqw.eq(StoreProduct::getIsDel, false);
+        lqw.apply(" find_in_set({0}, guarantee_ids)", gid);
+        lqw.last("limit 1");
+        StoreProduct storeProduct = dao.selectOne(lqw);
+        return ObjectUtil.isNotNull(storeProduct);
 
+    }
 
     ///////////////////////////////////////////自定义方法
 
@@ -1521,4 +1629,3 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         lqw.eq(StoreProduct::getIsShow, true);
     }
 }
-

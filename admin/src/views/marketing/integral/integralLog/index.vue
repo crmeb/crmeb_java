@@ -4,7 +4,8 @@
       <div class="padding-add">
         <el-form inline size="small" label-width="75px">
           <el-form-item label="时间选择：">
-            <el-date-picker
+            <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
+            <!-- <el-date-picker
               v-model="timeVal"
               value-format="yyyy-MM-dd"
               format="yyyy-MM-dd"
@@ -16,16 +17,19 @@
               @change="onchangeTime"
               start-placeholder="开始时间"
               end-placeholder="结束时间"
-            />
+            /> -->
           </el-form-item>
-          <el-form-item label="微信昵称：">
+          <el-form-item label="用户搜索：">
+            <UserSearchInput ref="userSearchInput" v-model="tableFrom" />
+          </el-form-item>
+          <!-- <el-form-item label="微信昵称：">
             <el-input
               v-model="tableFrom.keywords"
               placeholder="请输入用户昵称"
               class="selWidth"
               size="small"
             ></el-input>
-          </el-form-item>
+          </el-form-item> -->
           <el-form-item>
             <el-button type="primary" size="small" @click="getList(1)">搜索</el-button>
             <el-button size="small" @click="handleReset">重置</el-button>
@@ -98,7 +102,8 @@ export default {
         page: 1,
         limit: 20,
         dateLimit: '',
-        keywords: '',
+        content: '',
+        searchType: 'all',
       },
       userIdList: [],
       userList: [],
@@ -116,6 +121,8 @@ export default {
       this.timeVal = [];
       this.tableFrom.dateLimit = '';
       this.tableFrom.keywords = '';
+      this.tableFrom.content = '';
+      this.tableFrom.searchType = 'all';
       this.getList();
     },
     seachList() {
@@ -139,7 +146,7 @@ export default {
     // 列表
     getList() {
       this.listLoading = true;
-      integralListApi({ limit: this.tableFrom.limit, page: this.tableFrom.page }, this.tableFrom)
+      integralListApi(this.tableFrom)
         .then((res) => {
           this.tableData.data = res.list;
           this.tableData.total = res.total;

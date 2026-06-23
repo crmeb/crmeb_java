@@ -1,14 +1,23 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import {preOrderApi} from '@/api/order.js';
+import store from '@/store'
+import {
+	preOrderApi
+} from '@/api/order.js';
+import {
+	tokenIsExistApi
+} from '@/api/api.js';
+import {
+	toLogin
+} from '@/libs/login.js';
 import util from 'utils/util'
 import animationType from '@/utils/animationType.js'
 /**
@@ -47,9 +56,48 @@ export function getPreOrder(preOrderType, orderDetails) {
 				url: '/pages/order/order_confirm/index?preOrderNo=' + res.data.preOrderNo
 			});
 		}).catch(err => {
-			return util.Tips({
-				title: err
-			});
+			// 如果token此时失效
+			tokenIsExistApi().then(tokenRes => {
+				let tokenIsExist = tokenRes.data;
+				if (!tokenIsExist && (preOrderType == 'buyNow' || preOrderType == 'shoppingCart')) {
+					uni.navigateTo({
+						url: '/pages/users/login/index',
+						success: () => {
+							store.commit("LOGOUT");
+							uni.showToast({
+								title: 'token已失效',
+								icon: 'none',
+								duration: 1000
+							})
+						}
+					})
+				} else {
+					uni.showToast({
+						title: err,
+						icon: 'none',
+						duration: 1000
+					})
+				}
+			})
 		})
+	});
+}
+/**
+ * 协议富文本
+ */
+export function goToAgreement(from) {
+	return new Promise(resolve => {
+		// #ifdef MP
+		uni.navigateTo({
+			url: `/pages/goods/agreement_info/index?from=${from}`
+		})
+		// #endif
+		// #ifndef MP
+		uni.navigateTo({
+			animationType: animationType.type,
+			animationDuration: animationType.duration,
+			url: `/pages/goods/agreement_info/index?from=${from}`
+		})
+		// #endif
 	});
 }

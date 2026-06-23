@@ -156,6 +156,23 @@
           >
           </el-input>
         </el-form-item>
+        <el-form-item prop="storeBrokerageShareNode">
+          <span slot="label">
+            <span>开始冻结规则：</span>
+            <el-tooltip class="item" effect="dark" content="从哪个状态开始计算冻结时间" placement="top-start">
+              <i class="el-icon-warning-outline" />
+            </el-tooltip>
+          </span>
+          <el-select v-model="promoterForm.storeBrokerageShareNode">
+            <el-option
+              v-for="item in storeBrokerageShareNodeList"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
         <el-form-item prop="extractTime">
           <span slot="label">
             <span>冻结时间：</span>
@@ -166,7 +183,10 @@
           <el-input-number
             controls-position="right"
             v-model="promoterForm.extractTime"
+            step-strictly
+            :step="1"
             :min="0"
+            :max="30"
             class="selWidth"
             placeholder="佣金冻结时间(天)"
           ></el-input-number>
@@ -196,10 +216,25 @@ export default {
     return {
       promoterForm: {},
       loading: true,
+      storeBrokerageShareNodeList: [
+        {
+          value: 'pay',
+          label: '订单支付后',
+        },
+        {
+          value: 'receipt',
+          label: '订单收货后',
+        },
+        {
+          value: 'complete',
+          label: '订单完成后',
+        },
+      ],
       rules: {
         brokerageFuncStatus: [{ required: true, message: '请选择是否启用分销', trigger: 'change' }],
         storeBrokerageRatio: [{ required: true, message: '请输入一级返佣比例', trigger: 'blur' }],
         storeBrokerageTwo: [{ required: true, message: '请输入二级返佣比例', trigger: 'blur' }],
+        storeBrokerageShareNode: [{ required: true, message: '请选择开始冻结规则', trigger: 'none' }],
       },
     };
   },
@@ -226,12 +261,17 @@ export default {
           this.promoterForm.storeBrokerageIsBubble = res.storeBrokerageIsBubble.toString();
           this.promoterForm.brokerageFuncStatus = res.brokerageFuncStatus.toString();
           this.promoterForm.brokerageBindind = res.brokerageBindind.toString();
+          this.promoterForm.storeBrokerageShareNode = res.storeBrokerageShareNode || 'complete';
+          this.promoterForm.extractTime = res.extractTime || 7;
         })
         .catch((res) => {
           this.$message.error(res.message);
         });
     },
     submitForm: Debounce(function (formName) {
+      if (!this.promoterForm.storeBrokerageShareNode) {
+        this.$message.error('请选择开始冻结规则');
+      }
       this.$refs[formName].validate((valid) => {
         if (valid) {
           if (selfUtil.Add(this.promoterForm.storeBrokerageRatio, this.promoterForm.storeBrokerageTwo) > 100)

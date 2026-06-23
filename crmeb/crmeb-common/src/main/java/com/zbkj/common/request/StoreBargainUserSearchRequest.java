@@ -15,7 +15,7 @@ import java.math.BigDecimal;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -27,7 +27,7 @@ import java.math.BigDecimal;
 @Accessors(chain = true)
 @TableName("eb_store_bargain_user")
 @ApiModel(value="StoreBargainUser对象", description="用户参与砍价表")
-public class StoreBargainUserSearchRequest implements Serializable {
+public class StoreBargainUserSearchRequest extends UserCommonSearchRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 

@@ -5,7 +5,7 @@ package com.zbkj.common.constants;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -47,6 +47,12 @@ public class SysConfigConstants {
     public static final String CONFIG_KEY_STORE_BROKERAGE_IS_BUBBLE = "store_brokerage_is_bubble";
     /** 判断是否分销消费门槛 */
     public static final String CONFIG_KEY_STORE_BROKERAGE_QUOTA = "store_brokerage_quota";
+    /** 分销关系绑定:0-所有用户，1-新用户 */
+    public static final String CONFIG_KEY_BROKERAGE_BINDIND = "brokerage_bindind";
+    /** 分销佣金分账节点:pay:订单支付后，receipt:订单收货后，complete:订单完成后 */
+    public static final String RETAIL_STORE_BROKERAGE_SHARE_NODE = "store_brokerage_share_node";
+
+
 
     /** 是否开启会员功能 */
     public static final String CONFIG_KEY_VIP_OPEN = "vip_open";
@@ -62,6 +68,10 @@ public class SysConfigConstants {
     public static final String CONFIG_EXTRACT_MIN_PRICE = "user_extract_min_price";
     /** 提现冻结时间 */
     public static final String CONFIG_EXTRACT_FREEZING_TIME = "extract_time";
+    /** 提现银行卡 */
+    public static final String CONFIG_EXTRACT_BANK = "user_extract_bank";
+
+
 
     /** 全场满额包邮开关 */
     public static final String STORE_FEE_POSTAGE_SWITCH = "store_free_postage_switch";
@@ -120,6 +130,25 @@ public class SysConfigConstants {
 
     /** 充值注意事项 */
     public static final String CONFIG_RECHARGE_ATTENTION = "recharge_attention";
+    /********************************************************************************************* 协议START ****************/
+    /** 商户入驻协议 */
+    public static final String MERCHANT_SETTLEMENT_AGREEMENT = "merSettlementAgreement";
+    /** 用户隐私政策 */
+    public static final String USER_PRIVACY_AGREEMENT = "userPrivacyAgreement";
+    /** 用户注册协议 */
+    public static final String USER_REGISTER_AGREEMENT = "merLoginAgreement";
+    /** 用户注销声明 */
+    public static final String USER_CANCEL_AGREEMENT = "userCancelAccountAgreement";
+    /** 用户注销重要提示 */
+    public static final String USER_CANCEL_NOTICE_AGREEMENT = "userCancelAccountNoticeAgreement";
+    /** 关于我们 */
+    public static final String ABOUTUS_AGREEMENT = "userAboutAgreement";
+    /** 资质证明 */
+    public static final String PLATFROM_INTELLIGENT_AGREEMENT = "platfromIntelligentAgreement";
+    /** 优惠券规则 */
+    public static final String COUPON_AGREEMENT = "couponAgreement";
+
+    /********************************************************************************************* 协议END ****************/
 
 
     /** 图片上传类型 1本地 2七牛云 3OSS 4COS 5京东, 默认本地 */
@@ -182,5 +211,25 @@ public class SysConfigConstants {
     public static final String CONFIG_JD_CLOUD_SIGNING_REGION = "jdSigningRegion";
     /** 京东云存储端点 */
     public static final String CONFIG_JD_CLOUD_ENDPOINT = "jdEndpoint";
+
+    /** 开屏广告-开关 */
+    public static final String SPLASH_AD_SWITCH = "splash_ad_switch";
+    /** 开屏广告-广告时间 */
+    public static final String SPLASH_AD_SHOW_TIME = "splash_ad_show_time";
+    /** 开屏广告-展示间隔 */
+    public static final String SPLASH_AD_SHOW_INTERVAL = "splash_ad_show_interval";
+
+
+
+    /** 默认好评开关 '0'-关闭、'1'-打开*/
+    public static final String CONFIG_AUTO_REPLY_SWITCH = "auto_reply_switch";
+    /** 默认好评时间 */
+    public static final String CONFIG_AUTO_REPLY_TIME = "auto_reply_time";
+    /** 默认好评内容 */
+    public static final String CONFIG_AUTO_REPLY_CONTENT = "auto_reply_content";
+
+
+
+
 
 }

@@ -5,8 +5,11 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-
+import com.alipay.api.AlipayApiException;
+import com.alipay.api.internal.util.AlipaySignature;
+import com.zbkj.common.constants.AlipayConfig;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.TaskConstants;
 import com.zbkj.common.exception.CrmebException;
@@ -16,7 +19,7 @@ import com.zbkj.common.model.finance.UserRecharge;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.wechat.WechatPayInfo;
-
+import com.zbkj.common.model.wechat.video.PayComponentOrder;
 import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
@@ -36,6 +39,8 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Security;
 import java.util.*;
@@ -46,7 +51,7 @@ import java.util.*;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -84,6 +89,9 @@ public class CallbackServiceImpl implements CallbackService {
 
     @Autowired
     private StorePinkService storePinkService;
+
+    @Autowired
+    private PayComponentOrderService componentOrderService;
 
     @Autowired
     private WechatPayInfoService wechatPayInfoService;
@@ -180,6 +188,12 @@ public class CallbackServiceImpl implements CallbackService {
                         userService.updateIntegral(user, storeOrder.getUseIntegral(), "sub");
                     }
                     wechatPayInfoService.updateById(wechatPayInfo);
+                    if (storeOrder.getType().equals(1)) {
+                        PayComponentOrder componentOrder = componentOrderService.getByOrderNo(storeOrder.getOrderId());
+                        componentOrder.setTransactionId(callbackVo.getTransactionId());
+                        componentOrder.setTimeEnd(callbackVo.getTimeEnd());
+                        componentOrderService.updateById(componentOrder);
+                    }
 
                     // 处理拼团
                     if (storeOrder.getCombinationId() > 0) {
@@ -279,6 +293,197 @@ public class CallbackServiceImpl implements CallbackService {
         return sb.toString();
     }
 
+    /**
+     * 支付宝支付回调
+     */
+    @Override
+    public String aliPay(HttpServletRequest request) {
+        Map<String, String> params = convertRequestParamsToMap(request); // 将异步通知中收到的待验证所有参数都存放到map中
+        String paramsJson = JSON.toJSONString(params);
+        logger.info("支付宝回调，{}", paramsJson);
+        try {
+            //商户订单号
+            String out_trade_no = params.get("out_trade_no");
+            // 判断是否是退款订单
+            String refundFee = params.get("refund_fee");
+            if (StrUtil.isNotBlank(refundFee)) {// 订单退款
+                logger.info("支付宝进入退款回调");
+                BigDecimal bigDecimal = new BigDecimal(refundFee);
+                if (bigDecimal.compareTo(BigDecimal.ZERO) <= 0) {
+                    logger.error("ali pay error : 订单退款金额小于等于0==》" + paramsJson);
+                    return "fail";
+                }
+                StoreOrder storeOrder = storeOrderService.getByOderId(out_trade_no);
+                if (ObjectUtil.isNull(storeOrder)) {
+                    logger.error("ali pay error : 订单信息不存在==》" + out_trade_no);
+                    return "fail";
+                }
+                if (storeOrder.getRefundStatus() == 2) {
+                    logger.warn("ali pay warn : 订单退款已处理==》" + paramsJson);
+                    return "success";
+                }
+                storeOrder.setRefundStatus(2);
+                storeOrder.setUpdateTime(DateUtil.date());
+                boolean update = storeOrderService.updateById(storeOrder);
+                if (update) {
+                    // 退款task
+                    redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER, storeOrder.getId());
+                } else {
+                    logger.warn("微信退款订单更新失败==>" + paramsJson);
+                }
+                return "success";
+            }
+
+            // 判断订单类型
+            String passbackParams = params.get("passback_params");
+            if (StrUtil.isNotBlank(passbackParams)) {
+                String decode;
+                try {
+                    decode = URLDecoder.decode(passbackParams, "utf-8");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                    logger.error("ali pay error : 订单支付类型解码失败==》" + out_trade_no);
+                    return "fail";
+                }
+//                JSONObject jsonObject = JSONObject.parseObject(decode);
+//                String orderType = jsonObject.getString("type");
+                String[] split = decode.split("=");
+                String orderType = split[1];
+                if (Constants.SERVICE_PAY_TYPE_RECHARGE.equals(orderType)) {// 充值订单
+                    UserRecharge userRecharge = new UserRecharge();
+                    userRecharge.setOrderId(out_trade_no);
+                    userRecharge = userRechargeService.getInfoByEntity(userRecharge);
+                    if(ObjectUtil.isNull(userRecharge)){
+                        logger.error("ali pay error : 没有找到订单信息==》" + out_trade_no);
+                        return "fail";
+                    }
+                    if(userRecharge.getPaid()){
+                        return "success";
+                    }
+                    // 支付成功处理
+                    Boolean rechargePayAfter = rechargePayService.paySuccess(userRecharge);
+                    if (!rechargePayAfter) {
+                        logger.error("wechat pay error : 数据保存失败==》" + out_trade_no);
+                        return "fail";
+                    }
+                    return "success";
+                }
+            }
+
+            // 找到原订单
+            StoreOrder storeOrder = storeOrderService.getByOderId(out_trade_no);
+            if (ObjectUtil.isNull(storeOrder)) {
+                logger.error("ali pay error : 订单信息不存在==》" + out_trade_no);
+                return "fail";
+            }
+            if (storeOrder.getPaid()) {
+                logger.error("ali pay error : 订单已处理==》" + out_trade_no);
+                return "success";
+            }
+            //判断openid
+            User user = userService.getById(storeOrder.getUid());
+            if (ObjectUtil.isNull(user)) {
+                //用户信息错误
+                logger.error("支付宝回调用户信息错误，paramsJson = " + paramsJson);
+                return "fail";
+            }
+
+            //支付宝交易号
+            String trade_no = params.get("trade_no");
+
+            //交易状态
+            String trade_status = params.get("trade_status");
+
+            // 调用SDK验证签名
+            String aliPayPublicKey2 = systemConfigService.getValueByKey(AlipayConfig.ALIPAY_PUBLIC_KEY_2);
+            boolean signVerified = AlipaySignature.rsaCheckV1(params, aliPayPublicKey2, AlipayConfig.CHARSET, "RSA2");
+            if (signVerified) {//验证成功
+                logger.info("支付宝回调签名认证成功");
+                if (trade_status.equals("TRADE_FINISHED") || trade_status.equals("TRADE_SUCCESS")) {//交易成功
+                    // 添加支付成功redis队列
+                    Boolean execute = transactionTemplate.execute(e -> {
+                        storeOrder.setPaid(true);
+                        storeOrder.setPayTime(CrmebDateUtil.nowDateTime());
+                        storeOrder.setUpdateTime(DateUtil.date());
+                        storeOrderService.updateById(storeOrder);
+                        if (storeOrder.getUseIntegral() > 0) {
+                            userService.updateIntegral(user, storeOrder.getUseIntegral(), "sub");
+                        }
+
+                        // 处理拼团
+                        if (storeOrder.getCombinationId() > 0) {
+                            // 判断拼团团长是否存在
+                            StorePink headPink = new StorePink();
+                            Integer pinkId = storeOrder.getPinkId();
+                            if (pinkId > 0) {
+                                headPink = storePinkService.getById(pinkId);
+                                if (ObjectUtil.isNull(headPink) || headPink.getIsRefund().equals(true) || headPink.getStatus() == 3) {
+                                    pinkId = 0;
+                                }
+                            }
+                            StoreCombination storeCombination = storeCombinationService.getById(storeOrder.getCombinationId());
+                            // 如果拼团人数已满，重新开团
+                            if (pinkId > 0) {
+                                Integer count = storePinkService.getCountByKid(pinkId);
+                                if (count >= storeCombination.getPeople()) {
+                                    pinkId = 0;
+                                }
+                            }
+                            // 生成拼团表数据
+                            StorePink storePink = new StorePink();
+                            storePink.setUid(user.getUid());
+                            storePink.setAvatar(user.getAvatar());
+                            storePink.setNickname(user.getNickname());
+                            storePink.setOrderId(storeOrder.getOrderId());
+                            storePink.setOrderIdKey(storeOrder.getId());
+                            storePink.setTotalNum(storeOrder.getTotalNum());
+                            storePink.setTotalPrice(storeOrder.getTotalPrice());
+                            storePink.setCid(storeCombination.getId());
+                            storePink.setPid(storeCombination.getProductId());
+                            storePink.setPeople(storeCombination.getPeople());
+                            storePink.setPrice(storeCombination.getPrice());
+                            Integer effectiveTime = storeCombination.getEffectiveTime();// 有效小时数
+                            DateTime dateTime = cn.hutool.core.date.DateUtil.date();
+                            storePink.setAddTime(dateTime.getTime());
+                            if (pinkId > 0) {
+                                storePink.setStopTime(headPink.getStopTime());
+                            } else {
+                                DateTime hourTime = cn.hutool.core.date.DateUtil.offsetHour(dateTime, effectiveTime);
+                                long stopTime =  hourTime.getTime();
+                                if (stopTime > storeCombination.getStopTime()) {
+                                    stopTime = storeCombination.getStopTime();
+                                }
+                                storePink.setStopTime(stopTime);
+                            }
+                            storePink.setKId(pinkId);
+                            storePink.setIsTpl(false);
+                            storePink.setIsRefund(false);
+                            storePink.setStatus(1);
+                            storePinkService.save(storePink);
+                            // 如果是开团，需要更新订单数据
+                            storeOrder.setPinkId(storePink.getId());
+                            storeOrder.setUpdateTime(DateUtil.date());
+                            storeOrderService.updateById(storeOrder);
+                        }
+
+                        return Boolean.TRUE;
+                    });
+                    if (!execute) {
+                        logger.error("ali pay error : 订单更新失败==》" + out_trade_no);
+                        return "fail";
+                    }
+                    redisUtil.lPush(TaskConstants.ORDER_TASK_PAY_SUCCESS_AFTER, storeOrder.getOrderId());
+                }
+                return "success";
+            } else {
+                logger.info("支付宝回调签名认证失败，signVerified=false, paramsJson:{}", paramsJson);
+                return "fail";
+            }
+        } catch (AlipayApiException e) {
+            logger.error("支付宝回调签名认证失败,paramsJson:{},errorMsg:{}", paramsJson, e.getMessage());
+            return "fail";
+        }
+    }
 
     /**
      * 将request中的参数转换成Map

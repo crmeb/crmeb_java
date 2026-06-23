@@ -2,4 +2,37 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zbkj.service.dao.StoreProductReplyDao">
 
+    <select id="selectReplyList" resultType="com.zbkj.common.model.product.StoreProductReply">
+        select *
+        from eb_store_product_reply pr
+        left join eb_user as u on pr.uid = u.uid
+        left join eb_store_product as p on pr.product_id = p.id
+        where p.is_del = 0 and pr.is_del = 0
+        <if test="productSearch != null and productSearch !=''">
+            and p.store_name like CONCAT('%',#{productSearch},'%')
+        </if>
+        <if test="isReply != null ">
+            and pr.is_reply = #{isReply}
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and pr.create_time between #{startTime} and #{endTime}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            pr.uid like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and pr.uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        order by pr.id desc
+    </select>
 </mapper>

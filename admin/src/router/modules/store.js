@@ -51,6 +51,18 @@ const storeRouter = {
       meta: { title: '商品添加', noCache: true, activeMenu: `/store/index` },
       hidden: true,
     },
+    {
+      path: 'guarantee',
+      component: () => import('@/views/store/guarantee/index'),
+      name: 'StoreGuarantee',
+      meta: { title: '保障服务', icon: '' },
+    },
+    {
+      path: 'commentSetting',
+      component: () => import('@/views/store/commentSetting/index'),
+      name: 'commentSetting',
+      meta: { title: '评论设置', icon: '' },
+    },
   ],
 };
 

@@ -83,6 +83,24 @@
 							立即设置<text class="iconfont icon-xiangyou"></text>
 						</view>
 					</view>
+					<view class='item acea-row row-between-wrapper'>
+						<view>资质证明</view>
+						<view class="input" @click="userAgree('intelligentinfo')">
+							点击查看<text class="iconfont icon-xiangyou"></text>
+						</view>
+					</view>
+					<view class='item acea-row row-between-wrapper'>
+						<view>协议规则</view>
+						<navigator url="/pages/goods/agreement_rules/index" hover-class="none" class="input">
+							点击查看<text class="iconfont icon-xiangyou"></text>
+						</navigator>
+					</view>
+					<view class="item acea-row row-between-wrapper">
+						<view>账号注销</view>
+						<view class="input" @click="userAgree('useraccountcancelinfo')">
+							注销后无法恢复<text class="iconfont icon-xiangyou"></text>
+						</view>
+					</view>
 				</view>
 				<button class='modifyBnt bg_color' formType="submit">保存修改</button>
 				<!-- #ifdef H5 -->
@@ -114,6 +132,9 @@
 	import {
 		Debounce
 	} from '@/utils/validate.js'
+	import {
+		goToAgreement
+	} from "@/libs/order";
 	import dayjs from "@/plugin/dayjs/dayjs.min.js";
 	let app = getApp();
 	export default {
@@ -170,6 +191,10 @@
 				uni.navigateTo({
 					url:'/pages/users/user_address_list/index'
 				})
+			},
+			//to协议
+			userAgree(type) {
+				goToAgreement(type)
 			},
 			/**
 			 * 小程序端上传头像

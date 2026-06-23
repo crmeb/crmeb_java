@@ -1,6 +1,7 @@
 <template>
   <div class="divBox">
-    <el-card class="box-card">
+    <pages-header ref="pageHeader" :title="$route.params.id ? '编辑优惠券' : '添加优惠券'" back-url="/marketing/coupon/list" />
+    <el-card class="box-card mt14">
       <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="150px" class="demo-ruleForm">
         <el-form-item label="优惠劵名称：" prop="name">
           <el-input v-model="ruleForm.name" style="width: 350px" placeholder="请输入优惠券名称"></el-input>

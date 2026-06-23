@@ -583,7 +583,7 @@ uni-checkbox:not([disabled]) .uni-checkbox-input:hover{
 	width: 100%;
 	height: auto;
 	padding-bottom: 20rpx;
-	padding-bottom: calc(100rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+	padding-bottom: calc(100rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
 	padding-bottom: calc(100rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
 }
 //活动边框样式

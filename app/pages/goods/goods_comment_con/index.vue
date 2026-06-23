@@ -214,6 +214,7 @@
 		font-size: 28rpx;
 		color: #282828;
 		padding: 46rpx 24rpx;
+		color: fffdca63e;
 	}
 
 	.evaluate-con .score .item~.item {

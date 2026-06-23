@@ -20,7 +20,18 @@
 	import {
 		spread
 	} from "@/api/user";
+	import {
+		applyTheme,
+		setThemeColor
+	} from "@/utils/theme.js";
 	var statusBarHeight = uni.getSystemInfoSync().statusBarHeight; //手机端头部手机时间位置高度
+	const legacyThemeColorMap = {
+		1: { theme_color: '#e93323', gradient_color: '#FF7931', sub_color: '#FE960F', light_color: '#FDD9D3' },
+		2: { theme_color: '#FE5C2D', gradient_color: '#FF9445', sub_color: '#FDB000', light_color: '#FEE0D2' },
+		3: { theme_color: '#42CA4D', gradient_color: '#70E038', sub_color: '#FE960F', light_color: '#DBF5D6' },
+		4: { theme_color: '#1DB0FC', gradient_color: '#40D1F4', sub_color: '#C4D9EC', light_color: '#D1F1FB' },
+		5: { theme_color: '#FF448F', gradient_color: '#FF67AD', sub_color: '#282828', light_color: '#FFD8E7' },
+	};
 	// const app = getApp();
 	export default {
 		globalData: {
@@ -43,13 +54,28 @@
 			mobileLoginLogo: uni.getStorageSync('mobileLoginLogo') || `${Cache.get("imgHost")}crmebimage/perset/staticImg/logo2.png` //登录页logo
 		},
 		onLaunch: function(option) {
+			option = option || {};
 			//获取登录配置
 			this.getLoginConfig();
+			const isThemePreview = this.isThemePreview(option);
+			const launchQuery = option.query || {};
+			let previewThemeId = uni.getStorageSync("previewThemeId");
+			let themeModuleApplied = false;
+			applyTheme(previewThemeId)
+				.then((themeData) => {
+					themeModuleApplied = !!(themeData && themeData.theme_color);
+				})
+				.catch(() => {
+					themeModuleApplied = false;
+				});
 
-			//校验token是否有效,true为有效，false为无效
-			tokenIsExistApi().then(res => {
-				this.globalData.tokenIsExist = res.data;
-			})
+			// 主题预览不依赖登录态，避免 token 校验失败打断预览链路。
+			if (!isThemePreview) {
+				//校验token是否有效,true为有效，false为无效
+				tokenIsExistApi().then(res => {
+					this.globalData.tokenIsExist = res.data;
+				})
+			}
 
 			let that = this;
 			// #ifdef APP-PLUS || H5
@@ -107,14 +133,14 @@
 				return false;
 			}
 			//小程序扫码进入场景
-			if (option.query.hasOwnProperty('scene')) {
+			if (launchQuery.hasOwnProperty('scene')) {
 				switch (option.scene) {
 					case 1047: //扫描小程序码
 					case 1048: //长按图片识别小程序码
 					case 1049: //手机相册选取小程序码
 					case 1001: //直接进入小程序
 
-					let value = this.$util.getUrlParams(decodeURIComponent(option.query.scene));
+					let value = this.$util.getUrlParams(decodeURIComponent(launchQuery.scene));
 					let mapeMpQrCodeValue = this.$util.formatMpQrCodeData(value);
 					// that.globalData = mapeMpQrCodeValue;
 					that.globalData = Object.assign(that.globalData,mapeMpQrCodeValue);
@@ -136,7 +162,7 @@
 			// #endif
 
 			// #ifdef H5	
-			if (option.query.hasOwnProperty('type') && option.query.type == "iframeVisualizing") {
+			if (launchQuery.hasOwnProperty('type') && launchQuery.type == "iframeVisualizing") {
 				this.globalData.isIframe = true;
 			} else {
 				this.globalData.isIframe = false;
@@ -146,13 +172,13 @@
 			let snsapiBase = 'snsapi_base';
 			let urlData = location.pathname + location.search;
 			//publicLoginType，公众号登录方式(单选),1微信授权，2手机号登录
-			if (!that.$store.getters.isLogin && Auth.isWeixin() && this.globalData.publicLoginType == 1 && !that
+			if (!isThemePreview && !that.$store.getters.isLogin && Auth.isWeixin() && this.globalData.publicLoginType == 1 && !that
 				.globalData.tokenIsExist) {
 				const {
 					code,
 					state,
 					scope
-				} = option.query;
+				} = launchQuery;
 				if (code && code != uni.getStorageSync('snsapiCode') && location.pathname.indexOf(
 						'/pages/users/wechat_login/index') === -1) {
 					// 存储静默授权code
@@ -160,7 +186,7 @@
 					let spread = that.globalData.spread ? that.globalData.spread : 0;
 					Auth.auth(code, that.$Cache.get('SPREAD'))
 						.then(res => {
-							uni.setStorageSync('snRouter', decodeURIComponent(decodeURIComponent(option.query
+							uni.setStorageSync('snRouter', decodeURIComponent(decodeURIComponent(launchQuery
 								.back_url)));
 							if (res.type === 'register') {
 								this.$Cache.set('snsapiKey', res.key);
@@ -170,13 +196,13 @@
 									token: res.token
 								});
 								this.$store.commit("SETUID", res.uid);
-								location.replace(decodeURIComponent(decodeURIComponent(option.query.back_url)));
+								location.replace(decodeURIComponent(decodeURIComponent(launchQuery.back_url)));
 							}
 						})
 						.catch(error => {
 							if (!this.$Cache.has('snsapiKey')) {
 								if (location.pathname.indexOf('/pages/users/wechat_login/index') === -1) {
-									Auth.oAuth(snsapiBase, option.query.back_url);
+									Auth.oAuth(snsapiBase, launchQuery.back_url);
 								}
 							}
 						});
@@ -188,7 +214,7 @@
 					}
 				}
 			} else {
-				if (option.query.back_url) {
+				if (launchQuery.back_url) {
 					location.replace(uni.getStorageSync('snRouter'));
 				}
 			}
@@ -196,7 +222,7 @@
 
 			// #ifdef MP
 			// 小程序静默授权
-			if (!this.$store.getters.isLogin && !this.globalData.tokenIsExist) {
+			if (!isThemePreview && !this.$store.getters.isLogin && !this.globalData.tokenIsExist) {
 				Routine.getCode().then(code => {
 						Routine.authUserInfo(code)
 					})
@@ -207,8 +233,12 @@
 			// #endif
 			// 主题变色
 			getTheme().then(resP => {
-				that.globalData.theme = `theme${Number(resP.data.value)}`
+				const themeValue = Number(resP.data.value) || 1;
+				that.globalData.theme = `theme${themeValue}`
 				that.$Cache.set('theme', that.globalData.theme);
+				if (!themeModuleApplied) {
+					setThemeColor(legacyThemeColorMap[themeValue] || legacyThemeColorMap[1]);
+				}
 				// #ifdef H5
 				window.document.documentElement.setAttribute('data-theme', that.globalData.theme);
 				// #endif
@@ -218,6 +248,17 @@
 			if (this.$store.getters.isLogin && !this.$Cache.get('USER_INFO')) await this.$store.dispatch('USERINFO');
 		},
 		methods: {
+			isThemePreview(option = {}) {
+				const query = option.query || {};
+				if (query.type === 'iframeVisualizing') return true;
+				if (query.id || query.theme_id || query.themeId) return true;
+				if (uni.getStorageSync("previewThemeId")) return true;
+				if (query.scene) {
+					const value = this.$util.getUrlParams(decodeURIComponent(query.scene));
+					return !!(value.id || value.theme_id || value.themeId);
+				}
+				return false;
+			},
 			//获取登录配置
 			getLoginConfig() {
 				loginConfigApi().then(res => {
@@ -289,7 +330,10 @@
 	.flex {
 		display: flex;
 	}
-
+	// 导航高度重置
+	.open-location {
+		height: 100vh;
+	}
 	.uni-scroll-view::-webkit-scrollbar {
 		/* 隐藏滚动条，但依旧具备可以滚动的功能 */
 		display: none

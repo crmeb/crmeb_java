@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import org.hibernate.validator.constraints.Length;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -19,7 +20,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -112,10 +113,12 @@ public class StoreProductAddRequest implements Serializable {
     @ApiModelProperty(value = "活动显示排序 0=默认，1=秒杀，2=砍价，3=拼团")
     private List<String> activity;
 
+    @Valid
     @ApiModelProperty(value = "商品属性", required = true)
     @NotEmpty(message = "商品属性不能为空")
     private List<StoreProductAttrAddRequest> attr;
 
+    @Valid
     @ApiModelProperty(value = "商品属性详情", required = true)
     @NotEmpty(message = "商品属性详情不能为空")
     private List<StoreProductAttrValueAddRequest> attrValue;
@@ -129,4 +132,7 @@ public class StoreProductAddRequest implements Serializable {
     @ApiModelProperty(value = "展示图")
     @Length(max = 1000, message = "展示图名称长度不能超过1000个字符")
     private String flatPattern;
+
+    @ApiModelProperty(value = "保障服务ids(英文逗号拼接)")
+    private String guaranteeIds;
 }

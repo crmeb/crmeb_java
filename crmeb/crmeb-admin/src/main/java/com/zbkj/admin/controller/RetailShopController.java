@@ -4,6 +4,7 @@ import com.zbkj.common.model.user.User;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.request.RetailShopRequest;
+import com.zbkj.common.request.RetailShopSearchRequest;
 import com.zbkj.common.request.RetailShopStairUserRequest;
 import com.zbkj.common.response.SpreadOrderResponse;
 import com.zbkj.common.response.SpreadUserResponse;
@@ -25,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -46,21 +47,13 @@ public class RetailShopController {
 
     /**
      * 分销员列表
-     * @param keywords         搜索参数
-     * @param dateLimit        时间参数
-     * @param pageParamRequest 分页参数
+     * @param request 分销员分页列表查询请求对象
      */
     @PreAuthorize("hasAuthority('admin:retail:list')")
     @ApiOperation(value = "分销员列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "keywords", value = "搜索关键字[姓名、电话、uid]"),
-            @ApiImplicitParam(name = "dateLimit", value = "today,yesterday,lately7,lately30,month,year,/yyyy-MM-dd hh:mm:ss,yyyy-MM-dd hh:mm:ss/")
-    })
-    public CommonResult<CommonPage<SpreadUserResponse>> getList(@RequestParam(required = false) String keywords,
-                                                                @RequestParam(required = false) String dateLimit,
-                                                                @ModelAttribute PageParamRequest pageParamRequest) {
-        return CommonResult.success(retailShopService.getSpreadPeopleList(keywords, dateLimit, pageParamRequest));
+    public CommonResult<CommonPage<SpreadUserResponse>> getList(@ModelAttribute RetailShopSearchRequest request) {
+        return CommonResult.success(CommonPage.restPage(retailShopService.getSpreadPeopleList(request)));
     }
 
     /**
@@ -115,15 +108,14 @@ public class RetailShopController {
         return CommonResult.success(retailShopService.getManageInfo());
     }
 
-    /**
-     * 分销管理信息保存
-     * @param retailShopRequest 分销管理对象
-     * @return 保存结果
-     */
+
     @PreAuthorize("hasAuthority('admin:retail:spread:manage:set')")
     @ApiOperation(value = "分销管理信息保存")
     @RequestMapping(value = "/spread/manage/set", method = RequestMethod.POST)
     public CommonResult<Object> setSpreadInfo(@RequestBody @Validated RetailShopRequest retailShopRequest) {
-        return CommonResult.success(retailShopService.setManageInfo(retailShopRequest));
+        if (retailShopService.setManageInfo(retailShopRequest)) {
+            return CommonResult.success("保存成功");
+        }
+        return CommonResult.failed("保存失败");
     }
 }

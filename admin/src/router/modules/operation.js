@@ -31,6 +31,15 @@ const operationRouter = {
       },
     },
     {
+      path: 'guide',
+      name: 'guide',
+      component: () => import('@/views/systemSetting/guide'),
+      meta: {
+        title: '配置引导',
+        icon: 'clipboard',
+      },
+    },
+    {
       path: 'notification',
       name: 'notification',
       component: () => import('@/views/systemSetting/notification'),
@@ -167,6 +176,14 @@ const operationRouter = {
           meta: { title: '运费模板', noCache: true },
         },
       ],
+    },
+    {
+      path: 'agreement',
+      name: 'agreement',
+      component: () => import('@/views/systemSetting/agreement'),
+      meta: {
+        title: '协议管理',
+      },
     },
   ],
 };

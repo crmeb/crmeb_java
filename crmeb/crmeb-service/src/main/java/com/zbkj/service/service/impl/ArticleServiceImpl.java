@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -77,7 +77,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
         Page<Article> articlePage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
 
         LambdaQueryWrapper<Article> lambdaQueryWrapper = Wrappers.lambdaQuery();
-        lambdaQueryWrapper.eq(Article::getCid, cid);
+        if (StrUtil.isNotBlank(cid)) {
+            lambdaQueryWrapper.eq(Article::getCid, cid);
+        }
         lambdaQueryWrapper.eq(Article::getHide, false);
         lambdaQueryWrapper.eq(Article::getStatus, false);
         lambdaQueryWrapper.orderByDesc(Article::getSort).orderByDesc(Article::getVisit).orderByDesc(Article::getCreateTime);
@@ -149,9 +151,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
         ArticleResponse articleResponse = new ArticleResponse();
         BeanUtils.copyProperties(article, articleResponse);
 
-        String visit = StrUtil.isNotBlank(article.getVisit()) ? article.getVisit() : "0";
-        int num = Integer.parseInt(visit) + 1;
-        article.setVisit(String.valueOf(num));
+        int num = article.getVisit() + 1;
+        article.setVisit(num);
         article.setUpdateTime(DateUtil.date());
         dao.updateById(article);
         return articleResponse;
@@ -222,7 +223,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
         BeanUtils.copyProperties(articleRequest, article);
         article.setImageInput(systemAttachmentService.clearPrefix(article.getImageInput()));
         article.setContent(systemAttachmentService.clearPrefix(article.getContent()));
-        article.setVisit("0");
+        article.setVisit(0);
         return save(article);
     }
 
@@ -270,4 +271,3 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
         return article;
     }
 }
-

@@ -53,7 +53,7 @@
 					}
 				}
 			},
-			bgColor() {
+			bgColor(){
 				return {
 					background: `linear-gradient(${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
 				}
@@ -71,8 +71,7 @@
 			checkColor() {
 				if (this.dataConfig) {
 					return {
-						color: this.dataConfig.themeStyleConfig.tabVal ? this.dataConfig.checkColor.color[0].item : this
-							.themeColor
+						color: this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.checkColor.color[0].item:this.themeColor
 					};
 				}
 			},
@@ -95,7 +94,7 @@
 				isCustom: '',
 				bottomNavigationList: [],
 				activeRouter: '',
-				themeColor: this.$options.filters.filterTheme(app.globalData.theme)
+				themeColor:this.$options.filters.filterTheme(app.globalData.theme)
 			}
 		},
 		methods: {
@@ -143,7 +142,7 @@
 		bottom: 0;
 		left: 0;
 		width: 100%;
-		height: calc(98rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		height: calc(98rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
 		height: calc(98rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
 	}
 
@@ -157,7 +156,7 @@
 		bottom: 0;
 		z-index: 999999;
 		width: 100%;
-		height: calc(98rpx+ constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
+		height: calc(98rpx + constant(safe-area-inset-bottom)); ///兼容 IOS<11.2/
 		height: calc(98rpx + env(safe-area-inset-bottom)); ///兼容 IOS>11.2/
 		box-sizing: border-box;
 		border-top: solid 1rpx #F3F3F3;
@@ -190,11 +189,9 @@
 				padding: 4rpx;
 			}
 		}
-
-		.bg-box {
+		.bg-box{
 			height: 100%;
 		}
-
 		.foot-item image {
 			height: 50rpx;
 			width: 50rpx;

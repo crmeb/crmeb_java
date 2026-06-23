@@ -28,7 +28,7 @@ import java.util.Map;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -85,6 +85,16 @@ public class UserRechargeController {
     public CommonResult<OrderPayResultResponse> weChatAppRecharge(HttpServletRequest httpServletRequest, @RequestBody @Validated UserRechargeRequest request) {
         request.setClientIp(CrmebUtil.getClientIp(httpServletRequest));
         return CommonResult.success(userCenterService.recharge(request));
+    }
+
+    /**
+     * 支付宝充值
+     */
+    @ApiOperation(value = "支付宝充值")
+    @RequestMapping(value = "/alipay", method = RequestMethod.POST)
+    public CommonResult<OrderPayResultResponse> aliPayRecharge(HttpServletRequest httpServletRequest, @RequestBody @Validated UserRechargeRequest request) {
+        request.setClientIp(CrmebUtil.getClientIp(httpServletRequest));
+        return CommonResult.success(userCenterService.aliPayRecharge(request));
     }
 
     /**

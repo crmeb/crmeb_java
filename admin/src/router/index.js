@@ -90,11 +90,6 @@ export const constantRoutes = [
     hidden: true,
   },
   {
-    path: '/page/design/creatDevise/:id?/:type?',
-    component: () => import('@/views/design/devise/creatDevise'),
-    hidden: true,
-  },
-  {
     path: '/redirect',
     component: Layout,
     hidden: true,
@@ -135,6 +130,24 @@ export const constantRoutes = [
         component: () => import('@/views/dashboard/index'),
         name: 'Dashboard',
         meta: { title: '主页', icon: 'dashboard', isAffix: true },
+      },
+      {
+        path: 'product',
+        name: `product`,
+        meta: { title: '商品统计' },
+        component: () => import('@/views/statistic/product/index'),
+      },
+      {
+        path: 'statuser',
+        name: `statuser`,
+        meta: { title: '用户统计' },
+        component: () => import('@/views/statistic/user/index'),
+      },
+      {
+        path: 'transaction',
+        name: `transaction`,
+        meta: { title: '交易统计' },
+        component: () => import('@/views/statistic/transaction/index'),
       },
     ],
   },

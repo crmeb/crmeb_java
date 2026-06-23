@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-dialog title="商品列表" :visible.sync="visible" width="896px" :before-close="handleClose">
+    <el-dialog title="商品列表" :visible.sync="visible" width="896" :before-close="handleClose">
       <good-list
         v-if="visible"
         @getStoreItem="getStoreItem"

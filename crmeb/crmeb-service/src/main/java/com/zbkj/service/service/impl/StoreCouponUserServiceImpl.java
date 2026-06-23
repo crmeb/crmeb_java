@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -12,6 +13,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.CouponConstants;
+import com.zbkj.common.constants.UserConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.coupon.StoreCoupon;
 import com.zbkj.common.model.coupon.StoreCouponUser;
@@ -26,6 +28,7 @@ import com.zbkj.common.response.StoreCouponUserResponse;
 import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.RedisUtil;
+import com.zbkj.common.utils.ValidateFormUtil;
 import com.zbkj.common.vo.MyRecord;
 import com.zbkj.common.vo.OrderInfoDetailVo;
 import com.zbkj.common.vo.OrderInfoVo;
@@ -50,7 +53,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -82,41 +85,47 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
      * 列表
      *
      * @param request          请求参数
-     * @param pageParamRequest 分页类参数
      * @return List<StoreCouponUser>
      */
     @Override
-    public PageInfo<StoreCouponUserResponse> getList(StoreCouponUserSearchRequest request, PageParamRequest pageParamRequest) {
-        Page<StoreCouponUser> storeCouponUserPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-
-        //带 StoreCouponUser 类的多条件查询
-        LambdaQueryWrapper<StoreCouponUser> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        if (!StringUtils.isBlank(request.getName())) {
-            lambdaQueryWrapper.like(StoreCouponUser::getName, request.getName());
+    public PageInfo<StoreCouponUserResponse> getList(StoreCouponUserSearchRequest request) {
+        Map<String, Object> map = CollUtil.newHashMap();
+        if (StrUtil.isNotBlank(request.getContent())) {
+            ValidateFormUtil.validatorUserCommonSearch(request);
+            String keywords = URLUtil.decode(request.getContent());
+            switch (request.getSearchType()) {
+                case UserConstants.USER_SEARCH_TYPE_ALL:
+                    map.put("keywords", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_UID:
+                    map.put("uid", Integer.valueOf(request.getContent()));
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_NICKNAME:
+                    map.put("nickname", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_PHONE:
+                    map.put("phone", request.getContent());
+                    break;
+            }
         }
-
-        if (request.getUid() != null && request.getUid() > 0) {
-            lambdaQueryWrapper.eq(StoreCouponUser::getUid, request.getUid());
+        if (StrUtil.isNotBlank(request.getName())) {
+            String couponName = URLUtil.decode(request.getName());
+            map.put("name", couponName);
         }
-
-        if (request.getStatus() != null) {
-            lambdaQueryWrapper.eq(StoreCouponUser::getStatus, request.getStatus());
+        if (ObjectUtil.isNotNull(request.getStatus())) {
+            map.put("status", request.getStatus());
         }
-
-        if (request.getCouponId() != null) {
-            lambdaQueryWrapper.eq(StoreCouponUser::getCouponId, request.getCouponId());
-        }
-        lambdaQueryWrapper.orderByDesc(StoreCouponUser::getId);
-        List<StoreCouponUser> storeCouponUserList = dao.selectList(lambdaQueryWrapper);
-        if (storeCouponUserList.size() < 1) {
-            return new PageInfo<>();
+        Page<StoreCouponUser> page = PageHelper.startPage(request.getPage(), request.getLimit());
+        List<StoreCouponUser> couponUserList = dao.findCouponReceiveRecordList(map);
+        if (CollUtil.isEmpty(couponUserList)) {
+            return CommonPage.copyPageInfo(page, new ArrayList<>());
         }
         ArrayList<StoreCouponUserResponse> storeCouponUserResponseList = new ArrayList<>();
 
-        List<Integer> uidList = storeCouponUserList.stream().map(StoreCouponUser::getUid).distinct().collect(Collectors.toList());
+        List<Integer> uidList = couponUserList.stream().map(StoreCouponUser::getUid).distinct().collect(Collectors.toList());
         HashMap<Integer, User> userList = userService.getMapListInUid(uidList);
 
-        for (StoreCouponUser storeCouponUser : storeCouponUserList) {
+        for (StoreCouponUser storeCouponUser : couponUserList) {
             StoreCouponUserResponse storeCouponUserResponse = new StoreCouponUserResponse();
             BeanUtils.copyProperties(storeCouponUser, storeCouponUserResponse);
             if (userList.containsKey(storeCouponUser.getUid())) {
@@ -125,7 +134,7 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
             }
             storeCouponUserResponseList.add(storeCouponUserResponse);
         }
-        return CommonPage.copyPageInfo(storeCouponUserPage, storeCouponUserResponseList);
+        return CommonPage.copyPageInfo(page, storeCouponUserResponseList);
     }
 
     /**

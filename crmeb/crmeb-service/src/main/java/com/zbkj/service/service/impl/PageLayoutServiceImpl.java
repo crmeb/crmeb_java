@@ -4,27 +4,23 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
-import com.zbkj.common.constants.Constants;
-import com.zbkj.common.constants.SysConfigConstants;
-import com.zbkj.common.constants.SysGroupDataConstants;
-import com.zbkj.common.constants.UploadConstants;
+import com.zbkj.common.constants.*;
 import com.zbkj.common.exception.CrmebException;
+import com.zbkj.common.model.system.GroupConfig;
 import com.zbkj.common.model.system.SystemGroupData;
 import com.zbkj.common.request.SystemFormItemCheckRequest;
 import com.zbkj.common.response.pagelayout.PageLayoutBottomNavigationResponse;
 import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.common.vo.MyRecord;
-import com.zbkj.service.service.PageLayoutService;
-import com.zbkj.service.service.SystemAttachmentService;
-import com.zbkj.service.service.SystemConfigService;
-import com.zbkj.service.service.SystemGroupDataService;
+import com.zbkj.common.vo.SplashAdConfigVo;
+import com.zbkj.common.vo.SplashAdDataVo;
+import com.zbkj.service.service.*;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -32,7 +28,7 @@ import java.util.stream.Collectors;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -50,6 +46,8 @@ public class PageLayoutServiceImpl implements PageLayoutService {
     private SystemAttachmentService systemAttachmentService;
     @Autowired
     private SystemConfigService systemConfigService;
+    @Autowired
+    private GroupConfigService groupConfigService;
 
     /**
      * 页面首页
@@ -237,6 +235,31 @@ public class PageLayoutServiceImpl implements PageLayoutService {
     }
 
     /**
+     * 获取分类页配置
+     * @return MyRecord
+     */
+    @Override
+    public MyRecord getCategoryConfig() {
+        String categoryConfig = systemConfigService.getValueByKey(Constants.CONFIG_CATEGORY_CONFIG);// 商品分类页配置
+        String isShowCategory = systemConfigService.getValueByKey(Constants.CONFIG_IS_SHOW_CATEGORY);// 是否隐藏一级分类
+        MyRecord record = new MyRecord();
+        record.set("categoryConfig", categoryConfig);
+        record.set("isShowCategory", isShowCategory);
+        return record;
+    }
+
+    @Override
+    public Boolean categoryConfigSave(JSONObject jsonObject) {
+        String categoryConfig = jsonObject.getString(Constants.CONFIG_CATEGORY_CONFIG);
+        String isShowCategory = jsonObject.getString(Constants.CONFIG_IS_SHOW_CATEGORY);
+        return transactionTemplate.execute(e -> {
+            systemConfigService.updateOrSaveValueByName(Constants.CONFIG_CATEGORY_CONFIG, categoryConfig);
+            systemConfigService.updateOrSaveValueByName(Constants.CONFIG_IS_SHOW_CATEGORY, isShowCategory);
+            return Boolean.TRUE;
+        });
+    }
+
+    /**
      * 转换组合数据
      * @param jsonObjectList 数组
      * @param gid gid
@@ -344,4 +367,72 @@ public class PageLayoutServiceImpl implements PageLayoutService {
             return Boolean.TRUE;
         });
     }
+
+    /**
+     * 获取开屏广告配置
+     */
+    @Override
+    public SplashAdConfigVo getSplashAdConfig() {
+        List<String> keyList = new ArrayList<>();
+        keyList.add(SysConfigConstants.SPLASH_AD_SWITCH);
+        keyList.add(SysConfigConstants.SPLASH_AD_SHOW_TIME);
+        keyList.add(SysConfigConstants.SPLASH_AD_SHOW_INTERVAL);
+        MyRecord myRecord = systemConfigService.getValuesByKeyList(keyList);
+        SplashAdConfigVo configVo = new SplashAdConfigVo();
+        configVo.setSplashAdSwitch(myRecord.getInt(SysConfigConstants.SPLASH_AD_SWITCH));
+        configVo.setSplashAdShowTime(myRecord.getInt(SysConfigConstants.SPLASH_AD_SHOW_TIME));
+        configVo.setSplashAdShowInterval(myRecord.getInt(SysConfigConstants.SPLASH_AD_SHOW_INTERVAL));
+
+        List<GroupConfig> configList = groupConfigService.findByTag(GroupConfigConstants.TAG_SPLASH_AD_DATA, Constants.SORT_ASC, null);
+        if (CollUtil.isEmpty(configList)) {
+            configVo.setAdList(new ArrayList<>());
+        } else {
+            Iterator<GroupConfig> iterator = configList.iterator();
+            List<SplashAdDataVo> voList = new ArrayList<>();
+            while (iterator.hasNext()) {
+                GroupConfig config = iterator.next();
+                SplashAdDataVo vo = new SplashAdDataVo();
+                BeanUtils.copyProperties(config, vo);
+                voList.add(vo);
+            }
+            configVo.setAdList(voList);
+        }
+        return configVo;
+    }
+
+    /**
+     * 编辑开屏广告配置
+     */
+    @Override
+    public Boolean splashAdConfigSave(SplashAdConfigVo configVo) {
+        String adSwitch = configVo.getSplashAdSwitch().equals(1) ? "1" : "0";
+        List<GroupConfig> configList = new ArrayList<>();
+        if (CollUtil.isNotEmpty(configVo.getAdList())) {
+            configList = configVo.getAdList().stream().map(data -> {
+                GroupConfig groupConfig = new GroupConfig();
+                groupConfig.setTag(GroupConfigConstants.TAG_SPLASH_AD_DATA);
+                groupConfig.setName(data.getName());
+                groupConfig.setLinkUrl(data.getLinkUrl());
+                groupConfig.setImageUrl(data.getImageUrl());
+                groupConfig.setSort(data.getSort());
+                groupConfig.setStatus(true);
+                return groupConfig;
+            }).collect(Collectors.toList());
+        }
+        List<GroupConfig> finalConfigList = configList;
+        return transactionTemplate.execute(e -> {
+            systemConfigService.updateOrSaveValueByName(SysConfigConstants.SPLASH_AD_SWITCH, adSwitch);
+            systemConfigService.updateOrSaveValueByName(SysConfigConstants.SPLASH_AD_SHOW_TIME, configVo.getSplashAdShowTime().toString());
+            systemConfigService.updateOrSaveValueByName(SysConfigConstants.SPLASH_AD_SHOW_INTERVAL, configVo.getSplashAdShowInterval().toString());
+
+            if (CollUtil.isEmpty(finalConfigList)) {
+                groupConfigService.deleteByTag(GroupConfigConstants.TAG_SPLASH_AD_DATA);
+            } else {
+                groupConfigService.saveList(finalConfigList);
+            }
+            return Boolean.TRUE;
+        });
+    }
+
+
 }

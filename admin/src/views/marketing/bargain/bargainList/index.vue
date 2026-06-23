@@ -4,7 +4,8 @@
       <div class="padding-add">
         <el-form inline size="small" label-width="75px">
           <el-form-item label="时间选择：">
-            <el-date-picker
+            <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
+            <!-- <el-date-picker
               v-model="timeVal"
               value-format="yyyy-MM-dd"
               format="yyyy-MM-dd"
@@ -16,7 +17,7 @@
               @change="onchangeTime"
               start-placeholder="开始时间"
               end-placeholder="结束时间"
-            />
+            /> -->
           </el-form-item>
           <el-form-item label="砍价状态：">
             <el-select
@@ -30,6 +31,13 @@
               <el-option label="未完成" :value="2" />
               <el-option label="已成功" :value="3" />
             </el-select>
+          </el-form-item>
+          <el-form-item label="用户搜索：">
+            <UserSearchInput ref="userSearchInput" v-model="tableFrom" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" size="small" @click="getList(1)">搜索</el-button>
+            <el-button size="small" @click="handleReset">重置</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -138,6 +146,8 @@ export default {
       tableFrom: {
         dateLimit: '',
         status: '',
+        content: '',
+        searchType: 'all',
         page: 1,
         limit: 20,
       },
@@ -200,6 +210,20 @@ export default {
     },
     handleSizeChange(val) {
       this.tableFrom.limit = val;
+      this.getList();
+    },
+    //重置
+    handleReset() {
+      this.tableFrom.dateLimit = '';
+      this.tableFrom.content = '';
+      this.tableFrom.searchType = 'all';
+      this.timeVal = []
+      this.tableFrom.status = ''
+      this.getList();
+    },
+    // 搜索
+    seachList() {
+      this.tableFrom.page = 1;
       this.getList();
     },
   },

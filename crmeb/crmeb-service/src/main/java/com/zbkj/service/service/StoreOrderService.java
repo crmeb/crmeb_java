@@ -19,7 +19,7 @@ import java.util.Map;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -31,10 +31,9 @@ public interface StoreOrderService extends IService<StoreOrder> {
     /**
      * 列表（PC）
      * @param request 请求参数
-     * @param pageParamRequest 分页类参数
      * @return CommonPage<StoreOrderDetailResponse>
      */
-    CommonPage<StoreOrderDetailResponse> getAdminList(StoreOrderSearchRequest request, PageParamRequest pageParamRequest);
+    CommonPage<StoreOrderDetailResponse> getAdminList(StoreOrderSearchRequest request);
 
     /**
      * 核销列表
@@ -239,12 +238,10 @@ public interface StoreOrderService extends IService<StoreOrder> {
 
     /**
      * 获取订单状态数量
-     * @param dateLimit 时间端
-     * @param type 订单类型：0普通订单，1-视频号订单, 2-全部订单
-     * @param orderNo 订单号
+     * @param request 订单表头请求对象
      * @return StoreOrderCountItemResponse
      */
-    StoreOrderCountItemResponse getOrderStatusNum(String dateLimit, Integer type, String orderNo);
+    StoreOrderCountItemResponse getOrderStatusNum(StoreOrderTabsNumRequest request);
 
     /**
      * 获取订单统计数据
@@ -260,12 +257,12 @@ public interface StoreOrderService extends IService<StoreOrder> {
      */
     Boolean delete(String orderNo);
 
-//    /**
-//     * 视频订单发货
-//     * @param request 发货请求参数
-//     * @return Boolean
-//     */
-//    Boolean videoSend(VideoOrderSendRequest request);
+    /**
+     * 视频订单发货
+     * @param request 发货请求参数
+     * @return Boolean
+     */
+    Boolean videoSend(VideoOrderSendRequest request);
 
     /**
      * 通过日期获取商品交易件数

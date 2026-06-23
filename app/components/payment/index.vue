@@ -53,18 +53,12 @@
 				formContent:'',
 				payChannel:'',
 				//支付方式
-				payMode: [
-					{
+				payMode: [{
 						"name": "微信支付",
 						"icon": "icon-weixin2",
 						value: 'weixin',
 						title: '微信快捷支付',
-						// #ifdef APP
-						payStatus: 0,
-						// #endif
-						// #ifndef APP
 						payStatus: 1,
-						// #endif
 					},
 					{
 						"name": "余额支付",
@@ -74,6 +68,15 @@
 						payStatus: 1,
 						number: 0
 					},
+					// #ifndef MP
+					{
+						"name": "支付宝支付",
+						"icon": "icon-zhifubao",
+						value: 'alipay',
+						title: '支付宝快捷支付',
+						payStatus: 1,
+					}
+					// #endif
 				],
 			};
 		},
@@ -90,10 +93,8 @@
 			},
 			payConfig(){
 				getPayConfig().then(res=>{
-					this.payMode[1].payStatus = res.data.yuePayStatus === "'1'" ? 1 : 0;
-					// #ifndef APP
-					this.payMode[0].payStatus = res.data.payWeixinOpen === "'1'" ? 1 : 0;
-					// #endif
+					this.payMode[1].payStatus = parseInt(res.data.yuePayStatus) === 1 ? 1 : 2;
+					this.payMode[0].payStatus = parseInt(res.data.payWeixinOpen) === 1 ? 1 : 0;
 				})
 			},
 			goPay: function(number, paytype) {
@@ -332,7 +333,7 @@
 						"timestamp": Number(jsConfig.timeStamp), // 时间戳（单位：秒）
 						"sign": this.systemPlatform === 'ios' ? 'MD5' : jsConfig
 							.paySign // 签名，这里用的 MD5 签名
-					}, //订单数据 【注意微信的订单信息，键值应该全部是小写，不能采用驼峰命名】
+					}, //微信、支付宝订单数据 【注意微信的订单信息，键值应该全部是小写，不能采用驼峰命名】
 					success: (e) => {
 						uni.hideLoading();
 						let url = '/pages/order/order_pay_status/index?order_id=' + that.order_id;

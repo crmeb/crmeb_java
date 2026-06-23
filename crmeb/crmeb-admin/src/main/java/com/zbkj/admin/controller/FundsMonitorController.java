@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  *  +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -47,26 +47,24 @@ public class FundsMonitorController {
     /**
      * 分页显示资金监控
      * @param request 搜索条件
-     * @param pageParamRequest 分页参数
      */
     @PreAuthorize("hasAuthority('admin:finance:monitor:list')")
     @ApiOperation(value = "资金监控")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public CommonResult<CommonPage<MonitorResponse>> getList(@Validated FundsMonitorRequest request, @Validated PageParamRequest pageParamRequest){
-        CommonPage<MonitorResponse> userExtractCommonPage = CommonPage.restPage(userBillService.fundMonitoring(request, pageParamRequest));
+    public CommonResult<CommonPage<MonitorResponse>> getList(@Validated FundsMonitorRequest request){
+        CommonPage<MonitorResponse> userExtractCommonPage = CommonPage.restPage(userBillService.fundMonitoring(request));
         return CommonResult.success(userExtractCommonPage);
     }
 
     /**
      * 佣金记录
      * @param request 搜索条件
-     * @param pageParamRequest 分页参数
      */
     @PreAuthorize("hasAuthority('admin:finance:monitor:brokerage:record')")
     @ApiOperation(value = "佣金记录")
     @RequestMapping(value = "/brokerage/record", method = RequestMethod.GET)
-    public CommonResult<CommonPage<UserBrokerageRecord>> brokerageRecord(@Validated BrokerageRecordRequest request, @Validated PageParamRequest pageParamRequest){
-        return CommonResult.success(CommonPage.restPage(userFundsMonitorService.getBrokerageRecord(request, pageParamRequest)));
+    public CommonResult<CommonPage<UserBrokerageRecord>> brokerageRecord(@Validated BrokerageRecordRequest request){
+        return CommonResult.success(CommonPage.restPage(userFundsMonitorService.getBrokerageRecord(request)));
     }
 }
 

@@ -5,6 +5,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -14,6 +15,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.zbkj.common.config.CrmebConfig;
 import com.zbkj.common.constants.*;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.combination.StorePink;
@@ -27,10 +29,13 @@ import com.zbkj.common.model.system.SystemStore;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.model.user.UserBrokerageRecord;
 import com.zbkj.common.model.user.UserToken;
+import com.zbkj.common.model.wechat.video.PayComponentDeliveryCompany;
+import com.zbkj.common.model.wechat.video.PayComponentOrder;
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.*;
 import com.zbkj.common.request.onepass.OnePassShipmentCreateOrderRequest;
 import com.zbkj.common.response.*;
+import com.zbkj.common.result.CommonResultCode;
 import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.common.utils.RedisUtil;
@@ -57,7 +62,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -133,39 +138,94 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     private UserBrokerageRecordService userBrokerageRecordService;
 
     @Autowired
+    private PayComponentOrderService componentOrderService;
+
+    @Autowired
+    private WechatVideoDeliveryService wechatVideoDeliveryService;
+
+    @Autowired
+    private PayComponentDeliveryCompanyService componentDeliveryCompanyService;
+
+    @Autowired
+    private AliPayService aliPayService;
+
+    @Autowired
     private SystemNotificationService systemNotificationService;
 
     @Autowired
     private SmsTemplateService smsTemplateService;
 
-
-//    @Autowired
-//    private WechatOrderShippingService wechatOrderShippingService;
+    @Autowired
+    private WechatOrderShippingService wechatOrderShippingService;
+    @Autowired
+    private CrmebConfig crmebConfig;
 
     /**
     * 列表
     * @param request 请求参数
-    * @param pageParamRequest 分页类参数
     * @return CommonPage<StoreOrderDetailResponse>
     */
     @Override
-    public CommonPage<StoreOrderDetailResponse> getAdminList(StoreOrderSearchRequest request, PageParamRequest pageParamRequest) {
-        Page<Object> startPage = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
-        QueryWrapper<StoreOrder> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("id", "order_id", "uid", "real_name", "pay_price", "pay_type", "create_time", "status", "refund_status"
-                , "refund_reason_wap_img", "refund_reason_wap_explain", "refund_reason_wap", "refund_reason", "refund_reason_time"
-                , "is_del", "combination_id", "pink_id", "seckill_id", "bargain_id", "verify_code", "remark", "paid", "is_system_del"
-                , "shipping_type", "type", "is_alter_price", "pro_total_price", "is_alter_price", "coupon_price");
+    public CommonPage<StoreOrderDetailResponse> getAdminList(StoreOrderSearchRequest request) {
+        Page<Object> startPage = PageHelper.startPage(request.getPage(), request.getLimit());
+        //QueryWrapper<StoreOrder> queryWrapper = new QueryWrapper<>();
+        //queryWrapper.select("id", "order_id", "uid", "real_name", "pay_price", "pay_type", "create_time", "status", "refund_status"
+        //        , "refund_reason_wap_img", "refund_reason_wap_explain", "refund_reason_wap", "refund_reason", "refund_reason_time"
+        //        , "is_del", "combination_id", "pink_id", "seckill_id", "bargain_id", "verify_code", "remark", "paid", "is_system_del"
+        //        , "shipping_type", "type", "is_alter_price", "pro_total_price", "is_alter_price", "coupon_price");
+        //if (StrUtil.isNotBlank(request.getOrderNo())) {
+        //    queryWrapper.eq("order_id", request.getOrderNo());
+        //}
+        //getRequestTimeWhere(queryWrapper, request);
+        //getStatusWhere(queryWrapper, request.getStatus());
+        //if (!request.getType().equals(2)) {
+        //    queryWrapper.eq("type", request.getType());
+        //}
+        //queryWrapper.orderByDesc("id");
+        //List<StoreOrder> orderList = dao.selectList(queryWrapper);
+        Map<String, Object> map = CollUtil.newHashMap();
+        map.put("status", request.getStatus());
+        if (StrUtil.isNotBlank(request.getContent())) {
+            ValidateFormUtil.validatorUserCommonSearch(request);
+            String keywords = URLUtil.decode(request.getContent());
+            switch (request.getSearchType()) {
+                case UserConstants.USER_SEARCH_TYPE_ALL:
+                    map.put("keywords", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_UID:
+                    map.put("uid", Integer.valueOf(request.getContent()));
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_NICKNAME:
+                    map.put("nickname", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_PHONE:
+                    map.put("phone", request.getContent());
+                    break;
+            }
+        }
+        //时间范围
+        if (StrUtil.isNotBlank(request.getDateLimit())) {
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
+            //判断时间
+            int compareDateResult = CrmebDateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), DateConstants.DATE_FORMAT);
+            if (compareDateResult == -1) {
+                throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "开始时间不能大于结束时间！");
+            }
+            if (StrUtil.isNotBlank(dateLimit.getStartTime())) {
+                map.put("startTime", dateLimit.getStartTime());
+                map.put("endTime", dateLimit.getEndTime());
+            }
+        }
         if (StrUtil.isNotBlank(request.getOrderNo())) {
-            queryWrapper.eq("order_id", request.getOrderNo());
+            map.put("orderNo", URLUtil.decode(request.getOrderNo()));
         }
-        getRequestTimeWhere(queryWrapper, request);
-        getStatusWhere(queryWrapper, request.getStatus());
+        if (StrUtil.isNotBlank(request.getDeliveryId())) {
+            map.put("deliveryId", URLUtil.decode(request.getDeliveryId()));
+        }
         if (!request.getType().equals(2)) {
-            queryWrapper.eq("type", request.getType());
+            map.put("type", request.getType());
         }
-        queryWrapper.orderByDesc("id");
-        List<StoreOrder> orderList = dao.selectList(queryWrapper);
+        List<StoreOrder> orderList = dao.getAdminOrderList(map);
         List<StoreOrderDetailResponse> detailResponseList = new ArrayList<>();
         if (CollUtil.isNotEmpty(orderList)) {
             detailResponseList = formatOrder1(orderList);
@@ -202,6 +262,15 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     public PageInfo<StoreOrder> getUserOrderList_2_3(String keywords,
                                                  Integer uid, Integer status, PageParamRequest pageParamRequest) {
         Page<StoreOrder> page = PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
+        // 新需求：H5订单列表，增加关键字搜索功能--> 所以注掉以下代码
+//        LambdaQueryWrapper<StoreOrder> lqw = new LambdaQueryWrapper<>();
+//        if(StrUtil.isNotBlank(keywords)){
+//            orderUtils.statusApiByWhere(lqw, status);
+//            lqw.eq(StoreOrder::getUid, uid);
+//            lqw.orderByDesc(StoreOrder::getId);
+//            List<StoreOrder> storeOrders = dao.selectList(lqw);
+//            return CommonPage.copyPageInfo(page, storeOrders);
+//        }
         Map<String, Object> searchMap = new HashMap<>();
         String searchKey = URLUtil.decode(keywords);
         searchMap.put("keywords", searchKey);
@@ -307,6 +376,11 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
 
         //获取订单详情map
         HashMap<Integer, List<StoreOrderInfoOldVo>> orderInfoList = StoreOrderInfoService.getMapInId(orderIdList);
+//
+//        //根据用户获取信息
+//        List<Integer> userIdList = orderList.stream().map(StoreOrder::getUid).distinct().collect(Collectors.toList());
+//        //订单用户信息
+//        HashMap<Integer, User> userList = userService.getMapListInUid(userIdList);
 
         for (StoreOrder storeOrder : orderList) {
             StoreOrderDetailResponse storeOrderItemResponse = new StoreOrderDetailResponse();
@@ -565,6 +639,15 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
                 throw new CrmebException("微信申请退款失败！");
             }
         }
+        if (storeOrder.getPayType().equals(Constants.PAY_TYPE_ALI_PAY) && request.getAmount().compareTo(BigDecimal.ZERO) > 0) {
+            try {
+                aliPayService.refund(request, storeOrder);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new CrmebException("支付宝申请退款失败！");
+            }
+        }
+
         //修改订单退款状态
         storeOrder.setRefundStatus(3);
         storeOrder.setRefundPrice(request.getAmount());
@@ -603,10 +686,48 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
             storeOrderStatusService.saveRefund(storeOrder.getId(), request.getAmount(), "失败");
             throw new CrmebException("订单更新失败");
         }
+
+        // 发送消息通知
+//        HashMap<String, String> temMap = new HashMap<>();
+//        temMap.put(Constants.WE_CHAT_TEMP_KEY_FIRST, "您的订单退款申请被通过，钱款将退还至您的支付账户，请耐心等待。");
+//        temMap.put("keyword1", storeOrder.getOrderId());
+//        temMap.put("keyword2", storeOrder.getPayPrice().toString());
+//        temMap.put("keyword3", DateUtil.dateToStr(storeOrder.getCreateTime(), Constants.DATE_FORMAT));
+//        temMap.put(Constants.WE_CHAT_TEMP_KEY_END, "感谢你的使用。");
+//        pushMessageRefundOrder(storeOrder, user, temMap);
         return execute;
     }
 
-
+    /**
+     * 发送消息通知
+     * 根据用户类型发送
+     * 公众号模板消息
+     * 小程序订阅消息
+     */
+//    private void pushMessageRefundOrder(StoreOrder storeOrder, User user, HashMap<String, String> temMap) {
+//        if (user.getUserType().equals(UserConstants.USER_TYPE_H5)) {
+//            return;
+//        }
+//        UserToken userToken;
+//        // 公众号
+//        if (user.getUserType().equals(UserConstants.USER_TYPE_WECHAT)) {
+//            userToken = userTokenService.getTokenByUserId(user.getUid(), UserConstants.USER_TOKEN_TYPE_WECHAT);
+//            if (ObjectUtil.isNull(userToken)) {
+//                return ;
+//            }
+//            // 发送微信模板消息
+//            templateMessageService.pushTemplateMessage(Constants.WE_CHAT_TEMP_KEY_ORDER_REFUND, temMap, userToken.getToken());
+//            return;
+//        }
+//        // 小程序发送订阅消息
+//        String storeNameAndCarNumString = orderUtils.getStoreNameAndCarNumString(storeOrder.getId());
+//        if (StringUtils.isNotBlank(storeNameAndCarNumString)) {
+//            WechatSendMessageForPaySuccess paySuccess = new WechatSendMessageForPaySuccess(
+//                    storeOrder.getId()+"",storeOrder.getPayPrice()+"",storeOrder.getPayTime()+"","暂无",
+//                    storeOrder.getTotalPrice()+"",storeNameAndCarNumString);
+//            orderUtils.sendWeiChatMiniMessageForPaySuccess(paySuccess, userService.getById(storeOrder).getUid());
+//        }
+//    }
 
     /**
      * 订单详情（PC）
@@ -648,8 +769,11 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         storeOrderInfoResponse.setProTotalPrice(storeOrder.getTotalPrice().subtract(storeOrder.getTotalPostage()));
 
         // 手机号脱敏处理
-        storeOrderInfoResponse.setUserPhone(CrmebUtil.maskMobile(storeOrderInfoResponse.getUserPhone()));
-        storeOrderInfoResponse.setPhone(CrmebUtil.maskMobile(storeOrderInfoResponse.getPhone()));
+        if (crmebConfig.getDemoSite()) {
+            storeOrderInfoResponse.setUserPhone(CrmebUtil.maskMobile(storeOrderInfoResponse.getUserPhone()));
+            storeOrderInfoResponse.setPhone(CrmebUtil.maskMobile(storeOrderInfoResponse.getPhone()));
+
+        }
         return storeOrderInfoResponse;
     }
 
@@ -1026,7 +1150,7 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         lqw.eq(StoreOrder::getUid, userId);
         lqw.eq(StoreOrder::getPaid, true);
         lqw.eq(StoreOrder::getIsDel, false);
-        lqw.lt(StoreOrder::getRefundStatus, 2);
+        //lqw.lt(StoreOrder::getRefundStatus, 2);
         lqw.orderByDesc(StoreOrder::getId);
         return dao.selectList(lqw);
     }
@@ -1172,31 +1296,28 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
      * @return StoreOrderCountItemResponse
      */
     @Override
-    public StoreOrderCountItemResponse getOrderStatusNum(String dateLimit, Integer type, String orderNo) {
+    public StoreOrderCountItemResponse getOrderStatusNum(StoreOrderTabsNumRequest request) {
         StoreOrderCountItemResponse response = new StoreOrderCountItemResponse();
-        if (type.equals(2)) {
-            type = null;
-        }
         // 全部订单
-        response.setAll(getCount(dateLimit, Constants.ORDER_STATUS_ALL, type, orderNo));
+        response.setAll(getCount(request, Constants.ORDER_STATUS_ALL));
         // 未支付订单
-        response.setUnPaid(getCount(dateLimit, Constants.ORDER_STATUS_UNPAID, type, orderNo));
+        response.setUnPaid(getCount(request, Constants.ORDER_STATUS_UNPAID));
         // 未发货订单
-        response.setNotShipped(getCount(dateLimit, Constants.ORDER_STATUS_NOT_SHIPPED, type, orderNo));
+        response.setNotShipped(getCount(request, Constants.ORDER_STATUS_NOT_SHIPPED));
         // 待收货订单
-        response.setSpike(getCount(dateLimit, Constants.ORDER_STATUS_SPIKE, type, orderNo));
+        response.setSpike(getCount(request, Constants.ORDER_STATUS_SPIKE));
         // 待评价订单
-        response.setBargain(getCount(dateLimit, Constants.ORDER_STATUS_BARGAIN, type, orderNo));
+        response.setBargain(getCount(request, Constants.ORDER_STATUS_BARGAIN));
         // 交易完成订单
-        response.setComplete(getCount(dateLimit, Constants.ORDER_STATUS_COMPLETE, type, orderNo));
+        response.setComplete(getCount(request, Constants.ORDER_STATUS_COMPLETE));
         // 待核销订单
-        response.setToBeWrittenOff(getCount(dateLimit, Constants.ORDER_STATUS_TOBE_WRITTEN_OFF, type, orderNo));
+        response.setToBeWrittenOff(getCount(request, Constants.ORDER_STATUS_TOBE_WRITTEN_OFF));
         // 退款中订单
-        response.setRefunding(getCount(dateLimit, Constants.ORDER_STATUS_REFUNDING, type, orderNo));
+        response.setRefunding(getCount(request, Constants.ORDER_STATUS_REFUNDING));
         // 已退款订单
-        response.setRefunded(getCount(dateLimit, Constants.ORDER_STATUS_REFUNDED, type, orderNo));
+        response.setRefunded(getCount(request, Constants.ORDER_STATUS_REFUNDED));
         // 已删除订单
-        response.setDeleted(getCount(dateLimit, Constants.ORDER_STATUS_DELETED, type, orderNo));
+        response.setDeleted(getCount(request, Constants.ORDER_STATUS_DELETED));
         return response;
     }
 
@@ -1236,6 +1357,69 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         storeOrder.setIsSystemDel(true);
         storeOrder.setUpdateTime(DateUtil.date());
         return updateById(storeOrder);
+    }
+
+    /**
+     * 视频订单发货
+     * @param request 发货请求参数
+     * @return Boolean
+     */
+    @Override
+    public Boolean videoSend(VideoOrderSendRequest request) {
+        //订单信息
+        StoreOrder storeOrder = getInfoException(request.getOrderNo());
+        if (storeOrder.getIsDel()) throw new CrmebException("订单已删除,不能发货!");
+        if (storeOrder.getStatus() > 0) throw new CrmebException("订单已发货请勿重复操作!");
+        PayComponentOrder componentOrder = componentOrderService.getByOrderNo(request.getOrderNo());
+        if (ObjectUtil.isNull(componentOrder)) {
+            throw new CrmebException("为找到对应视频订单");
+        }
+        if (!componentOrder.getStatus().equals(20)) {
+            throw new CrmebException("视频订单不处于可发货状态");
+        }
+        PayComponentDeliveryCompany deliveryCompany = componentDeliveryCompanyService.getByDeliveryId(request.getDeliveryId());
+        if (ObjectUtil.isNull(deliveryCompany)) {
+            throw new CrmebException("快递公司不存在");
+        }
+        DeliverySendVo deliverySendVo = new DeliverySendVo();
+        deliverySendVo.setOutOrderId(componentOrder.getOrderNo());
+        deliverySendVo.setOpenid(componentOrder.getOpenid());
+        deliverySendVo.setFinishSllDelivery(1);
+        DeliveryInfoVo deliveryInfoVo = new DeliveryInfoVo();
+        deliveryInfoVo.setDeliveryId(request.getDeliveryId());
+        deliveryInfoVo.setWaybillId(request.getWaybillId());
+        List<DeliveryInfoVo> deliveryInfoVoList = CollUtil.newArrayList();
+        deliveryInfoVoList.add(deliveryInfoVo);
+        deliverySendVo.setDeliveryList(deliveryInfoVoList);
+        Boolean deliverySend = wechatVideoDeliveryService.shopDeliverySend(deliverySendVo);
+        if (!deliverySend) {
+            throw new CrmebException("发货失败");
+        }
+        storeOrder.setDeliveryCode(deliveryCompany.getDeliveryId());
+        storeOrder.setDeliveryName(deliveryCompany.getDeliveryName());
+        storeOrder.setDeliveryId(request.getWaybillId());
+        storeOrder.setStatus(1);
+        storeOrder.setDeliveryType("express");
+
+        componentOrder.setStatus(30);
+        componentOrder.setFinishAllDelivery(deliverySendVo.getFinishSllDelivery());
+        componentOrder.setDeliveryList(JSONArray.toJSONString(deliverySendVo.getDeliveryList()));
+
+        String message = Constants.ORDER_LOG_MESSAGE_EXPRESS.replace("{deliveryName}", deliveryCompany.getDeliveryName()).replace("{deliveryCode}", request.getWaybillId());
+
+        storeOrder.setUpdateTime(DateUtil.date());
+        Boolean execute = transactionTemplate.execute(i -> {
+            updateById(storeOrder);
+            componentOrderService.updateById(componentOrder);
+            //订单记录增加
+            storeOrderStatusService.createLog(storeOrder.getId(), Constants.ORDER_LOG_EXPRESS, message);
+            return Boolean.TRUE;
+        });
+
+        if (!execute) throw new CrmebException("快递发货失败！");
+
+        sendGoodsNotify(storeOrder);
+        return true;
     }
 
     /**
@@ -1546,13 +1730,13 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
             default:
                 throw new CrmebException("类型错误");
         }
-
-        storeOrder.setUpdateTime(DateUtil.date());
-        return transactionTemplate.execute(e -> {
-            updateById(storeOrder);
-            storeOrderStatusService.createLog(storeOrder.getId(), Constants.ORDER_LOG_EXPRESS, StrUtil.format("变更运单号,快递公司:{},运单号:{}", storeOrder.getDeliveryName(), storeOrder.getDeliveryId()));
-            return Boolean.TRUE;
-        });
+        //storeOrder.setUpdateTime(DateUtil.date());
+        //return transactionTemplate.execute(e -> {
+        //    updateById(storeOrder);
+        //    storeOrderStatusService.createLog(storeOrder.getId(), Constants.ORDER_LOG_EXPRESS, StrUtil.format("变更运单号,快递公司:{},运单号:{}", storeOrder.getDeliveryName(), storeOrder.getDeliveryId()));
+        //    return Boolean.TRUE;
+        //});
+        return Boolean.TRUE;
     }
 
 
@@ -1712,6 +1896,13 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
 
         sendGoodsNotify(storeOrder);
 
+        // 小程序发货管理
+        if (storeOrder.getPayType().equals(PayConstants.PAY_TYPE_WE_CHAT) && storeOrder.getIsChannel().equals(1)) {
+            String shippingSwitch = systemConfigService.getValueByKey(WeChatConstants.CONFIG_WECHAT_ROUTINE_SHIPPING_SWITCH);
+            if (StrUtil.isNotBlank(shippingSwitch) && shippingSwitch.equals("1")) {
+                wechatOrderShippingService.uploadShippingInfo(storeOrder.getOrderId());
+            }
+        }
         return mianDianResult;
     }
 
@@ -1914,6 +2105,12 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         User user = userService.getById(storeOrder.getUid());
         // 发送消息通知
         pushMessageDeliveryOrder(storeOrder, user, request, productNameList);
+        if (storeOrder.getPayType().equals(PayConstants.PAY_TYPE_WE_CHAT) && storeOrder.getIsChannel().equals(1)) {
+            String shippingSwitch = systemConfigService.getValueByKey(WeChatConstants.CONFIG_WECHAT_ROUTINE_SHIPPING_SWITCH);
+            if (StrUtil.isNotBlank(shippingSwitch) && shippingSwitch.equals("1")) {
+                wechatOrderShippingService.uploadVirtualShippingInfo(storeOrder.getOrderId());
+            }
+        }
     }
 
     /**
@@ -2014,26 +2211,54 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
 
     /**
      * 获取订单总数
-     * @param dateLimit 时间端
+     * @param request 订单表头请求对象
      * @param status String 状态
-     * @param orderNo 订单号
      * @return Integer
      */
-    private Integer getCount(String dateLimit, String status, Integer type, String orderNo) {
-        //总数只计算时间
-        QueryWrapper<StoreOrder> queryWrapper = new QueryWrapper<>();
-        if (StrUtil.isNotBlank(dateLimit)) {
-            DateLimitUtilVo dateLimitUtilVo = CrmebDateUtil.getDateLimit(dateLimit);
-            queryWrapper.between("create_time", dateLimitUtilVo.getStartTime(), dateLimitUtilVo.getEndTime());
+    private Integer getCount(StoreOrderTabsNumRequest request, String status) {
+        HashMap<String, Object> map = CollUtil.newHashMap();
+        map.put("status", status);
+        if (StrUtil.isNotBlank(request.getContent())) {
+            ValidateFormUtil.validatorUserCommonSearch(request);
+            String keywords = URLUtil.decode(request.getContent());
+            switch (request.getSearchType()) {
+                case UserConstants.USER_SEARCH_TYPE_ALL:
+                    map.put("keywords", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_UID:
+                    map.put("uid", Integer.valueOf(request.getContent()));
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_NICKNAME:
+                    map.put("nickname", keywords);
+                    break;
+                case UserConstants.USER_SEARCH_TYPE_PHONE:
+                    map.put("phone", request.getContent());
+                    break;
+            }
         }
-        getStatusWhereNew(queryWrapper, status);
-        if (ObjectUtil.isNotNull(type)) {
-            queryWrapper.eq("type", type);
+        //时间范围
+        if (StrUtil.isNotBlank(request.getDateLimit())) {
+            DateLimitUtilVo dateLimit = CrmebDateUtil.getDateLimit(request.getDateLimit());
+            //判断时间
+            int compareDateResult = CrmebDateUtil.compareDate(dateLimit.getEndTime(), dateLimit.getStartTime(), DateConstants.DATE_FORMAT);
+            if (compareDateResult == -1) {
+                throw new CrmebException(CommonResultCode.VALIDATE_FAILED, "开始时间不能大于结束时间！");
+            }
+            if (StrUtil.isNotBlank(dateLimit.getStartTime())) {
+                map.put("startTime", dateLimit.getStartTime());
+                map.put("endTime", dateLimit.getEndTime());
+            }
         }
-        if (StringUtils.isNotBlank(orderNo)) {
-            queryWrapper.eq("order_id", orderNo);
+        if (StrUtil.isNotBlank(request.getOrderNo())) {
+            map.put("orderNo", URLUtil.decode(request.getOrderNo()));
         }
-        return dao.selectCount(queryWrapper);
+        if (StrUtil.isNotBlank(request.getDeliveryId())) {
+            map.put("deliveryId", URLUtil.decode(request.getDeliveryId()));
+        }
+        if (!request.getType().equals(2)) {
+            map.put("type", request.getType());
+        }
+        return dao.getAdminOrderCount(map);
     }
 
     /**
@@ -2204,8 +2429,6 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
                 queryWrapper.eq("is_del", 1);
                 break;
             default:
-                //queryWrapper.eq("paid", 1);
-                //queryWrapper.ne("refund_status", 2);
                 break;
         }
         queryWrapper.eq("is_system_del", 0);

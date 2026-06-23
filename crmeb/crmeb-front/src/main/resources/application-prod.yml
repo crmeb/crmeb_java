@@ -1,6 +1,6 @@
 # CRMEB 相关配置
 crmeb:
-  version: CRMEB-JAVA-KY-v1.4 # 当前代码版本
+  version: CRMEB-JAVA-SY-v2.4 # 当前代码版本
   imagePath: /JAVA_PROJECT/SINGLE/demo/admin/ # 服务器图片路径配置 斜杠结尾
   asyncConfig: true #是否同步config表数据到redis
 
@@ -14,14 +14,14 @@ spring:
     #  数据库配置
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/java_demo?characterEncoding=utf-8&useSSL=false&serverTimeZone=GMT+8
     username: java_demo
-    password: 111111
+    password: xaNcFR3NhzrEkf3X
   redis:
     host: 127.0.0.1 #地址
     port: 6379 #端口
-    password: 111111
+    password: redis_dMtNMj
     timeout: 10000 # 连接超时时间（毫秒）
     database: 4 #默认数据库
     jedis:

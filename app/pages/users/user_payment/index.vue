@@ -78,6 +78,7 @@
 		getRechargeApi,
 		transferIn,
 		appWechat,
+		alipayFull
 	} from '@/api/user.js';
 	import { wechatQueryPayResult,getOrderPayConfig} from '@/api/order.js';
 	import {
@@ -111,13 +112,17 @@
 						"icon": "icon-weixin2",
 						value: 'weixin',
 						title: '微信快捷支付',
-						// #ifdef APP
-						payStatus: 0,
-						// #endif
-						// #ifndef APP
 						payStatus: 1,
-						// #endif
 					},
+					// #ifndef MP
+					{
+						"name": "支付宝支付",
+						"icon": "icon-zhifubao",
+						value: 'alipay',
+						title: '支付宝快捷支付',
+						payStatus: 1,
+					}
+					// #endif
 				],
 				payType: 'weixin', //支付方式
 				openType: 1, //优惠券打开方式 1=使用
@@ -192,7 +197,7 @@
 				getOrderPayConfig().then(res=>{
 					this.cartArr[0].payStatus = res.data.payWechatOpen ? 1 : 0;
 					// #ifndef MP
-					// this.cartArr[1].payStatus = res.data.aliPayStatus ? 1 : 0;
+					this.cartArr[1].payStatus = res.data.aliPayStatus ? 1 : 0;
 					// #endif
 					if(this.$wechat.isWeixin()) this.cartArr.pop();
 				})
@@ -296,7 +301,7 @@
 									"prepayid": jsConfig.packages, // 统一下单订单号 
 									"timestamp": Number(jsConfig.timeStamp), // 时间戳（单位：秒）
 									"sign": this.systemPlatform === 'ios' ? 'MD5' : jsConfig.paySign // 签名，这里用的 MD5 签名
-								}, //订单数据 【注意微信的订单信息，键值应该全部是小写，不能采用驼峰命名】
+								}, //微信、支付宝订单数据 【注意微信的订单信息，键值应该全部是小写，不能采用驼峰命名】
 								success: function(res) {
 									that.$store.commit("changInfo", {
 										amount1: 'nowMoney',
@@ -428,6 +433,73 @@
 									title: res
 								});
 							})
+							// #endif
+							break;
+						case 'alipay':
+							// alipayFull
+							// #ifdef APP-PLUS
+							alipayFull({
+								from: 'appAliPay',
+								price: money,
+								payType: 'alipay',
+								rechar_id: this.rechar_id 
+							}).then(res => {
+								uni.hideLoading();
+								let alipayRequest = res.data.alipayRequest;
+								uni.requestPayment({
+									provider: 'alipay',
+									orderInfo: alipayRequest,
+									success: (e) => {
+										return that.$util.Tips({
+											title: '支付成功',
+											icon: 'success'
+										}, {
+											tab: 5,
+											url: '/pages/users/user_money/index'
+										});
+									},
+									fail: (e) => {
+										return that.$util.Tips({
+											title: '支付失败'
+										});
+									},
+									complete: () => {
+										uni.hideLoading();
+									},
+								});
+								
+							}).catch(err => {
+								uni.hideLoading();
+								return that.$util.Tips({
+									title: err
+								})
+							});
+							// #endif
+							// #ifdef H5
+							if (this.$wechat.isWeixin()) {
+								uni.redirectTo({
+									url: `/pages/users/alipay_invoke/index?price=${money}&rechar_id=${this.rechar_id}&type=users`
+								});
+							} else{
+								alipayFull({
+									from: 'alipay',
+									price: money,
+									payType: 'alipay',
+									rechar_id: this.rechar_id
+								}).then(res => {
+									//h5支付  
+									uni.hideLoading();
+									that.formContent = res.data.alipayRequest;
+									that.$nextTick(() => {
+										document.forms['punchout_form'].submit();
+									})
+								}).catch(res=>{
+									uni.hideLoading();
+									return that.$util.Tips({
+										title: res
+									});
+								})
+							}
 							// #endif
 							break;
 					}

@@ -1,7 +1,7 @@
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
 // +----------------------------------------------------------------------
@@ -33,6 +33,14 @@ export function userShare(){
  */
 export function loginH5(data) {
   return request.post("login", data, { noAuth : true });
+}
+/**
+ * 注销账户
+ * @param object data
+ * 
+ */
+export function userOut(data) {
+	return request.post(`user/logoff`, data)
 }
 /**
  * h5用户手机号登录
@@ -337,6 +345,13 @@ export function transferIn(data) {
   return request.post("recharge/transferIn", data,{},1);
 }
 
+/*
+ * 支付宝充值
+ * */
+export function alipayFull(data) {
+  return request.post("recharge/alipay", data,{});
+}
+
 /**
  * 获取默认地址
  * 
@@ -468,8 +483,22 @@ export function spreadPeoCount() {
 }
 
 /**
+ * 小程序绑定手机号，标准版个人中心使用
+ */
+export function mpBindingPhone(data) {
+  return request.post('v2/routine/binding_phone', data);
+}
+
+/**
  * 版权信息
 */
 export function copyrightApi(){
   return request.get(`copyright/info`,{},{noAuth:true});
+}
+
+/**
+ * 推广码信息，主题个人中心组件暂按标准版字段兜底
+ */
+export function getRandCode() {
+  return Promise.resolve({ data: { code: '' } });
 }

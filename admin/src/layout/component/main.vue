@@ -3,10 +3,10 @@
     <el-scrollbar
       class="layout-scrollbar"
       ref="layoutScrollbarRef"
-      :style="{ minHeight: `calc(100vh - ${headerHeight}` }"
+      :style="{ minHeight: `calc(100vh - ${headerHeight})` }"
     >
       <LayoutParentView />
-      <Footers v-if="getThemeConfig.isFooter" />
+      <Footers v-if="getThemeConfig.isFooter && !isFullScreen" />
     </el-scrollbar>
   </el-main>
 </template>
@@ -30,6 +30,9 @@ export default {
     getThemeConfig() {
       return this.$store.state.themeConfig.themeConfig;
     },
+    isFullScreen() {
+      return this.$route.meta.fullScreen;
+    },
   },
   mounted() {
     this.initHeaderHeight();
@@ -46,6 +49,7 @@ export default {
     },
     // 设置 main 的高度
     initHeaderHeight() {
+      if (this.isFullScreen) return (this.headerHeight = '0px');
       let { isTagsview } = this.$store.state.themeConfig.themeConfig;
       if (isTagsview) return (this.headerHeight = `84px`);
       else return (this.headerHeight = `50px`);
@@ -59,6 +63,10 @@ export default {
     // 监听 vuex 数据变化
     '$store.state.themeConfig.themeConfig': {
       handler(val) {
+        if (this.isFullScreen) {
+          this.headerHeight = '0px';
+          return;
+        }
         this.headerHeight = val.isTagsview ? '84px' : '50px';
         if (val.isFixedHeaderChange !== val.isFixedHeader) {
           if (!this.$refs.layoutScrollbarRef) return false;
@@ -71,6 +79,7 @@ export default {
     $route: {
       handler(to) {
         this.initCurrentRouteMeta(to.meta);
+        this.initHeaderHeight();
         this.$refs.layoutScrollbarRef.wrap.scrollTop = 0;
       },
       deep: true,

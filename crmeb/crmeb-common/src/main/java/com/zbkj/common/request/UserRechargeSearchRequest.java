@@ -13,7 +13,7 @@ import java.io.Serializable;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -24,7 +24,7 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @ApiModel(value="UserRechargeSearchRequest对象", description="用户充值记录查询对象")
-public class UserRechargeSearchRequest implements Serializable {
+public class UserRechargeSearchRequest extends UserCommonSearchRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 
@@ -34,6 +34,6 @@ public class UserRechargeSearchRequest implements Serializable {
     @ApiModelProperty(value = "today,yesterday,lately7,lately30,month,year,/yyyy-MM-dd hh:mm:ss,yyyy-MM-dd hh:mm:ss/")
     private String dateLimit;
 
-    @ApiModelProperty(value = "用户uid")
-    private Integer uid;
+    //@ApiModelProperty(value = "用户uid")
+    //private Integer uid;
 }

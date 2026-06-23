@@ -2,4 +2,32 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zbkj.service.dao.UserIntegralRecordDao">
 
+    <select id="findRecordPageList" resultType="com.zbkj.common.response.UserIntegralRecordResponse">
+        SELECT uir.id, uir.uid, uir.link_id as linkId, uir.link_type as linkType, uir.type, uir.title, uir.integral,
+               uir.balance,uir.mark, uir.status, uir.create_time as createTime, uir.update_time as updateTime,
+               u.nickname as nickName
+        FROM eb_user_integral_record AS uir
+        left join eb_user as u on uir.uid = u.uid
+        where uir.status = 3
+        <if test="startTime != null and startTime != ''">
+            and uir.create_time between #{startTime} and #{endTime}
+        </if>
+        <if test="keywords != '' and keywords != null ">
+            and (
+            uir.uid like CONCAT('%',#{keywords},'%') or
+            u.nickname like CONCAT('%',#{keywords},'%') or
+            u.phone like CONCAT('%',#{keywords},'%')
+            )
+        </if>
+        <if test="uid != null ">
+            and uir.uid = #{uid}
+        </if>
+        <if test="nickname != '' and nickname != null ">
+            and u.nickname like CONCAT('%',#{nickname},'%')
+        </if>
+        <if test="phone != '' and phone != null ">
+            and u.phone like CONCAT('%',#{phone},'%')
+        </if>
+        ORDER BY uir.update_time desc
+    </select>
 </mapper>

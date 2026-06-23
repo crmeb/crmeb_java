@@ -48,7 +48,7 @@
 						</view>
 					</view>
 				</view>
-				<view v-if="orderInfo.shippingType == 2 && orderInfo.paid" class="writeOff borRadius14">
+				<view v-if="orderInfo.shippingType == 2 && orderInfo.paid && orderInfo.pinkStatus != 1" class="writeOff borRadius14">
 					<view class="title">核销信息</view>
 					<view class="grayBg">
 						<view class="pictrue">
@@ -287,6 +287,9 @@
 		orderCancel,
 		qrcodeApi
 	} from '@/api/order.js';
+	import {
+		getCombinationPink
+	} from '@/api/activity';
 	import payment from '@/components/payment';
 	import orderGoods from "@/components/orderGoods";
 	import ClipboardJS from "@/plugin/clipboard/clipboard.js";
@@ -333,7 +336,16 @@
 						title: '可用余额:',
 						number: 0,
 						payStatus: 1,
+					},
+					// #ifndef MP
+					{
+						"name": "支付宝支付",
+						"icon": "icon-zhifubao",
+						value: 'alipay',
+						title: '支付宝快捷支付',
+						payStatus: 1,
 					}
+					// #endif
 				],
 				pay_close: false,
 				pay_order_id: '',
@@ -352,7 +364,8 @@
 					consumer_hotline:'',
 					telephone_service_switch:'close',
 					wx_chant_independent:'open'
-				} //客服配置
+				} ,//客服配置
+				pinkStatus: 0, // 拼团状态
 			};
 		},
 		computed: mapGetters(['isLogin', 'chatUrl', 'userInfo']),
@@ -452,16 +465,33 @@
 				if (!this.system_store.latitude || !this.system_store.longitude) return this.$util.Tips({
 					title: '缺少经纬度信息无法查看地图！'
 				});
-				uni.openLocation({
-					latitude: parseFloat(this.system_store.latitude),
-					longitude: parseFloat(this.system_store.longitude),
-					scale: 8,
-					name: this.system_store.name,
-					address: this.system_store.address + this.system_store.detailedAddress,
-					success: function() {
-
-					},
-				});
+				//#ifdef H5
+				if (this.$wechat.isWeixin() === true) {
+					this.$wechat.seeLocation({
+						latitude: parseFloat(this.system_store.latitude),
+						longitude: parseFloat(this.system_store.longitude),
+						address: this.system_store.address + this.system_store.detailedAddress
+					}).then(res=>{
+						console.log('success');
+					})
+				} else {
+				//#endif
+					uni.openLocation({
+						latitude: parseFloat(this.system_store.latitude),
+						longitude: parseFloat(this.system_store.longitude),
+						scale: 8,
+						name: this.system_store.name,
+						address: this.system_store.address + this.system_store.detailedAddress,
+						success: function() {
+							console.log('success')
+						},
+						fail: function() {
+							console.log('fail')
+						}
+					});
+					// #ifdef H5
+				}
+				//#endif
 			},
 			/**
 			 * 关闭支付组件

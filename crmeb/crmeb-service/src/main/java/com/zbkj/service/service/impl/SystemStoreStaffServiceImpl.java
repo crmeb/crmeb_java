@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -165,5 +165,11 @@ public class SystemStoreStaffServiceImpl extends ServiceImpl<SystemStoreStaffDao
         return updateById(systemStoreStaff);
     }
 
+    @Override
+    public Boolean deleteByUid(Integer uid) {
+        LambdaUpdateWrapper<SystemStoreStaff> wrapper = Wrappers.lambdaUpdate();
+        wrapper.eq(SystemStoreStaff::getUid, uid);
+        return remove(wrapper);
+    }
 }
 

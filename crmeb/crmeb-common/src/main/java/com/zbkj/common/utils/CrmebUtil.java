@@ -1,21 +1,31 @@
 package com.zbkj.common.utils;
 
-import cn.hutool.core.codec.Base64;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
-import cn.hutool.crypto.symmetric.DES;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.zbkj.common.constants.Constants;
+import com.zbkj.common.exception.CrmebException;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import java.security.Security;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,7 +34,7 @@ import java.util.regex.Pattern;
  * +----------------------------------------------------------------------
  * | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  * +----------------------------------------------------------------------
- * | Copyright (c) 2016~2022 https://www.crmeb.com All rights reserved.
+ * | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  * +----------------------------------------------------------------------
  * | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  * +----------------------------------------------------------------------
@@ -33,26 +43,43 @@ import java.util.regex.Pattern;
  */
 public class CrmebUtil {
 
-    public static String encryptPassword(String pwd, String key) {
-        DES des = new DES(getDESSercretKey(key));
-        byte[] result = des.encrypt(pwd);
-        return Base64.encode(result);
+    public static String encryptPassword(String pwd, String key){
+        try {
+            Security.addProvider(new com.sun.crypto.provider.SunJCE());
+            Key _key = getDESSercretKey(key);
+            Cipher cipher = Cipher.getInstance("DES");
+            cipher.init(Cipher.ENCRYPT_MODE, _key);
+            byte[] data = pwd.getBytes(StandardCharsets.UTF_8);
+            byte[] result = cipher.doFinal(data);
+            return java.util.Base64.getEncoder().encodeToString(result);
+        }catch (Exception e){
+            throw new CrmebException("密码处理异常");
+        }
     }
 
     /**
      * 解密密码
      */
-    public static String decryptPassowrd(String pwd, String key) {
-        DES des = new DES(getDESSercretKey(key));
-        return des.decryptStr(pwd);
+    public static String decryptPassowrd(String pwd, String key)
+            throws Exception {
+        Security.addProvider(new com.sun.crypto.provider.SunJCE());
+        Key aKey = getDESSercretKey(key);
+        Cipher cipher = Cipher.getInstance("DES");
+        cipher.init(Cipher.DECRYPT_MODE, aKey);
+
+        byte[] data = java.util.Base64.getDecoder().decode(pwd);
+        byte[] result = cipher.doFinal(data);
+
+        return new String(result, StandardCharsets.UTF_8);
     }
 
     /**
      * 获得DES加密秘钥
      * @param key
      * @return
+     * @throws UnsupportedEncodingException
      */
-    public static byte[] getDESSercretKey(String key) {
+    public static SecretKey getDESSercretKey(String key) throws UnsupportedEncodingException {
         byte[] result = new byte[8];
         byte[] keys = null;
         keys = key.getBytes(StandardCharsets.UTF_8);
@@ -63,7 +90,7 @@ public class CrmebUtil {
                 result[i] = 0x01;
             }
         }
-        return result;
+        return new SecretKeySpec(result, "DES");
     }
 
     /**
@@ -113,25 +140,8 @@ public class CrmebUtil {
      * @param args String[] 字符串数组
      */
     public static void main(String[] args) throws Exception {
-//        System.out.println(encryptPassword("123456", "admin"));
-//		System.out.println(decryptPassowrd("", ""));
-
-//        String key = "123456";
-//        String data = "中国123ABCabc";
-//        System.out.println("原始数据：" + data);
-//        String encryptPassword = encryptPassword(data, key);
-//        System.out.println("加密结果：" + encryptPassword);
-//        String decryptPassowrd = decryptPassowrd(encryptPassword, key);
-//        System.out.println("解密结果：" + decryptPassowrd);
-        // 执行结果如下：
-        // 原始数据：中国123ABCabc
-        // 加密结果：5JNGj04iE/XUuTZM75zMrA==
-        // 解密结果：中国123ABCabc
-
-//        System.out.println(encryptPassword("Crmeb_123456", "18292417675"));
-        System.out.println(decryptPassowrd("c7Nwx1WsDdewbab2TlkpUg==", "18292417675"));
-        // 执行结果：f6mcpGQ8NEmwbab2TlkpUg==
-        // 与 SQL 中的数据一致
+        //System.out.println(encryptPassword("123456", "17303461189"));
+		System.out.println(decryptPassowrd("KQ+jAz27MJFzP2xgp9Vugg==", "17303461189"));
     }
 
     /**
@@ -392,7 +402,7 @@ public class CrmebUtil {
         }
 
         ip = request.getRemoteAddr();
-        if("0:0:0:0:0:0:0:1".equals(ip)){
+        if(ip.equals("0:0:0:0:0:0:0:1")){
             //本地 localhost访问 ipv6
             ip = "127.0.0.1";
         }
@@ -415,11 +425,11 @@ public class CrmebUtil {
             return false;
         }
 
-        if("unKnown".equals(ip)){
+        if(ip.equals("unKnown")){
             return false;
         }
 
-        if("unknown".equals(ip)){
+        if(ip.equals("unknown")){
             return false;
         }
 
@@ -730,7 +740,7 @@ public class CrmebUtil {
     /**
      * unicode编码转换为汉字
      * @param unicodeStr 待转化的编码
-     * @return 返回转化后的汉子
+     * @return 返回转化后的汉字
      */
     public static String UnicodeToCN(String unicodeStr) {
         Pattern pattern = Pattern.compile("(\\\\u(\\p{XDigit}{4}))");
@@ -883,5 +893,77 @@ public class CrmebUtil {
             return "";
         }
         return phone.replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2");
+    }
+
+
+    /**
+     * 运行时长格式化工具方法
+     * @param millis 毫秒数
+     */
+    public static String formatUptime(long millis) {
+        long days = TimeUnit.MILLISECONDS.toDays(millis);
+        millis -= TimeUnit.DAYS.toMillis(days);
+        long hours = TimeUnit.MILLISECONDS.toHours(millis);
+        millis -= TimeUnit.HOURS.toMillis(hours);
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(millis);
+        millis -= TimeUnit.MINUTES.toMillis(minutes);
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(millis);
+        return String.format("%d天 %d小时 %d分钟 %d秒", days, hours, minutes, seconds);
+    }
+
+    /**
+     * 字节转易读单位工具方法
+     * @param bytes 字节数
+     */
+    public static String formatBytes(long bytes) {
+        if (bytes <= 0) return "0 B";
+        String[] units = {"B", "KB", "MB", "GB", "TB"};
+        int unitIndex = (int) (Math.log(bytes) / Math.log(1024));
+        unitIndex = Math.min(unitIndex, units.length - 1);
+        return String.format("%.1f %s", bytes / Math.pow(1024, unitIndex), units[unitIndex]);
+    }
+
+    /**
+     * 四舍五入保留两位小数工具方法
+     * @param value 数值
+     */
+    public static double round(double value) {
+        return BigDecimal.valueOf(value * 100.0)
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
+    }
+
+    /**
+     * 获取主机 IPv4 地址
+     */
+    public static String getPrimaryIpAddress(){
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = interfaces.nextElement();
+                // 跳过回环、虚拟、未启用、VM/Docker相关的接口
+                if (networkInterface.isLoopback() || networkInterface.isVirtual() || !networkInterface.isUp()) {
+                    continue;
+                }
+                String name = networkInterface.getName().toLowerCase();
+                String displayName = networkInterface.getDisplayName().toLowerCase();
+                if (name.startsWith("docker") || name.startsWith("br-") || name.startsWith("veth")
+                        || displayName.contains("vm") || displayName.contains("virtual")) {
+                    continue;
+                }
+                // 遍历IP地址
+                Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress address = addresses.nextElement();
+                    if (address instanceof Inet4Address) {
+                        return address.getHostAddress();
+                    }
+                }
+            }
+            return "unknown";
+        } catch (SocketException e) {
+            e.printStackTrace();
+            return "unknown";
+        }
     }
 }

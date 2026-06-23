@@ -9,7 +9,7 @@
               :class="{ tab_active: listActive == index }"
               :key="index"
               @click="ProductNavTab(index)"
-              v-if="index != 0&&index != 1"
+              v-if="index != 0"
             >
               {{ item }}
             </div>
@@ -70,6 +70,21 @@
                 </div>
               </div>
             </div>
+          </div>
+          <div v-show="currentPage == 'cate'">
+            <!-- <img :src="cateImg" alt="" style="width: 100%" /> -->
+            <el-carousel
+              type="card"
+              height="600px"
+              trigger="click"
+              ref="carousel"
+              @change="carouselChange"
+              :autoplay="false"
+            >
+              <el-carousel-item v-for="(item, index) in cateArr" :key="index">
+                <img :src="item.img" alt="" style="width: 100%" height="600px" />
+              </el-carousel-item>
+            </el-carousel>
           </div>
           <div v-show="currentPage == 'user'">
             <div class="user_head">
@@ -159,7 +174,6 @@
               </div>
             </div>
           </div>
-          <div v-show="currentPage == 'diy'">首页</div>
         </div>
         <div class="flex_between" v-if="currentPage != 'diy'">
           <div class="right-box" v-if="typeName">
@@ -342,33 +356,6 @@
             </div>
           </div>
         </div>
-        <div class="flex_between" v-if="currentPage == 'diy'">
-          <div class="right-box diy-box">
-            <div class="title-bar diy-bar">
-              <el-button type="primary" @click="handlerEditDiyPage(0, 'add')">添加主题</el-button>
-              <el-table :data="diyListData" style="width: 100%" header-cell-class-name="headerBg">
-                <el-table-column prop="id" label="页面ID" width="80"> </el-table-column>
-                <el-table-column prop="templateName" label="模版名称"> </el-table-column>
-                <el-table-column prop="addTime" label="添加时间"> </el-table-column>
-                <el-table-column prop="updateTime" label="更新时间"> </el-table-column>
-                <el-table-column prop="operate" label="操作">
-                  <template slot-scope="scope">
-                    <el-button type="text" size="small">编辑</el-button>
-                    <el-divider direction="vertical"></el-divider>
-                    <el-dropdown trigger="click">
-                      <span class="el-dropdown-link"> 设置<i class="el-icon-arrow-down el-icon--right"></i> </span>
-                      <el-dropdown-menu slot="dropdown">
-                        <el-dropdown-item>删除</el-dropdown-item>
-                        <el-dropdown-item>预览</el-dropdown-item>
-                        <el-dropdown-item>设为首页</el-dropdown-item>
-                      </el-dropdown-menu>
-                    </el-dropdown>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </div>
-        </div>
         <div v-show="mockGoods" class="cate_box_style">
           <div class="title-bar">模块配置</div>
           <div style="margin: 26px 0 26px">
@@ -414,7 +401,6 @@
 
 <script>
 import { designListApi, SaveDataApi, goodDesignList, getDataApi, getBottomNavigationApi } from '@/api/systemGroup';
-import { diyListApi } from '@/api/devise';
 import ClipboardJS from 'clipboard';
 import { getHomeStyleApi, savehomeStyleApi } from '@/api/systemConfig';
 import linkaddress from '@/components/linkaddress';
@@ -445,7 +431,12 @@ export default {
       mockGoods: false,
       mockGoodsImg: require('@/assets/theme/goodsList1.png'),
       showTabNav: true,
-      cateArr: [],
+      cateArr: [
+        { img: require('@/assets/imgs/moren.png'), tit: '默认模板' },
+        { img: require('@/assets/imgs/youxuan.png'), tit: '模板1' },
+        { img: require('@/assets/imgs/haowu.png'), tit: '模板2' },
+        { img: require('@/assets/imgs/shengxian.png'), tit: '模板3' },
+      ],
       cateImg: '',
       active: 3,
       HomeStyle: 1, //移动端首页样式
@@ -453,25 +444,18 @@ export default {
       radio: true,
       newsInfo: '',
       listActive: 1,
-      tabList: ['', '', '个人中心', '底部菜单'],
+      tabList: ['', '分类', '个人中心', '底部菜单'],
       itemIndex: 0,
       navigationListTab: [], //底部导航左侧展示
       navigationList: [],
       isCustom: 0,
-      diyWhere: {
-        page: 1,
-        limit: 10,
-        name: '1',
-      },
-      diyListData: [],
     };
   },
   components: {
     linkaddress,
   },
   created() {
-    this.listActive = 2;
-    this.showCurrent('user');
+    this.cateNav();
   },
   mounted() {
     if (checkPermi(['admin:page:layout:bottom:navigation'])) this.getBottomNavigation();
@@ -499,21 +483,6 @@ export default {
     carouselChange(e) {
       this.active = e + 1;
       this.active = this.active.toString();
-    },
-    //同步获取diy列表
-    getDiyListAsyc(data) {
-      return new Promise((resolve, reject) => {
-        diyListApi(data).then((res) => {
-          resolve(res);
-        });
-      });
-    },
-    //跳转添加主题
-    handlerEditDiyPage(id, type) {
-      const { href } = this.$router.resolve({
-        path: `/page/design/creatDevise/${id}/${type}`,
-      });
-      window.open(href);
     },
     addBox() {
       if (this.typeName == 'bottomNavigation') {
@@ -575,7 +544,6 @@ export default {
         newArr.push(indexMenu, indexBanner, userMenu, indexNews, userBanner);
         this.dataList = newArr;
         this.$set(this, 'newsInfo', indexNews[0] ? indexNews[0].info : '这是一个新闻标题');
-        this.handleMessage('userMenu');
       });
       goodDesignList({ gid: 70 }).then((response) => {
         let list = response.list;
@@ -856,11 +824,6 @@ export default {
       } else if (index == 3) {
         this.showCurrent('bottom');
         this.handleMessage('bottomNavigation');
-      } else if (index == 4) {
-        this.getDiyListAsyc(this.diyWhere).then((res) => {
-          this.showCurrent('diy');
-          this.diyListData = res.list;
-        });
       }
     },
     linkUrl(e) {

@@ -2,6 +2,7 @@ package com.zbkj.common.response;
 
 import com.zbkj.common.model.product.StoreProduct;
 import com.zbkj.common.model.product.StoreProductAttr;
+import com.zbkj.common.model.product.StoreProductGuarantee;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -17,7 +18,7 @@ import java.util.List;
  * +----------------------------------------------------------------------
  *  | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
  *  +----------------------------------------------------------------------
- *  | Copyright (c) 2016~2025 https://www.crmeb.com All rights reserved.
+ *  | Copyright (c) 2016~2024 https://www.crmeb.com All rights reserved.
  *  +----------------------------------------------------------------------
  *  | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
  *  +----------------------------------------------------------------------
@@ -36,7 +37,7 @@ public class ProductDetailResponse implements Serializable {
     private List<StoreProductAttr> productAttr;
 
     @ApiModelProperty(value = "商品属性详情")
-    private HashMap<String, Object> productValue;
+    private HashMap<String, StoreProductAttrValueResponse> productValue;
 
     @ApiModelProperty(value = "返佣金额区间")
     private String priceName;
@@ -49,4 +50,7 @@ public class ProductDetailResponse implements Serializable {
 
     @ApiModelProperty(value = "收藏标识")
     private Boolean userCollect;
+
+    @ApiModelProperty(value = "保障服务")
+    private List<StoreProductGuarantee> guaranteeList;
 }

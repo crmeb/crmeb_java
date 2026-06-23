@@ -47,7 +47,8 @@
 	const app = getApp();
 	let statusBarHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
 	import mobileLogin from '@/components/login_mobile/index.vue'
-	import atModel from '@/components/accredit/index.vue'
+	import atModel from '@/pages/users/components/accredit/index.vue'
+	// import atModel from '@/components/accredit/index.vue'
 	import {
 		mapGetters
 	} from "vuex";
