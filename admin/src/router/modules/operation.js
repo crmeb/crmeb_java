@@ -143,33 +143,6 @@ const operationRouter = {
       },
       children: [
         {
-          path: 'takeGoods',
-          component: () => import('@/views/systemSetting/deliverGoods/takeGoods'),
-          name: 'takeGoods',
-          meta: { title: '提货设置', noCache: true, roles: ['admin'] },
-          redirect: '/operation/deliverGoods/takeGoods/collateUser',
-          children: [
-            {
-              path: 'deliveryAddress',
-              component: () => import('@/views/systemSetting/deliverGoods/takeGoods/deliveryAddress'),
-              name: 'deliveryAddress',
-              meta: { title: '提货点', icon: '' },
-            },
-            {
-              path: 'collateOrder',
-              component: () => import('@/views/systemSetting/deliverGoods/takeGoods/collateOrder'),
-              name: 'collateOrder',
-              meta: { title: '核销订单', icon: '' },
-            },
-            {
-              path: 'collateUser',
-              component: () => import('@/views/systemSetting/deliverGoods/takeGoods/collateUser'),
-              name: 'collateUser',
-              meta: { title: '核销员', icon: '' },
-            },
-          ],
-        },
-        {
           path: 'freightSet',
           component: () => import('@/views/systemSetting/deliverGoods/freightSet'),
           name: 'freightSet',
