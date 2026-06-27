@@ -11,7 +11,7 @@ crmeb/LOG_HOME_IS_UNDEFINED
 
 # Large files
 *.zip
-*.sql
+
 *.dump
 *.tar.gz
 *.rar
