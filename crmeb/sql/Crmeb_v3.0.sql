@@ -140,7 +140,7 @@ CREATE TABLE `eb_theme` (
   `add_time` int NOT NULL DEFAULT '0' COMMENT '添加时间',
   `up_time` int NOT NULL DEFAULT '0' COMMENT '更新时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDBeb_them DEFAULT CHARSET=utf8mb4 COMMENT='主题表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='主题表';
 
 -- ----------------------------
 -- Records of eb_ali_pay_info
