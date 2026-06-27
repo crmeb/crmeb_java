@@ -12087,7 +12087,6 @@ INSERT INTO `eb_system_menu` VALUES (37, 32, '订单发货', NULL, 'admin:order:
 INSERT INTO `eb_system_menu` VALUES (38, 32, '订单更新', NULL, '', 'api/admin/store/order/update', 'A', 99999, 1, 0, '2021-11-16 15:58:16', '2021-11-16 15:58:16');
 INSERT INTO `eb_system_menu` VALUES (39, 4, '用户管理 ', NULL, 'admin:user:list', '/user/index', 'C', 1, 1, 0, '2021-11-16 16:05:50', '2021-11-23 16:41:21');
 INSERT INTO `eb_system_menu` VALUES (40, 4, '用户标签', NULL, 'admin:user:tag:list', '/user/label', 'C', 1, 1, 0, '2021-11-16 16:05:50', '2021-11-23 17:19:48');
-
 INSERT INTO `eb_system_menu` VALUES (42, 4, '用户分组', NULL, 'admin:user:group:list', '/user/group', 'C', 1, 1, 0, '2021-11-16 16:05:50', '2021-11-23 17:29:42');
 INSERT INTO `eb_system_menu` VALUES (43, 39, '用户修改', NULL, 'admin:user:update', '', 'A', 1, 1, 0, '2021-11-16 16:12:46', '2021-11-23 16:28:58');
 INSERT INTO `eb_system_menu` VALUES (44, 39, '用户详情', NULL, 'admin:user:info', '', 'A', 1, 1, 0, '2021-11-16 16:12:46', '2021-11-23 16:29:23');
@@ -12118,7 +12117,6 @@ INSERT INTO `eb_system_menu` VALUES (84, 7, '积分', NULL, '', '/marketing/inte
 INSERT INTO `eb_system_menu` VALUES (85, 7, '秒杀管理', NULL, '', '/marketing/seckill', 'M', 99999, 1, 0, '2021-11-16 16:43:33', '2021-11-16 16:43:33');
 INSERT INTO `eb_system_menu` VALUES (86, 7, '砍价管理', NULL, '', '/marketing/bargain', 'M', 99999, 1, 0, '2021-11-16 16:43:33', '2021-11-16 16:43:33');
 INSERT INTO `eb_system_menu` VALUES (87, 7, '拼团管理', NULL, '', '/marketing/groupBuy', 'M', 99999, 1, 0, '2021-11-16 16:43:34', '2021-11-16 16:43:34');
-
 INSERT INTO `eb_system_menu` VALUES (89, 83, '优惠券', NULL, 'admin:coupon:list', '/marketing/coupon/list', 'C', 1, 1, 0, '2021-11-16 16:48:47', '2021-11-24 09:58:47');
 INSERT INTO `eb_system_menu` VALUES (90, 83, '领取记录', NULL, 'admin:coupon:user:list', '/marketing/coupon/record', 'C', 1, 1, 0, '2021-11-16 16:48:47', '2021-11-24 10:07:24');
 INSERT INTO `eb_system_menu` VALUES (91, 84, '积分配置', NULL, '', '/marketing/integral/integralconfig', 'C', 99999, 1, 0, '2021-11-16 16:48:47', '2021-11-16 16:48:47');
@@ -12129,8 +12127,6 @@ INSERT INTO `eb_system_menu` VALUES (95, 86, '砍价商品', NULL, 'admin:bargai
 INSERT INTO `eb_system_menu` VALUES (96, 86, '砍价列表', NULL, 'admin:bargain:user:list', '/marketing/bargain/bargainList', 'C', 1, 1, 0, '2021-11-16 16:48:47', '2021-11-24 10:28:10');
 INSERT INTO `eb_system_menu` VALUES (97, 87, '拼团商品', NULL, 'admin:combination:list', '/marketing/groupBuy/groupGoods', 'C', 1, 1, 0, '2021-11-16 16:48:47', '2021-11-24 10:31:41');
 INSERT INTO `eb_system_menu` VALUES (98, 87, '拼团列表', NULL, 'admin:combination:combine:list', '/marketing/groupBuy/groupList', 'C', 1, 1, 0, '2021-11-16 16:48:47', '2021-11-24 10:36:24');
-
-
 INSERT INTO `eb_system_menu` VALUES (101, 89, '优惠券添加', NULL, 'admin:coupon:save', '', 'A', 1, 1, 0, '2021-11-16 16:50:01', '2021-11-24 09:59:33');
 INSERT INTO `eb_system_menu` VALUES (102, 89, '优惠券状态更新', NULL, 'admin:coupon:update:status', '', 'A', 1, 1, 0, '2021-11-16 16:50:02', '2021-11-24 10:02:10');
 INSERT INTO `eb_system_menu` VALUES (103, 90, '领取优惠券', NULL, '', 'api/admin/marketing/coupon/user/receive', 'A', 99999, 1, 0, '2021-11-16 16:50:02', '2021-11-16 16:50:02');
@@ -12167,7 +12163,6 @@ INSERT INTO `eb_system_menu` VALUES (153, 138, '权限更新', NULL, 'admin:syst
 INSERT INTO `eb_system_menu` VALUES (154, 138, '更新权限状态', NULL, 'admin:system:menu:show:status', NULL, 'A', 99999, 1, 0, '2021-11-16 17:35:43', '2021-12-03 16:39:59');
 INSERT INTO `eb_system_menu` VALUES (158, 13, '素材管理', NULL, 'admin:system:attachment:list', '/maintain/picture', 'C', 1, 1, 0, '2021-11-16 17:38:38', '2021-12-02 11:24:34');
 INSERT INTO `eb_system_menu` VALUES (159, 13, '开发配置', NULL, '', '/maintain//devconfiguration', 'M', 99999, 1, 0, '2021-11-16 17:38:38', '2021-11-16 17:38:38');
-
 INSERT INTO `eb_system_menu` VALUES (161, 13, '物流设置', NULL, '', '/maintain/logistics', 'M', 99999, 1, 0, '2021-11-16 17:38:38', '2021-11-16 17:38:38');
 INSERT INTO `eb_system_menu` VALUES (162, 158, '删除素材', NULL, 'admin:system:attachment:delete', 'api/admin/system/attachment/delete', 'A', 1, 1, 0, '2021-11-16 17:41:33', '2021-12-02 11:25:04');
 INSERT INTO `eb_system_menu` VALUES (163, 159, '配置分类', NULL, '', '/maintain/devconfiguration/configCategory', 'C', 99999, 1, 0, '2021-11-16 17:41:33', '2021-11-16 17:41:33');
@@ -12217,17 +12212,9 @@ INSERT INTO `eb_system_menu` VALUES (212, 97, '拼团商品详情', '', 'admin:c
 INSERT INTO `eb_system_menu` VALUES (213, 97, '修改拼团商品状态', '', 'admin:combination:update:status', '', 'A', 0, 1, 0, '2021-11-24 10:34:13', '2021-12-09 16:31:00');
 INSERT INTO `eb_system_menu` VALUES (214, 97, '拼团商品导出', '', 'admin:export:excel:combiantion', '', 'A', 0, 1, 0, '2021-11-24 10:35:22', '2021-11-24 10:35:22');
 INSERT INTO `eb_system_menu` VALUES (215, 98, '拼团统计', '', 'admin:combination:statistics', '', 'A', 0, 1, 0, '2021-11-24 10:36:55', '2021-11-24 10:36:55');
-
-
-
-
-
 INSERT INTO `eb_system_menu` VALUES (224, 32, '易联云小票打印', '', 'admin:yly:print', '', 'A', 0, 1, 0, '2021-11-27 17:50:26', '2021-11-27 17:53:04');
 INSERT INTO `eb_system_menu` VALUES (225, 12, '配置引导', '', '', '/operation/guide', 'C', 0, 1, 0, '2021-11-29 11:23:37', '2021-12-27 17:39:39');
 INSERT INTO `eb_system_menu` VALUES (226, 1, '控制台', '', '', '/dashboard', 'C', 9, 1, 0, '2021-11-30 14:13:37', '2021-12-27 16:11:34');
-
-
-
 INSERT INTO `eb_system_menu` VALUES (231, 105, '分销配置信息保存', '', 'admin:retail:spread:manage:set', '', 'A', 0, 1, 0, '2021-12-02 09:35:28', '2021-12-02 09:35:28');
 INSERT INTO `eb_system_menu` VALUES (250, 164, '组合数据详情', '', 'admin:system:group:data:info', '', 'A', 8, 1, 0, '2021-12-02 11:35:48', '2021-12-02 11:35:48');
 INSERT INTO `eb_system_menu` VALUES (251, 167, '同步物流公司', '', 'admin:express:sync', '', 'A', 3, 1, 0, '2021-12-02 11:43:01', '2021-12-02 11:43:01');
@@ -12239,19 +12226,7 @@ INSERT INTO `eb_system_menu` VALUES (256, 140, '物流免费模板', '', 'admin:
 INSERT INTO `eb_system_menu` VALUES (257, 140, '物流付费模板', '', 'admin:shipping:templates:region:list', '', 'A', 8, 1, 0, '2021-12-02 11:47:21', '2021-12-02 11:47:21');
 INSERT INTO `eb_system_menu` VALUES (258, 166, '城市详情', '', 'admin:system:city:info', '', 'A', 0, 1, 0, '2021-12-02 11:55:47', '2021-12-02 11:55:47');
 INSERT INTO `eb_system_menu` VALUES (259, 166, '修改城市', '', 'admin:system:city:update', '', 'A', 0, 1, 0, '2021-12-02 11:57:04', '2021-12-02 11:57:04');
-
-
-
-
-
-
-
-
-
 INSERT INTO `eb_system_menu` VALUES (269, 12, '消息通知', '', 'admin:system:notification:list', '/operation/notification', 'C', 4, 1, 0, '2021-12-03 15:13:08', '2021-12-17 14:18:16');
-
-
-
 INSERT INTO `eb_system_menu` VALUES (273, 14, '商品表头数量', '', 'admin:product:tabs:headers', '', 'A', 0, 1, 0, '2021-12-03 15:48:18', '2021-12-03 15:48:18');
 INSERT INTO `eb_system_menu` VALUES (274, 14, '导入99Api商品', '', 'admin:product:import:product', '', 'A', 0, 1, 0, '2021-12-03 15:50:18', '2021-12-03 15:50:18');
 INSERT INTO `eb_system_menu` VALUES (275, 14, '获取复制商品配置', '', 'admin:product:copy:config', '', 'A', 0, 1, 0, '2021-12-03 15:51:00', '2021-12-03 15:51:00');
@@ -12320,7 +12295,6 @@ INSERT INTO `eb_system_menu` VALUES (344, 0, '公共服务', '', '', '', 'M', 0,
 INSERT INTO `eb_system_menu` VALUES (345, 344, '根据key存储', '', 'admin:system:config:saveuniq', '', 'A', 0, 1, 0, '2021-12-08 18:57:26', '2021-12-08 18:57:26');
 INSERT INTO `eb_system_menu` VALUES (347, 344, '根据key获取', '', 'admin:system:config:getuniq', '', 'A', 0, 1, 0, '2021-12-08 18:58:55', '2021-12-08 18:59:18');
 INSERT INTO `eb_system_menu` VALUES (348, 98, '拼团订单列表', '', 'admin:combination:order:pink', '', 'A', 0, 1, 0, '2021-12-08 19:08:59', '2021-12-08 19:08:59');
-
 INSERT INTO `eb_system_menu` VALUES (350, 100, '组件类目列表', '', 'admin:pay:component:cat:list', '', 'A', 0, 1, 0, '2021-12-08 19:14:06', '2021-12-08 19:14:06');
 INSERT INTO `eb_system_menu` VALUES (352, 104, '推广人', '', 'admin:retail:spread:list', '', 'A', 0, 1, 0, '2021-12-09 14:43:19', '2021-12-09 14:43:19');
 INSERT INTO `eb_system_menu` VALUES (353, 104, '推广订单', '', 'admin:retail:spread:order:list', '', 'A', 0, 1, 0, '2021-12-09 14:44:10', '2021-12-09 14:44:10');
@@ -12350,7 +12324,6 @@ INSERT INTO `eb_system_menu` VALUES (381, 88, '交易组件品牌列表', '', 'a
 INSERT INTO `eb_system_menu` VALUES (382, 88, '交易组件可用品牌列表', '', 'admin:pay:component:shop:brand:usable:list', '', 'A', 0, 1, 0, '2021-12-13 10:12:51', '2021-12-13 10:12:51');
 INSERT INTO `eb_system_menu` VALUES (383, 104, '添加推广关系', '', 'admin:retail:spread:save', '', 'A', 0, 1, 1, '2021-12-13 10:16:47', '2021-12-13 10:16:47');
 INSERT INTO `eb_system_menu` VALUES (387, 344, '订单统计详情', '', 'admin:order:time', '', 'A', 0, 1, 0, '2021-12-13 10:22:47', '2021-12-13 10:22:47');
-
 INSERT INTO `eb_system_menu` VALUES (389, 16, '商品规则值详情', '', 'admin:product:rule:info', '', 'A', 0, 1, 0, '2021-12-13 10:24:50', '2021-12-13 10:24:50');
 INSERT INTO `eb_system_menu` VALUES (390, 344, '新增附件', '', 'admin:system:attachment:save', '', 'A', 0, 1, 0, '2021-12-13 10:26:45', '2021-12-13 10:26:45');
 INSERT INTO `eb_system_menu` VALUES (391, 344, '修改附件', '', 'admin:system:attachment:update', '', 'A', 0, 1, 0, '2021-12-13 10:28:19', '2021-12-13 10:28:19');
@@ -12365,8 +12338,6 @@ INSERT INTO `eb_system_menu` VALUES (400, 39, '会员等级列表', '', 'admin:u
 INSERT INTO `eb_system_menu` VALUES (401, 40, '会员标签详情', '', 'admin:user:tag:info', '', 'A', 0, 1, 0, '2021-12-13 10:37:04', '2021-12-13 10:37:04');
 INSERT INTO `eb_system_menu` VALUES (402, 344, '获取微信公众号js配置', '', 'admin:wechat:config', '', 'A', 0, 1, 0, '2021-12-13 10:38:24', '2021-12-13 10:38:24');
 INSERT INTO `eb_system_menu` VALUES (403, 344, '微信素材上传', '', 'admin:wechat:media:upload', '', 'A', 0, 1, 0, '2021-12-13 10:38:50', '2021-12-13 10:38:50');
-
-
 INSERT INTO `eb_system_menu` VALUES (406, 344, '获取授权信息', '', 'admin:copyright:get:info', '', 'A', 0, 1, 0, '2021-12-13 17:54:06', '2021-12-13 18:12:17');
 INSERT INTO `eb_system_menu` VALUES (407, 344, '获取文件存储类型', '', 'admin:system:config:upload:type', '', 'A', 0, 1, 0, '2023-08-23 15:37:46', '2023-08-23 15:37:46');
 INSERT INTO `eb_system_menu` VALUES (408, 344, '获取管理端logo', '', 'admin:system:config:site:logo', '', 'A', 0, 1, 1, '2023-08-23 15:38:11', '2023-08-23 15:38:11');
@@ -12399,18 +12370,6 @@ INSERT INTO `eb_system_menu` VALUES (436, 125, '页面装修', '', '', '/operati
 INSERT INTO `eb_system_menu` VALUES (437, 142, '页面底部导航', '', 'admin:page:layout:bottom:navigation', '', 'A', 0, 1, 1, '2024-05-10 15:06:57', '2024-05-10 15:08:08');
 INSERT INTO `eb_system_menu` VALUES (438, 142, '底部导航保存', '', 'admin:page:layout:bottom:navigation:save', '', 'A', 0, 1, 1, '2024-05-10 15:07:19', '2024-05-10 15:43:30');
 INSERT INTO `eb_system_menu` VALUES (439, 0, '装修', 's-home', '', '/design', 'M', 85, 1, 0, '2024-07-12 10:54:00', '2024-07-12 10:55:24');
-INSERT INTO `eb_system_menu` VALUES (440, 439, '一键换色', '', '', '/design/theme', 'M', 0, 1, 0, '2024-07-12 10:56:19', '2024-07-12 10:56:19');
-INSERT INTO `eb_system_menu` VALUES (441, 439, '页面设计', '', 'admin:page:layout:index', '/design/viewDesign', 'C', 0, 1, 0, '2024-07-12 10:57:02', '2024-07-12 10:57:02');
-INSERT INTO `eb_system_menu` VALUES (442, 441, '页面布局首页保存', '', 'admin:page:layout:save', '', 'A', 0, 1, 0, '2024-07-12 10:58:47', '2024-07-12 10:58:47');
-INSERT INTO `eb_system_menu` VALUES (443, 441, '页面首页布局banner保存', '', 'admin:page:layout:index:banner:save', '', 'A', 0, 1, 0, '2024-07-12 10:59:31', '2024-07-12 10:59:31');
-INSERT INTO `eb_system_menu` VALUES (444, 441, '页面首页布局menus保存', '', 'admin:page:layout:index:menu:save', 'admin:page:layout:index:menu:save', 'A', 0, 1, 0, '2024-07-12 11:00:58', '2024-07-12 11:00:58');
-INSERT INTO `eb_system_menu` VALUES (445, 441, '页面首页新闻保存', '', 'admin:page:layout:index:news:save', '', 'A', 0, 1, 0, '2024-07-12 11:01:32', '2024-07-12 11:01:32');
-INSERT INTO `eb_system_menu` VALUES (446, 441, '页面用户中心导航保存', '', 'admin:page:layout:user:menu:save', '', 'A', 0, 1, 0, '2024-07-12 11:02:18', '2024-07-12 11:02:18');
-INSERT INTO `eb_system_menu` VALUES (447, 441, '页面用户中心', '', 'admin:page:layout:index:table:save', '', 'A', 0, 1, 0, '2024-07-12 11:03:40', '2024-07-12 11:03:40');
-INSERT INTO `eb_system_menu` VALUES (448, 441, '分类页配置保存', '', 'admin:page:layout:category:config:save', '', 'A', 0, 1, 0, '2024-07-12 11:04:13', '2024-07-12 11:04:13');
-INSERT INTO `eb_system_menu` VALUES (449, 441, '获取分类页配置', '', 'admin:page:layout:category:config', '', 'A', 0, 1, 0, '2024-07-12 11:04:34', '2024-07-12 11:04:34');
-INSERT INTO `eb_system_menu` VALUES (450, 441, '页面底部导航', '', 'admin:page:layout:bottom:navigation', '', 'A', 0, 1, 0, '2024-07-12 11:04:56', '2024-07-12 11:04:56');
-INSERT INTO `eb_system_menu` VALUES (451, 441, '底部导航保存', '', 'admin:page:layout:bottom:navigation:save', '', 'A', 0, 1, 0, '2024-07-12 11:05:18', '2024-07-12 11:05:18');
 INSERT INTO `eb_system_menu` VALUES (452, 12, '协议管理', '', '', '/operation/agreement', 'M', 0, 1, 0, '2024-07-12 11:11:22', '2024-11-27 15:34:02');
 INSERT INTO `eb_system_menu` VALUES (453, 452, '保存用户注册协议', '', 'admin:agreement:user:save', '', 'A', 0, 1, 0, '2024-07-12 11:34:20', '2024-07-12 11:34:20');
 INSERT INTO `eb_system_menu` VALUES (454, 452, '获取用户注册协议', '', 'admin:agreement:user:info', '', 'A', 0, 1, 0, '2024-07-12 11:34:47', '2024-07-12 11:34:47');
@@ -12427,29 +12386,11 @@ INSERT INTO `eb_system_menu` VALUES (464, 452, '平台资质证明保存', '', '
 INSERT INTO `eb_system_menu` VALUES (465, 452, '平台资质证明详情', '', 'admin:agreement:intelligent:info', '', 'A', 0, 1, 0, '2024-07-12 11:41:23', '2024-07-12 11:41:23');
 INSERT INTO `eb_system_menu` VALUES (466, 452, '优惠券规则保存', '', 'admin:agreement:coupon:agreement:save', '', 'A', 0, 1, 0, '2024-07-12 11:41:52', '2024-07-12 11:41:52');
 INSERT INTO `eb_system_menu` VALUES (467, 452, '优惠券规则详情', '', 'admin:agreement:coupon:agreement:info', '', 'A', 0, 1, 0, '2024-07-12 11:42:22', '2024-07-12 11:42:22');
-
-
-
-
-
-
-
-
 INSERT INTO `eb_system_menu` VALUES (476, 68, '发货管理', '', '', '/appSetting/publicRoutine/deliveryManagement', 'C', 0, 1, 0, '2024-08-27 10:06:07', '2024-08-27 10:06:07');
 INSERT INTO `eb_system_menu` VALUES (477, 476, '获取微信小程序发货开关', '', 'admin:wechat:mini:shipping:switch:get', '', 'A', 0, 1, 0, '2024-08-27 10:38:03', '2024-08-27 10:38:03');
 INSERT INTO `eb_system_menu` VALUES (478, 476, '更新微信小程序发货开关', '', 'admin:wechat:mini:shipping:switch:update', '', 'A', 0, 1, 0, '2024-08-27 10:38:25', '2024-08-27 10:38:25');
-INSERT INTO `eb_system_menu` VALUES (479, 439, '首页装修', '', '', '/design/devise', 'C', 99, 1, 0, '2024-10-25 15:24:44', '2024-11-20 11:02:43');
-INSERT INTO `eb_system_menu` VALUES (480, 479, '分页列表', '', 'admin:pagediy:list', '', 'A', 0, 1, 0, '2024-11-04 11:22:41', '2024-11-04 11:22:41');
-INSERT INTO `eb_system_menu` VALUES (481, 479, '设置商城首页', '', 'admin:pagediy:setdefault', '', 'A', 0, 1, 0, '2024-11-04 11:23:39', '2024-11-04 11:23:39');
-INSERT INTO `eb_system_menu` VALUES (482, 479, '获取商城首页', '', 'admin:pagediy:getdefault', '', 'A', 0, 1, 0, '2024-11-04 11:24:21', '2024-11-04 11:24:21');
-INSERT INTO `eb_system_menu` VALUES (483, 479, '新增', '', 'admin:pagediy:save', '', 'A', 0, 1, 0, '2024-11-04 11:24:44', '2024-11-04 11:24:44');
-INSERT INTO `eb_system_menu` VALUES (484, 479, '删除', '', 'admin:pagediy:delete', '', 'A', 0, 1, 0, '2024-11-04 11:25:09', '2024-11-04 11:25:09');
-INSERT INTO `eb_system_menu` VALUES (485, 479, '修改', '', 'admin:pagediy:update', '', 'A', 0, 1, 0, '2024-11-04 11:25:33', '2024-11-04 11:25:33');
-INSERT INTO `eb_system_menu` VALUES (486, 479, '模版名称更新', '', 'admin:pagediy:updatename', '', 'A', 0, 1, 0, '2024-11-04 11:26:01', '2024-11-04 11:26:01');
-INSERT INTO `eb_system_menu` VALUES (487, 479, '详情', '', 'admin:pagediy:info', '', 'A', 0, 1, 0, '2024-11-04 11:26:20', '2024-11-04 11:26:20');
 INSERT INTO `eb_system_menu` VALUES (488, 280, '修改登录用户密码', '', 'admin:update:password', '', 'A', 0, 1, 0, '2024-11-19 14:49:43', '2024-11-19 14:49:43');
 INSERT INTO `eb_system_menu` VALUES (489, 280, '修改管理员名称', '', 'admin:update:name', '', 'A', 0, 1, 0, '2024-11-19 14:50:12', '2024-11-19 14:50:12');
-
 INSERT INTO `eb_system_menu` VALUES (491, 14, '编辑库存', '', 'admin:product:quick:stock:add', '', 'A', 0, 1, 0, '2025-05-23 11:16:07', '2025-05-23 11:16:07');
 INSERT INTO `eb_system_menu` VALUES (492, 439, '开屏广告', '', '', '/design/advertisement', 'C', 0, 1, 0, '2025-10-21 17:37:13', '2025-10-21 17:51:31');
 INSERT INTO `eb_system_menu` VALUES (493, 492, '获取开屏广告配置', '', 'admin:page:layout:splash:ad:get', '', 'A', 0, 1, 0, '2025-10-21 17:37:50', '2025-10-21 17:37:50');
@@ -12460,8 +12401,28 @@ INSERT INTO `eb_system_menu` VALUES (497, 495, '新增保障服务', '', 'admin:
 INSERT INTO `eb_system_menu` VALUES (498, 495, '删除保障服务', '', 'admin:product:guarantee:delete', '', 'A', 0, 1, 0, '2025-10-22 16:59:25', '2025-10-22 16:59:25');
 INSERT INTO `eb_system_menu` VALUES (499, 495, '修改保障服务', '', 'admin:product:guarantee:update', '', 'A', 0, 1, 0, '2025-10-22 16:59:45', '2025-10-22 16:59:45');
 INSERT INTO `eb_system_menu` VALUES (500, 495, '修改保障服务显示状态', '', 'admin:product:guarantee:show:status', '', 'A', 0, 1, 0, '2025-10-22 17:00:02', '2025-10-22 17:00:02');
-INSERT INTO `eb_system_menu` VALUES (501, 98, '拼团列表头部对应状态数量', '', 'admin:combination:combine:list:count', '', 'A', 0, 1, 0, '2025-10-24 14:53:56', '2025-10-24 14:53:56');
 INSERT INTO `eb_system_menu` VALUES (502, 344, '通过表单名称查询详情', '', 'admin:system:form:name:info', '', 'A', 0, 1, 0, '2025-10-27 17:55:16', '2025-10-27 17:55:16');
+INSERT INTO `eb_system_menu` VALUES (506, 439, '商城主题', '', '', '/design/mall_theme', 'C', 98, 1, 0, '2026-05-18 16:02:49', '2026-05-21 15:32:04');
+INSERT INTO `eb_system_menu` VALUES (507, 439, '我的主题', '', '', '/design/my_theme', 'C', 97, 1, 0, '2026-05-18 16:02:49', '2026-05-21 15:25:41');
+INSERT INTO `eb_system_menu` VALUES (508, 439, '专题页面', '', '', '/design/micro_theme', 'C', 96, 1, 0, '2026-05-18 16:02:49', '2026-05-21 15:25:41');
+INSERT INTO `eb_system_menu` VALUES (531, 507, '分页列表', '', 'admin:theme:list', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (532, 507, '删除', '', 'admin:theme:delete', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (533, 507, '保存标题信息', '', 'admin:theme:save:title', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (534, 507, '保存主题', '', 'admin:theme:save:theme', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (535, 507, '保存主题图片', '', 'admin:theme:save:image', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (536, 507, '使用主题', '', 'admin:theme:use', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (537, 507, '使用主题数据', '', 'admin:theme:use:data', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (538, 507, '还原主题', '', 'admin:theme:restore', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (539, 507, '正在使用的主题', '', 'admin:theme:using', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (540, 507, '详情', '', 'admin:theme:info', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (541, 507, '版本号', '', 'admin:theme:version', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (542, 507, '导出主题', '', 'admin:theme:export', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (543, 507, '导入主题', '', 'admin:theme:import', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (544, 507, '文本字段', '', 'admin:pagediy:info', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (545, 507, '产品分类', '', 'admin:theme:info', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (546, 507, '文章分类', '', 'admin:theme:info', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (547, 507, '文章列表', '', 'admin:theme:info', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
+INSERT INTO `eb_system_menu` VALUES (548, 507, '商品列表', '', 'admin:theme:info', '', 'A', 0, 1, 0, '2026-06-01 00:00:00', '2026-06-01 00:00:00');
 
 -- ----------------------------
 -- Table structure for eb_system_notification
