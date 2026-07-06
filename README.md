@@ -67,7 +67,7 @@ CRMEB开源商城系统Java版，是一款基于Apache-2.0协议发布的开源�
 
 主题广场：<a href="https://www.crmeb.com/theme" target="_blank">主题广场</a>
 
-![输入图片说明](crmeb/crmebimage/theme-cate/主题广场.png)
+<img width="1476" height="1880" alt="主题广场" src="https://github.com/user-attachments/assets/7d273820-41d9-45a8-a85c-af9cb9a50148" />
 
 #### 社区共建计划
 我们致力于打造开发者友好生态，开放源码、持续更新功能模块，并欢迎开发者提交优化建议或贡献代码。通过共享技术成果，降低行业重复造轮子成本，推动开源电商系统的可持续发展。
