@@ -7344,7 +7344,7 @@ CREATE TABLE `eb_store_seckill_manger`  (
   `img` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '主图',
   `silder_imgs` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '轮播图',
   `sort` int NULL DEFAULT NULL COMMENT '排序',
-  `status` tinyint(1) NOT NULL DEFAULT 1 COMMENT COMMENT '状态:0=关闭,1=开启',
+  `status` tinyint(1) NOT NULL DEFAULT 1 COMMENT '状态:0=关闭,1=开启',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `is_del` int NOT NULL DEFAULT 0 COMMENT '删除标记 0=为删除 1=删除',
