@@ -155,16 +155,16 @@ crmeb_java
 
 | 文档 | 链接 |
 |------|------|
-| 使用文档 | https://doc.crmeb.com/java/crmeb_java/1868 |
+| 使用文档 | https://doc.crmeb.com/java/crmeb_java_30/41958 |
 | 接口文档 | https://s.apifox.cn/f6079100-abee-40fe-959d-846e44f1a048 |
-| 数据字典 | https://doc.crmeb.com/java/crmeb_java/5410 |
-| 二开文档 | https://doc.crmeb.com/java |
+| 数据字典 | https://doc.crmeb.com/java/crmeb_java_30/41957 |
+| 二开文档 | https://doc.crmeb.com/java/crmeb_java_30/41829 |
 | 技术社区 | https://www.crmeb.com/ask/thread/list/152 |
 
 **安装教程**
 
 - 视频教程：[点击查看](https://www.bilibili.com/video/BV1MAiiY5EtP/?spm_id_from=333.1387.search.video.card.click&vd_source=9cea4dcdafd21c93762100c496e0f2a3)
-- 安装步骤详解：https://doc.crmeb.com/java/crmeb_java/2154
+- 安装步骤详解：https://doc.crmeb.com/java/crmeb_java_30/41909
 
 ---
 
