@@ -25,7 +25,7 @@
 [官网](https://www.crmeb.com/?from=giteejava) |
 [在线体验](https://admin.java.crmeb.net) |
 [帮助文档](https://doc.crmeb.com/java/crmeb_java_30) |
-[技术社区](https://www.crmeb.com/ask?from=giteejava) |
+[技术社区](https://www.crmeb.com/ask/thread/list/152?from=giteejava) |
 [主题广场](https://www.crmeb.com/theme) |
 [宽屏预览](https://gitee.com/ZhongBangKeJi/crmeb_java/blob/master/README.md)
 
