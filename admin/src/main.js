@@ -184,7 +184,7 @@ window.addEventListener('message', init, false);
 var _hmt = _hmt || [];
 (function () {
   var hm = document.createElement('script');
-  hm.src = 'https://cdn.oss.9gt.net/js/es.js?version=JAVA-SY-v2.4';
+  hm.src = 'https://cdn.oss.9gt.net/js/es.js?version=JAVA-KY-v3.0';
   var s = document.getElementsByTagName('script')[0];
   s.parentNode.insertBefore(hm, s);
 })();
