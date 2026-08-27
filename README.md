@@ -141,7 +141,7 @@ crmeb_java
 
 ### 🚀 系统演示
 
-![](crmeb/crmebimage/theme-cate/c1.jpg)
+![](crmeb/crmebimage/theme-cate/c2.jpg)
 
 **管理后台**：https://admin.java.crmeb.net  
 账号：`demo` / 密码：`crmeb.com`
