@@ -13438,11 +13438,11 @@ CREATE TABLE `eb_system_user_level`  (
 -- ----------------------------
 -- Records of eb_system_user_level
 -- ----------------------------
-INSERT INTO `eb_system_user_level` VALUES (1, '普通会员', 1, 1, 1, 100, 'crmebimage/public/product/2025/05/30/5e59dfa3263b4236af27c452ad8d2f73ebymt8fegc.png', 0, '2021-12-25 12:36:23', '2025-05-30 14:56:42');
-INSERT INTO `eb_system_user_level` VALUES (2, '青铜会员', 500, 1, 2, 90, 'crmebimage/public/product/2025/05/30/7d0d57f00e54415fa1eab20f6704415frwu3t11i5y.png', 0, '2021-12-25 12:36:56', '2025-05-30 14:56:50');
-INSERT INTO `eb_system_user_level` VALUES (3, '白银会员', 999, 1, 3, 85, 'crmebimage/public/product/2025/05/30/a50002a908c245b086755d80371743333glh6cfjzl.png', 0, '2021-12-25 12:38:19', '2025-05-30 14:56:57');
-INSERT INTO `eb_system_user_level` VALUES (4, '黄金会员', 5000, 1, 4, 80, 'crmebimage/public/product/2025/05/30/6f23684a773b46dcb6626b012551ff8cm8ygqkrl56.png', 0, '2021-12-25 12:38:49', '2025-05-30 14:57:18');
-INSERT INTO `eb_system_user_level` VALUES (5, '钻石会员', 12000, 1, 5, 70, 'crmebimage/public/user/2025/05/30/4acd024b82a141649cd440a2b2eaadc44un1zxh7l7.png', 0, '2021-12-25 12:39:22', '2025-05-30 14:58:08');
+INSERT INTO `eb_system_user_level` VALUES (1, '普通会员', 1, 0, 1, 100, 'crmebimage/public/product/2025/05/30/5e59dfa3263b4236af27c452ad8d2f73ebymt8fegc.png', 1, '2021-12-25 12:36:23', '2025-05-30 14:56:42');
+INSERT INTO `eb_system_user_level` VALUES (2, '青铜会员', 500, 0, 2, 90, 'crmebimage/public/product/2025/05/30/7d0d57f00e54415fa1eab20f6704415frwu3t11i5y.png', 1, '2021-12-25 12:36:56', '2025-05-30 14:56:50');
+INSERT INTO `eb_system_user_level` VALUES (3, '白银会员', 999, 0, 3, 85, 'crmebimage/public/product/2025/05/30/a50002a908c245b086755d80371743333glh6cfjzl.png', 1, '2021-12-25 12:38:19', '2025-05-30 14:56:57');
+INSERT INTO `eb_system_user_level` VALUES (4, '黄金会员', 5000, 0, 4, 80, 'crmebimage/public/product/2025/05/30/6f23684a773b46dcb6626b012551ff8cm8ygqkrl56.png', 1, '2021-12-25 12:38:49', '2025-05-30 14:57:18');
+INSERT INTO `eb_system_user_level` VALUES (5, '钻石会员', 12000, 0, 5, 70, 'crmebimage/public/user/2025/05/30/4acd024b82a141649cd440a2b2eaadc44un1zxh7l7.png', 1, '2021-12-25 12:39:22', '2025-05-30 14:58:08');
 
 -- ----------------------------
 -- Table structure for eb_template_message
