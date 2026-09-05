@@ -97,6 +97,8 @@ CRMEB开源商城系统Java版，是一款基于**Apache-2.0**协议发布的开
 
 ---
 
+![输入图片说明](crmeb/crmebimage/theme-cate/开源banner-Java.jpg)
+
 ### 🛠️ 技术栈与运行环境
 
 | 类别 | 技术 |
