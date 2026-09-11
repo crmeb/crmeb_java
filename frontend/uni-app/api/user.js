@@ -402,7 +402,7 @@ export function computeUser(){
 		data: {
 	        host:window.location.host,
 			https:document.location.protocol,
-			version:'CRMEB-JAVA-SY-V2.0',
+			version:'CRMEB-JAVA-KY-v3.1',
 			ip:Cache.has('Ip') ? Cache.get('Ip') : ''
 	    },
 		dataType:'json',
