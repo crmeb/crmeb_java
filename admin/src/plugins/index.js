@@ -4,14 +4,14 @@ import modal from './modal';
 import download from './download';
 
 export default {
-  install(Vue) {
+  install(app) {
     // 认证对象
-    Vue.prototype.$auth = auth;
+    app.config.globalProperties.$auth = auth;
     // 缓存对象
-    Vue.prototype.$cache = cache;
+    app.config.globalProperties.$cache = cache;
     // 模态框对象
-    Vue.prototype.$modal = modal;
+    app.config.globalProperties.$modal = modal;
     // 下载文件
-    Vue.prototype.$download = download;
+    app.config.globalProperties.$download = download;
   },
 };

@@ -1,18 +1,18 @@
 <template>
   <div class="line-settings">
     <div class="section-title">线条设置</div>
-    <el-form size="small" label-width="70px">
+    <el-form label-width="70px">
       <el-form-item label="线条方向">
         <el-radio-group v-model="curComponent.propValue.direction" @change="handleLineDirectionChange">
-          <el-radio label="horizontal">横向</el-radio>
-          <el-radio label="vertical">竖向</el-radio>
+          <el-radio label="horizontal" value="horizontal">横向</el-radio>
+          <el-radio label="vertical" value="vertical">竖向</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="线条样式">
         <el-radio-group v-model="curComponent.propValue.style" @change="onChange">
-          <el-radio label="solid">实线</el-radio>
-          <el-radio label="dashed">虚线</el-radio>
-          <el-radio label="dotted">点线</el-radio>
+          <el-radio label="solid" value="solid">实线</el-radio>
+          <el-radio label="dashed" value="dashed">虚线</el-radio>
+          <el-radio label="dotted" value="dotted">点线</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="线条长度">
@@ -61,7 +61,7 @@
             style="margin-left: 10px; flex: 1"
           ></el-input>
           <el-button
-            type="text"
+            link
             @click="
               curComponent.propValue.color = '#000000';
               onChange();
@@ -74,64 +74,64 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ConfigLine',
-  props: {
-    curComponent: {
-      type: Object,
-      required: true,
-    },
-    canvasWidth: {
-      type: Number,
-      default: 375,
-    },
+<script setup>
+import { computed } from 'vue';
+
+defineOptions({ name: 'ConfigLine' });
+
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    required: true,
   },
-  computed: {
-    lineLength: {
-      get() {
-        if (this.curComponent.propValue.direction === 'horizontal') {
-          return this.curComponent.style.width;
-        } else {
-          return this.curComponent.style.height;
-        }
-      },
-      set(val) {
-        if (this.curComponent.propValue.direction === 'horizontal') {
-          this.curComponent.style.width = val;
-        } else {
-          this.curComponent.style.height = val;
-        }
-        this.onChange();
-      },
-    },
-    lineThickness: {
-      get() {
-        return this.curComponent.propValue.height;
-      },
-      set(val) {
-        this.curComponent.propValue.height = val;
-        if (this.curComponent.propValue.direction === 'horizontal') {
-          this.curComponent.style.height = val;
-        } else {
-          this.curComponent.style.width = val;
-        }
-        this.onChange();
-      },
-    },
+  canvasWidth: {
+    type: Number,
+    default: 375,
   },
-  methods: {
-    handleLineDirectionChange() {
-      const { width, height } = this.curComponent.style;
-      this.curComponent.style.width = height;
-      this.curComponent.style.height = width;
-      this.onChange();
-    },
-    onChange() {
-      this.$emit('change');
-    },
+});
+const emit = defineEmits(['change']);
+
+const lineLength = computed({
+  get() {
+    if (props.curComponent.propValue.direction === 'horizontal') {
+      return props.curComponent.style.width;
+    } else {
+      return props.curComponent.style.height;
+    }
   },
-};
+  set(val) {
+    if (props.curComponent.propValue.direction === 'horizontal') {
+      props.curComponent.style.width = val;
+    } else {
+      props.curComponent.style.height = val;
+    }
+    onChange();
+  },
+});
+const lineThickness = computed({
+  get() {
+    return props.curComponent.propValue.height;
+  },
+  set(val) {
+    props.curComponent.propValue.height = val;
+    if (props.curComponent.propValue.direction === 'horizontal') {
+      props.curComponent.style.height = val;
+    } else {
+      props.curComponent.style.width = val;
+    }
+    onChange();
+  },
+});
+
+function handleLineDirectionChange() {
+  const { width, height } = props.curComponent.style;
+  props.curComponent.style.width = height;
+  props.curComponent.style.height = width;
+  onChange();
+}
+function onChange() {
+  emit('change');
+}
 </script>
 
 <style scoped lang="scss">

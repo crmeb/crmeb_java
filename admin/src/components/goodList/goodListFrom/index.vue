@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-dialog title="商品列表" :visible.sync="visible" width="896" :before-close="handleClose">
+    <el-dialog title="商品列表" v-model="visible" width="896" :before-close="handleClose">
       <good-list
         v-if="visible"
         @getStoreItem="getStoreItem"
@@ -12,36 +12,48 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
 import goodList from '@/components/goodList/index.vue';
-export default {
-  name: 'GoodListFrom',
-  components: { goodList },
-  data() {
-    return {
-      handleNum: '',
-      visible: false,
-      callback: function () {},
-      checked: [],
-    };
-  },
-  methods: {
-    close() {
-      this.visible = false;
-    },
-    handleClose() {
-      this.visible = false;
-    },
-    getStoreItem(img) {
-      this.callback(img);
-      this.visible = false;
-    },
-  },
-};
+
+defineOptions({ name: 'GoodListFrom' });
+
+const handleNum = ref('');
+const visible = ref(false);
+const callback = ref(function () {});
+const checked = ref([]);
+
+function close() {
+  visible.value = false;
+}
+
+function handleClose() {
+  visible.value = false;
+}
+
+function getStoreItem(img) {
+  callback.value(img);
+  visible.value = false;
+}
+
+function open(options = {}) {
+  callback.value = typeof options.callback === 'function' ? options.callback : function () {};
+  handleNum.value = options.handleNum;
+  checked.value = options.checked ?? [];
+  visible.value = true;
+}
+
+defineExpose({
+  open,
+  visible,
+  callback,
+  handleNum,
+  checked,
+});
 </script>
 
 <style scoped>
-::v-deep .el-dialog__body {
+:deep(.el-dialog__body) {
   padding: 20px 24px 0 24px !important;
 }
 </style>

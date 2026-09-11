@@ -2,26 +2,26 @@
   <div>
     <el-dialog
       title="上传图片"
-      :visible.sync="uploadModal"
+      v-model="uploadModal"
       :append-to-body="true"
       :width="isIframe ? '100%' : '1024px'"
       :fullscreen="isIframe"
       @close="closed"
     >
       <div class="main" v-loading="loading">
-        <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+        <el-form :model="ruleForm" :rules="rules" ref="ruleFormRef" label-width="100px" class="demo-ruleForm">
           <el-form-item label="上传方式：" prop="type">
             <el-radio-group v-model="ruleForm.type" @input="radioChange(ruleForm.type)">
-              <el-radio :label="0">本地上传</el-radio>
-              <el-radio :label="1">网络上传</el-radio>
-              <el-radio :label="2">扫码上传</el-radio>
+              <el-radio :label="0" :value="0">本地上传</el-radio>
+              <el-radio :label="1" :value="1">网络上传</el-radio>
+              <el-radio :label="2" :value="2">扫码上传</el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="上传至分组：" prop="region" v-show="ruleForm.type == 0 || ruleForm.type == 1">
             <el-cascader
               class="form-width"
               v-model="ruleForm.region"
-              :props="props"
+              :props="propsData"
               :options="categoryList"
               @change="handleChange"
             ></el-cascader>
@@ -34,7 +34,7 @@
             <div class="acea-row">
               <div class="uploadCont">
                 <el-upload
-                  ref="upload"
+                  ref="uploadRef"
                   :action="fileUrl"
                   list-type="picture-card"
                   :on-change="fileChange"
@@ -45,19 +45,21 @@
                   :multiple="true"
                   :limit="limit"
                 >
-                  <i slot="default" class="el-icon-plus"></i>
-                  <div
-                    slot="file"
-                    slot-scope="{ file }"
-                    draggable="false"
-                    @dragstart="handleDragStart($event, file)"
-                    @dragover="handleDragOver($event, file)"
-                    @dragenter="handleDragEnter($event, file)"
-                    @dragend="handleDragEnd($event, file)"
-                  >
-                    <img class="el-upload-list__item-thumbnail" :src="file.url" alt="" />
-                    <i class="el-icon-error btndel" v-db-click @click="handleWebRemove(file)" />
-                  </div>
+                  <template #default>
+                    <i class="el-icon-plus"></i>
+                  </template>
+                  <template #file="{ file }">
+                    <div
+                      draggable="false"
+                      @dragstart="handleDragStart($event, file)"
+                      @dragover="handleDragOver($event, file)"
+                      @dragenter="handleDragEnter($event, file)"
+                      @dragend="handleDragEnd($event, file)"
+                    >
+                      <img class="el-upload-list__item-thumbnail" :src="file.url" alt="" />
+                      <i class="el-icon-error btndel" v-db-click @click="handleWebRemove(file)" />
+                    </div>
+                  </template>
                 </el-upload>
                 <div class="tips">
                   建议上传图片最大宽度750px，不超过3MB；仅支持jpeg、jpg、png格式，可拖拽调整上传顺序
@@ -88,19 +90,19 @@
                 <el-cascader
                   class="form-width"
                   v-model="ruleForm.region"
-                  :props="props"
+                  :props="propsData"
                   :options="categoryList"
                   @change="handleChange"
                 ></el-cascader>
               </el-form-item>
               <el-form-item label="二维码：" prop="region">
-                <div class="code" ref="qrCodeUrl"></div>
+                <div class="code" ref="qrCodeUrlRef"></div>
                 <div class="trip">扫描二维码，快速上传手机图片</div>
                 <div class="trip-small">建议使用手机浏览器</div>
               </el-form-item>
             </div>
             <div class="right">
-              <el-button size="small" v-db-click @click="scanUploadGet">刷新图库</el-button>
+              <el-button v-db-click @click="scanUploadGet">刷新图库</el-button>
               <div class="tip">刷新图库按钮，可显示移动端上传成功的图片</div>
               <div class="img-box">
                 <div
@@ -122,17 +124,21 @@
         </el-form>
       </div>
 
-      <span slot="footer" class="dialog-footer">
-        <el-button v-db-click @click="clear">取 消</el-button>
-        <el-button type="primary" :disabled="!ruleForm.imgList.length" v-db-click @click="submitUpload"
-          >确 定</el-button
-        >
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button v-db-click @click="clear">取 消</el-button>
+          <el-button type="primary" :disabled="!ruleForm.imgList.length" v-db-click @click="submitUpload"
+            >确 定</el-button
+          >
+        </span>
+      </template>
     </el-dialog>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, watch, onBeforeUnmount, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { getCategoryListApi, moveApi, onlineUpload, scanUploadCode } from '@/api/uploadPictures';
 import Setting from '@/setting';
 import { getCookies } from '@/libs/util';
@@ -140,291 +146,320 @@ import { fileUpload, scanUploadQrcode, scanUploadGet } from '@/api/setting';
 import QRCode from 'qrcodejs2';
 import compressImg from '@/utils/compressImg.js';
 import { isPicUpload } from '@/utils/index';
-export default {
-  name: '',
-  props: {
-    categoryList: {
-      default: () => {
-        return [];
-      },
-    },
-    categoryId: {
-      default: '',
-    },
-    isPage: {
-      default: false,
-    },
-    isIframe: {
-      default: false,
-    },
-  },
-  watch: {
-    uploadModal: {
-      handler(newVal) {
-        if (newVal) this.ruleForm.region = this.categoryId;
-      },
-      immediate: true,
-    },
-  },
-  data() {
-    return {
-      webImgUrl: '',
-      uploadModal: false,
-      fileUrl: Setting.apiBaseURL + '/file/upload',
-      header: {
-        'Authori-zation': 'Bearer ' + getCookies('token'),
-      },
-      uploadData: {},
-      props: { checkStrictly: true, emitPath: false, label: 'title', value: 'id' },
-      disabled: false,
-      ruleForm: {
-        type: 0,
-        region: '',
-        imgList: [],
-      },
-      rules: { type: [{ required: true, message: '请选择活动资源', trigger: 'change' }] },
-      qrcode: '',
-      scanToken: '',
-      limit: 20,
-      loading: false,
-      time: undefined,
-    };
-  },
-  created() {},
-  mounted() {},
-  beforeDestroy() {
-    clearInterval(this.time);
-    this.time = undefined;
-  },
-  methods: {
-    radioChange(type) {
-      this.ruleForm.type = type;
-      this.ruleForm.imgList = [];
-      clearInterval(this.time);
-      this.time = undefined;
-      if (type == 2) {
-        this.scanUploadQrcode();
-        this.time = setInterval((e) => {
-          this.scanUploadGet();
-        }, 2000);
-      }
-    },
-    scanUploadQrcode() {
-      scanUploadQrcode(this.ruleForm.region).then((res) => {
-        this.creatQrCode(res.data.url);
-        this.scanToken = res.data.url;
-      });
-    },
-    scanUploadGet() {
-      let token = this.scanToken.split('token=')[1];
-      scanUploadGet(token).then((res) => {
-        this.ruleForm.imgList = res.data;
-      });
-    },
 
-    getImg() {
-      if (!this.webImgUrl) {
-        this.$message.error('请先输入图片地址');
-        return;
-      }
-      if (this.webImgUrl.indexOf('.php') != -1) {
-        this.$message.error('请先输入其他图片地址');
-        return;
-      }
-      this.ruleForm.imgList.push({
-        url: this.webImgUrl,
-      });
-    },
-    async submitUpload() {
-      if (!this.ruleForm.imgList.length) return this.$message.warning('请先选择图片');
-      if (this.ruleForm.type == 0) {
-        this.uploadData = {
-          pid: this.ruleForm.region,
-        };
-        if (this.ruleForm.imgList.length) {
-          if (this.loading) return;
-          this.loading = true;
-          for (let i = 0; i < this.ruleForm.imgList.length; i++) {
-            const file = this.ruleForm.imgList[i].raw;
-            await this.uploadItem(file);
-            if (i == this.ruleForm.imgList.length - 1) {
-              this.$message.success('上传成功');
-              this.$emit('uploadSuccess');
-              this.uploadModal = false;
-              this.loading = false;
-              this.initData();
-            }
-          }
-        }
-      } else if (this.ruleForm.type == 1) {
-        let urls = this.ruleForm.imgList.map((e) => {
-          return e.url;
-        });
-        if (urls.length) {
-          if (this.loading) return;
-          this.loading = true;
-          onlineUpload({ pid: this.ruleForm.region, images: urls })
-            .then((res) => {
-              this.$message.success('上传成功');
-              this.$emit('uploadSuccess');
-              this.uploadModal = false;
-              this.loading = false;
-              this.initData();
-            })
-            .catch((err) => {
-              this.loading = false;
-              this.$message.error(err.msg);
-            });
-        }
-      } else if (this.ruleForm.type == 2) {
-        let attId = this.ruleForm.imgList.map((e) => {
-          return e.att_id;
-        });
-        moveApi({ pid: this.ruleForm.region, images: attId }).then((res) => {
-          this.$message.success('上传成功');
-          this.$emit('uploadSuccess');
-          this.uploadModal = false;
-          this.initData();
-        });
-      }
-    },
-    uploadItem(file) {
-      return new Promise((resolve, reject) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('pid', this.ruleForm.region);
-        fileUpload(formData)
-          .then((res) => {
-            if (res.status == 200) {
-              resolve();
-              // this.$emit('uploadImgSuccess', res.data);
-            } else {
-              this.loading = false;
-              this.$message({
-                message: '上传失败',
-                type: 'error',
-                duration: 1000,
-              });
-            }
-          })
-          .catch((err) => {
-            this.loading = false;
-            this.$message.error(err.msg);
-          });
-      });
-    },
-    beforeUpload(file) {
-      console.log(file);
-    },
-    creatQrCode(url) {
-      this.$refs.qrCodeUrl.innerHTML = '';
-      var qrcode = new QRCode(this.$refs.qrCodeUrl, {
-        text: url, // 需要转换为二维码的内容
-        width: 160,
-        height: 160,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H,
-      });
-    },
-    handleWebRemove(file) {
-      let index = this.ruleForm.imgList.findIndex((e) => {
-        return e.url == file.url;
-      });
-      this.ruleForm.imgList.splice(index, 1);
-    },
-    handleRemove(index) {
-      this.ruleForm.imgList.splice(index, 1);
-    },
-    handlePictureCardPreview(file) {
-      this.dialogImageUrl = file.url;
-      this.dialogVisible = true;
-    },
-    handleDownload(file) {
-      console.log(file);
-    },
-    async fileChange(file, fileList) {
-      if (isPicUpload(file)) {
-        if (file.size >= 2097152) {
-          await this.comImg(file.raw).then((res) => {
-            fileList.map((e) => {
-              if (e.uid === file.uid) {
-                e.raw = res;
-              }
-            });
-            this.ruleForm.imgList = fileList;
-          });
-        } else {
-          this.ruleForm.imgList = fileList;
-        }
-      } else {
-        // 从ruleForm对象的imgList数组中删除最后一个元素
-        this.ruleForm.imgList.splice(this.ruleForm.imgList.length, 1);
-      }
-    },
-    comImg(file) {
-      return new Promise((resolve, reject) => {
-        compressImg(file).then((res) => {
-          resolve(res);
-        });
-      });
-    },
-    loadData(item, callback) {
-      getCategoryListApi({
-        pid: item.value,
-      })
-        .then(async (res) => {
-          const data = res.data.list;
-          callback(data);
-        })
-        .catch((res) => {});
-    },
-    handleChange(e) {
-      if (this.ruleForm.type == 2) this.scanUploadQrcode();
-    },
-    // 移动
-    handleDragStart(e, item) {
-      this.dragging = item;
-    },
-    handleDragEnd(e, item) {
-      this.dragging = null;
-    },
-    handleDragOver(e) {
-      e.dataTransfer.dropEffect = 'move';
-    },
-    handleDragEnter(e, item) {
-      e.dataTransfer.effectAllowed = 'move';
-      if (item === this.dragging) {
-        return;
-      }
-      const newItems = [...this.ruleForm.imgList];
-      const src = newItems.indexOf(this.dragging);
-      const dst = newItems.indexOf(item);
-      newItems.splice(dst, 0, ...newItems.splice(src, 1));
-      this.ruleForm.imgList = newItems;
-    },
-    closed() {
-      this.initData();
-      scanUploadCode().then((res) => {});
-    },
-    clear() {
-      this.uploadModal = false;
-      this.initData();
-    },
-    initData() {
-      this.ruleForm.type = 0;
-      this.ruleForm.region = 0;
-      this.scanToken = '';
-      this.webImgUrl = '';
-      this.ruleForm.imgList = [];
-      clearInterval(this.time);
-      this.time = undefined;
+defineOptions({ name: '' });
+
+const props = defineProps({
+  categoryList: {
+    default: () => {
+      return [];
     },
   },
-};
+  categoryId: {
+    default: '',
+  },
+  isPage: {
+    default: false,
+  },
+  isIframe: {
+    default: false,
+  },
+});
+
+const emit = defineEmits(['uploadSuccess']);
+
+const ruleFormRef = ref(null);
+const uploadRef = ref(null);
+const qrCodeUrlRef = ref(null);
+
+const webImgUrl = ref('');
+const uploadModal = ref(false);
+const fileUrl = ref(Setting.apiBaseURL + '/file/upload');
+const header = ref({
+  Authorization: 'Bearer ' + getCookies('token'),
+});
+const uploadData = ref({});
+const propsData = ref({ checkStrictly: true, emitPath: false, label: 'title', value: 'id' });
+const disabled = ref(false);
+const ruleForm = ref({
+  type: 0,
+  region: '',
+  imgList: [],
+});
+const rules = ref({ type: [{ required: true, message: '请选择活动资源', trigger: 'change' }] });
+const qrcode = ref('');
+const scanToken = ref('');
+const limit = ref(20);
+const loading = ref(false);
+const time = ref(undefined);
+const dragging = ref(null);
+const dialogImageUrl = ref('');
+const dialogVisible = ref(false);
+
+watch(
+  uploadModal,
+  (newVal) => {
+    if (newVal) ruleForm.value.region = props.categoryId;
+  },
+  { immediate: true },
+);
+
+onBeforeUnmount(() => {
+  clearInterval(time.value);
+  time.value = undefined;
+});
+
+function radioChange(type) {
+  ruleForm.value.type = type;
+  ruleForm.value.imgList = [];
+  clearInterval(time.value);
+  time.value = undefined;
+  if (type == 2) {
+    scanUploadQrcodeFn();
+    time.value = setInterval((e) => {
+      scanUploadGetFn();
+    }, 2000);
+  }
+}
+
+function scanUploadQrcodeFn() {
+  scanUploadQrcode(ruleForm.value.region).then((res) => {
+    creatQrCode(res.data.url);
+    scanToken.value = res.data.url;
+  });
+}
+
+function scanUploadGetFn() {
+  let token = scanToken.value.split('token=')[1];
+  scanUploadGet(token).then((res) => {
+    ruleForm.value.imgList = res.data;
+  });
+}
+
+function getImg() {
+  if (!webImgUrl.value) {
+    ElMessage.error('请先输入图片地址');
+    return;
+  }
+  if (webImgUrl.value.indexOf('.php') != -1) {
+    ElMessage.error('请先输入其他图片地址');
+    return;
+  }
+  ruleForm.value.imgList.push({
+    url: webImgUrl.value,
+  });
+}
+
+async function submitUpload() {
+  if (!ruleForm.value.imgList.length) return ElMessage.warning('请先选择图片');
+  if (ruleForm.value.type == 0) {
+    uploadData.value = {
+      pid: ruleForm.value.region,
+    };
+    if (ruleForm.value.imgList.length) {
+      if (loading.value) return;
+      loading.value = true;
+      for (let i = 0; i < ruleForm.value.imgList.length; i++) {
+        const file = ruleForm.value.imgList[i].raw;
+        await uploadItem(file);
+        if (i == ruleForm.value.imgList.length - 1) {
+          ElMessage.success('上传成功');
+          emit('uploadSuccess');
+          uploadModal.value = false;
+          loading.value = false;
+          initData();
+        }
+      }
+    }
+  } else if (ruleForm.value.type == 1) {
+    let urls = ruleForm.value.imgList.map((e) => {
+      return e.url;
+    });
+    if (urls.length) {
+      if (loading.value) return;
+      loading.value = true;
+      onlineUpload({ pid: ruleForm.value.region, images: urls })
+        .then((res) => {
+          ElMessage.success('上传成功');
+          emit('uploadSuccess');
+          uploadModal.value = false;
+          loading.value = false;
+          initData();
+        })
+        .catch((err) => {
+          loading.value = false;
+          ElMessage.error(err.msg);
+        });
+    }
+  } else if (ruleForm.value.type == 2) {
+    let attId = ruleForm.value.imgList.map((e) => {
+      return e.att_id;
+    });
+    moveApi({ pid: ruleForm.value.region, images: attId }).then((res) => {
+      ElMessage.success('上传成功');
+      emit('uploadSuccess');
+      uploadModal.value = false;
+      initData();
+    });
+  }
+}
+
+function uploadItem(file) {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('pid', ruleForm.value.region);
+    fileUpload(formData)
+      .then((res) => {
+        if (res.status == 200) {
+          resolve();
+          // emit('uploadImgSuccess', res.data);
+        } else {
+          loading.value = false;
+          ElMessage({
+            message: '上传失败',
+            type: 'error',
+            duration: 1000,
+          });
+        }
+      })
+      .catch((err) => {
+        loading.value = false;
+        ElMessage.error(err.msg);
+      });
+  });
+}
+
+function beforeUpload(file) {
+  console.log(file);
+}
+
+function creatQrCode(url) {
+  qrCodeUrlRef.value.innerHTML = '';
+  var qrcode = new QRCode(qrCodeUrlRef.value, {
+    text: url, // 需要转换为二维码的内容
+    width: 160,
+    height: 160,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H,
+  });
+}
+
+function handleWebRemove(file) {
+  let index = ruleForm.value.imgList.findIndex((e) => {
+    return e.url == file.url;
+  });
+  ruleForm.value.imgList.splice(index, 1);
+}
+
+function handleRemove(index) {
+  ruleForm.value.imgList.splice(index, 1);
+}
+
+function handlePictureCardPreview(file) {
+  dialogImageUrl.value = file.url;
+  dialogVisible.value = true;
+}
+
+function handleDownload(file) {
+  console.log(file);
+}
+
+async function fileChange(file, fileList) {
+  if (isPicUpload(file)) {
+    if (file.size >= 2097152) {
+      await comImg(file.raw).then((res) => {
+        fileList.map((e) => {
+          if (e.uid === file.uid) {
+            e.raw = res;
+          }
+        });
+        ruleForm.value.imgList = fileList;
+      });
+    } else {
+      ruleForm.value.imgList = fileList;
+    }
+  } else {
+    // 从ruleForm对象的imgList数组中删除最后一个元素
+    ruleForm.value.imgList.splice(ruleForm.value.imgList.length, 1);
+  }
+}
+
+function comImg(file) {
+  return new Promise((resolve, reject) => {
+    compressImg(file).then((res) => {
+      resolve(res);
+    });
+  });
+}
+
+function loadData(item, callback) {
+  getCategoryListApi({
+    pid: item.value,
+  })
+    .then(async (res) => {
+      const data = res.data.list;
+      callback(data);
+    })
+    .catch((res) => {});
+}
+
+function handleChange(e) {
+  if (ruleForm.value.type == 2) scanUploadQrcodeFn();
+}
+
+// 移动
+function handleDragStart(e, item) {
+  dragging.value = item;
+}
+
+function handleDragEnd(e, item) {
+  dragging.value = null;
+}
+
+function handleDragOver(e) {
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(e, item) {
+  e.dataTransfer.effectAllowed = 'move';
+  if (item === dragging.value) {
+    return;
+  }
+  const newItems = [...ruleForm.value.imgList];
+  const src = newItems.indexOf(dragging.value);
+  const dst = newItems.indexOf(item);
+  newItems.splice(dst, 0, ...newItems.splice(src, 1));
+  ruleForm.value.imgList = newItems;
+}
+
+function closed() {
+  initData();
+  scanUploadCode().then((res) => {});
+}
+
+function clear() {
+  uploadModal.value = false;
+  initData();
+}
+
+function initData() {
+  ruleForm.value.type = 0;
+  ruleForm.value.region = 0;
+  scanToken.value = '';
+  webImgUrl.value = '';
+  ruleForm.value.imgList = [];
+  clearInterval(time.value);
+  time.value = undefined;
+}
+
+defineExpose({
+  uploadModal,
+});
 </script>
 <style lang="scss" scoped>
-::v-deep .el-dialog__title {
+:deep(.el-dialog__title) {
   font-size: 16px;
 }
 .main {
@@ -461,15 +496,15 @@ export default {
   color: var(--prev-color-primary);
   cursor: pointer;
 }
-.uploadCont ::v-deep .el-upload--picture-card,
-::v-deep .el-upload-list--picture-card .el-upload-list__item {
+.uploadCont :deep(.el-upload--picture-card),
+:deep(.el-upload-list--picture-card .el-upload-list__item) {
   width: 64px;
   height: 64px;
   line-height: 72px;
   overflow: inherit;
 }
-.uploadCont ::v-deep .el-upload--picture-card,
-::v-deep .el-upload-list--picture-card .el-upload-list__item img {
+.uploadCont :deep(.el-upload--picture-card),
+:deep(.el-upload-list--picture-card .el-upload-list__item img) {
   width: 64px !important;
   height: 64px !important;
   border-radius: 6px;

@@ -10,7 +10,7 @@
       <div class="layout-link-warp">
         <i class="layout-link-icon iconfont icon-xingqiu"></i>
         <div class="layout-link-msg">页面 "{{ meta.title }}" 已在新窗口中打开</div>
-        <el-button class="mt30" round size="small" @click="onGotoFullPage">
+        <el-button class="mt30" round @click="onGotoFullPage">
           <i class="iconfont icon-lianjie"></i>
           <span>立即前往</span>
         </el-button>
@@ -19,25 +19,25 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { verifyUrl } from '@/utils/toolsValidate';
-export default {
-  name: 'layoutLinkView',
-  props: {
-    meta: {
-      type: Object,
-      default: () => {},
-    },
+
+defineOptions({ name: 'layoutLinkView' });
+
+const props = defineProps({
+  meta: {
+    type: Object,
+    default: () => {},
   },
-  methods: {
-    // 立即前往
-    onGotoFullPage() {
-      const { origin, pathname } = window.location;
-      if (verifyUrl(this.isLink)) window.open(this.isLink);
-      else window.open(`${origin}${pathname}#${this.isLink}`);
-    },
-  },
-};
+});
+
+// 立即前往
+function onGotoFullPage() {
+  const { origin, pathname } = window.location;
+  const isLink = undefined;
+  if (verifyUrl(isLink)) window.open(isLink);
+  else window.open(`${origin}${pathname}#${isLink}`);
+}
 </script>
 
 <style scoped lang="scss">

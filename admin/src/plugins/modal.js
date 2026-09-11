@@ -1,4 +1,9 @@
-import { Message, MessageBox, Notification, Loading } from 'element-ui';
+import {
+  ElMessage as Message,
+  ElMessageBox as MessageBox,
+  ElNotification as Notification,
+  ElLoading as Loading,
+} from '@/utils/elementPlusFeedback';
 
 let loadingInstance;
 

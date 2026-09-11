@@ -8,72 +8,76 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import Breadcrumb from '@/layout/navBars/breadcrumb/breadcrumb.vue';
 import User from '@/layout/navBars/breadcrumb/user.vue';
 import Logo from '@/layout/logo/index.vue';
 import Horizontal from '@/layout/navMenu/horizontal.vue';
 import transverseAside from '@/layout/component/transverseAside.vue';
-export default {
-  name: 'layoutNavBars',
-  components: { Breadcrumb, User, Logo, Horizontal, transverseAside },
-  data() {
-    return {
-      menuList: [],
-    };
-  },
-  computed: {
-    // 设置 logo 是否显示
-    setIsShowLogo() {
-      let { isShowLogo, layout } = this.$store.state.themeConfig.themeConfig;
-      return (isShowLogo && layout === 'classic') || (isShowLogo && layout === 'transverse');
-    },
-    // 设置是否显示横向菜单
-    isLayoutTransverse() {
-      let { layout, isClassicSplitMenu } = this.$store.state.themeConfig.themeConfig;
-      return layout === 'transverse' || (isClassicSplitMenu && layout === 'classic');
-    },
-    isLayoutClassic() {
-      let { layout } = this.$store.state.themeConfig.themeConfig;
-      return layout === 'classic';
-    },
-  },
-  mounted() {
-    this.setFilterRoutes();
-    this.bus.$on('routesListChange', () => {
-      this.setFilterRoutes();
+import { useThemeConfigStore } from '@/store/modules/themeConfig';
+import { useUserStore } from '@/store/modules/user';
+import bus from '@/utils/bus';
+
+defineOptions({ name: 'layoutNavBars' });
+
+const themeConfigStore = useThemeConfigStore();
+const userStore = useUserStore();
+
+const menuList = ref([]);
+
+// 设置 logo 是否显示
+const setIsShowLogo = computed(() => {
+  let { isShowLogo, layout } = themeConfigStore.themeConfig;
+  return (isShowLogo && layout === 'classic') || (isShowLogo && layout === 'transverse');
+});
+// 设置是否显示横向菜单
+const isLayoutTransverse = computed(() => {
+  let { layout, isClassicSplitMenu } = themeConfigStore.themeConfig;
+  return layout === 'transverse' || (isClassicSplitMenu && layout === 'classic');
+});
+const isLayoutClassic = computed(() => {
+  let { layout } = themeConfigStore.themeConfig;
+  return layout === 'classic';
+});
+
+// 设置路由的过滤
+function setFilterRoutes() {
+  menuList.value = filterRoutesFun(userStore.menuList);
+}
+// 设置路由的过滤递归函数
+function filterRoutesFun(arr) {
+  return arr
+    .filter((item) => item.path)
+    .map((item) => {
+      item = Object.assign({}, item);
+      if (item.children.length) item.children = filterRoutesFun(item.children);
+      return item;
     });
+}
+
+onMounted(() => {
+  setFilterRoutes();
+  bus.on('routesListChange', onRoutesListChange);
+});
+
+onBeforeUnmount(() => {
+  bus.off('routesListChange', onRoutesListChange);
+});
+
+function onRoutesListChange() {
+  setFilterRoutes();
+}
+
+// 监听 store 数据变化
+watch(
+  () => themeConfigStore.themeConfig,
+  (val) => {
+    if (userStore.menuList.length === menuList.value.length) return false;
+    setFilterRoutes();
   },
-  beforeDestroy() {
-    this.bus.$off('routesListChange');
-  },
-  methods: {
-    // 设置路由的过滤
-    setFilterRoutes() {
-      this.menuList = this.filterRoutesFun(this.$store.state.user.menuList);
-    },
-    // 设置路由的过滤递归函数
-    filterRoutesFun(arr) {
-      return arr
-        .filter((item) => item.path)
-        .map((item) => {
-          item = Object.assign({}, item);
-          if (item.children.length) item.children = this.filterRoutesFun(item.children);
-          return item;
-        });
-    },
-  },
-  watch: {
-    // 监听 vuex 数据变化
-    '$store.state': {
-      handler(val) {
-        if (val.user.menuListlength === this.menuList.length) return false;
-        this.setFilterRoutes();
-      },
-      deep: true,
-    },
-  },
-};
+  { deep: true },
+);
 </script>
 
 <style scoped lang="scss">

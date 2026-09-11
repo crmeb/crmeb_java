@@ -7,7 +7,7 @@
       <span style="font-size: 14px; font-weight: bold; color: #333">位置设置</span>
     </div>
 
-    <el-form size="small" label-width="70px" label-position="left">
+    <el-form label-width="70px" label-position="left">
       <el-form-item label="对齐方式">
         <div class="alignment-bar">
           <div class="bar-item" @click="alignComponents('left')" title="左对齐">
@@ -81,58 +81,61 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ConfigMultiSelect',
-  props: {
-    groupX: {
-      type: Number,
-      default: 0,
-    },
-    groupY: {
-      type: Number,
-      default: 0,
-    },
-    canvasWidth: {
-      type: Number,
-      default: 375,
-    },
-    canvasHeight: {
-      type: Number,
-      default: 667,
-    },
+<script setup>
+import { ref, watch } from 'vue';
+
+defineOptions({ name: 'ConfigMultiSelect' });
+
+const props = defineProps({
+  groupX: {
+    type: Number,
+    default: 0,
   },
-  data() {
-    return {
-      localGroupX: this.groupX,
-      localGroupY: this.groupY,
-    };
+  groupY: {
+    type: Number,
+    default: 0,
   },
-  watch: {
-    groupX(val) {
-      this.localGroupX = val;
-    },
-    groupY(val) {
-      this.localGroupY = val;
-    },
+  canvasWidth: {
+    type: Number,
+    default: 375,
   },
-  methods: {
-    alignComponents(type) {
-      this.$emit('align', type);
-    },
-    handleXChange(val) {
-      this.$emit('update:groupX', val);
-    },
-    handleYChange(val) {
-      this.$emit('update:groupY', val);
-    },
+  canvasHeight: {
+    type: Number,
+    default: 667,
   },
-};
+});
+const emit = defineEmits(['align', 'update:groupX', 'update:groupY']);
+
+const localGroupX = ref(props.groupX);
+const localGroupY = ref(props.groupY);
+
+watch(
+  () => props.groupX,
+  (val) => {
+    localGroupX.value = val;
+  },
+);
+watch(
+  () => props.groupY,
+  (val) => {
+    localGroupY.value = val;
+  },
+);
+
+function alignComponents(type) {
+  emit('align', type);
+}
+function handleXChange(val) {
+  emit('update:groupX', val);
+}
+function handleYChange(val) {
+  emit('update:groupY', val);
+}
 </script>
 
 <style scoped lang="scss">
 .multi-select-panel {
-  ::v-deep .el-input-number.is-controls-right .el-input__inner {
+  :deep(.el-input-number.is-controls-right .el-input__inner) {
     text-align: center;
     padding: 0 5px;
   }

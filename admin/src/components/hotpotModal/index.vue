@@ -2,7 +2,7 @@
   <div>
     <el-dialog
       title="编辑热区"
-      :visible.sync="dialogVisible"
+      v-model="dialogVisible"
       fullscreen
       append-to-body
       custom-class="hotpot-dialog"
@@ -11,9 +11,9 @@
     >
       <div class="operationFloor">
         <div class="imgBox" @mouseup.left.stop="changeStop()">
-          <div ref="container" class="container" id="img-box-container">
+          <div ref="containerRef" class="container" id="img-box-container">
             <img
-              ref="backgroundImg"
+              ref="backgroundImgRef"
               :src="imageSrc"
               ondragstart="return false;"
               oncontextmenu="return false;"
@@ -40,7 +40,7 @@
               :link="item.link"
               :title="item.title"
               :type="parseInt(item.type)"
-              :area-init.sync="item"
+              v-model:area-init="areaData[index]"
               :parent-width="parentWidth"
               :parent-height="parentHeight"
               @delAreaBox="delAreaBox"
@@ -54,21 +54,23 @@
             <div class="mb12 titleTop acea-row row-middle">
               <span>热区管理</span>
               <span class="ml5 iconfont iconrequwenzitishi"></span>
-              <img class="ml5" src="@/assets/imgs/qipaokuang.png" alt="" />
+              <img class="ml5" :src="qipaokuangImg" alt="" />
               <div class="ml5 title-text">可框选热区范围，双击设置热区信息</div>
             </div>
           </div>
           <div class="actions">
-            <el-button type="primary" size="small" @click="addAreaBox">添加热区</el-button>
-            <el-button size="small" @click="resetAreaBox">重置</el-button>
+            <el-button type="primary" @click="addAreaBox">添加热区</el-button>
+            <el-button @click="resetAreaBox">重置</el-button>
           </div>
           <div v-for="(item, index) in areaData" :key="index" class="form-row">
             <!-- <span class="iconfont iconrequbianji"></span> -->
-            <el-input :maxlength="6" class="item-input" v-model="item.name"></el-input>
+            <el-input :maxlength="6" class="item-input" v-model="areaData[index].name"></el-input>
             <div class="form-item label">
               <div @click="getLink(index)">
                 <el-input :value="item.link" class="toLink" :style="linkInputStyle" readonly placeholder="选择跳转链接">
-                  <i class="iconfont iconlianjietubiao" slot="suffix"> </i>
+                  <template #suffix>
+                    <i class="iconfont iconlianjietubiao"> </i>
+                  </template>
                 </el-input>
               </div>
             </div>
@@ -76,311 +78,284 @@
           </div>
         </div>
       </div>
-      <div slot="footer" class="dialog-actions">
-        <el-button @click="cancelAreaData">取消</el-button>
-        <el-button type="primary" @click="saveAreaData">确定</el-button>
-      </div>
+      <template #footer>
+        <div class="dialog-actions">
+          <el-button @click="cancelAreaData">取消</el-button>
+          <el-button type="primary" @click="saveAreaData">确定</el-button>
+        </div>
+      </template>
     </el-dialog>
-    <linkaddress ref="linkaddres" @linkUrl="linkUrl"></linkaddress>
+    <linkaddress ref="linkaddresRef" @linkUrl="linkUrl"></linkaddress>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, onMounted, nextTick, getCurrentInstance } from 'vue';
 import AreaBox from './AreaBox';
 import linkaddress from '@/components/linkaddress';
+import qipaokuangImg from '@/assets/imgs/qipaokuang.png';
 
-export default {
-  name: 'OperationFloor',
-  components: {
-    AreaBox,
-    linkaddress,
+defineOptions({ name: 'OperationFloor' });
+
+const props = defineProps({
+  /**
+   * @description 图片数据对象
+   * @type {ImgData}
+   */
+  imgs: {
+    type: [String, Array], // 图片
+    default: '',
   },
-  props: {
-    /**
-     * @description 图片数据对象
-     * @type {ImgData}
-     */
-    imgs: {
-      type: [String, Array], // 图片
-      default: '',
-    },
-    /**
-     * @description 是否为热门汤品
-     * @type {boolean}
-     */
-    isHotPot: {
-      type: Boolean, // 布尔类型
-      default: () => false, // 默认值为false
-    },
-    /**
-     * @description 图片区域数据对象
-     * @type {AreaData[]}
-     */
-    imgAreaData: {
-      type: Array, // 数组类型
-      default: () => [], // 默认值为空数组
-    },
-    /**
-     * @description 链接输入框样式对象
-     * @type {LinkInputStyle}
-     */
-    linkInputStyle: {
-      type: Object, // 对象类型
-      default: () => ({
-        // 默认值为一个包含width属性的对象
-        width: '260px',
-        height: '32px',
-        borderRadius: '4px',
-      }),
-    },
+  /**
+   * @description 是否为热门汤品
+   * @type {boolean}
+   */
+  isHotPot: {
+    type: Boolean, // 布尔类型
+    default: () => false, // 默认值为false
   },
-  data() {
-    return {
-      /**
-       * @description 对话框是否可见
-       * @type {boolean}
-       */
-      dialogVisible: false,
-      /**
-       * @description 开始的x坐标
-       * @type {number}
-       */
-      starX: 0,
-      /**
-       * @description 开始的y坐标
-       * @type {number}
-       */
-      starY: 0,
-      /**
-       * @description 区域宽度
-       * @type {number}
-       */
-      areaWidth: 0,
-      /**
-       * @description 区域高度
-       * @type {number}
-       */
-      areaHeight: 0,
-      /**
-       * @description 当前显示的图片索引
-       * @type {boolean}
-       */
-      caseShow: false,
-      /**
-       * @description 当前图片的宽度
-       * @type {null}
-       */
-      nowImgWidth: null,
-      /**
-       * @description 区域数据
-       * @type {Array}
-       */
-      areaData: [],
-      /**
-       * @description 当前显示的图片编号
-       * @type {number}
-       */
-      imgNum: 1,
-      /**
-       * @description 父元素宽度
-       * @type {number}
-       */
-      parentWidth: 0,
-      /**
-       * @description 父元素高度
-       * @type {number}
-       */
-      parentHeight: 0,
-      /**
-       * @description 默认宽度
-       * @type {number}
-       */
-      defaultWidth: 750,
-      /**
-       * @description 当前显示的图片索引
-       * @type {number}
-       */
-      itemIndex: 0,
-      nowNum: 0,
+  /**
+   * @description 图片区域数据对象
+   * @type {AreaData[]}
+   */
+  imgAreaData: {
+    type: Array, // 数组类型
+    default: () => [], // 默认值为空数组
+  },
+  /**
+   * @description 链接输入框样式对象
+   * @type {LinkInputStyle}
+   */
+  linkInputStyle: {
+    type: Object, // 对象类型
+    default: () => ({
+      // 默认值为一个包含width属性的对象
+      width: '260px',
+      height: '32px',
+      borderRadius: '4px',
+    }),
+  },
+});
+
+const emit = defineEmits(['saveAreaData']);
+
+const { proxy } = getCurrentInstance();
+
+const containerRef = ref(null);
+const backgroundImgRef = ref(null);
+const linkaddresRef = ref(null);
+
+const dialogVisible = ref(false);
+const starX = ref(0);
+const starY = ref(0);
+const areaWidth = ref(0);
+const areaHeight = ref(0);
+const caseShow = ref(false);
+const nowImgWidth = ref(null);
+const areaData = ref([]);
+const imgNum = ref(1);
+const parentWidth = ref(0);
+const parentHeight = ref(0);
+const defaultWidth = ref(750);
+const itemIndex = ref(0);
+const nowNum = ref(0);
+
+function open() {
+  dialogVisible.value = true;
+}
+
+defineExpose({ open });
+
+const imageSrc = computed(() => {
+  if (Array.isArray(props.imgs)) {
+    const first = props.imgs[0] || {};
+    return first.img || first.url || first.att_dir || first.sattDir || '';
+  }
+  return props.imgs || '';
+});
+
+watch(
+  () => props.imgAreaData,
+  (val) => {
+    areaData.value = [...(val || [])];
+  },
+);
+
+onMounted(() => {
+  areaData.value = [...(props.imgAreaData || [])];
+});
+
+//添加热区
+function addAreaBox() {
+  if (areaData.value.length === 50) return;
+  nowNum.value++;
+  let starXVal = ((nowNum.value - 1) % 4) * 114;
+  let starYVal = Math.floor((nowNum.value - 1) / 4) * 114;
+  if (starYVal > parentHeight.value - 114) {
+    starYVal = parentHeight.value - 114;
+  }
+  areaData.value.push({
+    starX: starXVal,
+    starY: starYVal,
+    name: `热区${nowNum.value}`,
+    areaWidth: 114,
+    areaHeight: 114,
+    nowImgWidth: defaultWidth.value,
+    link: '',
+  });
+}
+
+//重置热区
+function resetAreaBox() {
+  nowNum.value = 0;
+  areaData.value = [];
+}
+
+function cancelAreaData() {
+  areaData.value = [...props.imgAreaData];
+  dialogVisible.value = false;
+}
+
+function saveAreaData() {
+  emit('saveAreaData', areaData.value);
+  dialogVisible.value = false;
+}
+
+function handleDialogClose() {
+  document.onmousemove = null;
+  caseShow.value = false;
+}
+
+function openModal() {
+  nextTick(() => {
+    const parentDiv = containerRef.value;
+    parentWidth.value = defaultWidth.value;
+    parentHeight.value = parentDiv ? parentDiv.clientHeight : 450;
+  });
+}
+
+function closeModal() {
+  // 原 this.$Modal.confirm 为 iView/element-ui 旧 API，迁移后保留调用（proxy.$Modal 可能未注册，属预存问题）
+  proxy.$Modal.confirm({
+    title: '提示信息',
+    content: '<p>未保存内容，是否在离开前放弃保存？</p>',
+    okText: '确认',
+    cancelText: '取消',
+    onOk: () => {
+      proxy.$Modal.remove();
+      dialogVisible.value = false;
+    },
+  });
+}
+
+// 绘画热区开始
+function mouseDown(e) {
+  e.preventDefault();
+  caseShow.value = true;
+  // 记录滑动的初始值
+  starX.value = e.layerX;
+  starY.value = e.layerY;
+  // 鼠标滑动的过程
+  if (!document.onmousemove) {
+    let maxWidth = defaultWidth.value - e.layerX;
+    document.onmousemove = (ev) => {
+      if (ev.layerX - starX.value < maxWidth) {
+        areaWidth.value = ev.layerX - starX.value;
+      } else {
+        areaWidth.value = maxWidth;
+      }
+      areaHeight.value = ev.layerY - starY.value;
     };
-  },
-  computed: {
-    imageSrc() {
-      if (Array.isArray(this.imgs)) {
-        const first = this.imgs[0] || {};
-        return first.img || first.url || first.att_dir || first.sattDir || '';
-      }
-      return this.imgs || '';
-    },
-  },
-  watch: {
-    imgAreaData(val) {
-      this.areaData = [...(val || [])];
-    },
-  },
-  mounted() {
-    this.areaData = [...(this.imgAreaData || [])];
-  },
-  methods: {
-    //添加热区
-    addAreaBox() {
-      if (this.areaData.length === 50) return;
-      this.nowNum++;
-      let starX = ((this.nowNum - 1) % 4) * 114;
-      let starY = Math.floor((this.nowNum - 1) / 4) * 114;
-      if (starY > this.parentHeight - 114) {
-        starY = this.parentHeight - 114;
-      }
-      this.areaData.push({
-        starX,
-        starY,
-        name: `热区${this.nowNum}`,
-        areaWidth: 114,
-        areaHeight: 114,
-        nowImgWidth: this.defaultWidth,
-        link: '',
-      });
-    },
-    //重置热区
-    resetAreaBox() {
-      this.nowNum = 0;
-      this.areaData = [];
-    },
-    cancelAreaData() {
-      this.areaData = [...this.imgAreaData];
-      this.dialogVisible = false;
-    },
-    saveAreaData() {
-      this.$emit('saveAreaData', this.areaData);
-      this.dialogVisible = false;
-    },
-    handleDialogClose() {
-      document.onmousemove = null;
-      this.caseShow = false;
-    },
-    openModal() {
-      this.$nextTick(() => {
-        const parentDiv = this.$refs.container;
-        this.parentWidth = this.defaultWidth;
-        this.parentHeight = parentDiv ? parentDiv.clientHeight : 450;
-      });
-    },
-    closeModal() {
-      this.$Modal.confirm({
-        title: '提示信息',
-        content: '<p>未保存内容，是否在离开前放弃保存？</p>',
-        okText: '确认',
-        cancelText: '取消',
-        onOk: () => {
-          this.$Modal.remove();
-          this.dialogVisible = false;
-        },
-      });
-    },
-    // 绘画热区开始
-    mouseDown(e) {
-      e.preventDefault();
-      this.caseShow = true;
-      // 记录滑动的初始值
-      this.starX = e.layerX;
-      this.starY = e.layerY;
-      // 鼠标滑动的过程
-      if (!document.onmousemove) {
-        let maxWidth = this.defaultWidth - e.layerX;
-        document.onmousemove = (ev) => {
-          if (ev.layerX - this.starX < maxWidth) {
-            this.areaWidth = ev.layerX - this.starX;
-          } else {
-            this.areaWidth = maxWidth;
-          }
-          this.areaHeight = ev.layerY - this.starY;
-        };
-      }
-    },
-    // 绘画热区结束
-    changeStop() {
-      document.onmousemove = null;
-      this.imgNum = this.areaData.length + 1;
-      if (this.caseShow && this.areaWidth > 10 && this.areaHeight > 10) {
-        const data = {
-          name: `热区${this.imgNum}`,
-          starX: this.starX,
-          starY: this.starY,
-          areaWidth: this.areaWidth < 50 ? 50 : this.areaWidth,
-          areaHeight: this.areaHeight < 50 ? 50 : this.areaHeight,
-          nowImgWidth: this.defaultWidth,
-          link: '',
-        };
-        this.areaData.push(data);
-      }
-      // 初始化绘图
-      this.caseShow = false;
-      this.starX = 0;
-      this.starY = 0;
-      this.areaWidth = 0;
-      this.areaHeight = 0;
-    },
-    // 删除指定热区
-    delAreaBox(index) {
-      /* 删除某个热区 */
-      this.areaData.splice(index, 1);
-      // this.$emit('delAreaData', this.areaData);
-      /* 删除后 每个热区按顺序重新编号 */
-      if (this.areaData) {
-        const arr = this.areaData.filter((i) => i.number > index);
-        if (!arr) return;
-        arr.forEach((i) => i.number--);
-        if (this.areaData[this.areaData.length - 1]) {
-          this.imgNum = this.areaData[this.areaData.length - 1].number + 1;
-        } else {
-          this.imgNum = 1;
-        }
-      }
-    },
-    // 添加网址
-    addURL(index, url) {
-      let obj = {
-        ...this.areaData[index],
-        link: url,
-      };
-      this.$set(this.areaData, index, obj);
-    },
-    /**
-     * 检查列表中每个元素是否都有 link 属性
-     * @param {Array} list - 待检查的列表
-     * @returns {Boolean} - 是否所有元素都有 link 属性
-     */
-    checkData(list) {
-      let isCheck = true;
-      list.some((val) => {
-        if (!val.link) {
-          isCheck = false;
-        }
-      });
-      return isCheck;
-    },
-    /**
-     * @description 获取链接地址并打开添加链接的模态框
-     * @param {number} index - 当前项的索引值
-     */
-    getLink(index) {
-      // 设置当前项的索引值
-      this.itemIndex = index;
-      // 打开添加链接的模态框
-      // this.$refs.linkaddres.currenType = 'link';
-      // this.$refs.linkaddres.mockData('link');
-      this.$refs.linkaddres.modals = true;
-    },
-    /**
-     * @description 处理链接地址的输入事件
-     * @param {string} e - 链接地址
-     */
-    linkUrl(e) {
-      // 将链接地址存储到对应的数据项中
-      this.areaData[this.itemIndex].link = e;
-    },
-  },
-};
+  }
+}
+
+// 绘画热区结束
+function changeStop() {
+  document.onmousemove = null;
+  imgNum.value = areaData.value.length + 1;
+  if (caseShow.value && areaWidth.value > 10 && areaHeight.value > 10) {
+    const data = {
+      name: `热区${imgNum.value}`,
+      starX: starX.value,
+      starY: starY.value,
+      areaWidth: areaWidth.value < 50 ? 50 : areaWidth.value,
+      areaHeight: areaHeight.value < 50 ? 50 : areaHeight.value,
+      nowImgWidth: defaultWidth.value,
+      link: '',
+    };
+    areaData.value.push(data);
+  }
+  // 初始化绘图
+  caseShow.value = false;
+  starX.value = 0;
+  starY.value = 0;
+  areaWidth.value = 0;
+  areaHeight.value = 0;
+}
+
+// 删除指定热区
+function delAreaBox(index) {
+  /* 删除某个热区 */
+  areaData.value.splice(index, 1);
+  // this.$emit('delAreaData', this.areaData);
+  /* 删除后 每个热区按顺序重新编号 */
+  if (areaData.value) {
+    const arr = areaData.value.filter((i) => i.number > index);
+    if (!arr) return;
+    arr.forEach((i) => i.number--);
+    if (areaData.value[areaData.value.length - 1]) {
+      imgNum.value = areaData.value[areaData.value.length - 1].number + 1;
+    } else {
+      imgNum.value = 1;
+    }
+  }
+}
+
+// 添加网址
+function addURL(index, url) {
+  let obj = {
+    ...areaData.value[index],
+    link: url,
+  };
+  areaData.value[index] = obj;
+}
+
+/**
+ * 检查列表中每个元素是否都有 link 属性
+ * @param {Array} list - 待检查的列表
+ * @returns {Boolean} - 是否所有元素都有 link 属性
+ */
+function checkData(list) {
+  let isCheck = true;
+  list.some((val) => {
+    if (!val.link) {
+      isCheck = false;
+    }
+  });
+  return isCheck;
+}
+
+/**
+ * @description 获取链接地址并打开添加链接的模态框
+ * @param {number} index - 当前项的索引值
+ */
+function getLink(index) {
+  // 设置当前项的索引值
+  itemIndex.value = index;
+  // 打开添加链接的模态框
+  // this.$refs.linkaddres.currenType = 'link';
+  // this.$refs.linkaddres.mockData('link');
+  linkaddresRef.value.modals = true;
+}
+
+/**
+ * @description 处理链接地址的输入事件
+ * @param {string} e - 链接地址
+ */
+function linkUrl(e) {
+  // 将链接地址存储到对应的数据项中
+  areaData.value[itemIndex.value].link = e;
+}
 </script>
 
 <style scoped lang="scss">
@@ -532,7 +507,7 @@ export default {
     left: 100px;
   }
 }
-::v-deep .el-input__suffix {
+:deep(.el-input__suffix) {
   line-height: 30px !important;
 }
 .iconrequwenzitishi {
@@ -544,10 +519,10 @@ export default {
 .mb12 {
   margin-bottom: 12px;
 }
-::v-deep .el-input__inner {
+:deep(.el-input__inner) {
   padding: 0 8px !important;
 }
-::v-deep .hotpot-dialog {
+:deep(.hotpot-dialog) {
   .el-dialog__body {
     height: calc(100vh - 110px);
     padding: 16px 24px;

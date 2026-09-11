@@ -15,19 +15,18 @@
   </el-container>
 </template>
 
-<script>
+<script setup>
+import { computed } from 'vue';
 import Asides from '@/layout/component/aside.vue';
 import Headers from '@/layout/component/header.vue';
 import Mains from '@/layout/component/main.vue';
 import ColumnsAside from '@/layout/component/columnsAside.vue';
-export default {
-  name: 'layoutColumns',
-  components: { Asides, Headers, Mains, ColumnsAside },
-  computed: {
-    // 是否开启固定 header
-    isFixedHeader() {
-      return this.$store.state.themeConfig.themeConfig.isFixedHeader;
-    },
-  },
-};
+import { useThemeConfigStore } from '@/store/modules/themeConfig';
+
+defineOptions({ name: 'layoutColumns' });
+
+const themeConfigStore = useThemeConfigStore();
+
+// 是否开启固定 header
+const isFixedHeader = computed(() => themeConfigStore.themeConfig.isFixedHeader);
 </script>

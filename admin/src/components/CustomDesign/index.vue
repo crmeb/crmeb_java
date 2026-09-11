@@ -8,8 +8,8 @@
       </div>
       <div class="center"></div>
       <div class="right">
-        <el-button size="small" @click="save(false)">保存</el-button>
-        <el-button type="primary" size="small" @click="save(true)">保存关闭</el-button>
+        <el-button @click="save(false)">保存</el-button>
+        <el-button type="primary" @click="save(true)">保存关闭</el-button>
       </div>
     </div>
 
@@ -25,14 +25,14 @@
               v-model="canvasHeight"
               :min="10"
               :max="1000"
-              input-size="mini"
+              input-size="small"
               style="flex: 1; margin-right: 10px"
             ></el-slider>
             <el-input-number
               v-model="canvasHeight"
               :min="10"
               :max="1000"
-              size="mini"
+
               controls-position="right"
               style="width: 100px"
             ></el-input-number>
@@ -42,23 +42,28 @@
         <div class="layer-list">
           <div class="title">已选组件 ({{ componentData.length }})</div>
           <el-scrollbar style="height: calc(100% - 40px)">
-            <draggable v-model="reversedComponentData" handle=".handle" animation="200">
-              <div
-                v-for="item in reversedComponentData"
-                :key="item.id"
-                class="layer-item"
-                :class="{ active: curComponent && curComponent.id === item.id }"
-                @click="setCurComponent(item, componentData.indexOf(item))"
-              >
-                <span class="handle iconfont iconxingzhuangjiehe"></span>
-                <span class="name">{{ item.label || item.component }}</span>
-                <div class="actions">
-                  <span class="iconfont iconic_edit2" @click.stop="editName(item)"></span>
-                  <span class="iconfont iconic_Eyes" v-if="!item.isHidden" @click.stop="toggleHide(item)"></span>
-                  <span class="iconfont iconic_eye" v-else style="color: #ccc" @click.stop="toggleHide(item)"></span>
-                  <span class="iconfont iconshanchu3" @click.stop="deleteComponent(componentData.indexOf(item))"></span>
+            <draggable
+              v-model="reversedComponentData"
+              :item-key="getDraggableItemKey"
+              handle=".handle"
+              animation="200"
+            >
+              <template #item="{ element: item }">
+                <div
+                  class="layer-item"
+                  :class="{ active: curComponent && curComponent.id === item.id }"
+                  @click="setCurComponent(item, componentData.indexOf(item))"
+                >
+                  <span class="handle iconfont iconxingzhuangjiehe"></span>
+                  <span class="name">{{ item.label || item.component }}</span>
+                  <div class="actions">
+                    <span class="iconfont iconic_edit2" @click.stop="editName(item)"></span>
+                    <span class="iconfont iconic_Eyes" v-if="!item.isHidden" @click.stop="toggleHide(item)"></span>
+                    <span class="iconfont iconic_eye" v-else style="color: #ccc" @click.stop="toggleHide(item)"></span>
+                    <span class="iconfont iconshanchu3" @click.stop="deleteComponent(componentData.indexOf(item))"></span>
+                  </div>
                 </div>
-              </div>
+              </template>
             </draggable>
           </el-scrollbar>
         </div>
@@ -197,7 +202,9 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount, getCurrentInstance } from 'vue';
+import { ElMessage, ElMessageBox } from '@/utils/elementPlusFeedback';
 import ComponentList from './ComponentList.vue';
 import Editor from './Editor.vue';
 import AttrList from './AttrList.vue';
@@ -205,329 +212,350 @@ import ContextMenu from './ContextMenu.vue';
 import draggable from 'vuedraggable';
 import { deepCopy } from './utils/utils';
 import generateID from './utils/generateID';
+import { getDraggableItemKey } from '@/utils/draggableKey';
 
 import { getDiyField } from '@/api/diy';
 
-export default {
-  name: 'CustomDesign',
-  components: { ComponentList, Editor, AttrList, draggable, ContextMenu },
-  props: {
-    initialData: {
-      type: Object,
-      default: () => ({}),
-    },
-    columnNum: {
-      type: Number,
-      default: 1,
-    },
-    type: {
-      type: String,
-      default: 'user',
-    },
+defineOptions({ name: 'CustomDesign' });
+
+const props = defineProps({
+  initialData: {
+    type: Object,
+    default: () => ({}),
   },
-  data() {
-    return {
-      componentData: [],
-      canvasHeight: 375,
-      curComponent: null,
-      curComponentIndex: -1,
-      snapshotData: [],
-      snapshotIndex: -1,
-      fieldList: {},
-      historyVisible: false,
-      activeComponentIds: [],
-      menuVisible: false,
-      menuTop: 0,
-      menuLeft: 0,
-    };
+  columnNum: {
+    type: Number,
+    default: 1,
   },
-  computed: {
-    canvasWidth() {
-      // Default 375, divided by columns if > 1
-      const base = 375;
-      return this.columnNum > 1 ? base / this.columnNum : base;
-    },
-    actionBarStyle() {
-      return {
-        left: `calc(50% + ${this.canvasWidth / 2}px + 10px)`,
-        top: '50%',
-        transform: 'translateY(-50%)',
-      };
-    },
-    isTop() {
-      return this.curComponentIndex === this.componentData.length - 1;
-    },
-    isBottom() {
-      return this.curComponentIndex === 0;
-    },
-    reversedComponentData: {
-      get() {
-        return this.componentData.slice().reverse();
-      },
-      set(val) {
-        this.componentData = val.slice().reverse();
-        this.recordSnapshot('调整层级');
-      },
-    },
+  type: {
+    type: String,
+    default: 'user',
   },
-  created() {
-    if (this.initialData) {
-      if (this.initialData.list) {
-        this.componentData = deepCopy(this.initialData.list);
-      }
-      if (this.initialData.canvasHeight) {
-        this.canvasHeight = this.initialData.canvasHeight;
-      }
+});
+
+const emit = defineEmits(['close', 'save']);
+
+const { proxy } = getCurrentInstance();
+
+const editor = ref(null);
+const componentData = ref([]);
+const canvasHeight = ref(375);
+const curComponent = ref(null);
+const curComponentIndex = ref(-1);
+const snapshotData = ref([]);
+const snapshotIndex = ref(-1);
+const fieldList = ref({});
+const historyVisible = ref(false);
+const activeComponentIds = ref([]);
+const menuVisible = ref(false);
+const menuTop = ref(0);
+const menuLeft = ref(0);
+
+const canvasWidth = computed(() => {
+  // Default 375, divided by columns if > 1
+  const base = 375;
+  return props.columnNum > 1 ? base / props.columnNum : base;
+});
+
+const actionBarStyle = computed(() => {
+  return {
+    left: `calc(50% + ${canvasWidth.value / 2}px + 10px)`,
+    top: '50%',
+    transform: 'translateY(-50%)',
+  };
+});
+
+const isTop = computed(() => curComponentIndex.value === componentData.value.length - 1);
+const isBottom = computed(() => curComponentIndex.value === 0);
+
+const reversedComponentData = computed({
+  get() {
+    return componentData.value.slice().reverse();
+  },
+  set(val) {
+    componentData.value = val.slice().reverse();
+    recordSnapshot('调整层级');
+  },
+});
+
+// created
+if (props.initialData) {
+  if (props.initialData.list) {
+    componentData.value = deepCopy(props.initialData.list);
+  }
+  if (props.initialData.canvasHeight) {
+    canvasHeight.value = props.initialData.canvasHeight;
+  }
+}
+recordSnapshot();
+getFieldList();
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown);
+  window.addEventListener('click', closeMenu);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown);
+  window.removeEventListener('click', closeMenu);
+});
+
+function handleBackgroundClick(e) {
+  // Check if the click target is center-panel or canvas-container
+  // to avoid triggering when clicking on controls
+  if (e.target.classList.contains('center-panel') || e.target.classList.contains('canvas-container')) {
+    curComponent.value = null;
+    curComponentIndex.value = -1;
+    activeComponentIds.value = [];
+  }
+}
+
+function getFieldList() {
+  getDiyField().then((res) => {
+    fieldList.value = res.data || {};
+  });
+}
+
+function setCurComponent(component, index) {
+  curComponent.value = component;
+  curComponentIndex.value = index;
+}
+
+function deleteComponent(index) {
+  componentData.value.splice(index, 1);
+  curComponent.value = null;
+  curComponentIndex.value = -1;
+  recordSnapshot('删除组件');
+}
+
+function toggleHide(item) {
+  item.isHidden = !item.isHidden;
+}
+
+function editName(item) {
+  ElMessageBox.prompt('请输入组件名称', '修改名称', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputValue: item.label,
+  })
+    .then(({ value }) => {
+      item.label = value;
+    })
+    .catch(() => {});
+}
+
+function formatTime(date) {
+  const h = date.getHours().toString().padStart(2, '0');
+  const m = date.getMinutes().toString().padStart(2, '0');
+  const s = date.getSeconds().toString().padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
+function recordSnapshot(type = '操作') {
+  // 简单的撤销重做实现
+  snapshotIndex.value++;
+  snapshotData.value[snapshotIndex.value] = {
+    componentData: deepCopy(componentData.value),
+    canvasHeight: canvasHeight.value,
+    type,
+    time: formatTime(new Date()),
+  };
+  // 删除后续的历史记录
+  if (snapshotIndex.value < snapshotData.value.length - 1) {
+    snapshotData.value = snapshotData.value.slice(0, snapshotIndex.value + 1);
+  }
+
+  // Limit to 15 records
+  const limit = 15;
+  if (snapshotData.value.length > limit) {
+    const diff = snapshotData.value.length - limit;
+    snapshotData.value.splice(0, diff);
+    snapshotIndex.value -= diff;
+  }
+}
+
+function undo() {
+  if (snapshotIndex.value > 0) {
+    snapshotIndex.value--;
+    const data = deepCopy(snapshotData.value[snapshotIndex.value]);
+    componentData.value = data.componentData;
+    canvasHeight.value = data.canvasHeight;
+    curComponent.value = null;
+  }
+}
+
+function redo() {
+  if (snapshotIndex.value < snapshotData.value.length - 1) {
+    snapshotIndex.value++;
+    const data = deepCopy(snapshotData.value[snapshotIndex.value]);
+    componentData.value = data.componentData;
+    canvasHeight.value = data.canvasHeight;
+    curComponent.value = null;
+  }
+}
+
+function copyComponent(item) {
+  const component = deepCopy(item);
+  component.id = generateID();
+  component.style.top += 20;
+  component.style.left += 20;
+  componentData.value.push(component);
+  recordSnapshot('复制组件');
+}
+
+function moveComponent({ index, type }) {
+  const component = componentData.value[index];
+  if (type === 'up') {
+    if (index < componentData.value.length - 1) {
+      componentData.value.splice(index, 1);
+      componentData.value.splice(index + 1, 0, component);
+      curComponentIndex.value = index + 1;
+      recordSnapshot('上移一层');
+    } else {
+      ElMessage.warning('已经到顶了');
     }
-    this.recordSnapshot();
-    this.getFieldList();
-  },
-  mounted() {
-    window.addEventListener('keydown', this.handleKeydown);
-    window.addEventListener('click', this.closeMenu);
-  },
-  beforeDestroy() {
-    window.removeEventListener('keydown', this.handleKeydown);
-    window.removeEventListener('click', this.closeMenu);
-  },
-  methods: {
-    handleBackgroundClick(e) {
-      // Check if the click target is center-panel or canvas-container
-      // to avoid triggering when clicking on controls
-      if (e.target.classList.contains('center-panel') || e.target.classList.contains('canvas-container')) {
-        this.curComponent = null;
-        this.curComponentIndex = -1;
-        this.activeComponentIds = [];
-      }
-    },
-    getFieldList() {
-      getDiyField().then((res) => {
-        this.fieldList = res.data || {};
-      });
-    },
-    setCurComponent(component, index) {
-      this.curComponent = component;
-      this.curComponentIndex = index;
-    },
-    deleteComponent(index) {
-      this.componentData.splice(index, 1);
-      this.curComponent = null;
-      this.curComponentIndex = -1;
-      this.recordSnapshot('删除组件');
-    },
-    toggleHide(item) {
-      this.$set(item, 'isHidden', !item.isHidden);
-    },
-    editName(item) {
-      this.$prompt('请输入组件名称', '修改名称', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        inputValue: item.label,
-      })
-        .then(({ value }) => {
-          this.$set(item, 'label', value);
-        })
-        .catch(() => {});
-    },
-    formatTime(date) {
-      const h = date.getHours().toString().padStart(2, '0');
-      const m = date.getMinutes().toString().padStart(2, '0');
-      const s = date.getSeconds().toString().padStart(2, '0');
-      return `${h}:${m}:${s}`;
-    },
-    recordSnapshot(type = '操作') {
-      // 简单的撤销重做实现
-      this.snapshotIndex++;
-      this.snapshotData[this.snapshotIndex] = {
-        componentData: deepCopy(this.componentData),
-        canvasHeight: this.canvasHeight,
-        type,
-        time: this.formatTime(new Date()),
-      };
-      // 删除后续的历史记录
-      if (this.snapshotIndex < this.snapshotData.length - 1) {
-        this.snapshotData = this.snapshotData.slice(0, this.snapshotIndex + 1);
-      }
+  } else if (type === 'down') {
+    if (index > 0) {
+      componentData.value.splice(index, 1);
+      componentData.value.splice(index - 1, 0, component);
+      curComponentIndex.value = index - 1;
+      recordSnapshot('下移一层');
+    } else {
+      ElMessage.warning('已经到底了');
+    }
+  } else if (type === 'top') {
+    if (index < componentData.value.length - 1) {
+      componentData.value.splice(index, 1);
+      componentData.value.push(component);
+      curComponentIndex.value = componentData.value.length - 1;
+      recordSnapshot('置顶');
+    } else {
+      ElMessage.warning('已经到顶了');
+    }
+  } else if (type === 'bottom') {
+    if (index > 0) {
+      componentData.value.splice(index, 1);
+      componentData.value.unshift(component);
+      curComponentIndex.value = 0;
+      recordSnapshot('置底');
+    } else {
+      ElMessage.warning('已经到底了');
+    }
+  }
+}
 
-      // Limit to 15 records
-      const limit = 15;
-      if (this.snapshotData.length > limit) {
-        const diff = this.snapshotData.length - limit;
-        this.snapshotData.splice(0, diff);
-        this.snapshotIndex -= diff;
-      }
-    },
-    undo() {
-      if (this.snapshotIndex > 0) {
-        this.snapshotIndex--;
-        const data = deepCopy(this.snapshotData[this.snapshotIndex]);
-        this.componentData = data.componentData;
-        this.canvasHeight = data.canvasHeight;
-        this.curComponent = null;
-      }
-    },
-    redo() {
-      if (this.snapshotIndex < this.snapshotData.length - 1) {
-        this.snapshotIndex++;
-        const data = deepCopy(this.snapshotData[this.snapshotIndex]);
-        this.componentData = data.componentData;
-        this.canvasHeight = data.canvasHeight;
-        this.curComponent = null;
-      }
-    },
-    copyComponent(item) {
-      const component = deepCopy(item);
-      component.id = generateID();
-      component.style.top += 20;
-      component.style.left += 20;
-      this.componentData.push(component);
-      this.recordSnapshot('复制组件');
-    },
-    moveComponent({ index, type }) {
-      const component = this.componentData[index];
-      if (type === 'up') {
-        if (index < this.componentData.length - 1) {
-          this.componentData.splice(index, 1);
-          this.componentData.splice(index + 1, 0, component);
-          this.curComponentIndex = index + 1;
-          this.recordSnapshot('上移一层');
-        } else {
-          this.$message.warning('已经到顶了');
-        }
-      } else if (type === 'down') {
-        if (index > 0) {
-          this.componentData.splice(index, 1);
-          this.componentData.splice(index - 1, 0, component);
-          this.curComponentIndex = index - 1;
-          this.recordSnapshot('下移一层');
-        } else {
-          this.$message.warning('已经到底了');
-        }
-      } else if (type === 'top') {
-        if (index < this.componentData.length - 1) {
-          this.componentData.splice(index, 1);
-          this.componentData.push(component);
-          this.curComponentIndex = this.componentData.length - 1;
-          this.recordSnapshot('置顶');
-        } else {
-          this.$message.warning('已经到顶了');
-        }
-      } else if (type === 'bottom') {
-        if (index > 0) {
-          this.componentData.splice(index, 1);
-          this.componentData.unshift(component);
-          this.curComponentIndex = 0;
-          this.recordSnapshot('置底');
-        } else {
-          this.$message.warning('已经到底了');
-        }
-      }
-    },
-    handleHistorySelect(index) {
-      this.snapshotIndex = index;
-      const data = deepCopy(this.snapshotData[this.snapshotIndex]);
-      this.componentData = data.componentData;
-      this.canvasHeight = data.canvasHeight;
-      this.curComponent = null;
-      this.historyVisible = false;
-    },
-    handleAttrChange() {
-      this.recordSnapshot('修改属性');
-    },
-    handleUpdateGroup() {
-      this.recordSnapshot('调整对齐/位置');
-    },
-    save(close = false) {
-      const data = {
-        list: this.componentData,
-        canvasHeight: this.canvasHeight,
-      };
-      this.$emit('save', data);
-      if (close) {
-        this.$emit('close');
-      } else {
-        this.$message.success('保存成功');
-      }
-    },
-    handleMultiSelect(ids) {
-      this.activeComponentIds = ids;
-    },
-    handleKeydown(e) {
-      // Avoid triggering when editing text
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+function handleHistorySelect(index) {
+  snapshotIndex.value = index;
+  const data = deepCopy(snapshotData.value[snapshotIndex.value]);
+  componentData.value = data.componentData;
+  canvasHeight.value = data.canvasHeight;
+  curComponent.value = null;
+  historyVisible.value = false;
+}
 
-      if (e.ctrlKey || e.metaKey) {
-        if (e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
-          e.preventDefault();
-          this.redo();
-        } else if (e.key === 'z' || e.key === 'Z') {
-          e.preventDefault();
-          this.undo();
-        }
-      } else if (e.key === 'Delete' || e.key === 'Backspace') {
-        e.preventDefault();
-        this.handleDeleteKey();
-      }
-    },
-    handleDeleteKey() {
-      if (this.activeComponentIds && this.activeComponentIds.length > 0) {
-        this.componentData = this.componentData.filter((item) => !this.activeComponentIds.includes(item.id));
-        this.curComponent = null;
-        this.curComponentIndex = -1;
-        this.activeComponentIds = [];
-        this.recordSnapshot('删除组件');
-      } else if (this.curComponent) {
-        this.deleteComponent(this.curComponentIndex);
-      }
-    },
-    closeMenu() {
-      this.menuVisible = false;
-    },
-    handleContextMenu(e) {
+function handleAttrChange() {
+  recordSnapshot('修改属性');
+}
+
+function handleUpdateGroup() {
+  recordSnapshot('调整对齐/位置');
+}
+
+function save(close = false) {
+  const data = {
+    list: componentData.value,
+    canvasHeight: canvasHeight.value,
+  };
+  emit('save', data);
+  if (close) {
+    emit('close');
+  } else {
+    ElMessage.success('保存成功');
+  }
+}
+
+function handleMultiSelect(ids) {
+  activeComponentIds.value = ids;
+}
+
+function handleKeydown(e) {
+  // Avoid triggering when editing text
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  if (e.ctrlKey || e.metaKey) {
+    if (e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
       e.preventDefault();
-      e.stopPropagation();
+      redo();
+    } else if (e.key === 'z' || e.key === 'Z') {
+      e.preventDefault();
+      undo();
+    }
+  } else if (e.key === 'Delete' || e.key === 'Backspace') {
+    e.preventDefault();
+    handleDeleteKey();
+  }
+}
 
-      const panel = this.$el.querySelector('.center-panel');
-      const rect = panel.getBoundingClientRect();
+function handleDeleteKey() {
+  if (activeComponentIds.value && activeComponentIds.value.length > 0) {
+    componentData.value = componentData.value.filter((item) => !activeComponentIds.value.includes(item.id));
+    curComponent.value = null;
+    curComponentIndex.value = -1;
+    activeComponentIds.value = [];
+    recordSnapshot('删除组件');
+  } else if (curComponent.value) {
+    deleteComponent(curComponentIndex.value);
+  }
+}
 
-      this.menuLeft = e.clientX - rect.left;
-      this.menuTop = e.clientY - rect.top;
-      this.menuVisible = true;
-    },
-    handleMenuAction(action) {
-      if (!this.curComponent) return;
+function closeMenu() {
+  menuVisible.value = false;
+}
 
-      switch (action) {
-        case 'copy':
-          this.copyComponent(this.curComponent);
-          break;
-        case 'delete':
-          this.deleteComponent(this.curComponentIndex);
-          break;
-        case 'top':
-          this.moveComponent({ index: this.curComponentIndex, type: 'top' });
-          break;
-        case 'bottom':
-          this.moveComponent({ index: this.curComponentIndex, type: 'bottom' });
-          break;
-        case 'up':
-          this.moveComponent({ index: this.curComponentIndex, type: 'up' });
-          break;
-        case 'down':
-          this.moveComponent({ index: this.curComponentIndex, type: 'down' });
-          break;
-        case 'lock':
-          this.$set(this.curComponent, 'isLock', true);
-          this.recordSnapshot('锁定组件');
-          break;
-        case 'unlock':
-          this.$set(this.curComponent, 'isLock', false);
-          this.recordSnapshot('解锁组件');
-          break;
-      }
-    },
-  },
-};
+function handleContextMenu(e) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const panel = proxy.$el.querySelector('.center-panel');
+  const rect = panel.getBoundingClientRect();
+
+  menuLeft.value = e.clientX - rect.left;
+  menuTop.value = e.clientY - rect.top;
+  menuVisible.value = true;
+}
+
+function handleMenuAction(action) {
+  if (!curComponent.value) return;
+
+  switch (action) {
+    case 'copy':
+      copyComponent(curComponent.value);
+      break;
+    case 'delete':
+      deleteComponent(curComponentIndex.value);
+      break;
+    case 'top':
+      moveComponent({ index: curComponentIndex.value, type: 'top' });
+      break;
+    case 'bottom':
+      moveComponent({ index: curComponentIndex.value, type: 'bottom' });
+      break;
+    case 'up':
+      moveComponent({ index: curComponentIndex.value, type: 'up' });
+      break;
+    case 'down':
+      moveComponent({ index: curComponentIndex.value, type: 'down' });
+      break;
+    case 'lock':
+      curComponent.value.isLock = true;
+      recordSnapshot('锁定组件');
+      break;
+    case 'unlock':
+      curComponent.value.isLock = false;
+      recordSnapshot('解锁组件');
+      break;
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -849,7 +877,7 @@ export default {
       width: 400px;
       background: #fff;
       overflow-y: auto;
-      ::v-deep .el-form-item__label {
+      :deep(.el-form-item__label) {
         color: #999;
       }
       .empty-tip {

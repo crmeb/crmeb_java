@@ -1,7 +1,7 @@
 <template>
   <div class="position-settings">
     <div class="section-title">位置设置</div>
-    <el-form size="small" label-width="70px" label-position="left">
+    <el-form label-width="70px" label-position="left">
       <el-form-item label="X 坐标">
         <div class="row">
           <el-slider
@@ -60,29 +60,28 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ConfigPosition',
-  props: {
-    curComponent: {
-      type: Object,
-      required: true,
-    },
-    canvasWidth: {
-      type: Number,
-      required: true,
-    },
-    canvasHeight: {
-      type: Number,
-      required: true,
-    },
+<script setup>
+defineOptions({ name: 'ConfigPosition' });
+
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    required: true,
   },
-  methods: {
-    onChange() {
-      this.$emit('change');
-    },
+  canvasWidth: {
+    type: Number,
+    required: true,
   },
-};
+  canvasHeight: {
+    type: Number,
+    required: true,
+  },
+});
+const emit = defineEmits(['change']);
+
+function onChange() {
+  emit('change');
+}
 </script>
 
 <style scoped lang="scss">

@@ -10,7 +10,7 @@
 
 import Cookies from 'js-cookie';
 
-const TokenKey = 'Authori-zation';
+const TokenKey = 'Authorization';
 
 export function getToken() {
   return Cookies.get(TokenKey);

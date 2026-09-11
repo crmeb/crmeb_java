@@ -10,80 +10,83 @@
     </el-scrollbar>
   </el-main>
 </template>
-<script>
+<script setup>
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import LayoutParentView from '@/layout/routerView/parent.vue';
 import Footers from '@/layout/footer/index.vue';
 import Links from '@/layout/routerView/link.vue';
 import Iframes from '@/layout/routerView/iframes.vue';
-export default {
-  name: 'layoutMain',
-  components: { LayoutParentView, Footers, Links, Iframes },
-  data() {
-    return {
-      headerHeight: '',
-      currentRouteMeta: {},
-      isShowLink: false,
-    };
+import { useThemeConfigStore } from '@/store/modules/themeConfig';
+
+defineOptions({ name: 'layoutMain' });
+
+const route = useRoute();
+const themeConfigStore = useThemeConfigStore();
+
+const layoutScrollbarRef = ref(null);
+const headerHeight = ref('');
+const currentRouteMeta = ref({});
+const isShowLink = ref(false);
+
+// 获取布局配置信息
+const getThemeConfig = computed(() => themeConfigStore.themeConfig);
+const isFullScreen = computed(() => route.meta.fullScreen);
+
+// 初始化当前路由 meta 信息
+function initCurrentRouteMeta(meta) {
+  isShowLink.value = false;
+  currentRouteMeta.value = meta;
+  setTimeout(() => {
+    isShowLink.value = true;
+  }, 100);
+}
+
+// 设置 main 的高度
+function initHeaderHeight() {
+  if (isFullScreen.value) return (headerHeight.value = '0px');
+  let { isTagsview } = themeConfigStore.themeConfig;
+  if (isTagsview) return (headerHeight.value = `84px`);
+  else return (headerHeight.value = `50px`);
+}
+
+// 子组件触发更新
+function onGetCurrentRouteMeta() {
+  initCurrentRouteMeta(route.meta);
+}
+
+onMounted(() => {
+  initHeaderHeight();
+  initCurrentRouteMeta(route.meta);
+});
+
+// 监听 store 数据变化
+watch(
+  () => themeConfigStore.themeConfig,
+  (val) => {
+    if (isFullScreen.value) {
+      headerHeight.value = '0px';
+      return;
+    }
+    headerHeight.value = val.isTagsview ? '84px' : '50px';
+    if (val.isFixedHeaderChange !== val.isFixedHeader) {
+      if (!layoutScrollbarRef.value) return false;
+      layoutScrollbarRef.value.update && layoutScrollbarRef.value.update();
+    }
   },
-  computed: {
-    // 获取布局配置信息
-    getThemeConfig() {
-      return this.$store.state.themeConfig.themeConfig;
-    },
-    isFullScreen() {
-      return this.$route.meta.fullScreen;
-    },
+  { deep: true }
+);
+
+// 监听路由的变化
+watch(
+  () => route,
+  (to) => {
+    initCurrentRouteMeta(to.meta);
+    initHeaderHeight();
+    if (layoutScrollbarRef.value && layoutScrollbarRef.value.wrapRef) {
+      layoutScrollbarRef.value.wrapRef.scrollTop = 0;
+    }
   },
-  mounted() {
-    this.initHeaderHeight();
-    this.initCurrentRouteMeta(this.$route.meta);
-  },
-  methods: {
-    // 初始化当前路由 meta 信息
-    initCurrentRouteMeta(meta) {
-      this.isShowLink = false;
-      this.currentRouteMeta = meta;
-      setTimeout(() => {
-        this.isShowLink = true;
-      }, 100);
-    },
-    // 设置 main 的高度
-    initHeaderHeight() {
-      if (this.isFullScreen) return (this.headerHeight = '0px');
-      let { isTagsview } = this.$store.state.themeConfig.themeConfig;
-      if (isTagsview) return (this.headerHeight = `84px`);
-      else return (this.headerHeight = `50px`);
-    },
-    // 子组件触发更新
-    onGetCurrentRouteMeta() {
-      this.initCurrentRouteMeta(this.$route.meta);
-    },
-  },
-  watch: {
-    // 监听 vuex 数据变化
-    '$store.state.themeConfig.themeConfig': {
-      handler(val) {
-        if (this.isFullScreen) {
-          this.headerHeight = '0px';
-          return;
-        }
-        this.headerHeight = val.isTagsview ? '84px' : '50px';
-        if (val.isFixedHeaderChange !== val.isFixedHeader) {
-          if (!this.$refs.layoutScrollbarRef) return false;
-          this.$refs.layoutScrollbarRef.update();
-        }
-      },
-      deep: true,
-    },
-    // 监听路由的变化
-    $route: {
-      handler(to) {
-        this.initCurrentRouteMeta(to.meta);
-        this.initHeaderHeight();
-        this.$refs.layoutScrollbarRef.wrap.scrollTop = 0;
-      },
-      deep: true,
-    },
-  },
-};
+  { deep: true }
+);
 </script>

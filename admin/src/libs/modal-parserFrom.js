@@ -18,29 +18,42 @@
  * @param keyNum 重置表单key值
  * @returns {Promise<any>}
  */
-export default function modalParserFrom(title, formName, isCreate, editData, callback, keyNum) {
-  const h = this.$createElement;
+import { h } from 'vue';
+import { ElMessageBox } from '@/utils/elementPlusFeedback';
+
+/**
+ * 弹窗样式的表单配置的提交
+ * @param title 标题
+ * @param formName 表单name
+ * @param isCreate 是否是编辑
+ * @param editData 详情数据
+ * @param callback 回调函数
+ * @param keyNum 重置表单key值
+ * @returns {Promise<any>}
+ */
+export default async function modalParserFrom(title, formName, isCreate, editData, callback, keyNum) {
+  const { default: ZBParser } = await import('@/components/base/ZBParser.vue');
+  const appContext = typeof window !== 'undefined' ? window.__APP_CONTEXT__ : null;
+  const parserVNode = h(ZBParser, {
+    formName,
+    isCreate,
+    editData,
+    keyNum,
+    onSubmit(formValue) {
+      callback(formValue);
+    },
+  });
+  parserVNode.appContext = appContext;
+  const messageVNode = h('div', { class: 'parserFrom_modal' }, [parserVNode]);
+  messageVNode.appContext = appContext;
+
   return new Promise((resolve, reject) => {
-    this.$msgbox({
+    ElMessageBox({
       title,
       customClass: 'upload-form',
       closeOnClickModal: false,
       showClose: true,
-      message: h('div', { class: 'parserFrom_modal'}, [
-        h('ZBParser', {
-          props: {
-            formName,
-            isCreate,
-            editData,
-            keyNum,
-          },
-          on: {
-            submit(formValue) {
-              callback(formValue);
-            }
-          },
-        }),
-      ]),
+      message: messageVNode,
       showCancelButton: false,
       showConfirmButton: false,
     })
@@ -49,10 +62,7 @@ export default function modalParserFrom(title, formName, isCreate, editData, cal
       })
       .catch(() => {
         reject();
-        // this.$message({
-        //   type: 'info',
-        //   message: '已取消',
-        // });
+        // ElMessage({ type: 'info', message: '已取消' });
       });
   });
 }

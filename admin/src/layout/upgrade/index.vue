@@ -1,7 +1,7 @@
 <template>
   <div class="upgrade-dialog">
     <el-dialog
-      :visible.sync="isUpgrade"
+      v-model="isUpgrade"
       width="470px"
       destroy-on-close
       :show-close="true"
@@ -12,60 +12,60 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { Local, Session } from '@/utils/storage';
 import config from '../../../package.json';
 import setting from '../../setting';
-export default {
-  data() {
-    return {
-      isUpgrade: false,
-      version: config.version,
-      isLoading: false,
-      btnTxt: '',
-    };
-  },
-  computed: {
-    // 获取布局配置信息
-    getThemeConfig() {
-      return this.$store.state.themeConfig.themeConfig;
-    },
-  },
-  methods: {
-    // 残忍拒绝
-    onCancel() {
-      this.isUpgrade = false;
-    },
-    // 马上更新
-    onUpgrade() {
-      this.isLoading = true;
-      this.btnTxt = '';
-      setTimeout(() => {
-        Local.clear();
-        Session.clear();
-        Local.set('version', this.version);
-        this.$router.push({ path: `${setting.routePre}/login` });
-      }, 2000);
-    },
-    // 延迟显示，防止刷新时界面显示太快
-    delayShow() {
-      setTimeout(() => {
-        this.btnTxt = '';
-      }, 1000);
-      setTimeout(() => {
-        this.isUpgrade = true;
-      }, 2000);
-    },
-  },
-  mounted() {
-    this.delayShow();
-  },
-};
+import { useThemeConfigStore } from '@/store/modules/themeConfig';
+
+defineOptions({ name: 'layoutUpgrade' });
+
+const router = useRouter();
+const themeConfigStore = useThemeConfigStore();
+
+const isUpgrade = ref(false);
+const version = config.version;
+const isLoading = ref(false);
+const btnTxt = ref('');
+
+// 获取布局配置信息
+const getThemeConfig = computed(() => themeConfigStore.themeConfig);
+
+// 残忍拒绝
+function onCancel() {
+  isUpgrade.value = false;
+}
+// 马上更新
+function onUpgrade() {
+  isLoading.value = true;
+  btnTxt.value = '';
+  setTimeout(() => {
+    Local.clear();
+    Session.clear();
+    Local.set('version', version);
+    router.push({ path: `${setting.routePre}/login` });
+  }, 2000);
+}
+// 延迟显示，防止刷新时界面显示太快
+function delayShow() {
+  setTimeout(() => {
+    btnTxt.value = '';
+  }, 1000);
+  setTimeout(() => {
+    isUpgrade.value = true;
+  }, 2000);
+}
+
+onMounted(() => {
+  delayShow();
+});
 </script>
 
 <style scoped lang="scss">
 .upgrade-dialog {
-  & ::v-deep .el-dialog {
+  & :deep(.el-dialog) {
     .el-dialog__body {
       padding: 0 !important;
     }

@@ -8,9 +8,8 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 /* eslint-disable */
-require('script-loader!file-saver'); //保存文件用
-require('./Blob.js'); //转二进制用
-require('script-loader!xlsx/dist/xlsx.core.min'); //xlsx核心
+import { saveAs } from 'file-saver'; //保存文件用
+import * as XLSX from 'xlsx'; //xlsx核心
 function generateArray(table) {
   var out = [];
   var rows = table.querySelectorAll('tr');

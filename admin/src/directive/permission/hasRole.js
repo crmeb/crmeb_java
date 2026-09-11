@@ -8,13 +8,13 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import store from '@/store';
+import { useUserStore } from '@/store/modules/user';
 
 export default {
-  inserted(el, binding, vnode) {
+  mounted(el, binding, vnode) {
     const { value } = binding;
     const super_admin = 'admin';
-    const roles = store.state.user.name;
+    const roles = useUserStore().name;
 
     if (value && value instanceof Array && value.length > 0) {
       const roleFlag = value;

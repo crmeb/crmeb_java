@@ -5,48 +5,49 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import screenfull from 'screenfull';
 
-export default {
-  name: 'Screenfull',
-  data() {
-    return {
-      isFullscreen: false,
-    };
-  },
-  mounted() {
-    this.init();
-  },
-  beforeDestroy() {
-    this.destroy();
-  },
-  methods: {
-    click() {
-      if (!screenfull.enabled) {
-        this.$message({
-          message: 'you browser can not work',
-          type: 'warning',
-        });
-        return false;
-      }
-      screenfull.toggle();
-    },
-    change() {
-      this.isFullscreen = screenfull.isFullscreen;
-    },
-    init() {
-      if (screenfull.enabled) {
-        screenfull.on('change', this.change);
-      }
-    },
-    destroy() {
-      if (screenfull.enabled) {
-        screenfull.off('change', this.change);
-      }
-    },
-  },
-};
+defineOptions({ name: 'Screenfull' });
+
+const isFullscreen = ref(false);
+
+function click() {
+  if (!screenfull.enabled) {
+    ElMessage({
+      message: 'you browser can not work',
+      type: 'warning',
+    });
+    return false;
+  }
+  screenfull.toggle();
+}
+
+function change() {
+  isFullscreen.value = screenfull.isFullscreen;
+}
+
+function init() {
+  if (screenfull.enabled) {
+    screenfull.on('change', change);
+  }
+}
+
+function destroy() {
+  if (screenfull.enabled) {
+    screenfull.off('change', change);
+  }
+}
+
+onMounted(() => {
+  init();
+});
+
+onBeforeUnmount(() => {
+  destroy();
+});
 </script>
 
 <style scoped>

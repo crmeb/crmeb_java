@@ -4,21 +4,19 @@
   </el-header>
 </template>
 
-<script>
+<script setup>
+import { computed } from 'vue';
 import NavBarsIndex from '@/layout/navBars/index.vue';
-export default {
-  name: 'layoutHeader',
-  components: { NavBarsIndex },
-  data() {
-    return {};
-  },
-  computed: {
-    // 设置顶部 header 的具体高度
-    setHeaderHeight() {
-      let { isTagsview, layout } = this.$store.state.themeConfig.themeConfig;
-      if (isTagsview && layout !== 'classic') return '84px';
-      else return '50px';
-    },
-  },
-};
+import { useThemeConfigStore } from '@/store/modules/themeConfig';
+
+defineOptions({ name: 'layoutHeader' });
+
+const themeConfigStore = useThemeConfigStore();
+
+// 设置顶部 header 的具体高度
+const setHeaderHeight = computed(() => {
+  let { isTagsview, layout } = themeConfigStore.themeConfig;
+  if (isTagsview && layout !== 'classic') return '84px';
+  else return '50px';
+});
 </script>

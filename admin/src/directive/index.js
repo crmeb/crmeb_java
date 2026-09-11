@@ -15,21 +15,17 @@ import dialogDragWidth from './dialog/dragWidth';
 import dialogDragHeight from './dialog/dragHeight';
 import copy from './copy/copy';
 import dbClick from './module/dbClick';
+import lazy from './module/lazy';
 
-const install = function (Vue) {
-  Vue.directive('hasRole', hasRole);
-  Vue.directive('hasPermi', hasPermi);
-  Vue.directive('dialogDrag', dialogDrag);
-  Vue.directive('dialogDragWidth', dialogDragWidth);
-  Vue.directive('dialogDragHeight', dialogDragHeight);
-  Vue.directive('copy', copy);
-  Vue.directive('dbClick', dbClick);
+const install = function (app) {
+  app.directive('hasRole', hasRole);
+  app.directive('hasPermi', hasPermi);
+  app.directive('dialogDrag', dialogDrag);
+  app.directive('dialogDragWidth', dialogDragWidth);
+  app.directive('dialogDragHeight', dialogDragHeight);
+  app.directive('copy', copy);
+  app.directive('dbClick', dbClick);
+  app.directive('lazy', lazy);
 };
-
-if (window.Vue) {
-  window['hasRole'] = hasRole;
-  window['hasPermi'] = hasPermi;
-  Vue.use(install); // eslint-disable-line
-}
 
 export default install;

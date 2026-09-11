@@ -20,152 +20,153 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { getCategory, getByCategory, diySave, storeStatus } from '@/api/diy';
-import toolCom from '@/components/diyComponents/index.js';
-import { mapMutations } from 'vuex';
-import { mapState } from 'vuex';
-export default {
-  name: 'rightConfig',
-  components: {
-    ...toolCom,
-  },
-  props: {
-    name: {
-      type: Object,
-      default: {},
-    },
-    pageId: {
-      type: Number,
-      default: 0,
-    },
-    configNum: {
-      type: Number | String,
-      default: 'default',
-    },
-  },
-  computed: {
-    // ...mapState({
-    //     defultArr:(state)=>state.goodSelect.component,
-    // })
-    defultArr() {
-      return this.$store.state.moren.component;
-    },
-  },
-  watch: {
-    name: {
-      handler(nVal, oVal) {
-        this.rCom = [];
-        this.configData = this.$store.state.moren.defaultConfig[nVal.name];
-        if (!this.configData.hasOwnProperty(this.configNum)) {
-          let defaultObj = JSON.parse(JSON.stringify(this.configData.defaultVal));
-          this.configData[nVal.num] = defaultObj;
-          this.$store.commit('moren/upDataName', this.configData);
-        }
-        let that = this;
-        setTimeout(function () {
-          that.rCom = that.$store.state.moren.component[nVal.name].list;
-        }, 30);
-        if (this.configData[nVal.num].selectConfig) {
-          let type = this.configData[nVal.num].selectConfig.type ? this.configData[nVal.num].selectConfig.type : 0;
-          if (type) {
-            this.getByCategory();
-          } else {
-            this.getCategory();
-          }
-        }
-      },
-      deep: true,
-    },
-    defultArr: {
-      handler(nVal, oVal) {
-        this.rCom = [];
-        let tempArr = this.objToArray(nVal);
-        this.rCom = nVal[this.name.name].list;
-      },
-      deep: true,
-    },
-  },
-  data() {
-    return {
-      rCom: [],
-      configData: {},
-      isShow: true,
-      categoryList: [],
-      status: 0,
-    };
-  },
-  mounted() {
-    this.storeStatus();
-  },
-  methods: {
-    storeStatus() {
-      storeStatus().then((res) => {
-        this.status = parseInt(res.data.store_status);
-      });
-    },
-    getCategory() {
-      getCategory().then((res) => {
-        let data = [];
-        res.data.map((item) => {
-          data.push({
-            title: item.title,
-            pid: item.pid,
-            activeValue: item.id.toString(),
-          });
-        });
-        this.configData[this.name.num].selectConfig.list = data;
-        this.bus.$emit('upData', data);
-      });
-    },
-    //获取二级分类
-    getByCategory() {
-      getByCategory().then((res) => {
-        let data = [];
-        res.data.map((item) => {
-          data.push({
-            title: item.cate_name,
-            pid: item.pid,
-            activeValue: item.id.toString(),
-          });
-        });
-        this.configData[this.name.num].selectConfig.list = data;
-        this.bus.$emit('upData', data);
-      });
-    },
-    // 保存数据
-    saveConfig() {
-      let data = this.$store.state.moren.defaultConfig;
-      if (this.name.name == 'tabBar') {
-        if (!this.status) {
-          let list = data.tabBar.default.tabBarList.list;
-          for (let i = 0; i < list.length; i++) {
-            if (list[i].link == '/pages/storeList/index' || list[i].link == 'pages/storeList/index') {
-              return this.$message.error('请先开启您的周边功能(/pages/storeList/index)');
-            }
-          }
-        }
-        if (data.tabBar.default.tabBarList.list.length < 2) {
-          return this.$message.error('您最少应添加2个导航');
-        }
-      }
+import bus from '@/utils/bus';
 
-      diySave(this.pageId, {
-        value: data,
-      }).then((res) => {
-        this.$message.success('保存成功');
-      });
-    },
-    // 对象转数组
-    objToArray(array) {
-      var arr = [];
-      for (var i in array) {
-        arr.push(array[i]);
-      }
-      return arr;
-    },
+defineOptions({ name: 'rightConfig' });
+
+const props = defineProps({
+  name: {
+    type: Object,
+    default: {},
   },
-};
+  pageId: {
+    type: Number,
+    default: 0,
+  },
+  configNum: {
+    type: Number | String,
+    default: 'default',
+  },
+});
+
+const { proxy } = getCurrentInstance();
+
+// NOTE: 原 Vuex 模块 `moren` 尚未迁移到 Pinia，这里通过 proxy.$store 兼容访问（若未挂载则逻辑不可用，属预存问题）
+const $store = proxy.$store;
+
+const rCom = ref([]);
+const configData = ref({});
+const isShow = ref(true);
+const categoryList = ref([]);
+const status = ref(0);
+
+// 原 computed defultArr: this.$store.state.moren.component
+const defultArr = computed(() => {
+  return $store && $store.state.moren ? $store.state.moren.component : {};
+});
+
+watch(
+  () => props.name,
+  (nVal, oVal) => {
+    rCom.value = [];
+    configData.value = $store.state.moren.defaultConfig[nVal.name];
+    if (!configData.value.hasOwnProperty(props.configNum)) {
+      let defaultObj = JSON.parse(JSON.stringify(configData.value.defaultVal));
+      configData.value[nVal.num] = defaultObj;
+      $store.commit('moren/upDataName', configData.value);
+    }
+    setTimeout(function () {
+      rCom.value = $store.state.moren.component[nVal.name].list;
+    }, 30);
+    if (configData.value[nVal.num].selectConfig) {
+      let type = configData.value[nVal.num].selectConfig.type ? configData.value[nVal.num].selectConfig.type : 0;
+      if (type) {
+        getByCategoryFn();
+      } else {
+        getCategoryFn();
+      }
+    }
+  },
+  { deep: true },
+);
+
+watch(
+  defultArr,
+  (nVal, oVal) => {
+    rCom.value = [];
+    let tempArr = objToArray(nVal);
+    rCom.value = nVal[props.name.name].list;
+  },
+  { deep: true },
+);
+
+function storeStatusFn() {
+  storeStatus().then((res) => {
+    status.value = parseInt(res.data.store_status);
+  });
+}
+
+function getCategoryFn() {
+  getCategory().then((res) => {
+    let data = [];
+    res.data.map((item) => {
+      data.push({
+        title: item.title,
+        pid: item.pid,
+        activeValue: item.id.toString(),
+      });
+    });
+    configData.value[props.name.num].selectConfig.list = data;
+    bus.emit('upData', data);
+  });
+}
+
+//获取二级分类
+function getByCategoryFn() {
+  getByCategory().then((res) => {
+    let data = [];
+    res.data.map((item) => {
+      data.push({
+        title: item.cate_name,
+        pid: item.pid,
+        activeValue: item.id.toString(),
+      });
+    });
+    configData.value[props.name.num].selectConfig.list = data;
+    bus.emit('upData', data);
+  });
+}
+
+// 保存数据
+function saveConfig() {
+  let data = $store.state.moren.defaultConfig;
+  if (props.name.name == 'tabBar') {
+    if (!status.value) {
+      let list = data.tabBar.default.tabBarList.list;
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].link == '/pages/storeList/index' || list[i].link == 'pages/storeList/index') {
+          return ElMessage.error('请先开启您的周边功能(/pages/storeList/index)');
+        }
+      }
+    }
+    if (data.tabBar.default.tabBarList.list.length < 2) {
+      return ElMessage.error('您最少应添加2个导航');
+    }
+  }
+
+  diySave(props.pageId, {
+    value: data,
+  }).then((res) => {
+    ElMessage.success('保存成功');
+  });
+}
+
+// 对象转数组
+function objToArray(array) {
+  var arr = [];
+  for (var i in array) {
+    arr.push(array[i]);
+  }
+  return arr;
+}
+
+onMounted(() => {
+  storeStatusFn();
+});
 </script>
 
 <style lang="scss" scoped>

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="zb-parser">
     <parser
       v-if="formConf.fields.length > 0"
       v-loading="loading"
@@ -17,7 +17,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
@@ -33,75 +33,80 @@
  *      数据后渲染表单，
  *      其他业务和Parser保持一致
  */
+import { ref, watch, onMounted } from 'vue';
+import { ElMessageBox } from 'element-plus';
+import { ElLoadingDirective as vLoading } from 'element-plus/es/components/loading/index.mjs';
 import { getFormTempByNameApi } from '@/api/systemFormConfig.js';
 import parser from '@/components/FormGenerator/components/parser/Parser';
 import { Debounce } from '@/utils/validate';
-import { checkPermi } from '@/utils/permission'; // 权限判断函数
-export default {
-  name: 'ZBParser',
-  components: { parser },
-  props: {
-    formName: {
-      type: String,
-      required: '',
-    },
-    isCreate: {
-      type: Number,
-      default: 0, // 0=create 1=edit
-    },
-    editData: {
-      type: Object,
-    },
-    keyNum: {
-      type: Number,
-      default: 0,
-    },
+
+defineOptions({ name: 'ZBParser' });
+
+const props = defineProps({
+  formName: {
+    type: String,
+    required: '',
   },
-  data() {
-    return {
-      loading: false,
-      formConf: { fields: [] },
-    };
+  isCreate: {
+    type: Number,
+    default: 0, // 0=create 1=edit
   },
-  watch: {
-    keyNum: {
-      handler(val) {
-        this.formConf = { fields: [] };
-        this.handlerGetFormConfig(this.formName);
-      },
-      deep: true,
-      immediate: false,
-    },
+  editData: {
+    type: Object,
   },
-  mounted() {
-    this.handlerGetFormConfig(this.formName);
+  keyNum: {
+    type: Number,
+    default: 0,
   },
-  methods: {
-    checkPermi,
-    handlerGetFormConfig(formName) {
-      // 获取表单配置后生成table列
-      this.loading = true;
-      const _pram = { name: encodeURIComponent(formName) };
-      getFormTempByNameApi(_pram)
-        .then((data) => {
-          this.formConf = JSON.parse(data.content);
-          this.loading = false;
-        })
-        .catch(() => {
-          this.loading = false;
-        });
-    },
-    handlerSubmit: Debounce(function (formValue) {
-      this.$emit('submit', formValue);
-    }),
-    closeDialog() {
-      this.$msgbox.close();
-    },
-    resetForm(formValue) {
-      this.$emit('resetForm', formValue);
-    },
+});
+
+const emit = defineEmits(['submit', 'resetForm']);
+
+const loading = ref(false);
+const formConf = ref({ fields: [] });
+
+watch(
+  () => props.keyNum,
+  (val) => {
+    formConf.value = { fields: [] };
+    handlerGetFormConfig(props.formName);
   },
-};
+  { deep: true, immediate: false },
+);
+
+onMounted(() => {
+  handlerGetFormConfig(props.formName);
+});
+
+function handlerGetFormConfig(formName) {
+  // 获取表单配置后生成table列
+  loading.value = true;
+  const _pram = { name: encodeURIComponent(formName) };
+  getFormTempByNameApi(_pram)
+    .then((data) => {
+      formConf.value = JSON.parse(data.content);
+      loading.value = false;
+    })
+    .catch(() => {
+      loading.value = false;
+    });
+}
+
+const handlerSubmit = Debounce(function (formValue) {
+  emit('submit', formValue);
+});
+
+function closeDialog() {
+  ElMessageBox.close();
+}
+
+function resetForm(formValue) {
+  emit('resetForm', formValue);
+}
 </script>
 
-<style scoped></style>
+<style scoped>
+.zb-parser {
+  width: 100%;
+}
+</style>

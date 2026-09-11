@@ -72,6 +72,14 @@ const designRouter = {
       },
     },
     {
+      path: 'picture',
+      name: 'designPicture',
+      component: () => import('@/views/maintain/picture'),
+      meta: {
+        title: '素材管理',
+      },
+    },
+    {
       path: 'advertisement',
       name: 'advertisement',
       component: () => import('@/views/design/advertisement/index'),

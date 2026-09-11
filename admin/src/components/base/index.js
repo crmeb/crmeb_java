@@ -8,9 +8,17 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-const components = require.context('./', false, /\.vue$/u);
-export default (Vue) => {
-  components.keys().map((item) => {
-    Vue.component(components(item).default.name, components(item).default);
+import { defineAsyncComponent } from 'vue';
+
+const components = {
+  pagesHeader: () => import('./pagesHeader.vue'),
+  optionDatePicker: () => import('./optionDatePicker.vue'),
+  ZBParser: () => import('./ZBParser.vue'),
+  UserSearchInput: () => import('./UserSearchInput.vue'),
+};
+
+export default function (app) {
+  Object.keys(components).forEach((name) => {
+    app.component(name, defineAsyncComponent(components[name]));
   });
 };

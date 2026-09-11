@@ -38,10 +38,10 @@
       </div>
     </el-form-item>
     <el-form-item label="图标位置">
-      <el-radio-group v-model="curComponent.propValue.iconAlign" size="small" @change="onChange">
-        <el-radio-button label="flex-start"><span class="iconfont iconzuoduiqi"></span></el-radio-button>
-        <el-radio-button label="center"><span class="iconfont iconjuzhongduiqi"></span></el-radio-button>
-        <el-radio-button label="flex-end"><span class="iconfont iconyouduiqi"></span></el-radio-button>
+      <el-radio-group v-model="curComponent.propValue.iconAlign" @change="onChange">
+        <el-radio-button label="flex-start" value="flex-start"><span class="iconfont iconzuoduiqi"></span></el-radio-button>
+        <el-radio-button label="center" value="center"><span class="iconfont iconjuzhongduiqi"></span></el-radio-button>
+        <el-radio-button label="flex-end" value="flex-end"><span class="iconfont iconyouduiqi"></span></el-radio-button>
       </el-radio-group>
     </el-form-item>
     <!-- <el-form-item label="旋转角度">
@@ -65,21 +65,20 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ConfigIconStyle',
-  props: {
-    curComponent: {
-      type: Object,
-      required: true,
-    },
+<script setup>
+defineOptions({ name: 'ConfigIconStyle' });
+
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    required: true,
   },
-  methods: {
-    onChange() {
-      this.$emit('change');
-    },
-  },
-};
+});
+const emit = defineEmits(['change']);
+
+function onChange() {
+  emit('change');
+}
 </script>
 
 <style scoped lang="scss">

@@ -8,38 +8,9 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
 import { themeProductCategory } from '@/api/theme';
-
-const state = {
-  adminProductClassify: localStorage.getItem('adminProductClassify')
-    ? JSON.parse(localStorage.getItem('adminProductClassify'))
-    : [] /** 平台商品分类 **/,
-};
-
-const mutations = {
-  SET_AdminProductClassify: (state, adminProductClassify) => {
-    state.adminProductClassify = adminProductClassify;
-    localStorage.setItem('adminProductClassify', JSON.stringify(changeNodes(adminProductClassify)));
-    if (!adminProductClassify.length) localStorage.removeItem('adminProductClassify');
-  },
-};
-
-const actions = {
-  /** 平台商品分类 **/
-  getAdminProductClassify({ commit, dispatch }) {
-    return new Promise((resolve, reject) => {
-      themeProductCategory({ status: -1 })
-        .then(async (res) => {
-          const list = res.data || [];
-          commit('SET_AdminProductClassify', changeNodes(list));
-          resolve(list);
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
-  },
-};
 
 /** tree去除 childList=[] 的结构**/
 const changeNodes = function (data) {
@@ -58,10 +29,40 @@ const changeNodes = function (data) {
   return data;
 };
 
-export default {
-  namespaced: true,
-  state,
-  mutations,
-  actions,
-  changeNodes,
-};
+export const useProductStore = defineStore('product', () => {
+  const adminProductClassify = ref(
+    localStorage.getItem('adminProductClassify')
+      ? JSON.parse(localStorage.getItem('adminProductClassify'))
+      : [],
+  );
+
+  function SET_AdminProductClassify(list) {
+    adminProductClassify.value = list;
+    localStorage.setItem('adminProductClassify', JSON.stringify(changeNodes(list)));
+    if (!list.length) localStorage.removeItem('adminProductClassify');
+  }
+
+  /** 平台商品分类 **/
+  function getAdminProductClassify() {
+    return new Promise((resolve, reject) => {
+      themeProductCategory({ status: -1 })
+        .then(async (res) => {
+          const list = res.data || [];
+          SET_AdminProductClassify(changeNodes(list));
+          resolve(list);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+
+  return {
+    adminProductClassify,
+    SET_AdminProductClassify,
+    getAdminProductClassify,
+    changeNodes,
+  };
+});
+
+export { changeNodes };

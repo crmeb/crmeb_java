@@ -8,7 +8,7 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import store from '@/store';
+import { useUserStore } from '@/store/modules/user';
 import { fileImageApi } from '@/api/systemSetting';
 /**
  * 根据需求过滤掉treeData中的child.length === 0的数据
@@ -53,7 +53,7 @@ export function addTreeListLabel(treeData) {
         item.name === '管理权限' ||
         item.name === '管理员列表' ||
         item.name === '权限规则') &&
-      store.getters.name !== 'admin'
+      useUserStore().name !== 'admin'
     ) {
       item.disabled = true;
     }
@@ -71,7 +71,7 @@ export function addTreeListLabelForCasCard(treeData, child) {
         item.name === '管理权限' ||
         item.name === '管理员列表' ||
         item.name === '权限规则') &&
-      store.getters.name !== 'admin'
+      useUserStore().name !== 'admin'
     ) {
       item.disabled = true;
     }
@@ -98,7 +98,7 @@ export function Add(arg1, arg2) {
     r2 = 0;
   }
   m = Math.pow(100, Math.max(r1, r2));
-  return (this.Mul(arg1, m) + this.Mul(arg2, m)) / m;
+  return (Mul(arg1, m) + Mul(arg2, m)) / m;
 }
 
 //乘法函数，用来得到精确的乘法结果

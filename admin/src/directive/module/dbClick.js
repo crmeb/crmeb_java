@@ -2,7 +2,7 @@
  * 防止短时间内重复点击。
  */
 const dbClick = {
-  inserted(el) {
+  mounted(el) {
     el.addEventListener('click', () => {
       if (!el.disabled) {
         el.disabled = true;

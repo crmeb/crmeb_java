@@ -93,6 +93,7 @@
 
 .el-message-box__wrapper {
   overflow: auto;
+
   .el-message-box__btns {
     padding: 0 24px;
   }
@@ -108,12 +109,14 @@ table img {
   height: 36px !important;
   border-radius: 4px;
 }
+
 table .el-image-viewer__wrapper {
   img {
     width: auto !important;
     height: 100% !important;
   }
 }
+
 .el-image-viewer__wrapper {
   img {
     width: auto !important;
@@ -123,6 +126,10 @@ table .el-image-viewer__wrapper {
 .upload-form {
   min-width: 900px;
   max-height: 620px;
+
+  .el-message-box__message {
+    width: 100%;
+  }
 }
 
 .upload-form-temp {
@@ -266,7 +273,7 @@ table .el-image-viewer__wrapper {
 .demo-table-expand .el-form-item {
   margin-right: 0;
   margin-bottom: 0;
-  width: 33.33%;
+  width: 22%;
 }
 
 .selWidth {
@@ -305,7 +312,7 @@ table .el-image-viewer__wrapper {
 }
 
 .el-message-box__content {
-  padding: 30px 24px 0 24px;
+  padding: 14px;
 }
 
 // 自定义表单 加载的弹窗样式 END
@@ -443,35 +450,40 @@ table .el-image-viewer__wrapper {
     }
   }
 }
+
 .labelwidth {
   width: 72px;
 }
+
 .labelml {
   margin-left: 22px;
 }
+
 .mobile-config {
   width: 100%;
-  padding: 15px 0;
+  // padding: 15px 0;
 }
+
 .borderPadding {
   padding: 0 15px;
 }
+
 .c_label {
   font-size: 12px;
   color: #999;
 }
+
 .c_label .labelwidth {
   color: #999;
   display: inline-block;
 }
-.slider-box {
-  width: 81% !important;
-}
+
 //右上角标题
 .title-config-diy {
   height: 63px;
   padding: 0 15px;
   line-height: 63px;
+
   .title-bar {
     font-size: 16px;
     color: #333;
@@ -479,14 +491,17 @@ table .el-image-viewer__wrapper {
     font-weight: 600;
   }
 }
+
 //系统表单样式
 .mobile-config-from {
   border-top: 6px solid #f6f7f9;
   padding-top: 20px;
+
   .labelwidth {
     //text-align: right;
   }
 }
+
 /***************diy样式*****************/
 
 //带蓝色横杠标题
@@ -499,6 +514,7 @@ table .el-image-viewer__wrapper {
   font-size: 16px;
   font-weight: 600;
   position: relative;
+
   &::before {
     content: '';
     position: absolute;
@@ -534,6 +550,7 @@ table .el-image-viewer__wrapper {
   justify-content: space-between;
   align-items: center;
 }
+
 //退款详情页面样式
 .detail {
   &-section {
@@ -667,8 +684,9 @@ table .el-image-viewer__wrapper {
     }
   }
 }
+
 .detailSection {
-  ::v-deep .el-table__row {
+  :deep(.el-table__row) {
     padding-left: 15px !important;
   }
 
@@ -748,13 +766,16 @@ table .el-image-viewer__wrapper {
     }
   }
 }
+
 .padBox {
   padding: 25px 35px !important;
 }
+
 //表单内输入框宽度
 .from-ipt-width {
   width: 460px;
 }
+
 /*****************************/
 
 /******************** 弹窗 from 样式重写 start ****************************/
@@ -769,6 +790,7 @@ table .el-image-viewer__wrapper {
 
 //登录显示隐藏按钮
 $dark_gray: #889aa4;
+
 .show-pwd {
   position: absolute;
   right: 10px;
@@ -777,7 +799,8 @@ $dark_gray: #889aa4;
   color: $dark_gray;
   cursor: pointer;
   user-select: none;
-  ::v-deepsvg-icon {
+
+  :deep(.svg-icon) {
     vertical-align: 0.3em;
   }
 }
@@ -797,6 +820,7 @@ $dark_gray: #889aa4;
   padding-left: 8px;
   position: relative;
   margin-left: 20px;
+
   &::before {
     position: absolute;
     content: '';
@@ -814,28 +838,37 @@ $dark_gray: #889aa4;
     max-height: none !important;
   }
 }
-.el-form-item--mini .el-form-item__content {
-  margin-bottom: -20px;
+
+.el-form-item .el-form-item__content {
+  display: block;
 }
+
 .tag-background {
   border-radius: 2px !important;
   background-color: #fff !important;
 }
+
 .tag-padding {
   padding: 3px 8px;
 }
+
 .el-dropdown-link {
   color: var(--prev-color-primary) !important;
 }
+
 .el-tooltip__popper {
-  max-width: 800px !important; /* 内容展示的最大宽度 */
+  max-width: 800px !important;
+  /* 内容展示的最大宽度 */
 }
-::v-deep .el-card__body {
+
+:deep(.el-card__body) {
   padding: 20px 20px 0;
 }
+
 .reset-theme {
   color: var(--prev-color-primary) !important;
 }
+
 .labelml {
   margin-left: 22px !important;
 }

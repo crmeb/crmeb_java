@@ -6,18 +6,16 @@
 -->
 <template>
   <div>
-    <template v-for="val in chil">
-      <el-submenu :index="val.path" :key="val.path" v-if="val.children && val.children.length > 0">
-        <template slot="title">
-          <i class="ivu-icon" :class="'el-icon-' + val.icon"></i>
-          <span>{{ val.title }}</span>
+    <template v-for="val in chil" :key="val.path">
+      <el-sub-menu :index="val.path" v-if="val.children && val.children.length > 0">
+        <template #title>
+          <span @click.stop="handleSubMenuTitleClick(val)">{{ val.title }}</span>
         </template>
         <sub-item :chil="val.children" />
-      </el-submenu>
+      </el-sub-menu>
       <template v-else>
-        <el-menu-item :index="val.path" :key="val.path">
-          <template>
-            <i class="ivu-icon" :class="val.icon ? 'el-icon-' + val.icon : ''"></i>
+        <el-menu-item :index="val.path">
+          <template #title>
             <span>{{ val.title }}</span>
           </template>
         </el-menu-item>
@@ -26,16 +24,38 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'subItem',
-  props: {
-    chil: {
-      type: Array,
-      default() {
-        return [];
-      },
-    },
-  },
-};
+<script setup>
+import { useRouter } from 'vue-router'
+
+defineOptions({ name: 'subItem' })
+
+const router = useRouter()
+
+const props = defineProps({
+  chil: {
+    type: Array,
+    default() {
+      return []
+    }
+  }
+})
+
+// 有 children 的子菜单点击标题时导航到第一个叶子节点
+function handleSubMenuTitleClick(val) {
+  if (val.children && val.children.length > 0) {
+    const firstLeaf = findFirstLeaf(val.children)
+    if (firstLeaf) {
+      router.push(firstLeaf.path)
+    }
+  }
+}
+
+function findFirstLeaf(children) {
+  console.log('findFirstLeaf', children)
+  if (!children || children.length === 0) return null
+  if (children[0].children && children[0].children.length > 0) {
+    return findFirstLeaf(children[0].children)
+  }
+  return children[0]
+}
 </script>

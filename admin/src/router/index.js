@@ -8,10 +8,7 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import Vue from 'vue';
-import Router from 'vue-router';
-
-Vue.use(Router);
+import { createRouter, createWebHistory } from 'vue-router';
 
 /* Layout */
 import Layout from '@/layout';
@@ -28,7 +25,6 @@ import contentRouter from './modules/content';
 import operationRouter from './modules/operation';
 import appSettingRouter from './modules/appSetting';
 import maintainRouter from './modules/maintain';
-import mobileRouter from './modules/mobile';
 import designRouter from './modules/design';
 
 /**
@@ -80,8 +76,6 @@ export const constantRoutes = [
   appSettingRouter,
   // 维护
   maintainRouter,
-  //移动端管理
-  mobileRouter,
   //装修
   designRouter,
   {
@@ -139,7 +133,8 @@ export const constantRoutes = [
     name: 'uploadPicture',
   },
   // 404 page must be placed at the end !!!
-  { path: '*', redirect: '/404', hidden: true },
+  // Vue Router 4 中通配符 * 不再支持，需用 :pathMatch(.*)*
+  { path: '/:pathMatch(.*)*', redirect: '/404', hidden: true },
 ];
 
 /**
@@ -148,20 +143,30 @@ export const constantRoutes = [
  */
 export const asyncRoutes = [];
 
-const createRouter = () =>
-  new Router({
+const createAppRouter = () =>
+  createRouter({
     // mode: 'history', // require service support
-    mode: 'history',
-    scrollBehavior: () => ({ y: 0 }),
+    history: createWebHistory(),
+    // Vue Router 4 scrollBehavior 使用 left/top 而非 x/y
+    scrollBehavior: () => ({ left: 0, top: 0 }),
     routes: constantRoutes,
   });
 
-const router = createRouter();
+const router = createAppRouter();
 
 // Detail see: https://github.com/vuejs/vue-router/issues/1234#issuecomment-357941465
+// Vue Router 4 中 router.matcher 已移除，resetRouter 改为移除动态添加的路由
 export function resetRouter() {
-  const newRouter = createRouter();
-  router.matcher = newRouter.matcher; // reset router
+  const newRouter = createAppRouter();
+  // 移除所有动态添加的路由（保留初始 constantRoutes）
+  router.getRoutes().forEach((r) => {
+    if (!constantRoutes.some((cr) => cr.name === r.name) && r.name) {
+      router.removeRoute(r.name);
+    }
+  });
+  // 简化处理：用新路由的 matcher 思路不可用，这里通过 removeRoute 清理动态路由
+  // 若仍有残留，可手动调用各动态路由 name 移除
+  void newRouter;
 }
 
 export default router;

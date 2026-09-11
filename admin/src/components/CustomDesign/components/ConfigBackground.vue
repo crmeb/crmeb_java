@@ -1,11 +1,11 @@
 <template>
   <el-form-item label="背景色">
     <div style="margin-bottom: 10px">
-      <el-radio-group v-model="curComponent.propValue.bgDirection" @change="onChange" size="mini">
-        <el-radio label="horizontal">横向</el-radio>
-        <el-radio label="vertical">纵向</el-radio>
-        <el-radio label="left-diagonal">左斜</el-radio>
-        <el-radio label="right-diagonal">右斜</el-radio>
+      <el-radio-group v-model="curComponent.propValue.bgDirection" @change="onChange">
+        <el-radio label="horizontal" value="horizontal">横向</el-radio>
+        <el-radio label="vertical" value="vertical">纵向</el-radio>
+        <el-radio label="left-diagonal" value="left-diagonal">左斜</el-radio>
+        <el-radio label="right-diagonal" value="right-diagonal">右斜</el-radio>
       </el-radio-group>
     </div>
     <div class="row">
@@ -46,21 +46,20 @@
   </el-form-item>
 </template>
 
-<script>
-export default {
-  name: 'ConfigBackground',
-  props: {
-    curComponent: {
-      type: Object,
-      required: true,
-    },
+<script setup>
+defineOptions({ name: 'ConfigBackground' });
+
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    required: true,
   },
-  methods: {
-    onChange() {
-      this.$emit('change');
-    },
-  },
-};
+});
+const emit = defineEmits(['change']);
+
+function onChange() {
+  emit('change');
+}
 </script>
 
 <style scoped lang="scss">

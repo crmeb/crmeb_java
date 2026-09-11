@@ -1,9 +1,8 @@
-import { saveAs } from 'file-saver';
 import axios from 'axios';
 import { getToken } from '@/utils/auth';
-import { Message } from 'element-ui';
+import { ElMessage as Message } from '@/utils/elementPlusFeedback';
 
-const baseURL = process.env.VUE_APP_BASE_API;
+const baseURL = import.meta.env.VITE_APP_BASE_API;
 
 export default {
   name(name, isDelete = true) {
@@ -57,7 +56,9 @@ export default {
       }
     });
   },
-  saveAs(text, name, opts) {
+  async saveAs(text, name, opts) {
+    // file-saver 改为动态加载，避免进入口 chunk（下载为用户触发，非首屏）
+    const { saveAs } = await import('file-saver');
     saveAs(text, name, opts);
   },
   async blobValidate(data) {

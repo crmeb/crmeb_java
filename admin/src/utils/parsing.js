@@ -61,7 +61,8 @@ export function parseTime(time, pattern) {
 
 // 表单重置
 export function resetForm(refName) {
-  if (this.$refs[refName]) {
+  // Vue3: this 为组件实例 proxy（通过 globalProperties 挂载），可能为 undefined
+  if (this && this.$refs && this.$refs[refName]) {
     this.$refs[refName].resetFields();
   }
 }

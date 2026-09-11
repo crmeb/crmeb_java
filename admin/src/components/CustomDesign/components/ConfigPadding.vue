@@ -16,7 +16,7 @@
               v-model="curComponent.propValue.paddingTop"
               controls-position="right"
               @change="onChange"
-              size="small"
+
             ></el-input-number>
           </div>
         </div>
@@ -27,7 +27,7 @@
               v-model="curComponent.propValue.paddingRight"
               controls-position="right"
               @change="onChange"
-              size="small"
+
             ></el-input-number>
           </div>
         </div>
@@ -38,7 +38,7 @@
               v-model="curComponent.propValue.paddingBottom"
               controls-position="right"
               @change="onChange"
-              size="small"
+
             ></el-input-number>
           </div>
         </div>
@@ -49,7 +49,7 @@
               v-model="curComponent.propValue.paddingLeft"
               controls-position="right"
               @change="onChange"
-              size="small"
+
             ></el-input-number>
           </div>
         </div>
@@ -58,54 +58,48 @@
   </el-form-item>
 </template>
 
-<script>
-export default {
-  name: 'ConfigPadding',
-  props: {
-    curComponent: {
-      type: Object,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      paddingMainVal: 0,
-      isPaddingExpanded: false,
-    };
-  },
-  watch: {
-    'curComponent.id': {
-      handler() {
-        if (this.curComponent && this.curComponent.propValue) {
-          // Ensure padding properties are reactive
-          if (this.curComponent.propValue.paddingTop === undefined)
-            this.$set(this.curComponent.propValue, 'paddingTop', 0);
-          if (this.curComponent.propValue.paddingRight === undefined)
-            this.$set(this.curComponent.propValue, 'paddingRight', 0);
-          if (this.curComponent.propValue.paddingBottom === undefined)
-            this.$set(this.curComponent.propValue, 'paddingBottom', 0);
-          if (this.curComponent.propValue.paddingLeft === undefined)
-            this.$set(this.curComponent.propValue, 'paddingLeft', 0);
+<script setup>
+import { ref, watch } from 'vue';
 
-          this.paddingMainVal = this.curComponent.propValue.paddingTop || 0;
-        }
-      },
-      immediate: true,
-    },
+defineOptions({ name: 'ConfigPadding' });
+
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    required: true,
   },
-  methods: {
-    onChange() {
-      this.$emit('change');
-    },
-    handlePaddingMainChange(val) {
-      this.$set(this.curComponent.propValue, 'paddingTop', val);
-      this.$set(this.curComponent.propValue, 'paddingRight', val);
-      this.$set(this.curComponent.propValue, 'paddingBottom', val);
-      this.$set(this.curComponent.propValue, 'paddingLeft', val);
-      this.onChange();
-    },
+});
+const emit = defineEmits(['change']);
+
+const paddingMainVal = ref(0);
+const isPaddingExpanded = ref(false);
+
+watch(
+  () => props.curComponent.id,
+  () => {
+    if (props.curComponent && props.curComponent.propValue) {
+      // Ensure padding properties are reactive
+      if (props.curComponent.propValue.paddingTop === undefined) props.curComponent.propValue.paddingTop = 0;
+      if (props.curComponent.propValue.paddingRight === undefined) props.curComponent.propValue.paddingRight = 0;
+      if (props.curComponent.propValue.paddingBottom === undefined) props.curComponent.propValue.paddingBottom = 0;
+      if (props.curComponent.propValue.paddingLeft === undefined) props.curComponent.propValue.paddingLeft = 0;
+
+      paddingMainVal.value = props.curComponent.propValue.paddingTop || 0;
+    }
   },
-};
+  { immediate: true },
+);
+
+function onChange() {
+  emit('change');
+}
+function handlePaddingMainChange(val) {
+  props.curComponent.propValue.paddingTop = val;
+  props.curComponent.propValue.paddingRight = val;
+  props.curComponent.propValue.paddingBottom = val;
+  props.curComponent.propValue.paddingLeft = val;
+  onChange();
+}
 </script>
 
 <style scoped lang="scss">
@@ -140,7 +134,7 @@ export default {
         border-color: #c6e2ff;
       }
     }
-    ::v-deep .el-slider {
+    :deep(.el-slider) {
       flex: 1;
       margin-right: 0;
       .el-slider__input {
@@ -176,7 +170,7 @@ export default {
           font-size: 14px;
           margin-right: 5px;
         }
-        ::v-deep .el-input-number {
+        :deep(.el-input-number) {
           width: 100%;
           border: none;
           .el-input__inner {

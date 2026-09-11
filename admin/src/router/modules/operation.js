@@ -49,15 +49,6 @@ const operationRouter = {
       },
     },
     {
-      path: 'onePass',
-      name: 'onePass',
-      component: () => import('@/views/sms/smsConfig/index'),
-      meta: {
-        title: '一号通',
-        icon: 'clipboard',
-      },
-    },
-    {
       path: 'onePassConfig',
       name: 'onePassConfig',
       component: () => import('@/views/sms/smsConfig/config'),
@@ -77,22 +68,53 @@ const operationRouter = {
       },
       children: [
         {
-          path: 'identityManager',
-          component: () => import('@/views/systemSetting/administratorAuthority/identityManager'),
-          name: 'identityManager',
-          meta: { title: '角色管理', icon: '' },
-        },
-        {
           path: 'adminList',
           component: () => import('@/views/systemSetting/administratorAuthority/adminList'),
           name: 'adminList',
           meta: { title: '管理员列表', icon: '' },
         },
         {
+          path: 'identityManager',
+          component: () => import('@/views/systemSetting/administratorAuthority/identityManager'),
+          name: 'identityManager',
+          meta: { title: '角色管理', icon: '' },
+        },
+        {
           path: 'promiseRules',
           component: () => import('@/views/systemSetting/administratorAuthority/permissionRules'),
           name: 'promiseRules',
           meta: { title: '权限规则', icon: '' },
+        },
+      ],
+    },
+    {
+      path: 'logistics',
+      name: 'LogisticsSettings',
+      alwaysShow: true,
+      redirect: '/operation/logistics/freightSet',
+      component: () => import('@/views/systemSetting/deliverGoods'),
+      meta: {
+        title: '物流设置',
+        roles: ['admin'],
+      },
+      children: [
+        {
+          path: 'freightSet',
+          component: () => import('@/views/systemSetting/deliverGoods/freightSet'),
+          name: 'freightSet',
+          meta: { title: '运费模板', noCache: true },
+        },
+        {
+          path: 'companyList',
+          component: () => import('@/views/maintain/logistics/companyList'),
+          name: 'companyList',
+          meta: { title: '物流公司', icon: '' },
+        },
+        {
+          path: 'cityList',
+          component: () => import('@/views/maintain/logistics/cityList'),
+          name: 'cityList',
+          meta: { title: '城市数据', icon: '' },
         },
       ],
     },
@@ -108,7 +130,7 @@ const operationRouter = {
       children: [
         {
           path: 'config',
-          component: () => import('@/views/sms/smsConfig'),
+          redirect: '/operation/setting',
           name: 'SmsConfig',
           meta: { title: '短信账户', noCache: true },
         },
@@ -116,13 +138,13 @@ const operationRouter = {
           path: 'template',
           component: () => import('@/views/sms/smsTemplate'),
           name: 'SmsTemplate',
-          meta: { title: '短信模板', noCache: true, activeMenu: `/operation/onePass` },
+          meta: { title: '短信模板', noCache: true, activeMenu: `/operation/onePassConfig` },
         },
         {
           path: 'pay',
           component: () => import('@/views/sms/smsPay'),
           name: 'SmsPay',
-          meta: { title: '短信购买', noCache: true, activeMenu: `/operation/onePass` },
+          meta: { title: '短信购买', noCache: true, activeMenu: `/operation/onePassConfig` },
         },
         {
           path: 'message',
@@ -134,18 +156,19 @@ const operationRouter = {
     },
     {
       path: 'deliverGoods',
-      name: 'deliverGoods',
+      name: 'LegacyDeliverGoods',
       alwaysShow: true,
       component: () => import('@/views/systemSetting/deliverGoods'),
       meta: {
         title: '发货设置',
         roles: ['admin'],
       },
+      hidden: true,
       children: [
         {
           path: 'freightSet',
           component: () => import('@/views/systemSetting/deliverGoods/freightSet'),
-          name: 'freightSet',
+          name: 'LegacyFreightSet',
           meta: { title: '运费模板', noCache: true },
         },
       ],

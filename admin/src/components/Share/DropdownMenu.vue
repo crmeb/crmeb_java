@@ -10,31 +10,27 @@
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    items: {
-      type: Array,
-      default: function () {
-        return [];
-      },
-    },
-    title: {
-      type: String,
-      default: 'vue',
+<script setup>
+import { ref } from 'vue';
+
+defineProps({
+  items: {
+    type: Array,
+    default: function () {
+      return [];
     },
   },
-  data() {
-    return {
-      isActive: false,
-    };
+  title: {
+    type: String,
+    default: 'vue',
   },
-  methods: {
-    clickTitle() {
-      this.isActive = !this.isActive;
-    },
-  },
-};
+});
+
+const isActive = ref(false);
+
+function clickTitle() {
+  isActive.value = !isActive.value;
+}
 </script>
 
 <style lang="scss">

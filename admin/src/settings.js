@@ -9,10 +9,13 @@
 // +----------------------------------------------------------------------
 
 // 请求接口地址 如果没有配置自动获取当前网址路径
-const VUE_APP_API_URL = process.env.VUE_APP_BASE_API || `${location.origin}/api/`;
-module.exports = {
+const VITE_APP_API_URL = import.meta.env.VITE_APP_BASE_API || `${location.origin}/api/`;
+
+// 路由前缀（原代码多处引用但未导出，补占位）
+export const roterPre = '';
+export default {
   // 接口请求地址
-  apiBaseURL: VUE_APP_API_URL,
+  apiBaseURL: VITE_APP_API_URL,
 
   title: '加载中...',
 

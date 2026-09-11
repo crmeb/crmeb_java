@@ -8,20 +8,25 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-export default function modalIcon(callback) {
-  const h = this.$createElement;
+import { h } from 'vue';
+import { ElMessageBox, ElMessage } from '@/utils/elementPlusFeedback';
+
+export default async function modalIcon(callback) {
+  const { default: IconFrom } = await import('@/components/iconFrom/index.vue');
   return new Promise((resolve, reject) => {
-    this.$msgbox({
+    let selected = false;
+    ElMessageBox({
       title: '菜单图标',
       customClass: 'upload-form',
       closeOnClickModal: false,
       showClose: true,
       message: h('div', { class: 'common-form-upload' }, [
-        h('iconFrom', {
-          on: {
-            getIcon(n) {
-              callback(n);
-            },
+        h(IconFrom, {
+          onGetIcon(n) {
+            selected = true;
+            callback?.(n);
+            resolve(n);
+            ElMessageBox.close();
           },
         }),
       ]),
@@ -32,8 +37,9 @@ export default function modalIcon(callback) {
         resolve();
       })
       .catch(() => {
+        if (selected) return;
         reject();
-        this.$message({
+        ElMessage({
           type: 'info',
           message: '已取消',
         });

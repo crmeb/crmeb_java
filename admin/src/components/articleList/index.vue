@@ -23,26 +23,26 @@
     </div>
     <el-table :data="listData.list" style="width: 100%" max-height="400" tooltip-effect="dark" highlight-current-row>
       <el-table-column label="" width="55">
-        <template slot-scope="{ row, index }">
-          <el-radio v-model="templateRadio" :label="row.id" @change.native="getTemplateRow(row)">&nbsp;</el-radio>
+        <template #default="{ row, index }">
+          <el-radio v-model="templateRadio" :label="row.id" :value="row.id" @change="getTemplateRow(row)">&nbsp;</el-radio>
         </template>
       </el-table-column>
       <el-table-column label="图片" min-width="80">
-        <template slot-scope="scope">
+        <template #default="scope">
           <div class="demo-image__preview">
-            <el-image style="width: 36px; height: 36px" :src="scope.row.imageInput" :preview-src-list="imgList" />
+            <el-image style="width: 36px; height: 36px" :src="scope.row.imageInput" :preview-src-list="imgList" preview-teleported />
           </div>
         </template>
       </el-table-column>
       <el-table-column prop="title" label="标题" min-width="150" />
       <el-table-column prop="visit" label="浏览量" min-width="100">
-        <template slot-scope="scope">
-          <span>{{ scope.row.visit | filterEmpty }}</span>
+        <template #default="scope">
+          <span>{{ $filters.filterEmpty(scope.row.visit) }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="updateTime" label="更新时间" width="150" />
       <!--<el-table-column label="操作" min-width="150">-->
-      <!--<template slot-scope="scope">-->
+      <!--<template #default="scope">-->
       <!--<el-button type="warning" disabled>关联产品</el-button>-->
       <!--</template>-->
       <!--</el-table-column>-->
@@ -60,96 +60,105 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage, ElMessageBox } from '@/utils/elementPlusFeedback';
 import * as articleApi from '@/api/article.js';
 import * as categoryApi from '@/api/categoryApi.js';
 import * as selfUtil from '@/utils/ZBKJIutil.js';
-export default {
-  // name: "list",
-  props: {
-    handle: {
-      type: String,
-      default: '',
-    },
+
+const props = defineProps({
+  handle: {
+    type: String,
+    default: '',
   },
-  data() {
-    return {
-      templateRadio: '',
-      imgList: [],
-      constants: this.$constants,
-      listPram: {
-        keywords: null,
-        cid: null,
-        page: 1,
-        limit: this.$constants.page.limit[0],
-      },
-      listData: { list: [], total: 0 },
-      editDialogConfig: {
-        visible: false,
-        data: {},
-        isEdit: 0, // 0=add 1=edit
-      },
-      categoryTreeData: [],
-      categoryProps: {
-        value: 'id',
-        label: 'name',
-        children: 'child',
-        expandTrigger: 'hover',
-        checkStrictly: true,
-        emitPath: false,
-      },
-    };
-  },
-  mounted() {
-    this.handlerGetListData(this.listPram);
-    this.handlerGetCategoryTreeData();
-  },
-  methods: {
-    getTemplateRow(row) {
-      this.$emit('getArticle', row);
-    },
-    handerSearch() {
-      this.listPram.page = 1;
-      this.handlerGetListData(this.listPram);
-    },
-    handlerGetListData(pram) {
-      articleApi.ListArticle(pram).then((data) => {
-        this.listData = data;
-        // this.listData.list.map((item) => {
-        //   item.imageInput.map(i => {
-        //     this.imgList.push(i)
-        //   })
-        // })
-      });
-    },
-    handlerGetCategoryTreeData() {
-      const _pram = { type: this.constants.categoryType[2].value, status: 1 };
-      categoryApi.treeCategroy(_pram).then((data) => {
-        this.categoryTreeData = selfUtil.addTreeListLabelForCasCard(data);
-      });
-    },
-    handlerHideDialog() {
-      this.handlerGetListData(this.listPram);
-      this.editDialogConfig.visible = false;
-    },
-    handlerDelete(rowData) {
-      this.$confirm('确定删除当前数据', '提示', { customClass: 'deleteConfirm' }).then((result) => {
-        articleApi.DelArticle(rowData).then((data) => {
-          this.$message.success('删除数据成功');
-          this.handlerGetListData(this.listPram);
-        });
-      });
-    },
-    handleSizeChange(val) {
-      this.listPram.limit = val;
-      this.handlerGetListData(this.listPram);
-    },
-    handleCurrentChange(val) {
-      this.listPram.page = val;
-      this.handlerGetListData(this.listPram);
-    },
-  },
-};
+});
+
+const emit = defineEmits(['getArticle']);
+
+const { proxy } = getCurrentInstance();
+
+const constants = proxy.$constants;
+
+const templateRadio = ref('');
+const imgList = ref([]);
+const listPram = ref({
+  keywords: null,
+  cid: null,
+  page: 1,
+  limit: constants.page.limit[0],
+});
+const listData = ref({ list: [], total: 0 });
+const editDialogConfig = ref({
+  visible: false,
+  data: {},
+  isEdit: 0, // 0=add 1=edit
+});
+const categoryTreeData = ref([]);
+const categoryProps = ref({
+  value: 'id',
+  label: 'name',
+  children: 'child',
+  expandTrigger: 'hover',
+  checkStrictly: true,
+  emitPath: false,
+});
+
+function getTemplateRow(row) {
+  emit('getArticle', row);
+}
+
+function handerSearch() {
+  listPram.value.page = 1;
+  handlerGetListData(listPram.value);
+}
+
+function handlerGetListData(pram) {
+  articleApi.ListArticle(pram).then((data) => {
+    listData.value = data;
+    // this.listData.list.map((item) => {
+    //   item.imageInput.map(i => {
+    //     this.imgList.push(i)
+    //   })
+    // })
+  });
+}
+
+function handlerGetCategoryTreeData() {
+  const _pram = { type: constants.categoryType[2].value, status: 1 };
+  categoryApi.treeCategroy(_pram).then((data) => {
+    categoryTreeData.value = selfUtil.addTreeListLabelForCasCard(data);
+  });
+}
+
+function handlerHideDialog() {
+  handlerGetListData(listPram.value);
+  editDialogConfig.value.visible = false;
+}
+
+function handlerDelete(rowData) {
+  ElMessageBox.confirm('确定删除当前数据', '提示', { customClass: 'deleteConfirm' }).then((result) => {
+    articleApi.DelArticle(rowData).then((data) => {
+      ElMessage.success('删除数据成功');
+      handlerGetListData(listPram.value);
+    });
+  });
+}
+
+function handleSizeChange(val) {
+  listPram.value.limit = val;
+  handlerGetListData(listPram.value);
+}
+
+function handleCurrentChange(val) {
+  listPram.value.page = val;
+  handlerGetListData(listPram.value);
+}
+
+onMounted(() => {
+  handlerGetListData(listPram.value);
+  handlerGetCategoryTreeData();
+});
 </script>
 
 <style scoped></style>

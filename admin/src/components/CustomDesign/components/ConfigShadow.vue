@@ -2,8 +2,8 @@
   <div>
     <el-form-item label="阴影设置">
       <el-radio-group v-model="curComponent.propValue.showShadow" @change="onChange">
-        <el-radio :label="false">隐藏</el-radio>
-        <el-radio :label="true">显示</el-radio>
+        <el-radio :label="false" :value="false">隐藏</el-radio>
+        <el-radio :label="true" :value="true">显示</el-radio>
       </el-radio-group>
     </el-form-item>
     <template v-if="curComponent.propValue.showShadow">
@@ -102,21 +102,20 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ConfigShadow',
-  props: {
-    curComponent: {
-      type: Object,
-      required: true,
-    },
+<script setup>
+defineOptions({ name: 'ConfigShadow' });
+
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    required: true,
   },
-  methods: {
-    onChange() {
-      this.$emit('change');
-    },
-  },
-};
+});
+const emit = defineEmits(['change']);
+
+function onChange() {
+  emit('change');
+}
 </script>
 
 <style scoped lang="scss">

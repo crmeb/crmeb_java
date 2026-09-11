@@ -43,331 +43,329 @@
     </div>
   </div>
 </template>
-<script type="text/babel">
+<script setup>
 /**
  * VerifySlide
  * @description 滑块
  * */
+import { ref, computed, watch, onMounted, getCurrentInstance, nextTick } from 'vue';
 import { aesEncrypt } from './../utils/ase';
 import { resetSize } from './../utils/util';
 import { reqGet, reqCheck } from './../api/index';
+import { useUserStore } from '@/store/modules/user';
 //  "captchaType":"blockPuzzle",
-export default {
-  name: 'VerifySlide',
-  props: {
-    captchaType: {
-      type: String,
-    },
-    type: {
-      type: String,
-      default: '1',
-    },
-    // 弹出式pop，固定fixed
-    mode: {
-      type: String,
-      default: 'fixed',
-    },
-    vSpace: {
-      type: Number,
-      default: 5,
-    },
-    explain: {
-      type: String,
-      default: '向右滑动完成验证',
-    },
-    imgSize: {
-      type: Object,
-      default() {
-        return {
-          width: '310px',
-          height: '155px',
-        };
-      },
-    },
-    blockSize: {
-      type: Object,
-      default() {
-        return {
-          width: '50px',
-          height: '50px',
-        };
-      },
-    },
-    barSize: {
-      type: Object,
-      default() {
-        return {
-          width: '310px',
-          height: '40px',
-        };
-      },
-    },
-    defaultImg: {
-      type: String,
-      default: '',
-    },
+defineOptions({ name: 'VerifySlide' });
+
+const props = defineProps({
+  captchaType: {
+    type: String,
   },
-  data() {
-    return {
-      secretKey: '', // 后端返回的加密秘钥 字段
-      passFlag: '', // 是否通过的标识
-      backImgBase: '', // 验证码背景图片
-      blockBackImgBase: '', // 验证滑块的背景图片
-      backToken: '', // 后端返回的唯一token值
-      startMoveTime: '', // 移动开始的时间
-      endMovetime: '', // 移动结束的时间
-      tipsBackColor: '', // 提示词的背景颜色
-      tipWords: '',
-      text: '',
-      finishText: '',
-      setSize: {
-        imgHeight: 0,
-        imgWidth: 0,
-        barHeight: 0,
-        barWidth: 0,
-      },
-      top: 0,
-      left: 0,
-      moveBlockLeft: undefined,
-      leftBarWidth: undefined,
-      // 移动中样式
-      moveBlockBackgroundColor: undefined,
-      leftBarBorderColor: '#ddd',
-      iconColor: undefined,
-      iconClass: 'icon-right',
-      status: false, // 鼠标状态
-      isEnd: false, // 是够验证完成
-      showRefresh: true,
-      transitionLeft: '',
-      transitionWidth: '',
-    };
+  type: {
+    type: String,
+    default: '1',
   },
-  computed: {
-    barArea() {
-      return this.$el.querySelector('.verify-bar-area');
-    },
-    resetSize() {
-      return resetSize;
-    },
+  // 弹出式pop，固定fixed
+  mode: {
+    type: String,
+    default: 'fixed',
   },
-  watch: {
-    // type变化则全面刷新
-    type: {
-      immediate: true,
-      handler() {
-        this.init();
-      },
-    },
+  vSpace: {
+    type: Number,
+    default: 5,
   },
-  mounted() {
-    // 禁止拖拽
-    this.$el.onselectstart = function () {
-      return false;
-    };
+  explain: {
+    type: String,
+    default: '向右滑动完成验证',
   },
-  methods: {
-    init() {
-      this.text = this.explain;
-      this.getPictrue();
-      this.$nextTick(() => {
-        const setSize = this.resetSize(this); // 重新设置宽度高度
-        for (const key in setSize) {
-          this.$set(this.setSize, key, setSize[key]);
-        }
-        this.$parent.$emit('ready', this);
-      });
-
-      var _this = this;
-
-      window.removeEventListener('touchmove', function (e) {
-        _this.move(e);
-      });
-      window.removeEventListener('mousemove', function (e) {
-        _this.move(e);
-      });
-
-      // 鼠标松开
-      window.removeEventListener('touchend', function () {
-        _this.end();
-      });
-      window.removeEventListener('mouseup', function () {
-        _this.end();
-      });
-
-      window.addEventListener('touchmove', function (e) {
-        _this.move(e);
-      });
-      window.addEventListener('mousemove', function (e) {
-        _this.move(e);
-      });
-
-      // 鼠标松开
-      window.addEventListener('touchend', function () {
-        _this.end();
-      });
-      window.addEventListener('mouseup', function () {
-        _this.end();
-      });
-    },
-
-    // 鼠标按下
-    start: function (e) {
-      e = e || window.event;
-      if (!e.touches) {
-        // 兼容PC端
-        var x = e.clientX;
-      } else {
-        // 兼容移动端
-        var x = e.touches[0].pageX;
-      }
-      this.startLeft = Math.floor(x - this.barArea.getBoundingClientRect().left);
-      this.startMoveTime = +new Date(); // 开始滑动的时间
-      if (this.isEnd == false) {
-        this.text = '';
-        this.moveBlockBackgroundColor = '#337ab7';
-        this.leftBarBorderColor = '#337AB7';
-        this.iconColor = '#fff';
-        e.stopPropagation();
-        this.status = true;
-      }
-    },
-    // 鼠标移动
-    move: function (e) {
-      e = e || window.event;
-      if (this.status && this.isEnd == false) {
-        if (!e.touches) {
-          // 兼容PC端
-          var x = e.clientX;
-        } else {
-          // 兼容移动端
-          var x = e.touches[0].pageX;
-        }
-        var bar_area_left = this.barArea.getBoundingClientRect().left;
-        var move_block_left = x - bar_area_left; // 小方块相对于父元素的left值
-        if (move_block_left >= this.barArea.offsetWidth - parseInt(parseInt(this.blockSize.width) / 2) - 2) {
-          move_block_left = this.barArea.offsetWidth - parseInt(parseInt(this.blockSize.width) / 2) - 2;
-        }
-        if (move_block_left <= 0) {
-          move_block_left = parseInt(parseInt(this.blockSize.width) / 2);
-        }
-        // 拖动后小方块的left值
-        this.moveBlockLeft = move_block_left - this.startLeft + 'px';
-        this.leftBarWidth = move_block_left - this.startLeft + 'px';
-      }
-    },
-
-    // 鼠标松开
-    end: function () {
-      this.endMovetime = +new Date();
-      var _this = this;
-      // 判断是否重合
-      if (this.status && this.isEnd == false) {
-        var moveLeftDistance = parseInt((this.moveBlockLeft || '').replace('px', ''));
-        moveLeftDistance = (moveLeftDistance * 310) / parseInt(this.setSize.imgWidth);
-        const data = {
-          captchaType: this.captchaType,
-          pointJson: this.secretKey
-            ? aesEncrypt(JSON.stringify({ x: moveLeftDistance, y: 5.0 }), this.secretKey)
-            : JSON.stringify({ x: moveLeftDistance, y: 5.0 }),
-          token: this.backToken,
-        };
-        reqCheck(data).then((res) => {
-          if (res.repCode == '0000') {
-            this.moveBlockBackgroundColor = '#5cb85c';
-            this.leftBarBorderColor = '#5cb85c';
-            this.iconColor = '#fff';
-            this.iconClass = 'icon-check';
-            this.showRefresh = false;
-            this.isEnd = true;
-            if (this.mode == 'pop') {
-              setTimeout(() => {
-                this.$parent.clickShow = false;
-                this.refresh();
-              }, 1500);
-            }
-            this.passFlag = true;
-            this.tipWords = `${((this.endMovetime - this.startMoveTime) / 1000).toFixed(2)}s验证成功`;
-            var captchaVerification = this.secretKey
-              ? aesEncrypt(this.backToken + '---' + JSON.stringify({ x: moveLeftDistance, y: 5.0 }), this.secretKey)
-              : this.backToken + '---' + JSON.stringify({ x: moveLeftDistance, y: 5.0 });
-            setTimeout(() => {
-              this.tipWords = '';
-              this.$parent.closeBox();
-              this.$parent.$emit('success', { captchaVerification });
-            }, 1000);
-          } else {
-            this.moveBlockBackgroundColor = '#d9534f';
-            this.leftBarBorderColor = '#d9534f';
-            this.iconColor = '#fff';
-            this.iconClass = 'icon-close';
-            this.passFlag = false;
-            setTimeout(function () {
-              _this.refresh();
-            }, 1000);
-            this.$parent.$emit('error', this);
-            this.tipWords = '验证失败';
-            setTimeout(() => {
-              this.tipWords = '';
-            }, 1000);
-          }
-        });
-        this.status = false;
-      }
-    },
-
-    refresh: function () {
-      this.showRefresh = true;
-      this.finishText = '';
-
-      this.transitionLeft = 'left .3s';
-      this.moveBlockLeft = 0;
-
-      this.leftBarWidth = undefined;
-      this.transitionWidth = 'width .3s';
-
-      this.leftBarBorderColor = '#ddd';
-      this.moveBlockBackgroundColor = '#fff';
-      this.iconColor = '#000';
-      this.iconClass = 'icon-right';
-      this.isEnd = false;
-
-      this.getPictrue();
-      setTimeout(() => {
-        this.transitionWidth = '';
-        this.transitionLeft = '';
-        this.text = this.explain;
-      }, 300);
-    },
-
-    // 请求背景图片和验证图片
-    getPictrue() {
-      const data = {
-        captchaType: this.captchaType,
-        clientUid: localStorage.getItem('single-admin-slider'),
-        ts: Date.now(), // 现在的时间戳
+  imgSize: {
+    type: Object,
+    default() {
+      return {
+        width: '310px',
+        height: '155px',
       };
-      reqGet(data).then((res) => {
-        if (res.repCode == '0000') {
-          this.backImgBase = res.repData.originalImageBase64;
-          this.blockBackImgBase = res.repData.jigsawImageBase64;
-          this.backToken = res.repData.token;
-          this.secretKey = res.repData.secretKey;
-          this.$store.commit('user/SET_CAPTCHA', {
-            captchaVerification: res.repData.captchaVerification,
-            secretKey: res.repData.secretKey,
-            token: res.repData.token,
-          });
-        } else {
-          this.tipWords = res.repMsg;
-        }
-
-        // 判断接口请求次数是否失效
-        if (res.repCode == '6201') {
-          this.backImgBase = null;
-          this.blockBackImgBase = null;
-        }
-      });
     },
   },
-};
+  blockSize: {
+    type: Object,
+    default() {
+      return {
+        width: '50px',
+        height: '50px',
+      };
+    },
+  },
+  barSize: {
+    type: Object,
+    default() {
+      return {
+        width: '310px',
+        height: '40px',
+      };
+    },
+  },
+  defaultImg: {
+    type: String,
+    default: '',
+  },
+});
+
+const { proxy } = getCurrentInstance();
+const userStore = useUserStore();
+
+const secretKey = ref(''); // 后端返回的加密秘钥 字段
+const passFlag = ref(''); // 是否通过的标识
+const backImgBase = ref(''); // 验证码背景图片
+const blockBackImgBase = ref(''); // 验证滑块的背景图片
+const backToken = ref(''); // 后端返回的唯一token值
+const startMoveTime = ref(''); // 移动开始的时间
+const endMovetime = ref(''); // 移动结束的时间
+const tipsBackColor = ref(''); // 提示词的背景颜色
+const tipWords = ref('');
+const text = ref('');
+const finishText = ref('');
+const setSize = ref({
+  imgHeight: 0,
+  imgWidth: 0,
+  barHeight: 0,
+  barWidth: 0,
+});
+const top = ref(0);
+const left = ref(0);
+const moveBlockLeft = ref(undefined);
+const leftBarWidth = ref(undefined);
+// 移动中样式
+const moveBlockBackgroundColor = ref(undefined);
+const leftBarBorderColor = ref('#ddd');
+const iconColor = ref(undefined);
+const iconClass = ref('icon-right');
+const status = ref(false); // 鼠标状态
+const isEnd = ref(false); // 是够验证完成
+const showRefresh = ref(true);
+const transitionLeft = ref('');
+const transitionWidth = ref('');
+
+const barArea = computed(() => proxy.$el.querySelector('.verify-bar-area'));
+const resetSizeFn = computed(() => resetSize);
+
+watch(
+  () => props.type,
+  () => {
+    init();
+  },
+  { immediate: true }
+);
+
+onMounted(() => {
+  // 禁止拖拽
+  proxy.$el.onselectstart = function () {
+    return false;
+  };
+});
+
+function init() {
+  text.value = props.explain;
+  getPictrue();
+  nextTick(() => {
+    const size = resetSizeFn.value(proxy); // 重新设置宽度高度
+    for (const key in size) {
+      setSize.value[key] = size[key];
+    }
+    proxy.$parent.$emit('ready', proxy);
+  });
+
+  var _this = proxy;
+
+  window.removeEventListener('touchmove', function (e) {
+    _this.move(e);
+  });
+  window.removeEventListener('mousemove', function (e) {
+    _this.move(e);
+  });
+
+  // 鼠标松开
+  window.removeEventListener('touchend', function () {
+    _this.end();
+  });
+  window.removeEventListener('mouseup', function () {
+    _this.end();
+  });
+
+  window.addEventListener('touchmove', function (e) {
+    _this.move(e);
+  });
+  window.addEventListener('mousemove', function (e) {
+    _this.move(e);
+  });
+
+  // 鼠标松开
+  window.addEventListener('touchend', function () {
+    _this.end();
+  });
+  window.addEventListener('mouseup', function () {
+    _this.end();
+  });
+}
+
+// 鼠标按下
+function start(e) {
+  e = e || window.event;
+  if (!e.touches) {
+    // 兼容PC端
+    var x = e.clientX;
+  } else {
+    // 兼容移动端
+    var x = e.touches[0].pageX;
+  }
+  proxy.startLeft = Math.floor(x - barArea.value.getBoundingClientRect().left);
+  startMoveTime.value = +new Date(); // 开始滑动的时间
+  if (isEnd.value == false) {
+    text.value = '';
+    moveBlockBackgroundColor.value = '#337ab7';
+    leftBarBorderColor.value = '#337AB7';
+    iconColor.value = '#fff';
+    e.stopPropagation();
+    status.value = true;
+  }
+}
+// 鼠标移动
+function move(e) {
+  e = e || window.event;
+  if (status.value && isEnd.value == false) {
+    if (!e.touches) {
+      // 兼容PC端
+      var x = e.clientX;
+    } else {
+      // 兼容移动端
+      var x = e.touches[0].pageX;
+    }
+    var bar_area_left = barArea.value.getBoundingClientRect().left;
+    var move_block_left = x - bar_area_left; // 小方块相对于父元素的left值
+    if (move_block_left >= barArea.value.offsetWidth - parseInt(parseInt(props.blockSize.width) / 2) - 2) {
+      move_block_left = barArea.value.offsetWidth - parseInt(parseInt(props.blockSize.width) / 2) - 2;
+    }
+    if (move_block_left <= 0) {
+      move_block_left = parseInt(parseInt(props.blockSize.width) / 2);
+    }
+    // 拖动后小方块的left值
+    moveBlockLeft.value = move_block_left - proxy.startLeft + 'px';
+    leftBarWidth.value = move_block_left - proxy.startLeft + 'px';
+  }
+}
+
+// 鼠标松开
+function end() {
+  endMovetime.value = +new Date();
+  var _this = proxy;
+  // 判断是否重合
+  if (status.value && isEnd.value == false) {
+    var moveLeftDistance = parseInt((moveBlockLeft.value || '').replace('px', ''));
+    moveLeftDistance = (moveLeftDistance * 310) / parseInt(setSize.value.imgWidth);
+    const data = {
+      captchaType: props.captchaType,
+      pointJson: secretKey.value
+        ? aesEncrypt(JSON.stringify({ x: moveLeftDistance, y: 5.0 }), secretKey.value)
+        : JSON.stringify({ x: moveLeftDistance, y: 5.0 }),
+      token: backToken.value,
+    };
+    reqCheck(data).then((res) => {
+      if (res.repCode == '0000') {
+        moveBlockBackgroundColor.value = '#5cb85c';
+        leftBarBorderColor.value = '#5cb85c';
+        iconColor.value = '#fff';
+        iconClass.value = 'icon-check';
+        showRefresh.value = false;
+        isEnd.value = true;
+        if (props.mode == 'pop') {
+          setTimeout(() => {
+            proxy.$parent.clickShow = false;
+            refresh();
+          }, 1500);
+        }
+        passFlag.value = true;
+        tipWords.value = `${((endMovetime.value - startMoveTime.value) / 1000).toFixed(2)}s验证成功`;
+        var captchaVerification = secretKey.value
+          ? aesEncrypt(backToken.value + '---' + JSON.stringify({ x: moveLeftDistance, y: 5.0 }), secretKey.value)
+          : backToken.value + '---' + JSON.stringify({ x: moveLeftDistance, y: 5.0 });
+        setTimeout(() => {
+          tipWords.value = '';
+          proxy.$parent.closeBox();
+          proxy.$parent.$emit('success', { captchaVerification });
+        }, 1000);
+      } else {
+        moveBlockBackgroundColor.value = '#d9534f';
+        leftBarBorderColor.value = '#d9534f';
+        iconColor.value = '#fff';
+        iconClass.value = 'icon-close';
+        passFlag.value = false;
+        setTimeout(function () {
+          _this.refresh();
+        }, 1000);
+        proxy.$parent.$emit('error', proxy);
+        tipWords.value = '验证失败';
+        setTimeout(() => {
+          tipWords.value = '';
+        }, 1000);
+      }
+    });
+    status.value = false;
+  }
+}
+
+function refresh() {
+  showRefresh.value = true;
+  finishText.value = '';
+
+  transitionLeft.value = 'left .3s';
+  moveBlockLeft.value = 0;
+
+  leftBarWidth.value = undefined;
+  transitionWidth.value = 'width .3s';
+
+  leftBarBorderColor.value = '#ddd';
+  moveBlockBackgroundColor.value = '#fff';
+  iconColor.value = '#000';
+  iconClass.value = 'icon-right';
+  isEnd.value = false;
+
+  getPictrue();
+  setTimeout(() => {
+    transitionWidth.value = '';
+    transitionLeft.value = '';
+    text.value = props.explain;
+  }, 300);
+}
+
+// 请求背景图片和验证图片
+function getPictrue() {
+  const data = {
+    captchaType: props.captchaType,
+    clientUid: localStorage.getItem('single-admin-slider'),
+    ts: Date.now(), // 现在的时间戳
+  };
+  reqGet(data).then((res) => {
+    if (res.repCode == '0000') {
+      backImgBase.value = res.repData.originalImageBase64;
+      blockBackImgBase.value = res.repData.jigsawImageBase64;
+      backToken.value = res.repData.token;
+      secretKey.value = res.repData.secretKey;
+      userStore.SET_CAPTCHA({
+        captchaVerification: res.repData.captchaVerification,
+        secretKey: res.repData.secretKey,
+        token: res.repData.token,
+      });
+    } else {
+      tipWords.value = res.repMsg;
+    }
+
+    // 判断接口请求次数是否失效
+    if (res.repCode == '6201') {
+      backImgBase.value = null;
+      blockBackImgBase.value = null;
+    }
+  });
+}
+
+// 父组件通过 ref 调用 refresh
+defineExpose({ refresh });
 </script>

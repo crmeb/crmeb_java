@@ -10,6 +10,8 @@
 /**
  * 菜单
  * */
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
 import { cloneDeep } from 'lodash';
 import {
   getBreadCrumbList,
@@ -25,6 +27,7 @@ import {
   localRead,
 } from '@/utils/util';
 import router from '@/router';
+import { useUserStore } from './user';
 
 // import { includeArray } from '@/utils/system.js';
 const homeName = 'Dashboard';
@@ -54,8 +57,8 @@ function getChilden(data) {
   return data.path;
 }
 // 获取表单页面的标题
-function getFormTitle(router) {
-  let path = router.path;
+function getFormTitle(routerItem) {
+  let path = routerItem.path;
   var index = path.lastIndexOf('/');
   path = path.substring(index + 1, path.length);
   switch (path) {
@@ -80,230 +83,222 @@ function getFormTitle(router) {
     case 'pc_config':
       return 'pc基础配置';
       break;
-    case 'pc_config':
-      return 'pc基础配置';
-      break;
     default:
-      return router.meta.title;
+      return routerItem.meta.title;
   }
 }
-const closePage = (state, route) => {
-  const nextRoute = getNextRoute(state.tagNavList, route);
-  state.tagNavList = state.tagNavList.filter((item) => {
-    return !routeEqual(item, route);
+
+// includeArray 原本从 @/utils/system.js 引入但被注释，这里内联一个等价实现以避免运行时未定义
+function includeArray(list, target) {
+  if (!target || !target.length) return false;
+  return list.some((item) => target.includes(item));
+}
+
+export const useMenuStore = defineStore('menu', () => {
+  // 顶部菜单
+  const header = ref([]);
+  // 一级菜单名称
+  const oneMenuName = ref('');
+  // 侧栏菜单
+  const sider = ref([]);
+  // 当前顶栏菜单的 name
+  const headerName = ref('');
+  // 当前所在菜单的 path
+  const activePath = ref('');
+  // 展开的子菜单 name 集合
+  const openNames = ref([]);
+  //----------------------------------------------------------------
+  const breadCrumbList = ref([]);
+  const tagNavList = ref(getTagNavListFromLocalstorage() || []);
+  const homeRoute = ref({});
+  const local = ref(localRead('local'));
+  const errorList = ref([]);
+  const adminTitle = ref('');
+  const hasReadErrorPage = ref(false);
+  //----------------------------------------------------------------
+  const keepAliveNames = ref([]);
+
+  // getters
+  const filterSider = computed(() => {
+    const userInfo = useUserStore();
+    // @权限（原代码引用 rootState.user.info，user store 实际无 info 字段，保持原行为返回空过滤结果）
+    const access = userInfo.info ? userInfo.info.access : [];
+    if (access && access.length) {
+      return filterMenu(sider.value, access, []);
+    } else {
+      return filterMenu(sider.value, [], []);
+    }
   });
-  router.push(nextRoute);
-};
 
-export default {
-  namespaced: true,
-  state: {
-    // 顶部菜单
-    header: [],
-    // 一级菜单名称
-    oneMenuName: '',
-    // 侧栏菜单
-    sider: [],
-    // 当前顶栏菜单的 name
-    headerName: '',
-    // 当前所在菜单的 path
-    activePath: '',
-    // 展开的子菜单 name 集合
-    openNames: [],
-    //----------------------------------------------------------------
-    breadCrumbList: [],
-    tagNavList: getTagNavListFromLocalstorage() || [],
-    homeRoute: {},
-    local: localRead('local'),
-    errorList: [],
-    adminTitle: '',
-    hasReadErrorPage: false,
-    //----------------------------------------------------------------
-    keepAliveNames: [],
-  },
-  getters: {
-    /**
-     * @description 根据 user 里登录用户权限，对侧边菜单进行鉴权过滤
-     * */
-    filterSider(state, getters, rootState) {
-      const userInfo = rootState.user.info;
-      // @权限
-      const access = userInfo.access;
-      if (access && access.length) {
-        return filterMenu(state.sider, access, []);
-      } else {
-        return filterMenu(state.sider, [], []);
-      }
-    },
-    // 处理顶部路由递归
-
-    /**
-     * @description 根据 user 里登录用户权限，对顶栏菜单进行鉴权过滤
-     * */
-    filterHeader(state, getters, rootState) {
-      //  调用递归函数
-      state.header.forEach((item) => {
-        item.path = getChilden(item);
+  const filterHeader = computed(() => {
+    // 调用递归函数
+    header.value.forEach((item) => {
+      item.path = getChilden(item);
+    });
+    // @权限（原代码引用 rootState.admin.user.info，保持原行为）
+    const userStore = useUserStore();
+    const access = userStore.info ? userStore.info.access : [];
+    if (access && access.length) {
+      return header.value.filter((item) => {
+        let state = true;
+        if (item.auth && !includeArray(item.auth, access)) state = false;
+        return state;
       });
+    } else {
+      return header.value.filter((item) => {
+        let state = true;
+        if (item.auth && item.auth.length) state = false;
+        return state;
+      });
+    }
+  });
 
-      // @权限
-      const userInfo = rootState.admin.user.info;
-      const access = userInfo.access;
-      if (access && access.length) {
-        return state.header.filter((item) => {
-          let state = true;
-          if (item.auth && !includeArray(item.auth, access)) state = false;
-          return state;
-        });
-      } else {
-        return state.header.filter((item) => {
-          let state = true;
-          if (item.auth && item.auth.length) state = false;
-          return state;
-        });
-      }
-    },
-    /**
-     * @description 当前 header 的全部信息
-     * */
-    currentHeader(state) {
-      return state.header.find((item) => item.name === state.headerName);
-    },
-    /**
-     * @description 在当前 header 下，是否隐藏 sider（及折叠按钮）
-     * */
-    hideSider(state, getters) {
-      let visible = false;
-      if (getters.currentHeader && 'hideSider' in getters.currentHeader) visible = getters.currentHeader.hideSider;
-      return visible;
-    },
-  },
-  mutations: {
-    /**
-     * @description 设置侧边栏菜单
-     * @param {Object} state vuex state
-     * @param {Array} menu menu
-     */
-    setSider(state, menu) {
-      state.sider = menu;
-    },
-    /**
-     * @description 设置侧边栏菜单
-     * @param {Object} state vuex state
-     * @param {Array} menu menu
-     */
-    setOpenMenuName(state, menu) {
-      state.oneMenuName = menu;
-    },
-    /**
-     * @description 设置顶栏菜单
-     * @param {Object} state vuex state
-     * @param {Array} menu menu
-     */
-    setHeader(state, menu) {
-      state.header = menu;
-    },
-    /**
-     * @description 设置当前顶栏菜单 name
-     * @param {Object} state vuex state
-     * @param {Array} name headerName
-     */
-    setHeaderName(state, name) {
-      state.headerName = name;
-    },
-    /**
-     * @description 设置当前所在菜单的 path，用于侧栏菜单高亮当前项
-     * @param {Object} state vuex state
-     * @param {Array} path fullPath
-     */
-    setActivePath(state, path) {
-      state.activePath = path;
-    },
-    /**
-     * @description 设置当前所在菜单的全部展开父菜单的 names 集合
-     * @param {Object} state vuex state
-     * @param {Array} names openNames
-     */
-    setOpenNames(state, names) {
-      state.openNames = names;
-    },
-    getCacheKeepAlive(state, data) {
-      state.keepAliveNames = data;
-    },
-    // ----------------------------------------------------------------
-    setBreadCrumb(state, route) {
-      state.breadCrumbList = getBreadCrumbList(route, state.homeRoute);
-    },
-    setAdminTitle(state, title) {
-      state.adminTitle = title;
-    },
-    setHomeRoute(state, routes) {
-      state.homeRoute = getHomeRoute(routes, homeName);
-    },
-    setTagNavList(state, list) {
-      let tagList = [];
-      if (list.length) {
-        tagList = [...list];
-      }
-      state.tagNavList = tagList;
-      setTagNavListInLocalstorage([...tagList]);
-    },
-    closeTag(state, route) {
-      let tag = state.tagNavList.filter((item) => routeEqual(item, route));
-      route = tag[0] ? tag[0] : null;
-      if (!route) return;
-      closePage(state, route);
-    },
-    addTag(state, { route, type = 'unshift' }) {
-      let router = getRouteTitleHandled(route);
-      router.meta.title = getFormTitle(router);
-      let i = state.tagNavList.findIndex((item) => item.path === route.path);
+  const currentHeader = computed(() => header.value.find((item) => item.name === headerName.value));
 
-      if (!routeHasExist(state.tagNavList, router)) {
-        if (type === 'push')
-          if (i < 1) state.tagNavList.push(router);
-          else {
-            return;
-            // if (router.name === homeName) state.tagNavList.unshift(router);
-            // else state.tagNavList.splice(1, 0, router);
-          }
-        setTagNavListInLocalstorage([...state.tagNavList]);
-      }
-    },
-    setLocal(state, lang) {
-      localSave('local', lang);
-      state.local = lang;
-    },
-    addError(state, error) {
-      state.errorList.push(error);
-    },
-    setHasReadErrorLoggerStatus(state, status = true) {
-      state.hasReadErrorPage = status;
-    },
-    clearAll(state) {
-      state.tagNavList = [];
-    },
-  },
-  actions: {
-    addErrorLog({ commit, rootState }, info) {
-      if (!window.location.href.includes('error_logger_page')) commit('setHasReadErrorLoggerStatus', false);
-      const {
-        user: { token, userId, userName },
-      } = rootState;
-      let data = {
-        ...info,
-        time: Date.parse(new Date()),
-        token,
-        userId,
-        userName,
-      };
-      // saveErrorLogger(info).then(() => {
-      //   commit('addError', data)
-      // })
-    },
-    // 设置路由缓存（name字段）
-    async setCacheKeepAlive({ commit }, data) {
-      commit('getCacheKeepAlive', data);
-    },
-  },
-};
+  const hideSider = computed(() => {
+    let visible = false;
+    if (currentHeader.value && 'hideSider' in currentHeader.value) visible = currentHeader.value.hideSider;
+    return visible;
+  });
+
+  // mutations
+  function setSider(menu) {
+    sider.value = menu;
+  }
+  function setOpenMenuName(menu) {
+    oneMenuName.value = menu;
+  }
+  function setHeader(menu) {
+    header.value = menu;
+  }
+  function setHeaderName(name) {
+    headerName.value = name;
+  }
+  function setActivePath(path) {
+    activePath.value = path;
+  }
+  function setOpenNames(names) {
+    openNames.value = names;
+  }
+  function getCacheKeepAlive(data) {
+    keepAliveNames.value = data;
+  }
+  function setBreadCrumb(route) {
+    breadCrumbList.value = getBreadCrumbList(route, homeRoute.value);
+  }
+  function setAdminTitle(title) {
+    adminTitle.value = title;
+  }
+  function setHomeRoute(routes) {
+    homeRoute.value = getHomeRoute(routes, homeName);
+  }
+  function setTagNavList(list) {
+    let tagList = [];
+    if (list.length) {
+      tagList = [...list];
+    }
+    tagNavList.value = tagList;
+    setTagNavListInLocalstorage([...tagList]);
+  }
+  function closeTag(route) {
+    let tag = tagNavList.value.filter((item) => routeEqual(item, route));
+    route = tag[0] ? tag[0] : null;
+    if (!route) return;
+    closePage(route);
+  }
+  function addTag({ route, type = 'unshift' }) {
+    let routerItem = getRouteTitleHandled(route);
+    routerItem.meta.title = getFormTitle(routerItem);
+    let i = tagNavList.value.findIndex((item) => item.path === route.path);
+
+    if (!routeHasExist(tagNavList.value, routerItem)) {
+      if (type === 'push')
+        if (i < 1) tagNavList.value.push(routerItem);
+        else {
+          return;
+        }
+      setTagNavListInLocalstorage([...tagNavList.value]);
+    }
+  }
+  function setLocal(lang) {
+    localSave('local', lang);
+    local.value = lang;
+  }
+  function addError(error) {
+    errorList.value.push(error);
+  }
+  function setHasReadErrorLoggerStatus(status = true) {
+    hasReadErrorPage.value = status;
+  }
+  function clearAll() {
+    tagNavList.value = [];
+  }
+
+  function closePage(route) {
+    const nextRoute = getNextRoute(tagNavList.value, route);
+    tagNavList.value = tagNavList.value.filter((item) => {
+      return !routeEqual(item, route);
+    });
+    router.push(nextRoute);
+  }
+
+  // actions
+  function addErrorLog(info) {
+    if (!window.location.href.includes('error_logger_page')) setHasReadErrorLoggerStatus(false);
+    const userStore = useUserStore();
+    const { token, userId, userName } = { token: userStore.token, userId: userStore.userId, userName: userStore.name };
+    let data = {
+      ...info,
+      time: Date.parse(new Date()),
+      token,
+      userId,
+      userName,
+    };
+    // saveErrorLogger(info).then(() => { addError(data) })
+  }
+
+  // 设置路由缓存（name字段）
+  async function setCacheKeepAlive(data) {
+    getCacheKeepAlive(data);
+  }
+
+  return {
+    header,
+    oneMenuName,
+    sider,
+    headerName,
+    activePath,
+    openNames,
+    breadCrumbList,
+    tagNavList,
+    homeRoute,
+    local,
+    errorList,
+    adminTitle,
+    hasReadErrorPage,
+    keepAliveNames,
+    filterSider,
+    filterHeader,
+    currentHeader,
+    hideSider,
+    setSider,
+    setOpenMenuName,
+    setHeader,
+    setHeaderName,
+    setActivePath,
+    setOpenNames,
+    getCacheKeepAlive,
+    setBreadCrumb,
+    setAdminTitle,
+    setHomeRoute,
+    setTagNavList,
+    closeTag,
+    addTag,
+    setLocal,
+    addError,
+    setHasReadErrorLoggerStatus,
+    clearAll,
+    addErrorLog,
+    setCacheKeepAlive,
+  };
+});

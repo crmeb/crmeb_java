@@ -24,7 +24,7 @@
                 v-model="curComponent.propValue.borderRadiusTopLeft"
                 :min="0"
                 :max="100"
-                size="small"
+
                 controls-position="right"
                 @change="onChange"
               ></el-input-number>
@@ -37,7 +37,7 @@
                 v-model="curComponent.propValue.borderRadiusTopRight"
                 :min="0"
                 :max="100"
-                size="small"
+
                 controls-position="right"
                 @change="onChange"
               ></el-input-number>
@@ -50,7 +50,7 @@
                 v-model="curComponent.propValue.borderRadiusBottomLeft"
                 :min="0"
                 :max="100"
-                size="small"
+
                 controls-position="right"
                 @change="onChange"
               ></el-input-number>
@@ -63,7 +63,7 @@
                 v-model="curComponent.propValue.borderRadiusBottomRight"
                 :min="0"
                 :max="100"
-                size="small"
+
                 controls-position="right"
                 @change="onChange"
               ></el-input-number>
@@ -75,54 +75,53 @@
   </el-form-item>
 </template>
 
-<script>
-export default {
-  name: 'ConfigRadius',
-  props: {
-    curComponent: {
-      type: Object,
-      required: true,
-    },
-    labelPrefix: {
-      type: String,
-      default: '',
-    },
+<script setup>
+defineOptions({ name: 'ConfigRadius' });
+
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    required: true,
   },
-  methods: {
-    onChange() {
-      this.$emit('change');
-    },
-    toggleExpand() {
-      const isRadiusAll = !this.curComponent.propValue.isRadiusAll;
-      this.$set(this.curComponent.propValue, 'isRadiusAll', isRadiusAll);
-      if (isRadiusAll) {
-        // Switch to all mode: sync individual values to current main value
-        // Or actually, if switching to All, we should probably take the main value.
-        // But if switching FROM individual TO all, which value to use?
-        // Usually the main slider value.
-        this.handleRadiusChange(this.curComponent.propValue.borderRadius);
-      } else {
-        // Switch to individual mode: sync main value to all individuals
-        const r = this.curComponent.propValue.borderRadius || 0;
-        this.$set(this.curComponent.propValue, 'borderRadiusTopLeft', r);
-        this.$set(this.curComponent.propValue, 'borderRadiusTopRight', r);
-        this.$set(this.curComponent.propValue, 'borderRadiusBottomRight', r);
-        this.$set(this.curComponent.propValue, 'borderRadiusBottomLeft', r);
-      }
-      this.onChange();
-    },
-    handleRadiusChange(val) {
-      this.$set(this.curComponent.propValue, 'borderRadius', val);
-      if (this.curComponent.propValue.isRadiusAll) {
-        this.$set(this.curComponent.propValue, 'borderRadiusTopLeft', val);
-        this.$set(this.curComponent.propValue, 'borderRadiusTopRight', val);
-        this.$set(this.curComponent.propValue, 'borderRadiusBottomRight', val);
-        this.$set(this.curComponent.propValue, 'borderRadiusBottomLeft', val);
-      }
-      this.onChange();
-    },
+  labelPrefix: {
+    type: String,
+    default: '',
   },
-};
+});
+const emit = defineEmits(['change']);
+
+function onChange() {
+  emit('change');
+}
+function toggleExpand() {
+  const isRadiusAll = !props.curComponent.propValue.isRadiusAll;
+  props.curComponent.propValue.isRadiusAll = isRadiusAll;
+  if (isRadiusAll) {
+    // Switch to all mode: sync individual values to current main value
+    // Or actually, if switching to All, we should probably take the main value.
+    // But if switching FROM individual TO all, which value to use?
+    // Usually the main slider value.
+    handleRadiusChange(props.curComponent.propValue.borderRadius);
+  } else {
+    // Switch to individual mode: sync main value to all individuals
+    const r = props.curComponent.propValue.borderRadius || 0;
+    props.curComponent.propValue.borderRadiusTopLeft = r;
+    props.curComponent.propValue.borderRadiusTopRight = r;
+    props.curComponent.propValue.borderRadiusBottomRight = r;
+    props.curComponent.propValue.borderRadiusBottomLeft = r;
+  }
+  onChange();
+}
+function handleRadiusChange(val) {
+  props.curComponent.propValue.borderRadius = val;
+  if (props.curComponent.propValue.isRadiusAll) {
+    props.curComponent.propValue.borderRadiusTopLeft = val;
+    props.curComponent.propValue.borderRadiusTopRight = val;
+    props.curComponent.propValue.borderRadiusBottomRight = val;
+    props.curComponent.propValue.borderRadiusBottomLeft = val;
+  }
+  onChange();
+}
 </script>
 
 <style scoped lang="scss">
@@ -169,7 +168,7 @@ export default {
       color: #409eff;
       border-color: #c6e2ff;
     }
-    ::v-deep .el-slider {
+    :deep(.el-slider) {
       flex: 1;
       margin-right: 0;
       .el-slider__input {
@@ -202,7 +201,7 @@ export default {
           font-size: 14px;
           margin-right: 5px;
         }
-        ::v-deep .el-input-number {
+        :deep(.el-input-number) {
           width: 100%;
           border: none;
           .el-input__inner {

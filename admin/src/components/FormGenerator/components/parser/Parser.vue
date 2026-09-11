@@ -1,5 +1,15 @@
-<script>
+<script lang="jsx">
+import { defineComponent, reactive, watch } from 'vue';
 import render from '@/components/FormGenerator/components/render/render.js';
+import { elementComponentMap } from '@/components/FormGenerator/components/render/elementComponents';
+import { Debounce } from '@/utils/validate';
+
+const ElButton = elementComponentMap['el-button'];
+const ElCol = elementComponentMap['el-col'];
+const ElForm = elementComponentMap['el-form'];
+const ElFormItem = elementComponentMap['el-form-item'];
+const ElLink = elementComponentMap['el-link'];
+const ElRow = elementComponentMap['el-row'];
 
 const ruleTrigger = {
   'el-input': 'blur',
@@ -13,136 +23,191 @@ const ruleTrigger = {
   'el-rate': 'change',
 };
 
-function renderFrom(h) {
-  const { formConfCopy } = this;
+function normalizeElementSize(size) {
+  const sizeMap = { medium: 'default', mini: 'small' };
+  return sizeMap[size] || size;
+}
+
+function isNumberLike(value) {
+  return value !== '' && value !== null && value !== undefined && !Number.isNaN(Number(value));
+}
+
+function toNumberOrNull(value) {
+  if (value === '' || value === null || value === undefined) return null;
+  return isNumberLike(value) ? Number(value) : value;
+}
+
+// ElCheckboxGroup 的 modelValue 必须为数组，后端可能以单个字符串、逗号分隔字符串或 JSON 数组字符串存储
+function toCheckboxArray(value) {
+  if (Array.isArray(value)) return value;
+  if (value === '' || value === null || value === undefined) return [];
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        // 非合法 JSON，按逗号分隔处理
+      }
+    }
+    return trimmed.split(',').filter((item) => item !== '');
+  }
+  return [value];
+}
+
+function normalizeComponentValue(config, value) {
+  if (!config) return value;
+  if (config.tag === 'el-input-number') return toNumberOrNull(value);
+  if (config.tag === 'el-slider') {
+    return Array.isArray(value) ? value.map((item) => toNumberOrNull(item)) : toNumberOrNull(value);
+  }
+  if (config.tag === 'el-rate') return toNumberOrNull(value);
+  if (config.tag === 'el-checkbox-group') return toCheckboxArray(value);
+  return value;
+}
+
+function renderFrom(h, vm) {
+  const { formConfCopy } = vm.state;
   return (
-    <el-row gutter={formConfCopy.gutter}>
-      <el-form
-        size={formConfCopy.size}
+    <ElRow class="form-parser-row" gutter={formConfCopy.gutter}>
+      <ElForm
+        size={normalizeElementSize(formConfCopy.size)}
         label-position={formConfCopy.labelPosition}
         disabled={formConfCopy.disabled}
         label-width={`${formConfCopy.labelWidth}px`}
-        ref={formConfCopy.formRef}
-        // model不能直接赋值 https://github.com/vuejs/jsx/issues/49#issuecomment-472013664
-        props={{ model: this[formConfCopy.formModel] }}
-        rules={this[formConfCopy.formRules]}
+        ref={vm.setFormRef}
+        model={vm.state[formConfCopy.formModel]}
+        rules={vm.state[formConfCopy.formRules]}
       >
-        {renderFormItem.call(this, h, formConfCopy.fields)}
-        {formConfCopy.formBtns && formBtns.call(this, h)}
-      </el-form>
-    </el-row>
+        {renderFormItem(h, formConfCopy.fields, vm)}
+        {formConfCopy.formBtns && formBtns(h, vm)}
+      </ElForm>
+    </ElRow>
   );
 }
 
-function formBtns(h) {
+function formBtns(h, vm) {
   return (
-    <el-col>
-      <el-form-item class="dialog-footer-inner zdy-btn">
-        <el-button onClick={this.closeDialog} class="closeBtn">
+    <ElCol>
+      <ElFormItem class="dialog-footer-inner zdy-btn">
+        <ElButton onClick={vm.closeDialog} class="closeBtn">
           取消
-        </el-button>
-        <el-button class="saveBtn" type="primary" v-debounceClick={this.submitForm}>
+        </ElButton>
+        <ElButton class="saveBtn" type="primary" onClick={vm.debouncedSubmitForm}>
           提交
-        </el-button>
-      </el-form-item>
-    </el-col>
+        </ElButton>
+      </ElFormItem>
+    </ElCol>
   );
 }
 
-function renderFormItem(h, elementList) {
+function renderFormItem(h, elementList, vm) {
   return elementList.map((scheme) => {
     const config = scheme.__config__;
     const layout = layouts[config.layout];
     if (layout) {
-      return layout.call(this, h, scheme);
+      return layout(h, scheme, vm);
     }
     throw new Error(`没有与${config.layout}匹配的layout`);
   });
 }
 
-function renderChildren(h, scheme) {
+function renderChildren(h, scheme, vm) {
   const config = scheme.__config__;
   if (!Array.isArray(config.children)) return null;
-  return renderFormItem.call(this, h, config.children);
+  return renderFormItem(h, config.children, vm);
 }
 
-function setValue(event, config, scheme) {
-  this.$set(config, 'defaultValue', event);
-  this.$set(this[this.formConf.formModel], scheme.__vModel__, event);
+function setValue(event, config, scheme, vm) {
+  config.defaultValue = event;
+  vm.state[vm.props.formConf.formModel][scheme.__vModel__] = event;
 }
 
-function buildListeners(scheme) {
+function buildListeners(scheme, vm) {
   const config = scheme.__config__;
-  const methods = this.formConf.__methods__ || {};
+  const methods = vm.props.formConf.__methods__ || {};
   const listeners = {};
 
   // 给__methods__中的方法绑定this和event
   Object.keys(methods).forEach((key) => {
-    listeners[key] = (event) => methods[key].call(this, event);
+    listeners[key] = (event) => methods[key].call(vm, event);
   });
   // 响应 render.js 中的 vModel $emit('input', val)
-  listeners.input = (event) => setValue.call(this, event, config, scheme);
+  listeners.input = (event) => setValue(event, config, scheme, vm);
 
   return listeners;
 }
+
+function toEventKey(name) {
+  return `on${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+}
+
+function buildRenderProps(scheme, listeners) {
+  const listenerProps = {};
+  Object.keys(listeners).forEach((key) => {
+    listenerProps[toEventKey(key)] = listeners[key];
+  });
+  return { conf: scheme, ...listenerProps };
+}
 const layouts = {
-  colFormItem(h, scheme) {
+  colFormItem(h, scheme, vm) {
     const config = scheme.__config__;
-    const listeners = buildListeners.call(this, scheme);
+    const listeners = buildListeners(scheme, vm);
     let labelWidth = config.labelWidth ? `${config.labelWidth}px` : null;
     if (config.showLabel === false) labelWidth = '0';
     if (config.tips && !config.tipsIsLink) {
       return (
-        <el-col span={config.span}>
-          <el-form-item label-width={labelWidth} prop={scheme.__vModel__} label={config.showLabel ? config.label : ''}>
-            <render conf={scheme} {...{ on: listeners }} />
+        <ElCol span={config.span}>
+          <ElFormItem label-width={labelWidth} prop={scheme.__vModel__} label={config.showLabel ? config.label : ''}>
+            <render {...buildRenderProps(scheme, listeners)} />
             <div>
               <span class="tips-info">{config.tipsDesc}</span>
             </div>
-          </el-form-item>
-        </el-col>
+          </ElFormItem>
+        </ElCol>
       );
     } else if (config.tips && config.tipsIsLink) {
       return (
-        <el-col span={config.span}>
-          <el-form-item label-width={labelWidth} prop={scheme.__vModel__} label={config.showLabel ? config.label : ''}>
-            <render conf={scheme} {...{ on: listeners }} />
+        <ElCol span={config.span}>
+          <ElFormItem label-width={labelWidth} prop={scheme.__vModel__} label={config.showLabel ? config.label : ''}>
+            <render {...buildRenderProps(scheme, listeners)} />
             <div>
-              <el-link class="tips-info" type="info" href={config.tipsLink} target="_blank">
+              <ElLink class="tips-info" type="info" href={config.tipsLink} target="_blank">
                 {config.tipsDesc}
-              </el-link>
+              </ElLink>
             </div>
-          </el-form-item>
-        </el-col>
+          </ElFormItem>
+        </ElCol>
       );
     } else {
       return (
-        <el-col span={config.span}>
-          <el-form-item label-width={labelWidth} prop={scheme.__vModel__} label={config.showLabel ? config.label : ''}>
-            <render conf={scheme} {...{ on: listeners }} />
-          </el-form-item>
-        </el-col>
+        <ElCol span={config.span}>
+          <ElFormItem label-width={labelWidth} prop={scheme.__vModel__} label={config.showLabel ? config.label : ''}>
+            <render {...buildRenderProps(scheme, listeners)} />
+          </ElFormItem>
+        </ElCol>
       );
     }
   },
-  rowFormItem(h, scheme) {
-    let child = renderChildren.apply(this, arguments);
+  rowFormItem(h, scheme, vm) {
+    let child = renderChildren(h, scheme, vm);
     if (scheme.type === 'flex') {
       child = (
-        <el-row type={scheme.type} justify={scheme.justify} align={scheme.align}>
+        <ElRow type={scheme.type} justify={scheme.justify} align={scheme.align}>
           {child}
-        </el-row>
+        </ElRow>
       );
     }
     return (
-      <el-col span={scheme.span}>
-        <el-row gutter={scheme.gutter}>{child}</el-row>
-      </el-col>
+      <ElCol span={scheme.span}>
+        <ElRow gutter={scheme.gutter}>{child}</ElRow>
+      </ElCol>
     );
   },
 };
 
-export default {
+export default defineComponent({
   components: {
     render,
   },
@@ -159,43 +224,62 @@ export default {
       default: false,
     },
   },
-  data() {
-    if (this.isEdit) {
-      // 初始化待编辑数据
-      this.formConf.fields.forEach((conf) => {
-        // 设置现有的数据
-        const hasValueForEdit = this.formEditData[conf.__vModel__];
-        if (hasValueForEdit) {
-          conf.__config__.defaultValue = hasValueForEdit;
+  emits: ['resetForm', 'closeDialog', 'submit'],
+  setup(props, { emit, expose }) {
+    const state = reactive({
+      formConfCopy: JSON.parse(JSON.stringify(props.formConf)),
+      [props.formConf.formModel]: {},
+      [props.formConf.formRules]: {},
+    });
+
+    function applyEditData(componentList) {
+      if (!props.isEdit || !props.formEditData || !componentList) return;
+      componentList.forEach((conf) => {
+        const vModel = conf.__vModel__;
+        const hasValueForEdit = vModel ? props.formEditData[vModel] : undefined;
+        if (hasValueForEdit !== undefined && hasValueForEdit !== null && hasValueForEdit !== '') {
+          conf.__config__.defaultValue = normalizeComponentValue(conf.__config__, hasValueForEdit);
         }
-        // 如果是el-select标签 判断数据后改变实现默认选中效果
         if (conf.__config__.tag === 'el-select' || conf.__config__.tag === 'el-radio-group') {
-          const perValue = conf.__slot__.options.filter((option) => option.value == this.formEditData[conf.__vModel__]);
+          const options = (conf.__slot__ && conf.__slot__.options) || [];
+          const perValue = options.filter((option) => option.value == props.formEditData[vModel]);
           if (perValue.length > 0) {
-            // 有表单数据
             conf.__config__.defaultValue = perValue[0].value;
           }
         }
+        if (conf.__config__.tag === 'el-checkbox-group') {
+          const options = (conf.__slot__ && conf.__slot__.options) || [];
+          const selectedValues = toCheckboxArray(props.formEditData[vModel]);
+          // 与选项宽松比较后，保留选项原始类型的值，避免出现类型不一致导致的无法勾选问题
+          const perValues = options
+            .filter((option) => selectedValues.some((val) => option.value == val))
+            .map((option) => option.value);
+          if (perValues.length > 0) {
+            conf.__config__.defaultValue = perValues;
+          }
+        }
+        if (conf.__config__.children) applyEditData(conf.__config__.children);
       });
     }
-    const data = {
-      formConfCopy: JSON.parse(JSON.stringify(this.formConf)),
-      [this.formConf.formModel]: {},
-      [this.formConf.formRules]: {},
-    };
-    this.initFormData(data.formConfCopy.fields, data[this.formConf.formModel]);
-    this.buildRules(data.formConfCopy.fields, data[this.formConf.formRules]);
-    return data;
-  },
-  methods: {
-    initFormData(componentList, formData) {
+    function syncEditData() {
+      if (!props.formConf || !props.formConf.fields || !props.formConf.fields.length) return;
+      if (!props.isEdit) return;
+      const formConfCopy = JSON.parse(JSON.stringify(props.formConf));
+      applyEditData(formConfCopy.fields);
+      state.formConfCopy = formConfCopy;
+      const formData = {};
+      initFormData(state.formConfCopy.fields, formData);
+      state[props.formConf.formModel] = formData;
+    }
+    function initFormData(componentList, formData) {
       componentList.forEach((cur) => {
         const config = cur.__config__;
+        config.defaultValue = normalizeComponentValue(config, config.defaultValue);
         if (cur.__vModel__) formData[cur.__vModel__] = config.defaultValue;
-        if (config.children) this.initFormData(config.children, formData);
+        if (config.children) initFormData(config.children, formData);
       });
-    },
-    buildRules(componentList, rules) {
+    }
+    function buildRules(componentList, rules) {
       componentList.forEach((cur) => {
         const config = cur.__config__;
         if (Array.isArray(config.regList)) {
@@ -209,35 +293,81 @@ export default {
             config.regList.push(required);
           }
           rules[cur.__vModel__] = config.regList.map((item) => {
-            item.pattern && (item.pattern = eval(item.pattern));
+            if (typeof item.pattern === 'string' && /^\/(.*)\/([gimsuy]*)$/.test(item.pattern)) {
+              const match = item.pattern.match(/^\/(.*)\/([gimsuy]*)$/);
+              item.pattern = new RegExp(match[1], match[2]);
+            }
             item.trigger = ruleTrigger && ruleTrigger[config.tag];
             return item;
           });
         }
-        if (config.children) this.buildRules(config.children, rules);
+        if (config.children) buildRules(config.children, rules);
       });
-    },
-    resetForm() {
-      this.$emit('resetForm', this.formConf);
-      this.formConfCopy = JSON.parse(JSON.stringify(this.formConf));
-      this.$refs[this.formConf.formRef].resetFields();
-    },
-    closeDialog() {
-      this.$emit('closeDialog');
-    },
-    submitForm() {
-      this.$refs[this.formConf.formRef].validate((valid) => {
+    }
+    function resetForm() {
+      emit('resetForm', props.formConf);
+      state.formConfCopy = JSON.parse(JSON.stringify(props.formConf));
+      formRefs[props.formConf.formRef].value.resetFields();
+    }
+    function closeDialog() {
+      emit('closeDialog');
+    }
+    function submitForm() {
+      formRefs[props.formConf.formRef].value.validate((valid) => {
         if (!valid) return false;
         // 触发sumit事件
-        this.$emit('submit', this[this.formConf.formModel]);
+        emit('submit', state[props.formConf.formModel]);
         return true;
       });
-    },
+    }
+    const debouncedSubmitForm = Debounce(submitForm);
+
+    const formRefs = {};
+    const setFormRef = (el) => {
+      if (el && props.formConf && props.formConf.formRef) {
+        formRefs[props.formConf.formRef] = { value: el };
+      }
+    };
+
+    applyEditData(state.formConfCopy.fields);
+    initFormData(state.formConfCopy.fields, state[props.formConf.formModel]);
+    buildRules(state.formConfCopy.fields, state[props.formConf.formRules]);
+
+    watch(
+      () => props.formConf,
+      () => {
+        syncEditData();
+      },
+      { deep: true },
+    );
+    watch(
+      () => props.formEditData,
+      () => {
+        syncEditData();
+      },
+      { deep: true },
+    );
+    watch(
+      () => props.isEdit,
+      () => {
+        syncEditData();
+      },
+    );
+
+    const vm = {
+      props,
+      state,
+      closeDialog,
+      submitForm,
+      debouncedSubmitForm,
+      setFormRef,
+    };
+
+    expose({ resetForm, submitForm, closeDialog });
+
+    return () => renderFrom(null, vm);
   },
-  render(h) {
-    return renderFrom.call(this, h);
-  },
-};
+});
 </script>
 <style scoped lang="scss">
 .tips-info {
@@ -248,5 +378,11 @@ export default {
 }
 .saveBtn {
   font-size: 12px;
+}
+.form-parser-row {
+  width: 100%;
+}
+:deep(.el-form) {
+  width: 100%;
 }
 </style>

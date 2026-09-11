@@ -1,16 +1,24 @@
 <template>
   <div class="layout-search-dialog">
-    <el-dialog :visible.sync="isShowSearch" width="540px" destroy-on-close :modal="false" fullscreen :show-close="true">
+    <el-dialog
+      v-model="isShowSearch"
+      class="layout-search-dialog-panel"
+      width="540px"
+      destroy-on-close
+      :modal="false"
+      fullscreen
+      :show-close="true"
+      @click="onSearchDialogClick"
+    >
       <el-autocomplete
         v-model="menuQuery"
         :fetch-suggestions="menuSearch"
         placeholder="菜单搜索：支持中文、路由路径"
-        prefix-icon="el-icon-search"
+        :prefix-icon="Search"
         ref="layoutMenuAutocompleteRef"
         @select="onHandleSelect"
-        @blur="onSearchBlur"
       >
-        <template slot-scope="{ item }">
+        <template #default="{ item }">
           <div><i :class="item.icon" class="mr10"></i>{{ item.title }}</div>
         </template>
       </el-autocomplete>
@@ -18,90 +26,121 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, nextTick } from 'vue';
+import { Search } from '@element-plus/icons-vue';
+import { useRouter } from 'vue-router';
 import { getAllSiderMenu } from '@/utils/system.js';
-export default {
-  name: 'layoutBreadcrumbSearch',
-  data() {
-    return {
-      isShowSearch: false,
-      menuQuery: '',
-      tagsViewList: [],
-    };
-  },
-  methods: {
-    // 搜索弹窗打开
-    openSearch() {
-      this.menuQuery = '';
-      this.isShowSearch = true;
-      this.initTageView();
-      this.$nextTick(() => {
-        this.$refs.layoutMenuAutocompleteRef.focus();
-      });
-    },
-    // 搜索弹窗关闭
-    closeSearch() {
-      setTimeout(() => {
-        this.isShowSearch = false;
-      }, 150);
-    },
-    // 菜单搜索数据过滤
-    menuSearch(queryString, cb) {
-      let results = queryString ? this.tagsViewList.filter(this.createFilter(queryString)) : this.tagsViewList;
-      cb(results);
-    },
-    // 菜单搜索过滤
-    createFilter(queryString) {
-      return (restaurant) => {
-        return (
-          restaurant.path.toLowerCase().indexOf(queryString.toLowerCase()) > -1 ||
-          restaurant.title.toLowerCase().indexOf(queryString.toLowerCase()) > -1
-        );
-      };
-    },
-    // 初始化菜单数据
-    initTageView() {
-      if (this.tagsViewList.length > 0) return false;
-      this.tagsViewList = getAllSiderMenu(this.$store.state.user.menuList);
-      // this.$store.state.tagsViewRoutes.tagsViewRoutes.map((v) => {
-      // 	if (!v.isHide) this.tagsViewList.push({ ...v });
-      // });
-    },
-    // 当前菜单选中时
-    onHandleSelect(item) {
-      let { path, redirect } = item;
-      if (redirect) this.$router.push(redirect);
-      else this.$router.push(path);
-      this.closeSearch();
-    },
-    // input 失去焦点时
-    onSearchBlur() {
-      this.closeSearch();
-    },
-  },
-};
+import { useUserStore } from '@/store/modules/user';
+
+defineOptions({ name: 'layoutBreadcrumbSearch' });
+
+const router = useRouter();
+const userStore = useUserStore();
+
+const isShowSearch = ref(false);
+const menuQuery = ref('');
+const tagsViewList = ref([]);
+const layoutMenuAutocompleteRef = ref(null);
+
+// 搜索弹窗打开
+function openSearch() {
+  menuQuery.value = '';
+  isShowSearch.value = true;
+  initTageView();
+  nextTick(() => {
+    layoutMenuAutocompleteRef.value?.focus?.();
+  });
+}
+
+// 搜索弹窗关闭
+function closeSearch() {
+  setTimeout(() => {
+    isShowSearch.value = false;
+  }, 150);
+}
+
+// 点击搜索框外的蒙层区域关闭弹窗
+function onSearchDialogClick(event) {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  if (target.closest('.el-autocomplete') || target.closest('.el-dialog__headerbtn')) return;
+  closeSearch();
+}
+
+// 菜单搜索数据过滤
+function menuSearch(queryString, cb) {
+  let results = queryString ? tagsViewList.value.filter(createFilter(queryString)) : tagsViewList.value;
+  cb(results);
+}
+
+// 菜单搜索过滤
+function createFilter(queryString) {
+  return (restaurant) => {
+    return (
+      restaurant.path.toLowerCase().indexOf(queryString.toLowerCase()) > -1 ||
+      restaurant.title.toLowerCase().indexOf(queryString.toLowerCase()) > -1
+    );
+  };
+}
+
+// 初始化菜单数据
+function initTageView() {
+  if (tagsViewList.value.length > 0) return false;
+  tagsViewList.value = getAllSiderMenu(userStore.menuList);
+  // tagsViewStore.visitedViews.map((v) => {
+  // 	if (!v.isHide) tagsViewList.value.push({ ...v });
+  // });
+}
+
+// 当前菜单选中时
+function onHandleSelect(item) {
+  let { path, redirect } = item;
+  if (redirect) router.push(redirect);
+  else router.push(path);
+  closeSearch();
+}
+
+defineExpose({ openSearch, closeSearch });
 </script>
 
 <style scoped lang="scss">
-.layout-search-dialog {
-  ::v-deep .el-dialog {
-    box-shadow: unset !important;
-    border-radius: 0 !important;
-    background: rgba(0, 0, 0, 0.5);
-  }
-  ::v-deep .el-autocomplete {
-    width: 560px;
-    position: absolute;
-    top: 100px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
+:global(.layout-search-dialog-panel) {
+  box-shadow: unset !important;
+  border-radius: 0 !important;
+  background: rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 }
-::v-deep .el-dialog__header {
+
+:global(.layout-search-dialog-panel .el-dialog__header) {
+  height: 56px;
+  padding: 12px 20px !important;
   border: none !important;
 }
-::v-deep .el-input--small .el-input__inner {
-  height: 36px;
-  line-height: 36px;
+
+:global(.layout-search-dialog-panel .el-dialog__headerbtn) {
+  position: absolute !important;
+  top: 12px;
+  right: 20px;
+  width: 32px;
+  height: 32px;
+  color: #fff;
+}
+
+:global(.layout-search-dialog-panel .el-dialog__body) {
+  max-height: none;
+  padding: 44px 24px 0 !important;
+  overflow: visible;
+}
+
+:global(.layout-search-dialog-panel .el-autocomplete) {
+  display: block;
+  width: min(560px, calc(100vw - 48px));
+  margin: 0 auto;
+}
+
+:global(.layout-search-dialog-panel .el-autocomplete .el-input__wrapper) {
+  min-height: 40px;
+  padding: 0 14px;
 }
 </style>

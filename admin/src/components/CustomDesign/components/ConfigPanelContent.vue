@@ -11,37 +11,33 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import ConfigLink from './ConfigLink';
 
-export default {
-  name: 'ConfigIconContent',
-  components: {
-    ConfigLink,
+defineOptions({ name: 'ConfigIconContent' });
+
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    required: true,
   },
-  props: {
-    curComponent: {
-      type: Object,
-      required: true,
-    },
-    type: {
-      type: String,
-      default: 'user',
-    },
-    currentFieldList: {
-      type: Array,
-      default: () => [],
-    },
+  type: {
+    type: String,
+    default: 'user',
   },
-  methods: {
-    getLink() {
-      this.$emit('get-link');
-    },
-    onChange() {
-      this.$emit('change');
-    },
+  currentFieldList: {
+    type: Array,
+    default: () => [],
   },
-};
+});
+const emit = defineEmits(['get-link', 'change']);
+
+function getLink() {
+  emit('get-link');
+}
+function onChange() {
+  emit('change');
+}
 </script>
 
 <style scoped lang="scss">

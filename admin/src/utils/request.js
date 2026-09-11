@@ -9,11 +9,14 @@
 // +----------------------------------------------------------------------
 
 import axios from 'axios';
-import { MessageBox, Message } from 'element-ui';
-import store from '@/store';
+import { ElMessage as Message } from '@/utils/elementPlusFeedback';
+import { useUserStore } from '@/store/modules/user';
 import { getToken } from '@/utils/auth';
 import SettingMer from '@/utils/settingMer';
 import { isPhone } from '@/libs/wechat';
+
+const FORBIDDEN_MESSAGE = '暂无权限';
+
 const service = axios.create({
   baseURL: SettingMer.apiBaseURL,
   timeout: 60000, // 过期时间
@@ -23,10 +26,11 @@ const service = axios.create({
 service.interceptors.request.use(
   (config) => {
     // 发送请求之前做的
-    const token = !store.getters.token ? sessionStorage.getItem('token') : store.getters.token;
+    const userStore = useUserStore();
+    const token = !userStore.token ? sessionStorage.getItem('token') : userStore.token;
     config.headers['X-Source'] = 'df07addc462f7f8f';
     if (token) {
-      config.headers['Authori-zation'] = token;
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
     if (/get/i.test(config.method)) {
       config.params = config.params || {};
@@ -49,19 +53,27 @@ service.interceptors.response.use(
       Message.error('无效的会话，或者登录已过期，请重新登录。');
       if (window.location.pathname !== '/login') location.href = '/login';
     } else if (res.code === 403) {
-      Message.error('没有权限访问。');
+      const forbiddenResponse = {
+        ...res,
+        message: FORBIDDEN_MESSAGE,
+        msg: FORBIDDEN_MESSAGE,
+      };
+      if (!response.config.silent) Message.error(FORBIDDEN_MESSAGE);
+      return Promise.reject(forbiddenResponse);
     }
     if (![0, 200].includes(res.code) && res.code !== 401) {
       if (isPhone()) {
         //移动端
         return Promise.reject(res || 'Error');
       }
-      Message({
-        message: res.message || 'Error',
-        type: 'error',
-        duration: 5 * 1000,
-      });
-      return Promise.reject();
+      if (!response.config.silent) {
+        Message({
+          message: res.message || 'Error',
+          type: 'error',
+          duration: 5 * 1000,
+        });
+      }
+      return Promise.reject(res);
     } else {
       return res.data;
     }

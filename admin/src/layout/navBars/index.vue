@@ -5,23 +5,21 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { computed } from 'vue';
 import BreadcrumbIndex from '@/layout/navBars/breadcrumb/index.vue';
 import TagsView from '@/layout/navBars/tagsView/tagsView.vue';
-export default {
-  name: 'layoutNavBars',
-  components: { BreadcrumbIndex, TagsView },
-  data() {
-    return {};
-  },
-  computed: {
-    // 设置是否显示 tagsView
-    setShowTagsView() {
-      let { layout, isTagsview } = this.$store.state.themeConfig.themeConfig;
-      return layout !== 'classic' && isTagsview;
-    },
-  },
-};
+import { useThemeConfigStore } from '@/store/modules/themeConfig';
+
+defineOptions({ name: 'layoutNavBars' });
+
+const themeConfigStore = useThemeConfigStore();
+
+// 设置是否显示 tagsView
+const setShowTagsView = computed(() => {
+  let { layout, isTagsview } = themeConfigStore.themeConfig;
+  return layout !== 'classic' && isTagsview;
+});
 </script>
 
 <style scoped lang="scss">

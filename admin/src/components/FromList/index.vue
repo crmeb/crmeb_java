@@ -6,101 +6,111 @@
       {{ configData.tips }}
     </div>
     <div class="list-box mt20">
-      <draggable class="dragArea list-group" :list="configData.list" group="peoples" handle=".move-icon">
-        <div class="item" v-for="(item, index) in configData.list" :key="index">
-          <div class="move-icon">
-            <span class="iconfont icontuozhuaitubiao"></span>
-          </div>
-          <div v-if="configData.isShowImageUrl" class="img-box" @click="modalPicTap(item, index)">
-            <img :src="item.imageUrl" alt="" v-if="item.imageUrl" />
-            <div class="upload-box" v-else><i class="el-icon-camera-solid" style="font-size: 30px" /></div>
-          </div>
-          <div class="info">
-            <div v-if="configData.title" class="info-item">
-              <span class="text-14px">{{ configData.title }}</span>
-              <div class="input-box">
-                <el-input
-                  size="small"
-                  v-model="item.name"
-                  :placeholder="configData.placeWords"
-                  :maxlength="configData.maxLength"
-                ></el-input>
-              </div>
+      <draggable
+        class="dragArea list-group"
+        :list="configData.list"
+        :item-key="getDraggableItemKey"
+        group="peoples"
+        handle=".move-icon"
+      >
+        <template #item="{ element: item, index }">
+          <div class="item">
+            <div class="move-icon">
+              <span class="iconfont icontuozhuaitubiao"></span>
             </div>
-            <div v-if="configData.isShowLinkUrl" class="info-item">
-              <span class="text-14px">链接</span>
-              <div v-if="configData.isShowLinkUrlChose" class="input-box" @click="getLink(index, item.linkUrl)">
-                {{ configData.linkPlaceWords }}
-                <el-input size="small" v-model="item.linkUrl" :placeholder="configData.linkPlaceWords || '请输入链接'">
-                  <el-button slot="append" icon="el-icon-arrow-right"></el-button>
-                </el-input>
-              </div>
-              <div v-else class="input-box">
-                <el-input size="small" v-model="item.linkUrl" placeholder="请输入链接"></el-input>
-              </div>
+            <div v-if="configData.isShowImageUrl" class="img-box" @click="modalPicTap(item, index)">
+              <img :src="item.imageUrl" alt="" v-if="item.imageUrl" />
+              <div class="upload-box" v-else><i class="el-icon-camera-solid" style="font-size: 30px" /></div>
             </div>
-            <div v-if="configData.isShowStatus" class="info-item">
-              <span class="text-14px">状态</span>
-              <div class="input-box">
-                <el-switch
-                  v-model="item.status"
-                  :active-value="true"
-                  :inactive-value="false"
-                  active-text="显示"
-                  inactive-text="隐藏"
-                  @change="onchangeIsShow(item.status, index)"
-                />
-              </div>
-            </div>
-            <!-- 添加链接-->
-            <div v-if="item.linkList && item.linkList.length">
-              <div class="acea-row">
-                <div
-                  class="input-box mb15"
-                  v-for="(items, indexs) in item.linkList"
-                  :key="indexs"
-                  style="position: relative"
-                >
-                  {{ item.maxLength }}
+            <div class="info">
+              <div v-if="configData.title" class="info-item">
+                <span class="text-14px">{{ configData.title }}</span>
+                <div class="input-box">
                   <el-input
-                    style="width: 155px"
-                    size="small"
-                    v-model="items.name"
-                    placeholder="链接名称，最多8个字"
-                    :maxlength="configData.linkNameMaxLength"
+
+                    v-model="item.name"
+                    :placeholder="configData.placeWords"
+                    :maxlength="configData.maxLength"
                   ></el-input>
-                  <el-input
-                    size="small"
-                    style="width: 479px"
-                    v-model="items.linkUrl"
-                    placeholder="请输入链接地址"
-                  ></el-input>
-                  <div class="delect-btn-link" @click.stop="handleLinkDelete(items, indexs, index)">
-                    <i class="el-icon-error" style="font-size: 20px" />
-                  </div>
                 </div>
               </div>
-              <div class="add-btn" v-if="item.linkList.length < configData.modelLinkMaxLength">
-                <el-button class="button" icon="el-icon-plus" plain @click="handleAddLink(index)">添加链接</el-button>
+              <div v-if="configData.isShowLinkUrl" class="info-item">
+                <span class="text-14px">链接</span>
+                <div v-if="configData.isShowLinkUrlChose" class="input-box" @click="getLink(index, item.linkUrl)">
+                  {{ configData.linkPlaceWords }}
+                  <el-input v-model="item.linkUrl" :placeholder="configData.linkPlaceWords || '请输入链接'">
+                    <template #append>
+                      <el-button :icon="ArrowRight"></el-button>
+                    </template>
+                  </el-input>
+                </div>
+                <div v-else class="input-box">
+                  <el-input v-model="item.linkUrl" placeholder="请输入链接"></el-input>
+                </div>
+              </div>
+              <div v-if="configData.isShowStatus" class="info-item">
+                <span class="text-14px">状态</span>
+                <div class="input-box">
+                  <el-switch
+                    v-model="item.status"
+                    :active-value="true"
+                    :inactive-value="false"
+                    active-text="显示"
+                    inactive-text="隐藏"
+                    @change="onchangeIsShow(item.status, index)"
+                  />
+                </div>
+              </div>
+              <!-- 添加链接-->
+              <div v-if="item.linkList && item.linkList.length">
+                <div class="acea-row">
+                  <div
+                    class="input-box mb15"
+                    v-for="(items, indexs) in item.linkList"
+                    :key="indexs"
+                    style="position: relative"
+                  >
+                    {{ item.maxLength }}
+                    <el-input
+                      style="width: 155px"
+
+                      v-model="items.name"
+                      placeholder="链接名称，最多8个字"
+                      :maxlength="configData.linkNameMaxLength"
+                    ></el-input>
+                    <el-input
+
+                      style="width: 479px"
+                      v-model="items.linkUrl"
+                      placeholder="请输入链接地址"
+                    ></el-input>
+                    <div class="delect-btn-link" @click.stop="handleLinkDelete(items, indexs, index)">
+                      <i class="el-icon-error" style="font-size: 20px" />
+                    </div>
+                  </div>
+                </div>
+                <div class="add-btn" v-if="item.linkList.length < configData.modelLinkMaxLength">
+                  <el-button class="button" :icon="Plus" plain @click="handleAddLink(index)">添加链接</el-button>
+                </div>
+              </div>
+              <div v-if="configData.isShowEdit" class="delect-btn" @click.stop="handleDelete(item, index)">
+                <i class="el-icon-error" style="font-size: 26px" />
               </div>
             </div>
-            <div v-if="configData.isShowEdit" class="delect-btn" @click.stop="handleDelete(item, index)">
-              <i class="el-icon-error" style="font-size: 26px" />
-            </div>
           </div>
-        </div>
+        </template>
       </draggable>
     </div>
     <template v-if="configData.isShowAddBtn">
       <div class="add-btn mt20" v-if="configData.list.length < configData.modelMaxLength || !configData.modelMaxLength">
-        <el-button class="button" icon="el-icon-plus" plain @click="handleAddBox">添加板块</el-button>
+        <el-button class="button" :icon="Plus" plain @click="handleAddBox">添加板块</el-button>
       </div>
     </template>
-    <linkaddress ref="linkaddres" @linkUrl="linkUrl"></linkaddress>
+    <linkaddress ref="linkaddresRef" @linkUrl="linkUrl"></linkaddress>
   </div>
 </template>
 
-<script>
+<script setup>
 // +---------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +---------------------------------------------------------------------
@@ -110,128 +120,137 @@
 // +---------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
-import vuedraggable from 'vuedraggable';
+import { ref, watch, nextTick, onMounted, getCurrentInstance } from 'vue';
+import draggable from 'vuedraggable';
 import linkaddress from '@/components/linkaddress';
-export default {
-  name: 'c_menu_list',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
-    index: {
-      type: null,
-    },
-    isRub: {
-      type: Boolean,
-      default: false,
-    },
+import { ArrowRight, Plus } from '@element-plus/icons-vue';
+import { getDraggableItemKey } from '@/utils/draggableKey';
+
+defineOptions({ name: 'c_menu_list' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  components: {
-    draggable: vuedraggable,
-    linkaddress,
+  configNme: {
+    type: String,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-      gridBtn: {
-        xl: 4,
-        lg: 8,
-        md: 8,
-        sm: 8,
-        xs: 8,
-      },
-      gridPic: {
-        xl: 6,
-        lg: 8,
-        md: 12,
-        sm: 12,
-        xs: 12,
-      },
-      activeIndex: 0, //索引
-      indexLast: 0,
-      lastObj: {},
-    };
+  index: {
+    type: null,
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.configData = this.configObj;
-    });
+  isRub: {
+    type: Boolean,
+    default: false,
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.configData = nVal;
-      },
-      deep: true,
-    },
+});
+
+const emit = defineEmits(['getPicList']);
+
+const { proxy } = getCurrentInstance();
+
+const defaults = ref({});
+const configData = ref({});
+const gridBtn = ref({
+  xl: 4,
+  lg: 8,
+  md: 8,
+  sm: 8,
+  xs: 8,
+});
+const gridPic = ref({
+  xl: 6,
+  lg: 8,
+  md: 12,
+  sm: 12,
+  xs: 12,
+});
+const activeIndex = ref(0); //索引
+const indexLast = ref(0);
+const lastObj = ref({});
+const linkaddresRef = ref(null);
+
+onMounted(() => {
+  nextTick(() => {
+    configData.value = props.configObj;
+  });
+});
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    configData.value = nVal;
   },
-  methods: {
-    //状态切换
-    onchangeIsShow(e, index) {
-      this.activeIndex = index;
-      this.configData.list[this.activeIndex].status = e;
-    },
-    linkUrl(e) {
-      this.configData.list[this.activeIndex].linkUrl = e;
-    },
-    getLink(index, item) {
-      this.activeIndex = index;
-      this.$refs.linkaddres.dialogVisible = true;
-    },
-    handleAddLink(index) {
-      let data = {
-        name: '',
-        linkUrl: '',
-        id: 0,
-        sort: 0,
-        modelMaxLength: 8,
-      };
-      let datas = Object.assign({}, data);
-      this.configData.list[index].linkList.push(datas);
-    },
-    //删除链接
-    handleLinkDelete(item, indexs, index) {
-      this.configData.list[index].linkList.splice(indexs, 1);
-    },
-    //添加板块
-    handleAddBox() {
-      let data = JSON.parse(JSON.stringify(this.configData.defaultList));
-      this.configData.list.push(data);
-    },
-    // 点击图文封面
-    modalPicTap(item, index) {
-      this.activeIndex = index;
-      let _this = this;
-      _this.$modalUpload(function (img) {
-        if (!img) return;
-        item.img = img[0].sattDir;
-        _this.getPic(img[0].sattDir);
-      }, '1','diy');
-    },
-    // 获取图片信息
-    getPic(pc) {
-      this.$nextTick(() => {
-        this.configData.list[this.activeIndex].imageUrl = pc;
-        this.$emit('getPicList', this.configData.list)
-      });
-    },
-    onBlur() {
-      let data = this.defaults.menuConfig;
-      this.defaults.picStyle.picList[this.defaults.picStyle.tabVal].link = data.list[0].info[0].value;
-    },
-    // 删除整个模块
-    handleDelete(item, index) {
-      if (this.configData.list.length == 1) {
-        this.lastObj = this.configData.list[0];
-      }
-      this.configData.list.splice(index, 1);
-    },
-  },
-};
+  { deep: true },
+);
+
+//状态切换
+function onchangeIsShow(e, index) {
+  activeIndex.value = index;
+  configData.value.list[activeIndex.value].status = e;
+}
+
+function linkUrl(e) {
+  configData.value.list[activeIndex.value].linkUrl = e;
+}
+
+function getLink(index, item) {
+  activeIndex.value = index;
+  linkaddresRef.value.dialogVisible = true;
+}
+
+function handleAddLink(index) {
+  let data = {
+    name: '',
+    linkUrl: '',
+    id: 0,
+    sort: 0,
+    modelMaxLength: 8,
+  };
+  let datas = Object.assign({}, data);
+  configData.value.list[index].linkList.push(datas);
+}
+
+//删除链接
+function handleLinkDelete(item, indexs, index) {
+  configData.value.list[index].linkList.splice(indexs, 1);
+}
+
+//添加板块
+function handleAddBox() {
+  let data = JSON.parse(JSON.stringify(configData.value.defaultList));
+  configData.value.list.push(data);
+}
+
+// 点击图文封面
+function modalPicTap(item, index) {
+  activeIndex.value = index;
+  proxy.$modalUpload(function (img) {
+    if (!img) return;
+    item.img = img[0].sattDir;
+    getPic(img[0].sattDir);
+  }, '1', 'diy');
+}
+
+// 获取图片信息
+function getPic(pc) {
+  nextTick(() => {
+    configData.value.list[activeIndex.value].imageUrl = pc;
+    emit('getPicList', configData.value.list);
+  });
+}
+
+function onBlur() {
+  let data = defaults.value.menuConfig;
+  defaults.value.picStyle.picList[defaults.value.picStyle.tabVal].link = data.list[0].info[0].value;
+}
+
+// 删除整个模块
+function handleDelete(item, index) {
+  if (configData.value.list.length == 1) {
+    lastObj.value = configData.value.list[0];
+  }
+  configData.value.list.splice(index, 1);
+}
 </script>
 
 <style scoped lang="scss">
@@ -305,7 +324,7 @@ export default {
         .input-box {
           flex: 1;
 
-          ::v-deep.ivu-input {
+          :deep(.ivu-input ){
             font-size: 13px !important;
           }
         }
@@ -359,7 +378,7 @@ export default {
 .el-icon-error {
   cursor: pointer;
   transition-property: all;
-  transition-duration: 0.2s; 
+  transition-duration: 0.2s;
   &:hover {
     color: #303133;
   }

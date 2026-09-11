@@ -1,4 +1,5 @@
-import { isArray } from 'util';
+// 原 import { isArray } from 'util' 是 node 内置模块，浏览器端不可用，改用原生
+const isArray = Array.isArray;
 import { exportDefault, titleCase } from '@/utils/index';
 import ruleTrigger from './ruleTrigger';
 
@@ -12,6 +13,18 @@ const inheritAttrs = {
   file: '',
   dialog: 'inheritAttrs: false,',
 };
+
+function parsePattern(pattern) {
+  if (pattern instanceof RegExp) return pattern;
+  if (typeof pattern !== 'string') return pattern;
+  const match = pattern.match(/^\/(.*)\/([gimsuy]*)$/);
+  if (!match) return pattern;
+  try {
+    return new RegExp(match[1], match[2]);
+  } catch (e) {
+    return pattern;
+  }
+}
 
 /**
  * 组装js 【入口函数】
@@ -156,7 +169,7 @@ function buildRules(scheme, ruleList) {
       config.regList.forEach((item) => {
         if (item.pattern) {
           rules.push(
-            `{ pattern: ${eval(item.pattern)}, message: '${item.message}', trigger: '${ruleTrigger[config.tag]}' }`,
+            `{ pattern: ${parsePattern(item.pattern)}, message: '${item.message}', trigger: '${ruleTrigger[config.tag]}' }`,
           );
         }
       });

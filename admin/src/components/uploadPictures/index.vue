@@ -18,7 +18,7 @@
                 @node-click="appendBtn"
                 :current-node-key="treeId"
               >
-                <span class="custom-tree-node" slot-scope="{ data }">
+                <template #default="{ data }">
                   <!-- <span class="file-name">
                     <i class="icon el-icon-folder-remove"></i>
                     {{ data.title }}</span
@@ -38,7 +38,7 @@
                   <span>
                     <el-dropdown @command="(command) => clickMenu(data, command)">
                       <i class="el-icon-more el-icon--right"></i>
-                      <template slot="dropdown">
+                      <template #dropdown>
                         <el-dropdown-menu>
                           <el-dropdown-item command="1">新增分类</el-dropdown-item>
                           <el-dropdown-item v-if="data.id" command="2">编辑分类</el-dropdown-item>
@@ -47,7 +47,7 @@
                       </template>
                     </el-dropdown>
                   </span>
-                </span>
+                </template>
               </el-tree>
             </div>
           </div>
@@ -61,14 +61,13 @@
               :disabled="checkPicList.length === 0"
               v-db-click
               @click="checkPics"
-              size="small"
+
               v-if="isShow !== 0"
               >使用选中图片</el-button
             >
-            <el-button size="small" type="primary" v-db-click @click="uploadModal">上传图片</el-button>
+            <el-button type="primary" v-db-click @click="uploadModal">上传图片</el-button>
             <el-button
               class="mr14"
-              size="small"
               :disabled="!checkPicList.length && !ids.length"
               v-db-click
               @click.stop="editPicList()"
@@ -82,7 +81,7 @@
               :options="treeData2"
               :props="{ checkStrictly: true, emitPath: false, label: 'title', value: 'id' }"
               clearable
-              size="small"
+
               @visible-change="moveImg"
             ></el-cascader>
           </div>
@@ -91,17 +90,19 @@
               class="mr10"
               v-model="fileData.real_name"
               placeholder="请输入图片名"
-              size="small"
+
               style="width: 150px"
               @change="searchFile"
             >
-              <i slot="suffix" class="el-icon-search el-input__icon" v-db-click @click="getFileList"></i>
+              <template #suffix>
+                <i class="el-icon-search el-input__icon" v-db-click @click="getFileList"></i>
+              </template>
             </el-input>
-            <el-radio-group class="mr10" v-if="isPage" v-model="lietStyle" size="small" @input="radioChange">
-              <el-radio-button label="list">
+            <el-radio-group class="mr10" v-if="isPage" v-model="lietStyle" @input="radioChange">
+              <el-radio-button label="list" value="list">
                 <i class="el-icon-menu"></i>
               </el-radio-button>
-              <el-radio-button label="table">
+              <el-radio-button label="table" value="table">
                 <!-- <i class="el-icon-files"></i> -->
                 <span class="iconfont iconliebiao"></span>
               </el-radio-button>
@@ -141,7 +142,7 @@
                   <p v-if="!item.isEdit">
                     {{ item.editName }}
                   </p>
-                  <el-input size="small" type="text" v-model="item.real_name" v-else @blur="bindTxt(item)" />
+                  <el-input type="text" v-model="item.real_name" v-else @blur="bindTxt(item)" />
                   <div class="operate-height">
                     <span class="operate mr10" v-db-click @click="editPicList(item.att_id)" v-if="item.isShowEdit"
                       >删除</span
@@ -157,7 +158,7 @@
           </div>
           <el-table
             v-if="lietStyle == 'table'"
-            ref="table"
+            ref="tableRef"
             :data="pictrueList"
             v-loading="loading"
             highlight-row
@@ -168,14 +169,14 @@
           >
             <el-table-column type="selection" width="60" :reserve-selection="true"> </el-table-column>
             <el-table-column label="图片名称" min-width="190">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <div class="df-aic">
                   <div class="tabBox_img mr10" v-viewer>
                     <img v-lazy="scope.row.att_dir" />
                   </div>
                   <span v-if="!scope.row.isEdit" class="line2 real-name">{{ scope.row.real_name }}</span>
                   <el-input
-                    size="small"
+
                     type="text"
                     style="width: 90%"
                     v-model="scope.row.real_name"
@@ -186,12 +187,12 @@
               </template>
             </el-table-column>
             <el-table-column label="上传时间" min-width="100">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <span>{{ scope.row.time }}</span>
               </template>
             </el-table-column>
             <el-table-column label="操作" fixed="right" width="170">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <a v-db-click @click="editPicList(scope.row.att_id)">删除</a>
                 <el-divider direction="vertical"></el-divider>
                 <a v-db-click @click="scope.row.isEdit = !scope.row.isEdit">{{
@@ -209,15 +210,15 @@
             :total="total"
             :pageCount="9"
             layout="total, prev, pager, next"
-            :page.sync="fileData.page"
+            v-model:page="fileData.page"
             @pagination="pageChange"
-            :limit.sync="fileData.limit"
+            v-model:limit="fileData.limit"
           ></pagination>
         </div>
       </div>
     </div>
     <uploadImg
-      ref="upload"
+      ref="uploadRef"
       :isPage="isPage"
       :isIframe="isIframe"
       :categoryId="treeId"
@@ -230,7 +231,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import {
   getCategoryListApi,
   createApi,
@@ -243,531 +244,541 @@ import Setting from '@/setting';
 import { getCookies } from '@/libs/util';
 import uploadImg from '@/components/uploadImg';
 import { VueTreeList, Tree, TreeNode } from 'vue-tree-list';
-export default {
-  name: 'uploadPictures',
-  components: { uploadImg, VueTreeList },
-  props: {
-    isChoice: {
-      type: String,
-      default: '',
-    },
-    isPage: {
-      type: Boolean,
-      default: false,
-    },
-    isIframe: {
-      type: Boolean,
-      default: false,
-    },
-    gridBtn: {
-      type: Object,
-      default: null,
-    },
-    gridPic: {
-      type: Object,
-      default: null,
-    },
-    isShow: {
-      type: Number,
-      default: 1,
-    },
-    pageLimit: {
-      type: Number,
-      default: 0,
-    },
-  },
-  data() {
-    return {
-      spinShow: false,
-      fileUrl: Setting.apiBaseURL + '/file/upload',
-      modalPic: false,
-      treeData: [],
-      treeData2: [],
-      pictrueList: [],
-      uploadData: {}, // 上传参数
-      checkPicList: [],
-      uploadName: {
-        name: '',
-        all: 1,
-      },
-      formValidate: { id: 0 },
-      FromData: null,
-      treeId: '',
-      isJudge: false,
-      buttonProps: {
-        type: 'default',
-        size: 'small',
-      },
-      fileData: {
-        pid: 0,
-        real_name: '',
-        page: 1,
-        limit: this.pageLimit || 18,
-      },
-      total: 0,
-      pids: 0,
-      list: [],
-      modalTitleSs: '',
-      isShowPic: false,
-      header: {},
-      ids: [], // 选中附件的id集合
-      lietStyle: 'list',
-      imageUrl: '',
-      loading: false,
-      multipleSelection: [],
-      picmargin: '5px', //默认距离右边距离
-    };
-  },
-  mounted() {
-    if (this.isPage) {
-      let hang = parseInt((document.body.clientHeight - this.$refs.imgListBox.clientHeight - 325) / 180); //计算行数
-      let col = parseInt(this.$refs.imgListBox.clientWidth / 156); //计算列数
-      this.fileData.limit = col * hang; //计算分页数量
-      this.picmargin = parseInt(this.$refs.imgListBox.clientWidth - col * 146) / (2 * col) + 'px'; //平均分布计算margin距离
-    }
-    this.getToken();
-    this.getList();
-    this.getFileList();
-  },
-  methods: {
-    radioChange() {
-      this.initData();
-    },
-    lookImg(item) {
-      this.imageUrl = item.att_dir;
-      const viewer = this.$el.querySelector('.images').$viewer;
-      viewer.show();
-      this.$nextTick(() => {
-        let i = this.pictrueList.findIndex((e) => e.att_dir === item.att_dir);
-        viewer.update().view(i);
-      });
-    },
-    onDel(node) {
-      let method = node.cate_id ? routeDel : routeCateDel;
-      this.$msgbox({
-        title: '提示',
-        message: '是否确定删除该菜单',
-        showCancelButton: true,
-        cancelButtonText: '取消',
-        confirmButtonText: '删除',
-        iconClass: 'el-icon-warning',
-        confirmButtonClass: 'btn-custom-cancel',
-      })
-        .then(() => {
-          method(node.id)
-            .then((res) => {
-              this.$message.success(res.msg);
-              node.remove();
-            })
-            .catch((err) => {
-              this.$message.error(err);
-            });
-        })
-        .catch(() => {});
-    },
+import { ref, reactive, onMounted, getCurrentInstance, nextTick } from 'vue';
+import { useRoute } from 'vue-router';
+import { ElMessage, ElMessageBox } from '@/utils/elementPlusFeedback';
 
-    onChangeName(params) {
-      if (params.eventType == 'blur') {
-        let data = {
-          name: params.newName,
-          id: params.id,
-        };
-        interfaceEditName(data)
-          .then((res) => {
-            this.$message.success(res.msg);
-          })
-          .catch((err) => {
-            this.$message.error(err);
-          });
-      }
-    },
-    // 添加分类
-    addSort() {
-      this.append({ id: this.treeId || 0 });
-    },
-    // 点击菜单
-    clickMenu(data, name) {
-      if (name == 1) {
-        this.append(data);
-      } else if (name == 2) {
-        this.editPic(data);
-      } else if (name == 3) {
-        this.remove(data, '分类');
-      }
-    },
-    uploadSuccess() {
-      this.fileData.page = 1;
-      this.initData();
-      this.getFileList();
-    },
-    uploadModal() {
-      this.$refs.upload.uploadModal = true;
-    },
-    enterMouse(item) {
-      item.realName = !item.realName;
-    },
-    enterLeave(item) {
-      item.isShowEdit = !item.isShowEdit;
-    },
-    // 上传头部token
-    getToken() {
-      this.header['Authori-zation'] = 'Bearer ' + getCookies('token');
-    },
-    moveImg(status) {
-      if (!status) {
-        this.getMove();
-      } else {
-        if (!this.ids.toString()) {
-          this.$message.warning('请先选择图片');
-          return;
-        }
-      }
-    },
-    searchImg() {},
-    // 移动分类
-    getMove() {
-      let data = {
-        pid: this.pids,
-        images: this.ids.toString(),
-      };
-      if (!data.images) return;
-      moveApi(data)
-        .then(async (res) => {
-          this.$message.success(res.msg);
-          this.getFileList();
-          this.pids = 0;
-          this.checkPicList = [];
-          this.ids = [];
-        })
-        .catch((res) => {
-          this.$message.error(res.msg);
-        });
-    },
-    delImg(id) {
-      let ids = {
-        ids: id,
-      };
-      let delfromData = {
-        title: '删除选中图片',
-        url: `file/file/delete`,
-        method: 'POST',
-        ids: ids,
-      };
-      this.$modalSure(delfromData)
-        .then((res) => {
-          this.$message.success(res.msg);
-          this.getFileList();
-          this.checkPicList = [];
-        })
-        .catch((res) => {
-          this.$message.error(res.msg);
-        });
-    },
-    // 删除图片
-    editPicList(id) {
-      let ids = {
-        ids: id || this.ids.toString(),
-      };
-      let delfromData = {
-        title: '删除选中图片',
-        url: `file/file/delete`,
-        method: 'POST',
-        ids: ids,
-      };
-      this.$modalSure(delfromData)
-        .then((res) => {
-          this.$message.success(res.msg);
-          this.getFileList();
-          this.initData();
-        })
-        .catch((res) => {
-          this.$message.error(res.msg);
-        });
-    },
-    initData() {
-      this.checkPicList = [];
-      this.ids = [];
-      this.multipleSelection = [];
-    },
-    // 鼠标移入 移出
-    onMouseOver(root, node, data) {
-      event.preventDefault();
-      data.flag = !data.flag;
-      if (data.flag2) {
-        data.flag2 = false;
-      }
-    },
-    // 点击树
-    appendBtn(data) {
-      this.treeId = data.id;
-      this.fileData.page = 1;
-      this.getFileList();
-    },
-    // 点击添加
-    append(data) {
-      this.treeId = data.id;
-      this.getFrom();
-    },
-    // 删除分类
-    remove(data, tit) {
-      this.tits = tit;
-      let delfromData = {
-        title: '删除 [ ' + data.title + ' ] ' + '分类',
-        url: `file/category/${data.id}`,
-        method: 'DELETE',
-        ids: '',
-      };
-      this.$modalSure(delfromData)
-        .then((res) => {
-          this.$message.success(res.msg);
-          this.getList();
-          this.checkPicList = [];
-        })
-        .catch((res) => {
-          this.$message.error(res.msg);
-        });
-    },
-    // 编辑树表单
-    editPic(data) {
-      this.$modalForm(categoryEditApi(data.id)).then(() => this.getList());
-    },
-    // 搜索分类
-    changePage() {
-      this.getList('search');
-    },
-    // 分类列表树
-    getList(type) {
-      let data = {
-        title: '全部图片',
-        id: '',
-        pid: 0,
-      };
-      getCategoryListApi(this.uploadName)
-        .then(async (res) => {
-          if (type !== 'search') {
-            this.treeData2 = JSON.parse(JSON.stringify([...res.data.list]));
-          }
-          res.data.list.unshift(data);
-          this.treeData = res.data.list;
-        })
-        .catch((res) => {
-          this.$message.error(res.msg);
-        });
-    },
-    loadData(item, callback) {
-      getCategoryListApi({
-        pid: item.id,
-      })
-        .then(async (res) => {
-          const data = res.data.list;
-          callback(data);
-        })
-        .catch((res) => {});
-    },
-    addFlag(treedata) {
-      treedata.map((item) => {
-        this.$set(item, 'flag', false);
-        this.$set(item, 'flag2', false);
-        item.children && this.addFlag(item.children);
-      });
-    },
-    // 新建分类
-    add() {
-      this.treeId = 0;
-      this.getFrom();
-    },
-    searchFile() {
-      this.fileData.page = 1;
-      this.getFileList();
-    },
-    // 文件列表
-    getFileList() {
-      this.fileData.pid = this.treeId;
-      fileListApi(this.fileData)
-        .then(async (res) => {
-          res.data.list.forEach((el) => {
-            el.isSelect = false;
-            el.isEdit = false;
-            el.isShowEdit = false;
-            el.realName = false;
-            el.num = 0;
-            this.editName(el);
-          });
-          this.pictrueList = res.data.list;
+defineOptions({ name: 'uploadPictures' });
 
-          if (this.pictrueList.length) {
-            this.isShowPic = false;
-          } else {
-            this.isShowPic = true;
-          }
-          this.total = res.data.count;
-          this.$nextTick(() => {
-            //确保dom加载完毕
-            // this.showSelectData();
-          });
-        })
-        .catch((res) => {
-          this.$message.error(res.msg);
-        });
-    },
-    showSelectData() {
-      if (this.multipleSelection.length > 0) {
-        // 判断是否存在勾选过的数据
-        this.pictrueList.forEach((row) => {
-          // 获取数据列表接口请求到的数据
-          this.multipleSelection.forEach((item) => {
-            // 勾选到的数据
-            if (row.att_id === item.att_id) {
-              // this.$refs.table.toggleRowSelection(item, true); // 若有重合，则回显该条数据
-            }
-          });
-        });
-      }
-    },
-    getRowKey(row) {
-      return row.att_id;
-    },
-    //对象数组去重；
-    unique(arr) {
-      let result = arr.reduce((acc, curr) => {
-        const x = acc.find((item) => item.att_id === curr.att_id);
-        if (!x) {
-          return acc.concat([curr]);
-        } else {
-          return acc;
-        }
-      }, []);
-      return result;
-    },
-    //  选中某一行
-    handleSelectRow(selection) {
-      let arr = this.unique(selection);
-      const uniqueArr = [];
-      const ids = [];
-      for (let i = 0; i < arr.length; i++) {
-        const item = arr[i];
-        if (!ids.includes(item.att_id)) {
-          uniqueArr.push(item);
-          ids.push(item.att_id);
-        }
-      }
-      this.ids = ids;
-      this.multipleSelection = uniqueArr;
-    },
-    pageChange(index) {
-      this.fileData.page = index;
-      this.getFileList();
-      this.checkPicList = [];
-    },
-    // 新建分类表单
-    getFrom() {
-      this.$modalForm(createApi({ id: this.treeId })).then((res) => {
-        this.getList();
-      });
-    },
-    // 上传之前
-    beforeUpload(file) {
-      // if (file.size > 2097152) {
-      //   this.$message.error(file.name + "大小超过2M!");
-      // } else
-      if (!/image\/\w+/.test(file.type)) {
-        this.$message.error('请上传以jpg、jpeg、png等结尾的图片文件'); //FileExt.toLowerCase()
-        return false;
-      }
-      this.uploadData = {
-        pid: this.treeId,
-      };
-      let promise = new Promise((resolve) => {
-        this.$nextTick(function () {
-          resolve(true);
-        });
-      });
-      return promise;
-    },
-    // 上传成功
-    handleSuccess(res, file, fileList) {
-      if (res.status === 200) {
-        this.$message.success(res.msg);
-        this.fileData.page = 1;
-        this.getFileList();
-      } else {
-        this.$message.error(res.msg);
-      }
-    },
-    // 关闭
-    cancel() {
-      this.$emit('changeCancel');
-    },
-    // 选中图片
-    changImage(item, index, row) {
-      let activeIndex = 0;
-      if (!item.isSelect) {
-        item.isSelect = true;
-        this.checkPicList.push(item);
-      } else {
-        item.isSelect = false;
-        this.checkPicList.map((el, index) => {
-          if (el.att_id == item.att_id) {
-            activeIndex = index;
-          }
-        });
-        this.checkPicList.splice(activeIndex, 1);
-      }
-
-      this.ids = [];
-      this.checkPicList.map((item, i) => {
-        this.ids.push(item.att_id);
-      });
-      this.pictrueList.map((el, i) => {
-        if (el.isSelect) {
-          this.checkPicList.filter((el2, j) => {
-            if (el.att_id == el2.att_id) {
-              el.num = j + 1;
-            }
-          });
-        } else {
-          el.num = 0;
-        }
-      });
-    },
-    // 点击使用选中图片
-    checkPics() {
-      if (this.isChoice === '单选') {
-        if (this.checkPicList.length > 1) return this.$message.warning('最多只能选一张图片');
-        this.$emit('getPic', this.checkPicList[0]);
-      } else {
-        let maxLength = this.$route.query.maxLength;
-        if (maxLength != undefined && this.checkPicList.length > Number(maxLength))
-          return this.$message.warning('最多只能选' + maxLength + '张图片');
-        this.$emit('getPicD', this.checkPicList);
-        this.$emit('getPic', this.checkPicList);
-      }
-    },
-    editName(item) {
-      let it = item.real_name.split('.');
-      let it1 = it[1] == undefined ? [] : it[1];
-      let len = it[0].length + it1.length;
-      item.editName = len < 10 ? item.real_name : item.real_name.substr(0, 4) + '...' + item.real_name.substr(-5, 5);
-    },
-    // 修改图片文字上传
-    bindTxt(item) {
-      if (item.real_name == '') {
-        this.$message.error('请填写内容');
-      }
-      fileUpdateApi(item.att_id, {
-        real_name: item.real_name,
-      })
-        .then((res) => {
-          this.editName(item);
-          item.isEdit = false;
-          this.$message.success(res.msg);
-        })
-        .catch((error) => {
-          this.$message.error(error.msg);
-        });
-    },
+const props = defineProps({
+  isChoice: {
+    type: String,
+    default: '',
   },
+  isPage: {
+    type: Boolean,
+    default: false,
+  },
+  isIframe: {
+    type: Boolean,
+    default: false,
+  },
+  gridBtn: {
+    type: Object,
+    default: null,
+  },
+  gridPic: {
+    type: Object,
+    default: null,
+  },
+  isShow: {
+    type: Number,
+    default: 1,
+  },
+  pageLimit: {
+    type: Number,
+    default: 0,
+  },
+});
+
+const emit = defineEmits(['changeCancel', 'getPic', 'getPicD']);
+
+const { proxy } = getCurrentInstance();
+const route = useRoute();
+
+const spinShow = ref(false);
+const fileUrl = Setting.apiBaseURL + '/file/upload';
+const modalPic = ref(false);
+const treeData = ref([]);
+const treeData2 = ref([]);
+const pictrueList = ref([]);
+const uploadData = ref({}); // 上传参数
+const checkPicList = ref([]);
+const uploadName = reactive({
+  name: '',
+  all: 1,
+});
+const formValidate = reactive({ id: 0 });
+const FromData = ref(null);
+const treeId = ref('');
+const isJudge = ref(false);
+const buttonProps = {
+  type: 'default',
+  size: 'small',
 };
+const fileData = reactive({
+  pid: 0,
+  real_name: '',
+  page: 1,
+  limit: props.pageLimit || 18,
+});
+const total = ref(0);
+const pids = ref(0);
+const list = ref([]);
+const modalTitleSs = ref('');
+const isShowPic = ref(false);
+const header = reactive({});
+const ids = ref([]); // 选中附件的id集合
+const lietStyle = ref('list');
+const imageUrl = ref('');
+const loading = ref(false);
+const multipleSelection = ref([]);
+const picmargin = ref('5px'); //默认距离右边距离
+
+const imgListBox = ref(null);
+const tableRef = ref(null);
+const uploadRef = ref(null);
+
+onMounted(() => {
+  if (props.isPage) {
+    let hang = parseInt((document.body.clientHeight - imgListBox.value.clientHeight - 325) / 180); //计算行数
+    let col = parseInt(imgListBox.value.clientWidth / 156); //计算列数
+    fileData.limit = col * hang; //计算分页数量
+    picmargin.value = parseInt(imgListBox.value.clientWidth - col * 146) / (2 * col) + 'px'; //平均分布计算margin距离
+  }
+  getToken();
+  getList();
+  getFileList();
+});
+
+function radioChange() {
+  initData();
+}
+function lookImg(item) {
+  imageUrl.value = item.att_dir;
+  const viewer = proxy.$el.querySelector('.images').$viewer;
+  viewer.show();
+  nextTick(() => {
+    let i = pictrueList.value.findIndex((e) => e.att_dir === item.att_dir);
+    viewer.update().view(i);
+  });
+}
+function onDel(node) {
+  let method = node.cate_id ? routeDel : routeCateDel;
+  ElMessageBox({
+    title: '提示',
+    message: '是否确定删除该菜单',
+    showCancelButton: true,
+    cancelButtonText: '取消',
+    confirmButtonText: '删除',
+    iconClass: 'el-icon-warning',
+    confirmButtonClass: 'btn-custom-cancel',
+  })
+    .then(() => {
+      method(node.id)
+        .then((res) => {
+          ElMessage.success(res.msg);
+          node.remove();
+        })
+        .catch((err) => {
+          ElMessage.error(err);
+        });
+    })
+    .catch(() => {});
+}
+
+function onChangeName(params) {
+  if (params.eventType == 'blur') {
+    let data = {
+      name: params.newName,
+      id: params.id,
+    };
+    interfaceEditName(data)
+      .then((res) => {
+        ElMessage.success(res.msg);
+      })
+      .catch((err) => {
+        ElMessage.error(err);
+      });
+  }
+}
+// 添加分类
+function addSort() {
+  append({ id: treeId.value || 0 });
+}
+// 点击菜单
+function clickMenu(data, name) {
+  if (name == 1) {
+    append(data);
+  } else if (name == 2) {
+    editPic(data);
+  } else if (name == 3) {
+    remove(data, '分类');
+  }
+}
+function uploadSuccess() {
+  fileData.page = 1;
+  initData();
+  getFileList();
+}
+function uploadModal() {
+  uploadRef.value.uploadModal = true;
+}
+function enterMouse(item) {
+  item.realName = !item.realName;
+}
+function enterLeave(item) {
+  item.isShowEdit = !item.isShowEdit;
+}
+// 上传头部token
+function getToken() {
+  header.Authorization = 'Bearer ' + getCookies('token');
+}
+function moveImg(status) {
+  if (!status) {
+    getMove();
+  } else {
+    if (!ids.value.toString()) {
+      ElMessage.warning('请先选择图片');
+      return;
+    }
+  }
+}
+function searchImg() {}
+// 移动分类
+function getMove() {
+  let data = {
+    pid: pids.value,
+    images: ids.value.toString(),
+  };
+  if (!data.images) return;
+  moveApi(data)
+    .then(async (res) => {
+      ElMessage.success(res.msg);
+      getFileList();
+      pids.value = 0;
+      checkPicList.value = [];
+      ids.value = [];
+    })
+    .catch((res) => {
+      ElMessage.error(res.msg);
+    });
+}
+function delImg(id) {
+  let idsObj = {
+    ids: id,
+  };
+  let delfromData = {
+    title: '删除选中图片',
+    url: `file/file/delete`,
+    method: 'POST',
+    ids: idsObj,
+  };
+  proxy.$modalSure(delfromData)
+    .then((res) => {
+      ElMessage.success(res.msg);
+      getFileList();
+      checkPicList.value = [];
+    })
+    .catch((res) => {
+      ElMessage.error(res.msg);
+    });
+}
+// 删除图片
+function editPicList(id) {
+  let idsObj = {
+    ids: id || ids.value.toString(),
+  };
+  let delfromData = {
+    title: '删除选中图片',
+    url: `file/file/delete`,
+    method: 'POST',
+    ids: idsObj,
+  };
+  proxy.$modalSure(delfromData)
+    .then((res) => {
+      ElMessage.success(res.msg);
+      getFileList();
+      initData();
+    })
+    .catch((res) => {
+      ElMessage.error(res.msg);
+    });
+}
+function initData() {
+  checkPicList.value = [];
+  ids.value = [];
+  multipleSelection.value = [];
+}
+// 鼠标移入 移出
+function onMouseOver(root, node, data) {
+  event.preventDefault();
+  data.flag = !data.flag;
+  if (data.flag2) {
+    data.flag2 = false;
+  }
+}
+// 点击树
+function appendBtn(data) {
+  treeId.value = data.id;
+  fileData.page = 1;
+  getFileList();
+}
+// 点击添加
+function append(data) {
+  treeId.value = data.id;
+  getFrom();
+}
+// 删除分类
+function remove(data, tit) {
+  proxy.tits = tit;
+  let delfromData = {
+    title: '删除 [ ' + data.title + ' ] ' + '分类',
+    url: `file/category/${data.id}`,
+    method: 'DELETE',
+    ids: '',
+  };
+  proxy.$modalSure(delfromData)
+    .then((res) => {
+      ElMessage.success(res.msg);
+      getList();
+      checkPicList.value = [];
+    })
+    .catch((res) => {
+      ElMessage.error(res.msg);
+    });
+}
+// 编辑树表单
+function editPic(data) {
+  proxy.$modalForm(categoryEditApi(data.id)).then(() => getList());
+}
+// 搜索分类
+function changePage() {
+  getList('search');
+}
+// 分类列表树
+function getList(type) {
+  let data = {
+    title: '全部图片',
+    id: '',
+    pid: 0,
+  };
+  getCategoryListApi(uploadName)
+    .then(async (res) => {
+      if (type !== 'search') {
+        treeData2.value = JSON.parse(JSON.stringify([...res.data.list]));
+      }
+      res.data.list.unshift(data);
+      treeData.value = res.data.list;
+    })
+    .catch((res) => {
+      ElMessage.error(res.msg);
+    });
+}
+function loadData(item, callback) {
+  getCategoryListApi({
+    pid: item.id,
+  })
+    .then(async (res) => {
+      const data = res.data.list;
+      callback(data);
+    })
+    .catch((res) => {});
+}
+function addFlag(treedata) {
+  treedata.map((item) => {
+    item.flag = false;
+    item.flag2 = false;
+    item.children && addFlag(item.children);
+  });
+}
+// 新建分类
+function add() {
+  treeId.value = 0;
+  getFrom();
+}
+function searchFile() {
+  fileData.page = 1;
+  getFileList();
+}
+// 文件列表
+function getFileList() {
+  fileData.pid = treeId.value;
+  fileListApi(fileData)
+    .then(async (res) => {
+      res.data.list.forEach((el) => {
+        el.isSelect = false;
+        el.isEdit = false;
+        el.isShowEdit = false;
+        el.realName = false;
+        el.num = 0;
+        editName(el);
+      });
+      pictrueList.value = res.data.list;
+
+      if (pictrueList.value.length) {
+        isShowPic.value = false;
+      } else {
+        isShowPic.value = true;
+      }
+      total.value = res.data.count;
+      nextTick(() => {
+        //确保dom加载完毕
+        // this.showSelectData();
+      });
+    })
+    .catch((res) => {
+      ElMessage.error(res.msg);
+    });
+}
+function showSelectData() {
+  if (multipleSelection.value.length > 0) {
+    // 判断是否存在勾选过的数据
+    pictrueList.value.forEach((row) => {
+      // 获取数据列表接口请求到的数据
+      multipleSelection.value.forEach((item) => {
+        // 勾选到的数据
+        if (row.att_id === item.att_id) {
+          // tableRef.value.toggleRowSelection(item, true); // 若有重合，则回显该条数据
+        }
+      });
+    });
+  }
+}
+function getRowKey(row) {
+  return row.att_id;
+}
+//对象数组去重；
+function unique(arr) {
+  let result = arr.reduce((acc, curr) => {
+    const x = acc.find((item) => item.att_id === curr.att_id);
+    if (!x) {
+      return acc.concat([curr]);
+    } else {
+      return acc;
+    }
+  }, []);
+  return result;
+}
+//  选中某一行
+function handleSelectRow(selection) {
+  let arr = unique(selection);
+  const uniqueArr = [];
+  const idsArr = [];
+  for (let i = 0; i < arr.length; i++) {
+    const item = arr[i];
+    if (!idsArr.includes(item.att_id)) {
+      uniqueArr.push(item);
+      idsArr.push(item.att_id);
+    }
+  }
+  ids.value = idsArr;
+  multipleSelection.value = uniqueArr;
+}
+function pageChange(index) {
+  fileData.page = index;
+  getFileList();
+  checkPicList.value = [];
+}
+// 新建分类表单
+function getFrom() {
+  proxy.$modalForm(createApi({ id: treeId.value })).then((res) => {
+    getList();
+  });
+}
+// 上传之前
+function beforeUpload(file) {
+  // if (file.size > 2097152) {
+  //   ElMessage.error(file.name + "大小超过2M!");
+  // } else
+  if (!/image\/\w+/.test(file.type)) {
+    ElMessage.error('请上传以jpg、jpeg、png等结尾的图片文件'); //FileExt.toLowerCase()
+    return false;
+  }
+  uploadData.value = {
+    pid: treeId.value,
+  };
+  let promise = new Promise((resolve) => {
+    nextTick(function () {
+      resolve(true);
+    });
+  });
+  return promise;
+}
+// 上传成功
+function handleSuccess(res, file, fileList) {
+  if (res.status === 200) {
+    ElMessage.success(res.msg);
+    fileData.page = 1;
+    getFileList();
+  } else {
+    ElMessage.error(res.msg);
+  }
+}
+// 关闭
+function cancel() {
+  emit('changeCancel');
+}
+// 选中图片
+function changImage(item, index, row) {
+  let activeIndex = 0;
+  if (!item.isSelect) {
+    item.isSelect = true;
+    checkPicList.value.push(item);
+  } else {
+    item.isSelect = false;
+    checkPicList.value.map((el, index) => {
+      if (el.att_id == item.att_id) {
+        activeIndex = index;
+      }
+    });
+    checkPicList.value.splice(activeIndex, 1);
+  }
+
+  ids.value = [];
+  checkPicList.value.map((item, i) => {
+    ids.value.push(item.att_id);
+  });
+  pictrueList.value.map((el, i) => {
+    if (el.isSelect) {
+      checkPicList.value.filter((el2, j) => {
+        if (el.att_id == el2.att_id) {
+          el.num = j + 1;
+        }
+      });
+    } else {
+      el.num = 0;
+    }
+  });
+}
+// 点击使用选中图片
+function checkPics() {
+  if (props.isChoice === '单选') {
+    if (checkPicList.value.length > 1) return ElMessage.warning('最多只能选一张图片');
+    emit('getPic', checkPicList.value[0]);
+  } else {
+    let maxLength = route.query.maxLength;
+    if (maxLength != undefined && checkPicList.value.length > Number(maxLength))
+      return ElMessage.warning('最多只能选' + maxLength + '张图片');
+    emit('getPicD', checkPicList.value);
+    emit('getPic', checkPicList.value);
+  }
+}
+function editName(item) {
+  let it = item.real_name.split('.');
+  let it1 = it[1] == undefined ? [] : it[1];
+  let len = it[0].length + it1.length;
+  item.editName = len < 10 ? item.real_name : item.real_name.substr(0, 4) + '...' + item.real_name.substr(-5, 5);
+}
+// 修改图片文字上传
+function bindTxt(item) {
+  if (item.real_name == '') {
+    ElMessage.error('请填写内容');
+  }
+  fileUpdateApi(item.att_id, {
+    real_name: item.real_name,
+  })
+    .then((res) => {
+      editName(item);
+      item.isEdit = false;
+      ElMessage.success(res.msg);
+    })
+    .catch((error) => {
+      ElMessage.error(error.msg);
+    });
+}
+
+defineExpose({ getFileList, getList });
 </script>
 
 <style scoped lang="scss">
@@ -860,7 +871,7 @@ export default {
     right: 0;
     top: 0;
   }
-  ::v-deep .el-badge__content.is-fixed {
+  :deep(.el-badge__content.is-fixed) {
     top: 13px;
     right: 25px;
   }
@@ -886,7 +897,7 @@ export default {
     .isTree {
       min-height: 374px;
       max-height: 550px;
-      ::v-deep .file-name {
+      :deep(.file-name) {
         display: flex;
         align-items: center;
         .name {
@@ -898,17 +909,17 @@ export default {
           margin-right: 8px;
         }
       }
-      ::v-deep .el-tree-node {
+      :deep(.el-tree-node) {
         margin-right: 16px;
       }
-      ::v-deep .el-tree-node__children .el-tree-node {
+      :deep(.el-tree-node__children .el-tree-node) {
         margin-right: 0;
       }
-      ::v-deep .el-tree-node__content {
+      :deep(.el-tree-node__content) {
         width: 100%;
         height: 36px;
       }
-      ::v-deep .custom-tree-node {
+      :deep(.custom-tree-node) {
         flex: 1;
         display: flex;
         align-items: center;
@@ -919,11 +930,11 @@ export default {
         color: rgba(0, 0, 0, 0.6);
         line-height: 13px;
       }
-      ::v-deep .is-current {
+      :deep(.is-current) {
         background: #f1f9ff !important;
         color: var(--prev-color-primary) !important;
       }
-      ::v-deep .is-current .custom-tree-node {
+      :deep(.is-current .custom-tree-node) {
         color: var(--prev-color-primary) !important;
       }
     }
@@ -934,7 +945,7 @@ export default {
   }
 }
 
-.treeSel ::v-deep .ivu-select-dropdown-list {
+.treeSel :deep(.ivu-select-dropdown-list) {
   padding: 0 5px !important;
   box-sizing: border-box;
   width: 200px;
@@ -1024,7 +1035,7 @@ export default {
   display: inline-block;
 }
 
-.bnt ::v-deep .ivu-tree-children {
+.bnt :deep(.ivu-tree-children) {
   padding: 5px 0;
 }
 

@@ -8,24 +8,23 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-export default function modalAttr(val, callback, keyNum) {
-  const h = this.$createElement;
+import { h } from 'vue';
+import { ElMessageBox, ElMessage } from '@/utils/elementPlusFeedback';
+
+export default async function modalAttr(val, callback, keyNum) {
+  const { default: AttrFrom } = await import('@/components/attrFrom/index.vue');
   return new Promise((resolve, reject) => {
-    this.$msgbox({
+    ElMessageBox({
       title: '属性规格',
       customClass: 'upload-form',
       closeOnClickModal: false,
       showClose: true,
       message: h('div', { class: 'common-form-upload' }, [
-        h('attrFrom', {
-          props: {
-            currentRow: val,
-            keyNum: keyNum,
-          },
-          on: {
-            getList() {
-              callback();
-            },
+        h(AttrFrom, {
+          currentRow: val,
+          keyNum: keyNum,
+          onGetList() {
+            callback();
           },
         }),
       ]),
@@ -37,7 +36,7 @@ export default function modalAttr(val, callback, keyNum) {
       })
       .catch(() => {
         reject();
-        this.$message({
+        ElMessage({
           type: 'info',
           message: '已取消',
         });

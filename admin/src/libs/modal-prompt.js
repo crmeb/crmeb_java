@@ -8,6 +8,8 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
+import { ElMessageBox, ElMessage } from '@/utils/elementPlusFeedback';
+
 /**
  * $prompt一行内容input提交封装
  * @param inputType input type 类型
@@ -18,7 +20,7 @@
  */
 export default function modalPrompt(inputType, title, val, label) {
   return new Promise((resolve, reject) => {
-    this.$prompt('', `${title}`, {
+    ElMessageBox.prompt('', `${title}`, {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       inputErrorMessage: `请输入${title}`,
@@ -45,7 +47,7 @@ export default function modalPrompt(inputType, title, val, label) {
         resolve(value);
       })
       .catch(() => {
-        this.$message.info('取消输入');
+        ElMessage.info('取消输入');
       });
   });
 }

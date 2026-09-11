@@ -6,41 +6,50 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'layoutIfameView',
-  props: {
-    meta: {
-      type: Object,
-      default: () => {},
-    },
+<script setup>
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import bus from '@/utils/bus';
+
+defineOptions({ name: 'layoutIfameView' });
+
+const props = defineProps({
+  meta: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {
-      iframeLoading: true,
+});
+
+const emit = defineEmits(['getCurrentRouteMeta']);
+
+const route = useRoute();
+
+const iframeLoading = ref(true);
+
+function onTagsViewRefreshRouterView(path) {
+  if (route.path !== path) return false;
+  emit('getCurrentRouteMeta');
+}
+
+// 初始化页面加载 loading
+function initIframeLoad() {
+  nextTick(() => {
+    iframeLoading.value = true;
+    const iframe = document.getElementById('iframe');
+    if (!iframe) return false;
+    iframe.onload = () => {
+      iframeLoading.value = false;
     };
-  },
-  created() {
-    this.bus.$on('onTagsViewRefreshRouterView', (path) => {
-      if (this.$route.path !== path) return false;
-      this.$emit('getCurrentRouteMeta');
-    });
-  },
-  mounted() {
-    this.initIframeLoad();
-  },
-  methods: {
-    // 初始化页面加载 loading
-    initIframeLoad() {
-      this.$nextTick(() => {
-        this.iframeLoading = true;
-        const iframe = document.getElementById('iframe');
-        if (!iframe) return false;
-        iframe.onload = () => {
-          this.iframeLoading = false;
-        };
-      });
-    },
-  },
-};
+  });
+}
+
+bus.on('onTagsViewRefreshRouterView', onTagsViewRefreshRouterView);
+
+onMounted(() => {
+  initIframeLoad();
+});
+
+onBeforeUnmount(() => {
+  bus.off('onTagsViewRefreshRouterView', onTagsViewRefreshRouterView);
+});
 </script>

@@ -6,16 +6,10 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import iCopyright from '@/components/copyright';
 
-export default {
-  components: { iCopyright },
-  name: 'layoutFooter',
-  data() {
-    return {};
-  },
-};
+defineOptions({ name: 'layoutFooter' });
 </script>
 
 <style scoped lang="scss">

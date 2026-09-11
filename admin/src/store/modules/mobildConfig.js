@@ -10,6 +10,17 @@
 /**
  * diy自定义组件
  * */
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import foot001 from '@/assets/images/foot-001.png';
+import foot002 from '@/assets/images/foot-002.png';
+import foot003 from '@/assets/images/foot-003.png';
+import foot004 from '@/assets/images/foot-004.png';
+import foot005 from '@/assets/images/foot-005.png';
+import foot006 from '@/assets/images/foot-006.png';
+import foot007 from '@/assets/images/foot-007.png';
+import foot008 from '@/assets/images/foot-008.png';
+
 const bottomMenu = {
   cname: '底部菜单',
   name: 'bottomMenu',
@@ -185,299 +196,369 @@ const pageFooter = {
   },
   menuList: [
     {
-      imgList: [require('@/assets/images/foot-001.png'), require('@/assets/images/foot-002.png')],
+      imgList: [foot001, foot002],
       name: '首页',
       link: '/pages/index/index',
     },
     {
-      imgList: [require('@/assets/images/foot-003.png'), require('@/assets/images/foot-004.png')],
+      imgList: [foot003, foot004],
       name: '分类',
       link: '/pages/goods_cate/goods_cate',
     },
     {
-      imgList: [require('@/assets/images/foot-005.png'), require('@/assets/images/foot-006.png')],
+      imgList: [foot005, foot006],
       name: '购物车',
       link: '/pages/order_addcart/order_addcart',
     },
     {
-      imgList: [require('@/assets/images/foot-007.png'), require('@/assets/images/foot-008.png')],
+      imgList: [foot007, foot008],
       name: '我的',
       link: '/pages/user/index',
     },
   ],
 };
 
-export default {
-  namespaced: true,
-  state: {
-    configName: '',
-    pageTitle: '',
-    pageName: '' || '模板',
-    pageShow: 1,
-    pageColor: 1,
-    pagePic: 0,
-    pageColorPicker: '#f5f5f5',
-    pageTabVal: '0',
-    pagePicUrl: '',
-    returnAddress: '',
-    titleColor: '#000000',
-    titleBgColor: '#fff',
-    // 已知组件列表默认数据 数组
-    defaultArray: {},
-    bottomMenu: JSON.parse(JSON.stringify(bottomMenu)),
-    pageFooter: JSON.parse(JSON.stringify(pageFooter)),
-  },
-  mutations: {
-    FOOTER(state, data) {
-      if (state.pageFooter.status) state.pageFooter.status.title = data.title;
-      state.pageFooter.menuList[2] = data.name;
-    },
-    UPBOTTOMMENU(state, data) {
-      state.bottomMenu = data;
-    },
-    /**
-     * 隐藏组件，更新数据显示值
-     * @constructor
-     */
-    UPDATESHOW(state, data) {
-      state.defaultArray[data.num].isHide = !state.defaultArray[data.num].isHide;
-    },
-    /**
-     * @description 默认配置push到数组里面
-     * @param {Object} state vuex state
-     * @param {Object} data
-     * 把默认数据添加到默认数组里面，解耦重复组件公用一条配置的问题
-     */
-    ADDARRAY(state, data) {
-      data.val.id = 'id' + data.val.timestamp;
-      state.defaultArray[data.num] = data.val;
-    },
-    /**
-     * @description 删除列表第几个默认数据
-     * @param {Object} state vuex state
-     * @param {Object} data 数据
-     */
-    DELETEARRAY(state, data) {
-      let tempObj = delete state.defaultArray[data.num];
-    },
-    /**
-     * @description 删除列表第几个默认数据
-     * @param {Object} state vuex state
-     * @param {Object} data 数据
-     */
-    ARRAYREAST(state, data) {
-      let tempObj = delete state.defaultArray[data];
-    },
-    /**
-     * @description 数组排序
-     * @param {Object} state vuex state
-     * @param {Object} data 位置index记录
-     */
-    defaultArraySort(state, data) {
-      let newArr = objToArr(state.defaultArray);
-      let sortArr = [];
+export const useMobildConfigStore = defineStore('mobildConfig', () => {
+  const configName = ref('');
+  const pageTitle = ref('');
+  const pageName = ref('' || '模板');
+  const pageShow = ref(1);
+  const pageColor = ref(1);
+  const pagePic = ref(0);
+  const pageColorPicker = ref('#f5f5f5');
+  const pageTabVal = ref('0');
+  const pagePicUrl = ref('');
+  const returnAddress = ref('');
+  const titleColor = ref('#000000');
+  const titleBgColor = ref('#fff');
+  // 已知组件列表默认数据 数组
+  const defaultArray = ref({});
+  const bottomMenuRef = ref(JSON.parse(JSON.stringify(bottomMenu)));
+  const pageFooterRef = ref(JSON.parse(JSON.stringify(pageFooter)));
+
+  function FOOTER(data) {
+    if (pageFooterRef.value.status) pageFooterRef.value.status.title = data.title;
+    pageFooterRef.value.menuList[2] = data.name;
+  }
+  function UPBOTTOMMENU(data) {
+    bottomMenuRef.value = data;
+  }
+  /**
+   * 隐藏组件，更新数据显示值
+   * @constructor
+   */
+  function UPDATESHOW(data) {
+    defaultArray.value[data.num].isHide = !defaultArray.value[data.num].isHide;
+  }
+  /**
+   * @description 默认配置push到数组里面
+   * @param {Object} data
+   * 把默认数据添加到默认数组里面，解耦重复组件公用一条配置的问题
+   */
+  function ADDARRAY(data) {
+    data.val.id = 'id' + data.val.timestamp;
+    defaultArray.value[data.num] = data.val;
+  }
+  /**
+   * @description 删除列表第几个默认数据
+   * @param {Object} data 数据
+   */
+  function DELETEARRAY(data) {
+    let tempObj = delete defaultArray.value[data.num];
+  }
+  /**
+   * @description 删除列表第几个默认数据
+   * @param {Object} data 数据
+   */
+  function ARRAYREAST(data) {
+    let tempObj = delete defaultArray.value[data];
+  }
+  /**
+   * @description 数组排序
+   * @param {Object} data 位置index记录
+   */
+  function defaultArraySort(data) {
+    let newArr = objToArr(defaultArray.value);
+    let sortArr = [];
+    let newObj = {};
+    function objToArr(data) {
+      let obj = Object.keys(data);
+      let m = obj.map((key) => data[key]);
+      return m;
+    }
+    function swapArray(arr, index1, index2) {
+      let oldObj = {};
       let newObj = {};
-      function objToArr(data) {
-        let obj = Object.keys(data);
-        let m = obj.map((key) => data[key]);
-        return m;
-      }
-      function swapArray(arr, index1, index2) {
-        let oldObj = {};
-        let newObj = {};
-        let active = 0;
-        arr.forEach((el, index) => {
-          if (!el.id) {
-            el.id = 'id' + el.timestamp;
+      let active = 0;
+      arr.forEach((el, index) => {
+        if (!el.id) {
+          el.id = 'id' + el.timestamp;
+        }
+        data.list.forEach((item, j) => {
+          if (el.id == item.id) {
+            el.timestamp = item.num;
           }
-          data.list.forEach((item, j) => {
-            if (el.id == item.id) {
-              el.timestamp = item.num;
-            }
-          });
         });
-        return arr;
-      }
-      if (data.oldIndex != undefined) {
-        sortArr = JSON.parse(JSON.stringify(swapArray(newArr, data.newIndex, data.oldIndex)));
-      } else {
-        newArr.splice(data.newIndex, 0, data.element.data().defaultConfig);
-        sortArr = JSON.parse(JSON.stringify(swapArray(newArr, 0, 0)));
-      }
-      for (let i = 0; i < sortArr.length; i++) {
-        newObj[sortArr[i].timestamp] = sortArr[i];
-      }
-      state.defaultArray = Object.assign({}, newObj);
-    },
-    /**
-     * @description 更新数组某一组数据
-     * @param {Object} state vuex state
-     * @param {Object} data
-     */
-    UPDATEARR(state, data) {
-      for (var k in state.defaultArray) {
-        if (state.defaultArray[k].id == data.val.id) {
-          state.defaultArray[k] = data.val;
+      });
+      return arr;
+    }
+    if (data.oldIndex != undefined) {
+      sortArr = JSON.parse(JSON.stringify(swapArray(newArr, data.newIndex, data.oldIndex)));
+    } else {
+      // 新增组件：Vue2 时代通过 data.element.data().defaultConfig 获取组件默认配置，
+      // 迁移到 <script setup> 后组件不再暴露 data() 方法。这里以组件元数据构建
+      // 最小初始配置插入，组件 onMounted 时 setConfig 会用本地 defaultConfig 补全其余字段。
+      const el = data.element || {};
+      const initialConfig = {
+        name: el.defaultName || el.name,
+        cname: el.cname,
+        timestamp: el.num,
+        id: el.id || 'id' + el.num,
+        isHide: false,
+      };
+      newArr.splice(data.newIndex, 0, initialConfig);
+      sortArr = JSON.parse(JSON.stringify(swapArray(newArr, 0, 0)));
+    }
+    for (let i = 0; i < sortArr.length; i++) {
+      newObj[sortArr[i].timestamp] = sortArr[i];
+    }
+    defaultArray.value = Object.assign({}, newObj);
+  }
+  /**
+   * @description 更新数组某一组数据
+   * @param {Object} data
+   */
+  function UPDATEARR(data) {
+    const val = data.val || data.data;
+    if (!val) return;
+
+    let targetKey = data.num !== undefined ? data.num : val.timestamp;
+    if (targetKey === undefined || !defaultArray.value[targetKey]) {
+      for (var k in defaultArray.value) {
+        if (defaultArray.value[k].id == val.id) {
+          targetKey = k;
+          break;
         }
       }
-      let value = Object.assign({}, state.defaultArray);
-      state.defaultArray = value;
-    },
-    /**
-     * @description 保存组件名称
-     * @param {Object} state vuex state
-     * @param {string} data
-     */
-    SETCONFIGNAME(state, name) {
-      state.configName = name;
-    },
-    /**
-     * @description 默认组件清空
-     * @param {Object} state vuex state
-     * @param {string} data
-     */
-    SETEMPTY(state, name) {
-      state.defaultArray = {};
-    },
-    DEFAULTARRAY(state, data) {
-      state.defaultArray = data || {};
-    },
-    UPTITLE(state, val) {
-      state.pageTitle = val;
-    },
-    UPNAME(state, val) {
-      state.pageName = val;
-    },
-    UPSHOW(state, val) {
-      state.pageShow = val;
-    },
-    UPCOLOR(state, val) {
-      state.pageColor = val;
-    },
-    UPPIC(state, val) {
-      state.pagePic = val;
-    },
-    UPPICKER(state, val) {
-      state.pageColorPicker = val;
-    },
-    UPRADIO(state, val) {
-      state.pageTabVal = val;
-    },
-    UPPICURL(state, val) {
-      state.pagePicUrl = val;
-    },
-    UPPReturnAddress(state, val) {
-      state.returnAddress = val;
-    },
-    UPPTitleColor(state, val) {
-      state.titleColor = val;
-    },
-    UPPTitleBgColor(state, val) {
-      state.titleBgColor = val;
-    },
-    /**
-     * @description 更新foot菜单配置
-     * @param {Object} state vuex state
-     * @param {string} data
-     */
-    footUpdata(state, data) {
-      state.pageFooter.menuList = [];
-      state.pageFooter.menuList = data;
-    },
-    /**
-     * @description 更新foot自定义开关
-     * @param {Object} state vuex state
-     * @param {string} data
-     */
-    footStatus(state, data) {
-      if (state.pageFooter.status) state.pageFooter.status.status = data;
-    },
-    footType(state, data) {
-      state.pageFooter.navConfig.tabVal = data;
-    },
-    footBottom(state, data) {
-      state.pageFooter.mbConfig.val = data;
-    },
-    /**
-     * @description 更新foot配置
-     * @param {Object} state vuex state
-     * @param {string} data
-     */
-    footPageUpdata(state, data) {
-      state.pageFooter = data;
-    },
-    bottomMenuUpdata(state, data) {
-      state.bottomMenu = data;
-    },
-    RESET_BOTTOM_MENU(state) {
-      state.bottomMenu = JSON.parse(JSON.stringify(bottomMenu));
-    },
-    /**
-     * @description 更新title配置
-     * @param {Object} state vuex state
-     * @param {string} data
-     */
-    titleUpdata(state, data) {
-      state.pageTitle = data;
-    },
-    /**
-     * @description 更新name配置
-     * @param {Object} state vuex state
-     * @param {string} data
-     */
-    nameUpdata(state, data) {
-      state.pageName = data;
-    },
-    //
-    showUpdata(state, data) {
-      state.pageShow = data;
-    },
-    colorUpdata(state, data) {
-      state.pageColor = data;
-    },
-    picUpdata(state, data) {
-      state.pagePic = data;
-    },
-    /**
-     * @description 更新页面背景色
-     * @param {Object} state vuex state
-     * @param {string} data
-     */
-    pickerUpdata(state, data) {
-      state.pageColorPicker = data;
-    },
-    radioUpdata(state, data) {
-      state.pageTabVal = data;
-    },
-    picurlUpdata(state, data) {
-      state.pagePicUrl = data;
-    },
-    /**
-     * 更新页面设置中返回地址
-     * @param state
-     * @param data
-     */
-    returnAddressUpdata(state, data) {
-      state.returnAddress = data;
-    },
-    /**
-     * 更新页面设置中顶部颜色
-     * @param state
-     * @param data
-     */
-    titleBgColorUpdata(state, data) {
-      state.titleBgColor = data;
-    },
-    /**
-     * 更新页面设置中顶部颜色
-     * @param state
-     * @param data
-     */
-    titleColorUpdata(state, data) {
-      state.titleColor = data;
-    },
-  },
-  actions: {
-    getData({ commit }, data) {},
-  },
-};
+    }
+    if (targetKey === undefined) return;
+
+    const oldVal = defaultArray.value[targetKey] || {};
+    const nextVal = Object.assign({}, oldVal, val);
+    nextVal.timestamp = targetKey;
+    if (!nextVal.id) nextVal.id = 'id' + nextVal.timestamp;
+
+    if (JSON.stringify(oldVal) === JSON.stringify(nextVal)) {
+      return;
+    }
+    defaultArray.value = Object.assign({}, defaultArray.value, {
+      [targetKey]: nextVal,
+    });
+  }
+  /**
+   * @description 保存组件名称
+   * @param {string} name
+   */
+  function SETCONFIGNAME(name) {
+    configName.value = name;
+  }
+  /**
+   * @description 默认组件清空
+   * @param {string} name
+   */
+  function SETEMPTY(name) {
+    defaultArray.value = {};
+  }
+  function DEFAULTARRAY(data) {
+    defaultArray.value = data || {};
+  }
+  function UPTITLE(val) {
+    pageTitle.value = val;
+  }
+  function UPNAME(val) {
+    pageName.value = val;
+  }
+  function UPSHOW(val) {
+    pageShow.value = val;
+  }
+  function UPCOLOR(val) {
+    pageColor.value = val;
+  }
+  function UPPIC(val) {
+    pagePic.value = val;
+  }
+  function UPPICKER(val) {
+    pageColorPicker.value = val;
+  }
+  function UPRADIO(val) {
+    pageTabVal.value = val;
+  }
+  function UPPICURL(val) {
+    pagePicUrl.value = val;
+  }
+  function UPPReturnAddress(val) {
+    returnAddress.value = val;
+  }
+  function UPPTitleColor(val) {
+    titleColor.value = val;
+  }
+  function UPPTitleBgColor(val) {
+    titleBgColor.value = val;
+  }
+  /**
+   * @description 更新foot菜单配置
+   * @param {string} data
+   */
+  function footUpdata(data) {
+    pageFooterRef.value.menuList = [];
+    pageFooterRef.value.menuList = data;
+  }
+  /**
+   * @description 更新foot自定义开关
+   * @param {string} data
+   */
+  function footStatus(data) {
+    if (pageFooterRef.value.status) pageFooterRef.value.status.status = data;
+  }
+  function footType(data) {
+    pageFooterRef.value.navConfig.tabVal = data;
+  }
+  function footBottom(data) {
+    pageFooterRef.value.mbConfig.val = data;
+  }
+  /**
+   * @description 更新foot配置
+   * @param {string} data
+   */
+  function footPageUpdata(data) {
+    pageFooterRef.value = data;
+  }
+  function bottomMenuUpdata(data) {
+    bottomMenuRef.value = data;
+  }
+  function RESET_BOTTOM_MENU() {
+    bottomMenuRef.value = JSON.parse(JSON.stringify(bottomMenu));
+  }
+  function RESET_PAGE_FOOTER() {
+    pageFooterRef.value = JSON.parse(JSON.stringify(pageFooter));
+  }
+  /**
+   * @description 更新title配置
+   * @param {string} data
+   */
+  function titleUpdata(data) {
+    pageTitle.value = data;
+  }
+  /**
+   * @description 更新name配置
+   * @param {string} data
+   */
+  function nameUpdata(data) {
+    pageName.value = data;
+  }
+  //
+  function showUpdata(data) {
+    pageShow.value = data;
+  }
+  function colorUpdata(data) {
+    pageColor.value = data;
+  }
+  function picUpdata(data) {
+    pagePic.value = data;
+  }
+  /**
+   * @description 更新页面背景色
+   * @param {string} data
+   */
+  function pickerUpdata(data) {
+    pageColorPicker.value = data;
+  }
+  function radioUpdata(data) {
+    pageTabVal.value = data;
+  }
+  function picurlUpdata(data) {
+    pagePicUrl.value = data;
+  }
+  /**
+   * 更新页面设置中返回地址
+   * @param data
+   */
+  function returnAddressUpdata(data) {
+    returnAddress.value = data;
+  }
+  /**
+   * 更新页面设置中顶部颜色
+   * @param data
+   */
+  function titleBgColorUpdata(data) {
+    titleBgColor.value = data;
+  }
+  /**
+   * 更新页面设置中顶部颜色
+   * @param data
+   */
+  function titleColorUpdata(data) {
+    titleColor.value = data;
+  }
+  function getData(data) {}
+
+  return {
+    configName,
+    pageTitle,
+    pageName,
+    pageShow,
+    pageColor,
+    pagePic,
+    pageColorPicker,
+    pageTabVal,
+    pagePicUrl,
+    returnAddress,
+    titleColor,
+    titleBgColor,
+    defaultArray,
+    bottomMenu: bottomMenuRef,
+    pageFooter: pageFooterRef,
+    FOOTER,
+    UPBOTTOMMENU,
+    UPDATESHOW,
+    ADDARRAY,
+    DELETEARRAY,
+    ARRAYREAST,
+    defaultArraySort,
+    UPDATEARR,
+    SETCONFIGNAME,
+    SETEMPTY,
+    DEFAULTARRAY,
+    UPTITLE,
+    UPNAME,
+    UPSHOW,
+    UPCOLOR,
+    UPPIC,
+    UPPICKER,
+    UPRADIO,
+    UPPICURL,
+    UPPReturnAddress,
+    UPPTitleColor,
+    UPPTitleBgColor,
+    footUpdata,
+    footStatus,
+    footType,
+    footBottom,
+    footPageUpdata,
+    bottomMenuUpdata,
+    RESET_BOTTOM_MENU,
+    RESET_PAGE_FOOTER,
+    titleUpdata,
+    nameUpdata,
+    showUpdata,
+    colorUpdata,
+    picUpdata,
+    pickerUpdata,
+    radioUpdata,
+    picurlUpdata,
+    returnAddressUpdata,
+    titleBgColorUpdata,
+    titleColorUpdata,
+    getData,
+  };
+});

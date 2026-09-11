@@ -8,5 +8,9 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import Vue from 'vue';
-export default new Vue();
+import mitt from 'mitt';
+
+// Vue3 中 Vue 实例不再支持 $on/$emit 事件总线，改用 mitt 提供。
+// 用法：import bus from '@/utils/bus'; bus.on('xxx', cb); bus.emit('xxx', data);
+const bus = mitt();
+export default bus;

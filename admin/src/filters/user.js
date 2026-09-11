@@ -11,22 +11,6 @@
 //会员过滤器
 
 /**
- * 等级
- */
-export function levelFilter(status) {
-  if (!status) {
-    return '';
-  }
-  let arrayList = JSON.parse(localStorage.getItem('single-admin-levelKey'));
-  let array = arrayList.filter((item) => status === item.id);
-  if (array.length) {
-    return array[0].name;
-  } else {
-    return '';
-  }
-}
-
-/**
  * 用户类型
  */
 export function typeFilter(status) {

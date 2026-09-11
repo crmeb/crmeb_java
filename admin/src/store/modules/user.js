@@ -8,87 +8,86 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import { login, logout, getInfo } from '@/api/user';
+import { defineStore } from 'pinia';
+import { ref, reactive } from 'vue';
+import { login as loginApi, logout, getInfo as getInfoApi } from '@/api/user';
 import { getToken, setToken, removeToken } from '@/utils/auth';
 import router, { resetRouter } from '@/router';
 import { isLoginApi } from '@/api/sms';
 import Cookies from 'js-cookie';
-import { Loading } from 'element-ui';
+import { ElLoading } from '@/utils/elementPlusFeedback';
 import * as roleApi from '@/api/roleApi.js';
 import { formatFlatteningRoutes } from '@/utils/system.js';
-import * as Auth from '@/libs/wechat';
+import { useTagsViewStore } from './tagsView';
 
-const state = {
-  token: getToken(),
-  name: '',
-  avatar: '',
-  introduction: '',
-  roles: [],
-  isLogin: Cookies.get('isLogin'),
-  permissions: [],
-  captcha: {
+export const useUserStore = defineStore('user', () => {
+  const token = ref(getToken());
+  const name = ref('');
+  const avatar = ref('');
+  const introduction = ref('');
+  const roles = ref([]);
+  const isLogin = ref(Cookies.get('isLogin'));
+  const permissions = ref([]);
+  const captcha = reactive({
     captchaVerification: '',
     secretKey: '',
     token: '',
-  }, //滑块验证token
+  });
   // 菜单数据
-  menuList: JSON.parse(localStorage.getItem('MerPlatAdmin_MenuList')) || [],
-  oneLvMenus: [],
-  oneLvRoutes: JSON.parse(localStorage.getItem('MerPlatAdmin_oneLvRoutes')) || [],
-  childMenuList: [],
-};
+  const menuList = ref(JSON.parse(localStorage.getItem('MerPlatAdmin_MenuList')) || []);
+  const oneLvMenus = ref([]);
+  const oneLvRoutes = ref(JSON.parse(localStorage.getItem('MerPlatAdmin_oneLvRoutes')) || []);
+  const childMenuList = ref([]);
 
-const mutations = {
-  SET_TOKEN: (state, token) => {
-    state.token = token;
-  },
-  SET_ISLOGIN: (state, isLogin) => {
-    state.isLogin = isLogin;
-    Cookies.set(isLogin);
-  },
-  SET_INTRODUCTION: (state, introduction) => {
-    state.introduction = introduction;
-  },
-  SET_NAME: (state, name) => {
-    state.name = name;
-  },
-  SET_AVATAR: (state, avatar) => {
-    state.avatar = avatar;
-  },
-  SET_ROLES: (state, roles) => {
-    state.roles = roles;
-  },
-  SET_PERMISSIONS: (state, permissions) => {
-    state.permissions = permissions;
-  },
-  SET_CAPTCHA: (state, captcha) => {
-    state.captcha = captcha;
-  },
-  SET_MENU_LIST: (state, menuList) => {
-    state.menuList = menuList;
-  },
-  setOneLvMenus(state, oneLvMenus) {
-    state.oneLvMenus = oneLvMenus;
-  },
-  setOneLvRoute(state, oneLvRoutes) {
-    state.oneLvRoutes = oneLvRoutes;
-  },
-  childMenuList(state, list) {
-    state.childMenuList = list;
-  },
-};
+  // mutations
+  function SET_TOKEN(val) {
+    token.value = val;
+  }
+  function SET_ISLOGIN(val) {
+    isLogin.value = val;
+    Cookies.set(val);
+  }
+  function SET_INTRODUCTION(val) {
+    introduction.value = val;
+  }
+  function SET_NAME(val) {
+    name.value = val;
+  }
+  function SET_AVATAR(val) {
+    avatar.value = val;
+  }
+  function SET_ROLES(val) {
+    roles.value = val;
+  }
+  function SET_PERMISSIONS(val) {
+    permissions.value = val;
+  }
+  function SET_CAPTCHA(val) {
+    Object.assign(captcha, val);
+  }
+  function SET_MENU_LIST(list) {
+    menuList.value = list;
+  }
+  function setOneLvMenus(list) {
+    oneLvMenus.value = list;
+  }
+  function setOneLvRoute(list) {
+    oneLvRoutes.value = list;
+  }
+  function setChildMenuList(list) {
+    childMenuList.value = list;
+  }
 
-const actions = {
   // user login
-  login({ commit }, userInfo) {
+  function login(userInfo) {
     const { account, pwd, key, code, wxCode } = userInfo;
-    Loading.service();
+    ElLoading.service();
     return new Promise((resolve, reject) => {
-      login(userInfo)
+      loginApi(userInfo)
         .then((data) => {
-          let loadingInstance = Loading.service();
+          let loadingInstance = ElLoading.service();
           loadingInstance.close();
-          commit('SET_TOKEN', data.token);
+          SET_TOKEN(data.token);
           Cookies.set('JavaInfo', JSON.stringify(data));
           setToken(data.token);
           resolve();
@@ -97,99 +96,96 @@ const actions = {
           reject(error);
         });
     });
-  },
+  }
 
-  // 短信是否登录
-  isLogin({ commit }, userInfo) {
+  // 短信是否登录（原 Vuex action 名 isLogin 与 state.isLogin 同名，Pinia 中改名）
+  function checkIsLogin() {
     return new Promise((resolve, reject) => {
       isLoginApi()
         .then(async (res) => {
-          commit('SET_ISLOGIN', res.isLogin);
+          SET_ISLOGIN(res.isLogin);
           resolve(res);
         })
         .catch((res) => {
-          commit('SET_ISLOGIN', false);
+          SET_ISLOGIN(false);
           reject(res);
         });
     });
-  },
+  }
 
   // get user info
-  getInfo({ commit, state }) {
+  function getInfo() {
     return new Promise((resolve, reject) => {
-      getInfo(state.token)
+      getInfoApi(token.value)
         .then((data) => {
           if (!data) {
             reject('Verification failed, please Login again.');
           }
-          const { roles, account } = data;
+          const { roles: _roles, account } = data;
           // roles must be a non-empty array
-          if (!roles || roles.length <= 0) {
+          if (!_roles || _roles.length <= 0) {
             reject('getInfo: roles must be a non-null array!');
           }
 
-          commit('SET_ROLES', roles);
-          // commit('SET_ROLES', ['admin'])
-          commit('SET_NAME', account);
-          // commit('SET_AVATAR', avatar)
-          commit('SET_AVATAR', 'http://kaifa.crmeb.net/system/images/admin_logo.png');
-          commit('SET_INTRODUCTION', 'CRMEB admin');
-          commit('SET_PERMISSIONS', data.permissionsList); //权限标识
+          SET_ROLES(_roles);
+          SET_NAME(account);
+          SET_AVATAR('http://kaifa.crmeb.net/system/images/admin_logo.png');
+          SET_INTRODUCTION('CRMEB admin');
+          SET_PERMISSIONS(data.permissionsList); //权限标识
           resolve(data);
         })
         .catch((error) => {
           reject(error);
         });
     });
-  },
+  }
 
   // user logout
-  handleLogout({ commit, state, dispatch }) {
-    Loading.service();
+  function handleLogout() {
+    ElLoading.service();
     return new Promise((resolve, reject) => {
-      logout(state.token)
+      logout(token.value)
         .then(() => {
-          let loadingInstance = Loading.service();
+          let loadingInstance = ElLoading.service();
           loadingInstance.close();
-          commit('SET_TOKEN', '');
-          commit('SET_ROLES', []);
-          commit('SET_PERMISSIONS', []);
+          SET_TOKEN('');
+          SET_ROLES([]);
+          SET_PERMISSIONS([]);
           removeToken();
           resetRouter();
-          // localStorage.clear();
-          Cookies.remove('storeStaffList');
           Cookies.remove('JavaInfo');
           sessionStorage.removeItem('token');
           // reset visited views and cached views
-          // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2485
-          dispatch('tagsView/delAllViews', null, { root: true });
+          useTagsViewStore().delAllViews(null);
           resolve();
         })
         .catch((error) => {
           reject(error);
         });
     });
-  },
+  }
 
   // remove token
-  resetToken({ commit }) {
+  function resetToken() {
     return new Promise((resolve) => {
-      commit('SET_TOKEN', '');
-      commit('SET_ROLES', []);
+      SET_TOKEN('');
+      SET_ROLES([]);
       removeToken();
       resolve();
     });
-  },
-  // 设置token
-  setToken({ commit }, state) {
+  }
+
+  // 设置token（注意：原代码存在引用未定义 data 的 bug，此处保持原行为用 state 入参）
+  function setTokenState(state) {
     return new Promise((resolve) => {
-      commit('SET_TOKEN', state.token);
+      SET_TOKEN(state.token);
       Cookies.set('JavaInfo', JSON.stringify(state));
-      setToken(data.token);
+      setToken(state.token);
       resolve();
     });
-  },
-  getMenus({ commit }) {
+  }
+
+  function getMenus() {
     function formatTwoStageRoutes(arr) {
       if (arr.length <= 0) return false;
       const newArr = [];
@@ -198,7 +194,6 @@ const actions = {
         if (v && v.meta && v.meta.keepAlive) {
           newArr.push({ ...v });
           cacheList.push(v.name);
-          this.$store.dispatch('keepAliveNames/setCacheKeepAlive', cacheList);
         }
       });
       return newArr;
@@ -207,33 +202,59 @@ const actions = {
     return new Promise(async (resolve, reject) => {
       let accessRoutes = await roleApi.menuListApi();
       accessRoutes = replaceChildListWithChildren(accessRoutes);
-      //处理移动端路由
-      !Auth.isPhone()
-        ? (accessRoutes = accessRoutes.filter((item) => item.path !== '/javaMobile'))
-        : (accessRoutes = accessRoutes.filter((item) => item.path === '/javaMobile'));
-      // let accessRoutes = formatRoutes(menusAll);
-      // const accessRoutes = await dispatch('permission/generateRoutes', roles, { root: true });
-      commit('SET_MENU_LIST', accessRoutes);
+      SET_MENU_LIST(accessRoutes);
       localStorage.setItem('MerPlatAdmin_MenuList', JSON.stringify(accessRoutes));
       let arr = formatFlatteningRoutes(router.options.routes);
       formatTwoStageRoutes(arr);
       let routes = formatFlatteningRoutes(accessRoutes);
       localStorage.setItem('MerPlatAdmin_oneLvRoutes', JSON.stringify(routes));
-      commit('setOneLvMenus', arr);
-      commit('setOneLvRoute', routes);
+      setOneLvMenus(arr);
+      setOneLvRoute(routes);
       resolve(resolve);
     });
-  },
-};
+  }
+
+  return {
+    token,
+    name,
+    avatar,
+    introduction,
+    roles,
+    isLogin,
+    permissions,
+    captcha,
+    menuList,
+    oneLvMenus,
+    oneLvRoutes,
+    childMenuList,
+    SET_TOKEN,
+    SET_ISLOGIN,
+    SET_INTRODUCTION,
+    SET_NAME,
+    SET_AVATAR,
+    SET_ROLES,
+    SET_PERMISSIONS,
+    SET_CAPTCHA,
+    SET_MENU_LIST,
+    setOneLvMenus,
+    setOneLvRoute,
+    setChildMenuList,
+    login,
+    checkIsLogin,
+    getInfo,
+    handleLogout,
+    resetToken,
+    setToken: setTokenState,
+    getMenus,
+  };
+});
 
 // 递归函数，用于替换 childList 为 children
 function replaceChildListWithChildren(data) {
   return data.map((item) => {
     // 检查是否存在 childList 字段
     if (item.childList) {
-      // 递归处理 childList 中的每个子对象
       const children = replaceChildListWithChildren(item.childList);
-      // 创建一个新的对象，将 childList 替换为 children
       const title = item.name;
       const path = item.component;
       return {
@@ -241,20 +262,11 @@ function replaceChildListWithChildren(data) {
         children,
         title,
         path,
-        // 删除原来的 childList 字段
         childList: undefined,
         name: undefined,
         component: undefined,
       };
     }
-    // 如果不存在 childList 字段，直接返回原对象
     return item;
   });
 }
-
-export default {
-  namespaced: true,
-  state,
-  mutations,
-  actions,
-};

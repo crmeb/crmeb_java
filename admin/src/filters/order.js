@@ -69,7 +69,6 @@ export function payTypeFilter(status) {
 export function orderTypeFilter(status) {
   const statusMap = {
     1: '普通订单',
-    2: '核销订单',
   };
   return statusMap[status];
 }

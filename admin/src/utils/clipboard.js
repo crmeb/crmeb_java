@@ -8,11 +8,11 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import Vue from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import Clipboard from 'clipboard';
 
 function clipboardSuccess() {
-  Vue.prototype.$message({
+  ElMessage({
     message: 'Copy successfully',
     type: 'success',
     duration: 1500,
@@ -20,7 +20,7 @@ function clipboardSuccess() {
 }
 
 function clipboardError() {
-  Vue.prototype.$message({
+  ElMessage({
     message: 'Copy failed',
     type: 'error',
   });

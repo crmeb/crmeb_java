@@ -4,6 +4,11 @@ import { getToken } from '@/utils/auth';
 let confGlobal;
 let someSpanIsNot24;
 
+function normalizeElementSize(size) {
+  const sizeMap = { medium: 'default', mini: 'small' };
+  return sizeMap[size] || size;
+}
+
 export function dialogWrapper(str) {
   return `<el-dialog v-bind="$attrs" v-on="$listeners" @open="onOpen"  @close="onClose" title="Dialog Titile">
     ${str}
@@ -40,9 +45,9 @@ function buildFormTemplate(scheme, child, type) {
     labelPosition = `label-position="${scheme.labelPosition}"`;
   }
   const disabled = scheme.disabled ? `:disabled="${scheme.disabled}"` : '';
-  let str = `<el-form ref="${scheme.formRef}" :model="${scheme.formModel}" :rules="${scheme.formRules}" size="${
-    scheme.size
-  }" ${disabled} label-width="${scheme.labelWidth}px" ${labelPosition}>
+  let str = `<el-form ref="${scheme.formRef}" :model="${scheme.formModel}" :rules="${scheme.formRules}" size="${normalizeElementSize(
+    scheme.size,
+  )}" ${disabled} label-width="${scheme.labelWidth}px" ${labelPosition}>
       ${child}
       ${buildFromBtns(scheme, type)}
     </el-form>`;
@@ -121,7 +126,7 @@ const tags = {
     const type = el.type ? `type="${el.type}"` : '';
     const icon = el.icon ? `icon="${el.icon}"` : '';
     const round = el.round ? 'round' : '';
-    const size = el.size ? `size="${el.size}"` : '';
+    const size = el.size ? `size="${normalizeElementSize(el.size)}"` : '';
     const plain = el.plain ? 'plain' : '';
     const circle = el.circle ? 'circle' : '';
     let child = buildElButtonChild(el);
@@ -169,7 +174,7 @@ const tags = {
   },
   'el-radio-group': (el) => {
     const { tag, disabled, vModel } = attrBuilder(el);
-    const size = `size="${el.size}"`;
+    const size = `size="${normalizeElementSize(el.size)}"`;
     let child = buildElRadioGroupChild(el);
 
     if (child) child = `\n${child}\n`; // 换行
@@ -177,7 +182,7 @@ const tags = {
   },
   'el-checkbox-group': (el) => {
     const { tag, disabled, vModel } = attrBuilder(el);
-    const size = `size="${el.size}"`;
+    const size = `size="${normalizeElementSize(el.size)}"`;
     const min = el.min ? `:min="${el.min}"` : '';
     const max = el.max ? `:max="${el.max}"` : '';
     let child = buildElCheckboxGroupChild(el);
@@ -252,7 +257,7 @@ const tags = {
   },
   'el-color-picker': (el) => {
     const { tag, disabled, vModel } = attrBuilder(el);
-    const size = `size="${el.size}"`;
+    const size = `size="${normalizeElementSize(el.size)}"`;
     const showAlpha = el['show-alpha'] ? 'show-alpha' : '';
     const colorFormat = el['color-format'] ? `color-format="${el['color-format']}"` : '';
 
@@ -270,7 +275,7 @@ const tags = {
     const beforeUpload = `:before-upload="${el.__vModel__}BeforeUpload"`;
     const fileList = `:file-list="${el.__vModel__}fileList"`;
     const ref = `ref="${el.__vModel__}"`;
-    const headers = { 'Authori-zation': getToken() };
+    const headers = { Authorization: `Bearer ${getToken()}` };
     const data = el.data ? 'data' : '';
     let child = buildElUploadChild(el);
 
@@ -376,7 +381,7 @@ function buildElCheckboxGroupChild(scheme) {
     const tag = config.optionType === 'button' ? 'el-checkbox-button' : 'el-checkbox';
     const border = config.border ? 'border' : '';
     children.push(
-      `<${tag} v-for="(item, index) in ${scheme.__vModel__}Options" :key="index" :label="item.value" :disabled="item.disabled" ${border}>{{item.label}}</${tag}>`,
+      `<${tag} v-for="(item, index) in ${scheme.__vModel__}Options" :key="index" :label="item.value" :value="item.value" :disabled="item.disabled" ${border}>{{item.label}}</${tag}>`,
     );
   }
   return children.join('\n');
@@ -387,7 +392,7 @@ function buildElUploadChild(scheme) {
   const list = [];
   const config = scheme.__config__;
   if (scheme['list-type'] === 'picture-card') list.push('<i class="el-icon-plus"></i>');
-  else list.push(`<el-button size="small" type="primary" icon="el-icon-upload">${config.buttonText}</el-button>`);
+  else list.push(`<el-button type="primary" icon="el-icon-upload">${config.buttonText}</el-button>`);
   if (config.showTip)
     list.push(
       `<div slot="tip" class="el-upload__tip">只能上传不超过 ${config.fileSize}${config.sizeUnit} 的${scheme.accept}文件</div>`,
@@ -400,7 +405,7 @@ function buildElUploadChild(scheme) {
 //   const list = []
 //   const config = scheme.__config__
 //   if (scheme['list-type'] === 'picture-card') list.push('<i class="el-icon-plus"></i>')
-//   else list.push(`<el-button size="small" type="primary" icon="el-icon-upload">${config.buttonText}</el-button>`)
+//   else list.push(`<el-button type="primary" icon="el-icon-upload">${config.buttonText}</el-button>`)
 //   if (config.showTip) list.push(`<div slot="tip" class="el-upload__tip">只能上传不超过 ${config.fileSize}${config.sizeUnit} 的${scheme.accept}文件</div>`)
 //   return list.join('\n')
 // }

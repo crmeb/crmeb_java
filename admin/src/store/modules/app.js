@@ -8,59 +8,58 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
+import { defineStore } from 'pinia';
+import { reactive, ref } from 'vue';
 import Cookies from 'js-cookie';
 
-const state = {
-  sidebar: {
+export const useAppStore = defineStore('app', () => {
+  const sidebar = reactive({
     opened: Cookies.get('sidebarStatus') ? !!+Cookies.get('sidebarStatus') : true,
     withoutAnimation: false,
-  },
-  device: 'desktop',
-  size: Cookies.get('size') || 'mini',
-};
+  });
+  const device = ref('desktop');
+  // 尺寸配置统一归一到 Element Plus default。
+  const sizeMap = { medium: 'default', mini: 'default', small: 'default', large: 'default' };
+  const normalizeSize = (sizeVal) => sizeMap[sizeVal] || sizeVal || 'default';
+  const size = ref(normalizeSize(Cookies.get('size')));
 
-const mutations = {
-  TOGGLE_SIDEBAR: (state) => {
-    state.sidebar.opened = !state.sidebar.opened;
-    state.sidebar.withoutAnimation = false;
-    if (state.sidebar.opened) {
+  // TOGGLE_SIDEBAR
+  function toggleSideBar() {
+    sidebar.opened = !sidebar.opened;
+    sidebar.withoutAnimation = false;
+    if (sidebar.opened) {
       Cookies.set('sidebarStatus', 1);
     } else {
       Cookies.set('sidebarStatus', 0);
     }
-  },
-  CLOSE_SIDEBAR: (state, withoutAnimation) => {
+  }
+
+  // CLOSE_SIDEBAR
+  function closeSideBar({ withoutAnimation }) {
     Cookies.set('sidebarStatus', 0);
-    state.sidebar.opened = false;
-    state.sidebar.withoutAnimation = withoutAnimation;
-  },
-  TOGGLE_DEVICE: (state, device) => {
-    state.device = device;
-  },
-  SET_SIZE: (state, size) => {
-    state.size = size;
-    Cookies.set('size', size);
-  },
-};
+    sidebar.opened = false;
+    sidebar.withoutAnimation = withoutAnimation;
+  }
 
-const actions = {
-  toggleSideBar({ commit }) {
-    commit('TOGGLE_SIDEBAR');
-  },
-  closeSideBar({ commit }, { withoutAnimation }) {
-    commit('CLOSE_SIDEBAR', withoutAnimation);
-  },
-  toggleDevice({ commit }, device) {
-    commit('TOGGLE_DEVICE', device);
-  },
-  setSize({ commit }, size) {
-    commit('SET_SIZE', size);
-  },
-};
+  // TOGGLE_DEVICE
+  function toggleDevice(deviceVal) {
+    device.value = deviceVal;
+  }
 
-export default {
-  namespaced: true,
-  state,
-  mutations,
-  actions,
-};
+  // SET_SIZE
+  function setSize(sizeVal) {
+    const mapped = normalizeSize(sizeVal);
+    size.value = mapped;
+    Cookies.set('size', mapped);
+  }
+
+  return {
+    sidebar,
+    device,
+    size,
+    toggleSideBar,
+    closeSideBar,
+    toggleDevice,
+    setSize,
+  };
+});

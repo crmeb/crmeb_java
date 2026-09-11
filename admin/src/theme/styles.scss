@@ -277,7 +277,7 @@ body {
   width: 100%;
 }
 
-.el-dialog ::v-deep .form-create .el-button {
+.el-dialog :deep(.form-create .el-button) {
   float: right;
 }
 
@@ -785,7 +785,7 @@ body {
   background-color: rgba(255, 255, 255, 1) !important;
   backdrop-filter: blur(4px);
 
-  ::v-deep .ivu-card-body {
+  :deep(.ivu-card-body) {
     padding: 15px 16px 14px;
   }
 
@@ -793,7 +793,7 @@ body {
     margin-bottom: 0;
   }
 
-  ::v-deep .ivu-form-item-content {
+  :deep(.ivu-form-item-content) {
     margin-right: 124px;
     text-align: center;
   }

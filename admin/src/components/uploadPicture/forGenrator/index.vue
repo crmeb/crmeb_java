@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="self-upload">
     <div class="acea-row" v-if="multiple">
       <div
         v-for="(item, index) in imageList"
@@ -26,100 +26,110 @@
         <i class="el-icon-camera cameraIconfont" />
       </div>
     </div>
-    <el-dialog append-to-body :visible.sync="visible" width="896px" :before-close="handleClose" :modal="true">
+    <el-dialog append-to-body v-model="visible" width="1024px" :before-close="handleClose" :modal="true">
       <upload-index v-if="visible" :checkedMore="imageList" :isMore="isMore" @getImage="getImage" />
     </el-dialog>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onBeforeMount } from 'vue';
 import UploadIndex from '@/components/uploadPicture/index.vue';
-export default {
-  name: 'UploadFroms',
-  components: { UploadIndex },
-  props: {
-    value: {},
-    multiple: {
-      type: Boolean,
-      default: false,
-    },
+
+defineOptions({ name: 'UploadFroms' });
+
+const props = defineProps({
+  modelValue: {},
+  multiple: {
+    type: Boolean,
+    default: false,
   },
-  data() {
-    return {
-      image: '',
-      visible: false,
-      callback: function () {},
-      isMore: '',
-      imageList: [],
-    };
-  },
-  beforeMount() {
-    if (this.multiple) {
-      // 接收 v-model 数据
-      if (this.value) {
-        this.imageList = JSON.parse(this.value);
-      }
-    } else {
-      // 接收 v-model 数据
-      if (this.value) {
-        this.image = this.value;
-      }
+});
+
+const emit = defineEmits(['update:modelValue']);
+
+const image = ref('');
+const visible = ref(false);
+const callback = ref(function () {});
+const isMore = ref('');
+const imageList = ref([]);
+const dragging = ref(null);
+
+onBeforeMount(() => {
+  if (props.multiple) {
+    // 接收 v-model 数据
+    if (props.modelValue) {
+      imageList.value = JSON.parse(props.modelValue);
     }
-    // 处理多选
-    this.isMore = this.multiple ? '2' : '1';
-  },
-  methods: {
-    handleClose() {
-      this.visible = false;
-    },
-    getImage(img) {
-      if (this.multiple) {
-        let obj = {};
-        this.imageList = img.reduce((cur, next) => {
-          obj[next.attId] ? '' : (obj[next.attId] = true && cur.push(next));
-          return cur;
-        }, []);
-        this.$emit('input', JSON.stringify(this.imageList));
-      } else {
-        this.image = img[0].sattDir;
-        this.$emit('input', this.image);
-      }
-      this.visible = false;
-    },
-    // 点击商品图
-    modalPicTap(tit, num, i) {
-      this.visible = true;
-    },
-    handleRemove(i) {
-      this.imageList.splice(i, 1);
-      this.$emit('input', JSON.stringify(this.imageList));
-    },
-    // 移动
-    handleDragStart(e, item) {
-      this.dragging = item;
-    },
-    handleDragEnd(e, item) {
-      this.dragging = null;
-    },
-    handleDragOver(e) {
-      e.dataTransfer.dropEffect = 'move';
-    },
-    handleDragEnter(e, item) {
-      e.dataTransfer.effectAllowed = 'move';
-      if (item === this.dragging) {
-        return;
-      }
-      const newItems = [...this.imageList];
-      const src = newItems.indexOf(this.dragging);
-      const dst = newItems.indexOf(item);
-      newItems.splice(dst, 0, ...newItems.splice(src, 1));
-      this.imageList = newItems;
-    },
-  },
-};
+  } else {
+    // 接收 v-model 数据
+    if (props.modelValue) {
+      image.value = props.modelValue;
+    }
+  }
+  // 处理多选
+  isMore.value = props.multiple ? '2' : '1';
+});
+
+function handleClose() {
+  visible.value = false;
+}
+
+function getImage(img) {
+  if (props.multiple) {
+    let obj = {};
+    imageList.value = img.reduce((cur, next) => {
+      obj[next.attId] ? '' : (obj[next.attId] = true && cur.push(next));
+      return cur;
+    }, []);
+    emit('update:modelValue', JSON.stringify(imageList.value));
+  } else {
+    image.value = img[0].sattDir;
+    emit('update:modelValue', image.value);
+  }
+  visible.value = false;
+}
+
+// 点击商品图
+function modalPicTap(tit, num, i) {
+  visible.value = true;
+}
+
+function handleRemove(i) {
+  imageList.value.splice(i, 1);
+  emit('update:modelValue', JSON.stringify(imageList.value));
+}
+
+// 移动
+function handleDragStart(e, item) {
+  dragging.value = item;
+}
+
+function handleDragEnd(e, item) {
+  dragging.value = null;
+}
+
+function handleDragOver(e) {
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(e, item) {
+  e.dataTransfer.effectAllowed = 'move';
+  if (item === dragging.value) {
+    return;
+  }
+  const newItems = [...imageList.value];
+  const src = newItems.indexOf(dragging.value);
+  const dst = newItems.indexOf(item);
+  newItems.splice(dst, 0, ...newItems.splice(src, 1));
+  imageList.value = newItems;
+}
 </script>
 
 <style scoped lang="scss">
+.self-upload {
+  width: 100%;
+}
 .btndel {
   position: absolute;
   z-index: 1;
@@ -140,12 +150,12 @@ export default {
     height: 100%;
   }
 }
-::v-deep .el-dialog__close {
+:deep(.el-dialog__close) {
   position: absolute;
   top: 15px;
   right: 15px;
 }
-::v-deep .el-dialog__header {
+:deep(.el-dialog__header) {
   border-bottom: none;
   padding: 0 !important;
 }

@@ -307,6 +307,7 @@ export function copyConfigApi() {
   return request({
     url: `/admin/store/product/copy/config`,
     method: 'post',
+    silent: true,
   });
 }
 

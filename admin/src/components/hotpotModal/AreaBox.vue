@@ -26,195 +26,219 @@
     <!--编辑框-->
 
     <!-- 修改框 -->
-    <el-dialog title="设置热区" :visible.sync="editBoxShow" width="560px" append-to-body custom-class="hotpot-area-dialog">
+    <el-dialog title="设置热区" v-model="editBoxShow" width="560px" append-to-body custom-class="hotpot-area-dialog">
       <div class="area-set">
         <div class="area-label">热区跳转链接：</div>
         <div class="area-content">
           <el-input v-model="url" readonly placeholder="选择跳转链接">
-            <i class="iconfont iconlianjietubiao" slot="suffix" @click="getLink"> </i>
+            <template #suffix>
+              <i class="iconfont iconlianjietubiao" @click="getLink"> </i>
+            </template>
           </el-input>
         </div>
       </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="editBoxShow = false">取消</el-button>
-        <el-button type="primary" @click="addURL">确定</el-button>
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="editBoxShow = false">取消</el-button>
+          <el-button type="primary" @click="addURL">确定</el-button>
+        </span>
+      </template>
     </el-dialog>
-    <linkaddress ref="linkaddres" @linkUrl="linkUrl"></linkaddress>
-    <img class="right-bottom" src="@/assets/imgs/rightBottom.png" alt="" />
+    <linkaddress ref="linkaddresRef" @linkUrl="linkUrl"></linkaddress>
+    <img class="right-bottom" :src="rightBottomImg" alt="" />
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage, ElMessageBox } from '@/utils/elementPlusFeedback';
 import linkaddress from '@/components/linkaddress';
-export default {
-  name: 'AreaBox',
-  components: { linkaddress },
-  props: {
-    areaInit: {
-      type: Object,
-      default: () => {},
-    },
-    areaDataIndex: {
-      type: Number,
-      default: null,
-    },
-    link: {
-      type: String,
-      default: '',
-    },
-    title: {
-      type: String,
-      default: '',
-    },
-    type: {
-      type: Number,
-      default: -1,
-    },
-    parentWidth: {
-      type: Number,
-      default: 0,
-    },
-    parentHeight: {
-      type: Number,
-      default: 0,
-    },
+import rightBottomImg from '@/assets/imgs/rightBottom.png';
+
+defineOptions({ name: 'AreaBox' });
+
+const props = defineProps({
+  areaInit: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {
-      areaTitle: '',
-      url: '',
-      // box操作初始点
-      move: {
-        // 拖动
-        startX: 0,
-        starY: 0,
-        // 形变
-        start1X: 0,
-        start1Y: 0,
-      },
-      editBoxShow: false,
-      itemIndex: '',
+  areaDataIndex: {
+    type: Number,
+    default: null,
+  },
+  link: {
+    type: String,
+    default: '',
+  },
+  title: {
+    type: String,
+    default: '',
+  },
+  type: {
+    type: Number,
+    default: -1,
+  },
+  parentWidth: {
+    type: Number,
+    default: 0,
+  },
+  parentHeight: {
+    type: Number,
+    default: 0,
+  },
+});
+
+const emit = defineEmits(['delAreaBox', 'addURL']);
+
+const areaTitle = ref('');
+const url = ref('');
+// box操作初始点
+const move = ref({
+  // 拖动
+  startX: 0,
+  starY: 0,
+  // 形变
+  start1X: 0,
+  start1Y: 0,
+});
+const editBoxShow = ref(false);
+const itemIndex = ref('');
+const linkaddresRef = ref(null);
+
+// 拖动/形变临时记录点（原 this.starX/starY/star1X/star1Y）
+const starX = ref(0);
+const starY = ref(0);
+const star1X = ref(0);
+const star1Y = ref(0);
+
+const isSet = computed(() => {
+  return !!props.link;
+});
+
+watch(
+  () => props.title,
+  (val) => {
+    areaTitle.value = val;
+  },
+);
+
+watch(
+  () => props.link,
+  (val) => {
+    url.value = val;
+  },
+);
+
+onMounted(() => {
+  url.value = props.link;
+});
+
+function getLink() {
+  // 打开添加链接的模态框
+  linkaddresRef.value.modals = true;
+}
+
+function handleClose(done) {
+  ElMessageBox.confirm('确认关闭？', '提示', { type: 'warning' })
+    .then((_) => {
+      done();
+    })
+    .catch((_) => {});
+}
+
+// 删除
+function del() {
+  emit('delAreaBox', props.areaDataIndex);
+}
+
+// 结束拖动/变形
+function mouseUp() {
+  document.onmousemove = null;
+}
+
+// 形变开始
+function shapeDown(e) {
+  e.preventDefault();
+
+  star1X.value = e.clientX;
+  star1Y.value = e.clientY;
+  // 获取左部和底部的偏移量
+
+  if (!document.onmousemove) {
+    const initX = props.areaInit.areaWidth;
+    const initY = props.areaInit.areaHeight;
+    document.onmousemove = (ev) => {
+      props.areaInit.areaWidth = initX + ev.clientX - star1X.value;
+      if (props.areaInit.areaWidth < 50) {
+        props.areaInit.areaWidth = 50;
+      }
+      props.areaInit.areaHeight = initY + ev.clientY - star1Y.value;
+      if (props.areaInit.areaHeight < 50) {
+        props.areaInit.areaHeight = 50;
+      }
     };
-  },
-  computed: {
-    isSet() {
-      return !!this.link;
-    },
-  },
-  watch: {
-    title(val) {
-      this.areaTitle = val;
-    },
-    link(val) {
-      this.url = val;
-    },
-  },
-  mounted() {
-    this.url = this.link;
-  },
-  methods: {
-    getLink() {
-      // 打开添加链接的模态框
-      this.$refs.linkaddres.modals = true;
-    },
-    handleClose(done) {
-      this.$confirm('确认关闭？', '提示', { type: 'warning' })
-        .then((_) => {
-          done();
-        })
-        .catch((_) => {});
-    },
-    // 删除
-    del() {
-      this.$emit('delAreaBox', this.areaDataIndex);
-    },
+  }
+}
 
-    // 结束拖动/变形
-    mouseUp() {
-      document.onmousemove = null;
-    },
-    // 形变开始
-    shapeDown(e) {
-      e.preventDefault();
+function linkUrl(e) {
+  url.value = e;
+}
 
-      this.star1X = e.clientX;
-      this.star1Y = e.clientY;
-      // 获取左部和底部的偏移量
+function addURL() {
+  if (!url.value) return ElMessage.error('请选择跳转链接');
+  emit('addURL', props.areaDataIndex, url.value);
+  editBoxShow.value = false;
+}
 
-      if (!document.onmousemove) {
-        const initX = this.areaInit.areaWidth;
-        const initY = this.areaInit.areaHeight;
-        document.onmousemove = (ev) => {
-          this.areaInit.areaWidth = initX + ev.clientX - this.star1X;
-          if (this.areaInit.areaWidth < 50) {
-            this.areaInit.areaWidth = 50;
-          }
-          this.areaInit.areaHeight = initY + ev.clientY - this.star1Y;
-          if (this.areaInit.areaHeight < 50) {
-            this.areaInit.areaHeight = 50;
-          }
-        };
+// 开始拖动限制范围
+function mouseDownLint(e) {
+  e.preventDefault();
+  starX.value = e.clientX;
+  starY.value = e.clientY;
+  const childrenDiv = e.target || e;
+  //获取子元素的宽高
+  let childrenWidth = childrenDiv.getBoundingClientRect().width;
+  let childrenHight = childrenDiv.getBoundingClientRect().height;
+  if (!document.onmousemove) {
+    const initX = props.areaInit.starX;
+    const initY = props.areaInit.starY;
+
+    document.onmousemove = (ev) => {
+      // 移动位置
+      let nLeft = initX + ev.clientX - starX.value;
+      let nTop = initY + ev.clientY - starY.value;
+      nLeft = nLeft <= 0 ? 0 : nLeft; //判断左边是否越界
+      nTop = nTop <= 0 ? 0 : nTop; //判断上边是否越界
+      let nRight = nLeft + childrenWidth;
+      let nBottom = nTop + childrenHight;
+      // 判断右边是否越界
+      if (nRight >= props.parentWidth) {
+        nLeft = props.parentWidth - childrenWidth;
       }
-    },
-    linkUrl(e) {
-      this.url = e;
-    },
-    addURL() {
-      if (!this.url) return this.$message.error('请选择跳转链接');
-      this.$emit('addURL', this.areaDataIndex, this.url);
-      this.editBoxShow = false;
-    },
-    // 开始拖动限制范围
-    mouseDownLint(e) {
-      e.preventDefault();
-      this.starX = e.clientX;
-      this.starY = e.clientY;
-      const childrenDiv = e.target || e;
-      //获取子元素的宽高
-      let childrenWidth = childrenDiv.getBoundingClientRect().width;
-      let childrenHight = childrenDiv.getBoundingClientRect().height;
-      if (!document.onmousemove) {
-        const initX = this.areaInit.starX;
-        const initY = this.areaInit.starY;
+      // 判断下边是否越界
+      if (nBottom >= props.parentHeight) {
+        nTop = props.parentHeight - childrenHight;
+      }
+      props.areaInit.starX = nLeft;
+      props.areaInit.starY = nTop;
+    };
+  }
+}
 
-        document.onmousemove = (ev) => {
-          // 移动位置
-          let nLeft = initX + ev.clientX - this.starX;
-          let nTop = initY + ev.clientY - this.starY;
-          nLeft = nLeft <= 0 ? 0 : nLeft; //判断左边是否越界
-          nTop = nTop <= 0 ? 0 : nTop; //判断上边是否越界
-          let nRight = nLeft + childrenWidth;
-          let nBottom = nTop + childrenHight;
-          // 判断右边是否越界
-          if (nRight >= this.parentWidth) {
-            nLeft = this.parentWidth - childrenWidth;
-          }
-          // 判断下边是否越界
-          if (nBottom >= this.parentHeight) {
-            nTop = this.parentHeight - childrenHight;
-          }
-          this.areaInit.starX = nLeft;
-          this.areaInit.starY = nTop;
-        };
-      }
-    },
-    // 开始拖动不限制范围
-    mouseDown(e) {
-      e.preventDefault();
-      this.starX = e.clientX;
-      this.starY = e.clientY;
-      if (!document.onmousemove) {
-        const initX = this.areaInit.starX;
-        const initY = this.areaInit.starY;
-        document.onmousemove = (ev) => {
-          this.areaInit.starX = initX + ev.clientX - this.starX;
-          this.areaInit.starY = initY + ev.clientY - this.starY;
-        };
-      }
-    },
-  },
-};
+// 开始拖动不限制范围
+function mouseDown(e) {
+  e.preventDefault();
+  starX.value = e.clientX;
+  starY.value = e.clientY;
+  if (!document.onmousemove) {
+    const initX = props.areaInit.starX;
+    const initY = props.areaInit.starY;
+    document.onmousemove = (ev) => {
+      props.areaInit.starX = initX + ev.clientX - starX.value;
+      props.areaInit.starY = initY + ev.clientY - starY.value;
+    };
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -307,7 +331,7 @@ export default {
 .el-form-item {
   margin-bottom: 0 !important;
 }
-::v-deep .el-form-item__label {
+:deep(.el-form-item__label) {
   font-weight: 500 !important;
 }
 .right-bottom {
@@ -315,7 +339,7 @@ export default {
   right: 2px;
   bottom: 2px;
 }
-::v-deep .el-dialog__body {
+:deep(.el-dialog__body) {
   overflow-y: hidden;
   padding: 30px 24px 20px 24px;
 }

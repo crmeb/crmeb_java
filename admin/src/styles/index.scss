@@ -1,7 +1,8 @@
-@import './mixin.scss';
-@import './styles.scss';
-@import './font/iconfont.css';
-@import './font/mobile_iconfont.css';
+@use './mixin.scss' as *;
+@use './styles.scss' as *;
+@use './font/iconfont.css';
+@use './font/mobile_iconfont.css';
+@use '../theme/el-icons.scss';
 
 body {
   height: 100%;
@@ -145,4 +146,8 @@ div:focus {
 }
 .closeBtn {
   margin-right: 14px !important;
+}
+
+.m-r-10 {
+  margin-right: 10px;
 }

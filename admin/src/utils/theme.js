@@ -1,4 +1,4 @@
-import { Message } from 'element-ui';
+import { ElMessage as Message } from '@/utils/elementPlusFeedback';
 
 /**
  * 颜色转换函数

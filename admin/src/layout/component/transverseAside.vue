@@ -1,6 +1,6 @@
 <template>
   <div class="layout-columns-tra-aside el-menu-horizontal-warp">
-    <el-scrollbar ref="elMenuHorizontalScrollRef" @wheel.native.prevent="onElMenuHorizontalScroll">
+    <el-scrollbar ref="elMenuHorizontalScrollRef" @wheel.prevent="onElMenuHorizontalScroll">
       <ul>
         <li
           v-for="(v, k) in columnsAsideList"
@@ -27,200 +27,215 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { getMenuSider, getHeaderName, findFirstNonNullChildren } from '@/utils/system.js';
 import Logo from '@/layout/logo/index.vue';
+import bus from '@/utils/bus';
+import { useUserStore } from '@/store/modules/user';
+import { useThemeConfigStore } from '@/store/modules/themeConfig';
 
-export default {
-  name: 'layoutColumnsAside',
-  components: { Logo },
-  data() {
-    return {
-      columnsAsideList: [],
-      liIndex: 0,
-      difference: 0,
-      routeSplit: [],
-      activePath: '',
-    };
-  },
-  computed: {
-    // 设置分栏高亮风格
-    setColumnsAsideStyle() {
-      return this.$store.state.themeConfig.themeConfig.columnsAsideStyle;
-    },
-    // 设置分栏布局风格
-    setColumnsAsidelayout() {
-      return this.$store.state.themeConfig.themeConfig.columnsAsideLayout;
-    },
-    Layout() {
-      return this.$store.state.themeConfig.themeConfig.Layout;
-    },
-    routesList() {
-      this.$store.state.user.menuList;
-    },
-  },
-  beforeDestroy() {
-    this.bus.$off('routesListChange');
-  },
-  mounted() {
-    this.bus.$on('routesListChange', () => {
-      this.setFilterRoutes();
+defineOptions({ name: 'layoutColumnsAside' });
+
+const route = useRoute();
+const router = useRouter();
+const userStore = useUserStore();
+const themeConfigStore = useThemeConfigStore();
+
+const columnsAsideList = ref([]);
+const liIndex = ref(0);
+const difference = ref(0);
+const routeSplit = ref([]);
+const activePath = ref('');
+
+const elMenuHorizontalScrollRef = ref(null);
+const columnsAsideOffsetLeftRefs = ref(null);
+const columnsAsideActiveRef = ref(null);
+
+// 设置分栏高亮风格
+const setColumnsAsideStyle = computed(() => themeConfigStore.themeConfig.columnsAsideStyle);
+// 设置分栏布局风格
+const setColumnsAsidelayout = computed(() => themeConfigStore.themeConfig.columnsAsideLayout);
+const Layout = computed(() => themeConfigStore.themeConfig.Layout);
+
+const routesList = computed(() => {
+  userStore.menuList;
+});
+
+// 设置横向滚动条可以鼠标滚轮滚动
+function onElMenuHorizontalScroll(e) {
+  const eventDelta = e.wheelDelta || -e.deltaY * 40;
+  elMenuHorizontalScrollRef.value.wrapRef.scrollLeft =
+    elMenuHorizontalScrollRef.value.wrapRef.scrollLeft + eventDelta / 4;
+}
+
+// 初始化数据，页面刷新时，滚动条滚动到对应位置
+function initElMenuOffsetLeft() {
+  nextTick(() => {
+    let els = document.querySelector('.layout-columns.layout-columns-active');
+    if (!els) return false;
+    elMenuHorizontalScrollRef.value.wrapRef.scrollLeft = els.offsetLeft;
+  });
+}
+
+// 设置菜单高亮位置移动
+function setColumnsAsideMove(k) {
+  if (k === undefined) return false;
+  const els = columnsAsideOffsetLeftRefs.value;
+  liIndex.value = k;
+  columnsAsideActiveRef.value.style.left = `${els[k].offsetLeft + difference.value}px`;
+}
+
+// 菜单高亮点击事件
+function onColumnsAsideMenuClick(v) {
+  let { path } = v;
+  if (Array.isArray(v.children) && v.children.length) {
+    const firstRoute = findFirstNonNullChildren(v.children, path);
+    if (firstRoute && firstRoute.path) router.push(firstRoute.path);
+  } else {
+    router.push(path);
+  }
+  // 一个路由设置自动收起菜单
+  if (!v.children || v.children.length <= 1) themeConfigStore.themeConfig.isCollapse = true;
+  else if (v.children.length > 1) themeConfigStore.themeConfig.isCollapse = false;
+  // bus.emit('setSendColumnsChildren', getMenuSider(columnsAsideList.value, path));
+}
+
+// 设置高亮动态位置
+function onColumnsAsideDown(k) {
+  nextTick(() => {
+    setColumnsAsideMove(k);
+  });
+}
+
+// 设置/过滤路由（非静态路由/是否显示在菜单中）
+function setFilterRoutes() {
+  if (userStore.menuList.length <= 0) return false;
+  columnsAsideList.value = filterRoutesFun(userStore.menuList);
+  //   const resData = getHeaderName(route.path, columnsAsideList.value);
+  const resData = setSendChildren(getHeaderName(route, columnsAsideList.value));
+  if (!resData && !resData.item[0].children.length) {
+    bus.emit('setSendColumnsChildren', []);
+    userStore.setChildMenuList([]);
+
+    themeConfigStore.themeConfig.isCollapse = true;
+    return false;
+  }
+  if (!resData) return;
+  bus.emit('oneCatName', resData.item[0].title);
+  onColumnsAsideDown(resData.item[0].k);
+  // 刷新时，初始化一个路由设置自动收起菜单
+  resData.item[0].children.length > 0
+    ? (themeConfigStore.themeConfig.isCollapse = false)
+    : (themeConfigStore.themeConfig.isCollapse = true);
+  bus.emit('setSendColumnsChildren', resData.item[0].children || []);
+  userStore.setChildMenuList(resData.item[0].children || []);
+}
+
+// 传送当前子级数据到菜单中
+function setSendChildren(path) {
+  // const currentPathSplit = path.split('/');
+  let currentData = {};
+  columnsAsideList.value.map((v, k) => {
+    v['k'] = k;
+    if (v.path === path) {
+      currentData['item'] = [{ ...v }];
+      //   currentData['children'] = [{ ...v }];
+      if (v.children.length) currentData['children'] = v.children;
+    }
+  });
+  return currentData;
+}
+
+// 路由过滤递归函数
+function filterRoutesFun(arr) {
+  return arr
+    .filter((item) => item.path)
+    .map((item) => {
+      item = Object.assign({}, item);
+      if (item.children.length) item.children = filterRoutesFun(item.children);
+      return item;
     });
-    this.setFilterRoutes();
-    this.$nextTick((e) => {
-      this.initElMenuOffsetLeft();
-    });
-  },
-  methods: {
-    // 设置横向滚动条可以鼠标滚轮滚动
-    onElMenuHorizontalScroll(e) {
-      const eventDelta = e.wheelDelta || -e.deltaY * 40;
-      this.$refs.elMenuHorizontalScrollRef.$refs.wrap.scrollLeft =
-        this.$refs.elMenuHorizontalScrollRef.$refs.wrap.scrollLeft + eventDelta / 4;
-    },
-    // 初始化数据，页面刷新时，滚动条滚动到对应位置
-    initElMenuOffsetLeft() {
-      this.$nextTick(() => {
-        let els = document.querySelector('.layout-columns.layout-columns-active');
-        if (!els) return false;
-        this.$refs.elMenuHorizontalScrollRef.$refs.wrap.scrollLeft = els.offsetLeft;
-      });
-    },
-    // 设置菜单高亮位置移动
-    setColumnsAsideMove(k) {
-      if (k === undefined) return false;
-      const els = this.$refs.columnsAsideOffsetLeftRefs;
-      this.liIndex = k;
-      this.$refs.columnsAsideActiveRef.style.left = `${els[k].offsetLeft + this.difference}px`;
-    },
-    // 菜单高亮点击事件
-    onColumnsAsideMenuClick(v) {
-      let { path, redirect } = v;
-      if (v.children.length) {
-        this.$router.push(findFirstNonNullChildren(v.children).path);
-      } else {
-        this.$router.push(path);
-      }
-      // 一个路由设置自动收起菜单
-      if (!v.children || v.children.length <= 1) this.$store.state.themeConfig.themeConfig.isCollapse = true;
-      else if (v.children.length > 1) this.$store.state.themeConfig.themeConfig.isCollapse = false;
-      // this.bus.$emit('setSendColumnsChildren', getMenuSider(this.columnsAsideList, path));
-    },
-    // 设置高亮动态位置
-    onColumnsAsideDown(k) {
-      this.$nextTick(() => {
-        this.setColumnsAsideMove(k);
-      });
-    },
-    // 设置/过滤路由（非静态路由/是否显示在菜单中）
-    setFilterRoutes() {
-      if (this.$store.state.user.menuList.length <= 0) return false;
-      this.columnsAsideList = this.filterRoutesFun(this.$store.state.user.menuList);
-      //   const resData = getHeaderName(this.$route.path, this.columnsAsideList);
-      const resData = this.setSendChildren(getHeaderName(this.$route, this.columnsAsideList));
-      if (!resData && !resData.item[0].children.length) {
-        this.bus.$emit('setSendColumnsChildren', []);
-        this.$store.commit('user/childMenuList', []);
+}
 
-        this.$store.state.themeConfig.themeConfig.isCollapse = true;
-        return false;
-      }
-      if (!resData) return;
-      this.bus.$emit('oneCatName', resData.item[0].title);
-      this.onColumnsAsideDown(resData.item[0].k);
-      // 刷新时，初始化一个路由设置自动收起菜单
-      resData.item[0].children.length > 0
-        ? (this.$store.state.themeConfig.themeConfig.isCollapse = false)
-        : (this.$store.state.themeConfig.themeConfig.isCollapse = true);
-      this.bus.$emit('setSendColumnsChildren', resData.item[0].children || []);
-      this.$store.commit('user/childMenuList', resData.item[0].children || []);
-    },
-    // 传送当前子级数据到菜单中
-    setSendChildren(path) {
-      // const currentPathSplit = path.split('/');
-      let currentData = {};
-      this.columnsAsideList.map((v, k) => {
-        v['k'] = k;
-        if (v.path === path) {
-          currentData['item'] = [{ ...v }];
-          //   currentData['children'] = [{ ...v }];
-          if (v.children.length) currentData['children'] = v.children;
-        }
-      });
-      return currentData;
-    },
-    // 路由过滤递归函数
-    filterRoutesFun(arr) {
-      return arr
-        .filter((item) => item.path)
-        .map((item) => {
-          item = Object.assign({}, item);
-          if (item.children.length) item.children = this.filterRoutesFun(item.children);
-          return item;
-        });
-    },
-    // tagsView 点击时，根据路由查找下标 columnsAsideList，实现左侧菜单高亮
-    setColumnsMenuHighlight(path) {
-      // this.routeSplit = path.split('/');
-      // this.routeSplit.shift();
-      // const routeFirst = `/${this.routeSplit[0]}`;
-      const currentSplitRoute = this.columnsAsideList.find((v) => v.path === path);
-      if (!currentSplitRoute) {
-        this.onColumnsAsideDown(0);
-        return false;
-      }
-      // 延迟拿值，防止取不到
-      setTimeout(() => {
-        this.onColumnsAsideDown(currentSplitRoute.k);
-      }, 0);
-    },
-  },
-  watch: {
-    // 监听 vuex 数据变化
-    '$store.state': {
-      handler(val) {
-        val.themeConfig.themeConfig.columnsAsideStyle === 'columnsRound'
-          ? (this.difference = 3)
-          : (this.difference = 0);
-        if (val.user.menuListlength === this.columnsAsideList.length) return false;
-      },
-      deep: true,
-    },
-    // 监听路由的变化
-    $route: {
-      handler(to) {
-        this.setColumnsMenuHighlight(to.path);
-        // this.setColumnsAsideMove();
-        let HeadName = getHeaderName(to, this.columnsAsideList);
-        let asideList = getMenuSider(this.columnsAsideList, HeadName)[0].children;
-        const resData = this.setSendChildren(HeadName);
-        if (resData && resData.item && resData.item.length) {
-          this.onColumnsAsideDown(resData.item[0].k);
-          this.bus.$emit('oneCatName', resData.item[0].title);
-        }
+// tagsView 点击时，根据路由查找下标 columnsAsideList，实现左侧菜单高亮
+function setColumnsMenuHighlight(path) {
+  // routeSplit.value = path.split('/');
+  // routeSplit.value.shift();
+  // const routeFirst = `/${routeSplit.value[0]}`;
+  const currentSplitRoute = columnsAsideList.value.find((v) => v.path === path);
+  if (!currentSplitRoute) {
+    onColumnsAsideDown(0);
+    return false;
+  }
+  // 延迟拿值，防止取不到
+  setTimeout(() => {
+    onColumnsAsideDown(currentSplitRoute.k);
+  }, 0);
+}
 
-        this.bus.$emit('setSendColumnsChildren', asideList || []);
-        this.$store.commit('user/childMenuList', asideList || []);
-      },
-      deep: true,
-    },
+function onRoutesListChange() {
+  setFilterRoutes();
+}
+
+// 监听 vuex 数据变化
+watch(
+  () => [themeConfigStore.themeConfig, userStore.menuList],
+  (val) => {
+    const [themeConfig, menuList] = val;
+    themeConfig.columnsAsideStyle === 'columnsRound' ? (difference.value = 3) : (difference.value = 0);
+    if (menuList.length === columnsAsideList.value.length) return false;
   },
-};
+  { deep: true }
+);
+
+// 监听路由的变化
+watch(
+  route,
+  (to) => {
+    setColumnsMenuHighlight(to.path);
+    // setColumnsAsideMove();
+    let HeadName = getHeaderName(to, columnsAsideList.value);
+    let asideList = getMenuSider(columnsAsideList.value, HeadName)[0].children;
+    const resData = setSendChildren(HeadName);
+    if (resData && resData.item && resData.item.length) {
+      onColumnsAsideDown(resData.item[0].k);
+      bus.emit('oneCatName', resData.item[0].title);
+    }
+
+    bus.emit('setSendColumnsChildren', asideList || []);
+    userStore.setChildMenuList(asideList || []);
+  },
+  { deep: true }
+);
+
+onBeforeUnmount(() => {
+  bus.off('routesListChange', onRoutesListChange);
+});
+
+onMounted(() => {
+  bus.on('routesListChange', onRoutesListChange);
+  setFilterRoutes();
+  nextTick(() => {
+    initElMenuOffsetLeft();
+  });
+});
 </script>
 
 <style scoped lang="scss">
-::v-deep .el-scrollbar__bar.is-horizontal {
+:deep(.el-scrollbar__bar.is-horizontal) {
   height: 0;
 }
 .el-menu-horizontal-warp {
-  ::v-deep .el-scrollbar__bar.is-vertical {
+  :deep(.el-scrollbar__bar.is-vertical) {
     display: none;
   }
-  ::v-deep .el-scrollbar__wrap {
+  :deep(.el-scrollbar__wrap) {
     overflow-y: hidden !important;
     overflow-x: scroll !important;
   }
-  ::v-deep a {
+  :deep(.a) {
     width: 100%;
   }
   .el-menu.el-menu--horizontal {
@@ -311,13 +326,13 @@ export default {
     }
   }
 }
-::v-deep .el-scrollbar {
+:deep(.el-scrollbar) {
   height: 50px;
 }
-::v-deep .el-scrollbar__bar.is-horizontal {
+:deep(.el-scrollbar__bar.is-horizontal) {
   display: none;
 }
-::v-deep .el-scrollbar__thumb {
+:deep(.el-scrollbar__thumb) {
   display: none;
 }
 </style>

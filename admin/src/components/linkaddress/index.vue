@@ -8,7 +8,7 @@
       :close-on-click-modal="false"
       :data="categoryData"
       width="860"
-      :visible.sync="dialogVisible"
+      v-model="dialogVisible"
     >
       <div class="table_box">
         <div class="left_box">
@@ -166,7 +166,7 @@
             currenType === 'micro'
           "
         >
-          <el-form ref="formValidate" class="tabform" v-if="currenType == 'product'">
+          <el-form ref="formValidateRef" class="tabform" v-if="currenType == 'product'">
             <el-row>
               <el-col :span="24">
                 <el-form-item>
@@ -182,8 +182,8 @@
           </el-form>
           <el-table
             row-key="id"
-            ref="table"
-            size="small"
+            ref="tableRef"
+
             v-loading="lodingList"
             :data="tableList.list"
             @row-click="singleElection"
@@ -203,13 +203,13 @@
             "
           >
             <el-table-column label="" width="80">
-              <template slot-scope="scope">
-                <el-radio class="radio" v-model="radioData" :label="scope.$index">&nbsp;</el-radio>
+              <template #default="scope">
+                <el-radio class="radio" v-model="radioData" :label="scope.$index" :value="scope.$index">&nbsp;</el-radio>
               </template>
             </el-table-column>
             <el-table-column prop="id" label="ID" width="80"></el-table-column>
             <el-table-column v-if="currenType !== 'micro'" label="图片" width="80">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <el-image
                   style="width: 50px; height: 50px"
                   lazy
@@ -250,6 +250,7 @@
             ></el-table-column>
           </el-table>
           <el-pagination
+            class="link-pagination"
             :current-page="params.page"
             :page-sizes="constants.page.limit"
             :layout="constants.page.layout"
@@ -261,7 +262,7 @@
         </div>
         <div class="right_box" v-if="currenType == 'custom'">
           <div style="width: 440px; margin: 50px 100px 0 30px">
-            <el-form ref="customDate" :model="customDate" label-width="100px">
+            <el-form ref="customDateRef" :model="customDate" label-width="100px">
               <el-form-item label="跳转路径：" prop="url">
                 <el-input v-model="customDate.url" placeholder="请输入跳转路径" />
               </el-form-item>
@@ -269,15 +270,18 @@
           </div>
         </div>
       </div>
-      <div slot="footer">
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit()">确定</el-button>
-      </div>
+      <template #footer>
+        <div>
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmit()">确定</el-button>
+        </div>
+      </template>
     </el-dialog>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, getCurrentInstance } from 'vue';
 import { getMicroPageList } from '@/api/theme';
 import { productLstApi, categoryApi } from '@/api/store';
 import { seckillStoreListApi, combinationListApi, bargainListApi } from '@/api/marketing';
@@ -286,248 +290,267 @@ import listData from './list.json';
 import linkData from './linkData.json';
 import marketing from './marketing.json';
 
-export default {
-  name: 'linkaddress',
-  data() {
-    return {
-      constants: this.$constants,
-      dialogVisible: false,
-      defaultProps: {
-        children: 'children',
-        label: 'title',
-      },
-      basicsList: [],
-      userList: [],
-      distributionList: [],
-      coupon: [],
-      luckDraw: [],
-      integral: [],
-      lodingList: false,
-      categoryData: listData.data,
-      currenType: 'link',
-      currenId: '',
-      currenUrl: '',
-      formValidate: {
-        keywords: '',
-      },
-      customDate: {
-        url: '',
-      },
-      radioData: '',
-      linkId: 0,
-      tableList: {
-        list: [],
-        total: 0,
-      },
-      params: {
-        page: 1,
-        limit: 20,
-        keywords: '',
-        name: '',
-      },
-      columns: [
-        { title: 'ID', key: 'id', width: 60 },
-        { title: '页面名称', key: 'name', width: 150 },
-        { title: '页面链接', key: 'url' },
-      ],
-      columns7: [
-        { title: 'ID', key: 'id', width: 60 },
-        { title: '分类名称', key: 'cate_name', tree: true },
-        { title: '分类图标', slot: 'pic' },
-      ],
-      columns8: [
-        { title: 'ID', key: 'id', width: 60 },
-        { title: '商品图片', slot: 'image', width: 90 },
-        { title: '商品名称', key: 'store_name' },
-      ],
-      bargain: [
-        { title: 'ID', key: 'id', width: 60 },
-        { title: '商品图片', slot: 'image', width: 90 },
-        { title: '商品名称', key: 'title' },
-      ],
-      news: [
-        { title: 'ID', key: 'id', width: 60 },
-        { title: '文章图片', slot: 'image_input', width: 90 },
-        { title: '文章名称', key: 'title' },
-      ],
-      categorytitle: '',
-    };
+defineOptions({ name: 'linkaddress' });
+
+const emit = defineEmits(['linkUrl']);
+
+const { proxy } = getCurrentInstance();
+
+const constants = proxy.$constants;
+const dialogVisible = ref(false);
+const defaultProps = ref({
+  children: 'children',
+  label: 'title',
+});
+const basicsList = ref([]);
+const userList = ref([]);
+const distributionList = ref([]);
+const coupon = ref([]);
+const luckDraw = ref([]);
+const integral = ref([]);
+const lodingList = ref(false);
+const categoryData = ref(listData.data);
+const currenType = ref('link');
+const currenId = ref('');
+const currenUrl = ref('');
+const formValidate = ref({
+  keywords: '',
+});
+const customDate = ref({
+  url: '',
+});
+const radioData = ref('');
+const linkId = ref(0);
+const tableList = ref({
+  list: [],
+  total: 0,
+});
+const params = ref({
+  page: 1,
+  limit: 20,
+  keywords: '',
+  name: '',
+});
+const columns = ref([
+  { title: 'ID', key: 'id', width: 60 },
+  { title: '页面名称', key: 'name', width: 150 },
+  { title: '页面链接', key: 'url' },
+]);
+const columns7 = ref([
+  { title: 'ID', key: 'id', width: 60 },
+  { title: '分类名称', key: 'cate_name', tree: true },
+  { title: '分类图标', slot: 'pic' },
+]);
+const columns8 = ref([
+  { title: 'ID', key: 'id', width: 60 },
+  { title: '商品图片', slot: 'image', width: 90 },
+  { title: '商品名称', key: 'store_name' },
+]);
+const bargain = ref([
+  { title: 'ID', key: 'id', width: 60 },
+  { title: '商品图片', slot: 'image', width: 90 },
+  { title: '商品名称', key: 'title' },
+]);
+const news = ref([
+  { title: 'ID', key: 'id', width: 60 },
+  { title: '文章图片', slot: 'image_input', width: 90 },
+  { title: '文章名称', key: 'title' },
+]);
+const categorytitle = ref('');
+const formValidateRef = ref(null);
+const tableRef = ref(null);
+const customDateRef = ref(null);
+
+const modals = computed({
+  get() {
+    return dialogVisible.value;
   },
-  computed: {
-    modals: {
-      get() {
-        return this.dialogVisible;
-      },
-      set(value) {
-        this.dialogVisible = value;
-      },
-    },
+  set(value) {
+    dialogVisible.value = value;
   },
-  mounted() {
-    this.mockData('link');
-  },
-  methods: {
-    getProductList() {
-      this.lodingList = true;
-      productLstApi(this.params).then((res) => {
-        this.tableList = this.normalizeTableList(res);
-        this.lodingList = false;
-      });
-    },
-    handleCheckChange(data = {}) {
-      this.params.keywords = '';
-      this.currenId = '';
-      this.currenUrl = '';
-      this.linkId = 0;
-      this.radioData = '';
-      this.categorytitle = '';
-      this.currenType = data.type || 'link';
-      this.mockData(this.currenType);
-    },
-    handleNodeClick(data) {
-      this.params.keywords = '';
-      this.currenId = '';
-      this.currenUrl = '';
-      this.linkId = 0;
-      this.radioData = '';
-      this.categorytitle = '';
-      this.$set(this, 'currenType', data.type);
-      this.mockData(data.type);
-    },
-    mockData(type) {
-      let data = [];
-      if (type == 'marketing_link') {
-        data = marketing.data.list;
-      } else if (type == 'link') {
-        data = linkData.data.list;
-      } else if (type == 'product_category') {
-        this.lodingList = true;
-        categoryApi({ type: 1, status: -1 }).then((res) => {
-          this.tableList = this.normalizeTableList(res);
-          this.lodingList = false;
-        });
-      } else if (type == 'product') {
-        this.getProductList();
-      } else if (type == 'seckill') {
-        this.lodingList = true;
-        seckillStoreListApi(this.params).then((res) => {
-          this.tableList = this.normalizeTableList(res);
-          this.lodingList = false;
-        });
-      } else if (type == 'bargain') {
-        this.lodingList = true;
-        bargainListApi(this.params).then((res) => {
-          this.tableList = this.normalizeTableList(res);
-          this.lodingList = false;
-        });
-      } else if (type == 'combination') {
-        this.lodingList = true;
-        combinationListApi(this.params).then((res) => {
-          this.tableList = this.normalizeTableList(res);
-          this.lodingList = false;
-        });
-      } else if (type == 'news') {
-        this.lodingList = true;
-        ListArticle(this.params).then((res) => {
-          this.tableList = this.normalizeTableList(res);
-          this.lodingList = false;
-        });
-      } else if (type == 'micro') {
-        this.lodingList = true;
-        getMicroPageList(this.params).then((res) => {
-          this.tableList = this.normalizeTableList(res);
-          this.lodingList = false;
-        });
-      }
-      let basicsList = [];
-      let distributionList = [];
-      let userList = [];
-      let integral = [];
-      let luckDraw = [];
-      let coupon = [];
-      data.forEach((e) => {
-        if (e.type == 1) {
-          basicsList.push(e);
-        } else if (e.type == 2) {
-          distributionList.push(e);
-        } else if (e.type == 3) {
-          userList.push(e);
-        } else if (e.type == 4) {
-          integral.push(e);
-        } else if (e.type == 5) {
-          luckDraw.push(e);
-        } else {
-          coupon.push(e);
-        }
-      });
-      this.basicsList = basicsList;
-      this.distributionList = distributionList;
-      this.userList = userList;
-      this.coupon = coupon;
-      this.luckDraw = luckDraw;
-      this.integral = integral;
-    },
-    getUrl(item) {
-      this.currenId = item.id;
-      this.currenUrl = item.url;
-    },
-    singleElection(row) {
-      this.linkId = row.id || row.value;
-      this.categorytitle = row.name || row.title || row.label || row.storeName || '';
-    },
-    normalizeTableList(res) {
-      const list = Array.isArray(res) ? res : res.list || (res.data && res.data.list) || res.data || [];
-      return {
-        ...res,
-        list: Array.isArray(list) ? list : [],
-        total: res.total || res.count || (res.data && (res.data.total || res.data.count)) || (Array.isArray(list) ? list.length : 0),
-      };
-    },
-    handleSubmit(name) {
-      switch (this.currenType) {
-        case 'product':
-          this.$emit('linkUrl', '/pages/goods/goods_details/index?id=' + this.linkId);
-          break;
-        case 'seckill':
-          this.$emit('linkUrl', '/pages/activity/goods_seckill_details/index?id=' + this.linkId);
-          break;
-        case 'bargain':
-          this.$emit('linkUrl', '/pages/activity/goods_bargain_details/index?id=' + this.linkId);
-          break;
-        case 'combination':
-          this.$emit('linkUrl', '/pages/activity/goods_combination_details/index?id=' + this.linkId);
-          break;
-        case 'news':
-          this.$emit('linkUrl', '/pages/news/news_details/index?id=' + this.linkId);
-          break;
-        case 'product_category':
-          this.$emit(
-            'linkUrl',
-            '/pages/goods/goods_list/index?cid=' + this.linkId + '&title=' + encodeURIComponent(this.categorytitle),
-          );
-          break;
-        case 'custom':
-          this.$emit('linkUrl', this.customDate.url);
-          break;
-        case 'micro':
-          this.$emit('linkUrl', `/pages/activity/small_page/index?id=${this.linkId}`);
-          break;
-        default:
-          this.$emit('linkUrl', this.currenUrl);
-          break;
-      }
-      this.dialogVisible = false;
-    },
-    handleSizeChange(val) {
-      this.params.limit = val;
-      this.mockData(this.currenType);
-    },
-    handleCurrentChange(val) {
-      this.params.page = val;
-      this.mockData(this.currenType);
-    },
-  },
-};
+});
+
+// 暴露给父组件：在 <script setup> 中，内部绑定默认不挂到实例代理上，
+// 父组件通过 ref 调用 `linkaddresRef.value.modals = true` 或 `handleCheckChange()`
+// 必须显式 expose 才能生效，否则弹窗无法打开。
+defineExpose({
+  modals,
+  dialogVisible,
+  handleCheckChange,
+});
+
+onMounted(() => {
+  mockData('link');
+});
+
+function getProductList() {
+  lodingList.value = true;
+  productLstApi(params.value).then((res) => {
+    tableList.value = normalizeTableList(res);
+    lodingList.value = false;
+  });
+}
+
+function handleCheckChange(data = {}) {
+  params.value.keywords = '';
+  currenId.value = '';
+  currenUrl.value = '';
+  linkId.value = 0;
+  radioData.value = '';
+  categorytitle.value = '';
+  currenType.value = data.type || 'link';
+  mockData(currenType.value);
+}
+
+function handleNodeClick(data) {
+  params.value.keywords = '';
+  currenId.value = '';
+  currenUrl.value = '';
+  linkId.value = 0;
+  radioData.value = '';
+  categorytitle.value = '';
+  currenType.value = data.type;
+  mockData(data.type);
+}
+
+function mockData(type) {
+  let data = [];
+  if (type == 'marketing_link') {
+    data = marketing.data.list;
+  } else if (type == 'link') {
+    data = linkData.data.list;
+  } else if (type == 'product_category') {
+    lodingList.value = true;
+    categoryApi({ type: 1, status: -1 }).then((res) => {
+      tableList.value = normalizeTableList(res);
+      lodingList.value = false;
+    });
+  } else if (type == 'product') {
+    getProductList();
+  } else if (type == 'seckill') {
+    lodingList.value = true;
+    seckillStoreListApi(params.value).then((res) => {
+      tableList.value = normalizeTableList(res);
+      lodingList.value = false;
+    });
+  } else if (type == 'bargain') {
+    lodingList.value = true;
+    bargainListApi(params.value).then((res) => {
+      tableList.value = normalizeTableList(res);
+      lodingList.value = false;
+    });
+  } else if (type == 'combination') {
+    lodingList.value = true;
+    combinationListApi(params.value).then((res) => {
+      tableList.value = normalizeTableList(res);
+      lodingList.value = false;
+    });
+  } else if (type == 'news') {
+    lodingList.value = true;
+    ListArticle(params.value).then((res) => {
+      tableList.value = normalizeTableList(res);
+      lodingList.value = false;
+    });
+  } else if (type == 'micro') {
+    lodingList.value = true;
+    getMicroPageList(params.value).then((res) => {
+      tableList.value = normalizeTableList(res);
+      lodingList.value = false;
+    });
+  }
+  let basicsListArr = [];
+  let distributionListArr = [];
+  let userListArr = [];
+  let integralArr = [];
+  let luckDrawArr = [];
+  let couponArr = [];
+  data.forEach((e) => {
+    if (e.type == 1) {
+      basicsListArr.push(e);
+    } else if (e.type == 2) {
+      distributionListArr.push(e);
+    } else if (e.type == 3) {
+      userListArr.push(e);
+    } else if (e.type == 4) {
+      integralArr.push(e);
+    } else if (e.type == 5) {
+      luckDrawArr.push(e);
+    } else {
+      couponArr.push(e);
+    }
+  });
+  basicsList.value = basicsListArr;
+  distributionList.value = distributionListArr;
+  userList.value = userListArr;
+  coupon.value = couponArr;
+  luckDraw.value = luckDrawArr;
+  integral.value = integralArr;
+}
+
+function getUrl(item) {
+  currenId.value = item.id;
+  currenUrl.value = item.url;
+}
+
+function singleElection(row) {
+  linkId.value = row.id || row.value;
+  categorytitle.value = row.name || row.title || row.label || row.storeName || '';
+}
+
+function normalizeTableList(res) {
+  const list = Array.isArray(res) ? res : res.list || (res.data && res.data.list) || res.data || [];
+  return {
+    ...res,
+    list: Array.isArray(list) ? list : [],
+    total: res.total || res.count || (res.data && (res.data.total || res.data.count)) || (Array.isArray(list) ? list.length : 0),
+  };
+}
+
+function handleSubmit(name) {
+  switch (currenType.value) {
+    case 'product':
+      emit('linkUrl', '/pages/goods/goods_details/index?id=' + linkId.value);
+      break;
+    case 'seckill':
+      emit('linkUrl', '/pages/activity/goods_seckill_details/index?id=' + linkId.value);
+      break;
+    case 'bargain':
+      emit('linkUrl', '/pages/activity/goods_bargain_details/index?id=' + linkId.value);
+      break;
+    case 'combination':
+      emit('linkUrl', '/pages/activity/goods_combination_details/index?id=' + linkId.value);
+      break;
+    case 'news':
+      emit('linkUrl', '/pages/news/news_details/index?id=' + linkId.value);
+      break;
+    case 'product_category':
+      emit(
+        'linkUrl',
+        '/pages/goods/goods_list/index?cid=' + linkId.value + '&title=' + encodeURIComponent(categorytitle.value),
+      );
+      break;
+    case 'custom':
+      emit('linkUrl', customDate.value.url);
+      break;
+    case 'micro':
+      emit('linkUrl', `/pages/activity/small_page/index?micro_id=${linkId.value}`);
+      break;
+    default:
+      emit('linkUrl', currenUrl.value);
+      break;
+  }
+  dialogVisible.value = false;
+}
+
+function handleSizeChange(val) {
+  params.value.limit = val;
+  mockData(currenType.value);
+}
+
+function handleCurrentChange(val) {
+  params.value.page = val;
+  mockData(currenType.value);
+}
 </script>
 
 <style scoped lang="scss">
@@ -692,16 +715,20 @@ export default {
   }
 }
 
-::v-deep .el-tree-node:focus > .el-tree-node__content {
+:deep(.el-tree-node:focus > .el-tree-node__content) {
   color: #409eff; //节点的字体颜色
 }
-::v-deep .el-pagination {
+:deep(.link-pagination) {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
   margin-top: 20px;
+  padding: 0;
 }
-::v-deep .el-table__indent {
+:deep(.el-table__indent) {
   padding-left: 0 !important;
 }
-::v-deep .el-radio__label {
+:deep(.el-radio__label) {
   display: none;
 }
 </style>

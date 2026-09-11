@@ -8,77 +8,71 @@
   <Columns v-else-if="getThemeConfig.layout === 'columns'" />
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
+import { useRoute } from 'vue-router';
 import { Local } from '@/utils/storage.js';
-import { mapMutations } from 'vuex';
 import { getNewTagList } from '@/utils/util';
+import { useThemeConfigStore } from '@/store/modules/themeConfig';
+import { useMenuStore } from '@/store/modules/menu';
+import { useUserStore } from '@/store/modules/user';
+import bus from '@/utils/bus';
 
-export default {
-  name: 'layout',
-  components: {
-    Defaults: () => import('@/layout/main/defaults.vue'),
-    Classic: () => import('@/layout/main/classic.vue'),
-    Transverse: () => import('@/layout/main/transverse.vue'),
-    Columns: () => import('@/layout/main/columns.vue'),
-    Mains: () => import('@/layout/component/main.vue'),
-  },
-  data() {
-    return {
-      headMenuNoShow: false,
-    };
-  },
-  computed: {
-    // 获取布局配置信息
-    getThemeConfig() {
-      return this.$store.state.themeConfig.themeConfig;
-    },
-    tagNavList() {
-      return this.$store.state.menu.tagNavList;
-    },
-    routesList() {
-      return this.$store.state.user.menuList;
-    },
-  },
-  watch: {
-    $route(newRoute) {
-      this.headMenuNoShow = this.$route.meta.fullScreen;
-      const { name, query, params, meta, path } = newRoute;
-      this.addTag({
-        route: { name, query, params, meta, path },
-        type: 'push',
-      });
-      this.setBreadCrumb(newRoute);
-      this.setTagNavList(getNewTagList(this.tagNavList, newRoute));
-    },
-  },
-  created() {
-    this.headMenuNoShow = this.$route.meta.fullScreen;
-    this.onLayoutResize();
-    window.addEventListener('resize', this.onLayoutResize, { passive: true });
-  },
-  methods: {
-    ...mapMutations('menu', ['setBreadCrumb', 'setTagNavList', 'addTag', 'setLocal', 'setHomeRoute', 'closeTag']),
+defineOptions({ name: 'layout' });
 
-    // 窗口大小改变时(适配移动端)
-    onLayoutResize() {
-      if (!Local.get('oldLayout')) Local.set('oldLayout', this.$store.state.themeConfig.themeConfig.layout);
-      const clientWidth = document.body.clientWidth;
-      if (clientWidth < 1000) {
-        this.$store.state.themeConfig.themeConfig.isCollapse = false;
-        this.bus.$emit('layoutMobileResize', {
-          layout: 'defaults',
-          clientWidth,
-        });
-      } else {
-        this.bus.$emit('layoutMobileResize', {
-          layout: Local.get('oldLayout') ? Local.get('oldLayout') : this.$store.state.themeConfig.themeConfig.layout,
-          clientWidth,
-        });
-      }
-    },
-  },
-  distroyed() {
-    window.removeEventListener('resize', this.onLayoutResize);
-  },
-};
+const route = useRoute();
+const themeConfigStore = useThemeConfigStore();
+const menuStore = useMenuStore();
+const userStore = useUserStore();
+
+const Defaults = defineAsyncComponent(() => import('@/layout/main/defaults.vue'));
+const Classic = defineAsyncComponent(() => import('@/layout/main/classic.vue'));
+const Transverse = defineAsyncComponent(() => import('@/layout/main/transverse.vue'));
+const Columns = defineAsyncComponent(() => import('@/layout/main/columns.vue'));
+const Mains = defineAsyncComponent(() => import('@/layout/component/main.vue'));
+
+const headMenuNoShow = ref(false);
+
+// 获取布局配置信息
+const getThemeConfig = computed(() => themeConfigStore.themeConfig);
+const tagNavList = computed(() => menuStore.tagNavList);
+const routesList = computed(() => userStore.menuList);
+
+watch(route, (newRoute) => {
+  headMenuNoShow.value = route.meta.fullScreen;
+  const { name, query, params, meta, path } = newRoute;
+  menuStore.addTag({
+    route: { name, query, params, meta, path },
+    type: 'push',
+  });
+  menuStore.setBreadCrumb(newRoute);
+  menuStore.setTagNavList(getNewTagList(tagNavList.value, newRoute));
+});
+
+// created 时机
+headMenuNoShow.value = route.meta.fullScreen;
+onLayoutResize();
+window.addEventListener('resize', onLayoutResize, { passive: true });
+
+onUnmounted(() => {
+  window.removeEventListener('resize', onLayoutResize);
+});
+
+// 窗口大小改变时(适配移动端)
+function onLayoutResize() {
+  if (!Local.get('oldLayout')) Local.set('oldLayout', themeConfigStore.themeConfig.layout);
+  const clientWidth = document.body.clientWidth;
+  if (clientWidth < 1000) {
+    themeConfigStore.themeConfig.isCollapse = false;
+    bus.emit('layoutMobileResize', {
+      layout: 'defaults',
+      clientWidth,
+    });
+  } else {
+    bus.emit('layoutMobileResize', {
+      layout: Local.get('oldLayout') ? Local.get('oldLayout') : themeConfigStore.themeConfig.layout,
+      clientWidth,
+    });
+  }
+}
 </script>

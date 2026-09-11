@@ -16,6 +16,11 @@ export * from '../filters/user';
 export * from '../filters/order';
 export * from '../filters/wx';
 
+// Vue3 已移除全局过滤器（Vue.filter），改用以下聚合对象挂载到 app.config.globalProperties.$filters。
+// 模板中：{{ x | filterName }} 需改为 {{ $filters.filterName(x) }}
+import * as allFilters from './index.js';
+export const filters = allFilters;
+
 /**
  * Show plural label if time is plural number
  * @param {number} time

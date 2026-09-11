@@ -8,13 +8,12 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import WechatJSSDK from 'wechat-jssdk/dist/client.umd';
 import { getWechatConfig, wechatAuth } from '@/api/wxApi';
 import { getToken, removeToken, setToken } from '@/utils/auth';
 import { parseQuery } from '@/utils';
 import Cookies from 'js-cookie';
 const STATE_KEY = 'wx_authorize_state';
-import store from '@/store';
+import { useUserStore } from '@/store/modules/user';
 const WX_AUTH = 'wx_auth';
 const BACK_URL = 'login_back_url';
 const LOGINTYPE = 'loginType';
@@ -43,7 +42,8 @@ export default function wechat() {
   return new Promise((resolve, reject) => {
     if (instance) return resolve(instance);
     getWechatConfig()
-      .then((res) => {
+      .then(async (res) => {
+        const { default: WechatJSSDK } = await import('wechat-jssdk/dist/client.umd');
         const _wx = WechatJSSDK(res);
         wechatObj = _wx;
         _wx
@@ -66,7 +66,7 @@ export function loginByWxCode(code) {
     let loginType = getToken();
     wechatAuth(code)
       .then((res) => {
-        store.commit('SET_TOKEN', res.token);
+        useUserStore().SET_TOKEN(res.token);
         setToken(res.token);
         Cookies.set(WX_AUTH, code);
         resolve(res);
@@ -146,7 +146,8 @@ export function wechatEvevt(name, config) {
       },
     };
     Object.assign(configDefault, config);
-    getWechatConfig().then((res) => {
+    getWechatConfig().then(async (res) => {
+      const { default: WechatJSSDK } = await import('wechat-jssdk/dist/client.umd');
       const _wx = WechatJSSDK(res);
       _wx.initialize().then(() => {
         instance = _wx.getOriginalWx();
@@ -169,7 +170,8 @@ export function ready() {
         resolve(instance);
       });
     } else {
-      getWechatConfig().then((res) => {
+      getWechatConfig().then(async (res) => {
+        const { default: WechatJSSDK } = await import('wechat-jssdk/dist/client.umd');
         const _wx = WechatJSSDK(res);
         _wx.initialize().then(() => {
           instance = _wx.wx;

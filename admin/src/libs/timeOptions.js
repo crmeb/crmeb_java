@@ -8,58 +8,62 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
 
+const oneDay = 3600 * 1000 * 24
+
+function offsetDate(days) {
+  const date = new Date()
+  date.setTime(date.getTime() - oneDay * days)
+  return date
+}
+
 export default {
   shortcuts: [
     {
       text: '昨天',
-      onClick(picker) {
-        const end = new Date();
-        const start = new Date();
-        start.setTime(start.getTime() - 3600 * 1000 * 24);
-        picker.$emit('pick', [start, end]);
-      },
+      value() {
+        const end = new Date()
+        const start = offsetDate(1)
+        return [start, end]
+      }
     },
     {
       text: '最近七天',
-      onClick(picker) {
-        const end = new Date();
-        const start = new Date();
-        start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
-        picker.$emit('pick', [start, end]);
-      },
+      value() {
+        const end = new Date()
+        const start = offsetDate(7)
+        return [start, end]
+      }
     },
     {
       text: '本月',
-      onClick(picker) {
-        const end = new Date();
-        const start = new Date();
-        start.setTime(start.setTime(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
-        picker.$emit('pick', [start, end]);
-      },
+      value() {
+        const end = new Date()
+        const now = new Date()
+        const start = new Date(now.getFullYear(), now.getMonth(), 1)
+        return [start, end]
+      }
     },
     {
       text: '最近30天',
-      onClick(picker) {
-        const end = new Date();
-        const start = new Date();
-        start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
-        picker.$emit('pick', [start, end]);
-      },
+      value() {
+        const end = new Date()
+        const start = offsetDate(30)
+        return [start, end]
+      }
     },
     {
       text: '最近一年',
-      onClick(picker) {
-        const end = new Date();
-        const start = new Date();
-        start.setTime(start.getTime() - 3600 * 1000 * 24 * 365);
-        picker.$emit('pick', [start, end]);
-      },
-    },
+      value() {
+        const end = new Date()
+        const start = offsetDate(365)
+        return [start, end]
+      }
+    }
   ],
   disabledDate(time) {
-    let curDate = new Date().getTime();
-    let three = 365 * 24 * 3600 * 1000;
-    let threeMonths = curDate - three;
-    return time.getTime() > Date.now() || time.getTime() < threeMonths;
-  },
-};
+    let curDate = new Date().getTime()
+    let three = 365 * 24 * 3600 * 1000
+    let threeMonths = curDate - three
+    return time.getTime() > Date.now() || time.getTime() < threeMonths
+  }
+}

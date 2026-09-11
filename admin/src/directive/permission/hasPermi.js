@@ -8,15 +8,15 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import store from '@/store';
+import { useUserStore } from '@/store/modules/user';
 
 export default {
-  inserted(el, binding, vnode) {
+  mounted(el, binding, vnode) {
     // 当被绑定的元素插入到 DOM 中时……
     const { value } = binding;
     const all_permission = '*:*:*';
     //超管标识
-    const permissions = store.getters && store.getters.permissions;
+    const permissions = useUserStore().permissions;
     //从getters中取出从接口请求到的权限标识数组
     if (value && value instanceof Array && value.length > 0) {
       //value为指令的绑定值，并且要求是一个非空数组

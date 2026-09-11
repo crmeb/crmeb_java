@@ -8,7 +8,6 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import Cookies from 'js-cookie';
 /**
  * Created by PanJiaChen on 16/11/18.
  */
@@ -414,16 +413,6 @@ export function parseQuery() {
   return res;
 }
 
-/**
- * 是否是核销员
- */
-export function isWriteOff() {
-  if (localStorage.getItem('storeStaffList')) {
-    let JavaInfo = JSON.parse(Cookies.get('JavaInfo'));
-    let staff = JSON.parse(localStorage.getItem('storeStaffList'));
-    return staff.some((item) => item.avatar === JavaInfo.account);
-  }
-}
 export function getImageDimensions(imageUrl) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -450,4 +439,11 @@ export function arraysEqual(arr1, arr2) {
   }
 
   return true;
+}
+
+// FormGenerator 依赖的工具函数（原代码引用但未定义，补占位）
+export const exportDefault = 'export default';
+export function titleCase(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }

@@ -204,41 +204,55 @@ function flattenSiderMenu(menuList, newList) {
 
 export { flattenSiderMenu };
 
-export const findFirstNonNullChildren = (arr) => {
+function resolveMenuPath(path, parentPath = '') {
+  if (!path) return parentPath || '';
+  if (path.startsWith('/')) return path;
+  if (!parentPath) return path;
+  const parent = parentPath.replace(/^\/|\/$/g, '');
+  if (parent && (path === parent || path.startsWith(`${parent}/`))) return `/${path}`;
+  return `${parentPath.replace(/\/$/, '')}/${path}`;
+}
+
+export const findFirstNonNullChildren = (arr, parentPath = '') => {
   // 如果数组为空，返回null
-  if (!arr || arr.length === 0) {
+  if (!Array.isArray(arr) || arr.length === 0) {
     return null;
   }
   // 找到第一个对象
   const firstObj = arr[0];
+  if (!firstObj) {
+    return null;
+  }
+  const children = Array.isArray(firstObj.children) ? firstObj.children : [];
+  const path = resolveMenuPath(firstObj.path, parentPath);
   // 如果第一个对象没有children属性，返回该对象
-  if (!firstObj.children.length) {
-    return firstObj;
+  if (!children.length) {
+    return {
+      ...firstObj,
+      path,
+    };
   }
 
   // 如果第一个对象的children属性是数组，
   // 递归查找children属性中的第一个非null children属性
-  if (firstObj.children.length && Array.isArray(firstObj.children)) {
-    return findFirstNonNullChildren(firstObj.children);
-  }
-  // 如果数组中没有非null children属性，返回null
-  return null;
+  return findFirstNonNullChildren(children, path);
 };
 
 export const findFirstNonNullChildrenKeys = (obj, lastArr) => {
   let ids = lastArr;
+  if (!obj) {
+    return ids;
+  }
+  const children = Array.isArray(obj.children) ? obj.children : [];
   // 如果第一个对象没有children属性，返回该对象
-  if (!obj.children.length) {
+  if (!children.length) {
     ids.push(obj.id);
     return ids;
   }
   // 如果第一个对象的children属性是数组，
   // 递归查找children属性中的第一个非null children属性
-  if (Array.isArray(obj.children) && firstObj.children.length) {
-    ids.push(obj.id);
-    return findFirstNonNullChildrenKeys(obj.children[0], ids);
-  }
-  return ids;
+  ids.push(obj.id);
+  return findFirstNonNullChildrenKeys(children[0], ids);
 };
 
 // 多级嵌套数组处理成一维数组

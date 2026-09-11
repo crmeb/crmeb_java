@@ -4,107 +4,105 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import * as categoryApi from '@/api/categoryApi.js';
-export default {
-  // name: "info"
-  props: {
-    id: {
-      type: Number,
-      required: true,
-    },
+
+const props = defineProps({
+  id: {
+    type: Number,
+    required: true,
   },
-  data() {
-    return {
-      defaultProps: {
-        children: 'children',
-        label: 'label',
+});
+
+const defaultProps = ref({
+  children: 'children',
+  label: 'label',
+});
+const ddd = ref([
+  {
+    label: '一级 1',
+    children: [
+      {
+        label: '二级 1-1',
+        children: [
+          {
+            label: '三级 1-1-1',
+          },
+        ],
       },
-      ddd: [
-        {
-          label: '一级 1',
-          children: [
-            {
-              label: '二级 1-1',
-              children: [
-                {
-                  label: '三级 1-1-1',
-                },
-              ],
-            },
-          ],
-        },
-        {
-          label: '一级 2',
-          children: [
-            {
-              label: '二级 2-1',
-              children: [
-                {
-                  label: '三级 2-1-1',
-                },
-              ],
-            },
-            {
-              label: '二级 2-2',
-              children: [
-                {
-                  label: '三级 2-2-1',
-                },
-              ],
-            },
-          ],
-        },
-        {
-          label: '一级 3',
-          children: [
-            {
-              label: '二级 3-1',
-              children: [
-                {
-                  label: '三级 3-1-1',
-                },
-              ],
-            },
-            {
-              label: '二级 3-2',
-              children: [
-                {
-                  label: '三级 3-2-1',
-                },
-              ],
-            },
-          ],
-        },
-      ],
-      dataList: {
-        // 数据结果
-        page: 0,
-        limit: 0,
-        totalPage: 0,
-        total: 0,
-        list: [],
+    ],
+  },
+  {
+    label: '一级 2',
+    children: [
+      {
+        label: '二级 2-1',
+        children: [
+          {
+            label: '三级 2-1-1',
+          },
+        ],
       },
-    };
+      {
+        label: '二级 2-2',
+        children: [
+          {
+            label: '三级 2-2-1',
+          },
+        ],
+      },
+    ],
   },
-  mounted() {
-    this.handlerGetTreeList(this.id);
+  {
+    label: '一级 3',
+    children: [
+      {
+        label: '二级 3-1',
+        children: [
+          {
+            label: '三级 3-1-1',
+          },
+        ],
+      },
+      {
+        label: '二级 3-2',
+        children: [
+          {
+            label: '三级 3-2-1',
+          },
+        ],
+      },
+    ],
   },
-  methods: {
-    handlerGetTreeList(id) {
-      if (!id) {
-        this.$message.error('当前数据id不正确');
-        return;
-      }
-      categoryApi.treeCategroy({ pid: id }).then((data) => {
-        this.dataList = data;
-      });
-    },
-    handleNodeClick(data) {
-      console.log('data:', data);
-    },
-  },
-};
+]);
+const dataList = ref({
+  // 数据结果
+  page: 0,
+  limit: 0,
+  totalPage: 0,
+  total: 0,
+  list: [],
+});
+
+onMounted(() => {
+  handlerGetTreeList(props.id);
+});
+
+function handlerGetTreeList(id) {
+  if (!id) {
+    ElMessage.error('当前数据id不正确');
+    return;
+  }
+  categoryApi.treeCategroy({ pid: id }).then((data) => {
+    dataList.value = data;
+  });
+}
+
+function handleNodeClick(data) {
+  console.log('data:', data);
+}
 </script>
 
 <style scoped></style>

@@ -182,18 +182,6 @@ export function menuUpdateShowStatus(params) {
   });
 }
 
-//
-/**
- * 权限规则菜单详情
- * @param data
- */
-export function sensitiveListApi(params) {
-  return request({
-    url: `/admin/log/sensitive/list`,
-    method: 'get',
-    params,
-  });
-}
 /**
  * 修改登录用户信息
  * @param data
@@ -214,5 +202,17 @@ export function adminPwdUpdateApi(data) {
     url: `/admin/login/update/password`,
     method: 'post',
     data,
+  });
+}
+
+
+/**
+ * 分类列表（原代码引用但未定义，补占位）
+ */
+export function listCategroy(params) {
+  return request({
+    url: `/admin/system/category/list`,
+    method: 'get',
+    params,
   });
 }

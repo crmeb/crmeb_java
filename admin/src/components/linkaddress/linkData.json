@@ -290,18 +290,6 @@
         "add_time": 1626837579
       },
       {
-        "id": 50,
-        "cate_id": 5,
-        "type": 1,
-        "name": "会员中心",
-        "url": "/pages/infos/user_vip/index",
-        "param": "",
-        "example": "",
-        "status": 1,
-        "sort": 0,
-        "add_time": 1626837579
-      },
-      {
         "id": 44,
         "cate_id": 5,
         "type": 3,

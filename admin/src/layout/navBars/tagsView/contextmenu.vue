@@ -25,79 +25,82 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'layoutTagsViewContextmenu',
-  props: {
-    dropdown: {
-      type: Object,
-    },
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
+
+defineOptions({ name: 'layoutTagsViewContextmenu' });
+
+const props = defineProps({
+  dropdown: {
+    type: Object,
   },
-  data() {
+});
+const emit = defineEmits(['currentContextmenuClick']);
+
+const isShow = ref(false);
+const dropdownList = ref([
+  { id: 0, txt: '刷新', affix: false, icon: 'el-icon-refresh-right' },
+  { id: 1, txt: '关闭', affix: false, icon: 'el-icon-close' },
+  { id: 2, txt: '关闭其他', affix: false, icon: 'el-icon-circle-close' },
+  { id: 3, txt: '关闭全部', affix: false, icon: 'el-icon-folder-delete' },
+]);
+const path = ref({});
+const arrowLeft = ref(5);
+
+const dropdowns = computed(() => {
+  // 99 为 `Dropdown 下拉菜单` 的宽度
+  if (props.dropdown.x + 99 > document.documentElement.clientWidth) {
     return {
-      isShow: false,
-      dropdownList: [
-        { id: 0, txt: '刷新', affix: false, icon: 'el-icon-refresh-right' },
-        { id: 1, txt: '关闭', affix: false, icon: 'el-icon-close' },
-        { id: 2, txt: '关闭其他', affix: false, icon: 'el-icon-circle-close' },
-        { id: 3, txt: '关闭全部', affix: false, icon: 'el-icon-folder-delete' },
-      ],
-      path: {},
-      arrowLeft: 5,
+      x: document.documentElement.clientWidth - 99 - 5,
+      y: props.dropdown.y,
     };
+  } else {
+    return props.dropdown;
+  }
+});
+
+onMounted(() => {
+  // 监听页面监听进行右键菜单的关闭
+  document.body.addEventListener('click', closeContextmenu, { passive: true });
+});
+
+// 当前项菜单点击
+function onCurrentContextmenuClick(id) {
+  emit('currentContextmenuClick', { id, path: path.value });
+}
+
+// 打开右键菜单：判断是否固定，固定则不显示关闭按钮
+function openContextmenu(item) {
+  path.value = item.path;
+  item.meta.isAffix ? (dropdownList.value[1].affix = true) : (dropdownList.value[1].affix = false);
+  closeContextmenu();
+  setTimeout(() => {
+    isShow.value = true;
+  }, 80);
+}
+
+// 关闭右键菜单
+function closeContextmenu() {
+  isShow.value = false;
+}
+
+onBeforeUnmount(() => {
+  // 页面卸载时，移除右键菜单监听事件
+  document.body.removeEventListener('click', closeContextmenu);
+});
+
+// 监听下拉菜单位置
+watch(
+  () => props.dropdown,
+  ({ x }) => {
+    if (x + 99 > document.documentElement.clientWidth)
+      arrowLeft.value = 99 - (document.documentElement.clientWidth - x);
+    else arrowLeft.value = 10;
   },
-  computed: {
-    dropdowns() {
-      // 99 为 `Dropdown 下拉菜单` 的宽度
-      if (this.dropdown.x + 99 > document.documentElement.clientWidth) {
-        return {
-          x: document.documentElement.clientWidth - 99 - 5,
-          y: this.dropdown.y,
-        };
-      } else {
-        return this.dropdown;
-      }
-    },
-  },
-  mounted() {
-    // 监听页面监听进行右键菜单的关闭
-    document.body.addEventListener('click', this.closeContextmenu, { passive: true });
-  },
-  methods: {
-    // 当前项菜单点击
-    onCurrentContextmenuClick(id) {
-      this.$emit('currentContextmenuClick', { id, path: this.path });
-    },
-    // 打开右键菜单：判断是否固定，固定则不显示关闭按钮
-    openContextmenu(item) {
-      this.path = item.path;
-      item.meta.isAffix ? (this.dropdownList[1].affix = true) : (this.dropdownList[1].affix = false);
-      this.closeContextmenu();
-      setTimeout(() => {
-        this.isShow = true;
-      }, 80);
-    },
-    // 关闭右键菜单
-    closeContextmenu() {
-      this.isShow = false;
-    },
-  },
-  destroyed() {
-    // 页面卸载时，移除右键菜单监听事件
-    document.body.removeEventListener('click', this.closeContextmenu);
-  },
-  // 监听下拉菜单位置
-  watch: {
-    dropdown: {
-      handler({ x }) {
-        if (x + 99 > document.documentElement.clientWidth)
-          this.arrowLeft = 99 - (document.documentElement.clientWidth - x);
-        else this.arrowLeft = 10;
-      },
-      deep: true,
-    },
-  },
-};
+  { deep: true },
+);
+
+defineExpose({ openContextmenu });
 </script>
 
 <style scoped lang="scss">

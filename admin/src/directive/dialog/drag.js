@@ -4,7 +4,7 @@
  */
 
 export default {
-  bind(el, binding, vnode, oldVnode) {
+  mounted(el, binding, vnode, oldVnode) {
     const value = binding.value;
     if (value == false) return;
     // 获取拖拽内容头部

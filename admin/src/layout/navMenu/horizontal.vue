@@ -1,28 +1,27 @@
 <template>
   <div class="el-menu-horizontal-warp">
-    <el-scrollbar @wheel.native.prevent="onElMenuHorizontalScroll" ref="elMenuHorizontalScrollRef">
+    <el-scrollbar @wheel.prevent="onElMenuHorizontalScroll" ref="elMenuHorizontalScrollRef">
       <el-menu
-        router
         :default-active="activePath || defaultActive"
         background-color="transparent"
         mode="horizontal"
         @select="onHorizontalSelect"
       >
-        <template v-for="val in menuList">
-          <el-submenu :index="val.path" v-if="val.children && val.children.length > 0" :key="val.path">
-            <template slot="title">
+        <template v-for="val in menuList" :key="val.path">
+          <el-sub-menu :index="val.path" v-if="val.children && val.children.length > 0">
+            <template #title>
               <!-- <i class="ivu-icon" :class="val.icon ? 'el-icon-' + val.icon : ''"></i> -->
               <span>{{ val.title }}</span>
             </template>
             <SubItem :chil="val.children" />
-          </el-submenu>
+          </el-sub-menu>
           <template v-else>
-            <el-menu-item :index="val.path" :key="val.path">
-              <template slot="title" v-if="!val.isLink || (val.isLink && val.isIframe)">
+            <el-menu-item :index="val.path">
+              <template #title v-if="!val.isLink || (val.isLink && val.isIframe)">
                 <!-- <i class="ivu-icon" :class="val.icon ? 'el-icon-' + val.icon : ''"></i> -->
                 {{ val.title }}
               </template>
-              <template slot="title" v-else>
+              <template #title v-else>
                 <a :href="val.isLink" target="_blank">
                   <Icon :type="val.icon ? val.icon : ''" />
                   {{ val.title }}
@@ -36,110 +35,121 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { useRoute } from 'vue-router';
 import SubItem from '@/layout/navMenu/subItem.vue';
-import { mapState } from 'vuex';
-export default {
-  name: 'navMenuHorizontal',
-  components: { SubItem },
-  props: {
-    menuList: {
-      type: Array,
-      default: () => [],
-    },
+import bus from '@/utils/bus';
+import { useMenuStore } from '@/store/modules/menu';
+import { useUserStore } from '@/store/modules/user';
+import { useThemeConfigStore } from '@/store/modules/themeConfig';
+
+defineOptions({ name: 'navMenuHorizontal' });
+
+const props = defineProps({
+  menuList: {
+    type: Array,
+    default: () => [],
   },
-  computed: {
-    ...mapState('menu', ['activePath']),
+});
+
+const route = useRoute();
+const menuStore = useMenuStore();
+const userStore = useUserStore();
+const themeConfigStore = useThemeConfigStore();
+
+const defaultActive = ref(null);
+const elMenuHorizontalScrollRef = ref(null);
+
+const activePath = computed(() => menuStore.activePath);
+
+// 设置横向滚动条可以鼠标滚轮滚动
+function onElMenuHorizontalScroll(e) {
+  const eventDelta = e.wheelDelta || -e.deltaY * 40;
+  elMenuHorizontalScrollRef.value.wrapRef.scrollLeft =
+    elMenuHorizontalScrollRef.value.wrapRef.scrollLeft + eventDelta / 4;
+}
+
+// 初始化数据，页面刷新时，滚动条滚动到对应位置
+function initElMenuOffsetLeft() {
+  nextTick(() => {
+    let els = document.querySelector('.el-menu.el-menu--horizontal li.is-active');
+    if (!els) return false;
+    elMenuHorizontalScrollRef.value.wrapRef.scrollLeft = els.offsetLeft;
+  });
+}
+
+// 路由过滤递归函数
+function filterRoutesFun(arr) {
+  return arr
+    .filter((item) => !item.isHide)
+    .map((item) => {
+      item = Object.assign({}, item);
+      if (item.children) item.children = filterRoutesFun(item.children);
+      return item;
+    });
+}
+
+// 传送当前子级数据到菜单中
+function setSendClassicChildren(path) {
+  const currentPathSplit = path.split('/');
+  let currentData = {};
+  filterRoutesFun(userStore.menuList).map((v, k) => {
+    if (v.path === `/${currentPathSplit[1]}`) {
+      v['k'] = k;
+      currentData['item'] = [{ ...v }];
+      currentData['children'] = [{ ...v }];
+      if (v.children) currentData['children'] = v.children;
+    }
+  });
+  return currentData;
+}
+
+// 菜单激活回调
+function onHorizontalSelect(path) {
+  bus.emit('setSendClassicChildren', setSendClassicChildren(path));
+}
+
+// 设置页面当前路由高亮
+function setCurrentRouterHighlight(path) {
+  const currentPathSplit = path.split('/');
+  if (themeConfigStore.themeConfig.layout === 'classic') {
+    defaultActive.value = `/${currentPathSplit[1]}`;
+  } else {
+    defaultActive.value = path;
+  }
+}
+
+// 监听路由的变化
+watch(
+  route,
+  (to) => {
+    setCurrentRouterHighlight(to.path);
   },
-  data() {
-    return {
-      defaultActive: null,
-    };
-  },
-  mounted() {
-    this.initElMenuOffsetLeft();
-    this.setCurrentRouterHighlight(this.$route.path);
-  },
-  methods: {
-    // 设置横向滚动条可以鼠标滚轮滚动
-    onElMenuHorizontalScroll(e) {
-      const eventDelta = e.wheelDelta || -e.deltaY * 40;
-      this.$refs.elMenuHorizontalScrollRef.$refs.wrap.scrollLeft =
-        this.$refs.elMenuHorizontalScrollRef.$refs.wrap.scrollLeft + eventDelta / 4;
-    },
-    // 初始化数据，页面刷新时，滚动条滚动到对应位置
-    initElMenuOffsetLeft() {
-      this.$nextTick(() => {
-        let els = document.querySelector('.el-menu.el-menu--horizontal li.is-active');
-        if (!els) return false;
-        this.$refs.elMenuHorizontalScrollRef.$refs.wrap.scrollLeft = els.offsetLeft;
-      });
-    },
-    // 路由过滤递归函数
-    filterRoutesFun(arr) {
-      return arr
-        .filter((item) => !item.isHide)
-        .map((item) => {
-          item = Object.assign({}, item);
-          if (item.children) item.children = this.filterRoutesFun(item.children);
-          return item;
-        });
-    },
-    // 传送当前子级数据到菜单中
-    setSendClassicChildren(path) {
-      const currentPathSplit = path.split('/');
-      let currentData = {};
-      this.filterRoutesFun(this.$store.state.user.menuList).map((v, k) => {
-        if (v.path === `/${currentPathSplit[1]}`) {
-          v['k'] = k;
-          currentData['item'] = [{ ...v }];
-          currentData['children'] = [{ ...v }];
-          if (v.children) currentData['children'] = v.children;
-        }
-      });
-      return currentData;
-    },
-    // 菜单激活回调
-    onHorizontalSelect(path) {
-      this.bus.$emit('setSendClassicChildren', this.setSendClassicChildren(path));
-    },
-    // 设置页面当前路由高亮
-    setCurrentRouterHighlight(path) {
-      const currentPathSplit = path.split('/');
-      if (this.$store.state.themeConfig.themeConfig.layout === 'classic') {
-        this.defaultActive = `/${currentPathSplit[1]}`;
-      } else {
-        this.defaultActive = path;
-      }
-    },
-  },
-  watch: {
-    // 监听路由的变化
-    $route: {
-      handler(to) {
-        this.setCurrentRouterHighlight(to.path);
-      },
-      deep: true,
-    },
-  },
-};
+  { deep: true }
+);
+
+onMounted(() => {
+  initElMenuOffsetLeft();
+  setCurrentRouterHighlight(route.path);
+});
 </script>
 
 <style scoped lang="scss">
-::v-deep .el-scrollbar__bar.is-horizontal {
+:deep(.el-scrollbar__bar.is-horizontal) {
   height: 0;
 }
 .el-menu-horizontal-warp {
   flex: 1;
   overflow: hidden;
   margin-right: 30px;
-  ::v-deep .el-scrollbar__bar.is-vertical {
+  :deep(.el-scrollbar__bar.is-vertical) {
     display: none;
   }
-  ::v-deep .el-scrollbar__wrap {
+  :deep(.el-scrollbar__wrap) {
     overflow-y: hidden !important;
   }
-  ::v-deep a {
+  :deep(.a) {
     width: 100%;
   }
   .el-menu.el-menu--horizontal {

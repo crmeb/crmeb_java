@@ -1,31 +1,24 @@
 /**
-* I think element-ui's default theme color is too light for long-term use.
-* So I modified the default color and you can modify it to your liking.
+* 主题色变量定义。
+* Vue2 + element-ui 时代，此文件通过 @import element-ui 的 SCSS 源码并覆盖 $--color-* 变量来实现主题定制。
+* Vue3 + element-plus 改用 CSS 变量机制，主题色通过运行时设置 --el-color-primary 等覆盖（见 layout/navBars/breadcrumb/setings.vue）。
+* 这里仅保留 :export 供 JS 读取主色，以及少量自定义 SCSS 变量供其他样式引用。
 **/
 
-/* theme color */
+/* theme color（仅作为 SCSS 变量供本项目样式引用，不再用于覆盖 element-plus）*/
 $--color-primary: #0256ff;
 $--color-success: #19be6b;
 $--color-warning: #ff7d00;
 $--color-danger: #f56464;
-// $--color-info: #1E1E1E;
 
 $--button-font-weight: 400;
-
-// $--color-text-regular: #1f2d3d;
 
 $--border-color-light: #dfe4ed;
 $--border-color-lighter: #e6ebf5;
 
-$--table-border: 1px solid#dfe6ec;
+$--table-border: 1px solid #dfe6ec;
 
-/* icon font path, required */
-$--font-path: '~element-ui/lib/theme-chalk/fonts';
-
-@import '~element-ui/packages/theme-chalk/src/index';
-
-// the :export directive is the magic sauce for webpack
-// https://www.bluematador.com/blog/how-to-share-variables-between-js-and-sass
+// the :export directive is the magic sauce for sharing vars between JS and SCSS
 :export {
   theme: $--color-primary;
 }

@@ -2,16 +2,16 @@
   <div>
     <el-form-item label="边框显示">
       <el-radio-group v-model="curComponent.propValue.showBorder" @change="onChange">
-        <el-radio :label="false">隐藏</el-radio>
-        <el-radio :label="true">显示</el-radio>
+        <el-radio :label="false" :value="false">隐藏</el-radio>
+        <el-radio :label="true" :value="true">显示</el-radio>
       </el-radio-group>
     </el-form-item>
     <template v-if="curComponent.propValue.showBorder">
       <el-form-item label="边框样式">
         <el-radio-group v-model="curComponent.propValue.borderStyle" @change="onChange">
-          <el-radio label="solid">实线</el-radio>
-          <el-radio label="dashed">虚线</el-radio>
-          <el-radio label="dotted">点状</el-radio>
+          <el-radio label="solid" value="solid">实线</el-radio>
+          <el-radio label="dashed" value="dashed">虚线</el-radio>
+          <el-radio label="dotted" value="dotted">点状</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="边框粗细">
@@ -53,21 +53,20 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ConfigBorder',
-  props: {
-    curComponent: {
-      type: Object,
-      required: true,
-    },
+<script setup>
+defineOptions({ name: 'ConfigBorder' });
+
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    required: true,
   },
-  methods: {
-    onChange() {
-      this.$emit('change');
-    },
-  },
-};
+});
+const emit = defineEmits(['change']);
+
+function onChange() {
+  emit('change');
+}
 </script>
 
 <style scoped lang="scss">

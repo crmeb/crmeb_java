@@ -1,4 +1,8 @@
 @font-face {
+  font-family: 'SemiBold';
+  src: url('./D-DIN-PRO-600-SemiBold.otf');
+}
+@font-face {
   font-family: 'dinProSemiBold';
   src: url('./D-DIN-PRO-600-SemiBold.otf');
 }
@@ -8,6 +12,9 @@
 }
 
 .semiBold {
+  font-family: 'SemiBold';
+}
+.dinProSemiBold {
   font-family: 'dinProSemiBold';
 }
 .regular {

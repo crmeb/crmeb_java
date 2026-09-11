@@ -1,7 +1,7 @@
 <template>
   <div
     class="layout-logo"
-    v-if="$store.state.themeConfig.themeConfig.layout !== 'columns' && !$store.state.themeConfig.themeConfig.isCollapse"
+    v-if="themeConfig.layout !== 'columns' && !themeConfig.isCollapse"
     @click="onThemeConfigChange"
   >
     <img v-if="maxLogo" class="layout-logo-medium-img" :src="maxLogo" />
@@ -11,85 +11,84 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { computed, onMounted, reactive } from 'vue';
+import { useRouter } from 'vue-router';
 import Cookies from 'js-cookie';
 import { getSiteLogoApi } from '@/api/systemConfig';
-export default {
-  name: 'layoutLogo',
-  data() {
-    return {
-      platMerLoginInfo: {},
-    };
-  },
-  computed: {
-    maxLogo() {
-      return (
-        this.platMerLoginInfo.siteLogoSquare ||
-        this.platMerLoginInfo.siteLogoLeftTop ||
-        this.platMerLoginInfo.logoSquare ||
-        this.platMerLoginInfo.logo_square ||
-        this.platMerLoginInfo.logo ||
-        this.platMerLoginInfo.loginLogo ||
-        ''
-      );
-    },
-    minLogo() {
-      return (
-        this.platMerLoginInfo.siteLogoLeftTop ||
-        this.platMerLoginInfo.siteLogoSquare ||
-        this.platMerLoginInfo.logoLeftTop ||
-        this.platMerLoginInfo.logo_square ||
-        this.platMerLoginInfo.logo ||
-        this.platMerLoginInfo.loginLogo ||
-        ''
-      );
-    },
-    // 获取布局配置信息
-    getThemeConfig() {
-      return this.$store.state.themeConfig.themeConfig;
-    },
-    // 设置 logo 是否显示
-    setShowLogo() {
-      let { isCollapse, layout } = this.$store.state.themeConfig.themeConfig;
-      return !isCollapse || layout === 'classic' || document.body.clientWidth < 1000;
-    },
-  },
-  mounted() {
-    this.getLogoInfo();
-  },
-  methods: {
-    getLogoInfo() {
-      getSiteLogoApi()
-        .then((res) => {
-          this.platMerLoginInfo = res || {};
-        })
-        .catch(() => {
-          const logoInfo = Cookies.get('logoInfo');
-          this.platMerLoginInfo = this.parseLogoInfo(logoInfo);
-        });
-    },
-    parseLogoInfo(logoInfo) {
-      if (!logoInfo) return {};
-      try {
-        return JSON.parse(logoInfo);
-      } catch (e) {
-        return {};
-      }
-    },
-    // logo 点击实现菜单展开/收起
-    onThemeConfigChange() {
-      // if (
-      //   this.$store.state.themeConfig.themeConfig.layout == 'columns' &&
-      //   !this.$store.state.user.childMenuList.length &&
-      //   this.$store.state.themeConfig.themeConfig.isCollapse
-      // )
-      //   return;
-      // if (this.$store.state.themeConfig.themeConfig.layout === 'transverse' || this.$store.state.themeConfig.themeConfig.layout === 'classic') return false;
-      // this.$store.state.themeConfig.themeConfig.isCollapse = !this.$store.state.themeConfig.themeConfig.isCollapse;
-      this.$router.push(`/dashboard`);
-    },
-  },
-};
+import { useThemeConfigStore } from '@/store/modules/themeConfig';
+
+defineOptions({ name: 'layoutLogo' });
+
+const router = useRouter();
+const themeConfigStore = useThemeConfigStore();
+
+const platMerLoginInfo = reactive({});
+
+const maxLogo = computed(() => {
+  return (
+    platMerLoginInfo.siteLogoSquare ||
+    platMerLoginInfo.siteLogoLeftTop ||
+    platMerLoginInfo.logoSquare ||
+    platMerLoginInfo.logo_square ||
+    platMerLoginInfo.logo ||
+    platMerLoginInfo.loginLogo ||
+    ''
+  );
+});
+const minLogo = computed(() => {
+  return (
+    platMerLoginInfo.siteLogoLeftTop ||
+    platMerLoginInfo.siteLogoSquare ||
+    platMerLoginInfo.logoLeftTop ||
+    platMerLoginInfo.logo_square ||
+    platMerLoginInfo.logo ||
+    platMerLoginInfo.loginLogo ||
+    ''
+  );
+});
+// 获取布局配置信息
+const themeConfig = computed(() => themeConfigStore.themeConfig);
+// 设置 logo 是否显示
+const setShowLogo = computed(() => {
+  let { isCollapse, layout } = themeConfigStore.themeConfig;
+  return !isCollapse || layout === 'classic' || document.body.clientWidth < 1000;
+});
+
+function getLogoInfo() {
+  getSiteLogoApi()
+    .then((res) => {
+      Object.assign(platMerLoginInfo, res || {});
+    })
+    .catch(() => {
+      const logoInfo = Cookies.get('logoInfo');
+      Object.assign(platMerLoginInfo, parseLogoInfo(logoInfo));
+    });
+}
+function parseLogoInfo(logoInfo) {
+  if (!logoInfo) return {};
+  try {
+    return JSON.parse(logoInfo);
+  } catch (e) {
+    return {};
+  }
+}
+// logo 点击实现菜单展开/收起
+function onThemeConfigChange() {
+  // if (
+  //   themeConfigStore.themeConfig.layout == 'columns' &&
+  //   !this.$store.state.user.childMenuList.length &&
+  //   themeConfigStore.themeConfig.isCollapse
+  // )
+  //   return;
+  // if (themeConfigStore.themeConfig.layout === 'transverse' || themeConfigStore.themeConfig.layout === 'classic') return false;
+  // themeConfigStore.themeConfig.isCollapse = !themeConfigStore.themeConfig.isCollapse;
+  router.push(`/dashboard`);
+}
+
+onMounted(() => {
+  getLogoInfo();
+});
 </script>
 
 <style scoped lang="scss">

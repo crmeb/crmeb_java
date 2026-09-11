@@ -4,7 +4,7 @@
  */
 
 export default {
-  bind(el) {
+  mounted(el) {
     const dragDom = el.querySelector('.el-dialog');
     const lineEl = document.createElement('div');
     lineEl.style =

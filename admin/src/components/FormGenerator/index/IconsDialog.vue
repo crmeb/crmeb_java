@@ -4,21 +4,20 @@
       v-bind="$attrs"
       width="980px"
       :modal-append-to-body="false"
-      v-on="$listeners"
       @open="onOpen"
       @close="onClose"
     >
-      <div slot="title">
+      <template #header>
         选择图标
         <el-input
           v-model="key"
-          size="mini"
+
           :style="{ width: '260px' }"
           placeholder="请输入图标名称"
-          prefix-icon="el-icon-search"
+          :prefix-icon="Search"
           clearable
         />
-      </div>
+      </template>
       <ul class="icon-ul">
         <li v-for="icon in iconList" :key="icon" :class="active === icon ? 'active-item' : ''" @click="onSelect(icon)">
           <i :class="icon" />
@@ -28,43 +27,40 @@
     </el-dialog>
   </div>
 </template>
-<script>
-import iconList from '../utils/icon.json';
+<script setup>
+import { ref, watch } from 'vue';
+import { Search } from '@element-plus/icons-vue';
+import iconData from '../utils/icon.json';
 
-const originList = iconList.map((name) => `el-icon-${name}`);
+defineOptions({ inheritAttrs: false });
 
-export default {
-  inheritAttrs: false,
-  props: ['current'],
-  data() {
-    return {
-      iconList: originList,
-      active: null,
-      key: '',
-    };
-  },
-  watch: {
-    key(val) {
-      if (val) {
-        this.iconList = originList.filter((name) => name.indexOf(val) > -1);
-      } else {
-        this.iconList = originList;
-      }
-    },
-  },
-  methods: {
-    onOpen() {
-      this.active = this.current;
-      this.key = '';
-    },
-    onClose() {},
-    onSelect(icon) {
-      this.active = icon;
-      this.$emit('select', icon);
-      this.$emit('update:visible', false);
-    },
-  },
-};
+const props = defineProps(['current']);
+const emit = defineEmits(['select', 'update:visible']);
+
+const originList = iconData.map((name) => `el-icon-${name}`);
+
+const iconList = ref(originList);
+const active = ref(null);
+const key = ref('');
+
+watch(key, (val) => {
+  if (val) {
+    iconList.value = originList.filter((name) => name.indexOf(val) > -1);
+  } else {
+    iconList.value = originList;
+  }
+});
+
+function onOpen() {
+  active.value = props.current;
+  key.value = '';
+}
+function onClose() {}
+function onSelect(icon) {
+  active.value = icon;
+  emit('select', icon);
+  emit('update:visible', false);
+}
 </script>
 <style lang="scss" scoped>
 .icon-ul {
@@ -96,7 +92,7 @@ export default {
   }
 }
 .icon-dialog {
-  ::v-deep .el-dialog {
+  :deep(.el-dialog) {
     border-radius: 8px;
     margin-bottom: 0;
     margin-top: 4vh !important;

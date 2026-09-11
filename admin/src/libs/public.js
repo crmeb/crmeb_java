@@ -8,9 +8,8 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import { storeStaffListApi } from '@/api/storePoint';
 import { seckillListApi } from '@/api/marketing';
-import { checkPermi } from '@/utils/permission'; // 权限判断函数
+import { ElMessageBox, ElMessage } from '@/utils/elementPlusFeedback';
 import Cookies from 'js-cookie';
 
 /**
@@ -18,7 +17,7 @@ import Cookies from 'js-cookie';
  */
 export function modalSure(title) {
   return new Promise((resolve, reject) => {
-    this.$confirm(`确定${title || '永久删除该数据'}`, '提示', {
+    ElMessageBox.confirm(`确定${title || '永久删除该数据'}`, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
@@ -29,7 +28,7 @@ export function modalSure(title) {
       })
       .catch(() => {
         reject();
-        this.$message({
+        ElMessage({
           type: 'info',
           message: '已取消',
         });
@@ -49,19 +48,6 @@ export function isLogin() {
       .catch((res) => {
         reject(res);
       });
-  });
-}
-
-/**
- * @description 核销员列表
- */
-export function getStoreStaff() {
-  return new Promise((resolve, reject) => {
-    if (checkPermi(['admin:system:staff:list'])) {
-      storeStaffListApi({ page: 1, limit: 9999 }).then(async (res) => {
-        localStorage.setItem('storeStaffList', res.list ? JSON.stringify(res.list) : []);
-      });
-    }
   });
 }
 

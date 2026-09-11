@@ -8,26 +8,25 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
+import { h } from 'vue';
+import { ElMessageBox, ElMessage } from '@/utils/elementPlusFeedback';
+import CouponList from '@/components/couponList/index.vue';
+
 export default function modalCoupon(handle, keyNum, callback, couponId = [], userIds) {
-  const h = this.$createElement;
   return new Promise((resolve, reject) => {
-    this.$msgbox({
+    ElMessageBox({
       title: '优惠券列表',
       customClass: 'upload-form-temp',
       closeOnClickModal: false,
       showClose: false,
       message: h('div', { class: 'common-form-upload' }, [
-        h('couponList', {
-          props: {
-            handle: handle,
-            couponId: couponId,
-            keyNum: keyNum,
-            userIds: userIds,
-          },
-          on: {
-            getCouponId(id) {
-              callback(id);
-            },
+        h(CouponList, {
+          handle: handle,
+          couponId: couponId,
+          keyNum: keyNum,
+          userIds: userIds,
+          onGetCouponId(id) {
+            callback(id);
           },
         }),
       ]),
@@ -39,7 +38,7 @@ export default function modalCoupon(handle, keyNum, callback, couponId = [], use
       })
       .catch(() => {
         reject();
-        this.$message({
+        ElMessage({
           type: 'info',
           message: '已取消',
         });

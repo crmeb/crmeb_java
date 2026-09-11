@@ -59,18 +59,6 @@ export function userUpdateApi(params, data) {
 }
 
 /**
- * 会员管理等级 修改
- * @param pram
- */
-export function userLevelUpdateApi(data) {
-  return request({
-    url: `/admin/user/update/level`,
-    method: 'post',
-    data,
-  });
-}
-
-/**
  * 会员管理 详情
  * @param pram
  */
@@ -151,77 +139,6 @@ export function userDeleteApi(params) {
     url: `/admin/user/delete`,
     method: 'get',
     params,
-  });
-}
-
-/**
- * 会员等级 列表
- * @param pram
- */
-export function levelListApi() {
-  return request({
-    url: `/admin/system/user/level/list`,
-    method: 'get',
-  });
-}
-
-/**
- * 会员等级 新增
- * @param pram
- */
-export function levelSaveApi(data) {
-  return request({
-    url: `/admin/system/user/level/save`,
-    method: 'post',
-    data,
-  });
-}
-
-/**
- * 会员等级 编辑
- *  @param pram
- */
-export function levelUpdateApi(params, data) {
-  return request({
-    url: `/admin/system/user/level/update/${params}`,
-    method: 'post',
-    // params,
-    data,
-  });
-}
-
-/**
- * 会员等级 详情
- * @param pram
- */
-export function levelInfoApi(params) {
-  return request({
-    url: `/admin/system/user/level/info`,
-    method: 'get',
-    params,
-  });
-}
-
-/**
- * 会员等级 删除
- * @param pram
- */
-export function levelDeleteApi(id) {
-  return request({
-    url: `/admin/system/user/level/delete/${id}`,
-    method: 'post',
-  });
-}
-
-/**
- * 会员等级 是否显示
- * @param pram
- */
-export function levelUseApi(data) {
-  return request({
-    url: `/admin/system/user/level/use`,
-    method: 'post',
-    data,
   });
 }
 
@@ -386,6 +303,28 @@ export function updatePhoneApi(params) {
     url: `/admin/user/update/phone`,
     method: 'get',
     params,
+  });
+}
+
+/**
+ * @description 修改用户密码
+ */
+export function userUpdatePasswordApi(data) {
+  return request({
+    url: `/admin/user/update/password`,
+    method: 'post',
+    data,
+  });
+}
+
+/**
+ * @description 新增H5用户
+ */
+export function userCreateApi(data) {
+  return request({
+    url: `/admin/user/save`,
+    method: 'post',
+    data,
   });
 }
 

@@ -19,7 +19,7 @@
       </div>
 
       <div class="tab-content" v-show="activeName === 'attr' && curComponent.component !== 'Line'">
-        <el-form size="small" label-width="70px" label-position="left">
+        <el-form label-width="70px" label-position="left">
           <template v-if="curComponent.component === 'Text'">
             <ConfigTextContent
               :curComponent="curComponent"
@@ -71,7 +71,7 @@
         />
         <div v-if="curComponent.component === 'Picture'" class="section-title">图片设置</div>
         <div v-if="curComponent.component === 'Icon'" class="section-title">图标设置</div>
-        <el-form size="small" label-width="70px" label-position="left">
+        <el-form label-width="70px" label-position="left">
           <template v-if="curComponent.component === 'Picture'">
             <ConfigRadius :curComponent="curComponent" labelPrefix="图片" @change="onChange" />
             <ConfigSize
@@ -149,7 +149,8 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch } from 'vue';
 import linkaddress from '@/components/linkaddress';
 import ConfigPosition from './components/ConfigPosition';
 import ConfigSize from './components/ConfigSize';
@@ -167,230 +168,203 @@ import ConfigPictureContent from './components/ConfigPictureContent';
 import ConfigIconContent from './components/ConfigIconContent';
 import ConfigPanelContent from './components/ConfigPanelContent';
 
-export default {
-  components: {
-    linkaddress,
-    ConfigPosition,
-    ConfigSize,
-    ConfigBorder,
-    ConfigRadius,
-    ConfigBackground,
-    ConfigPadding,
-    ConfigShadow,
-    ConfigText,
-    ConfigMultiSelect,
-    ConfigLine,
-    ConfigIconStyle,
-    ConfigTextContent,
-    ConfigPictureContent,
-    ConfigIconContent,
-    ConfigPanelContent,
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    default: () => ({}),
   },
-  props: {
-    curComponent: {
-      type: Object,
-      default: () => ({}),
-    },
-    activeComponentIds: {
-      type: Array,
-      default: () => [],
-    },
-    componentData: {
-      type: Array,
-      default: () => [],
-    },
-    canvasWidth: {
-      type: Number,
-      default: 375,
-    },
-    canvasHeight: {
-      type: Number,
-      default: 380,
-    },
-    type: {
-      type: String,
-      default: 'user',
-    },
-    fieldList: {
-      type: Object,
-      default: () => ({}),
-    },
+  activeComponentIds: {
+    type: Array,
+    default: () => [],
   },
-  data() {
-    return {
-      activeName: 'attr',
-    };
+  componentData: {
+    type: Array,
+    default: () => [],
   },
-  watch: {
-    'curComponent.id': {
-      handler(val) {
-        if (val && this.curComponent && this.curComponent.style) {
-          // Ensure padding properties are reactive (for ConfigPadding)
-          if (this.curComponent.propValue.paddingTop === undefined)
-            this.$set(this.curComponent.propValue, 'paddingTop', 0);
-          if (this.curComponent.propValue.paddingRight === undefined)
-            this.$set(this.curComponent.propValue, 'paddingRight', 0);
-          if (this.curComponent.propValue.paddingBottom === undefined)
-            this.$set(this.curComponent.propValue, 'paddingBottom', 0);
-          if (this.curComponent.propValue.paddingLeft === undefined)
-            this.$set(this.curComponent.propValue, 'paddingLeft', 0);
-
-          // Ensure rotate is reactive in style (for drag rotate)
-          if (this.curComponent.style.rotate === undefined) {
-            this.$set(this.curComponent.style, 'rotate', 0);
-          }
-
-          if (this.curComponent.component === 'Text' && this.curComponent.propValue.linkType === undefined) {
-            this.$set(this.curComponent.propValue, 'linkType', 'url');
-          }
-          // Ensure typeLabel is synced if missing
-          if (this.curComponent.propValue.fieldType && !this.curComponent.propValue.typeLabel) {
-            const field = this.currentFieldList.find((item) => item.value === this.curComponent.propValue.fieldType);
-            if (field) {
-              this.$set(this.curComponent.propValue, 'typeLabel', field.label);
-            }
-          }
-        }
-      },
-      immediate: true,
-    },
+  canvasWidth: {
+    type: Number,
+    default: 375,
   },
-  computed: {
-    selectedComponents() {
-      return this.componentData.filter((item) => this.activeComponentIds.includes(item.id));
-    },
-    groupRect() {
-      if (this.selectedComponents.length === 0) return { left: 0, top: 0, width: 0, height: 0 };
-      const lefts = this.selectedComponents.map((c) => c.style.left);
-      const tops = this.selectedComponents.map((c) => c.style.top);
-      const rights = this.selectedComponents.map((c) => c.style.left + c.style.width);
-      const bottoms = this.selectedComponents.map((c) => c.style.top + c.style.height);
+  canvasHeight: {
+    type: Number,
+    default: 380,
+  },
+  type: {
+    type: String,
+    default: 'user',
+  },
+  fieldList: {
+    type: Object,
+    default: () => ({}),
+  },
+});
+const emit = defineEmits(['update-group', 'change']);
 
-      const minLeft = Math.min(...lefts);
-      const minTop = Math.min(...tops);
-      const maxRight = Math.max(...rights);
-      const maxBottom = Math.max(...bottoms);
+const activeName = ref('attr');
+const linkaddres = ref(null);
 
-      return {
-        left: minLeft,
-        top: minTop,
-        width: maxRight - minLeft,
-        height: maxBottom - minTop,
-      };
-    },
-    groupX: {
-      get() {
-        return this.groupRect.left;
-      },
-      set(val) {
-        const delta = val - this.groupRect.left;
-        this.selectedComponents.forEach((c) => {
-          c.style.left += delta;
-        });
-        this.$emit('update-group');
-      },
-    },
-    groupY: {
-      get() {
-        return this.groupRect.top;
-      },
-      set(val) {
-        const delta = val - this.groupRect.top;
-        this.selectedComponents.forEach((c) => {
-          c.style.top += delta;
-        });
-        this.$emit('update-group');
-      },
-    },
-    currentFieldList() {
-      const map = {
-        user: 'user',
-        article: 'article',
-        coupon: 'coupon',
-        goods: 'product',
-      };
-      const key = map[this.type] || 'user';
-      const list = this.fieldList[key] || [];
-      if (Array.isArray(list)) {
-        return list.map((item) => {
-          if (typeof item === 'object') {
-            return {
-              label: item.label || item.title || item.name,
-              value: item.value || item.field || item.key || item.name,
-            };
-          }
-          return { label: item, value: item };
-        });
+watch(
+  () => props.curComponent.id,
+  (val) => {
+    if (val && props.curComponent && props.curComponent.style) {
+      // Ensure padding properties are reactive (for ConfigPadding)
+      if (props.curComponent.propValue.paddingTop === undefined) props.curComponent.propValue.paddingTop = 0;
+      if (props.curComponent.propValue.paddingRight === undefined) props.curComponent.propValue.paddingRight = 0;
+      if (props.curComponent.propValue.paddingBottom === undefined) props.curComponent.propValue.paddingBottom = 0;
+      if (props.curComponent.propValue.paddingLeft === undefined) props.curComponent.propValue.paddingLeft = 0;
+
+      // Ensure rotate is reactive in style (for drag rotate)
+      if (props.curComponent.style.rotate === undefined) {
+        props.curComponent.style.rotate = 0;
       }
-      if (typeof list === 'object') {
-        return Object.keys(list).map((k) => ({
-          label: list[k],
-          value: k,
-        }));
-      }
-      return [];
-    },
-  },
-  methods: {
-    alignComponents(type) {
-      if (this.selectedComponents.length < 2) return;
 
-      const rect = this.groupRect;
-      this.selectedComponents.forEach((c) => {
-        switch (type) {
-          case 'left':
-            c.style.left = rect.left;
-            break;
-          case 'center':
-            c.style.left = rect.left + (rect.width - c.style.width) / 2;
-            break;
-          case 'right':
-            c.style.left = rect.left + rect.width - c.style.width;
-            break;
-          case 'top':
-            c.style.top = rect.top;
-            break;
-          case 'middle':
-            c.style.top = rect.top + (rect.height - c.style.height) / 2;
-            break;
-          case 'bottom':
-            c.style.top = rect.top + rect.height - c.style.height;
-            break;
-          case 'all-center':
-            c.style.left = rect.left + (rect.width - c.style.width) / 2;
-            c.style.top = rect.top + (rect.height - c.style.height) / 2;
-            break;
+      if (props.curComponent.component === 'Text' && props.curComponent.propValue.linkType === undefined) {
+        props.curComponent.propValue.linkType = 'url';
+      }
+      // Ensure typeLabel is synced if missing
+      if (props.curComponent.propValue.fieldType && !props.curComponent.propValue.typeLabel) {
+        const field = currentFieldList.value.find((item) => item.value === props.curComponent.propValue.fieldType);
+        if (field) {
+          props.curComponent.propValue.typeLabel = field.label;
         }
-      });
-      this.$emit('update-group');
-    },
-    onChange() {
-      this.$emit('change');
-    },
-    getLink() {
-      const typeMap = {
-        goods: {
-          id: 9,
-          pid: 2,
-          type: 'product',
-        },
-        article: {
-          id: 14,
-          pid: 3,
-          type: 'news',
-        },
-      };
-      const linkType = this.curComponent && this.curComponent.propValue && this.curComponent.propValue.linkType;
-      const target = linkType === 'detail' ? typeMap[this.type] : null;
-      if (target) this.$refs.linkaddres.handleCheckChange(target);
-      this.$refs.linkaddres.modals = true;
-    },
-    linkUrl(e) {
-      this.$set(this.curComponent.propValue, 'link', e);
-      this.onChange();
-    },
+      }
+    }
   },
-};
+  { immediate: true },
+);
+
+const selectedComponents = computed(() => {
+  return props.componentData.filter((item) => props.activeComponentIds.includes(item.id));
+});
+const groupRect = computed(() => {
+  if (selectedComponents.value.length === 0) return { left: 0, top: 0, width: 0, height: 0 };
+  const lefts = selectedComponents.value.map((c) => c.style.left);
+  const tops = selectedComponents.value.map((c) => c.style.top);
+  const rights = selectedComponents.value.map((c) => c.style.left + c.style.width);
+  const bottoms = selectedComponents.value.map((c) => c.style.top + c.style.height);
+
+  const minLeft = Math.min(...lefts);
+  const minTop = Math.min(...tops);
+  const maxRight = Math.max(...rights);
+  const maxBottom = Math.max(...bottoms);
+
+  return {
+    left: minLeft,
+    top: minTop,
+    width: maxRight - minLeft,
+    height: maxBottom - minTop,
+  };
+});
+const groupX = computed({
+  get() {
+    return groupRect.value.left;
+  },
+  set(val) {
+    const delta = val - groupRect.value.left;
+    selectedComponents.value.forEach((c) => {
+      c.style.left += delta;
+    });
+    emit('update-group');
+  },
+});
+const groupY = computed({
+  get() {
+    return groupRect.value.top;
+  },
+  set(val) {
+    const delta = val - groupRect.value.top;
+    selectedComponents.value.forEach((c) => {
+      c.style.top += delta;
+    });
+    emit('update-group');
+  },
+});
+const currentFieldList = computed(() => {
+  const map = {
+    user: 'user',
+    article: 'article',
+    coupon: 'coupon',
+    goods: 'product',
+  };
+  const key = map[props.type] || 'user';
+  const list = props.fieldList[key] || [];
+  if (Array.isArray(list)) {
+    return list.map((item) => {
+      if (typeof item === 'object') {
+        return {
+          label: item.label || item.title || item.name,
+          value: item.value || item.field || item.key || item.name,
+        };
+      }
+      return { label: item, value: item };
+    });
+  }
+  if (typeof list === 'object') {
+    return Object.keys(list).map((k) => ({
+      label: list[k],
+      value: k,
+    }));
+  }
+  return [];
+});
+
+function alignComponents(type) {
+  if (selectedComponents.value.length < 2) return;
+
+  const rect = groupRect.value;
+  selectedComponents.value.forEach((c) => {
+    switch (type) {
+      case 'left':
+        c.style.left = rect.left;
+        break;
+      case 'center':
+        c.style.left = rect.left + (rect.width - c.style.width) / 2;
+        break;
+      case 'right':
+        c.style.left = rect.left + rect.width - c.style.width;
+        break;
+      case 'top':
+        c.style.top = rect.top;
+        break;
+      case 'middle':
+        c.style.top = rect.top + (rect.height - c.style.height) / 2;
+        break;
+      case 'bottom':
+        c.style.top = rect.top + rect.height - c.style.height;
+        break;
+      case 'all-center':
+        c.style.left = rect.left + (rect.width - c.style.width) / 2;
+        c.style.top = rect.top + (rect.height - c.style.height) / 2;
+        break;
+    }
+  });
+  emit('update-group');
+}
+function onChange() {
+  emit('change');
+}
+function getLink() {
+  const typeMap = {
+    goods: {
+      id: 9,
+      pid: 2,
+      type: 'product',
+    },
+    article: {
+      id: 14,
+      pid: 3,
+      type: 'news',
+    },
+  };
+  const linkType = props.curComponent && props.curComponent.propValue && props.curComponent.propValue.linkType;
+  const target = linkType === 'detail' ? typeMap[props.type] : null;
+  if (target) linkaddres.value.handleCheckChange(target);
+  linkaddres.value.modals = true;
+}
+function linkUrl(e) {
+  props.curComponent.propValue.link = e;
+  onChange();
+}
 </script>
 
 <style scoped lang="scss">
@@ -448,20 +422,20 @@ export default {
       }
     }
   }
-  ::v-deep .el-radio,
-  ::v-deep .el-checkbox {
+  :deep(.el-radio),
+  :deep(.el-checkbox) {
     margin-bottom: 0;
   }
-  ::v-deep .el-form-item__content {
+  :deep(.el-form-item__content) {
     margin-left: 80px !important;
     line-height: 36px !important;
   }
-  ::v-deep .el-form-item--small .el-form-item__label {
+  :deep(.el-form-item--small .el-form-item__label) {
     line-height: 38px !important;
     word-break: break-word;
   }
 }
-::v-deep .reset-color {
+:deep(.reset-color) {
   font-size: 13px;
   white-space: nowrap;
   color: var(--prev-color-primary);

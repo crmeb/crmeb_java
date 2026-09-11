@@ -17,7 +17,7 @@
       @change="onChange"
       @get-link="getLink"
     />
-    <el-dialog :visible.sync="modalPic" width="950px" title="上传图片" append-to-body>
+    <el-dialog v-model="modalPic" width="1024px" title="上传图片" append-to-body>
       <uploadPictures
         :isChoice="isChoice"
         @getPic="getPic"
@@ -29,71 +29,64 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive } from 'vue';
 import uploadPictures from '@/views/design/theme_editor/components/uploadPictures';
 import ConfigLink from './ConfigLink';
 
-export default {
-  name: 'ConfigPictureContent',
-  components: {
-    uploadPictures,
-    ConfigLink,
+defineOptions({ name: 'ConfigPictureContent' });
+
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    required: true,
   },
-  props: {
-    curComponent: {
-      type: Object,
-      required: true,
-    },
-    type: {
-      type: String,
-      default: 'user',
-    },
-    currentFieldList: {
-      type: Array,
-      default: () => [],
-    },
+  type: {
+    type: String,
+    default: 'user',
   },
-  data() {
-    return {
-      modalPic: false,
-      isChoice: '单选',
-      gridBtn: {
-        xl: 4,
-        lg: 8,
-        md: 8,
-        sm: 8,
-        xs: 8,
-      },
-      gridPic: {
-        xl: 6,
-        lg: 8,
-        md: 12,
-        sm: 12,
-        xs: 12,
-      },
-    };
+  currentFieldList: {
+    type: Array,
+    default: () => [],
   },
-  methods: {
-    modalPicTap() {
-      this.modalPic = true;
-    },
-    bindDelete() {
-      this.curComponent.propValue.url = '';
-      this.onChange();
-    },
-    getPic(pc) {
-      this.curComponent.propValue.url = pc.att_dir;
-      this.modalPic = false;
-      this.onChange();
-    },
-    getLink() {
-      this.$emit('get-link');
-    },
-    onChange() {
-      this.$emit('change');
-    },
-  },
-};
+});
+const emit = defineEmits(['change', 'get-link']);
+
+const modalPic = ref(false);
+const isChoice = ref('单选');
+const gridBtn = reactive({
+  xl: 4,
+  lg: 8,
+  md: 8,
+  sm: 8,
+  xs: 8,
+});
+const gridPic = reactive({
+  xl: 6,
+  lg: 8,
+  md: 12,
+  sm: 12,
+  xs: 12,
+});
+
+function modalPicTap() {
+  modalPic.value = true;
+}
+function bindDelete() {
+  props.curComponent.propValue.url = '';
+  onChange();
+}
+function getPic(pc) {
+  props.curComponent.propValue.url = pc.att_dir;
+  modalPic.value = false;
+  onChange();
+}
+function getLink() {
+  emit('get-link');
+}
+function onChange() {
+  emit('change');
+}
 </script>
 
 <style scoped lang="scss">

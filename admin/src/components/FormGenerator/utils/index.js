@@ -91,8 +91,9 @@ function stringify(obj) {
 }
 
 function parse(str) {
-  JSON.parse(str, (k, v) => {
-    if (v.indexOf && v.indexOf('function') > -1) {
+  return JSON.parse(str, (k, v) => {
+    if (typeof v === 'string' && v.indexOf('function') > -1) {
+      // eslint-disable-next-line no-eval
       return eval(`(${v})`);
     }
     return v;

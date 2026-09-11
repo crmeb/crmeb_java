@@ -7,7 +7,7 @@
       @click="onThemeConfigChange"
     ></i>
     <el-breadcrumb class="layout-navbars-breadcrumb-hide" v-if="isShowcrumb" :style="{ display: isShowBreadcrumb }">
-      <transition-group name="breadcrumb" mode="out-in">
+      <transition-group name="breadcrumb">
         <el-breadcrumb-item v-for="(v, k) in [...breadCrumbList, ...crumbPast]" :key="v.id">
           <span v-if="k == 1" class="layout-navbars-breadcrumb-span">
             <i
@@ -29,159 +29,178 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { Local } from '@/utils/storage.js';
-import { R } from '@/utils/util';
-import { getMenuopen } from '@/utils/util';
+import { R, getMenuopen } from '@/utils/util';
+import { useThemeConfigStore } from '@/store/modules/themeConfig';
+import { useUserStore } from '@/store/modules/user';
 
-export default {
-  name: 'layoutBreadcrumb',
-  data() {
-    return {
-      breadcrumbList: [],
-      routeSplit: [],
-      routeSplitFirst: '',
-      routeSplitIndex: 1,
-    };
-  },
-  computed: {
-    breadCrumbList() {
-      let menuList = this.$store.state.user.menuList;
-      let openMenus = getMenuopen(this.$route, menuList);
-      let allMenuList = R(menuList, []);
-      let selectMenu = [];
-      if (allMenuList.length > 0) {
-        openMenus.forEach((i) => {
-          allMenuList.forEach((a) => {
-            if (i === a.path) {
-              selectMenu.push(a);
-            }
-          });
-        });
+defineOptions({ name: 'layoutBreadcrumb' });
+
+const route = useRoute();
+const router = useRouter();
+const themeConfigStore = useThemeConfigStore();
+const userStore = useUserStore();
+
+const breadcrumbList = ref([]);
+const routeSplit = ref([]);
+const routeSplitFirst = ref('');
+const routeSplitIndex = ref(1);
+
+const breadCrumbList = computed(() => {
+  let menuList = userStore.menuList;
+  let openMenus = getMenuopen(route, menuList);
+  let allMenuList = R(menuList, []);
+  let selectMenu = [];
+  if (allMenuList.length > 0) {
+    openMenus.forEach((i) => {
+      allMenuList.forEach((a) => {
+        if (i === a.path) {
+          selectMenu.push(a);
+        }
+      });
+    });
+  }
+  return selectMenu;
+});
+
+const crumbPast = computed(() => {
+  let menuList = userStore.menuList;
+  let allMenuList = R(menuList, []);
+  let selectMenu = [];
+  if (allMenuList.length > 0) {
+    allMenuList.forEach((a) => {
+      if (route.path === a.path) {
+        selectMenu.push(a);
       }
-      return selectMenu;
+    });
+  }
+  return selectMenu;
+});
+
+// 获取布局配置信息
+const getThemeConfig = computed(() => {
+  return themeConfigStore.themeConfig;
+});
+
+// 动态设置经典、横向布局不显示
+const isShowBreadcrumb = computed(() => {
+  const { layout, isBreadcrumb } = themeConfigStore.themeConfig;
+  if (layout === 'transverse' || layout === 'classic') {
+    return 'none';
+  } else {
+    return isBreadcrumb ? '' : 'none';
+  }
+});
+
+const isShowcrumb = computed(() => {
+  const { layout } = themeConfigStore.themeConfig;
+  if (layout === 'transverse' || layout === 'classic') {
+    return false;
+  } else {
+    return true;
+  }
+});
+
+const collapseShow = computed(() => {
+  return ['defaults', 'columns'].includes(themeConfigStore.themeConfig.layout);
+});
+
+onMounted(() => {
+  initRouteSplit(route.path);
+});
+
+// breadcrumb 当前项点击时
+function onBreadcrumbClick(v) {
+  console.log(v);
+
+  const { redirect, path } = v;
+  router.push(path);
+}
+
+// breadcrumb icon 点击菜单展开与收起
+function onThemeConfigChange() {
+  if (
+    themeConfigStore.themeConfig.layout == 'columns' &&
+    !userStore.childMenuList.length &&
+    themeConfigStore.themeConfig.isCollapse
+  ) {
+    return;
+  }
+  themeConfigStore.themeConfig.isCollapse = !themeConfigStore.themeConfig.isCollapse;
+  setLocalThemeConfig();
+}
+
+// 存储布局配置
+function setLocalThemeConfig() {
+  Local.remove('JavaPlatThemeConfigPrev');
+  Local.set('JavaPlatThemeConfigPrev', themeConfigStore.themeConfig);
+}
+
+// 递归设置 breadcrumb
+function getBreadcrumbList(arr) {
+  if (!Array.isArray(arr) || arr.length === 0) return;
+  arr.map((item) => {
+    routeSplit.value.map((v, k, arrs) => {
+      if (routeSplitFirst.value === item.path) {
+        routeSplitFirst.value += `/${arrs[routeSplitIndex.value]}`;
+        breadcrumbList.value.push(item);
+        routeSplitIndex.value++;
+        if (item.children) getBreadcrumbList(item.children);
+      }
+    });
+  });
+}
+
+// 当前路由分割处理
+function initRouteSplit(path) {
+  const firstMenu = userStore.menuList[0];
+
+  if (!firstMenu) {
+    breadcrumbList.value = [];
+    return;
+  }
+
+  breadcrumbList.value = [
+    {
+      path: '/',
+      meta: {
+        title: firstMenu.title,
+        icon: firstMenu.icon,
+      },
     },
-    crumbPast() {
-      let that = this;
-      let menuList = that.$store.state.user.menuList;
-      let allMenuList = R(menuList, []);
-      let selectMenu = [];
-      if (allMenuList.length > 0) {
+  ];
+  //   routeSplit.value = path.split('/');
+  //   routeSplit.value.shift();
+  routeSplitFirst.value = path;
+  routeSplitIndex.value = 1;
+  getBreadcrumbList(userStore.menuList);
+}
+
+// 监听路由的变化
+watch(
+  () => [route.path, userStore.menuList],
+  ([path]) => {
+    initRouteSplit(path);
+    const newVal = route;
+    let menuList = userStore.menuList;
+    let openMenus = getMenuopen(newVal, menuList);
+    let allMenuList = R(menuList, []);
+    let selectMenu = [];
+    if (allMenuList.length > 0) {
+      openMenus.forEach((i) => {
         allMenuList.forEach((a) => {
-          if (that.$route.path === a.path) {
+          if (i === a.path) {
             selectMenu.push(a);
           }
         });
-      }
-      return selectMenu;
-    },
-    // 获取布局配置信息
-    getThemeConfig() {
-      return this.$store.state.themeConfig.themeConfig;
-    },
-    // 动态设置经典、横向布局不显示
-    isShowBreadcrumb() {
-      const { layout, isBreadcrumb } = this.$store.state.themeConfig.themeConfig;
-      if (layout === 'transverse' || layout === 'classic') {
-        return 'none';
-      } else {
-        return isBreadcrumb ? '' : 'none';
-      }
-    },
-    isShowcrumb() {
-      const { layout } = this.$store.state.themeConfig.themeConfig;
-      if (layout === 'transverse' || layout === 'classic') {
-        return false;
-      } else {
-        return true;
-      }
-    },
-    collapseShow() {
-      return ['defaults', 'columns'].includes(this.$store.state.themeConfig.themeConfig.layout);
-    },
-  },
-  mounted() {
-    this.initRouteSplit(this.$route.path);
-  },
-  methods: {
-    // breadcrumb 当前项点击时
-    onBreadcrumbClick(v) {
-      console.log(v);
-
-      const { redirect, path } = v;
-      this.$router.push(path);
-    },
-    // breadcrumb icon 点击菜单展开与收起
-    onThemeConfigChange() {
-      if (
-        this.$store.state.themeConfig.themeConfig.layout == 'columns' &&
-        !this.$store.state.user.childMenuList.length &&
-        this.$store.state.themeConfig.themeConfig.isCollapse
-      ) {
-        return;
-      }
-      this.$store.state.themeConfig.themeConfig.isCollapse = !this.$store.state.themeConfig.themeConfig.isCollapse;
-      this.setLocalThemeConfig();
-    },
-    // 存储布局配置
-    setLocalThemeConfig() {
-      Local.remove('JavaPlatThemeConfigPrev');
-      Local.set('JavaPlatThemeConfigPrev', this.$store.state.themeConfig.themeConfig);
-    },
-    // 递归设置 breadcrumb
-    getBreadcrumbList(arr) {
-      arr.map((item) => {
-        this.routeSplit.map((v, k, arrs) => {
-          if (this.routeSplitFirst === item.path) {
-            this.routeSplitFirst += `/${arrs[this.routeSplitIndex]}`;
-            this.breadcrumbList.push(item);
-            this.routeSplitIndex++;
-            if (item.children) this.getBreadcrumbList(item.children);
-          }
-        });
       });
-    },
-    // 当前路由分割处理
-    initRouteSplit(path) {
-      this.breadcrumbList = [
-        {
-          path: '/',
-          meta: {
-            title: this.$store.state.user.menuList[0].title,
-            icon: this.$store.state.user.menuList[0].icon,
-          },
-        },
-      ];
-      //   this.routeSplit = path.split('/');
-      //   this.routeSplit.shift();
-      this.routeSplitFirst = path;
-      this.routeSplitIndex = 1;
-      this.getBreadcrumbList(this.$store.state.user.menuList);
-    },
+    }
   },
-  // 监听路由的变化
-  watch: {
-    $route: {
-      handler(newVal) {
-        // this.initRouteSplit(newVal.path);
-        let menuList = this.$store.state.user.menuList;
-        let openMenus = getMenuopen(newVal, menuList);
-        let allMenuList = R(menuList, []);
-        let selectMenu = [];
-        if (allMenuList.length > 0) {
-          openMenus.forEach((i) => {
-            allMenuList.forEach((a) => {
-              if (i === a.path) {
-                selectMenu.push(a);
-              }
-            });
-          });
-        }
-      },
-      deep: true,
-    },
-  },
-};
+  { deep: true },
+);
 </script>
 
 <style scoped lang="scss">

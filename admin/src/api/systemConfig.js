@@ -158,16 +158,6 @@ export function getHomeStyleApi() {
 }
 
 /**
- * @description 获取移动端首页列表样式
- */
-export function getAuthHostApi() {
-  return request({
-    url: '/admin/system/config/get/auth/host',
-    method: 'GET',
-  });
-}
-
-/**
  * @description 清除config缓存
  */
 export function clearCacheApi() {
@@ -210,26 +200,6 @@ export function savehomeStyleApi(data) {
 }
 
 /**
- * @description 一号通 应用保存
- */
-export function passAppSaveApi(data) {
-  return request({
-    url: '/admin/pass/appsave',
-    method: 'post',
-    data,
-  });
-}
-
-/**
- * @description 一号通 应用详情获取
- */
-export function passAppInfoApi() {
-  return request({
-    url: '/admin/pass/appget',
-    method: 'get',
-  });
-}
-/**
  * @description 获取移动端域名
  */
 export function frontDomainApi(data) {
@@ -245,14 +215,5 @@ export function mediaDomainApi(data) {
   return request({
     url: '/public/jsconfig/get/admin/mediadomain',
     method: 'GET',
-  });
-}
-/**
- * @description 获取系统状态信息
- */
-export function systemStateInfoApi() {
-  return request({
-    url: '/admin/system/status/info',
-    method: 'get',
   });
 }

@@ -50,72 +50,70 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ConfigSize',
-  props: {
-    curComponent: {
-      type: Object,
-      required: true,
-    },
-    canvasWidth: {
-      type: Number,
-      required: true,
-    },
-    canvasHeight: {
-      type: Number,
-      required: true,
-    },
-    labelPrefix: {
-      type: String,
-      default: '容器',
-    },
+<script setup>
+import { ref, watch } from 'vue';
+
+defineOptions({ name: 'ConfigSize' });
+
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    required: true,
   },
-  data() {
-    return {
-      isLocked: false,
-      aspectRatio: 1,
-    };
+  canvasWidth: {
+    type: Number,
+    required: true,
   },
-  watch: {
-    'curComponent.id': {
-      handler(val) {
-        if (val && this.curComponent && this.curComponent.style) {
-          this.isLocked = !!this.curComponent.isRatioLock;
-          if (this.isLocked) {
-            this.aspectRatio = this.curComponent.style.width / this.curComponent.style.height;
-          }
-        }
-      },
-      immediate: true,
-    },
+  canvasHeight: {
+    type: Number,
+    required: true,
   },
-  methods: {
-    onChange() {
-      this.$emit('change');
-    },
-    toggleLock() {
-      this.isLocked = !this.isLocked;
-      this.$set(this.curComponent, 'isRatioLock', this.isLocked);
-      if (this.isLocked) {
-        // Calculate aspect ratio when locked
-        this.aspectRatio = this.curComponent.style.width / this.curComponent.style.height;
+  labelPrefix: {
+    type: String,
+    default: '容器',
+  },
+});
+const emit = defineEmits(['change']);
+
+const isLocked = ref(false);
+const aspectRatio = ref(1);
+
+watch(
+  () => props.curComponent.id,
+  (val) => {
+    if (val && props.curComponent && props.curComponent.style) {
+      isLocked.value = !!props.curComponent.isRatioLock;
+      if (isLocked.value) {
+        aspectRatio.value = props.curComponent.style.width / props.curComponent.style.height;
       }
-    },
-    handleWidthChange(val) {
-      if (this.isLocked) {
-        this.curComponent.style.height = Math.round(val / this.aspectRatio);
-      }
-      this.onChange();
-    },
-    handleHeightChange(val) {
-      if (this.isLocked) {
-        this.curComponent.style.width = Math.round(val * this.aspectRatio);
-      }
-      this.onChange();
-    },
+    }
   },
-};
+  { immediate: true },
+);
+
+function onChange() {
+  emit('change');
+}
+function toggleLock() {
+  isLocked.value = !isLocked.value;
+  props.curComponent.isRatioLock = isLocked.value;
+  if (isLocked.value) {
+    // Calculate aspect ratio when locked
+    aspectRatio.value = props.curComponent.style.width / props.curComponent.style.height;
+  }
+}
+function handleWidthChange(val) {
+  if (isLocked.value) {
+    props.curComponent.style.height = Math.round(val / aspectRatio.value);
+  }
+  onChange();
+}
+function handleHeightChange(val) {
+  if (isLocked.value) {
+    props.curComponent.style.width = Math.round(val * aspectRatio.value);
+  }
+  onChange();
+}
 </script>
 
 <style scoped lang="scss">

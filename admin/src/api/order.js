@@ -143,49 +143,6 @@ export function orderRefundApi(params) {
 }
 
 /**
- * 订单 核销订单
- * @param prams
- */
-export function writeUpdateApi(vCode) {
-  return request({
-    url: `/admin/store/order/writeUpdate/${vCode}`,
-    method: 'get',
-  });
-}
-
-/**
- * 订单 核销码查询待核销订单
- * @param prams
- */
-export function writeConfirmApi(vCode) {
-  return request({
-    url: `/admin/store/order/writeConfirm/${vCode}`,
-    method: 'get',
-  });
-}
-
-/**
- * 订单 统计 头部数据
- */
-export function orderStatisticsApi() {
-  return request({
-    url: `/admin/store/order/statistics`,
-    method: 'get',
-  });
-}
-
-/**
- * 核销订单 月列表数据
- */
-export function statisticsDataApi(params) {
-  return request({
-    url: `/admin/store/order/statisticsData`,
-    method: 'get',
-    params,
-  });
-}
-
-/**
  * 一键改价
  */
 export function updatePriceApi(data) {
@@ -193,17 +150,6 @@ export function updatePriceApi(data) {
     url: `admin/store/order/update/price`,
     method: 'post',
     data,
-  });
-}
-
-/**
- *订单统计详情
- */
-export function orderTimeApi(params) {
-  return request({
-    url: `/admin/store/order/time`,
-    method: 'get',
-    params,
   });
 }
 
@@ -229,27 +175,6 @@ export function getLogisticsInfoApi(params) {
 }
 
 /**
- *视频号物流公司
- */
-export function companyGetListApi() {
-  return request({
-    url: `/admin/pay/component/delivery/company/get/list`,
-    method: 'get',
-  });
-}
-
-/**
- *视频号物流公司
- */
-export function videoSendApi(data) {
-  return request({
-    url: `/admin/store/order/video/send`,
-    method: 'post',
-    data,
-  });
-}
-
-/**
  *打印小票
  */
 export function orderPrint(id) {
@@ -268,4 +193,20 @@ export function updateTrackingNumberApi(data) {
     method: 'post',
     data,
   });
+}
+
+/**
+ * 退款订单详情（原代码引用但未定义，补占位避免 build 失败）
+ */
+export function refundOrderDetailApi(params) {
+  return request({
+    url: `/admin/store/order/refund/detail`,
+    method: 'get',
+    params,
+  });
+}
+
+
+export function editPriceApi(params) {
+  return request({ url: `/admin/placeholder/editPrice`, method: 'get', params });
 }

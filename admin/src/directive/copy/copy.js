@@ -8,16 +8,16 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import { Message } from 'element-ui';
+import { ElMessage as Message } from '@/utils/elementPlusFeedback';
 
 const vCopy = {
   // 名字爱取啥取啥
   /*
-    bind 钩子函数，第一次绑定时调用，可以在这里做初始化设置
+    Vue3 钩子：bind -> beforeMount，inserted -> mounted，componentUpdated -> updated，unbind -> unmounted
     el: 作用的 dom 对象
     value: 传给指令的值，也就是我们要 copy 的值
   */
-  bind(el, { value }) {
+  beforeMount(el, { value }) {
     el.$value = value; // 用一个全局属性来存传进来的值，因为这个值在别的钩子函数里还会用到
     el.handler = () => {
       if (!el.$value) {
@@ -57,11 +57,11 @@ const vCopy = {
     el.addEventListener('click', el.handler);
   },
   // 当传进来的值更新的时候触发
-  componentUpdated(el, { value }) {
+  updated(el, { value }) {
     el.$value = value;
   },
   // 指令与元素解绑的时候，移除事件绑定
-  unbind(el) {
+  unmounted(el) {
     el.removeEventListener('click', el.handler);
   },
 };

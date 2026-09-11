@@ -9,12 +9,14 @@
 // +----------------------------------------------------------------------
 
 import router from './router';
-import store from './store';
-import { Message } from 'element-ui';
+import { ElMessage as Message } from '@/utils/elementPlusFeedback';
 import NProgress from 'nprogress'; // progress bar
 import 'nprogress/nprogress.css'; // progress bar style
 import { getToken } from '@/utils/auth'; // get token from cookie
 import getPageTitle from '@/utils/get-page-title';
+import { useUserStore } from '@/store/modules/user';
+import { usePermissionStore } from '@/store/modules/permission';
+import { useMenuStore } from '@/store/modules/menu';
 
 NProgress.configure({ showSpinner: false }); // NProgress Configuration
 
@@ -36,19 +38,24 @@ router.beforeEach(async (to, from, next) => {
       next({ path: '/' });
       NProgress.done();
     } else {
-      const hasRoles = store.getters.roles && store.getters.roles.length > 0;
+      const userStore = useUserStore();
+      const hasRoles = userStore.roles && userStore.roles.length > 0;
       if (hasRoles) {
         next();
       } else {
         try {
-          const roles = await store.dispatch('user/getInfo');
-          const accessRoutes = await store.dispatch('permission/generateRoutes', roles);
-          router.addRoutes(accessRoutes);
+          const roles = await userStore.getInfo();
+          const permissionStore = usePermissionStore();
+          const accessRoutes = await permissionStore.generateRoutes(roles);
+          // Vue Router 4 中 addRoutes 改为 addRoute（单数），需逐个添加
+          accessRoutes.forEach((route) => {
+            router.addRoute(route);
+          });
           next({ ...to, replace: true });
         } catch (error) {
           // remove token and go to login page to re-login
-          await store.dispatch('user/resetToken');
-          Message.error(error || 'Has Error');
+          await useUserStore().resetToken();
+          Message.error((error && (error.message || error.msg)) || error || 'Has Error');
           next(`/login?redirect=${to.path}`);
           NProgress.done();
         }
@@ -70,4 +77,11 @@ router.beforeEach(async (to, from, next) => {
 router.afterEach(() => {
   // finish progress bar
   NProgress.done();
+  // 填充 keep-alive 缓存列表：取已打开标签中未标记 noCache 的路由 name
+  // keep-alive :include 按组件 name 匹配，路由 name 与组件 name 大部分一致
+  const menuStore = useMenuStore();
+  const names = menuStore.tagNavList
+    .filter((item) => item.meta && !item.meta.noCache && item.name)
+    .map((item) => item.name);
+  menuStore.setCacheKeepAlive(names);
 });

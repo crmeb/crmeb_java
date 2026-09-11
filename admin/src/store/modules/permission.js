@@ -8,10 +8,12 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
 import { asyncRoutes, constantRoutes } from '@/router';
 import * as roleApi from '@/api/roleApi.js';
-import * as Auth from '@/libs/wechat';
 import { formatRoutes } from '@/utils/parsing';
+import { useSettingsStore } from './settings';
 
 /**
  * Filter asynchronous routing tables by recursion
@@ -32,60 +34,6 @@ export function filterAsyncRoutes(routes, roles) {
   return res;
 }
 
-const state = {
-  routes: [],
-  addRoutes: [],
-  topbarRouters: [],
-  sidebarRouters: [],
-};
-
-const mutations = {
-  SET_ROUTES: (state, routes) => {
-    state.addRoutes = routes;
-    // state.routes = constantRoutes.concat(routes)
-    state.routes = routes;
-  },
-  SET_TOPBAR_ROUTES: (state, routes) => {
-    state.topbarRouters = routes;
-  },
-  SET_SIDEBAR_ROUTERS: (state, routes) => {
-    state.sidebarRouters = routes;
-  },
-};
-
-const actions = {
-  generateRoutes({ commit }, roleid) {
-    return new Promise(async (resolve) => {
-      let accessedRoutes = [];
-      let menus = [];
-      // const { rules } = await roleApi.getRoleById(roleid)
-      let menusAll = await roleApi.menuListApi();
-      menusAll = formatRoutes(menusAll);
-
-      !Auth.isPhone()
-        ? (menus = menusAll.filter((item) => item.url !== '/javaMobile'))
-        : (menus = menusAll.filter((item) => item.url === '/javaMobile'));
-      const _routerResult = comRouter(menus, asyncRoutes);
-      accessedRoutes = filterAsyncRoutes(_routerResult);
-      // todo 这里控制是否过滤路由，经测试有些菜单不能予以设置，比如系统设置等等
-      this.state.settings.showSettings = false;
-      commit('SET_ROUTES', menus);
-      commit('SET_TOPBAR_ROUTES', menus);
-      if (this.state.settings.topNav) {
-        commit('SET_SIDEBAR_ROUTERS', state.sidebarRouters.length ? state.sidebarRouters : menus[0].child);
-      } else {
-        commit('SET_SIDEBAR_ROUTERS', menus);
-      }
-      // resolve(menus)
-      // commit('SET_ROUTES', accessedRoutes)
-      resolve(accessedRoutes);
-
-      // commit('SET_ROUTES', asyncRoutes)
-      // resolve(asyncRoutes)
-    });
-  },
-};
-
 function comRouter(menus, asyncRouter, hasLeft) {
   const res = [];
   asyncRouter.forEach((router) => {
@@ -101,9 +49,56 @@ function comRouter(menus, asyncRouter, hasLeft) {
   return res;
 }
 
-export default {
-  namespaced: true,
-  state,
-  mutations,
-  actions,
-};
+export const usePermissionStore = defineStore('permission', () => {
+  const routes = ref([]);
+  const addRoutes = ref([]);
+  const topbarRouters = ref([]);
+  const sidebarRouters = ref([]);
+
+  function SET_ROUTES(list) {
+    addRoutes.value = list;
+    routes.value = list;
+  }
+
+  function SET_TOPBAR_ROUTES(list) {
+    topbarRouters.value = list;
+  }
+
+  function SET_SIDEBAR_ROUTERS(list) {
+    sidebarRouters.value = list;
+  }
+
+  function generateRoutes(roleid) {
+    return new Promise(async (resolve) => {
+      let accessedRoutes = [];
+      let menus = [];
+      let menusAll = await roleApi.menuListApi();
+      menusAll = formatRoutes(menusAll);
+
+      menus = menusAll;
+      const _routerResult = comRouter(menus, asyncRoutes);
+      accessedRoutes = filterAsyncRoutes(_routerResult);
+      // todo 这里控制是否过滤路由，经测试有些菜单不能予以设置，比如系统设置等等
+      useSettingsStore().showSettings = false;
+      SET_ROUTES(menus);
+      SET_TOPBAR_ROUTES(menus);
+      if (useSettingsStore().topNav) {
+        SET_SIDEBAR_ROUTERS(sidebarRouters.value.length ? sidebarRouters.value : menus[0].child);
+      } else {
+        SET_SIDEBAR_ROUTERS(menus);
+      }
+      resolve(accessedRoutes);
+    });
+  }
+
+  return {
+    routes,
+    addRoutes,
+    topbarRouters,
+    sidebarRouters,
+    SET_ROUTES,
+    SET_TOPBAR_ROUTES,
+    SET_SIDEBAR_ROUTERS,
+    generateRoutes,
+  };
+});

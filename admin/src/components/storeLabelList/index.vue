@@ -37,69 +37,76 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { productLabelUseListApi } from '@/api/product';
-export default {
-  name: 'storeLabelList',
-  props: {},
-  data() {
-    return {
-      labelList: [],
-      dataLabel: [],
-      isStore: false,
-    };
-  },
-  mounted() {},
-  methods: {
-    inArray: function (search, array) {
-      for (const i in array) {
-        if (array[i].id === search) {
-          return true;
-        }
-      }
-      return false;
-    },
-    storeLabel(data) {
-      this.dataLabel = data || [];
-      productLabelUseListApi()
-        .then((res) => {
-          res.data.map((el) => {
-            if (el.list && el.list.length) {
-              this.isStore = true;
-              el.list.map((label) => {
-                if (this.inArray(label.id, this.dataLabel)) {
-                  label.disabled = true;
-                } else {
-                  label.disabled = false;
-                }
-              });
+
+defineOptions({ name: 'storeLabelList' });
+
+defineProps({});
+
+const emit = defineEmits(['activeData', 'close']);
+
+const labelList = ref([]);
+const dataLabel = ref([]);
+const isStore = ref(false);
+
+function inArray(search, array) {
+  for (const i in array) {
+    if (array[i].id === search) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function storeLabel(data) {
+  dataLabel.value = data || [];
+  productLabelUseListApi()
+    .then((res) => {
+      res.data.map((el) => {
+        if (el.list && el.list.length) {
+          isStore.value = true;
+          el.list.map((label) => {
+            if (inArray(label.id, dataLabel.value)) {
+              label.disabled = true;
+            } else {
+              label.disabled = false;
             }
           });
-          this.labelList = res.data;
-        })
-        .catch((res) => {
-          this.$message.error(res.msg);
-        });
-    },
-    selectLabel(label, index) {
-      if (label.disabled) {
-        const index = this.dataLabel.indexOf(this.dataLabel.filter((d) => d.id === label.id)[0]);
-        this.dataLabel.splice(index, 1);
-        label.disabled = false;
-      } else {
-        this.dataLabel.push({ label_name: label.name, id: label.id });
-        label.disabled = true;
-      }
-    },
-    // 确定
-    subBtn() {
-      this.$emit('activeData', JSON.parse(JSON.stringify(this.dataLabel)));
-    },
-    cancel() {
-      this.$emit('close');
-    },
-  },
-};
+        }
+      });
+      labelList.value = res.data;
+    })
+    .catch((res) => {
+      ElMessage.error(res.msg);
+    });
+}
+
+function selectLabel(label, index) {
+  if (label.disabled) {
+    const idx = dataLabel.value.indexOf(dataLabel.value.filter((d) => d.id === label.id)[0]);
+    dataLabel.value.splice(idx, 1);
+    label.disabled = false;
+  } else {
+    dataLabel.value.push({ label_name: label.name, id: label.id });
+    label.disabled = true;
+  }
+}
+
+// 确定
+function subBtn() {
+  emit('activeData', JSON.parse(JSON.stringify(dataLabel.value)));
+}
+
+function cancel() {
+  emit('close');
+}
+
+defineExpose({
+  storeLabel,
+});
 </script>
 
 <style lang="scss" scoped>

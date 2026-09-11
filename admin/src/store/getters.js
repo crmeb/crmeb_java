@@ -8,25 +8,46 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-const getters = {
-  sidebar: (state) => state.app.sidebar,
-  size: (state) => state.app.size,
-  device: (state) => state.app.device,
-  visitedViews: (state) => state.tagsView.visitedViews,
-  cachedViews: (state) => state.tagsView.cachedViews,
-  token: (state) => state.user.token,
-  avatar: (state) => state.user.avatar,
-  name: (state) => state.user.name,
-  introduction: (state) => state.user.introduction,
-  roles: (state) => state.user.roles,
-  permission_routes: (state) => state.permission.routes,
-  permissions: (state) => state.user.permissions,
-  sidebarRouters: (state) => state.permission.sidebarRouters,
-  errorLogs: (state) => state.errorLog.logs,
-  isLogin: (state) => state.user.isLogin,
-  adminProductClassify: (state) => state.product.adminProductClassify,
-  frontDomain: (state) => state.settings.frontDomain,
-  mediaDomain: (state) => state.settings.mediaDomain,
-  mobileTheme: (state) => state.settings.mobileTheme,
-};
-export default getters;
+// 兼容 Vue2 时代 store.getters.xxx 的访问习惯。
+// Vue3 + Pinia 无全局 getters，改为各 store 内的 computed。
+// 此处聚合常用 getters，供过渡期使用；新代码建议直接 useXxxStore()。
+import { computed } from 'vue';
+import { useAppStore } from './modules/app';
+import { useTagsViewStore } from './modules/tagsView';
+import { useUserStore } from './modules/user';
+import { usePermissionStore } from './modules/permission';
+import { useErrorLogStore } from './modules/errorLog';
+import { useProductStore } from './modules/product';
+import { useSettingsStore } from './modules/settings';
+
+export function useGetters() {
+  const appStore = useAppStore();
+  const tagsViewStore = useTagsViewStore();
+  const userStore = useUserStore();
+  const permissionStore = usePermissionStore();
+  const errorLogStore = useErrorLogStore();
+  const productStore = useProductStore();
+  const settingsStore = useSettingsStore();
+
+  return {
+    sidebar: computed(() => appStore.sidebar),
+    size: computed(() => appStore.size),
+    device: computed(() => appStore.device),
+    visitedViews: computed(() => tagsViewStore.visitedViews),
+    cachedViews: computed(() => tagsViewStore.cachedViews),
+    token: computed(() => userStore.token),
+    avatar: computed(() => userStore.avatar),
+    name: computed(() => userStore.name),
+    introduction: computed(() => userStore.introduction),
+    roles: computed(() => userStore.roles),
+    permission_routes: computed(() => permissionStore.routes),
+    permissions: computed(() => userStore.permissions),
+    sidebarRouters: computed(() => permissionStore.sidebarRouters),
+    errorLogs: computed(() => errorLogStore.logs),
+    isLogin: computed(() => userStore.isLogin),
+    adminProductClassify: computed(() => productStore.adminProductClassify),
+    frontDomain: computed(() => settingsStore.frontDomain),
+    mediaDomain: computed(() => settingsStore.mediaDomain),
+    mobileTheme: computed(() => settingsStore.mobileTheme),
+  };
+}

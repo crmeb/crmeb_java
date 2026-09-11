@@ -2,23 +2,23 @@
   <div>
     <div class="section-title">文本设置</div>
     <el-form-item label="文字形态">
-      <el-checkbox-group v-model="textShape" size="small">
-        <el-checkbox label="bold">加粗</el-checkbox>
-        <el-checkbox label="italic">倾斜</el-checkbox>
+      <el-checkbox-group v-model="textShape">
+        <el-checkbox label="bold" value="bold">加粗</el-checkbox>
+        <el-checkbox label="italic" value="italic">倾斜</el-checkbox>
       </el-checkbox-group>
     </el-form-item>
     <el-form-item label="文字修饰">
-      <el-radio-group v-model="curComponent.propValue.textDecoration" size="small" @change="onChange">
-        <el-radio label="none">无</el-radio>
-        <el-radio label="underline">下划线</el-radio>
-        <el-radio label="line-through">删除线</el-radio>
+      <el-radio-group v-model="curComponent.propValue.textDecoration" @change="onChange">
+        <el-radio label="none" value="none">无</el-radio>
+        <el-radio label="underline" value="underline">下划线</el-radio>
+        <el-radio label="line-through" value="line-through">删除线</el-radio>
       </el-radio-group>
     </el-form-item>
     <el-form-item label="对齐方式">
-      <el-radio-group v-model="curComponent.propValue.textAlign" size="small" @change="onChange">
-        <el-radio-button label="start"><span class="iconfont iconzuoduiqi"></span></el-radio-button>
-        <el-radio-button label="center"><span class="iconfont iconjuzhongduiqi"></span></el-radio-button>
-        <el-radio-button label="end"><span class="iconfont iconyouduiqi"></span></el-radio-button>
+      <el-radio-group v-model="curComponent.propValue.textAlign" @change="onChange">
+        <el-radio-button label="start" value="start"><span class="iconfont iconzuoduiqi"></span></el-radio-button>
+        <el-radio-button label="center" value="center"><span class="iconfont iconjuzhongduiqi"></span></el-radio-button>
+        <el-radio-button label="end" value="end"><span class="iconfont iconyouduiqi"></span></el-radio-button>
       </el-radio-group>
     </el-form-item>
     <el-form-item label="文字颜色">
@@ -80,16 +80,16 @@
     </el-form-item>
     <el-form-item label="行高省略">
       <el-radio-group v-model="curComponent.propValue.ellipsis" @change="onChange">
-        <el-radio :label="0">不限制</el-radio>
-        <el-radio :label="1">一行</el-radio>
-        <el-radio :label="2">两行</el-radio>
-        <el-radio :label="3">三行</el-radio>
+        <el-radio :label="0" :value="0">不限制</el-radio>
+        <el-radio :label="1" :value="1">一行</el-radio>
+        <el-radio :label="2" :value="2">两行</el-radio>
+        <el-radio :label="3" :value="3">三行</el-radio>
       </el-radio-group>
     </el-form-item>
     <el-form-item label="文字阴影">
       <el-radio-group v-model="curComponent.propValue.showTextShadow" @change="onChange">
-        <el-radio :label="false">隐藏</el-radio>
-        <el-radio :label="true">显示</el-radio>
+        <el-radio :label="false" :value="false">隐藏</el-radio>
+        <el-radio :label="true" :value="true">显示</el-radio>
       </el-radio-group>
     </el-form-item>
     <template v-if="curComponent.propValue.showTextShadow">
@@ -171,51 +171,51 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ConfigText',
-  props: {
-    curComponent: {
-      type: Object,
-      required: true,
-    },
+<script setup>
+import { computed, watch } from 'vue';
+
+defineOptions({ name: 'ConfigText' });
+
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    required: true,
   },
-  watch: {
-    'curComponent.id': {
-      handler(val) {
-        if (val && this.curComponent && this.curComponent.propValue) {
-          const pv = this.curComponent.propValue;
-          if (pv.showTextShadow === undefined) this.$set(pv, 'showTextShadow', false);
-          if (pv.shadowX === undefined) this.$set(pv, 'shadowX', 0);
-          if (pv.shadowY === undefined) this.$set(pv, 'shadowY', 0);
-          if (pv.shadowBlur === undefined) this.$set(pv, 'shadowBlur', 0);
-          if (pv.shadowColor === undefined) this.$set(pv, 'shadowColor', 'rgba(0,0,0,0.5)');
-        }
-      },
-      immediate: true,
-    },
+});
+const emit = defineEmits(['change']);
+
+watch(
+  () => props.curComponent.id,
+  (val) => {
+    if (val && props.curComponent && props.curComponent.propValue) {
+      const pv = props.curComponent.propValue;
+      if (pv.showTextShadow === undefined) pv.showTextShadow = false;
+      if (pv.shadowX === undefined) pv.shadowX = 0;
+      if (pv.shadowY === undefined) pv.shadowY = 0;
+      if (pv.shadowBlur === undefined) pv.shadowBlur = 0;
+      if (pv.shadowColor === undefined) pv.shadowColor = 'rgba(0,0,0,0.5)';
+    }
   },
-  computed: {
-    textShape: {
-      get() {
-        const shapes = [];
-        if (this.curComponent.propValue.fontWeight === 'bold') shapes.push('bold');
-        if (this.curComponent.propValue.fontStyle === 'italic') shapes.push('italic');
-        return shapes;
-      },
-      set(val) {
-        this.curComponent.propValue.fontWeight = val.includes('bold') ? 'bold' : 'normal';
-        this.curComponent.propValue.fontStyle = val.includes('italic') ? 'italic' : 'normal';
-        this.onChange();
-      },
-    },
+  { immediate: true },
+);
+
+const textShape = computed({
+  get() {
+    const shapes = [];
+    if (props.curComponent.propValue.fontWeight === 'bold') shapes.push('bold');
+    if (props.curComponent.propValue.fontStyle === 'italic') shapes.push('italic');
+    return shapes;
   },
-  methods: {
-    onChange() {
-      this.$emit('change');
-    },
+  set(val) {
+    props.curComponent.propValue.fontWeight = val.includes('bold') ? 'bold' : 'normal';
+    props.curComponent.propValue.fontStyle = val.includes('italic') ? 'italic' : 'normal';
+    onChange();
   },
-};
+});
+
+function onChange() {
+  emit('change');
+}
 </script>
 
 <style scoped lang="scss">
@@ -234,7 +234,7 @@ export default {
   padding-top: 20px;
   border-top: 6px solid #f0f2f5;
 }
-::v-deep .el-radio-button--small .el-radio-button__inner {
+:deep(.el-radio-button--small .el-radio-button__inner) {
   padding: 7px 15px;
 }
 </style>

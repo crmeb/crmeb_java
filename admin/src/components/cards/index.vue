@@ -24,13 +24,12 @@
   </el-row>
 </template>
 
-<script>
-export default {
-  name: 'index',
-  props: {
-    cardLists: Array,
-  },
-};
+<script setup>
+defineOptions({ name: 'CardsIndex' });
+
+defineProps({
+  cardLists: Array,
+});
 </script>
 
 <style scoped lang="scss">

@@ -23,45 +23,45 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, defineAsyncComponent } from 'vue';
 import ConfigLink from './ConfigLink';
 
-export default {
-  name: 'ConfigIconContent',
-  components: {
-    ConfigLink,
-    c_icon_select: () => import('../../mobileConfigRight/c_icon_select'),
+defineOptions({ name: 'ConfigIconContent' });
+
+const c_icon_select = defineAsyncComponent(() => import('../../mobileConfigRight/c_icon_select'));
+
+const props = defineProps({
+  curComponent: {
+    type: Object,
+    required: true,
   },
-  props: {
-    curComponent: {
-      type: Object,
-      required: true,
-    },
-    type: {
-      type: String,
-      default: 'user',
-    },
-    currentFieldList: {
-      type: Array,
-      default: () => [],
-    },
+  type: {
+    type: String,
+    default: 'user',
   },
-  methods: {
-    openIconModal() {
-      this.$refs.iconSelect.show();
-    },
-    handleIconSelect(icon) {
-      this.curComponent.propValue.class = icon;
-      this.onChange();
-    },
-    getLink() {
-      this.$emit('get-link');
-    },
-    onChange() {
-      this.$emit('change');
-    },
+  currentFieldList: {
+    type: Array,
+    default: () => [],
   },
-};
+});
+const emit = defineEmits(['change', 'get-link']);
+
+const iconSelect = ref(null);
+
+function openIconModal() {
+  iconSelect.value.show();
+}
+function handleIconSelect(icon) {
+  props.curComponent.propValue.class = icon;
+  onChange();
+}
+function getLink() {
+  emit('get-link');
+}
+function onChange() {
+  emit('change');
+}
 </script>
 
 <style scoped lang="scss">

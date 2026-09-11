@@ -28,156 +28,163 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { needDealtList } from '@/api/system';
-export default {
-  name: 'layoutBreadcrumbUserNews',
-  data() {
-    return {
-      list: [],
-      newsList: [],
-      newOrderAudioLink: null,
-      messageList: [],
-    };
-  },
-  props: ['vm'],
-  mounted() {
-    this.getNotict();
-    // this.newOrderAudioLink = newOrderAudioLink;
-    // adminSocket.then((ws) => {
-    //   ws.send({
-    //     type: 'login',
-    //     data: getCookies('token'),
-    //   });
-    //   let that = this;
-    //   ws.$on('ADMIN_NEW_PUSH', function (data) {
-    //     that.getNotict();
-    //   });
+import newsIcon from '@/assets/images/news.png';
+import newsIcon2 from '@/assets/images/news2.png';
 
-    //   ws.$on('NEW_ORDER', function (data) {
-    //     that.$notify.info({
-    //       title: '新订单',
-    //       message: '您有一个新的订单,ID为(' + data.order_id + '),请注意查看',
-    //     });
-    //     if (this.newOrderAudioLink) this.newOrderAudioLink.play();
-    //     that.messageList.push({
-    //       title: '新订单提醒',
-    //       icon: 'md-bulb',
-    //       iconColor: '#87d068',
-    //       time: 0,
-    //       read: 0,
-    //     });
-    //   });
-    //   ws.$on('NEW_REFUND_ORDER', function (data) {
-    //     that.$notify.info({
-    //       title: '退款订单提醒',
-    //       message: '您有一个订单申请退款,ID为(' + data.order_id + '),请注意查看',
-    //     });
-    //     if (window.newOrderAudioLink) this.newOrderAudioLink.play();
-    //     that.messageList.push({
-    //       title: '退款订单提醒',
-    //       icon: 'md-information',
-    //       iconColor: '#fe5c57',
-    //       time: 0,
-    //       read: 0,
-    //     });
-    //   });
-    //   ws.$on('WITHDRAW', function (data) {
-    //     // that.$Notice.warning({
-    //     //   title: '提现提醒',
-    //     //   duration: 8,
-    //     //   desc: '有用户申请提现,编号为(' + data.id + '),请注意查看',
-    //     // });
-    //     that.$notify.info({
-    //       title: '提现提醒',
-    //       message: '有用户申请提现,编号为(' + data.id + '),请注意查看',
-    //     });
-    //     that.messageList.push({
-    //       title: '退款订单提醒',
-    //       icon: 'md-people',
-    //       iconColor: '#f06292',
-    //       time: 0,
-    //       read: 0,
-    //     });
-    //   });
-    //   ws.$on('STORE_STOCK', function (data) {
-    //     that.$notify.info({
-    //       title: '库存预警',
-    //       message: '商品ID为(' + data.id + ')的库存不足啦,请注意查看~',
-    //     });
-    //     that.messageList.push({
-    //       title: '库存预警',
-    //       icon: 'md-information',
-    //       iconColor: '#fe5c57',
-    //       time: 0,
-    //       read: 0,
-    //     });
-    //   });
-    //   ws.$on('PAY_SMS_SUCCESS', function (data) {
-    //     that.$notify.info({
-    //       title: '短信充值成功',
-    //       message: '恭喜您充值' + data.price + '元，获得' + data.number + '条短信',
-    //     });
-    //     that.messageList.push({
-    //       title: '短信充值成功',
-    //       icon: 'md-bulb',
-    //       iconColor: '#87d068',
-    //       time: 0,
-    //       read: 0,
-    //     });
-    //   });
-    // });
-  },
-  filters: {
-    // 1 待发货 2 库存报警  3评论回复  4提现申请
-    msgType(type) {
-      let typeName;
-      switch (type) {
-        case 1:
-          typeName = '待发货订单提醒';
-          break;
-        case 2:
-          typeName = '库存报警';
-          break;
-        case 3:
-          typeName = '评论回复';
-          break;
-        case 4:
-          typeName = '提现申请';
-          break;
-        default:
-          typeName = '其它';
-      }
-      return typeName;
-    },
-  },
-  methods: {
-    // 全部已读点击
-    onAllReadClick() {
-      this.list = [];
-      this.$emit('haveNews', !!this.list.length);
-    },
-    // 前往通知中心点击
-    onGoToGiteeClick() {},
-    getNotict() {
-      needDealtList()
-        .then((res) => {
-          this.list = res.data || [];
-          this.newsList = res.data.length > 3 ? res.data.slice(0, 3) : res.data;
-          this.$emit('haveNews', !!this.list.length);
-        })
-        .catch(() => {});
-    },
-    jumpUrl(path) {
-      this.vm.$router.push({
-        path,
-      });
-    },
-    icon(type) {
-      return require(`@/assets/images/news-${type}.png`);
-    },
-  },
-};
+defineOptions({ name: 'layoutBreadcrumbUserNews' });
+
+const props = defineProps(['vm']);
+const emit = defineEmits(['haveNews']);
+
+const router = useRouter();
+
+const list = ref([]);
+const newsList = ref([]);
+const newOrderAudioLink = ref(null);
+const messageList = ref([]);
+
+// 1 待发货 2 库存报警  3评论回复  4提现申请
+function msgType(type) {
+  let typeName;
+  switch (type) {
+    case 1:
+      typeName = '待发货订单提醒';
+      break;
+    case 2:
+      typeName = '库存报警';
+      break;
+    case 3:
+      typeName = '评论回复';
+      break;
+    case 4:
+      typeName = '提现申请';
+      break;
+    default:
+      typeName = '其它';
+  }
+  return typeName;
+}
+
+// 全部已读点击
+function onAllReadClick() {
+  list.value = [];
+  emit('haveNews', !!list.value.length);
+}
+
+// 前往通知中心点击
+function onGoToGiteeClick() {}
+
+function getNotict() {
+  needDealtList()
+    .then((res) => {
+      list.value = res.data || [];
+      newsList.value = res.data.length > 3 ? res.data.slice(0, 3) : res.data;
+      emit('haveNews', !!list.value.length);
+    })
+    .catch(() => {});
+}
+
+function jumpUrl(path) {
+  router.push({
+    path,
+  });
+}
+
+function icon(type) {
+  return Number(type) === 2 ? newsIcon2 : newsIcon;
+}
+
+onMounted(() => {
+  getNotict();
+  // newOrderAudioLink.value = newOrderAudioLink;
+  // adminSocket.then((ws) => {
+  //   ws.send({
+  //     type: 'login',
+  //     data: getCookies('token'),
+  //   });
+  //   let that = this;
+  //   ws.$on('ADMIN_NEW_PUSH', function (data) {
+  //     that.getNotict();
+  //   });
+
+  //   ws.$on('NEW_ORDER', function (data) {
+  //     that.$notify.info({
+  //       title: '新订单',
+  //       message: '您有一个新的订单,ID为(' + data.order_id + '),请注意查看',
+  //     });
+  //     if (this.newOrderAudioLink) this.newOrderAudioLink.play();
+  //     that.messageList.push({
+  //       title: '新订单提醒',
+  //       icon: 'md-bulb',
+  //       iconColor: '#87d068',
+  //       time: 0,
+  //       read: 0,
+  //     });
+  //   });
+  //   ws.$on('NEW_REFUND_ORDER', function (data) {
+  //     that.$notify.info({
+  //       title: '退款订单提醒',
+  //       message: '您有一个订单申请退款,ID为(' + data.order_id + '),请注意查看',
+  //     });
+  //     if (window.newOrderAudioLink) this.newOrderAudioLink.play();
+  //     that.messageList.push({
+  //       title: '退款订单提醒',
+  //       icon: 'md-information',
+  //       iconColor: '#fe5c57',
+  //       time: 0,
+  //       read: 0,
+  //     });
+  //   });
+  //   ws.$on('WITHDRAW', function (data) {
+  //     // that.$Notice.warning({
+  //     //   title: '提现提醒',
+  //     //   duration: 8,
+  //     //   desc: '有用户申请提现,编号为(' + data.id + '),请注意查看',
+  //     // });
+  //     that.$notify.info({
+  //       title: '提现提醒',
+  //       message: '有用户申请提现,编号为(' + data.id + '),请注意查看',
+  //     });
+  //     that.messageList.push({
+  //       title: '退款订单提醒',
+  //       icon: 'md-people',
+  //       iconColor: '#f06292',
+  //       time: 0,
+  //       read: 0,
+  //     });
+  //   });
+  //   ws.$on('STORE_STOCK', function (data) {
+  //     that.$notify.info({
+  //       title: '库存预警',
+  //       message: '商品ID为(' + data.id + ')的库存不足啦,请注意查看~',
+  //     });
+  //     that.messageList.push({
+  //       title: '库存预警',
+  //       icon: 'md-information',
+  //       iconColor: '#fe5c57',
+  //       time: 0,
+  //       read: 0,
+  //     });
+  //   });
+  //   ws.$on('PAY_SMS_SUCCESS', function (data) {
+  //     that.$notify.info({
+  //       title: '短信充值成功',
+  //       message: '恭喜您充值' + data.price + '元，获得' + data.number + '条短信',
+  //     });
+  //     that.messageList.push({
+  //       title: '短信充值成功',
+  //       icon: 'md-bulb',
+  //       iconColor: '#87d068',
+  //       time: 0,
+  //       read: 0,
+  //     });
+  //   });
+  // });
+});
 </script>
 
 <style scoped lang="scss">
@@ -277,7 +284,7 @@ export default {
       opacity: 1;
     }
   }
-  ::v-deep(.el-empty__description p) {
+  :deep(.el-empty__description p) {
     font-size: 13px;
   }
 }

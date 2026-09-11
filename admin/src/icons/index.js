@@ -1,9 +1,13 @@
-import Vue from 'vue';
-import SvgIcon from '@/components/SvgIcon'; // svg component
+// SVG 图标加载由 vite-plugin-svg-icons 在构建/开发时处理（见 vite.config.js）。
+// 此处仅做 svg-icon 组件的全局注册。
+import SvgIcon from '@/components/SvgIcon/index.vue'; // svg component
 
-// register globally
-Vue.component('svg-icon', SvgIcon);
+export function setupIcons(app) {
+  app.component('svg-icon', SvgIcon);
+}
 
-const req = require.context('./svg', false, /\.svg$/);
-const requireAll = (requireContext) => requireContext.keys().map(requireContext);
-requireAll(req);
+export default {
+  install(app) {
+    app.component('svg-icon', SvgIcon);
+  },
+};

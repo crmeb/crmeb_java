@@ -4,9 +4,8 @@
       v-model="dateValue"
       align="left"
       unlink-panels
-      value-format="yyyy-MM-dd"
-      format="yyyy-MM-dd"
-      size="small"
+      value-format="YYYY-MM-DD"
+      format="YYYY-MM-DD"
       type="daterange"
       placement="bottom-end"
       placeholder="自定义时间"
@@ -14,105 +13,103 @@
       @change="onchangeTime"
       start-placeholder="开始时间"
       end-placeholder="结束时间"
-      :picker-options="pickerOptions"
+      :shortcuts="shortcuts"
     />
   </div>
 </template>
-<script>
-export default {
-  name: 'optionDatePicker',
-  props: {
-    value: {
-      type: Array,
-      default: [],
-    },
-  },
-  data() {
-    return {
-      dateValue: [],
-      pickerOptions: {
-        shortcuts: [
-          {
-            text: '今天',
-            onClick(picker) {
-              const date = new Date();
-              const start = date,
-                end = date;
-              picker.$emit('pick', [start, end]);
-            },
-          },
-          {
-            text: '昨天',
-            onClick(picker) {
-              const date = new Date();
-              date.setTime(date.getTime() - 3600 * 1000 * 24);
-              const start = date,
-                end = date;
-              picker.$emit('pick', [start, end]);
-            },
-          },
-          {
-            text: '最近7天',
-            onClick(picker) {
-              const end = new Date();
-              const start = new Date();
-              start.setTime(start.getTime() - 3600 * 1000 * 24 * 6);
-              picker.$emit('pick', [start, end]);
-            },
-          },
-          {
-            text: '最近30天',
-            onClick(picker) {
-              const end = new Date();
-              const start = new Date();
-              start.setTime(start.getTime() - 3600 * 1000 * 24 * 29);
-              picker.$emit('pick', [start, end]);
-            },
-          },
-          {
-            text: '上个月',
-            onClick(picker) {
-              const now = new Date();
-              const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-              const end = new Date(now.getFullYear(), now.getMonth(), 0);
-              picker.$emit('pick', [start, end]);
-            },
-          },
-          {
-            text: '本月',
-            onClick(picker) {
-              const now = new Date();
-              const start = new Date(now.getFullYear(), now.getMonth(), 1);
-              const end = new Date();
-              picker.$emit('pick', [start, end]);
-            },
-          },
-          {
-            text: '本年',
-            onClick(picker) {
-              const now = new Date();
-              const start = new Date(now.getFullYear(), 0, 1); 
-              const end = new Date();
-              picker.$emit('pick', [start, end]);
-            },
-          },
-        ],
-      },
-    };
-  },
-  watch: {
-    value(nval) {
-      this.dateValue = nval
+<script setup>
+import { ref, watch } from 'vue'
+
+defineOptions({ name: 'optionDatePicker' })
+
+const props = defineProps({
+  modelValue: {
+    type: Array,
+    default: () => []
+  }
+})
+
+const emit = defineEmits(['update:modelValue', 'changeOptTime'])
+
+const dateValue = ref([])
+const oneDay = 3600 * 1000 * 24
+
+function offsetDate(days) {
+  const date = new Date()
+  date.setTime(date.getTime() - oneDay * days)
+  return date
+}
+
+const shortcuts = [
+  {
+    text: '今天',
+    value() {
+      return [new Date(), new Date()]
     }
   },
-  created() {
-    this.dateValue = this.value;
+  {
+    text: '昨天',
+    value() {
+      const date = offsetDate(1)
+      return [date, new Date(date)]
+    }
   },
-  methods: {
-    onchangeTime(dateValue) {
-      this.$emit('changeOptTime', dateValue);
-    },
+  {
+    text: '最近7天',
+    value() {
+      const end = new Date()
+      const start = offsetDate(6)
+      return [start, end]
+    }
   },
-};
+  {
+    text: '最近30天',
+    value() {
+      const end = new Date()
+      const start = offsetDate(29)
+      return [start, end]
+    }
+  },
+  {
+    text: '上个月',
+    value() {
+      const now = new Date()
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+      const end = new Date(now.getFullYear(), now.getMonth(), 0)
+      return [start, end]
+    }
+  },
+  {
+    text: '本月',
+    value() {
+      const now = new Date()
+      const start = new Date(now.getFullYear(), now.getMonth(), 1)
+      const end = new Date()
+      return [start, end]
+    }
+  },
+  {
+    text: '本年',
+    value() {
+      const now = new Date()
+      const start = new Date(now.getFullYear(), 0, 1)
+      const end = new Date()
+      return [start, end]
+    }
+  }
+]
+
+watch(
+  () => props.modelValue,
+  (nval) => {
+    dateValue.value = nval || []
+  },
+  { immediate: true }
+)
+
+function onchangeTime(dateValueArg) {
+  emit('update:modelValue', dateValueArg)
+  emit('changeOptTime', dateValueArg)
+}
 </script>
 <style lang="scss" scoped></style>

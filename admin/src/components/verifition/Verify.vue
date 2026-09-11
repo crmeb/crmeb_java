@@ -9,174 +9,178 @@
       </div>
       <div class="verifybox-bottom" :style="{ padding: mode == 'pop' ? '15px' : '0' }">
         <!-- 验证码容器 -->
-        <components :is="componentType" v-if="componentType" ref="instance" :captcha-type="captchaType"
+        <component :is="componentType" v-if="componentType" ref="instanceRef" :captcha-type="captchaType"
           :type="verifyType" :figure="figure" :arith="arith" :mode="mode" :v-space="vSpace" :explain="explain"
           :img-size="imgSize" :block-size="blockSize" :bar-size="barSize" :default-img="defaultImg" />
       </div>
     </div>
   </div>
 </template>
-<script type="text/babel">
+<script setup>
 /**
  * Verify 验证码组件
  * @description 分发验证码使用
  * */
+import { ref, computed, watch, markRaw, onMounted } from 'vue';
 import VerifySlide from './Verify/VerifySlide';
 import VerifyPoints from './Verify/VerifyPoints';
+import defaultImg from '@/assets/imgs/default.jpg';
 
-export default {
-  name: 'Vue2Verify',
-  components: {
-    VerifySlide,
-    VerifyPoints,
-  },
-  props: {
-    // 双语化
-    locale: {
-      require: false,
-      type: String,
-      default() {
-        // 默认语言不输入为浏览器语言
-        if (navigator.language) {
-          var language = navigator.language;
-        } else {
-          var language = navigator.browserLanguage;
-        }
-        return language;
-      },
-    },
-    captchaType: {
-      type: String,
-      required: true,
-    },
-    figure: {
-      type: Number,
-    },
-    arith: {
-      type: Number,
-    },
-    mode: {
-      type: String,
-      default: 'pop',
-    },
-    vSpace: {
-      type: Number,
-    },
-    explain: {
-      type: String,
-    },
-    imgSize: {
-      type: Object,
-      default() {
-        return {
-          width: '310px',
-          height: '155px',
-        };
-      },
-    },
-    blockSize: {
-      type: Object,
-    },
-    barSize: {
-      type: Object,
-    },
-  },
-  data() {
-    return {
-      // showBox:true,
-      clickShow: false,
-      // 内部类型
-      verifyType: undefined,
-      // 所用组件类型
-      componentType: undefined,
-      // 默认图片
-      defaultImg: require('@/assets/imgs/default.jpg'),
-    };
-  },
-  computed: {
-    instance() {
-      return this.$refs.instance || {};
-    },
-    showBox() {
-      if (this.mode == 'pop') {
-        return this.clickShow;
+defineOptions({ name: 'Vue2Verify' });
+
+const props = defineProps({
+  // 双语化
+  locale: {
+    require: false,
+    type: String,
+    default() {
+      // 默认语言不输入为浏览器语言
+      if (navigator.language) {
+        var language = navigator.language;
       } else {
-        return true;
+        var language = navigator.browserLanguage;
       }
+      return language;
     },
   },
-  watch: {
-    captchaType: {
-      immediate: true,
-      handler(captchaType) {
-        switch (captchaType.toString()) {
-          case 'blockPuzzle':
-            this.verifyType = '2';
-            this.componentType = 'VerifySlide';
-            break;
-          case 'clickWord':
-            this.verifyType = '';
-            this.componentType = 'VerifyPoints';
-            break;
-        }
-      },
+  captchaType: {
+    type: String,
+    required: true,
+  },
+  figure: {
+    type: Number,
+  },
+  arith: {
+    type: Number,
+  },
+  mode: {
+    type: String,
+    default: 'pop',
+  },
+  vSpace: {
+    type: Number,
+  },
+  explain: {
+    type: String,
+  },
+  imgSize: {
+    type: Object,
+    default() {
+      return {
+        width: '310px',
+        height: '155px',
+      };
     },
   },
-  mounted() {
-    this.uuid();
+  blockSize: {
+    type: Object,
   },
-  methods: {
-    // 生成 uuid
-    uuid() {
-      var s = [];
-      var hexDigits = '0123456789abcdef';
-      for (var i = 0; i < 36; i++) {
-        s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
-      }
-      s[14] = '4'; // bits 12-15 of the time_hi_and_version field to 0010
-      s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
-      s[8] = s[13] = s[18] = s[23] = '-';
+  barSize: {
+    type: Object,
+  },
+});
 
-      var slider = 'slider' + '-' + s.join('');
-      var point = 'point' + '-' + s.join('');
-      // 判断下是否存在 slider
-      if (!localStorage.getItem('single-admin-slider')) {
-        localStorage.setItem('single-admin-slider', slider);
-      }
-      if (!localStorage.getItem('single-admin-point')) {
-        localStorage.setItem('single-admin-point', point);
-      }
-    },
-    /**
-     * i18n
-     * @description Java 项目未接入 vue-i18n，直接读取组件内置文案
-     * @param {String} text-被转换的目标
-     * @return {String} i18n的结果
-     * */
-    i18n(text) {
-      const i18n = this.$options.i18n.messages[this.locale] || this.$options.i18n.messages['en-US'];
-      return i18n[text] || text;
-    },
-    /**
-     * refresh
-     * @description 刷新
-     * */
-    refresh() {
-      if (this.instance.refresh) {
-        this.instance.refresh();
-      }
-    },
-    closeBox() {
-      this.clickShow = false;
-      this.refresh();
-    },
-    show() {
-      if (this.mode == 'pop') {
-        this.clickShow = true;
-      }
-    },
+// showBox:true,
+const clickShow = ref(false);
+// 内部类型
+const verifyType = ref(undefined);
+// 所用组件类型
+const componentType = ref(null);
+// 默认图片
+const defaultImgRef = defaultImg;
+
+const instanceRef = ref(null);
+
+const instance = computed(() => instanceRef.value || {});
+const showBox = computed(() => {
+  if (props.mode == 'pop') {
+    return clickShow.value;
+  } else {
+    return true;
+  }
+});
+
+watch(
+  () => props.captchaType,
+  (captchaType) => {
+    switch (captchaType.toString()) {
+      case 'blockPuzzle':
+        verifyType.value = '2';
+        componentType.value = markRaw(VerifySlide);
+        break;
+      case 'clickWord':
+        verifyType.value = '';
+        componentType.value = markRaw(VerifyPoints);
+        break;
+    }
   },
-};
+  { immediate: true }
+);
+
+onMounted(() => {
+  uuid();
+});
+
+// 生成 uuid
+function uuid() {
+  var s = [];
+  var hexDigits = '0123456789abcdef';
+  for (var i = 0; i < 36; i++) {
+    s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+  }
+  s[14] = '4'; // bits 12-15 of the time_hi_and_version field to 0010
+  s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
+  s[8] = s[13] = s[18] = s[23] = '-';
+
+  var slider = 'slider' + '-' + s.join('');
+  var point = 'point' + '-' + s.join('');
+  // 判断下是否存在 slider
+  if (!localStorage.getItem('single-admin-slider')) {
+    localStorage.setItem('single-admin-slider', slider);
+  }
+  if (!localStorage.getItem('single-admin-point')) {
+    localStorage.setItem('single-admin-point', point);
+  }
+}
+/**
+ * i18n
+ * @description Java 项目未接入 vue-i18n，直接读取组件内置文案
+ * @param {String} text-被转换的目标
+ * @return {String} i18n的结果
+ * */
+function i18n(text) {
+  // 原实现依赖 this.$options.i18n（组件未定义 i18n 选项，属预存遗留死代码，未调用）
+  const i18nOpt = undefined; // this.$options.i18n
+  const messages = i18nOpt ? i18nOpt.messages : {};
+  const lang = messages[props.locale] || messages['en-US'] || {};
+  return lang[text] || text;
+}
+/**
+ * refresh
+ * @description 刷新
+ * */
+function refresh() {
+  if (instance.value.refresh) {
+    instance.value.refresh();
+  }
+}
+function closeBox() {
+  clickShow.value = false;
+  refresh();
+}
+function show() {
+  if (props.mode == 'pop') {
+    clickShow.value = true;
+  }
+}
+
+// 子组件通过 proxy.$parent 访问 clickShow / closeBox，需暴露
+defineExpose({
+  show,
+  refresh,
+  closeBox,
+  clickShow,
+});
 </script>
 <style>
 .verifybox {

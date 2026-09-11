@@ -23,6 +23,26 @@ const marketingRouter = {
   },
   children: [
     {
+      path: 'integral',
+      component: () => import('@/views/marketing/integral/index'),
+      name: 'Integral',
+      meta: { title: '积分', icon: '' },
+      children: [
+        {
+          path: 'integrallog',
+          component: () => import('@/views/marketing/integral/integralLog/index'),
+          name: 'integralLog',
+          meta: { title: '积分日志', icon: '' },
+        },
+        {
+          path: 'integralconfig',
+          component: () => import('@/views/marketing/integral/config/index'),
+          name: 'integralConfig',
+          meta: { title: '积分配置', icon: '' },
+        },
+      ],
+    },
+    {
       path: 'coupon',
       component: () => import('@/views/marketing/coupon/index'),
       name: 'Coupon',
@@ -57,6 +77,32 @@ const marketingRouter = {
           component: () => import('@/views/marketing/coupon/record/index'),
           name: 'Record',
           meta: { title: '领取记录', icon: '' },
+        },
+      ],
+    },
+    {
+      path: 'seckill',
+      component: () => import('@/views/marketing/seckill/index'),
+      name: 'Seckill',
+      meta: { title: '秒杀管理', icon: '' },
+      children: [
+        {
+          path: 'list/:timeId?',
+          component: () => import('@/views/marketing/seckill/seckillList/index'),
+          name: 'SeckillList',
+          meta: { title: '秒杀商品', icon: '', noCache: true, activeMenu: `/marketing/seckill/list` },
+        },
+        {
+          path: 'config',
+          component: () => import('@/views/marketing/seckill/seckillConfig/index'),
+          name: 'SeckillConfig',
+          meta: { title: '秒杀配置', icon: '' },
+        },
+        {
+          path: 'creatSeckill/:name?/:timeId?/:id?/:type?',
+          component: () => import('@/views/marketing/seckill/seckillList/creatSeckill'),
+          name: 'CreatSeckill',
+          meta: { title: '添加秒杀商品', icon: '', noCache: true, activeMenu: `/marketing/seckill/list` },
         },
       ],
     },
@@ -112,52 +158,6 @@ const marketingRouter = {
           component: () => import('@/views/marketing/groupBuy/groupList/index'),
           name: 'groupList',
           meta: { title: '拼团列表', icon: '' },
-        },
-      ],
-    },
-    {
-      path: 'seckill',
-      component: () => import('@/views/marketing/seckill/index'),
-      name: 'Seckill',
-      meta: { title: '秒杀管理', icon: '' },
-      children: [
-        {
-          path: 'config',
-          component: () => import('@/views/marketing/seckill/seckillConfig/index'),
-          name: 'SeckillConfig',
-          meta: { title: '秒杀配置', icon: '' },
-        },
-        {
-          path: 'list/:timeId?',
-          component: () => import('@/views/marketing/seckill/seckillList/index'),
-          name: 'SeckillList',
-          meta: { title: '秒杀商品', icon: '', noCache: true, activeMenu: `/marketing/seckill/list` },
-        },
-        {
-          path: 'creatSeckill/:name?/:timeId?/:id?/:type?',
-          component: () => import('@/views/marketing/seckill/seckillList/creatSeckill'),
-          name: 'CreatSeckill',
-          meta: { title: '添加秒杀商品', icon: '', noCache: true, activeMenu: `/marketing/seckill/list` },
-        },
-      ],
-    },
-    {
-      path: 'integral',
-      component: () => import('@/views/marketing/integral/index'),
-      name: 'Integral',
-      meta: { title: '积分', icon: '' },
-      children: [
-        {
-          path: 'integralconfig',
-          component: () => import('@/views/marketing/integral/config/index'),
-          name: 'integralConfig',
-          meta: { title: '积分配置', icon: '' },
-        },
-        {
-          path: 'integrallog',
-          component: () => import('@/views/marketing/integral/integralLog/index'),
-          name: 'integralLog',
-          meta: { title: '积分日志', icon: '' },
         },
       ],
     },

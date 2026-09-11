@@ -1,14 +1,14 @@
 <template>
   <div>
     <el-form
-      ref="formDynamic"
-      size="small"
+      ref="formDynamicRef"
+
       :model="formDynamic"
       v-loading="loading"
       :rules="rules"
       class="attrFrom mb20"
       label-width="75px"
-      @submit.native.prevent
+      @submit.prevent
     >
       <el-row :gutter="24">
         <el-col :span="8">
@@ -27,7 +27,7 @@
                 v-for="(j, indexn) in item.detail"
                 :key="indexn"
                 closable
-                size="medium"
+                size="default"
                 :disable-transitions="false"
                 class="mb5 mr10"
                 @close="handleClose(item.detail, indexn)"
@@ -39,8 +39,8 @@
                 ref="saveTagInput"
                 v-model="item.detail.attrsVal"
                 class="input-new-tag"
-                size="small"
-                @keyup.enter.native="createAttr(item.detail.attrsVal, index)"
+
+                @keyup.enter="createAttr(item.detail.attrsVal, index)"
                 @blur="createAttr(item.detail.attrsVal, index)"
               />
               <el-button v-else class="button-new-tag" @click="showInput(item)">+ 添加</el-button>
@@ -66,10 +66,6 @@
         <Spin v-if="spinShow" size="large" fix />
       </el-row>
       <el-button v-if="!isBtn" type="primary" icon="md-add" class="ml75" @click="addBtn">添加新规格</el-button>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取消</el-button>
-        <el-button type="primary" @click="dialogFormVisible = false">确定</el-button>
-      </div>
     </el-form>
     <span class="footer acea-row">
       <el-button @click="resetForm('formDynamic')">取消</el-button>
@@ -78,197 +74,212 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, watch, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage, ElMessageBox } from '@/utils/elementPlusFeedback';
 import { attrCreatApi, attrEditApi } from '@/api/store';
-export default {
-  name: 'CreatAttr',
-  props: {
-    currentRow: {
-      type: Object,
-      default: null,
-    },
-    keyNum: {
-      type: Number,
-      default: 0,
-    },
+
+defineOptions({ name: 'CreatAttr' });
+
+const props = defineProps({
+  currentRow: {
+    type: Object,
+    default: null,
   },
-  data() {
-    return {
-      loadingBtn: false,
-      loading: false,
-      dialogVisible: false,
-      inputVisible: false,
-      inputValue: '',
-      spinShow: false,
-      grid: {
-        xl: 3,
-        lg: 3,
-        md: 12,
-        sm: 24,
-        xs: 24,
-      },
-      modal: false,
-      index: 1,
-      rules: {
-        ruleName: [{ required: true, message: '请输入规格名称', trigger: 'blur' }],
-      },
-      formDynamic: {
-        ruleName: '',
-        ruleValue: [],
-      },
-      attrsName: '',
-      attrsVal: '',
-      isBtn: false,
-      results: [],
-      result: [],
-      ids: 0,
+  keyNum: {
+    type: Number,
+    default: 0,
+  },
+});
+
+const emit = defineEmits(['getList']);
+
+const formDynamicRef = ref(null);
+
+const loadingBtn = ref(false);
+const loading = ref(false);
+const dialogVisible = ref(false);
+const inputVisible = ref(false);
+const inputValue = ref('');
+const spinShow = ref(false);
+const grid = ref({
+  xl: 3,
+  lg: 3,
+  md: 12,
+  sm: 24,
+  xs: 24,
+});
+const modal = ref(false);
+const index = ref(1);
+const rules = ref({
+  ruleName: [{ required: true, message: '请输入规格名称', trigger: 'blur' }],
+});
+const formDynamic = ref({
+  ruleName: '',
+  ruleValue: [],
+});
+const attrsName = ref('');
+const attrsVal = ref('');
+const isBtn = ref(false);
+const results = ref([]);
+const result = ref([]);
+const ids = ref(0);
+
+watch(
+  () => props.currentRow,
+  (val, oldVal) => {
+    formDynamic.value = val;
+  },
+  { immediate: true },
+);
+
+watch(
+  () => props.keyNum,
+  (val) => {
+    if (val > 0) clear();
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  formDynamic.value.ruleValue.map((item) => {
+    item.inputVisible = false;
+  });
+});
+
+function resetForm(formName) {
+  ElMessageBox.close();
+  clear();
+  formDynamicRef.value.resetFields();
+}
+
+// 添加按钮
+function addBtn() {
+  isBtn.value = true;
+}
+
+function handleClose(item, index) {
+  item.splice(index, 1);
+}
+
+// 取消
+function offAttrName() {
+  isBtn.value = false;
+}
+
+// 删除
+function handleRemove(index) {
+  formDynamic.value.ruleValue.splice(index, 1);
+}
+
+// 添加规则名称
+function createAttrName() {
+  if (attrsName.value && attrsVal.value) {
+    const data = {
+      value: attrsName.value,
+      detail: [attrsVal.value],
     };
-  },
-  watch: {
-    currentRow: {
-      handler: function (val, oldVal) {
-        this.formDynamic = val;
-      },
-      immediate: true,
-    },
-    keyNum: {
-      deep: true,
-      handler(val) {
-        if (val > 0) this.clear();
-      },
-    },
-  },
-  mounted() {
-    this.formDynamic.ruleValue.map((item) => {
-      this.$set(item, 'inputVisible', false);
-    });
-  },
-  methods: {
-    resetForm(formName) {
-      this.$msgbox.close();
-      this.clear();
-      this.$refs[formName].resetFields();
-    },
-    // 添加按钮
-    addBtn() {
-      this.isBtn = true;
-    },
-    handleClose(item, index) {
-      item.splice(index, 1);
-    },
-    // 取消
-    offAttrName() {
-      this.isBtn = false;
-    },
-    // 删除
-    handleRemove(index) {
-      this.formDynamic.ruleValue.splice(index, 1);
-    },
-    // 添加规则名称
-    createAttrName() {
-      if (this.attrsName && this.attrsVal) {
-        const data = {
-          value: this.attrsName,
-          detail: [this.attrsVal],
-        };
-        this.formDynamic.ruleValue.push(data);
-        var hash = {};
-        this.formDynamic.ruleValue = this.formDynamic.ruleValue.reduce(function (item, next) {
-          /* eslint-disable */
-          hash[next.value] ? '' : (hash[next.value] = true && item.push(next));
-          return item;
-        }, []);
-        this.attrsName = '';
-        this.attrsVal = '';
-        this.isBtn = false;
-      } else {
-        this.$message.warning('请添加规格名称');
+    formDynamic.value.ruleValue.push(data);
+    var hash = {};
+    formDynamic.value.ruleValue = formDynamic.value.ruleValue.reduce(function (item, next) {
+      /* eslint-disable */
+      hash[next.value] ? '' : (hash[next.value] = true && item.push(next));
+      return item;
+    }, []);
+    attrsName.value = '';
+    attrsVal.value = '';
+    isBtn.value = false;
+  } else {
+    ElMessage.warning('请添加规格名称');
+  }
+}
+
+// 添加属性
+function createAttr(num, idx) {
+  if (num) {
+    formDynamic.value.ruleValue[idx].detail.push(num);
+    var hash = {};
+    formDynamic.value.ruleValue[idx].detail = formDynamic.value.ruleValue[idx].detail.reduce(function (item, next) {
+      /* eslint-disable */
+      hash[next] ? '' : (hash[next] = true && item.push(next));
+      return item;
+    }, []);
+    formDynamic.value.ruleValue[idx].inputVisible = false;
+  }
+}
+
+function showInput(item) {
+  item.inputVisible = true;
+}
+
+// 提交
+function handleSubmit(name) {
+  const data = {
+    id: props.currentRow.id || 0,
+    ruleName: formDynamic.value.ruleName,
+    ruleValue: JSON.stringify(formDynamic.value.ruleValue),
+  };
+  formDynamicRef.value.validate((valid) => {
+    if (valid) {
+      if (formDynamic.value.ruleValue.length === 0) {
+        return ElMessage.warning('请至少添加一条属性规格！');
       }
-    },
-    // 添加属性
-    createAttr(num, idx) {
-      if (num) {
-        this.formDynamic.ruleValue[idx].detail.push(num);
-        var hash = {};
-        this.formDynamic.ruleValue[idx].detail = this.formDynamic.ruleValue[idx].detail.reduce(function (item, next) {
-          /* eslint-disable */
-          hash[next] ? '' : (hash[next] = true && item.push(next));
-          return item;
-        }, []);
-        this.formDynamic.ruleValue[idx].inputVisible = false;
-      }
-    },
-    showInput(item) {
-      this.$set(item, 'inputVisible', true);
-    },
-    // 提交
-    handleSubmit(name) {
-      const data = {
-        id: this.currentRow.id || 0,
-        ruleName: this.formDynamic.ruleName,
-        ruleValue: JSON.stringify(this.formDynamic.ruleValue),
-      };
-      this.$refs[name].validate((valid) => {
-        if (valid) {
-          if (this.formDynamic.ruleValue.length === 0) {
-            return this.$message.warning('请至少添加一条属性规格！');
-          }
-          this.loadingBtn = true;
-          this.loading = true;
-          setTimeout(() => {
-            this.currentRow.id
-              ? attrEditApi(data)
-                  .then((res) => {
-                    this.$message.success('提交成功');
-                    this.$msgbox.close();
-                    this.clear();
-                    this.$emit('getList');
-                    this.loading = false;
-                    this.loadingBtn = false;
-                  })
-                  .catch(() => {
-                    this.loading = false;
-                    this.loadingBtn = false;
-                  })
-              : attrCreatApi(data)
-                  .then((res) => {
-                    this.$message.success('提交成功');
-                    this.$msgbox.close();
-                    this.$emit('getList');
-                    this.clear();
-                    this.loading = false;
-                    this.loadingBtn = false;
-                  })
-                  .catch(() => {
-                    this.loading = false;
-                    this.loadingBtn = false;
-                  });
-          }, 1200);
-        } else {
-          this.loading = false;
-          this.loadingBtn = false;
-          return false;
-        }
-      });
-    },
-    clear() {
-      this.$refs['formDynamic'].resetFields();
-      this.formDynamic.ruleValue = [];
-      this.formDynamic.ruleName = '';
-      this.isBtn = false;
-      this.attrsName = '';
-      this.attrsVal = '';
-    },
-    handleInputConfirm() {
-      const inputValue = this.inputValue;
-      if (inputValue) {
-        this.dynamicTags.push(inputValue);
-      }
-      this.inputVisible = false;
-      this.inputValue = '';
-    },
-  },
-};
+      loadingBtn.value = true;
+      loading.value = true;
+      setTimeout(() => {
+        props.currentRow.id
+          ? attrEditApi(data)
+              .then((res) => {
+                ElMessage.success('提交成功');
+                ElMessageBox.close();
+                clear();
+                emit('getList');
+                loading.value = false;
+                loadingBtn.value = false;
+              })
+              .catch(() => {
+                loading.value = false;
+                loadingBtn.value = false;
+              })
+          : attrCreatApi(data)
+              .then((res) => {
+                ElMessage.success('提交成功');
+                ElMessageBox.close();
+                emit('getList');
+                clear();
+                loading.value = false;
+                loadingBtn.value = false;
+              })
+              .catch(() => {
+                loading.value = false;
+                loadingBtn.value = false;
+              });
+      }, 1200);
+    } else {
+      loading.value = false;
+      loadingBtn.value = false;
+      return false;
+    }
+  });
+}
+
+function clear() {
+  formDynamicRef.value.resetFields();
+  formDynamic.value.ruleValue = [];
+  formDynamic.value.ruleName = '';
+  isBtn.value = false;
+  attrsName.value = '';
+  attrsVal.value = '';
+}
+
+function handleInputConfirm() {
+  const inputValueVal = inputValue.value;
+  if (inputValueVal) {
+    dynamicTags.value.push(inputValueVal);
+  }
+  inputVisible.value = false;
+  inputValue.value = '';
+}
 </script>
 
 <style scoped lang="scss">
@@ -293,7 +304,7 @@ export default {
 .ml75 {
   margin-left: 75px;
 }
-::v-deep [role='dialog'] .el-message-box {
+:deep([role='dialog'] .el-message-box) {
   padding-bottom: 10px !important;
 }
 </style>

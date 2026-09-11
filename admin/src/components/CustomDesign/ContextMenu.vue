@@ -21,34 +21,33 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ContextMenu',
-  props: {
-    visible: {
-      type: Boolean,
-      default: false,
-    },
-    top: {
-      type: Number,
-      default: 0,
-    },
-    left: {
-      type: Number,
-      default: 0,
-    },
-    curComponent: {
-      type: Object,
-      default: null,
-    },
+<script setup>
+defineOptions({ name: 'ContextMenu' });
+
+const props = defineProps({
+  visible: {
+    type: Boolean,
+    default: false,
   },
-  methods: {
-    handleAction(action) {
-      this.$emit('action', action);
-      this.$emit('close');
-    },
+  top: {
+    type: Number,
+    default: 0,
   },
-};
+  left: {
+    type: Number,
+    default: 0,
+  },
+  curComponent: {
+    type: Object,
+    default: null,
+  },
+});
+const emit = defineEmits(['action', 'close']);
+
+function handleAction(action) {
+  emit('action', action);
+  emit('close');
+}
 </script>
 
 <style scoped lang="scss">

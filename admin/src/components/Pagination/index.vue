@@ -2,8 +2,8 @@
   <div :class="{ hidden: hidden }" class="pagination-container">
     <el-pagination
       :background="background"
-      :current-page.sync="currentPage"
-      :page-size.sync="pageSize"
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
       :layout="layout"
       :page-sizes="pageSizes"
       :pager-count="pageCount"
@@ -15,84 +15,86 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { computed } from 'vue';
 import { scrollTo } from '@/utils/scroll-to.js';
 
-export default {
-  name: 'Pagination',
-  props: {
-    total: {
-      required: true,
-      type: Number,
-    },
-    page: {
-      type: Number,
-      default: 1,
-    },
-    limit: {
-      type: Number,
-      default: 15,
-    },
-    pageSizes: {
-      type: Array,
-      default() {
-        return [15, 20, 30, 50];
-      },
-    },
-    layout: {
-      type: String,
-      default: 'total, sizes, prev, pager, next, jumper',
-    },
-    background: {
-      type: Boolean,
-      default: true,
-    },
-    autoScroll: {
-      type: Boolean,
-      default: true,
-    },
-    hidden: {
-      type: Boolean,
-      default: false,
-    },
-    pageCount: {
-      type: Number,
-      default: 7,
+defineOptions({ name: 'Pagination', inheritAttrs: false });
+
+const props = defineProps({
+  total: {
+    required: true,
+    type: Number,
+  },
+  page: {
+    type: Number,
+    default: 1,
+  },
+  limit: {
+    type: Number,
+    default: 15,
+  },
+  pageSizes: {
+    type: Array,
+    default() {
+      return [15, 20, 30, 50];
     },
   },
-  computed: {
-    currentPage: {
-      get() {
-        return this.page;
-      },
-      set(val) {
-        this.$emit('update:page', val);
-      },
-    },
-    pageSize: {
-      get() {
-        return this.limit;
-      },
-      set(val) {
-        this.$emit('update:limit', val);
-      },
-    },
+  layout: {
+    type: String,
+    default: 'total, sizes, prev, pager, next, jumper',
   },
-  methods: {
-    handleSizeChange() {
-      this.$emit('pagination');
-      if (this.autoScroll) {
-        scrollTo(0, 800);
-      }
-    },
-    handleCurrentChange(val) {
-      this.$emit('pagination', val);
-      if (this.autoScroll) {
-        scrollTo(0, 800);
-      }
-    },
+  background: {
+    type: Boolean,
+    default: true,
   },
-};
+  autoScroll: {
+    type: Boolean,
+    default: true,
+  },
+  hidden: {
+    type: Boolean,
+    default: false,
+  },
+  pageCount: {
+    type: Number,
+    default: 7,
+  },
+});
+
+const emit = defineEmits(['update:page', 'update:limit', 'pagination']);
+
+const currentPage = computed({
+  get() {
+    return props.page;
+  },
+  set(val) {
+    emit('update:page', val);
+  },
+});
+
+const pageSize = computed({
+  get() {
+    return props.limit;
+  },
+  set(val) {
+    emit('update:limit', val);
+  },
+});
+
+function handleSizeChange() {
+  emit('pagination');
+  if (props.autoScroll) {
+    scrollTo(0, 800);
+  }
+}
+
+function handleCurrentChange(val) {
+  emit('pagination', val);
+  if (props.autoScroll) {
+    scrollTo(0, 800);
+  }
+}
 </script>
 
 <style scoped>
