@@ -79,7 +79,7 @@ CRMEB开源商城系统Java版，是一款基于**Apache-2.0**协议发布的开
 
 主题广场：<a href="https://www.crmeb.com/theme" target="_blank">主题广场</a>
 
-![输入图片说明](crmeb/crmebimage/theme-cate/主题广场.png)
+![输入图片说明](backend/crmebimage/theme-cate/主题广场.png)
 
 #### 社区共建计划
 我们致力于打造开发者友好生态，开放源码、持续更新功能模块，并欢迎开发者提交优化建议或贡献代码。通过共享技术成果，降低行业重复造轮子成本，推动开源电商系统的可持续发展。
@@ -97,7 +97,7 @@ CRMEB开源商城系统Java版，是一款基于**Apache-2.0**协议发布的开
 
 ---
 
-![输入图片说明](crmeb/crmebimage/theme-cate/开源banner-Java.jpg)
+![输入图片说明](backend/crmebimage/theme-cate/开源banner-Java.jpg)
 
 ### 🛠️ 技术栈与运行环境
 
@@ -121,23 +121,30 @@ CRMEB开源商城系统Java版，是一款基于**Apache-2.0**协议发布的开
 
 ```
 crmeb_java
-├── admin/          PC端管理端（Vue + ElementUI）
-├── app/            移动商城（UniApp标准开发，支持H5 + 微信小程序）
-├── crmeb/          后端API服务（Java SpringBoot + MybatisPlus）
-└── 接口文档/        部署后也可在线查看 Swagger 文档
+├── .crmeb/             协作文档目录，与 backend 同级
+│   ├── agents/
+│   ├── documents/      文档（接口文档、安装必读）
+│   ├── rules/          项目规范
+│   ├── skills/         技能
+│   └── AGENTS.md
+├── backend/            后端API服务（Java SpringBoot + MybatisPlus）
+└── frontend/           前端
+    ├── admin/          管理后台（Vue3 + Element Plus）
+    ├── pc/             PC 端
+    └── uni-app/        H5 / App / 小程序端（uni-app）
 ```
 
 ---
 
 ### 📖 系统功能
 
-![输入图片说明](crmeb/crmebimage/theme-cate/251201002.jpg)
+![输入图片说明](backend/crmebimage/theme-cate/251201002.jpg)
 
 ---
 
 ### 📖 UI界面展示
 
-![输入图片说明](crmeb/crmebimage/theme-cate/251201005.jpg)
+![输入图片说明](backend/crmebimage/theme-cate/251201005.jpg)
 
 
 
@@ -145,7 +152,7 @@ crmeb_java
 
 ### 📖 后台界面展示
 
-![输入图片说明](crmeb/crmebimage/theme-cate/251201004.jpg)
+![输入图片说明](backend/crmebimage/theme-cate/251201004.jpg)
 
 
 ---
@@ -153,7 +160,7 @@ crmeb_java
 
 ### 🚀 系统演示
 
-![](crmeb/crmebimage/theme-cate/c2.jpg)
+![](backend/crmebimage/theme-cate/c2.jpg)
 
 **管理后台**：https://admin.java.crmeb.net  
 账号：`demo` / 密码：`crmeb.com`
@@ -185,7 +192,7 @@ crmeb_java
 
 欢迎加入CRMEB开源技术交流群，扫码进群免费领取接口文档、功能清单、思维导图等资源！
 
-![](crmeb/crmebimage/theme-cate/开源Java.jpg)
+![](backend/crmebimage/theme-cate/开源Java.jpg)
 
 您还可以在 [CRMEB技术社区](https://www.crmeb.com/ask/thread/list/152) 中提交Bug、交流解决方案、获取官方更新动态。
 
@@ -195,4 +202,4 @@ crmeb_java
 
 ### 📕 2小时快速搭建你的小程序商城
 
-[![输入图片说明](crmeb/crmebimage/theme-cate/java-saas.jpg)](https://shop.crmeb.com)
+[![输入图片说明](backend/crmebimage/theme-cate/java-saas.jpg)](https://shop.crmeb.com)

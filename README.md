@@ -84,7 +84,7 @@ Not only use it freely, but also earn money easily. You can leverage the system'
 Theme Market：<a href="https://www.crmeb.com/theme" target="_blank">Theme Market</a>
 
 
-![Theme Market](crmeb/crmebimage/theme-cate/主题广场.png)
+![Theme Market](backend/crmebimage/theme-cate/主题广场.png)
 
 #### Community Co-construction Plan
 
@@ -103,7 +103,7 @@ We are committed to building a developer-friendly ecosystem, open-sourcing our c
 
 ---
 
-![输入图片说明](crmeb/crmebimage/theme-cate/开源banner-Java.jpg)
+![输入图片说明](backend/crmebimage/theme-cate/开源banner-Java.jpg)
 
 ### 🛠️ Technology Stack and Runtime Environment
 
@@ -127,23 +127,30 @@ We are committed to building a developer-friendly ecosystem, open-sourcing our c
 
 ```
 crmeb_java
-├── admin/          PC Management Terminal （Vue + ElementUI）
-├── app/            Mobile end （UniApp，H5 + official account + WeChat Mini Program）
-├── crmeb/          API service（Java SpringBoot + MybatisPlus）
-└── 接口文档/        Swagger documents can also be viewed online after deployment
+├── .crmeb/             Collaboration docs, same level as backend
+│   ├── agents/
+│   ├── documents/      Documents (API docs, installation guide)
+│   ├── rules/          Project conventions
+│   ├── skills/         Skills
+│   └── AGENTS.md
+├── backend/            API service (Java SpringBoot + MybatisPlus)
+└── frontend/           Frontend
+    ├── admin/          Management console (Vue3 + Element Plus)
+    ├── pc/             PC end
+    └── uni-app/        H5 / App / Mini Program (uni-app)
 ```
 
 ---
 
 ### 📖 System Features
 
-![System Features](crmeb/crmebimage/theme-cate/251201002.jpg)
+![System Features](backend/crmebimage/theme-cate/251201002.jpg)
 
 ---
 
 ### 📖 UI Interface Display
 
-![UI Interface Display](crmeb/crmebimage/theme-cate/251201005.jpg)
+![UI Interface Display](backend/crmebimage/theme-cate/251201005.jpg)
 
 
 
@@ -151,7 +158,7 @@ crmeb_java
 
 ### 📖 Backend Interface Display
 
-![Backend Interface Display](crmeb/crmebimage/theme-cate/251201004.jpg)
+![Backend Interface Display](backend/crmebimage/theme-cate/251201004.jpg)
 
 
 ---
@@ -159,7 +166,7 @@ crmeb_java
 
 ### 🚀 System Demonstration
 
-![System Demonstration](crmeb/crmebimage/theme-cate/c2.jpg)
+![System Demonstration](backend/crmebimage/theme-cate/c2.jpg)
 
 **Admin Panel**：https://admin.java.crmeb.net  
 Account：`demo` / Password:`crmeb.com`
@@ -191,12 +198,12 @@ Account：`demo` / Password:`crmeb.com`
 
 Welcome to join the CRMEB open source technology exchange group, scan the code to join the group and get free access to interface documents, function lists, mind maps and other resources!
 
-![](crmeb/crmebimage/theme-cate/开源Java.jpg)
+![](backend/crmebimage/theme-cate/开源Java.jpg)
 
 You can also in [CRMEB Technology Community ](https://www.crmeb.com/ask/thread/list/152) Submit bugs, exchange solutions, and get official updates.
 
 
-[![输入图片说明](crmeb/crmebimage/theme-cate/java-saas.jpg)](https://shop.crmeb.com)
+[![输入图片说明](backend/crmebimage/theme-cate/java-saas.jpg)](https://shop.crmeb.com)
 
 
 ---
