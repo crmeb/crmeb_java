@@ -5,6 +5,8 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.SmsConstants;
+import com.zbkj.common.constants.SysConfigConstants;
+import com.zbkj.common.constants.WeChatConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.request.LoginMobileRequest;
@@ -203,30 +205,29 @@ public class LoginServiceImpl implements LoginService {
     }
 
     /**
-     * 校验token是否有效
-     *
-     * @return true 有效， false 无效
-     */
-    @Override
-    public Boolean tokenIsExist() {
-        Integer userId = userService.getUserId();
-        return userId > 0;
-    }
-
-    /**
      * 获取登录配置
      */
     @Override
     public LoginConfigResponse getLoginConfig() {
         String routinePhoneVerification = systemConfigService.getValueByKey(Constants.WECHAT_ROUTINE_PHONE_VERIFICATION);
         String publicLoginType = systemConfigService.getValueByKey(Constants.WECHAT_PUBLIC_LOGIN_TYPE);
+        String publicAppId = systemConfigService.getValueByKey(WeChatConstants.WECHAT_PUBLIC_APPID);
+        String publicAppSecret = systemConfigService.getValueByKey(WeChatConstants.WECHAT_PUBLIC_APPSECRET);
         String mobileLoginLogo = systemConfigService.getValueByKey(Constants.CONFIG_KEY_MOBILE_LOGIN_LOGO);
         String siteName = systemConfigService.getValueByKey(Constants.CONFIG_KEY_SITE_NAME);
+        String companyImage = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_COPYRIGHT_COMPANY_IMAGE);
+
+        // 公众号授权依赖 AppId 和 AppSecret，缺少任一项时自动降级为手机号验证码登录。
+        if (StrUtil.isBlank(publicAppId) || StrUtil.isBlank(publicAppSecret)) {
+            publicLoginType = "2";
+        }
+
         LoginConfigResponse response = new LoginConfigResponse();
         response.setPublicLoginType(publicLoginType);
         response.setRoutinePhoneVerification(routinePhoneVerification);
         response.setMobileLoginLogo(mobileLoginLogo);
         response.setSiteName(siteName);
+        response.setCompanyImage(companyImage);
         return response;
     }
 }

@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -43,7 +44,7 @@ public class UploadController {
     /**
      * 图片上传
      */
-//    @PreAuthorize("hasAuthority('admin:upload:image')")
+    @PreAuthorize("isAuthenticated()")
     @ApiOperation(value = "图片上传")
     @RequestMapping(value = "/image", method = RequestMethod.POST)
     @ApiImplicitParams({
@@ -59,7 +60,7 @@ public class UploadController {
     /**
      * 文件上传
      */
-//    @PreAuthorize("hasAuthority('admin:upload:file')")
+    @PreAuthorize("isAuthenticated()")
     @ApiOperation(value = "文件上传")
     @RequestMapping(value = "/file", method = RequestMethod.POST)
     @ApiImplicitParams({
@@ -73,6 +74,5 @@ public class UploadController {
     }
 
 }
-
 
 

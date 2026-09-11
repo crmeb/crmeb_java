@@ -91,18 +91,11 @@ public class LoginController {
         }
     }
 
-    @ApiOperation(value = "校验token是否有效")
-    @RequestMapping(value = "/token/is/exist", method = RequestMethod.POST)
-    public CommonResult<Boolean> tokenIsExist() {
-        return CommonResult.success(loginService.tokenIsExist());
-    }
-
     @ApiOperation(value = "获取登录配置")
     @RequestMapping(value = "/login/config", method = RequestMethod.GET)
     public CommonResult<LoginConfigResponse> getLoginConfig() {
         return CommonResult.success(loginService.getLoginConfig());
     }
 }
-
 
 

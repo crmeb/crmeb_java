@@ -1254,7 +1254,10 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                 checkValidateCode(request.getPhone(), request.getCaptcha());
             } else {
                 // 参数校验
-                if (StrUtil.isBlank(request.getCode())) {
+                String miniLoginCode = StrUtil.isNotBlank(request.getWxCode())
+                        ? request.getWxCode()
+                        : request.getCode();
+                if (StrUtil.isBlank(miniLoginCode)) {
                     throw new CrmebException("小程序获取手机号code不能为空");
                 }
                 if (StrUtil.isBlank(request.getEncryptedData())) {
@@ -1269,7 +1272,7 @@ public class UserCenterServiceImpl extends ServiceImpl<UserDao, User> implements
                     throw new CrmebException("微信小程序appId未设置");
                 }
 
-                WeChatMiniAuthorizeVo response = wechatNewService.miniAuthCode(request.getCode());
+                WeChatMiniAuthorizeVo response = wechatNewService.miniAuthCode(miniLoginCode);
                 System.out.println("小程序登陆成功 = " + JSON.toJSONString(response));
                 String decrypt = WxUtil.decrypt(programAppId, request.getEncryptedData(), response.getSessionKey(), request.getIv());
                 if (StrUtil.isBlank(decrypt)) {

@@ -1,15 +1,16 @@
 # CRMEB 相关配置
 crmeb:
-  version: CRMEB-JAVA-SY-v2.4 # 当前代码版本
+  version: CRMEB-JAVA-SY-v3.1 # 当前代码版本
   domain: #配合swagger使用 # 待部署域名
   wechat-api-url:  #请求微信接口中专服务器
   wechat-js-api-debug: false #微信js api系列是否开启调试模式
   wechat-js-api-beta: true #微信js api是否是beta版本
   asyncConfig: false #是否同步config表数据到redis
   asyncWeChatProgramTempList: false #是否同步小程序公共模板库
+  jwt-secret: # JWT签名密钥，请配置随机密钥（如 openssl rand -hex 32）；也可用环境变量 CRMEB_JWT_SECRET；留空时启动自动生成临时密钥（重启后需重新登录）
   imagePath: /JAVA_PROJECT/SINGLE/dev/admin/ # 服务器图片路径配置 斜杠结尾
   captchaOn: false # 是否开启行为验证码
-  demoSite: true # 是否演示站点 所有手机号码都会掩码
+  demoSite: false # 是否演示站点 所有手机号码都会掩码
 
 server:
   port: 20600

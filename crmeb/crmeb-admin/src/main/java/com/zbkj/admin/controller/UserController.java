@@ -89,6 +89,20 @@ public class UserController {
     }
 
     /**
+     * 修改用户密码
+     * @param request 修改密码参数
+     */
+    @PreAuthorize("hasAuthority('admin:user:update:password')")
+    @ApiOperation(value = "修改用户密码")
+    @RequestMapping(value = "/update/password", method = RequestMethod.POST)
+    public CommonResult<String> updatePassword(@RequestBody @Validated UserUpdatePasswordRequest request) {
+        if (userService.updateUserPassword(request.getId(), request.getPassword())) {
+            return CommonResult.success();
+        }
+        return CommonResult.failed();
+    }
+
+    /**
      * 用户详情
      * @param id Integer
      */
@@ -197,7 +211,18 @@ public class UserController {
         }
         return CommonResult.failed("更新失败");
     }
-}
 
+    /**
+     * 后台新增H5用户
+     * @param request 用户创建参数
+     */
+    @PreAuthorize("hasAuthority('admin:user:save')")
+    @ApiOperation(value = "新增H5用户")
+    @RequestMapping(value = "/save", method = RequestMethod.POST)
+    public CommonResult<String> save(@RequestBody @Validated UserCreateRequest request) {
+        userService.adminCreateUser(request);
+        return CommonResult.success("新增成功");
+    }
+}
 
 

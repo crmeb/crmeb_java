@@ -1,16 +1,17 @@
 package com.zbkj.admin.filter;
 
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.zbkj.common.constants.Constants;
-import com.zbkj.common.utils.RedisUtil;
+import com.zbkj.common.utils.JwtTokenUtil;
 import com.zbkj.common.vo.LoginUserVo;
+import com.zbkj.service.service.impl.UserDetailServiceImpl;
+import io.jsonwebtoken.Claims;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * token验证处理
@@ -28,18 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class TokenComponent {
 
     @Resource
-    private RedisUtil redisUtil;
-
-    private static final Long MILLIS_MINUTE_TEN = 20 * 60 * 1000L;
-
-    private static final Long MILLIS_MINUTE = 60 * 1000L;
-
-    // 令牌有效期（默认30分钟） todo 调试期改为5小时
-//    private static final int expireTime = 30;
-    private static final int expireTime = 5 * 60;
-
-    // Redis 存储的key
-    private static final String TOKEN_REDIS = "TOKEN:ADMIN:";
+    private UserDetailServiceImpl userDetailService;
 
     /**
      * 获取用户身份信息
@@ -50,8 +40,23 @@ public class TokenComponent {
         // 获取请求携带的令牌
         String token = getToken(request);
         if (StrUtil.isNotEmpty(token)) {
-            String userKey = getTokenKey(token);
-            return redisUtil.get(userKey);
+            try {
+                Claims claims = JwtTokenUtil.parseToken(token);
+                if (!JwtTokenUtil.isTokenType(claims, Constants.JWT_TOKEN_TYPE_ADMIN)) {
+                    return null;
+                }
+                String account = claims.get("account", String.class);
+                if (StrUtil.isBlank(account)) {
+                    return null;
+                }
+                LoginUserVo loginUser = (LoginUserVo) userDetailService.loadUserByUsername(account);
+                loginUser.setToken(token);
+                loginUser.setLoginTime(claims.getIssuedAt().getTime());
+                loginUser.setExpireTime(claims.getExpiration().getTime());
+                return loginUser;
+            } catch (Exception e) {
+                return null;
+            }
         }
         return null;
     }
@@ -60,19 +65,12 @@ public class TokenComponent {
      * 设置用户身份信息
      */
     public void setLoginUser(LoginUserVo loginUser) {
-        if (ObjectUtil.isNotNull(loginUser) && StrUtil.isNotEmpty(loginUser.getToken())) {
-            refreshToken(loginUser);
-        }
     }
 
     /**
      * 删除用户身份信息
      */
     public void delLoginUser(String token) {
-        if (StrUtil.isNotEmpty(token)) {
-            String userKey = getTokenKey(token);
-            redisUtil.delete(userKey);
-        }
     }
 
     /**
@@ -82,38 +80,28 @@ public class TokenComponent {
      * @return 令牌
      */
     public String createToken(LoginUserVo loginUser) {
-        String token = UUID.randomUUID().toString().replace("-", "");
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("adminId", loginUser.getUser().getId());
+        claims.put("account", loginUser.getUser().getAccount());
+        String token = JwtTokenUtil.createToken(String.valueOf(loginUser.getUser().getId()), Constants.JWT_TOKEN_TYPE_ADMIN, claims, Constants.JWT_ADMIN_EXPIRE_MINUTES);
         loginUser.setToken(token);
-//        setUserAgent(loginUser);
-        refreshToken(loginUser);
         return token;
     }
 
     /**
-     * 验证令牌有效期，相差不足20分钟，自动刷新缓存
+     * JWT通过自身过期时间校验，不再按请求刷新服务端缓存。
      *
      * @param loginUser LoginUserVo
      */
     public void verifyToken(LoginUserVo loginUser) {
-        long expireTime = loginUser.getExpireTime();
-        long currentTime = System.currentTimeMillis();
-        if (expireTime - currentTime <= MILLIS_MINUTE_TEN)
-        {
-            refreshToken(loginUser);
-        }
     }
 
     /**
-     * 刷新令牌有效期
+     * JWT无状态，不再刷新服务端缓存。
      *
      * @param loginUser 登录信息
      */
     public void refreshToken(LoginUserVo loginUser) {
-        loginUser.setLoginTime(System.currentTimeMillis());
-        loginUser.setExpireTime(loginUser.getLoginTime() + expireTime * MILLIS_MINUTE);
-        // 根据uuid将loginUser缓存
-        String userKey = getTokenKey(loginUser.getToken());
-        redisUtil.set(userKey, loginUser, (long) expireTime, TimeUnit.MINUTES);
     }
 
     /**
@@ -123,15 +111,7 @@ public class TokenComponent {
      * @return token
      */
     private String getToken(HttpServletRequest request) {
-        String token = request.getHeader(Constants.HEADER_AUTHORIZATION_KEY);
-        if (StrUtil.isNotEmpty(token) && token.startsWith(TOKEN_REDIS)) {
-            token = token.replace(TOKEN_REDIS, "");
-        }
-        return token;
-    }
-
-    private String getTokenKey(String uuid) {
-        return TOKEN_REDIS + uuid;
+        return JwtTokenUtil.resolveBearerToken(request.getHeader(Constants.HEADER_AUTHORIZATION_KEY));
     }
 
 }

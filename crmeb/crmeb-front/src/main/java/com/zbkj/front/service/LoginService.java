@@ -51,13 +51,6 @@ public interface LoginService {
     void loginOut(HttpServletRequest request);
 
     /**
-     * 校验token是否有效
-     *
-     * @return true 有效， false 无效
-     */
-    Boolean tokenIsExist();
-
-    /**
      * 获取登录配置
      */
     LoginConfigResponse getLoginConfig();

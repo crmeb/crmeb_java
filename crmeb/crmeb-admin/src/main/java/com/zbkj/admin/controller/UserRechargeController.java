@@ -2,6 +2,7 @@ package com.zbkj.admin.controller;
 
 import com.zbkj.common.page.CommonPage;
 import com.zbkj.common.request.PageParamRequest;
+import com.zbkj.common.request.UserRechargeRefundRequest;
 import com.zbkj.common.request.UserRechargeSearchRequest;
 import com.zbkj.common.response.UserRechargeResponse;
 import com.zbkj.common.result.CommonResult;
@@ -14,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
@@ -62,7 +64,16 @@ public class UserRechargeController {
     public CommonResult<HashMap<String, BigDecimal>> balance(){
         return CommonResult.success(userRechargeService.getBalanceList());
     }
-}
 
+    /**
+     * 充值订单退款
+     */
+    @PreAuthorize("hasAuthority('admin:recharge:refund')")
+    @ApiOperation(value = "充值订单退款")
+    @RequestMapping(value = "/refund", method = RequestMethod.POST)
+    public CommonResult<Boolean> refund(@RequestBody @Validated UserRechargeRefundRequest request) {
+        return CommonResult.success(userRechargeService.refund(request));
+    }
+}
 
 

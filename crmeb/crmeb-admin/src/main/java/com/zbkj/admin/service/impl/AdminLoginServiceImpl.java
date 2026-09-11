@@ -7,6 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import com.anji.captcha.model.common.ResponseModel;
 import com.zbkj.admin.filter.TokenComponent;
 import com.zbkj.admin.service.AdminLoginService;
+import com.zbkj.common.config.CrmebConfig;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.SysConfigConstants;
 import com.zbkj.common.constants.SysGroupDataConstants;
@@ -85,6 +86,10 @@ public class AdminLoginServiceImpl implements AdminLoginService {
 
     @Autowired
     private SafetyService safetyService;
+
+    @Autowired
+    private CrmebConfig crmebConfig;
+
     /**
      * PC登录
      */
@@ -168,6 +173,10 @@ public class AdminLoginServiceImpl implements AdminLoginService {
         map.put("banner", bannerList);
 
         map.put("siteName", systemConfigService.getValueByKey(SysConfigConstants.CONFIG_KEY_SITE_NAME));
+        String companyName = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_COPYRIGHT_COMPANY_INFO);
+        map.put("companyName", StrUtil.isBlank(companyName)
+                ? "Copyright © 2014-2026 " + crmebConfig.getVersion()
+                : companyName);
         return map;
     }
 

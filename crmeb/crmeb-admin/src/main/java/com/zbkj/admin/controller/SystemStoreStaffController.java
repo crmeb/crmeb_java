@@ -12,6 +12,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -30,19 +31,19 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("api/admin/system/store/staff")
-@Api(tags = "设置 -- 提货点 -- 核销员")
+@Api(tags = "设置 -- 提货点 -- 移动端管理员/核销员")
 public class SystemStoreStaffController {
 
     @Autowired
     private SystemStoreStaffService systemStoreStaffService;
 
     /**
-     * 分页显示门店核销员列表
+     * 分页显示移动端管理员/核销员列表
      * @param storeId 门店id
      * @param pageParamRequest 分页参数
      */
     @PreAuthorize("hasAuthority('admin:system:staff:list')")
-    @ApiOperation(value = "分页列表")
+    @ApiOperation(value = "移动端管理员/核销员分页列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     public CommonResult<CommonPage<SystemStoreStaffResponse>> getList(@RequestParam(name = "storeId", required = false, defaultValue = "0") Integer storeId,
                                                                       @ModelAttribute PageParamRequest pageParamRequest) {
@@ -52,13 +53,13 @@ public class SystemStoreStaffController {
     }
 
     /**
-     * 新增门店店员表
+     * 新增移动端管理员/核销员
      * @param systemStoreStaffRequest 新增参数
      */
     @PreAuthorize("hasAuthority('admin:system:staff:save')")
-    @ApiOperation(value = "新增")
+    @ApiOperation(value = "新增移动端管理员/核销员")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
-    public CommonResult<String> save(@RequestBody @ModelAttribute SystemStoreStaffRequest systemStoreStaffRequest) {
+    public CommonResult<String> save(@Validated @ModelAttribute SystemStoreStaffRequest systemStoreStaffRequest) {
         if (systemStoreStaffService.saveUnique(systemStoreStaffRequest)) {
             return CommonResult.success();
         }
@@ -66,11 +67,11 @@ public class SystemStoreStaffController {
     }
 
     /**
-     * 删除门店店员表
+     * 删除移动端管理员/核销员
      * @param id Integer
      */
     @PreAuthorize("hasAuthority('admin:system:staff:delete')")
-    @ApiOperation(value = "删除")
+    @ApiOperation(value = "删除移动端管理员/核销员")
     @RequestMapping(value = "/delete", method = RequestMethod.GET)
     public CommonResult<String> delete(@RequestParam(value = "id") Integer id) {
         if (systemStoreStaffService.removeById(id)) {
@@ -80,14 +81,14 @@ public class SystemStoreStaffController {
     }
 
     /**
-     * 修改门店店员表
+     * 修改移动端管理员/核销员
      * @param id integer id
      * @param systemStoreStaffRequest 修改参数
      */
     @PreAuthorize("hasAuthority('admin:system:staff:update')")
-    @ApiOperation(value = "修改")
+    @ApiOperation(value = "修改移动端管理员/核销员")
     @RequestMapping(value = "/update", method = RequestMethod.POST)
-    public CommonResult<String> update(@RequestParam Integer id, @RequestBody @ModelAttribute SystemStoreStaffRequest systemStoreStaffRequest) {
+    public CommonResult<String> update(@RequestParam Integer id, @Validated @ModelAttribute SystemStoreStaffRequest systemStoreStaffRequest) {
         if (systemStoreStaffService.edit(id, systemStoreStaffRequest)) {
             return CommonResult.success();
         }
@@ -95,12 +96,12 @@ public class SystemStoreStaffController {
     }
 
     /**
-     * 修改门店店员表
+     * 修改移动端管理员/核销员状态
      * @param id integer id
      * @param status 状态
      */
     @PreAuthorize("hasAuthority('admin:system:staff:update:status')")
-    @ApiOperation(value = "修改状态")
+    @ApiOperation(value = "修改移动端管理员/核销员状态")
     @RequestMapping(value = "/update/status", method = RequestMethod.GET)
     public CommonResult<String> updateStatus(@RequestParam Integer id, @RequestParam Integer status) {
         if (systemStoreStaffService.updateStatus(id, status)) {
@@ -110,16 +111,15 @@ public class SystemStoreStaffController {
     }
 
     /**
-     * 查询门店店员表信息
+     * 查询移动端管理员/核销员信息
      * @param id Integer
      */
     @PreAuthorize("hasAuthority('admin:system:staff:info')")
-    @ApiOperation(value = "详情")
+    @ApiOperation(value = "移动端管理员/核销员详情")
     @RequestMapping(value = "/info", method = RequestMethod.GET)
     public CommonResult<SystemStoreStaff> info(@RequestParam(value = "id") Integer id) {
         return CommonResult.success(systemStoreStaffService.getById(id));
    }
 }
-
 
 

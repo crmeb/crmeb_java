@@ -1,18 +1,18 @@
 package com.zbkj.admin.config;
 
 import com.zbkj.admin.filter.JwtAuthenticationTokenFilter;
+import com.zbkj.admin.filter.NonSuperAdminReadOnlyFilter;
 import com.zbkj.admin.manager.AuthenticationEntryPointImpl;
 import com.zbkj.admin.manager.CustomAccessDeniedHandler;
 import com.zbkj.admin.manager.CustomAuthenticationProvider;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.UploadConstants;
-import com.zbkj.service.service.impl.UserDetailServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -35,7 +35,6 @@ import org.springframework.web.filter.CorsFilter;
  */
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     /**
@@ -43,6 +42,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      */
     @Autowired
     private CorsFilter corsFilter;
+
+    @Autowired
+    private CustomAuthenticationProvider customAuthenticationProvider;
+
+    @Value("${crmeb.non-super-admin-read-only:false}")
+    private boolean nonSuperAdminReadOnly;
 
     /**
      * token认证过滤器
@@ -79,7 +84,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.authenticationProvider(new CustomAuthenticationProvider(new UserDetailServiceImpl()));
+        auth.authenticationProvider(customAuthenticationProvider);
     }
 
     /**
@@ -122,9 +127,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/"+ UploadConstants.UPLOAD_AFTER_FILE_KEYWORD +"/**").permitAll()
             .antMatchers("/theme/download/**").permitAll()
             .antMatchers("/uploads/theme/**").permitAll()
-                // 放行图片、文件上传
-            .antMatchers("/api/admin/upload/image").permitAll()
-            .antMatchers("/api/admin/upload/file").permitAll()
+                // 图片、文件上传必须登录后访问
+            .antMatchers("/api/admin/upload/image", "/api/admin/upload/file").authenticated()
 //            .antMatchers("/wx/user/*/login","/citylife/nocheck/**").anonymous()
             .antMatchers(
                     HttpMethod.GET,
@@ -154,6 +158,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         // 添加JWT filter
         // 开启登录认证流程过滤器
         http.addFilterBefore(jwtAuthenticationTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+        // 非超级管理员只读模式必须在JWT认证后执行，确保能够取得当前管理员角色
+        http.addFilterAfter(new NonSuperAdminReadOnlyFilter(nonSuperAdminReadOnly), JwtAuthenticationTokenFilter.class);
         // 添加CORS filter
         http.addFilterBefore(corsFilter, JwtAuthenticationTokenFilter.class);
         http.addFilterBefore(corsFilter, LogoutFilter.class);
