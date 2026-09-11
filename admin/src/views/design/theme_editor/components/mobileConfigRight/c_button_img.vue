@@ -19,90 +19,91 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_button_img',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import cart1 from '@/assets/images/cart1.png';
+import cart2 from '@/assets/images/cart2.png';
+import cart3 from '@/assets/images/cart3.png';
+
+defineOptions({ name: 'c_button_img' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-      current: 0,
-      list: [],
-    };
+  configNme: {
+    type: String,
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-        this.getBnt(nVal);
-      },
-      deep: true,
+});
+
+const defaults = ref({});
+const configData = ref({});
+const current = ref(0);
+const list = ref([]);
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
+    getBnt(nVal);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    defaults.value = props.configObj;
+    configData.value = props.configObj[props.configNme] || {};
+    getBnt(defaults.value);
+  });
+});
+
+function tap(index) {
+  current.value = index;
+  configData.value.tabVal = index;
+}
+function getBnt(nVal) {
+  let obj = [
+    {
+      url: cart2,
+      width: 24,
+      height: 24,
     },
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      this.configData = this.configObj[this.configNme];
-      this.getBnt(this.defaults);
-    });
-  },
-  methods: {
-    tap(index) {
-      this.current = index;
-      this.configData.tabVal = index;
+    {
+      url: cart3,
+      width: 24,
+      height: 24,
     },
-    getBnt(nVal) {
-      let obj = [
+  ];
+  if (nVal.bntStyleConfig.typeFrom == 'bnt') {
+    list.value = obj;
+  } else {
+    if (nVal.styleConfig.tabVal == 0 || nVal.styleConfig.tabVal == 4) {
+      list.value = [
         {
-          url: require('@/assets/images/cart2.png'),
+          url: cart1,
+          width: 42,
+          height: 24,
+        },
+        {
+          url: cart2,
           width: 24,
           height: 24,
         },
         {
-          url: require('@/assets/images/cart3.png'),
+          url: cart3,
           width: 24,
           height: 24,
         },
       ];
-      if (nVal.bntStyleConfig.typeFrom == 'bnt') {
-        this.list = obj;
-      } else {
-        if (nVal.styleConfig.tabVal == 0 || nVal.styleConfig.tabVal == 4) {
-          this.list = [
-            {
-              url: require('@/assets/images/cart1.png'),
-              width: 42,
-              height: 24,
-            },
-            {
-              url: require('@/assets/images/cart2.png'),
-              width: 24,
-              height: 24,
-            },
-            {
-              url: require('@/assets/images/cart3.png'),
-              width: 24,
-              height: 24,
-            },
-          ];
-        } else {
-          this.current = this.current == 2 ? 1 : this.current;
-          this.list = obj;
-        }
-        nVal.bntStyleConfig.tabVal = this.current;
-      }
-    },
-  },
-};
+    } else {
+      current.value = current.value == 2 ? 1 : current.value;
+      list.value = obj;
+    }
+    nVal.bntStyleConfig.tabVal = current.value;
+  }
+}
 </script>
 
 <style scoped lang="scss">

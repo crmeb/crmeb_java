@@ -8,10 +8,10 @@
         <el-cascader
           @change="sliderChange"
           placeholder="请选择品牌"
-          size="mini"
+
           v-model="configData.brandVal"
           :options="brandData"
-          :props="props"
+          :props="cascaderProps"
           filterable
           clearable
         >
@@ -21,60 +21,61 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 // import { brandList } from '@/api/product';
-export default {
-  name: 'c_brand',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
-    number: {
-      type: null,
-    },
+
+defineOptions({ name: 'c_brand' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-      props: { emitPath: false, multiple: true },
-      brandData: [],
-    };
+  configNme: {
+    type: String,
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      this.configData = this.configObj[this.configNme];
-      // this.getBrandList();
+  number: {
+    type: null,
+  },
+});
+
+const emit = defineEmits(['getConfig']);
+
+const defaults = ref({});
+const configData = ref({});
+const cascaderProps = ref({ emitPath: false, multiple: true });
+const brandData = ref([]);
+
+onMounted(() => {
+  nextTick(() => {
+    defaults.value = props.configObj;
+    configData.value = props.configObj[props.configNme] || {};
+    // getBrandList();
+  });
+});
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
+  },
+  { deep: true },
+);
+
+function sliderChange() {
+  emit('getConfig', { name: 'brands' });
+}
+function getBrandList() {
+  brandList()
+    .then((res) => {
+      brandData.value = res.data;
+    })
+    .catch((err) => {
+      ElMessage.error(err.msg);
     });
-  },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-    },
-  },
-  methods: {
-    sliderChange() {
-      this.$emit('getConfig', { name: 'brands' });
-    },
-    getBrandList() {
-      brandList()
-        .then((res) => {
-          this.brandData = res.data;
-        })
-        .catch((err) => {
-          this.$message.error(err.msg);
-        });
-    },
-  },
-};
+}
 </script>
 
 <style scoped lang="scss">
@@ -90,10 +91,10 @@ export default {
 .c_row-item {
   margin-bottom: 20px;
 }
-::v-deep.el-cascader__search-input {
+:deep(.el-cascader__search-input ){
   margin-left: 8px;
 }
-::v-deep.el-cascader {
+:deep(.el-cascader ){
   width: 100%;
 }
 </style>

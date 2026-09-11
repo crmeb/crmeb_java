@@ -56,61 +56,39 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState, mapMutations } from 'vuex';
-// import theme from "@/views/design/theme_editor/mixins/theme";
-export default {
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+
+defineOptions({
   name: 'nav_bar',
-  configName: 'c_nav_bar',
   cname: '选项卡',
   icon: '#iconzujian-xuanxiangka1',
-  type: 0, // 0 基础组件 1 营销组件 2工具组件
-  defaultName: 'tabNav', // 外面匹配名称
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+  configName: 'c_nav_bar',
+  type: 0,
+  defaultName: 'tabNav',
+});
+
+const props = defineProps({
+  index: {
+        type: null,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
+      colorStyle: {
+        type: null,
       },
-      deep: true,
-    },
-  },
-  // mixins: [theme],
-  data() {
-    return {
-      // 默认初始化数据禁止修改
-      defaultConfig: {
+});
+
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '选项卡',
         desc: '选项卡介绍',
         name: 'tabNav',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -489,98 +467,120 @@ export default {
             min: -50,
           },
         },
-      },
-      configObj: null,
-      pageData: {},
-      navList: [],
-      toneConfig: 0,
-      decorateColorLeft: '',
-      decorateColorRight: '',
-      decorateColor: '',
-      bgColorLeft: '',
-      bgColorRight: '',
-      textColor: '',
-      textColor2: '',
-      textColor3: '',
-      cSlider: 0,
-      bgRadius: 0,
-      bottomBgColor: '',
-      topConfig: 0,
-      bottomConfig: 0,
-      prConfig: 0,
-      styleConfig: 0,
-      themeColor: '',
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      this.configObj = data;
-      for (let key in this.defaultConfig) {
-        if (data[key] === undefined) {
-          this.$set(data, key, this.defaultConfig[key]);
+      };
+
+const configObj = ref(null);
+const pageData = ref({});
+const navList = ref([]);
+const toneConfig = ref(0);
+const decorateColorLeft = ref('');
+const decorateColorRight = ref('');
+const decorateColor = ref('');
+const bgColorLeft = ref('');
+const bgColorRight = ref('');
+const textColor = ref('');
+const textColor2 = ref('');
+const textColor3 = ref('');
+const cSlider = ref(0);
+const bgRadius = ref(0);
+const bottomBgColor = ref('');
+const topConfig = ref(0);
+const bottomConfig = ref(0);
+const prConfig = ref(0);
+const styleConfig = ref(0);
+const themeColor = ref('');
+
+function setConfig(data) {
+  if (!data) return;
+        configObj.value = data;
+        for (let key in defaultConfig) {
+          if (data[key] === undefined) {
+            data[key] = defaultConfig[key];
+          }
         }
-      }
 
-      if (!data.paddingConfig) {
-        let paddingConfig = {
-          title: '内边距',
-          val: 0,
-          min: 0,
-          isAll: false,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        };
-        if (data.topConfig) paddingConfig.valList[0].val = data.topConfig.val;
-        if (data.prConfig) {
-          paddingConfig.valList[1].val = data.prConfig.val;
-          paddingConfig.valList[3].val = data.prConfig.val;
+        if (!data.paddingConfig) {
+          let paddingConfig = {
+            title: '内边距',
+            val: 0,
+            min: 0,
+            isAll: false,
+            valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+          };
+          if (data.topConfig) paddingConfig.valList[0].val = data.topConfig.val;
+          if (data.prConfig) {
+            paddingConfig.valList[1].val = data.prConfig.val;
+            paddingConfig.valList[3].val = data.prConfig.val;
+          }
+          if (data.bottomConfig) paddingConfig.valList[2].val = data.bottomConfig.val;
+          configObj.value['paddingConfig'] = paddingConfig;
         }
-        if (data.bottomConfig) paddingConfig.valList[2].val = data.bottomConfig.val;
-        this.$set(this.configObj, 'paddingConfig', paddingConfig);
-      }
 
-      if (!data.marginConfig) {
-        let marginConfig = {
-          title: '外边距',
-          val: 0,
-          min: 0,
-          isAll: false,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        };
-        if (data.mbConfig) marginConfig.valList[0].val = data.mbConfig.val;
-        this.$set(this.configObj, 'marginConfig', marginConfig);
-      }
+        if (!data.marginConfig) {
+          let marginConfig = {
+            title: '外边距',
+            val: 0,
+            min: 0,
+            isAll: false,
+            valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+          };
+          if (data.mbConfig) marginConfig.valList[0].val = data.mbConfig.val;
+          configObj.value['marginConfig'] = marginConfig;
+        }
 
-      this.navList = data.tabListConfig.list;
-      this.toneConfig = data.toneConfig.tabVal;
-      this.decorateColorLeft = data.decorateColor.color[0].item;
-      this.decorateColorRight = data.decorateColor.color[1].item;
-      this.decorateColor = data.decorateColor2.color[0].item;
-      this.textColor = data.textColor.color[0].item;
-      this.textColor2 = data.textColor2.color[0].item;
-      this.textColor3 = data.textColor3.color[0].item;
-      this.bgColorLeft = data.moduleColor.color[0].item;
-      this.bgColorRight = data.moduleColor.color[1].item;
-      this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-      this.bottomBgColor = data.bottomBgColor.color[0].item;
-      this.styleConfig = data.styleConfig.tabVal;
-      let fillet = data.fillet.type;
-      let filletVal = data.fillet.val;
-      let valList = data.fillet.valList;
-      this.bgRadius = fillet
-        ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
-        : filletVal + 'px';
-    },
+        navList.value = data.tabListConfig.list;
+        toneConfig.value = data.toneConfig.tabVal;
+        decorateColorLeft.value = data.decorateColor.color[0].item;
+        decorateColorRight.value = data.decorateColor.color[1].item;
+        decorateColor.value = data.decorateColor2.color[0].item;
+        textColor.value = data.textColor.color[0].item;
+        textColor2.value = data.textColor2.color[0].item;
+        textColor3.value = data.textColor3.color[0].item;
+        bgColorLeft.value = data.moduleColor.color[0].item;
+        bgColorRight.value = data.moduleColor.color[1].item;
+        themeColor.value = `linear-gradient(90deg,${props.colorStyle.theme} 0%,${props.colorStyle.gradient} 100%)`;
+        bottomBgColor.value = data.bottomBgColor.color[0].item;
+        styleConfig.value = data.styleConfig.tabVal;
+        let fillet = data.fillet.type;
+        let filletVal = data.fillet.val;
+        let valList = data.fillet.valList;
+        bgRadius.value = fillet
+          ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
+          : filletVal + 'px';
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
   },
-};
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+      });
+});
+
 </script>
-
 <style scoped lang="scss">
 .menusCon {
   overflow: hidden;

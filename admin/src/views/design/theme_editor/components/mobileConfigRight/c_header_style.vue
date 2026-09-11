@@ -6,92 +6,92 @@
     <div class="config-item">
       <span class="item-label">标题字号</span>
       <div class="slider-container">
-        <el-slider v-model="configData.fontSize" show-input :min="12" :max="24"></el-slider>
+        <el-slider
+          v-model="configData.fontSize"
+          show-input
+          :show-input-controls="false"
+          :min="fontSizeInputConfig.min"
+          :max="fontSizeInputConfig.max"
+          :step="fontSizeInputConfig.step"
+          @change="normalizeHeaderNumber('fontSize', fontSizeInputConfig)"
+        ></el-slider>
       </div>
     </div>
 
     <!-- 左侧文字颜色 -->
     <div class="config-item">
       <span class="item-label">标题文字色</span>
-      <!-- <el-color-picker v-model="configData.leftColor" @change="handleChange" size="small"></el-color-picker> -->
+      <!-- <el-color-picker v-model="configData.leftColor" @change="handleChange"></el-color-picker> -->
       <div class="row slider-container">
-        <el-color-picker
-          v-model="configData.leftColor"
-          @change="handleChange"
-          show-alpha
-          size="small"
-        ></el-color-picker>
+        <el-color-picker v-model="configData.leftColor" @change="handleChange" show-alpha></el-color-picker>
         <el-input
           v-model="configData.leftColor"
           placeholder="请输入颜色"
           @change="handleChange"
           style="margin-left: 10px; flex: 1"
         ></el-input>
-        <span
-          class="reset-btn"
-          @click="
-            configData.leftColor = '#fff';
-            handleChange();
-          "
-          >重置</span
-        >
+        <span class="reset-btn" @click="resetColor('leftColor')">重置</span>
       </div>
     </div>
     <!-- 左侧字重 可选 300 500 正常 -->
     <div class="config-item">
       <span class="item-label">标题字重</span>
-      <el-radio-group v-model="configData.leftWeight" size="small">
+      <el-radio-group v-model="configData.leftWeight">
         <el-radio-button label="300" value="300"></el-radio-button>
         <el-radio-button label="500" value="500"></el-radio-button>
-        <el-radio-button label="normal">正常</el-radio-button>
+        <el-radio-button label="normal" value="normal">正常</el-radio-button>
       </el-radio-group>
     </div>
     <!-- 右侧文字颜色 -->
     <div class="config-item">
       <span class="item-label">按钮字号</span>
       <div class="slider-container">
-        <el-slider v-model="configData.rightFontSize" show-input :min="12" :max="24"></el-slider>
+        <el-slider
+          v-model="configData.rightFontSize"
+          show-input
+          :show-input-controls="false"
+          :min="fontSizeInputConfig.min"
+          :max="fontSizeInputConfig.max"
+          :step="fontSizeInputConfig.step"
+          @change="normalizeHeaderNumber('rightFontSize', fontSizeInputConfig)"
+        ></el-slider>
       </div>
     </div>
     <div class="config-item">
       <span class="item-label">按钮文字色</span>
-      <!-- <el-color-picker v-model="configData.rightColor" @change="handleChange" size="small"></el-color-picker> -->
+      <!-- <el-color-picker v-model="configData.rightColor" @change="handleChange"></el-color-picker> -->
       <div class="row slider-container">
-        <el-color-picker
-          v-model="configData.rightColor"
-          @change="handleChange"
-          show-alpha
-          size="small"
-        ></el-color-picker>
+        <el-color-picker v-model="configData.rightColor" @change="handleChange" show-alpha></el-color-picker>
         <el-input
           v-model="configData.rightColor"
           placeholder="请输入颜色"
           @change="handleChange"
           style="margin-left: 10px; flex: 1"
         ></el-input>
-        <span
-          class="reset-btn"
-          @click="
-            configData.rightColor = '#fff';
-            handleChange();
-          "
-          >重置</span
-        >
+        <span class="reset-btn" @click="resetColor('rightColor')">重置</span>
       </div>
     </div>
     <div class="config-item">
       <span class="item-label">按钮字重</span>
-      <el-radio-group v-model="configData.rightWeight" size="small">
+      <el-radio-group v-model="configData.rightWeight">
         <el-radio-button label="300" value="300"></el-radio-button>
         <el-radio-button label="500" value="500"></el-radio-button>
-        <el-radio-button label="normal">正常</el-radio-button>
+        <el-radio-button label="normal" value="normal">正常</el-radio-button>
       </el-radio-group>
     </div>
     <!-- 上边距 -->
     <div class="config-item">
       <span class="item-label">上边距</span>
       <div class="slider-container">
-        <el-slider v-model="configData.topPadding" show-input :min="0"></el-slider>
+        <el-slider
+          v-model="configData.topPadding"
+          show-input
+          :show-input-controls="false"
+          :min="paddingInputConfig.min"
+          :max="paddingInputConfig.max"
+          :step="paddingInputConfig.step"
+          @change="normalizeHeaderNumber('topPadding', paddingInputConfig)"
+        ></el-slider>
       </div>
     </div>
 
@@ -99,7 +99,15 @@
     <div class="config-item">
       <span class="item-label">下边距</span>
       <div class="slider-container">
-        <el-slider v-model="configData.bottomPadding" show-input :min="0"></el-slider>
+        <el-slider
+          v-model="configData.bottomPadding"
+          show-input
+          :show-input-controls="false"
+          :min="paddingInputConfig.min"
+          :max="paddingInputConfig.max"
+          :step="paddingInputConfig.step"
+          @change="normalizeHeaderNumber('bottomPadding', paddingInputConfig)"
+        ></el-slider>
       </div>
     </div>
 
@@ -107,60 +115,80 @@
     <div class="config-item">
       <span class="item-label">左右边距</span>
       <div class="slider-container">
-        <el-slider v-model="configData.leftRightPadding" show-input :min="0"></el-slider>
+        <el-slider
+          v-model="configData.leftRightPadding"
+          show-input
+          :show-input-controls="false"
+          :min="paddingInputConfig.min"
+          :max="paddingInputConfig.max"
+          :step="paddingInputConfig.step"
+          @change="normalizeHeaderNumber('leftRightPadding', paddingInputConfig)"
+        ></el-slider>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_header_style',
-  props: {
-    configNme: {
-      type: String,
-    },
-    configObj: {
-      type: Object,
-      default: () => {},
-    },
+<script setup>
+import { ref, watch } from 'vue'
+import { normalizeNumberField } from '@/views/design/theme_editor/utils/numberInput'
+
+defineOptions({ name: 'c_header_style' })
+
+const props = defineProps({
+  configNme: {
+    type: String
   },
-  data() {
-    return {
-      configData: {
-        title: '顶部样式',
-        fontSize: 14,
-        leftColor: '#333333',
-        rightColor: '#333333',
-        topPadding: 10,
-        bottomPadding: 10,
-        leftRightPadding: 12,
-      },
-    };
+  configObj: {
+    type: Object,
+    default: () => ({})
+  }
+})
+
+const emit = defineEmits(['getConfig'])
+
+const fontSizeInputConfig = { min: 12, max: 24, step: 1 }
+const paddingInputConfig = { min: 0, max: 100, step: 1 }
+
+const configData = ref({
+  title: '顶部样式',
+  fontSize: 14,
+  leftColor: '#333333',
+  rightColor: '#333333',
+  topPadding: 10,
+  bottomPadding: 10,
+  leftRightPadding: 12
+})
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    configData.value = nVal[props.configNme] || {
+      title: '顶部样式',
+      fontSize: 14,
+      leftColor: '#333333',
+      rightColor: '#333333',
+      topPadding: 10,
+      bottomPadding: 10,
+      leftRightPadding: 12
+    }
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.configData = nVal[this.configNme] || {
-          title: '顶部样式',
-          fontSize: 14,
-          leftColor: '#333333',
-          rightColor: '#333333',
-          topPadding: 10,
-          bottomPadding: 10,
-          leftRightPadding: 12,
-        };
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
-  methods: {
-    handleChange() {
-      this.$emit('getConfig', this.configData);
-    },
-  },
-};
+  { deep: true, immediate: true }
+)
+
+function handleChange() {
+  emit('getConfig', configData.value)
+}
+
+function normalizeHeaderNumber(key, config) {
+  normalizeNumberField(configData.value, key, config)
+  handleChange()
+}
+
+function resetColor(key) {
+  configData.value[key] = '#fff'
+  handleChange()
+}
 </script>
 
 <style lang="scss" scoped>

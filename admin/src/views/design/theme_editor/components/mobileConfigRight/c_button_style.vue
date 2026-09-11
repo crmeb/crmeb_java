@@ -10,10 +10,10 @@
       </div>
     </div>
     <el-dialog
-      :visible.sync="modals"
+      v-model="modals"
       title="风格选择器"
       height="500"
-      :width="configData.type == 'signIn' || configData.type == 'ranking' ? '630px' : '910px'"
+      :width="configData.type == 'signIn' || configData.type == 'ranking' ? '630px' : '950px'"
     >
       <div class="list acea-row row-middle">
         <div
@@ -36,235 +36,258 @@
           <div class="name">风格{{ index + 1 }}</div>
         </div>
       </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button v-db-click @click="cancel">取 消</el-button>
-        <el-button type="primary" v-db-click @click="ok">确 定</el-button>
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button v-db-click @click="cancel">取 消</el-button>
+          <el-button type="primary" v-db-click @click="ok">确 定</el-button>
+        </span>
+      </template>
     </el-dialog>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_button_style',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import tab02 from '@/assets/images/tab02.png';
+import tab03 from '@/assets/images/tab03.png';
+import tab01 from '@/assets/images/tab01.png';
+import signIn01 from '@/assets/images/signIn01.png';
+import signIn02 from '@/assets/images/signIn02.png';
+import ranking01 from '@/assets/images/ranking01.png';
+import ranking02 from '@/assets/images/ranking02.png';
+import coupon01 from '@/assets/images/coupon01.png';
+import coupon02 from '@/assets/images/coupon02.png';
+import coupon03 from '@/assets/images/coupon03.png';
+import coupon04 from '@/assets/images/coupon04.png';
+import coupon05 from '@/assets/images/coupon05.png';
+import cube2 from '@/assets/images/cube2.png';
+import cube3 from '@/assets/images/cube3.png';
+import cube4 from '@/assets/images/cube4.png';
+import cube5 from '@/assets/images/cube5.png';
+import cube6 from '@/assets/images/cube6.png';
+import cube7 from '@/assets/images/cube7.png';
+import cube8 from '@/assets/images/cube8.png';
+import cube9 from '@/assets/images/cube9.png';
+import cube10 from '@/assets/images/cube10.png';
+import cube11 from '@/assets/images/cube11.png';
+import cube12 from '@/assets/images/cube12.png';
+
+defineOptions({ name: 'c_button_style' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-      modals: false,
-      current: 0,
-      navBar: [
-        {
-          url: require('@/assets/images/tab02.png'),
-          width: 220,
-          height: 24,
-        },
-        {
-          url: require('@/assets/images/tab03.png'),
-          width: 220,
-          height: 24,
-        },
-        {
-          url: require('@/assets/images/tab01.png'),
-          width: 220,
-          height: 24,
-        },
-      ],
-      signIn: [
-        {
-          url: require('@/assets/images/signIn01.png'),
-          width: 220,
-          height: 64,
-        },
-        {
-          url: require('@/assets/images/signIn02.png'),
-          width: 220,
-          height: 59,
-        },
-      ],
-      ranking: [
-        {
-          url: require('@/assets/images/ranking01.png'),
-          width: 200,
-          height: 172,
-        },
-        {
-          url: require('@/assets/images/ranking02.png'),
-          width: 200,
-          height: 167,
-        },
-      ],
-      coupon: [
-        {
-          url: require('@/assets/images/coupon01.png'),
-          width: 220,
-          height: 69,
-        },
-        {
-          url: require('@/assets/images/coupon02.png'),
-          width: 220,
-          height: 87,
-        },
-        {
-          url: require('@/assets/images/coupon03.png'),
-          width: 220,
-          height: 62,
-        },
-        {
-          url: require('@/assets/images/coupon04.png'),
-          width: 220,
-          height: 69,
-        },
-        {
-          url: require('@/assets/images/coupon05.png'),
-          width: 220,
-          height: 49,
-        },
-      ],
-      pictureCube: [
-        {
-          url: require('@/assets/images/cube2.png'),
-          width: 130,
-          height: 129,
-          count: 2,
-        },
-        {
-          url: require('@/assets/images/cube3.png'),
-          width: 130,
-          height: 129,
-          count: 2,
-        },
-        {
-          url: require('@/assets/images/cube4.png'),
-          width: 130,
-          height: 129,
-          count: 3,
-        },
-        {
-          url: require('@/assets/images/cube5.png'),
-          width: 130,
-          height: 129,
-          count: 3,
-        },
-        {
-          url: require('@/assets/images/cube6.png'),
-          width: 130,
-          height: 129,
-          count: 3,
-        },
-        {
-          url: require('@/assets/images/cube7.png'),
-          width: 130,
-          height: 129,
-          count: 3,
-        },
-        {
-          url: require('@/assets/images/cube8.png'),
-          width: 130,
-          height: 129,
-          count: 3,
-        },
-        {
-          url: require('@/assets/images/cube9.png'),
-          width: 130,
-          height: 129,
-          count: 4,
-        },
-        {
-          url: require('@/assets/images/cube10.png'),
-          width: 130,
-          height: 129,
-          count: 5,
-        },
-        {
-          url: require('@/assets/images/cube11.png'),
-          width: 130,
-          height: 129,
-          count: 4,
-        },
-        {
-          url: require('@/assets/images/cube12.png'),
-          width: 130,
-          height: 129,
-          count: 1,
-        },
-        // {
-        //   url: require('@/assets/images/cube1.png'),
-        //   width: 130,
-        //   height: 130,
-        //   count: 16,
-        // },
-      ],
-      list: [],
-    };
+  configNme: {
+    type: String,
   },
-  watch: {
-    configObj: {
-      handler(nVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-    },
+});
+
+const defaults = ref({});
+const configData = ref({});
+const modals = ref(false);
+const current = ref(0);
+const navBar = ref([
+  {
+    url: tab02,
+    width: 220,
+    height: 24,
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      this.configData = this.configObj[this.configNme];
-      this.$nextTick((e) => {
-        this.current = this.configData.tabVal;
-      });
-      switch (this.configData.type) {
-        case 'navBar':
-          this.list = this.navBar;
-          break;
-        case 'signIn':
-          this.list = this.signIn;
-          break;
-        case 'ranking':
-          this.list = this.ranking;
-          break;
-        case 'coupon':
-          this.list = this.coupon;
-          break;
-        case 'pictureCube':
-          this.list = this.pictureCube;
-          break;
-      }
+  {
+    url: tab03,
+    width: 220,
+    height: 24,
+  },
+  {
+    url: tab01,
+    width: 220,
+    height: 24,
+  },
+]);
+const signIn = ref([
+  {
+    url: signIn01,
+    width: 220,
+    height: 64,
+  },
+  {
+    url: signIn02,
+    width: 220,
+    height: 59,
+  },
+]);
+const ranking = ref([
+  {
+    url: ranking01,
+    width: 200,
+    height: 172,
+  },
+  {
+    url: ranking02,
+    width: 200,
+    height: 167,
+  },
+]);
+const coupon = ref([
+  {
+    url: coupon01,
+    width: 220,
+    height: 69,
+  },
+  {
+    url: coupon02,
+    width: 220,
+    height: 87,
+  },
+  {
+    url: coupon03,
+    width: 220,
+    height: 62,
+  },
+  {
+    url: coupon04,
+    width: 220,
+    height: 69,
+  },
+  {
+    url: coupon05,
+    width: 220,
+    height: 49,
+  },
+]);
+const pictureCube = ref([
+  {
+    url: cube2,
+    width: 130,
+    height: 129,
+    count: 2,
+  },
+  {
+    url: cube3,
+    width: 130,
+    height: 129,
+    count: 2,
+  },
+  {
+    url: cube4,
+    width: 130,
+    height: 129,
+    count: 3,
+  },
+  {
+    url: cube5,
+    width: 130,
+    height: 129,
+    count: 3,
+  },
+  {
+    url: cube6,
+    width: 130,
+    height: 129,
+    count: 3,
+  },
+  {
+    url: cube7,
+    width: 130,
+    height: 129,
+    count: 3,
+  },
+  {
+    url: cube8,
+    width: 130,
+    height: 129,
+    count: 3,
+  },
+  {
+    url: cube9,
+    width: 130,
+    height: 129,
+    count: 4,
+  },
+  {
+    url: cube10,
+    width: 130,
+    height: 129,
+    count: 5,
+  },
+  {
+    url: cube11,
+    width: 130,
+    height: 129,
+    count: 4,
+  },
+  {
+    url: cube12,
+    width: 130,
+    height: 129,
+    count: 1,
+  },
+  // {
+  //   url: cube1,
+  //   width: 130,
+  //   height: 130,
+  //   count: 16,
+  // },
+]);
+const list = ref([]);
+
+watch(
+  () => props.configObj,
+  (nVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    defaults.value = props.configObj;
+    configData.value = props.configObj[props.configNme] || {};
+    nextTick((e) => {
+      current.value = configData.value.tabVal;
     });
-  },
-  methods: {
-    tap(index) {
-      this.current = index;
-    },
-    styleTap() {
-      this.modals = true;
-    },
-    cancel() {
-      this.modals = false;
-    },
-    ok() {
-      this.modals = false;
-      this.configData.tabVal = this.current;
-      this.configData.count = this.list[this.current].count;
-      if (this.defaults.picStyle) {
-        this.defaults.picStyle.tabVal = 0;
-      }
-    },
-  },
-};
+    switch (configData.value.type) {
+      case 'navBar':
+        list.value = navBar.value;
+        break;
+      case 'signIn':
+        list.value = signIn.value;
+        break;
+      case 'ranking':
+        list.value = ranking.value;
+        break;
+      case 'coupon':
+        list.value = coupon.value;
+        break;
+      case 'pictureCube':
+        list.value = pictureCube.value;
+        break;
+    }
+  });
+});
+
+function tap(index) {
+  current.value = index;
+}
+function styleTap() {
+  modals.value = true;
+}
+function cancel() {
+  modals.value = false;
+}
+function ok() {
+  modals.value = false;
+  configData.value.tabVal = current.value;
+  configData.value.count = list.value[current.value].count;
+  if (defaults.value.picStyle) {
+    defaults.value.picStyle.tabVal = 0;
+  }
+}
 </script>
 
 <style scoped lang="scss">
-::v-deep.ivu-modal-body {
+:deep(.ivu-modal-body ){
   max-height: 623px;
   overflow: auto;
 }

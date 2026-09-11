@@ -86,497 +86,497 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState } from 'vuex';
-// import theme from "@/views/design/theme_editor/mixins/theme";
-export default {
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import news2Img from '@/views/design/theme_editor/assets/images/news2.png';
+
+defineOptions({
   name: 'home_news_roll',
   cname: '新闻公告',
   configName: 'c_news_roll',
   type: 0, // 0 基础组件 1 营销组件 2工具组件
   defaultName: 'news', // 外面匹配名称
   icon: '#iconzujian-xinwenbobao',
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
+});
+
+const props = defineProps({
+  index: {
+    type: null,
   },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
+  num: {
+    type: null,
   },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+  colorStyle: {
+    type: null,
+  },
+});
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
+  cname: '新闻公告',
+  desc: '新闻公告',
+  name: 'news',
+  timestamp: props.num,
+  isHide: false,
+  setUp: {
+    tabVal: 0,
+  },
+  titleLeft: '展示设置',
+  titleStyle: '公告风格',
+  titleButton: '按钮设置',
+  titleContent: '公告内容',
+  titleRight: '标题样式',
+  titleCurrency: '通用样式',
+  styleConfig: {
+    title: '选择风格',
+    tabVal: 0,
+    tabList: [
+      {
+        name: '样式一',
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      {
+        name: '样式二',
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
+    ],
+  },
+  titleConfig: {
+    title: '标题类型',
+    tabVal: 0,
+    tabList: [
+      {
+        name: '图片',
       },
-      deep: true,
-    },
-  },
-  // mixins: [theme],
-  data() {
-    return {
-      // 默认初始化数据禁止修改
-      defaultConfig: {
-        cname: '新闻公告',
-        desc: '新闻公告',
-        name: 'news',
-        timestamp: this.num,
-        isHide: false,
-        setUp: {
-          tabVal: 0,
-        },
-        titleLeft: '展示设置',
-        titleStyle: '公告风格',
-        titleButton: '按钮设置',
-        titleContent: '公告内容',
-        titleRight: '标题样式',
-        titleCurrency: '通用样式',
-        styleConfig: {
-          title: '选择风格',
-          tabVal: 0,
-          tabList: [
-            {
-              name: '样式一',
-            },
-            {
-              name: '样式二',
-            },
-          ],
-        },
-        titleConfig: {
-          title: '标题类型',
-          tabVal: 0,
-          tabList: [
-            {
-              name: '图片',
-            },
-            {
-              name: '文字',
-            },
-          ],
-        },
-        imgConfig: {
-          url: require('@/assets/images/news2.png'),
-          type: 'code',
-          delType: 0,
-          name: '上传图片',
-        },
-        titleTxtConfig: {
-          title: '标题文字',
-          value: '商城头条',
-          place: '请输入标题文字',
-          max: 4,
-        },
-        rollConfig: {
-          title: '滚动方式',
-          tabVal: 0,
-          tabList: [
-            {
-              name: '上下滚动',
-            },
-            {
-              name: '左右滚动',
-            },
-          ],
-        },
-        buttonConfig: {
-          title: '右侧按钮',
-          tabVal: 0,
-          tabList: [
-            {
-              name: '显示',
-            },
-            {
-              name: '隐藏',
-            },
-          ],
-        },
-        textConfig: {
-          title: '右侧文字',
-          value: '更多',
-          place: '请输入右侧文字',
-          max: 4,
-        },
-        linkConfig: {
-          title: '链接',
-          value: '',
-          place: '选择跳转链接',
-          max: 100,
-          type: 'link',
-        },
-        listConfig: {
-          max: 10,
-          type: 1,
-          list: [
-            {
-              chiild: [
-                {
-                  title: '标题',
-                  val: '标题',
-                  max: 20,
-                  pla: '输入标题',
-                },
-                {
-                  title: '链接',
-                  val: '',
-                  max: 200,
-                  pla: '输入连接',
-                },
-              ],
-              show: true,
-            },
-          ],
-        },
-        toneConfig: {
-          title: '色调',
-          tabVal: 0,
-          tabList: [
-            {
-              name: '跟随主题风格',
-            },
-            {
-              name: '自定义',
-            },
-          ],
-        },
-        titleBgColor: {
-          title: '标题背景',
-          default: [
-            {
-              item: '#FCEAE9',
-            },
-            {
-              item: '#FCEAE9',
-            },
-          ],
-          color: [
-            {
-              item: '#FCEAE9',
-            },
-            {
-              item: '#FCEAE9',
-            },
-          ],
-        },
-        titleColor: {
-          title: '标题文字',
-          default: [
-            {
-              item: '#E93323',
-            },
-          ],
-          color: [
-            {
-              item: '#E93323',
-            },
-          ],
-        },
-        newsColor: {
-          title: '新闻标题',
-          default: [
-            {
-              item: '#333333',
-            },
-          ],
-          color: [
-            {
-              item: '#333333',
-            },
-          ],
-        },
-        bntColor: {
-          title: '按钮颜色',
-          default: [
-            {
-              item: '#999999',
-            },
-          ],
-          color: [
-            {
-              item: '#999999',
-            },
-          ],
-        },
-        moduleColor: {
-          title: '组件背景',
-          default: [
-            {
-              item: '#fff',
-            },
-            {
-              item: '#fff',
-            },
-          ],
-          color: [
-            {
-              item: '#fff',
-            },
-            {
-              item: '#fff',
-            },
-          ],
-        },
-        bottomBgColor: {
-          title: '底部背景',
-          default: [
-            {
-              item: '#f5f5f5',
-            },
-          ],
-          color: [
-            {
-              item: '#f5f5f5',
-            },
-          ],
-        },
-        paddingConfig: {
-          title: '内边距',
-          val: 0,
-          min: 0,
-          max: 100,
-          isAll: false,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        },
-        marginConfig: {
-          title: '外边距',
-          val: 0,
-          min: 0,
-          max: 100,
-          isAll: false,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        },
-        zIndexConfig: {
-          title: '组件上浮',
-          val: 0,
-          min: 0,
-        },
-        borderConfig: {
-          title: '边框设置',
-          tabVal: 0,
-          tabList: [{ name: '隐藏' }, { name: '显示' }],
-          val: 0, // 0: Hide, 1: Show
-          styleConfig: {
-            title: '边框样式',
-            tabVal: 0,
-            tabList: [
-              { name: '实线', style: 'solid' },
-              { name: '虚线', style: 'dashed' },
-              { name: '点状', style: 'dotted' },
-            ],
-          },
-          widthConfig: {
-            title: '边框粗细',
-            val: 1,
-            min: 1,
-          },
-          colorConfig: {
-            title: '边框颜色',
-            default: [{ item: '#e5e5e5' }],
-            color: [{ item: '#e5e5e5' }],
-          },
-        },
-        shadowConfig: {
-          title: '阴影设置',
-          tabVal: 0,
-          tabList: [{ name: '隐藏' }, { name: '显示' }],
-          val: 0, // 0: Off, 1: On
-          colorConfig: {
-            title: '阴影颜色',
-            default: [{ item: 'rgba(0,0,0,0.1)' }],
-            color: [{ item: 'rgba(0,0,0,0.1)' }],
-          },
-          xConfig: {
-            title: 'X轴偏移',
-            val: 0,
-            min: -50,
-          },
-          yConfig: {
-            title: 'Y轴偏移',
-            val: 0,
-            min: -50,
-          },
-          blurConfig: {
-            title: '模糊半径',
-            val: 10,
-            min: 0,
-          },
-          spreadConfig: {
-            title: '扩展半径',
-            val: 0,
-            min: -50,
-          },
-        },
-        componentBgConfig: {
-          title: '组件背景',
-          tabVal: 0,
-          tabList: [{ name: '颜色' }, { name: '图片' }],
-          colorConfig: {
-            title: '背景颜色',
-            default: [{ item: '#fff' }, { item: '#fff' }],
-            color: [{ item: '#fff' }, { item: '#fff' }],
-          },
-          colorDirection: {
-            title: '渐变方向',
-            tabVal: 0,
-            tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
-          },
-          imageConfig: {
-            header: '背景图片',
-            title: '',
-            name: '上传图片',
-            type: 'code',
-            url: '',
-            info: '建议尺寸：750px * 400px',
-          },
-        },
-        fillet: {
-          title: '背景圆角',
-          type: 0,
-          list: [
-            {
-              val: '全部',
-              icon: 'iconcaozuo-zhengti',
-            },
-            {
-              val: '单个',
-              icon: 'iconcaozuo-bianjiao',
-            },
-          ],
-          valName: '圆角值',
-          val: 0,
-          min: 0,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        },
-        // logoConfig: {
-        //     header: '图标设置',
-        //     title: '最多可添加1张图片，建议宽度130 * 36px',
-        //     url: require('@/assets/images/news.png')
-        // }
+      {
+        name: '文字',
       },
-      tabVal: '',
-      rollStyle: '',
-      txtPosition: '',
-      pageData: {},
-      configObj: {},
-      list: [],
-      slider: 0,
-      styleConfig: 0,
-      imgUrl: '',
-      buttonConfig: 0,
-      textConfig: '',
-      toneConfig: 0,
-      newsColor: '',
-      bntColor: '',
-      bgColorLeft: '',
-      bgColorRight: '',
-      bgRadius: 0,
-      titleConfig: 0,
-      titleBgColorLeft: '',
-      titleBgColorRight: '',
-      titleColor: '',
-      titleTxtConfig: '',
-    };
+    ],
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
+  imgConfig: {
+    url: news2Img,
+    type: 'code',
+    delType: 0,
+    name: '上传图片',
   },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      this.configObj = data;
-      if (!this.configObj.paddingConfig) {
-        this.$set(this.configObj, 'paddingConfig', {
-          title: '内边距',
-          isAll: false,
-          val: 0,
-          min: 0,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        });
-        if (data.topConfig) this.configObj.paddingConfig.valList[0].val = data.topConfig.val;
-        if (data.bottomConfig) this.configObj.paddingConfig.valList[2].val = data.bottomConfig.val;
-        if (data.prConfig) {
-          this.configObj.paddingConfig.valList[1].val = data.prConfig.val;
-          this.configObj.paddingConfig.valList[3].val = data.prConfig.val;
-        }
-      }
-      if (!this.configObj.marginConfig) {
-        this.$set(this.configObj, 'marginConfig', {
-          title: '外边距',
-          isAll: false,
-          val: 0,
-          min: 0,
-          max: 100,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        });
-        if (data.mbConfig) {
-          this.configObj.marginConfig.valList[0].val = data.mbConfig.val;
-        }
-      }
-      for (let key in this.defaultConfig) {
-        if (this.configObj[key] === undefined) {
-          this.$set(this.configObj, key, this.defaultConfig[key]);
-        }
-      }
-      this.rollStyle = data.rollConfig.tabVal;
-      this.txtPosition = data.textConfig.tabVal;
-      // this.slider = this.marginConfig.valList[0].val;
-      this.styleConfig = data.styleConfig.tabVal;
-      this.imgUrl = data.imgConfig.url;
-      this.buttonConfig = data.buttonConfig.tabVal;
-      this.textConfig = data.textConfig.value;
-      let lists = data.listConfig.list;
-      let list = [];
-      lists.forEach((item) => {
-        if (item.show) {
-          list.push(item);
-        }
-      });
-      this.list = list;
-      this.toneConfig = data.toneConfig.tabVal;
-      this.newsColor = data.newsColor.color[0].item;
-      this.bntColor = data.bntColor.color[0].item;
-      this.bgColorLeft = data.moduleColor.color[0].item;
-      this.bgColorRight = data.moduleColor.color[1].item;
-      // this.prConfig = this.paddingConfig.valList[1].val;
-      // this.topConfig = this.paddingConfig.valList[0].val;
-      // this.bottomConfig = this.paddingConfig.valList[2].val;
-      this.titleConfig = data.titleConfig.tabVal;
-      this.titleBgColorLeft = data.titleBgColor.color[0].item;
-      this.titleBgColorRight = data.titleBgColor.color[1].item;
-      this.titleColor = data.titleColor.color[0].item;
-      this.titleTxtConfig = data.titleTxtConfig.value;
-      let fillet = data.fillet.type;
-      let filletVal = data.fillet.val;
-      let valList = data.fillet.valList;
-      this.bgRadius = fillet
-        ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
-        : filletVal + 'px';
+  titleTxtConfig: {
+    title: '标题文字',
+    value: '商城头条',
+    place: '请输入标题文字',
+    max: 4,
+  },
+  rollConfig: {
+    title: '滚动方式',
+    tabVal: 0,
+    tabList: [
+      {
+        name: '上下滚动',
+      },
+      {
+        name: '左右滚动',
+      },
+    ],
+  },
+  buttonConfig: {
+    title: '右侧按钮',
+    tabVal: 0,
+    tabList: [
+      {
+        name: '显示',
+      },
+      {
+        name: '隐藏',
+      },
+    ],
+  },
+  textConfig: {
+    title: '右侧文字',
+    value: '更多',
+    place: '请输入右侧文字',
+    max: 4,
+  },
+  linkConfig: {
+    title: '链接',
+    value: '',
+    place: '选择跳转链接',
+    max: 100,
+    type: 'link',
+  },
+  listConfig: {
+    max: 10,
+    type: 1,
+    list: [
+      {
+        chiild: [
+          {
+            title: '标题',
+            val: '标题',
+            max: 20,
+            pla: '输入标题',
+          },
+          {
+            title: '链接',
+            val: '',
+            max: 200,
+            pla: '输入连接',
+          },
+        ],
+        show: true,
+      },
+    ],
+  },
+  toneConfig: {
+    title: '色调',
+    tabVal: 0,
+    tabList: [
+      {
+        name: '跟随主题风格',
+      },
+      {
+        name: '自定义',
+      },
+    ],
+  },
+  titleBgColor: {
+    title: '标题背景',
+    default: [
+      {
+        item: '#FCEAE9',
+      },
+      {
+        item: '#FCEAE9',
+      },
+    ],
+    color: [
+      {
+        item: '#FCEAE9',
+      },
+      {
+        item: '#FCEAE9',
+      },
+    ],
+  },
+  titleColor: {
+    title: '标题文字',
+    default: [
+      {
+        item: '#E93323',
+      },
+    ],
+    color: [
+      {
+        item: '#E93323',
+      },
+    ],
+  },
+  newsColor: {
+    title: '新闻标题',
+    default: [
+      {
+        item: '#333333',
+      },
+    ],
+    color: [
+      {
+        item: '#333333',
+      },
+    ],
+  },
+  bntColor: {
+    title: '按钮颜色',
+    default: [
+      {
+        item: '#999999',
+      },
+    ],
+    color: [
+      {
+        item: '#999999',
+      },
+    ],
+  },
+  moduleColor: {
+    title: '组件背景',
+    default: [
+      {
+        item: '#fff',
+      },
+      {
+        item: '#fff',
+      },
+    ],
+    color: [
+      {
+        item: '#fff',
+      },
+      {
+        item: '#fff',
+      },
+    ],
+  },
+  bottomBgColor: {
+    title: '底部背景',
+    default: [
+      {
+        item: '#f5f5f5',
+      },
+    ],
+    color: [
+      {
+        item: '#f5f5f5',
+      },
+    ],
+  },
+  paddingConfig: {
+    title: '内边距',
+    val: 0,
+    min: 0,
+    max: 100,
+    isAll: false,
+    valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+  },
+  marginConfig: {
+    title: '外边距',
+    val: 0,
+    min: 0,
+    max: 100,
+    isAll: false,
+    valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+  },
+  zIndexConfig: {
+    title: '组件上浮',
+    val: 0,
+    min: 0,
+  },
+  borderConfig: {
+    title: '边框设置',
+    tabVal: 0,
+    tabList: [{ name: '隐藏' }, { name: '显示' }],
+    val: 0, // 0: Hide, 1: Show
+    styleConfig: {
+      title: '边框样式',
+      tabVal: 0,
+      tabList: [
+        { name: '实线', style: 'solid' },
+        { name: '虚线', style: 'dashed' },
+        { name: '点状', style: 'dotted' },
+      ],
+    },
+    widthConfig: {
+      title: '边框粗细',
+      val: 1,
+      min: 1,
+    },
+    colorConfig: {
+      title: '边框颜色',
+      default: [{ item: '#e5e5e5' }],
+      color: [{ item: '#e5e5e5' }],
     },
   },
+  shadowConfig: {
+    title: '阴影设置',
+    tabVal: 0,
+    tabList: [{ name: '隐藏' }, { name: '显示' }],
+    val: 0, // 0: Off, 1: On
+    colorConfig: {
+      title: '阴影颜色',
+      default: [{ item: 'rgba(0,0,0,0.1)' }],
+      color: [{ item: 'rgba(0,0,0,0.1)' }],
+    },
+    xConfig: {
+      title: 'X轴偏移',
+      val: 0,
+      min: -50,
+    },
+    yConfig: {
+      title: 'Y轴偏移',
+      val: 0,
+      min: -50,
+    },
+    blurConfig: {
+      title: '模糊半径',
+      val: 10,
+      min: 0,
+    },
+    spreadConfig: {
+      title: '扩展半径',
+      val: 0,
+      min: -50,
+    },
+  },
+  componentBgConfig: {
+    title: '组件背景',
+    tabVal: 0,
+    tabList: [{ name: '颜色' }, { name: '图片' }],
+    colorConfig: {
+      title: '背景颜色',
+      default: [{ item: '#fff' }, { item: '#fff' }],
+      color: [{ item: '#fff' }, { item: '#fff' }],
+    },
+    colorDirection: {
+      title: '渐变方向',
+      tabVal: 0,
+      tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
+    },
+    imageConfig: {
+      header: '背景图片',
+      title: '',
+      name: '上传图片',
+      type: 'code',
+      url: '',
+      info: '建议尺寸：750px * 400px',
+    },
+  },
+  fillet: {
+    title: '背景圆角',
+    type: 0,
+    list: [
+      {
+        val: '全部',
+        icon: 'iconcaozuo-zhengti',
+      },
+      {
+        val: '单个',
+        icon: 'iconcaozuo-bianjiao',
+      },
+    ],
+    valName: '圆角值',
+    val: 0,
+    min: 0,
+    valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+  },
+  // logoConfig: {
+  //     header: '图标设置',
+  //     title: '最多可添加1张图片，建议宽度130 * 36px',
+  //     url: require('@/views/design/theme_editor/assets/images/news.png')
+  // }
 };
+
+const tabVal = ref('');
+const rollStyle = ref('');
+const txtPosition = ref('');
+const pageData = ref({});
+const configObj = ref({});
+const list = ref([]);
+const slider = ref(0);
+const styleConfig = ref(0);
+const imgUrl = ref('');
+const buttonConfig = ref(0);
+const textConfig = ref('');
+const toneConfig = ref(0);
+const newsColor = ref('');
+const bntColor = ref('');
+const bgColorLeft = ref('');
+const bgColorRight = ref('');
+const bgRadius = ref(0);
+const titleConfig = ref(0);
+const titleBgColorLeft = ref('');
+const titleBgColorRight = ref('');
+const titleColor = ref('');
+const titleTxtConfig = ref('');
+
+function setConfig(data) {
+  if (!data) return;
+  configObj.value = data;
+  if (!configObj.value.paddingConfig) {
+    configObj.value.paddingConfig = {
+      title: '内边距',
+      isAll: false,
+      val: 0,
+      min: 0,
+      valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+    };
+    if (data.topConfig) configObj.value.paddingConfig.valList[0].val = data.topConfig.val;
+    if (data.bottomConfig) configObj.value.paddingConfig.valList[2].val = data.bottomConfig.val;
+    if (data.prConfig) {
+      configObj.value.paddingConfig.valList[1].val = data.prConfig.val;
+      configObj.value.paddingConfig.valList[3].val = data.prConfig.val;
+    }
+  }
+  if (!configObj.value.marginConfig) {
+    configObj.value.marginConfig = {
+      title: '外边距',
+      isAll: false,
+      val: 0,
+      min: 0,
+      max: 100,
+      valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+    };
+    if (data.mbConfig) {
+      configObj.value.marginConfig.valList[0].val = data.mbConfig.val;
+    }
+  }
+  for (let key in defaultConfig) {
+    if (configObj.value[key] === undefined) {
+      configObj.value[key] = defaultConfig[key];
+    }
+  }
+  rollStyle.value = data.rollConfig.tabVal;
+  txtPosition.value = data.textConfig.tabVal;
+  // slider.value = marginConfig.valList[0].val;
+  styleConfig.value = data.styleConfig.tabVal;
+  imgUrl.value = data.imgConfig.url;
+  buttonConfig.value = data.buttonConfig.tabVal;
+  textConfig.value = data.textConfig.value;
+  let lists = data.listConfig.list;
+  let l = [];
+  lists.forEach((item) => {
+    if (item.show) {
+      l.push(item);
+    }
+  });
+  list.value = l;
+  toneConfig.value = data.toneConfig.tabVal;
+  newsColor.value = data.newsColor.color[0].item;
+  bntColor.value = data.bntColor.color[0].item;
+  bgColorLeft.value = data.moduleColor.color[0].item;
+  bgColorRight.value = data.moduleColor.color[1].item;
+  // prConfig = paddingConfig.valList[1].val;
+  // topConfig = paddingConfig.valList[0].val;
+  // bottomConfig = paddingConfig.valList[2].val;
+  titleConfig.value = data.titleConfig.tabVal;
+  titleBgColorLeft.value = data.titleBgColor.color[0].item;
+  titleBgColorRight.value = data.titleBgColor.color[1].item;
+  titleColor.value = data.titleColor.color[0].item;
+  titleTxtConfig.value = data.titleTxtConfig.value;
+  let fillet = data.fillet.type;
+  let filletVal = data.fillet.val;
+  let valList = data.fillet.valList;
+  bgRadius.value = fillet
+    ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
+    : filletVal + 'px';
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
+  },
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+    setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+    setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    pageData.value = mobildConfigStore.defaultArray[props.num];
+    setConfig(pageData.value);
+  });
+});
 </script>
 
 <style scoped lang="scss">

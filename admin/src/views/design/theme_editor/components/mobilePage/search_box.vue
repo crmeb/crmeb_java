@@ -38,96 +38,38 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState } from 'vuex';
-// import theme from "@/views/design/theme_editor/mixins/theme";
-export default {
+<script setup>
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+
+defineOptions({
   name: 'search_box',
   cname: '搜索框',
   icon: '#iconzujian-sousuokuang',
   configName: 'c_search_box',
-  type: 0, // 0 基础组件 1 营销组件 2工具组件
-  defaultName: 'headerSerch', // 外面匹配名称
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-    txtStyle() {
-      let num = 0;
-      if (this.styleConfig == 0 && this.styleTypeConfig != 1) {
-        num = 15;
-      }
-      return {
-        color: `${this.txtColor}`,
-        fontStyle: `${this.txtStyleConfig != 'bold' ? this.txtStyleConfig : ''}`,
-        fontWeight: `${this.txtStyleConfig == 'bold' ? this.txtStyleConfig : ''}`,
-        fontSize: `${this.txtSize}px`,
-        marginRight: `${num}px`,
-      };
-    },
-    txtPosition() {
-      return {
-        justifyContent:
-          this.styleConfig != 0 && this.txtFixConfig === 1
-            ? 'center'
-            : this.styleConfig != 0 && this.txtFixConfig === 2
-            ? 'flex-end'
-            : 'flex-start',
-      };
-    },
-    searchStyle() {
-      return {
-        textAlign: this.txtFixConfig == 0 ? 'left' : this.txtFixConfig == 2 ? 'right' : 'center',
-        background: this.searchBoxColor,
-      };
-    },
-    searchBoxStyle() {
-      if (this.configObj && this.configObj.moduleColor) {
-        return {
-          background: `linear-gradient(90deg, ${this.configObj.moduleColor.color[0].item} 0%, ${this.configObj.moduleColor.color[1].item} 100%)`,
-        };
-      }
-    },
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+  type: 0,
+  defaultName: 'headerSerch',
+});
+
+const props = defineProps({
+  index: {
+        type: null,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
+      colorStyle: {
+        type: null,
       },
-      deep: true,
-    },
-  },
-  // mixins: [theme],
-  data() {
-    return {
-      // 默认初始化数据禁止修改
-      defaultConfig: {
+});
+
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '搜索框',
         name: 'headerSerch',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -441,71 +383,133 @@ export default {
             min: -50,
           },
         },
-      },
-      pageData: {},
-      logoUrl: '',
-      styleConfig: 0,
-      titleConfig: '',
-      searchBoxColor: '',
-      tipConfig: '',
-      hotWords: '',
-      tipColor: '',
-      hotWordsColor: '',
-      styleTypeConfig: 0,
-      fixConfig: 0,
-      txtFixConfig: 0,
-      txtColor: '',
-      txtStyleConfig: '',
-      txtSize: 0,
-      paddingConfig: null,
-      marginConfig: null,
-      borderConfig: null,
-      shadowConfig: null,
-      componentBgConfig: null,
-      configObj: null,
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      let dataClone = JSON.parse(JSON.stringify(data));
-      for (let key in this.defaultConfig) {
-        if (dataClone[key] === undefined) {
-          this.$set(dataClone, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+      };
+
+const pageData = ref({});
+const logoUrl = ref('');
+const styleConfig = ref(0);
+const titleConfig = ref('');
+const searchBoxColor = ref('');
+const tipConfig = ref('');
+const hotWords = ref('');
+const tipColor = ref('');
+const hotWordsColor = ref('');
+const styleTypeConfig = ref(0);
+const fixConfig = ref(0);
+const txtFixConfig = ref(0);
+const txtColor = ref('');
+const txtStyleConfig = ref('');
+const txtSize = ref(0);
+const paddingConfig = ref(null);
+const marginConfig = ref(null);
+const borderConfig = ref(null);
+const shadowConfig = ref(null);
+const componentBgConfig = ref(null);
+const configObj = ref(null);
+
+const txtStyle = computed(() => {
+  let num = 0;
+        if (styleConfig.value == 0 && styleTypeConfig.value != 1) {
+          num = 15;
         }
-      }
-      this.configObj = dataClone;
+        return {
+          color: `${txtColor.value}`,
+          fontStyle: `${txtStyleConfig.value != 'bold' ? txtStyleConfig.value : ''}`,
+          fontWeight: `${txtStyleConfig.value == 'bold' ? txtStyleConfig.value : ''}`,
+          fontSize: `${txtSize.value}px`,
+          marginRight: `${num}px`,
+        };
+});
 
-      this.paddingConfig = dataClone.paddingConfig;
-      this.marginConfig = dataClone.marginConfig;
-      this.borderConfig = dataClone.borderConfig;
-      this.shadowConfig = dataClone.shadowConfig;
-      this.componentBgConfig = dataClone.componentBgConfig;
+const txtPosition = computed(() => {
+  return {
+          justifyContent:
+            styleConfig.value != 0 && txtFixConfig.value === 1
+              ? 'center'
+              : styleConfig.value != 0 && txtFixConfig.value === 2
+              ? 'flex-end'
+              : 'flex-start',
+        };
+});
 
-      this.logoUrl = dataClone.logoConfig.url;
-      this.styleConfig = dataClone.styleConfig.tabVal;
-      this.styleTypeConfig = dataClone.styleTypeConfig.tabVal;
-      this.txtFixConfig = dataClone.txtFixConfig.tabVal;
-      this.txtStyleConfig = dataClone.txtStyleConfig.tabList[dataClone.txtStyleConfig.tabVal].style;
-      this.txtSize = dataClone.txtSize.val;
-      this.txtColor = dataClone.txtColor.color[0].item;
-      this.titleConfig = dataClone.titleConfig.value;
-      this.searchBoxColor = dataClone.searchBoxColor.color[0].item;
-      this.tipConfig = dataClone.tipConfig.value;
-      this.hotWords = dataClone.hotWords.list.length ? dataClone.hotWords.list[0].val : '';
-      this.tipColor = dataClone.tipColor.color[0].item;
-      this.hotWordsColor = dataClone.hotWordsColor.color[0].item;
-    },
+const searchStyle = computed(() => {
+  return {
+          textAlign: txtFixConfig.value == 0 ? 'left' : txtFixConfig.value == 2 ? 'right' : 'center',
+          background: searchBoxColor.value,
+        };
+});
+
+const searchBoxStyle = computed(() => {
+  if (configObj.value && configObj.value.moduleColor) {
+          return {
+            background: `linear-gradient(90deg, ${configObj.value.moduleColor.color[0].item} 0%, ${configObj.value.moduleColor.color[1].item} 100%)`,
+          };
+        }
+});
+
+function setConfig(data) {
+  if (!data) return;
+        let dataClone = JSON.parse(JSON.stringify(data));
+        for (let key in defaultConfig) {
+          if (dataClone[key] === undefined) {
+            dataClone[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
+          }
+        }
+        configObj.value = dataClone;
+
+        paddingConfig.value = dataClone.paddingConfig;
+        marginConfig.value = dataClone.marginConfig;
+        borderConfig.value = dataClone.borderConfig;
+        shadowConfig.value = dataClone.shadowConfig;
+        componentBgConfig.value = dataClone.componentBgConfig;
+
+        logoUrl.value = dataClone.logoConfig.url;
+        styleConfig.value = dataClone.styleConfig.tabVal;
+        styleTypeConfig.value = dataClone.styleTypeConfig.tabVal;
+        txtFixConfig.value = dataClone.txtFixConfig.tabVal;
+        txtStyleConfig.value = dataClone.txtStyleConfig.tabList[dataClone.txtStyleConfig.tabVal].style;
+        txtSize.value = dataClone.txtSize.val;
+        txtColor.value = dataClone.txtColor.color[0].item;
+        titleConfig.value = dataClone.titleConfig.value;
+        searchBoxColor.value = dataClone.searchBoxColor.color[0].item;
+        tipConfig.value = dataClone.tipConfig.value;
+        hotWords.value = dataClone.hotWords.list.length ? dataClone.hotWords.list[0].val : '';
+        tipColor.value = dataClone.tipColor.color[0].item;
+        hotWordsColor.value = dataClone.hotWordsColor.color[0].item;
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
   },
-};
-</script>
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
 
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+      });
+});
+
+</script>
 <style scoped lang="scss">
 .mobile-page {
   display: inline-block;

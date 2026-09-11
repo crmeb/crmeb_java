@@ -17,84 +17,91 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
+import { useRoute, useRouter } from 'vue-router';
 import { themeInfo, themeSave } from '@/api/theme';
 import setting from '@/utils/settingMer';
+import morenImg from '@/assets/imgs/moren.png';
+import youxuanImg from '@/assets/imgs/youxuan.png';
+import haowuImg from '@/assets/imgs/haowu.png';
+import shengxianImg from '@/assets/imgs/shengxian.png';
 
-export default {
-  name: 'goodClass',
-  props: {},
-  data() {
-    return {
-      classList: [
-        { image: require('@/assets/imgs/moren.png'), name: '默认模板' },
-        { image: require('@/assets/imgs/youxuan.png'), name: '模板1' },
-        { image: require('@/assets/imgs/haowu.png'), name: '模板2' },
-        { image: require('@/assets/imgs/shengxian.png'), name: '模板3' },
-      ],
-      activeStyle: '-1',
-      themeColor: '',
-    };
-  },
-  created() {
-    this.getInfo();
-    this.getTheme();
-  },
-  methods: {
-    getTheme() {
-      themeInfo(this.$route.query.id, 'theme').then((res) => {
-        this.themeColor = res.data ? res.data.theme_color : '#E93323';
-      });
-    },
-    getInfo() {
-      themeInfo(this.$route.query.id, 'category').then((res) => {
-        this.activeStyle = res.data.status ? res.data.status - 1 : 0;
-      });
-    },
-    selectTap(index) {
-      this.activeStyle = index;
-    },
-    saveOnly(num) {
-      this.$emit('parentFun', true);
-      this.activeStyle = num == 1 ? 0 : this.activeStyle;
-      themeSave(this.$route.query.id, {
-        type: 'category',
-        value: num == 1 ? 1 : this.activeStyle + 1,
-      }).then((res) => {
-        if (this.$route.query.id == 0) {
-          this.$router.replace({ query: { ...this.$route.query, id: res.data.id } });
-        }
-        this.$message.success(res.msg);
-      });
-    },
-    saveAndClose() {
-      // 先触发父组件事件
-      this.$emit('parentFun', true);
+defineOptions({ name: 'goodClass' });
 
-      // 保存数据
-      themeSave(this.$route.query.id, {
-        type: 'category',
-        value: this.activeStyle + 1,
-      })
-        .then((res) => {
-          // 如果是新建（id为0），更新路由参数
-          if (this.$route.query.id == 0) {
-            this.$router.replace({ query: { ...this.$route.query, id: res.data.id } });
-          }
+const emit = defineEmits(['parentFun']);
 
-          // 显示成功消息
-          this.$message.success(res.msg);
+const route = useRoute();
+const router = useRouter();
 
-          // 保存成功后跳转回主题列表页面
-          this.$router.push('/design/my_theme');
-        })
-        .catch((err) => {
-          // 保存失败时的处理
-          this.$message.error(err.msg || '保存失败');
-        });
-    },
-  },
-};
+const classList = [
+  { image: morenImg, name: '默认模板' },
+  { image: youxuanImg, name: '模板1' },
+  { image: haowuImg, name: '模板2' },
+  { image: shengxianImg, name: '模板3' },
+];
+const activeStyle = ref('-1');
+const themeColor = ref('');
+
+function getTheme() {
+  themeInfo(route.query.id, 'theme').then((res) => {
+    themeColor.value = res.data ? res.data.theme_color : '#E93323';
+  });
+}
+function getInfo() {
+  themeInfo(route.query.id, 'category').then((res) => {
+    activeStyle.value = res.data.status ? res.data.status - 1 : 0;
+  });
+}
+function selectTap(index) {
+  activeStyle.value = index;
+}
+function saveOnly(num) {
+  emit('parentFun', true);
+  activeStyle.value = num == 1 ? 0 : activeStyle.value;
+  themeSave(route.query.id, {
+    type: 'category',
+    value: num == 1 ? 1 : activeStyle.value + 1,
+  }).then((res) => {
+    if (route.query.id == 0) {
+      router.replace({ query: { ...route.query, id: res.data.id } });
+    }
+    ElMessage.success(res.msg);
+  });
+}
+function saveAndClose() {
+  // 先触发父组件事件
+  emit('parentFun', true);
+
+  // 保存数据
+  themeSave(route.query.id, {
+    type: 'category',
+    value: activeStyle.value + 1,
+  })
+    .then((res) => {
+      // 如果是新建（id为0），更新路由参数
+      if (route.query.id == 0) {
+        router.replace({ query: { ...route.query, id: res.data.id } });
+      }
+
+      // 显示成功消息
+      ElMessage.success(res.msg);
+
+      // 保存成功后跳转回主题列表页面
+      router.push('/design/my_theme');
+    })
+    .catch((err) => {
+      // 保存失败时的处理
+      ElMessage.error(err.msg || '保存失败');
+    });
+}
+
+// created 等价逻辑
+getInfo();
+getTheme();
+
+defineExpose({ saveOnly, saveAndClose });
 </script>
 <style lang="scss" scoped>
 .goodClass {

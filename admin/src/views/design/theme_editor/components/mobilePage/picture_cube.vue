@@ -31,7 +31,7 @@
                 borderRadius: imgRadius,
               }"
             >
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
           </div>
         </div>
@@ -40,7 +40,7 @@
             class="item"
             v-for="(item, index) in picList"
             :key="index"
-            :style="{ border: imgConfig + 'px solid ' + bottomBgColor }"
+            :style="{ border: imgConfig + 'px solid transparent' }"
           >
             <img
               class="img"
@@ -57,7 +57,7 @@
                 borderRadius: imgRadius,
               }"
             >
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
           </div>
         </div>
@@ -66,7 +66,7 @@
             class="item"
             v-for="(item, index) in picList"
             :key="index"
-            :style="{ border: imgConfig + 'px solid ' + bottomBgColor }"
+            :style="{ border: imgConfig + 'px solid transparent' }"
           >
             <img
               class="img"
@@ -83,7 +83,7 @@
                 borderRadius: imgRadius,
               }"
             >
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
           </div>
         </div>
@@ -105,7 +105,7 @@
                   borderRadius: imgRadius,
                 }"
               >
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
             <div class="pic" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
@@ -118,14 +118,14 @@
                 }"
               />
               <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
           </div>
           <div class="item" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
             <img class="img" :src="picList[2].image" v-if="picList[2].image" :style="{ borderRadius: imgRadius }" />
             <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
           </div>
         </div>
@@ -133,20 +133,20 @@
           <div class="item" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
             <img class="img" :src="picList[0].image" v-if="picList[0].image" :style="{ borderRadius: imgRadius }" />
             <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
           </div>
           <div class="item acea-row">
             <div class="pic" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
               <img class="img" :src="picList[1].image" v-if="picList[1].image" :style="{ borderRadius: imgRadius }" />
               <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
             <div class="pic" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
               <img class="img" :src="picList[2].image" v-if="picList[2].image" :style="{ borderRadius: imgRadius }" />
               <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
           </div>
@@ -155,20 +155,20 @@
           <div class="item" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
             <img class="img" :src="picList[0].image" v-if="picList[0].image" :style="{ borderRadius: imgRadius }" />
             <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
           </div>
           <div class="item">
             <div class="pic" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
               <img class="img" :src="picList[1].image" v-if="picList[1].image" :style="{ borderRadius: imgRadius }" />
               <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
             <div class="pic" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
               <img class="img" :src="picList[2].image" v-if="picList[2].image" :style="{ borderRadius: imgRadius }" />
               <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
           </div>
@@ -178,20 +178,20 @@
             <div class="pic" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
               <img class="img" :src="picList[0].image" v-if="picList[0].image" :style="{ borderRadius: imgRadius }" />
               <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
             <div class="pic" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
               <img class="img" :src="picList[1].image" v-if="picList[1].image" :style="{ borderRadius: imgRadius }" />
               <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
           </div>
           <div class="item" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
             <img class="img" :src="picList[2].image" v-if="picList[2].image" :style="{ borderRadius: imgRadius }" />
             <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
           </div>
         </div>
@@ -200,11 +200,11 @@
             class="item"
             v-for="(item, index) in picList"
             :key="index"
-            :style="{ border: imgConfig + 'px solid ' + bottomBgColor }"
+            :style="{ border: imgConfig + 'px solid transparent' }"
           >
             <img class="img" :src="item.image" v-if="item.image" :style="{ borderRadius: imgRadius }" />
             <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
           </div>
         </div>
@@ -213,13 +213,13 @@
             <div class="pic" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
               <img class="img" :src="picList[0].image" v-if="picList[0].image" :style="{ borderRadius: imgRadius }" />
               <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
             <div class="pic" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
               <img class="img" :src="picList[1].image" v-if="picList[1].image" :style="{ borderRadius: imgRadius }" />
               <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
           </div>
@@ -227,19 +227,19 @@
             <div class="pic" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
               <img class="img" :src="picList[2].image" v-if="picList[2].image" :style="{ borderRadius: imgRadius }" />
               <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
             <div class="pic" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
               <img class="img" :src="picList[3].image" v-if="picList[3].image" :style="{ borderRadius: imgRadius }" />
               <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
             <div class="pic" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
               <img class="img" :src="picList[4].image" v-if="picList[4].image" :style="{ borderRadius: imgRadius }" />
               <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
           </div>
@@ -248,27 +248,27 @@
           <div class="item" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
             <img class="img" :src="picList[0].image" v-if="picList[0].image" :style="{ borderRadius: imgRadius }" />
             <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
           </div>
           <div class="item">
             <div class="pic" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
               <img class="img" :src="picList[1].image" v-if="picList[1].image" :style="{ borderRadius: imgRadius }" />
               <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
             <div class="pic acea-row">
               <div class="picItem" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
                 <img class="img" :src="picList[2].image" v-if="picList[2].image" :style="{ borderRadius: imgRadius }" />
                 <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                  <img src="../../assets/images/shan.png" />
+                  <img :src="shanImg" />
                 </div>
               </div>
               <div class="picItem" :style="{ border: imgConfig + 'px solid ' + bottomBgColor }">
                 <img class="img" :src="picList[3].image" v-if="picList[3].image" :style="{ borderRadius: imgRadius }" />
                 <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-                  <img src="../../assets/images/shan.png" />
+                  <img :src="shanImg" />
                 </div>
               </div>
             </div>
@@ -280,11 +280,11 @@
             class="advertItem01 acea-row"
             v-for="(item, index) in picList"
             :key="index"
-            :style="{ border: imgConfig + 'px solid ' + bottomBgColor }"
+            :style="{ border: imgConfig + 'px solid transparent' }"
           >
             <img class="img" :src="item.image" v-if="item.image" :style="{ borderRadius: imgRadius }" />
             <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
           </div>
         </template>
@@ -294,7 +294,7 @@
             v-for="(item, index) in docPicList"
             :key="index"
             :style="{
-              border: imgConfig + 'px solid ' + bottomBgColor,
+              border: imgConfig + 'px solid transparent',
               width: (item.doc.w / 375) * 100 + '%',
               height: (item.doc.h / 375) * 100 + '%',
               left: (item.doc.startX / 375) * 100 + '%',
@@ -303,7 +303,7 @@
           >
             <img class="img" :src="item.img" v-if="item.img" :style="{ borderRadius: imgRadius }" />
             <div class="empty-box" v-else :style="{ borderRadius: imgRadius }">
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
           </div>
         </template>
@@ -312,55 +312,36 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState } from 'vuex';
-export default {
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import shanImg from '@/views/design/theme_editor/assets/images/shan.png';
+
+defineOptions({
   name: 'picture_cube',
   cname: '图片魔方',
-  configName: 'c_picture_cube',
   icon: '#iconzujian-tupianmofang',
-  type: 0, // 0 基础组件 1 营销组件 2工具组件
-  defaultName: 'pictureCube', // 外面匹配名称
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-  },
-  watch: {
-    pageData: {
-      handler(nVal) {
-        this.setConfig(nVal);
+  configName: 'c_picture_cube',
+  type: 0,
+  defaultName: 'pictureCube',
+});
+
+const props = defineProps({
+  index: {
+        type: null,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler() {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
-      },
-      deep: true,
-    },
-  },
-  data() {
-    return {
-      // 默认初始化数据禁止修改
-      defaultConfig: {
+});
+
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '图片魔方',
         name: 'pictureCube',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -527,99 +508,121 @@ export default {
           min: 0,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-      },
-      pageData: {},
-      style: 0,
-      imgConfig: 0,
-      picList: [],
-      configObj: null,
-      bottomBgColor: '',
-      paddingConfig: {
+      };
+
+const pageData = ref({});
+const style = ref(0);
+const imgConfig = ref(0);
+const picList = ref([]);
+const configObj = ref(null);
+const bottomBgColor = ref('');
+const paddingConfig = ref({
         title: '内边距',
         val: 0,
         min: 0,
         max: 100,
         isAll: false,
         valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-      },
-      imgRadius: 0,
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      let dataClone = JSON.parse(JSON.stringify(data));
-      for (let key in this.defaultConfig) {
-        if (dataClone[key] == undefined) {
-          this.$set(dataClone, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+      });
+const imgRadius = ref(0);
+
+function setConfig(data) {
+  if (!data) return;
+        let dataClone = JSON.parse(JSON.stringify(data));
+        for (let key in defaultConfig) {
+          if (dataClone[key] == undefined) {
+            dataClone[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
+          }
         }
-      }
-      this.configObj = dataClone;
+        configObj.value = dataClone;
 
-      let isLegacyPadding = !dataClone.paddingConfig;
-      let isLegacyMargin = !dataClone.marginConfig;
+        let isLegacyPadding = !dataClone.paddingConfig;
+        let isLegacyMargin = !dataClone.marginConfig;
 
-      if (isLegacyPadding) {
-        dataClone.paddingConfig = {
-          title: '边距设置',
-          val: 0,
-          min: 0,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        };
-        if (dataClone.topConfig) dataClone.paddingConfig.valList[0].val = dataClone.topConfig.val;
-        if (dataClone.bottomConfig) dataClone.paddingConfig.valList[2].val = dataClone.bottomConfig.val;
-        if (dataClone.prConfig) {
-          dataClone.paddingConfig.valList[1].val = dataClone.prConfig.val;
-          dataClone.paddingConfig.valList[3].val = dataClone.prConfig.val;
+        if (isLegacyPadding) {
+          dataClone.paddingConfig = {
+            title: '边距设置',
+            val: 0,
+            min: 0,
+            valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+          };
+          if (dataClone.topConfig) dataClone.paddingConfig.valList[0].val = dataClone.topConfig.val;
+          if (dataClone.bottomConfig) dataClone.paddingConfig.valList[2].val = dataClone.bottomConfig.val;
+          if (dataClone.prConfig) {
+            dataClone.paddingConfig.valList[1].val = dataClone.prConfig.val;
+            dataClone.paddingConfig.valList[3].val = dataClone.prConfig.val;
+          }
         }
-      }
-      if (isLegacyMargin) {
-        dataClone.marginConfig = {
-          title: '间距设置',
-          val: 0,
-          min: 0,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        };
-        if (dataClone.mbConfig) dataClone.marginConfig.valList[0].val = dataClone.mbConfig.val;
-      }
-      this.paddingConfig = dataClone.paddingConfig;
+        if (isLegacyMargin) {
+          dataClone.marginConfig = {
+            title: '间距设置',
+            val: 0,
+            min: 0,
+            valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+          };
+          if (dataClone.mbConfig) dataClone.marginConfig.valList[0].val = dataClone.mbConfig.val;
+        }
+        paddingConfig.value = dataClone.paddingConfig;
 
-      this.style = dataClone.styleConfig.tabVal;
-      this.bottomBgColor = dataClone.bottomBgColor.color[0].item;
-      let filletImg = dataClone.filletImg.type;
-      let filletValImg = dataClone.filletImg.val;
-      let valListImg = dataClone.filletImg.valList;
-      this.imgRadius = filletImg
-        ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
-        : filletValImg + 'px';
-      this.imgConfig = dataClone.imgConfig.val;
-      if (dataClone.styleConfig.tabVal !== 11) {
-        if (!dataClone.picStyle.picList.length) {
-          this.picList = [
-            {
-              image: '',
-              link: '',
-            },
-          ];
+        style.value = dataClone.styleConfig.tabVal;
+        bottomBgColor.value = dataClone.bottomBgColor.color[0].item;
+        let filletImg = dataClone.filletImg.type;
+        let filletValImg = dataClone.filletImg.val;
+        let valListImg = dataClone.filletImg.valList;
+        imgRadius.value = filletImg
+          ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
+          : filletValImg + 'px';
+        imgConfig.value = dataClone.imgConfig.val;
+        if (dataClone.styleConfig.tabVal !== 11) {
+          if (!dataClone.picStyle.picList.length) {
+            picList.value = [
+              {
+                image: '',
+                link: '',
+              },
+            ];
+          } else {
+            picList.value = dataClone.picStyle.picList;
+          }
         } else {
-          this.picList = dataClone.picStyle.picList;
+          dataClone.picStyle.docPicList.map((e, i) => {
+            dataClone.picStyle.docPicList[i].img = dataClone.picStyle.picList[i].image;
+            dataClone.picStyle.docPicList[i].link = dataClone.picStyle.picList[i].link;
+          });
+          this['docPicList'] = dataClone.picStyle.docPicList;
         }
-      } else {
-        dataClone.picStyle.docPicList.map((e, i) => {
-          dataClone.picStyle.docPicList[i].img = dataClone.picStyle.picList[i].image;
-          dataClone.picStyle.docPicList[i].link = dataClone.picStyle.picList[i].link;
-        });
-        this.$set(this, 'docPicList', dataClone.picStyle.docPicList);
-      }
-    },
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
   },
-};
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+      });
+});
 </script>
 <style scoped lang="scss">
 .empty-box {

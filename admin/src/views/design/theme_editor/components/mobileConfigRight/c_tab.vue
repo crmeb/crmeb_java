@@ -5,8 +5,8 @@
       >{{ configData.tabList[configData.tabVal].name }}
     </div>
     <div class="radio-box" :class="{ on: configData.type == 1 }">
-      <el-radio-group v-model="configData.tabVal" type="button" size="large" @input="radioChange($event)">
-        <el-radio :label="index" v-for="(item, index) in configData.tabList" :key="index">
+      <el-radio-group v-model="configData.tabVal" type="button" size="large" @change="radioChange($event)">
+        <el-radio :label="index" :value="index" v-for="(item, index) in configData.tabList" :key="index">
           <span class="iconfont" :class="item.icon" v-if="item.icon"></span>
           <span v-else>{{ item.name }}</span>
         </el-radio>
@@ -15,50 +15,50 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_tab',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+
+defineOptions({ name: 'c_tab' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      formData: {
-        type: 0,
-      },
-      defaults: {},
-      configData: {},
-    };
+  configNme: {
+    type: String,
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-    },
+});
+
+const emit = defineEmits(['getConfig']);
+
+const formData = ref({
+  type: 0,
+});
+const defaults = ref({});
+const configData = ref({});
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      this.configData = this.configObj[this.configNme];
-    });
-  },
-  methods: {
-    radioChange(e) {
-      if (this.defaults.picStyle) {
-        this.defaults.picStyle.tabVal = 0;
-      }
-      this.$emit('getConfig', e);
-    },
-  },
-};
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    defaults.value = props.configObj;
+    configData.value = props.configObj[props.configNme] || {};
+  });
+});
+
+function radioChange(e) {
+  if (defaults.value.picStyle) {
+    defaults.value.picStyle.tabVal = 0;
+  }
+  emit('getConfig', e);
+}
 </script>
 
 <style scoped lang="scss">

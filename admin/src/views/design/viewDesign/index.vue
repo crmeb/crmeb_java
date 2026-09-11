@@ -43,7 +43,7 @@
               </el-carousel>
             </div>
             <div class="model_news" :class="{ select_ctive: shows == 2 }">
-              <img src="@/assets/imgs/new_header1.png" alt="" style="width: 64px; height: 17px" />
+              <img :src="newHeader1Img" alt="" style="width: 64px; height: 17px" />
               <span style="color: #ccc">|</span>
               <p>{{ newsInfo }}</p>
               <i class="el-icon-arrow-right"></i>
@@ -91,7 +91,7 @@
               <div class="user_bg" :style="{ backgroundImage: 'url(' + urlbg + ')' }">
                 <div class="user_card">
                   <div class="user_info">
-                    <img src="@/assets/imgs/default_avatar.png" alt="" />
+                    <img :src="defaultAvatarImg" alt="" />
                     <div class="info">
                       <p class="nick_name">用户信息</p>
                       <p class="phone">123456</p>
@@ -126,23 +126,23 @@
                   </div>
                   <div class="order_wrap_list">
                     <div class="order_list_item">
-                      <img src="@/assets/imgs/fukuan.png" alt="" />
+                      <img :src="fukuanImg" alt="" />
                       <p>待付款</p>
                     </div>
                     <div class="order_list_item">
-                      <img src="@/assets/imgs/fahuo.png" alt="" />
+                      <img :src="fahuoImg" alt="" />
                       <p>待发货</p>
                     </div>
                     <div class="order_list_item">
-                      <img src="@/assets/imgs/shouhuo.png" alt="" />
+                      <img :src="shouhuoImg" alt="" />
                       <p>待收货</p>
                     </div>
                     <div class="order_list_item">
-                      <img src="@/assets/imgs/pingjia.png" alt="" />
+                      <img :src="pingjiaImg" alt="" />
                       <p>待评价</p>
                     </div>
                     <div class="order_list_item">
-                      <img src="@/assets/imgs/tuikuan.png" alt="" />
+                      <img :src="tuikuanImg" alt="" />
                       <p>售后/退款</p>
                     </div>
                   </div>
@@ -342,10 +342,10 @@
             <div style="margin: 26px 0 26px">
               页面风格：
               <el-radio-group v-model="active" @change="switchTab">
-                <el-radio label="1">样式1</el-radio>
-                <el-radio label="2">样式2</el-radio>
-                <el-radio label="3">样式3</el-radio>
-                <el-radio label="4">样式4</el-radio>
+                <el-radio label="1" value="1">样式1</el-radio>
+                <el-radio label="2" value="2">样式2</el-radio>
+                <el-radio label="3" value="3">样式3</el-radio>
+                <el-radio label="4" value="4">样式4</el-radio>
               </el-radio-group>
             </div>
             <div>
@@ -360,9 +360,9 @@
           <div class="title-bar">模块配置</div>
           <div style="margin: 26px 0 26px">
             <el-radio-group v-model="HomeStyle" @change="switchKind">
-              <el-radio label="1">样式1</el-radio>
-              <el-radio label="2">样式2</el-radio>
-              <el-radio label="3">样式3</el-radio>
+              <el-radio label="1" value="1">样式1</el-radio>
+              <el-radio label="2" value="2">样式2</el-radio>
+              <el-radio label="3" value="3">样式3</el-radio>
             </el-radio-group>
           </div>
         </div>
@@ -378,7 +378,6 @@
             'admin:page:layout:index:banner:save',
             'admin:page:layout:index:news:save',
             'admin:page:layout:user:menu:save',
-            'admin:page:layout:user:banner:save',
             'admin:page:layout:bottom:navigation',
             'admin:page:layout:bottom:navigation:save',
           ]"
@@ -399,442 +398,458 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, nextTick, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { designListApi, SaveDataApi, goodDesignList, getDataApi, getBottomNavigationApi } from '@/api/systemGroup';
 import ClipboardJS from 'clipboard';
 import { getHomeStyleApi, savehomeStyleApi } from '@/api/systemConfig';
 import linkaddress from '@/components/linkaddress';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
 import { Debounce } from '@/utils/validate';
-export default {
-  name: 'index',
-  data() {
-    return {
-      menuList: [],
-      menuInfo: {},
-      typeName: '',
-      currentPage: 'cate',
-      modelBanner: [
-        'https://image.java.crmeb.net/crmebimage/maintain/2021/07/06/c99ee385e94d4711a0ea4be72169a86euwmzuhxbb2.jpg',
-      ],
-      urlbg: require('@/assets/imgs/user_bg.png'),
-      indexTab: [],
-      dataList: [],
-      addUrlStatus: true,
-      infoStatus: false,
-      showStatus: false,
-      shows: 0,
-      indextTabMenu: [],
-      tabActive: 0,
-      cate: true,
-      tip: false,
-      mockGoods: false,
-      mockGoodsImg: require('@/assets/theme/goodsList1.png'),
-      showTabNav: true,
-      cateArr: [
-        { img: require('@/assets/imgs/moren.png'), tit: '默认模板' },
-        { img: require('@/assets/imgs/youxuan.png'), tit: '模板1' },
-        { img: require('@/assets/imgs/haowu.png'), tit: '模板2' },
-        { img: require('@/assets/imgs/shengxian.png'), tit: '模板3' },
-      ],
-      cateImg: '',
-      active: 3,
-      HomeStyle: 1, //移动端首页样式
-      disabled: false,
-      radio: true,
-      newsInfo: '',
-      listActive: 1,
-      tabList: ['', '分类', '个人中心', '底部菜单'],
-      itemIndex: 0,
-      navigationListTab: [], //底部导航左侧展示
-      navigationList: [],
-      isCustom: 0,
-    };
-  },
-  components: {
-    linkaddress,
-  },
-  created() {
-    this.cateNav();
-  },
-  mounted() {
-    if (checkPermi(['admin:page:layout:bottom:navigation'])) this.getBottomNavigation();
-    //监听子页面给当前页面传值
-    window.addEventListener('message', this.handleMessage, false);
-    this.designList();
-    this.$set(this, 'typeName', '');
-    this.$set(this, 'tip', true);
-    this.$nextTick(function () {
-      const clipboard = new ClipboardJS('.copy-data');
-      clipboard.on('success', () => {
-        this.$message.success('复制成功');
-      });
+import userBgImg from '@/assets/imgs/user_bg.png';
+import goodsList1Img from '@/assets/theme/goodsList1.png';
+import goodsList2Img from '@/assets/theme/goodsList2.png';
+import goodsList3Img from '@/assets/theme/goodsList3.png';
+import morenImg from '@/assets/imgs/moren.png';
+import youxuanImg from '@/assets/imgs/youxuan.png';
+import haowuImg from '@/assets/imgs/haowu.png';
+import shengxianImg from '@/assets/imgs/shengxian.png';
+import newHeader1Img from '@/assets/imgs/new_header1.png';
+import defaultAvatarImg from '@/assets/imgs/default_avatar.png';
+import fukuanImg from '@/assets/imgs/fukuan.png';
+import fahuoImg from '@/assets/imgs/fahuo.png';
+import shouhuoImg from '@/assets/imgs/shouhuo.png';
+import pingjiaImg from '@/assets/imgs/pingjia.png';
+import tuikuanImg from '@/assets/imgs/tuikuan.png';
+
+defineOptions({ name: 'index' });
+
+const { proxy } = getCurrentInstance();
+
+const menuList = ref([]);
+const menuInfo = ref({});
+const typeName = ref('');
+const currentPage = ref('cate');
+const modelBanner = [
+  'https://image.java.crmeb.net/crmebimage/maintain/2021/07/06/c99ee385e94d4711a0ea4be72169a86euwmzuhxbb2.jpg',
+];
+const urlbg = ref(userBgImg);
+const indexTab = ref([]);
+const dataList = ref([]);
+const addUrlStatus = ref(true);
+const infoStatus = ref(false);
+const showStatus = ref(false);
+const shows = ref(0);
+const indextTabMenu = ref([]);
+const tabActive = ref(0);
+const cate = ref(true);
+const tip = ref(false);
+const mockGoods = ref(false);
+const mockGoodsImg = ref(goodsList1Img);
+const showTabNav = ref(true);
+const cateArr = [
+  { img: morenImg, tit: '默认模板' },
+  { img: youxuanImg, tit: '模板1' },
+  { img: haowuImg, tit: '模板2' },
+  { img: shengxianImg, tit: '模板3' },
+];
+const cateImg = ref('');
+const active = ref(3);
+const HomeStyle = ref(1); //移动端首页样式
+const disabled = ref(false);
+const radio = ref(true);
+const newsInfo = ref('');
+const listActive = ref(1);
+const tabList = ['', '分类', '个人中心', '底部菜单'];
+const itemIndex = ref(0);
+const navigationListTab = ref([]); //底部导航左侧展示
+const navigationList = ref([]);
+const isCustom = ref(0);
+let dragging = null;
+
+const carousel = ref(null);
+const linkaddres = ref(null);
+
+// created 等价逻辑
+cateNav();
+
+//删除底部菜单中的配置项
+function handleDelMenu(item, index) {
+  navigationList.value.splice(index, 1);
+  navigationListTab.value.splice(index, 1);
+}
+//走马灯切换
+function carouselChange(e) {
+  active.value = e + 1;
+  active.value = active.value.toString();
+}
+function addBox() {
+  if (typeName.value == 'bottomNavigation') {
+    const indexMenu = JSON.parse(JSON.stringify(navigationList.value[0]));
+    indexMenu.id = null;
+    indexMenu.name = '';
+    indexMenu.url = '';
+    indexMenu.checked = '';
+    indexMenu.unchecked = '';
+    indexMenu.link = '';
+    navigationList.value.push(indexMenu);
+  } else if (menuList.value.length >= 10 && typeName.value == 'indexMenu') {
+    ElMessage.warning('设置数据不能超过10条');
+  } else if (typeName.value == 'indexTabNav' && menuList.value.length >= 4) {
+    addUrlStatus.value = false;
+    infoStatus.value = true;
+    ElMessage.warning('设置数据不能超过4条');
+  } else {
+    const indexMenu = JSON.parse(JSON.stringify(menuList.value[0]));
+    indexMenu.id = null;
+    indexMenu.name = '';
+    indexMenu.url = '';
+    indexMenu.info = '';
+    indexMenu.pic = '';
+    menuList.value.push(indexMenu);
+  }
+}
+//获取底部导航
+function getBottomNavigation() {
+  getBottomNavigationApi().then((res) => {
+    navigationList.value = res.bottomNavigationList;
+    let data = res.bottomNavigationList.filter((item) => {
+      return item.status;
     });
-    this.kindGet();
-  },
-  methods: {
-    checkPermi,
-    //删除底部菜单中的配置项
-    handleDelMenu(item, index) {
-      this.navigationList.splice(index, 1);
-      this.navigationListTab.splice(index, 1);
-    },
-    //走马灯切换
-    carouselChange(e) {
-      this.active = e + 1;
-      this.active = this.active.toString();
-    },
-    addBox() {
-      if (this.typeName == 'bottomNavigation') {
-        const indexMenu = JSON.parse(JSON.stringify(this.navigationList[0]));
-        indexMenu.id = null;
-        indexMenu.name = '';
-        indexMenu.url = '';
-        indexMenu.checked = '';
-        indexMenu.unchecked = '';
-        indexMenu.link = '';
-        this.navigationList.push(indexMenu);
-      } else if (this.menuList.length >= 10 && this.typeName == 'indexMenu') {
-        this.$message.warning('设置数据不能超过10条');
-      } else if (this.typeName == 'indexTabNav' && this.menuList.length >= 4) {
-        this.addUrlStatus = false;
-        this.infoStatus = true;
-        this.$message.warning('设置数据不能超过4条');
-      } else {
-        const indexMenu = JSON.parse(JSON.stringify(this.menuList[0]));
-        indexMenu.id = null;
-        indexMenu.name = '';
-        indexMenu.url = '';
-        indexMenu.info = '';
-        indexMenu.pic = '';
-        this.menuList.push(indexMenu);
-      }
-    },
-    //获取底部导航
-    getBottomNavigation() {
-      getBottomNavigationApi().then((res) => {
-        this.navigationList = res.bottomNavigationList;
-        let data = res.bottomNavigationList.filter((item) => {
-          return item.status;
-        });
-        this.navigationListTab = data;
-        this.isCustom = Number(res.isCustom);
+    navigationListTab.value = data;
+    isCustom.value = Number(res.isCustom);
+  });
+}
+// 获取列表值；
+function designList() {
+  designListApi().then((res) => {
+    menuInfo.value = res;
+    let newArr = [];
+    let indexMenu = res.indexMenu.filter((item, index, arr) => {
+      return item.status == true;
+    });
+    let indexBanner = res.indexBanner.filter((item, index, arr) => {
+      return item.status == true;
+    });
+    let userMenu = res.userMenu.filter((item, index, arr) => {
+      return item.status == true;
+    });
+    let indexNews = res.indexNews.filter((item, index, arr) => {
+      return item.status == true;
+    });
+    let userBanner = res.userBanner.filter((item, index, arr) => {
+      return item.status == true;
+    });
+    newArr.push(indexMenu, indexBanner, userMenu, indexNews, userBanner);
+    dataList.value = newArr;
+    newsInfo.value = indexNews[0] ? indexNews[0].info : '这是一个新闻标题';
+  });
+  goodDesignList({ gid: 70 }).then((response) => {
+    let list = response.list;
+    let arr = [];
+    let arr1 = [];
+    list.forEach((item) => {
+      let obj = {};
+      obj.value = JSON.parse(item.value);
+      obj.id = item.id;
+      obj.gid = item.gid;
+      obj.status = item.status;
+      arr.push(obj);
+    });
+    arr.forEach((item1) => {
+      let obj1 = {};
+      obj1.pic = item1.value.fields[0].value;
+      obj1.name = item1.value.fields[1].value;
+      obj1.info = item1.value.fields[2].value;
+      obj1.type = item1.value.fields[3].value;
+      obj1.id = item1.id;
+      obj1.gid = item1.gid;
+      // obj1.show = '1';
+      obj1.status = item1.status;
+      arr1.push(obj1);
+      indextTabMenu.value = arr1;
+      let indexTab = arr1.filter((item, index, arr) => {
+        return item.status == true;
       });
-    },
-    // 获取列表值；
-    designList() {
-      designListApi().then((res) => {
-        this.menuInfo = res;
-        let newArr = [];
-        let indexMenu = res.indexMenu.filter((item, index, arr) => {
-          return item.status == true;
-        });
-        let indexBanner = res.indexBanner.filter((item, index, arr) => {
-          return item.status == true;
-        });
-        let userMenu = res.userMenu.filter((item, index, arr) => {
-          return item.status == true;
-        });
-        let indexNews = res.indexNews.filter((item, index, arr) => {
-          return item.status == true;
-        });
-        let userBanner = res.userBanner.filter((item, index, arr) => {
-          return item.status == true;
-        });
-        newArr.push(indexMenu, indexBanner, userMenu, indexNews, userBanner);
-        this.dataList = newArr;
-        this.$set(this, 'newsInfo', indexNews[0] ? indexNews[0].info : '这是一个新闻标题');
-      });
-      goodDesignList({ gid: 70 }).then((response) => {
-        let list = response.list;
-        let arr = [];
-        let arr1 = [];
-        list.forEach((item) => {
-          let obj = {};
-          obj.value = JSON.parse(item.value);
-          obj.id = item.id;
-          obj.gid = item.gid;
-          obj.status = item.status;
-          arr.push(obj);
-        });
-        arr.forEach((item1) => {
-          let obj1 = {};
-          obj1.pic = item1.value.fields[0].value;
-          obj1.name = item1.value.fields[1].value;
-          obj1.info = item1.value.fields[2].value;
-          obj1.type = item1.value.fields[3].value;
-          obj1.id = item1.id;
-          obj1.gid = item1.gid;
-          // obj1.show = '1';
-          obj1.status = item1.status;
-          arr1.push(obj1);
-          this.indextTabMenu = arr1;
-          let indexTab = arr1.filter((item, index, arr) => {
-            return item.status == true;
-          });
-          this.indexTab = indexTab;
-        });
-        //
-      });
-    },
+      indexTab.value = indexTab;
+    });
     //
-    handleMessage(event) {
-      // this.typeName = event.data.name;
-      this.typeName = event;
-      switch (event) {
-        case 'bottomNavigation':
-          this.shows = 8;
-          this.menuList = [];
-          break;
-        case 'indexMenu':
-          this.menuList = this.menuInfo.indexMenu;
-          this.shows = 3;
-          this.mockGoods = false;
-          break;
-        case 'indexBanner':
-          this.menuList = this.menuInfo.indexBanner;
-          this.shows = 1;
-          this.mockGoods = false;
-          break;
-        case 'userMenu':
-          this.menuList = this.menuInfo.userMenu;
-          this.shows = 6;
-          this.mockGoods = false;
-          break;
-        case 'indexNews':
-          this.menuList = this.menuInfo.indexNews;
-          this.shows = 2;
-          this.mockGoods = false;
-          break;
-        case 'userBanner':
-          this.menuList = this.menuInfo.userBanner;
-          this.shows = 5;
-          this.mockGoods = false;
-          break;
-        case 'indexTabNav':
-          this.menuList = this.indextTabMenu;
-          this.shows = 4;
-          this.mockGoods = false;
-          break;
-        case 'goodsMock':
-          this.mockGoods = true;
-          this.typeName = '';
-          this.tip = false;
-          this.shows = 7;
-          break;
+  });
+}
+//
+function handleMessage(event) {
+  // this.typeName = event.data.name;
+  typeName.value = event;
+  switch (event) {
+    case 'bottomNavigation':
+      shows.value = 8;
+      menuList.value = [];
+      break;
+    case 'indexMenu':
+      menuList.value = menuInfo.value.indexMenu;
+      shows.value = 3;
+      mockGoods.value = false;
+      break;
+    case 'indexBanner':
+      menuList.value = menuInfo.value.indexBanner;
+      shows.value = 1;
+      mockGoods.value = false;
+      break;
+    case 'userMenu':
+      menuList.value = menuInfo.value.userMenu;
+      shows.value = 6;
+      mockGoods.value = false;
+      break;
+    case 'indexNews':
+      menuList.value = menuInfo.value.indexNews;
+      shows.value = 2;
+      mockGoods.value = false;
+      break;
+    case 'userBanner':
+      menuList.value = menuInfo.value.userBanner;
+      shows.value = 5;
+      mockGoods.value = false;
+      break;
+    case 'indexTabNav':
+      menuList.value = indextTabMenu.value;
+      shows.value = 4;
+      mockGoods.value = false;
+      break;
+    case 'goodsMock':
+      mockGoods.value = true;
+      typeName.value = '';
+      tip.value = false;
+      shows.value = 7;
+      break;
+  }
+}
+function switchNav(index) {
+  tabActive.value = index;
+}
+// 点击商品图
+function modalPicTap(tit, num, i, boolean) {
+  proxy.$modalUpload(
+    function (img) {
+      if (tit === '1' && num === 'duo') {
+        menuList.value[i].pic = img[0].sattDir;
+      }
+      if (tit === '2') {
+        navigationList.value[i].checked = img[0].sattDir;
+      }
+      if (tit === '3') {
+        navigationList.value[i].unchecked = img[0].sattDir;
       }
     },
-    switchNav(index) {
-      this.tabActive = index;
-    },
-    // 点击商品图
-    modalPicTap(tit, num, i, boolean) {
-      const _this = this;
-      this.$modalUpload(
-        function (img) {
-          if (tit === '1' && num === 'duo') {
-            _this.menuList[i].pic = img[0].sattDir;
-          }
-          if (tit === '2') {
-            _this.navigationList[i].checked = img[0].sattDir;
-          }
-          if (tit === '3') {
-            _this.navigationList[i].unchecked = img[0].sattDir;
-          }
-        },
-        tit,
-        'content',
-        true,
-      );
-    },
-    // 删除
-    bindDelete(item, index) {
-      this.menuList.splice(index, 1);
-    },
-    saveConfig: Debounce(function () {
-      switch (this.typeName) {
-        case 'indexMenu':
-          this.saveData('indexMenu', '/admin/page/layout/index/menu/save');
-          break;
-        case 'indexBanner':
-          this.saveData('indexBanner', '/admin/page/layout/index/banner/save');
-          break;
-        case 'userMenu':
-          this.saveData('userMenu', '/admin/page/layout/user/menu/save');
-          break;
-        case 'indexNews':
-          this.saveData('indexNews', '/admin/page/layout/index/news/save');
-          break;
-        case 'userBanner':
-          this.saveData('userBanner', '/admin/page/layout/user/banner/save');
-          break;
-        case 'indexTabNav':
-          this.saveData('indexTable', '/admin/page/layout/index/table/save');
-        case 'bottomNavigation':
-          this.saveData('bottomNavigation', '/admin/page/layout/bottom/navigation/save');
-          break;
-      }
-    }),
-    saveData(param, url) {
-      let tArr = this.menuList.filter((item, index, arr) => {
-        return item.status === true;
-      });
-      let navigationList = this.navigationList.filter((item, index, arr) => {
-        return item.status === true;
-      });
-      let data = {};
-      if (param === 'bottomNavigation') {
-        data = { bottomNavigationList: this.changeIndex(this.navigationList), isCustom: this.isCustom };
-        if (navigationList.length < 4) return this.$message.warning('设置数据不能小于4条');
-      } else {
-        if (param === 'indexMenu' && tArr.length < 5) return this.$message.warning('设置数据不能小于5条');
-        if (param === 'indexTabNav' && tArr.length < 2) return this.$message.warning('设置数据不能小于2条');
-        if (param === 'indexNews' && tArr.length < 1) return this.$message.warning('设置数据不能小于1条');
-        data = { [param]: this.changeIndex(this.menuList) };
-      }
-      SaveDataApi(data, url).then((res) => {
-        this.$message.success('保存成功');
-        if (param === 'bottomNavigation') {
-          this.getBottomNavigation();
-        } else {
-          this.designList();
-        }
-      });
-    },
-    changeIndex(array) {
-      array.map((item, index) => {
-        item.sort = index;
-      });
-      return array;
-    },
-    // 移动
-    handleDragStart(e, item) {
-      this.dragging = item;
-    },
-    handleDragEnd(e, item) {
-      this.dragging = null;
-    },
-    handleDragOver(e) {
-      e.dataTransfer.dropEffect = 'move';
-    },
-    handleDragEnter(e, item, data, name) {
-      e.dataTransfer.effectAllowed = 'move';
-      if (item === this.dragging) {
-        return;
-      }
-      const newItems = [...data];
-      const src = newItems.indexOf(this.dragging);
-      const dst = newItems.indexOf(item);
-      newItems.splice(dst, 0, ...newItems.splice(src, 1));
-      if (name === 'menuList') {
-        this.menuList = newItems;
-      } else {
-        this.navigationList = newItems;
-        this.navigationListTab = newItems;
-      }
-    },
-    showCurrent(name, index) {
-      this.currentPage = name;
-      this.$set(this, 'typeName', '');
-      this.$set(this, 'tip', true);
-      this.$set(this, 'cate', false);
-    },
-    showTip() {
-      this.$message.warning('暂不支持此操作');
-    },
-    cateNav() {
-      this.currentPage = 'cate';
-      this.$set(this, 'typeName', '');
-      this.$set(this, 'cate', true);
-      this.$set(this, 'mockGoods', false);
-      this.getConfig();
-    },
-    switchTab(index) {
-      this.$refs.carousel.setActiveItem(index - 1);
-    },
-    switchKind(index) {
-      this.HomeStyle = index;
-      switch (index) {
-        case '1':
-          this.$set(this, 'mockGoodsImg', require('@/assets/theme/goodsList1.png'));
-          this.$set(this, 'showTabNav', true);
-          break;
-        case '2':
-          this.$set(this, 'mockGoodsImg', require('@/assets/theme/goodsList2.png'));
-          this.$set(this, 'showTabNav', false);
-          break;
-        case '3':
-          this.$set(this, 'mockGoodsImg', require('@/assets/theme/goodsList3.png'));
-          this.$set(this, 'showTabNav', false);
-          break;
-      }
-    },
-    save: Debounce(function () {
-      let data = {
-        category_page_config: this.active,
-        is_show_category: this.radio,
-      };
-      SaveDataApi(data, '/admin/page/layout/category/config/save').then((res) => {
-        this.$message.success('保存成功');
-      });
-    }),
-    getConfig() {
-      getDataApi().then((res) => {
-        this.$set(this, 'active', res.categoryConfig);
-        this.$set(this, 'radio', res.isShowCategory == 'true' ? true : false);
-        this.switchTab(this.active);
-      });
-    },
-    kindSave: Debounce(function () {
-      let data = {
-        value: this.HomeStyle,
-      };
-      savehomeStyleApi(data).then((res) => {
-        this.$message.success('保存成功');
-      });
-    }),
-    kindGet() {
-      getHomeStyleApi().then((res) => {
-        this.$set(this, 'HomeStyle', res.value);
-        if (this.HomeStyle == '1') {
-          this.$set(this, 'mockGoodsImg', require('@/assets/theme/goodsList1.png')); //showTabNav
-          this.$set(this, 'showTabNav', true);
-        } else if (this.HomeStyle == '2') {
-          this.$set(this, 'mockGoodsImg', require('@/assets/theme/goodsList2.png'));
-          this.$set(this, 'showTabNav', false);
-        } else if (this.HomeStyle == '3') {
-          this.$set(this, 'mockGoodsImg', require('@/assets/theme/goodsList3.png'));
-          this.$set(this, 'showTabNav', false);
-        }
-      });
-    },
-    getLink(index) {
-      this.itemIndex = index;
-      this.$refs.linkaddres.dialogVisible = true;
-    },
-    ProductNavTab(index) {
-      this.listActive = index;
-      if (index == 0) {
-        // this.showCurrent('home');
-      } else if (index == 1) {
-        this.cateNav();
-      } else if (index == 2) {
-        this.showCurrent('user');
-        this.handleMessage('userMenu');
-      } else if (index == 3) {
-        this.showCurrent('bottom');
-        this.handleMessage('bottomNavigation');
-      }
-    },
-    linkUrl(e) {
-      if (this.typeName == 'bottomNavigation') {
-        this.navigationList[this.itemIndex].link = e;
-      } else {
-        this.menuList[this.itemIndex].url = e;
-      }
-    },
-  },
-};
+    tit,
+    'content',
+    true,
+  );
+}
+// 删除
+function bindDelete(item, index) {
+  menuList.value.splice(index, 1);
+}
+const saveConfig = Debounce(function () {
+  switch (typeName.value) {
+    case 'indexMenu':
+      saveData('indexMenu', '/admin/page/layout/index/menu/save');
+      break;
+    case 'indexBanner':
+      saveData('indexBanner', '/admin/page/layout/index/banner/save');
+      break;
+    case 'userMenu':
+      saveData('userMenu', '/admin/page/layout/user/menu/save');
+      break;
+    case 'indexNews':
+      saveData('indexNews', '/admin/page/layout/index/news/save');
+      break;
+    case 'userBanner':
+      saveData('userBanner', '/admin/page/layout/user/banner/save');
+      break;
+    case 'indexTabNav':
+      saveData('indexTable', '/admin/page/layout/index/table/save');
+    case 'bottomNavigation':
+      saveData('bottomNavigation', '/admin/page/layout/bottom/navigation/save');
+      break;
+  }
+});
+function saveData(param, url) {
+  let tArr = menuList.value.filter((item, index, arr) => {
+    return item.status === true;
+  });
+  let navList = navigationList.value.filter((item, index, arr) => {
+    return item.status === true;
+  });
+  let data = {};
+  if (param === 'bottomNavigation') {
+    data = { bottomNavigationList: changeIndex(navigationList.value), isCustom: isCustom.value };
+    if (navList.length < 4) return ElMessage.warning('设置数据不能小于4条');
+  } else {
+    if (param === 'indexMenu' && tArr.length < 5) return ElMessage.warning('设置数据不能小于5条');
+    if (param === 'indexTabNav' && tArr.length < 2) return ElMessage.warning('设置数据不能小于2条');
+    if (param === 'indexNews' && tArr.length < 1) return ElMessage.warning('设置数据不能小于1条');
+    data = { [param]: changeIndex(menuList.value) };
+  }
+  SaveDataApi(data, url).then((res) => {
+    ElMessage.success('保存成功');
+    if (param === 'bottomNavigation') {
+      getBottomNavigation();
+    } else {
+      designList();
+    }
+  });
+}
+function changeIndex(array) {
+  array.map((item, index) => {
+    item.sort = index;
+  });
+  return array;
+}
+// 移动
+function handleDragStart(e, item) {
+  dragging = item;
+}
+function handleDragEnd(e, item) {
+  dragging = null;
+}
+function handleDragOver(e) {
+  e.dataTransfer.dropEffect = 'move';
+}
+function handleDragEnter(e, item, data, name) {
+  e.dataTransfer.effectAllowed = 'move';
+  if (item === dragging) {
+    return;
+  }
+  const newItems = [...data];
+  const src = newItems.indexOf(dragging);
+  const dst = newItems.indexOf(item);
+  newItems.splice(dst, 0, ...newItems.splice(src, 1));
+  if (name === 'menuList') {
+    menuList.value = newItems;
+  } else {
+    navigationList.value = newItems;
+    navigationListTab.value = newItems;
+  }
+}
+function showCurrent(name, index) {
+  currentPage.value = name;
+  typeName.value = '';
+  tip.value = true;
+  cate.value = false;
+}
+function showTip() {
+  ElMessage.warning('暂不支持此操作');
+}
+function cateNav() {
+  currentPage.value = 'cate';
+  typeName.value = '';
+  cate.value = true;
+  mockGoods.value = false;
+  getConfig();
+}
+function switchTab(index) {
+  carousel.value.setActiveItem(index - 1);
+}
+function switchKind(index) {
+  HomeStyle.value = index;
+  switch (index) {
+    case '1':
+      mockGoodsImg.value = goodsList1Img;
+      showTabNav.value = true;
+      break;
+    case '2':
+      mockGoodsImg.value = goodsList2Img;
+      showTabNav.value = false;
+      break;
+    case '3':
+      mockGoodsImg.value = goodsList3Img;
+      showTabNav.value = false;
+      break;
+  }
+}
+const save = Debounce(function () {
+  let data = {
+    category_page_config: active.value,
+    is_show_category: radio.value,
+  };
+  SaveDataApi(data, '/admin/page/layout/category/config/save').then((res) => {
+    ElMessage.success('保存成功');
+  });
+});
+function getConfig() {
+  getDataApi().then((res) => {
+    active.value = res.categoryConfig;
+    radio.value = res.isShowCategory == 'true' ? true : false;
+    switchTab(active.value);
+  });
+}
+const kindSave = Debounce(function () {
+  let data = {
+    value: HomeStyle.value,
+  };
+  savehomeStyleApi(data).then((res) => {
+    ElMessage.success('保存成功');
+  });
+});
+function kindGet() {
+  getHomeStyleApi().then((res) => {
+    HomeStyle.value = res.value;
+    if (HomeStyle.value == '1') {
+      mockGoodsImg.value = goodsList1Img; //showTabNav
+      showTabNav.value = true;
+    } else if (HomeStyle.value == '2') {
+      mockGoodsImg.value = goodsList2Img;
+      showTabNav.value = false;
+    } else if (HomeStyle.value == '3') {
+      mockGoodsImg.value = goodsList3Img;
+      showTabNav.value = false;
+    }
+  });
+}
+function getLink(index) {
+  itemIndex.value = index;
+  linkaddres.value.dialogVisible = true;
+}
+function ProductNavTab(index) {
+  listActive.value = index;
+  if (index == 0) {
+    // this.showCurrent('home');
+  } else if (index == 1) {
+    cateNav();
+  } else if (index == 2) {
+    showCurrent('user');
+    handleMessage('userMenu');
+  } else if (index == 3) {
+    showCurrent('bottom');
+    handleMessage('bottomNavigation');
+  }
+}
+function linkUrl(e) {
+  if (typeName.value == 'bottomNavigation') {
+    navigationList.value[itemIndex.value].link = e;
+  } else {
+    menuList.value[itemIndex.value].url = e;
+  }
+}
+
+onMounted(() => {
+  if (checkPermi(['admin:page:layout:bottom:navigation'])) getBottomNavigation();
+  //监听子页面给当前页面传值
+  window.addEventListener('message', handleMessage, false);
+  designList();
+  typeName.value = '';
+  tip.value = true;
+  nextTick(function () {
+    const clipboard = new ClipboardJS('.copy-data');
+    clipboard.on('success', () => {
+      ElMessage.success('复制成功');
+    });
+  });
+  kindGet();
+});
+
+defineExpose({ saveConfig, save, kindSave });
 </script>
 
 <style scoped lang="scss">
@@ -1606,12 +1621,12 @@ export default {
   }
 }
 
-::v-deep .headerBg {
+:deep(.headerBg) {
   background: #f3f8fe;
   font-weight: 600;
 }
 
-::v-deep .el-table__row {
+:deep(.el-table__row) {
   font-weight: 500;
   color: #333;
 }

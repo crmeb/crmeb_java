@@ -11,8 +11,8 @@
           range-separator="-"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
-          value-format="yyyy/MM/dd"
-          size="mini"
+          value-format="YYYY/MM/DD"
+
           style="width: 100%"
         >
         </el-date-picker>
@@ -21,32 +21,29 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_datetime_picker',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch } from 'vue';
+
+defineOptions({ name: 'c_datetime_picker' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      configData: null,
-    };
+  configNme: {
+    type: String,
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-      immediate: true,
-    },
+});
+
+const configData = ref(null);
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    configData.value = nVal[props.configNme] || {};
   },
-};
+  { deep: true, immediate: true },
+);
 </script>
 
 <style scoped lang="scss">

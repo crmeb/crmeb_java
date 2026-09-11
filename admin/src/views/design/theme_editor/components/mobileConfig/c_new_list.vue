@@ -2,7 +2,7 @@
   <div class="mobile-config">
     <div v-for="(item, key) in rCom" :key="key">
       <component
-        :is="item.components.name"
+        :is="item.components"
         :configObj="configObj"
         ref="childData"
         :configNme="item.configNme"
@@ -16,259 +16,263 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, nextTick, onMounted } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import toolCom from '@/views/design/theme_editor/components/mobileConfigRight/index.js';
 import rightBtn from '@/views/design/theme_editor/components/rightBtn/index.vue';
-import { mapState, mapMutations, mapActions } from 'vuex';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
 import { getArticleList, themeArticleCategory } from '@/api/theme';
-export default {
-  name: 'c_home_bargain',
-  componentsName: 'home_bargain',
-  components: {
-    ...toolCom,
-    rightBtn,
+
+defineOptions({ name: 'c_home_bargain', componentsName: 'home_bargain' });
+
+const mobildConfigStore = useMobildConfigStore();
+
+const props = defineProps({
+  activeIndex: {
+    type: null,
   },
-  props: {
-    activeIndex: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    index: {
-      type: null,
-    },
+  num: {
+    type: null,
   },
-  data() {
-    return {
-      configObj: {},
-      rCom: [
-        {
-          components: toolCom.c_card_select,
-          configNme: 'styleConfig',
-        },
-        {
-          components: toolCom.c_set_up,
-          configNme: 'setUp',
-        },
-      ],
-      oneStyle: [
+  index: {
+    type: null,
+  },
+});
+
+const configObj = ref({});
+const rCom = shallowRef([
+  {
+    components: toolCom.c_card_select,
+    configNme: 'styleConfig',
+  },
+  {
+    components: toolCom.c_set_up,
+    configNme: 'setUp',
+  },
+]);
+const oneStyle = [
+  {
+    components: toolCom.c_title,
+    configNme: 'titleRight',
+  },
+  {
+    components: toolCom.c_fillet,
+    configNme: 'filletImg',
+  },
+  {
+    components: toolCom.c_radio,
+    configNme: 'nameConfig',
+  },
+  {
+    components: toolCom.c_radio,
+    configNme: 'toneConfig',
+  },
+];
+const twoStyle = [
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'likeSuccessColor',
+  },
+];
+const threeStyle = [
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'nameColor',
+  },
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'timeColor',
+  },
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'browseColor',
+  },
+  // {
+  //   components: toolCom.c_bg_color,
+  //   configNme: 'likeColor',
+  // },
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'statisticColor',
+  },
+  {
+    components: toolCom.c_common_style,
+    configNme: 'c_common_style',
+  },
+];
+const setUp = ref(0);
+const type = ref(0);
+
+watch(
+  () => props.num,
+  (nVal) => {
+    let value = JSON.parse(JSON.stringify(mobildConfigStore.defaultArray[nVal]));
+    configObj.value = value;
+    categoryList();
+  },
+);
+
+watch(
+  configObj,
+  (nVal, oVal) => {
+    mobildConfigStore.UPDATEARR({ num: props.num, val: nVal });
+  },
+  { deep: true },
+);
+
+watch(
+  () => configObj.value?.setUp?.tabVal,
+  (nVal, oVal) => {
+    setUp.value = nVal;
+    // 取前两个
+    var arr = [
+      {
+        components: toolCom.c_card_select,
+        configNme: 'styleConfig',
+      },
+      {
+        components: toolCom.c_set_up,
+        configNme: 'setUp',
+      },
+    ];
+    if (nVal == 0) {
+      let tempArr = [
         {
           components: toolCom.c_title,
-          configNme: 'titleRight',
+          configNme: 'titleArticle',
         },
         {
-          components: toolCom.c_fillet,
-          configNme: 'filletImg',
+          components: toolCom.c_select,
+          configNme: 'selectConfig',
         },
         {
-          components: toolCom.c_radio,
-          configNme: 'nameConfig',
+          components: toolCom.c_input_number,
+          configNme: 'numConfig',
         },
         {
-          components: toolCom.c_radio,
-          configNme: 'toneConfig',
+          components: toolCom.c_title,
+          configNme: 'titleList',
         },
+        {
+          components: toolCom.c_checkbox,
+          configNme: 'checkboxList',
+        },
+      ];
+      rCom.value = arr.concat(tempArr);
+    } else {
+      if (type.value) {
+        rCom.value = [...arr, ...oneStyle, ...twoStyle, ...threeStyle];
+      } else {
+        rCom.value = [...arr, ...oneStyle, ...threeStyle];
+      }
+    }
+  },
+  { deep: true },
+);
+
+watch(
+  () => configObj.value?.toneConfig?.tabVal,
+  (nVal, oVal) => {
+    type.value = nVal;
+    var arr = [
+      {
+        components: toolCom.c_card_select,
+        configNme: 'styleConfig',
+      },
+      {
+        components: toolCom.c_set_up,
+        configNme: 'setUp',
+      },
+    ];
+    if (setUp.value) {
+      if (nVal) {
+        rCom.value = [...arr, ...oneStyle, ...twoStyle, ...threeStyle];
+      } else {
+        rCom.value = [...arr, ...oneStyle, ...threeStyle];
+      }
+    }
+  },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    let value = JSON.parse(JSON.stringify(mobildConfigStore.defaultArray[props.num]));
+    configObj.value = patchConfig(value);
+    categoryList();
+  });
+});
+
+function patchConfig(data) {
+  if (!data) return data;
+  if (!data.paddingConfig) {
+    data.paddingConfig = {
+      isAll: false,
+      title: '内边距',
+      val: 0,
+      min: 0,
+      max: 100,
+      valList: [
+        { val: data.topConfig ? data.topConfig.val : 0 },
+        { val: data.prConfig ? data.prConfig.val : 0 },
+        { val: data.bottomConfig ? data.bottomConfig.val : 0 },
+        { val: data.prConfig ? data.prConfig.val : 0 },
       ],
-      twoStyle: [
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'likeSuccessColor',
-        },
-      ],
-      threeStyle: [
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'nameColor',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'timeColor',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'browseColor',
-        },
-        // {
-        //   components: toolCom.c_bg_color,
-        //   configNme: 'likeColor',
-        // },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'statisticColor',
-        },
-        {
-          components: toolCom.c_common_style,
-          configNme: 'c_common_style',
-        },
-      ],
-      setUp: 0,
-      type: 0,
     };
-  },
-  watch: {
-    num(nVal) {
-      let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[nVal]));
-      this.configObj = value;
-      this.categoryList();
-    },
-    configObj: {
-      handler(nVal, oVal) {
-        this.$store.commit('mobildConfig/UPDATEARR', { num: this.num, val: nVal });
-      },
-      deep: true,
-    },
-    'configObj.setUp.tabVal': {
-      handler(nVal, oVal) {
-        this.setUp = nVal;
-        // 取前两个
-        var arr = [
-          {
-            components: toolCom.c_card_select,
-            configNme: 'styleConfig',
-          },
-          {
-            components: toolCom.c_set_up,
-            configNme: 'setUp',
-          },
-        ];
-        if (nVal == 0) {
-          let tempArr = [
-            {
-              components: toolCom.c_title,
-              configNme: 'titleArticle',
-            },
-            {
-              components: toolCom.c_select,
-              configNme: 'selectConfig',
-            },
-            {
-              components: toolCom.c_input_number,
-              configNme: 'numConfig',
-            },
-            {
-              components: toolCom.c_title,
-              configNme: 'titleList',
-            },
-            {
-              components: toolCom.c_checkbox,
-              configNme: 'checkboxList',
-            },
-          ];
-          this.rCom = arr.concat(tempArr);
-        } else {
-          if (this.type) {
-            this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.threeStyle];
-          } else {
-            this.rCom = [...arr, ...this.oneStyle, ...this.threeStyle];
-          }
-        }
-      },
-      deep: true,
-    },
-    'configObj.toneConfig.tabVal': {
-      handler(nVal, oVal) {
-        this.type = nVal;
-        var arr = [
-          {
-            components: toolCom.c_card_select,
-            configNme: 'styleConfig',
-          },
-          {
-            components: toolCom.c_set_up,
-            configNme: 'setUp',
-          },
-        ];
-        if (this.setUp) {
-          if (nVal) {
-            this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.threeStyle];
-          } else {
-            this.rCom = [...arr, ...this.oneStyle, ...this.threeStyle];
-          }
-        }
-      },
-    },
-  },
-  mounted() {
-    this.$nextTick(() => {
-      let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[this.num]));
-      this.configObj = this.patchConfig(value);
-      this.categoryList();
+  }
+  if (!data.marginConfig) {
+    data.marginConfig = {
+      isAll: false,
+      title: '外边距',
+      val: 0,
+      min: 0,
+      max: 100,
+      valList: [{ val: data.mbConfig ? data.mbConfig.val : 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+    };
+  }
+  return data;
+}
+
+function categoryList() {
+  themeArticleCategory()
+    .then((res) => {
+      let data = [];
+      res.data.map((item) => {
+        data.push({ title: item.title, activeValue: item.id.toString() });
+      });
+      configObj.value.selectConfig.list = data;
+      // mobildConfigStore.UPDATEARR({ num: props.num, val: pageData })
+    })
+    .catch((err) => {
+      ElMessage.error(err.msg);
     });
-  },
-  methods: {
-    patchConfig(data) {
-      if (!data) return data;
-      if (!data.paddingConfig) {
-        this.$set(data, 'paddingConfig', {
-          isAll: false,
-          title: '内边距',
-          val: 0,
-          min: 0,
-          max: 100,
-          valList: [
-            { val: data.topConfig ? data.topConfig.val : 0 },
-            { val: data.prConfig ? data.prConfig.val : 0 },
-            { val: data.bottomConfig ? data.bottomConfig.val : 0 },
-            { val: data.prConfig ? data.prConfig.val : 0 },
-          ],
-        });
-      }
-      if (!data.marginConfig) {
-        this.$set(data, 'marginConfig', {
-          isAll: false,
-          title: '外边距',
-          val: 0,
-          min: 0,
-          max: 100,
-          valList: [{ val: data.mbConfig ? data.mbConfig.val : 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        });
-      }
-      return data;
-    },
-    categoryList() {
-      themeArticleCategory()
-        .then((res) => {
-          let data = [];
-          res.data.map((item) => {
-            data.push({ title: item.title, activeValue: item.id.toString() });
-          });
-          this.configObj.selectConfig.list = data;
-          // this.$store.commit('mobildConfig/UPDATEARR', { num: this.num, val: this.pageData })
-        })
-        .catch((err) => {
-          this.$message.error(err.msg);
-        });
-    },
-    // 获取组件参数
-    getConfig(data) {
-      if (data.name == 'radio') {
-        return;
-      }
-      let val = {
-        cid: this.configObj.selectConfig.activeValue,
-        page: 1,
-        limit: parseInt(this.configObj.numConfig.val),
-      };
-      getArticleList(val)
-        .then((res) => {
-          this.configObj.selectList.list = res.list || (res.data && res.data.list) || [];
-        })
-        .catch((err) => {
-          this.$message.error((err && (err.msg || err.message)) || '文章列表获取失败');
-        });
-    },
-    handleSubmit(name) {
-      let obj = {};
-      obj.activeIndex = this.activeIndex;
-      obj.data = this.configObj;
-      this.add(obj);
-    },
-    ...mapMutations({
-      add: 'mobildConfig/UPDATEARR',
-    }),
-  },
-};
+}
+
+// 获取组件参数
+function getConfig(data) {
+  if (data.name == 'radio') {
+    return;
+  }
+  let val = {
+    cid: configObj.value.selectConfig.activeValue,
+    page: 1,
+    limit: parseInt(configObj.value.numConfig.val),
+  };
+  getArticleList(val)
+    .then((res) => {
+      configObj.value.selectList.list = res.list || (res.data && res.data.list) || [];
+    })
+    .catch((err) => {
+      ElMessage.error((err && (err.msg || err.message)) || '文章列表获取失败');
+    });
+}
+
+function handleSubmit(name) {
+  let obj = {};
+  obj.activeIndex = props.activeIndex;
+  obj.data = configObj.value;
+  mobildConfigStore.UPDATEARR(obj);
+}
 </script>
 
 <style scoped lang="scss">

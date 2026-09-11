@@ -3,11 +3,11 @@
     <div class="title-bar">{{ configData.title }}</div>
     <div class="box-content">
       <!-- Color Tone -->
-      <div class="box-item">
+      <div class="box-item" v-if="configData.colorTone">
         <span class="label">{{ configData.colorTone.title }}</span>
         <div class="input-box">
           <el-radio-group v-model="configData.colorTone.tabVal">
-            <el-radio :label="item.val" v-for="(item, index) in configData.colorTone.tabList" :key="index">
+            <el-radio :label="item.val" :value="item.val" v-for="(item, index) in configData.colorTone.tabList" :key="index">
               {{ item.name }}
             </el-radio>
           </el-radio-group>
@@ -15,7 +15,7 @@
       </div>
 
       <!-- Custom Colors -->
-      <div v-if="configData.colorTone.tabVal === 1">
+      <div v-if="configData.colorTone && configData.colorTone.tabVal === 1">
         <c_bg_color :configObj="configData" configNme="textColor" />
         <c_bg_color :configObj="configData" configNme="selectedBorderColor" />
         <div v-if="showAdvancedSpecColors">
@@ -28,46 +28,36 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch } from 'vue';
 import toolCom from '@/views/design/theme_editor/components/mobileConfigRight/index.js';
 import c_bg_color from './c_bg_color';
 
-export default {
-  name: 'c_spec_settings',
-  components: {
-    ...toolCom,
-    c_bg_color,
+defineOptions({ name: 'c_spec_settings' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+  configNme: {
+    type: String,
   },
-  data() {
-    return {
-      configData: null,
-    };
+});
+
+const configData = ref(null);
+
+const showAdvancedSpecColors = computed(() => {
+  const styleVal = props.configObj && props.configObj.specStyle ? props.configObj.specStyle.tabVal : 0;
+  return styleVal === 1 || styleVal === 2 || styleVal === 3;
+});
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    configData.value = nVal[props.configNme] || {};
   },
-  computed: {
-    showAdvancedSpecColors() {
-      const styleVal = this.configObj && this.configObj.specStyle ? this.configObj.specStyle.tabVal : 0;
-      return styleVal === 1 || styleVal === 2 || styleVal === 3;
-    },
-  },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
-  methods: {},
-};
+  { deep: true, immediate: true },
+);
 </script>
 
 <style scoped lang="scss">
@@ -93,7 +83,7 @@ export default {
       }
       .input-box {
         flex: 1;
-        ::v-deep .el-radio {
+        :deep(.el-radio) {
           margin-bottom: 0px;
           margin-right: 15px;
         }

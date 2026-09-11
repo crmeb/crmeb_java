@@ -17,7 +17,7 @@
                 borderRadius: imgRadius,
               }"
             >
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
             <div class="label bgblue" v-if="item.type == 1">
               <span class="txt">预告</span>
@@ -29,7 +29,7 @@
           <div class="info">
             <div class="title" v-if="checkboxInfo.indexOf(0) != -1">这里是直播标题这里是直播标题这里是直播标题...</div>
             <div class="people" v-if="checkboxInfo.indexOf(1) != -1">
-              <img src="@/assets/images/ren.png" alt="" />
+              <img :src="renImg" alt="" />
               <span>主播：王小丫</span>
             </div>
           </div>
@@ -51,7 +51,7 @@
                 borderRadius: imgRadius,
               }"
             >
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
             <div
               class="label bgblue"
@@ -91,7 +91,7 @@
           <div class="info">
             <div class="title line1" v-if="checkboxInfo.indexOf(0) != -1">直播标题直播标题直播标 题直播标题</div>
             <div class="people" v-if="checkboxInfo.indexOf(1) != -1">
-              <img src="@/assets/images/ren.png" alt="" />
+              <img :src="renImg" alt="" />
               <span>主播：王小丫</span>
             </div>
           </div>
@@ -113,7 +113,7 @@
                 borderRadius: imgRadius,
               }"
             >
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
             <div class="label bgblue" v-if="item.type == 1">
               <span class="txt">预告</span>
@@ -129,7 +129,7 @@
             <div class="goods-wrapper">
               <template v-if="item.goods.length > 0">
                 <div class="goods-item" v-for="(goods, index) in item.goods" :key="index">
-                  <img src="../../assets/images/shan.png" alt="" />
+                  <img :src="shanImg" alt="" />
                   <span v-if="index < 2">￥{{ goods.price }}</span>
                   <span class="num" v-else>+5</span>
                 </div>
@@ -148,7 +148,7 @@
               }"
             >
               <div class="empty-box">
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
               <div class="label bgred" v-if="item.type == 2"><span class="iconfont iconzhibozhong"></span>直播中</div>
               <div
@@ -162,7 +162,7 @@
                   这里是直播标题这里是直播标题这里是直播标题...
                 </div>
                 <div class="people" v-if="checkboxInfo.indexOf(1) != -1">
-                  <img src="@/assets/images/ren.png" alt="" />
+                  <img :src="renImg" alt="" />
                   <span>主播：王小丫</span>
                 </div>
               </div>
@@ -181,7 +181,7 @@
               <div v-if="checkboxInfo.indexOf(0) != -1">这里是直播标题这里...</div>
             </div>
             <div class="people acea-row row-middle" v-if="checkboxInfo.indexOf(1) != -1">
-              <img src="@/assets/images/ren.png" alt="" />
+              <img :src="renImg" alt="" />
               <div class="acea-row row-middle">
                 <span>主播：王小丫</span>
                 <div class="line"></div>
@@ -195,56 +195,38 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState, mapMutations } from 'vuex';
-export default {
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import renImg from '@/views/design/theme_editor/assets/images/ren.png';
+import shanImg from '@/views/design/theme_editor/assets/images/shan.png';
+
+defineOptions({
   name: 'wechat_live',
   cname: '小程序直播',
-  configName: 'c_wechat_live',
-  type: 1, // 0 基础组件 1 营销组件 2工具组件
-  defaultName: 'liveBroadcast', // 外面匹配名称
   icon: '#iconzujian-xiaochengxuzhibo',
-  props: {
-    index: {
-      type: null,
-      default: -1,
-    },
-    num: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+  configName: 'c_wechat_live',
+  type: 1,
+  defaultName: 'liveBroadcast',
+});
+
+const props = defineProps({
+  index: {
+        type: null,
+        default: -1,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
-      },
-      deep: true,
-    },
-  },
-  data() {
-    return {
-      // 默认初始化数据禁止修改
-      defaultConfig: {
+});
+
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '小程序直播',
         name: 'liveBroadcast',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -436,8 +418,9 @@ export default {
             min: -50,
           },
         },
-      },
-      live: [
+      };
+
+const live = ref([
         {
           title: '直播中',
           name: 'playBg',
@@ -451,121 +434,104 @@ export default {
             },
           ],
         },
-        {
-          title: '预告',
-          name: 'notBg',
-          type: 1,
-          color: '',
-          icon: 'iconweikaishi',
-          goods: [
-            {
-              img: '',
-              price: '199',
-            },
-            {
-              img: '',
-              price: '199',
-            },
-            {
-              img: '',
-              price: '199',
-            },
-          ],
-        },
-        {
-          title: '回放',
-          name: 'endBg',
-          type: 0,
-          color: '',
-          icon: 'iconyijieshu',
-          goods: [
-            {
-              img: '',
-              price: '199',
-            },
-            {
-              img: '',
-              price: '199',
-            },
-          ],
-        },
-      ],
-      confObj: {},
-      pageData: {},
-      styleConfig: 0,
-      checkboxInfo: [],
-      liveConfig: 0,
-      imgRadius: 0,
-      bgColor: '',
-      bottomBgColor: '',
-      paddingConfig: {
+      ]);
+const configObj = ref({});
+const pageData = ref({});
+const styleConfig = ref(0);
+const checkboxInfo = ref([]);
+const liveConfig = ref(0);
+const imgRadius = ref(0);
+const bgColor = ref('');
+const bottomBgColor = ref('');
+const paddingConfig = ref({
         valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-      },
-      marginConfig: {
+      });
+const marginConfig = ref({
         valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-      },
-      mTop: 0,
-      topConfig: 0,
-      bottomConfig: 0,
-      prConfig: 0,
-      bgRadius: '',
-      imgRadius2: 0,
-      imgRadius3: 0,
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      let dataClone = JSON.parse(JSON.stringify(data));
-      for (let key in this.defaultConfig) {
-        if (dataClone[key] == undefined) {
-          this.$set(dataClone, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+      });
+const mTop = ref(0);
+const topConfig = ref(0);
+const bottomConfig = ref(0);
+const prConfig = ref(0);
+const bgRadius = ref('');
+const imgRadius2 = ref(0);
+const imgRadius3 = ref(0);
+
+function setConfig(data) {
+  if (!data) return;
+        let dataClone = JSON.parse(JSON.stringify(data));
+        for (let key in defaultConfig) {
+          if (dataClone[key] == undefined) {
+            dataClone[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
+          }
         }
-      }
 
-      if (!data.componentBgConfig && data.moduleColor) {
-        dataClone.componentBgConfig.colorConfig.color[0].item = data.moduleColor.color[0].item;
-        dataClone.componentBgConfig.colorConfig.color[1].item = data.moduleColor.color[1].item;
-      }
-
-      if (!data.paddingConfig) {
-        if (dataClone.topConfig) dataClone.paddingConfig.valList[0].val = dataClone.topConfig.val;
-        if (dataClone.bottomConfig) dataClone.paddingConfig.valList[2].val = dataClone.bottomConfig.val;
-        if (dataClone.prConfig) {
-          dataClone.paddingConfig.valList[1].val = dataClone.prConfig.val;
-          dataClone.paddingConfig.valList[3].val = dataClone.prConfig.val;
+        if (!data.componentBgConfig && data.moduleColor) {
+          dataClone.componentBgConfig.colorConfig.color[0].item = data.moduleColor.color[0].item;
+          dataClone.componentBgConfig.colorConfig.color[1].item = data.moduleColor.color[1].item;
         }
-      }
-      if (!data.marginConfig) {
-        if (dataClone.mbConfig) dataClone.marginConfig.valList[0].val = dataClone.mbConfig.val;
-      }
 
-      this.configObj = dataClone;
+        if (!data.paddingConfig) {
+          if (dataClone.topConfig) dataClone.paddingConfig.valList[0].val = dataClone.topConfig.val;
+          if (dataClone.bottomConfig) dataClone.paddingConfig.valList[2].val = dataClone.bottomConfig.val;
+          if (dataClone.prConfig) {
+            dataClone.paddingConfig.valList[1].val = dataClone.prConfig.val;
+            dataClone.paddingConfig.valList[3].val = dataClone.prConfig.val;
+          }
+        }
+        if (!data.marginConfig) {
+          if (dataClone.mbConfig) dataClone.marginConfig.valList[0].val = dataClone.mbConfig.val;
+        }
 
-      this.styleConfig = dataClone.styleConfig.tabVal;
-      this.checkboxInfo = dataClone.checkboxInfo.type;
-      this.liveConfig = dataClone.liveConfig.val;
-      let filletImg = dataClone.filletImg.type;
-      let filletValImg = dataClone.filletImg.val;
-      let valListImg = dataClone.filletImg.valList;
-      this.imgRadius = filletImg
-        ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
-        : filletValImg + 'px';
-      this.imgRadius2 = filletImg ? valListImg[0].val + 'px 0 10px 0' : filletValImg + 'px 0 10px 0';
-      this.imgRadius3 = filletImg
-        ? '0 0 ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
-        : '0 0 ' + filletValImg + 'px ' + filletValImg + 'px';
-    },
+        configObj.value = dataClone;
+
+        styleConfig.value = dataClone.styleConfig.tabVal;
+        checkboxInfo.value = dataClone.checkboxInfo.type;
+        liveConfig.value = dataClone.liveConfig.val;
+        let filletImg = dataClone.filletImg.type;
+        let filletValImg = dataClone.filletImg.val;
+        let valListImg = dataClone.filletImg.valList;
+        imgRadius.value = filletImg
+          ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
+          : filletValImg + 'px';
+        imgRadius2.value = filletImg ? valListImg[0].val + 'px 0 10px 0' : filletValImg + 'px 0 10px 0';
+        imgRadius3.value = filletImg
+          ? '0 0 ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
+          : '0 0 ' + filletValImg + 'px ' + filletValImg + 'px';
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
   },
-};
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+      });
+});
+
 </script>
-
 <style scoped lang="scss">
 .live-broadcast {
   width: 100%;

@@ -20,7 +20,9 @@
       ></el-input>
       <div class="link-box" v-if="configData.link !== undefined">
         <el-input v-model="configData.link" placeholder="请选择链接">
-          <i slot="suffix" class="el-icon-link" @click="getLink"></i>
+          <template #suffix>
+            <i class="el-icon-link" @click="getLink"></i>
+          </template>
         </el-input>
       </div>
     </div>
@@ -28,54 +30,51 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch } from 'vue';
 import linkaddress from '@/components/linkaddress';
 
-export default {
-  name: 'c_text_config',
-  components: {
-    linkaddress,
+defineOptions({ name: 'c_text_config' });
+
+const props = defineProps({
+  configNme: {
+    type: String,
   },
-  props: {
-    configNme: {
-      type: String,
-    },
-    configObj: {
-      type: Object,
-      default: () => {},
-    },
+  configObj: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {
-      configData: {
-        title: '',
-        enable: false,
-        text: '',
-      },
-    };
+});
+
+const emit = defineEmits(['getConfig']);
+
+const configData = ref({
+  title: '',
+  enable: false,
+  text: '',
+});
+const linkaddres = ref(null);
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    configData.value = nVal[props.configNme] || { title: '', enable: false, text: '' };
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.configData = nVal[this.configNme] || { title: '', enable: false, text: '' };
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
-  methods: {
-    handleChange() {
-      this.$emit('getConfig', this.configData);
-    },
-    getLink() {
-      this.$refs.linkaddres.modals = true;
-    },
-    linkUrl(e) {
-      this.configData.link = e;
-      this.handleChange();
-    },
-  },
-};
+  { deep: true, immediate: true },
+);
+
+function handleChange() {
+  emit('getConfig', configData.value);
+}
+
+function getLink() {
+  linkaddres.value.modals = true;
+}
+
+function linkUrl(e) {
+  configData.value.link = e;
+  handleChange();
+}
 </script>
 
 <style lang="scss" scoped>

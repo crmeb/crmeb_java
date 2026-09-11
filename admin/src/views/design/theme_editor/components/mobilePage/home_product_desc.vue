@@ -17,248 +17,252 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState } from 'vuex';
-export default {
+<script setup>
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import { mergeConfigDefaults } from '@/views/design/theme_editor/utils/mergeConfigDefaults';
+
+defineOptions({
   name: 'home_product_desc',
   cname: '产品介绍',
   configName: 'c_product_desc',
   icon: '#iconzujian-wenzhangliebiao',
   type: 3,
   defaultName: 'productDesc',
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-    titleShow() {
-      return (this.configObj && this.configObj.isShow && this.configObj.isShow.tabVal) == 0;
-    },
-    titleColor() {
-      return (this.configObj && this.configObj.textColor && this.configObj.textColor.color && this.configObj.textColor.color[0] && this.configObj.textColor.color[0].item) || '#333';
-    },
-    titleSize() {
-      return (this.configObj && this.configObj.fontSize && this.configObj.fontSize.val) || 16;
-    },
-    titleAlign() {
-      return (this.configObj && this.configObj.textPosition && this.configObj.textPosition.val) || 'left';
-    },
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
-      },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
-      },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
-      },
-      deep: true,
-    },
-  },
-  data() {
-    return {
-      configObj: null,
-      defaultConfig: {
-        cname: '产品介绍',
-        name: 'productDesc',
-        timestamp: this.num,
-        contentTitle: '内容设置',
-        titleStyle: '标题样式',
-        setUp: {
-          tabVal: 0,
-        },
-        isShow: {
-          title: '显示标题',
-          tabVal: 0,
-          tabList: [{ name: '显示' }, { name: '隐藏' }],
-        },
+});
 
-        textPosition: {
-          title: '对齐方式',
-          val: 'center',
-        },
-        textColor: {
-          title: '文字颜色',
-          default: [{ item: '#333' }],
-          color: [{ item: '#333' }],
-        },
-        fontSize: {
-          title: '字体大小',
-          val: 16,
-          min: 12,
-          max: 40,
-        },
-        titleCurrency: '通用样式',
-        moduleColor: {
-          title: '背景颜色',
-          name: 'moduleColor',
-          default: [{ item: '#fff' }],
-          color: [{ item: '#fff' }],
-        },
-        bottomBgColor: {
-          title: '底部背景',
-          name: 'bottomBgColor',
-          default: [{ item: '#fff' }],
-          color: [{ item: '#fff' }],
-        },
-        marginConfig: {
-          title: '外边距',
-          val: 0,
-          min: 0,
-          max: 100,
-          isAll: false,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        },
-        paddingConfig: {
-          title: '内边距',
-          val: 10,
-          min: 0,
-          max: 100,
-          isAll: false,
-          valList: [{ val: 10 }, { val: 10 }, { val: 10 }, { val: 10 }],
-        },
-        componentBgConfig: {
-          title: '组件背景',
-          tabVal: 0,
-          colorConfig: {
-            title: '颜色设置',
-            default: [{ item: '#fff' }],
-            color: [{ item: '#fff' }],
-          },
-          imageConfig: {
-            title: '图片设置',
-            url: '',
-          },
-        },
-        borderConfig: {
-          title: '边框设置',
-          tabVal: 0,
-          tabList: [{ name: '隐藏' }, { name: '显示' }],
-          val: 0, // 0: Hide, 1: Show
-          styleConfig: {
-            title: '边框样式',
-            tabVal: 0,
-            tabList: [
-              { name: '实线', style: 'solid' },
-              { name: '虚线', style: 'dashed' },
-              { name: '点状', style: 'dotted' },
-            ],
-          },
-          widthConfig: {
-            title: '边框粗细',
-            val: 1,
-            min: 1,
-          },
-          colorConfig: {
-            title: '边框颜色',
-            default: [{ item: '#e5e5e5' }],
-            color: [{ item: '#e5e5e5' }],
-          },
-        },
-        shadowConfig: {
-          title: '阴影设置',
-          tabVal: 0,
-          tabList: [
-            {
-              name: '隐藏',
-            },
-            {
-              name: '显示',
-            },
-          ],
-          val: 0,
-          colorConfig: {
-            title: '阴影颜色',
-            default: [
-              {
-                item: 'rgba(0,0,0,0.1)',
-              },
-            ],
-            color: [
-              {
-                item: 'rgba(0,0,0,0.1)',
-              },
-            ],
-          },
-          xConfig: {
-            title: 'X轴偏移',
-            val: 0,
-            min: -50,
-          },
-          yConfig: {
-            title: 'Y轴偏移',
-            val: 0,
-            min: -50,
-          },
-          blurConfig: {
-            title: '模糊半径',
-            val: 10,
-            min: 0,
-          },
-          spreadConfig: {
-            title: '扩展半径',
-            val: 0,
-            min: -50,
-          },
-        },
-        fillet: {
-          title: '背景圆角',
-          type: 0,
-          list: [
-            {
-              val: '全部',
-              icon: 'iconcaozuo-zhengti',
-            },
-            {
-              val: '单个',
-              icon: 'iconcaozuo-bianjiao',
-            },
-          ],
-          valName: '圆角值',
-          val: 0,
-          min: 0,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        },
-        borderRadius: '0',
-        zIndexConfig: {
-          title: '层级',
-          val: 0,
-          min: 0,
-        },
-      },
-    };
+const props = defineProps({
+  index: {
+    type: null,
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
+  num: {
+    type: null,
   },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      if (data) {
-        this.configObj = data;
-      }
+});
+
+const mobildConfigStore = useMobildConfigStore();
+
+const configObj = ref(null);
+const pageData = ref({});
+
+const defaultConfig = {
+  cname: '产品介绍',
+  name: 'productDesc',
+  timestamp: props.num,
+  contentTitle: '内容设置',
+  titleStyle: '标题样式',
+  setUp: {
+    tabVal: 0,
+  },
+  isShow: {
+    title: '显示标题',
+    tabVal: 0,
+    tabList: [{ name: '显示' }, { name: '隐藏' }],
+  },
+
+  textPosition: {
+    title: '对齐方式',
+    val: 'center',
+  },
+  textColor: {
+    title: '文字颜色',
+    default: [{ item: '#333' }],
+    color: [{ item: '#333' }],
+  },
+  fontSize: {
+    title: '字体大小',
+    val: 16,
+    min: 12,
+    max: 40,
+  },
+  titleCurrency: '通用样式',
+  moduleColor: {
+    title: '背景颜色',
+    name: 'moduleColor',
+    default: [{ item: '#fff' }],
+    color: [{ item: '#fff' }],
+  },
+  bottomBgColor: {
+    title: '底部背景',
+    name: 'bottomBgColor',
+    default: [{ item: '#fff' }],
+    color: [{ item: '#fff' }],
+  },
+  marginConfig: {
+    title: '外边距',
+    val: 0,
+    min: 0,
+    max: 100,
+    isAll: false,
+    valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+  },
+  paddingConfig: {
+    title: '内边距',
+    val: 10,
+    min: 0,
+    max: 100,
+    isAll: false,
+    valList: [{ val: 10 }, { val: 10 }, { val: 10 }, { val: 10 }],
+  },
+  componentBgConfig: {
+    title: '组件背景',
+    tabVal: 0,
+    colorConfig: {
+      title: '颜色设置',
+      default: [{ item: '#fff' }],
+      color: [{ item: '#fff' }],
     },
+    imageConfig: {
+      title: '图片设置',
+      url: '',
+    },
+  },
+  borderConfig: {
+    title: '边框设置',
+    tabVal: 0,
+    tabList: [{ name: '隐藏' }, { name: '显示' }],
+    val: 0, // 0: Hide, 1: Show
+    styleConfig: {
+      title: '边框样式',
+      tabVal: 0,
+      tabList: [
+        { name: '实线', style: 'solid' },
+        { name: '虚线', style: 'dashed' },
+        { name: '点状', style: 'dotted' },
+      ],
+    },
+    widthConfig: {
+      title: '边框粗细',
+      val: 1,
+      min: 1,
+    },
+    colorConfig: {
+      title: '边框颜色',
+      default: [{ item: '#e5e5e5' }],
+      color: [{ item: '#e5e5e5' }],
+    },
+  },
+  shadowConfig: {
+    title: '阴影设置',
+    tabVal: 0,
+    tabList: [
+      {
+        name: '隐藏',
+      },
+      {
+        name: '显示',
+      },
+    ],
+    val: 0,
+    colorConfig: {
+      title: '阴影颜色',
+      default: [
+        {
+          item: 'rgba(0,0,0,0.1)',
+        },
+      ],
+      color: [
+        {
+          item: 'rgba(0,0,0,0.1)',
+        },
+      ],
+    },
+    xConfig: {
+      title: 'X轴偏移',
+      val: 0,
+      min: -50,
+    },
+    yConfig: {
+      title: 'Y轴偏移',
+      val: 0,
+      min: -50,
+    },
+    blurConfig: {
+      title: '模糊半径',
+      val: 10,
+      min: 0,
+    },
+    spreadConfig: {
+      title: '扩展半径',
+      val: 0,
+      min: -50,
+    },
+  },
+  fillet: {
+    title: '背景圆角',
+    type: 0,
+    list: [
+      {
+        val: '全部',
+        icon: 'iconcaozuo-zhengti',
+      },
+      {
+        val: '单个',
+        icon: 'iconcaozuo-bianjiao',
+      },
+    ],
+    valName: '圆角值',
+    val: 0,
+    min: 0,
+    valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+  },
+  borderRadius: '0',
+  zIndexConfig: {
+    title: '层级',
+    val: 0,
+    min: 0,
   },
 };
+
+const titleShow = computed(() => {
+  return (configObj.value && configObj.value.isShow && configObj.value.isShow.tabVal) == 0;
+});
+const titleColor = computed(() => {
+  return (configObj.value && configObj.value.textColor && configObj.value.textColor.color && configObj.value.textColor.color[0] && configObj.value.textColor.color[0].item) || '#333';
+});
+const titleSize = computed(() => {
+  return (configObj.value && configObj.value.fontSize && configObj.value.fontSize.val) || 16;
+});
+const titleAlign = computed(() => {
+  return (configObj.value && configObj.value.textPosition && configObj.value.textPosition.val) || 'left';
+});
+
+function setConfig(data) {
+  if (!data) return;
+  let dataClone = mergeConfigDefaults(data, defaultConfig);
+  configObj.value = dataClone;
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
+  },
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+    setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+    setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    pageData.value = mobildConfigStore.defaultArray[props.num];
+    setConfig(pageData.value);
+  });
+});
 </script>
 
 <style scoped>

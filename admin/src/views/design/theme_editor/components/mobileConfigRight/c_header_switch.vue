@@ -13,41 +13,39 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_header_switch',
-  props: {
-    configNme: {
-      type: String,
-    },
-    configObj: {
-      type: Object,
-      default: () => {},
-    },
+<script setup>
+import { ref, watch } from 'vue';
+
+defineOptions({ name: 'c_header_switch' });
+
+const props = defineProps({
+  configNme: {
+    type: String,
   },
-  data() {
-    return {
-      configData: {
-        title: '',
-        enable: false,
-      },
-    };
+  configObj: {
+    type: Object,
+    default: () => ({}),
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.configData = nVal[this.configNme] || { title: '', enable: false };
-      },
-      deep: true,
-      immediate: true,
-    },
+});
+
+const emit = defineEmits(['getConfig']);
+
+const configData = ref({
+  title: '',
+  enable: false,
+});
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    configData.value = nVal[props.configNme] || { title: '', enable: false };
   },
-  methods: {
-    handleChange() {
-      this.$emit('getConfig', this.configData);
-    },
-  },
-};
+  { deep: true, immediate: true },
+);
+
+function handleChange() {
+  emit('getConfig', configData.value);
+}
 </script>
 
 <style lang="scss" scoped>

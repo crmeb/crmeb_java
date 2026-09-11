@@ -26,81 +26,85 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'Sidebar',
-  props: {
-    activeMenu: {
-      type: String,
-      default: 'home',
-    },
-    collapsed: {
-      type: Boolean,
-      default: false,
-    },
-    unsaved: {
-      type: Boolean,
-      default: false,
-    },
+<script setup>
+import { nextTick } from 'vue';
+import { ElMessageBox } from 'element-plus';
+import { useRoute, useRouter } from 'vue-router';
+
+defineOptions({ name: 'Sidebar' });
+
+const props = defineProps({
+  activeMenu: {
+    type: String,
+    default: 'home',
   },
-  data() {
-    return {
-      menuList: [
-        { key: 'home', name: '商城首页', icon: 'iconic_home' },
-        { key: 'category', name: '商品分类', icon: 'icona-ic_Picturearrangement' },
-        { key: 'detail', name: '商品详情', icon: 'iconic_commodity' },
-        { key: 'user', name: '个人中心', icon: 'icona-ic_user1' },
-        { key: 'theme', name: '商城风格', icon: 'iconic_zhuti' },
-      ],
-    };
+  collapsed: {
+    type: Boolean,
+    default: false,
   },
-  methods: {
-    selectMenu(key) {
-      if (this.activeMenu === key) return;
-      let type = this.$route.query.type;
-      if (this.unsaved) {
-        this.$confirm('确定离开此页面？系统可能不会保存您所做的更改。', '提示', {
-          confirmButtonText: '保存',
-          cancelButtonText: '不保存',
-          type: 'warning',
-          distinguishCancelAndClose: true,
-          showClose: false,
-        })
-          .then(() => {
-            this.$emit('save', type);
-            this.$emit('change', key);
-          })
-          .catch((action) => {
-            this.$emit('change', key);
-          });
-      } else {
-        this.$emit('change', key);
-      }
-    },
-    toggle() {
-      this.$emit('toggle');
-    },
-    goBack() {
-      let type = this.$route.query.type;
-      this.$confirm('确定离开此页面？系统可能不会保存您所做的更改。', '提示', {
-        confirmButtonText: '保存',
-        cancelButtonText: '退出',
-        type: 'warning',
-        distinguishCancelAndClose: true,
-        showClose: false,
+  unsaved: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const emit = defineEmits(['change', 'save', 'toggle']);
+
+const route = useRoute();
+const router = useRouter();
+
+const menuList = [
+  { key: 'home', name: '商城首页', icon: 'iconic_home' },
+  { key: 'category', name: '商品分类', icon: 'icona-ic_Picturearrangement' },
+  { key: 'detail', name: '商品详情', icon: 'iconic_commodity' },
+  { key: 'user', name: '个人中心', icon: 'icona-ic_user1' },
+  { key: 'theme', name: '商城风格', icon: 'iconic_zhuti' },
+];
+
+function selectMenu(key) {
+  if (props.activeMenu === key) return;
+  let type = route.query.type;
+  if (props.unsaved) {
+    ElMessageBox.confirm('确定离开此页面？系统可能不会保存您所做的更改。', '提示', {
+      confirmButtonText: '保存',
+      cancelButtonText: '不保存',
+      type: 'warning',
+      distinguishCancelAndClose: true,
+      showClose: false,
+    })
+      .then(() => {
+        emit('save', type);
+        emit('change', key);
       })
-        .then(() => {
-          this.$emit('save', type);
-          this.$nextTick(() => {
-            this.$router.back();
-          });
-        })
-        .catch(() => {
-          this.$router.back();
-        });
-    },
-  },
-};
+      .catch((action) => {
+        emit('change', key);
+      });
+  } else {
+    emit('change', key);
+  }
+}
+function toggle() {
+  emit('toggle');
+}
+function goBack() {
+  let type = route.query.type;
+  ElMessageBox.confirm('确定离开此页面？系统可能不会保存您所做的更改。', '提示', {
+    confirmButtonText: '保存',
+    cancelButtonText: '退出',
+    type: 'warning',
+    distinguishCancelAndClose: true,
+    showClose: false,
+  })
+    .then(() => {
+      emit('save', type);
+      nextTick(() => {
+        router.back();
+      });
+    })
+    .catch(() => {
+      router.back();
+    });
+}
 </script>
 
 <style lang="scss" scoped>

@@ -50,7 +50,7 @@
             borderRadius: imgRadius,
           }"
         >
-          <img class="shan" src="../../assets/images/shan.png" />
+          <img class="shan" :src="shanImg" />
         </div>
       </div>
       <div class="banner ons" :class="classConfig == 0 ? '' : 'on'" v-else>
@@ -84,7 +84,7 @@
                 borderRadius: imgRadius,
               }"
             />
-            <img class="shan" src="../../assets/images/shan.png" v-else />
+            <img class="shan" :src="shanImg" v-else />
           </div>
           <div
             class="empty-box style3"
@@ -150,68 +150,41 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState } from 'vuex';
-// import theme from "@/views/design/theme_editor/mixins/theme";
-export default {
-  name: 'home_comb', // 组件名称
-  cname: '轮播搜索', // 标题名称
+<script setup>
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import shanImg from '@/views/design/theme_editor/assets/images/shan.png';
+
+defineOptions({
+  name: 'home_comb',
+  cname: '轮播搜索',
   icon: '#iconzujian-zuhezujian',
-  defaultName: 'homeComb', // 外面匹配名称
-  configName: 'c_home_comb', // 右侧配置名称
-  type: 0, // 0 基础组件 1 营销组件 2工具组件
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-    bgGradientStyle() {
-      return {
-        'background-image': `linear-gradient(to bottom, rgba(245,245,245,0) 0%, rgba(245,245,245,0) 50%, ${this.gradientColor} 100%)`,
-      };
-      return {};
-    },
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+  configName: 'c_home_comb',
+  type: 0,
+  defaultName: 'homeComb',
+});
+
+const props = defineProps({
+  index: {
+        type: null,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        const data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        const data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
+      colorStyle: {
+        type: null,
       },
-      deep: true,
-    },
-  },
-  // mixins: [theme],
-  data() {
-    return {
-      // 默认初始化数据禁止修改
-      defaultConfig: {
+});
+
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '轮播搜索',
         // 组件描述
         desc: '轮播搜索组件',
         name: 'homeComb',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -692,86 +665,116 @@ export default {
             info: '建议尺寸：750px * 400px',
           },
         },
-      },
-      pageData: {},
-      imgSrc: '',
-      bannerImg: [],
-      navList: [],
-      styleConfig: 0,
-      classConfig: 0,
-      searchConfig: 0,
-      placeholders: '',
-      hotWords: '',
-      contentConfig: 0,
-      docPosition: 0,
-      toneConfig: 0,
-      dotBgColor: '',
-      dotColor: '',
-      docStyle: 0,
-      imgRadius: 0,
-      imgRadiusLeft: 0,
-      imgRadiusRight: 0,
-      imgSrcList: [],
-      searchBox: 0,
-      searchFix: 0,
-      titleConfig: '',
-      gradientColor: '#f5f5f5',
-      configObj: null,
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      let dataClone = JSON.parse(JSON.stringify(data));
-      for (let key in this.defaultConfig) {
-        if (dataClone[key] === undefined) {
-          this.$set(dataClone, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
-        }
-      }
-      this.configObj = dataClone;
-      this.navList = dataClone.tabListConfig.list;
-      this.styleConfig = dataClone.styleConfig.tabVal;
-      this.classConfig = dataClone.classConfig.tabVal;
-      this.searchConfig = dataClone.searchConfig.tabVal;
-      this.searchBox = dataClone.searchBox.tabVal;
-      this.searchFix = dataClone.searchFix.tabVal;
-      this.logoConfig = dataClone.logoConfig.url;
-      this.imgSrc = dataClone.logoConfig.url;
-      this.titleConfig = dataClone.titleConfig.value;
-      this.placeholders = dataClone.inputConfig.value;
-      this.hotWords = dataClone.hotWords.list.length ? dataClone.hotWords.list[0].val : '';
-      this.contentConfig = dataClone.contentConfig.val;
-      this.imgSrcList = dataClone.swiperConfig.list;
-      this.bannerImg = dataClone.swiperConfig.list.length ? dataClone.swiperConfig.list[0].img : '';
-      this.docPosition = dataClone.docPosition.tabVal;
-      this.toneConfig = dataClone.toneConfig.tabVal;
-      this.dotBgColor = dataClone.dotBgColor.color[0].item;
-      this.dotColor = dataClone.dotColor.color[0].item;
-      this.docStyle = dataClone.docConfig.tabVal;
-      this.gradientColor = dataClone.gradientColor.color[0].item;
-      let filletImg = dataClone.filletImg.type;
-      let filletValImg = dataClone.filletImg.val;
-      let valListImg = dataClone.filletImg.valList;
-      this.imgRadius = filletImg
-        ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
-        : filletValImg + 'px';
-      this.imgRadiusLeft = filletImg
-        ? '0 ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + '0'
-        : '0 ' + filletValImg + 'px ' + filletValImg + 'px ' + '0';
-      this.imgRadiusRight = filletImg
-        ? valListImg[1].val + 'px 0 0 ' + valListImg[3].val + 'px'
-        : filletValImg + 'px 0 0 ' + filletValImg + 'px';
-    },
-  },
-};
-</script>
+      };
 
+const pageData = ref({});
+const imgSrc = ref('');
+const bannerImg = ref([]);
+const navList = ref([]);
+const styleConfig = ref(0);
+const classConfig = ref(0);
+const searchConfig = ref(0);
+const placeholders = ref('');
+const hotWords = ref('');
+const contentConfig = ref(0);
+const docPosition = ref(0);
+const toneConfig = ref(0);
+const dotBgColor = ref('');
+const dotColor = ref('');
+const docStyle = ref(0);
+const imgRadius = ref(0);
+const imgRadiusLeft = ref(0);
+const imgRadiusRight = ref(0);
+const imgSrcList = ref([]);
+const searchBox = ref(0);
+const searchFix = ref(0);
+const titleConfig = ref('');
+const logoConfig = ref('');
+const gradientColor = ref('#f5f5f5');
+const configObj = ref(null);
+
+const bgGradientStyle = computed(() => {
+  return {
+          'background-image': `linear-gradient(to bottom, rgba(245,245,245,0) 0%, rgba(245,245,245,0) 50%, ${gradientColor.value} 100%)`,
+        };
+        return {};
+});
+
+function setConfig(data) {
+  if (!data) return;
+        let dataClone = JSON.parse(JSON.stringify(data));
+        for (let key in defaultConfig) {
+          if (dataClone[key] === undefined) {
+            dataClone[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
+          }
+        }
+        configObj.value = dataClone;
+        navList.value = dataClone.tabListConfig.list;
+        styleConfig.value = dataClone.styleConfig.tabVal;
+        classConfig.value = dataClone.classConfig.tabVal;
+        searchConfig.value = dataClone.searchConfig.tabVal;
+        searchBox.value = dataClone.searchBox.tabVal;
+        searchFix.value = dataClone.searchFix.tabVal;
+        logoConfig.value = dataClone.logoConfig.url;
+        imgSrc.value = dataClone.logoConfig.url;
+        titleConfig.value = dataClone.titleConfig.value;
+        placeholders.value = dataClone.inputConfig.value;
+        hotWords.value = dataClone.hotWords.list.length ? dataClone.hotWords.list[0].val : '';
+        contentConfig.value = dataClone.contentConfig.val;
+        imgSrcList.value = dataClone.swiperConfig.list;
+        bannerImg.value = dataClone.swiperConfig.list.length ? dataClone.swiperConfig.list[0].img : '';
+        docPosition.value = dataClone.docPosition.tabVal;
+        toneConfig.value = dataClone.toneConfig.tabVal;
+        dotBgColor.value = dataClone.dotBgColor.color[0].item;
+        dotColor.value = dataClone.dotColor.color[0].item;
+        docStyle.value = dataClone.docConfig.tabVal;
+        gradientColor.value = dataClone.gradientColor.color[0].item;
+        let filletImg = dataClone.filletImg.type;
+        let filletValImg = dataClone.filletImg.val;
+        let valListImg = dataClone.filletImg.valList;
+        imgRadius.value = filletImg
+          ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
+          : filletValImg + 'px';
+        imgRadiusLeft.value = filletImg
+          ? '0 ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + '0'
+          : '0 ' + filletValImg + 'px ' + filletValImg + 'px ' + '0';
+        imgRadiusRight.value = filletImg
+          ? valListImg[1].val + 'px 0 0 ' + valListImg[3].val + 'px'
+          : filletValImg + 'px 0 0 ' + filletValImg + 'px';
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
+  },
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    const data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    const data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+      });
+});
+
+</script>
 <style scoped lang="scss">
 .empty-box {
   height: 160px;
@@ -797,7 +800,9 @@ export default {
 }
 .banDot {
   .dot {
-    padding: 0 40px;
+    left: 28px;
+    width: calc(100% - 65px);
+    padding: 0 12px;
   }
 }
 .dot {
@@ -998,7 +1003,7 @@ export default {
   }
   .banner {
     width: 355px;
-    height: 180px;
+    // height: 180px;
     position: relative;
     z-index: 1;
     border-radius: 6px;

@@ -1,31 +1,31 @@
 <template>
   <div class="detail-editor">
-    <diy-index ref="diy" />
-    
+    <diy-index ref="diy" page-type="detail" />
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
 import DiyIndex from '@/views/design/theme_editor/devise/diyIndex.vue';
 
-export default {
-  name: 'DetailEditor',
-  components: { DiyIndex },
-  methods: {
-    preview() {
-      this.$refs.diy && this.$refs.diy.preview && this.$refs.diy.preview();
-    },
-    saveOnly() {
-      this.$refs.diy && this.$refs.diy.saveConfig && this.$refs.diy.saveConfig(1);
-    },
-    saveAndClose() {
-      this.$refs.diy && this.$refs.diy.saveConfig && this.$refs.diy.saveConfig(2);
-    },
-    saveTemplate() {
-      this.$refs.diy && (this.$refs.diy.nameModal = true);
-    },
-  },
-};
+defineOptions({ name: 'DetailEditor' });
+
+const diy = ref(null);
+
+function preview() {
+  diy.value && diy.value.preview && diy.value.preview();
+}
+function saveOnly() {
+  diy.value && diy.value.saveConfig && diy.value.saveConfig(1);
+}
+function saveAndClose() {
+  diy.value && diy.value.saveConfig && diy.value.saveConfig(2);
+}
+function saveTemplate() {
+  if (diy.value) diy.value.nameModal = true;
+}
+
+defineExpose({ preview, saveOnly, saveAndClose, saveTemplate });
 </script>
 
 <style lang="scss" scoped>

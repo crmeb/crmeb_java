@@ -57,126 +57,38 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState } from 'vuex';
+<script setup>
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
 
-export default {
+defineOptions({
   name: 'home_bottom_menu',
   cname: '底部菜单',
+  icon: '#iconzujian-dibucaidan',
   configName: 'c_bottom_menu',
-  icon: '#iconzujian-dibucaidan', // Placeholder icon
-  type: -1, // 0 基础组件 1 营销组件 2工具组件 3 商品组件 4 个人中心组件
+  type: -1,
   defaultName: 'bottomMenu',
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray', 'bottomMenu']),
-    entryConfig() {
-      return (this.configObj && this.configObj.entryConfig);
-    },
-    isCustomEntry() {
-      return (this.entryConfig && this.entryConfig.tabVal) === 1;
-    },
-    isCustomImage() {
-      return this.isCustomEntry && (this.configObj && this.configObj.menuConfig && this.configObj.menuConfig.listStyle) === 0;
-    },
-    isCustomIcon() {
-      return this.isCustomEntry && (this.configObj && this.configObj.menuConfig && this.configObj.menuConfig.listStyle) === 1;
-    },
-    customImageStyle() {
-      const fillet = (this.configObj && this.configObj.menuPcFillet);
-      if (!fillet) return { width: '20px', height: '20px' };
-      let radius;
-      if (fillet.type) {
-        radius = `${fillet.valList[0].val}px ${fillet.valList[1].val}px ${fillet.valList[3].val}px ${fillet.valList[2].val}px`;
-      } else {
-        radius = `${fillet.val}px`;
-      }
-      return {
-        borderRadius: radius,
-        width: '20px',
-        height: '20px',
-        display: 'block',
-      };
-    },
-    customIconStyle() {
-      const config = this.configObj;
-      if (!config) return {};
-      const color = (config.iconColor && config.iconColor.color && config.iconColor.color[0] && config.iconColor.color[0].item) || '#333';
-      const size = (config.iconSize && config.iconSize.val) || 20;
-      const rotate = (config.iconRotate && config.iconRotate.val) || 0;
-      const padding = (config.padding && config.padding.val) || 0;
-      const shadow = (config.shadow && config.shadow.tabVal) === 1 ? '0px 2px 4px rgba(0,0,0,0.2)' : 'none';
-      return {
-        width: '20px',
-        height: '20px',
-        color: color,
-        fontSize: `${size}px`,
-        transform: `rotate(${rotate}deg)`,
-        padding: `${padding}px`,
-        textShadow: shadow,
-        display: 'inline-block',
-      };
-    },
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+});
+
+const props = defineProps({
+  index: {
+        type: null,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data;
-        if (nVal) {
-          data = this.$store.state.mobildConfig.defaultArray[nVal];
-        } else {
-          data = this.$store.state.mobildConfig.bottomMenu;
-        }
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        if (this.num) {
-          let data = this.$store.state.mobildConfig.defaultArray[this.num];
-          this.setConfig(data);
-        }
+      colorStyle: {
+        type: null,
       },
-      deep: true,
-    },
-    bottomMenu: {
-      handler(nVal, oVal) {
-        if (!this.num) {
-          this.setConfig(nVal);
-        }
-      },
-      deep: true,
-    },
-    colorStyle: {
-      handler(nVal, oVal) {
-        this.themeColor = `linear-gradient(90deg,${nVal.theme} 0%,${nVal.gradient} 100%)`;
-      },
-      deep: true,
-    },
-  },
-  data() {
-    return {
-      defaultConfig: {
+});
+
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '底部菜单',
         name: 'bottomMenu',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -420,111 +332,190 @@ export default {
           min: 0,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-      },
-      pageData: {},
-      showIconsList: [],
-      showCartBtn: true,
-      toneConfig: 0,
-      configObj: null,
-      cartBtnColor: '',
-      buyBtnColor: '',
-      // bgColor: '',
-      // bottomBgColor: '',
-      mTop: 0,
-      topConfig: 0,
-      bottomConfig: 0,
-      prConfig: 0,
-      // bgRadius: 0,
-      themeColor: '',
-      themeColor2: '',
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      if (this.num) {
-        this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      } else {
-        this.pageData = this.$store.state.mobildConfig.bottomMenu;
-      }
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      // Content
-      if (data.entryConfig && data.entryConfig.tabVal === 1) {
-        // Custom Mode: Use menuConfig list
-        let list = data.menuConfig.list || [];
-        this.showIconsList = list
-          .filter((item) => item.show)
-          .map((item) => ({
-            name: item.info[0].value,
-            icon: item.icon, // Using icon class if available
-            img: item.img, // Or image
-            id: 'custom', // Flag for custom
-            url: item.url, // Custom URL
-          }));
-      } else {
-        // Default Mode: Use showContent
-        let showIds = data.showContent.type;
-        let allIcons = data.showContent.list;
-        this.showIconsList = showIds.map((id) => allIcons.find((item) => item.id === id)).filter((item) => item);
-      }
+      };
 
-      this.showCartBtn = data.cartButton.tabVal === 0;
+const pageData = ref({});
+const showIconsList = ref([]);
+const showCartBtn = ref(true);
+const toneConfig = ref(0);
+const configObj = ref(null);
+const cartBtnColor = ref('');
+const buyBtnColor = ref('');
+const mTop = ref(0);
+const topConfig = ref(0);
+const bottomConfig = ref(0);
+const prConfig = ref(0);
+const themeColor = ref('');
+const themeColor2 = ref('');
 
-      // Style
-      this.toneConfig = data.toneConfig.tabVal;
+const entryConfig = computed(() => {
+  return (configObj.value && configObj.value.entryConfig);
+});
 
-      let cartC1 = data.cartColor.color[0].item;
-      let cartC2 = data.cartColor.color[1].item;
-      this.cartBtnColor = `linear-gradient(90deg,${cartC1} 0%,${cartC2} 100%)`;
+const isCustomEntry = computed(() => {
+  return (entryConfig.value && entryConfig.value.tabVal) === 1;
+});
 
-      let buyC1 = data.buyColor.color[0].item;
-      let buyC2 = data.buyColor.color[1].item;
-      this.buyBtnColor = `linear-gradient(90deg,${buyC1} 0%,${buyC2} 100%)`;
+const isCustomImage = computed(() => {
+  return isCustomEntry.value && (configObj.value && configObj.value.menuConfig && configObj.value.menuConfig.listStyle) === 0;
+});
 
-      if (!data.componentBgConfig) {
-        data.componentBgConfig = {
-          title: '背景设置',
-          tabVal: 0,
-          tabList: [{ name: '颜色' }, { name: '图片' }],
-          colorConfig: {
-            title: '背景颜色',
-            default: data.moduleColor.default,
-            color: data.moduleColor.color,
-          },
-          colorDirection: {
-            title: '渐变方向',
+const isCustomIcon = computed(() => {
+  return isCustomEntry.value && (configObj.value && configObj.value.menuConfig && configObj.value.menuConfig.listStyle) === 1;
+});
+
+const customImageStyle = computed(() => {
+  const fillet = (configObj.value && configObj.value.menuPcFillet);
+        if (!fillet) return { width: '20px', height: '20px' };
+        let radius;
+        if (fillet.type) {
+          radius = `${fillet.valList[0].val}px ${fillet.valList[1].val}px ${fillet.valList[3].val}px ${fillet.valList[2].val}px`;
+        } else {
+          radius = `${fillet.val}px`;
+        }
+        return {
+          borderRadius: radius,
+          width: '20px',
+          height: '20px',
+          display: 'block',
+        };
+});
+
+const customIconStyle = computed(() => {
+  const config = configObj.value;
+        if (!config) return {};
+        const color = (config.iconColor && config.iconColor.color && config.iconColor.color[0] && config.iconColor.color[0].item) || '#333';
+        const size = (config.iconSize && config.iconSize.val) || 20;
+        const rotate = (config.iconRotate && config.iconRotate.val) || 0;
+        const padding = (config.padding && config.padding.val) || 0;
+        const shadow = (config.shadow && config.shadow.tabVal) === 1 ? '0px 2px 4px rgba(0,0,0,0.2)' : 'none';
+        return {
+          width: '20px',
+          height: '20px',
+          color: color,
+          fontSize: `${size}px`,
+          transform: `rotate(${rotate}deg)`,
+          padding: `${padding}px`,
+          textShadow: shadow,
+          display: 'inline-block',
+        };
+});
+
+function setConfig(data) {
+  if (!data) return;
+        // Content
+        if (data.entryConfig && data.entryConfig.tabVal === 1) {
+          // Custom Mode: Use menuConfig list
+          let list = data.menuConfig.list || [];
+          showIconsList.value = list
+            .filter((item) => item.show)
+            .map((item) => ({
+              name: item.info[0].value,
+              icon: item.icon, // Using icon class if available
+              img: item.img, // Or image
+              id: 'custom', // Flag for custom
+              url: item.url, // Custom URL
+            }));
+        } else {
+          // Default Mode: Use showContent
+          let showIds = data.showContent.type;
+          let allIcons = data.showContent.list;
+          showIconsList.value = showIds.map((id) => allIcons.find((item) => item.id === id)).filter((item) => item);
+        }
+
+        showCartBtn.value = data.cartButton.tabVal === 0;
+
+        // Style
+        toneConfig.value = data.toneConfig.tabVal;
+
+        let cartC1 = data.cartColor.color[0].item;
+        let cartC2 = data.cartColor.color[1].item;
+        cartBtnColor.value = `linear-gradient(90deg,${cartC1} 0%,${cartC2} 100%)`;
+
+        let buyC1 = data.buyColor.color[0].item;
+        let buyC2 = data.buyColor.color[1].item;
+        buyBtnColor.value = `linear-gradient(90deg,${buyC1} 0%,${buyC2} 100%)`;
+
+        if (!data.componentBgConfig) {
+          data.componentBgConfig = {
+            title: '背景设置',
             tabVal: 0,
-            tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
-          },
-          imageConfig: {
-            header: '背景图片',
-            title: '',
-            name: '上传图片',
-            type: 'code',
-            url: '',
-            info: '建议尺寸：750px * 400px',
-          },
-        };
-      }
-      if (!data.marginConfig) {
-        data.marginConfig = {
-          isAll: false,
-          val: 0,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        };
-      }
-      this.configObj = data;
-      this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-      this.themeColor2 = 'linear-gradient(90deg, #FAAD14 0%, #FAAD14 100%)';
-    },
-  },
-};
-</script>
+            tabList: [{ name: '颜色' }, { name: '图片' }],
+            colorConfig: {
+              title: '背景颜色',
+              default: data.moduleColor.default,
+              color: data.moduleColor.color,
+            },
+            colorDirection: {
+              title: '渐变方向',
+              tabVal: 0,
+              tabList: [{ name: '横向' }, { name: '纵向' }, { name: '左斜' }, { name: '右斜' }],
+            },
+            imageConfig: {
+              header: '背景图片',
+              title: '',
+              name: '上传图片',
+              type: 'code',
+              url: '',
+              info: '建议尺寸：750px * 400px',
+            },
+          };
+        }
+        if (!data.marginConfig) {
+          data.marginConfig = {
+            isAll: false,
+            val: 0,
+            valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+          };
+        }
+        configObj.value = data;
+        themeColor.value = `linear-gradient(90deg,${props.colorStyle.theme} 0%,${props.colorStyle.gradient} 100%)`;
+        themeColor2.value = 'linear-gradient(90deg, #FAAD14 0%, #FAAD14 100%)';
+}
 
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
+  },
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data;
+            if (nVal) {
+              data = mobildConfigStore.defaultArray[nVal];
+            } else {
+              data = mobildConfigStore.bottomMenu;
+            }
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    if (props.num) {
+              let data = mobildConfigStore.defaultArray[props.num];
+              setConfig(data);
+            }
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+        if (props.num) {
+          pageData.value = mobildConfigStore.defaultArray[props.num];
+        } else {
+          pageData.value = mobildConfigStore.bottomMenu;
+        }
+        setConfig(pageData.value);
+      });
+});
+
+</script>
 <style scoped lang="scss">
 .bottom-menu {
   height: 50px;

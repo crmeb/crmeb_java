@@ -9,31 +9,31 @@
     >
       <div class="signInBg acea-row row-middle row-around" v-if="styleConfig == 0">
         <div class="item">
-          <img src="../../assets/images/gift4.png" />
+          <img :src="gift4Img" />
           <div>今天</div>
         </div>
         <div class="item">
-          <img src="../../assets/images/points.png" />
+          <img :src="pointsImg" />
           <div>周二</div>
         </div>
         <div class="item">
-          <img src="../../assets/images/points.png" />
+          <img :src="pointsImg" />
           <div>周三</div>
         </div>
         <div class="item">
-          <img src="../../assets/images/gift3.png" />
+          <img :src="gift3Img" />
           <div>周四</div>
         </div>
         <div class="item">
-          <img src="../../assets/images/gift2.png" />
+          <img :src="gift2Img" />
           <div>周五</div>
         </div>
         <div class="item">
-          <img src="../../assets/images/points.png" />
+          <img :src="pointsImg" />
           <div>周六</div>
         </div>
         <div class="item gift">
-          <img src="../../assets/images/gift.png" />
+          <img :src="giftImg" />
           <div>周日</div>
         </div>
         <div
@@ -49,7 +49,7 @@
       <div class="signInBg on acea-row row-between-wrapper" v-else>
         <div class="acea-row row-middle">
           <div class="pictrue">
-            <img src="../../assets/images/signInGift.png" />
+            <img :src="signInGiftImg" />
           </div>
           <div>
             <div class="acea-row row-middle">
@@ -67,7 +67,7 @@
                     background: toneConfig ? '' : 'rgba(255,255,255,0.9)',
                   }"
                 >
-                  <img src="../../assets/images/points.png" />
+                  <img :src="pointsImg" />
                   <span>+20</span>
                 </div>
               </div>
@@ -89,61 +89,45 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState, mapMutations } from 'vuex';
-// import theme from "@/views/design/theme_editor/mixins/theme";
-export default {
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import gift2Img from '@/views/design/theme_editor/assets/images/gift2.png';
+import gift3Img from '@/views/design/theme_editor/assets/images/gift3.png';
+import gift4Img from '@/views/design/theme_editor/assets/images/gift4.png';
+import giftImg from '@/views/design/theme_editor/assets/images/gift.png';
+import pointsImg from '@/views/design/theme_editor/assets/images/points.png';
+import signInGiftImg from '@/views/design/theme_editor/assets/images/signInGift.png';
+
+defineOptions({
   name: 'sign_in',
   cname: '签到',
-  configName: 'c_sign_in',
   icon: '#iconzujian-qiandao',
-  type: 1, // 0 基础组件 1 营销组件 2工具组件
-  defaultName: 'signIn', // 外面匹配名称
-  props: {
-    index: {
-      type: null,
-      default: -1,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+  configName: 'c_sign_in',
+  type: 1,
+  defaultName: 'signIn',
+});
+
+const props = defineProps({
+  index: {
+        type: null,
+        default: -1,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
+      colorStyle: {
+        type: null,
       },
-      deep: true,
-    },
-  },
-  // mixins: [theme],
-  data() {
-    return {
-      // 默认初始化数据禁止修改
-      defaultConfig: {
+});
+
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '签到',
         name: 'signIn',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -362,101 +346,123 @@ export default {
             min: -50,
           },
         },
-      },
-      pageData: {},
-      configObj: null,
-      bottomConfig: '',
-      styleConfig: 0,
-      toneConfig: 0,
-      bntBgColorLeft: '',
-      bntBgColorRight: '',
-      bntTxtColor: '',
-      labelBgColor: '',
-      labelTxtColor: '',
-      bgColorLeft: '',
-      bgColorRight: '',
-      bgColorLeft2: '',
-      bgColorRight2: '',
-      mbConfig: 0,
-      bgRadius: 0,
-      themeColor: '',
-      zIndexConfig: null,
-      componentBgConfig: null,
-      borderConfig: null,
-      shadowConfig: null,
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      let dataClone = JSON.parse(JSON.stringify(data));
-      for (let key in this.defaultConfig) {
-        if (dataClone[key] == undefined) {
-          this.$set(dataClone, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+      };
+
+const pageData = ref({});
+const configObj = ref(null);
+const bottomConfig = ref('');
+const styleConfig = ref(0);
+const toneConfig = ref(0);
+const bntBgColorLeft = ref('');
+const bntBgColorRight = ref('');
+const bntTxtColor = ref('');
+const labelBgColor = ref('');
+const labelTxtColor = ref('');
+const bgColorLeft = ref('');
+const bgColorRight = ref('');
+const bgColorLeft2 = ref('');
+const bgColorRight2 = ref('');
+const mbConfig = ref(0);
+const bgRadius = ref(0);
+const themeColor = ref('');
+const zIndexConfig = ref(null);
+const componentBgConfig = ref(null);
+const borderConfig = ref(null);
+const shadowConfig = ref(null);
+
+function setConfig(data) {
+  if (!data) return;
+        let dataClone = JSON.parse(JSON.stringify(data));
+        for (let key in defaultConfig) {
+          if (dataClone[key] == undefined) {
+            dataClone[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
+          }
         }
-      }
 
-      if (!dataClone.paddingConfig) {
-        dataClone.paddingConfig = {
-          title: '内边距',
-          val: 0,
-          min: 0,
-          max: 100,
-          isAll: false,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        };
-        if (dataClone.topConfig) dataClone.paddingConfig.valList[0].val = dataClone.topConfig.val;
-        if (dataClone.prConfig) {
-          dataClone.paddingConfig.valList[1].val = dataClone.prConfig.val;
-          dataClone.paddingConfig.valList[3].val = dataClone.prConfig.val;
+        if (!dataClone.paddingConfig) {
+          dataClone.paddingConfig = {
+            title: '内边距',
+            val: 0,
+            min: 0,
+            max: 100,
+            isAll: false,
+            valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+          };
+          if (dataClone.topConfig) dataClone.paddingConfig.valList[0].val = dataClone.topConfig.val;
+          if (dataClone.prConfig) {
+            dataClone.paddingConfig.valList[1].val = dataClone.prConfig.val;
+            dataClone.paddingConfig.valList[3].val = dataClone.prConfig.val;
+          }
+          if (dataClone.bottomConfig) dataClone.paddingConfig.valList[2].val = dataClone.bottomConfig.val;
         }
-        if (dataClone.bottomConfig) dataClone.paddingConfig.valList[2].val = dataClone.bottomConfig.val;
-      }
 
-      if (!dataClone.marginConfig) {
-        dataClone.marginConfig = {
-          title: '外边距',
-          val: 0,
-          min: 0,
-          max: 100,
-          isAll: false,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        };
-        if (dataClone.mbConfig) dataClone.marginConfig.valList[0].val = dataClone.mbConfig.val;
-      }
+        if (!dataClone.marginConfig) {
+          dataClone.marginConfig = {
+            title: '外边距',
+            val: 0,
+            min: 0,
+            max: 100,
+            isAll: false,
+            valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+          };
+          if (dataClone.mbConfig) dataClone.marginConfig.valList[0].val = dataClone.mbConfig.val;
+        }
 
-      this.configObj = dataClone;
-      this.zIndexConfig = dataClone.zIndexConfig.val;
-      this.componentBgConfig = dataClone.componentBgConfig;
-      this.borderConfig = dataClone.borderConfig;
-      this.shadowConfig = dataClone.shadowConfig;
+        configObj.value = dataClone;
+        zIndexConfig.value = dataClone.zIndexConfig.val;
+        componentBgConfig.value = dataClone.componentBgConfig;
+        borderConfig.value = dataClone.borderConfig;
+        shadowConfig.value = dataClone.shadowConfig;
 
-      this.styleConfig = dataClone.styleConfig.tabVal;
-      this.toneConfig = dataClone.toneConfig.tabVal;
-      this.bntBgColorLeft = dataClone.bntBgColor.color[0].item;
-      this.bntBgColorRight = dataClone.bntBgColor.color[1].item;
-      this.bntTxtColor = dataClone.bntTxtColor.color[0].item;
-      this.labelBgColor = dataClone.labelBgColor.color[0].item;
-      this.labelTxtColor = dataClone.labelTxtColor.color[0].item;
-      this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-      // this.bottomBgColor = data.bottomBgColor.color[0].item;
-      let fillet = dataClone.fillet.type;
-      let filletVal = dataClone.fillet.val;
-      let valList = dataClone.fillet.valList;
-      this.bgRadius = fillet
-        ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
-        : filletVal + 'px';
-    },
+        styleConfig.value = dataClone.styleConfig.tabVal;
+        toneConfig.value = dataClone.toneConfig.tabVal;
+        bntBgColorLeft.value = dataClone.bntBgColor.color[0].item;
+        bntBgColorRight.value = dataClone.bntBgColor.color[1].item;
+        bntTxtColor.value = dataClone.bntTxtColor.color[0].item;
+        labelBgColor.value = dataClone.labelBgColor.color[0].item;
+        labelTxtColor.value = dataClone.labelTxtColor.color[0].item;
+        themeColor.value = `linear-gradient(90deg,${props.colorStyle.theme} 0%,${props.colorStyle.gradient} 100%)`;
+        // bottomBgColor.value = data.bottomBgColor.color[0].item;
+        let fillet = dataClone.fillet.type;
+        let filletVal = dataClone.fillet.val;
+        let valList = dataClone.fillet.valList;
+        bgRadius.value = fillet
+          ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
+          : filletVal + 'px';
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
   },
-};
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+      });
+});
+
 </script>
-
 <style scoped lang="scss">
 .signIn {
   width: 100%;

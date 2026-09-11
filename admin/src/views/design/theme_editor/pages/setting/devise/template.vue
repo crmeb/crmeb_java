@@ -2,7 +2,7 @@
   <div>
     <div class="i-layout-page-header">
       <router-link :to="{ path: '/design/my_theme' }"
-        ><el-button size="small" class="mr20">返回</el-button></router-link
+        ><el-button class="mr20">返回</el-button></router-link
       >
       <span class="ivu-page-header-title mr20">页面设计</span>
     </div>
@@ -21,63 +21,55 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, getCurrentInstance } from 'vue';
+import { useRoute } from 'vue-router';
 import { diyGetInfo, diySave } from '@/api/theme';
-import { mapMutations } from 'vuex';
 import rightConfig from '@/components/rightConfig/index';
-import links from './links';
+import links from '@/views/design/theme_editor/devise/links.vue';
 import Setting from '@/utils/settingMer';
-export default {
-  name: 'index',
-  components: {
-    rightConfig,
-    links,
-  },
-  data() {
-    return {
-      configName: '',
-      iframeUrl: '',
-      setConfig: '',
-      updataConfig: '',
-      pageId: 0,
-    };
-  },
-  created() {
-    let pageId = this.$route.query.id;
-    let names = this.$route.query.name;
-    this.setConfig = '' + '/' + names + '/setConfig';
-    this.updataConfig = '' + '/' + names + '/updataConfig';
-    this.pageId = parseInt(pageId);
-    this.iframeUrl = `${location.origin}/pages/index/index?mdType=iframeWindow`;
-    diyGetInfo(parseInt(pageId)).then((datas) => {
-      let data = datas.data.info.value;
-      this.upData(data);
-    });
-  },
-  mounted() {
-    //监听子页面给当前页面传值
-    window.addEventListener('message', this.handleMessage, false);
-  },
-  methods: {
-    //接收iframe值
-    handleMessage(event) {
-      if (event.data.name) {
-        this.configName = event.data.name;
-        this.add(event.data.name);
-      }
-    },
-    add(data) {
-      this.$store.commit(this.setConfig, data);
-    },
-    upData(data) {
-      this.$store.commit(this.updataConfig, data);
-    },
-    // ...mapMutations({
-    //     add: 'diy/setConfig',
-    //     upData:'diy/updataConfig'
-    // })
-  },
-};
+
+defineOptions({ name: 'index' });
+
+const route = useRoute();
+const { proxy } = getCurrentInstance();
+
+const configName = ref('');
+const iframeUrl = ref('');
+const setConfig = ref('');
+const updataConfig = ref('');
+const pageId = ref(0);
+const iframe = ref(null);
+
+let rPageId = route.query.id;
+let names = route.query.name;
+setConfig.value = '' + '/' + names + '/setConfig';
+updataConfig.value = '' + '/' + names + '/updataConfig';
+pageId.value = parseInt(rPageId);
+iframeUrl.value = `${location.origin}/pages/index/index?mdType=iframeWindow`;
+diyGetInfo(parseInt(rPageId)).then((datas) => {
+  let data = datas.data.info.value;
+  upData(data);
+});
+
+//接收iframe值
+function handleMessage(event) {
+  if (event.data.name) {
+    configName.value = event.data.name;
+    add(event.data.name);
+  }
+}
+function add(data) {
+  proxy.$store.commit(setConfig.value, data);
+}
+function upData(data) {
+  proxy.$store.commit(updataConfig.value, data);
+}
+
+onMounted(() => {
+  //监听子页面给当前页面传值
+  window.addEventListener('message', handleMessage, false);
+});
 </script>
 
 <style lang="scss" scoped>

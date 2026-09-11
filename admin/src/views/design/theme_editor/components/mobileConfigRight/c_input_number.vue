@@ -14,9 +14,11 @@
           <el-input-number
             v-model="configData.val"
             :placeholder="configData.placeholder"
-            :step="1"
-            :max="configData.max || 100"
-            :min="configData.min || 1"
+            :controls="false"
+            :step="getNumberStep(configData)"
+            :step-strictly="true"
+            :max="getNumberMax(configData)"
+            :min="getNumberMin(configData, 1)"
             @change="bindChange"
             style="width: 100%"
           ></el-input-number>
@@ -26,48 +28,52 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_input_number',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch } from 'vue'
+import {
+  getNumberMax,
+  getNumberMin,
+  getNumberStep,
+  normalizeNumberField
+} from '@/views/design/theme_editor/utils/numberInput'
+
+defineOptions({ name: 'c_input_number' })
+
+const props = defineProps({
+  configObj: {
+    type: Object
   },
-  data() {
-    return {
-      defaults: {},
-      sliderWidth: 0,
-      configData: {},
-    };
+  configNme: {
+    type: String
+  }
+})
+
+const emit = defineEmits(['getConfig'])
+
+const defaults = ref({})
+const sliderWidth = ref(0)
+const configData = ref({})
+
+defaults.value = props.configObj
+configData.value = props.configObj[props.configNme] || {}
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal
+    configData.value = nVal[props.configNme] || {}
   },
-  created() {
-    this.defaults = this.configObj;
-    this.configData = this.configObj[this.configNme];
-  },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  methods: {
-    bindChange() {
-      this.$emit('getConfig', { name: 'number', numVal: this.configData.val });
-    },
-  },
-};
+  { immediate: true, deep: true }
+)
+
+function bindChange() {
+  normalizeNumberField(configData.value, 'val', configData.value, { minFallback: 1 })
+  emit('getConfig', { name: 'number', numVal: configData.value.val })
+}
 </script>
 
 <style scoped lang="scss">
-::v-deep .ivu-input-number {
+:deep(.ivu-input-number) {
   width: 100%;
   font-size: 12px !important;
 }
@@ -85,7 +91,7 @@ export default {
     margin-left: 15px;
     margin-right: 15px;
 
-    ::v-deep .ivu-input-number {
+    :deep(.ivu-input-number) {
       width: 91%;
     }
 
@@ -100,7 +106,7 @@ export default {
 
   &.on {
     padding: 0;
-    ::v-deep .ivu-input-number {
+    :deep(.ivu-input-number) {
       font-size: 13px !important;
     }
 

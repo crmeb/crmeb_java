@@ -3,13 +3,12 @@
     <div class="seckill-box">
       <div
         class="hd"
-        :style="
-          (styleConfig
-            ? 'backgroundImage:url(' + imgBgUrl + ')'
-            : `background:linear-gradient(90deg,${headerBgColorLeft} 0%,${headerBgColorRight} 100%)`) +
-          ';borderRadius:' +
-          bgRadius
-        "
+        :style="{
+          backgroundImage: styleConfig
+            ? `url(${imgBgUrl})`
+            : `linear-gradient(90deg,${headerBgColorLeft} 0%,${headerBgColorRight} 100%)`,
+          borderRadius: bgRadius,
+        }"
       >
         <div class="left acea-row row-middle">
           <div
@@ -35,7 +34,7 @@
             }"
           ></div>
           <div class="pictrue">
-            <img src="../../assets/images/pinkHead.png" />
+            <img :src="pinkHeadImg" />
           </div>
           <div
             class="tips"
@@ -45,21 +44,6 @@
           >
             134人参与
           </div>
-        </div>
-        <div
-          class="right"
-          :style="{
-            color: styleConfig ? headerBntColor : headerBntColor2,
-            fontSize: bntNumber + 'px',
-          }"
-        >
-          {{ rightBntTxt }}
-          <span
-            class="iconfont iconjinru"
-            :style="{
-              fontSize: bntNumber + 'px',
-            }"
-          ></span>
         </div>
       </div>
       <div
@@ -86,7 +70,7 @@
                 borderRadius: imgRadius,
               }"
             >
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
             <div class="text">
               <div class="top">
@@ -167,7 +151,7 @@
                 borderRadius: imgRadius,
               }"
             >
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
             <div
               :class="
@@ -246,7 +230,7 @@
                   borderRadius: imgRadius,
                 }"
               >
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
                 <div
                   class="label"
                   v-if="checkboxInfo.indexOf(1) != -1"
@@ -297,7 +281,7 @@
                 borderRadius: imgRadius,
               }"
             >
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
               <div
                 class="label"
                 v-if="checkboxInfo.indexOf(1) != -1"
@@ -348,61 +332,42 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState } from 'vuex';
-// import theme from "@/views/design/theme_editor/mixins/theme";
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import pinkHeadImg from '@/views/design/theme_editor/assets/images/pinkHead.png';
+import shanImg from '@/views/design/theme_editor/assets/images/shan.png';
 import Setting from '@/utils/settingMer';
-export default {
+
+defineOptions({
   name: 'home_pink',
   cname: '拼团',
   icon: '#iconzujian-pintuan',
   configName: 'c_home_pink',
-  type: 1, // 0 基础组件 1 营销组件 2工具组件
-  defaultName: 'combination', // 外面匹配名称
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+  type: 1,
+  defaultName: 'combination',
+});
+
+const props = defineProps({
+  index: {
+        type: null,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
+      colorStyle: {
+        type: null,
       },
-      deep: true,
-    },
-  },
-  // mixins: [theme],
-  data() {
-    return {
-      // 默认初始化数据禁止修改
-      defaultConfig: {
+});
+
+import pink01Img from '@/views/design/theme_editor/assets/images/pink01.png';
+import pink02Img from '@/views/design/theme_editor/assets/images/pink02.png';
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '拼团',
         name: 'combination',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -489,7 +454,7 @@ export default {
         },
         imgBgConfig: {
           info: '建议：710px * 96px',
-          url: Setting.httpUrl + '/' + 'statics/images/pinkBg.png',
+          url: Setting.httpUrl + '/' + 'crmebimage/theme-cate/pinkBg.png',
           type: 'code',
           delType: 0,
           name: '背景图片',
@@ -509,7 +474,7 @@ export default {
         },
         imgConfig: {
           info: '建议：154px * 32px',
-          url: require('@/assets/images/pink02.png'),
+          url: pink02Img,
           type: 'code',
           delType: 0,
           name: '标题图片',
@@ -517,7 +482,7 @@ export default {
         },
         imgColorConfig: {
           info: '建议：154px * 32px',
-          url: require('@/assets/images/pink01.png'),
+          url: pink01Img,
           type: 'code',
           delType: 0,
           name: '标题图片',
@@ -526,12 +491,6 @@ export default {
           title: '标题文字',
           value: '超值拼团',
           place: '请输入标题文字',
-          max: 6,
-        },
-        rightBntConfig: {
-          title: '右侧按钮',
-          value: '更多',
-          place: '请输入右侧按钮',
           max: 6,
         },
         goodStyleConfig: {
@@ -662,39 +621,6 @@ export default {
               item: '#E93323',
             },
           ],
-        },
-        headerBntColor: {
-          title: '按钮颜色',
-          name: 'headerBntColor',
-          default: [
-            {
-              item: '#fff',
-            },
-          ],
-          color: [
-            {
-              item: '#fff',
-            },
-          ],
-        },
-        headerBntColor2: {
-          title: '按钮颜色',
-          name: 'headerBntColor2',
-          default: [
-            {
-              item: '#999',
-            },
-          ],
-          color: [
-            {
-              item: '#999',
-            },
-          ],
-        },
-        bntNumber: {
-          title: '按钮字号',
-          val: 12,
-          min: 0,
         },
         tipsColor: {
           title: '提示文字',
@@ -945,122 +871,136 @@ export default {
           min: 0,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-      },
-      pageData: {},
-      imgUrl: '',
-      imgBgUrl: '',
-      tipsColor: '',
-      tipsColor2: '',
-      dividerColor: '',
-      rightBntTxt: '',
-      headerBntColor: '',
-      headerBntColor2: '',
-      bntNumber: 0,
-      styleConfig: 0,
-      headerBgColorLeft: '',
-      headerBgColorRight: '',
-      imgColorUrl: '',
-      titleConfig: 0,
-      titleTxtConfig: '',
-      configObj: null,
-      bgColor: '',
-      titleText: '',
-      titleTabVal: 0,
-      checkboxInfo: [],
-      imgRadius: 0,
-      bgRadius: 0,
-      bgRadius2: 0,
-      goodsName: '',
-      goodsNameColor: '',
-      goodsPriceColor: '',
-      toneConfig: 0,
-      goodsBntColorLeft: '',
-      goodsBntColorRight: '',
-      goodStyleConfig: 0,
-      goodsBntTxtColor: '',
-      pinkConfig: 0,
-      numberConfig: 1,
-      titleColor: '',
-      titleNumber: 0,
-      labelColor: '',
-      pinkPriceColor: '',
-      themeColor: '',
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      this.configObj = data;
-      for (let key in this.defaultConfig) {
-        if (data[key] == undefined) {
-          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
-        }
-      }
-      this.imgUrl = data.imgConfig.url;
-      this.imgBgUrl = data.imgBgConfig.url;
-      this.imgColorUrl = data.imgColorConfig.url;
-      this.tipsColor = data.tipsColor.color[0].item;
-      this.tipsColor2 = data.tipsColor2.color[0].item;
-      this.dividerColor = data.dividerColor.color[0].item;
-      this.rightBntTxt = data.rightBntConfig.value;
-      this.headerBntColor = data.headerBntColor.color[0].item;
-      this.headerBntColor2 = data.headerBntColor2.color[0].item;
-      this.bntNumber = data.bntNumber.val;
-      this.styleConfig = data.styleConfig.tabVal;
-      this.headerBgColorLeft = data.headerBgColor.color[0].item;
-      this.headerBgColorRight = data.headerBgColor.color[1].item;
-      this.titleConfig = data.titleConfig.tabVal;
-      this.titleTxtConfig = data.titleTxtConfig.value;
-      let bgColorLeft = data.moduleColor.color[0].item;
-      let bgColorRight = data.moduleColor.color[1].item;
-      this.bgColor = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
-      this.configObj = data;
-      let tabVal = data.titleText.tabVal;
-      this.titleTabVal = tabVal;
-      this.titleText = data.titleText.tabList[tabVal].style;
-      this.checkboxInfo = data.checkboxInfo.type;
-      let filletImg = data.filletImg.type;
-      let filletValImg = data.filletImg.val;
-      let valListImg = data.filletImg.valList;
-      this.imgRadius = filletImg
-        ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
-        : filletValImg + 'px';
-      let fillet = data.fillet.type;
-      let filletVal = data.fillet.val;
-      let valList = data.fillet.valList;
-      this.bgRadius = fillet
-        ? valList[0].val + 'px ' + valList[1].val + 'px 0 0'
-        : filletVal + 'px ' + filletVal + 'px 0 0';
-      this.bgRadius2 = fillet
-        ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
-        : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
-      let goodsTabVal = data.goodsName.tabVal;
-      this.goodsName = data.goodsName.tabList[goodsTabVal].style;
-      this.goodsNameColor = data.goodsNameColor.color[0].item;
-      this.goodsPriceColor = data.goodsPriceColor.color[0].item;
-      this.toneConfig = data.toneConfig.tabVal;
-      this.goodsBntColorLeft = data.goodsBntColor.color[0].item;
-      this.goodsBntColorRight = data.goodsBntColor.color[1].item;
-      this.goodStyleConfig = data.goodStyleConfig.tabVal;
-      this.goodsBntTxtColor = data.goodsBntTxtColor.color[0].item;
-      this.pinkConfig = data.pinkConfig.tabVal;
-      this.numberConfig = data.numberConfig.val;
-      this.titleColor = data.titleColor.color[0].item;
-      this.titleNumber = data.titleNumber.val;
-      this.labelColor = data.labelColor.color[0].item;
-      this.pinkPriceColor = data.pinkPriceColor.color[0].item;
-      this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-    },
-  },
-};
-</script>
+      };
 
+const pageData = ref({});
+const imgUrl = ref('');
+const imgBgUrl = ref('');
+const tipsColor = ref('');
+const tipsColor2 = ref('');
+const dividerColor = ref('');
+const styleConfig = ref(0);
+const headerBgColorLeft = ref('');
+const headerBgColorRight = ref('');
+const imgColorUrl = ref('');
+const titleConfig = ref(0);
+const titleTxtConfig = ref('');
+const configObj = ref(null);
+const bgColor = ref('');
+const titleText = ref('');
+const titleTabVal = ref(0);
+const checkboxInfo = ref([]);
+const imgRadius = ref(0);
+const bgRadius = ref(0);
+const bgRadius2 = ref(0);
+const goodsName = ref('');
+const goodsNameColor = ref('');
+const goodsPriceColor = ref('');
+const toneConfig = ref(0);
+const goodsBntColorLeft = ref('');
+const goodsBntColorRight = ref('');
+const goodStyleConfig = ref(0);
+const goodsBntTxtColor = ref('');
+const pinkConfig = ref(0);
+const numberConfig = ref(1);
+const titleColor = ref('');
+const titleNumber = ref(0);
+const labelColor = ref('');
+const pinkPriceColor = ref('');
+const themeColor = ref('');
+
+function setConfig(data) {
+  if (!data) return;
+        configObj.value = data;
+        for (let key in defaultConfig) {
+          if (data[key] == undefined) {
+            data[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
+          }
+        }
+        imgUrl.value = data.imgConfig.url;
+        imgBgUrl.value = data.imgBgConfig.url;
+        imgColorUrl.value = data.imgColorConfig.url;
+        tipsColor.value = data.tipsColor.color[0].item;
+        tipsColor2.value = data.tipsColor2.color[0].item;
+        dividerColor.value = data.dividerColor.color[0].item;
+        styleConfig.value = data.styleConfig.tabVal;
+        headerBgColorLeft.value = data.headerBgColor.color[0].item;
+        headerBgColorRight.value = data.headerBgColor.color[1].item;
+        titleConfig.value = data.titleConfig.tabVal;
+        titleTxtConfig.value = data.titleTxtConfig.value;
+        let bgColorLeft = data.moduleColor.color[0].item;
+        let bgColorRight = data.moduleColor.color[1].item;
+        bgColor.value = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
+        configObj.value = data;
+        let tabVal = data.titleText.tabVal;
+        titleTabVal.value = tabVal;
+        titleText.value = data.titleText.tabList[tabVal].style;
+        checkboxInfo.value = data.checkboxInfo.type;
+        let filletImg = data.filletImg.type;
+        let filletValImg = data.filletImg.val;
+        let valListImg = data.filletImg.valList;
+        imgRadius.value = filletImg
+          ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
+          : filletValImg + 'px';
+        let fillet = data.fillet.type;
+        let filletVal = data.fillet.val;
+        let valList = data.fillet.valList;
+        bgRadius.value = fillet
+          ? valList[0].val + 'px ' + valList[1].val + 'px 0 0'
+          : filletVal + 'px ' + filletVal + 'px 0 0';
+        bgRadius2.value = fillet
+          ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
+          : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
+        let goodsTabVal = data.goodsName.tabVal;
+        goodsName.value = data.goodsName.tabList[goodsTabVal].style;
+        goodsNameColor.value = data.goodsNameColor.color[0].item;
+        goodsPriceColor.value = data.goodsPriceColor.color[0].item;
+        toneConfig.value = data.toneConfig.tabVal;
+        goodsBntColorLeft.value = data.goodsBntColor.color[0].item;
+        goodsBntColorRight.value = data.goodsBntColor.color[1].item;
+        goodStyleConfig.value = data.goodStyleConfig.tabVal;
+        goodsBntTxtColor.value = data.goodsBntTxtColor.color[0].item;
+        pinkConfig.value = data.pinkConfig.tabVal;
+        numberConfig.value = data.numberConfig.val;
+        titleColor.value = data.titleColor.color[0].item;
+        titleNumber.value = data.titleNumber.val;
+        labelColor.value = data.labelColor.color[0].item;
+        pinkPriceColor.value = data.pinkPriceColor.color[0].item;
+        themeColor.value = `linear-gradient(90deg,${props.colorStyle.theme} 0%,${props.colorStyle.gradient} 100%)`;
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
+  },
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+      });
+});
+
+</script>
 <style scoped lang="scss">
 .seckill-box {
   display: inline-block;
@@ -1074,13 +1014,6 @@ export default {
     width: 100%;
     height: 48px;
     padding: 0 12px;
-    .right {
-      color: #fff;
-      font-size: 12px;
-      .iconfont {
-        font-size: 12px;
-      }
-    }
     .left {
       display: flex;
       align-items: center;

@@ -2,39 +2,47 @@
   <div class="hot_imgs">
     <div class="title">最多可添加4个版块，图片建议尺寸140 * 140px；鼠标拖拽左侧圆点可 调整版块顺序</div>
     <div class="list-box">
-      <draggable class="dragArea list-group" :list="defaults.menu" group="people" handle=".move-icon">
-        <div class="item" v-for="(item, index) in defaults.menu" :key="index">
-          <div class="move-icon">
-            <Icon type="ios-keypad-outline" size="22" />
-          </div>
-          <div class="img-box" @click="modalPicTap('单选', index)">
-            <img :src="item.img" alt="" v-if="item.img" />
-            <div class="upload-box" v-else><Icon type="ios-camera-outline" size="36" /></div>
-            <div>
-              <el-dialog
-                :visible.sync="modalPic"
-                width="960px"
-                title="上传图片"
-              >
-                <uploadPictures
-                  :isChoice="isChoice"
-                  @getPic="getPic"
-                  :gridBtn="gridBtn"
-                  :gridPic="gridPic"
-                  v-if="modalPic"
-                ></uploadPictures>
-              </el-dialog>
+      <draggable
+        class="dragArea list-group"
+        :list="defaults.menu"
+        :item-key="getDraggableItemKey"
+        group="people"
+        handle=".move-icon"
+      >
+        <template #item="{ element: item, index }">
+          <div class="item">
+            <div class="move-icon">
+              <Icon type="ios-keypad-outline" size="22" />
             </div>
-          </div>
-          <div class="info">
-            <div class="info-item" v-for="(infos, key) in item.info" :key="key">
-              <span>{{ infos.title }}</span>
-              <div class="input-box">
-                <el-input v-model="infos.value" :placeholder="infos.tips" :maxlength="infos.max" />
+            <div class="img-box" @click="modalPicTap('单选', index)">
+              <img :src="item.img" alt="" v-if="item.img" />
+              <div class="upload-box" v-else><Icon type="ios-camera-outline" size="36" /></div>
+              <div>
+                <el-dialog
+                  v-model="modalPic"
+                  width="1024px"
+                  title="上传图片"
+                >
+                  <uploadPictures
+                    :isChoice="isChoice"
+                    @getPic="getPic"
+                    :gridBtn="gridBtn"
+                    :gridPic="gridPic"
+                    v-if="modalPic"
+                  ></uploadPictures>
+                </el-dialog>
+              </div>
+            </div>
+            <div class="info">
+              <div class="info-item" v-for="(infos, key) in item.info" :key="key">
+                <span>{{ infos.title }}</span>
+                <div class="input-box">
+                  <el-input v-model="infos.value" :placeholder="infos.tips" :maxlength="infos.max" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </template>
       </draggable>
     </div>
     <div class="add-btn" v-if="defaults.menu.length < 4">
@@ -43,145 +51,136 @@
   </div>
 </template>
 
-<script>
-import vuedraggable from 'vuedraggable';
-import { mapState, mapActions } from 'vuex';
+<script setup>
+import { ref, watch } from 'vue';
+import draggable from 'vuedraggable';
 import uploadPictures from '@/views/design/theme_editor/components/uploadPictures';
 import { wechatNewsAddApi, wechatNewsInfotApi } from '@/api/app';
-export default {
-  name: 'c_hot_imgs',
-  props: {
-    configObj: {
-      type: Object,
-    },
+import { getDraggableItemKey } from '@/utils/draggableKey';
+
+defineOptions({ name: 'c_hot_imgs' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  components: {
-    draggable: vuedraggable,
-    uploadPictures,
+});
+
+const defaults = ref({});
+const menus = ref([]);
+const list = ref([
+  {
+    title: 'aa',
+    val: '',
   },
-  data() {
-    return {
-      defaults: {},
-      menus: [],
-      list: [
+]);
+const modalPic = ref(false);
+const isChoice = ref('单选');
+const gridBtn = ref({
+  xl: 4,
+  lg: 8,
+  md: 8,
+  sm: 8,
+  xs: 8,
+});
+const gridPic = ref({
+  xl: 6,
+  lg: 8,
+  md: 12,
+  sm: 12,
+  xs: 12,
+});
+const activeIndex = ref(0);
+
+defaults.value = props.configObj;
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+  },
+  { immediate: true, deep: true },
+);
+
+function addBox() {
+  let obj = {
+    img: 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1594458238721&di=d9978a807dcbf5d8a01400875bc51162&imgtype=0&src=http%3A%2F%2Fattachments.gfan.com%2Fforum%2F201604%2F23%2F002205xqdkj84gnw4oi85v.jpg',
+    info: [
+      {
+        title: '标题',
+        value: '',
+        tips: '选填，不超过4个字',
+        max: 4,
+      },
+      {
+        title: '简介',
+        value: '',
+        tips: '选填，不超过20个字',
+        max: 20,
+      },
+    ],
+    link: {
+      title: '链接',
+      optiops: [
         {
-          title: 'aa',
-          val: '',
+          type: 0,
+          value: '',
+          label: '一级>二级分类',
+        },
+        {
+          type: 1,
+          value: '',
+          label: '自定义链接',
         },
       ],
-      modalPic: false,
-      isChoice: '单选',
-      gridBtn: {
-        xl: 4,
-        lg: 8,
-        md: 8,
-        sm: 8,
-        xs: 8,
-      },
-      gridPic: {
-        xl: 6,
-        lg: 8,
-        md: 12,
-        sm: 12,
-        xs: 12,
-      },
-      activeIndex: 0,
-    };
-  },
-  created() {
-    this.defaults = this.configObj;
-  },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-      },
-      immediate: true,
-      deep: true,
     },
-  },
-  methods: {
-    addBox() {
-      let obj = {
-        img: 'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1594458238721&di=d9978a807dcbf5d8a01400875bc51162&imgtype=0&src=http%3A%2F%2Fattachments.gfan.com%2Fforum%2F201604%2F23%2F002205xqdkj84gnw4oi85v.jpg',
-        info: [
-          {
-            title: '标题',
-            value: '',
-            tips: '选填，不超过4个字',
-            max: 4,
-          },
-          {
-            title: '简介',
-            value: '',
-            tips: '选填，不超过20个字',
-            max: 20,
-          },
-        ],
-        link: {
-          title: '链接',
-          optiops: [
-            {
-              type: 0,
-              value: '',
-              label: '一级>二级分类',
-            },
-            {
-              type: 1,
-              value: '',
-              label: '自定义链接',
-            },
-          ],
+  };
+  defaults.value.menu.push(obj);
+}
+// 点击图文封面
+function modalPicTap(title, index) {
+  activeIndex.value = index;
+  modalPic.value = true;
+}
+// 添加自定义弹窗
+function addCustomDialog(editorId) {
+  window.UE.registerUI(
+    'test-dialog',
+    function (editor, uiName) {
+      let dialog = new window.UE.ui.Dialog({
+        iframeUrl: '/admin/widget.images/index.html?fodder=dialog',
+        editor: editor,
+        name: uiName,
+        title: '上传图片',
+        cssRules: 'width:1200px;height:500px;padding:20px;',
+      });
+      this.dialog = dialog;
+      // 参考上面的自定义按钮
+      var btn = new window.UE.ui.Button({
+        name: 'dialog-button',
+        title: '上传图片',
+        cssRules: `background-image: url(../../../assets/images/icons.png);background-position: -726px -77px;`,
+        onclick: function () {
+          // 渲染dialog
+          dialog.render();
+          dialog.open();
         },
-      };
-      this.defaults.menu.push(obj);
-    },
-    // 点击图文封面
-    modalPicTap(title, index) {
-      this.activeIndex = index;
-      this.modalPic = true;
-    },
-    // 添加自定义弹窗
-    addCustomDialog(editorId) {
-      window.UE.registerUI(
-        'test-dialog',
-        function (editor, uiName) {
-          let dialog = new window.UE.ui.Dialog({
-            iframeUrl: '/admin/widget.images/index.html?fodder=dialog',
-            editor: editor,
-            name: uiName,
-            title: '上传图片',
-            cssRules: 'width:1200px;height:500px;padding:20px;',
-          });
-          this.dialog = dialog;
-          // 参考上面的自定义按钮
-          var btn = new window.UE.ui.Button({
-            name: 'dialog-button',
-            title: '上传图片',
-            cssRules: `background-image: url(../../../assets/images/icons.png);background-position: -726px -77px;`,
-            onclick: function () {
-              // 渲染dialog
-              dialog.render();
-              dialog.open();
-            },
-          });
+      });
 
-          return btn;
-        },
-        37,
-      );
+      return btn;
     },
-    // 获取图片信息
-    getPic(pc) {
-      this.defaults.menu[this.activeIndex].img = pc.att_dir;
-      this.modalPic = false;
-    },
-  },
-};
+    37,
+  );
+}
+// 获取图片信息
+function getPic(pc) {
+  defaults.value.menu[activeIndex.value].img = pc.att_dir;
+  modalPic.value = false;
+}
 </script>
 
 <style scoped lang="scss">
-::v-deep .ivu-input {
+:deep(.ivu-input) {
   font-size: 13px !important;
 }
 

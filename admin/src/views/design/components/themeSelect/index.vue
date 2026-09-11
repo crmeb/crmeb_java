@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-    :visible.sync="visible"
+    v-model="visible"
     width="1188px"
     top="5vh"
     custom-class="theme-dialog"
@@ -11,7 +11,8 @@
     :lock-scroll="true"
     @close="handleClose"
   >
-    <div slot="title" v-if="!showDetail" class="dialog-header">
+    <template #header>
+      <div v-if="!showDetail" class="dialog-header">
       <div class="dialog-header-tabs">
         <div class="tabs">
           <span class="title">我的主题</span>
@@ -20,6 +21,14 @@
       </div>
       <i class="el-icon-close" @click="handleClose"></i>
     </div>
+    <div v-else class="detail-header">
+      <div class="left-action">
+        <div class="back-btn" @click="backToStyleList"><i class="el-icon-arrow-left"></i> 返回</div>
+        <div class="vertical-line"></div>
+        <span class="detail-title">风格详情</span>
+      </div>
+    </div>
+    </template>
     <div class="dialog-content" v-if="!showDetail">
       <!-- 顶部Tab切换 -->
 
@@ -28,7 +37,7 @@
         <div class="main-content">
           <div class="filters-header">
             <div v-if="type != 'mall'" class="filter-left">
-              <el-select v-model="currentFilter" size="small" placeholder="首页" style="width: 204px">
+              <el-select v-model="currentFilter" placeholder="首页" style="width: 204px">
                 <el-option
                   v-for="item in filterOptions"
                   :key="item.value"
@@ -41,8 +50,8 @@
               <el-input
                 v-model="searchKeyword"
                 placeholder="请输入主题名称"
-                suffix-icon="el-icon-search"
-                size="small"
+                :suffix-icon="Search"
+
                 @change="searchTheme"
               ></el-input>
             </div>
@@ -69,7 +78,7 @@
                     alt="theme"
                   />
                   <div class="no-poster" v-else>
-                    <img :src="require('@/assets/images/no-theme-poster.png')" class="preview-image" alt="no poster" />
+                    <img :src="noThemePoster" class="preview-image" alt="no poster" />
                     <div>暂无封面</div>
                   </div>
                 </div>
@@ -94,8 +103,8 @@
             <pagination
               v-if="total"
               :total="total"
-              :page.sync="page"
-              :limit.sync="limit"
+              v-model:page="page"
+              v-model:limit="limit"
               layout="total, prev, pager, next, jumper"
               @pagination="handlePageChange"
             />
@@ -122,7 +131,7 @@
               alt="preview"
             />
             <div class="no-poster" v-else>
-              <img :src="require('@/assets/images/no-theme-poster.png')" class="preview-image" alt="no poster" />
+              <img :src="noThemePoster" class="preview-image" alt="no poster" />
             </div>
           </div>
           <div class="detail-info-box">
@@ -150,7 +159,7 @@
                   class="preview-image"
                 />
                 <div class="no-poster" v-else>
-                  <img :src="require('@/assets/images/no-theme-poster.png')" class="preview-image" alt="no poster" />
+                  <img :src="noThemePoster" class="preview-image" alt="no poster" />
                   <div>暂无封面</div>
                 </div>
               </div>
@@ -166,171 +175,186 @@
   </el-dialog>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { Search } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox } from '@/utils/elementPlusFeedback';
+import { useRouter } from 'vue-router';
 import { getThemeList, useThemeData } from '@/api/theme';
 import QRCode from 'qrcodejs2';
 import SettingMer from '@/utils/settingMer';
+import noThemePoster from '@/assets/images/no-theme-poster.png';
 
-export default {
-  name: 'ThemeSelectDialog',
-  props: {
-    visible: {
-      type: Boolean,
-      default: false,
-    },
-    type: {
-      type: String,
-      default: 'mall', // mall: 商城装修, my: 我的主题
-    },
-    themeId: {
-      type: [Number, String],
-      default: 0,
-    },
-    currentType: {
-      type: String,
-      default: 'home',
-    },
-    activeTab: {
-      type: String,
-      default: 'my',
-    },
+defineOptions({ name: 'ThemeSelectDialog' });
+
+const props = defineProps({
+  visible: {
+    type: Boolean,
+    default: false,
   },
-  data() {
-    return {
-      showDetail: false,
-      currentTheme: {},
-      currentCategory: 'all',
-      currentFilter: 'home_image',
-      searchKeyword: '',
-      filterOptions: [
-        { label: '首页', value: 'home_image' },
-        { label: '分类页', value: 'category_image' },
-        { label: '详情页', value: 'detail_image' },
-        { label: '个人中心', value: 'user_image' },
-      ],
-      themes: [],
-      page: 1,
-      limit: 9,
-      total: 0,
-      BaseURL: SettingMer.httpUrl + '/',
-    };
+  type: {
+    type: String,
+    default: 'mall', // mall: 商城装修, my: 我的主题
   },
-  watch: {
-    currentType: {
-      handler(newVal) {
-        this.currentFilter = `${newVal}_image`;
-      },
-      immediate: true,
-    },
-    activeTab: {
-      handler(newVal) {
-        if (newVal === 'mall') {
-          this.limit = 10;
-        } else {
-          this.limit = 9;
-        }
-      },
-      immediate: true,
-    },
+  themeId: {
+    type: [Number, String],
+    default: 0,
   },
-  created() {
-    this.getList();
+  currentType: {
+    type: String,
+    default: 'home',
   },
-  methods: {
-    getList() {
-      const reqData = { page: this.page, limit: this.limit, title: this.searchKeyword };
-      if (this.type == 'mall' && this.currentType == 'home') {
-        reqData.pageType = 'all';
-      } else {
-        reqData.pageType = 'theme';
-      }
-      getThemeList(reqData).then((res) => {
-        this.themes = res.list;
-        this.total = res.count;
-      });
-    },
-    handlePageChange(val) {
-      this.page = val;
-      this.getList();
-    },
-    toTheme() {
-      window.open('https://www.crmeb.com/theme?from=crmebkytheme', '_blank');
-    },
-    handleClose() {
-      this.showDetail = false;
-      this.$emit('update:visible', false);
-    },
-    selectTheme(theme) {
-      if (this.themeId && this.themeId != 0) {
-        this.$confirm('确定要使用该主题数据吗？这将覆盖当前页面配置', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning',
+  activeTab: {
+    type: String,
+    default: 'my',
+  },
+});
+
+const emit = defineEmits(['update:visible', 'select', 'success']);
+
+const router = useRouter();
+
+const visible = computed({
+  get() {
+    return props.visible;
+  },
+  set(val) {
+    emit('update:visible', val);
+  },
+});
+
+const showDetail = ref(false);
+const currentTheme = ref({});
+const currentCategory = ref('all');
+const currentFilter = ref('home_image');
+const searchKeyword = ref('');
+const filterOptions = [
+  { label: '首页', value: 'home_image' },
+  { label: '分类页', value: 'category_image' },
+  { label: '详情页', value: 'detail_image' },
+  { label: '个人中心', value: 'user_image' },
+];
+const themes = ref([]);
+const page = ref(1);
+const limit = ref(9);
+const total = ref(0);
+const BaseURL = SettingMer.httpUrl + '/';
+
+watch(
+  () => props.currentType,
+  (newVal) => {
+    currentFilter.value = `${newVal}_image`;
+  },
+  { immediate: true },
+);
+watch(
+  () => props.activeTab,
+  (newVal) => {
+    if (newVal === 'mall') {
+      limit.value = 10;
+    } else {
+      limit.value = 9;
+    }
+  },
+  { immediate: true },
+);
+
+function getList() {
+  const reqData = { page: page.value, limit: limit.value, title: searchKeyword.value };
+  if (props.type == 'mall' && props.currentType == 'home') {
+    reqData.pageType = 'all';
+  } else {
+    reqData.pageType = 'theme';
+  }
+  getThemeList(reqData).then((res) => {
+    themes.value = res.list;
+    total.value = res.count;
+  });
+}
+function handlePageChange(val) {
+  page.value = val;
+  getList();
+}
+function toTheme() {
+  window.open('https://www.crmeb.com/theme?from=javakytheme', '_blank');
+}
+function handleClose() {
+  showDetail.value = false;
+  emit('update:visible', false);
+}
+function selectTheme(theme) {
+  if (props.themeId && props.themeId != 0) {
+    ElMessageBox.confirm('确定要使用该主题数据吗？这将覆盖当前页面配置', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+      .then(() => {
+        const type = currentFilter.value.replace('_image', '');
+        useThemeData(props.themeId, {
+          theme_id: theme.id,
+          type: type,
         })
           .then(() => {
-            const type = this.currentFilter.replace('_image', '');
-            useThemeData(this.themeId, {
-              theme_id: theme.id,
-              type: type,
-            })
-              .then(() => {
-                this.$message.success('设置成功');
-                this.$emit('success');
-                this.handleClose();
-                this.showDetail = false;
-              })
-              .catch((err) => {
-                this.$message.error((err && (err.message || err.msg)) || '设置失败');
-              });
+            ElMessage.success('设置成功');
+            emit('success');
+            handleClose();
+            showDetail.value = false;
           })
-          .catch(() => {});
-      } else {
-        this.$emit('select', theme);
-        this.handleClose();
-        this.showDetail = false;
-      }
+          .catch((err) => {
+            ElMessage.error((err && (err.message || err.msg)) || '设置失败');
+          });
+      })
+      .catch(() => {});
+  } else {
+    emit('select', theme);
+    handleClose();
+    showDetail.value = false;
+  }
+}
+function viewThemeDetail(theme) {
+  currentTheme.value = theme;
+  showDetail.value = true;
+  nextTick(() => {
+    creatQrCode();
+  });
+}
+function creatQrCode() {
+  if (document.getElementById('qrcodeDetail')) {
+    document.getElementById('qrcodeDetail').innerHTML = '';
+  }
+  let url = `${BaseURL}pages/index/index?theme_id=${currentTheme.value.id}`;
+  var qrcode = new QRCode(document.getElementById('qrcodeDetail'), {
+    text: url,
+    width: 120,
+    height: 120,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H,
+  });
+}
+function createNewTheme() {
+  router.push({
+    path: '/design/edit_theme',
+    query: {
+      id: 0,
+      type: 'home',
     },
-    viewThemeDetail(theme) {
-      this.currentTheme = theme;
-      this.showDetail = true;
-      this.$nextTick(() => {
-        this.creatQrCode();
-      });
-    },
-    creatQrCode() {
-      if (document.getElementById('qrcodeDetail')) {
-        document.getElementById('qrcodeDetail').innerHTML = '';
-      }
-      let url = `${this.BaseURL}pages/index/index?theme_id=${this.currentTheme.id}`;
-      var qrcode = new QRCode(document.getElementById('qrcodeDetail'), {
-        text: url,
-        width: 120,
-        height: 120,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H,
-      });
-    },
-    createNewTheme() {
-      this.$router.push({
-        path: '/design/edit_theme',
-        query: {
-          id: 0,
-          type: 'home',
-        },
-      });
-    },
-    searchTheme() {
-      this.page = 1;
-      this.getList();
-    },
-  },
-};
+  });
+}
+function searchTheme() {
+  page.value = 1;
+  getList();
+}
+
+onMounted(() => {
+  getList();
+});
 </script>
 
 <style lang="scss" scoped>
 // 弹窗样式
-::v-deep .theme-dialog {
+:deep(.theme-dialog) {
   border-radius: 8px;
   overflow: hidden;
 
@@ -352,7 +376,6 @@ export default {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 15px 24px;
   .dialog-header-tabs {
     background: #fff;
 
@@ -386,7 +409,6 @@ export default {
   display: flex;
   flex-direction: column;
   height: calc(100% - 100px);
-  padding: 1px 24px 1px 24px !important;
 
   .content-wrapper {
     flex: 1;
@@ -395,7 +417,6 @@ export default {
     .main-content {
       flex: 1;
       min-height: 756px;
-      padding: 20px 0;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -415,7 +436,7 @@ export default {
       .theme-grid {
         display: flex;
         flex-wrap: wrap;
-        gap: 30px;
+        gap: 25px;
         overflow-y: auto;
         flex: 1;
 
@@ -601,7 +622,7 @@ export default {
     }
   }
 }
-::v-deep .el-dialog__body {
+:deep(.el-dialog__body) {
   max-height: calc(100vh - 100px) !important;
 }
 .detail-content {

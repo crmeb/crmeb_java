@@ -4,7 +4,7 @@
     <div class="config-panel">
       <div class="panel-header">
         <span class="title">当前风格：商城通用主题</span>
-        <el-button type="text" @click="openStyleDialog">更换风格</el-button>
+        <el-button link @click="openStyleDialog">更换风格</el-button>
         <span class="restore-btn" @click="initData()"><i class="el-icon-refresh-left"></i> 还原主题</span>
       </div>
 
@@ -53,11 +53,7 @@
         <!-- 模拟预览图 0 1 2 -->
         <div class="preview-item" v-for="i in [0, 1, 2]" :key="i">
           <div class="phone-mockup">
-            <img
-              :style="{ background: themeColor }"
-              :src="require('@/assets/images/theme-bg-' + i + '.png')"
-              alt="preview"
-            />
+            <img :style="{ background: themeColor }" :src="themeBgs[i]" alt="preview" />
             <div v-if="i == 0" class="buy-btn">
               <div class="btn btn-outline" :style="{ background: subColor }">加入购物车</div>
               <div class="btn btn-primary" :style="{ background: themeColor }">立即购买</div>
@@ -69,7 +65,7 @@
 
     <!-- 风格选择弹窗 -->
     <el-dialog
-      :visible.sync="styleDialogVisible"
+      v-model="styleDialogVisible"
       width="1188px"
       top="9vh"
       custom-class="theme-dialog"
@@ -80,27 +76,29 @@
       :lock-scroll="true"
       @close="handleClose"
     >
-      <div slot="title" v-if="!showDetail" class="dialog-header">
-        <div class="dialog-header-tabs">
-          <div class="tabs">
-            <span class="title">我的主题</span>
-            <img
-              class="title-icon"
-              src="https://www.crmeb.com/static/images/zhutishichang.png"
-              alt=""
-              @click="toTheme"
-            />
+      <template #header>
+        <div v-if="!showDetail" class="dialog-header">
+          <div class="dialog-header-tabs">
+            <div class="tabs">
+              <span class="title">我的主题</span>
+              <img
+                class="title-icon"
+                src="https://www.crmeb.com/static/images/zhutishichang.png"
+                alt=""
+                @click="toTheme"
+              />
+            </div>
+          </div>
+          <i class="el-icon-close" @click="handleClose"></i>
+        </div>
+        <div v-else class="detail-header">
+          <div class="left-action">
+            <div class="back-btn" @click="backToStyleList"><i class="el-icon-arrow-left"></i> 返回</div>
+            <div class="vertical-line"></div>
+            <span class="detail-title">风格详情</span>
           </div>
         </div>
-        <i class="el-icon-close" @click="handleClose"></i>
-      </div>
-      <div v-else class="detail-header" slot="title">
-        <div class="left-action">
-          <div class="back-btn" @click="backToStyleList"><i class="el-icon-arrow-left"></i> 返回</div>
-          <div class="vertical-line"></div>
-          <span class="detail-title">风格详情</span>
-        </div>
-      </div>
+      </template>
 
       <transition name="fade-transform" mode="out-in">
         <div class="dialog-content" v-if="!showDetail" key="list">
@@ -108,12 +106,7 @@
             <div class="main-content">
               <div class="filters-header">
                 <div class="search-box">
-                  <el-input
-                    v-model="searchKeyword"
-                    placeholder="请输入主题名称"
-                    prefix-icon="el-icon-search"
-                    size="small"
-                  ></el-input>
+                  <el-input v-model="searchKeyword" placeholder="请输入主题名称" :prefix-icon="Search"></el-input>
                 </div>
               </div>
 
@@ -121,11 +114,7 @@
                 <div class="theme-item" v-for="(item, index) in filteredStyleList" :key="index">
                   <div class="theme-cover" :style="{ background: hexToRgba(item.themeColor, 0.1) }">
                     <div class="phone-preview">
-                      <img
-                        :style="{ background: item.themeColor }"
-                        :src="require('@/assets/images/theme-bg-1.png')"
-                        alt="style"
-                      />
+                      <img :style="{ background: item.themeColor }" :src="themeBg1" alt="style" />
                     </div>
                   </div>
                   <div class="theme-info">
@@ -138,8 +127,8 @@
                       </div>
                     </div>
                     <div class="hover-actions">
-                      <el-button plain size="small" @click="viewStyleDetail(item)">查看详情</el-button>
-                      <el-button type="primary" size="small" @click="handleStyleSelect(item)">使用风格</el-button>
+                      <el-button plain @click="viewStyleDetail(item)">查看详情</el-button>
+                      <el-button type="primary" @click="handleStyleSelect(item)">使用风格</el-button>
                     </div>
                   </div>
                 </div>
@@ -150,7 +139,7 @@
                   layout="prev, pager, next"
                   :total="total"
                   :page-size="limit"
-                  :current-page.sync="page"
+                  :current-page="page"
                   @current-change="handlePageChange"
                 >
                 </el-pagination>
@@ -167,11 +156,7 @@
               <div class="images-list">
                 <div class="image-item" v-for="i in [0, 1, 2]" :key="i">
                   <div class="phone-mockup">
-                    <img
-                      :style="{ background: selectedStyle.themeColor }"
-                      :src="require('@/assets/images/theme-bg-' + i + '.png')"
-                      alt="preview"
-                    />
+                    <img :style="{ background: selectedStyle.themeColor }" :src="themeBgs[i]" alt="preview" />
                     <div v-if="i == 0" class="buy-btn">
                       <div class="btn btn-outline" :style="{ background: selectedStyle.subColor }">加入购物车</div>
                       <div class="btn btn-primary" :style="{ background: selectedStyle.themeColor }">立即购买</div>
@@ -187,197 +172,209 @@
   </div>
 </template>
 
-<script>
-import { themeSave, themeInfo, getThemeList } from '@/api/theme';
-import QRCode from 'qrcodejs2';
-import Setting from '@/utils/settingMer';
+<script setup>
+import { ref, computed, nextTick, onMounted } from 'vue'
+import { Search } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from '@/utils/elementPlusFeedback'
+import { useRoute, useRouter } from 'vue-router'
+import { themeSave, themeInfo, getThemeList } from '@/api/theme'
+import QRCode from 'qrcodejs2'
+import Setting from '@/utils/settingMer'
+import themeBg0 from '@/assets/images/theme-bg-0.png'
+import themeBg1 from '@/assets/images/theme-bg-1.png'
+import themeBg2 from '@/assets/images/theme-bg-2.png'
 
-export default {
-  name: 'StyleConfig',
-  data() {
-    return {
-      themeColor: '#E93323',
-      gradientColor: '#FF7F00',
-      subColor: '#FFC300',
-      BaseURL: Setting.httpUrl + '/',
-      styleDialogVisible: false,
-      activeTab: 'my',
-      searchKeyword: '',
-      styleList: [],
-      showDetail: false,
-      selectedStyle: {},
-      page: 1,
-      limit: 10,
-      total: 0,
-      loading: false,
-    };
-  },
-  computed: {
-    filteredStyleList() {
-      return this.styleList.filter((item) => {
-        const matchSearch = item.name.includes(this.searchKeyword);
-        return matchSearch;
-      });
-    },
-  },
-  mounted() {
-    if (this.$route.query.id != 0) this.initData();
-  },
-  methods: {
-    openStyleDialog() {
-      this.styleDialogVisible = true;
-      this.page = 1;
-      this.getStyleList();
-    },
-    getStyleList() {
-      this.loading = true;
-      getThemeList({ page: this.page, limit: this.limit })
-        .then((res) => {
-          this.loading = false;
-          this.total = res.data.count;
-          this.styleList = res.data.list.map((item) => {
-            return {
-              ...item,
-              name: item.title,
-              image: item.image,
-              themeColor: (item.theme_data && item.theme_data.theme_color) || '#E93323',
-              gradientColor: (item.theme_data && item.theme_data.gradient_color) || '#FF7F00',
-              subColor: (item.theme_data && item.theme_data.sub_color) || '#FFC300',
-            };
-          });
-        })
-        .catch(() => {
-          this.loading = false;
-        });
-    },
-    handlePageChange(val) {
-      this.page = val;
-      this.getStyleList();
-    },
-    handleStyleSelect(item) {
-      this.themeColor = (item.theme_data && item.theme_data.theme_color) || '#E93323';
-      this.gradientColor = (item.theme_data && item.theme_data.gradient_color) || '#FF7F00';
-      this.subColor = (item.theme_data && item.theme_data.sub_color) || '#FFC300';
-      this.$message.success('已应用风格颜色');
-      this.styleDialogVisible = false;
-      this.showDetail = false;
-    },
-    toTheme() {
-      window.open('https://www.crmeb.com/theme?from=crmebkytheme', '_blank');
-    },
-    viewStyleDetail(item) {
-      this.selectedStyle = item;
-      this.showDetail = true;
-    },
-    backToStyleList() {
-      this.showDetail = false;
-    },
-    handleClose() {
-      this.styleDialogVisible = false;
-      this.showDetail = false;
-    },
-    // 生成二维码
-    creatQrCode() {
-      if (this.$refs.qrCodeUrl) {
-        this.$refs.qrCodeUrl.innerHTML = '';
-        let url = `${this.BaseURL}pages/index/index?theme_id=${this.$route.query.id}`;
-        new QRCode(this.$refs.qrCodeUrl, {
-          text: url,
-          width: 110,
-          height: 110,
-          colorDark: '#000000',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.H,
-        });
-      }
-    },
-    hexToRgba(hex, opacity) {
-      if (!hex) hex = '#E93323';
-      hex = hex.replace('#', '');
-      const r = parseInt(hex.substring(0, 2), 16);
-      const g = parseInt(hex.substring(2, 4), 16);
-      const b = parseInt(hex.substring(4, 6), 16);
-      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-    },
-    bgLight() {
-      //这里根据this.themeColor计算出一个该色值透明度为0.1的颜色
-      const hex = this.themeColor.replace('#', '');
-      const r = parseInt(hex.substring(0, 2), 16);
-      const g = parseInt(hex.substring(2, 4), 16);
-      const b = parseInt(hex.substring(4, 6), 16);
-      return `rgba(${r}, ${g}, ${b}, 0.1)`;
-    },
-    // 初始化数据
-    initData() {
-      this.$nextTick(() => {
-        this.creatQrCode();
-      });
-      themeInfo(this.$route.query.id, 'theme').then((res) => {
-        if (res.data) {
-          this.themeColor = res.data.theme_color;
-          this.gradientColor = res.data.gradient_color;
-          this.subColor = res.data.sub_color;
+defineOptions({ name: 'StyleConfig' })
+
+const route = useRoute()
+const router = useRouter()
+
+const themeBgs = [themeBg0, themeBg1, themeBg2]
+const themeColor = ref('#E93323')
+const gradientColor = ref('#FF7F00')
+const subColor = ref('#FFC300')
+const BaseURL = Setting.httpUrl + '/'
+const styleDialogVisible = ref(false)
+const activeTab = ref('my')
+const searchKeyword = ref('')
+const styleList = ref([])
+const showDetail = ref(false)
+const selectedStyle = ref({})
+const page = ref(1)
+const limit = ref(10)
+const total = ref(0)
+const loading = ref(false)
+const showUrl = ref('')
+const qrCodeUrl = ref(null)
+const coverUrl = ref('')
+
+const filteredStyleList = computed(() => {
+  return styleList.value.filter((item) => {
+    const matchSearch = item.name.includes(searchKeyword.value)
+    return matchSearch
+  })
+})
+
+function openStyleDialog() {
+  styleDialogVisible.value = true
+  page.value = 1
+  getStyleList()
+}
+function getStyleList() {
+  loading.value = true
+  getThemeList({ page: page.value, limit: limit.value })
+    .then((res) => {
+      loading.value = false
+      total.value = res.data.count
+      styleList.value = res.data.list.map((item) => {
+        return {
+          ...item,
+          name: item.title,
+          image: item.image,
+          themeColor: (item.theme_data && item.theme_data.theme_color) || '#E93323',
+          gradientColor: (item.theme_data && item.theme_data.gradient_color) || '#FF7F00',
+          subColor: (item.theme_data && item.theme_data.sub_color) || '#FFC300'
         }
-      });
-    },
-    saveOnly() {
-      this.$confirm('确认仅保存风格吗？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }).then(() => {
-        themeSave(this.$route.query.id, {
-          type: 'theme',
-          value: {
-            theme_color: this.themeColor,
-            gradient_color: this.gradientColor,
-            sub_color: this.subColor,
-            light_color: this.bgLight(),
-          },
-        }).then((res) => {
-          if (this.$route.query.id == 0) {
-            this.$router.replace({ query: { ...this.$route.query, id: res.data.id } });
-          }
-          this.$message({
-            type: 'success',
-            message: res.msg,
-          });
-        });
-      });
-    },
-    saveAndClose() {
-      // 保存主题配置数据
-      themeSave(this.$route.query.id, {
-        type: 'theme',
-        value: {
-          theme_color: this.themeColor,
-          gradient_color: this.gradientColor,
-          sub_color: this.subColor,
-          light_color: this.bgLight(),
-        },
       })
-        .then((res) => {
-          // 如果是新建（id为0），更新路由参数
-          if (this.$route.query.id == 0) {
-            this.$router.replace({ query: { ...this.$route.query, id: res.data.id } });
-          }
+    })
+    .catch(() => {
+      loading.value = false
+    })
+}
+function handlePageChange(val) {
+  page.value = val
+  getStyleList()
+}
+function handleStyleSelect(item) {
+  themeColor.value = (item.theme_data && item.theme_data.theme_color) || '#E93323'
+  gradientColor.value = (item.theme_data && item.theme_data.gradient_color) || '#FF7F00'
+  subColor.value = (item.theme_data && item.theme_data.sub_color) || '#FFC300'
+  ElMessage.success('已应用风格颜色')
+  styleDialogVisible.value = false
+  showDetail.value = false
+}
+function toTheme() {
+  window.open('https://www.crmeb.com/theme?from=javakytheme', '_blank')
+}
+function viewStyleDetail(item) {
+  selectedStyle.value = item
+  showDetail.value = true
+}
+function backToStyleList() {
+  showDetail.value = false
+}
+function handleClose() {
+  styleDialogVisible.value = false
+  showDetail.value = false
+}
+// 生成二维码
+function creatQrCode() {
+  if (qrCodeUrl.value) {
+    qrCodeUrl.value.innerHTML = ''
+    let url = showUrl.value
+    console.log('生成二维码链接：', url)
+    new QRCode(qrCodeUrl.value, {
+      text: url,
+      width: 110,
+      height: 110,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    })
+  }
+}
+function hexToRgba(hex, opacity) {
+  if (!hex) hex = '#E93323'
+  hex = hex.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+function bgLight() {
+  //这里根据this.themeColor计算出一个该色值透明度为0.1的颜色
+  const hex = themeColor.value.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, 0.1)`
+}
+// 初始化数据
+function initData() {
+  themeInfo(route.query.id, 'theme').then((res) => {
+    if (res.data) {
+      themeColor.value = res.data.theme_color
+      gradientColor.value = res.data.gradient_color
+      subColor.value = res.data.sub_color
+      showUrl.value = res.data.showUrl
+      nextTick(() => {
+        creatQrCode()
+      })
+    }
+  })
+}
+function saveOnly() {
+  ElMessageBox.confirm('确认仅保存风格吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    themeSave(route.query.id, {
+      type: 'theme',
+      value: {
+        theme_color: themeColor.value,
+        gradient_color: gradientColor.value,
+        sub_color: subColor.value,
+        light_color: bgLight()
+      }
+    }).then((res) => {
+      if (route.query.id == 0) {
+        router.replace({ query: { ...route.query, id: res.data.id } })
+      }
+      ElMessage({
+        type: 'success',
+        message: res.msg
+      })
+    })
+  })
+}
+function saveAndClose() {
+  // 保存主题配置数据
+  themeSave(route.query.id, {
+    type: 'theme',
+    value: {
+      theme_color: themeColor.value,
+      gradient_color: gradientColor.value,
+      sub_color: subColor.value,
+      light_color: bgLight()
+    }
+  })
+    .then((res) => {
+      // 如果是新建（id为0），更新路由参数
+      if (route.query.id == 0) {
+        router.replace({ query: { ...route.query, id: res.data.id } })
+      }
 
-          // 显示成功消息
-          this.$message({
-            type: 'success',
-            message: res.msg,
-          });
+      // 显示成功消息
+      ElMessage({
+        type: 'success',
+        message: res.msg
+      })
 
-          // 保存成功后跳转回主题列表页面
-          this.$router.push(`${''}/setting/my_theme`);
-        })
-        .catch((err) => {
-          // 保存失败时的处理
-          this.$message.error(err.msg || '保存失败');
-        });
-    },
-  },
-};
+      // 保存成功后跳转回主题列表页面
+      router.push(`${''}/setting/my_theme`)
+    })
+    .catch((err) => {
+      // 保存失败时的处理
+      ElMessage.error(err.msg || '保存失败')
+    })
+}
+
+onMounted(() => {
+  if (route.query.id != 0) initData()
+})
+
+defineExpose({ saveOnly, saveAndClose })
 </script>
 
 <style lang="scss" scoped>
@@ -405,14 +402,14 @@ export default {
     background: #fff;
     padding: 35px 40px;
     border-right: 1px solid #eee;
-    ::v-deep .el-color-picker__trigger {
+    :deep(.el-color-picker__trigger) {
       border: none;
     }
     .panel-header {
       display: flex;
       align-items: center;
       margin-bottom: 30px;
-      ::v-deep .el-button {
+      :deep(.el-button) {
         font-size: 14px;
         padding-left: 0 !important;
       }
@@ -570,7 +567,7 @@ export default {
   }
 
   // 弹窗样式
-  ::v-deep .theme-dialog {
+  :deep(.theme-dialog) {
     border-radius: 8px;
     overflow: hidden;
     margin-top: 50px !important;
@@ -586,7 +583,7 @@ export default {
     }
   }
 }
-::v-deep .el-dialog__body {
+:deep(.el-dialog__body) {
   max-height: max-content;
   padding: 0px !important;
   overflow-y: auto;
@@ -988,8 +985,8 @@ export default {
 
             .buy-btn {
               position: absolute;
-              bottom: 28px;
-              right: 9px;
+              bottom: 22px;
+              right: 12px;
               display: flex;
 
               .btn {

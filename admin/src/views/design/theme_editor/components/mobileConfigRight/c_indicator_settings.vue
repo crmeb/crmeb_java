@@ -7,7 +7,7 @@
         <span class="label">指示器样式</span>
         <div class="input-box">
           <el-radio-group v-model="configData.tabVal">
-            <el-radio :label="index" v-for="(item, index) in configData.tabList" :key="index">
+            <el-radio :label="index" :value="index" v-for="(item, index) in configData.tabList" :key="index">
               {{ item.name }}
             </el-radio>
           </el-radio-group>
@@ -19,7 +19,7 @@
         <span class="label">指示器位置</span>
         <div class="input-box">
           <el-radio-group v-model="configData.positionVal">
-            <el-radio :label="index" v-for="(item, index) in configData.positionList" :key="index">
+            <el-radio :label="index" :value="index" v-for="(item, index) in configData.positionList" :key="index">
               {{ item.name }}
             </el-radio>
           </el-radio-group>
@@ -33,39 +33,31 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch } from 'vue';
 import toolCom from '@/views/design/theme_editor/components/mobileConfigRight/index.js';
 import c_bg_color from './c_bg_color';
 
-export default {
-  name: 'c_indicator_settings',
-  components: {
-    ...toolCom,
-    c_bg_color,
+defineOptions({ name: 'c_indicator_settings' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+  configNme: {
+    type: String,
   },
-  data() {
-    return {
-      configData: {},
-    };
+});
+
+const configData = ref({});
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    configData.value = nVal[props.configNme] || {};
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
-};
+  { deep: true, immediate: true },
+);
 </script>
 
 <style scoped lang="scss">
@@ -91,7 +83,7 @@ export default {
       }
       .input-box {
         flex: 1;
-        ::v-deep .el-radio {
+        :deep(.el-radio) {
           margin-bottom: 0px;
         }
         &.red-text {

@@ -5,44 +5,42 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_title',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
-    title: {
-      type: String,
-      default: '',
-    },
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+
+defineOptions({ name: 'c_title' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-    };
+  configNme: {
+    type: String,
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-    },
+  title: {
+    type: String,
+    default: '',
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      this.configData = this.title || this.configObj[this.configNme];
-    });
+});
+
+const defaults = ref({});
+const configData = ref({});
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
   },
-  methods: {},
-};
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    defaults.value = props.configObj;
+    configData.value = props.title || props.configObj[props.configNme];
+  });
+});
 </script>
 
 <style scoped lang="scss">

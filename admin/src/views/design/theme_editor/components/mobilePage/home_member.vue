@@ -13,7 +13,7 @@
             <div class="avatar">
               <img :src="logoConfig" v-if="logoConfig" />
               <div class="empty-box" v-else>
-                <img src="@/assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
             <div class="text">
@@ -39,13 +39,7 @@
                 <span
                   class="mb-iconfont"
                   :class="item.icon"
-                  :style="{
-                    display: 'inline-block',
-                    color: iconStyle.color.color[0].item,
-                    fontSize: iconStyle.size.val + 'px',
-                    padding: iconStyle.padding.val + 'px',
-                    transform: 'rotate(' + iconStyle.rotate.val + 'deg)',
-                  }"
+                  :style="menuIconStyle"
                   v-if="item.icon"
                 ></span>
               </template>
@@ -67,7 +61,7 @@
             <div class="avatar">
               <img :src="logoConfig" v-if="logoConfig" />
               <div class="empty-box" v-else>
-                <img src="@/assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
           </div>
@@ -80,7 +74,7 @@
             <div class="avatar">
               <img :src="logoConfig" v-if="logoConfig" />
               <div class="empty-box" v-else>
-                <img src="@/assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
             </div>
             <div class="text">
@@ -101,20 +95,14 @@
               <template v-if="menuStyle == 0">
                 <img :src="item.img" v-if="item.img" class="menu-img" />
                 <div class="empty-icon" v-else>
-                  <img src="@/assets/images/shan.png" />
+                  <img :src="shanImg" />
                 </div>
               </template>
               <template v-else>
                 <span
                   class="mb-iconfont"
                   :class="item.icon"
-                  :style="{
-                    display: 'inline-block',
-                    color: iconStyle.color.color[0].item,
-                    fontSize: iconStyle.size.val + 'px',
-                    padding: iconStyle.padding.val + 'px',
-                    transform: 'rotate(' + iconStyle.rotate.val + 'deg)',
-                  }"
+                  :style="menuIconStyle"
                   v-if="item.icon"
                 ></span>
               </template>
@@ -130,7 +118,7 @@
               <div class="avatar">
                 <img :src="logoConfig" v-if="logoConfig" />
                 <div class="empty-box" v-else>
-                  <img src="@/assets/images/shan.png" />
+                  <img :src="shanImg" />
                 </div>
               </div>
               <div class="text">
@@ -173,7 +161,7 @@
                       :style="{ fontSize: assetIconSize + 'px', color: assetIconColor }"
                       v-else-if="assetStyle == 1 && item.icon"
                     ></span>
-                    <div class="empty-icon" v-else><img src="@/assets/images/shan.png" /></div>
+                    <div class="empty-icon" v-else><img :src="shanImg" /></div>
                   </div>
                   <div class="label" :style="{ fontSize: assetTextSize + 'px', color: assetTextColor }">
                     {{ item.info[0].value }}
@@ -199,7 +187,7 @@
               </div>
               <div class="img-box">
                 <img :src="rightEntryList[0].img" v-if="rightEntryList[0].img" />
-                <div class="empty-icon" v-else><img src="@/assets/images/shan.png" /></div>
+                <div class="empty-icon" v-else><img :src="shanImg" /></div>
               </div>
             </div>
           </div>
@@ -213,7 +201,7 @@
               <div class="avatar">
                 <img :src="logoConfig" v-if="logoConfig" />
                 <div class="empty-box" v-else>
-                  <img src="@/assets/images/shan.png" />
+                  <img :src="shanImg" />
                 </div>
               </div>
               <div class="text">
@@ -234,13 +222,7 @@
                   <span
                     class="mb-iconfont"
                     :class="item.icon"
-                    :style="{
-                      display: 'inline-block',
-                      color: iconStyle.color.color[0].item,
-                      fontSize: iconStyle.size.val + 'px',
-                      padding: iconStyle.padding.val + 'px',
-                      transform: 'rotate(' + iconStyle.rotate.val + 'deg)',
-                    }"
+                    :style="menuIconStyle"
                     v-if="item.icon"
                   ></span>
                 </template>
@@ -282,7 +264,7 @@
                     :style="{ fontSize: assetIconSize + 'px', color: assetIconColor }"
                     v-else-if="assetStyle == 1 && item.icon"
                   ></span>
-                  <div class="empty-icon" v-else><img src="@/assets/images/shan.png" /></div>
+                  <div class="empty-icon" v-else><img :src="shanImg" /></div>
                 </div>
                 <div class="label">{{ item.info[0].value }}</div>
               </div>
@@ -334,7 +316,7 @@
                   :style="{ fontSize: assetIconSize + 'px', color: assetIconColor }"
                   v-else-if="assetStyle == 1 && item.icon"
                 ></span>
-                <div class="empty-icon" v-else><img src="@/assets/images/shan.png" /></div>
+                <div class="empty-icon" v-else><img :src="shanImg" /></div>
               </div>
               <div class="label" :style="{ color: assetTextColor, fontSize: assetTextSize + 'px' }">
                 {{ item.info[0].value }}
@@ -353,7 +335,7 @@
             </div>
             <div class="img-box">
               <img :src="item.img" v-if="item.img" />
-              <div class="empty-icon" v-else><img src="@/assets/images/shan.png" /></div>
+              <div class="empty-icon" v-else><img :src="shanImg" /></div>
             </div>
             <div class="line" v-if="index < memberList.length - 1"></div>
           </div>
@@ -381,7 +363,7 @@
                     v-else-if="item.icon"
                     :style="{ color: ms2RightsColor }"
                   ></span>
-                  <div class="empty-icon" v-else><img src="@/assets/images/shan.png" /></div>
+                  <div class="empty-icon" v-else><img :src="shanImg" /></div>
                 </div>
                 <span class="text" :style="{ color: ms2RightsColor }">{{ item.info[0].value }}</span>
               </div>
@@ -452,166 +434,40 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState } from 'vuex';
-export default {
-  components: {},
+<script setup>
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import shanImg from '@/views/design/theme_editor/assets/images/shan.png';
+
+defineOptions({
   name: 'home_member',
   cname: '会员中心',
-  configName: 'c_member',
   icon: '#iconzujian-huiyuanxinxi',
-  type: 4, // 0 基础组件 1 营销组件 2工具组件 3 商品组件 4 用户组件
+  configName: 'c_member',
+  type: 4,
   defaultName: 'member',
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-    dataList() {
-      let list = [
-        { id: 1, name: '余额', val: '200' },
-        { id: 3, name: '优惠券', val: '2888' },
-        { id: 2, name: '积分', val: '3000' },
-        { id: 5, name: '收藏商品', val: '1660' },
-        { id: 6, name: '浏览记录', val: '1660' },
-        { id: 8, name: '推广佣金', val: '666' },
-        { id: 9, name: '推广人', val: '1660' },
-        { id: 10, name: '推广订单', val: '1660' },
-      ];
-      return list.filter((item) => this.checkType.indexOf(item.id) != -1);
-    },
-    moduleCardStyle() {
-      if (this.styleConfig == 3) {
-        let color1 = this.moduleBgColor && this.moduleBgColor.color[0] ? this.moduleBgColor.color[0].item : '#fff';
-        let color2 = this.moduleBgColor && this.moduleBgColor.color[1] ? this.moduleBgColor.color[1].item : '#fff';
-        return {
-          background: `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`,
-          borderRadius: this.moduleRadius ? this.moduleRadius : '0px',
-        };
-      }
-      return {};
-    },
-    moduleTitleColor() {
-      return this.moduleTextColor && this.moduleTextColor.color[0] ? this.moduleTextColor.color[0].item : '#333';
-    },
-    memberTopMargin() {
-      return this.styleConfig == 3 || this.styleConfig == 4 ? '10px' : '';
-    },
-    cardStyle() {
-      if (this.memberStyleConfig == 0) {
-        let color1 = this.cardBgColor && this.cardBgColor.color[0] ? this.cardBgColor.color[0].item : '#fff';
-        let color2 = this.cardBgColor && this.cardBgColor.color[1] ? this.cardBgColor.color[1].item : '#fff';
-        return {
-          background: `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`,
-          borderRadius: this.cardBgRadius ? this.cardBgRadius : '0px',
-        };
-      } else if (this.memberStyleConfig == 1) {
-        let color1 = this.cardBgColor && this.cardBgColor.color[0] ? this.cardBgColor.color[0].item : '#fff';
-        let color2 = this.cardBgColor && this.cardBgColor.color[1] ? this.cardBgColor.color[1].item : '#fff';
-        return {
-          background: `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`,
-          borderRadius: this.cardBgRadius ? this.cardBgRadius : '0px',
-        };
-      } else if (this.memberStyleConfig == 2) {
-        let style = { borderRadius: this.cardBgRadius ? this.cardBgRadius : '0px' };
-        if (this.ms3BgMode === 1 && this.ms3BackgroundImage) {
-          style.backgroundImage = `url(${this.ms3BackgroundImage})`;
-          style.backgroundRepeat = 'no-repeat';
-          style.backgroundSize = '100% 100%';
-        } else {
-          const c1 = this.cardBgColor && this.cardBgColor.color[0] ? this.cardBgColor.color[0].item : '#fff';
-          const c2 = this.cardBgColor && this.cardBgColor.color[1] ? this.cardBgColor.color[1].item : c1;
-          style.background = `linear-gradient(90deg, ${c1} 0%, ${c2} 100%)`;
-        }
-        return style;
-      } else if (this.memberStyleConfig == 3) {
-        let style = { borderRadius: this.cardBgRadius ? this.cardBgRadius : '0px' };
-        if (this.ms4BgMode === 1 && this.ms4BackgroundImage) {
-          style.backgroundImage = `url(${this.ms4BackgroundImage})`;
-          style.backgroundRepeat = 'no-repeat';
-          style.backgroundSize = '100% 100%';
-        } else {
-          const c1 = this.cardBgColor && this.cardBgColor.color[0] ? this.cardBgColor.color[0].item : '#fff';
-          const c2 = this.cardBgColor && this.cardBgColor.color[1] ? this.cardBgColor.color[1].item : c1;
-          style.background = `linear-gradient(90deg, ${c1} 0%, ${c2} 100%)`;
-        }
-        return style;
-      }
-      return {};
-    },
-    ms4BgColorStyle() {
-      return this.ms4BgColor && this.ms4BgColor.color ? this.ms4BgColor.color : [];
-    },
-    ms3ContainerStyle() {
-      let pad = this.ms3PaddingConfig
-        ? this.ms3PaddingConfig.valList
-        : [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }];
-      return {
-        padding: `${pad[0].val}px ${pad[1].val}px ${pad[2].val}px ${pad[3].val}px`,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      };
-    },
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+});
+
+const props = defineProps({
+  index: {
+        type: null,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
+      colorStyle: {
+        type: null,
       },
-      deep: true,
-    },
-    configObj: {
-      handler(nVal, oVal) {
-        if (!nVal) return;
-        this.ms3BgColor = nVal.ms3BgColor ? nVal.ms3BgColor.color : [];
-        this.ms3BgMode = nVal.ms3BgMode ? nVal.ms3BgMode.tabVal : 0;
-        this.ms3BackgroundImage = nVal.ms3BackgroundImage ? nVal.ms3BackgroundImage.url : '';
-        this.ms4BgColor = nVal.ms4BgColor ? nVal.ms4BgColor.color : [];
-        this.ms4BgMode = nVal.ms4BgMode ? nVal.ms4BgMode.tabVal : 0;
-        this.ms4BackgroundImage = nVal.ms4BackgroundImage ? nVal.ms4BackgroundImage.url : '';
-        this.assetIconColor = nVal.assetIconColor ? nVal.assetIconColor.color[0].item : '#ff9900';
-        this.assetIconSize = nVal.assetIconSize ? nVal.assetIconSize.val : 20;
-        this.assetTextColor = nVal.assetTextColor ? nVal.assetTextColor.color[0].item : '#333';
-        this.assetTextSize = nVal.assetTextSize ? nVal.assetTextSize.val : 12;
-      },
-      deep: true,
-    },
-  },
-  data() {
-    return {
-      configObj: null,
-      assetIconColor: '',
-      assetIconSize: 20,
-      assetTextColor: '',
-      assetTextSize: 12,
-      defaultConfig: {
+});
+
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '会员中心',
         name: 'member',
         desc: '会员中心模块，可以用来展示会员信息、优惠券、积分等',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -844,211 +700,336 @@ export default {
           min: 10,
           max: 32,
         },
-      },
-      pageData: {},
-      styleConfig: 0,
-      userInfoConfig: 0,
-      memberStyleConfig: 0,
-      iconStyle: {},
-      checkType: [],
-      logoConfig: '',
-      menuStyle: 0,
-      menuList: [],
-      shortcutStyle: 0,
-      shortcutList: [],
-      assetMode: 0,
-      dataStyle: 0,
-      assetStyle: 2,
-      assetList: [],
-      bgColorLeft: '',
-      bgColorRight: '',
-      bottomBgColor: '',
-      fillet: null,
-      paddingConfig: {
+      };
+
+const pageData = ref({});
+const configObj = ref(null);
+const styleConfig = ref(0);
+const userInfoConfig = ref(0);
+const memberStyleConfig = ref(0);
+const iconStyle = ref({});
+const checkType = ref([]);
+const logoConfig = ref('');
+const menuStyle = ref(0);
+const menuList = ref([]);
+const shortcutStyle = ref(0);
+const shortcutList = ref([]);
+const assetMode = ref(0);
+const dataStyle = ref(0);
+const assetStyle = ref(2);
+const assetList = ref([]);
+const assetIconColor = ref('#ff9900');
+const assetIconSize = ref(20);
+const assetTextColor = ref('#333');
+const assetTextSize = ref(12);
+const bgColorLeft = ref('');
+const bgColorRight = ref('');
+const bottomBgColor = ref('');
+const fillet = ref(null);
+const paddingConfig = ref({
         title: '内边距',
         isAll: false,
         val: 15,
         min: 0,
         valList: [{ val: 15 }, { val: 15 }, { val: 15 }, { val: 15 }],
-      },
-      marginConfig: {
+      });
+const marginConfig = ref({
         title: '外边距',
         isAll: false,
         val: 0,
         min: 0,
         valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-      },
-      nameColor: '#fff',
-      nameSize: 16,
-      numColor: '#fff',
-      numSize: 14,
-      dataTitleColor: '#fff',
-      dataNumColor: '#fff',
-      zIndexConfig: null,
-      componentBgConfig: null,
-      borderConfig: null,
-      shadowConfig: null,
-      memberConfig: null,
-      memberList: [],
-      rightEntryList: [],
-      leftMenuList: [],
-      cardBgColor: null,
-      cardBgRadius: 0,
-      moduleBgColor: null,
-      moduleTextColor: null,
-      moduleRadius: null,
-      ms2TitleType: 0,
-      ms2TitleText: '',
-      ms2TitleColor: '',
-      ms2TitleImage: '',
-      ms2IntroText: '',
-      ms2IntroColor: '',
-      ms2RightsList: [],
-      ms2RightsColor: '',
-      ms2ExplainIcons: '',
-      ms2ExplainText: '',
-      ms2ExplainColor: '',
-      ms2ButtonText: '',
-      ms2ButtonLink: '',
-      ms2ButtonColor: '',
-      ms2ButtonBgColor: '',
-      ms3TitleText: '',
-      ms3TitleColor: '',
-      ms3ButtonText: '',
-      ms3ButtonColor: '',
-      ms3PaddingConfig: null,
-      ms3BackgroundImage: '',
-      ms3BgColor: null,
-      ms3BgMode: 0,
-      ms4BgColor: null,
-      ms4BgMode: 0,
-      ms4BackgroundImage: '',
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    getNum(item) {
-      if (!item.info || !item.info[1]) return 0;
-      let val = item.info[1].value;
-      if (val.indexOf('money') != -1) return 200;
-      if (val.indexOf('integral') != -1) return 3000;
-      if (val.indexOf('coupon') != -1) return 2888;
-      if (val.indexOf('collection') != -1) return 666;
-      if (val.indexOf('visit') != -1) return 1660;
-      return 0;
-    },
-    setConfig(data) {
-      if (!data) return;
+      });
+const nameColor = ref('#fff');
+const nameSize = ref(16);
+const numColor = ref('#fff');
+const numSize = ref(14);
+const dataTitleColor = ref('#fff');
+const dataNumColor = ref('#fff');
+const zIndexConfig = ref(null);
+const componentBgConfig = ref(null);
+const borderConfig = ref(null);
+const shadowConfig = ref(null);
+const memberConfig = ref(null);
+const memberList = ref([]);
+const rightEntryList = ref([]);
+const leftMenuList = ref([]);
+const cardBgColor = ref(null);
+const cardBgRadius = ref(0);
+const moduleBgColor = ref(null);
+const moduleTextColor = ref(null);
+const moduleRadius = ref(null);
+const ms2TitleType = ref(0);
+const ms2TitleText = ref('');
+const ms2TitleColor = ref('');
+const ms2TitleImage = ref('');
+const ms2IntroText = ref('');
+const ms2IntroColor = ref('');
+const ms2RightsList = ref([]);
+const ms2RightsColor = ref('');
+const ms2ExplainIcons = ref('');
+const ms2ExplainText = ref('');
+const ms2ExplainColor = ref('');
+const ms2ButtonText = ref('');
+const ms2ButtonLink = ref('');
+const ms2ButtonColor = ref('');
+const ms2ButtonBgColor = ref('');
+const ms3TitleText = ref('');
+const ms3TitleColor = ref('');
+const ms3ButtonText = ref('');
+const ms3ButtonColor = ref('');
+const ms3PaddingConfig = ref(null);
+const ms3BackgroundImage = ref('');
+const ms3BgColor = ref(null);
+const ms3BgMode = ref(0);
+const ms4BgColor = ref(null);
+const ms4BgMode = ref(0);
+const ms4BackgroundImage = ref('');
 
-      let dataClone = JSON.parse(JSON.stringify(data));
-      for (let key in this.defaultConfig) {
-        if (dataClone[key] === undefined) {
-          this.$set(dataClone, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+const dataList = computed(() => {
+  let list = [
+          { id: 1, name: '余额', val: '200' },
+          { id: 3, name: '优惠券', val: '2888' },
+          { id: 2, name: '积分', val: '3000' },
+          { id: 5, name: '收藏商品', val: '1660' },
+          { id: 6, name: '浏览记录', val: '1660' },
+          { id: 8, name: '推广佣金', val: '666' },
+          { id: 9, name: '推广人', val: '1660' },
+          { id: 10, name: '推广订单', val: '1660' },
+        ];
+        return list.filter((item) => checkType.value.indexOf(item.id) != -1);
+});
+
+function getColorValue(config, index, fallback) {
+  const colors = config && Array.isArray(config.color) ? config.color : [];
+  return colors[index] && colors[index].item !== undefined ? colors[index].item : fallback;
+}
+
+function getConfigVal(config, fallback) {
+  return config && config.val !== undefined ? config.val : fallback;
+}
+
+function getRadiusValue(config) {
+  const value = config && config.val !== undefined ? config.val : 0;
+  if (!config || !config.type) return `${value}px`;
+  const values = Array.isArray(config.valList) ? config.valList : [];
+  const getValue = (index) => (values[index] && values[index].val !== undefined ? values[index].val : value);
+  return `${getValue(0)}px ${getValue(1)}px ${getValue(3)}px ${getValue(2)}px`;
+}
+
+const menuIconStyle = computed(() => {
+  const style = iconStyle.value || {};
+  const size = getConfigVal(style.size, 20);
+  return {
+    display: 'inline-block',
+    color: getColorValue(style.color, 0, '#fff'),
+    fontSize: `${size}px`,
+    padding: `${getConfigVal(style.padding, 0)}px`,
+    transform: `rotate(${getConfigVal(style.rotate, 0)}deg)`,
+  };
+});
+
+const moduleCardStyle = computed(() => {
+  if (styleConfig.value == 3) {
+          let color1 = getColorValue(moduleBgColor.value, 0, '#fff');
+          let color2 = getColorValue(moduleBgColor.value, 1, color1);
+          return {
+            background: `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`,
+            borderRadius: moduleRadius.value ? moduleRadius.value : '0px',
+          };
         }
-      }
-      this.configObj = dataClone;
-      this.paddingConfig = dataClone.paddingConfig;
-      this.marginConfig = dataClone.marginConfig;
-      this.zIndexConfig = dataClone.zIndexConfig;
-      this.borderConfig = dataClone.borderConfig;
-      this.shadowConfig = dataClone.shadowConfig;
-      this.componentBgConfig = dataClone.componentBgConfig;
+        return {};
+});
 
-      this.menuStyle = dataClone.menuConfig ? dataClone.menuConfig.listStyle : 0;
-      this.styleConfig = dataClone.styleConfig.tabVal;
-      this.userInfoConfig = dataClone.userInfoConfig ? dataClone.userInfoConfig.tabVal : 0;
-      this.memberStyleConfig = dataClone.memberStyleConfig ? dataClone.memberStyleConfig.tabVal : 0;
-      this.checkType = dataClone.checkboxInfo.type;
-      this.logoConfig = dataClone.logoConfig.url;
+const moduleTitleColor = computed(() => {
+  return getColorValue(moduleTextColor.value, 0, '#333');
+});
 
-      this.menuList = dataClone.menuConfig ? dataClone.menuConfig.list : [];
-      this.shortcutStyle = dataClone.shortcutConfig ? dataClone.shortcutConfig.listStyle : 0;
-      this.shortcutList = dataClone.shortcutConfig ? dataClone.shortcutConfig.list : [];
-      this.assetMode = dataClone.assetMode ? dataClone.assetMode.tabVal : 0;
-      this.dataStyle = dataClone.dataStyle ? dataClone.dataStyle.tabVal : 0;
-      this.memberList = dataClone.memberConfig ? dataClone.memberConfig.list : [];
-      this.rightEntryList = dataClone.rightEntryConfig ? dataClone.rightEntryConfig.list : [];
-      this.cardBgColor = dataClone.cardBgColor ? dataClone.cardBgColor : [];
-      let cardFillet = dataClone.cardBgRadius ? dataClone.cardBgRadius.type : 0;
-      let cardFilletVal = dataClone.cardBgRadius ? dataClone.cardBgRadius.val : 0;
-      let cardValList = dataClone.cardBgRadius && dataClone.cardBgRadius.valList ? dataClone.cardBgRadius.valList : [];
-      this.cardBgRadius = cardFillet
-        ? cardValList[0].val +
-          'px ' +
-          cardValList[1].val +
-          'px ' +
-          cardValList[3].val +
-          'px ' +
-          cardValList[2].val +
-          'px'
-        : cardFilletVal + 'px';
-      this.moduleBgColor = dataClone.moduleBgColor;
-      this.moduleTextColor = dataClone.moduleTextColor;
-      let moduleFillet = dataClone.moduleRadius ? dataClone.moduleRadius.type : 0;
-      let moduleFilletVal = dataClone.moduleRadius ? dataClone.moduleRadius.val : 0;
-      let moduleValList =
-        dataClone.moduleRadius && dataClone.moduleRadius.valList ? dataClone.moduleRadius.valList : [];
-      this.moduleRadius = moduleFillet
-        ? moduleValList[0].val +
-          'px ' +
-          moduleValList[1].val +
-          'px ' +
-          moduleValList[3].val +
-          'px ' +
-          moduleValList[2].val +
-          'px'
-        : moduleFilletVal + 'px';
-      this.ms2TitleType = dataClone.ms2TitleType ? dataClone.ms2TitleType.tabVal : 0;
-      this.ms2TitleText = dataClone.ms2TitleText ? dataClone.ms2TitleText.value : '';
-      this.ms2TitleColor = dataClone.ms2TitleColor ? dataClone.ms2TitleColor.color[0].item : '';
-      this.ms2TitleImage = dataClone.ms2TitleImage ? dataClone.ms2TitleImage.url : '';
-      this.ms2IntroText = dataClone.ms2IntroText ? dataClone.ms2IntroText.value : '';
-      this.ms2IntroColor = dataClone.ms2IntroColor ? dataClone.ms2IntroColor.color[0].item : '';
-      this.ms2RightsList = dataClone.ms2RightsList ? dataClone.ms2RightsList.list : [];
-      this.ms2RightsColor = dataClone.ms2RightsColor ? dataClone.ms2RightsColor.color[0].item : '';
-      this.ms2ExplainIcons = dataClone.ms2ExplainIcons ? dataClone.ms2ExplainIcons.url : '';
-      this.ms2ExplainText = dataClone.ms2ExplainText ? dataClone.ms2ExplainText.value : '';
-      this.ms2ExplainColor = dataClone.ms2ExplainColor ? dataClone.ms2ExplainColor.color[0].item : '';
-      this.ms2ButtonText = dataClone.ms2ButtonText ? dataClone.ms2ButtonText.value : '';
-      this.ms2ButtonLink = dataClone.ms2ButtonLink ? dataClone.ms2ButtonLink.value : '';
-      this.ms2ButtonColor = dataClone.ms2ButtonColor ? dataClone.ms2ButtonColor.color[0].item : '';
-      this.ms2ButtonBgColor = dataClone.ms2ButtonBgColor ? dataClone.ms2ButtonBgColor.color[0].item : '';
-      this.ms3TitleText = dataClone.ms3TitleText ? dataClone.ms3TitleText.value : '';
-      this.ms3TitleColor = dataClone.ms3TitleColor ? dataClone.ms3TitleColor.color[0].item : '';
-      this.ms3ButtonText = dataClone.ms3ButtonText ? dataClone.ms3ButtonText.value : '';
-      this.ms3ButtonColor = dataClone.ms3ButtonColor ? dataClone.ms3ButtonColor.color[0].item : '';
-      this.ms3PaddingConfig = dataClone.ms3PaddingConfig;
-      this.ms3BgMode = dataClone.ms3BgMode ? dataClone.ms3BgMode.tabVal : 0;
-      this.ms3BgColor = dataClone.ms3BgColor ? dataClone.ms3BgColor.color : [];
-      this.ms3BackgroundImage = dataClone.ms3BackgroundImage ? dataClone.ms3BackgroundImage.url : '';
-      this.ms4BgMode = dataClone.ms4BgMode ? dataClone.ms4BgMode.tabVal : 0;
-      this.ms4BgColor = dataClone.ms4BgColor ? dataClone.ms4BgColor.color : [];
-      this.ms4BackgroundImage = dataClone.ms4BackgroundImage ? dataClone.ms4BackgroundImage.url : '';
-      this.assetStyle = dataClone.assetConfig ? dataClone.assetConfig.listStyle : 2;
-      this.assetList = dataClone.assetConfig ? dataClone.assetConfig.list : [];
-      this.iconStyle = dataClone.iconStyleConfig || dataClone.iconStyle || {};
-      this.bottomBgColor = dataClone.bottomBgColor.color[0].item;
-      this.fillet = dataClone.fillet;
-      this.nameColor = dataClone.nameColor ? dataClone.nameColor.color[0].item : '#333333';
-      this.nameSize = dataClone.nameSize ? dataClone.nameSize.val : 16;
-      this.numColor = dataClone.numColor ? dataClone.numColor.color[0].item : '#333333';
-      this.numSize = dataClone.numSize ? dataClone.numSize.val : 14;
-      this.dataTitleColor = dataClone.dataTitleColor ? dataClone.dataTitleColor.color[0].item : '#333333';
-      this.dataNumColor = dataClone.dataNumColor ? dataClone.dataNumColor.color[0].item : '#333333';
-      this.assetIconColor = dataClone.assetIconColor ? dataClone.assetIconColor.color[0].item : '#ff9900';
-      this.assetIconSize = dataClone.assetIconSize ? dataClone.assetIconSize.val : 20;
-      this.assetTextColor = dataClone.assetTextColor ? dataClone.assetTextColor.color[0].item : '#333';
-      this.assetTextSize = dataClone.assetTextSize ? dataClone.assetTextSize.val : 12;
-    },
+const memberTopMargin = computed(() => {
+  return styleConfig.value == 3 || styleConfig.value == 4 ? '10px' : '';
+});
+
+const cardStyle = computed(() => {
+  if (memberStyleConfig.value == 0) {
+          let color1 = getColorValue(cardBgColor.value, 0, '#fff');
+          let color2 = getColorValue(cardBgColor.value, 1, color1);
+          return {
+            background: `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`,
+            borderRadius: cardBgRadius.value ? cardBgRadius.value : '0px',
+          };
+        } else if (memberStyleConfig.value == 1) {
+          let color1 = getColorValue(cardBgColor.value, 0, '#fff');
+          let color2 = getColorValue(cardBgColor.value, 1, color1);
+          return {
+            background: `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`,
+            borderRadius: cardBgRadius.value ? cardBgRadius.value : '0px',
+          };
+        } else if (memberStyleConfig.value == 2) {
+          let style = { borderRadius: cardBgRadius.value ? cardBgRadius.value : '0px' };
+          if (ms3BgMode.value === 1 && ms3BackgroundImage.value) {
+            style.backgroundImage = `url(${ms3BackgroundImage.value})`;
+            style.backgroundRepeat = 'no-repeat';
+            style.backgroundSize = '100% 100%';
+          } else {
+            const c1 = getColorValue(cardBgColor.value, 0, '#fff');
+            const c2 = getColorValue(cardBgColor.value, 1, c1);
+            style.background = `linear-gradient(90deg, ${c1} 0%, ${c2} 100%)`;
+          }
+          return style;
+        } else if (memberStyleConfig.value == 3) {
+          let style = { borderRadius: cardBgRadius.value ? cardBgRadius.value : '0px' };
+          if (ms4BgMode.value === 1 && ms4BackgroundImage.value) {
+            style.backgroundImage = `url(${ms4BackgroundImage.value})`;
+            style.backgroundRepeat = 'no-repeat';
+            style.backgroundSize = '100% 100%';
+          } else {
+            const c1 = getColorValue(cardBgColor.value, 0, '#fff');
+            const c2 = getColorValue(cardBgColor.value, 1, c1);
+            style.background = `linear-gradient(90deg, ${c1} 0%, ${c2} 100%)`;
+          }
+          return style;
+        }
+        return {};
+});
+
+const ms4BgColorStyle = computed(() => {
+  return ms4BgColor.value && ms4BgColor.value.color ? ms4BgColor.value.color : [];
+});
+
+const ms3ContainerStyle = computed(() => {
+  let pad = ms3PaddingConfig.value
+          ? ms3PaddingConfig.value.valList
+          : [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }];
+        return {
+          padding: `${pad[0].val}px ${pad[1].val}px ${pad[2].val}px ${pad[3].val}px`,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        };
+});
+
+function getNum(item) {
+  if (!item.info || !item.info[1]) return 0;
+        let val = item.info[1].value;
+        if (val.indexOf('money') != -1) return 200;
+        if (val.indexOf('integral') != -1) return 3000;
+        if (val.indexOf('coupon') != -1) return 2888;
+        if (val.indexOf('collection') != -1) return 666;
+        if (val.indexOf('visit') != -1) return 1660;
+        return 0;
+}
+
+function setConfig(data) {
+  if (!data) return;
+
+        let dataClone = JSON.parse(JSON.stringify(data));
+        for (let key in defaultConfig) {
+          if (dataClone[key] === undefined) {
+            dataClone[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
+          }
+        }
+        configObj.value = dataClone;
+        paddingConfig.value = dataClone.paddingConfig;
+        marginConfig.value = dataClone.marginConfig;
+        zIndexConfig.value = dataClone.zIndexConfig;
+        borderConfig.value = dataClone.borderConfig;
+        shadowConfig.value = dataClone.shadowConfig;
+        componentBgConfig.value = dataClone.componentBgConfig;
+
+        menuStyle.value = dataClone.menuConfig ? dataClone.menuConfig.listStyle : 0;
+        styleConfig.value = dataClone.styleConfig.tabVal;
+        userInfoConfig.value = dataClone.userInfoConfig ? dataClone.userInfoConfig.tabVal : 0;
+        memberStyleConfig.value = dataClone.memberStyleConfig ? dataClone.memberStyleConfig.tabVal : 0;
+        checkType.value = dataClone.checkboxInfo.type;
+        logoConfig.value = dataClone.logoConfig.url;
+
+        menuList.value = dataClone.menuConfig ? dataClone.menuConfig.list : [];
+        shortcutStyle.value = dataClone.shortcutConfig ? dataClone.shortcutConfig.listStyle : 0;
+        shortcutList.value = dataClone.shortcutConfig ? dataClone.shortcutConfig.list : [];
+        assetMode.value = dataClone.assetMode ? dataClone.assetMode.tabVal : 0;
+        dataStyle.value = dataClone.dataStyle ? dataClone.dataStyle.tabVal : 0;
+        memberList.value = dataClone.memberConfig ? dataClone.memberConfig.list : [];
+        rightEntryList.value = dataClone.rightEntryConfig ? dataClone.rightEntryConfig.list : [];
+        cardBgColor.value = dataClone.cardBgColor || null;
+        cardBgRadius.value = getRadiusValue(dataClone.cardBgRadius);
+        moduleBgColor.value = dataClone.moduleBgColor || null;
+        moduleTextColor.value = dataClone.moduleTextColor || null;
+        moduleRadius.value = getRadiusValue(dataClone.moduleRadius);
+        ms2TitleType.value = dataClone.ms2TitleType ? dataClone.ms2TitleType.tabVal : 0;
+        ms2TitleText.value = dataClone.ms2TitleText ? dataClone.ms2TitleText.value : '';
+        ms2TitleColor.value = getColorValue(dataClone.ms2TitleColor, 0, '');
+        ms2TitleImage.value = dataClone.ms2TitleImage ? dataClone.ms2TitleImage.url : '';
+        ms2IntroText.value = dataClone.ms2IntroText ? dataClone.ms2IntroText.value : '';
+        ms2IntroColor.value = getColorValue(dataClone.ms2IntroColor, 0, '');
+        ms2RightsList.value = dataClone.ms2RightsList ? dataClone.ms2RightsList.list : [];
+        ms2RightsColor.value = getColorValue(dataClone.ms2RightsColor, 0, '');
+        ms2ExplainIcons.value = dataClone.ms2ExplainIcons ? dataClone.ms2ExplainIcons.url : '';
+        ms2ExplainText.value = dataClone.ms2ExplainText ? dataClone.ms2ExplainText.value : '';
+        ms2ExplainColor.value = getColorValue(dataClone.ms2ExplainColor, 0, '');
+        ms2ButtonText.value = dataClone.ms2ButtonText ? dataClone.ms2ButtonText.value : '';
+        ms2ButtonLink.value = dataClone.ms2ButtonLink ? dataClone.ms2ButtonLink.value : '';
+        ms2ButtonColor.value = getColorValue(dataClone.ms2ButtonColor, 0, '');
+        ms2ButtonBgColor.value = getColorValue(dataClone.ms2ButtonBgColor, 0, '');
+        ms3TitleText.value = dataClone.ms3TitleText ? dataClone.ms3TitleText.value : '';
+        ms3TitleColor.value = getColorValue(dataClone.ms3TitleColor, 0, '');
+        ms3ButtonText.value = dataClone.ms3ButtonText ? dataClone.ms3ButtonText.value : '';
+        ms3ButtonColor.value = getColorValue(dataClone.ms3ButtonColor, 0, '');
+        ms3PaddingConfig.value = dataClone.ms3PaddingConfig;
+        ms3BgMode.value = dataClone.ms3BgMode ? dataClone.ms3BgMode.tabVal : 0;
+        ms3BgColor.value = dataClone.ms3BgColor ? dataClone.ms3BgColor.color : [];
+        ms3BackgroundImage.value = dataClone.ms3BackgroundImage ? dataClone.ms3BackgroundImage.url : '';
+        ms4BgMode.value = dataClone.ms4BgMode ? dataClone.ms4BgMode.tabVal : 0;
+        ms4BgColor.value = dataClone.ms4BgColor ? dataClone.ms4BgColor.color : [];
+        ms4BackgroundImage.value = dataClone.ms4BackgroundImage ? dataClone.ms4BackgroundImage.url : '';
+        assetStyle.value = dataClone.assetConfig ? dataClone.assetConfig.listStyle : 2;
+        assetList.value = dataClone.assetConfig ? dataClone.assetConfig.list : [];
+        iconStyle.value = dataClone.iconStyleConfig || dataClone.iconStyle || {};
+        bottomBgColor.value = getColorValue(dataClone.bottomBgColor, 0, '#fff');
+        fillet.value = dataClone.fillet;
+        nameColor.value = getColorValue(dataClone.nameColor, 0, '#333333');
+        nameSize.value = dataClone.nameSize ? dataClone.nameSize.val : 16;
+        numColor.value = getColorValue(dataClone.numColor, 0, '#333333');
+        numSize.value = dataClone.numSize ? dataClone.numSize.val : 14;
+        dataTitleColor.value = getColorValue(dataClone.dataTitleColor, 0, '#333333');
+        dataNumColor.value = getColorValue(dataClone.dataNumColor, 0, '#333333');
+        assetIconColor.value = getColorValue(dataClone.assetIconColor, 0, '#ff9900');
+        assetIconSize.value = dataClone.assetIconSize ? dataClone.assetIconSize.val : 20;
+        assetTextColor.value = getColorValue(dataClone.assetTextColor, 0, '#333');
+        assetTextSize.value = dataClone.assetTextSize ? dataClone.assetTextSize.val : 12;
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
   },
-};
-</script>
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
 
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+      });
+});
+
+</script>
 <style scoped lang="scss">
 .mobile-page {
   display: inline-block;

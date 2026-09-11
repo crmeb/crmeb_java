@@ -4,18 +4,17 @@
       <div class="seckill-box">
         <div
           class="hd"
-          :style="
-            (styleConfig
-              ? 'backgroundImage:url(' + imgBgUrl + ')'
-              : `background:linear-gradient(90deg,${headerBgColorLeft} 0%,${headerBgColorRight} 100%)`) +
-            ';borderRadius:' +
-            bgRadius
-          "
+          :style="{
+            backgroundImage: styleConfig
+              ? `url(${imgBgUrl})`
+              : `linear-gradient(90deg,${headerBgColorLeft} 0%,${headerBgColorRight} 100%)`,
+            borderRadius: bgRadius,
+          }"
         >
           <div class="left acea-row row-middle">
             <div
               class="text"
-              v-if="titleConfig"
+              v-if="!styleConfig && titleConfig"
               :style="
                 (titleTabVal == 2 ? 'fontStyle:' : 'fontWeight:') +
                 titleText +
@@ -28,7 +27,7 @@
             >
               {{ titleTxtConfig }}
             </div>
-            <img v-else :src="styleConfig ? imgUrl : imgColorUrl" alt="" />
+            <img v-else-if="!styleConfig" :src="imgColorUrl" alt="" />
             <div
               class="tips"
               :style="{
@@ -75,8 +74,9 @@
           </div>
           <div
             class="right"
+            v-if="!styleConfig"
             :style="{
-              color: styleConfig ? headerBntColor : headerBntColor2,
+              color: headerBntColor2,
               fontSize: bntNumber + 'px',
             }"
           >
@@ -113,7 +113,7 @@
                   borderRadius: imgRadius,
                 }"
               >
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
               <div class="text">
                 <div class="top">
@@ -145,7 +145,7 @@
                             : themeColor2,
                         }"
                       ></div>
-                      <img src="../../assets/images/dian2.png" />
+                      <img :src="dian2Img" />
                     </div>
                     <div
                       class="progressTxt"
@@ -203,7 +203,7 @@
                   borderRadius: imgRadius,
                 }"
               >
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
               <div
                 :class="
@@ -274,7 +274,7 @@
                     borderRadius: imgRadius,
                   }"
                 >
-                  <img src="../../assets/images/shan.png" />
+                  <img :src="shanImg" />
                 </div>
               </div>
               <div
@@ -297,7 +297,7 @@
                     : themeColor2,
                 }"
               >
-                <img src="../../assets/images/dian.png" /><span>¥</span>350.00
+                <img :src="dianImg" /><span>¥</span>350.00
               </div>
               <div
                 class="yprice"
@@ -318,7 +318,7 @@
                   borderRadius: imgRadius,
                 }"
               >
-                <img src="../../assets/images/shan.png" />
+                <img :src="shanImg" />
               </div>
               <div
                 :class="
@@ -377,7 +377,7 @@
                 >
                   <div class="bntCon">
                     抢
-                    <img src="../../assets/images/dian.png" />
+                    <img :src="dianImg" />
                   </div>
                 </div>
               </div>
@@ -389,64 +389,44 @@
   </div>
 </template>
 
-<script>
-import { mapState } from 'vuex';
-// import theme from "@/views/design/theme_editor/mixins/theme";
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import dian2Img from '@/views/design/theme_editor/assets/images/dian2.png';
+import dianImg from '@/views/design/theme_editor/assets/images/dian.png';
+import shanImg from '@/views/design/theme_editor/assets/images/shan.png';
 import Setting from '@/utils/settingMer';
-export default {
+
+defineOptions({
   name: 'home_seckill',
   cname: '秒杀',
-  configName: 'c_home_seckill',
   icon: '#iconzujian-miaosha',
-  type: 1, // 0 基础组件 1 营销组件 2工具组件
-  defaultName: 'seckill', // 外面匹配名称
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-  },
+  configName: 'c_home_seckill',
+  type: 1,
+  defaultName: 'seckill',
+});
 
-  watch: {
-    pageData: {
-      handler(nVal) {
-        this.setConfig(nVal);
+const props = defineProps({
+  index: {
+        type: null,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler() {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
+      colorStyle: {
+        type: null,
       },
-      deep: true,
-    },
-  },
-  // mixins: [theme],
-  data() {
-    return {
-      configObj: null,
-      // 默认初始化数据禁止修改
-      defaultConfig: {
+});
+
+import seckill01Img from '@/views/design/theme_editor/assets/images/seckill01.png';
+import seckill02Img from '@/views/design/theme_editor/assets/images/seckill02.png';
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '秒杀',
         name: 'seckill',
         desc: '秒杀介绍',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -571,7 +551,7 @@ export default {
         },
         imgBgConfig: {
           info: '建议：710px * 96px',
-          url: Setting.httpUrl + '/' + 'statics/images/seckillBg.png',
+          url: Setting.httpUrl + '/' + 'crmebimage/theme-cate/seckillBg.png',
           type: 'code',
           delType: 0,
           name: '背景图片',
@@ -590,14 +570,14 @@ export default {
         },
         imgConfig: {
           info: '建议：154px * 32px',
-          url: require('@/assets/images/seckill02.png'),
+          url: seckill02Img,
           type: 'code',
           delType: 0,
           name: '标题图片',
         },
         imgColorConfig: {
           info: '建议：154px * 32px',
-          url: require('@/assets/images/seckill01.png'),
+          url: seckill01Img,
           type: 'code',
           delType: 0,
           name: '标题图片',
@@ -1113,174 +1093,197 @@ export default {
           min: 0,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-      },
-      pageData: {},
-      imgUrl: '',
-      imgBgUrl: '',
-      tipsColor: '',
-      tipsColor2: '',
-      numberBgColorLeft: '',
-      numberBgColor: '',
-      numberBgColorLeft2: '',
-      numberBgColor2: '',
-      numberColor: '',
-      numberColor2: '',
-      rightBntTxt: '',
-      headerBntColor: '',
-      headerBntColor2: '',
-      bntNumber: 0,
-      styleConfig: 0,
-      headerBgColorLeft: '',
-      headerBgColorRight: '',
-      imgColorUrl: '',
-      titleConfig: 0,
-      titleTxtConfig: '',
-      bgColor: '',
-      bottomBgColor: '',
-      paddingConfig: {
+      };
+
+const pageData = ref({});
+const imgUrl = ref('');
+const imgBgUrl = ref('');
+const tipsColor = ref('');
+const tipsColor2 = ref('');
+const numberBgColorLeft = ref('');
+const numberBgColor = ref('');
+const numberBgColorLeft2 = ref('');
+const numberBgColor2 = ref('');
+const numberColor = ref('');
+const numberColor2 = ref('');
+const rightBntTxt = ref('');
+const headerBntColor = ref('');
+const headerBntColor2 = ref('');
+const bntNumber = ref(0);
+const styleConfig = ref(0);
+const headerBgColorLeft = ref('');
+const headerBgColorRight = ref('');
+const imgColorUrl = ref('');
+const titleConfig = ref(0);
+const titleTxtConfig = ref('');
+const bgColor = ref('');
+const bottomBgColor = ref('');
+const paddingConfig = ref({
         title: '内边距',
         val: 0,
         isAll: false,
         valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-      },
-      marginConfig: {
+      });
+const marginConfig = ref({
         title: '外边距',
         val: 0,
         isAll: false,
         valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-      },
-      titleText: '',
-      titleTabVal: 0,
-      checkboxInfo: [],
-      imgRadius: 0,
-      bgRadius: 0,
-      bgRadius2: 0,
-      goodsName: '',
-      goodsNameColor: '',
-      goodsPriceColor: '',
-      seckillPriceColor: '',
-      seckillPriceColor2: '',
-      toneConfig: 0,
-      goodsBntColorLeft: '',
-      goodsBntColorRight: '',
-      goodStyleConfig: 0,
-      goodsBntTxtColor: '',
-      seckillConfig: 0,
-      progressColorLeft: '',
-      progressColorRight: '',
-      numberConfig: 1,
-      titleColor: '',
-      titleNumber: 0,
-      progressTxtColor: '',
-      themeColor: '',
-      themeColor2: '',
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      this.configObj = data;
-      let isLegacyPadding = !data.paddingConfig;
-      let isLegacyMargin = !data.marginConfig;
+      });
+const titleText = ref('');
+const titleTabVal = ref(0);
+const checkboxInfo = ref([]);
+const imgRadius = ref(0);
+const bgRadius = ref(0);
+const bgRadius2 = ref(0);
+const goodsName = ref('');
+const goodsNameColor = ref('');
+const goodsPriceColor = ref('');
+const seckillPriceColor = ref('');
+const seckillPriceColor2 = ref('');
+const toneConfig = ref(0);
+const goodsBntColorLeft = ref('');
+const goodsBntColorRight = ref('');
+const goodStyleConfig = ref(0);
+const goodsBntTxtColor = ref('');
+const seckillConfig = ref(0);
+const progressColorLeft = ref('');
+const progressColorRight = ref('');
+const numberConfig = ref(1);
+const titleColor = ref('');
+const titleNumber = ref(0);
+const progressTxtColor = ref('');
+const themeColor = ref('');
+const themeColor2 = ref('');
+const configObj = ref(null);
 
-      for (let key in this.defaultConfig) {
-        if (data[key] == undefined) {
-          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+function setConfig(data) {
+  if (!data) return;
+        configObj.value = data;
+        let isLegacyPadding = !data.paddingConfig;
+        let isLegacyMargin = !data.marginConfig;
+
+        for (let key in defaultConfig) {
+          if (data[key] == undefined) {
+            data[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
+          }
         }
-      }
 
-      if (isLegacyPadding) {
-        if (data.topConfig) data.paddingConfig.valList[0].val = data.topConfig.val;
-        if (data.prConfig) {
-          data.paddingConfig.valList[1].val = data.prConfig.val;
-          data.paddingConfig.valList[3].val = data.prConfig.val;
+        if (isLegacyPadding) {
+          if (data.topConfig) data.paddingConfig.valList[0].val = data.topConfig.val;
+          if (data.prConfig) {
+            data.paddingConfig.valList[1].val = data.prConfig.val;
+            data.paddingConfig.valList[3].val = data.prConfig.val;
+          }
+          if (data.bottomConfig) data.paddingConfig.valList[2].val = data.bottomConfig.val;
         }
-        if (data.bottomConfig) data.paddingConfig.valList[2].val = data.bottomConfig.val;
-      }
-      if (isLegacyMargin) {
-        if (data.mbConfig) data.marginConfig.valList[0].val = data.mbConfig.val;
-      }
+        if (isLegacyMargin) {
+          if (data.mbConfig) data.marginConfig.valList[0].val = data.mbConfig.val;
+        }
 
-      if (data.mbConfig || data.marginConfig) {
-        this.imgUrl = data.imgConfig.url;
-        this.imgBgUrl = data.imgBgConfig.url;
-        this.imgColorUrl = data.imgColorConfig.url;
-        this.tipsColor = data.tipsColor.color[0].item;
-        this.tipsColor2 = data.tipsColor2.color[0].item;
-        let numberBgColorLeft = data.numberBgColor.color[0].item;
-        let numberBgColorRight = data.numberBgColor.color[1].item;
-        this.numberBgColorLeft = numberBgColorLeft;
-        this.numberBgColor = `linear-gradient(90deg,${numberBgColorLeft} 0%,${numberBgColorRight} 100%)`;
-        let numberBgColorLeft2 = data.numberBgColor2.color[0].item;
-        let numberBgColorRight2 = data.numberBgColor2.color[1].item;
-        this.numberBgColorLeft2 = numberBgColorLeft2;
-        this.numberBgColor2 = `linear-gradient(90deg,${numberBgColorLeft2} 0%,${numberBgColorRight2} 100%)`;
-        this.numberColor = data.numberColor.color[0].item;
-        this.numberColor2 = data.numberColor2.color[0].item;
-        this.rightBntTxt = data.rightBntConfig.value;
-        this.headerBntColor = data.headerBntColor.color[0].item;
-        this.headerBntColor2 = data.headerBntColor2.color[0].item;
-        this.bntNumber = data.bntNumber.val;
-        this.styleConfig = data.styleConfig.tabVal;
-        this.headerBgColorLeft = data.headerBgColor.color[0].item;
-        this.headerBgColorRight = data.headerBgColor.color[1].item;
-        this.titleConfig = data.titleConfig.tabVal;
-        this.titleTxtConfig = data.titleTxtConfig.value;
-        let bgColorLeft = data.moduleColor.color[0].item;
-        let bgColorRight = data.moduleColor.color[1].item;
-        this.bgColor = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
+        if (data.mbConfig || data.marginConfig) {
+          imgUrl.value = data.imgConfig.url;
+          imgBgUrl.value = data.imgBgConfig.url;
+          imgColorUrl.value = data.imgColorConfig.url;
+          tipsColor.value = data.tipsColor.color[0].item;
+          tipsColor2.value = data.tipsColor2.color[0].item;
+          let _numberBgColorLeft = data.numberBgColor.color[0].item;
+          let numberBgColorRight = data.numberBgColor.color[1].item;
+          numberBgColorLeft.value = _numberBgColorLeft;
+          numberBgColor.value = `linear-gradient(90deg,${_numberBgColorLeft} 0%,${numberBgColorRight} 100%)`;
+          let _numberBgColorLeft2 = data.numberBgColor2.color[0].item;
+          let numberBgColorRight2 = data.numberBgColor2.color[1].item;
+          numberBgColorLeft2.value = _numberBgColorLeft2;
+          numberBgColor2.value = `linear-gradient(90deg,${_numberBgColorLeft2} 0%,${numberBgColorRight2} 100%)`;
+          numberColor.value = data.numberColor.color[0].item;
+          numberColor2.value = data.numberColor2.color[0].item;
+          rightBntTxt.value = data.rightBntConfig.value;
+          headerBntColor.value = data.headerBntColor.color[0].item;
+          headerBntColor2.value = data.headerBntColor2.color[0].item;
+          bntNumber.value = data.bntNumber.val;
+          styleConfig.value = data.styleConfig.tabVal;
+          headerBgColorLeft.value = data.headerBgColor.color[0].item;
+          headerBgColorRight.value = data.headerBgColor.color[1].item;
+          titleConfig.value = data.titleConfig.tabVal;
+          titleTxtConfig.value = data.titleTxtConfig.value;
+          let bgColorLeft = data.moduleColor.color[0].item;
+          let bgColorRight = data.moduleColor.color[1].item;
+          bgColor.value = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
 
-        let tabVal = data.titleText.tabVal;
-        this.titleTabVal = tabVal;
-        this.titleText = data.titleText.tabList[tabVal].style;
-        this.checkboxInfo = data.checkboxInfo.type;
-        let filletImg = data.filletImg.type;
-        let filletValImg = data.filletImg.val;
-        let valListImg = data.filletImg.valList;
-        this.imgRadius = filletImg
-          ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
-          : filletValImg + 'px';
-        let fillet = data.fillet.type;
-        let filletVal = data.fillet.val;
-        let valList = data.fillet.valList;
-        this.bgRadius = fillet
-          ? valList[0].val + 'px ' + valList[1].val + 'px 0 0'
-          : filletVal + 'px ' + filletVal + 'px 0 0';
-        this.bgRadius2 = fillet
-          ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
-          : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
-        let goodsTabVal = data.goodsName.tabVal;
-        this.goodsName = data.goodsName.tabList[goodsTabVal].style;
-        this.goodsNameColor = data.goodsNameColor.color[0].item;
-        this.goodsPriceColor = data.goodsPriceColor.color[0].item;
-        this.toneConfig = data.toneConfig.tabVal;
-        this.seckillPriceColor = data.seckillPriceColor.color[0].item;
-        this.seckillPriceColor2 = data.seckillPriceColor2.color[0].item;
-        this.goodsBntColorLeft = data.goodsBntColor.color[0].item;
-        this.goodsBntColorRight = data.goodsBntColor.color[1].item;
-        this.goodStyleConfig = data.goodStyleConfig.tabVal;
-        this.goodsBntTxtColor = data.goodsBntTxtColor.color[0].item;
-        this.seckillConfig = data.seckillConfig.tabVal;
-        this.progressColorLeft = data.progressColor.color[0].item;
-        this.progressColorRight = data.progressColor.color[1].item;
-        this.numberConfig = data.numberConfig.val;
-        this.titleColor = data.titleColor.color[0].item;
-        this.titleNumber = data.titleNumber.val;
-        this.progressTxtColor = data.progressTxtColor.color[0].item;
-        this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-        this.themeColor2 = `linear-gradient(270deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-      }
-    },
+          let tabVal = data.titleText.tabVal;
+          titleTabVal.value = tabVal;
+          titleText.value = data.titleText.tabList[tabVal].style;
+          checkboxInfo.value = data.checkboxInfo.type;
+          let filletImg = data.filletImg.type;
+          let filletValImg = data.filletImg.val;
+          let valListImg = data.filletImg.valList;
+          imgRadius.value = filletImg
+            ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
+            : filletValImg + 'px';
+          let fillet = data.fillet.type;
+          let filletVal = data.fillet.val;
+          let valList = data.fillet.valList;
+          bgRadius.value = fillet
+            ? valList[0].val + 'px ' + valList[1].val + 'px 0 0'
+            : filletVal + 'px ' + filletVal + 'px 0 0';
+          bgRadius2.value = fillet
+            ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
+            : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
+          let goodsTabVal = data.goodsName.tabVal;
+          goodsName.value = data.goodsName.tabList[goodsTabVal].style;
+          goodsNameColor.value = data.goodsNameColor.color[0].item;
+          goodsPriceColor.value = data.goodsPriceColor.color[0].item;
+          toneConfig.value = data.toneConfig.tabVal;
+          seckillPriceColor.value = data.seckillPriceColor.color[0].item;
+          seckillPriceColor2.value = data.seckillPriceColor2.color[0].item;
+          goodsBntColorLeft.value = data.goodsBntColor.color[0].item;
+          goodsBntColorRight.value = data.goodsBntColor.color[1].item;
+          goodStyleConfig.value = data.goodStyleConfig.tabVal;
+          goodsBntTxtColor.value = data.goodsBntTxtColor.color[0].item;
+          seckillConfig.value = data.seckillConfig.tabVal;
+          progressColorLeft.value = data.progressColor.color[0].item;
+          progressColorRight.value = data.progressColor.color[1].item;
+          numberConfig.value = data.numberConfig.val;
+          titleColor.value = data.titleColor.color[0].item;
+          titleNumber.value = data.titleNumber.val;
+          progressTxtColor.value = data.progressTxtColor.color[0].item;
+          themeColor.value = `linear-gradient(90deg,${props.colorStyle.theme} 0%,${props.colorStyle.gradient} 100%)`;
+          themeColor2.value = `linear-gradient(270deg,${props.colorStyle.theme} 0%,${props.colorStyle.gradient} 100%)`;
+        }
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
   },
-};
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+      });
+});
+
 </script>
-
 <style scoped lang="scss">
 .seckill-box {
   display: inline-block;

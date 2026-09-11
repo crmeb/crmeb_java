@@ -6,75 +6,69 @@
       </el-col>
       <el-col :span="configData.type == 'ranges' ? 24 : configData.type == 'form' ? 19 : 18" class="slider-box">
         <el-input v-model="configData.value" :placeholder="configData.place" :maxlength="configData.max">
-          <i
-            v-if="configData.title == '链接' || configData.title == '按钮链接'"
-            class="el-icon-link"
-            slot="suffix"
-            @click="getLink(configData)"
-          />
+          <template #suffix>
+            <i
+              v-if="configData.title == '链接' || configData.title == '按钮链接'"
+              class="el-icon-link"
+              @click="getLink(configData)"
+            />
+          </template>
         </el-input>
       </el-col>
     </div>
     <linkaddress
-      ref="linkaddres"
+      ref="linkaddresRef"
       @linkUrl="linkUrl"
       v-if="configData.type != 'form' && (configData.title == '链接' || configData.type == 'link')"
     ></linkaddress>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch } from 'vue';
 import linkaddress from '@/components/linkaddress';
-export default {
-  name: 'c_input_item',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+
+defineOptions({ name: 'c_input_item' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  components: {
-    linkaddress,
+  configNme: {
+    type: String,
   },
-  data() {
-    return {
-      value: '',
-      defaults: {},
-      configData: {},
-    };
+});
+
+const value = ref('');
+const defaults = ref({});
+const configData = ref({});
+const linkaddresRef = ref(null);
+
+defaults.value = props.configObj;
+configData.value = props.configObj[props.configNme] || {};
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
   },
-  created() {
-    this.defaults = this.configObj;
-    this.configData = this.configObj[this.configNme];
-  },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  methods: {
-    linkUrl(e) {
-      this.configData.value = e;
-    },
-    getLink(configData) {
-      if (configData.title != '链接' && configData.title != '按钮链接' && configData.type != 'link') {
-        return;
-      }
-      this.$refs.linkaddres.modals = true;
-    },
-  },
-};
+  { immediate: true, deep: true },
+);
+
+function linkUrl(e) {
+  configData.value.value = e;
+}
+function getLink(configData) {
+  if (configData.title != '链接' && configData.title != '按钮链接' && configData.type != 'link') {
+    return;
+  }
+  linkaddresRef.value.modals = true;
+}
 </script>
 
 <style scoped lang="scss">
-::v-deep .ivu-input {
+:deep(.ivu-input) {
   font-size: 13px !important;
 }
 
@@ -82,7 +76,7 @@ export default {
   &.on3 {
     padding: 0 15px;
 
-    ::v-deep .ivu-input {
+    :deep(.ivu-input) {
       font-size: 12px !important;
     }
 
@@ -91,7 +85,7 @@ export default {
       color: #999;
     }
 
-    ::v-deep .ivu-input-icon {
+    :deep(.ivu-input-icon) {
       color: #bbbbbb;
     }
   }

@@ -77,7 +77,7 @@
               }"
             >
               <img class="img" :src="item.image" v-if="item.image" />
-              <img src="../../assets/images/shan.png" v-else />
+              <img :src="shanImg" v-else />
             </div>
             <div
               class="title"
@@ -110,7 +110,7 @@
                 borderRadius: bgRadius,
               }"
             >
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
           </div>
           <div class="info" :style="{ borderRadius: bgRadius2 }">
@@ -118,14 +118,13 @@
               {{ item.store_name || '蓝牙音乐手表 | Jeep智能表蓝牙通话健康管理 P07' }}
             </div>
             <div class="pictrue">
-              <img src="../../assets/images/goods01.png" />
+              <img :src="goods01Img" />
             </div>
             <div class="price">
               <div class="num" :style="{ color: goodsPriceColor }">
                 <span>￥</span>{{ item.price ? $HandlePrice(item.price, 0) : 77
                 }}<span>{{ item.price ? $HandlePrice(item.price, 1) : '' }}</span>
               </div>
-              <img src="../../assets/images/goods02.png" />
             </div>
             <div class="sales">已售{{ item.sales || 0 }}件</div>
           </div>
@@ -147,62 +146,41 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState } from 'vuex';
-// import theme from "@/views/design/theme_editor/mixins/theme";
-export default {
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import goods01Img from '@/views/design/theme_editor/assets/images/goods01.png';
+import shanImg from '@/views/design/theme_editor/assets/images/shan.png';
+
+defineOptions({
   name: 'home_product',
   cname: '商品选项卡',
-  configName: 'c_home_product',
-  desc: '商品选项卡',
   icon: '#iconzujian-shangpinxuanxiangka',
-  type: 0, // 0 基础组件 1 营销组件 2工具组件
-  defaultName: 'promotionList', // 外面匹配名称
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+  configName: 'c_home_product',
+  type: 0,
+  defaultName: 'promotionList',
+});
+
+const props = defineProps({
+  index: {
+        type: null,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        const data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        const data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
+      colorStyle: {
+        type: null,
       },
-      deep: true,
-    },
-  },
-  // mixins: [theme],
-  data() {
-    return {
-      // 默认初始化数据禁止修改
-      defaultConfig: {
+});
+
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '商品选项卡',
         desc: '商品选项卡',
         name: 'promotionList',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -559,125 +537,147 @@ export default {
           min: 0,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-      },
-      configObj: null,
-      navlist: [],
-      imgStyle: '',
-      tabCur: 0,
-      list: [],
-      pageData: {},
-      styleConfig: 0,
-      toneConfig: 0,
-      textColor: '',
-      textColor2: '',
-      textColor3: '',
-      decorateColor: '',
-      decorateColor2: '',
-      decorateColorLeft: '',
-      // bgColor:'',
-      bottomBgColor: '',
-      topConfig: 0,
-      bottomConfig: 0,
-      prConfig: 0,
-      bgRadius: 0,
-      bgRadius2: 0,
-      themeColor: '',
-      cartConfig: 0,
-      toneCartConfig: 0,
-      bntBgColor: '',
-      bntStyleConfig: 0,
-      goodsPriceColor: '',
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      for (let key in this.defaultConfig) {
-        if (data[key] == undefined) {
-          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
-        }
-      }
-      this.styleConfig = data.styleConfig.tabVal;
-      this.cartConfig = data.cartConfig.tabVal;
-      this.bntStyleConfig = data.bntStyleConfig.tabVal;
-      this.toneCartConfig = data.toneCartConfig.tabVal;
-      let bntBgColorLeft = data.bntBgColor.color[0].item;
-      let bntBgColorRight = data.bntBgColor.color[1].item;
-      this.bntBgColor = `linear-gradient(90deg,${bntBgColorLeft} 0%,${bntBgColorRight} 100%)`;
-      this.toneConfig = data.toneConfig.tabVal;
-      this.textColor = data.textColor.color[0].item;
-      this.textColor2 = data.textColor2.color[0].item;
-      this.textColor3 = data.textColor3.color[0].item;
-      let decorateColorLeft = data.decorateColor.color[0].item;
-      let decorateColorRight = data.decorateColor.color[1].item;
-      this.decorateColorLeft = decorateColorLeft;
-      this.goodsPriceColor = this.toneCartConfig ? data.goodsPriceColor.color[0].item : '#E93323';
-      this.decorateColor = `linear-gradient(90deg,${decorateColorLeft} 0%,${decorateColorRight} 100%)`;
-      this.decorateColor2 = data.decorateColor2.color[0].item;
-      this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-      // let bgColorLeft =  data.moduleColor.color[0].item;
-      // let bgColorRight =  data.moduleColor.color[1].item;
-      // this.bgColor = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
-      this.bottomBgColor = data.bottomBgColor.color[0].item;
-      this.configObj = data;
-      // 兼容旧数据
-      if (!data.paddingConfig) {
-        let paddingConfig = {
-          title: '内边距',
-          isAll: false,
-          val: 0,
-          min: 0,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        };
-        if (data.topConfig) paddingConfig.valList[0].val = data.topConfig.val;
-        if (data.prConfig) {
-          paddingConfig.valList[1].val = data.prConfig.val;
-          paddingConfig.valList[3].val = data.prConfig.val;
-        }
-        if (data.bottomConfig) paddingConfig.valList[2].val = data.bottomConfig.val;
-        this.$set(this.configObj, 'paddingConfig', paddingConfig);
-      }
-      if (!data.marginConfig) {
-        let marginConfig = {
-          title: '外边距',
-          isAll: false,
-          val: 0,
-          min: 0,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        };
-        if (data.mbConfig) marginConfig.valList[0].val = data.mbConfig.val;
-        this.$set(this.configObj, 'marginConfig', marginConfig);
-      }
-      let fillet = data.fillet.type;
-      let filletVal = data.fillet.val;
-      let valList = data.fillet.valList;
-      this.bgRadius = fillet
-        ? valList[0].val + 'px ' + valList[1].val + 'px 0 0'
-        : filletVal + 'px ' + filletVal + 'px 0 0';
-      this.bgRadius2 = fillet
-        ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
-        : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
-      this.navlist = data.tabConfig.list;
-      this.tabCur = data.tabConfig.tabCur || 0;
-      let goods = data.tabConfig.list[this.tabCur];
-      this.list = this.getGoodsPreviewList(goods, 2);
-    },
-    getGoodsPreviewList(data, placeholderCount) {
-      const goodsList = data.goodsList && Array.isArray(data.goodsList.list) ? data.goodsList.list : [];
-      const productList = data.productList && Array.isArray(data.productList.list) ? data.productList.list : [];
-      const list = data.tabVal == 1 ? goodsList : productList;
-      return list.length ? list : placeholderCount;
-    },
-  },
-};
-</script>
+      };
 
+const configObj = ref(null);
+const navlist = ref([]);
+const imgStyle = ref('');
+const tabCur = ref(0);
+const list = ref([]);
+const pageData = ref({});
+const styleConfig = ref(0);
+const toneConfig = ref(0);
+const textColor = ref('');
+const textColor2 = ref('');
+const textColor3 = ref('');
+const decorateColor = ref('');
+const decorateColor2 = ref('');
+const decorateColorLeft = ref('');
+const bottomBgColor = ref('');
+const topConfig = ref(0);
+const bottomConfig = ref(0);
+const prConfig = ref(0);
+const bgRadius = ref(0);
+const bgRadius2 = ref(0);
+const themeColor = ref('');
+const cartConfig = ref(0);
+const toneCartConfig = ref(0);
+const bntBgColor = ref('');
+const bntStyleConfig = ref(0);
+const goodsPriceColor = ref('');
+
+function setConfig(data) {
+  if (!data) return;
+        for (let key in defaultConfig) {
+          if (data[key] == undefined) {
+            data[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
+          }
+        }
+        styleConfig.value = data.styleConfig.tabVal;
+        cartConfig.value = data.cartConfig.tabVal;
+        bntStyleConfig.value = data.bntStyleConfig.tabVal;
+        toneCartConfig.value = data.toneCartConfig.tabVal;
+        let bntBgColorLeft = data.bntBgColor.color[0].item;
+        let bntBgColorRight = data.bntBgColor.color[1].item;
+        bntBgColor.value = `linear-gradient(90deg,${bntBgColorLeft} 0%,${bntBgColorRight} 100%)`;
+        toneConfig.value = data.toneConfig.tabVal;
+        textColor.value = data.textColor.color[0].item;
+        textColor2.value = data.textColor2.color[0].item;
+        textColor3.value = data.textColor3.color[0].item;
+        let _decorateColorLeft = data.decorateColor.color[0].item;
+        let decorateColorRight = data.decorateColor.color[1].item;
+        decorateColorLeft.value = _decorateColorLeft;
+        goodsPriceColor.value = toneCartConfig.value ? data.goodsPriceColor.color[0].item : '#E93323';
+        decorateColor.value = `linear-gradient(90deg,${_decorateColorLeft} 0%,${decorateColorRight} 100%)`;
+        decorateColor2.value = data.decorateColor2.color[0].item;
+        themeColor.value = `linear-gradient(90deg,${props.colorStyle.theme} 0%,${props.colorStyle.gradient} 100%)`;
+        // let bgColorLeft =  data.moduleColor.color[0].item;
+        // let bgColorRight =  data.moduleColor.color[1].item;
+        // bgColor.value = `linear-gradient(90deg,${bgColorLeft} 0%,${bgColorRight} 100%)`;
+        bottomBgColor.value = data.bottomBgColor.color[0].item;
+        configObj.value = data;
+        // 兼容旧数据
+        if (!data.paddingConfig) {
+          let paddingConfig = {
+            title: '内边距',
+            isAll: false,
+            val: 0,
+            min: 0,
+            valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+          };
+          if (data.topConfig) paddingConfig.valList[0].val = data.topConfig.val;
+          if (data.prConfig) {
+            paddingConfig.valList[1].val = data.prConfig.val;
+            paddingConfig.valList[3].val = data.prConfig.val;
+          }
+          if (data.bottomConfig) paddingConfig.valList[2].val = data.bottomConfig.val;
+          configObj.value['paddingConfig'] = paddingConfig;
+        }
+        if (!data.marginConfig) {
+          let marginConfig = {
+            title: '外边距',
+            isAll: false,
+            val: 0,
+            min: 0,
+            valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+          };
+          if (data.mbConfig) marginConfig.valList[0].val = data.mbConfig.val;
+          configObj.value['marginConfig'] = marginConfig;
+        }
+        let fillet = data.fillet.type;
+        let filletVal = data.fillet.val;
+        let valList = data.fillet.valList;
+        bgRadius.value = fillet
+          ? valList[0].val + 'px ' + valList[1].val + 'px 0 0'
+          : filletVal + 'px ' + filletVal + 'px 0 0';
+        bgRadius2.value = fillet
+          ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
+          : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
+        navlist.value = data.tabConfig.list;
+        tabCur.value = data.tabConfig.tabCur || 0;
+        let goods = data.tabConfig.list[tabCur.value];
+        list.value = getGoodsPreviewList(goods, 2);
+}
+
+function getGoodsPreviewList(data, placeholderCount) {
+  const goodsList = data.goodsList && Array.isArray(data.goodsList._list) ? data.goodsList._list : [];
+        const productList = data.productList && Array.isArray(data.productList._list) ? data.productList._list : [];
+        const _list = data.tabVal == 1 ? goodsList : productList;
+        return _list.length ? _list : placeholderCount;
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
+  },
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    const data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    const data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+      });
+});
+
+</script>
 <style scoped lang="scss">
 .mobile-page {
   display: inline-block;
@@ -793,7 +793,7 @@ export default {
 
   .hd_nav {
     display: flex;
-    height: 65px;
+    height: 45px;
     overflow: hidden;
     padding: 10px 0;
 
@@ -933,11 +933,6 @@ export default {
           display: flex;
           align-items: center;
           margin-top: 6px;
-
-          img {
-            width: 70px;
-            height: 15px;
-          }
 
           .num {
             font-size: 20px;

@@ -23,12 +23,14 @@
       >
         <div class="name">链接</div>
         <el-input v-model="configData.link" placeholder="输入链接">
-          <i class="el-icon-link" slot="suffix" @click="getLink" />
+          <template #suffix>
+            <i class="el-icon-link" @click="getLink" />
+          </template>
         </el-input>
       </div>
     </div>
     <div>
-      <el-dialog :visible.sync="modalPic" width="960px" :title="configData.name ? configData.name : '上传图片'">
+      <el-dialog v-model="modalPic" width="1024px" :title="configData.name ? configData.name : '上传图片'">
         <uploadPictures
           :isChoice="isChoice"
           @getPic="getPic"
@@ -39,133 +41,126 @@
         ></uploadPictures>
       </el-dialog>
     </div>
-    <linkaddress v-if="configData.type != 'code'" ref="linkaddres" @linkUrl="linkUrl"></linkaddress>
+    <linkaddress v-if="configData.type != 'code'" ref="linkaddresRef" @linkUrl="linkUrl"></linkaddress>
   </div>
 </template>
 
-<script>
-import { mapState } from 'vuex';
+<script setup>
+import { ref, watch, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
 import linkaddress from '@/components/linkaddress';
 import uploadPictures from '@/views/design/theme_editor/components/uploadPictures';
-export default {
-  name: 'c_upload_img',
-  components: {
-    uploadPictures,
-    linkaddress,
-  },
-  computed: {
-    ...mapState({
-      tabVal: (state) => state.mobildConfig.searchConfig.data.tabVal,
-    }),
-  },
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
-  },
-  data() {
-    return {
-      defaultList: [
-        {
-          name: 'a42bdcc1178e62b4694c830f028db5c0',
-          url: 'https://o5wwk8baw.qnssl.com/a42bdcc1178e62b4694c830f028db5c0/avatar',
-        },
-        {
-          name: 'bc7521e033abdd1e92222d733590f104',
-          url: 'https://o5wwk8baw.qnssl.com/bc7521e033abdd1e92222d733590f104/avatar',
-        },
-      ],
-      defaults: {},
-      configData: {},
-      modalPic: false,
-      isChoice: '单选',
-      gridBtn: {
-        xl: 4,
-        lg: 8,
-        md: 8,
-        sm: 8,
-        xs: 8,
-      },
-      gridPic: {
-        xl: 6,
-        lg: 8,
-        md: 12,
-        sm: 12,
-        xs: 12,
-      },
-      activeIndex: 0,
-    };
-  },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  created() {
-    this.defaults = this.configObj;
-    this.configData = this.configObj[this.configNme];
-  },
-  methods: {
-    linkUrl(e) {
-      this.configData.link = e;
-    },
-    getLink() {
-      this.$refs.linkaddres.modals = true;
-    },
-    bindDelete() {
-      this.configData.url = '';
-    },
-    // 点击图文封面
-    modalPicTap(title) {
-      this.modalPic = true;
-    },
-    // 添加自定义弹窗
-    addCustomDialog(editorId) {
-      window.UE.registerUI(
-        'test-dialog',
-        function (editor, uiName) {
-          let dialog = new window.UE.ui.Dialog({
-            iframeUrl: '/admin/widget.images/index.html?fodder=dialog',
-            editor: editor,
-            name: uiName,
-            title: '上传图片',
-            cssRules: 'width:1200px;height:500px;padding:20px;',
-          });
-          this.dialog = dialog;
-          // 参考上面的自定义按钮
-          var btn = new window.UE.ui.Button({
-            name: 'dialog-button',
-            title: '上传图片',
-            cssRules: `background-image: url(../../../assets/images/icons.png);background-position: -726px -77px;`,
-            onclick: function () {
-              // 渲染dialog
-              dialog.render();
-              dialog.open();
-            },
-          });
 
-          return btn;
-        },
-        37,
-      );
-    },
-    // 获取图片信息
-    getPic(pc) {
-      this.$nextTick(() => {
-        this.configData.url = pc.att_dir;
-        this.modalPic = false;
-      });
-    },
+defineOptions({ name: 'c_upload_img' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-};
+  configNme: {
+    type: String,
+  },
+});
+
+const mobildConfigStore = useMobildConfigStore();
+
+const tabVal = ref(
+  mobildConfigStore.searchConfig ? mobildConfigStore.searchConfig.data.tabVal : undefined,
+);
+
+const defaultList = ref([
+  {
+    name: 'a42bdcc1178e62b4694c830f028db5c0',
+    url: 'https://o5wwk8baw.qnssl.com/a42bdcc1178e62b4694c830f028db5c0/avatar',
+  },
+  {
+    name: 'bc7521e033abdd1e92222d733590f104',
+    url: 'https://o5wwk8baw.qnssl.com/bc7521e033abdd1e92222d733590f104/avatar',
+  },
+]);
+const defaults = ref({});
+const configData = ref({});
+const modalPic = ref(false);
+const isChoice = ref('单选');
+const gridBtn = ref({
+  xl: 4,
+  lg: 8,
+  md: 8,
+  sm: 8,
+  xs: 8,
+});
+const gridPic = ref({
+  xl: 6,
+  lg: 8,
+  md: 12,
+  sm: 12,
+  xs: 12,
+});
+const activeIndex = ref(0);
+const linkaddresRef = ref(null);
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
+  },
+  { immediate: true, deep: true },
+);
+
+defaults.value = props.configObj;
+configData.value = props.configObj[props.configNme] || {};
+
+function linkUrl(e) {
+  configData.value.link = e;
+}
+function getLink() {
+  linkaddresRef.value.modals = true;
+}
+function bindDelete() {
+  configData.value.url = '';
+}
+// 点击图文封面
+function modalPicTap(title) {
+  modalPic.value = true;
+}
+// 添加自定义弹窗
+function addCustomDialog(editorId) {
+  window.UE.registerUI(
+    'test-dialog',
+    function (editor, uiName) {
+      let dialog = new window.UE.ui.Dialog({
+        iframeUrl: '/admin/widget.images/index.html?fodder=dialog',
+        editor: editor,
+        name: uiName,
+        title: '上传图片',
+        cssRules: 'width:1200px;height:500px;padding:20px;',
+      });
+      this.dialog = dialog;
+      // 参考上面的自定义按钮
+      var btn = new window.UE.ui.Button({
+        name: 'dialog-button',
+        title: '上传图片',
+        cssRules: `background-image: url(../../../assets/images/icons.png);background-position: -726px -77px;`,
+        onclick: function () {
+          // 渲染dialog
+          dialog.render();
+          dialog.open();
+        },
+      });
+
+      return btn;
+    },
+    37,
+  );
+}
+// 获取图片信息
+function getPic(pc) {
+  nextTick(() => {
+    configData.value.url = pc.att_dir;
+    modalPic.value = false;
+  });
+}
 </script>
 
 <style scoped lang="scss">
@@ -205,7 +200,7 @@ export default {
       margin-right: 16px;
       white-space: nowrap;
     }
-    ::v-deep.ivu-input-icon {
+    :deep(.ivu-input-icon ){
       color: #bbbbbb;
     }
     .picTxt {

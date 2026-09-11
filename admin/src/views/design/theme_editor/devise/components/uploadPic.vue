@@ -1,47 +1,57 @@
 <template>
   <div class="hot_imgs">
     <div class="list-box">
-      <draggable class="dragArea list-group" :list="listData" group="peoples" handle=".move-icon">
-        <div class="item" v-for="(item, index) in listData" :key="index">
-          <div class="move-icon">
-            <span class="iconfont icondrag"></span>
-          </div>
-          <div class="img-box" v-db-click @click="modalPicTap('单选', index)">
-            <img :src="item.pic" alt="" v-if="item.pic && item.pic != ''" />
-            <div class="upload-box" v-else>
-              <i class="el-icon-picture-outline" style="font-size: 24px"></i>
+      <draggable
+        class="dragArea list-group"
+        :list="listData"
+        :item-key="getDraggableItemKey"
+        group="peoples"
+        handle=".move-icon"
+      >
+        <template #item="{ element: item, index }">
+          <div class="item">
+            <div class="move-icon">
+              <span class="iconfont icondrag"></span>
             </div>
-          </div>
-          <div class="info">
-            <div class="info-item" v-if="item.hasOwnProperty('name')">
-              <span>{{ type == 1 ? '管理名称：' : type == 5 ? '广告名称' : '服务名称：' }}</span>
-              <div class="input-box">
-                <el-input v-model="item.name" :placeholder="type == 5 ? '请输入名称' : '服务中心'" :maxlength="4" />
+            <div class="img-box" v-db-click @click="modalPicTap('单选', index)">
+              <img :src="item.pic" alt="" v-if="item.pic && item.pic != ''" />
+              <div class="upload-box" v-else>
+                <i class="el-icon-picture-outline" style="font-size: 24px"></i>
               </div>
             </div>
-            <div class="info-item">
-              <span>链接地址：</span>
-              <div class="input-box" v-db-click>
-                <el-input v-model="item.url" placeholder="选择链接">
-                  <i class="el-icon-link" slot="suffix" @click="getLink(index)" />
-                </el-input>
+            <div class="info">
+              <div class="info-item" v-if="item.hasOwnProperty('name')">
+                <span>{{ type == 1 ? '管理名称：' : type == 5 ? '广告名称' : '服务名称：' }}</span>
+                <div class="input-box">
+                  <el-input v-model="item.name" :placeholder="type == 5 ? '请输入名称' : '服务中心'" :maxlength="4" />
+                </div>
+              </div>
+              <div class="info-item">
+                <span>链接地址：</span>
+                <div class="input-box" v-db-click>
+                  <el-input v-model="item.url" placeholder="选择链接">
+                    <template #suffix>
+                      <i class="el-icon-link" @click="getLink(index)" />
+                    </template>
+                  </el-input>
+                </div>
+              </div>
+              <!-- 开关是否显示 -->
+              <div class="info-item">
+                <span>是否显示：</span>
+                <div class="input-box">
+                  <el-switch class="defineSwitch" v-model="item.is_show" active-value="1" inactive-value="0" />
+                </div>
               </div>
             </div>
-            <!-- 开关是否显示 -->
-            <div class="info-item">
-              <span>是否显示：</span>
-              <div class="input-box">
-                <el-switch class="defineSwitch" v-model="item.is_show" active-value="1" inactive-value="0" />
-              </div>
+            <div v-if="type != 1" class="delect-btn" v-db-click @click.stop="bindDelete(item, index)">
+              <span class="iconfont icondel_1 cup"></span>
             </div>
           </div>
-          <div v-if="type != 1" class="delect-btn" v-db-click @click.stop="bindDelete(item, index)">
-            <span class="iconfont icondel_1 cup"></span>
-          </div>
-        </div>
+        </template>
       </draggable>
       <div>
-        <el-dialog :visible.sync="modalPic" width="950px" title="上传商品图" :close-on-click-modal="false">
+        <el-dialog v-model="modalPic" width="1024px" title="上传商品图" :close-on-click-modal="false">
           <uploadPictures
             :isChoice="isChoice"
             @getPic="getPic"
@@ -63,130 +73,128 @@
   </div>
 </template>
 
-<script>
-import vuedraggable from 'vuedraggable';
+<script setup>
+import { ref, watch, nextTick, getCurrentInstance } from 'vue';
+import draggable from 'vuedraggable';
 import uploadPictures from '@/views/design/theme_editor/components/uploadPictures';
 import linkaddress from '@/components/linkaddress';
-export default {
-  name: 'uploadPic',
-  props: {
-    listData: {
-      type: Array,
-    },
-    type: {
-      type: Number,
-    },
-  },
-  components: {
-    draggable: vuedraggable,
-    uploadPictures,
-    linkaddress,
-  },
-  data() {
-    return {
-      modalPic: false,
-      isChoice: '单选',
-      gridBtn: {
-        xl: 4,
-        lg: 8,
-        md: 8,
-        sm: 8,
-        xs: 8,
-      },
-      gridPic: {
-        xl: 6,
-        lg: 8,
-        md: 12,
-        sm: 12,
-        xs: 12,
-      },
-      activeIndex: 0,
-      lastObj: {
-        name: '',
-        pic: '',
-        url: '',
-      },
-    };
-  },
-  mounted() {},
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {},
-      deep: true,
-    },
-  },
-  methods: {
-    linkUrl(e) {
-      this.listData[this.activeIndex].url = e;
-    },
-    getLink(index) {
-      this.activeIndex = index;
-      this.$refs.linkaddres.modals = true;
-    },
-    addBox() {
-      if (this.listData.length == 0) {
-        this.listData.push(this.lastObj);
-      } else {
-        let obj = JSON.parse(JSON.stringify(this.listData[this.listData.length - 1]));
-        obj.name = '';
-        obj.pic = '';
-        obj.url = '';
-        this.listData.push(obj);
-      }
-      // this.$emit('parentFun',this.listData)
-    },
-    // 点击图文封面
-    modalPicTap(title, index) {
-      this.activeIndex = index;
-      this.modalPic = true;
-    },
-    // 添加自定义弹窗
-    addCustomDialog(editorId) {
-      window.UE.registerUI(
-        'test-dialog',
-        function (editor, uiName) {
-          let dialog = new window.UE.ui.Dialog({
-            iframeUrl: this.$routeProStr + '/widget.images/index.html?fodder=dialog',
-            editor: editor,
-            name: uiName,
-            title: '上传图片',
-            cssRules: 'width:960px;height:550px;padding:20px;',
-          });
-          this.dialog = dialog;
-          // 参考上面的自定义按钮
-          var btn = new window.UE.ui.Button({
-            name: 'dialog-button',
-            title: '上传图片',
-            cssRules: `background-image: url(../../../assets/images/icons.png);background-position: -726px -77px;`,
-            onclick: function () {
-              // 渲染dialog
-              dialog.render();
-              dialog.open();
-            },
-          });
+import { getDraggableItemKey } from '@/utils/draggableKey';
 
-          return btn;
-        },
-        37,
-      );
-    },
-    // 获取图片信息
-    getPic(pc) {
-      this.$nextTick(() => {
-        this.listData[this.activeIndex].pic = pc.att_dir;
-        this.modalPic = false;
-      });
-    },
-    // 删除
-    bindDelete(item, index) {
-      if (this.listData.length == 1) {
-        this.lastObj = this.listData[0];
-      }
-      this.listData.splice(index, 1);
-      // this.$emit('parentFun',this.listData)
-    },
+defineOptions({ name: 'uploadPic' });
+
+const props = defineProps({
+  listData: {
+    type: Array,
   },
-};
+  type: {
+    type: Number,
+  },
+  configObj: {
+    type: Object,
+    default: () => ({}),
+  },
+});
+
+const modalPic = ref(false);
+const isChoice = ref('单选');
+const gridBtn = ref({
+  xl: 4,
+  lg: 8,
+  md: 8,
+  sm: 8,
+  xs: 8,
+});
+const gridPic = ref({
+  xl: 6,
+  lg: 8,
+  md: 12,
+  sm: 12,
+  xs: 12,
+});
+const activeIndex = ref(0);
+const lastObj = ref({
+  name: '',
+  pic: '',
+  url: '',
+});
+const linkaddres = ref(null);
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {},
+  { deep: true },
+);
+
+function linkUrl(e) {
+  props.listData[activeIndex.value].url = e;
+}
+function getLink(index) {
+  activeIndex.value = index;
+  linkaddres.value.modals = true;
+}
+function addBox() {
+  if (props.listData.length == 0) {
+    props.listData.push(lastObj.value);
+  } else {
+    let obj = JSON.parse(JSON.stringify(props.listData[props.listData.length - 1]));
+    obj.name = '';
+    obj.pic = '';
+    obj.url = '';
+    props.listData.push(obj);
+  }
+  // emit('parentFun', props.listData)
+}
+// 点击图文封面
+function modalPicTap(title, index) {
+  activeIndex.value = index;
+  modalPic.value = true;
+}
+// 添加自定义弹窗
+function addCustomDialog(editorId) {
+  const { proxy } = getCurrentInstance();
+  window.UE.registerUI(
+    'test-dialog',
+    function (editor, uiName) {
+      let dialog = new window.UE.ui.Dialog({
+        iframeUrl: proxy.$routeProStr + '/widget.images/index.html?fodder=dialog',
+        editor: editor,
+        name: uiName,
+        title: '上传图片',
+        cssRules: 'width:960px;height:550px;padding:20px;',
+      });
+      this.dialog = dialog;
+      // 参考上面的自定义按钮
+      var btn = new window.UE.ui.Button({
+        name: 'dialog-button',
+        title: '上传图片',
+        cssRules: `background-image: url(../../../assets/images/icons.png);background-position: -726px -77px;`,
+        onclick: function () {
+          // 渲染dialog
+          dialog.render();
+          dialog.open();
+        },
+      });
+
+      return btn;
+    },
+    37,
+  );
+}
+// 获取图片信息
+function getPic(pc) {
+  nextTick(() => {
+    props.listData[activeIndex.value].pic = pc.att_dir;
+    modalPic.value = false;
+  });
+}
+// 删除
+function bindDelete(item, index) {
+  if (props.listData.length == 1) {
+    lastObj.value = props.listData[0];
+  }
+  props.listData.splice(index, 1);
+  // emit('parentFun', props.listData)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -239,11 +247,11 @@ export default {
           }
           .input-box {
             flex: 1;
-            ::v-deep input {
+            :deep(.input) {
               cursor: pointer;
             }
           }
-          ::v-deep .ivu-input {
+          :deep(.ivu-input) {
             font-size: 13px !important;
           }
         }

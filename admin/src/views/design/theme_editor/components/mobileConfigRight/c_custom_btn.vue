@@ -4,41 +4,41 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_custom_btn',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+
+defineOptions({ name: 'c_custom_btn' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      configData: {},
-    };
+  configNme: {
+    type: String,
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.configData = this.configObj[this.configNme] || {};
-    });
+});
+
+const emit = defineEmits(['getConfig']);
+
+const configData = ref({});
+
+onMounted(() => {
+  nextTick(() => {
+    configData.value = props.configObj[props.configNme] || {};
+  });
+});
+
+watch(
+  () => props.configObj,
+  (nVal) => {
+    configData.value = nVal[props.configNme] || {};
   },
-  watch: {
-    configObj: {
-      handler(nVal) {
-        this.configData = nVal[this.configNme] || {};
-      },
-      deep: true,
-    },
-  },
-  methods: {
-    onClick() {
-      this.$emit('getConfig', { name: 'custom_btn_click' });
-    },
-  },
-};
+  { deep: true },
+);
+
+function onClick() {
+  emit('getConfig', { name: 'custom_btn_click' });
+}
 </script>
 
 <style scoped lang="scss">

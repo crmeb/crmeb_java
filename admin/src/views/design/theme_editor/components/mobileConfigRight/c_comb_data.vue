@@ -6,15 +6,15 @@
       </el-col>
       <el-col class="color-box" :span="configData.type == 'ranges' ? 24 : 19">
         <div>
-          <el-radio-group v-model="configData.tabVal" @input="radioChange()">
-            <el-radio :label="key" v-for="(radio, key) in configData.tabList" :key="key">
+          <el-radio-group v-model="configData.tabVal" @change="radioChange()">
+            <el-radio :label="key" :value="key" v-for="(radio, key) in configData.tabList" :key="key">
               <span>{{ radio.name }}</span>
             </el-radio>
           </el-radio-group>
         </div>
         <div>
-          <el-radio-group v-model="configData.tabData" @input="radioDataChange()" v-if="configData.tabVal == 0">
-            <el-radio :label="key" v-for="(radio, key) in configData.dataList" :key="key + 'data'">
+          <el-radio-group v-model="configData.tabData" @change="radioDataChange()" v-if="configData.tabVal == 0">
+            <el-radio :label="key" :value="key" v-for="(radio, key) in configData.dataList" :key="key + 'data'">
               <span>{{ radio.name }}</span>
             </el-radio>
           </el-radio-group>
@@ -38,7 +38,7 @@
           type="daterange"
           placement="bottom-end"
           v-model="configData.specifyDate"
-          format="yyyy/MM/dd"
+          format="YYYY/MM/DD"
           placeholder="请选择"
           style="margin-top: 6px"
           v-else-if="configData.tabData == 1 && configData.tabVal == 0 && configData.type == 'daterange'"
@@ -58,49 +58,46 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_comb_data',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch } from 'vue';
+
+defineOptions({ name: 'c_comb_data' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-    };
+  configNme: {
+    type: String,
   },
-  created() {
-    this.defaults = this.configObj;
-    this.configData = this.configObj[this.configNme];
+});
+
+const emit = defineEmits(['getConfig']);
+
+const defaults = ref({});
+const configData = ref({});
+
+defaults.value = props.configObj;
+configData.value = props.configObj[props.configNme] || {};
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  methods: {
-    getDaterange(e) {
-      this.$emit('getConfig', { type: 2, val: e });
-    },
-    radioChange(e) {
-      this.$emit('getConfig', { type: 0, val: e });
-    },
-    radioDataChange(e) {
-      this.$emit('getConfig', { type: 1, val: e });
-    },
-  },
-};
+  { immediate: true, deep: true },
+);
+
+function getDaterange(e) {
+  emit('getConfig', { type: 2, val: e });
+}
+function radioChange(e) {
+  emit('getConfig', { type: 0, val: e });
+}
+function radioDataChange(e) {
+  emit('getConfig', { type: 1, val: e });
+}
 </script>
 
 <style scoped lang="scss">
@@ -127,10 +124,10 @@ export default {
       color: #666;
     }
   }
-  ::v-deep.ivu-radio-wrapper {
+  :deep(.ivu-radio-wrapper ){
     margin: 5px 25px 5px 0;
   }
-  ::v-deep.ivu-radio {
+  :deep(.ivu-radio ){
     margin-right: 6px;
   }
 }

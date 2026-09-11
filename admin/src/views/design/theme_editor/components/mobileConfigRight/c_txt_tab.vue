@@ -3,11 +3,11 @@
     <div class="c_row-item">
       <el-col class="c_label">
         {{ configData.title }}
-        <span>{{ configData.list[configData.type].val }}</span>
+        <span v-if="configData.list">{{ configData.list[configData.type].val }}</span>
       </el-col>
       <el-col class="color-box">
-        <el-radio-group v-model="configData.type" type="button" @input="radioChange($event)">
-          <el-radio :label="key" v-for="(radio, key) in configData.list" :key="key">
+        <el-radio-group v-model="configData.type" type="button" @change="radioChange($event)">
+          <el-radio :label="key" :value="key" v-for="(radio, key) in configData.list" :key="key">
             <span class="iconfont" :class="radio.icon" v-if="radio.icon"></span>
             <span v-else>{{ radio.val }}</span>
           </el-radio>
@@ -17,49 +17,46 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_txt_tab',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch } from 'vue';
+
+defineOptions({ name: 'c_txt_tab' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-    };
+  configNme: {
+    type: String,
   },
-  created() {
-    this.defaults = this.configObj;
-    this.configData = this.configObj[this.configNme];
+});
+
+const emit = defineEmits(['getConfig']);
+
+const defaults = ref({});
+const configData = ref({});
+
+defaults.value = props.configObj;
+configData.value = props.configObj[props.configNme] || {};
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  methods: {
-    radioChange(e) {
-      if (
-        this.configData.name !== 'itemSstyle' &&
-        this.configData.name !== 'bgStyle' &&
-        this.configData.name !== 'conStyle'
-      ) {
-        this.$emit('getConfig', { name: 'radio', values: e });
-      }
-    },
-  },
-};
+  { immediate: true, deep: true },
+);
+
+function radioChange(e) {
+  if (
+    configData.value.name !== 'itemSstyle' &&
+    configData.value.name !== 'bgStyle' &&
+    configData.value.name !== 'conStyle'
+  ) {
+    emit('getConfig', { name: 'radio', values: e });
+  }
+}
 </script>
 
 <style scoped lang="scss">

@@ -8,7 +8,7 @@
       </div>
     </div>
     <div>
-      <el-dialog :visible.sync="modalPic" width="950px" title="上传视频" :mask-closable="false" :z-index="888">
+      <el-dialog v-model="modalPic" width="950px" title="上传视频" :mask-closable="false" :z-index="888">
         <uploadPictures
           :isChoice="isChoice"
           @getPic="getPic"
@@ -22,114 +22,105 @@
   </div>
 </template>
 
-<script>
-import { mapState } from 'vuex';
+<script setup>
+import { ref, watch, nextTick } from 'vue';
 import settings from '@/utils/settingMer';
 import uploadPictures from '@/views/design/theme_editor/components/uploadPictures';
-export default {
-  name: 'c_upload_video',
-  components: {
-    uploadPictures,
-  },
-  computed: {},
-  props: {
-    name: {
-      type: String,
-    },
-    configData: {
-      type: null,
-    },
-    configNum: {
-      type: Number | String,
-      default: 'default',
-    },
-  },
-  data() {
-    return {
-      defaultList: [
-        {
-          name: 'a42bdcc1178e62b4694c830f028db5c0',
-          url: 'https://o5wwk8baw.qnssl.com/a42bdcc1178e62b4694c830f028db5c0/avatar',
-        },
-        {
-          name: 'bc7521e033abdd1e92222d733590f104',
-          url: 'https://o5wwk8baw.qnssl.com/bc7521e033abdd1e92222d733590f104/avatar',
-        },
-      ],
-      defaults: {},
-      modalPic: false,
-      isChoice: '单选',
-      gridBtn: {
-        xl: 4,
-        lg: 8,
-        md: 8,
-        sm: 8,
-        xs: 8,
-      },
-      gridPic: {
-        xl: 6,
-        lg: 8,
-        md: 12,
-        sm: 12,
-        xs: 12,
-      },
-      activeIndex: 0,
-      datas: this.configData[this.configNum],
-    };
-  },
-  watch: {
-    configData: {
-      handler(nVal, oVal) {
-        this.datas = nVal[this.configNum];
-      },
-      deep: true,
-    },
-  },
-  mounted() {},
-  methods: {
-    // 点击图文封面
-    modalPicTap(title) {
-      this.modalPic = true;
-    },
-    // 添加自定义弹窗
-    addCustomDialog(editorId) {
-      window.UE.registerUI(
-        'test-dialog',
-        function (editor, uiName) {
-          let dialog = new window.UE.ui.Dialog({
-            iframeUrl: '' + '/widget.images/index.html?fodder=dialog',
-            editor: editor,
-            name: uiName,
-            title: '上传图片',
-            cssRules: 'width:960px;height:550px;padding:20px;',
-          });
-          this.dialog = dialog;
-          // 参考上面的自定义按钮
-          var btn = new window.UE.ui.Button({
-            name: 'dialog-button',
-            title: '上传图片',
-            cssRules: `background-image: url(../../../assets/images/icons.png);background-position: -726px -77px;`,
-            onclick: function () {
-              // 渲染dialog
-              dialog.render();
-              dialog.open();
-            },
-          });
 
-          return btn;
-        },
-        37,
-      );
-    },
-    // 获取图片信息
-    getPic(pc) {
-      this.$nextTick(() => {
-        this.configData[this.configNum][this.name].url = pc.att_dir;
-        this.modalPic = false;
-      });
-    },
+defineOptions({ name: 'c_upload_video' });
+
+const props = defineProps({
+  name: {
+    type: String,
   },
-};
+  configData: {
+    type: null,
+  },
+  configNum: {
+    type: [Number, String],
+    default: 'default',
+  },
+});
+
+const defaultList = ref([
+  {
+    name: 'a42bdcc1178e62b4694c830f028db5c0',
+    url: 'https://o5wwk8baw.qnssl.com/a42bdcc1178e62b4694c830f028db5c0/avatar',
+  },
+  {
+    name: 'bc7521e033abdd1e92222d733590f104',
+    url: 'https://o5wwk8baw.qnssl.com/bc7521e033abdd1e92222d733590f104/avatar',
+  },
+]);
+const defaults = ref({});
+const modalPic = ref(false);
+const isChoice = ref('单选');
+const gridBtn = ref({
+  xl: 4,
+  lg: 8,
+  md: 8,
+  sm: 8,
+  xs: 8,
+});
+const gridPic = ref({
+  xl: 6,
+  lg: 8,
+  md: 12,
+  sm: 12,
+  xs: 12,
+});
+const activeIndex = ref(0);
+const datas = ref(props.configData[props.configNum]);
+
+watch(
+  () => props.configData,
+  (nVal, oVal) => {
+    datas.value = nVal[props.configNum];
+  },
+  { deep: true },
+);
+
+// 点击图文封面
+function modalPicTap(title) {
+  modalPic.value = true;
+}
+// 添加自定义弹窗
+function addCustomDialog(editorId) {
+  window.UE.registerUI(
+    'test-dialog',
+    function (editor, uiName) {
+      let dialog = new window.UE.ui.Dialog({
+        iframeUrl: '' + '/widget.images/index.html?fodder=dialog',
+        editor: editor,
+        name: uiName,
+        title: '上传图片',
+        cssRules: 'width:960px;height:550px;padding:20px;',
+      });
+      this.dialog = dialog;
+      // 参考上面的自定义按钮
+      var btn = new window.UE.ui.Button({
+        name: 'dialog-button',
+        title: '上传图片',
+        cssRules: `background-image: url(../../../assets/images/icons.png);background-position: -726px -77px;`,
+        onclick: function () {
+          // 渲染dialog
+          dialog.render();
+          dialog.open();
+        },
+      });
+
+      return btn;
+    },
+    37,
+  );
+}
+// 获取图片信息
+function getPic(pc) {
+  nextTick(() => {
+    props.configData[props.configNum][props.name].url = pc.att_dir;
+    modalPic.value = false;
+  });
+}
 </script>
 
 <style lang="scss" scoped>

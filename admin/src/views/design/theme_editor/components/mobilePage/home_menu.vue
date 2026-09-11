@@ -94,7 +94,7 @@
                           : filletValImg + 'px',
                       }"
                     >
-                      <img src="../../assets/images/shan.png" />
+                      <img :src="shanImg" />
                     </div>
                   </template>
                   <template v-else>
@@ -135,7 +135,19 @@
 
         <!-- 宫格样式和排列样式 -->
         <div class="mobile-page" v-else>
-          <div class="list_menu" :class="menuStyleConfig === 2 ? 'list-style' : ''">
+          <div
+            class="list_menu"
+            :class="[menuStyleConfig === 2 ? 'list-style' : '', menuStyleConfig === 1 ? 'grid-layout' : '']"
+            :style="
+              menuStyleConfig === 1
+                ? {
+                    gridTemplateColumns: gridStyle === 0 ? 'repeat(3, 1fr)' : 'repeat(4, 1fr)',
+                    columnGap: gridItemStyle.itemPadding + 'px',
+                    rowGap: gridItemStyle.itemPaddingTop + 'px',
+                  }
+                : {}
+            "
+          >
             <div
               class="item"
               :class="[
@@ -144,13 +156,6 @@
               ]"
               v-for="(item, index) in vuexMenu"
               :key="index"
-              :style="
-                menuStyleConfig === 1
-                  ? {
-                      padding: gridItemStyle.itemPadding + 'px',
-                    }
-                  : {}
-              "
             >
               <div
                 class="item-content"
@@ -201,7 +206,7 @@
                         }"
                         v-else
                       >
-                        <img src="../../assets/images/shan.png" />
+                        <img :src="shanImg" />
                       </div>
                     </div>
                   </template>
@@ -258,60 +263,39 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState } from 'vuex';
-// import theme from "@/views/design/theme_editor/mixins/theme";
-export default {
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import shanImg from '@/views/design/theme_editor/assets/images/shan.png';
+
+defineOptions({
   name: 'home_menu',
   cname: '导航组',
   icon: '#iconzujian-daohangzu',
   configName: 'c_home_menu',
-  type: 0, // 0 基础组件 1 营销组件 2工具组件
-  defaultName: 'menus', // 外面匹配名称
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+  type: 0,
+  defaultName: 'menus',
+});
+
+const props = defineProps({
+  index: {
+        type: null,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
+      colorStyle: {
+        type: null,
       },
-      deep: true,
-    },
-  },
-  // mixins: [theme],
-  data() {
-    return {
-      // 默认初始化数据禁止修改
-      defaultConfig: {
+});
+
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '导航组',
         name: 'menus',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -388,6 +372,7 @@ export default {
           itemPadding: 8,
           itemBgColor: '#ffffff',
           itemRadius: 8,
+          itemPaddingTop: 0,
         },
         headerConfig: {
           title: '头部设置',
@@ -801,170 +786,202 @@ export default {
           min: 0,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-      },
-      vuexMenu: [],
-      bgColorLeft: '',
-      bgColorRight: '',
-      bottomBgColor: '',
-      number: 0,
-      rowsNum: 0,
-      textColor: '',
-      pointerColor: '',
-      pointerBgColor: '',
-      pageData: {},
-      menuStyleConfig: 0,
-      navDisplayStyle: 0,
-      showConfig: 0,
-      filletImg: 0,
-      filletValImg: 0,
-      valListImg: [],
-      fillet: 0,
-      filletVal: 0,
-      valList: [],
-      toneConfig: 0,
-      gridStyle: 0,
-      leftTopText: { enable: false, text: '' },
-      rightTopText: { enable: false, text: '' },
-      headerConfig: { enable: false },
-      headerStyle: {
+      };
+
+const vuexMenu = ref([]);
+const bgColorLeft = ref('');
+const bgColorRight = ref('');
+const bottomBgColor = ref('');
+const number = ref(0);
+const rowsNum = ref(0);
+const textColor = ref('');
+const pointerColor = ref('');
+const pointerBgColor = ref('');
+const pageData = ref({});
+const menuStyleConfig = ref(0);
+const navDisplayStyle = ref(0);
+const showConfig = ref(0);
+const filletImg = ref(0);
+const filletValImg = ref(0);
+const valListImg = ref([]);
+const fillet = ref(0);
+const filletVal = ref(0);
+const valList = ref([]);
+const toneConfig = ref(0);
+const gridStyle = ref(0);
+const leftTopText = ref({ enable: false, text: '' });
+const rightTopText = ref({ enable: false, text: '' });
+const headerConfig = ref({ enable: false });
+const headerStyle = ref({
         fontSize: 14,
         leftColor: '#333333',
         rightColor: '#333333',
         topPadding: 10,
         bottomPadding: 10,
         leftRightPadding: 12,
-      },
-      gridItemStyle: { itemPadding: 8, itemBgColor: '#ffffff' },
-      listStyle: 0,
-      iconStyleConfig: {
-        color: '#333',
-        size: 24,
-        position: 1,
-        padding: 0,
-        rotate: 0,
-        shadow: 0,
-      },
-      configObj: null,
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    // 对象转数组
-    objToArr(data) {
-      let obj = Object.keys(data);
-      let m = obj.map((key) => data[key]);
-      return m;
-    },
-    setConfig(data) {
-      if (!data) return;
-      this.configObj = data;
-      for (let key in this.defaultConfig) {
-        if (data[key] == undefined) {
-          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
-        }
-      }
-      if (data.menuConfig) {
-        this.menuStyleConfig = data.menuStyleConfig.tabVal;
-        this.navDisplayStyle = data.navDisplayStyle ? data.navDisplayStyle.tabVal : 0;
-        this.showConfig = data.showConfig.tabVal;
-        this.filletImg = data.filletImg.type;
-        this.filletValImg = data.filletImg.val;
-        this.valListImg = data.filletImg.valList;
-        this.fillet = data.fillet.type;
-        this.filletVal = data.fillet.val;
-        this.valList = data.fillet.valList;
-        this.toneConfig = data.toneConfig.tabVal;
-        this.pointerColor = data.pointerColor.color[0].item;
-        this.pointerBgColor = data.pointerBgColor.color[0].item;
-        this.bottomBgColor =
-          data.bottomBgColor && data.bottomBgColor.color && data.bottomBgColor.color[0]
-            ? data.bottomBgColor.color[0].item
-            : '';
-        this.textColor = data.textColor.color[0].item;
+      });
+const gridItemStyle = ref({ itemPadding: 8, itemBgColor: '#ffffff', itemRadius: 8, itemPaddingTop: 0 });
+const listStyle = ref(0);
+const iconStyleConfig = ref({
+  color: '#333',
+  size: 24,
+  position: 1,
+  padding: 0,
+  rotate: 0,
+  shadow: 0,
+});
+const configObj = ref(null);
 
-        if (!data.paddingConfig) {
-          data.paddingConfig = {
-            title: '内边距',
-            isAll: false,
-            val: 0,
-            min: 0,
-            max: 100,
-            valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-          };
-          if (data.topConfig) data.paddingConfig.valList[0].val = data.topConfig.val;
-          if (data.prConfig) {
-            data.paddingConfig.valList[1].val = data.prConfig.val;
-            data.paddingConfig.valList[3].val = data.prConfig.val;
+function normalizeMenuList(list) {
+  if (Array.isArray(list)) return list;
+  if (!list || typeof list !== 'object') return [];
+  return Object.keys(list).map((key) => list[key]);
+}
+
+function getTabVal(config, defaultValue = 0) {
+  return config && config.tabVal !== undefined ? config.tabVal : defaultValue;
+}
+
+function setConfig(data) {
+  if (!data) return;
+        configObj.value = data;
+        for (let key in defaultConfig) {
+          if (data[key] == undefined) {
+            data[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
           }
-          if (data.bottomConfig) data.paddingConfig.valList[2].val = data.bottomConfig.val;
         }
+        if (data.menuConfig) {
+          menuStyleConfig.value = getTabVal(data.menuStyleConfig);
+          navDisplayStyle.value = getTabVal(data.navDisplayStyle);
+          showConfig.value = getTabVal(data.showConfig);
+          filletImg.value = data.filletImg.type;
+          filletValImg.value = data.filletImg.val;
+          valListImg.value = data.filletImg.valList;
+          fillet.value = data.fillet.type;
+          filletVal.value = data.fillet.val;
+          valList.value = data.fillet.valList;
+          toneConfig.value = getTabVal(data.toneConfig);
+          pointerColor.value = data.pointerColor.color[0].item;
+          pointerBgColor.value = data.pointerBgColor.color[0].item;
+          bottomBgColor.value =
+            data.bottomBgColor && data.bottomBgColor.color && data.bottomBgColor.color[0]
+              ? data.bottomBgColor.color[0].item
+              : '';
+          textColor.value = data.textColor.color[0].item;
 
-        if (!data.marginConfig) {
-          data.marginConfig = {
-            title: '外边距',
-            isAll: true,
-            val: 0,
-            min: 0,
-            max: 100,
-            valList: [{ val: 20 }, { val: 0 }, { val: 0 }, { val: 0 }],
-          };
-          if (data.mbConfig) data.marginConfig.valList[0].val = data.mbConfig.val;
-        }
-
-        this.bgColorLeft = data.bgColor.color[0].item;
-        this.bgColorRight = data.bgColor.color[1].item;
-        // 新增配置
-        this.gridStyle = data.gridStyle ? data.gridStyle.tabVal : 0;
-        this.leftTopText = data.leftTopText || { enable: false, text: '左上角文字', link: '' };
-        this.rightTopText = data.rightTopText || { enable: false, text: '右上角文字', link: '' };
-        this.headerConfig = data.headerConfig || { enable: false };
-        this.headerStyle = data.headerStyle || {
-          fontSize: 14,
-          leftColor: '#333333',
-          rightColor: '#333333',
-          topPadding: 10,
-          bottomPadding: 10,
-          leftRightPadding: 12,
-        };
-        this.gridItemStyle = data.gridItemStyle || { itemPadding: 8, itemBgColor: '#ffffff' };
-        this.listStyle = data.menuConfig.listStyle || 0;
-        let iconConfig = data.iconStyleConfig || {};
-        this.iconStyleConfig = {
-          color: iconConfig.color ? iconConfig.color.color[0].item : '#333',
-          size: iconConfig.size ? iconConfig.size.val : 24,
-          position: iconConfig.position ? iconConfig.position.tabVal : 1,
-          padding: iconConfig.padding ? iconConfig.padding.val : 0,
-          rotate: iconConfig.rotate ? iconConfig.rotate.val : 0,
-          shadow: iconConfig.shadow ? iconConfig.shadow.tabVal : 0,
-        };
-
-        let rowsNum = data.rowsNum.tabVal;
-        let number = data.number.tabVal;
-        let lists = this.objToArr(data.menuConfig.list);
-        let list = [];
-        lists.forEach((item) => {
-          if (item.show) {
-            list.push(item);
+          if (!data.paddingConfig) {
+            data.paddingConfig = {
+              title: '内边距',
+              isAll: false,
+              val: 0,
+              min: 0,
+              max: 100,
+              valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+            };
+            if (data.topConfig) data.paddingConfig.valList[0].val = data.topConfig.val;
+            if (data.prConfig) {
+              data.paddingConfig.valList[1].val = data.prConfig.val;
+              data.paddingConfig.valList[3].val = data.prConfig.val;
+            }
+            if (data.bottomConfig) data.paddingConfig.valList[2].val = data.bottomConfig.val;
           }
-        });
-        this.number = number;
-        this.rowsNum = rowsNum;
-        if (this.showConfig) {
-          this.vuexMenu = list.splice(0, (rowsNum + 1) * (number + 3));
-        } else {
-          this.vuexMenu = lists.filter((item) => item.show);
+
+          if (!data.marginConfig) {
+            data.marginConfig = {
+              title: '外边距',
+              isAll: true,
+              val: 0,
+              min: 0,
+              max: 100,
+              valList: [{ val: 20 }, { val: 0 }, { val: 0 }, { val: 0 }],
+            };
+            if (data.mbConfig) data.marginConfig.valList[0].val = data.mbConfig.val;
+          }
+
+          bgColorLeft.value = data.bgColor.color[0].item;
+          bgColorRight.value = data.bgColor.color[1].item;
+          // 新增配置
+          gridStyle.value = getTabVal(data.gridStyle);
+          leftTopText.value = data.leftTopText || { enable: false, text: '左上角文字', link: '' };
+          rightTopText.value = data.rightTopText || { enable: false, text: '右上角文字', link: '' };
+          headerConfig.value = data.headerConfig || { enable: false };
+          headerStyle.value = data.headerStyle || {
+            fontSize: 14,
+            leftColor: '#333333',
+            rightColor: '#333333',
+            topPadding: 10,
+            bottomPadding: 10,
+            leftRightPadding: 12,
+          };
+          gridItemStyle.value = Object.assign({
+            itemPadding: 8,
+            itemBgColor: '#ffffff',
+            itemRadius: 8,
+            itemPaddingTop: 0,
+          }, data.gridItemStyle);
+          listStyle.value = data.menuConfig.listStyle || 0;
+          let iconConfig = data.iconStyleConfig || {};
+          iconStyleConfig.value = {
+            color: iconConfig.color ? iconConfig.color.color[0].item : '#333',
+            size: iconConfig.size ? iconConfig.size.val : 24,
+            position: getTabVal(iconConfig.position, 1),
+            padding: iconConfig.padding ? iconConfig.padding.val : 0,
+            rotate: iconConfig.rotate ? iconConfig.rotate.val : 0,
+            shadow: getTabVal(iconConfig.shadow),
+          };
+
+          let _rowsNum = getTabVal(data.rowsNum || data._rowsNum);
+          let _number = getTabVal(data.number || data._number, 1);
+          let lists = normalizeMenuList(data.menuConfig.list);
+          let list = [];
+          lists.forEach((item) => {
+            if (item.show) {
+              list.push(item);
+            }
+          });
+          number.value = _number;
+          rowsNum.value = _rowsNum;
+          if (showConfig.value) {
+            const columns = menuStyleConfig.value === 1 ? gridStyle.value + 3 : _number + 3;
+            vuexMenu.value = list.splice(0, (_rowsNum + 1) * columns);
+          } else {
+            vuexMenu.value = lists.filter((item) => item.show);
+          }
         }
-      }
-    },
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
   },
-};
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+      });
+});
+
 </script>
-
 <style scoped lang="scss">
 .mobile-page {
   display: inline-block;
@@ -1056,6 +1073,19 @@ export default {
 
   .icontupian {
     font-size: 16px;
+  }
+}
+
+.list_menu.grid-layout {
+  display: grid;
+  flex-wrap: nowrap;
+
+  .item {
+    width: 100%;
+
+    .item-content {
+      margin-bottom: 0;
+    }
   }
 }
 

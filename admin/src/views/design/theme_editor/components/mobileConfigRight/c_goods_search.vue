@@ -3,7 +3,7 @@
   <div class="acea-row row-top" style="margin-bottom: 20px" v-if="configData">
     <el-checkbox-group v-model="configData.type" @change="checkboxChange">
       <div>
-        <el-checkbox :label="1">
+        <el-checkbox :label="1" :value="1">
           <span>商品分类</span>
         </el-checkbox>
         <el-cascader
@@ -19,52 +19,53 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_goods_search',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+
+defineOptions({ name: 'c_goods_search' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      formData: {
-        type: 0,
-      },
-      defaults: {},
-      configData: {},
-    };
+  configNme: {
+    type: String,
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-    },
+});
+
+const emit = defineEmits(['getConfig']);
+
+const formData = ref({
+  type: 0,
+});
+const defaults = ref({});
+const configData = ref({});
+const timeStamp = ref('');
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      this.configData = this.configObj[this.configNme];
-    });
-  },
-  methods: {
-    checkboxChange(e) {
-      this.$emit('getConfig', e);
-    },
-    sliderChange(e) {
-      let storage = window.localStorage;
-      this.configData.activeValue = e ? e : storage.getItem(this.timeStamp);
-      this.$emit('getConfig', { name: 'cascader', values: e });
-    },
-  },
-};
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    defaults.value = props.configObj;
+    configData.value = props.configObj[props.configNme] || {};
+  });
+});
+
+function checkboxChange(e) {
+  emit('getConfig', e);
+}
+function sliderChange(e) {
+  let storage = window.localStorage;
+  configData.value.activeValue = e ? e : storage.getItem(timeStamp.value);
+  emit('getConfig', { name: 'cascader', values: e });
+}
 </script>
 
 <style></style>

@@ -29,80 +29,90 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { themeSave } from '@/api/systemGroup';
 import { changeColorApi, saveColorApi } from '@/api/systemConfig';
 import { Debounce } from '@/utils/validate';
-export default {
-  data() {
-    return {
-      active: 0,
-      tabList: [
-        { tit: '热情红', class: 'bg1' },
-        { tit: '家居橙', class: 'bg2' },
-        { tit: '生鲜绿', class: 'bg3' },
-        { tit: '海鲜蓝', class: 'bg4' },
-        { tit: '女神粉', class: 'bg5' },
-      ],
-      themeData: [],
-      imgList: [require('@/assets/theme/theme1.jpg')],
-      theme1: [require('@/assets/theme/theme1.jpg')],
-      theme2: [require('@/assets/theme/theme2.jpg')],
-      theme3: [require('@/assets/theme/theme3.jpg')],
-      theme4: [require('@/assets/theme/theme4.png')],
-      theme5: [require('@/assets/theme/theme5.jpg')],
-      //主题色
-      themeColor: ['#e93323', '#FE5C2D', '#42CA4D', '#1db0fc', '#ff448f'],
-    };
-  },
-  mounted() {
-    this.getSet();
-  },
-  methods: {
-    selected(index) {
-      this.active = index;
-      if (index == 0) {
-        this.$set(this, 'imgList', this.theme1);
-      } else if (index == 1) {
-        this.$set(this, 'imgList', this.theme2);
-      } else if (index == 2) {
-        this.$set(this, 'imgList', this.theme3);
-      } else if (index == 3) {
-        this.$set(this, 'imgList', this.theme4);
-      } else if (index == 4) {
-        this.$set(this, 'imgList', this.theme5);
-      }
-    },
-    //获取默认数据
-    getSet() {
-      changeColorApi().then((res) => {
-        this.active = res.value - 1;
-        this.imgList = this.getTheme(res.value);
-      });
-    },
-    // 默认数据种给主题色图片赋值
-    getTheme(status) {
-      const statusMap = {
-        1: this.theme1,
-        2: this.theme2,
-        3: this.theme3,
-        4: this.theme4,
-        5: this.theme5,
-      };
-      return statusMap[status];
-    },
-    // 保存
-    saveTheme: Debounce(function () {
-      let data = {
-        value: this.active + 1,
-      };
-      saveColorApi(data).then((res) => {
-        this.$message.success('编辑成功');
-        this.$store.commit('settings/SET_mobileThemeColor', this.themeColor[this.active]);
-      });
-    }),
-  },
-};
+import { useSettingsStore } from '@/store/modules/settings';
+import theme1Img from '@/assets/theme/theme1.jpg';
+import theme2Img from '@/assets/theme/theme2.jpg';
+import theme3Img from '@/assets/theme/theme3.jpg';
+import theme4Img from '@/assets/theme/theme4.png';
+import theme5Img from '@/assets/theme/theme5.jpg';
+import goodsList1Img from '@/assets/theme/goodsList1.png';
+import goodsList2Img from '@/assets/theme/goodsList2.png';
+import goodsList3Img from '@/assets/theme/goodsList3.png';
+
+const settingsStore = useSettingsStore();
+
+const active = ref(0);
+const tabList = [
+  { tit: '热情红', class: 'bg1' },
+  { tit: '家居橙', class: 'bg2' },
+  { tit: '生鲜绿', class: 'bg3' },
+  { tit: '海鲜蓝', class: 'bg4' },
+  { tit: '女神粉', class: 'bg5' },
+];
+const themeData = ref([]);
+const imgList = ref([theme1Img]);
+const theme1 = [theme1Img];
+const theme2 = [theme2Img];
+const theme3 = [theme3Img];
+const theme4 = [theme4Img];
+const theme5 = [theme5Img];
+//主题色
+const themeColor = ['#e93323', '#FE5C2D', '#42CA4D', '#1db0fc', '#ff448f'];
+const mockGoodsImg = ref(goodsList1Img);
+const showTabNav = ref(true);
+
+function selected(index) {
+  active.value = index;
+  if (index == 0) {
+    imgList.value = theme1;
+  } else if (index == 1) {
+    imgList.value = theme2;
+  } else if (index == 2) {
+    imgList.value = theme3;
+  } else if (index == 3) {
+    imgList.value = theme4;
+  } else if (index == 4) {
+    imgList.value = theme5;
+  }
+}
+//获取默认数据
+function getSet() {
+  changeColorApi().then((res) => {
+    active.value = res.value - 1;
+    imgList.value = getTheme(res.value);
+  });
+}
+// 默认数据种给主题色图片赋值
+function getTheme(status) {
+  const statusMap = {
+    1: theme1,
+    2: theme2,
+    3: theme3,
+    4: theme4,
+    5: theme5,
+  };
+  return statusMap[status];
+}
+// 保存
+const saveTheme = Debounce(function () {
+  let data = {
+    value: active.value + 1,
+  };
+  saveColorApi(data).then((res) => {
+    ElMessage.success('编辑成功');
+    settingsStore.SET_mobileThemeColor(themeColor[active.value]);
+  });
+});
+
+onMounted(() => {
+  getSet();
+});
 </script>
 
 <style lscoped lang="scss">

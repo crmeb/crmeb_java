@@ -4,19 +4,19 @@
       <span v-if="isMicroPage" class="iconfont iconfanhui" @click="backToMicroPage"></span>
       <span class="label">当前{{ isMicroPage ? '专题' : '主题' }}：</span>
       <span class="theme-name">{{ themeName }}</span>
-      <span class="iconfont iconic_edit1 edit-icon" @click="handleEdit"></span>
+      <span class="iconfont iconic_edit2" @click="handleEdit"></span>
     </div>
 
     <div class="header-right">
-      <el-button size="small" icon="el-icon-view" @click="$emit('preview')">预览</el-button>
-      <el-button v-if="!isMicroPage" size="small" @click="$emit('save-template')">另存主题</el-button>
-      <el-button size="small" @click="$emit('save')">保存</el-button>
-      <el-button type="primary" size="small" @click="$emit('save-close')">保存并关闭</el-button>
+      <el-button :icon="View" @click="onPreview">预览</el-button>
+      <el-button v-if="!isMicroPage" @click="onSaveTemplate">另存主题</el-button>
+      <el-button @click="onSave">保存</el-button>
+      <el-button type="primary" @click="onSaveClose">保存并关闭</el-button>
     </div>
 
     <!-- 修改主题信息弹窗 -->
-    <el-dialog :title="`修改${isMicroPage ? '专题' : '主题'}信息`" :visible.sync="dialogVisible" width="500px">
-      <el-form :model="form" ref="form" label-width="80px">
+    <el-dialog :title="`修改${isMicroPage ? '专题' : '主题'}信息`" v-model="dialogVisible" width="500px">
+      <el-form :model="form" ref="formRef" label-width="80px">
         <el-form-item :label="`${isMicroPage ? '专题' : '主题'}名称：`">
           <el-input
             v-model="form.title"
@@ -36,64 +36,81 @@
           ></el-input>
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="handleConfirm">确 定</el-button>
-      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="handleConfirm">确 定</el-button>
+        </div>
+      </template>
     </el-dialog>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'PageHeader',
-  props: {
-    themeName: {
-      type: String,
-      default: '',
-    },
-    themeInfo: {
-      type: String,
-      default: '',
-    },
-    isMicroPage: {
-      type: Boolean,
-      default: false,
-    },
-  },
+<script setup>
+import { ref, reactive } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { View } from '@element-plus/icons-vue';
 
-  data() {
-    return {
-      dialogVisible: false,
-      form: {
-        title: '',
-        info: '',
-      },
-    };
+defineOptions({ name: 'PageHeader' });
+
+const props = defineProps({
+  themeName: {
+    type: String,
+    default: '',
   },
-  methods: {
-    handleEdit() {
-      this.form.title = this.themeName;
-      this.form.info = this.themeInfo;
-      this.dialogVisible = true;
-    },
-    handleConfirm() {
-      let data = {
-        title: this.form.title,
-        info: this.form.info,
-      };
-      if (this.$route.query.page_type === 'micro') data.page_type = 'micro';
-      if (this.$route.query.tid) data.tid = this.$route.query.tid;
-      this.$emit('update-info', data);
-      this.dialogVisible = false;
-    },
-    backToMicroPage() {
-      this.$router.push({
-        path: '/design/micro_theme',
-      });
-    },
+  themeInfo: {
+    type: String,
+    default: '',
   },
-};
+  isMicroPage: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const emit = defineEmits(['preview', 'save', 'save-close', 'save-template', 'update-info']);
+
+const route = useRoute();
+const router = useRouter();
+
+const dialogVisible = ref(false);
+const form = reactive({
+  title: '',
+  info: '',
+});
+
+function onPreview() {
+  emit('preview');
+}
+function onSave() {
+  emit('save');
+}
+function onSaveClose() {
+  emit('save-close');
+}
+function onSaveTemplate() {
+  emit('save-template');
+}
+function handleEdit() {
+  form.title = props.themeName;
+  form.info = props.themeInfo;
+  dialogVisible.value = true;
+}
+function handleConfirm() {
+  let data = {
+    title: form.title,
+    info: form.info,
+  };
+  if (route.query.page_type === 'micro') data.page_type = 'micro';
+  if (route.query.tid) data.tid = route.query.tid;
+  emit('update-info', data);
+  dialogVisible.value = false;
+}
+function backToMicroPage() {
+  router.push({
+    path: '/design/micro_theme',
+  });
+}
 </script>
 
 <style lang="scss" scoped>

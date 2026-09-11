@@ -8,10 +8,10 @@
         <el-cascader
           @change="sliderChange"
           placeholder="请选择分类"
-          size="mini"
+
           v-model="modelValue"
           :options="treeSelect"
-          :props="props"
+          :props="cascaderProps"
           filterable
           clearable
         >
@@ -21,99 +21,99 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { themeArticleCategory, themeProductCategory } from '@/api/theme';
-export default {
-  name: 'c_classify',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
-    number: {
-      type: null,
-    },
+
+defineOptions({ name: 'c_classify' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-      props: { multiple: true, checkStrictly: true, emitPath: false },
-      treeSelect: [],
-    };
+  configNme: {
+    type: String,
   },
-  computed: {
-    modelValue: {
-      get() {
-        if (this.configData.activeValue !== undefined) {
-          return this.configData.activeValue;
-        }
-        return this.configData.classVal;
-      },
-      set(val) {
-        if (this.configData.activeValue !== undefined) {
-          this.configData.activeValue = val;
-        } else {
-          this.configData.classVal = val;
-        }
-      },
-    },
+  number: {
+    type: null,
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      this.configData = this.configObj[this.configNme];
-      if (this.configNme === 'articleClass') {
-        this.articleCategory();
-      } else {
-        this.goodsCategory();
-      }
+});
+
+const emit = defineEmits(['getConfig']);
+
+const defaults = ref({});
+const configData = ref({});
+const cascaderProps = ref({ multiple: true, checkStrictly: true, emitPath: false });
+const treeSelect = ref([]);
+
+const modelValue = computed({
+  get() {
+    if (configData.value.activeValue !== undefined) {
+      return configData.value.activeValue;
+    }
+    return configData.value.classVal;
+  },
+  set(val) {
+    if (configData.value.activeValue !== undefined) {
+      configData.value.activeValue = val;
+    } else {
+      configData.value.classVal = val;
+    }
+  },
+});
+
+onMounted(() => {
+  nextTick(() => {
+    defaults.value = props.configObj;
+    configData.value = props.configObj[props.configNme] || {};
+    if (props.configNme === 'articleClass') {
+      articleCategory();
+    } else {
+      goodsCategory();
+    }
+  });
+});
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
+  },
+  { deep: true },
+);
+
+function sliderChange() {
+  emit('getConfig', { name: 'classlfy' });
+}
+function articleCategory() {
+  themeArticleCategory()
+    .then((res) => {
+      treeSelect.value = formatCategory(res.data);
+    })
+    .catch((res) => {
+      ElMessage.error((res && (res.msg || res.message)) || '文章分类获取失败');
     });
-  },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-    },
-  },
-  methods: {
-    sliderChange() {
-      this.$emit('getConfig', { name: 'classlfy' });
-    },
-    articleCategory() {
-      themeArticleCategory()
-        .then((res) => {
-          this.treeSelect = this.formatCategory(res.data);
-        })
-        .catch((res) => {
-          this.$message.error((res && (res.msg || res.message)) || '文章分类获取失败');
-        });
-    },
-    formatCategory(list) {
-      return (Array.isArray(list) ? list : []).map((item) => {
-        return {
-          value: item.id,
-          label: item.title,
-          children: item.children ? this.formatCategory(item.children) : null,
-        };
-      });
-    },
-    goodsCategory() {
-      themeProductCategory({ status: 1 })
-        .then((res) => {
-          this.treeSelect = res.data;
-        })
-        .catch((res) => {
-          this.$message.error((res && (res.msg || res.message)) || '商品分类获取失败');
-        });
-    },
-  },
-};
+}
+function formatCategory(list) {
+  return (Array.isArray(list) ? list : []).map((item) => {
+    return {
+      value: item.id,
+      label: item.title,
+      children: item.children ? formatCategory(item.children) : null,
+    };
+  });
+}
+function goodsCategory() {
+  themeProductCategory({ status: 1 })
+    .then((res) => {
+      treeSelect.value = res.data;
+    })
+    .catch((res) => {
+      ElMessage.error((res && (res.msg || res.message)) || '商品分类获取失败');
+    });
+}
 </script>
 
 <style scoped lang="scss">
@@ -130,11 +130,11 @@ export default {
 .c_row-item {
   margin-bottom: 20px;
 }
-::v-deep .el-cascader__search-input {
+:deep(.el-cascader__search-input) {
   margin-left: 8px;
   font-size: 12px;
 }
-::v-deep.el-cascader {
+:deep(.el-cascader ){
   width: 100%;
   .el-tag {
     margin: 4px 0 2px 6px;

@@ -3,24 +3,28 @@
     <div class="acea-row">
       <div class="title">选择商品</div>
       <div class="wrapper">
-        <draggable class="dragArea list-group" :list="defaults.goodsList.list" group="peoples">
-          <div
-            class="item"
-            v-for="(goods, index) in defaults.goodsList.list"
-            :key="index"
-            v-if="defaults.goodsList.list.length"
-          >
-            <img :src="goods.image" alt="" />
-            <span class="iconfont icondel_1" @click.stop="bindDelete(index)"></span>
-          </div>
-          <div class="add-item item" @click="modals = true"><span class="iconfont iconjiahao1"></span></div>
+        <draggable
+          class="dragArea list-group"
+          :list="defaults.goodsList.list"
+          :item-key="getDraggableItemKey"
+          group="peoples"
+        >
+          <template #item="{ element: goods, index }">
+            <div class="item" v-if="defaults.goodsList.list.length">
+              <img :src="goods.image" alt="" />
+              <span class="iconfont icondel_1" @click.stop="bindDelete(index)"></span>
+            </div>
+          </template>
+          <template #footer>
+            <div class="add-item item" @click="modals = true"><span class="iconfont iconjiahao1"></span></div>
+          </template>
         </draggable>
       </div>
     </div>
 
-    <el-dialog :visible.sync="modals" title="商品列表" class="paymentFooter" width="900px">
+    <el-dialog v-model="modals" title="商品列表" class="paymentFooter" width="900px">
       <goods-list
-        ref="goodslist"
+        ref="goodslistRef"
         :ischeckbox="true"
         :isdiy="true"
         isType
@@ -31,64 +35,57 @@
   </div>
 </template>
 
-<script>
-import vuedraggable from 'vuedraggable';
+<script setup>
+import { ref, watch } from 'vue';
+import draggable from 'vuedraggable';
 import goodsList from '@/components/goodsList';
-export default {
-  name: 'c_goods',
-  props: {
-    configObj: {
-      type: Object,
-    },
+import { getDraggableItemKey } from '@/utils/draggableKey';
+
+defineOptions({ name: 'c_goods' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  components: {
-    goodsList,
-    draggable: vuedraggable,
+});
+
+const modals = ref(false);
+const goodsListData = ref([]);
+const tempGoods = ref({});
+const defaults = ref({});
+const goodslistRef = ref(null);
+
+defaults.value = props.configObj;
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  data() {
-    return {
-      modals: false,
-      goodsList: [],
-      tempGoods: {},
-      defaults: {},
-    };
-  },
-  created() {
-    this.defaults = this.configObj;
-  },
-  methods: {
-    //对象数组去重；
-    unique(arr) {
-      const res = new Map();
-      return arr.filter((arr) => !res.has(arr.id) && res.set(arr.id, 1));
-    },
-    getProductId(data) {
-      // this.tempGoods = data
-      this.modals = false;
-      let list = this.defaults.goodsList.list.concat(data);
-      this.defaults.goodsList.list = this.unique(list);
-    },
-    cancel() {
-      this.modals = false;
-      // this.tempGoods = {}
-    },
-    ok() {
-      this.defaults.goodsList.list.push(this.tempGoods);
-    },
-    bindDelete(index) {
-      this.defaults.goodsList.list.splice(index, 1);
-    },
-  },
-};
+  { immediate: true, deep: true },
+);
+
+//对象数组去重；
+function unique(arr) {
+  const res = new Map();
+  return arr.filter((arr) => !res.has(arr.id) && res.set(arr.id, 1));
+}
+function getProductId(data) {
+  // tempGoods.value = data
+  modals.value = false;
+  let list = defaults.value.goodsList.list.concat(data);
+  defaults.value.goodsList.list = unique(list);
+}
+function cancel() {
+  modals.value = false;
+  // tempGoods.value = {}
+}
+function ok() {
+  defaults.value.goodsList.list.push(tempGoods.value);
+}
+function bindDelete(index) {
+  defaults.value.goodsList.list.splice(index, 1);
+}
 </script>
 
 <style scoped lang="scss">

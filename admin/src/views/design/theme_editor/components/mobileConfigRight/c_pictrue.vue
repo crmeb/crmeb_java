@@ -215,324 +215,325 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_pictrue',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+
+defineOptions({ name: 'c_pictrue' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-      style: 0,
-      isUpdate: false, // 重新渲染
-      currentIndex: 0,
-      arrayObj: {
-        image: '',
-        link: '',
-      },
-      list: undefined,
-      select: false,
-      lis: undefined,
-      rect: null, // 定义移动元素div
-      // 记录鼠标按下时的坐标
-      downX: 0,
-      downY: 0,
-      // 记录鼠标抬起时候的坐标
-      mouseX2: 0,
-      mouseY2: 0,
-      imgNum: 0,
-      selPicBox: 0, // 当前选中的图片盒子
-    };
+  configNme: {
+    type: String,
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      if (this.configObj.hasOwnProperty('timestamp')) {
-        this.isUpdate = true;
+});
+
+const emit = defineEmits(['delAreaBox']);
+
+const defaults = ref({});
+const configData = ref({});
+const style = ref(0);
+const isUpdate = ref(false); // 重新渲染
+const currentIndex = ref(0);
+const arrayObj = ref({
+  image: '',
+  link: '',
+});
+const list = ref(undefined);
+const select = ref(false);
+const lis = ref(undefined);
+const rect = ref(null); // 定义移动元素div
+// 记录鼠标按下时的坐标
+const downX = ref(0);
+const downY = ref(0);
+// 记录鼠标抬起时候的坐标
+const mouseX2 = ref(0);
+const mouseY2 = ref(0);
+const imgNum = ref(0);
+const selPicBox = ref(0); // 当前选中的图片盒子
+let count = 0;
+
+const selBoxList = computed(() => {
+  return props.configObj.picStyle.docPicList;
+});
+
+onMounted(() => {
+  nextTick(() => {
+    defaults.value = props.configObj;
+    if (props.configObj.hasOwnProperty('timestamp')) {
+      isUpdate.value = true;
+    } else {
+      isUpdate.value = false;
+    }
+    configData.value = props.configObj[props.configNme] || {};
+    style.value = props.configObj.styleConfig.tabVal;
+    count = defaults.value.styleConfig.count;
+    picArrayConcat(count);
+
+    if (style.value == 11) {
+      lis.value = document.getElementsByClassName('lay-item');
+    }
+    currentTab(0, configData.value);
+  });
+});
+
+watch(
+  () => props.configObj,
+  (nVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
+    style.value = nVal.styleConfig.tabVal;
+    isUpdate.value = true;
+  },
+  { deep: true },
+);
+
+watch(
+  () => props.configObj.styleConfig.tabVal,
+  () => {
+    if (!configData.value.picList) return;
+    count = defaults.value.styleConfig && defaults.value.styleConfig.count;
+    picArrayConcat(count);
+    configData.value.picList.splice(count);
+    currentIndex.value = 0;
+    let list = defaults.value.menuConfig.list[0];
+    if (configData.value.picList[0]) {
+      list.img = configData.value.picList[0].image;
+      list.info[0].value = configData.value.picList[0].link;
+    }
+    lis.value = document.getElementsByClassName('lay-item');
+  },
+  { deep: true, immediate: true },
+);
+
+watch(
+  () => props.configObj.picStyle.docPicList,
+  () => {
+    if (props.configObj.styleConfig.tabVal == 11) {
+      props.configObj.picStyle.docPicList.map((e, i) => {
+        props.configObj.picStyle.docPicList[i].img = props.configObj.picStyle.picList[i].image;
+        props.configObj.picStyle.docPicList[i].link = props.configObj.picStyle.picList[i].link;
+      });
+    }
+  },
+  { deep: true, immediate: true },
+);
+
+function currentTab(e, data) {
+  selPicBox.value = e;
+  currentIndex.value = e;
+  configData.value.tabVal = e;
+  if (defaults.value.menuConfig.isCube) {
+    if (configData.value.tabVal !== 11) {
+      let list = defaults.value.menuConfig.list[0];
+      if (data.picList[e] && data.picList[e].image) {
+        list.img = data.picList[e].image;
+        list.info[0].value = data.picList[e].link;
       } else {
-        this.isUpdate = false;
+        list.img = '';
+        list.info[0].value = '';
       }
-      this.$set(this, 'configData', this.configObj[this.configNme]);
-      this.style = this.configObj.styleConfig.tabVal;
-      this.count = this.defaults.styleConfig.count;
-      this.picArrayConcat(this.count);
-
-      if (this.style == 11) {
-        this.lis = document.getElementsByClassName('lay-item');
+    } else {
+      selPicBox.value = e;
+      let list = defaults.value.docPicList;
+      if (data.menuConfig.picStyle.picList[e].image) {
+        list[e].img = data.menuConfig.picStyle.picList[e].image;
+        list[e].info[0].value = data.menuConfig.picStyle.docPicList[e].value;
+      } else {
+        list[0].img = '';
+        list[0].info[0].value = '';
       }
-      this.currentTab(0, this.configData);
-    });
-  },
-  computed: {
-    selBoxList() {
-      return this.configObj.picStyle.docPicList;
-    },
-  },
-  watch: {
-    configObj: {
-      handler(nVal) {
-        this.defaults = nVal;
-        this.$set(this, 'configData', nVal[this.configNme]);
-        this.style = nVal.styleConfig.tabVal;
-        this.isUpdate = true;
-        this.$set(this, 'isUpdate', true);
-      },
-      deep: true,
-    },
-    'configObj.styleConfig.tabVal': {
-      handler() {
-        if (!this.configData.picList) return;
-        this.count = (this.defaults.styleConfig && this.defaults.styleConfig.count);
-        this.picArrayConcat(this.count);
-        this.configData.picList.splice(this.count);
-        this.currentIndex = 0;
-        let list = this.defaults.menuConfig.list[0];
-        if (this.configData.picList[0]) {
-          list.img = this.configData.picList[0].image;
-          list.info[0].value = this.configData.picList[0].link;
-        }
-        this.lis = document.getElementsByClassName('lay-item');
-      },
-      deep: true,
-      immediate: true,
-    },
-    'configObj.picStyle.docPicList': {
-      handler() {
-        if (this.configObj.styleConfig.tabVal == 11) {
-          this.configObj.picStyle.docPicList.map((e, i) => {
-            this.configObj.picStyle.docPicList[i].img = this.configObj.picStyle.picList[i].image;
-            this.configObj.picStyle.docPicList[i].link = this.configObj.picStyle.picList[i].link;
-          });
-        }
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
-  methods: {
-    currentTab(e, data) {
-      this.selPicBox = e;
-      this.currentIndex = e;
-      this.configData.tabVal = e;
-      if (this.defaults.menuConfig.isCube) {
-        if (this.configData.tabVal !== 11) {
-          let list = this.defaults.menuConfig.list[0];
-          if (data.picList[e] && data.picList[e].image) {
-            list.img = data.picList[e].image;
-            list.info[0].value = data.picList[e].link;
-          } else {
-            list.img = '';
-            list.info[0].value = '';
-          }
-        } else {
-          this.selPicBox = e;
-          let list = this.defaults.docPicList;
-          if (data.menuConfig.picStyle.picList[e].image) {
-            list[e].img = data.menuConfig.picStyle.picList[e].image;
-            list[e].info[0].value = data.menuConfig.picStyle.docPicList[e].value;
-          } else {
-            list[0].img = '';
-            list[0].info[0].value = '';
-          }
-        }
-      }
-    },
-    picArrayConcat(count) {
-      for (let i = this.configData.picList.length; i < count; i++) {
-        this.configData.picList.push(JSON.parse(JSON.stringify(this.arrayObj)));
-      }
-    },
-    // 删除指定热区
-    delAreaBox(index) {
-      /* 删除某个热区 */
-      this.selBoxList.splice(index, 1);
-      this.configObj.picStyle.picList.splice(index, 1);
-      this.configObj.picStyle.picList.push({ image: '', link: '' });
-      if (this.selBoxList.length) this.currentTab(this.selBoxList.length - 1, this.configData);
-    },
-    initRect() {
-      if (this.rect) {
-        document.getElementById('lay1').removeChild(this.rect);
-      }
-    },
-    //处理鼠标按下事件
-    clickBox(event) {
-      if (this.select) {
-        let boxData = this.up();
-        try {
-          if (this.selBoxList.length && this.selBoxList.length == 1 && this.selBoxList[0].doc.w === 0) {
-            this.selBoxList[0].doc = boxData;
-          } else {
-            this.selBoxList.push({
-              img: '',
-              link: '',
-              doc: boxData,
-            });
-          }
-          this.currentTab(this.selBoxList.length - 1, this.configData);
-        } catch (error) {
-          console.log(error);
-        }
-
-        this.selPicBox = this.selBoxList.length ? this.selBoxList.length - 1 : 0;
-        return;
-      }
-      // 鼠标按下时才允许处理鼠标的移动事件
-      this.select = true;
-      this.rect = document.createElement('div');
-      // 框选div 样式
-      this.rect.style.cssText =
-        'position:absolute;width:0px;height:0px;font-size:0px;margin:0px;padding:0px;border:1px dashed #0099FF;background-color:#C3D5ED;z-index:1000;filter:alpha(opacity:60);opacity:0.6;display:none;';
-      this.rect.id = 'selectDiv';
-      // 添加到lay1下
-      document.getElementById('lay1').appendChild(this.rect);
-      // 取得鼠标按下时的坐标位置
-      this.downX = event.layerX;
-      this.downY = event.layerY;
-      this.rect.style.left = this.downX + 'px';
-      this.rect.style.top = this.downY + 'px';
-      //设置你要画的矩形框的起点位置
-      this.rect.style.left = this.downX + 'px';
-      this.rect.style.top = this.downY + 'px';
-    },
-
-    //鼠标抬起事件
-    up() {
-      let topList = [];
-      let leftList = [];
-      for (let i = 0; i < this.lis.length; i++) {
-        //将移动的div的四个点和和div元素的四个点进行比较
-        if (
-          //判断div元素 右边框的位置大于移动div的左起始点
-          this.rect.offsetLeft < this.lis[i].offsetLeft + this.lis[i].offsetWidth &&
-          //判断div元素 下边框的位置大于移动div的上起始点
-          this.lis[i].offsetTop + this.lis[i].offsetHeight > this.rect.offsetTop &&
-          // 判断div元素左边框的位置小于移动div的右起始点
-          this.rect.offsetLeft + this.rect.offsetWidth > this.lis[i].offsetLeft &&
-          // 判断div元素上边框的位置小于移动div的下起始点
-          this.rect.offsetTop + this.rect.offsetHeight > this.lis[i].offsetTop
-        ) {
-          //将已选中的样式改变
-          if (this.lis[i].className.indexOf('seled') == -1) {
-            topList.push(this.lis[i].offsetTop);
-            leftList.push(this.lis[i].offsetLeft);
-          }
-        } else {
-          //如果没有选中则清除样式
-          if (this.lis[i].className.indexOf('seled') != -1) {
-            this.lis[i].className = 'lay-item';
-          }
-        }
-        //鼠标抬起,就不允许在处理鼠标移动事件
-        this.select = false;
-      }
-
-      //隐藏图层
-      if (this.rect) {
-        document.getElementById('lay1').removeChild(this.rect);
-      }
-
-      return {
-        startX: this.getMin(leftList),
-        startY: this.getMin(topList),
-        w: this.getMax(leftList) - this.getMin(leftList) + 93.75,
-        h: this.getMax(topList) - this.getMin(topList) + 93.75,
-      };
-    },
-    // 删除
-    del() {
-      this.$emit('delAreaBox', this.areaDataIndex);
-    },
-    getMin(arr) {
-      let min = arr[0];
-      for (let i = 1; i < arr.length; i++) {
-        if (arr[i] < min) {
-          min = arr[i];
-        }
-      }
-      return min;
-    },
-    getMax(arr) {
-      let max = arr[0];
-      for (let i = 1; i < arr.length; i++) {
-        if (arr[i] > max) {
-          max = arr[i];
-        }
-      }
-      return max;
-    },
-    out() {
-      if (this.rect) {
-        this.select = false;
-        document.getElementById('lay1').removeChild(this.rect);
-      }
-    },
-    //鼠标移动事件,最主要的事件
-    move(event) {
-      event.preventDefault();
-      if (!this.select) return;
-      /*
-            这个部分,根据你鼠标按下的位置,和你拉框时鼠标松开的位置关系,可以把区域分为四个部分,根据四个部分的不同,
-            我们可以分别来画框,否则的话,就只能向一个方向画框,也就是点的右下方画框.
-            */
-      if (this.select) {
-        window.requestAnimationFrame(() => {
-          // 取得鼠标移动时的坐标位置
-          this.mouseX2 = event.layerX - 5;
-          this.mouseY2 = event.layerY - 5;
-          // 显示框选元素
-          if (this.rect.style.display == 'none') {
-            this.rect.style.display = '';
-          }
-          this.rect.style.left = Math.min(this.mouseX2, this.downX) + 'px';
-          this.rect.style.top = Math.min(this.mouseY2, this.downY) + 'px';
-          this.rect.style.width = this.mouseX2 - this.downX + 'px';
-          this.rect.style.height = this.mouseY2 - this.downY + 'px';
-          // // A part
-          // if (this.mouseX2 < this.downX && this.mouseY2 < this.downY) {
-          //   this.rect.style.left = this.mouseX2;
-          //   this.rect.style.top = this.mouseY2;
-          // }
-
-          // // B part
-          // if (this.mouseX2 > this.downX && this.mouseY2 < this.downY) {
-          //   this.rect.style.left = this.downX;
-          //   this.rect.style.top = this.mouseY2;
-          // }
-
-          // // C part
-          // if (this.mouseX2 < this.downX && this.mouseY2 > this.downY) {
-          //   this.rect.style.left = this.mouseX2;
-          //   this.rect.style.top = this.downY;
-          // }
-
-          // // D part
-          // if (this.mouseX2 > this.downX && this.mouseY2 > this.downY) {
-          //   this.rect.style.left = this.downX;
-          //   this.rect.style.top = this.downY;
-          // }
-          //   this.rect.style.left = this.downX;
-          //   this.rect.style.top = this.downY;
+    }
+  }
+}
+function picArrayConcat(count) {
+  for (let i = configData.value.picList.length; i < count; i++) {
+    configData.value.picList.push(JSON.parse(JSON.stringify(arrayObj.value)));
+  }
+}
+// 删除指定热区
+function delAreaBox(index) {
+  /* 删除某个热区 */
+  selBoxList.value.splice(index, 1);
+  props.configObj.picStyle.picList.splice(index, 1);
+  props.configObj.picStyle.picList.push({ image: '', link: '' });
+  if (selBoxList.value.length) currentTab(selBoxList.value.length - 1, configData.value);
+}
+function initRect() {
+  if (rect.value) {
+    document.getElementById('lay1').removeChild(rect.value);
+  }
+}
+//处理鼠标按下事件
+function clickBox(event) {
+  if (select.value) {
+    let boxData = up();
+    try {
+      if (selBoxList.value.length && selBoxList.value.length == 1 && selBoxList.value[0].doc.w === 0) {
+        selBoxList.value[0].doc = boxData;
+      } else {
+        selBoxList.value.push({
+          img: '',
+          link: '',
+          doc: boxData,
         });
       }
+      currentTab(selBoxList.value.length - 1, configData.value);
+    } catch (error) {
+      console.log(error);
+    }
 
-      // 阻止事件上传
-      window.event.cancelBubble = true;
-      // 阻止默认事件
-      window.event.returnValue = false;
-    },
-  },
-};
+    selPicBox.value = selBoxList.value.length ? selBoxList.value.length - 1 : 0;
+    return;
+  }
+  // 鼠标按下时才允许处理鼠标的移动事件
+  select.value = true;
+  rect.value = document.createElement('div');
+  // 框选div 样式
+  rect.value.style.cssText =
+    'position:absolute;width:0px;height:0px;font-size:0px;margin:0px;padding:0px;border:1px dashed #0099FF;background-color:#C3D5ED;z-index:1000;filter:alpha(opacity:60);opacity:0.6;display:none;';
+  rect.value.id = 'selectDiv';
+  // 添加到lay1下
+  document.getElementById('lay1').appendChild(rect.value);
+  // 取得鼠标按下时的坐标位置
+  downX.value = event.layerX;
+  downY.value = event.layerY;
+  rect.value.style.left = downX.value + 'px';
+  rect.value.style.top = downY.value + 'px';
+  //设置你要画的矩形框的起点位置
+  rect.value.style.left = downX.value + 'px';
+  rect.value.style.top = downY.value + 'px';
+}
+
+//鼠标抬起事件
+function up() {
+  let topList = [];
+  let leftList = [];
+  for (let i = 0; i < lis.value.length; i++) {
+    //将移动的div的四个点和和div元素的四个点进行比较
+    if (
+      //判断div元素 右边框的位置大于移动div的左起始点
+      rect.value.offsetLeft < lis.value[i].offsetLeft + lis.value[i].offsetWidth &&
+      //判断div元素 下边框的位置大于移动div的上起始点
+      lis.value[i].offsetTop + lis.value[i].offsetHeight > rect.value.offsetTop &&
+      // 判断div元素左边框的位置小于移动div的右起始点
+      rect.value.offsetLeft + rect.value.offsetWidth > lis.value[i].offsetLeft &&
+      // 判断div元素上边框的位置小于移动div的下起始点
+      rect.value.offsetTop + rect.value.offsetHeight > lis.value[i].offsetTop
+    ) {
+      //将已选中的样式改变
+      if (lis.value[i].className.indexOf('seled') == -1) {
+        topList.push(lis.value[i].offsetTop);
+        leftList.push(lis.value[i].offsetLeft);
+      }
+    } else {
+      //如果没有选中则清除样式
+      if (lis.value[i].className.indexOf('seled') != -1) {
+        lis.value[i].className = 'lay-item';
+      }
+    }
+    //鼠标抬起,就不允许在处理鼠标移动事件
+    select.value = false;
+  }
+
+  //隐藏图层
+  if (rect.value) {
+    document.getElementById('lay1').removeChild(rect.value);
+  }
+
+  return {
+    startX: getMin(leftList),
+    startY: getMin(topList),
+    w: getMax(leftList) - getMin(leftList) + 93.75,
+    h: getMax(topList) - getMin(topList) + 93.75,
+  };
+}
+// 删除
+function del() {
+  emit('delAreaBox', areaDataIndex);
+}
+function getMin(arr) {
+  let min = arr[0];
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] < min) {
+      min = arr[i];
+    }
+  }
+  return min;
+}
+function getMax(arr) {
+  let max = arr[0];
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] > max) {
+      max = arr[i];
+    }
+  }
+  return max;
+}
+function out() {
+  if (rect.value) {
+    select.value = false;
+    document.getElementById('lay1').removeChild(rect.value);
+  }
+}
+//鼠标移动事件,最主要的事件
+function move(event) {
+  event.preventDefault();
+  if (!select.value) return;
+  /*
+        这个部分,根据你鼠标按下的位置,和你拉框时鼠标松开的位置关系,可以把区域分为四个部分,根据四个部分的不同,
+        我们可以分别来画框,否则的话,就只能向一个方向画框,也就是点的右下方画框.
+        */
+  if (select.value) {
+    window.requestAnimationFrame(() => {
+      // 取得鼠标移动时的坐标位置
+      mouseX2.value = event.layerX - 5;
+      mouseY2.value = event.layerY - 5;
+      // 显示框选元素
+      if (rect.value.style.display == 'none') {
+        rect.value.style.display = '';
+      }
+      rect.value.style.left = Math.min(mouseX2.value, downX.value) + 'px';
+      rect.value.style.top = Math.min(mouseY2.value, downY.value) + 'px';
+      rect.value.style.width = mouseX2.value - downX.value + 'px';
+      rect.value.style.height = mouseY2.value - downY.value + 'px';
+      // // A part
+      // if (mouseX2.value < downX.value && mouseY2.value < downY.value) {
+      //   rect.value.style.left = mouseX2.value;
+      //   rect.value.style.top = mouseY2.value;
+      // }
+
+      // // B part
+      // if (mouseX2.value > downX.value && mouseY2.value < downY.value) {
+      //   rect.value.style.left = downX.value;
+      //   rect.value.style.top = mouseY2.value;
+      // }
+
+      // // C part
+      // if (mouseX2.value < downX.value && mouseY2.value > downY.value) {
+      //   rect.value.style.left = mouseX2.value;
+      //   rect.value.style.top = downY.value;
+      // }
+
+      // // D part
+      // if (mouseX2.value > downX.value && mouseY2.value > downY.value) {
+      //   rect.value.style.left = downX.value;
+      //   rect.value.style.top = downY.value;
+      // }
+      //   rect.value.style.left = downX.value;
+      //   rect.value.style.top = downY.value;
+    });
+  }
+
+  // 阻止事件上传
+  window.event.cancelBubble = true;
+  // 阻止默认事件
+  window.event.returnValue = false;
+}
 </script>
 <style scoped lang="scss">
-::v-deep .ivu-divider-horizontal {
+:deep(.ivu-divider-horizontal) {
   margin: 12px 0;
 }
 

@@ -2,10 +2,8 @@
 
 </template>
 
-<script>
-    export default {
-        name: 'c_hot_box'
-    }
+<script setup>
+defineOptions({ name: 'c_hot_box' });
 </script>
 
 <style scoped>

@@ -14,7 +14,7 @@
             @on-click="bindDelete(index)"
           />
         </div>
-        <div class="button acea-row row-between-wrapper" :class="configData.list.length == 0 ? 'on' : ''">
+        <div class="button acea-row row-between-wrapper" :class="configData.list && configData.list.length == 0 ? 'on' : ''">
           <div class="bnt acea-row row-center-wrapper" @click="addHotTxt">
             <span class="iconfont iconjia"></span>
             添加单个选项
@@ -24,87 +24,84 @@
               <span class="iconfont iconjia"></span>
               批量添加选项
             </div>
-            <div class="batchItem on" slot="content">
-              <div class="title">批量添加选项</div>
-              <div class="tips">可按回车键添加多个选项</div>
-              <el-input v-model="batchWord" type="textarea" :autosize="{ minRows: 3, maxRows: 5 }" />
-              <div class="batchBnt acea-row row-right">
-                <el-button @click.stop="cancel(1)">取消</el-button>
-                <el-button type="primary" class="ml10" @click.stop="cancel(2)">确定</el-button>
+            <template #content>
+              <div class="batchItem on">
+                <div class="title">批量添加选项</div>
+                <div class="tips">可按回车键添加多个选项</div>
+                <el-input v-model="batchWord" type="textarea" :autosize="{ minRows: 3, maxRows: 5 }" />
+                <div class="batchBnt acea-row row-right">
+                  <el-button @click.stop="cancel(1)">取消</el-button>
+                  <el-button type="primary" class="ml10" @click.stop="cancel(2)">确定</el-button>
+                </div>
               </div>
-            </div>
+            </template>
           </Poptip>
         </div>
       </el-col>
     </div>
   </div>
 </template>
-<script>
-export default {
-  name: 'c_select_item',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch } from 'vue';
+
+defineOptions({ name: 'c_select_item' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-      batchWord: '',
-      visible: false,
-    };
+  configNme: {
+    type: String,
   },
-  created() {
-    this.defaults = this.configObj;
-    this.configData = this.configObj[this.configNme];
+});
+
+const defaults = ref({});
+const configData = ref({});
+const batchWord = ref('');
+const visible = ref(false);
+
+defaults.value = props.configObj;
+configData.value = props.configObj[props.configNme] || {};
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    configData.value = nVal[props.configNme] || {};
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.configData = nVal[this.configNme];
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  methods: {
-    cancel(num) {
-      this.visible = false;
-      if (num == 2) {
-        let arr = this.batchWord.split('\n');
-        let arrNew = [];
-        arr.forEach((item) => {
-          let obj = {};
-          obj['val'] = item;
-          arrNew.push(obj);
-        });
-        this.configData.list = this.configData.list.concat(arrNew);
-      }
-      this.batchWord = '';
-    },
-    addHotTxt() {
-      let obj = {
-        val: '',
-      };
-      this.configData.list.push(obj);
-    },
-    // 删除数组
-    bindDelete(index) {
-      this.configData.list.splice(index, 1);
-    },
-  },
-};
+  { immediate: true, deep: true },
+);
+
+function cancel(num) {
+  visible.value = false;
+  if (num == 2) {
+    let arr = batchWord.value.split('\n');
+    let arrNew = [];
+    arr.forEach((item) => {
+      let obj = {};
+      obj['val'] = item;
+      arrNew.push(obj);
+    });
+    configData.value.list = configData.value.list.concat(arrNew);
+  }
+  batchWord.value = '';
+}
+function addHotTxt() {
+  let obj = {
+    val: '',
+  };
+  configData.value.list.push(obj);
+}
+// 删除数组
+function bindDelete(index) {
+  configData.value.list.splice(index, 1);
+}
 </script>
 
 <style scoped lang="scss">
 .poptipOn {
   display: none;
 }
-::v-deep textarea.ivu-input {
+:deep(.textarea.ivu-input) {
   resize: none;
 }
 .batchItem {
@@ -133,7 +130,7 @@ export default {
     align-items: baseline !important;
     text-align: right;
     color: #666;
-    ::v-deep.ivu-input-suffix i {
+    :deep(.ivu-input-suffix i ){
       color: #999;
       font-size: 18px;
     }

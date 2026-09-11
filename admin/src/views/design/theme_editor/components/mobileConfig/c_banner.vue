@@ -2,7 +2,7 @@
   <div class="mobile-config">
     <div v-for="(item, key) in rCom" :key="key">
       <component
-        :is="item.components.name"
+        :is="item.components"
         :configObj="configObj"
         ref="childData"
         :configNme="item.configNme"
@@ -15,413 +15,394 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, nextTick, onMounted } from 'vue';
 import toolCom from '@/views/design/theme_editor/components/mobileConfigRight/index.js';
 import rightBtn from '@/views/design/theme_editor/components/rightBtn/index.vue';
-import { mapState, mapMutations, mapActions } from 'vuex';
-export default {
-  name: 'c_banner',
-  componentsName: 'home_banner',
-  components: {
-    ...toolCom,
-    rightBtn,
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+
+defineOptions({ name: 'c_banner', componentsName: 'home_banner' });
+
+const mobildConfigStore = useMobildConfigStore();
+
+const props = defineProps({
+  activeIndex: {
+    type: null,
   },
-  props: {
-    activeIndex: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    index: {
-      type: null,
-    },
+  num: {
+    type: null,
   },
-  data() {
-    return {
-      configObj: {},
-      rCom: [
-        // {
-        //   components: toolCom.c_title,
-        //   configNme: 'titleLeft',
-        // },
-        {
-          components: toolCom.c_card_select,
-          configNme: 'styleConfig',
-        },
-        {
-          components: toolCom.c_set_up,
-          configNme: 'setUp',
-        },
-      ],
-      // 内容设置部分
-      contentStyle: [
-        {
-          components: toolCom.c_title,
-          configNme: 'titleContent',
-        },
-        {
-          components: toolCom.c_swipers_list,
-          configNme: 'swiperConfig',
-        },
-      ],
-      // 样式设置 - 指示器部分
-      oneStyle: [
-        {
-          components: toolCom.c_title,
-          configNme: 'titleRight',
-        },
-        {
-          components: toolCom.c_radio,
-          configNme: 'docConfig',
-        },
-        {
-          components: toolCom.c_radio,
-          configNme: 'docPosition',
-        },
-        {
-          components: toolCom.c_radio,
-          configNme: 'toneConfig',
-        },
-      ],
-      twoStyle: [
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'dotColor',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'dotBgColor',
-        },
-      ],
-      threeStyle: [
-        {
-          components: toolCom.c_title,
-          configNme: 'titleImg',
-        },
-        {
-          components: toolCom.c_fillet,
-          configNme: 'filletImg',
-        },
-      ],
-      fourStyle: [
-        {
-          components: toolCom.c_slider,
-          configNme: 'imgConfig',
-        },
-      ],
-      oneCurrencyStyle: [
-        {
-          components: toolCom.c_common_style,
-          configNme: 'commonStyle',
-        },
-      ],
-      twoCurrencyStyle: [],
-      threeCurrencyStyle: [
-        {
-          components: toolCom.c_fillet,
-          configNme: 'fillet',
-        },
-      ],
-      setUp: 0,
-      type: 0,
-      type2: 0,
-    };
+  index: {
+    type: null,
   },
-  watch: {
-    num(nVal) {
-      let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[nVal]));
-      this.configObj = this.patchConfig(value);
+});
+
+const configObj = ref({});
+const rCom = shallowRef([
+  // {
+  //   components: toolCom.c_title,
+  //   configNme: 'titleLeft',
+  // },
+  {
+    components: toolCom.c_card_select,
+    configNme: 'styleConfig',
+  },
+  {
+    components: toolCom.c_set_up,
+    configNme: 'setUp',
+  },
+]);
+// 内容设置部分
+const contentStyle = [
+  {
+    components: toolCom.c_title,
+    configNme: 'titleContent',
+  },
+  {
+    components: toolCom.c_swipers_list,
+    configNme: 'swiperConfig',
+  },
+];
+// 样式设置 - 指示器部分
+const oneStyle = [
+  {
+    components: toolCom.c_title,
+    configNme: 'titleRight',
+  },
+  {
+    components: toolCom.c_radio,
+    configNme: 'docConfig',
+  },
+  {
+    components: toolCom.c_radio,
+    configNme: 'docPosition',
+  },
+  {
+    components: toolCom.c_radio,
+    configNme: 'toneConfig',
+  },
+];
+const twoStyle = [
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'dotColor',
+  },
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'dotBgColor',
+  },
+];
+const threeStyle = [
+  {
+    components: toolCom.c_title,
+    configNme: 'titleImg',
+  },
+  {
+    components: toolCom.c_fillet,
+    configNme: 'filletImg',
+  },
+];
+const fourStyle = [
+  {
+    components: toolCom.c_slider,
+    configNme: 'imgConfig',
+  },
+];
+const oneCurrencyStyle = [
+  {
+    components: toolCom.c_common_style,
+    configNme: 'commonStyle',
+  },
+];
+const twoCurrencyStyle = [];
+const threeCurrencyStyle = [
+  {
+    components: toolCom.c_fillet,
+    configNme: 'fillet',
+  },
+];
+const setUp = ref(0);
+const type = ref(0);
+const type2 = ref(0);
+
+function buildArr() {
+  return [
+    // {
+    //   components: toolCom.c_title,
+    //   configNme: 'titleLeft',
+    // },
+    {
+      components: toolCom.c_card_select,
+      configNme: 'styleConfig',
     },
-    configObj: {
-      handler(nVal, oVal) {
-        this.$store.commit('mobildConfig/UPDATEARR', { num: this.num, val: nVal });
-      },
-      deep: true,
+    {
+      components: toolCom.c_set_up,
+      configNme: 'setUp',
     },
-    'configObj.setUp.tabVal': {
-      handler(nVal, oVal) {
-        this.setUp = nVal;
-        var arr = [
-          // {
-          //   components: toolCom.c_title,
-          //   configNme: 'titleLeft',
-          // },
-          {
-            components: toolCom.c_card_select,
-            configNme: 'styleConfig',
-          },
-          {
-            components: toolCom.c_set_up,
-            configNme: 'setUp',
-          },
-        ];
-        if (nVal == 0) {
-          // 内容设置
-          this.rCom = arr.concat(this.contentStyle);
+  ];
+}
+
+watch(
+  () => props.num,
+  (nVal) => {
+    let value = JSON.parse(JSON.stringify(mobildConfigStore.defaultArray[nVal]));
+    configObj.value = patchConfig(value);
+  },
+);
+
+watch(
+  configObj,
+  (nVal, oVal) => {
+    mobildConfigStore.UPDATEARR({ num: props.num, val: nVal });
+  },
+  { deep: true },
+);
+
+watch(
+  () => configObj.value?.setUp?.tabVal,
+  (nVal, oVal) => {
+    setUp.value = nVal;
+    var arr = buildArr();
+    if (nVal == 0) {
+      // 内容设置
+      rCom.value = arr.concat(contentStyle);
+    } else {
+      // 样式设置
+      if (type2.value == 2) {
+        if (type.value) {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...twoStyle,
+            ...threeStyle,
+            ...fourStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
         } else {
-          // 样式设置
-          if (this.type2 == 2) {
-            if (this.type) {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.threeStyle,
-                ...this.fourStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.threeStyle,
-                ...this.fourStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            }
-          } else if (this.type2 == 1) {
-            if (this.type) {
-              this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.threeStyle, ...this.oneCurrencyStyle];
-            } else {
-              this.rCom = [...arr, ...this.oneStyle, ...this.threeStyle, ...this.oneCurrencyStyle];
-            }
-          } else {
-            if (this.type) {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.threeStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.threeStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            }
-          }
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...threeStyle,
+            ...fourStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
         }
-      },
-      deep: true,
-    },
-    'configObj.styleConfig.tabVal': {
-      handler(nVal, oVal) {
-        this.type2 = nVal;
-        var arr = [
-          // {
-          //   components: toolCom.c_title,
-          //   configNme: 'titleLeft',
-          // },
-          {
-            components: toolCom.c_card_select,
-            configNme: 'styleConfig',
-          },
-          {
-            components: toolCom.c_set_up,
-            configNme: 'setUp',
-          },
-        ];
-        if (this.setUp) {
-          if (nVal == 2) {
-            if (this.type) {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.threeStyle,
-                ...this.fourStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.threeStyle,
-                ...this.fourStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            }
-          } else if (nVal == 1) {
-            if (this.type) {
-              this.rCom = [...arr, ...this.oneStyle, ...this.twoStyle, ...this.threeStyle, ...this.oneCurrencyStyle];
-            } else {
-              this.rCom = [...arr, ...this.oneStyle, ...this.threeStyle, ...this.oneCurrencyStyle];
-            }
-          } else {
-            if (this.type) {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.threeStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.threeStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            }
-          }
+      } else if (type2.value == 1) {
+        if (type.value) {
+          rCom.value = [...arr, ...oneStyle, ...twoStyle, ...threeStyle, ...oneCurrencyStyle];
+        } else {
+          rCom.value = [...arr, ...oneStyle, ...threeStyle, ...oneCurrencyStyle];
         }
-      },
-      deep: true,
-    },
-    'configObj.toneConfig.tabVal': {
-      handler(nVal, oVal) {
-        this.type = nVal;
-        var arr = [
-          // {
-          //   components: toolCom.c_title,
-          //   configNme: 'titleLeft',
-          // },
-          {
-            components: toolCom.c_card_select,
-            configNme: 'styleConfig',
-          },
-          {
-            components: toolCom.c_set_up,
-            configNme: 'setUp',
-          },
-        ];
-        if (this.setUp) {
-          if (this.type2 == 2) {
-            if (nVal) {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.threeStyle,
-                ...this.fourStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.threeStyle,
-                ...this.fourStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            }
-          } else if (this.type2 == 1) {
-            if (nVal) {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.threeStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.threeStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            }
-          } else {
-            if (nVal) {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.threeStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.threeStyle,
-                ...this.oneCurrencyStyle,
-                ...this.twoCurrencyStyle,
-              ];
-            }
-          }
+      } else {
+        if (type.value) {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...twoStyle,
+            ...threeStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
+        } else {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...threeStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
         }
-      },
-      deep: true,
-    },
-  },
-  mounted() {
-    this.$nextTick(() => {
-      let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[this.num]));
-      this.configObj = this.patchConfig(value);
-    });
-  },
-  methods: {
-    patchConfig(data) {
-      if (!data) return data;
-      // 兼容旧数据：底部背景
-      if (data.bgColor && !data.bottomBgColor) {
-        this.$set(data, 'bottomBgColor', {
-          title: '底部背景',
-          default: [{ item: data.bgColor.color[0].item }],
-          color: [{ item: data.bgColor.color[0].item }],
-        });
       }
-      if (!data.paddingConfig) {
-        this.$set(data, 'paddingConfig', {
-          title: '内边距',
-          isAll: false,
-          val: 0,
-          min: 0,
-          max: 100,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        });
-        if (data.topConfig) data.paddingConfig.valList[0].val = data.topConfig.val;
-        if (data.prConfig) {
-          data.paddingConfig.valList[1].val = data.prConfig.val;
-          data.paddingConfig.valList[3].val = data.prConfig.val;
-        }
-        if (data.bottomConfig) data.paddingConfig.valList[2].val = data.bottomConfig.val;
-      }
-      if (!data.marginConfig) {
-        this.$set(data, 'marginConfig', {
-          title: '外边距',
-          val: 0,
-          min: 0,
-          max: 100,
-          isAll: false,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        });
-        if (data.mbConfig) data.marginConfig.valList[0].val = data.mbConfig.val;
-      }
-      return data;
-    },
-    // 提交
-    handleSubmit(name) {
-      let obj = {};
-      obj.activeIndex = this.activeIndex;
-      obj.data = this.configObj;
-      this.add(obj);
-    },
-    ...mapMutations({
-      add: 'mobildConfig/UPDATEARR',
-    }),
+    }
   },
-};
+  { deep: true },
+);
+
+watch(
+  () => configObj.value?.styleConfig?.tabVal,
+  (nVal, oVal) => {
+    type2.value = nVal;
+    var arr = buildArr();
+    if (setUp.value) {
+      if (nVal == 2) {
+        if (type.value) {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...twoStyle,
+            ...threeStyle,
+            ...fourStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
+        } else {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...threeStyle,
+            ...fourStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
+        }
+      } else if (nVal == 1) {
+        if (type.value) {
+          rCom.value = [...arr, ...oneStyle, ...twoStyle, ...threeStyle, ...oneCurrencyStyle];
+        } else {
+          rCom.value = [...arr, ...oneStyle, ...threeStyle, ...oneCurrencyStyle];
+        }
+      } else {
+        if (type.value) {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...twoStyle,
+            ...threeStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
+        } else {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...threeStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
+        }
+      }
+    }
+  },
+  { deep: true },
+);
+
+watch(
+  () => configObj.value?.toneConfig?.tabVal,
+  (nVal, oVal) => {
+    type.value = nVal;
+    var arr = buildArr();
+    if (setUp.value) {
+      if (type2.value == 2) {
+        if (nVal) {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...twoStyle,
+            ...threeStyle,
+            ...fourStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
+        } else {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...threeStyle,
+            ...fourStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
+        }
+      } else if (type2.value == 1) {
+        if (nVal) {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...twoStyle,
+            ...threeStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
+        } else {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...threeStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
+        }
+      } else {
+        if (nVal) {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...twoStyle,
+            ...threeStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
+        } else {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...threeStyle,
+            ...oneCurrencyStyle,
+            ...twoCurrencyStyle,
+          ];
+        }
+      }
+    }
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    let value = JSON.parse(JSON.stringify(mobildConfigStore.defaultArray[props.num]));
+    configObj.value = patchConfig(value);
+  });
+});
+
+function patchConfig(data) {
+  if (!data) return data;
+  // 兼容旧数据：底部背景
+  if (data.bgColor && !data.bottomBgColor) {
+    data.bottomBgColor = {
+      title: '底部背景',
+      default: [{ item: data.bgColor.color[0].item }],
+      color: [{ item: data.bgColor.color[0].item }],
+    };
+  }
+  if (!data.paddingConfig) {
+    data.paddingConfig = {
+      title: '内边距',
+      isAll: false,
+      val: 0,
+      min: 0,
+      max: 100,
+      valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+    };
+    if (data.topConfig) data.paddingConfig.valList[0].val = data.topConfig.val;
+    if (data.prConfig) {
+      data.paddingConfig.valList[1].val = data.prConfig.val;
+      data.paddingConfig.valList[3].val = data.prConfig.val;
+    }
+    if (data.bottomConfig) data.paddingConfig.valList[2].val = data.bottomConfig.val;
+  }
+  if (!data.marginConfig) {
+    data.marginConfig = {
+      title: '外边距',
+      val: 0,
+      min: 0,
+      max: 100,
+      isAll: false,
+      valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+    };
+    if (data.mbConfig) data.marginConfig.valList[0].val = data.mbConfig.val;
+  }
+  return data;
+}
+
+// 提交
+function handleSubmit(name) {
+  let obj = {};
+  obj.activeIndex = props.activeIndex;
+  obj.data = configObj.value;
+  mobildConfigStore.UPDATEARR(obj);
+}
 </script>
 
 <style scoped lang="scss">

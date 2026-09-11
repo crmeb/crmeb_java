@@ -7,7 +7,7 @@
             <div class="top acea-row row-between-wrapper">
               <div class="picTxt acea-row row-middle">
                 <div class="pictrue">
-                  <img src="../../../assets/images/f.png" />
+                  <img :src="fImg" />
                 </div>
                 <div class="txt">
                   <div class="name">用户名称用户名称</div>
@@ -43,7 +43,7 @@
               <div class="renew">立即续费<span class="iconfont iconjinru"></span></div>
             </div>
             <div class="bottomB acea-row row-between" v-if="userData.status == 3">
-              <div class="vip"><img src="../../../assets/images/member01.png" />开通会员VIP</div>
+              <div class="vip"><img :src="member01Img" />开通会员VIP</div>
               <div>会员可享多项权益<span class="iconfont iconjinru"></span></div>
             </div>
           </div>
@@ -123,32 +123,6 @@
               </div>
             </div>
           </div>
-          <div
-            class="orderCenter service dotted"
-            :class="current == 3 ? 'solid' : ''"
-            v-db-click
-            @click="currentShow(3)"
-          >
-            <div class="title acea-row row-between-wrapper" v-if="userData.business_status == 1">
-              <div>商家管理</div>
-            </div>
-            <div class="list acea-row" v-if="userData.business_status == 1">
-              <div class="item" v-for="(item, index) in storeMenu" :key="index" v-if="item.pic">
-                <div class="pictrue">
-                  <img :src="item.pic" />
-                </div>
-                <div>{{ item.name }}</div>
-              </div>
-            </div>
-            <div class="list-2" v-else-if="userData.business_status == 2">
-              <div class="acea-row row-middle item" v-for="(item, index) in storeMenu" :key="index" v-if="item.pic">
-                <img class="pictrue" :src="item.pic" v-if="item.pic && item.pic != ''" />
-                <span class="iconfont icontupian1" v-else></span>
-                <div class="name">{{ item.name ? item.name : '服务名称' }}</div>
-                <i class="el-icon-arrow-right"></i>
-              </div>
-            </div>
-          </div>
         </div>
         <div class="right">
           <div class="title">页面设置</div>
@@ -156,13 +130,13 @@
             <el-col class="label" :span="4"> 页面风格： </el-col>
             <el-col :span="20" class="slider-box">
               <el-radio-group v-model="userData.status">
-                <el-radio :label="1">
+                <el-radio :label="1" :value="1">
                   <span>样式1</span>
                 </el-radio>
-                <el-radio :label="2">
+                <el-radio :label="2" :value="2">
                   <span>样式2</span>
                 </el-radio>
-                <el-radio :label="3">
+                <el-radio :label="3" :value="3">
                   <span>样式3</span>
                 </el-radio>
               </el-radio-group>
@@ -171,20 +145,20 @@
           <div class="c_row-item" v-if="current == 4">
             <el-col class="label" :span="4"> 订单中心： </el-col>
             <el-col :span="20" class="slider-box">
-              <el-radio-group v-model="userData.order_status" @input="orderStyle">
-                <el-radio :label="1">
+              <el-radio-group v-model="userData.order_status" @change="orderStyle">
+                <el-radio :label="1" :value="1">
                   <span>样式1</span>
                 </el-radio>
-                <el-radio :label="2">
+                <el-radio :label="2" :value="2">
                   <span>样式2</span>
                 </el-radio>
-                <el-radio :label="3">
+                <el-radio :label="3" :value="3">
                   <span>样式3</span>
                 </el-radio>
-                <el-radio :label="4">
+                <el-radio :label="4" :value="4">
                   <span>样式4</span>
                 </el-radio>
-                <el-radio :label="5">
+                <el-radio :label="5" :value="5">
                   <span>样式5</span>
                 </el-radio>
               </el-radio-group>
@@ -194,23 +168,10 @@
             <el-col class="label" :span="4"> 我的服务： </el-col>
             <el-col :span="20" class="slider-box">
               <el-radio-group v-model="userData.my_menus_status">
-                <el-radio :label="1">
+                <el-radio :label="1" :value="1">
                   <span>样式1</span>
                 </el-radio>
-                <el-radio :label="2">
-                  <span>样式2</span>
-                </el-radio>
-              </el-radio-group>
-            </el-col>
-          </div>
-          <div class="c_row-item" v-if="current == 3">
-            <el-col class="label" :span="4"> 商家服务： </el-col>
-            <el-col :span="20" class="slider-box">
-              <el-radio-group v-model="userData.business_status">
-                <el-radio :label="1">
-                  <span>样式1</span>
-                </el-radio>
-                <el-radio :label="2">
+                <el-radio :label="2" :value="2">
                   <span>样式2</span>
                 </el-radio>
               </el-radio-group>
@@ -236,215 +197,201 @@
               <uploadPic :listData="MyMenus" :type="2"></uploadPic>
             </el-col>
           </div>
-          <div class="c_row-item acea-row row-top" v-if="current == 3">
-            <el-col class="label" :span="4"> 商家管理： </el-col>
-            <el-col :span="20" class="slider-box">
-              <div class="info">建议尺寸：86 * 86px，拖拽图片可调整图片显示顺序哦，最多添加五张</div>
-              <uploadPic :listData="storeMenu" :type="1"></uploadPic>
-            </el-col>
-          </div>
         </div>
       </div>
     </el-card>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { getMember, memberSave } from '@/api/theme';
 import uploadPic from './components/uploadPic';
-export default {
-  name: 'users',
-  components: {
-    uploadPic,
+import fImg from '@/assets/imgs/no.png';
+import member01Img from '@/assets/imgs/no.png';
+
+defineOptions({ name: 'users' });
+
+const emit = defineEmits(['parentFun']);
+
+const swiperOption = ref({
+  //显示分页
+  pagination: {
+    el: '.swiper-pagination',
   },
-  props: {},
-  data() {
-    return {
-      swiperOption: {
-        //显示分页
-        pagination: {
-          el: '.swiper-pagination',
-        },
-        //自动轮播
-        autoplay: {
-          delay: 2000,
-          //当用户滑动图片后继续自动轮播
-          disableOnInteraction: false,
-        },
-        //开启循环模式
-        loop: false,
-      },
-      userData: {
-        my_banner_status: false,
-        routine_my_banner: [],
-        routine_my_menus: [],
-        status: '',
-        order_status: '',
-        my_menus_status: 1,
-        business_status: 1,
-      },
-      MyMenus: [{ pic: '', url: '', name: '', sort: 1, status: 1 }],
-      storeMenu: [{ pic: '', url: '', name: '', sort: 1, status: 1 }],
-      current: 1,
-      colorStyle: '',
-      order: {},
-      order01: {
-        dfk: 'icondaifukuan1',
-        dfh: 'icondaifahuo1',
-        dsh: 'icondaishouhuo1',
-        dpj: 'icondaipingjia1',
-        sh: 'iconshouhou_tuikuan',
-      },
-      order02: {
-        dfk: 'icondaifukuan-lan',
-        dfh: 'icondaifahuo-lan',
-        dsh: 'icondaishouhuo-lan',
-        dpj: 'icondaipingjia-lan',
-        sh: 'iconshouhou-tuikuan-lan',
-      },
-      order03: {
-        dfk: 'icondaifukuan-ju',
-        dfh: 'icondaifahuo-ju',
-        dsh: 'icondaishouhuo-ju',
-        dpj: 'icondaipingjia-ju',
-        sh: 'iconshouhou-tuikuan-ju',
-      },
-      order04: {
-        dfk: 'icondaifukuan-fen',
-        dfh: 'icondaifahuo-fen',
-        dsh: 'icondaishouhuo-fen',
-        dpj: 'icondaipingjia-fen',
-        sh: 'icona-shouhoutuikuan-fen',
-      },
-      order05: {
-        dfk: 'icondaifukuan-lv',
-        dfh: 'icondaifahuo-lv',
-        dsh: 'icondaishouhuo-lv',
-        dpj: 'icondaipingjia-lv',
-        sh: 'iconshouhou-tuikuan-lv',
-      },
-    };
+  //自动轮播
+  autoplay: {
+    delay: 2000,
+    //当用户滑动图片后继续自动轮播
+    disableOnInteraction: false,
   },
-  created() {
-    this.getInfo();
-  },
-  methods: {
-    currentShow(type) {
-      this.current = type;
-    },
-    switchOrder(status) {
-      switch (status) {
-        case 1:
-          this.order = this.order01;
-          break;
-        case 2:
-          this.order = this.order02;
-          break;
-        case 3:
-          this.order = this.order03;
-          break;
-        case 4:
-          this.order = this.order04;
-          break;
-        case 5:
-          this.order = this.order05;
-          break;
-        default:
-          this.order = this.order01;
-          break;
-      }
-    },
-    orderStyle(e) {
-      this.switchOrder(e);
-    },
-    getInfo() {
-      let green =
-        '--view-theme: #42CA4D;--view-priceColor:#FF7600;--view-minorColor:rgba(108, 198, 94, 0.5);--view-minorColorT:rgba(66, 202, 77, 0.1);--view-bntColor:#FE960F;';
-      let red =
-        '--view-theme: #e93323;--view-priceColor:#e93323;--view-minorColor:rgba(233, 51, 35, 0.5);--view-minorColorT:rgba(233, 51, 35, 0.1);--view-bntColor:#FE960F;';
-      let blue =
-        '--view-theme: #1DB0FC;--view-priceColor:#FD502F;--view-minorColor:rgba(58, 139, 236, 0.5);--view-minorColorT:rgba(9, 139, 243, 0.1);--view-bntColor:#22CAFD;';
-      let pink =
-        '--view-theme: #FF448F;--view-priceColor:#FF448F;--view-minorColor:rgba(255, 68, 143, 0.5);--view-minorColorT:rgba(255, 68, 143, 0.1);--view-bntColor:#282828;';
-      let orange =
-        '--view-theme: #FE5C2D;--view-priceColor:#FE5C2D;--view-minorColor:rgba(254, 92, 45, 0.5);--view-minorColorT:rgba(254, 92, 45, 0.1);--view-bntColor:#FDB000;';
-      getMember().then((res) => {
-        this.userData.status = res.data.status;
-        this.userData.order_status = res.data.order_status;
-        this.userData.my_banner_status = res.data.my_banner_status;
-        this.userData.my_menus_status = res.data.my_menus_status || 1;
-        this.userData.business_status = res.data.business_status || 1;
-        let storeMenu = [];
-        let myMenu = [];
-        this.switchOrder(res.data.order_status);
-        switch (res.data.color_change) {
-          case 1:
-            this.colorStyle = blue;
-            break;
-          case 2:
-            this.colorStyle = green;
-            break;
-          case 3:
-            this.colorStyle = red;
-            break;
-          case 4:
-            this.colorStyle = pink;
-            break;
-          case 5:
-            this.colorStyle = orange;
-            break;
-          default:
-            this.colorStyle = red;
-            break;
-        }
-        res.data.routine_my_banner.forEach((el, index, arr) => {
-          if (el.pic.length) {
-            el.pic = el.pic[0];
-          }
-        });
-        if (res.data.routine_my_banner.length) {
-          this.userData.routine_my_banner = res.data.routine_my_banner;
-        } else {
-          this.userData.routine_my_banner = [];
-        }
-        res.data.routine_my_menus.forEach((el, index, arr) => {
-          if (el.pic.length) {
-            el.pic = el.pic[0];
-          }
-          if (
-            el.url == '/pages/admin/order/index' ||
-            el.url == '/pages/admin/order_cancellation/index' ||
-            el.url == '/pages/admin/manage/index' ||
-            el.name == '客服接待'
-          ) {
-            storeMenu.push(el);
-          } else {
-            myMenu.push(el);
-          }
-        });
-        if (myMenu.length) {
-          this.MyMenus = myMenu;
-        }
-        if (storeMenu.length) {
-          this.storeMenu = storeMenu;
-        }
-      });
-    },
-    onSubmit() {
-      this.userData.routine_my_menus = this.MyMenus.concat(this.storeMenu);
-      this.$emit('parentFun', true);
-      memberSave(this.userData)
-        .then((res) => {
-          this.$emit('parentFun', false);
-          this.$message.success(res.msg);
-        })
-        .catch((err) => {
-          this.$message.error(err.msg);
-          this.$emit('parentFun', false);
-        });
-    },
-  },
+  //开启循环模式
+  loop: false,
+});
+const userData = reactive({
+  my_banner_status: false,
+  routine_my_banner: [],
+  routine_my_menus: [],
+  status: '',
+  order_status: '',
+  my_menus_status: 1,
+  business_status: 1,
+});
+const MyMenus = ref([{ pic: '', url: '', name: '', sort: 1, status: 1 }]);
+const current = ref(1);
+const colorStyle = ref('');
+const order = ref({});
+const order01 = {
+  dfk: 'icondaifukuan1',
+  dfh: 'icondaifahuo1',
+  dsh: 'icondaishouhuo1',
+  dpj: 'icondaipingjia1',
+  sh: 'iconshouhou_tuikuan',
 };
+const order02 = {
+  dfk: 'icondaifukuan-lan',
+  dfh: 'icondaifahuo-lan',
+  dsh: 'icondaishouhuo-lan',
+  dpj: 'icondaipingjia-lan',
+  sh: 'iconshouhou-tuikuan-lan',
+};
+const order03 = {
+  dfk: 'icondaifukuan-ju',
+  dfh: 'icondaifahuo-ju',
+  dsh: 'icondaishouhuo-ju',
+  dpj: 'icondaipingjia-ju',
+  sh: 'iconshouhou-tuikuan-ju',
+};
+const order04 = {
+  dfk: 'icondaifukuan-fen',
+  dfh: 'icondaifahuo-fen',
+  dsh: 'icondaishouhuo-fen',
+  dpj: 'icondaipingjia-fen',
+  sh: 'icona-shouhoutuikuan-fen',
+};
+const order05 = {
+  dfk: 'icondaifukuan-lv',
+  dfh: 'icondaifahuo-lv',
+  dsh: 'icondaishouhuo-lv',
+  dpj: 'icondaipingjia-lv',
+  sh: 'iconshouhou-tuikuan-lv',
+};
+
+function currentShow(type) {
+  current.value = type;
+}
+function switchOrder(status) {
+  switch (status) {
+    case 1:
+      order.value = order01;
+      break;
+    case 2:
+      order.value = order02;
+      break;
+    case 3:
+      order.value = order03;
+      break;
+    case 4:
+      order.value = order04;
+      break;
+    case 5:
+      order.value = order05;
+      break;
+    default:
+      order.value = order01;
+      break;
+  }
+}
+function orderStyle(e) {
+  switchOrder(e);
+}
+function getInfo() {
+  let green =
+    '--view-theme: #42CA4D;--view-priceColor:#FF7600;--view-minorColor:rgba(108, 198, 94, 0.5);--view-minorColorT:rgba(66, 202, 77, 0.1);--view-bntColor:#FE960F;';
+  let red =
+    '--view-theme: #e93323;--view-priceColor:#e93323;--view-minorColor:rgba(233, 51, 35, 0.5);--view-minorColorT:rgba(233, 51, 35, 0.1);--view-bntColor:#FE960F;';
+  let blue =
+    '--view-theme: #1DB0FC;--view-priceColor:#FD502F;--view-minorColor:rgba(58, 139, 236, 0.5);--view-minorColorT:rgba(9, 139, 243, 0.1);--view-bntColor:#22CAFD;';
+  let pink =
+    '--view-theme: #FF448F;--view-priceColor:#FF448F;--view-minorColor:rgba(255, 68, 143, 0.5);--view-minorColorT:rgba(255, 68, 143, 0.1);--view-bntColor:#282828;';
+  let orange =
+    '--view-theme: #FE5C2D;--view-priceColor:#FE5C2D;--view-minorColor:rgba(254, 92, 45, 0.5);--view-minorColorT:rgba(254, 92, 45, 0.1);--view-bntColor:#FDB000;';
+  getMember().then((res) => {
+    userData.status = res.data.status;
+    userData.order_status = res.data.order_status;
+    userData.my_banner_status = res.data.my_banner_status;
+    userData.my_menus_status = res.data.my_menus_status || 1;
+    userData.business_status = res.data.business_status || 1;
+    let myMenu = [];
+    switchOrder(res.data.order_status);
+    switch (res.data.color_change) {
+      case 1:
+        colorStyle.value = blue;
+        break;
+      case 2:
+        colorStyle.value = green;
+        break;
+      case 3:
+        colorStyle.value = red;
+        break;
+      case 4:
+        colorStyle.value = pink;
+        break;
+      case 5:
+        colorStyle.value = orange;
+        break;
+      default:
+        colorStyle.value = red;
+        break;
+    }
+    res.data.routine_my_banner.forEach((el, index, arr) => {
+      if (el.pic.length) {
+        el.pic = el.pic[0];
+      }
+    });
+    if (res.data.routine_my_banner.length) {
+      userData.routine_my_banner = res.data.routine_my_banner;
+    } else {
+      userData.routine_my_banner = [];
+    }
+    res.data.routine_my_menus.forEach((el, index, arr) => {
+      if (el.pic.length) {
+        el.pic = el.pic[0];
+      }
+      // 移动端商家管理相关菜单（开源版不提供），不再展示
+      if (
+        el.url == '/pages/admin/order/index' ||
+        el.url == '/pages/admin/order_cancellation/index' ||
+        el.url == '/pages/admin/manage/index' ||
+        el.name == '客服接待'
+      ) {
+        return;
+      }
+      myMenu.push(el);
+    });
+    if (myMenu.length) {
+      MyMenus.value = myMenu;
+    }
+  });
+}
+function onSubmit() {
+  userData.routine_my_menus = MyMenus.value;
+  emit('parentFun', true);
+  memberSave(userData)
+    .then((res) => {
+      emit('parentFun', false);
+      ElMessage.success(res.msg);
+    })
+    .catch((err) => {
+      ElMessage.error(err.msg);
+      emit('parentFun', false);
+    });
+}
+
+getInfo();
+
+defineExpose({ onSubmit, getInfo });
 </script>
 <style lang="scss" scoped>
 /* 定义滑块 内阴影+圆角 */
@@ -587,11 +534,11 @@ export default {
 .swiper-container-horizontal > .swiper-pagination-bullets {
   bottom: 2px;
 }
-::v-deep .swiper-pagination-bullet {
+:deep(.swiper-pagination-bullet) {
   width: 4px;
   height: 4px;
 }
-::v-deep .swiper-pagination-bullet-active {
+:deep(.swiper-pagination-bullet-active) {
   background: #fff;
 }
 .users {
@@ -817,7 +764,7 @@ export default {
   }
   .right {
     width: 540px;
-    ::v-deep .ivu-radio-wrapper {
+    :deep(.ivu-radio-wrapper) {
       font-size: 13px;
       margin-right: 20px;
     }

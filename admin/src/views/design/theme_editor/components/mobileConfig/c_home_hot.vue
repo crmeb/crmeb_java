@@ -2,7 +2,7 @@
   <div class="mobile-config hot">
     <div v-for="(item, key) in rCom" :key="key">
       <component
-        :is="item.components.name"
+        :is="item.components"
         :configObj="configObj"
         ref="childData"
         :configNme="item.configNme"
@@ -16,149 +16,148 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, nextTick, onMounted } from 'vue';
 import toolCom from '@/views/design/theme_editor/components/mobileConfigRight/index.js';
 import rightBtn from '@/views/design/theme_editor/components/rightBtn/index.vue';
-import { mapState, mapMutations, mapActions } from 'vuex';
-export default {
-  name: 'c_home_hot',
-  componentsName: 'home_hot',
-  cname: '超值爆款',
-  props: {
-    activeIndex: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    index: {
-      type: null,
-    },
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+
+defineOptions({ name: 'c_home_hot', componentsName: 'home_hot', cname: '超值爆款' });
+
+const mobildConfigStore = useMobildConfigStore();
+
+const props = defineProps({
+  activeIndex: {
+    type: null,
   },
-  components: {
-    ...toolCom,
-    rightBtn,
+  num: {
+    type: null,
   },
-  watch: {
-    num(nVal) {
-      // debugger;
-      let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[nVal]));
-      this.configObj = this.patchConfig(value);
-    },
-    configObj: {
-      handler(nVal, oVal) {
-        this.$store.commit('mobildConfig/UPDATEARR', { num: this.num, val: nVal });
-      },
-      deep: true,
-    },
-    'configObj.setUp.tabVal': {
-      handler(nVal, oVal) {
-        var arr = [this.rCom[0]];
-        if (nVal == 0) {
-          let tempArr = [
-            {
-              components: toolCom.c_input_item,
-              configNme: 'titleConfig',
-            },
-            {
-              components: toolCom.c_input_item,
-              configNme: 'desConfig',
-            },
-            {
-              components: toolCom.c_menu_list,
-              configNme: 'menuConfig',
-            },
-          ];
-          this.rCom = arr.concat(tempArr);
-        } else {
-          let tempArr = [
-            {
-              components: toolCom.c_bg_color,
-              configNme: 'themeColor',
-            },
-            {
-              components: toolCom.c_bg_color,
-              configNme: 'boxColor',
-            },
-            {
-              components: toolCom.c_common_style,
-              configNme: 'c_common_style',
-            },
-          ];
-          this.rCom = arr.concat(tempArr);
-        }
-      },
-      deep: true,
-    },
+  index: {
+    type: null,
   },
-  data() {
-    return {
-      configObj: {},
-      rCom: [
+});
+
+const configObj = ref({});
+const rCom = shallowRef([
+  {
+    components: toolCom.c_set_up,
+    configNme: 'setUp',
+  },
+]);
+
+watch(
+  () => props.num,
+  (nVal) => {
+    // debugger;
+    let value = JSON.parse(JSON.stringify(mobildConfigStore.defaultArray[nVal]));
+    configObj.value = patchConfig(value);
+  },
+);
+
+watch(
+  configObj,
+  (nVal, oVal) => {
+    mobildConfigStore.UPDATEARR({ num: props.num, val: nVal });
+  },
+  { deep: true },
+);
+
+watch(
+  () => configObj.value?.setUp?.tabVal,
+  (nVal, oVal) => {
+    var arr = [rCom.value[0]];
+    if (nVal == 0) {
+      let tempArr = [
         {
-          components: toolCom.c_set_up,
-          configNme: 'setUp',
+          components: toolCom.c_input_item,
+          configNme: 'titleConfig',
+        },
+        {
+          components: toolCom.c_input_item,
+          configNme: 'desConfig',
+        },
+        {
+          components: toolCom.c_menu_list,
+          configNme: 'menuConfig',
+        },
+      ];
+      rCom.value = arr.concat(tempArr);
+    } else {
+      let tempArr = [
+        {
+          components: toolCom.c_bg_color,
+          configNme: 'themeColor',
+        },
+        {
+          components: toolCom.c_bg_color,
+          configNme: 'boxColor',
+        },
+        {
+          components: toolCom.c_common_style,
+          configNme: 'c_common_style',
+        },
+      ];
+      rCom.value = arr.concat(tempArr);
+    }
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    let value = JSON.parse(JSON.stringify(mobildConfigStore.defaultArray[props.num]));
+    configObj.value = patchConfig(value);
+  });
+});
+
+function patchConfig(data) {
+  if (!data.paddingConfig) {
+    data.paddingConfig = {
+      isAll: false,
+      title: '内边距',
+      val: 0,
+      min: 0,
+      max: 100,
+      valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+    };
+  }
+  if (!data.marginConfig) {
+    data.marginConfig = {
+      isAll: false,
+      title: '外边距',
+      val: 0,
+      min: 0,
+      max: 100,
+      valList: [{ val: data.mbConfig ? data.mbConfig.val : 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+    };
+  }
+  if (!data.bottomBgColor) {
+    data.bottomBgColor = {
+      title: '底部背景',
+      default: [
+        {
+          item: '#F5F5F5',
+        },
+      ],
+      color: [
+        {
+          item: '#F5F5F5',
         },
       ],
     };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[this.num]));
-      this.configObj = this.patchConfig(value);
-    });
-  },
-  methods: {
-    patchConfig(data) {
-      if (!data.paddingConfig) {
-        this.$set(data, 'paddingConfig', {
-          isAll: false,
-          title: '内边距',
-          val: 0,
-          min: 0,
-          max: 100,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        });
-      }
-      if (!data.marginConfig) {
-        this.$set(data, 'marginConfig', {
-          isAll: false,
-          title: '外边距',
-          val: 0,
-          min: 0,
-          max: 100,
-          valList: [{ val: data.mbConfig ? data.mbConfig.val : 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        });
-      }
-      if (!data.bottomBgColor) {
-        this.$set(data, 'bottomBgColor', {
-          title: '底部背景',
-          default: [
-            {
-              item: '#F5F5F5',
-            },
-          ],
-          color: [
-            {
-              item: '#F5F5F5',
-            },
-          ],
-        });
-      }
-      return data;
-    },
-    getConfig(data) {},
-    handleSubmit(name) {
-      let obj = {};
-      obj.activeIndex = this.activeIndex;
-      obj.data = this.configObj;
-      this.add(obj);
-    },
-    ...mapMutations({
-      add: 'mobildConfig/UPDATEARR',
-    }),
-  },
-};
+  }
+  return data;
+}
+
+function getConfig(data) {}
+
+function handleSubmit(name) {
+  let obj = {};
+  obj.activeIndex = props.activeIndex;
+  obj.data = configObj.value;
+  mobildConfigStore.UPDATEARR(obj);
+}
 </script>
 
 <style scoped lang="scss">

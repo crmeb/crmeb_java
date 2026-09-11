@@ -3,11 +3,11 @@
     <div class="title-bar">{{ configData.title }}</div>
     <div class="box-content">
       <!-- Color Tone -->
-      <div class="box-item">
+      <div class="box-item" v-if="configData.colorTone">
         <span class="label">{{ configData.colorTone.title }}</span>
         <div class="input-box">
           <el-radio-group v-model="configData.colorTone.tabVal">
-            <el-radio :label="item.val" v-for="(item, index) in configData.colorTone.tabList" :key="index">
+            <el-radio :label="item.val" :value="item.val" v-for="(item, index) in configData.colorTone.tabList" :key="index">
               {{ item.name }}
             </el-radio>
           </el-radio-group>
@@ -15,7 +15,7 @@
       </div>
 
       <!-- Custom Colors -->
-      <div v-if="configData.colorTone.tabVal === 1">
+      <div v-if="configData.colorTone && configData.colorTone.tabVal === 1">
         <c_bg_color :configObj="configData" configNme="finalPriceColor" />
         <c_bg_color :configObj="configData" configNme="sellingPriceColor" />
       </div>
@@ -26,41 +26,32 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch } from 'vue';
 import toolCom from '@/views/design/theme_editor/components/mobileConfigRight/index.js';
 import c_bg_color from './c_bg_color';
 import c_slider from './c_slider';
 
-export default {
-  name: 'c_price_settings',
-  components: {
-    ...toolCom,
-    c_bg_color,
-    c_slider,
+defineOptions({ name: 'c_price_settings' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+  configNme: {
+    type: String,
   },
-  data() {
-    return {
-      configData: null,
-    };
+});
+
+const configData = ref(null);
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    configData.value = nVal[props.configNme] || {};
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
-};
+  { deep: true, immediate: true },
+);
 </script>
 
 <style scoped lang="scss">
@@ -86,7 +77,7 @@ export default {
       }
       .input-box {
         flex: 1;
-        ::v-deep .el-radio {
+        :deep(.el-radio) {
           margin-bottom: 0px;
           margin-right: 15px;
         }

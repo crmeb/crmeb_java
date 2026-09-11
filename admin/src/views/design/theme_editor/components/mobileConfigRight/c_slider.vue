@@ -5,51 +5,66 @@
         {{ configData.title }}
       </el-col>
       <el-col :span="18">
-        <el-slider v-model="configData.val" show-input :min="configData.min" :max="configData.max"></el-slider>
+        <el-slider
+          v-model="configData.val"
+          show-input
+          :show-input-controls="false"
+          :min="getNumberMin(configData)"
+          :max="getNumberMax(configData)"
+          :step="getNumberStep(configData)"
+          @change="handleSliderChange"
+        ></el-slider>
       </el-col>
     </div>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_slider',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue'
+import {
+  getNumberMax,
+  getNumberMin,
+  getNumberStep,
+  normalizeNumberField
+} from '@/views/design/theme_editor/utils/numberInput'
+
+defineOptions({ name: 'c_slider' })
+
+const props = defineProps({
+  configObj: {
+    type: Object
   },
-  data() {
-    return {
-      defaults: {},
-      sliderWidth: 0,
-      configData: {},
-    };
+  configNme: {
+    type: String
+  }
+})
+
+const emit = defineEmits(['getConfig'])
+
+const defaults = ref({})
+const sliderWidth = ref(0)
+const configData = ref({})
+
+onMounted(() => {
+  nextTick(() => {
+    defaults.value = props.configObj
+    configData.value = props.configObj[props.configNme] || {}
+  })
+})
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal
+    configData.value = nVal[props.configNme] || {}
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      this.configData = this.configObj[this.configNme];
-    });
-  },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-    },
-  },
-  methods: {
-    sliderChange(e) {
-      this.$emit('getConfig', e);
-    },
-  },
-};
+  { deep: true }
+)
+
+function handleSliderChange() {
+  normalizeNumberField(configData.value, 'val', configData.value)
+  emit('getConfig', configData.value)
+}
 </script>
 
 <style scoped lang="scss">

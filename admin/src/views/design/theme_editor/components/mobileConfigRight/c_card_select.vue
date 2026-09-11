@@ -3,7 +3,7 @@
     <div class="card-wrapper">
       <div class="card-title" v-if="defaults.cname">{{ defaults.cname }}</div>
       <div class="card-desc" v-if="defaults.desc">{{ defaults.desc }}</div>
-      <div class="card-list" v-if="configData.tabList && configData.tabList.length">
+      <div class="card-list" v-if="configData && configData.tabList && configData.tabList.length">
         <div
           class="card-item"
           :class="{ active: configData.tabVal === index }"
@@ -23,46 +23,38 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_card_select',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch } from 'vue';
+
+defineOptions({ name: 'c_card_select' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-    };
+  configNme: {
+    type: String,
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-    },
+});
+
+const emit = defineEmits(['getConfig']);
+
+const defaults = ref({});
+const configData = ref({});
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
   },
-  mounted() {
-    // this.$nextTick(() => {
-    //   console.log(this.configObj,'this.configObj');
-    //   this.defaults = this.configObj;
-    //   this.configData = this.configObj[this.configNme];
-    // });
-  },
-  methods: {
-    handleSelect(index) {
-      this.configData.tabVal = index;
-      this.$emit('getConfig', index);
-    },
-  },
-};
+  { deep: true },
+);
+
+function handleSelect(index) {
+  configData.value.tabVal = index;
+  emit('getConfig', index);
+}
 </script>
 
 <style scoped lang="scss">

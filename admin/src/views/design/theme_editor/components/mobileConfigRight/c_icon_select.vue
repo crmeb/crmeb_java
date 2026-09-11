@@ -1,8 +1,8 @@
 <template>
-  <el-dialog :visible.sync="visible" width="800px" title="选择图标" append-to-body>
+  <el-dialog v-model="visible" width="800px" title="选择图标" append-to-body>
     <div class="icon-selector">
       <div class="search-box">
-        <el-input v-model="searchText" placeholder="搜索图标名称" prefix-icon="el-icon-search" clearable></el-input>
+        <el-input v-model="searchText" placeholder="搜索图标名称" :prefix-icon="Search" clearable></el-input>
       </div>
       <div class="icon-list">
         <div class="icon-item" v-for="(item, index) in filteredIcons" :key="index" @click="selectIcon(item)">
@@ -16,44 +16,42 @@
   </el-dialog>
 </template>
 
-<script>
+<script setup>
+import { ref, computed } from 'vue';
+import { Search } from '@element-plus/icons-vue';
 import iconData from '@/styles/font/mobile.json';
 
-export default {
-  name: 'c_icon_select',
-  data() {
-    return {
-      visible: false,
-      searchText: '',
-      icons: [],
-      cssPrefix: 'icon-',
-    };
-  },
-  created() {
-    this.icons = iconData.glyphs || [];
-    this.cssPrefix = iconData.css_prefix_text || 'icon-';
-  },
-  computed: {
-    filteredIcons() {
-      if (!this.searchText) {
-        return this.icons;
-      }
-      const lower = this.searchText.toLowerCase();
-      return this.icons.filter(
-        (item) => item.name.toLowerCase().includes(lower) || item.font_class.toLowerCase().includes(lower),
-      );
-    },
-  },
-  methods: {
-    show() {
-      this.visible = true;
-    },
-    selectIcon(item) {
-      this.$emit('select', this.cssPrefix + item.font_class);
-      this.visible = false;
-    },
-  },
-};
+defineOptions({ name: 'c_icon_select' });
+
+const emit = defineEmits(['select']);
+
+const visible = ref(false);
+const searchText = ref('');
+const icons = ref([]);
+const cssPrefix = ref('icon-');
+
+icons.value = iconData.glyphs || [];
+cssPrefix.value = iconData.css_prefix_text || 'icon-';
+
+const filteredIcons = computed(() => {
+  if (!searchText.value) {
+    return icons.value;
+  }
+  const lower = searchText.value.toLowerCase();
+  return icons.value.filter(
+    (item) => item.name.toLowerCase().includes(lower) || item.font_class.toLowerCase().includes(lower),
+  );
+});
+
+function show() {
+  visible.value = true;
+}
+function selectIcon(item) {
+  emit('select', cssPrefix.value + item.font_class);
+  visible.value = false;
+}
+
+defineExpose({ show });
 </script>
 
 <style scoped lang="scss">

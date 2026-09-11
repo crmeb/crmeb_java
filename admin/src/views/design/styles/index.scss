@@ -58,6 +58,6 @@
     margin: 0 12px;
   }
 }
-::v-deep .el-icon-error {
+:deep(.el-icon-error) {
   color: #ccc !important;
 }

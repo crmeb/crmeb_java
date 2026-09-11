@@ -5,7 +5,7 @@
         <div class="img-box">
           <div class="empty-box on">
             <img :src="imgUrl" alt="" v-if="imgUrl" />
-            <img src="../../assets/images/noPictrue.png" v-else />
+            <img :src="noPictrueImg" v-else />
           </div>
         </div>
         <div class="name">{{ txt }}</div>
@@ -18,242 +18,256 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState, mapMutations } from 'vuex';
-export default {
+<script setup>
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import noPictrueImg from '@/views/design/theme_editor/assets/images/noPictrue.png';
+
+defineOptions({
   name: 'z_wechat_attention',
   cname: '关注公众号',
   configName: 'c_wechat_attention',
   icon: '#iconzujian-gongzhonghao',
   type: 2, // 0 基础组件 1 营销组件 2工具组件
   defaultName: 'follow', // 外面匹配名称
-  props: {
-    index: {
-      type: null,
-      default: -1,
-    },
-    num: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-    wrapperConfig() {
-      return {
-        ...this.configObj,
-      };
-    },
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
-      },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
-      },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
-      },
-      deep: true,
-    },
-  },
-  data() {
-    return {
-      configObj: null,
-      // 默认初始化数据禁止修改
-      defaultConfig: {
-        cname: '关注公众号',
-        name: 'follow',
-        timestamp: this.num,
-        isHide: false,
-        setUp: {
-          tabVal: 0,
-        },
-        titleLeft: '标题设置',
-        positionTitle: '位置设置',
-        pictrueTitle: '图片设置',
-        codeTitle: '关注二维码',
-        titleRight: '关注按钮',
-        titleCurrency: '通用样式',
-        positionConfig: {
-          title: '展示位置',
-          tabVal: 0,
-          tabList: [
-            {
-              name: '顶部',
-            },
-            {
-              name: '底部',
-            },
-          ],
-        },
-        titleConfig: {
-          title: '标题名称',
-          value: '标题',
-          place: '请输入标题',
-          max: 10,
-        },
-        imgConfig: {
-          info: '建议：图片尺寸92px * 92px',
-          url: '',
-          type: 'code',
-          name: '上传图片',
-        },
-        codeConfig: {
-          url: '',
-          type: 'code',
-          name: '上传二维码',
-        },
-        themeColor: {
-          title: '按钮颜色',
-          default: [
-            {
-              item: '#E93323',
-            },
-          ],
-          color: [
-            {
-              item: '#E93323',
-            },
-          ],
-        },
-        bgColor: {
-          title: '背景颜色',
-          default: [
-            {
-              item: '#fff',
-            },
-            {
-              item: '#fff',
-            },
-          ],
-          color: [
-            {
-              item: '#fff',
-            },
-            {
-              item: '#fff',
-            },
-          ],
-        },
-        paddingConfig: {
-          title: '内边距',
-          isAll: false,
-          val: 0,
-          min: 0,
-          max: 100,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        },
-        marginConfig: {
-          title: '外边距',
-          isAll: false,
-          val: 0,
-          min: 0,
-          max: 100,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        },
-        fillet: {
-          title: '背景圆角',
-          type: 0,
-          list: [
-            {
-              val: '全部',
-              icon: 'iconcaozuo-zhengti',
-            },
-            {
-              val: '单个',
-              icon: 'iconcaozuo-bianjiao',
-            },
-          ],
-          valName: '圆角值',
-          val: 0,
-          min: 0,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        },
-      },
-      cSlider: '',
-      bgColor: '',
-      confObj: {},
-      pageData: {},
-      themeColor: '',
-      imgUrl: '',
-      txt: '',
-      fillet: 0,
-      filletVal: 0,
-      valList: [],
-      bgRadius: 0,
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      this.configObj = data;
-      this.bgColor = data.bgColor.color;
-      this.themeColor = data.themeColor.color[0].item;
-      this.imgUrl = data.imgConfig.url;
-      this.txt = data.titleConfig.value;
-      this.fillet = data.fillet.type;
-      this.filletVal = data.fillet.val;
-      this.valList = data.fillet.valList;
-      this.bgRadius = this.fillet
-        ? this.valList[0].val +
-          'px ' +
-          this.valList[1].val +
-          'px ' +
-          this.valList[3].val +
-          'px ' +
-          this.valList[2].val +
-          'px'
-        : this.filletVal + 'px';
+});
 
-      if (!this.configObj.paddingConfig) {
-        this.$set(this.configObj, 'paddingConfig', {
-          title: '内边距',
-          isAll: false,
-          val: 0,
-          min: 0,
-          max: 100,
-          valList: [
-            { val: 0 },
-            { val: data.prConfig ? data.prConfig.val : 0 },
-            { val: 0 },
-            { val: data.prConfig ? data.prConfig.val : 0 },
-          ],
-        });
-      }
-      if (!this.configObj.marginConfig) {
-        this.$set(this.configObj, 'marginConfig', {
-          title: '外边距',
-          isAll: false,
-          val: 0,
-          min: 0,
-          max: 100,
-          valList: [{ val: data.mbConfig ? data.mbConfig.val : 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        });
-      }
-      for (let key in this.defaultConfig) {
-        if (this.configObj[key] === undefined) {
-          this.$set(this.configObj, key, this.defaultConfig[key]);
-        }
-      }
-    },
+const props = defineProps({
+  index: {
+    type: null,
+    default: -1,
+  },
+  num: {
+    type: null,
+  },
+});
+
+const mobildConfigStore = useMobildConfigStore();
+
+const configObj = ref(null);
+// 默认初始化数据禁止修改
+const defaultConfig = {
+  cname: '关注公众号',
+  name: 'follow',
+  timestamp: props.num,
+  isHide: false,
+  setUp: {
+    tabVal: 0,
+  },
+  titleLeft: '标题设置',
+  positionTitle: '位置设置',
+  pictrueTitle: '图片设置',
+  codeTitle: '关注二维码',
+  titleRight: '关注按钮',
+  titleCurrency: '通用样式',
+  positionConfig: {
+    title: '展示位置',
+    tabVal: 0,
+    tabList: [
+      {
+        name: '顶部',
+      },
+      {
+        name: '底部',
+      },
+    ],
+  },
+  titleConfig: {
+    title: '标题名称',
+    value: '标题',
+    place: '请输入标题',
+    max: 10,
+  },
+  imgConfig: {
+    info: '建议：图片尺寸92px * 92px',
+    url: '',
+    type: 'code',
+    name: '上传图片',
+  },
+  codeConfig: {
+    url: '',
+    type: 'code',
+    name: '上传二维码',
+  },
+  themeColor: {
+    title: '按钮颜色',
+    default: [
+      {
+        item: '#E93323',
+      },
+    ],
+    color: [
+      {
+        item: '#E93323',
+      },
+    ],
+  },
+  bgColor: {
+    title: '背景颜色',
+    default: [
+      {
+        item: '#fff',
+      },
+      {
+        item: '#fff',
+      },
+    ],
+    color: [
+      {
+        item: '#fff',
+      },
+      {
+        item: '#fff',
+      },
+    ],
+  },
+  paddingConfig: {
+    title: '内边距',
+    isAll: false,
+    val: 0,
+    min: 0,
+    max: 100,
+    valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+  },
+  marginConfig: {
+    title: '外边距',
+    isAll: false,
+    val: 0,
+    min: 0,
+    max: 100,
+    valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+  },
+  fillet: {
+    title: '背景圆角',
+    type: 0,
+    list: [
+      {
+        val: '全部',
+        icon: 'iconcaozuo-zhengti',
+      },
+      {
+        val: '单个',
+        icon: 'iconcaozuo-bianjiao',
+      },
+    ],
+    valName: '圆角值',
+    val: 0,
+    min: 0,
+    valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
   },
 };
+
+const cSlider = ref('');
+const bgColor = ref('');
+const confObj = ref({});
+const pageData = ref({});
+const themeColor = ref('');
+const imgUrl = ref('');
+const txt = ref('');
+const fillet = ref(0);
+const filletVal = ref(0);
+const valList = ref([]);
+const bgRadius = ref(0);
+
+const wrapperConfig = computed(() => {
+  const config = configObj.value || {};
+  const wrapperConfig = {
+    ...config,
+  };
+  if (config.bgColor && config.bgColor.color) {
+    wrapperConfig.componentBgConfig = {
+      tabVal: 0,
+      colorConfig: config.bgColor,
+    };
+  }
+  return {
+    ...wrapperConfig,
+  };
+});
+
+function setConfig(data) {
+  if (!data) return;
+  configObj.value = data;
+  for (let key in defaultConfig) {
+    if (configObj.value[key] === undefined) {
+      configObj.value[key] = defaultConfig[key];
+    }
+  }
+  bgColor.value = data.bgColor.color;
+  themeColor.value = data.themeColor.color[0].item;
+  imgUrl.value = data.imgConfig.url;
+  txt.value = data.titleConfig.value;
+  fillet.value = data.fillet.type;
+  filletVal.value = data.fillet.val;
+  valList.value = data.fillet.valList;
+  bgRadius.value = fillet.value
+    ? valList.value[0].val +
+      'px ' +
+      valList.value[1].val +
+      'px ' +
+      valList.value[3].val +
+      'px ' +
+      valList.value[2].val +
+      'px'
+    : filletVal.value + 'px';
+
+  if (!configObj.value.paddingConfig) {
+    configObj.value.paddingConfig = {
+      title: '内边距',
+      isAll: false,
+      val: 0,
+      min: 0,
+      max: 100,
+      valList: [
+        { val: 0 },
+        { val: data.prConfig ? data.prConfig.val : 0 },
+        { val: 0 },
+        { val: data.prConfig ? data.prConfig.val : 0 },
+      ],
+    };
+  }
+  if (!configObj.value.marginConfig) {
+    configObj.value.marginConfig = {
+      title: '外边距',
+      isAll: false,
+      val: 0,
+      min: 0,
+      max: 100,
+      valList: [{ val: data.mbConfig ? data.mbConfig.val : 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+    };
+  }
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
+  },
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+    setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+    setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    pageData.value = mobildConfigStore.defaultArray[props.num];
+    setConfig(pageData.value);
+  });
+});
 </script>
 
 <style scoped lang="scss">

@@ -55,7 +55,7 @@
                       <i class="el-icon-question"></i>
                     </el-tooltip>
                   </div>
-                  <el-button type="primary" size="small" @click="handleEdit(item)">去编辑</el-button>
+                  <el-button type="primary" @click="handleEdit(item)">去编辑</el-button>
                 </div>
               </div>
             </div>
@@ -66,7 +66,7 @@
 
     <!-- 更换主题弹窗 -->
     <theme-select-dialog
-      :visible.sync="dialogVisible"
+      v-model:visible="dialogVisible"
       activeTab="mall"
       type="mall"
       :theme-id="id"
@@ -77,90 +77,87 @@
   </div>
 </template>
 
-<script>
-import { restoreTheme, getThemeUsing } from '@/api/theme';
+<script setup>
+import { ref, reactive, computed, onMounted } from 'vue';
+import { ElMessage, ElMessageBox } from '@/utils/elementPlusFeedback';
+import { useRouter } from 'vue-router';
+import { restoreTheme, getThemeUsing as getThemeUsingApi } from '@/api/theme';
 import ThemeSelectDialog from '../components/themeSelect/index.vue';
 
-export default {
-  name: 'MallTheme',
-  components: {
-    ThemeSelectDialog,
-  },
-  data() {
-    return {
-      pageList: [],
-      themeColors: [], // 模拟后端返回的主题色值
-      dialogVisible: false,
-      title: '',
-      is_diy: false,
-      id: '',
-      confuse: false,
-      currentType: '',
-    };
-  },
-  created() {
-    this.getThemeUsing();
-  },
-  methods: {
-    getThemeUsing() {
-      getThemeUsing().then((res) => {
-        const { title, data_info, theme_data, id, confuse } = res;
-        this.title = title;
-        this.id = id;
-        this.confuse = confuse;
-        this.themeColors = Object.values(theme_data || {});
-        this.pageList = data_info.map((item, index) => {
-          return {
-            id: item.key,
-            name: this.getPageName(item.key),
-            themeName: item.title,
-            updateTime: item.update_time,
-            image: item.image,
-            type: ['home', 'category', 'detail', 'user'][index],
-          };
-        });
-      });
-    },
-    getPageName(key) {
-      const names = {
-        home: '商城首页',
-        category: '商品分类页',
-        detail: '商品详情页',
-        user: '个人中心页',
+defineOptions({ name: 'MallTheme' });
+
+const router = useRouter();
+
+const pageList = ref([]);
+const themeColors = ref([]); // 模拟后端返回的主题色值
+const dialogVisible = ref(false);
+const title = ref('');
+const is_diy = ref(false);
+const id = ref('');
+const confuse = ref(false);
+const currentType = ref('');
+
+function getThemeUsing() {
+  getThemeUsingApi().then((res) => {
+    const { title: t, data_info, theme_data, id: tid, confuse: cf } = res;
+    title.value = t;
+    id.value = tid;
+    confuse.value = cf;
+    themeColors.value = Object.values(theme_data || {});
+    pageList.value = data_info.map((item, index) => {
+      return {
+        id: item.key,
+        name: getPageName(item.key),
+        themeName: item.title,
+        updateTime: item.update_time,
+        image: item.image,
+        type: ['home', 'category', 'detail', 'user'][index],
       };
-      return names[key] || key;
-    },
-    handleEdit(item) {
-      // 跳转到编辑页面，假设路由结构
-      this.$router.push({
-        path: '/design/edit_theme',
-        query: { type: item.type, id: this.id },
+    });
+  });
+}
+function getPageName(key) {
+  const names = {
+    home: '商城首页',
+    category: '商品分类页',
+    detail: '商品详情页',
+    user: '个人中心页',
+  };
+  return names[key] || key;
+}
+function handleEdit(item) {
+  // 跳转到编辑页面，假设路由结构
+  router.push({
+    path: '/design/edit_theme',
+    query: { type: item.type, id: id.value },
+  });
+}
+function handleReplace(item, type) {
+  currentType.value = type;
+  dialogVisible.value = true;
+}
+function handleRestore() {
+  ElMessageBox.confirm('确定要还原主题吗？所有自定义修改将丢失。', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      // 调用还原接口
+      restoreTheme(id.value).then((res) => {
+        ElMessage.success('主题已还原');
+        getThemeUsing();
       });
-    },
-    handleReplace(item, type) {
-      this.currentType = type;
-      this.dialogVisible = true;
-    },
-    handleRestore() {
-      this.$confirm('确定要还原主题吗？所有自定义修改将丢失。', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      })
-        .then(() => {
-          // 调用还原接口
-          restoreTheme(this.id).then((res) => {
-            this.$message.success('主题已还原');
-            this.getThemeUsing();
-          });
-        })
-        .catch(() => {});
-    },
-    selectTheme() {
-      this.getThemeUsing();
-    },
-  },
-};
+    })
+    .catch(() => {});
+}
+function selectTheme() {
+  getThemeUsing();
+}
+
+onMounted(() => {
+  getThemeUsing();
+});
 </script>
 
 <style>

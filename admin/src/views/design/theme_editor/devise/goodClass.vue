@@ -19,49 +19,52 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { colorChange, getColorChange } from '@/api/theme';
-export default {
-  name: 'goodClass',
-  props: {},
-  data() {
-    return {
-      classList: [
-        { image: require('@/assets/imgs/moren.png'), name: '默认模板' },
-        { image: require('@/assets/imgs/youxuan.png'), name: '模板1' },
-        { image: require('@/assets/imgs/haowu.png'), name: '模板2' },
-        { image: require('@/assets/imgs/shengxian.png'), name: '模板3' },
-      ],
-      activeStyle: '-1',
-    };
-  },
-  created() {
-    this.getInfo();
-  },
-  methods: {
-    getInfo() {
-      getColorChange('category').then((res) => {
-        this.activeStyle = res.data.status ? res.data.status - 1 : 0;
-      });
-    },
-    selectTap(index) {
-      this.activeStyle = index;
-    },
-    onSubmit(num) {
-      this.$emit('parentFun', true);
-      this.activeStyle = num == 1 ? 0 : this.activeStyle;
-      colorChange(num == 1 ? 1 : this.activeStyle + 1, 'category')
-        .then((res) => {
-          this.$emit('parentFun', false);
-          this.$message.success(res.msg);
-        })
-        .catch((err) => {
-          this.$message.error(err.msg);
-          this.$emit('parentFun', false);
-        });
-    },
-  },
-};
+import morenImg from '@/assets/imgs/moren.png';
+import youxuanImg from '@/assets/imgs/youxuan.png';
+import haowuImg from '@/assets/imgs/haowu.png';
+import shengxianImg from '@/assets/imgs/shengxian.png';
+
+defineOptions({ name: 'goodClass' });
+
+const emit = defineEmits(['parentFun']);
+
+const classList = ref([
+  { image: morenImg, name: '默认模板' },
+  { image: youxuanImg, name: '模板1' },
+  { image: haowuImg, name: '模板2' },
+  { image: shengxianImg, name: '模板3' },
+]);
+const activeStyle = ref('-1');
+
+function getInfo() {
+  getColorChange('category').then((res) => {
+    activeStyle.value = res.data.status ? res.data.status - 1 : 0;
+  });
+}
+function selectTap(index) {
+  activeStyle.value = index;
+}
+function onSubmit(num) {
+  emit('parentFun', true);
+  activeStyle.value = num == 1 ? 0 : activeStyle.value;
+  colorChange(num == 1 ? 1 : activeStyle.value + 1, 'category')
+    .then((res) => {
+      emit('parentFun', false);
+      ElMessage.success(res.msg);
+    })
+    .catch((err) => {
+      ElMessage.error(err.msg);
+      emit('parentFun', false);
+    });
+}
+
+getInfo();
+
+defineExpose({ onSubmit, getInfo, selectTap });
 </script>
 <style lang="scss" scoped>
 .goodClass {

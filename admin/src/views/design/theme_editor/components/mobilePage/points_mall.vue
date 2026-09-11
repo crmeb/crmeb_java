@@ -9,11 +9,11 @@
     >
       <div
         class="title acea-row row-between-wrapper"
-        :style="
-          styleConfig
-            ? 'backgroundImage:url(' + imgBgUrl + ')'
-            : `background:linear-gradient(90deg,${headerBgColorLeft} 0%,${headerBgColorRight} 100%)`
-        "
+        :style="{
+          backgroundImage: styleConfig
+            ? `url(${imgBgUrl})`
+            : `linear-gradient(90deg,${headerBgColorLeft} 0%,${headerBgColorRight} 100%)`,
+        }"
       >
         <div
           v-if="titleConfig"
@@ -62,7 +62,7 @@
                 borderRadius: imgRadius,
               }"
             >
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
             <div
               class="bottom"
@@ -93,10 +93,10 @@
               borderRadius: imgRadius,
             }"
           >
-            <img src="../../assets/images/shan.png" />
+            <img :src="shanImg" />
           </div>
           <div class="money acea-row row-middle">
-            <img src="../../assets/images/points.png" /><span
+            <img :src="pointsImg" /><span
               class="num"
               :style="{
                 color: !toneConfig
@@ -135,7 +135,7 @@
               borderRadius: imgRadius,
             }"
           >
-            <img src="../../assets/images/shan.png" />
+            <img :src="shanImg" />
           </div>
           <div
             class="name"
@@ -146,7 +146,7 @@
             小米蓝牙耳机你值得拥有
           </div>
           <div class="money acea-row row-middle">
-            <img src="../../assets/images/points.png" /><span
+            <img :src="pointsImg" /><span
               class="num on"
               :style="{
                 color: !toneConfig
@@ -166,63 +166,43 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState, mapMutations } from 'vuex';
-// import theme from "@/views/design/theme_editor/mixins/theme";
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import pointsImg from '@/views/design/theme_editor/assets/images/points.png';
+import shanImg from '@/views/design/theme_editor/assets/images/shan.png';
 import Setting from '@/utils/settingMer';
-export default {
+
+defineOptions({
   name: 'points_mall',
   cname: '积分商城',
-  configName: 'c_points_mall',
   icon: '#iconzujian-jifenshangcheng',
-  type: 1, // 0 基础组件 1 营销组件 2工具组件
-  defaultName: 'pointsMall', // 外面匹配名称
-  props: {
-    index: {
-      type: null,
-      default: -1,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+  configName: 'c_points_mall',
+  type: 1,
+  defaultName: 'pointsMall',
+});
+
+const props = defineProps({
+  index: {
+        type: null,
+        default: -1,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
+      colorStyle: {
+        type: null,
       },
-      deep: true,
-    },
-  },
-  // mixins: [theme],
-  data() {
-    return {
-      // 默认初始化数据禁止修改
-      configObj: null,
-      defaultConfig: {
+});
+
+import points01Img from '@/views/design/theme_editor/assets/images/points01.png';
+import points02Img from '@/views/design/theme_editor/assets/images/points02.png';
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '积分商城',
         name: 'pointsMall',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -259,21 +239,21 @@ export default {
         },
         imgBgConfig: {
           info: '建议：710px * 96px',
-          url: Setting.httpUrl + '/' + 'statics/images/pointsBg.png',
+          url: Setting.httpUrl + '/' + 'crmebimage/theme-cate/pointsBg.png',
           type: 'code',
           delType: 0,
           name: '背景图片',
         },
         imgConfig: {
           info: '建议：154px * 32px',
-          url: require('@/assets/images/points01.png'),
+          url: points01Img,
           type: 'code',
           delType: 0,
           name: '标题图片',
         },
         imgConfig2: {
           info: '建议：154px * 32px',
-          url: require('@/assets/images/points02.png'),
+          url: points02Img,
           type: 'code',
           delType: 0,
           name: '标题图片',
@@ -726,158 +706,181 @@ export default {
           min: 0,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-      },
-      pageData: {},
-      bottomBgColor: '',
-      paddingConfig: {
+      };
+
+const pageData = ref({});
+const configObj = ref(null);
+const bottomBgColor = ref('');
+const paddingConfig = ref({
         title: '内边距',
         val: 0,
         min: 0,
         max: 100,
         isAll: false,
         valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-      },
-      marginConfig: {
+      });
+const marginConfig = ref({
         title: '外边距',
         val: 0,
         min: 0,
         max: 100,
         isAll: false,
         valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-      },
-      topConfig: 0,
-      bottomConfig: 0,
-      prConfig: 0,
-      styleConfig: 0,
-      imgBgUrl: 0,
-      headerBgColorLeft: '',
-      headerBgColorRight: '',
-      titleConfig: 0,
-      imgUrl: '',
-      imgColorUrl: '',
-      headerBntColor: '',
-      headerBntColor2: '',
-      titleTabVal: 0,
-      titleText: '',
-      titleColor: '',
-      titleNumber: 0,
-      titleTxtConfig: '',
-      rightBntTxt: '',
-      numberConfig: 0,
-      goodStyleConfig: 0,
-      bntNumber: 0,
-      imgRadius: 0,
-      toneConfig: 0,
-      goodsPriceColor: '',
-      goodsPriceColor2: '',
-      priceBgColorLeft: '',
-      priceBgColorRight: '',
-      bgColor: '',
-      bgColor2: '',
-      mTop: 0,
-      bgRadius: 0,
-      bgRadius2: 0,
-      goodsNameColor: '',
-      goodsNameColor2: '',
-      goodsUnitPriceColor: '',
-      goodsUnitPriceColor2: '',
-      themeColor: '',
-      zIndexConfig: 0,
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      let dataClone = JSON.parse(JSON.stringify(data));
-      for (let key in this.defaultConfig) {
-        if (dataClone[key] == undefined) {
-          this.$set(dataClone, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+      });
+const topConfig = ref(0);
+const bottomConfig = ref(0);
+const prConfig = ref(0);
+const styleConfig = ref(0);
+const imgBgUrl = ref(0);
+const headerBgColorLeft = ref('');
+const headerBgColorRight = ref('');
+const titleConfig = ref(0);
+const imgUrl = ref('');
+const imgColorUrl = ref('');
+const headerBntColor = ref('');
+const headerBntColor2 = ref('');
+const titleTabVal = ref(0);
+const titleText = ref('');
+const titleColor = ref('');
+const titleNumber = ref(0);
+const titleTxtConfig = ref('');
+const rightBntTxt = ref('');
+const numberConfig = ref(0);
+const goodStyleConfig = ref(0);
+const bntNumber = ref(0);
+const imgRadius = ref(0);
+const toneConfig = ref(0);
+const goodsPriceColor = ref('');
+const goodsPriceColor2 = ref('');
+const priceBgColorLeft = ref('');
+const priceBgColorRight = ref('');
+const bgColor = ref('');
+const bgColor2 = ref('');
+const mTop = ref(0);
+const bgRadius = ref(0);
+const bgRadius2 = ref(0);
+const goodsNameColor = ref('');
+const goodsNameColor2 = ref('');
+const goodsUnitPriceColor = ref('');
+const goodsUnitPriceColor2 = ref('');
+const themeColor = ref('');
+const zIndexConfig = ref(0);
+
+function setConfig(data) {
+  if (!data) return;
+        let dataClone = JSON.parse(JSON.stringify(data));
+        for (let key in defaultConfig) {
+          if (dataClone[key] == undefined) {
+            dataClone[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
+          }
         }
-      }
 
-      if (!data.componentBgConfig && data.bottomBgColor) {
-        dataClone.componentBgConfig.colorConfig.color[0].item = data.bottomBgColor.color[0].item;
-        dataClone.componentBgConfig.colorConfig.color[1].item = data.bottomBgColor.color[0].item;
-      }
-
-      if (!data.paddingConfig) {
-        if (dataClone.topConfig) dataClone.paddingConfig.valList[0].val = dataClone.topConfig.val;
-        if (dataClone.bottomConfig) dataClone.paddingConfig.valList[2].val = dataClone.bottomConfig.val;
-        if (dataClone.prConfig) {
-          dataClone.paddingConfig.valList[1].val = dataClone.prConfig.val;
-          dataClone.paddingConfig.valList[3].val = dataClone.prConfig.val;
+        if (!data.componentBgConfig && data.bottomBgColor) {
+          dataClone.componentBgConfig.colorConfig.color[0].item = data.bottomBgColor.color[0].item;
+          dataClone.componentBgConfig.colorConfig.color[1].item = data.bottomBgColor.color[0].item;
         }
-      }
-      if (!data.marginConfig) {
-        if (dataClone.mbConfig) dataClone.marginConfig.valList[0].val = dataClone.mbConfig.val;
-      }
-      this.paddingConfig = dataClone.paddingConfig;
-      this.marginConfig = dataClone.marginConfig;
-      this.zIndexConfig = dataClone.zIndexConfig.val;
-      this.configObj = dataClone;
 
-      this.styleConfig = dataClone.styleConfig.tabVal;
-      this.imgBgUrl = dataClone.imgBgConfig.url;
-      this.headerBgColorLeft = dataClone.headerBgColor.color[0].item;
-      this.headerBgColorRight = dataClone.headerBgColor.color[1].item;
-      this.titleConfig = dataClone.titleConfig.tabVal;
-      this.imgUrl = dataClone.imgConfig.url;
-      this.imgColorUrl = dataClone.imgConfig2.url;
-      this.headerBntColor = dataClone.headerBntColor.color[0].item;
-      this.headerBntColor2 = dataClone.headerBntColor2.color[0].item;
-      this.bntNumber = dataClone.bntNumber.val;
-      let tabVal = dataClone.titleText.tabVal;
-      this.titleTabVal = tabVal;
-      this.titleText = dataClone.titleText.tabList[tabVal].style;
-      this.titleColor = dataClone.titleColor.color[0].item;
-      this.titleNumber = dataClone.titleNumber.val;
-      this.titleTxtConfig = dataClone.titleTxtConfig.value;
-      this.rightBntTxt = dataClone.rightBntConfig.value;
-      this.numberConfig = dataClone.numberConfig.val;
-      this.goodStyleConfig = dataClone.goodStyleConfig.tabVal;
-      let filletImg = dataClone.filletImg.type;
-      let filletValImg = dataClone.filletImg.val;
-      let valListImg = dataClone.filletImg.valList;
-      this.imgRadius = filletImg
-        ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
-        : filletValImg + 'px';
-      this.toneConfig = dataClone.toneConfig.tabVal;
-      this.goodsPriceColor = dataClone.goodsPriceColor.color[0].item;
-      this.goodsPriceColor2 = dataClone.goodsPriceColor2.color[0].item;
-      this.priceBgColorLeft = dataClone.priceBgColor.color[0].item;
-      this.priceBgColorRight = dataClone.priceBgColor.color[1].item;
-      let bgColorLeft = dataClone.moduleColor.color[0].item;
-      let bgColorRight = dataClone.moduleColor.color[1].item;
-      this.bgColor = `linear-gradient(90deg,${bgColorRight} 0%,${bgColorLeft} 100%)`;
-      let bgColorLeft2 = dataClone.moduleColor2.color[0].item;
-      let bgColorRight2 = dataClone.moduleColor2.color[1].item;
-      this.bgColor2 = `linear-gradient(90deg,${bgColorRight2} 0%,${bgColorLeft2} 100%)`;
-      this.bottomBgColor = dataClone.bottomBgColor.color[0].item;
-      let fillet = dataClone.fillet.type;
-      let filletVal = dataClone.fillet.val;
-      let valList = dataClone.fillet.valList;
-      this.bgRadius = fillet
-        ? valList[0].val + 'px ' + valList[1].val + 'px 0 0'
-        : filletVal + 'px ' + filletVal + 'px 0 0';
-      this.bgRadius2 = fillet
-        ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
-        : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
-      this.goodsNameColor = dataClone.goodsNameColor.color[0].item;
-      this.goodsNameColor2 = dataClone.goodsNameColor2.color[0].item;
-      this.goodsUnitPriceColor = dataClone.goodsUnitPriceColor.color[0].item;
-      this.goodsUnitPriceColor2 = dataClone.goodsUnitPriceColor2.color[0].item;
-      this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-    },
+        if (!data.paddingConfig) {
+          if (dataClone.topConfig) dataClone.paddingConfig.valList[0].val = dataClone.topConfig.val;
+          if (dataClone.bottomConfig) dataClone.paddingConfig.valList[2].val = dataClone.bottomConfig.val;
+          if (dataClone.prConfig) {
+            dataClone.paddingConfig.valList[1].val = dataClone.prConfig.val;
+            dataClone.paddingConfig.valList[3].val = dataClone.prConfig.val;
+          }
+        }
+        if (!data.marginConfig) {
+          if (dataClone.mbConfig) dataClone.marginConfig.valList[0].val = dataClone.mbConfig.val;
+        }
+        paddingConfig.value = dataClone.paddingConfig;
+        marginConfig.value = dataClone.marginConfig;
+        zIndexConfig.value = dataClone.zIndexConfig.val;
+        configObj.value = dataClone;
+
+        styleConfig.value = dataClone.styleConfig.tabVal;
+        imgBgUrl.value = dataClone.imgBgConfig.url;
+        headerBgColorLeft.value = dataClone.headerBgColor.color[0].item;
+        headerBgColorRight.value = dataClone.headerBgColor.color[1].item;
+        titleConfig.value = dataClone.titleConfig.tabVal;
+        imgUrl.value = dataClone.imgConfig.url;
+        imgColorUrl.value = dataClone.imgConfig2.url;
+        headerBntColor.value = dataClone.headerBntColor.color[0].item;
+        headerBntColor2.value = dataClone.headerBntColor2.color[0].item;
+        bntNumber.value = dataClone.bntNumber.val;
+        let tabVal = dataClone.titleText.tabVal;
+        titleTabVal.value = tabVal;
+        titleText.value = dataClone.titleText.tabList[tabVal].style;
+        titleColor.value = dataClone.titleColor.color[0].item;
+        titleNumber.value = dataClone.titleNumber.val;
+        titleTxtConfig.value = dataClone.titleTxtConfig.value;
+        rightBntTxt.value = dataClone.rightBntConfig.value;
+        numberConfig.value = dataClone.numberConfig.val;
+        goodStyleConfig.value = dataClone.goodStyleConfig.tabVal;
+        let filletImg = dataClone.filletImg.type;
+        let filletValImg = dataClone.filletImg.val;
+        let valListImg = dataClone.filletImg.valList;
+        imgRadius.value = filletImg
+          ? valListImg[0].val + 'px ' + valListImg[1].val + 'px ' + valListImg[3].val + 'px ' + valListImg[2].val + 'px'
+          : filletValImg + 'px';
+        toneConfig.value = dataClone.toneConfig.tabVal;
+        goodsPriceColor.value = dataClone.goodsPriceColor.color[0].item;
+        goodsPriceColor2.value = dataClone.goodsPriceColor2.color[0].item;
+        priceBgColorLeft.value = dataClone.priceBgColor.color[0].item;
+        priceBgColorRight.value = dataClone.priceBgColor.color[1].item;
+        let bgColorLeft = dataClone.moduleColor.color[0].item;
+        let bgColorRight = dataClone.moduleColor.color[1].item;
+        bgColor.value = `linear-gradient(90deg,${bgColorRight} 0%,${bgColorLeft} 100%)`;
+        let bgColorLeft2 = dataClone.moduleColor2.color[0].item;
+        let bgColorRight2 = dataClone.moduleColor2.color[1].item;
+        bgColor2.value = `linear-gradient(90deg,${bgColorRight2} 0%,${bgColorLeft2} 100%)`;
+        bottomBgColor.value = dataClone.bottomBgColor.color[0].item;
+        let fillet = dataClone.fillet.type;
+        let filletVal = dataClone.fillet.val;
+        let valList = dataClone.fillet.valList;
+        bgRadius.value = fillet
+          ? valList[0].val + 'px ' + valList[1].val + 'px 0 0'
+          : filletVal + 'px ' + filletVal + 'px 0 0';
+        bgRadius2.value = fillet
+          ? '0 0 ' + valList[3].val + 'px ' + valList[2].val + 'px'
+          : '0 0 ' + filletVal + 'px ' + filletVal + 'px';
+        goodsNameColor.value = dataClone.goodsNameColor.color[0].item;
+        goodsNameColor2.value = dataClone.goodsNameColor2.color[0].item;
+        goodsUnitPriceColor.value = dataClone.goodsUnitPriceColor.color[0].item;
+        goodsUnitPriceColor2.value = dataClone.goodsUnitPriceColor2.color[0].item;
+        themeColor.value = `linear-gradient(90deg,${props.colorStyle.theme} 0%,${props.colorStyle.gradient} 100%)`;
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
   },
-};
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+      });
+});
+
 </script>
-
 <style scoped lang="scss">
 .pointsMall {
   .title {

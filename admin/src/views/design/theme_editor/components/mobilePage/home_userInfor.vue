@@ -12,11 +12,11 @@
         <div class="pictrue acea-row row-center-wrapper">
           <img :src="logoConfig" v-if="logoConfig" />
           <div class="empty-box" v-else>
-            <img src="../../assets/images/shan.png" />
+            <img :src="shanImg" />
           </div>
         </div>
         <div class="text">
-          <div class="name acea-row row-middle">用户名称<img src="../../assets/images/vip-diy.png" /></div>
+          <div class="name acea-row row-middle">用户名称<img :src="vipDiyImg" /></div>
           <div class="acea-row row-middle">
             <div
               class="progress"
@@ -74,11 +74,11 @@
           <div class="pictrue acea-row row-center-wrapper">
             <img :src="logoConfig" v-if="logoConfig" />
             <div class="empty-box" v-else>
-              <img src="../../assets/images/shan.png" />
+              <img :src="shanImg" />
             </div>
           </div>
           <div class="text">
-            <div class="name acea-row row-middle">用户名称<img src="../../assets/images/vip-diy.png" /></div>
+            <div class="name acea-row row-middle">用户名称<img :src="vipDiyImg" /></div>
             <div class="acea-row row-middle">
               <div
                 class="progress"
@@ -122,61 +122,42 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState, mapMutations } from 'vuex';
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import shanImg from '@/views/design/theme_editor/assets/images/shan.png';
+import vipDiyImg from '@/views/design/theme_editor/assets/images/vip-diy.png';
 // import theme from "@/views/design/theme_editor/mixins/theme";
-export default {
+
+defineOptions({
   name: 'home_userInfor',
   cname: '用户信息',
   configName: 'c_userInfor',
   icon: '#iconzujian-yonghuxinxi',
   type: 0, // 0 基础组件 1 营销组件 2工具组件
   defaultName: 'userInfor', // 外面匹配名称
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
+});
+
+const props = defineProps({
+  index: {
+    type: null,
   },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
+  num: {
+    type: null,
   },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
-      },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
-      },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
-      },
-      deep: true,
-    },
+  colorStyle: {
+    type: null,
   },
-  // mixins: [theme],
-  data() {
-    return {
-      configObj: null,
-      // 默认初始化数据禁止修改
-      defaultConfig: {
+});
+
+const mobildConfigStore = useMobildConfigStore();
+
+const configObj = ref(null);
+// 默认初始化数据禁止修改
+const defaultConfig = {
         cname: '用户信息',
         name: 'userInfor',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -423,106 +404,128 @@ export default {
           isAll: false,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-      },
-      pageData: {},
-      styleConfig: 0,
-      checkType: [],
-      logoConfig: '',
-      progressLeft: '',
-      progressRight: '',
-      progressBgColor: '',
-      bgColorLeft: '',
-      bgColorRight: '',
-      bottomBgColor: '',
-      topConfig: 0,
-      bottomConfig: 0,
-      prConfig: 0,
-      mTop: '',
-      bgRadius: 0,
-      toneConfig: 0,
-      themeColor: '',
-      paddingConfig: {
-        title: '内边距',
-        val: 0,
-        min: 0,
-        max: 100,
-        isAll: false,
-        valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-      },
-      marginConfig: {
-        title: '外边距',
-        val: 0,
-        min: 0,
-        max: 100,
-        isAll: false,
-        valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-      },
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      this.configObj = data;
-      for (let key in this.defaultConfig) {
-        if (data[key] === undefined) {
-          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
-        }
-      }
-      this.paddingConfig = data.paddingConfig || {
-        title: '内边距',
-        isAll: false,
-        val: 0,
-        min: 0,
-        valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
       };
-      this.marginConfig = data.marginConfig || {
-        title: '外边距',
-        isAll: false,
-        val: 0,
-        min: 0,
-        valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-      };
-      if (!data.paddingConfig) {
-        if (data.topConfig) this.paddingConfig.valList[0].val = data.topConfig.val;
-        if (data.bottomConfig) this.paddingConfig.valList[2].val = data.bottomConfig.val;
-        if (data.prConfig) {
-          this.paddingConfig.valList[1].val = data.prConfig.val;
-          this.paddingConfig.valList[3].val = data.prConfig.val;
-        }
-      }
-      if (!data.marginConfig) {
-        if (data.mbConfig) this.marginConfig.valList[0].val = data.mbConfig.val;
-      }
-      this.styleConfig = data.styleConfig.tabVal;
-      this.checkType = data.checkboxInfo.type;
-      this.logoConfig = data.logoConfig.url;
-      this.toneConfig = data.toneConfig.tabVal;
-      this.progressLeft = data.progressColor.color[0].item;
-      this.progressRight = data.progressColor.color[1].item;
-      this.progressBgColor = data.progressBgColor.color[0].item;
-      this.bgColorLeft = data.moduleColor.color[0].item;
-      this.bgColorRight = data.moduleColor.color[1].item;
-      this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-      // this.bottomBgColor = data.bottomBgColor.color[0].item;
-      // this.topConfig = data.topConfig.val;
-      // this.bottomConfig = data.bottomConfig.val;
-      // this.prConfig = data.prConfig.val;
-      // this.mTop = data.mbConfig.val;
-      let fillet = data.fillet.type;
-      let filletVal = data.fillet.val;
-      let valList = data.fillet.valList;
-      this.bgRadius = fillet
-        ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
-        : filletVal + 'px';
-    },
+
+const pageData = ref({});
+const styleConfig = ref(0);
+const checkType = ref([]);
+const logoConfig = ref('');
+const progressLeft = ref('');
+const progressRight = ref('');
+const progressBgColor = ref('');
+const bgColorLeft = ref('');
+const bgColorRight = ref('');
+const bottomBgColor = ref('');
+const topConfig = ref(0);
+const bottomConfig = ref(0);
+const prConfig = ref(0);
+const mTop = ref('');
+const bgRadius = ref(0);
+const toneConfig = ref(0);
+const themeColor = ref('');
+const paddingConfig = ref({
+  title: '内边距',
+  val: 0,
+  min: 0,
+  max: 100,
+  isAll: false,
+  valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+});
+const marginConfig = ref({
+  title: '外边距',
+  val: 0,
+  min: 0,
+  max: 100,
+  isAll: false,
+  valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+});
+
+function setConfig(data) {
+  if (!data) return;
+  configObj.value = data;
+  for (let key in defaultConfig) {
+    if (data[key] === undefined) {
+      data[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
+    }
+  }
+  paddingConfig.value = data.paddingConfig || {
+    title: '内边距',
+    isAll: false,
+    val: 0,
+    min: 0,
+    valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+  };
+  marginConfig.value = data.marginConfig || {
+    title: '外边距',
+    isAll: false,
+    val: 0,
+    min: 0,
+    valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+  };
+  if (!data.paddingConfig) {
+    if (data.topConfig) paddingConfig.value.valList[0].val = data.topConfig.val;
+    if (data.bottomConfig) paddingConfig.value.valList[2].val = data.bottomConfig.val;
+    if (data.prConfig) {
+      paddingConfig.value.valList[1].val = data.prConfig.val;
+      paddingConfig.value.valList[3].val = data.prConfig.val;
+    }
+  }
+  if (!data.marginConfig) {
+    if (data.mbConfig) marginConfig.value.valList[0].val = data.mbConfig.val;
+  }
+  styleConfig.value = data.styleConfig.tabVal;
+  checkType.value = data.checkboxInfo.type;
+  logoConfig.value = data.logoConfig.url;
+  toneConfig.value = data.toneConfig.tabVal;
+  progressLeft.value = data.progressColor.color[0].item;
+  progressRight.value = data.progressColor.color[1].item;
+  progressBgColor.value = data.progressBgColor.color[0].item;
+  bgColorLeft.value = data.moduleColor.color[0].item;
+  bgColorRight.value = data.moduleColor.color[1].item;
+  themeColor.value = `linear-gradient(90deg,${props.colorStyle.theme} 0%,${props.colorStyle.gradient} 100%)`;
+  // bottomBgColor.value = data.bottomBgColor.color[0].item;
+  // topConfig.value = data.topConfig.val;
+  // bottomConfig.value = data.bottomConfig.val;
+  // prConfig.value = data.prConfig.val;
+  // mTop.value = data.mbConfig.val;
+  let fillet = data.fillet.type;
+  let filletVal = data.fillet.val;
+  let valList = data.fillet.valList;
+  bgRadius.value = fillet
+    ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
+    : filletVal + 'px';
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
   },
-};
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+    setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+    setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    pageData.value = mobildConfigStore.defaultArray[props.num];
+    setConfig(pageData.value);
+  });
+});
 </script>
 
 <style scoped lang="scss">

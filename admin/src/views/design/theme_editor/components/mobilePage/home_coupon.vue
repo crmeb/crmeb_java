@@ -44,7 +44,7 @@
             >
               满200可用
             </div>
-            <img src="../../assets/images/newVip02.png" />
+            <img :src="newVip02Img" />
           </div>
         </div>
       </div>
@@ -104,7 +104,12 @@
             v-for="(item, index) in numberConfig"
             :key="index"
           >
-            <div class="item">
+            <div
+              class="item"
+              :style="{
+                borderColor: toneConfig ? couponMoneyColor : colorStyle.theme,
+              }"
+            >
               <div class="left">
                 <div
                   class="num"
@@ -114,13 +119,38 @@
                 >
                   <span>￥</span>50
                 </div>
-                <div class="txt">满100元可用</div>
+                <div
+                  class="txt"
+                  :style="{
+                    color: toneConfig ? couponMoneyColor : colorStyle.theme,
+                  }"
+                >
+                  满100元可用
+                </div>
               </div>
-              <div class="right">
+              <div
+                class="right"
+                :style="{
+                  color: toneConfig ? couponMoneyColor : colorStyle.theme,
+                  borderColor: toneConfig ? couponMoneyColor : colorStyle.theme,
+                }"
+              >
                 <div class="rightCon">立即领取</div>
               </div>
-              <div class="roll up-roll"></div>
-              <div class="roll down-roll"></div>
+              <div
+                class="roll up-roll"
+                :style="{
+                  color: toneConfig ? couponMoneyColor : colorStyle.theme,
+                  borderColor: toneConfig ? couponMoneyColor : colorStyle.theme,
+                }"
+              ></div>
+              <div
+                class="roll down-roll"
+                :style="{
+                  color: toneConfig ? couponMoneyColor : colorStyle.theme,
+                  borderColor: toneConfig ? couponMoneyColor : colorStyle.theme,
+                }"
+              ></div>
             </div>
           </div>
         </div>
@@ -148,7 +178,12 @@
                 :key="index"
                 v-if="index < 4"
               >
-                <div class="type">
+                <div
+                  class="type"
+                  :style="{
+                    color: toneConfig ? couponMoneyColor : colorStyle.theme,
+                  }"
+                >
                   <div class="typeCon">通用券</div>
                 </div>
                 <div
@@ -173,7 +208,12 @@
           >
             <div class="tips">先领券 再购物</div>
             <div class="info">领券下单·享购物优惠</div>
-            <div class="bnt">
+            <div
+              class="bnt"
+              :style="{
+                color: toneConfig ? couponMoneyColor : colorStyle.theme,
+              }"
+            >
               <div class="bntCon">立即领取</div>
             </div>
           </div>
@@ -220,61 +260,40 @@
   </common_wrapper>
 </template>
 
-<script>
-import { mapState } from 'vuex';
-// import theme from "@/views/design/theme_editor/mixins/theme";
-export default {
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import newVip02Img from '@/views/design/theme_editor/assets/images/newVip02.png';
+
+defineOptions({
   name: 'home_coupon',
   cname: '优惠券',
-  configName: 'c_home_coupon',
   icon: '#iconzujian-youhuiquan',
-  type: 1, // 0 基础组件 1 营销组件 2工具组件
-  defaultName: 'coupon', // 外面匹配名称
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+  configName: 'c_home_coupon',
+  type: 1,
+  defaultName: 'coupon',
+});
+
+const props = defineProps({
+  index: {
+        type: null,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        let data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
+      colorStyle: {
+        type: null,
       },
-      deep: true,
-    },
-  },
-  // mixins: [theme],
-  data() {
-    return {
-      // 默认初始化数据禁止修改
-      defaultConfig: {
+});
+
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '优惠券',
         name: 'coupon',
         desc: '优惠券的介绍',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -541,59 +560,84 @@ export default {
           min: 0,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-      },
-      pageData: {},
-      numberConfig: 0,
-      styleConfig: 0,
-      toneConfig: 0,
-      couponBgColor: '',
-      couponMoneyColor: '',
-      bntBgColorLeft: '',
-      bntBgColorRight: '',
-      moduleColor: '',
-      configObj: null,
-      bgRadius: 0,
-    };
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-    });
-  },
-  methods: {
-    setConfig(data) {
-      if (!data) return;
-      for (let key in this.defaultConfig) {
-        if (data[key] == undefined) {
-          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
-        }
-      }
-      this.numberConfig = data.numberConfig.val;
-      this.styleConfig = data.styleConfig.tabVal;
-      this.toneConfig = data.toneConfig.tabVal;
-      this.couponMoneyColor = data.couponMoneyColor.color[0].item;
-      this.bntBgColorLeft = data.bntBgColor.color[0].item;
-      this.bntBgColorRight = data.bntBgColor.color[1].item;
-      this.couponBgColor = data.couponBgColor.color[0].item;
-      this.spacingConfig = data.spacingConfig.val;
-      let moduleColorLeft = data.moduleColor.color[0].item;
-      let moduleColorRight = data.moduleColor.color[1].item;
-      this.moduleColor = `linear-gradient(90deg,${moduleColorLeft} 0%,${moduleColorRight} 100%)`;
-      let fillet = data.fillet.type;
-      let filletVal = data.fillet.val;
-      let valList = data.fillet.valList;
-      this.bgRadius = fillet
-        ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
-        : filletVal + 'px';
-      this.configObj = data;
-      this.themeColor = `linear-gradient(90deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-      this.themeColor2 = `linear-gradient(0deg,${this.colorStyle.theme} 0%,${this.colorStyle.gradient} 100%)`;
-    },
-  },
-};
-</script>
+      };
 
+const pageData = ref({});
+const numberConfig = ref(0);
+const styleConfig = ref(0);
+const toneConfig = ref(0);
+const couponBgColor = ref('');
+const couponMoneyColor = ref('');
+const bntBgColorLeft = ref('');
+const bntBgColorRight = ref('');
+const spacingConfig = ref(0);
+const themeColor = ref('');
+const themeColor2 = ref('');
+const moduleColor = ref('');
+const configObj = ref(null);
+const bgRadius = ref(0);
+
+function setConfig(data) {
+  if (!data) return;
+        for (let key in defaultConfig) {
+          if (data[key] == undefined) {
+            data[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
+          }
+        }
+        numberConfig.value = data.numberConfig.val;
+        styleConfig.value = data.styleConfig.tabVal;
+        toneConfig.value = data.toneConfig.tabVal;
+        couponMoneyColor.value = data.couponMoneyColor.color[0].item;
+        bntBgColorLeft.value = data.bntBgColor.color[0].item;
+        bntBgColorRight.value = data.bntBgColor.color[1].item;
+        couponBgColor.value = data.couponBgColor.color[0].item;
+        spacingConfig.value = data.spacingConfig.val;
+        let moduleColorLeft = data.moduleColor.color[0].item;
+        let moduleColorRight = data.moduleColor.color[1].item;
+        moduleColor.value = `linear-gradient(90deg,${moduleColorLeft} 0%,${moduleColorRight} 100%)`;
+        let fillet = data.fillet.type;
+        let filletVal = data.fillet.val;
+        let valList = data.fillet.valList;
+        bgRadius.value = fillet
+          ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
+          : filletVal + 'px';
+        configObj.value = data;
+        themeColor.value = `linear-gradient(90deg,${props.colorStyle.theme} 0%,${props.colorStyle.gradient} 100%)`;
+        themeColor2.value = `linear-gradient(0deg,${props.colorStyle.theme} 0%,${props.colorStyle.gradient} 100%)`;
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
+  },
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    let data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+      });
+});
+
+</script>
 <style scoped lang="scss">
 .couponCon {
   // display: inline-block;
@@ -824,7 +868,7 @@ export default {
         border: 1px solid #fceae9;
         position: absolute;
         left: 3px;
-        top: -18px;
+        top: -12px;
         text-align: center;
         font-size: 20px;
         font-family: D-DIN-PRO, D-DIN-PRO;
@@ -839,6 +883,7 @@ export default {
           font-size: 9px;
           color: #999999;
           font-weight: 400;
+          margin-top: 3px;
         }
       }
       .sill {

@@ -37,13 +37,13 @@
           正在导入，您可关闭当前弹窗，稍候可在列表查看导入结果
           <i class="el-icon-loading"></i>
         </div>
-        <el-button v-else class="btn-import" type="primary" size="small" @click="importThemePkg">立即导入</el-button>
+        <el-button v-else class="btn-import" type="primary" @click="importThemePkg">立即导入</el-button>
       </div>
       <div v-show="fileUrl && importStatus" class="file-info">
         <img class="el-upload-dragger__icon mb20" :src="statusImage" alt="" />
         <div class="el-upload__text">导入成功</div>
         <div>
-          <el-button class="btn-import" size="small" @click="selectFile">再次导入</el-button>
+          <el-button class="btn-import" @click="selectFile">再次导入</el-button>
           <el-button type="primary" class="btn-import" @click="close">完成</el-button>
         </div>
       </div>
@@ -51,106 +51,107 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { importTheme } from '@/api/theme';
 import SettingMer from '@/utils/settingMer';
 import { getToken } from '@/utils/auth';
+import fileSuccessImg from '@/assets/images/file-success.png';
 
-export default {
-  name: 'themeImport',
-  data() {
-    return {
-      uploadUrl: SettingMer.apiBaseURL + 'admin/upload/file',
-      uploadData: {
-        model: 'theme',
-        pid: 0,
-      },
-      header: {
-        'Authori-zation': getToken(),
-      },
-      fileName: '',
-      fileUrl: '',
-      importStatus: false,
-      importLoading: false,
-      uploadLoading: false,
-      statusImage: require('@/assets/images/file-success.png'),
-    };
-  },
-  methods: {
-    fileChange(file, fileList) {
-      const isZip = file.name.endsWith('.zip');
-      if (!isZip) {
-        this.$message.error('请上传 .zip 格式的文件');
-        return false;
-      }
-      // 限制50M
-      if (file.size >= 52428800) {
-        this.$message.error('文件大小不能超过50MB');
-        return false;
-      } else {
-        this.uploadLoading = true;
-        this.fileName = file.name;
-        return true;
-      }
-    },
-    selectFile() {
-      this.importStatus = false;
-      this.importLoading = false;
-      this.uploadLoading = false;
-      // 调起选择文件
-      this.$refs['upload'].$refs['upload-inner'].handleClick();
-    },
-    handleSuccess(res, file, fileList) {
-      this.uploadLoading = false;
-      if (res.code === 200) {
-        const data = res.data || {};
-        this.fileUrl = data.url || data.src || data.fileUrl || '';
-      } else {
-        this.$message.error(res.message || '上传失败');
-      }
-    },
-    handleError(err, file, fileList) {
-      this.uploadLoading = false;
-      this.$message.error('上传失败');
-    },
-    importThemePkg() {
-      this.importLoading = true;
-      this.importStatus = false;
-      importTheme({
-        url: this.fileUrl,
-      })
-        .then((res) => {
-          // 返回导入结果
-          this.importStatus = true;
-          this.importLoading = false;
-          this.statusImage = require('@/assets/images/file-success.png');
-          this.$message.success('导入成功');
-          this.$emit('success');
-        })
-        .catch((err) => {
-          this.importLoading = false;
-          this.importStatus = false;
-          this.$message.error((err && err.message) || '导入失败');
-        });
-    },
-    close() {
-      this.fileUrl = '';
-      this.fileName = '';
-      this.importStatus = false;
-      this.$emit('close');
-    },
-  },
+defineOptions({ name: 'themeImport' });
+
+const emit = defineEmits(['close', 'success']);
+
+const upload = ref(null);
+const uploadUrl = SettingMer.apiBaseURL + 'admin/upload/file';
+const uploadData = reactive({
+  model: 'theme',
+  pid: 0,
+});
+const header = {
+  Authorization: `Bearer ${getToken()}`,
 };
+const fileName = ref('');
+const fileUrl = ref('');
+const importStatus = ref(false);
+const importLoading = ref(false);
+const uploadLoading = ref(false);
+const statusImage = ref(fileSuccessImg);
+
+function fileChange(file, fileList) {
+  const isZip = file.name.endsWith('.zip');
+  if (!isZip) {
+    ElMessage.error('请上传 .zip 格式的文件');
+    return false;
+  }
+  // 限制50M
+  if (file.size >= 52428800) {
+    ElMessage.error('文件大小不能超过50MB');
+    return false;
+  } else {
+    uploadLoading.value = true;
+    fileName.value = file.name;
+    return true;
+  }
+}
+function selectFile() {
+  importStatus.value = false;
+  importLoading.value = false;
+  uploadLoading.value = false;
+  // 调起选择文件
+  upload.value.$refs['upload-inner'].handleClick();
+}
+function handleSuccess(res, file, fileList) {
+  uploadLoading.value = false;
+  if (res.code === 200) {
+    const data = res.data || {};
+    fileUrl.value = data.url || data.src || data.fileUrl || '';
+  } else {
+    ElMessage.error(res.message || '上传失败');
+  }
+}
+function handleError(err, file, fileList) {
+  uploadLoading.value = false;
+  ElMessage.error('上传失败');
+}
+function importThemePkg() {
+  importLoading.value = true;
+  importStatus.value = false;
+  importTheme({
+    url: fileUrl.value,
+  })
+    .then((res) => {
+      // 返回导入结果
+      importStatus.value = true;
+      importLoading.value = false;
+      statusImage.value = fileSuccessImg;
+      ElMessage.success('导入成功');
+      emit('success');
+    })
+    .catch((err) => {
+      importLoading.value = false;
+      importStatus.value = false;
+      ElMessage.error((err && err.message) || '导入失败');
+    });
+}
+function close() {
+  fileUrl.value = '';
+  fileName.value = '';
+  importStatus.value = false;
+  emit('close');
+}
 </script>
 
 <style lang="scss" scoped>
 .goods-upload {
   width: 100%;
-  height: 680px;
+  height: 580px;
+  margin-bottom: 30px;
   .upload-demo {
     height: 100%;
   }
-  ::v-deep .el-upload {
+  :deep(.el-upload) {
     width: 100%;
     height: 100%;
     .el-upload-dragger {

@@ -29,8 +29,8 @@
         </div>
         <div class="acea-row row-between row-top color">
           <el-checkbox v-model="bgPic" @change="bgPicTap">背景图</el-checkbox>
-          <el-radio-group v-model="tabVal" size="mini" @input="radioTap">
-            <el-radio-button :label="index" v-for="(item, index) in picList" :key="index">
+          <el-radio-group v-model="tabVal" @change="radioTap">
+            <el-radio-button :label="index" :value="index" v-for="(item, index) in picList" :key="index">
               <span class="iconfont" :class="item"></span>
             </el-radio-button>
           </el-radio-group>
@@ -47,7 +47,7 @@
       </el-col>
     </div>
     <div>
-      <el-dialog :visible.sync="modalPic" width="960px" title="上传背景图">
+      <el-dialog v-model="modalPic" width="1024px" title="上传背景图">
         <uploadPictures
           :isChoice="isChoice"
           @getPic="getPic"
@@ -60,93 +60,97 @@
   </div>
 </template>
 
-<script>
-import { mapState } from 'vuex';
+<script setup>
+import { ref, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
 import uploadPictures from '@/views/design/theme_editor/components/uploadPictures';
-export default {
-  name: 'pageTitle',
-  components: {
-    uploadPictures,
-  },
-  data() {
-    return {
-      value: '',
-      name: '',
-      isShow: true,
-      picList: ['icondantu', 'iconpingpu', 'iconlashen'],
-      bgColor: false,
-      bgPic: false,
-      tabVal: 0,
-      colorPicker: '#f5f5f5',
-      modalPic: false,
-      isChoice: '单选',
-      gridBtn: {
-        xl: 4,
-        lg: 8,
-        md: 8,
-        sm: 8,
-        xs: 8,
-      },
-      gridPic: {
-        xl: 6,
-        lg: 8,
-        md: 12,
-        sm: 12,
-        xs: 12,
-      },
-      bgPicUrl: '',
-    };
-  },
-  created() {
-    let state = this.$store.state.mobildConfig;
-    console.log(state, 'statestate');
-    this.value = state.pageTitle;
-    this.name = state.pageName;
-    this.isShow = state.pageShow ? true : false;
-    this.bgColor = state.pageColor ? true : false;
-    this.bgPic = state.pagePic ? true : false;
-    this.colorPicker = state.pageColorPicker;
-    this.tabVal = state.pageTabVal;
-    this.bgPicUrl = state.pagePicUrl;
-  },
-  methods: {
-    // 点击图文封面
-    modalPicTap(title) {
-      this.modalPic = true;
-    },
-    bindDelete() {
-      this.bgPicUrl = '';
-    },
-    getPic(pc) {
-      this.$nextTick(() => {
-        this.bgPicUrl = pc.att_dir;
-        this.modalPic = false;
-        this.$store.commit('mobildConfig/UPPICURL', pc.att_dir);
-      });
-    },
-    colorPickerTap(colorPicker) {
-      this.$store.commit('mobildConfig/UPPICKER', colorPicker);
-    },
-    radioTap(val) {
-      this.$store.commit('mobildConfig/UPRADIO', val);
-    },
-    changVal(val) {
-      this.$store.commit('mobildConfig/UPTITLE', val);
-    },
-    changName(val) {
-      this.$store.commit('mobildConfig/UPNAME', val);
-    },
-    changeState(val) {
-      this.$store.commit('mobildConfig/UPSHOW', val);
-    },
-    bgColorTap(val) {
-      this.$store.commit('mobildConfig/UPCOLOR', val);
-    },
-    bgPicTap(val) {
-      this.$store.commit('mobildConfig/UPPIC', val);
-    },
-  },
-};
+
+defineOptions({ name: 'pageTitle' });
+
+const mobildConfigStore = useMobildConfigStore();
+
+const value = ref('');
+const name = ref('');
+const isShow = ref(true);
+const picList = ref(['icondantu', 'iconpingpu', 'iconlashen']);
+const bgColor = ref(false);
+const bgPic = ref(false);
+const tabVal = ref(0);
+const colorPicker = ref('#f5f5f5');
+const modalPic = ref(false);
+const isChoice = ref('单选');
+const gridBtn = ref({
+  xl: 4,
+  lg: 8,
+  md: 8,
+  sm: 8,
+  xs: 8,
+});
+const gridPic = ref({
+  xl: 6,
+  lg: 8,
+  md: 12,
+  sm: 12,
+  xs: 12,
+});
+const bgPicUrl = ref('');
+
+// created
+let state = mobildConfigStore;
+console.log(state, 'statestate');
+value.value = state.pageTitle;
+name.value = state.pageName;
+isShow.value = state.pageShow ? true : false;
+bgColor.value = state.pageColor ? true : false;
+bgPic.value = state.pagePic ? true : false;
+colorPicker.value = state.pageColorPicker;
+tabVal.value = state.pageTabVal;
+bgPicUrl.value = state.pagePicUrl;
+
+// 点击图文封面
+function modalPicTap(title) {
+  modalPic.value = true;
+}
+
+function bindDelete() {
+  bgPicUrl.value = '';
+}
+
+function getPic(pc) {
+  nextTick(() => {
+    bgPicUrl.value = pc.att_dir;
+    modalPic.value = false;
+    mobildConfigStore.UPPICURL(pc.att_dir);
+  });
+}
+
+function colorPickerTap(colorPickerVal) {
+  mobildConfigStore.UPPICKER(colorPickerVal);
+}
+
+function radioTap(val) {
+  mobildConfigStore.UPRADIO(val);
+}
+
+function changVal(val) {
+  mobildConfigStore.UPTITLE(val);
+}
+
+function changName(val) {
+  mobildConfigStore.UPNAME(val);
+}
+
+function changeState(val) {
+  mobildConfigStore.UPSHOW(val);
+}
+
+function bgColorTap(val) {
+  mobildConfigStore.UPCOLOR(val);
+}
+
+function bgPicTap(val) {
+  mobildConfigStore.UPPIC(val);
+}
 </script>
 
 <style scoped lang="scss">
@@ -158,7 +162,7 @@ export default {
   height: 60px;
   background: #ccc;
 }
-::v-deep.ivu-input {
+:deep(.ivu-input ){
   font-size: 13px !important;
 }
 .slider-box .title {

@@ -46,89 +46,135 @@
   </div>
 </template>
 
-<script>
-import { mapState } from 'vuex';
-import theme from '@/views/design/theme_editor/mixins/theme';
-export default {
-  name: 'index.vue',
-  props: {
-    configObj: {
-      type: Object,
-      default: function () {
-        return {};
-      },
-    },
-    configNme: {
-      type: String,
-      default: '',
-    },
-  },
-  mixins: [theme],
-  data() {
-    return {
-      txtColor: '',
-      activeTxtColor: '',
-      bgColor: '',
-      bgColor2: '',
-      menuList: [],
-      isSpecial: 2,
-      toneConfig: 0,
-      topConfig: 0,
-      bottomConfig: 0,
-      navStyleConfig: 0,
-      navConfig: 0,
-      prConfig: 0,
-      mTop: 0,
-      bgRadius: 0,
-      noPic: require('../../assets/images/noPictrue.png'),
-    };
-  },
-  computed: {
-    ...mapState('mobildConfig', ['pageFooter']),
-  },
-  watch: {
-    pageFooter: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
-      },
-      deep: true,
+<script setup>
+import { ref, reactive, computed, watch, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import { getColorChange } from '@/api/theme';
+import noPic from '@/assets/imgs/no.png';
+
+defineOptions({ name: 'pagesFoot' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
+    default: function () {
+      return {};
     },
   },
-  mounted() {
-    let data = this.$store.state.mobildConfig.pageFooter;
-    this.setConfig(data);
+  configNme: {
+    type: String,
+    default: '',
   },
-  methods: {
-    setConfig(data) {
-      this.txtColor = data.txtColor.color[0].item;
-      this.activeTxtColor = data.activeTxtColor.color[0].item;
-      this.bgColor = data.bgColor.color[0].item;
-      this.bgColor2 = data.bgColor2.color[0].item;
-      this.navStyleConfig = data.navStyleConfig.tabVal;
-      this.toneConfig = data.toneConfig.tabVal;
-      this.navConfig = data.navConfig.tabVal;
-      this.topConfig = data.topConfig.val;
-      this.bottomConfig = data.bottomConfig.val;
-      this.prConfig = data.prConfig.val;
-      this.mTop = data.mbConfig.val;
-      let fillet = data.fillet.type;
-      let filletVal = data.fillet.val;
-      let valList = data.fillet.valList;
-      this.bgRadius = fillet
-        ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
-        : filletVal + 'px';
-      this.$store.commit('mobildConfig/footType', this.navConfig);
-      this.$store.commit('mobildConfig/footBottom', this.mTop);
-      this.menuList = [];
-      this.$set(this, 'menuList', data.menuList.length ? data.menuList : 5);
-      if (data.status.title == '是否显示') {
-        this.isSpecial = 2;
-      } else {
-        this.isSpecial = 0;
+});
+
+const mobildConfigStore = useMobildConfigStore();
+
+// --- theme mixin inlined ---
+const current = ref(3);
+const colorStyle = ref({});
+function getInfo() {
+  getColorChange('color_change')
+    .then((res) => {
+      const status = res && res.data ? res.data.status : 0;
+      current.value = status ? status : 3;
+      let colorList = [
+        { theme: '#42CA4D', priceColor: '#FF7600', minorColor: 'rgba(108, 198, 94, 0.5)', minorColorT: 'rgba(66, 202, 77, 0.1)', bntColor: '#FE960F', gradient: '#4DEA4D' },
+        { theme: '#e93323', priceColor: '#e93323', minorColor: 'rgba(233, 51, 35, 0.5)', minorColorT: 'rgba(233, 51, 35, 0.1)', bntColor: '#FE960F', gradient: '#FF7931' },
+        { theme: '#1DB0FC', priceColor: '#FD502F', minorColor: 'rgba(58, 139, 236, 0.5)', minorColorT: 'rgba(9, 139, 243, 0.1)', bntColor: '#22CAFD', gradient: '#5ACBFF' },
+        { theme: '#FF448F', priceColor: '#FF448F', minorColor: 'rgba(255, 68, 143, 0.5)', minorColorT: 'rgba(255, 68, 143, 0.1)', bntColor: '#282828', gradient: '#FF67AD' },
+        { theme: '#FE5C2D', priceColor: '#FE5C2D', minorColor: 'rgba(254, 92, 45, 0.5)', minorColorT: 'rgba(254, 92, 45, 0.1)', bntColor: '#FDB000', gradient: '#FF9451' },
+        { theme: '#E0A558', priceColor: '#DA8C18', minorColor: 'rgba(224, 165, 88, 0.5)', minorColorT: 'rgba(224, 165, 88, 0.1)', bntColor: '#1A1A1A', gradient: '#FFCD8C' },
+      ];
+      switch (status) {
+        case 1:
+          colorStyle.value = colorList[2];
+          break;
+        case 2:
+          colorStyle.value = colorList[0];
+          break;
+        case 3:
+          colorStyle.value = colorList[1];
+          break;
+        case 4:
+          colorStyle.value = colorList[3];
+          break;
+        case 5:
+          colorStyle.value = colorList[4];
+          break;
+        case 6:
+          colorStyle.value = colorList[5];
+          break;
+        default:
+          colorStyle.value = colorList[1];
+          break;
       }
-    },
+    })
+    .catch((err) => {
+      ElMessage.error((err && (err.message || err.msg)) || '获取颜色配置失败');
+    });
+}
+// --- end theme mixin ---
+
+const txtColor = ref('');
+const activeTxtColor = ref('');
+const bgColor = ref('');
+const bgColor2 = ref('');
+const menuList = ref([]);
+const isSpecial = ref(2);
+const toneConfig = ref(0);
+const topConfig = ref(0);
+const bottomConfig = ref(0);
+const navStyleConfig = ref(0);
+const navConfig = ref(0);
+const prConfig = ref(0);
+const mTop = ref(0);
+const bgRadius = ref(0);
+
+const pageFooter = computed(() => mobildConfigStore.pageFooter);
+
+watch(
+  pageFooter,
+  (nVal, oVal) => {
+    setConfig(nVal);
   },
-};
+  { deep: true },
+);
+
+function setConfig(data) {
+  txtColor.value = data.txtColor.color[0].item;
+  activeTxtColor.value = data.activeTxtColor.color[0].item;
+  bgColor.value = data.bgColor.color[0].item;
+  bgColor2.value = data.bgColor2.color[0].item;
+  navStyleConfig.value = data.navStyleConfig.tabVal;
+  toneConfig.value = data.toneConfig.tabVal;
+  navConfig.value = data.navConfig.tabVal;
+  topConfig.value = data.topConfig.val;
+  bottomConfig.value = data.bottomConfig.val;
+  prConfig.value = data.prConfig.val;
+  mTop.value = data.mbConfig.val;
+  let fillet = data.fillet.type;
+  let filletVal = data.fillet.val;
+  let valList = data.fillet.valList;
+  bgRadius.value = fillet
+    ? valList[0].val + 'px ' + valList[1].val + 'px ' + valList[3].val + 'px ' + valList[2].val + 'px'
+    : filletVal + 'px';
+  mobildConfigStore.footType(navConfig.value);
+  mobildConfigStore.footBottom(mTop.value);
+  menuList.value = [];
+  menuList.value = data.menuList.length ? data.menuList : 5;
+  if (data.status.title == '是否显示') {
+    isSpecial.value = 2;
+  } else {
+    isSpecial.value = 0;
+  }
+}
+
+onMounted(() => {
+  getInfo();
+  let data = mobildConfigStore.pageFooter;
+  setConfig(data);
+});
 </script>
 
 <style lang="scss" scoped>

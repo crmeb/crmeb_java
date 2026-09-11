@@ -1,101 +1,103 @@
 <template>
   <div class="line-box" v-if="configData">
     <div class="input-box">
-      <draggable class="dragArea list-group" :list="configData.list" group="peoples" handle=".icon">
-        <div class="input-item" v-for="(item, index) in configData.list" :key="index">
-          <div class="icon">
-            <span class="iconfont iconxingzhuangjiehe"></span>
+      <draggable
+        class="dragArea list-group"
+        :list="configData.list"
+        :item-key="getDraggableItemKey"
+        group="peoples"
+        handle=".icon"
+      >
+        <template #item="{ element: item, index }">
+          <div class="input-item">
+            <div class="icon">
+              <span class="iconfont iconxingzhuangjiehe"></span>
+            </div>
+            <el-input v-model="item.val" maxlength="10" placeholder="选填，不超过十个字" />
+            <!-- <el-select v-model="item.val">
+              <el-option v-for="(val, index) in wordList" :value="val.name" :key="index">{{ val.name }}</el-option>
+            </el-select> -->
+            <div class="delete" @click.stop="bindDelete(index)">
+              <span class="iconfont icondel_2"></span>
+            </div>
           </div>
-          <el-input v-model="item.val" maxlength="10" placeholder="选填，不超过十个字" />
-          <!-- <el-select v-model="item.val">
-            <el-option v-for="(val, index) in wordList" :value="val.name" :key="index">{{ val.name }}</el-option>
-          </el-select> -->
-          <div class="delete" @click.stop="bindDelete(index)">
-            <span class="iconfont icondel_2"></span>
-          </div>
-        </div>
+        </template>
       </draggable>
-      <div class="add-btn" @click="addHotTxt" v-if="configData.list.length < 20">
+      <div class="add-btn" @click="addHotTxt" v-if="configData.list && configData.list.length < 20">
         <el-button class="btn" type="primary" ghost> <span class="iconfont iconjiahao"></span>添加 </el-button>
       </div>
     </div>
   </div>
 </template>
-<script>
+<script setup>
+import { ref, watch } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { getWordsAll } from '@/api/theme';
-import vuedraggable from 'vuedraggable';
-export default {
-  name: 'c_hot_word',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+import draggable from 'vuedraggable';
+import { getDraggableItemKey } from '@/utils/draggableKey';
+
+defineOptions({ name: 'c_hot_word' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  components: {
-    draggable: vuedraggable,
+  configNme: {
+    type: String,
   },
-  data() {
-    return {
-      hotWordList: [],
-      hotIndex: 1,
-      defaults: {},
-      configData: {},
-      wordList: [],
-    };
+});
+
+const hotWordList = ref([]);
+const hotIndex = ref(1);
+const defaults = ref({});
+const configData = ref({});
+const wordList = ref([]);
+
+defaults.value = props.configObj;
+configData.value = props.configObj[props.configNme] || {};
+// wordsAll();
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    // hotWordList.value = nVal.hotList
+    configData.value = nVal[props.configNme] || {};
   },
-  created() {
-    this.defaults = this.configObj;
-    this.configData = this.configObj[this.configNme];
-    // this.wordsAll();
-  },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        // this.hotWordList = nVal.hotList
-        this.configData = nVal[this.configNme];
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  methods: {
-    wordsAll() {
-      getWordsAll()
-        .then((res) => {
-          this.wordList = res.data;
-        })
-        .catch((err) => {
-          this.$message.error(err.msg);
-        });
-    },
-    addHotTxt() {
-      // let obj = {}
-      // if(this.configData.list.length){
-      //     obj = JSON.parse(JSON.stringify(this.configData.list[this.configData.list.length - 1]))
-      // }else {
-      //     obj = {
-      //         val: ''
-      //     }
-      // }
-      let obj = {
-        val: '',
-      };
-      this.configData.list.push(obj);
-      // this.$emit('input', this.hotWordList);
-    },
-    // 删除数组
-    bindDelete(index) {
-      this.configData.list.splice(index, 1);
-    },
-  },
-};
+  { immediate: true, deep: true },
+);
+
+function wordsAll() {
+  getWordsAll()
+    .then((res) => {
+      wordList.value = res.data;
+    })
+    .catch((err) => {
+      ElMessage.error(err.msg);
+    });
+}
+function addHotTxt() {
+  // let obj = {}
+  // if(this.configData.list.length){
+  //     obj = JSON.parse(JSON.stringify(this.configData.list[this.configData.list.length - 1]))
+  // }else {
+  //     obj = {
+  //         val: ''
+  //     }
+  // }
+  let obj = {
+    val: '',
+  };
+  configData.value.list.push(obj);
+  // emit('input', hotWordList.value);
+}
+// 删除数组
+function bindDelete(index) {
+  configData.value.list.splice(index, 1);
+}
 </script>
 
 <style scoped lang="scss">
-::v-deep .ivu-select-arrow {
+:deep(.ivu-select-arrow) {
   color: #cccccc;
 }
 
@@ -110,7 +112,7 @@ export default {
         width: 100%;
         height: 36px;
         border-color: #eeeeee;
-        color: #666666;
+        color: #ffffff;
 
         .iconfont {
           font-size: 11px;
@@ -147,7 +149,7 @@ export default {
         }
       }
 
-      ::v-deep .ivu-input {
+      :deep(.ivu-input) {
         flex: 1;
         height: 36px;
         font-size: 13px !important;

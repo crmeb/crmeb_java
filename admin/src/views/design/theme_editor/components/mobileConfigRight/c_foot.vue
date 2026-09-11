@@ -1,52 +1,62 @@
 <template>
   <div class="footer" v-if="footConfig">
     <p class="tips">图片建议宽度81*81px；鼠标拖拽左侧圆点可调整导航顺序</p>
-    <draggable class="dragArea list-group" :list="footConfig" group="peoples" handle=".iconfont">
-      <div class="box-item" v-for="(item, index) in footConfig" :key="index">
-        <div class="left-tool">
-          <span class="iconfont iconxingzhuangjiehe"></span>
-        </div>
-        <div class="right-wrapper">
-          <div class="acea-row" v-if="navStyle != 1">
-            <div class="title">图标</div>
-            <div class="img-wrapper">
-              <div class="img-item" v-for="(img, j) in item.imgList" @click="modalPicTap(index, j)">
-                <div class="pictrue" v-if="img">
-                  <img :src="img" alt="" />
-                  <p class="txt">替换</p>
+    <draggable
+      class="dragArea list-group"
+      :list="footConfig"
+      :item-key="getDraggableItemKey"
+      group="peoples"
+      handle=".iconfont"
+    >
+      <template #item="{ element: item, index }">
+        <div class="box-item">
+          <div class="left-tool">
+            <span class="iconfont iconxingzhuangjiehe"></span>
+          </div>
+          <div class="right-wrapper">
+            <div class="acea-row" v-if="navStyle != 1">
+              <div class="title">图标</div>
+              <div class="img-wrapper">
+                <div class="img-item" v-for="(img, j) in item.imgList" :key="j" @click="modalPicTap(index, j)">
+                  <div class="pictrue" v-if="img">
+                    <img :src="img" alt="" />
+                    <p class="txt">替换</p>
+                  </div>
+                  <div class="empty-img" v-else>
+                    <span class="iconfont iconjiahao"></span>
+                  </div>
+                  <div class="name">{{ j == 0 ? '选中' : '未选中' }}</div>
                 </div>
-                <div class="empty-img" v-else>
-                  <span class="iconfont iconjiahao"></span>
-                </div>
-                <div class="name">{{ j == 0 ? '选中' : '未选中' }}</div>
               </div>
             </div>
+            <div class="c_row-item" v-if="navStyle != 2">
+              <el-col class="label" :span="4"> 名称 </el-col>
+              <el-col class="slider-box" :span="20">
+                <el-input v-model="item.name" placeholder="选填不超过10个字" />
+              </el-col>
+            </div>
+            <div class="c_row-item">
+              <el-col class="label" :span="4"> 链接 </el-col>
+              <el-col class="slider-box" :span="20">
+                <div>
+                  <el-input v-model="item.link" placeholder="选填不超过10个字">
+                    <template #suffix>
+                      <i class="el-icon-link" @click="getLink(index)" />
+                    </template>
+                  </el-input>
+                </div>
+              </el-col>
+            </div>
           </div>
-          <div class="c_row-item" v-if="navStyle != 2">
-            <el-col class="label" :span="4"> 名称 </el-col>
-            <el-col class="slider-box" :span="20">
-              <el-input v-model="item.name" placeholder="选填不超过10个字" />
-            </el-col>
-          </div>
-          <div class="c_row-item">
-            <el-col class="label" :span="4"> 链接 </el-col>
-            <el-col class="slider-box" :span="20">
-              <div>
-                <el-input v-model="item.link" placeholder="选填不超过10个字">
-                  <i class="el-icon-link" slot="suffix" @click="getLink(index)" />
-                </el-input>
-              </div>
-            </el-col>
+          <div class="del-box" @click="deleteMenu(index)">
+            <span class="iconfont iconcha"></span>
           </div>
         </div>
-        <div class="del-box" @click="deleteMenu(index)">
-          <span class="iconfont iconcha"></span>
-        </div>
-      </div>
+      </template>
     </draggable>
     <el-button class="add-btn" @click="addMenu" v-if="footConfig.length < 5">+ 添加板块</el-button>
     <div>
-      <el-dialog :visible.sync="modalPic" width="960px" title="上传底部菜单" :mask-closable="false">
+      <el-dialog v-model="modalPic" width="1024px" title="上传底部菜单" :mask-closable="false">
         <uploadPictures
           :isChoice="isChoice"
           @getPic="getPic"
@@ -56,124 +66,121 @@
         ></uploadPictures>
       </el-dialog>
     </div>
-    <linkaddress ref="linkaddres" @linkUrl="linkUrl"></linkaddress>
+    <linkaddress ref="linkaddresRef" @linkUrl="linkUrl"></linkaddress>
   </div>
 </template>
 
-<script>
-import vuedraggable from 'vuedraggable';
+<script setup>
+import { ref, watch, nextTick } from 'vue';
+import { ElMessageBox } from 'element-plus';
+import draggable from 'vuedraggable';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
 import uploadPictures from '@/views/design/theme_editor/components/uploadPictures';
 import linkaddress from '@/components/linkaddress';
-export default {
-  name: 'c_foot',
-  props: {
-    configObj: {
-      type: Object,
-      default: function () {
-        return {};
-      },
-    },
-    configNme: {
-      type: String,
-      default: '',
+import noPic from '@/assets/imgs/no.png';
+import { getDraggableItemKey } from '@/utils/draggableKey';
+
+defineOptions({ name: 'c_foot' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
+    default: function () {
+      return {};
     },
   },
-  components: {
-    uploadPictures,
-    linkaddress,
-    draggable: vuedraggable,
+  configNme: {
+    type: String,
+    default: '',
   },
-  data() {
-    return {
-      val1: '',
-      val2: '',
-      footConfig: [],
-      modalPic: false,
-      isChoice: '单选',
-      itemIndex: 0,
-      itemChildIndex: 0,
-      gridBtn: {
-        xl: 4,
-        lg: 8,
-        md: 8,
-        sm: 8,
-        xs: 8,
-      },
-      gridPic: {
-        xl: 6,
-        lg: 8,
-        md: 12,
-        sm: 12,
-        xs: 12,
-      },
-      navStyle: 0,
-      noPic: require('../../assets/images/noPictrue.png'),
-    };
+});
+
+const mobildConfigStore = useMobildConfigStore();
+
+const val1 = ref('');
+const val2 = ref('');
+const footConfig = ref([]);
+const modalPic = ref(false);
+const isChoice = ref('单选');
+const itemIndex = ref(0);
+const itemChildIndex = ref(0);
+const gridBtn = ref({
+  xl: 4,
+  lg: 8,
+  md: 8,
+  sm: 8,
+  xs: 8,
+});
+const gridPic = ref({
+  xl: 6,
+  lg: 8,
+  md: 12,
+  sm: 12,
+  xs: 12,
+});
+const navStyle = ref(0);
+const linkaddresRef = ref(null);
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    footConfig.value = nVal[props.configNme];
+    navStyle.value = nVal.navStyleConfig.tabVal;
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.footConfig = nVal[this.configNme];
-        this.navStyle = nVal.navStyleConfig.tabVal;
-      },
-      deep: true,
-    },
-  },
-  created() {
-    this.footConfig = this.configObj[this.configNme];
-  },
-  methods: {
-    linkUrl(e) {
-      this.footConfig[this.itemIndex].link = e;
-    },
-    getLink(index) {
-      this.itemIndex = index;
-      this.$refs.linkaddres.modals = true;
-    },
-    // 点击图文封面
-    modalPicTap(parent, child) {
-      this.itemIndex = parent;
-      this.itemChildIndex = child;
-      this.modalPic = true;
-    },
-    // 获取图片信息
-    getPic(pc) {
-      this.$nextTick(() => {
-        this.footConfig[this.itemIndex].imgList[this.itemChildIndex] = pc.att_dir;
-        this.modalPic = false;
-        this.$store.commit('mobildConfig/footUpdata', this.footConfig);
-      });
-    },
-    // 添加模块
-    addMenu() {
-      let obj = {
-        imgList: [this.noPic, this.noPic],
-        name: '自定义',
-        link: '',
-      };
-      this.footConfig.push(obj);
-    },
-    deleteMenu(index) {
-      this.$msgbox({
-        title: '提示',
-        message: '是否确定删除该菜单',
-        showCancelButton: true,
-        cancelButtonText: '取消',
-        confirmButtonText: '删除',
-        iconClass: 'el-icon-warning',
-        confirmButtonClass: 'btn-custom-cancel',
-      })
-        .then(() => {
-          this.footConfig.splice(index, 1);
-        })
-        .catch(() => {});
-    },
-  },
-};
+  { deep: true },
+);
+
+footConfig.value = props.configObj[props.configNme];
+
+function linkUrl(e) {
+  footConfig.value[itemIndex.value].link = e;
+}
+function getLink(index) {
+  itemIndex.value = index;
+  linkaddresRef.value.modals = true;
+}
+// 点击图文封面
+function modalPicTap(parent, child) {
+  itemIndex.value = parent;
+  itemChildIndex.value = child;
+  modalPic.value = true;
+}
+// 获取图片信息
+function getPic(pc) {
+  nextTick(() => {
+    footConfig.value[itemIndex.value].imgList[itemChildIndex.value] = pc.att_dir;
+    modalPic.value = false;
+    mobildConfigStore.footUpdata(footConfig.value);
+  });
+}
+// 添加模块
+function addMenu() {
+  let obj = {
+    imgList: [noPic, noPic],
+    name: '自定义',
+    link: '',
+  };
+  footConfig.value.push(obj);
+}
+function deleteMenu(index) {
+  ElMessageBox({
+    title: '提示',
+    message: '是否确定删除该菜单',
+    showCancelButton: true,
+    cancelButtonText: '取消',
+    confirmButtonText: '删除',
+    iconClass: 'el-icon-warning',
+    confirmButtonClass: 'btn-custom-cancel',
+  })
+    .then(() => {
+      footConfig.value.splice(index, 1);
+    })
+    .catch(() => {});
+}
 </script>
 
 <style scoped lang="scss">
-::v-deep.ivu-input {
+:deep(.ivu-input ){
   font-size: 12px !important;
 }
 .dragArea {

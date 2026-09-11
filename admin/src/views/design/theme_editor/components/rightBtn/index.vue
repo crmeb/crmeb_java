@@ -6,24 +6,25 @@
   </div>
 </template>
 
-<script>
-import { mapState, mapMutations, mapActions } from 'vuex';
-export default {
-  name: 'rightBtn',
-  props: ['activeIndex', 'configObj'],
-  methods: {
-    // 右侧确认保存配置
-    handleSubmit(name) {
-      let obj = {};
-      obj.activeIndex = this.activeIndex;
-      obj.data = this.configObj;
-      this.add(obj);
-    },
-    ...mapMutations({
-      add: 'mobildConfig/UPDATEARR',
-    }),
-  },
-};
+<script setup>
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+
+defineOptions({ name: 'rightBtn' });
+
+const props = defineProps({
+  activeIndex: { type: [Number, String], default: 0 },
+  configObj: { type: Object, default: () => ({}) },
+});
+
+const mobildConfigStore = useMobildConfigStore();
+
+// 右侧确认保存配置
+function handleSubmit(name) {
+  let obj = {};
+  obj.activeIndex = props.activeIndex;
+  obj.data = props.configObj;
+  mobildConfigStore.UPDATEARR(obj);
+}
 </script>
 
 <style scoped></style>

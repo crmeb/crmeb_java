@@ -9,39 +9,31 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch } from 'vue';
 import toolCom from '@/views/design/theme_editor/components/mobileConfigRight/index.js';
 import c_bg_color from './c_bg_color';
 
-export default {
-  name: 'c_data_settings',
-  components: {
-    ...toolCom,
-    c_bg_color,
+defineOptions({ name: 'c_data_settings' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+  configNme: {
+    type: String,
   },
-  data() {
-    return {
-      configData: null,
-    };
+});
+
+const configData = ref(null);
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    configData.value = nVal[props.configNme] || {};
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
-};
+  { deep: true, immediate: true },
+);
 </script>
 
 <style scoped lang="scss">

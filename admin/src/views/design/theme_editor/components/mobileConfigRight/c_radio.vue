@@ -5,8 +5,8 @@
         {{ configData.title }}
       </el-col>
       <el-col class="color-box" :span="configData.type == 'form' ? 19 : 18">
-        <el-radio-group v-model="configData.tabVal" @input="radioChange()">
-          <el-radio :label="key" v-for="(radio, key) in configData.tabList" :key="key">
+        <el-radio-group v-model="configData.tabVal" @change="radioChange()">
+          <el-radio :label="key" :value="key" v-for="(radio, key) in configData.tabList" :key="key">
             <span>{{ radio.name }}</span>
           </el-radio>
         </el-radio-group>
@@ -15,43 +15,40 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_radio',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch } from 'vue';
+
+defineOptions({ name: 'c_radio' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-    };
+  configNme: {
+    type: String,
   },
-  created() {
-    this.defaults = this.configObj;
-    this.configData = this.configObj[this.configNme];
+});
+
+const emit = defineEmits(['getConfig']);
+
+const defaults = ref({});
+const configData = ref({});
+
+defaults.value = props.configObj;
+configData.value = props.configObj[props.configNme] || {};
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  methods: {
-    radioChange(e) {
-      this.$emit('getConfig', e, 'radio');
-    },
-  },
-};
+  { immediate: true, deep: true },
+);
+
+function radioChange(e) {
+  emit('getConfig', e, 'radio');
+}
 </script>
 
 <style scoped lang="scss">
@@ -62,7 +59,7 @@ export default {
       color: #999999;
       font-size: 12px;
     }
-    ::v-deep.ivu-radio-wrapper {
+    :deep(.ivu-radio-wrapper ){
       margin: 5px 25px 15px 0;
     }
   }
@@ -79,7 +76,7 @@ export default {
     }
   }
   .color-box {
-    margin-top: 10px;
+    // margin-top: 10px;
   }
 }
 </style>

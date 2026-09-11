@@ -11,7 +11,7 @@
       </div>
       <div class="tips">
         例如：{{ item.example }}
-        <!--<el-button size="small" style="margin-left: 10px" v-clipboard:copy="item.example"-->
+        <!--<el-button style="margin-left: 10px" v-clipboard:copy="item.example"-->
         <!--v-clipboard:success="onCopy"-->
         <!--v-clipboard:error="onError">复制</el-button>-->
         <span class="copy copy-data" v-db-click @click="onCopy(item.example)">复制</span>
@@ -20,57 +20,53 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, nextTick, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import ClipboardJS from 'clipboard';
 import { getUrl } from '@/api/theme';
-export default {
-  name: 'links',
-  data() {
-    return {
-      list: [
-        {
-          name: '商城首页',
-          url: '/pages/goods/order_list/index',
-          parameter: [{}],
-          example: '/pages/activity/bargain/index',
-        },
-        {
-          name: '商城首页',
-          url: '/pages/goods/order_list/index',
-          parameter: [{}],
-          example: '/pages/activity/bargain/index',
-        },
-      ],
-    };
+
+defineOptions({ name: 'links' });
+
+const { proxy } = getCurrentInstance();
+
+const list = ref([
+  {
+    name: '商城首页',
+    url: '/pages/goods/order_list/index',
+    parameter: [{}],
+    example: '/pages/activity/bargain/index',
   },
-  created() {
-    getUrl().then((res) => {
-      this.list = res.data.url;
+  {
+    name: '商城首页',
+    url: '/pages/goods/order_list/index',
+    parameter: [{}],
+    example: '/pages/activity/bargain/index',
+  },
+]);
+
+getUrl().then((res) => {
+  list.value = res.data.url;
+});
+
+onMounted(function () {
+  nextTick(function () {
+    const clipboard = new ClipboardJS('.copy-data');
+    clipboard.on('success', () => {
+      ElMessage.success('复制成功');
     });
-  },
-  mounted: function () {
-    this.$nextTick(function () {
-      const clipboard = new ClipboardJS('.copy-data');
-      clipboard.on('success', () => {
-        this.$message.success('复制成功');
-      });
+  });
+});
+
+function onCopy(copyData) {
+  proxy.$copyText(copyData)
+    .then((message) => {
+      ElMessage.success('复制成功');
+    })
+    .catch((err) => {
+      ElMessage.error('复制失败');
     });
-  },
-  methods: {
-    onCopy(copyData) {
-      this.$copyText(copyData)
-        .then((message) => {
-          this.$message.success('复制成功');
-        })
-        .catch((err) => {
-          this.$message.error('复制失败');
-        });
-    },
-    // onError () {
-    //     this.$message.error('复制成功');
-    // }
-  },
-};
+}
 </script>
 
 <style lang="scss" scoped>

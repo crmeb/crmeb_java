@@ -17,7 +17,7 @@
       <!-- 顶部栏 -->
       <page-header
         :theme-name="themeName"
-        :theme-info="themeInfo"
+        :theme-info="themeInfoVal"
         :isMicroPage="isMicroPage"
         @preview="onPreview"
         @save="onSave"
@@ -38,7 +38,10 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, provide, inject, watch, onMounted } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
+import { useRoute, useRouter } from 'vue-router';
 import Sidebar from './components/Sidebar.vue';
 import PageHeader from './components/Header.vue';
 import StyleConfig from './components/StyleConfig.vue';
@@ -48,145 +51,177 @@ import DetailEditor from './components/DetailEditor.vue';
 import UserEditor from './components/UserEditor.vue';
 import { saveThemeTitle, themeInfo } from '@/api/theme';
 
-export default {
-  name: 'EditTheme',
-  components: {
-    Sidebar,
-    PageHeader,
-    StyleConfig,
-    HomeEditor,
-    CategoryEditor,
-    DetailEditor,
-    UserEditor,
-  },
-  data() {
-    return {
-      themeName: '请设置页面名称',
-      themeInfo: '',
-      activeMenu: 'home', // 默认选中商城首页
-      collapsed: false,
-      isDirty: false, // 是否有未保存的修改
-    };
-  },
-  provide() {
-    return {
-      setDirty: (dirty) => {
-        this.isDirty = dirty;
-      },
-    };
-  },
-  watch: {
-    '$route.query.type': {
-      handler(val) {
-        if (val) {
-          this.activeMenu = val;
-        }
-      },
-      immediate: true,
-    },
-  },
-  computed: {
-    isMicroPage() {
-      return this.$route.query.page_type === 'micro';
-    },
-  },
-  mounted() {
-    if (this.$route.query.id != 0) this.getThemeBaseInfo();
-  },
-  methods: {
-    getThemeBaseInfo() {
-      const id = this.$route.query.id || 0;
-      if (!id) {
-        this.themeName = '请设置页面名称';
-        return;
-      }
-      themeInfo(id, 'base')
-        .then((res) => {
-          this.themeName = res.data.title || '请设置页面名称';
-          this.themeInfo = res.data.info;
-        })
-        .catch((err) => {
-          this.$message.error(err.msg);
-        });
-    },
-    handleMenuChange(menuKey) {
-      if (this.isDirty) {
-        this.isDirty = false;
-      }
-      this.activeMenu = menuKey;
-      if (this.$route.query.type !== menuKey) {
-        this.$router.replace({ query: { ...this.$route.query, type: menuKey } });
-      }
-    },
-    handleSidebarSave(key) {
-      this.onSave();
-    },
-    handleUpdateInfo(data) {
-      this.themeName = data.title;
-      this.themeInfo = data.info;
-      let id = this.$route.query.id || 0;
-      saveThemeTitle(id, data)
-        .then((res) => {
-          this.$message.success('保存成功');
-          if (id == 0) {
-            let query = { ...this.$route.query, id: res.data.id };
-            if (query.tid) {
-              delete query.tid; // 保存后移除 tid
-            }
-            this.$router.replace({ query });
-            // Update active component's pageId
-            const refName = this.getRefName();
-            if (refName && this.$refs[refName] && this.$refs[refName].$refs.diy) {
-              this.$refs[refName].$refs.diy.pageId = res.data.id;
-            }
-          }
-        })
-        .catch((err) => {
-          this.$message.error(err.msg);
-        });
-    },
-    getRefName() {
-      switch (this.activeMenu) {
-        case 'theme':
-          return 'styleConfig';
-        case 'home':
-          return 'homeEditor';
-        case 'category':
-          return 'categoryEditor';
-        case 'detail':
-          return 'detailEditor';
-        case 'user':
-          return 'userEditor';
-        default:
-          return '';
-      }
-    },
-    onPreview() {
-      const refName = this.getRefName();
-      if (refName && this.$refs[refName] && this.$refs[refName].preview) {
-        this.$refs[refName].preview();
-      }
-    },
-    onSave() {
-      const refName = this.getRefName();
-      if (refName && this.$refs[refName] && this.$refs[refName].saveOnly) {
-        this.$refs[refName].saveOnly();
-      }
-    },
-    onSaveClose() {
-      const refName = this.getRefName();
-      if (refName && this.$refs[refName] && this.$refs[refName].saveAndClose) {
-        this.$refs[refName].saveAndClose();
-      }
-    },
-    onSaveTemplate() {
-      const refName = this.getRefName();
-      if (refName && this.$refs[refName] && this.$refs[refName].saveTemplate) {
-        this.$refs[refName].saveTemplate();
-      }
-    },
-  },
+defineOptions({ name: 'EditTheme' });
+
+const route = useRoute();
+const router = useRouter();
+
+const reload = inject('reload', null);
+
+const themeName = ref('请设置页面名称');
+const themeInfoVal = ref('');
+const activeMenu = ref('home'); // 默认选中商城首页
+const collapsed = ref(false);
+const isDirty = ref(false); // 是否有未保存的修改
+
+const styleConfig = ref(null);
+const homeEditor = ref(null);
+const categoryEditor = ref(null);
+const detailEditor = ref(null);
+const userEditor = ref(null);
+
+const setDirty = (dirty) => {
+  isDirty.value = dirty;
 };
+provide('setDirty', setDirty);
+
+const isMicroPage = computed(() => route.query.page_type === 'micro');
+
+watch(
+  () => route.query.type,
+  (val) => {
+    if (val) {
+      activeMenu.value = val;
+    }
+  },
+  { immediate: true },
+);
+
+function getThemeBaseInfo() {
+  const id = route.query.id || 0;
+  if (!id) {
+    themeName.value = '请设置页面名称';
+    return;
+  }
+  themeInfo(id, 'base')
+    .then((res) => {
+      themeName.value = res.data.title || '请设置页面名称';
+      themeInfoVal.value = res.data.info;
+    })
+    .catch((err) => {
+      ElMessage.error((err && (err.message || err.msg)) || '获取主题信息失败');
+    });
+}
+function handleMenuChange(menuKey) {
+  if (isDirty.value) {
+    isDirty.value = false;
+  }
+  activeMenu.value = menuKey;
+  if (route.query.type !== menuKey) {
+    router.replace({ query: { ...route.query, type: menuKey } });
+  }
+}
+function handleSidebarSave(key) {
+  onSave();
+}
+function handleUpdateInfo(data) {
+  themeName.value = data.title;
+  themeInfoVal.value = data.info;
+  let id = route.query.id || 0;
+  saveThemeTitle(id, data)
+    .then((res) => {
+      ElMessage.success('保存成功');
+      if (id == 0) {
+        let query = { ...route.query, id: res.data.id };
+        if (query.tid) {
+          delete query.tid; // 保存后移除 tid
+        }
+        router.replace({ query });
+        // Update active component's pageId
+        const refName = getRefName();
+        const refMap = {
+          styleConfig,
+          homeEditor,
+          categoryEditor,
+          detailEditor,
+          userEditor,
+        };
+        const targetRef = refMap[refName];
+        if (refName && targetRef.value && targetRef.value.$refs && targetRef.value.$refs.diy) {
+          targetRef.value.$refs.diy.pageId = res.data.id;
+        }
+      }
+    })
+    .catch((err) => {
+      ElMessage.error((err && (err.message || err.msg)) || '保存失败');
+    });
+}
+function getRefName() {
+  switch (activeMenu.value) {
+    case 'theme':
+      return 'styleConfig';
+    case 'home':
+      return 'homeEditor';
+    case 'category':
+      return 'categoryEditor';
+    case 'detail':
+      return 'detailEditor';
+    case 'user':
+      return 'userEditor';
+    default:
+      return '';
+  }
+}
+function onPreview() {
+  const refName = getRefName();
+  const refMap = {
+    styleConfig,
+    homeEditor,
+    categoryEditor,
+    detailEditor,
+    userEditor,
+  };
+  const targetRef = refMap[refName];
+  if (refName && targetRef.value && targetRef.value.preview) {
+    targetRef.value.preview();
+  }
+}
+function onSave() {
+  const refName = getRefName();
+  const refMap = {
+    styleConfig,
+    homeEditor,
+    categoryEditor,
+    detailEditor,
+    userEditor,
+  };
+  const targetRef = refMap[refName];
+  if (refName && targetRef.value && targetRef.value.saveOnly) {
+    targetRef.value.saveOnly();
+  }
+}
+function onSaveClose() {
+  const refName = getRefName();
+  const refMap = {
+    styleConfig,
+    homeEditor,
+    categoryEditor,
+    detailEditor,
+    userEditor,
+  };
+  const targetRef = refMap[refName];
+  if (refName && targetRef.value && targetRef.value.saveAndClose) {
+    targetRef.value.saveAndClose();
+  }
+}
+function onSaveTemplate() {
+  const refName = getRefName();
+  const refMap = {
+    styleConfig,
+    homeEditor,
+    categoryEditor,
+    detailEditor,
+    userEditor,
+  };
+  const targetRef = refMap[refName];
+  if (refName && targetRef.value && targetRef.value.saveTemplate) {
+    targetRef.value.saveTemplate();
+  }
+}
+
+onMounted(() => {
+  if (route.query.id != 0) getThemeBaseInfo();
+});
 </script>
 <style>
 .el-main {

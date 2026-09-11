@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="i-layout-page-header header-title">
-      <span class="ivu-page-header-title mr20">{{ $route.meta.title }}</span>
+      <span class="ivu-page-header-title mr20">{{ route.meta.title }}</span>
       <div>
         <div style="float: right" v-if="cardShow == 1 || cardShow == 2">
           <el-button class="bnt" type="primary" v-db-click @click="submit" :loading="loadingExist">保存</el-button>
@@ -43,33 +43,33 @@
             no-filtered-userFrom-text="暂无筛选结果"
           >
             <el-table-column label="页面ID" width="80">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <span>{{ scope.row.id }}</span>
               </template>
             </el-table-column>
             <el-table-column label="模板名称" min-width="130">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <span>{{ scope.row.name }}</span>
               </template>
             </el-table-column>
             <el-table-column label="模板类型" min-width="130">
-              <template slot-scope="scope">
-                <el-tag type="success" size="medium" v-if="scope.row.status == 1">首页</el-tag>
-                <el-tag type="info" size="medium" v-else class="mr10">专题页</el-tag>
+              <template #default="scope">
+                <el-tag type="success" size="default" v-if="scope.row.status == 1">首页</el-tag>
+                <el-tag type="info" size="default" v-else class="mr10">专题页</el-tag>
               </template>
             </el-table-column>
             <el-table-column label="添加时间" min-width="130">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <span>{{ scope.row.add_time }}</span>
               </template>
             </el-table-column>
             <el-table-column label="更新时间" min-width="130">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <span>{{ scope.row.update_time }}</span>
               </template>
             </el-table-column>
             <el-table-column label="操作" fixed="right" width="210">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <div
                   style="display: inline-block"
                   v-if="scope.row.status || scope.row.is_diy"
@@ -80,7 +80,7 @@
                     v-if="scope.row.is_diy === 1"
                     class="target"
                     ref="target"
-                    :href="`${url}${$routeProStr}/setting/pages/diy_index?id=${scope.row.id}&name=${
+                    :href="`${url}${routeProStr}/setting/pages/diy_index?id=${scope.row.id}&name=${
                       scope.row.template_name || 'moren'
                     }`"
                   >
@@ -118,8 +118,8 @@
             <pagination
               v-if="total"
               :total="total"
-              :page.sync="diyFrom.page"
-              :limit.sync="diyFrom.limit"
+              v-model:page="diyFrom.page"
+              v-model:limit="diyFrom.limit"
               @pagination="diyProList"
             />
           </div>
@@ -128,7 +128,7 @@
     </el-card>
     <goodClass v-else-if="cardShow == 1" ref="category" @parentFun="getChildData"></goodClass>
     <users v-else ref="users" @parentFun="getChildData"></users>
-    <el-dialog :visible.sync="isTemplate" title="开发移动端链接" :z-index="1" width="540px" @closed="cancel">
+    <el-dialog v-model="isTemplate" title="开发移动端链接" :z-index="1" width="540px" @closed="cancel">
       <div class="article-manager">
         <el-card :bordered="false" shadow="never" class="ivu-mt">
           <el-form
@@ -137,7 +137,7 @@
             label-width="120px"
             label-position="right"
             :rules="ruleValidate"
-            @submit.native.prevent
+            @submit.prevent
           >
             <el-row :gutter="24">
               <el-col :span="24">
@@ -151,11 +151,13 @@
           </el-form>
         </el-card>
       </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" v-db-click @click="handleSubmit('formItem')">提交</el-button>
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button type="primary" v-db-click @click="handleSubmit('formItem')">提交</el-button>
+        </span>
+      </template>
     </el-dialog>
-    <el-dialog :visible.sync="modal" width="540px" title="预览">
+    <el-dialog v-model="modal" width="540px" title="预览">
       <div>
         <div v-viewer class="acea-row row-around code">
           <div class="acea-row row-column-around row-between-wrapper">
@@ -174,327 +176,324 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, watch, nextTick, onMounted, getCurrentInstance } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ElMessage, ElMessageBox } from '@/utils/elementPlusFeedback';
 import Setting from '@/utils/settingMer';
-import { diyProList, diyDel, setStatus, recovery, getRoutineCode, setDefault, exportDiyDataApi } from '@/api/theme';
-import { mapState, mapActions } from 'vuex';
+import { diyProList as diyProListApi, diyDel, setStatus as setStatusApi, recovery, getRoutineCode, setDefault, exportDiyDataApi } from '@/api/theme';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
 import QRCode from 'qrcodejs2';
 import goodClass from './goodClass';
 import users from './users';
-import { Upload } from 'element-ui';
-import { getCookies } from '@/libs/util';
+import { getCookies, setCookies } from '@/libs/util';
 
-export default {
-  name: 'devise_list',
-  computed: {
-    ...mapState('admin/layout', ['menuCollapse']),
+defineOptions({ name: 'devise_list' });
+
+const route = useRoute();
+const router = useRouter();
+const { proxy } = getCurrentInstance();
+const mobildConfigStore = useMobildConfigStore();
+
+const routeProStr = proxy.$routeProStr || '';
+
+const loading = ref(false);
+const theme3 = ref('light');
+const menuList = ref([
+  {
+    name: '商城首页',
+    id: 1,
   },
-  components: {
-    goodClass,
-    users,
+  {
+    name: '商品分类',
+    id: 2,
   },
-  data() {
-    return {
-      loading: false,
-      theme3: 'light',
-      menuList: [
-        {
-          name: '商城首页',
-          id: 1,
-        },
-        {
-          name: '商品分类',
-          id: 2,
-        },
-        {
-          name: '个人中心',
-          id: 3,
-        },
-      ],
-      list: [],
-      iframeUrl: '',
-      modal: false,
-      UploadPath: Setting.apiBaseURL + '/diy_pro/import/data',
-      BaseURL: Setting.httpUrl + '/',
-      cardShow: 0,
-      loadingExist: false,
-      isDiy: 1,
-      qrcodeImg: '',
-      diyFrom: {
-        type: '',
-        page: 1,
-        limit: 15,
-      },
-      total: 0,
-      formItem: {
-        id: 0,
-        link: '',
-      },
-      isTemplate: false,
-      ruleValidate: {
-        link: [{ required: true, message: '请输入移动端链接', trigger: 'blur' }],
-      },
-      url: window.location.origin,
-      header: {},
-    };
+  {
+    name: '个人中心',
+    id: 3,
   },
-  watch: {
-    $route() {
-      this.cardShow = this.$route.params.type;
+]);
+const list = ref([]);
+const iframeUrl = ref('');
+const modal = ref(false);
+const UploadPath = Setting.apiBaseURL + '/diy_pro/import/data';
+const BaseURL = Setting.httpUrl + '/';
+const cardShow = ref(0);
+const loadingExist = ref(false);
+const isDiy = ref(1);
+const qrcodeImg = ref('');
+const diyFrom = reactive({
+  type: '',
+  page: 1,
+  limit: 15,
+});
+const total = ref(0);
+const formItem = reactive({
+  id: 0,
+  link: '',
+});
+const isTemplate = ref(false);
+const ruleValidate = reactive({
+  link: [{ required: true, message: '请输入移动端链接', trigger: 'blur' }],
+});
+const url = ref(window.location.origin);
+const header = ref({});
+const iframe = ref(null);
+const table = ref(null);
+const target = ref(null);
+const category = ref(null);
+const usersRef = ref(null);
+const qrCodeUrl = ref(null);
+const formItemRef = ref(null);
+
+watch(route, () => {
+  cardShow.value = route.params.type;
+});
+
+cardShow.value = route.params.type;
+diyProList();
+iframeUrl.value = `${location.origin}/pages/index/index?mdType=iframeWindow`;
+getToken();
+
+onMounted(() => {
+  mobildConfigStore.SETEMPTY();
+});
+
+function getToken() {
+  header.value.Authorization = 'Bearer ' + getCookies('token');
+}
+function beforeUpload(file) {
+  const isTXT = file.type === 'text/plain';
+  if (!isTXT) {
+    ElMessage.error('只能上传TXT文件');
+  }
+  return isTXT;
+}
+function handleSuccess(response, file) {
+  if (response.status == 200) {
+    ElMessage.success(response.msg);
+    diyProList();
+  } else {
+    ElMessage.error(response.msg);
+  }
+}
+function handleError(err, file) {
+  ElMessage.error('文件上传失败');
+}
+function exportView(id) {
+  exportDiyDataApi(id)
+    .then((res) => {
+      const textToSave = res.data.value;
+      const blob = new Blob([textToSave], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = res.data.filename; // 设置下载文件的名称
+      document.body.appendChild(a);
+      a.click(); // 模拟点击触发下载
+      document.body.removeChild(a); // 清理DOM
+      ElMessage.success(res.msg);
+    })
+    .catch((err) => {
+      ElMessage.error(err.msg);
+    });
+}
+function createdPage() {
+  router.push({
+    path: '/design/edit_theme',
+    query: { id: 0, name: '首页', type: 1 },
+  });
+  // nextTick(() => {
+  //   window.open(`${url.value}${routeProStr}/setting/pages/diy_index?id=0&name=首页&type=0`);
+  // });
+}
+function cancel() {
+  formItemRef.value.resetFields();
+}
+function refreshFrame() {
+  iframeUrl.value = '';
+  setTimeout((e) => {
+    iframeUrl.value = `${location.origin}/pages/index/index?mdType=iframeWindow`;
+  }, 200);
+}
+function getChildData(e) {
+  loadingExist.value = e;
+}
+function submit() {
+  if (cardShow.value == 1) {
+    category.value.onSubmit();
+  } else {
+    usersRef.value.onSubmit();
+  }
+}
+function reast() {
+  if (cardShow.value == 1) {
+    category.value.onSubmit(1);
+  } else {
+    usersRef.value.getInfo();
+  }
+}
+function bindMenuItem(index) {
+  cardShow.value = index;
+}
+function onCopy() {
+  ElMessage.success('复制预览链接成功');
+}
+function onError() {
+  ElMessage.error('复制预览链接失败');
+}
+//生成二维码
+function creatQrCode(id) {
+  qrCodeUrl.value.innerHTML = '';
+  let url = `${BaseURL}pages/annex/special/index?id=${id}`;
+  var qrcode = new QRCode(qrCodeUrl.value, {
+    text: url, // 需要转换为二维码的内容
+    width: 160,
+    height: 160,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H,
+  });
+}
+//小程序二维码
+function routineCode(id) {
+  getRoutineCode(id)
+    .then((res) => {
+      qrcodeImg.value = res.data.image;
+    })
+    .catch((err) => {
+      ElMessage.error(err);
+    });
+}
+function preview(row) {
+  modal.value = true;
+  nextTick((e) => {
+    creatQrCode(row.id);
+    routineCode(row.id);
+  });
+}
+function handleSubmit(name) {
+  formItemRef.value.validate((valid) => {
+    if (valid) {
+      setCookies('moveLink', formItem.link);
+      router.push({
+        path: '/design/edit_theme',
+        query: { id: formItem.id, type: 1 },
+      });
+    } else {
+      return false;
+    }
+  });
+}
+function changeMenu(row, index, name) {
+  switch (name) {
+    case '1':
+      setDefaultFn(row);
+      break;
+    case '2':
+      recoveryFn(row);
+      break;
+    case '3':
+      del(row, '删除此模板', index);
+      break;
+    default:
+  }
+}
+//设置默认数据
+function setDefaultFn(row) {
+  setDefault(row.id)
+    .then((res) => {
+      ElMessage.success(res.msg);
+      diyProList();
+    })
+    .catch((err) => {
+      ElMessage.error(err.msg);
+    });
+}
+// 获取列表
+function diyProList() {
+  // let storage = window.localStorage;
+  // iframeUrl.value = storage.getItem("iframeUrl");
+  loading.value = true;
+  diyProListApi(diyFrom).then((res) => {
+    loading.value = false;
+    let data = res.data;
+    list.value = data.list;
+    total.value = data.count;
+  });
+}
+// 编辑
+function edit(row) {
+  formItem.id = row.id;
+  if (!row.is_diy) {
+    if (!row.status) {
+      ElMessage.error('请先设为首页在进行编辑');
+    } else {
+      router.push({
+        path: '/design/edit_theme',
+        query: { id: row.id, type: 0 },
+      });
+    }
+  }
+}
+// 添加
+function add() {
+  // router.push({
+  //   path: '/design/edit_theme',
+  //   query: { id: 0, name: '首页', type: 1 },
+  // });
+}
+// 删除
+function del(row) {
+  let delfromData = {
+    title: '删除',
+    num: 2000,
+    url: 'diy/del/' + row.id,
+    method: 'DELETE',
+    data: {
+      type: 1,
     },
-  },
-  created() {
-    this.cardShow = this.$route.params.type;
-    this.diyProList();
-    this.iframeUrl = `${location.origin}/pages/index/index?mdType=iframeWindow`;
-    this.getToken();
-  },
-  mounted() {
-    this.$store.commit('mobildConfig/SETEMPTY');
-  },
-  methods: {
-    getToken() {
-      this.header['Authori-zation'] = 'Bearer ' + getCookies('token');
-    },
-    beforeUpload(file) {
-      const isTXT = file.type === 'text/plain';
-      if (!isTXT) {
-        this.$message.error('只能上传TXT文件');
-      }
-      return isTXT;
-    },
-    handleSuccess(response, file) {
-      if (response.status == 200) {
-        this.$message.success(response.msg);
-        this.diyProList();
-      } else {
-        this.$message.error(response.msg);
-      }
-    },
-    handleError(err, file) {
-      this.$message.error('文件上传失败');
-    },
-    exportView(id) {
-      exportDiyDataApi(id)
+  };
+  proxy.$modalSure(delfromData)
+    .then((res) => {
+      diyProList();
+    })
+    .catch((res) => {
+      ElMessage.error(res.msg);
+    });
+}
+// 使用模板
+async function setStatus(row) {
+  ElMessageBox({
+    title: '提示',
+    message: '是否把该模板设为首页',
+    showCancelButton: true,
+    cancelButtonText: '取消',
+    confirmButtonText: '确定',
+    iconClass: 'el-icon-warning',
+    confirmButtonClass: 'btn-custom-cancel',
+  })
+    .then(() => {
+      setStatusApi(row.id, {
+        type: 1,
+      })
         .then((res) => {
-          const textToSave = res.data.value;
-          const blob = new Blob([textToSave], { type: 'text/plain;charset=utf-8' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = res.data.filename; // 设置下载文件的名称
-          document.body.appendChild(a);
-          a.click(); // 模拟点击触发下载
-          document.body.removeChild(a); // 清理DOM
-          this.$message.success(res.msg);
-        })
-        .catch((err) => {
-          this.$message.error(err.msg);
-        });
-    },
-    createdPage() {
-      this.$router.push({
-        path: this.'/design/edit_theme',
-        query: { id: 0, name: '首页', type: 1 },
-      });
-      // this.$nextTick(() => {
-      //   window.open(`${this.url}${this.$routeProStr}/setting/pages/diy_index?id=0&name=首页&type=0`);
-      // });
-    },
-    cancel() {
-      this.$refs['formItem'].resetFields();
-    },
-    refreshFrame() {
-      this.iframeUrl = '';
-      setTimeout((e) => {
-        this.iframeUrl = `${location.origin}/pages/index/index?mdType=iframeWindow`;
-      }, 200);
-    },
-    getChildData(e) {
-      this.loadingExist = e;
-    },
-    submit() {
-      if (this.cardShow == 1) {
-        this.$refs.category.onSubmit();
-      } else {
-        this.$refs.users.onSubmit();
-      }
-    },
-    reast() {
-      if (this.cardShow == 1) {
-        this.$refs.category.onSubmit(1);
-      } else {
-        this.$refs.users.getInfo();
-      }
-    },
-    bindMenuItem(index) {
-      this.cardShow = index;
-    },
-    onCopy() {
-      this.$message.success('复制预览链接成功');
-    },
-    onError() {
-      this.$message.error('复制预览链接失败');
-    },
-    //生成二维码
-    creatQrCode(id) {
-      this.$refs.qrCodeUrl.innerHTML = '';
-      let url = `${this.BaseURL}pages/annex/special/index?id=${id}`;
-      var qrcode = new QRCode(this.$refs.qrCodeUrl, {
-        text: url, // 需要转换为二维码的内容
-        width: 160,
-        height: 160,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H,
-      });
-    },
-    //小程序二维码
-    routineCode(id) {
-      getRoutineCode(id)
-        .then((res) => {
-          this.qrcodeImg = res.data.image;
-        })
-        .catch((err) => {
-          this.$message.error(err);
-        });
-    },
-    preview(row) {
-      this.modal = true;
-      this.$nextTick((e) => {
-        this.creatQrCode(row.id);
-        this.routineCode(row.id);
-      });
-    },
-    handleSubmit(name) {
-      this.$refs[name].validate((valid) => {
-        if (valid) {
-          setCookies('moveLink', this.formItem.link);
-          this.$router.push({
-            path: this.'/design/edit_theme',
-            query: { id: this.formItem.id, type: 1 },
-          });
-        } else {
-          return false;
-        }
-      });
-    },
-    changeMenu(row, index, name) {
-      switch (name) {
-        case '1':
-          this.setDefault(row);
-          break;
-        case '2':
-          this.recovery(row);
-          break;
-        case '3':
-          this.del(row, '删除此模板', index);
-          break;
-        default:
-      }
-    },
-    //设置默认数据
-    setDefault(row) {
-      setDefault(row.id)
-        .then((res) => {
-          this.$message.success(res.msg);
-          this.diyProList();
-        })
-        .catch((err) => {
-          this.$message.error(err.msg);
-        });
-    },
-    // 获取列表
-    diyProList() {
-      // let storage = window.localStorage;
-      // this.iframeUrl = storage.getItem("iframeUrl");
-      let that = this;
-      this.loading = true;
-      diyProList(this.diyFrom).then((res) => {
-        this.loading = false;
-        let data = res.data;
-        this.list = data.list;
-        this.total = data.count;
-      });
-    },
-    // 编辑
-    edit(row) {
-      this.formItem.id = row.id;
-      if (!row.is_diy) {
-        if (!row.status) {
-          this.$message.error('请先设为首页在进行编辑');
-        } else {
-          this.$router.push({
-            path: this.'/design/edit_theme',
-            query: { id: row.id, type: 0 },
-          });
-        }
-      }
-    },
-    // 添加
-    // add() {
-    //   this.$modalForm(getDiyCreate()).then(() => this.diyProList());
-    // },
-    // 添加
-    add() {
-      // this.$router.push({
-      //   path: this.'/design/edit_theme',
-      //   query: { id: 0, name: '首页', type: 1 },
-      // });
-    },
-    // 删除
-    del(row) {
-      let delfromData = {
-        title: '删除',
-        num: 2000,
-        url: 'diy/del/' + row.id,
-        method: 'DELETE',
-        data: {
-          type: 1,
-        },
-      };
-      this.$modalSure(delfromData)
-        .then((res) => {
-          this.diyProList();
+          refreshFrame();
+          ElMessage.success(res.msg);
+          diyProList();
         })
         .catch((res) => {
-          this.$message.error(res.msg);
+          ElMessage.error(res.msg);
         });
-    },
-    // 使用模板
-    async setStatus(row) {
-      this.$msgbox({
-        title: '提示',
-        message: '是否把该模板设为首页',
-        showCancelButton: true,
-        cancelButtonText: '取消',
-        confirmButtonText: '确定',
-        iconClass: 'el-icon-warning',
-        confirmButtonClass: 'btn-custom-cancel',
-      })
-        .then(() => {
-          setStatus(row.id, {
-            type: 1,
-          })
-            .then((res) => {
-              this.refreshFrame();
-              this.$message.success(res.msg);
-              this.diyProList();
-            })
-            .catch((res) => {
-              this.$message.error(res.msg);
-            });
-        })
-        .catch(() => {});
-    },
-    recovery(row) {
-      recovery(row.id).then((res) => {
-        this.$message.success(res.msg);
-        this.diyProList();
-      });
-    },
-  },
-};
+    })
+    .catch(() => {});
+}
+function recoveryFn(row) {
+  recovery(row.id).then((res) => {
+    ElMessage.success(res.msg);
+    diyProList();
+  });
+}
 </script>
 
 <style lang="scss" scoped>
@@ -505,7 +504,7 @@ export default {
 .no-warp {
   flex-wrap: nowrap !important;
 }
-::v-deep .el-card__body {
+:deep(.el-card__body) {
   padding: 40px;
 }
 .bnt {
@@ -536,31 +535,31 @@ export default {
   height: 100%;
   background-color: rgba(0, 0, 0, 0);
 }
-::v-deep .ivu-menu-vertical .ivu-menu-item,
+:deep(.ivu-menu-vertical .ivu-menu-item),
 .ivu-menu-vertical .ivu-menu-submenu-title {
   text-align: center;
 }
-::v-deep .i-layout-page-header {
+:deep(.i-layout-page-header) {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-::v-deep .ivu-page-header {
+:deep(.ivu-page-header) {
   border-bottom: unset;
   position: fixed;
   z-index: 9;
   width: 100%;
 }
-::v-deep .ivu-menu-vertical .ivu-menu-item-group-title {
+:deep(.ivu-menu-vertical .ivu-menu-item-group-title) {
   display: none;
 }
-::v-deep .ivu-menu-vertical.ivu-menu-light:after {
+:deep(.ivu-menu-vertical.ivu-menu-light:after) {
   display: none;
 }
-::v-deep .ivu-menu {
+:deep(.ivu-menu) {
   z-index: 0 !important;
 }
-::v-deep .ivu-row {
+:deep(.ivu-row) {
   display: flex;
 }
 .table-box {

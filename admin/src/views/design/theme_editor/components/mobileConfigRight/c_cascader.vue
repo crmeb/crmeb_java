@@ -18,53 +18,57 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_cascader',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
-    number: {
-      type: null,
-    },
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+
+defineOptions({ name: 'c_cascader' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-      timeStamp: '',
-    };
+  configNme: {
+    type: String,
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      this.configData = this.configObj[this.configNme];
-    });
+  number: {
+    type: null,
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-    },
-    number(nVal) {
-      this.timeStamp = nVal;
-    },
+});
+
+const emit = defineEmits(['getConfig']);
+
+const defaults = ref({});
+const configData = ref({});
+const timeStamp = ref('');
+
+onMounted(() => {
+  nextTick(() => {
+    defaults.value = props.configObj;
+    configData.value = props.configObj[props.configNme] || {};
+  });
+});
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
   },
-  methods: {
-    sliderChange(e) {
-      let storage = window.localStorage;
-      this.configData.activeValue = e ? e : storage.getItem(this.timeStamp);
-      this.$emit('getConfig', { name: 'cascader', values: e });
-    },
+  { deep: true },
+);
+
+watch(
+  () => props.number,
+  (nVal) => {
+    timeStamp.value = nVal;
   },
-};
+);
+
+function sliderChange(e) {
+  let storage = window.localStorage;
+  configData.value.activeValue = e ? e : storage.getItem(timeStamp.value);
+  emit('getConfig', { name: 'cascader', values: e });
+}
 </script>
 
 <style scoped lang="scss"></style>

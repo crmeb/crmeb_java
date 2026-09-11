@@ -3,74 +3,92 @@
     <div class="title" v-if="configData.title">{{ configData.title }}</div>
     <div class="tips" v-if="configData.tips">{{ configData.tips }}</div>
     <div class="list-box">
-      <draggable class="dragArea list-group" :list="configData.list" group="productInfoSections" handle=".move-icon">
-        <div class="item" v-for="(item, index) in configData.list" :key="index">
-          <div class="move-icon">
-            <span class="iconfont iconxingzhuangjiehe"></span>
-          </div>
-          <div class="content">
-            <div class="info">
-              <div class="info-item">
-                <span class="span">{{ item.cname }}</span>
-                <div class="input-box" v-if="item.type === 'radio'">
-                  <el-switch v-model="item.show" active-text="" inactive-text=""></el-switch>
+      <draggable
+        class="dragArea list-group"
+        :list="configData.list"
+        :item-key="getDraggableItemKey"
+        group="productInfoSections"
+        handle=".move-icon"
+      >
+        <template #item="{ element: item }">
+          <div class="item" v-if="item.name !== 'tags'">
+            <div class="move-icon">
+              <span class="iconfont iconxingzhuangjiehe"></span>
+            </div>
+            <div class="content">
+              <div class="info">
+                <div class="info-item">
+                  <span class="span">{{ item.cname }}</span>
+                  <div class="input-box" v-if="item.type === 'radio'">
+                    <el-switch v-model="item.show" active-text="" inactive-text=""></el-switch>
+                  </div>
                 </div>
-              </div>
-              <div class="info-item" v-if="item.show && item.checkBoxList">
-                <div class="">
-                  <el-checkbox-group v-model="item.checkList">
-                    <el-checkbox v-for="(check, cIndex) in item.checkBoxList" :key="cIndex" :label="check.value">
-                      {{ check.name }}
-                    </el-checkbox>
-                  </el-checkbox-group>
+                <div class="info-item" v-if="item.show && item.checkBoxList">
+                  <div class="">
+                    <el-checkbox-group v-model="item.checkList">
+                      <template v-for="(check, cIndex) in item.checkBoxList" :key="cIndex">
+                        <el-checkbox
+                          v-if="
+                            !(
+                              (item.name === 'price' && check.value == 2) ||
+                              (item.name === 'data' && check.value == 0)
+                            )
+                          "
+                          :label="check.value"
+                          :value="check.value"
+                        >
+                          {{ check.name }}
+                        </el-checkbox>
+                      </template>
+                    </el-checkbox-group>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </template>
       </draggable>
     </div>
   </div>
 </template>
 
-<script>
-import vuedraggable from 'vuedraggable';
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import draggable from 'vuedraggable';
+import { getDraggableItemKey } from '@/utils/draggableKey';
 
-export default {
-  name: 'c_product_info_list',
-  components: {
-    draggable: vuedraggable,
+defineOptions({ name: 'c_product_info_list' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+  configNme: {
+    type: String,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-    };
+});
+
+const defaults = ref({});
+const configData = ref({});
+
+onMounted(() => {
+  nextTick(() => {
+    syncConfigData(props.configObj);
+  });
+});
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    syncConfigData(nVal);
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      this.configData = this.configObj[this.configNme];
-    });
-  },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-    },
-  },
-};
+  { deep: true },
+);
+
+function syncConfigData(data) {
+  defaults.value = data || {};
+  configData.value = defaults.value[props.configNme] || {};
+}
 </script>
 
 <style scoped lang="scss">
@@ -122,7 +140,7 @@ export default {
             display: flex;
             align-items: center;
             margin-bottom: 10px;
-            ::v-deep .el-checkbox {
+            :deep(.el-checkbox) {
               margin-bottom: 0;
             }
             &:nth-last-child(1) {
@@ -141,12 +159,12 @@ export default {
               justify-content: flex-end; // 开关和复选框靠右
 
               // 针对复选框组的特殊处理
-              ::v-deep .el-checkbox-group {
+              :deep(.el-checkbox-group) {
                 display: flex;
                 flex-wrap: wrap;
                 justify-content: flex-end;
               }
-              ::v-deep .el-checkbox {
+              :deep(.el-checkbox) {
                 margin-right: 10px;
                 &:last-child {
                   margin-right: 0;

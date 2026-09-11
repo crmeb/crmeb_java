@@ -19,10 +19,10 @@
       </el-col>
     </div>
     <!-- 商品标签 -->
-    <el-dialog :visible.sync="storeLabelShow" title="选择商品标签" width="540">
+    <el-dialog v-model="storeLabelShow" title="选择商品标签" width="540">
       <storeLabelList
         v-if="storeLabelShow"
-        ref="storeLabel"
+        ref="storeLabelRef"
         @activeData="activeStoreData"
         @close="storeLabelClose"
       ></storeLabelList>
@@ -30,86 +30,88 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
 import storeLabelList from '@/components/storeLabelList';
-export default {
-  name: 'c_goods_label',
-  components: {
-    storeLabelList,
+
+defineOptions({ name: 'c_goods_label' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
-    number: {
-      type: null,
-    },
+  configNme: {
+    type: String,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-      timeStamp: '',
-      storeLabelShow: false,
-    };
+  number: {
+    type: null,
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      this.configData = this.configObj[this.configNme];
-    });
+});
+
+const emit = defineEmits(['getConfig']);
+
+const defaults = ref({});
+const configData = ref({});
+const timeStamp = ref('');
+const storeLabelShow = ref(false);
+const storeLabelRef = ref(null);
+
+onMounted(() => {
+  nextTick(() => {
+    defaults.value = props.configObj;
+    configData.value = props.configObj[props.configNme] || {};
+  });
+});
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-    },
-    number(nVal) {
-      this.timeStamp = nVal;
-    },
+  { deep: true },
+);
+
+watch(
+  () => props.number,
+  (nVal) => {
+    timeStamp.value = nVal;
   },
-  methods: {
-    openStoreLabel(row) {
-      this.storeLabelShow = true;
-      this.$nextTick(() => {
-        // 深拷贝配置数据列表，避免直接修改原数据
-        const listData = (this.configData.list && this.configData.list.length) ? JSON.parse(JSON.stringify(this.configData.list)) : undefined;
-        // 调用storeLabel方法，传入处理后的数据
-        this.$refs.storeLabel.storeLabel(listData);
-      });
-    },
-    closeStoreLabel(label) {
-      if (this.configData.list.length) {
-        let index = this.configData.list.indexOf(this.configData.list.filter((d) => d.id == label.id)[0]);
-        this.configData.list.splice(index, 1);
-        this.getLabelId(this.configData.list);
-      }
-    },
-    activeStoreData(storeDataLabel) {
-      this.storeLabelShow = false;
-      this.configData.list = storeDataLabel;
-      this.getLabelId(storeDataLabel);
-    },
-    getLabelId(storeDataLabel) {
-      let storeActiveIds = [];
-      storeDataLabel.forEach((item) => {
-        storeActiveIds.push(item.id);
-      });
-      this.configData.activeValue = storeActiveIds;
-      this.$emit('getConfig', { name: 'goodsLabel' });
-    },
-    // 标签弹窗关闭
-    storeLabelClose() {
-      this.storeLabelShow = false;
-    },
-  },
-};
+);
+
+function openStoreLabel(row) {
+  storeLabelShow.value = true;
+  nextTick(() => {
+    // 深拷贝配置数据列表，避免直接修改原数据
+    const listData = configData.value.list && configData.value.list.length ? JSON.parse(JSON.stringify(configData.value.list)) : undefined;
+    // 调用storeLabel方法，传入处理后的数据
+    storeLabelRef.value.storeLabel(listData);
+  });
+}
+function closeStoreLabel(label) {
+  if (configData.value.list.length) {
+    let index = configData.value.list.indexOf(configData.value.list.filter((d) => d.id == label.id)[0]);
+    configData.value.list.splice(index, 1);
+    getLabelId(configData.value.list);
+  }
+}
+function activeStoreData(storeDataLabel) {
+  storeLabelShow.value = false;
+  configData.value.list = storeDataLabel;
+  getLabelId(storeDataLabel);
+}
+function getLabelId(storeDataLabel) {
+  let storeActiveIds = [];
+  storeDataLabel.forEach((item) => {
+    storeActiveIds.push(item.id);
+  });
+  configData.value.activeValue = storeActiveIds;
+  emit('getConfig', { name: 'goodsLabel' });
+}
+// 标签弹窗关闭
+function storeLabelClose() {
+  storeLabelShow.value = false;
+}
 </script>
 
 <style scoped lang="scss">

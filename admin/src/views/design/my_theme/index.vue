@@ -46,8 +46,8 @@
 
               <!-- 底部按钮 -->
               <div class="bottom-buttons">
-                <el-button size="small" @click="handleEdit(item)">编辑主题</el-button>
-                <el-button type="primary" size="small" @click="handleUse(item)">使用主题</el-button>
+                <el-button @click="handleEdit(item)">编辑主题</el-button>
+                <el-button type="primary" @click="handleUse(item)">使用主题</el-button>
               </div>
             </div>
           </div>
@@ -59,7 +59,7 @@
             <div class="phone-preview">
               <img v-if="item.home_image" :src="item.home_image" alt="cover" />
               <div class="no-poster" v-else>
-                <img :src="require('@/assets/images/no-theme-poster.png')" class="preview-image" alt="no poster" />
+                <img :src="noThemePoster" class="preview-image" alt="no poster" />
                 <div>暂无封面</div>
               </div>
             </div>
@@ -81,8 +81,8 @@
         <pagination
           v-if="total"
           :total="total"
-          :page.sync="page"
-          :limit.sync="limit"
+          v-model:page="page"
+          v-model:limit="limit"
           layout="total, prev, pager, next, jumper"
           @pagination="handlePageChange"
         />
@@ -92,7 +92,7 @@
     <!-- 导入主题弹窗 -->
     <el-dialog
       title="导入主题"
-      :visible.sync="importVisible"
+      v-model="importVisible"
       width="1188px"
       top="10vh"
       destroy-on-close
@@ -102,199 +102,196 @@
     </el-dialog>
 
     <!-- 选择主题弹窗 -->
-    <theme-select-dialog :visible.sync="selectVisible" type="my" @select="handleThemeSelect"></theme-select-dialog>
+    <theme-select-dialog v-model:visible="selectVisible" type="my" @select="handleThemeSelect"></theme-select-dialog>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ElMessage, ElMessageBox } from '@/utils/elementPlusFeedback';
+import { useRouter } from 'vue-router';
 import ThemeImport from './components/themeImport.vue';
 import ThemeSelectDialog from '../components/themeSelect/index.vue';
 import { getThemeList, exportTheme, getExportRecord, useTheme, deleteTheme } from '@/api/theme';
 import QRCode from 'qrcodejs2';
 import SettingMer from '@/utils/settingMer';
+import noThemePoster from '@/assets/images/no-theme-poster.png';
 
-export default {
-  name: 'MyTheme',
-  components: {
-    ThemeImport,
-    ThemeSelectDialog,
-  },
-  data() {
-    return {
-      BaseURL: SettingMer.httpUrl + '/',
-      searchKeyword: '',
-      importVisible: false,
-      selectVisible: false,
-      themeList: [],
-      page: 1,
-      limit: 10,
-      total: 0,
-    };
-  },
-  mounted() {
-    this.calcLimit();
-    window.addEventListener('resize', this.calcLimit);
-  },
-  beforeDestroy() {
-    window.removeEventListener('resize', this.calcLimit);
-  },
-  methods: {
-    calcLimit() {
-      if (!this.$refs.gridContainer) return;
-      const width = this.$refs.gridContainer.clientWidth;
-      const cardWidth = 206;
-      const gap = 20;
-      const n = Math.floor((width + gap) / (cardWidth + gap));
-      const newLimit = n * 2 > 0 ? n * 2 : 2;
-      if (this.limit !== newLimit) {
-        this.limit = newLimit;
-        this.page = 1;
-        this.getList();
-      } else if (this.themeList.length === 0) {
-        this.getList();
-      }
-    },
-    handlePageChange(val) {
-      this.page = val;
-      this.getList();
-    },
-    getList() {
-      getThemeList({ page: this.page, limit: this.limit, title: this.searchKeyword, pageType: 'theme' }).then((res) => {
-        this.themeList = res.list;
-        this.total = res.count;
-        this.$nextTick(() => {
-          this.themeList.forEach((item) => {
-            if (document.getElementById('qrcode' + item.id)) {
-              document.getElementById('qrcode' + item.id).innerHTML = '';
+defineOptions({ name: 'MyTheme' });
+
+const router = useRouter();
+
+const BaseURL = SettingMer.httpUrl + '/';
+const searchKeyword = ref('');
+const importVisible = ref(false);
+const selectVisible = ref(false);
+const themeList = ref([]);
+const page = ref(1);
+const limit = ref(10);
+const total = ref(0);
+const gridContainer = ref(null);
+
+function calcLimit() {
+  if (!gridContainer.value) return;
+  const width = gridContainer.value.clientWidth;
+  const cardWidth = 206;
+  const gap = 20;
+  const n = Math.floor((width + gap) / (cardWidth + gap));
+  const newLimit = n * 2 > 0 ? n * 2 : 2;
+  if (limit.value !== newLimit) {
+    limit.value = newLimit;
+    page.value = 1;
+    getList();
+  } else if (themeList.value.length === 0) {
+    getList();
+  }
+}
+function handlePageChange(val) {
+  page.value = val;
+  getList();
+}
+function getList() {
+  getThemeList({ page: page.value, limit: limit.value, title: searchKeyword.value, pageType: 'theme' }).then((res) => {
+    themeList.value = res.list;
+    total.value = res.count;
+    nextTick(() => {
+      themeList.value.forEach((item) => {
+        if (document.getElementById('qrcode' + item.id)) {
+          document.getElementById('qrcode' + item.id).innerHTML = '';
+        }
+        creatQrCode(item.id, item.showUrl);
+      });
+    });
+  });
+}
+//生成二维码
+function creatQrCode(id, url) {
+  var qrcode = new QRCode(document.getElementById('qrcode' + id), {
+    text: url, // 需要转换为二维码的内容
+    width: 100,
+    height: 100,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H,
+  });
+}
+function handleExport(item) {
+  exportTheme(item.id)
+    .then((res) => {
+      const recordId = res.record_id;
+      // duration: 0 表示不自动关闭，轮询完成后手动关闭
+      const loadingMsg = ElMessage({
+        type: 'success',
+        message: res.message || '导出中，请稍候',
+        duration: 0,
+      });
+      // 开始轮询，最多查 60 次（每 3s 一次，共 3 分钟）
+      let attempts = 0;
+      const maxAttempts = 60;
+      const timer = setInterval(() => {
+        attempts++;
+        console.log(recordId);
+        getExportRecord(recordId)
+          .then((r) => {
+            const url = r.downloadUrl || r.download_url;
+            if (url) {
+              clearInterval(timer);
+              loadingMsg.close();
+              ElMessage.success('导出成功，正在下载…');
+              window.location.href = url;
+            } else if (attempts >= maxAttempts) {
+              clearInterval(timer);
+              loadingMsg.close();
+              ElMessage.warning('打包超时，请稍后到下载记录中查看');
             }
-            this.creatQrCode(item.id);
+          })
+          .catch(() => {
+            clearInterval(timer);
+            loadingMsg.close();
           });
-        });
-      });
-    },
-    //生成二维码
-    creatQrCode(id) {
-      let url = `${this.BaseURL}pages/index/index?theme_id=${id}`;
-      var qrcode = new QRCode(document.getElementById('qrcode' + id), {
-        text: url, // 需要转换为二维码的内容
-        width: 100,
-        height: 100,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.H,
-      });
-    },
-    handleExport(item) {
-      exportTheme(item.id)
+      }, 3000);
+    })
+    .catch((err) => {
+      ElMessage.error((err && (err.message || err.msg)) || '导出失败');
+    });
+}
+function handleDelete(item) {
+  ElMessageBox.confirm('确认删除该主题吗？', '提示', {
+    type: 'warning',
+  })
+    .then(() => {
+      deleteTheme(item.id)
         .then((res) => {
-          const recordId = res.record_id;
-          // duration: 0 表示不自动关闭，轮询完成后手动关闭
-          const loadingMsg = this.$message({
-            type: 'success',
-            message: res.message || '导出中，请稍候',
-            duration: 0,
-          });
-          // 开始轮询，最多查 60 次（每 3s 一次，共 3 分钟）
-          let attempts = 0;
-          const maxAttempts = 60;
-          const timer = setInterval(() => {
-            attempts++;
-            console.log(recordId)
-            getExportRecord(recordId)
-              .then((r) => {
-                const url = r.downloadUrl || r.download_url;
-                if (url) {
-                  clearInterval(timer);
-                  loadingMsg.close();
-                  this.$message.success('导出成功，正在下载…');
-                  window.location.href = url;
-                } else if (attempts >= maxAttempts) {
-                  clearInterval(timer);
-                  loadingMsg.close();
-                  this.$message.warning('打包超时，请稍后到下载记录中查看');
-                }
-              })
-              .catch(() => {
-                clearInterval(timer);
-                loadingMsg.close();
-              });
-          }, 3000);
+          ElMessage.success('删除成功');
+          let index = themeList.value.findIndex((e) => e.id === item.id);
+          if (index !== -1) {
+            themeList.value.splice(index, 1);
+          }
+          total.value = total.value - 1;
+          if (themeList.value.length === 0 && page.value > 1) {
+            page.value = page.value - 1;
+          }
+          getList();
         })
         .catch((err) => {
-          this.$message.error((err && (err.message || err.msg)) || '导出失败');
+          ElMessage.error((err && (err.message || err.msg)) || '删除失败');
         });
-    },
-    handleDelete(item) {
-      this.$confirm('确认删除该主题吗？', '提示', {
-        type: 'warning',
+    })
+    .catch(() => {});
+}
+function handleEdit(item) {
+  // 跳转编辑页
+  router.push({
+    path: '/design/edit_theme',
+    query: { id: item.id, type: 'home' },
+  });
+}
+function handleUse(item) {
+  ElMessageBox.confirm('确认使用该主题吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => {
+    useTheme(item.id)
+      .then((res) => {
+        ElMessage.success('已切换主题');
+        getList();
       })
-        .then(() => {
-          deleteTheme(item.id)
-            .then((res) => {
-              this.$message.success('删除成功');
-              let index = this.themeList.findIndex((e) => e.id === item.id);
-              if (index !== -1) {
-                this.themeList.splice(index, 1);
-              }
-              this.total = this.total - 1;
-              if (this.themeList.length === 0 && this.page > 1) {
-                this.page = this.page - 1;
-              }
-              this.getList();
-            })
-            .catch((err) => {
-              this.$message.error((err && (err.message || err.msg)) || '删除失败');
-            });
-        })
-        .catch(() => {});
-    },
-    handleEdit(item) {
-      // 跳转编辑页
-      this.$router.push({
-        path: '/design/edit_theme',
-        query: { id: item.id, type: 'home' },
+      .catch((err) => {
+        ElMessage.error((err && (err.message || err.msg)) || '切换失败');
       });
-    },
-    handleUse(item) {
-      this.$confirm('确认使用该主题吗？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }).then(() => {
-        useTheme(item.id)
-          .then((res) => {
-            this.$message.success('已切换主题');
-            this.getList();
-          })
-          .catch((err) => {
-            this.$message.error((err && (err.message || err.msg)) || '切换失败');
-          });
-      });
-    },
-    handleAdd() {
-      this.selectVisible = true;
-    },
-    toTheme() {
-      window.open('https://www.crmeb.com/theme?from=crmebkytheme', '_blank');
-    },
-    handleThemeSelect(theme) {
-      // 跳转新建页，使用选中主题作为模板
-      this.$router.push({
-        path: '/design/edit_theme',
-        query: { type: 'home', id: 0, tid: theme.id },
-      });
-    },
-    handleImport() {
-      this.importVisible = true;
-    },
-    closeImport() {
-      this.importVisible = false;
-    },
-    handleImportSuccess() {
-      this.getList();
-    },
-  },
-};
+  });
+}
+function handleAdd() {
+  selectVisible.value = true;
+}
+function toTheme() {
+  window.open('https://www.crmeb.com/theme?from=javakytheme', '_blank');
+}
+function handleThemeSelect(theme) {
+  // 跳转新建页，使用选中主题作为模板
+  router.push({
+    path: '/design/edit_theme',
+    query: { type: 'home', id: 0, tid: theme.id },
+  });
+}
+function handleImport() {
+  importVisible.value = true;
+}
+function closeImport() {
+  importVisible.value = false;
+}
+function handleImportSuccess() {
+  getList();
+}
+
+onMounted(() => {
+  calcLimit();
+  window.addEventListener('resize', calcLimit);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', calcLimit);
+});
 </script>
 
 <style lang="scss" scoped>

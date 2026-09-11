@@ -7,7 +7,7 @@
       <el-col :span="18">
         <el-select v-model="configData.activeValue" @change="sliderChange" style="width: 100%">
           <el-option
-            v-for="(item, index) in configData.list"
+            v-for="(item, index) in visibleOptions"
             :value="item.activeValue"
             :key="index"
             :label="item.title"
@@ -18,52 +18,61 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_select',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
-    number: {
-      type: null,
-    },
+<script setup>
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+
+defineOptions({ name: 'c_select' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-      timeStamp: '',
-    };
+  configNme: {
+    type: String,
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      this.configData = this.configObj[this.configNme];
-    });
+  number: {
+    type: null,
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-    },
-    number(nVal) {
-      this.timeStamp = nVal;
-    },
+});
+
+const emit = defineEmits(['getConfig']);
+
+const defaults = ref({});
+const configData = ref({});
+const timeStamp = ref('');
+const visibleOptions = computed(() => {
+  const list = Array.isArray(configData.value.list) ? configData.value.list : [];
+  if (props.configNme !== 'typeConfig') return list;
+  return list.filter((item) => item && Number(item.activeValue) !== 4 && item.title !== '商品标签');
+});
+
+onMounted(() => {
+  nextTick(() => {
+    defaults.value = props.configObj;
+    configData.value = props.configObj[props.configNme] || {};
+  });
+});
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
   },
-  methods: {
-    sliderChange(e) {
-      this.configData.activeValue = e;
-      this.$emit('getConfig', { name: 'select', values: e });
-    },
+  { deep: true },
+);
+
+watch(
+  () => props.number,
+  (nVal) => {
+    timeStamp.value = nVal;
   },
-};
+);
+
+function sliderChange(e) {
+  configData.value.activeValue = e;
+  emit('getConfig', { name: 'select', values: e });
+}
 </script>
 
 <style scoped lang="scss">

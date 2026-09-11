@@ -1,176 +1,194 @@
 <template>
-  <div class="checkboxs acea-row row-top" v-if="hasConfig">
-    <div class="title-tips">
-      <span>{{ configData.title }}</span>
-    </div>
-    <div class="checkbox-box">
-      <el-checkbox-group size="small" v-model="configData.type" @change="checkboxChange()">
-        <el-checkbox
-          :label="item.id"
-          :disabled="isDisabled(item)"
-          v-for="(item, index) in configData.list"
-          :key="index"
-        >
-          <span>{{ item.name }}</span>
-        </el-checkbox>
-      </el-checkbox-group>
+  <div class="checkboxs" v-if="hasConfig">
+    <div class="c_row-item">
+      <el-col class="title-tips" :span="4">
+        <span>{{ configData.title }}</span>
+      </el-col>
+      <el-col class="checkbox-box" :span="18">
+        <el-checkbox-group v-model="configData.type" @change="checkboxChange()">
+          <el-checkbox
+            :label="item.id"
+            :value="item.id"
+            :disabled="isDisabled(item)"
+            v-for="(item, index) in visibleCheckboxList"
+            :key="index"
+          >
+            <span>{{ item.name }}</span>
+          </el-checkbox>
+        </el-checkbox-group>
+      </el-col>
     </div>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_checkbox',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+
+defineOptions({ name: 'c_checkbox' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      formData: {
-        type: 0,
-      },
-      defaults: {},
-      configData: {},
-      selectedData: [],
-      userStyle: 0,
+  configNme: {
+    type: String,
+  },
+});
+
+const formData = ref({
+  type: 0,
+});
+const defaults = ref({});
+const configData = ref({});
+const selectedData = ref([]);
+const userStyle = ref(0);
+
+const hasConfig = computed(() => {
+  return configData.value && Array.isArray(configData.value.type) && Array.isArray(configData.value.list);
+});
+const visibleCheckboxList = computed(() => {
+  const list = Array.isArray(configData.value.list) ? configData.value.list : [];
+  return list.filter((item) => item && !isHiddenCheckboxItem(item));
+});
+
+function isHiddenCheckboxItem(item) {
+  if (item.name === '会员价格') return true;
+  if (props.configNme === 'checkboxInfo' && defaults.value.name === 'goodList' && item.name === '商品标签') return true;
+  return false;
+}
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    setConfig(nVal);
+  },
+  { deep: true, immediate: true },
+);
+
+watch(
+  () => props.configObj.styleConfig?.tabVal,
+  (nVal, oVal) => {
+    if (configData.value && configData.value.userType) {
+      configData.value.type = [3, 1, 2];
+    }
+  },
+);
+
+watch(
+  () => props.configObj.storeStyleConfig?.tabVal,
+  (nVal, oVal) => {
+    if (configData.value.storeType) {
+      if (nVal == 1) {
+        configData.value.list = [
+          {
+            id: 0,
+            name: '配送方式',
+          },
+          {
+            id: 2,
+            name: '门店距离',
+          },
+          {
+            id: 3,
+            name: '门店地址',
+          },
+        ];
+      } else {
+        configData.value.list = [
+          {
+            id: 0,
+            name: '配送方式',
+          },
+          {
+            id: 1,
+            name: '营业时间',
+          },
+          {
+            id: 2,
+            name: '门店距离',
+          },
+          {
+            id: 3,
+            name: '门店地址',
+          },
+        ];
+      }
+    }
+  },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    setConfig(props.configObj);
+  });
+});
+
+function setConfig(configObj) {
+  defaults.value = configObj || {};
+  const configDataVal = defaults.value && props.configNme ? defaults.value[props.configNme] : null;
+  if (!configDataVal) {
+    configData.value = {
+      type: [],
+      list: [],
     };
-  },
-  computed: {
-    hasConfig() {
-      return this.configData && Array.isArray(this.configData.type) && Array.isArray(this.configData.list);
-    },
-  },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
-      },
-      deep: true,
-      immediate: true,
-    },
-    'configObj.styleConfig.tabVal': {
-      handler(nVal, oVal) {
-        if (this.configData && this.configData.userType) {
-          this.configData.type = [3, 1, 2];
-        }
-      },
-    },
-    'configObj.storeStyleConfig.tabVal': {
-      handler(nVal, oVal) {
-        if (this.configData.storeType) {
-          if (nVal == 1) {
-            this.configData.list = [
-              {
-                id: 0,
-                name: '配送方式',
-              },
-              {
-                id: 2,
-                name: '门店距离',
-              },
-              {
-                id: 3,
-                name: '门店地址',
-              },
-            ];
-          } else {
-            this.configData.list = [
-              {
-                id: 0,
-                name: '配送方式',
-              },
-              {
-                id: 1,
-                name: '营业时间',
-              },
-              {
-                id: 2,
-                name: '门店距离',
-              },
-              {
-                id: 3,
-                name: '门店地址',
-              },
-            ];
-          }
-        }
-      },
-    },
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.setConfig(this.configObj);
-    });
-  },
-  methods: {
-    setConfig(configObj) {
-      this.defaults = configObj || {};
-      const configData = this.defaults && this.configNme ? this.defaults[this.configNme] : null;
-      if (!configData) {
-        this.configData = {
-          type: [],
-          list: [],
-        };
-        this.userStyle = 0;
-        this.selectedData = [];
-        return;
-      }
-      if (!Array.isArray(configData.type)) {
-        this.$set(configData, 'type', configData.type === undefined || configData.type === null ? [] : [configData.type]);
-      }
-      if (!Array.isArray(configData.list)) {
-        this.$set(configData, 'list', []);
-      }
-      this.configData = configData;
-      this.userStyle = (this.defaults.styleConfig && this.defaults.styleConfig.tabVal) || 1;
-      this.selectedData = (this.defaults.checkboxInfo && this.defaults.checkboxInfo.type) || [];
-    },
-    isDisabled(item) {
-      const type = this.configData.type || [];
-      const maxList = Number(this.configData.maxList) || 0;
-      return (
-        (this.selectedData.length >= 3 && this.userStyle && this.configData.userType && !this.selectedData.includes(item.id)) ||
-        (type.length >= 3 && this.configData.name == 'showContent' && !type.includes(item.id)) ||
-        (maxList > 0 && type.length >= maxList && !type.includes(item.id))
-      );
-    },
-    checkboxChange(e) {
-      // this.$emit('getConfig', e);
-    },
-  },
-};
+    userStyle.value = 0;
+    selectedData.value = [];
+    return;
+  }
+  if (!Array.isArray(configDataVal.type)) {
+    configDataVal.type = configDataVal.type === undefined || configDataVal.type === null ? [] : [configDataVal.type];
+  }
+  if (!Array.isArray(configDataVal.list)) {
+    configDataVal.list = [];
+  }
+  configData.value = configDataVal;
+  userStyle.value = (defaults.value.styleConfig && defaults.value.styleConfig.tabVal) || 1;
+  selectedData.value = (defaults.value.checkboxInfo && defaults.value.checkboxInfo.type) || [];
+}
+function isDisabled(item) {
+  const type = configData.value.type || [];
+  const maxList = Number(configData.value.maxList) || 0;
+  return (
+    (selectedData.value.length >= 3 && userStyle.value && configData.value.userType && !selectedData.value.includes(item.id)) ||
+    (type.length >= 3 && configData.value.name == 'showContent' && !type.includes(item.id)) ||
+    (maxList > 0 && type.length >= maxList && !type.includes(item.id))
+  );
+}
+function checkboxChange(e) {
+  // emit('getConfig', e);
+}
 </script>
 
 <style scoped lang="scss">
 .checkboxs {
   padding: 0 15px;
   margin-bottom: 20px;
+  .c_row-item {
+    align-items: flex-start;
+  }
 }
 .title-tips {
-  margin-right: 14px;
   color: #999;
   font-size: 12px;
-  width: 82px;
+  line-height: 32px;
 }
 .checkbox-box {
-  width: 270px;
+  min-width: 0;
 }
-.ivu-checkbox-group-item {
-  margin-bottom: 15px;
-  margin-right: 15px;
+:deep(.el-checkbox-group) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 4px;
 }
-::v-deep.ivu-checkbox {
-  margin-right: 4px;
-}
-::v-deep.ivu-checkbox-group-item {
-  font-size: 12px;
-}
-::v-deep.ivu-checkbox-wrapper:nth-last-child(1) {
+:deep(.el-checkbox) {
+  width: calc((100% - 24px) / 3);
+  height: 28px;
   margin-right: 0;
+}
+:deep(.el-checkbox__label) {
+  font-size: 12px;
+  white-space: nowrap;
 }
 </style>

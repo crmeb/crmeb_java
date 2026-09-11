@@ -4,7 +4,15 @@
       <div class="c_label">{{ configData.title }}</div>
       <div class="c_content">
         <div class="main-setting">
-          <el-slider v-model="configData.val" show-input :min="configData.min" :max="configData.max"></el-slider>
+          <el-slider
+            v-model="configData.val"
+            show-input
+            :show-input-controls="false"
+            :min="getNumberMin(configData)"
+            :max="getNumberMax(configData)"
+            :step="getNumberStep(configData)"
+            @change="normalizeMainValue"
+          ></el-slider>
           <div class="expand-icon" :class="configData.isAll ? 'selected' : ''" @click="toggleExpand">
             <span class="iconfont iconbianju"></span>
           </div>
@@ -15,10 +23,12 @@
               <span class="prefix-icon iconfont" :class="getIcon(index)"></span>
               <el-input-number
                 v-model="item.val"
-                :min="configData.min"
-                :max="configData.max"
-                size="small"
-                controls-position="right"
+                :min="getNumberMin(configData)"
+                :max="getNumberMax(configData)"
+                :step="getNumberStep(configData)"
+                :step-strictly="true"
+                :controls="false"
+                @change="normalizeSubValue(item)"
               ></el-input-number>
             </div>
           </div>
@@ -28,62 +38,77 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_margin_style',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch } from 'vue'
+import {
+  getNumberMax,
+  getNumberMin,
+  getNumberStep,
+  normalizeNumberField
+} from '@/views/design/theme_editor/utils/numberInput'
+
+defineOptions({ name: 'c_margin_style' })
+
+const props = defineProps({
+  configObj: {
+    type: Object
   },
-  data() {
-    return {
-      configData: null,
-    };
+  configNme: {
+    type: String
+  }
+})
+
+const configData = ref(null)
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    if (!nVal) return
+    configData.value = nVal[props.configNme] || {}
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        if (!nVal) return;
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-      immediate: true,
-    },
-    'configData.val': {
-      handler(nVal) {
-        if (this.configData && this.configData.valList) {
-          this.configData.valList.forEach((item) => {
-            item.val = nVal;
-          });
-        }
-      },
-    },
-    'configData.isAll': {
-      handler(nVal) {
-        if (this.configData && this.configData.valList) {
-          this.configData.valList.forEach((item) => {
-            item.val = this.configData.val;
-          });
-        }
-      },
-    },
-  },
-  methods: {
-    toggleExpand() {
-      if (!this.configData) return;
-      this.$set(this.configData, 'isAll', !this.configData.isAll);
-    },
-    getIcon(index) {
-      const icons = ['iconshangbianju', 'iconyoubianju', 'iconxiabianju', 'iconzuobianju'];
-      const paddingIcons = ['iconneibianju-shang', 'iconneibianju-you', 'iconneibianju-xia', 'iconneibianju-zuo'];
-      return this.configNme === 'paddingConfig' ? paddingIcons[index] || '' : icons[index] || '';
-    },
-  },
-};
+  { deep: true, immediate: true }
+)
+
+watch(
+  () => configData.value && configData.value.val,
+  (nVal) => {
+    if (configData.value && configData.value.valList) {
+      configData.value.valList.forEach((item) => {
+        item.val = nVal
+      })
+    }
+  }
+)
+
+watch(
+  () => configData.value && configData.value.isAll,
+  (nVal) => {
+    if (configData.value && configData.value.valList) {
+      configData.value.valList.forEach((item) => {
+        item.val = configData.value.val
+      })
+    }
+  }
+)
+
+function toggleExpand() {
+  if (!configData.value) return
+  configData.value.isAll = !configData.value.isAll
+}
+
+function normalizeMainValue() {
+  normalizeNumberField(configData.value, 'val')
+}
+
+function normalizeSubValue(item) {
+  normalizeNumberField(item, 'val', configData.value)
+}
+
+function getIcon(index) {
+  const icons = ['iconshangbianju', 'iconyoubianju', 'iconxiabianju', 'iconzuobianju']
+  const paddingIcons = ['iconneibianju-shang', 'iconneibianju-you', 'iconneibianju-xia', 'iconneibianju-zuo']
+  return props.configNme === 'paddingConfig' ? paddingIcons[index] || '' : icons[index] || ''
+}
 </script>
 
 <style scoped lang="scss">
@@ -129,14 +154,11 @@ export default {
       color: #409eff;
       border-color: #c6e2ff;
     }
-    ::v-deep .el-slider {
+    :deep(.el-slider) {
       flex: 1;
       margin-right: 0;
       .el-slider__input {
         width: 90px;
-      }
-      .el-slider__runway {
-        margin-right: 100px;
       }
     }
   }
@@ -164,9 +186,15 @@ export default {
           font-size: 14px;
           margin-right: 5px;
         }
-        ::v-deep .el-input-number {
+        :deep(.el-input-number) {
           width: 100%;
           border: none;
+          .el-input__wrapper {
+            box-shadow: none;
+            border: none;
+            padding: 0;
+            background: transparent;
+          }
           .el-input__inner {
             border: none;
             padding-left: 5px;

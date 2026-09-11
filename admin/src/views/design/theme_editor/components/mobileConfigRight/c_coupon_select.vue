@@ -3,16 +3,24 @@
     <div class="acea-row">
       <div class="title">选择优惠券</div>
       <div class="wrapper">
-        <draggable class="dragArea list-group" :list="defaults.couponList.list" group="coupons" handle=".move-icon">
-          <div class="item" v-for="(item, index) in defaults.couponList.list" :key="index">
-            <div class="move-icon">
-              <span class="iconfont iconxingzhuangjiehe"></span>
+        <draggable
+          class="dragArea list-group"
+          :list="defaults.couponList.list"
+          :item-key="getDraggableItemKey"
+          group="coupons"
+          handle=".move-icon"
+        >
+          <template #item="{ element: item, index }">
+            <div class="item">
+              <div class="move-icon">
+                <span class="iconfont iconxingzhuangjiehe"></span>
+              </div>
+              <div class="coupon-item">
+                <div class="name line1">{{ item.name || item.title || '优惠券' }}</div>
+              </div>
+              <span class="iconfont iconshanchu3" @click.stop="bindDelete(index)"></span>
             </div>
-            <div class="coupon-item">
-              <div class="name line1">{{ item.name || item.title || '优惠券' }}</div>
-            </div>
-            <span class="iconfont iconshanchu3" @click.stop="bindDelete(index)"></span>
-          </div>
+          </template>
         </draggable>
         <div class="add-item" @click="openModal">
           <el-button class="btn"><span class="iconfont iconjiahao1"></span>添加</el-button>
@@ -22,63 +30,58 @@
   </div>
 </template>
 
-<script>
-import vuedraggable from 'vuedraggable';
-export default {
-  name: 'c_coupon_select',
-  props: {
-    configObj: {
-      type: Object,
-    },
+<script setup>
+import { ref, watch, getCurrentInstance } from 'vue';
+import draggable from 'vuedraggable';
+import { getDraggableItemKey } from '@/utils/draggableKey';
+
+defineOptions({ name: 'c_coupon_select' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  components: {
-    draggable: vuedraggable,
+});
+
+const { proxy } = getCurrentInstance();
+
+const defaults = ref({});
+const ids = ref([]);
+
+defaults.value = props.configObj || {};
+ids.value = getCouponIds();
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal || {};
+    ids.value = getCouponIds();
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal || {};
-        this.ids = this.getCouponIds();
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  data() {
-    return {
-      defaults: {},
-      ids: [],
-    };
-  },
-  created() {
-    this.defaults = this.configObj || {};
-    this.ids = this.getCouponIds();
-  },
-  methods: {
-    openModal() {
-      const couponList = (this.defaults.couponList && this.defaults.couponList.list) || [];
-      this.$modalCoupon('wu', Date.now(), couponList, (couponObj) => this.getCouponId(couponObj), '', '');
-    },
-    //对象数组去重；
-    unique(arr) {
-      const res = new Map();
-      return arr.filter((arr) => !res.has(arr.id) && res.set(arr.id, 1));
-    },
-    getCouponIds() {
-      const list = (this.defaults.couponList && this.defaults.couponList.list) || [];
-      return list.map((item) => item.id);
-    },
-    getCouponId(couponObj = []) {
-      const list = this.unique(Array.isArray(couponObj) ? couponObj : []);
-      this.$set(this.defaults.couponList, 'list', list);
-      this.ids = this.getCouponIds();
-    },
-    bindDelete(index) {
-      this.defaults.couponList.list.splice(index, 1);
-      this.ids = this.defaults.couponList.list.map((item) => item.id);
-    },
-  },
-};
+  { immediate: true, deep: true },
+);
+
+function openModal() {
+  const couponList = (defaults.value.couponList && defaults.value.couponList.list) || [];
+  proxy.$modalCoupon('wu', Date.now(), couponList, (couponObj) => getCouponId(couponObj), '', '');
+}
+//对象数组去重；
+function unique(arr) {
+  const res = new Map();
+  return arr.filter((arr) => !res.has(arr.id) && res.set(arr.id, 1));
+}
+function getCouponIds() {
+  const list = (defaults.value.couponList && defaults.value.couponList.list) || [];
+  return list.map((item) => item.id);
+}
+function getCouponId(couponObj = []) {
+  const list = unique(Array.isArray(couponObj) ? couponObj : []);
+  defaults.value.couponList.list = list;
+  ids.value = getCouponIds();
+}
+function bindDelete(index) {
+  defaults.value.couponList.list.splice(index, 1);
+  ids.value = defaults.value.couponList.list.map((item) => item.id);
+}
 </script>
 
 <style scoped lang="scss">

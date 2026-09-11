@@ -51,7 +51,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import c_title from './c_title';
 import c_bg_color from './c_bg_color';
 import c_margin_style from './c_margin_style';
@@ -60,24 +60,14 @@ import c_slider from './c_slider';
 import c_radio from './c_radio';
 import c_upload_img from './c_upload_img';
 
-export default {
-  name: 'c_common_style',
-  components: {
-    c_title,
-    c_bg_color,
-    c_margin_style,
-    c_fillet,
-    c_slider,
-    c_radio,
-    c_upload_img,
+defineOptions({ name: 'c_common_style' });
+
+defineProps({
+  configObj: {
+    type: Object,
   },
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+  configNme: {
+    type: String,
   },
-};
+});
 </script>

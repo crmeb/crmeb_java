@@ -6,7 +6,7 @@
     <div class="config-item" v-if="configData.color">
       <span class="item-label">{{ configData.color.title }}</span>
       <div class="color-box">
-        <el-color-picker v-model="configData.color.color[0].item" size="small"></el-color-picker>
+        <el-color-picker v-model="configData.color.color[0].item"></el-color-picker>
         <el-input class="input" v-model="configData.color.color[0].item" />
         <span class="reset" @click="configData.color.color[0].item = configData.color.default[0].item">重置</span>
       </div>
@@ -19,8 +19,11 @@
         <el-slider
           v-model="configData.size.val"
           show-input
-          :min="configData.size.min"
-          :max="configData.size.max"
+          :show-input-controls="false"
+          :min="getNumberMin(configData.size)"
+          :max="getNumberMax(configData.size)"
+          :step="getNumberStep(configData.size)"
+          @change="normalizeConfigValue(configData.size)"
         ></el-slider>
       </div>
     </div>
@@ -29,8 +32,13 @@
     <div class="config-item" v-if="configData.position">
       <span class="item-label">{{ configData.position.title }}</span>
       <div class="radio-box">
-        <el-radio-group v-model="configData.position.tabVal" size="small">
-          <el-radio-button v-for="(item, index) in configData.position.tabList" :key="index" :label="index">
+        <el-radio-group v-model="configData.position.tabVal">
+          <el-radio-button
+            v-for="(item, index) in configData.position.tabList"
+            :key="index"
+            :label="index"
+            :value="index"
+          >
             <span class="iconfont" :class="item.icon"></span>
           </el-radio-button>
         </el-radio-group>
@@ -44,8 +52,11 @@
         <el-slider
           v-model="configData.padding.val"
           show-input
-          :min="configData.padding.min"
-          :max="configData.padding.max"
+          :show-input-controls="false"
+          :min="getNumberMin(configData.padding)"
+          :max="getNumberMax(configData.padding)"
+          :step="getNumberStep(configData.padding)"
+          @change="normalizeConfigValue(configData.padding)"
         ></el-slider>
       </div>
     </div>
@@ -57,8 +68,11 @@
         <el-slider
           v-model="configData.rotate.val"
           show-input
-          :min="configData.rotate.min"
-          :max="configData.rotate.max"
+          :show-input-controls="false"
+          :min="getNumberMin(configData.rotate)"
+          :max="getNumberMax(configData.rotate)"
+          :step="getNumberStep(configData.rotate)"
+          @change="normalizeConfigValue(configData.rotate)"
         ></el-slider>
       </div>
     </div>
@@ -67,7 +81,7 @@
     <div class="config-item" v-if="configData.shadow">
       <span class="item-label">{{ configData.shadow.title }}</span>
       <el-radio-group v-model="configData.shadow.tabVal">
-        <el-radio :label="item.val" v-for="(item, index) in configData.shadow.tabList" :key="index">{{
+        <el-radio :label="item.val" :value="item.val" v-for="(item, index) in configData.shadow.tabList" :key="index">{{
           item.name
         }}</el-radio>
       </el-radio-group>
@@ -75,39 +89,47 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_icon_style',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue'
+import {
+  getNumberMax,
+  getNumberMin,
+  getNumberStep,
+  normalizeNumberField
+} from '@/views/design/theme_editor/utils/numberInput'
+
+defineOptions({ name: 'c_icon_style' })
+
+const props = defineProps({
+  configObj: {
+    type: Object
   },
-  data() {
-    return {
-      configData: null,
-    };
+  configNme: {
+    type: String
+  }
+})
+
+const configData = ref(null)
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    configData.value = nVal[props.configNme] || {}
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.configData = nVal[this.configNme];
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
-  mounted() {
-    this.$nextTick(() => {
-      if (this.configObj) {
-        this.configData = this.configObj[this.configNme];
-      }
-    });
-  },
-};
+  { deep: true, immediate: true }
+)
+
+onMounted(() => {
+  nextTick(() => {
+    if (props.configObj) {
+      configData.value = props.configObj[props.configNme] || {}
+    }
+  })
+})
+
+function normalizeConfigValue(config) {
+  normalizeNumberField(config, 'val')
+}
 </script>
 
 <style scoped lang="scss">

@@ -2,22 +2,30 @@
   <div class="article-box" v-if="defaults[configNme]">
     <div class="title-bar">文章列表</div>
     <div class="list-box">
-      <draggable class="dragArea list-group" :list="defaults[configNme].list" group="peoples" handle=".move-icon">
-        <div class="item" v-for="(item, index) in defaults[configNme].list" :key="index">
-          <div class="move-icon">
-            <span class="iconfont iconxingzhuangjiehe"></span>
-          </div>
-          <div class="img-box">
-            <img :src="item.image_input[0]" alt="" v-if="item.image_input && item.image_input.length" />
-            <div class="empty-img" v-else>
-              <i class="el-icon-picture"></i>
+      <draggable
+        class="dragArea list-group"
+        :list="defaults[configNme].list"
+        :item-key="getDraggableItemKey"
+        group="peoples"
+        handle=".move-icon"
+      >
+        <template #item="{ element: item, index }">
+          <div class="item">
+            <div class="move-icon">
+              <span class="iconfont iconxingzhuangjiehe"></span>
             </div>
+            <div class="img-box">
+              <img :src="item.image_input[0]" alt="" v-if="item.image_input && item.image_input.length" />
+              <div class="empty-img" v-else>
+                <i class="el-icon-picture"></i>
+              </div>
+            </div>
+            <div class="info">
+              <div class="name line1">{{ item.title }}</div>
+            </div>
+            <span class="iconfont iconshanchu3" @click.stop="bindDelete(index)"></span>
           </div>
-          <div class="info">
-            <div class="name line1">{{ item.title }}</div>
-          </div>
-          <span class="iconfont iconshanchu3" @click.stop="bindDelete(index)"></span>
-        </div>
+        </template>
       </draggable>
       <div class="add-btn" @click="modals = true">
         <el-button class="btn"><span class="iconfont iconjiahao1"></span>添加</el-button>
@@ -25,7 +33,7 @@
     </div>
 
     <el-dialog
-      :visible.sync="modals"
+      v-model="modals"
       title="文章列表"
       class="paymentFooter"
       width="900px"
@@ -35,11 +43,11 @@
       <div class="article-manager">
         <div class="padding-add">
           <el-form
-            ref="artFrom"
+            ref="artFromRef"
             :model="artFrom"
             label-width="80px"
             label-position="right"
-            @submit.native.prevent
+            @submit.prevent
             inline
           >
             <el-form-item label="文章分类：" label-for="cid">
@@ -49,7 +57,7 @@
                 class="treeSel"
                 @change="handleCheckChange"
                 :options="treeData"
-                :props="props"
+                :props="propsData"
                 style="width: 250px"
                 clearable
               >
@@ -68,7 +76,7 @@
         </div>
         <el-table
           :data="cmsList"
-          ref="table"
+          ref="tableRef"
           class="mt14"
           v-loading="loading"
           highlight-current-row
@@ -80,7 +88,7 @@
           <el-table-column type="selection" width="55"> </el-table-column>
           <el-table-column label="ID" width="80" prop="id"> </el-table-column>
           <el-table-column label="文章图片" min-width="90">
-            <template slot-scope="scope">
+            <template #default="scope">
               <div class="tabBox_img" v-if="scope.row.image_input && scope.row.image_input.length">
                 <img :src="scope.row.image_input[0]" />
               </div>
@@ -89,8 +97,8 @@
           <el-table-column label="文章名称" min-width="130" prop="title"> </el-table-column>
           <el-table-column label="分类" min-width="130" prop="catename"> </el-table-column>
           <el-table-column label="时间" min-width="130">
-            <template slot-scope="scope">
-              <span>{{ scope.row.add_time | formatDate }}</span>
+            <template #default="scope">
+              <span>{{ formatDateFn(scope.row.add_time) }}</span>
             </template>
           </el-table-column>
         </el-table>
@@ -98,185 +106,182 @@
           <el-pagination
             v-if="total"
             :total="total"
-            :current-page.sync="artFrom.page"
-            :page-size.sync="artFrom.limit"
+            v-model:current-page="artFrom.page"
+            v-model:page-size="artFrom.limit"
             layout="prev, pager, next"
             @current-change="pageChange"
           />
         </div>
       </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="modals = false">取 消</el-button>
-        <el-button type="primary" @click="addSelectedArticles">确 定</el-button>
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="modals = false">取 消</el-button>
+          <el-button type="primary" @click="addSelectedArticles">确 定</el-button>
+        </span>
+      </template>
     </el-dialog>
   </div>
 </template>
 
-<script>
-import vuedraggable from 'vuedraggable';
+<script setup>
+import { ref, watch } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
+import draggable from 'vuedraggable';
 import { getArticleList, themeArticleCategory } from '@/api/theme';
 import { formatDate } from '@/utils/validate';
+import { getDraggableItemKey } from '@/utils/draggableKey';
 
-export default {
-  name: 'c_article',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+defineOptions({ name: 'c_article' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  components: {
-    draggable: vuedraggable,
+  configNme: {
+    type: String,
   },
-  filters: {
-    formatDate(time) {
-      if (!time) return '';
-      if (typeof time === 'string') return time;
-      if (time !== 0) {
-        let date = new Date(time * 1000);
-        return formatDate(date, 'yyyy-MM-dd hh:mm');
-      }
-    },
-  },
-  data() {
+});
+
+const modals = ref(false);
+const defaults = ref({});
+const loading = ref(false);
+const artFrom = ref({
+  cid: '',
+  title: '',
+  page: 1,
+  limit: 10,
+});
+const total = ref(0);
+const cmsList = ref([]);
+const treeData = ref([]);
+const propsData = ref({
+  value: 'id',
+  label: 'title',
+  emitPath: false,
+  checkStrictly: true,
+});
+const multipleSelection = ref([]);
+const artFromRef = ref(null);
+const tableRef = ref(null);
+
+function formatDateFn(time) {
+  if (!time) return '';
+  if (typeof time === 'string') return time;
+  if (time !== 0) {
+    let date = new Date(time * 1000);
+    return formatDate(date, 'YYYY-MM-DD hh:mm');
+  }
+}
+
+defaults.value = props.configObj;
+getClass();
+
+function handleSelectionChange(val) {
+  multipleSelection.value = val;
+}
+function addSelectedArticles() {
+  if (multipleSelection.value.length === 0) {
+    return ElMessage.warning('请至少选择一篇文章');
+  }
+  let list = defaults.value[props.configNme].list;
+  let newItems = [];
+  multipleSelection.value.forEach((item) => {
+    let exists = list.some((i) => i.id === item.id);
+    if (!exists) {
+      newItems.push(item);
+    }
+  });
+  if (newItems.length === 0) {
+    return ElMessage.warning('您选择的文章已存在');
+  }
+  defaults.value[props.configNme].list = list.concat(newItems);
+  ElMessage.success('添加成功');
+  modals.value = false;
+}
+// 获取文章列表
+function getList() {
+  loading.value = true;
+  getArticleList(artFrom.value)
+    .then((res) => {
+      cmsList.value = res.list || (res.data && res.data.list) || [];
+      total.value = res.count || (res.data && res.data.count) || 0;
+      loading.value = false;
+    })
+    .catch((res) => {
+      loading.value = false;
+      ElMessage.error((res && (res.msg || res.message)) || '文章列表获取失败');
+    });
+}
+// 获取分类
+function getClass() {
+  themeArticleCategory()
+    .then((res) => {
+      treeData.value = formatCategory(res.data);
+      treeData.value.unshift({ id: '', title: '全部' });
+    })
+    .catch((res) => {
+      ElMessage.error((res && (res.msg || res.message)) || '文章分类获取失败');
+    });
+}
+function formatCategory(list) {
+  return (Array.isArray(list) ? list : []).map((item) => {
     return {
-      modals: false,
-      defaults: {},
-      loading: false,
-      artFrom: {
-        cid: '',
-        title: '',
-        page: 1,
-        limit: 10,
-      },
-      total: 0,
-      cmsList: [],
-      treeData: [],
-      props: {
-        value: 'id',
-        label: 'title',
-        emitPath: false,
-        checkStrictly: true,
-      },
-      multipleSelection: [],
+      id: item.id,
+      title: item.title,
+      children: item.children ? formatCategory(item.children) : null,
     };
+  });
+}
+// 选择分类
+function handleCheckChange(data) {
+  artFrom.value.cid = data || '';
+  artFrom.value.page = 1;
+  getList();
+}
+// 搜索
+function userSearchs() {
+  artFrom.value.page = 1;
+  getList();
+}
+// 分页
+function pageChange(e) {
+  artFrom.value.page = e;
+  getList();
+}
+// 选择文章
+function selectArticle(row) {
+  // 检查是否已存在
+  let list = defaults.value[props.configNme].list;
+  let exists = list.some((item) => item.id === row.id);
+  if (exists) {
+    ElMessage.warning('该文章已添加');
+    return;
+  }
+  defaults.value[props.configNme].list.push(row);
+  ElMessage.success('添加成功');
+}
+// 删除文章
+function bindDelete(index) {
+  defaults.value[props.configNme].list.splice(index, 1);
+}
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
   },
-  created() {
-    this.defaults = this.configObj;
-    this.getClass();
-  },
-  methods: {
-    handleSelectionChange(val) {
-      this.multipleSelection = val;
-    },
-    addSelectedArticles() {
-      if (this.multipleSelection.length === 0) {
-        return this.$message.warning('请至少选择一篇文章');
-      }
-      let list = this.defaults[this.configNme].list;
-      let newItems = [];
-      this.multipleSelection.forEach((item) => {
-        let exists = list.some((i) => i.id === item.id);
-        if (!exists) {
-          newItems.push(item);
-        }
-      });
-      if (newItems.length === 0) {
-        return this.$message.warning('您选择的文章已存在');
-      }
-      this.defaults[this.configNme].list = list.concat(newItems);
-      this.$message.success('添加成功');
-      this.modals = false;
-    },
-    // 获取文章列表
-    getList() {
-      this.loading = true;
-      getArticleList(this.artFrom)
-        .then((res) => {
-          this.cmsList = res.list || (res.data && res.data.list) || [];
-          this.total = res.count || (res.data && res.data.count) || 0;
-          this.loading = false;
-        })
-        .catch((res) => {
-          this.loading = false;
-          this.$message.error((res && (res.msg || res.message)) || '文章列表获取失败');
-        });
-    },
-    // 获取分类
-    getClass() {
-      themeArticleCategory()
-        .then((res) => {
-          this.treeData = this.formatCategory(res.data);
-          this.treeData.unshift({ id: '', title: '全部' });
-        })
-        .catch((res) => {
-          this.$message.error((res && (res.msg || res.message)) || '文章分类获取失败');
-        });
-    },
-    formatCategory(list) {
-      return (Array.isArray(list) ? list : []).map((item) => {
-        return {
-          id: item.id,
-          title: item.title,
-          children: item.children ? this.formatCategory(item.children) : null,
-        };
-      });
-    },
-    // 选择分类
-    handleCheckChange(data) {
-      this.artFrom.cid = data || '';
-      this.artFrom.page = 1;
-      this.getList();
-    },
-    // 搜索
-    userSearchs() {
-      this.artFrom.page = 1;
-      this.getList();
-    },
-    // 分页
-    pageChange(e) {
-      this.artFrom.page = e;
-      this.getList();
-    },
-    // 选择文章
-    selectArticle(row) {
-      // 检查是否已存在
-      let list = this.defaults[this.configNme].list;
-      let exists = list.some((item) => item.id === row.id);
-      if (exists) {
-        this.$message.warning('该文章已添加');
-        return;
-      }
-      this.defaults[this.configNme].list.push(row);
-      this.$message.success('添加成功');
-    },
-    // 删除文章
-    bindDelete(index) {
-      this.defaults[this.configNme].list.splice(index, 1);
-    },
-  },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-      },
-      immediate: true,
-      deep: true,
-    },
-    modals(val) {
-      if (val) {
-        this.getList();
-      }
-    },
-  },
-};
+  { immediate: true, deep: true },
+);
+
+watch(modals, (val) => {
+  if (val) {
+    getList();
+  }
+});
 </script>
 
 <style scoped lang="scss">
-::v-deep .el-checkbox {
+:deep(.el-checkbox) {
   margin-bottom: 0 !important;
 }
 .article-box {

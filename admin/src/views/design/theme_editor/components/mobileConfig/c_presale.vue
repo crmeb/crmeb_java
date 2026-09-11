@@ -2,7 +2,7 @@
   <div class="mobile-config">
     <div v-for="(item, key) in rCom" :key="key">
       <component
-        :is="item.components.name"
+        :is="item.components"
         :configObj="configObj"
         ref="childData"
         @getConfig="getConfig"
@@ -14,1053 +14,1061 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, nextTick, onMounted } from 'vue';
 import toolCom from '@/views/design/theme_editor/components/mobileConfigRight/index.js';
 import rightBtn from '@/views/design/theme_editor/components/rightBtn/index.vue';
-import { mapState, mapMutations, mapActions } from 'vuex';
-export default {
-  name: 'c_presale',
-  componentsName: 'home_presale',
-  components: {
-    ...toolCom,
-    rightBtn,
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+
+defineOptions({ name: 'c_presale', componentsName: 'home_presale' });
+
+const mobildConfigStore = useMobildConfigStore();
+
+const props = defineProps({
+  activeIndex: {
+    type: null,
   },
-  props: {
-    activeIndex: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    index: {
-      type: null,
-    },
+  num: {
+    type: null,
   },
-  data() {
-    return {
-      configObj: {},
-      rCom: [
-        {
-          components: toolCom.c_set_up,
-          configNme: 'setUp',
-        },
+  index: {
+    type: null,
+  },
+});
+
+const configObj = ref({});
+const rCom = shallowRef([
+  {
+    components: toolCom.c_set_up,
+    configNme: 'setUp',
+  },
+]);
+const oneContent = [
+  {
+    components: toolCom.c_title,
+    configNme: 'titleLeft',
+  },
+  {
+    components: toolCom.c_radio,
+    configNme: 'styleConfig',
+  },
+];
+const oneContentImg = [
+  {
+    components: toolCom.c_upload_img,
+    configNme: 'imgBgConfig',
+  },
+];
+const twoContent = [
+  {
+    components: toolCom.c_radio,
+    configNme: 'titleConfig',
+  },
+];
+const twoContentImg = [
+  {
+    components: toolCom.c_upload_img,
+    configNme: 'imgConfig',
+  },
+];
+const twoContentColorImg = [
+  {
+    components: toolCom.c_upload_img,
+    configNme: 'imgColorConfig',
+  },
+];
+const twoContentText = [
+  {
+    components: toolCom.c_input_item,
+    configNme: 'titleTxtConfig',
+  },
+];
+const threeContent = [
+  {
+    components: toolCom.c_input_item,
+    configNme: 'tipTxtConfig',
+  },
+  {
+    components: toolCom.c_input_item,
+    configNme: 'rightBntConfig',
+  },
+  {
+    components: toolCom.c_title,
+    configNme: 'titleGoodsList',
+  },
+  {
+    components: toolCom.c_radio,
+    configNme: 'goodStyleConfig',
+  },
+  {
+    components: toolCom.c_title,
+    configNme: 'titleGoods',
+  },
+  {
+    components: toolCom.c_slider,
+    configNme: 'numberConfig',
+  },
+  {
+    components: toolCom.c_checkbox,
+    configNme: 'checkboxInfo',
+  },
+];
+const fourContent = [
+  {
+    components: toolCom.c_radio,
+    configNme: 'presaleConfig',
+  },
+];
+const oneStyle = [
+  {
+    components: toolCom.c_title,
+    configNme: 'titleRight',
+  },
+];
+const twoStyle = [
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'headerBgColor',
+  },
+];
+const threeStyle = [
+  {
+    components: toolCom.c_radio,
+    configNme: 'titleText',
+  },
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'titleColor',
+  },
+  {
+    components: toolCom.c_slider,
+    configNme: 'titleNumber',
+  },
+];
+const fourStyle = [
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'headerBntColor',
+  },
+];
+const fourStyle2 = [
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'headerBntColor2',
+  },
+];
+const fourBntStyle = [
+  {
+    components: toolCom.c_slider,
+    configNme: 'bntNumber',
+  },
+];
+const fourColorStyle = [
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'tipsColor',
+  },
+];
+const fourColorStyle2 = [
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'tipsColor2',
+  },
+];
+const fourGoodsStyle = [
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'dividerColor',
+  },
+  {
+    components: toolCom.c_title,
+    configNme: 'titleGoodsStyle',
+  },
+  {
+    components: toolCom.c_fillet,
+    configNme: 'filletImg',
+  },
+  {
+    components: toolCom.c_radio,
+    configNme: 'goodsName',
+  },
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'goodsNameColor',
+  },
+];
+const goodsPriceStyle = [
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'goodsPriceColor',
+  },
+];
+const toneStyle = [
+  {
+    components: toolCom.c_radio,
+    configNme: 'toneConfig',
+  },
+];
+const fiveStyle = [
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'presalePriceColor',
+  },
+];
+const bntStyle = [
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'goodsBntColor',
+  },
+  {
+    components: toolCom.c_bg_color,
+    configNme: 'goodsBntTxtColor',
+  },
+];
+const currencyStyle = [
+  {
+    components: toolCom.c_title,
+    configNme: 'titleCurrency',
+  },
+  {
+    components: toolCom.c_common_style,
+    configNme: 'c_common_style',
+  },
+];
+const setUp = ref(0);
+const type = ref(0);
+const type2 = ref(0);
+const type3 = ref(0);
+const type4 = ref(0);
+const type5 = ref(0);
+
+watch(
+  () => props.num,
+  (nVal) => {
+    let value = JSON.parse(JSON.stringify(mobildConfigStore.defaultArray[nVal]));
+    configObj.value = patchConfig(value);
+  },
+);
+
+watch(
+  configObj,
+  (nVal, oVal) => {
+    mobildConfigStore.UPDATEARR({ num: props.num, val: nVal });
+  },
+  { deep: true },
+);
+
+watch(
+  () => configObj.value?.setUp?.tabVal,
+  (nVal, oVal) => {
+    setUp.value = nVal;
+    var arr = [rCom.value[0]];
+    if (nVal == 0) {
+      getRComContent(arr, type.value, type2.value, type3.value);
+    } else {
+      getRComStyle(arr, type.value, type2.value, type3.value, type5.value, type4.value);
+    }
+  },
+  { deep: true },
+);
+
+watch(
+  () => configObj.value?.styleConfig?.tabVal,
+  (nVal, oVal) => {
+    type.value = nVal;
+    var arr = [rCom.value[0]];
+    if (setUp.value == 0) {
+      getRComContent(arr, nVal, type2.value, type3.value);
+    } else {
+      getRComStyle(arr, nVal, type2.value, type3.value, type5.value, type4.value);
+    }
+  },
+  { deep: true },
+);
+
+watch(
+  () => configObj.value?.titleConfig?.tabVal,
+  (nVal, oVal) => {
+    type2.value = nVal;
+    var arr = [rCom.value[0]];
+    if (setUp.value == 0) {
+      getRComContent(arr, type.value, nVal, type3.value);
+    } else {
+      getRComStyle(arr, type.value, nVal, type3.value, type5.value, type4.value);
+    }
+  },
+  { deep: true },
+);
+
+watch(
+  () => configObj.value?.goodStyleConfig?.tabVal,
+  (nVal, oVal) => {
+    type3.value = nVal;
+    var arr = [rCom.value[0]];
+    if (setUp.value == 0) {
+      getRComContent(arr, type.value, type2.value, nVal);
+    } else {
+      getRComStyle(arr, type.value, type2.value, nVal, type5.value, type4.value);
+    }
+  },
+  { deep: true },
+);
+
+watch(
+  () => configObj.value?.presaleConfig?.tabVal,
+  (nVal, oVal) => {
+    type5.value = nVal;
+    var arr = [rCom.value[0]];
+    if (setUp.value) {
+      getRComStyle(arr, type.value, type2.value, type3.value, nVal, type4.value);
+    }
+  },
+  { deep: true },
+);
+
+watch(
+  () => configObj.value?.toneConfig?.tabVal,
+  (nVal, oVal) => {
+    type4.value = nVal;
+    var arr = [rCom.value[0]];
+    if (setUp.value) {
+      getRComStyle(arr, type.value, type2.value, type3.value, type5.value, nVal);
+    }
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    let value = JSON.parse(JSON.stringify(mobildConfigStore.defaultArray[props.num]));
+    configObj.value = patchConfig(value);
+  });
+});
+
+function patchConfig(config) {
+  if (!config.paddingConfig) {
+    config.paddingConfig = {
+      isAll: false,
+      title: '内边距',
+      val: 0,
+      min: 0,
+      max: 100,
+      valList: [
+        { val: config.topConfig ? config.topConfig.val : 0 },
+        { val: config.prConfig ? config.prConfig.val : 0 },
+        { val: config.bottomConfig ? config.bottomConfig.val : 0 },
+        { val: config.prConfig ? config.prConfig.val : 0 },
       ],
-      oneContent: [
-        {
-          components: toolCom.c_title,
-          configNme: 'titleLeft',
-        },
-        {
-          components: toolCom.c_radio,
-          configNme: 'styleConfig',
-        },
-      ],
-      oneContentImg: [
-        {
-          components: toolCom.c_upload_img,
-          configNme: 'imgBgConfig',
-        },
-      ],
-      twoContent: [
-        {
-          components: toolCom.c_radio,
-          configNme: 'titleConfig',
-        },
-      ],
-      twoContentImg: [
-        {
-          components: toolCom.c_upload_img,
-          configNme: 'imgConfig',
-        },
-      ],
-      twoContentColorImg: [
-        {
-          components: toolCom.c_upload_img,
-          configNme: 'imgColorConfig',
-        },
-      ],
-      twoContentText: [
-        {
-          components: toolCom.c_input_item,
-          configNme: 'titleTxtConfig',
-        },
-      ],
-      threeContent: [
-        {
-          components: toolCom.c_input_item,
-          configNme: 'tipTxtConfig',
-        },
-        {
-          components: toolCom.c_input_item,
-          configNme: 'rightBntConfig',
-        },
-        {
-          components: toolCom.c_title,
-          configNme: 'titleGoodsList',
-        },
-        {
-          components: toolCom.c_radio,
-          configNme: 'goodStyleConfig',
-        },
-        {
-          components: toolCom.c_title,
-          configNme: 'titleGoods',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'numberConfig',
-        },
-        {
-          components: toolCom.c_checkbox,
-          configNme: 'checkboxInfo',
-        },
-      ],
-      fourContent: [
-        {
-          components: toolCom.c_radio,
-          configNme: 'presaleConfig',
-        },
-      ],
-      oneStyle: [
-        {
-          components: toolCom.c_title,
-          configNme: 'titleRight',
-        },
-      ],
-      twoStyle: [
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'headerBgColor',
-        },
-      ],
-      threeStyle: [
-        {
-          components: toolCom.c_radio,
-          configNme: 'titleText',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'titleColor',
-        },
-        {
-          components: toolCom.c_slider,
-          configNme: 'titleNumber',
-        },
-      ],
-      fourStyle: [
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'headerBntColor',
-        },
-      ],
-      fourStyle2: [
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'headerBntColor2',
-        },
-      ],
-      fourBntStyle: [
-        {
-          components: toolCom.c_slider,
-          configNme: 'bntNumber',
-        },
-      ],
-      fourColorStyle: [
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'tipsColor',
-        },
-      ],
-      fourColorStyle2: [
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'tipsColor2',
-        },
-      ],
-      fourGoodsStyle: [
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'dividerColor',
-        },
-        {
-          components: toolCom.c_title,
-          configNme: 'titleGoodsStyle',
-        },
-        {
-          components: toolCom.c_fillet,
-          configNme: 'filletImg',
-        },
-        {
-          components: toolCom.c_radio,
-          configNme: 'goodsName',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'goodsNameColor',
-        },
-      ],
-      goodsPriceStyle: [
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'goodsPriceColor',
-        },
-      ],
-      toneStyle: [
-        {
-          components: toolCom.c_radio,
-          configNme: 'toneConfig',
-        },
-      ],
-      fiveStyle: [
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'presalePriceColor',
-        },
-      ],
-      bntStyle: [
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'goodsBntColor',
-        },
-        {
-          components: toolCom.c_bg_color,
-          configNme: 'goodsBntTxtColor',
-        },
-      ],
-      currencyStyle: [
-        {
-          components: toolCom.c_title,
-          configNme: 'titleCurrency',
-        },
-        {
-          components: toolCom.c_common_style,
-          configNme: 'c_common_style',
-        },
-      ],
-      setUp: 0,
-      type: 0,
-      type2: 0,
-      type3: 0,
-      type4: 0,
-      type5: 0,
     };
-  },
-  watch: {
-    num(nVal) {
-      let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[nVal]));
-      this.configObj = this.patchConfig(value);
-    },
-    configObj: {
-      handler(nVal, oVal) {
-        this.$store.commit('mobildConfig/UPDATEARR', { num: this.num, val: nVal });
-      },
-      deep: true,
-    },
-    'configObj.setUp.tabVal': {
-      handler(nVal, oVal) {
-        this.setUp = nVal;
-        var arr = [this.rCom[0]];
-        if (nVal == 0) {
-          this.getRComContent(arr, this.type, this.type2, this.type3);
-        } else {
-          this.getRComStyle(arr, this.type, this.type2, this.type3, this.type5, this.type4);
-        }
-      },
-      deep: true,
-    },
-    'configObj.styleConfig.tabVal': {
-      handler(nVal, oVal) {
-        this.type = nVal;
-        var arr = [this.rCom[0]];
-        if (this.setUp == 0) {
-          this.getRComContent(arr, nVal, this.type2, this.type3);
-        } else {
-          this.getRComStyle(arr, nVal, this.type2, this.type3, this.type5, this.type4);
-        }
-      },
-      deep: true,
-    },
-    'configObj.titleConfig.tabVal': {
-      handler(nVal, oVal) {
-        this.type2 = nVal;
-        var arr = [this.rCom[0]];
-        if (this.setUp == 0) {
-          this.getRComContent(arr, this.type, nVal, this.type3);
-        } else {
-          this.getRComStyle(arr, this.type, nVal, this.type3, this.type5, this.type4);
-        }
-      },
-      deep: true,
-    },
-    'configObj.goodStyleConfig.tabVal': {
-      handler(nVal, oVal) {
-        this.type3 = nVal;
-        var arr = [this.rCom[0]];
-        if (this.setUp == 0) {
-          this.getRComContent(arr, this.type, this.type2, nVal);
-        } else {
-          this.getRComStyle(arr, this.type, this.type2, nVal, this.type5, this.type4);
-        }
-      },
-      deep: true,
-    },
-    'configObj.presaleConfig.tabVal': {
-      handler(nVal, oVal) {
-        this.type5 = nVal;
-        var arr = [this.rCom[0]];
-        if (this.setUp) {
-          this.getRComStyle(arr, this.type, this.type2, this.type3, nVal, this.type4);
-        }
-      },
-      deep: true,
-    },
-    'configObj.toneConfig.tabVal': {
-      handler(nVal, oVal) {
-        this.type4 = nVal;
-        var arr = [this.rCom[0]];
-        if (this.setUp) {
-          this.getRComStyle(arr, this.type, this.type2, this.type3, this.type5, nVal);
-        }
-      },
-      deep: true,
-    },
-  },
-  mounted() {
-    this.$nextTick(() => {
-      let value = JSON.parse(JSON.stringify(this.$store.state.mobildConfig.defaultArray[this.num]));
-      this.configObj = this.patchConfig(value);
-    });
-  },
-  methods: {
-    patchConfig(config) {
-      if (!config.paddingConfig) {
-        config.paddingConfig = {
-          isAll: false,
-          title: '内边距',
-          val: 0,
-          min: 0,
-          max: 100,
-          valList: [
-            { val: config.topConfig ? config.topConfig.val : 0 },
-            { val: config.prConfig ? config.prConfig.val : 0 },
-            { val: config.bottomConfig ? config.bottomConfig.val : 0 },
-            { val: config.prConfig ? config.prConfig.val : 0 },
-          ],
-        };
+  }
+  if (!config.marginConfig) {
+    config.marginConfig = {
+      isAll: false,
+      title: '外边距',
+      val: 0,
+      min: 0,
+      max: 100,
+      valList: [{ val: 0 }, { val: 0 }, { val: config.mbConfig ? config.mbConfig.val : 0 }, { val: 0 }],
+    };
+  }
+  if (!config.c_common_style && config.moduleColor) {
+    config.c_common_style = {
+      color: config.moduleColor.color,
+      color2: config.bottomBgColor.color,
+      lr: config.fillet.type ? config.fillet.val : 0,
+      type: config.fillet.type,
+    };
+  }
+  return config;
+}
+
+function getRComContent(arr, type, type2, type3) {
+  if (type == 0) {
+    if (type2 == 0) {
+      if (type3 == 1) {
+        rCom.value = [
+          ...arr,
+          ...oneContent,
+          ...twoContent,
+          ...twoContentColorImg,
+          ...threeContent,
+          ...fourContent,
+        ];
+      } else {
+        rCom.value = [...arr, ...oneContent, ...twoContent, ...twoContentColorImg, ...threeContent];
       }
-      if (!config.marginConfig) {
-        config.marginConfig = {
-          isAll: false,
-          title: '外边距',
-          val: 0,
-          min: 0,
-          max: 100,
-          valList: [{ val: 0 }, { val: 0 }, { val: config.mbConfig ? config.mbConfig.val : 0 }, { val: 0 }],
-        };
+    } else {
+      if (type3 == 1) {
+        rCom.value = [
+          ...arr,
+          ...oneContent,
+          ...twoContent,
+          ...twoContentText,
+          ...threeContent,
+          ...fourContent,
+        ];
+      } else {
+        rCom.value = [...arr, ...oneContent, ...twoContent, ...twoContentText, ...threeContent];
       }
-      if (!config.c_common_style && config.moduleColor) {
-        config.c_common_style = {
-          color: config.moduleColor.color,
-          color2: config.bottomBgColor.color,
-          lr: config.fillet.type ? config.fillet.val : 0,
-          type: config.fillet.type,
-        };
+    }
+  } else {
+    if (type2 == 0) {
+      if (type3 == 1) {
+        rCom.value = [
+          ...arr,
+          ...oneContent,
+          ...oneContentImg,
+          ...twoContent,
+          ...twoContentImg,
+          ...threeContent,
+          ...fourContent,
+        ];
+      } else {
+        rCom.value = [
+          ...arr,
+          ...oneContent,
+          ...oneContentImg,
+          ...twoContent,
+          ...twoContentImg,
+          ...threeContent,
+        ];
       }
-      return config;
-    },
-    getRComContent(arr, type, type2, type3) {
-      if (type == 0) {
-        if (type2 == 0) {
-          if (type3 == 1) {
-            this.rCom = [
-              ...arr,
-              ...this.oneContent,
-              ...this.twoContent,
-              ...this.twoContentColorImg,
-              ...this.threeContent,
-              ...this.fourContent,
-            ];
+    } else {
+      if (type3 == 1) {
+        rCom.value = [
+          ...arr,
+          ...oneContent,
+          ...oneContentImg,
+          ...twoContent,
+          ...twoContentText,
+          ...threeContent,
+          ...fourContent,
+        ];
+      } else {
+        rCom.value = [
+          ...arr,
+          ...oneContent,
+          ...oneContentImg,
+          ...twoContent,
+          ...twoContentText,
+          ...threeContent,
+        ];
+      }
+    }
+  }
+}
+
+function getRComStyle(arr, type, type2, type3, type5, type4) {
+  let obj = [
+    ...arr,
+    ...oneStyle,
+    ...twoStyle,
+    ...fourStyle2,
+    ...fourBntStyle,
+    ...fourColorStyle2,
+    ...fourGoodsStyle,
+    ...toneStyle,
+    ...currencyStyle,
+  ];
+  let obj2 = [
+    ...arr,
+    ...oneStyle,
+    ...twoStyle,
+    ...threeStyle,
+    ...fourStyle2,
+    ...fourBntStyle,
+    ...fourColorStyle2,
+    ...fourGoodsStyle,
+    ...toneStyle,
+    ...currencyStyle,
+  ];
+  let obj3 = [
+    ...arr,
+    ...oneStyle,
+    ...fourStyle,
+    ...fourBntStyle,
+    ...fourColorStyle,
+    ...fourGoodsStyle,
+    ...toneStyle,
+    ...currencyStyle,
+  ];
+  let obj4 = [
+    ...arr,
+    ...oneStyle,
+    ...threeStyle,
+    ...fourStyle,
+    ...fourBntStyle,
+    ...fourColorStyle,
+    ...fourGoodsStyle,
+    ...toneStyle,
+    ...currencyStyle,
+  ];
+  if (type == 0) {
+    if (type2 == 0) {
+      if (type3 == 0) {
+        if (type5 == 0) {
+          if (type4 == 0) {
+            rCom.value = obj;
           } else {
-            this.rCom = [
+            rCom.value = [
               ...arr,
-              ...this.oneContent,
-              ...this.twoContent,
-              ...this.twoContentColorImg,
-              ...this.threeContent,
+              ...oneStyle,
+              ...twoStyle,
+              ...fourStyle2,
+              ...fourBntStyle,
+              ...fourColorStyle2,
+              ...fourGoodsStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...bntStyle,
+              ...currencyStyle,
             ];
           }
         } else {
-          if (type3 == 1) {
-            this.rCom = [
+          if (type4 == 0) {
+            rCom.value = obj;
+          } else {
+            rCom.value = [
               ...arr,
-              ...this.oneContent,
-              ...this.twoContent,
-              ...this.twoContentText,
-              ...this.threeContent,
-              ...this.fourContent,
+              ...oneStyle,
+              ...twoStyle,
+              ...fourStyle2,
+              ...fourBntStyle,
+              ...fourColorStyle2,
+              ...fourGoodsStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...currencyStyle,
+            ];
+          }
+        }
+      } else if (type3 == 1) {
+        if (type5 == 0) {
+          if (type4 == 0) {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...twoStyle,
+              ...fourStyle2,
+              ...fourBntStyle,
+              ...fourColorStyle2,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...currencyStyle,
             ];
           } else {
-            this.rCom = [...arr, ...this.oneContent, ...this.twoContent, ...this.twoContentText, ...this.threeContent];
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...twoStyle,
+              ...fourStyle2,
+              ...fourBntStyle,
+              ...fourColorStyle2,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...bntStyle,
+              ...currencyStyle,
+            ];
           }
+        } else {
+          if (type4 == 0) {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...twoStyle,
+              ...fourStyle2,
+              ...fourBntStyle,
+              ...fourColorStyle2,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...currencyStyle,
+            ];
+          } else {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...twoStyle,
+              ...fourStyle2,
+              ...fourBntStyle,
+              ...fourColorStyle2,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...currencyStyle,
+            ];
+          }
+        }
+      } else if (type3 == 2) {
+        if (type4 == 0) {
+          rCom.value = obj;
+        } else {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...twoStyle,
+            ...fourStyle2,
+            ...fourBntStyle,
+            ...fourColorStyle2,
+            ...fourGoodsStyle,
+            ...toneStyle,
+            ...fiveStyle,
+            ...currencyStyle,
+          ];
         }
       } else {
-        if (type2 == 0) {
-          if (type3 == 1) {
-            this.rCom = [
-              ...arr,
-              ...this.oneContent,
-              ...this.oneContentImg,
-              ...this.twoContent,
-              ...this.twoContentImg,
-              ...this.threeContent,
-              ...this.fourContent,
-            ];
+        if (type4 == 0) {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...twoStyle,
+            ...fourStyle2,
+            ...fourBntStyle,
+            ...fourColorStyle2,
+            ...fourGoodsStyle,
+            ...toneStyle,
+            ...currencyStyle,
+          ];
+        } else {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...twoStyle,
+            ...fourStyle2,
+            ...fourBntStyle,
+            ...fourColorStyle2,
+            ...fourGoodsStyle,
+            ...toneStyle,
+            ...fiveStyle,
+            ...currencyStyle,
+          ];
+        }
+      }
+    } else {
+      if (type3 == 0) {
+        if (type5 == 0) {
+          if (type4 == 0) {
+            rCom.value = obj2;
           } else {
-            this.rCom = [
+            rCom.value = [
               ...arr,
-              ...this.oneContent,
-              ...this.oneContentImg,
-              ...this.twoContent,
-              ...this.twoContentImg,
-              ...this.threeContent,
+              ...oneStyle,
+              ...twoStyle,
+              ...threeStyle,
+              ...fourStyle2,
+              ...fourBntStyle,
+              ...fourColorStyle2,
+              ...fourGoodsStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...bntStyle,
+              ...currencyStyle,
             ];
           }
         } else {
-          if (type3 == 1) {
-            this.rCom = [
-              ...arr,
-              ...this.oneContent,
-              ...this.oneContentImg,
-              ...this.twoContent,
-              ...this.twoContentText,
-              ...this.threeContent,
-              ...this.fourContent,
-            ];
+          if (type4 == 0) {
+            rCom.value = obj2;
           } else {
-            this.rCom = [
+            rCom.value = [
               ...arr,
-              ...this.oneContent,
-              ...this.oneContentImg,
-              ...this.twoContent,
-              ...this.twoContentText,
-              ...this.threeContent,
+              ...oneStyle,
+              ...twoStyle,
+              ...threeStyle,
+              ...fourStyle2,
+              ...fourBntStyle,
+              ...fourColorStyle2,
+              ...fourGoodsStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...currencyStyle,
             ];
           }
         }
-      }
-    },
-    getRComStyle(arr, type, type2, type3, type5, type4) {
-      let obj = [
-        ...arr,
-        ...this.oneStyle,
-        ...this.twoStyle,
-        ...this.fourStyle2,
-        ...this.fourBntStyle,
-        ...this.fourColorStyle2,
-        ...this.fourGoodsStyle,
-        ...this.toneStyle,
-        ...this.currencyStyle,
-      ];
-      let obj2 = [
-        ...arr,
-        ...this.oneStyle,
-        ...this.twoStyle,
-        ...this.threeStyle,
-        ...this.fourStyle2,
-        ...this.fourBntStyle,
-        ...this.fourColorStyle2,
-        ...this.fourGoodsStyle,
-        ...this.toneStyle,
-        ...this.currencyStyle,
-      ];
-      let obj3 = [
-        ...arr,
-        ...this.oneStyle,
-        ...this.fourStyle,
-        ...this.fourBntStyle,
-        ...this.fourColorStyle,
-        ...this.fourGoodsStyle,
-        ...this.toneStyle,
-        ...this.currencyStyle,
-      ];
-      let obj4 = [
-        ...arr,
-        ...this.oneStyle,
-        ...this.threeStyle,
-        ...this.fourStyle,
-        ...this.fourBntStyle,
-        ...this.fourColorStyle,
-        ...this.fourGoodsStyle,
-        ...this.toneStyle,
-        ...this.currencyStyle,
-      ];
-      if (type == 0) {
-        if (type2 == 0) {
-          if (type3 == 0) {
-            if (type5 == 0) {
-              if (type4 == 0) {
-                this.rCom = obj;
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.twoStyle,
-                  ...this.fourStyle2,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle2,
-                  ...this.fourGoodsStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.bntStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            } else {
-              if (type4 == 0) {
-                this.rCom = obj;
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.twoStyle,
-                  ...this.fourStyle2,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle2,
-                  ...this.fourGoodsStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            }
-          } else if (type3 == 1) {
-            if (type5 == 0) {
-              if (type4 == 0) {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.twoStyle,
-                  ...this.fourStyle2,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle2,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.currencyStyle,
-                ];
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.twoStyle,
-                  ...this.fourStyle2,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle2,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.bntStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            } else {
-              if (type4 == 0) {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.twoStyle,
-                  ...this.fourStyle2,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle2,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.currencyStyle,
-                ];
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.twoStyle,
-                  ...this.fourStyle2,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle2,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            }
-          } else if (type3 == 2) {
-            if (type4 == 0) {
-              this.rCom = obj;
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.fourStyle2,
-                ...this.fourBntStyle,
-                ...this.fourColorStyle2,
-                ...this.fourGoodsStyle,
-                ...this.toneStyle,
-                ...this.fiveStyle,
-                ...this.currencyStyle,
-              ];
-            }
+      } else if (type3 == 1) {
+        if (type5 == 0) {
+          if (type4 == 0) {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...twoStyle,
+              ...threeStyle,
+              ...fourStyle2,
+              ...fourBntStyle,
+              ...fourColorStyle2,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...currencyStyle,
+            ];
           } else {
-            if (type4 == 0) {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.fourStyle2,
-                ...this.fourBntStyle,
-                ...this.fourColorStyle2,
-                ...this.fourGoodsStyle,
-                ...this.toneStyle,
-                ...this.currencyStyle,
-              ];
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.fourStyle2,
-                ...this.fourBntStyle,
-                ...this.fourColorStyle2,
-                ...this.fourGoodsStyle,
-                ...this.toneStyle,
-                ...this.fiveStyle,
-                ...this.currencyStyle,
-              ];
-            }
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...twoStyle,
+              ...threeStyle,
+              ...fourStyle2,
+              ...fourBntStyle,
+              ...fourColorStyle2,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...bntStyle,
+              ...currencyStyle,
+            ];
           }
         } else {
-          if (type3 == 0) {
-            if (type5 == 0) {
-              if (type4 == 0) {
-                this.rCom = obj2;
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.twoStyle,
-                  ...this.threeStyle,
-                  ...this.fourStyle2,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle2,
-                  ...this.fourGoodsStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.bntStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            } else {
-              if (type4 == 0) {
-                this.rCom = obj2;
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.twoStyle,
-                  ...this.threeStyle,
-                  ...this.fourStyle2,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle2,
-                  ...this.fourGoodsStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            }
-          } else if (type3 == 1) {
-            if (type5 == 0) {
-              if (type4 == 0) {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.twoStyle,
-                  ...this.threeStyle,
-                  ...this.fourStyle2,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle2,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.currencyStyle,
-                ];
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.twoStyle,
-                  ...this.threeStyle,
-                  ...this.fourStyle2,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle2,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.bntStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            } else {
-              if (type4 == 0) {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.twoStyle,
-                  ...this.threeStyle,
-                  ...this.fourStyle2,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle2,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.currencyStyle,
-                ];
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.twoStyle,
-                  ...this.threeStyle,
-                  ...this.fourStyle2,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle2,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            }
-          } else if (type3 == 2) {
-            if (type4 == 0) {
-              this.rCom = obj2;
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.threeStyle,
-                ...this.fourStyle2,
-                ...this.fourBntStyle,
-                ...this.fourColorStyle2,
-                ...this.fourGoodsStyle,
-                ...this.toneStyle,
-                ...this.fiveStyle,
-                ...this.currencyStyle,
-              ];
-            }
+          if (type4 == 0) {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...twoStyle,
+              ...threeStyle,
+              ...fourStyle2,
+              ...fourBntStyle,
+              ...fourColorStyle2,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...currencyStyle,
+            ];
           } else {
-            if (type4 == 0) {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.threeStyle,
-                ...this.fourStyle2,
-                ...this.fourBntStyle,
-                ...this.fourColorStyle2,
-                ...this.fourGoodsStyle,
-                ...this.toneStyle,
-                ...this.currencyStyle,
-              ];
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.twoStyle,
-                ...this.threeStyle,
-                ...this.fourStyle2,
-                ...this.fourBntStyle,
-                ...this.fourColorStyle2,
-                ...this.fourGoodsStyle,
-                ...this.toneStyle,
-                ...this.fiveStyle,
-                ...this.currencyStyle,
-              ];
-            }
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...twoStyle,
+              ...threeStyle,
+              ...fourStyle2,
+              ...fourBntStyle,
+              ...fourColorStyle2,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...currencyStyle,
+            ];
           }
+        }
+      } else if (type3 == 2) {
+        if (type4 == 0) {
+          rCom.value = obj2;
+        } else {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...twoStyle,
+            ...threeStyle,
+            ...fourStyle2,
+            ...fourBntStyle,
+            ...fourColorStyle2,
+            ...fourGoodsStyle,
+            ...toneStyle,
+            ...fiveStyle,
+            ...currencyStyle,
+          ];
         }
       } else {
-        if (type2 == 0) {
-          if (type3 == 0) {
-            if (type5 == 0) {
-              if (type4 == 0) {
-                this.rCom = obj3;
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.fourStyle,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle,
-                  ...this.fourGoodsStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.bntStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            } else {
-              if (type4 == 0) {
-                this.rCom = obj3;
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.fourStyle,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle,
-                  ...this.fourGoodsStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            }
-          } else if (type3 == 1) {
-            if (type5 == 0) {
-              if (type4 == 0) {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.fourStyle,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.currencyStyle,
-                ];
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.fourStyle,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.bntStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            } else {
-              if (type4 == 0) {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.fourStyle,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.currencyStyle,
-                ];
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.fourStyle,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            }
-          } else if (type3 == 2) {
-            if (type4 == 0) {
-              this.rCom = obj3;
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.fourStyle,
-                ...this.fourBntStyle,
-                ...this.fourColorStyle,
-                ...this.fourGoodsStyle,
-                ...this.toneStyle,
-                ...this.fiveStyle,
-                ...this.currencyStyle,
-              ];
-            }
-          } else {
-            if (type4 == 0) {
-              this.rCom = obj3;
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.fourStyle,
-                ...this.fourBntStyle,
-                ...this.fourColorStyle,
-                ...this.fourGoodsStyle,
-                ...this.toneStyle,
-                ...this.fiveStyle,
-                ...this.currencyStyle,
-              ];
-            }
-          }
+        if (type4 == 0) {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...twoStyle,
+            ...threeStyle,
+            ...fourStyle2,
+            ...fourBntStyle,
+            ...fourColorStyle2,
+            ...fourGoodsStyle,
+            ...toneStyle,
+            ...currencyStyle,
+          ];
         } else {
-          if (type3 == 0) {
-            if (type5 == 0) {
-              if (type4 == 0) {
-                this.rCom = obj4;
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.threeStyle,
-                  ...this.fourStyle,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle,
-                  ...this.fourGoodsStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.bntStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            } else {
-              if (type4 == 0) {
-                this.rCom = obj4;
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.threeStyle,
-                  ...this.fourStyle,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle,
-                  ...this.fourGoodsStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            }
-          } else if (type3 == 1) {
-            if (type5 == 0) {
-              if (type4 == 0) {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.threeStyle,
-                  ...this.fourStyle,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.currencyStyle,
-                ];
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.threeStyle,
-                  ...this.fourStyle,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.bntStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            } else {
-              if (type4 == 0) {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.threeStyle,
-                  ...this.fourStyle,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.currencyStyle,
-                ];
-              } else {
-                this.rCom = [
-                  ...arr,
-                  ...this.oneStyle,
-                  ...this.threeStyle,
-                  ...this.fourStyle,
-                  ...this.fourBntStyle,
-                  ...this.fourColorStyle,
-                  ...this.fourGoodsStyle,
-                  ...this.goodsPriceStyle,
-                  ...this.toneStyle,
-                  ...this.fiveStyle,
-                  ...this.currencyStyle,
-                ];
-              }
-            }
-          } else if (type3 == 2) {
-            if (type4 == 0) {
-              this.rCom = obj4;
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.threeStyle,
-                ...this.fourStyle,
-                ...this.fourBntStyle,
-                ...this.fourColorStyle,
-                ...this.fourGoodsStyle,
-                ...this.toneStyle,
-                ...this.fiveStyle,
-                ...this.currencyStyle,
-              ];
-            }
-          } else {
-            if (type4 == 0) {
-              this.rCom = obj4;
-            } else {
-              this.rCom = [
-                ...arr,
-                ...this.oneStyle,
-                ...this.threeStyle,
-                ...this.fourStyle,
-                ...this.fourBntStyle,
-                ...this.fourColorStyle,
-                ...this.fourGoodsStyle,
-                ...this.toneStyle,
-                ...this.fiveStyle,
-                ...this.currencyStyle,
-              ];
-            }
-          }
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...twoStyle,
+            ...threeStyle,
+            ...fourStyle2,
+            ...fourBntStyle,
+            ...fourColorStyle2,
+            ...fourGoodsStyle,
+            ...toneStyle,
+            ...fiveStyle,
+            ...currencyStyle,
+          ];
         }
       }
-    },
-    // 获取组件参数
-    getConfig(data) {},
-  },
-};
+    }
+  } else {
+    if (type2 == 0) {
+      if (type3 == 0) {
+        if (type5 == 0) {
+          if (type4 == 0) {
+            rCom.value = obj3;
+          } else {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...fourStyle,
+              ...fourBntStyle,
+              ...fourColorStyle,
+              ...fourGoodsStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...bntStyle,
+              ...currencyStyle,
+            ];
+          }
+        } else {
+          if (type4 == 0) {
+            rCom.value = obj3;
+          } else {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...fourStyle,
+              ...fourBntStyle,
+              ...fourColorStyle,
+              ...fourGoodsStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...currencyStyle,
+            ];
+          }
+        }
+      } else if (type3 == 1) {
+        if (type5 == 0) {
+          if (type4 == 0) {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...fourStyle,
+              ...fourBntStyle,
+              ...fourColorStyle,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...currencyStyle,
+            ];
+          } else {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...fourStyle,
+              ...fourBntStyle,
+              ...fourColorStyle,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...bntStyle,
+              ...currencyStyle,
+            ];
+          }
+        } else {
+          if (type4 == 0) {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...fourStyle,
+              ...fourBntStyle,
+              ...fourColorStyle,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...currencyStyle,
+            ];
+          } else {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...fourStyle,
+              ...fourBntStyle,
+              ...fourColorStyle,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...currencyStyle,
+            ];
+          }
+        }
+      } else if (type3 == 2) {
+        if (type4 == 0) {
+          rCom.value = obj3;
+        } else {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...fourStyle,
+            ...fourBntStyle,
+            ...fourColorStyle,
+            ...fourGoodsStyle,
+            ...toneStyle,
+            ...fiveStyle,
+            ...currencyStyle,
+          ];
+        }
+      } else {
+        if (type4 == 0) {
+          rCom.value = obj3;
+        } else {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...fourStyle,
+            ...fourBntStyle,
+            ...fourColorStyle,
+            ...fourGoodsStyle,
+            ...toneStyle,
+            ...fiveStyle,
+            ...currencyStyle,
+          ];
+        }
+      }
+    } else {
+      if (type3 == 0) {
+        if (type5 == 0) {
+          if (type4 == 0) {
+            rCom.value = obj4;
+          } else {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...threeStyle,
+              ...fourStyle,
+              ...fourBntStyle,
+              ...fourColorStyle,
+              ...fourGoodsStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...bntStyle,
+              ...currencyStyle,
+            ];
+          }
+        } else {
+          if (type4 == 0) {
+            rCom.value = obj4;
+          } else {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...threeStyle,
+              ...fourStyle,
+              ...fourBntStyle,
+              ...fourColorStyle,
+              ...fourGoodsStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...currencyStyle,
+            ];
+          }
+        }
+      } else if (type3 == 1) {
+        if (type5 == 0) {
+          if (type4 == 0) {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...threeStyle,
+              ...fourStyle,
+              ...fourBntStyle,
+              ...fourColorStyle,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...currencyStyle,
+            ];
+          } else {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...threeStyle,
+              ...fourStyle,
+              ...fourBntStyle,
+              ...fourColorStyle,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...bntStyle,
+              ...currencyStyle,
+            ];
+          }
+        } else {
+          if (type4 == 0) {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...threeStyle,
+              ...fourStyle,
+              ...fourBntStyle,
+              ...fourColorStyle,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...currencyStyle,
+            ];
+          } else {
+            rCom.value = [
+              ...arr,
+              ...oneStyle,
+              ...threeStyle,
+              ...fourStyle,
+              ...fourBntStyle,
+              ...fourColorStyle,
+              ...fourGoodsStyle,
+              ...goodsPriceStyle,
+              ...toneStyle,
+              ...fiveStyle,
+              ...currencyStyle,
+            ];
+          }
+        }
+      } else if (type3 == 2) {
+        if (type4 == 0) {
+          rCom.value = obj4;
+        } else {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...threeStyle,
+            ...fourStyle,
+            ...fourBntStyle,
+            ...fourColorStyle,
+            ...fourGoodsStyle,
+            ...toneStyle,
+            ...fiveStyle,
+            ...currencyStyle,
+          ];
+        }
+      } else {
+        if (type4 == 0) {
+          rCom.value = obj4;
+        } else {
+          rCom.value = [
+            ...arr,
+            ...oneStyle,
+            ...threeStyle,
+            ...fourStyle,
+            ...fourBntStyle,
+            ...fourColorStyle,
+            ...fourGoodsStyle,
+            ...toneStyle,
+            ...fiveStyle,
+            ...currencyStyle,
+          ];
+        }
+      }
+    }
+  }
+}
+
+// 获取组件参数
+function getConfig(data) {}
 </script>
 
 <style scoped></style>

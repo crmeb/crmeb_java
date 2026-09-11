@@ -20,7 +20,7 @@
     </div>
     <div class="bnt" @click="openFloorModal">+ 编辑热区</div>
     <div>
-      <el-dialog :visible.sync="modalPic" width="960px" :title="'上传图片'">
+      <el-dialog v-model="modalPic" width="1024px" :title="'上传图片'">
         <uploadPictures
           :isChoice="isChoice"
           @getPic="getPic"
@@ -30,7 +30,7 @@
         ></uploadPictures>
       </el-dialog>
       <OperationFloorModal
-        ref="hotpot"
+        ref="hotpotRef"
         :imgs="configData.url"
         :img-area-data="imgAreaData"
         @delAreaData="handleAreaData"
@@ -40,92 +40,88 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
 import uploadPictures from '@/views/design/theme_editor/components/uploadPictures';
 import OperationFloorModal from '@/components/hotpotModal';
-export default {
-  name: 'c_one_pictrue',
-  components: {
-    uploadPictures,
-    OperationFloorModal,
+import { ElMessage } from '@/utils/elementPlusFeedback';
+
+defineOptions({ name: 'c_one_pictrue' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+  configNme: {
+    type: String,
   },
-  data() {
-    return {
-      defaults: {},
-      configData: {},
-      gridBtn: {
-        xl: 4,
-        lg: 8,
-        md: 8,
-        sm: 8,
-        xs: 8,
-      },
-      gridPic: {
-        xl: 6,
-        lg: 8,
-        md: 12,
-        sm: 12,
-        xs: 12,
-      },
-      modalPic: false,
-      isChoice: '单选',
-      imgAreaData: [], //热区数据
-    };
+});
+
+const defaults = ref({});
+const configData = ref({});
+const gridBtn = ref({
+  xl: 4,
+  lg: 8,
+  md: 8,
+  sm: 8,
+  xs: 8,
+});
+const gridPic = ref({
+  xl: 6,
+  lg: 8,
+  md: 12,
+  sm: 12,
+  xs: 12,
+});
+const modalPic = ref(false);
+const isChoice = ref('单选');
+const imgAreaData = ref([]); //热区数据
+const hotpotRef = ref(null);
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal.picStyle;
+    imgAreaData.value = nVal.picStyle.list || [];
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal.picStyle;
-        this.$set(this, 'imgAreaData', nVal.picStyle.list || []);
-      },
-      deep: true,
-    },
-  },
-  mounted() {
-    this.$nextTick(() => {
-      this.defaults = this.configObj;
-      this.configData = this.configObj[this.configNme];
-      this.imgAreaData = this.configObj.picStyle.list || [];
-    });
-  },
-  methods: {
-    bindDelete() {
-      this.configData.url = '';
-    },
-    // 点击图文封面
-    modalPicTap(title) {
-      this.modalPic = true;
-    },
-    // 获取图片信息
-    getPic(pc) {
-      this.$nextTick(() => {
-        this.configData.url = pc.att_dir;
-        this.modalPic = false;
-      });
-    },
-    openFloorModal() {
-      // 如果配置数据中有url，则显示热点图对话框
-      if (this.configData.url) this.$refs.hotpot.dialogVisible = true;
-    },
-    /**
-     * 处理区域数据
-     * @param {Object} areaData - 区域数据对象
-     */
-    handleAreaData(areaData) {
-      // 打印保存的数据
-      this.configData.list = areaData;
-    },
-  },
-};
+  { deep: true },
+);
+
+onMounted(() => {
+  nextTick(() => {
+    defaults.value = props.configObj;
+    configData.value = props.configObj[props.configNme] || {};
+    imgAreaData.value = props.configObj.picStyle.list || [];
+  });
+});
+
+function bindDelete() {
+  configData.value.url = '';
+}
+// 点击图文封面
+function modalPicTap(title) {
+  modalPic.value = true;
+}
+// 获取图片信息
+function getPic(pc) {
+  nextTick(() => {
+    configData.value.url = pc.att_dir;
+    modalPic.value = false;
+  });
+}
+function openFloorModal() {
+  if (!configData.value.url) return ElMessage.warning('请先选择图片');
+  hotpotRef.value?.open();
+}
+/**
+ * 处理区域数据
+ * @param {Object} areaData - 区域数据对象
+ */
+function handleAreaData(areaData) {
+  // 打印保存的数据
+  configData.value.list = areaData;
+}
 </script>
 
 <style scoped lang="scss">

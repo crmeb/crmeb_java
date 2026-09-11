@@ -48,12 +48,12 @@
                 : filletValImg + 'px',
             }"
           >
-            <img src="../../assets/images/shan.png" />
+            <img :src="shanImg" />
           </div>
         </div>
         <div class="bottom acea-row" :class="checkboxList.indexOf(0) != -1 ? 'row-between-wrapper' : 'row-right'">
           <div v-if="checkboxList.indexOf(0) != -1" :style="{ color: timeColor }">
-            {{ (item.add_time || '1621474811') | formatDate }}
+            {{ formatDate(item.add_time || '1621474811') }}
           </div>
           <div class="right">
             <div class="acea-row row-center-wrapper mr5" v-if="checkboxList.indexOf(1) != -1">
@@ -118,7 +118,7 @@
               : filletValImg + 'px',
           }"
         >
-          <img src="../../assets/images/shan.png" />
+          <img :src="shanImg" />
         </div>
         <div class="info">
           <div class="titleCon">
@@ -195,7 +195,7 @@
                 : filletValImg + 'px',
             }"
           >
-            <img src="../../assets/images/shan.png" />
+            <img :src="shanImg" />
           </div>
         </div>
         <div class="text">
@@ -204,7 +204,7 @@
           </div>
           <div class="bottom acea-row" :class="checkboxList.indexOf(0) != -1 ? 'row-between-wrapper' : 'row-right'">
             <div class="time" v-if="checkboxList.indexOf(0) != -1" :style="{ color: `${timeColor}` }">
-              {{ (item.add_time || '1621474811') | formatDate }}
+              {{ formatDate(item.add_time || '1621474811') }}
             </div>
             <div class="acea-row row-center-wrapper mr5" v-if="checkboxList.indexOf(1) != -1">
               <span class="iconfont iconfangwenliang" :style="{ color: `${browseColor}` }"></span>
@@ -229,71 +229,42 @@
   </common_wrapper>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, onMounted, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+import shanImg from '@/views/design/theme_editor/assets/images/shan.png';
 import { themeArticleCategory } from '@/api/theme';
-import { mapState } from 'vuex';
 import { formatDate } from '@/utils/validate';
-// import theme from "@/views/design/theme_editor/mixins/theme";
-export default {
+
+defineOptions({
   name: 'home_new_list',
-  filters: {
-    formatDate(time) {
-      if (time !== 0) {
-        const date = new Date(time * 1000);
-        return formatDate(date, 'yyyy-MM-dd hh:mm');
-      }
-    },
-  },
   cname: '文章列表',
   icon: '#iconzujian-wenzhangliebiao',
   configName: 'c_new_list',
-  type: 0, // 0 基础组件 1 营销组件 2工具组件
-  defaultName: 'articleList', // 外面匹配名称
-  props: {
-    index: {
-      type: null,
-    },
-    num: {
-      type: null,
-    },
-    colorStyle: {
-      type: null,
-    },
-  },
-  computed: {
-    ...mapState('mobildConfig', ['defaultArray']),
-  },
-  watch: {
-    pageData: {
-      handler(nVal, oVal) {
-        this.setConfig(nVal);
+  type: 0,
+  defaultName: 'articleList',
+});
+
+const props = defineProps({
+  index: {
+        type: null,
       },
-      deep: true,
-    },
-    num: {
-      handler(nVal, oVal) {
-        const data = this.$store.state.mobildConfig.defaultArray[nVal];
-        this.setConfig(data);
+      num: {
+        type: null,
       },
-      deep: true,
-    },
-    defaultArray: {
-      handler(nVal, oVal) {
-        const data = this.$store.state.mobildConfig.defaultArray[this.num];
-        this.setConfig(data);
+      colorStyle: {
+        type: null,
       },
-      deep: true,
-    },
-  },
-  // mixins: [theme],
-  data() {
-    return {
-      // 默认初始化数据禁止修改
-      defaultConfig: {
+});
+
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaultConfig = {
         cname: '文章列表',
         desc: '文章列表介绍',
         name: 'articleList',
-        timestamp: this.num,
+        timestamp: props.num,
         isHide: false,
         setUp: {
           tabVal: 0,
@@ -620,125 +591,149 @@ export default {
           min: 0,
           valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
         },
-      },
-      bgColorLeft: '',
-      bgColorRight: '',
-      itemStyle: 0,
-      prConfig: 0,
-      styleConfig: 0,
-      checkboxList: [],
-      filletImg: 0,
-      filletValImg: 0,
-      valListImg: [],
-      fillet: 0,
-      filletVal: 0,
-      valList: [],
-      nameConfig: 0,
-      nameColor: '',
-      timeColor: '',
-      browseColor: '',
-      // likeColor: '',
-      statisticColor: '',
-      bottomBgColor: '',
-      configObj: {},
-      pageData: {},
-      topConfig: 0,
-      bottomConfig: 0,
-      toneConfig: 0,
-      likeSuccessColor: '',
-      list: [],
-    };
-  },
-  created() {},
-  mounted() {
-    this.$nextTick(() => {
-      this.pageData = this.$store.state.mobildConfig.defaultArray[this.num];
-      this.setConfig(this.pageData);
-      // this.categoryList()
-    });
-  },
-  methods: {
-    categoryList() {
-      themeArticleCategory().then((res) => {
-        this.pageData.selectConfig.list = res.data;
-        this.pageData.selectConfig.list.map((item) => {
-          item.id.toString();
-          // return item;
+      };
+
+const bgColorLeft = ref('');
+const bgColorRight = ref('');
+const itemStyle = ref(0);
+const prConfig = ref(0);
+const styleConfig = ref(0);
+const checkboxList = ref([]);
+const filletImg = ref(0);
+const filletValImg = ref(0);
+const valListImg = ref([]);
+const fillet = ref(0);
+const filletVal = ref(0);
+const valList = ref([]);
+const nameConfig = ref(0);
+const nameColor = ref('');
+const timeColor = ref('');
+const browseColor = ref('');
+const statisticColor = ref('');
+const bottomBgColor = ref('');
+const configObj = ref({});
+const pageData = ref({});
+const topConfig = ref(0);
+const bottomConfig = ref(0);
+const toneConfig = ref(0);
+const likeSuccessColor = ref('');
+const list = ref([]);
+
+{
+
+}
+
+function categoryList() {
+  themeArticleCategory().then((res) => {
+          pageData.value.selectConfig.list = res.data;
+          pageData.value.selectConfig.list.map((item) => {
+            item.id.toString();
+            // return item;
+          });
+          mobildConfigStore.UPDATEARR({ num: props.num, val: pageData.value });
         });
-        this.$store.commit('mobildConfig/UPDATEARR', { num: this.num, val: this.pageData });
-      });
-    },
-    setConfig(data) {
-      if (!data) return;
-      for (let key in this.defaultConfig) {
-        if (data[key] == undefined) {
-          this.$set(data, key, JSON.parse(JSON.stringify(this.defaultConfig[key])));
+}
+
+function setConfig(data) {
+  if (!data) return;
+        for (let key in defaultConfig) {
+          if (data[key] == undefined) {
+            data[key] = JSON.parse(JSON.stringify(defaultConfig[key]));
+          }
         }
-      }
-      this.styleConfig = data.styleConfig.tabVal;
-      this.checkboxList = data.checkboxList.type;
-      this.filletImg = data.filletImg.type;
-      this.filletValImg = data.filletImg.val;
-      this.valListImg = data.filletImg.valList;
-      this.fillet = data.fillet.type;
-      this.filletVal = data.fillet.val;
-      this.valList = data.fillet.valList;
-      this.bgColorLeft = data.bgColor.color[0].item;
-      this.bgColorRight = data.bgColor.color[1].item;
-      this.nameConfig = data.nameConfig.tabVal;
-      this.nameColor = data.nameColor.color[0].item;
-      this.timeColor = data.timeColor.color[0].item;
-      this.browseColor = data.browseColor.color[0].item;
-      // this.likeColor = data.likeColor.color[0].item;
-      this.likeSuccessColor = data.likeSuccessColor.color[0].item;
-      this.statisticColor = data.statisticColor.color[0].item;
-      this.bottomBgColor = data.bottomBgColor.color[0].item;
-      this.topConfig = data.topConfig.val;
-      this.bottomConfig = data.bottomConfig.val;
-      this.toneConfig = data.toneConfig.tabVal;
-      this.mTOP = data.mbConfig ? data.mbConfig.val : 0;
-      this.prConfig = data.prConfig.val;
+        styleConfig.value = data.styleConfig.tabVal;
+        checkboxList.value = data.checkboxList.type;
+        filletImg.value = data.filletImg.type;
+        filletValImg.value = data.filletImg.val;
+        valListImg.value = data.filletImg.valList;
+        fillet.value = data.fillet.type;
+        filletVal.value = data.fillet.val;
+        valList.value = data.fillet.valList;
+        bgColorLeft.value = data.bgColor.color[0].item;
+        bgColorRight.value = data.bgColor.color[1].item;
+        nameConfig.value = data.nameConfig.tabVal;
+        nameColor.value = data.nameColor.color[0].item;
+        timeColor.value = data.timeColor.color[0].item;
+        browseColor.value = data.browseColor.color[0].item;
+        // likeColor.value = data.likeColor.color[0].item;
+        likeSuccessColor.value = data.likeSuccessColor.color[0].item;
+        statisticColor.value = data.statisticColor.color[0].item;
+        bottomBgColor.value = data.bottomBgColor.color[0].item;
+        topConfig.value = data.topConfig.val;
+        bottomConfig.value = data.bottomConfig.val;
+        toneConfig.value = data.toneConfig.tabVal;
+        prConfig.value = data.prConfig.val;
 
-      this.configObj = data;
+        configObj.value = data;
 
-      if (!data.paddingConfig) {
-        let paddingConfig = {
-          title: '内边距',
-          val: 0,
-          min: 0,
-          isAll: false,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        };
-        paddingConfig.valList[0].val = data.topConfig.val;
-        paddingConfig.valList[2].val = data.bottomConfig.val;
-        paddingConfig.valList[1].val = data.prConfig.val;
-        paddingConfig.valList[3].val = data.prConfig.val;
-        this.$set(this.configObj, 'paddingConfig', paddingConfig);
-      }
+        if (!data.paddingConfig) {
+          let paddingConfig = {
+            title: '内边距',
+            val: 0,
+            min: 0,
+            isAll: false,
+            valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+          };
+          paddingConfig.valList[0].val = data.topConfig.val;
+          paddingConfig.valList[2].val = data.bottomConfig.val;
+          paddingConfig.valList[1].val = data.prConfig.val;
+          paddingConfig.valList[3].val = data.prConfig.val;
+          configObj.value['paddingConfig'] = paddingConfig;
+        }
 
-      if (!data.marginConfig) {
-        let marginConfig = {
-          title: '外边距',
-          val: 0,
-          min: 0,
-          isAll: false,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        };
-        marginConfig.valList[0].val = data.mbConfig ? data.mbConfig.val : 0;
-        this.$set(this.configObj, 'marginConfig', marginConfig);
-      }
+        if (!data.marginConfig) {
+          let marginConfig = {
+            title: '外边距',
+            val: 0,
+            min: 0,
+            isAll: false,
+            valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+          };
+          marginConfig.valList[0].val = data.mbConfig ? data.mbConfig.val : 0;
+          configObj.value['marginConfig'] = marginConfig;
+        }
 
-      const selectList = data.selectList.list || [];
-      if (selectList.length) {
-        this.list = selectList;
-      } else {
-        this.list = data.numConfig.val;
-      }
-    },
+        const selectList = data.selectList.list || [];
+        if (selectList.length) {
+          list.value = selectList;
+        } else {
+          list.value = data.numConfig.val;
+        }
+}
+
+watch(
+  pageData,
+  (nVal, oVal) => {
+    setConfig(nVal);
   },
-};
-</script>
+  { deep: true },
+);
+watch(
+  () => props.num,
+  (nVal, oVal) => {
+    const data = mobildConfigStore.defaultArray[nVal];
+            setConfig(data);
+  },
+  { deep: true },
+);
+watch(
+  () => mobildConfigStore.defaultArray,
+  (nVal, oVal) => {
+    const data = mobildConfigStore.defaultArray[props.num];
+            setConfig(data);
+  },
+  { deep: true },
+);
 
+onMounted(() => {
+  nextTick(() => {
+        pageData.value = mobildConfigStore.defaultArray[props.num];
+        setConfig(pageData.value);
+        // categoryList()
+      });
+});
+
+</script>
 <style scoped lang="scss">
 .mobile-page {
   display: inline-block;

@@ -5,7 +5,13 @@
         <!-- 左侧预览 -->
         <div class="iframe" :bordered="false">
           <div class="nofonts" v-if="!splashFrom.adList.length">暂无照片，请添加~</div>
-          <swiper :options="swiperOption" class="swiperimg on">
+          <swiper
+            :modules="swiperModules"
+            :pagination="{ clickable: true }"
+            :autoplay="{ delay: 2000, disableOnInteraction: false }"
+            :loop="false"
+            class="swiperimg on"
+          >
             <swiper-slide class="swiperimg on" v-for="(item, index) in splashFrom.adList" :key="index + 'a'">
               <img :src="item.imageUrl" mode="aspectFill" />
               {{ item }}
@@ -34,7 +40,7 @@
                     <el-input-number
                       v-model.number="splashFrom.splashAdShowTime"
                       type="number"
-                      size="small"
+
                       :min="1"
                       placeholder="请输入开屏广告时间"
                       style="width: 150px"
@@ -46,7 +52,7 @@
                     <el-input-number
                       v-model.number="splashFrom.splashAdShowInterval"
                       type="number"
-                      size="small"
+
                       :min="0"
                       placeholder="请输入广告间隔时间"
                       style="width: 150px"
@@ -67,7 +73,7 @@
     <el-card class="bottom-card">
       <div class="save">
         <el-button
-          size="small"
+
           type="primary"
           v-hasPermi="['admin:page:layout:splash:ad:save']"
           v-debounceClick="handleAdvertisementSave"
@@ -77,93 +83,71 @@
     </el-card>
   </div>
 </template>
-<script>
+<script setup>
+import { ref, reactive, onMounted } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { Pagination, Autoplay } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
 import FromList from '@/components/FromList';
 import { advertisementDefault } from '@/views/design/advertisement/default';
 import { checkPermi } from '@/utils/permission';
 import { splashGetApi, splashSaveApi } from '@/api/devise';
-export default {
-  name: '',
-  components: {
-    FromList,
-  },
-  mixins: [],
-  props: {},
-  data() {
-    return {
-      advertisementConfig: Object.assign({}, advertisementDefault()), //选择链接数据
-      loadingBtn: false,
-      // 广告设置
-      splashFrom: {
-        adList: [],
-        splashAdShowInterval: 0, // 展示间隔
-        splashAdShowTime: 0, // 广告时间
-        splashAdSwitch: 0, // 广告开关
-      },
-      // 轮播图配置项
-      swiperOption: {
-        //显示分页
-        pagination: {
-          el: '.swiper-pagination',
-        },
-        //设置点击箭头
-        navigation: {
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev',
-        },
-        //自动轮播
-        autoplay: {
-          delay: 2000,
-          //当用户滑动图片后继续自动轮播
-          disableOnInteraction: false,
-        },
-        //开启循环模式
-        loop: false,
-      },
-    };
-  },
-  mounted() {
-    if (checkPermi(['admin:page:layout:splash:ad:get'])) this.getAdvertisement();
-  },
-  methods: {
-    // 开屏广告新增
-    handleAdvertisementSave() {
-      this.advertisementConfig.list.map((item, index) => {
-        item.sort = index + 1;
-      });
-      let data = {
-        ...this.splashFrom,
-        adList: this.advertisementConfig.list,
-      };
-      this.loadingBtn = true;
-      splashSaveApi(data)
-        .then((res) => {
-          this.$message.success('保存成功');
-          this.loadingBtn = false;
-          this.getAdvertisement();
-        })
-        .catch(() => {
-          this.loadingBtn = false;
-        });
-    },
-    // 开屏广告数据
-    getAdvertisement() {
-      splashGetApi().then((res) => {
-        this.splashFrom = res;
-        this.advertisementConfig.list = res.adList;
-      });
-    },
-    // 获取广告图片
-    getPicList(data) {
-      this.splashFrom.adList = data
-    }
-  },
-};
+
+const swiperModules = [Pagination, Autoplay];
+
+const advertisementConfig = reactive(Object.assign({}, advertisementDefault())); //选择链接数据
+const loadingBtn = ref(false);
+// 广告设置
+const splashFrom = reactive({
+  adList: [],
+  splashAdShowInterval: 0, // 展示间隔
+  splashAdShowTime: 0, // 广告时间
+  splashAdSwitch: 0, // 广告开关
+});
+// 开屏广告新增
+function handleAdvertisementSave() {
+  advertisementConfig.list.map((item, index) => {
+    item.sort = index + 1;
+  });
+  let data = {
+    ...splashFrom,
+    adList: advertisementConfig.list,
+  };
+  loadingBtn.value = true;
+  splashSaveApi(data)
+    .then((res) => {
+      ElMessage.success('保存成功');
+      loadingBtn.value = false;
+      getAdvertisement();
+    })
+    .catch(() => {
+      loadingBtn.value = false;
+    });
+}
+// 开屏广告数据
+function getAdvertisement() {
+  splashGetApi().then((res) => {
+    Object.assign(splashFrom, res);
+    advertisementConfig.list = res.adList;
+  });
+}
+// 获取广告图片
+function getPicList(data) {
+  splashFrom.adList = data;
+}
+
+onMounted(() => {
+  if (checkPermi(['admin:page:layout:splash:ad:get'])) getAdvertisement();
+});
+
+defineExpose({ handleAdvertisementSave });
 </script>
 <style lang="scss" scoped>
 .card-box {
   padding: 20px 50px;
-  ::v-deep .el-card__body {
+  :deep(.el-card__body) {
     padding: 0;
   }
   .iframe {
@@ -221,7 +205,8 @@ export default {
   align-items: center;
   height: 50px;
   width: 100%;
-  ::v-deep .el-card__body {
+  padding-top: 8px;
+  :deep(.el-card__body) {
     padding: 0;
   }
 }

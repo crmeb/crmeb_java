@@ -9,48 +9,47 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'c_status',
-  props: {
-    configObj: {
-      type: Object,
-    },
-    configNme: {
-      type: String,
-    },
+<script setup>
+import { ref, watch, nextTick } from 'vue';
+import { useMobildConfigStore } from '@/store/modules/mobildConfig';
+
+defineOptions({ name: 'c_status' });
+
+const props = defineProps({
+  configObj: {
+    type: Object,
   },
-  data() {
-    return {
-      configData: {
-        status: false,
-      },
-    };
+  configNme: {
+    type: String,
   },
-  created() {
-    this.defaults = this.configObj;
-    this.configData = this.configObj[this.configNme];
+});
+
+const mobildConfigStore = useMobildConfigStore();
+
+const defaults = ref({});
+const configData = ref({
+  status: false,
+});
+
+defaults.value = props.configObj;
+configData.value = props.configObj[props.configNme] || {};
+
+watch(
+  () => props.configObj,
+  (nVal, oVal) => {
+    defaults.value = nVal;
+    configData.value = nVal[props.configNme] || {};
   },
-  watch: {
-    configObj: {
-      handler(nVal, oVal) {
-        this.defaults = nVal;
-        this.configData = nVal[this.configNme];
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  methods: {
-    change(status) {
-      this.$nextTick(() => {
-        this.configData.status = status;
-        this.$store.commit('mobildConfig/footStatus', status);
-      });
-      //   this.$emit("getConfig", this.configData);
-    },
-  },
-};
+  { immediate: true, deep: true },
+);
+
+function change(status) {
+  nextTick(() => {
+    configData.value.status = status;
+    mobildConfigStore.footStatus(status);
+  });
+  //   emit("getConfig", configData.value);
+}
 </script>
 
 <style scoped lang="scss">
