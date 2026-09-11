@@ -1,6 +1,6 @@
 <template>
 	<!-- 底部导航 -->
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view v-if="bottomNavigationList.length">
 			<view class="page-footer" id="target" :style="[isSmallPage?boxStyle:'']">
 				<view :style="[bgColor]" class="acea-row row-middle row-around bg-box">
@@ -22,116 +22,107 @@
 	</view>
 </template>
 
-<script>
-	import {
-		mapState,
-		mapGetters
-	} from "vuex"
-	import {
-		getBottomNavigationApi
-	} from '@/api/api.js';
-	let app = getApp();
-	export default {
-		name: 'pageFooter',
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			},
-			isSmallPage: {
-				type: Boolean,
-				default: () => false
-			}
-		},
-		computed: {
-			//外部盒子
-			boxStyle() {
-				if (this.dataConfig) {
-					return {
-						borderRadius: this.dataConfig.bgStyle.val ? this.dataConfig.bgStyle.val + 'px' : '0',
-						padding: '0' + ' ' + this.dataConfig.lrConfig.val + 'px' + ' ' + 0
-					}
-				}
-			},
-			bgColor(){
-				return {
-					background: `linear-gradient(${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-				}
-			},
-			//标签文字颜色
-			fontColor() {
-				if (this.dataConfig) {
-					return {
-						color: this.dataConfig.fontColor.color[0].item
-					};
-				}
+<script setup>
+	import { ref, computed } from 'vue';
+	import { getBottomNavigationApi } from '@/api/api.js';
+	import { filterTheme } from '@/filters';
+	import { useAppStore } from "@/store/app.js";
+import { useColor } from '@/composables/useColor.js';
 
-			},
-			//选中颜色
-			checkColor() {
-				if (this.dataConfig) {
-					return {
-						color: this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.checkColor.color[0].item:this.themeColor
-					};
-				}
-			},
+	const app = getApp();
+	const appStore = useAppStore();
+
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
 		},
-		created() {
-			let routes = getCurrentPages(); //获取当前打开过的页面路由数组
-			let curRoute = routes[routes.length - 1].route //获取当前页面路由
-			this.activeRouter = '/' + curRoute;
-		},
-		mounted() {
-			if (this.activeRouter === '/pages/activity/small_page/index') {
-				this.bottomNavigationList = this.dataConfig.menuList.list;
-			} else {
-				this.navigationInfo();
-			}
-		},
-		data() {
+		isSmallPage: {
+			type: Boolean,
+			default: () => false
+		}
+	});
+
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	const isCustom = ref('');
+	const bottomNavigationList = ref([]);
+	const activeRouter = ref('');
+	const themeColor = ref(filterTheme(app.globalData.theme));
+
+	//外部盒子
+	const boxStyle = computed(() => {
+		if (props.dataConfig) {
 			return {
-				theme: app.globalData.theme,
-				isCustom: '',
-				bottomNavigationList: [],
-				activeRouter: '',
-				themeColor:this.$options.filters.filterTheme(app.globalData.theme)
+				borderRadius: props.dataConfig.bgStyle.val ? props.dataConfig.bgStyle.val + 'px' : '0',
+				padding: '0' + ' ' + props.dataConfig.lrConfig.val + 'px' + ' ' + 0
 			}
-		},
-		methods: {
-			navigationInfo() {
-				getBottomNavigationApi().then(res => {
-					let data = res.data;
-					this.isCustom = data.isCustom; //是否使用自定义导航，1使用，0不使用
-					this.$store.commit('BottomNavigationIsCustom', this.isCustom == 1 ? true : false);
-					if (data.isCustom == 1) {
-						uni.hideTabBar()
-						this.bottomNavigationList = data.bottomNavigationList;
-					} else {
-						uni.showTabBar();
-					}
-				})
-			},
-			goRouter(item) {
-				var pages = getCurrentPages();
-				var page = (pages[pages.length - 1]).$page.fullPath;
-				if (item.link == page) return
-				if (['/pages/index/index', '/pages/order_addcart/order_addcart',
-						'/pages/user/index', '/pages/discover_index/index', '/pages/goods_cate/goods_cate'
-					].indexOf(item.link) > -1) {
-					uni.switchTab({
-						url: item.link,
-						fail(err) {
-							uni.redirectTo({
-								url: item.link
-							})
-						}
-					})
-				} else {
-					uni.navigateTo({
+		}
+	});
+	const bgColor = computed(() => ({
+		background: `linear-gradient(${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+	}));
+	//标签文字颜色
+	const fontColor = computed(() => {
+		if (props.dataConfig) {
+			return {
+				color: props.dataConfig.fontColor.color[0].item
+			};
+		}
+	});
+	//选中颜色
+	const checkColor = computed(() => {
+		if (props.dataConfig) {
+			return {
+				color: props.dataConfig.themeStyleConfig.tabVal ? props.dataConfig.checkColor.color[0].item : themeColor.value
+			};
+		}
+	});
+
+	// created
+	let routes = getCurrentPages(); //获取当前打开过的页面路由数组
+	let curRoute = routes[routes.length - 1].route //获取当前页面路由
+	activeRouter.value = '/' + curRoute;
+
+	// mounted
+	if (activeRouter.value === '/pages/activity/small_page/index') {
+		bottomNavigationList.value = props.dataConfig.menuList.list;
+	} else {
+		navigationInfo();
+	}
+
+	function navigationInfo() {
+		getBottomNavigationApi().then(res => {
+			let data = res.data;
+			isCustom.value = data.isCustom; //是否使用自定义导航，1使用，0不使用
+			appStore.BottomNavigationIsCustom(isCustom.value == 1 ? true : false);
+			if (data.isCustom == 1) {
+				uni.hideTabBar()
+				bottomNavigationList.value = data.bottomNavigationList;
+			} else {
+				uni.showTabBar();
+			}
+		})
+	}
+	function goRouter(item) {
+		var pages = getCurrentPages();
+		var page = (pages[pages.length - 1]).$page.fullPath;
+		if (item.link == page) return
+		if (['/pages/index/index', '/pages/order_addcart/order_addcart',
+				'/pages/user/index', '/pages/discover_index/index', '/pages/goods_cate/goods_cate'
+			].indexOf(item.link) > -1) {
+			uni.switchTab({
+				url: item.link,
+				fail(err) {
+					uni.redirectTo({
 						url: item.link
 					})
 				}
-			}
+			})
+		} else {
+			uni.navigateTo({
+				url: item.link
+			})
 		}
 	}
 </script>

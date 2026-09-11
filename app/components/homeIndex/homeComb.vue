@@ -1,11 +1,11 @@
 <template>
 	<!-- 组合组件 -->
-	<view class="page_count tui-skeleton" :data-theme="theme">
+	<view class="page_count tui-skeleton" :data-theme="theme" :style="colorStyle">
 		<!--logo-->
 		<!-- 组合组件背景图轮换 -->
 		<view class="bg-img" :style="{'background-image': bgColor}">
 			<block v-for="(item,index) in banner" :key="index">
-				<img :src="item.img" alt="" v-show="index == swiperCur">
+				<img class="bg-image" :src="item.img" alt="" v-show="index == swiperCur">
 			</block>
 			<view class="maskBg" :style="[maskBgStyle]"></view>
 		</view>
@@ -18,7 +18,7 @@
 					<view v-if="logoConfig" class="logo skeleton-rect">
 						<image :src="logoUrl" mode="scaleToFill"></image>
 					</view>
-					<navigator v-if="hotWords.length > 0" :url="'/pages/goods/goods_search/index?searchVal='+searchVal"
+					<navigator :render-link="false" v-if="hotWords.length > 0" :url="'/pages/goods/goods_search/index?searchVal='+searchVal"
 						:style="[searchBoxStyle]" :class="logoConfig ? 'input' : 'uninput'" hover-class="none"
 						class="input">
 						<view class='swiperTxt'>
@@ -38,7 +38,7 @@
 							</swiper>
 						</view>
 					</navigator>
-					<navigator v-else :style="[searchBoxStyle]" :class="logoConfig ? 'input' : 'uninput'"
+					<navigator :render-link="false" v-else :style="[searchBoxStyle]" :class="logoConfig ? 'input' : 'uninput'"
 						url="/pages/goods/goods_search/index" class="input" hover-class="none">
 						<text class="iconfont icon-sousuo8"></text>
 						<text class="line1">{{placeWords}}</text>
@@ -59,7 +59,7 @@
 						<view v-if="logoConfig" class="logo tui-skeleton-rect">
 							<image :src="logoUrl" mode="scaleToFill"></image>
 						</view>
-						<navigator v-if="hotWords.length > 0"
+						<navigator :render-link="false" v-if="hotWords.length > 0"
 							:url="'/pages/goods/goods_search/index?searchVal='+searchVal" :style="[searchBoxStyle]"
 							hover-class="none" class="input" :class="logoConfig&&!isSmallPage ? 'input' : 'uninput'">
 							<view class='swiperTxt'>
@@ -79,7 +79,7 @@
 								</swiper>
 							</view>
 						</navigator>
-						<navigator v-else :style="[searchBoxStyle]" :class="logoConfig ? 'input' : 'uninput'"
+						<navigator :render-link="false" v-else :style="[searchBoxStyle]" :class="logoConfig ? 'input' : 'uninput'"
 							url="/pages/goods/goods_search/index" class="input" hover-class="none">
 							<text class="iconfont icon-sousuo8"></text>
 							<text class="line1">{{placeWords}}</text>
@@ -161,7 +161,7 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -171,291 +171,257 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
-	let app = getApp();
+	import { ref, computed, watch, nextTick, getCurrentInstance } from 'vue';
 	import {
 		goPage
 	} from '@/libs/iframe.js'
 	import animationType from '@/utils/animationType.js'
-	export default {
-		name: 'homeComb',
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			},
-			//判断首页显示内容，1显示分类页和商品，0首页
-			navIndex: {
-				type: Number,
-				default: 0
-			},
-			//是否开始滚动
-			isScrolled: {
-				type: Boolean,
-				default: false
-			},
-			//是否为微页面
-			isSmallPage: {
-				type: Boolean,
-				default: false
-			},
-			//页面设置信息
-			bgInfo: {
-				type: Object,
-				default: () => {}
-			},
-		},
-		data() {
-			return {
-				myMainHeight: 0, //头部tab切换页和搜索按钮的高度和
-				indicatorDots: false,
-				circular: true,
-				autoplay: false,
-				duration: 500,
-				searchH: 0,
-				swiperTop: 0,
-				statusBarHeight: app.globalData.statusBarHeight, //手机端头部显示时间位置的高度
-				swiperCur: 0,
-				showSkeleton: true,
-				tabClick: 0, //导航栏被点击
-				isLeft: 0, //导航栏下划线位置
-				isWidth: 0, //每个导航栏占位
-				mainWidth: app.globalData.mainWidth,
-				theme: app.globalData.theme,
-				tabLeft: 0,
-				bgColor: '',
-				isTop: 0,
-				navHeight: 0,
-				isShow: false,
-				marTop: 0,
-				searchVal: '',
-				intervalBanner: 2500,
-				themeColor:this.$options.filters.filterTheme(app.globalData.theme),
-				searchTop:0,
-				searchRight:0,
-				searchHeight:0,
-				statusWidth:0,
-			};
-		},
-		watch: {
-			banner: {
-				handler(val) {
-					this.bgColor = val[0].img;
-				},
-				immediate: true
-			},
-		},
-		computed: {
-			//分类是否展示，0展示，1不展示
-			tabShowConfig() {
-				return this.dataConfig.tabShowConfig.tabVal == 0;
-			},
-			//搜索提示语
-			placeWords() {
-				return this.dataConfig.placeWords.val;
-			},
-			//轮播切换时间
-			interval() {
-				return this.dataConfig.titleConfig.val * 1000
-			},
-			//指示器类型，0圆，1直，2无
-			docType() {
-				return this.dataConfig.docConfig.tabVal
-			},
-			//轮播图样式
-			swiperType() {
-				return this.dataConfig.swiperStyleConfig.tabVal
-			},
-			//搜索热词列表
-			hotWords() {
-				return this.dataConfig.hotWords.list
-			},
-			//分类选中颜色
-			lineColor() {
-				return {
-					backgroundColor: this.dataConfig.checkColor.color[0].item
-				}
-			},
-			maskBgStyle() {
-				return {
-					background: this.bgInfo.isBgColor=='1' ?
-						`linear-gradient(180deg, rgba(245, 245, 245, 0) 0%, ${this.bgInfo.colorPicker} 100%)` :
-						`linear-gradient(180deg, rgba(245, 245, 245, 0) 0%, #f5f5f5 100%)`,
-				}
-			},
-			//判断logo图是否展示
-			logoConfig() {
-				return this.dataConfig.logoConfig.url && this.dataConfig.searConfig.tabVal === 1
-			},
-			//logo图
-			logoUrl() {
-				if (this.isScrolled && this.dataConfig.logoFixConfig.url) {
-					return this.dataConfig.logoFixConfig.url
-				} else {
-					return this.dataConfig.logoConfig.url
-				}
-			},
-			//标签文字颜色
-			textColor() {
-				return this.dataConfig.fontColor.color[0].item;
-			},
-			//分类列表
-			tabList() {
-				//type=0微页面，1分类，2首页
-				let tabList = this.dataConfig.listConfig.list;
-				tabList.unshift({
-					title: '首页',
-					type: 2,
-					val: 0
-				})
-				return tabList
-			},
-			//轮播列表
-			banner() {
-				return this.dataConfig.swiperConfig.list
-			},
-			//搜索框样式
-			searchBoxStyle() {
-				return {
-					borderRadius: this.dataConfig.contentStyle.val ? this.dataConfig.contentStyle.val + 'px' : '0',
-					backgroundColor: this.dataConfig.borderColor.color[0].item,
-					color: this.dataConfig.textColor.color[0].item,
-					textAlign: this.dataConfig.textPosition.list[this.dataConfig.textPosition.tabVal].style,
-					// #ifdef MP
-					height:this.searchHeight + 'px',
-					flex:!this.isSmallPage?1:'',
-					marginRight:!this.isSmallPage?(this.statusWidth + this.searchRight+'px'):'',
-					// #endif
-				}
-			},
-			//指示器样式
-			dotStyle() {
-				return {
-					padding: '0 40rpx',
-					justifyContent: this.dataConfig.txtStyle.tabVal === 1 ? 'center' : this.dataConfig.txtStyle
-						.tabVal === 2 ? 'flex-end' : 'flex-start'
-				}
-			},
-			//轮播图圆角
-			contentStyleBanner() {
-				return {
-					'borderRadius': this.dataConfig.contentStyleBanner.val ? this.dataConfig.contentStyleBanner
-						.val + 'px' : '0'
-				}
-			},
-		},
-		created() {
-			// #ifdef MP || APP-PLUS
-			this.isTop = (this.isSmallPage ? 0 : this.statusBarHeight) + 48 + 'px' //分类的top值
-			// this.tabShowConfig，true有分类,false无分类
-			if (!this.tabShowConfig) {
-				this.myMainHeight = (this.isSmallPage ? 0 : this.statusBarHeight) + 40 + 10; //头部tab切换页和搜索按钮的高度和，10是下边距
-			} else {
-				this.myMainHeight = (this.isSmallPage ? 0 : this.statusBarHeight) + 40 + 42; //头部tab切换页和搜索按钮的高度和
-			}
-			// #endif
-			
-			// #ifdef MP
-			const res = uni.getMenuButtonBoundingClientRect()
-			const statusHeight = res.top //胶囊距离顶部
-			const statusRight = res.right //胶囊右边界坐标
-			const jnHeight = res.height //胶囊高度
-			this.statusWidth= res.width
-			this.searchTop=statusHeight-this.statusBarHeight
-			this.searchHeight=jnHeight
-			//搜索框宽度计算
-			uni.getSystemInfo({
-				success:res=>{
-					this.searchRight=res.windowWidth-statusRight
-				}
-			})
-			// #endif
+	import util from '@/utils/util.js';
+	import { filterTheme } from '@/filters';
+import { useColor } from '@/composables/useColor.js';
+	let app = getApp();
+	const { proxy } = getCurrentInstance();
 
-			// #ifdef H5
-			this.isTop = 0
-			this.myMainHeight = 'auto';
-
-			// #endif
-
-			this.isWidth = (this.mainWidth - 65) / 4;
-			setTimeout((e) => {
-				const query = uni.createSelectorQuery().in(this);
-				query.select('.header').boundingClientRect(res => {
-					if (res) this.marTop = res.height //头部的高度
-				}).exec();
-
-				//展示与不展示分类的距离值判断
-				if (!this.tabShowConfig) {
-					// 不展示分类
-					query.select('.swiperBg').boundingClientRect(res => {
-						// #ifdef H5
-						this.swiperTop = this.navHeight + this.marTop + this.statusBarHeight +
-							4; //轮播图的top值
-						//#endif
-						// #ifndef H5
-						if (this.isSmallPage) {
-							this.swiperTop = this.statusBarHeight; //轮播图的top值
-						} else {
-							this.swiperTop = this.statusBarHeight + 48; //轮播图的top值
-						}
-						//#endif
-					}).exec();
-				} else {
-					//展示分类
-					query.select('.navTabBox').boundingClientRect(data => {
-						this.navHeight = data.height //元素navHeight的高度
-						// #ifdef H5
-						this.swiperTop = this.navHeight + this.marTop + this.statusBarHeight +
-							4; //轮播图的top值
-						//#endif
-						// #ifndef H5
-						if (this.isSmallPage) {
-							this.swiperTop = 85; //轮播图的top值
-						} else {
-							this.swiperTop = this.statusBarHeight + 85; //轮播图的top值
-						}
-						//#endif
-					}).exec();
-				}
-
-			}, 200)
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
 		},
-		methods: {
-			//轮播图跳转
-			menusTap(url) {
-				this.$util.navigateTo(url);
-			},
-			swiperChange(e) {
-				let {
-					current,
-					source
-				} = e.detail;
-				if (source === 'autoplay' || source === 'touch') {
-					this.swiperCur = e.detail.current;
-					this.bgColor = this.banner[e.detail.current]['img']
-				}
-			},
-			textChange(e) {
-				let {
-					current,
-					source
-				} = e.detail;
-				if (source === 'autoplay' || source === 'touch') {
-					this.searchVal = this.hotWords[e.detail.current]['val']
-				}
-			},
-			// 导航栏点击
-			longClick(index, item) {
-				this.tabClick = index; //设置导航点击了哪一个
-				this.$nextTick(() => {
-					let id = 'id' + index;
-					this.tabLeft = (index - 2) * this.isWidth //设置下划线位置
-					this.$emit('changeTab', index, item);
-				})
-			},
-			parentEmit(id, index) {
-				this.$emit('changeTab', id, index);
-			}
+		//判断首页显示内容，1显示分类页和商品，0首页
+		navIndex: {
+			type: Number,
+			default: 0
+		},
+		//是否开始滚动
+		isScrolled: {
+			type: Boolean,
+			default: false
+		},
+		//是否为微页面
+		isSmallPage: {
+			type: Boolean,
+			default: false
+		},
+		//页面设置信息
+		bgInfo: {
+			type: Object,
+			default: () => {}
+		},
+	});
+	const emit = defineEmits(['changeTab']);
+
+	const myMainHeight = ref(0); //头部tab切换页和搜索按钮的高度和
+	const indicatorDots = ref(false);
+	const circular = ref(true);
+	const autoplay = ref(false);
+	const duration = ref(500);
+	const searchH = ref(0);
+	const swiperTop = ref(0);
+	const statusBarHeight = ref(app.globalData.statusBarHeight); //手机端头部显示时间位置的高度
+	const swiperCur = ref(0);
+	const showSkeleton = ref(true);
+	const tabClick = ref(0); //导航栏被点击
+	const isLeft = ref(0); //导航栏下划线位置
+	const isWidth = ref(0); //每个导航栏占位
+	const mainWidth = ref(app.globalData.mainWidth);
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	const tabLeft = ref(0);
+	const bgColor = ref('');
+	const isTop = ref(0);
+	const navHeight = ref(0);
+	const isShow = ref(false);
+	const marTop = ref(0);
+	const searchVal = ref('');
+	const intervalBanner = ref(2500);
+	const themeColor = ref(filterTheme(app.globalData.theme));
+	const searchTop = ref(0);
+	const searchRight = ref(0);
+	const searchHeight = ref(0);
+	const statusWidth = ref(0);
+
+	//分类是否展示，0展示，1不展示
+	const tabShowConfig = computed(() => props.dataConfig.tabShowConfig.tabVal == 0);
+	//搜索提示语
+	const placeWords = computed(() => props.dataConfig.placeWords.val);
+	//轮播切换时间
+	const interval = computed(() => props.dataConfig.titleConfig.val * 1000);
+	//指示器类型，0圆，1直，2无
+	const docType = computed(() => props.dataConfig.docConfig.tabVal);
+	//轮播图样式
+	const swiperType = computed(() => props.dataConfig.swiperStyleConfig.tabVal);
+	//搜索热词列表
+	const hotWords = computed(() => props.dataConfig.hotWords.list);
+	//分类选中颜色
+	const lineColor = computed(() => ({
+		backgroundColor: props.dataConfig.checkColor.color[0].item
+	}));
+	const maskBgStyle = computed(() => ({
+		background: props.bgInfo.isBgColor == '1' ?
+			`linear-gradient(180deg, rgba(245, 245, 245, 0) 0%, ${props.bgInfo.colorPicker} 100%)` :
+			`linear-gradient(180deg, rgba(245, 245, 245, 0) 0%, #f5f5f5 100%)`,
+	}));
+	//判断logo图是否展示
+	const logoConfig = computed(() => props.dataConfig.logoConfig.url && props.dataConfig.searConfig.tabVal === 1);
+	//logo图
+	const logoUrl = computed(() => {
+		if (props.isScrolled && props.dataConfig.logoFixConfig.url) {
+			return props.dataConfig.logoFixConfig.url
+		} else {
+			return props.dataConfig.logoConfig.url
 		}
+	});
+	//标签文字颜色
+	const textColor = computed(() => props.dataConfig.fontColor.color[0].item);
+	//分类列表
+	const tabList = computed(() => {
+		//type=0微页面，1分类，2首页
+		let list = props.dataConfig.listConfig.list;
+		list.unshift({
+			title: '首页',
+			type: 2,
+			val: 0
+		})
+		return list
+	});
+	//轮播列表
+	const banner = computed(() => props.dataConfig.swiperConfig.list);
+	//搜索框样式
+	const searchBoxStyle = computed(() => ({
+		borderRadius: props.dataConfig.contentStyle.val ? props.dataConfig.contentStyle.val + 'px' : '0',
+		backgroundColor: props.dataConfig.borderColor.color[0].item,
+		color: props.dataConfig.textColor.color[0].item,
+		textAlign: props.dataConfig.textPosition.list[props.dataConfig.textPosition.tabVal].style,
+		// #ifdef MP
+		height: searchHeight.value + 'px',
+		flex: !props.isSmallPage ? 1 : '',
+		marginRight: !props.isSmallPage ? (statusWidth.value + searchRight.value + 'px') : '',
+		// #endif
+	}));
+	//指示器样式
+	const dotStyle = computed(() => ({
+		padding: '0 40rpx',
+		justifyContent: props.dataConfig.txtStyle.tabVal === 1 ? 'center' : props.dataConfig.txtStyle
+			.tabVal === 2 ? 'flex-end' : 'flex-start'
+	}));
+	//轮播图圆角
+	const contentStyleBanner = computed(() => ({
+		'borderRadius': props.dataConfig.contentStyleBanner.val ? props.dataConfig.contentStyleBanner
+			.val + 'px' : '0'
+	}));
+
+	watch(banner, (val) => {
+		bgColor.value = val[0].img;
+	}, { immediate: true });
+
+	// #ifdef MP || APP-PLUS
+	isTop.value = (props.isSmallPage ? 0 : statusBarHeight.value) + 48 + 'px' //分类的top值
+	// tabShowConfig，true有分类,false无分类
+	if (!tabShowConfig.value) {
+		myMainHeight.value = (props.isSmallPage ? 0 : statusBarHeight.value) + 40 + 10; //头部tab切换页和搜索按钮的高度和，10是下边距
+	} else {
+		myMainHeight.value = (props.isSmallPage ? 0 : statusBarHeight.value) + 40 + 42; //头部tab切换页和搜索按钮的高度和
+	}
+	// #endif
+
+	// #ifdef MP
+	const res = uni.getMenuButtonBoundingClientRect()
+	const statusHeight = res.top //胶囊距离顶部
+	const statusRight = res.right //胶囊右边界坐标
+	const jnHeight = res.height //胶囊高度
+	statusWidth.value = res.width
+	searchTop.value = statusHeight - statusBarHeight.value
+	searchHeight.value = jnHeight
+	//搜索框宽度计算
+	uni.getSystemInfo({
+		success: res => {
+			searchRight.value = res.windowWidth - statusRight
+		}
+	})
+	// #endif
+
+	// #ifdef H5
+	isTop.value = 0
+	myMainHeight.value = 'auto';
+	// #endif
+
+	isWidth.value = (mainWidth.value - 65) / 4;
+	setTimeout((e) => {
+		const query = uni.createSelectorQuery().in(proxy);
+		query.select('.header').boundingClientRect(res => {
+			if (res) marTop.value = res.height //头部的高度
+		}).exec();
+
+		//展示与不展示分类的距离值判断
+		if (!tabShowConfig.value) {
+			// 不展示分类
+			query.select('.swiperBg').boundingClientRect(res => {
+				// #ifdef H5
+				swiperTop.value = navHeight.value + marTop.value + statusBarHeight.value +
+					4; //轮播图的top值
+				//#endif
+				// #ifndef H5
+				if (props.isSmallPage) {
+					swiperTop.value = statusBarHeight.value; //轮播图的top值
+				} else {
+					swiperTop.value = statusBarHeight.value + 48; //轮播图的top值
+				}
+				//#endif
+			}).exec();
+		} else {
+			//展示分类
+			query.select('.navTabBox').boundingClientRect(data => {
+				navHeight.value = data.height //元素navHeight的高度
+				// #ifdef H5
+				swiperTop.value = navHeight.value + marTop.value + statusBarHeight.value +
+					4; //轮播图的top值
+				//#endif
+				// #ifndef H5
+				if (props.isSmallPage) {
+					swiperTop.value = 85; //轮播图的top值
+				} else {
+					swiperTop.value = statusBarHeight.value + 85; //轮播图的top值
+				}
+				//#endif
+			}).exec();
+		}
+
+	}, 200)
+
+	//轮播图跳转
+	function menusTap(url) {
+		util.navigateTo(url);
+	}
+	function swiperChange(e) {
+		let {
+			current,
+			source
+		} = e.detail;
+		if (source === 'autoplay' || source === 'touch') {
+			swiperCur.value = e.detail.current;
+			bgColor.value = banner.value[e.detail.current]['img']
+		}
+	}
+	function textChange(e) {
+		let {
+			current,
+			source
+		} = e.detail;
+		if (source === 'autoplay' || source === 'touch') {
+			searchVal.value = hotWords.value[e.detail.current]['val']
+		}
+	}
+	// 导航栏点击
+	function longClick(index, item) {
+		tabClick.value = index; //设置导航点击了哪一个
+		nextTick(() => {
+			let id = 'id' + index;
+			tabLeft.value = (index - 2) * isWidth.value //设置下划线位置
+			emit('changeTab', index, item);
+		})
+	}
+	function parentEmit(id, index) {
+		emit('changeTab', id, index);
 	}
 </script>
 
@@ -779,7 +745,7 @@
 			filter: blur(0);
 			overflow: hidden;
 
-			img {
+			.bg-image {
 				width: 100%;
 				height: 100%;
 				filter: blur(30rpx);

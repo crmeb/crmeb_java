@@ -13,7 +13,7 @@
 						<view class='num'>x {{item.payNum ? item.payNum : item.cartNum}}</view>
 					</view>
 					<view class='attr line1' v-if="item.sku">{{item.sku}}</view>
-					<view class='money'>￥{{item.vipPrice ? item.vipPrice : item.price}}</view>
+					<view class='money'>￥{{item.price}}</view>
 					<view class='evaluate' v-if='item.isReply==0 && evaluate==2' @click.stop="evaluateTap(item)">评价
 					</view>
 					<view class='evaluate' v-else-if="item.isReply==1">已评价</view>
@@ -24,72 +24,67 @@
 
 </template>
 
-<script>
-	export default {
-		props: {
-			evaluate: {
-				type: Number,
-				default: 0,
-			},
-			cartInfo: {
-				type: Array,
-				default: function() {
-					return [];
-				}
-			},
-			orderId: {
-				type: String,
-				default: '',
-			},
-			ids: {
-				type: Number,
-				default: 0,
-			},
-			jump: {
-				type: Boolean,
-				default: false,
-			},
-			orderProNum: {
-				type: Number,
-				default: function() {
-					return 0;
-				}
-			},
-			productType: {
-				type: Number,
-				default: function() {
-					return 0;
-				}
+<script setup>
+	import { ref, watch } from 'vue'
+
+	const props = defineProps({
+		evaluate: {
+			type: Number,
+			default: 0,
+		},
+		cartInfo: {
+			type: Array,
+			default: function() {
+				return [];
 			}
 		},
-		data() {
-			return {
-				totalNmu: ''
-			};
+		orderId: {
+			type: String,
+			default: '',
 		},
-		watch: {
-			cartInfo: function(nVal, oVal) {
-				let num = 0
-				nVal.forEach((item, index) => {
-					num += item.cartNum
-				})
-				this.totalNmu = num
+		ids: {
+			type: Number,
+			default: 0,
+		},
+		jump: {
+			type: Boolean,
+			default: false,
+		},
+		orderProNum: {
+			type: Number,
+			default: function() {
+				return 0;
 			}
 		},
-		methods: {
-			evaluateTap(item) {
-				uni.navigateTo({
-					url: "/pages/goods/goods_comment_con/index?unique=" + item.attrId + "&orderId=" + this.orderId + '&id=' + this.ids
-				})
-			},
-			jumpCon: function(id) {
-				let type = this.productType==0?'normal':'video'
-				if (this.jump) {
-					uni.navigateTo({
-						url: `/pages/goods/goods_details/index?id=${id}&type=${type}`
-					})
-				}
+		productType: {
+			type: Number,
+			default: function() {
+				return 0;
 			}
+		}
+	})
+
+	const totalNmu = ref('')
+
+	watch(() => props.cartInfo, (nVal, oVal) => {
+		let num = 0
+		nVal.forEach((item, index) => {
+			num += item.cartNum
+		})
+		totalNmu.value = num
+	})
+
+	function evaluateTap(item) {
+		uni.navigateTo({
+			url: "/pages/goods/goods_comment_con/index?unique=" + item.attrId + "&orderId=" + props.orderId + '&id=' + props.ids
+		})
+	}
+	function jumpCon(id) {
+		let type = props.productType==0?'normal':'video'
+		if (props.jump) {
+			uni.navigateTo({
+				url: `/pages/goods/goods_details/index?id=${id}&type=${type}`
+			})
 		}
 	}
 </script>

@@ -1,10 +1,12 @@
 @font-face {
     font-family: 'dinProSemiBold';
-    src: url('static/fonts/D-DIN-PRO-600-SemiBold.otf');
+    src: url('./D-DIN-PRO-600-SemiBold.otf') format('opentype');
+    font-display: swap;
 }
 @font-face {
     font-family: 'dinProRegular';
-    src: url('static/fonts/D-DIN-PRO-400-Regular.otf');
+    src: url('./D-DIN-PRO-400-Regular.otf') format('opentype');
+    font-display: swap;
 }
 
 .semiBold{

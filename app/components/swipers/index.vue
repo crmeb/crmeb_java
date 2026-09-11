@@ -3,7 +3,7 @@
 	        <swiper :autoplay="autoplay" :circular="circular" :interval="interval" :duration="duration" @change="swiperChange">
 	            <block v-for="(item,index) in imgUrls" :key="index">
 	              <swiper-item>
-	                <navigator :url="item.link" style='width:100%;height:100%;' hover-class='none'><image :src="item.img" class="slide-image"/></navigator>
+	                <navigator :render-link="false" :url="item.link" style='width:100%;height:100%;' hover-class='none'><image :src="item.img" class="slide-image"/></navigator>
 	              </swiper-item>
 	            </block>
 	        </swiper>
@@ -13,32 +13,26 @@
 	    </view>
 </template>
 
-	<script>
-		export default {
-			
-			props: {
-				 imgUrls: {
-				 	type: Array,
-				 	default: function(){
-				 		return [];
-				 	}
-				 }
-			},
-			data() {
-				return {
-					circular: true,
-					    autoplay: true,
-					    interval: 3000,
-					    duration: 500,
-					    currentSwiper: 0
-				};
-			},
-			
-			methods: {
-				swiperChange: function (e) {
-					 this.currentSwiper = e.detail.current
-				    }
-			}
+	<script setup>
+		import { ref } from 'vue'
+
+		const props = defineProps({
+			 imgUrls: {
+			 	type: Array,
+			 	default: function(){
+			 		return [];
+			 	}
+			 }
+		})
+
+		const circular = ref(true)
+		const autoplay = ref(true)
+		const interval = ref(3000)
+		const duration = ref(500)
+		const currentSwiper = ref(0)
+
+		function swiperChange(e) {
+			currentSwiper.value = e.detail.current
 		}
 	</script>
 

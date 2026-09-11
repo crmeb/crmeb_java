@@ -12,20 +12,17 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		name: "Loading",
-		props: {
-			loaded: {
-				type: Boolean,
-				default: false
-			},
-			loading: {
-				type: Boolean,
-				default: false
-			}
+<script setup>
+	const props = defineProps({
+		loaded: {
+			type: Boolean,
+			default: false
+		},
+		loading: {
+			type: Boolean,
+			default: false
 		}
-	};
+	});
 </script>
 <style>
 	.Loads {

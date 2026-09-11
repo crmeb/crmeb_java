@@ -33,93 +33,88 @@
 
   </view>
 </template>
-<script>
-export default {
-  name: "homeIdex",
-  props: {
-    navH: {
-      type: String | Number,
-      default: "",
-    },
-    returnShow: {
-      type: Boolean,
-      default: true,
-    },
-    goodList: {
-      type: Boolean,
-      default: false,
-    },
-    currentPage: {
-      type: Boolean,
-      default: false,
-    },
-    goodsShow: {
-      type: Boolean,
-      default: false,
-    },
-    sysHeight: {
-      type: String | Number,
-      default: "",
-    },
+<script setup>
+import { ref, getCurrentInstance } from 'vue'
+
+const { proxy } = getCurrentInstance()
+
+const props = defineProps({
+  navH: {
+    type: String | Number,
+    default: "",
   },
-  data: function () {
-    return {
-      selectNavList: [
-        {
-          name: this.$t(`首页`),
-          icon: "icon-shouye8",
-          url: "/pages/index/index",
-          after: "dialog_after",
-        },
-        {
-          name: this.$t(`搜索`),
-          icon: "icon-sousuo6",
-          url: "/pages/goods/goods_search/index",
-          after: "dialog_after",
-        },
-        {
-          name: this.$t(`购物车`),
-          icon: "icon-gouwuche7",
-          url: "/pages/order_addcart/order_addcart",
-          after: "dialog_after",
-        },
-        {
-          name: this.$t(`我的收藏`),
-          icon: "icon-shoucang3",
-          url: "/pages/users/user_goods_collection/index",
-          after: "dialog_after",
-        },
-        {
-          name: this.$t(`个人中心`),
-          icon: "icon-gerenzhongxin1",
-          url: "/pages/user/index",
-        },
-      ],
-    };
+  returnShow: {
+    type: Boolean,
+    default: true,
   },
-  methods: {
-    linkPage(url) {
-      if (
-        [
-          "/pages/goods_cate/goods_cate",
-          "/pages/order_addcart/order_addcart",
-          "/pages/user/index",
-          "/pages/index/index",
-        ].indexOf(url) == -1
-      ) {
-        uni.navigateTo({
-          url: url,
-        });
-      } else {
-        uni.switchTab({
-          url: url,
-        });
-      }
-    },
+  goodList: {
+    type: Boolean,
+    default: false,
   },
-  created() {},
-  beforeDestroy() {},
-};
+  currentPage: {
+    type: Boolean,
+    default: false,
+  },
+  goodsShow: {
+    type: Boolean,
+    default: false,
+  },
+  sysHeight: {
+    type: String | Number,
+    default: "",
+  },
+})
+
+const selectNavList = ref([
+  {
+    name: proxy.$t(`首页`),
+    icon: "icon-shouye8",
+    url: "/pages/index/index",
+    after: "dialog_after",
+  },
+  {
+    name: proxy.$t(`搜索`),
+    icon: "icon-sousuo6",
+    url: "/pages/goods/goods_search/index",
+    after: "dialog_after",
+  },
+  {
+    name: proxy.$t(`购物车`),
+    icon: "icon-gouwuche7",
+    url: "/pages/order_addcart/order_addcart",
+    after: "dialog_after",
+  },
+  {
+    name: proxy.$t(`我的收藏`),
+    icon: "icon-shoucang3",
+    url: "/pages/users/user_goods_collection/index",
+    after: "dialog_after",
+  },
+  {
+    name: proxy.$t(`个人中心`),
+    icon: "icon-gerenzhongxin1",
+    url: "/pages/user/index",
+  },
+])
+
+function linkPage(url) {
+  if (
+    [
+      "/pages/goods_cate/goods_cate",
+      "/pages/order_addcart/order_addcart",
+      "/pages/user/index",
+      "/pages/index/index",
+    ].indexOf(url) == -1
+  ) {
+    uni.navigateTo({
+      url: url,
+    });
+  } else {
+    uni.switchTab({
+      url: url,
+    });
+  }
+}
 </script>
 
 <style scoped lang="scss">

@@ -13,10 +13,6 @@
 					<view class="money">
 						<view class="flex align-baseline">
 							￥<text class="num">{{ attr.productSelect.price }}</text>
-							<view class="flex pl-2" v-if="attr.productSelect.vipPrice && attr.productSelect.vipPrice > 0">
-								<image :src="urlDomain+'crmebimage/perset/staticImg/vip_badge.png'" class="vip_icon"></image>
-								<text class='vip_money skeleton-rect'>￥{{attr.productSelect.vipPrice}}</text>
-							</view>
 						</view>
 						<view>
 							<text class="stock" v-if='isShow'>库存: {{ attr.productSelect.stock }}</text>
@@ -114,110 +110,104 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		props: {
-			attr: {
-				type: Object,
-				default: () => {}
-			},
-			//一次最多可买几个，活动商品中使用
-			onceNum: {
-				type: Number,
-				value: 1
-			},
-			limitNum: {
-				type: Number,
-				value: 0
-			},
-			isShow: {
-				type: Number,
-				value: 0
-			},
-			iSbnt: {
-				type: Number,
-				value: 0
-			},
-			iSplus: {
-				type: Number,
-				value: 0
-			},
-			iScart: {
-				type: Number,
-				value: 0
-			},
-			// 是否是拼团、秒杀、积分商品，用红色不用主题色
-			isMarketingGoods: {
-			  type: Boolean,
-			  default: () => false
-			}
+<script setup>
+	import { ref } from 'vue'
+
+	const props = defineProps({
+		attr: {
+			type: Object,
+			default: () => {}
 		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				gridShow: 1, //宫格还是列样式选择
-			};
+		//一次最多可买几个，活动商品中使用
+		onceNum: {
+			type: Number,
+			value: 1
 		},
-		created() {
+		limitNum: {
+			type: Number,
+			value: 0
 		},
-		methods: {
-			goCat: function() {
-				this.$emit('goCat');
-			},
-			/**
-			 * 购物车手动输入数量
-			 * 
-			 */
-			bindCode: function(e) {
-				this.$emit('iptCartNum', this.attr.productSelect.cart_num);
-			},
-			closeAttr: function() {
-				this.$emit('myevent');
-			},
-			CartNumDes: function() {
-				this.$emit('ChangeCartNum', false);
-			},
-			CartNumAdd: function() {
-				this.$emit('ChangeCartNum', true);
-			},
-			tapAttr: function(indexw, indexn) {
-				let that = this;
-				that.$emit("attrVal", {
-					indexw: indexw,
-					indexn: indexn
-				});
-				this.$set(this.attr.productAttr[indexw], 'index', this.attr.productAttr[indexw].attrValues[indexn]);
-				let value = that.getCheckedValue().join(",");
-				that.$emit("ChangeAttr", value);
-			},
-			//获取被选中属性；
-			getCheckedValue: function() {
-				let productAttr = this.attr.productAttr;
-				let value = [];
-				for (let i = 0; i < productAttr.length; i++) {
-					for (let j = 0; j < productAttr[i].attrValues.length; j++) {
-						if (productAttr[i].index === productAttr[i].attrValues[j]) {
-							value.push(productAttr[i].attrValues[j]);
-						}
-					}
-				}
-				return value;
-			},
-			showImg() {
-				this.$emit('getImg');
-			},
-			//选择规格值样式
-			toggleGridAttr(type) {
-				this.gridShow = type;
-			},
-			// 点击贵供图查看图片
-			proviewImg(img){
-			  uni.previewImage({
-			    current: 0,
-			    urls: [img]
-			  });
-			},
+		isShow: {
+			type: Number,
+			value: 0
+		},
+		iSbnt: {
+			type: Number,
+			value: 0
+		},
+		iSplus: {
+			type: Number,
+			value: 0
+		},
+		iScart: {
+			type: Number,
+			value: 0
+		},
+		// 是否是拼团、秒杀、积分商品，用红色不用主题色
+		isMarketingGoods: {
+		  type: Boolean,
+		  default: () => false
 		}
+	})
+	const emit = defineEmits(['goCat', 'iptCartNum', 'myevent', 'ChangeCartNum', 'attrVal', 'ChangeAttr', 'getImg'])
+
+	// data
+	const gridShow = ref(1) //宫格还是列样式选择
+
+	function goCat() {
+		emit('goCat');
+	}
+	/**
+	 * 购物车手动输入数量
+	 * 
+	 */
+	function bindCode(e) {
+		emit('iptCartNum', props.attr.productSelect.cart_num);
+	}
+	function closeAttr() {
+		emit('myevent');
+	}
+	function CartNumDes() {
+		emit('ChangeCartNum', false);
+	}
+	function CartNumAdd() {
+		emit('ChangeCartNum', true);
+	}
+	function tapAttr(indexw, indexn) {
+		emit("attrVal", {
+			indexw: indexw,
+			indexn: indexn
+		});
+		props.attr.productAttr[indexw].index = props.attr.productAttr[indexw].attrValues[indexn];
+		let value = getCheckedValue().join(",");
+		emit("ChangeAttr", value);
+	}
+	//获取被选中属性；
+	function getCheckedValue() {
+		let productAttr = props.attr.productAttr;
+		let value = [];
+		for (let i = 0; i < productAttr.length; i++) {
+			for (let j = 0; j < productAttr[i].attrValues.length; j++) {
+				if (productAttr[i].index === productAttr[i].attrValues[j]) {
+					value.push(productAttr[i].attrValues[j]);
+				}
+			}
+		}
+		return value;
+	}
+	function showImg() {
+		emit('getImg');
+	}
+	//选择规格值样式
+	function toggleGridAttr(type) {
+		gridShow.value = type;
+	}
+	// 点击贵供图查看图片
+	function proviewImg(img){
+	  uni.previewImage({
+	    current: 0,
+	    urls: [img]
+	  });
 	}
 </script>
 
@@ -250,7 +240,9 @@
 
 	.product-window.joinCart {
 		padding-bottom: 30rpx;
-		z-index: 999;
+		/* 购物车等 tab 页中，自定义 tabbar(pageFooter) 与本弹窗同为 z-index:999 且在 DOM 之后，
+		   会盖住弹窗底部"确定"按钮，这里抬高一层保证弹窗及其遮罩位于 tabbar 之上 */
+		z-index: 1000;
 	}
 
 	.product-window .textpic {
@@ -440,26 +432,6 @@
 		align-items: center;
 	}
 
-	.vip_icon {
-		width: 44rpx;
-		height: 28rpx;
-	}
-
-	.vip_money {
-		background: #FFE7B9;
-		border-radius: 4px;
-		font-size: 22rpx;
-		color: #333;
-		line-height: 28rpx;
-		text-align: center;
-		padding: 0 6rpx;
-		box-sizing: border-box;
-		margin-left: -4rpx;
-	}
-
-	.pl-2 {
-		padding-left: 20rpx;
-	}
 
 	.grid-item-box {
 		width: 196rpx;
@@ -477,7 +449,6 @@
 			padding: 4rpx 12rpx;
 			height: 74rpx;
 			line-height: 37rpx;
-			display: -webkit-box;
 			/* 旧版弹性盒子 */
 			overflow: hidden;
 			text-overflow: ellipsis;

@@ -31,7 +31,7 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -41,123 +41,119 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
+	import { ref, computed, watch, onMounted, nextTick } from 'vue';
 	import {
 		navigatoPage
-	} from "@/utils/index"
+	} from "@/utils/index.js"
+	import { filterTheme } from '@/filters';
+	import util from '@/utils/util.js';
 	let app = getApp();
-	export default {
-		name: 'swiperBg',
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			},
-			merId: {}
+
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
 		},
-		data() {
-			return {
-				indicatorDots: false,
-				imgUrls: [], //图片轮播数据
-				txtStyle: this.dataConfig.txtStyle.type, //指示器位置
-				imageH: 310,
-				swiperCur: 0,
-				themeColor:this.$options.filters.filterTheme(app.globalData.theme)
-			};
-		},
-		watch: {
-			imageH(nVal, oVal) {
-				let self = this
-				this.imageH = nVal
-			}
-		},
-		computed: {
-			//指示器样式
-			dotStyle() {
-				return {
-					padding: '0 50rpx',
-					justifyContent: this.dataConfig.txtStyle.tabVal === 1 ? 'center' : this.dataConfig.txtStyle
-						.tabVal === 2 ? 'flex-end' : 'flex-start'
-				}
-			},
-			//指示器类型，0圆，1直，2无
-			docType() {
-				return this.dataConfig.docConfig.tabVal
-			},
-			//轮播图样式
-			swiperType(){
-				return this.dataConfig.swiperStyleConfig.tabVal
-			},
-			//最外层盒子的样式
-			boxStyle() {
-				return {
-					borderRadius: this.dataConfig.bgStyle.val * 2 + 'rpx',
-					background: `linear-gradient(${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-					margin: this.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + this.dataConfig.lrConfig.val * 2 + 'rpx' +
-						' ' + 0,
-					padding: this.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + '20rpx' + ' ' + this.dataConfig.downConfig.val *
-						2 + 'rpx'
-				}
-			},
-			//指示器颜色
-			docColor() {
-				return this.dataConfig.docColor.color[0].item + '!important'
-			},
-			//指示器样式
-			docConfig() {
-				if (this.dataConfig.docConfig.tabVal == 1) {
-					return 'square'
-				} else if (this.dataConfig.docConfig.tabVal == 2) {
-					return 'nodoc'
-				} else {
-					return 'circular'
-				}
-			},
-			//内容圆角
-			imgStyle() {
-				return {
-					"border-radius": this.dataConfig.contentStyle.val * 2 + 'rpx'
-				}
-			}
-		},
-		created() {
-			this.imgUrls = this.dataConfig.swiperConfig.list
-		},
-		mounted() {
-			let that = this;
-			this.$nextTick(function() {
-				uni.getImageInfo({
-					src: that.setDomain(that.imgUrls[0].img),
-					success: function(res) {
-						that.$set(that, 'imageH', res.height);
-					},
-					fail: function(error) {
-						that.$set(that, 'imageH', 310);
-					}
-				})
-			})
-		},
-		methods: {
-			//替换安全域名
-			setDomain: function(url) {
-				url = url ? url.toString() : '';
-				//本地调试打开,生产请注销
-				if (url.indexOf("https://") > -1) return url;
-				else return url.replace('http://', 'https://');
-			},
-			swiperChange(e) {
-				let {
-					current,
-					source
-				} = e.detail;
-				if (source === 'autoplay' || source === 'touch') {
-					this.swiperCur = e.detail.current;
-				}
-			},
-			goDetail(url) {
-				let path = url.info[1].value
-				this.$util.navigateTo(path);
-			}
+		merId: {}
+	});
+
+	// data
+	const indicatorDots = ref(false);
+	const imgUrls = ref([]); //图片轮播数据
+	const txtStyle = ref(props.dataConfig.txtStyle.type); //指示器位置
+	const imageH = ref(310);
+	const swiperCur = ref(0);
+	const themeColor = ref(filterTheme(app.globalData.theme));
+
+	watch(imageH, (nVal, oVal) => {
+		imageH.value = nVal
+	});
+
+	// computed
+	//指示器样式
+	const dotStyle = computed(() => {
+		return {
+			padding: '0 50rpx',
+			justifyContent: props.dataConfig.txtStyle.tabVal === 1 ? 'center' : props.dataConfig.txtStyle
+				.tabVal === 2 ? 'flex-end' : 'flex-start'
 		}
+	});
+	//指示器类型，0圆，1直，2无
+	const docType = computed(() => {
+		return props.dataConfig.docConfig.tabVal
+	});
+	//轮播图样式
+	const swiperType = computed(() => {
+		return props.dataConfig.swiperStyleConfig.tabVal
+	});
+	//最外层盒子的样式
+	const boxStyle = computed(() => {
+		return {
+			borderRadius: props.dataConfig.bgStyle.val * 2 + 'rpx',
+			background: `linear-gradient(${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+			margin: props.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + props.dataConfig.lrConfig.val * 2 + 'rpx' +
+				' ' + 0,
+			padding: props.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + '20rpx' + ' ' + props.dataConfig.downConfig.val *
+				2 + 'rpx'
+		}
+	});
+	//指示器颜色
+	const docColor = computed(() => {
+		return props.dataConfig.docColor.color[0].item + '!important'
+	});
+	//指示器样式
+	const docConfig = computed(() => {
+		if (props.dataConfig.docConfig.tabVal == 1) {
+			return 'square'
+		} else if (props.dataConfig.docConfig.tabVal == 2) {
+			return 'nodoc'
+		} else {
+			return 'circular'
+		}
+	});
+	//内容圆角
+	const imgStyle = computed(() => {
+		return {
+			"border-radius": props.dataConfig.contentStyle.val * 2 + 'rpx'
+		}
+	});
+
+	// created
+	imgUrls.value = props.dataConfig.swiperConfig.list
+
+	onMounted(() => {
+		nextTick(function() {
+			uni.getImageInfo({
+				src: setDomain(imgUrls.value[0].img),
+				success: function(res) {
+					imageH.value = res.height;
+				},
+				fail: function(error) {
+					imageH.value = 310;
+				}
+			})
+		})
+	});
+
+	//替换安全域名
+	function setDomain(url) {
+		url = url ? url.toString() : '';
+		//本地调试打开,生产请注销
+		if (url.indexOf("https://") > -1) return url;
+		else return url.replace('http://', 'https://');
+	}
+	function swiperChange(e) {
+		let {
+			current,
+			source
+		} = e.detail;
+		if (source === 'autoplay' || source === 'touch') {
+			swiperCur.value = e.detail.current;
+		}
+	}
+	function goDetail(url) {
+		let path = url.info[1].value
+		util.navigateTo(path);
 	}
 </script>
 

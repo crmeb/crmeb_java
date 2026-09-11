@@ -34,25 +34,19 @@
 		</view>
 	</view>
 </template>
-<script>
-	export default {
-		props: {
-			reply: {
-				type: Array,
-				default: () => []
-			}
-		},
-		data: function() {
-			return {};
-		},
-		methods: {
-			getpreviewImage: function(indexw, indexn) {
-				uni.previewImage({
-					urls: this.reply[indexw].pics,
-					current: this.reply[indexw].pics[indexn]
-				});
-			}
+<script setup>
+	const props = defineProps({
+		reply: {
+			type: Array,
+			default: () => []
 		}
+	})
+
+	function getpreviewImage(indexw, indexn) {
+		uni.previewImage({
+			urls: props.reply[indexw].pics,
+			current: props.reply[indexw].pics[indexn]
+		});
 	}
 </script>
 <style scoped lang='scss'>

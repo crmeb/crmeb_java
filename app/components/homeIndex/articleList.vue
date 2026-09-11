@@ -3,7 +3,7 @@
 	<view>
 		<view class="articleList" :style="[boxStyle]" v-if="articleList.length && articleListData.length">
 			<view v-if="listStyle">
-				<navigator :url='"/pages/news/news_details/index?id="+item.id' hover-class='none' :style="[itemStyle]"
+				<navigator :render-link="false" :url='"/pages/news/news_details/index?id="+item.id' hover-class='none' :style="[itemStyle]"
 					 v-for="(item,index) in articleList" :key='index'
 					class="item acea-row row-between-wrapper">
 					<view class="pictrue">
@@ -16,7 +16,7 @@
 				</navigator>
 			</view>
 			<view v-else>
-				<navigator  :url='"/pages/news/news_details/index?id="+item.id' hover-class='none'
+				<navigator :render-link="false"  :url='"/pages/news/news_details/index?id="+item.id' hover-class='none'
 					:style="[itemStyle]" v-for="(item,index) in articleList" :key='index'
 					class="item acea-row row-between-wrapper">
 					<view class="text">
@@ -31,7 +31,7 @@
 		</view>
 	</view>
 </template>
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -41,81 +41,70 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
+	import { ref, computed } from 'vue';
 	import easyLoadimage from '@/components/base/easy-loadimage.vue';
 	import {getArticleList} from '@/api/api.js'
-	export default {
-		name: 'homeArticle',
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			},
+
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
 		},
-		data() {
-			return {
-				cid: 0,
-				articleListData: [], // 文章列表数据
-			}
-		},
-		components: {
-			easyLoadimage
-		},
-		computed: {
-			//布局样式
-			listStyle() {
-				return this.dataConfig.layoutConfig.tabVal === 0
-			},
-			//文章分类
-			articleList() {
-				return this.dataConfig.selectConfig.articleList
-			},
-			//最外层盒子的样式
-			boxStyle() {
-				return {
-					borderRadius: this.dataConfig.bgStyle.val * 2 + 'rpx',
-					background: `linear-gradient(${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-					margin: this.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + this.dataConfig.lrConfig.val * 2 + 'rpx' +
-						' ' + 0,
-					padding: this.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + 0 + ' ' + this.dataConfig.downConfig.val *
-						2 + 'rpx'
-				}
-			},
-			//文章间距
-			itemStyle() {
-				return {
-					'margin-bottom': this.dataConfig.contentConfig.val * 2 + 'rpx'
-				}
-			},
-			//时间颜色
-			timeColor() {
-				return {
-					'color': this.dataConfig.timeColor.color[0].item
-				}
-			},
-			//标题颜色
-			titleColor() {
-				return {
-					'color': this.dataConfig.titleColor.color[0].item
-				}
-			}
-		},
-		created() {
-			// 获取cid
-			this.cid = this.dataConfig.selectConfig.articleList[0].cid
-			// 获取文章列表数据
-			this.getArticleListData()
-			
-		},
-		methods: {
-			// 获取文章列表
-			getArticleListData() {
-				getArticleList(this.cid).then(res =>{
-					this.articleListData = res.data.list
-				}).catch(err => {
-					console.log(err.message)
-				})
-			}
+	});
+
+	const cid = ref(0);
+	const articleListData = ref([]); // 文章列表数据
+
+	//布局样式
+	const listStyle = computed(() => {
+		return props.dataConfig.layoutConfig.tabVal === 0
+	});
+	//文章分类
+	const articleList = computed(() => {
+		return props.dataConfig.selectConfig.articleList
+	});
+	//最外层盒子的样式
+	const boxStyle = computed(() => {
+		return {
+			borderRadius: props.dataConfig.bgStyle.val * 2 + 'rpx',
+			background: `linear-gradient(${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+			margin: props.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + props.dataConfig.lrConfig.val * 2 + 'rpx' +
+				' ' + 0,
+			padding: props.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + 0 + ' ' + props.dataConfig.downConfig.val *
+				2 + 'rpx'
 		}
+	});
+	//文章间距
+	const itemStyle = computed(() => {
+		return {
+			'margin-bottom': props.dataConfig.contentConfig.val * 2 + 'rpx'
+		}
+	});
+	//时间颜色
+	const timeColor = computed(() => {
+		return {
+			'color': props.dataConfig.timeColor.color[0].item
+		}
+	});
+	//标题颜色
+	const titleColor = computed(() => {
+		return {
+			'color': props.dataConfig.titleColor.color[0].item
+		}
+	});
+
+	// created
+	// 获取cid
+	cid.value = props.dataConfig.selectConfig.articleList[0].cid
+	// 获取文章列表数据
+	getArticleListData()
+
+	// 获取文章列表
+	function getArticleListData() {
+		getArticleList(cid.value).then(res =>{
+			articleListData.value = res.data.list
+		}).catch(err => {
+		})
 	}
 </script>
 

@@ -3,51 +3,49 @@
 	<image class="img-tag" :class="{'middle-img-tag': size == 'middle'}" :src="imgSrc" mode="heightFix" v-else></image>
 </template>
 
-<script>
-	export default {
-		name: "tag",
-		props: {
-			size: {
-				// 标签大小 normal, small
-				type: String,
-				default: "normal"
-			},
-			// 标签内容
-			text: {
-				type: String,
-				default: ""
-			},
-			circle: {
-				type: [Boolean, String],
-				default: false
-			},
-			background: {
-				type: String,
-				default: '#e93323'
-			},
-			color: {
-				type: String,
-				default: '#ffffff'
-			},
-			borderColor:{
-				type: String,
-				default: ''
-			},
-			imgSrc:{
-				type: String,
-				default: ''
-			}
+<script setup>
+	import { computed } from 'vue';
+
+	const props = defineProps({
+		size: {
+			// 标签大小 normal, small
+			type: String,
+			default: "normal"
 		},
-		computed:{
-			tagStyle(){
-				return {
-					background: this.background,
-					color: this.color,
-					border: this.borderColor ? `1rpx solid ${this.borderColor}` : 'none'
-				}
-			}
+		// 标签内容
+		text: {
+			type: String,
+			default: ""
+		},
+		circle: {
+			type: [Boolean, String],
+			default: false
+		},
+		background: {
+			type: String,
+			default: '#e93323'
+		},
+		color: {
+			type: String,
+			default: '#ffffff'
+		},
+		borderColor:{
+			type: String,
+			default: ''
+		},
+		imgSrc:{
+			type: String,
+			default: ''
 		}
-	};
+	});
+
+	const tagStyle = computed(() => {
+		return {
+			background: props.background,
+			color: props.color,
+			border: props.borderColor ? `1rpx solid ${props.borderColor}` : 'none'
+		}
+	});
 </script>
 
 <style lang="scss">

@@ -53,104 +53,99 @@
 			:style="{width: canvasWidth + 'px', height: canvasHeight + 'px',position: 'absolute',left:'-100000px',top:'-100000px'}"></canvas>
 		<view class="mask" @touchmove.prevent v-if="isShow" @click="closeAttr"></view>
 	</view>
-	</uni-popup>
 
 </template>
 
-<script>
-	import colors from "@/mixins/color";
-	import Cache from '@/utils/cache';
+<script setup>
+	import { ref, getCurrentInstance } from 'vue';
+	import { useColor } from '@/composables/useColor.js';
+	import util from '@/utils/util.js';
+	import Cache from '@/utils/cache.js';
 	import {
 		userEdit,
 	} from '@/api/user.js';
-	export default {
-		mixins: [colors],
-		props: {
-			isShow: {
-				type: Boolean,
-				default: false
-			}
-		},
-		data() {
-			return {
-				defHead: require('@/static/images/def_avatar.png'),
-				mp_is_new: this.$Cache.get('MP_VERSION_ISNEW') || false,
-				userInfo: {
-					avatar: '',
-					nickname: '',
-				},
-				mpData: uni.getStorageSync('copyRight'),
-				canvasStatus: false,
-			};
-		},
-		mounted() {
+	import defAvatarSrc from '@/static/images/def_avatar.png';
 
-		},
-		methods: {
-			/**
-			 * 上传文件
-			 * 
-			 */
-			uploadpic: function() {
-				let that = this;
-				this.canvasStatus = true
-				that.$util.uploadImageChange('upload/image', (res) => {
-					let userInfo = that.userInfo;
-					if (userInfo !== undefined) {
-						that.userInfo.avatar = res.data.url;
-					}
-					this.canvasStatus = false
-				}, (res) => {
-					this.canvasStatus = false
-				}, (res) => {
-					this.canvasWidth = res.w
-					this.canvasHeight = res.h
-				});
-			},
-			// 微信头像获取
-			onChooseAvatar(e) {
-				const {
-					avatarUrl
-				} = e.detail
-				this.$util.uploadImgs('upload/image', avatarUrl, (res) => {
-					this.userInfo.avatar = res.data.url
-				}, (err) => {
-					console.log(err)
-				})
-			},
-			closeAttr: function() {
-				this.$emit('closeEdit');
-			},
-			/**
-			 * 提交修改
-			 */
-			formSubmit(e) {
-				let that = this
-				if (!this.userInfo.avatar) return that.$util.Tips({
-					title: that.$t(`请上传头像`)
-				});
-				if (!e.detail.value.nickname) return that.$util.Tips({
-					title: that.$t(`请输入昵称`)
-				});
-				this.userInfo.nickname = e.detail.value.nickname
-				userEdit(this.userInfo).then(res => {
-					this.$emit('editSuccess')
-					return that.$util.Tips({
-						title: res.msg,
-						icon: 'success'
-					}, {
-						tab: 3
-					});
-				}).catch(msg => {
-					return that.$util.Tips({
-						title: msg || that.$t(`保存失败`)
-					}, {
-						tab: 3,
-						url: 1
-					});
-				});
-			}
+	const { proxy } = getCurrentInstance();
+	const { colorStyle } = useColor();
+
+	const props = defineProps({
+		isShow: {
+			type: Boolean,
+			default: false
 		}
+	});
+
+	const emit = defineEmits(['closeEdit', 'editSuccess']);
+
+	const defHead = ref(defAvatarSrc);
+	const mp_is_new = ref(Cache.get('MP_VERSION_ISNEW') || false);
+	const userInfo = ref({
+		avatar: '',
+		nickname: '',
+	});
+	const mpData = ref(uni.getStorageSync('copyRight'));
+	const canvasStatus = ref(false);
+	const canvasWidth = ref(0);
+	const canvasHeight = ref(0);
+
+	/**
+	 * 上传文件
+	 */
+	function uploadpic() {
+		canvasStatus.value = true
+		util.uploadImageChange('upload/image', (res) => {
+			if (userInfo.value !== undefined) {
+				userInfo.value.avatar = res.data.url;
+			}
+			canvasStatus.value = false
+		}, (res) => {
+			canvasStatus.value = false
+		}, (res) => {
+			canvasWidth.value = res.w
+			canvasHeight.value = res.h
+		});
+	}
+	// 微信头像获取
+	function onChooseAvatar(e) {
+		const {
+			avatarUrl
+		} = e.detail
+		util.uploadImgs('upload/image', avatarUrl, (res) => {
+			userInfo.value.avatar = res.data.url
+		}, (err) => {
+		})
+	}
+	function closeAttr() {
+		emit('closeEdit');
+	}
+	/**
+	 * 提交修改
+	 */
+	function formSubmit(e) {
+		if (!userInfo.value.avatar) return util.Tips({
+			title: proxy.$t(`请上传头像`)
+		});
+		if (!e.detail.value.nickname) return util.Tips({
+			title: proxy.$t(`请输入昵称`)
+		});
+		userInfo.value.nickname = e.detail.value.nickname
+		userEdit(userInfo.value).then(res => {
+			emit('editSuccess')
+			return util.Tips({
+				title: res.msg,
+				icon: 'success'
+			}, {
+				tab: 3
+			});
+		}).catch(msg => {
+			return util.Tips({
+				title: msg || proxy.$t(`保存失败`)
+			}, {
+				tab: 3,
+				url: 1
+			});
+		});
 	}
 </script>
 <style>

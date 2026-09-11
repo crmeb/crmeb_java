@@ -11,98 +11,84 @@
 		</view>
 	</view>
 </template>
-<script>
-	const app = getApp();
-	import Routine from '@/libs/routine';
+<script setup>
+	import { ref } from 'vue';
+	import util from '@/utils/util.js';
+	import { useAppStore } from "@/store/app.js";
+	import Routine from '@/libs/routine.js';
 	import {
 		loginMobile,
 		registerVerify,
 		getCodeApi,
 		getUserInfo
-	} from "@/api/user";
-	import { getLogo, getUserPhone } from '@/api/public';
-	export default{
-		name:'routine_phone',
-		props:{
-			isPhoneBox:{
-				type:Boolean,
-				default:false,
-			},
-			logoUrl:{
-				type:String,
-				default:'',
-			},
-			authKey:{
-				type:String,
-				default:'',
-			}
-		},
-		data(){
-			return {
-				keyCode:'',
-				account:'',
-				codeNum:'',
-				isStatus:false
-			}
-		},
-		mounted() {
-		},
-		methods:{
-			// #ifdef MP
-			// 小程序获取手机号码
-			getphonenumber(e){
-				uni.showLoading({ title: '加载中' });
-				Routine.getCode()
-					.then(code => {
-						this.getUserPhoneNumber(e.detail.encryptedData, e.detail.iv, code);
-					})
-					.catch(error => {
-						uni.hideLoading();
-					});
-			},
-			// 小程序获取手机号码回调
-			getUserPhoneNumber(encryptedData, iv, code) {
-				getUserPhone({
-					encryptedData: encryptedData,
-					iv: iv,
-					code: code,
-					key:this.authKey,
-					type: 'routine'
-				})
-					.then(res => {
-						this.$store.commit('LOGIN', {
-							token: res.data.token
-						});
-						this.$store.commit("SETUID", res.data.uid);
-						this.getUserInfo();
-					})
-					.catch(res => {
-						uni.hideLoading();
-						this.$util.Tips({
-							title: res
-						});
-					});
-			},
-			/**
-			 * 获取个人用户信息
-			 */
-			getUserInfo: function() {
-				let that = this;
-				getUserInfo().then(res => {
-					uni.hideLoading();
-					that.userInfo = res.data
-					that.$store.commit("UPDATE_USERINFO", res.data);
-					that.isStatus = true
-					this.close()
-				});
-			},
-			// #endif
-			close(){
-				this.$emit('close',{isStatus:this.isStatus})
-			}
-		}
+	} from "@/api/user.js";
+	import { getLogo, getUserPhone } from '@/api/public.js';
+
+	const appStore = useAppStore();
+
+	const props = defineProps({
+		isPhoneBox: { type: Boolean, default: false },
+		logoUrl: { type: String, default: '' },
+		authKey: { type: String, default: '' }
+	});
+
+	const emit = defineEmits(['close']);
+
+	const keyCode = ref('');
+	const account = ref('');
+	const codeNum = ref('');
+	const isStatus = ref(false);
+	const userInfo = ref({});
+
+	// #ifdef MP
+	// 小程序获取手机号码
+	function getphonenumber(e) {
+		uni.showLoading({ title: '加载中' });
+		Routine.getCode()
+			.then(code => {
+				getUserPhoneNumber(e.detail.encryptedData, e.detail.iv, code);
+			})
+			.catch(error => {
+				uni.hideLoading();
+			});
 	}
-	
+	// 小程序获取手机号码回调
+	function getUserPhoneNumber(encryptedData, iv, code) {
+		getUserPhone({
+			encryptedData: encryptedData,
+			iv: iv,
+			code: code,
+			key: props.authKey,
+			type: 'routine'
+		})
+			.then(res => {
+				appStore.LOGIN({ token: res.data.token });
+				appStore.SETUID(res.data.uid);
+				getUserInfoFn();
+			})
+			.catch(res => {
+				uni.hideLoading();
+				util.Tips({ title: res });
+			});
+	}
+	/**
+	 * 获取个人用户信息
+	 */
+	function getUserInfoFn() {
+		getUserInfo().then(res => {
+			uni.hideLoading();
+			userInfo.value = res.data
+			appStore.UPDATE_USERINFO(res.data);
+			isStatus.value = true
+			close()
+		});
+	}
+	// #endif
+	function close() {
+		emit('close', { isStatus: isStatus.value })
+	}
+
+	defineExpose({ close });
 </script>
 
 <style lang="scss">

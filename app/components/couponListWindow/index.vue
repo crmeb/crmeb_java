@@ -39,7 +39,7 @@
 				</block>
 				<!-- 无优惠券 -->
 				<view class='pictrue' v-else>
-					<image :src="urlDomain+'crmebimage/perset/staticImg/noCoupon.png'"></image>
+					<image :src="urlDomain+'/crmebimage/perset/staticImg/noCoupon.png'"></image>
 				</view>
 			</view>
 
@@ -48,88 +48,88 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, onMounted } from 'vue';
 	import {
 		setCouponReceive
 	} from '@/api/api.js';
-	export default {
-		props: {
-			//打开状态 0=领取优惠券,1=使用优惠券
-			openType: {
-				type: Number,
-				default: 0,
-			},
-			coupon: {
-				type: Object,
-				default: function() {
-					return {};
-				}
-			},
-			//下单页面使用优惠券组件不展示tab切换页
-			orderShow: {
-				type: String,
-				default: function() {
-					return '';
-				}
-			},
-			typeNum: {
-				type: Number,
-				default: 0
-			},
-			firstType: {
-				type: Number,
-				default: 1
+	import Cache from '@/utils/cache.js';
+	import util from '@/utils/util.js';
+
+	const props = defineProps({
+		//打开状态 0=领取优惠券,1=使用优惠券
+		openType: {
+			type: Number,
+			default: 0,
+		},
+		coupon: {
+			type: Object,
+			default: function() {
+				return {};
 			}
 		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				type: 1,
-			};
-		},
-		mounted() {
-			this.type = this.firstType
-		},
-		methods: {
-			close: function() {
-				this.type = this.typeNum;
-				this.$emit('ChangCouponsClone');
-			},
-			getCouponUser: function(index, id) {
-				let that = this;
-				let list = that.coupon.list;
-				if (list[index].isUse == true && this.openType == 0) return true;
-				switch (this.openType) {
-					case 0:
-						//领取优惠券
-						let ids = [];
-						ids.push(id);
-						setCouponReceive(id).then(res => {
-							that.$emit('ChangCouponsUseState', index);
-							that.$util.Tips({
-								title: "领取成功"
-							}, function(res) {
-								return that.$util.Tips({
-									title: res
-								});
-							});
-							that.$emit('ChangCoupons', list[index]);
-						}).catch(err => {
-							that.$util.Tips({
-								title: '请登录'
-							});
-						})
-						break;
-					case 1:
-						that.$emit('ChangCoupons', index);
-						break;
-				}
-			},
-			setType: function(type) {
-				this.$emit('tabCouponType', type);
-				this.type = type;
+		//下单页面使用优惠券组件不展示tab切换页
+		orderShow: {
+			type: String,
+			default: function() {
+				return '';
 			}
+		},
+		typeNum: {
+			type: Number,
+			default: 0
+		},
+		firstType: {
+			type: Number,
+			default: 1
 		}
+	});
+
+	const emit = defineEmits(['ChangCouponsClone', 'ChangCouponsUseState', 'ChangCoupons', 'tabCouponType']);
+
+	const urlDomain = ref(Cache.get("imgHost"));
+	const type = ref(1);
+
+	onMounted(() => {
+		type.value = props.firstType
+	});
+
+	function close() {
+		type.value = props.typeNum;
+		emit('ChangCouponsClone');
+	}
+	function getCouponUser(index, id) {
+		let list = props.coupon.list;
+		if (list[index].isUse == true && props.openType == 0) return true;
+		switch (props.openType) {
+			case 0:
+				//领取优惠券
+				let ids = [];
+				ids.push(id);
+				setCouponReceive(id).then(res => {
+					emit('ChangCouponsUseState', index);
+					util.Tips({
+						title: "领取成功"
+					}, function(res) {
+						return util.Tips({
+							title: res
+						});
+					});
+					emit('ChangCoupons', list[index]);
+				}).catch(err => {
+					util.Tips({
+						title: '请登录'
+					});
+				})
+				break;
+			case 1:
+				emit('ChangCoupons', index);
+				break;
+		}
+	}
+	function setType(tabType) {
+		emit('tabCouponType', tabType);
+		type.value = tabType;
 	}
 </script>
 

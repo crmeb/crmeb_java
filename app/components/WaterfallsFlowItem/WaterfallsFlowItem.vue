@@ -1,10 +1,8 @@
 <template>
-	<view class='list acea-row row-between-wrapper' :data-theme="theme">
+	<view class='list acea-row row-between-wrapper' :data-theme="theme" :style="colorStyle">
 		<view class='item' hover-class='none' @click="goDetail(item)">
 			<view class='pictrue'>
 				<easy-loadimage mode="widthFix" :image-src="item.image"></easy-loadimage>
-				<view v-if="item.activityStyle" :style="{ backgroundImage: `url(${item.activityStyle})` }"
-					class="border-picture"></view>
 			</view>
 			<view class='texts'>
 				<view class='names line2'>
@@ -20,7 +18,7 @@
 						<text v-if="Math.floor(item.replyNum)>0" class="regular">{{item.replyNum}}条评论</text>
 						<text v-if="item.replyNum===0">暂无评论</text>
 						<text v-if="Number(item.positiveRatio)>0"
-							class="m-l-8">好评{{$util.$h.Mul(item.positiveRatio, 100)}}%</text>
+							class="m-l-8">好评{{util.$h.Mul(item.positiveRatio, 100)}}%</text>
 
 					</view>
 					<view class="sold">已售 {{ item.sales }} {{item.unitName}}
@@ -31,7 +29,7 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -41,80 +39,47 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
+	import { ref } from 'vue'
 	import easyLoadimage from '@/components/base/easy-loadimage.vue';
+	import util from '@/utils/util.js'
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		components: {
-			easyLoadimage,
+
+	const props = defineProps({
+		item: {
+			type: Object,
+			require: true
 		},
-		props: {
-			item: {
-				type: Object,
-				require: true
-			},
-			type: {
-				type: Number,
-				default: 0
-			},
-			isStore: {
-				type: [String, Number],
-				default: '1'
-			},
-			isLogin: {
-				type: Boolean,
-				require: false
-			}
+		type: {
+			type: Number,
+			default: 0
 		},
-		data() {
-			return {
-				theme: app.globalData.theme,
-				//普通价格
-				svipPriceStyle: {
-					svipBox: {
-						height: '26rpx',
-						borderRadius: '60rpx 56rpx 56rpx 20rpx',
-					},
-					icon: {
-						height: '26rpx',
-						fontSize: '18rpx',
-						borderRadius: '12rpx 0 12rpx 2rpx'
-					},
-					price: {
-						fontSize: '38rpx'
-					},
-					svipPrice: {
-						fontSize: '22rpx'
-					}
-				},
-				//svip价格
-				svipIconStyle: {
-					svipBox: {
-						height: '26rpx',
-						borderRadius: '24rpx 40rpx 40rpx 0.4rpx',
-					},
-					price: {
-						fontSize: '38rpx'
-					},
-					svipPrice: {
-						fontSize: '18rpx'
-					}
-				}
-			}
+		isStore: {
+			type: [String, Number],
+			default: '1'
 		},
-		methods: {
-			// 去详情页
-			goDetail(item) {
-				uni.navigateTo({
-				    url: `/pages/goods/goods_details/index?id=${item.id}`
-				})
-			},
-			authOpen() {
-				this.$emit('authOpen');
-			},
-			followToggle(item) {
-				this.$emit('followToggle', item);
-			}
-		},
+		isLogin: {
+			type: Boolean,
+			require: false
+		}
+	});
+
+	const emit = defineEmits(['authOpen', 'followToggle']);
+
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+
+	// 去详情页
+	function goDetail(item) {
+		uni.navigateTo({
+		    url: `/pages/goods/goods_details/index?id=${item.id}`
+		})
+	}
+	function authOpen() {
+		emit('authOpen');
+	}
+	function followToggle(item) {
+		emit('followToggle', item);
 	}
 </script>
 <style lang="scss" scoped>

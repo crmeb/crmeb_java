@@ -18,167 +18,152 @@
 	</view>
 </template>
 
-<script>
-const app = getApp();
-import Cache from '../utils/cache';
-import { getLogo, silenceAuth, routineBindingPhone } from '../api/public';
-import { LOGO_URL, EXPIRES_TIME, USER_INFO, STATE_R_KEY } from '../config/cache';
-import { mapGetters } from 'vuex';
-import Routine from '../libs/routine';
-import store from '../store';
+<script setup>
+import { ref, computed, watch, onMounted, getCurrentInstance } from 'vue';
+import Cache from '@/utils/cache.js';
+import { getLogo, silenceAuth, routineBindingPhone } from '@/api/public.js';
+import { LOGO_URL, EXPIRES_TIME, USER_INFO, STATE_R_KEY } from '@/config/cache.js';
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from 'pinia';
+import Routine from '@/libs/routine.js';
 
-export default {
-	name: 'Authorize',
-	props: {
-		isAuto: {
-			type: Boolean,
-			default: true
-		},
-		isGoIndex: {
-			type: Boolean,
-			default: true
-		},
-		isShowAuth: {
-			type: Boolean,
-			default: false
-		}
+const app = getApp();
+const { proxy } = getCurrentInstance();
+
+const props = defineProps({
+	isAuto: {
+		type: Boolean,
+		default: true
 	},
-	data() {
-		return {
-			logoUrl: '',
-			authKey: ''
-		};
+	isGoIndex: {
+		type: Boolean,
+		default: true
 	},
-	computed: mapGetters(['isLogin', 'userInfo']),
-	watch: {
-		isLogin(n) {
-			n === true && this.$emit('onLoadFun', this.userInfo);
-		}
-	},
-	mounted() {
-		this.getLogoUrl();
-		let that = this;
-		if (!this.isLogin && !Cache.has(STATE_R_KEY)) {
-			wx.login({
-				success(res) {
-					Cache.set(STATE_R_KEY, res.code, 10800);
-					let spread = app.globalData.spid ? app.globalData.spid : '';
-					// silenceAuth({ code: res.code, spread: spread, spid: app.globalData.code })
-					// 	.then(res => {
-					// 		if (res.data.key !== undefined && res.data.key) {
-					// 			that.authKey = res.data.key;
-					// 		} else {
-					// 			app.globalData.code = 0;
-					// 			let time = res.data.expires_time - Cache.time();
-					// 			// store.commit('UPDATE_USERINFO', res.data.userInfo);
-					// 			store.commit('LOGIN', { token: res.data.token, time: time });
-					// 			// store.commit('SETUID', res.data.userInfo.uid);
-					// 			// Cache.set(EXPIRES_TIME,res.data.expires_time,time);
-					// 			// Cache.set(USER_INFO,res.data.userInfo,time);
-					// 		}
-					// 	})
-					// 	.catch(res => {
-					// 	});
-				}
-			});
-		} else {
-			this.setAuthStatus();
-		}
-	},
-	methods: {
-		setAuthStatus() {
-			Routine.authorize()
-				.then(res => {
-					if (res.islogin === false) this.setUserInfo();
-					else this.$emit('onLoadFun', this.userInfo);
-				})
-				.catch(res => {
-					if (this.isAuto) this.$emit('authColse', true);
-				});
-		},
-		getUserInfo(code) {
-			Routine.getUserInfo()
-				.then(res => {
-					let userInfo = res.userInfo;
-					userInfo.code = code;
-					userInfo.spread_spid = app.globalData.spid; //获取推广人ID
-					userInfo.spread_code = app.globalData.code; //获取推广人分享二维码ID
-					Routine.authUserInfo(userInfo)
-						.then(res => {
-							uni.hideLoading();
-							this.$emit('authColse', false);
-							this.$emit('onLoadFun', this.userInfo);
-						})
-						.catch(res => {
-							uni.hideLoading();
-							uni.showToast({
-								title: res.msg,
-								icon: 'none',
-								duration: 2000
-							});
-						});
-				})
-				.catch(res => {
-					uni.hideLoading();
-				});
-		},
-		getUserPhoneNumber(encryptedData, iv, code) {
-			routineBindingPhone({
-				encryptedData: encryptedData,
-				iv: iv,
-				code: code,
-				spid: app.globalData.spid,
-				spread: app.globalData.code
-			})
-				.then(res => {
-					let time = res.data.expires_time - this.$Cache.time();
-					this.$store.commit('LOGIN', {
-						token: res.data.token,
-						time: time
-					});
-					this.$emit('authColse', false);
-					this.$emit('onLoadFun', res.data.userInfo);
-					uni.hideLoading();
-				})
-				.catch(res => {
-					uni.hideLoading();
-				});
-		},
-		setUserInfo(e) {
-			uni.showLoading({ title: '正在登录中' });
-			Routine.getCode()
-				.then(code => {
-					this.getUserPhoneNumber(e.detail.encryptedData, e.detail.iv, code);
-				})
-				.catch(res => {
-					uni.hideLoading();
-				});
-		},
-		getLogoUrl() {
-			let that = this;
-			if (Cache.has(LOGO_URL)) {
-				this.logoUrl = Cache.get(LOGO_URL);
-				return;
-			}
-			getLogo().then(res => {
-				that.logoUrl = res.data.logo_url;
-				Cache.set(LOGO_URL, that.logoUrl);
-			});
-		},
-		close() {
-			let pages = getCurrentPages(),
-				currPage = pages[pages.length - 1];
-			if (this.isGoIndex) {
-				uni.navigateTo({ url: '/pages/index/index' });
-			} else {
-				this.$emit('authColse', false);
-			}
-			// if (currPage && currPage.isShowAuth != undefined){
-			// 	currPage.isShowAuth = true;
-			// }
-		}
+	isShowAuth: {
+		type: Boolean,
+		default: false
 	}
-};
+});
+const emit = defineEmits(['onLoadFun', 'authColse']);
+
+const appStore = useAppStore();
+const { isLogin, userInfo } = storeToRefs(appStore);
+
+const logoUrl = ref('');
+const authKey = ref('');
+
+watch(isLogin, (n) => {
+	n === true && emit('onLoadFun', userInfo.value);
+});
+
+onMounted(() => {
+	getLogoUrl();
+	if (!isLogin.value && !Cache.has(STATE_R_KEY)) {
+		wx.login({
+			success(res) {
+				Cache.set(STATE_R_KEY, res.code, 10800);
+				let spread = app.globalData.spread ? app.globalData.spread : '';
+			}
+		});
+	} else {
+		setAuthStatus();
+	}
+});
+
+function setAuthStatus() {
+	Routine.authorize()
+		.then(res => {
+			if (res.islogin === false) setUserInfo();
+			else emit('onLoadFun', userInfo.value);
+		})
+		.catch(res => {
+			if (props.isAuto) emit('authColse', true);
+		});
+}
+
+function getUserInfo(code) {
+	Routine.getUserInfo()
+		.then(res => {
+			let info = res.userInfo;
+			info.code = code;
+			info.spread_spid = app.globalData.spread; //获取推广人ID
+			info.spread_code = app.globalData.code; //获取推广人分享二维码ID
+			Routine.authUserInfo(info)
+				.then(res => {
+					uni.hideLoading();
+					emit('authColse', false);
+					emit('onLoadFun', userInfo.value);
+				})
+				.catch(res => {
+					uni.hideLoading();
+					uni.showToast({
+						title: res.msg,
+						icon: 'none',
+						duration: 2000
+					});
+				});
+		})
+		.catch(res => {
+			uni.hideLoading();
+		});
+}
+
+function getUserPhoneNumber(encryptedData, iv, code) {
+	routineBindingPhone({
+		encryptedData: encryptedData,
+		iv: iv,
+		code: code,
+		spid: app.globalData.spread,
+		spread: app.globalData.code
+	})
+		.then(res => {
+			let time = res.data.expires_time - Cache.time();
+			appStore.LOGIN({
+				token: res.data.token,
+				time: time
+			});
+			emit('authColse', false);
+			emit('onLoadFun', res.data.userInfo);
+			uni.hideLoading();
+		})
+		.catch(res => {
+			uni.hideLoading();
+		});
+}
+
+function setUserInfo(e) {
+	uni.showLoading({ title: '正在登录中' });
+	Routine.getCode()
+		.then(code => {
+			getUserPhoneNumber(e.detail.encryptedData, e.detail.iv, code);
+		})
+		.catch(res => {
+			uni.hideLoading();
+		});
+}
+
+function getLogoUrl() {
+	if (Cache.has(LOGO_URL)) {
+		logoUrl.value = Cache.get(LOGO_URL);
+		return;
+	}
+	getLogo().then(res => {
+		logoUrl.value = res.data.logo_url;
+		Cache.set(LOGO_URL, logoUrl.value);
+	});
+}
+
+function close() {
+	let pages = getCurrentPages(),
+		currPage = pages[pages.length - 1];
+	if (props.isGoIndex) {
+		uni.navigateTo({ url: '/pages/index/index' });
+	} else {
+		emit('authColse', false);
+	}
+}
+
+defineExpose({ setUserInfo, close });
 </script>
 
 <style scoped lang="scss">

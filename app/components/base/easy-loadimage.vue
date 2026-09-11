@@ -5,11 +5,11 @@
 			@load="handleImgLoad" @error="handleImgError">
 		</image>
 		<view class="loadfail-img" v-else-if="isLoadError"
-			:style="{'background-image': `url(${urlDomain}crmebimage/presets/loadfail.png) no-repeat center`}"></view>
+			:style="{'background-image': `url(${urlDomain}/crmebimage/presets/loadfail.png) no-repeat center`}"></view>
 		<view :class="['loading-img',loadingMode]" v-show="!showImg&&!isLoadError"></view>
 	</view>
 </template>
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -19,9 +19,12 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
+	import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, getCurrentInstance } from 'vue';
 	import {
 		throttle
 	} from '@/utils/validate.js'
+
+	const { proxy } = getCurrentInstance();
 
 	// 生成全局唯一id
 	function generateUUID() {
@@ -31,128 +34,167 @@
 			return v.toString(16);
 		})
 	}
-	export default {
-		name: 'easyLoadimage',
-		props: {
-			imageSrc: {
-				type: String || null,
-				default () {
-					return '';
-				}
-			},
-			mode: {
-				type: String,
-			},
-			loadingMode: {
-				type: String,
-				default: 'looming-gray'
-			},
-			openTransition: {
-				type: Boolean,
-				default: true,
-			},
-			viewHeight: {
-				type: Number,
-				default () {
-					return uni.getSystemInfoSync().windowHeight;
-				}
-			},
-			width: {
-				type: String,
-				default: ''
-			},
-			height: {
-				type: String,
-				default: ''
-			},
-			borderRadius: {
-				type: String,
-				default: ''
-			},
-			radius: {
-				type: Number,
-				default: 0
-			},
-		},
-		data() {
-			const that = this;
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				uid: 'uid-' + generateUUID(),
-				loadImg: false,
-				showImg: false,
-				isLoadError: false,
-				borderLoaded: 0,
-				showTransition: false,
-				scrollFn: throttle(function() {
-					// 加载img时才执行滚动监听判断是否可加载
-					if (that.loadImg || that.isLoadError) return;
-					const id = that.uid
-					const query = uni.createSelectorQuery().in(that);
-					query.select('#' + id).boundingClientRect(data => {
-						if (!data) return;
-						if (data.top - that.viewHeight < 0) {
-							that.loadImg = !!that.imageSrc;
-							that.isLoadError = !that.loadImg;
-						}
-					}).exec()
-				}, 200)
+
+	const props = defineProps({
+		imageSrc: {
+			type: String || null,
+			default () {
+				return '';
 			}
 		},
-		computed: {
-			boxStyle() {
-				return {
-					width: this.width,
-					height: this.height,
-					borderRadius: this.radius * 2 + 'rpx'
-				}
-			},
-			imageRadius() {
-				if (this.radius && this.radius > 0) {
-					return {
-						'border-radius': this.radius * 2 + 'rpx'
-					}
-				}
+		mode: {
+			type: String,
+		},
+		loadingMode: {
+			type: String,
+			default: 'looming-gray'
+		},
+		openTransition: {
+			type: Boolean,
+			default: true,
+		},
+		viewHeight: {
+			type: Number,
+			default () {
+				return uni.getSystemInfoSync().windowHeight;
 			}
 		},
-		methods: {
-			init() {
-				this.$nextTick(this.onScroll)
-			},
-			handleBorderLoad() {
-				this.borderLoaded = 1;
-			},
-			handleBorderError() {
-				this.borderLoaded = 2;
-			},
-			handleImgLoad(e) {
-				this.showImg = true;
-				setTimeout(() => {
-					this.showTransition = true
-				}, 50)
-			},
-			handleImgError(e) {
-				this.isLoadError = true;
-			},
-			onScroll() {
-				this.scrollFn();
-			},
+		width: {
+			type: String,
+			default: ''
 		},
-		mounted() {
-			this.init()
-			uni.$on('scroll', this.scrollFn);
-			this.onScroll()
+		height: {
+			type: String,
+			default: ''
 		},
-		beforeDestroy() {
-			uni.$off('scroll', this.scrollFn);
+		borderRadius: {
+			type: String,
+			default: ''
+		},
+		radius: {
+			type: Number,
+			default: 0
+		},
+	});
+
+	const urlDomain = ref(proxy.$Cache.get("imgHost"));
+	const uid = ref('uid-' + generateUUID());
+	const loadImg = ref(false);
+	const showImg = ref(false);
+	const isLoadError = ref(false);
+	const showTransition = ref(false);
+	let observer = null;
+	const scrollFn = throttle(function() {
+		// 加载img时才执行滚动监听判断是否可加载
+		if (loadImg.value || isLoadError.value) return;
+		const id = uid.value
+		const query = uni.createSelectorQuery().in(proxy);
+		query.select('#' + id).boundingClientRect(data => {
+			if (!data) return;
+			if (data.top - props.viewHeight < 0) {
+				loadImg.value = !!props.imageSrc;
+				isLoadError.value = !loadImg.value;
+			}
+		}).exec()
+	}, 200);
+
+	// IntersectionObserver 自行观察视口，不依赖页面 emit scroll 事件
+	function observeViewport() {
+		if (loadImg.value || isLoadError.value) return;
+		// #ifdef H5 || APP-PLUS || MP
+		try {
+			observer = uni.createIntersectionObserver(proxy, {
+				thresholds: [0, 0.01, 0.1]
+			});
+			observer.relativeToViewport();
+			observer.observe('#' + uid.value, (res) => {
+				if (loadImg.value) return;
+				// 进入或已在视口内即加载（intersectionRatio > 0 表示有相交）
+				if (res.intersectionRatio > 0 || res.isIntersecting) {
+					loadImg.value = !!props.imageSrc;
+					isLoadError.value = !loadImg.value;
+					disconnectObserver();
+				}
+			});
+		} catch (e) {
+			// 降级：observer 不可用时退回 scroll 监听
+		}
+		// #endif
+	}
+	function disconnectObserver() {
+		if (observer) {
+			try { observer.disconnect(); } catch (e) {}
+			observer = null;
 		}
 	}
+
+	const boxStyle = computed(() => {
+		return {
+			width: props.width,
+			height: props.height,
+			borderRadius: props.borderRadius || props.radius * 2 + 'rpx'
+		}
+	});
+	const imageRadius = computed(() => {
+		if (props.borderRadius) {
+			return {
+				'border-radius': props.borderRadius
+			}
+		}
+		if (props.radius && props.radius > 0) {
+			return {
+				'border-radius': props.radius * 2 + 'rpx'
+			}
+		}
+	});
+
+	function init() {
+		nextTick(() => {
+			onScroll()
+			observeViewport()
+		})
+	}
+	function handleImgLoad(e) {
+		showImg.value = true;
+		setTimeout(() => {
+			showTransition.value = true
+		}, 50)
+	}
+	function handleImgError(e) {
+		isLoadError.value = true;
+	}
+	function onScroll() {
+		scrollFn();
+	}
+
+	onMounted(() => {
+		init()
+		uni.$on('scroll', scrollFn);
+		onScroll()
+	});
+
+	// 图片地址异步到达时，重置错误状态并重新观察视口
+	watch(() => props.imageSrc, (val) => {
+		if (val && !loadImg.value) {
+			isLoadError.value = false;
+			nextTick(() => {
+				observeViewport()
+				onScroll()
+			})
+		}
+	});
+
+	onBeforeUnmount(() => {
+		uni.$off('scroll', scrollFn);
+		disconnectObserver()
+	});
 </script>
 
 <style scoped lang="scss">
 	.easy-loadimage {
 		width: 100%;
 		height: 100%;
+		position: relative;
 		overflow: hidden;
 	}
 

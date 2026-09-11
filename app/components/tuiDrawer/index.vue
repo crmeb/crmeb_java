@@ -28,235 +28,219 @@
 	</view>
 </template>
 
-<script>
-	import colors from '@/mixins/color';
-	export default {
-		name: 'tuiSwipeAction',
-		emits: ['click'],
-		mixins: [colors],
-		props: {
-			// name: '删除',
-			// color: '#fff',
-			// fontsize: 32,//单位rpx
-			// width: 80, //单位px
-			// icon: 'like.png',//此处为图片地址
-			// background: '#ed3f14'
-			actions: {
-				type: Array,
-				default () {
-					return [];
-				}
-			},
-			//点击按钮时是否自动关闭
-			closable: {
-				type: Boolean,
-				default: true
-			},
-			//设为false，可以滑动多行不关闭菜单
-			showMask: {
-				type: Boolean,
-				default: true
-			},
-			operateWidth: {
-				type: Number,
-				default: 80
-			},
-			params: {
-				type: Object,
-				default () {
-					return {};
-				}
-			},
-			//禁止滑动
-			forbid: {
-				type: Boolean,
-				default: false
-			},
-			//手动开关
-			open: {
-				type: Boolean,
-				default: false
-			},
-			//背景色
-			backgroundColor: {
-				type: String,
-				default: '#fff'
-			}
-		},
-		watch: {
-			actions(newValue, oldValue) {
-				this.updateButtonSize();
-			},
-			open(newValue) {
-				this.manualSwitch(newValue);
-			}
-		},
-		data() {
-			return {
-				//start position
-				tStart: {
-					pageX: 0,
-					pageY: 0
-				},
-				//限制滑动距离
-				limitMove: 0,
-				//move position
-				position: {
-					pageX: 0,
-					pageY: 0
-				},
-				isShowBtn: false,
-				move: false
-			};
-		},
-		mounted() {
-			this.updateButtonSize();
-		},
-		methods: {
-			swipeDirection(x1, x2, y1, y2) {
-				return Math.abs(x1 - x2) >= Math.abs(y1 - y2) ? (x1 - x2 > 0 ? 'Left' : 'Right') : y1 - y2 > 0 ? 'Up' :
-					'Down';
-			},
-			//阻止事件冒泡
-			loop() {},
-			updateButtonSize() {
-				const actions = this.actions;
-				if (actions.length > 0) {
-					const query = uni.createSelectorQuery().in(this);
-					let limitMovePosition = 0;
-					actions.forEach(item => {
-						limitMovePosition += item.width || 0;
-					});
-					this.limitMove = limitMovePosition;
-				} else {
-					this.limitMove = this.operateWidth;
-				}
-			},
-			handlerTouchstart(event) {
-				if (this.forbid) return;
-				let touches = event.touches
-				if (touches && touches.length > 1) return;
-				this.move = true;
-				touches = touches ? event.touches[0] : {};
-				if (!touches || (touches.pageX === undefined && touches.pageY === undefined)) {
-					touches = {
-						pageX: event.pageX,
-						pageY: event.pageY
-					};
-				}
-				const tStart = this.tStart;
-				if (touches) {
-					for (let i in tStart) {
-						if (touches[i]) {
-							tStart[i] = touches[i];
-						}
-					}
-				}
-			},
-			swipper(touches) {
-				const start = this.tStart;
-				const spacing = {
-					pageX: touches.pageX - start.pageX,
-					pageY: touches.pageY - start.pageY
-				};
-				if (this.limitMove < Math.abs(spacing.pageX)) {
-					spacing.pageX = -this.limitMove;
-				}
-				this.position = spacing;
-			},
-			handlerTouchmove(event) {
-				if (this.forbid || !this.move) return;
-				const start = this.tStart;
-				let touches = event.touches ? event.touches[0] : {};
-				if (!touches || (touches.pageX === undefined && touches.pageY === undefined)) {
-					touches = {
-						pageX: event.pageX,
-						pageY: event.pageY
-					};
-				}
-				if (touches) {
-					const direction = this.swipeDirection(start.pageX, touches.pageX, start.pageY, touches.pageY);
-					if (direction === 'Left' && Math.abs(this.position.pageX) !== this.limitMove) {
-						this.swipper(touches);
-					}
-				}
-			},
-			handlerTouchend(event) {
-				if (this.forbid || !this.move) return;
-				this.move = false;
-				const start = this.tStart;
-				let touches = event.changedTouches ? event.changedTouches[0] : {};
-				if (!touches || (touches.pageX === undefined && touches.pageY === undefined)) {
-					touches = {
-						pageX: event.pageX,
-						pageY: event.pageY
-					};
-				}
-				if (touches) {
-					const direction = this.swipeDirection(start.pageX, touches.pageX, start.pageY, touches.pageY);
-					const spacing = {
-						pageX: touches.pageX - start.pageX,
-						pageY: touches.pageY - start.pageY
-					};
-					if (Math.abs(spacing.pageX) >= 40 && direction === 'Left') {
-						spacing.pageX = spacing.pageX < 0 ? -this.limitMove : this.limitMove;
-						this.isShowBtn = true;
-					} else {
-						spacing.pageX = 0;
-					}
-					if (spacing.pageX == 0) {
-						this.isShowBtn = false;
-					}
-					this.position = spacing;
+<script setup>
+	import { ref, reactive, watch, onMounted, getCurrentInstance } from 'vue';
+	import { useColor } from '@/composables/useColor.js';
 
+	const { proxy } = getCurrentInstance();
+	const { colorStyle } = useColor();
+
+	const props = defineProps({
+		actions: {
+			type: Array,
+			default () {
+				return [];
+			}
+		},
+		//点击按钮时是否自动关闭
+		closable: {
+			type: Boolean,
+			default: true
+		},
+		//设为false，可以滑动多行不关闭菜单
+		showMask: {
+			type: Boolean,
+			default: true
+		},
+		operateWidth: {
+			type: Number,
+			default: 80
+		},
+		params: {
+			type: Object,
+			default () {
+				return {};
+			}
+		},
+		//禁止滑动
+		forbid: {
+			type: Boolean,
+			default: false
+		},
+		//手动开关
+		open: {
+			type: Boolean,
+			default: false
+		},
+		//背景色
+		backgroundColor: {
+			type: String,
+			default: '#fff'
+		}
+	});
+
+	const emit = defineEmits(['click']);
+
+	//start position
+	const tStart = reactive({ pageX: 0, pageY: 0 });
+	//限制滑动距离
+	const limitMove = ref(0);
+	//move position
+	const position = ref({ pageX: 0, pageY: 0 });
+	const isShowBtn = ref(false);
+	let move = false;
+
+	watch(() => props.actions, () => {
+		updateButtonSize();
+	});
+	watch(() => props.open, (newValue) => {
+		manualSwitch(newValue);
+	});
+
+	onMounted(() => {
+		updateButtonSize();
+	});
+
+	function swipeDirection(x1, x2, y1, y2) {
+		return Math.abs(x1 - x2) >= Math.abs(y1 - y2) ? (x1 - x2 > 0 ? 'Left' : 'Right') : y1 - y2 > 0 ? 'Up' :
+			'Down';
+	}
+	//阻止事件冒泡
+	function loop() {}
+	function updateButtonSize() {
+		const actions = props.actions;
+		if (actions.length > 0) {
+			const query = uni.createSelectorQuery().in(proxy);
+			let limitMovePosition = 0;
+			actions.forEach(item => {
+				limitMovePosition += item.width || 0;
+			});
+			limitMove.value = limitMovePosition;
+		} else {
+			limitMove.value = props.operateWidth;
+		}
+	}
+	function handlerTouchstart(event) {
+		if (props.forbid) return;
+		let touches = event.touches
+		if (touches && touches.length > 1) return;
+		move = true;
+		touches = touches ? event.touches[0] : {};
+		if (!touches || (touches.pageX === undefined && touches.pageY === undefined)) {
+			touches = {
+				pageX: event.pageX,
+				pageY: event.pageY
+			};
+		}
+		if (touches) {
+			for (let i in tStart) {
+				if (touches[i]) {
+					tStart[i] = touches[i];
 				}
-			},
-			handlerButton(event) {
-				if (this.closable) {
-					this.closeButtonGroup();
-				}
-				const dataset = event.currentTarget.dataset;
-				this.$emit('click', {
-					index: Number(dataset.index),
-					item: this.params
-				});
-			},
-			closeButtonGroup() {
-				this.position = {
-					pageX: 0,
-					pageY: 0
-				};
-				this.isShowBtn = false;
-			},
-			//控制自定义按钮菜单
-			handlerParentButton(event) {
-				if (this.closable) {
-					this.closeButtonGroup();
-				}
-			},
-			manualSwitch(isOpen) {
-				let x = 0;
-				if (isOpen) {
-					if (this.actions.length === 0) {
-						x = this.operateWidth;
-					} else {
-						let width = 0;
-						this.actions.forEach(item => {
-							width += item.width;
-						});
-						x = width;
-					}
-				}
-				this.position = {
-					pageX: -x,
-					pageY: 0
-				};
-			},
-			px(num) {
-				return uni.upx2px(num) + 'px';
 			}
 		}
-	};
+	}
+	function swipper(touches) {
+		const start = tStart;
+		const spacing = {
+			pageX: touches.pageX - start.pageX,
+			pageY: touches.pageY - start.pageY
+		};
+		if (limitMove.value < Math.abs(spacing.pageX)) {
+			spacing.pageX = -limitMove.value;
+		}
+		position.value = spacing;
+	}
+	function handlerTouchmove(event) {
+		if (props.forbid || !move) return;
+		const start = tStart;
+		let touches = event.touches ? event.touches[0] : {};
+		if (!touches || (touches.pageX === undefined && touches.pageY === undefined)) {
+			touches = {
+				pageX: event.pageX,
+				pageY: event.pageY
+			};
+		}
+		if (touches) {
+			const direction = swipeDirection(start.pageX, touches.pageX, start.pageY, touches.pageY);
+			if (direction === 'Left' && Math.abs(position.value.pageX) !== limitMove.value) {
+				swipper(touches);
+			}
+		}
+	}
+	function handlerTouchend(event) {
+		if (props.forbid || !move) return;
+		move = false;
+		const start = tStart;
+		let touches = event.changedTouches ? event.changedTouches[0] : {};
+		if (!touches || (touches.pageX === undefined && touches.pageY === undefined)) {
+			touches = {
+				pageX: event.pageX,
+				pageY: event.pageY
+			};
+		}
+		if (touches) {
+			const direction = swipeDirection(start.pageX, touches.pageX, start.pageY, touches.pageY);
+			const spacing = {
+				pageX: touches.pageX - start.pageX,
+				pageY: touches.pageY - start.pageY
+			};
+			if (Math.abs(spacing.pageX) >= 40 && direction === 'Left') {
+				spacing.pageX = spacing.pageX < 0 ? -limitMove.value : limitMove.value;
+				isShowBtn.value = true;
+			} else {
+				spacing.pageX = 0;
+			}
+			if (spacing.pageX == 0) {
+				isShowBtn.value = false;
+			}
+			position.value = spacing;
+		}
+	}
+	function handlerButton(event) {
+		if (props.closable) {
+			closeButtonGroup();
+		}
+		const dataset = event.currentTarget.dataset;
+		emit('click', {
+			index: Number(dataset.index),
+			item: props.params
+		});
+	}
+	function closeButtonGroup() {
+		position.value = {
+			pageX: 0,
+			pageY: 0
+		};
+		isShowBtn.value = false;
+	}
+	//控制自定义按钮菜单
+	function handlerParentButton(event) {
+		if (props.closable) {
+			closeButtonGroup();
+		}
+	}
+	function manualSwitch(isOpen) {
+		let x = 0;
+		if (isOpen) {
+			if (props.actions.length === 0) {
+				x = props.operateWidth;
+			} else {
+				let width = 0;
+				props.actions.forEach(item => {
+					width += item.width;
+				});
+				x = width;
+			}
+		}
+		position.value = {
+			pageX: -x,
+			pageY: 0
+		};
+	}
+	function px(num) {
+		return uni.upx2px(num) + 'px';
+	}
 </script>
 
 <style scoped>

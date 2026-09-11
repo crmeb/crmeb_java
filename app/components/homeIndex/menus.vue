@@ -43,7 +43,7 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -53,144 +53,139 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
+	import { ref, computed, onMounted, nextTick, getCurrentInstance } from 'vue';
 	import easyLoadimage from '@/components/base/easy-loadimage.vue';
-	export default {
-		name: 'menus',
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			}
-		},
-		components: {
-			easyLoadimage
-		},
-		data() {
+	import util from '@/utils/util.js';
+
+	const { proxy } = getCurrentInstance();
+
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
+		}
+	});
+
+	// data
+	const interval = ref(3000);
+	const duration = ref(500);
+	const menus = ref(props.dataConfig.menuConfig.list || []);
+	const rowsNum = ref(props.dataConfig.rowsNum.tabVal);
+	const number = ref(props.dataConfig.number.tabVal);
+	const isMany = ref(props.dataConfig.tabConfig.tabVal);
+	const docConfig = ref(0);
+	const dotColor = ref('#E93323');
+	const menuList = ref([]);
+	const active = ref(0);
+	const navHigh = ref(0);
+
+	// computed
+	//最外层盒子的样式
+	const boxStyle = computed(() => {
+		return {
+			borderRadius: props.dataConfig.bgStyle.val * 2 + 'rpx',
+			background: `linear-gradient(${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+			margin: props.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + props.dataConfig.lrConfig.val * 2 + 'rpx' +' ' + 0,
+			padding: props.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + 0 + ' ' + props.dataConfig.downConfig.val *2 + 'rpx'
+		}
+	});
+	//分几行展示，一行展示多少个
+	const gridColumns = computed(() => {
+		if (props.dataConfig.number.tabVal == 0) {
 			return {
-				interval: 3000,
-				duration: 500,
-				menus: this.dataConfig.menuConfig.list || [],
-				rowsNum: this.dataConfig.rowsNum.tabVal,
-				number: this.dataConfig.number.tabVal,
-				isMany: this.dataConfig.tabConfig.tabVal,
-				docConfig: 0,
-				dotColor: '#E93323',
-				menuList: [],
-				active: 0,
-				navHigh: 0
-			};
-		},
-		computed: {
-			//最外层盒子的样式
-			boxStyle() {
-				return {
-					borderRadius: this.dataConfig.bgStyle.val * 2 + 'rpx',
-					background: `linear-gradient(${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-					margin: this.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + this.dataConfig.lrConfig.val * 2 + 'rpx' +' ' + 0,
-					padding: this.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + 0 + ' ' + this.dataConfig.downConfig.val *2 + 'rpx'
-				}
-			},
-			//分几行展示，一行展示多少个
-			gridColumns() {
-				if (this.dataConfig.number.tabVal == 0) {
-					return {
-						gridRowGap: this.dataConfig.contentConfig.val * 2 + 'rpx',
-						gridTemplateColumns: 'repeat(3, 1fr)'
-					}
-				} else if (this.dataConfig.number.tabVal == 1) {
-					return {
-						gridRowGap: this.dataConfig.contentConfig.val * 2 + 'rpx',
-						gridTemplateColumns: 'repeat(4, 1fr)'
-					}
-				} else {
-					return {
-						gridRowGap: this.dataConfig.contentConfig.val * 2 + 'rpx',
-						gridTemplateColumns: 'repeat(5, 1fr)'
-					}
-				}
-			},
-			//标题颜色
-			titleColor() {
-				return {
-					'color': this.dataConfig.titleColor.color[0].item,
-				}
-			},
-			//内容圆角
-			menuStyle() {
-				return {
-					'border-radius': this.dataConfig.contentStyle.val + 'px'
-				}
+				gridRowGap: props.dataConfig.contentConfig.val * 2 + 'rpx',
+				gridTemplateColumns: 'repeat(3, 1fr)'
 			}
-		},
-		mounted() {
-			if (this.rowsNum === 0) {
-				if (this.number === 0) {
-					this.pageNum(6)
-				} else if (this.number === 1) {
-					this.pageNum(8)
-				} else {
-					this.pageNum(10)
-				}
-			} else if (this.rowsNum === 1) {
-				if (this.number === 0) {
-					this.pageNum(9)
-				} else if (this.number === 1) {
-					this.pageNum(12)
-				} else {
-					this.pageNum(15)
-				}
-			} else {
-				if (this.number === 0) {
-					this.pageNum(12)
-				} else if (this.number === 1) {
-					this.pageNum(16)
-				} else {
-					this.pageNum(20)
-				}
+		} else if (props.dataConfig.number.tabVal == 1) {
+			return {
+				gridRowGap: props.dataConfig.contentConfig.val * 2 + 'rpx',
+				gridTemplateColumns: 'repeat(4, 1fr)'
 			}
-			this.$nextTick(() => {
-				if (this.menuList.length && this.isMany===1) {
-					let that = this
-					// #ifdef H5
-					that.menuHeight()
-					// #endif
-					// #ifndef H5
-					setTimeout(() => {
-						that.menuHeight()
-					}, 150)
-					// #endif
-				}
-			})
-		},
-		methods: {
-			bannerfun(e) {
-				this.active = e.detail.current;
-			},
-			menuHeight() {
-				let that = this;
-				const query = uni.createSelectorQuery().in(this);
-				query.select('#nav0').boundingClientRect(data => {
-					that.navHigh = data.height;
-				}).exec();
-			},
-			pageNum(num) {
-				let menus = this.menus.filter(item=>item.status);
-				let count = Math.ceil(menus.length / num);
-				let goodArray = new Array();
-				for (let i = 0; i < count; i++) {
-					let list = menus.slice(i * num, i * num + num);
-					if (list.length)
-						goodArray.push({
-							list: list
-						});
-				}
-				this.$set(this, 'menuList', goodArray);
-			},
-			menusTap(url) {
-				this.$util.navigateTo(url);
+		} else {
+			return {
+				gridRowGap: props.dataConfig.contentConfig.val * 2 + 'rpx',
+				gridTemplateColumns: 'repeat(5, 1fr)'
 			}
 		}
-	};
+	});
+	//标题颜色
+	const titleColor = computed(() => {
+		return {
+			'color': props.dataConfig.titleColor.color[0].item,
+		}
+	});
+	//内容圆角
+	const menuStyle = computed(() => {
+		return {
+			'border-radius': props.dataConfig.contentStyle.val + 'px'
+		}
+	});
+
+	onMounted(() => {
+		if (rowsNum.value === 0) {
+			if (number.value === 0) {
+				pageNum(6)
+			} else if (number.value === 1) {
+				pageNum(8)
+			} else {
+				pageNum(10)
+			}
+		} else if (rowsNum.value === 1) {
+			if (number.value === 0) {
+				pageNum(9)
+			} else if (number.value === 1) {
+				pageNum(12)
+			} else {
+				pageNum(15)
+			}
+		} else {
+			if (number.value === 0) {
+				pageNum(12)
+			} else if (number.value === 1) {
+				pageNum(16)
+			} else {
+				pageNum(20)
+			}
+		}
+		nextTick(() => {
+			if (menuList.value.length && isMany.value===1) {
+				// #ifdef H5
+				menuHeight()
+				// #endif
+				// #ifndef H5
+				setTimeout(() => {
+					menuHeight()
+				}, 150)
+				// #endif
+			}
+		})
+	});
+
+	function bannerfun(e) {
+		active.value = e.detail.current;
+	}
+	function menuHeight() {
+		const query = uni.createSelectorQuery().in(proxy);
+		query.select('#nav0').boundingClientRect(data => {
+			navHigh.value = data.height;
+		}).exec();
+	}
+	function pageNum(num) {
+		let list = menus.value.filter(item=>item.status);
+		let count = Math.ceil(list.length / num);
+		let goodArray = new Array();
+		for (let i = 0; i < count; i++) {
+			let arr = list.slice(i * num, i * num + num);
+			if (arr.length)
+				goodArray.push({
+					list: arr
+				});
+		}
+		menuList.value = goodArray;
+	}
+	function menusTap(url) {
+		util.navigateTo(url);
+	}
 </script>
 
 <style lang="scss" scoped>

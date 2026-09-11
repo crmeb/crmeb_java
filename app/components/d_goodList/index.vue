@@ -26,38 +26,30 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		name: 'd_goodList',
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			},
-			tempArr:{
-				type: Array,
-				default:[]
-			},
-			isLogin:{
-				type: Boolean,
-				default:false
-			}
+<script setup>
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
 		},
-		data() {
-			return {
-			};
+		tempArr:{
+			type: Array,
+			default: () => []
 		},
-		created() {},
-		mounted() {},
-		methods: {
-			goDetail(item){
-				this.$emit('detail',item);
-			},
-			goCartDuo(item){
-				this.$emit('gocartduo',item);
-			}
+		isLogin:{
+			type: Boolean,
+			default:false
 		}
-	};
+	});
+
+	const emit = defineEmits(['detail', 'gocartduo']);
+
+	function goDetail(item){
+		emit('detail',item);
+	}
+	function goCartDuo(item){
+		emit('gocartduo',item);
+	}
 </script>
 
 <style lang="scss">

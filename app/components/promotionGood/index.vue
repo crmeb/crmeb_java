@@ -14,30 +14,23 @@
 		</block>
 	</view>
 </template>
-<script>
+<script setup>
 	import animationType from '@/utils/animationType.js'
-	export default {
-		props: {
-			benefit: {
-				type: Array,
-				default: function() {
-					return [];
-				}
-			}
-		},
-		data() {
-			return {
 
-			};
-		},
-		methods: {
-			goDetail(item) {
-				uni.navigateTo({
-					animationType: animationType.type,					animationDuration: animationType.duration,
-					url: `/pages/goods/goods_details/index?id=${item.id}`
-				})
+	const props = defineProps({
+		benefit: {
+			type: Array,
+			default: function() {
+				return [];
 			}
 		}
+	})
+
+	function goDetail(item) {
+		uni.navigateTo({
+			animationType: animationType.type,					animationDuration: animationType.duration,
+			url: `/pages/goods/goods_details/index?id=${item.id}`
+		})
 	}
 </script>
 

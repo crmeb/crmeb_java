@@ -56,134 +56,128 @@
 	</view>
 </template>
 
-<script>
-	// +----------------------------------------------------------------------
-	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
-	// +----------------------------------------------------------------------
-	// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
-	// +----------------------------------------------------------------------
-	// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
-	// +----------------------------------------------------------------------
-	// | Author: CRMEB Team <admin@crmeb.com>
-	// +----------------------------------------------------------------------
-	let app = getApp();
-	import {
-		getSeckillIndexApi
-	} from '@/api/activity.js';
-	import easyLoadimage from '@/components/base/easy-loadimage.vue';
-	export default {
-		name: 'homeSeckill',
-		props: {
+	<script setup>
+		// +----------------------------------------------------------------------
+		// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+		// +----------------------------------------------------------------------
+		// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+		// +----------------------------------------------------------------------
+		// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+		// +----------------------------------------------------------------------
+		// | Author: CRMEB Team <admin@crmeb.com>
+		// +----------------------------------------------------------------------
+		import { ref, computed } from 'vue';
+		import {
+			getSeckillIndexApi
+		} from '@/api/activity.js';
+		import easyLoadimage from '@/components/base/easy-loadimage.vue';
+		import util from '@/utils/util.js';
+		import Cache from '@/utils/cache.js';
+		import { filterTheme } from '@/filters';
+		let app = getApp();
+
+		const props = defineProps({
 			dataConfig: {
 				type: Object,
 				default: () => {}
 			},
-		},
-		components: {
-			easyLoadimage
-		},
-		data() {
+		});
+
+		const urlDomain = ref(Cache.get("imgHost"));
+		const spikeList = ref([]); // 秒杀
+		const datatime = ref(0);
+		const status = ref(0);
+		const themeColor = ref(filterTheme(app.globalData.theme));
+
+		//秒杀样式
+		const listStyle = computed(() => {
+			return props.dataConfig.tabConfig.tabVal
+		});
+		//最外层盒子的背景图片
+		const boxBgStyle = computed(() => {
 			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				spikeList: [], // 秒杀
-				datatime: 0,
-				status: 0,
-				themeColor:this.$options.filters.filterTheme(app.globalData.theme)
+				borderRadius: props.dataConfig.bgStyle.val * 2 + 'rpx' + ' ' + props.dataConfig.bgStyle.val * 2 + 'rpx' +
+					' ' + 0 + ' ' + 0,
+				backgroundImage: `url(${urlDomain.value}/crmebimage/presets/seckill_bg_pic.png),linear-gradient(${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`
 			}
-		},
-		computed: {
-			//秒杀样式
-			listStyle() {
-				return this.dataConfig.tabConfig.tabVal
-			},
-			//最外层盒子的背景图片
-			boxBgStyle() {
-				return {
-					borderRadius: this.dataConfig.bgStyle.val * 2 + 'rpx' + ' ' + this.dataConfig.bgStyle.val * 2 + 'rpx' +
-						' ' + 0 + ' ' + 0,
-					backgroundImage: `url(${this.urlDomain}crmebimage/presets/seckill_bg_pic.png),linear-gradient(${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`
-				}
-			},
-			//最外层盒子的样式
-			boxStyle() {
-				return {
-					borderRadius: this.dataConfig.bgStyle.val * 2 + 'rpx',
-					margin: this.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + this.dataConfig.lrConfig.val * 2 + 'rpx' +
-						' ' + 0,
-					padding: this.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + '24rpx' + ' ' + this.dataConfig.downConfig
-						.val * 2 + 'rpx'
-				}
-			},
-			//图片圆角
-			itemStyle() {
-				return this.dataConfig.contentConfig.val * 2 + 'rpx'
-			},
-			//标题图片
-			logoUrl() {
-				return this.dataConfig.logoConfig.url
-			},
-			//标题
-			titleText() {
-				return this.dataConfig.titleConfig.val
-			},
-			//标题颜色
-			titleColor() {
-				return {
-					color: this.dataConfig.titleColor.color[0].item
-				}
-			},
-			//名称颜色
-			nameColor() {
-				return {
-					color: this.dataConfig.nameColor.color[0].item
-				};
-			},
-			//价格颜色
-			priceColor() {
-				return {
-					color: this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.priceColor.color[0].item:this.themeColor
-				};
-			},
-			//商品名称
-			nameShow() {
-				if (this.dataConfig.typeConfig.activeValue.indexOf(0) !== -1) {
-					return true;
-				} else {
-					return false;
-				}
-			},
-			//商品价格
-			priceShow() {
-				if (this.dataConfig.typeConfig.activeValue.indexOf(1) !== -1) {
-					return true;
-				} else {
-					return false;
-				}
-			},
-		},
-		created() {
-			this.getSeckillIndex();
-		},
-		methods: {
-			getSeckillIndex() {
-				getSeckillIndexApi().then(({
-					data
-				}) => {
-					this.spikeList = [];
-					this.spikeList = data ? data.productList : [];
-				})
-			},
-			toSeckillList() {
-				this.$util.navigateTo(this.dataConfig.linkConfig.val)
-			},
-			toSeckillDetail(id){
-				uni.navigateTo({
-					url:`/pages/activity/goods_seckill_details/index?id=${id}`
-				})
+		});
+		//最外层盒子的样式
+		const boxStyle = computed(() => {
+			return {
+				borderRadius: props.dataConfig.bgStyle.val * 2 + 'rpx',
+				margin: props.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + props.dataConfig.lrConfig.val * 2 + 'rpx' +
+					' ' + 0,
+				padding: props.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + '24rpx' + ' ' + props.dataConfig.downConfig
+					.val * 2 + 'rpx'
 			}
+		});
+		//图片圆角
+		const itemStyle = computed(() => {
+			return props.dataConfig.contentConfig.val * 2 + 'rpx'
+		});
+		//标题图片
+		const logoUrl = computed(() => {
+			return props.dataConfig.logoConfig.url
+		});
+		//标题
+		const titleText = computed(() => {
+			return props.dataConfig.titleConfig.val
+		});
+		//标题颜色
+		const titleColor = computed(() => {
+			return {
+				color: props.dataConfig.titleColor.color[0].item
+			}
+		});
+		//名称颜色
+		const nameColor = computed(() => {
+			return {
+				color: props.dataConfig.nameColor.color[0].item
+			};
+		});
+		//价格颜色
+		const priceColor = computed(() => {
+			return {
+				color: props.dataConfig.themeStyleConfig.tabVal?props.dataConfig.priceColor.color[0].item:themeColor.value
+			};
+		});
+		//商品名称
+		const nameShow = computed(() => {
+			if (props.dataConfig.typeConfig.activeValue.indexOf(0) !== -1) {
+				return true;
+			} else {
+				return false;
+			}
+		});
+		//商品价格
+		const priceShow = computed(() => {
+			if (props.dataConfig.typeConfig.activeValue.indexOf(1) !== -1) {
+				return true;
+			} else {
+				return false;
+			}
+		});
+
+		// created
+		getSeckillIndex();
+
+		function getSeckillIndex() {
+			getSeckillIndexApi().then(({
+				data
+			}) => {
+				spikeList.value = [];
+				spikeList.value = data ? data.productList : [];
+			})
 		}
-	}
-</script>
+		function toSeckillList() {
+			util.navigateTo(props.dataConfig.linkConfig.val)
+		}
+		function toSeckillDetail(id){
+			uni.navigateTo({
+				url:`/pages/activity/goods_seckill_details/index?id=${id}`
+			})
+		}
+	</script>
 
 <style lang="scss" scoped>
 	.seckill {

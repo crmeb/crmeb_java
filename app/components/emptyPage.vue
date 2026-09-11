@@ -1,25 +1,23 @@
 <template>
 	<view class="empty-box">
-		<image :src="urlDomain+'crmebimage/perset/staticImg/empty-box.png'"></image>
+		<image :src="urlDomain+'/crmebimage/perset/staticImg/empty-box.png'"></image>
 		<view class="txt">{{title}}</view>
 	</view>
 </template>
 
-<script>
-	export default{
-		props: {
-			title: {
-				type: String,
-				default: '暂无记录',
-			},
+<script setup>
+	import { ref, getCurrentInstance } from 'vue';
+
+	const { proxy } = getCurrentInstance();
+
+	const props = defineProps({
+		title: {
+			type: String,
+			default: '暂无记录',
 		},
-		data(){
-			return{
-				urlDomain: this.$Cache.get("imgHost"),
-			}
-		}
-	}
-	
+	});
+
+	const urlDomain = ref(proxy.$Cache.get("imgHost"))
 </script>
 
 <style lang="scss">

@@ -13,7 +13,7 @@
 						<image class="image" :src="imgUrls[0]"></image>
 					</view>
 					<view class="stop" v-show="controls" @tap="bindPause">
-						<image class="image" :src="urlDomain+'crmebimage/perset/staticImg/stop.png'"></image>
+						<image class="image" :src="urlDomain+'/crmebimage/perset/staticImg/stop.png'"></image>
 					</view>
 				</view>
 			</swiper-item>
@@ -25,7 +25,7 @@
 						<image class="image" :src="imgUrls[0]"></image>
 					</view>
 					<view class="stop" v-show="controls" @tap="bindPause">
-						<image class="image" :src="urlDomain+'crmebimage/perset/staticImg/stop.png'"></image>
+						<image class="image" :src="urlDomain+'/crmebimage/perset/staticImg/stop.png'"></image>
 					</view>
 				</view>
 			</swiper-item>
@@ -45,72 +45,72 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, onMounted, getCurrentInstance } from 'vue'
 	import {setThemeColor} from '@/utils/setTheme.js'
-	export default {
-		props: {
-			imgUrls: {
-				type: Array,
-				default: function() {
-					return [];
-				}
-			},
-			videoline: {
-				type: String,
-				value: ""
+	import Cache from '@/utils/cache.js'
+
+	const { proxy } = getCurrentInstance();
+
+	const props = defineProps({
+		imgUrls: {
+			type: Array,
+			default: function() {
+				return [];
 			}
 		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				indicatorDots: true,
-				circular: true,
-				autoplay: true,
-				interval: 3000,
-				duration: 500,
-				currents: "1",
-				controls: true,
-				isPlay:true,
-				videoContext:'',
-				indicatorBg:'#e93323',
-			};
-		},
-		created(){
-			let that = this;
-			that.indicatorBg = setThemeColor();
-		},
-		mounted() {
-			if(this.videoline){
-				this.imgUrls.shift()
-			}
-			// #ifndef APP-PLUS
-			this.videoContext = uni.createVideoContext('myVideo', this);
-			// #endif
-		},
-		methods: {
-			videoPause(e){
-				// #ifdef APP-PLUS
-				this.isPlay= true
-				this.autoplay = true
-				// #endif
-			},
-			bindPause: function() {
-				
-				// #ifndef APP-PLUS
-				this.videoContext.play();
-				this.$set(this, 'controls', false)
-				this.autoplay = false
-				// #endif
-				// #ifdef APP-PLUS
-				this.isPlay= false
-				this.videoContext = uni.createVideoContext('myVideo', this);
-				this.videoContext.play();
-				// #endif
-			},
-			change: function(e) {
-				this.$set(this, 'currents', e.detail.current + 1);
-			}
+		videoline: {
+			type: String,
+			value: ""
 		}
+	})
+
+	// data
+	const urlDomain = ref(Cache.get("imgHost"))
+	const indicatorDots = ref(true)
+	const circular = ref(true)
+	const autoplay = ref(true)
+	const interval = ref(3000)
+	const duration = ref(500)
+	const currents = ref("1")
+	const controls = ref(true)
+	const isPlay = ref(true)
+	const videoContext = ref('')
+	const indicatorBg = ref('#e93323')
+
+	// created
+	indicatorBg.value = setThemeColor();
+
+	onMounted(() => {
+		if(props.videoline){
+			props.imgUrls.shift()
+		}
+		// #ifndef APP-PLUS
+		videoContext.value = uni.createVideoContext('myVideo', proxy);
+		// #endif
+	})
+
+	function videoPause(e){
+		// #ifdef APP-PLUS
+		isPlay.value = true
+		autoplay.value = true
+		// #endif
+	}
+	function bindPause() {
+
+		// #ifndef APP-PLUS
+		videoContext.value.play();
+		controls.value = false
+		autoplay.value = false
+		// #endif
+		// #ifdef APP-PLUS
+		isPlay.value = false
+		videoContext.value = uni.createVideoContext('myVideo', proxy);
+		videoContext.value.play();
+		// #endif
+	}
+	function change(e) {
+		currents.value = e.detail.current + 1;
 	}
 </script>
 

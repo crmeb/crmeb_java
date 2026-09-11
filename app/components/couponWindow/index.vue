@@ -12,7 +12,7 @@
 				</view>
 			</view>
 			<view class='lid'>
-				<navigator hover-class='none' url='/pages/users/user_get_coupon/index' class='bnt font-color'>立即领取</navigator>
+				<navigator :render-link="false" hover-class='none' url='/pages/users/user_get_coupon/index' class='bnt font-color'>立即领取</navigator>
 				<view class='iconfont icon-guanbi3' @click="close"></view>
 			</view>
 		</view>
@@ -20,31 +20,24 @@
 	</view>
 </template>
 
-<script>
-	export default {
-
-		props: {
-			window: {
-				type: Boolean,
-				default: false,
+<script setup>
+	const props = defineProps({
+		window: {
+			type: Boolean,
+			default: false,
+		},
+		couponList: {
+			type: Array,
+			default: function() {
+				return []
 			},
-			couponList: {
-				type: Array,
-				default: function() {
-					return []
-				},
-			}
-		},
-		data() {
-			return {
-
-			};
-		},
-		methods: {
-			close:function(){
-			      this.$emit('onColse');
-			    }
 		}
+	});
+
+	const emit = defineEmits(['onColse']);
+
+	function close() {
+		emit('onColse');
 	}
 </script>
 

@@ -17,54 +17,48 @@
 	<!-- #endif -->
 </template>
 
-<script>
+<script setup>
+	import { ref, onMounted } from 'vue'
 	import {
 		getCustomer
 	} from '@/utils/index.js'
 	let app = getApp();
-	export default {
-		name: "kefuIcon",
-		props: {
-			ids: {
-				type: Number,
-				default: 0
-			},
-			routineContact: {
-				type: Number,
-				default: 0
-			},
-			storeInfo: {
-				type: Object,
-				default: () => {}
-			},
-			goodsCon: {
-				type: Number,
-				default: 0
-			}
+
+	const props = defineProps({
+		ids: {
+			type: Number,
+			default: 0
 		},
-		data: function() {
-			return {
-				top: "480"
-			};
+		routineContact: {
+			type: Number,
+			default: 0
 		},
-		mounted() {
-			// #ifdef H5
-			this.top = parseFloat(window.innerHeight) - 200
-			// #endif
+		storeInfo: {
+			type: Object,
+			default: () => {}
 		},
-		methods: {
-			goCustomer() {
-				getCustomer(`/pages/extension/customer_list/chat?productId=${this.ids}`)
-			},
-			setTouchMove(e) {
-				let that = this;
-				if (e.touches[0].clientY < 480 && e.touches[0].clientY > 66) {
-					that.top = e.touches[0].clientY
-				}
-			}
-		},
-		created() {}
-	};
+		goodsCon: {
+			type: Number,
+			default: 0
+		}
+	})
+
+	const top = ref("480")
+
+	onMounted(() => {
+		// #ifdef H5
+		top.value = parseFloat(window.innerHeight) - 200
+		// #endif
+	})
+
+	function goCustomer() {
+		getCustomer(`/pages/extension/customer_list/chat?productId=${props.ids}`)
+	}
+	function setTouchMove(e) {
+		if (e.touches[0].clientY < 480 && e.touches[0].clientY > 66) {
+			top.value = e.touches[0].clientY
+		}
+	}
 </script>
 
 <style lang="scss">

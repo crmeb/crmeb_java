@@ -13,71 +13,67 @@
 	</view>
 </template>
 <!--  -->
-<script>
+<script setup>
+	import { ref } from 'vue'
 	import { getImageDomain } from '@/api/api.js'
-	export default {
-		props: {
-			sharePacket: {
-				type: Object,
-				default: function(){
-					return {isState: true,priceName:'',touchstart:false}
-				}
+
+	const props = defineProps({
+		sharePacket: {
+			type: Object,
+			default: function(){
+				return {isState: true,priceName:'',touchstart:false}
 			}
-		},
-		data() {
-			return {
-				imgHost:'',
-				picBg:'crmebimage/perset/share_tip/share_tip1.png',
-				top: "260",
-			};
-		},
-		created(){
-			let that = this;
-			uni.getStorage({
-			    key: 'theme',
-			    success: function (res) {
-					switch (res.data) {
-						case 'theme1':
-							that.picBg = 'crmebimage/perset/share_tip/share_tip1.png';
-							break;
-						case 'theme2':
-							that.picBg = 'crmebimage/perset/share_tip/share_tip2.png';
-							break;
-						case 'theme3':
-							that.picBg = 'crmebimage/perset/share_tip/share_tip3.png';
-							break;
-						case 'theme4':
-							that.picBg = 'crmebimage/perset/share_tip/share_tip4.png';
-							break;
-						case 'theme5':
-							that.picBg = 'crmebimage/perset/share_tip/share_tip5.png';
-							break;
-					}
-			    }
-			});
-			getImageDomain().then(res=>{
-				that.$set(that,'imgHost',res.data);
-			})
-		},
-		methods: {
-			goShare:function(){
-				this.$emit('listenerActionSheet');
-			},
-			setTouchMove(e) {
-				var that = this;
-				if (e.touches[0].clientY < 545 && e.touches[0].clientY > 66) {
-					that.top = e.touches[0].clientY
-				}
-			},
-			handleleterClick(){
-				if(this.sharePacket.touchstart){
-					this.$emit('showShare',false)
-				}else{
-					// this.$emit('showShare',true)
-					this.goShare()
-				}
+		}
+	})
+	const emit = defineEmits(['listenerActionSheet', 'showShare'])
+
+	// data
+	const imgHost = ref('')
+	const picBg = ref('crmebimage/perset/share_tip/share_tip1.png')
+	const top = ref("260")
+
+	// created
+	uni.getStorage({
+	    key: 'theme',
+	    success: function (res) {
+			switch (res.data) {
+				case 'theme1':
+					picBg.value = 'crmebimage/perset/share_tip/share_tip1.png';
+					break;
+				case 'theme2':
+					picBg.value = 'crmebimage/perset/share_tip/share_tip2.png';
+					break;
+				case 'theme3':
+					picBg.value = 'crmebimage/perset/share_tip/share_tip3.png';
+					break;
+				case 'theme4':
+					picBg.value = 'crmebimage/perset/share_tip/share_tip4.png';
+					break;
+				case 'theme5':
+					picBg.value = 'crmebimage/perset/share_tip/share_tip5.png';
+					break;
 			}
-		},
+	    }
+	});
+	getImageDomain().then(res=>{
+		imgHost.value = res.data;
+	})
+
+	function goShare(){
+		emit('listenerActionSheet');
+	}
+	function setTouchMove(e) {
+		if (e.touches[0].clientY < 545 && e.touches[0].clientY > 66) {
+			top.value = e.touches[0].clientY
+		}
+	}
+	function handleleterClick(){
+		if(props.sharePacket.touchstart){
+			emit('showShare',false)
+		}else{
+			// emit('showShare',true)
+			goShare()
+		}
 	}
 </script>
 

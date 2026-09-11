@@ -4,7 +4,7 @@
 		<view :style="[boxStyle]"></view>
 	</view>
 </template>
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -14,26 +14,24 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
-	export default {
-		name: 'blankPage',
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			}
-		},
-		computed: {
-			//最外层盒子的样式
-			boxStyle() {
-				return {
-					height: this.dataConfig.heightConfig.val + 'px',
-					background: `linear-gradient(${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-					margin: this.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + this.dataConfig.lrConfig.val * 2 + 'rpx' +
-						' ' + 0,
-				}
-			},
-		},
-	}
+	import { computed } from 'vue';
+
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
+		}
+	});
+
+	//最外层盒子的样式
+	const boxStyle = computed(() => {
+		return {
+			height: props.dataConfig.heightConfig.val + 'px',
+			background: `linear-gradient(${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+			margin: props.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + props.dataConfig.lrConfig.val * 2 + 'rpx' +
+				' ' + 0,
+		}
+	});
 </script>
 
 <style lang="scss" scoped>

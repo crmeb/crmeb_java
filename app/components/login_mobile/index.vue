@@ -1,5 +1,5 @@
 <template>
-	<view v-if="isUp" :data-theme="theme">
+	<view v-if="isUp" :data-theme="theme" :style="colorStyle">
 		<view class="mobile-bg" v-if="isShow" @click="close"></view>
 		<view class="mobile-mask" :class="[{slideInUp:isUp},{animated:isPos}]"
 			:style="{position:isPos?'fixed':'static'}">
@@ -20,229 +20,171 @@
 					<button class="code font-num" :disabled="disabled" @click="code">{{text}}</button>
 				</view>
 			</view>
-			<view class="sub_btn" @click="loginBtn">
-				{{(!userInfo.phone && isLogin) || (userInfo.phone && isLogin)?'立即绑定':'立即登录'}}
-			</view>
+				<view class="sub_btn" @click="loginBtn">
+					{{ isLogin ? '立即绑定' : '立即登录' }}
+				</view>
 		</view>
 	</view>
 </template>
 
-<script>
-	const app = getApp();
-	import sendVerifyCode from "@/mixins/SendVerifyCode";
-	import Routine from '@/libs/routine';
-	import {
-		mapGetters
-	} from "vuex";
-	import {
-		loginMobile,
-		registerVerify,
-		getCodeApi,
-		getUserInfo,
-		phoneWxSilenceAuth
-	} from "@/api/user";
-	import {
-		bindingPhone
-	} from '@/api/api.js'
-	import {
-		getUserPhone,
-		iosBinding
-	} from '@/api/public';
-	const BACK_URL = "login_back_url";
-	export default {
-		name: 'login_mobile',
-		computed: mapGetters(['userInfo', 'isLogin']),
-		props: {
-			isUp: {
-				type: Boolean,
-				default: false,
-			},
-			authKey: {
-				type: String,
-				default: '',
-			},
-			isShow: {
-				type: Boolean,
-				default: true
-			},
-			// 是否定位
-			isPos: {
-				type: Boolean,
-				default: true
-			},
-			appleShow: {
-				type: String,
-				default: ''
-			},
-			platform: {
-				type: String,
-				default: '',
-			},
-			//小程序code值
-			wxCode: {
-				type: String,
-				default: '',
-			},
-			// 小程序绑定手机号，isPhone其他手机号绑定
-			loginConfig:{
-				type: String,
-				default: '',
-			}
-		},
-		data() {
-			return {
-				theme: app.globalData.theme,
-				keyCode: '',
-				account: '',
-				codeNum: '',
-				isApp: 0
-			}
-		},
-		mixins: [sendVerifyCode],
-		mounted() {
-			//this.getCode();
-		},
-		onLoad() {
+<script setup>
+import { ref } from 'vue';
+import Cache from '@/utils/cache.js';
+import util from '@/utils/util.js';
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from 'pinia';
+import { useSendVerifyCode } from '@/composables/useSendVerifyCode.js';
+import Routine from '@/libs/routine.js';
+import {
+	loginMobile,
+	registerVerify,
+	getCodeApi,
+	getUserInfo,
+	phoneWxSilenceAuth
+} from "@/api/user.js";
+import {
+	bindingPhone
+} from '@/api/api.js'
+import {
+	getUserPhone,
+	iosBinding
+} from '@/api/public.js';
+import { useColor } from '@/composables/useColor.js';
 
-		},
-		methods: {
-			// 获取验证码
-			async code() {
-				let that = this;
-				if (!that.account) return that.$util.Tips({
-					title: '请填写手机号码'
-				});
-				if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(that.account)) return that.$util.Tips({
-					title: '请输入正确的手机号码'
-				});
-				await registerVerify(that.account).then(res => {
-					that.$util.Tips({
-						title: res.msg
-					});
-					that.sendCode();
-				}).catch(err => {
-					return that.$util.Tips({
-						title: err
-					})
-				})
-			},
-			// 获取验证码api
-			getCode() {
-				let that = this
-				getCodeApi().then(res => {
-					that.keyCode = res.data.key;
-				}).catch(res => {
-					that.$util.Tips({
-						title: res
-					});
-				});
-			},
-			close() {
-				this.$emit('close', false)
-			},
-			// 登录
-			loginBtn() {
-				let that = this
-				if (!that.account) return that.$util.Tips({
-					title: '请填写手机号码'
-				});
-				if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(that.account)) return that.$util.Tips({
-					title: '请输入正确的手机号码'
-				});
-				if (!that.codeNum) return that.$util.Tips({
-					title: '请填写验证码'
-				});
-				if (!/^[\w\d]+$/i.test(that.codeNum)) return that.$util.Tips({
-					title: '请输入正确的验证码'
-				});
-				uni.showLoading({
-					title: !this.userInfo.phone && this.isLogin ? '正在绑定中' : '正在登录中'
-				});
-				if (!this.userInfo.phone && this.isLogin) {
-					iosBinding({
-						captcha: that.codeNum,
-						phone: that.account
-					}).then(res => {
-						that.isApp = 0;
-						that.onSuccess();
-						that.getUserInfo();
-					}).catch(error => {
-						uni.hideLoading()
-						that.$util.Tips({
-							title: error
-						})
-					})
-				} else {
-					getUserPhone({
-						captcha: that.codeNum,
-						phone: that.account,
-						// #ifdef H5
-						type: 'public',
-						// #endif
-						// #ifdef MP
-						type: 'routine',
-						code: this.wxCode,
-						// #endif
-						// #ifdef APP-PLUS
-						type: that.platform === 'ios' ? 'iosWx' : 'androidWx',
-						// #endif
-						key: that.authKey
-					}).then(res => {
-						that.$store.commit('LOGIN', {
-							token: res.data.token
-						});
-						that.$store.commit("SETUID", res.data.uid);
-						that.onSuccess();
-						that.getUserInfo();
-					}).catch(error => {
-						uni.hideLoading()
-						that.$util.Tips({
-							title: error
-						})
-					})
-				}
-			},
-			/**
-			 * 登录成功后的方法
-			 */
-			onSuccess(){
-				uni.hideLoading();
-				let backUrl = this.$Cache.get(BACK_URL) || "/pages/index/index";
-				// #ifdef MP
-				this.$util.Tips({
-					title: '绑定手机号成功'
-				}, {
-					tab: 4,
-					url: backUrl
-				});
-				this.close();
-				// #endif
-				// #ifdef H5
-				this.$emit('wechatPhone', true)
-				// #endif
-				// #ifdef APP-PLUS
-				if (this.isApp == 0) {
-					if (backUrl.indexOf('/pages/users/login/index') !== -1) {
-						backUrl = '/pages/index/index';
-					}
-					uni.reLaunch({
-						url: backUrl
-					});
-				}
-				// #endif
-			},
-			/**
-			 * 获取个人用户信息
-			 */
-			getUserInfo: function() {
-				let that = this;
-				getUserInfo().then(res => {
-					uni.hideLoading();
-					that.$store.commit("UPDATE_USERINFO", res.data);
-				});
-			},
-		}
+const app = getApp();
+const BACK_URL = "login_back_url";
+const appStore = useAppStore();
+const { userInfo, isLogin } = storeToRefs(appStore);
+const { disabled, text, sendCode } = useSendVerifyCode();
+
+const props = defineProps({
+	isUp: { type: Boolean, default: false },
+	authKey: { type: String, default: '' },
+	isShow: { type: Boolean, default: true },
+	isPos: { type: Boolean, default: true },
+	appleShow: { type: String, default: '' },
+	platform: { type: String, default: '' },
+	wxCode: { type: String, default: '' },
+	loginConfig: { type: String, default: '' },
+});
+
+const emit = defineEmits(['close', 'wechatPhone']);
+
+const theme = ref(app.globalData.theme);
+const { colorStyle } = useColor();
+const keyCode = ref('');
+const account = ref('');
+const codeNum = ref('');
+const isApp = ref(0);
+
+// 获取验证码
+async function code() {
+	if (!account.value) return util.Tips({ title: '请填写手机号码' });
+	if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(account.value)) return util.Tips({ title: '请输入正确的手机号码' });
+	await registerVerify(account.value).then(res => {
+		util.Tips({ title: res.msg });
+		sendCode();
+	}).catch(err => {
+		return util.Tips({ title: err })
+	})
+}
+
+// 获取验证码api
+function getCode() {
+	getCodeApi().then(res => {
+		keyCode.value = res.data.key;
+	}).catch(res => {
+		util.Tips({ title: res });
+	});
+}
+
+function close() {
+	emit('close', false)
+}
+
+// 登录
+function loginBtn() {
+	if (!account.value) return util.Tips({ title: '请填写手机号码' });
+	if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(account.value)) return util.Tips({ title: '请输入正确的手机号码' });
+	if (!codeNum.value) return util.Tips({ title: '请填写验证码' });
+	if (!/^[\w\d]+$/i.test(codeNum.value)) return util.Tips({ title: '请输入正确的验证码' });
+	const isBinding = isLogin.value && !(userInfo.value && userInfo.value.phone);
+	uni.showLoading({
+		title: isBinding ? '正在绑定中' : '正在登录中'
+	});
+	if (isBinding) {
+		iosBinding({
+			captcha: codeNum.value,
+			phone: account.value
+		}).then(res => {
+			isApp.value = 0;
+			onSuccess();
+			getUserInfoFn();
+		}).catch(error => {
+			uni.hideLoading()
+			util.Tips({ title: error })
+		})
+	} else {
+		getUserPhone({
+			captcha: codeNum.value,
+			phone: account.value,
+			// #ifdef H5
+			type: 'public',
+			// #endif
+			// #ifdef MP
+			type: 'routine',
+			code: props.wxCode,
+			// #endif
+			// #ifdef APP-PLUS
+			type: props.platform === 'ios' ? 'iosWx' : 'androidWx',
+			// #endif
+			key: props.authKey
+		}).then(res => {
+			appStore.LOGIN({ token: res.data.token });
+			appStore.SETUID(res.data.uid);
+			onSuccess();
+			getUserInfoFn();
+		}).catch(error => {
+			uni.hideLoading()
+			util.Tips({ title: error })
+		})
 	}
+}
+
+/**
+ * 登录成功后的方法
+ */
+function onSuccess() {
+	uni.hideLoading();
+	let backUrl = Cache.get(BACK_URL) || "/pages/index/index";
+	// #ifdef MP
+	util.Tips({ title: '绑定手机号成功' }, { tab: 4, url: backUrl });
+	close();
+	// #endif
+	// #ifdef H5
+	emit('wechatPhone', true)
+	// #endif
+	// #ifdef APP-PLUS
+	if (isApp.value == 0) {
+		if (backUrl.indexOf('/pages/users/login/index') !== -1) {
+			backUrl = '/pages/index/index';
+		}
+		uni.reLaunch({ url: backUrl });
+	}
+	// #endif
+}
+
+/**
+ * 获取个人用户信息
+ */
+function getUserInfoFn() {
+	getUserInfo().then(res => {
+		uni.hideLoading();
+		appStore.UPDATE_USERINFO(res.data);
+	});
+}
+
+defineExpose({ code, getCode, close, loginBtn, onSuccess, getUserInfo: getUserInfoFn });
 </script>
 
 <style lang="scss" scoped>

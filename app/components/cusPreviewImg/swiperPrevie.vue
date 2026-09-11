@@ -12,16 +12,14 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		name: 'cusPreviewImg',
-		props: {
+<script setup>
+		import { ref, watch } from 'vue';
+
+		const props = defineProps({
 			list: {
 				type: Array,
 				required: true,
-				default: () => {
-					return [];
-				}
+				default: () => []
 			},
 			circular: {
 				type: Boolean,
@@ -31,33 +29,28 @@
 				type: Number,
 				default: 500
 			}
-		},
-		data() {
-			return {
-				currentIndex: 0,
-				showBox: false
-			};
-		},
-		watch: {
-			list(val) {}
-		},
-		methods: {
-			// 左右切换
-			changeSwiper(e) {
-				this.currentIndex = e.target.current;
-				// this.$emit('changeSwitch', e.target.current)
-			},
-			open(current) {
-				if (!this.list.length) return;
-				this.currentIndex = current;
-				this.showBox = true;
-			},
-			close() {
-				this.showBox = false;
-			},
+		});
+
+		const currentIndex = ref(0);
+		const showBox = ref(false);
+
+		watch(() => props.list, (val) => {});
+
+		// 左右切换
+		function changeSwiper(e) {
+			currentIndex.value = e.target.current;
 		}
-	}
-</script>
+		function open(current) {
+			if (!props.list.length) return;
+			currentIndex.value = current;
+			showBox.value = true;
+		}
+		function close() {
+			showBox.value = false;
+		}
+
+		defineExpose({ open, close });
+	</script>
 
 <style lang="scss" scoped>
 	@mixin full {

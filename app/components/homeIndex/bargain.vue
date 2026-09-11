@@ -152,12 +152,13 @@
 				</scroll-view>
 			</view>
 			<emptyPage :mTop="'0'" v-if="groupProductList.length==0" title="暂无砍价商品，去看看其他商品吧~～"
-				:imgSrc="urlDomain+'crmebimage/presets/noActivity.png'"></emptyPage>
+				:imgSrc="urlDomain+'/crmebimage/presets/noActivity.png'"></emptyPage>
 		</view>
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, reactive, computed } from 'vue';
 	import {
 		toLogin
 	} from '@/libs/login.js';
@@ -166,252 +167,201 @@
 	} from '@/api/activity.js';
 	import easyLoadimage from '@/components/base/easy-loadimage.vue';
 	import emptyPage from '@/components/emptyPage.vue'
-	import {
-		mapGetters
-	} from "vuex";
-	let app = getApp();
-	export default {
-		name: 'homeBargain',
-		components: {
-			easyLoadimage,
-			emptyPage
+	import util from '@/utils/util.js';
+	import Cache from '@/utils/cache.js';
+	import { filterTheme } from '@/filters';
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
+
+	const app = getApp();
+	const appStore = useAppStore();
+	const { userInfo: userData, uid } = storeToRefs(appStore);
+
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
 		},
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			},
+	});
+
+	const urlDomain = ref(Cache.get("imgHost"));
+	const listStyle = ref(0);
+	const logoUrl = ref(null);
+	const typeShow = ref([0, 1, 2, 3]);
+	const groupBtnShow = ref(true);
+	const selectStyle = ref('');
+	const titleConfig = ref('');
+	const selectBgImg = ref('');
+	const bgImgUrl = ref('');
+	const headerTitleStyle = ref(0);
+	const old = reactive({ scrollTop: 0 });
+	const groupInfo = ref({});
+	const groupProductList = ref([]);
+	const themeColor = ref(filterTheme(app.globalData.theme));
+
+	//容器样式
+	//最外层盒子的样式
+	const boxStyle = computed(() => [{
+			'border-radius': props.dataConfig.bgStyle.val ? 2 * props.dataConfig.bgStyle.val + 'rpx' : '0'
 		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				listStyle: 0,
-				logoUrl: null,
-				typeShow: [0, 1, 2, 3],
-				groupBtnShow: true,
-				selectStyle: '',
-				titleConfig: '',
-				selectBgImg: '',
-				bgImgUrl: '',
-				headerTitleStyle: 0,
-				old: {
-					scrollTop: 0
-				},
-				groupInfo: {},
-				groupProductList: [],
-				themeColor: this.$options.filters.filterTheme(app.globalData.theme)
-			}
+		{
+			margin: 0 + ' ' + 2 * props.dataConfig.lrConfig.val + 'rpx' + ' ' + 0
 		},
-		computed: {
-			...mapGetters({
-				'userData': 'userInfo',
-				'uid': 'uid'
-			}),
-			//容器样式
-			//最外层盒子的样式
-			boxStyle() {
-				return [{
-						'border-radius': this.dataConfig.bgStyle.val ? 2 * this.dataConfig.bgStyle.val + 'rpx' : '0'
-					},
-					{
-						margin: 0 + ' ' + 2 * this.dataConfig.lrConfig.val + 'rpx' + ' ' + 0
-					},
-					{
-						background: `linear-gradient(to right,${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-					},
-				];
-			},
-			//边距
-			boxPadding() {
-				return [{
-						padding: 2 * this.dataConfig.upConfig.val + 'rpx' + ' ' + '0rpx' + ' ' + 2 * this.dataConfig
-							.downConfig.val + 'rpx',
-					},
-					{
-						margin: 2 * this.dataConfig.mbConfig.val + 'rpx' + ' ' + 0 + ' ' + 0
-					},
-				]
-			},
-			//背景颜色
-			boxBgStyle() {
-				return [{
-						gap: this.listStyle != 3 ? `${2*this.dataConfig.contentConfig.val}rpx` : ''
-					},
-					{
-						background: `linear-gradient(to right,${this.dataConfig.contentBgColor.color[0].item}, ${this.dataConfig.contentBgColor.color[1].item})`,
-					},
-					{
-						'justify-content': 'space-between',
-					},
-				];
-			},
-			fourStyle() {
-				return {
-					'margin-right': this.listStyle == 3 ? `${2*this.dataConfig.contentConfig.val}rpx` : ''
-				}
-			},
-			//标题颜色
-			titleColor() {
-				return {
-					color: this.dataConfig.titleColor.color[0].item,
-				};
-			},
-			//头部按钮颜色
-			headerBtnColor() {
-				return {
-					color: this.dataConfig.headerBtnColor.color[0].item,
-				};
-			},
-			//商品名称颜色
-			nameColor() {
-				return {
-					color: this.dataConfig.nameColor.color[0].item,
-				};
-			},
-			//商品原价颜色
-			originalColor() {
-				return {
-					color: this.dataConfig.originalColor.color[0].item,
-				};
-			},
-			//砍价价格颜色
-			priceColor() {
-				return {
-					color: this.dataConfig.themeStyleConfig.tabVal ? this.dataConfig.priceColor.color[0].item : this
-						.themeColor,
-				};
-			},
-			//标签颜色
-			groupTitleColor() {
-				return {
-					color: this.dataConfig.themeStyleConfig.tabVal ?this.dataConfig.groupTitleColor.color[0].item: this
-						.themeColor,
-				};
-			},
-			peopleStyle() {
-				return [{
-						color: '#fff',
-					},
-					{
-						background: `linear-gradient(to right,${
-					            this.dataConfig.themeStyleConfig.tabVal ? this.dataConfig.btnColor.color[0].item : '#FF7931'
-					          }, ${this.dataConfig.themeStyleConfig.tabVal? this.dataConfig.btnColor.color[1].item : this.themeColor})`,
-					},
-					{
-						'align-self': 'baseline',
-					},
-					{
-						'border-radius': '14rpx',
-					},
-				];
-			},
-			//已拼颜色
-			groupTitleFontColor() {
-				return {
-					color: this.dataConfig.groupTitleColor.color[0].item,
-				}
-			},
-			//分割线颜色
-			lineColor() {
-				return {
-					border: `1rpx solid ${this.dataConfig.lineColor.color[0].item}`,
-				};
-			},
-			//按钮颜色
-			btnColor() {
-				return [{
-						background: `linear-gradient(to right,${
-					            this.dataConfig.themeStyleConfig.tabVal ? this.dataConfig.btnColor.color[0].item : '#FF7931'
-					          }, ${this.dataConfig.themeStyleConfig.tabVal ? this.dataConfig.btnColor.color[1].item : this.themeColor})`,
-					},
-					{
-						color: this.dataConfig.btnFontColor.color[0].item,
-					}
-				];
-			},
-			//图片圆角
-			contentStyle() {
-				return {
-					'border-radius': this.dataConfig.contentStyle.val ? 2 * this.dataConfig.contentStyle.val + 'rpx' : '0',
-				};
-			},
-			//样式一内容边距
-			contentConfig() {
-				return {
-					'paddingBottom': 2 * this.dataConfig.contentConfig.val + 'rpx',
-				};
-			},
-			//背景图片
-			bgImgStyle() {
-				return {
-					'background': this.selectBgImg == 0 ? `url(${this.bgImgUrl})` :
-						`linear-gradient(to right,${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-				};
-			},
-			//标题文字格式
-			headerTitleConfig() {
-				return [{
-						'font-weight': this.headerTitleStyle == 0 ? 600 : ''
-					},
-					{
-						'font-style': this.headerTitleStyle == 2 ? 'italic' : 'normal'
-					},
-					{
-						color: this.dataConfig.headerTitleColor.color[0].item,
-					}
-				]
-			}
+		{
+			background: `linear-gradient(to right,${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
 		},
-		created() {
-			this.setConfig()
-			this.getInfo()
+	]);
+	//边距
+	const boxPadding = computed(() => [{
+			padding: 2 * props.dataConfig.upConfig.val + 'rpx' + ' ' + '0rpx' + ' ' + 2 * props.dataConfig
+				.downConfig.val + 'rpx',
 		},
-		methods: {
-			//去砍价
-			toGroupDetail(id) {
-				if (this.uid) {
-					uni.navigateTo({
-						url: `/pages/activity/goods_bargain_details/index?id=${id}&startBargainUid=${this.uid}`
-					})
-				} else {
-					toLogin()
-				}
-			},
-			getInfo() {
-				let that = this;
-				getBargainIndexApi().then(function(res) {
-					that.groupProductList = res.data.productList;
-					that.groupInfo = {
-						totalPeople: res.data.totalPeople,
-						avatarList: res.data.avatarList
-					}
-				}).catch((res) => {
-					return that.$util.Tips({
-						title: res
-					});
-				})
-			},
-			scroll: function(e) {
-				this.old.scrollTop = e.detail.scrollTop
-			},
-			// 更多
-			toMore() {
-				uni.navigateTo({
-					url: '/pages/activity/goods_bargain/index'
-				})
-			},
-			setConfig() {
-				this.listStyle = this.dataConfig.tabConfig.tabVal;
-				this.logoUrl = this.dataConfig.logoConfig.url;
-				this.typeShow = this.dataConfig.typeConfig.activeValue;
-				this.groupBtnShow = this.dataConfig.groupBtnConfig.tabVal == 0 ? true : false;
-				this.selectStyle = this.dataConfig.selectStyle.tabVal;
-				this.titleConfig = this.dataConfig.titleConfig.val;
-				this.selectBgImg = this.dataConfig.selectBgImg.tabVal;
-				this.bgImgUrl = this.dataConfig.bgImg.url;
-				this.headerTitleStyle = this.dataConfig.headerTitleStyle.tabVal;
-			},
+		{
+			margin: 2 * props.dataConfig.mbConfig.val + 'rpx' + ' ' + 0 + ' ' + 0
+		},
+	]);
+	//背景颜色
+	const boxBgStyle = computed(() => [{
+			gap: listStyle.value != 3 ? `${2*props.dataConfig.contentConfig.val}rpx` : ''
+		},
+		{
+			background: `linear-gradient(to right,${props.dataConfig.contentBgColor.color[0].item}, ${props.dataConfig.contentBgColor.color[1].item})`,
+		},
+		{
+			'justify-content': 'space-between',
+		},
+	]);
+	const fourStyle = computed(() => ({
+		'margin-right': listStyle.value == 3 ? `${2*props.dataConfig.contentConfig.val}rpx` : ''
+	}));
+	//标题颜色
+	const titleColor = computed(() => ({
+		color: props.dataConfig.titleColor.color[0].item,
+	}));
+	//头部按钮颜色
+	const headerBtnColor = computed(() => ({
+		color: props.dataConfig.headerBtnColor.color[0].item,
+	}));
+	//商品名称颜色
+	const nameColor = computed(() => ({
+		color: props.dataConfig.nameColor.color[0].item,
+	}));
+	//商品原价颜色
+	const originalColor = computed(() => ({
+		color: props.dataConfig.originalColor.color[0].item,
+	}));
+	//砍价价格颜色
+	const priceColor = computed(() => ({
+		color: props.dataConfig.themeStyleConfig.tabVal ? props.dataConfig.priceColor.color[0].item : themeColor.value,
+	}));
+	//标签颜色
+	const groupTitleColor = computed(() => ({
+		color: props.dataConfig.themeStyleConfig.tabVal ? props.dataConfig.groupTitleColor.color[0].item : themeColor.value,
+	}));
+	const peopleStyle = computed(() => [{
+			color: '#fff',
+		},
+		{
+			background: `linear-gradient(to right,${
+		            props.dataConfig.themeStyleConfig.tabVal ? props.dataConfig.btnColor.color[0].item : '#FF7931'
+		          }, ${props.dataConfig.themeStyleConfig.tabVal? props.dataConfig.btnColor.color[1].item : themeColor.value})`,
+		},
+		{
+			'align-self': 'baseline',
+		},
+		{
+			'border-radius': '14rpx',
+		},
+	]);
+	//已拼颜色
+	const groupTitleFontColor = computed(() => ({
+		color: props.dataConfig.groupTitleColor.color[0].item,
+	}));
+	//分割线颜色
+	const lineColor = computed(() => ({
+		border: `1rpx solid ${props.dataConfig.lineColor.color[0].item}`,
+	}));
+	//按钮颜色
+	const btnColor = computed(() => [{
+			background: `linear-gradient(to right,${
+		            props.dataConfig.themeStyleConfig.tabVal ? props.dataConfig.btnColor.color[0].item : '#FF7931'
+		          }, ${props.dataConfig.themeStyleConfig.tabVal ? props.dataConfig.btnColor.color[1].item : themeColor.value})`,
+		},
+		{
+			color: props.dataConfig.btnFontColor.color[0].item,
 		}
+	]);
+	//图片圆角
+	const contentStyle = computed(() => ({
+		'border-radius': props.dataConfig.contentStyle.val ? 2 * props.dataConfig.contentStyle.val + 'rpx' : '0',
+	}));
+	//样式一内容边距
+	const contentConfig = computed(() => ({
+		'paddingBottom': 2 * props.dataConfig.contentConfig.val + 'rpx',
+	}));
+	//背景图片
+	const bgImgStyle = computed(() => ({
+		'background': selectBgImg.value == 0 ? `url(${bgImgUrl.value})` :
+			`linear-gradient(to right,${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+	}));
+	//标题文字格式
+	const headerTitleConfig = computed(() => [{
+			'font-weight': headerTitleStyle.value == 0 ? 600 : ''
+		},
+		{
+			'font-style': headerTitleStyle.value == 2 ? 'italic' : 'normal'
+		},
+		{
+			color: props.dataConfig.headerTitleColor.color[0].item,
+		}
+	]);
+
+	// created
+	setConfig()
+	getInfo()
+
+	//去砍价
+	function toGroupDetail(id) {
+		if (uid.value) {
+			uni.navigateTo({
+				url: `/pages/activity/goods_bargain_details/index?id=${id}&startBargainUid=${uid.value}`
+			})
+		} else {
+			toLogin()
+		}
+	}
+	function getInfo() {
+		getBargainIndexApi().then(function(res) {
+			groupProductList.value = res.data.productList;
+			groupInfo.value = {
+				totalPeople: res.data.totalPeople,
+				avatarList: res.data.avatarList
+			}
+		}).catch((res) => {
+			return util.Tips({
+				title: res
+			});
+		})
+	}
+	function scroll(e) {
+		old.scrollTop = e.detail.scrollTop
+	}
+	// 更多
+	function toMore() {
+		uni.navigateTo({
+			url: '/pages/activity/goods_bargain/index'
+		})
+	}
+	function setConfig() {
+		listStyle.value = props.dataConfig.tabConfig.tabVal;
+		logoUrl.value = props.dataConfig.logoConfig.url;
+		typeShow.value = props.dataConfig.typeConfig.activeValue;
+		groupBtnShow.value = props.dataConfig.groupBtnConfig.tabVal == 0 ? true : false;
+		selectStyle.value = props.dataConfig.selectStyle.tabVal;
+		titleConfig.value = props.dataConfig.titleConfig.val;
+		selectBgImg.value = props.dataConfig.selectBgImg.tabVal;
+		bgImgUrl.value = props.dataConfig.bgImg.url;
+		headerTitleStyle.value = props.dataConfig.headerTitleStyle.tabVal;
 	}
 </script>
 

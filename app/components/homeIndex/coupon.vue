@@ -96,7 +96,7 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -106,119 +106,115 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
+	import { ref, computed, getCurrentInstance, onMounted } from 'vue';
 	import {
 		getCoupons,
 		setCouponReceive
 	} from "@/api/api.js"
+	import { filterTheme } from '@/filters';
+	const { proxy } = getCurrentInstance();
 	let app = getApp();
-	export default {
-		name: 'homeCoupon',
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			}
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				couponList: [],
-				listStyle: 0,
-				themeColor:this.$options.filters.filterTheme(app.globalData.theme)
-			};
-		},
-		computed: {
-			//最外层盒子的样式
-			boxStyle() {
-				return [{
-						'border-radius': 2 * this.dataConfig.bgStyle.val ? 2 * this.dataConfig.bgStyle.val + 'rpx' :
-							'0'
-					},
-					{
-						background: this.listStyle != 3 ?
-							`linear-gradient(to right,${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})` :
-							this.dataConfig.bgColorNew.color[0].item,
-					},
-					{
-						'margin': 2 * this.dataConfig.mbConfig.val + 'rpx' + ' ' + 2 * this.dataConfig.lrConfig.val +
-							'rpx' +
-							' ' + 0
-					},
-					{
-						'padding': 2 * this.dataConfig.upConfig.val + 'rpx' + ' ' + '20rpx' + ' ' + 2 * this.dataConfig
-							.downConfig
-							.val + 'rpx'
-					},
-				];
-			},
-			boxBg() {
-				return [{
-					background: this.dataConfig.bgColorNew.color[0].item,
-				}, ];
-			},
-			//内容边距
-			contentConfig() {
-				return [{
-						'margin-right': this.dataConfig.contentConfig.val ? 2 * this.dataConfig.contentConfig.val +
-							'rpx' : '0'
-					},
-					{
-						'background': this.listStyle == 1 ?
-							(this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.itemBgColor.color[0].item:this.themeColor) : this.listStyle == 3 ?
-							`linear-gradient(180deg,${this.dataConfig.btnColor.color[0].item}, ${this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.btnColor.color[1].item:this.themeColor})` :
-							'',
-					},
-				];
-			},
-			//优惠金额颜色
-			priceColorStyle() {
-				return [{
-					'color': this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.priceColor.color[0].item:this.themeColor
-				}];
-			},
-			//领取按钮
-			btnColorStyle() {
-				return [{
-					'background': `linear-gradient(90deg,${this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.btnColor.color[0].item:'#FF7931'}, ${this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.btnColor.color[1].item:this.themeColor})`,
-				}, ];
-			},
-			//展示数量
-			limit() {
-				return this.dataConfig.numConfig.val
-			},
-		},
-		mounted() {
-			this.getList();
-			this.setConfig()
-		},
-		methods: {
-			getCoupon(isUse, id) {
-				let that = this
-				if (!isUse) {
-					setCouponReceive(id).then(res => {
-						that.getList();
-					})
-				}
-			},
-			setConfig(data) {
-				this.listStyle = this.dataConfig.tabConfig.tabVal;
-			},
-			//优惠券列表
-			getList() {
-				getCoupons({
-					page: 1,
-					limit: this.limit
-				}).then(res => {
-					this.couponList = res.data.list;
-				})
-			},
-			//去更多
-			goPage() {
-				this.$util.navigateTo(this.dataConfig.linkConfig.val ? this.dataConfig.linkConfig.val :
-					'/pages/activity/couponList/index')
-			}
+
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
 		}
-	};
+	});
+
+	const urlDomain = ref(proxy.$Cache.get("imgHost"));
+	const couponList = ref([]);
+	const listStyle = ref(0);
+	const themeColor = ref(filterTheme(app.globalData.theme));
+
+	//最外层盒子的样式
+	const boxStyle = computed(() => {
+		return [{
+				'border-radius': 2 * props.dataConfig.bgStyle.val ? 2 * props.dataConfig.bgStyle.val + 'rpx' :
+					'0'
+			},
+			{
+				background: listStyle.value != 3 ?
+					`linear-gradient(to right,${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})` :
+					props.dataConfig.bgColorNew.color[0].item,
+			},
+			{
+				'margin': 2 * props.dataConfig.mbConfig.val + 'rpx' + ' ' + 2 * props.dataConfig.lrConfig.val +
+					'rpx' +
+					' ' + 0
+			},
+			{
+				'padding': 2 * props.dataConfig.upConfig.val + 'rpx' + ' ' + '20rpx' + ' ' + 2 * props.dataConfig
+					.downConfig
+					.val + 'rpx'
+			},
+		];
+	});
+	const boxBg = computed(() => {
+		return [{
+			background: props.dataConfig.bgColorNew.color[0].item,
+		}, ];
+	});
+	//内容边距
+	const contentConfig = computed(() => {
+		return [{
+				'margin-right': props.dataConfig.contentConfig.val ? 2 * props.dataConfig.contentConfig.val +
+					'rpx' : '0'
+			},
+			{
+				'background': listStyle.value == 1 ?
+					(props.dataConfig.themeStyleConfig.tabVal?props.dataConfig.itemBgColor.color[0].item:themeColor.value) : listStyle.value == 3 ?
+					`linear-gradient(180deg,${props.dataConfig.btnColor.color[0].item}, ${props.dataConfig.themeStyleConfig.tabVal?props.dataConfig.btnColor.color[1].item:themeColor.value})` :
+					'',
+			},
+		];
+	});
+	//优惠金额颜色
+	const priceColorStyle = computed(() => {
+		return [{
+			'color': props.dataConfig.themeStyleConfig.tabVal?props.dataConfig.priceColor.color[0].item:themeColor.value
+		}];
+	});
+	//领取按钮
+	const btnColorStyle = computed(() => {
+		return [{
+			'background': `linear-gradient(90deg,${props.dataConfig.themeStyleConfig.tabVal?props.dataConfig.btnColor.color[0].item:'#FF7931'}, ${props.dataConfig.themeStyleConfig.tabVal?props.dataConfig.btnColor.color[1].item:themeColor.value})`,
+		}, ];
+	});
+	//展示数量
+	const limit = computed(() => {
+		return props.dataConfig.numConfig.val
+	});
+
+	function getCoupon(isUse, id) {
+		if (!isUse) {
+			setCouponReceive(id).then(res => {
+				getList();
+			})
+		}
+	}
+	function setConfig(data) {
+		listStyle.value = props.dataConfig.tabConfig.tabVal;
+	}
+	//优惠券列表
+	function getList() {
+		getCoupons({
+			page: 1,
+			limit: limit.value
+		}).then(res => {
+			couponList.value = res.data.list;
+		})
+	}
+	//去更多
+	function goPage() {
+		proxy.$util.navigateTo(props.dataConfig.linkConfig.val ? props.dataConfig.linkConfig.val :
+			'/pages/activity/couponList/index')
+	}
+
+	onMounted(() => {
+		getList();
+		setConfig()
+	});
 </script>
 
 <style lang="scss" scoped>

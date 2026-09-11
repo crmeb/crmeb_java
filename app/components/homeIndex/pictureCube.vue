@@ -28,7 +28,7 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -38,114 +38,111 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
-	export default {
-		name: 'pictureCube',
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			},
+	import { ref, computed, onMounted, nextTick } from 'vue';
+	import util from '@/utils/util.js';
+
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
 		},
-		data() {
+	});
+
+	// data
+	const picList = ref(props.dataConfig.picStyle.picList);
+	const style = ref(props.dataConfig.tabConfig.tabVal);
+	const prConfig = ref(props.dataConfig.lrConfig.val);
+	const widthC = ref('');
+	const imageH = ref(0);
+
+	// computed
+	//最外层盒子的样式
+	const boxStyle = computed(() => {
+		return {
+			borderRadius: props.dataConfig.bgStyle.val * 2 + 'rpx',
+			background: `linear-gradient(${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+			margin: props.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + props.dataConfig.lrConfig.val * 2 + 'rpx' +
+				' ' + 0,
+			padding: props.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + '0' + ' ' + props.dataConfig.downConfig.val *
+				2 + 'rpx'
+		}
+	});
+	const imageStyle = computed(() => {
+		return {
+			height: imageH.value + 'rpx',
+			'border-radius': props.dataConfig.contantStyle.val ? props.dataConfig.contantStyle.val + 'px' :
+				'0'
+		}
+	});
+	const widthStyle = computed(() => {
+		return {width :750-props.dataConfig.lrConfig.val * 4 + 'rpx',gap: 2 * props.dataConfig.spaceConfig.val + 'rpx'}
+	});
+	const radiusStyle = computed(() => {
+		return {'border-radius': props.dataConfig.contantStyle.val ? props.dataConfig.contantStyle.val + 'px' :
+				'0'}
+	});
+	const gapStyle = computed(() => {
+		return{gap: 2 * props.dataConfig.spaceConfig.val + 'rpx',}
+	});
+	//图片魔方排版
+	const gridColumns = computed(() => {
+		if ([1, 5].includes(props.dataConfig.tabConfig.tabVal)) {
 			return {
-				picList: this.dataConfig.picStyle.picList,
-				style: this.dataConfig.tabConfig.tabVal,
-				prConfig: this.dataConfig.lrConfig.val,
-				widthC: '',
-				imageH: 0,
-			};
-		},
-		computed: {
-			//最外层盒子的样式
-			boxStyle() {
-				return {
-					borderRadius: this.dataConfig.bgStyle.val * 2 + 'rpx',
-					background: `linear-gradient(${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-					margin: this.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + this.dataConfig.lrConfig.val * 2 + 'rpx' +
-						' ' + 0,
-					padding: this.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + '0' + ' ' + this.dataConfig.downConfig.val *
-						2 + 'rpx'
-				}
-			},
-			imageStyle() {
-				return {
-					height: this.imageH + 'rpx',
-					'border-radius': this.dataConfig.contantStyle.val ? this.dataConfig.contantStyle.val + 'px' :
-						'0'
-				}
-			},
-			widthStyle(){
-				return {width :750-this.dataConfig.lrConfig.val * 4 + 'rpx',gap: 2 * this.dataConfig.spaceConfig.val + 'rpx'}
-			},
-			radiusStyle(){
-				return {'border-radius': this.dataConfig.contantStyle.val ? this.dataConfig.contantStyle.val + 'px' :
-						'0'}
-			},
-			gapStyle(){
-				return{gap: 2 * this.dataConfig.spaceConfig.val + 'rpx',}
-			},
-			//图片魔方排版
-			gridColumns() {
-				if ([1, 5].includes(this.dataConfig.tabConfig.tabVal)) {
-					return {
-						gridTemplateColumns: 'repeat(2, 1fr)',
-						gap: 2 * this.dataConfig.spaceConfig.val + 'rpx',
-					}
-				} else if (this.dataConfig.tabConfig.tabVal == 0) {
-					return {
-						gridTemplateColumns: 'repeat(1, 1fr)',
-						gap: 2 * this.dataConfig.spaceConfig.val + 'rpx',
-					}
-				} else if (this.dataConfig.tabConfig.tabVal == 2) {
-					return {
-						gridTemplateColumns: 'repeat(3, 1fr)',
-						gap: 2 * this.dataConfig.spaceConfig.val + 'rpx',
-					}
-				} else if (this.dataConfig.tabConfig.tabVal == 4) {
-					return {
-						gridTemplateColumns: 'repeat(4, 1fr)',
-						gap: 2 * this.dataConfig.spaceConfig.val + 'rpx',
-					}
-				}
-			},
-		},
-		mounted() {
-			if (this.picList.length) {
-				let that = this;
-				this.$nextTick((e) => {
-					// 宽度
-					if (this.style == 0) {
-						this.widthC = 750
-					} else if (this.style == 1) {
-						this.widthC = 375
-					} else if (this.style == 2) {
-						this.widthC = 250
-					} else if (this.style == 4) {
-						this.widthC = 187.5
-					}
-					//高度计算
-					if (this.style == 5) {
-						that.$set(that, 'imageH', 187.5);
-					} else {
-						let maxHeight = 0
-						this.picList.forEach((val, index) => {
-							let height = val.height * ((that.widthC - that.prConfig *
-									2) / val
-								.width)
-							if (height > maxHeight) {
-								maxHeight = height
-							}
-						})
-						that.$set(that, 'imageH', maxHeight);
-					}
-				})
+				gridTemplateColumns: 'repeat(2, 1fr)',
+				gap: 2 * props.dataConfig.spaceConfig.val + 'rpx',
 			}
-		},
-		methods: {
-			goDetail(item) {
-				this.$util.navigateTo(item.link);
+		} else if (props.dataConfig.tabConfig.tabVal == 0) {
+			return {
+				gridTemplateColumns: 'repeat(1, 1fr)',
+				gap: 2 * props.dataConfig.spaceConfig.val + 'rpx',
+			}
+		} else if (props.dataConfig.tabConfig.tabVal == 2) {
+			return {
+				gridTemplateColumns: 'repeat(3, 1fr)',
+				gap: 2 * props.dataConfig.spaceConfig.val + 'rpx',
+			}
+		} else if (props.dataConfig.tabConfig.tabVal == 4) {
+			return {
+				gridTemplateColumns: 'repeat(4, 1fr)',
+				gap: 2 * props.dataConfig.spaceConfig.val + 'rpx',
 			}
 		}
+	});
+
+	onMounted(() => {
+		if (picList.value.length) {
+			nextTick((e) => {
+				// 宽度
+				if (style.value == 0) {
+					widthC.value = 750
+				} else if (style.value == 1) {
+					widthC.value = 375
+				} else if (style.value == 2) {
+					widthC.value = 250
+				} else if (style.value == 4) {
+					widthC.value = 187.5
+				}
+				//高度计算
+				if (style.value == 5) {
+					imageH.value = 187.5;
+				} else {
+					let maxHeight = 0
+					picList.value.forEach((val, index) => {
+						let height = val.height * ((widthC.value - prConfig.value *
+								2) / val
+							.width)
+						if (height > maxHeight) {
+							maxHeight = height
+						}
+					})
+					imageH.value = maxHeight;
+				}
+			})
+		}
+	});
+
+	function goDetail(item) {
+		util.navigateTo(item.link);
 	}
 </script>
 

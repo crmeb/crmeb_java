@@ -2,18 +2,18 @@
 	<div class="mpvue-calendar" ref="calendar">
 		<div class="calendar-tools" v-if="!isMonthRange">
 			<div class="calendar-prev" @click="prev">
-				<img :src="arrowLeft" v-if="!!arrowLeft">
+				<img class="calendar-arrow-icon" :src="arrowLeft" v-if="!!arrowLeft">
 				<i class="iconfont icon-arrow-left" v-else></i>
 			</div>
 			<div class="calendar-next" @click="next">
-				<img :src="arrowRight" v-if="!!arrowRight">
+				<img class="calendar-arrow-icon" :src="arrowRight" v-if="!!arrowRight">
 				<i class="iconfont icon-arrow-right" v-else></i>
 			</div>
 			<div class="calendar-info" @click.stop="changeYear">
 				<div class="mc-month">
 					<div :class="['mc-month-inner', oversliding ? '' : 'month-transition']"
 						:style="{'top': monthPosition + unit}" v-if="isIos">
-						<span v-for="(m, i) in monthsLoop" :key="i">{{m}}</span>
+						<span class="mc-month-item" v-for="(m, i) in monthsLoop" :key="i">{{m}}</span>
 					</div>
 					<div class="mc-month-text" v-else>{{monthText}}</div>
 				</div>
@@ -50,11 +50,11 @@
 		</table>
 		<div class="mpvue-calendar-change" :class="{'show': yearsShow}">
 			<div class="calendar-years" v-if="!weekSwitch">
-				<span v-for="y in years" :key="y" @click.stop="selectYear(y)"
+				<span class="calendar-change-item" v-for="y in years" :key="y" @click.stop="selectYear(y)"
 					:class="{'active': y === year}">{{y}}</span>
 			</div>
 			<div :class="['calendar-months', {'calendar-week-switch-months': weekSwitch}]">
-				<span v-for="(m, i) in months" :key="m" @click.stop="changeMonth(i)"
+				<span class="calendar-change-item" v-for="(m, i) in months" :key="m" @click.stop="changeMonth(i)"
 					:class="{'active': i === month}">{{m}}</span>
 			</div>
 		</div>

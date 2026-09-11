@@ -9,8 +9,6 @@
 						<view class="pictrue">
 							<easy-loadimage :image-src="item.image" :radius="dataConfig.contentStyle.val">
 							</easy-loadimage>
-							<view v-if="item.activityStyle" :style="{ backgroundImage: `url(${item.activityStyle})` }"
-								class="border-picture"></view>
 						</view>
 						<view class="text-info text-add">
 							<view>
@@ -43,8 +41,6 @@
 						<view class="pictrue">
 							<easy-loadimage :image-src="item.image" :radius="dataConfig.contentStyle.val">
 							</easy-loadimage>
-							<view v-if="item.activityStyle" :style="{ backgroundImage: `url(${item.activityStyle})` }"
-								class="border-picture"></view>
 						</view>
 						<view class="text-info">
 							<view class="title line2" :style="[titleColor]" v-if="titleShow">
@@ -74,8 +70,6 @@
 						<view class="pictrue">
 							<easy-loadimage :image-src="item.image" :radius="dataConfig.contentStyle.val">
 							</easy-loadimage>
-							<view v-if="item.activityStyle" :style="{ backgroundImage: `url(${item.activityStyle})` }"
-								class="border-picture"></view>
 						</view>
 						<view class="text-info">
 							<view class="title line2" :style="[titleColor]" v-if="titleShow">
@@ -105,8 +99,6 @@
 						<view class="img-box">
 							<easy-loadimage :image-src="item.image" :radius="dataConfig.contentStyle.val">
 							</easy-loadimage>
-							<view v-if="item.activityStyle" :style="{ backgroundImage: `url(${item.activityStyle})` }"
-								class="border-picture"></view>
 						</view>
 						<view class="name line2" :style="[titleColor]" v-if="titleShow">
 							<span>{{item.storeName}}</span>
@@ -139,7 +131,7 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -149,219 +141,186 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
+	import { ref, reactive, computed, onMounted } from 'vue';
 	import {
 		getProductslist,productByidsApi
 	} from '@/api/store.js';
-	let app = getApp();
+	import { filterTheme } from '@/filters';
 	import easyLoadimage from '@/components/base/easy-loadimage.vue';
-	export default {
-		name: 'goodList',
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			},
-		},
-		components: {
-			easyLoadimage,
-		},
-		data() {
-			return {
-				//普通价格
-				svipPriceStyle: {
-					svipBox: {
-						height: '26rpx',
-						borderRadius: '60rpx 56rpx 56rpx 20rpx',
-					},
-					icon: {
-						height: '26rpx',
-						fontSize: '18rpx',
-						borderRadius: '12rpx 0 12rpx 2rpx'
-					},
-					price: {
-						fontSize: '38rpx'
-					},
-					svipPrice: {
-						fontSize: '22rpx'
-					}
-				},
-				//svip价格
-				svipIconStyle: {
-					svipBox: {
-						height: '26rpx',
-						borderRadius: '24rpx 40rpx 40rpx 0.4rpx',
-					},
-					price: {
-						fontSize: '38rpx'
-					},
-					svipPrice: {
-						fontSize: '18rpx'
-					}
-				},
-				tempArr: [],
-				numConfig: this.dataConfig.numConfig.val, //展示多少条
-				itemStyle: this.dataConfig.itemStyle.tabVal, //商品列表展示方式  单列 两列 三列
-				type: this.dataConfig.tabConfig.tabVal || 0, //商品类型 0指定商品，1指定品牌，2指定分类，3指定商户
-				selectId: this.dataConfig.selectConfig ? this.dataConfig.selectConfig.activeValue : [], //分类
-				productIds: this.dataConfig.goodsList.ids || [],
-				params: { //精品推荐分页
-					page: 1,
-					limit: 10,
-					cid: '',
-					priceOrder: '',
-					salesOrder: ''
-				},
-				goodScroll: false,
-				loading: false,
-				themeColor:this.$options.filters.filterTheme(app.globalData.theme)
-			};
-		},
-		computed: {
-			//商品名称颜色
-			titleColor() {
-				return {
-					'color': this.dataConfig.titleColor.color[0].item,
-				}
-			},
-			//最外层盒子的样式
-			boxStyle() {
-				return {
-					borderRadius: this.dataConfig.bgStyle.val * 2 + 'rpx',
-					background: `linear-gradient(${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-					margin: this.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + this.dataConfig.lrConfig.val * 2 + 'rpx' +
-						' ' + 0,
-					padding: this.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + '16rpx' + ' ' + this.dataConfig.downConfig
-						.val *
-						2 + 'rpx'
-				}
-			},
-			//图片展示样式
-			gridGap() {
-				return {
-					'grid-gap': this.dataConfig.contentConfig.val * 2 + 'rpx'
-				}
-			},
-			//文章图片的圆角和高度
-			imgStyle() {
-				return {
-					'border-radius': this.dataConfig.contentStyle.val * 2 + 'rpx',
-				}
-			},
-			//价格颜色
-			priceColor() {
-				return {
-					'color': this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.priceColor.color[0].item:this.themeColor,
-				}
-			},
-			//已售数量
-			soldColor() {
-				return {
-					'color': this.dataConfig.soldColor.color[0].item,
-				}
-			},
-			//商品名称
-			titleShow() {
-				if (this.dataConfig.typeConfig.activeValue.includes(0)) {
-					return true;
-				} else {
-					return false;
-				}
-			},
-			//价格
-			priceShow() {
-				if (this.dataConfig.typeConfig.activeValue.includes(1)) {
-					return true;
-				} else {
-					return false;
-				}
-			},
-			//销量
-			soldShow() {
-				if (this.dataConfig.typeConfig.activeValue.includes(2)) {
-					return true;
-				} else {
-					return false;
-				}
-			},
-			//排序，0综合，1销量，2价格
-			goodsSort() {
-				return this.dataConfig.goodsSort.tabVal
-			},
-			//内容圆角
-			contentStyle() {
-				return {
-					'border-radius': this.dataConfig.contentStyle.val ? 2*this.dataConfig.contentStyle.val + 'rpx' : '0'
-				};
-			},
-		},
-		mounted() {
-			this.params.page = 1;
-			this.goodScroll = false;
-			this.tempArr = [];
-			//类型为0时，直接加载选中的商品，不为0时根据条件加载商品列表
-			if (this.type > 0) {
-				this.productslist();
-			} else {
-				this.getProList();
-			}
-		},
-		//uniapp小程序用deep重写组件样式不生效
+	let app = getApp();
+
+	//uniapp小程序用deep重写组件样式不生效
+	defineOptions({
 		options: {
 			styleIsolation: 'shared'
-		},
-		methods: {
-			//根据商品id集合查询对应商品
-			getProductByids(data) {
-				uni.showLoading({
-					title: '加载中...'
-				});
-				let ids = data.map((item) => item.id).join(',');
-				productByidsApi(ids).then((res) => {
-						this.tempArr = res.data;
-						uni.hideLoading();
-					})
-					.catch(res => {
-						uni.hideLoading();
-					});
-			},
-			getProList() {
-				this.getProductByids(this.dataConfig.goodsList.list);
-			},
-			productslist() {
-				if (this.goodScroll) return;
-				this.loading = true
-				this.params.limit = this.numConfig;
-				switch (this.type) {
-					case 1:
-						this.params.cid = this.selectId.join(',');
-						break;
-				}
-
-				if (this.goodsSort === 0) {
-					this.params.priceOrder = '';
-					this.params.salesOrder = '';
-				} else if (this.goodsSort === 1) {
-					this.params.priceOrder = '';
-					this.params.salesOrder = 'desc';
-				} else {
-					this.params.priceOrder = 'desc';
-					this.params.salesOrder = '';
-				}
-
-				getProductslist(this.params).then(res => {
-					this.$set(this.params, 'page', this.params.page + 1);
-					this.goodScroll = this.params.page > res.data.totalPage;
-					this.tempArr = this.tempArr.concat(res.data.list || []);
-					this.loading = false
-				});
-			},
-			goDetail(item) {
-				uni.navigateTo({
-				    url: `/pages/goods/goods_details/index?id=${item.id}`
-				})
-			}
 		}
-	};
+	});
+
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
+		},
+	});
+
+	// data
+	const tempArr = ref([]);
+	const numConfig = ref(props.dataConfig.numConfig.val); //展示多少条
+	const itemStyle = ref(props.dataConfig.itemStyle.tabVal); //商品列表展示方式  单列 两列 三列
+	const type = ref(props.dataConfig.tabConfig.tabVal || 0); //商品类型 0指定商品，1指定品牌，2指定分类，3指定商户
+	const selectId = ref(props.dataConfig.selectConfig ? props.dataConfig.selectConfig.activeValue : []); //分类
+	const productIds = ref(props.dataConfig.goodsList.ids || []);
+	const params = reactive({ //精品推荐分页
+		page: 1,
+		limit: 10,
+		cid: '',
+		priceOrder: '',
+		salesOrder: ''
+	});
+	const goodScroll = ref(false);
+	const loading = ref(false);
+	const themeColor = ref(filterTheme(app.globalData.theme));
+
+	// computed
+	//商品名称颜色
+	const titleColor = computed(() => {
+		return {
+			'color': props.dataConfig.titleColor.color[0].item,
+		}
+	});
+	//最外层盒子的样式
+	const boxStyle = computed(() => {
+		return {
+			borderRadius: props.dataConfig.bgStyle.val * 2 + 'rpx',
+			background: `linear-gradient(${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+			margin: props.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + props.dataConfig.lrConfig.val * 2 + 'rpx' +
+				' ' + 0,
+			padding: props.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + '16rpx' + ' ' + props.dataConfig.downConfig
+				.val *
+				2 + 'rpx'
+		}
+	});
+	//图片展示样式
+	const gridGap = computed(() => {
+		return {
+			'grid-gap': props.dataConfig.contentConfig.val * 2 + 'rpx'
+		}
+	});
+	//文章图片的圆角和高度
+	const imgStyle = computed(() => {
+		return {
+			'border-radius': props.dataConfig.contentStyle.val * 2 + 'rpx',
+		}
+	});
+	//价格颜色
+	const priceColor = computed(() => {
+		return {
+			'color': props.dataConfig.themeStyleConfig.tabVal?props.dataConfig.priceColor.color[0].item:themeColor.value,
+		}
+	});
+	//已售数量
+	const soldColor = computed(() => {
+		return {
+			'color': props.dataConfig.soldColor.color[0].item,
+		}
+	});
+	//商品名称
+	const titleShow = computed(() => {
+		if (props.dataConfig.typeConfig.activeValue.includes(0)) {
+			return true;
+		} else {
+			return false;
+		}
+	});
+	//价格
+	const priceShow = computed(() => {
+		if (props.dataConfig.typeConfig.activeValue.includes(1)) {
+			return true;
+		} else {
+			return false;
+		}
+	});
+	//销量
+	const soldShow = computed(() => {
+		if (props.dataConfig.typeConfig.activeValue.includes(2)) {
+			return true;
+		} else {
+			return false;
+		}
+	});
+	//排序，0综合，1销量，2价格
+	const goodsSort = computed(() => {
+		return props.dataConfig.goodsSort.tabVal
+	});
+	//内容圆角
+	const contentStyle = computed(() => {
+		return {
+			'border-radius': props.dataConfig.contentStyle.val ? 2*props.dataConfig.contentStyle.val + 'rpx' : '0'
+		};
+	});
+
+	onMounted(() => {
+		params.page = 1;
+		goodScroll.value = false;
+		tempArr.value = [];
+		//类型为0时，直接加载选中的商品，不为0时根据条件加载商品列表
+		if (type.value > 0) {
+			productslist();
+		} else {
+			getProList();
+		}
+	});
+
+	//根据商品id集合查询对应商品
+	function getProductByids(data) {
+		uni.showLoading({
+			title: '加载中...'
+		});
+		let ids = data.map((item) => item.id).join(',');
+		productByidsApi(ids).then((res) => {
+				tempArr.value = res.data;
+				uni.hideLoading();
+			})
+			.catch(res => {
+				uni.hideLoading();
+			});
+	}
+	function getProList() {
+		getProductByids(props.dataConfig.goodsList.list);
+	}
+	function productslist() {
+		if (goodScroll.value) return;
+		loading.value = true
+		params.limit = numConfig.value;
+		switch (type.value) {
+			case 1:
+				params.cid = selectId.value.join(',');
+				break;
+		}
+
+		if (goodsSort.value === 0) {
+			params.priceOrder = '';
+			params.salesOrder = '';
+		} else if (goodsSort.value === 1) {
+			params.priceOrder = '';
+			params.salesOrder = 'desc';
+		} else {
+			params.priceOrder = 'desc';
+			params.salesOrder = '';
+		}
+
+		getProductslist(params).then(res => {
+			params.page = params.page + 1;
+			goodScroll.value = params.page > res.data.totalPage;
+			tempArr.value = tempArr.value.concat(res.data.list || []);
+			loading.value = false
+		});
+	}
+	function goDetail(item) {
+		uni.navigateTo({
+		    url: `/pages/goods/goods_details/index?id=${item.id}`
+		})
+	}
 </script>
 
 <style lang="scss" scoped>

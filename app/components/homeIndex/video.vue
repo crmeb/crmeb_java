@@ -6,7 +6,7 @@
 		</view>
 	</view>
 </template>
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -16,56 +16,51 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
-	export default {
-		name: 'pictureCube',
-		props: {
-			dataConfig: {
-				type: Object, 
-				default: () => {}
-			},
-		},
-		data() {
-			return {
-				pageGesture: true,
-				onloadCode: ''
-			};
-		},
-		created() {
-			// #ifdef APP
-			this.onloadCode =
-				`this.contentWindow.document.body.innerHTML = '<video style="width: 100%;height: 100%" objectFit="cover" controls="controls"  loop show-mute-btn="${this.pageGesture}" poster="${this.cover}" src="${this.link}"></video>';`
-			// #endif
-		},
-		computed: {
-			//视频封面
-			cover() {
-				return this.dataConfig.cover.url
-			},
-			//视频地址
-			link() {
-				if (this.dataConfig.tabConfig.tabVal === 0) {
-					return this.dataConfig.uploadVideo.url
-				} else {
-					return this.dataConfig.link.val
-				}
+	import { ref, computed } from 'vue';
 
-			},
-			//最外层盒子的样式
-			boxStyle() {
-				return {
-					borderRadius: this.dataConfig.bgStyle.val * 2 + 'rpx',
-					background: `linear-gradient(${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-					margin: this.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + this.dataConfig.lrConfig.val * 2 + 'rpx' +
-						' ' + 0,
-					padding: this.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + 0 + ' ' + this.dataConfig.downConfig.val *
-						2 + 'rpx'
-				}
-			},
-			contantRadius() {
-			      return { 'border-radius': this.dataConfig.contantStyle.val ? this.dataConfig.contantStyle.val + 'px' : '0' };
-			    },
+	const props = defineProps({
+		dataConfig: {
+			type: Object, 
+			default: () => {}
+		},
+	});
+
+	const pageGesture = ref(true);
+	const onloadCode = ref('');
+
+	//视频封面
+	const cover = computed(() => {
+		return props.dataConfig.cover.url
+	});
+	//视频地址
+	const link = computed(() => {
+		if (props.dataConfig.tabConfig.tabVal === 0) {
+			return props.dataConfig.uploadVideo.url
+		} else {
+			return props.dataConfig.link.val
 		}
-	}
+
+	});
+	//最外层盒子的样式
+	const boxStyle = computed(() => {
+		return {
+			borderRadius: props.dataConfig.bgStyle.val * 2 + 'rpx',
+			background: `linear-gradient(${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+			margin: props.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + props.dataConfig.lrConfig.val * 2 + 'rpx' +
+				' ' + 0,
+			padding: props.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + 0 + ' ' + props.dataConfig.downConfig.val *
+				2 + 'rpx'
+		}
+	});
+	const contantRadius = computed(() => {
+	      return { 'border-radius': props.dataConfig.contantStyle.val ? props.dataConfig.contantStyle.val + 'px' : '0' };
+	    });
+
+	// created
+	// #ifdef APP
+	onloadCode.value =
+		`this.contentWindow.document.body.innerHTML = '<video style="width: 100%;height: 100%" objectFit="cover" controls="controls"  loop show-mute-btn="${pageGesture.value}" poster="${cover.value}" src="${link.value}"></video>';`
+	// #endif
 </script>
 <style lang="scss" scoped>
 	.diy_video {

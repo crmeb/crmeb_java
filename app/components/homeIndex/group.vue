@@ -161,219 +161,211 @@
 					</view>
 				</scroll-view>
 			</view>
-			<emptyPage :mTop="'0'" v-if="groupProductList.length==0" title="暂无拼团商品，去看看其他商品吧~～" :imgSrc="urlDomain+'crmebimage/presets/noActivity.png'"></emptyPage>
+			<emptyPage :mTop="'0'" v-if="groupProductList.length==0" title="暂无拼团商品，去看看其他商品吧~～" :imgSrc="urlDomain+'/crmebimage/presets/noActivity.png'"></emptyPage>
 		</view>
 	</view>
 </template>
 
-<script>
-	import {getCombinationIndexApi} from '@/api/activity.js';
-	import easyLoadimage from '@/components/base/easy-loadimage.vue';
-	import emptyPage from '@/components/emptyPage.vue'
-	let app = getApp();
-	export default {
-		name: 'homeGroup',
-		components: {
-			easyLoadimage,
-			emptyPage
-		},
-		props: {
+	<script setup>
+		import { ref, reactive, computed } from 'vue';
+		import {getCombinationIndexApi} from '@/api/activity.js';
+		import easyLoadimage from '@/components/base/easy-loadimage.vue';
+		import emptyPage from '@/components/emptyPage.vue'
+		import util from '@/utils/util.js';
+		import Cache from '@/utils/cache.js';
+		import { filterTheme } from '@/filters';
+		let app = getApp();
+
+		const props = defineProps({
 			dataConfig: {
 				type: Object,
 				default: () => {}
 			},
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				listStyle: 0,
-				logoUrl: null,
-				typeShow: [0, 1, 2, 3],
-				groupBtnShow: true,
-				selectStyle: '',
-				titleConfig: '',
-				selectBgImg: '',
-				bgImgUrl: '',
-				headerTitleStyle: 0,
-				old: {
-					scrollTop: 0
+		});
+
+		const urlDomain = ref(Cache.get("imgHost"));
+		const listStyle = ref(0);
+		const logoUrl = ref(null);
+		const typeShow = ref([0, 1, 2, 3]);
+		const groupBtnShow = ref(true);
+		const selectStyle = ref('');
+		const titleConfig = ref('');
+		const selectBgImg = ref('');
+		const bgImgUrl = ref('');
+		const headerTitleStyle = ref(0);
+		const old = reactive({
+			scrollTop: 0
+		});
+		const groupInfo = ref({});
+		const groupProductList = ref([]);
+		const themeColor = ref(filterTheme(app.globalData.theme));
+
+		//容器样式
+		//最外层盒子的样式
+		const boxStyle = computed(() => {
+			return [{
+					'border-radius': props.dataConfig.bgStyle.val ? 2 * props.dataConfig.bgStyle.val + 'rpx' : '0'
 				},
-				groupInfo: {},
-				groupProductList: [],
-				themeColor:this.$options.filters.filterTheme(app.globalData.theme)
+				{
+					margin: 0 + ' ' + 2 * props.dataConfig.lrConfig.val + 'rpx' + ' ' + 0
+				},
+				{
+					background: `linear-gradient(to right,${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+				},
+			];
+		});
+		//边距
+		const boxPadding = computed(() => {
+			return [{
+					padding: 2 * props.dataConfig.upConfig.val + 'rpx' + ' ' + '0rpx' + ' ' + 2 * props.dataConfig
+						.downConfig.val + 'rpx',
+				},
+				{
+					margin: 2 * props.dataConfig.mbConfig.val + 'rpx' + ' ' + 0 + ' ' + 0
+				},
+			]
+		});
+		//背景颜色
+		const boxBgStyle = computed(() => {
+			return [{
+					gap: listStyle.value != 3 ? `${2*props.dataConfig.contentConfig.val}rpx` : ''
+				},
+				{
+					background: `linear-gradient(to right,${props.dataConfig.contentBgColor.color[0].item}, ${props.dataConfig.contentBgColor.color[1].item})`,
+				},
+			];
+		});
+		const fourStyle = computed(() => {
+			return {
+				'margin-right': listStyle.value == 3 ? `${2*props.dataConfig.contentConfig.val}rpx` : ''
 			}
-		},
-		computed: {
-			//容器样式
-			//最外层盒子的样式
-			boxStyle() {
-				return [{
-						'border-radius': this.dataConfig.bgStyle.val ? 2 * this.dataConfig.bgStyle.val + 'rpx' : '0'
-					},
-					{
-						margin: 0 + ' ' + 2 * this.dataConfig.lrConfig.val + 'rpx' + ' ' + 0
-					},
-					{
-						background: `linear-gradient(to right,${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-					},
-				];
-			},
-			//边距
-			boxPadding() {
-				return [{
-						padding: 2 * this.dataConfig.upConfig.val + 'rpx' + ' ' + '0rpx' + ' ' + 2 * this.dataConfig
-							.downConfig.val + 'rpx',
-					},
-					{
-						margin: 2 * this.dataConfig.mbConfig.val + 'rpx' + ' ' + 0 + ' ' + 0
-					},
-				]
-			},
-			//背景颜色
-			boxBgStyle() {
-				return [{
-						gap: this.listStyle != 3 ? `${2*this.dataConfig.contentConfig.val}rpx` : ''
-					},
-					{
-						background: `linear-gradient(to right,${this.dataConfig.contentBgColor.color[0].item}, ${this.dataConfig.contentBgColor.color[1].item})`,
-					},
-				];
-			},
-			fourStyle() {
-				return {
-					'margin-right': this.listStyle == 3 ? `${2*this.dataConfig.contentConfig.val}rpx` : ''
-				}
-			},
-			//标题颜色
-			titleColor() {
-				return {
-					color: this.dataConfig.titleColor.color[0].item,
-				};
-			},
-			//头部按钮颜色
-			headerBtnColor() {
-				return {
-					color: this.dataConfig.headerBtnColor.color[0].item,
-				};
-			},
-			//商品名称颜色
-			nameColor() {
-				return {
-					color: this.dataConfig.nameColor.color[0].item,
-				};
-			},
-			//商品原价颜色
-			originalColor() {
-				return {
-					color: this.dataConfig.originalColor.color[0].item,
-				};
-			},
-			//拼团价格颜色
-			priceColor() {
-				return {
-					color: this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.priceColor.color[0].item:this.themeColor,
-				};
-			},
-			//标签颜色
-			groupTitleColor() {
-				return {
-					background: this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.groupTitleColor.color[0].item:this.themeColor,
-				};
-			},
-			//已拼颜色
-			groupTitleFontColor() {
-				return {
-					color: this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.groupTitleColor.color[0].item:this.themeColor,
-				}
-			},
-			//分割线颜色
-			lineColor() {
-				return {
-					border: `1rpx solid ${this.dataConfig.lineColor.color[0].item}`,
-				};
-			},
-			//按钮颜色
-			btnColor() {
-				return [{
-						background: `linear-gradient(to right,${this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.btnColor.color[0].item:'#FF7931'}, ${this.dataConfig.themeStyleConfig.tabVal?this.dataConfig.btnColor.color[1].item:this.themeColor})`,
-					},
-					{
-						color: this.dataConfig.btnFontColor.color[0].item,
-					}
-				];
-			},
-			//样式一内容边距
-			contentConfig() {
-				return {
-					'paddingBottom': 2 * this.dataConfig.contentConfig.val + 'rpx',
-				};
-			},
-			//背景图片
-			bgImgStyle() {
-				return {
-					'background': this.selectBgImg == 0 ? `url(${this.bgImgUrl})` :
-						`linear-gradient(to right,${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-				};
-			},
-			//标题文字格式
-			headerTitleConfig() {
-				return [{
-						'font-weight': this.headerTitleStyle == 0 ? 600 : ''
-					},
-					{
-						'font-style': this.headerTitleStyle == 2 ? 'italic' : 'normal'
-					},
-					{
-						color: this.dataConfig.headerTitleColor.color[0].item,
-					}
-				]
+		});
+		//标题颜色
+		const titleColor = computed(() => {
+			return {
+				color: props.dataConfig.titleColor.color[0].item,
+			};
+		});
+		//头部按钮颜色
+		const headerBtnColor = computed(() => {
+			return {
+				color: props.dataConfig.headerBtnColor.color[0].item,
+			};
+		});
+		//商品名称颜色
+		const nameColor = computed(() => {
+			return {
+				color: props.dataConfig.nameColor.color[0].item,
+			};
+		});
+		//商品原价颜色
+		const originalColor = computed(() => {
+			return {
+				color: props.dataConfig.originalColor.color[0].item,
+			};
+		});
+		//拼团价格颜色
+		const priceColor = computed(() => {
+			return {
+				color: props.dataConfig.themeStyleConfig.tabVal?props.dataConfig.priceColor.color[0].item:themeColor.value,
+			};
+		});
+		//标签颜色
+		const groupTitleColor = computed(() => {
+			return {
+				background: props.dataConfig.themeStyleConfig.tabVal?props.dataConfig.groupTitleColor.color[0].item:themeColor.value,
+			};
+		});
+		//已拼颜色
+		const groupTitleFontColor = computed(() => {
+			return {
+				color: props.dataConfig.themeStyleConfig.tabVal?props.dataConfig.groupTitleColor.color[0].item:themeColor.value,
 			}
-		},
-		created() {
-			this.setConfig()
-			this.getInfo()
-		},
-		methods: {
-			//去拼团
-			toGroupDetail(id){
-				uni.navigateTo({
-					url:`/pages/activity/goods_combination_details/index?id=${id}`
-				})
-			},
-			getInfo() {
-				let that = this;
-				getCombinationIndexApi().then(function(res) {
-					that.groupProductList = res.data.productList; 
-					that.groupInfo = {totalPeople:res.data.totalPeople,avatarList:res.data.avatarList}
-				}).catch((res) => {
-					return that.$util.Tips({
-						title: res
-					});
-				})
-			},
-			scroll: function(e) {
-				this.old.scrollTop = e.detail.scrollTop
-			},
-			// 更多
-			toMore() {
-				uni.navigateTo({
-					url: '/pages/activity/goods_combination/index'
-				})
-			},
-			setConfig() {
-				this.listStyle = this.dataConfig.tabConfig.tabVal;
-				this.logoUrl = this.dataConfig.logoConfig.url;
-				this.typeShow = this.dataConfig.typeConfig.activeValue;
-				this.groupBtnShow = this.dataConfig.groupBtnConfig.tabVal == 0 ? true : false;
-				this.selectStyle = this.dataConfig.selectStyle.tabVal;
-				this.titleConfig = this.dataConfig.titleConfig.val;
-				this.selectBgImg = this.dataConfig.selectBgImg.tabVal;
-				this.bgImgUrl = this.dataConfig.bgImg.url;
-				this.headerTitleStyle = this.dataConfig.headerTitleStyle.tabVal;
-			},
+		});
+		//分割线颜色
+		const lineColor = computed(() => {
+			return {
+				border: `1rpx solid ${props.dataConfig.lineColor.color[0].item}`,
+			};
+		});
+		//按钮颜色
+		const btnColor = computed(() => {
+			return [{
+					background: `linear-gradient(to right,${props.dataConfig.themeStyleConfig.tabVal?props.dataConfig.btnColor.color[0].item:'#FF7931'}, ${props.dataConfig.themeStyleConfig.tabVal?props.dataConfig.btnColor.color[1].item:themeColor.value})`,
+				},
+				{
+					color: props.dataConfig.btnFontColor.color[0].item,
+				}
+			];
+		});
+		//样式一内容边距
+		const contentConfig = computed(() => {
+			return {
+				'paddingBottom': 2 * props.dataConfig.contentConfig.val + 'rpx',
+			};
+		});
+		//背景图片
+		const bgImgStyle = computed(() => {
+			return {
+				'background': selectBgImg.value == 0 ? `url(${bgImgUrl.value})` :
+					`linear-gradient(to right,${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+			};
+		});
+		//标题文字格式
+		const headerTitleConfig = computed(() => {
+			return [{
+					'font-weight': headerTitleStyle.value == 0 ? 600 : ''
+				},
+				{
+					'font-style': headerTitleStyle.value == 2 ? 'italic' : 'normal'
+				},
+				{
+					color: props.dataConfig.headerTitleColor.color[0].item,
+				}
+			]
+		});
+
+		// created
+		setConfig()
+		getInfo()
+
+		//去拼团
+		function toGroupDetail(id){
+			uni.navigateTo({
+				url:`/pages/activity/goods_combination_details/index?id=${id}`
+			})
 		}
-	}
-</script>
+		function getInfo() {
+			getCombinationIndexApi().then(function(res) {
+				groupProductList.value = res.data.productList;
+				groupInfo.value = {totalPeople:res.data.totalPeople,avatarList:res.data.avatarList}
+			}).catch((res) => {
+				return util.Tips({
+					title: res
+				});
+			})
+		}
+		function scroll(e) {
+			old.scrollTop = e.detail.scrollTop
+		}
+		// 更多
+		function toMore() {
+			uni.navigateTo({
+				url: '/pages/activity/goods_combination/index'
+			})
+		}
+		function setConfig() {
+			listStyle.value = props.dataConfig.tabConfig.tabVal;
+			logoUrl.value = props.dataConfig.logoConfig.url;
+			typeShow.value = props.dataConfig.typeConfig.activeValue;
+			groupBtnShow.value = props.dataConfig.groupBtnConfig.tabVal == 0 ? true : false;
+			selectStyle.value = props.dataConfig.selectStyle.tabVal;
+			titleConfig.value = props.dataConfig.titleConfig.val;
+			selectBgImg.value = props.dataConfig.selectBgImg.tabVal;
+			bgImgUrl.value = props.dataConfig.bgImg.url;
+			headerTitleStyle.value = props.dataConfig.headerTitleStyle.tabVal;
+		}
+	</script>
 
 <style lang="scss" scoped>
 	.groupBox {

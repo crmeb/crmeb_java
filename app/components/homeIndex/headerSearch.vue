@@ -15,7 +15,7 @@
 					<view v-if="logoConfig" class="logo skeleton-rect">
 						<image :src="logoUrl" mode=""></image>
 					</view>
-					<navigator :style="[contentStyle]" v-if="hotWords.length > 0"
+					<navigator :render-link="false" :style="[contentStyle]" v-if="hotWords.length > 0"
 						:url="'/pages/goods/goods_search/index?searchVal='+searchVal"
 						:class="logoConfig&&!isSmallPage ? 'input' : logoConfig&&isSmallPage?'uninput':!logoConfig&&!isSmallPage?'uninput':'maxInput'" hover-class="none" class=" input skeleton-rect">
 						<view class='swiperTxt'>
@@ -33,7 +33,7 @@
 							</swiper>
 						</view>
 					</navigator>
-					<navigator :style="[contentStyle]" hover-class="none" v-else url="/pages/goods/goods_search/index"
+					<navigator :render-link="false" :style="[contentStyle]" hover-class="none" v-else url="/pages/goods/goods_search/index"
 						:class="logoConfig&&!isSmallPage ? 'input' : logoConfig&&isSmallPage?'uninput':!logoConfig&&!isSmallPage?'uninput':'maxInput'" class="skeleton-rect">
 						<text class="line1">{{placeWords}}</text>
 						<text class="iconfont icon-xiazai5"></text>
@@ -46,7 +46,7 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -56,140 +56,136 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
+	import { ref, computed, nextTick, onMounted, getCurrentInstance } from 'vue';
+	const { proxy } = getCurrentInstance();
 	let app = getApp();
-	export default {
-		name: 'headerSerch',
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			},
-			//是否为微页面
-			isSmallPage: {
-				type: Boolean,
-				default: false
-			},
-			//是否开始滚动
-			isScrolled: {
-				type: Boolean,
-				default: false
-			},
+
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
 		},
-		data() {
-			return {
-				statusBarHeight: app.globalData.statusBarHeight,
-				indicatorDots: false,
-				autoplay: true,
-				duration: 500,
-				marTop: 0,
-				searchH: 0,
-				searchVal: '',
-				searchTop:0,
-				searchRight:0,
-				searchHeight:0,
-				statusWidth:0,
-				searchBoxHeight:0
-			};
+		//是否为微页面
+		isSmallPage: {
+			type: Boolean,
+			default: false
 		},
-		computed: {
-			//轮播切换时间
-			interval(){
-				return this.dataConfig.titleConfig.val * 1000
-			},
-			//判断logo图是否展示
-			logoConfig() {
-				return this.dataConfig.logoConfig.url && this.dataConfig.searConfig.tabVal === 1
-			},
-			//logo图
-			logoUrl() {
-				if(this.isScrolled&&this.dataConfig.logoFixConfig.url){
-					return this.dataConfig.logoFixConfig.url
-				}else{
-					return this.dataConfig.logoConfig.url
-				}
-			},
-			//最外层盒子的样式
-			boxStyle() {
-				return {
-					borderRadius: this.dataConfig.bgStyle.val * 2 + 'rpx',
-					background: `linear-gradient(${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-					margin: 0 + ' ' + this.dataConfig.lrConfig.val * 2 + 'rpx' +
-						' ' + 0,
-					// #ifdef MP
-					height:this.searchBoxHeight + 'px',
-					// #endif
-				}
-			},
-			//搜索热词
-			hotWords() {
-				return this.dataConfig.hotWords.list
-			},
-			//内容圆角
-			contentStyle() {
-				return {
-					borderRadius: this.dataConfig.contentStyle.val ? this.dataConfig.contentStyle.val + 'px' : '0',
-					background: this.dataConfig.borderColor.color[0].item,
-					color: this.dataConfig.textColor.color[0].item,
-					textAlign: this.dataConfig.textPosition.list[this.dataConfig.textPosition.tabVal].style,
-					// #ifdef MP
-					height:this.searchHeight + 'px',
-					flex:!this.isSmallPage?1:'',
-					marginRight:!this.isSmallPage?(this.statusWidth + this.searchRight+'px'):'',
-					// #endif
-				}
-			},
-			//搜索提示语
-			placeWords(){
-				return this.dataConfig.placeWords.val;
-			}
+		//是否开始滚动
+		isScrolled: {
+			type: Boolean,
+			default: false
 		},
-		mounted() {
-			// 使用nextTick，确保页面更新结束后，再请求高度
-			// #ifdef MP || APP-PLUS
-			this.$nextTick(() => {
-				setTimeout(() => {
-					// 获取小程序头部高度
-					let info = uni.createSelectorQuery().in(this).select(".serch-box");
-					info.boundingClientRect((data)=> {
-						this.marTop = this.isSmallPage ? data.height :data.height + this.statusBarHeight
-					}).exec()
-				}, 100)
-			})
-			// #endif
-			
+	});
+
+	const statusBarHeight = ref(app.globalData.statusBarHeight);
+	const indicatorDots = ref(false);
+	const autoplay = ref(true);
+	const duration = ref(500);
+	const marTop = ref(0);
+	const searchH = ref(0);
+	const searchVal = ref('');
+	const searchTop = ref(0);
+	const searchRight = ref(0);
+	const searchHeight = ref(0);
+	const statusWidth = ref(0);
+	const searchBoxHeight = ref(0);
+
+	//轮播切换时间
+	const interval = computed(() => {
+		return props.dataConfig.titleConfig.val * 1000
+	});
+	//判断logo图是否展示
+	const logoConfig = computed(() => {
+		return props.dataConfig.logoConfig.url && props.dataConfig.searConfig.tabVal === 1
+	});
+	//logo图
+	const logoUrl = computed(() => {
+		if(props.isScrolled&&props.dataConfig.logoFixConfig.url){
+			return props.dataConfig.logoFixConfig.url
+		}else{
+			return props.dataConfig.logoConfig.url
+		}
+	});
+	//最外层盒子的样式
+	const boxStyle = computed(() => {
+		return {
+			borderRadius: props.dataConfig.bgStyle.val * 2 + 'rpx',
+			background: `linear-gradient(${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+			margin: 0 + ' ' + props.dataConfig.lrConfig.val * 2 + 'rpx' +
+				' ' + 0,
 			// #ifdef MP
-			const res = uni.getMenuButtonBoundingClientRect()
-			const statusHeight = res.top //胶囊距离顶部
-			const statusRight = res.right //胶囊右边界坐标
-			const jnHeight = res.height //胶囊高度
-			this.statusWidth= res.width
-			this.searchTop=statusHeight-this.statusBarHeight
-			this.searchHeight=jnHeight
-			this.searchBoxHeight = this.searchTop*2 + jnHeight
-			//搜索框宽度计算
-			uni.getSystemInfo({
-				success:res=>{
-					this.searchRight=res.windowWidth-statusRight-this.dataConfig.lrConfig.val
-				}
-			})
+			height:searchBoxHeight.value + 'px',
 			// #endif
-			
-			// #ifdef H5
-			this.marTop = 43
+		}
+	});
+	//搜索热词
+	const hotWords = computed(() => {
+		return props.dataConfig.hotWords.list
+	});
+	//内容圆角
+	const contentStyle = computed(() => {
+		return {
+			borderRadius: props.dataConfig.contentStyle.val ? props.dataConfig.contentStyle.val + 'px' : '0',
+			background: props.dataConfig.borderColor.color[0].item,
+			color: props.dataConfig.textColor.color[0].item,
+			textAlign: props.dataConfig.textPosition.list[props.dataConfig.textPosition.tabVal].style,
+			// #ifdef MP
+			height:searchHeight.value + 'px',
+			flex:!props.isSmallPage?1:'',
+			marginRight:!props.isSmallPage?(statusWidth.value + searchRight.value+'px'):'',
 			// #endif
-		},
-		methods: {
-			textChange(e) {
-				let {
-					current,
-					source
-				} = e.detail;
-				if (source === 'autoplay' || source === 'touch') {
-					this.searchVal = this.hotWords[e.detail.current]['val'];
-				}
-			},
+		}
+	});
+	//搜索提示语
+	const placeWords = computed(() => {
+		return props.dataConfig.placeWords.val;
+	});
+
+	function textChange(e) {
+		let {
+			current,
+			source
+		} = e.detail;
+		if (source === 'autoplay' || source === 'touch') {
+			searchVal.value = hotWords.value[e.detail.current]['val'];
 		}
 	}
+
+	onMounted(() => {
+		// 使用nextTick，确保页面更新结束后，再请求高度
+		// #ifdef MP || APP-PLUS
+		nextTick(() => {
+			setTimeout(() => {
+				// 获取小程序头部高度
+				let info = uni.createSelectorQuery().in(proxy).select(".serch-box");
+				info.boundingClientRect((data)=> {
+					marTop.value = props.isSmallPage ? data.height :data.height + statusBarHeight.value
+				}).exec()
+			}, 100)
+		})
+		// #endif
+
+		// #ifdef MP
+		const res = uni.getMenuButtonBoundingClientRect()
+		const statusHeight = res.top //胶囊距离顶部
+		const statusRight = res.right //胶囊右边界坐标
+		const jnHeight = res.height //胶囊高度
+		statusWidth.value = res.width
+		searchTop.value = statusHeight-statusBarHeight.value
+		searchHeight.value = jnHeight
+		searchBoxHeight.value = searchTop.value*2 + jnHeight
+		//搜索框宽度计算
+		uni.getSystemInfo({
+			success:res=>{
+				searchRight.value = res.windowWidth-statusRight-props.dataConfig.lrConfig.val
+			}
+		})
+		// #endif
+
+		// #ifdef H5
+		marTop.value = 43
+		// #endif
+	});
 </script>
 
 <style lang="scss" scoped>

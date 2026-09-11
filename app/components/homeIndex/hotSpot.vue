@@ -19,7 +19,7 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -29,89 +29,84 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
-	export default {
-		name: 'hotSpot',
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			},
+	import { ref, computed, getCurrentInstance } from 'vue';
+	const { proxy } = getCurrentInstance();
+
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
 		},
-		data() {
-			return {
-				picList: this.dataConfig.picStyle.picList,
-				style: this.dataConfig.tabConfig.tabVal,
-				prConfig: this.dataConfig.lrConfig.val,
-				igConfig: this.dataConfig.igConfig.val
-			};
-		},
-		computed: {
-			//最外层盒子的样式
-			boxStyle() {
-				return {
-					borderRadius: this.dataConfig.bgStyle.val * 2 + 'rpx',
-					backgroundImage: `linear-gradient(${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-					margin: this.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + this.dataConfig.lrConfig.val * 2 + 'rpx' +
-						' ' + 0,
-					padding: this.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + '0' + ' ' + this.dataConfig.downConfig.val *
-						2 + 'rpx'
-				}
-			},
-			contentStyle(){
-				return{
-					borderRadius: this.dataConfig.contentStyle.val * 2 + 'rpx',
-				}
-			},
-			//伸缩系数
-			spotIndex(){
-				return  (750-4*this.dataConfig.lrConfig.val)/456
-			},
-			// 两张图片 图片间距样式
-			twoImgStyle() {
-				return {
-					width: (750 - 2 * this.igConfig - 4 * this.prConfig) / 2 + 'rpx',
-					height: (750 - 2 * this.igConfig - 4 * this.prConfig) / 2 + 'rpx',
-				}
-			},
-			// 第一种 三张图片间距样式
-			thrOneImgStyle() {
-				return {
-					width: (750 - 4 * this.igConfig - 4 * this.prConfig) / 3 + 'rpx',
-					height: (750 - 4 * this.igConfig - 4 * this.prConfig) / 3 + 'rpx',
-				}
-			},
-			// 第一种四张图片布局
-			forOneImgStyle() {
-				return {
-					width: (750 - 6 * this.igConfig - 4 * this.prConfig) / 4 + 'rpx',
-				}
-			},
-			// 第二种四张图片布局
-			forTwoImgStyle() {
-				return {
-					width: (750 - 2 * this.igConfig - 4 * this.prConfig) / 2 + 'rpx',
-					height: (750 - 2 * this.igConfig - 4 * this.prConfig) / 2 + 'rpx',
-				}
-			},
-			imgBoxStyle() {
-				return {
-					display: this.igConfig ? 'flex' : '',
-					'justify-content': this.igConfig ? 'space-between' : ''
-				}
-			}
-		},
-		methods: {
-			//替换安全域名
-			setDomain: function(url) {
-				url = url ? url.toString() : '';
-				//本地调试打开,生产请注销
-				if (url.indexOf("https://") > -1) return url;
-				else return url.replace('http://', 'https://');
-			},
-			goDetail(item) {
-				this.$util.navigateTo(item.link);
-			}
+	});
+
+	const picList = ref(props.dataConfig.picStyle.picList);
+	const style = ref(props.dataConfig.tabConfig.tabVal);
+	const prConfig = ref(props.dataConfig.lrConfig.val);
+	const igConfig = ref(props.dataConfig.igConfig.val);
+
+	//最外层盒子的样式
+	const boxStyle = computed(() => {
+		return {
+			borderRadius: props.dataConfig.bgStyle.val * 2 + 'rpx',
+			backgroundImage: `linear-gradient(${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+			margin: props.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + props.dataConfig.lrConfig.val * 2 + 'rpx' +
+				' ' + 0,
+			padding: props.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + '0' + ' ' + props.dataConfig.downConfig.val *
+				2 + 'rpx'
 		}
+	});
+	const contentStyle = computed(() => {
+		return{
+			borderRadius: props.dataConfig.contentStyle.val * 2 + 'rpx',
+		}
+	});
+	//伸缩系数
+	const spotIndex = computed(() => {
+		return  (750-4*props.dataConfig.lrConfig.val)/456
+	});
+	// 两张图片 图片间距样式
+	const twoImgStyle = computed(() => {
+		return {
+			width: (750 - 2 * igConfig.value - 4 * prConfig.value) / 2 + 'rpx',
+			height: (750 - 2 * igConfig.value - 4 * prConfig.value) / 2 + 'rpx',
+		}
+	});
+	// 第一种 三张图片间距样式
+	const thrOneImgStyle = computed(() => {
+		return {
+			width: (750 - 4 * igConfig.value - 4 * prConfig.value) / 3 + 'rpx',
+			height: (750 - 4 * igConfig.value - 4 * prConfig.value) / 3 + 'rpx',
+		}
+	});
+	// 第一种四张图片布局
+	const forOneImgStyle = computed(() => {
+		return {
+			width: (750 - 6 * igConfig.value - 4 * prConfig.value) / 4 + 'rpx',
+		}
+	});
+	// 第二种四张图片布局
+	const forTwoImgStyle = computed(() => {
+		return {
+			width: (750 - 2 * igConfig.value - 4 * prConfig.value) / 2 + 'rpx',
+			height: (750 - 2 * igConfig.value - 4 * prConfig.value) / 2 + 'rpx',
+		}
+	});
+	const imgBoxStyle = computed(() => {
+		return {
+			display: igConfig.value ? 'flex' : '',
+			'justify-content': igConfig.value ? 'space-between' : ''
+		}
+	});
+
+	//替换安全域名
+	function setDomain(url) {
+		url = url ? url.toString() : '';
+		//本地调试打开,生产请注销
+		if (url.indexOf("https://") > -1) return url;
+		else return url.replace('http://', 'https://');
+	}
+	function goDetail(item) {
+		proxy.$util.navigateTo(item.link);
 	}
 </script>
 

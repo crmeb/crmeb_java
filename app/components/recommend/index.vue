@@ -10,7 +10,6 @@
 				@tap="goDetail(item)">
 				<view class='pictrue'>
 					<image :src='item.image'></image>
-					<view :style="{ backgroundImage: `url(${item.activityStyle})` }" class="border-picture"></view>
 					<span class="pictrue_log_big pictrue_log_class"
 						v-if="item.activityH5 && item.activityH5.type === '1'">秒杀</span>
 					<span class="pictrue_log_big pictrue_log_class"
@@ -31,76 +30,78 @@
 	</view>
 </template>
 
-<script>
-	import {
-		mapGetters
-	} from "vuex";
-	import {
-		goShopDetail
-	} from '@/libs/order.js'
-	import animationType from '@/utils/animationType.js'
-	import {
-		getProductHot
-	} from '@/api/store.js';
-	export default {
-		computed: mapGetters(['uid']),
-		props: {
-			hostProduct: {
-				type: Array,
-				default: function() {
-					return [];
-				}
-			}
-		},
-		mounted() {
-			this.params.page = 1;
-			this.goodScroll = false;
-			this.tempArr = [];
-			this.get_host_product();
-		},
-		data() {
-			return {
-				goodScroll: false,
-				params: { //精品推荐分页
-					page: 1,
-					limit: 10
-				},
-				loading: false,
-				tempArr: []
-			};
-		},
+<script setup>
+import { ref, reactive, onMounted } from 'vue';
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from 'pinia';
+import {
+	goShopDetail
+} from '@/libs/order.js'
+import animationType from '@/utils/animationType.js'
+import {
+	getProductHot
+} from '@/api/store.js';
 
-		methods: {
-			/**
-			 * 获取我的推荐
-			 */
-			get_host_product: function() {
-				if (this.goodScroll) return;
-				this.loading = true
-				getProductHot(
-					this.params.page,
-					this.params.limit
-				).then((res) => {
-					this.$set(this.params, 'page', this.params.page + 1);
-					this.goodScroll = this.params.page > res.data.totalPage;
-					this.tempArr = this.tempArr.concat(res.data.list || []);
-                    this.$emit('getRecommendLength', this.tempArr.length);
-					this.loading = false
-				}).catch(err => {
-					this.loading = false
-				});
-			},
-			goDetail(item) {
-				goShopDetail(item, this.uid).then(res => {
-					uni.navigateTo({
-						animationType: animationType.type,
-						animationDuration: animationType.duration,
-						url: `/pages/goods/goods_details/index?id=${item.id}`
-					})
-				})
-			}
+const appStore = useAppStore();
+const { uid } = storeToRefs(appStore);
+
+const props = defineProps({
+	hostProduct: {
+		type: Array,
+		default: function() {
+			return [];
 		}
 	}
+});
+
+const emit = defineEmits(['getRecommendLength']);
+
+const goodScroll = ref(false);
+const params = reactive({ //精品推荐分页
+	page: 1,
+	limit: 10
+});
+const loading = ref(false);
+const tempArr = ref([]);
+
+onMounted(() => {
+	params.page = 1;
+	goodScroll.value = false;
+	tempArr.value = [];
+	get_host_product();
+});
+
+/**
+ * 获取我的推荐
+ */
+function get_host_product() {
+	if (goodScroll.value) return;
+	loading.value = true
+	getProductHot(
+		params.page,
+		params.limit
+	).then((res) => {
+		params.page = params.page + 1;
+		goodScroll.value = params.page > res.data.totalPage;
+		tempArr.value = tempArr.value.concat(res.data.list || []);
+		emit('getRecommendLength', tempArr.value.length);
+		loading.value = false
+	}).catch(err => {
+		loading.value = false
+	});
+}
+
+function goDetail(item) {
+	goShopDetail(item, uid.value).then(res => {
+		uni.navigateTo({
+			animationType: animationType.type,
+			animationDuration: animationType.duration,
+			url: `/pages/goods/goods_details/index?id=${item.id}`
+		})
+	})
+}
+
+defineExpose({ get_host_product });
 </script>
 
 <style scoped lang="scss">

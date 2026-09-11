@@ -190,7 +190,16 @@ body,html {
 .start.star1{background-position: 0 -140rpx;}
 .start.star0{background-position: 0 -175rpx;}
 
-* {
+page,
+view,
+text,
+image,
+button,
+input,
+textarea,
+scroll-view,
+swiper,
+swiper-item {
 	box-sizing: border-box
 }
 
@@ -707,7 +716,16 @@ margin-bottom: 15rpx;
 	background-position: 0 -192rpx;
 }
 
-* {
+page,
+view,
+text,
+image,
+button,
+input,
+textarea,
+scroll-view,
+swiper,
+swiper-item {
 	box-sizing: border-box
 }
 

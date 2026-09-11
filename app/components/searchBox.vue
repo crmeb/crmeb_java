@@ -8,64 +8,59 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		props: {
-			//是否展示返回按钮
-			toBackShow: {
-				type: Boolean,
-				default: true
-			},
-			searchValue:{
-				type: String,
-				default: ''
-			}
+<script setup>
+	import { ref, computed, watch } from 'vue';
+
+	const props = defineProps({
+		//是否展示返回按钮
+		toBackShow: {
+			type: Boolean,
+			default: true
 		},
-		data(){
-			return{
-				searchVal:'',
-				searchTop:0,
-				searchRight:0,
-				searchHeight:0,
-				statusWidth:0,
-			}
-		},
-		watch:{
-			searchValue(val){
-				this.searchVal=val
-			}
-		},
-		computed:{
-			searchBoxStyle(){
-				return {
-					height:this.searchHeight + 'px',
-					flex:1,
-					marginRight:this.statusWidth + this.searchRight+'px',
-				}
-			}
-		},
-		created() {
-			const res = uni.getMenuButtonBoundingClientRect()
-			this.searchTop=uni.getMenuButtonBoundingClientRect().top
-			const statusRight = res.right //胶囊右边界坐标
-			const jnHeight = res.height //胶囊高度
-			this.statusWidth= res.width
-			this.searchHeight=jnHeight
-			//搜索框宽度计算
-			uni.getSystemInfo({
-				success:res=>{
-					this.searchRight=res.windowWidth-statusRight
-				}
-			})
-		},
-		methods:{
-			inputSearch(e){
-				this.$emit('searchChange',e)
-			},
-			toBack(){
-				uni.navigateBack()
-			}
+		searchValue:{
+			type: String,
+			default: ''
 		}
+	});
+
+	const emit = defineEmits(['searchChange']);
+
+	const searchVal = ref('');
+	const searchTop = ref(0);
+	const searchRight = ref(0);
+	const searchHeight = ref(0);
+	const statusWidth = ref(0);
+
+	watch(() => props.searchValue, (val) => {
+		searchVal.value = val
+	});
+
+	const searchBoxStyle = computed(() => {
+		return {
+			height: searchHeight.value + 'px',
+			flex: 1,
+			marginRight: statusWidth.value + searchRight.value + 'px',
+		}
+	});
+
+	const res = uni.getMenuButtonBoundingClientRect()
+	searchTop.value = uni.getMenuButtonBoundingClientRect().top
+	const statusRight = res.right //胶囊右边界坐标
+	const jnHeight = res.height //胶囊高度
+	statusWidth.value = res.width
+	searchHeight.value = jnHeight
+	//搜索框宽度计算
+	uni.getSystemInfo({
+		success: r => {
+			searchRight.value = r.windowWidth - statusRight
+		}
+	})
+
+	function inputSearch(e){
+		emit('searchChange', e)
+	}
+	function toBack(){
+		uni.navigateBack()
 	}
 </script>
 

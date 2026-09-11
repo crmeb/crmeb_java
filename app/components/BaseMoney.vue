@@ -19,86 +19,82 @@
   </view>
 </template>
 
-<script>
-export default {
-  name: 'BaseMoney',
-  props: {
-    digits: {
-      type: Number,
-      default: 2,
-    },
-    money: {
-      type: [String, Number],
-      default: '',
-    },
-    line: {
-      type: Boolean,
-      default: false,
-    },
-    weight: {
-      type: Boolean,
-      default: false,
-    },
-    symbol: {
-      type: Boolean,
-      default: true,
-    },
-    color: {
-      type: String,
-      default: 'var(--view-theme)',
-    },
-    textColor: {
-      type: String,
-      default: '#999',
-    },
-    symbolSize: {
-      type: String,
-      default: '20',
-    },
-    integerSize: {
-      type: String,
-      default: '26',
-    },
-    decimalSize: {
-      type: String,
-      default: '24',
-    },
-    preFix: {
-      type: String,
-      default: '',
-    },
-    preFixSize: {
-      type: String,
-      default: '24',
-    },
-    SemiBold: {
-      type: Boolean,
-      default: true,
-    },
-    isCoupon: {
-      type: Boolean,
-      default: false,
-    },
+<script setup>
+import { ref, watch } from 'vue';
+
+const props = defineProps({
+  digits: {
+    type: Number,
+    default: 2,
   },
-  data() {
-    return {
-      integer: '0',
-      decimal: '00',
-    };
+  money: {
+    type: [String, Number],
+    default: '',
   },
-  watch: {
-    money: {
-      handler(newValue) {
-        const number = Number(newValue);
-        let value = Number.isFinite(number) ? number : 0;
-        value = value.toFixed(this.digits).split('.');
-        this.integer = value[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-        this.decimal = value[1] || '00';
-      },
-      immediate: true,
-    },
+  line: {
+    type: Boolean,
+    default: false,
   },
-};
+  weight: {
+    type: Boolean,
+    default: false,
+  },
+  symbol: {
+    type: Boolean,
+    default: true,
+  },
+  color: {
+    type: String,
+    default: 'var(--view-theme)',
+  },
+  textColor: {
+    type: String,
+    default: '#999',
+  },
+  symbolSize: {
+    type: String,
+    default: '20',
+  },
+  integerSize: {
+    type: String,
+    default: '26',
+  },
+  decimalSize: {
+    type: String,
+    default: '24',
+  },
+  preFix: {
+    type: String,
+    default: '',
+  },
+  preFixSize: {
+    type: String,
+    default: '24',
+  },
+  SemiBold: {
+    type: Boolean,
+    default: true,
+  },
+  isCoupon: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const integer = ref('0');
+const decimal = ref('00');
+
+watch(
+  () => props.money,
+  (newValue) => {
+    const number = Number(newValue);
+    let value = Number.isFinite(number) ? number : 0;
+    value = value.toFixed(props.digits).split('.');
+    integer.value = value[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    decimal.value = value[1] || '00';
+  },
+  { immediate: true }
+);
 </script>
 
 <style lang="scss" scoped>

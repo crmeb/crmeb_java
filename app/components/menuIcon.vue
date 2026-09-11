@@ -36,96 +36,95 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		name: "menuIcon",
-		data() {
-			return {
-				Active: false,
-				returnShow: true, //判断顶部返回是否出现
-				homeTop: 20,
-				text_opacity: 0,
-				menuButton:{},
-				iconList: [{
-						name: this.$t(`首页`),
-						iconName: "icon-shouye8",
-						path: '/pages/index/index',
-						jumpType: 1
-					},
-					{
-						name: this.$t(`购物车`),
-						iconName: "icon-gouwuche7",
-						path: '/pages/order_addcart/order_addcart',
-						jumpType: 1
-					},
-					{
-						name: this.$t(`搜索`),
-						iconName: "icon-sousuo6",
-						path: '/pages/goods/goods_search/index',
-						jumpType: 0
-					},
-					{
-						name: this.$t(`我的收藏`),
-						iconName: "icon-shoucang3",
-						path: '/pages/users/user_goods_collection/index',
-						jumpType: 0
-					},
-					{
-						name: this.$t(`个人中心`),
-						iconName: "icon-yonghu1",
-						path: '/pages/user/index',
-						jumpType: 1
-					}
-				]
-			};
+<script setup>
+	import { ref, watch, nextTick, onMounted, getCurrentInstance } from 'vue';
+
+	const { proxy } = getCurrentInstance();
+
+	const props = defineProps({
+		showMenuIcon: {
+			type: Boolean,
+			default: false
 		},
-		props: {
-			showMenuIcon: {
-				type: Boolean,
-				default: false
-			},
-			opacity: {
-				type: Number,
-				default: 1
-			}
-		},
-		watch: {
-			showMenuIcon(e) {
-				this.Active = e
-			},
-			opacity(e) {
-				this.text_opacity = e
-			}
-		},
-		mounted() {
-			var pages = getCurrentPages();
-			this.returnShow = pages.length === 1 ? false : true;
-			this.$nextTick(() => {
-				// #ifdef MP
-				this.menuButton = uni.getMenuButtonBoundingClientRect();
-				const query = uni.createSelectorQuery().in(this);
-				query
-					.select('#home')
-					.boundingClientRect(data => {
-						this.homeTop = this.menuButton.top * 2 + this.menuButton.height - data.height + 2;
-					})
-					.exec();
-				// #endif
-			});
-		},
-		methods: {
-			open() {
-				this.Active = !this.Active
-				if (this.Active) this.$emit('open', true)
-			},
-			// 后退
-			returns() {
-				uni.navigateBack();
-			},
-			jumpUrl(url, type) {
-				(type === 1 ? uni.switchTab : uni.navigateTo)({url})
-			},
+		opacity: {
+			type: Number,
+			default: 1
 		}
+	});
+
+	const emit = defineEmits(['open']);
+
+	const Active = ref(false);
+	const returnShow = ref(true); //判断顶部返回是否出现
+	const homeTop = ref(20);
+	const text_opacity = ref(0);
+	const menuButton = ref({});
+	const iconList = ref([{
+			name: proxy.$t(`首页`),
+			iconName: "icon-shouye8",
+			path: '/pages/index/index',
+			jumpType: 1
+		},
+		{
+			name: proxy.$t(`购物车`),
+			iconName: "icon-gouwuche7",
+			path: '/pages/order_addcart/order_addcart',
+			jumpType: 1
+		},
+		{
+			name: proxy.$t(`搜索`),
+			iconName: "icon-sousuo6",
+			path: '/pages/goods/goods_search/index',
+			jumpType: 0
+		},
+		{
+			name: proxy.$t(`我的收藏`),
+			iconName: "icon-shoucang3",
+			path: '/pages/users/user_goods_collection/index',
+			jumpType: 0
+		},
+		{
+			name: proxy.$t(`个人中心`),
+			iconName: "icon-yonghu1",
+			path: '/pages/user/index',
+			jumpType: 1
+		}
+	]);
+
+	watch(() => props.showMenuIcon, (e) => {
+		Active.value = e
+	});
+	watch(() => props.opacity, (e) => {
+		text_opacity.value = e
+	});
+
+	onMounted(() => {
+		var pages = getCurrentPages();
+		returnShow.value = pages.length === 1 ? false : true;
+		nextTick(() => {
+			// #ifdef MP
+			menuButton.value = uni.getMenuButtonBoundingClientRect();
+			const query = uni.createSelectorQuery().in(proxy);
+			query
+				.select('#home')
+				.boundingClientRect(data => {
+					homeTop.value = menuButton.value.top * 2 + menuButton.value.height - data.height + 2;
+				})
+				.exec();
+			// #endif
+		});
+	});
+
+	function open() {
+		Active.value = !Active.value
+		if (Active.value) emit('open', true)
+	}
+	// 后退
+	function returns() {
+		uni.navigateBack();
+	}
+	function jumpUrl(url, type) {
+		(type === 1 ? uni.switchTab : uni.navigateTo)({url})
 	}
 </script>
 

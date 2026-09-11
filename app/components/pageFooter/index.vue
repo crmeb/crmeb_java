@@ -42,10 +42,12 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch } from 'vue';
 import { getThemeInfo } from "@/api/api.js";
 import { getCartCounts } from "@/api/order.js";
-import { mapGetters } from "vuex";
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
 
 function parseJson(value, fallback) {
   if (!value) return fallback;
@@ -83,210 +85,197 @@ function looksLikeComponentCollection(value) {
   return list.some((item) => item && typeof item === "object" && (item.name || item.defaultName));
 }
 
-export default {
-  name: "pageFooter",
-  props: {
-    isTabBar: {
-      type: Boolean,
-      default: true,
-    },
-    configData: {
-      type: Object,
-      default: () => null,
-    },
+const props = defineProps({
+  isTabBar: {
+    type: Boolean,
+    default: true,
   },
-  computed: {
-    ...mapGetters(["isLogin"]),
-    menuList() {
-      return Array.isArray(this.newData.menuList) ? this.newData.menuList : [];
-    },
-    navStyle() {
-      return this.newData.navStyleConfig ? this.newData.navStyleConfig.tabVal : 0;
-    },
-    txtActiveColor() {
-      let styleObject = {};
-      if (this.newData.toneConfig && this.newData.toneConfig.tabVal) {
-        styleObject.color = this.getColor(this.newData.activeTxtColor);
-      }
-      return styleObject;
-    },
-    txtColor() {
-      let styleObject = {};
-      if (this.newData.toneConfig && this.newData.toneConfig.tabVal) {
-        styleObject.color = this.getColor(this.newData.txtColor);
-      }
-      return styleObject;
-    },
-    bgColor() {
-      let styleObject = {};
-      if (!this.newData.name) return styleObject;
-      if (!this.newData.navConfig || !this.newData.navConfig.tabVal) {
-        styleObject.background = this.getColor(this.newData.bgColor);
-      }
-      return styleObject;
-    },
-    componentStyle() {
-      let styleObject = {};
-      if (!this.newData.name) return styleObject;
-      if (this.newData.navConfig && this.newData.navConfig.tabVal) {
-        styleObject.right = `${this.getVal(this.newData.prConfig) * 2}rpx`;
-        styleObject.bottom = `${this.getVal(this.newData.mbConfig) * 2}rpx`;
-        styleObject.left = `${this.getVal(this.newData.prConfig) * 2}rpx`;
-        styleObject.paddingTop = `${this.getVal(this.newData.topConfig) * 2}rpx`;
-        styleObject.paddingBottom = `${this.getVal(this.newData.bottomConfig) * 2}rpx`;
-        styleObject.borderRadius = this.getRadius(this.newData.fillet);
-        styleObject.background = this.getColor(this.newData.bgColor2);
-      } else {
-        styleObject.paddingTop = `${this.getVal(this.newData.topConfig) * 2}rpx`;
-        styleObject.paddingBottom = `${this.getVal(this.newData.bottomConfig) * 2}rpx`;
-        styleObject.background = this.getColor(this.newData.bgColor);
-      }
-      return styleObject;
-    },
+  configData: {
+    type: Object,
+    default: () => null,
   },
-  watch: {
-    configData: {
-      handler(newVal) {
-        if (newVal && Object.keys(newVal).length) {
-          this.setNavigationInfo(newVal);
-        }
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
-  data() {
+});
+
+const emit = defineEmits(['newDataStatus']);
+
+const appStore = useAppStore();
+const { isLogin } = storeToRefs(appStore);
+
+const newData = ref({});
+const activeRouter = ref("");
+const showTabBar = ref(false);
+const footerHeight = ref(0);
+const cartNum = ref(0);
+
+const menuList = computed(() => Array.isArray(newData.value.menuList) ? newData.value.menuList : []);
+const navStyle = computed(() => newData.value.navStyleConfig ? newData.value.navStyleConfig.tabVal : 0);
+const txtActiveColor = computed(() => {
+  let styleObject = {};
+  if (newData.value.toneConfig && newData.value.toneConfig.tabVal) {
+    styleObject.color = getColor(newData.value.activeTxtColor);
+  }
+  return styleObject;
+});
+const txtColor = computed(() => {
+  let styleObject = {};
+  if (newData.value.toneConfig && newData.value.toneConfig.tabVal) {
+    styleObject.color = getColor(newData.value.txtColor);
+  }
+  return styleObject;
+});
+const bgColor = computed(() => {
+  let styleObject = {};
+  if (!newData.value.name) return styleObject;
+  if (!newData.value.navConfig || !newData.value.navConfig.tabVal) {
+    styleObject.background = getColor(newData.value.bgColor);
+  }
+  return styleObject;
+});
+const componentStyle = computed(() => {
+  let styleObject = {};
+  if (!newData.value.name) return styleObject;
+  if (newData.value.navConfig && newData.value.navConfig.tabVal) {
+    styleObject.right = `${getVal(newData.value.prConfig) * 2}rpx`;
+    styleObject.bottom = `${getVal(newData.value.mbConfig) * 2}rpx`;
+    styleObject.left = `${getVal(newData.value.prConfig) * 2}rpx`;
+    styleObject.paddingTop = `${getVal(newData.value.topConfig) * 2}rpx`;
+    styleObject.paddingBottom = `${getVal(newData.value.bottomConfig) * 2}rpx`;
+    styleObject.borderRadius = getRadius(newData.value.fillet);
+    styleObject.background = getColor(newData.value.bgColor2);
+  } else {
+    styleObject.paddingTop = `${getVal(newData.value.topConfig) * 2}rpx`;
+    styleObject.paddingBottom = `${getVal(newData.value.bottomConfig) * 2}rpx`;
+    styleObject.background = getColor(newData.value.bgColor);
+  }
+  return styleObject;
+});
+
+watch(() => props.configData, (newVal) => {
+  if (newVal && Object.keys(newVal).length) {
+    setNavigationInfo(newVal);
+  }
+}, { deep: true, immediate: true });
+
+// created
+let routes = getCurrentPages();
+let curRoute = routes[routes.length - 1].route;
+activeRouter.value = "/" + curRoute;
+
+// mounted
+if (!props.configData || !Object.keys(props.configData).length) {
+  getThemeNavigation();
+}
+if (isLogin.value) {
+  getCartNum();
+}
+
+function getColor(config, fallback = "") {
+  return config && config.color && config.color[0] ? config.color[0].item : fallback;
+}
+function getVal(config, fallback = 0) {
+  return config && config.val !== undefined ? Number(config.val) || 0 : fallback;
+}
+function getRadius(config) {
+  if (!config) return "0";
+  if (config.type && Array.isArray(config.valList)) {
+    return `${getVal(config.valList[0]) * 2}rpx ${getVal(config.valList[1]) * 2}rpx ${getVal(config.valList[3]) * 2}rpx ${getVal(config.valList[2]) * 2}rpx`;
+  }
+  return `${getVal(config) * 2}rpx`;
+}
+function getMenuImage(item, active) {
+  if (Array.isArray(item.imgList)) {
+    return item.imgList[active ? 0 : 1] || "";
+  }
+  return active ? item.checked || "" : item.unchecked || "";
+}
+function getLink(item) {
+  return item && item.link ? item.link : "";
+}
+function isActive(item) {
+  const link = getLink(item);
+  return link && link.split("?")[0] === activeRouter.value;
+}
+function isCartLink(item) {
+  return getLink(item).split("?")[0] === "/pages/order_addcart/order_addcart";
+}
+function setNavigationInfo(data) {
+  if (!data || !data.name) return;
+  newData.value = data;
+  showTabBar.value = data.effectConfig ? !!data.effectConfig.tabVal : true;
+  let pdHeight = getVal(data.topConfig) + getVal(data.bottomConfig);
+  emit(
+    "newDataStatus",
+    showTabBar.value,
+    pdHeight,
+    getVal(data.mbConfig),
+    data.navConfig ? data.navConfig.tabVal : 0
+  );
+  appStore.BottomNavigationIsCustom(showTabBar.value);
+  if (props.isTabBar) {
+    if (showTabBar.value) {
+      uni.hideTabBar();
+    } else {
+      uni.showTabBar();
+    }
+  }
+}
+function normalizeDiyData(data) {
+  let normalized = parseJson(data, data || {});
+  if (!normalized || typeof normalized !== "object") return {};
+  if (normalized.value === undefined && looksLikeComponentCollection(normalized)) {
     return {
-      newData: {},
-      activeRouter: "",
-      showTabBar: false,
-      footerHeight: 0,
-      cartNum: 0,
+      value: normalized,
     };
-  },
-  created() {
-    let routes = getCurrentPages();
-    let curRoute = routes[routes.length - 1].route;
-    this.activeRouter = "/" + curRoute;
-  },
-  mounted() {
-    if (!this.configData || !Object.keys(this.configData).length) {
-      this.getThemeNavigation();
-    }
-    if (this.isLogin) {
-      this.getCartNum();
-    }
-  },
-  methods: {
-    getColor(config, fallback = "") {
-      return config && config.color && config.color[0] ? config.color[0].item : fallback;
-    },
-    getVal(config, fallback = 0) {
-      return config && config.val !== undefined ? Number(config.val) || 0 : fallback;
-    },
-    getRadius(config) {
-      if (!config) return "0";
-      if (config.type && Array.isArray(config.valList)) {
-        return `${this.getVal(config.valList[0]) * 2}rpx ${this.getVal(config.valList[1]) * 2}rpx ${this.getVal(config.valList[3]) * 2}rpx ${this.getVal(config.valList[2]) * 2}rpx`;
+  }
+  let value = parseJson(normalized.value, normalized.value || {});
+  if (value && typeof value === "object" && value.value !== undefined) {
+    value = parseJson(value.value, value.value || {});
+  }
+  return {
+    ...normalized,
+    value,
+  };
+}
+function findFooterConfig(data) {
+  const diyData = normalizeDiyData(data);
+  const list = toComponentList(diyData.value);
+  return list.find((item) => item && (item.name === "pageFoot" || item.defaultName === "pageFoot"));
+}
+function getThemeNavigation() {
+  let data = {};
+  let previewThemeId = uni.getStorageSync("previewThemeId");
+  if (previewThemeId) data.theme_id = previewThemeId;
+  getThemeInfo("home", data)
+    .then((res) => {
+      const footerConfig = findFooterConfig(res.data);
+      if (footerConfig) {
+        setNavigationInfo(footerConfig);
       }
-      return `${this.getVal(config) * 2}rpx`;
-    },
-    getMenuImage(item, active) {
-      if (Array.isArray(item.imgList)) {
-        return item.imgList[active ? 0 : 1] || "";
-      }
-      return active ? item.checked || "" : item.unchecked || "";
-    },
-    getLink(item) {
-      return item && item.link ? item.link : "";
-    },
-    isActive(item) {
-      const link = this.getLink(item);
-      return link && link.split("?")[0] === this.activeRouter;
-    },
-    isCartLink(item) {
-      return this.getLink(item).split("?")[0] === "/pages/order_addcart/order_addcart";
-    },
-    setNavigationInfo(data) {
-      if (!data || !data.name) return;
-      this.newData = data;
-      this.showTabBar = data.effectConfig ? !!data.effectConfig.tabVal : true;
-      let pdHeight = this.getVal(data.topConfig) + this.getVal(data.bottomConfig);
-      this.$emit(
-        "newDataStatus",
-        this.showTabBar,
-        pdHeight,
-        this.getVal(data.mbConfig),
-        data.navConfig ? data.navConfig.tabVal : 0
-      );
-      this.$store.commit("BottomNavigationIsCustom", this.showTabBar);
-      if (this.isTabBar) {
-        if (this.showTabBar) {
-          uni.hideTabBar();
-        } else {
-          uni.showTabBar();
-        }
-      }
-    },
-    normalizeDiyData(data) {
-      let normalized = parseJson(data, data || {});
-      if (!normalized || typeof normalized !== "object") return {};
-      if (normalized.value === undefined && looksLikeComponentCollection(normalized)) {
-        return {
-          value: normalized,
-        };
-      }
-      let value = parseJson(normalized.value, normalized.value || {});
-      if (value && typeof value === "object" && value.value !== undefined) {
-        value = parseJson(value.value, value.value || {});
-      }
-      return {
-        ...normalized,
-        value,
-      };
-    },
-    findFooterConfig(data) {
-      const diyData = this.normalizeDiyData(data);
-      const list = toComponentList(diyData.value);
-      return list.find((item) => item && (item.name === "pageFoot" || item.defaultName === "pageFoot"));
-    },
-    getThemeNavigation() {
-      let data = {};
-      let previewThemeId = uni.getStorageSync("previewThemeId");
-      if (previewThemeId) data.theme_id = previewThemeId;
-      getThemeInfo("home", data)
-        .then((res) => {
-          const footerConfig = this.findFooterConfig(res.data);
-          if (footerConfig) {
-            this.setNavigationInfo(footerConfig);
-          }
-        })
-        .catch(() => {});
-    },
-    getCartNum() {
-      getCartCounts(true, "total")
-        .then((res) => {
-          this.cartNum = Number(res.data && res.data.count) || 0;
-        })
-        .catch(() => {});
-    },
-    goRouter(item) {
-      const link = this.getLink(item);
-      if (!link) return;
-      var pages = getCurrentPages();
-      var page = pages[pages.length - 1].$page.fullPath;
-      if (link === page) return;
-      uni.switchTab({
+    })
+    .catch(() => {});
+}
+function getCartNum() {
+  getCartCounts(true, "total")
+    .then((res) => {
+      cartNum.value = Number(res.data && res.data.count) || 0;
+    })
+    .catch(() => {});
+}
+function goRouter(item) {
+  const link = getLink(item);
+  if (!link) return;
+  var pages = getCurrentPages();
+  var page = pages[pages.length - 1].$page.fullPath;
+  if (link === page) return;
+  uni.switchTab({
+    url: link,
+    fail() {
+      uni.redirectTo({
         url: link,
-        fail() {
-          uni.redirectTo({
-            url: link,
-          });
-        },
       });
     },
-  },
-};
+  });
+}
 </script>
 
 <style scoped lang="scss">

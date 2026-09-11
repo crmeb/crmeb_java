@@ -32,23 +32,21 @@
 	</view>
 </template>
 
-<script>
-	// +----------------------------------------------------------------------
-	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
-	// +----------------------------------------------------------------------
-	// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
-	// +----------------------------------------------------------------------
-	// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
-	// +----------------------------------------------------------------------
-	// | Author: CRMEB Team <admin@crmeb.com>
-	// +----------------------------------------------------------------------
-	import uniNoticeBar from '@/components/uniNoticeBar/uni-notice-bar.vue';
-	export default {
-		components: {
-			uniNoticeBar
-		},
-		name: 'news',
-		props: {
+	<script setup>
+		// +----------------------------------------------------------------------
+		// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+		// +----------------------------------------------------------------------
+		// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+		// +----------------------------------------------------------------------
+		// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+		// +----------------------------------------------------------------------
+		// | Author: CRMEB Team <admin@crmeb.com>
+		// +----------------------------------------------------------------------
+		import { ref, computed } from 'vue';
+		import uniNoticeBar from '@/components/uniNoticeBar/uni-notice-bar.vue';
+		import util from '@/utils/util.js';
+
+		const props = defineProps({
 			dataConfig: {
 				type: Object,
 				default: () => {}
@@ -57,68 +55,62 @@
 				type: String | Number,
 				default: 0
 			}
-		},
-		data() {
+		});
+
+		const indicatorDots = ref(false);
+		const autoplay = ref(true);
+		const duration = ref(500);
+
+		//文本列表
+		const itemNew = computed(() => {
+			return props.dataConfig.listConfig.list
+		});
+		//图标设置
+		const logoConfig = computed(() => {
+			return props.dataConfig.logoConfig.url
+		});
+		//文本滚动方向
+		const direction = computed(() => {
+			return props.dataConfig.directionConfig.tabVal
+		});
+		//最外层盒子的样式
+		const boxStyle = computed(() => {
 			return {
-				indicatorDots: false,
-				autoplay: true,
-				duration: 500,
-			};
-		},
-		computed: {
-			//文本列表
-			itemNew() {
-				return this.dataConfig.listConfig.list
-			},
-			//图标设置
-			logoConfig() {
-				return this.dataConfig.logoConfig.url
-			},
-			//文本滚动方向
-			direction() {
-				return this.dataConfig.directionConfig.tabVal
-			},
-			//最外层盒子的样式
-			boxStyle() {
-				return {
-					borderRadius: this.dataConfig.bgStyle.val * 2 + 'rpx',
-					background: `linear-gradient(${this.dataConfig.bgColor.color[0].item}, ${this.dataConfig.bgColor.color[1].item})`,
-					margin: this.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + this.dataConfig.lrConfig.val * 2 + 'rpx' +
-						' ' + 0,
-					padding: this.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + '20rpx' + ' ' + this.dataConfig.downConfig
-						.val * 2 + 'rpx',
-					color: this.dataConfig.textColor.color[0].item
-				}
-			},
-			//文字位置
-			txtStyle() {
-				let txtStyle = this.dataConfig.textPosition.tabVal;
-				if (txtStyle == 0) {
-					return {
-						'text-align': 'left'
-					}
-				} else if (txtStyle == 1) {
-					return {
-						'text-align': 'center'
-					}
-				} else {
-					return {
-						'text-align': 'right'
-					}
-				}
-			},
-			//文字颜色
-			textColor() {
-				return this.dataConfig.textColor.color[0].item
-			},
-		},
-		methods: {
-			moreTab(url) {
-				this.$util.navigateTo(url);
+				borderRadius: props.dataConfig.bgStyle.val * 2 + 'rpx',
+				background: `linear-gradient(${props.dataConfig.bgColor.color[0].item}, ${props.dataConfig.bgColor.color[1].item})`,
+				margin: props.dataConfig.mbConfig.val * 2 + 'rpx' + ' ' + props.dataConfig.lrConfig.val * 2 + 'rpx' +
+					' ' + 0,
+				padding: props.dataConfig.upConfig.val * 2 + 'rpx' + ' ' + '20rpx' + ' ' + props.dataConfig.downConfig
+					.val * 2 + 'rpx',
+				color: props.dataConfig.textColor.color[0].item
 			}
+		});
+		//文字位置
+		const txtStyle = computed(() => {
+			let txtStyle = props.dataConfig.textPosition.tabVal;
+			if (txtStyle == 0) {
+				return {
+					'text-align': 'left'
+				}
+			} else if (txtStyle == 1) {
+				return {
+					'text-align': 'center'
+				}
+			} else {
+				return {
+					'text-align': 'right'
+				}
+			}
+		});
+		//文字颜色
+		const textColor = computed(() => {
+			return props.dataConfig.textColor.color[0].item
+		});
+
+		function moreTab(url) {
+			util.navigateTo(url);
 		}
-	}
-</script>
+	</script>
 
 <style lang="scss" scoped>
 	.news {

@@ -3,7 +3,6 @@
 		<view class="item acea-row row-between-wrapper" v-for="(item,index) in tempArr" :key='index' @click="goDetail(item)">
 			<view class="pic">
 				<image :src="item.image" mode=""></image>
-				<view :style="{ backgroundImage: `url(${item.activityStyle})` }" class="border-picture"></view>
 			</view>
 			<view class="pictxt">
 				<view class="text line2">{{item.storeName}}</view>
@@ -27,48 +26,39 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		name: 'd_goodList',
-		props: {
-			dataConfig: {
-				type: Object,
-				default: () => {}
-			},
-			tempArr:{
-				type: Array,
-				default:[]
-			},
-			isLogin:{
-				type: Boolean,
-				default:false
-			}
+<script setup>
+	const props = defineProps({
+		dataConfig: {
+			type: Object,
+			default: () => {}
 		},
-		data() {
-			return {
-				
-			};
+		tempArr:{
+			type: Array,
+			default:[]
 		},
-		created() {},
-		mounted() {},
-		methods: {
-			goDetail(item){
-				this.$emit('detail',item);
-			},
-			goCartDuo(item){
-				this.$emit('gocartduo',item);
-			},
-			goCartDan(item,index){
-				this.$emit('gocartdan',item,index);
-			},
-			CartNumDes(index,item){
-				this.$emit('ChangeCartNumDan', false,index,item);
-			},
-			CartNumAdd(index,item){
-				this.$emit('ChangeCartNumDan', true,index,item);
-			}
+		isLogin:{
+			type: Boolean,
+			default:false
 		}
-	};
+	})
+
+	const emit = defineEmits(['detail','gocartduo','gocartdan','ChangeCartNumDan'])
+
+	function goDetail(item){
+		emit('detail',item);
+	}
+	function goCartDuo(item){
+		emit('gocartduo',item);
+	}
+	function goCartDan(item,index){
+		emit('gocartdan',item,index);
+	}
+	function CartNumDes(index,item){
+		emit('ChangeCartNumDan', false,index,item);
+	}
+	function CartNumAdd(index,item){
+		emit('ChangeCartNumDan', true,index,item);
+	}
 </script>
 
 <style lang="scss">

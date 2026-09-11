@@ -4,7 +4,6 @@
 			<view @click="goDetail(item)" class='item acea-row row-between-wrapper' hover-class="none">
 				<view class='pictrue'>
 					<image :src='item.image'></image>
-					<view :style="{ backgroundImage: `url(${item.activityStyle})` }" class="border-picture"></view>
 					<span class="pictrue_log pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '1'">秒杀</span>
 					<span class="pictrue_log pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '2'">砍价</span>
 					<span class="pictrue_log pictrue_log_class" v-if="item.activityH5 && item.activityH5.type === '3'">拼团</span>
@@ -13,59 +12,49 @@
 					<view class='text'>
 						<view class='line1'>{{item.storeName}}</view>
 						<view class='money'>￥<text class='num'>{{item.price}}</text></view>
-						<view class='vip-money acea-row row-middle' v-if="item.vip_price && item.vip_price > 0">￥{{item.vip_price || 0}}
-							<image :src="urlDomain+'crmebimage/perset/staticImg/vip.png'"></image>
-							<text class='num' v-if="status == 0">已售{{Number(item.sales) || 0}}{{item.unitName}}</text>
-							<text class="num line_thr" v-if="status == 1">{{item.otPrice}}</text>
-						</view>
-						<view class='vip-money acea-row row-middle' v-else>
+						<view class='sales-money acea-row row-middle'>
 							<text class='num' v-if="status == 0">已售{{Number(item.sales)|| 0}}{{item.unitName}}</text>
 							<text class="num line_thr" v-if="status == 1">￥{{item.otPrice}}</text>
 						</view>
 					</view>
 				</view>
-				<view class='iconfont icon-gengduo3'></view>
+				<!-- <view class='iconfont icon-gengduo3'></view> -->
 			</view>
 		</block>
 	</view>
 </template>
 
-<script>
-	import {mapGetters} from "vuex";
-	import { goShopDetail } from '@/libs/order.js'
-	import animationType from '@/utils/animationType.js'
-	export default {
-		computed: mapGetters(['uid']),
-		props: {
-			status: {
-				type: Number,
-				default: 0,
-			},
-			bastList: {
-				type: Array,
-				default: function() {
-					return [];
-				}
-			}
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-			};
-		},
-		methods: {
-			goDetail(item){
-				goShopDetail(item,this.uid).then(res=>{
-					uni.navigateTo({
-						animationType: 'zoom-fade-out',
-						animationDuration: 200,
-						url:`/pages/goods/goods_details/index?id=${item.id}`
-					})
-				})
-			}
-			
+<script setup>
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from 'pinia';
+import { goShopDetail } from '@/libs/order.js'
+import animationType from '@/utils/animationType.js'
+
+const appStore = useAppStore();
+const { uid } = storeToRefs(appStore);
+
+const props = defineProps({
+	status: {
+		type: Number,
+		default: 0,
+	},
+	bastList: {
+		type: Array,
+		default: function() {
+			return [];
 		}
 	}
+});
+
+function goDetail(item) {
+	goShopDetail(item, uid.value).then(res => {
+		uni.navigateTo({
+			animationType: 'zoom-fade-out',
+			animationDuration: 200,
+			url: `/pages/goods/goods_details/index?id=${item.id}`
+		})
+	})
+}
 </script>
 
 <style scoped lang='scss'>
@@ -119,20 +108,14 @@
 		font-size: 34rpx;
 	}
 
-	.goodList .item .text .vip-money {
+	.goodList .item .text .sales-money {
 		font-size: 24rpx;
 		color: #282828;
 		font-weight: bold;
 		margin-top: 15rpx;
 	}
 
-	.goodList .item .text .vip-money image {
-		width: 46rpx;
-		height: 21rpx;
-		margin: 0 22rpx 0 5rpx;
-	}
-
-	.goodList .item .text .vip-money .num {
+	.goodList .item .text .sales-money .num {
 		font-size: 22rpx;
 		color: #aaa;
 		font-weight: normal;

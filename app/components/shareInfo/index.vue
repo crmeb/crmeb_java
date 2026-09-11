@@ -1,33 +1,29 @@
 <template>
 	<view v-if="shareInfoStatus" class="poster-first">
 	    <view class="mask-share">
-			<image :src="urlDomain+'crmebimage/perset/staticImg/share-info.png'" @click="shareInfoClose" @touchmove.stop.prevent="false"></image>
+			<image :src="urlDomain+'/crmebimage/perset/staticImg/share-info.png'" @click="shareInfoClose" @touchmove.stop.prevent="false"></image>
 	    </view>
 	  </view>
 </template>
 
-<script>
-	
-export default {
-	props: {
-		 shareInfoStatus: {
-		      type: Boolean,
-		      default:false,
-		    }
-	},
-  data: function() {
-    return {
-		urlDomain: this.$Cache.get("imgHost"),
-	};
-  },
-  mounted: function() {},
-  methods: {
-    shareInfoClose: function() {
-      this.$emit("setShareInfoStatus");
-    }
-  }
-};
+<script setup>
+import { ref } from 'vue'
+import Cache from '@/utils/cache.js'
 
+const props = defineProps({
+	shareInfoStatus: {
+		type: Boolean,
+		default: false,
+	}
+})
+
+const emit = defineEmits(['setShareInfoStatus'])
+
+const urlDomain = ref(Cache.get("imgHost"))
+
+function shareInfoClose() {
+	emit("setShareInfoStatus");
+}
 </script>
 
 <style scoped lang="scss">

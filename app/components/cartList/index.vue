@@ -16,7 +16,7 @@
 						<view v-if="item.attrStatus">
 							<view class="info" >{{item.suk}}</view>
 							<view class="bottom acea-row row-between-wrapper">
-								<view class="money">￥<text class="num">{{item.vipPrice ? item.vipPrice :item.price}}</text></view>
+								<view class="money">￥<text class="num">{{item.price}}</text></view>
 								<view class="cartNum acea-row row-middle">
 									<view class="reduce iconfont icon-jianhao1" @click="leaveCart(index)"></view>
 									<view class="num">{{item.cartNum}}</view>
@@ -34,36 +34,30 @@
 	</view>
 </template>
 
-<script>
-	export default {
-		props:{
-			cartData: {
-				type: Object,
-				default: () => {}
-			}
-		},
-		data() {
-			return {};
-		},
-		mounted(){
-		},
-		methods: {
-			closeList(){
-				this.$emit('closeList', false);
-			},
-			leaveCart(index){
-				this.$emit('ChangeCartNumDan', false,index);
-			},
-			joinCart(index){
-				this.$emit('ChangeCartNumDan', true,index);
-			},
-			subDel(){
-				this.$emit('ChangeSubDel');
-			},
-			oneDel(id,index){
-				this.$emit('ChangeOneDel',id,index);
-			}
+<script setup>
+	const props = defineProps({
+		cartData: {
+			type: Object,
+			default: () => {}
 		}
+	})
+
+	const emit = defineEmits(['closeList','ChangeCartNumDan','ChangeSubDel','ChangeOneDel'])
+
+	function closeList(){
+		emit('closeList', false);
+	}
+	function leaveCart(index){
+		emit('ChangeCartNumDan', false,index);
+	}
+	function joinCart(index){
+		emit('ChangeCartNumDan', true,index);
+	}
+	function subDel(){
+		emit('ChangeSubDel');
+	}
+	function oneDel(id,index){
+		emit('ChangeOneDel',id,index);
 	}
 </script>
 
