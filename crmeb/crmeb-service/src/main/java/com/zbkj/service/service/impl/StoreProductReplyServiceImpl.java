@@ -255,6 +255,12 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
         }
         storeProductReply.setAvatar(systemAttachmentService.clearPrefix(storeProductReply.getAvatar()));
         storeProductReply.setUnique(CrmebUtil.randomCount(11111,9999)+"");
+        // 评论时间处理：如果前端传了时间则使用，否则默认当前时间
+        if (StrUtil.isNotBlank(request.getCreateTime())) {
+            storeProductReply.setCreateTime(DateUtil.parse(request.getCreateTime(), DateConstants.DATE_FORMAT));
+        } else {
+            storeProductReply.setCreateTime(DateUtil.date());
+        }
         return save(storeProductReply);
     }
 
@@ -407,7 +413,9 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
             ProductReplyResponse productReplyResponse = new ProductReplyResponse();
             BeanUtils.copyProperties(productReply, productReplyResponse);
             // 评价图
-            productReplyResponse.setPics(CrmebUtil.stringToArrayStr(productReply.getPics()));
+            productReplyResponse.setPics(StringUtils.isBlank(productReply.getPics())
+                    ? new ArrayList<>()
+                    : CrmebUtil.stringToArrayStr(productReply.getPics()));
             // 昵称
             String nickname = productReply.getNickname();
             if (StrUtil.isNotBlank(nickname)) {
@@ -562,4 +570,3 @@ public class StoreProductReplyServiceImpl extends ServiceImpl<StoreProductReplyD
     }
 
 }
-

@@ -68,6 +68,12 @@ public class UserCenterResponse implements Serializable {
     @ApiModelProperty(value = "是否为推广员")
     private Boolean isPromoter;
 
+    @ApiModelProperty(value = "是否为移动端管理员")
+    private Boolean isMobileAdmin;
+
+    @ApiModelProperty(value = "是否为核销员")
+    private Boolean isWriteOffStaff;
+
     @ApiModelProperty(value = "用户优惠券数量")
     private Integer couponCount;
 

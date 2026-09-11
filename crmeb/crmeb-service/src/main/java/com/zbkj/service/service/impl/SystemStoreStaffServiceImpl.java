@@ -3,6 +3,7 @@ package com.zbkj.service.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -122,6 +123,7 @@ public class SystemStoreStaffServiceImpl extends ServiceImpl<SystemStoreStaffDao
      */
     @Override
     public Boolean saveUnique(SystemStoreStaffRequest request) {
+        fillAndValidateMobileUser(request, true);
         List<Integer> userIds = new ArrayList<>();
         userIds.add(request.getUid());
         List<SystemStoreStaff> existStaffs = getByAdminUserIds(userIds);
@@ -138,6 +140,17 @@ public class SystemStoreStaffServiceImpl extends ServiceImpl<SystemStoreStaffDao
      */
     @Override
     public Boolean edit(Integer id, SystemStoreStaffRequest systemStoreStaffRequest) {
+        SystemStoreStaff existStaff = getById(id);
+        if (ObjectUtil.isNull(existStaff)) {
+            throw new CrmebException("移动端管理员不存在");
+        }
+        fillAndValidateMobileUser(systemStoreStaffRequest, false);
+        LambdaQueryWrapper<SystemStoreStaff> duplicateWrapper = Wrappers.lambdaQuery();
+        duplicateWrapper.eq(SystemStoreStaff::getUid, systemStoreStaffRequest.getUid());
+        duplicateWrapper.ne(SystemStoreStaff::getId, id);
+        if (count(duplicateWrapper) > 0) {
+            throw new CrmebException(Constants.RESULT_VERIFICATION_USER_EXIST);
+        }
         SystemStoreStaff systemStoreStaff = new SystemStoreStaff();
         BeanUtils.copyProperties(systemStoreStaffRequest, systemStoreStaff);
         systemStoreStaff.setId(id);
@@ -171,5 +184,33 @@ public class SystemStoreStaffServiceImpl extends ServiceImpl<SystemStoreStaffDao
         wrapper.eq(SystemStoreStaff::getUid, uid);
         return remove(wrapper);
     }
-}
 
+    private void fillAndValidateMobileUser(SystemStoreStaffRequest request, boolean fillPermissionDefaults) {
+        User user = userService.getById(request.getUid());
+        if (ObjectUtil.isNull(user)) {
+            throw new CrmebException("移动端用户不存在");
+        }
+        if (StrUtil.isBlank(request.getAvatar())) {
+            request.setAvatar(user.getAvatar());
+        }
+        if (StrUtil.isBlank(request.getStaffName())) {
+            request.setStaffName(StrUtil.blankToDefault(user.getNickname(), user.getAccount()));
+        }
+        if (StrUtil.isBlank(request.getPhone())) {
+            request.setPhone(user.getPhone());
+        }
+        if (request.getVerifyStatus() == null) {
+            request.setVerifyStatus(0);
+        }
+        if (fillPermissionDefaults && request.getStatus() == null) {
+            request.setStatus(1);
+        }
+        if (Integer.valueOf(1).equals(request.getVerifyStatus())) {
+            if (request.getStoreId() == null || request.getStoreId() <= 0) {
+                throw new CrmebException("开启订单核销时请选择所属提货点");
+            }
+        } else {
+            request.setStoreId(0);
+        }
+    }
+}

@@ -7,7 +7,6 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.zbkj.common.constants.Constants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.article.Article;
 import com.zbkj.common.model.category.Category;
@@ -24,7 +23,6 @@ import com.zbkj.service.dao.ArticleDao;
 import com.zbkj.service.service.ArticleService;
 import com.zbkj.service.service.CategoryService;
 import com.zbkj.service.service.SystemAttachmentService;
-import com.zbkj.service.service.SystemConfigService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,8 +58,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
     @Autowired
     private CategoryService categoryService;
 
-    @Autowired
-    private SystemConfigService systemConfigService;
+    private static final int ARTICLE_BANNER_LIMIT = 3;
 
     @Autowired
     private SystemAttachmentService systemAttachmentService;
@@ -164,17 +161,13 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleDao, Article> impleme
      */
     @Override
     public List<Article> getBannerList() {
-        // 根据配置控制banner的数量
-        String articleBannerLimitString = systemConfigService.getValueByKey(Constants.ARTICLE_BANNER_LIMIT);
-        int articleBannerLimit = Integer.parseInt(articleBannerLimitString);
-
         LambdaQueryWrapper<Article> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.select(Article::getId, Article::getImageInput);
         lambdaQueryWrapper.eq(Article::getIsBanner, true);
         lambdaQueryWrapper.eq(Article::getHide, false);
         lambdaQueryWrapper.eq(Article::getStatus, false);
         lambdaQueryWrapper.orderByDesc(Article::getSort);
-        lambdaQueryWrapper.last(" limit " + articleBannerLimit);
+        lambdaQueryWrapper.last(" limit " + ARTICLE_BANNER_LIMIT);
         return dao.selectList(lambdaQueryWrapper);
     }
 

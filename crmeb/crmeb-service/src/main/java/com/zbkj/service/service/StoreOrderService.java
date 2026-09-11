@@ -166,6 +166,14 @@ public interface StoreOrderService extends IService<StoreOrder> {
     Boolean updatePaid(String orderNo);
 
     /**
+     * 原子占位商户订单号：仅在订单未设置商户订单号时写入，避免并发重复支付时覆盖商户订单号
+     * @param id 订单id
+     * @param outTradeNo 商户订单号
+     * @return 是否占位成功
+     */
+    Boolean claimOutTradeNo(Integer id, String outTradeNo);
+
+    /**
      * 跟据订单号列表获取订单列表Map
      * @param orderNoList 订单号列表
      * @return Map

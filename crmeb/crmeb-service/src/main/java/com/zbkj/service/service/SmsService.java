@@ -61,15 +61,6 @@ public interface SmsService {
     Boolean sendPaySuccess(String phone, String orderNo, BigDecimal payPrice, Integer msgTempId);
 
     /**
-     * 发送管理员下单短信提醒短信
-     * @param phone 手机号
-     * @param orderNo 订单编号
-     * @param realName 管理员名称
-     * @param msgTempId 短信模板id
-     */
-    Boolean sendCreateOrderNotice(String phone, String orderNo, String realName, Integer msgTempId);
-
-    /**
      * 发送订单支付成功管理员提醒短信
      * @param phone 手机号
      * @param orderNo 订单编号

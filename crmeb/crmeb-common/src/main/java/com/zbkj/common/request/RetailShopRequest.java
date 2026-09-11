@@ -69,7 +69,11 @@ public class RetailShopRequest {
     @ApiModelProperty(value = "冻结时间")
     @NotNull(message = "冻结时间 不能为空")
     @Min(value = 0, message = "冻结时间最少为0天")
-    private Integer extractTime;
+    private Integer extractTime = 0;
+
+    public void setExtractTime(Integer extractTime) {
+        this.extractTime = extractTime != null && extractTime > 0 ? extractTime : 0;
+    }
 
     @ApiModelProperty(value = "是否展示分销气泡：0-展示，1-展示")
     @NotNull(message = "是否展示分销气泡 不能为空")

@@ -1,5 +1,6 @@
 package com.zbkj.common.request.theme;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -25,4 +26,8 @@ public class ThemeTitleInfoRequest implements Serializable {
     @ApiModelProperty(value = "主题简介")
     @Length(max = 255, message = "主题简介长度不能超过255个字符")
     private String info;
+
+    @ApiModelProperty(value = "页面类型：theme主题，micro微页面")
+    @JsonProperty("page_type")
+    private String pageType;
 }

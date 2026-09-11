@@ -11,17 +11,20 @@ import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.system.SystemMenu;
 import com.zbkj.common.request.SystemMenuRequest;
 import com.zbkj.common.request.SystemMenuSearchRequest;
-import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.vo.MenuCheckTree;
 import com.zbkj.common.vo.MenuCheckVo;
 import com.zbkj.service.dao.SystemMenuDao;
 import com.zbkj.service.service.SystemMenuService;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -41,11 +44,6 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
 
     @Resource
     private SystemMenuDao dao;
-
-    @Autowired
-    private RedisUtil redisUtil;
-
-    private static final String CACHE_LIST_KEY = "menuList";
 
     /**
      * 通过权限获取管理员可访问目录
@@ -110,11 +108,7 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
         SystemMenu systemMenu = new SystemMenu();
         request.setId(null);
         BeanUtils.copyProperties(request, systemMenu);
-        boolean save = save(systemMenu);
-        if (save) {
-            redisUtil.delete(CACHE_LIST_KEY);
-        }
-        return save;
+        return save(systemMenu);
     }
 
     /**
@@ -128,28 +122,16 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
         systemMenu.setIsDelte(true);
         if (systemMenu.getMenuType().equals("A")) {
             systemMenu.setUpdateTime(DateUtil.date());
-            boolean update = updateById(systemMenu);
-            if (update) {
-                redisUtil.delete(CACHE_LIST_KEY);
-            }
-            return update;
+            return updateById(systemMenu);
         }
         List<SystemMenu> childList = findAllChildListByPid(id);
         if (CollUtil.isEmpty(childList)) {
             systemMenu.setUpdateTime(DateUtil.date());
-            boolean update = updateById(systemMenu);
-            if (update) {
-                redisUtil.delete(CACHE_LIST_KEY);
-            }
-            return update;
+            return updateById(systemMenu);
         }
         childList.forEach(e -> e.setIsDelte(true).setUpdateTime(DateUtil.date()));
         childList.add(systemMenu);
-        boolean updateBatch = updateBatchById(childList);
-        if (updateBatch) {
-            redisUtil.delete(CACHE_LIST_KEY);
-        }
-        return updateBatch;
+        return updateBatchById(childList);
     }
 
     /**
@@ -171,11 +153,7 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
         SystemMenu systemMenu = new SystemMenu();
         BeanUtils.copyProperties(request, systemMenu);
         systemMenu.setUpdateTime(DateUtil.date());
-        boolean update = updateById(systemMenu);
-        if (update) {
-            redisUtil.delete(CACHE_LIST_KEY);
-        }
-        return update;
+        return updateById(systemMenu);
     }
 
     /**
@@ -202,30 +180,21 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
         SystemMenu systemMenu = getInfoById(id);
         systemMenu.setIsShow(!systemMenu.getIsShow());
         systemMenu.setUpdateTime(DateUtil.date());
-        boolean update = updateById(systemMenu);
-        if (update) {
-            redisUtil.delete(CACHE_LIST_KEY);
-        }
-        return update;
+        return updateById(systemMenu);
     }
 
     /**
-     * 获取菜单缓存列表
+     * 获取菜单列表
      */
     @Override
     public List<SystemMenu> getCacheList() {
-        if (redisUtil.exists(CACHE_LIST_KEY)) {
-            return redisUtil.get(CACHE_LIST_KEY);
-        }
         LambdaQueryWrapper<SystemMenu> lqw = Wrappers.lambdaQuery();
         lqw.eq(SystemMenu::getIsDelte, false);
-        List<SystemMenu> systemMenuList = dao.selectList(lqw);
-        redisUtil.set(CACHE_LIST_KEY, systemMenuList);
-        return systemMenuList;
+        return dao.selectList(lqw);
     }
 
     /**
-     * 菜单缓存树
+     * 菜单权限树
      * @return List
      */
     @Override
@@ -265,7 +234,34 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
      */
     @Override
     public List<SystemMenu> getMenusByUserId(Integer userId) {
-        return dao.getMenusByUserId(userId);
+        List<SystemMenu> grantedNodeList = dao.findPermissionByUserId(userId);
+        if (CollUtil.isEmpty(grantedNodeList)) {
+            return grantedNodeList;
+        }
+
+        LambdaQueryWrapper<SystemMenu> lqw = Wrappers.lambdaQuery();
+        lqw.eq(SystemMenu::getIsDelte, false);
+        Map<Integer, SystemMenu> menuMap = dao.selectList(lqw).stream()
+                .collect(Collectors.toMap(SystemMenu::getId, Function.identity()));
+        List<SystemMenu> menuList = new ArrayList<>();
+        Set<Integer> menuIdSet = new HashSet<>();
+
+        for (SystemMenu grantedNode : grantedNodeList) {
+            SystemMenu currentNode = grantedNode;
+            Set<Integer> visitedNodeIds = new HashSet<>();
+            while (ObjectUtil.isNotNull(currentNode) && visitedNodeIds.add(currentNode.getId())) {
+                if (Boolean.TRUE.equals(currentNode.getIsShow())
+                        && !"A".equals(currentNode.getMenuType())
+                        && menuIdSet.add(currentNode.getId())) {
+                    menuList.add(currentNode);
+                }
+                if (ObjectUtil.isNull(currentNode.getPid()) || currentNode.getPid() == 0) {
+                    break;
+                }
+                currentNode = menuMap.get(currentNode.getPid());
+            }
+        }
+        return menuList;
     }
 
     /**
@@ -293,4 +289,3 @@ public class SystemMenuServiceImpl extends ServiceImpl<SystemMenuDao, SystemMenu
         return systemMenu;
     }
 }
-

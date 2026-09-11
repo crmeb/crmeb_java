@@ -83,4 +83,7 @@ public class StoreCouponUser implements Serializable {
     @ApiModelProperty(value = "主键id 商品id/分类id", required = true)
     private String primaryKey;
 
+    @ApiModelProperty(value = "关联订单id")
+    private Integer orderId;
+
 }

@@ -33,6 +33,9 @@
             <if test="name != '' and name != null ">
                 and scu.name = #{name}
             </if>
+            <if test="couponId != null ">
+                and scu.coupon_id = #{couponId}
+            </if>
             <if test="status != null">
                 and scu.status = #{status}
             </if>

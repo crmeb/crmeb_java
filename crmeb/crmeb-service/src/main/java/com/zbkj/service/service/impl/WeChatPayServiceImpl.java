@@ -9,7 +9,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.PayConstants;
-import com.zbkj.common.constants.TaskConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.combination.StoreCombination;
 import com.zbkj.common.model.combination.StorePink;
@@ -73,10 +72,10 @@ public class WeChatPayServiceImpl implements WeChatPayService {
     private CreateOrderResponseVo createOrderResponseVo = null;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private TransactionTemplate transactionTemplate;
 
     @Autowired
-    private TransactionTemplate transactionTemplate;
+    private OrderPaySuccessQueueService orderPaySuccessQueueService;
 
     @Autowired
     private UserService userService;
@@ -252,7 +251,7 @@ public class WeChatPayServiceImpl implements WeChatPayService {
                 throw new CrmebException("支付成功更新订单失败");
             }
             // 添加支付成功task
-            redisUtil.lPush(TaskConstants.ORDER_TASK_PAY_SUCCESS_AFTER, orderNo);
+            orderPaySuccessQueueService.enqueue(orderNo);
             return Boolean.TRUE;
         }
         // 充值订单

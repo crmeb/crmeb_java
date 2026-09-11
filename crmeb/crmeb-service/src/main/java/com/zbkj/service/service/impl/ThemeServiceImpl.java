@@ -94,9 +94,11 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -138,6 +140,12 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
     private static final String CONFIG_KEY_INVOICE_FUNC_STATUS = "invoice_func_status";
 
     private static final String CONFIG_KEY_VIP_OPEN = "vip_open";
+
+    private static final String MOBILE_ADMIN_ORDER_LINK = "/pages/admin/order/index";
+
+    private static final String MOBILE_ADMIN_MANAGE_LINK = "/pages/admin/manage/index";
+
+    private static final String MOBILE_ADMIN_WRITE_OFF_LINK = "/pages/admin/order_cancellation/index";
 
     private static final List<String> THEME_MAIN_IMAGES = Arrays.asList(
             "home_image",
@@ -195,6 +203,8 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
     );
 
     private static final int THEME_ATTACHMENT_PID = 6;
+
+    private static final int ATTACHMENT_QUERY_BATCH_SIZE = 500;
 
     private static final List<String> LIST_EXCLUDED_COLUMNS = Arrays.asList(
             "home_data",
@@ -292,7 +302,10 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         if (CollUtil.isEmpty(themeList)) {
             return CommonPage.copyPageInfo(page, new ArrayList<>());
         }
-        List<ThemeResponse> responseList = themeList.stream().map(this::buildThemeResponse).collect(Collectors.toList());
+        Map<String, String> imageDomainMap = buildThemeImageDomainMap(collectThemeListImagePaths(themeList));
+        List<ThemeResponse> responseList = themeList.stream()
+                .map(theme -> buildThemeResponse(theme, imageDomainMap))
+                .collect(Collectors.toList());
         return CommonPage.copyPageInfo(page, responseList);
     }
 
@@ -380,7 +393,14 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         if (CollUtil.isEmpty(productList)) {
             return new ArrayList<>();
         }
-        return productList.stream().map(this::buildThemeProductResponse).collect(Collectors.toList());
+        List<ThemeProductResponse> responseList = productList.stream()
+                .map(this::buildThemeProductResponse)
+                .collect(Collectors.toList());
+        Set<String> imagePaths = new LinkedHashSet<>();
+        responseList.forEach(item -> collectThemeRelativeImagePaths(item.getImage(), imagePaths));
+        Map<String, String> imageDomainMap = buildThemeImageDomainMap(imagePaths);
+        responseList.forEach(item -> item.setImage(resolveThemeResponseImage(item.getImage(), imageDomainMap)));
+        return responseList;
     }
 
     private ThemeProductResponse buildThemeProductResponse(StoreProduct storeProduct) {
@@ -414,9 +434,16 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         if (CollUtil.isEmpty(pageInfo.getList())) {
             return response;
         }
-        response.setList(pageInfo.getList().stream()
+        List<ThemeArticleResponse> articleList = pageInfo.getList().stream()
                 .map(this::buildThemeArticleResponse)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
+        Set<String> imagePaths = new LinkedHashSet<>();
+        articleList.forEach(item -> collectThemeRelativeImagePaths(item.getImageInput(), imagePaths));
+        Map<String, String> imageDomainMap = buildThemeImageDomainMap(imagePaths);
+        articleList.forEach(item -> item.setImageInput(item.getImageInput().stream()
+                .map(image -> resolveThemeResponseImage(image, imageDomainMap))
+                .collect(Collectors.toList())));
+        response.setList(articleList);
         return response;
     }
 
@@ -521,7 +548,11 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         if (CollUtil.isEmpty(productList)) {
             return new ArrayList<>();
         }
-        return productList.stream().map(product -> buildThemeProductJson(product, appendFicti)).collect(Collectors.toList());
+        List<JSONObject> result = productList.stream()
+                .map(product -> buildThemeProductJson(product, appendFicti))
+                .collect(Collectors.toList());
+        appendImageDomainPrefixToList(result);
+        return result;
     }
 
     /**
@@ -592,9 +623,11 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         }
 
         String timeSwap = getSeckillTimeSwap(currentManager);
-        return seckillList.stream()
+        List<JSONObject> result = seckillList.stream()
                 .map(seckill -> buildThemeSeckillJson(seckill, timeSwap))
                 .collect(Collectors.toList());
+        appendImageDomainPrefixToList(result);
+        return result;
     }
 
     /**
@@ -618,9 +651,11 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         if (CollUtil.isEmpty(combinationList)) {
             return new ArrayList<>();
         }
-        return combinationList.stream()
+        List<JSONObject> result = combinationList.stream()
                 .map(this::buildThemeCombinationJson)
                 .collect(Collectors.toList());
+        appendImageDomainPrefixToList(result);
+        return result;
     }
 
     /**
@@ -644,9 +679,11 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         if (CollUtil.isEmpty(bargainList)) {
             return new ArrayList<>();
         }
-        return bargainList.stream()
+        List<JSONObject> result = bargainList.stream()
                 .map(this::buildThemeBargainJson)
                 .collect(Collectors.toList());
+        appendImageDomainPrefixToList(result);
+        return result;
     }
 
     private void setProductOrder(ProductRequest request, Integer order, Integer sort) {
@@ -925,7 +962,8 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         boolean isLogin = uid != null && uid > 0;
         boolean isPromoter = isLogin && Boolean.TRUE.equals(user.getIsPromoter());
         boolean brokerageEnabled = isConfigEnabled(Constants.CONFIG_KEY_STORE_BROKERAGE_IS_OPEN, false);
-        boolean verifyStaff = isLogin && isVerifyStaff(uid);
+        boolean enabledStaff = isLogin && isEnabledStoreStaff(uid);
+        boolean writeOffStaff = isLogin && isWriteOffStaff(uid);
 
         Map<String, Integer> orderNumMap = isLogin ? buildOrderNumMap(uid) : new HashMap<>();
         for (Object component : value.values()) {
@@ -933,9 +971,6 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
                 continue;
             }
             JSONObject componentJson = (JSONObject) component;
-            if (!"menus".equals(componentJson.getString("name"))) {
-                continue;
-            }
             JSONObject menuConfig = componentJson.getJSONObject("menuConfig");
             if (menuConfig == null) {
                 continue;
@@ -946,16 +981,16 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
             }
             for (int i = 0; i < menuList.size(); i++) {
                 JSONObject menu = menuList.getJSONObject(i);
-                handleMenuItem(menu, brokerageEnabled, isPromoter, verifyStaff, orderNumMap);
+                handleMenuItem(menu, brokerageEnabled, isPromoter, enabledStaff, writeOffStaff, orderNumMap);
             }
         }
     }
 
     private void handleMenuItem(JSONObject menu, boolean brokerageEnabled, boolean isPromoter,
-                                boolean verifyStaff, Map<String, Integer> orderNumMap) {
+                                boolean enabledStaff, boolean writeOffStaff, Map<String, Integer> orderNumMap) {
         String link = getMenuLink(menu);
         boolean show = !menu.containsKey("show") || menu.getBooleanValue("show");
-        show = show && canShowMenu(link, brokerageEnabled, isPromoter, verifyStaff);
+        show = show && canShowMenu(link, brokerageEnabled, isPromoter, enabledStaff, writeOffStaff);
         menu.put("show", show);
 
         if (orderNumMap.containsKey(link)) {
@@ -972,7 +1007,8 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         }
     }
 
-    private boolean canShowMenu(String link, boolean brokerageEnabled, boolean isPromoter, boolean verifyStaff) {
+    private boolean canShowMenu(String link, boolean brokerageEnabled, boolean isPromoter,
+                                boolean enabledStaff, boolean writeOffStaff) {
         if (StrUtil.isBlank(link)) {
             return true;
         }
@@ -985,11 +1021,11 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
                 return brokerageEnabled && !isPromoter;
             case "/pages/users/user_money/index":
                 return isConfigEnabled(CONFIG_KEY_BALANCE_FUNC_STATUS, true);
-            case "/pages/admin/order/index":
-            case "/pages/admin/manage/index":
-                return false;
-            case "/pages/admin/order_cancellation/index":
-                return verifyStaff;
+            case MOBILE_ADMIN_ORDER_LINK:
+            case MOBILE_ADMIN_MANAGE_LINK:
+                return enabledStaff;
+            case MOBILE_ADMIN_WRITE_OFF_LINK:
+                return writeOffStaff;
             case "/pages/users/user_invoice_list/index":
                 return isConfigEnabled(CONFIG_KEY_INVOICE_FUNC_STATUS, true);
             case "/pages/annex/vip_paid/index":
@@ -1017,10 +1053,16 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         return count == null ? 0 : count;
     }
 
-    private boolean isVerifyStaff(Integer uid) {
+    private boolean isEnabledStoreStaff(Integer uid) {
         return systemStoreStaffService.count(Wrappers.<SystemStoreStaff>lambdaQuery()
                 .eq(SystemStoreStaff::getUid, uid)
                 .eq(SystemStoreStaff::getStatus, 1)) > 0;
+    }
+
+    private boolean isWriteOffStaff(Integer uid) {
+        return systemStoreStaffService.count(Wrappers.<SystemStoreStaff>lambdaQuery()
+                .eq(SystemStoreStaff::getUid, uid)
+                .eq(SystemStoreStaff::getVerifyStatus, 1)) > 0;
     }
 
     private boolean isConfigEnabled(String key, boolean defaultValue) {
@@ -1078,38 +1120,240 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
     }
 
     /**
-     * 为图片路径拼接 localUploadUrl 域名前缀。
+     * 为主题数据中的相对图片路径拼接对应的存储域名。
      *
-     * 遍历 themeInfo 中所有字段，对于没有域名的图片路径，
-     * 拼接系统配置的 localUploadUrl 前缀。
+     * 素材表中存在记录时，根据 image_type 选择本地、七牛、阿里、腾讯或京东云域名；
+     * 素材表中不存在记录时，使用 localUploadUrl。
      *
      * @param themeInfo 主题信息 JSON
      */
-    private void appendImageDomainPrefix(JSONObject themeInfo) {
-        String localUploadUrl = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_LOCAL_UPLOAD_URL);
-        if (StrUtil.isBlank(localUploadUrl)) {
+    private void appendImageDomainPrefix(Object themeInfo) {
+        if (themeInfo == null
+                || (themeInfo instanceof JSONObject && ((JSONObject) themeInfo).isEmpty())
+                || (themeInfo instanceof JSONArray && ((JSONArray) themeInfo).isEmpty())) {
             return;
         }
-        String baseUrl = removeEndSlash(localUploadUrl);
-        appendImageDomainPrefixRecursive(themeInfo, baseUrl);
+        Set<String> imagePaths = new LinkedHashSet<>();
+        collectThemeRelativeImagePaths(themeInfo, imagePaths);
+        if (imagePaths.isEmpty()) {
+            return;
+        }
+        appendImageDomainPrefixRecursive(themeInfo, buildThemeImageDomainMap(imagePaths));
     }
 
     /**
-     * 递归处理 JSON 中的图片路径。
+     * 处理主题列表数据中的图片域名。
      */
-    private void appendImageDomainPrefixRecursive(Object value, String baseUrl) {
+    private void appendImageDomainPrefixToList(List<JSONObject> dataList) {
+        if (CollUtil.isEmpty(dataList)) {
+            return;
+        }
+        JSONArray data = new JSONArray();
+        data.addAll(dataList);
+        appendImageDomainPrefix(data);
+    }
+
+    /**
+     * 收集主题列表中的图片相对路径。
+     */
+    private Set<String> collectThemeListImagePaths(List<Theme> themeList) {
+        Set<String> imagePaths = new LinkedHashSet<>();
+        for (Theme theme : themeList) {
+            collectThemeRelativeImagePaths(theme.getHomeImage(), imagePaths);
+            collectThemeRelativeImagePaths(theme.getCategoryImage(), imagePaths);
+            collectThemeRelativeImagePaths(theme.getDetailImage(), imagePaths);
+            collectThemeRelativeImagePaths(theme.getUserImage(), imagePaths);
+            collectThemeRelativeImagePaths(theme.getHomeDefaultImage(), imagePaths);
+            collectThemeRelativeImagePaths(theme.getCategoryDefaultImage(), imagePaths);
+            collectThemeRelativeImagePaths(theme.getDetailDefaultImage(), imagePaths);
+            collectThemeRelativeImagePaths(theme.getUserDefaultImage(), imagePaths);
+        }
+        return imagePaths;
+    }
+
+    /**
+     * 递归收集主题数据中的图片相对路径。
+     */
+    private void collectThemeRelativeImagePaths(Object value, Set<String> imagePaths) {
+        if (value instanceof JSONObject) {
+            for (Object fieldValue : ((JSONObject) value).values()) {
+                collectThemeRelativeImagePaths(fieldValue, imagePaths);
+            }
+            return;
+        }
+        if (value instanceof JSONArray) {
+            for (Object element : (JSONArray) value) {
+                collectThemeRelativeImagePaths(element, imagePaths);
+            }
+            return;
+        }
+        if (value instanceof Iterable) {
+            for (Object element : (Iterable<?>) value) {
+                collectThemeRelativeImagePaths(element, imagePaths);
+            }
+            return;
+        }
+        if (!(value instanceof String)) {
+            return;
+        }
+
+        String stringValue = ((String) value).trim();
+        Object nestedJson = parseThemeJsonContainer(stringValue);
+        if (nestedJson != null) {
+            collectThemeRelativeImagePaths(nestedJson, imagePaths);
+            return;
+        }
+        if (hasDomainPrefix(stringValue) || !isLikelyImageUrl(stringValue)) {
+            return;
+        }
+        String imagePath = normalizeThemeImagePath(stringValue);
+        if (StrUtil.isNotBlank(imagePath)) {
+            imagePaths.add(imagePath);
+        }
+    }
+
+    /**
+     * 批量查询素材存储类型，并生成图片路径对应的域名映射。
+     */
+    private Map<String, String> buildThemeImageDomainMap(Set<String> imagePaths) {
+        Map<String, String> imageDomainMap = new HashMap<>();
+        if (imagePaths == null || imagePaths.isEmpty()) {
+            return imageDomainMap;
+        }
+
+        Map<String, Integer> imageTypeMap = findAttachmentImageTypes(imagePaths);
+        Map<Integer, String> domainCache = new HashMap<>();
+        String localUploadUrl = getThemeUploadDomain(1, domainCache);
+        for (String imagePath : imagePaths) {
+            Integer imageType = imageTypeMap.get(imagePath);
+            String domain = getThemeUploadDomain(imageType, domainCache);
+            imageDomainMap.put(imagePath, StrUtil.isBlank(domain) ? localUploadUrl : domain);
+        }
+        return imageDomainMap;
+    }
+
+    /**
+     * 批量查询图片路径对应的素材存储类型。
+     */
+    private Map<String, Integer> findAttachmentImageTypes(Set<String> imagePaths) {
+        Map<String, Integer> imageTypeMap = new HashMap<>();
+        List<String> queryPaths = new ArrayList<>();
+        for (String imagePath : imagePaths) {
+            queryPaths.add(imagePath);
+            queryPaths.add("/" + imagePath);
+        }
+
+        for (int start = 0; start < queryPaths.size(); start += ATTACHMENT_QUERY_BATCH_SIZE) {
+            int end = Math.min(start + ATTACHMENT_QUERY_BATCH_SIZE, queryPaths.size());
+            List<String> batchPaths = queryPaths.subList(start, end);
+            LambdaQueryWrapper<SystemAttachment> queryWrapper = Wrappers.lambdaQuery();
+            queryWrapper.select(
+                    SystemAttachment::getAttId,
+                    SystemAttachment::getAttDir,
+                    SystemAttachment::getSattDir,
+                    SystemAttachment::getImageType
+            );
+            queryWrapper.and(wrapper -> wrapper
+                    .in(SystemAttachment::getSattDir, batchPaths)
+                    .or()
+                    .in(SystemAttachment::getAttDir, batchPaths));
+            queryWrapper.orderByDesc(SystemAttachment::getAttId);
+            List<SystemAttachment> attachments = systemAttachmentService.list(queryWrapper);
+            if (CollUtil.isEmpty(attachments)) {
+                continue;
+            }
+            for (SystemAttachment attachment : attachments) {
+                putAttachmentImageType(imageTypeMap, attachment.getSattDir(), attachment.getImageType());
+                putAttachmentImageType(imageTypeMap, attachment.getAttDir(), attachment.getImageType());
+            }
+        }
+        return imageTypeMap;
+    }
+
+    /**
+     * 写入素材路径对应的存储类型，重复路径优先使用最新素材记录。
+     */
+    private void putAttachmentImageType(Map<String, Integer> imageTypeMap, String path, Integer imageType) {
+        String normalizedPath = normalizeThemeImagePath(path);
+        if (StrUtil.isBlank(normalizedPath)) {
+            return;
+        }
+        imageTypeMap.putIfAbsent(normalizedPath, normalizeUploadType(imageType));
+    }
+
+    /**
+     * 根据素材存储类型获取对应域名。
+     */
+    private String getThemeUploadDomain(Integer imageType, Map<Integer, String> domainCache) {
+        int uploadType = normalizeUploadType(imageType);
+        if (domainCache.containsKey(uploadType)) {
+            return domainCache.get(uploadType);
+        }
+
+        String configKey;
+        switch (uploadType) {
+            case 2:
+                configKey = SysConfigConstants.CONFIG_QN_UPLOAD_URL;
+                break;
+            case 3:
+                configKey = SysConfigConstants.CONFIG_AL_UPLOAD_URL;
+                break;
+            case 4:
+                configKey = SysConfigConstants.CONFIG_TX_UPLOAD_URL;
+                break;
+            case 5:
+                configKey = SysConfigConstants.CONFIG_JD_UPLOAD_URL;
+                break;
+            default:
+                configKey = SysConfigConstants.CONFIG_LOCAL_UPLOAD_URL;
+                break;
+        }
+
+        String domain = systemConfigService.getValueByKey(configKey);
+        if (StrUtil.isBlank(domain) && uploadType != 1) {
+            domain = getThemeUploadDomain(1, domainCache);
+        }
+        domain = StrUtil.isBlank(domain) ? "" : removeEndSlash(domain.trim());
+        domainCache.put(uploadType, domain);
+        return domain;
+    }
+
+    /**
+     * 规范化素材存储类型，未知类型按本地存储处理。
+     */
+    private int normalizeUploadType(Integer imageType) {
+        if (imageType == null || imageType < 2 || imageType > 5) {
+            return 1;
+        }
+        return imageType;
+    }
+
+    /**
+     * 递归替换主题 JSON 中的图片路径，同时兼容字段值本身为 JSON 字符串的情况。
+     */
+    private boolean appendImageDomainPrefixRecursive(Object value, Map<String, String> imageDomainMap) {
+        boolean changed = false;
         if (value instanceof JSONObject) {
             JSONObject jsonObject = (JSONObject) value;
             for (String key : jsonObject.keySet()) {
                 Object fieldValue = jsonObject.get(key);
                 if (fieldValue instanceof String) {
-                    String strValue = (String) fieldValue;
-                    String modified = prependDomainIfImageUrl(strValue, baseUrl);
+                    String stringValue = (String) fieldValue;
+                    Object nestedJson = parseThemeJsonContainer(stringValue);
+                    if (nestedJson != null) {
+                        if (appendImageDomainPrefixRecursive(nestedJson, imageDomainMap)) {
+                            jsonObject.put(key, JSON.toJSONString(nestedJson));
+                            changed = true;
+                        }
+                        continue;
+                    }
+                    String modified = resolveThemeImageUrl(stringValue, imageDomainMap);
                     if (modified != null) {
                         jsonObject.put(key, modified);
+                        changed = true;
                     }
-                } else {
-                    appendImageDomainPrefixRecursive(fieldValue, baseUrl);
+                } else if (appendImageDomainPrefixRecursive(fieldValue, imageDomainMap)) {
+                    changed = true;
                 }
             }
         } else if (value instanceof JSONArray) {
@@ -1117,36 +1361,105 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
             for (int i = 0; i < jsonArray.size(); i++) {
                 Object element = jsonArray.get(i);
                 if (element instanceof String) {
-                    String strValue = (String) element;
-                    String modified = prependDomainIfImageUrl(strValue, baseUrl);
+                    String stringValue = (String) element;
+                    Object nestedJson = parseThemeJsonContainer(stringValue);
+                    if (nestedJson != null) {
+                        if (appendImageDomainPrefixRecursive(nestedJson, imageDomainMap)) {
+                            jsonArray.set(i, JSON.toJSONString(nestedJson));
+                            changed = true;
+                        }
+                        continue;
+                    }
+                    String modified = resolveThemeImageUrl(stringValue, imageDomainMap);
                     if (modified != null) {
                         jsonArray.set(i, modified);
+                        changed = true;
                     }
-                } else {
-                    appendImageDomainPrefixRecursive(element, baseUrl);
+                } else if (appendImageDomainPrefixRecursive(element, imageDomainMap)) {
+                    changed = true;
                 }
             }
+        } else if (value instanceof List) {
+            @SuppressWarnings("unchecked")
+            List<Object> list = (List<Object>) value;
+            for (int i = 0; i < list.size(); i++) {
+                Object element = list.get(i);
+                if (element instanceof String) {
+                    String stringValue = (String) element;
+                    Object nestedJson = parseThemeJsonContainer(stringValue);
+                    if (nestedJson != null) {
+                        if (appendImageDomainPrefixRecursive(nestedJson, imageDomainMap)) {
+                            list.set(i, JSON.toJSONString(nestedJson));
+                            changed = true;
+                        }
+                        continue;
+                    }
+                    String modified = resolveThemeImageUrl(stringValue, imageDomainMap);
+                    if (modified != null) {
+                        list.set(i, modified);
+                        changed = true;
+                    }
+                } else if (appendImageDomainPrefixRecursive(element, imageDomainMap)) {
+                    changed = true;
+                }
+            }
+        }
+        return changed;
+    }
+
+    /**
+     * 为单个图片相对路径拼接解析后的域名。
+     */
+    private String resolveThemeImageUrl(String value, Map<String, String> imageDomainMap) {
+        if (StrUtil.isBlank(value) || hasDomainPrefix(value) || !isLikelyImageUrl(value)) {
+            return null;
+        }
+        String imagePath = normalizeThemeImagePath(value);
+        String domain = imageDomainMap.get(imagePath);
+        if (StrUtil.isBlank(imagePath) || StrUtil.isBlank(domain)) {
+            return null;
+        }
+        return domain + "/" + removeStartSlash(value.trim());
+    }
+
+    /**
+     * 解析对象或数组形式的 JSON 字符串。
+     */
+    private Object parseThemeJsonContainer(String value) {
+        if (StrUtil.isBlank(value)) {
+            return null;
+        }
+        String json = value.trim();
+        boolean objectJson = json.startsWith("{") && json.endsWith("}");
+        boolean arrayJson = json.startsWith("[") && json.endsWith("]");
+        if (!objectJson && !arrayJson) {
+            return null;
+        }
+        try {
+            Object parsed = JSON.parse(json);
+            return parsed instanceof JSONObject || parsed instanceof JSONArray ? parsed : null;
+        } catch (Exception e) {
+            return null;
         }
     }
 
     /**
-     * 判断并拼接域名前缀到图片路径。
-     *
-     * @param value   字符串值
-     * @param baseUrl 基础域名
-     * @return 拼接后的值，如果不是图片路径则返回 null
+     * 规范化主题图片路径，用于匹配素材表中的相对路径。
      */
-    private String prependDomainIfImageUrl(String value, String baseUrl) {
-        if (StrUtil.isBlank(value)) {
-            return null;
+    private String normalizeThemeImagePath(String value) {
+        if (StrUtil.isBlank(value) || hasDomainPrefix(value)) {
+            return "";
         }
-        if (isRemoteUrl(value)) {
-            return null;
+        String path = value.trim().replace("\\/", "/").replace("\\", "/");
+        int queryIndex = path.indexOf('?');
+        if (queryIndex >= 0) {
+            path = path.substring(0, queryIndex);
         }
-        if (isLikelyImageUrl(value)) {
-            return baseUrl + "/" + removeStartSlash(value);
+        int fragmentIndex = path.indexOf('#');
+        if (fragmentIndex >= 0) {
+            path = path.substring(0, fragmentIndex);
         }
-        return null;
+        return removeStartSlash(path);
     }
 
     /**
@@ -1165,7 +1478,9 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
             if (lower.endsWith("." + ext)) {
                 return true;
             }
-            if (lower.contains("." + ext + "?") || lower.contains("." + ext + "&")) {
+            if (lower.contains("." + ext + "?")
+                    || lower.contains("." + ext + "&")
+                    || lower.contains("." + ext + "#")) {
                 return true;
             }
         }
@@ -1217,6 +1532,7 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         Integer nowTime = CrmebDateUtil.getNowTime();
         theme.setTitle(request.getTitle());
         theme.setInfo(request.getInfo() == null ? "" : request.getInfo());
+        theme.setPageType(request.getPageType());
         theme.setVersion(generateThemeVersion());
         theme.setUpTime(nowTime);
         if (isCreate) {
@@ -1465,6 +1781,7 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         data.put("confuse", confuse ? 1 : 0);
         data.put("data_info", buildUsingThemeDataInfo(theme, sourceThemeTitleMap));
         data.put("theme_data", parseUsingThemeData(theme.getThemeData()));
+        appendImageDomainPrefix(data);
         return data;
     }
 
@@ -1538,7 +1855,7 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
             case "category":
                 JSONObject categoryData = new JSONObject();
                 categoryData.put("status", theme.getCategoryData());
-                return appendThemeShowUrl(categoryData, theme);
+                return buildThemeInfoResponse(categoryData, theme);
             case "detail":
                 data = theme.getDetailData();
                 break;
@@ -1557,17 +1874,17 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
                 baseData.put("title", theme.getTitle());
                 baseData.put("info", theme.getInfo());
                 baseData.put("type", theme.getType());
-                return appendThemeShowUrl(baseData, theme);
+                return buildThemeInfoResponse(baseData, theme);
             default:
-                return buildDefaultInfoData(theme);
+                return buildThemeInfoResponse(buildDefaultInfoData(theme), theme);
         }
 
         if (StrUtil.isBlank(data)) {
-            return appendThemeShowUrl(new JSONObject(), theme);
+            return buildThemeInfoResponse(new JSONObject(), theme);
         }
 
         try {
-            return appendThemeShowUrl(filterThemeInfoComponents(JSON.parseObject(data)), theme);
+            return buildThemeInfoResponse(filterThemeInfoComponents(JSON.parseObject(data)), theme);
         } catch (Exception e) {
             throw new CrmebException("主题" + dataType + "数据不是正确的JSON对象格式");
         }
@@ -1749,7 +2066,7 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
 
             unzipThemePackage(zipFile, importDir);
             JSONObject config = readThemeImportConfig(importDir);
-            String baseUrl = getSiteBaseUrl();
+            String baseUrl = getLocalUploadBaseUrl();
             Map<String, String> imageMap = copyThemeImportImages(importDir, uploadDir, uploadWebPath, baseUrl);
             rewriteThemeImportImageFields(config, imageMap);
             rewriteThemeImportDataFields(config, imageMap);
@@ -1882,7 +2199,7 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
      * @param importDir 导入目录
      * @param uploadDir 图片目录
      * @param uploadWebPath 图片Web路径
-     * @param baseUrl 当前站点基础地址
+     * @param baseUrl 本地图片访问基础地址
      * @return 包内路径和新图片绝对地址映射
      */
     private Map<String, String> copyThemeImportImages(File importDir, File uploadDir, String uploadWebPath, String baseUrl) {
@@ -1909,7 +2226,7 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
      * @param uploadRootPath 图片根路径
      * @param filePath 当前文件路径
      * @param uploadWebPath 图片Web路径
-     * @param baseUrl 当前站点基础地址
+     * @param baseUrl 本地图片访问基础地址
      * @param imageMap 图片映射
      */
     private void copyThemeImportImage(Path importRootPath, Path uploadRootPath, Path filePath,
@@ -2202,14 +2519,14 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
      * 拼装导入图片访问地址。
      *
      * @param imageWebPath 图片Web路径
-     * @param baseUrl 当前站点基础地址
+     * @param baseUrl 本地图片访问基础地址
      * @return 图片访问地址
      */
     private String buildThemeImportImageUrl(String imageWebPath, String baseUrl) {
         if (StrUtil.isBlank(imageWebPath)) {
             return "";
         }
-        if (isRemoteUrl(imageWebPath)) {
+        if (hasDomainPrefix(imageWebPath)) {
             return imageWebPath;
         }
         if (StrUtil.isBlank(baseUrl)) {
@@ -2375,29 +2692,13 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
     }
 
     /**
-     * 获取站点协议和域名。
+     * 获取本地图片访问基础地址。
      *
-     * @return 站点基础地址
+     * @return 本地图片访问基础地址
      */
-    private String getSiteBaseUrl() {
-        String siteUrl = systemConfigService.getValueByKey(Constants.CONFIG_KEY_API_URL);
-        if (StrUtil.isBlank(siteUrl)) {
-            siteUrl = getSiteUrl();
-        }
-        if (StrUtil.isBlank(siteUrl)) {
-            return "";
-        }
-        try {
-            URL url = new URL(siteUrl);
-            StringBuilder builder = new StringBuilder();
-            builder.append(url.getProtocol()).append("://").append(url.getHost());
-            if (url.getPort() > 0) {
-                builder.append(":").append(url.getPort());
-            }
-            return builder.toString();
-        } catch (Exception e) {
-            return removeEndSlash(siteUrl);
-        }
+    private String getLocalUploadBaseUrl() {
+        String localUploadUrl = systemConfigService.getValueByKey(SysConfigConstants.CONFIG_LOCAL_UPLOAD_URL);
+        return StrUtil.isBlank(localUploadUrl) ? "" : removeEndSlash(localUploadUrl.trim());
     }
 
     /**
@@ -2832,8 +3133,25 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
      * @return 是否远程URL
      */
     private boolean isRemoteUrl(String value) {
-        return StrUtil.isNotBlank(value)
-                && (value.toLowerCase().startsWith("http://") || value.toLowerCase().startsWith("https://"));
+        if (StrUtil.isBlank(value)) {
+            return false;
+        }
+        String url = value.trim().toLowerCase();
+        return url.startsWith("http://") || url.startsWith("https://");
+    }
+
+    /**
+     * 判断图片地址是否已经带有域名前缀。
+     *
+     * @param value 图片地址
+     * @return 是否带有域名前缀
+     */
+    private boolean hasDomainPrefix(String value) {
+        if (StrUtil.isBlank(value)) {
+            return false;
+        }
+        String url = value.trim();
+        return isRemoteUrl(url) || url.startsWith("//");
     }
 
     /**
@@ -2878,26 +3196,6 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         String siteUrl = systemConfigService.getValueByKey(Constants.CONFIG_KEY_SITE_URL);
         if (StrUtil.isNotBlank(siteUrl)) {
             return siteUrl.trim();
-        }
-        if (StrUtil.isNotBlank(crmebConfig.getDomain())) {
-            return normalizeSiteUrl(crmebConfig.getDomain());
-        }
-        String requestDomain = RequestUtil.getDomain();
-        if (StrUtil.isNotBlank(requestDomain)) {
-            return "http://" + requestDomain;
-        }
-        return "";
-    }
-
-    /**
-     * 获取admin接口地址地址。
-     *
-     * @return admin接口地址地址
-     */
-    private String getApiUrl() {
-        String apiUrl = systemConfigService.getValueByKey(Constants.CONFIG_KEY_API_URL);
-        if (StrUtil.isNotBlank(apiUrl)) {
-            return apiUrl.trim();
         }
         if (StrUtil.isNotBlank(crmebConfig.getDomain())) {
             return normalizeSiteUrl(crmebConfig.getDomain());
@@ -3359,13 +3657,13 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
     private JSONArray buildUsingThemeDataInfo(Theme theme, Map<Integer, String> sourceThemeTitleMap) {
         JSONArray dataInfo = new JSONArray();
         dataInfo.add(buildUsingThemeDataInfoItem("home", theme.getTitle(), theme.getHomeDataId(),
-                buildFileUrl(theme.getHomeImage()), theme.getHomeDataUpdateTime(), sourceThemeTitleMap));
+                theme.getHomeImage(), theme.getHomeDataUpdateTime(), sourceThemeTitleMap));
         dataInfo.add(buildUsingThemeDataInfoItem("category", theme.getTitle(), theme.getCategoryDataId(),
-                buildFileUrl(theme.getCategoryImage()), theme.getCategoryDataUpdateTime(), sourceThemeTitleMap));
+                theme.getCategoryImage(), theme.getCategoryDataUpdateTime(), sourceThemeTitleMap));
         dataInfo.add(buildUsingThemeDataInfoItem("detail", theme.getTitle(), theme.getDetailDataId(),
-                buildFileUrl(theme.getDetailImage()), theme.getDetailDataUpdateTime(), sourceThemeTitleMap));
+                theme.getDetailImage(), theme.getDetailDataUpdateTime(), sourceThemeTitleMap));
         dataInfo.add(buildUsingThemeDataInfoItem("user", theme.getTitle(), theme.getUserDataId(),
-                buildFileUrl(theme.getUserImage()), theme.getUserDataUpdateTime(), sourceThemeTitleMap));
+                theme.getUserImage(), theme.getUserDataUpdateTime(), sourceThemeTitleMap));
         return dataInfo;
     }
 
@@ -3385,7 +3683,7 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         JSONObject item = new JSONObject();
         item.put("key", key);
         item.put("title", getUsingThemeModuleTitle(defaultTitle, sourceThemeId, sourceThemeTitleMap));
-        item.put("image", buildFileUrl(image));
+        item.put("image", image);
         item.put("update_time", formatTimestamp(updateTime));
         return item;
     }
@@ -3415,22 +3713,6 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         String themeData = StrUtil.isBlank(data) || "null".equalsIgnoreCase(data.trim()) ? DEFAULT_THEME_DATA : data;
         Object parsedData = parseJsonData(themeData);
         return parsedData == null ? JSON.parseObject(DEFAULT_THEME_DATA) : parsedData;
-    }
-
-    /**
-     * 构建文件访问地址。
-     *
-     * @param path 文件路径
-     * @return 文件访问地址
-     */
-    private String buildFileUrl(String path) {
-        if (StrUtil.isBlank(path)) {
-            return "";
-        }
-        if (isRemoteUrl(path)) {
-            return path;
-        }
-        return removeEndSlash(getApiUrl()) + "/" + removeStartSlash(path);
     }
 
     /**
@@ -3645,15 +3927,19 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
      * @param theme 主题实体
      * @return 列表响应对象
      */
-    private ThemeResponse buildThemeResponse(Theme theme) {
+    private ThemeResponse buildThemeResponse(Theme theme, Map<String, String> imageDomainMap) {
         ThemeResponse response = new ThemeResponse();
         BeanUtils.copyProperties(theme, response);
         response.setShowUrl(buildThemeShowUrl(theme.getId()));
         response.setType(resolveThemeTypeName(theme.getType()));
-        response.setHomeImage(buildFileUrl(theme.getHomeImage()));
-        response.setCategoryImage(buildFileUrl(theme.getCategoryImage()));
-        response.setDetailImage(buildFileUrl(theme.getDetailImage()));
-        response.setUserImage(buildFileUrl(theme.getUserImage()));
+        response.setHomeImage(resolveThemeResponseImage(theme.getHomeImage(), imageDomainMap));
+        response.setCategoryImage(resolveThemeResponseImage(theme.getCategoryImage(), imageDomainMap));
+        response.setDetailImage(resolveThemeResponseImage(theme.getDetailImage(), imageDomainMap));
+        response.setUserImage(resolveThemeResponseImage(theme.getUserImage(), imageDomainMap));
+        response.setHomeDefaultImage(resolveThemeResponseImage(theme.getHomeDefaultImage(), imageDomainMap));
+        response.setCategoryDefaultImage(resolveThemeResponseImage(theme.getCategoryDefaultImage(), imageDomainMap));
+        response.setDetailDefaultImage(resolveThemeResponseImage(theme.getDetailDefaultImage(), imageDomainMap));
+        response.setUserDefaultImage(resolveThemeResponseImage(theme.getUserDefaultImage(), imageDomainMap));
         response.setHomeDataUpdateTime(CrmebDateUtil.timeStamp11ToDate(theme.getHomeDataUpdateTime()));
         response.setCategoryDataUpdateTime(CrmebDateUtil.timeStamp11ToDate(theme.getCategoryDataUpdateTime()));
         response.setDetailDataUpdateTime(CrmebDateUtil.timeStamp11ToDate(theme.getDetailDataUpdateTime()));
@@ -3661,6 +3947,26 @@ public class ThemeServiceImpl extends ServiceImpl<ThemeDao, Theme> implements Th
         response.setThemeDataUpdateTime(CrmebDateUtil.timeStamp11ToDate(theme.getThemeDataUpdateTime()));
         response.setAddTime(CrmebDateUtil.timeStamp11ToDate(theme.getAddTime()));
         response.setUpTime(CrmebDateUtil.timeStamp11ToDate(theme.getUpTime()));
+        return response;
+    }
+
+    /**
+     * 处理主题响应中的单张图片。
+     */
+    private String resolveThemeResponseImage(String image, Map<String, String> imageDomainMap) {
+        if (StrUtil.isBlank(image)) {
+            return "";
+        }
+        String resolvedImage = resolveThemeImageUrl(image, imageDomainMap);
+        return resolvedImage == null ? image.trim() : resolvedImage;
+    }
+
+    /**
+     * 追加主题预览地址并处理其中所有图片域名。
+     */
+    private JSONObject buildThemeInfoResponse(JSONObject data, Theme theme) {
+        JSONObject response = appendThemeShowUrl(data, theme);
+        appendImageDomainPrefix(response);
         return response;
     }
 

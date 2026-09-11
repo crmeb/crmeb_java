@@ -69,4 +69,7 @@ public class StoreProductReplyAddRequest implements Serializable {
 
     @ApiModelProperty(value = "商品规格属性值，多规格时用英文逗号拼接")
     private String sku;
+
+    @ApiModelProperty(value = "评论时间 [虚拟评论参数]，格式: yyyy-MM-dd HH:mm:ss")
+    private String createTime;
 }

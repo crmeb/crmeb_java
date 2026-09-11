@@ -73,6 +73,9 @@ public class StoreOrderInfoResponse implements Serializable {
     @ApiModelProperty(value = "支付方式")
     private String payType;
 
+    @ApiModelProperty(value = "支付状态")
+    private Boolean paid;
+
     @ApiModelProperty(value = "创建时间")
     private Date createTime;
 

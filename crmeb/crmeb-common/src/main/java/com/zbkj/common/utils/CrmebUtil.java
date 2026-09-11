@@ -179,19 +179,56 @@ public class CrmebUtil {
      */
     public static List<Integer> stringToArrayByRegex(String str, String regex ){
         List<Integer> list = new ArrayList<>();
-        if (str.contains(regex)){
+        if (StringUtils.isBlank(str)) {
+            return list;
+        }
 
-            String[] split = str.split(regex);
-
-            for (String value : split) {
-                if(!StringUtils.isBlank(value)){
-                    list.add(Integer.parseInt(value.trim()));
+        String valueStr = str.trim();
+        if (",".equals(regex) && valueStr.startsWith("[") && valueStr.endsWith("]")) {
+            try {
+                JSONArray jsonArray = JSONObject.parseArray(valueStr);
+                for (Object value : jsonArray) {
+                    addIntegerValue(list, value);
                 }
+                return list;
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (valueStr.contains(regex)){
+            String[] split = valueStr.split(regex);
+            for (String value : split) {
+                addIntegerValue(list, value);
             }
         }else {
-            list.add(Integer.parseInt(str));
+            addIntegerValue(list, valueStr);
         }
         return list;
+    }
+
+    private static void addIntegerValue(List<Integer> list, Object value) {
+        if (value == null) {
+            return;
+        }
+        String valueStr = cleanIntegerString(String.valueOf(value));
+        if (!StringUtils.isBlank(valueStr)) {
+            list.add(Integer.parseInt(valueStr));
+        }
+    }
+
+    private static String cleanIntegerString(String value) {
+        String valueStr = value.trim();
+        while (valueStr.startsWith("[") || valueStr.startsWith("]")) {
+            valueStr = valueStr.substring(1).trim();
+        }
+        while (valueStr.endsWith("[") || valueStr.endsWith("]")) {
+            valueStr = valueStr.substring(0, valueStr.length() - 1).trim();
+        }
+        while (valueStr.length() > 1 && ((valueStr.startsWith("\"") && valueStr.endsWith("\"")) ||
+                (valueStr.startsWith("'") && valueStr.endsWith("'")))) {
+            valueStr = valueStr.substring(1, valueStr.length() - 1).trim();
+        }
+        return valueStr;
     }
 
 
@@ -212,12 +249,7 @@ public class CrmebUtil {
      * @return int数组
      */
     public static List<Integer> stringToArrayInt(String str){
-        List<String> strings = stringToArrayStrRegex(str, ",");
-        List<Integer> ids = new ArrayList<>();
-        for (String string : strings) {
-            ids.add(Integer.parseInt(string.trim()));
-        }
-        return ids;
+        return stringToArray(str);
     }
 
     /**
@@ -457,6 +489,9 @@ public class CrmebUtil {
      * @return String
      */
     public static String getFindInSetSql(String field, ArrayList<Integer> list ){
+        if (CollUtil.isEmpty(list)) {
+            return "1 = 0";
+        }
         ArrayList<String> sqlList = new ArrayList<>();
         for (Integer value: list) {
             sqlList.add(getFindInSetSql(field, value));
@@ -474,6 +509,9 @@ public class CrmebUtil {
      */
     public static String getFindInSetSql(String field, String idStr ){
         List<Integer> list = stringToArray(idStr);
+        if (CollUtil.isEmpty(list)) {
+            return "1 = 0";
+        }
         ArrayList<String> sqlList = new ArrayList<>();
         for (Integer value: list) {
             sqlList.add(getFindInSetSql(field, value));

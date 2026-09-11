@@ -72,7 +72,10 @@ public class SystemAttachmentServiceImpl extends ServiceImpl<SystemAttachmentDao
     public List<SystemAttachment> getList(Integer pid, String attType, PageParamRequest pageParamRequest) {
         PageHelper.startPage(pageParamRequest.getPage(), pageParamRequest.getLimit());
         LambdaQueryWrapper<SystemAttachment> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(SystemAttachment::getPid, pid);
+        // pid 为空或 0 时查询全部附件，大于 0 时按分类查询
+        if (pid != null && pid > 0) {
+            lambdaQueryWrapper.eq(SystemAttachment::getPid, pid);
+        }
         if(StringUtils.isNotEmpty(attType)){
             lambdaQueryWrapper.in(SystemAttachment::getAttType, CrmebUtil.stringToArrayStr(attType));
         }

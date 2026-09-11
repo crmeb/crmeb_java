@@ -36,8 +36,8 @@ public class StoreCouponUserSearchRequest extends UserCommonSearchRequest implem
     //@ApiModelProperty(value = "优惠券所属用户")
     //private Integer uid;
     //
-    //@ApiModelProperty(value = "优惠券id")
-    //private Integer couponId;
+    @ApiModelProperty(value = "优惠券id")
+    private Integer couponId;
 
     @ApiModelProperty(value = "优惠券名称")
     private String name;

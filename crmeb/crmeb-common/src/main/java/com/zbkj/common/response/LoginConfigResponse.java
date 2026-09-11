@@ -40,4 +40,7 @@ public class LoginConfigResponse implements Serializable {
     @ApiModelProperty(value = "公司名称")
     private String siteName;
 
+    @ApiModelProperty(value = "公司图片")
+    private String companyImage;
+
 }

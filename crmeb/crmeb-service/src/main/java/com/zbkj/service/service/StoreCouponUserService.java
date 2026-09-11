@@ -91,4 +91,13 @@ public interface StoreCouponUserService extends IService<StoreCouponUser> {
      * @return CommonPage<StoreCouponUserResponse>
      */
     CommonPage<StoreCouponUserResponse> getMyCouponList(String type, PageParamRequest pageParamRequest);
+
+    /**
+     * 根据用户id、订单id、领取类型查询未使用的优惠券
+     * @param uid 用户uid
+     * @param orderId 订单id
+     * @param type 领取类型
+     * @return List<StoreCouponUser>
+     */
+    List<StoreCouponUser> findUnusedByUidAndOrderIdAndType(Integer uid, Integer orderId, String type);
 }

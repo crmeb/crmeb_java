@@ -191,6 +191,9 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
             switch (request.getSearchType()) {
                 case UserConstants.USER_SEARCH_TYPE_ALL:
                     map.put("keywords", keywords);
+                    if (Boolean.TRUE.equals(request.getKeywordOrderSearch())) {
+                        map.put("keywordOrderSearch", true);
+                    }
                     break;
                 case UserConstants.USER_SEARCH_TYPE_UID:
                     map.put("uid", Integer.valueOf(request.getContent()));
@@ -221,6 +224,12 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         }
         if (StrUtil.isNotBlank(request.getDeliveryId())) {
             map.put("deliveryId", URLUtil.decode(request.getDeliveryId()));
+        }
+        if (StrUtil.isNotBlank(request.getPayType())) {
+            map.put("payType", request.getPayType());
+        }
+        if (Boolean.TRUE.equals(request.getRefundStatusAll())) {
+            map.put("refundStatusAll", true);
         }
         if (!request.getType().equals(2)) {
             map.put("type", request.getType());
@@ -289,6 +298,22 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     @Override
     public boolean create(StoreOrder storeOrder) {
         return dao.insert(storeOrder) > 0;
+    }
+
+    /**
+     * 原子占位商户订单号：仅在订单未设置商户订单号时写入
+     * @param id 订单id
+     * @param outTradeNo 商户订单号
+     * @return 是否占位成功
+     */
+    @Override
+    public Boolean claimOutTradeNo(Integer id, String outTradeNo) {
+        LambdaUpdateWrapper<StoreOrder> wrapper = Wrappers.lambdaUpdate();
+        wrapper.eq(StoreOrder::getId, id);
+        wrapper.and(w -> w.isNull(StoreOrder::getOutTradeNo).or().eq(StoreOrder::getOutTradeNo, ""));
+        wrapper.set(StoreOrder::getOutTradeNo, outTradeNo);
+        wrapper.set(StoreOrder::getUpdateTime, DateUtil.date());
+        return update(wrapper);
     }
 
     /**
@@ -618,6 +643,12 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         if (!storeOrder.getPaid()) {
             throw new CrmebException("未支付无法退款");
         }
+        if (Objects.equals(storeOrder.getRefundStatus(), 3)) {
+            throw new CrmebException("订单退款处理中，请勿重复操作");
+        }
+        if (Objects.equals(storeOrder.getRefundStatus(), 2)) {
+            throw new CrmebException("订单已退款，请勿重复操作");
+        }
         if (storeOrder.getRefundPrice().add(request.getAmount()).compareTo(storeOrder.getPayPrice()) > 0) {
             throw new CrmebException("退款金额大于支付金额，请修改退款金额");
         }
@@ -649,22 +680,28 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
         }
 
         //修改订单退款状态
-        storeOrder.setRefundStatus(3);
+        boolean isBalancePayment = Constants.PAY_TYPE_YUE.equals(storeOrder.getPayType());
+        storeOrder.setRefundStatus(isBalancePayment ? 2 : 3);
         storeOrder.setRefundPrice(request.getAmount());
 
         storeOrder.setUpdateTime(DateUtil.date());
         Boolean execute = transactionTemplate.execute(e -> {
             updateById(storeOrder);
-            if (storeOrder.getPayType().equals(Constants.PAY_TYPE_YUE)) {
+            if (isBalancePayment) {
                 //新增日志
                 request.setOrderId(storeOrder.getId());
                 userBillService.saveRefundBill(request, user);
 
                 // 更新用户金额
-                userService.operationNowMoney(user.getUid(), request.getAmount(), user.getNowMoney(), "add");
+                Boolean balanceUpdated = userService.operationNowMoney(user.getUid(), request.getAmount(), user.getNowMoney(), "add");
+                if (!Boolean.TRUE.equals(balanceUpdated)) {
+                    throw new CrmebException("余额退款失败，请稍后重试");
+                }
 
                 // 退款task
-                redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER, storeOrder.getId());
+                if (!redisUtil.lPush(Constants.ORDER_TASK_REDIS_KEY_AFTER_REFUND_BY_USER, storeOrder.getId())) {
+                    throw new CrmebException("退款后续任务提交失败，请稍后重试");
+                }
             }
             if (storeOrder.getPayType().equals(Constants.PAY_TYPE_WE_CHAT) && request.getAmount().compareTo(BigDecimal.ZERO) == 0) {
                 //新增日志
@@ -2566,4 +2603,3 @@ public class StoreOrderServiceImpl extends ServiceImpl<StoreOrderDao, StoreOrder
     }
 
 }
-

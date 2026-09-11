@@ -35,8 +35,6 @@ public class NotifyConstants {
     public static final String PAY_SUCCESS_ADMIN_MARK = "adminPaySuccess";
     /** 收货(管理员)标记 */
     public static final String RECEIPT_GOODS_ADMIN_MARK = "adminReceiptGoods";
-    /** 用户下单(管理员)标记 */
-    public static final String PLACE_AN_ORDER_ADMIN_MARK = "adminPlaceAnOrder";
     /** 用户发起退款(管理员)标记 */
     public static final String APPLY_ORDER_REFUND_ADMIN_MARK = "adminApplyOrderRefund";
 }

@@ -30,19 +30,6 @@ public interface OnePassService {
     Boolean login(OnePassLoginRequest request);
 
     /**
-     * 保存一号通应用信息
-     * @param request 一号通服务中申请的应用信息
-     * @return 保存结果
-     */
-    Boolean saveOnePassApplicationInfo(OnePassLoginRequest request);
-
-    /**
-     * 获取一号通应用信息
-     * @return 一号通应用信息
-     */
-    OnePassLoginRequest getOnePassApplicationInfo();
-
-    /**
      *  商家寄件
      * @param request 寄件请求对象
      * @return 寄件返回数据

@@ -436,6 +436,18 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
                 couponUser.setUpdateTime(DateUtil.date());
                 couponUserService.updateById(couponUser);
             }
+
+            // 作废下单赠送的优惠券
+            List<StoreCouponUser> giftCoupons = couponUserService.findUnusedByUidAndOrderIdAndType(
+                    storeOrder.getUid(), storeOrder.getId(), CouponConstants.STORE_COUPON_USER_TYPE_BUY);
+            if (CollUtil.isNotEmpty(giftCoupons)) {
+                giftCoupons.forEach(c -> {
+                    c.setStatus(CouponConstants.STORE_COUPON_USER_STATUS_LAPSED);
+                    c.setUpdateTime(DateUtil.date());
+                });
+                couponUserService.updateBatchById(giftCoupons);
+            }
+
             return Boolean.TRUE;
         });
 

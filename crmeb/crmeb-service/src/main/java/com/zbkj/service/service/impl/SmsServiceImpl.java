@@ -94,40 +94,36 @@ public class SmsServiceImpl implements SmsService {
                 HashMap<String, Object> justPram = new HashMap<>();
                 justPram.put("code", code);
                 justPram.put("time", codeExpireStr);
-                push(phone, SmsConstants.SMS_CONFIG_VERIFICATION_CODE,
+                Boolean sendResult = push(phone, SmsConstants.SMS_CONFIG_VERIFICATION_CODE,
                         SmsConstants.SMS_CONFIG_VERIFICATION_CODE_TEMP_ID, justPram);
+
+                if (!sendResult) {
+                    return false;
+                }
 
                 // 将验证码存入redis
                 redisUtil.set(userService.getValidateCodeRedisKey(phone), code, Long.valueOf(codeExpireStr), TimeUnit.MINUTES);
-                break;
+                return true;
             case SmsConstants.SMS_CONFIG_TYPE_LOWER_ORDER_SWITCH: // 支付成功短信提醒 pay_price order_id
-                push(phone, msgTempId, pram);
-                break;
+                return push(phone, msgTempId, pram);
             case SmsConstants.SMS_CONFIG_TYPE_DELIVER_GOODS_SWITCH: // 发货短信提醒 nickname store_name
-                push(phone, msgTempId, pram);
-                break;
+                return push(phone, msgTempId, pram);
             case SmsConstants.SMS_CONFIG_TYPE_CONFIRM_TAKE_OVER_SWITCH: // 确认收货短信提醒 order_id store_name
-                push(phone, SmsConstants.SMS_CONFIG_CONFIRM_TAKE_OVER_SWITCH,
+                return push(phone, SmsConstants.SMS_CONFIG_CONFIRM_TAKE_OVER_SWITCH,
                         SmsConstants.SMS_CONFIG_CONFIRM_TAKE_OVER_SWITCH_TEMP_ID, pram);
-                break;
             case SmsConstants.SMS_CONFIG_TYPE_ADMIN_LOWER_ORDER_SWITCH: // 用户下单管理员短信提醒 admin_name order_id
-                push(phone, msgTempId, pram);
-                break;
+                return push(phone, msgTempId, pram);
             case SmsConstants.SMS_CONFIG_TYPE_ADMIN_PAY_SUCCESS_SWITCH: // 支付成功管理员短信提醒 admin_name order_id
-                push(phone, msgTempId, pram);
-                break;
+                return push(phone, msgTempId, pram);
             case SmsConstants.SMS_CONFIG_TYPE_ADMIN_REFUND_SWITCH: // 用户确认收货管理员短信提醒 admin_name order_id
-                push(phone, msgTempId, pram);
-                break;
+                return push(phone, msgTempId, pram);
             case SmsConstants.SMS_CONFIG_TYPE_ADMIN_CONFIRM_TAKE_OVER_SWITCH: // 用户发起退款管理员短信提醒 admin_name order_id
-                push(phone, msgTempId, pram);
-                break;
+                return push(phone, msgTempId, pram);
             case SmsConstants.SMS_CONFIG_TYPE_PRICE_REVISION_SWITCH: // 改价短信提醒 order_id pay_price
-                push(phone, SmsConstants.SMS_CONFIG_PRICE_REVISION_SWITCH,
-                        SmsConstants.SMS_CONFIG_PRICE_REVISION_SWITCH_TEMP_ID, pram);
-                break;
+                return push(phone, msgTempId, pram);
+            default:
+                return false;
         }
-        return true;
     }
 
     /**
@@ -366,23 +362,6 @@ public class SmsServiceImpl implements SmsService {
         map.put("pay_price", payPrice);
         map.put("order_id", orderNo);
         return sendMessages(phone, SmsConstants.SMS_CONFIG_TYPE_LOWER_ORDER_SWITCH, msgTempId, map);
-    }
-
-    /**
-     * 发送管理员下单短信提醒
-     *
-     * @param phone    手机号
-     * @param orderNo  订单编号
-     * @param realName 管理员名称
-     * @param msgTempId 短信模板id
-     * @return Boolean
-     */
-    @Override
-    public Boolean sendCreateOrderNotice(String phone, String orderNo, String realName, Integer msgTempId) {
-        HashMap<String, Object> map = CollUtil.newHashMap();
-        map.put("admin_name", realName);
-        map.put("order_id", orderNo);
-        return sendMessages(phone, SmsConstants.SMS_CONFIG_TYPE_ADMIN_LOWER_ORDER_SWITCH, msgTempId, map);
     }
 
     /**

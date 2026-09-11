@@ -34,11 +34,20 @@ public class StoreOrderDetailResponse implements Serializable {
 
     private static final long serialVersionUID=1L;
 
+    @ApiModelProperty(value = "订单ID")
+    private Integer id;
+
     @ApiModelProperty(value = "订单号")
     private String orderId;
 
+    @ApiModelProperty(value = "用户id")
+    private Integer uid;
+
     @ApiModelProperty(value = "实际支付金额")
     private BigDecimal payPrice;
+
+    @ApiModelProperty(value = "订单商品总数")
+    private Integer totalNum;
 
     @ApiModelProperty(value = "支付方式")
     private String payType;
@@ -84,6 +93,24 @@ public class StoreOrderDetailResponse implements Serializable {
 
     @ApiModelProperty(value = "核销码")
     private String verifyCode;
+
+    @ApiModelProperty(value = "配送方式 1=快递 ，2=门店自提")
+    private Integer shippingType;
+
+    @ApiModelProperty(value = "发货类型 express 发货，send 送货，fictitious虚拟")
+    private String deliveryType;
+
+    @ApiModelProperty(value = "快递名称/送货人姓名")
+    private String deliveryName;
+
+    @ApiModelProperty(value = "快递单号/手机号")
+    private String deliveryId;
+
+    @ApiModelProperty(value = "快递公司简称")
+    private String deliveryCode;
+
+    @ApiModelProperty(value = "拼团id 0没有拼团")
+    private Integer pinkId;
 
     @ApiModelProperty(value = "订单类型")
     private String orderType;

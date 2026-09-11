@@ -22,17 +22,22 @@ import com.github.pagehelper.PageInfo;
 import com.zbkj.common.result.CommonResultCode;
 import com.zbkj.common.utils.CrmebDateUtil;
 import com.zbkj.common.model.finance.UserRecharge;
+import com.zbkj.common.model.user.UserBill;
+import com.zbkj.common.request.UserRechargeRefundRequest;
 import com.zbkj.common.request.UserRechargeSearchRequest;
 import com.zbkj.common.response.UserRechargeResponse;
 import com.zbkj.common.model.user.User;
 import com.zbkj.common.utils.ValidateFormUtil;
 import com.zbkj.common.vo.DateLimitUtilVo;
 import com.zbkj.service.dao.UserRechargeDao;
+import com.zbkj.service.service.RechargeRefundService;
+import com.zbkj.service.service.UserBillService;
 import com.zbkj.service.service.UserRechargeService;
 import com.zbkj.service.service.UserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -61,6 +66,12 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserBillService userBillService;
+
+    @Autowired
+    private RechargeRefundService rechargeRefundService;
 
 
     /**
@@ -183,6 +194,88 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
         map.put("other", total.subtract(routine).subtract(weChat)); //其他金额
 
         return map;
+    }
+
+    /**
+     * 后台充值订单退款
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean refund(UserRechargeRefundRequest request) {
+        UserRecharge userRecharge = dao.getByIdForUpdate(request.getId());
+        if (ObjectUtil.isNull(userRecharge)) {
+            throw new CrmebException("充值订单不存在");
+        }
+        if (!request.getOrderId().equals(userRecharge.getOrderId())) {
+            throw new CrmebException("充值订单信息不匹配");
+        }
+        if (!Boolean.TRUE.equals(userRecharge.getPaid())) {
+            throw new CrmebException("充值订单未支付");
+        }
+        if (ObjectUtil.isNotNull(userRecharge.getRefundPrice())
+                && userRecharge.getRefundPrice().compareTo(BigDecimal.ZERO) > 0) {
+            throw new CrmebException("充值订单已退款");
+        }
+        if (ObjectUtil.isNull(userRecharge.getPrice())
+                || userRecharge.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new CrmebException("充值订单金额异常");
+        }
+        if ("balance".equals(userRecharge.getRechargeType())) {
+            throw new CrmebException("佣金转入余额不能退款");
+        }
+
+        BigDecimal givePrice = ObjectUtil.isNull(userRecharge.getGivePrice())
+                ? BigDecimal.ZERO : userRecharge.getGivePrice();
+        if (givePrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new CrmebException("充值赠送金额异常");
+        }
+        BigDecimal deductionAmount = userRecharge.getPrice();
+        if (request.getType().equals(2)) {
+            deductionAmount = deductionAmount.add(givePrice);
+        }
+
+        User user = userService.getById(userRecharge.getUid());
+        if (ObjectUtil.isNull(user)) {
+            throw new CrmebException("充值用户不存在");
+        }
+        if (ObjectUtil.isNull(user.getNowMoney())) {
+            throw new CrmebException("用户余额数据异常");
+        }
+        if (user.getNowMoney().compareTo(deductionAmount) < 0) {
+            throw new CrmebException("用户余额不足，无法完成充值退款");
+        }
+
+        boolean moneyUpdated = userService.operationNowMoney(
+                user.getUid(), deductionAmount, user.getNowMoney(), "sub");
+        if (!moneyUpdated) {
+            throw new CrmebException("用户余额已发生变化，请重试");
+        }
+
+        UserBill userBill = new UserBill();
+        userBill.setUid(user.getUid());
+        userBill.setLinkId(userRecharge.getOrderId());
+        userBill.setPm(0);
+        userBill.setTitle("充值退款");
+        userBill.setCategory(Constants.USER_BILL_CATEGORY_MONEY);
+        userBill.setType(Constants.USER_BILL_TYPE_USER_RECHARGE_REFUND);
+        userBill.setNumber(deductionAmount);
+        userBill.setBalance(user.getNowMoney().subtract(deductionAmount));
+        userBill.setMark(request.getType().equals(2)
+                ? StrUtil.format("充值退款扣回本金{}元及赠送金额{}元", userRecharge.getPrice(), givePrice)
+                : StrUtil.format("充值退款扣回本金{}元", userRecharge.getPrice()));
+        userBill.setStatus(1);
+        userBill.setCreateTime(CrmebDateUtil.nowDateTime());
+        if (!userBillService.save(userBill)) {
+            throw new CrmebException("充值退款流水保存失败");
+        }
+
+        userRecharge.setRefundPrice(userRecharge.getPrice());
+        if (!updateById(userRecharge)) {
+            throw new CrmebException("充值退款状态更新失败");
+        }
+
+        rechargeRefundService.refund(userRecharge);
+        return Boolean.TRUE;
     }
 
     /**
@@ -324,4 +417,3 @@ public class UserRechargeServiceImpl extends ServiceImpl<UserRechargeDao, UserRe
         return dao.selectOne(lqw);
     }
 }
-

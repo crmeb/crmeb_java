@@ -24,5 +24,6 @@ public class YlyPrintRequest {
     private String Discount;    // 优惠
     private String Postal;      // 邮费
     private String Deduction;   // 折扣
+    private String Coupon;      // 优惠券
     private String PayMoney;    // 实际金额
 }

@@ -198,29 +198,6 @@ public class OrderServiceImpl implements OrderService {
     private StorePinkService storePinkService;
 
     /**
-     * 发送后台管理员下单提醒通知短信
-     *
-     * @param orderNo 订单编号
-     */
-    @Async
-    public void sendAdminOrderNotice(String orderNo) {
-        // 系统是否开启用户下单管理员提醒开关
-        SystemNotification notification = systemNotificationService.getByMark(NotifyConstants.PLACE_AN_ORDER_ADMIN_MARK);
-        if (!notification.getIsSms().equals(1)) {
-            return;
-        }
-        // 查询可已发送短信的管理员
-        List<SystemAdmin> systemAdminList = systemAdminService.findIsSmsList();
-        if (CollUtil.isEmpty(systemAdminList)) {
-            return;
-        }
-        // 发送短信
-        SmsTemplate smsTemplate = smsTemplateService.getDetail(notification.getSmsId());
-        Integer tempId = Integer.valueOf(smsTemplate.getTempId());
-        systemAdminList.forEach(admin -> smsService.sendCreateOrderNotice(admin.getPhone(), orderNo, admin.getRealName(), tempId));
-    }
-
-    /**
      * 删除已完成订单
      *
      * @param id Integer 订单id
@@ -1278,9 +1255,6 @@ public class OrderServiceImpl implements OrderService {
 
         // 加入自动未支付自动取消队列
         redisUtil.lPush(Constants.ORDER_AUTO_CANCEL_KEY, storeOrder.getOrderId());
-
-        // 发送后台管理员下单提醒通知短信
-        sendAdminOrderNotice(storeOrder.getOrderId());
 
         MyRecord record = new MyRecord();
         record.set("orderNo", storeOrder.getOrderId());

@@ -3,6 +3,7 @@ package com.zbkj.service.dao;
 import com.zbkj.common.model.finance.UserRecharge;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.zbkj.common.response.UserRechargeResponse;
+import org.apache.ibatis.annotations.Param;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -36,4 +37,10 @@ public interface UserRechargeDao extends BaseMapper<UserRecharge> {
     BigDecimal getSumByRefund();
 
     List<UserRechargeResponse> getAdminPage(Map<String, Object> map);
+
+    /**
+     * 查询充值记录并加行锁
+     * @param id 充值记录ID
+     */
+    UserRecharge getByIdForUpdate(@Param("id") Integer id);
 }

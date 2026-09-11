@@ -36,30 +36,30 @@ public class SystemStoreStaffRequest implements Serializable {
 
     private static final long serialVersionUID=1L;
 
-    @ApiModelProperty(value = "管理员 id")
-    @Min(value = 1, message = "请选择管理员")
+    @ApiModelProperty(value = "移动端用户 id")
+    @NotNull(message = "请选择移动端用户")
+    @Min(value = 1, message = "请选择移动端用户")
     private Integer uid;
 
     @ApiModelProperty(value = "管理员头像")
     private String avatar;
 
-    @ApiModelProperty(value = "提货点id")
-    @Min(value = 1, message = "请选择提货点")
+    @ApiModelProperty(value = "提货点id，开启订单核销时必填")
     private Integer storeId;
 
-    @ApiModelProperty(value = "核销员 名称 [昵称]")
-    @NotBlank(message = "核销员名称不能为空")
-    @Length(max = 64,message = "核销员名称不能超过64个字符")
+    @ApiModelProperty(value = "移动端管理员/核销员名称 [昵称]")
+    @NotBlank(message = "管理员名称不能为空")
+    @Length(max = 64,message = "管理员名称不能超过64个字符")
     private String staffName;
 
     @ApiModelProperty(value = "手机号码")
     private String phone;
 
-    @ApiModelProperty(value = "核销开关")
-    private boolean verifyStatus = false;
+    @ApiModelProperty(value = "核销开关：0=关闭，1=开启")
+    private Integer verifyStatus;
 
-    @ApiModelProperty(value = "状态")
-    private boolean status = false;
+    @ApiModelProperty(value = "商家管理状态：0=禁用，1=启用")
+    private Integer status;
 
 
 }

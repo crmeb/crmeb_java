@@ -53,6 +53,12 @@ public class WxBindingPhoneRequest implements Serializable {
     @ApiModelProperty(value = "加密算法的初始向量")
     private String iv;
 
-    @ApiModelProperty(value = "小程序code")
+    @ApiModelProperty(value = "小程序登录code，来自wx.login()，用于获取session_key")
     private String code;
+
+    @ApiModelProperty(value = "兼容前端字段：小程序登录code，优先于code使用")
+    private String wxCode;
+
+    @ApiModelProperty(value = "微信手机号授权code，新版手机号授权接口返回")
+    private String phoneCode;
 }

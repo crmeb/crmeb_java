@@ -3,10 +3,8 @@ package com.zbkj.service.dao;
 import com.zbkj.common.model.order.StoreOrder;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.zbkj.common.request.StoreDateRangeSqlPram;
-import com.zbkj.common.request.StoreOrderStaticsticsRequest;
 import com.zbkj.common.response.OrderBrokerageData;
 import com.zbkj.common.response.StoreOrderStatisticsChartItemResponse;
-import com.zbkj.common.response.StoreStaffDetail;
 import org.apache.ibatis.annotations.Param;
 
 import java.math.BigDecimal;
@@ -44,13 +42,6 @@ public interface StoreOrderDao extends BaseMapper<StoreOrder> {
     Integer getRefundTotal(String where);
 
     List<StoreOrder> findFrontList(Map<String, Object> searchMap);
-
-    /**
-     * 核销详情 月数据
-     * @param request 分页和日期
-     * @return 月数据
-     */
-    List<StoreStaffDetail> getOrderVerificationDetail(StoreOrderStaticsticsRequest request);
 
     /**
      * 订单统计详情 price

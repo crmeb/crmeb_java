@@ -8,6 +8,7 @@ import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.request.YlyPrintRequest;
 import com.zbkj.common.request.YlyPrintRequestGoods;
+import com.zbkj.common.vo.OrderInfoDetailVo;
 import com.zbkj.common.vo.StoreOrderInfoOldVo;
 
 import java.math.BigDecimal;
@@ -75,11 +76,23 @@ public class YlyPrintServiceImpl implements YlyPrintService {
         }
         List<StoreOrderInfoOldVo> exitOrderInfo = storeOrderInfoService.getOrderListByOrderId(exitOrder.getId());
         List<YlyPrintRequestGoods> goods = new ArrayList<>();
+        BigDecimal originalTotal = BigDecimal.ZERO;
+        BigDecimal memberDiscount = BigDecimal.ZERO;
         for (StoreOrderInfoOldVo storeOrderInfo : exitOrderInfo) {
-            goods.add(new YlyPrintRequestGoods(storeOrderInfo.getInfo().getProductName()
-                    ,storeOrderInfo.getInfo().getPrice().toString(),
-                    storeOrderInfo.getInfo().getPayNum()+"",
-                    storeOrderInfo.getInfo().getPrice().multiply(BigDecimal.valueOf(storeOrderInfo.getInfo().getPayNum())).setScale(2, RoundingMode.HALF_UP).toString()));
+            OrderInfoDetailVo info = storeOrderInfo.getInfo();
+            if (info == null || info.getPrice() == null || info.getPayNum() == null) {
+                continue;
+            }
+            BigDecimal qty = BigDecimal.valueOf(info.getPayNum());
+            BigDecimal itemOriginalTotal = info.getPrice().multiply(qty).setScale(2, RoundingMode.HALF_UP);
+            originalTotal = originalTotal.add(itemOriginalTotal);
+            // 计算会员优惠金额：(原价 - 会员价) * 数量
+            if (info.getVipPrice() != null) {
+                BigDecimal itemVipTotal = info.getVipPrice().multiply(qty).setScale(2, RoundingMode.HALF_UP);
+                memberDiscount = memberDiscount.add(itemOriginalTotal.subtract(itemVipTotal));
+            }
+            goods.add(new YlyPrintRequestGoods(info.getProductName(), info.getPrice().toString(),
+                    String.valueOf(info.getPayNum()), itemOriginalTotal.toString()));
         }
 
         YlyPrintRequest ylyPrintRequest = new YlyPrintRequest();
@@ -92,10 +105,11 @@ public class YlyPrintServiceImpl implements YlyPrintService {
         ylyPrintRequest.setNote(exitOrder.getMark());
 
         ylyPrintRequest.setGoods(goods);
-        ylyPrintRequest.setAmount(exitOrder.getProTotalPrice().toString());
-        ylyPrintRequest.setDiscount(exitOrder.getDeductionPrice().toString());
+        ylyPrintRequest.setAmount(originalTotal.setScale(2, RoundingMode.HALF_UP).toString());
+        ylyPrintRequest.setDiscount(memberDiscount.setScale(2, RoundingMode.HALF_UP).toString());
         ylyPrintRequest.setPostal(exitOrder.getPayPostage().toString());
-        ylyPrintRequest.setDeduction(exitOrder.getCouponPrice().toString());
+        ylyPrintRequest.setDeduction(exitOrder.getDeductionPrice().toString());
+        ylyPrintRequest.setCoupon(exitOrder.getCouponPrice().toString());
         ylyPrintRequest.setPayMoney(exitOrder.getPayPrice().toString());
 
         try {

@@ -251,6 +251,14 @@ public interface UserService extends IService<User> {
     Boolean updateUserPhone(Integer id, String phone);
 
     /**
+     * 后台修改用户密码
+     * @param id 用户uid
+     * @param password 新密码
+     * @return Boolean
+     */
+    Boolean updateUserPassword(Integer id, String password);
+
+    /**
      * 根据昵称匹配用户，返回id集合
      * @param nikeName 需要匹配得昵称
      * @return List
@@ -324,4 +332,11 @@ public interface UserService extends IService<User> {
      * 用户注销
      */
     Boolean logoff();
+
+    /**
+     * 后台管理员新增H5用户
+     * @param request 创建用户参数
+     * @return User
+     */
+    User adminCreateUser(UserCreateRequest request);
 }

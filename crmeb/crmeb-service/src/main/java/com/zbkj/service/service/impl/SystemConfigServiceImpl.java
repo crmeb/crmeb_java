@@ -24,6 +24,8 @@ import com.zbkj.service.dao.SystemConfigDao;
 import com.zbkj.service.service.SystemAttachmentService;
 import com.zbkj.service.service.SystemConfigService;
 import com.zbkj.service.service.SystemFormTempService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -48,6 +50,8 @@ import java.util.List;
  */
 @Service
 public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, SystemConfig> implements SystemConfigService {
+
+    private static final Logger logger = LoggerFactory.getLogger(SystemConfigServiceImpl.class);
 
     @Resource
     private SystemConfigDao dao;
@@ -173,16 +177,19 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
             }
             return Boolean.TRUE;
         });
-        if (execute && crmebConfig.isAsyncConfig() && CollUtil.isNotEmpty(systemConfigOldList)) {
-            asyncDelete(systemConfigOldList);
+        if (Boolean.TRUE.equals(execute)) {
+            deleteConfigCache(systemConfigOldList);
+            systemConfigList.forEach(this::syncConfigCache);
         }
         return execute;
     }
 
-    private void asyncDelete(List<SystemConfig> systemConfigList) {
+    private void deleteConfigCache(List<SystemConfig> systemConfigList) {
         systemConfigList.forEach(config -> {
-            if (redisUtil.hHasKey(Constants.CONFIG_LIST, config.getName())) {
+            try {
                 redisUtil.hmDelete(Constants.CONFIG_LIST, config.getName());
+            } catch (Exception exception) {
+                logger.error("删除系统配置缓存失败，name={}", config.getName(), exception);
             }
         });
     }
@@ -216,8 +223,8 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
             systemConfig.setUpdateTime(DateUtil.date());
             result = updateById(systemConfig);
         }
-        if (result && crmebConfig.isAsyncConfig()) {
-            async(systemConfig);
+        if (result) {
+            syncConfigCache(systemConfig);
         }
         return result;
     }
@@ -370,12 +377,18 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         return systemConfig;
     }
 
-    private void asyncBlank(String key) {
-        redisUtil.hset(Constants.CONFIG_LIST, key, "");
+    private void syncBlankConfigCache(String key) {
+        syncConfigCache(key, "");
     }
 
-    private void async(SystemConfig systemConfig) {
-        redisUtil.hset(Constants.CONFIG_LIST, systemConfig.getName(), systemConfig.getValue());
+    private void syncConfigCache(SystemConfig systemConfig) {
+        syncConfigCache(systemConfig.getName(), systemConfig.getValue());
+    }
+
+    private void syncConfigCache(String name, String value) {
+        if (!redisUtil.hset(Constants.CONFIG_LIST, name, value)) {
+            logger.error("同步系统配置缓存失败，name={}", name);
+        }
     }
 
 
@@ -397,10 +410,10 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         if (size <= 0) {
             SystemConfig systemConfig = getByName(name);
             if (ObjectUtil.isNull(systemConfig) || StrUtil.isBlank(systemConfig.getValue())) {
-                asyncBlank(name);
+                syncBlankConfigCache(name);
                 return "";
             }
-            async(systemConfig);
+            syncConfigCache(systemConfig);
             return systemConfig.getValue();
         }
         Object data = redisUtil.hget(Constants.CONFIG_LIST, name);
@@ -409,10 +422,10 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         }
         SystemConfig systemConfig = getByName(name);
         if (ObjectUtil.isNull(systemConfig) || StrUtil.isBlank(systemConfig.getValue())) {
-            asyncBlank(name);
+            syncBlankConfigCache(name);
             return "";
         }
-        async(systemConfig);
+        syncConfigCache(systemConfig);
         return systemConfig.getValue();
     }
 
@@ -487,4 +500,3 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigDao, System
         return systemAttachmentService.getCdnUrl();
     }
 }
-

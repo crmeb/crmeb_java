@@ -108,6 +108,9 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
                     break;
             }
         }
+        if (ObjectUtil.isNotNull(request.getCouponId())) {
+            map.put("couponId", request.getCouponId());
+        }
         if (StrUtil.isNotBlank(request.getName())) {
             String couponName = URLUtil.decode(request.getName());
             map.put("name", couponName);
@@ -591,6 +594,19 @@ public class StoreCouponUserServiceImpl extends ServiceImpl<StoreCouponUserDao, 
             responseList.add(storeCouponUserResponse);
         }
         return CommonPage.restPage(responseList);
+    }
+
+    /**
+     * 根据用户id、订单id、领取类型查询未使用的优惠券
+     */
+    @Override
+    public List<StoreCouponUser> findUnusedByUidAndOrderIdAndType(Integer uid, Integer orderId, String type) {
+        LambdaQueryWrapper<StoreCouponUser> lqw = new LambdaQueryWrapper<>();
+        lqw.eq(StoreCouponUser::getUid, uid)
+                .eq(StoreCouponUser::getOrderId, orderId)
+                .eq(StoreCouponUser::getType, type)
+                .eq(StoreCouponUser::getStatus, CouponConstants.STORE_COUPON_USER_STATUS_USABLE);
+        return list(lqw);
     }
 }
 

@@ -50,4 +50,13 @@ public class StoreOrderSearchRequest extends UserCommonSearchRequest implements 
     @ApiModelProperty(value = "物流单号")
     private String deliveryId;
 
+    @ApiModelProperty(value = "支付方式")
+    private String payType;
+
+    @ApiModelProperty(value = "是否查询全部售后状态")
+    private Boolean refundStatusAll = false;
+
+    @ApiModelProperty(value = "关键词是否包含订单号和商品名称")
+    private Boolean keywordOrderSearch = false;
+
 }

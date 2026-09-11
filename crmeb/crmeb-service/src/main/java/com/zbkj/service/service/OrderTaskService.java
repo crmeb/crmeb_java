@@ -24,6 +24,13 @@ package com.zbkj.service.service;
     void orderPaySuccessAfter();
 
     /**
+     * 立即处理指定订单的支付成功后置任务。
+     *
+     * @param orderNo 订单编号
+     */
+    void orderPaySuccessAfter(String orderNo);
+
+    /**
      * 自动取消未支付订单
      */
     void autoCancel();

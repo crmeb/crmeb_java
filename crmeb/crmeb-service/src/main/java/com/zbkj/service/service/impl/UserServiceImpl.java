@@ -22,6 +22,7 @@ import com.zbkj.common.model.coupon.StoreCoupon;
 import com.zbkj.common.model.coupon.StoreCouponUser;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.record.UserVisitRecord;
+import com.zbkj.common.model.system.SystemStoreStaff;
 import com.zbkj.common.model.system.SystemUserLevel;
 import com.zbkj.common.model.user.*;
 import com.zbkj.common.page.CommonPage;
@@ -587,6 +588,14 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         }
         UserCenterResponse userCenterResponse = new UserCenterResponse();
         BeanUtils.copyProperties(currentUser, userCenterResponse);
+        SystemStoreStaff storeStaff = systemStoreStaffService.getOne(
+                Wrappers.<SystemStoreStaff>lambdaQuery()
+                        .eq(SystemStoreStaff::getUid, currentUser.getUid())
+                        .last("limit 1"));
+        userCenterResponse.setIsMobileAdmin(ObjectUtil.isNotNull(storeStaff)
+                && Integer.valueOf(1).equals(storeStaff.getStatus()));
+        userCenterResponse.setIsWriteOffStaff(ObjectUtil.isNotNull(storeStaff)
+                && Integer.valueOf(1).equals(storeStaff.getVerifyStatus()));
         // 优惠券数量
         userCenterResponse.setCouponCount(storeCouponUserService.getUseCount(currentUser.getUid()));
         // 收藏数量
@@ -1558,12 +1567,12 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
                 .set(ObjectUtil.isNotNull(userRequest.getIsPromoter()), User::getIsPromoter, userRequest.getIsPromoter());
 
         // 推广员状态变更的特殊处理
-        if (userRequest.getIsPromoter() && !tempUser.getIsPromoter()) {
+        if (Boolean.TRUE.equals(userRequest.getIsPromoter()) && !Boolean.TRUE.equals(tempUser.getIsPromoter())) {
             wrapper.set(User::getPromoterTime, DateUtil.date());
         }
         wrapper.eq(User::getUid, tempUser.getUid());
         boolean update = update(wrapper);
-        if (update && tempUser.getStatus() && !userRequest.getStatus()) {
+        if (update && Boolean.TRUE.equals(tempUser.getStatus()) && !Boolean.TRUE.equals(userRequest.getStatus())) {
             // 用户禁用时，清除token
             tokenComponet.clearUserToken(tempUser.getUid());
         }
@@ -1618,6 +1627,33 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
     }
 
     /**
+     * 后台修改用户密码
+     * @param id 用户uid
+     * @param password 新密码
+     * @return Boolean
+     */
+    @Override
+    public Boolean updateUserPassword(Integer id, String password) {
+        User user = getById(id);
+        if (ObjectUtil.isNull(user)) {
+            throw new CrmebException("对应用户不存在");
+        }
+        if (StrUtil.isBlank(user.getPhone())) {
+            throw new CrmebException("请先为用户绑定手机号");
+        }
+
+        User newUser = new User();
+        newUser.setUid(id);
+        newUser.setPwd(CrmebUtil.encryptPassword(password, user.getPhone()));
+        newUser.setUpdateTime(DateUtil.date());
+        boolean update = userDao.updateById(newUser) > 0;
+        if (update) {
+            tokenComponet.clearUserToken(id);
+        }
+        return update;
+    }
+
+    /**
      * 根据昵称匹配用户，返回id集合
      * @param nikeName 需要匹配得昵称
      * @return List
@@ -1657,7 +1693,7 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         if (ObjectUtil.isNull(user)) {
             throw new CrmebException("用户不存在");
         }
-        if (user.getLevel().equals(request.getLevelId())) {
+        if (ObjectUtil.equal(user.getLevel(), request.getLevelId())) {
             throw new CrmebException("用户等级与修改前相同");
         }
 
@@ -1919,5 +1955,106 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         luw.set(User::getLevel, levelId);
         luw.eq(User::getUid, uid);
         return update(luw);
+    }
+
+    /**
+     * 后台管理员新增H5用户
+     * @param request 创建用户参数
+     * @return User
+     */
+    @Override
+    public User adminCreateUser(UserCreateRequest request) {
+        // 校验手机号是否已注册
+        User existUser = getByPhone(request.getPhone());
+        if (ObjectUtil.isNotNull(existUser)) {
+            throw new CrmebException("此手机号码已被注册");
+        }
+
+        User user = new User();
+        user.setAccount(request.getPhone());
+        user.setPwd(CrmebUtil.encryptPassword(request.getPwd(), request.getPhone()));
+        user.setPhone(request.getPhone());
+        user.setUserType(Constants.USER_LOGIN_TYPE_H5);
+        // 昵称：优先使用管理员输入的昵称，否则自动生成
+        if (StrUtil.isNotBlank(request.getNickname())) {
+            user.setNickname(request.getNickname());
+        } else {
+            user.setNickname(CommonUtil.createNickName(request.getPhone()));
+        }
+        if (StrUtil.isNotBlank(request.getRealName())) {
+            user.setRealName(request.getRealName());
+        }
+        user.setAvatar(systemConfigService.getValueByKey(Constants.USER_DEFAULT_AVATAR_CONFIG_KEY));
+        user.setSex(0);
+        user.setNowMoney(BigDecimal.ZERO);
+        user.setBrokeragePrice(BigDecimal.ZERO);
+        user.setIntegral(0);
+        user.setExperience(0);
+        user.setSignNum(0);
+        user.setStatus(request.getStatus());
+        user.setIsPromoter(request.getIsPromoter());
+        if (request.getIsPromoter()) {
+            user.setPromoterTime(CrmebDateUtil.nowDateTime());
+        }
+        user.setLevel(0);
+        user.setSpreadUid(0);
+        user.setSpreadCount(0);
+        user.setPayCount(0);
+        user.setGroupId("");
+        user.setTagId("");
+        user.setMark("");
+        user.setAddres("");
+        user.setAddIp("");
+        user.setLastIp("");
+        user.setPath("/0/");
+        user.setSubscribe(false);
+        user.setIsLogoff(false);
+
+        Date nowDate = CrmebDateUtil.nowDateTime();
+        user.setCreateTime(nowDate);
+        user.setUpdateTime(nowDate);
+        user.setLastLoginTime(nowDate);
+
+        // 查询是否有新人注册赠送优惠券
+        List<StoreCouponUser> couponUserList = CollUtil.newArrayList();
+        List<StoreCoupon> couponList = storeCouponService.findRegisterList();
+        if (CollUtil.isNotEmpty(couponList)) {
+            couponList.forEach(storeCoupon -> {
+                if (!storeCoupon.getIsFixedTime()) {
+                    String endTime = CrmebDateUtil.addDay(CrmebDateUtil.nowDate(Constants.DATE_FORMAT), storeCoupon.getDay(), Constants.DATE_FORMAT);
+                    storeCoupon.setUseEndTime(CrmebDateUtil.strToDate(endTime, Constants.DATE_FORMAT));
+                    storeCoupon.setUseStartTime(CrmebDateUtil.nowDateTimeReturnDate(Constants.DATE_FORMAT));
+                }
+
+                StoreCouponUser storeCouponUser = new StoreCouponUser();
+                storeCouponUser.setCouponId(storeCoupon.getId());
+                storeCouponUser.setName(storeCoupon.getName());
+                storeCouponUser.setMoney(storeCoupon.getMoney());
+                storeCouponUser.setMinPrice(storeCoupon.getMinPrice());
+                storeCouponUser.setStartTime(storeCoupon.getUseStartTime());
+                storeCouponUser.setEndTime(storeCoupon.getUseEndTime());
+                storeCouponUser.setUseType(storeCoupon.getUseType());
+                storeCouponUser.setType(CouponConstants.STORE_COUPON_USER_TYPE_REGISTER);
+                if (storeCoupon.getUseType() > 1) {
+                    storeCouponUser.setPrimaryKey(storeCoupon.getPrimaryKey());
+                }
+                couponUserList.add(storeCouponUser);
+            });
+        }
+
+        Boolean execute = transactionTemplate.execute(e -> {
+            save(user);
+            // 赠送注册优惠券
+            if (CollUtil.isNotEmpty(couponUserList)) {
+                couponUserList.forEach(couponUser -> couponUser.setUid(user.getUid()));
+                storeCouponUserService.saveBatch(couponUserList);
+                couponList.forEach(coupon -> storeCouponService.deduction(coupon.getId(), 1, coupon.getIsLimited()));
+            }
+            return Boolean.TRUE;
+        });
+        if (!execute) {
+            throw new CrmebException("创建用户失败!");
+        }
+        return user;
     }
 }

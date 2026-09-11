@@ -20,7 +20,7 @@
         left join eb_user as u on ur.uid = u.uid
         where ur.paid = 1
         <if test="orderNo != null and orderNo !=''">
-            and ur.order_no like CONCAT('%',#{orderNo},'%')
+            and ur.order_id like CONCAT('%',#{orderNo},'%')
         </if>
         <if test="startTime != null and startTime != ''">
             and ur.create_time between #{startTime} and #{endTime}
@@ -42,5 +42,11 @@
             and u.phone like CONCAT('%',#{phone},'%')
         </if>
         order by ur.id desc
+    </select>
+    <select id="getByIdForUpdate" resultType="com.zbkj.common.model.finance.UserRecharge">
+        select *
+        from eb_user_recharge
+        where id = #{id}
+        for update
     </select>
 </mapper>

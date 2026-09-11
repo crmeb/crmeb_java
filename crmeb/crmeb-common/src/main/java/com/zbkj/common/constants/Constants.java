@@ -13,7 +13,7 @@ package com.zbkj.common.constants;
  *  +----------------------------------------------------------------------
  */
 public class Constants {
-    public static final long TOKEN_EXPRESS_MINUTES = (60 * 24); //3小时
+    public static final long TOKEN_EXPRESS_MINUTES = (60 * 24); //24小时
 
     public static final int HTTPSTATUS_CODE_SUCCESS = 200;
 
@@ -26,7 +26,12 @@ public class Constants {
     public static final int NUM_TEN = 10;
     public static final int NUM_ONE_HUNDRED = 100;
     //头部 token令牌key
-    public static final String HEADER_AUTHORIZATION_KEY = "Authori-zation";
+    public static final String HEADER_AUTHORIZATION_KEY = "Authorization";
+    public static final String HEADER_AUTHORIZATION_BEARER = "Bearer ";
+    public static final String JWT_TOKEN_TYPE_FRONT = "front";
+    public static final String JWT_TOKEN_TYPE_ADMIN = "admin";
+    public static final long JWT_FRONT_EXPIRE_MINUTES = 60 * 24 * 7; // 7天
+    public static final long JWT_ADMIN_EXPIRE_MINUTES = 60 * 24; // 24小时
 
     //验证码redis key前缀
     public static final String VALIDATE_REDIS_KEY_PREFIX = "validate_code_";
@@ -61,13 +66,6 @@ public class Constants {
 
     //用户登录密码加密混淆字符串
     public static final String USER_LOGIN_PASSWORD_MD5_KEYWORDS = "crmeb";
-
-    //用户登token redis存储前缀
-    public static final String USER_TOKEN_REDIS_KEY_PREFIX = "TOKEN_USER:";
-
-    // front 同一用户token集合
-    public static final String FRONT_USER_TOKEN_SET_KEY = "FRONT_USER_TOKEN:{}";
-
 
     //用户登录方式 h5
     public static final String USER_LOGIN_TYPE_H5 = "h5";
@@ -124,9 +122,6 @@ public class Constants {
     public static final String UPLOAD_FILE_MAX_SIZE_CONFIG_KEY = "file_max_size";
 
     public static final int UPLOAD_TYPE_USER = 7; //用户上传
-
-    // 移动端文章顶部的banner图最大数量 配置数据最小3最大10
-    public static final String ARTICLE_BANNER_LIMIT = "news_slides_limit";
 
     //城市数据 redis key
     public static final String CITY_LIST = "city_list";
@@ -534,7 +529,7 @@ public class Constants {
     public static String RESULT_VERIFICATION_ORDER_NOT_FUND = "核销码 ${vCode} 的订单未找到";
     public static String RESULT_VERIFICATION_ORDER_VED = "核销码 ${vCode} 的订单已核销";
     public static String RESULT_VERIFICATION_NOTAUTH = "没有核销权限";
-    public static String RESULT_VERIFICATION_USER_EXIST = "当前用户已经是核销员";
+    public static String RESULT_VERIFICATION_USER_EXIST = "当前用户已经是移动端管理员/核销员";
 
 
     // QRcode Response text info

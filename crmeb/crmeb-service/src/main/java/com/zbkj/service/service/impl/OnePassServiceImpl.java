@@ -74,28 +74,6 @@ public class OnePassServiceImpl implements OnePassService {
     private StoreOrderService storeOrderService;
 
     /**
-     * 保存一号通应用信息
-     *
-     * @param request 一号通服务中申请的应用信息
-     * @return 保存结果
-     */
-    @Override
-    public Boolean saveOnePassApplicationInfo(OnePassLoginRequest request) {
-        setConfigSmsInfo(request.getAccessKey(), request.getSecretKey());
-        return Boolean.TRUE;
-    }
-
-    /**
-     * 获取一号通应用信息
-     *
-     * @return 一号通应用信息
-     */
-    @Override
-    public OnePassLoginRequest getOnePassApplicationInfo() {
-        return getConfigSmsInfo();
-    }
-
-    /**
      * 商家寄件
      *
      * @param request 寄件请求对象
@@ -469,33 +447,6 @@ public class OnePassServiceImpl implements OnePassService {
         list.add(OnePassConstants.ONE_PASS_MEAL_TYPE_DUMP);
         list.add(OnePassConstants.ONE_PASS_MEAL_TYPE_COPY);
         return list.contains(type);
-    }
-
-    /**
-     * 配置一号通应用 appid 和 密钥信息
-     *
-     * @param accessKey  账号
-     * @param secretKey 密码
-     */
-    private void setConfigSmsInfo(String accessKey, String secretKey) {
-        boolean accountResult = systemConfigService.updateOrSaveValueByName(OnePassConstants.ONE_PASS_ACCESS_KEY, accessKey);
-        boolean tokenResult = systemConfigService.updateOrSaveValueByName(OnePassConstants.ONE_PASS_SECRET_KEY, secretKey);
-
-        if (!accountResult || !tokenResult) {
-            throw new CrmebException("数据更新失败！");
-        }
-    }
-
-
-    /**
-     * 获取一号通 应用配置信息
-     * @return 应用配置
-     */
-    private OnePassLoginRequest getConfigSmsInfo() {
-        OnePassLoginRequest onePassLoginRequest = new OnePassLoginRequest();
-        onePassLoginRequest.setAccessKey(systemConfigService.getValueByKey(OnePassConstants.ONE_PASS_ACCESS_KEY));
-        onePassLoginRequest.setSecretKey(systemConfigService.getValueByKey(OnePassConstants.ONE_PASS_SECRET_KEY));
-        return onePassLoginRequest;
     }
 
     /**

@@ -176,10 +176,13 @@ public class YlyUtil {
                 "</FH>" +
                 "********************************\n" +
                 "<FH>" +
-                "<LR>合计：¥"+ ylyPrintRequest.getAmount()+"元，优惠：¥"+ylyPrintRequest.getDiscount()+"元</LR>" +
-                "<LR>邮费：¥"+ylyPrintRequest.getPostal()+"元，抵扣：¥"+ylyPrintRequest.getDeduction()+"元</LR>" +
+                buildPrintLine("订单合计", "¥" + ylyPrintRequest.getAmount() + "元") +
+                buildPrintLine("订单邮费", "¥" + ylyPrintRequest.getPostal() + "元") +
+                buildPrintLine("会员优惠", "¥" + ylyPrintRequest.getDiscount() + "元") +
+                buildPrintLine("积分抵扣", "¥" + ylyPrintRequest.getDeduction() + "元") +
+                buildPrintLine("优惠券抵扣", "¥" + ylyPrintRequest.getCoupon() + "元") +
+                buildPrintLine("实际支付", "¥" + ylyPrintRequest.getPayMoney() + "元") +
                 "</FH>" +
-                "<FH><right>实际支付：¥"+ylyPrintRequest.getPayMoney()+"元</right></FH>" +
                 "<FB><FB><center>完</center></FB></FB>";
         RequestMethod.getInstance().printIndex(ylyAccessTokenResponse.getBody().getAccess_token(),machine_code,
                 URLEncoder.encode(printSb, "utf-8"),"order111");
@@ -215,6 +218,45 @@ public class YlyUtil {
             printGoodsString.append(" ").append(goood.getMoney()).append("\n");
         }
         return printGoodsString.toString();
+    }
+
+    /**
+     * 构建一行打印内容，左对齐名称，右对齐金额
+     * @param left 左侧文本
+     * @param right 右侧文本
+     * @return 格式化后的一行内容
+     */
+    private String buildPrintLine(String left, String right) {
+        int totalWidth = 32;
+        int leftWidth = getDisplayWidth(left);
+        int rightWidth = getDisplayWidth(right);
+        int spaceCount = totalWidth - leftWidth - rightWidth;
+        if (spaceCount < 1) {
+            spaceCount = 1;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(left);
+        for (int i = 0; i < spaceCount; i++) {
+            sb.append(" ");
+        }
+        sb.append(right).append("\n");
+        return sb.toString();
+    }
+
+    /**
+     * 计算字符串显示宽度（中文占2个宽度，英文/数字占1个宽度）
+     */
+    private int getDisplayWidth(String str) {
+        int width = 0;
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            if (c > 127) {
+                width += 2;
+            } else {
+                width += 1;
+            }
+        }
+        return width;
     }
 
     public static void main(String[] args) throws Exception {

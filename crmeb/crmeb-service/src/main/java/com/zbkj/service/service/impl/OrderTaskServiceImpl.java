@@ -212,20 +212,38 @@ public class OrderTaskServiceImpl implements OrderTaskService {
             if (ObjectUtil.isNull(data)) {
                 continue;
             }
-            try {
-                StoreOrder storeOrder = storeOrderService.getByOderId(String.valueOf(data));
-                if (ObjectUtil.isNull(storeOrder)) {
-                    logger.error("OrderTaskServiceImpl.orderPaySuccessAfter | 订单不存在，orderNo: " + data);
-                    throw new CrmebException("订单不存在，orderNo: " + data);
-                }
-                boolean result = orderPayService.paySuccess(storeOrder);
-                if (!result) {
-                    redisUtil.lPush(redisKey, data);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                redisUtil.lPush(redisKey, data);
+            processOrderPaySuccessAfter(redisKey, String.valueOf(data));
+        }
+    }
+
+    /**
+     * 立即处理指定订单的支付成功后置任务
+     *
+     * @param orderNo 订单编号
+     */
+    @Override
+    public void orderPaySuccessAfter(String orderNo) {
+        String redisKey = TaskConstants.ORDER_TASK_PAY_SUCCESS_AFTER;
+        Long removed = redisUtil.lRemove(redisKey, 1, orderNo);
+        if (removed == null || removed < 1) {
+            return;
+        }
+        processOrderPaySuccessAfter(redisKey, orderNo);
+    }
+
+    private void processOrderPaySuccessAfter(String redisKey, String orderNo) {
+        try {
+            StoreOrder storeOrder = storeOrderService.getByOderId(orderNo);
+            if (ObjectUtil.isNull(storeOrder)) {
+                throw new CrmebException("订单不存在，orderNo: " + orderNo);
             }
+            Boolean result = orderPayService.paySuccess(storeOrder);
+            if (!Boolean.TRUE.equals(result)) {
+                redisUtil.lPush(redisKey, orderNo);
+            }
+        } catch (Exception e) {
+            logger.error("OrderTaskServiceImpl.orderPaySuccessAfter | 处理失败，orderNo: " + orderNo, e);
+            redisUtil.lPush(redisKey, orderNo);
         }
     }
 

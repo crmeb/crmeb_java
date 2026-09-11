@@ -11,7 +11,6 @@ import com.alipay.api.AlipayApiException;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.zbkj.common.constants.AlipayConfig;
 import com.zbkj.common.constants.Constants;
-import com.zbkj.common.constants.TaskConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.combination.StoreCombination;
 import com.zbkj.common.model.combination.StorePink;
@@ -77,6 +76,9 @@ public class CallbackServiceImpl implements CallbackService {
 
     @Autowired
     private RedisUtil redisUtil;
+
+    @Autowired
+    private OrderPaySuccessQueueService orderPaySuccessQueueService;
 
     @Autowired
     private SystemConfigService systemConfigService;
@@ -260,7 +262,7 @@ public class CallbackServiceImpl implements CallbackService {
                     sb.append("</xml>");
                     return sb.toString();
                 }
-                redisUtil.lPush(TaskConstants.ORDER_TASK_PAY_SUCCESS_AFTER, storeOrder.getOrderId());
+                orderPaySuccessQueueService.enqueue(storeOrder.getOrderId());
             }
             // 充值
             if (Constants.SERVICE_PAY_TYPE_RECHARGE.equals(attachVo.getType())) {
@@ -472,7 +474,7 @@ public class CallbackServiceImpl implements CallbackService {
                         logger.error("ali pay error : 订单更新失败==》" + out_trade_no);
                         return "fail";
                     }
-                    redisUtil.lPush(TaskConstants.ORDER_TASK_PAY_SUCCESS_AFTER, storeOrder.getOrderId());
+                    orderPaySuccessQueueService.enqueue(storeOrder.getOrderId());
                 }
                 return "success";
             } else {

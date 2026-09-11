@@ -66,19 +66,6 @@
         </if>
         order by id desc
     </select>
-    <select id="getOrderVerificationDetail" parameterType="com.zbkj.common.request.PageParamRequest"
-            resultType="com.zbkj.common.response.StoreStaffDetail">
-        select sum(o.`pay_price`) as price, count(o.`id`) as count, DATE_FORMAT(o.`create_time`, '%Y-%m-%d') as time
-        from `eb_store_order` o
-        where o.`is_del` = 0 and o.`paid` = 1 and o.`refund_status` = 0
-        <if test="null != startTime and startTime != ''">
-            and o.create_time >= #{ startTime }
-        </if>
-        <if test="null != endTime and endTime != ''">
-            and o.create_time &lt; #{ endTime }
-        </if>
-        GROUP by DATE_FORMAT(o.`create_time`, '%Y-%m-%d') order by o.`create_time` desc limit #{ page },#{ limit };
-    </select>
     <select id="getOrderStatisticsPriceDetail" parameterType="com.zbkj.common.request.StoreDateRangeSqlPram"
             resultType="com.zbkj.common.response.StoreOrderStatisticsChartItemResponse">
         select sum(o.pay_price) as num,date_format(o.create_time, '%Y-%m-%d') as time
@@ -112,11 +99,17 @@
                  left join eb_user as u on o.uid = u.uid
         where o.is_system_del = 0
         <choose>
+            <when test='status == "mobileAll"'>
+                and o.is_del = 0
+            </when>
             <when test='status == "unPaid"'>
                 and o.paid = 0 and o.status = 0 and o.is_del = 0
             </when>
             <when test='status == "notShipped"'>
                 and o.paid = 1 and o.status = 0 and o.refund_status = 0 and o.shipping_type = 1 and o.is_del = 0
+            </when>
+            <when test='status == "notShippedOrToBeWrittenOff"'>
+                and o.paid = 1 and o.status = 0 and o.refund_status = 0 and o.shipping_type in (1, 2) and o.is_del = 0
             </when>
             <when test='status == "spike"'>
                 and o.paid = 1 and o.status = 1 and o.refund_status = 0 and o.is_del = 0
@@ -147,8 +140,14 @@
         <if test="deliveryId != null and deliveryId !=''">
             and o.delivery_id like CONCAT('%',#{deliveryId},'%')
         </if>
+        <if test="payType != null and payType !=''">
+            and o.pay_type = #{payType}
+        </if>
         <if test="type != null">
             and o.type = #{type}
+        </if>
+        <if test="refundStatusAll != null and refundStatusAll">
+            and o.paid = 1 and o.refund_status in (1,2,3) and o.is_del = 0
         </if>
         <if test="startTime != null and startTime != ''">
             and o.create_time between #{startTime} and #{endTime}
@@ -158,6 +157,10 @@
             o.uid like CONCAT('%',#{keywords},'%') or
             u.nickname like CONCAT('%',#{keywords},'%') or
             u.phone like CONCAT('%',#{keywords},'%')
+            <if test="keywordOrderSearch != null and keywordOrderSearch">
+                or o.order_id like CONCAT('%',#{keywords},'%')
+                or o.order_id in (select order_no from eb_store_order_info where product_name like CONCAT('%',#{keywords},'%'))
+            </if>
             )
         </if>
         <if test="uid != null ">
@@ -175,11 +178,17 @@
         left join eb_user as u on o.uid = u.uid
         where o.is_system_del = 0
         <choose>
+            <when test='status == "mobileAll"'>
+                and o.is_del = 0
+            </when>
             <when test='status == "unPaid"'>
                 and o.paid = 0 and o.status = 0 and o.is_del = 0
             </when>
             <when test='status == "notShipped"'>
                 and o.paid = 1 and o.status = 0 and o.refund_status = 0 and o.shipping_type = 1 and o.is_del = 0
+            </when>
+            <when test='status == "notShippedOrToBeWrittenOff"'>
+                and o.paid = 1 and o.status = 0 and o.refund_status = 0 and o.shipping_type in (1, 2) and o.is_del = 0
             </when>
             <when test='status == "spike"'>
                 and o.paid = 1 and o.status = 1 and o.refund_status = 0 and o.is_del = 0
@@ -210,8 +219,14 @@
         <if test="deliveryId != null and deliveryId !=''">
             and o.delivery_id like CONCAT('%',#{deliveryId},'%')
         </if>
+        <if test="payType != null and payType !=''">
+            and o.pay_type = #{payType}
+        </if>
         <if test="type != null">
             and o.type = #{type}
+        </if>
+        <if test="refundStatusAll != null and refundStatusAll">
+            and o.paid = 1 and o.refund_status in (1,2,3) and o.is_del = 0
         </if>
         <if test="startTime != null and startTime != ''">
             and o.create_time between #{startTime} and #{endTime}
@@ -221,6 +236,10 @@
             o.uid like CONCAT('%',#{keywords},'%') or
             u.nickname like CONCAT('%',#{keywords},'%') or
             u.phone like CONCAT('%',#{keywords},'%')
+            <if test="keywordOrderSearch != null and keywordOrderSearch">
+                or o.order_id like CONCAT('%',#{keywords},'%')
+                or o.order_id in (select order_no from eb_store_order_info where product_name like CONCAT('%',#{keywords},'%'))
+            </if>
             )
         </if>
         <if test="uid != null ">

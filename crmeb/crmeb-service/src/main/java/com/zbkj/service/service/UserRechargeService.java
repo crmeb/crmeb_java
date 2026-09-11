@@ -5,6 +5,7 @@ import com.zbkj.common.request.PageParamRequest;
 import com.github.pagehelper.PageInfo;
 import com.zbkj.common.model.finance.UserRecharge;
 import com.zbkj.common.request.UserRechargeSearchRequest;
+import com.zbkj.common.request.UserRechargeRefundRequest;
 import com.zbkj.common.response.UserRechargeResponse;
 
 import java.math.BigDecimal;
@@ -37,6 +38,12 @@ public interface UserRechargeService extends IService<UserRecharge> {
      * @return HashMap
      */
     HashMap<String, BigDecimal> getBalanceList();
+
+    /**
+     * 后台充值订单退款
+     * @param request 退款参数
+     */
+    Boolean refund(UserRechargeRefundRequest request);
 
     UserRecharge getInfoByEntity(UserRecharge userRecharge);
 

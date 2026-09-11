@@ -11,7 +11,6 @@ import com.zbkj.common.request.PageParamRequest;
 import com.zbkj.common.constants.OnePassConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.github.pagehelper.PageHelper;
-import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.model.express.Express;
 import com.zbkj.common.request.ExpressSearchRequest;
 import com.zbkj.common.request.ExpressUpdateRequest;
@@ -27,9 +26,10 @@ import org.springframework.util.MultiValueMap;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -47,11 +47,11 @@ import java.util.stream.Collectors;
 @Service
 public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> implements ExpressService {
 
+    private static final int EXPRESS_SYNC_PAGE_LIMIT = 100;
+    private static final int EXPRESS_SYNC_MAX_PAGE = 200;
+
     @Resource
     private ExpressDao dao;
-
-    @Autowired
-    private RedisUtil redisUtil;
 
     @Autowired
     private OnePassUtil onePassUtil;
@@ -117,12 +117,7 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
      */
     @Override
     public Boolean syncExpress() {
-        if (redisUtil.exists(OnePassConstants.ONE_PASS_EXPRESS_CACHE_KEY)) {
-            return Boolean.TRUE;
-        }
         getExpressList();
-
-        redisUtil.set(OnePassConstants.ONE_PASS_EXPRESS_CACHE_KEY, 1, 3600L, TimeUnit.SECONDS);
         return Boolean.TRUE;
     }
 
@@ -204,51 +199,69 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
     private void getExpressList() {
         String token = onePassUtil.getToken();
         HashMap<String, String> header = onePassUtil.getCommonHeader(token);
-        MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
-        //        param.add("type", 1);// 快递类型：1，国内运输商；2，国际运输商；3，国际邮政 不传获取全部
-        param.add("page", 0);
-        param.add("limit", 9999);
-
-        JSONObject post = onePassUtil.getFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_EXPRESS_URI, param, header);
-        System.out.println("OnePass Express ALL post = " + post);
-        JSONObject jsonObject = post.getJSONObject("data");
-        JSONArray jsonArray = jsonObject.getJSONArray("data");
-        if (CollUtil.isEmpty(jsonArray)) return;
-
         List<Express> expressList = CollUtil.newArrayList();
-        List<String> codeList = getAllCode();
-        for (int i = 0; i < jsonArray.size(); i++) {
-            JSONObject object = jsonArray.getJSONObject(i);
-            if (StrUtil.isNotBlank(object.getString("code")) && !codeList.contains(object.getString("code"))) {
-                Express express = new Express();
-                express.setName(Optional.ofNullable(object.getString("name")).orElse(""));
-                express.setCode(Optional.ofNullable(object.getString("code")).orElse(""));
-                express.setPartnerId(false);
-                express.setPartnerKey(false);
-                express.setNet(false);
-                if (ObjectUtil.isNotNull(object.getInteger("partner_id"))) {
-                    express.setPartnerId(object.getInteger("partner_id") == 1);
+        Set<String> codeSet = new HashSet<>(getAllCode());
+
+        for (int page = 1; page <= EXPRESS_SYNC_MAX_PAGE; page++) {
+            JSONObject jsonObject = getExpressPage(page, EXPRESS_SYNC_PAGE_LIMIT, header);
+            JSONArray jsonArray = jsonObject.getJSONArray("data");
+            if (CollUtil.isEmpty(jsonArray)) {
+                break;
+            }
+
+            for (int i = 0; i < jsonArray.size(); i++) {
+                JSONObject object = jsonArray.getJSONObject(i);
+                String code = object.getString("code");
+                if (StrUtil.isNotBlank(code) && !codeSet.contains(code)) {
+                    Express express = new Express();
+                    express.setName(Optional.ofNullable(object.getString("name")).orElse(""));
+                    express.setCode(code);
+                    express.setPartnerId(false);
+                    express.setPartnerKey(false);
+                    express.setNet(false);
+                    if (ObjectUtil.isNotNull(object.getInteger("partner_id"))) {
+                        express.setPartnerId(object.getInteger("partner_id") == 1);
+                    }
+                    if (ObjectUtil.isNotNull(object.getInteger("partner_key"))) {
+                        express.setPartnerKey(object.getInteger("partner_key") == 1);
+                    }
+                    if (ObjectUtil.isNotNull(object.getInteger("net"))) {
+                        express.setNet(object.getInteger("net") == 1);
+                    }
+                    express.setIsShow(true);
+                    express.setStatus(false);
+                    if (!express.getPartnerId() && !express.getPartnerKey() && !express.getNet()) {
+                        express.setStatus(true);
+                    }
+                    expressList.add(express);
+                    codeSet.add(code);
                 }
-                if (ObjectUtil.isNotNull(object.getInteger("partner_key"))) {
-                    express.setPartnerKey(object.getInteger("partner_key") == 1);
-                }
-                if (ObjectUtil.isNotNull(object.getInteger("net"))) {
-                    express.setNet(object.getInteger("net") == 1);
-                }
-                express.setIsShow(true);
-                express.setStatus(false);
-                if (!express.getPartnerId() && !express.getPartnerKey() && !express.getNet()) {
-                    express.setStatus(true);
-                }
-                expressList.add(express);
+            }
+
+            Integer total = jsonObject.getInteger("total");
+            if (jsonArray.size() < EXPRESS_SYNC_PAGE_LIMIT || (ObjectUtil.isNotNull(total) && page * EXPRESS_SYNC_PAGE_LIMIT >= total)) {
+                break;
             }
         }
 
-
         if (CollUtil.isNotEmpty(expressList)) {
-            boolean saveBatch = saveBatch(expressList);
+            boolean saveBatch = saveBatch(expressList, EXPRESS_SYNC_PAGE_LIMIT);
             if (!saveBatch) throw new CrmebException("同步物流公司失败");
         }
+    }
+
+    private JSONObject getExpressPage(Integer page, Integer limit, HashMap<String, String> header) {
+        MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
+        //        param.add("type", 1);// 快递类型：1，国内运输商；2，国际运输商；3，国际邮政 不传获取全部
+        param.add("page", page);
+        param.add("limit", limit);
+
+        JSONObject post = onePassUtil.getFrom(OnePassConstants.ONE_PASS_API_URL + OnePassConstants.ONE_PASS_API_EXPRESS_URI, param, header);
+        JSONObject jsonObject = post.getJSONObject("data");
+        if (ObjectUtil.isNull(jsonObject) || ObjectUtil.isNull(jsonObject.getJSONArray("data"))) {
+            throw new CrmebException("同步物流公司失败：一号通返回数据格式异常");
+        }
+        return jsonObject;
     }
 
     /**
@@ -264,4 +277,3 @@ public class ExpressServiceImpl extends ServiceImpl<ExpressDao, Express> impleme
         return expressList.stream().map(Express::getCode).collect(Collectors.toList());
     }
 }
-

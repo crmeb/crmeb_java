@@ -19,7 +19,6 @@ import com.alipay.api.response.AlipayTradeRefundResponse;
 import com.zbkj.common.constants.AlipayConfig;
 import com.zbkj.common.constants.Constants;
 import com.zbkj.common.constants.PayConstants;
-import com.zbkj.common.constants.TaskConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.model.combination.StoreCombination;
 import com.zbkj.common.model.combination.StorePink;
@@ -60,6 +59,9 @@ public class AliPayServiceImpl implements AliPayService {
 
     @Autowired
     private RedisUtil redisUtil;
+
+    @Autowired
+    private OrderPaySuccessQueueService orderPaySuccessQueueService;
 
     @Autowired
     private UserService userService;
@@ -206,7 +208,7 @@ public class AliPayServiceImpl implements AliPayService {
                 throw new CrmebException("支付成功更新订单失败");
             }
             // 添加支付成功task
-            redisUtil.lPush(TaskConstants.ORDER_TASK_PAY_SUCCESS_AFTER, orderNo);
+            orderPaySuccessQueueService.enqueue(orderNo);
             return Boolean.TRUE;
         }
         // 充值订单

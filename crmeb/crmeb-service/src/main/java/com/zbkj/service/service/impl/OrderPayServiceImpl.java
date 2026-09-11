@@ -37,7 +37,6 @@ import com.zbkj.common.response.OrderPayResultResponse;
 import com.zbkj.common.response.PayConfigResponse;
 import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.common.utils.CrmebDateUtil;
-import com.zbkj.common.utils.RedisUtil;
 import com.zbkj.common.utils.WxPayUtil;
 import com.zbkj.common.vo.*;
 import com.zbkj.service.delete.OrderUtils;
@@ -120,10 +119,10 @@ public class OrderPayServiceImpl implements OrderPayService {
     private TransactionTemplate transactionTemplate;
 
     @Autowired
-    private RedisUtil redisUtil;
+    private SystemConfigService systemConfigService;
 
     @Autowired
-    private SystemConfigService systemConfigService;
+    private OrderPaySuccessQueueService orderPaySuccessQueueService;
 
     @Autowired
     private StoreProductService storeProductService;
@@ -346,7 +345,7 @@ public class OrderPayServiceImpl implements OrderPayService {
                 componentOrder.setStatus(20);
                 componentOrderService.updateById(componentOrder);
             }
-            try {
+            executeAfterPayAction("发送支付成功通知", storeOrder, () -> {
                 SystemNotification payNotification = systemNotificationService.getByMark(NotifyConstants.PAY_SUCCESS_MARK);
                 // 发送短信
                 if (StrUtil.isNotBlank(user.getPhone()) && payNotification.getIsSms().equals(1)) {
@@ -372,22 +371,28 @@ public class OrderPayServiceImpl implements OrderPayService {
                     //下发模板通知
                     pushMessageOrder(storeOrder, user, payNotification);
                 }
+            });
 
-                // 购买成功后根据配置送优惠券
-                autoSendCoupons(storeOrder);
+            // 购买成功后根据配置送优惠券
+            executeAfterPayAction("赠送优惠券", storeOrder, () -> autoSendCoupons(storeOrder));
 
-                // 异步处理佣金冻结
-                asyncService.brokerageFreezeByNode(storeOrder.getOrderId(), "pay");
+            // 异步处理佣金冻结
+            executeAfterPayAction("处理佣金冻结", storeOrder,
+                    () -> asyncService.brokerageFreezeByNode(storeOrder.getOrderId(), "pay"));
 
-                // 根据配置 打印小票
-                ylyPrintService.YlyPrint(storeOrder.getOrderId(),true);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                logger.error("短信、模板通知、优惠券或打印小票异常");
-            }
+            // 根据配置打印小票
+            executeAfterPayAction("打印小票", storeOrder,
+                    () -> ylyPrintService.YlyPrint(storeOrder.getOrderId(), true));
         }
         return execute;
+    }
+
+    private void executeAfterPayAction(String actionName, StoreOrder storeOrder, Runnable action) {
+        try {
+            action.run();
+        } catch (Exception e) {
+            logger.error(StrUtil.format("订单支付成功后{}失败，订单编号：{}", actionName, storeOrder.getOrderId()), e);
+        }
     }
 
     // 支持成功拼团后置处理
@@ -660,9 +665,6 @@ public class OrderPayServiceImpl implements OrderPayService {
             if (storeOrder.getUseIntegral() > 0) {
                 userService.updateIntegral(user, storeOrder.getUseIntegral(), "sub");
             }
-            // 添加支付成功redis队列
-            redisUtil.lPush(TaskConstants.ORDER_TASK_PAY_SUCCESS_AFTER, storeOrder.getOrderId());
-
             // 处理拼团
             if (storeOrder.getCombinationId() > 0) {
                 // 判断拼团团长是否存在
@@ -722,6 +724,7 @@ public class OrderPayServiceImpl implements OrderPayService {
             return Boolean.TRUE;
         });
         if (!execute) throw new CrmebException("余额支付订单失败");
+        orderPaySuccessQueueService.enqueue(storeOrder.getOrderId());
         return execute;
     }
 
@@ -811,6 +814,21 @@ public class OrderPayServiceImpl implements OrderPayService {
 
         // 微信支付，调用微信预下单，返回拉起微信支付需要的信息
         if (storeOrder.getPayType().equals(PayConstants.PAY_TYPE_WE_CHAT)) {
+            // 幂等：商户订单号只生成一次并原子占位，重复触发支付时复用同一商户订单号，
+            // 避免商户订单号被覆盖导致微信回调按原单号匹配不到订单
+            if (StrUtil.isBlank(storeOrder.getOutTradeNo())) {
+                String newOutTradeNo = CrmebUtil.getOrderNo("wxNo");
+                if (storeOrderService.claimOutTradeNo(storeOrder.getId(), newOutTradeNo)) {
+                    storeOrder.setOutTradeNo(newOutTradeNo);
+                } else {
+                    // 并发下已被其他请求占位，以数据库中的为准
+                    StoreOrder freshOrder = storeOrderService.getById(storeOrder.getId());
+                    if (ObjectUtil.isNull(freshOrder) || StrUtil.isBlank(freshOrder.getOutTradeNo())) {
+                        throw new CrmebException("订单状态异常，请刷新后重试");
+                    }
+                    storeOrder.setOutTradeNo(freshOrder.getOutTradeNo());
+                }
+            }
             // 预下单
             Map<String, String> unifiedorder = unifiedorder(storeOrder, ip);
             response.setStatus(true);
@@ -1082,7 +1100,8 @@ public class OrderPayServiceImpl implements OrderPayService {
         // 因商品名称在微信侧超长更换为网站名称
         vo.setBody(siteName);
         vo.setAttach(JSONObject.toJSONString(attachVo));
-        vo.setOut_trade_no(CrmebUtil.getOrderNo("wxNo"));
+        // 商户订单号复用订单已占位的值（幂等），与充值/支付宝支付一致
+        vo.setOut_trade_no(storeOrder.getOutTradeNo());
         // 订单中使用的是BigDecimal,这里要转为Integer类型
         vo.setTotal_fee(storeOrder.getPayPrice().multiply(BigDecimal.TEN).multiply(BigDecimal.TEN).intValue());
         vo.setSpbill_create_ip(ip);
@@ -1312,7 +1331,7 @@ public class OrderPayServiceImpl implements OrderPayService {
     private void autoSendCoupons(StoreOrder storeOrder){
         // 根据订单详情获取商品信息
         List<StoreOrderInfoOldVo> orders = storeOrderInfoService.getOrderListByOrderId(storeOrder.getId());
-        if(null == orders){
+        if (CollUtil.isEmpty(orders)) {
             return;
         }
         List<StoreCouponUser> couponUserList = CollUtil.newArrayList();
@@ -1337,12 +1356,13 @@ public class OrderPayServiceImpl implements OrderPayService {
 
         Boolean execute = transactionTemplate.execute(e -> {
             if (CollUtil.isNotEmpty(couponUserList)) {
+                couponUserList.forEach(c -> c.setOrderId(storeOrder.getId()));
                 storeCouponUserService.saveBatch(couponUserList);
                 couponUserList.forEach(i -> storeCouponService.deduction(i.getCouponId(), 1, couponMap.get(i.getCouponId())));
             }
             return Boolean.TRUE;
         });
-        if (!execute) {
+        if (!Boolean.TRUE.equals(execute)) {
             logger.error(StrUtil.format("支付成功领取优惠券，更新数据库失败，订单编号：{}", storeOrder.getOrderId()));
         }
     }

@@ -133,6 +133,14 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         }
     }
 
+    private String normalizeIdString(String idStr) {
+        List<Integer> idList = CrmebUtil.stringToArray(idStr);
+        if (CollUtil.isEmpty(idList)) {
+            return "";
+        }
+        return idList.stream().map(String::valueOf).collect(Collectors.joining(","));
+    }
+
     /**
      * 获取产品列表Admin
      * @param request 筛选参数
@@ -291,6 +299,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
 
         StoreProduct storeProduct = new StoreProduct();
         BeanUtils.copyProperties(request, storeProduct);
+        storeProduct.setCateId(normalizeIdString(storeProduct.getCateId()));
         storeProduct.setId(null);
         storeProduct.setAddTime(CrmebDateUtil.getNowTime());
         storeProduct.setIsShow(false);
@@ -498,9 +507,6 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         if (tempProduct.getIsRecycle() || tempProduct.getIsDel()) {
             throw new CrmebException("商品已删除");
         }
-        if (tempProduct.getIsShow()) {
-            throw new CrmebException("请先下架商品，再进行修改");
-        }
         // 如果商品是活动商品主商品不允许修改
 //        if (storeSeckillService.isExistByProductId(storeProductRequest.getId())) {
 //            throw new CrmebException("商品作为秒杀商品的主商品，需要修改请先删除对应秒杀商品");
@@ -514,6 +520,7 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
 
         StoreProduct storeProduct = new StoreProduct();
         BeanUtils.copyProperties(storeProductRequest, storeProduct);
+        storeProduct.setCateId(normalizeIdString(storeProduct.getCateId()));
 
         // 设置Activity活动
         storeProduct.setActivity(getProductActivityStr(storeProductRequest.getActivity()));
