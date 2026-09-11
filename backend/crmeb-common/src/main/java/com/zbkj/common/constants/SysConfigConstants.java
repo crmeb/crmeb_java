@@ -97,6 +97,8 @@ public class SysConfigConstants {
     public static final String CONFIG_COPYRIGHT_COMPANY_IMAGE = "copyright_company_image";
     /** 版权-授权地址 */
     public static final String CONFIG_COPYRIGHT_AUTH_HOST = "authHost";
+    /** 安装统计-是否已上报 */
+    public static final String CONFIG_INSTALL_STATISTICS = "install_statistics";
 
     /** 主题测配置 */
     public static final String CONFIG_CHANGE_COLOR = "change_color_config";
