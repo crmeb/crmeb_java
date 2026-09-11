@@ -282,7 +282,7 @@ public class YlyUtil {
 //        ylyPrintRequest.setDate("20211127");
 ////        ylyPrintRequest.setTime("12:00:00");
 //        ylyPrintRequest.setName("大粽子");
-//        ylyPrintRequest.setPhone("18292417675");
+//        ylyPrintRequest.setPhone("13000000000");
 //        ylyPrintRequest.setAddress("陕西省 西安市 雁塔区 春林东街");
 //        ylyPrintRequest.setNote("死鬼 来的是否先打电话");
 //

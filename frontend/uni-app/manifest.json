@@ -1,6 +1,6 @@
 {
     "name" : "CRMEB",
-    "appid" : "__UNI__14B991A",
+    "appid" : "",
     "description" : "crmeb商城",
     "versionName" : "2.1",
     "versionCode" : 2,
@@ -70,7 +70,7 @@
             "ios" : {
                 "capabilities" : {
                     "entitlements" : {
-                        "com.apple.developer.associated-domains" : [ "applinks:app.beta.java.crmeb.net" ]
+                        "com.apple.developer.associated-domains" : []
                     }
                 },
                 "privacyDescription" : {
@@ -90,8 +90,8 @@
                 "geolocation" : {
                     "amap" : {
                         "__platform__" : [ "ios", "android" ],
-                        "appkey_ios" : "06c86988256f022fd1de555bd3c46c72",
-                        "appkey_android" : "1389b7dbd4f570b605454873825cecbc"
+                        "appkey_ios" : "",
+                        "appkey_android" : ""
                     },
                     "system" : {
                         "__platform__" : [ "ios", "android" ]
@@ -100,28 +100,28 @@
                 "oauth" : {
                     "apple" : {},
                     "weixin" : {
-                        "appid" : "wxa83d6fab40cab13f",
-                        "appsecret" : "e1d254e4c6a68b10bd60bd347bf0ffba",
-                        "UniversalLinks" : "https://app.beta.java.crmeb.net/"
+                        "appid" : "",
+                        "appsecret" : "",
+                        "UniversalLinks" : ""
                     }
                 },
                 "maps" : {
                     "amap" : {
-                        "appkey_ios" : "06c86988256f022fd1de555bd3c46c72",
-                        "appkey_android" : "1389b7dbd4f570b605454873825cecbc"
+                        "appkey_ios" : "",
+                        "appkey_android" : ""
                     }
                 },
                 "share" : {
                     "weixin" : {
-                        "appid" : "wxa83d6fab40cab13f",
-                        "UniversalLinks" : "https://app.beta.java.crmeb.net/"
+                        "appid" : "",
+                        "UniversalLinks" : ""
                     }
                 },
                 "payment" : {
                     "weixin" : {
                         "__platform__" : [ "ios", "android" ],
-                        "appid" : "wxa83d6fab40cab13f",
-                        "UniversalLinks" : "https://app.beta.java.crmeb.net/"
+                        "appid" : "",
+                        "UniversalLinks" : ""
                     },
                     "alipay" : {
                         "__platform__" : [ "ios", "android" ]
@@ -176,7 +176,7 @@
     },
     /* 小程序特有相关 */
     "mp-weixin" : {
-        "appid" : "wx2ce61fcc6fc5f952",
+        "appid" : "",
         "setting" : {
             "urlCheck" : false,
             "minified" : true,
@@ -203,7 +203,7 @@
     },
     "mp-toutiao" : {
         "usingComponents" : true,
-        "appid" : "tt1688603589b1e71d01",
+        "appid" : "",
         "setting" : {
             "es6" : true,
             "postcss" : true,
@@ -222,7 +222,7 @@
         "sdkConfigs" : {
             "maps" : {
                 "qqmap" : {
-                    "key" : "PWQBZ-OBU3W-JWCR7-Y6PQ3-4TJAV-LDFWP"
+                    "key" : ""
                 }
             }
         },

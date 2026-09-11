@@ -32,8 +32,8 @@ public class DruidConfig {
 //        servletRegistrationBean.addInitParameter("allow",
 //                "127.0.0.1,192.168.1.159"); // 白名单
 //        servletRegistrationBean.addInitParameter("deny", "192.168.1.200"); // 黑名单
-        servletRegistrationBean.addInitParameter("loginUsername", "kf"); // 用户名
-        servletRegistrationBean.addInitParameter("loginPassword", "654321"); // 密码
+        servletRegistrationBean.addInitParameter("loginUsername", "admin"); // 用户名
+        servletRegistrationBean.addInitParameter("loginPassword", "111111"); // 密码
         servletRegistrationBean.addInitParameter("resetEnable", "true"); // 是否可以重置数据源
         return servletRegistrationBean;
     }
