@@ -21,3 +21,9 @@ selenium-debug.log
 
 package-lock.json
 yarn.lock
+
+# ZCode agent internal files
+.zcode/
+
+# Local tool internal files
+.reasonix/
