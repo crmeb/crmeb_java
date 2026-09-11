@@ -8,7 +8,22 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
+import { SUBSCRIBE_MESSAGE } from '@/config/cache.js';
+
 const arrTemp =  ["beforePay","afterPay", "createBargain","pink"];
+
+export function cacheSubscribeTemplateIds(templateIds = {}) {
+	const normalized = {};
+	arrTemp.forEach(type => {
+		const ids = Array.isArray(templateIds[type])
+			? templateIds[type].map(item => typeof item === 'string' ? item : item && item.tempId).filter(Boolean)
+			: [];
+		normalized[type] = ids;
+		if (ids.length) uni.setStorageSync('tempID' + type, ids);
+	});
+	uni.setStorageSync(SUBSCRIBE_MESSAGE, JSON.stringify(normalized));
+	return normalized;
+}
 
 // export function auth() {
 // 	let tmplIds = {};
@@ -36,16 +51,6 @@ export function openOrderSubscribe() {
 }
 
 /**
- * 提现消息订阅
- * 成功 和 失败 消息
- */
-// export function openExtrctSubscribe() {
-// 	let tmplIds = uni.getStorageSync('tempID' + arrTemp[2]);
-// 	return subscribe(tmplIds);
-// }
-
-
-/**
  * 砍价成功
  */
 export function openBargainSubscribe() {
@@ -61,14 +66,6 @@ export function openPinkSubscribe() {
 	let tmplIds = uni.getStorageSync('tempID' + arrTemp[3]);
 	return subscribe(tmplIds);
 }
-// /**
-//  * 提现
-//  */
-// export function openEextractSubscribe() {
-// 	let tmplIds = JSON.parse(uni.getStorageSync('tempID' + paySubscribe));
-// 	return subscribe(tmplIds);
-// }
-
 /**
  * 调起订阅界面
  * array tmplIds 模板id

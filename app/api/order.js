@@ -14,9 +14,14 @@ import request from "@/utils/request.js";
 /**
  * 获取购物车列表
  * @param numType boolean true 购物车数量,false=购物车产品数量
+ * @param type string total=总数 sum=产品数量
  */
-export function getCartCounts(numType,type) {
-	return request.get("cart/count?numType=" + numType + "&type=" + type);
+export function getCartCounts(numType, type) {
+	// 兜底：未传参时 numType 为 undefined，直接拼接会变成字符串 "undefined"，
+	// 后端 Boolean 类型转换报错（Invalid boolean value [undefined]）。
+	const n = numType === undefined ? true : !!numType;
+	const t = type || "total";
+	return request.get(`cart/count?numType=${n}&type=${t}`);
 }
 /**
  * 获取购物车列表

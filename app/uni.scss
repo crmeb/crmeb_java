@@ -14,9 +14,9 @@
 
 /*引入主题变色的scss文件*/
 /* 颜色变量 */
-@import './static/css/theme.scss';
-@import './static/css/theme_color.scss';  
-	
+@import '@/static/css/theme_color.scss';
+@import '@/static/css/theme.scss';
+
 /* 行为相关颜色 */
 $uni-color-primary: #007aff;
 $uni-color-success: #4cd964;
@@ -90,7 +90,4 @@ $uni-font-size-subtitle:36upx;
 $uni-color-paragraph: #3F536E; // 文章段落颜色
 $uni-font-size-paragraph:30upx;
 
-
-/* 透明度 */
-$uni-opacity-disabled: 0.3; // 组件禁用态的透明度
 $uni-index-box-shadow: 0rpx 3rpx 10rpx 2rpx rgba(0, 0, 0, 0.03);

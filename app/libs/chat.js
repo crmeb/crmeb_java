@@ -8,7 +8,7 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import $store from "@/store";
+import { useAppStore } from "@/store/app.js";
 import {
 	VUE_APP_WS_URL
 } from "@/utils/index.js";
@@ -39,11 +39,10 @@ Socket.prototype = {
 		this.ws.close();
 	},
 	onOpen: function() {
-		console.log("ws open");
 		this.init();
 		this.send({
 			type: "login",
-			data: $store.state.app.token
+			data: useAppStore().token
 		});
 		this.vm.$emit("socket_open");
 	},
@@ -69,7 +68,6 @@ Socket.prototype = {
 		clearInterval(this.timer);
 	},
 	onError: function(e) {
-		console.log(e);
 		this.vm.$emit("socket_error", e);
 	}
 };

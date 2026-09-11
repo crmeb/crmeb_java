@@ -14,11 +14,18 @@ import {
 	TOKENNAME,
 	HEADERPARAMS
 } from '@/config/app';
+import { LOGIN_STATUS } from '@/config/cache';
 import {
 	toLogin,
 	checkLogin
 } from '../libs/login';
-import store from '../store';
+import { useAppStore } from "@/store/app.js";
+
+// 在请求函数内按需获取 store 实例（Pinia 要求在 install 之后调用，
+// 这里延迟到调用时获取，避免模块加载顺序问题）
+function getAppStore() {
+	return useAppStore();
+}
 
 
 /**
@@ -28,50 +35,77 @@ function baseRequest(url, method, data, {
 	noAuth = false,
 	noVerify = false
 }, params,prefix) {
-	let Url = HTTP_REQUEST_URL,header = HEADER
-	if (params != undefined) {
-		header = HEADERPARAMS;
-	}
+	let Url = HTTP_REQUEST_URL;
+	let header = { ...(params != undefined ? HEADERPARAMS : HEADER) };
+	const appStore = getAppStore();
 	if (!noAuth) {
 		//登录过期自动登录
-		if (!store.state.app.token && !checkLogin()) {
+		if (!appStore.token && !checkLogin()) {
 			toLogin();
 			return Promise.reject({
 				msg: '未登录'
 			});
 		}
 	}
-	if (store.state.app.token) header[TOKENNAME] = store.state.app.token;
+	const requestToken = appStore.token || getCacheToken();
+	if (requestToken) header[TOKENNAME] = `Bearer ${requestToken}`;
 	return new Promise((reslove, reject) => {
 		uni.request({
 			url: Url + `${prefix?'/api/public/':'/api/front/'}` + url,
 			method: method || 'GET',
 			header: header,
 			data: data || {},
+			timeout: 15000,
 			success: (res) => {
+				// 网关错误/服务端返回非 JSON（如 502 HTML）时 res.data 可能为字符串或 undefined，
+				// 直接访问 res.data.code 会抛异常且 Promise 永远 pending，这里先做兜底。
+				const data = res.data;
+				if (res.statusCode < 200 || res.statusCode >= 300) {
+					let msg = `请求异常(${res.statusCode})`;
+					if (res.statusCode === 404) msg = '请求的资源不存在';
+					else if (res.statusCode === 502 || res.statusCode === 504) msg = '服务器维护中，请稍后再试';
+					else if (res.statusCode === 500) msg = '服务器开小差了，请稍后再试';
+					return reject({ msg });
+				}
+				if (typeof data !== 'object' || data === null) {
+					return reject({ msg: '响应数据格式异常' });
+				}
 				if (noVerify)
-					reslove(res.data, res);
-				else if (res.data.code == 200 || res.data.code == 0)
-					reslove(res.data, res);
-				else if ([410000, 410001, 410002, 401,402].indexOf(res.data.code) !== -1) {
+					reslove(data, res);
+				else if (data.code == 200 || data.code == 0)
+					reslove(data, res);
+				else if ([410000, 410001, 410002, 401, 402].indexOf(data.code) !== -1) {
 					if (!noAuth) toLogin();
-					reject(res.data);
-				}else if (res.data.code == 500){
-					reject(res.data.message || '系统异常');
-				}else if (res.data.code == 400){
-					reject(res.data.message || '参数校验失败');
-				}else if (res.data.code == 404){
-					reject(res.data.message || '没有找到相关数据');
-				}else if (res.data.code == 403){
-					reject(res.data.message || '没有相关权限');
+					reject(data);
+				} else if (data.code == 500) {
+					reject({ msg: data.message || '系统异常' });
+				} else if (data.code == 400) {
+					reject({ msg: data.message || '参数校验失败' });
+				} else if (data.code == 404) {
+					reject({ msg: data.message || '没有找到相关数据' });
+				} else if (data.code == 403) {
+					reject({ msg: data.message || '没有相关权限' });
 				} else
-					reject(res.data.message || '系统错误');
+					reject({ msg: data.message || '系统错误' });
 			},
-			fail: (msg) => {
-				reject('请求失败');
+			fail: (err) => {
+				// err 为 uni.request 失败对象，含 errMsg 字段；透传错误信息供调用方区分超时/断网/DNS 失败
+				let msg = '请求失败';
+				const errMsg = (err && err.errMsg) || '';
+				if (/timeout/i.test(errMsg)) msg = '请求超时，请检查网络后重试';
+				else if (/fail|abort/i.test(errMsg)) msg = '网络连接失败，请检查网络设置';
+				reject({ msg, errMsg });
 			}
 		})
 	});
+}
+
+function getCacheToken() {
+	try {
+		return uni.getStorageSync(LOGIN_STATUS) || '';
+	} catch (e) {
+		return '';
+	}
 }
 
 const request = {};

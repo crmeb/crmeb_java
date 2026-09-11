@@ -8,21 +8,21 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import store from "../store";
+import { useAppStore } from "../store/app.js";
 import Cache from '../utils/cache';
 import { Debounce } from '@/utils/validate.js'
 // #ifdef H5 || APP-PLUS
 import { isWeixin } from "../utils";
-import auth from './wechat';
 // #endif
 
 
 import { LOGIN_STATUS, USER_INFO, EXPIRES_TIME, STATE_R_KEY, BACK_URL} from './../config/cache';
+import { TOKEN_EXPIRE_SECONDS } from '@/config/app.js';
 
 function prePage(){
 	let pages = getCurrentPages();
 	let prePage = pages[pages.length - 1];
-	return prePage.$page.fullPath;
+	return prePage && prePage.$page ? prePage.$page.fullPath : '';
 }
 
 export const toLogin = Debounce(_toLogin,800)
@@ -30,10 +30,11 @@ export const toLogin = Debounce(_toLogin,800)
 export function _toLogin(push, pathLogin) {
 	// 公众号登录方式(单选),1微信授权，2手机号登录/
 	let publicLoginType = getApp().globalData.publicLoginType;
-	
-	store.commit("LOGOUT");
+	const forceLogin = push === true;
+
+	const appStore = useAppStore();
+	appStore.LOGOUT();
 	let path = prePage();
-	let login_back_url = Cache.get(BACK_URL);
 	// #ifdef H5
 	path = location.href;
 	path = location.pathname + location.search;
@@ -42,34 +43,25 @@ export function _toLogin(push, pathLogin) {
 		pathLogin = '/page/users/login/index'
 		Cache.set(BACK_URL,path);
 	}
-		
+	// 在 Cache.set 之后读取，确保拿到的是当前页路径而非刷新前残留的旧值
+	let login_back_url = Cache.get(BACK_URL);
+
 	// #ifdef H5
 	if (isWeixin() && publicLoginType ==1) {
-		let urlData = location.pathname + location.search
-		if (urlData.indexOf('?') !== -1) {
-			urlData += '&go_longin=1';
-		} else {
-			urlData += '?go_longin=1';
-		}
-		if (!Cache.has('snsapiKey')) {
-			auth.oAuth('snsapi_base', urlData);
-		} else {
-			if (['/pages/user/index'].indexOf(login_back_url) == -1) {
-				uni.navigateTo({
-					url: '/pages/users/wechat_login/index'
-				})
-			}
-		}
-	} else {
-		if (['/pages/user/index'].indexOf(login_back_url) == -1) {
+		if (location.pathname.indexOf('/pages/users/wechat_login/index') === -1) {
 			uni.navigateTo({
-				url: '/pages/users/login/index'
+				url: '/pages/users/wechat_login/index'
 			})
 		}
+	} else {
+		uni.navigateTo({
+				url: '/pages/users/login/index'
+			})
 	}
 	// #endif
-	
-	if (['pages/user/index','/pages/user/index'].indexOf(login_back_url) == -1) {
+
+	// #ifndef H5
+	if (forceLogin || ['pages/user/index','/pages/user/index'].indexOf(login_back_url) == -1) {
 		// #ifdef MP
 		uni.navigateTo({
 			 url: '/pages/users/wechat_login/index'
@@ -93,25 +85,30 @@ export function _toLogin(push, pathLogin) {
 			});
 		// #endif
 	}
+	// #endif
 }
 
 
 export function checkLogin()
 {
 	let token = Cache.get(LOGIN_STATUS);
-	let expiresTime = Cache.get(EXPIRES_TIME);
+	let expiresTime = Number(uni.getStorageSync(EXPIRES_TIME) || 0);
 	let newTime = Math.round(new Date() / 1000);
-	if (expiresTime < newTime || !token){
+	if (!token || (expiresTime && expiresTime < newTime)){
 		Cache.clear(LOGIN_STATUS);
 		Cache.clear(EXPIRES_TIME);
 		Cache.clear(USER_INFO);
 		Cache.clear(STATE_R_KEY);
 		return false;
 	}else{
-		store.commit('UPDATE_LOGIN',token);
+		if (!expiresTime) {
+			Cache.set(EXPIRES_TIME, newTime + TOKEN_EXPIRE_SECONDS);
+		}
+		const appStore = useAppStore();
+		appStore.UPDATE_LOGIN(token);
 		let userInfo = Cache.get(USER_INFO,true);
 		if(userInfo){
-			store.commit('UPDATE_USERINFO',userInfo);
+			appStore.UPDATE_USERINFO(userInfo);
 		}
 		return true;
 	}

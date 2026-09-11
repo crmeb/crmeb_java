@@ -25,7 +25,7 @@ function normalizeThemeColor(data = {}) {
       ...parseJson(value.themeData || value.theme_data, {}),
     };
   }
-  if (value.value && typeof value.value !== "string") {
+  if (value.value !== undefined) {
     value = {
       ...value,
       ...parseJson(value.value, {}),
@@ -38,6 +38,92 @@ function normalizeThemeColor(data = {}) {
     sub_color: pickValue(value, "subColor", "sub_color", value.sub_color),
     light_color: pickValue(value, "lightColor", "light_color", value.light_color),
   };
+}
+
+function buildLegacyThemeData(data = {}) {
+  const themeColor = data.theme_color || "#e93323";
+  const gradientColor = data.gradient_color || themeColor;
+  const subColor = data.sub_color || themeColor;
+  const lightColor = data.light_color || hexToRgba(themeColor, 0.1);
+  return {
+    theme: "theme1",
+    theme_color: themeColor,
+    gradient_color: gradientColor,
+    sub_color: subColor,
+    light_color: lightColor,
+    main_color: themeColor,
+    price_color: themeColor,
+    main_gradient: `linear-gradient(90deg, ${gradientColor} 0%, ${themeColor} 100%)`,
+    second_gradient: `linear-gradient(90deg, ${gradientColor} 0%, ${subColor} 100%)`,
+    coupons_border: `1px solid ${themeColor}`,
+    coupons_light_color: lightColor,
+  };
+}
+
+function setLegacyThemeData(themeData) {
+  const app = typeof getApp === "function" ? getApp() : null;
+  uni.setStorageSync("theme", themeData.theme);
+  uni.setStorageSync("themeData", themeData);
+  uni.setStorageSync("themeColor", themeData.theme_color);
+  if (app && app.globalData) {
+    app.globalData.theme = themeData.theme;
+    app.globalData.themeData = themeData;
+    app.globalData.themeColor = themeData.theme_color;
+  }
+  uni.$emit("themeData", themeData);
+}
+
+function buildThemeStyle(data = {}) {
+  const themeColor = data.theme_color;
+  const gradientColor = data.gradient_color || themeColor;
+  const subColor = data.sub_color || themeColor;
+  const lightColor = data.light_color || hexToRgba(themeColor, 0.1);
+  const themeColorRgba = hexToRgba(themeColor, 1);
+
+  return `
+      --view-theme: ${themeColorRgba};
+      --view-theme-16: ${themeColor};
+      --view-priceColor: ${themeColor};
+      --view-minorColor: ${subColor};
+      --view-minorColorT: ${lightColor};
+      --view-bntColor: ${subColor};
+      --view-op-ten: ${hexToRgba(themeColor, 0.1)};
+      --view-main-start: ${gradientColor};
+      --view-main-over: ${themeColor};
+      --view-op-point-four: ${hexToRgba(themeColor, 0.04)};
+      --view-op-point-eight: ${hexToRgba(themeColor, 0.8)};
+      --view-linear: linear-gradient(180deg, ${hexToRgba(
+        themeColor,
+        0.2,
+      )} 0%, rgba(255,255,255,0) 100%);
+      --view-gradient: ${gradientColor};
+      --view-main-gradient: linear-gradient(90deg, ${gradientColor} 0%, ${themeColorRgba} 100%);
+      --view-second-gradient: linear-gradient(90deg, ${gradientColor} 0%, ${subColor} 100%);
+      --view-index-gradient: linear-gradient(270deg, ${themeColorRgba} 0%, #F5F5F5 100%);
+      --view-seckill-gradient: linear-gradient(270deg, ${themeColorRgba} 0%, rgba(255,255,255,0.2) 72%, rgba(255,255,255,1) 100%);
+      --view-coupons-gradient: linear-gradient(0deg, ${gradientColor} 0%, ${themeColorRgba} 100%);
+      --view-bargain-gradient: linear-gradient(270deg, ${gradientColor} 0%, ${themeColorRgba} 100%);
+      --view-login-gradient: linear-gradient(180deg, ${hexToRgba(themeColor, 0.2)} 0%, rgba(255,255,255,0) 100%);
+      --view-bragin-border: ${themeColorRgba} transparent transparent;
+    `;
+}
+
+export function applyH5ThemeStyle(styleText = "") {
+  // #ifdef H5
+  if (typeof document === "undefined" || !styleText) return;
+  styleText
+    .split(";")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .forEach((item) => {
+      const index = item.indexOf(":");
+      if (index === -1) return;
+      document.documentElement.style.setProperty(
+        item.slice(0, index).trim(),
+        item.slice(index + 1).trim(),
+      );
+    });
+  // #endif
 }
 
 /**
@@ -70,33 +156,14 @@ export function hexToRgba(hex, alpha) {
  * @param {Object} data 主题数据
  */
 export function setThemeColor(data) {
-  let selectedTheme;
   data = normalizeThemeColor(data);
   // 处理自定义主题色数据
   if (data.theme_color) {
-    let themeColor = data.theme_color;
-    let gradientColor = data.gradient_color || themeColor;
-    let subColor = data.sub_color || themeColor;
-    let lightColor = data.light_color || hexToRgba(themeColor, 0.1);
-    selectedTheme = `
-      --view-theme: ${hexToRgba(themeColor, 1)};
-      --view-theme-16: ${themeColor};
-      --view-priceColor: ${themeColor};
-      --view-minorColor: ${subColor};
-      --view-minorColorT: ${lightColor};
-      --view-bntColor: ${subColor};
-      --view-op-ten: ${hexToRgba(themeColor, 0.1)};
-      --view-main-start: ${gradientColor};
-      --view-main-over: ${themeColor};
-      --view-op-point-four: ${hexToRgba(themeColor, 0.04)};
-      --view-op-point-eight: ${hexToRgba(themeColor, 0.8)};
-      --view-linear: linear-gradient(180deg, ${hexToRgba(
-        themeColor,
-        0.2,
-      )} 0%, rgba(255,255,255,0) 100%);
-      --view-gradient: ${gradientColor};
-    `;
+    const legacyThemeData = buildLegacyThemeData(data);
+    const selectedTheme = buildThemeStyle(data);
+    setLegacyThemeData(legacyThemeData);
     uni.setStorageSync("viewColor", selectedTheme);
+    applyH5ThemeStyle(selectedTheme);
     uni.$emit("ok", selectedTheme);
   }
 }

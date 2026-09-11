@@ -32,5 +32,5 @@
   "appid": "wx2ce61fcc6fc5f952",
   "editorSetting": {},
   "libVersion": "3.10.3",
-	"miniprogramRoot": "./unpackage/dist/dev/mp-weixin"
+	"miniprogramRoot": ""
 }

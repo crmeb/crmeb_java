@@ -1,14 +1,25 @@
+// +----------------------------------------------------------------------
+// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2016~2026 https://www.crmeb.com All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed CRMEB并不是自由软件，未经许可不能去掉CRMEB相关版权
+// +----------------------------------------------------------------------
+// | Author: CRMEB Team <admin@crmeb.com>
+// +----------------------------------------------------------------------
+// 主题页面逻辑，替代原 mixins/themePage.js。
+// 用法：
+//   const { themeId, themeDiyData, themeChecked, getThemeIdFromOptions, initThemePage } = useThemePage();
+
+import { ref } from 'vue';
 import { getThemeInfo } from '@/api/api.js';
 import { applyTheme } from '@/utils/theme.js';
+import util from '@/utils/util';
 
 function parseJson(value, fallback) {
 	if (!value) return fallback;
 	if (typeof value === 'object') return value;
-	try {
-		return JSON.parse(value);
-	} catch (e) {
-		return fallback;
-	}
+	try { return JSON.parse(value); } catch (e) { return fallback; }
 }
 
 function pickValue(data, camelKey, snakeKey, fallback) {
@@ -18,11 +29,8 @@ function pickValue(data, camelKey, snakeKey, fallback) {
 }
 
 function looksLikeThemePage(data) {
-	return !!(
-		data &&
-		typeof data === 'object' &&
-		(data.value || data.type || data.title || data.is_show !== undefined || data.isShow !== undefined)
-	);
+	return !!(data && typeof data === 'object' &&
+		(data.value || data.type || data.title || data.is_show !== undefined || data.isShow !== undefined));
 }
 
 function looksLikeComponentCollection(data) {
@@ -40,7 +48,6 @@ function normalizeThemeInfo(data = {}, type) {
 	if (value.value === undefined && looksLikeComponentCollection(value)) {
 		return { value };
 	}
-
 	let configValue = parseJson(value.value, value.value || {});
 	let normalized = {
 		...value,
@@ -57,7 +64,6 @@ function normalizeThemeInfo(data = {}, type) {
 		cover_pic: pickValue(value, 'coverPic', 'cover_pic', value.cover_pic),
 		bg_tab_val: pickValue(value, 'bgTabVal', 'bg_tab_val', value.bg_tab_val),
 	};
-
 	if (looksLikeThemePage(configValue) && configValue.value !== undefined) {
 		const innerValue = parseJson(configValue.value, configValue.value || {});
 		normalized = {
@@ -73,12 +79,8 @@ function normalizeThemeInfo(data = {}, type) {
 			bg_tab_val: pickValue(configValue, 'bgTabVal', 'bg_tab_val', normalized.bg_tab_val),
 		};
 	}
-
 	if (type === 'theme' && (value.themeData || value.theme_data)) {
-		return {
-			...normalized,
-			...parseJson(value.themeData || value.theme_data, {}),
-		};
+		return { ...normalized, ...parseJson(value.themeData || value.theme_data, {}) };
 	}
 	return normalized;
 }
@@ -88,58 +90,60 @@ function hasThemeData(data) {
 }
 
 function parseQueryString(value = '') {
-	return value
-		.split('&')
-		.reduce((params, item) => {
-			const [key, val] = item.split('=');
-			if (key) params[key] = val ? decodeURIComponent(val) : '';
-			return params;
-		}, {});
+	return value.split('&').reduce((params, item) => {
+		const [key, val] = item.split('=');
+		if (key) params[key] = val ? decodeURIComponent(val) : '';
+		return params;
+	}, {});
 }
 
-export default {
-	data() {
-		return {
-			themeId: '',
-			themeDiyData: null,
-			themeChecked: false,
-		};
-	},
-	methods: {
-		getThemeIdFromOptions(options = {}) {
-			let themeId = options.id || options.theme_id || options.themeId || '';
-			// #ifdef MP
-			if (!themeId && options.scene) {
-				const scene = decodeURIComponent(options.scene);
-				const sceneData =
-					this.$util && this.$util.getUrlParams
-						? this.$util.getUrlParams(scene)
-						: parseQueryString(scene);
-				themeId = sceneData.id || sceneData.theme_id || sceneData.themeId || '';
-			}
-			// #endif
-			if (themeId) {
-				uni.setStorageSync('previewThemeId', themeId);
-				return themeId;
-			}
-			return uni.getStorageSync('previewThemeId') || '';
-		},
-		initThemePage(type, options = {}) {
-			this.themeId = this.getThemeIdFromOptions(options);
-			const params = {};
-			if (this.themeId) params.theme_id = this.themeId;
-			applyTheme(this.themeId).catch(() => {});
-			return getThemeInfo(type, params)
-				.then((res) => {
-					const data = normalizeThemeInfo(res.data || {}, type);
-					this.themeDiyData = hasThemeData(data) ? data : null;
-					this.themeChecked = true;
-					return data;
-				})
-				.catch(() => {
-					this.themeDiyData = null;
-					this.themeChecked = true;
-				});
-		},
-	},
-};
+export function useThemePage() {
+	const themeId = ref('');
+	const themeDiyData = ref(null);
+	const themeChecked = ref(false);
+
+	function getThemeIdFromOptions(options = {}) {
+		let tid = options.theme_id;
+		// #ifdef MP
+		if (!tid && options.scene) {
+			const scene = decodeURIComponent(options.scene);
+			const sceneData = util.getUrlParams ? util.getUrlParams(scene) : parseQueryString(scene);
+			tid = sceneData.theme_id || '';
+		}
+		// #endif
+		if (tid) {
+			uni.setStorageSync('previewThemeId', tid);
+			return tid;
+		}
+		return uni.getStorageSync('previewThemeId') || '';
+	}
+
+	function initThemePage(type, options = {}) {
+		themeId.value = getThemeIdFromOptions(options);
+		const params = {};
+		if (themeId.value) params.theme_id = themeId.value;
+		if (options.micro_id) params.theme_id = options.micro_id;
+		applyTheme(themeId.value).catch(() => {});
+		return getThemeInfo(type, params)
+			.then((res) => {
+				const data = normalizeThemeInfo(res.data || {}, type);
+				themeDiyData.value = hasThemeData(data) ? data : null;
+				themeChecked.value = true;
+				return data;
+			})
+			.catch(() => {
+				themeDiyData.value = null;
+				themeChecked.value = true;
+			});
+	}
+
+	return {
+		themeId,
+		themeDiyData,
+		themeChecked,
+		getThemeIdFromOptions,
+		initThemePage,
+	};
+}
+
+export default useThemePage;

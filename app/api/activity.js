@@ -236,3 +236,19 @@ export function combinationHeaderApi(){
   return request.get('combination/header',{},{noAuth:true});
 }
 
+/**
+ * 预售列表
+ * @param {Object} data 包含 page, limit, time_type 等参数
+ */
+export function getAdvancellList(data) {
+  return request.get('advance_sale/list', data, { noAuth: true });
+}
+
+/**
+ * 砍价开启（用户）
+ * @param {Object} data
+ */
+export function postBargainStartUser(data) {
+  return request.post("bargain/start/user", data);
+}
+

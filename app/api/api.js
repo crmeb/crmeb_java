@@ -209,13 +209,7 @@ export function getTemlIds(data)
   return request.get('wechat/program/my/temp/list', data , { noAuth:true});
 }
 
-/**
- * 首页拼团数据
- */
-export function pink()
-{
-  return request.get('pink', {}, { noAuth:true});
-}
+const SUBSCRIBE_TEMPLATE_TYPES = ['beforePay', 'afterPay', 'createBargain', 'pink'];
 
 /**
  * 获取城市信息
@@ -370,10 +364,25 @@ export function getCategoryVersion() {
 }
 
 /**
- * 获取订阅消息 id，标准版首页使用；接口未提供时先按标准版地址保留
+ * 获取订阅消息 id，当前后端按 type 分组提供模板。
  */
 export function getTempIds() {
-  return request.get("wechat/temp_ids", {}, { noAuth: true });
+  return Promise.all(
+    SUBSCRIBE_TEMPLATE_TYPES.map(type =>
+      getTemlIds({ type })
+        .then(res => ({
+          type,
+          data: Array.isArray(res.data) ? res.data.map(item => item.tempId).filter(Boolean) : []
+        }))
+        .catch(() => ({ type, data: [] }))
+    )
+  ).then(list => ({
+    code: 200,
+    data: list.reduce((data, item) => {
+      data[item.type] = item.data;
+      return data;
+    }, {})
+  }));
 }
 
 /**
@@ -381,13 +390,6 @@ export function getTempIds() {
  */
 export function getDiy(id) {
   return request.get(`v2/diy/get_diy/default${id ? "?id=" + id : ""}`, {}, { noAuth: true });
-}
-
-/**
- * 获取版权信息
- */
-export function getCrmebCopyRight() {
-  return request.get("copyright", {}, { noAuth: true });
 }
 
 /**
@@ -402,13 +404,6 @@ export function getDiyVersion(name) {
 */
 export function productRank(){
   return request.get('product/leaderboard',{},{noAuth:true});
-}
-
-/**
- * 校验token是否有效
-*/
-export function tokenIsExistApi(){
-  return request.post(`token/is/exist`,{},{noAuth:true});
 }
 
 /**

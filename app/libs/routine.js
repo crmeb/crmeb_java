@@ -8,11 +8,11 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import store from '../store';
+import { useAppStore } from "../store/app.js";
 import { checkLogin } from './login';
 import { login } from '../api/public';
 import Cache from '../utils/cache';
-import { spread } from "@/api/user";
+import { spread } from "@/api/user.js";
 import { STATE_R_KEY, USER_INFO, EXPIRES_TIME, LOGIN_STATUS} from './../config/cache';
 class Routine 
 {
@@ -164,10 +164,11 @@ class Routine
 		return new Promise((resolve, reject)=>{
 			login(code,data).then(res=>{
 				if(res.data.type==='login'){
-					store.commit('LOGIN', {
+					const appStore = useAppStore();
+					appStore.LOGIN({
 						token: res.data.token
 					});
-					store.commit("SETUID", res.data.uid);
+					appStore.SETUID(res.data.uid);
 				}
 				return resolve(res);
 			}).catch(res=>{

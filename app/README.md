@@ -34,7 +34,6 @@
 │   ├── skeleton           骨架屏
 │   ├── swipers            轮播图
 │   ├── userEvaluation     商品评价
-│   ├── vconsole.min.js    调试打印工具 
 │   └── wPicker            选择器
 ├── config                 配置
 │   ├── app.js             请求地址和请求头配置
@@ -80,10 +79,12 @@
 │   └── jweixin-module     公众号H5的JS-SDK
 ├── static                 静态文件
 │   ├── css                css样式目录
+│   ├── fonts              字体资源
 │   ├── html               PC端打开时的html文件
 │   ├── iconfont           iconfont
 │   ├── images             图片资源
 │   ├── img                图片资源
+│   ├── js                 调试脚本
 │   └── tabBar             底部导航图片
 ├── store                  vuex
 │   ├── getters.js         store的计算属性

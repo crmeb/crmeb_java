@@ -11,7 +11,7 @@
 		// Global (browser)
 		root.CryptoJS = factory();
 	}
-}(this, function () {
+}((typeof self !== "undefined" ? self : typeof global !== "undefined" ? global : this), function () {
 
 	/*globals window, global, require*/
 
@@ -6189,3 +6189,11 @@
 	return CryptoJS;
 
 }));
+// ES Module support
+if (typeof exports === "object" && typeof module !== "undefined") {
+  module.exports.default = module.exports;
+}
+
+const CryptoJSExport = typeof globalThis !== "undefined" ? globalThis.CryptoJS : undefined;
+
+export default CryptoJSExport;

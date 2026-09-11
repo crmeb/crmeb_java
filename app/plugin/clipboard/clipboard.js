@@ -11,9 +11,10 @@
 		define([], factory);
 	else if(typeof exports === 'object')
 		exports["ClipboardJS"] = factory();
-	else
+	else {
 		root["ClipboardJS"] = factory();
-})(this, function() {
+	}
+})(typeof globalThis !== 'undefined' ? globalThis : (typeof self !== 'undefined' ? self : this), function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -971,3 +972,5 @@ function getAttributeValue(suffix, element) {
 /***/ })
 /******/ ])["default"];
 });
+// ESM 默认导出（Vite 兼容）：UMD 在非 CJS/AMD 环境下已将 ClipboardJS 挂载到全局
+export default (typeof globalThis !== "undefined" && globalThis.ClipboardJS) || (typeof self !== "undefined" && self.ClipboardJS);

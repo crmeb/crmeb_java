@@ -5,6 +5,7 @@
     "versionName" : "2.1",
     "versionCode" : 2,
     "transformPx" : false,
+    "vueVersion" : "3",
     /* 5+App特有相关 */
     "app-plus" : {
         "usingComponents" : true,
@@ -166,6 +167,13 @@
     },
     /* 快应用特有相关 */
     "quickapp" : {},
+    /* 网络请求超时时间（毫秒），作为各平台兜底；单次请求可在 uni.request 内单独覆盖 */
+    "networkTimeout" : {
+        "request" : 15000,
+        "uploadFile" : 60000,
+        "downloadFile" : 60000,
+        "socket" : 60000
+    },
     /* 小程序特有相关 */
     "mp-weixin" : {
         "appid" : "wx2ce61fcc6fc5f952",
@@ -241,7 +249,7 @@
             }
         }
     },
-    "sassImplementationName" : "node-sass"
+    "sassImplementationName" : "sass"
 }
 /* ios打包配置 */
 

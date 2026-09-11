@@ -7,17 +7,12 @@
 // +----------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
+// Pinia store 统一出口
+// 用法：
+//   import { useAppStore } from '@/store/app.js';
+//   const appStore = useAppStore();
+//   const { isLogin, userInfo } = storeToRefs(appStore);
 
-import Vue from "vue";
-import Vuex from "vuex";
-import modules from "./modules";
-import getters from "./getters";
-
-Vue.use(Vuex);
-const debug = process.env.NODE_ENV !== "production";
-
-export default new Vuex.Store({
-  modules,
-  getters,
-  strict: debug
-});
+export { useAppStore } from './app';
+export { useIndexDataStore } from './indexData';
+export { useHotWordsStore } from './hotWords';

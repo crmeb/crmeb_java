@@ -10,7 +10,9 @@
 
 
 import request from "@/utils/request.js";
+// #ifdef H5
 import wechat from "@/libs/wechat.js";
+// #endif
 import {
 	toLogin,
 	checkLogin
@@ -20,7 +22,12 @@ import {
  * @returns {*}
  */
 export function getWechatConfig() {
+  // #ifdef H5
   return request.get("wechat/config",{ url: encodeURIComponent(wechat.signLink()) },{ noAuth: true });
+  // #endif
+  // #ifndef H5
+  return request.get("wechat/config",{ url: "" },{ noAuth: true });
+  // #endif
 }
 
 /**
@@ -38,7 +45,7 @@ export function wechatAuth(code, spread) {
 
 /**
  * 获取登录授权login
- * 
+	 *
 */
 export function getLogo()
 {
@@ -150,4 +157,21 @@ export function iosBinding(data) {
  */
 export function iosRegisterBinding(data) {
 	return request.post("ios/register/binding/phone", data, { noAuth : true });
+}
+
+/**
+ * 获取应用更新信息
+ * @param {Number} type 1:android 2:ios
+ * @returns {*}
+ */
+export function getUpdateInfo(type) {
+	return request.get("version/get", { type }, { noAuth : true });
+}
+
+/**
+ * 小程序绑定手机号
+ * @param {Object} data
+ */
+export function routineBindingPhone(data) {
+	return request.post("routine/binding/phone", data, { noAuth : true });
 }

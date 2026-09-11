@@ -8,7 +8,7 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-module.exports = {
+export default {
 	/*
 	-----仅在APP生效-----
 	slide-in-right 新窗体从右侧进入

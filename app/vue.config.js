@@ -9,14 +9,20 @@
 // +----------------------------------------------------------------------
 
 module.exports = {
-	productionSourceMap: true, // 生产打包时不输出map文件，增加打包速度,
+	productionSourceMap: false, // 生产打包时不输出map文件，增加打包速度,
 	configureWebpack: config => {
 		if (process.env.NODE_ENV === 'production') {
 			//注释可看见打印，解开看不见
-			config.optimization.minimizer[0].options.terserOptions.compress.warnings = false
-			config.optimization.minimizer[0].options.terserOptions.compress.drop_console = true
-			config.optimization.minimizer[0].options.terserOptions.compress.drop_debugger = true
-			config.optimization.minimizer[0].options.terserOptions.compress.pure_funcs = ['console.log']
+			// webpack5 下 minimizer 数组结构可能变化，遍历处理更稳妥
+			const minimizers = (config.optimization && config.optimization.minimizer) || [];
+			minimizers.forEach(minimizer => {
+				const compress = minimizer && minimizer.options && minimizer.options.terserOptions && minimizer.options.terserOptions.compress;
+				if (!compress) return;
+				compress.warnings = false;
+				compress.drop_console = true;
+				compress.drop_debugger = true;
+				compress.pure_funcs = ['console.log'];
+			});
 		}
 	}
 }

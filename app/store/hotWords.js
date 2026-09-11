@@ -7,18 +7,18 @@
 // +----------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
+// 兼容原代码中对 Vuex 命名空间模块 hotWords 的调用（原 store 中实际未定义该模块，
+// 此处补齐以保留调用行为，避免迁移时报错）。
 
-export default {
-	token: state => state.app.token,
-	isLogin: state => !!state.app.token,
-	backgroundColor: state => state.app.backgroundColor,
-	userInfo: state => state.app.userInfo || {},
-	uid: state => state.app.uid,
-	homeActive: state => state.app.homeActive,
-	home: state => state.app.home,
-	chatUrl: state => state.app.chatUrl,
-	systemPlatform: state => state.app.systemPlatform,
-	productType: state => state.app.productType,
-	bottomNavigationIsCustom: state => state.app.bottomNavigationIsCustom,
-	globalData: state => state.app.globalData,
-};
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+
+export const useHotWordsStore = defineStore('hotWords', () => {
+	const hotWord = ref([]);
+
+	function setHotWord(list) {
+		hotWord.value = list;
+	}
+
+	return { hotWord, setHotWord };
+});

@@ -49,22 +49,18 @@
 			"path": "pages/user/index",
 			"style": {
 				"navigationBarTitleText": "个人中心",
-				// #ifdef MP || APP-PLUS
-				"navigationBarTextStyle": "black",
-				"navigationBarBackgroundColor": "#fff",
-				// #endif
-				"app-plus": {
-					// #ifdef APP-PLUS
-					"titleNView": {
-						"type": "default"
-					}
-					// #endif
-				},
 				"mp-weixin": {
 					"componentPlaceholder": {
 						"page-design": "view"
 					}
-				}
+				},
+				"enablePullDownRefresh": true
+					// #ifdef MP || APP-PLUS
+					,
+				"navigationStyle": "custom",
+				// "navigationBarBackgroundColor": "#e93323",
+				"navigationBarTextStyle": "black"
+				// #endif
 			}
 		},
 		{
@@ -319,7 +315,7 @@
 						"navigationBarBackgroundColor": "#fff"
 							// #ifdef MP || APP-PLUS
 							,
-						"navigationBarTextStyle": "#333"
+						"navigationBarTextStyle": "black"
 							// #endif
 							,
 						"app-plus": {
@@ -487,7 +483,7 @@
 						"navigationBarTitleText": "砍价海报"
 							// #ifdef MP || APP-PLUS
 							,
-						"navigationBarTextStyle": "#fff",
+						"navigationBarTextStyle": "white",
 						"navigationBarBackgroundColor": "#e93323"
 							// #endif
 							,
@@ -776,7 +772,7 @@
 						"navigationBarBackgroundColor": "#e93323"
 							// #ifdef MP || APP-PLUS
 							,
-						"navigationBarTextStyle": "#fff"
+						"navigationBarTextStyle": "white"
 							// #endif
 							,
 						"app-plus": {
@@ -795,27 +791,13 @@
 						"navigationBarBackgroundColor": "#e93323"
 							// #ifdef MP || APP-PLUS
 							,
-						"navigationBarTextStyle": "#fff"
+						"navigationBarTextStyle": "white"
 							// #endif
 							,
 						"app-plus": {
 							// #ifdef APP-PLUS
 							"titleNView": {
 								"type": "default"
-							}
-							// #endif
-						}
-					}
-				},
-				{
-					"path": "user_vip/index",
-					"style": {
-						"navigationBarTitleText": "会员中心",
-						"app-plus": {
-							// #ifdef APP-PLUS
-							"titleNView": {
-								"type": "default",
-								"backgroundColor": "#fff"
 							}
 							// #endif
 						}

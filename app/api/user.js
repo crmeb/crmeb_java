@@ -238,30 +238,6 @@ export function extractBank(){
 }
 
 /**
- * 会员等级列表
- * 
-*/
-export function userLevelGrade(){
-  return request.get('user/level/grade');
-}
-
-/**
- * 获取某个等级任务
- * @param int id 任务id
-*/
-export function userLevelTask(id){
-  return request.get('user/level/task/'+id);
-}
-
-/**
- * 检查用户是否可以成为会员
- * 
-*/
-export function userLevelDetection(){
-  return request.get('user/level/detection');
-}
-
-/**
  * 
  * 地址列表
  * @param object data
@@ -407,26 +383,8 @@ export function brokerageRankNumber(data)
 }
 
 /**
- * 会员等级经验值；
- * 
- */
-export function getlevelInfo()
-{
-	return request.get("user/level/grade");
-}
-
-/**
- * 经验值明细；
- * 
- */
-export function getlevelExpList(data)
-{
-	return request.get("user/expList",data);
-}
-
-/**
- * 经验值明细；
- * 
+ * 用户资金统计；
+ *
  */
 export function getuserDalance()
 {
@@ -501,4 +459,20 @@ export function copyrightApi(){
  */
 export function getRandCode() {
   return Promise.resolve({ data: { code: '' } });
+}
+
+/**
+ * 手机号微信静默授权
+ * @param {Object} data
+ */
+export function phoneWxSilenceAuth(data) {
+  return request.post('v2/wechat/phone/silence_auth', data, { noAuth: true });
+}
+
+/**
+ * 添加/修改地址
+ * @param {Object} data
+ */
+export function postAddress(data) {
+  return request.post('address/edit', data);
 }

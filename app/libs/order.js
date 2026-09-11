@@ -8,17 +8,11 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import store from '@/store'
+import { useAppStore } from "@/store/app.js";
 import {
 	preOrderApi
 } from '@/api/order.js';
-import {
-	tokenIsExistApi
-} from '@/api/api.js';
-import {
-	toLogin
-} from '@/libs/login.js';
-import util from 'utils/util'
+import util from '@/utils/util.js'
 import animationType from '@/utils/animationType.js'
 /**
  * 去商品详情
@@ -56,29 +50,12 @@ export function getPreOrder(preOrderType, orderDetails) {
 				url: '/pages/order/order_confirm/index?preOrderNo=' + res.data.preOrderNo
 			});
 		}).catch(err => {
-			// 如果token此时失效
-			tokenIsExistApi().then(tokenRes => {
-				let tokenIsExist = tokenRes.data;
-				if (!tokenIsExist && (preOrderType == 'buyNow' || preOrderType == 'shoppingCart')) {
-					uni.navigateTo({
-						url: '/pages/users/login/index',
-						success: () => {
-							store.commit("LOGOUT");
-							uni.showToast({
-								title: 'token已失效',
-								icon: 'none',
-								duration: 1000
-							})
-						}
-					})
-				} else {
-					uni.showToast({
-						title: err,
-						icon: 'none',
-						duration: 1000
-					})
-				}
-			})
+			// 受保护请求的鉴权失败会由 request.js 统一跳转登录。
+			if (!useAppStore().isLogin && (preOrderType == 'buyNow' || preOrderType == 'shoppingCart')) return;
+			uni.showToast({
+				title: err?.msg || err?.message || String(err || '下单失败'),
+				icon: 'none'
+			});
 		})
 	});
 }

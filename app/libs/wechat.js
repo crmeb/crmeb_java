@@ -9,29 +9,29 @@
 // +----------------------------------------------------------------------
 
 // #ifdef H5
-import WechatJSSDK from "@/plugin/jweixin-module/index.js";
+import "@/plugin/jweixin-module/index.js";
 import {
 	getWechatConfig,
 	wechatAuth
-} from "@/api/public";
+} from "@/api/public.js";
 import {
 	WX_AUTH,
 	STATE_KEY,
 	LOGINTYPE,
-	BACK_URL
-} from '@/config/cache';
+	BACK_URL,
+	LOGIN_STATUS
+} from '@/config/cache.js';
 import {
 	parseQuery
 } from '@/utils';
-import store from '@/store';
-import Cache from '@/utils/cache';
-import util from '@/utils/util'
+import Cache from '@/utils/cache.js';
+import util from '@/utils/util.js'
 
 class AuthWechat {
 
 	constructor() {
 		//微信实例化对象
-		this.instance = WechatJSSDK;
+		this.instance = typeof wx !== 'undefined' ? wx : null;
 		//是否实例化
 		this.status = false;
 
@@ -67,10 +67,13 @@ class AuthWechat {
 						resolve(this.instance);
 					})
 				}).catch(err => {
-					util.Tips({
-						title: '请正确配置公众号后使用！' + err
-					});
-					console.log('微信分享配置失败', err);
+					const message = typeof err === 'string' ? err :
+						(err && (err.msg || err.message || (err.data && (err.data.message || err.data.msg)))) || '';
+					if (!/微信公众号(?:appId|secret)未设置/.test(message)) {
+						util.Tips({
+							title: '请正确配置公众号后使用！'
+						});
+					}
 					this.status = false;
 					reject(err);
 				});
@@ -183,7 +186,8 @@ class AuthWechat {
 	 * 自动去授权
 	 */
 	oAuth(snsapiBase, url) {
-		if (uni.getStorageSync(WX_AUTH) && store.state.app.token && snsapiBase == 'snsapi_base') return;
+		// 直接读缓存（与 store/app.js 的 token 同源），避免 store <-> wechat 循环依赖
+		if (uni.getStorageSync(WX_AUTH) && (Cache.get(LOGIN_STATUS) || '') && snsapiBase == 'snsapi_base') return;
 		const {
 			code
 		} = parseQuery();

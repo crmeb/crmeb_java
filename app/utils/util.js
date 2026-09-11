@@ -12,14 +12,57 @@ import {
 	TOKENNAME,
 	HTTP_REQUEST_URL
 } from '../config/app.js';
-import store from '../store';
+import { useAppStore } from "../store/app.js";
 import {
 	pathToBase64
 } from '@/plugin/image-tools/index.js';
-import util from 'utils/util'
 // #ifdef APP-PLUS
 import permision from "./permission.js"
 // #endif
+
+const HOME_PAGE = '/pages/index/index';
+
+function normalizeToastTitle(title) {
+	if (title === undefined || title === null) return '';
+	if (typeof title === 'string') return title;
+	if (typeof title === 'number' || typeof title === 'boolean') return String(title);
+	if (typeof title === 'object') {
+		const dataMessage = title.data && (title.data.message || title.data.msg || title.data.errMsg);
+		const message = title.message || title.msg || title.errMsg || title.error || title.title || dataMessage;
+		if (message !== undefined && message !== null && typeof message !== 'object') return String(message);
+		try {
+			return JSON.stringify(title);
+		} catch (e) {
+			return String(title);
+		}
+	}
+	return String(title);
+}
+
+function safeNavigateBack(delta) {
+	let backDelta = parseInt(delta, 10);
+	if (!backDelta || backDelta < 1) backDelta = 1;
+	// #ifdef H5
+	history.back();
+	// #endif
+	// #ifndef H5
+	const pages = typeof getCurrentPages === 'function' ? getCurrentPages() : [];
+	if (pages.length > backDelta) {
+		uni.navigateBack({
+			delta: backDelta
+		});
+		return;
+	}
+	uni.switchTab({
+		url: HOME_PAGE,
+		fail() {
+			uni.reLaunch({
+				url: HOME_PAGE
+			});
+		}
+	});
+	// #endif
+}
 
 export default {
 	/**
@@ -121,12 +164,13 @@ export default {
 	 * tab=4 关闭所有页面跳转至非table上
 	 * tab=5 关闭当前页面跳转至table上
 	 */
-	Tips: function(opt, to_url) {
+	Tips: function(opt = {}, to_url) {
 		if (typeof opt == 'string') {
 			to_url = opt;
 			opt = {};
 		}
-		let title = opt.title || '',
+		opt = opt || {};
+		let title = normalizeToastTitle(opt.title),
 			icon = opt.icon || 'none',
 			endtime = opt.endtime || 2000,
 			success = opt.success;
@@ -160,14 +204,7 @@ export default {
 					case 3:
 						//返回上页面
 						setTimeout(function() {
-							// #ifndef H5
-							uni.navigateBack({
-								delta: parseInt(url),
-							})
-							// #endif
-							// #ifdef H5
-							history.back();
-							// #endif
+							safeNavigateBack(url);
 						}, endtime);
 						break;
 					case 4:
@@ -364,7 +401,6 @@ export default {
 				});
 			},
 			fail: function(err) {
-				console.log('失败', err)
 				uni.hideLoading();
 				that.Tips({
 					title: '无法获取图片信息'
@@ -482,7 +518,6 @@ export default {
 
 			},
 			fail: function(err) {
-				console.log('失败', err)
 				uni.hideLoading();
 				that.Tips({
 					title: '无法获取图片信息'
@@ -558,7 +593,7 @@ export default {
 				// #ifdef MP
 				"Content-Type": "multipart/form-data",
 				// #endif
-				[TOKENNAME]: store.state.app.token
+					[TOKENNAME]: `Bearer ${useAppStore().token}`
 			},
 			success: function(res) {
 				uni.hideLoading();
@@ -579,7 +614,6 @@ export default {
 				}
 			},
 			fail: function(res) {
-				console.log('res', res)
 				uni.hideLoading();
 				that.Tips({
 					title: '上传图片失败'
@@ -631,7 +665,7 @@ export default {
 						// #ifdef MP
 						"Content-Type": "multipart/form-data",
 						// #endif
-						[TOKENNAME]: store.state.app.token
+							[TOKENNAME]: `Bearer ${useAppStore().token}`
 					},
 					success: function(res) {
 						uni.hideLoading();
@@ -664,7 +698,6 @@ export default {
 				that.Tips({
 					title: err.errMsg
 				});
-				console.log('选择图片失败：', err);
 			}
 		})
 	},

@@ -69,20 +69,16 @@ function push() {
         enabledTypes = settings.plusGetAttribute("types");
         if (enabledTypes == 0) {
             result = 0;
-            console.log("推送权限没有开启");
         } else {
             result = 1;
-            console.log("已经开启推送功能!")
         }
         plus.ios.deleteObject(settings);
     } else {
         enabledTypes = app.enabledRemoteNotificationTypes();
         if (enabledTypes == 0) {
             result = 3;
-            console.log("推送权限没有开启!");
         } else {
             result = 4;
-            console.log("已经开启推送功能!")
         }
     }
     plus.ios.deleteObject(app);
@@ -110,7 +106,6 @@ function record() {
     var avaudiosession = plus.ios.import("AVAudioSession");
     var avaudio = avaudiosession.sharedInstance();
     var status = avaudio.recordPermission();
-    console.log("permissionStatus:" + status);
     if (status === 1970168948) {
         result = null;
     } else if (status === 1735552628) {
@@ -128,9 +123,7 @@ function calendar() {
     var ekAuthStatus = EKEventStore.authorizationStatusForEntityType(0);
     if (ekAuthStatus == 3) {
         result = 1;
-        console.log("日历权限已经开启");
     } else {
-        console.log("日历权限没有开启");
     }
     plus.ios.deleteObject(EKEventStore);
     return result;
@@ -142,9 +135,7 @@ function memo() {
     var ekAuthStatus = EKEventStore.authorizationStatusForEntityType(1);
     if (ekAuthStatus == 3) {
         result = 1;
-        console.log("备忘录权限已经开启");
     } else {
-        console.log("备忘录权限没有开启");
     }
     plus.ios.deleteObject(EKEventStore);
     return result;
@@ -193,23 +184,19 @@ function requestAndroid(permissionID) {
                 var result = 0;
                 for (var i = 0; i < resultObj.granted.length; i++) {
                     var grantedPermission = resultObj.granted[i];
-                    console.log('已获取的权限：' + grantedPermission);
                     result = 1
                 }
                 for (var i = 0; i < resultObj.deniedPresent.length; i++) {
                     var deniedPresentPermission = resultObj.deniedPresent[i];
-                    console.log('拒绝本次申请的权限：' + deniedPresentPermission);
                     result = 0
                 }
                 for (var i = 0; i < resultObj.deniedAlways.length; i++) {
                     var deniedAlwaysPermission = resultObj.deniedAlways[i];
-                    console.log('永久拒绝申请的权限：' + deniedAlwaysPermission);
                     result = -1
                 }
                 resolve(result);
             },
             function(error) {
-                console.log('result error: ' + error.message)
                 resolve({
                     code: error.code,
                     message: error.message
@@ -251,4 +238,4 @@ const permission = {
     gotoAppSetting: gotoAppPermissionSetting
 }
 
-module.exports = permission
+export default permission
