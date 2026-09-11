@@ -406,7 +406,8 @@ export function computeUser(){
 			ip:Cache.has('Ip') ? Cache.get('Ip') : ''
 	    },
 		dataType:'json',
-	    success: (res) => {}
+	    success: (res) => {},
+	    fail: () => {}
 	});
 }
 
