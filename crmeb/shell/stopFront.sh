@@ -1,6 +1,6 @@
 
 #接口项目站点路径（目录按照各自配置）
-APP_PATH=/www/wwwroot/api.java.crmeb.net/
+APP_PATH=/www/wwwroot/api.java.crmeb.net
 
 #jar包文件名称
 APP_NAME=$APP_PATH/Crmeb-front.jar

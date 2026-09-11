@@ -1,7 +1,7 @@
 # 环境
 1. Java Jdk1.8
 2. Redis 5+
-3. Mysql 5.7+
+3. Mysql 8.0+
 
 # Java项目框架
 1. SpringBoot 2.2.6.RELEASE
@@ -22,6 +22,21 @@ front 开发文档 http://apif.java.crmeb.net/doc.html
 3. shell脚本会自动运行 `tail -f crmeb_out.file` 命令输出当前启动日志
 4. 看到 `Completed 200 OK` 表示启动成功
 5. 默认启动 `20000` 端口号
+
+# JWT安全配置
+根据实际启用的环境，在后台和前台对应的 `application-{profile}.yml` 配置文件的 `crmeb` 节点中填写同一个随机密钥。例如生产环境：
+
+- `crmeb-admin/src/main/resources/application-prod.yml`
+- `crmeb-front/src/main/resources/application-prod.yml`
+
+```yaml
+crmeb:
+  jwt-secret: "请替换为随机密钥"
+```
+
+也可以继续使用 `CRMEB_JWT_SECRET` 环境变量作为备用配置。随机密钥可通过 `openssl rand -hex 32` 生成，请勿使用公开的示例值。
+
+未配置密钥时，服务启动后会自动生成临时密钥（仅适合本地体验），服务重启后已登录的用户需要重新登录。
 
 # 注意事项
 1. web端口号不可以设置为`20000`

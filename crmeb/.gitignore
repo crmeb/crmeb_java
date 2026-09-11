@@ -4,7 +4,6 @@ target/
 !**/src/main/**
 !**/src/test/**
 
-
 ### STS ###
 .apt_generated
 .classpath
@@ -30,6 +29,9 @@ build/
 
 ### VS Code ###
 .vscode/
+.codegraph/
+.reasonix/
+reasonix.toml
 /crmeb_log/log_debug.log
 /crmeb_log/log_error.log
 /crmeb_log/log_info.log
@@ -41,7 +43,7 @@ src/main/java/com/.DS_Store
 src/main/java/.DS_Store
 src/main/.DS_Store
 .DS_Store
-
-
-
-xx
+/crmeb_front_log/
+/crmeb_admin_log/
+/crmeb-admin/crmeb_admin_log/
+/logs/
