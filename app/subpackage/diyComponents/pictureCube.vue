@@ -358,181 +358,168 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, nextTick, onMounted } from "vue";
 import commonWrapper from "./commonWrapper.vue";
-export default {
-  components: { commonWrapper },
-  name: "pictureCube",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {
-      picList: this.dataConfig.picStyle.picList,
-      style: this.dataConfig.styleConfig.tabVal,
-      imageH: 0,
-    };
-  },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
+});
+
+const picList = ref(props.dataConfig.picStyle.picList);
+const style = ref(props.dataConfig.styleConfig.tabVal);
+const imageH = ref(0);
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+      valList: [
+        {
+          val: props.dataConfig.topConfig
+            ? props.dataConfig.topConfig.val
+            : 0,
         },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
         },
-      };
-    },
-    imgGap() {
-      return {
-        borderWidth: `${this.dataConfig.imgConfig.val * 2}rpx`,
-      };
-    },
-    imgBorderRadius() {
-      let borderRadius = `${this.dataConfig.filletImg.val * 2}rpx`;
-      if (this.dataConfig.filletImg.type) {
-        borderRadius = `${this.dataConfig.filletImg.valList[0].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[1].val * 2
-        }rpx ${this.dataConfig.filletImg.valList[3].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[2].val * 2
-        }rpx`;
-      }
-      return borderRadius;
-    },
-    autoHeight() {
-      let windowWidth = uni.getWindowInfo().windowWidth;
-      return {
-        height: windowWidth + "px",
-      };
-    },
-    horizontalPadding() {
-      const paddingConfig = this.configData.paddingConfig || {};
-      if (!paddingConfig.isAll) {
-        return (paddingConfig.val || 0) * 2;
-      }
-      const right = paddingConfig.valList && paddingConfig.valList[1]
-        ? paddingConfig.valList[1].val || 0
-        : 0;
-      const left = paddingConfig.valList && paddingConfig.valList[3]
-        ? paddingConfig.valList[3].val || 0
-        : 0;
-      return right + left;
-    },
-  },
-  mounted() {
-    this.computedHeight();
-  },
-  methods: {
-    //替换安全域名
-    setDomain: function (url) {
-      url = url ? url.toString() : "";
-      //本地调试打开,生产请注销
-      if (url.indexOf("https://") > -1) return url;
-      else return url.replace("http://", "https://");
-    },
-    goDetail(url) {
-      let urls = url.link;
-      uni.navigateTo({
-        url: urls,
-        fail: (e) => {
-          uni.switchTab({ url: urls });
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
         },
-      });
-      // this.$util.JumpPath(urls);
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    computedHeight() {
-      if (this.picList.length) {
-        let that = this;
-        let windowWidth = uni.getWindowInfo().windowWidth;
-        this.$nextTick((e) => {
-          if (this.style == 0) {
-            this.imageH = windowWidth / 2;
-          } else if ([1, 2].includes(this.style)) {
-            uni.getImageInfo({
-              src: that.setDomain(that.picList[0].image),
-              success: (res) => {
-                if (res && res.height > 0) {
-                  const imageWidth = this.style == 1
-                    ? 375
-                    : 250 - that.horizontalPadding;
-                  let height =
-                    res.height *
-                    (imageWidth / res.width);
-                  that.$set(that, "imageH", height);
-                } else {
-                  const imageWidth = this.style == 1
-                    ? 375
-                    : 250 - that.horizontalPadding;
-                  that.$set(
-                    that,
-                    "imageH",
-                    imageWidth * 2,
-                  );
-                }
-              },
-              fail: function (error) {
-                const imageWidth = that.style == 1
-                  ? 375
-                  : 250 - that.horizontalPadding;
-                that.$set(
-                  that,
-                  "imageH",
-                  imageWidth * 2,
-                );
-              },
-            });
-          } else if (this.style == 10) {
-            uni.getImageInfo({
-              src: that.setDomain(that.picList[0].image),
-              success: (image) => {
-                this.imageH = (image.height * windowWidth) / image.width;
-              },
-            });
-          }
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
+    },
+  };
+});
+const imgGap = computed(() => {
+  return {
+    borderWidth: `${props.dataConfig.imgConfig.val * 2}rpx`,
+    borderRadius: imgBorderRadius.value,
+    overflow: "hidden",
+  };
+});
+const imgBorderRadius = computed(() => {
+  let borderRadius = `${props.dataConfig.filletImg.val * 2}rpx`;
+  if (props.dataConfig.filletImg.type) {
+    borderRadius = `${props.dataConfig.filletImg.valList[0].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[1].val * 2
+    }rpx ${props.dataConfig.filletImg.valList[3].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[2].val * 2
+    }rpx`;
+  }
+  return borderRadius;
+});
+const autoHeight = computed(() => {
+  let windowWidth = uni.getWindowInfo().windowWidth;
+  return {
+    height: windowWidth + "px",
+  };
+});
+const horizontalPadding = computed(() => {
+  const paddingConfig = configData.value.paddingConfig || {};
+  if (!paddingConfig.isAll) {
+    return (paddingConfig.val || 0) * 2;
+  }
+  const right = paddingConfig.valList && paddingConfig.valList[1]
+    ? paddingConfig.valList[1].val || 0
+    : 0;
+  const left = paddingConfig.valList && paddingConfig.valList[3]
+    ? paddingConfig.valList[3].val || 0
+    : 0;
+  return right + left;
+});
+
+onMounted(() => {
+  computedHeight();
+});
+
+//替换安全域名
+function setDomain(url) {
+  url = url ? url.toString() : "";
+  //本地调试打开,生产请注销
+  if (url.indexOf("https://") > -1) return url;
+  else return url.replace("http://", "https://");
+}
+function goDetail(url) {
+  let urls = url.link;
+  uni.navigateTo({
+    url: urls,
+    fail: (e) => {
+      uni.switchTab({ url: urls });
+    },
+  });
+  // this.$util.JumpPath(urls);
+}
+function computedHeight() {
+  if (picList.value.length) {
+    let windowWidth = uni.getWindowInfo().windowWidth;
+    nextTick((e) => {
+      if (style.value == 0) {
+        imageH.value = windowWidth / 2;
+      } else if ([1, 2].includes(style.value)) {
+        uni.getImageInfo({
+          src: setDomain(picList.value[0].image),
+          success: (res) => {
+            if (res && res.height > 0) {
+              const imageWidth = style.value == 1
+                ? 375
+                : 250 - horizontalPadding.value;
+              let height =
+                res.height *
+                (imageWidth / res.width);
+              imageH.value = height;
+            } else {
+              const imageWidth = style.value == 1
+                ? 375
+                : 250 - horizontalPadding.value;
+              imageH.value = imageWidth * 2;
+            }
+          },
+          fail: function (error) {
+            const imageWidth = style.value == 1
+              ? 375
+              : 250 - horizontalPadding.value;
+            imageH.value = imageWidth * 2;
+          },
+        });
+      } else if (style.value == 10) {
+        uni.getImageInfo({
+          src: setDomain(picList.value[0].image),
+          success: (image) => {
+            imageH.value = (image.height * windowWidth) / image.width;
+          },
         });
       }
-    },
-  },
-};
+    });
+  }
+}
 </script>
 
 <style lang="scss">
@@ -662,7 +649,6 @@ export default {
 
 .pictureCube {
   display: flex;
-  background-color: #fff;
 
   .item {
     border-width: 0;

@@ -1,5 +1,5 @@
 <template>
-	<div class="login-wrapper" :data-theme="theme">
+	<div class="login-wrapper" :data-theme="theme" :style="colorStyle">
 		<div class="shading">
 			<image :src="mobileLoginLogo"/>
 		</div>
@@ -8,13 +8,13 @@
 				<form @submit.prevent="submit">
 					<div class="item">
 						<div class="acea-row row-middle">
-							<image :src="urlDomain+'crmebimage/perset/staticImg/phone_1.png'"  style="width: 24rpx; height: 34rpx;"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/phone_1.png'"  style="width: 24rpx; height: 34rpx;"></image>
 							<input type="number" class="texts" placeholder="输入手机号码" v-model="account" maxlength="11" required/>
 						</div>
 					</div>
 					<div class="item">
 						<div class="acea-row row-middle">
-							<image :src="urlDomain+'crmebimage/perset/staticImg/code_2.png'" style="width: 28rpx; height: 32rpx;"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/code_2.png'" style="width: 28rpx; height: 32rpx;"></image>
 							<input type="password" class="texts" placeholder="填写登录密码" maxlength="18" v-model="password" required />
 						</div>
 					</div>
@@ -23,13 +23,13 @@
 			<div class="list" v-if="current !== 0 || appLoginStatus || appleLoginStatus">
 				<div class="item">
 					<div class="acea-row row-middle">
-						<image :src="urlDomain+'crmebimage/perset/staticImg/phone_1.png'" style="width: 24rpx; height: 34rpx;"></image>
+						<image :src="urlDomain+'/crmebimage/perset/staticImg/phone_1.png'" style="width: 24rpx; height: 34rpx;"></image>
 						<input type="number" class="texts" placeholder="输入手机号码" v-model="account" maxlength="11"/>
 					</div>
 				</div>
 				<div class="item">
 					<div class="acea-row row-middle">
-						<image :src="urlDomain+'crmebimage/perset/staticImg/code_2.png'" style="width: 28rpx; height: 32rpx;"></image>
+						<image :src="urlDomain+'/crmebimage/perset/staticImg/code_2.png'" style="width: 28rpx; height: 32rpx;"></image>
 						<input type="number" placeholder="填写验证码" class="codeIput" v-model="captcha" maxlength="6" />
 						<button class="code main_color" :disabled="disabled" :class="disabled === true ? 'on' : ''" @click="code">
 							{{ text }}
@@ -38,15 +38,33 @@
 				</div>
 				<div class="item" v-if="isShowCode">
 					<div class="acea-row row-middle">
-						<image :src="urlDomain+'crmebimage/perset/staticImg/code_2.png'" style="width: 28rpx; height: 32rpx;"></image>
+						<image :src="urlDomain+'/crmebimage/perset/staticImg/code_2.png'" style="width: 28rpx; height: 32rpx;"></image>
 						<input type="number" placeholder="填写验证码" class="codeIput" v-model="codeVal" maxlength="6"/>
-						<div class="code" @click="again"><img :src="codeUrl" /></div>
+						<div class="code" @click="again"><img class="code-img" :src="codeUrl" /></div>
 					</div>
 				</div>
 			</div>
 			<view class="protocol acea-row row-between-wrapper">
 				<checkbox-group class="checkgroup acea-row" @change='isAgree=!isAgree'  style="align-items: end;">
-					<checkbox class="checkbox" :checked="isAgree ? true : false" />
+					<!-- #ifndef MP -->
+					<checkbox
+						class="checkbox"
+						:checked="isAgree ? true : false"
+						color="#ffffff"
+						backgroundColor="#ffffff"
+						activeBackgroundColor="var(--view-theme, #E93323)"
+						activeBorderColor="var(--view-theme, #E93323)"
+						iconColor="#ffffff"
+						style="transform: scale(0.9)"
+					/>
+					<!-- #endif -->
+					<!-- #ifdef MP -->
+					<checkbox
+						class="checkbox"
+						:checked="isAgree ? true : false"
+						color="#ffffff"
+					/>
+					<!-- #endif -->
 					<text class="protocol_text">我已阅读并同意<text  @click="userAgree('userinfo')"
 							class="font_pro">《用户协议》</text>和<text   @click="userAgree('userprivacyinfo')"
 							class="font_pro">《隐私政策》</text></text>
@@ -85,413 +103,312 @@
 			<!-- #endif -->
 		</div>
 		<div class="bottom"></div>
-		<Verify @success="handlerOnVerSuccess" :captchaType="'clickWord'" :imgSize="{ width: '330px', height: '155px' }"
+		<Verify @success="handlerOnVerSuccess" :captchaType="'blockPuzzle'" :imgSize="{ width: '330px', height: '155px' }"
 		        ref="verify"></Verify>
 	</div>
 </template>
-<script>
-	import dayjs from "@/plugin/dayjs/dayjs.min.js";
-	import sendVerifyCode from "@/mixins/SendVerifyCode";
-	import Verify from '../components/verifition/verify.vue';
-	import {
-		loginH5,
-		loginMobile,
-		registerVerify,
-		register,
-		// getCodeApi,
-		getUserInfo
-	} from "@/api/user";
-	let app = getApp();
-	import attrs, {required,alpha_num,chs_phone} from "@/utils/validate";
-	import {validatorDefaultCatch} from "@/utils/dialog";
-	import {appAuth, appleLogin} from "@/api/public";
-	import {VUE_APP_API_URL} from "@/utils";
-	import Routine from '@/libs/routine';
-	import {Debounce} from '@/utils/validate.js'
-	import {
-		goToAgreement
-	} from "@/libs/order";
-	const BACK_URL = "login_back_url";
+<script setup>
+import { ref, watch } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
+import util from '@/utils/util.js';
+import Cache from '@/utils/cache.js';
+import { useAppStore } from "@/store/app.js";
+import { useColor } from "@/composables/useColor.js";
+import { useSendVerifyCode } from '@/composables/useSendVerifyCode.js';
+import Verify from '../components/verifition/verify.vue';
+import {
+	loginH5,
+	loginMobile as loginMobileApi,
+	registerVerify,
+	register as registerApi,
+	getUserInfo as getUserInfoApi
+} from "@/api/user.js";
+import { appAuth, appleLogin as appleLoginRequest } from "@/api/public.js";
+import { HTTP_REQUEST_URL } from "@/config/app.js";
+import Routine from '@/libs/routine.js';
+import { Debounce } from '@/utils/validate.js'
+import {
+	goToAgreement
+} from "@/libs/order.js";
 
-	export default {
-		name: "Login",
-		mixins: [sendVerifyCode],
-		components: {
-			Verify,
-		},
-		data: function() {
-			return {
-				isAgree: false,
-				urlDomain: this.$Cache.get("imgHost"),
-				navList: ["快速登录", "账号登录"],
-				current: 1,
-				account: "",
-				password: "",
-				captcha: "",
-				formItem: 1,
-				type: "login",
-				keyCode: "",
-				codeUrl: "",
-				codeVal: "",
-				isShowCode: false,
-				platform: '',
-				appLoginStatus: false, // 微信登录强制绑定手机号码状态
-				appUserInfo: null, // 微信登录保存的用户信息
-				appleLoginStatus: false, // 苹果登录强制绑定手机号码状态
-				appleUserInfo: null,
-				appleShow: false ,// 苹果登录版本必须要求ios13以上的
-				theme:app.globalData.theme,
-				mobileLoginLogo: app.globalData.mobileLoginLogo // 登录页logo
-			};
-		},
-		watch:{
-			formItem:function(nval,oVal){
-				if(nval == 1){
-					this.type = 'login'
-				}else{
-					this.type = 'register'
-				}
+const app = getApp();
+const BACK_URL = "login_back_url";
+const appStore = useAppStore();
+const { disabled, text, sendCode } = useSendVerifyCode();
+
+const verify = ref(null);
+const isAgree = ref(false);
+const urlDomain = ref(Cache.get("imgHost"));
+const navList = ref(["快速登录", "账号登录"]);
+const current = ref(1);
+const account = ref("");
+const password = ref("");
+const captcha = ref("");
+const formItem = ref(1);
+const type = ref("login");
+const keyCode = ref("");
+const codeUrl = ref("");
+const codeVal = ref("");
+const isShowCode = ref(false);
+const platform = ref('');
+const appLoginStatus = ref(false); // 微信登录强制绑定手机号码状态
+const appUserInfo = ref(null); // 微信登录保存的用户信息
+const appleLoginStatus = ref(false); // 苹果登录强制绑定手机号码状态
+const appleUserInfo = ref(null);
+const appleShow = ref(false); // 苹果登录版本必须要求ios13以上的
+const theme = ref(app.globalData.theme);
+const { colorStyle } = useColor();
+const mobileLoginLogo = ref(app.globalData.mobileLoginLogo); // 登录页logo
+
+watch(formItem, (nval) => {
+	if (nval == 1) {
+		type.value = 'login'
+	} else {
+		type.value = 'register'
+	}
+});
+
+onLoad(() => {
+	uni.getSystemInfo({
+		success: function(res) {
+			if (res.platform.toLowerCase() == 'ios' && res.system.split(' ')[1] >= '13') {
+				appleShow.value = true
 			}
-		},
-		mounted: function() {
-		},
-		onLoad() {
-			let self = this
-			uni.getSystemInfo({
-				success: function(res) {
-					if (res.platform.toLowerCase() == 'ios' && res.system.split(' ')[1] >= '13') {
-						self.appleShow = true
-					}
+		}
+	});
+});
+
+//滑块验证成功后
+function handlerOnVerSuccess(data) {
+	verify.value.hide();
+	codeSend();
+}
+
+//发送验证码
+function codeSend() {
+	if (!account.value) return util.Tips({ title: '请填写手机号码' });
+	if (!isAgree.value) return util.Tips({ title: '请勾选用户隐私协议' });
+	if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(account.value)) return util.Tips({ title: '请输入正确的手机号码' });
+	registerVerify(account.value)
+		.then(res => {
+			util.Tips({ title: res.message });
+			sendCode();
+		})
+		.catch(err => {
+			return util.Tips({ title: err });
+		});
+}
+
+function userAgree(t) {
+	goToAgreement(t)
+}
+
+// 苹果登录
+function appleLogin() {
+	account.value = ''
+	captcha.value = ''
+	if (!isAgree.value) return util.Tips({ title: '请勾选用户隐私协议' });
+	uni.showLoading({ title: '登录中' })
+	uni.login({
+		provider: 'apple',
+		timeout: 10000,
+		success(loginRes) {
+			uni.getUserInfo({
+				provider: 'apple',
+				success: function(infoRes) {
+					appleUserInfo.value = infoRes.userInfo
+					appleLoginApi()
+				},
+				fail() {
+					uni.hideLoading()
+					uni.showToast({ title: '获取用户信息失败', icon: 'none', duration: 2000 })
+				},
+				complete() {
+					uni.hideLoading()
 				}
 			});
 		},
-		methods: {
-			//滑块验证成功后
-			handlerOnVerSuccess(data) {
-				this.$refs.verify.hide();
-				this.codeSend();
-			},
-			//发送验证码
-			codeSend() {
-				let that = this;
-				if (!that.account) return that.$util.Tips({
-					title: '请填写手机号码'
-				});
-				if (!this.isAgree) return this.$util.Tips({
-					title: '请勾选用户隐私协议'
-				});
-				if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(that.account)) return that.$util.Tips({
-					title: '请输入正确的手机号码'
-				});
-				registerVerify(that.account)
-					.then(res => {
-						that.$util.Tips({
-							title: res.message
-						});
-						that.sendCode();
-					})
-					.catch(err => {
-						return that.$util.Tips({
-							title: err
-						});
-					});
-			},
-			userAgree(type) {
-				goToAgreement(type)
-			},
-			// 苹果登录
-			appleLogin() {
-				let self = this
-				this.account = ''
-				this.captcha = ''
-				if (!self.isAgree) return self.$util.Tips({
-					title: '请勾选用户隐私协议'
-				});
-				uni.showLoading({
-					title: '登录中'
-				})
-				uni.login({
-					provider: 'apple',
-					timeout: 10000,
-					success(loginRes) {
-						uni.getUserInfo({
-							provider: 'apple',
-							success: function(infoRes) {
-								self.appleUserInfo = infoRes.userInfo
-								self.appleLoginApi()
-							},
-							fail() {
-								uni.hideLoading()
-								uni.showToast({
-									title: '获取用户信息失败',
-									icon: 'none',
-									duration: 2000
-								})
-							},
-							complete() {
-								uni.hideLoading()
-							}
-						});
-					},
-					fail(error) {
-						uni.hideLoading()
-						console.log(error)
-					}
-				})
-			},
-			// 苹果登录Api
-			appleLoginApi() {
-				let self = this
-				appleLogin({
-					openId: self.appleUserInfo.openId,
-					email: self.appleUserInfo.email == undefined ? '' :self.appleUserInfo.email,
-					identityToken: self.appleUserInfo.identityToken || ''
-				}).then((res) => {
-					this.$store.commit("LOGIN", {
-						'token': res.data.token
-					});
-					this.getUserInfo(res.data);
-				}).catch(error => {
-					uni.hideLoading();
-					uni.showModal({
-						title: '提示',
-						content: `错误信息${error}`,
-						success: function(res) {
-							if (res.confirm) {
-								console.log('用户点击确定');
-							} else if (res.cancel) {
-								console.log('用户点击取消');
-							}
-						}
-					});
-				})
-			},
-			// App微信登录
-			wxLogin:Debounce(function() {
-				let self = this
-				this.account = ''
-				this.captcha = ''
-				if (!self.isAgree) return self.$util.Tips({
-					title: '请勾选用户隐私协议' 
-				});
-				uni.showLoading({
-					title: '登录中'
-				}) 
-				uni.login({
-					provider: 'weixin',
-					success: function(loginRes) {
-						// 获取用户信息
-						uni.getUserInfo({
-							provider: 'weixin',
-							success: function(infoRes) {
-								uni.hideLoading();
-								self.appUserInfo = infoRes.userInfo
-								self.appUserInfo.type = self.platform === 'ios' ? 'iosWx' : 'androidWx'
-								self.wxLoginGo(self.appUserInfo)
-							}, 
-							fail() {
-								uni.hideLoading();
-								uni.showToast({
-									title: '获取用户信息失败',
-									icon: 'none',
-									duration: 2000
-								})
-							},
-							complete() {
-								uni.hideLoading()
-							}
-						});
-					},
-					fail() {
-						uni.hideLoading()
-						uni.showToast({
-							title: '登录失败',
-							icon: 'none',
-							duration: 2000
-						})
-					}
-				});
-			}),
-			wxLoginGo(userInfo) {
-				appAuth(userInfo).then(res => {
-					if (res.data.type === 'register') {
-						uni.navigateTo({
-							url: '/pages/users/app_login/index?authKey='+res.data.key
-						})
-					}
-					if (res.data.type === 'login') {
-						this.$store.commit("LOGIN", {
-							'token': res.data.token
-						});
-						this.getUserInfo(res.data);
-					}
-				}).catch(res => {
-					this.$util.Tips({
-						title: res
-					});
-				});
-			},
-			again() {
-				this.codeUrl =
-					VUE_APP_API_URL +
-					"/sms_captcha?" +
-					"key=" +
-					this.keyCode +
-					Date.parse(new Date());
-			},
-			//手机号验证码登录
-			loginMobile:Debounce(function() {
-				let that = this;
-				if (!that.account) return that.$util.Tips({
-					title: '请填写手机号码'
-				});
-				if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(that.account)) return that.$util.Tips({
-					title: '请输入正确的手机号码'
-				});
-				if (!that.captcha) return that.$util.Tips({
-					title: '请填写验证码'
-				});
-				if (!/^[\w\d]+$/i.test(that.captcha)) return that.$util.Tips({
-					title: '请输入正确的验证码'
-				});
-				if (!that.isAgree) return that.$util.Tips({
-					title: '请勾选用户隐私协议'
-				});
-				uni.showLoading({
-					title: '登录中'
-				})
-				loginMobile({
-						phone: that.account,
-						captcha: that.captcha,
-						spread_spid: that.$Cache.get("spread")
-						// spread_spid: uni.getStorageSync('spid')
-					})
-					.then(res => {
-						let data = res.data;
-						let newTime = Math.round(new Date() / 1000);
-						this.$store.commit("LOGIN", {
-							'token': res.data.token
-						});
-						uni.hideLoading();
-						that.getUserInfo(data);
-					})
-					.catch(res => {
-						uni.hideLoading();
-						that.$util.Tips({
-							title: res
-						});
-					});
-			}),
-			async register() {
-				let that = this;
-				if (!that.account) return that.$util.Tips({
-					title: '请填写手机号码'
-				});
-				if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(that.account)) return that.$util.Tips({
-					title: '请输入正确的手机号码'
-				});
-				if (!that.isAgree) return that.$util.Tips({
-					title: '请勾选用户隐私协议'
-				});
-				if (!that.captcha) return that.$util.Tips({
-					title: '请填写验证码'
-				});
-				if (!/^[\w\d]+$/i.test(that.captcha)) return that.$util.Tips({
-					title: '请输入正确的验证码'
-				});
-				if (!that.password) return that.$util.Tips({
-					title: '请填写密码'
-				});
-				if (!/^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,16}$/i.test(that.password)) return that.$util.Tips({
-					title: '您输入的密码过于简单'
-				});
-				register({
-						account: that.account,
-						captcha: that.captcha,
-						password: that.password,
-						spread_spid: that.$Cache.get("spread")
-						// spread_spid: uni.getStorageSync('spid') || 0
-					})
-					.then(res => {
-						that.$util.Tips({
-							title: res
-						});
-						that.formItem = 1;
-					})
-					.catch(res => {
-						that.$util.Tips({
-							title: res
-						});
-					});
-			},
-			async code() {
-				let that = this;
-				if (!that.account) return that.$util.Tips({
-					title: '请填写手机号码'
-				});
-				if (!that.isAgree) return that.$util.Tips({
-					title: '请勾选用户隐私协议'
-				});
-				if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(that.account)) return that.$util.Tips({
-					title: '请输入正确的手机号码'
-				});
-				if (that.formItem == 2) that.type = "register";
-				that.$refs.verify.show();
-			},
-			navTap: function(index) {
-				this.current = index;
-			},
-			//账号密码登录
-			submit:Debounce(function() {
-				let that = this;
-				if (!that.account) return that.$util.Tips({
-					title: '请填写账号'
-				});
-				if (!/^[\w\d]{5,16}$/i.test(that.account)) return that.$util.Tips({
-					title: '请输入正确的账号'
-				});
-				if (!that.password) return that.$util.Tips({
-					title: '请填写密码'
-				});
-				if (!that.isAgree) return that.$util.Tips({
-					title: '请勾选用户隐私协议'
-				});
-				uni.showLoading({
-					title: '登录中'
-				})
-				loginH5({
-						account: that.account,
-						password: that.password,
-						spread_spid: that.$Cache.get("spread")
-					}).then(({data}) => {
-						this.$store.commit("LOGIN", {
-							'token': data.token
-						});
-						uni.hideLoading();
-						that.getUserInfo(data);	
-					})
-					.catch(e => {
-						uni.hideLoading();
-						that.$util.Tips({
-							title: e
-						});
-					});
-			}),
-			getUserInfo(data){
-				this.$store.commit("SETUID", data.uid); 
-				getUserInfo().then(res => {
-					this.$store.commit("UPDATE_USERINFO", res.data);
-					let backUrl = this.$Cache.get(BACK_URL) || "/pages/index/index";
-					if (backUrl.indexOf('/pages/users/login/index') !== -1) { 
-						backUrl = '/pages/index/index';
-					}
-					uni.reLaunch({
-						url: backUrl
-					});
-				})
-			},
+		fail(error) {
+			uni.hideLoading()
 		}
-	};
+	})
+}
+
+// 苹果登录Api
+function appleLoginApi() {
+	appleLoginRequest({
+		openId: appleUserInfo.value.openId,
+		email: appleUserInfo.value.email == undefined ? '' : appleUserInfo.value.email,
+		identityToken: appleUserInfo.value.identityToken || ''
+	}).then((res) => {
+		appStore.LOGIN({ 'token': res.data.token });
+		getUserInfo(res.data);
+	}).catch(error => {
+		uni.hideLoading();
+		uni.showModal({
+			title: '提示',
+			content: `错误信息${error}`,
+			success: function(res) {
+				if (res.confirm) {
+				} else if (res.cancel) {
+				}
+			}
+		});
+	})
+}
+
+// App微信登录
+const wxLogin = Debounce(function() {
+	account.value = ''
+	captcha.value = ''
+	if (!isAgree.value) return util.Tips({ title: '请勾选用户隐私协议' });
+	uni.showLoading({ title: '登录中' })
+	uni.login({
+		provider: 'weixin',
+		success: function(loginRes) {
+			// 获取用户信息
+			uni.getUserInfo({
+				provider: 'weixin',
+				success: function(infoRes) {
+					uni.hideLoading();
+					appUserInfo.value = infoRes.userInfo
+					appUserInfo.value.type = platform.value === 'ios' ? 'iosWx' : 'androidWx'
+					wxLoginGo(appUserInfo.value)
+				},
+				fail() {
+					uni.hideLoading();
+					uni.showToast({ title: '获取用户信息失败', icon: 'none', duration: 2000 })
+				},
+				complete() {
+					uni.hideLoading()
+				}
+			});
+		},
+		fail() {
+			uni.hideLoading()
+			uni.showToast({ title: '登录失败', icon: 'none', duration: 2000 })
+		}
+	});
+})
+
+function wxLoginGo(info) {
+	appAuth(info).then(res => {
+		if (res.data.type === 'register') {
+			uni.navigateTo({
+				url: '/pages/users/app_login/index?authKey=' + res.data.key
+			})
+		}
+		if (res.data.type === 'login') {
+			appStore.LOGIN({ 'token': res.data.token });
+			getUserInfo(res.data);
+		}
+	}).catch(res => {
+		util.Tips({ title: res });
+	});
+}
+
+function again() {
+	codeUrl.value =
+		HTTP_REQUEST_URL +
+		"/sms_captcha?" +
+		"key=" +
+		keyCode.value +
+		Date.parse(new Date());
+}
+
+//手机号验证码登录
+const loginMobile = Debounce(function() {
+	if (!account.value) return util.Tips({ title: '请填写手机号码' });
+	if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(account.value)) return util.Tips({ title: '请输入正确的手机号码' });
+	if (!captcha.value) return util.Tips({ title: '请填写验证码' });
+	if (!/^[\w\d]+$/i.test(captcha.value)) return util.Tips({ title: '请输入正确的验证码' });
+	if (!isAgree.value) return util.Tips({ title: '请勾选用户隐私协议' });
+	uni.showLoading({ title: '登录中' })
+	loginMobileApi({
+			phone: account.value,
+			captcha: captcha.value,
+			spread_spid: Cache.get("spread")
+		})
+		.then(res => {
+			let data = res.data;
+			appStore.LOGIN({ 'token': res.data.token });
+			uni.hideLoading();
+			getUserInfo(data);
+		})
+		.catch(res => {
+			uni.hideLoading();
+			util.Tips({ title: res });
+		});
+})
+
+async function register() {
+	if (!account.value) return util.Tips({ title: '请填写手机号码' });
+	if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(account.value)) return util.Tips({ title: '请输入正确的手机号码' });
+	if (!isAgree.value) return util.Tips({ title: '请勾选用户隐私协议' });
+	if (!captcha.value) return util.Tips({ title: '请填写验证码' });
+	if (!/^[\w\d]+$/i.test(captcha.value)) return util.Tips({ title: '请输入正确的验证码' });
+	if (!password.value) return util.Tips({ title: '请填写密码' });
+	if (!/^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,16}$/i.test(password.value)) return util.Tips({ title: '您输入的密码过于简单' });
+	registerApi({
+			account: account.value,
+			captcha: captcha.value,
+			password: password.value,
+			spread_spid: Cache.get("spread")
+		})
+		.then(res => {
+			util.Tips({ title: res });
+			formItem.value = 1;
+		})
+		.catch(res => {
+			util.Tips({ title: res });
+		});
+}
+
+async function code() {
+	if (!account.value) return util.Tips({ title: '请填写手机号码' });
+	if (!isAgree.value) return util.Tips({ title: '请勾选用户隐私协议' });
+	if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(account.value)) return util.Tips({ title: '请输入正确的手机号码' });
+	if (formItem.value == 2) type.value = "register";
+	verify.value.show();
+}
+
+function navTap(index) {
+	current.value = index;
+}
+
+//账号密码登录
+const submit = Debounce(function() {
+	if (!account.value) return util.Tips({ title: '请填写账号' });
+	if (!/^[\w\d]{5,16}$/i.test(account.value)) return util.Tips({ title: '请输入正确的账号' });
+	if (!password.value) return util.Tips({ title: '请填写密码' });
+	if (!isAgree.value) return util.Tips({ title: '请勾选用户隐私协议' });
+	uni.showLoading({ title: '登录中' })
+	loginH5({
+			account: account.value,
+			password: password.value,
+			spread_spid: Cache.get("spread")
+		}).then(({ data }) => {
+			appStore.LOGIN({ 'token': data.token });
+			uni.hideLoading();
+			getUserInfo(data);
+		})
+		.catch(e => {
+			uni.hideLoading();
+			util.Tips({ title: e });
+		});
+})
+
+function getUserInfo(data) {
+	appStore.SETUID(data.uid);
+	getUserInfoApi().then(res => {
+		appStore.UPDATE_USERINFO(res.data);
+		let backUrl = Cache.get(BACK_URL) || "/pages/index/index";
+		if (backUrl.indexOf('/pages/users/login/index') !== -1) {
+			backUrl = '/pages/index/index';
+		}
+		uni.reLaunch({ url: backUrl });
+	})
+}
 </script>
 <style lang="scss" scoped>
 	page {
@@ -575,7 +492,7 @@
 	.bg_color{
 		@include main_bg_color(theme);
 	}
-	.code img {
+	.code-img {
 		width: 100%;
 		height: 100%;
 	}
@@ -670,7 +587,7 @@
 				color: #FFFFFF;
 				font-size: 30rpx;
 			}
-	
+
 			.tips {
 				margin: 30rpx;
 				text-align: center;
@@ -681,6 +598,16 @@
 	.protocol {
 		margin: 30rpx 0;
 		padding-left: 44rpx;
+		::v-deep .uni-checkbox-input.uni-checkbox-input-checked {
+			@include main_bg_color(theme);
+			border: none !important;
+			color: #fff !important;
+		}
+		::v-deep checkbox .wx-checkbox-input.wx-checkbox-input-checked {
+			@include main_bg_color(theme);
+			border: none !important;
+			color: #fff !important;
+		}
 		.protocol_text {
 			.font_pro {
 				@include main_color(theme);

@@ -5,11 +5,6 @@
         <view class="pictrue acea-row row-center-wrapper relative">
           <image :src="diyInfo.avatar" v-if="diyInfo.avatar && isLogin"></image>
           <image
-            src="@/static/images/king.png"
-            class="king"
-            v-if="diyInfo.is_money_level"
-          ></image>
-          <image
             v-if="!diyInfo.avatar && isLogin"
             :src="dataConfig.logoConfig.url || '@/static/images/f.png'"
           ></image>
@@ -22,35 +17,10 @@
           <view v-if="!isLogin" class="name">{{ '请点击登录' }}</view>
           <view v-else class="name acea-row row-middle">
             <view class="nameCon line1">{{ diyInfo.nickname }}</view>
-            <view
-              class="lable acea-row row-middle"
-              v-if="diyInfo.level > 0 && (diyInfo.vip_icon || diyInfo.vip_name)"
-              :style="[lableStyle]"
-            >
-              <img
-                class="icon"
-                v-if="diyInfo.vip_icon"
-                :src="diyInfo.vip_icon"
-                alt=""
-              />
-              {{ diyInfo.vip_name }}
-            </view>
-          </view>
-          <view
-            class="acea-row row-middle"
-            v-if="isLogin && diyInfo.vip && diyInfo.level > 0"
-          >
-            <view class="progress" :style="[progressStyle]">
-              <view class="bg-reds" :style="[bgRedsStyle]"> </view>
-            </view>
-            <view class="percent"
-              >{{ diyInfo.exp ? diyInfo.exp.split(".")[0] : 0 }}
-              {{ diyInfo.next_exp ? `/ ${diyInfo.next_exp}` : "" }}</view
-            >
           </view>
           <view
             class="phone acea-row row-middle"
-            v-if="isLogin && diyInfo.level <= 0 && diyInfo.phone"
+            v-if="isLogin && diyInfo.phone"
           >
             <text>{{ diyInfo.phone }}</text>
           </view>
@@ -166,44 +136,101 @@
   </common-wrapper>
 </template>
 
-<script>
+<script setup>
 import commonWrapper from "./commonWrapper.vue";
-import colors from "@/mixins/color";
-import { getlevelInfo, getRandCode, getUserInfo } from "@/api/user.js";
-import { mapGetters } from "vuex";
-export default {
-  components: { commonWrapper },
-  computed: {
-    ...mapGetters(["isLogin"]),
-    configData() {
+import { useColor } from "@/composables/useColor.js";
+import { getRandCode, getUserInfo } from "@/api/user.js";
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
+import { ref, computed, watch } from "vue";
+import util from "@/utils/util.js";
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
+  },
+  isSortType: {
+    type: [String, Number],
+    default: 0,
+  },
+});
+const emit = defineEmits(["changeLogin"]);
+
+const { colorStyle, colorStatus } = useColor();
+const appStore = useAppStore();
+const { isLogin } = storeToRefs(appStore);
+
+const config = ref({
+  bar: {
+    code: "",
+    color: ["#000"],
+    bgColor: "#FFFFFF", // 背景色
+    width: 480, // 宽度
+    height: 110, // 高度
+  },
+  qrc: {
+    code: "",
+    size: 380, // 二维码大小
+    level: 3, //等级 0～4
+    bgColor: "#FFFFFF", //二维码背景色 默认白色
+    border: {
+      color: ["#eee", "#eee"], //边框颜色支持渐变色
+      lineWidth: 3, //边框宽度
+    },
+    // img: '/static/logo.png', //图片
+    // iconSize: 40, //二维码图标的大小
+    color: ["#333", "#333"], //边框颜色支持渐变色
+  },
+});
+const codeList = ref([
+  {
+    name: "会员码",
+  },
+  {
+    name: "付款码",
+  },
+]);
+const codeIndex = ref(0);
+const isCode = ref(false);
+const isextension = ref(false);
+const bgColor = ref("");
+const textColor = ref("");
+const mbCongfig = ref(0);
+const prConfig = ref(0); //背景边距
+const itemStyle = ref(0);
+const checkType = ref(props.dataConfig.checkboxInfo.type);
+const diyInfo = ref({});
+
+const configData = computed(() => {
       return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
+        ...props.dataConfig,
+        paddingConfig: props.dataConfig.paddingConfig || {
           isAll: false,
           valList: [
             {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
+              val: props.dataConfig.topConfig
+                ? props.dataConfig.topConfig.val
                 : 0,
             },
             {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
+              val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
             },
             {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
+              val: props.dataConfig.bottomConfig
+                ? props.dataConfig.bottomConfig.val
                 : 0,
             },
             {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
+              val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
             },
           ],
         },
-        marginConfig: this.dataConfig.marginConfig || {
+        marginConfig: props.dataConfig.marginConfig || {
           isAll: false,
           valList: [
             {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
+              val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
             },
             {
               val: 0,
@@ -217,175 +244,66 @@ export default {
           ],
         },
       };
-    },
-    lableStyle() {
-      let styleObject = {
-        background: this.currentLevelColor,
-        color: this.currentLevelColor,
-      };
-      return styleObject;
-    },
+});
     // componentStyle() {
     // 	return {
-    // 		'padding': `${this.dataConfig.topConfig.val * 2}rpx ${this.dataConfig.prConfig.val * 2}rpx ${this.dataConfig.bottomConfig.val * 2}rpx`,
-    // 		'margin-top': `${this.dataConfig.mbConfig.val * 2}rpx`,
-    // 		'background': this.dataConfig.bottomBgColor.color[0].item,
+    // 		'padding': `${props.dataConfig.topConfig.val * 2}rpx ${props.dataConfig.prConfig.val * 2}rpx ${props.dataConfig.bottomConfig.val * 2}rpx`,
+    // 		'margin-top': `${props.dataConfig.mbConfig.val * 2}rpx`,
+    // 		'background': props.dataConfig.bottomBgColor.color[0].item,
     // 	};
     // },
-    progressStyle() {
-      let styleObject = {};
-      if (this.dataConfig.toneConfig.tabVal) {
-        styleObject["background"] =
-          this.dataConfig.progressBgColor.color[0].item;
-      }
-      return styleObject;
-    },
-    bgRedsStyle() {
-      let diyInfo = this.diyInfo;
-      let styleObject = {
-        width: `${
-          diyInfo.exp > diyInfo.next_exp
-            ? 100
-            : this.$util.$h.Div(parseInt(diyInfo.exp), diyInfo.next_exp) *
-                  100 >=
-                5
-              ? this.$util.$h.Div(parseInt(diyInfo.exp), diyInfo.next_exp) * 100
-              : 5
-        }%`,
-      };
-      if (this.dataConfig.toneConfig.tabVal) {
-        styleObject["background"] =
-          `linear-gradient(90deg, ${this.dataConfig.progressColor.color[0].item} 0%, ${this.dataConfig.progressColor.color[1].item} 100%)`;
-      }
-      return styleObject;
-    },
-    userInfoStyle() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
+const userInfoStyle = computed(() => {
+      let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+      if (props.dataConfig.fillet.type) {
+        borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+          props.dataConfig.fillet.valList[1].val * 2
+        }rpx ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+          props.dataConfig.fillet.valList[2].val * 2
         }rpx`;
       }
       return {
         "border-radius": borderRadius,
-        background: `linear-gradient(90deg, ${this.dataConfig.moduleColor.color[0].item} 0%, ${this.dataConfig.moduleColor.color[1].item} 100%)`,
+        background: `linear-gradient(90deg, ${props.dataConfig.moduleColor.color[0].item} 0%, ${props.dataConfig.moduleColor.color[1].item} 100%)`,
       };
-    },
-  },
-  name: "userInfor",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
-  },
-  mixins: [colors],
-  data() {
-    return {
-      config: {
-        bar: {
-          code: "",
-          color: ["#000"],
-          bgColor: "#FFFFFF", // 背景色
-          width: 480, // 宽度
-          height: 110, // 高度
-        },
-        qrc: {
-          code: "",
-          size: 380, // 二维码大小
-          level: 3, //等级 0～4
-          bgColor: "#FFFFFF", //二维码背景色 默认白色
-          border: {
-            color: ["#eee", "#eee"], //边框颜色支持渐变色
-            lineWidth: 3, //边框宽度
-          },
-          // img: '/static/logo.png', //图片
-          // iconSize: 40, //二维码图标的大小
-          color: ["#333", "#333"], //边框颜色支持渐变色
-        },
-      },
-      codeList: [
-        {
-          name: "会员码",
-        },
-        {
-          name: "付款码",
-        },
-      ],
-      codeIndex: 0,
-      isCode: false,
-      bgColor: "",
-      textColor: "",
-      progressColor: this.dataConfig.progressColor.color,
-      mbCongfig: 0,
-      prConfig: 0, //背景边距
-      itemStyle: 0,
-      checkType: this.dataConfig.checkboxInfo.type,
-      diyInfo: {},
-      currentLevelColor: "",
-    };
-  },
-  created() {
-    if (this.isLogin) {
-      this.getDiyUserInfo();
-      this.getlevelInfo();
-    }
-  },
-  watch: {
-    isLogin: {
-      handler: function (newV, oldV) {
-        if (newV) {
-          this.getDiyUserInfo();
-        }
-      },
-      deep: true,
-    },
-  },
-  methods: {
-    getCode() {
+});
+function getCode() {
       getRandCode()
         .then((res) => {
           let code = res.data.code;
-          this.config.bar.code = code;
-          this.config.qrc.code = code;
+          config.value.bar.code = code;
+          config.value.qrc.code = code;
         })
         .catch((err) => {
-          return this.$util.Tips(err);
+          return util.Tips(err);
         });
-    },
-    tapQrCode() {
-      // this.isCode = true;
-      // this.codeIndex = 0;
+}
+function tapQrCode() {
+      // isCode.value = true;
+      // codeIndex.value = 0;
       // this.$nextTick(function() {
-      // 	let code = this.diyInfo.bar_code;
-      // 	this.config.bar.code = code;
-      // 	this.config.qrc.code = code;
+      // 	let code = diyInfo.value.bar_code;
+      // 	config.value.bar.code = code;
+      // 	config.value.qrc.code = code;
       // })
       uni.navigateTo({
         url: "/pages/users/user_member_code/index",
       });
-    },
-    closeCode() {
-      this.isCode = false;
-      this.isextension = false;
-    },
-    tapCode(index) {
-      this.codeIndex = index;
+}
+function closeCode() {
+      isCode.value = false;
+      isextension.value = false;
+}
+function tapCode(index) {
+      codeIndex.value = index;
       if (index == 1) {
-        this.getCode();
+        getCode();
       } else {
-        let code = this.diyInfo.bar_code;
-        this.config.bar.code = code;
-        this.config.qrc.code = code;
+        let code = diyInfo.value.bar_code;
+        config.value.bar.code = code;
+        config.value.qrc.code = code;
       }
-    },
-    handleMenu(type) {
+}
+function handleMenu(type) {
       let url = "";
       switch (type) {
         case 0:
@@ -409,35 +327,24 @@ export default {
           url: url,
         });
       }
-    },
-    goLogin() {
-      if (!this.isLogin) {
-        this.$emit("changeLogin");
+}
+function goLogin() {
+      if (!isLogin.value) {
+        emit("changeLogin");
       }
-    },
-    getDiyUserInfo() {
+}
+function getDiyUserInfo() {
       getUserInfo()
         .then((res) => {
-          this.diyInfo = res.data;
+          diyInfo.value = res.data;
         })
         .catch((err) => {
-          this.$util.Tips({
+          util.Tips({
             title: err,
           });
         });
-    },
-    getlevelInfo() {
-      getlevelInfo().then((res) => {
-        const { level_info, level_list } = res.data;
-        const currentLevel = level_list.find(
-          (item) => item.grade == level_info.grade,
-        );
-        if (currentLevel) {
-          this.currentLevelColor = currentLevel.color;
-        }
-      });
-    },
-    colorToRgba(str, n) {
+}
+function colorToRgba(str, n) {
       // 十六进制颜色值的正则表达式
       const reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
       let sColor = str.toLowerCase();
@@ -458,9 +365,19 @@ export default {
         return `rgba(${sColorChange.join(",")}, ${n})`;
       }
       return sColor;
-    },
+}
+if (isLogin.value) {
+  getDiyUserInfo();
+}
+watch(
+  isLogin,
+  (newV, oldV) => {
+    if (newV) {
+      getDiyUserInfo();
+    }
   },
-};
+  { deep: true },
+);
 </script>
 
 <style lang="scss">
@@ -538,14 +455,6 @@ export default {
         height: 100%;
         border-radius: 50%;
       }
-
-      .king {
-        width: 36rpx;
-        height: 36rpx;
-        position: absolute;
-        top: -18rpx;
-        right: -8rpx;
-      }
     }
 
     .text {
@@ -561,51 +470,6 @@ export default {
           max-width: 190rpx;
           font-weight: bold;
         }
-
-        .lable {
-          height: 32rpx;
-          padding: 0 8rpx;
-          border-radius: 16rpx;
-          margin-left: 8rpx;
-          font-weight: 500;
-          font-size: 20rpx;
-          line-height: 32rpx;
-          color: #b06a00;
-          background-color: #ffe8ca;
-          .icon {
-            width: 24rpx;
-            height: 24rpx;
-            margin-right: 4rpx;
-          }
-        }
-      }
-
-      .progress {
-        overflow: hidden;
-        background-color: #eeeeee;
-        width: 120rpx;
-        height: 14rpx;
-        border-radius: 7rpx;
-        position: relative;
-        margin-right: 8rpx;
-
-        .bg-reds {
-          width: 0;
-          height: 14rpx;
-          border-radius: 7rpx;
-          transition: width 0.6s ease;
-          background: linear-gradient(
-            90deg,
-            var(--view-theme) 0%,
-            var(--view-gradient) 100%
-          );
-        }
-      }
-
-      .percent {
-        font-size: 20rpx;
-        line-height: 20rpx;
-        color: #666666;
       }
 
       .phone {

@@ -14,105 +14,104 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, getCurrentInstance } from "vue";
 import commonWrapper from "./commonWrapper.vue";
-export default {
-  components: { commonWrapper },
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+
+const { proxy } = getCurrentInstance();
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {
-      height: 0,
-    };
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
+});
+
+const height = ref(0);
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.topConfig
+            ? props.dataConfig.topConfig.val
+            : 0,
         },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
         },
-      };
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    // 视频高度
-    videoStyle() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
+    },
+  };
+});
+
+// 视频高度
+const videoStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    height: height.value + "px",
+    "border-radius": borderRadius,
+  };
+});
+
+onMounted(() => {
+  const query = uni.createSelectorQuery().in(proxy);
+  query
+    .select("#myVideo")
+    .boundingClientRect((data) => {
+      switch (props.dataConfig.scaleConfig.tabVal) {
+        case 0:
+          height.value = (data.width * 9) / 16;
+          break;
+        case 1:
+          height.value = (data.width * 3) / 4;
+          break;
+        default:
+          height.value = data.width;
+          break;
       }
-      return {
-        height: this.height + "px",
-        "border-radius": borderRadius,
-      };
-    },
-  },
-  mounted() {
-    const query = uni.createSelectorQuery().in(this);
-    query
-      .select("#myVideo")
-      .boundingClientRect((data) => {
-        switch (this.dataConfig.scaleConfig.tabVal) {
-          case 0:
-            this.height = (data.width * 9) / 16;
-            break;
-          case 1:
-            this.height = (data.width * 3) / 4;
-            break;
-          default:
-            this.height = data.width;
-            break;
-        }
-      })
-      .exec();
-  },
-};
+    })
+    .exec();
+});
 </script>
 
 <style lang="scss" scoped>

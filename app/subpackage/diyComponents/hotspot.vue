@@ -23,49 +23,45 @@
   </common-wrapper>
 </template>
 
-<script>
+<script setup>
+import { computed } from "vue";
 import commonWrapper from "./commonWrapper.vue";
-export default {
-  components: { commonWrapper },
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+import util from "@/utils/util.js";
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {};
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  computed: {
-    imageRadius() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        "border-radius": borderRadius,
-      };
-    },
-    configData() {
-      return {
-        ...this.dataConfig,
-      };
-    },
-  },
-  methods: {
-    goPage(link) {
-      this.$util.JumpPath(link);
-    },
-  },
-};
+});
+
+const imageRadius = computed(() => {
+  let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    "border-radius": borderRadius,
+  };
+});
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+  };
+});
+
+function goPage(link) {
+  util.JumpPath(link);
+}
 </script>
 
 <style lang="scss" scoped>

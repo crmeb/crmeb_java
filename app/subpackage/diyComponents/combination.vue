@@ -36,17 +36,6 @@
                 >{{ pinkInfo.pink_count }}{{ '人参与拼团' }}</text
               >
             </view>
-            <view
-              class="flex-y-center fs-24 text--w111-999"
-              :style="[headerBntColor]"
-              @tap="goPage('/pages/activity/goods_combination/index')"
-            >
-              <text>{{ rightBntTxt }}</text>
-              <text
-                class="iconfont icon-ic_rightarrow fs-24"
-                :style="[headerBntColor]"
-              ></text>
-            </view>
           </view>
           <!-- 拼团列表 -->
           <!-- 单列 -->
@@ -300,289 +289,287 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, getCurrentInstance } from "vue";
+import util from "@/utils/util.js";
 import commonWrapper from "./commonWrapper.vue";
 import { openPinkSubscribe } from "@/utils/SubscribeMessage.js";
-import { pink } from "@/api/api.js";
 import { getThemeCombination } from "@/api/api.js";
-export default {
-  components: { commonWrapper },
-  name: "combination",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+import { combinationHeaderApi } from "@/api/activity.js";
+const { proxy } = getCurrentInstance();
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {
-      pinkInfo: "",
-      combinationList: [],
-    };
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  computed: {
-    titleStyle() {
-      let titleText = this.dataConfig.titleText;
-      return {
-        fontStyle: !titleText.tabVal
-          ? "normal"
-          : titleText.tabList[titleText.tabVal].style,
-        fontWeight: !titleText.tabVal ? "bold" : "normal",
-        color: this.dataConfig.titleColor.color[0].item,
-        fontSize: this.dataConfig.titleNumber.val * 2 + "rpx",
-      };
-    },
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
+});
+
+const pinkInfo = ref({
+  avatars: [],
+  pink_count: 0,
+});
+const combinationList = ref([]);
+
+const titleStyle = computed(() => {
+  let titleText = props.dataConfig.titleText;
+  return {
+    fontStyle: !titleText.tabVal
+      ? "normal"
+      : titleText.tabList[titleText.tabVal].style,
+    fontWeight: !titleText.tabVal ? "bold" : "normal",
+    color: props.dataConfig.titleColor.color[0].item,
+    fontSize: props.dataConfig.titleNumber.val * 2 + "rpx",
+  };
+});
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.topConfig
+            ? props.dataConfig.topConfig.val
+            : 0,
         },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
         },
-      };
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    boxContentStyle() {
-      let br = `${this.dataConfig.fillet.val * 2}rpx`;
-      let borderRadius = `0 0 ${br} ${br}`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `0 0 ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        borderRadius,
-        background: `linear-gradient(90deg, ${this.dataConfig.moduleColor.color[0].item} 0%, ${this.dataConfig.moduleColor.color[1].item} 100%)`,
-      };
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
     },
-    /*商品模板*/
-    goodStyleConfig() {
-      return this.dataConfig.goodStyleConfig.tabVal;
-    },
-    styleConfig() {
-      return this.dataConfig.styleConfig.tabVal;
-    },
-    headerStyle() {
-      let br = `${this.dataConfig.fillet.val * 2}rpx`,
-        borderRadius = "",
-        imgBgUrl = this.dataConfig.imgBgConfig.url;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx 0 0`;
-      } else {
-        borderRadius = `${br} ${br} 0 0`;
-      }
-      return {
-        backgroundImage: this.styleConfig
-          ? "url(" + imgBgUrl + ")"
-          : `linear-gradient(90deg,${this.dataConfig.headerBgColor.color[0].item} 0%,${this.dataConfig.headerBgColor.color[1].item} 100%)`,
-        borderRadius,
-      };
-    },
-    /*标题是文本还是图片*/
-    titleConfig() {
-      return this.dataConfig.titleConfig.tabVal;
-    },
-    /*标题文本*/
-    titleTxtConfig() {
-      return this.dataConfig.titleTxtConfig.value;
-    },
-    /*标题图片*/
-    titleImg() {
-      return this.styleConfig ? this.titleUrl : this.titleColorUrl;
-    },
-    titleColorUrl() {
-      return this.dataConfig.imgColorConfig.url;
-    },
-    titleUrl() {
-      return this.dataConfig.imgConfig.url;
-    },
-    /*标题提示文字*/
-    tipsColor() {
-      return {
-        color: this.styleConfig
-          ? this.dataConfig.tipsColor.color[0].item
-          : this.dataConfig.tipsColor2.color[0].item,
-      };
-    },
-    /*分割线颜色*/
-    dividerColor() {
-      return {
-        color: this.dataConfig.dividerColor.color[0].item,
-      };
-    },
-    /*头部按钮文本*/
-    rightBntTxt() {
-      return this.dataConfig.rightBntConfig.value;
-    },
-    /*头部按钮样式*/
-    headerBntColor() {
-      return {
-        color: this.styleConfig
-          ? this.dataConfig.headerBntColor.color[0].item
-          : this.dataConfig.headerBntColor2.color[0].item,
-        fontSize: `${this.dataConfig.bntNumber.val * 2}rpx`,
-      };
-    },
-    /*商品图片圆角样式*/
-    imgStyle() {
-      let borderRadius = `${this.dataConfig.filletImg.val * 2}rpx`;
-      if (this.dataConfig.filletImg.type) {
-        borderRadius = `${this.dataConfig.filletImg.valList[0].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[1].val * 2
-        }rpx ${this.dataConfig.filletImg.valList[3].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[2].val * 2
-        }rpx`;
-      }
-      return borderRadius;
-    },
-    /*商品名称样式*/
-    productStyle() {
-      return {
-        color: this.dataConfig.goodsNameColor.color[0].item,
-        fontWeight: this.dataConfig.goodsName.tabVal ? "normal" : "bold",
-      };
-    },
-    /* 展示信息 */
-    checkboxInfo() {
-      return this.dataConfig.checkboxInfo.type;
-    },
-    pinkNumStyle() {
-      return {
-        color: this.dataConfig.toneConfig.tabVal
-          ? this.dataConfig.labelColor.color[0].item
-          : "var(--view-theme)",
-        // background: this.dataConfig.toneConfig.tabVal ? this.dataConfig.labelColor.color[0].item : 'var(--view-theme)'
-      };
-    },
-    labelBg() {
-      return {
-        background: this.dataConfig.toneConfig.tabVal
-          ? this.dataConfig.labelColor.color[0].item
-          : "var(--view-theme)",
-        height: "32rpx",
-      };
-    },
-    /* 价格颜色 */
-    priceColor() {
-      return this.dataConfig.toneConfig.tabVal
-        ? this.dataConfig.pinkPriceColor.color[0].item
-        : "var(--view-theme)";
-    },
-    /* 划线价颜色 */
-    otPriceColor() {
-      return {
-        color: this.dataConfig.goodsPriceColor.color[0].item,
-      };
-    },
-    showBtn() {
-      return this.dataConfig.pinkConfig.tabVal;
-    },
-    /* 按钮颜色 */
-    btnBgColor() {
-      return {
-        background: this.dataConfig.toneConfig.tabVal
-          ? `linear-gradient(90deg,${this.dataConfig.goodsBntColor.color[1].item} 0%,${this.dataConfig.goodsBntColor.color[0].item} 100%)`
-          : "linear-gradient(90deg, var(--view-theme) 0%, var(--view-gradient) 100%)",
-        color: this.dataConfig.goodsBntTxtColor.color[0].item,
-      };
-    },
-    /*商品数量*/
-    numberConfig() {
-      return this.dataConfig.numberConfig.val;
-    },
-  },
-  mounted() {
-    this.pink();
-    this.getCombinationList();
-  },
-  methods: {
-    goPage(url) {
-      uni.navigateTo({
-        url,
+  };
+});
+const boxContentStyle = computed(() => {
+  let br = `${props.dataConfig.fillet.val * 2}rpx`;
+  let borderRadius = `0 0 ${br} ${br}`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `0 0 ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    borderRadius,
+    background: `linear-gradient(90deg, ${props.dataConfig.moduleColor.color[0].item} 0%, ${props.dataConfig.moduleColor.color[1].item} 100%)`,
+  };
+});
+/*商品模板*/
+const goodStyleConfig = computed(() => {
+  return props.dataConfig.goodStyleConfig.tabVal;
+});
+const styleConfig = computed(() => {
+  return props.dataConfig.styleConfig.tabVal;
+});
+const headerStyle = computed(() => {
+  let br = `${props.dataConfig.fillet.val * 2}rpx`,
+    borderRadius = "",
+    imgBgUrl = props.dataConfig.imgBgConfig.url;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx 0 0`;
+  } else {
+    borderRadius = `${br} ${br} 0 0`;
+  }
+  return {
+    backgroundImage: styleConfig.value
+      ? "url(" + imgBgUrl + ")"
+      : `linear-gradient(90deg,${props.dataConfig.headerBgColor.color[0].item} 0%,${props.dataConfig.headerBgColor.color[1].item} 100%)`,
+    borderRadius,
+  };
+});
+/*标题是文本还是图片*/
+const titleConfig = computed(() => {
+  return props.dataConfig.titleConfig.tabVal;
+});
+/*标题文本*/
+const titleTxtConfig = computed(() => {
+  return props.dataConfig.titleTxtConfig.value;
+});
+/*标题图片*/
+const titleImg = computed(() => {
+  return styleConfig.value ? titleUrl.value : titleColorUrl.value;
+});
+const titleColorUrl = computed(() => {
+  return props.dataConfig.imgColorConfig.url;
+});
+const titleUrl = computed(() => {
+  return props.dataConfig.imgConfig.url;
+});
+/*标题提示文字*/
+const tipsColor = computed(() => {
+  return {
+    color: styleConfig.value
+      ? props.dataConfig.tipsColor.color[0].item
+      : props.dataConfig.tipsColor2.color[0].item,
+  };
+});
+/*分割线颜色*/
+const dividerColor = computed(() => {
+  return {
+    color: props.dataConfig.dividerColor.color[0].item,
+  };
+});
+/*商品图片圆角样式*/
+const imgStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.filletImg.val * 2}rpx`;
+  if (props.dataConfig.filletImg.type) {
+    borderRadius = `${props.dataConfig.filletImg.valList[0].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[1].val * 2
+    }rpx ${props.dataConfig.filletImg.valList[3].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[2].val * 2
+    }rpx`;
+  }
+  return borderRadius;
+});
+/*商品名称样式*/
+const productStyle = computed(() => {
+  return {
+    color: props.dataConfig.goodsNameColor.color[0].item,
+    fontWeight: props.dataConfig.goodsName.tabVal ? "normal" : "bold",
+  };
+});
+/* 展示信息 */
+const checkboxInfo = computed(() => {
+  return props.dataConfig.checkboxInfo.type;
+});
+const pinkNumStyle = computed(() => {
+  return {
+    color: props.dataConfig.toneConfig.tabVal
+      ? props.dataConfig.labelColor.color[0].item
+      : "var(--view-theme)",
+    // background: this.dataConfig.toneConfig.tabVal ? this.dataConfig.labelColor.color[0].item : 'var(--view-theme)'
+  };
+});
+const labelBg = computed(() => {
+  return {
+    background: props.dataConfig.toneConfig.tabVal
+      ? props.dataConfig.labelColor.color[0].item
+      : "var(--view-theme)",
+    height: "32rpx",
+  };
+});
+/* 价格颜色 */
+const priceColor = computed(() => {
+  return props.dataConfig.toneConfig.tabVal
+    ? props.dataConfig.pinkPriceColor.color[0].item
+    : "var(--view-theme)";
+});
+/* 划线价颜色 */
+const otPriceColor = computed(() => {
+  return {
+    color: props.dataConfig.goodsPriceColor.color[0].item,
+  };
+});
+const showBtn = computed(() => {
+  return props.dataConfig.pinkConfig.tabVal;
+});
+/* 按钮颜色 */
+const btnBgColor = computed(() => {
+  return {
+    background: props.dataConfig.toneConfig.tabVal
+      ? `linear-gradient(90deg,${props.dataConfig.goodsBntColor.color[1].item} 0%,${props.dataConfig.goodsBntColor.color[0].item} 100%)`
+      : "linear-gradient(90deg, var(--view-theme) 0%, var(--view-gradient) 100%)",
+    color: props.dataConfig.goodsBntTxtColor.color[0].item,
+  };
+});
+/*商品数量*/
+const numberConfig = computed(() => {
+  return props.dataConfig.numberConfig.val;
+});
+
+onMounted(() => {
+  getCombinationHeader();
+  getCombinationList();
+});
+
+function goDetail(item) {
+  // #ifndef MP
+  uni.navigateTo({
+    url: `/pages/activity/goods_combination_details/index?id=${item.id}&type=3`,
+  });
+  // #endif
+  // #ifdef MP
+  openPinkSubscribe().then((res) => {
+    uni.navigateTo({
+      url: `/pages/activity/goods_combination_details/index?id=${item.id}&type=3`,
+    });
+  });
+  // #endif
+}
+function updatePinkInfo(data = {}) {
+  if (!data || Array.isArray(data)) return;
+  const avatars = data.avatars || data.avatarList;
+  const pinkCount = data.pink_count ?? data.pinkCount ?? data.totalPeople;
+  pinkInfo.value = {
+    avatars: Array.isArray(avatars) ? avatars : pinkInfo.value.avatars,
+    pink_count:
+      pinkCount === undefined || pinkCount === null || pinkCount === ""
+        ? pinkInfo.value.pink_count
+        : pinkCount,
+  };
+}
+// 拼团头部参与人数
+function getCombinationHeader() {
+  combinationHeaderApi()
+    .then((res) => {
+      updatePinkInfo(res.data || {});
+    })
+    .catch(() => {});
+}
+// 拼团列表
+function getCombinationList() {
+  let limit = proxy.$config.LIMIT;
+  let data = {
+    limit: numberConfig.value >= limit ? limit : numberConfig.value,
+  };
+  getThemeCombination(data)
+    .then((res) => {
+      const responseData = res.data || {};
+      updatePinkInfo(responseData);
+      combinationList.value = Array.isArray(responseData)
+        ? responseData
+        : Array.isArray(responseData.list)
+        ? responseData.list
+        : Array.isArray(responseData.productList)
+        ? responseData.productList
+        : [];
+    })
+    .catch((res) => {
+      return util.Tips({
+        title: res,
       });
-    },
-    goDetail(item) {
-      // #ifndef MP
-      uni.navigateTo({
-        url: `/pages/activity/goods_combination_details/index?id=${item.id}&type=3`,
-      });
-      // #endif
-      // #ifdef MP
-      openPinkSubscribe().then((res) => {
-        uni.navigateTo({
-          url: `/pages/activity/goods_combination_details/index?id=${item.id}&type=3`,
-        });
-      });
-      // #endif
-    },
-    // 拼团列表
-    getCombinationList: function () {
-      let that = this;
-      let limit = that.$config.LIMIT;
-      let data = {
-        limit: this.numberConfig >= limit ? limit : this.numberConfig,
-      };
-      getThemeCombination(data)
-        .then((res) => {
-          that.combinationList = Array.isArray(res.data)
-            ? res.data
-            : res.data && res.data.list
-            ? res.data.list
-            : [];
-        })
-        .catch((res) => {
-          return that.$util.Tips({
-            title: res,
-          });
-        });
-    },
-    // 拼团数据（拼团人数头部图片）
-    pink: function () {
-      pink().then((res) => {
-        this.pinkInfo = res.data;
-      });
-    },
-  },
-};
+    });
+}
 </script>
 
 <style lang="scss">

@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class="ChangePassword">
 			<view class="list">
 				<view class="item" v-if="isNew">
@@ -21,183 +21,168 @@
 	</view>
 </template>
 
-<script>
-	import sendVerifyCode from "@/mixins/SendVerifyCode";
+<script setup>
+import { ref } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
+import util from '@/utils/util.js';
+import { useSendVerifyCode } from '@/composables/useSendVerifyCode.js';
+import {
+	registerVerify,
+	bindingPhone,
+	verifyCode,
+	bindingVerify
+} from '@/api/api.js';
+import { toLogin } from '@/libs/login.js';
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from 'pinia';
+import { setThemeColor } from '@/utils/setTheme.js'
+import { useColor } from '@/composables/useColor.js';
 
-	import {
-		registerVerify,
-		bindingPhone,
-		verifyCode,
-		bindingVerify
-	} from '@/api/api.js';
-	import {toLogin} from '@/libs/login.js';
-	import {mapGetters} from "vuex";
-	import {setThemeColor} from '@/utils/setTheme.js'
-	const app = getApp();
-	export default {
-		mixins: [sendVerifyCode],
-		data() {
-			return {
-				phone:'',
-				captcha:'',
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
-				key: '',
-				isNew: true,
-				timer: '',
-				text: '获取验证码',
-				nums: 60,
-				theme:app.globalData.theme,
-				bgColor:''
-			};
-		},
-		mounted() {
-		      // this.timer = setInterval(this.getTimes, 1000);
-		},
-		computed: mapGetters(['isLogin','userInfo']),
-		onLoad() {
-			let that = this;
-			that.bgColor = setThemeColor();
-			uni.setNavigationBarColor({
-				frontColor: '#ffffff',
-				backgroundColor:that.bgColor,
-			});
-			if (this.isLogin) {
-				// verifyCode().then(res=>{
-				// 	this.$set(this, 'key', res.data.key)
-				// });
-			} else {
-				toLogin();
-			}
-		},
-		methods: {
-			getTimes(){
-				this.nums = this.nums - 1;
-				this.text = "剩余 " + this.nums + "s";
-				if (this.nums < 0) {
-				  clearInterval(this.timer);
-				}
-				this.text = "剩余 " + this.nums + "s";
-				if (this.text < "剩余 " + 0 + "s") {
-				  this.disabled = false;
-				  this.text = "重新获取";
-				}
-			},
-			onLoadFun:function(){},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
-			},
-			next() {
-				// uni.hideLoading();
-				// this.isNew = false;
-				// this.captcha = '';
-				// clearInterval(this.timer);
-				// this.disabled = false;
-				// this.text = "获取验证码";
-				// uni.showLoading({
-				// 	title: '加载中',
-				// 	mask: true
-				// });
-				if (!this.captcha) return this.$util.Tips({
-					title: '请填写验证码'
-				});
-				bindingVerify({
-					phone: this.userInfo.phone,
-					captcha: this.captcha
+const app = getApp();
+const appStore = useAppStore();
+const { isLogin, userInfo } = storeToRefs(appStore);
+// 本组件仅复用 disabled，倒计时文案由本地 getTimes 管理
+const { disabled } = useSendVerifyCode();
+
+const phone = ref('');
+const captcha = ref('');
+const isAuto = ref(false); //没有授权的不会自动授权
+const isShowAuth = ref(false); //是否隐藏授权
+const key = ref('');
+const isNew = ref(true);
+const timer = ref('');
+const text = ref('获取验证码');
+const nums = ref(60);
+const theme = ref(app.globalData.theme);
+const { colorStyle } = useColor();
+const bgColor = ref('');
+
+onLoad(() => {
+	bgColor.value = setThemeColor();
+	uni.setNavigationBarColor({
+		frontColor: '#ffffff',
+		backgroundColor: bgColor.value,
+	});
+	if (isLogin.value) {
+		// verifyCode().then(res=>{ key.value = res.data.key });
+	} else {
+		toLogin();
+	}
+});
+
+function getTimes() {
+	nums.value = nums.value - 1;
+	text.value = "剩余 " + nums.value + "s";
+	if (nums.value < 0) {
+		clearInterval(timer.value);
+	}
+	text.value = "剩余 " + nums.value + "s";
+	if (text.value < "剩余 " + 0 + "s") {
+		disabled.value = false;
+		text.value = "重新获取";
+	}
+}
+
+function onLoadFun() {}
+
+// 授权关闭
+function authColse(e) {
+	isShowAuth.value = e
+}
+
+function next() {
+	if (!captcha.value) return util.Tips({
+		title: '请填写验证码'
+	});
+	bindingVerify({
+		phone: userInfo.value.phone,
+		captcha: captcha.value
+	}).then(res => {
+		isNew.value = false;
+		captcha.value = '';
+		clearInterval(timer.value);
+		disabled.value = false;
+		text.value = "获取验证码";
+	}).catch(err => {
+		return util.Tips({
+			title: err
+		});
+	})
+}
+
+function editPwd() {
+	if (!phone.value) return util.Tips({
+		title: '请填写手机号码！'
+	});
+	if (!(/^1(3|4|5|7|8|9|6)\d{9}$/i.test(phone.value))) return util.Tips({
+		title: '请输入正确的手机号码！'
+	});
+	if (!captcha.value) return util.Tips({
+		title: '请填写验证码'
+	});
+	uni.showModal({
+		title: '是否更换绑定账号',
+		confirmText: '绑定',
+		success(res) {
+			if (res.confirm) {
+				bindingPhone({
+					phone: phone.value,
+					captcha: captcha.value
 				}).then(res => {
-					// uni.hideLoading();
-					this.isNew = false;
-					this.captcha = '';
-					clearInterval(this.timer);
-					this.disabled = false;
-					this.text = "获取验证码";
+					return util.Tips({
+						title: res.message,
+						icon: 'success'
+					}, {
+						tab: 5,
+						url: '/pages/infos/user_info/index'
+					});
 				}).catch(err => {
-					return this.$util.Tips({
+					return util.Tips({
 						title: err
 					});
-					uni.hideLoading();
 				})
-			},
-			editPwd: function() {
-				let that = this;
-				if (!that.phone) return that.$util.Tips({
-					title: '请填写手机号码！'
-				});
-				if (!(/^1(3|4|5|7|8|9|6)\d{9}$/i.test(that.phone))) return that.$util.Tips({
-					title: '请输入正确的手机号码！'
-				});
-				if (!that.captcha) return that.$util.Tips({
-					title: '请填写验证码'
-				});
-				uni.showModal({
-					title: '是否更换绑定账号',
-					confirmText: '绑定',
-					success(res) {
-						if (res.confirm) {
-							bindingPhone({
-								phone: that.phone,
-								captcha: that.captcha
-							}).then(res => {
-								return that.$util.Tips({
-									title: res.message,
-									icon: 'success'
-								}, {
-									tab: 5,
-									url: '/pages/users/user_info/index'
-								});
-							}).catch(err => {
-								return that.$util.Tips({
-									title: err
-								});
-							})
-						} else if (res.cancel) {
-							return that.$util.Tips({
-								title: '您已取消更换绑定！'
-							}, {
-								tab: 5,
-								url: '/pages/users/user_info/index'
-							});
-						}
-					}
-				});
-			},
-			/**
-			 * 发送验证码
-			 * 
-			 */
-			async code() {
-				this.nums = 60;
-				uni.showLoading({
-					title: '加载中',
-					mask: true
-				});
-				let that = this;
-				if(!that.isNew){
-					if (!that.phone) return that.$util.Tips({
-						title: '请填写手机号码！'
-					});
-					if (!(/^1(3|4|5|7|8|9|6)\d{9}$/i.test(that.phone))) return that.$util.Tips({
-						title: '请输入正确的手机号码！'
-					});
-				}
-				await registerVerify(that.isNew?that.userInfo.phone:that.phone).then(res => {
-					that.$util.Tips({
-						title: res.message
-					});
-					
-					that.timer = setInterval(that.getTimes, 1000);
-					 that.disabled = true;
-					 uni.hideLoading();
-				}).catch(err => {
-					return that.$util.Tips({
-						title: err
-					});
-					uni.hideLoading();
+			} else if (res.cancel) {
+				return util.Tips({
+					title: '您已取消更换绑定！'
+				}, {
+					tab: 5,
+					url: '/pages/infos/user_info/index'
 				});
 			}
 		}
+	});
+}
+
+/**
+ * 发送验证码
+ */
+async function code() {
+	nums.value = 60;
+	uni.showLoading({
+		title: '加载中',
+		mask: true
+	});
+	if (!isNew.value) {
+		if (!phone.value) return util.Tips({
+			title: '请填写手机号码！'
+		});
+		if (!(/^1(3|4|5|7|8|9|6)\d{9}$/i.test(phone.value))) return util.Tips({
+			title: '请输入正确的手机号码！'
+		});
 	}
+	await registerVerify(isNew.value ? userInfo.value.phone : phone.value).then(res => {
+		util.Tips({
+			title: res.message
+		});
+		timer.value = setInterval(getTimes, 1000);
+		disabled.value = true;
+		uni.hideLoading();
+	}).catch(err => {
+		return util.Tips({
+			title: err
+		});
+	});
+}
 </script>
 
 <style lang="scss" scoped>

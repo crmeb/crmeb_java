@@ -13,235 +13,227 @@
 	</view>
 </template>
 
-<script>
-	import { getCombinationPink, getCombinationPoster } from '../../../api/activity.js';
+<script setup>
+	import { ref, getCurrentInstance } from 'vue';
+	import { onLoad, onShow } from '@dcloudio/uni-app';
+	import { getCombinationPink as getCombinationPinkApi, getCombinationPoster } from '../../../api/activity.js';
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js';
-	import { imageBase64 } from "@/api/public";
-	export default {
-		data() {
-			return {
-				parameter: {
-					'navbar': '1',
-					'return': '1',
-					'title': '拼团海报',
-					'color': true,
-					'class': '0'
-				},
-				type: 0,
-				id: 0,
-				image: '',
-				from:'',
-				storeCombination: {},
-				qrcodeSize: 600,
-				posterbackgd: `${this.$Cache.get("imgHost")}crmebimage/perset/staticImg/canbj.png`,
-				PromotionCode: '',//二维码
-				canvasStatus: false,
-				imgTop: '' //商品图base64位
-			}
-		},
-		onLoad(options) {
-			// #ifdef MP
-			this.from = 'routine'
-			// #endif
-			// #ifdef H5
-			this.from = 'wechat'
-			// #endif
-			var that = this;
-			if (options.hasOwnProperty('type') && options.hasOwnProperty('id')) {
-				this.type = options.type
-				this.id = options.id
-				if (options.type == 1) {
-					uni.setNavigationBarTitle({
-						title: '砍价海报'
-					})
-				} else {
-					uni.setNavigationBarTitle({
-						title: '拼团海报'
-					})
-				}
-			} else {
-				return app.Tips({
-					title: '参数错误',
-					icon: 'none'
-				}, {
-					tab: 3,
-					url: 1
-				});
-			}
-		},
-		onShow() {
-			this.getPosterInfo();
-		},
-		methods: {
-			getPosterInfo: function() {
-				var that = this,url = '';
-				let data = {
-					pinkId: parseFloat(that.id),
-					from: that.from
-				};
-				if (that.type == 1) {
-				
-				} else {
-					this.getCombinationPink();
-				}
-			},
-			//拼团信息
-			getCombinationPink: function() {
-				var that = this;
-				getCombinationPink(this.id)
-					.then(res => {
-					   this.storeCombination = res.data;
-					   this.getImageBase64(res.data.storeCombination.image);
-					   // #ifdef H5
-					   that.make(res.data.userInfo.uid);
-					   // #endif
-					})
-					.catch(err => {
-						this.$util.Tips({
-							title: err
-						});
-						uni.redirectTo({
-							success(){},
-							fail() {
-								uni.navigateTo({
-									url: '/pages/index/index',
-								})
-							}
-						})
-					});
-			},
-			getImageBase64:function(images){
-				let that = this;
-				imageBase64({url:images}).then(res=>{
-					that.imgTop = res.data.code
-				})
-			},
-			// 生成二维码；
-			make(uid) {
-				let href = location.protocol + '//' + window.location.host + '/pages/activity/goods_combination_status/index?id=' + this.id + "&spread=" + uid;
-				uQRCode.make({
-					canvasId: 'qrcode',
-					text: href,
-					size: this.qrcodeSize,
-					margin: 10,
-					success: res => {
-						this.PromotionCode = res;
-						let arrImages = [this.posterbackgd, this.imgTop, this.PromotionCode];
-						let storeName = this.storeCombination.storeCombination.title;
-						let price = this.storeCombination.storeCombination.price;
-						let people = this.storeCombination.storeCombination.people;
-						let otPrice = this.storeCombination.storeCombination.otPrice;
-						let count = this.storeCombination.count;
-						setTimeout(() => {
-							this.PosterCanvas(arrImages, storeName, price, people,otPrice,count);
-						}, 300);
-					},
-					complete: () => {
-					},
-					fail:res=>{
-						this.$util.Tips({
-							title: '海报二维码生成失败！'
-						});
-					}
-				})
-			},
-			// 生成海报
-			PosterCanvas:function(arrImages, storeName, price, people,otPrice,count){
-				uni.showLoading({
-					title: '海报生成中',
-					mask: true
-				});
-				let context = uni.createCanvasContext('firstCanvas')
-				context.clearRect(0, 0, 0, 0);
-				let that = this;
-				uni.getImageInfo({
-				            src: arrImages[0],
-				            success: function (image) {
-								context.drawImage(arrImages[0], 0, 0, 750, 1190);
-								context.setFontSize(36);
-								context.setTextAlign('center');
-								context.setFillStyle('#282828');
-								let maxText = 20;
-								let text = storeName;
-								let topText = '';
-								let bottomText = '';
-								let len = text.length;
-								if(len>maxText*2){
-									text = text.slice(0,maxText*2-4)+'......';
-									topText = text.slice(0,maxText-1);
-									bottomText = text.slice(maxText-1,len);
-								}else{
-									if(len>maxText){
-										topText = text.slice(0,maxText-1);
-										bottomText = text.slice(maxText-1,len);
-									}else{
-										topText = text;
-										bottomText = '';
-									}
-								}
-								context.fillText(topText, 750/2, 60);
-								context.fillText(bottomText, 750/2, 100);
-								
-								context.drawImage(arrImages[1], 150, 350, 450, 450);
-								context.save();
-								context.drawImage(arrImages[2], 300, 950, 140, 140);
-								context.restore();
-								
-								context.setFontSize(72);
-								context.setFillStyle('#fc4141');
-								context.fillText(price, 250, 210);
-								
-								context.setFontSize(32);
-								context.setFillStyle('#FFFFFF');
-								context.fillText( people+'人团', 538, 198);
-								
-								
-								context.setFontSize(26);
-								context.setFillStyle('#3F3F3F');
-								context.setTextAlign('center');
-								context.fillText( '原价：￥'+otPrice +'   还差 ' + count + '人 拼团成功', 750 / 2, 275);
-								
-								context.draw(true,function(){
-									uni.canvasToTempFilePath({
-									  destWidth: 750,
-									  destHeight: 1190,
-									  canvasId: 'firstCanvas',
-									  fileType: 'jpg',
-									  success: function(res) {
-									    // 在H5平台下，tempFilePath 为 base64
-										uni.hideLoading();
-										that.imagePath = res.tempFilePath;
-										that.canvasStatus = true;
-									  } 
-									})
-								})
-				            },
-							fail: function(err) {
-								uni.hideLoading();
-								that.$util.Tips({
-									title: '无法获取图片信息'
-								});
-							}
-				})
-			},
-			showImage: function() {
-				var that = this;
-				let imgArr = this.image.split(',')
-				uni.previewImage({
-						urls: imgArr,
-						longPressActions: {
-								itemList: ['发送给朋友', '保存图片', '收藏'],
-								success: function(data) {
-										console.log('选中了第' + (data.tapIndex + 1) + '个按钮,第' + (data.index + 1) + '张图片');
-								},
-								fail: function(err) {
-										console.log(err.errMsg);
-								}
-						}
-				});
-			},
+	import { imageBase64 } from "@/api/public.js";
+	const { proxy } = getCurrentInstance();
+
+	const parameter = ref({
+		'navbar': '1',
+		'return': '1',
+		'title': '拼团海报',
+		'color': true,
+		'class': '0'
+	});
+	const type = ref(0);
+	const id = ref(0);
+	const image = ref('');
+	const from = ref('');
+	const storeCombination = ref({});
+	const qrcodeSize = ref(600);
+	const posterbackgd = ref(`${proxy.$Cache.get("imgHost")}/crmebimage/perset/staticImg/canbj.png`);
+	const PromotionCode = ref(''); //二维码
+	const canvasStatus = ref(false);
+	const imgTop = ref(''); //商品图base64位
+	const imagePath = ref('');
+
+	function getPosterInfo() {
+		let data = {
+			pinkId: parseFloat(id.value),
+			from: from.value
+		};
+		if (type.value == 1) {
+
+		} else {
+			getCombinationPink();
 		}
 	}
+	//拼团信息
+	function getCombinationPink() {
+		getCombinationPinkApi(id.value)
+			.then(res => {
+			   storeCombination.value = res.data;
+			   getImageBase64(res.data.storeCombination.image);
+			   // #ifdef H5
+			   make(res.data.userInfo.uid);
+			   // #endif
+			})
+			.catch(err => {
+				proxy.$util.Tips({
+					title: err
+				});
+				uni.redirectTo({
+					success(){},
+					fail() {
+						uni.navigateTo({
+							url: '/pages/index/index',
+						})
+					}
+				})
+			});
+	}
+	function getImageBase64(images){
+		imageBase64({url:images}).then(res=>{
+			imgTop.value = res.data.code
+		})
+	}
+	// 生成二维码；
+	function make(uid) {
+		let href = location.protocol + '//' + window.location.host + '/pages/activity/goods_combination_status/index?id=' + id.value + "&spread=" + uid;
+		uQRCode.make({
+			canvasId: 'qrcode',
+			text: href,
+			size: qrcodeSize.value,
+			margin: 10,
+			success: res => {
+				PromotionCode.value = res;
+				let arrImages = [posterbackgd.value, imgTop.value, PromotionCode.value];
+				let storeName = storeCombination.value.storeCombination.title;
+				let price = storeCombination.value.storeCombination.price;
+				let people = storeCombination.value.storeCombination.people;
+				let otPrice = storeCombination.value.storeCombination.otPrice;
+				let count = storeCombination.value.count;
+				setTimeout(() => {
+					PosterCanvas(arrImages, storeName, price, people,otPrice,count);
+				}, 300);
+			},
+			complete: () => {
+			},
+			fail:res=>{
+				proxy.$util.Tips({
+					title: '海报二维码生成失败！'
+				});
+			}
+		})
+	}
+	// 生成海报
+	function PosterCanvas(arrImages, storeName, price, people,otPrice,count){
+		uni.showLoading({
+			title: '海报生成中',
+			mask: true
+		});
+		let context = uni.createCanvasContext('firstCanvas')
+		context.clearRect(0, 0, 0, 0);
+		uni.getImageInfo({
+		            src: arrImages[0],
+		            success: function (image) {
+						context.drawImage(arrImages[0], 0, 0, 750, 1190);
+						context.setFontSize(36);
+						context.setTextAlign('center');
+						context.setFillStyle('#282828');
+						let maxText = 20;
+						let text = storeName;
+						let topText = '';
+						let bottomText = '';
+						let len = text.length;
+						if(len>maxText*2){
+							text = text.slice(0,maxText*2-4)+'......';
+							topText = text.slice(0,maxText-1);
+							bottomText = text.slice(maxText-1,len);
+						}else{
+							if(len>maxText){
+								topText = text.slice(0,maxText-1);
+								bottomText = text.slice(maxText-1,len);
+							}else{
+								topText = text;
+								bottomText = '';
+							}
+						}
+						context.fillText(topText, 750/2, 60);
+						context.fillText(bottomText, 750/2, 100);
+						
+						context.drawImage(arrImages[1], 150, 350, 450, 450);
+						context.save();
+						context.drawImage(arrImages[2], 300, 950, 140, 140);
+						context.restore();
+						
+						context.setFontSize(72);
+						context.setFillStyle('#fc4141');
+						context.fillText(price, 250, 210);
+						
+						context.setFontSize(32);
+						context.setFillStyle('#FFFFFF');
+						context.fillText( people+'人团', 538, 198);
+						
+						
+						context.setFontSize(26);
+						context.setFillStyle('#3F3F3F');
+						context.setTextAlign('center');
+						context.fillText( '原价：￥'+otPrice +'   还差 ' + count + '人 拼团成功', 750 / 2, 275);
+						
+						context.draw(true,function(){
+							uni.canvasToTempFilePath({
+							  destWidth: 750,
+							  destHeight: 1190,
+							  canvasId: 'firstCanvas',
+							  fileType: 'jpg',
+							  success: function(res) {
+							    // 在H5平台下，tempFilePath 为 base64
+								uni.hideLoading();
+								imagePath.value = res.tempFilePath;
+								canvasStatus.value = true;
+							  } 
+							})
+						})
+		            },
+					fail: function(err) {
+						uni.hideLoading();
+						proxy.$util.Tips({
+							title: '无法获取图片信息'
+						});
+					}
+		})
+	}
+	function showImage() {
+		let imgArr = image.value.split(',')
+		uni.previewImage({
+				urls: imgArr,
+				longPressActions: {
+						itemList: ['发送给朋友', '保存图片', '收藏'],
+					success: function(data) {
+						},
+						fail: function(err) {
+						}
+				}
+		});
+	}
+
+	onLoad((options) => {
+		// #ifdef MP
+		from.value = 'routine'
+		// #endif
+		// #ifdef H5
+		from.value = 'wechat'
+		// #endif
+		if (options.hasOwnProperty('type') && options.hasOwnProperty('id')) {
+			type.value = options.type
+			id.value = options.id
+			if (options.type == 1) {
+				uni.setNavigationBarTitle({
+					title: '砍价海报'
+				})
+			} else {
+				uni.setNavigationBarTitle({
+					title: '拼团海报'
+				})
+			}
+		} else {
+			return app.Tips({
+				title: '参数错误',
+				icon: 'none'
+			}, {
+				tab: 3,
+				url: 1
+			});
+		}
+	});
+
+	onShow(() => {
+		getPosterInfo();
+	});
 </script>
 
 <style>

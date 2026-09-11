@@ -99,100 +99,99 @@
   </common-wrapper>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from "vue";
 import commonWrapper from "./commonWrapper.vue";
 import uniNoticeBar from "@/components/uniNoticeBar/uni-notice-bar.vue";
-export default {
-  components: {
-    uniNoticeBar,
-    commonWrapper,
+import util from "@/utils/util.js";
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
   },
-  name: "news",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-  },
-  data() {
-    return {
-      indicatorDots: false,
-      autoplay: true,
-      duration: 500,
-      newsList: [],
-      swiperIndex: 0,
-    };
-  },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-      };
-    },
-    newsWrapperStyle() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        borderRadius,
-        background: `linear-gradient(90deg, ${this.dataConfig.moduleColor.color[0].item} 0%, ${this.dataConfig.moduleColor.color[1].item} 100%)`,
-      };
-    },
-    moreStyle() {
-      return {
-        color: this.dataConfig.bntColor.color[0].item,
-      };
-    },
-    titleStyle() {
-      return {
-        color: this.dataConfig.titleColor.color[0].item,
-      };
-    },
-    leftStyle() {
-      return {
-        background: this.dataConfig.toneConfig.tabVal
-          ? `linear-gradient(90deg, ${this.dataConfig.titleBgColor.color[0].item} 0%, ${this.dataConfig.titleBgColor.color[1].item} 100%)`
-          : "var(--view-theme)",
-        color: this.dataConfig.toneConfig.tabVal
-          ? this.dataConfig.titleColor.color[0].item
-          : "#ffffff",
-      };
-    },
-    itemStyle() {
-      return {
-        color: this.dataConfig.newsColor.color[0].item,
-      };
-    },
-    linkConfig() {
-      return this.dataConfig.linkConfig.value
-        ? this.dataConfig.linkConfig.value
-        : "/pages/extension/news_list/index";
-    },
-  },
-  mounted() {
-    let list = this.dataConfig.listConfig.list;
-    let newsList = [];
-    list.forEach((item) => {
-      if (item.show) {
-        newsList.push(item);
-      }
-    });
-    this.newsList = newsList;
-  },
-  methods: {
-    changeIndex(event) {
-      this.swiperIndex = event.detail.current;
-    },
-    moreTab(url) {
-      this.$util.JumpPath(url);
-    },
-  },
-};
+});
+
+const indicatorDots = ref(false);
+const autoplay = ref(true);
+const duration = ref(500);
+const newsList = ref([]);
+const swiperIndex = ref(0);
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+  };
+});
+
+const newsWrapperStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    borderRadius,
+    background: `linear-gradient(90deg, ${props.dataConfig.moduleColor.color[0].item} 0%, ${props.dataConfig.moduleColor.color[1].item} 100%)`,
+  };
+});
+
+const moreStyle = computed(() => {
+  return {
+    color: props.dataConfig.bntColor.color[0].item,
+  };
+});
+
+const titleStyle = computed(() => {
+  return {
+    color: props.dataConfig.titleColor.color[0].item,
+  };
+});
+
+const leftStyle = computed(() => {
+  return {
+    background: props.dataConfig.toneConfig.tabVal
+      ? `linear-gradient(90deg, ${props.dataConfig.titleBgColor.color[0].item} 0%, ${props.dataConfig.titleBgColor.color[1].item} 100%)`
+      : "var(--view-theme)",
+    color: props.dataConfig.toneConfig.tabVal
+      ? props.dataConfig.titleColor.color[0].item
+      : "#ffffff",
+  };
+});
+
+const itemStyle = computed(() => {
+  return {
+    color: props.dataConfig.newsColor.color[0].item,
+  };
+});
+
+const linkConfig = computed(() => {
+  return props.dataConfig.linkConfig.value
+    ? props.dataConfig.linkConfig.value
+    : "/pages/extension/news_list/index";
+});
+
+function changeIndex(event) {
+  swiperIndex.value = event.detail.current;
+}
+
+function moreTab(url) {
+  util.JumpPath(url);
+}
+
+onMounted(() => {
+  let list = props.dataConfig.listConfig.list;
+  let list2 = [];
+  list.forEach((item) => {
+    if (item.show) {
+      list2.push(item);
+    }
+  });
+  newsList.value = list2;
+});
 </script>
 
 <style lang="scss">

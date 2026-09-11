@@ -1,7 +1,7 @@
 <template>
 	<view class="app_update">
 		<view class="logo_box">
-			<image :src="urlDomain+'crmebimage/perset/staticImg/crmeb_java.png'"></image>
+			<image :src="urlDomain+'/crmebimage/perset/staticImg/crmeb_java.png'"></image>
 			<view class="title">crmeb</view>
 			<view class="version">Version {{appUpdate.versionCode}}</view> 
 		</view>
@@ -12,69 +12,66 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref } from 'vue';
+	import { onLoad } from '@dcloudio/uni-app';
 	import {getAppVersion} from '@/api/api.js'; 
-	export default {
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				appUpdate:{} 
-			}
-		},
-		onLoad() {
-			let that = this;
+	import Cache from '@/utils/cache.js';
+
+	// data
+	const urlDomain = ref(Cache.get("imgHost"));
+	const appUpdate = ref({});
+
+	onLoad(() => {
+		plus.runtime.getProperty(plus.runtime.appid,function(inf){
+			appUpdate.value.versionCode = inf.version;
+		})
+	});
+
+	function appVersionConfig(){
+		//app升级
+		// 获取本地应用资源版本号  
+		getAppVersion().then(res=>{
+			appUpdate.value.androidAddress = res.data.androidAddress;
+			appUpdate.value.appVersion = res.data.appVersion;
+			appUpdate.value.iosAddress = res.data.iosAddress;
+			appUpdate.value.openUpgrade = res.data.openUpgrade;
 			plus.runtime.getProperty(plus.runtime.appid,function(inf){
-				that.$set(that.appUpdate,'versionCode',inf.version);
-			})
-		},
-		methods: {
-			appVersionConfig(){
-				var that = this;
-				//app升级
-				// 获取本地应用资源版本号  
-				getAppVersion().then(res=>{
-					that.$set(that.appUpdate,'androidAddress',res.data.androidAddress);
-					that.$set(that.appUpdate,'appVersion',res.data.appVersion);
-					that.$set(that.appUpdate,'iosAddress',res.data.iosAddress);
-					that.$set(that.appUpdate,'openUpgrade',res.data.openUpgrade);
-					plus.runtime.getProperty(plus.runtime.appid,function(inf){
-						let nowVersion = (inf.version).split('.').join('');
-						let appVersion = (res.data.appVersion).split('.').join('');
-						uni.getSystemInfo({
-							success:(res) => {
-								if(appVersion > nowVersion){
-									uni.showModal({
-										title: '更新提示',
-										content: '发现新版本，是否前去下载?',
-										showCancel:that.appUpdate.openUpgrade == 'false' ? true : false,
-										cancelColor: '#eeeeee',
-										confirmColor: '#FF0000',
-										success(response) {
-											if (response.confirm) {
-												switch (res.platform){
-													case "android":
-														plus.runtime.openURL(that.appUpdate.androidAddress); 
-														break;
-													case "ios":
-														plus.runtime.openURL(encodeURI(that.appUpdate.iosAddress));
-														break;
-												}
-												
-											}
+				let nowVersion = (inf.version).split('.').join('');
+				let appVersion = (res.data.appVersion).split('.').join('');
+				uni.getSystemInfo({
+					success:(res) => {
+						if(appVersion > nowVersion){
+							uni.showModal({
+								title: '更新提示',
+								content: '发现新版本，是否前去下载?',
+								showCancel:appUpdate.value.openUpgrade == 'false' ? true : false,
+								cancelColor: '#eeeeee',
+								confirmColor: '#FF0000',
+								success(response) {
+									if (response.confirm) {
+										switch (res.platform){
+											case "android":
+												plus.runtime.openURL(appUpdate.value.androidAddress); 
+												break;
+											case "ios":
+												plus.runtime.openURL(encodeURI(appUpdate.value.iosAddress));
+												break;
 										}
-									});
-								}else if(appVersion <= nowVersion){ 
-									uni.showToast({
-										title:'已是最新版本', 
-										icon:'none' 
-									})
+										
+									}
 								}
-							}  
-						}) 
-					});
-				})
-			},
-		}
+							});
+						}else if(appVersion <= nowVersion){ 
+							uni.showToast({
+								title:'已是最新版本', 
+								icon:'none' 
+							})
+						}
+					}  
+				}) 
+			});
+		})
 	}
 </script>
 

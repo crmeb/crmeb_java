@@ -6,18 +6,18 @@
   </view>
 </template>
 
-<script>
-export default {
-  name: "commonWrapper",
-  props: {
-    config: {
-      type: Object,
-      default: () => ({}),
-    },
+<script setup>
+import { computed } from "vue";
+
+const props = defineProps({
+  config: {
+    type: Object,
+    default: () => ({}),
   },
-  computed: {
-    boxStyle() {
-      const config = this.config || {};
+});
+
+const boxStyle = computed(() => {
+  const config = props.config || {};
       const marginConfig = config.marginConfig || {
         val: 0,
         valList: [
@@ -179,21 +179,20 @@ export default {
         // style["position"] = "relative";
       }
       return style;
-    },
-    bottomBgColor() {
-      const config = this.config || {};
-      let style = {
-        overflow: "hidden",
-      };
-      if (config.bottomBgColor) {
-        style.background = config.bottomBgColor.color
-          ? config.bottomBgColor.color[0].item
-          : "";
-      }
-      return style;
-    },
-  },
-};
+});
+
+const bottomBgColor = computed(() => {
+  const config = props.config || {};
+  let style = {
+    overflow: "hidden",
+  };
+  if (config.bottomBgColor) {
+    style.background = config.bottomBgColor.color
+      ? config.bottomBgColor.color[0].item
+      : "";
+  }
+  return style;
+});
 </script>
 
 <style scoped></style>

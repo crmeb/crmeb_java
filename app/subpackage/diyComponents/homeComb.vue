@@ -29,7 +29,7 @@
               <view class="logo skeleton-rect" v-if="searchBox == 1">
                 <image :src="logoUpImg" mode="heightFix"></image>
               </view>
-              <navigator
+              <navigator :render-link="false"
                 v-if="hotWords.length"
                 :url="'/pages/goods/goods_search/index?searchVal=' + searchVal"
                 :class="logoConfig ? 'input' : 'uninput'"
@@ -60,7 +60,7 @@
                 </view>
                 <text class="iconfont icon-ic_search"></text>
               </navigator>
-              <navigator
+              <navigator :render-link="false"
                 v-else
                 url="/pages/goods/goods_search/index"
                 hover-class="none"
@@ -164,6 +164,7 @@
           <view
             class="dots acea-row"
             :class="{
+              'style-card': dataConfig.styleConfig.tabVal,
               'row-center': dataConfig.docPosition.tabVal == 1,
               'row-right': dataConfig.docPosition.tabVal == 2,
             }"
@@ -198,323 +199,318 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, getCurrentInstance } from "vue";
+import util from "@/utils/util.js";
 import commonWrapper from "./commonWrapper.vue";
 import { getCategoryList } from "@/api/store.js";
 import { getCategoryVersion } from "@/api/api.js";
-let statusBarHeight = uni.getWindowInfo().statusBarHeight;
-export default {
-  components: { commonWrapper },
-  name: "homeComb",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isFixed: {
-      type: Boolean,
-      default: false,
-    },
-    isScrolled: {
-      type: Boolean,
-      default: false,
-    },
-    isScale: {
-      type: Boolean,
-      default: false,
-    },
-    isMenu: {
-      type: Boolean,
-      default: false,
-    },
-    special: {
-      type: Number,
-      default: 0,
-    },
-    belongIndex: {
-      type: Number,
-      default: 0,
-    },
+let statusBarHeightVal = uni.getWindowInfo().statusBarHeight;
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {
-      statusBarHeight: statusBarHeight,
-      autoplay: true,
-      interval: this.dataConfig.numConfig.val * 1000 || 2500,
-      duration: 500,
-      logoConfig: this.dataConfig.logoConfig.url,
-      tabClick: 0, //导航栏被点击
-      isLeft: 0, //导航栏下划线位置
-      isWidth: 0, //每个导航栏占位
-      mainWidth: 0,
-      tabLeft: 0,
-      tabTitle: [],
-      isTop: 0,
-      navHeight: 38,
-      indicatorDots: false,
-      circular: true,
-      intervals: 3000,
-      imgUrls: [], //图片轮播数据
-      swiperCur: 0,
-      searchVal: "",
-      bgColor: this.dataConfig.swiperConfig.list.length
-        ? this.dataConfig.swiperConfig.list[0].img
-        : "",
-      isCategory: false,
-      txtColor: "",
-      hotWordShow: false,
-      bgColorLeft: "",
-      bgColorRight: "",
-      searchShow: false,
-      titleConfig: this.dataConfig.titleConfig.value,
-      searchBox: this.dataConfig.searchBox.tabVal,
-      fixConfig: this.dataConfig.searchFix.tabVal,
-      gradientColor: "#f5f5f5",
-    };
+  isFixed: {
+    type: Boolean,
+    default: false,
   },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
-        },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
-        },
-        backgroundConfig:
-          this.dataConfig.backgroundConfig || this.dataConfig.bottomBgColor,
-      };
-    },
-    classColor() {
-      let color = this.dataConfig.classColor;
-      return {
-        background: `linear-gradient(90deg, ${color.color[0].item} 50%, ${color.color[1].item} 100%)`,
-        color: "#fff",
-      };
-    },
-    swiperMargin() {
-      return this.dataConfig.styleConfig.tabVal ? "50rpx" : "10rpx";
-    },
-    mpHeaderStyle() {
-      let style = {};
-      if (this.isScrolled && this.dataConfig.searchConfig.tabVal) {
-        style.background = `linear-gradient(90deg, #FFFFFF 50%, #FFFFFF 100%)`;
-        style.position = `fixed`;
-      }
-      return style;
-    },
-    searchPlaceholderShow() {
-      return !!(this.isScrolled && this.dataConfig.searchConfig.tabVal);
-    },
-    inputStyle() {
-      let style = {};
-      if (this.isScrolled && this.dataConfig.searchConfig.tabVal) {
-        style.background = `#F5F5F5`;
-        style.color = `#BBBBBB`;
-      }
-      return style;
-    },
-    titleStyle() {
-      let style = {};
-      if (this.isScrolled && this.dataConfig.searchConfig.tabVal) {
-        style.color = `#333`;
-      }
-      return style;
-    },
-    progressWidth() {
-      return {
-        width: `${this.dataConfig.swiperConfig.list.length * 20}rpx`,
-      };
-    },
-    progressValue() {
-      return {
-        width: `${
-          ((this.swiperCur + 1) / this.dataConfig.swiperConfig.list.length) *
-          100
-        }%`,
-      };
-    },
-    dotBgColor() {
-      return {
-        background: this.dataConfig.dotBgColor.color[0].item,
-      };
-    },
-    dotColor() {
-      return {
-        background: this.dataConfig.dotColor.color[0].item,
-      };
-    },
-    imageStyle() {
-      let borderRadius = `${this.dataConfig.filletImg.val * 2}rpx`;
-      if (this.dataConfig.filletImg.type) {
-        borderRadius = `${this.dataConfig.filletImg.valList[0].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[1].val * 2
-        }rpx ${this.dataConfig.filletImg.valList[3].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        "border-radius": borderRadius,
-      };
-    },
-    tabListConfig() {
-      let tabList =
-        this.dataConfig.tabListConfig && Array.isArray(this.dataConfig.tabListConfig.list)
-          ? this.dataConfig.tabListConfig.list
-          : [];
-      return [
+  isScrolled: {
+    type: Boolean,
+    default: false,
+  },
+  isScale: {
+    type: Boolean,
+    default: false,
+  },
+  isMenu: {
+    type: Boolean,
+    default: false,
+  },
+  special: {
+    type: Number,
+    default: 0,
+  },
+  belongIndex: {
+    type: Number,
+    default: 0,
+  },
+});
+const emit = defineEmits(["bindSortId"]);
+
+const statusBarHeight = ref(statusBarHeightVal);
+const autoplay = ref(true);
+const interval = ref(props.dataConfig.numConfig.val * 1000 || 2500);
+const duration = ref(500);
+const logoConfig = ref(props.dataConfig.logoConfig.url);
+const tabClick = ref(0); //导航栏被点击
+const isLeft = ref(0); //导航栏下划线位置
+const isWidth = ref(0); //每个导航栏占位
+const mainWidth = ref(0);
+const tabLeft = ref(0);
+const tabTitle = ref([]);
+const isTop = ref(0);
+const navHeight = ref(38);
+const indicatorDots = ref(false);
+const circular = ref(true);
+const intervals = ref(3000);
+const imgUrls = ref([]); //图片轮播数据
+const swiperCur = ref(0);
+const searchVal = ref("");
+const bgColor = ref(
+  props.dataConfig.swiperConfig.list.length
+    ? props.dataConfig.swiperConfig.list[0].img
+    : ""
+);
+const isCategory = ref(false);
+const txtColor = ref("");
+const hotWordShow = ref(false);
+const bgColorLeft = ref("");
+const bgColorRight = ref("");
+const searchShow = ref(false);
+const titleConfig = ref(props.dataConfig.titleConfig.value);
+const searchBox = ref(props.dataConfig.searchBox.tabVal);
+const fixConfig = ref(props.dataConfig.searchFix.tabVal);
+const gradientColor = ref("#f5f5f5");
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [
         {
-          classPage: {
-            id: 0,
-          },
-          dataType: {
-            tabVal: 0,
-          },
-          microPage: {
-            id: 0,
-          },
-          text: {
-            val: "首页",
-          },
+          val: props.dataConfig.topConfig
+            ? props.dataConfig.topConfig.val
+            : 0,
         },
-        ...tabList,
-      ];
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    hotWords() {
-      return this.dataConfig.hotWords.list.filter((item) => {
-        return item.val;
-      });
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
     },
-    logoUpImg() {
-      let img = "";
-      if (
-        this.isScrolled &&
-        this.dataConfig.searchConfig.tabVal &&
-        this.dataConfig.logoUpConfig &&
-        this.dataConfig.logoUpConfig.url
-      ) {
-        img = this.dataConfig.logoUpConfig.url;
-      } else {
-        img = this.dataConfig.logoConfig.url;
-      }
-      return img;
-    },
-    bgGradientStyle() {
-      const gradientColor =
-        this.dataConfig.gradientColor &&
-        this.dataConfig.gradientColor.color &&
-        this.dataConfig.gradientColor.color[0]
-          ? this.dataConfig.gradientColor.color[0].item
-          : "#f5f5f5";
-      return {
-        "background-image": `linear-gradient(to bottom, rgba(245,245,245,0) 0%, rgba(245,245,245,0) 50%, ${gradientColor} 100%)`,
-      };
-    },
-  },
-  created() {
-    var that = this;
-    // 获取设备宽度
-    uni.getSystemInfo({
-      success(e) {
-        that.mainWidth = e.windowWidth;
-        that.isWidth = (e.windowWidth - 65) / 8;
+    backgroundConfig:
+      props.dataConfig.backgroundConfig || props.dataConfig.bottomBgColor,
+  };
+});
+const classColor = computed(() => {
+  let color = props.dataConfig.classColor;
+  return {
+    background: `linear-gradient(90deg, ${color.color[0].item} 50%, ${color.color[1].item} 100%)`,
+    color: "#fff",
+  };
+});
+const swiperMargin = computed(() => {
+  return props.dataConfig.styleConfig.tabVal ? "50rpx" : "10rpx";
+});
+const mpHeaderStyle = computed(() => {
+  let style = {};
+  if (props.isScrolled && props.dataConfig.searchConfig.tabVal) {
+    style.background = `linear-gradient(90deg, #FFFFFF 50%, #FFFFFF 100%)`;
+    style.position = `fixed`;
+  }
+  return style;
+});
+const searchPlaceholderShow = computed(() => {
+  return !!(props.isScrolled && props.dataConfig.searchConfig.tabVal);
+});
+const inputStyle = computed(() => {
+  let style = {};
+  if (props.isScrolled && props.dataConfig.searchConfig.tabVal) {
+    style.background = `#F5F5F5`;
+    style.color = `#BBBBBB`;
+  }
+  return style;
+});
+const titleStyle = computed(() => {
+  let style = {};
+  if (props.isScrolled && props.dataConfig.searchConfig.tabVal) {
+    style.color = `#333`;
+  }
+  return style;
+});
+const progressWidth = computed(() => {
+  return {
+    width: `${props.dataConfig.swiperConfig.list.length * 20}rpx`,
+  };
+});
+const progressValue = computed(() => {
+  return {
+    width: `${
+      ((swiperCur.value + 1) / props.dataConfig.swiperConfig.list.length) *
+      100
+    }%`,
+  };
+});
+const dotBgColor = computed(() => {
+  return {
+    background: props.dataConfig.dotBgColor.color[0].item,
+  };
+});
+const dotColor = computed(() => {
+  return {
+    background: props.dataConfig.dotColor.color[0].item,
+  };
+});
+const imageStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.filletImg.val * 2}rpx`;
+  if (props.dataConfig.filletImg.type) {
+    borderRadius = `${props.dataConfig.filletImg.valList[0].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[1].val * 2
+    }rpx ${props.dataConfig.filletImg.valList[3].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    "border-radius": borderRadius,
+  };
+});
+const tabListConfig = computed(() => {
+  let tabList =
+    props.dataConfig.tabListConfig && Array.isArray(props.dataConfig.tabListConfig.list)
+      ? props.dataConfig.tabListConfig.list
+      : [];
+  return [
+    {
+      classPage: {
+        id: 0,
       },
+      dataType: {
+        tabVal: 0,
+      },
+      microPage: {
+        id: 0,
+      },
+      text: {
+        val: "首页",
+      },
+    },
+    ...tabList,
+  ];
+});
+const hotWords = computed(() => {
+  return props.dataConfig.hotWords.list.filter((item) => {
+    return item.val;
+  });
+});
+const logoUpImg = computed(() => {
+  let img = "";
+  if (
+    props.isScrolled &&
+    props.dataConfig.searchConfig.tabVal &&
+    props.dataConfig.logoUpConfig &&
+    props.dataConfig.logoUpConfig.url
+  ) {
+    img = props.dataConfig.logoUpConfig.url;
+  } else {
+    img = props.dataConfig.logoConfig.url;
+  }
+  return img;
+});
+const bgGradientStyle = computed(() => {
+  const gradientColorVal =
+    props.dataConfig.gradientColor &&
+    props.dataConfig.gradientColor.color &&
+    props.dataConfig.gradientColor.color[0]
+      ? props.dataConfig.gradientColor.color[0].item
+      : "#f5f5f5";
+  return {
+    "background-image": `linear-gradient(to bottom, rgba(245,245,245,0) 0%, rgba(245,245,245,0) 50%, ${gradientColorVal} 100%)`,
+  };
+});
+
+// 获取设备宽度
+uni.getSystemInfo({
+  success(e) {
+    mainWidth.value = e.windowWidth;
+    isWidth.value = (e.windowWidth - 65) / 8;
+  },
+});
+imgUrls.value = props.dataConfig.swiperConfig.list;
+
+onMounted(() => {
+  hotWords.value.forEach((item) => {
+    if (item.val) {
+      hotWordShow.value = true;
+    }
+  });
+  uni.setStorageSync("hotList", hotWords.value);
+});
+
+function goDetail(url) {
+  let urls = url.info[1].value;
+  util.JumpPath(urls);
+}
+//替换安全域名
+function setDomain(url) {
+  url = url ? url.toString() : "";
+  //本地调试打开,生产请注销
+  if (url.indexOf("https://") > -1) return url;
+  else return url.replace("http://", "https://");
+}
+function swiperChange(e) {
+  let { current, source } = e.detail;
+  if (source === "autoplay" || source === "touch") {
+    swiperCur.value = e.detail.current;
+    bgColor.value = imgUrls.value[e.detail.current]["img"];
+  }
+}
+function textChange(e) {
+  let { current, source } = e.detail;
+  if (source === "autoplay" || source === "touch") {
+    searchVal.value = hotWords.value[e.detail.current]["val"];
+  }
+}
+/**显示全部分类*/
+function showCategory() {
+  isCategory.value = true;
+}
+/*跳转为页面*/
+function changeTab(item, index) {
+  isCategory.value = false;
+  if (item.text && item.text.val === "首页") {
+    tabClick.value = index; //设置导航点击了哪一个
+    uni.switchTab({
+      url: "/pages/index/index",
     });
-    that.imgUrls = that.dataConfig.swiperConfig.list;
-  },
-  mounted() {
-    let that = this;
-    that.hotWords.forEach((item) => {
-      if (item.val) {
-        this.hotWordShow = true;
-      }
-    });
-    uni.setStorageSync("hotList", that.hotWords);
-  },
-  methods: {
-    goDetail(url) {
-      let urls = url.info[1].value;
-      this.$util.JumpPath(urls);
-    },
-    //替换安全域名
-    setDomain: function (url) {
-      url = url ? url.toString() : "";
-      //本地调试打开,生产请注销
-      if (url.indexOf("https://") > -1) return url;
-      else return url.replace("http://", "https://");
-    },
-    swiperChange(e) {
-      let { current, source } = e.detail;
-      if (source === "autoplay" || source === "touch") {
-        this.swiperCur = e.detail.current;
-        this.bgColor = this.imgUrls[e.detail.current]["img"];
-      }
-    },
-    textChange(e) {
-      let { current, source } = e.detail;
-      if (source === "autoplay" || source === "touch") {
-        this.searchVal = this.hotWords[e.detail.current]["val"];
-      }
-    },
-    /**显示全部分类*/
-    showCategory() {
-      this.isCategory = true;
-    },
-    /*跳转为页面*/
-    changeTab(item, index) {
-      this.isCategory = false;
-      if (item.text && item.text.val === "首页") {
-        this.tabClick = index; //设置导航点击了哪一个
-        uni.switchTab({
-          url: "/pages/index/index",
-        });
-        return;
-      }
-      this.$emit("bindSortId", item, index);
-      if (this.tabClick == index) return;
-      this.tabClick = index; //设置导航点击了哪一个
-      this.isLeft = index * this.isWidth + 16; //设置下划线位置
-      let data = {
-        type: item.dataType.tabVal, // 0 微页面 1 商品分类
-        microPage: item.microPage.id,
-        classPage: item.classPage.id,
-      };
-    },
-  },
-};
+    return;
+  }
+  emit("bindSortId", item, index);
+  if (tabClick.value == index) return;
+  tabClick.value = index; //设置导航点击了哪一个
+  isLeft.value = index * isWidth.value + 16; //设置下划线位置
+  let data = {
+    type: item.dataType.tabVal, // 0 微页面 1 商品分类
+    microPage: item.microPage.id,
+    classPage: item.classPage.id,
+  };
+}
 </script>
 
 <style lang="scss" scoped>
@@ -925,9 +921,14 @@ export default {
       display: flex;
       flex-direction: row;
       position: absolute;
-      right: 20rpx;
-      left: 20rpx;
+      right: 40rpx;
+      left: 40rpx;
       bottom: 23rpx;
+
+      &.style-card {
+        left: 80rpx;
+        right: 80rpx;
+      }
     }
 
     /*未选中时的小圆点样式 */

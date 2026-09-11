@@ -11,7 +11,7 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -21,52 +21,23 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
-	import {
-		mapGetters
-	} from "vuex";
-  import {goToAgreement} from "@/libs/order";
-	let app = getApp();
-	export default {
-		data() {
-			return {
-				theme: app.globalData.theme,
-				tabList: [{
-						title: "用户协议",
-						info: 'userinfo',
-						save: 'usersave'
-					},
-					{
-						title: "隐私政策",
-						info: 'userprivacyinfo',
-						save: 'userprivacysave'
-					},
-					{
-						title: "关于我们",
-						info: 'aboutusinfo',
-						save: 'aboutussave'
-					},
-					{
-						title: "资质证照",
-						info: 'intelligentinfo',
-						save: 'intelligentsave'
-					},
-					{
-						title: "优惠券协议",
-						info: 'coupon/agreement/info',
-						save: 'platfromrulesave'
-					},
-				],
-			}
-		},
-		onLoad() {
+	import { ref } from "vue";
+	import { onLoad } from "@dcloudio/uni-app";
+	import { goToAgreement } from "@/libs/order.js";
 
-		},
-		methods: {
-			goMultiple(e){
-        goToAgreement(e)
-			}
-		}
-	}
+	const app = getApp();
+	const theme = ref(app.globalData.theme);
+	const tabList = ref([
+		{ title: "用户协议", info: 'userinfo', save: 'usersave' },
+		{ title: "隐私政策", info: 'userprivacyinfo', save: 'userprivacysave' },
+		{ title: "关于我们", info: 'aboutusinfo', save: 'aboutussave' },
+		{ title: "资质证照", info: 'intelligentinfo', save: 'intelligentsave' },
+		{ title: "优惠券协议", info: 'coupon/agreement/info', save: 'platfromrulesave' },
+	]);
+
+	onLoad(() => {});
+
+	function goMultiple(e) { goToAgreement(e); }
 </script>
 
 <style scoped lang="scss">

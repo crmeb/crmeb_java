@@ -6,11 +6,11 @@
       }}</view>
       <view class="conter">
         <!-- #ifndef APP-PLUS -->
-        <parser
-          :html="productData.description"
+        <mp-html
+          :content="productData.description"
           ref="article"
           :tag-style="tagStyle"
-        ></parser>
+        />
         <!-- #endif -->
         <!-- #ifdef APP-PLUS -->
         <view class="description" v-html="productData.description"></view>
@@ -20,48 +20,39 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed } from "vue";
 import commonWrapper from "./commonWrapper.vue";
-import parser from "@/components/jyf-parser/jyf-parser";
+import mpHtml from "@/uni_modules/mp-html/components/mp-html/mp-html.vue";
 
-export default {
-  name: "productDesc",
-  components: {
-    parser,
-    commonWrapper
+const props = defineProps({
+  productData: {
+    type: Object,
+    default: () => ({}),
   },
-  props: {
-    productData: {
-      type: Object,
-      default: () => ({}),
-    },
-    dataConfig: {
-      type: Object,
-      default: () => ({}),
-    },
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
   },
-  computed: {
-    titleShow() {
-      return this.dataConfig.isShow?.tabVal == 0;
-    },
-    titleStyle() {
-      return {
-        color: this.dataConfig.textColor?.color?.[0]?.item || "#333",
-        fontSize: (this.dataConfig.fontSize?.val || 16) * 2 + "rpx",
-        textAlign: this.dataConfig.textPosition?.val || "left",
-      };
-    },
-  },
-  data() {
-    return {
-      tagStyle: {
-        img: "width:100%;display:block;",
-        table: "width:100%",
-        video: "width:100%",
-      },
-    };
-  },
-};
+});
+
+const tagStyle = ref({
+  img: "width:100%;display:block;",
+  table: "width:100%",
+  video: "width:100%",
+});
+
+const titleShow = computed(() => {
+  return props.dataConfig.isShow?.tabVal == 0;
+});
+
+const titleStyle = computed(() => {
+  return {
+    color: props.dataConfig.textColor?.color?.[0]?.item || "#333",
+    fontSize: (props.dataConfig.fontSize?.val || 16) * 2 + "rpx",
+    textAlign: props.dataConfig.textPosition?.val || "left",
+  };
+});
 </script>
 
 <style lang="scss" scoped>

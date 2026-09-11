@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class='payment-status'>
 			<!--失败时： 用icon-iconfontguanbi fail替换icon-duihao2 bg-color-->
 			<view class='iconfont icons icon-duihao2 bg_color'
@@ -40,104 +40,102 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref } from 'vue';
+	import { onLoad } from '@dcloudio/uni-app';
 	import {getOrderDetail,alipayQueryPayResult} from '@/api/order.js';
+	import util from '@/utils/util.js';
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default{
-		data() {
-			return {
-				orderId: '',
-				payPrice:'',
-				order_pay_info: {
-					paid: 0,
-					_status: {}
-				},
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
-				status: 0,
-				msg: '',
-				payResult: '订单查询中...',
-				payTime:'',
-				theme:app.globalData.theme,
-			};
-		},
-		onLoad(e){
-			// #ifdef H5
-			var url = window.location.search;
-			if(url){
-				var theRequest = new Object();
-				if (url.indexOf("?") != -1) {
-				    var str = url.substr(1);
-				    var strs = str.split("&");
-				    for (var i = 0; i < strs.length; i++) {
-						theRequest[strs[i].split('=')[0]] = decodeURI(strs[i].split('=')[1]);
-				    }
-				}
-				this.orderId = theRequest.out_trade_no; //返回的订单号
-				this.getOrderPayInfo();
-			}else{
-				let that = this;
-				uni.getStorage({
-				    key: 'orderNo',
-				    success: function (res) {
-				        that.orderId = res.data; //如果是支付宝中途放弃支付跳转到这个页面，就从缓存读取订单号查询订单详情和支付结果
-						setTimeout(()=>{
-							that.getOrderPayInfo();
-						},200)
-				    }
-				});
+
+	// data
+	const orderId = ref('');
+	const payPrice = ref('');
+	const order_pay_info = ref({
+		paid: 0,
+		_status: {}
+	});
+	const isAuto = ref(false); //没有授权的不会自动授权
+	const isShowAuth = ref(false); //是否隐藏授权
+	const status = ref(0);
+	const msg = ref('');
+	const payResult = ref('订单查询中...');
+	const payTime = ref('');
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+
+	onLoad((e) => {
+		// #ifdef H5
+		var url = window.location.search;
+		if(url){
+			var theRequest = new Object();
+			if (url.indexOf("?") != -1) {
+			    var str = url.substr(1);
+			    var strs = str.split("&");
+			    for (var i = 0; i < strs.length; i++) {
+					theRequest[strs[i].split('=')[0]] = decodeURI(strs[i].split('=')[1]);
+			    }
 			}
-			// #endif
-			
-			// #ifdef APP-PLUS
-			console.log(e);
-			this.orderId = e.out_trade_no;
-			this.getOrderPayInfo();
-			// #endif
-		},
-		methods:{
-			getOrderPayInfo: function() { 
-				let that = this;
-				uni.showLoading({
-					title: '正在加载中'
-				});
-				getOrderDetail(that.orderId).then(res => {
-					that.$set(that, 'order_pay_info', res.data);
-					that.alipayQueryPay();
-					uni.hideLoading();
-				}).catch(err => {
-					uni.hideLoading();
-				});
-			},
-			alipayQueryPay() {
-				alipayQueryPayResult(this.orderId).then(res => {
-					this.payResult = '支付成功';
-					uni.setNavigationBarTitle({
-						title: '支付成功'
-					});
-					this.order_pay_info.paid = 1;
-					uni.hideLoading();
-				}).catch(err => {
-					this.order_pay_info.paid = 2;
-					this.payResult = err;
-					this.msg = err;
-					uni.hideLoading();
-					return this.$util.Tips({
-						title: err
-					});
-				})
-			},
-			goOrderDetails(){
-				uni.navigateTo({
-					url: '/pages/order/order_details/index?order_id=' + this.orderId
-				})
-			},
-			goIndex(){
-				uni.switchTab({
-					url: '/pages/index/index'
-				});
-			}
+			orderId.value = theRequest.out_trade_no; //返回的订单号
+			getOrderPayInfo();
+		}else{
+			uni.getStorage({
+			    key: 'orderNo',
+			    success: function (res) {
+			        orderId.value = res.data; //如果是支付宝中途放弃支付跳转到这个页面，就从缓存读取订单号查询订单详情和支付结果
+					setTimeout(()=>{
+						getOrderPayInfo();
+					},200)
+			    }
+			});
 		}
+		// #endif
+		
+		// #ifdef APP-PLUS
+		orderId.value = e.out_trade_no;
+		getOrderPayInfo();
+		// #endif
+	});
+
+	function getOrderPayInfo() { 
+		uni.showLoading({
+			title: '正在加载中'
+		});
+		getOrderDetail(orderId.value).then(res => {
+			order_pay_info.value = res.data;
+			alipayQueryPay();
+			uni.hideLoading();
+		}).catch(err => {
+			uni.hideLoading();
+		});
+	}
+	function alipayQueryPay() {
+		alipayQueryPayResult(orderId.value).then(res => {
+			payResult.value = '支付成功';
+			uni.setNavigationBarTitle({
+				title: '支付成功'
+			});
+			order_pay_info.value.paid = 1;
+			uni.hideLoading();
+		}).catch(err => {
+			order_pay_info.value.paid = 2;
+			payResult.value = err;
+			msg.value = err;
+			uni.hideLoading();
+			return util.Tips({
+				title: err
+			});
+		})
+	}
+	function goOrderDetails(){
+		uni.navigateTo({
+			url: '/pages/order/order_details/index?order_id=' + orderId.value
+		})
+	}
+	function goIndex(){
+		uni.switchTab({
+			url: '/pages/index/index'
+		});
 	}
 </script>
 <style lang="scss">

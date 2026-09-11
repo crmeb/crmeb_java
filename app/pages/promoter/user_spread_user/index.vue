@@ -1,9 +1,9 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class='my-promotion'>
 			<view class="header">
-				<image class="head_img" :src="urlDomain+'crmebimage/maintain/2021/07/13/48e81e3e2e374d48820b7a9a56905365k2qa9yj8n5.png'"></image>
-				<navigator :url="'/pages/promoter/user_spread_money/index?type=1&extractCount='+spreadInfo.extractCount"  hover-class="none" class='record'>提现记录<text class='iconfont icon-xiangyou'></text></navigator>
+				<image class="head_img" :src="urlDomain+'/crmebimage/maintain/2021/07/13/48e81e3e2e374d48820b7a9a56905365k2qa9yj8n5.png'"></image>
+				<navigator :render-link="false" :url="'/pages/promoter/user_spread_money/index?type=1&extractCount='+spreadInfo.extractCount"  hover-class="none" class='record'>提现记录<text class='iconfont icon-xiangyou'></text></navigator>
 				<view class="head_box">
 					<view class='name acea-row row-center-wrapper'>
 						<view>当前佣金</view>
@@ -22,33 +22,33 @@
 				</view>
 			</view>
 			<!-- #ifdef APP-PLUS || H5 -->
-			<navigator url="/pages/users/user_cash/index" hover-class="none" class='bnt bg_color'>立即提现</navigator>
+			<navigator :render-link="false" url="/pages/users/user_cash/index" hover-class="none" class='bnt bg_color'>立即提现</navigator>
 			<!-- #endif -->
 			<!-- #ifdef MP -->
 			<view @click="openSubscribe('/pages/users/user_cash/index')" class='bnt bg_color'>立即提现</view>
 			<!-- #endif -->
 			<view class='list acea-row row-between-wrapper'>
-				<navigator url='/pages/promoter/user_spread_code/index' hover-class="none" class='item acea-row row-center-wrapper row-column'>
+				<navigator :render-link="false" url='/pages/promoter/user_spread_code/index' hover-class="none" class='item acea-row row-center-wrapper row-column'>
 					<text class='iconfont icon-erweima'></text>
 					<view>推广名片</view>
 				</navigator>
-				<navigator url='/pages/promoter/promoter-list/index' hover-class="none" class='item acea-row row-center-wrapper row-column'>
+				<navigator :render-link="false" url='/pages/promoter/promoter-list/index' hover-class="none" class='item acea-row row-center-wrapper row-column'>
 					<text class='iconfont icon-tongji'></text>
 					<view>推广人统计</view>
 				</navigator>
-				<navigator :url="'/pages/promoter/user_spread_money/index?type=2&commissionCount='+spreadInfo.commissionCount" hover-class="none" class='item acea-row row-center-wrapper row-column'>
+				<navigator :render-link="false" :url="'/pages/promoter/user_spread_money/index?type=2&commissionCount='+spreadInfo.commissionCount" hover-class="none" class='item acea-row row-center-wrapper row-column'>
 					<text class='iconfont icon-qiandai'></text>
 					<view>佣金明细</view>
 				</navigator>
-				<navigator url='/pages/promoter/promoter-order/index' hover-class="none" class='item acea-row row-center-wrapper row-column'>
+				<navigator :render-link="false" url='/pages/promoter/promoter-order/index' hover-class="none" class='item acea-row row-center-wrapper row-column'>
 					<text class='iconfont icon-dingdan'></text>
 					<view>推广人订单</view>
 				</navigator>
-				<navigator url='/pages/promoter/promoter_rank/index' hover-class="none" class='item acea-row row-center-wrapper row-column'>
+				<navigator :render-link="false" url='/pages/promoter/promoter_rank/index' hover-class="none" class='item acea-row row-center-wrapper row-column'>
 					<text class='iconfont icon-paihang1'></text>
 					<view>推广人排行</view>
 				</navigator>
-				<navigator url='/pages/promoter/commission_rank/index' hover-class="none" class='item acea-row row-center-wrapper row-column'>
+				<navigator :render-link="false" url='/pages/promoter/commission_rank/index' hover-class="none" class='item acea-row row-center-wrapper row-column'>
 					<text class='iconfont icon-paihang'></text>
 					<view>佣金排行</view>
 				</navigator>
@@ -57,63 +57,60 @@
 	</view>
 </template>
 
-<script>
-	import { getSpreadInfo } from '@/api/user.js';
-	import { openExtrctSubscribe } from '@/utils/SubscribeMessage.js';
+<script setup>
+	import { ref, watch, getCurrentInstance } from 'vue';
+	import { onShow } from '@dcloudio/uni-app';
+	import { getSpreadInfo as getSpreadInfoApi } from '@/api/user.js';
 	import {toLogin} from '@/libs/login.js';
-	import {mapGetters} from "vuex";
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
 	import {setThemeColor} from '@/utils/setTheme.js'
+import { useColor } from '@/composables/useColor.js';
 	const app = getApp();
-	export default {
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				spreadInfo: {},
-				theme:app.globalData.theme,
-				bgColor:'#e93323'
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		watch: {
-			isLogin: {
-				handler: function(newV, oldV) {
-					if (newV) {
-						this.getSpreadInfo();
-					}
-				},
-				deep: true
-			}
-		},
-		onShow() {
-			let that = this;
-			that.bgColor = setThemeColor();
-			uni.setNavigationBarColor({
-				frontColor: '#ffffff',
-				backgroundColor:that.bgColor,
-			});
-			
-			if (this.isLogin) {
-				this.getSpreadInfo();
-			} else {
-				toLogin();
-			}
-		},
-		methods: {
-			openSubscribe: function(page) {
-				uni.navigateTo({
-					url: page,
-				});
-			},
-			/**
-			 * 获取个人用户信息
-			 */
-			getSpreadInfo: function() {
-				let that = this;
-				getSpreadInfo().then(res => {
-					that.$set(that,'spreadInfo',res.data);
-				});
-			}
+	const { proxy } = getCurrentInstance();
+
+	const appStore = useAppStore();
+	const { isLogin } = storeToRefs(appStore);
+
+	const urlDomain = ref(proxy.$Cache.get("imgHost"));
+	const spreadInfo = ref({});
+	const { colorStyle } = useColor();
+	const theme = ref(app.globalData.theme);
+	const bgColor = ref('#e93323');
+
+	watch(isLogin, (newV) => {
+		if (newV) {
+			getSpreadInfo();
 		}
+	}, { deep: true });
+
+	onShow(() => {
+		bgColor.value = setThemeColor();
+		uni.setNavigationBarColor({
+			frontColor: '#ffffff',
+			backgroundColor: bgColor.value,
+		});
+
+		if (isLogin.value) {
+			getSpreadInfo();
+		} else {
+			toLogin();
+		}
+	});
+
+	function openSubscribe(page) {
+		uni.navigateTo({
+			url: page,
+		});
+	}
+
+	/**
+	 * 获取个人用户信息
+	 */
+	function getSpreadInfo() {
+		getSpreadInfoApi().then(res => {
+			spreadInfo.value = res.data;
+		});
 	}
 </script>
 

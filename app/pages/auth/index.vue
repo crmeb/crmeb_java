@@ -1,47 +1,49 @@
 <template>
 	<view class="lottie-bg">
 		<view id="lottie">
-			<image :src="urlDomain+'crmebimage/perset/staticImg/live-logo.gif'" rel="preload" />
+			<image :src="urlDomain+'/crmebimage/perset/staticImg/live-logo.gif'" rel="preload" />
 		</view>
 	</view>
 </template>
 
-<script>
-	import wechat from "@/libs/wechat";
+<script setup>
+	import { ref, getCurrentInstance } from 'vue'
+	import { onLoad } from '@dcloudio/uni-app'
+	// #ifdef H5
+	import wechat from "@/libs/wechat.js";
+	// #endif
 	import {
 		getUserInfo
-	} from "@/api/user";
-	export default {
-		name: "Auth",
-		data(){
-			return{
-				urlDomain: this.$Cache.get("imgHost"),
-			}
-		},
-		mounted() {
+	} from "@/api/user.js";
 
-		},
-		onLoad(option) {
-			let that = this
-			const {
-				code,
-				state
-			} = option;
-			wechat.auth(code, state)
-				.then(() => {
-					getUserInfo().then(res => {
-						location.href = decodeURIComponent(
-							decodeURIComponent(option.back_url)
-						);
-					}).catch(res => {
-						console.log('getUserInfo错误='+res);
-					});
-				})
-				.catch((err) => {
-					console.log('auth错误='+err);
+	const { proxy } = getCurrentInstance();
+
+	const urlDomain = ref(proxy.$Cache.get("imgHost"))
+
+	onLoad((option) => {
+		// #ifdef H5
+		const {
+			code,
+			state
+		} = option;
+		wechat.auth(code, state)
+			.then(() => {
+				getUserInfo().then(res => {
+					location.href = decodeURIComponent(
+						decodeURIComponent(option.back_url)
+					);
+				}).catch(res => {
 				});
-		}
-	};
+			})
+			.catch((err) => {
+			});
+		// #endif
+		// #ifndef H5
+		uni.switchTab({
+			url: '/pages/index/index'
+		});
+		// #endif
+	})
 </script>
 
 <style scoped lang="scss">

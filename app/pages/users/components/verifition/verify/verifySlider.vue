@@ -331,7 +331,8 @@
 
 					// 判断接口请求次数是否失效
 					if (res.repCode == '6201') {
-						this.pointBackImgBase = null;
+						this.backImgBase = null;
+						this.blockBackImgBase = null;
 					}
 				}).catch((res) => {
 					this.backImgBase = null

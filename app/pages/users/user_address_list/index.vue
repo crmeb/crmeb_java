@@ -1,7 +1,7 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class='line'>
-			<image :src="urlDomain+'crmebimage/perset/staticImg/line.jpg'" v-if="addressList.length"></image>
+			<image :src="urlDomain+'/crmebimage/perset/staticImg/line.jpg'" v-if="addressList.length"></image>
 		</view>
 		<view class='address-management' :class='addressList.length < 1 && page > 1 ? "fff":""'>
 			<radio-group class="radio-group" @change="radioChange" v-if="addressList.length">
@@ -33,7 +33,7 @@
 			</view>
 			<view class='noCommodity' v-if="addressList.length < 1 && page > 1">
 				<view class='pictrue'>
-					<image :src="urlDomain+'crmebimage/perset/staticImg/noAddress.png'"></image>
+					<image :src="urlDomain+'/crmebimage/perset/staticImg/noAddress.png'"></image>
 				</view>
 			</view>
 			<view style='height:120rpx;'></view>
@@ -50,9 +50,9 @@
 			</view>
 			<!-- #endif -->
 			<!-- #ifdef H5-->
-			<view class='addressBnt bg_color' :class="this.$wechat.isWeixin()?'':'on'" @click='addAddress'><text
+			<view class='addressBnt bg_color' :class="isWeixin?'':'on'" @click='addAddress'><text
 					class='iconfont icon-tianjiadizhi'></text>添加新地址</view>
-			<view v-if="this.$wechat.isWeixin()" class='addressBnt wxbnt' @click='getAddress'><text
+			<view v-if="isWeixin" class='addressBnt wxbnt' @click='getAddress'><text
 					class='iconfont icon-weixin2'></text>导入微信地址</view>
 			<!-- #endif -->
 		</view>
@@ -63,12 +63,14 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, watch, getCurrentInstance } from 'vue';
+	import { onLoad, onShow, onReachBottom } from '@dcloudio/uni-app';
 	import {
-		getAddressList,
+		getAddressList as getAddressListApi,
 		setAddressDefault,
-		delAddress,
-		editAddress,
+		delAddress as delAddressApi,
+		editAddress as editAddressApi,
 		postAddress
 	} from '@/api/user.js';
 	import {
@@ -76,321 +78,316 @@
 	} from '@/libs/login.js';
 	import atModel from '@/pages/users/components/accredit/index.vue'
 	// import atModel from '@/components/accredit/index.vue'
-	import {
-		mapGetters
-	} from "vuex";
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		components: {
-			atModel
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				addressList: [],
-				cartId: '',
-				pinkId: 0,
-				couponId: 0,
-				loading: false,
-				loadend: false,
-				loadTitle: '加载更多',
-				page: 1,
-				limit: 20,
-				bargain: false, //是否是砍价
-				combination: false, //是否是拼团
-				secKill: false, //是否是秒杀
-				theme: app.globalData.theme,
-				locationContent: '授权位置信息，提供完整服务',
-				locationStatus: false
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		watch: {
-			isLogin: {
-				handler: function(newV, oldV) {
-					if (newV) {
-						this.getUserAddress(true);
-					}
-				},
-				deep: true
+
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { isLogin } = storeToRefs(appStore);
+
+	// #ifdef H5
+	const isWeixin = proxy.$wechat.isWeixin();
+	// #endif
+	// #ifndef H5
+	const isWeixin = false;
+	// #endif
+
+	// data
+	const urlDomain = ref(proxy.$Cache.get("imgHost"));
+	const addressList = ref([]);
+	const cartId = ref('');
+	const pinkId = ref(0);
+	const couponId = ref(0);
+	const loading = ref(false);
+	const loadend = ref(false);
+	const loadTitle = ref('加载更多');
+	const page = ref(1);
+	const limit = ref(20);
+	const bargain = ref(false); //是否是砍价
+	const combination = ref(false); //是否是拼团
+	const secKill = ref(false); //是否是秒杀
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	const locationContent = ref('授权位置信息，提供完整服务');
+	const locationStatus = ref(false);
+	const preOrderNo = ref(0);
+
+	watch(isLogin, (newV, oldV) => {
+		if (newV) {
+			getUserAddress(true);
+		}
+	}, { deep: true });
+
+	onLoad((options) => {
+		if (isLogin.value) {
+			preOrderNo.value = options.preOrderNo || 0;
+			getAddressList(true);
+		} else {
+			toLogin();
+		}
+	});
+
+	onShow(() => {
+		getAddressList(true);
+	});
+
+	function modelCancel() {
+		locationStatus.value = false;
+	}
+	function confirmModel() {
+		uni.getLocation({
+			type: 'gcj02',
+			altitude: true,
+			geocode: true,
+			success: function(res) {
+				try {
+					uni.setStorageSync('user_latitude', res.latitude);
+					uni.setStorageSync('user_longitude', res.longitude);
+				} catch {}
 			}
-		},
-		onLoad(options) {
-			if (this.isLogin) {
-				this.preOrderNo = options.preOrderNo || 0;
-				this.getAddressList(true);
-			} else {
-				toLogin();
-			}
-		},
-		onShow: function() {
-			let that = this;
-			that.getAddressList(true);
-		},
-		methods: {
-			modelCancel() {
-				this.locationStatus = false;
-			},
-			confirmModel() {
-				uni.getLocation({
-					type: 'gcj02',
-					altitude: true,
-					geocode: true,
+		});
+		locationStatus.value = false;
+	}
+	/*
+	 * 导入微信地址（小程序）
+	 */
+	function getWxAddress() {
+		uni.authorize({
+			scope: 'scope.address',
+			success: function(res) {
+				uni.chooseAddress({
 					success: function(res) {
-						try {
-							uni.setStorageSync('user_latitude', res.latitude);
-							uni.setStorageSync('user_longitude', res.longitude);
-						} catch {}
-					}
-				});
-				this.locationStatus = false;
-			},
-			/*
-			 * 导入微信地址（小程序）
-			 */
-			getWxAddress: function() {
-				let that = this;
-				uni.authorize({
-					scope: 'scope.address',
-					success: function(res) {
-						uni.chooseAddress({
-							success: function(res) {
-								let addressP = {};
-								addressP.province = res.provinceName;
-								addressP.city = res.cityName;
-								addressP.district = res.countyName;
-								addressP.cityId = 0;
-								editAddress({
-									address: addressP,
-									isDefault: false,
-									realName: res.userName,
-									postCode: res.postalCode,
-									phone: res.telNumber,
-									detail: res.detailInfo,
-									id: 0
-									//type: 1//区别城市id（导入微信地址无城市id需要后台自己查找）;
-								}).then(res => {
-									setTimeout(() => {
-										that.getAddressList(true);
-										that.$util.Tips({
-											title: "添加成功",
-											icon: 'success'
-										});
-									}, 0)
-								}).catch(err => {
-									return that.$util.Tips({
-										title: err
-									});
-								});
-							},
-							fail: function(res) {
-								if (res.errMsg == 'chooseAddress:cancel') return that.$util
-									.Tips({
-										title: '取消选择'
-									});
-							},
-						})
-					},
-					fail: function(res) {
-						uni.showModal({
-							title: '您已拒绝导入微信地址权限',
-							content: '是否进入权限管理，调整授权？',
-							success(res) {
-								if (res.confirm) {
-									uni.openSetting({
-										success: function(res) {
-											console.log(res.authSetting)
-										}
-									});
-								} else if (res.cancel) {
-									return that.$util.Tips({
-										title: '已取消！'
-									});
-								}
-							}
-						})
-					}
-				})
-			},
-			/*
-			 * 导入微信地址（公众号）
-			 */
-			getAddress() {
-				let that = this;
-				that.$wechat.openAddress().then(userInfo => {
-					// open();
-					editAddress({
-							realName: userInfo.userName,
-							phone: userInfo.telNumber,
-							address: {
-								province: userInfo.provinceName,
-								city: userInfo.cityName,
-								district: userInfo.countryName,
-								cityId: 0
-							},
-							detail: userInfo.detailInfo,
-							postCode: userInfo.postalCode,
+						let addressP = {};
+						addressP.province = res.provinceName;
+						addressP.city = res.cityName;
+						addressP.district = res.countyName;
+						addressP.cityId = 0;
+						editAddressApi({
+							address: addressP,
 							isDefault: false,
-						})
-						.then(() => {
+							realName: res.userName,
+							postCode: res.postalCode,
+							phone: res.telNumber,
+							detail: res.detailInfo,
+							id: 0
+							//type: 1//区别城市id（导入微信地址无城市id需要后台自己查找）;
+						}).then(res => {
 							setTimeout(() => {
-								that.getAddressList(true);
-								that.$util.Tips({
+								getAddressList(true);
+								proxy.$util.Tips({
 									title: "添加成功",
 									icon: 'success'
 								});
 							}, 0)
-						})
-						.catch(err => {
-							// close();
-							return that.$util.Tips({
-								title: err || "添加失败"
+						}).catch(err => {
+							return proxy.$util.Tips({
+								title: err
 							});
 						});
-				}).catch(err => {
-					that.$util.Tips({
-						title: err.errMsg || "添加失败"
-					});
-				});
-			},
-			/**
-			 * 获取地址列表
-			 * 
-			 */
-			getAddressList: function(isPage) {
-				let that = this;
-				if (isPage) {
-					that.loadend = false;
-					that.page = 1;
-					that.$set(that, 'addressList', []);
-				};
-				if (that.loading) return;
-				if (that.loadend) return;
-				that.loading = true;
-				that.loadTitle = '';
-				getAddressList({
-					page: that.page,
-					limit: that.limit
-				}).then(res => {
-					let list = res.data.list;
-					let loadend = list.length < that.limit;
-					that.addressList = that.$util.SplitArray(list, that.addressList);
-					that.$set(that, 'addressList', that.addressList);
-					that.loadend = loadend;
-					that.loadTitle = loadend ? '我也是有底线的~' : '加载更多';
-					that.page = that.page + 1;
-					that.loading = false;
-				}).catch(err => {
-					that.loading = false;
-					that.loadTitle = '加载更多';
-				});
-			},
-			/**
-			 * 设置默认地址
-			 */
-			radioChange: function(e) {
-				let index = parseInt(e.detail.value),
-					that = this;
-				let address = this.addressList[index];
-				if (address == undefined) return that.$util.Tips({
-					title: '您设置的默认地址不存在!'
-				});
-				setAddressDefault(address.id).then(res => {
-					for (let i = 0, len = that.addressList.length; i < len; i++) {
-						if (i == index) that.addressList[i].isDefault = true;
-						else that.addressList[i].isDefault = false;
-					}
-					that.$util.Tips({
-						title: '设置成功',
-						icon: 'success'
-					}, function() {
-						that.$set(that, 'addressList', that.addressList);
-					});
-				}).catch(err => {
-					return that.$util.Tips({
-						title: err
-					});
-				});
-			},
-			/**
-			 * 编辑地址
-			 */
-			editAddress: function(id) {
-				let cartId = this.cartId,
-					pinkId = this.pinkId,
-					couponId = this.couponId;
-				this.cartId = '';
-				this.pinkId = '';
-				this.couponId = '';
-				uni.navigateTo({
-					url: '/pages/users/user_address/index?id=' + id + '&cartId=' + cartId + '&pinkId=' +
-						pinkId + '&couponId=' +
-						couponId + '&secKill' + this.secKill + '&combination=' + this.combination +
-						'&bargain=' + this.bargain
-				})
-			},
-			/**
-			 * 删除地址
-			 */
-			delAddress: function(index) {
-				let that = this,
-					address = this.addressList[index];
-				if (address == undefined) return that.$util.Tips({
-					title: '您删除的地址不存在!'
-				});
-				uni.showModal({
-					content: '确定删除该地址',
-					cancelText: "取消", // 取消按钮的文字  
-					confirmText: "确定", // 确认按钮文字  
-					showCancel: true, // 是否显示取消按钮，默认为 true
-					confirmColor: '#f55850',
-					success: (res) => {
-						if (res.confirm) {
-							delAddress(address.id).then(res => {
-								that.addressList.splice(index, 1);
-								that.$set(that, 'addressList', that.addressList);
-								that.$util.Tips({
-									title: '删除成功',
-									icon: 'success'
-								});
-							}).catch(err => {
-								return that.$util.Tips({
-									title: err
-								});
+					},
+					fail: function(res) {
+						if (res.errMsg == 'chooseAddress:cancel') return proxy.$util
+							.Tips({
+								title: '取消选择'
 							});
-						} else {
-
-						}
 					},
 				})
 			},
-			/**
-			 * 新增地址
-			 */
-			addAddress: function() {
-				let cartId = this.cartId,
-					pinkId = this.pinkId,
-					couponId = this.couponId;
-				this.cartId = '';
-				this.pinkId = '';
-				this.couponId = '';
-				uni.navigateTo({
-					url: '/pages/users/user_address/index?preOrderNo=' + this.preOrderNo
+			fail: function(res) {
+				uni.showModal({
+					title: '您已拒绝导入微信地址权限',
+					content: '是否进入权限管理，调整授权？',
+					success(res) {
+						if (res.confirm) {
+							uni.openSetting({
+								success: function(res) {
+								}
+							});
+						} else if (res.cancel) {
+							return proxy.$util.Tips({
+								title: '已取消！'
+							});
+						}
+					}
 				})
-			},
-			goOrder: function(item) {
-				if (this.preOrderNo) {
-					uni.redirectTo({
-						url: '/pages/order/order_confirm/index?is_address=1&preOrderNo=' + this.preOrderNo +
-							'&addressId=' + item.id
-					})
+			}
+		})
+	}
+	/*
+	 * 导入微信地址（公众号）
+	 */
+	// #ifdef H5
+	function getAddress() {
+		proxy.$wechat.openAddress().then(userInfo => {
+			// open();
+			editAddressApi({
+					realName: userInfo.userName,
+					phone: userInfo.telNumber,
+					address: {
+						province: userInfo.provinceName,
+						city: userInfo.cityName,
+						district: userInfo.countryName,
+						cityId: 0
+					},
+					detail: userInfo.detailInfo,
+					postCode: userInfo.postalCode,
+					isDefault: false,
+				})
+				.then(() => {
+					setTimeout(() => {
+						getAddressList(true);
+						proxy.$util.Tips({
+							title: "添加成功",
+							icon: 'success'
+						});
+					}, 0)
+				})
+				.catch(err => {
+					// close();
+					return proxy.$util.Tips({
+						title: err || "添加失败"
+					});
+				});
+		}).catch(err => {
+			proxy.$util.Tips({
+				title: err.errMsg || "添加失败"
+			});
+		});
+	}
+	// #endif
+	/**
+	 * 获取地址列表
+	 * 
+	 */
+	function getAddressList(isPage) {
+		if (isPage) {
+			loadend.value = false;
+			page.value = 1;
+			addressList.value = [];
+		};
+		if (loading.value) return;
+		if (loadend.value) return;
+		loading.value = true;
+		loadTitle.value = '';
+		getAddressListApi({
+			page: page.value,
+			limit: limit.value
+		}).then(res => {
+			let list = res.data.list;
+			let loadendVal = list.length < limit.value;
+			addressList.value = proxy.$util.SplitArray(list, addressList.value);
+			loadend.value = loadendVal;
+			loadTitle.value = loadendVal ? '我也是有底线的~' : '加载更多';
+			page.value = page.value + 1;
+			loading.value = false;
+		}).catch(err => {
+			loading.value = false;
+			loadTitle.value = '加载更多';
+		});
+	}
+	/**
+	 * 设置默认地址
+	 */
+	function radioChange(e) {
+		let index = parseInt(e.detail.value);
+		let address = addressList.value[index];
+		if (address == undefined) return proxy.$util.Tips({
+			title: '您设置的默认地址不存在!'
+		});
+		setAddressDefault(address.id).then(res => {
+			for (let i = 0, len = addressList.value.length; i < len; i++) {
+				if (i == index) addressList.value[i].isDefault = true;
+				else addressList.value[i].isDefault = false;
+			}
+			proxy.$util.Tips({
+				title: '设置成功',
+				icon: 'success'
+			}, function() {
+			});
+		}).catch(err => {
+			return proxy.$util.Tips({
+				title: err
+			});
+		});
+	}
+	/**
+	 * 编辑地址
+	 */
+	function editAddress(id) {
+		let cartIdVal = cartId.value,
+			pinkIdVal = pinkId.value,
+			couponIdVal = couponId.value;
+		cartId.value = '';
+		pinkId.value = '';
+		couponId.value = '';
+		uni.navigateTo({
+			url: '/pages/users/user_address/index?id=' + id + '&cartId=' + cartIdVal + '&pinkId=' +
+				pinkIdVal + '&couponId=' +
+				couponIdVal + '&secKill' + secKill.value + '&combination=' + combination.value +
+				'&bargain=' + bargain.value
+		})
+	}
+	/**
+	 * 删除地址
+	 */
+	function delAddress(index) {
+		let address = addressList.value[index];
+		if (address == undefined) return proxy.$util.Tips({
+			title: '您删除的地址不存在!'
+		});
+		uni.showModal({
+			content: '确定删除该地址',
+			cancelText: "取消", // 取消按钮的文字  
+			confirmText: "确定", // 确认按钮文字  
+			showCancel: true, // 是否显示取消按钮，默认为 true
+			confirmColor: '#f55850',
+			success: (res) => {
+				if (res.confirm) {
+					delAddressApi(address.id).then(res => {
+						addressList.value.splice(index, 1);
+						proxy.$util.Tips({
+							title: '删除成功',
+							icon: 'success'
+						});
+					}).catch(err => {
+						return proxy.$util.Tips({
+							title: err
+						});
+					});
+				} else {
+
 				}
 			},
-		},
-		onReachBottom: function() {
-			this.getAddressList();
+		})
+	}
+	/**
+	 * 新增地址
+	 */
+	function addAddress() {
+		let cartIdVal = cartId.value,
+			pinkIdVal = pinkId.value,
+			couponIdVal = couponId.value;
+		cartId.value = '';
+		pinkId.value = '';
+		couponId.value = '';
+		uni.navigateTo({
+			url: '/pages/users/user_address/index?preOrderNo=' + preOrderNo.value
+		})
+	}
+	function goOrder(item) {
+		if (preOrderNo.value) {
+			uni.redirectTo({
+				url: '/pages/order/order_confirm/index?is_address=1&preOrderNo=' + preOrderNo.value +
+					'&addressId=' + item.id
+			})
 		}
 	}
+
+	onReachBottom(() => {
+		getAddressList();
+	});
 </script>
 
 <style lang="scss" scoped>

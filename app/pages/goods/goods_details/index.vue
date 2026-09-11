@@ -62,7 +62,6 @@
 							:attr="attr"
 							:attrTxt="attrTxt"
 							:attrValue="attrValue"
-							:isShowPaidVip="isShowPaidVip"
 							@changeSpec="onChangeSpecFromPageDesign"
 							@showSpecModal="selecAttr"
 							@share="listenerActionSheet"
@@ -73,18 +72,11 @@
 						<block v-else>
 						<view id="past0">
 						<productConSwiper class="skeleton-rect" :imgUrls="sliderImage" :videoline="videoLink"></productConSwiper>
-						<!-- 氛围图card -->
-						<activity-style v-if="productInfo.activityStyle" :activityPrice="activityPrice" :activityVipPrice="activityVipPrice"
-							:productInfo="productInfo"></activity-style>
 						<view class="pad30">
 							<view class='wrapper mb30 borRadius14'>
 								<view class='share acea-row row-between row-bottom share-icon-box'>
-									<view class='x-money skeleton-rect flex align-baseline' v-if="!productInfo.activityStyle">￥
+									<view class='x-money skeleton-rect flex align-baseline'>￥
 										<text class='num font-44'>{{attr.productSelect.price}}</text>
-										<view class="flex  pl-2" v-if="attr.productSelect.vipPrice && attr.productSelect.vipPrice > 0">
-											<image :src="urlDomain+'crmebimage/perset/staticImg/vip_badge.png'" class="vip_icon"></image>
-											<text class='vip_money skeleton-rect'>￥{{attr.productSelect.vipPrice}}</text>
-										</view>
 									</view>
 									<view class='iconfont icon-fenxiang share-icon' @click="listenerActionSheet"></view>
 								</view>
@@ -163,10 +155,10 @@
 							<view class='userEvaluation' id="past1">
 								<view class='title acea-row row-between-wrapper'
 									:style="replyCount==0?'border-bottom-left-radius:14rpx;border-bottom-right-radius:14rpx;':''">
-									<view>用户评价<i>({{replyCount}})</i></view>
-									<navigator class='praise' hover-class='none'
+									<text>用户评价<text>&nbsp;({{replyCount}})</text></text>
+									<navigator :render-link="false" class='praise' hover-class='none'
 										:url='"/pages/goods/goods_comment_list/index?productId="+id'>
-										<i>好评</i>&nbsp;<text class='font_color px-12'>{{replyChance || 0}}%</text>
+										<text>好评</text>&nbsp;<text class='font_color px-12'>{{replyChance || 0}}%</text>
 										<text class='iconfont icon-jiantou'></text>
 									</navigator>
 								</view>
@@ -177,9 +169,9 @@
 							<!-- 优品推荐 -->
 							<view class="superior borRadius14" if='good_list.length' id="past2">
 								<view class="title acea-row row-center-wrapper">
-									<image :src="urlDomain+'crmebimage/perset/staticImg/xzuo.png'"></image>
+									<image :src="urlDomain+'/crmebimage/perset/staticImg/xzuo.png'"></image>
 									<view class="titleTxt">优品推荐</view>
-									<image :src="urlDomain+'crmebimage/perset/staticImg/xyou.png'"></image>
+									<image :src="urlDomain+'/crmebimage/perset/staticImg/xyou.png'"></image>
 								</view>
 								<view class="slider-banner banner">
 									<swiper indicator-dots="true" :autoplay="autoplay" :circular="circular" :interval="interval"
@@ -210,12 +202,12 @@
 					</view>
 					<view class='product-intro' id="past3">
 						<view class='title'>
-							<image :src="urlDomain+'crmebimage/perset/staticImg/xzuo.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/xzuo.png'"></image>
 							<span class="sp">产品详情</span>
-							<image :src="urlDomain+'crmebimage/perset/staticImg/xyou.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/xyou.png'"></image>
 						</view>
 						<view class='conter'>
-							<jyf-parser :html="description" ref="article" :tag-style="tagStyle"></jyf-parser>
+							<mp-html :content="description" ref="article" :tag-style="tagStyle"></mp-html>
 						</view>
 					</view>
 						<view style='height:120rpx;'></view>
@@ -247,7 +239,7 @@
 				</button>
 				<template v-else>
 					<button open-type="contact" hover-class='none' class='item skeleton-rect'
-						v-if="chatConfig.wx_chant_independent=='open'">
+						v-if="chatConfig.wx_chat_independent=='open'">
 						<view class='iconfont icon-kefu'></view>
 						<view>客服</view>
 					</button>
@@ -269,7 +261,7 @@
 						<view class='iconfont icon-shoucang' v-else></view>
 						<view>收藏</view>
 					</view>
-					<navigator open-type='switchTab' class="animated item skeleton-rect" :class="animated==true?'bounceIn':''"
+					<navigator :render-link="false" open-type='switchTab' class="animated item skeleton-rect" :class="animated==true?'bounceIn':''"
 						url='/pages/order_addcart/order_addcart' hover-class="none">
 						<view class='iconfont icon-gouwuche1'>
 							<text v-if="Math.floor(CartCount)>0" class='num bg_color'>{{CartCount}}</text>
@@ -318,7 +310,7 @@
 					<!-- #ifndef MP -->
 					<button class="item" hover-class="none" v-if="weixinStatus === true" @click="H5ShareBox = true">
 						<view class="pictrue">
-							<image :src="urlDomain+'crmebimage/perset/staticImg/weixin.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/weixin.png'"></image>
 						</view>
 						<view class="">分享给好友</view>
 					</button>
@@ -326,7 +318,7 @@
 					<!-- #ifdef MP -->
 					<button class="item" open-type="share" hover-class="none">
 						<view class="pictrue">
-							<image :src="urlDomain+'crmebimage/perset/staticImg/weixin.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/weixin.png'"></image>
 						</view>
 						<view class="">分享给好友</view>
 					</button>
@@ -344,7 +336,7 @@
 					<!-- #ifdef H5 || MP -->
 					<view class="item" @click="getpreviewImage">
 						<view class="pictrue">
-							<image :src="urlDomain+'crmebimage/perset/staticImg/changan.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/changan.png'"></image>
 						</view>
 						<view class="">预览发图</view>
 					</view>
@@ -352,7 +344,7 @@
 					<!-- #ifdef MP  -->
 					<button class="item" hover-class="none" @click="savePosterPath">
 						<view class="pictrue">
-							<image :src="urlDomain+'crmebimage/perset/staticImg/haibao.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/haibao.png'"></image>
 						</view>
 						<view class="">保存海报</view>
 					</button>
@@ -374,7 +366,7 @@
 			</view>
 			<!-- 发送给朋友图片 -->
 			<view class="share-box" v-if="H5ShareBox">
-				<image :src="urlDomain+'crmebimage/perset/staticImg/share-info.png'" @click="H5ShareBox = false"></image>
+				<image :src="urlDomain+'/crmebimage/perset/staticImg/share-info.png'" @click="H5ShareBox = false"></image>
 			</view>
 			<!-- 保障服务弹窗 -->
 			<view class="guarantee-pop-box">
@@ -407,17 +399,19 @@
 	</view>
 </template>
 
-<script>
-	import activityStyle from "./components/activityStyle.vue";
+<script setup>
+	import { ref, reactive, computed, watch, nextTick, getCurrentInstance } from 'vue';
+	import { onLoad, onShow, onReachBottom, onReady, onPageScroll, onShareAppMessage } from '@dcloudio/uni-app';
 	import tuiSkeleton from "@/components/base/tui-skeleton.vue";
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
-	import store from '@/store';
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
 	import {
 		HTTP_H5_URL
 	} from '@/config/app.js';
 	import {
 		spread
-	} from "@/api/user";
+	} from "@/api/user.js";
 	import {
 		getProductDetail,
 		collectAdd,
@@ -430,7 +424,6 @@
 	} from '@/api/store.js';
 		import {
 			getCoupons,
-			tokenIsExistApi,
 			getThemeInfo
 		} from '@/api/api.js';
 	import {
@@ -440,21 +433,18 @@
 		toLogin
 	} from '@/libs/login.js';
 	import {
-		mapGetters
-	} from "vuex";
-	import {
 		imageBase64
-	} from "@/api/public";
-	import productConSwiper from '@/components/productConSwiper';
-	import couponListWindow from '@/components/couponListWindow';
-	import productWindow from '@/components/productWindow';
-	import userEvaluation from '@/components/userEvaluation';
-	import shareRedPackets from '@/components/shareRedPackets';
-	import cusPreviewImg from '@/components/cus-previewImg/cus-previewImg.vue'
+	} from "@/api/public.js";
+	import productConSwiper from '@/components/productConSwiper/index.vue';
+	import couponListWindow from '@/components/couponListWindow/index.vue';
+	import productWindow from '@/components/productWindow/index.vue';
+	import userEvaluation from '@/components/userEvaluation/index.vue';
+	import shareRedPackets from '@/components/shareRedPackets/index.vue';
+	import CusPreviewImg from '@/components/cus-previewImg/cus-previewImg.vue'
 	import {
 		silenceBindingSpread
 	} from "@/utils";
-	import parser from "@/components/jyf-parser/jyf-parser";
+	import mpHtml from '@/uni_modules/mp-html/components/mp-html/mp-html.vue';
 	import {
 		computeUser
 	} from "@/api/user.js";
@@ -463,7 +453,7 @@
 		base64src
 	} from '@/utils/base64src.js'
 	import {
-		getQrcode
+		getQrcode as fetchQrcode
 	} from '@/api/api.js';
 	// #endif
 	let app = getApp();
@@ -473,1480 +463,1440 @@
 	import {
 		Debounce
 	} from '@/utils/validate.js'
-	import colors from '@/mixins/color';
-	import navBar from '@/components/navBar';
+	import { useColor } from '@/composables/useColor.js';
+	import navBar from '@/components/navBar.vue';
 		import PageDesign from '@/subpackage/diyComponents/pageDesign.vue';
 		import productBottom from '@/subpackage/diyComponents/productBottom.vue';
-		export default {
-			mixins: [colors],
-			components: {
-			productConSwiper,
-			couponListWindow,
-			productWindow,
-			userEvaluation,
-			shareRedPackets,
-			cusPreviewImg,
-			"jyf-parser": parser,
-				activityStyle,
-				navBar,
-				tuiSkeleton,
-				PageDesign,
-				productBottom
-			},
-		data() {
-			let that = this;
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				showSkeleton: true, //骨架屏显示隐藏
-				isNodes: 0, //控制什么时候开始抓取元素节点,只要数值改变就重新抓取
-				//属性是否打开
-				coupon: {
-					coupon: false,
-					type: 0,
-					list: [],
-					count: []
-				},
-				attrTxt: '请选择', //属性页面提示
-				attrValue: '', //已选属性
-				animated: false, //购物车动画
-				id: 0, //商品id
-				replyCount: 0, //总评论数量
-				reply: [], //评论列表
-				productInfo: {}, //商品详情
-				productValue: [], //系统属性
-				guaranteeList: [], // 保障服务列表
-				couponList: [], //优惠券
-					cart_num: 1, //购买数量
-					diyData: {},
-					noGoods: false,
-					isShowPaidVip: false,
-					isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
-				isOpen: false, //是否打开属性组件
-				actionSheetHidden: true,
-				storeImage: '', //海报产品图
-				PromotionCode: '', //二维码图片
-				posterbackgd: `${this.$Cache.get("imgHost")}crmebimage/perset/staticImg/posterbackgd.png`,
-				sharePacket: {
-					isState: true, //默认不显示
-					touchstart: false
-				}, //分销商详细
-				circular: false,
-				autoplay: false,
-				interval: 3000,
-				duration: 500,
-				clientHeight: "",
-				systemStore: {}, //门店信息
-				good_list: [],
-				replyChance: 0,
-				CartCount: 0,
-				isDown: true,
-				posters: false,
-				weixinStatus: false,
-				attr: {
-					cartAttr: false,
-					productAttr: [],
-					productSelect: {}
-				},
-				description: '',
-				navActive: 0,
-				H5ShareBox: false, //公众号分享图片
-				activityH5: [],
-				retunTop: true, //顶部返回
-				navH: "",
-				navList: [],
-				opacity: 0,
-				scrollY: 0,
-				topArr: [],
-				toView: '',
-				height: 0,
-				heightArr: [],
-				lock: false,
-				scrollTop: 0,
-				tagStyle: {
-					img: 'width:100%;display:block;',
-					table: 'width:100%',
-					video: 'width:100%'
-				},
-				sliderImage: [],
-				videoLink: '',
-				qrcodeSize: 600,
-				canvasStatus: false, //是否显示海报
-				imagePath: '', //海报路径
-				imgTop: '',
-				errT: '',
-				homeTop: 20,
-				navbarRight: 0,
-				userCollect: false,
-				returnShow: true, //判断顶部返回是否出现
-				type: "", //视频号普通商品类型
-				theme: app.globalData.theme,
-				indicatorBg: '',
-				shareStatus: true,
-				skuArr: [],
-				currentPage: false,
-				selectSku: {},
-				selectNavList: [{
-						name: '首页',
-						icon: 'icon-shouye8',
-						url: '/pages/index/index',
-						after: 'dialog_after'
-					},
-					{
-						name: '搜索',
-						icon: 'icon-sousuo6',
-						url: '/pages/goods/goods_search/index',
-						after: 'dialog_after'
-					},
-					{
-						name: '购物车',
-						icon: 'icon-gouwuche7',
-						url: '/pages/order_addcart/order_addcart',
-						after: 'dialog_after'
-					},
-					{
-						name: '我的收藏',
-						icon: 'icon-shoucang3',
-						url: '/pages/users/user_goods_collection/index',
-						after: 'dialog_after'
-					},
-					{
-						name: '个人中心',
-						icon: 'icon-gerenzhongxin1',
-						url: '/pages/user/index'
-					},
-				],
-				chatConfig: {
-					consumer_hotline: '',
-					telephone_service_switch: 'close',
-					wx_chant_independent: 'open'
-				}, //客服配置
-				defaultCoupon: [],
-				// couponDeaultType: [{
-				// 	useType: 1
-				// }],
-				couponDeaultType: [],
-				//优惠券分页数据
-				where: {
-					page: 1,
-					limit: 999,
-					productId: 0,
-					type: 0
-				},
-				couponType: 0, //优惠券类型 类型，1-通用，2-商品，3-品类
-				skuImage: [], //规格小图
-				activityPrice: 0, // 氛围图价格
-				activityVipPrice: 0 // 氛围图vip价格
-			};
+	import util from '@/utils/util.js';
+	import Cache from '@/utils/cache.js';
+	import * as Order from '@/libs/order.js';
+	// #ifdef H5
+	import Auth from '@/libs/wechat.js';
+	// #endif
+
+	const { proxy } = getCurrentInstance();
+	const { colorStyle } = useColor();
+	const store = useAppStore();
+	const { isLogin, uid, chatUrl, productType } = storeToRefs(store);
+
+	// Template refs
+	const cusPreviewImg = ref(null);
+	const guaranteePopup = ref(null);
+
+	// --- Data ---
+	const urlDomain = ref(Cache.get("imgHost"));
+	const showSkeleton = ref(true); //骨架屏显示隐藏
+	const isNodes = ref(0); //控制什么时候开始抓取元素节点,只要数值改变就重新抓取
+	//属性是否打开
+	const coupon = reactive({
+		coupon: false,
+		type: 0,
+		list: [],
+		count: []
+	});
+	const attrTxt = ref('请选择'); //属性页面提示
+	const attrValue = ref(''); //已选属性
+	const animated = ref(false); //购物车动画
+	const id = ref(0); //商品id
+	const replyCount = ref(0); //总评论数量
+	const reply = ref([]); //评论列表
+	const productInfo = ref({}); //商品详情
+	const productValue = ref([]); //系统属性
+	const guaranteeList = ref([]); // 保障服务列表
+	const couponList = ref([]); //优惠券
+		const cart_num = ref(1); //购买数量
+		const diyData = ref({});
+		const noGoods = ref(false);
+		const isAuto = ref(false); //没有授权的不会自动授权
+	const isShowAuth = ref(false); //是否隐藏授权
+	const isOpen = ref(false); //是否打开属性组件
+	const actionSheetHidden = ref(true);
+	const storeImage = ref(''); //海报产品图
+	const PromotionCode = ref(''); //二维码图片
+	const posterbackgd = ref(`${Cache.get("imgHost")}/crmebimage/perset/staticImg/posterbackgd.png`);
+	const sharePacket = reactive({
+		isState: true, //默认不显示
+		touchstart: false
+	}); //分销商详细
+	const circular = ref(false);
+	const autoplay = ref(false);
+	const interval = ref(3000);
+	const duration = ref(500);
+	const clientHeight = ref("");
+	const systemStore = ref({}); //门店信息
+	const good_list = ref([]);
+	const replyChance = ref(0);
+	const CartCount = ref(0);
+	const isDown = ref(true);
+	const posters = ref(false);
+	const weixinStatus = ref(false);
+	const attr = reactive({
+		cartAttr: false,
+		productAttr: [],
+		productSelect: {}
+	});
+	const description = ref('');
+	const navActive = ref(0);
+	const H5ShareBox = ref(false); //公众号分享图片
+	const activityH5 = ref([]);
+	const retunTop = ref(true); //顶部返回
+	const navH = ref("");
+	const navList = ref([]);
+	const opacity = ref(0);
+	const scrollY = ref(0);
+	const topArr = ref([]);
+	const toView = ref('');
+	const height = ref(0);
+	const heightArr = ref([]);
+	const lock = ref(false);
+	const scrollTop = ref(0);
+	const tagStyle = ref({
+		img: 'width:100%;display:block;',
+		table: 'width:100%',
+		video: 'width:100%'
+	});
+	const sliderImage = ref([]);
+	const videoLink = ref('');
+	const qrcodeSize = ref(600);
+	const canvasStatus = ref(false); //是否显示海报
+	const imagePath = ref(''); //海报路径
+	const imgTop = ref('');
+	const errT = ref('');
+	const homeTop = ref(20);
+	const navbarRight = ref(0);
+	const userCollect = ref(false);
+	const returnShow = ref(true); //判断顶部返回是否出现
+	const type = ref(""); //视频号普通商品类型
+	const theme = ref(app.globalData.theme);
+	const indicatorBg = ref('');
+	const shareStatus = ref(true);
+	const skuArr = ref([]);
+	const currentPage = ref(false);
+	const selectSku = ref({});
+	const selectNavList = ref([{
+			name: '首页',
+			icon: 'icon-shouye8',
+			url: '/pages/index/index',
+			after: 'dialog_after'
 		},
-			computed: {
-				...mapGetters(['isLogin', 'uid', 'chatUrl', 'productType']),
-				diyDataReady() {
-					return this.diyData && Object.keys(this.diyData).length > 0;
-				},
-				diyProtectionList() {
-					return (this.guaranteeList || []).map((item) => ({
-						...item,
-						title: item.title || item.name,
-					}));
-				},
-				diyProductInfo() {
-					const productInfo = this.productInfo || {};
-					const productSelect = this.attr.productSelect || {};
-					const sales = Math.floor(Number(productInfo.sales) || 0) + Math.floor(Number(productInfo.ficti) || 0);
-					const sliderImages = this.sliderImage.length ? this.sliderImage : this.parseSliderImage(productInfo.sliderImage);
-					return {
-						...productInfo,
-						store_name: productInfo.storeName || productInfo.store_name || '',
-						store_info: productInfo.storeInfo || productInfo.store_info || '',
-						slider_image: sliderImages.length ? sliderImages : (productInfo.image ? [productInfo.image] : []),
-						video_link: this.videoLink || productInfo.videoLink || productInfo.video_link || '',
-						description: this.description || productInfo.content || productInfo.description || '',
-						unit_name: productInfo.unitName || productInfo.unit_name || '',
-						ot_price: productSelect.otPrice || productInfo.otPrice || productInfo.ot_price || 0,
-						vip_price: productSelect.vipPrice || productInfo.vipPrice || productInfo.vip_price || 0,
-						real_price: productSelect.price || productInfo.price || 0,
-						price: productSelect.price || productInfo.price || 0,
-						fsales: sales,
-						userCollect: this.userCollect,
-						protection_list: this.diyProtectionList,
-						label_list: productInfo.labelList || productInfo.label_list || [],
-						cart_button: this.type === 'normal',
-						presale: false,
-					};
-				},
-				diyPriceData() {
-					const productInfo = this.productInfo || {};
-					const productSelect = this.attr.productSelect || {};
-					return {
-						price: productSelect.price || productInfo.price || 0,
-						real_price: productSelect.price || productInfo.price || 0,
-						ot_price: productSelect.otPrice || productInfo.otPrice || 0,
-						vip_price: productSelect.vipPrice || productInfo.vipPrice || 0,
-						member_price: productSelect.vipPrice || productInfo.vipPrice || 0,
-						stock: productSelect.stock || productInfo.stock || 0,
-						unit_name: productInfo.unitName || '',
-					};
-				},
-				diySkuList() {
-					return (this.skuArr || []).map((item) => ({
-						...item,
-						unique: item.unique || item.id,
-						ot_price: item.otPrice || item.ot_price || 0,
-						vip_price: item.vipPrice || item.vip_price || 0,
-						real_price: item.price || item.real_price || 0,
-					}));
-				},
-			},
-		watch: {
-			productInfo: {
-				handler: function() {
-					this.$nextTick(() => {});
-				},
-				immediate: true
-			}
+		{
+			name: '搜索',
+			icon: 'icon-sousuo6',
+			url: '/pages/goods/goods_search/index',
+			after: 'dialog_after'
 		},
-		onShow() {
-			//校验token是否有效,true为有效，false为无效
-			this.getTokenIsExist();
+		{
+			name: '购物车',
+			icon: 'icon-gouwuche7',
+			url: '/pages/order_addcart/order_addcart',
+			after: 'dialog_after'
 		},
-		onLoad(options) {
+		{
+			name: '我的收藏',
+			icon: 'icon-shoucang3',
+			url: '/pages/users/user_goods_collection/index',
+			after: 'dialog_after'
+		},
+		{
+			name: '个人中心',
+			icon: 'icon-gerenzhongxin1',
+			url: '/pages/user/index'
+		},
+	]);
+	const chatConfig = reactive({
+		consumer_hotline: '',
+		telephone_service_switch: 'close',
+		wx_chat_independent: 'open'
+	}); //客服配置
+	const defaultCoupon = ref([]);
+	// couponDeaultType: [{
+	// 	useType: 1
+	// }],
+	const couponDeaultType = ref([]);
+	//优惠券分页数据
+	const where = reactive({
+		page: 1,
+		limit: 999,
+		productId: 0,
+		type: 0
+	});
+	const couponType = ref(0); //优惠券类型 类型，1-通用，2-商品，3-品类
+	const skuImage = ref([]); //规格小图
+	const loadend = ref(false);
+	const loading = ref(false);
+	const loadTitle = ref('');
 
-			//用户从分享卡片进入的场景下获取主题色配置
-			this.$set(this, 'theme', this.$Cache.get('theme'));
+	// --- Computed ---
+	const diyDataReady = computed(() => {
+		return diyData.value && Object.keys(diyData.value).length > 0;
+	});
+	const diyProtectionList = computed(() => {
+		return (guaranteeList.value || []).map((item) => ({
+			...item,
+			title: item.title || item.name,
+		}));
+	});
+	const diyProductInfo = computed(() => {
+		const pInfo = productInfo.value || {};
+		const productSelect = attr.productSelect || {};
+		const sales = Math.floor(Number(pInfo.sales) || 0) + Math.floor(Number(pInfo.ficti) || 0);
+		const sliderImages = sliderImage.value.length ? sliderImage.value : parseSliderImage(pInfo.sliderImage);
+		return {
+			...pInfo,
+			store_name: pInfo.storeName || pInfo.store_name || '',
+			store_info: pInfo.storeInfo || pInfo.store_info || '',
+			slider_image: sliderImages.length ? sliderImages : (pInfo.image ? [pInfo.image] : []),
+			video_link: videoLink.value || pInfo.videoLink || pInfo.video_link || '',
+			description: description.value || pInfo.content || pInfo.description || '',
+			unit_name: pInfo.unitName || pInfo.unit_name || '',
+			ot_price: productSelect.otPrice || pInfo.otPrice || pInfo.ot_price || 0,
+			real_price: productSelect.price || pInfo.price || 0,
+			price: productSelect.price || pInfo.price || 0,
+			fsales: sales,
+			userCollect: userCollect.value,
+			protection_list: diyProtectionList.value,
+			label_list: pInfo.labelList || pInfo.label_list || [],
+			cart_button: type.value === 'normal',
+			presale: false,
+		};
+	});
+	const diyPriceData = computed(() => {
+		const pInfo = productInfo.value || {};
+		const productSelect = attr.productSelect || {};
+		return {
+			price: productSelect.price || pInfo.price || 0,
+			real_price: productSelect.price || pInfo.price || 0,
+			ot_price: productSelect.otPrice || pInfo.otPrice || 0,
+			stock: productSelect.stock || pInfo.stock || 0,
+			unit_name: pInfo.unitName || '',
+		};
+	});
+	const diySkuList = computed(() => {
+		return (skuArr.value || []).map((item) => ({
+			...item,
+			unique: item.unique || item.id,
+			ot_price: item.otPrice || item.ot_price || 0,
+			real_price: item.price || item.real_price || 0,
+		}));
+	});
 
-			//判断顶部返回是否出现
-			var pages = getCurrentPages();
-			this.returnShow = pages.length === 1 ? false : true;
-			if (pages.length <= 1) {
-				this.retunTop = false
-			}
+	// --- Watch ---
+	watch(productInfo, () => {
+		nextTick(() => {});
+	}, { immediate: true });
 
-			//页面中需要计算的一些值
-			let that = this;
-			uni.getSystemInfo({
-				success: function(res) {
-					that.height = res.windowHeight
-					//res.windowHeight:获取整个窗口高度为px，*2为rpx；98为头部占据的高度；
-					// #ifndef APP-PLUS || H5 || MP-ALIPAY
-					//that.navbarRight = res.windowWidth - uni.getMenuButtonBoundingClientRect().left;
-					// #endif
-				},
-			});
+	// --- Methods ---
+	const getDiyData = () => {
+		let previewThemeId = uni.getStorageSync('previewThemeId');
+		let data = {};
+		if (previewThemeId) data.theme_id = previewThemeId;
+		getThemeInfo('detail', data).then((res) => {
+			diyData.value = res.data || {};
+		}).catch(() => {
+			diyData.value = {};
+		});
+	};
 
-			//获取浏览器中的参数，商品id video视频号商品，normal普通商品
-			if (!options.scene && !options.id) {
-				this.showSkeleton = false;
-				this.$util.Tips({
-					title: '缺少参数无法查看商品'
-				}, {
-					url: '/pages/index/index'
+	const parseSliderImage = (value) => {
+		if (!value) return [];
+		if (Array.isArray(value)) return value;
+		try {
+			const list = JSON.parse(value);
+			return Array.isArray(list) ? list : [];
+		} catch (e) {
+			return typeof value === 'string' ? value.split(',').filter(Boolean) : [];
+		}
+	};
+
+	const onChangeSpecFromPageDesign = (item) => {
+		if (item && item.suk) {
+			let values = item.suk.split(',');
+			if (attr.productAttr && attr.productAttr.length === values.length) {
+				values.forEach((value, index) => {
+					attr.productAttr[index].index = value;
 				});
-				return;
 			}
-			if (options.id) this.id = options.id;
-			// 仅仅小程序扫码进入获取商品id，商品类型
-			if (options.scene) {
-				let qrCodeValue = this.$util.getUrlParams(decodeURIComponent(options.scene));
-				let mapeMpQrCodeValue = this.$util.formatMpQrCodeData(qrCodeValue);
-				app.globalData.spread = mapeMpQrCodeValue.spread;
-				this.id = mapeMpQrCodeValue.id;
-				this.type = mapeMpQrCodeValue.type ? mapeMpQrCodeValue.type : 'normal';
-			}
-			if (options.type === 'video') {
-				// #ifdef MP
-				this.navH = 160;
-				// #endif
-				this.type = options.type
-			} else {
-				this.type = 'normal'
-				this.navH = app.globalData.navHeight;
-			}
-			// 商品类型vuex存储
-			this.$store.commit("PRODUCT_TYPE", this.type);
-			// 客服配置
-			this.$set(this, 'chatConfig', this.$Cache.getItem('chatConfig'));
-			// #ifdef H5
-			computeUser();
-			// #endif
+			ChangeAttr(item.suk);
+		} else {
+			selecAttr();
+		}
+	};
 
-			if (options.spread) this.$Cache.set('spread', options.spread);
+	const openModal = (type) => {
+		if (type === 'protection') {
+			handleToGgle(true);
+		}
+	};
 
-			this.getDiyData(); //商品详情主题配置
-			this.getGoodsDetails(); //商品详情
-			this.getCouponType(); //获取默认的 优惠券类型
-			this.getProductReplyList(); //评论列表
-			this.getProductReplyCount(); //评论条数
-			this.getGoods(); //优品推荐
-			//主题色颜色配置
-			this.indicatorBg = setThemeColor();
-		},
-		onReady() {
-			this.isNodes++;
-			this.$nextTick(function() {
-				// #ifdef MP
-				const menuButton = uni.getMenuButtonBoundingClientRect();
-				const query = uni.createSelectorQuery().in(this);
-					query
-						.select('#home')
-						.boundingClientRect(data => {
-							this.homeTop = menuButton.top * 2 + menuButton.height - (data ? data.height : 0);
-						})
-						.exec();
-				// #endif
-				// #ifdef APP-PLUS
-				this.homeTop = 60;
-				// #endif
-			});
-		},
-		/**
-		 * 用户点击右上角分享
-		 */
-		// #ifdef MP
-		onShareAppMessage: function(res) {
-			let that = this;
-			that.$set(that, 'actionSheetHidden', !that.actionSheetHidden);
-			return {
-				title: that.productInfo.storeName || '',
-				imageUrl: that.productInfo.image || '',
-				path: '/pages/goods/goods_details/index?id=' + that.id + '&spread=' + that.uid,
-			}
-		},
-		// #endif
-		onReachBottom() {
-			this.getCouponList(this.couponType);
-		},
-		// 滚动监听
-		onPageScroll(e) {
-			// 传入scrollTop值并触发所有easy-loadimage组件下的滚动监听事件
-			uni.$emit('scroll');
-		},
-		methods: {
-			getDiyData() {
-				let previewThemeId = uni.getStorageSync('previewThemeId');
-				let data = {};
-				if (previewThemeId) data.theme_id = previewThemeId;
-				getThemeInfo('detail', data).then((res) => {
-					this.$set(this, 'diyData', res.data || {});
-				}).catch(() => {
-					this.$set(this, 'diyData', {});
-				});
-			},
-			parseSliderImage(value) {
-				if (!value) return [];
-				if (Array.isArray(value)) return value;
-				try {
-					const list = JSON.parse(value);
-					return Array.isArray(list) ? list : [];
-				} catch (e) {
-					return typeof value === 'string' ? value.split(',').filter(Boolean) : [];
-				}
-			},
-			onChangeSpecFromPageDesign(item) {
-				if (item && item.suk) {
-					let values = item.suk.split(',');
-					if (this.attr.productAttr && this.attr.productAttr.length === values.length) {
-						values.forEach((value, index) => {
-							this.$set(this.attr.productAttr[index], 'index', value);
-						});
-					}
-					this.ChangeAttr(item.suk);
-				} else {
-					this.selecAttr();
-				}
-			},
-			openModal(type) {
-				if (type === 'protection') {
-					this.handleToGgle(true);
-				}
-			},
-			goCart() {
-				uni.switchTab({
-					url: '/pages/order_addcart/order_addcart'
-				});
-			},
+	const goCart = () => {
+		uni.switchTab({
+			url: '/pages/order_addcart/order_addcart'
+		});
+	};
       //滚动
-      touchStart() {
-        this.currentPage = false;
-      },
-			//独立客服跳转
-			wxChatService() {
-				let chatUrlArr = this.chatUrl.split('?')
-				uni.navigateTo({
-					url: `/pages/users/web_page/index?webUel=${chatUrlArr[0]}&title=客服&${chatUrlArr[1]}`
+      const touchStart = () => {
+        currentPage.value = false;
+      };
+	//独立客服跳转
+	const wxChatService = () => {
+		let chatUrlArr = chatUrl.value.split('?')
+		uni.navigateTo({
+			url: `/pages/users/web_page/index?webUel=${chatUrlArr[0]}&title=客服&${chatUrlArr[1]}`
+		})
+	};
+	const loadUserRelatedData = () => {
+		if (isLogin.value) {
+			getCouponList(0); //优惠券列表 类型，1-通用，2-商品，3-品类
+			getCartCount(true); //购物车数量
+			//绑定关系
+			silenceBindingSpread();
+		}
+	};
+	// #ifdef APP-PLUS
+	const appShare = (scene) => {
+		let routes = getCurrentPages(); // 获取当前打开过的页面路由数组
+		let curRoute = routes[routes.length - 1].$page.fullPath // 获取当前页面路由，也就是最后一个打开的页面路由
+		uni.share({
+			provider: "weixin",
+			scene: scene,
+			type: 0,
+			href: `${HTTP_H5_URL}${curRoute}&spread=${uid.value}`,
+			title: productInfo.value.storeName,
+			summary: app.globalData.companyName,
+			imageUrl: productInfo.value.image,
+			success: function(res) {
+				posters.value = false;
+			},
+			fail: function(err) {
+				uni.showToast({
+					title: '分享失败',
+					icon: 'none',
+					duration: 2000
 				})
-			},
-			//校验token是否有效,true为有效，false为无效
-			getTokenIsExist() {
-				this.$LoginAuth.getTokenIsExist().then(data => {
-					if (data) {
-						this.getCouponList(0); //优惠券列表 类型，1-通用，2-商品，3-品类
-						this.getCartCount(true); //购物车数量
-						//绑定关系
-						silenceBindingSpread();
-					}
-				});
-			},
+				posters.value = false;
+			}
+		});
+	};
+	// #endif
+	const onClickService = () => {
+		if (chatConfig.telephone_service_switch === 'open') {
+			uni.makePhoneCall({
+				phoneNumber: chatConfig.consumer_hotline //仅为示例
+			});
+		} else {
 			// #ifdef APP-PLUS
-			appShare(scene) {
-				let that = this
-				let routes = getCurrentPages(); // 获取当前打开过的页面路由数组
-				let curRoute = routes[routes.length - 1].$page.fullPath // 获取当前页面路由，也就是最后一个打开的页面路由
-				uni.share({
-					provider: "weixin",
-					scene: scene,
-					type: 0,
-					href: `${HTTP_H5_URL}${curRoute}&spread=${that.uid}`,
-					title: that.productInfo.storeName,
-					summary: app.globalData.companyName,
-					imageUrl: that.productInfo.image,
-					success: function(res) {
-						that.posters = false;
-					},
-					fail: function(err) {
-						uni.showToast({
-							title: '分享失败',
-							icon: 'none',
-							duration: 2000
-						})
-						that.posters = false;
-					}
-				});
-			},
+			uni.navigateTo({
+				url: '/pages/users/web_page/index?webUel=' + chatUrl.value + '&title=客服'
+			})
 			// #endif
-			onClickService() {
-				if (this.chatConfig.telephone_service_switch === 'open') {
-					uni.makePhoneCall({
-						phoneNumber: this.chatConfig.consumer_hotline //仅为示例
-					});
-				} else {
-					// #ifdef APP-PLUS
-					uni.navigateTo({
-						url: '/pages/users/web_page/index?webUel=' + this.chatUrl + '&title=客服'
-					})
-					// #endif
+			// #ifndef APP-PLUS
+			location.href = chatUrl.value;
+			// #endif
+		}
+	};
+	const goActivity = (e) => {
+		let item = e;
+		if (item.type === "1") {
+			uni.navigateTo({
+				url: `/pages/activity/goods_seckill_details/index?id=${item.id}`
+			});
+		} else if (item.type === "2") {
+			uni.navigateTo({
+				url: `/pages/activity/goods_bargain_details/index?id=${item.id}&startBargainUid=${uid.value}`
+			});
+		} else {
+			uni.navigateTo({
+				url: `/pages/activity/goods_combination_details/index?id=${item.id}`
+			});
+		}
+	};
+	/**
+	 * 购物车手动填写
+	 *
+	 */
+	const iptCartNum = (e) => {
+		attr.productSelect.cart_num = e ? e : 1;
+	};
+	// 后退
+	const returns = () => {
+		uni.navigateBack()
+	};
+	const showNav = () => {
+		currentPage.value = !currentPage.value;
+	};
+	const tap = (index) => {
+		var id = "past" + index;
+		var index = index;
+		toView.value = id;
+		navActive.value = index;
+		lock.value = true;
+		scrollTop.value = index > 0 ? topArr.value[index] - (app.globalData.navHeight / 2) : topArr.value[index];
+	};
+	const scroll = (e) => {
+		var scrollYVal = e.detail.scrollTop;
+		var opacityVal = scrollYVal / 500;
+		opacityVal = opacityVal > 1 ? 1 : opacityVal;
+		opacity.value = opacityVal;
+		scrollY.value = scrollYVal;
+		if (lock.value) {
+			lock.value = false;
+			return;
+		}
+		for (var i = 0; i < topArr.value.length; i++) {
+			if (scrollYVal < topArr.value[i] - (app.globalData.navHeight / 2) + heightArr.value[i]) {
+				navActive.value = i;
+				break
+			}
+		}
+		sharePacket.touchstart = true; //滑动屏幕时让分享气泡缩回
+	};
+	/*
+	 *去商品详情页
+	 */
+	const goDetail = (item) => {
+		if (!item.activityH5) {
+			uni.redirectTo({
+				url: '/pages/goods/goods_details/index?id=' + item.id
+			})
+			return
+		}
+		if (item.activityH5.length == 0) {
+			uni.redirectTo({
+				url: '/pages/goods/goods_details/index?id=' + item.id
+			})
+			return
+		}
+		// 砍价
+		if (item.activityH5 && item.activityH5.type == 2) {
+			uni.redirectTo({
+				url: `/pages/activity/goods_bargain_details/index?id=${item.activityH5.id}&startBargainUid=${uid.value}`
+			})
+			return
+		}
+		// 拼团
+		if (item.activityH5 && item.activityH5.type == 3) {
+			uni.redirectTo({
+				url: `/pages/activity/goods_combination_details/index?id=${item.activityH5.id}`
+			})
+			return
+		}
+		// 秒杀
+		if (item.activityH5 && item.activityH5.type == 1) {
+			uni.redirectTo({
+				url: `/pages/activity/goods_seckill_details/index?id=${item.activityH5.id}`
+			})
+			return
+		}
+	};
+	// 关闭优惠券弹窗，重置优惠券列表
+	const ChangCouponsClone = () => {
+		coupon.coupon = false;
+		initCouponList();
+		coupon.type = 0;
+		couponType.value = 0; //优惠券类型
+		getCouponList(0);
+	};
+	/**
+	 * 购物车数量加和数量减
+	 *
+	 */
+	const ChangeCartNum = (changeValue) => {
+		//changeValue:是否 加|减
+		//获取当前变动属性
+		let productSelect = productValue.value[attrValue.value];
+		//如果没有属性,赋值给商品默认库存
+		if (productSelect === undefined && !attr.productAttr.length)
+			productSelect = attr.productSelect;
+		//无属性值即库存为0；不存在加减；
+		if (productSelect === undefined) return;
+		let stock = productSelect.stock || 0;
+		let num = attr.productSelect;
+		if (changeValue) {
+			num.cart_num++;
+			if (num.cart_num > stock) {
+				attr.productSelect.cart_num = stock;
+				cart_num.value = stock;
+			}
+		} else {
+			num.cart_num--;
+			if (num.cart_num < 1) {
+				attr.productSelect.cart_num = 1;
+				cart_num.value = 1;
+			}
+		}
+	};
+	const attrVal = (val) => {
+		attr.productAttr[val.indexw].index = attr.productAttr[val.indexw].attrValues[val.indexn];
+	};
+	/**
+	 * 属性变动赋值
+	 *
+	 */
+	const ChangeAttr = (res) => {
+		let productSelect = productValue.value[res];
+		selectSku.value = productSelect;
+		if (productSelect) {
+			attr.productSelect.image = productSelect.image;
+			attr.productSelect.price = productSelect.price;
+			attr.productSelect.stock = productSelect.stock;
+			attr.productSelect.unique = productSelect.id;
+			attr.productSelect.cart_num = 1;
+			attr.productSelect.otPrice = productSelect.otPrice;
+			attr.productSelect.isShow = productSelect.isShow;
+			// 后台传入的规格不展示时视为库存为0
+			if (!attr.productSelect.isShow) {
+				attr.productSelect.stock = 0;
+				util.Tips({
+					title: "请重新选择其它规格"
+				});
+			}
+			attrValue.value = res;
+			attrTxt.value = "已选择";
+		} else {
+			attr.productSelect.image = productInfo.value.image;
+			attr.productSelect.price = productInfo.value.price;
+			attr.productSelect.stock = 0;
+			attr.productSelect.unique = productInfo.value.id;
+			attr.productSelect.cart_num = 1;
+			attr.productSelect.otPrice = productInfo.value.otPrice;
+			attr.productSelect.isShow = false;
+			attrValue.value = "";
+			attrTxt.value = "请选择";
+		}
+	};
+	/**
+	 * 领取完毕移除当前页面领取过的优惠券展示
+	 */
+	const ChangCoupons = (e) => {
+		let couponItem = e;
+		let newCouponList = util.ArrayRemove(couponList.value, 'id', couponItem.id);
+		couponList.value = newCouponList;
+		getCouponList();
+	};
+	const setClientHeight = () => {
+		if (!good_list.value.length) return;
+		let view = uni.createSelectorQuery().select("#list0");
+			view.fields({
+				size: true,
+			}, data => {
+				clientHeight.value = data ? data.height + 20 : 0;
+			}).exec();
+		};
+	/**
+	 * 优品推荐
+	 *
+	 */
+	const getGoods = () => {
+		getProductGood().then(res => {
+			let goodList = res.data.list || [];
+			let count = Math.ceil(goodList.length / 6);
+			let goodArray = new Array();
+			for (let i = 0; i < count; i++) {
+				let list = goodList.slice(i * 6, i * 6 + 6);
+				if (list.length) goodArray.push({
+					list: list
+				});
+			}
+			good_list.value = goodArray;
+			let newNavList = ['商品', '评价', '详情'];
+			if (goodArray.length) {
+				newNavList.splice(2, 0, '推荐')
+			}
+			navList.value = newNavList;
+			nextTick(() => {
+				if (goodList.length) {
 					// #ifndef APP-PLUS
-					location.href = this.chatUrl;
+					setClientHeight();
 					// #endif
-				}
-			},
-			goActivity: function(e) {
-				let item = e;
-				if (item.type === "1") {
-					uni.navigateTo({
-						url: `/pages/activity/goods_seckill_details/index?id=${item.id}`
-					});
-				} else if (item.type === "2") {
-					uni.navigateTo({
-						url: `/pages/activity/goods_bargain_details/index?id=${item.id}&startBargainUid=${this.uid}`
-					});
-				} else {
-					uni.navigateTo({
-						url: `/pages/activity/goods_combination_details/index?id=${item.id}`
-					});
-				}
-			},
-			/**
-			 * 购物车手动填写
-			 * 
-			 */
-			iptCartNum: function(e) {
-				this.$set(this.attr.productSelect, 'cart_num', e ? e : 1);
-			},
-			// 后退
-			returns: function() {
-				uni.navigateBack()
-			},
-			showNav() {
-				this.currentPage = !this.currentPage;
-			},
-			tap: function(index) {
-				var id = "past" + index;
-				var index = index;
-				var that = this;
-				this.$set(this, 'toView', id);
-				this.$set(this, 'navActive', index);
-				this.$set(this, 'lock', true);
-				this.$set(this, 'scrollTop', index > 0 ? that.topArr[index] - (app.globalData.navHeight / 2) : that
-					.topArr[index]);
-			},
-			scroll: function(e) {
-				var that = this,
-					scrollY = e.detail.scrollTop;
-				var opacity = scrollY / 500;
-				opacity = opacity > 1 ? 1 : opacity;
-				that.$set(that, 'opacity', opacity);
-				that.$set(that, 'scrollY', scrollY);
-				if (that.lock) {
-					that.$set(that, 'lock', false)
-					return;
-				}
-				for (var i = 0; i < that.topArr.length; i++) {
-					if (scrollY < that.topArr[i] - (app.globalData.navHeight / 2) + that.heightArr[i]) {
-						that.$set(that, 'navActive', i)
-						break
-					}
-				}
-				that.$set(that.sharePacket, 'touchstart', true); //滑动屏幕时让分享气泡缩回
-			},
-			/*
-			 *去商品详情页 
-			 */
-			goDetail(item) {
-				if (!item.activityH5) {
-					uni.redirectTo({
-						url: '/pages/goods/goods_details/index?id=' + item.id
-					})
-					return
-				}
-				if (item.activityH5.length == 0) {
-					uni.redirectTo({
-						url: '/pages/goods/goods_details/index?id=' + item.id
-					})
-					return
-				}
-				// 砍价
-				if (item.activityH5 && item.activityH5.type == 2) {
-					uni.redirectTo({
-						url: `/pages/activity/goods_bargain_details/index?id=${item.activityH5.id}&startBargainUid=${this.uid}`
-					})
-					return
-				}
-				// 拼团
-				if (item.activityH5 && item.activityH5.type == 3) {
-					uni.redirectTo({
-						url: `/pages/activity/goods_combination_details/index?id=${item.activityH5.id}`
-					})
-					return
-				}
-				// 秒杀
-				if (item.activityH5 && item.activityH5.type == 1) {
-					uni.redirectTo({
-						url: `/pages/activity/goods_seckill_details/index?id=${item.activityH5.id}`
-					})
-					return
-				}
-			},
-			// 关闭优惠券弹窗，重置优惠券列表
-			ChangCouponsClone: function() {
-				this.$set(this.coupon, 'coupon', false)
-				this.initCouponList()
-				this.$set(this.coupon, 'type', 0);
-				this.couponType = 0; //优惠券类型
-				this.getCouponList(0);
-			},
-			/**
-			 * 购物车数量加和数量减
-			 * 
-			 */
-			ChangeCartNum: function(changeValue) {
-				//changeValue:是否 加|减
-				//获取当前变动属性
-				let productSelect = this.productValue[this.attrValue];
-				//如果没有属性,赋值给商品默认库存
-				if (productSelect === undefined && !this.attr.productAttr.length)
-					productSelect = this.attr.productSelect;
-				//无属性值即库存为0；不存在加减；
-				if (productSelect === undefined) return;
-				let stock = productSelect.stock || 0;
-				let num = this.attr.productSelect;
-				if (changeValue) {
-					num.cart_num++;
-					if (num.cart_num > stock) {
-						this.$set(this.attr.productSelect, "cart_num", stock);
-						this.$set(this, "cart_num", stock);
-					}
-				} else {
-					num.cart_num--;
-					if (num.cart_num < 1) {
-						this.$set(this.attr.productSelect, "cart_num", 1);
-						this.$set(this, "cart_num", 1);
-					}
-				}
-			},
-			attrVal(val) {
-				this.$set(this.attr.productAttr[val.indexw], 'index', this.attr.productAttr[val.indexw].attrValues[val
-					.indexn]);
-			},
-			/**
-			 * 属性变动赋值
-			 * 
-			 */
-			ChangeAttr: function(res) {
-				let productSelect = this.productValue[res];
-				this.$set(this, "selectSku", productSelect);
-				if (productSelect) {
-					this.$set(this.attr.productSelect, "image", productSelect.image);
-					this.$set(this.attr.productSelect, "price", productSelect.price);
-					this.activityPrice = productSelect.price
-					this.$set(this.attr.productSelect, "stock", productSelect.stock);
-					this.$set(this.attr.productSelect, "unique", productSelect.id);
-					this.$set(this.attr.productSelect, "cart_num", 1);
-					this.$set(this.attr.productSelect, "vipPrice", productSelect.vipPrice);
-					this.activityVipPrice = productSelect.vipPrice
-					this.$set(this.attr.productSelect, 'otPrice', productSelect.otPrice);
-					this.$set(this.attr.productSelect, 'isShow', productSelect.isShow);
-					// 后台传入的规格不展示时视为库存为0
-					if (!this.attr.productSelect.isShow) {
-						this.$set(this.attr.productSelect, "stock", 0);
-						this.$util.Tips({
-							title: "请重新选择其它规格"
-						});
-					}
-					this.$set(this, "attrValue", res);
-					this.$set(this, "attrTxt", "已选择");
-				} else {
-					this.$set(this.attr.productSelect, "image", this.productInfo.image);
-					this.$set(this.attr.productSelect, "price", this.productInfo.price);
-					this.$set(this.attr.productSelect, "stock", 0);
-					this.$set(this.attr.productSelect, "unique", this.productInfo.id);
-					this.$set(this.attr.productSelect, "cart_num", 1);
-					this.$set(this.attr.productSelect, "vipPrice", this.productInfo.vipPrice);
-					this.$set(this.attr.productSelect, 'otPrice', this.productInfo.otPrice);
-					this.$set(this.attr.productSelect, 'isShow', false);
-					this.$set(this, "attrValue", "");
-					this.$set(this, "attrTxt", "请选择");
-				}
-			},
-			/**
-			 * 领取完毕移除当前页面领取过的优惠券展示
-			 */
-			ChangCoupons: function(e) {
-				let coupon = e;
-				let couponList = this.$util.ArrayRemove(this.couponList, 'id', coupon.id);
-				this.$set(this, 'couponList', couponList);
-				this.getCouponList();
-			},
-
-			setClientHeight: function() {
-				let that = this;
-				if (!that.good_list.length) return;
-				let view = uni.createSelectorQuery().in(this).select("#list0");
-					view.fields({
-						size: true,
-					}, data => {
-						that.$set(that, 'clientHeight', data ? data.height + 20 : 0)
-					}).exec();
-				},
-			/**
-			 * 优品推荐
-			 * 
-			 */
-			getGoods() {
-				getProductGood().then(res => {
-					let good_list = res.data.list || [];
-					let count = Math.ceil(good_list.length / 6);
-					let goodArray = new Array();
-					for (let i = 0; i < count; i++) {
-						let list = good_list.slice(i * 6, i * 6 + 6);
-						if (list.length) goodArray.push({
-							list: list
-						});
-					}
-					this.$set(this, 'good_list', goodArray);
-					let navList = ['商品', '评价', '详情'];
-					if (goodArray.length) {
-						navList.splice(2, 0, '推荐')
-					}
-					this.$set(this, 'navList', navList);
-					this.$nextTick(() => {
-						if (good_list.length) {
-							// #ifndef APP-PLUS
-							this.setClientHeight();
-							// #endif
-							// #ifdef APP-PLUS
-							setTimeout(() => {
-								this.setClientHeight();
-							}, 1000)
-							// #endif
-						};
-					})
-				});
-			},
-			/**
-			 * 获取产品详情
-			 * 
-			 */
-			getGoodsDetails: function() {
-				let that = this;
-				getProductDetail(that.id, that.type).then(res => {
-					let productInfo = res.data.productInfo;
-					// 字符串数组转数组；
-					let sliderImage = that.parseSliderImage(productInfo.sliderImage);
-					if (that.getFileType(sliderImage[0]) == 'video') {
-						//判断轮播图第一张是否是视频，如果是，就赋值给videoLink，并且将其在轮播图中删除
-						this.$set(this, 'videoLink', sliderImage[0]);
-						sliderImage.splice(0, 1);
-					}
-					that.$set(that, 'sliderImage', sliderImage);
-					that.$set(that, 'productInfo', productInfo);
-					that.$set(that, 'description', productInfo.content);
-					that.$set(that, 'userCollect', res.data.userCollect);
-					that.$set(that.attr, 'productAttr', res.data.productAttr);
-					that.$set(that, 'productValue', res.data.productValue);
-					that.$set(that, 'guaranteeList', res.data.guaranteeList || []);
-					that.$set(that, 'skuArr', []);
-					for (let key in res.data.productValue) {
-						let obj = res.data.productValue[key];
-						that.skuArr.push(obj)
-					}
-					this.$set(this, "selectSku", that.skuArr[0]);
-					that.$set(that.sharePacket, 'priceName', res.data.priceName);
-					//that.$set(that.sharePacket, 'isState', Math.floor(res.data.priceName) != 0 ?false : true);
-					that.$set(that.sharePacket, 'isState', (res.data.priceName != "0" && res.data.priceName !==
-						null) ? false : true);
-					that.$set(that, 'activityH5', res.data.activityAllH5 ? res.data.activityAllH5 : []);
-					uni.setNavigationBarTitle({
-						title: productInfo.storeName.substring(0, 7) + "..."
-					})
-
-					let productAttr = this.attr.productAttr.map(item => {
-						return {
-							attrName: item.attrName,
-							attrValues: item.attrValues.split(','),
-							id: item.id,
-							isDel: item.isDel,
-							productId: item.productId,
-							type: item.type,
-							optionList: item.optionList || [],
-							isShowImage: item.isShowImage
-						}
-					});
-					this.$set(this.attr, 'productAttr', productAttr);
-					// 获取suk小图
-					this.getSkuImage()
-					// var navList = ['商品', '评价', '详情'];
-					// if (goodArray.length) {
-					// 	navList.splice(2, 0, '推荐')
-					// }
-					//that.$set(that, 'navList', navList);
-
-					//无需登录即可分享
-					that.getCartCount();
-					//#ifdef H5
-					that.make(that.uid);
-					that.ShareInfo();
-					this.getImageBase64(this.productInfo.image);
+					// #ifdef APP-PLUS
+					setTimeout(() => {
+						setClientHeight();
+					}, 1000)
 					// #endif
-					// #ifdef MP
-					that.getQrcode();
-					// #endif
-					setTimeout(function() {
-						that.infoScroll();
-					}, 500);
-					// #ifdef MP
-					that.imgTop = res.data.productInfo.image
-					// #endif
-					// #ifndef H5
-					that.downloadFilestoreImage();
-					// #endif
-					that.DefaultSelect();
-					this.showSkeleton = false
-					// setTimeout(() => {
-					// 	this.defaultCoupon = this.coupon.list;
-					// }, 1000)
-				}).catch(err => {
-					//状态异常返回上级页面
-					that.$util.Tips({
-						title: err.toString()
-					}, {
-						tab: 3,
-						url: 1
-					});
-					this.showSkeleton = false
-				})
-			},
-			//评论列表
-			getProductReplyList: function() {
-				getReplyProduct(this.id).then(res => {
-					this.reply = res.data.productReply ? [res.data.productReply] : [];
-				})
-			},
-			//评论条数
-			getProductReplyCount: function() {
-				let that = this;
-				getReplyConfig(that.id).then(res => {
-					that.$set(that, 'replyChance', res.data.replyChance * 100);
-					that.$set(that, 'replyCount', res.data.sumCount);
-				});
-			},
-			infoScroll: function() {
-				var that = this,
-					topArr = [],
-					heightArr = [];
-				for (var i = 0; i < that.navList.length; i++) { //productList
-					//获取元素所在位置
-					var query = uni.createSelectorQuery().in(this);
-					var idView = "#past" + i;
-					// if (!that.data.good_list.length && i == 2) {
-					//   var idView = "#past" + 3;
-					// }
-					query.select(idView).boundingClientRect();
-					query.exec(function(res) {
-						var top = res && res[0] ? res[0].top : 0;
-						var height = res && res[0] ? res[0].height : 0;
-						topArr.push(top);
-						heightArr.push(height);
-						that.$set(that, 'topArr', topArr);
-						that.$set(that, 'heightArr', heightArr);
-					});
 				};
-			},
-			/**
-			 * 默认选中属性
-			 * 
-			 */
-			DefaultSelect: function() {
-				let productAttr = this.attr.productAttr;
-				let value = [];
-				// 按 id 升序排序
-				const sortedArray = Object.entries(this.productValue)
-					.sort(([, a], [, b]) => a.id - b.id)
-					.map(([key, value]) => ({
-						key,
-						...value
-					}));
-				// 默认规格设置
-				for (let i = 0; i < sortedArray.length; i++) {
-					const attrItem = sortedArray[i]
-					if (attrItem.stock > 0 && attrItem.isShow) {
-						if (value.length == 0) {
-							value = this.attr.productAttr.length ? attrItem.key.split(",") : [];
-						}
-						if (attrItem.isDefault) {
-							value = this.attr.productAttr.length ? attrItem.key.split(",") : [];
-							break
-						}
-					}
-				}
-				for (let i = 0; i < value.length; i++) {
-					this.$set(productAttr[i], "index", value[i]);
-				}
+			})
+		});
+	};
+	/**
+	 * 获取产品详情
+	 *
+	 */
+	const getGoodsDetails = () => {
+		getProductDetail(id.value, type.value).then(res => {
+			let pInfo = res.data.productInfo;
+			// 字符串数组转数组；
+			let sImage = parseSliderImage(pInfo.sliderImage);
+			if (getFileType(sImage[0]) == 'video') {
+				//判断轮播图第一张是否是视频，如果是，就赋值给videoLink，并且将其在轮播图中删除
+				videoLink.value = sImage[0];
+				sImage.splice(0, 1);
+			}
+			sliderImage.value = sImage;
+			productInfo.value = pInfo;
+			description.value = pInfo.content;
+			userCollect.value = res.data.userCollect;
+			attr.productAttr = res.data.productAttr;
+			productValue.value = res.data.productValue;
+			guaranteeList.value = res.data.guaranteeList || [];
+			skuArr.value = [];
+			for (let key in res.data.productValue) {
+				let obj = res.data.productValue[key];
+				skuArr.value.push(obj)
+			}
+			selectSku.value = skuArr.value[0];
+			sharePacket.priceName = res.data.priceName;
+			//sharePacket.isState = Math.floor(res.data.priceName) != 0 ?false : true;
+			sharePacket.isState = (res.data.priceName != "0" && res.data.priceName !==
+				null) ? false : true;
+			activityH5.value = res.data.activityAllH5 ? res.data.activityAllH5 : [];
+			uni.setNavigationBarTitle({
+				title: pInfo.storeName.substring(0, 7) + "..."
+			})
 
-				//sort();排序函数:数字-英文-汉字；
-				let productSelect = this.productValue[value.join(",")];
-				if (productSelect && productAttr.length) {
-					this.$set(this.attr.productSelect, "storeName", this.productInfo.storeName);
-					this.$set(this.attr.productSelect, "image", productSelect.image);
-					this.$set(this.attr.productSelect, "price", productSelect.price);
-					this.activityPrice = productSelect.price
-					this.activityVipPrice = productSelect.vipPrice
-					this.$set(this.attr.productSelect, "stock", productSelect.stock);
-					this.$set(this.attr.productSelect, "unique", productSelect.id);
-					this.$set(this.attr.productSelect, "cart_num", 1);
-					this.$set(this.attr.productSelect, "vipPrice", productSelect
-						.vipPrice); //attr.productSelect.otPrice
-					this.$set(this.attr.productSelect, 'otPrice', productSelect.otPrice);
-					this.$set(this, "attrValue", value.join(","));
-					this.$set(this, "attrTxt", "已选择");
-				} else if (!productSelect && productAttr.length) {
-					this.$set(this.attr.productSelect, "storeName", this.productInfo.storeName);
-					this.$set(this.attr.productSelect, "image", this.productInfo.image);
-					this.$set(this.attr.productSelect, "price", this.productInfo.price);
-					this.$set(this.attr.productSelect, "stock", 0);
-					this.$set(this.attr.productSelect, "unique", this.productInfo.id);
-					this.$set(this.attr.productSelect, "cart_num", 1);
-					this.$set(this.attr.productSelect, "vipPrice", this.productInfo.vipPrice);
-					this.$set(this.attr.productSelect, 'otPrice', this.productInfo.otPrice);
-					this.$set(this, "attrValue", "");
-					this.$set(this, "attrTxt", "请选择");
-				} else if (!productSelect && !productAttr.length) {
-					this.$set(this.attr.productSelect, "storeName", this.productInfo.storeName);
-					this.$set(this.attr.productSelect, "image", this.productInfo.image);
-					this.$set(this.attr.productSelect, "price", this.productInfo.price);
-					this.$set(this.attr.productSelect, "stock", this.productInfo.stock);
-					this.$set(this.attr.productSelect, "unique", this.productInfo.id || "");
-					this.$set(this.attr.productSelect, "cart_num", 1);
-					this.$set(this.attr.productSelect, "vipPrice", this.productInfo.vipPrice);
-					this.$set(this.attr.productSelect, 'otPrice', this.productInfo.otPrice);
-					this.$set(this, "attrValue", "");
-					this.$set(this, "attrTxt", "请选择");
+			let productAttr = attr.productAttr.map(item => {
+				return {
+					attrName: item.attrName,
+					attrValues: item.attrValues.split(','),
+					id: item.id,
+					isDel: item.isDel,
+					productId: item.productId,
+					type: item.type,
+					optionList: item.optionList || [],
+					isShowImage: item.isShowImage
 				}
-			},
-			/**
-			 * 获取优惠券
-			 * 
-			 */
-			getCouponList(type) {
-				let that = this;
-				if (type != undefined || type != null) {
-					that.where.type = type;
-				} else {
-					that.where.type = "";
-				}
-				that.where.productId = that.id;
-				if (that.loadend) return;
-				if (that.loading) return;
-				// if (isPage === true) that.$set(that, 'productList', []);
-				that.loading = true;
-				that.loadTitle = '';
-				getCoupons(that.where).then(res => {
-					let list = res.data.list;
-					let couponList = that.$util.SplitArray(list, that.coupon.list);
-					let loadend = list.length < that.where.limit;
-					that.loadend = loadend;
-					that.loading = false;
-					that.loadTitle = loadend ? '已全部加载' : '加载更多';
-					that.$set(that.coupon, 'list', couponList);
-					that.$set(that.where, 'page', that.where.page + 1);
-				});
-			},
-			async getCouponType() {
-				//在onLoad只调用一次，获取默认的类型作为打开优惠券列表的参数，不会随着切换变化
-				let dataList = await getCoupons({
-					productId: this.id
-				});
-				// if (dataList.length) {
-				// 	this.couponDeaultType = dataList.data;
-				// 	this.$set(this.coupon, 'type', dataList);
-				// }
-				if (dataList.data.list.length) {
-					this.couponDeaultType = dataList.data.list;
-					this.$set(this.coupon, 'type', dataList.data);
-				}
-			},
-			// 重置优惠券列表
-			initCouponList() {
-				this.loadend = false;
-				this.loading = false;
-				this.where.page = 1;
-				this.where.limit = 999;
-				this.$set(this.coupon, 'list', []);
-			},
-			//切换优惠券头部
-			tabCouponType(type) {
-				this.initCouponList()
-				this.$set(this.coupon, 'type', type);
-				this.couponType = type; //优惠券类型
-				this.getCouponList(type);
-			},
+			});
+			attr.productAttr = productAttr;
+			// 获取suk小图
+			getSkuImage()
+			// var navList = ['商品', '评价', '详情'];
+			// if (goodArray.length) {
+			// 	navList.splice(2, 0, '推荐')
+			// }
+			//navList.value = navList;
 
-			ChangCouponsUseState(index) {
-				let that = this;
-				that.coupon.list[index].isUse = true;
-				that.$set(that.coupon, 'list', that.coupon.list);
-				that.$set(that.coupon, 'coupon', false);
-			},
-			/** 
-			 * 
-			 * 
-			 * 收藏商品
-			 */
-			setCollect: function() {
-				let that = this;
-				if (this.isLogin === false) {
-					toLogin();
-				} else {
-					if (this.userCollect) {
-						collectDel(this.productInfo.id).then(res => {
-							that.$set(that, 'userCollect', !that.userCollect);
-						})
-					} else {
-						collectAdd(this.productInfo.id).then(res => {
-							that.$set(that, 'userCollect', !that.userCollect);
-						})
-					}
-				}
-			},
-			/**
-			 * 打开属性插件
-			 */
-			selecAttr: function() {
-				this.$set(this.attr, 'cartAttr', true);
-				this.$set(this, 'isOpen', true);
-			},
-			/**
-			 * 打开优惠券插件
-			 */
-			couponTap: function() {
-				let that = this;
-				if (!this.couponDeaultType.length) return;
-				// if (that.isLogin === false) {
-				// 	toLogin();
-				// } else {
-				// this.loadend = false;
-				// this.loading = false;
-				// this.$set(that.coupon, 'list', []);
-				// //that.getCouponList(this.couponDeaultType[0].useType); //打开弹框默认请求商品券
-				this.initCouponList()
-				this.getCouponList(this.couponDeaultType[0].useType)
-				that.$set(that.coupon, 'coupon', true);
-				// }
-			},
-			onMyEvent: function() {
-				this.$set(this.attr, 'cartAttr', false);
-				this.$set(this, 'isOpen', false);
-			},
-			/**
-			 * 打开属性加入购物车
-			 * 
-			 */
-			joinCart: function(e) {
-				//是否登录
-				if (this.isLogin === false) {
-					toLogin();
-				} else {
-					this.goCat(1);
-				}
-			},
-			/*
-			 * 加入购物车
-			 */
-			goCat: function(num) {
-				let that = this,
-					productSelect = that.productValue[this.attrValue];
-				//打开属性
-				if (that.attrValue) {
-					//默认选中了属性，但是没有打开过属性弹窗还是自动打开让用户查看默认选中的属性
-					that.attr.cartAttr = !that.isOpen ? true : false;
-				} else {
-					if (that.isOpen) that.attr.cartAttr = true;
-					else that.attr.cartAttr = !that.attr.cartAttr;
-				}
-				//只有关闭属性弹窗时进行加入购物车
-				if (that.attr.cartAttr === true && that.isOpen === false)
-					return (that.isOpen = true);
-				//如果有属性,没有选择,提示用户选择
-				if (
-					that.attr.productAttr.length &&
-					productSelect.stock === 0 &&
-					that.isOpen === true
-				) {
-					return that.$util.Tips({
-						title: "产品库存不足，请选择其它"
-					});
-				} else if (that.attr.productSelect.stock == 0 && that.isOpen === true) {
-					return that.$util.Tips({
-						title: "请选择其它规格"
-					});
-				}
-				if (num === 1) {
-					let q = {
-						productId: parseFloat(that.id),
-						cartNum: parseFloat(that.attr.productSelect.cart_num),
-						isNew: false,
-						productAttrUnique: that.attr.productSelect !== undefined ?
-							that.attr.productSelect.unique : that.productInfo.id
-					};
-					postCartAdd(q).then(function(res) {
-							that.isOpen = false;
-							that.attr.cartAttr = false;
-							that.$util.Tips({
-								title: "添加购物车成功",
-								success: () => {
-									that.getCartCount(true);
-								}
-							});
-						})
-						.catch(res => {
-							that.isOpen = false;
-							return that.$util.Tips({
-								title: res
-							});
-						});
-				} else {
-					this.getPreOrder();
-				}
-			},
-			/**
-			 * 获取购物车数量
-			 * @param boolean 是否展示购物车动画和重置属性
-			 */
-			getCartCount: function(isAnima) {
-				let that = this;
-				const isLogin = that.isLogin;
-				if (isLogin) {
-					getCartCounts(true, 'total').then(res => {
-						that.CartCount = res.data.count;
-						//加入购物车后重置属性
-						if (isAnima) {
-							that.animated = true;
-							setTimeout(function() {
-								that.animated = false;
-							}, 500);
-						}
-					});
-				}
-			},
-			/**
-			 * 立即购买
-			 */
-			goBuy: Debounce(function(e) {
-				if (this.isLogin === false) {
-					toLogin();
-				} else {
-					this.goCat(0);
-				}
-			}),
-			/**
-			 * 预下单
-			 */
-			getPreOrder: function() {
-				this.$Order.getPreOrder(this.type === 'normal' ? 'buyNow' : 'video', [{
-					"attrValueId": parseFloat(this.attr.productSelect.unique),
-					"productId": parseFloat(this.id),
-					"productNum": parseFloat(this.attr.productSelect.cart_num)
-				}]);
-				this.isOpen = false;
-			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
-			},
-			/**
-			 * 分享打开
-			 * 
-			 */
-			listenerActionSheet: function() {
-				// if (this.isLogin === false) {
-				// 	toLogin();
-				// } else {
-				// 	// #ifdef H5
-				// 	if (this.$wechat.isWeixin() === true) {
-				// 		this.weixinStatus = true;
-				// 	}
-				// 	// #endif
-				// 	this.goPoster()
-				// 	this.posters = true;
-				// }
-				// #ifdef H5
-				if (this.$wechat.isWeixin() === true) {
-					this.weixinStatus = true;
-				}
-				// #endif
-				this.goPoster()
-				this.posters = true;
-			},
-			closePosters: function() {
-				this.posters = false;
-				this.currentPage = false;
-			},
-			//隐藏海报
-			posterImageClose: function() {
-				this.canvasStatus = false
-				this.posters = false;
-			},
-			//替换安全域名
-			setDomain: function(url) {
-				url = url ? url.toString() : '';
-				//本地调试打开,生产请注销
-				if (url.indexOf("https://") > -1) return url;
-				else return url.replace('http://', 'https://');
-			},
-			//获取海报产品图（解决跨域问题，只适用于小程序）
-			downloadFilestoreImage: function() {
-				let that = this;
-				uni.downloadFile({
-					url: that.setDomain(that.productInfo.image),
-					success: function(res) {
-						that.storeImage = res.tempFilePath;
-					},
-					fail: function() {
-						return that.$util.Tips({
-							title: ''
-						});
-						that.storeImage = '';
-					},
-				});
-			},
-			// 小程序关闭分享弹窗；
-			goFriend: function() {
-				this.posters = false;
-			},
-			// 小程序二维码
-			getQrcode() {
-				let that = this;
-				let data = {
-					pid: that.uid,
-					id: that.id,
-					path: 'pages/goods/goods_details/index'
-				}
-				getQrcode(data).then(res => {
-					base64src(res.data.code, Date.now(), res => {
-						that.PromotionCode = res;
-					});
-
-				}).catch(err => {
-					that.errT = err;
-				});
-			},
-			// 生成二维码；
-			make(uid) {
-				let href = location.href.split('?')[0] + "?id=" + this.id + "&spread=" + this.uid;
-				uQRCode.make({
-					canvasId: 'qrcode',
-					text: href,
-					size: this.qrcodeSize,
-					margin: 10,
-					success: res => {
-						this.PromotionCode = res;
-					},
-					complete: () => {},
-					fail: res => {
-						this.$util.Tips({
-							title: '海报二维码生成失败！'
-						});
-					}
-				})
-			},
-			getImageBase64: function(images) {
-				let that = this;
-				imageBase64({
-					url: images
-				}).then(res => {
-					that.imgTop = res.data.code;
-				})
-			},
-			/**
-			 * 生成海报
-			 */
-			goPoster: function() {
-				let that = this;
-				uni.showLoading({
-					title: '海报生成中',
-					mask: true
-				});
-				that.posters = false;
-				let arrImagesUrl = '';
-				let arrImagesUrlTop = '';
-				if (!that.PromotionCode) {
-					uni.hideLoading();
-					that.$util.Tips({
-						title: that.errT
-					});
-					return
-				}
-				setTimeout(() => {
-					if (!that.imgTop) {
-						uni.hideLoading();
-						that.$util.Tips({
-							title: '无法生成商品海报！'
-						});
-						return
-					}
-				}, 1000);
-				uni.downloadFile({
-					url: that.imgTop, //仅为示例，并非真实的资源
-					success: (res) => {
-						arrImagesUrlTop = res.tempFilePath;
-						let arrImages = [that.posterbackgd, arrImagesUrlTop, that.PromotionCode];
-						let storeName = that.productInfo.storeName;
-						let price = that.productInfo.price;
-						setTimeout(() => {
-							that.$util.PosterCanvas(arrImages, storeName, price, that.productInfo
-								.otPrice,
-								function(tempFilePath) {
-									that.imagePath = tempFilePath;
-									that.canvasStatus = true;
-									uni.hideLoading();
-								});
-						}, 500);
-					}
-				});
-			},
-			// 图片预览；
-			getpreviewImage: function() {
-				if (this.imagePath) {
-					let photoList = [];
-					photoList.push(this.imagePath)
-					uni.previewImage({
-						urls: photoList,
-						current: this.imagePath
-					});
-				} else {
-					this.$util.Tips({
-						title: '您的海报尚未生成'
-					});
-				}
-			},
-			/*
-			 * 保存到手机相册
-			 */
+			//无需登录即可分享
+			getCartCount();
+			//#ifdef H5
+			make();
+			ShareInfo();
+			getImageBase64(productInfo.value.image);
+			// #endif
 			// #ifdef MP
-			savePosterPath: function() {
-				let that = this;
-				uni.getSetting({
-					success(res) {
-						if (!res.authSetting['scope.writePhotosAlbum']) {
-							uni.authorize({
-								scope: 'scope.writePhotosAlbum',
-								success() {
-									uni.saveImageToPhotosAlbum({
-										filePath: that.imagePath,
-										success: function(res) {
-											that.posterImageClose();
-											that.$util.Tips({
-												title: '保存成功',
-												icon: 'success'
-											});
-										},
-										fail: function(res) {
-											that.$util.Tips({
-												title: '保存失败'
-											});
-										}
-									})
-								}
-							})
-						} else {
+			getQrcode();
+			// #endif
+			setTimeout(function() {
+				infoScroll();
+			}, 500);
+			// #ifdef MP
+			imgTop.value = res.data.productInfo.image
+			// #endif
+			// #ifndef H5
+			downloadFilestoreImage();
+			// #endif
+			DefaultSelect();
+			showSkeleton.value = false
+			// setTimeout(() => {
+			// 	defaultCoupon.value = coupon.list;
+			// }, 1000)
+		}).catch(err => {
+			//状态异常返回上级页面
+			util.Tips({
+				title: err.toString()
+			}, {
+				tab: 3,
+				url: 1
+			});
+			showSkeleton.value = false
+		})
+	};
+	//评论列表
+	const getProductReplyList = () => {
+		getReplyProduct(id.value).then(res => {
+			reply.value = res.data.productReply ? [res.data.productReply] : [];
+		})
+	};
+	//评论条数
+	const getProductReplyCount = () => {
+		getReplyConfig(id.value).then(res => {
+			replyChance.value = res.data.replyChance * 100;
+			replyCount.value = res.data.sumCount;
+		});
+	};
+	const infoScroll = () => {
+		var topArrLocal = [],
+			heightArrLocal = [];
+		for (var i = 0; i < navList.value.length; i++) { //productList
+			//获取元素所在位置
+			var query = uni.createSelectorQuery();
+			var idView = "#past" + i;
+			// if (!good_list.value.length && i == 2) {
+			//   var idView = "#past" + 3;
+			// }
+			query.select(idView).boundingClientRect();
+			query.exec(function(res) {
+				var top = res && res[0] ? res[0].top : 0;
+				var height = res && res[0] ? res[0].height : 0;
+				topArrLocal.push(top);
+				heightArrLocal.push(height);
+				topArr.value = topArrLocal;
+				heightArr.value = heightArrLocal;
+			});
+		};
+	};
+	/**
+	 * 默认选中属性
+	 *
+	 */
+	const DefaultSelect = () => {
+		let productAttr = attr.productAttr;
+		let value = [];
+		// 按 id 升序排序
+		const sortedArray = Object.entries(productValue.value)
+			.sort(([, a], [, b]) => a.id - b.id)
+			.map(([key, val]) => ({
+				key,
+				...val
+			}));
+		// 默认规格设置
+		for (let i = 0; i < sortedArray.length; i++) {
+			const attrItem = sortedArray[i]
+			if (attrItem.stock > 0 && attrItem.isShow) {
+				if (value.length == 0) {
+					value = attr.productAttr.length ? attrItem.key.split(",") : [];
+				}
+				if (attrItem.isDefault) {
+					value = attr.productAttr.length ? attrItem.key.split(",") : [];
+					break
+				}
+			}
+		}
+		for (let i = 0; i < value.length; i++) {
+			productAttr[i].index = value[i];
+		}
+
+		//sort();排序函数:数字-英文-汉字；
+		let productSelect = productValue.value[value.join(",")];
+		if (productSelect && productAttr.length) {
+			attr.productSelect.storeName = productInfo.value.storeName;
+			attr.productSelect.image = productSelect.image;
+			attr.productSelect.price = productSelect.price;
+			attr.productSelect.stock = productSelect.stock;
+			attr.productSelect.unique = productSelect.id;
+			attr.productSelect.cart_num = 1;
+			attr.productSelect.otPrice = productSelect.otPrice;
+			attrValue.value = value.join(",");
+			attrTxt.value = "已选择";
+		} else if (!productSelect && productAttr.length) {
+			attr.productSelect.storeName = productInfo.value.storeName;
+			attr.productSelect.image = productInfo.value.image;
+			attr.productSelect.price = productInfo.value.price;
+			attr.productSelect.stock = 0;
+			attr.productSelect.unique = productInfo.value.id;
+			attr.productSelect.cart_num = 1;
+			attr.productSelect.otPrice = productInfo.value.otPrice;
+			attrValue.value = "";
+			attrTxt.value = "请选择";
+		} else if (!productSelect && !productAttr.length) {
+			attr.productSelect.storeName = productInfo.value.storeName;
+			attr.productSelect.image = productInfo.value.image;
+			attr.productSelect.price = productInfo.value.price;
+			attr.productSelect.stock = productInfo.value.stock;
+			attr.productSelect.unique = productInfo.value.id || "";
+			attr.productSelect.cart_num = 1;
+			attr.productSelect.otPrice = productInfo.value.otPrice;
+			attrValue.value = "";
+			attrTxt.value = "请选择";
+		}
+	};
+	/**
+	 * 获取优惠券
+	 *
+	 */
+	const getCouponList = (type) => {
+		if (type != undefined || type != null) {
+			where.type = type;
+		} else {
+			where.type = "";
+		}
+		where.productId = id.value;
+		if (loadend.value) return;
+		if (loading.value) return;
+		// if (isPage === true) couponList.value = [];
+		loading.value = true;
+		loadTitle.value = '';
+		getCoupons(where).then(res => {
+			let list = res.data.list;
+			let newCouponList = util.SplitArray(list, coupon.list);
+			let isLoadEnd = list.length < where.limit;
+			loadend.value = isLoadEnd;
+			loading.value = false;
+			loadTitle.value = isLoadEnd ? '已全部加载' : '加载更多';
+			coupon.list = newCouponList;
+			where.page = where.page + 1;
+		});
+	};
+	const getCouponType = async () => {
+		//在onLoad只调用一次，获取默认的类型作为打开优惠券列表的参数，不会随着切换变化
+		let dataList = await getCoupons({
+			productId: id.value
+		});
+		// if (dataList.length) {
+		// 	couponDeaultType.value = dataList.data;
+		// 	coupon.type = dataList;
+		// }
+		if (dataList.data.list.length) {
+			couponDeaultType.value = dataList.data.list;
+			coupon.type = dataList.data;
+		}
+	};
+	// 重置优惠券列表
+	const initCouponList = () => {
+		loadend.value = false;
+		loading.value = false;
+		where.page = 1;
+		where.limit = 999;
+		coupon.list = [];
+	};
+	//切换优惠券头部
+	const tabCouponType = (type) => {
+		initCouponList();
+		coupon.type = type;
+		couponType.value = type; //优惠券类型
+		getCouponList(type);
+	};
+	const ChangCouponsUseState = (index) => {
+		coupon.list[index].isUse = true;
+		coupon.coupon = false;
+	};
+	/**
+	 *
+	 *
+	 * 收藏商品
+	 */
+	const setCollect = () => {
+		if (isLogin.value === false) {
+			toLogin();
+		} else {
+			if (userCollect.value) {
+				collectDel(productInfo.value.id).then(res => {
+					userCollect.value = !userCollect.value;
+				})
+			} else {
+				collectAdd(productInfo.value.id).then(res => {
+					userCollect.value = !userCollect.value;
+				})
+			}
+		}
+	};
+	/**
+	 * 打开属性插件
+	 */
+	const selecAttr = () => {
+		attr.cartAttr = true;
+		isOpen.value = true;
+	};
+	/**
+	 * 打开优惠券插件
+	 */
+	const couponTap = () => {
+		if (!couponDeaultType.value.length) return;
+		// if (isLogin.value === false) {
+		// 	toLogin();
+		// } else {
+		// loadend.value = false;
+		// loading.value = false;
+		// coupon.list = [];
+		// //getCouponList(couponDeaultType.value[0].useType); //打开弹框默认请求商品券
+		initCouponList();
+		getCouponList(couponDeaultType.value[0].useType);
+		coupon.coupon = true;
+		// }
+	};
+	const onMyEvent = () => {
+		attr.cartAttr = false;
+		isOpen.value = false;
+	};
+	/**
+	 * 打开属性加入购物车
+	 *
+	 */
+	const joinCart = (e) => {
+		//是否登录
+		if (isLogin.value === false) {
+			toLogin();
+		} else {
+			goCat(1);
+		}
+	};
+	/*
+	 * 加入购物车
+	 */
+	const goCat = (num) => {
+		let productSelectVal = productValue.value[attrValue.value];
+		//打开属性
+		if (attrValue.value) {
+			//默认选中了属性，但是没有打开过属性弹窗还是自动打开让用户查看默认选中的属性
+			attr.cartAttr = !isOpen.value ? true : false;
+		} else {
+			if (isOpen.value) attr.cartAttr = true;
+			else attr.cartAttr = !attr.cartAttr;
+		}
+		//只有关闭属性弹窗时进行加入购物车
+		if (attr.cartAttr === true && isOpen.value === false)
+			return (isOpen.value = true);
+		//如果有属性,没有选择,提示用户选择
+		if (
+			attr.productAttr.length &&
+			productSelectVal.stock === 0 &&
+			isOpen.value === true
+		) {
+			return util.Tips({
+				title: "产品库存不足，请选择其它"
+			});
+		} else if (attr.productSelect.stock == 0 && isOpen.value === true) {
+			return util.Tips({
+				title: "请选择其它规格"
+			});
+		}
+		if (num === 1) {
+			let q = {
+				productId: parseFloat(id.value),
+				cartNum: parseFloat(attr.productSelect.cart_num),
+				isNew: false,
+				productAttrUnique: attr.productSelect !== undefined ?
+					attr.productSelect.unique : productInfo.value.id
+			};
+			postCartAdd(q).then(function(res) {
+					isOpen.value = false;
+					attr.cartAttr = false;
+					util.Tips({
+						title: "添加购物车成功",
+						success: () => {
+							getCartCount(true);
+						}
+					});
+				})
+				.catch(res => {
+					isOpen.value = false;
+					return util.Tips({
+						title: res
+					});
+				});
+		} else {
+			getPreOrder();
+		}
+	};
+	/**
+	 * 获取购物车数量
+	 * @param boolean 是否展示购物车动画和重置属性
+	 */
+	const getCartCount = (isAnima) => {
+		const isLoggedIn = isLogin.value;
+		if (isLoggedIn) {
+			getCartCounts(true, 'total').then(res => {
+				CartCount.value = res.data.count;
+				//加入购物车后重置属性
+				if (isAnima) {
+					animated.value = true;
+					setTimeout(function() {
+						animated.value = false;
+					}, 500);
+				}
+			});
+		}
+	};
+	/**
+	 * 立即购买
+	 */
+	const goBuy = Debounce(function(e) {
+		if (isLogin.value === false) {
+			toLogin();
+		} else {
+			goCat(0);
+		}
+	});
+	/**
+	 * 预下单
+	 */
+	const getPreOrder = () => {
+		Order.getPreOrder(type.value === 'normal' ? 'buyNow' : 'video', [{
+			"attrValueId": parseFloat(attr.productSelect.unique),
+			"productId": parseFloat(id.value),
+			"productNum": parseFloat(attr.productSelect.cart_num)
+		}]);
+		isOpen.value = false;
+	};
+	// 授权关闭
+	const authColse = (e) => {
+		isShowAuth.value = e;
+	};
+	/**
+	 * 分享打开
+	 *
+	 */
+	const listenerActionSheet = () => {
+		// if (isLogin.value === false) {
+		// 	toLogin();
+		// } else {
+		// 	// #ifdef H5
+		// 	if (proxy.$wechat.isWeixin() === true) {
+		// 		weixinStatus.value = true;
+		// 	}
+		// 	// #endif
+		// 	goPoster()
+		// 	posters.value = true;
+		// }
+		// #ifdef H5
+		if (proxy.$wechat.isWeixin() === true) {
+			weixinStatus.value = true;
+		}
+		// #endif
+		goPoster()
+		posters.value = true;
+	};
+	const closePosters = () => {
+		posters.value = false;
+		currentPage.value = false;
+	};
+	//隐藏海报
+	const posterImageClose = () => {
+		canvasStatus.value = false;
+		posters.value = false;
+	};
+	//替换安全域名
+	const setDomain = (url) => {
+		url = url ? url.toString() : '';
+		//本地调试打开,生产请注销
+		if (url.indexOf("https://") > -1) return url;
+		else return url.replace('http://', 'https://');
+	};
+	//获取海报产品图（解决跨域问题，只适用于小程序）
+	const downloadFilestoreImage = () => {
+		uni.downloadFile({
+			url: setDomain(productInfo.value.image),
+			success: function(res) {
+				storeImage.value = res.tempFilePath;
+			},
+			fail: function() {
+				return util.Tips({
+					title: ''
+				});
+				storeImage.value = '';
+			},
+		});
+	};
+	// 小程序关闭分享弹窗；
+	const goFriend = () => {
+		posters.value = false;
+	};
+	// 小程序二维码
+	// #ifdef MP
+	const getQrcode = () => {
+		let data = {
+			pid: uid.value,
+			id: id.value,
+			path: 'pages/goods/goods_details/index'
+		}
+		fetchQrcode(data).then(res => {
+			base64src(res.data.code, Date.now(), res => {
+				PromotionCode.value = res;
+			});
+
+		}).catch(err => {
+			errT.value = err;
+		});
+	};
+	// #endif
+	// 生成二维码；
+	const make = () => {
+		let href = location.href.split('?')[0] + "?id=" + id.value + "&spread=" + uid.value;
+		uQRCode.make({
+			canvasId: 'qrcode',
+			text: href,
+			size: qrcodeSize.value,
+			margin: 10,
+			success: res => {
+				PromotionCode.value = res;
+			},
+			complete: () => {},
+			fail: res => {
+				util.Tips({
+					title: '海报二维码生成失败！'
+				});
+			}
+		})
+	};
+	const getImageBase64 = (images) => {
+		imageBase64({
+			url: images
+		}).then(res => {
+			imgTop.value = res.data.code;
+		})
+	};
+	/**
+	 * 生成海报
+	 */
+	const goPoster = () => {
+		uni.showLoading({
+			title: '海报生成中',
+			mask: true
+		});
+		posters.value = false;
+		let arrImagesUrl = '';
+		let arrImagesUrlTop = '';
+		if (!PromotionCode.value) {
+			uni.hideLoading();
+			util.Tips({
+				title: errT.value
+			});
+			return
+		}
+		setTimeout(() => {
+			if (!imgTop.value) {
+				uni.hideLoading();
+				util.Tips({
+					title: '无法生成商品海报！'
+				});
+				return
+			}
+		}, 1000);
+		uni.downloadFile({
+			url: imgTop.value, //仅为示例，并非真实的资源
+			success: (res) => {
+				arrImagesUrlTop = res.tempFilePath;
+				let arrImages = [posterbackgd.value, arrImagesUrlTop, PromotionCode.value];
+				let storeName = productInfo.value.storeName;
+				let price = productInfo.value.price;
+				setTimeout(() => {
+					util.PosterCanvas(arrImages, storeName, price, productInfo.value
+						.otPrice,
+						function(tempFilePath) {
+							imagePath.value = tempFilePath;
+							canvasStatus.value = true;
+							uni.hideLoading();
+						});
+				}, 500);
+			}
+		});
+	};
+	// 图片预览；
+	const getpreviewImage = () => {
+		if (imagePath.value) {
+			let photoList = [];
+			photoList.push(imagePath.value)
+			uni.previewImage({
+				urls: photoList,
+				current: imagePath.value
+			});
+		} else {
+			util.Tips({
+				title: '您的海报尚未生成'
+			});
+		}
+	};
+	/*
+	 * 保存到手机相册
+	 */
+	// #ifdef MP
+	const savePosterPath = () => {
+		uni.getSetting({
+			success(res) {
+				if (!res.authSetting['scope.writePhotosAlbum']) {
+					uni.authorize({
+						scope: 'scope.writePhotosAlbum',
+						success() {
 							uni.saveImageToPhotosAlbum({
-								filePath: that.imagePath,
+								filePath: imagePath.value,
 								success: function(res) {
-									that.posterImageClose();
-									that.$util.Tips({
+									posterImageClose();
+									util.Tips({
 										title: '保存成功',
 										icon: 'success'
 									});
 								},
 								fail: function(res) {
-									that.$util.Tips({
+									util.Tips({
 										title: '保存失败'
 									});
-								},
+								}
 							})
 						}
-					}
-				})
-			},
-			// #endif
-			ShareInfo() {
-				let data = this.productInfo;
-				let href = location.href;
-				if (this.$wechat.isWeixin()) {
-					href = href.indexOf("?") === -1 ? href + "?spread=" + this.uid : href + "&spread=" + this.uid;
-					let configAppMessage = {
-						desc: app.globalData.companyName,
-						title: data.storeName,
-						link: href,
-						imgUrl: data.image
-					};
-					this.$wechat.wechatEvevt([
-						"updateAppMessageShareData",
-						"updateTimelineShareData",
-						"onMenuShareAppMessage",
-						"onMenuShareTimeline"
-					], configAppMessage).then(res => {
-						// console.log(res);
-					}).catch(err => {
-						console.log(err);
-					})
-				}
-			},
-			showShare(status) {
-				let that = this;
-				that.$set(that.sharePacket, 'touchstart', status);
-			},
-			hideNav() {
-				this.currentPage = false;
-			},
-			//下拉导航页面跳转
-			linkPage(url) {
-				if (url == '/pages/index/index' || url == '/pages/order_addcart/order_addcart' || url ==
-					'/pages/user/index') {
-					uni.switchTab({
-						url
 					})
 				} else {
-					uni.navigateTo({
-						url
+					uni.saveImageToPhotosAlbum({
+						filePath: imagePath.value,
+						success: function(res) {
+							posterImageClose();
+							util.Tips({
+								title: '保存成功',
+								icon: 'success'
+							});
+						},
+						fail: function(res) {
+							util.Tips({
+								title: '保存失败'
+							});
+						},
 					})
 				}
-				this.currentPage = false
-			},
-			//点击sku图片打开轮播图
-			showImg(index) {
-				this.$refs.cusPreviewImg.open(this.selectSku.suk)
-			},
-			//滑动轮播图选择商品
-			changeSwitch(e) {
-				let productSelect = this.skuArr[e];
-				this.$set(this, 'selectSku', productSelect);
-				var skuList = productSelect.suk.split(',');
-				skuList.forEach((i, index) => {
-					this.$set(this.attr.productAttr[index], 'index', skuList[index]);
-				})
-				if (productSelect) {
-					this.$set(this.attr.productSelect, "image", productSelect.image);
-					this.$set(this.attr.productSelect, "price", productSelect.price);
-					this.activityPrice = productSelect.price
-					this.$set(this.attr.productSelect, "stock", productSelect.stock);
-					// 后台传入的规格不展示时视为库存为0
-					if (!productSelect.isShow) {
-						this.$set(this.attr.productSelect, "stock", 0);
-					}
-					this.$set(this.attr.productSelect, "unique", productSelect.id);
-					this.$set(this.attr.productSelect, "vipPrice", productSelect.vipPrice);
-					this.activityVipPrice = productSelect.vipPrice
-					this.$set(this, "attrTxt", "已选择");
-					this.$set(this, "attrValue", productSelect.suk)
-				}
-			},
-			getFileType(fileName) {
-				// 后缀获取
-				let suffix = '';
-				// 获取类型结果
-				let result = '';
-				try {
-					const flieArr = fileName.split('.');
-					suffix = flieArr[flieArr.length - 1];
-				} catch (err) {
-					suffix = '';
-				}
-				// fileName无后缀返回 false
-				if (!suffix) {
-					return false;
-				}
-				suffix = suffix.toLocaleLowerCase();
-				// 图片格式
-				const imglist = ['png', 'jpg', 'jpeg', 'bmp', 'gif'];
-				// 进行图片匹配
-				result = imglist.find(item => item === suffix);
-				if (result) {
-					return 'image';
-				}
-				// 匹配 视频
-				const videolist = ['mp4', 'm2v', 'mkv', 'rmvb', 'wmv', 'avi', 'flv', 'mov', 'm4v'];
-				result = videolist.find(item => item === suffix);
-				if (result) {
-					return 'video';
-				}
-				// 其他 文件类型
-				return 'other';
-			},
-			// 保障协议弹出框
-			handleToGgle(type) {
-				if (type) {
-					this.$refs.guaranteePopup.open()
-				} else {
-					this.$refs.guaranteePopup.close()
-				}
-			},
-			// 获取suk小图
-			getSkuImage() {
-				let sku = []
-				let skuTable = []
-				this.attr.productAttr.map((item) => {
-					item.optionList.map(items => {
-						if (items.image) sku.push(items.image)
-					});
-				})
-				const uniqueData = sku.filter((item, index, self) =>
-					index === self.findIndex((t) => t === item))
+			}
+		})
+	};
+	// #endif
+	const ShareInfo = () => {
+		let data = productInfo.value;
+		let href = location.href;
+		// #ifdef H5
+		if (proxy.$wechat.isWeixin()) {
+			href = href.indexOf("?") === -1 ? href + "?spread=" + uid.value : href + "&spread=" + uid.value;
+			let configAppMessage = {
+				desc: app.globalData.companyName,
+				title: data.storeName,
+				link: href,
+				imgUrl: data.image
+			};
+			proxy.$wechat.wechatEvevt([
+				"updateAppMessageShareData",
+				"updateTimelineShareData",
+				"onMenuShareAppMessage",
+				"onMenuShareTimeline"
+			], configAppMessage).then(res => {
+			}).catch(() => {})
+		}
+		// #endif
+	};
+	const showShare = (status) => {
+		sharePacket.touchstart = status;
+	};
+	const hideNav = () => {
+		currentPage.value = false;
+	};
+	//下拉导航页面跳转
+	const linkPage = (url) => {
+		if (url == '/pages/index/index' || url == '/pages/order_addcart/order_addcart' || url ==
+			'/pages/user/index') {
+			uni.switchTab({
+				url
+			})
+		} else {
+			uni.navigateTo({
+				url
+			})
+		}
+		currentPage.value = false;
+	};
+	//点击sku图片打开轮播图
+	const showImg = (index) => {
+		cusPreviewImg.value.open(selectSku.value.suk)
+	};
+	//滑动轮播图选择商品
+	const changeSwitch = (e) => {
+		let productSelect = skuArr.value[e];
+		selectSku.value = productSelect;
+		var skuList = productSelect.suk.split(',');
+		skuList.forEach((i, index) => {
+			attr.productAttr[index].index = skuList[index];
+		})
+		if (productSelect) {
+			attr.productSelect.image = productSelect.image;
+			attr.productSelect.price = productSelect.price;
+			attr.productSelect.stock = productSelect.stock;
+			// 后台传入的规格不展示时视为库存为0
+			if (!productSelect.isShow) {
+				attr.productSelect.stock = 0;
+			}
+			attr.productSelect.unique = productSelect.id;
+			attrTxt.value = "已选择";
+			attrValue.value = productSelect.suk;
+		}
+	};
+	const getFileType = (fileName) => {
+		// 后缀获取
+		let suffix = '';
+		// 获取类型结果
+		let result = '';
+		try {
+			const flieArr = fileName.split('.');
+			suffix = flieArr[flieArr.length - 1];
+		} catch (err) {
+			suffix = '';
+		}
+		// fileName无后缀返回 false
+		if (!suffix) {
+			return false;
+		}
+		suffix = suffix.toLocaleLowerCase();
+		// 图片格式
+		const imglist = ['png', 'jpg', 'jpeg', 'bmp', 'gif'];
+		// 进行图片匹配
+		result = imglist.find(item => item === suffix);
+		if (result) {
+			return 'image';
+		}
+		// 匹配 视频
+		const videolist = ['mp4', 'm2v', 'mkv', 'rmvb', 'wmv', 'avi', 'flv', 'mov', 'm4v'];
+		result = videolist.find(item => item === suffix);
+		if (result) {
+			return 'video';
+		}
+		// 其他 文件类型
+		return 'other';
+	};
+	// 保障协议弹出框
+	const handleToGgle = (type) => {
+		if (type) {
+			guaranteePopup.value.open()
+		} else {
+			guaranteePopup.value.close()
+		}
+	};
+	// 获取suk小图
+	const getSkuImage = () => {
+		let sku = []
+		let skuTable = []
+		attr.productAttr.map((item) => {
+			item.optionList.map(items => {
+				if (items.image) sku.push(items.image)
+			});
+		})
+		const uniqueData = sku.filter((item, index, self) =>
+			index === self.findIndex((t) => t === item))
 
-				if (uniqueData.length > 0) {
-					this.skuImage = uniqueData
-				} else {
-					for (let key in this.productValue) {
-						let obj = this.productValue[key];
-						skuTable.push(obj.image);
-					}
-					this.skuImage = skuTable.filter((item, index, self) =>
-						index === self.findIndex((t) => t === item))
-				}
+		if (uniqueData.length > 0) {
+			skuImage.value = uniqueData
+		} else {
+			for (let key in productValue.value) {
+				let obj = productValue.value[key];
+				skuTable.push(obj.image);
+			}
+			skuImage.value = skuTable.filter((item, index, self) =>
+				index === self.findIndex((t) => t === item))
+		}
+	};
+
+	// --- Lifecycle Hooks ---
+	onShow(() => {
+		loadUserRelatedData();
+	});
+
+	onLoad((options) => {
+
+		//用户从分享卡片进入的场景下获取主题色配置
+		theme.value = Cache.get('theme');
+
+		//判断顶部返回是否出现
+		var pages = getCurrentPages();
+		returnShow.value = pages.length === 1 ? false : true;
+		if (pages.length <= 1) {
+			retunTop.value = false
+		}
+
+		//页面中需要计算的一些值
+		uni.getSystemInfo({
+			success: function(res) {
+				height.value = res.windowHeight
+				//res.windowHeight:获取整个窗口高度为px，*2为rpx；98为头部占据的高度；
+				// #ifndef APP-PLUS || H5 || MP-ALIPAY
+				//navbarRight.value = res.windowWidth - uni.getMenuButtonBoundingClientRect().left;
+				// #endif
 			},
-		},
-	}
+		});
+
+		//获取浏览器中的参数，商品id video视频号商品，normal普通商品
+		if (!options.scene && !options.id) {
+			showSkeleton.value = false;
+			util.Tips({
+				title: '缺少参数无法查看商品'
+			}, {
+				url: '/pages/index/index'
+			});
+			return;
+		}
+		if (options.id) id.value = options.id;
+		// 仅仅小程序扫码进入获取商品id，商品类型
+		if (options.scene) {
+			let qrCodeValue = util.getUrlParams(decodeURIComponent(options.scene));
+			let mapeMpQrCodeValue = util.formatMpQrCodeData(qrCodeValue);
+			app.globalData.spread = mapeMpQrCodeValue.spread;
+			id.value = mapeMpQrCodeValue.id;
+			type.value = mapeMpQrCodeValue.type ? mapeMpQrCodeValue.type : 'normal';
+		}
+		if (options.type === 'video') {
+			// #ifdef MP
+			navH.value = 160;
+			// #endif
+			type.value = options.type
+		} else {
+			type.value = 'normal'
+			navH.value = app.globalData.navHeight;
+		}
+		// 商品类型vuex存储
+		useAppStore().PRODUCT_TYPE(type.value);
+		// 客服配置
+		Object.assign(chatConfig, Cache.getItem('chatConfig') || {});
+		// #ifdef H5
+		computeUser();
+		// #endif
+
+		if (options.spread) {
+			Cache.set('spread', options.spread);
+			app.globalData.spread = options.spread;
+		}
+
+		getDiyData(); //商品详情主题配置
+		getGoodsDetails(); //商品详情
+		getCouponType(); //获取默认的 优惠券类型
+		getProductReplyList(); //评论列表
+		getProductReplyCount(); //评论条数
+		getGoods(); //优品推荐
+		//主题色颜色配置
+		indicatorBg.value = setThemeColor();
+	});
+
+	onReady(() => {
+		isNodes.value++;
+		nextTick(() => {
+			// #ifdef MP
+			const menuButton = uni.getMenuButtonBoundingClientRect();
+			const query = uni.createSelectorQuery();
+				query
+					.select('#home')
+					.boundingClientRect(data => {
+						homeTop.value = menuButton.top * 2 + menuButton.height - (data ? data.height : 0);
+					})
+					.exec();
+			// #endif
+			// #ifdef APP-PLUS
+			homeTop.value = 60;
+			// #endif
+		});
+	});
+
+	/**
+	 * 用户点击右上角分享
+	 */
+	// #ifdef MP
+	onShareAppMessage((res) => {
+		actionSheetHidden.value = !actionSheetHidden.value;
+		return {
+			title: productInfo.value.storeName || '',
+			imageUrl: productInfo.value.image || '',
+			path: '/pages/goods/goods_details/index?id=' + id.value + '&spread=' + uid.value,
+		}
+	});
+	// #endif
+
+	onReachBottom(() => {
+		getCouponList(couponType.value);
+	});
+
+	// 滚动监听
+	onPageScroll((e) => {
+		// 传入scrollTop值并触发所有easy-loadimage组件下的滚动监听事件
+		uni.$emit('scroll');
+	});
 </script>
+
 
 <style scoped lang="scss">
 	.lang {
@@ -2184,27 +2134,6 @@
 
 	.bg_color {
 		@include main_bg_color(theme);
-	}
-
-	.vip_icon {
-		width: 44rpx;
-		height: 28rpx;
-	}
-
-	.pl-2 {
-		padding-left: 20rpx;
-	}
-
-	.vip_money {
-		background: #FFE7B9;
-		border-radius: 4px;
-		font-size: 22rpx;
-		color: #333;
-		line-height: 28rpx;
-		text-align: center;
-		padding: 0 6rpx;
-		box-sizing: border-box;
-		margin-left: -4rpx;
 	}
 
 	.theme_price {

@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class="promoter-order">
 			<view class='promoterHeader'>
 				<view class='headerCon acea-row row-between-wrapper'>
@@ -48,90 +48,82 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	import {spreadOrder} from '@/api/user.js';
 	import {toLogin} from '@/libs/login.js';
-	import {mapGetters} from "vuex";
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
 	import emptyPage from '@/components/emptyPage.vue'
 	import {setThemeColor} from '@/utils/setTheme.js'
+	import { ref } from 'vue';
+	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
+import { useColor } from '@/composables/useColor.js';
 	const app = getApp();
-	export default {
-		components: {
-			emptyPage
-		},
-		data() {
-			return {
-				page: 1,
-				limit: 20,
-				status: false,
-				recordList: [],
-				recordCount: 0,
-				time: 0,
-				theme:app.globalData.theme,
-				bgColor:'#e93323'
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		onLoad() {
-			if (this.isLogin) {
-				this.getRecordOrderList();
-			} else {
-				toLogin();
-			}
-			let that = this;
-			that.bgColor = setThemeColor();
-			uni.setNavigationBarColor({
-				frontColor: '#ffffff',
-				backgroundColor:that.bgColor,
-			});
-		},
-		methods: {
-			stringToDate : function(data){
-				let str = data.replace(/-/g,'/');
-				let date = new Date(str);
-				return data;
-			 },
-			getRecordOrderList: function() {
-				let that = this;
-				let page = that.page;
-				let limit = that.limit;
-				let status = that.status;
-				let recordList = that.recordList;
-				let newList = [];
-				if (status == true) return;
-				spreadOrder({
-					page: page,
-					limit: limit
-				}).then(res => {
-					let recordListData = res.data.list ? res.data.list : [];
-					// 每页返回的总条数；
-					let len = 0;
-					for(let i = 0;i<recordListData.length;i++) {
-						len = len + recordListData[i].child.length;
-						let str = recordListData[i].time.replace(/-/g,'/');
-						let date = new Date(str).getTime();
-						if(that.time === date){
-							that.$set(that.recordList[i],'child',that.recordList[i].child.concat(recordListData[i].child));
-						}else{
-							recordListData.forEach((item,index)=>{
-								if(recordListData[i]==item){
-									newList.push(item);
-								}
-							})
-							that.$set(that, 'recordList', recordList.concat(newList));
-						}
-						that.time = date;
-					};
-					that.recordCount = res.data.count || 0;
-					that.status = limit > len;
-					that.page = page + 1;
-				});
-			}
-		},
-		onReachBottom() {
-			this.getRecordOrderList()
+	const { isLogin } = storeToRefs(useAppStore());
+
+	const page = ref(1);
+	const limit = ref(20);
+	const status = ref(false);
+	const recordList = ref([]);
+	const recordCount = ref(0);
+	const time = ref(0);
+	const { colorStyle } = useColor();
+	const theme = ref(app.globalData.theme);
+	const bgColor = ref('#e93323');
+
+	onLoad(() => {
+		if (isLogin.value) {
+			getRecordOrderList();
+		} else {
+			toLogin();
 		}
+		bgColor.value = setThemeColor();
+		uni.setNavigationBarColor({
+			frontColor: '#ffffff',
+			backgroundColor: bgColor.value,
+		});
+	});
+
+	function stringToDate(data) {
+		let str = data.replace(/-/g,'/');
+		let date = new Date(str);
+		return data;
 	}
+	function getRecordOrderList() {
+		let newList = [];
+		if (status.value == true) return;
+		spreadOrder({
+			page: page.value,
+			limit: limit.value
+		}).then(res => {
+			let recordListData = res.data.list ? res.data.list : [];
+			// 每页返回的总条数；
+			let len = 0;
+			for (let i = 0; i < recordListData.length; i++) {
+				len = len + recordListData[i].child.length;
+				let str = recordListData[i].time.replace(/-/g,'/');
+				let date = new Date(str).getTime();
+				if (time.value === date) {
+					recordList.value[i].child = recordList.value[i].child.concat(recordListData[i].child);
+				} else {
+					recordListData.forEach((item, index) => {
+						if (recordListData[i] == item) {
+							newList.push(item);
+						}
+					})
+					recordList.value = recordList.value.concat(newList);
+				}
+				time.value = date;
+			};
+			recordCount.value = res.data.count || 0;
+			status.value = limit.value > len;
+			page.value = page.value + 1;
+		});
+	}
+
+	onReachBottom(() => {
+		getRecordOrderList()
+	});
 </script>
 
 <style scoped lang="scss">

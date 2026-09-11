@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<form @submit="subRefund" report-submit='true'>
 			<view class='apply-return'>
 				<view class='goodsStyle acea-row row-between borRadius14'
@@ -64,143 +64,62 @@
 		</form>
 	</view>
 </template>
-<script>
-	import {
-		ordeRefundReason,
-		orderRefundVerify,
-		applyRefund
-	} from '@/api/order.js';
-	import {
-		toLogin
-	} from '@/libs/login.js';
-	import {
-		mapGetters
-	} from "vuex";
-	import {
-		Debounce
-	} from '@/utils/validate.js'
-	let app = getApp();
-	export default {
-		data() {
-			return {
-				refund_reason_wap_img: [],
-				refund_reason_wap_imgPath: [],
-				orderInfo: {},
-				RefundArray: [],
-				index: 0,
-				orderId: 0,
-				theme: app.globalData.theme,
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		watch: {
-			isLogin: {
-				handler: function(newV, oldV) {
-					if (newV) {
-						this.getOrderInfo();
-						this.getRefundReason();
-					}
-				},
-				deep: true
-			}
-		},
-		onLoad: function(options) {
-			if (!options.orderId) return this.$util.Tips({
-				title: '缺少订单id,无法退款'
-			}, {
-				tab: 3,
-				url: 1
-			});
-			this.orderId = options.orderId;
-			if (this.isLogin) {
-				this.getOrderInfo();
-				this.getRefundReason();
-			} else {
-				toLogin();
-			}
-		},
-		methods: {
-			onLoadFun: function() {
-				this.getOrderInfo();
-				this.getRefundReason();
-			},
-			/**
-			 * 获取订单详情
-			 * 
-			 */
-			getOrderInfo: function() {
-				let that = this;
-				applyRefund(that.orderId).then(res => {
-					that.$set(that, 'orderInfo', res.data);
-				});
-			},
-			/**
-			 * 获取退款理由
-			 */
-			getRefundReason: function() {
-				let that = this;
-				ordeRefundReason().then(res => {
-					that.$set(that, 'RefundArray', res.data);
-				})
-			},
+<script setup>
+import { ref, watch } from "vue";
+import { onLoad } from "@dcloudio/uni-app";
+import { ordeRefundReason, orderRefundVerify, applyRefund } from "@/api/order.js";
+import { toLogin } from "@/libs/login.js";
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
+import { Debounce } from "@/utils/validate.js";
+import util from "@/utils/util.js";
+import { useColor } from '@/composables/useColor.js';
 
-			/**
-			 * 删除图片
-			 * 
-			 */
-			DelPic: function(e) {
-				let index = e,
-					that = this;
-				that.refund_reason_wap_imgPath.splice(index, 1);
-			},
-			/**
-			 * 上传文件
-			 * 
-			 */
-			uploadpic: function() {
-				let that = this;
-				that.$util.uploadImageOne({
-					url: 'upload/image',
-					name: 'multipart',
-					model: "product",
-					pid: 1
-				}, function(res) {
-					that.refund_reason_wap_imgPath.push(res.data.url);
-				});
-			},
+const app = getApp();
+const appStore = useAppStore();
+const { isLogin } = storeToRefs(appStore);
 
-			/**
-			 * 申请退货
-			 */
-			subRefund: Debounce(function(e) {
-				let that = this,
-					value = e.detail.value;
-				//收集form表单
-				// if (!value.refund_reason_wap_explain) return this.$util.Tips({title:'请输入退款原因'});
-				orderRefundVerify({
-					text: that.RefundArray[that.index] || '',
-					refund_reason_wap_explain: value.refund_reason_wap_explain,
-					refund_reason_wap_img: that.refund_reason_wap_imgPath.join(','),
-					uni: that.orderId
-				}).then(res => {
-					return this.$util.Tips({
-						title: '申请成功',
-						icon: 'success'
-					}, {
-						tab: 5,
-						url: '/pages/users/user_return_list/index?isT=1'
-					});
-				}).catch(err => {
-					return this.$util.Tips({
-						title: err
-					});
-				})
-			}),
-			bindPickerChange: function(e) {
-				this.$set(this, 'index', e.detail.value);
-			}
-		}
-	}
+const refund_reason_wap_img = ref([]);
+const refund_reason_wap_imgPath = ref([]);
+const orderInfo = ref({});
+const RefundArray = ref([]);
+const index = ref(0);
+const orderId = ref(0);
+const theme = ref(app.globalData.theme);
+const { colorStyle } = useColor();
+
+watch(isLogin, (newV) => {
+	if (newV) { getOrderInfo(); getRefundReason(); }
+}, { deep: true });
+
+onLoad((options) => {
+	if (!options.orderId) return util.Tips({ title: '缺少订单id,无法退款' }, { tab: 3, url: 1 });
+	orderId.value = options.orderId;
+	if (isLogin.value) { getOrderInfo(); getRefundReason(); }
+	else toLogin();
+});
+
+function onLoadFun() { getOrderInfo(); getRefundReason(); }
+function getOrderInfo() { applyRefund(orderId.value).then(res => { orderInfo.value = res.data; }); }
+function getRefundReason() { ordeRefundReason().then(res => { RefundArray.value = res.data; }); }
+function DelPic(e) { refund_reason_wap_imgPath.value.splice(e, 1); }
+function uploadpic() {
+	util.uploadImageOne({ url: 'upload/image', name: 'multipart', model: "product", pid: 1 }, function(res) {
+		refund_reason_wap_imgPath.value.push(res.data.url);
+	});
+}
+const subRefund = Debounce(function(e) {
+	let value = e.detail.value;
+	orderRefundVerify({
+		text: RefundArray.value[index.value] || '',
+		refund_reason_wap_explain: value.refund_reason_wap_explain,
+		refund_reason_wap_img: refund_reason_wap_imgPath.value.join(','),
+		uni: orderId.value
+	}).then(() => {
+		return util.Tips({ title: '申请成功', icon: 'success' }, { tab: 5, url: '/pages/users/user_return_list/index?isT=1' });
+	}).catch(err => { return util.Tips({ title: err }); });
+});
+function bindPickerChange(e) { index.value = e.detail.value; }
 </script>
 
 <style scoped lang="scss">

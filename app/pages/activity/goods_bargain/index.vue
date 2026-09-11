@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class="pageInfo">
 			<skeleton :show="showSkeleton" :isNodes="isNodes" ref="skeleton" loading="chiaroscuro" selector="skeleton"
 				></skeleton>
@@ -8,7 +8,7 @@
 				<view class='iconfont icon-xiangzuo' @tap='goBack' :style="'top:'+ (navH/2) +'rpx'" v-if="returnShow">
 				</view>
 				<!-- #endif -->
-				<view class='header skeleton-rect' :style="{backgroundImage:'url('+imgHost+backBg+')'}" v-show="imgHost">
+				<view class='header skeleton-rect' :style="{backgroundImage:'url('+imgHost+ '/' + backBg+')'}" v-show="imgHost">
 					<view class="pic">
 						<view class='swipers skeleton-rect'>
 							<swiper :indicator-dots="indicatorDots" :autoplay="autoplay" interval="2500" duration="500" vertical="true"
@@ -62,218 +62,147 @@
 					</view>
 				</view>
 				<view v-else class="flex-center no_shop">
-					<image :src="urlDomain+'crmebimage/perset/staticImg/noShopper.png'" mode="aspectFit" style="width: 400rpx;"></image>
+					<image :src="urlDomain + '/crmebimage/perset/staticImg/noShopper.png'" mode="aspectFit" style="width: 400rpx;"></image>
 				</view>
 			</view>
 		</view>
 	</view>
 </template>
-<script>
-	let app = getApp();
-	import {
-		getBargainList,
-		bargainHeaderApi
-	} from '@/api/activity.js';
-	import {
-		openBargainSubscribe
-	} from '@/utils/SubscribeMessage.js';
-	// import countDown from '@/components/countDown';
-	import countDown from "@/pages/activity/components/countDown";
-	import {
-		toLogin
-	} from '@/libs/login.js';
-	import {
-		mapGetters
-	} from "vuex";
-	import animationType from '@/utils/animationType.js'
-	export default {
-		components: {
-			countDown
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				showSkeleton: true, //骨架屏显示隐藏
-				isNodes: 0, //控制什么时候开始抓取元素节点,只要数值改变就重新抓取
-				bgColor: {
-					'bgColor': '#E93323',
-					'Color': '#fff',
-					'width': '44rpx',
-					'timeTxtwidth': '16rpx',
-					'isDay': true
-				},
-				bargainList: [],
-				page: 1,
-				limit: 10,
-				loading: false,
-				loadend: false,
-				navH: '',
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
-				returnShow: true,
-				loadTitle: '加载更多',
-				bargainSuccessList: [],
-				bargainTotal: 0,
-				indicatorDots: false,
-				autoplay: true,
-				theme:app.globalData.theme,
-				imgHost:'',
-				backBg:'crmebimage/perset/bargain_header/bargain_header1.jpg',
-				navBgColor:'#e93323'
-			};
-		},
-		computed: mapGetters(['isLogin', 'uid']),
-		watch: {
-			isLogin: {
-				handler: function(newV, oldV) {
-					if (newV) {
-						this.getBargainList();
-						this.getBargainHeader();
-					}
-				},
-				deep: true
-			}
-		},
-		onLoad: function(options) {
-			let that = this;
-			that.$set(that,'imgHost',that.$Cache.get('imgHost'));
-			switch (app.globalData.theme) {
-				case 'theme1':
-					that.backBg = 'crmebimage/perset/bargain_header/bargain_header1.jpg';
-					that.bgColor.bgColor = '#e93323';
-					that.navBgColor = '#e93323';
-					break;
-				case 'theme2':
-					that.backBg = 'crmebimage/perset/bargain_header/bargain_header2.jpg';
-					that.bgColor.bgColor = '#FE5C2D';
-					that.navBgColor = '#FE5C2D';
-					break;
-				case 'theme3':
-					that.backBg = 'crmebimage/perset/bargain_header/bargain_header3.jpg';
-					that.bgColor.bgColor = '#42CA4D';
-					that.navBgColor = '#42CA4D';
-					break;
-				case 'theme4':
-					that.backBg = 'crmebimage/perset/bargain_header/bargain_header4.jpg';
-					that.bgColor.bgColor = '#1DB0FC';
-					that.navBgColor = '#1DB0FC';
-					break;
-				case 'theme5':
-					that.backBg = 'crmebimage/perset/bargain_header/bargain_header5.jpg';
-					that.bgColor.bgColor = '#FF448F';
-					that.navBgColor = '#FF448F';
-					break;
-			}
-			uni.setNavigationBarColor({
-				frontColor: '#ffffff',
-				backgroundColor:that.navBgColor,
-			});
-			setTimeout(() => {
-				this.isNodes++;
-			}, 500);
-			var pages = getCurrentPages();
-			this.returnShow = pages.length === 1 ? false : true;
-			uni.setNavigationBarTitle({
-				title: "砍价列表"
-			})
-			this.navH = app.globalData.navHeight;
-			this.getBargainList();
-			this.getBargainHeader();
-		},
-		methods: {
-			getBargainHeader: function() {
-				bargainHeaderApi().then(res => {
-					this.bargainTotal = res.data.bargainTotal;
-					this.bargainSuccessList = res.data.bargainSuccessList;
-				}).catch(err => {
-					return this.$util.Tips({
-						title: err
-					});
-				})
-			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
-			},
-			goBack: function() {
-				uni.switchTab({
-					url:'/pages/index/index'
-				})
-			},
-			openSubscribe: function(e) {
-				let page = e;
-				// #ifndef MP
-				uni.navigateTo({
-					animationType: animationType.type,					animationDuration: animationType.duration,
-					url: page
-				});
-				// #endif
-				// #ifdef MP
-				uni.showLoading({
-					title: '正在加载',
-				})
-				openBargainSubscribe().then(res => {
-					uni.hideLoading();
-					uni.navigateTo({
-						url: page,
-					});
-				}).catch((err) => {
-					uni.hideLoading();
-				});
-				// #endif
-			},
-			getBargainList: function() {
-				let that = this;
-				if (that.loadend) return;
-				if (that.loading) return;
-				that.loading = true;
-				that.loadTitle = '';
-				getBargainList({
-					page: that.page,
-					limit: that.limit
-				}).then(function(res) {
-					let list = res.data.list;
-					let bargainList = that.$util.SplitArray(list, that.bargainList);
-					let loadend = list.length < that.limit;
-					that.loadend = loadend;
-					that.loading = false;
-					// #ifdef H5
-					that.setShare();
-					// #endif
-					that.loadTitle = loadend ? '已全部加载' : '加载更多';
-					that.$set(that, 'bargainList', bargainList);
-					that.$set(that, 'page', that.page + 1);
-					
-					setTimeout(() => {
-						that.showSkeleton = false
-					}, 1000)
-				}).catch(res => {
-					that.loading = false;
-					that.loadTitle = '加载更多';
-				});
-			},
-			setShare: function() {
-				this.$wechat.isWeixin() &&
-					this.$wechat.wechatEvevt([
-						"updateAppMessageShareData",
-						"updateTimelineShareData",
-						"onMenuShareAppMessage",
-						"onMenuShareTimeline"
-					], {
-						desc: this.bargainList[0].title,
-						title: this.bargainList[0].title,
-						link: location.href,
-						imgUrl:this.bargainList[0].image 
-					}).then(res => {
-					}).catch(err => {
-						console.log(err);
-					});
-			},
-		},
-		onReachBottom: function() {
-			this.getBargainList();
-		},
-	}
+<script setup>
+import { ref, watch, getCurrentInstance } from "vue";
+import { onLoad, onReachBottom } from "@dcloudio/uni-app";
+const app = getApp();
+import { getBargainList, bargainHeaderApi } from "@/api/activity.js";
+import { openBargainSubscribe } from "@/utils/SubscribeMessage.js";
+import countDown from "@/pages/activity/components/countDown/index.vue";
+import { toLogin } from "@/libs/login.js";
+import animationType from "@/utils/animationType.js";
+import util from "@/utils/util.js";
+import Cache from "@/utils/cache.js";
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
+import { useColor } from '@/composables/useColor.js';
+
+const { proxy } = getCurrentInstance();
+const appStore = useAppStore();
+const { isLogin, uid } = storeToRefs(appStore);
+
+const urlDomain = ref(Cache.get("imgHost"));
+const showSkeleton = ref(true);
+const isNodes = ref(0);
+const bgColor = ref({ bgColor: "#E93323", Color: "#fff", width: "44rpx", timeTxtwidth: "16rpx", isDay: true });
+const bargainList = ref([]);
+const page = ref(1);
+const limit = ref(10);
+const loading = ref(false);
+const loadend = ref(false);
+const navH = ref("");
+const isAuto = ref(false);
+const isShowAuth = ref(false);
+const returnShow = ref(true);
+const loadTitle = ref("加载更多");
+const bargainSuccessList = ref([]);
+const bargainTotal = ref(0);
+const indicatorDots = ref(false);
+const autoplay = ref(true);
+const theme = ref(app.globalData.theme);
+const { colorStyle } = useColor();
+const imgHost = ref("");
+const backBg = ref("crmebimage/perset/bargain_header/bargain_header1.jpg");
+const navBgColor = ref("#e93323");
+
+watch(isLogin, (newV) => {
+  if (newV) {
+    getBargainListFn();
+    getBargainHeader();
+  }
+}, { deep: true });
+
+onLoad((options) => {
+  imgHost.value = Cache.get("imgHost");
+  switch (app.globalData.theme) {
+    case "theme1": backBg.value = "crmebimage/perset/bargain_header/bargain_header1.jpg"; bgColor.value.bgColor = "#e93323"; navBgColor.value = "#e93323"; break;
+    case "theme2": backBg.value = "crmebimage/perset/bargain_header/bargain_header2.jpg"; bgColor.value.bgColor = "#FE5C2D"; navBgColor.value = "#FE5C2D"; break;
+    case "theme3": backBg.value = "crmebimage/perset/bargain_header/bargain_header3.jpg"; bgColor.value.bgColor = "#42CA4D"; navBgColor.value = "#42CA4D"; break;
+    case "theme4": backBg.value = "crmebimage/perset/bargain_header/bargain_header4.jpg"; bgColor.value.bgColor = "#1DB0FC"; navBgColor.value = "#1DB0FC"; break;
+    case "theme5": backBg.value = "crmebimage/perset/bargain_header/bargain_header5.jpg"; bgColor.value.bgColor = "#FF448F"; navBgColor.value = "#FF448F"; break;
+  }
+  uni.setNavigationBarColor({ frontColor: "#ffffff", backgroundColor: navBgColor.value });
+  setTimeout(() => { isNodes.value++; }, 500);
+  var pages = getCurrentPages();
+  returnShow.value = pages.length === 1 ? false : true;
+  uni.setNavigationBarTitle({ title: "砍价列表" });
+  navH.value = app.globalData.navHeight;
+  getBargainListFn();
+  getBargainHeader();
+});
+
+onReachBottom(() => { getBargainListFn(); });
+
+function getBargainHeader() {
+  bargainHeaderApi().then((res) => {
+    bargainTotal.value = res.data.bargainTotal;
+    bargainSuccessList.value = res.data.bargainSuccessList;
+  }).catch((err) => { return util.Tips({ title: err }); });
+}
+
+function authColse(e) { isShowAuth.value = e; }
+function goBack() { uni.switchTab({ url: "/pages/index/index" }); }
+
+function openSubscribe(e) {
+  let p = e;
+  // #ifndef MP
+  uni.navigateTo({ animationType: animationType.type, animationDuration: animationType.duration, url: p });
+  // #endif
+  // #ifdef MP
+  uni.showLoading({ title: "正在加载" });
+  openBargainSubscribe().then(() => {
+    uni.hideLoading();
+    uni.navigateTo({ url: p });
+  }).catch(() => { uni.hideLoading(); });
+  // #endif
+}
+
+function getBargainListFn() {
+  if (loadend.value) return;
+  if (loading.value) return;
+  loading.value = true;
+  loadTitle.value = "";
+  getBargainList({ page: page.value, limit: limit.value })
+    .then(function (res) {
+      let list = res.data.list;
+      let bl = util.SplitArray(list, bargainList.value);
+      let isEnd = list.length < limit.value;
+      loadend.value = isEnd;
+      loading.value = false;
+      // #ifdef H5
+      setShare();
+      // #endif
+      loadTitle.value = isEnd ? "已全部加载" : "加载更多";
+      bargainList.value = bl;
+      page.value++;
+      setTimeout(() => { showSkeleton.value = false; }, 1000);
+    })
+    .catch(() => {
+      loading.value = false;
+      loadTitle.value = "加载更多";
+    });
+}
+
+// #ifdef H5
+function setShare() {
+  proxy.$wechat.isWeixin() &&
+    proxy.$wechat.wechatEvevt(
+      ["updateAppMessageShareData", "updateTimelineShareData", "onMenuShareAppMessage", "onMenuShareTimeline"],
+      {
+        desc: bargainList.value[0].title,
+        title: bargainList.value[0].title,
+        link: location.href,
+        imgUrl: bargainList.value[0].image,
+      }
+    ).then(() => {}).catch(() => {});
+}
+// #endif
 </script>
 
 <style lang="scss">

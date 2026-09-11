@@ -77,7 +77,7 @@
             </scroll-view>
           </view>
           <waterfallsFlow
-            ref="waterfallsFlow"
+            ref="waterfallsFlowRef"
             :wfList="goodList"
             :goDetail="'goDetail'"
             @itemTap="goDetail"
@@ -117,697 +117,485 @@
   </view>
 </template>
 
-<script>
+<script setup>
 const app = getApp();
-import colors from "@/mixins/color";
-import { getCrmebCopyRight } from "@/api/api.js";
+import { ref, computed, nextTick, getCurrentInstance, onMounted } from "vue";
+import { onLoad, onShow, onUnload, onPullDownRefresh, onReachBottom, onPageScroll } from "@dcloudio/uni-app";
+import { useColor } from "@/composables/useColor.js";
 import { getShare } from "@/api/public.js";
 import waterfallsFlow from "@/components/WaterfallsFlow/WaterfallsFlow.vue";
 import emptyPage from "@/components/emptyPage.vue";
 // #ifdef MP
-import { getTempIds } from "@/api/api.js";
-import { SUBSCRIBE_MESSAGE } from "@/config/cache";
+import { getTempIds as getTempIdsApi } from "@/api/api.js";
+import { SUBSCRIBE_MESSAGE } from "@/config/cache.js";
+import { cacheSubscribeTemplateIds } from "@/utils/SubscribeMessage.js";
 // #endif
-import { mapGetters, mapMutations } from "vuex";
 import { getDiy, getDiyVersion, getThemeInfo } from "@/api/api.js";
 import { getCartCounts } from "@/api/order.js";
 import { getCategoryList, getProductslist } from "@/api/store.js";
 import { goShopDetail } from "@/libs/order.js";
 import { toLogin } from "@/libs/login.js";
-import { HTTP_REQUEST_URL } from "@/config/app";
+import { HTTP_REQUEST_URL } from "@/config/app.js";
+import configs from "@/config/app.js";
 import Loading from "@/components/Loading/index.vue";
-import Cache from "@/utils/cache";
+import Cache from "@/utils/cache.js";
+import util from "@/utils/util.js";
 import appUpdate from "@/components/update/app-update.vue";
 import { applyTheme } from "@/utils/theme.js";
 import PageDesign from "@/subpackage/diyComponents/pageDesign.vue";
+import { useAppStore } from "@/store/app.js";
+import { useIndexDataStore } from "@/store/indexData.js";
+import { storeToRefs } from "pinia";
 
-export default {
-  computed: {
-    // #ifdef MP
-    appletStyle() {
-      return {
-        top: this.getHeight.menuButtonInfo.bottom + 8 + "px",
-        right: "10px",
-      };
-    },
-    // #endif
-    pageStyle() {
-      return {
-        backgroundColor: this.bgColor,
-        backgroundImage: this.bgPic ? `url(${this.bgPic})` : "",
-        minHeight: this.windowHeight + "px",
-      };
-    },
-    pdHeights() {
-      let H = `${this.pdHeight * 2 + 100}rpx`;
-      return {
-        height: this.isFooter ? H : "100rpx",
-      };
-    },
-    ...mapGetters(["isLogin", "uid", "cartNum"]),
-  },
-  mixins: [colors],
-  components: {
-    PageDesign,
-    Loading,
-    waterfallsFlow,
-    emptyPage,
-    // #ifdef APP
-    appUpdate,
-    // #endif
-  },
-  data() {
-    return {
-      styleConfig: [],
-      loading: false,
-      loadend: false,
-      loadTitle: "下拉加载更多", //提示语
-      page: 1,
-      limit: this.$config.LIMIT,
-      numConfig: 0,
-      code: "",
-      shareInfo: {},
-      sortList: "",
-      sortAll: [],
-      goodPage: 1,
-      goodList: [],
-      sid: 0,
-      curSort: 0,
-      sortMpTop: 0,
-      loaded: false,
-      loading: false,
-      domOffsetTop: 50,
-      // #ifdef APP-PLUS || MP
-      isFixed: true,
-      // #endif
-      // #ifdef H5
-      isFixed: false,
-      // #endif
-      site_config: "",
-      errorNetwork: false, // 是否断网
-      isHeaderSerch: false,
-      showHomeComb: false,
-      showCateNav: false,
-      homeCombData: {},
-      headerSerchCombData: {},
-      cateNavData: {},
-      footerConfigData: {},
-      bgColor: "",
-      bgPic: "",
-      bgTabVal: "",
-      pageShow: true,
-      windowHeight: 0,
-      imgHost: HTTP_REQUEST_URL,
-      isShowAuth: false,
-      isScrolled: false,
-      product_video_status: false,
-      confirm_video_status: false,
-      positionTop: 0,
-      isFooter: false,
-      pdHeight: 0, //自定义底部导航上下边距和
-      entryData: {
-        store_id: "",
-        latitude: "",
-        longitude: "",
-        select_store_id: "",
-      },
-      goodsIndex: [],
-      promotionIndex: [],
-      belongIndex: 0, // 进店规则归属门店排序位置；
-      isBelongStore: false, //判断是否为归属门店；
-      getHeight: this.$util.getWXStatusHeight(),
-      myApplet: true,
-      configData: Cache.get("BASIC_CONFIG"),
-      currentDiyData: {},
-      isPreview: false,
-      themeId: 0,
-    };
-  },
-  onLoad(options) {
-    let that = this;
-    uni.hideTabBar();
-    that.getOptions(options);
-    this.$nextTick(function () {
-      uni.getSystemInfo({
-        success: function (res) {
-          that.windowHeight = res.windowHeight;
-        },
-      });
+const { proxy } = getCurrentInstance();
+const appStore = useAppStore();
+const indexDataStore = useIndexDataStore();
+const { isLogin, uid, cartNum } = storeToRefs(appStore);
+const { colorStyle } = useColor();
+
+// 子组件引用
+const waterfallsFlowRef = ref(null);
+const appUpdateRef = ref(null);
+
+// data
+const styleConfig = ref([]);
+const loading = ref(false);
+const loadend = ref(false);
+const loadTitle = ref("下拉加载更多");
+const page = ref(1);
+const limit = ref(configs.LIMIT);
+const numConfig = ref(0);
+const code = ref("");
+const shareInfo = ref({});
+const sortList = ref("");
+const sortAll = ref([]);
+const goodPage = ref(1);
+const goodList = ref([]);
+const sid = ref(0);
+const curSort = ref(0);
+const sortMpTop = ref(0);
+const loaded = ref(false);
+const domOffsetTop = ref(50);
+// #ifdef APP-PLUS || MP
+const isFixed = ref(true);
+// #endif
+// #ifdef H5
+const isFixed = ref(false);
+// #endif
+const site_config = ref("");
+const errorNetwork = ref(false);
+const isHeaderSerch = ref(false);
+const showHomeComb = ref(false);
+const showCateNav = ref(false);
+const homeCombData = ref({});
+const headerSerchCombData = ref({});
+const cateNavData = ref({});
+const footerConfigData = ref({});
+const bgColor = ref("");
+const bgPic = ref("");
+const bgTabVal = ref("");
+const pageShow = ref(true);
+const windowHeight = ref(0);
+const imgHost = ref(HTTP_REQUEST_URL);
+const isShowAuth = ref(false);
+const isScrolled = ref(false);
+const product_video_status = ref(false);
+const confirm_video_status = ref(false);
+const positionTop = ref(0);
+const isFooter = ref(false);
+const pdHeight = ref(0);
+const entryData = ref({ store_id: "", latitude: "", longitude: "", select_store_id: "" });
+const goodsIndex = ref([]);
+const promotionIndex = ref([]);
+const belongIndex = ref(0);
+const isBelongStore = ref(false);
+const getHeight = ref(util.getWXStatusHeight());
+const myApplet = ref(true);
+const configData = ref(Cache.get("BASIC_CONFIG"));
+const currentDiyData = ref({});
+const isPreview = ref(false);
+const themeId = ref(0);
+
+// computed
+// #ifdef MP
+const appletStyle = computed(() => ({
+  top: getHeight.value.menuButtonInfo.bottom + 8 + "px",
+  right: "10px",
+}));
+// #endif
+const pageStyle = computed(() => ({
+  backgroundColor: bgColor.value,
+  backgroundImage: bgPic.value ? `url(${bgPic.value})` : "",
+  minHeight: windowHeight.value + "px",
+}));
+const pdHeights = computed(() => {
+  let H = `${pdHeight.value * 2 + 100}rpx`;
+  return { height: isFooter.value ? H : "100rpx" };
+});
+
+// lifecycle
+onLoad((options) => {
+  uni.hideTabBar();
+  getOptions(options);
+  nextTick(function() {
+    uni.getSystemInfo({
+      success: function(res) { windowHeight.value = res.windowHeight; },
     });
-    const { state, scope } = options;
-    let themeId = options.theme_id;
-    // #ifdef MP
-    if (options.scene) {
-      let value = this.$util.getUrlParams(decodeURIComponent(options.scene));
-      if (value.theme_id) themeId = value.theme_id;
-    }
-    // #endif
-
-    if (themeId) {
-      this.themeId = themeId;
-      this.isPreview = true;
-      uni.setStorageSync("previewThemeId", themeId);
-      applyTheme(themeId);
+  });
+  const { state, scope } = options;
+  let tid = options.theme_id;
+  // #ifdef MP
+  if (options.scene) {
+    let value = util.getUrlParams(decodeURIComponent(options.scene));
+    if (value.theme_id) tid = value.theme_id;
+  }
+  // #endif
+  if (tid) {
+    themeId.value = tid;
+    isPreview.value = true;
+    uni.setStorageSync("previewThemeId", tid);
+    applyTheme(tid);
+  } else {
+    let previewThemeId = uni.getStorageSync("previewThemeId");
+    if (previewThemeId) {
+      themeId.value = previewThemeId;
+      isPreview.value = true;
+      applyTheme(previewThemeId);
     } else {
-      let previewThemeId = uni.getStorageSync("previewThemeId");
-      if (previewThemeId) {
-        this.themeId = previewThemeId;
-        this.isPreview = true;
-        applyTheme(previewThemeId);
-      } else {
-        applyTheme();
-      }
-    }
-    this.diyData();
-    // #ifdef H5
-    this.setOpenShare();
-    // #endif
-    // #ifdef MP
-    this.getTempIds();
-    // #endif
-    getShare().then((res) => {
-      this.shareInfo = res.data;
-    });
-    this.getCopyRight();
-    this.$eventHub.$on("confirm_video_status", () => {
-      if (this.confirm_video_status) {
-        return;
-      }
-      this.confirm_video_status = true;
-      let flag = true;
-      // #ifdef H5
-      flag = window.self == window.top;
-      // #endif
-      if (!flag) {
-        return;
-      }
-      uni.showModal({
-        content: "当前使用移动网络，是否继续播放视频？",
-        success: (res) => {
-          if (res.confirm) {
-            // 监听
-            this.SET_AUTOPLAY(true);
-            this.$eventHub.$emit("product_video_observe");
-          }
-        },
-      });
-    });
-
-    // #ifdef APP-PLUS
-    let onNetworkStatusChange = (res) => {
-      if (res.isConnected) {
-        this.diyData();
-        uni.offNetworkStatusChange(onNetworkStatusChange);
-      }
-    };
-    uni.onNetworkStatusChange(onNetworkStatusChange);
-    // #endif
-  },
-  onUnload() {
-    // 清除监听
-    uni.$off("activeFn");
-  },
-  onShow() {
-    uni.removeStorageSync("form_type_cart");
-    if (this.isLogin) {
-      this.getCartNum();
-    }
-    // #ifdef MP
-    if (wx.canIUse("checkIsAddedToMyMiniProgram")) {
-      this.checkMyApplet();
-    } else {
-      this.myApplet = true;
-    }
-    // #endif
-  },
-  onPullDownRefresh() {
-    this.diyData();
-    uni.stopPullDownRefresh();
-  },
-  methods: {
-    ...mapMutations(["SET_AUTOPLAY", "SET_NEARBY"]),
-    checkMyApplet() {
-      wx.checkIsAddedToMyMiniProgram({
-        success: (res) => {
-          if (res.added) {
-            this.myApplet = false;
-          } else {
-            this.myApplet = true;
-          }
-        },
-        fail: () => {
-          this.myApplet = true;
-        },
-      });
-    },
-    getCartNum: function () {
-      getCartCounts()
-        .then((res) => {
-          this.$store.commit("indexData/setCartNum", res.data.count + "");
-          let cartNum = res.data.count;
-          if (cartNum > 0) {
-            uni.setTabBarBadge({
-              index: 3,
-              text: cartNum > 99 ? "99+" : cartNum + "",
-            });
-          } else {
-            uni.hideTabBarRedDot({
-              index: 3,
-            });
-          }
-        })
-        .catch((err) => {
-          return this.$util.Tips({
-            title: err.msg,
-          });
-        });
-    },
-    storeTap(id) {
-      this.entryData.select_store_id = id;
-      this.entryData.store_id = "";
-      uni.removeStorageSync("rulesStoreId");
-    },
-    getCopyRight() {
-      getCrmebCopyRight()
-        .then((res) => {
-          let data = res.data;
-          uni.setStorageSync("wechatStatus", data.wechat_status);
-          if (!data.copyrightContext && !data.copyrightImage) {
-            data.copyrightImage = "/static/images/support.png";
-          }
-          uni.setStorageSync("copyNameInfo", data.copyrightContext);
-          uni.setStorageSync("copyImageInfo", data.copyrightImage);
-          // #ifdef MP
-          uni.setStorageSync(
-            "MPSiteData",
-            JSON.stringify({
-              site_logo: data.site_logo,
-              site_name: data.site_name,
-            })
-          );
-          // #endif
-        })
-        .catch((err) => {
-          return this.$util.Tips({
-            title: err.msg,
-          });
-        });
-    },
-    getOptions(options) {
-      let that = this;
-      // #ifdef MP
-      if (options.scene) {
-        let value = that.$util.getUrlParams(decodeURIComponent(options.scene));
-        //记录推广人uid
-        if (value.spid) app.globalData.spid = value.spid;
-      }
-      // #endif
-      if (options.spid) app.globalData.spid = options.spid;
-    },
-    // 重新链接
-    reconnect() {
-      this.diyData();
-      getShare().then((res) => {
-        this.shareInfo = res.data;
-      });
-    },
-    goICP(url) {
-      // #ifdef H5
-      window.open(url);
-      // #endif
-      // #ifdef MP
-      uni.navigateTo({
-        url: `/pages/annex/web_view/index?url=${url}`,
-      });
-      // #endif
-    },
-    bindHeighta(data) {
-      // #ifdef APP-PLUS
-      this.sortMpTop = data.top + data.height;
-      // #endif
-    },
-    bindHeight(data) {
-      uni.hideLoading();
-      this.domOffsetTop = data.top;
-    },
-    // 去商品详情
-    goGoodsDetail(item) {
-      goShopDetail(item, this.uid).then((res) => {
-        uni.navigateTo({
-          url: `/pages/goods/goods_details/index?id=${item.id}`,
-        });
-      });
-    },
-    // 分类点击
-    changeSort(item, index) {
-      if (this.curSort == index) return;
-      this.curSort = index;
-      this.sid = item.id;
-      this.goodList = [];
-      this.goodPage = 1;
-      this.loaded = false;
-      this.getGoodsList();
-    },
-    /**
-			 * @param data {
-				classPage: 0 分类id
-				microPage: 0 微页面id
-				type: 1   0 微页面 1 商品分类
-			 }*/
-    bindSortId(item, data) {
-      if (item.dataType.tabVal == 1) {
-        uni.navigateTo({
-          url: `/pages/goods/goods_list/index?cid=${item.classPage.id}&title=${item.classPage.name}`,
-        });
-      } else if (item.text.val == "首页") {
-        uni.switchTab({
-          url: `/pages/index/index`,
-        });
-      } else {
-        uni.navigateTo({
-          url: `/pages/activity/small_page/index?id=${item.microPage.id}`,
-        });
-      }
-    },
-    getProductList(data) {
-      let tempObj = "";
-      this.curSort = 0;
-      this.loaded = false;
-      if (this.sortAll.length > 0) {
-        this.sortAll.forEach((el, index) => {
-          if (el.id == data) {
-            this.$set(this, "sortList", el);
-            this.sid = el.children.length ? el.children[0].id : "";
-          }
-        });
-        this.goodList = [];
-        this.goodPage = 1;
-        this.$nextTick(() => {
-          if (this.sortList != "") this.getGoodsList();
-        });
-      } else {
-        getCategoryList().then((res) => {
-          this.sortAll = res.data;
-          res.data.forEach((el, index) => {
-            if (el.id == data) {
-              this.sortList = el;
-              this.sid = el.children.length ? el.children[0].id : "";
-            }
-          });
-          this.goodList = [];
-          this.goodPage = 1;
-
-          this.$nextTick(() => {
-            if (this.sortList != "") this.getGoodsList();
-          });
-        });
-      }
-    },
-    // 商品列表
-    getGoodsList() {
-      if (this.loading || this.loaded) return;
-      this.loading = true;
-      getProductslist({
-        sid: this.sid,
-        keyword: "",
-        priceOrder: "",
-        salesOrder: "",
-        news: 0,
-        page: this.goodPage,
-        limit: 10,
-        cid: this.sortList.id,
-      }).then((res) => {
-        this.loading = false;
-        this.loaded = res.data.length < 10;
-        this.goodPage++;
-        this.goodList = this.goodList.concat(res.data);
-      });
-    },
-    onLoadFun() {
-      this.isShowAuth = false;
-    },
-    // #ifdef H5
-    // 获取url后面的参数
-    getQueryString(name) {
-      var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
-      var reg_rewrite = new RegExp("(^|/)" + name + "/([^/]*)(/|$)", "i");
-      var r = window.location.search.substr(1).match(reg);
-      var q = window.location.pathname.substr(1).match(reg_rewrite);
-      if (r != null) {
-        return unescape(r[2]);
-      } else if (q != null) {
-        return unescape(q[2]);
-      } else {
-        return null;
-      }
-    },
-    // #endif
-
-    // #ifdef MP
-    getTempIds() {
-      let messageTmplIds = wx.getStorageSync(SUBSCRIBE_MESSAGE);
-      if (!messageTmplIds) {
-        getTempIds().then((res) => {
-          if (res.data)
-            wx.setStorageSync(SUBSCRIBE_MESSAGE, JSON.stringify(res.data));
-        });
-      }
-    },
-    // #endif
-    // 对象转数组
-    objToArr(data) {
-      if (!data || typeof data !== "object") return [];
-      let obj = Object.keys(data).sort();
-      let m = obj.map((key) => data[key]);
-      return m;
-    },
-    setDiyData(data) {
-      if (!data) return;
-      this.currentDiyData = data;
-      this.errorNetwork = false;
-      if (data.is_bg_color) {
-        this.bgColor = data.color_picker || "";
-      }
-      if (data.is_bg_pic) {
-        this.bgPic = data.bg_pic || "";
-        this.bgTabVal = data.bg_tab_val || "";
-      }
-      this.pageShow = 1;
-      if (data.title) {
-        uni.setNavigationBarTitle({
-          title: data.title,
-        });
-      }
-      let temp = [];
-      let goodsIndex = [];
-      let promotionIndex = [];
-      let lastArr = this.objToArr(data.value);
-      lastArr.forEach((item, index, arr) => {
-        if (!item) return;
-        if (item.name == "pageFoot") {
-          this.footerConfigData = item;
-        }
-        if (item.name === "homeComb" && !item.isHide) {
-          this.showHomeComb = true;
-          this.homeCombData = item;
-          if (item.searchConfig && item.searchConfig.tabVal) {
-            this.positionTop = uni.getWindowInfo().statusBarHeight + 43;
-          }
-        }
-        if (item.name == "headerSerch" && !item.isHide) {
-          this.isHeaderSerch = true;
-          this.headerSerchCombData = item;
-        }
-        if (item.name == "tabNav" && !item.isHide) {
-          this.showCateNav = true;
-          this.cateNavData = item;
-        }
-        if (item.name == "goodList" && !item.isHide) {
-          goodsIndex.push(index);
-        }
-        if (item.name == "promotionList" && !item.isHide) {
-          promotionIndex.push(index);
-        }
-        if (!item.isHide) {
-          temp.push(item);
-        }
-      });
-
-      function sortNumber(a, b) {
-        return (a.timestamp || 0) - (b.timestamp || 0);
-      }
-      temp.sort(sortNumber);
-      this.styleConfig = temp;
-      this.goodsIndex = goodsIndex;
-      this.promotionIndex = promotionIndex;
-    },
-    exitPreview() {
-      uni.removeStorageSync("previewThemeId");
-      this.themeId = 0;
-      this.currentDiyData = {};
-
-      this.isPreview = false;
       applyTheme();
-      this.diyData();
-      // 去掉 theme_id 刷新当前页面
-      // uni.reLaunch({ url: "/pages/index/index" });
-    },
-    getDiyData() {
-      let data = {};
-      if (this.themeId) data.theme_id = this.themeId;
-      getThemeInfo("home", data)
-        .then((res) => {
-          uni.setStorageSync("diyData", JSON.stringify(res.data));
-          this.setDiyData(res.data);
-        })
-        .catch((error) => {
-          // #ifdef APP-PLUS
-          if (error.status) {
-            uni.hideLoading();
-            if (this.errorNetwork) {
-              uni.showToast({
-                title: "请开启网络连接",
-                icon: "none",
-                duration: 2000,
-              });
-            }
-            this.errorNetwork = true;
-          }
-          // #endif
-        });
-    },
-    diyData() {
-      // let diyData = uni.getStorageSync('diyData');
-      // if (diyData) {
-      // 	getDiyVersion(0).then((res) => {
-      // 		let diyVersion = uni.getStorageSync('diyVersion');
-      // 		if (res.data.version + '0' === diyVersion) {
-      // 			this.setDiyData(JSON.parse(diyData));
-      // 		} else {
-      // 			uni.setStorageSync('diyVersion', res.data.version + '0');
-      // 			this.getDiyData();
-      // 		}
-      // 	});
-      // } else {
-      // }
-      this.getDiyData();
-    },
+    }
+  }
+  diyData();
+  // #ifdef H5
+  setOpenShare();
+  // #endif
+  // #ifdef MP
+  getTempIds();
+  // #endif
+  getShare().then((res) => { shareInfo.value = res.data; });
+  proxy.$eventHub.on("confirm_video_status", () => {
+    if (confirm_video_status.value) return;
+    confirm_video_status.value = true;
+    let flag = true;
+    // #ifdef H5
+    flag = window.self == window.top;
+    // #endif
+    if (!flag) return;
+    uni.showModal({
+      content: "当前使用移动网络，是否继续播放视频？",
+      success: (res) => {
+        if (res.confirm) {
+          appStore.SET_AUTOPLAY(true);
+          proxy.$eventHub.emit("product_video_observe");
+        }
+      },
+    });
+  });
+  // #ifdef APP-PLUS
+  let onNetworkStatusChange = (res) => {
+    if (res.isConnected) {
+      diyData();
+      uni.offNetworkStatusChange(onNetworkStatusChange);
+    }
+  };
+  uni.onNetworkStatusChange(onNetworkStatusChange);
+  // #endif
+});
 
-    changeLogin() {
-      this.getIsLogin();
-    },
-    getIsLogin() {
-      toLogin();
-    },
-    changeBarg(item) {
-      if (!this.isLogin) {
-        this.getIsLogin();
-      } else {
-        uni.navigateTo({
-          url: `/pages/activity/goods_bargain_details/index?id=${item.id}&spid=${this.$store.state.app.uid}`,
-        });
+onUnload(() => { uni.$off("activeFn"); });
+
+onShow(() => {
+  uni.removeStorageSync("form_type_cart");
+  if (isLogin.value) getCartNum();
+  // #ifdef MP
+  if (wx.canIUse("checkIsAddedToMyMiniProgram")) {
+    checkMyApplet();
+  } else {
+    myApplet.value = true;
+  }
+  // #endif
+});
+
+onPullDownRefresh(() => { diyData(); uni.stopPullDownRefresh(); });
+
+onReachBottom(() => { if (goodList.value.length) getGoodsList(); });
+
+onPageScroll((e) => {
+  // 通知 easy-loadimage 等组件重新判断懒加载
+  uni.$emit("scroll");
+  if (e.scrollTop > 20) myApplet.value = false;
+  // #ifdef H5
+  if (isHeaderSerch.value) {
+    if (e.scrollTop > domOffsetTop.value) isFixed.value = true;
+    if (e.scrollTop < domOffsetTop.value) nextTick(() => { isFixed.value = false; });
+  } else {
+    isFixed.value = false;
+  }
+  // #endif
+  if (e.scrollTop > 10) isScrolled.value = true;
+  else isScrolled.value = false;
+});
+
+// methods
+function checkMyApplet() {
+  wx.checkIsAddedToMyMiniProgram({
+    success: (res) => { myApplet.value = !res.added; },
+    fail: () => { myApplet.value = true; },
+  });
+}
+
+function getCartNum() {
+  getCartCounts(true, "total").then((res) => {
+    indexDataStore.setCartNum(res.data.count + "");
+    let cn = res.data.count;
+    if (cn > 0) {
+      uni.setTabBarBadge({ index: 3, text: cn > 99 ? "99+" : cn + "" });
+    } else {
+      uni.hideTabBarRedDot({ index: 3 });
+    }
+  }).catch((err) => {
+    return util.Tips({ title: err.msg });
+  });
+}
+
+function storeTap(id) {
+  entryData.value.select_store_id = id;
+  entryData.value.store_id = "";
+  uni.removeStorageSync("rulesStoreId");
+}
+
+function getOptions(options) {
+  // #ifdef MP
+  if (options.scene) {
+    let value = util.getUrlParams(decodeURIComponent(options.scene));
+    if (value.spid) app.globalData.spid = value.spid;
+  }
+  // #endif
+  if (options.spid) app.globalData.spid = options.spid;
+}
+
+function reconnect() {
+  diyData();
+  getShare().then((res) => { shareInfo.value = res.data; });
+}
+
+function goICP(url) {
+  // #ifdef H5
+  window.open(url);
+  // #endif
+  // #ifdef MP
+  uni.navigateTo({ url: `/pages/annex/web_view/index?url=${url}` });
+  // #endif
+}
+
+function bindHeighta(data) {
+  // #ifdef APP-PLUS
+  sortMpTop.value = data.top + data.height;
+  // #endif
+}
+
+function bindHeight(data) {
+  uni.hideLoading();
+  domOffsetTop.value = data.top;
+}
+
+function goGoodsDetail(item) {
+  goShopDetail(item, uid.value).then(() => {
+    uni.navigateTo({ url: `/pages/goods/goods_details/index?id=${item.id}` });
+  });
+}
+
+function changeSort(item, index) {
+  if (curSort.value == index) return;
+  curSort.value = index;
+  sid.value = item.id;
+  goodList.value = [];
+  goodPage.value = 1;
+  loaded.value = false;
+  getGoodsList();
+}
+
+function bindSortId(item, data) {
+  if (item.dataType.tabVal == 1) {
+    uni.navigateTo({ url: `/pages/goods/goods_list/index?cid=${item.classPage.id}&title=${item.classPage.name}` });
+  } else if (item.text.val == "首页") {
+    uni.switchTab({ url: `/pages/index/index` });
+  } else {
+    uni.navigateTo({ url: `/pages/activity/small_page/index?micro_id=${item.microPage.id}` });
+  }
+}
+
+function getProductList(data) {
+  curSort.value = 0;
+  loaded.value = false;
+  if (sortAll.value.length > 0) {
+    sortAll.value.forEach((el) => {
+      if (el.id == data) {
+        sortList.value = el;
+        sid.value = el.children.length ? el.children[0].id : "";
       }
-    },
-    goDetail(item) {
-      goShopDetail(item, this.$store.state.app.uid).then((res) => {
-        uni.navigateTo({
-          url: `/pages/goods/goods_details/index?id=${item.id}`,
-        });
+    });
+    goodList.value = [];
+    goodPage.value = 1;
+    nextTick(() => { if (sortList.value != "") getGoodsList(); });
+  } else {
+    getCategoryList().then((res) => {
+      sortAll.value = res.data;
+      res.data.forEach((el) => {
+        if (el.id == data) {
+          sortList.value = el;
+          sid.value = el.children.length ? el.children[0].id : "";
+        }
       });
-    },
-    newDataStatus(val, num) {
-      this.isFooter = val ? true : false;
-      this.pdHeight = num;
-    },
-    // #ifdef H5
-    // 微信分享；
-    setOpenShare: function () {
-      let that = this;
-      let uid = this.uid ? this.uid : 0;
-      if (that.$wechat.isWeixin()) {
-        getShare().then((res) => {
-          let data = res.data;
-          let configAppMessage = {
-            desc: data.synopsis,
-            title: data.title,
-            link: location.href + "?spid=" + uid,
-            imgUrl: data.img,
-          };
-          that.$wechat.wechatEvevt(
-            [
-              "updateAppMessageShareData",
-              "updateTimelineShareData",
-              "onMenuShareAppMessage",
-              "onMenuShareTimeline",
-            ],
-            configAppMessage
-          );
-        });
-      }
-    },
+      goodList.value = [];
+      goodPage.value = 1;
+      nextTick(() => { if (sortList.value != "") getGoodsList(); });
+    });
+  }
+}
+
+function getGoodsList() {
+  if (loading.value || loaded.value) return;
+  loading.value = true;
+  getProductslist({
+    sid: sid.value, keyword: "", priceOrder: "", salesOrder: "",
+    news: 0, page: goodPage.value, limit: 10, cid: sortList.value.id,
+  }).then((res) => {
+    loading.value = false;
+    loaded.value = res.data.length < 10;
+    goodPage.value++;
+    goodList.value = goodList.value.concat(res.data);
+  });
+}
+
+function onLoadFun() { isShowAuth.value = false; }
+
+// #ifdef H5
+function getQueryString(name) {
+  var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+  var reg_rewrite = new RegExp("(^|/)" + name + "/([^/]*)(/|$)", "i");
+  var r = window.location.search.substr(1).match(reg);
+  var q = window.location.pathname.substr(1).match(reg_rewrite);
+  if (r != null) return unescape(r[2]);
+  else if (q != null) return unescape(q[2]);
+  else return null;
+}
+// #endif
+
+// #ifdef MP
+function getTempIds() {
+  let messageTmplIds = wx.getStorageSync(SUBSCRIBE_MESSAGE);
+  if (!messageTmplIds) {
+    getTempIdsApi().then((res) => {
+      if (res.data) cacheSubscribeTemplateIds(res.data);
+    }).catch(() => {});
+  }
+}
+// #endif
+
+function objToArr(data) {
+  if (!data || typeof data !== "object") return [];
+  let obj = Object.keys(data).sort();
+  return obj.map((key) => data[key]);
+}
+
+function setDiyData(data) {
+  if (!data) return;
+  currentDiyData.value = data;
+  errorNetwork.value = false;
+  if (data.is_bg_color) bgColor.value = data.color_picker || "";
+  if (data.is_bg_pic) { bgPic.value = data.bg_pic || ""; bgTabVal.value = data.bg_tab_val || ""; }
+  pageShow.value = 1;
+  if (data.title) uni.setNavigationBarTitle({ title: data.title });
+  let temp = [];
+  let gi = [];
+  let pi = [];
+  let lastArr = objToArr(data.value);
+  lastArr.forEach((item, index) => {
+    if (!item) return;
+    if (item.name == "pageFoot") footerConfigData.value = item;
+    if (item.name === "homeComb" && !item.isHide) {
+      showHomeComb.value = true;
+      homeCombData.value = item;
+      if (item.searchConfig && item.searchConfig.tabVal) positionTop.value = uni.getWindowInfo().statusBarHeight + 43;
+    }
+    if (item.name == "headerSerch" && !item.isHide) { isHeaderSerch.value = true; headerSerchCombData.value = item; }
+    if (item.name == "tabNav" && !item.isHide) { showCateNav.value = true; cateNavData.value = item; }
+    if (item.name == "goodList" && !item.isHide) gi.push(index);
+    if (item.name == "promotionList" && !item.isHide) pi.push(index);
+    if (!item.isHide) temp.push(item);
+  });
+  temp.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+  styleConfig.value = temp;
+  goodsIndex.value = gi;
+  promotionIndex.value = pi;
+}
+
+function exitPreview() {
+  uni.removeStorageSync("previewThemeId");
+  themeId.value = 0;
+  currentDiyData.value = {};
+  isPreview.value = false;
+  applyTheme();
+  diyData();
+}
+
+function getDiyData() {
+  let data = {};
+  if (themeId.value) data.theme_id = themeId.value;
+  getThemeInfo("home", data).then((res) => {
+    uni.setStorageSync("diyData", JSON.stringify(res.data));
+    setDiyData(res.data);
+  }).catch((error) => {
+    // #ifdef APP-PLUS
+    if (error.status) {
+      uni.hideLoading();
+      if (errorNetwork.value) uni.showToast({ title: "请开启网络连接", icon: "none", duration: 2000 });
+      errorNetwork.value = true;
+    }
     // #endif
-  },
-  onReachBottom() {
-    if (this.goodList.length) {
-      this.getGoodsList();
-    }
-  },
-  onPageScroll(e) {
-    if (e.scrollTop > 20) {
-      this.myApplet = false;
-    }
-    // #ifdef H5
-    if (this.isHeaderSerch) {
-      if (e.scrollTop > this.domOffsetTop) {
-        this.isFixed = true;
-      }
-      if (e.scrollTop < this.domOffsetTop) {
-        this.$nextTick(() => {
-          this.isFixed = false;
-        });
-      }
-    } else {
-      this.isFixed = false;
-    }
-    // #endif
-    if (e.scrollTop > 10) {
-      this.isScrolled = true;
-    } else {
-      this.isScrolled = false;
-    }
-    uni.$emit("scroll");
-    uni.$emit("onPageScroll", e.scrollTop);
-  },
-  //#ifdef MP
-  onShareAppMessage() {
-    let uid = this.uid ? this.uid : 0;
-    if (this.shareInfo.img) {
-      return {
-        title: this.shareInfo.title,
-        path: "/pages/index/index?spid=" + uid,
-        imageUrl: this.shareInfo.img,
-        desc: this.shareInfo.synopsis,
+  });
+}
+
+function diyData() { getDiyData(); }
+
+function changeLogin() { getIsLogin(); }
+function getIsLogin() { toLogin(); }
+
+function changeBarg(item) {
+  if (!isLogin.value) getIsLogin();
+  else uni.navigateTo({ url: `/pages/activity/goods_bargain_details/index?id=${item.id}&spid=${uid.value}` });
+}
+
+function goDetail(item) {
+  goShopDetail(item, uid.value).then(() => {
+    uni.navigateTo({ url: `/pages/goods/goods_details/index?id=${item.id}` });
+  });
+}
+
+function newDataStatus(val, num) {
+  isFooter.value = val ? true : false;
+  pdHeight.value = num;
+}
+
+// #ifdef H5
+function setOpenShare() {
+  let u = uid.value ? uid.value : 0;
+  if (proxy.$wechat.isWeixin()) {
+    getShare().then((res) => {
+      let data = res.data;
+      let configAppMessage = {
+        desc: data.synopsis, title: data.title,
+        link: location.href + "?spid=" + u, imgUrl: data.img,
       };
-    } else {
-      return {
-        title: this.shareInfo.title,
-        path: "/pages/index/index?spid=" + uid,
-        // imageUrl: this.shareInfo.img,
-        // desc: this.shareInfo.synopsis
-      };
-    }
-  },
-  //分享到朋友圈
-  onShareTimeline: function () {
-    return {
-      title: this.shareInfo.title,
-      path: "/pages/index/index",
-      imageUrl: this.shareInfo.img,
-      desc: this.shareInfo.synopsis,
-    };
-  },
-  //#endif
-};
+      proxy.$wechat.wechatEvevt(
+        ["updateAppMessageShareData", "updateTimelineShareData", "onMenuShareAppMessage", "onMenuShareTimeline"],
+        configAppMessage
+      );
+    });
+  }
+}
+// #endif
 </script>
 
 <style lang="scss">

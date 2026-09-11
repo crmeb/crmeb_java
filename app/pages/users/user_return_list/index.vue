@@ -1,5 +1,5 @@
 <template>
-	<view>
+	<view :style="colorStyle">
 		<view class='return-list pad30' v-if="orderList.length">
 			<view class='goodWrapper borRadius14' v-for="(item,index) in orderList" :key="index" @click='goOrderDetails(item.orderId)'>
 				<view class='iconfont icon-tuikuanzhong powder' v-if="item.refundStatus==1 || item.refundStatus==3"></view>
@@ -30,97 +30,90 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, watch, getCurrentInstance } from 'vue';
+	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
 	import emptyPage from '@/components/emptyPage.vue'
 	import {
-		getOrderList
+		getOrderList as getOrderListApi
 	} from '@/api/order.js';
 	import {
 		toLogin
 	} from '@/libs/login.js';
-	import {
-		mapGetters
-	} from "vuex";
-	export default {
-		components: {
-			emptyPage
-		},
-		data() {
-			return {
-				loading: false,
-				loadend: false,
-				loadTitle: '加载更多', //提示语
-				orderList: [], //订单数组
-				orderStatus: -3, //订单状态
-				page: 1,
-				limit: 20
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		watch:{
-			isLogin:{
-				handler:function(newV,oldV){
-					if(newV){
-						this.getOrderList();
-					}
-				},
-				deep:true
-			}
-		},
-		onLoad() {
-			if (this.isLogin) {
-				this.getOrderList();
-			} else {
-				toLogin();
-			}
-		},
-		/**
-		 * 页面上拉触底事件的处理函数
-		 */
-		onReachBottom: function() {
-			this.getOrderList();
-		},
-		methods: {
-			/**
-			 * 去订单详情
-			 */
-			goOrderDetails: function(order_id) {
-				if (!order_id) return that.$util.Tips({
-					title: '缺少订单号无法查看订单详情'
-				});
-				uni.navigateTo({
-					url: '/pages/order/order_details/index?order_id=' + order_id + '&isReturen=1'
-				})
-			},
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
+import { useColor } from '@/composables/useColor.js';
+const { colorStyle } = useColor();
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { isLogin } = storeToRefs(appStore);
 
-			/**
-			 * 获取订单列表
-			 */
-			getOrderList: function() {
-				let that = this;
-				if (that.loadend) return;
-				if (that.loading) return;
-				that.loading = true;
-				that.loadTitle = "";
-				getOrderList({
-					type: that.orderStatus,
-					page: that.page,
-					limit: that.limit,
-				}).then(res => {
-					let list = res.data.list || [];
-					let loadend = list.length < that.limit;
-					that.orderList = that.$util.SplitArray(list, that.orderList);
-					that.$set(that,'orderList',that.orderList);
-					that.loadend = loadend;
-					that.loading = false;
-					that.loadTitle = loadend ? "我也是有底线的~" : '加载更多';
-					that.page = that.page + 1;
-				}).catch(err => {
-					that.loading = false;
-					that.loadTitle = "加载更多";
-				});
-			}
+	const loading = ref(false);
+	const loadend = ref(false);
+	const loadTitle = ref('加载更多'); //提示语
+	const orderList = ref([]); //订单数组
+	const orderStatus = ref(-3); //订单状态
+	const page = ref(1);
+	const limit = ref(20);
+
+	watch(isLogin, (newV, oldV) => {
+		if (newV) {
+			getOrderList();
 		}
+	}, { deep: true });
+
+	onLoad(() => {
+		if (isLogin.value) {
+			getOrderList();
+		} else {
+			toLogin();
+		}
+	});
+
+	/**
+	 * 页面上拉触底事件的处理函数
+	 */
+	onReachBottom(() => {
+		getOrderList();
+	});
+
+	/**
+	 * 去订单详情
+	 */
+	function goOrderDetails(order_id) {
+		if (!order_id) return proxy.$util.Tips({
+			title: '缺少订单号无法查看订单详情'
+		});
+		uni.navigateTo({
+			url: '/pages/order/order_details/index?order_id=' + order_id + '&isReturen=1'
+		})
+	}
+
+	/**
+	 * 获取订单列表
+	 */
+	function getOrderList() {
+		if (loadend.value) return;
+		if (loading.value) return;
+		loading.value = true;
+		loadTitle.value = "";
+		getOrderListApi({
+			type: orderStatus.value,
+			page: page.value,
+			limit: limit.value,
+		}).then(res => {
+			let list = res.data.list || [];
+			let loadendVal = list.length < limit.value;
+			orderList.value = proxy.$util.SplitArray(list, orderList.value);
+			orderList.value = orderList.value;
+			loadend.value = loadendVal;
+			loading.value = false;
+			loadTitle.value = loadendVal ? "我也是有底线的~" : '加载更多';
+			page.value = page.value + 1;
+		}).catch(err => {
+			loading.value = false;
+			loadTitle.value = "加载更多";
+		});
 	}
 </script>
 

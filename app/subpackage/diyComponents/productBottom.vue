@@ -9,7 +9,7 @@
       <div class="acea-row">
         <block v-if="!isCustomEntry">
           <block v-for="(item_id, index) in showIcons" :key="index">
-            <navigator
+            <navigator :render-link="false"
               v-if="item_id === 3"
               hover-class="none"
               class="item"
@@ -210,7 +210,8 @@
   </commonWrapper>
 </template>
 
-<script>
+<script setup>
+import { computed } from "vue";
 import commonWrapper from "./commonWrapper.vue";
 import { getCustomer } from "@/utils/index.js";
 
@@ -341,226 +342,227 @@ function mergeConfig(defaultConfig, data) {
   return result;
 }
 
-export default {
-  name: "productBottom",
-  components: {
-    commonWrapper,
+const props = defineProps({
+  diyData: {
+    type: Object,
+    default: () => ({}),
   },
-  props: {
-    diyData: {
-      type: Object,
-      default: () => ({}),
-    },
-    storeInfo: {
-      type: Object,
-      default: () => ({}),
-    },
-    CartCount: {
-      type: [Number, String],
-      default: 0,
-    },
-    noGoods: {
-      type: Boolean,
-      default: false,
-    },
-    attr: {
-      type: Object,
-      default: () => ({
-        productSelect: {},
-      }),
-    },
-    presale_pay_status: {
-      type: [Number, String],
-      default: 1,
-    },
-    animated: {
-      type: Boolean,
-      default: false,
-    },
-    routineContact: {
-      type: Number,
-      default: 0,
-    },
+  storeInfo: {
+    type: Object,
+    default: () => ({}),
   },
-  computed: {
-    bottomConfig() {
-      const config = this.findBottomConfig(this.diyData);
-      return config ? mergeConfig(DEFAULT_BOTTOM_CONFIG, config) : null;
-    },
-    wrapperConfig() {
-      let config = this.bottomConfig;
-      if (!config) return {};
-      let newConfig = { ...config };
-      return newConfig;
-    },
-    toneConfig() {
-      if (!this.bottomConfig || !this.bottomConfig.toneConfig) return 0;
-      return this.bottomConfig.toneConfig.tabVal;
-    },
-    bagStyle() {
-      if (this.bottomConfig && this.bottomConfig.componentBgConfig) {
-        const componentBgConfig = this.bottomConfig.componentBgConfig;
-        if (componentBgConfig.tabVal === 1 && componentBgConfig.imageConfig && componentBgConfig.imageConfig.url) {
-          return `background-image: url(${componentBgConfig.imageConfig.url});background-repeat: no-repeat;background-size: cover;background-position: center;`;
-        }
-        const color = componentBgConfig.colorConfig && componentBgConfig.colorConfig.color;
-        const c1 = (color && color[0] && color[0].item) || "#fff";
-        const c2 = (color && color[1] && color[1].item) || c1;
-        return `background: linear-gradient(90deg, ${c1} 0%, ${c2} 100%);`;
-      }
-      if (this.bottomConfig && this.bottomConfig.bottomBgColor && this.bottomConfig.bottomBgColor.color) {
-        return `background: ${this.bottomConfig.bottomBgColor.color[0].item};`;
-      }
-      return "";
-    },
-    cartBtnStyle() {
-      if (this.toneConfig && this.bottomConfig.cartColor) {
-        const color = this.bottomConfig.cartColor.color;
-        const c1 = (color && color[0] && color[0].item) || "#FAAD14";
-        const c2 = (color && color[1] && color[1].item) || c1;
-        return `background: linear-gradient(90deg, ${c1} 0%, ${c2} 100%);`;
-      }
-      return ""; // Fallback to CSS default
-    },
-    buyBtnStyle() {
-      if (this.toneConfig && this.bottomConfig.buyColor) {
-        const color = this.bottomConfig.buyColor.color;
-        const c1 = (color && color[0] && color[0].item) || "#E93323";
-        const c2 = (color && color[1] && color[1].item) || c1;
-        return `background: linear-gradient(90deg, ${c1} 0%, ${c2} 100%);`;
-      }
-      return ""; // Fallback to CSS default
-    },
-    showIcons() {
-      if (!this.bottomConfig) return [3, 1, 2, 0, 4];
-      return Array.isArray(this.bottomConfig.showContent.type) ? this.bottomConfig.showContent.type : [3, 1, 2, 0, 4];
-    },
-    showCartButton() {
-      if (!this.bottomConfig) return true;
-      return this.bottomConfig.cartButton.tabVal === 0;
-    },
-    isCartButtonVisible() {
-      return this.storeInfo.cart_button !== false && this.showCartButton;
-    },
-    entryConfig() {
-      return this.bottomConfig && this.bottomConfig.entryConfig;
-    },
-    menuConfig() {
-      return this.bottomConfig && this.bottomConfig.menuConfig;
-    },
-    isCustomEntry() {
-      return this.entryConfig && this.entryConfig.tabVal === 1;
-    },
-    isCustomImage() {
-      return this.isCustomEntry && this.menuConfig && this.menuConfig.listStyle === 0;
-    },
-    isCustomIcon() {
-      return this.isCustomEntry && this.menuConfig && this.menuConfig.listStyle === 1;
-    },
-    customMenuList() {
-      if (!this.isCustomEntry || !this.menuConfig) return [];
-      return (this.menuConfig.list || [])
-        .filter((item) => item.show)
-        .map((item) => ({
-          name: item.info && item.info[0] ? item.info[0].value : "",
-          url: item.url || (item.info && item.info[1] ? item.info[1].value : ""),
-          icon: item.icon,
-          img: item.img,
-        }));
-    },
-    customImageStyle() {
-      const fillet = this.bottomConfig && this.bottomConfig.menuPcFillet;
-      if (!fillet) return { width: "40rpx", height: "40rpx" };
-      const valList = fillet.valList || [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }];
-      let radius;
-      if (fillet.type) {
-        radius = `${valList[0].val}px ${valList[1].val}px ${valList[3].val}px ${valList[2].val}px`;
-      } else {
-        radius = `${fillet.val || 0}px`;
-      }
-      return {
-        borderRadius: radius,
-        width: "40rpx",
-        height: "40rpx",
-        display: "block",
-      };
-    },
-    customIconStyle() {
-      const config = this.bottomConfig;
-      if (!config) return {};
-      const color = config.iconColor?.color?.[0]?.item || "#333";
-      const size = config.iconSize?.val || 20;
-      const rotate = config.iconRotate?.val || 0;
-      const padding = config.padding?.val || 0;
-      const shadow =
-        config.shadow?.tabVal === 1 ? "0px 2px 4px rgba(0,0,0,0.2)" : "none";
-      return {
-        color: color,
-        fontSize: `${size}px`,
-        transform: `rotate(${rotate}deg)`,
-        padding: `${padding}px`,
-        textShadow: shadow,
-        display: "inline-block",
-      };
-    },
+  CartCount: {
+    type: [Number, String],
+    default: 0,
   },
-  methods: {
-    normalizeDiyData(data) {
-      let normalized = parseJson(data, data || {});
-      if (!normalized || typeof normalized !== "object") return {};
-      if (normalized.value === undefined && looksLikeComponentCollection(normalized)) {
-        return {
-          value: normalized,
-        };
-      }
-      let value = parseJson(normalized.value, normalized.value || {});
-      if (value && typeof value === "object" && value.value !== undefined) {
-        value = parseJson(value.value, value.value || {});
-      }
-      return {
-        ...normalized,
-        value,
-      };
-    },
-    findBottomConfig(data) {
-      const diyData = this.normalizeDiyData(data);
-      const list = toComponentList(diyData.value);
-      return list.find((item) => item && (item.name === "bottomMenu" || item.defaultName === "bottomMenu"));
-    },
-    goCustomer() {
-      getCustomer(`/pages/extension/customer_list/chat?productId=${this.storeInfo.id}`);
-    },
-    goPage(url) {
-      if (!url) return;
-      uni.navigateTo({
+  noGoods: {
+    type: Boolean,
+    default: false,
+  },
+  attr: {
+    type: Object,
+    default: () => ({
+      productSelect: {},
+    }),
+  },
+  presale_pay_status: {
+    type: [Number, String],
+    default: 1,
+  },
+  animated: {
+    type: Boolean,
+    default: false,
+  },
+  routineContact: {
+    type: Number,
+    default: 0,
+  },
+});
+
+const emit = defineEmits([
+  "setCollect",
+  "goCart",
+  "goGift",
+  "share",
+  "joinCart",
+  "goBuy",
+]);
+
+const bottomConfig = computed(() => {
+  const config = findBottomConfig(props.diyData);
+  return config ? mergeConfig(DEFAULT_BOTTOM_CONFIG, config) : null;
+});
+const wrapperConfig = computed(() => {
+  let config = bottomConfig.value;
+  if (!config) return {};
+  let newConfig = { ...config };
+  return newConfig;
+});
+const toneConfig = computed(() => {
+  if (!bottomConfig.value || !bottomConfig.value.toneConfig) return 0;
+  return bottomConfig.value.toneConfig.tabVal;
+});
+const bagStyle = computed(() => {
+  if (bottomConfig.value && bottomConfig.value.componentBgConfig) {
+    const componentBgConfig = bottomConfig.value.componentBgConfig;
+    if (componentBgConfig.tabVal === 1 && componentBgConfig.imageConfig && componentBgConfig.imageConfig.url) {
+      return `background-image: url(${componentBgConfig.imageConfig.url});background-repeat: no-repeat;background-size: cover;background-position: center;`;
+    }
+    const color = componentBgConfig.colorConfig && componentBgConfig.colorConfig.color;
+    const c1 = (color && color[0] && color[0].item) || "#fff";
+    const c2 = (color && color[1] && color[1].item) || c1;
+    return `background: linear-gradient(90deg, ${c1} 0%, ${c2} 100%);`;
+  }
+  if (bottomConfig.value && bottomConfig.value.bottomBgColor && bottomConfig.value.bottomBgColor.color) {
+    return `background: ${bottomConfig.value.bottomBgColor.color[0].item};`;
+  }
+  return "";
+});
+const cartBtnStyle = computed(() => {
+  if (toneConfig.value && bottomConfig.value.cartColor) {
+    const color = bottomConfig.value.cartColor.color;
+    const c1 = (color && color[0] && color[0].item) || "#FAAD14";
+    const c2 = (color && color[1] && color[1].item) || c1;
+    return `background: linear-gradient(90deg, ${c1} 0%, ${c2} 100%);`;
+  }
+  return ""; // Fallback to CSS default
+});
+const buyBtnStyle = computed(() => {
+  if (toneConfig.value && bottomConfig.value.buyColor) {
+    const color = bottomConfig.value.buyColor.color;
+    const c1 = (color && color[0] && color[0].item) || "#E93323";
+    const c2 = (color && color[1] && color[1].item) || c1;
+    return `background: linear-gradient(90deg, ${c1} 0%, ${c2} 100%);`;
+  }
+  return ""; // Fallback to CSS default
+});
+const showIcons = computed(() => {
+  if (!bottomConfig.value) return [3, 1, 2, 0, 4];
+  return Array.isArray(bottomConfig.value.showContent.type) ? bottomConfig.value.showContent.type : [3, 1, 2, 0, 4];
+});
+const showCartButton = computed(() => {
+  if (!bottomConfig.value) return true;
+  return bottomConfig.value.cartButton.tabVal === 0;
+});
+const isCartButtonVisible = computed(() => {
+  return props.storeInfo.cart_button !== false && showCartButton.value;
+});
+const entryConfig = computed(() => {
+  return bottomConfig.value && bottomConfig.value.entryConfig;
+});
+const menuConfig = computed(() => {
+  return bottomConfig.value && bottomConfig.value.menuConfig;
+});
+const isCustomEntry = computed(() => {
+  return entryConfig.value && entryConfig.value.tabVal === 1;
+});
+const isCustomImage = computed(() => {
+  return isCustomEntry.value && menuConfig.value && menuConfig.value.listStyle === 0;
+});
+const isCustomIcon = computed(() => {
+  return isCustomEntry.value && menuConfig.value && menuConfig.value.listStyle === 1;
+});
+const customMenuList = computed(() => {
+  if (!isCustomEntry.value || !menuConfig.value) return [];
+  return (menuConfig.value.list || [])
+    .filter((item) => item.show)
+    .map((item) => ({
+      name: item.info && item.info[0] ? item.info[0].value : "",
+      url: item.url || (item.info && item.info[1] ? item.info[1].value : ""),
+      icon: item.icon,
+      img: item.img,
+    }));
+});
+const customImageStyle = computed(() => {
+  const fillet = bottomConfig.value && bottomConfig.value.menuPcFillet;
+  if (!fillet) return { width: "40rpx", height: "40rpx" };
+  const valList = fillet.valList || [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }];
+  let radius;
+  if (fillet.type) {
+    radius = `${valList[0].val}px ${valList[1].val}px ${valList[3].val}px ${valList[2].val}px`;
+  } else {
+    radius = `${fillet.val || 0}px`;
+  }
+  return {
+    borderRadius: radius,
+    width: "40rpx",
+    height: "40rpx",
+    display: "block",
+  };
+});
+const customIconStyle = computed(() => {
+  const config = bottomConfig.value;
+  if (!config) return {};
+  const color = config.iconColor?.color?.[0]?.item || "#333";
+  const size = config.iconSize?.val || 20;
+  const rotate = config.iconRotate?.val || 0;
+  const padding = config.padding?.val || 0;
+  const shadow =
+    config.shadow?.tabVal === 1 ? "0px 2px 4px rgba(0,0,0,0.2)" : "none";
+  return {
+    color: color,
+    fontSize: `${size}px`,
+    transform: `rotate(${rotate}deg)`,
+    padding: `${padding}px`,
+    textShadow: shadow,
+    display: "inline-block",
+  };
+});
+
+function normalizeDiyData(data) {
+  let normalized = parseJson(data, data || {});
+  if (!normalized || typeof normalized !== "object") return {};
+  if (normalized.value === undefined && looksLikeComponentCollection(normalized)) {
+    return {
+      value: normalized,
+    };
+  }
+  let value = parseJson(normalized.value, normalized.value || {});
+  if (value && typeof value === "object" && value.value !== undefined) {
+    value = parseJson(value.value, value.value || {});
+  }
+  return {
+    ...normalized,
+    value,
+  };
+}
+function findBottomConfig(data) {
+  const diyData = normalizeDiyData(data);
+  const list = toComponentList(diyData.value);
+  return list.find((item) => item && (item.name === "bottomMenu" || item.defaultName === "bottomMenu"));
+}
+function goCustomer() {
+  getCustomer(`/pages/extension/customer_list/chat?productId=${props.storeInfo.id}`);
+}
+function goPage(url) {
+  if (!url) return;
+  uni.navigateTo({
+    url: url,
+    fail: () => {
+      uni.switchTab({
         url: url,
-        fail: () => {
-          uni.switchTab({
-            url: url,
-          });
-        },
       });
     },
-    setCollect() {
-      this.$emit("setCollect");
-    },
-    goCart() {
-      this.$emit("goCart");
-    },
-    goGift() {
-      this.$emit("goGift");
-    },
-    goShare() {
-      this.$emit("share");
-    },
-    joinCart() {
-      this.$emit("joinCart");
-    },
-    goBuy() {
-      this.$emit("goBuy");
-    },
-  },
-};
+  });
+}
+function setCollect() {
+  emit("setCollect");
+}
+function goCart() {
+  emit("goCart");
+}
+function goGift() {
+  emit("goGift");
+}
+function goShare() {
+  emit("share");
+}
+function joinCart() {
+  emit("joinCart");
+}
+function goBuy() {
+  emit("goBuy");
+}
 </script>
 
 <style scoped lang="scss">

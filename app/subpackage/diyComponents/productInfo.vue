@@ -162,7 +162,7 @@
         </view>
 
         <!-- 信息区域 -->
-        <view class="info-box">
+        <view class="info-box" :style="{ background: infoBoxBg }">
           <!-- 规格样式 0 & 1: 顶部 -->
           <view
             v-if="(specStyle === 0 || specStyle === 1) && skuList.length > 0"
@@ -224,7 +224,12 @@
                   <image :src="item.image" mode="aspectFill"></image>
                   <text
                     class="name line1"
-                    :style="{ color: specSelectedTextColor }"
+                    :style="{
+                      color:
+                        index === selectedIndex
+                          ? specSelectedTextColor
+                          : specUnselectedTextColor,
+                    }"
                     >{{ item.suk }}</text
                   >
                 </view>
@@ -258,7 +263,6 @@
                   class="main-price-wrap"
                   :style="{ color: finalPriceColor }"
                 >
-                  <view class="label">到手价</view>
                   <view class="symbol">¥</view>
                   <view
                     class="price"
@@ -274,15 +278,7 @@
                   class="ot-price-wrap"
                   :style="{ color: sellingPriceColor }"
                 >
-                  <text class="label">售价</text>
-                  <text class="price">¥{{ displayInfo.price }}</text>
-                </view>
-                <view
-                  v-if="item.checkList.includes(2) && displayInfo.vip_price"
-                  class="vip-price-wrap"
-                >
-                  <text class="badge">SVIP</text>
-                  <text class="price">¥{{ displayInfo.vip_price }}</text>
+                  <text class="price">¥{{ displayInfo.ot_price }}</text>
                 </view>
               </view>
             </view>
@@ -376,7 +372,7 @@
                       background:
                         index === selectedIndex
                           ? specSelectedBgColor
-                          : '#f5f5f5',
+                          : '#fff',
                     }"
                   >
                     {{ item.suk }}
@@ -395,7 +391,7 @@
           </view>
           <view class="presell_count" v-if="productData.presale">
             <view>
-              <view>{{ '预售活动时间' }}：</view>
+              <view>{{ "预售活动时间" }}：</view>
               <view
                 v-if="
                   productData.presale_start_time && productData.presale_end_time
@@ -409,8 +405,8 @@
               </view>
             </view>
             <view
-              >{{ '预售结束后' }} {{ productData.presale_day }}
-              {{ '天内发货' }}</view
+              >{{ "预售结束后" }} {{ productData.presale_day }}
+              {{ "天内发货" }}</view
             >
           </view>
         </view>
@@ -419,378 +415,389 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, nextTick, getCurrentInstance } from "vue";
 import commonWrapper from "./commonWrapper.vue";
 import BaseTag from "@/components/BaseTag.vue";
 
-export default {
-  name: "productInfo",
-  components: {
-    BaseTag,
-    commonWrapper,
-  },
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => ({}),
-    },
-    productData: {
-      type: Object,
-      default: () => ({}),
-    },
-    priceData: {
-      type: Object,
-      default: () => ({}),
-    },
-    skuList: {
-      type: Array,
-      default: () => [],
-    },
-    attrValue: {
-      type: String,
-      default: "",
-    },
-    colorStyle: {
-      type: Object,
-      default: () => ({ theme: "#E93323" }),
-    },
-  },
-  data() {
-    return {
-      currentSwiper: 0,
-      selectedIndex: 0,
-      hasUserSelected: false,
-      videoControls: true,
-      videoPlaying: false,
-    };
-  },
-  computed: {
-    displayInfo() {
-      let price = this.priceData.price || "0.00";
-      let real_price = this.priceData.real_price || "0.00";
-      let ot_price = this.priceData.ot_price || "0.00";
-      let vip_price = this.priceData.vip_price;
-      let stock = this.productData.stock || 0;
-      let fsales = this.productData.fsales || 0;
-      let unit_name = this.productData.unit_name || "";
+const { proxy } = getCurrentInstance();
 
-      if (this.skuList.length > 0 && this.selectedIndex < this.skuList.length) {
-        let sku = this.skuList[this.selectedIndex];
-        if (sku) {
-          if (sku.price) price = sku.price;
-          if (sku.real_price) real_price = sku.real_price;
-          if (sku.ot_price) ot_price = sku.ot_price;
-          if (sku.vip_price) vip_price = sku.vip_price;
-          if (sku.stock || sku.stock === 0) stock = sku.stock;
-        }
-      }
-      return {
-        price,
-        ot_price,
-        vip_price,
-        stock,
-        fsales,
-        unit_name,
-        real_price,
-      };
-    },
-    sliderImage() {
-      const images = Array.isArray(this.productData.slider_image)
-        ? this.productData.slider_image
-        : [];
-      const videoLink = this.productData.video_link;
-      if (videoLink) {
-        // 有视频时，第一项为视频对象，后面是图片（跳过第一张图片作为封面）
-        return [
-          {
-            isVideo: true,
-            src: videoLink,
-            poster: images[0] || "",
-          },
-          ...images.slice(1),
-        ];
-      }
-      return images;
-    },
-    currentSlideImage() {
-      const currentItem = this.sliderImage[this.currentSwiper];
-      if (currentItem) {
-        // 如果是视频，返回 poster；否则返回图片
-        return currentItem.isVideo ? currentItem.poster : currentItem;
-      }
-      return "";
-    },
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
-        },
-      };
-    },
-    specStyle() {
-      return this.dataConfig.specStyle ? this.dataConfig.specStyle.tabVal : 0;
-    },
-    specSettings() {
-      return this.dataConfig.specSettings || {};
-    },
-    isCustomSpecTone() {
-      return (
-        this.specSettings.colorTone && this.specSettings.colorTone.tabVal === 1
-      );
-    },
-    specSelectedColor() {
-      if (this.isCustomSpecTone) {
-        return this.specSettings.selectedBorderColor &&
-          this.specSettings.selectedBorderColor.color[0].item
-          ? this.specSettings.selectedBorderColor.color[0].item
-          : "#E93323";
-      }
-      return "var(--view-theme)";
-    },
-    specTextColor() {
-      if (this.isCustomSpecTone) {
-        return this.specSettings.textColor &&
-          this.specSettings.textColor.color[0].item
-          ? this.specSettings.textColor.color[0].item
-          : "#666";
-      }
-      return "var(--view-theme)";
-    },
-    specSelectedBorderColor() {
-      if (this.isCustomSpecTone) {
-        return this.specSettings.selectedBorderColor &&
-          this.specSettings.selectedBorderColor.color[0].item
-          ? this.specSettings.selectedBorderColor.color[0].item
-          : this.specSelectedColor;
-      }
-      return this.specSelectedColor;
-    },
-    specSelectedTextColor() {
-      if (this.isCustomSpecTone) {
-        return this.specSettings.selectedTextColor &&
-          this.specSettings.selectedTextColor.color[0].item
-          ? this.specSettings.selectedTextColor.color[0].item
-          : this.specTextColor;
-      }
-      return this.specTextColor;
-    },
-    specSelectedBgColor() {
-      if (this.isCustomSpecTone) {
-        return this.specSettings.selectedBgColor &&
-          this.specSettings.selectedBgColor.color[0].item
-          ? this.specSettings.selectedBgColor.color[0].item
-          : this.hexToRgba(this.colorStyle.theme || "#E93323", 0.1);
-      }
-      return this.specStyle === 3
-        ? "#777777"
-        : this.hexToRgba(this.colorStyle.theme || "#E93323", 0.1);
-    },
-    specUnselectedTextColor() {
-      if (this.isCustomSpecTone) {
-        return this.specSettings.unselectedTextColor &&
-          this.specSettings.unselectedTextColor.color[0].item
-          ? this.specSettings.unselectedTextColor.color[0].item
-          : this.specStyle === 3
-          ? "#ffffff"
-          : "#333333";
-      }
-      return this.specStyle === 3 ? "#ffffff" : "#333333";
-    },
-    titleColor() {
-      const config = this.dataConfig.titleConfig;
-      if (!config) return "#333333";
-      if (config.tabVal === 0) {
-        return "var(--view-theme)";
-      }
-      return config.color && config.color.color[0].item
-        ? config.color.color[0].item
-        : "#333333";
-    },
-    titleFontSize() {
-      return this.dataConfig.titleConfig && this.dataConfig.titleConfig.fontSize
-        ? this.dataConfig.titleConfig.fontSize.val
-        : 16;
-    },
-    sortList() {
-      return this.dataConfig.sortList
-        ? this.dataConfig.sortList.list
-        : [
-            { name: "price", show: true, checkList: [0, 1, 2] },
-            { name: "name", show: true },
-            { name: "data", show: true, checkList: [0, 1, 2] },
-            { name: "tags", show: true },
-          ];
-    },
-    indicatorConfig() {
-      return this.dataConfig.indicatorConfig || {};
-    },
-    selectColor() {
-      return this.indicatorConfig.selectColor
-        ? this.indicatorConfig.selectColor.color[0].item
-        : "#E93323";
-    },
-    defaultColor() {
-      return this.indicatorConfig.defaultColor
-        ? this.indicatorConfig.defaultColor.color[0].item
-        : "#CCCCCC";
-    },
-    indicatorPosition() {
-      if (this.indicatorConfig.tabVal === 0) return "center";
-      const pos = this.indicatorConfig.positionVal;
-      return pos === 0 ? "left" : pos === 2 ? "right" : "center";
-    },
-    priceSettings() {
-      return this.dataConfig.priceSettings || {};
-    },
-    dataSettings() {
-      return this.dataConfig.dataSettings || {};
-    },
-    isCustomPriceTone() {
-      return (
-        this.priceSettings.colorTone &&
-        this.priceSettings.colorTone.tabVal === 1
-      );
-    },
-    finalPriceColor() {
-      if (this.isCustomPriceTone) {
-        return this.priceSettings.finalPriceColor &&
-          this.priceSettings.finalPriceColor.color[0].item
-          ? this.priceSettings.finalPriceColor.color[0].item
-          : "#E93323";
-      }
-      return "var(--view-theme)" || "#E93323";
-    },
-    sellingPriceColor() {
-      if (this.isCustomPriceTone) {
-        return this.priceSettings.sellingPriceColor &&
-          this.priceSettings.sellingPriceColor.color[0].item
-          ? this.priceSettings.sellingPriceColor.color[0].item
-          : "#333333";
-      }
-      return "#333333";
-    },
-    priceFontSize() {
-      return this.priceSettings.priceFontSize
-        ? this.priceSettings.priceFontSize.val
-        : 24;
-    },
-    originalPriceColor() {
-      return this.dataSettings.originalPriceColor &&
-        this.dataSettings.originalPriceColor.color[0].item
-        ? this.dataSettings.originalPriceColor.color[0].item
-        : "#999999";
-    },
-    stockColor() {
-      return this.dataSettings.stockColor &&
-        this.dataSettings.stockColor.color[0].item
-        ? this.dataSettings.stockColor.color[0].item
-        : "#999999";
-    },
-    salesColor() {
-      return this.dataSettings.salesColor &&
-        this.dataSettings.salesColor.color[0].item
-        ? this.dataSettings.salesColor.color[0].item
-        : "#999999";
-    },
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
   },
-  methods: {
-    swiperChange(e) {
-      this.currentSwiper = e.detail.current;
-      // 切换到非视频页时暂停视频
-      if (this.currentSwiper !== 0 || !this.productData.video_link) {
-        this.videoControls = true;
-        this.videoPlaying = false;
-        // 暂停视频
-        const videoContext = uni.createVideoContext("productVideo", this);
-        videoContext && videoContext.pause();
-      }
-    },
-    playVideo() {
-      this.videoControls = false;
-      this.videoPlaying = true;
-      this.$nextTick(() => {
-        const videoContext = uni.createVideoContext("productVideo", this);
-        videoContext.play();
-      });
-    },
-    onVideoPlay() {
-      this.videoPlaying = true;
-    },
-    onVideoPause() {
-      this.videoPlaying = false;
-    },
-    changeSpec(item, index) {
-      if (index !== undefined) {
-        this.selectedIndex = index;
-        this.hasUserSelected = true;
-      }
-      this.$emit("changeSpec", item);
-    },
-    syncSelectedIndex() {
-      if (!this.skuList.length) return;
-      const attrIndex = this.skuList.findIndex(
-        (item) => item.suk === this.attrValue
-      );
-      if (attrIndex > -1) {
-        this.selectedIndex = attrIndex;
-        this.hasUserSelected = false;
-        return;
-      }
-      if (
-        this.hasUserSelected &&
-        this.selectedIndex > -1 &&
-        this.selectedIndex < this.skuList.length
-      ) {
-        return;
-      }
-      const stockIndex = this.skuList.findIndex((item) => Number(item.stock) > 0);
-      this.selectedIndex = stockIndex > -1 ? stockIndex : 0;
-    },
-    showSpecModal() {
-      this.$emit("showSpecModal");
-    },
-    emitShare() {
-      this.$emit("share");
-    },
-    hexToRgba(hex, opacity) {
-      if (!hex) return "";
-      let c;
-      if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
-        c = hex.substring(1).split("");
-        if (c.length == 3) {
-          c = [c[0], c[0], c[1], c[1], c[2], c[2]];
-        }
-        c = "0x" + c.join("");
-        return (
-          "rgba(" +
-          [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(",") +
-          "," +
-          opacity +
-          ")"
-        );
-      }
-      return hex;
-    },
+  productData: {
+    type: Object,
+    default: () => ({}),
   },
-  watch: {
-    skuList: {
-      handler() {
-        this.syncSelectedIndex();
+  priceData: {
+    type: Object,
+    default: () => ({}),
+  },
+  skuList: {
+    type: Array,
+    default: () => [],
+  },
+  attrValue: {
+    type: String,
+    default: "",
+  },
+  colorStyle: {
+    type: Object,
+    default: () => ({ theme: "#E93323" }),
+  },
+});
+
+const emit = defineEmits(["changeSpec", "showSpecModal", "share"]);
+
+const currentSwiper = ref(0);
+const selectedIndex = ref(0);
+const hasUserSelected = ref(false);
+const videoControls = ref(true);
+const videoPlaying = ref(false);
+
+const displayInfo = computed(() => {
+  let price = props.priceData.price || "0.00";
+  let real_price = props.priceData.real_price || "0.00";
+  let ot_price = props.priceData.ot_price || "0.00";
+  let stock = props.productData.stock || 0;
+  let fsales = props.productData.fsales || 0;
+  let unit_name = props.productData.unit_name || "";
+
+  if (props.skuList.length > 0 && selectedIndex.value < props.skuList.length) {
+    let sku = props.skuList[selectedIndex.value];
+    if (sku) {
+      if (sku.price) price = sku.price;
+      if (sku.real_price) real_price = sku.real_price;
+      if (sku.ot_price) ot_price = sku.ot_price;
+      if (sku.stock || sku.stock === 0) stock = sku.stock;
+    }
+  }
+  return {
+    price,
+    ot_price,
+    stock,
+    fsales,
+    unit_name,
+    real_price,
+  };
+});
+const sliderImage = computed(() => {
+  const images = Array.isArray(props.productData.slider_image)
+    ? props.productData.slider_image
+    : [];
+  const videoLink = props.productData.video_link;
+  if (videoLink) {
+    // 有视频时，第一项为视频对象，后面是图片（跳过第一张图片作为封面）
+    return [
+      {
+        isVideo: true,
+        src: videoLink,
+        poster: images[0] || "",
       },
-      deep: true,
-      immediate: true,
+      ...images.slice(1),
+    ];
+  }
+  return images;
+});
+const currentSlideImage = computed(() => {
+  const currentItem = sliderImage.value[currentSwiper.value];
+  if (currentItem) {
+    // 如果是视频，返回 poster；否则返回图片
+    return currentItem.isVideo ? currentItem.poster : currentItem;
+  }
+  return "";
+});
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
     },
-    attrValue() {
-      this.syncSelectedIndex();
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
     },
+  };
+});
+const infoBoxBg = computed(() => {
+  const componentBgConfig = props.dataConfig.componentBgConfig;
+  const colorConfig = componentBgConfig && componentBgConfig.colorConfig;
+  const colors =
+    colorConfig && colorConfig.color
+      ? colorConfig.color.map((item) => item.item || "#ffffff")
+      : [];
+  if (!colors.length)
+    return "linear-gradient(180deg, #ffffff 0%, #ffffff 100%)";
+  if (colors.length === 1) return colors[0];
+  const directionMap = ["90deg", "180deg", "135deg", "200deg"];
+  const direction =
+    componentBgConfig && componentBgConfig.colorDirection
+      ? componentBgConfig.colorDirection.tabVal
+      : 1;
+  return `linear-gradient(${directionMap[direction] || "180deg"}, ${colors[0]} 0%, ${colors[1]} 100%)`;
+});
+const specStyle = computed(() => {
+  return props.dataConfig.specStyle ? props.dataConfig.specStyle.tabVal : 0;
+});
+const specSettings = computed(() => {
+  return props.dataConfig.specSettings || {};
+});
+const isCustomSpecTone = computed(() => {
+  return (
+    specSettings.value.colorTone && specSettings.value.colorTone.tabVal === 1
+  );
+});
+const specSelectedColor = computed(() => {
+  if (isCustomSpecTone.value) {
+    return specSettings.value.selectedBorderColor &&
+      specSettings.value.selectedBorderColor.color[0].item
+      ? specSettings.value.selectedBorderColor.color[0].item
+      : "#E93323";
+  }
+  return "var(--view-theme)";
+});
+const specTextColor = computed(() => {
+  if (isCustomSpecTone.value) {
+    return specSettings.value.textColor &&
+      specSettings.value.textColor.color[0].item
+      ? specSettings.value.textColor.color[0].item
+      : "#666";
+  }
+  return "var(--view-theme)";
+});
+const specSelectedBorderColor = computed(() => {
+  if (isCustomSpecTone.value) {
+    return specSettings.value.selectedBorderColor &&
+      specSettings.value.selectedBorderColor.color[0].item
+      ? specSettings.value.selectedBorderColor.color[0].item
+      : specSelectedColor.value;
+  }
+  return specSelectedColor.value;
+});
+const specSelectedTextColor = computed(() => {
+  if (isCustomSpecTone.value) {
+    return specSettings.value.selectedTextColor &&
+      specSettings.value.selectedTextColor.color[0].item
+      ? specSettings.value.selectedTextColor.color[0].item
+      : specTextColor.value;
+  }
+  return specTextColor.value;
+});
+const specSelectedBgColor = computed(() => {
+  if (isCustomSpecTone.value) {
+    return specSettings.value.selectedBgColor &&
+      specSettings.value.selectedBgColor.color[0].item
+      ? specSettings.value.selectedBgColor.color[0].item
+      : hexToRgba(props.colorStyle.theme || "#E93323", 0.1);
+  }
+  return specStyle.value === 3
+    ? "#777777"
+    : hexToRgba(props.colorStyle.theme || "#E93323", 0.1);
+});
+const specUnselectedTextColor = computed(() => {
+  if (isCustomSpecTone.value) {
+    return specSettings.value.unselectedTextColor &&
+      specSettings.value.unselectedTextColor.color[0].item
+      ? specSettings.value.unselectedTextColor.color[0].item
+      : specStyle.value === 3
+        ? "#ffffff"
+        : "#333333";
+  }
+  return specStyle.value === 3 ? "#ffffff" : "#333333";
+});
+const titleColor = computed(() => {
+  const config = props.dataConfig.titleConfig;
+  if (!config) return "#333333";
+  if (config.tabVal === 0) {
+    return "var(--view-theme)";
+  }
+  return config.color && config.color.color[0].item
+    ? config.color.color[0].item
+    : "#333333";
+});
+const titleFontSize = computed(() => {
+  return props.dataConfig.titleConfig && props.dataConfig.titleConfig.fontSize
+    ? props.dataConfig.titleConfig.fontSize.val
+    : 16;
+});
+const sortList = computed(() => {
+  const list = props.dataConfig.sortList
+    ? props.dataConfig.sortList.list
+    : [
+        { name: "price", show: true, checkList: [0, 1] },
+        { name: "name", show: true },
+        { name: "data", show: true, checkList: [0, 1, 2] },
+      ];
+  return list;
+});
+const indicatorConfig = computed(() => {
+  return props.dataConfig.indicatorConfig || {};
+});
+const selectColor = computed(() => {
+  return indicatorConfig.value.selectColor
+    ? indicatorConfig.value.selectColor.color[0].item
+    : "#E93323";
+});
+const defaultColor = computed(() => {
+  return indicatorConfig.value.defaultColor
+    ? indicatorConfig.value.defaultColor.color[0].item
+    : "#CCCCCC";
+});
+const indicatorPosition = computed(() => {
+  if (indicatorConfig.value.tabVal === 0) return "center";
+  const pos = indicatorConfig.value.positionVal;
+  return pos === 0 ? "left" : pos === 2 ? "right" : "center";
+});
+const priceSettings = computed(() => {
+  return props.dataConfig.priceSettings || {};
+});
+const dataSettings = computed(() => {
+  return props.dataConfig.dataSettings || {};
+});
+const isCustomPriceTone = computed(() => {
+  return (
+    priceSettings.value.colorTone &&
+    priceSettings.value.colorTone.tabVal === 1
+  );
+});
+const finalPriceColor = computed(() => {
+  if (isCustomPriceTone.value) {
+    return priceSettings.value.finalPriceColor &&
+      priceSettings.value.finalPriceColor.color[0].item
+      ? priceSettings.value.finalPriceColor.color[0].item
+      : "#E93323";
+  }
+  return "var(--view-theme)" || "#E93323";
+});
+const sellingPriceColor = computed(() => {
+  if (isCustomPriceTone.value) {
+    return priceSettings.value.sellingPriceColor &&
+      priceSettings.value.sellingPriceColor.color[0].item
+      ? priceSettings.value.sellingPriceColor.color[0].item
+      : "#333333";
+  }
+  return "#333333";
+});
+const priceFontSize = computed(() => {
+  return priceSettings.value.priceFontSize
+    ? priceSettings.value.priceFontSize.val
+    : 24;
+});
+const originalPriceColor = computed(() => {
+  return dataSettings.value.originalPriceColor &&
+    dataSettings.value.originalPriceColor.color[0].item
+    ? dataSettings.value.originalPriceColor.color[0].item
+    : "#999999";
+});
+const stockColor = computed(() => {
+  return dataSettings.value.stockColor &&
+    dataSettings.value.stockColor.color[0].item
+    ? dataSettings.value.stockColor.color[0].item
+    : "#999999";
+});
+const salesColor = computed(() => {
+  return dataSettings.value.salesColor &&
+    dataSettings.value.salesColor.color[0].item
+    ? dataSettings.value.salesColor.color[0].item
+    : "#999999";
+});
+
+function swiperChange(e) {
+  currentSwiper.value = e.detail.current;
+  // 切换到非视频页时暂停视频
+  if (currentSwiper.value !== 0 || !props.productData.video_link) {
+    videoControls.value = true;
+    videoPlaying.value = false;
+    // 暂停视频
+    const videoContext = uni.createVideoContext("productVideo", proxy);
+    videoContext && videoContext.pause();
+  }
+}
+function playVideo() {
+  videoControls.value = false;
+  videoPlaying.value = true;
+  nextTick(() => {
+    const videoContext = uni.createVideoContext("productVideo", proxy);
+    videoContext.play();
+  });
+}
+function onVideoPlay() {
+  videoPlaying.value = true;
+}
+function onVideoPause() {
+  videoPlaying.value = false;
+}
+function changeSpec(item, index) {
+  if (index !== undefined) {
+    selectedIndex.value = index;
+    hasUserSelected.value = true;
+  }
+  emit("changeSpec", item);
+}
+function syncSelectedIndex() {
+  if (!props.skuList.length) return;
+  const attrIndex = props.skuList.findIndex(
+    (item) => item.suk === props.attrValue,
+  );
+  if (attrIndex > -1) {
+    selectedIndex.value = attrIndex;
+    hasUserSelected.value = false;
+    return;
+  }
+  if (
+    hasUserSelected.value &&
+    selectedIndex.value > -1 &&
+    selectedIndex.value < props.skuList.length
+  ) {
+    return;
+  }
+  const stockIndex = props.skuList.findIndex(
+    (item) => Number(item.stock) > 0,
+  );
+  selectedIndex.value = stockIndex > -1 ? stockIndex : 0;
+}
+function showSpecModal() {
+  emit("showSpecModal");
+}
+function emitShare() {
+  emit("share");
+}
+function hexToRgba(hex, opacity) {
+  if (!hex) return "";
+  let c;
+  if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+    c = hex.substring(1).split("");
+    if (c.length == 3) {
+      c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+    }
+    c = "0x" + c.join("");
+    return (
+      "rgba(" +
+      [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(",") +
+      "," +
+      opacity +
+      ")"
+    );
+  }
+  return hex;
+}
+
+watch(
+  () => props.skuList,
+  () => {
+    syncSelectedIndex();
   },
-};
+  { deep: true, immediate: true },
+);
+watch(
+  () => props.attrValue,
+  () => {
+    syncSelectedIndex();
+  },
+);
 </script>
 
 <style scoped lang="scss">
@@ -951,11 +958,12 @@ export default {
       display: flex;
       justify-content: space-between;
       .spec-list {
+        flex: 1;
+        min-width: 0;
         white-space: nowrap;
-        width: 100%;
+        width: 0;
         display: flex;
         align-items: center;
-        padding-right: 160rpx;
         .spec-item {
           display: inline-flex;
           align-items: center;
@@ -982,7 +990,6 @@ export default {
             max-width: 120rpx;
           }
         }
-
       }
       .total-count {
         display: inline-flex;
@@ -994,8 +1001,8 @@ export default {
         height: 88rpx;
         color: #fff;
         background: #777777;
-        position: absolute;
-        right: 0;
+        position: static;
+        flex-shrink: 0;
         z-index: 10;
         padding: 0 20rpx;
         border-radius: 8rpx 0 0 8rpx;
@@ -1011,7 +1018,7 @@ export default {
     position: relative;
     padding: 32rpx 32rpx 8rpx 32rpx;
     border-radius: 32rpx 32rpx 0 0;
-    background: #fff;
+    // background: #fff;
     margin-top: -32rpx;
     z-index: 11;
 
@@ -1148,35 +1155,6 @@ export default {
             margin-right: 20rpx;
           }
 
-          .vip-price-wrap {
-            display: flex;
-            align-items: center;
-            height: 32rpx;
-
-            .badge {
-              background: #333;
-              color: #f8dcae;
-              font-size: 20rpx;
-              padding: 0 8rpx;
-              border-radius: 18rpx 0 0 18rpx;
-              height: 100%;
-              display: flex;
-              align-items: center;
-              font-weight: bold;
-            }
-
-            .price {
-              background: #fff0d8;
-              color: #333;
-              font-size: 22rpx;
-              padding: 0 10rpx 0 4rpx;
-              border-radius: 0 18rpx 18rpx 0;
-              height: 100%;
-              display: flex;
-              align-items: center;
-              font-weight: bold;
-            }
-          }
         }
       }
 
@@ -1241,6 +1219,7 @@ export default {
           text-align: center;
           border: 2rpx solid transparent;
           border-radius: 8rpx;
+          background: #fff;
           overflow: hidden;
           image {
             width: 116rpx;
@@ -1251,7 +1230,6 @@ export default {
           .name {
             font-size: 24rpx;
             color: #333;
-            background: #f5f5f5;
             padding: 6rpx 14rpx;
             font-size: 22rpx;
             max-width: 116rpx;

@@ -41,51 +41,46 @@
   </view>
 </template>
 
-<script>
-import { mapGetters } from "vuex";
+<script setup>
+import { ref } from "vue";
 import { getCustomer } from "@/utils/index.js";
-export default {
-  name: "customerService",
-  computed: mapGetters(["userInfo"]),
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+import util from "@/utils/util.js";
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {
-      routineContact: parseFloat(this.dataConfig.routine_contact_type),
-      logoConfig: this.dataConfig.logoConfig.url,
-      topConfig: this.dataConfig.marginConfig.val
-        ? this.dataConfig.marginConfig.val >= 80
-          ? 80 + "%"
-          : this.dataConfig.marginConfig.val + "%"
-        : "30%",
-      positions: this.dataConfig.locationConfig.tabVal,
-    };
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  created() {},
-  methods: {
-    licks() {
-      if (this.dataConfig.buttonConfig.tabVal) {
-        getCustomer(`/pages/extension/customer_list/chat`);
-      } else {
-        this.$util.JumpPath(this.dataConfig.logoConfig.link);
-      }
-    },
-    setTouchMove(e) {
-      var that = this;
-      if (e.touches[0].clientY < 545 && e.touches[0].clientY > 66) {
-        that.topConfig = e.touches[0].clientY + "px";
-      }
-    },
-  },
-};
+});
+
+const routineContact = ref(parseFloat(props.dataConfig.routine_contact_type));
+const logoConfig = ref(props.dataConfig.logoConfig.url);
+const topConfig = ref(
+  props.dataConfig.marginConfig.val
+    ? props.dataConfig.marginConfig.val >= 80
+      ? 80 + "%"
+      : props.dataConfig.marginConfig.val + "%"
+    : "30%"
+);
+const positions = ref(props.dataConfig.locationConfig.tabVal);
+
+function licks() {
+  if (props.dataConfig.buttonConfig.tabVal) {
+    getCustomer(`/pages/extension/customer_list/chat`);
+  } else {
+    util.JumpPath(props.dataConfig.logoConfig.link);
+  }
+}
+
+function setTouchMove(e) {
+  if (e.touches[0].clientY < 545 && e.touches[0].clientY > 66) {
+    topConfig.value = e.touches[0].clientY + "px";
+  }
+}
 </script>
 
 <style lang="scss">

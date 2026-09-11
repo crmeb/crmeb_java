@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class='sign'>
 			<view class='header'>
 				<view class='headerCon acea-row row-between-wrapper'>
@@ -12,7 +12,7 @@
 							<view class='integral acea-row'><text>积分: {{userInfo.integral}}</text></view>
 						</view>
 					</view>
-					<navigator class='right acea-row row-middle' hover-class='none'
+					<navigator :render-link="false" class='right acea-row row-middle' hover-class='none'
 						url='/pages/users/user_sgin_list/index'>
 						<view class='iconfont icon-caidan'></view>
 						<view>明细</view>
@@ -77,168 +77,160 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, watch, getCurrentInstance } from 'vue';
+	import { onLoad } from '@dcloudio/uni-app';
 	import {
 		toLogin
 	} from '@/libs/login.js';
 	import {
-		mapGetters
-	} from "vuex";
-	import {
 		postSignUser,
 		getSignConfig,
-		getSignList,
+		getSignList as getSignListApi,
 		setSignIntegral
 	} from '@/api/user.js';
 	import {
 		setFormId
 	} from '@/api/api.js';
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
+import { useColor } from '@/composables/useColor.js';
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { isLogin, userInfo } = storeToRefs(appStore);
 	let app = getApp();
-	export default {
-		data() {
-			return {
-				active: false,
-				signCount: [],
-				signSystemList: [],
-				signList: [],
-				signInfo: {}, // 签到
-				integral: 0,
-				day: 0,
-				sign_index: 0, //连续签到天数
-				theme:app.globalData.theme,
-			};
-		},
-		computed: mapGetters(['isLogin', 'userInfo']),
-		watch: {
-			isLogin: {
-				handler: function(newV, oldV) {
-					if (newV) {
-						this.getUserInfo();
-						this.getSignSysteam();
-						this.getSignList();
-					}
-				},
-				deep: true
-			}
-		},
-		onLoad() {
-			if (this.isLogin) {
-				this.getUserInfo();
-				this.getSignSysteam();
-				this.getSignList();
-			} 
-			// else {
-			// 	toLogin();
-			// }
-		},
-		methods: {
-			/**
-			 * 获取签到配置
-			 */
-			getSignSysteam: function() {
-				let that = this;
-				getSignConfig().then(res => {
-					that.$set(that, 'signSystemList', res.data);
-					that.day = res.data.length;
-				})
-			},
 
-			/**
-			 * 去签到记录页面
-			 * 
-			 */
-			goSignList: function() {
-				return this.$util.Tips('/pages/users/user_sgin_list/index');
-			},
-			/**
-			 * 获取用户信息
-			 */
-			getUserInfo: function() {
-				let that = this;
-				postSignUser({
-					all: 0,
-					integral: 0,
-					sign: 1
-				}).then(res => {
-					res.data.integral = parseInt(res.data.integral);
-					let sum_sgin_day = res.data.sumSignDay; // 连续签到日期
-					that.$set(that, 'signInfo', res.data);
-					that.signCount = that.PrefixInteger(sum_sgin_day, 4);
-					that.sign_index = res.data.signNum;
-				});
-			},
+	const active = ref(false);
+	const signCount = ref([]);
+	const signSystemList = ref([]);
+	const signList = ref([]);
+	const signInfo = ref({}); // 签到
+	const integral = ref(0);
+	const day = ref(0);
+	const sign_index = ref(0); //连续签到天数
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
 
-			/**
-			 * 获取签到列表
-			 * 
-			 */
-			getSignList: function() {
-				let that = this;
-				getSignList({
-					page: 1,
-					limit: 3
-				}).then(res => {
-					that.$set(that, 'signList', res.data.list);
-				})
-			},
-			/**
-			 * 数字转中文
-			 * 
-			 */
-			Rp: function(n) {
-				let cnum = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
-				let s = '';
-				n = '' + n; // 数字转为字符串
-				for (let i = 0; i < n.length; i++) {
-					s += cnum[parseInt(n.charAt(i))];
-				}
-				return s;
-			},
-			/**
-			 * 数字分割为数组
-			 * @param int num 需要分割的数字
-			 * @param int length 需要分割为n位数组
-			 */
-			PrefixInteger: function(num, length) {
-				return (Array(length).join('0') + num).slice(-length).split('');
-			},
-
-			/**
-			 * 用户签到
-			 */
-			goSign: function(e) {
-				let that = this,
-					sum_sgin_day = that.signInfo.sumSignDay;
-				if (that.signInfo.isDaySign) return this.$util.Tips({
-					title: '您今日已签到!'
-				});
-				setSignIntegral().then(res => {
-					that.active = true;
-					that.integral = res.data.integral;
-					that.sign_index = (that.sign_index + 1) > that.signSystemList.length ? 1 : that
-						.sign_index + 1;
-					that.signCount = that.PrefixInteger(sum_sgin_day + 1, 4);
-					that.$set(that.signInfo, 'isDaySign', true);
-					// that.$set(that.signInfo, 'integral', that.$util.$h.Add(that.signInfo.integral, res.data
-					// 	.integral));
-					that.$store.commit("changInfo", {
-						amount1: 'integral',
-						amount2: that.$util.$h.Add(that.signInfo.integral, res.data.integral)
-					});
-					that.getSignList();
-				}).catch(err => {
-					return this.$util.Tips({
-						title: err
-					})
-				});
-			},
-			/**
-			 * 关闭签到提示
-			 */
-			close: function() {
-				this.active = false;
-			}
+	watch(isLogin, (newV, oldV) => {
+		if (newV) {
+			getUserInfo();
+			getSignSysteam();
+			getSignList();
 		}
+	}, { deep: true });
+
+	onLoad(() => {
+		if (isLogin.value) {
+			getUserInfo();
+			getSignSysteam();
+			getSignList();
+		}
+		// else {
+		// 	toLogin();
+		// }
+	});
+
+	/**
+	 * 获取签到配置
+	 */
+	function getSignSysteam() {
+		getSignConfig().then(res => {
+			signSystemList.value = res.data;
+			day.value = res.data.length;
+		})
+	}
+
+	/**
+	 * 去签到记录页面
+	 * 
+	 */
+	function goSignList() {
+		return proxy.$util.Tips('/pages/users/user_sgin_list/index');
+	}
+	/**
+	 * 获取用户信息
+	 */
+	function getUserInfo() {
+		postSignUser({
+			all: 0,
+			integral: 0,
+			sign: 1
+		}).then(res => {
+			res.data.integral = parseInt(res.data.integral);
+			let sum_sgin_day = res.data.sumSignDay; // 连续签到日期
+			signInfo.value = res.data;
+			signCount.value = PrefixInteger(sum_sgin_day, 4);
+			sign_index.value = res.data.signNum;
+		});
+	}
+
+	/**
+	 * 获取签到列表
+	 * 
+	 */
+	function getSignList() {
+		getSignListApi({
+			page: 1,
+			limit: 3
+		}).then(res => {
+			signList.value = res.data.list;
+		})
+	}
+	/**
+	 * 数字转中文
+	 * 
+	 */
+	function Rp(n) {
+		let cnum = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+		let s = '';
+		n = '' + n; // 数字转为字符串
+		for (let i = 0; i < n.length; i++) {
+			s += cnum[parseInt(n.charAt(i))];
+		}
+		return s;
+	}
+	/**
+	 * 数字分割为数组
+	 * @param int num 需要分割的数字
+	 * @param int length 需要分割为n位数组
+	 */
+	function PrefixInteger(num, length) {
+		return (Array(length).join('0') + num).slice(-length).split('');
+	}
+
+	/**
+	 * 用户签到
+	 */
+	function goSign(e) {
+		let sum_sgin_day = signInfo.value.sumSignDay;
+		if (signInfo.value.isDaySign) return proxy.$util.Tips({
+			title: '您今日已签到!'
+		});
+		setSignIntegral().then(res => {
+			active.value = true;
+			integral.value = res.data.integral;
+			sign_index.value = (sign_index.value + 1) > signSystemList.value.length ? 1 : sign_index
+				.value + 1;
+			signCount.value = PrefixInteger(sum_sgin_day + 1, 4);
+			signInfo.value.isDaySign = true;
+			// signInfo.value.integral = proxy.$util.$h.Add(signInfo.value.integral, res.data
+			// 	.integral);
+			appStore.changInfo({
+				amount1: 'integral',
+				amount2: proxy.$util.$h.Add(signInfo.value.integral, res.data.integral)
+			});
+			getSignList();
+		}).catch(err => {
+			return proxy.$util.Tips({
+				title: err
+			})
+		});
+	}
+	/**
+	 * 关闭签到提示
+	 */
+	function close() {
+		active.value = false;
 	}
 </script>
 
@@ -319,6 +311,9 @@
 		font-size: 22rpx;
 		color: #8a8886;
 		text-align: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 
 	.sign .wrapper .list .item .rewardTxt {

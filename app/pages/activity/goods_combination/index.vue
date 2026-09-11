@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class="pageInfo">
 			<skeleton :show="showSkeleton" :isNodes="isNodes" ref="skeleton" loading="chiaroscuro" selector="skeleton">
 			</skeleton>
@@ -18,7 +18,7 @@
 								indicator-active-color="#fff">
 								<block v-for="(item,index) in bannerList" :key="index">
 									<swiper-item>
-										<navigator :url='item.value'
+										<navigator :render-link="false" :url='item.value'
 											class='slide-navigator acea-row row-between-wrapper' hover-class='none'>
 											<image :src="item.value" class="slide-image" lazy-load mode="aspectFill">
 											</image>
@@ -28,7 +28,7 @@
 							</swiper>
 						</view>
 						<view class="nav acea-row row-between-wrapper" v-if="avatarList.length > 0">
-							<image :src="urlDomain+'crmebimage/perset/activityImg/zuo.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/activityImg/zuo.png'"></image>
 							<view class="title acea-row row-center">
 								<view class="spike-bd">
 									<view class="activity_pic">
@@ -43,7 +43,7 @@
 								</view>
 								<text class="pic_count">{{totalPeople}}人参与</text>
 							</view>
-							<image :src="urlDomain+'crmebimage/perset/activityImg/you.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/activityImg/you.png'"></image>
 						</view>
 						<view class='list'>
 							<block v-for="(item,index) in combinationList" :key='index'>
@@ -60,7 +60,7 @@
 											<view class="bnt acea-row row-center-wrapper" v-if="item.stock>0">
 												<view class="light">
 													<image
-														:src="urlDomain+'crmebimage/perset/activityImg/shandian1.png'">
+														:src="urlDomain+'/crmebimage/perset/activityImg/shandian1.png'">
 													</image>
 												</view>
 												<view class="num">{{item.people}}人团</view>
@@ -77,7 +77,7 @@
 							</view>
 						</view>
 						<view v-if="combinationList.length == 0" class="no_shop flex-center">
-							<image :src="urlDomain+'crmebimage/perset/staticImg/noShopper.png'" mode="aspectFit"
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/noShopper.png'" mode="aspectFit"
 								style="width: 400rpx;"></image>
 						</view>
 					</view>
@@ -88,11 +88,13 @@
 
 </template>
 
-<script>
-	import {
-		getCombinationList,
-		combinationHeaderApi
-	} from '@/api/activity.js';
+<script setup>
+	import { ref, getCurrentInstance } from 'vue';
+	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
+import {
+	getCombinationList as getCombinationListApi,
+	combinationHeaderApi
+} from '@/api/activity.js';
 	import {
 		openPinkSubscribe
 	} from '../../../utils/SubscribeMessage.js';
@@ -100,152 +102,153 @@
 		setThemeColor
 	} from '@/utils/setTheme.js'
 	import animationType from '@/utils/animationType.js'
+	import util from '@/utils/util.js';
+	import Cache from '@/utils/cache.js';
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				showSkeleton: true, //骨架屏显示隐藏
-				isNodes: 0, //控制什么时候开始抓取元素节点,只要数值改变就重新抓取
-				indicatorDots: false,
-				circular: true,
-				autoplay: true,
-				interval: 3000,
-				duration: 500,
-				navH: '',
-				combinationList: [],
-				limit: 10,
-				page: 1,
-				loading: false,
-				loadend: false,
-				returnShow: true,
-				loadTitle: '',
-				avatarList: [],
-				bannerList: [],
-				totalPeople: 0,
-				theme: app.globalData.theme,
-				bgColor: '#e93323'
-			}
-		},
-		onLoad() {
-			let that = this;
-			that.bgColor = setThemeColor();
-			uni.setNavigationBarColor({
-				frontColor: '#ffffff',
-				backgroundColor: that.bgColor,
-			});
-			setTimeout(() => {
-				this.isNodes++;
-			}, 500);
-			var pages = getCurrentPages();
-			this.returnShow = pages.length === 1 ? false : true;
-			uni.setNavigationBarTitle({
-				title: "拼团列表"
-			})
-			// #ifdef MP
-			this.navH = app.globalData.navH;
-			// #endif
-			// #ifdef H5
-			this.navH = app.globalData.navHeight;
-			// #endif
 
-			this.getCombinationList();
-			this.getCombinationHeader();
-		},
-		methods: {
-			goBack: function() {
-				uni.navigateBack();
-			},
-			openSubcribe: function(item) {
-				let page = item;
-				// #ifndef MP
-				uni.navigateTo({
-					animationType: animationType.type,
-					animationDuration: animationType.duration,
-					url: `/pages/activity/goods_combination_details/index?id=${item.id}`
-				});
-				// #endif
-				// #ifdef MP
-				uni.showLoading({
-					title: '正在加载',
-				})
-				openPinkSubscribe().then(res => {
-					uni.hideLoading();
-					uni.navigateTo({
-						animationType: animationType.type,
-						animationDuration: animationType.duration,
-						url: `/pages/activity/goods_combination_details/index?id=${item.id}`
-					});
-				}).catch(() => {
-					uni.hideLoading();
-				});
-				// #endif
-			},
-			getCombinationHeader: function() {
-				this.bannerList = [{
-					value: ''
-				}];
-				combinationHeaderApi().then(res => {
-					this.avatarList = res.data.avatarList || [];
-					this.bannerList = res.data.bannerList || [];
-					this.totalPeople = res.data.totalPeople;
-				}).catch(() => {
-					this.loading = false;
-					this.loadTitle = '加载更多';
-				})
-			},
-			getCombinationList: function() {
-				var that = this;
+	const { proxy } = getCurrentInstance();
 
-				if (that.loadend) return;
-				if (that.loading) return;
-				that.loadTitle = '';
-				var data = {
-					page: that.page,
-					limit: that.limit
-				};
-				this.loading = true
-				getCombinationList(data).then(function(res) {
-					let list = res.data.list;
-					let combinationList = that.$util.SplitArray(list, that.combinationList);
-					let loadend = list.length < that.limit;
-					that.loadend = loadend;
-					that.loading = false;
-					// #ifdef H5
-					that.setShare();
-					// #endif
-					that.loadTitle = loadend ? '已全部加载' : '加载更多';
-					that.$set(that, 'combinationList', combinationList);
-					that.$set(that, 'page', that.page + 1);
-					setTimeout(() => {
-						that.showSkeleton = false
-					}, 1000)
-				}).catch(() => {
-					that.loading = false;
-					that.loadTitle = '加载更多';
-				})
-			},
-			setShare: function() {
-				this.$wechat.isWeixin() &&
-					this.$wechat.wechatEvevt([
-						"updateAppMessageShareData",
-						"updateTimelineShareData",
-						"onMenuShareAppMessage",
-						"onMenuShareTimeline"
-					], {
-						desc: this.combinationList[0].title,
-						title: this.combinationList[0].title,
-						link: location.href,
-						imgUrl: this.combinationList[0].image
-					}).then(res => {}).catch(err => {
-						console.log(err);
-					});
-			},
-		},
-		onReachBottom: function() {
-			this.getCombinationList();
-		},
+	// data
+	const urlDomain = ref(Cache.get("imgHost"));
+	const showSkeleton = ref(true); //骨架屏显示隐藏
+	const isNodes = ref(0); //控制什么时候开始抓取元素节点,只要数值改变就重新抓取
+	const indicatorDots = ref(false);
+	const circular = ref(true);
+	const autoplay = ref(true);
+	const interval = ref(3000);
+	const duration = ref(500);
+	const navH = ref('');
+	const combinationList = ref([]);
+	const limit = ref(10);
+	const page = ref(1);
+	const loading = ref(false);
+	const loadend = ref(false);
+	const returnShow = ref(true);
+	const loadTitle = ref('');
+	const avatarList = ref([]);
+	const bannerList = ref([]);
+	const totalPeople = ref(0);
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	const bgColor = ref('#e93323');
+
+	onLoad(() => {
+		bgColor.value = setThemeColor();
+		uni.setNavigationBarColor({
+			frontColor: '#ffffff',
+			backgroundColor: bgColor.value,
+		});
+		setTimeout(() => {
+			isNodes.value++;
+		}, 500);
+		var pages = getCurrentPages();
+		returnShow.value = pages.length === 1 ? false : true;
+		uni.setNavigationBarTitle({
+			title: "拼团列表"
+		})
+		// #ifdef MP
+		navH.value = app.globalData.navH;
+		// #endif
+		// #ifdef H5
+		navH.value = app.globalData.navHeight;
+		// #endif
+
+		getCombinationList();
+		getCombinationHeader();
+	});
+
+	function goBack() {
+		uni.navigateBack();
 	}
+	function openSubcribe(item) {
+		let page = item;
+		// #ifndef MP
+		uni.navigateTo({
+			animationType: animationType.type,
+			animationDuration: animationType.duration,
+			url: `/pages/activity/goods_combination_details/index?id=${item.id}`
+		});
+		// #endif
+		// #ifdef MP
+		uni.showLoading({
+			title: '正在加载',
+		})
+		openPinkSubscribe().then(res => {
+			uni.hideLoading();
+			uni.navigateTo({
+				animationType: animationType.type,
+				animationDuration: animationType.duration,
+				url: `/pages/activity/goods_combination_details/index?id=${item.id}`
+			});
+		}).catch(() => {
+			uni.hideLoading();
+		});
+		// #endif
+	}
+	function getCombinationHeader() {
+		bannerList.value = [{
+			value: ''
+		}];
+		combinationHeaderApi().then(res => {
+			avatarList.value = res.data.avatarList || [];
+			bannerList.value = res.data.bannerList || [];
+			totalPeople.value = res.data.totalPeople;
+		}).catch(() => {
+			loading.value = false;
+			loadTitle.value = '加载更多';
+		})
+	}
+	function getCombinationList() {
+		if (loadend.value) return;
+		if (loading.value) return;
+		loadTitle.value = '';
+		var data = {
+			page: page.value,
+			limit: limit.value
+		};
+		loading.value = true
+		getCombinationListApi(data).then(function(res) {
+			let list = res.data.list;
+			let newList = util.SplitArray(list, combinationList.value);
+			let isLoadend = list.length < limit.value;
+			loadend.value = isLoadend;
+			loading.value = false;
+			// #ifdef H5
+			setShare();
+			// #endif
+			loadTitle.value = isLoadend ? '已全部加载' : '加载更多';
+			combinationList.value = newList;
+			page.value = page.value + 1;
+			setTimeout(() => {
+				showSkeleton.value = false
+			}, 1000)
+		}).catch(() => {
+			loading.value = false;
+			loadTitle.value = '加载更多';
+		})
+	}
+	// #ifdef H5
+	function setShare() {
+		proxy.$wechat.isWeixin() &&
+			proxy.$wechat.wechatEvevt([
+				"updateAppMessageShareData",
+				"updateTimelineShareData",
+				"onMenuShareAppMessage",
+				"onMenuShareTimeline"
+			], {
+				desc: combinationList.value[0].title,
+				title: combinationList.value[0].title,
+				link: location.href,
+				imgUrl: combinationList.value[0].image
+			}).then(res => {}).catch(err => {
+			});
+	}
+	// #endif
+
+	onReachBottom(() => {
+		getCombinationList();
+	});
 </script>
 
 <style lang="scss">

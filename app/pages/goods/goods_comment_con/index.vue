@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<form @submit="formSubmit" report-submit='true'>
 			<view class='evaluate-con pad30'>
 				<view class='goodsStyle acea-row row-between borRadius14'>
@@ -45,153 +45,81 @@
 	</view>
 </template>
 
-<script>
-	import {
-		orderProduct,
-		orderComment
-	} from '@/api/order.js';
-	import {toLogin} from '@/libs/login.js';
-	import {mapGetters} from "vuex";
-	let app = getApp();
-	export default {
-		data() {
-			return {
-				pics: [],
-				picsPath: [],
-				scoreList: [{
-						name: "商品质量",
-						stars: ["", "", "", "", ""],
-						index: -1
-					},
-					{
-						name: "服务态度",
-						stars: ["", "", "", "", ""],
-						index: -1
-					}
-				],
-				orderId: '',
-				productId: 0, //产品id
-				evaluateId: 0, //评价id
-				unique: '',
-				productInfo: {storeName:'',sku:'',truePrice:'',cartNum:'',image:''},
-				cart_num: 0,
-				id: 0 ,//订单id
-				theme:app.globalData.theme,
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		watch: {
-			isLogin: {
-				handler: function(newV, oldV) {
-					if (newV) {
-						this.getOrderProduct();
-					}
-				},
-				deep: true
-			}
-		},
-		onLoad(options) {
-			if (!options.unique || !options.orderId ) return this.$util.Tips({
-				title: '缺少参数'
-			}, {
-				tab: 3,
-				url: 1
-			});
-			this.unique =  Number(options.unique) || 0;
-			this.orderId = options.orderId || 0;
-			this.evaluateId = Number(options.id) || 0;
-			if (this.isLogin) {
-				this.getOrderProduct();
-			} else {
-				toLogin();
-			}
-		},
-		methods: {
-			/**
-			 * 获取某个产品详情
-			 * 
-			 */
-			getOrderProduct: function() {
-				let that = this;
-				orderProduct({
-					orderId: that.evaluateId,
-					uni: that.unique
-				}).then(res => {
-					that.$set(that, 'productInfo', res.data);
-					// that.$set(that, 'cart_num', res.data.cartNum);
-					// that.$set(that, 'productId', res.data.productId);
-				});
-			},
-			stars: function(indexn, indexw) {
-				this.scoreList[indexw].index = indexn;
-			},
-			/**
-			 * 删除图片
-			 * 
-			 */
-			DelPic: function(index) {
-				let that = this,
-					pic = this.picsPath[index];
-				that.picsPath.splice(index, 1);
-				that.pics.splice(index, 1);
-			},
+<script setup>
+import { ref, watch } from "vue";
+import { onLoad } from "@dcloudio/uni-app";
+import { orderProduct, orderComment } from "@/api/order.js";
+import { toLogin } from "@/libs/login.js";
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
+import util from "@/utils/util.js";
+import { useColor } from '@/composables/useColor.js';
 
-			/**
-			 * 上传文件
-			 * 
-			 */
-			uploadpic: function() {
-				let that = this;
-				that.$util.uploadImageOne({
-					url: 'upload/image',
-					name: 'multipart',
-					model: "product",
-					pid: 1
-				}, function(res) {
-					that.pics.push(res.data.url);
-					that.picsPath.push(res.data.localPath);
-					that.$set(that, 'pics', that.pics);
-					that.$set(that, 'picsPath', that.picsPath);
-				});
-			},
+const app = getApp();
+const appStore = useAppStore();
+const { isLogin } = storeToRefs(appStore);
 
-			/**
-			 * 立即评价
-			 */
-			formSubmit: function(e) {
-				let formId = e.detail.formId,
-					value = e.detail.value,
-					that = this,
-					product_score = that.scoreList[0].index + 1 === 0 ? "" : that.scoreList[0].index + 1,
-					service_score = that.scoreList[1].index + 1 === 0 ? "" : that.scoreList[1].index + 1;
-				if (!value.comment) return that.$util.Tips({
-					title: '请填写你对宝贝的心得！'
-				});
-				value.productScore = product_score;
-				value.serviceScore = service_score;
-				value.pics = that.pics.length>0?JSON.stringify(that.pics):'';
-				value.productId = that.productInfo.productId;
-				value.orderNo = that.orderId;
-				value.unique = that.unique;
-				value.sku = that.productInfo.sku;
-				uni.showLoading({
-					title: "正在发布评论……"
-				});
-				orderComment(value).then(res => {
-					uni.hideLoading();
-					return that.$util.Tips({
-						title: '感谢您的评价!',
-						icon: 'success'
-					}, '/pages/order/order_details/index?order_id=' + that.orderId);
-				}).catch(err => {
-					uni.hideLoading();
-					return that.$util.Tips({
-						title: err
-					});
-				});
-			}
-		}
-	}
+const pics = ref([]);
+const picsPath = ref([]);
+const scoreList = ref([
+	{ name: "商品质量", stars: ["", "", "", "", ""], index: -1 },
+	{ name: "服务态度", stars: ["", "", "", "", ""], index: -1 }
+]);
+const orderId = ref("");
+const productId = ref(0);
+const evaluateId = ref(0);
+const unique = ref("");
+const productInfo = ref({ storeName: '', sku: '', truePrice: '', cartNum: '', image: '' });
+const cart_num = ref(0);
+const id = ref(0);
+const theme = ref(app.globalData.theme);
+const { colorStyle } = useColor();
+
+watch(isLogin, (newV) => { if (newV) getOrderProduct(); }, { deep: true });
+
+onLoad((options) => {
+	if (!options.unique || !options.orderId) return util.Tips({ title: '缺少参数' }, { tab: 3, url: 1 });
+	unique.value = Number(options.unique) || 0;
+	orderId.value = options.orderId || 0;
+	evaluateId.value = Number(options.id) || 0;
+	if (isLogin.value) getOrderProduct();
+	else toLogin();
+});
+
+function getOrderProduct() {
+	orderProduct({ orderId: evaluateId.value, uni: unique.value }).then(res => {
+		productInfo.value = res.data;
+	});
+}
+function stars(indexn, indexw) { scoreList.value[indexw].index = indexn; }
+function DelPic(index) { picsPath.value.splice(index, 1); pics.value.splice(index, 1); }
+function uploadpic() {
+	util.uploadImageOne({ url: 'upload/image', name: 'multipart', model: "product", pid: 1 }, function(res) {
+		pics.value.push(res.data.url);
+		picsPath.value.push(res.data.localPath);
+	});
+}
+function formSubmit(e) {
+	let value = e.detail.value;
+	let product_score = scoreList.value[0].index + 1 === 0 ? "" : scoreList.value[0].index + 1;
+	let service_score = scoreList.value[1].index + 1 === 0 ? "" : scoreList.value[1].index + 1;
+	if (!value.comment) return util.Tips({ title: '请填写你对宝贝的心得！' });
+	value.productScore = product_score;
+	value.serviceScore = service_score;
+	value.pics = pics.value.length > 0 ? JSON.stringify(pics.value) : '';
+	value.productId = productInfo.value.productId;
+	value.orderNo = orderId.value;
+	value.unique = unique.value;
+	value.sku = productInfo.value.sku;
+	uni.showLoading({ title: "正在发布评论……" });
+	orderComment(value).then(() => {
+		uni.hideLoading();
+		return util.Tips({ title: '感谢您的评价!', icon: 'success' }, '/pages/order/order_details/index?order_id=' + orderId.value);
+	}).catch(err => {
+		uni.hideLoading();
+		return util.Tips({ title: err });
+	});
+}
 </script>
 
 <style lang="scss" scoped>

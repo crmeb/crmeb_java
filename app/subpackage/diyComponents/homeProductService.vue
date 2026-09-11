@@ -131,113 +131,122 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { computed } from "vue";
 import commonWrapper from "./commonWrapper.vue";
 
-export default {
-  name: "homeProductService",
-  components: {
-    commonWrapper,
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
   },
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => ({}),
-    },
-    productData: {
-      type: Object,
-      default: () => ({}),
-    },
-    couponList: {
-      type: Array,
-      default: () => [],
-    },
-    activity: {
-      type: Array,
-      default: () => [],
-    },
-    attr: {
-      type: Object,
-      default: () => ({}),
-    },
-    attrTxt: {
-      type: String,
-      default: "",
-    },
-    attrValue: {
-      type: String,
-      default: "",
-    },
+  productData: {
+    type: Object,
+    default: () => ({}),
   },
-  computed: {
-    isHide() {
-      return this.dataConfig.isHide;
-    },
-    checkList() {
-      return this.dataConfig.checkBoxConfig
-        ? this.dataConfig.checkBoxConfig.type
-        : [];
-    },
-    titleColor() {
-      return this.dataConfig.titleColor
-        ? this.dataConfig.titleColor.color[0].item
-        : "#999999";
-    },
-    contentColor() {
-      return this.dataConfig.contentColor
-        ? this.dataConfig.contentColor.color[0].item
-        : "#333333";
-    },
-    isCustomTone() {
-      return (
-        this.dataConfig.toneConfig && this.dataConfig.toneConfig.tabVal === 1
-      );
-    },
-    tagStyle() {
-      if (this.isCustomTone) {
-        const color = this.dataConfig.activityColor
-          ? this.dataConfig.activityColor.color[0].item
-          : "var(--view-theme)";
-        const bg = this.dataConfig.activityBgColor
-          ? this.dataConfig.activityBgColor.color[0].item
-          : "var(--view-minorColorT)";
-        return {
-          color: color,
-          background: bg,
-        };
-      }
-      return {
-        color: "var(--view-theme)",
-        background: "var(--view-minorColorT)",
-      };
-    },
-    activityColor() {
-      if (this.isCustomTone) {
-        return this.dataConfig.activityColor
-          ? this.dataConfig.activityColor.color[0].item
-          : "var(--view-theme)";
-      }
-      return "var(--view-theme)";
-    },
+  couponList: {
+    type: Array,
+    default: () => [],
   },
-  methods: {
-    activityTap() {
-      if (this.couponList.length) {
-        this.$emit("showCoupon");
-      } else if (this.activity.length) {
-      }
-    },
-    goActivity(item) {
-      this.$emit("goActivity", item);
-    },
-    showSpecModal() {
-      this.$emit("showSpecModal");
-    },
-    openModal(type) {
-      this.$emit("openModal", type);
-    },
+  activity: {
+    type: Array,
+    default: () => [],
   },
-};
+  attr: {
+    type: Object,
+    default: () => ({}),
+  },
+  attrTxt: {
+    type: String,
+    default: "",
+  },
+  attrValue: {
+    type: String,
+    default: "",
+  },
+});
+
+const emit = defineEmits([
+  "showCoupon",
+  "goActivity",
+  "showSpecModal",
+  "openModal",
+]);
+
+const isHide = computed(() => {
+  return props.dataConfig.isHide;
+});
+
+const checkList = computed(() => {
+  return props.dataConfig.checkBoxConfig
+    ? props.dataConfig.checkBoxConfig.type
+    : [];
+});
+
+const titleColor = computed(() => {
+  return props.dataConfig.titleColor
+    ? props.dataConfig.titleColor.color[0].item
+    : "#999999";
+});
+
+const contentColor = computed(() => {
+  return props.dataConfig.contentColor
+    ? props.dataConfig.contentColor.color[0].item
+    : "#333333";
+});
+
+const isCustomTone = computed(() => {
+  return (
+    props.dataConfig.toneConfig && props.dataConfig.toneConfig.tabVal === 1
+  );
+});
+
+const tagStyle = computed(() => {
+  if (isCustomTone.value) {
+    const color = props.dataConfig.activityColor
+      ? props.dataConfig.activityColor.color[0].item
+      : "var(--view-theme)";
+    const bg = props.dataConfig.activityBgColor
+      ? props.dataConfig.activityBgColor.color[0].item
+      : "var(--view-minorColorT)";
+    return {
+      color: color,
+      background: bg,
+    };
+  }
+  return {
+    color: "var(--view-theme)",
+    background: "var(--view-minorColorT)",
+  };
+});
+
+const activityColor = computed(() => {
+  if (isCustomTone.value) {
+    return props.dataConfig.activityColor
+      ? props.dataConfig.activityColor.color[0].item
+      : "var(--view-theme)";
+  }
+  return "var(--view-theme)";
+});
+
+function activityTap() {
+  if (props.couponList.length) {
+    emit("showCoupon");
+  } else if (props.activity.length) {
+  }
+}
+
+function goActivity(item) {
+  emit("goActivity", item);
+}
+
+function showSpecModal() {
+  emit("showSpecModal");
+}
+
+function openModal(type) {
+  emit("openModal", type);
+}
 </script>
 
 <style lang="scss" scoped>

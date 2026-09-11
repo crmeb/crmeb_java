@@ -13,12 +13,11 @@
 			<view class='item' v-for="(item,index) in productList" :key="index" @click="godDetail(item)">
 				<view class='pictrue'>
 					<image :src='item.image'></image>
-					<view :style="{ backgroundImage: `url(${item.activityStyle})` }" class="border-picture"></view>
 				</view>
 				<view class='text'>
 					<view class='name line1'>{{item.storeName}}</view>
 					<view class='money'>￥<text class='num'>{{item.price}}</text></view>
-					<view class='vip acea-row row-between-wrapper'>
+					<view class='sales acea-row row-between-wrapper'>
 						<view>已售{{item.sales }}{{item.unitName}}</view>
 					</view>
 				</view>
@@ -29,14 +28,16 @@
 		</view>
 		<view class='noCommodity' :style="{top: iStatusBarHeight + 'px'}" v-if="productList.length== 0 && page > 1">
 			<view class='pictrue'>
-				<image :src="urlDomain+'crmebimage/perset/staticImg/noShopper.png'"></image>
+				<image :src="urlDomain+'/crmebimage/perset/staticImg/noShopper.png'"></image>
 			</view>
 			<recommend ref="recommendIndex"></recommend>
 		</view>
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, getCurrentInstance } from 'vue';
+	import { onReachBottom } from '@dcloudio/uni-app';
 	import {
 		getCategoryList,
 		getProductslist
@@ -44,103 +45,101 @@
 	import {
 		goShopDetail
 	} from '@/libs/order.js'
-	import recommend from '@/components/recommend';
-	import {
-		mapGetters
-	} from "vuex";
+	import recommend from '@/components/recommend/index.vue';
+	import Cache from '@/utils/cache.js';
+	import util from '@/utils/util.js';
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
 	import animationType from '@/utils/animationType.js'
-	export default {
-		computed: mapGetters(['uid']),
-		components: {
-			recommend,
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				navLists: [],
-				productList: [],
-				scrollLeft: 0,
-				active: 0,
-				loading: false,
-				loadend: false,
-				loadTitle: '加载更多',
-				page: 1,
-				limit: 10,
-				cid: 0,
-				hostProduct: [],
-				iStatusBarHeight: 0, // 状态栏高度
-			}
-		},
-		created(){
-			// #ifdef APP-PLUS
-			this.iStatusBarHeight = uni.getSystemInfoSync().statusBarHeight;
-			// #endif
-			this.getAllCategory();
-		},
-		methods: {
-			// 去详情页
-			godDetail(item) {
-				goShopDetail(item, this.uid).then(res => {
-					uni.navigateTo({
-						animationType: animationType.type,
-            animationDuration: animationType.duration,
-						url: `/pages/goods/goods_details/index?id=${item.id}`
-					})
-				})
-			},
-			tabSelect(index, id) {
-				this.active = index;
-				const query = uni.createSelectorQuery().in(this);
-				query.select('#id' + index).boundingClientRect(data => {
-					this.scrollLeft = (index - 1) * data.width;
-				}).exec();
-				this.cid = id;
-				this.loadend = false;
-				this.page = 1;
-				this.$set(this, 'productList', [])
-				this.getProductList();
-			},
-			async getAllCategory() {
-        try {
-          const res = await getCategoryList();
-          const lists = Array.isArray(res && res.data) ? res.data : [];
-          this.navLists = lists;
-          const pid = lists[0] && lists[0].id ? lists[0].id : 0;
-          this.tabSelect(0, pid);
-        } catch (e) {
-          this.navLists = [];
-          this.tabSelect(0, 0);
-        }
-			},
-			getProductList: function() {
-				let that = this;
-				if (that.loadend) return;
-				if (that.loading) return;
-				that.loading = true;
-				that.loadTitle = '';
-				getProductslist({
-					page: that.page,
-					limit: that.limit,
-					cid: that.cid
-				}).then(res => {
-					let list = res.data.list,
-						loadend = list.length < that.limit;
-					that.productList = that.$util.SplitArray(list, that.productList);
-					that.$set(that, 'productList', that.productList);
-					that.loading = false;
-					that.loadend = loadend;
-					that.loadTitle = loadend ? "我也是有底线的~" : "加载更多";
-					that.page = that.page + 1;
-				}).catch(err => {
-					that.loading = false,
-						that.loadTitle = '加载更多'
-				});
-			},
-		},
-		onReachBottom() {
-			this.$refs.recommendIndex.get_host_product();
+
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { uid } = storeToRefs(appStore);
+
+	const recommendIndex = ref(null);
+
+	const urlDomain = ref(Cache.get("imgHost"));
+	const navLists = ref([]);
+	const productList = ref([]);
+	const scrollLeft = ref(0);
+	const active = ref(0);
+	const loading = ref(false);
+	const loadend = ref(false);
+	const loadTitle = ref('加载更多');
+	const page = ref(1);
+	const limit = ref(10);
+	const cid = ref(0);
+	const hostProduct = ref([]);
+	const iStatusBarHeight = ref(0); // 状态栏高度
+
+	// created
+	// #ifdef APP-PLUS
+	iStatusBarHeight.value = uni.getSystemInfoSync().statusBarHeight;
+	// #endif
+	getAllCategory();
+
+	// 去详情页
+	function godDetail(item) {
+		goShopDetail(item, uid.value).then(res => {
+			uni.navigateTo({
+				animationType: animationType.type,
+				animationDuration: animationType.duration,
+				url: `/pages/goods/goods_details/index?id=${item.id}`
+			})
+		})
+	}
+	function tabSelect(index, id) {
+		active.value = index;
+		const query = uni.createSelectorQuery().in(proxy);
+		query.select('#id' + index).boundingClientRect(data => {
+			scrollLeft.value = (index - 1) * data.width;
+		}).exec();
+		cid.value = id;
+		loadend.value = false;
+		page.value = 1;
+		productList.value = [];
+		getProductList();
+	}
+	async function getAllCategory() {
+		try {
+			const res = await getCategoryList();
+			const lists = Array.isArray(res && res.data) ? res.data : [];
+			navLists.value = lists;
+			const pid = lists[0] && lists[0].id ? lists[0].id : 0;
+			tabSelect(0, pid);
+		} catch (e) {
+			navLists.value = [];
+			tabSelect(0, 0);
 		}
 	}
+	function getProductList() {
+		if (loadend.value) return;
+		if (loading.value) return;
+		loading.value = true;
+		loadTitle.value = '';
+		getProductslist({
+			page: page.value,
+			limit: limit.value,
+			cid: cid.value
+		}).then(res => {
+			let list = res.data.list,
+				isEnd = list.length < limit.value;
+			productList.value = util.SplitArray(list, productList.value);
+			loading.value = false;
+			loadend.value = isEnd;
+			loadTitle.value = isEnd ? "我也是有底线的~" : "加载更多";
+			page.value = page.value + 1;
+		}).catch(err => {
+			loading.value = false,
+				loadTitle.value = '加载更多'
+		});
+	}
+
+	onReachBottom(() => {
+		recommendIndex.value.get_host_product();
+	});
+
+	defineExpose({ getProductList, tabSelect });
 </script>
 
 <style scoped lang="scss">

@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<form @submit="formSubmit" report-submit='true'>
 			<view class='personal-data pad30'>
 				<view class='list borRadius14'>
@@ -34,11 +34,11 @@
 					</view>
 					<view class='item acea-row row-between-wrapper'>
 						<view>手机号码</view>
-						<navigator url="/pages/users/app_login/index" hover-class="none" class="input"
+						<navigator :render-link="false" url="/pages/users/app_login/index" hover-class="none" class="input"
 							v-if="!userInfo.phone">
 							点击绑定手机号<text class="iconfont icon-xiangyou"></text>
 						</navigator>
-						<navigator url="/pages/infos/user_phone/index" hover-class="none" class="input" v-else>
+						<navigator :render-link="false" url="/pages/infos/user_phone/index" hover-class="none" class="input" v-else>
 							<view class='input acea-row row-between-wrapper'>
 								<input  disabled='true' name='phone' :value='userInfo.phone'
 									class='id'></input>
@@ -64,7 +64,7 @@
 					<!-- #ifdef H5 -->
 					<view class="item acea-row row-between-wrapper" v-if="userInfo.phone && wechat">
 						<view>密码</view>
-						<navigator url="/pages/infos/user_pwd_edit/index" hover-class="none" class="input">
+						<navigator :render-link="false" url="/pages/infos/user_pwd_edit/index" hover-class="none" class="input">
 							点击修改密码<text class="iconfont icon-xiangyou"></text>
 						</navigator>
 					</view>
@@ -72,7 +72,7 @@
 					<!-- #ifdef APP-PLUS -->
 					<view class="item acea-row row-between-wrapper" v-if="userInfo.phone">
 						<view>密码</view>
-						<navigator url="/pages/infos/user_pwd_edit/index" hover-class="none" class="input">
+						<navigator :render-link="false" url="/pages/infos/user_pwd_edit/index" hover-class="none" class="input">
 							点击修改密码<text class="iconfont icon-xiangyou"></text>
 						</navigator>
 					</view>
@@ -91,7 +91,7 @@
 					</view>
 					<view class='item acea-row row-between-wrapper'>
 						<view>协议规则</view>
-						<navigator url="/pages/goods/agreement_rules/index" hover-class="none" class="input">
+						<navigator :render-link="false" url="/pages/goods/agreement_rules/index" hover-class="none" class="input">
 							点击查看<text class="iconfont icon-xiangyou"></text>
 						</navigator>
 					</view>
@@ -105,7 +105,7 @@
 				<button class='modifyBnt bg_color' formType="submit">保存修改</button>
 				<!-- #ifdef H5 -->
 				<view class="logOut cart-color acea-row row-center-wrapper" @click="outLogin"
-					v-if="!this.$wechat.isWeixin() || (this.$wechat.isWeixin() && publicLoginType ==2)">退出登录</view>
+					v-if="wechat || publicLoginType == 2">退出登录</view>
 				<!-- #endif -->
 				<!-- #ifdef APP-PLUS -->
 				<view class="logOut cart-color acea-row row-center-wrapper" @click="outLogin">退出登录</view>
@@ -115,7 +115,9 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref } from 'vue';
+	import { onLoad } from '@dcloudio/uni-app';
 	import {
 		userEdit,
 		getLogout
@@ -127,191 +129,186 @@
 		toLogin
 	} from '@/libs/login.js';
 	import {
-		mapGetters
-	} from "vuex";
-	import {
 		Debounce
 	} from '@/utils/validate.js'
 	import {
 		goToAgreement
-	} from "@/libs/order";
-	import dayjs from "@/plugin/dayjs/dayjs.min.js";
+	} from "@/libs/order.js";
+	import util from '@/utils/util.js';
+	import Cache from '@/utils/cache.js';
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				memberInfo: {},
-				loginType: 'h5', //app.globalData.loginType
-				userIndex: 0,
-				newAvatar: '',
-				nickname: '',
-				wechat: false,
-				theme: app.globalData.theme,
-				editPng: `${this.$Cache.get("imgHost")}crmebimage/perset/staticImg/alert1.png`,
-				publicLoginType: app.globalData.publicLoginType //公众号登录方式(单选),1微信授权，2手机号登录
-			};
-		},
-		computed: mapGetters(['isLogin', 'uid', 'userInfo']),
-		onLoad() {
-			if (!this.isLogin) {
-				toLogin();
+
+	const appStore = useAppStore();
+	const { isLogin, uid, userInfo } = storeToRefs(appStore);
+
+	// data
+	const urlDomain = ref(Cache.get("imgHost"));
+	const memberInfo = ref({});
+	const loginType = ref('h5'); //app.globalData.loginType
+	const userIndex = ref(0);
+	const newAvatar = ref('');
+	const nickname = ref('');
+	const wechat = ref(false);
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	const editPng = ref(`${Cache.get("imgHost")}/crmebimage/perset/staticImg/alert1.png`);
+	const publicLoginType = ref(app.globalData.publicLoginType); //公众号登录方式(单选),1微信授权，2手机号登录
+
+	onLoad(() => {
+		if (!isLogin.value) {
+			toLogin();
+		}
+		newAvatar.value = userInfo.value.avatar ? userInfo.value.avatar : `${Cache.get("imgHost")}/crmebimage/perset/staticImg/f.png`;
+		nickname.value = userInfo.value.nickname ? userInfo.value.nickname : '-';
+		// #ifdef H5
+		let ua = navigator.userAgent.toLowerCase();
+		if (ua.match(/MicroMessenger/i) == "micromessenger") {
+			wechat.value = false;
+		} else {
+			wechat.value = true;
+		}
+		// #endif
+		switch (theme.value) {
+			case 'theme2':
+				editPng.value = `${Cache.get("imgHost")}/crmebimage/perset/staticImg/alert2.png`
+				break;
+			case 'theme3':
+				editPng.value = `${Cache.get("imgHost")}/crmebimage/perset/staticImg/alert3.png`
+				break;
+			case 'theme4':
+				editPng.value = `${Cache.get("imgHost")}/crmebimage/perset/staticImg/alert4.png`
+				break;
+			case 'theme5':
+				editPng.value = `${Cache.get("imgHost")}/crmebimage/perset/staticImg/alert5.png`
+				break;
+			default:
+				editPng.value = `${Cache.get("imgHost")}/crmebimage/perset/staticImg/alert1.png`
+				break;
+		}
+	});
+
+	//to地址
+	function toAddress(){
+		uni.navigateTo({
+			url:'/pages/users/user_address_list/index'
+		})
+	}
+	//to协议
+	function userAgree(type) {
+		goToAgreement(type)
+	}
+	/**
+	 * 小程序端上传头像
+	 * 
+	 */
+	function onChooseAvatar(e) {
+		const {
+			avatarUrl
+		} = e.detail
+		uni.showLoading({
+			title: '加载中...'
+		});
+		util.uploadImgs(avatarUrl, {
+			url: 'upload/image',
+			name: 'multipart',
+			model: "user",
+			pid: 7
+		}, (res) => {
+			newAvatar.value = res.data.url;
+			uni.hideLoading();
+		}, (err) => {
+			uni.hideLoading();
+		})
+	}
+	/**
+	 * 小程序设置
+	 */
+	function Setting() {
+		uni.openSetting({
+			success: function(res) {
 			}
-			this.newAvatar = this.userInfo.avatar ? this.userInfo.avatar : `${this.$Cache.get("imgHost")}crmebimage/perset/staticImg/f.png`;
-			this.nickname = this.userInfo.nickname ? this.userInfo.nickname : '-';
-			// #ifdef H5
-			let ua = navigator.userAgent.toLowerCase();
-			if (ua.match(/MicroMessenger/i) == "micromessenger") {
-				this.$set(this, 'wechat', false);
-			} else {
-				this.$set(this, 'wechat', true);
-			}
-			// #endif
-			switch (this.theme) {
-				case 'theme2':
-					this.editPng = `${this.$Cache.get("imgHost")}crmebimage/perset/staticImg/alert2.png`
-					break;
-				case 'theme3':
-					this.editPng = `${this.$Cache.get("imgHost")}crmebimage/perset/staticImg/alert3.png`
-					break;
-				case 'theme4':
-					this.editPng = `${this.$Cache.get("imgHost")}crmebimage/perset/staticImg/alert4.png`
-					break;
-				case 'theme5':
-					this.editPng = `${this.$Cache.get("imgHost")}crmebimage/perset/staticImg/alert5.png`
-					break;
-				default:
-					this.editPng = `${this.$Cache.get("imgHost")}crmebimage/perset/staticImg/alert1.png`
-					break;
-			}
-		},
-		methods: {
-			//to地址
-			toAddress(){
-				uni.navigateTo({
-					url:'/pages/users/user_address_list/index'
-				})
-			},
-			//to协议
-			userAgree(type) {
-				goToAgreement(type)
-			},
-			/**
-			 * 小程序端上传头像
-			 * 
-			 */
-			onChooseAvatar(e) {
-				const {
-					avatarUrl
-				} = e.detail
-				uni.showLoading({
-					title: '加载中...'
-				});
-				this.$util.uploadImgs(avatarUrl, {
-					url: 'upload/image',
-					name: 'multipart',
-					model: "user",
-					pid: 7
-				}, (res) => {
-					this.newAvatar = res.data.url;
-					uni.hideLoading();
-				}, (err) => {
-					uni.hideLoading();
-				})
-			},
-			/**
-			 * 小程序设置
-			 */
-			Setting: function() {
-				uni.openSetting({
-					success: function(res) {
-						console.log(res.authSetting)
+		});
+	}
+	/**
+	 * 退出登录
+	 * 
+	 */
+	function outLogin() {
+		if (loginType.value == 'h5') {
+			uni.showModal({
+				title: '提示',
+				content: '确认退出登录?',
+				success: function(res) {
+					if (res.confirm) {
+						uni.showLoading({
+							title: '加载中...'
+						})
+						getLogout()
+							.then(res => {
+								appStore.LOGOUT();
+								uni.hideLoading();
+								uni.reLaunch({
+									url: '/pages/index/index'
+								});
+							})
+							.catch(err => {
+								uni.hideLoading();
+							});
+						} else if (res.cancel) {
+						}
 					}
 				});
-			},
-			/**
-			 * 退出登录
-			 * 
-			 */
-			outLogin: function() {
-				let that = this;
-				if (that.loginType == 'h5') {
-					uni.showModal({
-						title: '提示',
-						content: '确认退出登录?',
-						success: function(res) {
-							if (res.confirm) {
-								uni.showLoading({
-									title: '加载中...'
-								})
-								getLogout()
-									.then(res => {
-										that.$store.commit("LOGOUT");
-										uni.hideLoading();
-										uni.reLaunch({
-											url: '/pages/index/index'
-										});
-									})
-									.catch(err => {
-										uni.hideLoading();
-									});
-							} else if (res.cancel) {
-								console.log('用户点击取消');
-							}
-						}
-					});
-				}
-			},
-			/**
-			 * 上传文件
-			 * 
-			 */
-			uploadpic: function() {
-				let that = this;
-				that.$util.uploadImageOne({
-					url: 'upload/image',
-					name: 'multipart',
-					model: "user",
-					pid: 7
-				}, function(res) {
-					that.newAvatar = res.data.url;
-				});
-			},
-
-			/**
-			 * 提交修改
-			 */
-			formSubmit: Debounce(function(e) {
-				let that = this,
-					value = e.detail.value
-				if (!value.nickname) return that.$util.Tips({
-					title: '用户姓名不能为空'
-				});
-				value.avatar = that.newAvatar ? that.newAvatar : that.userInfo.avatar;
-				userEdit(value).then(res => {
-					that.$store.commit("changInfo", {
-						amount1: 'avatar',
-						amount2: that.newAvatar
-					});
-					return that.$util.Tips({
-						title: '保存成功',
-						icon: 'success'
-					}, {
-						tab: 3,
-						url: 1
-					});
-
-				}).catch(msg => {
-					return that.$util.Tips({
-						title: msg || '保存失败，您并没有修改'
-					}, {
-						tab: 3,
-						url: 1
-					});
-				});
-			})
 		}
 	}
+	/**
+	 * 上传文件
+	 * 
+	 */
+	function uploadpic() {
+		util.uploadImageOne({
+			url: 'upload/image',
+			name: 'multipart',
+			model: "user",
+			pid: 7
+		}, function(res) {
+			newAvatar.value = res.data.url;
+		});
+	}
+
+	/**
+	 * 提交修改
+	 */
+	const formSubmit = Debounce(function(e) {
+		let value = e.detail.value
+		if (!value.nickname) return util.Tips({
+			title: '用户姓名不能为空'
+		});
+		value.avatar = newAvatar.value ? newAvatar.value : userInfo.value.avatar;
+		userEdit(value).then(res => {
+			appStore.changInfo({
+				amount1: 'avatar',
+				amount2: newAvatar.value
+			});
+			return util.Tips({
+				title: '保存成功',
+				icon: 'success'
+			}, {
+				tab: 3,
+				url: 1
+			});
+
+		}).catch(msg => {
+			return util.Tips({
+				title: msg || '保存失败，您并没有修改'
+			}, {
+				tab: 3,
+				url: 1
+			});
+		});
+	})
 </script>
 
 <style scoped lang="scss">

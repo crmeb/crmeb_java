@@ -45,220 +45,218 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed } from "vue";
 import commonWrapper from "./commonWrapper.vue";
 import { getCategoryList } from "@/api/store.js";
 import { getCategoryVersion } from "@/api/api.js";
-export default {
-  components: { commonWrapper },
-  name: "tabNav",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isFixed: {
-      type: Boolean | String | Number,
-      default: false,
-    },
-    fromType: {
-      type: Number,
-      default: 0,
-    },
-    special: {
-      type: Number,
-      default: 0,
-    },
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
   },
-  data() {
-    return {
-      tabTitle: [],
-      tabLeft: 0,
-      isWidth: 0, //每个导航栏占位
-      tabClick: 0, //导航栏被点击
-      isLeft: 0, //导航栏下划线位置
-      fixedTop: 0,
-      isTop: 0,
-      navHeight: 45,
-      tabList: 45,
-    };
+  isFixed: {
+    type: Boolean | String | Number,
+    default: false,
   },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
-        },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
-        },
-      };
-    },
-    lineStyle() {
-      let styleObject = {};
-      if (this.dataConfig.toneConfig.tabVal) {
-        switch (this.dataConfig.styleConfig.tabVal) {
-          case 0:
-            styleObject[
-              "background"
-            ] = `linear-gradient(90deg, ${this.dataConfig.decorateColor.color[0].item} 0%, ${this.dataConfig.decorateColor.color[1].item} 100%)`;
-            break;
-          case 1:
-            styleObject["border-bottom-color"] =
-              this.dataConfig.decorateColor2.color[0].item;
-            break;
-        }
-      }
-      return styleObject;
-    },
-    textStyle() {
-      let styleObject = {};
-      if (this.dataConfig.toneConfig.tabVal) {
-        switch (this.dataConfig.styleConfig.tabVal) {
-          case 0:
-            styleObject["color"] = this.dataConfig.textColor.color[0].item;
-            break;
-          case 1:
-            styleObject["color"] = this.dataConfig.textColor2.color[0].item;
-            break;
-          case 2:
-            styleObject[
-              "background"
-            ] = `linear-gradient(90deg, ${this.dataConfig.decorateColor.color[0].item} 0%, ${this.dataConfig.decorateColor.color[1].item} 100%)`;
-            styleObject["color"] = this.dataConfig.textColor3.color[0].item;
-            break;
-        }
-      }
-      return styleObject;
-    },
-    tabNavBgColor() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[2].val * 2}rpx ${
-          this.dataConfig.fillet.valList[3].val * 2
-        }rpx`;
-      }
-      return {
-        "border-radius": borderRadius,
-        background: `linear-gradient(90deg, ${this.dataConfig.moduleColor.color[0].item} 0%, ${this.dataConfig.moduleColor.color[1].item} 100%)`,
-      };
-    },
-    // tabNavStyle() {
-    //   return {
-    //     padding: `${this.dataConfig.topConfig.val * 2}rpx ${
-    //       this.dataConfig.prConfig.val * 2
-    //     }rpx ${this.dataConfig.bottomConfig.val * 2}rpx`,
-    //     "margin-top": `${this.dataConfig.mbConfig.val * 2}rpx`,
-    //   };
-    // },
-    tabListConfig() {
-      let tabList = this.dataConfig.tabListConfig.list;
-      tabList.unshift({
-        classPage: {
-          id: 0,
-        },
-        dataType: {
-          tabVal: 0,
-        },
-        microPage: {
-          id: 0,
-        },
-        text: {
-          val: "首页",
-        },
-      });
-      return tabList;
-    },
+  fromType: {
+    type: Number,
+    default: 0,
   },
-  created() {
-    let that = this;
-    that.getAllCategory();
-    // 获取设备宽度
-    uni.getSystemInfo({
-      success(e) {
-        that.isWidth = e.windowWidth / 5;
-      },
-    });
+  special: {
+    type: Number,
+    default: 0,
   },
-  methods: {
-    // 导航栏点击
-    longClick(item, index) {
-      if (this.tabTitle.length > 5) {
-        this.tabLeft = (index - 2) * this.isWidth; //设置下划线位置
-      }
-      this.tabClick = index; //设置导航点击了哪一个
-      this.isLeft = index * this.isWidth; //设置下划线位置
-      let data = {
-        type: item.dataType.tabVal, //0 商品分类 1 微页面
-        microPage: item.microPage.id,
-        classPage: item.classPage.id,
-      };
-      this.$emit("bindSortId", item, data);
+});
+
+const emit = defineEmits(["bindSortId"]);
+
+const tabTitle = ref([]);
+const tabLeft = ref(0);
+const isWidth = ref(0); //每个导航栏占位
+const tabClick = ref(0); //导航栏被点击
+const isLeft = ref(0); //导航栏下划线位置
+const fixedTop = ref(0);
+const isTop = ref(0);
+const navHeight = ref(45);
+const tabList = ref(45);
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.topConfig ? props.dataConfig.topConfig.val : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    setCategory(data) {
-      data.unshift({
-        id: -99,
-        text:{
-          val: "首页"
-        } 
-      });
-      this.tabTitle = data;
-      // #ifdef MP || APP-PLUS
-      this.isTop = uni.getWindowInfo().statusBarHeight + 43 + "px";
-      // #endif
-      // #ifdef H5
-      this.isTop = 0;
-      // #endif
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
     },
-    getCategory() {
-      getCategoryList().then((res) => {
-        uni.setStorageSync("category", JSON.stringify(res.data));
-        this.setCategory(res.data);
-      });
+  };
+});
+
+const lineStyle = computed(() => {
+  let styleObject = {};
+  if (props.dataConfig.toneConfig.tabVal) {
+    switch (props.dataConfig.styleConfig.tabVal) {
+      case 0:
+        styleObject[
+          "background"
+        ] = `linear-gradient(90deg, ${props.dataConfig.decorateColor.color[0].item} 0%, ${props.dataConfig.decorateColor.color[1].item} 100%)`;
+        break;
+      case 1:
+        styleObject["border-bottom-color"] =
+          props.dataConfig.decorateColor2.color[0].item;
+        break;
+    }
+  }
+  return styleObject;
+});
+
+const textStyle = computed(() => {
+  let styleObject = {};
+  if (props.dataConfig.toneConfig.tabVal) {
+    switch (props.dataConfig.styleConfig.tabVal) {
+      case 0:
+        styleObject["color"] = props.dataConfig.textColor.color[0].item;
+        break;
+      case 1:
+        styleObject["color"] = props.dataConfig.textColor2.color[0].item;
+        break;
+      case 2:
+        styleObject[
+          "background"
+        ] = `linear-gradient(90deg, ${props.dataConfig.decorateColor.color[0].item} 0%, ${props.dataConfig.decorateColor.color[1].item} 100%)`;
+        styleObject["color"] = props.dataConfig.textColor3.color[0].item;
+        break;
+    }
+  }
+  return styleObject;
+});
+
+const tabNavBgColor = computed(() => {
+  let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx ${props.dataConfig.fillet.valList[2].val * 2}rpx ${
+      props.dataConfig.fillet.valList[3].val * 2
+    }rpx`;
+  }
+  return {
+    "border-radius": borderRadius,
+    background: `linear-gradient(90deg, ${props.dataConfig.moduleColor.color[0].item} 0%, ${props.dataConfig.moduleColor.color[1].item} 100%)`,
+  };
+});
+
+// tabNavStyle() {
+//   return {
+//     padding: `${this.dataConfig.topConfig.val * 2}rpx ${
+//       this.dataConfig.prConfig.val * 2
+//     }rpx ${this.dataConfig.bottomConfig.val * 2}rpx`,
+//     "margin-top": `${this.dataConfig.mbConfig.val * 2}rpx`,
+//   };
+// },
+
+const tabListConfig = computed(() => {
+  let tabList = props.dataConfig.tabListConfig.list;
+  tabList.unshift({
+    classPage: {
+      id: 0,
     },
-    // 获取导航
-    getAllCategory: function () {
-      let that = this;
-      let category = uni.getStorageSync("category");
-      this.getCategory();
+    dataType: {
+      tabVal: 0,
     },
+    microPage: {
+      id: 0,
+    },
+    text: {
+      val: "首页",
+    },
+  });
+  return tabList;
+});
+
+// 导航栏点击
+function longClick(item, index) {
+  if (tabTitle.value.length > 5) {
+    tabLeft.value = (index - 2) * isWidth.value; //设置下划线位置
+  }
+  tabClick.value = index; //设置导航点击了哪一个
+  isLeft.value = index * isWidth.value; //设置下划线位置
+  let data = {
+    type: item.dataType.tabVal, //0 商品分类 1 微页面
+    microPage: item.microPage.id,
+    classPage: item.classPage.id,
+  };
+  emit("bindSortId", item, data);
+}
+
+function setCategory(data) {
+  data.unshift({
+    id: -99,
+    text: {
+      val: "首页",
+    },
+  });
+  tabTitle.value = data;
+  // #ifdef MP || APP-PLUS
+  isTop.value = uni.getWindowInfo().statusBarHeight + 43 + "px";
+  // #endif
+  // #ifdef H5
+  isTop.value = 0;
+  // #endif
+}
+
+function getCategory() {
+  getCategoryList().then((res) => {
+    uni.setStorageSync("category", JSON.stringify(res.data));
+    setCategory(res.data);
+  });
+}
+
+// 获取导航
+function getAllCategory() {
+  let category = uni.getStorageSync("category");
+  getCategory();
+}
+
+getAllCategory();
+// 获取设备宽度
+uni.getSystemInfo({
+  success(e) {
+    isWidth.value = e.windowWidth / 5;
   },
-};
+});
 </script>
 
 <style lang="scss">

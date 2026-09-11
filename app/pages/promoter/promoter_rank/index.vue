@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class="PromoterRank">
 			<view class="redBg">
 				<view class="header">
@@ -53,114 +53,99 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	import {
 		getRankList
 	} from '@/api/user.js';
 	import {
 		toLogin
 	} from '@/libs/login.js';
-	import {
-		mapGetters
-	} from "vuex";
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
 	import emptyPage from '@/components/emptyPage.vue'
 	import {setThemeColor} from '@/utils/setTheme.js'
+	import { ref, watch } from 'vue';
+	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
+import { useColor } from '@/composables/useColor.js';
 	const app = getApp();
-	export default {
-		components: {
-			emptyPage
-		},
-		data() {
-			return {
-				navList: ["周榜", "月榜"],
-				active: 0,
-				page: 1,
-				limit: 10,
-				type: 'week',
-				loading: false,
-				loadend: false,
-				rankList: [],
-				Two: {},
-				One: {},
-				Three: {},
-				theme:app.globalData.theme,
-				bgColor:'#e93323',
-				listData:[]
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		watch:{
-			isLogin:{
-				handler:function(newV,oldV){
-					if(newV){
-						this.getRanklist();
-					}
-				},
-				deep:true
-			}
-		},
-		onLoad() {
-			if (this.isLogin) {
-				this.getRanklist();
-			} else {
-				toLogin();
-			}
-			let that = this;
-			that.bgColor = setThemeColor();
-			uni.setNavigationBarColor({
-				frontColor: '#ffffff',
-				backgroundColor:that.bgColor,
-			});
-		},
-		
-		methods: {
-			getRanklist: function() {
-				let that = this;
-				if (that.loadend) return;
-				if (that.loading) return;
-				that.loading = true;
-				getRankList({
-					page: that.page,
-					limit: that.limit,
-					type: that.type
-				}).then(res => {
-					let list = res.data;
-					that.$set(that,'listData',list !== null ? list:[]);
-					that.rankList.push.apply(that.rankList, list);
-					if (that.page == 1) {
-						that.One = that.rankList.shift() || {};
-						that.Two = that.rankList.shift() || {};
-						that.Three = that.rankList.shift() || {};
-					}
-					that.loadend = list.length < that.limit;
-					that.loading = false;
-					that.$set(that, 'rankList', that.rankList);
-					that.One = that.One;
-					that.Two = that.Two;
-					that.Three = that.Three;
-				}).catch(err => {
-					that.loading = false;
-				})
-			},
+	const { isLogin } = storeToRefs(useAppStore());
 
-			switchTap: function(index) {
-				if (this.active === index) return;
-				this.active = index;
-				// week  
-				this.type = index ? 'month' : 'week';
-				this.page = 1;
-				this.loadend = false;
-				this.$set(this, 'rankList', []);
-				this.Two = {};
-				this.One = {};
-				this.Three = {};
-				this.getRanklist();
-			},
-		},
-		onReachBottom: function() {
-			this.getRanklist();
+	const navList = ref(["周榜", "月榜"]);
+	const active = ref(0);
+	const page = ref(1);
+	const limit = ref(10);
+	const type = ref('week');
+	const loading = ref(false);
+	const loadend = ref(false);
+	const rankList = ref([]);
+	const Two = ref({});
+	const One = ref({});
+	const Three = ref({});
+	const { colorStyle } = useColor();
+	const theme = ref(app.globalData.theme);
+	const bgColor = ref('#e93323');
+	const listData = ref([]);
+
+	watch(isLogin, (newV, oldV) => {
+		if (newV) {
+			getRanklist();
 		}
+	}, { deep: true });
+
+	onLoad(() => {
+		if (isLogin.value) {
+			getRanklist();
+		} else {
+			toLogin();
+		}
+		bgColor.value = setThemeColor();
+		uni.setNavigationBarColor({
+			frontColor: '#ffffff',
+			backgroundColor: bgColor.value,
+		});
+	});
+
+	function getRanklist() {
+		if (loadend.value) return;
+		if (loading.value) return;
+		loading.value = true;
+		getRankList({
+			page: page.value,
+			limit: limit.value,
+			type: type.value
+		}).then(res => {
+			let list = res.data;
+			listData.value = list !== null ? list : [];
+			rankList.value.push.apply(rankList.value, list);
+			if (page.value == 1) {
+				One.value = rankList.value.shift() || {};
+				Two.value = rankList.value.shift() || {};
+				Three.value = rankList.value.shift() || {};
+			}
+			loadend.value = list.length < limit.value;
+			loading.value = false;
+		}).catch(err => {
+			loading.value = false;
+		})
 	}
+
+	function switchTap(index) {
+		if (active.value === index) return;
+		active.value = index;
+		// week  
+		type.value = index ? 'month' : 'week';
+		page.value = 1;
+		loadend.value = false;
+		rankList.value = [];
+		Two.value = {};
+		One.value = {};
+		Three.value = {};
+		getRanklist();
+	}
+
+	onReachBottom(() => {
+		getRanklist();
+	});
 </script>
 
 <style scoped lang="scss">

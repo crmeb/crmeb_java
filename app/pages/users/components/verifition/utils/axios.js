@@ -13,12 +13,13 @@ import {
 	HEADER,
 	TOKENNAME,
 	HEADERPARAMS
-} from '@/config/app';
+} from '@/config/app.js';
+import { LOGIN_STATUS } from '@/config/cache.js';
 import {
 	toLogin,
 	checkLogin
-} from '@/libs/login';
-import store from '@/store';
+} from '@/libs/login.js';
+import { useAppStore } from "@/store/app.js";
 
 
 /**
@@ -29,20 +30,22 @@ function baseRequest(url, method, data, {
 	noVerify = false
 }, params) {
 	let Url = HTTP_REQUEST_URL,
-		header = HEADER
+		header = { ...HEADER }
 	// if (params != undefined) {
 	// 	header = HEADERPARAMS;
 	// }
+	const appStore = useAppStore();
 	if (!noAuth) {
 		//登录过期自动登录
-		if (!store.state.app.token && !checkLogin()) {
+		if (!appStore.token && !checkLogin()) {
 			toLogin();
 			return Promise.reject({
 				msg: '未登录'
 			});
 		}
 	}
-	if (store.state.app.token) header[TOKENNAME] = store.state.app.token;
+	const requestToken = appStore.token || getCacheToken();
+	if (requestToken) header[TOKENNAME] = `Bearer ${requestToken}`;
 	return new Promise((reslove, reject) => {
 		uni.request({
 			url: Url + '/api/public/' + url,
@@ -57,6 +60,14 @@ function baseRequest(url, method, data, {
 			}
 		})
 	});
+}
+
+function getCacheToken() {
+	try {
+		return uni.getStorageSync(LOGIN_STATUS) || '';
+	} catch (e) {
+		return '';
+	}
 }
 
 const request = {};

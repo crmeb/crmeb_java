@@ -1,12 +1,17 @@
 <template>
-	<view :data-theme="theme">
-		<!-- #ifndef APP-PLUS-->
-		<view class='cart_nav'>
-			<nav-bar :navTitle='navTitle' @getNavH='getNavH'></nav-bar>
+	<view :data-theme="theme" :style="colorStyle">
+		<!-- #ifdef MP -->
+		<view class="mp-nav-bar" :style="{ height: mpNavHeight + 'rpx' }">
+			<view class="mp-nav-bar__content">
+				<view class="mp-nav-bar__back iconfont icon-fanhui2" @tap="goBack"></view>
+				<view class="mp-nav-bar__title">{{ navTitle }}</view>
+				<view class="mp-nav-bar__placeholder"></view>
+			</view>
 		</view>
+		<view class="mp-nav-placeholder" :style="{ height: mpNavHeight + 'rpx' }"></view>
 		<!-- #endif -->
-		
-		<view class='order-submission' :style="'margin-top:'+(marTop)+'rpx;'">
+
+		<view class='order-submission'>
 			<view class="allAddress" :style="store_self_mention ? '':'padding-top:0;'">
 				<view class="nav acea-row">
 					<view class="item font_color" :class="shippingType == 0 ? 'on' : 'on2'" @tap="addressType(0)"
@@ -47,39 +52,19 @@
 					</block>
 				</view>
 				<view class='line'>
-					<image :src="urlDomain+'crmebimage/perset/staticImg/line.jpg'"></image>
+					<image :src="urlDomain+'/crmebimage/perset/staticImg/line.jpg'"></image>
 				</view>
 			</view>
 			<view class="pad30">
 				<orderGoods :cartInfo="cartInfo" :orderProNum="orderProNum"></orderGoods>
 				<view class='wrapper borRadius14'>
 					<view class='item acea-row row-between-wrapper' @tap='couponTap'
-						v-if="!orderInfoVo.bargainId && !orderInfoVo.combinationId && !orderInfoVo.seckillId && productType==='normal'">
+						v-if="canUseDiscount">
 						<view>优惠券</view>
 						<view class='discount'>{{couponTitle}}
 							<text class='iconfont icon-jiantou'></text>
 						</view>
 					</view>
-
-					<view class='item acea-row row-between-wrapper'
-						v-if="!orderInfoVo.bargainId && !orderInfoVo.combinationId && !orderInfoVo.seckillId && productType==='normal'">
-						<view>积分抵扣</view>
-						<view class='discount acea-row row-middle'>
-							<view> {{useIntegral ? "剩余积分":"当前积分"}}
-								<text
-									class='num font_color'>{{useIntegral ? orderInfoVo.surplusIntegral : orderInfoVo.userIntegral || 0}}</text>
-							</view>
-							<checkbox-group @change="ChangeIntegral">
-								<checkbox :checked='useIntegral ? true : false'
-									:disabled="orderInfoVo.userIntegral==0 && !useIntegral" />
-							</checkbox-group>
-						</view>
-					</view>
-					<!-- <view class='item acea-row row-between-wrapper'
-						v-if="priceGroup.vipPrice > 0 && userInfo.vip && !pinkId && !BargainId && !combinationId && !seckillId">
-						<view>会员优惠</view>
-						<view class='discount'>-￥{{priceGroup.vipPrice}}</view>
-					</view> -->
 					<view class='item acea-row row-between-wrapper' v-if='shippingType==0'>
 						<view>快递费用</view>
 						<view class='discount' v-if='parseFloat(orderInfoVo.freightFee) > 0'>
@@ -127,10 +112,6 @@
 						<view>优惠券抵扣：</view>
 						<view class='money'>-￥{{orderInfoVo.couponFee}}</view>
 					</view>
-					<view class='item acea-row row-between-wrapper' v-if="orderInfoVo.deductionPrice > 0">
-						<view>积分抵扣：</view>
-						<view class='money'>-￥{{orderInfoVo.deductionPrice}}</view>
-					</view>
 					<view class='item acea-row row-between-wrapper' v-if="orderInfoVo.freightFee > 0">
 						<view>运费：</view>
 						<view class='money'>+￥{{orderInfoVo.freightFee}}</view>
@@ -150,7 +131,9 @@
 			@ChangCoupons="ChangCoupons" :orderShow="orderShow"></couponListWindow>
 	</view>
 </template>
-<script>
+<script setup>
+	import { ref, reactive, computed, watch, getCurrentInstance } from 'vue';
+	import { onLoad, onShow } from '@dcloudio/uni-app';
 	import {
 		getCouponsOrderPrice,
 		orderCreate,
@@ -174,496 +157,522 @@
 		CACHE_LONGITUDE,
 		CACHE_LATITUDE
 	} from '@/config/cache.js';
-	import couponListWindow from '@/components/couponListWindow';
-	import orderGoods from '@/components/orderGoods';
-	import navBar from '@/components/navBar';
+	import couponListWindow from '@/components/couponListWindow/index.vue';
+	import orderGoods from '@/components/orderGoods/index.vue';
 	import {
 		toLogin
 	} from '@/libs/login.js';
 	import {
-		mapGetters
-	} from "vuex";
-	import {
 		Debounce
 	} from '@/utils/validate.js'
+	import util from '@/utils/util.js';
+	import Cache from '@/utils/cache.js';
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		components: {
-			navBar,
-			couponListWindow,
-			orderGoods,
+
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { isLogin, systemPlatform } = storeToRefs(appStore);
+
+	// data
+	const urlDomain = ref(Cache.get("imgHost"));
+	const navTitle = ref('提交订单');
+	// #ifdef MP
+	const mpWindowInfo = uni.getWindowInfo();
+	const mpWindowWidth = Number(mpWindowInfo.windowWidth || 375);
+	const cachedNavHeight = Number(app.globalData.navHeight);
+	const mpNavHeight =
+		cachedNavHeight > 0
+			? cachedNavHeight
+			: Number(mpWindowInfo.statusBarHeight || 0) * (750 / mpWindowWidth) + 91;
+	// #endif
+	const orderShow = ref('orderShow'); //下单页面使用优惠券组件不展示tab切换页
+	const textareaStatus = ref(true);
+	//支付方式
+	const cartArr = ref([{
+			"name": "微信支付",
+			"icon": "icon-weixin2",
+			value: 'weixin',
+			title: '微信快捷支付',
+			payStatus: 1,
 		},
-		onReady() {
-			this.$nextTick(function() {
-				// #ifdef MP
-				const menuButton = uni.getMenuButtonBoundingClientRect();
-				const query = uni.createSelectorQuery().in(this);
-				query
-					.select('#home')
-					.boundingClientRect(data => {
-						this.homeTop = menuButton.top * 2 + menuButton.height - data.height;
-					})
-					.exec();
-				// #endif
-			});
+		{
+			"name": "余额支付",
+			"icon": "icon-yuezhifu",
+			value: 'yue',
+			title: '可用余额:',
+			payStatus: 1,
 		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				marTop: 0,
-				navTitle: '提交订单',
-				homeTop: 20,
-				orderShow: 'orderShow', //下单页面使用优惠券组件不展示tab切换页
-				textareaStatus: true,
-				//支付方式
-				cartArr: [{
-						"name": "微信支付",
-						"icon": "icon-weixin2",
-						value: 'weixin',
-						title: '微信快捷支付',
-						payStatus: 1,
-					},
-					{
-						"name": "余额支付",
-						"icon": "icon-yuezhifu",
-						value: 'yue',
-						title: '可用余额:',
-						payStatus: 1,
-					},
-					// #ifndef MP
-					{
-						"name": "支付宝支付",
-						"icon": "icon-zhifubao",
-						value: 'alipay',
-						title: '支付宝快捷支付',
-						payStatus: 1,
-					}
-					// #endif
-				],
-				payType: 'weixin', //支付方式
-				openType: 1, //优惠券打开方式 1=使用
-				active: 0, //支付方式切换
-				coupon: {
-					coupon: false,
-					list: [],
-					statusTile: '立即使用'
-				}, //优惠券组件
-				addressInfo: {}, //地址信息
-				addressId: 0, //地址id
-				couponId: 0, //优惠券id
-				cartId: '', //购物车id
-				userInfo: {}, //用户信息
-				mark: '', //备注信息
-				couponTitle: '请选择', //优惠券
-				coupon_price: 0, //优惠券抵扣金额
-				useIntegral: false, //是否使用积分
-				integral_price: 0, //积分抵扣金额
-				integral: 0,
-				ChangePrice: 0, //使用积分抵扣变动后的金额
-				formIds: [], //收集formid
-				status: 0,
-				is_address: false,
-				toPay: false, //修复进入支付时页面隐藏从新刷新页面
-				shippingType: 0,
-				system_store: {},
-				storePostage: 0,
-				contacts: '',
-				contactsTel: '',
-				mydata: {},
-				storeList: [],
-				store_self_mention: false,
-				cartInfo: [],
-				priceGroup: {},
-				animated: false,
-				totalPrice: 0,
-				integralRatio: "0",
-				orderKey: "",
-				// usableCoupon: {},
-				offlinePostage: "",
-				payChannel: '',
-				news: true,
-				again: false,
-				addAgain: false,
-				bargain: false, //是否是砍价
-				combination: false, //是否是拼团
-				secKill: false, //是否是秒杀
-				orderInfoVo: {},
-				addressList: [], //地址列表数据
-				orderProNum: 0,
-				preOrderNo: '', //预下单订单号
-				theme: app.globalData.theme,
-				formContent: '',
-				addressChangeId: 0,
-				orderNo: '' //下单订单号
-			};
-		},
-		computed: {
-			...mapGetters(['isLogin', 'systemPlatform', 'productType']),
-			markNum() {
-				if (this.mark) {
-					return this.mark.length
-				}
+		// #ifndef MP
+		{
+			"name": "支付宝支付",
+			"icon": "icon-zhifubao",
+			value: 'alipay',
+			title: '支付宝快捷支付',
+			payStatus: 1,
+		}
+		// #endif
+	]);
+	const payType = ref('weixin'); //支付方式
+	const openType = ref(1); //优惠券打开方式 1=使用
+	const active = ref(0); //支付方式切换
+	const coupon = reactive({
+		coupon: false,
+		list: [],
+		statusTile: '立即使用'
+	}); //优惠券组件
+	const addressInfo = ref({}); //地址信息
+	const addressId = ref(0); //地址id
+	const couponId = ref(0); //优惠券id
+	const cartId = ref(''); //购物车id
+	const mark = ref(''); //备注信息
+	const couponTitle = ref('请选择'); //优惠券
+	const coupon_price = ref(0); //优惠券抵扣金额
+	const formIds = ref([]); //收集formid
+	const status = ref(0);
+	const is_address = ref(false);
+	const toPay = ref(false); //修复进入支付时页面隐藏从新刷新页面
+	const shippingType = ref(0);
+	const system_store = ref({});
+	const storePostage = ref(0);
+	const contacts = ref('');
+	const contactsTel = ref('');
+	const mydata = ref({});
+	const storeList = ref([]);
+	const store_self_mention = ref(false);
+	const cartInfo = ref([]);
+	const animated = ref(false);
+	const totalPrice = ref(0);
+	const orderKey = ref("");
+	// const usableCoupon = ref({});
+	const offlinePostage = ref("");
+	const payChannel = ref('');
+	const news = ref(true);
+	const again = ref(false);
+	const addAgain = ref(false);
+	const bargain = ref(false); //是否是砍价
+	const combination = ref(false); //是否是拼团
+	const secKill = ref(false); //是否是秒杀
+	const orderInfoVo = ref({});
+	const addressList = ref([]); //地址列表数据
+	const orderProNum = ref(0);
+	const preOrderNo = ref(''); //预下单订单号
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	const formContent = ref('');
+	const addressChangeId = ref(0);
+	const orderNo = ref(''); //下单订单号
+
+	// computed
+	const markNum = computed(() => {
+		if (mark.value) {
+			return mark.value.length
+		}
+	});
+	const canUseDiscount = computed(() => {
+		const info = orderInfoVo.value;
+		return info.isVideo === false && !info.bargainId && !info.combinationId && !info.seckillId;
+	});
+
+	watch(isLogin, (newV, oldV) => {
+		if (newV) {
+			getloadPreOrder();
+		}
+	}, { deep: true });
+
+	onLoad((options) => {
+		// #ifdef H5
+		payChannel.value = proxy.$wechat.isWeixin() ? 'public' : 'weixinh5';
+		// #endif
+		// #ifdef MP
+		payChannel.value = 'routine';
+		// #endif
+		// #ifdef APP-PLUS
+		payChannel.value = systemPlatform.value === 'ios' ? 'weixinAppIos' : 'weixinAppAndroid';
+		// #endif
+		// if (!options.cartId) return util.Tips({
+		// 	title: '请选择要购买的商品'
+		// }, {
+		// 	tab: 3,
+		// 	url: 1
+		// });
+		preOrderNo.value = options.preOrderNo || 0;
+		addressChangeId.value = options.addressId || 0;
+		is_address.value = options.is_address ? true : false;
+		if (isLogin.value) {
+			getloadPreOrder();
+		} else {
+			toLogin();
+		}
+	});
+	/**
+	 * 生命周期函数--监听页面显示
+	 */
+	onShow(() => {
+		// wx.getLaunchOptionsSync 
+		textareaStatus.value = true;
+
+		uni.$on("handClick", res => {
+			if (res) {
+				system_store.value = res.address
 			}
-		},
-		watch: {
-			isLogin: {
-				handler: function(newV, oldV) {
-					if (newV) {
-						this.getloadPreOrder();
-					}
-				},
-				deep: true
-			}
-		},
-		onLoad(options) {
-			// #ifdef H5
-			this.payChannel = this.$wechat.isWeixin() ? 'public' : 'weixinh5';
-			// #endif
-			// #ifdef MP
-			this.payChannel = 'routine';
-			// #endif
-			// #ifdef APP-PLUS
-			this.payChannel = this.systemPlatform === 'ios' ? 'weixinAppIos' : 'weixinAppAndroid';
-			// #endif
-			// if (!options.cartId) return this.$util.Tips({
-			// 	title: '请选择要购买的商品'
-			// }, {
-			// 	tab: 3,
-			// 	url: 1
-			// });
-			this.preOrderNo = options.preOrderNo || 0;
-			this.addressChangeId = options.addressId || 0;
-			this.is_address = options.is_address ? true : false;
-			if (this.isLogin) {
-				this.getloadPreOrder();
+			// 清除监听
+			uni.$off('handClick');
+		})
+	});
+
+	// #ifdef MP
+	function goBack() {
+		if (getCurrentPages().length > 1) {
+			uni.navigateBack();
+			return;
+		}
+
+		uni.switchTab({
+			url: '/pages/index/index'
+		});
+	}
+	// #endif
+
+	// 订单详情
+	function getloadPreOrder() {
+		loadPreOrderApi(preOrderNo.value).then(res => {
+			let info = res.data.orderInfoVo;
+			orderInfoVo.value = info;
+			appStore.PRODUCT_TYPE(info.isVideo ? 'video' : 'normal');
+			if (info.addressId && addressChangeId.value === 0) {
+				addressId.value = info.addressId;
 			} else {
-				toLogin();
+				addressId.value = addressChangeId.value;
+				if (info.addressId != addressChangeId.value) computedPrice();
 			}
-		},
-		/**
-		 * 生命周期函数--监听页面显示
-		 */
-		onShow: function() {
-			let _this = this
-			// wx.getLaunchOptionsSync 
-			this.textareaStatus = true;
-
-			uni.$on("handClick", res => {
-				if (res) {
-					_this.system_store = res.address
-				}
-				// 清除监听
-				uni.$off('handClick');
+			cartInfo.value = info.orderDetailList;
+			orderProNum.value = info.orderProNum;
+			cartArr.value[1].title = '可用余额:' + info.userBalance;
+			cartArr.value[1].payStatus = parseInt(res.data.yuePayStatus) === 1 ? 1 : 2;
+			cartArr.value[0].payStatus = parseInt(res.data.payWeixinOpen) === 1 ? 1 : 0;
+			getaddressInfo();
+			// #ifdef H5
+			if (proxy.$wechat.isWeixin()) cartArr.value.pop();
+			// #endif
+			store_self_mention.value = res.data.storeSelfMention == '1' && info.isVideo === false;
+		}).catch(err => {
+			uni.navigateTo({
+				url: '/pages/users/order_list/index'
+			});
+		})
+	}
+	/**
+	 * 获取门店列表数据
+	 */
+	function getList() {
+		let longitude = uni.getStorageSync("user_longitude") ? uni.getStorageSync("user_longitude") : ''; //经度
+		let latitude = uni.getStorageSync("user_latitude") ? uni.getStorageSync("user_latitude") : ''; //纬度
+		let data = {
+			latitude: latitude, //纬度
+			longitude: longitude, //经度
+			page: 1,
+			limit: 10
+		}
+		storeListApi(data).then(res => {
+			let list = res.data.list || [];
+			storeList.value = list;
+			system_store.value = list[0];
+		}).catch(err => {
+			return util.Tips({
+				title: err
+			});
+		})
+	}
+	/*
+	 * 跳转门店列表
+	 */
+	function showStoreList() {
+		if (storeList.value.length > 0) {
+			uni.navigateTo({
+				url: '/pages/goods/goods_details_store/index'
 			})
-		},
-		methods: {
-			getNavH(marTop) {
-				this.marTop = marTop;
-			},
-			// 订单详情
-			getloadPreOrder: function() {
-				loadPreOrderApi(this.preOrderNo).then(res => {
-					let orderInfoVo = res.data.orderInfoVo;
-					this.orderInfoVo = orderInfoVo;
-					if (orderInfoVo.addressId && this.addressChangeId === 0) {
-						this.addressId = orderInfoVo.addressId;
-					} else {
-						this.addressId = this.addressChangeId;
-						if (orderInfoVo.addressId != this.addressChangeId) this.computedPrice();
-					}
-					this.cartInfo = orderInfoVo.orderDetailList;
-					this.orderProNum = orderInfoVo.orderProNum;
-					this.cartArr[1].title = '可用余额:' + orderInfoVo.userBalance;
-					this.cartArr[1].payStatus = parseInt(res.data.yuePayStatus) === 1 ? 1 : 2;
-					this.cartArr[0].payStatus = parseInt(res.data.payWeixinOpen) === 1 ? 1 : 0;
-					this.getaddressInfo();
-					// #ifdef H5
-					if (this.$wechat.isWeixin()) this.cartArr.pop();
-					// #endif
-					this.store_self_mention = res.data.storeSelfMention == '1' && this
-						.productType ===
-						'normal' ? true : false;
-				}).catch(err => {
-					uni.navigateTo({
-						url: '/pages/users/order_list/index'
-					});
-				})
-			},
-			/**
-			 * 获取门店列表数据
-			 */
-			getList: function() {
-				let longitude = uni.getStorageSync("user_longitude") ? uni.getStorageSync("user_longitude") : ''; //经度
-				let latitude = uni.getStorageSync("user_latitude") ? uni.getStorageSync("user_latitude") : ''; //纬度
-				let data = {
-					latitude: latitude, //纬度
-					longitude: longitude, //经度
-					page: 1,
-					limit: 10
-				}
-				storeListApi(data).then(res => {
-					let list = res.data.list || [];
-					this.$set(this, 'storeList', list);
-					this.$set(this, 'system_store', list[0]);
-				}).catch(err => {
-					return this.$util.Tips({
-						title: err
-					});
-				})
-			},
-			/*
-			 * 跳转门店列表
-			 */
-			showStoreList: function() {
-				if (this.storeList.length > 0) {
-					uni.navigateTo({
-						url: '/pages/goods/goods_details_store/index'
-					})
-				}
-			},
-			// 计算订单价格
-			computedPrice: function() {
-				let shippingType = this.shippingType;
-				postOrderComputed({
-					addressId: this.addressId,
-					useIntegral: this.useIntegral ? true : false,
-					couponId: this.couponId,
-					shippingType: parseInt(shippingType) + 1,
-					preOrderNo: this.preOrderNo
-				}).then(res => {
-					let data = res.data;
-					this.orderInfoVo.couponFee = data.couponFee;
-					//赋值操作，userIntegral 当前积分，surplusIntegral 剩余积分
-					this.orderInfoVo.userIntegral = data.surplusIntegral;
-					this.orderInfoVo.deductionPrice = data.deductionPrice;
-					this.orderInfoVo.freightFee = data.freightFee;
-					this.orderInfoVo.payFee = data.payFee;
-					this.orderInfoVo.proTotalFee = data.proTotalFee;
-					this.orderInfoVo.useIntegral = data.useIntegral;
-					this.orderInfoVo.usedIntegral = data.usedIntegral;
-					this.orderInfoVo.surplusIntegral = data.surplusIntegral;
-					//this.orderInfoVo.userIntegral = data.userIntegral;
-				}).catch(err => {
-					return this.$util.Tips({
-						title: err
-					});
-				});
-			},
-			//选择地址还是门店自提
-			addressType: function(e) {
-				let index = e;
-				this.shippingType = parseInt(index);
-				this.computedPrice();
-				//调起获取定位信息
-				if (index == 1) {
-					this.getList();
-					this.$util.$L.getLocation();
-				}
-			},
-			bindPickerChange: function(e) {
-				let value = e.detail.value;
-				this.shippingType = value;
-				this.computedPrice();
-			},
-			ChangCouponsClone: function() {
-				this.$set(this.coupon, 'coupon', false);
-			},
-			/**
-			 * 处理点击优惠券后的事件
-			 * 
-			 */
-			ChangCoupons: function(e) {
-				// this.usableCoupon = e
-				// this.coupon.coupon = false
-				let index = e,
-					list = this.coupon.list,
-					couponTitle = '请选择',
-					couponId = 0;
-				for (let i = 0, len = list.length; i < len; i++) {
-					if (i != index) {
-						list[i].use_title = '';
-						list[i].isUse = 0;
-					}
-				}
-				if (list[index].isUse) {
-					//不使用优惠券
-					list[index].use_title = '';
-					list[index].isUse = 0;
-				} else {
-					//使用优惠券
-					list[index].use_title = '不使用';
-					list[index].isUse = 1;
-					couponTitle = list[index].name;
-					couponId = list[index].id;
-				}
-				this.couponTitle = couponTitle;
-				this.couponId = couponId;
-				this.$set(this.coupon, 'coupon', false);
-				this.$set(this.coupon, 'list', list);
-				this.computedPrice();
-			},
-			/**
-			 * 使用积分抵扣
-			 */
-			ChangeIntegral: function() {
-				this.useIntegral = !this.useIntegral;
-				this.computedPrice();
-			},
-			bindHideKeyboard: function(e) {
-				this.mark = e.detail.value;
-			},
-			/**
-			 * 获取当前金额可用优惠券
-			 * 
-			 */
-			getCouponList: function() {
-				getCouponsOrderPrice(this.preOrderNo).then(res => {
-					this.$set(this.coupon, 'list', res.data);
-					this.openType = 1;
-				});
-			},
-			/*
-			 * 获取默认收货地址或者获取某条地址信息
-			 */
-			getaddressInfo: function() {
-				if (this.addressId) {
-
-					getAddressDetail(this.addressId).then(res => {
-						if (res.data) {
-							res.data.isDefault = res.data.isDefault;
-							this.addressInfo = res.data || {};
-						}
-					})
-				}
-			},
-			payItem: function(e) {
-				let that = this;
-				let active = e;
-				that.active = active;
-				that.animated = true;
-				that.payType = that.cartArr[active].value;
-				// #ifdef H5
-				if (that.payType == 'alipay' && this.$wechat.isWeixin() == true) {
-					that.payChannel = 'public';
-				} else if (that.payType == 'alipay' && this.$wechat.isWeixin() == false) {
-					that.payChannel = 'weixinh5';
-				}
-				// #endif
-				// #ifdef APP-PLUS
-				if (that.payType == 'alipay') {
-					that.payChannel = 'appAliPay';
-				}
-				// #endif
-				//that.computedPrice();
-				setTimeout(function() {
-					that.car();
-				}, 500);
-			},
-			couponTap: function() {
-				this.coupon.coupon = true;
-				if (!this.coupon.list.length) this.getCouponList();
-			},
-			car: function() {
-				let that = this;
-				that.animated = false;
-			},
-			onAddress: function() {
-
-				uni.redirectTo({
-					url: '/pages/users/user_address_list/index?preOrderNo=' + this.preOrderNo
-				});
-			},
-			realName: function(e) {
-				this.contacts = e.detail.value;
-			},
-			phone: function(e) {
-				this.contactsTel = e.detail.value;
-			},
-			payment: function(data) {
-				let that = this;
-				// #ifdef MP
-				uni.checkBeforeAddOrder({
-					success(res) {
-						console.log("下单前置检查 成功：", JSON.stringify(res));
-						const traceId = res.data.traceId;
-						data.traceId = traceId;
-						that.onCreate(data);
-					},
-					fail(res) {
-						console.log("下单前置检查 失败：", JSON.stringify(res));
-					}
-				});
-				// #endif
-				// #ifndef MP
-				that.onCreate(data);
-				// #endif
-			},
-			onCreate(data) {
-				let that = this
-				orderCreate(data).then(res => {
-					this.orderNo = res.data.orderNo;
-					console.log(res.data.orderNo);
-					uni.navigateTo({
-						url: `/pages/order/order_payment/index?orderNo=${this.orderNo}&payPrice=${this.orderInfoVo.payFee}`
-					})
-				}).catch(err => {
-					uni.hideLoading();
-					return that.$util.Tips({
-						title: err
-					}, '/pages/users/order_list/index');
-				});
-			},
-			SubOrder(e) {
-				let that = this,
-					data = {};
-				if (!that.addressId && !that.shippingType) return that.$util.Tips({
-					title: '请选择收货地址'
-				});
-				if (that.shippingType == 1) {
-					if (that.contacts == "" || that.contactsTel == "") {
-						return that.$util.Tips({
-							title: '请填写联系人及联系人电话'
-						});
-					}
-					if (!/^1(3|4|5|7|8|9|6)\d{9}$/.test(that.contactsTel)) {
-						return that.$util.Tips({
-							title: '请填写正确的手机号'
-						});
-					}
-					if (!/^[\u4e00-\u9fa5\w]{2,16}$/.test(that.contacts)) {
-						return that.$util.Tips({
-							title: '请填写您的真实姓名'
-						});
-					}
-					if (that.storeList.length == 0) return that.$util.Tips({
-						title: '暂无门店,请选择其他方式'
-					});
-				}
-				data = {
-					realName: that.contacts,
-					phone: that.contactsTel,
-					addressId: that.addressId,
-					couponId: that.couponId,
-					useIntegral: that.useIntegral,
-					preOrderNo: that.preOrderNo,
-					mark: that.mark,
-					storeId: that.system_store.id || 0,
-					shippingType: that.$util.$h.Add(that.shippingType, 1),
-				};
-				// #ifdef MP
-				openPaySubscribe().then(() => {
-					that.payment(data);
-				});
-				// #endif
-				// #ifndef MP
-				that.payment(data);
-				// #endif
+		}
+	}
+	// 计算订单价格
+	function computedPrice() {
+		postOrderComputed({
+			addressId: addressId.value,
+			useIntegral: false, // 开源版不支持积分抵扣，后端要求该字段非空
+			couponId: couponId.value,
+			shippingType: parseInt(shippingType.value) + 1,
+			preOrderNo: preOrderNo.value
+		}).then(res => {
+			let data = res.data;
+			orderInfoVo.value.couponFee = data.couponFee;
+			orderInfoVo.value.freightFee = data.freightFee;
+			orderInfoVo.value.payFee = data.payFee;
+			orderInfoVo.value.proTotalFee = data.proTotalFee;
+		}).catch(err => {
+			return util.Tips({
+				title: err
+			});
+		});
+	}
+	//选择地址还是门店自提
+	function addressType(e) {
+		let index = e;
+		shippingType.value = parseInt(index);
+		computedPrice();
+		//调起获取定位信息
+		if (index == 1) {
+			getList();
+			util.$L.getLocation();
+		}
+	}
+	function bindPickerChange(e) {
+		let value = e.detail.value;
+		shippingType.value = value;
+		computedPrice();
+	}
+	function ChangCouponsClone() {
+		coupon.coupon = false;
+	}
+	/**
+	 * 处理点击优惠券后的事件
+	 * 
+	 */
+	function ChangCoupons(e) {
+		// usableCoupon.value = e
+		// coupon.coupon = false
+		let index = e,
+			list = coupon.list,
+			title = '请选择',
+			id = 0;
+		for (let i = 0, len = list.length; i < len; i++) {
+			if (i != index) {
+				list[i].use_title = '';
+				list[i].isUse = 0;
 			}
 		}
+		if (list[index].isUse) {
+			//不使用优惠券
+			list[index].use_title = '';
+			list[index].isUse = 0;
+		} else {
+			//使用优惠券
+			list[index].use_title = '不使用';
+			list[index].isUse = 1;
+			title = list[index].name;
+			id = list[index].id;
+		}
+		couponTitle.value = title;
+		couponId.value = id;
+		coupon.coupon = false;
+		coupon.list = list;
+		computedPrice();
+	}
+	function bindHideKeyboard(e) {
+		mark.value = e.detail.value;
+	}
+	/**
+	 * 获取当前金额可用优惠券
+	 * 
+	 */
+	function getCouponList() {
+		getCouponsOrderPrice(preOrderNo.value).then(res => {
+			coupon.list = res.data;
+			openType.value = 1;
+		});
+	}
+	/*
+	 * 获取默认收货地址或者获取某条地址信息
+	 */
+	function getaddressInfo() {
+		if (addressId.value) {
+
+			getAddressDetail(addressId.value).then(res => {
+				if (res.data) {
+					res.data.isDefault = res.data.isDefault;
+					addressInfo.value = res.data || {};
+				}
+			})
+		}
+	}
+	function payItem(e) {
+		let activeVal = e;
+		active.value = activeVal;
+		animated.value = true;
+		payType.value = cartArr.value[activeVal].value;
+		// #ifdef H5
+		if (payType.value == 'alipay' && proxy.$wechat.isWeixin() == true) {
+			payChannel.value = 'public';
+		} else if (payType.value == 'alipay' && proxy.$wechat.isWeixin() == false) {
+			payChannel.value = 'weixinh5';
+		}
+		// #endif
+		// #ifdef APP-PLUS
+		if (payType.value == 'alipay') {
+			payChannel.value = 'appAliPay';
+		}
+		// #endif
+		//computedPrice();
+		setTimeout(function() {
+			car();
+		}, 500);
+	}
+	function couponTap() {
+		coupon.coupon = true;
+		if (!coupon.list.length) getCouponList();
+	}
+	function car() {
+		animated.value = false;
+	}
+	function onAddress() {
+
+		uni.redirectTo({
+			url: '/pages/users/user_address_list/index?preOrderNo=' + preOrderNo.value
+		});
+	}
+	function realName(e) {
+		contacts.value = e.detail.value;
+	}
+	function phone(e) {
+		contactsTel.value = e.detail.value;
+	}
+	function payment(data) {
+		// #ifdef MP
+		uni.checkBeforeAddOrder({
+		success(res) {
+			const traceId = res.data.traceId;
+			data.traceId = traceId;
+			onCreate(data);
+		},
+		fail(res) {
+		}
+	});
+		// #endif
+		// #ifndef MP
+		onCreate(data);
+		// #endif
+	}
+	function onCreate(data) {
+		orderCreate(data).then(res => {
+			orderNo.value = res.data.orderNo;
+			uni.navigateTo({
+				url: `/pages/order/order_payment/index?orderNo=${orderNo.value}&payPrice=${orderInfoVo.value.payFee}`
+			})
+		}).catch(err => {
+			uni.hideLoading();
+			return util.Tips({
+				title: err
+			}, '/pages/users/order_list/index');
+		});
+	}
+	function SubOrder(e) {
+		let data = {};
+		if (!addressId.value && !shippingType.value) return util.Tips({
+			title: '请选择收货地址'
+		});
+		if (shippingType.value == 1) {
+			if (contacts.value == "" || contactsTel.value == "") {
+				return util.Tips({
+					title: '请填写联系人及联系人电话'
+				});
+			}
+			if (!/^1(3|4|5|7|8|9|6)\d{9}$/.test(contactsTel.value)) {
+				return util.Tips({
+					title: '请填写正确的手机号'
+				});
+			}
+			if (!/^[\u4e00-\u9fa5\w]{2,16}$/.test(contacts.value)) {
+				return util.Tips({
+					title: '请填写您的真实姓名'
+				});
+			}
+			if (storeList.value.length == 0) return util.Tips({
+				title: '暂无门店,请选择其他方式'
+			});
+		}
+		data = {
+			realName: contacts.value,
+			phone: contactsTel.value,
+			addressId: addressId.value,
+			couponId: couponId.value,
+			useIntegral: false, // 开源版不支持积分抵扣，后端要求该字段非空
+			preOrderNo: preOrderNo.value,
+			mark: mark.value,
+			storeId: system_store.value.id || 0,
+			shippingType: util.$h.Add(shippingType.value, 1),
+		};
+		// #ifdef MP
+		openPaySubscribe().then(() => {
+			payment(data);
+		});
+		// #endif
+		// #ifndef MP
+		payment(data);
+		// #endif
 	}
 </script>
 
 <style lang="scss" scoped>
+	/* #ifdef MP */
+	.mp-nav-bar {
+		position: fixed;
+		top: 0;
+		right: 0;
+		left: 0;
+		z-index: 998;
+		box-sizing: border-box;
+		@include main_bg_color(theme);
+	}
+
+	.mp-nav-bar__content {
+		display: flex;
+		align-items: center;
+		position: absolute;
+		right: 0;
+		bottom: 16rpx;
+		left: 0;
+		height: 60rpx;
+		padding: 0 14rpx;
+		box-sizing: border-box;
+	}
+
+	.mp-nav-bar__back,
+	.mp-nav-bar__placeholder {
+		width: 72rpx;
+		flex: 0 0 72rpx;
+	}
+
+	.mp-nav-bar__back {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 60rpx;
+		border: 1px solid rgba(0, 0, 0, 0.07);
+		border-radius: 30rpx;
+		background: rgba(255, 255, 255, 0.6);
+		color: #000;
+		font-size: 36rpx;
+	}
+
+	.mp-nav-bar__title {
+		flex: 1;
+		height: 60rpx;
+		overflow: hidden;
+		color: #fff;
+		font-size: 34rpx;
+		font-weight: 500;
+		line-height: 60rpx;
+		text-align: center;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.mp-nav-placeholder {
+		width: 100%;
+	}
+	/* #endif */
+
 	.font_color {
 		@include main_color(theme);
 	}
@@ -975,18 +984,5 @@
 
 	.footer .transparent {
 		opacity: 0
-	}
-
-	::v-deep  checkbox .uni-checkbox-input.uni-checkbox-input-checked {
-		@include main_bg_color(theme);
-		border: none !important;
-		color: #fff !important
-	}
-
-	::v-deep  checkbox .wx-checkbox-input.wx-checkbox-input-checked {
-		@include main_bg_color(theme);
-		border: none !important;
-		color: #fff !important;
-		margin-right: 0 !important;
 	}
 </style>

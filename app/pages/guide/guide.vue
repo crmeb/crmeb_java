@@ -19,91 +19,92 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, onMounted, onBeforeUnmount, getCurrentInstance } from 'vue'
 	let app = getApp();
 	let sysHeight = uni.getSystemInfoSync().statusBarHeight;
 	//let menuHeight = uni.getMenuButtonBoundingClientRect().height; // 获取胶囊高度并设置标题高度
-	export default {
-		data() {
-			return {
-				//iSindicator: false,
-				autoplay: true,
-				duration: 300,
-				jumpover: '跳过',
-				experience: '立即体验',
-				time: this.advData.splashAdShowTime,
-				timecount: undefined,
-				// #ifndef H5 
-				navH: 20 + sysHeight * 2,
-				// #endif
-				// #ifdef H5
-				navH: 60 + sysHeight * 2,
-				// #endif
 
+	const { proxy } = getCurrentInstance();
+
+	const props = defineProps({
+		advData: {
+			type: Object,
+			default: () => {}
+		},
+		// 1 倒计时 2 手动关闭(预留)
+		closeType: {
+			type: Number,
+			default: 1
+		}
+	})
+
+	//iSindicator: false,
+	const autoplay = ref(true)
+	const duration = ref(300)
+	const jumpover = ref('跳过')
+	const experience = ref('立即体验')
+	const time = ref(props.advData.splashAdShowTime)
+	const timecount = ref(undefined)
+	// #ifndef H5 
+	const navH = ref(20 + sysHeight * 2)
+	// #endif
+	// #ifdef H5
+	const navH = ref(60 + sysHeight * 2)
+	// #endif
+
+	onMounted(() => {
+		timer()
+	})
+
+	onBeforeUnmount(() => {
+		clearInterval(timecount.value)
+	})
+
+	function stopChange() {
+		if (props.advData.adList.length == 1) {
+			return false
+		}
+	}
+
+	function timer() {
+		var t = props.advData.splashAdShowTime || 5
+		timecount.value = setInterval(() => {
+			t--
+			time.value = t
+			if (t <= 0) {
+				clearInterval(timecount.value)
+				launchFlag()
 			}
-		},
-		props: {
-			advData: {
-				type: Object,
-				default: () => {}
-			},
-			// 1 倒计时 2 手动关闭(预留)
-			closeType: {
-				type: Number,
-				default: 1
-			}
-		},
-		mounted() {
-			this.timer()
-		},
-		beforeDestroy() {
-			clearInterval(this.timecount)
-		},
-		methods: {
-			stopChange() {
-				if (this.advData.adList.length == 1) {
-					return false
-				}
-			},
-			timer() {
-				var t = this.advData.splashAdShowTime || 5
-				this.timecount = setInterval(() => {
-					t--
-					this.time = t
-					if (t <= 0) {
-						clearInterval(this.timecount)
-						this.launchFlag()
+		}, 1000)
+	}
+
+	function launchFlag() {
+		clearInterval(timecount.value)
+		uni.switchTab({
+			url: '/pages/index/index'
+		});
+	}
+
+	function jump(url) {
+		if (url) {
+			clearInterval(timecount.value)
+			uni.redirectTo({
+				url: url,
+				// 如果要跳转到tabBar页面则通过switchTab跳转
+				fail: function(err) {
+					const errMsg = 'redirectTo:fail can not redirectTo a tabbar page'
+					if (errMsg == err.errMsg) {
+						uni.switchTab({
+							url: url
+						});
+					} else {
+						proxy.$util.Tips({
+							title: err.errMsg
+						})
 					}
-				}, 1000)
-			},
-			launchFlag() {
-				clearInterval(this.timecount)
-				uni.switchTab({
-					url: '/pages/index/index'
-				});
-			},
-			jump(url) {
-				const that = this
-				if (url) {
-					clearInterval(this.timecount)
-					uni.redirectTo({
-						url: url,
-						// 如果要跳转到tabBar页面则通过switchTab跳转
-						fail: function(err) {
-							const errMsg = 'redirectTo:fail can not redirectTo a tabbar page'
-							if (errMsg == err.errMsg) {
-								uni.switchTab({
-									url: url
-								});
-							} else {
-								that.$util.Tips({
-									title: err.errMsg
-								})
-							}
-						}
-					})
 				}
-			},
+			})
 		}
 	}
 </script>

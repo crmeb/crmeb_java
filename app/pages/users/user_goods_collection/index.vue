@@ -1,9 +1,9 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class='collectionGoods' v-if="collectProductList.length">
 			<!-- #ifdef  H5 || MP-->
 			<view class='nav acea-row row-between-wrapper'>
-				<view>当前共 <text class='num font_color'>{{ totals }}</text>件商品</view>
+				<view>当前共<text class='num font_color'>{{ totals }}</text>件商品</view>
 				<view class='administrate acea-row row-center-wrapper' @click='manage'>{{ footerswitch ? '管理' : '取消'}}
 				</view>
 			</view>
@@ -12,9 +12,20 @@
 				<checkbox-group @change="checkboxChange" class="centent">
 					<!-- #ifndef APP-PLUS-->
 					<view v-for="(item,index) in collectProductList" :key="index" class='item acea-row row-middle'>
+						<!-- #ifndef MP -->
+						<checkbox :value="item.id.toString()" :checked="item.checked" v-if="!footerswitch"
+							color="#ffffff"
+							backgroundColor="#ffffff"
+							activeBackgroundColor="var(--view-theme, #E93323)"
+							activeBorderColor="var(--view-theme, #E93323)"
+							iconColor="#ffffff"
+							style="margin-right: 10rpx;" />
+						<!-- #endif -->
+						<!-- #ifdef MP -->
 						<checkbox :value="item.id.toString()" :checked="item.checked" v-if="!footerswitch"
 							style="margin-right: 10rpx;" />
-						<navigator :url='"/pages/goods/goods_details/index?id="+item.productId' hover-class='none'
+						<!-- #endif -->
+						<navigator :render-link="false" :url='"/pages/goods/goods_details/index?id="+item.productId' hover-class='none'
 							class="acea-row">
 							<view class='pictrue'>
 								<image :src="item.image"></image>
@@ -29,7 +40,7 @@
 					<!-- #ifdef APP-PLUS -->
 					<view v-for="(item,index) in collectProductList" :key="index" :data-index="index"
 						class='item acea-row row-middle order-item'>
-						<navigator :url='"/pages/goods/goods_details/index?id="+item.productId' hover-class='none' class="acea-row">
+						<navigator :render-link="false" :url='"/pages/goods/goods_details/index?id="+item.productId' hover-class='none' class="acea-row">
 							<view class='pictrue'>
 								<image :src="item.image"></image>
 							</view>
@@ -49,7 +60,20 @@
 			<view v-if="!footerswitch" class='footer acea-row row-between-wrapper'>
 				<view>
 					<checkbox-group @change="checkboxAllChange" class="acea-row row-middle">
+						<!-- #ifndef MP -->
+						<checkbox
+							value="all"
+							:checked="!!isAllSelect"
+							color="#ffffff"
+							backgroundColor="#ffffff"
+							activeBackgroundColor="var(--view-theme, #E93323)"
+							activeBorderColor="var(--view-theme, #E93323)"
+							iconColor="#ffffff"
+						/>
+						<!-- #endif -->
+						<!-- #ifdef MP -->
 						<checkbox value="all" :checked="!!isAllSelect" />
+						<!-- #endif -->
 						<text @click="isAllSelectChange" class='checkAll'>{{isAllSelect?'取消':'全选'}}</text>
 					</checkbox-group>
 				</view>
@@ -62,190 +86,185 @@
 		</view>
 		<view class='noCommodity' v-else-if="!collectProductList.length && page > 1">
 			<view class='pictrue'>
-				<image :src="urlDomain+'crmebimage/perset/usersImg/noCollection.png'"></image>
+				<image :src="urlDomain+'/crmebimage/perset/usersImg/noCollection.png'"></image>
 			</view>
 			<recommend ref="recommendIndex"></recommend>
 		</view>
 	</view>
 </template>
 
-<script>
+<script setup>
 	import {
 		getCollectUserList,
 		getProductHot,
 		collectDelete
 	} from '@/api/store.js';
-	import {
-		mapGetters
-	} from "vuex";
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
 	import {
 		toLogin
 	} from '@/libs/login.js';
-	import recommend from '@/components/recommend';
+	import recommend from '@/components/recommend/index.vue';
+	import { ref, getCurrentInstance } from 'vue';
+	import { onLoad, onShow, onReachBottom } from '@dcloudio/uni-app';
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		components: {
-			recommend
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				footerswitch: true,
-				loadTitle: '加载更多',
-				loading: false,
-				loadend: false,
-				collectProductList: [],
-				limit: 8,
-				page: 1,
-				isAllSelect: false, //全选
-				selectValue: [], //选中的数据
-				delBtnWidth: 80, //左滑默认宽度
-				totals: 0,
-				theme:app.globalData.theme,
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		onLoad() {
-			let that = this;
-			if (this.isLogin) {
-				this.loadend = false;
-				this.page = 1;
-				this.collectProductList = [];
-			} else {
-				toLogin();
-			}
-		},
-		onShow() {
-			this.loadend = false;
-			this.page = 1;
-			this.collectProductList = [];
-			this.get_user_collect_product();
-		},
-		methods: {
-			manage: function() {
-				this.footerswitch = !this.footerswitch;
-			},
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { isLogin } = storeToRefs(appStore);
 
-			checkboxChange: function(event) {
-				var items = this.collectProductList,
-					values = event.detail.value;
-				for (var i = 0, lenI = items.length; i < lenI; ++i) {
-					const item = items[i]
-					if (values.includes(item.id.toString())) {
-						this.$set(item, 'checked', true)
-					} else {
-						this.$set(item, 'checked', false)
-					}
-				}
-				this.selectValue = values.toString();
-				this.isAllSelect = items.length === values.length;
-			},
-			checkboxAllChange: function(event) {
-				let value = event.detail.value;
-				if (value.length > 0) {
-					this.setAllSelectValue(1)
-				} else {
-					this.setAllSelectValue(0)
-				}
-			},
-			isAllSelectChange(){
-				this.isAllSelect=!this.isAllSelect
-				if(this.isAllSelect){
-					this.setAllSelectValue(1)
-				}else{
-					this.setAllSelectValue(0)
-				}
-			},
-			setAllSelectValue: function(status) {
-				let selectValue = [];
-				if (this.collectProductList.length > 0) {
-					this.collectProductList.map(item => {
-						if (status) {
-							this.$set(item, 'checked', true)
-							selectValue.push(item.id);
-							this.isAllSelect = true;
-						} else {
-							this.$set(item, 'checked', false)
-							this.isAllSelect = false;
-						}
-					});
-					this.selectValue = selectValue.toString();
-				}
-			},
-			/**
-			 * 获取收藏产品
-			 */
-			get_user_collect_product: function() {
-				let that = this;
-				if (this.loading) return;
-				if (this.loadend) return;
-				that.loading = true;
-				that.loadTitle = "";
-				getCollectUserList({
-					page: that.page,
-					limit: that.limit
-				}).then(res => {
-					res.data.list.map(item => {
-						that.$set(item, 'right', 0);
-					});
-					that.totals = res.data.total;
-					let collectProductList = res.data.list;
-					let loadend = collectProductList.length < that.limit;
-					that.collectProductList = that.$util.SplitArray(collectProductList, that
-						.collectProductList);
-					that.$set(that, 'collectProductList', that.collectProductList);
-					that.loadend = loadend;
-					that.loadTitle = loadend ? '我也是有底线的~' : '加载更多';
-					that.page = that.page + 1;
-					that.loading = false;
-				}).catch(err => {
-					that.loading = false;
-					that.loadTitle = "加载更多";
-				});
-			},
-			/**
-			 * 取消收藏
-			 */
-			delCollection: function(id, index) {
-				this.selectValue = id;
-				this.del({
-					ids: this.selectValue.toString()
-				});
-			},
-			delCollectionAll: function() {
-				if (!this.selectValue || this.selectValue.length == 0) return this.$util.Tips({
-					title: '请选择商品'
-				});
-				this.del({
-					ids: this.selectValue
-				});
-			},
-			del: function(data) {
-				collectDelete(data).then(res => {
-					this.$util.Tips({
-						title: '取消收藏成功',
-						icon: 'success'
-					});
-					this.selectValue = [];
-					this.collectProductList = [];
-					this.loadend = false;
-					this.page = 1;
-					this.get_user_collect_product();
-				}).catch(err => {
-					return this.$util.Tips({
-						title: err
-					})
-				});
-			},
-		},
-		/**
-		 * 页面上拉触底事件的处理函数
-		 */
-		onReachBottom() {
-			this.get_user_collect_product();
-			this.$refs.recommendIndex.get_host_product();
+	const recommendIndex = ref(null);
+	const urlDomain = ref(proxy.$Cache.get("imgHost"));
+	const footerswitch = ref(true);
+	const loadTitle = ref('加载更多');
+	const loading = ref(false);
+	const loadend = ref(false);
+	const collectProductList = ref([]);
+	const limit = ref(8);
+	const page = ref(1);
+	const isAllSelect = ref(false); //全选
+	const selectValue = ref([]); //选中的数据
+	const delBtnWidth = ref(80); //左滑默认宽度
+	const totals = ref(0);
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+
+	onLoad(() => {
+		if (isLogin.value) {
+			loadend.value = false;
+			page.value = 1;
+			collectProductList.value = [];
+		} else {
+			toLogin();
+		}
+	});
+	onShow(() => {
+		loadend.value = false;
+		page.value = 1;
+		collectProductList.value = [];
+		get_user_collect_product();
+	});
+
+	function manage() {
+		footerswitch.value = !footerswitch.value;
+	}
+
+	function checkboxChange(event) {
+		var items = collectProductList.value,
+			values = event.detail.value;
+		for (var i = 0, lenI = items.length; i < lenI; ++i) {
+			const item = items[i]
+			if (values.includes(item.id.toString())) {
+				item.checked = true
+			} else {
+				item.checked = false
+			}
+		}
+		selectValue.value = values.toString();
+		isAllSelect.value = items.length === values.length;
+	}
+	function checkboxAllChange(event) {
+		let value = event.detail.value;
+		if (value.length > 0) {
+			setAllSelectValue(1)
+		} else {
+			setAllSelectValue(0)
 		}
 	}
+	function isAllSelectChange() {
+		isAllSelect.value = !isAllSelect.value
+		if (isAllSelect.value) {
+			setAllSelectValue(1)
+		} else {
+			setAllSelectValue(0)
+		}
+	}
+	function setAllSelectValue(status) {
+		let selectValueArr = [];
+		if (collectProductList.value.length > 0) {
+			collectProductList.value.map(item => {
+				if (status) {
+					item.checked = true
+					selectValueArr.push(item.id);
+					isAllSelect.value = true;
+				} else {
+					item.checked = false
+					isAllSelect.value = false;
+				}
+			});
+			selectValue.value = selectValueArr.toString();
+		}
+	}
+	/**
+	 * 获取收藏产品
+	 */
+	function get_user_collect_product() {
+		if (loading.value) return;
+		if (loadend.value) return;
+		loading.value = true;
+		loadTitle.value = "";
+		getCollectUserList({
+			page: page.value,
+			limit: limit.value
+		}).then(res => {
+			res.data.list.map(item => {
+				item.right = 0;
+			});
+			totals.value = res.data.total;
+			let list = res.data.list;
+			let loadendVal = list.length < limit.value;
+			collectProductList.value = proxy.$util.SplitArray(list, collectProductList.value);
+			loadend.value = loadendVal;
+			loadTitle.value = loadendVal ? '我也是有底线的~' : '加载更多';
+			page.value = page.value + 1;
+			loading.value = false;
+		}).catch(err => {
+			loading.value = false;
+			loadTitle.value = "加载更多";
+		});
+	}
+	/**
+	 * 取消收藏
+	 */
+	function delCollection(id, index) {
+		selectValue.value = id;
+		del({
+			ids: selectValue.value.toString()
+		});
+	}
+	function delCollectionAll() {
+		if (!selectValue.value || selectValue.value.length == 0) return proxy.$util.Tips({
+			title: '请选择商品'
+		});
+		del({
+			ids: selectValue.value
+		});
+	}
+	function del(data) {
+		collectDelete(data).then(res => {
+			proxy.$util.Tips({
+				title: '取消收藏成功',
+				icon: 'success'
+			});
+			selectValue.value = [];
+			collectProductList.value = [];
+			loadend.value = false;
+			page.value = 1;
+			get_user_collect_product();
+		}).catch(err => {
+			return proxy.$util.Tips({
+				title: err
+			})
+		});
+	}
+
+	/**
+	 * 页面上拉触底事件的处理函数
+	 */
+	onReachBottom(() => {
+		get_user_collect_product();
+		recommendIndex.value.get_host_product();
+	});
 </script>
 
 <style scoped lang="scss">
@@ -404,7 +423,6 @@
 			color: #999;
 			border-radius: 30rpx;
 			border: 1px solid #999;
-			width: 160rpx;
 			height: 60rpx;
 			text-align: center;
 			line-height: 60rpx;
@@ -413,6 +431,7 @@
 	.font_color{
 		@include main_color(theme);
 	}
+	::v-deep  uni-checkbox .uni-checkbox-input.uni-checkbox-input-checked,
 	::v-deep  checkbox .uni-checkbox-input.uni-checkbox-input-checked {
 		@include main_bg_color(theme);
 		@include coupons_border_color(theme);

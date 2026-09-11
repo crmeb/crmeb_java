@@ -11,7 +11,7 @@
               <view class="avatar">
                 <image v-if="avatarUrl" :src="avatarUrl" mode="aspectFill" />
                 <view class="empty-box" v-else>
-                  <image src="/static/images/shan.png" mode="aspectFill" />
+                  <image src="/static/images/f.png" mode="aspectFill" />
                 </view>
               </view>
               <view class="text">
@@ -68,7 +68,7 @@
               <view class="avatar">
                 <image v-if="avatarUrl" :src="avatarUrl" mode="aspectFill" />
                 <view class="empty-box" v-else>
-                  <image src="/static/images/shan.png" mode="aspectFill" />
+                  <image src="/static/images/f.png" mode="aspectFill" />
                 </view>
               </view>
             </view>
@@ -84,7 +84,7 @@
               <view class="avatar">
                 <image v-if="avatarUrl" :src="avatarUrl" mode="aspectFill" />
                 <view class="empty-box" v-else>
-                  <image src="/static/images/shan.png" mode="aspectFill" />
+                  <image src="/static/images/f.png" mode="aspectFill" />
                 </view>
               </view>
               <view class="text">
@@ -131,7 +131,7 @@
                 <view class="avatar">
                   <image v-if="avatarUrl" :src="avatarUrl" mode="aspectFill" />
                   <view class="empty-box" v-else>
-                    <image src="/static/images/shan.png" mode="aspectFill" />
+                    <image src="/static/images/f.png" mode="aspectFill" />
                   </view>
                 </view>
                 <view class="text">
@@ -164,7 +164,7 @@
                   >
                     <template v-if="dataStyle == 0">
                       <view
-                        class="num line1"
+                        class="item-num line1"
                         :style="{ color: dataNumColor }"
                         >{{ item.val }}</view
                       >
@@ -181,7 +181,7 @@
                         >{{ item.name }}</view
                       >
                       <view
-                        class="num line1"
+                        class="item-num line1"
                         :style="{ color: dataNumColor }"
                         >{{ item.val }}</view
                       >
@@ -254,7 +254,7 @@
         </template>
 
         <template v-if="styleConfig == 4">
-          <view class="style-5-container" :style="[cardStyle]">
+          <view class="style-5-container" >
             <view
               class="header acea-row row-between-wrapper"
               @click="goUserInfo"
@@ -263,7 +263,7 @@
                 <view class="avatar">
                   <image v-if="avatarUrl" :src="avatarUrl" mode="aspectFill" />
                   <view class="empty-box" v-else>
-                    <image src="/static/images/shan.png" mode="aspectFill" />
+                    <image src="/static/images/f.png" mode="aspectFill" />
                   </view>
                 </view>
                 <view class="text">
@@ -321,7 +321,7 @@
                   }"
                 >
                   <template v-if="dataStyle == 0">
-                    <view class="num line1" :style="{ color: dataNumColor }">{{
+                    <view class="item-num line1" :style="{ color: dataNumColor }">{{
                       item.val
                     }}</view>
                     <view
@@ -336,7 +336,7 @@
                       :style="{ color: dataTitleColor }"
                       >{{ item.name }}</view
                     >
-                    <view class="num line1" :style="{ color: dataNumColor }">{{
+                    <view class="item-num line1" :style="{ color: dataNumColor }">{{
                       item.val
                     }}</view>
                   </template>
@@ -394,7 +394,7 @@
                 }"
               >
                 <template v-if="dataStyle == 0">
-                  <view class="num line1" :style="{ color: dataNumColor }">{{
+                  <view class="item-num line1" :style="{ color: dataNumColor }">{{
                     item.val
                   }}</view>
                   <view
@@ -409,7 +409,7 @@
                     :style="{ color: dataTitleColor }"
                     >{{ item.name }}</view
                   >
-                  <view class="num line1" :style="{ color: dataNumColor }">{{
+                  <view class="item-num line1" :style="{ color: dataNumColor }">{{
                     item.val
                   }}</view>
                 </template>
@@ -575,50 +575,53 @@
   </view>
 </template>
 
-<script>
+<script setup>
 import commonWrapper from "./commonWrapper.vue";
-import { mapGetters } from "vuex";
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
+import { computed } from "vue";
+import util from "@/utils/util.js";
 
-export default {
-  components: { commonWrapper },
-  name: "homeMember",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => ({}),
-    },
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
   },
-  computed: {
-    ...mapGetters(["userInfo", "isLogin"]),
-    configData() {
+});
+const emit = defineEmits(["changeLogin"]);
+
+const appStore = useAppStore();
+const { isLogin, userInfo } = storeToRefs(appStore);
+
+const configData = computed(() => {
       return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
+        ...props.dataConfig,
+        paddingConfig: props.dataConfig.paddingConfig || {
           isAll: false,
           valList: [
             {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
+              val: props.dataConfig.topConfig
+                ? props.dataConfig.topConfig.val
                 : 0,
             },
             {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
+              val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
             },
             {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
+              val: props.dataConfig.bottomConfig
+                ? props.dataConfig.bottomConfig.val
                 : 0,
             },
             {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
+              val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
             },
           ],
         },
-        marginConfig: this.dataConfig.marginConfig || {
+        marginConfig: props.dataConfig.marginConfig || {
           isAll: false,
           valList: [
             {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
+              val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
             },
             { val: 0 },
             { val: 0 },
@@ -626,269 +629,256 @@ export default {
           ],
         },
       };
-    },
-    styleConfig() {
+});
+const styleConfig = computed(() => {
       return (
         Number(
-          this.dataConfig.styleConfig && this.dataConfig.styleConfig.tabVal,
+          props.dataConfig.styleConfig && props.dataConfig.styleConfig.tabVal,
         ) || 0
       );
-    },
-    memberStyleConfig() {
+});
+const memberStyleConfig = computed(() => {
       return (
         Number(
-          this.dataConfig.memberStyleConfig &&
-            this.dataConfig.memberStyleConfig.tabVal,
+          props.dataConfig.memberStyleConfig &&
+            props.dataConfig.memberStyleConfig.tabVal,
         ) || 0
       );
-    },
-    menuStyle() {
+});
+const menuStyle = computed(() => {
       return (
         Number(
-          this.dataConfig.menuConfig && this.dataConfig.menuConfig.listStyle,
+          props.dataConfig.menuConfig && props.dataConfig.menuConfig.listStyle,
         ) || 0
       );
-    },
-    userInfoConfig() {
+});
+const userInfoConfig = computed(() => {
       return (
         Number(
-          this.dataConfig.userInfoConfig &&
-            this.dataConfig.userInfoConfig.tabVal,
+          props.dataConfig.userInfoConfig &&
+            props.dataConfig.userInfoConfig.tabVal,
         ) || 0
       );
-    },
-    assetMode() {
+});
+const assetMode = computed(() => {
       return (
-        Number(this.dataConfig.assetMode && this.dataConfig.assetMode.tabVal) ||
+        Number(props.dataConfig.assetMode && props.dataConfig.assetMode.tabVal) ||
         0
       );
-    },
-    dataStyle() {
+});
+const dataStyle = computed(() => {
       return (
-        Number(this.dataConfig.dataStyle && this.dataConfig.dataStyle.tabVal) ||
+        Number(props.dataConfig.dataStyle && props.dataConfig.dataStyle.tabVal) ||
         0
       );
-    },
-    checkType() {
+});
+const checkType = computed(() => {
       return (
-        (this.dataConfig.checkboxInfo && this.dataConfig.checkboxInfo.type) ||
+        (props.dataConfig.checkboxInfo && props.dataConfig.checkboxInfo.type) ||
         []
       );
-    },
-    avatarUrl() {
-      return this.userInfo.avatar || "";
-    },
-    menuList() {
+});
+const avatarUrl = computed(() => {
+      return (userInfo.value && userInfo.value.avatar) || "";
+});
+const menuList = computed(() => {
       return (
-        (this.dataConfig.menuConfig && this.dataConfig.menuConfig.list) || []
-      );
-    },
-    assetStyle() {
-      return this.dataConfig.assetConfig
-        ? this.dataConfig.assetConfig.listStyle
+        (props.dataConfig.menuConfig && props.dataConfig.menuConfig.list) || []
+      ).filter((item) => item && item.show !== false);
+});
+const assetStyle = computed(() => {
+      return props.dataConfig.assetConfig
+        ? props.dataConfig.assetConfig.listStyle
         : 2;
-    },
-    assetList() {
+});
+const assetList = computed(() => {
       return (
-        (this.dataConfig.assetConfig && this.dataConfig.assetConfig.list) || []
+        (props.dataConfig.assetConfig && props.dataConfig.assetConfig.list) || []
       );
-    },
-    memberList() {
+});
+const memberList = computed(() => {
       return (
-        (this.dataConfig.memberConfig && this.dataConfig.memberConfig.list) ||
+        (props.dataConfig.memberConfig && props.dataConfig.memberConfig.list) ||
         []
       );
-    },
-    rightEntryList() {
+});
+const rightEntryList = computed(() => {
       return (
-        (this.dataConfig.rightEntryConfig &&
-          this.dataConfig.rightEntryConfig.list) ||
+        (props.dataConfig.rightEntryConfig &&
+          props.dataConfig.rightEntryConfig.list) ||
         []
       );
-    },
-    moduleTitleColor() {
-      return this.dataConfig.moduleTextColor &&
-        this.dataConfig.moduleTextColor.color &&
-        this.dataConfig.moduleTextColor.color[0]
-        ? this.dataConfig.moduleTextColor.color[0].item
+});
+const moduleTitleColor = computed(() => {
+      return props.dataConfig.moduleTextColor &&
+        props.dataConfig.moduleTextColor.color &&
+        props.dataConfig.moduleTextColor.color[0]
+        ? props.dataConfig.moduleTextColor.color[0].item
         : "#333";
-    },
-    moduleCardStyle() {
-      if (this.styleConfig != 3) return {};
+});
+const moduleCardStyle = computed(() => {
+      if (styleConfig.value != 3) return {};
       let color1 =
-        this.dataConfig.moduleBgColor &&
-        this.dataConfig.moduleBgColor.color &&
-        this.dataConfig.moduleBgColor.color[0]
-          ? this.dataConfig.moduleBgColor.color[0].item
+        props.dataConfig.moduleBgColor &&
+        props.dataConfig.moduleBgColor.color &&
+        props.dataConfig.moduleBgColor.color[0]
+          ? props.dataConfig.moduleBgColor.color[0].item
           : "#fff";
       let color2 =
-        this.dataConfig.moduleBgColor &&
-        this.dataConfig.moduleBgColor.color &&
-        this.dataConfig.moduleBgColor.color[1]
-          ? this.dataConfig.moduleBgColor.color[1].item
+        props.dataConfig.moduleBgColor &&
+        props.dataConfig.moduleBgColor.color &&
+        props.dataConfig.moduleBgColor.color[1]
+          ? props.dataConfig.moduleBgColor.color[1].item
           : "#fff";
       return {
         background: `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`,
-        borderRadius: this.radiusFromConfig(this.dataConfig.moduleRadius),
+        borderRadius: radiusFromConfig(props.dataConfig.moduleRadius),
       };
-    },
-    memberTopStyle() {
-      if (this.styleConfig == 3 || this.styleConfig == 4) {
+});
+const memberTopStyle = computed(() => {
+      if (styleConfig.value == 3 || styleConfig.value == 4) {
         return { marginTop: "20rpx" };
       }
       return {};
-    },
-    cardStyle() {
-      if (this.memberStyleConfig == 2) {
+});
+const cardStyle = computed(() => {
+      if (memberStyleConfig.value == 2) {
         let style = {
-          borderRadius: this.radiusFromConfig(this.dataConfig.cardBgRadius),
+          borderRadius: radiusFromConfig(props.dataConfig.cardBgRadius),
         };
-        const mode = this.dataConfig.ms3BgMode
-          ? this.dataConfig.ms3BgMode.tabVal
+        const mode = props.dataConfig.ms3BgMode
+          ? props.dataConfig.ms3BgMode.tabVal
           : 0;
         if (
           mode === 1 &&
-          this.dataConfig.ms3BackgroundImage &&
-          this.dataConfig.ms3BackgroundImage.url
+          props.dataConfig.ms3BackgroundImage &&
+          props.dataConfig.ms3BackgroundImage.url
         ) {
-          style.backgroundImage = `url(${this.dataConfig.ms3BackgroundImage.url})`;
+          style.backgroundImage = `url(${props.dataConfig.ms3BackgroundImage.url})`;
           style.backgroundRepeat = "no-repeat";
           style.backgroundSize = "100% 100%";
         } else {
           const c1 =
-            this.dataConfig.cardBgColor &&
-            this.dataConfig.cardBgColor.color &&
-            this.dataConfig.cardBgColor.color[0]
-              ? this.dataConfig.cardBgColor.color[0].item
+            props.dataConfig.cardBgColor &&
+            props.dataConfig.cardBgColor.color &&
+            props.dataConfig.cardBgColor.color[0]
+              ? props.dataConfig.cardBgColor.color[0].item
               : "#fff";
           const c2 =
-            this.dataConfig.cardBgColor &&
-            this.dataConfig.cardBgColor.color &&
-            this.dataConfig.cardBgColor.color[1]
-              ? this.dataConfig.cardBgColor.color[1].item
+            props.dataConfig.cardBgColor &&
+            props.dataConfig.cardBgColor.color &&
+            props.dataConfig.cardBgColor.color[1]
+              ? props.dataConfig.cardBgColor.color[1].item
               : c1;
           style.background = `linear-gradient(90deg, ${c1} 0%, ${c2} 100%)`;
         }
         return style;
       }
-      if (this.memberStyleConfig == 3) {
+      if (memberStyleConfig.value == 3) {
         let style = {
-          borderRadius: this.radiusFromConfig(this.dataConfig.cardBgRadius),
+          borderRadius: radiusFromConfig(props.dataConfig.cardBgRadius),
         };
-        const mode = this.dataConfig.ms4BgMode
-          ? this.dataConfig.ms4BgMode.tabVal
+        const mode = props.dataConfig.ms4BgMode
+          ? props.dataConfig.ms4BgMode.tabVal
           : 0;
         if (
           mode === 1 &&
-          this.dataConfig.ms4BackgroundImage &&
-          this.dataConfig.ms4BackgroundImage.url
+          props.dataConfig.ms4BackgroundImage &&
+          props.dataConfig.ms4BackgroundImage.url
         ) {
-          style.backgroundImage = `url(${this.dataConfig.ms4BackgroundImage.url})`;
+          style.backgroundImage = `url(${props.dataConfig.ms4BackgroundImage.url})`;
           style.backgroundRepeat = "no-repeat";
           style.backgroundSize = "100% 100%";
         } else {
           const c1 =
-            this.dataConfig.cardBgColor &&
-            this.dataConfig.cardBgColor.color &&
-            this.dataConfig.cardBgColor.color[0]
-              ? this.dataConfig.cardBgColor.color[0].item
+            props.dataConfig.cardBgColor &&
+            props.dataConfig.cardBgColor.color &&
+            props.dataConfig.cardBgColor.color[0]
+              ? props.dataConfig.cardBgColor.color[0].item
               : "#fff";
           const c2 =
-            this.dataConfig.cardBgColor &&
-            this.dataConfig.cardBgColor.color &&
-            this.dataConfig.cardBgColor.color[1]
-              ? this.dataConfig.cardBgColor.color[1].item
+            props.dataConfig.cardBgColor &&
+            props.dataConfig.cardBgColor.color &&
+            props.dataConfig.cardBgColor.color[1]
+              ? props.dataConfig.cardBgColor.color[1].item
               : c1;
           style.background = `linear-gradient(90deg, ${c1} 0%, ${c2} 100%)`;
         }
         return style;
       }
       let color1 =
-        this.dataConfig.cardBgColor &&
-        this.dataConfig.cardBgColor.color &&
-        this.dataConfig.cardBgColor.color[0]
-          ? this.dataConfig.cardBgColor.color[0].item
+        props.dataConfig.cardBgColor &&
+        props.dataConfig.cardBgColor.color &&
+        props.dataConfig.cardBgColor.color[0]
+          ? props.dataConfig.cardBgColor.color[0].item
           : "#fff";
       let color2 =
-        this.dataConfig.cardBgColor &&
-        this.dataConfig.cardBgColor.color &&
-        this.dataConfig.cardBgColor.color[1]
-          ? this.dataConfig.cardBgColor.color[1].item
+        props.dataConfig.cardBgColor &&
+        props.dataConfig.cardBgColor.color &&
+        props.dataConfig.cardBgColor.color[1]
+          ? props.dataConfig.cardBgColor.color[1].item
           : "#fff";
       return {
         background: `linear-gradient(90deg, ${color1} 0%, ${color2} 100%)`,
-        borderRadius: this.radiusFromConfig(this.dataConfig.cardBgRadius),
+        borderRadius: radiusFromConfig(props.dataConfig.cardBgRadius),
       };
-    },
-    nameTextStyle() {
+});
+const nameTextStyle = computed(() => {
       let color =
-        this.dataConfig.nameColor &&
-        this.dataConfig.nameColor.color &&
-        this.dataConfig.nameColor.color[0]
-          ? this.dataConfig.nameColor.color[0].item
+        props.dataConfig.nameColor &&
+        props.dataConfig.nameColor.color &&
+        props.dataConfig.nameColor.color[0]
+          ? props.dataConfig.nameColor.color[0].item
           : "#333333";
       let size =
-        this.dataConfig.nameSize && this.dataConfig.nameSize.val
-          ? this.dataConfig.nameSize.val
+        props.dataConfig.nameSize && props.dataConfig.nameSize.val
+          ? props.dataConfig.nameSize.val
           : 16;
       return { color: color, fontSize: size * 2 + "rpx" };
-    },
-    numTextStyle() {
+});
+const numTextStyle = computed(() => {
       let color =
-        this.dataConfig.numColor &&
-        this.dataConfig.numColor.color &&
-        this.dataConfig.numColor.color[0]
-          ? this.dataConfig.numColor.color[0].item
+        props.dataConfig.numColor &&
+        props.dataConfig.numColor.color &&
+        props.dataConfig.numColor.color[0]
+          ? props.dataConfig.numColor.color[0].item
           : "#333333";
       let size =
-        this.dataConfig.numSize && this.dataConfig.numSize.val
-          ? this.dataConfig.numSize.val
+        props.dataConfig.numSize && props.dataConfig.numSize.val
+          ? props.dataConfig.numSize.val
           : 14;
       return { color: color, fontSize: size * 2 + "rpx" };
-    },
-    dataTitleColor() {
-      return this.dataConfig.dataTitleColor &&
-        this.dataConfig.dataTitleColor.color &&
-        this.dataConfig.dataTitleColor.color[0]
-        ? this.dataConfig.dataTitleColor.color[0].item
+});
+const dataTitleColor = computed(() => {
+      return props.dataConfig.dataTitleColor &&
+        props.dataConfig.dataTitleColor.color &&
+        props.dataConfig.dataTitleColor.color[0]
+        ? props.dataConfig.dataTitleColor.color[0].item
         : "#333333";
-    },
-    dataNumColor() {
-      return this.dataConfig.dataNumColor &&
-        this.dataConfig.dataNumColor.color &&
-        this.dataConfig.dataNumColor.color[0]
-        ? this.dataConfig.dataNumColor.color[0].item
+});
+const dataNumColor = computed(() => {
+      return props.dataConfig.dataNumColor &&
+        props.dataConfig.dataNumColor.color &&
+        props.dataConfig.dataNumColor.color[0]
+        ? props.dataConfig.dataNumColor.color[0].item
         : "#333333";
-    },
-    assetIconStyle() {
+});
+const assetTextStyle = computed(() => {
       let color =
-        this.dataConfig.assetIconColor &&
-        this.dataConfig.assetIconColor.color &&
-        this.dataConfig.assetIconColor.color[0]
-          ? this.dataConfig.assetIconColor.color[0].item
-          : "#ff9900";
-      let size =
-        this.dataConfig.assetIconSize && this.dataConfig.assetIconSize.val
-          ? this.dataConfig.assetIconSize.val
-          : 20;
-      return { color: color, fontSize: size * 2 + "rpx" };
-    },
-    assetTextStyle() {
-      let color =
-        this.dataConfig.assetTextColor &&
-        this.dataConfig.assetTextColor.color &&
-        this.dataConfig.assetTextColor.color[0]
-          ? this.dataConfig.assetTextColor.color[0].item
+        props.dataConfig.assetTextColor &&
+        props.dataConfig.assetTextColor.color &&
+        props.dataConfig.assetTextColor.color[0]
+          ? props.dataConfig.assetTextColor.color[0].item
           : "#333";
       let size =
-        this.dataConfig.assetTextSize && this.dataConfig.assetTextSize.val
-          ? this.dataConfig.assetTextSize.val
+        props.dataConfig.assetTextSize && props.dataConfig.assetTextSize.val
+          ? props.dataConfig.assetTextSize.val
           : 12;
       return { color: color, fontSize: size * 2 + "rpx" };
-    },
-    menuIconStyle() {
+});
+const menuIconStyle = computed(() => {
       let iconStyle =
-        this.dataConfig.iconStyleConfig || this.dataConfig.iconStyle || {};
+        props.dataConfig.iconStyleConfig || props.dataConfig.iconStyle || {};
       let color =
         iconStyle.color && iconStyle.color.color && iconStyle.color.color[0]
           ? iconStyle.color.color[0].item
@@ -905,179 +895,179 @@ export default {
         transform: `rotate(${rotate}deg)`,
         display: "inline-block",
       };
-    },
-    assetIconStyle() {
+});
+const assetIconStyle = computed(() => {
       return { fontSize: "48rpx", color: "#ff9900" };
-    },
-    userName() {
-      if (!this.isLogin) return "请点击登录";
-      return (this.userInfo && this.userInfo.nickname) || "";
-    },
-    userSubText() {
-      if (!this.isLogin) return "";
-      if (this.userInfoConfig == 0)
-        return (this.userInfo && this.userInfo.phone) || "";
+});
+const userName = computed(() => {
+      if (!isLogin.value) return "请点击登录";
+      return (userInfo.value && userInfo.value.nickname) || "";
+});
+const userSubText = computed(() => {
+      if (!isLogin.value) return "";
+      if (userInfoConfig.value == 0)
+        return (userInfo.value && userInfo.value.phone) || "";
       let uid =
-        (this.userInfo && (this.userInfo.uid || this.userInfo.id)) || "";
+        (userInfo.value && (userInfo.value.uid || userInfo.value.id)) || "";
       return uid ? `ID: ${uid}` : "";
-    },
-    userSubTextPlain() {
-      if (!this.isLogin) return "";
-      if (this.userInfoConfig == 0)
-        return (this.userInfo && this.userInfo.phone) || "";
-      return (this.userInfo && (this.userInfo.uid || this.userInfo.id)) || "";
-    },
-    ms2TitleType() {
+});
+const userSubTextPlain = computed(() => {
+      if (!isLogin.value) return "";
+      if (userInfoConfig.value == 0)
+        return (userInfo.value && userInfo.value.phone) || "";
+      return (userInfo.value && (userInfo.value.uid || userInfo.value.id)) || "";
+});
+const ms2TitleType = computed(() => {
       return (
         Number(
-          this.dataConfig.ms2TitleType && this.dataConfig.ms2TitleType.tabVal,
+          props.dataConfig.ms2TitleType && props.dataConfig.ms2TitleType.tabVal,
         ) || 0
       );
-    },
-    ms2TitleText() {
+});
+const ms2TitleText = computed(() => {
       return (
-        (this.dataConfig.ms2TitleText && this.dataConfig.ms2TitleText.value) ||
+        (props.dataConfig.ms2TitleText && props.dataConfig.ms2TitleText.value) ||
         ""
       );
-    },
-    ms2TitleColor() {
-      return this.dataConfig.ms2TitleColor &&
-        this.dataConfig.ms2TitleColor.color &&
-        this.dataConfig.ms2TitleColor.color[0]
-        ? this.dataConfig.ms2TitleColor.color[0].item
+});
+const ms2TitleColor = computed(() => {
+      return props.dataConfig.ms2TitleColor &&
+        props.dataConfig.ms2TitleColor.color &&
+        props.dataConfig.ms2TitleColor.color[0]
+        ? props.dataConfig.ms2TitleColor.color[0].item
         : "";
-    },
-    ms2TitleImage() {
+});
+const ms2TitleImage = computed(() => {
       return (
-        (this.dataConfig.ms2TitleImage && this.dataConfig.ms2TitleImage.url) ||
+        (props.dataConfig.ms2TitleImage && props.dataConfig.ms2TitleImage.url) ||
         ""
       );
-    },
-    ms2IntroText() {
+});
+const ms2IntroText = computed(() => {
       return (
-        (this.dataConfig.ms2IntroText && this.dataConfig.ms2IntroText.value) ||
+        (props.dataConfig.ms2IntroText && props.dataConfig.ms2IntroText.value) ||
         ""
       );
-    },
-    ms2IntroColor() {
-      return this.dataConfig.ms2IntroColor &&
-        this.dataConfig.ms2IntroColor.color &&
-        this.dataConfig.ms2IntroColor.color[0]
-        ? this.dataConfig.ms2IntroColor.color[0].item
+});
+const ms2IntroColor = computed(() => {
+      return props.dataConfig.ms2IntroColor &&
+        props.dataConfig.ms2IntroColor.color &&
+        props.dataConfig.ms2IntroColor.color[0]
+        ? props.dataConfig.ms2IntroColor.color[0].item
         : "";
-    },
-    ms2RightsList() {
+});
+const ms2RightsList = computed(() => {
       return (
-        (this.dataConfig.ms2RightsList && this.dataConfig.ms2RightsList.list) ||
+        (props.dataConfig.ms2RightsList && props.dataConfig.ms2RightsList.list) ||
         []
       );
-    },
-    ms2RightsColor() {
-      return this.dataConfig.ms2RightsColor &&
-        this.dataConfig.ms2RightsColor.color &&
-        this.dataConfig.ms2RightsColor.color[0]
-        ? this.dataConfig.ms2RightsColor.color[0].item
+});
+const ms2RightsColor = computed(() => {
+      return props.dataConfig.ms2RightsColor &&
+        props.dataConfig.ms2RightsColor.color &&
+        props.dataConfig.ms2RightsColor.color[0]
+        ? props.dataConfig.ms2RightsColor.color[0].item
         : "";
-    },
-    ms2ExplainIcons() {
+});
+const ms2ExplainIcons = computed(() => {
       return (
-        (this.dataConfig.ms2ExplainIcons &&
-          this.dataConfig.ms2ExplainIcons.url) ||
+        (props.dataConfig.ms2ExplainIcons &&
+          props.dataConfig.ms2ExplainIcons.url) ||
         ""
       );
-    },
-    ms2ExplainText() {
+});
+const ms2ExplainText = computed(() => {
       return (
-        (this.dataConfig.ms2ExplainText &&
-          this.dataConfig.ms2ExplainText.value) ||
+        (props.dataConfig.ms2ExplainText &&
+          props.dataConfig.ms2ExplainText.value) ||
         ""
       );
-    },
-    ms2ExplainColor() {
-      return this.dataConfig.ms2ExplainColor &&
-        this.dataConfig.ms2ExplainColor.color &&
-        this.dataConfig.ms2ExplainColor.color[0]
-        ? this.dataConfig.ms2ExplainColor.color[0].item
+});
+const ms2ExplainColor = computed(() => {
+      return props.dataConfig.ms2ExplainColor &&
+        props.dataConfig.ms2ExplainColor.color &&
+        props.dataConfig.ms2ExplainColor.color[0]
+        ? props.dataConfig.ms2ExplainColor.color[0].item
         : "";
-    },
-    ms2ButtonText() {
+});
+const ms2ButtonText = computed(() => {
       return (
-        (this.dataConfig.ms2ButtonText &&
-          this.dataConfig.ms2ButtonText.value) ||
+        (props.dataConfig.ms2ButtonText &&
+          props.dataConfig.ms2ButtonText.value) ||
         ""
       );
-    },
-    ms2ButtonLink() {
+});
+const ms2ButtonLink = computed(() => {
       return (
-        (this.dataConfig.ms2ButtonLink &&
-          this.dataConfig.ms2ButtonLink.value) ||
+        (props.dataConfig.ms2ButtonLink &&
+          props.dataConfig.ms2ButtonLink.value) ||
         ""
       );
-    },
-    ms2ButtonColor() {
-      return this.dataConfig.ms2ButtonColor &&
-        this.dataConfig.ms2ButtonColor.color &&
-        this.dataConfig.ms2ButtonColor.color[0]
-        ? this.dataConfig.ms2ButtonColor.color[0].item
+});
+const ms2ButtonColor = computed(() => {
+      return props.dataConfig.ms2ButtonColor &&
+        props.dataConfig.ms2ButtonColor.color &&
+        props.dataConfig.ms2ButtonColor.color[0]
+        ? props.dataConfig.ms2ButtonColor.color[0].item
         : "";
-    },
-    ms2ButtonBgColor() {
-      return this.dataConfig.ms2ButtonBgColor &&
-        this.dataConfig.ms2ButtonBgColor.color &&
-        this.dataConfig.ms2ButtonBgColor.color[0]
-        ? this.dataConfig.ms2ButtonBgColor.color[0].item
+});
+const ms2ButtonBgColor = computed(() => {
+      return props.dataConfig.ms2ButtonBgColor &&
+        props.dataConfig.ms2ButtonBgColor.color &&
+        props.dataConfig.ms2ButtonBgColor.color[0]
+        ? props.dataConfig.ms2ButtonBgColor.color[0].item
         : "";
-    },
-    ms3TitleText() {
+});
+const ms3TitleText = computed(() => {
       return (
-        (this.dataConfig.ms3TitleText && this.dataConfig.ms3TitleText.value) ||
+        (props.dataConfig.ms3TitleText && props.dataConfig.ms3TitleText.value) ||
         ""
       );
-    },
-    ms3TitleColor() {
-      return this.dataConfig.ms3TitleColor &&
-        this.dataConfig.ms3TitleColor.color &&
-        this.dataConfig.ms3TitleColor.color[0]
-        ? this.dataConfig.ms3TitleColor.color[0].item
+});
+const ms3TitleColor = computed(() => {
+      return props.dataConfig.ms3TitleColor &&
+        props.dataConfig.ms3TitleColor.color &&
+        props.dataConfig.ms3TitleColor.color[0]
+        ? props.dataConfig.ms3TitleColor.color[0].item
         : "";
-    },
-    ms3ButtonText() {
+});
+const ms3ButtonText = computed(() => {
       return (
-        (this.dataConfig.ms3ButtonText &&
-          this.dataConfig.ms3ButtonText.value) ||
+        (props.dataConfig.ms3ButtonText &&
+          props.dataConfig.ms3ButtonText.value) ||
         ""
       );
-    },
-    ms3ButtonColor() {
-      return this.dataConfig.ms3ButtonColor &&
-        this.dataConfig.ms3ButtonColor.color &&
-        this.dataConfig.ms3ButtonColor.color[0]
-        ? this.dataConfig.ms3ButtonColor.color[0].item
+});
+const ms3ButtonColor = computed(() => {
+      return props.dataConfig.ms3ButtonColor &&
+        props.dataConfig.ms3ButtonColor.color &&
+        props.dataConfig.ms3ButtonColor.color[0]
+        ? props.dataConfig.ms3ButtonColor.color[0].item
         : "";
-    },
-    ms3ContainerStyle() {
+});
+const ms3ContainerStyle = computed(() => {
       let pad =
-        this.dataConfig.ms3PaddingConfig &&
-        this.dataConfig.ms3PaddingConfig.valList
-          ? this.dataConfig.ms3PaddingConfig.valList
+        props.dataConfig.ms3PaddingConfig &&
+        props.dataConfig.ms3PaddingConfig.valList
+          ? props.dataConfig.ms3PaddingConfig.valList
           : [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }];
       return {
         padding: `${pad[0].val * 2}rpx ${pad[1].val * 2}rpx ${
           pad[2].val * 2
         }rpx ${pad[3].val * 2}rpx`,
       };
-    },
-    withdrawAmount() {
-      if (!this.isLogin) return "0.00";
+});
+const withdrawAmount = computed(() => {
+      if (!isLogin.value) return "0.00";
       let val =
-        (this.userInfo &&
-          (this.userInfo.brokerage_price ||
-            this.userInfo.brokeragePrice ||
-            this.userInfo.brokerage)) ||
+        (userInfo.value &&
+          (userInfo.value.brokerage_price ||
+            userInfo.value.brokeragePrice ||
+            userInfo.value.brokerage)) ||
         0;
       return val;
-    },
-    dataList() {
+});
+const dataList = computed(() => {
       let list = [
         { id: 1, name: "余额", key: "money" },
         { id: 3, name: "优惠券", key: "coupon" },
@@ -1089,12 +1079,10 @@ export default {
         { id: 10, name: "推广订单", key: "spreadOrderCount" },
       ];
       return list
-        .filter((item) => this.checkType.indexOf(item.id) != -1)
-        .map((item) => ({ ...item, val: this.getDataValue(item.key) }));
-    },
-  },
-  methods: {
-    radiusFromConfig(cfg) {
+        .filter((item) => checkType.value.indexOf(item.id) != -1)
+        .map((item) => ({ ...item, val: getDataValue(item.key) }));
+});
+function radiusFromConfig(cfg) {
       if (!cfg) return "0rpx";
       let type = Number(cfg.type) || 0;
       let val = Number(cfg.val) || 0;
@@ -1105,14 +1093,14 @@ export default {
         }rpx ${valList[2].val * 2}rpx`;
       }
       return val * 2 + "rpx";
-    },
-    getInfo(item, index) {
+}
+function getInfo(item, index) {
       if (!item || !item.info || !item.info[index]) return "";
       return item.info[index].value || "";
-    },
-    getDataValue(key) {
-      if (!this.isLogin) return 0;
-      let u = this.userInfo || {};
+}
+function getDataValue(key) {
+      if (!isLogin.value) return 0;
+      let u = userInfo.value || {};
       if (key === "money") return u.now_money || u.nowMoney || 0;
       if (key === "coupon")
         return u.couponCount || u.coupon_num || u.couponNum || 0;
@@ -1125,15 +1113,15 @@ export default {
       if (key === "spreadOrderCount")
         return u.order_count || u.spread_order_count || u.spreadOrderCount || 0;
       return 0;
-    },
-    goUserInfo() {
-      if (!this.isLogin) {
-        this.$emit("changeLogin");
+}
+function goUserInfo() {
+      if (!isLogin.value) {
+        emit("changeLogin");
         return;
       }
-      uni.navigateTo({ url: "/pages/users/user_info/index" });
-    },
-    handleDataNavigation(item) {
+      uni.navigateTo({ url: "/pages/infos/user_info/index" });
+}
+function handleDataNavigation(item) {
       let url = "";
       switch (item.id) {
         case 1:
@@ -1162,23 +1150,21 @@ export default {
           break;
       }
       if (url) {
-        this.goLink(url);
+        goLink(url);
       }
-    },
-    goLink(url) {
+}
+function goLink(url) {
       if (!url) return;
-      if (!this.isLogin) {
-        this.$emit("changeLogin");
+      if (!isLogin.value) {
+        emit("changeLogin");
         return;
       }
-      if (this.$util && this.$util.JumpPath) {
-        this.$util.JumpPath(url);
+      if (util && util.JumpPath) {
+        util.JumpPath(url);
         return;
       }
       uni.navigateTo({ url });
-    },
-  },
-};
+}
 </script>
 
 <style lang="scss" scoped>
@@ -1218,9 +1204,9 @@ export default {
       align-items: center;
       justify-content: center;
       image {
-        width: 52rpx;
-        height: 40rpx;
-        border-radius: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
       }
     }
   }
@@ -1281,8 +1267,8 @@ export default {
     align-items: center;
     justify-content: center;
   }
-  .num {
-    font-size: 32rpx;
+  .item-num {
+    font-size: 34rpx;
     font-weight: 600;
   }
   .label {
@@ -1302,7 +1288,7 @@ export default {
       margin-top: 0;
       margin-right: 0;
     }
-    .num {
+    .item-num {
       margin-left: 10rpx;
     }
   }
@@ -1437,9 +1423,9 @@ export default {
           align-items: center;
           justify-content: center;
           image {
-            width: 60rpx;
-            height: 60rpx;
-            border-radius: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
           }
         }
       }

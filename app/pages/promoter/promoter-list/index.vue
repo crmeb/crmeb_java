@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class="promoter-list">
 			<view class='promoterHeader'>
 				<view class='headerCon acea-row row-between'>
@@ -26,32 +26,32 @@
 				<view class='list'>
 					<view class="sortNav acea-row row-middle">
 						<view class="sortItem" @click='setSort("childCount","ASC")' v-if="sort == 'childCountDESC'">团队排序
-							<image :src="urlDomain+'crmebimage/perset/staticImg/sort1.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/sort1.png'"></image>
 						</view>
 						<view class="sortItem" @click='setSort("childCount")' v-else-if="sort == 'childCountASC'">团队排序
-							<image :src="urlDomain+'crmebimage/perset/staticImg/sort3.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/sort3.png'"></image>
 						</view>
 						<view class="sortItem" @click='setSort("childCount","DESC")' v-else>团队排序
-							<image :src="urlDomain+'crmebimage/perset/staticImg/sort2.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/sort2.png'"></image>
 						</view>
 						<view class="sortItem" @click='setSort("numberCount","ASC")' v-if="sort == 'numberCountDESC'">
 							金额排序
-							<image :src="urlDomain+'crmebimage/perset/staticImg/sort1.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/sort1.png'"></image>
 						</view>
 						<view class="sortItem" @click='setSort("numberCount")' v-else-if="sort == 'numberCountASC'">金额排序
-							<image :src="urlDomain+'crmebimage/perset/staticImg/sort3.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/sort3.png'"></image>
 						</view>
 						<view class="sortItem" @click='setSort("numberCount","DESC")' v-else>金额排序
-							<image :src="urlDomain+'crmebimage/perset/staticImg/sort2.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/sort2.png'"></image>
 						</view>
 						<view class="sortItem" @click='setSort("orderCount","ASC")' v-if="sort == 'orderCountDESC'">订单排序
-							<image :src="urlDomain+'crmebimage/perset/staticImg/sort1.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/sort1.png'"></image>
 						</view>
 						<view class="sortItem" @click='setSort("orderCount")' v-else-if="sort == 'orderCountASC'">订单排序
-							<image :src="urlDomain+'crmebimage/perset/staticImg/sort3.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/sort3.png'"></image>
 						</view>
 						<view class="sortItem" @click='setSort("orderCount","DESC")' v-else>订单排序
-							<image :src="urlDomain+'crmebimage/perset/staticImg/sort2.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/sort2.png'"></image>
 						</view>
 					</view>
 					<block v-for="(item,index) in recordList" :key="index">
@@ -83,137 +83,125 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	import {
 		spreadPeople,
-		spreadPeoCount
+		spreadPeoCount as spreadPeoCountApi
 	} from '@/api/user.js';
 	import {toLogin} from '@/libs/login.js';
-	import {mapGetters} from "vuex";
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
 	import emptyPage from '@/components/emptyPage.vue'
-	import Loading from "@/components/Loading";
+	import Loading from "@/components/Loading/index.vue";
 	import {setThemeColor} from '@/utils/setTheme.js'
+	import { ref } from 'vue';
+	import { onLoad, onShow, onHide, onReachBottom } from '@dcloudio/uni-app';
+	import Cache from '@/utils/cache.js';
+import { useColor } from '@/composables/useColor.js';
 	const app = getApp();
-	export default {
-		components: {
-			Loading,
-			emptyPage
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				page: 1,
-				limit: 20,
-				keyword: '',
-				sort: '',
-				isAsc: '',
-				sortKey: '',
-				grade: 0,
-				status: false,
-				loadingList: false,
-				recordList: [],
-				peopleData: {},
-				isShow: false,
-				theme:app.globalData.theme,
-				bgColor:'#e93323'
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		onLoad() {
-			if (this.isLogin) {
-				this.userSpreadNewList();
-				this.spreadPeoCount();
-			} else {
-				toLogin();
-			}
-			let that = this;
-			that.bgColor = setThemeColor();
-			uni.setNavigationBarColor({
-				frontColor: '#ffffff',
-				backgroundColor:that.bgColor,
-			});
-		},
-		onShow: function() {
-			if (this.is_show) this.userSpreadNewList();
-		},
-		onHide: function() {
-			this.is_show = true;
-		},
-		methods: {
-			setSort: function(sortKey, isAsc) {
-				let that = this;
-				that.isAsc = isAsc;
-				that.sort = sortKey + isAsc;
-				that.sortKey = sortKey;
-				that.page = 1;
-				that.limit = 20;
-				that.status = false;
-				that.$set(that, 'recordList', []);
-				that.userSpreadNewList();
-			},
-			submitForm: function() {
-				this.page = 1;
-				this.limit = 20;
-				this.status = false;
-				this.$set(this, 'recordList', []);
-				this.userSpreadNewList();
-			},
+	const { isLogin } = storeToRefs(useAppStore());
 
-			setType: function(grade) {
-				if (this.grade != grade) {
-					this.grade = grade;
-					this.page = 1;
-					this.limit = 20;
-					this.keyword = '';
-					this.sort = '';
-					this.isAsc = '';
-					this.status = false;
-					this.loadingList = false;
-					this.$set(this, 'recordList', []);
-					this.userSpreadNewList();
-				}
-			},
-			spreadPeoCount() {
-				spreadPeoCount().then(res => {
-					this.peopleData = res.data;
-				});
-			},
-			userSpreadNewList: function() {
-				let that = this;
-				let page = that.page;
-				let limit = that.limit;
-				let status = that.status;
-				let keyword = that.keyword;
-				let isAsc = that.isAsc;
-				let sortKey = that.sortKey;
-				let grade = that.grade;
-				let recordList = that.recordList;
-				let recordListNew = [];
-				if (that.loadingList) return;
-				if (status == true) return;
-				spreadPeople({
-					page: page,
-					limit: limit,
-					keyword: keyword,
-					grade: grade,
-					sortKey: sortKey,
-					isAsc: isAsc
-				}).then(res => {
-					let recordListData = res.data.list ? res.data.list : [];
-					let len = recordListData.length;
-					recordListNew = recordList.concat(recordListData);
-					that.status = limit > len;
-					that.page = page + 1;
-					that.$set(that, 'recordList', recordListNew || []);
-					that.loadingList = false;
-					if(that.recordList.length===0) that.isShow = true;
-				});
-			}
-		},
-		onReachBottom: function() {
-			this.userSpreadNewList();
+	const urlDomain = ref(Cache.get("imgHost"));
+	const page = ref(1);
+	const limit = ref(20);
+	const keyword = ref('');
+	const sort = ref('');
+	const isAsc = ref('');
+	const sortKey = ref('');
+	const grade = ref(0);
+	const status = ref(false);
+	const loadingList = ref(false);
+	const recordList = ref([]);
+	const peopleData = ref({});
+	const isShow = ref(false);
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	const bgColor = ref('#e93323');
+	const is_show = ref(false);
+
+	onLoad(() => {
+		if (isLogin.value) {
+			userSpreadNewList();
+			spreadPeoCount();
+		} else {
+			toLogin();
+		}
+		bgColor.value = setThemeColor();
+		uni.setNavigationBarColor({
+			frontColor: '#ffffff',
+			backgroundColor: bgColor.value,
+		});
+	});
+	onShow(() => {
+		if (is_show.value) userSpreadNewList();
+	});
+	onHide(() => {
+		is_show.value = true;
+	});
+
+	function setSort(sk, asc) {
+		isAsc.value = asc;
+		sort.value = sk + asc;
+		sortKey.value = sk;
+		page.value = 1;
+		limit.value = 20;
+		status.value = false;
+		recordList.value = [];
+		userSpreadNewList();
+	}
+	function submitForm() {
+		page.value = 1;
+		limit.value = 20;
+		status.value = false;
+		recordList.value = [];
+		userSpreadNewList();
+	}
+
+	function setType(g) {
+		if (grade.value != g) {
+			grade.value = g;
+			page.value = 1;
+			limit.value = 20;
+			keyword.value = '';
+			sort.value = '';
+			isAsc.value = '';
+			status.value = false;
+			loadingList.value = false;
+			recordList.value = [];
+			userSpreadNewList();
 		}
 	}
+	function spreadPeoCount() {
+		spreadPeoCountApi().then(res => {
+			peopleData.value = res.data;
+		});
+	}
+	function userSpreadNewList() {
+		let recordListNew = [];
+		if (loadingList.value) return;
+		if (status.value == true) return;
+		spreadPeople({
+			page: page.value,
+			limit: limit.value,
+			keyword: keyword.value,
+			grade: grade.value,
+			sortKey: sortKey.value,
+			isAsc: isAsc.value
+		}).then(res => {
+			let recordListData = res.data.list ? res.data.list : [];
+			let len = recordListData.length;
+			recordListNew = recordList.value.concat(recordListData);
+			status.value = limit.value > len;
+			page.value = page.value + 1;
+			recordList.value = recordListNew || [];
+			loadingList.value = false;
+			if (recordList.value.length === 0) isShow.value = true;
+		});
+	}
+
+	onReachBottom(() => {
+		userSpreadNewList();
+	});
 </script>
 
 <style scoped lang="scss">

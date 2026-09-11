@@ -68,221 +68,169 @@
   </common-wrapper>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, nextTick } from "vue";
 import commonWrapper from "./commonWrapper.vue";
-export default {
-  components: { commonWrapper },
-  name: "swiperBg",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+import util from "@/utils/util.js";
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {
-      circular: true,
-      autoplay: true,
-      interval: 3000,
-      duration: 500,
-      imgUrls: [], //图片轮播数据
-      bgColor: "", //轮播背景颜色
-      marginTop: 0, //组件上边距
-      paddinglr: 0, //轮播左右边距
-      docConfig: 0, //指示点样式
-      imgConfig: 0, //是否为圆角
-      imageH: 0,
-      isColor: 0,
-      txtStyle: 0,
-      dotColor: "",
-      current: 1, //数字指示器当前
-      active: 0, //一般指示器当前
-      swiperMargin: "",
-    };
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
+});
+
+const circular = ref(true);
+const autoplay = ref(true);
+const interval = ref(3000);
+const duration = ref(500);
+const imgUrls = ref([]);
+const bgColor = ref("");
+const marginTop = ref(0);
+const paddinglr = ref(0);
+const docConfig = ref(0);
+const imgConfig = ref(0);
+const imageH = ref(0);
+const isColor = ref(0);
+const txtStyle = ref(0);
+const dotColor = ref("");
+const current = ref(1); //数字指示器当前
+const active = ref(0); //一般指示器当前
+const swiperMargin = ref("");
+
+const configData = computed(() => ({
+  ...props.dataConfig,
+  paddingConfig: props.dataConfig.paddingConfig || {
+    isAll: false,
+    valList: [
+      { val: props.dataConfig.topConfig ? props.dataConfig.topConfig.val : 0 },
+      { val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0 },
+      { val: props.dataConfig.bottomConfig ? props.dataConfig.bottomConfig.val : 0 },
+      { val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0 },
+    ],
+  },
+  marginConfig: props.dataConfig.marginConfig || {
+    isAll: false,
+    valList: [
+      { val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0 },
+      { val: 0 },
+      { val: 0 },
+      { val: 0 },
+    ],
+  },
+}));
+
+const itemStyle = computed(() => {
+  let val = props.dataConfig.imgConfig.val;
+  let num = 1;
+  if (props.dataConfig.styleConfig.tabVal == 1) {
+    num = !val ? 1 : 0.9;
+  }
+  return { transform: `scale(${num})` };
+});
+
+const activeStyle = computed(() => {
+  let val = props.dataConfig.imgConfig.val;
+  let num = 1;
+  if (props.dataConfig.styleConfig.tabVal == 1) {
+    num = !val ? 1 : 1 - val / 400;
+  }
+  return { transform: `scale(${num})` };
+});
+
+const imageStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.filletImg.val * 2}rpx`;
+  if (props.dataConfig.filletImg.type) {
+    borderRadius = `${props.dataConfig.filletImg.valList[0].val * 2}rpx ${props.dataConfig.filletImg.valList[1].val * 2}rpx ${props.dataConfig.filletImg.valList[3].val * 2}rpx ${props.dataConfig.filletImg.valList[2].val * 2}rpx`;
+  }
+  return { borderRadius };
+});
+
+const dotStyle = computed(() => {
+  let styleObject = {};
+  if (props.dataConfig.docPosition.tabVal) {
+    styleObject["justify-content"] = props.dataConfig.docPosition.tabVal == 1 ? "center" : "flex-end";
+  }
+  if (props.dataConfig.styleConfig.tabVal == 1) {
+    styleObject["padding"] = "0 100rpx";
+    styleObject["bottom"] = "32rpx";
+  }
+  return styleObject;
+});
+
+const dotItemStyle = computed(() => {
+  let styleObject = {};
+  if (props.dataConfig.toneConfig.tabVal) {
+    styleObject["background"] = props.dataConfig.dotBgColor.color[0].item;
+  }
+  return styleObject;
+});
+
+const dotItemActiveStyle = computed(() => {
+  let styleObject = {};
+  if (props.dataConfig.toneConfig.tabVal) {
+    styleObject["background"] = props.dataConfig.dotColor.color[0].item;
+  }
+  return styleObject;
+});
+
+const progressWidth = computed(() => ({
+  width: `${props.dataConfig.swiperConfig.list.length * 20}rpx`,
+}));
+
+const progressValue = computed(() => ({
+  width: `${(current.value / props.dataConfig.swiperConfig.list.length) * 100}%`,
+}));
+
+// created
+imgUrls.value = props.dataConfig.swiperConfig.list;
+if (props.dataConfig.styleConfig.tabVal == 1) {
+  swiperMargin.value = "55rpx";
+}
+
+onMounted(() => {
+  if (imgUrls.value.length) {
+    nextTick(() => {
+      uni.getImageInfo({
+        src: setDomain(imgUrls.value[0].img),
+        success: (res) => {
+          if (res && res.height > 0) {
+            let p = props.dataConfig.paddingConfig.isAll
+              ? props.dataConfig.paddingConfig.val
+              : props.dataConfig.paddingConfig.valList[1].val;
+            let height = res.height * ((750 - p * 4) / res.width);
+            imageH.value = height;
+          } else {
+            imageH.value = 375;
+          }
         },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
+        fail: function() {
+          imageH.value = 375;
         },
-      };
-    },
-    itemStyle() {
-      let val = this.dataConfig.imgConfig.val;
-      let num = 1;
-      if (this.dataConfig.styleConfig.tabVal == 1) {
-        num = !val ? 1 : 0.9;
-      }
-      return {
-        transform: `scale(${num})`,
-      };
-    },
-    activeStyle() {
-      let val = this.dataConfig.imgConfig.val;
-      let num = 1;
-      if (this.dataConfig.styleConfig.tabVal == 1) {
-        num = !val ? 1 : 1 - val / 400;
-      }
-      return {
-        transform: `scale(${num})`,
-      };
-    },
-    // colorBgStyle() {
-    //   let styleObject = {
-    //     background: this.dataConfig.bgColor.color[0].item,
-    //   };
-    //   if (this.dataConfig.styleConfig.tabVal == 1) {
-    //     styleObject["height"] = "50%";
-    //   }
-    //   return styleObject;
-    // },
-    imageStyle() {
-      let borderRadius = `${this.dataConfig.filletImg.val * 2}rpx`;
-      if (this.dataConfig.filletImg.type) {
-        borderRadius = `${this.dataConfig.filletImg.valList[0].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[1].val * 2
-        }rpx ${this.dataConfig.filletImg.valList[3].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        borderRadius: borderRadius,
-      };
-    },
-    dotStyle() {
-      let styleObject = {};
-      if (this.dataConfig.docPosition.tabVal) {
-        styleObject["justify-content"] =
-          this.dataConfig.docPosition.tabVal == 1 ? "center" : "flex-end";
-      }
-      if (this.dataConfig.styleConfig.tabVal == 1) {
-        styleObject["padding"] = "0 100rpx";
-        styleObject["bottom"] = "32rpx";
-      }
-      return styleObject;
-    },
-    dotItemStyle() {
-      let styleObject = {};
-      if (this.dataConfig.toneConfig.tabVal) {
-        styleObject["background"] = this.dataConfig.dotBgColor.color[0].item;
-      }
-      return styleObject;
-    },
-    dotItemActiveStyle() {
-      let styleObject = {};
-      if (this.dataConfig.toneConfig.tabVal) {
-        styleObject["background"] = this.dataConfig.dotColor.color[0].item;
-      }
-      return styleObject;
-    },
-    progressWidth() {
-      return {
-        width: `${this.dataConfig.swiperConfig.list.length * 20}rpx`,
-      };
-    },
-    progressValue() {
-      return {
-        width: `${
-          (this.current / this.dataConfig.swiperConfig.list.length) * 100
-        }%`,
-      };
-    },
-  },
-  watch: {
-    imageH(nVal, oVal) {
-      let self = this;
-      this.imageH = nVal;
-    },
-  },
-  created() {
-    this.imgUrls = this.dataConfig.swiperConfig.list;
-    if (this.dataConfig.styleConfig.tabVal == 1) {
-      this.swiperMargin = "55rpx";
-    }
-  },
-  mounted() {
-    if (this.imgUrls.length) {
-      let that = this;
-      this.$nextTick((e) => {
-        uni.getImageInfo({
-          src: that.setDomain(that.imgUrls[0].img),
-          success: (res) => {
-            if (res && res.height > 0) {
-              let p = this.dataConfig.paddingConfig.isAll
-                ? this.dataConfig.paddingConfig.val
-                : this.dataConfig.paddingConfig.valList[1].val;
-              let height = res.height * ((750 - p * 4) / res.width);
-              that.$set(that, "imageH", height);
-            } else {
-              that.$set(that, "imageH", 375);
-            }
-          },
-          fail: function (error) {
-            that.$set(that, "imageH", 375);
-          },
-        });
       });
-    }
-  },
-  methods: {
-    bannerfun(e) {
-      this.active = e.detail.current;
-      this.current = e.detail.current + 1;
-    },
-    //替换安全域名
-    setDomain: function (url) {
-      url = url ? url.toString() : "";
-      //本地调试打开,生产请注销
-      if (url.indexOf("https://") > -1) return url;
-      else return url.replace("http://", "https://");
-    },
-    goDetail(url) {
-      let urls = url.info[0].value;
-      this.$util.JumpPath(urls);
-    },
-  },
-};
+    });
+  }
+});
+
+function bannerfun(e) {
+  active.value = e.detail.current;
+  current.value = e.detail.current + 1;
+}
+
+function setDomain(url) {
+  url = url ? url.toString() : "";
+  if (url.indexOf("https://") > -1) return url;
+  else return url.replace("http://", "https://");
+}
+
+function goDetail(url) {
+  let urls = url.info[0].value;
+  util.JumpPath(urls);
+}
 </script>
 
 <style lang="scss">

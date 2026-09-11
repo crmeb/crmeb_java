@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class="navbar acea-row row-around">
 			<view class="item acea-row row-center-wrapper" :class="{ on: navOn === 'usable' }" @click="onNav('usable')">未使用</view>
 			<view class="item acea-row row-center-wrapper" :class="{ on: navOn === 'unusable' }" @click="onNav('unusable')">已使用/过期</view>
@@ -19,7 +19,7 @@
 					</view>
 					<view class='data acea-row row-between-wrapper'>
 						<view>{{item.useStartTimeStr}}~{{item.useEndTimeStr}}</view>
-						<view class='bnt' :class="item.validStr==='unusable'||item.validStr==='overdue'||item.validStr==='notStart'?'gray':'bg_color'">{{item.validStr | validStrFilter}}</view>
+						<view class='bnt' :class="item.validStr==='unusable'||item.validStr==='overdue'||item.validStr==='notStart'?'gray':'bg_color'">{{ validStrFilter(item.validStr) }}</view>
 					</view>
 				</view>
 			</view>
@@ -29,102 +29,97 @@
 		  </view>
 		<view class='noCommodity' v-if="!couponsList.length">
 			<view class='pictrue'>
-				<image :src="urlDomain+'crmebimage/perset/staticImg/noCoupon.png'"></image>
+				<image src="/static/images/noCoupon.png"></image>
 			</view>
 		</view>
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, watch } from 'vue';
+	import { getCurrentInstance } from 'vue';
 	import {
 		getUserCoupons
 	} from '@/api/api.js';
 	import {
 		toLogin
 	} from '@/libs/login.js';
-	import {
-		mapGetters
-	} from "vuex";
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
+	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		filters: {
-		    validStrFilter(status) {
-		      const statusMap = {
-		        'usable': '可用',
-		        'unusable': '已用',
-				'overdue': '过期',
-				'notStart': '未开始'
-		      }
-		      return statusMap[status]
-		    }
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				couponsList: [],
-				loading: false,
-				loadend: false,
-				loadTitle: '加载更多',//提示语
-				page: 1,
-				limit: 20,
-				navOn: 'usable',
-				theme:app.globalData.theme,
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		watch: {
-			isLogin: {
-				handler: function(newV, oldV) {
-					if (newV) {
-						this.getUseCoupons();
-					}
-				},
-				deep: true
-			}
-		},
-		onLoad() {
-			if (this.isLogin) {
-				this.getUseCoupons();
-			} else {
-				toLogin();
-			}
-		},
-		methods: {
-			onNav: function(type) {
-				this.navOn = type;
-				this.couponsList = [];
-				this.page = 1;
-				this.loadend = false;
-				this.getUseCoupons();
-			},
-			/**
-			 * 获取领取优惠券列表
-			 */
-			getUseCoupons: function() {
-				let that = this;
-				if(this.loadend) return false;
-				if(this.loading) return false;
-				getUserCoupons({ page: that.page, limit: that.limit, type: that.navOn}).then(res => {
-					let list= res.data ? res.data.list : [],loadend=list.length < that.limit;
-					let couponsList = that.$util.SplitArray(list, that.couponsList);
-					that.$set(that,'couponsList',couponsList);
-					that.loadend = loadend;
-					that.loadTitle = loadend ? '我也是有底线的~' : '加载更多';
-					that.page = that.page + 1;
-					that.loading = false;
-				}).catch(err=>{
-					  that.loading = false;
-					  that.loadTitle = '加载更多';
-				  });
-			}
-		},
-		/**
-		  * 页面上拉触底事件的处理函数
-		  */
-		 onReachBottom: function () {
-		   this.getUseCoupons();
-		 }
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { isLogin } = storeToRefs(appStore);
+
+	function validStrFilter(status) {
+		const statusMap = {
+			'usable': '可用',
+			'unusable': '已用',
+			'overdue': '过期',
+			'notStart': '未开始'
+		}
+		return statusMap[status]
 	}
+
+	const couponsList = ref([]);
+	const loading = ref(false);
+	const loadend = ref(false);
+	const loadTitle = ref('加载更多');//提示语
+	const page = ref(1);
+	const limit = ref(20);
+	const navOn = ref('usable');
+	const { colorStyle } = useColor();
+	const theme = ref(app.globalData.theme);
+
+	watch(isLogin, (newV, oldV) => {
+		if (newV) {
+			getUseCoupons();
+		}
+	}, { deep: true });
+
+	onLoad(() => {
+		if (isLogin.value) {
+			getUseCoupons();
+		} else {
+			toLogin();
+		}
+	});
+
+	function onNav(type) {
+		navOn.value = type;
+		couponsList.value = [];
+		page.value = 1;
+		loadend.value = false;
+		getUseCoupons();
+	}
+	/**
+	 * 获取领取优惠券列表
+	 */
+	function getUseCoupons() {
+		if (loadend.value) return false;
+		if (loading.value) return false;
+		getUserCoupons({ page: page.value, limit: limit.value, type: navOn.value }).then(res => {
+			let list = res.data ? res.data.list : [], loadendVal = list.length < limit.value;
+			let list2 = proxy.$util.SplitArray(list, couponsList.value);
+			couponsList.value = list2;
+			loadend.value = loadendVal;
+			loadTitle.value = loadendVal ? '我也是有底线的~' : '加载更多';
+			page.value = page.value + 1;
+			loading.value = false;
+		}).catch(err => {
+			loading.value = false;
+			loadTitle.value = '加载更多';
+		});
+	}
+
+	/**
+	  * 页面上拉触底事件的处理函数
+	  */
+	onReachBottom(() => {
+		getUseCoupons();
+	});
 </script>
 
 <style lang="scss" scoped>

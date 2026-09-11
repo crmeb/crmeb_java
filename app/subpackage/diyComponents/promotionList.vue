@@ -66,477 +66,404 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch, onMounted, getCurrentInstance } from "vue";
 import commonWrapper from "./commonWrapper.vue";
 import { getThemeProduct } from "@/api/api.js";
 import goodList from "./goodList.vue";
-export default {
-  name: "promotionList",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
-    productVideoStatus: {
-      type: Boolean,
-      default: false,
-    },
-    positionTop: {
-      type: Number,
-      default: 0,
-    },
+import { useAppStore } from "@/store/app.js";
+import configs from "@/config/app.js";
+import util from "@/utils/util.js";
+
+const { proxy } = getCurrentInstance();
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  components: {
-    goodList,
-    commonWrapper
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  data() {
+  productVideoStatus: {
+    type: Boolean,
+    default: false,
+  },
+  positionTop: {
+    type: Number,
+    default: 0,
+  },
+});
+
+const emit = defineEmits(["detail"]);
+
+const goodLists = ref(null);
+
+const tempArr = ref([]);
+const iSshowH = ref(false);
+const ProductNavindex = ref(0);
+const explosiveMoney = ref(props.dataConfig.tabConfig.list);
+const numConfig = ref(props.dataConfig.tabConfig.list[0].numConfig.val);
+const mbConfig = ref(0);
+const themeColor = ref("");
+const titleShow = ref(0); //标题是否显示
+const opriceShow = ref(0); //划线价是否显示
+const priceShow = ref(0); //价格是否显示
+const couponShow = ref(0); //优惠券标签是否显示
+const titleConfig = ref(0); //标题位置
+const fontColor = ref("");
+const labelColor = ref("");
+const txtColor = ref("");
+const infoColor = ref("");
+const goodType = ref(props.dataConfig.tabConfig.list[0].tabVal);
+const loadend = ref(false);
+const loading = ref(false);
+const limit = ref(configs.LIMIT);
+const page = ref(1);
+const canPlay = ref(false);
+const autoplay = ref(false);
+const activeValue = ref(props.dataConfig.tabConfig.list[0]);
+const goodDataConfig = ref(null);
+const sticky = ref(false);
+const navBdH = ref(0);
+const loadTitle = ref("");
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.topConfig
+            ? props.dataConfig.topConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
+    },
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
+    },
+  };
+});
+
+const decorateColor = computed(() => {
+  if (props.dataConfig.toneConfig.tabVal) {
+    let color = props.dataConfig.decorateColor.color;
+    let background = `linear-gradient(90deg, ${color[0].item} 0%, ${color[1].item} 100%)`;
+    if (props.dataConfig.styleConfig.tabVal == 2) {
+      color = props.dataConfig.decorateColor2.color;
+      background = color[0].item;
+    }
     return {
-      tempArr: [],
-      iSshowH: false,
-      ProductNavindex: 0,
-      explosiveMoney: this.dataConfig.tabConfig.list,
-      numConfig: this.dataConfig.tabConfig.list[0].numConfig.val,
-      // imgStyle: this.dataConfig.imgStyle.type,
-      mbConfig: 0,
-      themeColor: "",
-      titleShow: 0, //标题是否显示
-      opriceShow: 0, //划线价是否显示
-      priceShow: 0, //价格是否显示
-      couponShow: 0, //优惠券标签是否显示
-      titleConfig: 0, //标题位置
-      fontColor: "",
-      labelColor: "",
-      txtColor: "",
-      infoColor: "",
-      goodType: this.dataConfig.tabConfig.list[0].tabVal,
-      loadend: false,
-      loading: false,
-      limit: this.$config.LIMIT,
-      page: 1,
-      canPlay: false,
-      autoplay: false,
-      activeValue: this.dataConfig.tabConfig.list[0],
-      goodDataConfig: null,
-      sticky: false,
-      navBdH: 0,
+      background: background,
     };
-  },
-  computed: {
-    configData() {
+  } else {
+    return {
+      background: `linear-gradient(90deg, var(--view-gradient) 0%, var(--view-theme) 100%)`,
+    };
+  }
+});
+
+const textColor = computed(() => {
+  if (props.dataConfig.toneConfig.tabVal) {
+    let color = props.dataConfig.textColor.color[0].item;
+    let bgColor = props.dataConfig.decorateColor.color;
+    let background = "";
+    if ([0, 1, 2].includes(props.dataConfig.styleConfig.tabVal)) {
+      color = props.dataConfig.textColor.color[0].item;
+    } else if ([3, 4].includes(props.dataConfig.styleConfig.tabVal)) {
+      color = "#ffffff";
+      background = `linear-gradient(90deg, ${bgColor[0].item} 0%, ${bgColor[1].item} 100%)`;
+    } else if (props.dataConfig.styleConfig.tabVal == 1) {
+      color = "#282828";
+    }
+    return {
+      color: color,
+      background: background,
+    };
+  } else {
+    if (props.dataConfig.styleConfig.tabVal == 1) {
       return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
-        },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
-        },
+        color: "#282828",
       };
-    },
-    decorateColor() {
-      if (this.dataConfig.toneConfig.tabVal) {
-        let color = this.dataConfig.decorateColor.color;
-        let background = `linear-gradient(90deg, ${color[0].item} 0%, ${color[1].item} 100%)`;
-        if (this.dataConfig.styleConfig.tabVal == 2) {
-          color = this.dataConfig.decorateColor2.color;
-          background = color[0].item;
-        }
-        return {
-          background: background,
-        };
-      } else {
-        return {
-          background: `linear-gradient(90deg, var(--view-gradient) 0%, var(--view-theme) 100%)`,
-        };
-      }
-    },
-    textColor() {
-      if (this.dataConfig.toneConfig.tabVal) {
-        let color = this.dataConfig.textColor.color[0].item;
-        let bgColor = this.dataConfig.decorateColor.color;
-        let background = "";
-        if ([0, 1, 2].includes(this.dataConfig.styleConfig.tabVal)) {
-          color = this.dataConfig.textColor.color[0].item;
-        } else if ([3, 4].includes(this.dataConfig.styleConfig.tabVal)) {
-          color = "#ffffff";
-          background = `linear-gradient(90deg, ${bgColor[0].item} 0%, ${bgColor[1].item} 100%)`;
-        } else if (this.dataConfig.styleConfig.tabVal == 1) {
-          color = "#282828";
-        }
-        return {
-          color: color,
-          background: background,
-        };
-      } else {
-        if (this.dataConfig.styleConfig.tabVal == 1) {
-          return {
-            color: "#282828",
-          };
-        } else if ([3, 4].includes(this.dataConfig.styleConfig.tabVal)) {
-          return {
-            background:
-              "linear-gradient(90deg, var(--view-gradient) 0, var(--view-theme) 100%)",
-            color: "#ffffff",
-          };
-        } else {
-          return {
-            color: "var(--view-theme)",
-          };
-        }
-      }
-    },
-    // bottomBgColor() {
-    // 	return {
-    // 		padding: `${this.dataConfig.topConfig.val * 2}rpx ${this.dataConfig.prConfig.val * 2}rpx ${this.dataConfig.bottomConfig.val * 2}rpx`,
-    // 		'margin-top': `${this.dataConfig.mbConfig.val * 2}rpx`,
-    // 		background: this.dataConfig.bottomBgColor.color[0].item
-    // 	};
-    // },
-    lineColor() {
-      let diy = this.dataConfig.toneConfig.tabVal;
-      let type = this.dataConfig.styleConfig.tabVal;
-      let color = this.dataConfig.decorateColor.color;
-      let bgColor = `linear-gradient(90deg, ${color[0].item} 0%, ${color[1].item} 100%)`;
-      if (type == 1) {
-        return {
-          background: diy
-            ? bgColor
-            : "linear-gradient(90deg, var(--view-gradient) 0, var(--view-theme) 100%)",
-        };
-      } else if (type == 2) {
-        return {
-          "border-bottom-color": diy
-            ? this.dataConfig.textColor2.color[0].item
-            : "var(--view-theme)",
-        };
-      }
-    },
-  },
-  watch: {
-    activeValue: {
-      handler(value) {
-        let that = this;
-        let type = that.goodType == 0 ? 3 : that.goodType;
-        let goodDataConfig = {
-          styleConfig: {
-            tabVal: 1,
-          },
-          goodsList: this.activeValue.goodsList,
-          brandList: this.activeValue.brandConfig,
-          classList: {
-            classVal: this.activeValue.selectConfig.activeValue,
-          },
-          goodsLabel: this.activeValue.goodsLabel,
-          typeConfig: {
-            activeValue: type,
-          },
-          goodsSort: {
-            tabVal: this.activeValue.goodsSort,
-          },
-          numberConfig: {
-            val: that.numConfig,
-          },
-          bntStyleConfig: this.dataConfig.bntStyleConfig,
-          cartConfig: this.dataConfig.cartConfig,
-          bntConfig: this.dataConfig.bntConfig,
-          filletImg: {
-            type: 0,
-            val: 8,
-          },
-          checkboxInfo: {
-            type: [0, 1, 2, 3, 4, 5],
-          },
-          toneConfig: {
-            tabVal: 0,
-          },
-          toneCartConfig: this.dataConfig.toneCartConfig,
-          bntBgColor: this.dataConfig.bntBgColor,
-          goodsName: {
-            tabVal: 1,
-          },
-          goodsNameColor: {
-            color: [
-              {
-                item: "#333333",
-              },
-            ],
-          },
-          goodsPriceColor: {
-            color: [
-              {
-                item: this.dataConfig.toneCartConfig.tabVal
-                  ? this.dataConfig.goodsPriceColor.color[0].item
-                  : "var(--view-theme)",
-              },
-            ],
-          },
-          topConfig: {
-            val: 0,
-          },
-          prConfig: {
-            val: 0,
-          },
-          bottomConfig: {
-            val: 0,
-          },
-          mbConfig: {
-            val: 0,
-          },
-          bottomBgColor: {
-            color: [
-              {
-                item: "",
-              },
-            ],
-          },
-          fillet: this.dataConfig.fillet,
-          name: "promotionList",
-        };
-        that.goodDataConfig = goodDataConfig;
-      },
-      immediate: true,
-    },
-    goodType: {
-      handler(value) {
-        //value !== undefined && this.getGroomList();
-      },
-      immediate: true,
-    },
-    tempArr() {
-      // #ifndef APP-PLUS
-      this.$nextTick(() => {
-        if (this.productVideoStatus) {
-          uni.getNetworkType({
-            success: (res) => {
-              if (["wifi", "unknown"].includes(res.networkType)) {
-                // 监听
-                this.observeVideo();
-              }
-              if (["2g", "3g", "4g", "5g"].includes(res.networkType)) {
-                if (this.$store.state.app.autoplay) {
-                  // 监听
-                  this.observeVideo();
-                } else {
-                  this.$eventHub.$emit("confirm_video_status");
-                }
-              }
-            },
-          });
-        }
-      });
-      // #endif
-    },
-  },
-  created() {
-    // #ifndef APP-PLUS
-    this.$eventHub.$on("product_video_observe", () => {
-      this.observeVideo();
-    });
-    // #endif
-    // this.getGroomList();
-    let that = this;
-    let type = that.goodType == 0 ? 3 : that.goodType;
-    let goodDataConfig = {
-      styleConfig: {
-        tabVal: 1,
-      },
-      goodsList: this.activeValue.goodsList,
-      brandList: this.activeValue.brandConfig,
-      classList: {
-        classVal: this.activeValue.selectConfig.activeValue,
-      },
-      goodsLabel: this.activeValue.goodsLabel,
-      typeConfig: {
-        activeValue: type,
-      },
-      goodsSort: {
-        tabVal: this.activeValue.goodsSort,
-      },
-      numberConfig: {
-        val: that.numConfig,
-      },
-      bntStyleConfig: this.dataConfig.bntStyleConfig,
-      cartConfig: this.dataConfig.cartConfig,
-      bntConfig: this.dataConfig.bntConfig,
-      filletImg: {
-        type: 0,
-        val: 8,
-      },
-      checkboxInfo: {
-        type: [0, 1, 2, 3, 4, 5],
-      },
-      toneConfig: {
-        tabVal: 0,
-      },
-      toneCartConfig: this.dataConfig.toneCartConfig,
-      bntBgColor: this.dataConfig.bntBgColor,
-      goodsName: {
-        tabVal: 1,
-      },
-      goodsNameColor: {
-        color: [
-          {
-            item: "#333333",
-          },
-        ],
-      },
-      goodsPriceColor: {
-        color: [
-          {
-            item: this.dataConfig.toneCartConfig.tabVal
-              ? this.dataConfig.goodsPriceColor.color[0].item
-              : "var(--view-theme)",
-          },
-        ],
-      },
-      topConfig: {
-        val: 0,
-      },
-      prConfig: {
-        val: 0,
-      },
-      bottomConfig: {
-        val: 0,
-      },
-      mbConfig: {
-        val: 0,
-      },
-      bottomBgColor: {
-        color: [
-          {
-            item: "",
-          },
-        ],
-      },
-      fillet: this.dataConfig.fillet,
-      name: "promotionList",
+    } else if ([3, 4].includes(props.dataConfig.styleConfig.tabVal)) {
+      return {
+        background:
+          "linear-gradient(90deg, var(--view-gradient) 0, var(--view-theme) 100%)",
+        color: "#ffffff",
+      };
+    } else {
+      return {
+        color: "var(--view-theme)",
+      };
+    }
+  }
+});
+
+const lineColor = computed(() => {
+  let diy = props.dataConfig.toneConfig.tabVal;
+  let type = props.dataConfig.styleConfig.tabVal;
+  let color = props.dataConfig.decorateColor.color;
+  let bgColor = `linear-gradient(90deg, ${color[0].item} 0%, ${color[1].item} 100%)`;
+  if (type == 1) {
+    return {
+      background: diy
+        ? bgColor
+        : "linear-gradient(90deg, var(--view-gradient) 0, var(--view-theme) 100%)",
     };
-    that.goodDataConfig = goodDataConfig;
+  } else if (type == 2) {
+    return {
+      "border-bottom-color": diy
+        ? props.dataConfig.textColor2.color[0].item
+        : "var(--view-theme)",
+    };
+  }
+});
+
+function buildGoodDataConfig() {
+  let type = goodType.value == 0 ? 3 : goodType.value;
+  return {
+    styleConfig: {
+      tabVal: 1,
+    },
+    goodsList: activeValue.value.goodsList,
+    brandList: activeValue.value.brandConfig,
+    classList: {
+      classVal: activeValue.value.selectConfig.activeValue,
+    },
+    goodsLabel: activeValue.value.goodsLabel,
+    typeConfig: {
+      activeValue: type,
+    },
+    goodsSort: {
+      tabVal: activeValue.value.goodsSort,
+    },
+    numberConfig: {
+      val: numConfig.value,
+    },
+    bntStyleConfig: props.dataConfig.bntStyleConfig,
+    cartConfig: props.dataConfig.cartConfig,
+    bntConfig: props.dataConfig.bntConfig,
+    filletImg: {
+      type: 0,
+      val: 8,
+    },
+    checkboxInfo: {
+      type: [0, 1, 2, 3, 4, 5],
+    },
+    toneConfig: {
+      tabVal: 0,
+    },
+    toneCartConfig: props.dataConfig.toneCartConfig,
+    bntBgColor: props.dataConfig.bntBgColor,
+    goodsName: {
+      tabVal: 1,
+    },
+    goodsNameColor: {
+      color: [
+        {
+          item: "#333333",
+        },
+      ],
+    },
+    goodsPriceColor: {
+      color: [
+        {
+          item: props.dataConfig.toneCartConfig.tabVal
+            ? props.dataConfig.goodsPriceColor.color[0].item
+            : "var(--view-theme)",
+        },
+      ],
+    },
+    topConfig: {
+      val: 0,
+    },
+    prConfig: {
+      val: 0,
+    },
+    bottomConfig: {
+      val: 0,
+    },
+    mbConfig: {
+      val: 0,
+    },
+    bottomBgColor: {
+      color: [
+        {
+          item: "",
+        },
+      ],
+    },
+    fillet: props.dataConfig.fillet,
+    name: "promotionList",
+  };
+}
+
+watch(
+  activeValue,
+  () => {
+    goodDataConfig.value = buildGoodDataConfig();
   },
-  mounted() {
-    let view = uni.createSelectorQuery().in(this).select(".nav-bd");
-    let views = uni.createSelectorQuery().in(this).select(".nav-bd-box");
-    view
-      .boundingClientRect((data) => {
-        this.navBdH = data ? data.height : 0;
-      })
-      .exec();
-    if (!this.dataConfig.slideConfig.tabVal) {
-      uni.$on("onPageScroll", () => {
-        views
-          .boundingClientRect((data) => {
-            this.sticky = data ? data.top <= this.positionTop : false;
-          })
-          .exec();
+  { immediate: true }
+);
+
+watch(
+  goodType,
+  () => {
+    //value !== undefined && getGroomList();
+  },
+  { immediate: true }
+);
+
+watch(tempArr, () => {
+  // #ifndef APP-PLUS
+  proxy.$nextTick(() => {
+    if (props.productVideoStatus) {
+      uni.getNetworkType({
+        success: (res) => {
+          if (["wifi", "unknown"].includes(res.networkType)) {
+            // 监听
+            observeVideo();
+          }
+          if (["2g", "3g", "4g", "5g"].includes(res.networkType)) {
+            if (useAppStore().autoplay) {
+              // 监听
+              observeVideo();
+            } else {
+              proxy.$eventHub.emit("confirm_video_status");
+            }
+          }
+        },
       });
     }
-  },
-  methods: {
-    observeVideo() {
-      this.autoplay = true;
-      // let observer = uni.createIntersectionObserver(this, { observeAll: true });
-      // observer.relativeToViewport().observe('.video', res => {
-      // 	if (res.intersectionRatio) {
-      // 		uni.createVideoContext(res.id, this).play();
-      // 	} else{
-      // 		uni.createVideoContext(res.id, this).pause();
-      // 	}
-      // });
-    },
-    // 促销列表的点击事件；
-    changeTab(item) {
-      this.goodType = item.tabVal;
-      this.activeValue = item;
-      // this.tempArr = [];
-      // this.page = 1;
-      // this.loadend = false;
-      // let onloadH = true;
-      // this.getGroomList(onloadH);
-    },
-    // 精品推荐
-    getGroomList(onloadH) {
-      let that = this;
-      let type = that.goodType == 0 ? 3 : that.goodType;
-      if (that.loadend) return false;
-      if (that.loading) return false;
-      if (onloadH) {
-        that.$set(that, "iSshowH", true);
-      }
-      let datas = {
-        limit: this.numConfig,
-        order: that.activeValue.goodsSort || 0,
-        sort: that.activeValue.goodsSort || 0,
-      };
-      if (type == 1) {
-        datas.ids = that.activeValue.goodsList.ids.join();
-      } else if (type == 3) {
-        datas.cate_ids = that.activeValue.selectConfig.activeValue.join();
-      }
-      getThemeProduct(datas)
-        .then(({ data }) => {
-          that.$set(that, "iSshowH", false);
-          let maxPage = Math.ceil(this.numConfig / this.limit);
-          let list = Array.isArray(data) ? data : data && data.list ? data.list : [],
-            loadend = list.length < that.limit || that.page >= maxPage;
-          let tempArr = that.$util.SplitArray(list, that.tempArr);
-          that.$set(that, "tempArr", tempArr.slice(0, this.numConfig));
-          that.loadend = loadend;
-          that.loadTitle = loadend ? "没有更多内容啦~" : "加载更多";
-          that.page = that.page + 1;
-          that.loading = false;
+  });
+  // #endif
+});
+
+// created
+// #ifndef APP-PLUS
+proxy.$eventHub.on("product_video_observe", () => {
+  observeVideo();
+});
+// #endif
+// getGroomList();
+goodDataConfig.value = buildGoodDataConfig();
+
+onMounted(() => {
+  let view = uni.createSelectorQuery().in(proxy).select(".nav-bd");
+  let views = uni.createSelectorQuery().in(proxy).select(".nav-bd-box");
+  view
+    .boundingClientRect((data) => {
+      navBdH.value = data ? data.height : 0;
+    })
+    .exec();
+  if (!props.dataConfig.slideConfig.tabVal) {
+    uni.$on("onPageScroll", () => {
+      views
+        .boundingClientRect((data) => {
+          sticky.value = data ? data.top <= props.positionTop : false;
         })
-        .catch((res) => {
-          that.loading = false;
-          that.loadTitle = "加载更多";
-        });
-    },
-    // 首发新品切换
-    ProductNavTab(item, index) {
-      this.ProductNavindex = index;
-      this.changeTab(item);
-    },
-    goDetail(item) {
-      this.$emit("detail", item);
-    },
-  },
-};
+        .exec();
+    });
+  }
+});
+
+function observeVideo() {
+  autoplay.value = true;
+  // let observer = uni.createIntersectionObserver(this, { observeAll: true });
+  // observer.relativeToViewport().observe('.video', res => {
+  // 	if (res.intersectionRatio) {
+  // 		uni.createVideoContext(res.id, this).play();
+  // 	} else{
+  // 		uni.createVideoContext(res.id, this).pause();
+  // 	}
+  // });
+}
+
+// 促销列表的点击事件；
+function changeTab(item) {
+  goodType.value = item.tabVal;
+  activeValue.value = item;
+  // tempArr.value = [];
+  // page.value = 1;
+  // loadend.value = false;
+  // let onloadH = true;
+  // getGroomList(onloadH);
+}
+
+// 精品推荐
+function getGroomList(onloadH) {
+  let type = goodType.value == 0 ? 3 : goodType.value;
+  if (loadend.value) return false;
+  if (loading.value) return false;
+  if (onloadH) {
+    iSshowH.value = true;
+  }
+  let datas = {
+    limit: numConfig.value,
+    order: activeValue.value.goodsSort || 0,
+    sort: activeValue.value.goodsSort || 0,
+  };
+  if (type == 1) {
+    datas.ids = activeValue.value.goodsList.ids.join();
+  } else if (type == 3) {
+    datas.cate_ids = activeValue.value.selectConfig.activeValue.join();
+  }
+  getThemeProduct(datas)
+    .then(({ data }) => {
+      iSshowH.value = false;
+      let maxPage = Math.ceil(numConfig.value / limit.value);
+      let list = Array.isArray(data) ? data : data && data.list ? data.list : [],
+        isLoadend = list.length < limit.value || page.value >= maxPage;
+      let newTempArr = util.SplitArray(list, tempArr.value);
+      tempArr.value = newTempArr.slice(0, numConfig.value);
+      loadend.value = isLoadend;
+      loadTitle.value = isLoadend ? "没有更多内容啦~" : "加载更多";
+      page.value = page.value + 1;
+      loading.value = false;
+    })
+    .catch((res) => {
+      loading.value = false;
+      loadTitle.value = "加载更多";
+    });
+}
+
+// 首发新品切换
+function ProductNavTab(item, index) {
+  ProductNavindex.value = index;
+  changeTab(item);
+}
+
+function goDetail(item) {
+  emit("detail", item);
+}
 </script>
 
 <style lang="scss">
@@ -736,7 +663,7 @@ $border-radius: 10px;
 
     .item {
       display: inline-block;
-      padding: 20rpx 0 14rpx;
+      padding: 10rpx 0 14rpx;
       margin-right: 66rpx;
       text-align: center;
 

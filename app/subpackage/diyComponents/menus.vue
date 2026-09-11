@@ -1,5 +1,5 @@
 <template>
-  <view v-show="!isSortType && menus.length">
+  <view v-show="!isSortType && menus.length" :data-theme="theme" :style="colorStyle">
     <common-wrapper :config="configData" :style="[boxContentStyle]">
       <view>
         <view
@@ -53,7 +53,7 @@
                   ></easy-loadimage>
                   <view class="list-empty-box" v-else>
                     <image
-                      src="/static/images/shan.png"
+                      src="/static/images/shandian.png"
                       mode="aspectFill"
                     ></image>
                   </view>
@@ -94,7 +94,7 @@
                     ></easy-loadimage>
                     <view class="list-empty-box" v-else>
                       <image
-                        src="/static/images/shan.png"
+                        src="/static/images/shandian.png"
                         mode="aspectFill"
                       ></image>
                     </view>
@@ -143,7 +143,10 @@
                     }"
                     :style="[gridContainerStyle]"
                   >
-                    <template v-for="(itemn, indexn) in item.list">
+                    <template
+                      v-for="(itemn, indexn) in item.list"
+                      :key="indexn"
+                    >
                       <view
                         v-if="
                           !itemn.routine_contact_type ||
@@ -154,7 +157,6 @@
                         :class="{
                           'grid-item': menuStyleConfig === 1,
                         }"
-                        :key="indexn"
                         @click="goMenuPage(itemn.info[1].value)"
                         :style="[gridItemContentStyle]"
                       >
@@ -251,7 +253,7 @@
               }"
               :style="[gridContainerStyle]"
             >
-              <template v-for="(item, index) in menus">
+              <template v-for="(item, index) in menus" :key="index">
                 <view
                   v-if="
                     !item.routine_contact_type ||
@@ -261,7 +263,6 @@
                   :class="{
                     'grid-item': menuStyleConfig === 1,
                   }"
-                  :key="index"
                   @click="goMenuPage(item.info[1].value)"
                   :style="[gridItemContentStyle]"
                 >
@@ -363,11 +364,17 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, nextTick, onMounted, getCurrentInstance } from "vue";
 import commonWrapper from "./commonWrapper.vue";
 import { getCustomer } from "@/utils/index.js";
-import { toLogin } from "@/libs/login.js";
-import { mapGetters } from "vuex";
+import util from "@/utils/util.js";
+import { useColor } from '@/composables/useColor.js';
+	let app = getApp();
+
+const theme = ref(app.globalData.theme);
+const { colorStyle } = useColor();
+const { proxy } = getCurrentInstance();
 
 function parseJson(value, fallback) {
   if (!value) return fallback;
@@ -412,305 +419,269 @@ function normalizeMenuItem(item = {}) {
   };
 }
 
-export default {
-  components: { commonWrapper },
-  name: "menus",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => ({}),
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
   },
-  data() {
+  isSortType: {
+    type: [String, Number],
+    default: 0,
+  },
+});
+
+const navHigh = ref(0);
+const menuList = ref([]);
+const active = ref(0);
+
+const rowsNum = computed(() =>
+  props.dataConfig.rowsNum ? props.dataConfig.rowsNum.tabVal : 0,
+);
+const number = computed(() =>
+  props.dataConfig.number ? props.dataConfig.number.tabVal : 1,
+);
+const configData = computed(() => ({ ...props.dataConfig }));
+const menus = computed(() => {
+  const menuConfig = props.dataConfig.menuConfig || {};
+  return toArray(menuConfig.list)
+    .map((item) => normalizeMenuItem(item))
+    .filter((item) => item.show);
+});
+const isShowConfig = computed(() =>
+  props.dataConfig.showConfig ? props.dataConfig.showConfig.tabVal : 0,
+);
+const textColor = computed(() => ({
+  color: props.dataConfig.textColor
+    ? props.dataConfig.textColor.color[0].item
+    : "#333",
+}));
+const boxContentStyle = computed(() => {
+  const bgColor = props.dataConfig.bgColor || {
+    color: [{ item: "#fff" }, { item: "#fff" }],
+  };
+  return {
+    background: `linear-gradient(90deg, ${bgColor.color[0].item} 0%, ${bgColor.color[1].item} 100%)`,
+  };
+});
+const imgStyle = computed(() => {
+  const filletImg = props.dataConfig.filletImg || {
+    val: 0,
+    type: 0,
+    valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }],
+  };
+  let borderRadius = `${filletImg.val * 2}rpx`;
+  if (filletImg.type) {
+    borderRadius = `${filletImg.valList[0].val * 2}rpx ${
+      filletImg.valList[1].val * 2
+    }rpx ${filletImg.valList[3].val * 2}rpx ${filletImg.valList[2].val * 2}rpx`;
+  }
+  return borderRadius;
+});
+//分几行展示，一行展示多少个
+const gridColumns = computed(() => {
+  const rowGap = {
+    rowGap: "24rpx",
+    gridRowGap: "24rpx",
+  };
+  if (number.value == 0) {
+    return { ...rowGap, gridTemplateColumns: "repeat(3, 1fr)" };
+  } else if (number.value == 1) {
+    return { ...rowGap, gridTemplateColumns: "repeat(4, 1fr)" };
+  } else {
+    return { ...rowGap, gridTemplateColumns: "repeat(5, 1fr)" };
+  }
+});
+const menuStyleConfig = computed(() =>
+  props.dataConfig.menuStyleConfig
+    ? props.dataConfig.menuStyleConfig.tabVal
+    : 0,
+);
+const dotColor = computed(() =>
+  props.dataConfig.pointerBgColor
+    ? props.dataConfig.pointerBgColor.color[0].item
+    : "#DDDDDD",
+);
+const dotSelectColor = computed(() =>
+  props.dataConfig.pointerColor
+    ? props.dataConfig.pointerColor.color[0].item
+    : "#E93323",
+);
+const headerConfig = computed(() => props.dataConfig.headerConfig || {});
+const leftTopText = computed(() => props.dataConfig.leftTopText || {});
+const rightTopText = computed(() => props.dataConfig.rightTopText || {});
+const headerStyle = computed(() => props.dataConfig.headerStyle || {});
+const navDisplayStyle = computed(() =>
+  props.dataConfig.navDisplayStyle
+    ? props.dataConfig.navDisplayStyle.tabVal
+    : 0,
+);
+const gridStyle = computed(() =>
+  props.dataConfig.gridStyle ? props.dataConfig.gridStyle.tabVal : 0,
+);
+const gridItemStyle = computed(() =>
+  Object.assign(
+    {
+      itemPadding: 8,
+      itemBgColor: "#ffffff",
+      itemRadius: 0,
+      itemPaddingTop: 0,
+    },
+    props.dataConfig.gridItemStyle,
+  ),
+);
+const listStyle = computed(() =>
+  props.dataConfig.menuConfig ? props.dataConfig.menuConfig.listStyle || 0 : 0,
+);
+const iconStyleConfig = computed(() => {
+  let iconConfig = props.dataConfig.iconStyleConfig || {};
+  return {
+    color: iconConfig.color ? iconConfig.color.color[0].item : "#333",
+    size: iconConfig.size ? iconConfig.size.val : 24,
+    position: iconConfig.position ? iconConfig.position.tabVal : 1,
+    padding: iconConfig.padding ? iconConfig.padding.val : 0,
+    rotate: iconConfig.rotate ? iconConfig.rotate.val : 0,
+    shadow: iconConfig.shadow ? iconConfig.shadow.tabVal : 0,
+  };
+});
+const iconBoxStyle = computed(() => {
+  const position = iconStyleConfig.value.position;
+  return {
+    justifyContent:
+      position === 0 ? "flex-start" : position === 1 ? "center" : "flex-end",
+  };
+});
+const headerBoxStyle = computed(() => ({
+  paddingTop: headerStyle.value.topPadding * 2 + "rpx",
+  paddingBottom: headerStyle.value.bottomPadding * 2 + "rpx",
+  paddingLeft: headerStyle.value.leftRightPadding * 2 + "rpx",
+  paddingRight: headerStyle.value.leftRightPadding * 2 + "rpx",
+}));
+const leftTextStyle = computed(() => ({
+  color: headerStyle.value.leftColor,
+  fontSize: headerStyle.value.fontSize * 2 + "rpx",
+  fontWeight: headerStyle.value.leftWeight,
+}));
+const rightTextStyle = computed(() => ({
+  color: headerStyle.value.rightColor,
+  fontSize: (headerStyle.value.rightFontSize || 12) * 2 + "rpx",
+  fontWeight: headerStyle.value.rightWeight,
+}));
+const rightIconStyle = computed(() => ({
+  fontSize: (headerStyle.value.rightFontSize || 12) * 2 + "rpx",
+}));
+const iconContentStyle = computed(() => {
+  const config = iconStyleConfig.value;
+  return {
+    color: config.color,
+    fontSize: config.size * 2 + "rpx",
+    padding: config.padding * 2 + "rpx",
+    transform: "rotate(" + config.rotate + "deg)",
+    textShadow: config.shadow ? "0px 2px 4px rgba(0,0,0,0.2)" : "none",
+  };
+});
+const gridContainerStyle = computed(() => {
+  if (menuStyleConfig.value === 1) {
+    const columnGap = gridItemStyle.value.itemPadding * 2 + "rpx";
+    const rowGap = gridItemStyle.value.itemPaddingTop * 2 + "rpx";
     return {
-      navHigh: 0,
-      menuList: [],
-      active: 0,
+      columnGap,
+      gridColumnGap: columnGap,
+      rowGap,
+      gridRowGap: rowGap,
     };
-  },
-  computed: {
-    ...mapGetters({
-      isLogin: "isLogin",
-    }),
+  } else {
+    return gridColumns.value;
+  }
+});
+const gridItemContentStyle = computed(() => {
+  if (menuStyleConfig.value === 1) {
+    return {
+      backgroundColor: gridItemStyle.value.itemBgColor,
+      borderRadius: gridItemStyle.value.itemRadius * 2 + "rpx",
+      paddingTop: gridItemStyle.value.itemPaddingTop * 2 + "rpx",
+      paddingBottom: gridItemStyle.value.itemPaddingTop * 2 + "rpx",
+    };
+  } else {
+    return {};
+  }
+});
 
-    rowsNum() {
-      return this.dataConfig.rowsNum ? this.dataConfig.rowsNum.tabVal : 0;
-    },
-    number() {
-      return this.dataConfig.number ? this.dataConfig.number.tabVal : 1;
-    },
-    configData() {
-      return {
-        ...this.dataConfig,
-      };
-    },
-    menus() {
-      const menuConfig = this.dataConfig.menuConfig || {};
-      return toArray(menuConfig.list)
-        .map((item) => normalizeMenuItem(item))
-        .filter((item) => item.show);
-    },
-    isShowConfig() {
-      return this.dataConfig.showConfig ? this.dataConfig.showConfig.tabVal : 0;
-    },
-    textColor() {
-      return {
-        color: this.dataConfig.textColor
-          ? this.dataConfig.textColor.color[0].item
-          : "#333",
-      };
-    },
-    boxContentStyle() {
-      const fillet = this.dataConfig.fillet || { val: 0, type: 0, valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }] };
-      const bgColor = this.dataConfig.bgColor || { color: [{ item: "#fff" }, { item: "#fff" }] };
-      let borderRadius = `${fillet.val * 2}rpx`;
-      if (fillet.type) {
-        borderRadius = `${fillet.valList[0].val * 2}rpx ${
-          fillet.valList[1].val * 2
-        }rpx ${fillet.valList[3].val * 2}rpx ${
-          fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        background: `linear-gradient(90deg, ${bgColor.color[0].item} 0%, ${bgColor.color[1].item} 100%)`,
-      };
-    },
-    imgStyle() {
-      const filletImg = this.dataConfig.filletImg || { val: 0, type: 0, valList: [{ val: 0 }, { val: 0 }, { val: 0 }, { val: 0 }] };
-      let borderRadius = `${filletImg.val * 2}rpx`;
-      if (filletImg.type) {
-        borderRadius = `${filletImg.valList[0].val * 2}rpx ${
-          filletImg.valList[1].val * 2
-        }rpx ${filletImg.valList[3].val * 2}rpx ${
-          filletImg.valList[2].val * 2
-        }rpx`;
-      }
-      return borderRadius;
-    },
-    //分几行展示，一行展示多少个
-    gridColumns() {
-      if (this.number == 0) {
-        return {
-          gridTemplateColumns: "repeat(3, 1fr)",
-        };
-      } else if (this.number == 1) {
-        return {
-          gridTemplateColumns: "repeat(4, 1fr)",
-        };
-      } else {
-        return {
-          gridTemplateColumns: "repeat(5, 1fr)",
-        };
-      }
-    },
-    menuStyleConfig() {
-      return this.dataConfig.menuStyleConfig ? this.dataConfig.menuStyleConfig.tabVal : 0;
-    },
-    dotColor() {
-      return this.dataConfig.pointerBgColor ? this.dataConfig.pointerBgColor.color[0].item : "#DDDDDD";
-    },
-    dotSelectColor() {
-      return this.dataConfig.pointerColor ? this.dataConfig.pointerColor.color[0].item : "#E93323";
-    },
-    headerConfig() {
-      return this.dataConfig.headerConfig || {};
-    },
-    leftTopText() {
-      return this.dataConfig.leftTopText || {};
-    },
-    rightTopText() {
-      return this.dataConfig.rightTopText || {};
-    },
-    headerStyle() {
-      return this.dataConfig.headerStyle || {};
-    },
-    navDisplayStyle() {
-      return this.dataConfig.navDisplayStyle
-        ? this.dataConfig.navDisplayStyle.tabVal
-        : 0;
-    },
-    gridStyle() {
-      return this.dataConfig.gridStyle ? this.dataConfig.gridStyle.tabVal : 0;
-    },
-    gridItemStyle() {
-      return (
-        this.dataConfig.gridItemStyle || {
-          itemPadding: 8,
-          itemBgColor: "#ffffff",
-          itemRadius: 0,
-          itemPaddingTop: 0,
-        }
-      );
-    },
-    listStyle() {
-      return this.dataConfig.menuConfig ? this.dataConfig.menuConfig.listStyle || 0 : 0;
-    },
-    iconStyleConfig() {
-      let iconConfig = this.dataConfig.iconStyleConfig || {};
-      return {
-        color: iconConfig.color ? iconConfig.color.color[0].item : "#333",
-        size: iconConfig.size ? iconConfig.size.val : 24,
-        position: iconConfig.position ? iconConfig.position.tabVal : 1,
-        padding: iconConfig.padding ? iconConfig.padding.val : 0,
-        rotate: iconConfig.rotate ? iconConfig.rotate.val : 0,
-        shadow: iconConfig.shadow ? iconConfig.shadow.tabVal : 0,
-      };
-    },
-    iconBoxStyle() {
-      const position = this.iconStyleConfig.position;
-      return {
-        justifyContent:
-          position === 0
-            ? "flex-start"
-            : position === 1
-            ? "center"
-            : "flex-end",
-      };
-    },
-    headerBoxStyle() {
-      return {
-        paddingTop: this.headerStyle.topPadding * 2 + "rpx",
-        paddingBottom: this.headerStyle.bottomPadding * 2 + "rpx",
-        paddingLeft: this.headerStyle.leftRightPadding * 2 + "rpx",
-        paddingRight: this.headerStyle.leftRightPadding * 2 + "rpx",
-      };
-    },
-    leftTextStyle() {
-      return {
-        color: this.headerStyle.leftColor,
-        fontSize: this.headerStyle.fontSize * 2 + "rpx",
-        fontWeight: this.headerStyle.leftWeight,
-      };
-    },
-    rightTextStyle() {
-      return {
-        color: this.headerStyle.rightColor,
-        fontSize: (this.headerStyle.rightFontSize || 12) * 2 + "rpx",
-        fontWeight: this.headerStyle.rightWeight,
-      };
-    },
-    rightIconStyle() {
-      return {
-        fontSize: (this.headerStyle.rightFontSize || 12) * 2 + "rpx",
-      };
-    },
-    iconContentStyle() {
-      const config = this.iconStyleConfig;
-      return {
-        color: config.color,
-        fontSize: config.size * 2 + "rpx",
-        padding: config.padding * 2 + "rpx",
-        transform: "rotate(" + config.rotate + "deg)",
-        textShadow: config.shadow ? "0px 2px 4px rgba(0,0,0,0.2)" : "none",
-      };
-    },
-    gridContainerStyle() {
-      if (this.menuStyleConfig === 1) {
-        return {
-          padding: this.gridItemStyle.itemPadding * 2 + "rpx",
-        };
-      } else {
-        return this.gridColumns;
-      }
-    },
-    gridItemContentStyle() {
-      if (this.menuStyleConfig === 1) {
-        return {
-          backgroundColor: this.gridItemStyle.itemBgColor,
-          borderRadius: this.gridItemStyle.itemRadius * 2 + "rpx",
-          paddingTop: this.gridItemStyle.itemPaddingTop * 2 + "rpx",
-          paddingBottom: this.gridItemStyle.itemPaddingTop * 2 + "rpx",
-        };
-      } else {
-        return {};
-      }
-    },
-  },
-  mounted() {
-    this.getSwiperCount();
-    this.$nextTick(() => {
-      if (this.menuList.length && this.isShowConfig) {
-        let that = this;
-        // #ifdef H5
-        that.menuHeight();
-        // #endif
-        // #ifndef H5
-        setTimeout(() => {
-          that.menuHeight();
-        }, 150);
-        // #endif
-      }
-    });
-  },
-  methods: {
-    getSwiperCount() {
-      /* rowsNum 显示行数  0: 1行  1: 2行 2: 3行 3 4行 */
-      /* number  单行显示  0: 3个  1: 4个 2: 5个 */
-      this.pageNum((this.rowsNum + 1) * (this.number + 3));
-    },
-    bannerfun(e) {
-      this.active = e.detail.current;
-    },
-    menuHeight() {
-      let that = this;
-      const query = uni.createSelectorQuery().in(this);
-      query
-        .select("#nav0")
-        .boundingClientRect((data) => {
-          that.navHigh = data ? data.height : 0;
-        })
-        .exec();
-    },
-    pageNum(num) {
-      let count = Math.ceil(this.menus.length / num);
-      let goodArray = new Array();
-      for (let i = 0; i < count; i++) {
-        let list = this.menus.slice(i * num, i * num + num);
-        if (list.length)
-          goodArray.push({
-            list: list,
-          });
-      }
-      this.$set(this, "menuList", goodArray);
-    },
+onMounted(() => {
+  getSwiperCount();
+  nextTick(() => {
+    if (menuList.value.length && isShowConfig.value) {
+      // #ifdef H5
+      menuHeight();
+      // #endif
+      // #ifndef H5
+      setTimeout(() => {
+        menuHeight();
+      }, 150);
+      // #endif
+    }
+  });
+});
 
-    getDotStyle(index) {
-      return {
-        "background-color":
-          this.active === index ? this.dotSelectColor : this.dotColor,
-      };
-    },
-    menusTap(url) {
-      this.$util.JumpPath(url);
-    },
-    goMenuPage(url) {
-      if (!url) return;
-      if (this.isLogin) {
-        if (url.indexOf("http") === -1) {
-          if (url== "/kefu/mobile_list") {
-            return uni.navigateTo({
-              url: `/pages/annex/web_view/index?url=${location.origin}${url}`,
-            });
-          } else if (url == "/pages/extension/customer_list/chat") {
-            return getCustomer(url);
-          }
-          this.$util.JumpPath(url);
-        } else {
-          this.$util.JumpPath(url);
-        }
-      } else {
-        toLogin();
-      }
-    },
-  },
-};
+function getSwiperCount() {
+  /* rowsNum 显示行数  0: 1行  1: 2行 2: 3行 3 4行 */
+  /* number  单行显示  0: 3个  1: 4个 2: 5个 */
+  const columns =
+    menuStyleConfig.value === 1 ? gridStyle.value + 3 : number.value + 3;
+  pageNum((rowsNum.value + 1) * columns);
+}
+function bannerfun(e) {
+  active.value = e.detail.current;
+}
+function menuHeight() {
+  const query = uni.createSelectorQuery().in(proxy);
+  query
+    .select("#nav0")
+    .boundingClientRect((data) => {
+      navHigh.value = data ? data.height : 0;
+    })
+    .exec();
+}
+function pageNum(num) {
+  let count = Math.ceil(menus.value.length / num);
+  let goodArray = new Array();
+  for (let i = 0; i < count; i++) {
+    let list = menus.value.slice(i * num, i * num + num);
+    if (list.length)
+      goodArray.push({
+        list: list,
+      });
+  }
+  menuList.value = goodArray;
+}
+
+function getDotStyle(index) {
+  return {
+    "background-color":
+      active.value === index ? dotSelectColor.value : dotColor.value,
+  };
+}
+function menusTap(url) {
+  util.JumpPath(url);
+}
+function goMenuPage(url) {
+  if (!url) return;
+  // 不在此处统一拦截登录，交由目标页 onLoad 自行 checkLogin
+  if (url.indexOf("http") === -1) {
+    if (url == "/kefu/mobile_list") {
+      return uni.navigateTo({
+        url: `/pages/annex/web_view/index?url=${location.origin}${url}`,
+      });
+    } else if (url == "/pages/extension/customer_list/chat") {
+      return getCustomer(url);
+    }
+    util.JumpPath(url);
+  } else {
+    util.JumpPath(url);
+  }
+}
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .menu-header {
   display: flex;
   justify-content: space-between;
@@ -763,7 +734,6 @@ export default {
 .menu {
   display: grid;
   grid-template-rows: auto;
-  grid-row-gap: 24rpx;
   width: 100%;
   padding: 0 0 20rpx 0;
 }
@@ -825,6 +795,7 @@ export default {
   height: 90rpx;
 }
 .num {
+  @include main_bg_color(theme);
   position: absolute;
   top: 10rpx;
   right: 8rpx;
@@ -835,7 +806,6 @@ export default {
   text-align: center;
   font-size: 20rpx;
   color: #fff;
-  background-color: #ff4444;
   border-radius: 50%;
 }
 

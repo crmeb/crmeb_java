@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class='order-details'>
 			<!-- 给header上与data上加on为退款订单-->
 			<view class='header bg_color' :class='isGoodsReturn ? "on":""'>
@@ -58,7 +58,7 @@
 						</view>
 					</view>
 					<view class="gear">
-						<image :src="urlDomain+'crmebimage/perset/staticImg/writeOff.jpg'"></image>
+						<image :src="urlDomain+'/crmebimage/perset/staticImg/writeOff.jpg'"></image>
 					</view>
 					<view class="num">{{orderInfo.verifyCode}}</view>
 					<view class="rules" v-if='orderInfo.systemStore'>
@@ -80,7 +80,7 @@
 				</view>
 				<view class="refund borRadius14" v-if="orderInfo.refundReason">
 					<view class="title">
-						<image :src="urlDomain+'crmebimage/perset/staticImg/shuoming.png'" mode=""></image>
+						<image :src="urlDomain+'/crmebimage/perset/staticImg/shuoming.png'" mode=""></image>
 						商家拒绝退款
 					</view>
 					<view class="con">拒绝原因：{{orderInfo.refundReason}}</view>
@@ -117,7 +117,7 @@
 						<view>客服</view>
 					</button>
 					<template v-else>
-						<button open-type="contact" hover-class='none' class='item skeleton-rect' v-if="chatConfig.wx_chant_independent=='open'">
+						<button open-type="contact" hover-class='none' class='item skeleton-rect' v-if="chatConfig.wx_chat_independent=='open'">
 							<view class='iconfont icon-kefu'></view>
 							<view>客服</view>
 						</button>
@@ -251,10 +251,6 @@
 						<view>优惠券抵扣：</view>
 						<view class='conter'>-￥{{orderInfo.couponPrice}}</view>
 					</view>
-					<view class='item acea-row row-between' v-if="orderInfo.useIntegral > 0">
-						<view>积分抵扣：</view>
-							<view class='conter'>-￥{{orderInfo.deductionPrice}}</view>
-					</view>
 					<view class='actualPay acea-row row-right'>实付款：<text
 							class='money'>￥{{orderInfo.payPrice}}</text></view>
 				</view>
@@ -262,11 +258,11 @@
 				<view class='footer acea-row row-right row-middle' v-if="isGoodsReturn==false">
 					<view class="qs-btn" v-if="!orderInfo.paid" @click.stop="cancelOrder">取消订单</view>
 					<view class='bnt bg_color' v-if="!orderInfo.paid" @tap='pay_open(orderInfo.orderId,orderInfo.payPrice)'>立即付款</view>
-					<navigator hover-class="none" :url="'/pages/goods/goods_return/index?orderId='+orderInfo.orderId"
+					<navigator :render-link="false" hover-class="none" :url="'/pages/goods/goods_return/index?orderId='+orderInfo.orderId"
 						class='bnt cancel' v-else-if="orderInfo.paid === true && orderInfo.refundStatus === 0 && orderInfo.type!==1">申请退款
 					</navigator>
 					<view class='bnt bg_color' v-if="orderInfo.combinationId > 0&&orderInfo.paid" @tap='goJoinPink'>查看拼团</view>
-					<navigator class='bnt cancel' v-if="orderInfo.deliveryType == 'express' && orderInfo.status >0"
+					<navigator :render-link="false" class='bnt cancel' v-if="orderInfo.deliveryType == 'express' && orderInfo.status >0"
 						hover-class='none' :url="'/pages/goods/goods_logistics/index?orderId='+ orderInfo.orderId">查看物流
 					</navigator>
 					<view class='bnt bg_color' v-if="orderInfo.status==1" @tap='confirmOrder'>确认收货</view>
@@ -279,7 +275,10 @@
 			:totalPrice='totalPrice'></payment>
 	</view>
 </template>
-<script>
+<script setup>
+	import { ref, getCurrentInstance } from 'vue';
+	import { onLoad, onShow, onHide, onReady } from '@dcloudio/uni-app';
+	import { onMounted } from 'vue';
 	import {
 		getOrderDetail,
 		orderTake,
@@ -289,448 +288,462 @@
 	} from '@/api/order.js';
 	import {
 		getCombinationPink
-	} from '@/api/activity';
-	import payment from '@/components/payment';
-	import orderGoods from "@/components/orderGoods";
+	} from '@/api/activity.js';
+	import payment from '@/components/payment/index.vue';
+	import orderGoods from "@/components/orderGoods/index.vue";
 	import ClipboardJS from "@/plugin/clipboard/clipboard.js";
 	import {toLogin} from '@/libs/login.js';
-	import {mapGetters} from "vuex";
 	// #ifdef MP
 	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js'
 	// #endif
 	import {setThemeColor} from '@/utils/setTheme.js'
+	import { useColor } from '@/composables/useColor.js';
 	import {Debounce} from '@/utils/validate.js'
+	import util from '@/utils/util.js';
+	import Cache from '@/utils/cache.js';
+	import * as Order from '@/libs/order.js';
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
 	const app = getApp();
-	export default {
-		components: {
-			payment,
-			orderGoods
+
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { isLogin, chatUrl, userInfo } = storeToRefs(appStore);
+
+	// data
+	const urlDomain = ref(Cache.get("imgHost"));
+	const codeImg = ref('');
+	const qrcodeSize = ref(100);
+	const order_id = ref('');
+	const evaluate = ref(0);
+	const cartInfo = ref([]); //购物车产品
+	const orderInfo = ref({
+		systemStore: {},
+		pstatus: {}
+	}); //订单详情
+	const system_store = ref({});
+	const isGoodsReturn = ref(false); //是否为退款订单
+	const status = ref({}); //订单底部按钮状态
+	const isClose = ref(false);
+	const payMode = ref([{
+			name: "微信支付",
+			icon: "icon-weixinzhifu",
+			value: 'weixin',
+			title: '微信快捷支付',
+			payStatus: 1,
 		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				codeImg: '',
-				qrcodeSize: 100,
-				order_id: '',
-				evaluate: 0,
-				cartInfo: [], //购物车产品
-				orderInfo: {
-					systemStore: {},
-					pstatus: {}
-				}, //订单详情
-				system_store: {},
-				isGoodsReturn: false, //是否为退款订单
-				status: {}, //订单底部按钮状态
-				isClose: false,
-				payMode: [{
-						name: "微信支付",
-						icon: "icon-weixinzhifu",
-						value: 'weixin',
-						title: '微信快捷支付',
-						payStatus: 1,
-					},
-					{
-						name: "余额支付",
-						icon: "icon-yuezhifu",
-						value: 'yue',
-						title: '可用余额:',
-						number: 0,
-						payStatus: 1,
-					},
-					// #ifndef MP
-					{
-						"name": "支付宝支付",
-						"icon": "icon-zhifubao",
-						value: 'alipay',
-						title: '支付宝快捷支付',
-						payStatus: 1,
-					}
-					// #endif
-				],
-				pay_close: false,
-				pay_order_id: '',
-				totalPrice: '0',
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
-				id: 0, //订单id
-				uniId: '',
-				utils: this.$util,
-				againStatus:0,
-				type: 'normal',
-				isShow:true,
-				theme:app.globalData.theme,
-				bgColor:'#e93323',
-				chatConfig:{
-					consumer_hotline:'',
-					telephone_service_switch:'close',
-					wx_chant_independent:'open'
-				} ,//客服配置
-				pinkStatus: 0, // 拼团状态
-			};
+		{
+			name: "余额支付",
+			icon: "icon-yuezhifu",
+			value: 'yue',
+			title: '可用余额:',
+			number: 0,
+			payStatus: 1,
 		},
-		computed: mapGetters(['isLogin', 'chatUrl', 'userInfo']),
-		onLoad: function(options) {
-			options.type == undefined || options.type == null ? this.type = 'normal' : this.type = options.type;
-			if (!options.order_id && !options.uniId) return this.$util.Tips({
-				title: '缺少参数'
-			}, {
-				tab: 3,
-				url: 1
-			});
-			this.$set(this, 'order_id', options.order_id);
-			let that = this;
-			that.bgColor = setThemeColor();
-			uni.setNavigationBarColor({
-				frontColor: '#ffffff',
-				backgroundColor:that.bgColor,
-			});
-			that.$set(that,'chatConfig',that.$Cache.getItem('chatConfig'));
-		},
-		onShow() {
-			if (this.isLogin) {
-				this.getOrderInfo();
-				this.payMode[1].number = this.userInfo.nowMoney;
-				this.$set(this, 'payMode', this.payMode);
-			} else {
-				toLogin();
-			}
-		},
-		onHide: function() {
-			this.isClose = true;
-		},
-		onReady: function() {
-			// #ifdef H5
-			this.$nextTick(function() {
-				const clipboard = new ClipboardJS(".copy-data");
-				clipboard.on("success", () => {
-					this.$util.Tips({
-						title: '复制成功'
-					});
+		// #ifndef MP
+		{
+			"name": "支付宝支付",
+			"icon": "icon-zhifubao",
+			value: 'alipay',
+			title: '支付宝快捷支付',
+			payStatus: 1,
+		}
+		// #endif
+	]);
+	const pay_close = ref(false);
+	const pay_order_id = ref('');
+	const totalPrice = ref('0');
+	const isAuto = ref(false); //没有授权的不会自动授权
+	const isShowAuth = ref(false); //是否隐藏授权
+	const id = ref(0); //订单id
+	const uniId = ref('');
+	const utils = ref(util);
+	const againStatus = ref(0);
+	const type = ref('normal');
+	const isShow = ref(true);
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	const bgColor = ref('#e93323');
+	const chatConfig = ref({
+		consumer_hotline:'',
+		telephone_service_switch:'close',
+		wx_chat_independent:'open'
+	}); //客服配置
+	const pinkStatus = ref(0); // 拼团状态
+
+	onLoad((options) => {
+		options.type == undefined || options.type == null ? type.value = 'normal' : type.value = options.type;
+		if (!options.order_id && !options.uniId) return util.Tips({
+			title: '缺少参数'
+		}, {
+			tab: 3,
+			url: 1
+		});
+		order_id.value = options.order_id;
+		bgColor.value = setThemeColor();
+		uni.setNavigationBarColor({
+			frontColor: '#ffffff',
+			backgroundColor:bgColor.value,
+		});
+		chatConfig.value = Cache.getItem('chatConfig');
+	});
+	onShow(() => {
+		if (isLogin.value) {
+			getOrderInfo();
+			payMode.value[1].number = userInfo.value && userInfo.value.nowMoney || 0;
+		} else {
+			toLogin();
+		}
+	});
+	onHide(() => {
+		isClose.value = true;
+	});
+	onReady(() => {
+		// #ifdef H5
+		proxy.$nextTick(function() {
+			const clipboard = new ClipboardJS(".copy-data");
+			clipboard.on("success", () => {
+				util.Tips({
+					title: '复制成功'
 				});
 			});
+		});
+		// #endif
+		 
+	});
+	onMounted(() => {
+		// #ifdef H5
+		if(proxy.$wechat.isWeixin()) payMode.value.pop();
+		// #endif
+	});
+
+	function wxChatService(){
+		let chatUrlArr = chatUrl.value.split('?')
+		uni.navigateTo({
+			url:`/pages/users/web_page/index?webUel=${chatUrlArr[0]}&title=客服&${chatUrlArr[1]}`
+		})
+	}
+    function onClickService() {
+		if(chatConfig.value.telephone_service_switch === 'open'){
+			uni.makePhoneCall({
+			    phoneNumber: chatConfig.value.consumer_hotline //仅为示例
+			});
+		}else{
+			// #ifdef APP-PLUS
+			uni.navigateTo({
+				url: '/pages/users/web_page/index?webUel=' + chatUrl.value + '&title=客服'
+			})
 			// #endif
-			 
-		},
-		mounted() {
-			// #ifdef H5
-			if(this.$wechat.isWeixin()) this.payMode.pop();
+			// #ifndef APP-PLUS
+			location.href = chatUrl.value;
 			// #endif
-		},
-		methods: {
-			wxChatService(){
-				let chatUrlArr = this.chatUrl.split('?')
-				uni.navigateTo({
-					url:`/pages/users/web_page/index?webUel=${chatUrlArr[0]}&title=客服&${chatUrlArr[1]}`
-				})
-			},
-            onClickService() {
-				if(this.chatConfig.telephone_service_switch === 'open'){
-					uni.makePhoneCall({
-					    phoneNumber: this.chatConfig.consumer_hotline //仅为示例
-					});
-				}else{
-					// #ifdef APP-PLUS
-					uni.navigateTo({
-						url: '/pages/users/web_page/index?webUel=' + this.chatUrl + '&title=客服'
-					})
-					// #endif
-					// #ifndef APP-PLUS
-					location.href = this.chatUrl;
-					// #endif
-				}
-			},
-			/**
-			 * 事件回调
-			 * 
-			 */
-			onChangeFun: function(e) {
-				let opt = e;
-				let action = opt.action || null;
-				let value = opt.value != undefined ? opt.value : null;
-				(action && this[action]) && this[action](value);
-			},
-			/**
-			 * 拨打电话
-			 */
-			makePhone: function() {
-				uni.makePhoneCall({
-					phoneNumber: this.system_store.phone
-				})
-			},
-			/**
-			 * 打开地图
-			 * 
-			 */
-			showMaoLocation: function() {
-				if (!this.system_store.latitude || !this.system_store.longitude) return this.$util.Tips({
-					title: '缺少经纬度信息无法查看地图！'
-				});
-				//#ifdef H5
-				if (this.$wechat.isWeixin() === true) {
-					this.$wechat.seeLocation({
-						latitude: parseFloat(this.system_store.latitude),
-						longitude: parseFloat(this.system_store.longitude),
-						address: this.system_store.address + this.system_store.detailedAddress
-					}).then(res=>{
-						console.log('success');
-					})
-				} else {
-				//#endif
-					uni.openLocation({
-						latitude: parseFloat(this.system_store.latitude),
-						longitude: parseFloat(this.system_store.longitude),
-						scale: 8,
-						name: this.system_store.name,
-						address: this.system_store.address + this.system_store.detailedAddress,
-						success: function() {
-							console.log('success')
-						},
-						fail: function() {
-							console.log('fail')
-						}
-					});
-					// #ifdef H5
-				}
-				//#endif
-			},
-			/**
-			 * 关闭支付组件
-			 * 
-			 */
-			payClose: function() {
-				this.pay_close = false;
-			},
-			/**
-			 * 打开支付组件
-			 * 
-			 */
-			pay_open: function(order_id,pay_price) {
-				// this.pay_close = true;
-				// this.pay_order_id = this.orderInfo.orderId;
-				// this.totalPrice = this.orderInfo.payPrice;
-				uni.navigateTo({
-					url:`/pages/order/order_payment/index?orderNo=${order_id}&payPrice=${pay_price}`
-				})
-			},
-			/**
-			 * 支付成功回调
-			 * 
-			 */
-			pay_complete: function() {
-				this.pay_close = false;
-				this.pay_order_id = '';
-				this.getOrderInfo();
-			},
-			/**
-			 * 支付失败回调
-			 * 
-			 */
-			pay_fail: function() {
-				this.pay_close = false;
-				this.pay_order_id = '';
-			},
-			/**
-			 * 获取订单详细信息
-			 * 
-			 */
-			getOrderInfo: function() {
-				let that = this;
-				uni.showLoading({
-					title: "正在加载中"
-				});
-				getOrderDetail(that.order_id).then(res => {
-					uni.hideLoading();
-					that.$set(that, 'orderInfo', res.data);
-					that.$set(that, 'evaluate', res.data.status == 2 ? 2 : 0);
-					that.$set(that, 'system_store', res.data.systemStore);
-					that.$set(that, 'id', res.data.id);
-					that.$set(that, 'cartInfo', res.data.orderInfoList);
-					if (res.data.refundStatus != 0) {
-						that.isGoodsReturn = true;
-					};
-					if (that.orderInfo.shippingType == 2 && that.orderInfo.paid) that.markCode(res.data
-						.verifyCode);
-					if(that.orderInfo.refundStatus>0){
-						uni.setNavigationBarColor({
-						    frontColor: '#fff',
-						    backgroundColor: '#666666'
-						})
-					}	
-					if(res.data.combinationId > 0 || res.data.bargainId > 0 ||res.data.seckillId > 0 ){
-						this.againStatus = 1;
-					}
-				}).catch(err => {
-					that.$util.Tips({
-						title: err
-					},{
-						tab: 4,
-						url: '/pages/user/index'
-					});
-				});
-			},
-			/**
-			 * 
-			 * 生成二维码
-			 */
-			markCode(text) {
-				qrcodeApi({
-					height: '145',
-					text: text,
-					width: '145'
-				}).then(res => {
-					this.codeImg = res.data.code
-				});
-			},
-			/**
-			 * 
-			 * 剪切订单号
-			 */
-			// #ifndef H5
-			copy: function() {
-				let that = this;
-				uni.setClipboardData({
-					data: this.orderInfo.orderId
-				});
-			},
-			// #endif
-			/**
-			 * 打电话
-			 */
-			goTel: function() {
-				uni.makePhoneCall({
-					phoneNumber: this.orderInfo.deliveryId
-				})
-			},
-			/**
-			 * 设置底部按钮
-			 * 
-			 */
-			getOrderStatus: function() {
-				let orderInfo = this.orderInfo || {},
-					_status = orderInfo.pstatus || {
-						type: 0
-					},
-					status = {};
-				let type = parseInt(_status.type),
-					delivery_type = orderInfo.deliveryType,
-					seckill_id = orderInfo.seckillId ? parseInt(orderInfo.seckillId) : 0,
-					bargain_id = orderInfo.bargainId ? parseInt(orderInfo.bargainId) : 0,
-					combination_id = orderInfo.combinationId ? parseInt(orderInfo.combinationId) : 0;
-				status = {
-					type: type == 9 ? -9 : type,
-					class_status: 0
-				};
-				if (type == 1 && combination_id > 0) status.class_status = 1; //查看拼团
-				if (type == 2 && delivery_type == 'express') status.class_status = 2; //查看物流
-				if (type == 2) status.class_status = 3; //确认收货
-				if (type == 4 || type == 0) status.class_status = 4; //删除订单
-				if (!seckill_id && !bargain_id && !combination_id && (type == 3 || type == 4)) status.class_status =
-				5; //再次购买
-				this.$set(this, 'status', status);
-			},
-			/**
-			 * 去拼团详情
-			 * 
-			 */
-			goJoinPink: function() {
-				uni.navigateTo({
-					url: '/pages/activity/goods_combination_status/index?id=' + this.orderInfo.pinkId,
-				});
-			},
-			/**
-			 * 再此购买
-			 * 
-			 */
-			goOrderConfirm: Debounce(function() {
-				this.$Order.getPreOrder("again",[{
-					orderNo: this.order_id
-				}]);
-			}),
-			confirmOrder: Debounce(function() {
-				let that = this;
-				uni.showModal({
-					title: '确认收货',
-					content: '为保障权益，请收到货确认无误后，再确认收货',
-					success: function(res) {
-						if (res.confirm) {
-							orderTake(that.id).then(res => {
-								return that.$util.Tips({
-									title: '操作成功',
-									icon: 'success'
-								}, function() {
-									that.getOrderInfo();
-								});
-							}).catch(err => {
-								return that.$util.Tips({
-									title: err
-								});
-							})
-						}
-					}
-				})
-			}),
-			/**
-			 * 
-			 * 删除订单
-			 */
-			delOrder: Debounce(function() {
-				uni.showModal({
-					content: '确定删除该订单',
-					cancelText: "取消", 
-					confirmText: "确定", 
-					showCancel: true, 
-					confirmColor: '#f55850',
-					success: (res) => {
-						if(res.confirm) {  
-							let that = this;
-							orderDel(this.id).then(res => {
-								return that.$util.Tips({
-									title: '删除成功',
-									icon: 'success'
-								}, {
-									tab: 4,
-									url: '/pages/user/index'
-								});
-							}).catch(err => {
-								return that.$util.Tips({
-									title: err
-								});
-							});
-						} else {  
-							
-						}  
-					} 
-				})
-			}),
-			cancelOrder:Debounce(function(){
-				let self = this
-				uni.showModal({
-					title: '提示',
-					content: '确认取消该订单?',
-					success: function(res) {
-						if (res.confirm) {
-							orderCancel(self.orderInfo.id)
-								.then((data) => {
-									self.$util.Tips({
-										title: '取消成功'
-									}, {
-									tab: 4,
-									url: '/pages/user/index'
-								   })
-								}).catch((err) => {
-									self.$util.Tips({
-										title: err
-									})
-									self.getDetail();
-								});
-						} else if (res.cancel) {
-							console.log('用户点击取消');
-						}
-					}
-				});
-			}) 
 		}
 	}
+	/**
+	 * 事件回调
+	 * 
+	 */
+	function onChangeFun(e) {
+		let opt = e;
+		let action = opt.action || null;
+		let value = opt.value != undefined ? opt.value : null;
+		const actions = {
+			payClose,
+			pay_complete,
+			pay_fail
+		};
+		(action && actions[action]) && actions[action](value);
+	}
+	/**
+	 * 拨打电话
+	 */
+	function makePhone() {
+		uni.makePhoneCall({
+			phoneNumber: system_store.value.phone
+		})
+	}
+	/**
+	 * 打开地图
+	 * 
+	 */
+	function showMaoLocation() {
+		if (!system_store.value.latitude || !system_store.value.longitude) return util.Tips({
+			title: '缺少经纬度信息无法查看地图！'
+		});
+		//#ifdef H5
+		if (proxy.$wechat.isWeixin() === true) {
+			proxy.$wechat.seeLocation({
+				latitude: parseFloat(system_store.value.latitude),
+				longitude: parseFloat(system_store.value.longitude),
+				address: system_store.value.address + system_store.value.detailedAddress
+			}).then(res=>{
+			})
+		} else {
+		//#endif
+			uni.openLocation({
+				latitude: parseFloat(system_store.value.latitude),
+				longitude: parseFloat(system_store.value.longitude),
+				scale: 8,
+				name: system_store.value.name,
+				address: system_store.value.address + system_store.value.detailedAddress,
+				success: function() {
+				},
+				fail: function() {
+				}
+			});
+			// #ifdef H5
+		}
+		//#endif
+	}
+	/**
+	 * 关闭支付组件
+	 * 
+	 */
+	function payClose() {
+		pay_close.value = false;
+	}
+	/**
+	 * 打开支付组件
+	 * 
+	 */
+	function pay_open(order_id,pay_price) {
+		// pay_close.value = true;
+		// pay_order_id.value = orderInfo.value.orderId;
+		// totalPrice.value = orderInfo.value.payPrice;
+		uni.navigateTo({
+			url:`/pages/order/order_payment/index?orderNo=${order_id}&payPrice=${pay_price}`
+		})
+	}
+	/**
+	 * 支付成功回调
+	 * 
+	 */
+	function pay_complete() {
+		pay_close.value = false;
+		pay_order_id.value = '';
+		getOrderInfo();
+	}
+	/**
+	 * 支付失败回调
+	 * 
+	 */
+	function pay_fail() {
+		pay_close.value = false;
+		pay_order_id.value = '';
+	}
+	/**
+	 * 获取订单详细信息
+	 * 
+	 */
+	function getOrderInfo() {
+		uni.showLoading({
+			title: "正在加载中"
+		});
+		getOrderDetail(order_id.value).then(res => {
+			uni.hideLoading();
+			orderInfo.value = res.data;
+			evaluate.value = res.data.status == 2 ? 2 : 0;
+			system_store.value = res.data.systemStore;
+			id.value = res.data.id;
+			cartInfo.value = res.data.orderInfoList;
+			if (res.data.refundStatus != 0) {
+				isGoodsReturn.value = true;
+			};
+			if (orderInfo.value.shippingType == 2 && orderInfo.value.paid) markCode(res.data
+				.verifyCode);
+			if(orderInfo.value.refundStatus>0){
+				uni.setNavigationBarColor({
+				    frontColor: '#fff',
+				    backgroundColor: '#666666'
+				})
+			}	
+			if(res.data.combinationId > 0 || res.data.bargainId > 0 ||res.data.seckillId > 0 ){
+				againStatus.value = 1;
+			}
+		}).catch(err => {
+			util.Tips({
+				title: err
+			},{
+				tab: 4,
+				url: '/pages/user/index'
+			});
+		});
+	}
+	/**
+	 * 
+	 * 生成二维码
+	 */
+	function markCode(text) {
+		qrcodeApi({
+			height: '145',
+			text: text,
+			width: '145'
+		}).then(res => {
+			codeImg.value = res.data.code
+		});
+	}
+	/**
+	 * 
+	 * 剪切订单号
+	 */
+	// #ifndef H5
+	function copy() {
+		uni.setClipboardData({
+			data: orderInfo.value.orderId
+		});
+	}
+	// #endif
+	/**
+	 * 打电话
+	 */
+	function goTel() {
+		uni.makePhoneCall({
+			phoneNumber: orderInfo.value.deliveryId
+		})
+	}
+	/**
+	 * 设置底部按钮
+	 * 
+	 */
+	function getOrderStatus() {
+		let info = orderInfo.value || {},
+			_status = info.pstatus || {
+				type: 0
+			},
+			statusObj = {};
+		let statusType = parseInt(_status.type),
+			delivery_type = info.deliveryType,
+			seckill_id = info.seckillId ? parseInt(info.seckillId) : 0,
+			bargain_id = info.bargainId ? parseInt(info.bargainId) : 0,
+			combination_id = info.combinationId ? parseInt(info.combinationId) : 0;
+		statusObj = {
+			type: statusType == 9 ? -9 : statusType,
+			class_status: 0
+		};
+		if (statusType == 1 && combination_id > 0) statusObj.class_status = 1; //查看拼团
+		if (statusType == 2 && delivery_type == 'express') statusObj.class_status = 2; //查看物流
+		if (statusType == 2) statusObj.class_status = 3; //确认收货
+		if (statusType == 4 || statusType == 0) statusObj.class_status = 4; //删除订单
+		if (!seckill_id && !bargain_id && !combination_id && (statusType == 3 || statusType == 4)) statusObj.class_status =
+		5; //再次购买
+		status.value = statusObj;
+	}
+	/**
+	 * 去拼团详情
+	 * 
+	 */
+	function goJoinPink() {
+		uni.navigateTo({
+			url: '/pages/activity/goods_combination_status/index?id=' + orderInfo.value.pinkId,
+		});
+	}
+	/**
+	 * 再此购买
+	 * 
+	 */
+	const goOrderConfirm = Debounce(function() {
+		Order.getPreOrder("again",[{
+			orderNo: order_id.value
+		}]);
+	});
+	const confirmOrder = Debounce(function() {
+		uni.showModal({
+			title: '确认收货',
+			content: '为保障权益，请收到货确认无误后，再确认收货',
+			success: function(res) {
+				if (res.confirm) {
+					orderTake(id.value).then(res => {
+						return util.Tips({
+							title: '操作成功',
+							icon: 'success'
+						}, function() {
+							getOrderInfo();
+						});
+					}).catch(err => {
+						return util.Tips({
+							title: err
+						});
+					})
+				}
+			}
+		})
+	});
+	/**
+	 * 
+	 * 删除订单
+	 */
+	const delOrder = Debounce(function() {
+		uni.showModal({
+			content: '确定删除该订单',
+			cancelText: "取消", 
+			confirmText: "确定", 
+			showCancel: true, 
+			confirmColor: '#f55850',
+			success: (res) => {
+				if(res.confirm) {  
+					orderDel(id.value).then(res => {
+						return util.Tips({
+							title: '删除成功',
+							icon: 'success'
+						}, {
+							tab: 4,
+							url: '/pages/user/index'
+						});
+					}).catch(err => {
+						return util.Tips({
+							title: err
+						});
+					});
+				} else {  
+					
+				}  
+			} 
+		})
+	});
+	const cancelOrder = Debounce(function(){
+		uni.showModal({
+			title: '提示',
+			content: '确认取消该订单?',
+			success: function(res) {
+				if (res.confirm) {
+					orderCancel(orderInfo.value.id)
+						.then((data) => {
+							util.Tips({
+								title: '取消成功'
+							}, {
+							tab: 4,
+							url: '/pages/user/index'
+						   })
+						}).catch((err) => {
+							util.Tips({
+								title: err
+							})
+							getOrderInfo();
+						});
+				} else if (res.cancel) {
+				}
+			}
+		});
+	});
+
+	defineExpose({
+		onChangeFun,
+		makePhone,
+		showMaoLocation,
+		payClose,
+		pay_open,
+		pay_complete,
+		pay_fail,
+		goTel,
+		getOrderStatus,
+		goJoinPink,
+		goOrderConfirm,
+		confirmOrder,
+		delOrder,
+		cancelOrder,
+		wxChatService,
+		onClickService
+	});
 </script>
 
 <style scoped lang="scss">
@@ -743,7 +756,7 @@
 		color: #fff;
 		font-size: 27rpx;
 		padding: 0 3%;
-		color: #aaa;
+		color: #333;
 		border: 1px solid #ddd;
 		margin-right: 20rpx;
 	}
@@ -764,7 +777,6 @@
 	.goodCall {
 		@include main_color(theme);
 		text-align: center;
-		width: 100%;
 		height: 86rpx;
 		padding: 0 30rpx;
 		border-bottom: 1rpx solid #eee;
@@ -977,7 +989,7 @@
 	}
 
 	.order-details .footer .bnt.cancel {
-		color: #aaa;
+		color: #333;
 		border: 1rpx solid #ddd;
 	}
 

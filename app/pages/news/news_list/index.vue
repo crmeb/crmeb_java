@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<skeleton :show="showSkeleton" :isNodes="isNodes" ref="skeleton" loading="chiaroscuro" selector="skeleton"
 			bgcolor="#FFF"></skeleton>
 		<view class='newsList skeleton' :style="{visibility: showSkeleton ? 'hidden' : 'visible'}">
@@ -8,7 +8,7 @@
 				 indicator-color="rgba(102,102,102,0.3)" indicator-active-color="#666">
 					<block v-for="(item,index) in imgUrls" :key="index">
 						<swiper-item>
-							<navigator :url="'/pages/news/news_details/index?id='+item.id">
+							<navigator :render-link="false" :url="'/pages/news/news_details/index?id='+item.id">
 								<image :src="item.imageInput" class="slide-image" mode="aspectFill" />
 							</navigator>
 						</swiper-item>
@@ -41,13 +41,15 @@
 		</view>
 		<view class='noCommodity' v-if="articleList.length == 0 && (page != 1 || active== 0) && isShow">
 			<view class='pictrue'>
-				<image :src="urlDomain+'crmebimage/perset/staticImg/noNews.png'"></image>
+				<image :src="urlDomain+'/crmebimage/perset/staticImg/noNews.png'"></image>
 			</view>
 		</view>
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, getCurrentInstance } from 'vue';
+	import { onLoad, onShow, onReachBottom } from '@dcloudio/uni-app';
 	import {
 		getArticleCategoryList,
 		getArticleList,
@@ -55,150 +57,147 @@
 		getArticleBannerList,
 	} from '@/api/api.js';
 	import animationType from '@/utils/animationType.js'
+	import Cache from '@/utils/cache.js';
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				showSkeleton: true, //骨架屏显示隐藏
-				isNodes: 0, //控制什么时候开始抓取元素节点,只要数值改变就重新抓取
-				imgUrls: [{imageInput:''}],
-				articleList: [{imageInput:'',title: '占位占位',createTime:'占位'}],
-				indicatorDots: false,
-				circular: true,
-				autoplay: true,
-				interval: 3000,
-				duration: 500,
-				navList: [{id:0,name:'占位'},{id:0,name:'占位'},{id:0,name:'占位'}],
-				active: 0,
-				page: 1,
-				limit: 8,
-				status: false,
-				scrollLeft: 0,
-				isShow: false,
-				theme:app.globalData.theme,
-			};
-		},
-		onLoad(){
+
+	const { proxy } = getCurrentInstance();
+
+	// data
+	const urlDomain = ref(Cache.get("imgHost"));
+	const showSkeleton = ref(true); //骨架屏显示隐藏
+	const isNodes = ref(0); //控制什么时候开始抓取元素节点,只要数值改变就重新抓取
+	const imgUrls = ref([{imageInput:''}]);
+	const articleList = ref([{imageInput:'',title: '占位占位',createTime:'占位'}]);
+	const indicatorDots = ref(false);
+	const circular = ref(true);
+	const autoplay = ref(true);
+	const interval = ref(3000);
+	const duration = ref(500);
+	const navList = ref([{id:0,name:'占位'},{id:0,name:'占位'},{id:0,name:'占位'}]);
+	const active = ref(0);
+	const page = ref(1);
+	const limit = ref(8);
+	const status = ref(false);
+	const scrollLeft = ref(0);
+	const isShow = ref(false);
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+
+	onLoad(() => {
+		setTimeout(() => {
+			//couponsList.value =  [{name:''}]
+			isNodes.value++;
+			// #ifdef H5
+			setShare();
+			// #endif
+		}, 500);
+		getArticleHot();
+		getArticleBanner();
+		getArticleCate();
+		status.value = false;
+		page.value = 1;
+		//articleList.value = [];
+		getCidArticle();
+	});
+	/**
+	 * 生命周期函数--监听页面显示
+	 */
+	onShow(() => {
+		// getArticleHot();
+		// getArticleBanner();
+		// getArticleCate();
+		// status.value = false;
+		// page.value = 1;
+		// //articleList.value = [];
+		// getCidArticle();
+	});
+	/**
+	   * 页面上拉触底事件的处理函数
+	*/
+	onReachBottom(() => {
+	    getCidArticle();
+	});
+
+	function getArticleHot() {
+		getArticleHotList().then(res => {
+			articleList.value = res.data.list;
+		});
+	}
+	function getArticleBanner() {
+		getArticleBannerList().then(res => {
+			imgUrls.value = res.data.list;
 			setTimeout(() => {
-				//this.couponsList =  [{name:''}]
-				this.isNodes++;
-				// #ifdef H5
-				this.setShare();
-				// #endif
-			}, 500);
-			this.getArticleHot();
-			this.getArticleBanner();
-			this.getArticleCate();
-			this.status = false;
-			this.page = 1;
-			//this.articleList = [];
-			this.getCidArticle();
-		},
-		/**
-		 * 生命周期函数--监听页面显示
-		 */
-		onShow: function() {
-			// this.getArticleHot();
-			// this.getArticleBanner();
-			// this.getArticleCate();
-			// this.status = false;
-			// this.page = 1;
-			// //this.articleList = [];
-			// this.getCidArticle();
-		},
-		/**
-		   * 页面上拉触底事件的处理函数
-		*/
-		onReachBottom: function () {
-		    this.getCidArticle();
-		},
-		methods: {
-			getArticleHot: function() {
-				let that = this;
-				getArticleHotList().then(res => {
-					that.$set(that, 'articleList', res.data.list);
-				});
-			},
-			getArticleBanner: function() {
-				let that = this;
-				getArticleBannerList().then(res => {
-					that.imgUrls = res.data.list;
-					setTimeout(() => {
-						this.showSkeleton = false
-					}, 1000)
-				});
-			},
-			getCidArticle: function() {
-				let that = this;
-				if (that.active == 0) return;
-				let limit = that.limit;
-				let page = that.page;
-				let articleList = that.articleList;
-				if (that.status) return;
-				getArticleList(that.active, {
-					page: page,
-					limit: limit
-				}).then(res => {
-					let articleListNew = [];
-					let len = res.data.list.length;
-					articleListNew = articleList.concat(res.data.list);
-					that.page++;
-					that.$set(that, 'articleList', articleListNew);
-					that.status = limit > len;
-					that.page = that.page;
-					that.isShow = true;
-				});
-			},
-			getArticleCate: function() {
-				let that = this;
-				getArticleCategoryList().then(res => {
-					let list = res.data.list;
-					list.unshift({id:0,name:'热门'});
-					that.$set(that, 'navList', list);
-					setTimeout(() => {
-						this.showSkeleton = false
-					}, 1000)
-				});
-			},
-			tabSelect(active,e) {
-				this.active = active;
-				this.scrollLeft =  e * 60;
-				// this.scrollLeft = (active - 1) * 50;
-				if (this.active == 0) this.getArticleHot();
-				else {
-					this.$set(this, 'articleList', []);
-					this.page = 1;
-					this.status = false;
-					this.getCidArticle();
-				}
-			},
-			// '"/pages/news_details/index?id="+item.id'
-			toNewDetail(id){
-				uni.navigateTo({
-					animationType: animationType.type,					animationDuration: animationType.duration,
-					url:"/pages/news/news_details/index?id="+id
-				})
-			},
-			setShare: function() {
-				this.$wechat.isWeixin() &&
-					this.$wechat.wechatEvevt([
-						"updateAppMessageShareData",
-						"updateTimelineShareData",
-						"onMenuShareAppMessage",
-						"onMenuShareTimeline"
-					], {
-						desc: this.articleList[0].title,
-						title: this.articleList[0].title,
-						link: location.href,
-						imgUrl:this.articleList[0].imageInput 
-					}).then(res => {
-					}).catch(err => {
-						console.log(err);
-					});
-			},
+				showSkeleton.value = false
+			}, 1000)
+		});
+	}
+	function getCidArticle() {
+		if (active.value == 0) return;
+		let lim = limit.value;
+		let pg = page.value;
+		let list = articleList.value;
+		if (status.value) return;
+		getArticleList(active.value, {
+			page: pg,
+			limit: lim
+		}).then(res => {
+			let articleListNew = [];
+			let len = res.data.list.length;
+			articleListNew = list.concat(res.data.list);
+			page.value++;
+			articleList.value = articleListNew;
+			status.value = lim > len;
+			isShow.value = true;
+		});
+	}
+	function getArticleCate() {
+		getArticleCategoryList().then(res => {
+			let list = res.data.list;
+			list.unshift({id:0,name:'热门'});
+			navList.value = list;
+			setTimeout(() => {
+				showSkeleton.value = false
+			}, 1000)
+		});
+	}
+	function tabSelect(activeVal,e) {
+		active.value = activeVal;
+		scrollLeft.value = e * 60;
+		// scrollLeft.value = (active.value - 1) * 50;
+		if (active.value == 0) getArticleHot();
+		else {
+			articleList.value = [];
+			page.value = 1;
+			status.value = false;
+			getCidArticle();
 		}
 	}
+	// '"/pages/news_details/index?id="+item.id'
+	function toNewDetail(id){
+		uni.navigateTo({
+			animationType: animationType.type,					animationDuration: animationType.duration,
+			url:"/pages/news/news_details/index?id="+id
+		})
+	}
+	// #ifdef H5
+	function setShare() {
+		proxy.$wechat.isWeixin() &&
+			proxy.$wechat.wechatEvevt([
+				"updateAppMessageShareData",
+				"updateTimelineShareData",
+				"onMenuShareAppMessage",
+				"onMenuShareTimeline"
+			], {
+				desc: articleList.value[0].title,
+				title: articleList.value[0].title,
+				link: location.href,
+				imgUrl:articleList.value[0].imageInput 
+			}).then(res => {
+			}).catch(err => {
+			});
+	}
+	// #endif
 </script>
 
 <style lang="scss">

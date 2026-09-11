@@ -24,7 +24,7 @@
             @click="goLink"
             >{{ titleConfig }}</view
           >
-          <navigator
+          <navigator :render-link="false"
             v-if="styleConfig === 0"
             url="/pages/goods/goods_search/index"
             class="input acea-row row-middle skeleton-rect"
@@ -89,7 +89,7 @@
                 @click="goLink"
                 >{{ titleConfig }}</view
               >
-              <navigator
+              <navigator :render-link="false"
                 v-if="styleConfig === 0"
                 url="/pages/goods/goods_search/index"
                 class="input acea-row row-middle skeleton-rect"
@@ -132,201 +132,195 @@
   </common-wrapper>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, getCurrentInstance } from "vue";
+import util from "@/utils/util.js";
 import commonWrapper from "./commonWrapper.vue";
-let statusBarHeight = uni.getWindowInfo().statusBarHeight;
-export default {
-  name: "headerSerch",
-  components: {
-    commonWrapper,
+const { proxy } = getCurrentInstance();
+let statusBarHeightVal = uni.getWindowInfo().statusBarHeight;
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    special: {
-      type: Number,
-      default: 0,
-    },
-    belongIndex: {
-      type: Number,
-      default: 0,
-    },
+  special: {
+    type: Number,
+    default: 0,
   },
-  data() {
-    return {
-      statusBarHeight: statusBarHeight,
-      marTop: 63,
-      styleConfig: this.dataConfig.styleConfig.tabVal,
-      styleTypeConfig: this.dataConfig.styleTypeConfig.tabVal,
-      bgColor: this.dataConfig.moduleColor.color,
-      titleConfig: this.dataConfig.titleConfig.value,
-      txtColor: this.dataConfig.txtColor.color[0].item,
-      txtStyleConfig:
-        this.dataConfig.txtStyleConfig.tabList[
-          this.dataConfig.txtStyleConfig.tabVal
-        ].style,
-      txtSize: this.dataConfig.txtSize.val,
-      // fixConfig: this.dataConfig.fixConfig.tabVal,
-      logoConfig: this.dataConfig.logoConfig.url,
-      txtFixConfig: this.dataConfig.txtFixConfig.tabVal,
-      boxStyle: "",
-      mbConfig: "",
-      hotWords: [],
-      prConfig: "",
-      tabVal: "",
-      radioVal: "",
-      textColor: "",
-      textStyle: "",
-      serchHeight: 43,
-      serchRight: "",
-    };
+  belongIndex: {
+    type: Number,
+    default: 0,
   },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-        zIndexConfig: 1000,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
-        },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
-        },
-        backgroundConfig: this.dataConfig.bottomBgColor,
-      };
-    },
-    txtStyle() {
-      let num = 0;
-      if (this.styleConfig == 0 && this.styleTypeConfig != 2) {
-        num = 30;
-      }
-      return {
-        color: `${this.txtColor}`,
-        fontStyle: `${
-          this.txtStyleConfig != "bold" ? this.txtStyleConfig : ""
-        }`,
-        fontWeight: `${
-          this.txtStyleConfig == "bold" ? this.txtStyleConfig : ""
-        }`,
-        fontSize: `${this.txtSize * 2}rpx`,
-        marginRight: `${num}rpx`,
-      };
-    },
-    serchWrapperStyle() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        background: `linear-gradient(90deg, ${this.dataConfig.moduleColor.color[0].item} 0%, ${this.dataConfig.moduleColor.color[1].item} 100%)`,
-      };
-    },
-    // 状态栏背景
-    statusBarStyle() {
-      return {
-        height: `${statusBarHeight}px`,
-        background: `linear-gradient(90deg, ${this.dataConfig.moduleColor.color[0].item} 0%, ${this.dataConfig.moduleColor.color[1].item} 100%)`,
-      };
-    },
-    txtPosition() {
-      return {
-        justifyContent:
-          this.styleConfig != 0 && this.txtFixConfig === 1
-            ? "center"
-            : this.styleConfig != 0 && this.txtFixConfig === 2
-            ? "flex-end"
-            : "flex-start",
-        paddingLeft:
-          this.styleConfig != 0 && this.txtFixConfig === 1
-            ? this.serchRight + "px !important"
+});
+
+const statusBarHeight = ref(statusBarHeightVal);
+const marTop = ref(63);
+const styleConfig = ref(props.dataConfig.styleConfig.tabVal);
+const styleTypeConfig = ref(props.dataConfig.styleTypeConfig.tabVal);
+const bgColor = ref(props.dataConfig.moduleColor.color);
+const titleConfig = ref(props.dataConfig.titleConfig.value);
+const txtColor = ref(props.dataConfig.txtColor.color[0].item);
+const txtStyleConfig = ref(
+  props.dataConfig.txtStyleConfig.tabList[
+    props.dataConfig.txtStyleConfig.tabVal
+  ].style
+);
+const txtSize = ref(props.dataConfig.txtSize.val);
+// fixConfig: this.dataConfig.fixConfig.tabVal,
+const logoConfig = ref(props.dataConfig.logoConfig.url);
+const txtFixConfig = ref(props.dataConfig.txtFixConfig.tabVal);
+const boxStyle = ref("");
+const mbConfig = ref("");
+const hotWords = ref([]);
+const prConfig = ref("");
+const tabVal = ref("");
+const radioVal = ref("");
+const textColor = ref("");
+const textStyle = ref("");
+const serchHeight = ref(43);
+const serchRight = ref("");
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    zIndexConfig: 1000,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.topConfig
+            ? props.dataConfig.topConfig.val
             : 0,
-      };
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    searchStyle() {
-      return {
-        background: this.dataConfig.searchBoxColor.color[0].item,
-        color: this.dataConfig.tipColor.color[0].item,
-        justifyContent:
-          this.txtFixConfig == 0
-            ? "flex-start"
-            : this.txtFixConfig == 2
-            ? "flex-end"
-            : "center",
-      };
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
     },
-  },
-  mounted() {
-    let that = this;
-    that.hotWords = that.dataConfig.hotWords.list.filter((item) => {
-      if (item.val) {
-        return item;
-      }
-    });
-    uni.setStorageSync("hotList", that.hotWords);
-    that.$store.commit("hotWords/setHotWord", that.hotWords);
-    // #ifdef MP || APP-PLUS
-    setTimeout(() => {
-      // 获取小程序头部高度
-      let info = uni.createSelectorQuery().in(this).select(".mp-header");
-      info
-        .boundingClientRect(function (data) {
-          that.marTop = data ? data.height : 0;
-        })
-        .exec();
-    }, 100);
-    // #endif
-    // #ifdef MP
-    const { windowWidth, statusBarHeight } = uni.getWindowInfo();
-    const { top, left, width, height } = uni.getMenuButtonBoundingClientRect();
-    that.serchHeight = (top - statusBarHeight) * 2 + height;
-    that.serchRight = windowWidth - left;
-    // #endif
-  },
-  methods: {
-    goLink() {
-      let url = this.dataConfig.linkConfig.value;
-      this.$util.JumpPath(url);
-    },
-  },
-};
+    backgroundConfig: props.dataConfig.bottomBgColor,
+  };
+});
+const txtStyle = computed(() => {
+  let num = 0;
+  if (styleConfig.value == 0 && styleTypeConfig.value != 2) {
+    num = 30;
+  }
+  return {
+    color: `${txtColor.value}`,
+    fontStyle: `${
+      txtStyleConfig.value != "bold" ? txtStyleConfig.value : ""
+    }`,
+    fontWeight: `${
+      txtStyleConfig.value == "bold" ? txtStyleConfig.value : ""
+    }`,
+    fontSize: `${txtSize.value * 2}rpx`,
+    marginRight: `${num}rpx`,
+  };
+});
+const serchWrapperStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    background: `linear-gradient(90deg, ${props.dataConfig.moduleColor.color[0].item} 0%, ${props.dataConfig.moduleColor.color[1].item} 100%)`,
+  };
+});
+// 状态栏背景
+const statusBarStyle = computed(() => {
+  return {
+    height: `${statusBarHeightVal}px`,
+    background: `linear-gradient(90deg, ${props.dataConfig.moduleColor.color[0].item} 0%, ${props.dataConfig.moduleColor.color[1].item} 100%)`,
+  };
+});
+const txtPosition = computed(() => {
+  return {
+    justifyContent:
+      styleConfig.value != 0 && txtFixConfig.value === 1
+        ? "center"
+        : styleConfig.value != 0 && txtFixConfig.value === 2
+        ? "flex-end"
+        : "flex-start",
+    paddingLeft:
+      styleConfig.value != 0 && txtFixConfig.value === 1
+        ? serchRight.value + "px !important"
+        : 0,
+  };
+});
+const searchStyle = computed(() => {
+  return {
+    background: props.dataConfig.searchBoxColor.color[0].item,
+    color: props.dataConfig.tipColor.color[0].item,
+    justifyContent:
+      txtFixConfig.value == 0
+        ? "flex-start"
+        : txtFixConfig.value == 2
+        ? "flex-end"
+        : "center",
+  };
+});
+
+onMounted(() => {
+  hotWords.value = props.dataConfig.hotWords.list.filter((item) => {
+    if (item.val) {
+      return item;
+    }
+  });
+  uni.setStorageSync("hotList", hotWords.value);
+  proxy.$store.commit("hotWords/setHotWord", hotWords.value);
+  // #ifdef MP || APP-PLUS
+  setTimeout(() => {
+    // 获取小程序头部高度
+    let info = uni.createSelectorQuery().in(proxy).select(".mp-header");
+    info
+      .boundingClientRect(function (data) {
+        marTop.value = data ? data.height : 0;
+      })
+      .exec();
+  }, 100);
+  // #endif
+  // #ifdef MP
+  const { windowWidth, statusBarHeight: sysStatusBarHeight } = uni.getWindowInfo();
+  const { top, left, width, height } = uni.getMenuButtonBoundingClientRect();
+  serchHeight.value = (top - sysStatusBarHeight) * 2 + height;
+  serchRight.value = windowWidth - left;
+  // #endif
+});
+
+function goLink() {
+  let url = props.dataConfig.linkConfig.value;
+  util.JumpPath(url);
+}
 </script>
 
 <style lang="scss" scoped>

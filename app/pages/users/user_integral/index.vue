@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class='integral-details'>
 			<view class='header'>
 				<view class='currentScore'>当前积分</view>
@@ -26,7 +26,6 @@
 					 @click='nav(index)'><text class='iconfont' :class="item.icon"></text>{{item.name}}</view>
 				</view>
 				<view class='list' :hidden='current!=0'>
-					<view class='tip acea-row row-middle'><text class='iconfont icon-shuoming'></text>提示：积分数值的高低会直接影响您的会员等级</view>
 					<view class='item acea-row row-between-wrapper' v-for="(item,index) in integralList" :key="index">
 						<view>
 							<view class='state'>{{item.title}}</view>
@@ -43,16 +42,16 @@
 					</view>
 				</view>
 				<view class='list2' :hidden='current!=1'>
-					<navigator class='item acea-row row-between-wrapper' open-type='switchTab' hover-class='none' url='/pages/index/index'>
+					<navigator :render-link="false" class='item acea-row row-between-wrapper' open-type='switchTab' hover-class='none' url='/pages/index/index'>
 						<view class='pictrue'>
-							<image :src="urlDomain+'crmebimage/perset/staticImg/score.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/score.png'"></image>
 						</view>
 						<view class='name'>购买商品可获得积分奖励</view>
 						<view class='earn'>赚积分</view>
 					</navigator>
-					<navigator class='item acea-row row-between-wrapper' hover-class='none' url='/pages/users/user_sgin/index'>
+					<navigator :render-link="false" class='item acea-row row-between-wrapper' hover-class='none' url='/pages/users/user_sgin/index'>
 						<view class='pictrue'>
-							<image :src="urlDomain+'crmebimage/perset/staticImg/score.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/score.png'"></image>
 						</view>
 						<view class='name'>每日签到可获得积分奖励</view>
 						<view class='earn'>赚积分</view>
@@ -63,107 +62,98 @@
 	</view>
 </template>
 
-<script>
-	import { postIntegralUser, getIntegralList } from '@/api/user.js';
+<script setup>
+	import { postIntegralUser, getIntegralList as getIntegralListApi } from '@/api/user.js';
 	import {
 		toLogin
 	} from '@/libs/login.js';
-	import {
-		mapGetters
-	} from "vuex";
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
 	import emptyPage from '@/components/emptyPage.vue'
+	import { ref, watch, getCurrentInstance } from 'vue';
+	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		components: {
-			emptyPage
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				navList: [{
-						'name': '分值明细',
-						'icon': 'icon-mingxi'
-					},
-					{
-						'name': '分值提升',
-						'icon': 'icon-tishengfenzhi'
-					}
-				],
-				current: 0,
-				page: 1,
-				limit: 10,
-				integralList: [],
-				integral:{},
-				loadend: false,
-				loading: false,
-				loadTitle: '加载更多',
-				theme:app.globalData.theme,
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		watch:{
-			isLogin:{
-				handler:function(newV,oldV){
-					if(newV){
-						this.getUserInfo();
-						this.getIntegralList();
-					}
-				},
-				deep:true
-			}
-		},
-		onLoad() {
-			if (this.isLogin) {
-				this.getUserInfo();
-				this.getIntegralList();
-			} else {
-				toLogin();
-			}
-		},
-		/**
-		   * 页面上拉触底事件的处理函数
-		   */
-		  onReachBottom: function () {
-		    this.getIntegralList();
-		  },
-		methods: {
-			getUserInfo: function() {
-				let that = this;
-				postIntegralUser().then(function(res) {
-					that.$set(that,'integral',res.data);
-				});
-			},
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { isLogin } = storeToRefs(appStore);
 
-			/**
-			 * 获取积分明细
-			 */
-			getIntegralList: function() {
-				let that = this;
-				if (that.loading) return;
-				if (that.loadend) return;
-				that.loading = true;
-				that.loadTitle = '';
-				getIntegralList({
-					page: that.page,
-					limit: that.limit
-				}).then(function(res) {
-					let list = res.data.list,
-						loadend = list.length < that.limit;
-					that.integralList = that.$util.SplitArray(list, that.integralList);
-					that.$set(that,'integralList',that.integralList);
-					that.page = that.page + 1;
-					that.loading = false;
-					that.loadend = loadend;
-					that.loadTitle = loadend ? '我也是有底线的~' : "加载更多";
-				}, function(res) {
-					this.loading = false;
-					that.loadTitle = '加载更多';
-				});
-			},
-			nav: function(current) {
-				this.current = current;
-			}
+	const urlDomain = ref(proxy.$Cache.get("imgHost"));
+	const navList = ref([{
+			'name': '分值明细',
+			'icon': 'icon-mingxi'
+		},
+		{
+			'name': '分值提升',
+			'icon': 'icon-tishengfenzhi'
 		}
+	]);
+	const current = ref(0);
+	const page = ref(1);
+	const limit = ref(10);
+	const integralList = ref([]);
+	const integral = ref({});
+	const loadend = ref(false);
+	const loading = ref(false);
+	const loadTitle = ref('加载更多');
+	const { colorStyle } = useColor();
+	const theme = ref(app.globalData.theme);
+
+	watch(isLogin, (newV, oldV) => {
+		if (newV) {
+			getUserInfo();
+			getIntegralList();
+		}
+	}, { deep: true });
+
+	onLoad(() => {
+		if (isLogin.value) {
+			getUserInfo();
+			getIntegralList();
+		} else {
+			toLogin();
+		}
+	});
+
+	/**
+	   * 页面上拉触底事件的处理函数
+	   */
+	onReachBottom(() => {
+		getIntegralList();
+	});
+
+	function getUserInfo() {
+		postIntegralUser().then(function (res) {
+			integral.value = res.data;
+		});
+	}
+
+	/**
+	 * 获取积分明细
+	 */
+	function getIntegralList() {
+		if (loading.value) return;
+		if (loadend.value) return;
+		loading.value = true;
+		loadTitle.value = '';
+		getIntegralListApi({
+			page: page.value,
+			limit: limit.value
+		}).then(function (res) {
+			let list = res.data.list,
+				loadendVal = list.length < limit.value;
+			integralList.value = proxy.$util.SplitArray(list, integralList.value);
+			page.value = page.value + 1;
+			loading.value = false;
+			loadend.value = loadendVal;
+			loadTitle.value = loadendVal ? '我也是有底线的~' : "加载更多";
+		}, function (res) {
+			loading.value = false;
+			loadTitle.value = '加载更多';
+		});
+	}
+	function nav(cur) {
+		current.value = cur;
 	}
 </script>
 
@@ -255,24 +245,6 @@
 	.integral-details .wrapper .list {
 		background-color: #fff;
 		padding: 24rpx 30rpx;
-	}
-
-	.integral-details .wrapper .list .tip {
-		font-size: 25rpx;
-		width: 690rpx;
-		height: 60rpx;
-		border-radius: 50rpx;
-		background-color: #fff5e2;
-		border: 1rpx solid #ffeac1;
-		color: #c8a86b;
-		padding: 0 20rpx;
-		box-sizing: border-box;
-		margin-bottom: 24rpx;
-	}
-
-	.integral-details .wrapper .list .tip .iconfont {
-		font-size: 35rpx;
-		margin-right: 15rpx;
 	}
 
 	.integral-details .wrapper .list .item {

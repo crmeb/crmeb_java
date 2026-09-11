@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class='commission-details'>
 			<view class='promoterHeader'>
 				<view class='headerCon acea-row row-between-wrapper'>
@@ -11,8 +11,8 @@
 					<view class='iconfont icon-jinbi1'></view>
 				</view>
 			</view>
-			<view class='sign-record' v-if="recordType == 4">
-				<block v-for="(item,index) in recordList" :key="index" v-if="recordList.length>0">
+			<view class='sign-record' v-if="recordType == 4 && recordList.length>0">
+				<block v-for="(item,index) in recordList" :key="index">
 					<view class='list pad30'>
 						<view class='item'>
 							<view class='data'>{{item.date}}</view>
@@ -20,7 +20,7 @@
 								<block v-for="(child,indexn) in item.list" :key="indexn">
 									<view class='itemn acea-row row-between-wrapper'>
 										<view class="left-box">
-											<view class='name line1'>{{child.status | statusFilter}}</view>
+											<view class='name line1'>{{statusFilter(child.status)}}</view>
 											<view class="remark font_color"> {{child.failMsg || ''}}</view>
 											<view>{{child.createTime}}</view>
 										</view>
@@ -48,7 +48,7 @@
 				</view>
 			</view>
 			<view class='sign-record' v-else>
-				<block v-for="(item,index) in recordList" :key="index" v-if="recordList.length>0">
+				<block v-for="(item,index) in recordList" :key="index">
 					<view class='list pad30'>
 						<view class='item'>
 							<view class='data'>{{item.date}}</view>
@@ -76,7 +76,9 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref } from 'vue';
+	import { onLoad, onShow, onReachBottom } from '@dcloudio/uni-app';
 	import {
 		getCommissionInfo,
 		getRecordApi,
@@ -84,144 +86,125 @@
 	import {
 		toLogin
 	} from '@/libs/login.js';
-	import {
-		mapGetters
-	} from "vuex";
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
 	import emptyPage from '@/components/emptyPage.vue'
 	import {
 		setThemeColor
 	} from '@/utils/setTheme.js'
+import { useColor } from '@/composables/useColor.js';
 	const app = getApp();
-	export default {
-		components: {
-			emptyPage
-		},
-		filters: {
-			statusFilter(status) {
-				const statusMap = {
-					'-1': '未通过',
-					'0': '审核中',
-					'1': '已提现'
-				}
-				return statusMap[status]
-			}
-		},
-		data() {
-			return {
-				name: '',
-				type: 0,
-				page: 1,
-				limit: 10,
-				recordList: [],
-				recordType: 0,
-				statuss: false,
-				extractCount: 0,
-				theme: app.globalData.theme,
-				commissionCount: 0,
-				bgColor: '#e93323'
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		onLoad(options) {
-			if (this.isLogin) {
-				this.type = options.type;
-				this.extractCount = options.extractCount;
-				this.commissionCount = options.commissionCount;
-			} else {
-				toLogin();
-			}
-			let that = this;
-			that.bgColor = setThemeColor();
-			uni.setNavigationBarColor({
-				frontColor: '#ffffff',
-				backgroundColor: that.bgColor,
-			});
-		},
-		onShow: function() {
-			let type = this.type;
-			if (type == 1) {
-				uni.setNavigationBarTitle({
-					title: "提现记录"
-				});
-				this.name = '提现总额';
-				this.recordType = 4;
-				this.getList();
-			} else if (type == 2) {
-				uni.setNavigationBarTitle({
-					title: "佣金记录"
-				});
-				this.name = '佣金明细';
-				this.recordType = 3;
-				this.getRecordList();
-			} else {
-				uni.showToast({
-					title: '参数错误',
-					icon: 'none',
-					duration: 1000,
-					mask: true,
-					success: function(res) {
-						setTimeout(function() {
-							// #ifndef H5
-							uni.navigateBack({
-								delta: 1,
-							});
-							// #endif
-							// #ifdef H5
-							history.back();
-							// #endif
 
-						}, 1200)
-					},
-				});
-			}
+	const appStore = useAppStore();
+	const { isLogin } = storeToRefs(appStore);
 
-		},
-		methods: {
-			getList: function() {
-				let that = this;
-				let recordList = that.recordList;
-				let recordListNew = [];
-				if (that.statuss == true) return;
-				getRecordApi({
-					page: that.page,
-					limit: that.limit
-				}).then(res => {
-					let len = res.data.list ? res.data.list.length : 0;
-					let recordListData = res.data.list || [];
-					recordListNew = recordList.concat(recordListData);
-					that.statuss = that.limit > len;
-					that.page = that.page + 1;
-					that.$set(that, 'recordList', recordListNew);
-				});
-			},
-			getRecordList: function() {
-				let that = this;
-				let page = that.page;
-				let limit = that.limit;
-				let statuss = that.statuss;
-				let recordType = that.recordType;
-				let recordList = that.recordList;
-				let recordListNew = [];
-				if (statuss == true) return;
-				getCommissionInfo({
-					page: page,
-					limit: limit
-				}).then(res => {
-					if (res.data.list) {
-						let len = res.data.list ? res.data.list.length : 0;
-						let recordListData = res.data.list || [];
-						recordListNew = recordList.concat(recordListData);
-						that.statuss = limit > len;
-						that.page = page + 1;
-						that.$set(that, 'recordList', recordListNew);
-					}
-				});
-			}
-		},
-		onReachBottom: function() {
-			this.getRecordList();
+	function statusFilter(status) {
+		const statusMap = {
+			'-1': '未通过',
+			'0': '审核中',
+			'1': '已提现'
 		}
+		return statusMap[status]
 	}
+
+	const name = ref('');
+	const type = ref(0);
+	const page = ref(1);
+	const limit = ref(10);
+	const recordList = ref([]);
+	const recordType = ref(0);
+	const statuss = ref(false);
+	const extractCount = ref(0);
+	const { colorStyle } = useColor();
+	const theme = ref(app.globalData.theme);
+	const commissionCount = ref(0);
+	const bgColor = ref('#e93323');
+
+	onLoad((options) => {
+		if (isLogin.value) {
+			type.value = options.type;
+			extractCount.value = options.extractCount;
+			commissionCount.value = options.commissionCount;
+		} else {
+			toLogin();
+		}
+		bgColor.value = setThemeColor();
+		uni.setNavigationBarColor({
+			frontColor: '#ffffff',
+			backgroundColor: bgColor.value,
+		});
+	});
+
+	onShow(() => {
+		if (type.value == 1) {
+			uni.setNavigationBarTitle({
+				title: "提现记录"
+			});
+			name.value = '提现总额';
+			recordType.value = 4;
+			getList();
+		} else if (type.value == 2) {
+			uni.setNavigationBarTitle({
+				title: "佣金记录"
+			});
+			name.value = '佣金明细';
+			recordType.value = 3;
+			getRecordList();
+		} else {
+			uni.showToast({
+				title: '参数错误',
+				icon: 'none',
+				duration: 1000,
+				mask: true,
+				success: function(res) {
+					setTimeout(function() {
+						// #ifndef H5
+						uni.navigateBack({
+							delta: 1,
+						});
+						// #endif
+						// #ifdef H5
+						history.back();
+						// #endif
+					}, 1200)
+				},
+			});
+		}
+	});
+
+	function getList() {
+		if (statuss.value == true) return;
+		getRecordApi({
+			page: page.value,
+			limit: limit.value
+		}).then(res => {
+			let len = res.data.list ? res.data.list.length : 0;
+			let recordListData = res.data.list || [];
+			statuss.value = limit.value > len;
+			page.value = page.value + 1;
+			recordList.value = recordList.value.concat(recordListData);
+		});
+	}
+
+	function getRecordList() {
+		if (statuss.value == true) return;
+		getCommissionInfo({
+			page: page.value,
+			limit: limit.value
+		}).then(res => {
+			if (res.data.list) {
+				let len = res.data.list ? res.data.list.length : 0;
+				let recordListData = res.data.list || [];
+				statuss.value = limit.value > len;
+				page.value = page.value + 1;
+				recordList.value = recordList.value.concat(recordListData);
+			}
+		});
+	}
+
+	onReachBottom(() => {
+		getRecordList();
+	});
 </script>
 
 <style scoped lang="scss">

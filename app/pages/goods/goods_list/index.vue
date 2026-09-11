@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class='productList'>
 			<view class='search bg_color acea-row row-between-wrapper'>
 				<!-- #ifdef H5 -->
@@ -16,15 +16,15 @@
 				<view class='item' :class='title ? "font_color":""' @click='set_where(1)'>{{title ? title:'默认'}}</view>
 				<view class='item' @click='set_where(2)'>
 					价格
-					<image v-if="price==1" :src="urlDomain+'crmebimage/perset/staticImg/up.png'"></image>
-					<image v-else-if="price==2" :src="urlDomain+'crmebimage/perset/staticImg/down.png'"></image>
-					<image v-else :src="urlDomain+'crmebimage/perset/staticImg/horn.png'"></image>
+					<image v-if="price==1" :src="urlDomain+'/crmebimage/perset/staticImg/up.png'"></image>
+					<image v-else-if="price==2" :src="urlDomain+'/crmebimage/perset/staticImg/down.png'"></image>
+					<image v-else :src="urlDomain+'/crmebimage/perset/staticImg/horn.png'"></image>
 				</view>
 				<view class='item' @click='set_where(3)'>
 					销量
-					<image v-if="stock==1" :src="urlDomain+'crmebimage/perset/staticImg/up.png'"></image>
-					<image v-else-if="stock==2" :src="urlDomain+'crmebimage/perset/staticImg/down.png'"></image>
-					<image v-else :src="urlDomain+'crmebimage/perset/staticImg/horn.png'"></image>
+					<image v-if="stock==1" :src="urlDomain+'/crmebimage/perset/staticImg/up.png'"></image>
+					<image v-else-if="stock==2" :src="urlDomain+'/crmebimage/perset/staticImg/down.png'"></image>
+					<image v-else :src="urlDomain+'/crmebimage/perset/staticImg/horn.png'"></image>
 				</view>
 				<!-- down -->
 				<view class='item' :class='nows ? "font_color":""' @click='set_where(4)'>新品</view>
@@ -35,7 +35,6 @@
 						v-for="(item,index) in productList" :key="index" @click="godDetail(item)">
 						<view class='pictrue' :class='is_switch==true?"":"on"'>
 							<image :src='item.image' :class='is_switch==true?"":"on"'></image>
-							<view :style="{ backgroundImage: `url(${item.activityStyle})` }" class="border-picture"></view>
 							<span class="pictrue_log_class"
 								:class="is_switch === true ? 'pictrue_log_big' : 'pictrue_log'"
 								v-if="item.activityH5 && item.activityH5.type === '1'">秒杀</span>
@@ -50,10 +49,7 @@
 							<view class='name line1'>{{item.storeName}}</view>
 							<view class='x-money' :class='is_switch==true?"":"on"'>￥<text
 									class='num'>{{item.price}}</text></view>
-							<view class='vip acea-row row-between-wrapper' :class='is_switch==true?"":"on"'>
-								<view class='vip-money' v-if="item.vip_price && item.vip_price > 0">￥{{item.vip_price}}
-									<image :src="urlDomain+'crmebimage/perset/staticImg/vip.png'"></image>
-								</view>
+							<view class='sales acea-row row-between-wrapper' :class='is_switch==true?"":"on"'>
 								<view>已售{{Number(item.sales)}}{{item.unitName}}</view>
 							</view>
 						</view>
@@ -66,157 +62,144 @@
 		</view>
 		<view class='noCommodity' v-if="productList.length==0 && where.page > 1">
 			<view class='pictrue'>
-				<image :src="urlDomain+'crmebimage/perset/staticImg/noShopper.png'"></image>
+				<image :src="urlDomain+'/crmebimage/perset/staticImg/noShopper.png'"></image>
 			</view>
 			<recommend ref="recommendIndex"></recommend>
 		</view>
 	</view>
 </template>
 
-<script>
-	import {getProductslist,getProductHot} from '@/api/store.js';
-	import recommend from '@/components/recommend';
-	import {mapGetters} from "vuex";
-	import {goShopDetail} from '@/libs/order.js'
-	import animationType from '@/utils/animationType.js'
-	let app = getApp();
-	export default {
-		computed: mapGetters(['uid']),
-		components: {
-			recommend
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				productList: [],
-				is_switch: true,
-				where: {
-					keyword: '',
-					priceOrder: '',
-					salesOrder: '',
-					news: 0,
-					page: 1,
-					limit: 20,
-					cid: '',
-				},
-				price: 0,
-				stock: 0,
-				nows: false,
-				loadend: false,
-				loading: false,
-				loadTitle: '加载更多',
-				title: '',
-				theme:app.globalData.theme
-			};
-		},
-		onLoad: function(options) {
-			this.$set(this.where, 'cid', options.cid || '');
-			this.title = options.title || '';
-			this.$set(this.where, 'keyword', options.searchValue || '');
-			this.get_product_list();
-		},
-		methods: {
-			goback() {
-				// #ifdef H5
-				return history.back();
-				// #endif
-				// #ifndef H5
-				return uni.navigateBack({
-					delta: 1,
-				})
-				// #endif
-			},
-			// 去详情页
-			godDetail(item) {
-				goShopDetail(item, this.uid).then(res => {
-					uni.navigateTo({
-						animationType: animationType.type,						animationDuration: animationType.duration,
-						url: `/pages/goods/goods_details/index?id=${item.id}`
-					})
-				})
-			},
-			Changswitch: function() {
-				let that = this;
-				that.is_switch = !that.is_switch
-			},
-			searchSubmit: function(e) {
-				let that = this;
-				that.$set(that.where, 'keyword', e.detail.value);
-				that.loadend = false;
-				that.$set(that.where, 'page', 1)
-				this.get_product_list(true);
-			},
-			//点击事件处理
-			set_where: function(e) {
-				switch (e) {
-					case 1:
-						return;
-						break;
-					case 2:
-						if (this.price == 0) this.price = 1;
-						else if (this.price == 1) this.price = 2;
-						else if (this.price == 2) this.price = 0;
-						this.stock = 0;
-						break;
-					case 3:
-						if (this.stock == 0) this.stock = 1;
-						else if (this.stock == 1) this.stock = 2;
-						else if (this.stock == 2) this.stock = 0;
-						this.price = 0
-						break;
-					case 4:
-						this.nows = !this.nows;
-						break;
-				}
-				this.loadend = false;
-				this.$set(this.where, 'page', 1);
-				this.get_product_list(true);
-			},
-			//设置where条件
-			setWhere: function() {
-				if (this.price == 0) this.where.priceOrder = '';
-				else if (this.price == 1) this.where.priceOrder = 'asc';
-				else if (this.price == 2) this.where.priceOrder = 'desc';
-				if (this.stock == 0) this.where.salesOrder = '';
-				else if (this.stock == 1) this.where.salesOrder = 'asc';
-				else if (this.stock == 2) this.where.salesOrder = 'desc';
-				this.where.news = this.nows ? 1 : 0;
-			},
-			//查找产品
-			get_product_list: function(isPage) {
-				let that = this;
-				that.setWhere();
-				if (that.loadend) return;
-				if (that.loading) return;
-				if (isPage === true) that.$set(that, 'productList', []);
-				that.loading = true;
-				that.loadTitle = '';
-				getProductslist(that.where).then(res => {
-					let list = res.data.list;
-					let productList = that.$util.SplitArray(list, that.productList);
-					let loadend = list.length < that.where.limit;
-					that.loadend = loadend;
-					that.loading = false;
-					that.loadTitle = loadend ? '已全部加载' : '加载更多';
-					that.$set(that, 'productList', productList);
-					that.$set(that.where, 'page', that.where.page + 1);
-					if (that.productList.length === 0) {
-						this.get_host_product();
-					} 
-				}).catch(err => {
-					that.loading = false;
-					that.loadTitle = '加载更多';
-				});
-			},
-		},
-		onReachBottom() {
-			if (this.productList.length > 0) {
-				this.get_product_list();
-			} else {
-				this.$refs.recommendIndex.get_host_product();
-			}
-		}
+<script setup>
+import { ref, reactive, getCurrentInstance } from "vue";
+import { onLoad, onReachBottom } from "@dcloudio/uni-app";
+import { getProductslist, getProductHot } from "@/api/store.js";
+import recommend from "@/components/recommend/index.vue";
+import { goShopDetail } from "@/libs/order.js";
+import animationType from "@/utils/animationType.js";
+import util from "@/utils/util.js";
+import Cache from "@/utils/cache.js";
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
+import { useColor } from '@/composables/useColor.js';
+
+const { proxy } = getCurrentInstance();
+const app = getApp();
+const appStore = useAppStore();
+const { uid } = storeToRefs(appStore);
+
+const recommendIndex = ref(null);
+const urlDomain = ref(Cache.get("imgHost"));
+const productList = ref([]);
+const is_switch = ref(true);
+const where = reactive({
+	keyword: "", priceOrder: "", salesOrder: "",
+	news: 0, page: 1, limit: 20, cid: "",
+});
+const price = ref(0);
+const stock = ref(0);
+const nows = ref(false);
+const loadend = ref(false);
+const loading = ref(false);
+const loadTitle = ref("加载更多");
+const title = ref("");
+const theme = ref(app.globalData.theme);
+const { colorStyle } = useColor();
+
+onLoad((options) => {
+	where.cid = options.cid || "";
+	title.value = options.title || "";
+	where.keyword = options.searchValue || "";
+	get_product_list();
+});
+
+onReachBottom(() => {
+	if (productList.value.length > 0) get_product_list();
+	else recommendIndex.value.get_host_product();
+});
+
+function goback() {
+	// #ifdef H5
+	return history.back();
+	// #endif
+	// #ifndef H5
+	return uni.navigateBack({ delta: 1 });
+	// #endif
+}
+
+function godDetail(item) {
+	goShopDetail(item, uid.value).then(() => {
+		uni.navigateTo({
+			animationType: animationType.type, animationDuration: animationType.duration,
+			url: `/pages/goods/goods_details/index?id=${item.id}`
+		});
+	});
+}
+
+function Changswitch() { is_switch.value = !is_switch.value; }
+
+function searchSubmit(e) {
+	where.keyword = e.detail.value;
+	loadend.value = false;
+	where.page = 1;
+	get_product_list(true);
+}
+
+function set_where(e) {
+	switch (e) {
+		case 1: return;
+		case 2:
+			if (price.value == 0) price.value = 1;
+			else if (price.value == 1) price.value = 2;
+			else if (price.value == 2) price.value = 0;
+			stock.value = 0;
+			break;
+		case 3:
+			if (stock.value == 0) stock.value = 1;
+			else if (stock.value == 1) stock.value = 2;
+			else if (stock.value == 2) stock.value = 0;
+			price.value = 0;
+			break;
+		case 4:
+			nows.value = !nows.value;
+			break;
 	}
+	loadend.value = false;
+	where.page = 1;
+	get_product_list(true);
+}
+
+function setWhere() {
+	if (price.value == 0) where.priceOrder = "";
+	else if (price.value == 1) where.priceOrder = "asc";
+	else if (price.value == 2) where.priceOrder = "desc";
+	if (stock.value == 0) where.salesOrder = "";
+	else if (stock.value == 1) where.salesOrder = "asc";
+	else if (stock.value == 2) where.salesOrder = "desc";
+	where.news = nows.value ? 1 : 0;
+}
+
+function get_product_list(isPage) {
+	setWhere();
+	if (loadend.value) return;
+	if (loading.value) return;
+	if (isPage === true) productList.value = [];
+	loading.value = true;
+	loadTitle.value = "";
+	getProductslist(where).then(res => {
+		let list = res.data.list;
+		let pl = util.SplitArray(list, productList.value);
+		let isEnd = list.length < where.limit;
+		loadend.value = isEnd;
+		loading.value = false;
+		loadTitle.value = isEnd ? "已全部加载" : "加载更多";
+		productList.value = pl;
+		where.page++;
+		if (productList.value.length === 0) get_host_product();
+	}).catch(() => {
+		loading.value = false;
+		loadTitle.value = "加载更多";
+	});
+}
 </script>
 
 <style scoped lang="scss">
@@ -389,26 +372,14 @@
 		font-size: 34rpx;
 	}
 
-	.productList .list .item .text .vip {
+	.productList .list .item .text .sales {
 		font-size: 22rpx;
 		color: #aaa;
 		margin-top: 7rpx;
 	}
 
-	.productList .list .item .text .vip.on {
+	.productList .list .item .text .sales.on {
 		margin-top: 12rpx;
-	}
-
-	.productList .list .item .text .vip .vip-money {
-		font-size: 24rpx;
-		color: #282828;
-		font-weight: bold;
-	}
-
-	.productList .list .item .text .vip .vip-money image {
-		width: 46rpx;
-		height: 21rpx;
-		margin-left: 4rpx;
 	}
 
 	.noCommodity {

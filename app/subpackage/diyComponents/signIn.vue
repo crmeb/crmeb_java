@@ -61,7 +61,7 @@
               mode="widthFix"
               class="image"
             ></image>
-            <view>{{ '周' }}{{ index | weekFormat }}</view>
+            <view>{{ '周' }}{{ weekFormat(index) }}</view>
           </view>
         </view>
         <view class="button" :style="[buttonStyle]" @click="goUserSgin">{{
@@ -72,139 +72,136 @@
   </common-wrapper>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from "vue";
 import commonWrapper from "./commonWrapper.vue";
-import { getSign } from "@/api/api.js";
-export default {
-  components: { commonWrapper },
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+import { getSign as getSignApi } from "@/api/api.js";
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
   },
-  filters: {
-    weekFormat: function (value) {
-      return ["一", "二", "三", "四", "五", "六", "日"][value];
-    },
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  data() {
-    return {
-      today: 0,
-      signList: [],
-      sign_give_point: 0,
-      continuousSignDays: 0,
-      nextContinuousSignRewardList: {},
-    };
-  },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
+});
+
+function weekFormat(value) {
+  return ["一", "二", "三", "四", "五", "六", "日"][value];
+}
+
+const today = ref(0);
+const signList = ref([]);
+const sign_give_point = ref(0);
+const continuousSignDays = ref(0);
+const nextContinuousSignRewardList = ref({});
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.topConfig ? props.dataConfig.topConfig.val : 0,
         },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
         },
-      };
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    buttonStyle() {
-      let styleObject = {};
-      if (this.dataConfig.toneConfig.tabVal) {
-        styleObject[
-          "background"
-        ] = `linear-gradient(90deg, ${this.dataConfig.bntBgColor.color[0].item} 0%, ${this.dataConfig.bntBgColor.color[1].item} 100%)`;
-        styleObject["color"] = this.dataConfig.bntTxtColor.color[0].item;
-      }
-      return styleObject;
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
     },
-    signStyle() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        "border-radius": borderRadius,
-      };
-    },
-    // signWrapStyle() {
-    // 	return {
-    // 		padding: `${this.dataConfig.topConfig.val * 2}rpx ${this.dataConfig.prConfig.val * 2}rpx ${this.dataConfig.bottomConfig.val * 2}rpx`,
-    // 		'margin-top': `${this.dataConfig.mbConfig.val * 2}rpx`,
-    // 		background: this.dataConfig.bottomBgColor.color[0].item
-    // 	};
-    // },
-    numStyle() {
-      let styleObject = {};
-      if (this.dataConfig.toneConfig.tabVal) {
-        styleObject["background"] = this.dataConfig.labelBgColor.color[0].item;
-        styleObject["color"] = this.dataConfig.labelTxtColor.color[0].item;
-      }
-      return styleObject;
-    },
-  },
-  mounted() {
-    const t = new Date();
-    const d = t.getDay();
-    this.today = d;
-    this.getSign();
-  },
-  methods: {
-    goUserSgin() {
-      uni.navigateTo({
-        url: "/pages/users/user_sgin/index",
-      });
-    },
-    getSign() {
-      getSign().then((res) => {
-        this.continuousSignDays = res.data.continuousSignDays;
-        this.sign_give_point = res.data.signGivePoint;
-        this.signList = res.data.signList[0];
-      });
-    },
-  },
-};
+  };
+});
+
+const buttonStyle = computed(() => {
+  let styleObject = {};
+  if (props.dataConfig.toneConfig.tabVal) {
+    styleObject[
+      "background"
+    ] = `linear-gradient(90deg, ${props.dataConfig.bntBgColor.color[0].item} 0%, ${props.dataConfig.bntBgColor.color[1].item} 100%)`;
+    styleObject["color"] = props.dataConfig.bntTxtColor.color[0].item;
+  }
+  return styleObject;
+});
+
+const signStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    "border-radius": borderRadius,
+  };
+});
+
+// signWrapStyle() {
+// 	return {
+// 		padding: `${this.dataConfig.topConfig.val * 2}rpx ${this.dataConfig.prConfig.val * 2}rpx ${this.dataConfig.bottomConfig.val * 2}rpx`,
+// 		'margin-top': `${this.dataConfig.mbConfig.val * 2}rpx`,
+// 		background: this.dataConfig.bottomBgColor.color[0].item
+// 	};
+// },
+
+const numStyle = computed(() => {
+  let styleObject = {};
+  if (props.dataConfig.toneConfig.tabVal) {
+    styleObject["background"] = props.dataConfig.labelBgColor.color[0].item;
+    styleObject["color"] = props.dataConfig.labelTxtColor.color[0].item;
+  }
+  return styleObject;
+});
+
+function goUserSgin() {
+  uni.navigateTo({
+    url: "/pages/users/user_sgin/index",
+  });
+}
+
+function getSign() {
+  getSignApi().then((res) => {
+    continuousSignDays.value = res.data.continuousSignDays;
+    sign_give_point.value = res.data.signGivePoint;
+    signList.value = res.data.signList[0];
+  });
+}
+
+onMounted(() => {
+  const t = new Date();
+  const d = t.getDay();
+  today.value = d;
+  getSign();
+});
 </script>
 
 <style lang="scss" scoped>

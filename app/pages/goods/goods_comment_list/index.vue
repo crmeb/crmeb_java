@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view style="height: 100%;">
 			<view class='evaluate-list'>
 				<view class='generalComment acea-row row-between-wrapper'>
@@ -28,116 +28,74 @@
 			</view>
 			<view class='noCommodity' v-if="!replyData.sumCount && page > 1">
 				<view class='pictrue'>
-					<image :src="urlDomain+'crmebimage/perset/usersImg/noEvaluate.png'"></image>
+					<image :src="urlDomain+'/crmebimage/perset/usersImg/noEvaluate.png'"></image>
 				</view>
 			</view>
 		</view>
 	</view>
 </template>
 
-<script>
-	import {
-		getReplyList,
-		getReplyConfig
-	} from '@/api/store.js';
-	import userEvaluation from '@/components/userEvaluation';
-	let app = getApp();
-	export default {
-		components: {
-			userEvaluation
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				replyData: {},
-				product_id: 0,
-				reply: [],
-				type: 0,
-				loading: false,
-				loadend: false,
-				loadTitle: '加载更多',
-				page: 1,
-				limit: 20,
-				theme:app.globalData.theme,
-			};
-		},
-		/**
-		 * 生命周期函数--监听页面加载
-		 */
-		onLoad: function(options) {
-			let that = this;
-			if (!options.productId) return that.$util.Tips({
-				title: '缺少参数'
-			}, {
-				tab: 3,
-				url: 1
-			});
-			that.productId = options.productId;
-		},
-		onShow: function() {
-			this.getProductReplyCount();
-			this.getProductReplyList();
-		},
-		methods: {
-			/**
-			 * 获取评论统计数据
-			 * 
-			 */
-			getProductReplyCount: function() {
-				let that = this;
-				getReplyConfig(that.productId).then(res => {
-					that.$set(that, 'replyData', res.data);
-				});
-			},
-			/**
-			 * 分页获取评论
-			 */
-			getProductReplyList: function() {
-				let that = this;
-				if (that.loadend) return;
-				if (that.loading) return;
-				that.loading = true;
-				that.loadTitle = '';
-				getReplyList(that.productId, {
-					page: that.page,
-					limit: that.limit,
-					type: that.type,
-				}).then(res => {
-					let list = res.data.list,
-						loadend = list.length < that.limit;
-					that.reply = that.$util.SplitArray(list, that.reply);
-					that.$set(that, 'reply', that.reply);
-					that.loading = false;
-					that.loadend = loadend;
-					if (that.reply.length) {
-						that.loadTitle = loadend ? "我也是有底线的~" : "加载更多";
-					}
-					that.page = that.page + 1;
-				}).catch(err => {
-					that.loading = false,
-						that.loadTitle = '加载更多'
-				});
-			},
-			/*
-			 * 点击事件切换
-			 * */
-			changeType: function(e) {
-				let type = parseInt(e);
-				if (type == this.type) return;
-				this.type = type;
-				this.page = 1;
-				this.loadend = false;
-				this.$set(this, 'reply', []);
-				this.getProductReplyList();
-			}
-		},
-		/**
-		 * 页面上拉触底事件的处理函数
-		 */
-		onReachBottom: function() {
-			this.getProductReplyList();
-		},
-	}
+<script setup>
+import { ref } from "vue";
+import { onLoad, onShow, onReachBottom } from "@dcloudio/uni-app";
+import { getReplyList, getReplyConfig } from "@/api/store.js";
+import userEvaluation from "@/components/userEvaluation/index.vue";
+import util from "@/utils/util.js";
+import Cache from "@/utils/cache.js";
+import { useColor } from '@/composables/useColor.js';
+
+const app = getApp();
+const urlDomain = ref(Cache.get("imgHost"));
+const replyData = ref({});
+const productId = ref(0);
+const reply = ref([]);
+const type = ref(0);
+const loading = ref(false);
+const loadend = ref(false);
+const loadTitle = ref("加载更多");
+const page = ref(1);
+const limit = ref(20);
+const theme = ref(app.globalData.theme);
+const { colorStyle } = useColor();
+
+onLoad((options) => {
+	if (!options.productId) return util.Tips({ title: '缺少参数' }, { tab: 3, url: 1 });
+	productId.value = options.productId;
+});
+
+onShow(() => { getProductReplyCount(); getProductReplyList(); });
+onReachBottom(() => { getProductReplyList(); });
+
+function getProductReplyCount() {
+	getReplyConfig(productId.value).then(res => { replyData.value = res.data; });
+}
+
+function getProductReplyList() {
+	if (loadend.value) return;
+	if (loading.value) return;
+	loading.value = true;
+	loadTitle.value = '';
+	getReplyList(productId.value, { page: page.value, limit: limit.value, type: type.value })
+		.then(res => {
+			let list = res.data.list;
+			let isEnd = list.length < limit.value;
+			reply.value = util.SplitArray(list, reply.value);
+			loading.value = false;
+			loadend.value = isEnd;
+			if (reply.value.length) loadTitle.value = isEnd ? "我也是有底线的~" : "加载更多";
+			page.value++;
+		}).catch(() => { loading.value = false; loadTitle.value = '加载更多'; });
+}
+
+function changeType(e) {
+	let t = parseInt(e);
+	if (t == type.value) return;
+	type.value = t;
+	page.value = 1;
+	loadend.value = false;
+	reply.value = [];
+	getProductReplyList();
+}
 </script>
 
 <style lang="scss">
@@ -183,6 +141,7 @@
 		background-color: #f4f4f4;
 		line-height: 54rpx;
 		margin-right: 17rpx;
+		width: max-content;
 	}
 
 	.evaluate-list .nav .item.bg-color {

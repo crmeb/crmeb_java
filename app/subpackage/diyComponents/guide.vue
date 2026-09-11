@@ -9,49 +9,42 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed } from "vue";
 import commonWrapper from "./commonWrapper.vue";
-export default {
-  components: { commonWrapper },
-  name: "guide",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {
-      heightConfig: 0,
-      lineColor: "",
-      // lineStyle: 0,
-      lrEdge: 0,
-      mbConfig: 0,
-    };
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  computed: {
-    lineStyle() {
-      return {
-        borderBottomWidth: `${this.dataConfig.heightConfig.val * 2}rpx`,
-        borderBottomStyle:
-          this.dataConfig.lineStyle.tabList[this.dataConfig.lineStyle.tabVal]
-            .style,
-        borderBottomColor: this.dataConfig.lineColor.color[0].item,
-      };
-    },
-    configData() {
-      return {
-        ...this.dataConfig,
-      };
-    },
-  },
-  created() {},
-  methods: {},
-};
+});
+
+const heightConfig = ref(0);
+const lineColor = ref("");
+// lineStyle: 0,
+const lrEdge = ref(0);
+const mbConfig = ref(0);
+
+const lineStyle = computed(() => {
+  return {
+    borderBottomWidth: `${props.dataConfig.heightConfig.val * 2}rpx`,
+    borderBottomStyle:
+      props.dataConfig.lineStyle.tabList[props.dataConfig.lineStyle.tabVal]
+        .style,
+    borderBottomColor: props.dataConfig.lineColor.color[0].item,
+  };
+});
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+  };
+});
 </script>
 
 <style lang="scss">

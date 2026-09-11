@@ -1,14 +1,14 @@
 <template>
 	<view>
 		<!-- #ifdef H5 -->
-		<view v-if="!this.$wechat.isWeixin()">
+		<view v-if="!isWeixin">
 			<view class="text-section">
 				<view>{{ content }}</view>
 			</view>
 			<view v-html="formContent"></view>
 		</view>
 		<!-- #endif -->
-		<view v-if="this.$wechat.isWeixin()">
+		<view v-if="isWeixin">
 			<view class="text-section">
 				<view>点击复制网址去浏览器中打开</view>
 				<view class="link">{{ link }}</view>
@@ -32,146 +32,110 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, nextTick, getCurrentInstance } from "vue";
+	import { onLoad, onReady } from "@dcloudio/uni-app";
 	// #ifdef H5
 	import ClipboardJS from '@/plugin/clipboard/clipboard.js';
-	import {mapGetters} from 'vuex';
-	import {toLogin} from '@/libs/login.js';
+	// #endif
+	import { toLogin } from '@/libs/login.js';
 	import { orderPay } from '@/api/order.js';
-	import { alipayFull} from '@/api/user.js';
-	export default {
-		data() {
-			return {
-				// #ifdef H5
-				isWeixin: this.$wechat.isWeixin(),
-				hintShow: true,
-				// #endif
-				orderId: '',
-				link: '',
-				pay_key: '',
-				content: '正在支付中',
-				formContent: ''
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		onLoad(option) {
-			if (!this.isLogin && this.$wechat.isWeixin()) {
-				toLogin();
-			}
-			this.orderId = option.id;
-			let rechar_id = option.id;
-			let type = option.type;
-			let price = option.price;
-			if (!this.$wechat.isWeixin()) {
-				if(type === 'order'){
-					this.link = location.protocol + '//' + window.location.host + '/pages/users/alipay_invoke/index?orderNo='+this.orderId + '&type=order';
-					if (!this.orderId) {
-						this.content = '支付订单不存在，页面将在2秒后自动关闭！';
-						uni.showToast({
-							title: '支付订单不存在,页面将在2秒后自动关闭',
-							icon: 'none'
-						});
-						setTimeout(() => {
-							uni.switchTab({
-								url: '/pages/index/index'
-							});
-						}, 2000);
-					}
-					uni.showLoading({
-						title: '正在支付中'
-					});
-					orderPay({
-						orderNo: this.orderId,
-						payChannel: 'alipay',
-						payType: 'alipay'
-					}).then(res=>{
-						uni.hideLoading(); 
-						that.$nextTick(() => {
-							document.forms['punchout_form'].submit();
-						})
-					}).catch(err=>{
-						uni.hideLoading();
-							uni.showToast({
-								title: err,
-								icon: 'none'
-							});
-							setTimeout(() => {
-								uni.switchTab({
-									url: '/pages/index/index'
-								});
-							}, 2000);
-					})
-				}else{ 
-					this.link = location.protocol + '//' + window.location.host + `/pages/users/alipay_invoke/index?price=${price}&rechar_id=${rechar_id}&type=users`;
-					alipayFull({
-						from: 'alipay',
-						price: price,
-						payType: 'alipay',
-						rechar_id: rechar_id
-					}).then(res => {
-						//h5支付
-						uni.hideLoading();
-						that.$nextTick(() => {
-							document.forms['punchout_form'].submit();
-						})
-					}).catch(res=>{
-						uni.hideLoading();
-						return that.$util.Tips({
-							title: res
-						});
-					})
-					
+	import { alipayFull } from '@/api/user.js';
+	import util from '@/utils/util.js';
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
+
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { isLogin } = storeToRefs(appStore);
+
+	// #ifdef H5
+	const isWeixin = ref(proxy.$wechat.isWeixin());
+	const hintShow = ref(true);
+	// #endif
+	const orderId = ref('');
+	const link = ref('');
+	const pay_key = ref('');
+	const content = ref('正在支付中');
+	const formContent = ref('');
+
+	onLoad((option) => {
+		// #ifdef H5
+		if (!isLogin.value && proxy.$wechat.isWeixin()) {
+			toLogin();
+		}
+		orderId.value = option.id;
+		let rechar_id = option.id;
+		let type = option.type;
+		let price = option.price;
+		if (!proxy.$wechat.isWeixin()) {
+			if (type === 'order') {
+				link.value = location.protocol + '//' + window.location.host + '/pages/users/alipay_invoke/index?orderNo=' + orderId.value + '&type=order';
+				if (!orderId.value) {
+					content.value = '支付订单不存在，页面将在2秒后自动关闭！';
+					uni.showToast({ title: '支付订单不存在,页面将在2秒后自动关闭', icon: 'none' });
+					setTimeout(() => { uni.switchTab({ url: '/pages/index/index' }); }, 2000);
 				}
-			
-			}
-		},
-		onReady() {
-			this.$nextTick(() => {
-				// #ifdef H5
-				const clipboard = new ClipboardJS(".copy");
-				clipboard.on("success", () => {
-					uni.showToast({
-						title: '复制成功'
-					});
+				uni.showLoading({ title: '正在支付中' });
+				orderPay({
+					orderNo: orderId.value,
+					payChannel: 'alipay',
+					payType: 'alipay'
+				}).then(res => {
+					uni.hideLoading();
+					nextTick(() => { document.forms['punchout_form'].submit(); });
+				}).catch(err => {
+					uni.hideLoading();
+					uni.showToast({ title: err, icon: 'none' });
+					setTimeout(() => { uni.switchTab({ url: '/pages/index/index' }); }, 2000);
 				});
-				// #endif
-			});
-		},
-		methods: {
-			// #ifdef MP
-			copyLink() {
-				uni.setClipboardData({
-					data: this.link,
-					success() {
-						uni.showToast({
-							title: '复制成功',
-							icon: 'success'
-						});
-					},
-					fail() {
-						uni.showToast({
-							title: '复制失败',
-							icon: 'none'
-						});
-					}
+			} else {
+				link.value = location.protocol + '//' + window.location.host + `/pages/users/alipay_invoke/index?price=${price}&rechar_id=${rechar_id}&type=users`;
+				alipayFull({
+					from: 'alipay',
+					price: price,
+					payType: 'alipay',
+					rechar_id: rechar_id
+				}).then(res => {
+					uni.hideLoading();
+					nextTick(() => { document.forms['punchout_form'].submit(); });
+				}).catch(res => {
+					uni.hideLoading();
+					return util.Tips({ title: res });
 				});
-			},
-			// #endif
-			goDetail() {
-				if(this.orderId){
-					uni.navigateTo({
-						url: `/pages/order/order_details/index?order_id=${this.orderId}`
-					});
-				}else{
-					uni.navigateTo({
-						url: `/pages/users/user_money/index`
-					});
-				}
-				
 			}
 		}
-	};
-	//#endif
+		// #endif
+	});
+
+	onReady(() => {
+		nextTick(() => {
+			// #ifdef H5
+			const clipboard = new ClipboardJS(".copy");
+			clipboard.on("success", () => {
+				uni.showToast({ title: '复制成功' });
+			});
+			// #endif
+		});
+	});
+
+	// #ifdef MP
+	function copyLink() {
+		uni.setClipboardData({
+			data: link.value,
+			success() { uni.showToast({ title: '复制成功', icon: 'success' }); },
+			fail() { uni.showToast({ title: '复制失败', icon: 'none' }); }
+		});
+	}
+	// #endif
+
+	function goDetail() {
+		if (orderId.value) {
+			uni.navigateTo({ url: `/pages/order/order_details/index?order_id=${orderId.value}` });
+		} else {
+			uni.navigateTo({ url: `/pages/users/user_money/index` });
+		}
+	}
 </script>
 
 <style>

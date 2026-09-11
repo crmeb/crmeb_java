@@ -6,7 +6,7 @@
       <view class="mb-config" :style="[liveStyle]">
         <template v-if="dataConfig.styleConfig.tabVal == 0">
           <view class="live-wrapper-a">
-            <navigator
+            <navigator :render-link="false"
               class="live-item-a"
               v-for="item in liveList"
               :key="item.id"
@@ -54,7 +54,7 @@
                 }}</view>
                 <view class="people acea-row row-middle" v-if="anchorShow">
                   <image
-                    :src="item.anchor_img || require('@/static/images/f.png')"
+                    :src="item.anchor_img || img___static_images_f_png_src"
                     class="w-40 h-40 borderRadius20 mr-12"
                   ></image>
                   <text>{{ '主播' }}：{{ item.anchor_name }}</text>
@@ -65,7 +65,7 @@
         </template>
         <template v-else-if="dataConfig.styleConfig.tabVal == 1">
           <view class="live-wrapper-b">
-            <navigator
+            <navigator :render-link="false"
               class="live-item acea-row"
               v-for="item in liveList"
               :key="item.id"
@@ -131,7 +131,7 @@
         <template v-else-if="dataConfig.styleConfig.tabVal == 2">
           <view class="live-wrapper-c">
             <scroll-view class="scroll-view" scroll-x="true">
-              <navigator
+              <navigator :render-link="false"
                 class="live-item"
                 v-for="item in liveList"
                 :key="item.id"
@@ -173,7 +173,7 @@
                   }}</view>
                   <view class="people acea-row row-middle" v-if="anchorShow">
                     <image
-                      :src="item.anchor_img || require('@/static/images/f.png')"
+                      :src="item.anchor_img || img___static_images_f_png_src"
                       class="w-40 h-40 borderRadius20 mr-12"
                     ></image>
                     <text>{{ '主播' }}：{{ item.anchor_name }}</text>
@@ -185,11 +185,10 @@
         </template>
         <template v-else-if="dataConfig.styleConfig.tabVal == 3">
           <view class="live-wrapper-d">
-            <template v-for="(item, index) in liveList">
-              <navigator
+            <template v-for="(item, index) in liveList" :key="item.id">
+              <navigator :render-link="false"
                 v-if="index"
                 class="live-item-b"
-                :key="item.id"
                 :style="[liveWrapStyle]"
                 :url="
                   'plugin-private://wx2b03c6e691cd7370/pages/live-player-plugin?room_id=' +
@@ -226,7 +225,7 @@
                   </view>
                   <view class="people acea-row row-middle" v-if="anchorShow">
                     <image
-                      :src="item.anchor_img || require('@/static/images/f.png')"
+                      :src="item.anchor_img || img___static_images_f_png_src"
                       class="w-40 h-40 borderRadius20 mr-12"
                     ></image>
                     <text>{{ '主播' }}：{{ item.anchor_name }}</text>
@@ -234,7 +233,7 @@
                   </view>
                 </view>
               </navigator>
-              <navigator
+              <navigator :render-link="false"
                 v-else
                 class="live-item-a"
                 :url="
@@ -281,7 +280,7 @@
                   }}</view>
                   <view class="people acea-row row-middle" v-if="anchorShow">
                     <image
-                      :src="item.anchor_img || require('@/static/images/f.png')"
+                      :src="item.anchor_img || img___static_images_f_png_src"
                       class="w-40 h-40 borderRadius20 mr-12"
                     ></image>
                     <text>{{ '主播' }}：{{ item.anchor_name }}</text>
@@ -297,182 +296,180 @@
   <!-- #endif -->
 </template>
 
-<script>
+<script setup>
+import img___static_images_f_png_src from '@/static/images/f.png';
+import { ref, computed, watch, onMounted, getCurrentInstance } from "vue";
 import commonWrapper from "./commonWrapper.vue";
-import { mapGetters } from "vuex";
-import { getLiveList } from "@/api/api.js";
-export default {
-  components: { commonWrapper },
-  computed: mapGetters(["uid"]),
-  name: "liveBroadcast",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
+import { getLiveList as getLiveListApi } from "@/api/api.js";
+
+const { proxy } = getCurrentInstance();
+
+const appStore = useAppStore();
+const { uid } = storeToRefs(appStore);
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {
-      listStyle: 0,
-      mbConfig: 0,
-      liveList: [],
-      customParams: 0,
-      bg: "",
-      titleColor: "",
-      prConfig: "",
-      boxShadow: "",
-      itemStyle: 0,
-    };
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  computed: {
-    imgStyle() {
-      let borderRadius = `${this.dataConfig.filletImg.val * 2}rpx`;
-      if (this.dataConfig.filletImg.type) {
-        borderRadius = `${this.dataConfig.filletImg.valList[0].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[1].val * 2
-        }rpx ${this.dataConfig.filletImg.valList[3].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[2].val * 2
-        }rpx`;
-      }
-      return borderRadius;
-    },
-    imgStyle2() {
-      let borderRadius = `${this.dataConfig.filletImg.val * 2}rpx`;
-      if (this.dataConfig.filletImg.type) {
-        borderRadius = `0 0 ${
-          this.dataConfig.filletImg.valList[3].val * 2
-        }rpx ${this.dataConfig.filletImg.valList[2].val * 2}rpx`;
-      }
-      return {
-        "border-radius": borderRadius,
-      };
-    },
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
+});
+
+const listStyle = ref(0);
+const mbConfig = ref(0);
+const liveList = ref([]);
+const customParams = ref(0);
+const bg = ref("");
+const titleColor = ref("");
+const prConfig = ref("");
+const boxShadow = ref("");
+const itemStyle = ref(0);
+
+const imgStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.filletImg.val * 2}rpx`;
+  if (props.dataConfig.filletImg.type) {
+    borderRadius = `${props.dataConfig.filletImg.valList[0].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[1].val * 2
+    }rpx ${props.dataConfig.filletImg.valList[3].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[2].val * 2
+    }rpx`;
+  }
+  return borderRadius;
+});
+const imgStyle2 = computed(() => {
+  let borderRadius = `${props.dataConfig.filletImg.val * 2}rpx`;
+  if (props.dataConfig.filletImg.type) {
+    borderRadius = `0 0 ${
+      props.dataConfig.filletImg.valList[3].val * 2
+    }rpx ${props.dataConfig.filletImg.valList[2].val * 2}rpx`;
+  }
+  return {
+    "border-radius": borderRadius,
+  };
+});
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.topConfig
+            ? props.dataConfig.topConfig.val
+            : 0,
         },
-        marginConfig: {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            { val: 0 },
-            { val: 0 },
-            { val: 0 },
-          ],
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
         },
-        componentBgConfig: {
-          color: [
-            {
-              item:
-                this.dataConfig.bottomBgColor &&
-                this.dataConfig.bottomBgColor.color &&
-                this.dataConfig.bottomBgColor.color[0]
-                  ? this.dataConfig.bottomBgColor.color[0].item
-                  : "",
-            },
-          ],
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
         },
-      };
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    liveStyle() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        "border-radius": borderRadius,
-        background: `linear-gradient(90deg, ${this.dataConfig.moduleColor.color[0].item} 0%, ${this.dataConfig.moduleColor.color[1].item} 100%)`,
-      };
+    marginConfig: {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        { val: 0 },
+        { val: 0 },
+        { val: 0 },
+      ],
     },
-    liveWrapStyle() {
-      let marginTop = 0;
-      let marginLeft = 0;
-      let marginRight = 0;
-      if (this.dataConfig.styleConfig.tabVal == 2) {
-        marginLeft = `${this.dataConfig.liveConfig.val * 2}rpx`;
-        marginRight = `${this.dataConfig.liveConfig.val * 2}rpx`;
-      } else {
-        marginTop = `${this.dataConfig.liveConfig.val * 2}rpx`;
-      }
-      return {
-        "margin-top": marginTop,
-        "margin-left": marginLeft,
-        "margin-right": marginRight,
-      };
+    componentBgConfig: {
+      color: [
+        {
+          item:
+            props.dataConfig.bottomBgColor &&
+            props.dataConfig.bottomBgColor.color &&
+            props.dataConfig.bottomBgColor.color[0]
+              ? props.dataConfig.bottomBgColor.color[0].item
+              : "",
+        },
+      ],
     },
-    anchorShow() {
-      return this.dataConfig.checkboxInfo.type.includes(1);
-    },
-    titleShow() {
-      return this.dataConfig.checkboxInfo.type.includes(0);
-    },
+  };
+});
+const liveStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    "border-radius": borderRadius,
+    background: `linear-gradient(90deg, ${props.dataConfig.moduleColor.color[0].item} 0%, ${props.dataConfig.moduleColor.color[1].item} 100%)`,
+  };
+});
+const liveWrapStyle = computed(() => {
+  let marginTop = 0;
+  let marginLeft = 0;
+  let marginRight = 0;
+  if (props.dataConfig.styleConfig.tabVal == 2) {
+    marginLeft = `${props.dataConfig.liveConfig.val * 2}rpx`;
+    marginRight = `${props.dataConfig.liveConfig.val * 2}rpx`;
+  } else {
+    marginTop = `${props.dataConfig.liveConfig.val * 2}rpx`;
+  }
+  return {
+    "margin-top": marginTop,
+    "margin-left": marginLeft,
+    "margin-right": marginRight,
+  };
+});
+const anchorShow = computed(() => {
+  return props.dataConfig.checkboxInfo.type.includes(1);
+});
+const titleShow = computed(() => {
+  return props.dataConfig.checkboxInfo.type.includes(0);
+});
+
+function getCustomParams() {
+  customParams.value = encodeURIComponent(
+    JSON.stringify({
+      pid: uid.value,
+    }),
+  );
+}
+function getLiveList() {
+  let limit = proxy.$config.LIMIT;
+  getLiveListApi(
+    1,
+    props.dataConfig.numberConfig.val == undefined
+      ? 10
+      : props.dataConfig.numberConfig.val,
+  )
+    .then((res) => {
+      liveList.value = res.data;
+    })
+    .catch((res) => {});
+}
+
+watch(
+  uid,
+  (newV, oldValue) => {
+    getCustomParams();
   },
-  watch: {
-    uid: {
-      handler(newV, oldValue) {
-        this.getCustomParams();
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  created() {},
-  mounted() {
-    this.getLiveList();
-  },
-  methods: {
-    getCustomParams() {
-      this.customParams = encodeURIComponent(
-        JSON.stringify({
-          pid: this.uid,
-        }),
-      );
-    },
-    getLiveList: function () {
-      let limit = this.$config.LIMIT;
-      getLiveList(
-        1,
-        this.dataConfig.numberConfig.val == undefined
-          ? 10
-          : this.dataConfig.numberConfig.val,
-      )
-        .then((res) => {
-          this.liveList = res.data;
-        })
-        .catch((res) => {});
-    },
-  },
-};
+  { immediate: true, deep: true },
+);
+
+onMounted(() => {
+  getLiveList();
+});
 </script>
 
 <style lang="scss">

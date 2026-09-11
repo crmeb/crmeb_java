@@ -1,8 +1,8 @@
 <template>
-	<view class="user_about" :data-theme="theme">
+	<view class="user_about" :data-theme="theme" :style="colorStyle">
 		<view>
 			<view class="text cancelTxt" :class="{cancelTxt: type == 'useraccountcancelinfo'}">
-				<jyf-parser :html="agreementData?agreementData:''" ref="article" :tag-style="tagStyle"></jyf-parser>
+				<mp-html :content="agreementData?agreementData:''" ref="article" :tag-style="tagStyle"></mp-html>
 			</view>
 			<view v-if="type === 'useraccountcancelinfo'" class="btn">
 				<button @click="cancelBtn" class="sure-btn">申请注销</button>
@@ -29,7 +29,7 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -39,6 +39,9 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
+	import { ref, getCurrentInstance } from 'vue';
+	import { onLoad } from '@dcloudio/uni-app';
+	import { useAppStore } from "@/store/app.js";
 	import {
 		userOut,
 	} from '@/api/user.js'
@@ -47,127 +50,122 @@
 	} from '@/api/api.js'
 	import {
 		goToAgreement
-	} from "@/libs/order";
-	import parser from "@/components/jyf-parser/jyf-parser";
+	} from "@/libs/order.js";
+	import mpHtml from '@/uni_modules/mp-html/components/mp-html/mp-html.vue';
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		name: 'user_about',
-		components: {
-			"jyf-parser": parser,
-		},
-		data() {
-			return {
-				theme: app.globalData.theme,
-				agreementData: '',
-				loaded: false,
-				check: false,
-				moal: false,
-				tagStyle: {
-					img: 'width:100%;display:block;',
-					table: 'width:100%',
-					video: 'width:100%'
-				},
-				type:''
-			}
-		},
-		onLoad: function(options) {
-			this.type = options.from;
-			this.setTitle(this.type);
-			this.getCacheinfo();
-		},
-		methods: {
-			toCancel() {
-				goToAgreement('useraccountcancelnoticeinfo')
-			},
-			setCheck() {
-				this.check = !this.check
-			},
-			cancelMoal() {
-				this.moal = false
-				this.check = false
-			},
-			ok() {
-				uni.showLoading({
-					title: '注销中',
-					mask: true
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	const agreementData = ref('');
+	const loaded = ref(false);
+	const check = ref(false);
+	const moal = ref(false);
+	const tagStyle = ref({
+		img: 'width:100%;display:block;',
+		table: 'width:100%',
+		video: 'width:100%'
+	});
+	const type = ref('');
+
+	function toCancel() {
+		goToAgreement('useraccountcancelnoticeinfo')
+	}
+	function setCheck() {
+		check.value = !check.value
+	}
+	function cancelMoal() {
+		moal.value = false
+		check.value = false
+	}
+	function ok() {
+		uni.showLoading({
+			title: '注销中',
+			mask: true
+		});
+		moal.value = false;
+		userOut().then(res => {
+			appStore.LOGOUT();
+			appStore.clearStorage();
+			appStore.GetThemeConfig();
+			uni.hideLoading();
+			setTimeout(() => {
+				uni.reLaunch({
+					url: '/pages/index/index'
 				});
-				this.moal = false;
-				userOut().then(res => {
-					this.$store.commit("clearStorage");
-					this.$store.dispatch("GetTokenIsExist");
-					this.$store.dispatch('GetThemeConfig');
-					uni.hideLoading();
-					setTimeout(() => {
-						uni.reLaunch({
-							url: '/pages/index/index'
-						});
-					}, 500);
-				}).then(err => {
-					uni.hideLoading()
-					this.$util.Tips({
-						title: err
-					});
-				});
-			},
-			cancelBtn() {
-				if (!this.check) {
-					return uni.showToast({
-						title: "请勾选已阅读",
-						icon: 'none',
-						duration: 2000,
-					})
-				} else {
-					this.moal = true
-				}
-			},
-			getCacheinfo() {
-				this.loaded = false;
-				agreementInfo(this.type).then(res => {
-					this.agreementData = res.data ? JSON.parse(res.data).agreement : ''
-					this.loaded = true;
-				})
-			},
-			setTitle(e) {
-				switch (e) {
-					case 'aboutusinfo':
-						uni.setNavigationBarTitle({
-							title: '关于我们协议'
-						})
-						break;
-					case 'intelligentinfo':
-						uni.setNavigationBarTitle({
-							title: '平台资质证明'
-						})
-						break;
-					case 'useraccountcancelinfo':
-						uni.setNavigationBarTitle({
-							title: '用户注销协议'
-						})
-						break;
-					case 'useraccountcancelnoticeinfo':
-						uni.setNavigationBarTitle({
-							title: '用户注销声明'
-						})
-						break;
-					case 'userinfo':
-						uni.setNavigationBarTitle({
-							title: '用户注册协议'
-						})
-						break;
-					case 'coupon/agreement/info':
-						uni.setNavigationBarTitle({
-							title: '优惠券协议'
-						})
-						break;
-					default:
-						uni.setNavigationBarTitle({
-							title: '用户隐私协议'
-						})
-						break;
-				}
-			}
+			}, 500);
+		}).then(err => {
+			uni.hideLoading()
+			proxy.$util.Tips({
+				title: err
+			});
+		});
+	}
+	function cancelBtn() {
+		if (!check.value) {
+			return uni.showToast({
+				title: "请勾选已阅读",
+				icon: 'none',
+				duration: 2000,
+			})
+		} else {
+			moal.value = true
 		}
 	}
+	function getCacheinfo() {
+		loaded.value = false;
+		agreementInfo(type.value).then(res => {
+			agreementData.value = res.data ? JSON.parse(res.data).agreement : ''
+			loaded.value = true;
+		})
+	}
+	function setTitle(e) {
+		switch (e) {
+			case 'aboutusinfo':
+				uni.setNavigationBarTitle({
+					title: '关于我们协议'
+				})
+				break;
+			case 'intelligentinfo':
+				uni.setNavigationBarTitle({
+					title: '平台资质证明'
+				})
+				break;
+			case 'useraccountcancelinfo':
+				uni.setNavigationBarTitle({
+					title: '用户注销协议'
+				})
+				break;
+			case 'useraccountcancelnoticeinfo':
+				uni.setNavigationBarTitle({
+					title: '用户注销声明'
+				})
+				break;
+			case 'userinfo':
+				uni.setNavigationBarTitle({
+					title: '用户注册协议'
+				})
+				break;
+			case 'coupon/agreement/info':
+				uni.setNavigationBarTitle({
+					title: '优惠券协议'
+				})
+				break;
+			default:
+				uni.setNavigationBarTitle({
+					title: '用户隐私协议'
+				})
+				break;
+		}
+	}
+
+	onLoad((options) => {
+		type.value = options.from;
+		setTitle(type.value);
+		getCacheinfo();
+	});
 </script>
 
 <style lang="scss">
@@ -201,10 +199,6 @@
 				text-align: center;
 				font-size: 24rpx;
 				font-weight: 400;
-	
-				span {
-					margin-left: 5rpx;
-				}
 	
 				.font {
 					@include main_color(theme);

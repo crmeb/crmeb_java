@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme" class="user_payment">
+	<view :data-theme="theme" class="user_payment" :style="colorStyle">
 		<form @submit="submitSub" report-submit='true'>
 			<view class="payment-top acea-row row-column row-center-wrapper">
 				<span class="name1">我的余额</span>
@@ -71,7 +71,11 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, reactive, nextTick, watch, getCurrentInstance } from 'vue';
+	import { onLoad } from '@dcloudio/uni-app';
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
 	import {
 		rechargeRoutine,
 		rechargeWechat,
@@ -80,435 +84,432 @@
 		appWechat,
 		alipayFull
 	} from '@/api/user.js';
-	import { wechatQueryPayResult,getOrderPayConfig} from '@/api/order.js';
+	import { wechatQueryPayResult, getOrderPayConfig } from '@/api/order.js';
 	import {
 		toLogin
 	} from '@/libs/login.js';
-	import {
-		mapGetters
-	} from "vuex";
-	import {Debounce} from '@/utils/validate.js'
-	let app = getApp();
-	export default {
-		data() {
-			let that = this;
-			return {
-				now_money: 0,
-				navRecharge: ['账户充值', '佣金转入'],
-				active: 0,
-				number: '',
-				placeholder: "0.00",
-				from: '',
-				picList: [],
-				activePic: 0,
-				money: "",
-				numberPic: '',
-				rechar_id: 0,
-				rechargeAttention: [],
-				theme:app.globalData.theme,
-				//支付方式
-				cartArr: [{
-						"name": "微信支付",
-						"icon": "icon-weixin2",
-						value: 'weixin',
-						title: '微信快捷支付',
-						payStatus: 1,
-					},
-					// #ifndef MP
-					{
-						"name": "支付宝支付",
-						"icon": "icon-zhifubao",
-						value: 'alipay',
-						title: '支付宝快捷支付',
-						payStatus: 1,
-					}
-					// #endif
-				],
-				payType: 'weixin', //支付方式
-				openType: 1, //优惠券打开方式 1=使用
-				curActive: 0, //支付方式切换
-				animated: false,
-				formContent:''
-			};
+	import { Debounce } from '@/utils/validate.js';
+	import util from '@/utils/util.js';
+import { useColor } from '@/composables/useColor.js';
+
+	const app = getApp();
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { isLogin, systemPlatform, userInfo } = storeToRefs(appStore);
+
+	const now_money = ref(0);
+	const navRecharge = ref(['账户充值', '佣金转入']);
+	const active = ref(0);
+	const number = ref('');
+	const placeholder = ref("0.00");
+	const from = ref('');
+	const picList = ref([]);
+	const activePic = ref(0);
+	const money = ref("");
+	const numberPic = ref('');
+	const rechar_id = ref(0);
+	const rechargeAttention = ref([]);
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	//支付方式
+	const cartArr = reactive([{
+			"name": "微信支付",
+			"icon": "icon-weixin2",
+			value: 'weixin',
+			title: '微信快捷支付',
+			payStatus: 1,
 		},
-		computed: mapGetters(['isLogin', 'systemPlatform','userInfo']),
-		watch:{
-			isLogin:{
-				handler:function(newV,oldV){
-					if(newV){
-						this.getRecharge();
+		// #ifndef MP
+		{
+			"name": "支付宝支付",
+			"icon": "icon-zhifubao",
+			value: 'alipay',
+			title: '支付宝快捷支付',
+			payStatus: 1,
+		}
+		// #endif
+	]);
+	const payType = ref('weixin'); //支付方式
+	const openType = ref(1); //优惠券打开方式 1=使用
+	const curActive = ref(0); //支付方式切换
+	const animated = ref(false);
+	const formContent = ref('');
+
+	watch(isLogin, (newV, oldV) => {
+		if (newV) {
+			getRecharge();
+		}
+	}, { deep: true });
+
+	onLoad((options) => {
+		// #ifdef H5
+		from.value = proxy.$wechat.isWeixin() ? "public" : "weixinh5";
+		// #endif
+		// #ifdef APP-PLUS
+		from.value = systemPlatform.value === 'ios' ? 'weixinAppIos' : 'weixinAppAndroid';
+		// #endif
+		if (isLogin.value) {
+			getRecharge();
+			payConfig();
+		} else {
+			toLogin();
+		}
+	});
+
+	/**
+	 * 选择金额
+	 */
+	function picCharge(idx, item) {
+		activePic.value = idx;
+		if (item === undefined) {
+			rechar_id.value = 0;
+			numberPic.value = "";
+		} else {
+			money.value = "";
+			rechar_id.value = item.id;
+			numberPic.value = item.price;
+		}
+	}
+
+	/**
+	 * 充值额度选择
+	 */
+	function getRecharge() {
+		getRechargeApi()
+			.then(res => {
+				picList.value = res.data.rechargeQuota;
+				if (picList.value[0]) {
+					rechar_id.value = picList.value[0].id;
+					numberPic.value = picList.value[0].price;
+				}
+				rechargeAttention.value = res.data.rechargeAttention || [];
+			})
+			.catch(res => {
+				proxy.$dialog.toast({
+					mes: res
+				});
+			});
+	}
+
+	// 支付配置
+	function payConfig() {
+		getOrderPayConfig().then(res => {
+			cartArr[0].payStatus = res.data.payWechatOpen ? 1 : 0;
+			// #ifndef MP
+			cartArr[1].payStatus = res.data.aliPayStatus ? 1 : 0;
+			// #endif
+			// #ifdef H5
+			if (proxy.$wechat.isWeixin()) cartArr.pop();
+			// #endif
+		})
+	}
+
+	function navRecharges(index) {
+		active.value = index;
+	}
+
+	function payItem(e) {
+		let act = e;
+		curActive.value = act;
+		animated.value = true;
+		payType.value = cartArr[act].value;
+	}
+
+	/*
+	 * 用户充值
+	 */
+	const submitSub = Debounce(function(e) {
+		let value = e.detail.value.number ? e.detail.value.number : numberPic.value;
+		// 转入余额
+		if (active.value) {
+			if (parseFloat(value) < 0 || parseFloat(value) == NaN || value == undefined || value == "") {
+				return util.Tips({
+					title: '请输入金额'
+				});
+			}
+			uni.showModal({
+				title: '转入余额',
+				content: '转入余额后无法再次转出，确认是否转入余额',
+				success(res) {
+					if (res.confirm) {
+						transferIn({
+							price: parseFloat(value)
+						}).then(res => {
+							appStore.changInfo({
+								amount1: 'brokeragePrice',
+								amount2: util.$h.Sub(userInfo.value.brokeragePrice, parseFloat(value))
+							});
+							return util.Tips({
+								title: '转入成功',
+								icon: 'success'
+							}, {
+								tab: 5,
+								url: '/pages/users/user_money/index'
+							});
+						}).catch(err => {
+							return util.Tips({
+								title: err
+							});
+						})
+					} else if (res.cancel) {
+						return util.Tips({
+							title: '已取消'
+						});
 					}
 				},
-				deep:true
-			}
-		},
-		onLoad(options) {
-			// #ifdef H5
-			this.from = this.$wechat.isWeixin() ? "public" : "weixinh5";
-			// #endif
-			// #ifdef APP-PLUS
-			this.from = this.systemPlatform === 'ios' ? 'weixinAppIos' : 'weixinAppAndroid';
-			// #endif
-			if (this.isLogin) {
-				this.getRecharge();
-				this.payConfig();
-			} else {
-				toLogin();
-			}
-		},
-		methods: {
-			/**
-			 * 选择金额
-			 */
-			picCharge(idx, item) {
-				this.activePic = idx;
-				if (item === undefined) {
-					this.rechar_id = 0;
-					this.numberPic = "";
-				} else {
-					this.money = "";
-					this.rechar_id = item.id;
-					this.numberPic = item.price;
-				}
-			},
-
-
-			/**
-			 * 充值额度选择
-			 */
-			getRecharge() {
-				getRechargeApi()
-					.then(res => {
-						this.picList = res.data.rechargeQuota;
-						if (this.picList[0]) {
-							this.rechar_id = this.picList[0].id;
-							this.numberPic = this.picList[0].price;
-						}
-						this.rechargeAttention = res.data.rechargeAttention || [];
-					})
-					.catch(res => {
-						this.$dialog.toast({
-							mes: res
-						});
+			})
+		} else {
+			uni.showLoading({
+				title: '正在支付',
+			})
+			let payMoney = parseFloat(money.value);
+			if (rechar_id.value == 0) {
+				if (Number.isNaN(payMoney)) {
+					return util.Tips({
+						title: '充值金额必须为数字'
 					});
-			},
-			// 支付配置
-			payConfig(){
-				getOrderPayConfig().then(res=>{
-					this.cartArr[0].payStatus = res.data.payWechatOpen ? 1 : 0;
-					// #ifndef MP
-					this.cartArr[1].payStatus = res.data.aliPayStatus ? 1 : 0;
-					// #endif
-					if(this.$wechat.isWeixin()) this.cartArr.pop();
-				})
-			},
-			navRecharges: function(index) {
-				this.active = index;
-			},
-			payItem: function(e) {
-				let that = this;
-				let active = e;
-				that.curActive = active;
-				that.animated = true;
-				that.payType = that.cartArr[active].value;
-			},
-			/*
-			 * 用户充值
-			 */
-			submitSub: Debounce(function(e) {
-				let that = this
-				let value = e.detail.value.number ? e.detail.value.number :that.numberPic;
-				// 转入余额
-				if (that.active) {
-					if (parseFloat(value) < 0 || parseFloat(value) == NaN || value == undefined || value == "") {
-						return that.$util.Tips({
-							title: '请输入金额'
-						});
-					}
-					uni.showModal({
-						title: '转入余额',
-						content: '转入余额后无法再次转出，确认是否转入余额',
-						success(res) {
-							if (res.confirm) {
-								transferIn({
-											price: parseFloat(value)
-								}).then(res => {
-									that.$store.commit("changInfo", {
-										amount1: 'brokeragePrice',
-										amount2: that.$util.$h.Sub(that.userInfo.brokeragePrice, parseFloat(value))
-									});
-									return that.$util.Tips({
-										title: '转入成功',
-										icon: 'success'
-									}, {
-										tab: 5,
-										url: '/pages/users/user_money/index'
-									});
-								}).catch(err=>{
-									return that.$util.Tips({
-										title: err
-									});
-								})
-							} else if (res.cancel) {
-								return that.$util.Tips({
-									title: '已取消'
-								});
-							}
-						},
-					})
-				} else {
-					uni.showLoading({
-						title: '正在支付',
-					})
-					let money = parseFloat(this.money);
-					if (this.rechar_id == 0) {
-						if (Number.isNaN(money)) {
-							return that.$util.Tips({
-								title: '充值金额必须为数字'
-							});
-						}
-						if (money <= 0) {
-							return that.$util.Tips({
-								title: '充值金额不能为0'
-							});
-						}
-						if (money > 50000) {
-							return that.$util.Tips({
-								title: '充值金额最大值为50000'
-							});
-						}
-					} else {
-						money = this.numberPic
-					}
-					switch (that.payType){
-						case 'weixin':
-						// #ifdef APP-PLUS
-						appWechat({
-							from: that.from,
-							price: money,
-							type: 0,
-							rechar_id: this.rechar_id
-						}).then(res => {
-							uni.hideLoading();
-							let jsConfig = res.data.jsConfig;
-							uni.requestPayment({
-								provider: 'wxpay',
-								orderInfo: {
-									"appid": jsConfig.appId, // 微信开放平台 - 应用 - AppId，注意和微信小程序、公众号 AppId 可能不一致
-									"noncestr": jsConfig.nonceStr, // 随机字符串
-									"package": "Sign=WXPay", // 固定值
-									"partnerid": jsConfig.partnerid, // 微信支付商户号
-									"prepayid": jsConfig.packages, // 统一下单订单号 
-									"timestamp": Number(jsConfig.timeStamp), // 时间戳（单位：秒）
-									"sign": this.systemPlatform === 'ios' ? 'MD5' : jsConfig.paySign // 签名，这里用的 MD5 签名
-								}, //微信、支付宝订单数据 【注意微信的订单信息，键值应该全部是小写，不能采用驼峰命名】
-								success: function(res) {
-									that.$store.commit("changInfo", {
-										amount1: 'nowMoney',
-										amount2: that.$util.$h.Add(value, that.userInfo.nowMoney)
-									});
-									return that.$util.Tips({
-										title: '支付成功',
-										icon: 'success'
-									}, {
-										tab: 5,
-										url: '/pages/users/user_money/index'
-									});
-								},
-								fail: function(err) {
-									return that.$util.Tips({
-										title: '支付失败'
-									});
-								},
-								complete: function(res) {
-									if (res.errMsg == 'requestPayment:cancel') return that.$util.Tips({
-										title: '取消支付'
-									});
-								}
-							})
-						}).catch(err => {
-							uni.hideLoading();
-							return that.$util.Tips({
-								title: err
-							})
-						});
-						// #endif
-						
-						// #ifdef MP
-						rechargeRoutine({
-							price: money,
-							type: 0,
-							rechar_id: this.rechar_id
-						}).then(res => {
-							uni.hideLoading();
-							let jsConfig = res.data.data.jsConfig;
-							uni.requestPayment({
-								timeStamp: jsConfig.timeStamp,
-								nonceStr: jsConfig.nonceStr,
-								package: jsConfig.packages,
-								signType: jsConfig.signType,
-								paySign: jsConfig.paySign,
-								success: function(res) {
-									that.$store.commit("changInfo", {
-										amount1: 'nowMoney',
-										amount2: that.$util.$h.Add(value, that.userInfo.nowMoney)
-									});
-									return that.$util.Tips({
-										title: '支付成功',
-										icon: 'success'
-									}, {
-										tab: 5,
-										url: '/pages/users/user_money/index'
-									});
-								},
-								fail: function(err) {
-									return that.$util.Tips({
-										title: '支付失败'
-									});
-								},
-								complete: function(res) {
-									if (res.errMsg == 'requestPayment:cancel') return that.$util.Tips({
-										title: '取消支付'
-									});
-								}
-							})
-						}).catch(err => {
-							uni.hideLoading();
-							return that.$util.Tips({
-								title: err
-							})
-						});
-						// #endif
-						// #ifdef H5
-							rechargeWechat({
-								price: money,
-								from: that.from,
-								rechar_id: that.rechar_id,
-								payType: 0
-							}).then(res => {
-								let jsConfig = res.data.jsConfig;
-								let orderNo = res.data.orderNo;
-								let data = {
-									timestamp:jsConfig.timeStamp,
-									nonceStr:jsConfig.nonceStr,
-									package:jsConfig.packages,
-									signType:jsConfig.signType,
-									paySign:jsConfig.paySign
-								};
-								if (that.from == "weixinh5") {
-									uni.hideLoading();
-									that.$util.Tips({
-										title: '支付成功'
-									}, {
-										tab: 5,
-										url:'/pages/users/user_money/index'
-									});
-									setTimeout(() => {
-										location.href = jsConfig.mwebUrl;
-									}, 100)
-								} else {
-									that.$wechat.pay(data)
-										.finally(() => {
-											that.$store.commit("changInfo", {
-												amount1: 'nowMoney',
-												amount2: that.$util.$h.Add(value, that.userInfo.nowMoney)
-											});
-											return that.$util.Tips({
-												title: '支付成功',
-												icon: 'success'
-											}, {
-												tab: 5,
-												url: '/pages/users/user_money/index'
-											});
-										})
-										.catch(function(err) {
-											return that.$util.Tips({
-												title: '支付失败'
-											});
-										});
-								}
-							}).catch(res=>{
-								uni.hideLoading();
-								return that.$util.Tips({
-									title: res
-								});
-							})
-							// #endif
-							break;
-						case 'alipay':
-							// alipayFull
-							// #ifdef APP-PLUS
-							alipayFull({
-								from: 'appAliPay',
-								price: money,
-								payType: 'alipay',
-								rechar_id: this.rechar_id 
-							}).then(res => {
-								uni.hideLoading();
-								let alipayRequest = res.data.alipayRequest;
-								uni.requestPayment({
-									provider: 'alipay',
-									orderInfo: alipayRequest,
-									success: (e) => {
-										return that.$util.Tips({
-											title: '支付成功',
-											icon: 'success'
-										}, {
-											tab: 5,
-											url: '/pages/users/user_money/index'
-										});
-									},
-									fail: (e) => {
-										return that.$util.Tips({
-											title: '支付失败'
-										});
-									},
-									complete: () => {
-										uni.hideLoading();
-									},
-								});
-								
-							}).catch(err => {
-								uni.hideLoading();
-								return that.$util.Tips({
-									title: err
-								})
-							});
-							// #endif
-							// #ifdef H5
-							if (this.$wechat.isWeixin()) {
-								uni.redirectTo({
-									url: `/pages/users/alipay_invoke/index?price=${money}&rechar_id=${this.rechar_id}&type=users`
-								});
-							} else{
-								alipayFull({
-									from: 'alipay',
-									price: money,
-									payType: 'alipay',
-									rechar_id: this.rechar_id
-								}).then(res => {
-									//h5支付  
-									uni.hideLoading();
-									that.formContent = res.data.alipayRequest;
-									that.$nextTick(() => {
-										document.forms['punchout_form'].submit();
-									})
-								}).catch(res=>{
-									uni.hideLoading();
-									return that.$util.Tips({
-										title: res
-									});
-								})
-							}
-							// #endif
-							break;
-					}
 				}
-			}),
-			addMoney(){
-				this.money = this.money.replace(/[^\d]/g,'').replace(/^0{1,}/g,'');
+				if (payMoney <= 0) {
+					return util.Tips({
+						title: '充值金额不能为0'
+					});
+				}
+				if (payMoney > 50000) {
+					return util.Tips({
+						title: '充值金额最大值为50000'
+					});
+				}
+			} else {
+				payMoney = numberPic.value;
+			}
+			switch (payType.value) {
+				case 'weixin':
+				// #ifdef APP-PLUS
+				appWechat({
+					from: from.value,
+					price: payMoney,
+					type: 0,
+					rechar_id: rechar_id.value
+				}).then(res => {
+					uni.hideLoading();
+					let jsConfig = res.data.jsConfig;
+					uni.requestPayment({
+						provider: 'wxpay',
+						orderInfo: {
+							"appid": jsConfig.appId, // 微信开放平台 - 应用 - AppId，注意和微信小程序、公众号 AppId 可能不一致
+							"noncestr": jsConfig.nonceStr, // 随机字符串
+							"package": "Sign=WXPay", // 固定值
+							"partnerid": jsConfig.partnerid, // 微信支付商户号
+							"prepayid": jsConfig.packages, // 统一下单订单号
+							"timestamp": Number(jsConfig.timeStamp), // 时间戳（单位：秒）
+							"sign": systemPlatform.value === 'ios' ? 'MD5' : jsConfig.paySign // 签名，这里用的 MD5 签名
+						}, //微信、支付宝订单数据 【注意微信的订单信息，键值应该全部是小写，不能采用驼峰命名】
+						success: function(res) {
+							appStore.changInfo({
+								amount1: 'nowMoney',
+								amount2: util.$h.Add(value, userInfo.value.nowMoney)
+							});
+							return util.Tips({
+								title: '支付成功',
+								icon: 'success'
+							}, {
+								tab: 5,
+								url: '/pages/users/user_money/index'
+							});
+						},
+						fail: function(err) {
+							return util.Tips({
+								title: '支付失败'
+							});
+						},
+						complete: function(res) {
+							if (res.errMsg == 'requestPayment:cancel') return util.Tips({
+								title: '取消支付'
+							});
+						}
+					})
+				}).catch(err => {
+					uni.hideLoading();
+					return util.Tips({
+						title: err
+					})
+				});
+				// #endif
+
+				// #ifdef MP
+				rechargeRoutine({
+					price: payMoney,
+					type: 0,
+					rechar_id: rechar_id.value
+				}).then(res => {
+					uni.hideLoading();
+					let jsConfig = res.data.data.jsConfig;
+					uni.requestPayment({
+						timeStamp: jsConfig.timeStamp,
+						nonceStr: jsConfig.nonceStr,
+						package: jsConfig.packages,
+						signType: jsConfig.signType,
+						paySign: jsConfig.paySign,
+						success: function(res) {
+							appStore.changInfo({
+								amount1: 'nowMoney',
+								amount2: util.$h.Add(value, userInfo.value.nowMoney)
+							});
+							return util.Tips({
+								title: '支付成功',
+								icon: 'success'
+							}, {
+								tab: 5,
+								url: '/pages/users/user_money/index'
+							});
+						},
+						fail: function(err) {
+							return util.Tips({
+								title: '支付失败'
+							});
+						},
+						complete: function(res) {
+							if (res.errMsg == 'requestPayment:cancel') return util.Tips({
+								title: '取消支付'
+							});
+						}
+					})
+				}).catch(err => {
+					uni.hideLoading();
+					return util.Tips({
+						title: err
+					})
+				});
+				// #endif
+				// #ifdef H5
+					rechargeWechat({
+						price: payMoney,
+						from: from.value,
+						rechar_id: rechar_id.value,
+						payType: 0
+					}).then(res => {
+						let jsConfig = res.data.jsConfig;
+						let orderNo = res.data.orderNo;
+						let data = {
+							timestamp:jsConfig.timeStamp,
+							nonceStr:jsConfig.nonceStr,
+							package:jsConfig.packages,
+							signType:jsConfig.signType,
+							paySign:jsConfig.paySign
+						};
+						if (from.value == "weixinh5") {
+							uni.hideLoading();
+							util.Tips({
+								title: '支付成功'
+							}, {
+								tab: 5,
+								url:'/pages/users/user_money/index'
+							});
+							setTimeout(() => {
+								location.href = jsConfig.mwebUrl;
+							}, 100)
+						} else {
+							proxy.$wechat.pay(data)
+								.finally(() => {
+									appStore.changInfo({
+										amount1: 'nowMoney',
+										amount2: util.$h.Add(value, userInfo.value.nowMoney)
+									});
+									return util.Tips({
+										title: '支付成功',
+										icon: 'success'
+									}, {
+										tab: 5,
+										url: '/pages/users/user_money/index'
+									});
+								})
+								.catch(function(err) {
+									return util.Tips({
+										title: '支付失败'
+									});
+								});
+						}
+					}).catch(res => {
+						uni.hideLoading();
+						return util.Tips({
+							title: res
+						});
+					})
+					// #endif
+					break;
+				case 'alipay':
+					// alipayFull
+					// #ifdef APP-PLUS
+					alipayFull({
+						from: 'appAliPay',
+						price: payMoney,
+						payType: 'alipay',
+						rechar_id: rechar_id.value
+					}).then(res => {
+						uni.hideLoading();
+						let alipayRequest = res.data.alipayRequest;
+						uni.requestPayment({
+							provider: 'alipay',
+							orderInfo: alipayRequest,
+							success: (e) => {
+								return util.Tips({
+									title: '支付成功',
+									icon: 'success'
+								}, {
+									tab: 5,
+									url: '/pages/users/user_money/index'
+								});
+							},
+							fail: (e) => {
+								return util.Tips({
+									title: '支付失败'
+								});
+							},
+							complete: () => {
+								uni.hideLoading();
+							},
+						});
+
+					}).catch(err => {
+						uni.hideLoading();
+						return util.Tips({
+							title: err
+						})
+					});
+					// #endif
+					// #ifdef H5
+					if (proxy.$wechat.isWeixin()) {
+						uni.redirectTo({
+							url: `/pages/users/alipay_invoke/index?price=${payMoney}&rechar_id=${rechar_id.value}&type=users`
+						});
+					} else {
+						alipayFull({
+							from: 'alipay',
+							price: payMoney,
+							payType: 'alipay',
+							rechar_id: rechar_id.value
+						}).then(res => {
+							//h5支付
+							uni.hideLoading();
+							formContent.value = res.data.alipayRequest;
+							nextTick(() => {
+								document.forms['punchout_form'].submit();
+							})
+						}).catch(res => {
+							uni.hideLoading();
+							return util.Tips({
+								title: res
+							});
+						})
+					}
+					// #endif
+					break;
 			}
 		}
+	});
+
+	function addMoney() {
+		money.value = money.value.replace(/[^\d]/g,'').replace(/^0{1,}/g,'');
 	}
 </script>
 
@@ -691,7 +692,7 @@
 	}
 	.px-30{
 		padding-left: 30rpx;
-		padding-rigt: 30rpx;
+		padding-right: 30rpx;
 	}
 	 .wrapper .item .placeholder {
 		color: #ccc;

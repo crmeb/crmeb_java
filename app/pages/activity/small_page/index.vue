@@ -57,279 +57,212 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, nextTick, getCurrentInstance } from "vue";
+import { onLoad, onUnload, onShow, onPullDownRefresh, onPageScroll } from "@dcloudio/uni-app";
 const app = getApp();
-import colors from "@/mixins/color";
-import themePage from "@/mixins/themePage.js";
+import { useColor } from "@/composables/useColor.js";
+import { useThemePage } from "@/composables/useThemePage.js";
 import PageDesign from "@/subpackage/diyComponents/pageDesign.vue";
 import { getShare } from "@/api/public.js";
-import { getCrmebCopyRight, getTempIds } from "@/api/api.js";
-import { SUBSCRIBE_MESSAGE } from "@/config/cache";
-import { mapGetters, mapMutations } from "vuex";
+import { getTempIds } from "@/api/api.js";
+import { SUBSCRIBE_MESSAGE } from "@/config/cache.js";
+import { cacheSubscribeTemplateIds } from "@/utils/SubscribeMessage.js";
 import { toLogin } from "@/libs/login.js";
-import { HTTP_REQUEST_URL } from "@/config/app";
-import Cache from "@/utils/cache";
+import { HTTP_REQUEST_URL } from "@/config/app.js";
+import Cache from "@/utils/cache.js";
+import util from "@/utils/util.js";
 import appUpdate from "@/components/update/app-update.vue";
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
 
-export default {
-  mixins: [colors, themePage],
-  components: {
-    PageDesign,
-    // #ifdef APP
-    appUpdate,
+const { proxy } = getCurrentInstance();
+const appStore = useAppStore();
+const { isLogin, uid } = storeToRefs(appStore);
+const { colorStyle } = useColor();
+const { themeId, themeDiyData, themeChecked, getThemeIdFromOptions, initThemePage } = useThemePage();
+
+const pageShow = ref(false);
+const currentDiyData = ref({});
+const windowHeight = ref(0);
+const isFixed = ref(true);
+const isScrolled = ref(false);
+const errorNetwork = ref(false);
+const confirm_video_status = ref(false);
+const belongIndex = ref(0);
+const bgColor = ref("");
+const bgPic = ref("");
+const bgTabVal = ref("");
+const site_config = ref("");
+const configData = ref(Cache.get("BASIC_CONFIG"));
+const shareInfo = ref({});
+const imgHost = ref(HTTP_REQUEST_URL);
+const isFooter = ref(false);
+const pdHeight = ref(0);
+const sortMpTop = ref(0);
+const entryData = ref({ store_id: "", select_store_id: "" });
+const microId = ref("");
+
+const pageStyle = computed(() => ({
+  backgroundColor: bgColor.value,
+  backgroundImage: bgPic.value ? `url(${bgPic.value})` : "",
+  minHeight: windowHeight.value + "px",
+}));
+
+onLoad((options) => {
+  uni.hideTabBar();
+  getOptions(options);
+  initPage(options);
+  nextTick(() => {
+    uni.getSystemInfo({ success: (res) => { windowHeight.value = res.windowHeight; } });
+  });
+  // #ifdef H5
+  setOpenShare();
+  // #endif
+  // #ifdef MP
+  getTempIdsFn();
+  // #endif
+  getShare().then((res) => { shareInfo.value = res.data; });
+  proxy.$eventHub.on("confirm_video_status", () => {
+    if (confirm_video_status.value) return;
+    confirm_video_status.value = true;
+    let flag = true;
+    // #ifdef H5
+    flag = window.self == window.top;
     // #endif
-  },
-  computed: {
-    ...mapGetters(["isLogin", "uid"]),
-    pageStyle() {
-      return {
-        backgroundColor: this.bgColor,
-        backgroundImage: this.bgPic ? `url(${this.bgPic})` : "",
-        minHeight: this.windowHeight + "px",
-      };
-    },
-  },
-  data() {
-    return {
-      pageShow: false,
-      currentDiyData: {},
-      windowHeight: 0,
-      isFixed: true,
-      isScrolled: false,
-      errorNetwork: false,
-      confirm_video_status: false,
-      belongIndex: 0,
-      bgColor: "",
-      bgPic: "",
-      bgTabVal: "",
-      site_config: "",
-      configData: Cache.get("BASIC_CONFIG"),
-      shareInfo: {},
-      imgHost: HTTP_REQUEST_URL,
-      themeId: "",
-      isFooter: false,
-      pdHeight: 0,
-      sortMpTop: 0,
-      entryData: {
-        store_id: "",
-        select_store_id: "",
+    if (!flag) return;
+    uni.showModal({
+      content: "当前使用移动网络，是否继续播放视频？",
+      success: (res) => {
+        if (res.confirm) {
+          appStore.SET_AUTOPLAY(true);
+          proxy.$eventHub.emit("product_video_observe");
+        }
       },
-    };
-  },
-  onLoad(options) {
-    uni.hideTabBar();
-    this.getOptions(options);
-    this.initPage(options);
-    this.$nextTick(() => {
-      uni.getSystemInfo({
-        success: (res) => {
-          this.windowHeight = res.windowHeight;
-        },
-      });
     });
-    // #ifdef H5
-    this.setOpenShare();
-    // #endif
-    // #ifdef MP
-    this.getTempIds();
-    // #endif
+  });
+});
+
+onUnload(() => { uni.$off("activeFn"); });
+onShow(() => { uni.removeStorageSync("form_type_cart"); });
+onPullDownRefresh(() => { initPage({ theme_id: microId.value }); uni.stopPullDownRefresh(); });
+onPageScroll((e) => { uni.$emit("scroll"); isScrolled.value = e.scrollTop > 10; });
+
+async function initPage(options = {}) {
+  try {
+    pageShow.value = false;
+    if (microId.value && !options.micro_id) options.theme_id = microId.value;
+    const data = await initThemePage("home", options);
+    currentDiyData.value = data || {};
+    applyThemeData(currentDiyData.value);
+  } finally {
+    pageShow.value = true;
+  }
+}
+
+function applyThemeData(data) {
+  if (!data || typeof data !== "object") return;
+  bgColor.value = data.color_picker || "";
+  bgPic.value = data.bg_pic || "";
+  bgTabVal.value = data.bg_tab_val || "";
+  if (data.title) uni.setNavigationBarTitle({ title: data.title });
+  if (data.titleColor || data.titleBgColor) {
+    uni.setNavigationBarColor({
+      frontColor: data.titleColor || "#ffffff",
+      backgroundColor: (data.titleBgColor || "#ffffff").toString().toLowerCase(),
+    });
+  }
+}
+
+function getOptions(options) {
+  // #ifdef MP
+  if (options.scene) {
+    let value = util.getUrlParams(decodeURIComponent(options.scene));
+    if (value.spid) app.globalData.spid = value.spid;
+    if (value.micro_id) microId.value = value.micro_id;
+  }
+  // #endif
+  if (options.spid) app.globalData.spid = options.spid;
+  if (options.micro_id) microId.value = options.micro_id;
+}
+
+function reconnect() {
+  initPage({ theme_id: microId.value });
+  getShare().then((res) => { shareInfo.value = res.data; });
+}
+
+function goICP(url) {
+  // #ifdef H5
+  window.open(url);
+  // #endif
+  // #ifdef MP
+  uni.navigateTo({ url: `/pages/annex/web_view/index?url=${url}` });
+  // #endif
+}
+
+function bindHeighta(data) {
+  // #ifdef APP-PLUS
+  sortMpTop.value = data.top + data.height;
+  // #endif
+}
+
+function storeTap(id) {
+  entryData.value.select_store_id = id;
+  entryData.value.store_id = "";
+  uni.removeStorageSync("rulesStoreId");
+}
+
+function bindSortId(item) {
+  if (item.dataType && item.dataType.tabVal == 1) {
+    uni.navigateTo({ url: `/pages/goods/goods_list/index?cid=${item.classPage.id}&title=${item.classPage.name}` });
+  } else if (item.text && item.text.val == "首页") {
+    uni.switchTab({ url: "/pages/index/index" });
+  } else if (item.microPage && item.microPage.id) {
+    uni.navigateTo({ url: `/pages/activity/small_page/index?micro_id=${item.microPage.id}` });
+  }
+}
+
+function changeLogin() { toLogin(); }
+
+function changeBarg(item) {
+  if (!isLogin.value) { toLogin(); return; }
+  uni.navigateTo({ url: `/pages/activity/goods_bargain_details/index?id=${item.id}&spid=${uid.value || 0}` });
+}
+
+function newDataStatus(val, num) {
+  isFooter.value = val ? true : false;
+  pdHeight.value = num;
+}
+
+function getTempIdsFn() {
+  // #ifdef MP
+  let messageTmplIds = wx.getStorageSync(SUBSCRIBE_MESSAGE);
+  if (!messageTmplIds) {
+    getTempIds().then((res) => {
+      if (res.data) cacheSubscribeTemplateIds(res.data);
+    }).catch(() => {});
+  }
+  // #endif
+}
+
+// #ifdef H5
+function setOpenShare() {
+  let u = uid.value ? uid.value : 0;
+  if (proxy.$wechat.isWeixin()) {
     getShare().then((res) => {
-      this.shareInfo = res.data;
+      let data = res.data;
+      let configAppMessage = {
+        desc: data.synopsis, title: data.title,
+        link: location.href + "?spid=" + u, imgUrl: data.img,
+      };
+      proxy.$wechat.wechatEvevt(
+        ["updateAppMessageShareData", "updateTimelineShareData", "onMenuShareAppMessage", "onMenuShareTimeline"],
+        configAppMessage
+      );
     });
-    this.getCopyRight();
-    this.$eventHub.$on("confirm_video_status", () => {
-      if (this.confirm_video_status) return;
-      this.confirm_video_status = true;
-      let flag = true;
-      // #ifdef H5
-      flag = window.self == window.top;
-      // #endif
-      if (!flag) return;
-      uni.showModal({
-        content: "当前使用移动网络，是否继续播放视频？",
-        success: (res) => {
-          if (res.confirm) {
-            this.SET_AUTOPLAY(true);
-            this.$eventHub.$emit("product_video_observe");
-          }
-        },
-      });
-    });
-  },
-  onUnload() {
-    uni.$off("activeFn");
-  },
-  onShow() {
-    uni.removeStorageSync("form_type_cart");
-  },
-  onPullDownRefresh() {
-    this.initPage({ id: this.themeId });
-    uni.stopPullDownRefresh();
-  },
-  onPageScroll(e) {
-    uni.$emit("scroll");
-    this.isScrolled = e.scrollTop > 10;
-  },
-  methods: {
-    ...mapMutations(["SET_AUTOPLAY", "SET_NEARBY"]),
-    async initPage(options = {}) {
-      try {
-        this.pageShow = false;
-        const data = await this.initThemePage("home", options);
-        this.currentDiyData = data || {};
-        this.applyThemeData(this.currentDiyData);
-      } finally {
-        this.pageShow = true;
-      }
-    },
-    applyThemeData(data) {
-      if (!data || typeof data !== "object") return;
-      this.bgColor = data.color_picker || "";
-      this.bgPic = data.bg_pic || "";
-      this.bgTabVal = data.bg_tab_val || "";
-      if (data.title) {
-        uni.setNavigationBarTitle({
-          title: data.title,
-        });
-      }
-      if (data.titleColor || data.titleBgColor) {
-        uni.setNavigationBarColor({
-          frontColor: data.titleColor || "#ffffff",
-          backgroundColor: (data.titleBgColor || "#ffffff").toString().toLowerCase(),
-        });
-      }
-    },
-    getOptions(options) {
-      // #ifdef MP
-      if (options.scene) {
-        let value = this.$util.getUrlParams(decodeURIComponent(options.scene));
-        if (value.spid) app.globalData.spid = value.spid;
-      }
-      // #endif
-      if (options.spid) app.globalData.spid = options.spid;
-    },
-    getCopyRight() {
-      getCrmebCopyRight()
-        .then((res) => {
-          let data = res.data;
-          uni.setStorageSync("wechatStatus", data.wechat_status);
-          if (!data.copyrightContext && !data.copyrightImage) {
-            data.copyrightImage = "/static/images/support.png";
-          }
-          uni.setStorageSync("copyNameInfo", data.copyrightContext);
-          uni.setStorageSync("copyImageInfo", data.copyrightImage);
-          // #ifdef MP
-          uni.setStorageSync(
-            "MPSiteData",
-            JSON.stringify({
-              site_logo: data.site_logo,
-              site_name: data.site_name,
-            })
-          );
-          // #endif
-        })
-        .catch((err) => {
-          return this.$util.Tips({
-            title: err.msg,
-          });
-        });
-    },
-    reconnect() {
-      this.initPage({ id: this.themeId });
-      getShare().then((res) => {
-        this.shareInfo = res.data;
-      });
-    },
-    goICP(url) {
-      // #ifdef H5
-      window.open(url);
-      // #endif
-      // #ifdef MP
-      uni.navigateTo({
-        url: `/pages/annex/web_view/index?url=${url}`,
-      });
-      // #endif
-    },
-    bindHeighta(data) {
-      // #ifdef APP-PLUS
-      this.sortMpTop = data.top + data.height;
-      // #endif
-    },
-    storeTap(id) {
-      this.entryData.select_store_id = id;
-      this.entryData.store_id = "";
-      uni.removeStorageSync("rulesStoreId");
-    },
-    bindSortId(item) {
-      if (item.dataType && item.dataType.tabVal == 1) {
-        uni.navigateTo({
-          url: `/pages/goods/goods_list/index?cid=${item.classPage.id}&title=${item.classPage.name}`,
-        });
-      } else if (item.text && item.text.val == "首页") {
-        uni.switchTab({
-          url: `/pages/index/index`,
-        });
-      } else if (item.microPage && item.microPage.id) {
-        uni.navigateTo({
-          url: `/pages/activity/small_page/index?id=${item.microPage.id}`,
-        });
-      }
-    },
-    changeLogin() {
-      toLogin();
-    },
-    changeBarg(item) {
-      if (!this.isLogin) {
-        toLogin();
-        return;
-      }
-      uni.navigateTo({
-        url: `/pages/activity/goods_bargain_details/index?id=${item.id}&spid=${this.uid || 0}`,
-      });
-    },
-    newDataStatus(val, num) {
-      this.isFooter = val ? true : false;
-      this.pdHeight = num;
-    },
-    getTempIds() {
-      // #ifdef MP
-      let messageTmplIds = wx.getStorageSync(SUBSCRIBE_MESSAGE);
-      if (!messageTmplIds) {
-        getTempIds().then((res) => {
-          if (res.data) {
-            wx.setStorageSync(SUBSCRIBE_MESSAGE, JSON.stringify(res.data));
-          }
-        });
-      }
-      // #endif
-    },
-    // #ifdef H5
-    setOpenShare() {
-      let uid = this.uid ? this.uid : 0;
-      if (this.$wechat.isWeixin()) {
-        getShare().then((res) => {
-          let data = res.data;
-          let configAppMessage = {
-            desc: data.synopsis,
-            title: data.title,
-            link: location.href + "?spid=" + uid,
-            imgUrl: data.img,
-          };
-          this.$wechat.wechatEvevt(
-            [
-              "updateAppMessageShareData",
-              "updateTimelineShareData",
-              "onMenuShareAppMessage",
-              "onMenuShareTimeline",
-            ],
-            configAppMessage
-          );
-        });
-      }
-    },
-    // #endif
-  },
-};
+  }
+}
+// #endif
 </script>
 
 <style lang="scss" scoped>

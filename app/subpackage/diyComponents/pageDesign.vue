@@ -192,13 +192,6 @@
               @share="onShare"
               @goActivity="onGoActivity"
             ></productInfo>
-            <homePaidVip
-              v-else-if="item.name == 'home_paid_vip'"
-              :dataConfig="item"
-              :productData="productData"
-              :isShowPaidVip="isShowPaidVip"
-              :priceData="priceData"
-            ></homePaidVip>
             <homeProductService
               v-else-if="item.name == 'productService'"
               :dataConfig="item"
@@ -248,7 +241,7 @@
 
     <view v-else>
       <view class="error-network">
-        <image :src="imgHost + '/statics/images/error-network.gif'"></image>
+        <image :src="imgHost + '/crmebimage/theme-cate/error-network.gif'"></image>
         <view class="title">{{ '网络连接断开' }}</view>
         <view class="btn" @click="reconnect">{{ '重新连接' }}</view>
       </view>
@@ -256,10 +249,12 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch } from "vue";
 import pageFooter from "@/components/pageFooter/index.vue";
-import { HTTP_REQUEST_URL } from "@/config/app";
-import colors from "@/mixins/color";
+import { HTTP_REQUEST_URL } from "@/config/app.js";
+import { useColor } from "@/composables/useColor.js";
+import util from "@/utils/util.js";
 // diyComponents - 同目录使用相对路径
 import homeComb from "./homeComb.vue";
 import headerSerch from "./headerSerch.vue";
@@ -292,11 +287,14 @@ import signIn from "./signIn.vue";
 import hotspot from "./hotspot.vue";
 import follow from "./follow.vue";
 import productInfo from "./productInfo.vue";
-import homePaidVip from "./homePaidVip.vue";
 import homeProductService from "./homeProductService.vue";
 import homeReviews from "./homeReviews.vue";
 import productDesc from "./productDesc.vue";
 import customComponent from "./customComponent.vue";
+
+const DISABLED_COMPONENT_NAMES = ["home_paid_vip"];
+
+const { colorStyle, colorStatus } = useColor();
 
 const COMPONENT_NAME_MAP = {
   home_comb: "homeComb",
@@ -325,7 +323,6 @@ const COMPONENT_NAME_MAP = {
   home_hotspot: "hotspot",
   z_wechat_attention: "follow",
   home_member: "member",
-  home_paid_vip: "home_paid_vip",
   home_product_info: "productInfo",
   home_product_service: "productService",
   home_reviews: "reviews",
@@ -357,371 +354,331 @@ function looksLikeComponentCollection(value) {
   return list.some((item) => item && typeof item === "object" && (item.name || item.defaultName));
 }
 
-export default {
-  name: "PageDesign",
-  components: {
-    pageFooter,
-    homeComb,
-    headerSerch,
-    tabNav,
-    userInfor,
-    homeUserInfor,
-    newVip,
-    articleList,
-    bargain,
-    blankPage,
-    combination,
-    coupon,
-    customerService,
-    goodList,
-    guide,
-    liveBroadcast,
-    menus,
-    news,
-    pictureCube,
-    promotionList,
-    seckill,
-    swiperBg,
-    swipers,
-    titles,
-    presale,
-    pointsMall,
-    richText,
-    videos,
-    signIn,
-    hotspot,
-    follow,
-    productInfo,
-    homePaidVip,
-    homeProductService,
-    homeReviews,
-    productDesc,
-    customComponent,
+const props = defineProps({
+  // DIY配置数据
+  diyData: {
+    type: Object,
+    default: () => ({}),
   },
-  mixins: [colors],
-  props: {
-    // DIY配置数据
-    diyData: {
-      type: Object,
-      default: () => ({}),
-    },
-    // 是否为首页（用于控制小程序添加到我的小程序提示等）
-    isHome: {
-      type: Boolean,
-      default: false,
-    },
-    // 页面滚动状态
-    isScrolled: {
-      type: Boolean,
-      default: false,
-    },
-    // 是否固定（用于吸顶）
-    isFixed: {
-      type: Boolean,
-      default: false,
-    },
-    productData: {
-      type: Object,
-      default: () => ({}),
-    },
-    priceData: {
-      type: Object,
-      default: () => ({}),
-    },
-    skuList: {
-      type: Array,
-      default: () => [],
-    },
-    reply: {
-      type: Array,
-      default: () => [],
-    },
-    replyCount: {
-      type: Number,
-      default: 0,
-    },
-    replyChance: {
-      type: [String, Number],
-      default: 0,
-    },
-    productId: {
-      type: [Number, String],
-      default: 0,
-    },
-    goodList: {
-      type: Array,
-      default: () => [],
-    },
-    // 视频播放状态
-    productVideoStatus: {
-      type: Boolean,
-      default: false,
-    },
-    // 进店规则归属门店排序位置
-    belongIndex: {
-      type: Number,
-      default: 0,
-    },
-    // 网络错误状态
-    errorNetwork: {
-      type: Boolean,
-      default: false,
-    },
-    couponList: {
-      type: Array,
-      default: () => [],
-    },
-    activity: {
-      type: Array,
-      default: () => [],
-    },
-    attr: {
-      type: Object,
-      default: () => ({}),
-    },
-    attrTxt: {
-      type: String,
-      default: "",
-    },
-    attrValue: {
-      type: String,
-      default: "",
-    },
-    // 微页面
-    microPage: {
-      type: Boolean,
-      default: false,
-    },
-    // 商品 vip 模块
-    isShowPaidVip: {
-      type: Boolean,
-      default: false,
-    },
+  // 是否为首页（用于控制小程序添加到我的小程序提示等）
+  isHome: {
+    type: Boolean,
+    default: false,
   },
-  data() {
+  // 页面滚动状态
+  isScrolled: {
+    type: Boolean,
+    default: false,
+  },
+  // 是否固定（用于吸顶）
+  isFixed: {
+    type: Boolean,
+    default: false,
+  },
+  productData: {
+    type: Object,
+    default: () => ({}),
+  },
+  priceData: {
+    type: Object,
+    default: () => ({}),
+  },
+  skuList: {
+    type: Array,
+    default: () => [],
+  },
+  reply: {
+    type: Array,
+    default: () => [],
+  },
+  replyCount: {
+    type: Number,
+    default: 0,
+  },
+  replyChance: {
+    type: [String, Number],
+    default: 0,
+  },
+  productId: {
+    type: [Number, String],
+    default: 0,
+  },
+  goodList: {
+    type: Array,
+    default: () => [],
+  },
+  // 视频播放状态
+  productVideoStatus: {
+    type: Boolean,
+    default: false,
+  },
+  // 进店规则归属门店排序位置
+  belongIndex: {
+    type: Number,
+    default: 0,
+  },
+  // 网络错误状态
+  errorNetwork: {
+    type: Boolean,
+    default: false,
+  },
+  couponList: {
+    type: Array,
+    default: () => [],
+  },
+  activity: {
+    type: Array,
+    default: () => [],
+  },
+  attr: {
+    type: Object,
+    default: () => ({}),
+  },
+  attrTxt: {
+    type: String,
+    default: "",
+  },
+  attrValue: {
+    type: String,
+    default: "",
+  },
+  // 微页面
+  microPage: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const emit = defineEmits([
+  "reconnect",
+  "changeSpec",
+  "showSpecModal",
+  "showCoupon",
+  "openModal",
+  "goActivity",
+  "share",
+  "bindSortId",
+  "bindHeight",
+  "storeTap",
+  "changeLogin",
+  "changeBarg",
+  "newDataStatus",
+]);
+
+const styleConfig = ref([]);
+const homeCombData = ref({});
+const headerSerchCombData = ref({});
+const cateNavData = ref({});
+const footerConfigData = ref(null);
+const showHomeComb = ref(false);
+const isHeaderSerch = ref(false);
+const showCateNav = ref(false);
+const bgColor = ref("");
+const bgPic = ref("");
+const bgTabVal = ref("");
+const positionTop = ref(0);
+const isFooter = ref(false);
+const pdHeight = ref(0);
+const myApplet = ref(true);
+const getHeight = ref(util.getWXStatusHeight());
+const imgHost = ref(HTTP_REQUEST_URL);
+
+// #ifdef MP
+const appletStyle = computed(() => {
+  return {
+    top: getHeight.value.menuButtonInfo.bottom + 8 + "px",
+    right: "10px",
+  };
+});
+// #endif
+const pageStyle = computed(() => {
+  return {
+    backgroundColor: bgColor.value,
+    backgroundImage: bgPic.value ? `url(${bgPic.value})` : "",
+    minHeight: "100vh", // 确保背景铺满
+  };
+});
+const bgClass = computed(() => {
+  if (bgTabVal.value == 2) return "fullsize noRepeat";
+  if (bgTabVal.value == 1) return "repeat ysize";
+  return "noRepeat ysize";
+});
+const pdHeights = computed(() => {
+  let H = `${pdHeight.value * 2 + 100}rpx`;
+  return {
+    height: isFooter.value ? H : "100rpx",
+  };
+});
+
+function reconnect() {
+  emit("reconnect");
+}
+function onChangeSpec(item) {
+  emit("changeSpec", item);
+}
+function onShowSpecModal() {
+  emit("showSpecModal");
+}
+function onShowCoupon() {
+  emit("showCoupon");
+}
+function onOpenModal(type) {
+  emit("openModal", type);
+}
+function onGoActivity(item) {
+  emit("goActivity", item);
+}
+function onShare() {
+  emit("share");
+}
+function normalizeDiyData(data) {
+  let normalized = parseJson(data, data || {});
+  if (!normalized || typeof normalized !== "object") return {};
+  if (normalized.value === undefined && looksLikeComponentCollection(normalized)) {
     return {
-      styleConfig: [],
-      homeCombData: {},
-      headerSerchCombData: {},
-      cateNavData: {},
-      footerConfigData: null,
-      showHomeComb: false,
-      isHeaderSerch: false,
-      showCateNav: false,
-      bgColor: "",
-      bgPic: "",
-      bgTabVal: "",
-      positionTop: 0,
-      isFooter: false,
-      pdHeight: 0,
-      myApplet: true,
-      getHeight: this.$util.getWXStatusHeight(),
-      imgHost: HTTP_REQUEST_URL,
+      value: normalized,
     };
-  },
-  computed: {
-    // #ifdef MP
-    appletStyle() {
-      return {
-        top: this.getHeight.menuButtonInfo.bottom + 8 + "px",
-        right: "10px",
-      };
-    },
-    // #endif
-    pageStyle() {
-      return {
-        backgroundColor: this.bgColor,
-        backgroundImage: this.bgPic ? `url(${this.bgPic})` : "",
-        minHeight: "100vh", // 确保背景铺满
-      };
-    },
-    bgClass() {
-      if (this.bgTabVal == 2) return "fullsize noRepeat";
-      if (this.bgTabVal == 1) return "repeat ysize";
-      return "noRepeat ysize";
-    },
-    pdHeights() {
-      let H = `${this.pdHeight * 2 + 100}rpx`;
-      return {
-        height: this.isFooter ? H : "100rpx",
-      };
-    },
-  },
-  watch: {
-    diyData: {
-      handler(val) {
-        if (val && Object.keys(val).length > 0) {
-          this.setDiyData(val);
-        } else {
-          // 重置数据
-          this.styleConfig = [];
-          this.homeCombData = {};
-          this.headerSerchCombData = {};
-          this.cateNavData = {};
-          this.footerConfigData = null;
-          this.showHomeComb = false;
-          this.isHeaderSerch = false;
-          this.showCateNav = false;
-          this.bgColor = "";
-          this.bgPic = "";
-          this.bgTabVal = "";
+  }
+  let value = parseJson(normalized.value, normalized.value || {});
+  if (value && typeof value === "object" && value.value !== undefined) {
+    const innerValue = parseJson(value.value, value.value || {});
+    normalized = {
+      ...normalized,
+      ...value,
+      value: innerValue,
+    };
+  } else {
+    normalized = {
+      ...normalized,
+      value,
+    };
+  }
+  return normalized;
+}
+function normalizeComponentItem(item, key) {
+  const data = parseJson(item, item || {});
+  if (!data || typeof data !== "object") return null;
+  const name = COMPONENT_NAME_MAP[data.name] || data.defaultName || data.name;
+  if (!name) return null;
+  if (DISABLED_COMPONENT_NAMES.includes(name)) return null;
+  return {
+    ...data,
+    name,
+    timestamp: data.timestamp || data.num || key || 0,
+    id: data.id || `id${data.timestamp || data.num || key || ""}`,
+  };
+}
+// 对象转数组
+function objToArr(data) {
+  const value = parseJson(data, data || {});
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map((item, index) => normalizeComponentItem(item, index))
+      .filter(Boolean);
+  }
+  if (!isPlainObject(value)) return [];
+  return Object.keys(value)
+    .sort((a, b) => {
+      const numA = Number(a);
+      const numB = Number(b);
+      if (!Number.isNaN(numA) && !Number.isNaN(numB)) return numA - numB;
+      return String(a).localeCompare(String(b));
+    })
+    .map((key) => normalizeComponentItem(value[key], key))
+    .filter(Boolean);
+}
+function setDiyData(data) {
+  const diyData = normalizeDiyData(data);
+  if (!diyData) return;
+  if (diyData.is_bg_color) {
+    bgColor.value = diyData.color_picker;
+  }
+  if (diyData.is_bg_pic) {
+    bgPic.value = diyData.bg_pic;
+    bgTabVal.value = diyData.bg_tab_val;
+  }
+
+  let temp = [];
+  // 重置状态
+  showHomeComb.value = false;
+  isHeaderSerch.value = false;
+  showCateNav.value = false;
+  footerConfigData.value = null;
+  if (diyData.value) {
+    let lastArr = objToArr(diyData.value);
+    lastArr.forEach((item) => {
+      if (item.name == "pageFoot" && !props.microPage) {
+        footerConfigData.value = item;
+      }
+      if (item.name === "homeComb" && !item.isHide) {
+        showHomeComb.value = true;
+        homeCombData.value = item;
+        if (item.searchConfig && item.searchConfig.tabVal) {
+          positionTop.value = uni.getWindowInfo().statusBarHeight + 43;
         }
-      },
-      deep: true,
-      immediate: true,
-    },
-  },
-  methods: {
-    reconnect() {
-      this.$emit("reconnect");
-    },
-    onChangeSpec(item) {
-      this.$emit("changeSpec", item);
-    },
-    onShowSpecModal() {
-      this.$emit("showSpecModal");
-    },
-    onShowCoupon() {
-      this.$emit("showCoupon");
-    },
-    onOpenModal(type) {
-      this.$emit("openModal", type);
-    },
-    onGoActivity(item) {
-      this.$emit("goActivity", item);
-    },
-    onShare() {
-      this.$emit("share");
-    },
-    normalizeDiyData(data) {
-      let normalized = parseJson(data, data || {});
-      if (!normalized || typeof normalized !== "object") return {};
-      if (normalized.value === undefined && looksLikeComponentCollection(normalized)) {
-        return {
-          value: normalized,
-        };
       }
-      let value = parseJson(normalized.value, normalized.value || {});
-      if (value && typeof value === "object" && value.value !== undefined) {
-        const innerValue = parseJson(value.value, value.value || {});
-        normalized = {
-          ...normalized,
-          ...value,
-          value: innerValue,
-        };
-      } else {
-        normalized = {
-          ...normalized,
-          value,
-        };
+      if (item.name == "headerSerch" && !item.isHide) {
+        isHeaderSerch.value = true;
+        headerSerchCombData.value = item;
       }
-      return normalized;
-    },
-    normalizeComponentItem(item, key) {
-      const data = parseJson(item, item || {});
-      if (!data || typeof data !== "object") return null;
-      const name = COMPONENT_NAME_MAP[data.name] || data.defaultName || data.name;
-      if (!name) return null;
-      return {
-        ...data,
-        name,
-        timestamp: data.timestamp || data.num || key || 0,
-        id: data.id || `id${data.timestamp || data.num || key || ""}`,
-      };
-    },
-    // 对象转数组
-    objToArr(data) {
-      const value = parseJson(data, data || {});
-      if (!value) return [];
-      if (Array.isArray(value)) {
-        return value
-          .map((item, index) => this.normalizeComponentItem(item, index))
-          .filter(Boolean);
+      if (item.name == "tabNav" && !item.isHide) {
+        showCateNav.value = true;
+        cateNavData.value = item;
       }
-      if (!isPlainObject(value)) return [];
-      return Object.keys(value)
-        .sort((a, b) => {
-          const numA = Number(a);
-          const numB = Number(b);
-          if (!Number.isNaN(numA) && !Number.isNaN(numB)) return numA - numB;
-          return String(a).localeCompare(String(b));
-        })
-        .map((key) => this.normalizeComponentItem(value[key], key))
-        .filter(Boolean);
-    },
-    setDiyData(data) {
-      const diyData = this.normalizeDiyData(data);
-      if (!diyData) return;
-      if (diyData.is_bg_color) {
-        this.bgColor = diyData.color_picker;
+      if (!item.isHide) {
+        temp.push(item);
       }
-      if (diyData.is_bg_pic) {
-        this.bgPic = diyData.bg_pic;
-        this.bgTabVal = diyData.bg_tab_val;
-      }
+    });
 
-      let temp = [];
-      // 重置状态
-      this.showHomeComb = false;
-      this.isHeaderSerch = false;
-      this.showCateNav = false;
-      this.footerConfigData = null;
-      if (diyData.value) {
-        let lastArr = this.objToArr(diyData.value);
-        lastArr.forEach((item) => {
-          if (item.name == "pageFoot" && !this.microPage) {
-            this.footerConfigData = item;
-          }
-          if (item.name === "homeComb" && !item.isHide) {
-            this.showHomeComb = true;
-            this.homeCombData = item;
-            if (item.searchConfig && item.searchConfig.tabVal) {
-              this.positionTop = uni.getWindowInfo().statusBarHeight + 43;
-            }
-          }
-          if (item.name == "headerSerch" && !item.isHide) {
-            this.isHeaderSerch = true;
-            this.headerSerchCombData = item;
-          }
-          if (item.name == "tabNav" && !item.isHide) {
-            this.showCateNav = true;
-            this.cateNavData = item;
-          }
-          if (!item.isHide) {
-            temp.push(item);
-          }
-        });
+    // 排序
+    temp.sort((a, b) => a.timestamp - b.timestamp);
+    styleConfig.value = temp;
+  }
+}
+function bindSortId(item, data) {
+  emit("bindSortId", item, data);
+}
+function bindHeight(data) {
+  emit("bindHeight", data);
+}
+function storeTap(id) {
+  emit("storeTap", id);
+}
+function changeLogin() {
+  emit("changeLogin");
+}
+function changeBarg(item) {
+  emit("changeBarg", item);
+}
+function newDataStatus(val, num) {
+  isFooter.value = val ? true : false;
+  pdHeight.value = num;
+  emit("newDataStatus", { val, num });
+}
 
-        // 排序
-        temp.sort((a, b) => a.timestamp - b.timestamp);
-        this.styleConfig = temp;
-      }
-    },
-    bindSortId(item, data) {
-      this.$emit("bindSortId", item, data);
-    },
-    bindHeight(data) {
-      this.$emit("bindHeight", data);
-    },
-    storeTap(id) {
-      this.$emit("storeTap", id);
-    },
-    changeLogin() {
-      this.$emit("changeLogin");
-    },
-    changeBarg(item) {
-      this.$emit("changeBarg", item);
-    },
-    newDataStatus(val, num) {
-      this.isFooter = val ? true : false;
-      this.pdHeight = num;
-      this.$emit("newDataStatus", { val, num });
-    },
-    reconnect() {
-      this.$emit("reconnect");
-    },
+watch(
+  () => props.diyData,
+  (val) => {
+    if (val && Object.keys(val).length > 0) {
+      setDiyData(val);
+    } else {
+      // 重置数据
+      styleConfig.value = [];
+      homeCombData.value = {};
+      headerSerchCombData.value = {};
+      cateNavData.value = {};
+      footerConfigData.value = null;
+      showHomeComb.value = false;
+      isHeaderSerch.value = false;
+      showCateNav.value = false;
+      bgColor.value = "";
+      bgPic.value = "";
+      bgTabVal.value = "";
+    }
   },
-};
+  { deep: true, immediate: true },
+);
 </script>
 
 <style lang="scss" scoped>

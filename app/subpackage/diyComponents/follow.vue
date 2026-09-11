@@ -57,223 +57,201 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from "vue";
 import commonWrapper from "./commonWrapper.vue";
-import { follow } from "@/api/api.js";
-import { getSubscribe } from "@/api/public";
+import { getSubscribe, follow } from "@/api/public.js";
+import util from "@/utils/util.js";
 // #ifdef H5
-import Auth from "@/libs/wechat";
+import Auth from "@/libs/wechat.js";
 // #endif
-export default {
-  components: { commonWrapper },
-  name: "follow",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
   },
-  data() {
-    return {
-      followCode: false,
-      followUrl: "",
-      bgColor: "",
-      imgConfig: "",
-      mbConfig: 0,
-      themeColor: "",
-      titleConfig: 0,
-      subscribe: false,
-      // #ifdef H5
-      isWeixin: Auth.isWeixin(),
-      //#endif
-    };
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  computed: {
-    buttonStyle() {
-      return {
-        "border-color": this.dataConfig.themeColor.color[0].item,
-        color: this.dataConfig.themeColor.color[0].item,
-      };
-    },
-    followStyle() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        "border-radius": borderRadius,
-        background: `linear-gradient(90deg, ${this.dataConfig.bgColor.color[0].item} 0%, ${this.dataConfig.bgColor.color[1].item} 100%)`,
-        color: this.dataConfig.themeColor.color[0].item,
-      };
-    },
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
+});
+
+const followCode = ref(false);
+const followUrl = ref("");
+const bgColor = ref("");
+const imgConfig = ref("");
+const mbConfig = ref(0);
+const themeColor = ref("");
+const titleConfig = ref(0);
+const subscribe = ref(false);
+// #ifdef H5
+const isWeixin = ref(Auth.isWeixin());
+//#endif
+
+const buttonStyle = computed(() => {
+  return {
+    "border-color": props.dataConfig.themeColor.color[0].item,
+    color: props.dataConfig.themeColor.color[0].item,
+  };
+});
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.topConfig ? props.dataConfig.topConfig.val : 0,
         },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
         },
-      };
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    followStyle() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        "border-radius": borderRadius,
-        background: `linear-gradient(90deg, ${this.dataConfig.bgColor.color[0].item} 0%, ${this.dataConfig.bgColor.color[1].item} 100%)`,
-        color: this.dataConfig.themeColor.color[0].item,
-      };
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
     },
-  },
-  created() {},
-  mounted() {
-    getSubscribe()
-      .then((res) => {
-        this.subscribe = res.data.subscribe || false;
-      })
-      .catch(() => {});
-  },
-  methods: {
-    savePic() {
-      // #ifdef H5
-      var a = document.createElement("a"); // 生成一个a元素
-      a.download = "wechat"; // 设置图片名称
-      a.style.display = "none";
-      a.href = this.dataConfig.codeConfig.url; // 将生成的URL设置为a.href属性
-      document.body.appendChild(a); // 将a标签追加到文档对象中
-      a.click(); // 触发a的单击事件
-      a.remove(); // 一次性的，用完就删除a标签
-      // #endif
-      // #ifdef MP
-      let _that = this;
-      uni.downloadFile({
-        url: _that.dataConfig.codeConfig.url, //图片地址
-        success: function (response) {
-          uni.getSetting({
-            success(res) {
-              if (!res.authSetting["scope.writePhotosAlbum"]) {
-                uni.authorize({
-                  scope: "scope.writePhotosAlbum",
-                  success() {
-                    uni.saveImageToPhotosAlbum({
-                      filePath: response.tempFilePath,
-                      success: function (res) {
-                        _that.closeFollowCode();
-                        _that.$util.Tips({
-                          title: "保存成功",
-                          icon: "success",
-                        });
-                      },
-                      fail: function (res) {
-                        _that.$util.Tips({
-                          title: "保存失败",
-                        });
-                      },
-                    });
-                  },
-                });
-              } else {
+  };
+});
+
+const followStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    "border-radius": borderRadius,
+    background: `linear-gradient(90deg, ${props.dataConfig.bgColor.color[0].item} 0%, ${props.dataConfig.bgColor.color[1].item} 100%)`,
+    color: props.dataConfig.themeColor.color[0].item,
+  };
+});
+
+function savePic() {
+  // #ifdef H5
+  var a = document.createElement("a"); // 生成一个a元素
+  a.download = "wechat"; // 设置图片名称
+  a.style.display = "none";
+  a.href = props.dataConfig.codeConfig.url; // 将生成的URL设置为a.href属性
+  document.body.appendChild(a); // 将a标签追加到文档对象中
+  a.click(); // 触发a的单击事件
+  a.remove(); // 一次性的，用完就删除a标签
+  // #endif
+  // #ifdef MP
+  uni.downloadFile({
+    url: props.dataConfig.codeConfig.url, //图片地址
+    success: function (response) {
+      uni.getSetting({
+        success(res) {
+          if (!res.authSetting["scope.writePhotosAlbum"]) {
+            uni.authorize({
+              scope: "scope.writePhotosAlbum",
+              success() {
                 uni.saveImageToPhotosAlbum({
                   filePath: response.tempFilePath,
                   success: function (res) {
-                    _that.closeFollowCode();
-                    _that.$util.Tips({
+                    closeFollowCode();
+                    util.Tips({
                       title: "保存成功",
                       icon: "success",
                     });
                   },
                   fail: function (res) {
-                    _that.$util.Tips({
+                    util.Tips({
                       title: "保存失败",
                     });
                   },
                 });
-              }
-            },
+              },
+            });
+          } else {
+            uni.saveImageToPhotosAlbum({
+              filePath: response.tempFilePath,
+              success: function (res) {
+                closeFollowCode();
+                util.Tips({
+                  title: "保存成功",
+                  icon: "success",
+                });
+              },
+              fail: function (res) {
+                util.Tips({
+                  title: "保存失败",
+                });
+              },
+            });
+          }
+        },
+      });
+    },
+  });
+  // #endif
+  //#ifdef APP-PLUS
+  uni.downloadFile({
+    url: props.dataConfig.codeConfig.url, //图片地址
+    success: function (response) {
+      uni.saveImageToPhotosAlbum({
+        filePath: response.tempFilePath,
+        success: function (res) {
+          posterImageClose();
+          util.Tips({
+            title: "保存成功",
+            icon: "success",
+          });
+        },
+        fail: function (res) {
+          util.Tips({
+            title: "保存失败",
           });
         },
       });
-      // #endif
-      //#ifdef APP-PLUS
-      let thatApp = this;
-      uni.downloadFile({
-        url: thatApp.dataConfig.codeConfig.url, //图片地址
-        success: function (response) {
-          uni.saveImageToPhotosAlbum({
-            filePath: response.tempFilePath,
-            success: function (res) {
-              thatApp.posterImageClose();
-              thatApp.$util.Tips({
-                title: "保存成功",
-                icon: "success",
-              });
-            },
-            fail: function (res) {
-              thatApp.$util.Tips({
-                title: "保存失败",
-              });
-            },
-          });
-        },
-      });
-      // #endif
     },
-    followTap() {
-      this.followCode = true;
-    },
-    closeFollowCode() {
-      this.followCode = false;
-    },
-  },
-};
+  });
+  // #endif
+}
+
+function followTap() {
+  followCode.value = true;
+}
+
+function closeFollowCode() {
+  followCode.value = false;
+}
+
+onMounted(() => {
+  getSubscribe()
+    .then((res) => {
+      subscribe.value = res.data.subscribe || false;
+    })
+    .catch(() => {});
+});
 </script>
 
 <style lang="scss">

@@ -16,11 +16,12 @@
             >
           </view>
           <navigator
+            :render-link="false"
             class="right acea-row row-middle"
             v-if="checkList.includes(1)"
             :url="
               productId
-                ? '/pages/goods/goods_comment_list/index?product_id=' +
+                ? '/pages/goods/goods_comment_list/index?productId=' +
                   productId
                 : ''
             "
@@ -49,7 +50,7 @@
                     class="iconfont icon-pingjia"
                     v-for="i in 5"
                     :key="i"
-                    :style="{ color: i <= item.star ? starColor : '#eee' }"
+                    :style="{ color: i <= getReplyScore(item) ? starColor : '#eee' }"
                   ></text>
                 </view>
               </view>
@@ -90,7 +91,7 @@
                     class="iconfont icon-pingjia"
                     v-for="i in 5"
                     :key="i"
-                    :style="{ color: i <= item.star ? starColor : '#eee' }"
+                    :style="{ color: i <= getReplyScore(item) ? starColor : '#eee' }"
                   ></text>
                 </view>
               </view>
@@ -115,139 +116,140 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, watch } from "vue";
 import commonWrapper from "./commonWrapper.vue";
 import { getReplyList } from "@/api/store.js";
 
-export default {
-  components: { commonWrapper },
-  name: "homeReviews",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => ({}),
-    },
-    productId: {
-      type: [Number, String],
-      default: 0,
-    },
-    reply: {
-      type: Array,
-      default: () => [],
-    },
-    replyCount: {
-      type: [Number, String],
-      default: 0,
-    },
-    replyChance: {
-      type: [Number, String],
-      default: 0,
-    },
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
   },
-  data() {
-    return {
-      replyList: [],
-    };
+  productId: {
+    type: [Number, String],
+    default: 0,
   },
-  watch: {
-    productId: {
-      handler(nVal) {
-        if (nVal) {
-          this.getReplyListFun();
-        }
-      },
-      immediate: true,
-    },
-    dataConfig: {
-      handler(nVal) {
-        if (nVal && this.productId) {
-          this.getReplyListFun();
-        }
-      },
-      deep: true,
-    },
+  reply: {
+    type: Array,
+    default: () => [],
   },
-  computed: {
-    configData() {
-      return this.dataConfig;
-    },
-    bgRadius() {
-      if (!this.dataConfig.fillet) return {};
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        borderRadius: borderRadius,
-        overflow: "hidden",
-      };
-    },
-    checkList() {
-      return this.dataConfig.checkBoxConfig
-        ? this.dataConfig.checkBoxConfig.type
-        : [];
-    },
-    isSlide() {
-      return this.dataConfig.layoutConfig
-        ? this.dataConfig.layoutConfig.tabVal === 1
-        : false;
-    },
-    showList() {
-      return this.replyList;
-    },
-    titleColor() {
-      return this.dataConfig.titleColor && this.dataConfig.titleColor.color[0]
-        ? this.dataConfig.titleColor.color[0].item
-        : "#333333";
-    },
-    countColor() {
-      return this.dataConfig.countColor && this.dataConfig.countColor.color[0]
-        ? this.dataConfig.countColor.color[0].item
-        : "#999999";
-    },
-    rateColor() {
-      if (
-        this.dataConfig.toneConfig &&
-        this.dataConfig.toneConfig.tabVal === 1
-      ) {
-        return this.dataConfig.rateColor && this.dataConfig.rateColor.color[0]
-          ? this.dataConfig.rateColor.color[0].item
-          : "#E93323";
-      }
-      return "var(--view-theme)";
-    },
-    starColor() {
-      if (
-        this.dataConfig.toneConfig &&
-        this.dataConfig.toneConfig.tabVal === 1
-      ) {
-        return this.dataConfig.starColor && this.dataConfig.starColor.color[0]
-          ? this.dataConfig.starColor.color[0].item
-          : "#E93323";
-      }
-      return "var(--view-theme)";
-    },
-    totalCount() {
-      return this.replyCount || "0";
-    },
+  replyCount: {
+    type: [Number, String],
+    default: 0,
   },
-  methods: {
-    getReplyListFun() {
-      let limit = this.dataConfig.numConfig ? this.dataConfig.numConfig.val : 2;
-      getReplyList(this.productId, {
-        page: 1,
-        limit: limit,
-        type: 0,
-      }).then((res) => {
-        this.replyList = res.data || [];
-      });
-    },
+  replyChance: {
+    type: [Number, String],
+    default: 0,
   },
-};
+});
+
+const replyList = ref([]);
+
+watch(
+  () => props.productId,
+  (nVal) => {
+    if (nVal) {
+      getReplyListFun();
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  () => props.dataConfig,
+  (nVal) => {
+    if (nVal && props.productId) {
+      getReplyListFun();
+    }
+  },
+  { deep: true }
+);
+
+const configData = computed(() => {
+  return props.dataConfig;
+});
+
+const bgRadius = computed(() => {
+  if (!props.dataConfig.fillet) return {};
+  let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    borderRadius: borderRadius,
+    overflow: "hidden",
+  };
+});
+
+const checkList = computed(() => {
+  return props.dataConfig.checkBoxConfig
+    ? props.dataConfig.checkBoxConfig.type
+    : [];
+});
+
+const isSlide = computed(() => {
+  return props.dataConfig.layoutConfig
+    ? props.dataConfig.layoutConfig.tabVal === 1
+    : false;
+});
+
+const showList = computed(() => {
+  return replyList.value;
+});
+
+const titleColor = computed(() => {
+  return props.dataConfig.titleColor && props.dataConfig.titleColor.color[0]
+    ? props.dataConfig.titleColor.color[0].item
+    : "#333333";
+});
+
+const countColor = computed(() => {
+  return props.dataConfig.countColor && props.dataConfig.countColor.color[0]
+    ? props.dataConfig.countColor.color[0].item
+    : "#999999";
+});
+
+const rateColor = computed(() => {
+  if (props.dataConfig.toneConfig && props.dataConfig.toneConfig.tabVal === 1) {
+    return props.dataConfig.rateColor && props.dataConfig.rateColor.color[0]
+      ? props.dataConfig.rateColor.color[0].item
+      : "#E93323";
+  }
+  return "var(--view-theme)";
+});
+
+const starColor = computed(() => {
+  if (props.dataConfig.toneConfig && props.dataConfig.toneConfig.tabVal === 1) {
+    return props.dataConfig.starColor && props.dataConfig.starColor.color[0]
+      ? props.dataConfig.starColor.color[0].item
+      : "#E93323";
+  }
+  return "var(--view-theme)";
+});
+
+const totalCount = computed(() => {
+  return props.replyCount || "0";
+});
+
+function getReplyListFun() {
+  let limit = props.dataConfig.numConfig ? props.dataConfig.numConfig.val : 2;
+  getReplyList(props.productId, {
+    page: 1,
+    limit: limit,
+    type: 0,
+  }).then((res) => {
+    replyList.value = Array.isArray(res.data?.list) ? res.data.list : [];
+  });
+}
+
+function getReplyScore(item) {
+  return Number(item.score ?? item.star ?? 0);
+}
 </script>
 
 <style lang="scss" scoped>

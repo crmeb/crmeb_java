@@ -17,7 +17,7 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	// +----------------------------------------------------------------------
 	// | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 	// +----------------------------------------------------------------------
@@ -27,87 +27,87 @@
 	// +----------------------------------------------------------------------
 	// | Author: CRMEB Team <admin@crmeb.com>
 	// +----------------------------------------------------------------------
-	export default {
-		data() {
-			return {
-				showTip: false,
-				boxTop: 0,
-				arrowMargin: 0,
-				cotainerMargin: 0,
-				screenWidth: 0,
-			};
+	import { ref } from 'vue'
+	import { onReady } from '@dcloudio/uni-app'
+
+	const props = defineProps({
+		/* 是否是自定义头部 */
+		isCustom: {
+			type: Boolean,
+			default: false,
 		},
-		props: {
-			/* 是否是自定义头部 */
-			isCustom: {
-				type: Boolean,
-				default: false,
-			},
-			/* 背景颜色 */
-			bgColor: {
-				type: String,
-				default: "#ffffff",
-			},
-			/* 提示文字 */
-			text: {
-				type: String,
-				default: "添加到我的小程序",
-			},
-			/* 提示文字样式 */
-			fontObj: {
-				type: Object,
-				default: function() {
-					return {
-						color: "#202020",
-						fontSize: "12px",
-						fontWeight: "0",
-					};
-				},
-			},
-			/* 圆角大小  px*/
-			borderR: {
-				type: Number,
-				default: 5,
-			},
-			/* 延时出现 */
-			delay: {
-				type: Number,
-				default: 2000,
-			},
-			/* 关闭btn黑白两色 或者自行添加 */
-			closeColor: {
-				type: Boolean,
-				default: true,
-			},
-			/* 动画效果 */
-			isAm: {
-				type: Boolean,
-				default: true,
+		/* 背景颜色 */
+		bgColor: {
+			type: String,
+			default: "#ffffff",
+		},
+		/* 提示文字 */
+		text: {
+			type: String,
+			default: "添加到我的小程序",
+		},
+		/* 提示文字样式 */
+		fontObj: {
+			type: Object,
+			default: function() {
+				return {
+					color: "#202020",
+					fontSize: "12px",
+					fontWeight: "0",
+				};
 			},
 		},
-		methods: {
-			tipHidden: function() {
-				uni.setStorageSync("my_tips_2020", "true");
-				this.showTip = false;
-			},
-			timeOut() {
-				this.tipHidden();
-				this.showTip = true;
-			},
-			init() {
-				if (uni.getStorageSync("my_tips_2020")) return;
-				let rect = uni.getMenuButtonBoundingClientRect();
-				let screenWidth = uni.getSystemInfoSync().screenWidth;
-				this.boxTop = rect.bottom;
-				this.arrowMargin = rect.width * 0.75 + 4;
-				this.cotainerMargin = screenWidth - rect.right;
-				this.timeOut();
-			},
+		/* 圆角大小  px*/
+		borderR: {
+			type: Number,
+			default: 5,
 		},
-		onReady() {
-			this.init();
+		/* 延时出现 */
+		delay: {
+			type: Number,
+			default: 2000,
 		},
-	};
+		/* 关闭btn黑白两色 或者自行添加 */
+		closeColor: {
+			type: Boolean,
+			default: true,
+		},
+		/* 动画效果 */
+		isAm: {
+			type: Boolean,
+			default: true,
+		},
+	})
+
+	const showTip = ref(false);
+	const boxTop = ref(0);
+	const arrowMargin = ref(0);
+	const cotainerMargin = ref(0);
+	const screenWidth = ref(0);
+
+	function tipHidden() {
+		uni.setStorageSync("my_tips_2020", "true");
+		showTip.value = false;
+	}
+
+	function timeOut() {
+		tipHidden();
+		showTip.value = true;
+	}
+
+	function init() {
+		if (uni.getStorageSync("my_tips_2020")) return;
+		let rect = uni.getMenuButtonBoundingClientRect();
+		let screenWidthVal = uni.getSystemInfoSync().screenWidth;
+		boxTop.value = rect.bottom;
+		arrowMargin.value = rect.width * 0.75 + 4;
+		cotainerMargin.value = screenWidthVal - rect.right;
+		timeOut();
+	}
+
+	onReady(() => {
+		init();
+	})
 </script>
 
 <style lang="scss" scoped>

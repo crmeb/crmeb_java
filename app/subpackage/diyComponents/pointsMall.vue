@@ -80,7 +80,7 @@
                   <view class="acea-row row-middle">
                     <image
                       class="image"
-                      :src="`${imgHost}/statics/images/newVip3.png`"
+                      :src="`${imgHost}/crmebimage/theme-cate/newVip3.png`"
                       mode="aspectFit"
                     ></image>
                     <text class="num" :style="[numStyle]">{{
@@ -121,7 +121,7 @@
                   <view class="">
                     <image
                       class="image"
-                      :src="`${imgHost}/statics/images/newVip3.png`"
+                      :src="`${imgHost}/crmebimage/theme-cate/newVip3.png`"
                       mode="aspectFit"
                     ></image>
                     <text class="num point" :style="[numStyle]">{{
@@ -138,234 +138,242 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from "vue";
 import commonWrapper from "./commonWrapper.vue";
 import { getStoreIntegralList } from "@/api/activity.js";
-import { HTTP_REQUEST_URL } from "@/config/app";
-export default {
-  components: { commonWrapper },
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+import { HTTP_REQUEST_URL } from "@/config/app.js";
+import configs from "@/config/app.js";
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {
-      imgHost: HTTP_REQUEST_URL,
-      goodsList: [],
-    };
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
+});
+
+const imgHost = ref(HTTP_REQUEST_URL);
+const goodsList = ref([]);
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.topConfig
+            ? props.dataConfig.topConfig.val
+            : 0,
         },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
         },
-      };
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    headerStyle() {
-      let background = `linear-gradient(90deg, ${this.dataConfig.headerBgColor.color[0].item} 0%, ${this.dataConfig.headerBgColor.color[1].item} 100%)`;
-      if (this.dataConfig.styleConfig.tabVal) {
-        background = `url(${this.dataConfig.imgBgConfig.url})`;
-      }
-      return {
-        "background-image": background,
-      };
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
     },
-    goodsWrapperStyle() {
-      let color = this.dataConfig.moduleColor2.color;
-      if (this.dataConfig.styleConfig.tabVal) {
-        color = this.dataConfig.moduleColor.color;
-      }
-      return {
-        "background-image": `linear-gradient(270deg, ${color[0].item} 0%, ${color[1].item} 100%)`,
-      };
-    },
-    pointsMallStyle() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        "border-radius": borderRadius,
-      };
-    },
-    buttonStyle() {
-      let color = this.dataConfig.headerBntColor2.color[0].item;
-      if (this.dataConfig.styleConfig.tabVal) {
-        color = this.dataConfig.headerBntColor.color[0].item;
-      }
-      return {
-        "font-size": this.dataConfig.bntNumber.val * 2 + "rpx",
-        color: color,
-      };
-    },
-    titleImage() {
-      let url = this.dataConfig.imgConfig2.url;
-      if (this.dataConfig.styleConfig.tabVal) {
-        url = this.dataConfig.imgConfig.url;
-      }
-      return url;
-    },
-    titleStyle() {
-      let titleText = this.dataConfig.titleText;
-      return {
-        fontStyle: !titleText.tabVal
-          ? "normal"
-          : titleText.tabList[titleText.tabVal].style,
-        fontWeight: !titleText.tabVal ? "bold" : "normal",
-        color: this.dataConfig.titleColor.color[0].item,
-        fontSize: this.dataConfig.titleNumber.val * 2 + "rpx",
-      };
-    },
-    goodsImage() {
-      let borderRadius = `${this.dataConfig.filletImg.val * 2}rpx`;
-      if (this.dataConfig.filletImg.type) {
-        borderRadius = `${this.dataConfig.filletImg.valList[0].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[1].val * 2
-        }rpx ${this.dataConfig.filletImg.valList[3].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[2].val * 2
-        }rpx`;
-      }
-      return borderRadius;
-    },
-    priceBoxStyle() {
-      let styleConfig = this.dataConfig.styleConfig.tabVal;
-      let goodStyleConfig = this.dataConfig.goodStyleConfig.tabVal;
-      let goodsUnitPriceColor2 =
-        this.dataConfig.goodsUnitPriceColor2.color[0].item;
-      let goodsUnitPriceColor =
-        this.dataConfig.goodsUnitPriceColor.color[0].item;
-      let styleObject = {};
-      if (this.dataConfig.toneConfig.tabVal) {
-        if (goodStyleConfig) {
-          styleObject["color"] = !styleConfig
-            ? goodsUnitPriceColor2
-            : goodsUnitPriceColor;
-        } else {
-          styleObject[
-            "background"
-          ] = `linear-gradient(90deg, ${this.dataConfig.priceBgColor.color[0].item} 0%, ${this.dataConfig.priceBgColor.color[1].item} 100%)`;
-          styleObject["color"] = this.dataConfig.goodsPriceColor.color[0].item;
-        }
-      } else {
-        if (goodStyleConfig && !styleConfig) {
-          styleObject["color"] = "#282828";
-        } else {
-          styleObject["color"] = "#fff";
-        }
-      }
-      return styleObject;
-    },
-    goodsTitleStyle() {
-      let styleConfig = this.dataConfig.styleConfig.tabVal;
-      let goodStyleConfig = this.dataConfig.goodStyleConfig.tabVal;
-      let color1 = this.dataConfig.goodsNameColor.color[0].item;
-      let color2 = this.dataConfig.goodsNameColor2.color[0].item;
-      let color = color2;
-      if (!styleConfig) {
-        color = !goodStyleConfig ? color2 : color1;
-      }
-      return {
-        color: color,
-      };
-    },
-    // 数字样式
-    numStyle() {
-      let styleConfig = this.dataConfig.styleConfig.tabVal;
-      let goodStyleConfig = this.dataConfig.goodStyleConfig.tabVal;
-      let color1 = this.dataConfig.goodsPriceColor.color[0].item;
-      let color2 = this.dataConfig.goodsPriceColor2.color[0].item;
-      let styleObject = {};
-      let color = color1;
-      if (!styleConfig) {
-        color = !goodStyleConfig ? color1 : color2;
-      }
-      if (this.dataConfig.toneConfig.tabVal) {
-        styleObject["color"] = color;
-      } else {
-        if (!goodStyleConfig || styleConfig) {
-          styleObject["color"] = "#fff";
-        } else {
-          styleObject["color"] = "var(--view-theme)";
-        }
-      }
-      return styleObject;
-    },
-  },
-  mounted() {
-    this.getStoreIntegralList();
-  },
-  methods: {
-    getStoreIntegralList() {
-      let limit = this.$config.LIMIT;
-      getStoreIntegralList({
-        page: 1,
-        limit:
-          this.dataConfig.numberConfig.val >= limit
-            ? limit
-            : this.dataConfig.numberConfig.val,
-      }).then((res) => {
-        this.goodsList = res.data;
-      });
-    },
-    goPointsMall() {
-      uni.navigateTo({
-        url: `/pages/points_mall/index`,
-      });
-    },
-    goGoodsDetails(id) {
-      uni.navigateTo({
-        url: `/pages/points_mall/integral_goods_details?id=${id}`,
-      });
-    },
-  },
-};
+  };
+});
+
+const headerStyle = computed(() => {
+  let background = `linear-gradient(90deg, ${props.dataConfig.headerBgColor.color[0].item} 0%, ${props.dataConfig.headerBgColor.color[1].item} 100%)`;
+  if (props.dataConfig.styleConfig.tabVal) {
+    background = `url(${props.dataConfig.imgBgConfig.url})`;
+  }
+  return {
+    "background-image": background,
+  };
+});
+
+const goodsWrapperStyle = computed(() => {
+  let color = props.dataConfig.moduleColor2.color;
+  if (props.dataConfig.styleConfig.tabVal) {
+    color = props.dataConfig.moduleColor.color;
+  }
+  return {
+    "background-image": `linear-gradient(270deg, ${color[0].item} 0%, ${color[1].item} 100%)`,
+  };
+});
+
+const pointsMallStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    "border-radius": borderRadius,
+  };
+});
+
+const buttonStyle = computed(() => {
+  let color = props.dataConfig.headerBntColor2.color[0].item;
+  if (props.dataConfig.styleConfig.tabVal) {
+    color = props.dataConfig.headerBntColor.color[0].item;
+  }
+  return {
+    "font-size": props.dataConfig.bntNumber.val * 2 + "rpx",
+    color: color,
+  };
+});
+
+const titleImage = computed(() => {
+  let url = props.dataConfig.imgConfig2.url;
+  if (props.dataConfig.styleConfig.tabVal) {
+    url = props.dataConfig.imgConfig.url;
+  }
+  return url;
+});
+
+const titleStyle = computed(() => {
+  let titleText = props.dataConfig.titleText;
+  return {
+    fontStyle: !titleText.tabVal
+      ? "normal"
+      : titleText.tabList[titleText.tabVal].style,
+    fontWeight: !titleText.tabVal ? "bold" : "normal",
+    color: props.dataConfig.titleColor.color[0].item,
+    fontSize: props.dataConfig.titleNumber.val * 2 + "rpx",
+  };
+});
+
+const goodsImage = computed(() => {
+  let borderRadius = `${props.dataConfig.filletImg.val * 2}rpx`;
+  if (props.dataConfig.filletImg.type) {
+    borderRadius = `${props.dataConfig.filletImg.valList[0].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[1].val * 2
+    }rpx ${props.dataConfig.filletImg.valList[3].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[2].val * 2
+    }rpx`;
+  }
+  return borderRadius;
+});
+
+const priceBoxStyle = computed(() => {
+  let styleConfig = props.dataConfig.styleConfig.tabVal;
+  let goodStyleConfig = props.dataConfig.goodStyleConfig.tabVal;
+  let goodsUnitPriceColor2 =
+    props.dataConfig.goodsUnitPriceColor2.color[0].item;
+  let goodsUnitPriceColor =
+    props.dataConfig.goodsUnitPriceColor.color[0].item;
+  let styleObject = {};
+  if (props.dataConfig.toneConfig.tabVal) {
+    if (goodStyleConfig) {
+      styleObject["color"] = !styleConfig
+        ? goodsUnitPriceColor2
+        : goodsUnitPriceColor;
+    } else {
+      styleObject[
+        "background"
+      ] = `linear-gradient(90deg, ${props.dataConfig.priceBgColor.color[0].item} 0%, ${props.dataConfig.priceBgColor.color[1].item} 100%)`;
+      styleObject["color"] = props.dataConfig.goodsPriceColor.color[0].item;
+    }
+  } else {
+    if (goodStyleConfig && !styleConfig) {
+      styleObject["color"] = "#282828";
+    } else {
+      styleObject["color"] = "#fff";
+    }
+  }
+  return styleObject;
+});
+
+const goodsTitleStyle = computed(() => {
+  let styleConfig = props.dataConfig.styleConfig.tabVal;
+  let goodStyleConfig = props.dataConfig.goodStyleConfig.tabVal;
+  let color1 = props.dataConfig.goodsNameColor.color[0].item;
+  let color2 = props.dataConfig.goodsNameColor2.color[0].item;
+  let color = color2;
+  if (!styleConfig) {
+    color = !goodStyleConfig ? color2 : color1;
+  }
+  return {
+    color: color,
+  };
+});
+
+// 数字样式
+const numStyle = computed(() => {
+  let styleConfig = props.dataConfig.styleConfig.tabVal;
+  let goodStyleConfig = props.dataConfig.goodStyleConfig.tabVal;
+  let color1 = props.dataConfig.goodsPriceColor.color[0].item;
+  let color2 = props.dataConfig.goodsPriceColor2.color[0].item;
+  let styleObject = {};
+  let color = color1;
+  if (!styleConfig) {
+    color = !goodStyleConfig ? color1 : color2;
+  }
+  if (props.dataConfig.toneConfig.tabVal) {
+    styleObject["color"] = color;
+  } else {
+    if (!goodStyleConfig || styleConfig) {
+      styleObject["color"] = "#fff";
+    } else {
+      styleObject["color"] = "var(--view-theme)";
+    }
+  }
+  return styleObject;
+});
+
+onMounted(() => {
+  getStoreIntegralListFn();
+});
+
+function getStoreIntegralListFn() {
+  let limit = configs.LIMIT;
+  getStoreIntegralList({
+    page: 1,
+    limit:
+      props.dataConfig.numberConfig.val >= limit
+        ? limit
+        : props.dataConfig.numberConfig.val,
+  }).then((res) => {
+    goodsList.value = res.data;
+  });
+}
+
+function goPointsMall() {
+  uni.navigateTo({
+    url: `/pages/points_mall/index`,
+  });
+}
+
+function goGoodsDetails(id) {
+  uni.navigateTo({
+    url: `/pages/points_mall/integral_goods_details?id=${id}`,
+  });
+}
 </script>
 
 <style lang="scss" scoped>

@@ -9,7 +9,7 @@
         <view class="header acea-row row-between row-middle">
           <view class="title-box acea-row row-middle">
             <image
-              :src="`${imgHost}/statics/images/newVip1.png`"
+              :src="`${imgHost}/crmebimage/theme-cate/newVip1.png`"
               class="image"
             ></image>
             <view class="info">{{ '超值优惠 限时专享' }}</view>
@@ -97,7 +97,7 @@
           v-if="dataConfig.checkboxInfo.type.includes(0)"
         >
           <image
-            :src="`${imgHost}/statics/images/newVip2.png`"
+            :src="`${imgHost}/crmebimage/theme-cate/newVip2.png`"
             class="image"
           ></image>
           <view class="text">
@@ -106,7 +106,7 @@
               <view class="red" :style="[bonusRedStyle]">
                 <view class="inner acea-row row-middle">
                   <image
-                    :src="`${imgHost}/statics/images/newVip3.png`"
+                    :src="`${imgHost}/crmebimage/theme-cate/newVip3.png`"
                     class="image"
                   ></image>
                   +{{ newcomer_integral }}
@@ -135,7 +135,7 @@
         >
           <view class="inner acea-row row-middle">
             <image
-              :src="`${imgHost}/statics/images/newVip3.png`"
+              :src="`${imgHost}/crmebimage/theme-cate/newVip3.png`"
               class="image"
             ></image>
             {{ '新用户注册即可' }}
@@ -245,223 +245,222 @@
   </view>
 </template>
 
-<script>
+<script setup>
 import commonWrapper from "./commonWrapper.vue";
 import { newcomerList } from "@/api/api.js";
-import { mapGetters } from "vuex";
-import { HTTP_REQUEST_URL } from "@/config/app";
-export default {
-  components: { commonWrapper },
-  computed: mapGetters(["isLogin"]),
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
+import { HTTP_REQUEST_URL } from "@/config/app.js";
+import { ref, computed, watch, getCurrentInstance } from "vue";
+import util from "@/utils/util.js";
+
+const { proxy } = getCurrentInstance();
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
   },
-  data() {
-    return {
-      imgHost: HTTP_REQUEST_URL,
-      couponList: [],
-      productList: [],
-      newcomer_integral: "",
-    };
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  created() {
-    this.getList();
-  },
-  computed: {
-    totalPrice() {
-      return this.couponList.reduce((total, item) => {
-        return this.$util.$h.Add(total, item.coupon_price);
+});
+
+const appStore = useAppStore();
+const { isLogin } = storeToRefs(appStore);
+
+const imgHost = ref(HTTP_REQUEST_URL);
+const couponList = ref([]);
+const productList = ref([]);
+const newcomer_integral = ref("");
+
+const totalPrice = computed(() => {
+      return couponList.value.reduce((total, item) => {
+        return util.$h.Add(total, item.coupon_price);
       }, 0);
-    },
-    bonusStyle() {
+});
+const bonusStyle = computed(() => {
       let styleObject = {};
-      if (this.dataConfig.toneConfig.tabVal) {
+      if (props.dataConfig.toneConfig.tabVal) {
         styleObject["border-color"] =
-          this.dataConfig.integralBgColor.color[0].item;
+          props.dataConfig.integralBgColor.color[0].item;
         styleObject["background"] =
-          this.dataConfig.integralBgColor.color[0].item;
+          props.dataConfig.integralBgColor.color[0].item;
       }
       return styleObject;
-    },
-    bonusRedStyle() {
+});
+const bonusRedStyle = computed(() => {
       let styleObject = {};
-      if (this.dataConfig.toneConfig.tabVal) {
-        if (this.dataConfig.styleConfig.tabVal) {
+      if (props.dataConfig.toneConfig.tabVal) {
+        if (props.dataConfig.styleConfig.tabVal) {
           styleObject["background"] =
-            this.dataConfig.integralTxtColor.color[0].item;
-          styleObject["color"] = this.dataConfig.integralTxtColor.color[0].item;
+            props.dataConfig.integralTxtColor.color[0].item;
+          styleObject["color"] = props.dataConfig.integralTxtColor.color[0].item;
         } else {
-          styleObject["color"] = this.dataConfig.tipsColor.color[0].item;
+          styleObject["color"] = props.dataConfig.tipsColor.color[0].item;
         }
       }
       return styleObject;
-    },
-    moneyStyle() {
+});
+const moneyStyle = computed(() => {
       let styleObject = {};
-      if (this.dataConfig.toneCouponConfig.tabVal) {
-        styleObject["color"] = this.dataConfig.couponMoneyColor.color[0].item;
+      if (props.dataConfig.toneCouponConfig.tabVal) {
+        styleObject["color"] = props.dataConfig.couponMoneyColor.color[0].item;
       }
       return styleObject;
-    },
-    buttonStyle() {
+});
+const buttonStyle = computed(() => {
       let styleObject = {};
-      if (this.dataConfig.toneConfig.tabVal) {
-        if (this.dataConfig.styleConfig.tabVal) {
+      if (props.dataConfig.toneConfig.tabVal) {
+        if (props.dataConfig.styleConfig.tabVal) {
           styleObject[
             "background"
-          ] = `linear-gradient(90deg, ${this.dataConfig.bntColor.color[0].item} 0%, ${this.dataConfig.bntColor.color[1].item} 100%)`;
+          ] = `linear-gradient(90deg, ${props.dataConfig.bntColor.color[0].item} 0%, ${props.dataConfig.bntColor.color[1].item} 100%)`;
         }
       }
-      if (this.dataConfig.toneCouponConfig.tabVal) {
-        if (!this.dataConfig.styleConfig.tabVal) {
-          styleObject["color"] = this.dataConfig.bntTxtColor.color[0].item;
+      if (props.dataConfig.toneCouponConfig.tabVal) {
+        if (!props.dataConfig.styleConfig.tabVal) {
+          styleObject["color"] = props.dataConfig.bntTxtColor.color[0].item;
         }
       }
       return styleObject;
-    },
-    couponTypeStyle() {
+});
+const couponTypeStyle = computed(() => {
       let styleObject = {};
-      if (this.dataConfig.toneCouponConfig.tabVal) {
-        styleObject["color"] = this.dataConfig.couponTypeColor.color[0].item;
+      if (props.dataConfig.toneCouponConfig.tabVal) {
+        styleObject["color"] = props.dataConfig.couponTypeColor.color[0].item;
       }
       return styleObject;
-    },
-    couponStyle() {
+});
+const couponStyle = computed(() => {
       let styleObject = {};
-      if (this.dataConfig.toneCouponConfig.tabVal) {
-        if (this.dataConfig.styleConfig.tabVal) {
+      if (props.dataConfig.toneCouponConfig.tabVal) {
+        if (props.dataConfig.styleConfig.tabVal) {
           styleObject["margin-right"] = `${
-            this.dataConfig.spacingConfig2.val * 2
+            props.dataConfig.spacingConfig2.val * 2
           }rpx`;
           styleObject["background"] =
-            this.dataConfig.couponBgColor2.color[0].item;
+            props.dataConfig.couponBgColor2.color[0].item;
         } else {
           styleObject["margin-right"] = `${
-            this.dataConfig.spacingConfig.val * 2
+            props.dataConfig.spacingConfig.val * 2
           }rpx`;
         }
       }
       return styleObject;
-    },
-    couponContentStyle() {
+});
+const couponContentStyle = computed(() => {
       let styleObject = {};
-      if (this.dataConfig.toneCouponConfig.tabVal) {
+      if (props.dataConfig.toneCouponConfig.tabVal) {
         styleObject[
           "background"
-        ] = `linear-gradient(90deg, ${this.dataConfig.couponBgColor.color[0].item} 0%, ${this.dataConfig.couponBgColor.color[1].item} 100%)`;
+        ] = `linear-gradient(90deg, ${props.dataConfig.couponBgColor.color[0].item} 0%, ${props.dataConfig.couponBgColor.color[1].item} 100%)`;
       }
       return styleObject;
-    },
-    stationStyle() {
+});
+const stationStyle = computed(() => {
       let styleObject = {};
-      if (this.dataConfig.toneCouponConfig.tabVal) {
+      if (props.dataConfig.toneCouponConfig.tabVal) {
         styleObject[
           "background"
-        ] = `linear-gradient(90deg, ${this.dataConfig.vipBgColor.color[0].item} 0%, ${this.dataConfig.vipBgColor.color[1].item} 100%)`;
+        ] = `linear-gradient(90deg, ${props.dataConfig.vipBgColor.color[0].item} 0%, ${props.dataConfig.vipBgColor.color[1].item} 100%)`;
       }
       return styleObject;
-    },
-    productMoneyStyle() {
+});
+const productMoneyStyle = computed(() => {
       let styleObject = {};
-      if (this.dataConfig.toneGoodsConfig.tabVal) {
-        styleObject["color"] = this.dataConfig.priceColor.color[0].item;
+      if (props.dataConfig.toneGoodsConfig.tabVal) {
+        styleObject["color"] = props.dataConfig.priceColor.color[0].item;
       }
       return styleObject;
-    },
-    couponInfoStyle() {
+});
+const couponInfoStyle = computed(() => {
       let styleObject = {};
-      if (this.dataConfig.toneCouponConfig.tabVal) {
+      if (props.dataConfig.toneCouponConfig.tabVal) {
         styleObject[
           "background"
-        ] = `linear-gradient(90deg, ${this.dataConfig.bntBgColor.color[1].item} 0%, ${this.dataConfig.bntBgColor.color[0].item} 100%)`;
+        ] = `linear-gradient(90deg, ${props.dataConfig.bntBgColor.color[1].item} 0%, ${props.dataConfig.bntBgColor.color[0].item} 100%)`;
       }
       return styleObject;
-    },
+});
+
     // 组件背景
-    newVip2Background() {
+const newVip2Background = computed(() => {
       return {
-        background: `linear-gradient(90deg, ${this.dataConfig.moduleColor.color[0].item} 0%, ${this.dataConfig.moduleColor.color[1].item} 99%)`,
+        background: `linear-gradient(90deg, ${props.dataConfig.moduleColor.color[0].item} 0%, ${props.dataConfig.moduleColor.color[1].item} 99%)`,
       };
-    },
+});
+
     // 背景圆角
-    newVipBorderRadius() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
+const newVipBorderRadius = computed(() => {
+      let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+      if (props.dataConfig.fillet.type) {
+        borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+          props.dataConfig.fillet.valList[1].val * 2
+        }rpx ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+          props.dataConfig.fillet.valList[2].val * 2
         }rpx`;
       }
       return {
         "border-radius": borderRadius,
       };
-    },
+});
+
     // 底部背景
-    newVipWrapStyle() {
+const newVipWrapStyle = computed(() => {
       return {
-        "margin-top": `${this.dataConfig.mbConfig.val * 2}rpx`,
-        background: this.dataConfig.bottomBgColor.color[0].item,
+        "margin-top": `${props.dataConfig.mbConfig.val * 2}rpx`,
+        background: props.dataConfig.bottomBgColor.color[0].item,
       };
-    },
-  },
-  watch: {
-    isLogin: {
-      handler: function (newV, oldV) {
-        if (newV) {
-          this.getList();
-        }
-      },
-      deep: true,
-    },
-  },
-  methods: {
-    goDetail(item) {
+});
+function goDetail(item) {
       uni.navigateTo({
         url: `/pages/goods/goods_details/index?id=${item.id}`,
       });
-    },
-    goNewList() {
+}
+function goNewList() {
       uni.navigateTo({
         url: `/pages/activity/new_customer/index`,
       });
-    },
-    goUser() {
+}
+function goUser() {
       uni.switchTab({
         url: `/pages/users/user_coupon/index`,
       });
-    },
-    getList() {
-      let limit = this.$config.LIMIT;
+}
+function getList() {
+      let limit = proxy.$config.LIMIT;
       newcomerList({
         page: 1,
         limit: limit,
       })
         .then((res) => {
-          let newcomer_integral = res.data.newcomer_integral;
-          this.couponList = res.data.newcomer_coupon;
-          this.productList = res.data.newcomer_products;
-          if (Array.isArray(newcomer_integral)) {
-            this.newcomer_integral = 0;
+          let integralVal = res.data.newcomer_integral;
+          couponList.value = res.data.newcomer_coupon;
+          productList.value = res.data.newcomer_products;
+          if (Array.isArray(integralVal)) {
+            newcomer_integral.value = 0;
           } else {
-            this.newcomer_integral = newcomer_integral;
+            newcomer_integral.value = integralVal;
           }
         })
         .catch((err) => {
-          return this.$util.Tips({
+          return util.Tips({
             title: err.msg,
           });
         });
-    },
+}
+getList();
+watch(
+  isLogin,
+  (newV, oldV) => {
+    if (newV) {
+      getList();
+    }
   },
-};
+  { deep: true },
+);
 </script>
 
 <style lang="scss">

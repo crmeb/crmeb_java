@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme" class="upda_pasd">
+	<view :data-theme="theme" class="upda_pasd" :style="colorStyle">
 		<view class="ChangePassword">
 			<form @submit="editPwd" report-submit='true'>
 				<view class="phone">当前手机号：{{phone}}</view>
@@ -20,183 +20,179 @@
 				<button form-type="submit" class="confirmBnt">确认修改</button>
 			</form>
 		</view>
-		<Verify @success="handlerOnVerSuccess" :captchaType="'clickWord'" :imgSize="{ width: '330px', height: '155px' }"
+		<Verify @success="handlerOnVerSuccess" :captchaType="'blockPuzzle'" :imgSize="{ width: '330px', height: '155px' }"
 		        ref="verify"></Verify>
 	</view>
 </template>
 
-<script>
-	import sendVerifyCode from "@/mixins/SendVerifyCode";
-	import Verify from '@/pages/users/components/verifition/verify.vue';
-	import {
-		phoneRegisterReset,
-		registerVerify
-	} from '@/api/api.js';
-	import {
-		getUserInfo
-	} from '@/api/user.js';
-	import {
-		toLogin
-	} from '@/libs/login.js';
-	import {mapGetters} from "vuex";
-	import {setThemeColor} from '@/utils/setTheme.js'
-	const app = getApp();
-	export default {
-		mixins: [sendVerifyCode],
-		components: {
-			Verify,
-		},
-		data() {
-			return {
-				userInfo: {},
-				phone: '',
-				password: '',
-				captcha: '',
-				qr_password: '',
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
-				theme:app.globalData.theme,
-				bgColor:''
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		watch:{
-			isLogin:{
-				handler:function(newV,oldV){
-					if(newV){
-						this.getUserInfo();
-					}
-				},
-				deep:true
-			}
-		},
-		onLoad() {
-			if (this.isLogin) {
-				this.getUserInfo();
-			} else {
-				toLogin();
-			}
-			let that = this;
-			that.bgColor = setThemeColor();
-			uni.setNavigationBarColor({
-				frontColor: '#ffffff',
-				backgroundColor:that.bgColor,
-			});
-		},
-		methods: {
-			clickCode(){
-				let that = this;
-				if (that.qr_password != that.password) return that.$util.Tips({
-					title: '两次输入的密码不一致！'
-				});
-				if (!/^[a-zA-Z]\w{5,17}$/i.test(that.password)) return that.$util.Tips({
-					title: '密码格式错误，密码必须以字母开头，长度在6～18之间，只能包含字符、数字和下划线'
-				});
-				this.$refs.verify.show();
-			},
-			//滑块验证成功后
-			handlerOnVerSuccess(data) {
-				this.$refs.verify.hide();
-				this.code();
-			},
-			/**
-			 * 授权回调
-			 */
-			onLoadFun: function(e) {
-				this.getUserInfo();
-			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
-			},
-			/**
-			 * 获取个人用户信息
-			 */
-			getUserInfo: function() {
-				let that = this;
-				getUserInfo().then(res => {
-					let tel = res.data.phone;
-					let phone = tel.substr(0, 3) + "****" + tel.substr(7);
-					that.$set(that, 'userInfo', res.data);
-					that.phone = phone;
-				});
-			},
-			/**
-			 * 发送验证码
-			 * 
-			 */
-			async code() {
-				let that = this;
-				if (!that.userInfo.phone) return that.$util.Tips({
-					title: '手机号码不存在,无法发送验证码！'
-				});
-				await registerVerify(that.userInfo.phone).then(res => {
-					that.$util.Tips({
-						title: res.message
-					});
-					that.sendCode();
-				}).catch(err => {
-					return that.$util.Tips({
-						title: err
-					});
-				});
-			},
+<script setup>
+import { ref, watch } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
+import util from '@/utils/util.js';
+import { useSendVerifyCode } from '@/composables/useSendVerifyCode.js';
+import Verify from '@/pages/users/components/verifition/verify.vue';
+import {
+	phoneRegisterReset,
+	registerVerify
+} from '@/api/api.js';
+import {
+	getUserInfo
+} from '@/api/user.js';
+import {
+	toLogin
+} from '@/libs/login.js';
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from 'pinia';
+import { setThemeColor } from '@/utils/setTheme.js'
+import { useColor } from '@/composables/useColor.js';
 
-			/**
-			 * H5登录 修改密码
-			 * 
-			 */
-			checkPasd(e){
-				let that = this,password = e.detail.value;
-				that.password = password;
-				// if (!/^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,8}$/i.test(password)) return that.$util.Tips({
-				if (!/^[a-zA-Z]\w{5,17}$/i.test(password)) return that.$util.Tips({
-					title: '密码格式错误，密码必须以字母开头，长度在6～18之间，只能包含字符、数字和下划线'
-				});
-			},
-			//校验2次密码是否一样
-			checkPassword(e){
-				let that = this,qr_password = e.detail.value;
-				if (qr_password != that.password) return that.$util.Tips({
-					title: '两次输入的密码不一致！'
-				});
-			},
-			editPwd: function(e) {
-				let that = this,
-					password = e.detail.value.password,
-					qr_password = e.detail.value.qr_password,
-					captcha = e.detail.value.captcha;
-				if (!password) return that.$util.Tips({
-					title: '请输入新密码'
-				});
-				if (!qr_password) return that.$util.Tips({
-					title: '请确认新密码'
-				});
-				if (!captcha) return that.$util.Tips({
-					title: '请输入验证码'
-				});
-				if (qr_password != that.password) return that.$util.Tips({
-					title: '两次输入的密码不一致！'
-				});
-				phoneRegisterReset({
-					account: that.userInfo.phone,
-					captcha: captcha,
-					password: password
-				}).then(res => {
-					return that.$util.Tips({
-						title: res.message
-					}, {
-						tab: 3,
-						url: 1
-					});
-				}).catch(err => {
-					return that.$util.Tips({
-						title: err
-					});
-				});
-			}
-		}
+const app = getApp();
+const appStore = useAppStore();
+const { isLogin } = storeToRefs(appStore);
+const { disabled, text, sendCode } = useSendVerifyCode();
+
+const verify = ref(null);
+const userInfo = ref({});
+const phone = ref('');
+const password = ref('');
+const captcha = ref('');
+const qr_password = ref('');
+const isAuto = ref(false); //没有授权的不会自动授权
+const isShowAuth = ref(false); //是否隐藏授权
+const theme = ref(app.globalData.theme);
+const { colorStyle } = useColor();
+const bgColor = ref('');
+
+watch(isLogin, (newV) => {
+	if (newV) {
+		getUserInfoFn();
 	}
+}, { deep: true });
+
+onLoad(() => {
+	if (isLogin.value) {
+		getUserInfoFn();
+	} else {
+		toLogin();
+	}
+	bgColor.value = setThemeColor();
+	uni.setNavigationBarColor({
+		frontColor: '#ffffff',
+		backgroundColor: bgColor.value,
+	});
+});
+
+function clickCode() {
+	if (qr_password.value != password.value) return util.Tips({
+		title: '两次输入的密码不一致！'
+	});
+	if (!/^[a-zA-Z]\w{5,17}$/i.test(password.value)) return util.Tips({
+		title: '密码格式错误，密码必须以字母开头，长度在6～18之间，只能包含字符、数字和下划线'
+	});
+	verify.value.show();
+}
+
+//滑块验证成功后
+function handlerOnVerSuccess(data) {
+	verify.value.hide();
+	code();
+}
+
+/**
+ * 授权回调
+ */
+function onLoadFun(e) {
+	getUserInfoFn();
+}
+
+// 授权关闭
+function authColse(e) {
+	isShowAuth.value = e
+}
+
+/**
+ * 获取个人用户信息
+ */
+function getUserInfoFn() {
+	getUserInfo().then(res => {
+		let tel = res.data.phone;
+		let p = tel.substr(0, 3) + "****" + tel.substr(7);
+		userInfo.value = res.data;
+		phone.value = p;
+	});
+}
+
+/**
+ * 发送验证码
+ */
+async function code() {
+	if (!userInfo.value.phone) return util.Tips({
+		title: '手机号码不存在,无法发送验证码！'
+	});
+	await registerVerify(userInfo.value.phone).then(res => {
+		util.Tips({
+			title: res.message
+		});
+		sendCode();
+	}).catch(err => {
+		return util.Tips({
+			title: err
+		});
+	});
+}
+
+/**
+ * H5登录 修改密码
+ */
+function checkPasd(e) {
+	let pwd = e.detail.value;
+	password.value = pwd;
+	if (!/^[a-zA-Z]\w{5,17}$/i.test(pwd)) return util.Tips({
+		title: '密码格式错误，密码必须以字母开头，长度在6～18之间，只能包含字符、数字和下划线'
+	});
+}
+
+//校验2次密码是否一样
+function checkPassword(e) {
+	let qr = e.detail.value;
+	if (qr != password.value) return util.Tips({
+		title: '两次输入的密码不一致！'
+	});
+}
+
+function editPwd(e) {
+	let pwd = e.detail.value.password,
+		qr = e.detail.value.qr_password,
+		cap = e.detail.value.captcha;
+	if (!pwd) return util.Tips({
+		title: '请输入新密码'
+	});
+	if (!qr) return util.Tips({
+		title: '请确认新密码'
+	});
+	if (!cap) return util.Tips({
+		title: '请输入验证码'
+	});
+	if (qr != password.value) return util.Tips({
+		title: '两次输入的密码不一致！'
+	});
+	phoneRegisterReset({
+		account: userInfo.value.phone,
+		captcha: cap,
+		password: pwd
+	}).then(res => {
+		return util.Tips({
+			title: res.message
+		}, {
+			tab: 3,
+			url: 1
+		});
+	}).catch(err => {
+		return util.Tips({
+			title: err
+		});
+	});
+}
 </script>
 
 <style lang="scss">

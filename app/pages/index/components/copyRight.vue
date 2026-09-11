@@ -9,30 +9,26 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, onMounted } from 'vue'
 	import {getConfigCopyright} from '@/api/api.js'
-	export default{
-		data(){
-			return{
-				copyRightInfo:null
-			}
-		},
-		mounted() {
-			this.getCopyright()
-		},
-		methods:{
-			getCopyright(){
-				getConfigCopyright().then(res=>{
-					this.copyRightInfo=res.data
-				})
-			},
-			toIcp(){
-				window.open(this.copyRightInfo.copyrightIcpNumberUrl)
-			},
-			toInternet(){
-				window.open(this.copyRightInfo.copyrightInternetRecordUrl)
-			},
-		}
+
+	const copyRightInfo = ref(null)
+
+	onMounted(() => {
+		getCopyright()
+	})
+
+	function getCopyright(){
+		getConfigCopyright().then(res=>{
+			copyRightInfo.value = res.data
+		})
+	}
+	function toIcp(){
+		window.open(copyRightInfo.value.copyrightIcpNumberUrl)
+	}
+	function toInternet(){
+		window.open(copyRightInfo.value.copyrightInternetRecordUrl)
 	}
 </script>
 

@@ -1,5 +1,5 @@
 <template>
-	<div class="quality-recommend" :data-theme="theme">
+	<div class="quality-recommend" :data-theme="theme" :style="colorStyle">
 		<view class="saleBox" v-if="typeInfo.pic"></view>
 		<view class="header skeleton-rect" v-if="typeInfo.pic">
 			<view class="borRadius14">
@@ -18,7 +18,6 @@
 				<view class="item acea-row row-middle" v-for="(item,index) in tempArr" :key="index" @click="toDetail(item.id)">
 					<view class="img_box">
 						<image class="pictrue" :src="item.image"></image>
-						<view :style="{ backgroundImage: `url(${item.activityStyle})` }" class="border-picture"></view>
 					</view>
 					<view class="ml_11 flex-column justify-between">
 						<view class="goods_name">{{item.storeName}}</view>
@@ -39,78 +38,70 @@
 		</view>
 	</div>
 </template>
-<script>
+<script setup>
+	import { ref } from 'vue';
+	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
 	import emptyPage from '@/components/emptyPage.vue';
-	import GoodList from '@/components/goodList/index';
-	import {getGroomList} from '@/api/store';
-	import {goPage} from '@/libs/order.js';
+	import GoodList from '@/components/goodList/index.vue';
+	import {getGroomList as getGroomListApi} from '@/api/store.js';
 	import {productRank} from '@/api/api.js'
 	import Loading from '@/components/Loading/index.vue';
 	import animationType from '@/utils/animationType.js'
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp()
-	export default {
-		name: 'HotNewGoods',
-		components: {
-			GoodList,
-			emptyPage,
-			Loading
-		},
-		data: function() {
-			return {
-				circular:true,
-				theme:app.globalData.theme,
-				typeInfo:{},
-				loading:false,
-				params: { //精品推荐分页
-					page: 1,
-					limit: 10,
-				},
-				loading: false,
-				goodScroll: true, //精品推荐开关
-				tempArr:[],
-			};
-		},
-		onLoad: function(e) {
-			this.typeInfo = e;
-			uni.setNavigationBarTitle({
-				title: this.typeInfo.name
-			});
-			if(this.typeInfo.name == '商品排行'){
-				this.getProductRank();
-			}else{
-				this.getGroomList();
-			}
-		},
-		methods: {
-			getGroomList() {
-				this.loading = true
-				if (!this.goodScroll) return
-				getGroomList(this.typeInfo.type, this.params).then(({data}) => {
-					this.goodScroll = data.list.length >= this.params.limit
-					this.loading = false
-					this.params.page++
-					this.tempArr = this.tempArr.concat(data.list)
-				})
-			},
-			getProductRank(){
-				productRank().then(res=>{
-					this.tempArr = res.data;
-				})
-			},
-			toDetail(id){
-				uni.navigateTo({
-					animationType: animationType.type,
-					animationDuration: animationType.duration,
-					url:'/pages/goods/goods_details/index?id=' + id
-				})
-			}
-		},
-		onReachBottom() {
-			if (this.params.page != 1) {
-				this.getGroomList();
-			}
-		},
+
+	const circular = ref(true);
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	const typeInfo = ref({});
+	const loading = ref(false);
+	const params = ref({ //精品推荐分页
+		page: 1,
+		limit: 10,
+	});
+	const goodScroll = ref(true); //精品推荐开关
+	const tempArr = ref([]);
+
+	function getGroomList() {
+		loading.value = true
+		if (!goodScroll.value) return
+		getGroomListApi(typeInfo.value.type, params.value).then(({data}) => {
+			goodScroll.value = data.list.length >= params.value.limit
+			loading.value = false
+			params.value.page++
+			tempArr.value = tempArr.value.concat(data.list)
+		})
 	}
+	function getProductRank(){
+		productRank().then(res=>{
+			tempArr.value = res.data;
+		})
+	}
+	function toDetail(id){
+		uni.navigateTo({
+			animationType: animationType.type,
+			animationDuration: animationType.duration,
+			url:'/pages/goods/goods_details/index?id=' + id
+		})
+	}
+
+	onLoad((e) => {
+		typeInfo.value = e;
+		uni.setNavigationBarTitle({
+			title: typeInfo.value.name
+		});
+		if(typeInfo.value.name == '商品排行'){
+			getProductRank();
+		}else{
+			getGroomList();
+		}
+	});
+
+	onReachBottom(() => {
+		if (params.value.page != 1) {
+			getGroomList();
+		}
+	});
 </script>
 <style lang="scss">
 	::v-deep  .quality-recommend {
@@ -143,9 +134,6 @@
 		height: 100%;
 		border-radius: 14rpx;
 		overflow: hidden;
-		img{
-			border-radius: 14rpx;
-		}
 	}
 	.quality-recommend {
 		.wrapper {

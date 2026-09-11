@@ -42,95 +42,69 @@
 	</view>
 </template>
 
-<script>
-	import {
-		express
-	} from '@/api/order.js';
-	import ClipboardJS from "@/plugin/clipboard/clipboard.js";
-	import {
-		toLogin
-	} from '@/libs/login.js';
-	import {
-		mapGetters
-	} from "vuex";
-	import recommend from '@/components/recommend';
-	export default {
-		components: {
-			recommend
-		},
-		data() {
-			return {
-				orderId: '',
-				product: {
-					productInfo: {}
-				},
-				orderInfo: {},
-				expressList: [],
-				loading: false,
-				isloading: false, //接口是否请求完毕
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		watch:{
-			isLogin:{
-				handler:function(newV,oldV){
-					if(newV){
-						this.getExpress();
-					}
-				},
-				deep:true
-			}
-		},
-		onLoad: function (options) {
-		    if (!options.orderId) return this.$util.Tips({title:'缺少订单号'});
-			this.orderId = options.orderId;
-			if (this.isLogin) {
-				this.getExpress();
-			} else {
-				toLogin();
-			}
-		  },
-		  onReady: function() {
-		  	// #ifdef H5
-		  	this.$nextTick(function() {
-		  		const clipboard = new ClipboardJS(".copy-data");
-		  		clipboard.on("success", () => {
-		  			this.$util.Tips({
-		  				title: '复制成功'
-		  			});
-		  		});
-		  	});
-		  	// #endif
-		  },
-		methods: {
-			copyOrderId:function(){
-			    uni.setClipboardData({ data: this.orderInfo.deliveryId });
-			  },
-			  getExpress:function(){
-			    let that=this;
-				that.isloading = false;
-			    express(that.orderId).then(function(res){
-			      let result = res.data.express|| {};
-				  that.$set(that,'product',res.data.order.info[0] || {});
-				  that.$set(that,'orderInfo',res.data.order);
-				  that.$set(that,'expressList',result.list || []);
-				  that.isloading = true;
-			    }).catch(e => {
-					that.isloading = false;
-					return this.$util.Tips({
-						title: e
-					});
-				});
-			  }
-		},
-		// 滚动到底部
-		onReachBottom() {
-		
-			if (this.params.page != 1) {
-				this.$refs.recommendIndex.get_host_product();
-			}
-		},
-	}
+<script setup>
+import { ref, watch, nextTick, getCurrentInstance } from "vue";
+import { onLoad, onReady, onReachBottom } from "@dcloudio/uni-app";
+import { express } from "@/api/order.js";
+import ClipboardJS from "@/plugin/clipboard/clipboard.js";
+import { toLogin } from "@/libs/login.js";
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
+import util from "@/utils/util.js";
+import recommend from "@/components/recommend/index.vue";
+
+const { proxy } = getCurrentInstance();
+const appStore = useAppStore();
+const { isLogin } = storeToRefs(appStore);
+
+const orderId = ref("");
+const product = ref({ productInfo: {} });
+const orderInfo = ref({});
+const expressList = ref([]);
+const loading = ref(false);
+const isloading = ref(false);
+const recommendIndex = ref(null);
+const params = ref({ page: 1 });
+
+watch(isLogin, (newV) => { if (newV) getExpress(); }, { deep: true });
+
+onLoad((options) => {
+	if (!options.orderId) return util.Tips({ title: '缺少订单号' });
+	orderId.value = options.orderId;
+	if (isLogin.value) getExpress();
+	else toLogin();
+});
+
+onReady(() => {
+	// #ifdef H5
+	nextTick(() => {
+		const clipboard = new ClipboardJS(".copy-data");
+		clipboard.on("success", () => { util.Tips({ title: '复制成功' }); });
+	});
+	// #endif
+});
+
+onReachBottom(() => {
+	if (params.value.page != 1) recommendIndex.value.get_host_product();
+});
+
+function copyOrderId() {
+	uni.setClipboardData({ data: orderInfo.value.deliveryId });
+}
+
+function getExpress() {
+	isloading.value = false;
+	express(orderId.value).then(function(res) {
+		let result = res.data.express || {};
+		product.value = res.data.order.info[0] || {};
+		orderInfo.value = res.data.order;
+		expressList.value = result.list || [];
+		isloading.value = true;
+	}).catch(e => {
+		isloading.value = false;
+		util.Tips({ title: e });
+	});
+}
 </script>
 
 <style scoped lang="scss">

@@ -8,7 +8,7 @@
       }"
       v-if="articleList.length"
     >
-      <navigator
+      <navigator :render-link="false"
         :url="'/pages/news/news_details/index?id=' + item.id"
         hover-class="none"
         v-for="(item, index) in articleList"
@@ -75,160 +75,171 @@
   </common-wrapper>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from "vue";
 import commonWrapper from "./commonWrapper.vue";
 import { getThemeArticle } from "@/api/api.js";
-import dayjs from "@/plugin/dayjs/dayjs.min.js";
-export default {
-  components: { commonWrapper },
-  name: "articleList",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+import configs from "@/config/app.js";
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
   },
-  data() {
-    return {
-      articleList: [],
-    };
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
+});
+
+const articleList = ref([]);
+
+function padTime(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatArticleTime(value) {
+  const timestamp = Number(value);
+  const date = new Date(Number.isFinite(timestamp) && timestamp < 10000000000 ? timestamp * 1000 : value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${padTime(date.getMonth() + 1)}-${padTime(date.getDate())} ${padTime(date.getHours())}:${padTime(date.getMinutes())}`;
+}
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.topConfig ? props.dataConfig.topConfig.val : 0,
         },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
         },
-      };
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    isLike() {
-      let like = true;
-      like = this.dataConfig.checkboxList.type.includes(2);
-      return like;
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
     },
-    borderRadius() {
-      let borderRadius = `${this.dataConfig.filletImg.val * 2}rpx`;
-      if (this.dataConfig.filletImg.type) {
-        borderRadius = `${this.dataConfig.filletImg.valList[0].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[1].val * 2
-        }rpx ${this.dataConfig.filletImg.valList[3].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[2].val * 2
-        }rpx`;
-      }
-      return borderRadius;
-    },
-    timeStyle() {
-      return {
-        color: this.dataConfig.timeColor.color[0].item,
-      };
-    },
-    iconEyesStyle() {
-      return {
-        color: this.dataConfig.browseColor.color[0].item,
-      };
-    },
-    // iconLikeStyle() {
-    // 	return {
-    // 		'color': this.dataConfig.likeColor.color[0].item,
-    // 	};
-    // },
-    numberStyle() {
-      return {
-        color: this.dataConfig.statisticColor.color[0].item,
-      };
-    },
-    articleItemStyle() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        "border-radius": borderRadius,
-        background: `linear-gradient(90deg, ${this.dataConfig.bgColor.color[0].item} 0%, ${this.dataConfig.bgColor.color[1].item} 100%)`,
-      };
-    },
-    titleStyle() {
-      let styleObject = {
-        color: this.dataConfig.nameColor.color[0].item,
-      };
-      if (!this.dataConfig.nameConfig.tabVal) {
-        styleObject["font-weight"] = "bold";
-      }
-      return styleObject;
-    },
-  },
-  mounted() {
-    this.getCidArticle();
-  },
-  methods: {
-    getCidArticle: function () {
-      let limit = this.$config.LIMIT;
-      getThemeArticle({
-        cid: Array.isArray(this.dataConfig.selectConfig.activeValue)
-          ? this.dataConfig.selectConfig.activeValue.join(",")
-          : this.dataConfig.selectConfig.activeValue || "",
-        page: 1,
-        limit:
-          this.dataConfig.numConfig.val >= limit
-            ? limit
-            : this.dataConfig.numConfig.val,
-      }).then((res) => {
-        const data = res.data || {};
-        const list = Array.isArray(data) ? data : data.list || [];
-        if (this.dataConfig.styleConfig.tabVal == 2) {
-          list.forEach((item) => {
-            item.add_time = dayjs(item.add_time).format("MM-DD HH:mm");
-          });
-        }
-        this.articleList = list;
+  };
+});
+
+const isLike = computed(() => {
+  let like = true;
+  like = props.dataConfig.checkboxList.type.includes(2);
+  return like;
+});
+
+const borderRadius = computed(() => {
+  let borderRadius = `${props.dataConfig.filletImg.val * 2}rpx`;
+  if (props.dataConfig.filletImg.type) {
+    borderRadius = `${props.dataConfig.filletImg.valList[0].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[1].val * 2
+    }rpx ${props.dataConfig.filletImg.valList[3].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[2].val * 2
+    }rpx`;
+  }
+  return borderRadius;
+});
+
+const timeStyle = computed(() => {
+  return {
+    color: props.dataConfig.timeColor.color[0].item,
+  };
+});
+
+const iconEyesStyle = computed(() => {
+  return {
+    color: props.dataConfig.browseColor.color[0].item,
+  };
+});
+
+// iconLikeStyle() {
+// 	return {
+// 		'color': this.dataConfig.likeColor.color[0].item,
+// 	};
+// },
+
+const numberStyle = computed(() => {
+  return {
+    color: props.dataConfig.statisticColor.color[0].item,
+  };
+});
+
+const articleItemStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    "border-radius": borderRadius,
+    background: `linear-gradient(90deg, ${props.dataConfig.bgColor.color[0].item} 0%, ${props.dataConfig.bgColor.color[1].item} 100%)`,
+  };
+});
+
+const titleStyle = computed(() => {
+  let styleObject = {
+    color: props.dataConfig.nameColor.color[0].item,
+  };
+  if (!props.dataConfig.nameConfig.tabVal) {
+    styleObject["font-weight"] = "bold";
+  }
+  return styleObject;
+});
+
+function getCidArticle() {
+  let limit = configs.LIMIT;
+  getThemeArticle({
+    cid: Array.isArray(props.dataConfig.selectConfig.activeValue)
+      ? props.dataConfig.selectConfig.activeValue.join(",")
+      : props.dataConfig.selectConfig.activeValue || "",
+    page: 1,
+    limit:
+      props.dataConfig.numConfig.val >= limit
+        ? limit
+        : props.dataConfig.numConfig.val,
+  }).then((res) => {
+    const data = res.data || {};
+    const list = Array.isArray(data) ? data : data.list || [];
+    if (props.dataConfig.styleConfig.tabVal == 2) {
+      list.forEach((item) => {
+        item.add_time = formatArticleTime(item.add_time);
       });
-    },
-  },
-};
+    }
+    articleList.value = list;
+  });
+}
+
+onMounted(() => {
+  getCidArticle();
+});
 </script>
 
 <style lang="scss">

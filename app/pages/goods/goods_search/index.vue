@@ -36,134 +36,104 @@
 		</view>
 		<view class='noCommodity'>
 			<view class='pictrue'  v-if="bastList.length == 0 && isbastList">
-				<image :src="urlDomain+'crmebimage/perset/staticImg/noSearch.png'"></image>
+				<image :src="urlDomain+'/crmebimage/perset/staticImg/noSearch.png'"></image>
 			</view>
 			<recommend ref="recommendIndex" v-if="bastList.length == 0"></recommend>
 		</view>
 	</view>
 </template>
 
-<script>
-	import {
-		getSearchKeyword,
-		getProductslist
-	} from '@/api/store.js';
-	import goodList from '@/components/goodList';
-	import recommend from '@/components/recommend';
+<script setup>
+import { ref, getCurrentInstance } from "vue";
+import { onLoad, onShow, onReachBottom } from "@dcloudio/uni-app";
+import { getSearchKeyword, getProductslist } from "@/api/store.js";
+import goodList from "@/components/goodList/index.vue";
+import recommend from "@/components/recommend/index.vue";
+// #ifdef MP
+import searchBox from "@/components/searchBox.vue";
+// #endif
+import util from "@/utils/util.js";
+import Cache from "@/utils/cache.js";
+
+const { proxy } = getCurrentInstance();
+const app = getApp();
+const urlDomain = ref(Cache.get("imgHost"));
+const searchValue = ref("");
+const focus = ref(true);
+const bastList = ref([]);
+const hotSearchList = ref([]);
+const first = ref(0);
+const limit = ref(8);
+const page = ref(1);
+const loading = ref(false);
+const loadend = ref(false);
+const loadTitle = ref("加载更多");
+const isbastList = ref(false);
+const theme = ref(app.globalData.theme);
+const searchTop = ref("");
+const recommendIndex = ref(null);
+
+onLoad((e) => {
 	// #ifdef MP
-	import searchBox from "@/components/searchBox.vue";
+	searchTop.value = uni.getMenuButtonBoundingClientRect().top;
 	// #endif
-	let app = getApp();
-	export default {
-		components: {
-			goodList,
-			recommend,
-			// #ifdef MP
-			searchBox
-			// #endif
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				searchValue: '',
-				focus: true,
-				bastList: [],
-				hotSearchList: [],
-				first: 0,
-				limit: 8,
-				page: 1,
-				loading: false,
-				loadend: false,
-				loadTitle: '加载更多',
-				isbastList: false,
-				theme:app.globalData.theme,
-				searchTop:''
-			};
-		},
-		onLoad(e){
-			// #ifdef MP
-			this.searchTop=uni.getMenuButtonBoundingClientRect().top
-			// #endif
-		},
-		onShow: function() {
-			this.getRoutineHotSearch();
-		},
-		onReachBottom: function() {
-			if(this.bastList.length>0){
-				this.getProductList();
-			}else{
-				this.$refs.recommendIndex.get_host_product();
-			}
-			
-		},
-		methods: {
-			getRoutineHotSearch: function() {
-				let that = this;
-				getSearchKeyword().then(res => {
-					that.$set(that, 'hotSearchList', res.data);
-				});
-			},
-			getProductList: function() {
-				let that = this;
-				if (that.loadend) return;
-				if (that.loading) return;
-				that.loading = true;
-				that.loadTitle = '';
-				getProductslist({
-					keyword: that.searchValue,
-					page: that.page,
-					limit: that.limit
-				}).then(res => {
-					let list = res.data.list,
-						loadend = list.length < that.limit;
-					that.bastList = that.$util.SplitArray(list, that.bastList);
-					that.$set(that,'bastList',that.bastList);
-					that.loading = false;
-					that.loadend = loadend;
-					that.loadTitle = loadend ? "我也是有底线的~" : "加载更多";
-					that.page = that.page + 1;
-					that.isbastList = true;
-				}).catch(err => {
-					that.loading = false,
-					that.loadTitle = '加载更多'
-				});
-			},
-			setHotSearchValue: function(event) {
-				this.$set(this, 'searchValue', event);
-				this.page = 1;
-				this.loadend = false;
-				this.$set(this, 'bastList', []);
-				this.getProductList();
-			},
-			setValue: function(event) {
-				this.$set(this, 'searchValue', event.detail.value);
-			},
-			searchBut: function(e) {
-				let that = this;
-				that.focus = false;
-				if(e.detail.value){
-					this.searchValue =e.detail.value
-				}
-				if (that.searchValue.length > 0||val) {
-					that.page = 1;
-					that.loadend = false;
-					that.$set(that, 'bastList', []);
-					uni.showLoading({
-						title: '正在搜索中'
-					});
-					that.getProductList();
-					uni.hideLoading();
-				} else {
-					return this.$util.Tips({
-						title: '请输入要搜索的商品',
-						icon: 'none',
-						duration: 1000,
-						mask: true,
-					});
-				}
-			}
-		}
+});
+
+onShow(() => { getRoutineHotSearch(); });
+
+onReachBottom(() => {
+	if (bastList.value.length > 0) getProductList();
+	else recommendIndex.value.get_host_product();
+});
+
+function getRoutineHotSearch() {
+	getSearchKeyword().then(res => { hotSearchList.value = res.data; });
+}
+
+function getProductList() {
+	if (loadend.value) return;
+	if (loading.value) return;
+	loading.value = true;
+	loadTitle.value = "";
+	getProductslist({ keyword: searchValue.value, page: page.value, limit: limit.value })
+		.then(res => {
+			let list = res.data.list;
+			let isEnd = list.length < limit.value;
+			bastList.value = util.SplitArray(list, bastList.value);
+			loading.value = false;
+			loadend.value = isEnd;
+			loadTitle.value = isEnd ? "我也是有底线的~" : "加载更多";
+			page.value++;
+			isbastList.value = true;
+		}).catch(() => { loading.value = false; loadTitle.value = "加载更多"; });
+}
+
+function setHotSearchValue(event) {
+	searchValue.value = event;
+	page.value = 1;
+	loadend.value = false;
+	bastList.value = [];
+	getProductList();
+}
+
+function setValue(event) {
+	searchValue.value = event.detail.value;
+}
+
+function searchBut(e) {
+	focus.value = false;
+	if (e.detail.value) searchValue.value = e.detail.value;
+	if (searchValue.value.length > 0) {
+		page.value = 1;
+		loadend.value = false;
+		bastList.value = [];
+		uni.showLoading({ title: "正在搜索中" });
+		getProductList();
+		uni.hideLoading();
+	} else {
+		return util.Tips({ title: "请输入要搜索的商品", icon: "none", duration: 1000, mask: true });
 	}
+}
 </script>
 
 <style lang="scss">

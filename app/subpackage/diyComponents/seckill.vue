@@ -12,11 +12,12 @@
             <text
               class="fs-32 lh-44rpx fw-500"
               :style="[titleStyle]"
-              v-if="titleConfig"
+              v-if="!styleConfig && titleConfig"
               >{{ titleTxtConfig }}</text
             >
-            <image :src="titleImg" class="w-140 h-32" v-else></image>
-            <text
+            <image :src="titleImg" class="w-140 h-32" v-else-if="!styleConfig"></image>
+						
+						<!-- <text
               class="fs-26 text--w111-999 lh-36rpx pl-20"
               :style="[tipsColor]"
               >{{ '距离结束' }}</text
@@ -32,9 +33,10 @@
               :bgColor="numberBgColor"
               :colors="numberColor"
               :dotColor="dotColor"
-            ></countDown>
+            ></countDown> -->
           </view>
           <view
+            v-if="!styleConfig"
             class="flex-y-center fs-24 text--w111-999"
             :style="[headerBntColor]"
             @tap="goPage('/pages/activity/goods_seckill/index')"
@@ -60,7 +62,6 @@
           >
             <easy-loadimage
               :image-src="item.image"
-              :border-src="item.activity_image"
               width="240rpx"
               height="240rpx"
               :borderRadius="imgStyle"
@@ -101,7 +102,7 @@
                   </view>
                   <text
                     class="fs-22 lh-30rpx pl-12"
-                    :style="{ color: priceColor }"
+                    :style="{ color: progressTextColor }"
                     >已抢{{ item.percent + "%" }}</text
                   >
                 </view>
@@ -151,7 +152,6 @@
           >
             <easy-loadimage
               :image-src="item.image"
-              :border-src="item.activity_image"
               width="100%"
               height="324rpx"
               :borderRadius="imgStyle"
@@ -203,7 +203,6 @@
           >
             <easy-loadimage
               :image-src="item.image"
-              :border-src="item.activity_image"
               width="100%"
               height="212rpx"
               :borderRadius="imgStyle"
@@ -245,12 +244,12 @@
         <scroll-view
           scroll-x="true"
           show-scrollbar="false"
-          class="white-nowrap vertical-middle w-full p-32"
+          class="seckill-scroll w-full p-32"
           :style="[boxContentStyle]"
           v-if="goodStyleConfig == 3"
         >
           <view
-            class="inline-block"
+            class="seckill-scroll-item"
             :class="{ 'ml-20': index }"
             v-for="(item, index) in spikeList"
             :key="index"
@@ -258,7 +257,6 @@
           >
             <easy-loadimage
               :image-src="item.image"
-              :border-src="item.activity_image"
               width="224rpx"
               height="224rpx"
               :borderRadius="imgStyle"
@@ -302,318 +300,344 @@
   </common-wrapper>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from "vue";
 import commonWrapper from "./commonWrapper.vue";
-import countDown from "@/components/countDown";
+import countDown from "@/components/countDown/index.vue";
 import { getThemeSeckill } from "@/api/api.js";
-export default {
+import configs from "@/config/app.js";
+
+defineOptions({
   options: {
     styleIsolation: "shared",
   },
-  name: "seckill",
-  components: {
-    countDown,
-    commonWrapper,
+});
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  data() {
-    return {
-      datatime: "",
-      spikeList: [],
-      seckillTimeIndex: 0,
-      seckillTime: [],
-    };
-  },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
+});
+
+const datatime = ref("");
+const spikeList = ref([]);
+const seckillTimeIndex = ref(0);
+const seckillTime = ref([]);
+const timeList = ref(null);
+const active = ref(0);
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.topConfig
+            ? props.dataConfig.topConfig.val
+            : 0,
         },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
         },
-      };
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    titleStyle() {
-      let titleText = this.dataConfig.titleText;
-      return {
-        fontStyle: !titleText.tabVal
-          ? "normal"
-          : titleText.tabList[titleText.tabVal].style,
-        fontWeight: !titleText.tabVal ? "bold" : "normal",
-        color: this.dataConfig.titleColor.color[0].item,
-        fontSize: this.dataConfig.titleNumber.val * 2 + "rpx",
-      };
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
     },
-    // boxStyle() {
-    //   return {
-    //     padding: `${this.dataConfig.topConfig.val * 2}rpx ${
-    //       this.dataConfig.prConfig.val * 2
-    //     }rpx ${this.dataConfig.bottomConfig.val * 2}rpx`,
-    //     marginTop: `${this.dataConfig.mbConfig.val * 2}rpx`,
-    //     background: this.dataConfig.bottomBgColor.color[0].item,
-    //   };
-    // },
-    tagBag() {
-      return {
-        color: this.dataConfig.toneConfig.tabVal
-          ? this.dataConfig.goodsBntTxtColor.color[0].item
-          : "#fff",
-        background: this.dataConfig.toneConfig.tabVal
-          ? `linear-gradient(270deg,${this.dataConfig.goodsBntColor.color[1].item} 0%,${this.dataConfig.goodsBntColor.color[0].item} 100%)`
-          : "var(--view-theme)",
-      };
-    },
-    bargainPriceColor() {
-      return this.dataConfig.toneConfig.tabVal
-        ? this.dataConfig.seckillPriceColor2.color[0].item
-        : "#fff";
-    },
-    boxContentStyle() {
-      let br = `${this.dataConfig.fillet.val * 2}rpx`;
-      let borderRadius = `0 0 ${br} ${br}`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `0 0 ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        borderRadius,
-        background: `linear-gradient(90deg, ${this.dataConfig.moduleColor.color[0].item} 0%, ${this.dataConfig.moduleColor.color[1].item} 100%)`,
-      };
-    },
-    /*商品模板*/
-    goodStyleConfig() {
-      return this.dataConfig.goodStyleConfig.tabVal;
-    },
-    styleConfig() {
-      return this.dataConfig.styleConfig.tabVal;
-    },
-    headerStyle() {
-      let br = `${this.dataConfig.fillet.val * 2}rpx`,
-        borderRadius = "",
-        imgBgUrl = this.dataConfig.imgBgConfig.url;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx 0 0`;
-      } else {
-        borderRadius = `${br} ${br} 0 0`;
-      }
-      return {
-        backgroundImage: this.styleConfig
-          ? "url(" + imgBgUrl + ")"
-          : `linear-gradient(90deg,${this.dataConfig.headerBgColor.color[0].item} 0%,${this.dataConfig.headerBgColor.color[1].item} 100%)`,
-        borderRadius,
-      };
-    },
-    /*标题是文本还是图片*/
-    titleConfig() {
-      return this.dataConfig.titleConfig.tabVal;
-    },
-    /*标题文本*/
-    titleTxtConfig() {
-      return this.dataConfig.titleTxtConfig.value;
-    },
-    /*标题图片*/
-    titleImg() {
-      return this.styleConfig ? this.titleUrl : this.titleColorUrl;
-    },
-    titleColorUrl() {
-      return this.dataConfig.imgColorConfig.url;
-    },
-    titleUrl() {
-      return this.dataConfig.imgConfig.url;
-    },
-    /*标题提示文字*/
-    tipsColor() {
-      return {
-        color: this.styleConfig
-          ? this.dataConfig.tipsColor.color[0].item
-          : this.dataConfig.tipsColor2.color[0].item,
-      };
-    },
-    /*头部按钮文本*/
-    rightBntTxt() {
-      return this.dataConfig.rightBntConfig.value;
-    },
-    /*头部按钮样式*/
-    headerBntColor() {
-      return {
-        color: this.styleConfig
-          ? this.dataConfig.headerBntColor.color[0].item
-          : this.dataConfig.headerBntColor2.color[0].item,
-        fontSize: `${this.dataConfig.bntNumber.val * 2}rpx`,
-      };
-    },
-    /*商品图片圆角样式*/
-    imgStyle() {
-      let borderRadius = `${this.dataConfig.filletImg.val * 2}rpx`;
-      if (this.dataConfig.filletImg.type) {
-        borderRadius = `${this.dataConfig.filletImg.valList[0].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[1].val * 2
-        }rpx ${this.dataConfig.filletImg.valList[3].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[2].val * 2
-        }rpx`;
-      }
-      return borderRadius;
-    },
-    /*商品名称样式*/
-    productStyle() {
-      return {
-        color: this.dataConfig.goodsNameColor.color[0].item,
-        fontWeight: this.dataConfig.goodsName.tabVal ? "normal" : "bold",
-      };
-    },
-    /* 展示信息 */
-    checkboxInfo() {
-      return this.dataConfig.checkboxInfo.type;
-    },
-    /* 价格颜色 */
-    priceColor() {
-      return this.dataConfig.toneConfig.tabVal
-        ? this.dataConfig.progressTxtColor.color[0].item
-        : "var(--view-theme)";
-    },
-    /* 划线价颜色 */
-    otPriceColor() {
-      return {
-        color: this.dataConfig.goodsPriceColor.color[0].item,
-      };
-    },
-    showBtn() {
-      return this.dataConfig.seckillConfig.tabVal;
-    },
-    /* 按钮颜色 */
-    btnBgColor() {
-      return {
-        background: this.dataConfig.toneConfig.tabVal
-          ? `linear-gradient(90deg,${this.dataConfig.goodsBntColor.color[1].item} 0%,${this.dataConfig.goodsBntColor.color[0].item} 100%)`
-          : "linear-gradient(90deg, var(--view-gradient) 0%, var(--view-theme) 100%)",
-        color: this.dataConfig.goodsBntTxtColor.color[0].item,
-      };
-    },
-    progressBgColor() {
-      return this.dataConfig.toneConfig.tabVal
-        ? `linear-gradient(90deg,${this.dataConfig.progressColor.color[0].item} 0%,${this.dataConfig.progressColor.color[1].item} 100%)`
-        : "linear-gradient(45deg, var(--view-gradient) 0%, var(--view-theme) 100%)";
-    },
-    /*倒计时背景色*/
-    numberBgColor() {
-      return this.styleConfig
-        ? `linear-gradient(90deg, ${this.dataConfig.numberBgColor.color[0].item} 0%, ${this.dataConfig.numberBgColor.color[1].item} 100%)`
-        : `linear-gradient(90deg, ${this.dataConfig.numberBgColor2.color[0].item} 0%, ${this.dataConfig.numberBgColor2.color[1].item} 100%)`;
-    },
-    numberColor() {
-      return this.styleConfig
-        ? this.dataConfig.numberColor.color[0].item
-        : this.dataConfig.numberColor2.color[0].item;
-    },
-    dotColor() {
-      return this.styleConfig
-        ? this.dataConfig.numberBgColor.color[0].item
-        : this.dataConfig.numberBgColor2.color[0].item;
-    },
-    /*商品数量*/
-    numberConfig() {
-      return this.dataConfig.numberConfig.val;
-    },
-  },
-  mounted() {
-    this.getSeckillIndexTime();
-  },
-  methods: {
-    goPage(url) {
-      uni.navigateTo({
-        url,
-      });
-    },
-    goDetails(item) {
-      let url = "/pages/activity/goods_seckill_details/index?id=" + item.id + "&type=1";
-      const timeItem = this.timeList && this.timeList[this.active];
-      if (timeItem && timeItem.id) {
-        url += "&time_id=" + timeItem.id;
-      }
-      uni.navigateTo({
-        url,
-      });
-    },
-    formatMoney(value) {
-      const number = Number(value);
-      return Number.isFinite(number) ? number.toFixed(2) : "0.00";
-    },
-    normalizeProduct(item) {
-      const productPrice =
-        item.product_price !== undefined && item.product_price !== null
-          ? item.product_price
-          : item.ot_price !== undefined && item.ot_price !== null
-          ? item.ot_price
-          : item.otPrice !== undefined && item.otPrice !== null
-          ? item.otPrice
-          : item.price;
-      return {
-        ...item,
-        title: item.title || item.store_name || item.storeName || "",
-        product_price: productPrice === undefined || productPrice === null ? 0 : productPrice,
-        percent: Number(item.percent || item.sales_percent || item.salesPercent || 0),
-      };
-    },
-    getSeckillIndexTime() {
-      let limit = this.$config.LIMIT;
-      let params = {
-        limit: this.numberConfig >= limit ? limit : this.numberConfig,
-      };
-      this.datatime = Math.floor(Date.now() / 1000) + 24 * 60 * 60;
-      getThemeSeckill(params).then(({ data }) => {
-        const list = Array.isArray(data) ? data : data && data.list ? data.list : [];
-        this.spikeList = list.map((item) => this.normalizeProduct(item));
-      });
-    },
-  },
-};
+  };
+});
+
+const titleStyle = computed(() => {
+  let titleText = props.dataConfig.titleText;
+  return {
+    fontStyle: !titleText.tabVal
+      ? "normal"
+      : titleText.tabList[titleText.tabVal].style,
+    fontWeight: !titleText.tabVal ? "bold" : "normal",
+    color: props.dataConfig.titleColor.color[0].item,
+    fontSize: props.dataConfig.titleNumber.val * 2 + "rpx",
+  };
+});
+
+const tagBag = computed(() => {
+  return {
+    color: props.dataConfig.toneConfig.tabVal
+      ? props.dataConfig.goodsBntTxtColor.color[0].item
+      : "#fff",
+    background: props.dataConfig.toneConfig.tabVal
+      ? `linear-gradient(270deg,${props.dataConfig.goodsBntColor.color[1].item} 0%,${props.dataConfig.goodsBntColor.color[0].item} 100%)`
+      : "var(--view-theme)",
+  };
+});
+
+const bargainPriceColor = computed(() => {
+  return props.dataConfig.toneConfig.tabVal
+    ? props.dataConfig.seckillPriceColor2.color[0].item
+    : "#fff";
+});
+
+const boxContentStyle = computed(() => {
+  let br = `${props.dataConfig.fillet.val * 2}rpx`;
+  let borderRadius = `0 0 ${br} ${br}`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `0 0 ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    borderRadius,
+    background: `linear-gradient(90deg, ${props.dataConfig.moduleColor.color[0].item} 0%, ${props.dataConfig.moduleColor.color[1].item} 100%)`,
+  };
+});
+
+/*商品模板*/
+const goodStyleConfig = computed(() => {
+  return props.dataConfig.goodStyleConfig.tabVal;
+});
+
+const styleConfig = computed(() => {
+  return props.dataConfig.styleConfig.tabVal;
+});
+
+const headerStyle = computed(() => {
+  let br = `${props.dataConfig.fillet.val * 2}rpx`,
+    borderRadius = "",
+    imgBgUrl = props.dataConfig.imgBgConfig.url;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx 0 0`;
+  } else {
+    borderRadius = `${br} ${br} 0 0`;
+  }
+  return {
+    backgroundImage: styleConfig.value
+      ? "url(" + imgBgUrl + ")"
+      : `linear-gradient(90deg,${props.dataConfig.headerBgColor.color[0].item} 0%,${props.dataConfig.headerBgColor.color[1].item} 100%)`,
+    borderRadius,
+  };
+});
+
+/*标题是文本还是图片*/
+const titleConfig = computed(() => {
+  return props.dataConfig.titleConfig.tabVal;
+});
+
+/*标题文本*/
+const titleTxtConfig = computed(() => {
+  return props.dataConfig.titleTxtConfig.value;
+});
+
+const titleColorUrl = computed(() => {
+  return props.dataConfig.imgColorConfig.url;
+});
+
+const titleUrl = computed(() => {
+  return props.dataConfig.imgConfig.url;
+});
+
+/*标题图片*/
+const titleImg = computed(() => {
+  return styleConfig.value ? titleUrl.value : titleColorUrl.value;
+});
+
+/*标题提示文字*/
+const tipsColor = computed(() => {
+  return {
+    color: styleConfig.value
+      ? props.dataConfig.tipsColor.color[0].item
+      : props.dataConfig.tipsColor2.color[0].item,
+  };
+});
+
+/*头部按钮文本*/
+const rightBntTxt = computed(() => {
+  return props.dataConfig.rightBntConfig.value;
+});
+
+/*头部按钮样式*/
+const headerBntColor = computed(() => {
+  return {
+    color: styleConfig.value
+      ? props.dataConfig.headerBntColor.color[0].item
+      : props.dataConfig.headerBntColor2.color[0].item,
+    fontSize: `${props.dataConfig.bntNumber.val * 2}rpx`,
+  };
+});
+
+/*商品图片圆角样式*/
+const imgStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.filletImg.val * 2}rpx`;
+  if (props.dataConfig.filletImg.type) {
+    borderRadius = `${props.dataConfig.filletImg.valList[0].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[1].val * 2
+    }rpx ${props.dataConfig.filletImg.valList[3].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[2].val * 2
+    }rpx`;
+  }
+  return borderRadius;
+});
+
+/*商品名称样式*/
+const productStyle = computed(() => {
+  return {
+    color: props.dataConfig.goodsNameColor.color[0].item,
+    fontWeight: props.dataConfig.goodsName.tabVal ? "normal" : "bold",
+  };
+});
+
+/* 展示信息 */
+const checkboxInfo = computed(() => {
+  return props.dataConfig.checkboxInfo.type;
+});
+
+/* 价格颜色 */
+const priceColor = computed(() => {
+  return props.dataConfig.toneConfig.tabVal
+    ? props.dataConfig.seckillPriceColor.color[0].item
+    : "var(--view-theme)";
+});
+
+/* 进度文字颜色 */
+const progressTextColor = computed(() => {
+  return props.dataConfig.toneConfig.tabVal
+    ? props.dataConfig.progressTxtColor.color[0].item
+    : "var(--view-theme)";
+});
+
+/* 划线价颜色 */
+const otPriceColor = computed(() => {
+  return {
+    color: props.dataConfig.goodsPriceColor.color[0].item,
+  };
+});
+
+const showBtn = computed(() => {
+  return props.dataConfig.seckillConfig.tabVal;
+});
+
+/* 按钮颜色 */
+const btnBgColor = computed(() => {
+  return {
+    background: props.dataConfig.toneConfig.tabVal
+      ? `linear-gradient(90deg,${props.dataConfig.goodsBntColor.color[1].item} 0%,${props.dataConfig.goodsBntColor.color[0].item} 100%)`
+      : "linear-gradient(90deg, var(--view-gradient) 0%, var(--view-theme) 100%)",
+    color: props.dataConfig.goodsBntTxtColor.color[0].item,
+  };
+});
+
+const progressBgColor = computed(() => {
+  return props.dataConfig.toneConfig.tabVal
+    ? `linear-gradient(90deg,${props.dataConfig.progressColor.color[0].item} 0%,${props.dataConfig.progressColor.color[1].item} 100%)`
+    : "linear-gradient(45deg, var(--view-gradient) 0%, var(--view-theme) 100%)";
+});
+
+/*倒计时背景色*/
+const numberBgColor = computed(() => {
+  return styleConfig.value
+    ? `linear-gradient(90deg, ${props.dataConfig.numberBgColor.color[0].item} 0%, ${props.dataConfig.numberBgColor.color[1].item} 100%)`
+    : `linear-gradient(90deg, ${props.dataConfig.numberBgColor2.color[0].item} 0%, ${props.dataConfig.numberBgColor2.color[1].item} 100%)`;
+});
+
+const numberColor = computed(() => {
+  return styleConfig.value
+    ? props.dataConfig.numberColor.color[0].item
+    : props.dataConfig.numberColor2.color[0].item;
+});
+
+const dotColor = computed(() => {
+  return styleConfig.value
+    ? props.dataConfig.numberBgColor.color[0].item
+    : props.dataConfig.numberBgColor2.color[0].item;
+});
+
+/*商品数量*/
+const numberConfig = computed(() => {
+  return props.dataConfig.numberConfig.val;
+});
+
+onMounted(() => {
+  getSeckillIndexTime();
+});
+
+function goPage(url) {
+  uni.navigateTo({
+    url,
+  });
+}
+
+function goDetails(item) {
+  let url = "/pages/activity/goods_seckill_details/index?id=" + item.id + "&type=1";
+  const timeItem = timeList.value && timeList.value[active.value];
+  if (timeItem && timeItem.id) {
+    url += "&time_id=" + timeItem.id;
+  }
+  uni.navigateTo({
+    url,
+  });
+}
+
+function formatMoney(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number.toFixed(2) : "0.00";
+}
+
+function normalizeProduct(item) {
+  const productPrice =
+    item.product_price !== undefined && item.product_price !== null
+      ? item.product_price
+      : item.ot_price !== undefined && item.ot_price !== null
+      ? item.ot_price
+      : item.otPrice !== undefined && item.otPrice !== null
+      ? item.otPrice
+      : item.price;
+  return {
+    ...item,
+    title: item.title || item.store_name || item.storeName || "",
+    product_price: productPrice === undefined || productPrice === null ? 0 : productPrice,
+    percent: Number(item.percent || item.sales_percent || item.salesPercent || 0),
+  };
+}
+
+function getSeckillIndexTime() {
+  let limit = configs.LIMIT;
+  let params = {
+    limit: numberConfig.value >= limit ? limit : numberConfig.value,
+  };
+  datatime.value = Math.floor(Date.now() / 1000) + 24 * 60 * 60;
+  getThemeSeckill(params).then(({ data }) => {
+    const list = Array.isArray(data) ? data : data && data.list ? data.list : [];
+    spikeList.value = list.map((item) => normalizeProduct(item));
+  });
+}
 </script>
 
 <style lang="scss" scoped>
@@ -688,5 +712,14 @@ export default {
 }
 scroll-view {
   box-sizing: border-box;
+}
+.seckill-scroll {
+  white-space: nowrap;
+
+  .seckill-scroll-item {
+    display: inline-block;
+    width: 224rpx;
+    vertical-align: top;
+  }
 }
 </style>

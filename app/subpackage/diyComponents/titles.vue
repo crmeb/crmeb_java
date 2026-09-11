@@ -21,121 +21,122 @@
   </common-wrapper>
 </template>
 
-<script>
+<script setup>
+import { computed } from "vue";
 import commonWrapper from "./commonWrapper.vue";
-export default {
-  components: { commonWrapper },
-  name: "titles",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+import util from "@/utils/util.js";
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
+  isSortType: {
+    type: [String, Number],
+    default: 0,
+  },
+});
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.topConfig
+            ? props.dataConfig.topConfig.val
+            : 0,
         },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
         },
-      };
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    titleWrapStyle() {
-      let borderRadius = `${this.dataConfig.fillet.val * 2}rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        "border-radius": borderRadius,
-        background: `linear-gradient(90deg, ${this.dataConfig.moduleColor.color[0].item} 0%, ${this.dataConfig.moduleColor.color[1].item} 100%)`,
-      };
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
     },
-    titleStyle() {
-      let style = {
-        "font-size": `${this.dataConfig.fontSize.val * 2}rpx`,
-        color: this.dataConfig.themeColor.color[0].item,
-      };
-      switch (this.dataConfig.textStyle.tabVal) {
-        case 1:
-          style["font-style"] = "italic";
-          break;
-        case 2:
-          style["font-weight"] = "bold";
-          break;
-      }
-      return style;
-    },
-    titleLocation() {
-      if (this.dataConfig.buttonConfig.tabVal) {
-        let style = {};
-        switch (this.dataConfig.textPosition.tabVal) {
-          case 1:
-            style["justify-content"] = "center";
-            break;
-          case 2:
-            style["justify-content"] = "flex-end";
-            break;
-        }
-        return style;
-      }
-    },
-    moreStyle() {
-      return {
-        "font-size": `${this.dataConfig.buttonText.val * 2}rpx`,
-        color: this.dataConfig.buttonColor.color[0].item,
-      };
-    },
-  },
-  methods: {
-    goLink() {
-      this.$util.JumpPath(this.dataConfig.linkConfig.value);
-    },
-  },
-};
+  };
+});
+
+const titleWrapStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.fillet.val * 2}rpx`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    "border-radius": borderRadius,
+    background: `linear-gradient(90deg, ${props.dataConfig.moduleColor.color[0].item} 0%, ${props.dataConfig.moduleColor.color[1].item} 100%)`,
+  };
+});
+
+const titleStyle = computed(() => {
+  let style = {
+    "font-size": `${props.dataConfig.fontSize.val * 2}rpx`,
+    color: props.dataConfig.themeColor.color[0].item,
+  };
+  switch (props.dataConfig.textStyle.tabVal) {
+    case 1:
+      style["font-style"] = "italic";
+      break;
+    case 2:
+      style["font-weight"] = "bold";
+      break;
+  }
+  return style;
+});
+
+const titleLocation = computed(() => {
+  if (props.dataConfig.buttonConfig.tabVal) {
+    let style = {};
+    switch (props.dataConfig.textPosition.tabVal) {
+      case 1:
+        style["justify-content"] = "center";
+        break;
+      case 2:
+        style["justify-content"] = "flex-end";
+        break;
+    }
+    return style;
+  }
+});
+
+const moreStyle = computed(() => {
+  return {
+    "font-size": `${props.dataConfig.buttonText.val * 2}rpx`,
+    color: props.dataConfig.buttonColor.color[0].item,
+  };
+});
+
+function goLink() {
+  util.JumpPath(props.dataConfig.linkConfig.value);
+}
 </script>
 
 <style lang="scss">

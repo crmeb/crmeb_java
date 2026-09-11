@@ -1,8 +1,8 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class="acea-row row-around nav">
-			<template v-for="item in navList">
-				<view :key="item.type" :class="['acea-row', 'row-middle', type === item.type ? 'on' : '']" >
+			<template v-for="item in navList" :key="item.type">
+				<view :class="['acea-row', 'row-middle', type === item.type ? 'on' : '']" >
 					<text @click="setType(item.type)">{{ item.name }}</text>
 				</view>
 			</template>
@@ -35,13 +35,13 @@
 		  </view>
 		<view class='noCommodity' v-if="!couponsList.length && isShow && !loading">
 			<view class='pictrue'>
-				<image :src="urlDomain+'crmebimage/perset/staticImg/noCoupon.png'"></image>
+				<image src="/static/images/noCoupon.png"></image>
 			</view>
 		</view>
 	</view>	
 </template>
 
-<script>
+<script setup>
 	import {
 		getCoupons,
 		setCouponReceive
@@ -49,115 +49,109 @@
 	import {
 		toLogin
 	} from '@/libs/login.js';
-	 import {
-	 	mapGetters
-	 } from "vuex";
-	 let app = getApp();
-		export default {
-			data() {
-				return {
-					urlDomain: this.$Cache.get("imgHost"),
-					couponsList:[],
-					loading: false,
-					loadend: false,
-					loadTitle: '加载更多',//提示语
-					page: 1,
-					limit: 20,
-					type: 1,
-					isShow: false,
-					navList: [{
-							type: 1,
-							name: '通用券',
-							count: 0
-						},
-						{
-							type: 2,
-							name: '商品券',
-							count: 0
-						},
-						{
-							type: 3,
-							name: '品类券',
-							count: 0
-						},
-					],
-					count: 0,
-					theme:app.globalData.theme,
-				};
-			},
-			computed: mapGetters(['isLogin']),
-			watch: {
-				isLogin: {
-					handler: function(newV, oldV) {
-						if (newV) {
-							this.getUseCoupons();
-						}
-					},
-					deep: true
-				}
-			},
-			onLoad(){
-				if(this.isLogin){
-					this.getUseCoupons();
-					
-				}else{
-					toLogin();
-				}
-			},
-			 /**
-			   * 页面上拉触底事件的处理函数
-			   */
-			  onReachBottom: function () {
-			    this.getUseCoupons();
-			  },
-			methods: {
-				 getCoupon:function(id,index){
-				    let that = this;
-				    let list = that.couponsList;
-					let ids = [];
-					ids.push(id);
-				    //领取优惠券
-				    setCouponReceive(id).then(function (res) {
-				      list[index].isUse = true;
-					  that.$set(that,'couponsList',list);
-				      that.$util.Tips({ title: '领取成功' });
-				    },function(res){
-				      return that.$util.Tips({title:res});
-				    })
-				  },
-				   /**
-				     * 获取领取优惠券列表
-				    */
-				    getUseCoupons:function(){
-				      let that=this
-				      if(that.loadend) return false;
-				      if(that.loading) return false;
-					  that.loading = true;
-				      getCoupons({ page: that.page, limit: that.limit, type: that.type }).then(res=>{
-				        let list=res.data.list,loadend=list.length < that.limit;
-				        let couponsList = that.$util.SplitArray(list, that.couponsList);
-						that.$set(that,'couponsList',couponsList);
-						that.loadend = loadend;
-						that.loadTitle = loadend ? '我也是有底线的~' : '加载更多';
-						that.page = that.page + 1;
-						that.loading = false;
-						that.isShow = true;
-				      }).catch(err=>{
-						  that.loading = false;
-						  that.loadTitle = '加载更多';
-				      });
-				    },
-					setType: function(type) {
-						if (this.type !== type) {
-							this.type = type;
-							this.couponsList = [];
-							this.page = 1;
-							this.loadend = false;
-							this.getUseCoupons();
-						}
-					}
-			}
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
+	import { ref, watch, getCurrentInstance } from 'vue';
+	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
+import { useColor } from '@/composables/useColor.js';
+	let app = getApp();
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { isLogin } = storeToRefs(appStore);
+
+	const couponsList = ref([]);
+	const loading = ref(false);
+	const loadend = ref(false);
+	const loadTitle = ref('加载更多');//提示语
+	const page = ref(1);
+	const limit = ref(20);
+	const type = ref(1);
+	const isShow = ref(false);
+	const navList = ref([{
+			type: 1,
+			name: '通用券',
+			count: 0
+		},
+		{
+			type: 2,
+			name: '商品券',
+			count: 0
+		},
+		{
+			type: 3,
+			name: '品类券',
+			count: 0
+		},
+	]);
+	const count = ref(0);
+	const { colorStyle } = useColor();
+	const theme = ref(app.globalData.theme);
+
+	watch(isLogin, (newV, oldV) => {
+		if (newV) {
+			getUseCoupons();
 		}
+	}, { deep: true });
+
+	onLoad(() => {
+		if (isLogin.value) {
+			getUseCoupons();
+
+		} else {
+			toLogin();
+		}
+	});
+
+	 /**
+	   * 页面上拉触底事件的处理函数
+	   */
+	onReachBottom(() => {
+		getUseCoupons();
+	});
+
+	function getCoupon(id, index) {
+		let list = couponsList.value;
+		let ids = [];
+		ids.push(id);
+		//领取优惠券
+		setCouponReceive(id).then(function (res) {
+			list[index].isUse = true;
+			couponsList.value = list;
+			proxy.$util.Tips({ title: '领取成功' });
+		}, function (res) {
+			return proxy.$util.Tips({ title: res });
+		})
+	}
+	 /**
+	   * 获取领取优惠券列表
+	  */
+	function getUseCoupons() {
+		if (loadend.value) return false;
+		if (loading.value) return false;
+		loading.value = true;
+		getCoupons({ page: page.value, limit: limit.value, type: type.value }).then(res => {
+			let list = res.data.list, loadendVal = list.length < limit.value;
+			let list2 = proxy.$util.SplitArray(list, couponsList.value);
+			couponsList.value = list2;
+			loadend.value = loadendVal;
+			loadTitle.value = loadendVal ? '我也是有底线的~' : '加载更多';
+			page.value = page.value + 1;
+			loading.value = false;
+			isShow.value = true;
+		}).catch(err => {
+			loading.value = false;
+			loadTitle.value = '加载更多';
+		});
+	}
+	function setType(t) {
+		if (type.value !== t) {
+			type.value = t;
+			couponsList.value = [];
+			page.value = 1;
+			loadend.value = false;
+			getUseCoupons();
+		}
+	}
 </script>
 
 <style scoped lang="scss">

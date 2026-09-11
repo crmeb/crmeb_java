@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class='my-account'>
 			<view class='wrapper'>
 				<view class='header'>
@@ -24,25 +24,25 @@
 					</view>
 				</view>
 				<view class='nav acea-row row-middle'>
-					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=all'>
+					<navigator :render-link="false" class='item' hover-class='none' url='/pages/users/user_bill/index?type=all'>
 						<view class='pictrue'>
 							<text class="iconfont icon-s-zhangdanjilu icon_txt"></text>
 						</view>
 						<view>账单记录</view>
 					</navigator>
-					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=expenditure'>
+					<navigator :render-link="false" class='item' hover-class='none' url='/pages/users/user_bill/index?type=expenditure'>
 						<view class='pictrue'>
 							<text class="iconfont icon-s-xiaofeijilu icon_txt"></text>
 						</view>
 						<view>消费记录</view>
 					</navigator>
-					<navigator class='item' hover-class='none' url='/pages/users/user_bill/index?type=income' v-if="showRecharge">
+					<navigator :render-link="false" class='item' hover-class='none' url='/pages/users/user_bill/index?type=income' v-if="showRecharge">
 						<view class='pictrue'>
 							<text class="iconfont icon-s-chongzhijilu icon_txt"></text>
 						</view>
 						<view>充值记录</view>
 					</navigator>
-					<navigator class='item' hover-class='none' url='/pages/users/user_integral/index'>
+					<navigator :render-link="false" class='item' hover-class='none' url='/pages/users/user_integral/index'>
 						<view class='pictrue'>
 							<text class="iconfont icon-jifenzhongxin icon_txt"></text>
 						</view>
@@ -50,22 +50,22 @@
 					</navigator>
 				</view>
 				<view class='advert acea-row row-between-wrapper'>
-					<navigator class='item acea-row row-between-wrapper' hover-class='none' url='/pages/users/user_sgin/index'>
+					<navigator :render-link="false" class='item acea-row row-between-wrapper' hover-class='none' url='/pages/users/user_sgin/index'>
 						<view class='text'>
 							<view class='name'>签到领积分</view>
 							<view>赚积分抵现金</view>
 						</view>
 						<view class='pictrue'>
-							<image :src="urlDomain+'crmebimage/perset/staticImg/gift.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/gift.png'"></image>
 						</view>
 					</navigator>
-					<navigator class='item on acea-row row-between-wrapper' hover-class='none' url='/pages/users/user_get_coupon/index'>
+					<navigator :render-link="false" class='item on acea-row row-between-wrapper' hover-class='none' url='/pages/users/user_get_coupon/index'>
 						<view class='text'>
 							<view class='name'>领取优惠券</view>
 							<view>满减享优惠</view>
 						</view>
 						<view class='pictrue'>
-							<image :src="urlDomain+'crmebimage/perset/staticImg/money.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/money.png'"></image>
 						</view>
 					</navigator>
 				</view>
@@ -73,136 +73,134 @@
 			<recommend ref="recommendIndex" @getRecommendLength="getRecommendLength"></recommend>
 			<view class='noCommodity' v-if="isNoCommodity">
 				<view class='pictrue'>
-					<image :src="urlDomain+'crmebimage/perset/staticImg/noSearch.png'"></image>
+					<image :src="urlDomain+'/crmebimage/perset/staticImg/noSearch.png'"></image>
 				</view>
 			</view>
 		</view>
 	</view>
 </template>
 
-<script>
+<script setup>
 	import {userActivity,getuserDalance} from '@/api/user.js';
 	import {toLogin} from '@/libs/login.js';
-	import {mapGetters} from "vuex";
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
 	import { alipayQueryPayResult } from '@/api/order.js';
-	import recommend from '@/components/recommend/index';
+	import recommend from '@/components/recommend/index.vue';
+	import { ref, computed, watch, getCurrentInstance } from 'vue';
+	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		components: {
-			recommend
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				hostProduct: [],
-				isClose: false,
-				activity: {},
-				statistics:{},
-				theme:app.globalData.theme,
-				isNoCommodity: false // 是否显示缺省图
-			};
-		},
-		computed: {
-			...mapGetters(['isLogin', 'userInfo']),
-			showRecharge() {
-				// #ifdef MP
-				return this.userInfo && this.userInfo.rechargeSwitch;
-				// #endif
-				// #ifndef MP
-				return true;
-				// #endif
-			}
-		},
-		watch:{
-			isLogin:{
-				handler:function(newV,oldV){
-					if(newV){
-						this.get_activity();
-						this.userDalance();
-					}
-				},
-				deep:true
-			}
-		},
-		onLoad() {
-			if (this.isLogin) {
-				// #ifdef H5
-				var url = window.location.search;
-				if(url){
-					var theRequest = new Object();
-					if (url.indexOf("?") != -1) {
-					    var str = url.substr(1);
-					    var strs = str.split("&");
-					    for (var i = 0; i < strs.length; i++) {
-							theRequest[strs[i].split('=')[0]] = decodeURI(strs[i].split('=')[1]);
-					    }
-					}
-					this.orderId = theRequest.out_trade_no; //返回的订单号
-					this.alipayQueryPay();
-				}
-				// #endif
-				this.get_activity();
-				this.userDalance();
-			} else {
-				toLogin();
-			}
-		},
-		methods: {
-			getRecommendLength(e) {
-				this.isNoCommodity = e == 0 ? true : false;
-			},
-			/**
-			 * 支付宝充值结果查询
-			 */
-			alipayQueryPay() {
-				uni.showLoading({
-					title: '查询中...'
-				});
-				alipayQueryPayResult(this.orderId).then(res => {
-					this.userDalance();
-					return this.$util.Tips({
-						title: '充值成功'
-					});
-					uni.hideLoading();
-				}).catch(err => {
-					uni.hideLoading();
-					return this.$util.Tips({
-						title: err
-					});
-				})
-			},
-			onLoadFun: function() {
-				this.get_activity();
-				this.userDalance();
-			},
-			userDalance(){
-				getuserDalance().then(res=>{
-					this.statistics = res.data;
-				})
-			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
-			},
-			openSubscribe: function(page) {
-				uni.navigateTo({
-					url: page,
-				});
-			},
-			/**
-			 * 获取活动可参与否
-			 */
-			get_activity: function() {
-				// let that = this;
-				// userActivity().then(res => {
-				// 	that.$set(that, "activity", res.data);
-				// })
-			}
-		},
-		onReachBottom() {
-			this.$refs.recommendIndex.get_host_product();
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { isLogin, userInfo } = storeToRefs(appStore);
+
+	const recommendIndex = ref(null);
+	const urlDomain = ref(proxy.$Cache.get("imgHost"));
+	const hostProduct = ref([]);
+	const isClose = ref(false);
+	const activity = ref({});
+	const statistics = ref({});
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	const isNoCommodity = ref(false); // 是否显示缺省图
+	const orderId = ref(null);
+	const isShowAuth = ref(false);
+
+	const showRecharge = computed(() => {
+		// #ifdef MP
+		return userInfo.value && userInfo.value.rechargeSwitch;
+		// #endif
+		// #ifndef MP
+		return true;
+		// #endif
+	});
+
+	watch(isLogin, (newV, oldV) => {
+		if (newV) {
+			get_activity();
+			userDalance();
 		}
+	}, { deep: true });
+
+	onLoad(() => {
+		if (isLogin.value) {
+			// #ifdef H5
+			var url = window.location.search;
+			if (url) {
+				var theRequest = new Object();
+				if (url.indexOf("?") != -1) {
+				    var str = url.substr(1);
+				    var strs = str.split("&");
+				    for (var i = 0; i < strs.length; i++) {
+						theRequest[strs[i].split('=')[0]] = decodeURI(strs[i].split('=')[1]);
+				    }
+				}
+				orderId.value = theRequest.out_trade_no; //返回的订单号
+				alipayQueryPay();
+			}
+			// #endif
+			get_activity();
+			userDalance();
+		} else {
+			toLogin();
+		}
+	});
+
+	function getRecommendLength(e) {
+		isNoCommodity.value = e == 0 ? true : false;
 	}
+	/**
+	 * 支付宝充值结果查询
+	 */
+	function alipayQueryPay() {
+		uni.showLoading({
+			title: '查询中...'
+		});
+		alipayQueryPayResult(orderId.value).then(res => {
+			userDalance();
+			return proxy.$util.Tips({
+				title: '充值成功'
+			});
+			uni.hideLoading();
+		}).catch(err => {
+			uni.hideLoading();
+			return proxy.$util.Tips({
+				title: err
+			});
+		})
+	}
+	function onLoadFun() {
+		get_activity();
+		userDalance();
+	}
+	function userDalance() {
+		getuserDalance().then(res => {
+			statistics.value = res.data;
+		})
+	}
+	// 授权关闭
+	function authColse(e) {
+		isShowAuth.value = e
+	}
+	function openSubscribe(page) {
+		uni.navigateTo({
+			url: page,
+		});
+	}
+	/**
+	 * 获取活动可参与否
+	 */
+	function get_activity() {
+		// let that = this;
+		// userActivity().then(res => {
+		// 	that.$set(that, "activity", res.data);
+		// })
+	}
+
+	onReachBottom(() => {
+		recommendIndex.value.get_host_product();
+	});
 </script>
 
 <style scoped lang="scss">

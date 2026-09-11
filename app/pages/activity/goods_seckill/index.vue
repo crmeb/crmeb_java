@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<skeleton :show="showSkeleton" :isNodes="isNodes" ref="skeleton" loading="chiaroscuro" selector="skeleton"
 			bgcolor="#FFF"></skeleton>
 		<view class="skeleton" :style="{visibility: showSkeleton ? 'hidden' : 'visible'}">
@@ -22,7 +22,7 @@
 				</view>
 				<view class="seckillList acea-row row-between-wrapper">
 					<view class="priceTag skeleton-rect">
-						<image :src="urlDomain+'crmebimage/perset/staticImg/priceTag.png'"></image>
+						<image :src="urlDomain+'/crmebimage/perset/staticImg/priceTag.png'"></image>
 					</view>
 					<view class='timeLsit'>
 						<scroll-view class="scroll-view_x" scroll-x scroll-with-animation :scroll-left="scrollLeft"
@@ -64,170 +64,165 @@
 			</view>
 			<view class='noCommodity' v-if="seckillList.length == 0 && (page != 1 || active== 0)">
 				<view class='pictrue'>
-					<image :src="urlDomain+'crmebimage/perset/staticImg/noShopper.png'"></image>
+					<image :src="urlDomain+'/crmebimage/perset/staticImg/noShopper.png'"></image>
 				</view>
 			</view>
 		</view>	
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, getCurrentInstance } from 'vue';
+	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
 	import {
 		getSeckillHeaderApi,
-		getSeckillList
+		getSeckillList as getSeckillListApi
 	} from '../../../api/activity.js';
 	import animationType from '@/utils/animationType.js'
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				showSkeleton: true, //骨架屏显示隐藏
-				isNodes: 0, //控制什么时候开始抓取元素节点,只要数值改变就重新抓取
-				circular: true,
-				autoplay: true,
-				interval: 500,
-				topImage: '',
-				seckillList: [],
-				timeList: [],
-				active: 0,
-				scrollLeft: 0,
-				interval: 0,
-				status: 1,
-				countDownHour: "00",
-				countDownMinute: "00",
-				countDownSecond: "00",
-				page: 1,
-				limit: 10,
-				loading: false,
-				loadend: false,
-				pageloading: false,
-				dataList: [],
-				returnShow: true,
-				navH: '',
-				theme:app.globalData.theme
-			}
-		},
-		onLoad() {
-			let that = this;
-			setTimeout(() => {
-				this.isNodes++;
-			}, 500);
-			var pages = getCurrentPages();
-			this.returnShow = pages.length===1?false:true;
-			// #ifdef H5
-			this.navH = app.globalData.navHeight-18;
-			// #endif
-			this.getSeckillConfig();
-		},
-		methods: {
-			goBack: function() {
-				uni.navigateBack();
-			},
-			getSeckillConfig: function() {
-				let that = this;
-				//if(that.showSkeleton) that.dataList = [{slide:''}]
-				that.seckillList = [{image:'',otPrice:'',percent:'',price:'',title:''}];
-				getSeckillHeaderApi().then(res => {
-					if(res.data == ''){
-						this.$util.Tips({
-							title: '暂无秒杀活动'
-						}, {
-							url: '/pages/index/index'
-						});
-						return;
-					}
-					that.seckillList = [];
-					res.data.map(item => {
-						item.slide = JSON.parse(item.slide)
-					})
-					that.dataList = res.data;
-					that.page = 1;
-					that.status = that.dataList[that.active].status;
-					that.getSeckillList();
+	const { proxy } = getCurrentInstance();
 
+	const urlDomain = ref(proxy.$Cache.get("imgHost"));
+	const showSkeleton = ref(true); //骨架屏显示隐藏
+	const isNodes = ref(0); //控制什么时候开始抓取元素节点,只要数值改变就重新抓取
+	const circular = ref(true);
+	const autoplay = ref(true);
+	const topImage = ref('');
+	const seckillList = ref([]);
+	const timeList = ref([]);
+	const active = ref(0);
+	const scrollLeft = ref(0);
+	const interval = ref(0);
+	const status = ref(1);
+	const countDownHour = ref("00");
+	const countDownMinute = ref("00");
+	const countDownSecond = ref("00");
+	const page = ref(1);
+	const limit = ref(10);
+	const loading = ref(false);
+	const loadend = ref(false);
+	const pageloading = ref(false);
+	const dataList = ref([]);
+	const returnShow = ref(true);
+	const navH = ref('');
+	const { colorStyle } = useColor();
+	const theme = ref(app.globalData.theme);
+
+	function goBack() {
+		uni.navigateBack();
+	}
+	function getSeckillConfig() {
+		//if(showSkeleton.value) dataList.value = [{slide:''}]
+		seckillList.value = [{image:'',otPrice:'',percent:'',price:'',title:''}];
+		getSeckillHeaderApi().then(res => {
+			if(res.data == ''){
+				proxy.$util.Tips({
+					title: '暂无秒杀活动'
+				}, {
+					url: '/pages/index/index'
 				});
-			},
-			getSeckillList: function() {
-				var that = this;
-				var data = {
-					page: that.page,
-					limit: that.limit
-				};
-				if (that.loadend) return;
-				if (that.pageloading) return;
-				that.pageloading = true
-				getSeckillList(that.dataList[that.active].id, data).then(res => {
-					// that.seckillList = [];
-					var seckillList = res.data.list;
-					var loadend = seckillList.length < that.limit;
-					that.seckillList = that.seckillList.concat(seckillList);
-					that.page++;
-					that.page = that.page;
-					that.pageloading = false;
-					that.loadend = loadend;
-					// #ifdef H5
-					that.setShare();
-					// #endif
-					setTimeout(() => {
-						that.showSkeleton = false
-					}, 1000)
-				}).catch(err => {
-					that.pageloading = false
-				});
-			},
-			settimeList: function(item, index) {
-				if(index !== this.active){
-					var that = this;
-					this.active = index
-					if (that.interval) {
-						clearInterval(that.interval);
-						that.interval = null
-					}
-					that.interval = 0,
-						that.countDownHour = "00";
-					that.countDownMinute = "00";
-					that.countDownSecond = "00";
-					that.status = that.dataList[that.active].status;
-					that.loadend = false;
-					that.page = 1;
-					that.seckillList = [];
-					// wxh.time(e.currentTarget.dataset.stop, that);
-					that.getSeckillList();
-				}
-			},
-			goDetails(item) {
-				uni.navigateTo({
-					animationType: animationType.type,					animationDuration: animationType.duration,
-					url: '/pages/activity/goods_seckill_details/index?id=' + item.id
-				})
-			},
-			setShare: function() {
-				this.$wechat.isWeixin() &&
-					this.$wechat.wechatEvevt([
-						"updateAppMessageShareData",
-						"updateTimelineShareData",
-						"onMenuShareAppMessage",
-						"onMenuShareTimeline"
-					], {
-						desc: this.seckillList[0].title,
-						title: this.seckillList[0].title,
-						link: location.href,
-						imgUrl:this.seckillList[0].image 
-					}).then(res => {
-					}).catch(err => {
-						console.log(err);
-					});
-			},
-		},
-		/**
-		 * 页面上拉触底事件的处理函数
-		 */
-		onReachBottom: function() {
-			var that = this;
-			that.getSeckillList();
+				return;
+			}
+			seckillList.value = [];
+			res.data.map(item => {
+				item.slide = JSON.parse(item.slide)
+			})
+			dataList.value = res.data;
+			page.value = 1;
+			status.value = dataList.value[active.value].status;
+			getSeckillList();
+
+		});
+	}
+	function getSeckillList() {
+		var data = {
+			page: page.value,
+			limit: limit.value
+		};
+		if (loadend.value) return;
+		if (pageloading.value) return;
+		pageloading.value = true
+		getSeckillListApi(dataList.value[active.value].id, data).then(res => {
+			// seckillList.value = [];
+			var list = res.data.list;
+			var loadendVal = list.length < limit.value;
+			seckillList.value = seckillList.value.concat(list);
+			page.value++;
+			pageloading.value = false;
+			loadend.value = loadendVal;
+			// #ifdef H5
+			setShare();
+			// #endif
+			setTimeout(() => {
+				showSkeleton.value = false
+			}, 1000)
+		}).catch(err => {
+			pageloading.value = false
+		});
+	}
+	function settimeList(item, index) {
+		if(index !== active.value){
+			active.value = index
+			if (interval.value) {
+				clearInterval(interval.value);
+				interval.value = null
+			}
+			interval.value = 0,
+				countDownHour.value = "00";
+			countDownMinute.value = "00";
+			countDownSecond.value = "00";
+			status.value = dataList.value[active.value].status;
+			loadend.value = false;
+			page.value = 1;
+			seckillList.value = [];
+			// wxh.time(e.currentTarget.dataset.stop, that);
+			getSeckillList();
 		}
 	}
+	function goDetails(item) {
+		uni.navigateTo({
+			animationType: animationType.type,					animationDuration: animationType.duration,
+			url: '/pages/activity/goods_seckill_details/index?id=' + item.id
+		})
+	}
+	// #ifdef H5
+	function setShare() {
+		proxy.$wechat.isWeixin() &&
+			proxy.$wechat.wechatEvevt([
+				"updateAppMessageShareData",
+				"updateTimelineShareData",
+				"onMenuShareAppMessage",
+				"onMenuShareTimeline"
+			], {
+				desc: seckillList.value[0].title,
+				title: seckillList.value[0].title,
+				link: location.href,
+				imgUrl:seckillList.value[0].image 
+			}).then(res => {
+			}).catch(err => {
+			});
+	}
+	// #endif
+
+	onLoad(() => {
+		setTimeout(() => {
+			isNodes.value++;
+		}, 500);
+		var pages = getCurrentPages();
+		returnShow.value = pages.length===1?false:true;
+		// #ifdef H5
+		navH.value = app.globalData.navHeight-18;
+		// #endif
+		getSeckillConfig();
+	});
+
+	/**
+	 * 页面上拉触底事件的处理函数
+	 */
+	onReachBottom(() => {
+		getSeckillList();
+	});
 </script>
 
 <style>
@@ -263,9 +258,6 @@
 		height: 100%;
 		border-radius: 14rpx;
 		overflow: hidden;
-		img{
-			border-radius: 14rpx;
-		}
 	}
 
 	.flash-sale .seckillList {

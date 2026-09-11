@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class='cash-withdrawal'>
 			<view class='nav acea-row'>
 				<view v-for="(item,index) in navList" :key="index" class='item font-color' @click="swichNav(index)">
@@ -35,7 +35,7 @@
 						</view>
 						<view class='item acea-row row-between-wrapper'>
 							<view class='name'>提现</view>
-							<view class='input'><input :placeholder='"最低提现金额"+minPrice' placeholder-class='placeholder' name="money"
+							<view class='input'><input :placeholder='cashPlaceholder' placeholder-class='placeholder' name="money"
 									type='digit'></input></view>
 						</view>
 						<view class='tip'>
@@ -58,7 +58,7 @@
 						<view class='item acea-row row-between-wrapper'>
 							<view class='name'>提现</view>
 							<view class='input'>
-								<input :placeholder='"最低提现金额"+minPrice' placeholder-class='placeholder' name="money" type='digit'
+								<input :placeholder='cashPlaceholder' placeholder-class='placeholder' name="money" type='digit'
 									maxlength="5"></input>
 							</view>
 						</view>
@@ -95,7 +95,7 @@
 						<view class='item acea-row row-between-wrapper'>
 							<view class='name'>提现</view>
 							<view class='input'>
-								<input :placeholder='"最低提现金额"+minPrice' placeholder-class='placeholder' name="money" type='digit'
+								<input :placeholder='cashPlaceholder' placeholder-class='placeholder' name="money" type='digit'
 									maxlength="5"></input>
 							</view>
 						</view>
@@ -132,7 +132,7 @@
 						<view class='item acea-row row-between-wrapper'>
 							<view class='name'>提现</view>
 							<view class='input'>
-								<input :placeholder='"最低提现金额"+minPrice' placeholder-class='placeholder' name="money" type='digit'>
+								<input :placeholder='cashPlaceholder' placeholder-class='placeholder' name="money" type='digit'>
 								</input>
 							</view>
 						</view>
@@ -150,7 +150,9 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, computed, nextTick, watch, getCurrentInstance } from 'vue';
+	import { onLoad } from '@dcloudio/uni-app';
 	import {
 		extractCash,
 		extractBank,
@@ -160,203 +162,200 @@
 	import {
 		toLogin
 	} from '@/libs/login.js';
-	import {
-		mapGetters
-	} from "vuex";
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
 	import {
 		Debounce
 	} from '@/utils/validate.js'
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		data() {
-			return {
-				navList: [{
-						'name': '银行卡',
-						'icon': 'icon-yinhangqia'
-					},
-					{
-						'name': '微信',
-						'icon': 'icon-weixin2'
-					},
-					{
-						'name': '支付宝',
-						'icon': 'icon-icon34'
-					},
-					{
-						'name': '余额',
-						'icon': 'icon-yuezhifu'
-					}
-				],
-				currentTab: 0,
-				index: 0,
-				array: [], //提现银行
-				minPrice: 0.00, //最低提现金额
-				// userInfo: [],
-				isClone: false,
-				commission: {},
-				qrcodeUrlW: "",
-				qrcodeUrlZ: "",
-				isCommitted: false, //防止多次提交
-				theme: app.globalData.theme,
-			};
-		},
-		computed: mapGetters(['isLogin', 'userInfo']),
-		watch: {
-			isLogin: {
-				handler: function(newV, oldV) {
-					if (newV) {
-						this.getUserExtractBank();
-						this.getExtractUser();
-					}
-				},
-				deep: true
-			}
-		},
-		onLoad() {
-			if (this.isLogin) {
-				this.getUserExtractBank();
-				this.getExtractUser();
-			} else {
-				toLogin();
-			}
-		},
-		methods: {
-			uploadpic: function(type) {
-				let that = this;
-				that.$util.uploadImageOne({
-					url: 'upload/image',
-					name: 'multipart',
-					model: "user",
-					pid: 1
-				}, function(res) {
-					if (type === 'W') {
-						that.qrcodeUrlW = res.data.url;
-					} else {
-						that.qrcodeUrlZ = res.data.url;
-					}
-				});
-			},
-			/**
-			 * 删除图片
-			 * 
-			 */
-			DelPicW: function() {
-				this.qrcodeUrlW = "";
-			},
-			DelPicZ: function() {
-				this.qrcodeUrlZ = "";
-			},
-			getExtractUser() {
-				extractUser().then(res => {
-					this.commission = res.data;
-					this.minPrice = res.data.minPrice;
-				})
-			},
-			getUserExtractBank: function() {
-				let that = this;
-				extractBank().then(res => {
-					let array = res.data;
-					array.unshift("请选择银行");
-					that.$set(that, 'array', array);
-				});
-			},
-			swichNav: function(current) {
-				this.currentTab = current;
-			},
-			bindPickerChange: function(e) {
-				this.index = e.detail.value;
-			},
-			moneyInput(e) {
-				//正则表达试
-				e.target.value = (e.target.value.match(/^\d*(\.?\d{0,2})/g)[0]) || null
-				//重新赋值给input
-				this.$nextTick(() => {
-					this.money = e.target.value
-				})
 
-			},
-			subCash: Debounce(function(e) {
-				let that = this,
-					value = e.detail.value;
-				if (that.currentTab == 0) { //银行卡
-					if (value.name.length == 0) return this.$util.Tips({
-						title: '请填写持卡人姓名'
-					});
-					if (value.cardum.length == 0) return this.$util.Tips({
-						title: '请填写卡号'
-					});
-					if (that.index == 0) return this.$util.Tips({
-						title: "请选择银行"
-					});
-					value.extractType = 'bank';
-					value.bankName = that.array[that.index];
-				} else if (that.currentTab == 1) { //微信
-					value.extractType = 'weixin';
-					if (value.name.length == 0) return this.$util.Tips({
-						title: '请填写微信号'
-					});
-					value.wechat = value.name;
-					value.qrcodeUrl = that.qrcodeUrlW;
-				} else if (that.currentTab == 2) { //支付宝
-					value.extractType = 'alipay';
-					if (value.name.length == 0) return this.$util.Tips({
-						title: '请填写账号'
-					});
-					value.alipayCode = value.name;
-					value.qrcodeUrl = that.qrcodeUrlZ;
-				}
-				if (value.money.length == 0) return this.$util.Tips({
-					title: '请填写提现金额'
-				});
-				if (!(/^(\d?)+(\.\d{0,2})?$/.test(value.money))) return this.$util.Tips({
-					title: '提现金额保留2位小数'
-				});
-				if (value.money < that.minPrice) return this.$util.Tips({
-					title: '提现金额不能低于' + that.minPrice
-				});
-				if (this.isCommitted == false) {
-					this.isCommitted = true;
-					if (that.currentTab == 3) {
-						transferIn({
-							price: parseFloat(value.money)
-						}).then(res => {
-							that.$store.commit("changInfo", {
-								amount1: 'brokeragePrice',
-								amount2: that.$util.$h.Sub(that.userInfo.brokeragePrice, parseFloat(value.money))
-							});
-							return that.$util.Tips({
-								title: '提现成功',
-								icon: 'success'
-							}, {
-								tab: 3,
-								url: '/pages/promoter/user_spread_user/index'
-							});
-						}).catch(err => {
-							return that.$util.Tips({
-								title: err
-							});
-						})
-					} else {
-						extractCash(value).then(res => {
-							return this.$util.Tips({
-								title: "提现成功",
-								icon: 'success'
-							}, {
-								tab: 2,
-								url: '/pages/promoter/user_spread_user/index'
-							});
-							this.isCommitted = false;
-						}).catch(err => {
-							this.isCommitted = false;
-							return this.$util.Tips({
-								title: err
-							});
-						});
-					}
-				}
-			})
+	const { proxy } = getCurrentInstance();
+	const appStore = useAppStore();
+	const { isLogin, userInfo } = storeToRefs(appStore);
+
+	// data
+	const navList = ref([{
+			'name': '银行卡',
+			'icon': 'icon-yinhangqia'
+		},
+		{
+			'name': '微信',
+			'icon': 'icon-weixin2'
+		},
+		{
+			'name': '支付宝',
+			'icon': 'icon-icon34'
+		},
+		{
+			'name': '余额',
+			'icon': 'icon-yuezhifu'
 		}
+	]);
+	const currentTab = ref(0);
+	const index = ref(0);
+	const array = ref([]); //提现银行
+	const minPrice = ref(0.00); //最低提现金额
+	const cashPlaceholder = computed(() => Number(minPrice.value) > 0
+		? `最低提现金额${minPrice.value}`
+		: '请输入提现金额');
+	// const userInfo = ref([]);
+	const isClone = ref(false);
+	const commission = ref({});
+	const qrcodeUrlW = ref("");
+	const qrcodeUrlZ = ref("");
+	const isCommitted = ref(false); //防止多次提交
+	const { colorStyle } = useColor();
+	const theme = ref(app.globalData.theme);
+	const money = ref('');
+
+	watch(isLogin, (newV, oldV) => {
+		if (newV) {
+			getUserExtractBank();
+			getExtractUser();
+		}
+	}, { deep: true });
+
+	onLoad(() => {
+		if (isLogin.value) {
+			getUserExtractBank();
+			getExtractUser();
+		} else {
+			toLogin();
+		}
+	});
+
+	function uploadpic(type) {
+		proxy.$util.uploadImageOne({
+			url: 'upload/image',
+			name: 'multipart',
+			model: "user",
+			pid: 1
+		}, function(res) {
+			if (type === 'W') {
+				qrcodeUrlW.value = res.data.url;
+			} else {
+				qrcodeUrlZ.value = res.data.url;
+			}
+		});
 	}
+	/**
+	 * 删除图片
+	 * 
+	 */
+	function DelPicW() {
+		qrcodeUrlW.value = "";
+	}
+	function DelPicZ() {
+		qrcodeUrlZ.value = "";
+	}
+	function getExtractUser() {
+		extractUser().then(res => {
+			commission.value = res.data;
+			minPrice.value = res.data.minPrice;
+		})
+	}
+	function getUserExtractBank() {
+		extractBank().then(res => {
+			let arr = res.data;
+			arr.unshift("请选择银行");
+			array.value = arr;
+		});
+	}
+	function swichNav(current) {
+		currentTab.value = current;
+	}
+	function bindPickerChange(e) {
+		index.value = e.detail.value;
+	}
+	function moneyInput(e) {
+		//正则表达试
+		e.target.value = (e.target.value.match(/^\d*(\.?\d{0,2})/g)[0]) || null
+		//重新赋值给input
+		nextTick(() => {
+			money.value = e.target.value
+		})
+
+	}
+	const subCash = Debounce(function(e) {
+		let value = e.detail.value;
+		if (currentTab.value == 0) { //银行卡
+			if (value.name.length == 0) return proxy.$util.Tips({
+				title: '请填写持卡人姓名'
+			});
+			if (value.cardum.length == 0) return proxy.$util.Tips({
+				title: '请填写卡号'
+			});
+			if (index.value == 0) return proxy.$util.Tips({
+				title: "请选择银行"
+			});
+			value.extractType = 'bank';
+			value.bankName = array.value[index.value];
+		} else if (currentTab.value == 1) { //微信
+			value.extractType = 'weixin';
+			if (value.name.length == 0) return proxy.$util.Tips({
+				title: '请填写微信号'
+			});
+			value.wechat = value.name;
+			value.qrcodeUrl = qrcodeUrlW.value;
+		} else if (currentTab.value == 2) { //支付宝
+			value.extractType = 'alipay';
+			if (value.name.length == 0) return proxy.$util.Tips({
+				title: '请填写账号'
+			});
+			value.alipayCode = value.name;
+			value.qrcodeUrl = qrcodeUrlZ.value;
+		}
+		if (value.money.length == 0) return proxy.$util.Tips({
+			title: '请填写提现金额'
+		});
+		if (!(/^(\d?)+(\.\d{0,2})?$/.test(value.money))) return proxy.$util.Tips({
+			title: '提现金额保留2位小数'
+		});
+		if (value.money < minPrice.value) return proxy.$util.Tips({
+			title: '提现金额不能低于' + minPrice.value
+		});
+		if (isCommitted.value == false) {
+			isCommitted.value = true;
+			if (currentTab.value == 3) {
+				transferIn({
+					price: parseFloat(value.money)
+				}).then(res => {
+					appStore.changInfo({
+						amount1: 'brokeragePrice',
+						amount2: proxy.$util.$h.Sub(userInfo.value.brokeragePrice, parseFloat(value.money))
+					});
+					return proxy.$util.Tips({
+						title: '提现成功',
+						icon: 'success'
+					}, {
+						tab: 3,
+						url: '/pages/promoter/user_spread_user/index'
+					});
+				}).catch(err => {
+					return proxy.$util.Tips({
+						title: err
+					});
+				})
+			} else {
+				extractCash(value).then(res => {
+					return proxy.$util.Tips({
+						title: "提现成功",
+						icon: 'success'
+					}, {
+						tab: 2,
+						url: '/pages/promoter/user_spread_user/index'
+					});
+					isCommitted.value = false;
+				}).catch(err => {
+					isCommitted.value = false;
+					return proxy.$util.Tips({
+						title: err
+					});
+				});
+			}
+		}
+	})
 </script>
 
 <style lang="scss">

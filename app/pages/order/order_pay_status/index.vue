@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class='payment-status'>
 			<!--失败时： 用icon-iconfontguanbi fail替换icon-duihao2 bg-color-->
 			<view class='iconfont icons icon-duihao2 bg_color'
@@ -48,7 +48,9 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, watch } from 'vue';
+	import { onLoad } from '@dcloudio/uni-app';
 	import {
 		getOrderDetail,
 		wechatQueryPayResult
@@ -59,149 +61,142 @@
 	import {
 		toLogin
 	} from '@/libs/login.js';
-	import {
-		mapGetters
-	} from "vuex";
+	import util from '@/utils/util.js';
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		data() {
-			return {
-				orderId: '',
-				order_pay_info: {
-					paid: 0,
-					_status: {}
-				},
-				status: 0,
-				msg: '',
-				errMsg: false,
-				payResult: '订单查询中...',
-				theme:app.globalData.theme,
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		watch: {
-			isLogin: {
-				handler: function(newV, oldV) {
-					if (newV) {
-						this.getOrderPayInfo();
-					}
-				},
-				deep: true
-			}
-		},
-		onLoad: function(options) {
-			if (!options.order_id) return this.$util.Tips({
-				title: '缺少参数无法查看订单支付状态'
-			}, {
-				tab: 3,
-				url: 1
-			});
-			this.orderId = options.order_id;
-			this.status = options.status || 0;
-			if (this.isLogin) {
-				this.getOrderPayInfo();
-			} else {
-				toLogin();
-			}
-		},
-		methods: {
-			wechatQueryPay() {
-				wechatQueryPayResult(this.orderId).then(res => {
-					this.payResult = '支付成功';
-					uni.setNavigationBarTitle({
-						title: '支付成功'
-					});
-					this.order_pay_info.paid = 1;
-					uni.hideLoading();
-				})
-				.catch(err => {
-					this.order_pay_info.paid = 2;
-					this.errMsg = true;
-					this.msg = err;
-					uni.hideLoading();
-					this.$util.Tips({
-						title: err
-					});
-				});
-			},
-			onLoadFun: function() {
-				this.getOrderPayInfo();
-			},
-			/**
-			 * 
-			 * 支付完成查询支付状态
-			 * 
-			 */
-			getOrderPayInfo: function() {
-				let that = this;
-				uni.showLoading({
-					title: '正在加载中'
-				});
-				getOrderDetail(that.orderId).then(res => {
-					that.$set(that, 'order_pay_info', res.data);
-					if (res.data.payType === 'weixin') {
-						setTimeout(()=>{
-							that.wechatQueryPay();
-						},2000);
-					}else {
-						uni.setNavigationBarTitle({
-							title: res.data.paid ? '支付成功' : '未支付'
-						});
-						if(res.data.paid){
-							this.payResult = '支付成功';
-							this.order_pay_info.paid = 1;
-						}else{
-							this.payResult = '支付失败';
-							this.order_pay_info.paid = 2;
-						}
-						uni.hideLoading();
-					} 
-					
-				}).catch(err => {
-					uni.hideLoading();
-				});
-			},
-			/**
-			 * 去首页关闭当前所有页面
-			 */
-			goIndex: function(e) {
-				uni.switchTab({
-					url: '/pages/index/index'
-				});
-			},
-			// 去参团页面；
-			goPink: function(id) {
-				uni.navigateTo({
-					url: '/pages/activity/goods_combination_status/index?id=' + id
-				});
-			},
-			/**
-			 * 
-			 * 去订单详情页面
-			 */
-			goOrderDetails: function(e) {
-				let that = this;
-				// #ifdef MP
-				uni.showLoading({
-					title: '正在加载',
-				})
-				openOrderSubscribe().then(res => {
-					uni.hideLoading();
-					uni.navigateTo({
-						url: '/pages/order/order_details/index?order_id=' + that.orderId
-					});
-				}).catch(() => {
-					uni.hideLoading();
-				});
-				// #endif
-				// #ifndef MP
-				uni.navigateTo({
-					url: '/pages/order/order_details/index?order_id=' + that.orderId
-				})
-				// #endif
-			}
 
+	const appStore = useAppStore();
+	const { isLogin } = storeToRefs(appStore);
+
+	// data
+	const orderId = ref('');
+	const order_pay_info = ref({
+		paid: 0,
+		_status: {}
+	});
+	const status = ref(0);
+	const msg = ref('');
+	const errMsg = ref(false);
+	const payResult = ref('订单查询中...');
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+
+	watch(isLogin, (newV, oldV) => {
+		if (newV) {
+			getOrderPayInfo();
 		}
+	}, { deep: true });
+
+	onLoad((options) => {
+		if (!options.order_id) return util.Tips({
+			title: '缺少参数无法查看订单支付状态'
+		}, {
+			tab: 3,
+			url: 1
+		});
+		orderId.value = options.order_id;
+		status.value = options.status || 0;
+		if (isLogin.value) {
+			getOrderPayInfo();
+		} else {
+			toLogin();
+		}
+	});
+
+	function wechatQueryPay() {
+		wechatQueryPayResult(orderId.value).then(res => {
+			payResult.value = '支付成功';
+			uni.setNavigationBarTitle({
+				title: '支付成功'
+			});
+			order_pay_info.value.paid = 1;
+			uni.hideLoading();
+		})
+		.catch(err => {
+			order_pay_info.value.paid = 2;
+			errMsg.value = true;
+			msg.value = err;
+			uni.hideLoading();
+			util.Tips({
+				title: err
+			});
+		});
+	}
+	function onLoadFun() {
+		getOrderPayInfo();
+	}
+	/**
+	 * 
+	 * 支付完成查询支付状态
+	 * 
+	 */
+	function getOrderPayInfo() {
+		uni.showLoading({
+			title: '正在加载中'
+		});
+		getOrderDetail(orderId.value).then(res => {
+			order_pay_info.value = res.data;
+			if (res.data.payType === 'weixin') {
+				setTimeout(()=>{
+					wechatQueryPay();
+				},2000);
+			}else {
+				uni.setNavigationBarTitle({
+					title: res.data.paid ? '支付成功' : '未支付'
+				});
+				if(res.data.paid){
+					payResult.value = '支付成功';
+					order_pay_info.value.paid = 1;
+				}else{
+					payResult.value = '支付失败';
+					order_pay_info.value.paid = 2;
+				}
+				uni.hideLoading();
+			} 
+			
+		}).catch(err => {
+			uni.hideLoading();
+		});
+	}
+	/**
+	 * 去首页关闭当前所有页面
+	 */
+	function goIndex(e) {
+		uni.switchTab({
+			url: '/pages/index/index'
+		});
+	}
+	// 去参团页面；
+	function goPink(id) {
+		uni.navigateTo({
+			url: '/pages/activity/goods_combination_status/index?id=' + id
+		});
+	}
+	/**
+	 * 
+	 * 去订单详情页面
+	 */
+	function goOrderDetails(e) {
+		// #ifdef MP
+		uni.showLoading({
+			title: '正在加载',
+		})
+		openOrderSubscribe().then(res => {
+			uni.hideLoading();
+			uni.navigateTo({
+				url: '/pages/order/order_details/index?order_id=' + orderId.value
+			});
+		}).catch(() => {
+			uni.hideLoading();
+		});
+		// #endif
+		// #ifndef MP
+		uni.navigateTo({
+			url: '/pages/order/order_details/index?order_id=' + orderId.value
+		})
+		// #endif
 	}
 </script>
 

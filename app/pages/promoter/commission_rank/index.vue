@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class="CommissionRank">
 			<view class="header">
 				<view class="rank" v-if="position">您目前的排名<text class="num">{{position}}</text>名</view>
@@ -15,7 +15,7 @@
 				<view class="list">
 					<view class="item acea-row row-between-wrapper" v-for="(item,index) in rankList" :key="index">
 						<view class="num" v-if="index <= 2">
-							<image :src="urlDomain+'crmebimage/perset/staticImg/medal0'+(index+1)+'.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/staticImg/medal0'+(index+1)+'.png'"></image>
 						</view>
 						<view class="num" v-else>
 							{{index+1}}
@@ -37,120 +37,113 @@
 	</view>
 </template>
 
-<script>
+<script setup>
 	import {
 		getBrokerageRank,
 		brokerageRankNumber
 	} from '@/api/user.js';
 	import {toLogin} from '@/libs/login.js';
 	import emptyPage from '@/components/emptyPage.vue'
-	import {mapGetters} from "vuex";
-	import {setThemeColor} from '@/utils/setTheme.js'
+	import { useAppStore } from "@/store/app.js";
+	import { storeToRefs } from 'pinia';
+	import { setThemeColor } from '@/utils/setTheme.js'
+	import { ref, watch } from 'vue';
+	import { onLoad, onReachBottom } from '@dcloudio/uni-app';
+	import Cache from '@/utils/cache.js';
+import { useColor } from '@/composables/useColor.js';
 	const app = getApp();
-	export default {
-		components: {
-			emptyPage
-		},
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				navList: ["周排行", "月排行"],
-				active: 0,
-				rankList: [],
-				page: 1,
-				limit: 20,
-				loadend: false,
-				loading: false,
-				loadTitle: '加载更多',
-				type: 'week',
-				position: 0,
-				isShow: false,
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
-				theme:app.globalData.theme,
-				bgColor:'#e93323'
-			};
-		},
-		computed: mapGetters(['isLogin']),
-		watch:{
-			isLogin:{
-				handler:function(newV,oldV){
-					if(newV){
-						this.getBrokerageRankList();
-						this.getBrokerageRankNumber(this.type);
-					}
-				},
-				deep:true
-			}
-		},
-		onLoad() {
-			if (this.isLogin) {
-				this.getBrokerageRankList();
-				this.getBrokerageRankNumber(this.type);
-			} else {
-				toLogin();
-			}
-			let that = this;
-			that.bgColor = setThemeColor();
-			uni.setNavigationBarColor({
-				frontColor: '#ffffff',
-				backgroundColor:that.bgColor,
-			});
-		},
-		methods: {
-			onLoadFun: function() {
-				this.getBrokerageRankList();
-				this.getBrokerageRankNumber(this.type);
-			},
-			// 授权关闭
-			authColse: function(e) {
-				this.isShowAuth = e
-			},
-			switchTap: function(index) {
-				this.active = index;
-				this.type = index ? 'month' : 'week';
-				this.page = 1;
-				this.loadend = false;
-				this.$set(this, 'rankList', []);
-				this.getBrokerageRankList();
-				this.getBrokerageRankNumber(this.type);
-			},
-			getBrokerageRankNumber(type) {
-				brokerageRankNumber({
-					type: type
-				}).then(res => {
-					this.position = res.data;
-				})
-			},
-			getBrokerageRankList: function() {
-				if (this.loadend) return;
-				if (this.loading) return;
-				this.loading = true;
-				this.loadTitle = '';
-				getBrokerageRank({
-					page: this.page,
-					limit: this.limit,
-					type: this.type
-				}).then(res => {
-					let list = res.data || [];
-					let loadend = list.length <= this.limit;
-					this.rankList.push.apply(this.rankList, list);
-					this.loading = false;
-					this.loadend = loadend;
-					this.loadTitle = loadend ? '我也是有底线的~' : '加载更多';
-					this.$set(this, 'rankList', this.rankList);
-					this.isShow = true;
-					//this.position = res.data.position;
-				}).catch(err => {
-					this.loading = false;
-					this.loadTitle = '加载更多'; 
-				})
-			}
-		},
-		onReachBottom: function() {
-			this.getBrokerageRankList();
+	const { isLogin } = storeToRefs(useAppStore());
+
+	const urlDomain = ref(Cache.get("imgHost"));
+	const navList = ref(["周排行", "月排行"]);
+	const active = ref(0);
+	const rankList = ref([]);
+	const page = ref(1);
+	const limit = ref(20);
+	const loadend = ref(false);
+	const loading = ref(false);
+	const loadTitle = ref('加载更多');
+	const type = ref('week');
+	const position = ref(0);
+	const isShow = ref(false);
+	const isAuto = ref(false); //没有授权的不会自动授权
+	const isShowAuth = ref(false); //是否隐藏授权
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	const bgColor = ref('#e93323');
+
+	watch(isLogin, (newV, oldV) => {
+		if (newV) {
+			getBrokerageRankList();
+			getBrokerageRankNumber(type.value);
 		}
+	}, { deep: true });
+
+	onLoad(() => {
+		if (isLogin.value) {
+			getBrokerageRankList();
+			getBrokerageRankNumber(type.value);
+		} else {
+			toLogin();
+		}
+		bgColor.value = setThemeColor();
+		uni.setNavigationBarColor({
+			frontColor: '#ffffff',
+			backgroundColor: bgColor.value,
+		});
+	});
+
+	function onLoadFun() {
+		getBrokerageRankList();
+		getBrokerageRankNumber(type.value);
 	}
+	// 授权关闭
+	function authColse(e) {
+		isShowAuth.value = e
+	}
+	function switchTap(index) {
+		active.value = index;
+		type.value = index ? 'month' : 'week';
+		page.value = 1;
+		loadend.value = false;
+		rankList.value = [];
+		getBrokerageRankList();
+		getBrokerageRankNumber(type.value);
+	}
+	function getBrokerageRankNumber(t) {
+		brokerageRankNumber({
+			type: t
+		}).then(res => {
+			position.value = res.data;
+		})
+	}
+	function getBrokerageRankList() {
+		if (loadend.value) return;
+		if (loading.value) return;
+		loading.value = true;
+		loadTitle.value = '';
+		getBrokerageRank({
+			page: page.value,
+			limit: limit.value,
+			type: type.value
+		}).then(res => {
+			let list = res.data || [];
+			let loadendVal = list.length <= limit.value;
+			rankList.value.push.apply(rankList.value, list);
+			loading.value = false;
+			loadend.value = loadendVal;
+			loadTitle.value = loadendVal ? '我也是有底线的~' : '加载更多';
+			isShow.value = true;
+			//position.value = res.data.position;
+		}).catch(err => {
+			loading.value = false;
+			loadTitle.value = '加载更多'; 
+		})
+	}
+
+	onReachBottom(() => {
+		getBrokerageRankList();
+	});
 </script>
 
 <style scoped lang="scss">

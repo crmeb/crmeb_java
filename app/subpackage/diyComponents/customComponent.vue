@@ -170,7 +170,7 @@
   </view>
 </template>
 
-<script>
+<script setup>
 import {
   getThemeArticle,
   getThemeCoupon,
@@ -178,51 +178,44 @@ import {
   getThemeUser,
   setCouponReceive,
 } from "@/api/api.js";
-import { mapGetters } from "vuex";
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
+import { ref, computed, watch } from "vue";
 import CommonWrapper from "./commonWrapper.vue";
 
-export default {
-  name: "customComponent",
-  components: {
-    CommonWrapper,
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => ({}),
   },
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => ({}),
-    },
-  },
-  data() {
-    return {
-      dataList: [],
-      articleList: [],
-      couponList: [],
-      goodsList: [],
-      userInfo: {},
-    };
-  },
-  computed: {
-    ...mapGetters(["isLogin"]),
-    configObj() {
-      return this.dataConfig;
-    },
-    customComponents() {
-      return this.configObj.customComponents || {};
-    },
-    visibleComponents() {
-      if (!this.customComponents || !this.customComponents.list) return [];
-      return this.customComponents.list.filter((item) => !item.isHidden);
-    },
-    contentScale() {
-      const {
-        marginConfig,
-        paddingConfig,
-        borderConfig,
-        paddingDataConfig,
-        borderDataConfig,
-        marginDataConfig,
-      } = this.configObj;
-      let width = 375;
+});
+const emit = defineEmits(["changeLogin"]);
+
+const appStore = useAppStore();
+const { isLogin } = storeToRefs(appStore);
+
+const dataList = ref([]);
+const articleList = ref([]);
+const couponList = ref([]);
+const goodsList = ref([]);
+const userInfo = ref({});
+
+const configObj = computed(() => props.dataConfig);
+const customComponents = computed(() => configObj.value.customComponents || {});
+const visibleComponents = computed(() => {
+  if (!customComponents.value || !customComponents.value.list) return [];
+  return customComponents.value.list.filter((item) => !item.isHidden);
+});
+const contentScale = computed(() => {
+  const {
+    marginConfig,
+    paddingConfig,
+    borderConfig,
+    paddingDataConfig,
+    borderDataConfig,
+    marginDataConfig,
+  } = configObj.value;
+  let width = 375;
 
       // Wrapper Margin
       if (marginConfig) {
@@ -281,32 +274,32 @@ export default {
       }
 
       return width / 375;
-    },
-    currentDisplayMode() {
-      if (this.selectTypeValue === "article")
-        return this.configObj.articleDisplayMode;
-      if (this.selectTypeValue === "coupon")
-        return this.configObj.couponDisplayMode;
-      if (this.selectTypeValue === "goods")
-        return this.configObj.goodsDisplayMode;
+    });
+const currentDisplayMode = computed(() => {
+      if (selectTypeValue.value === "article")
+        return configObj.value.articleDisplayMode;
+      if (selectTypeValue.value === "coupon")
+        return configObj.value.couponDisplayMode;
+      if (selectTypeValue.value === "goods")
+        return configObj.value.goodsDisplayMode;
       return null;
-    },
-    currentColumnStyle() {
-      if (this.selectTypeValue === "article")
-        return this.configObj.articleColumnStyle;
-      if (this.selectTypeValue === "coupon")
-        return this.configObj.couponColumnStyle;
-      if (this.selectTypeValue === "goods")
-        return this.configObj.goodsColumnStyle;
+    });
+const currentColumnStyle = computed(() => {
+      if (selectTypeValue.value === "article")
+        return configObj.value.articleColumnStyle;
+      if (selectTypeValue.value === "coupon")
+        return configObj.value.couponColumnStyle;
+      if (selectTypeValue.value === "goods")
+        return configObj.value.goodsColumnStyle;
       return null;
-    },
-    selectTypeValue() {
-      return this.configObj.selectType
-        ? this.configObj.selectType.activeValue
+    });
+const selectTypeValue = computed(() => {
+      return configObj.value.selectType
+        ? configObj.value.selectType.activeValue
         : "user";
-    },
+    });
     // Background Gradient
-    getDataWrapperStyle() {
+const getDataWrapperStyle = computed(() => {
       const {
         filletDataConfig,
         marginDataConfig,
@@ -314,7 +307,7 @@ export default {
         componentBgDataConfig,
         borderDataConfig,
         shadowDataConfig,
-      } = this.configObj;
+      } = configObj.value;
       const style = {};
 
       // Border Radius
@@ -394,8 +387,8 @@ export default {
       }
 
       return style;
-    },
-    itemWrapperStyle() {
+    });
+const itemWrapperStyle = computed(() => {
       // let bgColorLeft = this.configObj.moduleColor.color[0].item;
       // let bgColorRight = this.configObj.moduleColor.color[1].item;
 
@@ -406,7 +399,7 @@ export default {
         marginDataConfig,
         paddingDataConfig,
         borderDataConfig,
-      } = this.configObj;
+      } = configObj.value;
 
       let marginHeight = 0;
       let paddingHeight = 0;
@@ -452,34 +445,34 @@ export default {
         borderWidth += borderDataConfig.widthConfig.val / 2;
       }
 
-      const scale = this.contentScale;
+      const scale = contentScale.value;
       const canvasHeight =
-        (this.customComponents.canvasHeight * scale || 0) +
+        (customComponents.value.canvasHeight * scale || 0) +
         borderWidth * scale +
         marginHeight * scale +
         paddingHeight * scale;
 
       return {
-        height: this.customComponents.canvasHeight * scale * 2 + "rpx",
+        height: customComponents.value.canvasHeight * scale * 2 + "rpx",
         position: "relative",
         width: "100%",
         // background: `linear-gradient(90deg,${bgColorLeft || "#fff"} 0%,${
         //   bgColorRight || "#fff"
         // } 100%)`,
       };
-    },
+    });
     // List Styles
-    getListContainerStyle() {
+const getListContainerStyle = computed(() => {
       let displayMode, columnStyle;
-      if (this.selectTypeValue === "article") {
-        displayMode = this.configObj.articleDisplayMode;
-        columnStyle = this.configObj.articleColumnStyle;
-      } else if (this.selectTypeValue === "coupon") {
-        displayMode = this.configObj.couponDisplayMode;
-        columnStyle = this.configObj.couponColumnStyle;
-      } else if (this.selectTypeValue === "goods") {
-        displayMode = this.configObj.goodsDisplayMode;
-        columnStyle = this.configObj.goodsColumnStyle;
+      if (selectTypeValue.value === "article") {
+        displayMode = configObj.value.articleDisplayMode;
+        columnStyle = configObj.value.articleColumnStyle;
+      } else if (selectTypeValue.value === "coupon") {
+        displayMode = configObj.value.couponDisplayMode;
+        columnStyle = configObj.value.couponColumnStyle;
+      } else if (selectTypeValue.value === "goods") {
+        displayMode = configObj.value.goodsDisplayMode;
+        columnStyle = configObj.value.goodsColumnStyle;
       }
 
       const style = {
@@ -497,18 +490,18 @@ export default {
         style.flexWrap = "wrap";
       }
       return style;
-    },
-    getListItemStyle() {
+    });
+const getListItemStyle = computed(() => {
       let displayMode, columnStyle;
-      if (this.selectTypeValue === "article") {
-        displayMode = this.configObj.articleDisplayMode;
-        columnStyle = this.configObj.articleColumnStyle;
-      } else if (this.selectTypeValue === "coupon") {
-        displayMode = this.configObj.couponDisplayMode;
-        columnStyle = this.configObj.couponColumnStyle;
-      } else if (this.selectTypeValue === "goods") {
-        displayMode = this.configObj.goodsDisplayMode;
-        columnStyle = this.configObj.goodsColumnStyle;
+      if (selectTypeValue.value === "article") {
+        displayMode = configObj.value.articleDisplayMode;
+        columnStyle = configObj.value.articleColumnStyle;
+      } else if (selectTypeValue.value === "coupon") {
+        displayMode = configObj.value.couponDisplayMode;
+        columnStyle = configObj.value.couponColumnStyle;
+      } else if (selectTypeValue.value === "goods") {
+        displayMode = configObj.value.goodsDisplayMode;
+        columnStyle = configObj.value.goodsColumnStyle;
       }
 
       const style = {
@@ -529,107 +522,103 @@ export default {
         }
       }
       return style;
-    },
+    });
     // Add flex-basis for multi-column layouts to ensure wrapping works correctly if needed,
     // though width usually suffices.
-  },
-  watch: {
-    dataConfig: {
-      handler(val) {
-        this.fetchData();
+watch(
+      () => props.dataConfig,
+      (val) => {
+        fetchData();
       },
-      deep: true,
-      immediate: true,
-    },
-  },
-  methods: {
-    fetchData() {
-      if (this.selectTypeValue === "user") {
-        this.fetchUserInfo();
-        this.dataList = [];
+      { deep: true, immediate: true },
+    );
+    function fetchData() {
+      if (selectTypeValue.value === "user") {
+        fetchUserInfo();
+        dataList.value = [];
         return;
       }
-      if (this.selectTypeValue === "article") {
-        this.fetchArticleData();
-      } else if (this.selectTypeValue === "coupon") {
-        this.fetchCouponData();
-      } else if (this.selectTypeValue === "goods") {
-        this.fetchGoodsData();
+      if (selectTypeValue.value === "article") {
+        fetchArticleData();
+      } else if (selectTypeValue.value === "coupon") {
+        fetchCouponData();
+      } else if (selectTypeValue.value === "goods") {
+        fetchGoodsData();
       }
-    },
-    fetchArticleData() {
-      if (!this.configObj.articleDataSource) return;
+    }
+    function fetchArticleData() {
+      if (!configObj.value.articleDataSource) return;
       let params = {
-        limit: this.configObj.articleNum.val,
+        limit: configObj.value.articleNum.val,
         page: 1,
       };
-      if (this.configObj.articleDataSource.tabVal !== 0) {
-        params.cid = Array.isArray(this.configObj.articleClass.activeValue)
-          ? this.configObj.articleClass.activeValue.join(",")
-          : this.configObj.articleClass.activeValue;
+      if (configObj.value.articleDataSource.tabVal !== 0) {
+        params.cid = Array.isArray(configObj.value.articleClass.activeValue)
+          ? configObj.value.articleClass.activeValue.join(",")
+          : configObj.value.articleClass.activeValue;
       }
       getThemeArticle(params).then((res) => {
-        this.dataList = Array.isArray(res.data)
+        dataList.value = Array.isArray(res.data)
           ? res.data
           : res.data && res.data.list
           ? res.data.list
           : [];
       });
-    },
-    fetchCouponData() {
-      if (!this.configObj.couponDataSource) return;
+    }
+    function fetchCouponData() {
+      if (!configObj.value.couponDataSource) return;
       let params = {
-        limit: this.configObj.couponNum.val,
+        limit: configObj.value.couponNum.val,
       };
       getThemeCoupon(params).then((res) => {
-        this.dataList = Array.isArray(res.data)
+        dataList.value = Array.isArray(res.data)
           ? res.data
           : res.data && res.data.list
           ? res.data.list
           : [];
       });
-    },
-    fetchGoodsData() {
-      if (!this.configObj.goodsDataSource) return;
+    }
+    function fetchGoodsData() {
+      if (!configObj.value.goodsDataSource) return;
       let params = {
-        limit: this.configObj.goodsNum.val,
-        order: this.configObj.goodsSort.tabVal,
-        sort: this.configObj.goodsSortRule.tabVal,
+        limit: configObj.value.goodsNum.val,
+        order: configObj.value.goodsSort.tabVal,
+        sort: configObj.value.goodsSortRule.tabVal,
       };
-      if (this.configObj.goodsDataSource.tabVal === 0) {
+      if (configObj.value.goodsDataSource.tabVal === 0) {
         // Specific Data
-        if (!this.configObj.goodsList || !this.configObj.goodsList.list) return;
-        params.ids = this.configObj.goodsList.list
+        if (!configObj.value.goodsList || !configObj.value.goodsList.list) return;
+        params.ids = configObj.value.goodsList.list
           .map((item) => item.id)
           .join(",");
         if (params.ids.length === 0) {
-          this.dataList = [];
+          dataList.value = [];
           return;
         }
       } else {
         // Filter Data
-        params.cate_ids = Array.isArray(this.configObj.goodsClass.activeValue)
-          ? this.configObj.goodsClass.activeValue.join(",")
-          : this.configObj.goodsClass.activeValue;
+        params.cate_ids = Array.isArray(configObj.value.goodsClass.activeValue)
+          ? configObj.value.goodsClass.activeValue.join(",")
+          : configObj.value.goodsClass.activeValue;
       }
       getThemeProduct(params).then((res) => {
-        this.dataList = Array.isArray(res.data)
+        dataList.value = Array.isArray(res.data)
           ? res.data
           : res.data && res.data.list
           ? res.data.list
           : [];
       });
-    },
-    fetchUserInfo() {
-      if (!this.isLogin) {
-        this.userInfo = {};
+    }
+    function fetchUserInfo() {
+      if (!isLogin.value) {
+        userInfo.value = {};
         return;
       }
       getThemeUser().then((res) => {
-        this.userInfo = res.data || {};
+        userInfo.value = res.data || {};
       });
-    },
-    getWrapperStyle(displayMode, columnStyle) {
+    }
+    function getWrapperStyle(displayMode, columnStyle) {
       const style = {
         width: "100%",
       };
@@ -648,9 +637,9 @@ export default {
         }
       }
       return style;
-    },
-    getComponentStyle(style) {
-      const scale = this.contentScale;
+    }
+    function getComponentStyle(style) {
+      const scale = contentScale.value;
       return {
         position: "absolute",
         left: style.left * scale * 2 + "rpx",
@@ -661,8 +650,8 @@ export default {
         zIndex: style.zIndex,
         transform: `rotate(${style.rotate || 0}deg)`,
       };
-    },
-    getPictureStyle(propValue) {
+    }
+    function getPictureStyle(propValue) {
       let borderRadius = 0;
       if (propValue.isRadiusAll) {
         borderRadius = propValue.borderRadius * 2 + "rpx";
@@ -691,9 +680,9 @@ export default {
         } ${propValue.borderColor}`;
       }
       return style;
-    },
-    getTextStyle(propValue) {
-      const scale = this.contentScale;
+    }
+    function getTextStyle(propValue) {
+      const scale = contentScale.value;
       const style = {
         width: "100%",
         fontSize: propValue.fontSize * scale * 2 + "rpx",
@@ -718,9 +707,9 @@ export default {
         }`;
       }
       return style;
-    },
-    getTextBgStyle(propValue) {
-      const scale = this.contentScale;
+    }
+    function getTextBgStyle(propValue) {
+      const scale = contentScale.value;
       const style = {
         height: "100%",
         padding: `${(propValue.paddingTop || 0) * scale * 2}rpx ${(propValue.paddingRight || 0) * scale * 2}rpx ${
@@ -759,9 +748,9 @@ export default {
         }rpx ${(propValue.borderRadiusBottomLeft || 0) * scale * 2}rpx`;
       }
       return style;
-    },
-    getIconStyle(propValue) {
-      const scale = this.contentScale;
+    }
+    function getIconStyle(propValue) {
+      const scale = contentScale.value;
       const style = {
         display: "flex",
         justifyContent: propValue.iconAlign || "center",
@@ -807,8 +796,8 @@ export default {
       }
 
       return style;
-    },
-    getLineStyle(propValue) {
+    }
+    function getLineStyle(propValue) {
       const style = {};
       if (propValue.direction === "vertical") {
         style.width = "0rpx";
@@ -824,9 +813,9 @@ export default {
         }`;
       }
       return style;
-    },
-    getPanelStyle(propValue) {
-      const scale = this.contentScale;
+    }
+    function getPanelStyle(propValue) {
+      const scale = contentScale.value;
       let borderRadius = 0;
       if (propValue.isRadiusAll) {
         borderRadius = propValue.borderRadius * 2 + "rpx";
@@ -877,13 +866,13 @@ export default {
         } ${propValue.borderColor}`;
       }
       return style;
-    },
-    getPictureUrl(item, dataItem) {
+    }
+    function getPictureUrl(item, dataItem) {
       const field = item.propValue.fieldType;
-      if (this.selectTypeValue === "user" && field === "image") {
-        if (!this.isLogin) return item.propValue.url || "/static/images/f.png";
+      if (selectTypeValue.value === "user" && field === "image") {
+        if (!isLogin.value) return item.propValue.url || "/static/images/f.png";
         return (
-          this.userInfo.image || item.propValue.url || "/static/images/f.png"
+          userInfo.value.image || item.propValue.url || "/static/images/f.png"
         );
       }
       if (dataItem && field) {
@@ -894,16 +883,16 @@ export default {
       }
 
       return item.propValue.url;
-    },
-    getDisplayText(item, dataItem) {
+    }
+    function getDisplayText(item, dataItem) {
       const field = item.propValue.fieldType;
-      if (this.selectTypeValue === "article") {
+      if (selectTypeValue.value === "article") {
         // Article mapping
         if (field === "title") return dataItem.title;
         if (field === "visit") return dataItem.visit;
         if (field === "add_time") return dataItem.add_time;
         if (field === "synopsis") return dataItem.synopsis;
-      } else if (this.selectTypeValue === "coupon") {
+      } else if (selectTypeValue.value === "coupon") {
         // Coupon mapping
         const field = item.propValue.fieldType;
         if (field === "coupon_title")
@@ -922,7 +911,7 @@ export default {
         if (field === "use_time") return dataItem.use_time;
         if (field === "receive_count") return dataItem.receive_count;
         if (field === "add_time") return dataItem.add_time;
-      } else if (this.selectTypeValue === "goods") {
+      } else if (selectTypeValue.value === "goods") {
         // Goods mapping
         if (field === "store_name") return dataItem.store_name;
         if (field === "id") return dataItem.id;
@@ -942,7 +931,7 @@ export default {
         if (field === "sales") return dataItem.sales;
         if (field === "browse") return dataItem.browse;
         if (field === "add_time") return dataItem.add_time;
-      } else if (this.selectTypeValue === "user") {
+      } else if (selectTypeValue.value === "user") {
         // User mapping
         if (field === "nickname") return dataItem.nickname;
         if (field === "uid") return dataItem.uid;
@@ -958,16 +947,16 @@ export default {
         if (field === "add_time") return dataItem.add_time;
       }
       return item.propValue.text;
-    },
-    goDetail(dataItem, item) {
+    }
+    function goDetail(dataItem, item) {
       if (item.propValue.linkType === "detail") {
-        if (this.selectTypeValue === "goods") {
+        if (selectTypeValue.value === "goods") {
           uni.navigateTo({
             url: "/pages/goods/goods_details/index?id=" + dataItem.id,
           });
-        } else if (this.selectTypeValue === "coupon") {
-          this.receiveCoupon(dataItem);
-        } else if (this.selectTypeValue === "article") {
+        } else if (selectTypeValue.value === "coupon") {
+          receiveCoupon(dataItem);
+        } else if (selectTypeValue.value === "article") {
           uni.navigateTo({
             url: "/pages/news/news_details/index?id=" + dataItem.id,
           });
@@ -980,10 +969,10 @@ export default {
           },
         });
       }
-    },
-    receiveCoupon(item) {
-      if (!this.isLogin) {
-        this.$emit("changeLogin");
+    }
+    function receiveCoupon(item) {
+      if (!isLogin.value) {
+        emit("changeLogin");
         return;
       }
       setCouponReceive(item.id)
@@ -993,20 +982,18 @@ export default {
         .catch((err) => {
           uni.showToast({ title: err, icon: "none" });
         });
-    },
-    handleUserClick(item) {
+    }
+    function handleUserClick(item) {
       if (item.propValue.link) {
         if (item.propValue.linkType === "url") {
           uni.navigateTo({
             url: item.propValue.link,
           });
         }
-      } else if (!this.isLogin) {
-        this.$emit("changeLogin"); // Trigger login modal via parent
+      } else if (!isLogin.value) {
+        emit("changeLogin"); // Trigger login modal via parent
       }
-    },
-  },
-};
+    }
 </script>
 
 <style scoped>

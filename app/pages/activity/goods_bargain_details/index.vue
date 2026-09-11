@@ -1,9 +1,9 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<skeleton :show="showSkeleton" :isNodes="isNodes" ref="skeleton" loading="chiaroscuro" selector="skeleton"
 			></skeleton>
 		<view class='bargain skeleton' :style="{visibility: showSkeleton ? 'hidden' : 'visible'}">
-			<view class="header" :class="startBargainUid != uid ? 'on' : ''" :style="{backgroundImage:'url('+imgHost+ '/' + backBg+')'}" v-show="imgHost">
+			<view class="header" :class="!isSelfBargain ? 'on' : ''" :style="{backgroundImage:'url('+imgHost+ '/' + backBg+')'}" v-show="imgHost">
 				<!-- #ifdef H5 -->
 				<view class="select_nav flex justify-center align-center">
 					<text class="iconfont icon-fanhui2 px-20" @tap="returns"></text>
@@ -12,7 +12,7 @@
 				</view>
 				<!-- #endif -->
 				<!-- #ifndef H5 -->
-				<navigator url="/pages/activity/goods_bargain/index" hover-class="none">
+				<navigator :render-link="false" url="/pages/activity/goods_bargain/index" hover-class="none">
 					<view class="back">
 						<text class="iconfont icon-xiangzuo"></text> 返回砍价列表
 					</view>
@@ -51,7 +51,7 @@
 				</view>
 				<view class="content">
 					<block
-						v-if="(startBargainUid == uid && (bargainStatus==1 || bargainStatus==3)) || (startBargainUid != uid && bargainStatus==5)">
+						v-if="(isSelfBargain && (bargainStatus==1 || bargainStatus==3)) || (!isSelfBargain && bargainStatus==5)">
 						<view class='money acea-row row-center'
 							:class="new Date().getTime()- bargainInfo.stopTime >=0 ? 'font_hui': ''">
 							<view style="margin-right: 40rpx;" class="skeleton-rect">已砍<text class="font-color-red"
@@ -74,16 +74,16 @@
 
 					<!-- 自己砍价 -->
 					<view
-						v-if="startBargainUid == uid && parseFloat(bargainUserInfo.surplusPrice) > 0 && bargainStatus==1">
+						v-if="isSelfBargain && parseFloat(bargainUserInfo.surplusPrice) > 0 && bargainStatus==1">
 						<view class='bargainBnt skeleton-rect' @tap='userBargain' v-if="quota>0">
 							立即参与砍价
 						</view>
 						<view class='bargainBnt grey' v-if="quota<=0">商品暂无库存</view>
 					</view>
 					<view
-						v-if="startBargainUid == uid && parseFloat(bargainUserInfo.surplusPrice) > 0 && bargainStatus==3">
+						v-if="isSelfBargain && parseFloat(bargainUserInfo.surplusPrice) > 0 && bargainStatus==3">
 						<!-- #ifdef H5 -->
-						<view class='bargainBnt' v-if="$wechat.isWeixin()" @click="H5ShareBox = true">邀请好友帮砍价</view>
+						<view class='bargainBnt' v-if="isWeixin" @click="H5ShareBox = true">邀请好友帮砍价</view>
 						<view class='bargainBnt' v-else @tap='getBargainUserBargainPricePoster'>邀请好友帮砍价</view>
 						<!-- #endif -->
 						<!-- #ifdef MP -->
@@ -95,34 +95,34 @@
 					</view>
 
 					<view
-						v-if="startBargainUid != uid && bargainStatus==5 && parseFloat(bargainUserInfo.surplusPrice) > 0">
+						v-if="!isSelfBargain && bargainStatus==5 && parseFloat(bargainUserInfo.surplusPrice) > 0">
 						<view class='bargainBnt' @tap='setBargainHelp'>帮好友砍一刀</view>
 					</view>
-					<view v-if="startBargainUid != uid && bargainStatus==4 && parseFloat(bargainUserInfo.surplusPrice) == 0" >
+					<view v-if="!isSelfBargain && bargainStatus==4 && parseFloat(bargainUserInfo.surplusPrice) == 0" >
 						<view class='bargainSuccess'>
-							<image :src="urlDomain+'crmebimage/perset/activityImg/cheng.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/activityImg/cheng.png'"></image>
 							好友已砍成功
 						</view>
 						<view class='bargainBnt' @tap='currentBargainUser'>我也要参与</view>
 					</view>
-					<view v-if="startBargainUid != uid && bargainStatus==7">
+					<view v-if="!isSelfBargain && bargainStatus==7">
 						<view class='bargainSuccess'>
-							<image :src="urlDomain+'crmebimage/perset/activityImg/cheng.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/activityImg/cheng.png'"></image>
 							您已帮其他好友砍过此商品
 						</view>
 						<view class='bargainBnt' @tap='currentBargainUser'>我也要参与</view>
 					</view>
-					<view v-if="startBargainUid != uid && bargainStatus==6">
+					<view v-if="!isSelfBargain && bargainStatus==6">
 						<view class='bargainSuccess'>
-							<image :src="urlDomain+'crmebimage/perset/activityImg/chengh.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/activityImg/chengh.png'"></image>
 							已成功帮助好友砍价
 						</view>
 						<view class='bargainBnt' @tap='currentBargainUser'>我也要参与</view>
 					</view>
 					<view
-						v-if="parseFloat(bargainUserInfo.surplusPrice) == 0 &&  startBargainUid == uid && (bargainStatus==4 || bargainStatus==8)">
+						v-if="parseFloat(bargainUserInfo.surplusPrice) == 0 &&  isSelfBargain && (bargainStatus==4 || bargainStatus==8)">
 						<view class='bargainSuccess'>
-							<image :src="urlDomain+'crmebimage/perset/activityImg/chengh.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/activityImg/chengh.png'"></image>
 							恭喜您砍价成功，快去支付吧~
 						</view>
 						<view class="acea-row row-between buyBox pad30">
@@ -132,9 +132,9 @@
 						</view>
 					</view>
 					<view
-						v-if="parseFloat(bargainUserInfo.surplusPrice) == 0 &&  startBargainUid == uid && bargainStatus==9">
+						v-if="parseFloat(bargainUserInfo.surplusPrice) == 0 &&  isSelfBargain && bargainStatus==9">
 						<view class='bargainSuccess'>
-							<image :src="urlDomain+'crmebimage/perset/activityImg/chengh.png'"></image>
+							<image :src="urlDomain+'/crmebimage/perset/activityImg/chengh.png'"></image>
 							恭喜您砍价成功，去看看别的商品吧~
 						</view>
 						<view class="buyBox pad30">
@@ -147,7 +147,7 @@
 					<view v-else-if="bargainInfo.quota==0">
 						<view class='huiBtn' @tap='currentBargainUser'>商品已售罄</view>
 					</view>
-					<navigator v-if="new Date().getTime()- bargainInfo.stopTime >=0 || bargainInfo.quota==0"
+					<navigator :render-link="false" v-if="new Date().getTime()- bargainInfo.stopTime >=0 || bargainInfo.quota==0"
 						url="/pages/activity/goods_bargain/index" hover-class="none">
 						<view class="go">再去逛逛<text class="iconfont icon-jiantou"></text></view>
 					</navigator>
@@ -169,14 +169,14 @@
 				<!-- 砍价记录 -->
 				<view class='title font-color acea-row row-center-wrapper skeleton-rect'>
 					<view class='pictrue'>
-						<image :src="urlDomain+'crmebimage/perset/activityImg/zuo2.png'"></image>
+						<image :src="urlDomain+'/crmebimage/perset/activityImg/zuo2.png'"></image>
 					</view>
 					<view class="tits">
 						<view class='titleCon'>砍价记录</view>
 						<view class="line"></view>
 					</view>
 					<view class='pictrue on'>
-						<image :src="urlDomain+'crmebimage/perset/activityImg/you2.png'"></image>
+						<image :src="urlDomain+'/crmebimage/perset/activityImg/you2.png'"></image>
 					</view>
 				</view>
 				<view class='bargainGang borRadius14 skeleton-rect'>
@@ -213,20 +213,20 @@
 				<!-- 商品详情 -->
 				<view class='title font-color acea-row row-center-wrapper'>
 					<view class='pictrue'>
-						<image :src="urlDomain+'crmebimage/perset/activityImg/zuo2.png'"></image>
+						<image :src="urlDomain+'/crmebimage/perset/activityImg/zuo2.png'"></image>
 					</view>
 					<view class="tits">
 						<view class='titleCon'>商品详情</view>
 						<view class="line"></view>
 					</view>
 					<view class='pictrue on'>
-						<image :src="urlDomain+'crmebimage/perset/activityImg/you2.png'"></image>
+						<image :src="urlDomain+'/crmebimage/perset/activityImg/you2.png'"></image>
 					</view>
 				</view>
 				<view class='goodsDetails borRadius14'>
 					<view class='conter borRadius14'>
-						<jyf-parser v-if="bargainInfo.content" :html="bargainInfo.content" ref="article"
-							:tag-style="tagStyle"></jyf-parser>
+						<mp-html v-if="bargainInfo.content" :content="bargainInfo.content" ref="article"
+							:tag-style="tagStyle"></mp-html>
 						<view v-else class="contentNo">
 							<text class="iconfont icon-xiaolian mr8"></text>
 							暂无商品详情
@@ -236,7 +236,7 @@
 
 				<view class='bargainTip' :class='active==true?"on":""'>
 					<view class='pictrue' :style="{backgroundImage:'url('+imgHost +'/'+backHead+')'}" v-show="imgHost"></view>
-					<view v-if="startBargainUid == uid">
+					<view v-if="isSelfBargain">
 						<view class='cutOff'>
 							您已砍掉<text class='font_color'>{{bargainUserBargainPrice}}元</text>
 						</view>
@@ -303,7 +303,7 @@
 
 		<!-- 发送给朋友图片 -->
 		<view class="share-box" v-if="H5ShareBox">
-			<image :src="urlDomain+'crmebimage/perset/staticImg/share-info.png'" @click="H5ShareBox = false"></image>
+			<image :src="urlDomain+'/crmebimage/perset/staticImg/share-info.png'" @click="H5ShareBox = false"></image>
 		</view>
 
 		<!-- 海报展示 -->
@@ -327,583 +327,411 @@
 	</view>
 </template>
 
-<script>
-	import {
-		getBargainDetail,
-		postBargainStartUser,
-		postBargainStart,
-		postBargainHelp,
-		getBargainUser
-	} from '../../../api/activity.js';
-	import {imageBase64} from "@/api/public";
-	import uQRCode from '@/js_sdk/Sansnn-uQRCode/uqrcode.js';
-	import {postCartAdd} from '../../../api/store.js';
-	import util from '../../../utils/util.js';
-	import {toLogin} from '@/libs/login.js';
-	import {mapGetters} from "vuex";
-	import { getImageDomain } from '@/api/api.js'
-	// import countDown from '@/components/countDown';
-	import countDown from "@/pages/activity/components/countDown";
-	import parser from "@/components/jyf-parser/jyf-parser";
-	import {
-		silenceBindingSpread
-	} from "@/utils";
-	// #ifdef APP-PLUS
-	import {
-		TOKENNAME,
-		HTTP_H5_URL
-	} from '@/config/app.js';
+<script setup>
+import img____images_bargain_post1_png_src from '../images/bargain_post1.png';
+import img____images_bargain_post2_png_src from '../images/bargain_post2.png';
+import img____images_bargain_post3_png_src from '../images/bargain_post3.png';
+import img____images_bargain_post4_png_src from '../images/bargain_post4.png';
+import img____images_bargain_post5_png_src from '../images/bargain_post5.png';
+import { ref, computed, getCurrentInstance } from "vue";
+import { onLoad, onReady, onShow, onHide, onUnload, onShareAppMessage } from "@dcloudio/uni-app";
+import {
+	getBargainDetail,
+	postBargainStartUser,
+	postBargainStart,
+	postBargainHelp,
+	getBargainUser
+} from "@/api/activity.js";
+import { imageBase64 } from "@/api/public.js";
+import uQRCode from "@/js_sdk/Sansnn-uQRCode/uqrcode.js";
+import { postCartAdd } from "@/api/store.js";
+import util from "@/utils/util.js";
+import { toLogin } from "@/libs/login.js";
+import { getImageDomain } from "@/api/api.js";
+import countDown from "@/pages/activity/components/countDown/index.vue";
+import mpHtml from "@/uni_modules/mp-html/components/mp-html/mp-html.vue";
+import { silenceBindingSpread } from "@/utils";
+// #ifdef APP-PLUS
+import { TOKENNAME, HTTP_H5_URL } from "@/config/app.js";
+// #endif
+import { BACK_URL } from "@/config/cache.js";
+import Cache from "@/utils/cache.js";
+import * as Order from "@/libs/order.js";
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
+import { useColor } from '@/composables/useColor.js';
+
+const { proxy } = getCurrentInstance();
+const app = getApp();
+const appStore = useAppStore();
+const { isLogin, userInfo, uid } = storeToRefs(appStore);
+
+// filters 转函数
+function picFilter(status) {
+	const statusMap = { '0': 'num1', '1': 'num2', '2': 'num3' };
+	return statusMap[status];
+}
+
+// data
+const urlDomain = ref(Cache.get("imgHost"));
+const showSkeleton = ref(true);
+const isNodes = ref(0);
+const bgColor = ref({ bgColor: '#333333', Color: '#fff', width: '44rpx', timeTxtwidth: '16rpx', isDay: true });
+const countDownDay = ref('00');
+const countDownHour = ref('00');
+const countDownMinute = ref('00');
+const countDownSecond = ref('00');
+const active = ref(false);
+const id = ref(0);
+const bargainStatus = ref(0);
+const startBargainUid = ref(0);
+const bargainUserInfo = ref({});
+const storeBargainId = ref(0);
+const bargainInfo = ref({});
+const page = ref(1);
+const limit = ref(5);
+const limitStatus = ref(false);
+const bargainUserHelpList = ref([]);
+const bargainUserHelpInfo = ref([]);
+const bargainUserBargainPrice = ref(0);
+const bargainCount = ref([]);
+const retunTop = ref(true);
+const bargainPartake = ref(0);
+const isHelp = ref(false);
+const interval = ref(null);
+const productStock = ref(0);
+const quota = ref(0);
+const userBargainStatusHelp = ref(true);
+const navH = ref('');
+const bargainPrice = ref(0);
+const datatime = ref(0);
+const offest = ref('');
+const tagStyle = ref({ img: 'width:100%;display:block;', table: 'width:100%', video: 'width:100%' });
+const H5ShareBox = ref(false);
+const systemH = ref(0);
+const isAuto = ref(false);
+const isShowAuth = ref(false);
+const pages = ref('');
+const couponsHidden = ref(true);
+const loading = ref(false);
+const loadend = ref(false);
+const posters = ref(false);
+const buyPrice = ref('');
+const qrcodeSize = ref(600);
+const posterbackgd = ref('../static/images/bargain_post1.png');
+const PromotionCode = ref('');
+const canvasStatus = ref(false);
+const imgTop = ref('');
+const imagePath = ref('');
+const theme = ref(app.globalData.theme);
+const { colorStyle } = useColor();
+const imgHost = ref('');
+const backBg = ref('crmebimage/perset/bargain_header_bg/bargain_header_bg1.jpg');
+const backHead = ref('crmebimage/perset/bargain_tip/bargain_tip1.png');
+const spreadUid = ref(0);
+const isWeixin = ref(false);
+const currentUid = computed(() => {
+	const storeUid = getPositiveNumber(uid.value);
+	return storeUid || getPositiveNumber(Cache.get('UID'));
+});
+const bargainStarterUid = computed(() => {
+	const starterUid = getPositiveNumber(startBargainUid.value);
+	if (starterUid) return starterUid;
+	return storeBargainId.value ? 0 : currentUid.value;
+});
+const isSelfBargain = computed(() => {
+	const starterUid = getPositiveNumber(startBargainUid.value);
+	if (starterUid && currentUid.value) return starterUid === currentUid.value;
+	if (starterUid && !storeBargainId.value && [1, 3, 4, 8, 9, 10].includes(Number(bargainStatus.value))) return true;
+	if (starterUid) return false;
+	if (storeBargainId.value && (bargainUserInfo.value.storeBargainUserName || bargainUserInfo.value.storeBargainUserAvatar)) return false;
+	if (storeBargainId.value && [5, 6, 7].includes(Number(bargainStatus.value))) return false;
+	return true;
+});
+
+function getPositiveNumber(value) {
+	const numberValue = Number(value);
+	return Number.isFinite(numberValue) && numberValue > 0 ? numberValue : 0;
+}
+
+function getWechat() {
+	return proxy && proxy.$wechat ? proxy.$wechat : null;
+}
+
+function checkIsWeixin() {
+	const wechat = getWechat();
+	return !!(wechat && typeof wechat.isWeixin === 'function' && wechat.isWeixin());
+}
+
+function buildBargainDetailPath(startUid = bargainStarterUid.value, shareUid = currentUid.value, bargainUserId = storeBargainId.value) {
+	return '/pages/activity/goods_bargain_details/index?id=' + id.value +
+		'&startBargainUid=' + (getPositiveNumber(startUid) || 0) +
+		'&spread=' + (getPositiveNumber(shareUid) || 0) +
+		'&storeBargainId=' + (getPositiveNumber(bargainUserId) || 0);
+}
+
+function ensureStartBargainUid() {
+	if (!getPositiveNumber(startBargainUid.value) && !getPositiveNumber(storeBargainId.value) && currentUid.value) startBargainUid.value = currentUid.value;
+}
+
+// #ifdef H5
+isWeixin.value = checkIsWeixin();
+// #endif
+
+onLoad((options) => {
+	let routeOptions = options || {};
+	setTimeout(() => { isNodes.value++; }, 200);
+	theme.value = Cache.get('theme');
+	getImageDomain().then(res => { imgHost.value = res.data; });
+	switch (theme.value) {
+		case 'theme1': backBg.value = 'crmebimage/perset/bargain_header_bg/bargain_header_bg1.jpg'; backHead.value = 'crmebimage/perset/bargain_tip/bargain_tip1.png'; posterbackgd.value = img____images_bargain_post1_png_src; break;
+		case 'theme2': backBg.value = 'crmebimage/perset/bargain_header_bg/bargain_header_bg2.jpg'; backHead.value = 'crmebimage/perset/bargain_tip/bargain_tip2.png'; posterbackgd.value = img____images_bargain_post2_png_src; break;
+		case 'theme3': backBg.value = 'crmebimage/perset/bargain_header_bg/bargain_header_bg3.jpg'; backHead.value = 'crmebimage/perset/bargain_tip/bargain_tip3.png'; posterbackgd.value = img____images_bargain_post3_png_src; break;
+		case 'theme4': backBg.value = 'crmebimage/perset/bargain_header_bg/bargain_header_bg4.jpg'; backHead.value = 'crmebimage/perset/bargain_tip/bargain_tip4.png'; posterbackgd.value = img____images_bargain_post4_png_src; break;
+		case 'theme5': backBg.value = 'crmebimage/perset/bargain_header_bg/bargain_header_bg5.jpg'; backHead.value = 'crmebimage/perset/bargain_tip/bargain_tip5.png'; posterbackgd.value = img____images_bargain_post5_png_src; break;
+	}
+	appStore.PRODUCT_TYPE('normal');
+	// #ifdef MP
+	uni.getSystemInfo({ success: function(res) { systemH.value = res.statusBarHeight; navH.value = systemH.value + 10; } });
 	// #endif
-	import { BACK_URL} from '@/config/cache';
-	const app = getApp();
+	var pgs = getCurrentPages();
+	if (pgs.length <= 1) retunTop.value = false;
+	if (Object.prototype.hasOwnProperty.call(routeOptions, 'id') || routeOptions.scene) {
+		if (routeOptions.scene) {
+			let qrCodeValue = util.getUrlParams(decodeURIComponent(routeOptions.scene));
+			let mapeMpQrCodeValue = util.formatMpQrCodeData(qrCodeValue);
+			routeOptions = Object.assign({}, routeOptions, mapeMpQrCodeValue);
+			app.globalData = mapeMpQrCodeValue;
+			app.globalData.spread = mapeMpQrCodeValue.spread;
+			id.value = routeOptions.id;
+		} else {
+			id.value = routeOptions.id;
+		}
+	}
+	spreadUid.value = getPositiveNumber(routeOptions.spread) || getPositiveNumber(routeOptions.spid);
+	if (spreadUid.value) app.globalData.spread = spreadUid.value;
+	// startBargainUid 缺失时保留为 0，由 isSelfBargain 结合 uid、storeBargainId 与接口状态兜底判断。
+	startBargainUid.value = getPositiveNumber(routeOptions.startBargainUid);
+	storeBargainId.value = getPositiveNumber(routeOptions.storeBargainId);
+	if (isLogin.value) {
+		ensureStartBargainUid();
+		page.value = 1;
+	} else {
+		Cache.set(BACK_URL, buildBargainDetailPath(startBargainUid.value, spreadUid.value, storeBargainId.value));
+		toLogin();
+	}
+	uni.setNavigationBarTitle({ title: '砍价详情' });
+	if (isLogin.value && parseInt(app.globalData.spread) > 0) silenceBindingSpread();
+});
 
-	export default {
-		components: {
-			countDown,
-			"jyf-parser": parser
-		},
-		filters: {
-			picFilter(status) {
-				const statusMap = {
-					'0': 'num1',
-					'1': 'num2',
-					'2': 'num3'
-				}
-				return statusMap[status]
-			}
-		},
-		/**
-		 * 页面的初始数据
-		 */
-		
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				showSkeleton: true, //骨架屏显示隐藏
-				isNodes: 0, //控制什么时候开始抓取元素节点,只要数值改变就重新抓取
-				bgColor: {
-					'bgColor': '#333333',
-					'Color': '#fff',
-					'width': '44rpx',
-					'timeTxtwidth': '16rpx',
-					'isDay': true
-				},
-				countDownDay: '00',
-				countDownHour: '00',
-				countDownMinute: '00',
-				countDownSecond: '00',
-				active: false,
-				id: 0, //砍价商品id
-				bargainStatus: 0, //当前用户砍价状态：1-可以参与砍价,2-参与次数已满，3-砍价中,4-已完成，5-可以帮砍，6-已帮砍,7-帮砍次数已满,8-已生成订单未支付，9-已支付
-				startBargainUid: 0, //开启砍价用户uid
-				bargainUserInfo: {}, //开启砍价用户信息
-				//bargainUserId: 0, //开启砍价编号
-				storeBargainId: 0, // 砍价活动id
-				bargainInfo: {}, //砍价产品
-				page: 1,
-				limit: 5,
-				limitStatus: false,
-				bargainUserHelpList: [],
-				bargainUserHelpInfo: [],
-				bargainUserBargainPrice: 0, //砍了多少钱
-				bargainCount: [], //分享人数  浏览人数 参与人数
-				retunTop: true,
-				bargainPartake: 0,
-				isHelp: false,
-				interval: null,
-				productStock: 0, //判断是否售罄；
-				quota: 0, //判断是否已限量；
-				userBargainStatusHelp: true,
-				navH: '',
-				bargainPrice: 0,
-				datatime: 0,
-				offest: '',
-				tagStyle: {
-					img: 'width:100%;display:block;',
-					table: 'width:100%',
-					video: 'width:100%'
-				},
-				H5ShareBox: false, //公众号分享图片
-				systemH: 0,
-				isAuto: false, //没有授权的不会自动授权
-				isShowAuth: false, //是否隐藏授权
-				pages: '',
-				couponsHidden: true,
-				loading: false,
-				loadend: false,
-				posters: false,
-				buyPrice: '', //最后砍价购买价格
-				qrcodeSize: 600,
-				posterbackgd: '../static/images/bargain_post1.png',
-				PromotionCode: '', //二维码
-				canvasStatus: false,
-				imgTop: '', //商品图base64位
-				imagePath: '', // 海报图片
-				theme:app.globalData.theme,
-				imgHost:'',
-				backBg:'crmebimage/perset/bargain_header_bg/bargain_header_bg1.jpg',
-				backHead:'crmebimage/perset/bargain_tip/bargain_tip1.png'
-			}
+onReady(() => {});
+onShow(() => {
+	if (isLogin.value) {
+		ensureStartBargainUid();
+		// #ifdef H5
+		isWeixin.value = checkIsWeixin();
+		// #endif
+		getBargainDetails();
+	}
+});
+onHide(() => { if (interval.value !== null) clearInterval(interval.value); });
+onUnload(() => { if (interval.value !== null) clearInterval(interval.value); });
 
-		},
-		computed: mapGetters(['isLogin', 'userInfo', 'uid']),
-		/**
-		 * 生命周期函数--监听页面加载
-		 */
-		onLoad: function(options) {
-			setTimeout(() => {
-				this.isNodes++;
-			}, 200);
-			let that = this;
-			that.$set(that,'theme',that.$Cache.get('theme'));
-			getImageDomain().then(res=>{
-				that.$set(that,'imgHost',res.data);
-			})
-			switch (that.theme) {
-				case 'theme1':
-					that.backBg = 'crmebimage/perset/bargain_header_bg/bargain_header_bg1.jpg';
-					that.backHead = 'crmebimage/perset/bargain_tip/bargain_tip1.png';
-					that.posterbackgd = require('../images/bargain_post1.png') // 因为跨域不能使用网络图片，
-					break;
-				case 'theme2':
-					that.backBg = 'crmebimage/perset/bargain_header_bg/bargain_header_bg2.jpg';
-					that.backHead = 'crmebimage/perset/bargain_tip/bargain_tip2.png';
-					that.posterbackgd = require('../images/bargain_post2.png') 
-					break;
-				case 'theme3':
-					that.backBg = 'crmebimage/perset/bargain_header_bg/bargain_header_bg3.jpg';
-					that.backHead = 'crmebimage/perset/bargain_tip/bargain_tip3.png';
-					that.posterbackgd = require('../images/bargain_post3.png') 
-					break;
-				case 'theme4':
-					that.backBg = 'crmebimage/perset/bargain_header_bg/bargain_header_bg4.jpg';
-					that.backHead = 'crmebimage/perset/bargain_tip/bargain_tip4.png';
-					that.posterbackgd = require('../images/bargain_post4.png') 
-					break;
-				case 'theme5':
-					that.backBg = 'crmebimage/perset/bargain_header_bg/bargain_header_bg5.jpg';
-					that.backHead = 'crmebimage/perset/bargain_tip/bargain_tip5.png';
-					that.posterbackgd = require('../images/bargain_post5.png') 
-					break;
-			}
-			that.$store.commit("PRODUCT_TYPE", 'normal');
-			// #ifdef MP
-			uni.getSystemInfo({
-				success: function(res) {
-					that.systemH = res.statusBarHeight
-					that.navH = that.systemH + 10
-				}
-			})
-			// #endif
-			
-            
-            // 链接进入获取绑定关系id
-            if(options.spread) app.globalData.spread = options.spread; 
-	
-			var pages = getCurrentPages();
-			if (pages.length <= 1) {
-				that.retunTop = false
-			}
-			
-			if (options.hasOwnProperty('id') || options.scene) {
-				if (options.scene) { // 仅仅小程序扫码进入
-					let qrCodeValue = this.$util.getUrlParams(decodeURIComponent(options.scene));
-					let mapeMpQrCodeValue = this.$util.formatMpQrCodeData(qrCodeValue);
-			        app.globalData = mapeMpQrCodeValue;
-					app.globalData.spread = mapeMpQrCodeValue.spread; 
-					this.id = app.globalData.id
-				}else{
-					this.id = options.id;
-				}
-			}
-			options.startBargainUid == 'undefined' ? that.startBargainUid = 0 : that.startBargainUid = Number(options
-				.startBargainUid);
-				
-			if (this.isLogin) {
-				if (that.startBargainUid == 0) {
-					that.startBargainUid = Number(that.$store.state.app.uid)
-				}
-				this.storeBargainId = options.storeBargainId ? Number(options.storeBargainId) : 0;
-				this.page = 1;
-			} else {
-				this.$Cache.set(BACK_URL,
-					'/pages/activity/goods_bargain_details/index?id=' + options.id +
-					'&startBargainUid=' + this.uid + '&spread=' + this.uid + '&storeBargainId=' + this.storeBargainId
-				);
-				toLogin();
-			}
-			uni.setNavigationBarTitle({
-				title: '砍价详情'
-			})
-			if(this.isLogin && parseInt(app.globalData.spread)>0){
-				silenceBindingSpread()
-			}
-		},
-		methods: {
-			//去支付
-			goConfirm() {
-				uni.navigateTo({
-					url: `/pages/activity/bargain/index`
-				})
-			},
-			// app分享
-			// #ifdef APP-PLUS
-			appShare(scene) {
-				let that = this
-				let routes = getCurrentPages(); // 获取当前打开过的页面路由数组
-				let curRoute = routes[routes.length - 1].$page.fullPath // 获取当前页面路由，也就是最后一个打开的页面路由"
-				let href = HTTP_H5_URL + '/pages/activity/goods_bargain_details/index?id=' + this.id +
-					'&startBargainUid=' + this
-					.uid + '&spread=' + this.uid + '&storeBargainId=' + this.storeBargainId;
-				uni.share({
-					provider: "weixin",
-					scene: scene,
-					type: 0,
-					href: href,
-					title: '您的好友' + that.userInfo.nickname + '邀请您帮他砍' + that.bargainInfo.title + ' 快去帮忙吧！',
-					imageUrl: that.bargainInfo.image,
-					success: function(res) {
-						that.posters = false;
-					},
-					fail: function(err) {
-						uni.showToast({
-							title: '分享失败',
-							icon: 'none',
-							duration: 2000
-						})
-						that.posters = false;
-					}
-				});
-			},
-			// #endif
-			//#ifdef H5
-			setOpenShare() {
-				let that = this;
-				let configTimeline = {
-					title: "您的好友" +
-						that.userInfo.nickname +
-						"邀请您砍价" +
-						that.bargainInfo.title,
-					desc: that.bargainInfo.title,
-					link: window.location.protocol +
-						"//" +
-						window.location.host +
-						'/pages/activity/goods_bargain_details/index?id=' + this.id + '&startBargainUid=' + this
-						.uid + '&spread=' + this.uid + '&storeBargainId=' + this.storeBargainId,
-					imgUrl: that.bargainInfo.image
-				};
-				if (this.$wechat.isWeixin()) {
-					this.$wechat.wechatEvevt([
-								"updateAppMessageShareData",
-								"updateTimelineShareData",
-								"onMenuShareAppMessage",
-								"onMenuShareTimeline"
-							],
-							configTimeline
-						)
-						.then(res => {})
-						.catch(res => {
-							if (res.is_ready) {
-								res.wx.updateAppMessageShareData(configTimeline);
-								res.wx.updateTimelineShareData(configTimeline);
-								res.wx.onMenuShareAppMessage(configTimeline);
-								res.wx.onMenuShareTimeline(configTimeline);
-							}
-						});
-				}
-			},
-			//#endif
-			openTap() {
-				this.$set(this, 'couponsHidden', !this.couponsHidden);
-			},
-			// 去商品页
-			goProduct() {
-				uni.navigateTo({
-					url: `/pages/goods/goods_details/index?id=${this.bargainInfo.productId}`
-				})
-			},
-			// 自己砍价；
-			userBargain: function() {
-				if (this.uid == this.startBargainUid) {
-					this.setBargain();
-				}
-			},
-			goBack: function() {
-				uni.navigateBack({
+//#ifdef MP
+onShareAppMessage(() => {
+	let share = {
+		title: '您的好友' + userInfo.value.nickname + '邀请您帮他砍' + bargainInfo.value.title + ' 快去帮忙吧！',
+		path: buildBargainDetailPath(bargainStarterUid.value, currentUid.value, storeBargainId.value),
+		imageUrl: bargainInfo.value.image,
+	};
+	close();
+	return share;
+});
+//#endif
 
-					delta: 1
-				})
-			},
-			// 生成二维码；
-			make() {
-				let href = window.location.protocol +
-					"//" +
-					window.location.host +
-					'/pages/activity/goods_bargain_details/index?id=' + this.id + '&startBargainUid=' + this
-					.uid + '&spread=' + this.uid + '&storeBargainId=' + this.storeBargainId;
-				uQRCode.make({
-					canvasId: 'qrcode',
-					text: href,
-					size: this.qrcodeSize,
-					margin: 10,
-					success: res => {
-						this.PromotionCode = res;
-					},
-					complete: () => {},
-					fail: res => {
-						this.$util.Tips({
-							title: '海报二维码生成失败！'
-						});
-					}
-				})
-			},
-			// 商品图片转base64
-			getImageBase64: function(images) {
-				let that = this;
-				imageBase64({
-					url: images
-				}).then(res => {
-					that.imgTop = res.data.code;
-				})
-			},
-			//获取砍价用户信息
-			gobargainUserInfo: function() {
-				getBargainUser({
-					bargainId: this.id,
-					bargainUserId: this.storeBargainId || 0
-				}).then(res => {
-					let bargainUserInfo = res.data;
-					this.bargainUserInfo = bargainUserInfo;
-					this.bargainStatus = bargainUserInfo.bargainStatus;
-					this.storeBargainId = bargainUserInfo.storeBargainUserId;
-					this.buyPrice = this.$util.$h.Sub(parseFloat(this.bargainPrice), parseFloat(bargainUserInfo
-						.alreadyPrice))
-					this.bargainUserHelpList = bargainUserInfo.userHelpList || [];
-					//#ifdef H5
-					if (bargainUserInfo.storeBargainUserId) this.make();
-					this.setOpenShare();
-					//#endif
-				}).catch(err => {
-					//状态异常返回上级页面
-					return this.$util.Tips({
-						title: err.toString()
-					}, {
-						tab: 3,
-						url: 1
-					});
-				});
-			},
-			goPay: function() { //立即支付
-				if (this.isLogin === false) {
-					toLogin();
-				} else {
-					// 预下单
-					this.$Order.getPreOrder("buyNow", [{
-						"attrValueId": parseFloat(this.bargainInfo.attrValueId),
-						"bargainId": parseFloat(this.id),
-						"productNum": 1,
-						"productId": parseFloat(this.bargainInfo.productId),
-						"bargainUserId": parseFloat(this.storeBargainId)
-					}]);
-				}
-			},
-			//获取砍价产品详情
-			getBargainDetails: function() {
-				var that = this;
-				getBargainDetail(that.id).then(function(res) {
-					let bargainInfo = res.data;
-					that.bargainInfo = bargainInfo;
-					that.bargainPrice = bargainInfo.price;
-					that.quota = bargainInfo.quota;
-					that.datatime = bargainInfo.stopTime / 1000;
-					that.pages = '/pages/activity/goods_bargain_details/index?id=' + that.id +
-						'&startBargainUid=' + that
-						.uid + '&spread=' + that.uid + '&storeBargainId=' + that.storeBargainId;
-					uni.setNavigationBarTitle({
-						title: bargainInfo.title.substring(0, 13) + '...'
-					})
-					that.bargainUserHelpList = []
-					if (that.isLogin && that.quota > 0 && new Date().getTime() - bargainInfo.stopTime < 0) {
-						that.gobargainUserInfo();
-					} else {
-						that.buyPrice = that.bargainPrice;
-					}
-					//#ifdef H5
-					that.getImageBase64(bargainInfo.image);
-					//#endif
-					setTimeout(() => {
-						that.showSkeleton = false
-					}, 1000)
-				}).catch(function(err) {
-					that.$util.Tips({
-						title: err
-					}, {
-						tab: 2,
-						url: '/pages/activity/goods_bargain/index'
-					});
-				})
-			},
-			currentBargainUser: function() { //当前用户砍价
-				this.page = 1;
-				uni.navigateTo({
-					url: '/pages/activity/goods_bargain_details/index?id=' + this.id + '&startBargainUid=' +
-						this.uid
-				});
-			},
-			setBargain: function() { //参与砍价
-				var that = this;
-				postBargainStart(that.id).then(res => {
-					if (res.code === 'subscribe') {
-						return;
-					}
-					this.storeBargainId = res.data.storeBargainUserId;
-					that.setBargainHelp();
-					that.userBargainStatus = 1;
-					//#ifdef H5
-					that.make();
-					//#endif
-				}, error => {
-					this.startBargainUid = 0;
-					that.$util.Tips({
-						title: error
-					})
-				})
-			},
-			//帮好友砍价
-			setBargainHelp: function() {
-				var data = {
-					bargainId: this.id,
-					bargainUserId: this.storeBargainId,
-					bargainUserUid: this.startBargainUid
-				};
-				postBargainHelp(data).then(res => {
-					this.$set(this, 'bargainUserHelpList', []);
-					this.$set(this, 'bargainUserBargainPrice', res.data.bargainPrice);
-					this.$set(this, 'active', true);
-					this.gobargainUserInfo();
-				}).catch(err => {
-					this.$util.Tips({
-						title: err
-					})
-					this.$set(this, 'bargainUserHelpList', []);
-				})
-			},
-			getBargainUserBargainPricePoster: function() {
-				var that = this;
-				this.active = false
-				uni.showLoading({
-					title: '海报生成中',
-					mask: true
-				});
-				this.posters = false;
-				let arrImagesUrl = '';
-				let arrImagesUrlTop = '';
-				if (!this.PromotionCode) {
-					uni.hideLoading();
-					this.$util.Tips({
-						title: this.errT
-					});
-					return
-				}
-				setTimeout(() => {
-					if (!this.imgTop) {
-						uni.hideLoading();
-						this.$util.Tips({
-							title: '无法生成商品海报！'
-						});
-						return
-					}
-				}, 1000);
-				uni.downloadFile({
-					url: this.imgTop,
-					success: (res) => {
-						arrImagesUrlTop = res.tempFilePath;
-						let arrImages = [this.posterbackgd, arrImagesUrlTop, this.PromotionCode];
-						setTimeout(() => {
-							this.$util.activityCanvas(arrImages, this.bargainInfo.title, this
-								.buyPrice, '已砍至', '还剩' + this.bargainUserInfo
-								.surplusPrice + '元砍价成功', 0,
-								(tempFilePath) => {
-									this.imagePath = tempFilePath;
-									this.canvasStatus = true;
-									uni.hideLoading();
-								});
-						}, 500);
-					}
-				});
-			},
-			goBargainList: function() {
-				uni.navigateTo({
-					url: '/pages/activity/goods_bargain/index',
-				})
-			},
-			close: function() {
-				this.$set(this, 'active', false);
-				this.$set(this, 'posters', false);
-				this.$set(this, 'canvasStatus', false);
-			},
-			// 返回
-			returns() {
-				uni.switchTab({
-					url:'/pages/index/index'
-				})
-			},
-			backList(){
-				uni.navigateTo({
-					url:'/pages/activity/goods_bargain/index'
-				})
-			}
-		},
+// methods
+function goConfirm() { uni.navigateTo({ url: `/pages/activity/bargain/index` }); }
 
-		/**
-		 * 生命周期函数--监听页面初次渲染完成
-		 */
-		onReady: function() {
+// #ifdef APP-PLUS
+function appShare(scene) {
+	let routes = getCurrentPages();
+	let curRoute = routes[routes.length - 1].$page.fullPath;
+	let href = HTTP_H5_URL + buildBargainDetailPath(bargainStarterUid.value, currentUid.value, storeBargainId.value);
+	uni.share({
+		provider: "weixin", scene, type: 0, href,
+		title: '您的好友' + userInfo.value.nickname + '邀请您帮他砍' + bargainInfo.value.title + ' 快去帮忙吧！',
+		imageUrl: bargainInfo.value.image,
+		success: function() { posters.value = false; },
+		fail: function() { uni.showToast({ title: '分享失败', icon: 'none', duration: 2000 }); posters.value = false; }
+	});
+}
+// #endif
 
-		},
-		/**
-		 * 生命周期函数--监听页面显示
-		 */
-		onShow: function() {
-			//校验token是否有效,true为有效，false为无效
-			this.$LoginAuth.getTokenIsExist().then(data => {
-				if (data) {
-					this.getBargainDetails();
+//#ifdef H5
+function setOpenShare() {
+	const wechat = getWechat();
+	if (!wechat) return;
+	let configTimeline = {
+		title: "您的好友" + userInfo.value.nickname + "邀请您砍价" + bargainInfo.value.title,
+		desc: bargainInfo.value.title,
+		link: window.location.protocol + "//" + window.location.host + buildBargainDetailPath(bargainStarterUid.value, currentUid.value, storeBargainId.value),
+		imgUrl: bargainInfo.value.image
+	};
+	if (isWeixin.value) {
+		wechat.wechatEvevt(["updateAppMessageShareData", "updateTimelineShareData", "onMenuShareAppMessage", "onMenuShareTimeline"], configTimeline)
+			.then(() => {})
+			.catch(res => {
+				if (res.is_ready) {
+					res.wx.updateAppMessageShareData(configTimeline);
+					res.wx.updateTimelineShareData(configTimeline);
+					res.wx.onMenuShareAppMessage(configTimeline);
+					res.wx.onMenuShareTimeline(configTimeline);
 				}
 			});
-		},
-
-		/**
-		 * 生命周期函数--监听页面隐藏
-		 */
-		onHide: function() {
-			if (this.interval !== null) clearInterval(this.interval);
-		},
-
-		/**
-		 * 生命周期函数--监听页面卸载
-		 */
-		onUnload: function() {
-			if (this.interval !== null) clearInterval(this.interval);
-		},
-
-		//#ifdef MP
-		/**
-		 * 用户点击右上角分享
-		 */
-		onShareAppMessage: function() {
-			let that = this,
-				share = {
-					title: '您的好友' + that.userInfo.nickname + '邀请您帮他砍' + that.bargainInfo.title + ' 快去帮忙吧！',
-					path: '/pages/activity/goods_bargain_details/index?id=' + this.id + '&startBargainUid=' + this
-						.startBargainUid + '&spread=' + this.uid + '&storeBargainId=' + this.storeBargainId,
-					imageUrl: that.bargainInfo.image,
-				};
-			that.close();
-			return share;
-		},
-		//#endif
 	}
+}
+//#endif
+
+function openTap() { couponsHidden.value = !couponsHidden.value; }
+function goProduct() { uni.navigateTo({ url: `/pages/goods/goods_details/index?id=${bargainInfo.value.productId}` }); }
+function userBargain() {
+	ensureStartBargainUid();
+	if (isSelfBargain.value) setBargain();
+}
+function goBack() { uni.navigateBack({ delta: 1 }); }
+
+function make() {
+	let href = window.location.protocol + "//" + window.location.host + buildBargainDetailPath(bargainStarterUid.value, currentUid.value, storeBargainId.value);
+	uQRCode.make({
+		canvasId: 'qrcode', text: href, size: qrcodeSize.value, margin: 10,
+		success: res => { PromotionCode.value = res; },
+		complete: () => {},
+		fail: () => { util.Tips({ title: '海报二维码生成失败！' }); }
+	});
+}
+
+function getImageBase64Fn(images) {
+	imageBase64({ url: images }).then(res => { imgTop.value = res.data.code; });
+}
+
+function gobargainUserInfo() {
+	getBargainUser({ bargainId: id.value, bargainUserId: storeBargainId.value || 0 }).then(res => {
+		let bui = res.data;
+		bargainUserInfo.value = bui;
+		bargainStatus.value = bui.bargainStatus;
+		storeBargainId.value = bui.storeBargainUserId;
+		buyPrice.value = util.$h.Sub(parseFloat(bargainPrice.value), parseFloat(bui.alreadyPrice));
+		bargainUserHelpList.value = bui.userHelpList || [];
+		//#ifdef H5
+		if (bui.storeBargainUserId) make();
+		setOpenShare();
+		//#endif
+	}).catch(err => {
+		return util.Tips({ title: err.toString() }, { tab: 3, url: 1 });
+	});
+}
+
+function goPay() {
+	if (!isLogin.value) { toLogin(); return; }
+	Order.getPreOrder("buyNow", [{
+		"attrValueId": parseFloat(bargainInfo.value.attrValueId),
+		"bargainId": parseFloat(id.value),
+		"productNum": 1,
+		"productId": parseFloat(bargainInfo.value.productId),
+		"bargainUserId": parseFloat(storeBargainId.value)
+	}]);
+}
+
+function getBargainDetails() {
+	getBargainDetail(id.value).then(function(res) {
+		let bi = res.data;
+		bargainInfo.value = bi;
+		bargainPrice.value = bi.price;
+		quota.value = bi.quota;
+		datatime.value = bi.stopTime / 1000;
+		pages.value = buildBargainDetailPath(bargainStarterUid.value, currentUid.value, storeBargainId.value);
+		uni.setNavigationBarTitle({ title: bi.title.substring(0, 13) + '...' });
+		bargainUserHelpList.value = [];
+		if (isLogin.value && quota.value > 0 && new Date().getTime() - bi.stopTime < 0) {
+			gobargainUserInfo();
+		} else {
+			buyPrice.value = bargainPrice.value;
+		}
+		//#ifdef H5
+		getImageBase64Fn(bi.image);
+		//#endif
+		setTimeout(() => { showSkeleton.value = false; }, 1000);
+	}).catch(function(err) {
+		util.Tips({ title: err }, { tab: 2, url: '/pages/activity/goods_bargain/index' });
+	});
+}
+
+function currentBargainUser() {
+	page.value = 1;
+	uni.navigateTo({ url: buildBargainDetailPath(currentUid.value, currentUid.value, 0) });
+}
+
+function setBargain() {
+	postBargainStart(id.value).then(res => {
+		if (res.code === 'subscribe') return;
+		ensureStartBargainUid();
+		storeBargainId.value = res.data.storeBargainUserId;
+		setBargainHelp();
+		//#ifdef H5
+		make();
+		//#endif
+	}, error => {
+		ensureStartBargainUid();
+		util.Tips({ title: error });
+	});
+}
+
+function setBargainHelp() {
+	let data = { bargainId: id.value, bargainUserId: storeBargainId.value, bargainUserUid: bargainStarterUid.value };
+	postBargainHelp(data).then(res => {
+		bargainUserHelpList.value = [];
+		bargainUserBargainPrice.value = res.data.bargainPrice;
+		active.value = true;
+		gobargainUserInfo();
+	}).catch(err => {
+		util.Tips({ title: err });
+		bargainUserHelpList.value = [];
+	});
+}
+
+function getBargainUserBargainPricePoster() {
+	active.value = false;
+	uni.showLoading({ title: '海报生成中', mask: true });
+	posters.value = false;
+	if (!PromotionCode.value) {
+		uni.hideLoading();
+		util.Tips({ title: '海报二维码生成失败' });
+		return;
+	}
+	setTimeout(() => {
+		if (!imgTop.value) {
+			uni.hideLoading();
+			util.Tips({ title: '无法生成商品海报！' });
+			return;
+		}
+	}, 1000);
+	uni.downloadFile({
+		url: imgTop.value,
+		success: (res) => {
+			let arrImagesUrlTop = res.tempFilePath;
+			let arrImages = [posterbackgd.value, arrImagesUrlTop, PromotionCode.value];
+			setTimeout(() => {
+				util.activityCanvas(arrImages, bargainInfo.value.title, buyPrice.value, '已砍至', '还剩' + bargainUserInfo.value.surplusPrice + '元砍价成功', 0,
+					(tempFilePath) => { imagePath.value = tempFilePath; canvasStatus.value = true; uni.hideLoading(); });
+			}, 500);
+		}
+	});
+}
+
+function goBargainList() { uni.navigateTo({ url: '/pages/activity/goods_bargain/index' }); }
+function close() { active.value = false; posters.value = false; canvasStatus.value = false; }
+function returns() { uni.switchTab({ url: '/pages/index/index' }); }
+function backList() { uni.navigateTo({ url: '/pages/activity/goods_bargain/index' }); }
 </script>
 
 <style lang="scss">

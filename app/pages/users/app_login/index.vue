@@ -1,14 +1,14 @@
 <template>
-	<view class="wrapper" :data-theme="theme">
+	<view class="wrapper" :data-theme="theme" :style="colorStyle">
 		<view class="bag"></view>
 		<view class="system-height" :style="{height:statusBarHeight}"></view>
 		<!-- #ifdef MP -->
 		<view class="title-bar" style="height: 43px;">
 			<view class="icon" @click="back" v-if="!isHome">
-				<image class="img" :src="urlDomain+'crmebimage/perset/usersImg/left.png'"></image>
+				<image class="img" :src="urlDomain+'/crmebimage/perset/usersImg/left.png'"></image>
 			</view>
 			<view class="icon" @click="home" v-else>
-				<image class="img" :src="urlDomain+'crmebimage/perset/usersImg/home.png'"></image>
+				<image class="img" :src="urlDomain+'/crmebimage/perset/usersImg/home.png'"></image>
 			</view>
 			账户登录
 		</view>
@@ -22,166 +22,156 @@
 	</view>
 </template>
 
-<script>
-	const app = getApp();
-	let statusBarHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
-	import sendVerifyCode from "@/mixins/SendVerifyCode";
-	import Routine from '@/libs/routine';
-	import {
-		loginMobile,
-		registerVerify,
-		getCodeApi,
-		getUserInfo
-	} from "@/api/user";
-	import {
-		bindingPhone
-	} from '@/api/api.js'
-	import {
-		getUserPhone
-	} from '@/api/public';
-	import mobileLogin from '@/components/login_mobile/index.vue'
+<script setup>
+import { ref } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
+import Cache from '@/utils/cache.js';
+import util from '@/utils/util.js';
+import { useAppStore } from "@/store/app.js";
+import { useSendVerifyCode } from '@/composables/useSendVerifyCode.js';
+import Routine from '@/libs/routine.js';
+import {
+	loginMobile,
+	registerVerify,
+	getCodeApi,
+	getUserInfo
+} from "@/api/user.js";
+import {
+	bindingPhone
+} from '@/api/api.js'
+import {
+	getUserPhone
+} from '@/api/public.js';
+import mobileLogin from '@/components/login_mobile/index.vue'
+import { useColor } from '@/composables/useColor.js';
 
-	export default {
-		name: 'login_mobile',
-		data() {
-			return {
-				urlDomain: this.$Cache.get("imgHost"),
-				theme: app.globalData.theme,
-				options: '',
-				keyCode: '',
-				account: '',
-				codeNum: '',
-				isUp: true,
-				authKey: '',
-				logoUrl: '',
-				isShow: false,
-				isPos: false,
-				platform: '', // 手机平台
-				appleShow: '', //是否是苹果登录
-				statusBarHeight: statusBarHeight,
-				wxCode: '' //小程序code值
-			}
-		},
-		components: {
-			mobileLogin
-		},
-		mixins: [sendVerifyCode],
-		mounted() {
-			//this.getCode();
-		},
-		onLoad: function(options) {
-			let that = this;
-			// 获取系统信息
-			uni.getSystemInfo({
-				success(res) {
-					that.platform = res.platform;
-				}
-			});
-			const {
-				code,
-				state,
-				scope,
-				back_url,
-				appleShow
-			} = options;
-			that.options = options
-			if (options.authKey) that.authKey = options.authKey
-			if (options.appleShow) that.appleShow = options.appleShow
-			if (options.code) that.wxCode = options.code
-		},
-		methods: {
-			// 返回
-			back() {
-				uni.navigateBack();
-			},
-			// 跳入首页
-			home() {
-				uni.switchTab({
-					url: '/pages/index/index'
-				})
-			},
-			wechatPhone() {
-				this.$Cache.clear('snsapiKey');
-				if (this.options.back_url) {
-					let url = uni.getStorageSync('snRouter');
-					url = url.indexOf('/pages/index/index') != -1 ? '/' : url;
-					if (url.indexOf('/pages/users/wechat_login/index') !== -1) {
-						url = '/';
-					}
-					if (!url) {
-						url = '/pages/index/index';
-					}
-					this.isUp = false
-					uni.showToast({
-						title: '登录成功',
-						icon: 'none'
-					})
-					setTimeout(res => {
-						location.href = url
-					}, 800)
-				} else {
-					uni.navigateBack()
-				}
-			},
-			// 获取验证码
-			async code() {
-				let that = this;
-				if (!that.account) return that.$util.Tips({
-					title: '请填写手机号码'
-				});
-				if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(that.account)) return that.$util.Tips({
-					title: '请输入正确的手机号码'
-				});
-				await registerVerify(that.account).then(res => {
-					that.$util.Tips({
-						title: res.msg
-					});
-					that.sendCode();
-				}).catch(err => {
-					return that.$util.Tips({
-						title: err
-					})
-				})
-			},
-			// 获取验证码api
-			getCode() {
-				let that = this
-				getCodeApi().then(res => {
-					that.keyCode = res.data.key;
-				}).catch(res => {
-					that.$util.Tips({
-						title: res
-					});
-				});
-			},
-			close() {
-				this.$emit('close', false)
-			},
-			/**
-			 * 获取个人用户信息
-			 */
-			getUserInfo: function() {
-				let that = this;
-				getUserInfo().then(res => {
-					uni.hideLoading();
-					that.userInfo = res.data
-					that.$store.commit("UPDATE_USERINFO", res.data);
-					// #ifdef MP
-					that.$util.Tips({
-						title: '登录成功',
-						icon: 'success'
-					}, {
-						tab: 3
-					})
-					that.close()
-					// #endif
-					// #ifdef H5
-					that.$emit('wechatPhone', true)
-					// #endif
-				});
-			},
+const app = getApp();
+const statusBarHeight = uni.getSystemInfoSync().statusBarHeight + 'px';
+
+const emit = defineEmits(['close', 'wechatPhone']);
+const appStore = useAppStore();
+const { disabled, text, sendCode } = useSendVerifyCode();
+
+const urlDomain = ref(Cache.get("imgHost"));
+const theme = ref(app.globalData.theme);
+const { colorStyle } = useColor();
+const options = ref('');
+const keyCode = ref('');
+const account = ref('');
+const codeNum = ref('');
+const isUp = ref(true);
+const authKey = ref('');
+const logoUrl = ref('');
+const isShow = ref(false);
+const isPos = ref(false);
+const platform = ref(''); // 手机平台
+const appleShow = ref(''); //是否是苹果登录
+const wxCode = ref(''); //小程序code值
+const isHome = ref(false);
+const userInfo = ref({});
+
+onLoad((opts) => {
+	// 获取系统信息
+	uni.getSystemInfo({
+		success(res) {
+			platform.value = res.platform;
 		}
+	});
+	options.value = opts;
+	if (opts.authKey) authKey.value = opts.authKey;
+	if (opts.appleShow) appleShow.value = opts.appleShow;
+	if (opts.code) wxCode.value = opts.code;
+});
+
+// 返回
+function back() {
+	uni.navigateBack();
+}
+// 跳入首页
+function home() {
+	uni.switchTab({
+		url: '/pages/index/index'
+	})
+}
+function wechatPhone() {
+	Cache.clear('snsapiKey');
+	if (options.value.back_url) {
+		let url = uni.getStorageSync('snRouter');
+		url = url.indexOf('/pages/index/index') != -1 ? '/' : url;
+		if (url.indexOf('/pages/users/wechat_login/index') !== -1) {
+			url = '/';
+		}
+		if (!url) {
+			url = '/pages/index/index';
+		}
+		isUp.value = false
+		uni.showToast({
+			title: '登录成功',
+			icon: 'none'
+		})
+		setTimeout(res => {
+			location.href = url
+		}, 800)
+	} else {
+		uni.navigateBack()
 	}
+}
+// 获取验证码
+async function code() {
+	if (!account.value) return util.Tips({
+		title: '请填写手机号码'
+	});
+	if (!/^1(3|4|5|7|8|9|6)\d{9}$/i.test(account.value)) return util.Tips({
+		title: '请输入正确的手机号码'
+	});
+	await registerVerify(account.value).then(res => {
+		util.Tips({
+			title: res.msg
+		});
+		sendCode();
+	}).catch(err => {
+		return util.Tips({
+			title: err
+		})
+	})
+}
+// 获取验证码api
+function getCode() {
+	getCodeApi().then(res => {
+		keyCode.value = res.data.key;
+	}).catch(res => {
+		util.Tips({
+			title: res
+		});
+	});
+}
+function close() {
+	emit('close', false)
+}
+/**
+ * 获取个人用户信息
+ */
+function getUserInfoFn() {
+	getUserInfo().then(res => {
+		uni.hideLoading();
+		userInfo.value = res.data
+		appStore.UPDATE_USERINFO(res.data);
+		// #ifdef MP
+		util.Tips({
+			title: '登录成功',
+			icon: 'success'
+		}, {
+			tab: 3
+		})
+		close()
+		// #endif
+		// #ifdef H5
+		emit('wechatPhone', true)
+		// #endif
+	});
+}
+
+defineExpose({ code, getCode, close, getUserInfo: getUserInfoFn });
 </script>
 
 <style>

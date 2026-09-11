@@ -1,14 +1,14 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<view class='newsDetail' :style="{backgroundColor:bgColor}">
 			<view class='title'>{{articleInfo.title}}</view>
 			<view class='list acea-row row-middle'>
 				<view class='label'>{{articleInfo.author}}</view>
-				<view class='item'></text>{{articleInfo.createTime}}</view>
+				<view class='item'>{{articleInfo.createTime}}</view>
 				<view class='item'><text class='iconfont icon-liulan'></text>{{articleInfo.visit}}</view>
 			</view>
 			<view class='conter'>
-				<jyf-parser :html="content" ref="article" :tag-style="tagStyle"></jyf-parser>
+				<mp-html :content="content" ref="article" :tag-style="tagStyle"></mp-html>
 			</view>
 			<view class="picTxt acea-row row-between-wrapper" v-if="store_info.id">
 				<view class="pictrue">
@@ -21,12 +21,12 @@
 					</view>
 					<view class="y_money">￥{{store_info.otPrice}}</view>
 				</view>
-				<navigator :url="'/pages/goods/goods_details/index?id='+store_info.id" hover-class="none" class="label"><text
+				<navigator :render-link="false" :url="'/pages/goods/goods_details/index?id='+store_info.id" hover-class="none" class="label"><text
 						class="span">查看商品</text></navigator>
 			</view>
 			<!-- #ifdef H5 -->
 			<button class="bnt bg_color" hover-class='none' @click="listenerActionSheet"
-				v-if="this.$wechat.isWeixin()">和好友一起分享</button>
+				v-if="isWeixin">和好友一起分享</button>
 			<!-- #endif -->
 			<!-- #ifdef MP -->
 			<button class="bnt bg_color" open-type="share" hover-class='none'>和好友一起分享</button>
@@ -39,118 +39,134 @@
 	</view>
 </template>
 
-<script>
+<script setup>
+	import { ref, getCurrentInstance } from 'vue';
+	import { onLoad, onShow, onShareAppMessage } from '@dcloudio/uni-app';
 	import {
 		getArticleDetails 
 	} from '@/api/api.js';
 	import {
 		getProductDetail
 	} from '@/api/store.js';
-	import shareInfo from '@/components/shareInfo';
-	import parser from "@/components/jyf-parser/jyf-parser";
+	import shareInfo from '@/components/shareInfo/index.vue';
+	import mpHtml from '@/uni_modules/mp-html/components/mp-html/mp-html.vue';
+import { useColor } from '@/composables/useColor.js';
 	let app = getApp();
-	export default {
-		components: {
-			shareInfo,
-			"jyf-parser": parser
-		},
-		data() {
-			return {
-				id: 0,
-				articleInfo: [],
-				store_info: {},
-				content: '',
-				shareInfoStatus: false,
-				tagStyle: {
-					img: 'width:100%;display:block;',
-					table: 'width:100%',
-					video: 'width:100%'
-				},
-				productId: 0,
-				theme: app.globalData.theme,
-				bgColor:'#ffffff'
-			};
-		},
-		/**
-		 * 生命周期函数--监听页面加载
-		 */
-		onLoad: function(options) {
-			if (options.hasOwnProperty('id')) {
-				this.id = options.id;
-			} else {
-				// #ifndef H5
-				uni.navigateBack({
-					delta: 1
-				});
-				// #endif
-				// #ifdef H5
-			 history.back();
-				// #endif
-			}
-		},
-		onShow: function() {
-			this.getArticleOne();
-		},
-		/**
-		 * 用户点击右上角分享
-		 */
-		// #ifdef MP
-		onShareAppMessage: function() {
-			return {
-				title: this.articleInfo.title,
-				imageUrl: this.articleInfo.imageInput.length ? this.articleInfo.imageInput : "",
-				desc: this.articleInfo.synopsis,
-				path: '/pages/news/news_details/index?id=' + this.id
-			};
-		},
-		// #endif
-		methods: {
-			getArticleOne: function() {
-				let that = this;
-				getArticleDetails({
-					id: that.id
-				}).then(res => {
-					uni.setNavigationBarTitle({
-						title: res.data.title.substring(0, 7) + "..."
-					});
-					that.$set(that, 'articleInfo', res.data);
-					that.$set(that, 'productId', res.data.productId);
-					if (res.data.productId) {
-						that.goodInfo(res.data.productId);
-					}
-					that.content = res.data.content;
-					// #ifdef H5
-					if (this.$wechat.isWeixin()) {
-						this.setShareInfo();
-					}
-					// #endif
-				});
-			},
-			goodInfo(id) {
-				getProductDetail(id).then(res => {
-					this.$set(this, 'store_info', res.data.storeInfo ? res.data.storeInfo : {});
-				})
-			},
-			listenerActionSheet() {
-				this.shareInfoStatus = true
-			},
-			setShareInfoStatus() {
-				this.shareInfoStatus = false
-			},
-			setShareInfo: function() {
-				let href = location.href;
-				let configAppMessage = {
-					desc: this.articleInfo.synopsis,
-					title: this.articleInfo.title,
-					link: href,
-					imgUrl: this.articleInfo.imageInput.length ? this.articleInfo.imageInput[0] : ""
-				};
-				this.$wechat.wechatEvevt(["updateAppMessageShareData", "updateTimelineShareData"], configAppMessage);
-			},
-			bgTheme(value){
-				this.bgColor = value;
-			}
+
+	const { proxy } = getCurrentInstance();
+
+	// data
+	const id = ref(0);
+	const articleInfo = ref([]);
+	const store_info = ref({});
+	const content = ref('');
+	const shareInfoStatus = ref(false);
+	const tagStyle = ref({
+		img: 'width:100%;display:block;',
+		table: 'width:100%',
+		video: 'width:100%'
+	});
+	const productId = ref(0);
+	const theme = ref(app.globalData.theme);
+	const { colorStyle } = useColor();
+	const bgColor = ref('#ffffff');
+	const isWeixin = ref(false);
+
+	// #ifdef H5
+	function getWechat() {
+		return proxy && proxy.$wechat ? proxy.$wechat : null;
+	}
+
+	function checkIsWeixin() {
+		const wechat = getWechat();
+		return !!(wechat && typeof wechat.isWeixin === 'function' && wechat.isWeixin());
+	}
+
+	isWeixin.value = checkIsWeixin();
+	// #endif
+
+	/**
+	 * 生命周期函数--监听页面加载
+	 */
+	onLoad((options) => {
+		if (options.hasOwnProperty('id')) {
+			id.value = options.id;
+		} else {
+			// #ifndef H5
+			uni.navigateBack({
+				delta: 1
+			});
+			// #endif
+			// #ifdef H5
+		 history.back();
+			// #endif
 		}
+	});
+	onShow(() => {
+		getArticleOne();
+	});
+	/**
+	 * 用户点击右上角分享
+	 */
+	// #ifdef MP
+	onShareAppMessage(() => {
+		return {
+			title: articleInfo.value.title,
+			imageUrl: articleInfo.value.imageInput.length ? articleInfo.value.imageInput : "",
+			desc: articleInfo.value.synopsis,
+			path: '/pages/news/news_details/index?id=' + id.value
+		};
+	});
+	// #endif
+
+	function getArticleOne() {
+		getArticleDetails({
+			id: id.value
+		}).then(res => {
+			uni.setNavigationBarTitle({
+				title: res.data.title.substring(0, 7) + "..."
+			});
+			articleInfo.value = res.data;
+			productId.value = res.data.productId;
+			if (res.data.productId) {
+				goodInfo(res.data.productId);
+			}
+			content.value = res.data.content;
+			// #ifdef H5
+			if (isWeixin.value) {
+				setShareInfo();
+			}
+			// #endif
+		});
+	}
+	function goodInfo(id) {
+		getProductDetail(id).then(res => {
+			store_info.value = res.data.storeInfo ? res.data.storeInfo : {};
+		})
+	}
+	function listenerActionSheet() {
+		shareInfoStatus.value = true
+	}
+	function setShareInfoStatus() {
+		shareInfoStatus.value = false
+	}
+	// #ifdef H5
+	function setShareInfo() {
+		const wechat = getWechat();
+		if (!wechat) return;
+		let href = location.href;
+		const imageInput = articleInfo.value.imageInput || [];
+		let configAppMessage = {
+			desc: articleInfo.value.synopsis,
+			title: articleInfo.value.title,
+			link: href,
+			imgUrl: imageInput.length ? imageInput[0] : ""
+		};
+		wechat.wechatEvevt(["updateAppMessageShareData", "updateTimelineShareData"], configAppMessage);
+	}
+	// #endif
+	function bgTheme(value){
+		bgColor.value = value;
 	}
 </script>
 

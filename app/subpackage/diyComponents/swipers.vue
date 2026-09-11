@@ -23,7 +23,7 @@
         >
           <block v-for="(item, index) in imgUrls" :key="index">
             <swiper-item :class="{ active: index == swiperCur }">
-              <navigator
+              <navigator :render-link="false"
                 :url="item.info[1].title"
                 class="slide-navigator acea-row row-between-wrapper"
                 hover-class="none"
@@ -39,7 +39,7 @@
         </swiper>
       </view>
       <view v-if="!tabConfig">
-        <navigator
+        <navigator :render-link="false"
           :url="item.info[1].title"
           hover-class="none"
           class="advert"
@@ -54,115 +54,79 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from "vue";
 import commonWrapper from "./commonWrapper.vue";
-export default {
-  components: { commonWrapper },
-  name: "swiper",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
+  },
+  isSortType: {
+    type: [String, Number],
+    default: 0,
+  },
+});
+
+const indicatorDots = ref(false);
+const circular = ref(true);
+const autoplay = ref(true);
+const interval = ref(2500);
+const duration = ref(500);
+const swiperCur = ref(0);
+const imgUrls = ref([]);
+const docConfig = ref(props.dataConfig.docConfig.type);
+const imgConfig = ref(props.dataConfig.imgConfig.type);
+const itemEdge = ref(props.dataConfig.itemEdge.val);
+const lrConfig = ref(props.dataConfig.lrConfig.val);
+const mbConfig = ref(props.dataConfig.mbConfig.val);
+const tabConfig = ref(props.dataConfig.tabConfig.tabVal);
+const imageH = ref(0);
+
+const configData = computed(() => ({
+  ...props.dataConfig,
+  paddingConfig: props.dataConfig.paddingConfig || {
+    isAll: false,
+    valList: [
+      { val: props.dataConfig.topConfig ? props.dataConfig.topConfig.val : 0 },
+      { val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0 },
+      { val: props.dataConfig.bottomConfig ? props.dataConfig.bottomConfig.val : 0 },
+      { val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0 },
+    ],
+  },
+  marginConfig: props.dataConfig.marginConfig || {
+    isAll: false,
+    valList: [
+      { val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0 },
+      { val: 0 },
+      { val: 0 },
+      { val: 0 },
+    ],
+  },
+}));
+
+// created
+imgUrls.value = props.dataConfig.swiperConfig.list;
+
+onMounted(() => {
+  uni.getImageInfo({
+    src: setDomain(imgUrls.value[0].img),
+    success: function(res) {
+      imageH.value = res.height;
     },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
-  },
-  data() {
-    return {
-      indicatorDots: false,
-      circular: true,
-      autoplay: true,
-      interval: 2500,
-      duration: 500,
-      swiperCur: 0,
-      imgUrls: [],
-      docConfig: this.dataConfig.docConfig.type,
-      imgConfig: this.dataConfig.imgConfig.type,
-      itemEdge: this.dataConfig.itemEdge.val,
-      lrConfig: this.dataConfig.lrConfig.val,
-      mbConfig: this.dataConfig.mbConfig.val,
-      tabConfig: this.dataConfig.tabConfig.tabVal,
-      imageH: 0,
-    };
-  },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
-        },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
-        },
-      };
-    },
-  },
-  watch: {
-    imageH(nVal, oVal) {
-      this.imageH = nVal;
-    },
-  },
-  created() {
-    this.imgUrls = this.dataConfig.swiperConfig.list;
-  },
-  mounted() {
-    let that = this;
-    uni.getImageInfo({
-      src: that.setDomain(that.imgUrls[0].img),
-      success: function (res) {
-        that.$set(that, "imageH", res.height);
-      },
-    });
-  },
-  methods: {
-    // swiper
-    swiperChange(e) {
-      this.swiperCur = e.detail.current;
-    },
-    //替换安全域名
-    setDomain: function (url) {
-      url = url ? url.toString() : "";
-      //本地调试打开,生产请注销
-      if (url.indexOf("https://") > -1) return url;
-      else return url.replace("http://", "https://");
-    },
-  },
-};
+  });
+});
+
+function swiperChange(e) {
+  swiperCur.value = e.detail.current;
+}
+
+function setDomain(url) {
+  url = url ? url.toString() : "";
+  if (url.indexOf("https://") > -1) return url;
+  else return url.replace("http://", "https://");
+}
 </script>
 
 <style lang="scss">

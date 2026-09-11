@@ -1,5 +1,5 @@
 <template>
-	<view :data-theme="theme">
+	<view :data-theme="theme" :style="colorStyle">
 		<block v-if="bargain.length>0">
 			<div class="bargain-record" ref="container">
 				<div class="item borRadius14" v-for="(item, index) in bargain" :key="index">
@@ -48,186 +48,137 @@
 		<payment :pay_close="pay_close" @onChangeFun='onChangeFun' :order_id="pay_order_id" :totalPrice='totalPrice'></payment>
 	</view>
 </template>
-<script>
-	// import CountDown from "@/components/countDown";
-	import CountDown from "@/pages/activity/components/countDown";
-	import emptyPage from '@/components/emptyPage.vue'
-	import {
-		getBargainUserList,
-		getBargainUserCancel
-	} from "@/api/activity";
-	import Loading from "@/components/Loading";
-	import payment from '@/components/payment';
-	import {mapGetters} from "vuex";
-	import {setThemeColor} from '@/utils/setTheme.js'
-	import animationType from '@/utils/animationType.js'
-	let app = getApp();
-	export default {
-		name: "BargainRecord",
-		components: {
-			CountDown,
-			Loading,
-			emptyPage,
-			payment
-		},
-		props: {},
-		computed: mapGetters(['isLogin', 'userInfo', 'uid']),
-		data: function() {
-			return {
-				bgColor:{
-					'bgColor': '',
-					'Color': '#E93323',
-					'width': '40rpx',
-					'timeTxtwidth': '28rpx',
-					'isDay': false
-				},
-				bargain: [],
-				status: false, //砍价列表是否获取完成 false 未完成 true 完成
-				loadingList: false, //当前接口是否请求完成 false 完成 true 未完成
-				page: 1, //页码
-				limit: 20, //数量
-				payMode: [{
-						name: "微信支付",
-						icon: "icon-weixinzhifu",
-						value: 'weixin',
-						title: '微信快捷支付'
-					},
-					{
-						name: "余额支付",
-						icon: "icon-yuezhifu",
-						value: 'yue',
-						title: '可用余额:',
-						number: 0
-					}
-				],
-				pay_close: false,
-				pay_order_id: '',
-				totalPrice: '0',
-				theme:app.globalData.theme
-			};
-		},
-		onShow() {
-			if (this.isLogin) {
-				this.payMode[1].number = this.userInfo.nowMoney;
-				this.$set(this, 'payMode', this.payMode);
-				this.getBargainUserList();
-				this.bgColor.Color = setThemeColor();
-			} else {
-				toLogin();
-			}
-		},
-		methods: {
-			/**
-			 * 打开支付组件
-			 * 
-			 */
-			goPay(pay_price, order_id) {
-				this.$set(this, 'pay_close', true);
-				this.$set(this, 'pay_order_id', order_id);
-				this.$set(this, 'totalPrice', pay_price);
-			},
-			/**
-			 * 事件回调
-			 * 
-			 */
-			onChangeFun: function(e) {
-				let opt = e;
-				let action = opt.action || null;
-				let value = opt.value != undefined ? opt.value : null;
-				(action && this[action]) && this[action](value);
-			},
-			/**
-			 * 关闭支付组件
-			 * 
-			 */
-			payClose: function() {
-				this.pay_close = false;
-			},
-			/**
-			 * 支付成功回调
-			 * 
-			 */
-			pay_complete: function() {
-				this.status = false;
-				this.page = 1;
-				this.$set(this, 'bargain', []);
-				this.$set(this, 'pay_close', false);
-				this.getBargainUserList();
-			},
-			/**
-			 * 支付失败回调
-			 * 
-			 */
-			pay_fail: function() {
-				this.pay_close = false;
-			},
-			goConfirm: function(item) { //立即支付
-				if (this.isLogin === false) {
-					toLogin();
-				} else {
-					uni.navigateTo({
-						animationType: animationType.type,						animationDuration: animationType.duration,
-						url: `/pages/activity/goods_bargain_details/index?id=${item.id}&startBargainUid=${this.uid}&storeBargainId=${item.bargainUserId}`
-					})
-				}
-			},
-			goDetail: function(id) {
-				uni.navigateTo({
-					animationType: animationType.type,					animationDuration: animationType.duration,
-					url: `/pages/activity/goods_bargain_details/index?id=${id}&startBargainUid=${this.uid}`
-				})
-			},
-			// 砍价列表
-			goList: function() {
-				uni.navigateTo({
-					animationType: animationType.type,					animationDuration: animationType.duration,
-					url: '/pages/activity/goods_bargain/index'
-				})
-			},
-			getBargainUserList: function() {
-				var that = this;
-				if (that.loadingList) return;
-				if (that.status) return;
-				getBargainUserList({
-						page: that.page,
-						limit: that.limit
-					})
-					.then(res => {
-						that.status = res.data.list.length < that.limit;
-						that.bargain.push.apply(that.bargain, res.data.list);
-						that.page++;
-						that.loadingList = false;
-					})
-					.catch(res => {
-						that.$dialog.error(res);
-					});
-			},
-			getBargainUserCancel: function(bargainId) {
-				var that = this;
-				getBargainUserCancel({
-						bargainId: bargainId
-					})
-					.then(res => {
-						that.status = false;
-						that.loadingList = false;
-						that.page = 1;
-						that.bargain = [];
-						that.getBargainUserList();
-						that.$util.Tips({
-							title: res
-						})
-					})
-					.catch(res => {
-						that.$util.Tips({
-							title: res
-						})
-					});
-			}
-		},
-		onReachBottom() {
-			this.getBargainUserList();
-		}
-	};
+<script setup>
+import { ref } from "vue";
+import { onShow, onReachBottom } from "@dcloudio/uni-app";
+import CountDown from "@/pages/activity/components/countDown/index.vue";
+import emptyPage from "@/components/emptyPage.vue";
+import { getBargainUserList, getBargainUserCancel } from "@/api/activity.js";
+import Loading from "@/components/Loading/index.vue";
+import payment from "@/components/payment/index.vue";
+import { toLogin } from "@/libs/login.js";
+import { setThemeColor } from "@/utils/setTheme.js";
+import animationType from "@/utils/animationType.js";
+import util from "@/utils/util.js";
+import { useAppStore } from "@/store/app.js";
+import { storeToRefs } from "pinia";
+import { useColor } from '@/composables/useColor.js';
+
+const app = getApp();
+const appStore = useAppStore();
+const { isLogin, userInfo, uid } = storeToRefs(appStore);
+
+const bgColor = ref({ bgColor: "", Color: "#E93323", width: "40rpx", timeTxtwidth: "28rpx", isDay: false });
+const bargain = ref([]);
+const status = ref(false);
+const loadingList = ref(false);
+const page = ref(1);
+const limit = ref(20);
+const payMode = ref([
+  { name: "微信支付", icon: "icon-weixinzhifu", value: "weixin", title: "微信快捷支付" },
+  { name: "余额支付", icon: "icon-yuezhifu", value: "yue", title: "可用余额:", number: 0 },
+]);
+const pay_close = ref(false);
+const pay_order_id = ref("");
+const totalPrice = ref("0");
+const theme = ref(app.globalData.theme);
+const { colorStyle } = useColor();
+
+onShow(() => {
+  if (isLogin.value) {
+    payMode.value[1].number = userInfo.value && userInfo.value.nowMoney || 0;
+    getBargainUserListFn();
+    bgColor.value.Color = setThemeColor();
+  } else {
+    toLogin();
+  }
+});
+
+onReachBottom(() => { getBargainUserListFn(); });
+
+function goPay(pay_price, order_id) {
+  pay_close.value = true;
+  pay_order_id.value = order_id;
+  totalPrice.value = pay_price;
+}
+
+const paymentActionMap = {
+  payClose,
+  pay_complete,
+  pay_fail,
+};
+
+function onChangeFun(e) {
+  let opt = e;
+  let action = opt.action || null;
+  let value = opt.value != undefined ? opt.value : null;
+  const handler = paymentActionMap[action];
+  if (typeof handler === "function") handler(value);
+}
+
+function payClose() { pay_close.value = false; }
+
+function pay_complete() {
+  status.value = false;
+  page.value = 1;
+  bargain.value = [];
+  pay_close.value = false;
+  getBargainUserListFn();
+}
+
+function pay_fail() { pay_close.value = false; }
+
+function goConfirm(item) {
+  if (!isLogin.value) { toLogin(); return; }
+  uni.navigateTo({
+    animationType: animationType.type, animationDuration: animationType.duration,
+    url: `/pages/activity/goods_bargain_details/index?id=${item.id}&startBargainUid=${uid.value}&storeBargainId=${item.bargainUserId}`,
+  });
+}
+
+function goDetail(id) {
+  uni.navigateTo({
+    animationType: animationType.type, animationDuration: animationType.duration,
+    url: `/pages/activity/goods_bargain_details/index?id=${id}&startBargainUid=${uid.value}`,
+  });
+}
+
+function goList() {
+  uni.navigateTo({
+    animationType: animationType.type, animationDuration: animationType.duration,
+    url: "/pages/activity/goods_bargain/index",
+  });
+}
+
+function getBargainUserListFn() {
+  if (loadingList.value) return;
+  if (status.value) return;
+  getBargainUserList({ page: page.value, limit: limit.value })
+    .then((res) => {
+      status.value = res.data.list.length < limit.value;
+      bargain.value.push.apply(bargain.value, res.data.list);
+      page.value++;
+      loadingList.value = false;
+    })
+    .catch((res) => {
+      util.Tips({ title: res });
+    });
+}
+
+function getBargainUserCancelFn(bargainId) {
+  getBargainUserCancel({ bargainId })
+    .then((res) => {
+      status.value = false;
+      loadingList.value = false;
+      page.value = 1;
+      bargain.value = [];
+      getBargainUserListFn();
+      util.Tips({ title: res });
+    })
+    .catch((res) => {
+      util.Tips({ title: res });
+    });
+}
 </script>
 <style lang="scss">
 	page {

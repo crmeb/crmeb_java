@@ -198,12 +198,12 @@
       <scroll-view
         scroll-x="true"
         show-scrollbar="false"
-        class="white-nowrap vertical-middle w-full p-32"
+        class="bargain-scroll w-full p-32"
         :style="[boxContentStyle]"
         v-if="goodStyleConfig == 3"
       >
         <view
-          class="inline-block"
+          class="bargain-scroll-item"
           :class="{ 'ml-20': index }"
           v-for="(item, index) in bargList"
           :key="index"
@@ -250,281 +250,279 @@
   </common-wrapper>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, getCurrentInstance } from "vue";
 import commonWrapper from "./commonWrapper.vue";
 import { openBargainSubscribe } from "@/utils/SubscribeMessage.js";
 import { getThemeBargain } from "@/api/api.js";
-export default {
-  components: { commonWrapper },
-  name: "bargain",
-  props: {
-    dataConfig: {
-      type: Object,
-      default: () => {},
-    },
-    isSortType: {
-      type: [String, Number],
-      default: 0,
-    },
+const { proxy } = getCurrentInstance();
+
+const props = defineProps({
+  dataConfig: {
+    type: Object,
+    default: () => {},
   },
-  data() {
-    return {
-      bargList: [],
-    };
+  isSortType: {
+    type: [String, Number],
+    default: 0,
   },
-  computed: {
-    configData() {
-      return {
-        ...this.dataConfig,
-        paddingConfig: this.dataConfig.paddingConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.topConfig
-                ? this.dataConfig.topConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-            {
-              val: this.dataConfig.bottomConfig
-                ? this.dataConfig.bottomConfig.val
-                : 0,
-            },
-            {
-              val: this.dataConfig.prConfig ? this.dataConfig.prConfig.val : 0,
-            },
-          ],
+});
+const emit = defineEmits(["changeBarg"]);
+
+const bargList = ref([]);
+
+const configData = computed(() => {
+  return {
+    ...props.dataConfig,
+    paddingConfig: props.dataConfig.paddingConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.topConfig
+            ? props.dataConfig.topConfig.val
+            : 0,
         },
-        marginConfig: this.dataConfig.marginConfig || {
-          isAll: false,
-          valList: [
-            {
-              val: this.dataConfig.mbConfig ? this.dataConfig.mbConfig.val : 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-            {
-              val: 0,
-            },
-          ],
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
         },
-      };
+        {
+          val: props.dataConfig.bottomConfig
+            ? props.dataConfig.bottomConfig.val
+            : 0,
+        },
+        {
+          val: props.dataConfig.prConfig ? props.dataConfig.prConfig.val : 0,
+        },
+      ],
     },
-    boxContentStyle() {
-      let borderRadius = `0 0 ${this.dataConfig.fillet.val * 2}rpx ${
-        this.dataConfig.fillet.val * 2
-      }rpx`;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `0 0 ${this.dataConfig.fillet.valList[3].val * 2}rpx ${
-          this.dataConfig.fillet.valList[2].val * 2
-        }rpx`;
-      }
-      return {
-        borderRadius,
-        background: `linear-gradient(90deg, ${this.dataConfig.moduleColor.color[0].item} 0%, ${this.dataConfig.moduleColor.color[1].item} 100%)`,
-      };
+    marginConfig: props.dataConfig.marginConfig || {
+      isAll: false,
+      valList: [
+        {
+          val: props.dataConfig.mbConfig ? props.dataConfig.mbConfig.val : 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+        {
+          val: 0,
+        },
+      ],
     },
-    /*商品模板*/
-    goodStyleConfig() {
-      return this.dataConfig.goodStyleConfig.tabVal;
-    },
-    styleConfig() {
-      return this.dataConfig.styleConfig.tabVal;
-    },
-    headerStyle() {
-      let br = `${this.dataConfig.fillet.val * 2}rpx`,
-        borderRadius = "",
-        imgBgUrl = this.dataConfig.imgBgConfig.url;
-      if (this.dataConfig.fillet.type) {
-        borderRadius = `${this.dataConfig.fillet.valList[0].val * 2}rpx ${
-          this.dataConfig.fillet.valList[1].val * 2
-        }rpx 0 0`;
-      } else {
-        borderRadius = `${br} ${br} 0 0`;
-      }
-      let headerBgColor =
-        this.dataConfig.headerBgColor && this.dataConfig.headerBgColor.color;
-      let color1 =
-        headerBgColor && headerBgColor[0] ? headerBgColor[0].item : "#F62C2C";
-      let color2 =
-        headerBgColor && headerBgColor[1] ? headerBgColor[1].item : "#F96E29";
-      return {
-        backgroundImage: this.styleConfig
-          ? "url(" + imgBgUrl + ")"
-          : `linear-gradient(90deg,${color1} 0%,${color2} 100%)`,
-        borderRadius,
-      };
-    },
-    titleStyle() {
-      let titleText = this.dataConfig.titleText;
-      return {
-        fontStyle: !titleText.tabVal
-          ? "normal"
-          : titleText.tabList[titleText.tabVal].style,
-        fontWeight: !titleText.tabVal ? "bold" : "normal",
-        color: this.dataConfig.titleColor.color[0].item,
-        fontSize: this.dataConfig.titleNumber.val * 2 + "rpx",
-      };
-    },
-    /*标题是文本还是图片*/
-    titleConfig() {
-      return this.dataConfig.titleConfig.tabVal;
-    },
-    /*标题文本*/
-    titleTxtConfig() {
-      return this.dataConfig.titleTxtConfig.value;
-    },
-    /*标题图片*/
-    titleImg() {
-      return this.styleConfig ? this.titleUrl : this.titleColorUrl;
-    },
-    titleColorUrl() {
-      return this.dataConfig.imgColorConfig.url;
-    },
-    titleUrl() {
-      return this.dataConfig.imgConfig.url;
-    },
-    /*标题提示文字*/
-    tipsColor() {
-      return {
-        color: this.styleConfig
-          ? this.dataConfig.tipsColor.color[0].item
-          : this.dataConfig.tipsColor2.color[0].item,
-      };
-    },
-    /*分割线颜色*/
-    dividerColor() {
-      return {
-        color: this.dataConfig.dividerColor.color[0].item,
-      };
-    },
-    /*头部提示语文本*/
-    tipTxt() {
-      return this.dataConfig.tipTxtConfig.value;
-    },
-    /*头部按钮文本*/
-    rightBntTxt() {
-      return this.dataConfig.rightBntConfig.value;
-    },
-    /*头部按钮样式*/
-    headerBntColor() {
-      return {
-        color: this.styleConfig
-          ? this.dataConfig.headerBntColor.color[0].item
-          : this.dataConfig.headerBntColor2.color[0].item,
-        fontSize: `${this.dataConfig.bntNumber.val * 2}rpx`,
-      };
-    },
-    /*商品图片圆角样式*/
-    imgStyle() {
-      let borderRadius = `${this.dataConfig.filletImg.val * 2}rpx`;
-      if (this.dataConfig.filletImg.type) {
-        borderRadius = `${this.dataConfig.filletImg.valList[0].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[1].val * 2
-        }rpx ${this.dataConfig.filletImg.valList[3].val * 2}rpx ${
-          this.dataConfig.filletImg.valList[2].val * 2
-        }rpx`;
-      }
-      return borderRadius;
-    },
-    /*商品名称样式*/
-    productStyle() {
-      return {
-        color: this.dataConfig.goodsNameColor.color[0].item,
-        fontWeight: this.dataConfig.goodsName.tabVal ? "normal" : "bold",
-      };
-    },
-    /* 展示信息 */
-    checkboxInfo() {
-      return this.dataConfig.checkboxInfo.type;
-    },
-    /* 参与人数颜色 */
-    joinColor() {
-      return {
-        color: this.dataConfig.toneConfig.tabVal
-          ? this.dataConfig.joinNumColor.color[0].item
-          : "var(--view-theme)",
-      };
-    },
-    /* 价格颜色 */
-    priceColor() {
-      return this.dataConfig.toneConfig.tabVal
-        ? this.dataConfig.bargainPriceColor.color[0].item
-        : "var(--view-theme)";
-    },
-    /* 划线价颜色 */
-    otPriceColor() {
-      return {
-        color: this.dataConfig.goodsPriceColor.color[0].item,
-      };
-    },
-    showBtn() {
-      return this.dataConfig.bargainConfig.tabVal;
-    },
-    /* 按钮颜色 */
-    btnBgColor() {
-      return {
-        background: this.dataConfig.toneConfig.tabVal
-          ? `linear-gradient(90deg,${this.dataConfig.goodsBntColor.color[1].item} 0%,${this.dataConfig.goodsBntColor.color[0].item} 100%)`
-          : "linear-gradient(90deg, var(--view-theme) 0%, var(--view-gradient) 100%)",
-        color: this.dataConfig.goodsBntTxtColor.color[0].item,
-      };
-    },
-    /*砍价成功*/
-    braginSuccess() {
-      let styleObject = {};
-      if (this.dataConfig.toneConfig.tabVal) {
-        styleObject["color"] = this.dataConfig.joinNumColor.color[0].item;
-      } else {
-        styleObject["color"] = "var(--view-theme)";
-      }
-      return styleObject;
-    },
-    /*商品数量*/
-    numberConfig() {
-      return this.dataConfig.numberConfig.val;
-    },
-  },
-  mounted() {
-    this.getBargainList();
-  },
-  methods: {
-    goPage(url) {
-      uni.navigateTo({
-        url,
-      });
-    },
-    // 砍价列表
-    getBargainList() {
-      let limit = this.$config.LIMIT;
-      getThemeBargain({
-        limit: this.numberConfig >= limit ? limit : this.numberConfig,
-      }).then((res) => {
-        this.bargList = Array.isArray(res.data)
-          ? res.data
-          : res.data && res.data.list
-          ? res.data.list
-          : [];
-      });
-    },
-    bargDetail(item) {
-      // #ifndef MP
-      this.$emit("changeBarg", item);
-      // #endif
-      // #ifdef MP
-      openBargainSubscribe().then((res) => {
-        this.$emit("changeBarg", item);
-      });
-      // #endif
-    },
-  },
-};
+  };
+});
+const boxContentStyle = computed(() => {
+  let borderRadius = `0 0 ${props.dataConfig.fillet.val * 2}rpx ${
+    props.dataConfig.fillet.val * 2
+  }rpx`;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `0 0 ${props.dataConfig.fillet.valList[3].val * 2}rpx ${
+      props.dataConfig.fillet.valList[2].val * 2
+    }rpx`;
+  }
+  return {
+    borderRadius,
+    background: `linear-gradient(90deg, ${props.dataConfig.moduleColor.color[0].item} 0%, ${props.dataConfig.moduleColor.color[1].item} 100%)`,
+  };
+});
+/*商品模板*/
+const goodStyleConfig = computed(() => {
+  return props.dataConfig.goodStyleConfig.tabVal;
+});
+const styleConfig = computed(() => {
+  return props.dataConfig.styleConfig.tabVal;
+});
+const headerStyle = computed(() => {
+  let br = `${props.dataConfig.fillet.val * 2}rpx`,
+    borderRadius = "",
+    imgBgUrl = props.dataConfig.imgBgConfig.url;
+  if (props.dataConfig.fillet.type) {
+    borderRadius = `${props.dataConfig.fillet.valList[0].val * 2}rpx ${
+      props.dataConfig.fillet.valList[1].val * 2
+    }rpx 0 0`;
+  } else {
+    borderRadius = `${br} ${br} 0 0`;
+  }
+  let headerBgColor =
+    props.dataConfig.headerBgColor && props.dataConfig.headerBgColor.color;
+  let color1 =
+    headerBgColor && headerBgColor[0] ? headerBgColor[0].item : "#F62C2C";
+  let color2 =
+    headerBgColor && headerBgColor[1] ? headerBgColor[1].item : "#F96E29";
+  return {
+    backgroundImage: styleConfig.value
+      ? "url(" + imgBgUrl + ")"
+      : `linear-gradient(90deg,${color1} 0%,${color2} 100%)`,
+    borderRadius,
+  };
+});
+const titleStyle = computed(() => {
+  let titleText = props.dataConfig.titleText;
+  return {
+    fontStyle: !titleText.tabVal
+      ? "normal"
+      : titleText.tabList[titleText.tabVal].style,
+    fontWeight: !titleText.tabVal ? "bold" : "normal",
+    color: props.dataConfig.titleColor.color[0].item,
+    fontSize: props.dataConfig.titleNumber.val * 2 + "rpx",
+  };
+});
+/*标题是文本还是图片*/
+const titleConfig = computed(() => {
+  return props.dataConfig.titleConfig.tabVal;
+});
+/*标题文本*/
+const titleTxtConfig = computed(() => {
+  return props.dataConfig.titleTxtConfig.value;
+});
+/*标题图片*/
+const titleImg = computed(() => {
+  return styleConfig.value ? titleUrl.value : titleColorUrl.value;
+});
+const titleColorUrl = computed(() => {
+  return props.dataConfig.imgColorConfig.url;
+});
+const titleUrl = computed(() => {
+  return props.dataConfig.imgConfig.url;
+});
+/*标题提示文字*/
+const tipsColor = computed(() => {
+  return {
+    color: styleConfig.value
+      ? props.dataConfig.tipsColor.color[0].item
+      : props.dataConfig.tipsColor2.color[0].item,
+  };
+});
+/*分割线颜色*/
+const dividerColor = computed(() => {
+  return {
+    color: props.dataConfig.dividerColor.color[0].item,
+  };
+});
+/*头部提示语文本*/
+const tipTxt = computed(() => {
+  return props.dataConfig.tipTxtConfig.value;
+});
+/*头部按钮文本*/
+const rightBntTxt = computed(() => {
+  return props.dataConfig.rightBntConfig.value;
+});
+/*头部按钮样式*/
+const headerBntColor = computed(() => {
+  return {
+    color: styleConfig.value
+      ? props.dataConfig.headerBntColor.color[0].item
+      : props.dataConfig.headerBntColor2.color[0].item,
+    fontSize: `${props.dataConfig.bntNumber.val * 2}rpx`,
+  };
+});
+/*商品图片圆角样式*/
+const imgStyle = computed(() => {
+  let borderRadius = `${props.dataConfig.filletImg.val * 2}rpx`;
+  if (props.dataConfig.filletImg.type) {
+    borderRadius = `${props.dataConfig.filletImg.valList[0].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[1].val * 2
+    }rpx ${props.dataConfig.filletImg.valList[3].val * 2}rpx ${
+      props.dataConfig.filletImg.valList[2].val * 2
+    }rpx`;
+  }
+  return borderRadius;
+});
+/*商品名称样式*/
+const productStyle = computed(() => {
+  return {
+    color: props.dataConfig.goodsNameColor.color[0].item,
+    fontWeight: props.dataConfig.goodsName.tabVal ? "normal" : "bold",
+  };
+});
+/* 展示信息 */
+const checkboxInfo = computed(() => {
+  return props.dataConfig.checkboxInfo.type;
+});
+/* 参与人数颜色 */
+const joinColor = computed(() => {
+  return {
+    color: props.dataConfig.toneConfig.tabVal
+      ? props.dataConfig.joinNumColor.color[0].item
+      : "var(--view-theme)",
+  };
+});
+/* 价格颜色 */
+const priceColor = computed(() => {
+  return props.dataConfig.toneConfig.tabVal
+    ? props.dataConfig.bargainPriceColor.color[0].item
+    : "var(--view-theme)";
+});
+/* 划线价颜色 */
+const otPriceColor = computed(() => {
+  return {
+    color: props.dataConfig.goodsPriceColor.color[0].item,
+  };
+});
+const showBtn = computed(() => {
+  return props.dataConfig.bargainConfig.tabVal;
+});
+/* 按钮颜色 */
+const btnBgColor = computed(() => {
+  return {
+    background: props.dataConfig.toneConfig.tabVal
+      ? `linear-gradient(90deg,${props.dataConfig.goodsBntColor.color[1].item} 0%,${props.dataConfig.goodsBntColor.color[0].item} 100%)`
+      : "linear-gradient(90deg, var(--view-theme) 0%, var(--view-gradient) 100%)",
+    color: props.dataConfig.goodsBntTxtColor.color[0].item,
+  };
+});
+/*砍价成功*/
+const braginSuccess = computed(() => {
+  let styleObject = {};
+  if (props.dataConfig.toneConfig.tabVal) {
+    styleObject["color"] = props.dataConfig.joinNumColor.color[0].item;
+    styleObject["background"] = `linear-gradient(90deg,${props.dataConfig.joinBgColor.color[0].item} 0%,${props.dataConfig.joinBgColor.color[1].item} 100%)`;
+  } else {
+    styleObject["color"] = "var(--view-theme)";
+    styleObject["background"] = "linear-gradient(90deg, var(--view-theme) 0%, var(--view-gradient) 100%)";
+  }
+  return styleObject;
+});
+/*商品数量*/
+const numberConfig = computed(() => {
+  return props.dataConfig.numberConfig.val;
+});
+
+onMounted(() => {
+  getBargainList();
+});
+
+function goPage(url) {
+  uni.navigateTo({
+    url,
+  });
+}
+// 砍价列表
+function getBargainList() {
+  let limit = proxy.$config.LIMIT;
+  getThemeBargain({
+    limit: numberConfig.value >= limit ? limit : numberConfig.value,
+  }).then((res) => {
+    bargList.value = Array.isArray(res.data)
+      ? res.data
+      : res.data && res.data.list
+      ? res.data.list
+      : [];
+  });
+}
+function bargDetail(item) {
+  // #ifndef MP
+  emit("changeBarg", item);
+  // #endif
+  // #ifdef MP
+  openBargainSubscribe().then((res) => {
+    emit("changeBarg", item);
+  });
+  // #endif
+}
 </script>
 
 <style lang="scss">
@@ -557,5 +555,14 @@ export default {
 }
 scroll-view {
   box-sizing: border-box;
+}
+.bargain-scroll {
+  white-space: nowrap;
+
+  .bargain-scroll-item {
+    display: inline-block;
+    width: 224rpx;
+    vertical-align: top;
+  }
 }
 </style>
