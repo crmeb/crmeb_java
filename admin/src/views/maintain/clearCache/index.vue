@@ -8,7 +8,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 // +---------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +---------------------------------------------------------------------
@@ -18,17 +18,16 @@
 // +---------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { clearCacheApi } from '@/api/systemConfig';
-export default {
-  name: 'clearCache',
-  methods: {
-    handleClear() {
-      clearCacheApi().then((response) => {
-        this.$message.success('清除成功');
-      });
-    },
-  },
-};
+
+defineOptions({ name: 'clearCache' });
+
+function handleClear() {
+  clearCacheApi().then((response) => {
+    ElMessage.success('清除成功');
+  });
+}
 </script>
 
 <style scoped></style>

@@ -2,34 +2,34 @@
   <div class="lottie-bg">
     <div>222进来了22222</div>
     <div id="lottie">
-      <img src="@/assets/imgs/live-logo.gif" rel="preload" style="width: 100%" />
+      <img :src="liveLogoImg" rel="preload" style="width: 100%" />
     </div>
   </div>
 </template>
-<script>
-import { auth, oAuth } from '@/libs/wechat';
+<script setup>
+import { onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import Cookies from 'js-cookie';
+import liveLogoImg from '@/assets/imgs/live-logo.gif';
+
+defineOptions({ name: 'AuthSend' });
+
 const WX_AUTH = 'wx_auth';
-export default {
-  name: 'AuthSend',
-  created() {
-    import('@/assets/js/media_750');
-    // const hash = window.location.search.slice(1)
-    // if (window.localStorage) {
-    //   window.localStorage.setItem('x-admin-oauth-code', hash)
-    //   window.close()
-    // }
-    Cookies.set(WX_AUTH, this.$route.query.code);
-  },
-  render: function (h) {
-    return h(); // avoid warning message
-  },
-  mounted() {
-    if (this.$route.query.code) location.replace('/login');
-    // oAuth('/auth-send')
-    //  if( Cookies.get(WX_AUTH)!==undefined) location.replace("/login");
-  },
-};
+const route = useRoute();
+
+// const hash = window.location.search.slice(1)
+// if (window.localStorage) {
+//   window.localStorage.setItem('x-admin-oauth-code', hash)
+//   window.close()
+// }
+Cookies.set(WX_AUTH, route.query.code);
+
+onMounted(() => {
+  import('@/assets/js/media_750');
+  if (route.query.code) location.replace('/login');
+  // oAuth('/auth-send')
+  //  if( Cookies.get(WX_AUTH)!==undefined) location.replace("/login");
+});
 </script>
 <style scoped>
 .lottie-bg {

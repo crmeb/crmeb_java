@@ -27,7 +27,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 // +---------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +---------------------------------------------------------------------
@@ -37,59 +37,54 @@
 // +---------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
+import { ref, reactive } from 'vue';
 import * as schedule from '@/api/schedule.js';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
 import { Debounce } from '@/utils/validate';
-export default {
-  name: 'CompanyList',
-  data() {
-    return {
-      tableData: {
-        data: [],
-        total: 0,
-      },
-      loading: false,
-      dialogVisible: false,
-      editId: 0,
-      tableFrom: {
-        page: 1,
-        limit: 20,
-        total: 0,
-      },
-    };
-  },
-  created() {
-    if (checkPermi(['admin:schedule:job:log:list'])) this.getjobLogList();
-  },
-  methods: {
-    checkPermi,
-    //  获取定时任务日志分页列表
-    getjobLogList() {
-      this.loading = true;
-      schedule
-        .jobLogList({
-          page: this.tableFrom.page,
-          limit: this.tableFrom.limit,
-        })
-        .then((res) => {
-          this.loading = false;
-          this.tableData = res;
-        })
-        .catch(() => {
-          this.loading = false;
-        });
-    },
-    // 分页
-    pageChange(e) {
-      this.tableFrom.page = e;
-      this.getjobLogList();
-    },
-    handleSizeChange(e) {
-      this.tableFrom.limit = e;
-      this.getjobLogList();
-    },
-  },
-};
+
+defineOptions({ name: 'CompanyList' });
+
+const tableData = reactive({
+  data: [],
+  total: 0,
+});
+const loading = ref(false);
+const dialogVisible = ref(false);
+const editId = ref(0);
+const tableFrom = reactive({
+  page: 1,
+  limit: 20,
+  total: 0,
+});
+
+//  获取定时任务日志分页列表
+function getjobLogList() {
+  loading.value = true;
+  schedule
+    .jobLogList({
+      page: tableFrom.page,
+      limit: tableFrom.limit,
+    })
+    .then((res) => {
+      loading.value = false;
+      Object.assign(tableData, res);
+    })
+    .catch(() => {
+      loading.value = false;
+    });
+}
+// 分页
+function pageChange(e) {
+  tableFrom.page = e;
+  getjobLogList();
+}
+function handleSizeChange(e) {
+  tableFrom.limit = e;
+  getjobLogList();
+}
+
+// created
+if (checkPermi(['admin:schedule:job:log:list'])) getjobLogList();
 </script>
 
 <style lang="scss" scoped>

@@ -3,14 +3,14 @@
     <el-card class="box-card">
       <div class="clearfix">
         <div class="container">
-          <el-form inline size="small" label-width="70px">
+          <el-form inline label-width="70px">
             <el-form-item label="时间选择：">
               <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
               <!-- <el-date-picker
                 v-model="timeVal"
-                value-format="yyyy-MM-dd"
-                format="yyyy-MM-dd"
-                size="small"
+                value-format="YYYY-MM-DD"
+                format="YYYY-MM-DD"
+
                 type="daterange"
                 placement="bottom-end"
                 placeholder="自定义时间"
@@ -41,14 +41,14 @@
                 v-model="tableFrom.keywords"
                 placeholder="微信号/姓名/支付宝账号/银行卡号/失败原因"
                 class="selWidth"
-                size="small"
+
                 clearable
               >
               </el-input>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" size="small" @click="getList(1)">搜索</el-button>
-              <el-button size="small" @click="handleReset">重置</el-button>
+              <el-button type="primary" @click="getList(1)">搜索</el-button>
+              <el-button @click="handleReset">重置</el-button>
             </el-form-item>
           </el-form>
         </div>
@@ -62,25 +62,25 @@
         v-loading="listLoading"
         :data="tableData.data"
         style="width: 100%"
-        size="mini"
+
         class="table"
         highlight-current-row
       >
         <el-table-column prop="id" label="ID" width="60" />
         <el-table-column label="用户信息" min-width="180">
-          <template slot-scope="scope">
+          <template #default="scope">
             <p>用户昵称：{{ scope.row.nickName }}</p>
             <p>用户id：{{ scope.row.uid }}</p>
           </template>
         </el-table-column>
         <el-table-column prop="extractPrice" label="提现金额" min-width="120" />
         <el-table-column label="提现方式" min-width="100">
-          <template slot-scope="scope">
-            <span>{{ scope.row.extractType | extractTypeFilter }}</span>
+          <template #default="scope">
+            <span>{{ $filters.extractTypeFilter(scope.row.extractType) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="账号" min-width="200">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div v-if="scope.row.extractType === 'bank'">
               <p>姓名：{{ scope.row.realName }}</p>
               <p>卡号：{{ scope.row.bankCode }}</p>
@@ -92,7 +92,7 @@
               <div class="acea-row">
                 收款码：
                 <div class="demo-image__preview" v-if="scope.row.qrcodeUrl">
-                  <el-image :src="scope.row.qrcodeUrl" :preview-src-list="[scope.row.qrcodeUrl]" />
+                  <el-image :src="scope.row.qrcodeUrl" :preview-src-list="[scope.row.qrcodeUrl]" preview-teleported />
                 </div>
                 <div v-else>无</div>
               </div>
@@ -103,7 +103,7 @@
               <div class="acea-row">
                 收款码：
                 <div class="demo-image__preview" v-if="scope.row.qrcodeUrl">
-                  <el-image :src="scope.row.qrcodeUrl" :preview-src-list="[scope.row.qrcodeUrl]" />
+                  <el-image :src="scope.row.qrcodeUrl" :preview-src-list="[scope.row.qrcodeUrl]" preview-teleported />
                 </div>
                 <div v-else>无</div>
               </div>
@@ -112,15 +112,15 @@
           </template>
         </el-table-column>
         <el-table-column label="审核状态" min-width="200">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div>
-              <span class="spBlock">{{ scope.row.status | extractStatusFilter }}</span>
+              <span class="spBlock">{{ $filters.extractStatusFilter(scope.row.status) }}</span>
               <span v-if="scope.row.status === -1">拒绝原因：{{ scope.row.failMsg }}</span>
             </div>
             <template v-if="scope.row.status === 0 && checkPermi(['admin:finance:apply:apply'])">
               <el-button
                 type="danger"
-                icon="el-icon-close"
+                :icon="Close"
                 v-debounceClick="
                   () => {
                     handleFail(scope.row.id);
@@ -130,7 +130,7 @@
               >
               <el-button
                 type="primary"
-                icon="el-icon-check"
+                :icon="Check"
                 v-debounceClick="
                   () => {
                     handlePass(scope.row.id);
@@ -142,13 +142,13 @@
           </template>
         </el-table-column>
         <el-table-column label="备注" min-width="200">
-          <template slot-scope="scope">
-            <span class="spBlock">{{ scope.row.mark | filterEmpty }}</span>
+          <template #default="scope">
+            <span class="spBlock">{{ $filters.filterEmpty(scope.row.mark) }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" min-width="150" />
         <el-table-column label="操作" width="80" fixed="right">
-          <template slot-scope="scope">
+          <template #default="scope">
             <a v-if="scope.row.status !== 1" @click="handleEdit(scope.row)" v-hasPermi="['admin:finance:apply:update']"
               >编辑</a
             >
@@ -171,7 +171,7 @@
     </el-card>
 
     <!--编辑-->
-    <el-dialog title="编辑" :visible.sync="dialogVisible" width="540px" :before-close="handleClose">
+    <el-dialog title="编辑" v-model="dialogVisible" width="540px" :before-close="handleClose">
       <!--微信-->
       <zb-parser
         v-if="dialogVisible && (tableFrom.extractType === 'weixin' || extractType === 'weixin')"
@@ -206,189 +206,186 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage, ElMessageBox } from '@/utils/elementPlusFeedback';
+import { Close, Check } from '@element-plus/icons-vue';
 import { applyListApi, applyBalanceApi, applyUpdateApi, applyStatusApi } from '@/api/financial';
 import cardsData from '@/components/cards/index';
 import zbParser from '@/components/FormGenerator/components/parser/ZBParser';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
 import { Debounce } from '@/utils/validate';
-export default {
-  name: 'AccountsExtract',
-  components: {
-    cardsData,
-    zbParser,
-  },
-  data() {
-    return {
-      editData: {},
-      isCreate: 1,
-      dialogVisible: false,
-      timeVal: [],
-      tableData: {
-        data: [],
-        total: 0,
+
+defineOptions({ name: 'AccountsExtract' });
+
+const { proxy } = getCurrentInstance();
+const constants = proxy.$constants;
+
+const editData = ref({});
+const isCreate = ref(1);
+const dialogVisible = ref(false);
+const timeVal = ref([]);
+const tableData = reactive({
+  data: [],
+  total: 0,
+});
+const listLoading = ref(true);
+const tableFrom = reactive({
+  extractType: '',
+  status: '',
+  dateLimit: '',
+  keywords: '',
+  page: 1,
+  limit: 20,
+});
+const fromList = constants.fromList;
+const cardLists = ref([]);
+const applyId = ref(null);
+const extractType = ref('');
+
+//重置
+function handleReset() {
+  tableFrom.extractType = '';
+  tableFrom.status = '';
+  tableFrom.dateLimit = '';
+  tableFrom.keywords = '';
+  timeVal.value = [];
+  getList();
+  getBalance();
+}
+function resetForm() {
+  dialogVisible.value = false;
+}
+function handleEdit(row) {
+  extractType.value = row.extractType;
+  applyId.value = row.id;
+  dialogVisible.value = true;
+  isCreate.value = 1;
+  editData.value = JSON.parse(JSON.stringify(row));
+}
+const handlerSubmit = Debounce(function (formValue) {
+  formValue.id = applyId.value;
+  formValue.extractType = extractType.value;
+  applyUpdateApi(formValue).then((data) => {
+    ElMessage.success('编辑成功');
+    dialogVisible.value = false;
+    getList();
+  });
+});
+function handleClose() {
+  dialogVisible.value = false;
+  editData.value = {};
+}
+// 审核未通过
+function handleFail(id) {
+  ElMessageBox.prompt('未通过', '拒绝原因', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputErrorMessage: '请输入原因',
+    inputType: 'textarea',
+    inputValue: '输入信息不完整或有误!',
+    inputPlaceholder: '请输入原因',
+    inputValidator: (value) => {
+      if (!value) {
+        return '请输入原因';
+      }
+    },
+  })
+    .then(({ value }) => {
+      applyStatusApi({ id: id, status: -1, backMessage: value }).then((res) => {
+        ElMessage({
+          type: 'success',
+          message: '提交成功',
+        });
+        getList();
+      });
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '取消输入',
+      });
+    });
+}
+// 审核通过
+function handlePass(id) {
+  proxy.$modalSure('审核通过吗').then(() => {
+    applyStatusApi({ id: id, status: 1 }).then(() => {
+      ElMessage.success('操作成功');
+      getList();
+    });
+  });
+}
+// 金额
+function getBalance() {
+  applyBalanceApi({ dateLimit: tableFrom.dateLimit }).then((res) => {
+    cardLists.value = [
+      { name: '待提现金额', count: res.toBeWithdrawn, color: '#1890FF', class: 'one', icon: 'iconzhichujine1' },
+      {
+        name: '佣金总金额',
+        count: res.commissionTotal,
+        color: '#A277FF',
+        class: 'two',
+        icon: 'iconzhifuyongjinjine1',
       },
-      listLoading: true,
-      tableFrom: {
-        extractType: '',
-        status: '',
-        dateLimit: '',
-        keywords: '',
-        page: 1,
-        limit: 20,
-      },
-      fromList: this.$constants.fromList,
-      cardLists: [],
-      applyId: null,
-      extractType: '',
-    };
-  },
-  mounted() {
-    this.getList();
-    this.getBalance();
-  },
-  methods: {
-    checkPermi,
-    //重置
-    handleReset() {
-      this.tableFrom.extractType = '';
-      this.tableFrom.status = '';
-      this.tableFrom.dateLimit = '';
-      this.tableFrom.keywords = '';
-      this.timeVal = [];
-      this.getList();
-      this.getBalance();
-    },
-    resetForm() {
-      this.dialogVisible = false;
-    },
-    handleEdit(row) {
-      this.extractType = row.extractType;
-      this.applyId = row.id;
-      this.dialogVisible = true;
-      this.isCreate = 1;
-      this.editData = JSON.parse(JSON.stringify(row));
-    },
-    handlerSubmit: Debounce(function (formValue) {
-      formValue.id = this.applyId;
-      formValue.extractType = this.extractType;
-      applyUpdateApi(formValue).then((data) => {
-        this.$message.success('编辑成功');
-        this.dialogVisible = false;
-        this.getList();
-      });
-    }),
-    handleClose() {
-      this.dialogVisible = false;
-      this.editData = {};
-    },
-    // 审核未通过
-    handleFail(id) {
-      this.$prompt('未通过', '拒绝原因', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        inputErrorMessage: '请输入原因',
-        inputType: 'textarea',
-        inputValue: '输入信息不完整或有误!',
-        inputPlaceholder: '请输入原因',
-        inputValidator: (value) => {
-          if (!value) {
-            return '请输入原因';
-          }
-        },
-      })
-        .then(({ value }) => {
-          applyStatusApi({ id: id, status: -1, backMessage: value }).then((res) => {
-            this.$message({
-              type: 'success',
-              message: '提交成功',
-            });
-            this.getList();
-          });
-        })
-        .catch(() => {
-          this.$message({
-            type: 'info',
-            message: '取消输入',
-          });
-        });
-    },
-    // 审核通过
-    handlePass(id) {
-      this.$modalSure('审核通过吗').then(() => {
-        applyStatusApi({ id: id, status: 1 }).then(() => {
-          this.$message.success('操作成功');
-          this.getList();
-        });
-      });
-    },
-    // 金额
-    getBalance() {
-      applyBalanceApi({ dateLimit: this.tableFrom.dateLimit }).then((res) => {
-        this.cardLists = [
-          { name: '待提现金额', count: res.toBeWithdrawn, color: '#1890FF', class: 'one', icon: 'iconzhichujine1' },
-          {
-            name: '佣金总金额',
-            count: res.commissionTotal,
-            color: '#A277FF',
-            class: 'two',
-            icon: 'iconzhifuyongjinjine1',
-          },
-          { name: '已提现金额', count: res.withdrawn, color: '#EF9C20', class: 'three', icon: 'iconyingyee1' },
-          { name: '未提现金额', count: res.unDrawn, color: '#1BBE6B', class: 'four', icon: 'iconyuezhifujine2' },
-        ];
-      });
-    },
-    // 选择时间
-    selectChange(tab) {
-      this.timeVal = [];
-      this.tableFrom.dateLimit = tab;
-      this.tableFrom.page = 1;
-      this.getList();
-      this.getBalance();
-    },
-    // 具体日期
-    onchangeTime(e) {
-      this.timeVal = e;
-      this.tableFrom.dateLimit = e ? this.timeVal.join(',') : '';
-      this.tableFrom.page = 1;
-      this.getList();
-      this.getBalance();
-    },
-    // 列表
-    getList(num) {
-      this.listLoading = true;
-      this.tableFrom.page = num ? num : this.tableFrom.page;
-      applyListApi(this.tableFrom)
-        .then((res) => {
-          this.tableData.data = res.list;
-          this.tableData.total = res.total;
-          this.listLoading = false;
-        })
-        .catch(() => {
-          this.listLoading = false;
-        });
-    },
-    pageChange(page) {
-      this.tableFrom.page = page;
-      this.getList();
-    },
-    handleSizeChange(val) {
-      this.tableFrom.limit = val;
-      this.getList();
-    },
-  },
-};
+      { name: '已提现金额', count: res.withdrawn, color: '#EF9C20', class: 'three', icon: 'iconyingyee1' },
+      { name: '未提现金额', count: res.unDrawn, color: '#1BBE6B', class: 'four', icon: 'iconyuezhifujine2' },
+    ];
+  });
+}
+// 选择时间
+function selectChange(tab) {
+  timeVal.value = [];
+  tableFrom.dateLimit = tab;
+  tableFrom.page = 1;
+  getList();
+  getBalance();
+}
+// 具体日期
+function onchangeTime(e) {
+  timeVal.value = e;
+  tableFrom.dateLimit = e ? timeVal.value.join(',') : '';
+  tableFrom.page = 1;
+  getList();
+  getBalance();
+}
+// 列表
+function getList(num) {
+  listLoading.value = true;
+  tableFrom.page = num ? num : tableFrom.page;
+  applyListApi(tableFrom)
+    .then((res) => {
+      tableData.data = res.list;
+      tableData.total = res.total;
+      listLoading.value = false;
+    })
+    .catch(() => {
+      listLoading.value = false;
+    });
+}
+function pageChange(page) {
+  tableFrom.page = page;
+  getList();
+}
+function handleSizeChange(val) {
+  tableFrom.limit = val;
+  getList();
+}
+
+onMounted(() => {
+  getList();
+  getBalance();
+});
 </script>
 
 <style scoped>
 .selWidth {
   width: 350px;
 }
-::v-deep .dialog-footer-inner {
+:deep(.dialog-footer-inner) {
   padding-top: 0 !important;
 }
-::v-deep [role='dialog'] .el-message-box__content {
+:deep([role='dialog'] .el-message-box__content) {
   padding: 30px 24px 20px !important;
 }
 </style>

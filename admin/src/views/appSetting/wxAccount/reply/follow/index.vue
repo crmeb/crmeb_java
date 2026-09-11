@@ -5,7 +5,7 @@
         v-show="$route.path.indexOf('keyword') !== -1"
         :to="{ path: '/appSetting/publicAccount/wxReply/keyword' }"
       >
-        <el-button  class="mr20 mb20" icon="el-icon-back">返回</el-button>
+        <el-button  class="mr20 mb20" :icon="Back">返回</el-button>
       </router-link>
       <el-row :gutter="30" v-loading="loading">
         <el-col v-bind="grid" class="acea-row">
@@ -48,12 +48,12 @@
         <el-col :xl="11" :lg="12" :md="14" :sm="22" :xs="22">
           <div class="box-card right ml50">
             <el-form
-              ref="formValidate"
+              ref="formValidateRef"
               :model="formValidate"
               :rules="ruleValidate"
               label-width="100px"
               class="mt20"
-              @submit.native.prevent
+              @submit.prevent
             >
               <el-form-item v-if="$route.path.indexOf('keyword') !== -1" label="关键字：" prop="val">
                 <div class="arrbox">
@@ -69,7 +69,7 @@
                   </el-tag>
                   <el-input
                     v-model="val"
-                    size="mini"
+
                     class="arrbox_ip"
                     placeholder="输入后回车"
                     style="width: 90%"
@@ -79,8 +79,8 @@
               </el-form-item>
               <el-form-item label="规则状态：">
                 <el-radio-group v-model="formValidate.status">
-                  <el-radio :label="true">启用</el-radio>
-                  <el-radio :label="false">禁用</el-radio>
+                  <el-radio :label="true" :value="true">启用</el-radio>
+                  <el-radio :label="false" :value="false">禁用</el-radio>
                 </el-radio-group>
               </el-form-item>
               <el-form-item label="消息类型：" prop="type">
@@ -143,7 +143,7 @@
               <el-button
                 type="primary"
                 class="ml50"
-                @click="submenus('formValidate')"
+                @click="submenus('formValidateRef')"
                 v-hasPermi="['admin:wechat:keywords:reply:update']"
                 >保存并发布
               </el-button>
@@ -155,296 +155,298 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, computed, watch, onMounted, getCurrentInstance } from 'vue';
+import { Back } from '@element-plus/icons-vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ElMessage, ElLoading } from '@/utils/elementPlusFeedback';
 import { getToken } from '@/utils/auth';
-import { replySaveApi, replyEditApi, replyInfoApi, replyListApi, keywordsInfoApi, replyUpdateApi } from '@/api/wxApi';
+import { replySaveApi, replyInfoApi, keywordsInfoApi, replyUpdateApi } from '@/api/wxApi';
 import { wechatUploadApi } from '@/api/systemSetting';
 import { Debounce } from '@/utils/validate';
-export default {
-  name: 'Index',
-  components: {},
-  data() {
-    const validateContent = (rule, value, callback) => {
-      if (this.formValidate.type === 'text') {
-        if (this.formValidate.contents.content === '') {
-          callback(new Error('请填写规则内容'));
-        } else {
-          callback();
-        }
-      }
-    };
-    const validateSrc = (rule, value, callback) => {
-      if (this.formValidate.type === 'image' && this.formValidate.contents.mediaId === '') {
-        callback(new Error('请上传'));
-      } else {
-        callback();
-      }
-    };
-    const validateVal = (rule, value, callback) => {
-      if (this.labelarr.length === 0) {
-        callback(new Error('请输入后回车'));
-      } else {
-        callback();
-      }
-    };
-    return {
-      loading: false,
-      visible: false,
-      grid: {
-        xl: 7,
-        lg: 12,
-        md: 10,
-        sm: 24,
-        xs: 24,
-      },
-      delfromData: {},
-      isShow: false,
-      maxCols: 3,
-      scrollerHeight: '600',
-      contentTop: '130',
-      contentWidth: '98%',
-      modals: false,
-      val: '',
-      formatImg: ['jpg', 'jpeg', 'png', 'bmp', 'gif'],
-      formatVoice: ['mp3', 'wma', 'wav', 'amr'],
-      header: {},
-      formValidate: {
-        status: true,
-        type: '',
-        keywords: '',
-        contents: {
-          content: '',
-          articleData: {},
-          mediaId: '',
-          srcUrl: '',
-          articleId: null,
-        },
-        id: null,
-      },
-      ruleValidate: {
-        val: [{ required: true, validator: validateVal, trigger: 'blur' }],
-        type: [{ required: true, message: '请选择消息类型', trigger: 'change' }],
-        content: [{ required: true, validator: validateContent, trigger: 'blur' }],
-        mediaId: [{ required: true, validator: validateSrc, trigger: 'change' }],
-      },
-      labelarr: [],
-      myHeaders: { 'X-Token': getToken() },
-    };
-  },
-  computed: {
-    fileUrl() {
-      return https + `/wechat/reply/upload/image`;
-    },
-    voiceUrl() {
-      return https + `/wechat/reply/upload/voice`;
-    },
-    httpsURL() {
-      return process.env.VUE_APP_BASE_API.replace('api/', '');
-    },
-  },
-  watch: {
-    $route(to, from) {
-      if (this.$route.params.id) {
-        // this.formValidate.keywords = this.$route.params.key
-        this.details();
-      } else {
-        // this.labelarr = []
-        // this.$refs['formValidate'].resetFields()
-      }
-    },
-  },
-  mounted() {
-    if (this.$route.params.id) {
-      this.details();
+
+defineOptions({ name: 'Index' });
+
+const route = useRoute();
+const router = useRouter();
+const { proxy } = getCurrentInstance();
+
+const validateContent = (rule, value, callback) => {
+  if (formValidate.type === 'text') {
+    if (formValidate.contents.content === '') {
+      callback(new Error('请填写规则内容'));
+    } else {
+      callback();
     }
-    if (this.$route.path.indexOf('keyword') === -1) {
-      this.followDetails();
-    }
-  },
-  methods: {
-    change(e) {
-      this.$forceUpdate();
-    },
-    // 上传
-    handleUploadForm(param) {
-      const formData = new FormData();
-      formData.append('media', param.file);
-      let loading = this.$loading({
-        lock: true,
-        text: '上传中，请稍候...',
-        spinner: 'el-icon-loading',
-        background: 'rgba(0, 0, 0, 0.7)',
-      });
-      wechatUploadApi(formData, { type: this.formValidate.type === 'image' ? 'image' : 'voice' })
-        .then((res) => {
-          loading.close();
-          this.formValidate.contents.mediaId = res.mediaId;
-          this.formValidate.contents.srcUrl = res.url;
-          this.$message.success('上传成功');
-        })
-        .catch(() => {
-          loading.close();
-        });
-    },
-    changePic() {
-      const _this = this;
-      this.$modalArticle(function (row) {
-        _this.formValidate.contents.articleData = {
-          title: row.title,
-          imageInput: row.imageInput,
-        };
-        _this.formValidate.contents.articleId = row.id;
-      });
-    },
-    handleClosePic() {
-      this.visible = false;
-    },
-    // 详情
-    details() {
-      this.loading = true;
-      replyInfoApi({ id: this.$route.params.id })
-        .then(async (res) => {
-          const info = res || null;
-          this.formValidate = {
-            status: info.status,
-            type: info.type,
-            keywords: info.keywords,
-            id: info.id,
-            contents: {
-              content: JSON.parse(info.data).content,
-              mediaId: JSON.parse(info.data).mediaId,
-              srcUrl: JSON.parse(info.data).srcUrl,
-              articleData: JSON.parse(info.data).articleData,
-            },
-          };
-          this.labelarr = info.keywords.split(',') || [];
-          this.loading = false;
-        })
-        .catch(() => {
-          this.loading = false;
-        });
-    },
-    // 关注回复，无效关键词详情
-    followDetails() {
-      this.loading = true;
-      keywordsInfoApi({ keywords: this.$route.path.indexOf('follow') !== -1 ? 'subscribe' : 'default' })
-        .then(async (res) => {
-          const info = res || null;
-          this.formValidate = {
-            status: info.status,
-            type: info.type,
-            keywords: info.keywords,
-            data: '',
-            id: info.id,
-            contents: {
-              content: JSON.parse(info.data).content || '',
-              mediaId: JSON.parse(info.data).mediaId || '',
-              srcUrl: JSON.parse(info.data).srcUrl || '',
-              articleData: JSON.parse(info.data).articleData || {},
-            },
-          };
-          this.loading = false;
-        })
-        .catch(() => {
-          this.loading = false;
-          // if (res.message === '数据不存在') return
-          // this.$message.error(res.message)
-        });
-    },
-    // 下拉选择
-    RuleFactor(type) {
-      switch (type) {
-        case 'text':
-          this.formValidate.contents.mediaId = '';
-          this.formValidate.contents.srcUrl = '';
-          this.formValidate.contents.articleData = {};
-          break;
-        case 'news':
-          this.formValidate.contents.mediaId = '';
-          this.formValidate.contents.content = '';
-          this.formValidate.contents.srcUrl = '';
-          this.formValidate.contents.articleData = {};
-          break;
-        default:
-          this.formValidate.contents.content = '';
-          this.formValidate.contents.mediaId = '';
-          this.formValidate.contents.articleData = {};
-      }
-      // this.$refs['formValidate'].resetFields();
-    },
-    handleClose(tag) {
-      const index = this.labelarr.indexOf(tag);
-      this.labelarr.splice(index, 1);
-    },
-    addlabel() {
-      const count = this.labelarr.indexOf(this.val);
-      if (count === -1) {
-        this.labelarr.push(this.val);
-      }
-      this.val = '';
-    },
-    // 保存
-    submenus: Debounce(function (name) {
-      this.$refs[name].validate((valid) => {
-        if (valid) {
-          this.formValidate.keywords = this.labelarr.join(',');
-          this.formValidate.data = JSON.stringify(this.formValidate.contents);
-          if (this.$route.path.indexOf('keyword') !== -1) {
-            this.$route.params.id
-              ? replyUpdateApi({ id: this.$route.params.id }, this.formValidate)
-                  .then(async (res) => {
-                    this.operation();
-                  })
-                  .catch((res) => {
-                    this.$message.error(res.message);
-                  })
-              : replySaveApi(this.formValidate)
-                  .then(async (res) => {
-                    this.operation();
-                  })
-                  .catch((res) => {
-                    this.$message.error(res.message);
-                  });
-          } else {
-            this.$route.path.indexOf('follow') !== -1
-              ? (this.formValidate.keywords = 'subscribe')
-              : (this.formValidate.keywords = 'default');
-            this.formValidate.id !== null
-              ? replyUpdateApi({ id: this.formValidate.id }, this.formValidate).then(async (res) => {
-                  this.$message.success('操作成功');
-                })
-              : replySaveApi(this.formValidate)
-                  .then(async (res) => {
-                    this.operation();
-                  })
-                  .catch((res) => {
-                    this.$message.error(res.message);
-                  });
-          }
-        } else {
-          return false;
-        }
-      });
-    }),
-    // 保存成功操作
-    operation() {
-      this.$modalSure('继续添加')
-        .then(() => {
-          setTimeout(() => {
-            this.labelarr = [];
-            this.val = '';
-            this.$refs['formValidate'].resetFields();
-            this.formValidate.contents.mediaId = '';
-          }, 1000);
-        })
-        .catch(() => {
-          setTimeout(() => {
-            this.$router.push({ path: `/appSetting/publicAccount/wxReply/keyword` });
-          }, 500);
-        });
-    },
-  },
+  }
 };
+const validateSrc = (rule, value, callback) => {
+  if (formValidate.type === 'image' && formValidate.contents.mediaId === '') {
+    callback(new Error('请上传'));
+  } else {
+    callback();
+  }
+};
+const validateVal = (rule, value, callback) => {
+  if (labelarr.value.length === 0) {
+    callback(new Error('请输入后回车'));
+  } else {
+    callback();
+  }
+};
+
+const loading = ref(false);
+const visible = ref(false);
+const grid = reactive({
+  xl: 7,
+  lg: 12,
+  md: 10,
+  sm: 24,
+  xs: 24,
+});
+const delfromData = ref({});
+const isShow = ref(false);
+const maxCols = ref(3);
+const scrollerHeight = ref('600');
+const contentTop = ref('130');
+const contentWidth = ref('98%');
+const modals = ref(false);
+const val = ref('');
+const formatImg = ref(['jpg', 'jpeg', 'png', 'bmp', 'gif']);
+const formatVoice = ref(['mp3', 'wma', 'wav', 'amr']);
+const header = ref({});
+const formValidate = reactive({
+  status: true,
+  type: '',
+  keywords: '',
+  contents: {
+    content: '',
+    articleData: {},
+    mediaId: '',
+    srcUrl: '',
+    articleId: null,
+  },
+  id: null,
+});
+const ruleValidate = {
+  val: [{ required: true, validator: validateVal, trigger: 'blur' }],
+  type: [{ required: true, message: '请选择消息类型', trigger: 'change' }],
+  content: [{ required: true, validator: validateContent, trigger: 'blur' }],
+  mediaId: [{ required: true, validator: validateSrc, trigger: 'change' }],
+};
+const labelarr = ref([]);
+const myHeaders = { 'X-Token': getToken() };
+const formValidateRef = ref(null);
+
+const fileUrl = computed(() => {
+  return https + `/wechat/reply/upload/image`;
+});
+const voiceUrl = computed(() => {
+  return https + `/wechat/reply/upload/voice`;
+});
+const httpsURL = computed(() => {
+  return import.meta.env.VITE_APP_BASE_API.replace('api/', '');
+});
+
+const change = (e) => {
+  proxy.$forceUpdate();
+};
+// 上传
+const handleUploadForm = (param) => {
+  const formData = new FormData();
+  formData.append('media', param.file);
+  let loading = ElLoading.service({
+    lock: true,
+    text: '上传中，请稍候...',
+    spinner: 'el-icon-loading',
+    background: 'rgba(0, 0, 0, 0.7)',
+  });
+  wechatUploadApi(formData, { type: formValidate.type === 'image' ? 'image' : 'voice' })
+    .then((res) => {
+      loading.close();
+      formValidate.contents.mediaId = res.mediaId;
+      formValidate.contents.srcUrl = res.url;
+      ElMessage.success('上传成功');
+    })
+    .catch(() => {
+      loading.close();
+    });
+};
+const changePic = () => {
+  proxy.$modalArticle(function (row) {
+    formValidate.contents.articleData = {
+      title: row.title,
+      imageInput: row.imageInput,
+    };
+    formValidate.contents.articleId = row.id;
+  });
+};
+const handleClosePic = () => {
+  visible.value = false;
+};
+// 详情
+const details = () => {
+  loading.value = true;
+  replyInfoApi({ id: route.params.id })
+    .then(async (res) => {
+      const info = res || null;
+      Object.assign(formValidate, {
+        status: info.status,
+        type: info.type,
+        keywords: info.keywords,
+        id: info.id,
+        contents: {
+          content: JSON.parse(info.data).content,
+          mediaId: JSON.parse(info.data).mediaId,
+          srcUrl: JSON.parse(info.data).srcUrl,
+          articleData: JSON.parse(info.data).articleData,
+        },
+      });
+      labelarr.value = info.keywords.split(',') || [];
+      loading.value = false;
+    })
+    .catch(() => {
+      loading.value = false;
+    });
+};
+// 关注回复，无效关键词详情
+const followDetails = () => {
+  loading.value = true;
+  keywordsInfoApi({ keywords: route.path.indexOf('follow') !== -1 ? 'subscribe' : 'default' })
+    .then(async (res) => {
+      const info = res || null;
+      Object.assign(formValidate, {
+        status: info.status,
+        type: info.type,
+        keywords: info.keywords,
+        data: '',
+        id: info.id,
+        contents: {
+          content: JSON.parse(info.data).content || '',
+          mediaId: JSON.parse(info.data).mediaId || '',
+          srcUrl: JSON.parse(info.data).srcUrl || '',
+          articleData: JSON.parse(info.data).articleData || {},
+        },
+      });
+      loading.value = false;
+    })
+    .catch(() => {
+      loading.value = false;
+      // if (res.message === '数据不存在') return
+      // this.$message.error(res.message)
+    });
+};
+// 下拉选择
+const RuleFactor = (type) => {
+  switch (type) {
+    case 'text':
+      formValidate.contents.mediaId = '';
+      formValidate.contents.srcUrl = '';
+      formValidate.contents.articleData = {};
+      break;
+    case 'news':
+      formValidate.contents.mediaId = '';
+      formValidate.contents.content = '';
+      formValidate.contents.srcUrl = '';
+      formValidate.contents.articleData = {};
+      break;
+    default:
+      formValidate.contents.content = '';
+      formValidate.contents.mediaId = '';
+      formValidate.contents.articleData = {};
+  }
+  // this.$refs['formValidate'].resetFields();
+};
+const handleClose = (tag) => {
+  const index = labelarr.value.indexOf(tag);
+  labelarr.value.splice(index, 1);
+};
+const addlabel = () => {
+  const count = labelarr.value.indexOf(val.value);
+  if (count === -1) {
+    labelarr.value.push(val.value);
+  }
+  val.value = '';
+};
+// 保存
+const submenus = Debounce(function (name) {
+  formValidateRef.value.validate((valid) => {
+    if (valid) {
+      formValidate.keywords = labelarr.value.join(',');
+      formValidate.data = JSON.stringify(formValidate.contents);
+      if (route.path.indexOf('keyword') !== -1) {
+        route.params.id
+          ? replyUpdateApi({ id: route.params.id }, formValidate)
+              .then(async (res) => {
+                operation();
+              })
+              .catch((res) => {
+                ElMessage.error(res.message);
+              })
+          : replySaveApi(formValidate)
+              .then(async (res) => {
+                operation();
+              })
+              .catch((res) => {
+                ElMessage.error(res.message);
+              });
+      } else {
+        route.path.indexOf('follow') !== -1
+          ? (formValidate.keywords = 'subscribe')
+          : (formValidate.keywords = 'default');
+        formValidate.id !== null
+          ? replyUpdateApi({ id: formValidate.id }, formValidate).then(async (res) => {
+              ElMessage.success('操作成功');
+            })
+          : replySaveApi(formValidate)
+              .then(async (res) => {
+                operation();
+              })
+              .catch((res) => {
+                ElMessage.error(res.message);
+              });
+      }
+    } else {
+      return false;
+    }
+  });
+});
+// 保存成功操作
+const operation = () => {
+  proxy.$modalSure('继续添加')
+    .then(() => {
+      setTimeout(() => {
+        labelarr.value = [];
+        val.value = '';
+        formValidateRef.value.resetFields();
+        formValidate.contents.mediaId = '';
+      }, 1000);
+    })
+    .catch(() => {
+      setTimeout(() => {
+        router.push({ path: `/appSetting/publicAccount/wxReply/keyword` });
+      }, 500);
+    });
+};
+
+watch(route, (to, from) => {
+  if (route.params.id) {
+    // this.formValidate.keywords = this.$route.params.key
+    details();
+  } else {
+    // this.labelarr = []
+    // this.$refs['formValidate'].resetFields()
+  }
+});
+
+onMounted(() => {
+  if (route.params.id) {
+    details();
+  }
+  if (route.path.indexOf('keyword') === -1) {
+    followDetails();
+  }
+});
 </script>
 
 <style scoped lang="scss">

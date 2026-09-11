@@ -10,11 +10,11 @@
             </el-select>
           </el-form-item>
           <el-form-item label="用户搜索：">
-            <UserSearchInput ref="userSearchInput" v-model="tableFrom" />
+            <UserSearchInput ref="userSearchInputRef" v-model="tableFrom" />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" size="small" @click="getList(1)">搜索</el-button>
-            <el-button size="small" @click="handleReset">重置</el-button>
+            <el-button type="primary" @click="getList(1)">搜索</el-button>
+            <el-button @click="handleReset">重置</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -24,13 +24,13 @@
         v-loading="listLoading"
         :data="tableData.data"
         style="width: 100%"
-        size="mini"
+
         class="table"
         highlight-current-row
       >
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column label="佣金变动" min-width="100">
-          <template slot-scope="scope">
+          <template #default="scope">
             <span :class="scope.row.type == 1 ? 'color_red' : 'color_green'"
               >{{ scope.row.type == 1 ? '+' : '-' }}{{ scope.row.price }}</span
             >
@@ -57,92 +57,94 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { brokerageListApi } from '@/api/financial';
-export default {
-  name: 'AccountsCapital',
-  data() {
-    return {
-      timeVal: [],
-      tableData: {
-        data: [],
-        total: 0,
-      },
-      listLoading: true,
-      tableFrom: {
-        type: '',
-        content: '',
-        searchType: 'all',
-        page: 1,
-        limit: 20,
-      },
-      userTableFrom: {
-        page: 1,
-        limit: 10,
-        dateLimit: '',
-      },
-      fromList: this.$constants.fromList,
-      options: [],
-      typeOptions: [
-        { value: 1, label: '订单返佣' },
-        { value: 2, label: '申请提现' },
-        { value: 3, label: '提现失败' },
-        { value: 4, label: '提现成功' },
-        { value: 5, label: '佣金转余额' },
-      ],
-    };
-  },
-  mounted() {
-    // this.getTypes()
-    this.getList();
-  },
-  methods: {
-    // 列表
-    getList(num) {
-      this.listLoading = true;
-      this.tableFrom.page = num ? num : this.tableFrom.page;
-      brokerageListApi(this.tableFrom)
-        .then((res) => {
-          this.tableData.data = res.list;
-          this.tableData.total = res.total;
-          this.listLoading = false;
-        })
-        .catch((res) => {
-          this.listLoading = false;
-        });
-    },
-    pageChange(page) {
-      this.tableFrom.page = page;
-      this.getList();
-    },
-    handleSizeChange(val) {
-      this.tableFrom.limit = val;
-      this.getList();
-    },
-    getTypes() {
-      billTypeApi()
-        .then((res) => {
-          this.options = res.data;
-          localStorage.setItem('CashKey', JSON.stringify(res.data));
-        })
-        .catch((res) => {
-          this.$message.error(res.message);
-        });
-    },
-    //重置
-    handleReset() {
-      this.tableFrom.content = '';
-      this.tableFrom.searchType = 'all';
-      this.tableFrom.type = ''
-      this.getList();
-    },
-    // 搜索
-    seachList() {
-      this.tableFrom.page = 1;
-      this.getList();
-    },
-  },
-};
+
+defineOptions({ name: 'AccountsCapital' });
+
+const { proxy } = getCurrentInstance();
+const constants = proxy.$constants;
+
+const userSearchInputRef = ref(null);
+const timeVal = ref([]);
+const tableData = reactive({
+  data: [],
+  total: 0,
+});
+const listLoading = ref(true);
+const tableFrom = reactive({
+  type: '',
+  content: '',
+  searchType: 'all',
+  page: 1,
+  limit: 20,
+});
+const userTableFrom = reactive({
+  page: 1,
+  limit: 10,
+  dateLimit: '',
+});
+const fromList = constants.fromList;
+const options = ref([]);
+const typeOptions = [
+  { value: 1, label: '订单返佣' },
+  { value: 2, label: '申请提现' },
+  { value: 3, label: '提现失败' },
+  { value: 4, label: '提现成功' },
+  { value: 5, label: '佣金转余额' },
+];
+
+// 列表
+function getList(num) {
+  listLoading.value = true;
+  tableFrom.page = num ? num : tableFrom.page;
+  brokerageListApi(tableFrom)
+    .then((res) => {
+      tableData.data = res.list;
+      tableData.total = res.total;
+      listLoading.value = false;
+    })
+    .catch((res) => {
+      listLoading.value = false;
+    });
+}
+function pageChange(page) {
+  tableFrom.page = page;
+  getList();
+}
+function handleSizeChange(val) {
+  tableFrom.limit = val;
+  getList();
+}
+function getTypes() {
+  billTypeApi()
+    .then((res) => {
+      options.value = res.data;
+      localStorage.setItem('CashKey', JSON.stringify(res.data));
+    })
+    .catch((res) => {
+      ElMessage.error(res.message);
+    });
+}
+//重置
+function handleReset() {
+  tableFrom.content = '';
+  tableFrom.searchType = 'all';
+  tableFrom.type = '';
+  getList();
+}
+// 搜索
+function seachList() {
+  tableFrom.page = 1;
+  getList();
+}
+
+onMounted(() => {
+  // getTypes()
+  getList();
+});
 </script>
 
 <style scoped lang="scss">

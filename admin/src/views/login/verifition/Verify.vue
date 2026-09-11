@@ -1,11 +1,11 @@
 <template>
-  <el-dialog class="verifybox-dialog" :visible.sync="dialogVisible" width="340px" :append-to-body="true"
+  <el-dialog class="verifybox-dialog" v-model="dialogVisible" width="340px" :append-to-body="true"
     :show-close="true" :align-center="true" :close-on-click-modal="false" :close-on-press-escape="false"
     :before-close="closeBox" title="请完成安全验证">
     <div :class="mode == 'pop' ? 'verifybox' : ''" :style="{ 'max-width': parseInt(imgSize.width) + 30 + 'px' }">
       <div class="verifybox-bottom">
         <!-- 验证码容器 -->
-        <component :is="componentType" v-if="componentType" ref="instance" :captcha-type="captchaType"
+        <component :is="componentType" v-if="componentType" ref="instanceRef" :captcha-type="captchaType"
           :type="verifyType" :figure="figure" :arith="arith" :mode="mode" :v-space="vSpace" :explain="explain"
           :img-size="imgSize" :block-size="blockSize" :bar-size="barSize" :default-img="defaultImg" :phone="phone"
           @error="error" @success="success" />
@@ -13,150 +13,147 @@
     </div>
   </el-dialog>
 </template>
-<script>
+<script setup>
 /**
  * Verify 验证码组件
  * @description 分发验证码使用
  * */
+import { ref, computed, watch, onMounted, shallowRef } from 'vue';
 import VerifySlide from './Verify/verifySlider.vue';
 import VerifyPoints from './Verify/verifyPoints.vue';
 
-export default {
-  name: 'Vue2Verify',
-  components: {
-    VerifySlide,
-    VerifyPoints,
-  },
-  props: {
-    captchaType: {
-      type: String,
-      default: 'clickWord',
-    },
-    phone: {
-      type: String,
-      default: '',
-    },
-    figure: {
-      type: Number,
-    },
-    arith: {
-      type: Number,
-    },
-    mode: {
-      type: String,
-      default: 'pop',
-    },
-    vSpace: {
-      type: Number,
-    },
-    explain: {
-      type: String,
-    },
-    imgSize: {
-      type: Object,
-      default() {
-        return {
-          width: '310px',
-          height: '155px',
-        };
-      },
-    },
-    blockSize: {
-      type: Object,
-    },
-    barSize: {
-      type: Object,
-    },
-  },
-  data() {
-    return {
-      showBox: false,
-      clickShow: false,
-      // 内部类型
-      verifyType: undefined,
-      // 所用组件类型
-      componentType: undefined,
-      // 默认图片
-      defaultImg: '',
-      dialogVisible: false,
-    };
-  },
-  computed: {
-    instance() {
-      return this.$refs.instance || {};
-    },
-  },
-  watch: {
-    captchaType: {
-      immediate: true,
-      handler(captchaType) {
-        switch (captchaType.toString()) {
-          case 'blockPuzzle':
-            this.verifyType = '2';
-            this.componentType = 'VerifySlide';
-            break;
-          case 'clickWord':
-            this.verifyType = '';
-            this.componentType = 'VerifyPoints';
-            break;
-        }
-      },
-    },
-  },
-  mounted() {
-    this.uuid();
-  },
-  methods: {
-    // 生成 uuid
-    uuid() {
-      var s = [];
-      var hexDigits = '0123456789abcdef';
-      for (var i = 0; i < 36; i++) {
-        s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
-      }
-      s[14] = '4'; // bits 12-15 of the time_hi_and_version field to 0010
-      s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
-      s[8] = s[13] = s[18] = s[23] = '-';
+defineOptions({ name: 'Vue2Verify' });
 
-      var slider = 'slider' + '-' + s.join('');
-      var point = 'point' + '-' + s.join('');
-      // 判断下是否存在 slider
-      if (!localStorage.getItem('single-admin-slider')) {
-        localStorage.setItem('single-admin-slider', slider);
-      }
-      if (!localStorage.getItem('single-admin-point')) {
-        localStorage.setItem('single-admin-point', point);
-      }
-    },
-    /**
-     * refresh
-     * @description 刷新
-     * */
-    refresh() {
-      if (this.instance.refresh) {
-        this.instance.refresh();
-      }
-    },
-    closeBox() {
-      this.clickShow = false;
-      this.dialogVisible = false;
-      this.refresh();
-    },
-    show() {
-      this.dialogVisible = true;
-      if (this.mode == 'pop') {
-        this.clickShow = true;
-      }
-    },
-    error() {
-      // this.closeBox()
-    },
-    success(e) {
-      this.closeBox();
-      this.$emit('success', e);
+const props = defineProps({
+  captchaType: {
+    type: String,
+    default: 'clickWord',
+  },
+  phone: {
+    type: String,
+    default: '',
+  },
+  figure: {
+    type: Number,
+  },
+  arith: {
+    type: Number,
+  },
+  mode: {
+    type: String,
+    default: 'pop',
+  },
+  vSpace: {
+    type: Number,
+  },
+  explain: {
+    type: String,
+  },
+  imgSize: {
+    type: Object,
+    default: () => {
+      return {
+        width: '310px',
+        height: '155px',
+      };
     },
   },
-};
+  blockSize: {
+    type: Object,
+  },
+  barSize: {
+    type: Object,
+  },
+});
+
+const emit = defineEmits(['success']);
+
+const showBox = ref(false);
+const clickShow = ref(false);
+// 内部类型
+const verifyType = ref(undefined);
+// 所用组件类型
+const componentType = shallowRef(undefined);
+// 默认图片
+const defaultImg = ref('');
+const dialogVisible = ref(false);
+const instanceRef = ref(null);
+
+const instance = computed(() => {
+  return instanceRef.value || {};
+});
+
+watch(
+  () => props.captchaType,
+  (captchaType) => {
+    switch (captchaType.toString()) {
+      case 'blockPuzzle':
+        verifyType.value = '2';
+        componentType.value = VerifySlide;
+        break;
+      case 'clickWord':
+        verifyType.value = '';
+        componentType.value = VerifyPoints;
+        break;
+    }
+  },
+  { immediate: true },
+);
+
+onMounted(() => {
+  uuid();
+});
+
+// 生成 uuid
+function uuid() {
+  var s = [];
+  var hexDigits = '0123456789abcdef';
+  for (var i = 0; i < 36; i++) {
+    s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+  }
+  s[14] = '4'; // bits 12-15 of the time_hi_and_version field to 0010
+  s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
+  s[8] = s[13] = s[18] = s[23] = '-';
+
+  var slider = 'slider' + '-' + s.join('');
+  var point = 'point' + '-' + s.join('');
+  // 判断下是否存在 slider
+  if (!localStorage.getItem('single-admin-slider')) {
+    localStorage.setItem('single-admin-slider', slider);
+  }
+  if (!localStorage.getItem('single-admin-point')) {
+    localStorage.setItem('single-admin-point', point);
+  }
+}
+/**
+ * refresh
+ * @description 刷新
+ * */
+function refresh() {
+  if (instance.value.refresh) {
+    instance.value.refresh();
+  }
+}
+function closeBox() {
+  clickShow.value = false;
+  dialogVisible.value = false;
+  refresh();
+}
+function show() {
+  dialogVisible.value = true;
+  if (props.mode == 'pop') {
+    clickShow.value = true;
+  }
+}
+function error() {
+  // this.closeBox()
+}
+function success(e) {
+  closeBox();
+  emit('success', e);
+}
+
+defineExpose({ show, refresh, closeBox });
 </script>
 <style lang="scss">
 .verifybox-dialog {

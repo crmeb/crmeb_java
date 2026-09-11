@@ -5,8 +5,9 @@
       :title="$route.params.id ? (isDisabled ? '商品详情' : '编辑商品') : '添加商品'"
       backUrl="/store/index"
     ></pages-header>
-    <el-card v-if="$route.params.isCopy" class="mt14" shadow="never" :bordered="false">
+    <el-card v-if="isCopy" class="mt14" shadow="never" :bordered="false">
       <div class="line-ht mb15">
+        <div v-if="copyConfigError" style="color: #f56c6c; margin-bottom: 8px;">{{ copyConfigError }}</div>
         生成的商品默认是没有上架的，请手动上架商品！
         <span v-if="copyConfig.copyType && copyConfig.copyType == 1"
           >您当前剩余{{ copyConfig.copyNum }}条采集次数。
@@ -17,8 +18,10 @@
         </div>
       </div>
       <div :span="24" v-if="copyConfig.copyType">
-        <el-input v-model.trim="url" placeholder="请输入链接地址" class="selWidth100" size="small">
-          <el-button slot="append" icon="el-icon-search" @click="addProduct" size="small" />
+        <el-input v-model.trim="url" placeholder="请输入链接地址" class="selWidth100">
+          <template #append>
+            <el-button :icon="Search" @click="addProduct" />
+          </template>
         </el-input>
       </div>
     </el-card>
@@ -30,13 +33,13 @@
         <el-tab-pane label="其他设置" name="3"></el-tab-pane>
       </el-tabs>
       <el-form
-        ref="formValidate"
+        ref="formValidateRef"
         v-loading="fullscreenLoading"
         class="formValidate mt20"
         :rules="ruleValidate"
         :model="formValidate"
         label-width="90px"
-        @submit.native.prevent
+        @submit.prevent
       >
         <el-row v-show="currentTab == 0" :gutter="24">
           <!-- 商品信息-->
@@ -45,7 +48,8 @@
               <el-input
                 class="from-ipt-width"
                 v-model="formValidate.storeName"
-                maxlength="249"
+                maxlength="30"
+                show-word-limit
                 placeholder="请输入商品名称"
                 :disabled="isDisabled"
               />
@@ -91,7 +95,7 @@
                   <el-image
                     class="image"
                     :src="formValidate.image"
-                    :preview-src-list="isDisabled ? [formValidate.image] : []"
+                    :preview-src-list="isDisabled ? [formValidate.image] : []" preview-teleported
                   >
                   </el-image>
                 </div>
@@ -115,7 +119,7 @@
                   @dragenter="handleDragEnter($event, item)"
                   @dragend="handleDragEnd($event, item)"
                 >
-                  <el-image class="image" :src="item" :preview-src-list="formValidate.sliderImages"> </el-image>
+                  <el-image class="image" :src="item" :preview-src-list="formValidate.sliderImages" preview-teleported> </el-image>
                   <i v-if="!isDisabled" class="el-icon-error btndel" @click="handleRemove(index)" />
                 </div>
                 <div
@@ -206,7 +210,7 @@
         <el-row v-show="currentTab == 2 && !isDisabled">
           <el-col :span="24">
             <el-form-item label="商品详情：">
-              <Tinymce v-model.trim="formValidate.content" :key="htmlKey"></Tinymce>
+              <WangEditor v-model.trim="formValidate.content" :key="htmlKey"></WangEditor>
             </el-form-item>
           </el-col>
         </el-row>
@@ -256,8 +260,8 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="商品推荐：">
-              <el-checkbox-group v-model="checkboxGroup" size="small" @change="onChangeGroup" :disabled="isDisabled">
-                <el-checkbox v-for="(item, index) in recommend" :key="index" :label="item.value">{{
+              <el-checkbox-group v-model="checkboxGroup" @change="onChangeGroup" :disabled="isDisabled">
+                <el-checkbox v-for="(item, index) in recommend" :key="index" :label="item.value" :value="item.value">{{
                   item.name
                 }}</el-checkbox>
               </el-checkbox-group>
@@ -285,7 +289,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="优惠券：" class="proCoupon">
+            <el-form-item label="赠送优惠券：" class="proCoupon">
               <div>
                 <el-tag
                   v-for="(tag, index) in formValidate.coupons"
@@ -318,12 +322,16 @@
         </el-form-item>
       </el-form>
     </el-card>
-    <CreatTemplates ref="addTemplates" @getList="getShippingList" />
+    <CreatTemplates ref="addTemplatesRef" @getList="getShippingList" />
   </div>
 </template>
 
-<script>
-import Tinymce from '@/components/Tinymce/index';
+<script setup lang="jsx">
+import { reactive, ref, computed, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
+import { useRoute, useRouter } from 'vue-router';
+import { useTagsViewStore } from '@/store/modules/tagsView';
+import WangEditor from '@/components/wangEditor/index.vue';
 import {
   templateListApi,
   productCreateApi,
@@ -331,6 +339,8 @@ import {
   productDetailApi,
   productUpdateApi,
   guaranteeListApi,
+  copyConfigApi,
+  copyProductApi,
 } from '@/api/store';
 import { marketingSendApi } from '@/api/marketing';
 import { shippingTemplatesList } from '@/api/logistics';
@@ -341,7 +351,16 @@ import CreatTemplates from '@/views/systemSetting/deliverGoods/freightSet/creatT
 import creatAttr from '../components/creatAttr';
 import Templates from '../../appSetting/wxAccount/wxTemplate/index';
 import { Debounce } from '@/utils/validate';
-import { copyConfigApi, copyProductApi } from '@/api/store';
+import { Search } from '@element-plus/icons-vue';
+
+defineOptions({ name: 'SortCreat' });
+
+const { proxy } = getCurrentInstance();
+const route = useRoute();
+const router = useRouter();
+const tagsViewStore = useTagsViewStore();
+const isCopy = computed(() => route.query.isCopy === '1' || route.params.isCopy === '1');
+
 const defaultObj = {
   image: '',
   sliderImages: [],
@@ -365,13 +384,13 @@ const defaultObj = {
   attrValue: [
     {
       image: '',
-      price: void 0,
-      cost: void 0,
-      otPrice: void 0,
-      stock: void 0,
+      price: 0,
+      cost: 0,
+      otPrice: 0,
+      stock: 0,
       barCode: '',
-      weight: void 0,
-      volume: void 0,
+      weight: 0,
+      volume: 0,
     },
   ],
   attr: [],
@@ -408,857 +427,851 @@ const objTitle = {
     title: '体积(m³)',
   },
 };
-export default {
-  name: 'SortCreat',
-  components: { Templates, CreatTemplates, Tinymce, creatAttr },
-  data() {
-    return {
-      htmlKey: 0,
-      isDisabled: this.$route.params.isDisabled === '1' ? true : false,
-      activity: { 默认: 'red', 秒杀: 'blue', 砍价: 'green', 拼团: 'yellow' },
-      props2: {
-        children: 'child',
-        label: 'name',
-        value: 'id',
-        multiple: true,
-        emitPath: false,
-      },
-      checkboxGroup: [],
-      recommend: [],
-      tabs: [],
-      fullscreenLoading: false,
-      props: { multiple: true },
-      active: 0,
-      OneattrValue: [Object.assign({}, defaultObj.attrValue[0])], // 单规格
-      ManyAttrValue: [Object.assign({}, defaultObj.attrValue[0])], // 多规格
-      ruleList: [],
-      merCateList: [], // 商品分类筛选
-      shippingList: [], // 运费模板
-      formThead: Object.assign({}, objTitle),
-      formValidate: Object.assign({}, defaultObj),
-      formDynamics: {
-        ruleName: '',
-        ruleValue: [],
-      },
-      tempData: {
-        page: 1,
-        limit: 9999,
-      },
-      manyTabTit: {},
-      manyTabDate: {},
-      grid2: {
-        xl: 24,
-        lg: 24,
-        md: 24,
-        sm: 24,
-        xs: 24,
-      },
-      // 规格数据
-      formDynamic: {
-        attrsName: '',
-        attrsVal: '',
-      },
-      isBtn: false,
-      manyFormValidate: [],
-      currentTab: 0,
-      isChoice: '',
-      grid: {
-        xl: 24,
-        lg: 24,
-        md: 24,
-        sm: 24,
-        xs: 24,
-      },
-      ruleValidate: {
-        storeName: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
-        cateIds: [{ required: true, message: '请选择商品分类', trigger: 'change', type: 'array', min: '1' }],
-        keyword: [{ required: true, message: '请输入商品关键字', trigger: 'blur' }],
-        unitName: [{ required: true, message: '请输入单位', trigger: 'blur' }],
-        tempId: [{ required: true, message: '请选择运费模板', trigger: 'change' }],
-        image: [{ required: true, message: '请上传商品图', trigger: 'change' }],
-        sliderImages: [{ required: true, message: '请上传商品轮播图', type: 'array', trigger: 'change' }],
-        specType: [{ required: true, message: '请选择商品规格', trigger: 'change' }],
-      },
-      attrInfo: {},
-      tableFrom: {
-        page: 1,
-        limit: 9999,
-        keywords: '',
-      },
-      tempRoute: {},
-      keyNum: 0,
-      isAttr: false,
-      showAll: false,
-      videoLink: '',
-      copyConfig: {},
-      url: '',
-      guaranteeList: [], // 服务保障列表
-      guaranteeIdsList: [], // 服务保障选择id列表
-      // 批量添加数据
-      oneFormBatch: [Object.assign({}, defaultObj.attrValue[0])],
-    };
-  },
-  computed: {
-    attrValue() {
-      const obj = Object.assign({}, defaultObj.attrValue[0]);
-      delete obj.image;
-      return obj;
-    },
-  },
-  watch: {
-    // 'formValidate.attr': {
-    //   handler: function (val) {
-    //     // 如果是多规格商品
-    //     if (this.formValidate.specType) {
-    //       // 生成规格属性表头
-    //       this.generateHeader(val);
-    //       // 生成规格属性数据
-    //       this.ManyAttrValue = this.generateAttr(val);
-    //     }
-    //     // if (this.formValidate.specType) this.watCh(val); //重要！！！
-    //   },
-    //   immediate: false,
-    //   deep: true,
-    // },
-  },
-  created() {
-    this.tempRoute = Object.assign({}, this.$route);
-    if (this.$route.params.id && this.formValidate.specType) {
-      // this.$watch('formValidate.attr', this.watCh);
-    }
-    // 获取服务保障列表
-    this.getGuaranteeList();
-  },
-  mounted() {
-    this.getCopyConfig();
-    this.formValidate.sliderImages = [];
-    if (this.$route.params.id) {
-      this.setTagsViewTitle();
-      this.getInfo();
-    }
-    this.getCategorySelect();
-    this.getShippingList();
-    this.getGoodsType();
-  },
-  methods: {
-    addProduct() {
-      if (this.url) {
-        this.loading = true;
-        this.copyConfig.copyType == 1
-          ? copyProductApi({ url: this.url })
-              .then((res) => {
-                let info = res;
-                this.formValidate = {
-                  image: this.$selfUtil.setDomain(info.image),
-                  sliderImage: info.sliderImage,
-                  storeName: info.storeName,
-                  keyword: info.keyword,
-                  cateIds: info.cateId ? info.cateId.split(',') : [], // 商品分类id
-                  cateId: info.cateId, // 商品分类id传值
-                  unitName: info.unitName,
-                  sort: 0,
-                  isShow: 0,
-                  isBenefit: false,
-                  isNew: false,
-                  isGood: false,
-                  isHot: false,
-                  isBest: false,
-                  tempId: info.tempId,
-                  attrValue: info.attrValue,
-                  attr: info.attr || [],
-                  selectRule: info.selectRule,
-                  isSub: false,
-                  content: this.$selfUtil.replaceImgSrcHttps(info.content),
-                  specType: info.attr.length ? true : false,
-                  id: info.id,
-                  giveIntegral: info.giveIntegral,
-                  ficti: info.ficti,
-                  activity: ['默认', '秒杀', '砍价', '拼团'],
-                };
-                if (info.specType) {
-                  // 设置多规格商品属性数据
-                  this.generateManyAttr();
-                } else {
-                  this.OneattrValue = info.attrValue;
-                }
-                if (info.isHot) this.checkboxGroup.push('isHot');
-                if (info.isGood) this.checkboxGroup.push('isGood');
-                if (info.isBenefit) this.checkboxGroup.push('isBenefit');
-                if (info.isBest) this.checkboxGroup.push('isBest');
-                if (info.isNew) this.checkboxGroup.push('isNew');
-                let imgs = JSON.parse(info.sliderImage);
-                let imgss = [];
-                Object.keys(imgs).map((i) => {
-                  imgss.push(this.$selfUtil.setDomain(imgs[i]));
-                });
-                this.formValidate.sliderImages = imgss;
-                if (this.formValidate.attr.length) {
-                  this.oneFormBatch[0].image = this.$selfUtil.setDomain(info.image);
-                  this.oneFormBatch[0].brokerage = 0; // 设置采集商品的默认一级佣金
-                  this.oneFormBatch[0].brokerageTwo = 0; // 设置采集商品的默认二级佣金
-                  for (var i = 0; i < this.formValidate.attr.length; i++) {
-                    this.formValidate.attr[i].attrValue = JSON.parse(this.formValidate.attr[i].attrValues);
-                  }
-                }
-                this.loading = false;
-              })
-              .catch(() => {
-                this.loading = false;
-              })
-          : importProductApi({ url: this.url, form: this.form })
-              .then((res) => {
-                this.formValidate = {
-                  image: this.$selfUtil.setDomain(res.image),
-                  sliderImage: res.sliderImage,
-                  storeName: res.storeName,
-                  keyword: res.keyword,
-                  cateIds: res.cateId ? res.cateId.split(',') : [], // 商品分类id
-                  cateId: res.cateId, // 商品分类id传值
-                  unitName: res.unitName,
-                  sort: 0,
-                  isShow: 0,
-                  isBenefit: false,
-                  isNew: false,
-                  isGood: false,
-                  isHot: false,
-                  isBest: false,
-                  tempId: res.tempId,
-                  attrValue: res.attrValue,
-                  attr: res.attr || [],
-                  selectRule: res.selectRule,
-                  isSub: false,
-                  content: res.content,
-                  specType: res.attr.length ? true : false,
-                  id: res.id,
-                  giveIntegral: res.giveIntegral,
-                  ficti: res.ficti,
-                  activity: ['默认', '秒杀', '砍价', '拼团'],
-                };
-                if (info.specType) {
-                  // 设置多规格商品属性数据
-                  this.generateManyAttr();
-                } else {
-                  this.OneattrValue = info.attrValue;
-                  // this.formValidate.attr = [] //单规格商品规格设置为空
-                }
-                let imgs = JSON.parse(res.sliderImage);
-                let imgss = [];
-                Object.keys(imgs).map((i) => {
-                  imgss.push(this.$selfUtil.setDomain(imgs[i]));
-                });
-                this.formValidate.sliderImages = imgss;
-                if (this.formValidate.attr.length) {
-                  this.oneFormBatch[0].image = this.$selfUtil.setDomain(res.image);
-                  for (var i = 0; i < this.formValidate.attr.length; i++) {
-                    this.formValidate.attr[i].attrValue = JSON.parse(this.formValidate.attr[i].attrValues);
-                  }
-                }
-                this.loading = false;
-              })
-              .catch(() => {
-                this.loading = false;
-              });
-      } else {
-        this.$message.warning('请输入链接地址！');
-      }
-    },
-    getCopyConfig() {
-      copyConfigApi().then((res) => {
-        this.copyConfig = res;
-      });
-    },
-    tabsHandleClick(tab, event) {
-      this.currentTab = tab.name;
-    },
-    keyupEvent(key, val, index, num) {
-      var re = /([0-9]+.[0-9]{2})[0-9]*/;
-      switch (num) {
-        case 1:
-          this.oneFormBatch[index][key] =
-            key === 'stock' ? parseInt(val) : this.$set(this.oneFormBatch[index], key, String(val).replace(re, '$1'));
-          break;
-        case 2:
-          this.OneattrValue[index][key] =
-            key === 'stock' ? parseInt(val) : this.$set(this.OneattrValue[index], key, String(val).replace(re, '$1'));
-          break;
-        default:
-          this.ManyAttrValue[index][key] =
-            key === 'stock' ? parseInt(val) : this.$set(this.ManyAttrValue[index], key, String(val).replace(re, '$1'));
-          break;
-      }
-    },
-    handleCloseCoupon(tag) {
-      this.isAttr = true;
-      this.formValidate.coupons.splice(this.formValidate.coupons.indexOf(tag), 1);
-      this.formValidate.couponIds.splice(this.formValidate.couponIds.indexOf(tag.id), 1);
-    },
-    addCoupon() {
-      const _this = this;
-      this.$modalCoupon(
-        'wu',
-        (this.keyNum += 1),
-        this.formValidate.coupons,
-        function (row) {
-          _this.formValidate.couponIds = [];
-          _this.formValidate.coupons = row;
-          row.map((item) => {
-            _this.formValidate.couponIds.push(item.id);
-          });
-        },
-        '',
-      );
-    },
-    setTagsViewTitle() {
-      const title = this.isDisabled ? '商品详情' : '编辑商品';
-      const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.$route.params.id}` });
-      this.$store.dispatch('tagsView/updateVisitedView', route);
-    },
-    onChangeGroup() {
-      this.checkboxGroup.includes('isGood') ? (this.formValidate.isGood = true) : (this.formValidate.isGood = false);
-      this.checkboxGroup.includes('isBenefit')
-        ? (this.formValidate.isBenefit = true)
-        : (this.formValidate.isBenefit = false);
-      this.checkboxGroup.includes('isBest') ? (this.formValidate.isBest = true) : (this.formValidate.isBest = false);
-      this.checkboxGroup.includes('isNew') ? (this.formValidate.isNew = true) : (this.formValidate.isNew = false);
-      this.checkboxGroup.includes('isHot') ? (this.formValidate.isHot = true) : (this.formValidate.isHot = false);
-    },
-    // 运费模板
-    addTem() {
-      this.$refs.addTemplates.dialogVisible = true;
-      this.$refs.addTemplates.getCityList();
-    },
-    // 商品分类；
-    getCategorySelect() {
-      categoryApi({ status: -1, type: 1 }).then((res) => {
-        this.merCateList = this.addDisabled(res);
-      });
-    },
-    //限制商品分类只能选择开启的
-    addDisabled(dropdownList) {
-      const list = [];
-      try {
-        dropdownList.forEach((e, index) => {
-          let e_new = {
-            id: e.id,
-            name: e.name,
-            level: e.level,
-            pid: e.pid,
-            sort: e.sort,
-            status: e.status,
-          };
-          if (!e.status) {
-            e_new = { ...e_new, disabled: true };
-          }
-          if (e.child) {
-            const childList = this.addDisabled(e.child);
-            e_new = { ...e_new, child: childList };
-          }
-          list.push(e_new);
-        });
-      } catch (error) {
-        console.log(error);
-        return [];
-      }
-      return list;
-    },
-    filerMerCateList(treeData) {
-      return treeData.map((item) => {
-        if (!item.child) {
-          item.disabled = true;
-        }
-        item.label = item.name;
-        return item;
-      });
-    },
-    // 获取商品属性模板；
-    productGetRule() {
-      templateListApi(this.tableFrom).then((res) => {
-        const list = res.list;
-        for (var i = 0; i < list.length; i++) {
-          list[i].ruleValue = JSON.parse(list[i].ruleValue);
-        }
-        this.ruleList = list;
-      });
-    },
-    // 运费模板；
-    getShippingList() {
-      shippingTemplatesList(this.tempData).then((res) => {
-        this.shippingList = res.list;
-      });
-    },
-    // 详情
-    getInfo() {
-      this.fullscreenLoading = true;
-      productDetailApi(this.$route.params.id)
-        .then(async (res) => {
-          // this.isAttr = true;
-          let info = res;
-          this.formValidate = {
-            image: this.$selfUtil.setDomain(info.image),
-            sliderImage: info.sliderImage,
-            sliderImages: JSON.parse(info.sliderImage),
-            storeName: info.storeName,
-            keyword: info.keyword,
-            cateIds: info.cateId.split(','), // 商品分类id
-            cateId: info.cateId, // 商品分类id传值
-            unitName: info.unitName,
-            sort: info.sort,
-            isShow: info.isShow,
-            isBenefit: info.isBenefit,
-            isNew: info.isNew,
-            isGood: info.isGood,
-            isHot: info.isHot,
-            isBest: info.isBest,
-            tempId: info.tempId,
-            attr: info.attr,
-            attrValue: info.attrValue,
-            selectRule: info.selectRule,
-            isSub: info.isSub,
-            content: info.content ? this.$selfUtil.replaceImgSrcHttps(info.content) : '',
-            specType: info.specType,
-            id: info.id,
-            giveIntegral: info.giveIntegral,
-            ficti: info.ficti,
-            coupons: info.coupons,
-            couponIds: info.couponIds,
-            activity: info.activity ? info.activity : ['默认', '秒杀', '砍价', '拼团'],
-          };
-          // 获取服务保障被选id列表
-          this.getGuranteeIdsList(info.guaranteeList);
-          marketingSendApi({ type: 3 }).then((res) => {
-            if (this.formValidate.couponIds !== null) {
-              let ids = this.formValidate.couponIds.toString();
-              let arr = res.list;
-              let obj = {};
-              for (let i in arr) {
-                obj[arr[i].id] = arr[i];
-              }
-              let strArr = ids.split(',');
-              let newArr = [];
-              for (let item of strArr) {
-                if (obj[item]) {
-                  newArr.push(obj[item]);
-                }
-              }
-              this.$set(this.formValidate, 'coupons', newArr); //在编辑回显时，让返回数据中的优惠券id，通过接口匹配显示,
-            }
-          });
-          let imgs = JSON.parse(info.sliderImage);
-          let imgss = [];
-          Object.keys(imgs).map((i) => {
-            imgss.push(this.$selfUtil.setDomain(imgs[i]));
-          });
-          this.formValidate.sliderImages = [...imgss];
-          if (this.getFileType(this.formValidate.sliderImages[0]) == 'video') {
-            //如果返回数据轮播图的第一张是视频，就将其赋值给videoLink做渲染，同时将其在轮播图中删除
-            this.$set(this.formValidate, 'videoLink', this.formValidate.sliderImages[0]);
-            this.formValidate.sliderImages.splice(0, 1);
-          }
-          if (info.isHot) this.checkboxGroup.push('isHot');
-          if (info.isGood) this.checkboxGroup.push('isGood');
-          if (info.isBenefit) this.checkboxGroup.push('isBenefit');
-          if (info.isBest) this.checkboxGroup.push('isBest');
-          if (info.isNew) this.checkboxGroup.push('isNew');
-          this.productGetRule();
-          if (info.specType) {
-            // 设置多规格商品属性数据
-            this.generateManyAttr();
-          } else {
-            this.OneattrValue = info.attrValue;
-            // this.formValidate.attr = [] //单规格商品规格设置为空
-          }
-          this.fullscreenLoading = false;
-        })
-        .catch((res) => {
-          this.fullscreenLoading = false;
-          this.$message.error(res.message);
-        });
-    },
-    handleRemove(i) {
-      this.formValidate.sliderImages.splice(i, 1);
-    },
-    // 点击商品图
-    modalPicTap(tit, num, i, status) {
-      const _this = this;
-      if (_this.isDisabled) return;
-      this.$modalUpload(
-        function (img) {
-          if (tit === '1' && !num) {
-            _this.formValidate.image = img[0].sattDir;
-            _this.OneattrValue[0].image = img[0].sattDir;
-          }
-          if (tit === '2' && !num) {
-            if (img.length > 10) return this.$message.warning('最多选择10张图片！');
-            if (img.length + _this.formValidate.sliderImages.length > 10)
-              return this.$message.warning('最多选择10张图片！');
-            img.map((item) => {
-              _this.formValidate.sliderImages.push(item.sattDir);
-            });
-          }
-          if (tit === '3' && status === 'video') {
-            let videoInfo = img[0];
-            if (videoInfo.attType !== 'video/mp4') {
-              this.$message.warning('请重新选择视频！');
-            } else {
-              _this.$set(_this.formValidate, 'videoLink', videoInfo.sattDir);
-            }
-          }
-          if (tit === '1' && num === 'dan') {
-            _this.OneattrValue[0].image = img[0].sattDir;
-          }
-          if (tit === '1' && num === 'duo') {
-            _this.ManyAttrValue[i].image = img[0].sattDir;
-          }
-          if (tit === '1' && num === 'pi') {
-            _this.oneFormBatch[0].image = img[0].sattDir;
-          }
-        },
-        tit,
-        'content',
-      );
-    },
-    handleSubmitUp() {
-      if (this.currentTab-- < 0) this.currentTab = 0;
-      this.currentTab = this.currentTab.toString();
-    },
-    handleSubmitNest(name) {
-      this.$refs[name].validate((valid) => {
-        if (valid) {
-          if (this.currentTab++ > 3) this.currentTab = 0;
-          this.currentTab = this.currentTab.toString();
-        } else {
-          if (
-            !this.formValidate.store_name ||
-            !this.formValidate.cate_id ||
-            !this.formValidate.keyword ||
-            !this.formValidate.unit_name ||
-            !this.formValidate.store_info ||
-            !this.formValidate.image ||
-            !this.formValidate.slider_image
-          ) {
-            this.$message.warning('请填写完整商品信息！');
-          }
-        }
-      });
-    },
-    //提交接口数据更新
-    getFromData() {
-      if (this.formValidate.specType && this.formValidate.attr.length < 1)
-        return this.$message.warning('请填写多规格属性！');
-      this.formValidate.cateId = this.formValidate.cateIds.join(',');
-      if (this.formValidate.videoLink) {
-        //如果有视频主图，将视频链接插入到轮播图第一的位置
-        this.formValidate.sliderImages.unshift(this.formValidate.videoLink);
-      }
-      this.formValidate.sliderImage = JSON.stringify(this.formValidate.sliderImages);
-      if (this.formValidate.specType) {
-        this.formValidate.attrValue = this.ManyAttrValue.slice(1);
-        this.formValidate.attr = this.formValidate.attr.map((item) => {
-          return {
-            attrName: item.attrName,
-            id: item.id,
-            attrValues: item.optionList.map((val) => val.value).join(','),
-            isShowImage: item.isShowImage || false,
-            optionList: item.optionList || [{ value: '默认' }],
-          };
-        });
-        if (typeof (this.formValidate.attrValue[0].attrValue) == 'object') {
-          this.formValidate.attrValue.forEach((item) => {
-            item.attrValue = JSON.stringify(item.attrValue);
-          });
-        }
-        // 如果不是采集商品
-        if (!this.$route.params.isCopy) {
-          for (var i = 0; i < this.formValidate.attrValue.length; i++) {
-            this.$set(this.formValidate.attrValue[i], 'id', 0);
-            this.$set(this.formValidate.attrValue[i], 'productId', 0);
-            let attrValues = this.formValidate.attrValue[i].attrValue;
-            // this.$set(this.formValidate.attrValue[i], 'attrValue', JSON.stringify(attrValues));
-            delete this.formValidate.attrValue[i].value0;
-          }
-        }
-      } else {
-        this.formValidate.attr = [
-          {
-            attrName: '规格',
-            attrValues: '默认',
-            id: this.$route.params.id ? this.formValidate.attr[0].id : 0,
-            isShowImage: false,
-            optionList: [{ value: '默认' }],
-          },
-        ];
-        this.OneattrValue.map((item) => {
-          this.$set(item, 'attrValue', JSON.stringify({ 规格: '默认' }));
-          // 如果佣金设置为默认
-          if (!this.formValidate.isSub) {
-            this.$set(item, 'brokerage', 0);
-            this.$set(item, 'brokerageTwo', 0);
-          }
-          //this.$set(item, 'productId', 0);
-        });
-        this.formValidate.attrValue = this.OneattrValue;
-      }
-    },
-    // 提交
-    handleSubmit: Debounce(function (name) {
-      this.onChangeGroup();
-      this.getFromData();
-      this.$refs[name].validate((valid) => {
-        if (valid) {
-          this.fullscreenLoading = true;
-          this.$route.params.id
-            ? productUpdateApi(this.formValidate)
-                .then(async (res) => {
-                  this.$message.success('编辑成功');
-                  setTimeout(() => {
-                    this.$router.push({ path: '/store/index' });
-                  }, 500);
-                  this.fullscreenLoading = false;
-                })
-                .catch((res) => {
-                  this.fullscreenLoading = false;
-                  this.restoreData();
-                  if (this.formValidate.specType) this.ManyAttrValue = this.formValidate.attrValue;
-                })
-            : productCreateApi(this.formValidate)
-                .then(async (res) => {
-                  this.$message.success('新增成功');
-                  setTimeout(() => {
-                    this.$router.push({ path: '/store/index' });
-                  }, 500);
-                  this.fullscreenLoading = false;
-                })
-                .catch((res) => {
-                  this.fullscreenLoading = false;
-                  this.restoreData();
-                });
-        } else {
-          if (
-            !this.formValidate.storeName ||
-            !this.formValidate.cateId ||
-            !this.formValidate.keyword ||
-            !this.formValidate.unitName ||
-            !this.formValidate.image ||
-            !this.formValidate.sliderImages
-          ) {
-            this.$message.warning('请填写完整商品信息！');
-          }
-        }
-      });
-    }),
-    // 提交失败之后恢复数据
-    restoreData() {
-      for (var i = 0; i < this.formValidate.attrValue.length; i++) {
-        let attrValues = this.formValidate.attrValue[i].attrValue;
-        this.$set(this.formValidate.attrValue[i], 'attrValue', JSON.parse(attrValues));
-      }
-    },
-    // 表单验证
-    validate(prop, status, error) {
-      if (status === false) {
-        this.$message.warning(error);
-      }
-    },
-    // 移动
-    handleDragStart(e, item) {
-      if (!this.isDisabled) this.dragging = item;
-    },
-    handleDragEnd(e, item) {
-      if (!this.isDisabled) this.dragging = null;
-    },
-    handleDragOver(e) {
-      if (!this.isDisabled) e.dataTransfer.dropEffect = 'move';
-    },
-    handleDragEnter(e, item) {
-      if (!this.isDisabled) {
-        e.dataTransfer.effectAllowed = 'move';
-        if (item === this.dragging) {
-          return;
-        }
-        const newItems = [...this.formValidate.sliderImages];
-        const src = newItems.indexOf(this.dragging);
-        const dst = newItems.indexOf(item);
-        newItems.splice(dst, 0, ...newItems.splice(src, 1));
-        this.formValidate.sliderImages = newItems;
-      }
-    },
-    handleDragEnterFont(e, item) {
-      if (!this.isDisabled) {
-        e.dataTransfer.effectAllowed = 'move';
-        if (item === this.dragging) {
-          return;
-        }
-        const newItems = [...this.formValidate.activity];
-        const src = newItems.indexOf(this.dragging);
-        const dst = newItems.indexOf(item);
-        newItems.splice(dst, 0, ...newItems.splice(src, 1));
-        this.formValidate.activity = newItems;
-      }
-    },
-    getGoodsType() {
-      /** 让商品推荐列表的name属性与页面设置tab的name匹配**/
-      goodDesignList({ gid: 70 }).then((response) => {
-        let list = response.list;
-        let arr = [],
-          arr1 = [];
-        const listArr = [{ name: '是否热卖', value: 'isGood', type: '5' }];
-        let typeLists = [
-          { name: '', value: 'isHot', type: '2' }, //热门榜单
-          { name: '', value: 'isBenefit', type: '4' }, //促销单品
-          { name: '', value: 'isBest', type: '1' }, //精品推荐
-          { name: '', value: 'isNew', type: '3' },
-        ]; //首发新品
-        list.forEach((item) => {
-          let obj = {};
-          obj.value = JSON.parse(item.value);
-          obj.id = item.id;
-          obj.gid = item.gid;
-          obj.status = item.status;
-          arr.push(obj);
-        });
-        arr.forEach((item1) => {
-          let obj1 = {};
-          obj1.name = item1.value.fields[1].value;
-          obj1.status = item1.status;
-          obj1.type = item1.value.fields[3].value;
-          arr1.push(obj1);
-        });
-        typeLists.forEach((item) => {
-          arr1.forEach((item1) => {
-            if (item.type == item1.type) {
-              listArr.push({
-                name: item1.name,
-                value: item.value,
-                type: item.type,
-              });
-            }
-          });
-        });
-        this.recommend = listArr;
-      });
-    },
-    // 删除视频；
-    delVideo() {
-      let that = this;
-      that.$set(that.formValidate, 'videoLink', '');
-    },
-    zh_uploadFile() {
-      if (this.videoLink) {
-        this.$set(this.formValidate, 'videoLink', this.videoLink);
-      }
-    },
-    getFileType(fileName) {
-      // 后缀获取
-      let suffix = '';
-      // 获取类型结果
-      let result = '';
-      try {
-        const flieArr = fileName.split('.');
-        suffix = flieArr[flieArr.length - 1];
-      } catch (err) {
-        suffix = '';
-      }
-      // fileName无后缀返回 false
-      if (!suffix) {
-        return false;
-      }
-      suffix = suffix.toLocaleLowerCase();
-      // 图片格式
-      const imglist = ['png', 'jpg', 'jpeg', 'bmp', 'gif'];
-      // 进行图片匹配
-      result = imglist.find((item) => item === suffix);
-      if (result) {
-        return 'image';
-      }
-      // 匹配 视频
-      const videolist = ['mp4', 'm2v', 'mkv', 'rmvb', 'wmv', 'avi', 'flv', 'mov', 'm4v'];
-      result = videolist.find((item) => item === suffix);
-      if (result) {
-        return 'video';
-      }
-      // 其他 文件类型
-      return 'other';
-    },
-    // 获取服务保障列表
-    getGuaranteeList() {
-      guaranteeListApi({
-        isShow: 1,
-      })
-        .then((res) => {
-          this.guaranteeList = res;
-        })
-        .catch((err) => {
-          this.$message.error(err.message);
-        });
-    },
-    // 获取被选服务保障id列表
-    getGuranteeIdsList(list) {
-      if (list) {
-        this.guaranteeIdsList = list.map((item) => {
-          return item.id;
-        });
-      }
-    },
-    // 修改服务保障
-    updateGuaranteeIds(list) {
-      this.formValidate.guaranteeIds = list.join(',');
-    },
-    // 回调规格生成表格数据 多规格
-    changeManyAttrValue(e) {
-      // rows数组第一项 新增默认数据 oneFormBatch
-      this.ManyAttrValue = e;
-    },
-    //批量清空规格中的批量数据
-    handleBatchDel() {
-      this.oneFormBatch = [
-        {
-          image: '',
-          price: void 0,
-          cost: void 0,
-          otPrice: void 0,
-          stock: void 0,
-          weight: void 0,
-          volume: void 0,
-          brokerage: void 0,
-          brokerageTwo: void 0,
-          barCode: '',
-        },
-      ];
-    },
-    // 设置多规格商品的表格数据
-    generateManyAttr() {
-      // 多规格属性赋值
-      this.ManyAttrValue = this.formValidate.attrValue;
-      this.ManyAttrValue.forEach((val) => {
-        val.image = this.$selfUtil.setDomain(val.image);
-        val.attrValue = JSON.parse(val.attrValue);
-      });
-      this.ManyAttrValue = [...this.oneFormBatch, ...this.ManyAttrValue];
-      // 此处手动实现后台原本value0 value1的逻辑
-      this.formValidate.attrValue.forEach((item) => {
-        for (let attrValueKey in item.attrValue) {
-          item[attrValueKey] = item.attrValue[attrValueKey];
-        }
-      });
-    },
-  },
+
+const htmlKey = ref(0);
+const isDisabled = ref(route.params.isDisabled === '1' ? true : false);
+const activity = { 默认: 'red', 秒杀: 'blue', 砍价: 'green', 拼团: 'yellow' };
+const props2 = {
+  children: 'child',
+  label: 'name',
+  value: 'id',
+  multiple: true,
+  emitPath: false,
 };
+const checkboxGroup = ref([]);
+const recommend = ref([]);
+const tabs = ref([]);
+const fullscreenLoading = ref(false);
+const props = { multiple: true };
+const active = ref(0);
+const OneattrValue = ref([Object.assign({}, defaultObj.attrValue[0])]); // 单规格
+const ManyAttrValue = ref([Object.assign({}, defaultObj.attrValue[0])]); // 多规格
+const ruleList = ref([]);
+const merCateList = ref([]); // 商品分类筛选
+const shippingList = ref([]); // 运费模板
+const formThead = ref(Object.assign({}, objTitle));
+const formValidate = reactive(Object.assign({}, defaultObj));
+const formDynamics = reactive({
+  ruleName: '',
+  ruleValue: [],
+});
+const tempData = {
+  page: 1,
+  limit: 9999,
+};
+const manyTabTit = ref({});
+const manyTabDate = ref({});
+const grid2 = {
+  xl: 24,
+  lg: 24,
+  md: 24,
+  sm: 24,
+  xs: 24,
+};
+// 规格数据
+const formDynamic = reactive({
+  attrsName: '',
+  attrsVal: '',
+});
+const isBtn = ref(false);
+const manyFormValidate = ref([]);
+const currentTab = ref('0');
+const isChoice = ref('');
+const grid = {
+  xl: 24,
+  lg: 24,
+  md: 24,
+  sm: 24,
+  xs: 24,
+};
+const ruleValidate = {
+  storeName: [
+    { required: true, message: '请输入商品名称', trigger: 'blur' },
+    { max: 30, message: '商品名称长度不能超过30个字', trigger: 'blur' },
+  ],
+  cateIds: [{ required: true, message: '请选择商品分类', trigger: 'change', type: 'array', min: '1' }],
+  keyword: [{ required: true, message: '请输入商品关键字', trigger: 'blur' }],
+  unitName: [{ required: true, message: '请输入单位', trigger: 'blur' }],
+  tempId: [{ required: true, message: '请选择运费模板', trigger: 'change' }],
+  image: [{ required: true, message: '请上传商品图', trigger: 'change' }],
+  sliderImages: [{ required: true, message: '请上传商品轮播图', type: 'array', trigger: 'change' }],
+  specType: [{ required: true, message: '请选择商品规格', trigger: 'change' }],
+};
+const attrInfo = ref({});
+const tableFrom = reactive({
+  page: 1,
+  limit: 9999,
+  keywords: '',
+});
+const tempRoute = ref({});
+const keyNum = ref(0);
+const isAttr = ref(false);
+const showAll = ref(false);
+const videoLink = ref('');
+const copyConfig = ref({});
+const copyConfigError = ref('');
+const url = ref('');
+const guaranteeList = ref([]); // 服务保障列表
+const guaranteeIdsList = ref([]); // 服务保障选择id列表
+// 批量添加数据
+const oneFormBatch = ref([Object.assign({}, defaultObj.attrValue[0])]);
+// 表单 ref
+const formValidateRef = ref(null);
+const addTemplatesRef = ref(null);
+// 原 methods 中引用但未声明的变量（保留原逻辑）
+const loading = ref(false);
+const dragging = ref(null);
+
+const attrValue = computed(() => {
+  const obj = Object.assign({}, defaultObj.attrValue[0]);
+  delete obj.image;
+  return obj;
+});
+
+function parseCategoryIds(cateId) {
+  if (cateId === null || cateId === undefined || cateId === '') return [];
+  const ids = Array.isArray(cateId) ? cateId : String(cateId).split(',');
+  return ids.map((id) => Number(String(id).trim())).filter((id) => Number.isInteger(id) && id > 0);
+}
+
+// created 逻辑
+tempRoute.value = Object.assign({}, route);
+if (route.params.id && formValidate.specType) {
+  // this.$watch('formValidate.attr', this.watCh);
+}
+// 获取服务保障列表
+getGuaranteeList();
+
+function addProduct() {
+  if (url.value) {
+    loading.value = true;
+    copyConfig.value.copyType == 1
+      ? copyProductApi({ url: url.value })
+          .then((res) => {
+            let info = res;
+            Object.assign(formValidate, {
+              image: proxy.$selfUtil.setDomain(info.image),
+              sliderImage: info.sliderImage,
+              storeName: info.storeName,
+              keyword: info.keyword,
+              cateIds: parseCategoryIds(info.cateId), // 商品分类id
+              cateId: info.cateId, // 商品分类id传值
+              unitName: info.unitName,
+              sort: 0,
+              isShow: 0,
+              isBenefit: false,
+              isNew: false,
+              isGood: false,
+              isHot: false,
+              isBest: false,
+              tempId: info.tempId,
+              attrValue: info.attrValue,
+              attr: info.attr || [],
+              selectRule: info.selectRule,
+              isSub: false,
+              content: proxy.$selfUtil.replaceImgSrcHttps(info.content),
+              specType: info.attr.length ? true : false,
+              id: info.id,
+              giveIntegral: info.giveIntegral,
+              ficti: info.ficti,
+              activity: ['默认', '秒杀', '砍价', '拼团'],
+            });
+            if (info.specType) {
+              // 设置多规格商品属性数据
+              generateManyAttr();
+            } else {
+              OneattrValue.value = info.attrValue;
+            }
+            if (info.isHot) checkboxGroup.value.push('isHot');
+            if (info.isGood) checkboxGroup.value.push('isGood');
+            if (info.isBenefit) checkboxGroup.value.push('isBenefit');
+            if (info.isBest) checkboxGroup.value.push('isBest');
+            if (info.isNew) checkboxGroup.value.push('isNew');
+            let imgs = JSON.parse(info.sliderImage);
+            let imgss = [];
+            Object.keys(imgs).map((i) => {
+              imgss.push(proxy.$selfUtil.setDomain(imgs[i]));
+            });
+            formValidate.sliderImages = imgss;
+            if (formValidate.attr.length) {
+              oneFormBatch.value[0].image = proxy.$selfUtil.setDomain(info.image);
+              oneFormBatch.value[0].brokerage = 0; // 设置采集商品的默认一级佣金
+              oneFormBatch.value[0].brokerageTwo = 0; // 设置采集商品的默认二级佣金
+              for (var i = 0; i < formValidate.attr.length; i++) {
+                formValidate.attr[i].attrValue = JSON.parse(formValidate.attr[i].attrValues);
+              }
+            }
+            loading.value = false;
+          })
+          .catch(() => {
+            loading.value = false;
+          })
+      : importProductApi({ url: url.value, form: form })
+          .then((res) => {
+            Object.assign(formValidate, {
+              image: proxy.$selfUtil.setDomain(res.image),
+              sliderImage: res.sliderImage,
+              storeName: res.storeName,
+              keyword: res.keyword,
+              cateIds: parseCategoryIds(res.cateId), // 商品分类id
+              cateId: res.cateId, // 商品分类id传值
+              unitName: res.unitName,
+              sort: 0,
+              isShow: 0,
+              isBenefit: false,
+              isNew: false,
+              isGood: false,
+              isHot: false,
+              isBest: false,
+              tempId: res.tempId,
+              attrValue: res.attrValue,
+              attr: res.attr || [],
+              selectRule: res.selectRule,
+              isSub: false,
+              content: res.content,
+              specType: res.attr.length ? true : false,
+              id: res.id,
+              giveIntegral: res.giveIntegral,
+              ficti: res.ficti,
+              activity: ['默认', '秒杀', '砍价', '拼团'],
+            });
+            if (info.specType) {
+              // 设置多规格商品属性数据
+              generateManyAttr();
+            } else {
+              OneattrValue.value = info.attrValue;
+              // this.formValidate.attr = [] //单规格商品规格设置为空
+            }
+            let imgs = JSON.parse(res.sliderImage);
+            let imgss = [];
+            Object.keys(imgs).map((i) => {
+              imgss.push(proxy.$selfUtil.setDomain(imgs[i]));
+            });
+            formValidate.sliderImages = imgss;
+            if (formValidate.attr.length) {
+              oneFormBatch.value[0].image = proxy.$selfUtil.setDomain(res.image);
+              for (var i = 0; i < formValidate.attr.length; i++) {
+                formValidate.attr[i].attrValue = JSON.parse(formValidate.attr[i].attrValues);
+              }
+            }
+            loading.value = false;
+          })
+          .catch(() => {
+            loading.value = false;
+          });
+  } else {
+    ElMessage.warning('请输入链接地址！');
+  }
+}
+function getCopyConfig() {
+  copyConfigApi()
+    .then((res) => {
+      copyConfig.value = res;
+      copyConfigError.value = '';
+    })
+    .catch((err) => {
+      copyConfigError.value = (err && err.message) || '获取配置失败';
+    });
+}
+function tabsHandleClick(tab, event) {
+  currentTab.value = tab.name;
+}
+function keyupEvent(key, val, index, num) {
+  var re = /([0-9]+.[0-9]{2})[0-9]*/;
+  switch (num) {
+    case 1:
+      oneFormBatch.value[index][key] =
+        key === 'stock' ? parseInt(val) : (oneFormBatch.value[index][key] = String(val).replace(re, '$1'));
+      break;
+    case 2:
+      OneattrValue.value[index][key] =
+        key === 'stock' ? parseInt(val) : (OneattrValue.value[index][key] = String(val).replace(re, '$1'));
+      break;
+    default:
+      ManyAttrValue.value[index][key] =
+        key === 'stock' ? parseInt(val) : (ManyAttrValue.value[index][key] = String(val).replace(re, '$1'));
+      break;
+  }
+}
+function handleCloseCoupon(tag) {
+  isAttr.value = true;
+  formValidate.coupons.splice(formValidate.coupons.indexOf(tag), 1);
+  formValidate.couponIds.splice(formValidate.couponIds.indexOf(tag.id), 1);
+}
+function addCoupon() {
+  proxy.$modalCoupon(
+    'wu',
+    (keyNum.value += 1),
+    formValidate.coupons,
+    function (row) {
+      formValidate.couponIds = [];
+      formValidate.coupons = row;
+      row.map((item) => {
+        formValidate.couponIds.push(item.id);
+      });
+    },
+    '',
+  );
+}
+function setTagsViewTitle() {
+  const title = isDisabled.value ? '商品详情' : '编辑商品';
+  const routeObj = Object.assign({}, tempRoute.value, { title: `${title}-${route.params.id}` });
+  tagsViewStore.updateVisitedView(routeObj);
+}
+function onChangeGroup() {
+  checkboxGroup.value.includes('isGood') ? (formValidate.isGood = true) : (formValidate.isGood = false);
+  checkboxGroup.value.includes('isBenefit')
+    ? (formValidate.isBenefit = true)
+    : (formValidate.isBenefit = false);
+  checkboxGroup.value.includes('isBest') ? (formValidate.isBest = true) : (formValidate.isBest = false);
+  checkboxGroup.value.includes('isNew') ? (formValidate.isNew = true) : (formValidate.isNew = false);
+  checkboxGroup.value.includes('isHot') ? (formValidate.isHot = true) : (formValidate.isHot = false);
+}
+// 运费模板
+function addTem() {
+  addTemplatesRef.value.dialogVisible = true;
+  addTemplatesRef.value.getCityList();
+}
+// 商品分类；
+function getCategorySelect() {
+  categoryApi({ status: -1, type: 1 }).then((res) => {
+    merCateList.value = addDisabled(res);
+  });
+}
+//限制商品分类只能选择开启的
+function addDisabled(dropdownList) {
+  const list = [];
+  try {
+    dropdownList.forEach((e, index) => {
+      let e_new = {
+        id: e.id,
+        name: e.name,
+        level: e.level,
+        pid: e.pid,
+        sort: e.sort,
+        status: e.status,
+      };
+      if (!e.status) {
+        e_new = { ...e_new, disabled: true };
+      }
+      if (e.child) {
+        const childList = addDisabled(e.child);
+        e_new = { ...e_new, child: childList };
+      }
+      list.push(e_new);
+    });
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+  return list;
+}
+function filerMerCateList(treeData) {
+  return treeData.map((item) => {
+    if (!item.child) {
+      item.disabled = true;
+    }
+    item.label = item.name;
+    return item;
+  });
+}
+// 获取商品属性模板；
+function productGetRule() {
+  templateListApi(tableFrom).then((res) => {
+    const list = res.list;
+    for (var i = 0; i < list.length; i++) {
+      list[i].ruleValue = JSON.parse(list[i].ruleValue);
+    }
+    ruleList.value = list;
+  });
+}
+// 运费模板；
+function getShippingList() {
+  shippingTemplatesList(tempData).then((res) => {
+    shippingList.value = res.list;
+  });
+}
+// 详情
+function getInfo() {
+  fullscreenLoading.value = true;
+  productDetailApi(route.params.id)
+    .then(async (res) => {
+      // this.isAttr = true;
+      let info = res;
+      Object.assign(formValidate, {
+        image: proxy.$selfUtil.setDomain(info.image),
+        sliderImage: info.sliderImage,
+        sliderImages: JSON.parse(info.sliderImage),
+        storeName: info.storeName,
+        keyword: info.keyword,
+        cateIds: parseCategoryIds(info.cateId), // 商品分类id
+        cateId: info.cateId, // 商品分类id传值
+        unitName: info.unitName,
+        sort: info.sort,
+        isShow: info.isShow,
+        isBenefit: info.isBenefit,
+        isNew: info.isNew,
+        isGood: info.isGood,
+        isHot: info.isHot,
+        isBest: info.isBest,
+        tempId: info.tempId,
+        attr: info.attr,
+        attrValue: info.attrValue,
+        selectRule: info.selectRule,
+        isSub: info.isSub,
+        content: info.content ? proxy.$selfUtil.replaceImgSrcHttps(info.content) : '',
+        specType: info.specType,
+        id: info.id,
+        giveIntegral: info.giveIntegral,
+        ficti: info.ficti,
+        coupons: info.coupons,
+        couponIds: info.couponIds,
+        activity: info.activity ? info.activity : ['默认', '秒杀', '砍价', '拼团'],
+      });
+      // 获取服务保障被选id列表
+      getGuranteeIdsList(info.guaranteeList);
+      marketingSendApi({ type: 3 }).then((res) => {
+        if (formValidate.couponIds !== null) {
+          let ids = formValidate.couponIds.toString();
+          let arr = res.list;
+          let obj = {};
+          for (let i in arr) {
+            obj[arr[i].id] = arr[i];
+          }
+          let strArr = ids.split(',');
+          let newArr = [];
+          for (let item of strArr) {
+            if (obj[item]) {
+              newArr.push(obj[item]);
+            }
+          }
+          formValidate.coupons = newArr; //在编辑回显时，让返回数据中的优惠券id，通过接口匹配显示,
+        }
+      });
+      let imgs = JSON.parse(info.sliderImage);
+      let imgss = [];
+      Object.keys(imgs).map((i) => {
+        imgss.push(proxy.$selfUtil.setDomain(imgs[i]));
+      });
+      formValidate.sliderImages = [...imgss];
+      if (getFileType(formValidate.sliderImages[0]) == 'video') {
+        //如果返回数据轮播图的第一张是视频，就将其赋值给videoLink做渲染，同时将其在轮播图中删除
+        formValidate.videoLink = formValidate.sliderImages[0];
+        formValidate.sliderImages.splice(0, 1);
+      }
+      if (info.isHot) checkboxGroup.value.push('isHot');
+      if (info.isGood) checkboxGroup.value.push('isGood');
+      if (info.isBenefit) checkboxGroup.value.push('isBenefit');
+      if (info.isBest) checkboxGroup.value.push('isBest');
+      if (info.isNew) checkboxGroup.value.push('isNew');
+      productGetRule();
+      if (info.specType) {
+        // 设置多规格商品属性数据
+        generateManyAttr();
+      } else {
+        OneattrValue.value = info.attrValue;
+        // this.formValidate.attr = [] //单规格商品规格设置为空
+      }
+      fullscreenLoading.value = false;
+    })
+    .catch((res) => {
+      fullscreenLoading.value = false;
+      ElMessage.error(res.message);
+    });
+}
+function handleRemove(i) {
+  formValidate.sliderImages.splice(i, 1);
+}
+// 点击商品图
+function modalPicTap(tit, num, i, status) {
+  if (isDisabled.value) return;
+  proxy.$modalUpload(
+    function (img) {
+      if (tit === '1' && !num) {
+        formValidate.image = img[0].sattDir;
+        OneattrValue.value[0].image = img[0].sattDir;
+      }
+      if (tit === '2' && !num) {
+        if (img.length > 10) return ElMessage.warning('最多选择10张图片！');
+        if (img.length + formValidate.sliderImages.length > 10)
+          return ElMessage.warning('最多选择10张图片！');
+        img.map((item) => {
+          formValidate.sliderImages.push(item.sattDir);
+        });
+      }
+      if (tit === '3' && status === 'video') {
+        let videoInfo = img[0];
+        if (videoInfo.attType !== 'video/mp4') {
+          ElMessage.warning('请重新选择视频！');
+        } else {
+          formValidate.videoLink = videoInfo.sattDir;
+        }
+      }
+      if (tit === '1' && num === 'dan') {
+        OneattrValue.value[0].image = img[0].sattDir;
+      }
+      if (tit === '1' && num === 'duo') {
+        ManyAttrValue.value[i].image = img[0].sattDir;
+      }
+      if (tit === '1' && num === 'pi') {
+        oneFormBatch.value[0].image = img[0].sattDir;
+      }
+    },
+    tit,
+    'content',
+  );
+}
+function handleSubmitUp() {
+  if (currentTab.value-- < 0) currentTab.value = 0;
+  currentTab.value = currentTab.value.toString();
+}
+function handleSubmitNest(name) {
+  formValidateRef.value.validate((valid) => {
+    if (valid) {
+      if (currentTab.value++ > 3) currentTab.value = 0;
+      currentTab.value = currentTab.value.toString();
+    } else {
+      if (
+        !formValidate.store_name ||
+        !formValidate.cate_id ||
+        !formValidate.keyword ||
+        !formValidate.unit_name ||
+        !formValidate.store_info ||
+        !formValidate.image ||
+        !formValidate.slider_image
+      ) {
+        ElMessage.warning('请填写完整商品信息！');
+      }
+    }
+  });
+}
+//提交接口数据更新
+function getFromData() {
+  if (formValidate.specType && formValidate.attr.length < 1)
+    return ElMessage.warning('请填写多规格属性！');
+  formValidate.cateId = formValidate.cateIds.join(',');
+  if (formValidate.videoLink) {
+    //如果有视频主图，将视频链接插入到轮播图第一的位置
+    formValidate.sliderImages.unshift(formValidate.videoLink);
+  }
+  formValidate.sliderImage = JSON.stringify(formValidate.sliderImages);
+  if (formValidate.specType) {
+    formValidate.attrValue = ManyAttrValue.value.slice(1);
+    formValidate.attr = formValidate.attr.map((item) => {
+      return {
+        attrName: item.attrName,
+        id: item.id,
+        attrValues: item.optionList.map((val) => val.value).join(','),
+        isShowImage: item.isShowImage || false,
+        optionList: item.optionList || [{ value: '默认' }],
+      };
+    });
+    if (typeof formValidate.attrValue[0].attrValue == 'object') {
+      formValidate.attrValue.forEach((item) => {
+        item.attrValue = JSON.stringify(item.attrValue);
+      });
+    }
+    // 如果不是采集商品
+    if (!isCopy.value) {
+      for (var i = 0; i < formValidate.attrValue.length; i++) {
+        formValidate.attrValue[i].id = 0;
+        formValidate.attrValue[i].productId = 0;
+        let attrValues = formValidate.attrValue[i].attrValue;
+        // this.$set(this.formValidate.attrValue[i], 'attrValue', JSON.stringify(attrValues));
+        delete formValidate.attrValue[i].value0;
+      }
+    }
+  } else {
+    formValidate.attr = [
+      {
+        attrName: '规格',
+        attrValues: '默认',
+        id: route.params.id ? formValidate.attr[0].id : 0,
+        isShowImage: false,
+        optionList: [{ value: '默认' }],
+      },
+    ];
+    OneattrValue.value.map((item) => {
+      item.attrValue = JSON.stringify({ 规格: '默认' });
+      // 如果佣金设置为默认
+      if (!formValidate.isSub) {
+        item.brokerage = 0;
+        item.brokerageTwo = 0;
+      }
+      //this.$set(item, 'productId', 0);
+    });
+    formValidate.attrValue = OneattrValue.value;
+  }
+}
+// 提交
+const handleSubmit = Debounce(function (name) {
+  onChangeGroup();
+  getFromData();
+  formValidateRef.value.validate((valid) => {
+    if (valid) {
+      fullscreenLoading.value = true;
+      route.params.id
+        ? productUpdateApi(formValidate)
+            .then(async (res) => {
+              ElMessage.success('编辑成功');
+              setTimeout(() => {
+                router.push({ path: '/store/index' });
+              }, 500);
+              fullscreenLoading.value = false;
+            })
+            .catch((res) => {
+              fullscreenLoading.value = false;
+              restoreData();
+              if (formValidate.specType) ManyAttrValue.value = formValidate.attrValue;
+            })
+        : productCreateApi(formValidate)
+            .then(async (res) => {
+              ElMessage.success('新增成功');
+              setTimeout(() => {
+                router.push({ path: '/store/index' });
+              }, 500);
+              fullscreenLoading.value = false;
+            })
+            .catch((res) => {
+              fullscreenLoading.value = false;
+              restoreData();
+            });
+    } else {
+      if (
+        !formValidate.storeName ||
+        !formValidate.cateId ||
+        !formValidate.keyword ||
+        !formValidate.unitName ||
+        !formValidate.image ||
+        !formValidate.sliderImages
+      ) {
+        ElMessage.warning('请填写完整商品信息！');
+      }
+    }
+  });
+});
+// 提交失败之后恢复数据
+function restoreData() {
+  for (var i = 0; i < formValidate.attrValue.length; i++) {
+    let attrValues = formValidate.attrValue[i].attrValue;
+    formValidate.attrValue[i].attrValue = JSON.parse(attrValues);
+  }
+}
+// 表单验证
+function validate(prop, status, error) {
+  if (status === false) {
+    ElMessage.warning(error);
+  }
+}
+// 移动
+function handleDragStart(e, item) {
+  if (!isDisabled.value) dragging.value = item;
+}
+function handleDragEnd(e, item) {
+  if (!isDisabled.value) dragging.value = null;
+}
+function handleDragOver(e) {
+  if (!isDisabled.value) e.dataTransfer.dropEffect = 'move';
+}
+function handleDragEnter(e, item) {
+  if (!isDisabled.value) {
+    e.dataTransfer.effectAllowed = 'move';
+    if (item === dragging.value) {
+      return;
+    }
+    const newItems = [...formValidate.sliderImages];
+    const src = newItems.indexOf(dragging.value);
+    const dst = newItems.indexOf(item);
+    newItems.splice(dst, 0, ...newItems.splice(src, 1));
+    formValidate.sliderImages = newItems;
+  }
+}
+function handleDragEnterFont(e, item) {
+  if (!isDisabled.value) {
+    e.dataTransfer.effectAllowed = 'move';
+    if (item === dragging.value) {
+      return;
+    }
+    const newItems = [...formValidate.activity];
+    const src = newItems.indexOf(dragging.value);
+    const dst = newItems.indexOf(item);
+    newItems.splice(dst, 0, ...newItems.splice(src, 1));
+    formValidate.activity = newItems;
+  }
+}
+function getGoodsType() {
+  /** 让商品推荐列表的name属性与页面设置tab的name匹配**/
+  goodDesignList({ gid: 70 }).then((response) => {
+    let list = response.list;
+    let arr = [],
+      arr1 = [];
+    const listArr = [{ name: '是否热卖', value: 'isGood', type: '5' }];
+    let typeLists = [
+      { name: '', value: 'isHot', type: '2' }, //热门榜单
+      { name: '', value: 'isBenefit', type: '4' }, //促销单品
+      { name: '', value: 'isBest', type: '1' }, //精品推荐
+      { name: '', value: 'isNew', type: '3' },
+    ]; //首发新品
+    list.forEach((item) => {
+      let obj = {};
+      obj.value = JSON.parse(item.value);
+      obj.id = item.id;
+      obj.gid = item.gid;
+      obj.status = item.status;
+      arr.push(obj);
+    });
+    arr.forEach((item1) => {
+      let obj1 = {};
+      obj1.name = item1.value.fields[1].value;
+      obj1.status = item1.status;
+      obj1.type = item1.value.fields[3].value;
+      arr1.push(obj1);
+    });
+    typeLists.forEach((item) => {
+      arr1.forEach((item1) => {
+        if (item.type == item1.type) {
+          listArr.push({
+            name: item1.name,
+            value: item.value,
+            type: item.type,
+          });
+        }
+      });
+    });
+    recommend.value = listArr;
+  });
+}
+// 删除视频；
+function delVideo() {
+  formValidate.videoLink = '';
+}
+function zh_uploadFile() {
+  if (videoLink.value) {
+    formValidate.videoLink = videoLink.value;
+  }
+}
+function getFileType(fileName) {
+  // 后缀获取
+  let suffix = '';
+  // 获取类型结果
+  let result = '';
+  try {
+    const flieArr = fileName.split('.');
+    suffix = flieArr[flieArr.length - 1];
+  } catch (err) {
+    suffix = '';
+  }
+  // fileName无后缀返回 false
+  if (!suffix) {
+    return false;
+  }
+  suffix = suffix.toLocaleLowerCase();
+  // 图片格式
+  const imglist = ['png', 'jpg', 'jpeg', 'bmp', 'gif'];
+  // 进行图片匹配
+  result = imglist.find((item) => item === suffix);
+  if (result) {
+    return 'image';
+  }
+  // 匹配 视频
+  const videolist = ['mp4', 'm2v', 'mkv', 'rmvb', 'wmv', 'avi', 'flv', 'mov', 'm4v'];
+  result = videolist.find((item) => item === suffix);
+  if (result) {
+    return 'video';
+  }
+  // 其他 文件类型
+  return 'other';
+}
+// 获取服务保障列表
+function getGuaranteeList() {
+  guaranteeListApi({
+    isShow: 1,
+  })
+    .then((res) => {
+      guaranteeList.value = res;
+    })
+    .catch((err) => {
+      ElMessage.error(err.message);
+    });
+}
+// 获取被选服务保障id列表
+function getGuranteeIdsList(list) {
+  if (list) {
+    guaranteeIdsList.value = list.map((item) => {
+      return item.id;
+    });
+  }
+}
+// 修改服务保障
+function updateGuaranteeIds(list) {
+  formValidate.guaranteeIds = list.join(',');
+}
+// 回调规格生成表格数据 多规格
+function changeManyAttrValue(e) {
+  // rows数组第一项 新增默认数据 oneFormBatch
+  ManyAttrValue.value = e;
+}
+//批量清空规格中的批量数据
+function handleBatchDel() {
+  oneFormBatch.value = [
+    {
+      image: '',
+      price: void 0,
+      cost: void 0,
+      otPrice: void 0,
+      stock: void 0,
+      weight: void 0,
+      volume: void 0,
+      brokerage: void 0,
+      brokerageTwo: void 0,
+      barCode: '',
+    },
+  ];
+}
+// 设置多规格商品的表格数据
+function generateManyAttr() {
+  // 多规格属性赋值
+  ManyAttrValue.value = formValidate.attrValue;
+  ManyAttrValue.value.forEach((val) => {
+    val.image = proxy.$selfUtil.setDomain(val.image);
+    val.attrValue = JSON.parse(val.attrValue);
+  });
+  ManyAttrValue.value = [...oneFormBatch.value, ...ManyAttrValue.value];
+  // 此处手动实现后台原本value0 value1的逻辑
+  formValidate.attrValue.forEach((item) => {
+    for (let attrValueKey in item.attrValue) {
+      item[attrValueKey] = item.attrValue[attrValueKey];
+    }
+  });
+}
+
+onMounted(() => {
+  getCopyConfig();
+  formValidate.sliderImages = [];
+  if (route.params.id) {
+    setTagsViewTitle();
+    getInfo();
+  }
+  getCategorySelect();
+  getShippingList();
+  getGoodsType();
+});
 </script>
 <style scoped lang="scss">
 .upLoadPicBox {
-  ::v-deep.el-alert {
+  :deep(.el-alert ){
     padding: 0 !important;
   }
 }
 
 .disLabel {
-  ::v-deepel-form-item__label {
+  :deep(.el-form-item__label ){
     margin-left: 36px !important;
   }
 }
 
 .disLabelmoren {
-  ::v-deepel-form-item__label {
+  :deep(.el-form-item__label ){
     margin-left: 120px !important;
   }
 }
@@ -1293,7 +1306,7 @@ export default {
 }
 
 .proCoupon {
-  ::v-deepel-form-item__content {
+  :deep(.el-form-item__content ){
     margin-top: 5px;
   }
 }
@@ -1309,36 +1322,36 @@ export default {
 }
 
 .noLeft {
-  ::v-deepel-form-item__content {
+  :deep(.el-form-item__content ){
     margin-left: 0 !important;
   }
 }
 
 .tabNumWidth {
-  ::v-deepel-input-number--medium {
+  :deep(.el-input-number--medium ){
     width: 121px !important;
   }
 
-  ::v-deepel-input-number__increase {
+  :deep(.el-input-number__increase ){
     width: 20px !important;
     font-size: 12px !important;
   }
 
-  ::v-deepel-input-number__decrease {
+  :deep(.el-input-number__decrease ){
     width: 20px !important;
     font-size: 12px !important;
   }
 
-  ::v-deepel-input-number--medium .el-input__inner {
+  :deep(.el-input-number--medium .el-input__inner ){
     padding-left: 25px !important;
     padding-right: 25px !important;
   }
 
-  ::v-deep thead {
+  :deep(.thead) {
     line-height: normal !important;
   }
 
-  ::v-deep .el-table .cell {
+  :deep(.el-table .cell) {
     line-height: normal !important;
   }
 }
@@ -1392,7 +1405,7 @@ export default {
 }
 
 .labeltop {
-  ::v-deepel-form-item__label {
+  :deep(.el-form-item__label ){
     float: none !important;
     display: inline-block !important;
     width: auto !important;
@@ -1431,7 +1444,7 @@ export default {
   text-align: center;
 }
 
-::v-deep .el-tabs__nav-scroll {
+:deep(.el-tabs__nav-scroll) {
   margin-top: -20px;
 }
 .selWidth100 {
@@ -1449,10 +1462,10 @@ export default {
 .mr16 {
   margin-right: 16px;
 }
-::v-deep .el-radio__label {
+:deep(.el-radio__label) {
   font-size: 12px !important;
 }
-::v-deep .el-radio__input {
+:deep(.el-radio__input) {
   font-size: 12px !important;
 }
 .inputWid {

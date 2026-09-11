@@ -4,16 +4,12 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { getCurrentInstance } from 'vue';
 import categoryList from '@/components/Category/list';
-export default {
-  components: { categoryList },
-  data() {
-    return {
-      constants: this.$constants,
-    };
-  },
-};
+
+const { proxy } = getCurrentInstance();
+const constants = proxy.$constants;
 </script>
 
 <style scoped></style>

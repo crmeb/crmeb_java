@@ -1,15 +1,17 @@
 <template>
   <div class="divBox">
     <el-card class="box-card">
-      <div slot="header" class="clearfix">
-        <el-steps :active="currentTab" align-center>
-          <el-step title="安装系统" />
-          <el-step title="应用配置" />
-          <el-step title="支付配置" />
-          <el-step title="站点配置" />
-          <!-- <el-step title="一号通" /> -->
-        </el-steps>
-      </div>
+      <template #header>
+        <div class="clearfix">
+          <el-steps :active="currentTab" align-center>
+            <el-step title="安装系统" />
+            <el-step title="应用配置" />
+            <el-step title="支付配置" />
+            <el-step title="站点配置" />
+            <!-- <el-step title="一号通" /> -->
+          </el-steps>
+        </div>
+      </template>
       <div class="install" v-show="currentTab === 0">
         <div class="ins_name flex align-center">
           <span>选择应用配置:</span>
@@ -60,7 +62,7 @@
             v-for="(tabItem, itemIndex) in payConfigArr"
             :key="itemIndex"
             :label="tabItem.name"
-            :name="tabItem.extra"
+            :name="toTabName(tabItem.extra)"
           >
             <parser
               v-if="formConf.render"
@@ -78,7 +80,7 @@
             v-for="(tabItem, itemIndex) in siteConfigArr"
             :key="itemIndex"
             :label="tabItem.name"
-            :name="tabItem.extra"
+            :name="toTabName(tabItem.extra)"
           >
             <parser
               v-if="formConf.render"
@@ -123,7 +125,7 @@
                   style="width: 240px; margin-right: 10px"
                 />
                 <el-button
-                  :disabled="!this.canClick"
+                  :disabled="!canClick"
                   @click="cutDown"
                   type="primary"
                   plain
@@ -142,7 +144,7 @@
               >
             </div>
             <div class="flex-center go_login">
-              <router-link to="/operation/onePass">已有帐号 去登录</router-link>
+              <router-link to="/operation/onePassConfig">已有帐号 去登录</router-link>
             </div>
           </el-form>
         </div>
@@ -151,276 +153,294 @@
         <el-button class="step_btn" v-show="currentTab > 0" @click="beforeStep()">上一步</el-button>
         <el-button
           type="primary"
-          :class="currentTab == 0 ? 'step_btn' : ''"
+          :class="currentTab == 0 ? 'step_btn' : 'step_btn_next'"
           @click="nextStep()"
           v-show="currentTab < 3"
           :disabled="disabled"
           >下一步</el-button
         >
-        <el-button v-show="currentTab === 3" type="primary" @click="complate()">完成</el-button>
+        <el-button class="step_btn_next" v-show="currentTab === 3" type="primary" @click="complate()">完成</el-button>
       </div>
     </el-card>
   </div>
 </template>
-<script>
-import parser from '@/components/FormGenerator/components/parser/Parser';
-import * as categoryApi from '@/api/categoryApi.js';
-import * as systemFormConfigApi from '@/api/systemFormConfig.js';
-import * as systemSettingApi from '@/api/systemSetting.js';
-import { captchaApi, registerApi } from '@/api/sms';
-import { Debounce } from '@/utils/validate';
-export default {
-  data() {
-    const validatePhone = (rule, value, callback) => {
-      if (!value) {
-        return callback(new Error('请填写手机号'));
-      } else if (!/^1[3456789]\d{9}$/.test(value)) {
-        callback(new Error('手机号格式不正确!'));
-      } else {
-        callback();
+<script setup>
+import { reactive, ref, onMounted, getCurrentInstance } from 'vue'
+import { ElMessage } from '@/utils/elementPlusFeedback'
+import { useRouter } from 'vue-router'
+import parser from '@/components/FormGenerator/components/parser/Parser'
+import * as categoryApi from '@/api/categoryApi.js'
+import * as systemFormConfigApi from '@/api/systemFormConfig.js'
+import * as systemSettingApi from '@/api/systemSetting.js'
+import { captchaApi, registerApi } from '@/api/sms'
+import { Debounce } from '@/utils/validate'
+// 将 require('@/assets/imgs/*.png') 转为静态 import
+import wechatH5Img from '@/assets/imgs/wechat_h5.png'
+import routineImg from '@/assets/imgs/routine.png'
+import appImg from '@/assets/imgs/app.png'
+
+defineOptions({ name: 'guide' })
+
+const router = useRouter()
+const { proxy } = getCurrentInstance()
+
+const validatePhone = (rule, value, callback) => {
+  if (!value) {
+    return callback(new Error('请填写手机号'))
+  } else if (!/^1[3456789]\d{9}$/.test(value)) {
+    callback(new Error('手机号格式不正确!'))
+  } else {
+    callback()
+  }
+}
+
+const currentTab = ref(0)
+const cTab = ref(0)
+const installList = [
+  { img: wechatH5Img, name: '公众号', id: 159 },
+  { img: routineImg, name: '小程序', id: 160 },
+  { img: appImg, name: 'APP', id: 161 }
+]
+const checkArr = ref([])
+const payConfigArr = ref([])
+const siteConfigArr = ref([])
+const applicationName = ref('')
+const siteConfigName = ref('')
+const payConfigName = ref('')
+const checked = ref(false)
+const formConf = reactive({ content: { fields: [] }, id: null, render: false, isEdit: false })
+const currentEditId = ref(null)
+const currentEditData = ref({})
+const loading = ref(false)
+const disabled = ref(true)
+const passwordType = ref('password')
+const cutNUm = ref('获取验证码')
+const canClick = ref(true)
+const formInline = reactive({
+  account: '',
+  code: '',
+  domain: '',
+  phone: '',
+  password: ''
+})
+const ruleInline = reactive({
+  password: [{ required: true, message: '请输入短信平台密码/token', trigger: 'blur' }],
+  domain: [{ required: true, message: '请输入网址域名', trigger: 'blur' }],
+  phone: [{ required: true, validator: validatePhone, trigger: 'blur' }],
+  code: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
+})
+
+const formInlineRef = ref(null)
+
+function install(i) {
+  if (checkArr.value.includes(i)) {
+    //includes()方法判断是否包含某一元素,返回true或false表示是否包含元素，对NaN一样有效
+    //filter()方法用于把Array的某些元素过滤掉，filter()把传入的函数依次作用于每个元素，然后根据返回值是true还是false决定保留还是丢弃该元素：生成新的数组
+    checkArr.value = checkArr.value.filter(function (ele) {
+      return ele != i
+    })
+  } else {
+    checkArr.value.push(i)
+    applicationName.value = checkArr.value[0].id.toString()
+    if (checkArr.value.length) disabled.value = false
+  }
+}
+function nextStep() {
+  currentTab.value++
+  switch (currentTab.value) {
+    case 1:
+      if (checkArr.value.length) {
+        handlerGetFormConfig(Number(applicationName.value))
       }
-    };
-    return {
-      currentTab: 0,
-      cTab: 0,
-      installList: [
-        { img: require('@/assets/imgs/wechat_h5.png'), name: '公众号', id: 65 },
-        { img: require('@/assets/imgs/routine.png'), name: '小程序', id: 66 },
-        { img: require('@/assets/imgs/app.png'), name: 'APP', id: 134 },
-      ],
-      checkArr: [],
-      payConfigArr: [],
-      siteConfigArr: [],
-      applicationName: '',
-      siteConfigName: '',
-      payConfigName: '',
-      checked: false,
-      formConf: { content: { fields: [] }, id: null, render: false, isEdit: false },
-      currentEditId: null,
-      currentEditData: {},
-      loading: false,
-      disabled: true,
-      passwordType: 'password',
-      cutNUm: '获取验证码',
-      canClick: true,
-      formInline: {
-        account: '',
-        code: '',
-        domain: '',
-        phone: '',
-        password: '',
-      },
-      ruleInline: {
-        password: [{ required: true, message: '请输入短信平台密码/token', trigger: 'blur' }],
-        domain: [{ required: true, message: '请输入网址域名', trigger: 'blur' }],
-        phone: [{ required: true, validator: validatePhone, trigger: 'blur' }],
-        code: [{ required: true, message: '请输入验证码', trigger: 'blur' }],
-      },
-    };
-  },
-  components: { parser },
-  mounted() {
-    this.$cache.local.remove('step');
-    this.handlerGetTreeList();
-    this.getStep();
-  },
-  methods: {
-    install(i) {
-      if (this.checkArr.includes(i)) {
-        //includes()方法判断是否包含某一元素,返回true或false表示是否包含元素，对NaN一样有效
-        //filter()方法用于把Array的某些元素过滤掉，filter()把传入的函数依次作用于每个元素，然后根据返回值是true还是false决定保留还是丢弃该元素：生成新的数组
-        this.checkArr = this.checkArr.filter(function (ele) {
-          return ele != i;
-        });
-      } else {
-        this.checkArr.push(i);
-        this.applicationName = this.checkArr[0].id.toString();
-        if (this.checkArr.length) this.disabled = false;
+      break
+    case 2:
+      payConfigName.value = toTabName(payConfigArr.value[0]?.extra)
+      if (payConfigName.value) {
+        handlerGetFormConfig(Number(payConfigName.value))
       }
-    },
-    nextStep() {
-      this.currentTab++;
-      switch (this.currentTab) {
-        case 1:
-          if (this.checkArr.length) {
-            this.handlerGetFormConfig(Number(this.applicationName));
-          }
-          break;
-        case 2:
-          this.payConfigName = this.payConfigArr[0].extra;
-          if (this.payConfigArr.length) {
-            this.handlerGetFormConfig(Number(this.payConfigName));
-          }
-          break;
-        case 3:
-          this.siteConfigName = this.siteConfigArr[0].extra;
-          if (this.siteConfigArr.length) {
-            this.handlerGetFormConfig(Number(this.siteConfigName));
-          }
-        default:
-          break;
+      break
+    case 3:
+      siteConfigName.value = toTabName(siteConfigArr.value[0]?.extra)
+      if (siteConfigName.value) {
+        handlerGetFormConfig(Number(siteConfigName.value))
       }
-      let data = {
-        currentTab: this.currentTab,
-        checkArr: this.checkArr,
-        payConfigArr: this.payConfigArr,
-        siteConfigArr: this.siteConfigArr,
-      };
-      this.$cache.local.setJSON('step', data);
-    },
-    getStep() {
-      if (!this.$cache.local.has('step')) return;
-      let data = this.$cache.local.getJSON('step');
-      this.currentTab = data.currentTab ? data.currentTab : 0;
-      this.checkArr = data.checkArr;
-      this.payConfigArr = data.payConfigArr;
-      this.siteConfigArr = data.siteConfigArr;
-      if (this.checkArr.length) this.disabled = false;
-      if (this.currentTab == 1) {
-        this.applicationName = this.checkArr[0].id.toString();
-        this.handlerGetFormConfig(Number(this.checkArr[0].id));
-      } else if (this.currentTab == 2) {
-        this.payConfigName = this.payConfigArr[0].extra;
-        this.handlerGetFormConfig(Number(this.payConfigArr[0].extra));
-      } else if (this.currentTab == 3) {
-        this.siteConfigName = this.siteConfigArr[0].extra;
-        this.handlerGetFormConfig(Number(this.siteConfigArr[0].extra));
-      }
-    },
-    beforeStep() {
-      this.currentTab--;
-      this.formConf.content = { fields: [] };
-      this.formConf.render = false;
-      if (this.currentTab == 1) {
-        this.applicationName = this.checkArr[0].id.toString();
-        this.handlerGetFormConfig(Number(this.checkArr[0].id));
-      } else if (this.currentTab == 2) {
-        this.payConfigName = this.payConfigArr[0].extra;
-        this.handlerGetFormConfig(Number(this.payConfigArr[0].extra));
-      } else if (this.currentTab == 3) {
-        this.siteConfigName = this.siteConfigArr[0].extra;
-        this.handlerGetFormConfig(Number(this.siteConfigArr[0].extra));
-      }
-    },
-    handleClick(tab) {
-      let _id = tab.name ? tab.name : '';
-      if (!_id) return this.$message.error('表单配置不正确，请关联正确表单后使用');
-      this.handlerGetFormConfig(_id);
-    },
-    handlerGetFormConfig(id) {
-      const formPram = { id: id };
-      this.currentEditId = id;
-      this.formConf.content = { fields: [] };
-      this.formConf.render = false;
-      this.loading = true;
-      systemFormConfigApi
-        .getFormConfigInfo(formPram)
-        .then((data) => {
-          const { id, name, info, content } = data;
-          this.formConf.content = JSON.parse(content);
-          this.formConf.id = id;
-          this.handlerGetSettingInfo(id, 1);
-          this.loading = false;
+    default:
+      break
+  }
+  let data = {
+    currentTab: currentTab.value,
+    checkArr: checkArr.value,
+    payConfigArr: payConfigArr.value,
+    siteConfigArr: siteConfigArr.value
+  }
+  proxy.$cache.local.setJSON('step', data)
+}
+function getStep() {
+  if (!proxy.$cache.local.has('step')) return
+  let data = proxy.$cache.local.getJSON('step')
+  currentTab.value = data.currentTab ? data.currentTab : 0
+  checkArr.value = data.checkArr
+  payConfigArr.value = data.payConfigArr
+  siteConfigArr.value = data.siteConfigArr
+  if (checkArr.value.length) disabled.value = false
+  if (currentTab.value == 1) {
+    applicationName.value = checkArr.value[0].id.toString()
+    handlerGetFormConfig(Number(checkArr.value[0].id))
+  } else if (currentTab.value == 2) {
+    payConfigName.value = toTabName(payConfigArr.value[0]?.extra)
+    if (payConfigName.value) handlerGetFormConfig(Number(payConfigName.value))
+  } else if (currentTab.value == 3) {
+    siteConfigName.value = toTabName(siteConfigArr.value[0]?.extra)
+    if (siteConfigName.value) handlerGetFormConfig(Number(siteConfigName.value))
+  }
+}
+function beforeStep() {
+  currentTab.value--
+  formConf.content = { fields: [] }
+  formConf.render = false
+  if (currentTab.value == 1) {
+    applicationName.value = checkArr.value[0].id.toString()
+    handlerGetFormConfig(Number(checkArr.value[0].id))
+  } else if (currentTab.value == 2) {
+    payConfigName.value = toTabName(payConfigArr.value[0]?.extra)
+    if (payConfigName.value) handlerGetFormConfig(Number(payConfigName.value))
+  } else if (currentTab.value == 3) {
+    siteConfigName.value = toTabName(siteConfigArr.value[0]?.extra)
+    if (siteConfigName.value) handlerGetFormConfig(Number(siteConfigName.value))
+  }
+}
+function getTabName(tab) {
+  return tab?.props?.name ?? tab?.paneName ?? tab?.name ?? tab
+}
+function toTabName(value) {
+  return value != null ? value.toString() : ''
+}
+function findCategoryByName(list, name) {
+  return (list || []).find((item) => item?.name === name)
+}
+function handleClick(tab) {
+  let _id = getTabName(tab)
+  if (!_id) return ElMessage.error('表单配置不正确，请关联正确表单后使用')
+  handlerGetFormConfig(_id)
+}
+function handlerGetFormConfig(id) {
+  const formPram = { id: id }
+  currentEditId.value = id
+  formConf.content = { fields: [] }
+  formConf.render = false
+  loading.value = true
+  systemFormConfigApi
+    .getFormConfigInfo(formPram)
+    .then((data) => {
+      const { id, name, info, content } = data
+      formConf.content = JSON.parse(content)
+      formConf.id = id
+      handlerGetSettingInfo(id, 1)
+      loading.value = false
+    })
+    .catch(() => {
+      loading.value = false
+    })
+}
+function handlerGetSettingInfo(id, level) {
+  systemSettingApi.systemConfigInfo({ id: id }).then((data) => {
+    currentEditData.value = data
+    if (level === 1) {
+      formConf.isEdit = currentEditData.value !== null
+      formConf.render = true
+    }
+  })
+}
+const handlerSubmit = Debounce(function (formValue) {
+  handlerSave(formValue)
+})
+function handlerSave(formValue) {
+  const _pram = buildFormPram(formValue)
+  let _formId = 0
+  systemSettingApi.systemConfigSave(_pram).then((data) => {
+    ElMessage.success('添加数据成功')
+  })
+}
+function buildFormPram(formValue) {
+  const _pram = {
+    fields: [],
+    id: currentEditId.value,
+    sort: 0, // 参数暂时无用
+    status: true // 参数暂时无用
+  }
+  const _fields = []
+  Object.keys(formValue).forEach((key) => {
+    _fields.push({
+      name: key,
+      title: key,
+      value: formValue[key]
+    })
+  })
+  _pram.fields = _fields
+  return _pram
+}
+function handlerGetTreeList() {
+  const _pram = { type: 6, status: 1 }
+  loading.value = true
+  categoryApi
+    .treeCategroy(_pram)
+    .then((data) => {
+      payConfigArr.value = findCategoryByName(data, '支付配置')?.child || []
+      siteConfigArr.value = findCategoryByName(data, '系统配置')?.child || []
+      loading.value = false
+    })
+    .catch(() => {
+      loading.value = false
+    })
+}
+const formSubmit = Debounce(function (name) {
+  formInline.account = formInline.phone
+  formInlineRef.value.validate((valid) => {
+    if (valid) {
+      loading.value = true
+      registerApi(formInline)
+        .then(async (res) => {
+          ElMessage.success('注册成功')
+          loading.value = false
         })
         .catch(() => {
-          this.loading = false;
-        });
-    },
-    handlerGetSettingInfo(id, level) {
-      systemSettingApi.systemConfigInfo({ id: id }).then((data) => {
-        this.currentEditData = data;
-        if (level === 1) {
-          this.formConf.isEdit = this.currentEditData !== null;
-          this.formConf.render = true;
-        }
-      });
-    },
-    handlerSubmit: Debounce(function (formValue) {
-      this.handlerSave(formValue);
-    }),
-    handlerSave(formValue) {
-      const _pram = this.buildFormPram(formValue);
-      let _formId = 0;
-      systemSettingApi.systemConfigSave(_pram).then((data) => {
-        this.$message.success('添加数据成功');
-      });
-    },
-    buildFormPram(formValue) {
-      const _pram = {
-        fields: [],
-        id: this.currentEditId,
-        sort: 0, // 参数暂时无用
-        status: true, // 参数暂时无用
-      };
-      const _fields = [];
-      Object.keys(formValue).forEach((key) => {
-        _fields.push({
-          name: key,
-          title: key,
-          value: formValue[key],
-        });
-      });
-      _pram.fields = _fields;
-      return _pram;
-    },
-    handlerGetTreeList() {
-      const _pram = { type: 6, status: 1 };
-      this.loading = true;
-      categoryApi
-        .treeCategroy(_pram)
-        .then((data) => {
-          this.payConfigArr = data[3].child;
-          this.siteConfigArr[0] = data[0].child[0];
-          this.loading = false;
+          loading.value = false
         })
-        .catch(() => {
-          this.loading = false;
-        });
-    },
-    formSubmit: Debounce(function (name) {
-      this.formInline.account = this.formInline.phone;
-      this.$refs[name].validate((valid) => {
-        if (valid) {
-          this.loading = true;
-          registerApi(this.formInline)
-            .then(async (res) => {
-              this.$message.success('注册成功');
-              this.loading = false;
-            })
-            .catch(() => {
-              this.loading = false;
-            });
-        } else {
-          return false;
-        }
-      });
-    }),
-    complate() {
-      this.$cache.local.remove('step');
-      this.$router.push('/');
-    },
-    cutDown() {
-      if (this.formInline.phone) {
-        if (!this.canClick) return;
-        this.canClick = false;
-        this.cutNUm = 60;
-        captchaApi({ phone: this.formInline.phone, types: 0 }).then(async (res) => {
-          this.$message.success('发送成功');
-        });
-        const time = setInterval(() => {
-          this.cutNUm--;
-          if (this.cutNUm === 0) {
-            this.cutNUm = '获取验证码';
-            this.canClick = true;
-            clearInterval(time);
-          }
-        }, 1000);
-      } else {
-        this.$message.warning('请填写手机号!');
+    } else {
+      return false
+    }
+  })
+})
+function complate() {
+  proxy.$cache.local.remove('step')
+  router.push('/')
+}
+function cutDown() {
+  if (formInline.phone) {
+    if (!canClick.value) return
+    canClick.value = false
+    cutNUm.value = 60
+    captchaApi({ phone: formInline.phone, types: 0 }).then(async (res) => {
+      ElMessage.success('发送成功')
+    })
+    const time = setInterval(() => {
+      cutNUm.value--
+      if (cutNUm.value === 0) {
+        cutNUm.value = '获取验证码'
+        canClick.value = true
+        clearInterval(time)
       }
-    },
-  },
-};
+    }, 1000)
+  } else {
+    ElMessage.warning('请填写手机号!')
+  }
+}
+
+onMounted(() => {
+  proxy.$cache.local.remove('step')
+  handlerGetTreeList()
+  getStep()
+})
 </script>
 <style lang="scss" scoped>
 .flex {
@@ -494,6 +514,9 @@ export default {
 .step_btn {
   margin: 54px 0 0 105px;
 }
+.step_btn_next {
+  margin: 54px 0 0 25px;
+}
 .step_btn {
   margin-left: 105px !important;
 }
@@ -523,37 +546,38 @@ export default {
 .active {
   border: none !important;
 }
-::v-deep .el-step__line {
+
+:deep(.el-step__line) {
   margin-left: 95px;
   margin-right: 30px !important;
 }
-::v-deep .el-step__title {
+:deep(.el-step__title) {
   position: absolute;
   top: -6px;
   right: 50px;
 }
-::v-deep .is-process .el-step__icon {
+:deep(.is-process .el-step__icon) {
   border: none;
   background: var(--prev-color-primary);
   color: #fff;
 }
-// ::v-deep .el-step__icon-inner {
+// :deep(.el-step__icon-inner) {
 //   margin-right: 2px;
 //   margin-top: 1px;
 // }
-::v-deep .el-steps {
+:deep(.el-steps) {
   margin-left: 3px;
 }
-::v-deep .el-steps {
+:deep(.el-steps) {
   width: 1100px !important;
 }
 .step_btn_box {
   margin-left: 35%;
 }
-::v-deep .dialog-footer-inner {
+:deep(.dialog-footer-inner) {
   float: left !important;
 }
-::v-deep .closeBtn {
+:deep(.closeBtn) {
   display: none;
 }
 </style>

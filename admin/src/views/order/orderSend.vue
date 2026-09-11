@@ -1,18 +1,18 @@
 <template>
   <el-dialog
     :close-on-click-modal="false"
-    :visible.sync="modals"
+    v-model="modals"
     title="发送货"
     class="order_box"
     :before-close="handleClose"
     width="900px"
   >
     <el-form
-      ref="formItem"
+      ref="formItemRef"
       v-loading="loading"
       :model="formItem"
       label-width="130px"
-      @submit.native.prevent
+      @submit.prevent
       :rules="rules"
     >
       <el-form-item label="选择类型：">
@@ -22,9 +22,9 @@
           @change="changeRadioType(formItem.deliveryType)"
           required
         >
-          <el-radio label="express">发货</el-radio>
-          <el-radio label="send">送货</el-radio>
-          <el-radio label="fictitious">虚拟</el-radio>
+          <el-radio label="express" value="express">发货</el-radio>
+          <el-radio label="send" value="send">送货</el-radio>
+          <el-radio label="fictitious" value="fictitious">虚拟</el-radio>
         </el-radio-group>
       </el-form-item>
       <!--发货-->
@@ -35,9 +35,9 @@
             v-model="formItem.expressRecordType"
             @change="changeRadio(formItem.expressRecordType)"
           >
-            <el-radio label="3">商家寄件</el-radio>
-            <el-radio label="1">手动填写</el-radio>
-            <el-radio label="2" v-if="checkPermi(['admin:order:sheet:info'])">电子面单打印</el-radio>
+            <el-radio label="1" value="1">手动填写</el-radio>
+            <el-radio label="2" value="2" v-if="checkPermi(['admin:order:sheet:info'])">电子面单打印</el-radio>
+            <el-radio label="3" value="3">商家寄件</el-radio>
           </el-radio-group>
         </el-form-item>
         <!--商家寄件-->
@@ -98,7 +98,7 @@
                     <el-image
                       style="width: 36px; height: 36px"
                       :src="expressTempIdImg"
-                      :preview-src-list="[expressTempIdImg]"
+                      :preview-src-list="[expressTempIdImg]" preview-teleported
                     />
                   </div>
                 </div>
@@ -107,9 +107,9 @@
           </el-form-item>
           <el-form-item label="取件日期：">
             <el-radio-group v-model="formItem.shipment.dayType" type="button">
-              <el-radio :label="0">今天</el-radio>
-              <el-radio :label="1">明天</el-radio>
-              <el-radio :label="2">后天</el-radio>
+              <el-radio :label="0" :value="0">今天</el-radio>
+              <el-radio :label="1" :value="1">明天</el-radio>
+              <el-radio :label="2" :value="2">后天</el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="取件时间：">
@@ -164,7 +164,7 @@
               <div v-if="formItem.expressTempId" style="position: relative">
                 <div class="tempImgList ml10">
                   <div class="demo-image__preview">
-                    <el-image style="width: 36px; height: 36px" :src="tempImg" :preview-src-list="[tempImg]" />
+                    <el-image style="width: 36px; height: 36px" :src="tempImg" :preview-src-list="[tempImg]" preview-teleported />
                   </div>
                 </div>
               </div>
@@ -197,18 +197,25 @@
         </el-form-item>
       </div> -->
     </el-form>
-    <div slot="footer">
-      <el-button @click="cancel('formItem')">取消</el-button>
-      <el-button type="primary" @click="putSend('formItem')">提交</el-button>
-    </div>
+    <template #footer>
+      <div>
+        <el-button @click="cancel('formItem')">取消</el-button>
+        <el-button type="primary" @click="putSend('formItem')">提交</el-button>
+      </div>
+    </template>
   </el-dialog>
 </template>
 
-<script>
+<script setup lang="jsx">
+import { ref, reactive, watch, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { orderSendApi, sheetInfoApi, updateTrackingNumberApi } from '@/api/order';
 import { expressAllApi, exportTempApi, shipmentExpressApi } from '@/api/sms';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
 import { Debounce } from '@/utils/validate';
+//修改引入打印扩展
+import printJS from 'print-js';
+
 const validatePhone = (rule, value, callback) => {
   if (!value) {
     return callback(new Error('请填写手机号'));
@@ -218,266 +225,282 @@ const validatePhone = (rule, value, callback) => {
     callback();
   }
 };
-//修改引入打印扩展
-import printJS from 'print-js';
-export default {
-  name: 'orderSend',
-  props: {
-    orderId: {
-      type: String,
-      default: '',
-    },
-    expressListNormal: {
-      type: Array,
-      default: [],
-    },
-    expressListElec: {
-      type: Array,
-      default: [],
-    },
-    orderDetail: {
-      type: Object,
-      default: null,
-    },
+
+defineOptions({ name: 'orderSend' });
+
+const props = defineProps({
+  orderId: {
+    type: String,
+    default: '',
   },
-  data() {
-    return {
-      formItem: {
-        deliveryType: 'express',
-        expressRecordType: '3',
-        expressCode: '',
-        company: '', //快递公司
-        deliveryName: '',
-        deliveryTel: '',
-        expressName: '',
-        expressNumber: '',
-        expressTempId: '',
-        toAddr: '',
-        toName: '',
-        toTel: '',
-        orderNo: '',
-        shipment: {
-          sendRealName: '',
-          sendPhone: '',
-          sendAddress: '',
-          kuaidicom: '', //快递公司编码
-          serviceType: '', //快递业务类型
-          pickupStartTime: '', // 取件开始时间
-          pickupEndTime: '', // 取件结束时间
-          tempid: '', //电子面单模板id
-          dayType: 1, //时间
-        },
-      },
-      modals: false,
-      exportTempList: [],
-      tempImg: '',
-      rules: {
-        'shipment.sendRealName': [{ required: true, message: '请输入寄件人姓名', trigger: 'blur' }],
-        'shipment.sendPhone': [{ required: true, validator: validatePhone, trigger: 'blur' }],
-        'shipment.sendAddress': [{ required: true, message: '请输入寄件人地址', trigger: 'blur' }],
-        'shipment.kuaidicom': [{ required: true, message: '请选择快递公司', trigger: 'change' }],
-        'shipment.serviceType': [{ required: true, message: '请选择业务类型', trigger: 'change' }],
-        'shipment.tempid': [{ required: true, message: '请选择电子面单模板', trigger: 'change' }],
-        toName: [{ required: true, message: '请输寄件人姓名', trigger: 'blur' }],
-        toTel: [{ required: true, validator: validatePhone, trigger: 'blur' }],
-        toAddr: [{ required: true, message: '请输入寄件人地址', trigger: 'blur' }],
-        company: [{ required: true, message: '请选择快递公司', trigger: 'change' }],
-        expressNumber: [{ required: true, message: '请输入快递单号', trigger: 'blur' }],
-        expressTempId: [{ required: true, message: '请选择电子面单', trigger: 'change' }],
-        deliveryName: [{ required: true, message: '请输入送货人姓名', trigger: 'blur' }],
-        deliveryTel: [{ required: true, validator: validatePhone, trigger: 'blur' }],
-      },
-      expressType: 'normal',
-      loading: false,
-      express: [], //物流公司
-      isEdit: false, //是否是编辑
-      shipmentExpress: [], //一号通物流公司
-      serviceTypeList: [], //业务类型
-      expressTempIdList: [], //商家发货电子面单
-      expressTempIdImg: '', // 商家发货电子面单图片
-      pickupTime: ['', ''], // 取件时间
-      nowCompany: '',
-    };
+  expressListNormal: {
+    type: Array,
+    default: () => [],
   },
-  watch: {
-    orderDetail: {
-      handler: function (val) {
-        if (val) {
-          this.loading = true;
-          this.isEdit = true;
-          this.getExpressDetail(val);
-        } else {
-          this.isEdit = false;
-          this.loading = false;
-        }
-      },
-      immediate: false,
-      deep: true,
-    },
+  expressListElec: {
+    type: Array,
+    default: () => [],
   },
-  mounted() {
-    this.express = this.expressListNormal;
-    if (checkPermi(['admin:pass:shipment:express'])) this.getShipmentExpress();
+  orderDetail: {
+    type: Object,
+    default: null,
   },
-  methods: {
-    checkPermi,
-    //一号通 商家寄件 快递列表
-    getShipmentExpress() {
-      shipmentExpressApi().then((res) => {
-        this.shipmentExpress = res.data;
-      });
-    },
-    // 取件时间选择
-    onchangeTime(e) {
-      this.formItem.shipment.pickupStartTime = e[0];
-      this.formItem.shipment.pickupEndTime = e[1];
-    },
-    //商家寄件选择快递公司获取电子面单列表
-    onChangeShipmentExpress(value) {
-      this.formItem.shipment.serviceType = '';
-      let expressItem = this.shipmentExpress.find((item) => {
-        return item.value === value;
-      });
-      if (expressItem === undefined) {
-        return;
-      }
-      this.serviceTypeList = expressItem.types; //业务类型
-      this.expressTempIdList = expressItem.list; //商家发货电子面单
-    },
-    //选择电子面单
-    onChangeExpressTempId(item) {
-      this.expressTempIdList.map((i) => {
-        if (i.temp_id === item) this.expressTempIdImg = i.pic;
-      });
-    },
-    //物流信息详情, 快递单号，快递公司，快递公司code
-    getExpressDetail(val) {
-      if (val.deliveryType === 'send') {
-        this.formItem.deliveryTel = val.deliveryId;
-        this.formItem.deliveryName = val.deliveryName;
-      } else {
-        this.formItem.expressName = val.deliveryName;
-        this.formItem.expressNumber = val.deliveryId;
-      }
-      this.formItem.deliveryType = val.deliveryType;
-      this.formItem.expressCode = val.deliveryCode;
-      this.formItem.expressRecordType = val.expressRecordType;
-      this.formItem.company = { code: val.deliveryCode, name: val.deliveryName };
-      this.loading = false;
-    },
-    // 默认信息
-    sheetInfo() {
-      sheetInfoApi().then(async (res) => {
-        this.formItem.toAddr = res.exportToAddress || '';
-        this.formItem.toName = res.exportToName || '';
-        this.formItem.toTel = res.exportToTel || '';
-      });
-    },
-    // 快递公司选择
-    onChangeExport(val) {
-      this.formItem.expressCode = val.code;
-      this.formItem.expressName = val.name;
-      this.formItem.expressTempId = '';
-      if (this.formItem.expressRecordType === '2') this.exportTemp(val.code);
-    },
-    // 电子面单模板
-    exportTemp(code) {
-      exportTempApi({ com: code }).then(async (res) => {
-        this.exportTempList = res.data.data || [];
-      });
-    },
-    onChangeImg(item) {
-      this.exportTempList.map((i) => {
-        if (i.temp_id === item) this.tempImg = i.pic;
-      });
-    },
-    //选择类型
-    changeRadioType() {
-      if (this.formItem.deliveryType === 'fictitious') {
-        this.formItem.expressId = '';
-        this.formItem.expressCode = '';
-      }
-    },
-    //选择发货类型
-    changeRadio(o) {
-      if (o !== '3') {
-        if (o === '2') {
-          this.express = this.expressListElec;
-        } else {
-          this.express = this.expressListNormal;
-        }
-        //其他数据置空
-        this.formItem.shipment = {
-          sendRealName: '',
-          sendPhone: '',
-          sendAddress: '',
-          kuaidicom: '', //快递公司编码
-          serviceType: '', //快递业务类型
-          pickupStartTime: '', // 取件开始时间
-          pickupEndTime: '', // 取件结束时间
-          tempid: '', //电子面单模板id
-          dayType: 1, //时间
-        };
-      } else {
-        //其他数据置空
-        this.formItem.deliveryName = '';
-        this.formItem.expressCode = '';
-        this.formItem.expressName = '';
-        this.formItem.expressTempId = '';
-        this.formItem.expressNumber = '';
-      }
-    },
-    // 提交
-    putSend: Debounce(function (name) {
-      // 打印测试
-      //this.printImg("http://api.kuaidi100.com/label/getImage/20230505/FBA3DFCE5C684CB9A13DADA8EE8357FB");
-      // 正常业务中使用;
-      this.formItem.orderNo = this.orderId;
-      this.$refs[name].validate((valid) => {
-        if (valid) {
-          !this.isEdit
-            ? orderSendApi(this.formItem).then((data) => {
-                // data -》 label是一个网络图片地址，直接打印即可
-                if (this.formItem.expressRecordType === '2') this.printImg(data.label);
-                this.$message.success('发送货成功');
-                this.modals = false;
-                this.$refs[name].resetFields();
-                this.$emit('submitFail');
-              })
-            : updateTrackingNumberApi(this.formItem).then((data) => {
-                this.$message.success('修改快递单号成功');
-                this.modals = false;
-                this.$refs[name].resetFields();
-                this.$emit('submitFail');
-              });
-        } else {
-          this.$message.error('请填写信息');
-        }
-      });
-    }),
-    handleClose() {
-      this.cancel('formItem');
-    },
-    cancel(name) {
-      this.modals = false;
-      this.$refs[name].resetFields();
-      this.formItem.deliveryType = 'express';
-      this.formItem.expressRecordType = '3';
-    },
-    //修改增加打印方法
-    printImg(url) {
-      printJS({
-        printable: url,
-        type: 'image',
-        documentTitle: '快递信息',
-        style: `img{
-          width: 100%;
-          height: 476px;
-        }`,
-      });
-    },
+});
+
+const emit = defineEmits(['submitFail']);
+
+const formItemRef = ref(null);
+
+const formItem = reactive({
+  deliveryType: 'express',
+  expressRecordType: '1',
+  expressCode: '',
+  company: '', //快递公司
+  deliveryName: '',
+  deliveryTel: '',
+  expressName: '',
+  expressNumber: '',
+  expressTempId: '',
+  toAddr: '',
+  toName: '',
+  toTel: '',
+  orderNo: '',
+  shipment: {
+    sendRealName: '',
+    sendPhone: '',
+    sendAddress: '',
+    kuaidicom: '', //快递公司编码
+    serviceType: '', //快递业务类型
+    pickupStartTime: '', // 取件开始时间
+    pickupEndTime: '', // 取件结束时间
+    tempid: '', //电子面单模板id
+    dayType: 1, //时间
   },
+});
+const modals = ref(false);
+const exportTempList = ref([]);
+const tempImg = ref('');
+const rules = {
+  'shipment.sendRealName': [{ required: true, message: '请输入寄件人姓名', trigger: 'blur' }],
+  'shipment.sendPhone': [{ required: true, validator: validatePhone, trigger: 'blur' }],
+  'shipment.sendAddress': [{ required: true, message: '请输入寄件人地址', trigger: 'blur' }],
+  'shipment.kuaidicom': [{ required: true, message: '请选择快递公司', trigger: 'change' }],
+  'shipment.serviceType': [{ required: true, message: '请选择业务类型', trigger: 'change' }],
+  'shipment.tempid': [{ required: true, message: '请选择电子面单模板', trigger: 'change' }],
+  toName: [{ required: true, message: '请输寄件人姓名', trigger: 'blur' }],
+  toTel: [{ required: true, validator: validatePhone, trigger: 'blur' }],
+  toAddr: [{ required: true, message: '请输入寄件人地址', trigger: 'blur' }],
+  company: [{ required: true, message: '请选择快递公司', trigger: 'change' }],
+  expressNumber: [{ required: true, message: '请输入快递单号', trigger: 'blur' }],
+  expressTempId: [{ required: true, message: '请选择电子面单', trigger: 'change' }],
+  deliveryName: [{ required: true, message: '请输入送货人姓名', trigger: 'blur' }],
+  deliveryTel: [{ required: true, validator: validatePhone, trigger: 'blur' }],
 };
+const expressType = ref('normal');
+const loading = ref(false);
+const express = ref([]); //物流公司
+const isEdit = ref(false); //是否是编辑
+const shipmentExpress = ref([]); //一号通物流公司
+const serviceTypeList = ref([]); //业务类型
+const expressTempIdList = ref([]); //商家发货电子面单
+const expressTempIdImg = ref(''); // 商家发货电子面单图片
+const pickupTime = ref(['', '']); // 取件时间
+const nowCompany = ref('');
+
+watch(modals, (val) => {
+  if (val && formItem.expressRecordType === '3') {
+    if (checkPermi(['admin:pass:shipment:express']) && !shipmentExpress.value.length) {
+      getShipmentExpress();
+    }
+  }
+});
+
+watch(
+  () => props.orderDetail,
+  (val) => {
+    if (val) {
+      loading.value = true;
+      isEdit.value = true;
+      getExpressDetail(val);
+      if (val.expressRecordType === '3' && checkPermi(['admin:pass:shipment:express']) && !shipmentExpress.value.length) {
+        getShipmentExpress();
+      }
+    } else {
+      isEdit.value = false;
+      loading.value = false;
+    }
+  },
+  { immediate: false, deep: true }
+);
+
+//一号通 商家寄件 快递列表
+function getShipmentExpress() {
+  shipmentExpressApi().then((res) => {
+    shipmentExpress.value = res.data;
+  });
+}
+// 取件时间选择
+function onchangeTime(e) {
+  formItem.shipment.pickupStartTime = e[0];
+  formItem.shipment.pickupEndTime = e[1];
+}
+//商家寄件选择快递公司获取电子面单列表
+function onChangeShipmentExpress(value) {
+  formItem.shipment.serviceType = '';
+  let expressItem = shipmentExpress.value.find((item) => {
+    return item.value === value;
+  });
+  if (expressItem === undefined) {
+    return;
+  }
+  serviceTypeList.value = expressItem.types; //业务类型
+  expressTempIdList.value = expressItem.list; //商家发货电子面单
+}
+//选择电子面单
+function onChangeExpressTempId(item) {
+  expressTempIdList.value.map((i) => {
+    if (i.temp_id === item) expressTempIdImg.value = i.pic;
+  });
+}
+//物流信息详情, 快递单号，快递公司，快递公司code
+function getExpressDetail(val) {
+  if (val.deliveryType === 'send') {
+    formItem.deliveryTel = val.deliveryId;
+    formItem.deliveryName = val.deliveryName;
+  } else {
+    formItem.expressName = val.deliveryName;
+    formItem.expressNumber = val.deliveryId;
+  }
+  formItem.deliveryType = val.deliveryType;
+  formItem.expressCode = val.deliveryCode;
+  formItem.expressRecordType = val.expressRecordType;
+  formItem.company = { code: val.deliveryCode, name: val.deliveryName };
+  loading.value = false;
+}
+// 默认信息
+function sheetInfo() {
+  sheetInfoApi().then(async (res) => {
+    formItem.toAddr = res.exportToAddress || '';
+    formItem.toName = res.exportToName || '';
+    formItem.toTel = res.exportToTel || '';
+  });
+}
+// 快递公司选择
+function onChangeExport(val) {
+  formItem.expressCode = val.code;
+  formItem.expressName = val.name;
+  formItem.expressTempId = '';
+  if (formItem.expressRecordType === '2') exportTemp(val.code);
+}
+// 电子面单模板
+function exportTemp(code) {
+  exportTempApi({ com: code }).then(async (res) => {
+    exportTempList.value = res.data.data || [];
+  });
+}
+function onChangeImg(item) {
+  exportTempList.value.map((i) => {
+    if (i.temp_id === item) tempImg.value = i.pic;
+  });
+}
+//选择类型
+function changeRadioType() {
+  if (formItem.deliveryType === 'fictitious') {
+    formItem.expressId = '';
+    formItem.expressCode = '';
+  }
+}
+//选择发货类型
+function changeRadio(o) {
+  if (o === '3') {
+    if (checkPermi(['admin:pass:shipment:express']) && !shipmentExpress.value.length) {
+      getShipmentExpress();
+    }
+    return;
+  }
+  if (o === '2') {
+    express.value = props.expressListElec;
+  } else {
+    express.value = props.expressListNormal;
+  }
+  //其他数据置空
+  formItem.shipment = {
+    sendRealName: '',
+    sendPhone: '',
+    sendAddress: '',
+    kuaidicom: '',
+    serviceType: '',
+    pickupStartTime: '',
+    pickupEndTime: '',
+    tempid: '',
+    dayType: 1,
+  };
+  formItem.deliveryName = '';
+  formItem.expressCode = '';
+  formItem.expressName = '';
+  formItem.expressTempId = '';
+  formItem.expressNumber = '';
+}
+// 提交
+const putSend = Debounce(function (name) {
+  // 打印测试
+  //this.printImg("http://api.kuaidi100.com/label/getImage/20230505/FBA3DFCE5C684CB9A13DADA8EE8357FB");
+  // 正常业务中使用;
+  formItem.orderNo = props.orderId;
+  formItemRef.value.validate((valid) => {
+    if (valid) {
+      !isEdit.value
+        ? orderSendApi(formItem).then((data) => {
+            // data -》 label是一个网络图片地址，直接打印即可
+            if (formItem.expressRecordType === '2') printImg(data.label);
+            ElMessage.success('发送货成功');
+            modals.value = false;
+            formItemRef.value.resetFields();
+            emit('submitFail');
+          })
+        : updateTrackingNumberApi(formItem).then((data) => {
+            ElMessage.success('修改快递单号成功');
+            modals.value = false;
+            formItemRef.value.resetFields();
+            emit('submitFail');
+          });
+    } else {
+      ElMessage.error('请填写信息');
+    }
+  });
+});
+function handleClose() {
+  cancel('formItem');
+}
+function cancel(name) {
+  modals.value = false;
+  formItemRef.value.resetFields();
+  formItem.deliveryType = 'express';
+  formItem.expressRecordType = '1';
+}
+//修改增加打印方法
+function printImg(url) {
+  printJS({
+    printable: url,
+    type: 'image',
+    documentTitle: '快递信息',
+    style: `img{
+      width: 100%;
+      height: 476px;
+    }`,
+  });
+}
+
+onMounted(() => {
+  express.value = props.expressListNormal;
+});
+
+defineExpose({
+  modals,
+  loading,
+  express,
+  sheetInfo,
+});
 </script>
 
 <style scoped lang="scss">

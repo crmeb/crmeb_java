@@ -1,7 +1,7 @@
 <template>
   <div class="divBox">
     <pages-header
-      ref="pageHeader"
+      ref="pageHeaderRef"
       :title="$route.params.id ? ($route.params.type && formValidate.id > 0 ? '商品详情' : '编辑商品') : '添加商品'"
       backUrl="/marketing/bargain/bargainGoods"
     ></pages-header>
@@ -12,13 +12,13 @@
         <el-tab-pane label="商品详情" name="2"></el-tab-pane>
       </el-tabs>
       <el-form
-        ref="formValidate"
+        ref="formValidateRef"
         v-loading="fullscreenLoading"
         class="formValidate mt20"
         :rules="ruleValidate"
         :model="formValidate"
         label-width="100px"
-        @submit.native.prevent
+        @submit.prevent
       >
         <!-- 砍价商品-->
         <div v-show="currentTab == 0 && !$route.params.id">
@@ -115,12 +115,11 @@
                   :disabled="Boolean($route.params.type)"
                   v-model="formValidate.timeVal"
                   type="daterange"
-                  value-format="yyyy-MM-dd"
-                  format="yyyy-MM-dd"
+                  value-format="YYYY-MM-DD"
+                  format="YYYY-MM-DD"
                   range-separator="-"
                   start-placeholder="开始日期"
                   end-placeholder="结束日期"
-                  :picker-options="pickerOptions"
                   @change="onchangeTime"
                 >
                 </el-date-picker>
@@ -192,22 +191,22 @@
             <el-col :span="24">
               <el-form-item label="活动状态：" required>
                 <el-radio-group v-model="formValidate.status" :disabled="Boolean($route.params.type)">
-                  <el-radio :label="0" class="radio">关闭</el-radio>
-                  <el-radio :label="1">开启</el-radio>
+                  <el-radio :label="0" :value="0" class="radio">关闭</el-radio>
+                  <el-radio :label="1" :value="1">开启</el-radio>
                 </el-radio-group>
               </el-form-item>
             </el-col>
             <!-- 规格表格-->
             <el-col :span="24">
               <el-form-item label="商品属性：" class="labeltop" required>
-                <el-table ref="multipleTable" :data="ManyAttrValue" tooltip-effect="dark" style="width: 100%">
+                <el-table ref="multipleTableRef" :data="ManyAttrValue" tooltip-effect="dark" style="width: 100%">
                   <el-table-column label="选择" width="70">
-                    <template slot-scope="scope">
+                    <template #default="scope">
                       <el-radio
                         :disabled="Boolean($route.params.type)"
                         v-model="radio"
-                        :label="scope.row"
-                        @change.native="changeType(scope.row)"
+                        :label="scope.row" :value="scope.row"
+                        @change="changeType(scope.row)"
                         >{{ '' }}</el-radio
                       >
                     </template>
@@ -219,13 +218,13 @@
                       :label="manyTabTit[iii].title"
                       min-width="80"
                     >
-                      <template slot-scope="scope">
+                      <template #default="scope">
                         <span class="priceBox" v-text="scope.row[iii]" />
                       </template>
                     </el-table-column>
                   </template>
                   <el-table-column label="图片" min-width="80">
-                    <template slot-scope="scope">
+                    <template #default="scope">
                       <div class="upLoadPicBox" @click="modalPicTap('1', 'duo', scope.$index)">
                         <div v-if="scope.row.image" class="pictrue tabPic"><img :src="scope.row.image" /></div>
                         <div v-else class="upLoad tabPic">
@@ -240,12 +239,13 @@
                     :label="formThead[iii].title"
                     min-width="150"
                   >
-                    <template slot-scope="{ row, $index }">
+                    <template #default="{ row, $index }">
                       <el-input-number
                         :disabled="Boolean($route.params.type)"
+                        :controls="false"
                         controls-position="right"
                         v-if="formThead[iii].title === '砍价起始金额'"
-                        size="small"
+
                         v-model="row[iii]"
                         :min="0"
                         :precision="2"
@@ -254,8 +254,9 @@
                       />
                       <el-input-number
                         :disabled="Boolean($route.params.type)"
+                        :controls="false"
                         controls-position="right"
-                        size="small"
+
                         v-else-if="formThead[iii].title === '砍价最低价'"
                         v-model="row[iii]"
                         :min="0"
@@ -266,8 +267,9 @@
                       />
                       <el-input-number
                         :disabled="Boolean($route.params.type)"
+                        :controls="false"
                         controls-position="right"
-                        size="small"
+
                         v-else-if="formThead[iii].title === '限量'"
                         v-model="row[iii]"
                         type="number"
@@ -288,7 +290,7 @@
         <!-- 商品详情-->
         <div v-show="currentTab == 2">
           <el-form-item label="商品详情：">
-            <Tinymce v-if="!$route.params.type" v-model="formValidate.content"></Tinymce>
+            <WangEditor v-if="!$route.params.type" v-model="formValidate.content"></WangEditor>
             <div v-else v-html="formValidate.content"></div>
           </el-form-item>
         </div>
@@ -296,39 +298,42 @@
           <el-button
             v-show="(!$route.params.id && currentTab > 0) || ($route.params.id && currentTab == 2)"
             class="submission"
-            size="small"
+
             @click="handleSubmitUp"
             >上一步</el-button
           >
           <el-button
             v-show="currentTab == 0"
             class="submission onePrimary"
-            size="small"
-            @click="handleSubmitNest1('formValidate')"
+
+            @click="handleSubmitNest1('formValidateRef')"
             >下一步</el-button
           >
-          <el-button v-show="currentTab == 1" class="submission" size="small" @click="handleSubmitNest2('formValidate')"
+          <el-button v-show="currentTab == 1" class="submission" @click="handleSubmitNest2('formValidateRef')"
             >下一步</el-button
           >
           <el-button
-            v-show="!$route.params.type"
+            v-show="!$route.params.type && currentTab != 0"
             :loading="loading"
             type="primary"
             class="submission"
-            size="small"
-            @click="handleSubmit('formValidate')"
+
+            @click="handleSubmit('formValidateRef')"
             v-hasPermi="['admin:bargain:update']"
             >提交</el-button
           >
         </el-form-item>
       </el-form>
     </el-card>
-    <CreatTemplates ref="addTemplates" @getList="getShippingList" />
+    <CreatTemplates ref="addTemplatesRef" @getList="getShippingList" />
   </div>
 </template>
 
-<script>
-import Tinymce from '@/components/Tinymce/index';
+<script setup>
+import { ref, reactive, computed, watch, onMounted, nextTick, getCurrentInstance } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ElMessage } from '@/utils/elementPlusFeedback';
+import WangEditor from '@/components/wangEditor/index.vue';
 import { productDetailApi, categoryApi } from '@/api/store';
 import { shippingTemplatesList } from '@/api/logistics';
 import { getSeckillList } from '@/libs/public';
@@ -336,6 +341,15 @@ import { bargainSaveApi, bargainUpdateApi, bargainInfoApi } from '@/api/marketin
 import CreatTemplates from '@/views/systemSetting/deliverGoods/freightSet/creatTemplates';
 import { formatDates } from '@/utils';
 import { Debounce } from '@/utils/validate';
+import { useTagsViewStore } from '@/store/modules/tagsView';
+
+defineOptions({ name: 'creatSeckill' });
+
+const route = useRoute();
+const router = useRouter();
+const { proxy } = getCurrentInstance();
+const tagsViewStore = useTagsViewStore();
+
 const defaultObj = {
   image: '',
   images: '',
@@ -403,445 +417,436 @@ const objTitle = {
     title: '商品编号',
   },
 };
-export default {
-  name: 'creatSeckill',
-  components: { CreatTemplates, Tinymce },
-  data() {
-    return {
-      pickerOptions: {
-        disabledDate(time) {
-          return time.getTime() < new Date().setTime(new Date().getTime() - 3600 * 1000 * 24);
-        },
-      },
-      props2: {
-        children: 'child',
-        label: 'name',
-        value: 'id',
-        multiple: true,
-        emitPath: false,
-      },
-      grid2: {
-        xl: 24,
-        lg: 24,
-        md: 24,
-        sm: 24,
-        xs: 24,
-      },
-      currentTab: 0,
-      formThead: Object.assign({}, objTitle),
-      formValidate: Object.assign({}, defaultObj),
-      loading: false,
-      fullscreenLoading: false,
-      merCateList: [], // 商户分类筛选
-      shippingList: [], // 运费模板
-      seckillTime: [],
-      ruleValidate: {
-        productId: [{ required: true, message: '请选择商品', trigger: 'blur' }],
-        title: [{ required: true, message: '请输入砍价活动名称', trigger: 'blur' }],
-        attrValue: [{ required: true, message: '请选择商品属相', trigger: 'change', type: 'array', min: '1' }],
-        num: [{ required: true, message: '请输入购买数量限制', trigger: 'blur' }],
-        unitName: [{ required: true, message: '请输入单位', trigger: 'blur' }],
-        tempId: [{ required: true, message: '请选择运费模板', trigger: 'change' }],
-        timeId: [{ required: true, message: '请选择活动时间', trigger: 'change' }],
-        image: [{ required: true, message: '请选择商品', trigger: 'change' }],
-        imagess: [{ required: true, message: '请上传商品轮播图', type: 'array', trigger: 'change' }],
-        specType: [{ required: true, message: '请选择商品规格', trigger: 'change' }],
-        timeVal: [{ required: true, message: '请选择活动日期', trigger: 'change', type: 'array' }],
-        bargainNum: [{ required: true, message: '请输入帮砍次数', trigger: 'blur' }],
-        peopleNum: [{ required: true, message: '请输入砍价人数', trigger: 'blur' }],
-        price: [{ required: true, message: '333333', trigger: 'blur' }],
-      },
-      manyTabDate: {},
-      manyTabTit: {},
-      attrInfo: {},
-      tempRoute: {},
-      multipleSelection: [],
-      productId: 0,
-      radio: '',
-      ManyAttrValue: [Object.assign({}, defaultObj.attrValue[0])], // 多规格
-    };
-  },
-  computed: {
-    attrValue() {
-      const obj = Object.assign({}, defaultObj.attrValue[0]);
-      delete obj.image;
-      return obj;
-    },
-    // 限量最小值
-    minQuota() {
-      return (data) => {
-        if (data.stock) {
-          return 1;
-        } else {
-          return 0;
-        }
-      };
-    },
-  },
-  created() {
-    this.$watch('formValidate.attr', this.watCh);
-    this.tempRoute = Object.assign({}, this.$route);
-  },
-  mounted() {
-    getSeckillList(1).then((res) => {
-      this.seckillTime = res.list;
-    });
-    this.formValidate.imagess = [];
-    if (this.$route.params.id) {
-      this.setTagsViewTitle();
-      this.getInfo();
-      this.currentTab = '1';
-    }
-    this.getShippingList();
-    this.getCategorySelect();
-  },
-  methods: {
-    tabsHandleClick(tab, event) {
-      this.currentTab = tab.name;
-      // if (!this.$route.params.id && tab.index == 1) this.getProdect(this.productId);
-    },
-    changeType(row, index) {
-      row.checked = true;
-      this.multipleSelection = [row];
-    },
-    watCh(val) {
-      const tmp = {};
-      const tmpTab = {};
-      this.formValidate.attr.forEach((o, i) => {
-        // tmp['value' + i] = { title: o.attrName }
-        // tmpTab['value' + i] = ''
-        tmp[o.attrName] = { title: o.attrName };
-        tmpTab[o.attrName] = '';
-      });
-      this.manyTabTit = tmp;
-      this.manyTabDate = tmpTab;
-      this.formThead = Object.assign({}, this.formThead, tmp);
-    },
-    handleRemove(i) {
-      this.formValidate.imagess.splice(i, 1);
-    },
-    // 点击商品图
-    modalPicTap(tit, num, i) {
-      if (this.$route.params.type) return;
-      const _this = this;
-      this.$modalUpload(
-        function (img) {
-          if (tit === '1' && !num) {
-            _this.formValidate.image = img[0].sattDir;
-            _this.ManyAttrValue[0].image = img[0].sattDir;
-          }
-          if (tit === '2' && !num) {
-            if (img.length > 10) return this.$message.warning('最多选择10张图片！');
-            if (img.length + _this.formValidate.imagess.length > 10) return this.$message.warning('最多选择10张图片！');
-            img.map((item) => {
-              _this.formValidate.imagess.push(item.sattDir);
-            });
-          }
-          if (tit === '1' && num === 'duo') {
-            _this.ManyAttrValue[i].image = img[0].sattDir;
-          }
-        },
-        tit,
-        'content',
-      );
-    },
-    // 具体日期
-    onchangeTime(e) {
-      this.formValidate.timeVal = e;
-      this.formValidate.startTime = e ? e[0] : '';
-      this.formValidate.stopTime = e ? e[1] : '';
-    },
-    changeGood() {
-      const _this = this;
-      this.$modalGoodList(function (row) {
-        _this.formValidate.image = row.image;
-        _this.productId = row.id;
-        if (!_this.$route.params.id) _this.getProdect(row.id);
-      });
-    },
-    handleSubmitNest1() {
-      if (!this.formValidate.image) {
-        this.$message.warning('请选择商品！');
-        return;
-      } else {
-        this.currentTab++;
-        this.currentTab = this.currentTab.toString();
-        if (!this.$route.params.id) this.getProdect(this.productId);
-      }
-    },
-    // 商品分类；
-    getCategorySelect() {
-      categoryApi({ status: -1, type: 1 }).then((res) => {
-        this.merCateList = this.filerMerCateList(res);
-      });
-    },
-    filerMerCateList(treeData) {
-      return treeData.map((item) => {
-        if (!item.child) {
-          item.disabled = true;
-        }
-        item.label = item.name;
-        return item;
-      });
-    },
-    // 运费模板；
-    getShippingList() {
-      shippingTemplatesList(this.tempData).then((res) => {
-        this.shippingList = res.list;
-      });
-    },
-    // 运费模板
-    addTem() {
-      this.$refs.addTemplates.dialogVisible = true;
-      this.$refs.addTemplates.getCityList();
-    },
-    // 商品详情
-    getInfo() {
-      if (!this.$route.params.id) {
-        this.getProdect(this.productId);
-      } else {
-        this.getSekllProdect(this.$route.params.id);
-      }
-    },
-    getProdect(id) {
-      this.fullscreenLoading = true;
-      productDetailApi(id)
-        .then(async (res) => {
-          this.formValidate = {
-            image: this.$selfUtil.setDomain(res.image),
-            imagess: JSON.parse(res.sliderImage),
-            title: res.storeName,
-            storeName: res.storeName,
-            unitName: res.unitName,
-            sort: res.sort,
-            tempId: res.tempId,
-            attr: res.attr,
-            attrValue: res.attrValue,
-            selectRule: res.selectRule,
-            content: res.content,
-            specType: res.specType,
-            productId: res.id,
-            giveIntegral: res.giveIntegral,
-            ficti: res.ficti,
-            startTime: res.startTime || '',
-            stopTime: res.stopTime || '',
-            timeVal: [],
-            status: 0,
-            num: 1,
-            bargainNum: 2,
-            peopleNum: 1,
-          };
-          if (res.specType) {
-            res.attrValue.forEach((row) => {
-              row.quota = row.stock;
-              row.attrValue = JSON.parse(row.attrValue);
-              for (let attrValueKey in row.attrValue) {
-                row[attrValueKey] = row.attrValue[attrValueKey];
-              }
-              row.image = this.$selfUtil.setDomain(row.image);
-            });
-            this.ManyAttrValue = res.attrValue;
-            this.multipleSelection = res.attrValue;
-          } else {
-            res.attrValue.forEach((row) => {
-              row.quota = row.stock;
-              row.image = this.$selfUtil.setDomain(row.image);
-            });
-            this.ManyAttrValue = res.attrValue;
-            this.radio = res.attrValue[0];
-            // this.formValidate.attr = []
-          }
-          this.fullscreenLoading = false;
-        })
-        .catch((res) => {
-          this.fullscreenLoading = false;
-        });
-    },
-    getSekllProdect(id) {
-      this.fullscreenLoading = true;
-      bargainInfoApi({ id: id })
-        .then(async (res) => {
-          this.formValidate = {
-            image: this.$selfUtil.setDomain(res.image),
-            imagess: JSON.parse(res.sliderImage),
-            title: res.title,
-            storeName: res.storeName,
-            unitName: res.unitName,
-            sort: res.sort,
-            tempId: res.tempId,
-            attr: res.attr,
-            selectRule: res.selectRule,
-            content: res.content,
-            specType: res.specType,
-            productId: res.productId,
-            giveIntegral: res.giveIntegral,
-            ficti: res.ficti,
-            startTime: res.startTime || '',
-            stopTime: res.stopTime || '',
-            timeVal:
-              res.startTime && res.stopTime
-                ? [
-                    formatDates(new Date(res.startTime), 'yyyy-MM-dd'),
-                    formatDates(new Date(res.stopTime), 'yyyy-MM-dd'),
-                  ]
-                : [],
-            status: res.status,
-            num: res.num,
-            bargainNum: res.bargainNum,
-            peopleNum: res.peopleNum,
-            id: res.id,
-          };
-          if (res.specType) {
-            this.ManyAttrValue = res.attrValue;
-            this.$nextTick(() => {
-              this.ManyAttrValue.forEach((item, index) => {
-                item.attrValue = JSON.parse(item.attrValue);
-                for (let attrValueKey in item.attrValue) {
-                  item[attrValueKey] = item.attrValue[attrValueKey];
-                }
-                item.image = this.$selfUtil.setDomain(item.image);
-                if (item.id) {
-                  this.radio = item;
-                }
-              });
-            });
-          } else {
-            this.ManyAttrValue = res.attrValue;
-            this.ManyAttrValue.forEach((item, index) => {
-              item.image = this.$selfUtil.setDomain(item.image);
-            });
-            // this.formValidate.attr = [];
-            this.radio = res.attrValue[0];
-          }
 
-          this.fullscreenLoading = false;
-        })
-        .catch((res) => {
-          this.fullscreenLoading = false;
-        });
-    },
-    handleSubmitNest2(name) {
-      this.$refs[name].validate((valid) => {
-        if (valid) {
-          if (!this.radio) {
-            return this.$message.warning('请选择一个商品属性！');
-          } else {
-            if (!this.radio.price) return this.$message.warning('请填写砍价起始金额！');
-            if (!this.radio.minPrice && this.radio.minPrice != 0) return this.$message.warning('请填写砍价最低价！');
-            if (!this.radio.quota) return this.$message.warning('请填写限量！');
-            // 砍价起始金额 >= 砍价人数*0.01 + 砍价最低价
-            let nums = this.formValidate.peopleNum * 0.01 + this.radio.minPrice;
-            if (this.radio.price < nums) return this.$message.warning(`砍价起始金额不能小于${nums}！`);
-          }
-          this.currentTab++;
-          this.currentTab = this.currentTab.toString();
-        } else {
-          return false;
-        }
-      });
-    },
-    // 提交
-    handleSubmit: Debounce(function (name) {
-      if (!this.radio) {
-        return this.$message.warning('请选择一个商品属性！');
-      }
-      if (!this.formValidate.specType) {
-        // this.formValidate.attr = []
-        this.formValidate.attrValue = this.ManyAttrValue;
-      } else {
-        if (typeof this.radio.attrValue == 'object') {
-          this.radio.attrValue = JSON.stringify(this.radio.attrValue);
-        }
-        this.formValidate.attrValue = [this.radio];
-      }
-      this.formValidate.startTime = this.formValidate.timeVal[0];
-      this.formValidate.stopTime = this.formValidate.timeVal[1];
-      this.formValidate.images = JSON.stringify(this.formValidate.imagess);
-      this.$refs[name].validate((valid) => {
-        if (valid) {
-          this.fullscreenLoading = true;
-          this.loading = true;
-          this.$route.params.id
-            ? bargainUpdateApi({ id: this.$route.params.id }, this.formValidate)
-                .then(async () => {
-                  this.fullscreenLoading = false;
-                  this.$message.success('编辑成功');
-                  this.$router.push({
-                    path: '/marketing/bargain/bargainGoods',
-                  });
-                  this.$refs[name].resetFields();
-                  this.formValidate.images = [];
-                  this.loading = false;
-                })
-                .catch(() => {
-                  this.fullscreenLoading = false;
-                  this.loading = false;
-                })
-            : bargainSaveApi(this.formValidate)
-                .then(async (res) => {
-                  this.fullscreenLoading = false;
-                  this.$message.success('新增成功');
-                  this.$router.push({
-                    path: '/marketing/bargain/bargainGoods',
-                  });
-                  this.$refs[name].resetFields();
-                  this.formValidate.images = [];
-                  this.loading = false;
-                })
-                .catch(() => {
-                  this.fullscreenLoading = false;
-                  this.loading = false;
-                });
-        } else {
-          if (
-            !this.formValidate.storeName ||
-            !this.formValidate.unitName ||
-            !this.formValidate.store_info ||
-            !this.formValidate.image ||
-            !this.formValidate.images
-          ) {
-            this.$message.warning('请填写完整商品信息！');
-          }
-        }
-      });
-    }),
-    handleSubmitUp() {
-      if (this.currentTab-- < 0) this.currentTab = 0;
-      this.currentTab = this.currentTab.toString();
-    },
-    setTagsViewTitle() {
-      const title = '编辑砍价商品';
-      const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.$route.params.id}` });
-      this.$store.dispatch('tagsView/updateVisitedView', route);
-    },
-    // 移动
-    handleDragStart(e, item) {
-      this.dragging = item;
-    },
-    handleDragEnd(e, item) {
-      this.dragging = null;
-    },
-    handleDragOver(e) {
-      e.dataTransfer.dropEffect = 'move';
-    },
-    handleDragEnter(e, item) {
-      e.dataTransfer.effectAllowed = 'move';
-      if (item === this.dragging) {
-        return;
-      }
-      const newItems = [...this.formValidate.imagess];
-      const src = newItems.indexOf(this.dragging);
-      const dst = newItems.indexOf(item);
-      newItems.splice(dst, 0, ...newItems.splice(src, 1));
-      this.formValidate.imagess = newItems;
-    },
-  },
+const props2 = reactive({
+  children: 'child',
+  label: 'name',
+  value: 'id',
+  multiple: true,
+  emitPath: false,
+});
+const grid2 = reactive({
+  xl: 24,
+  lg: 24,
+  md: 24,
+  sm: 24,
+  xs: 24,
+});
+const currentTab = ref(0);
+const formThead = ref(Object.assign({}, objTitle));
+const formValidate = ref(Object.assign({}, defaultObj));
+const loading = ref(false);
+const fullscreenLoading = ref(false);
+const merCateList = ref([]); // 商户分类筛选
+const shippingList = ref([]); // 运费模板
+const seckillTime = ref([]);
+const ruleValidate = {
+  productId: [{ required: true, message: '请选择商品', trigger: 'blur' }],
+  title: [{ required: true, message: '请输入砍价活动名称', trigger: 'blur' }],
+  attrValue: [{ required: true, message: '请选择商品属相', trigger: 'change', type: 'array', min: '1' }],
+  num: [{ required: true, message: '请输入购买数量限制', trigger: 'blur' }],
+  unitName: [{ required: true, message: '请输入单位', trigger: 'blur' }],
+  tempId: [{ required: true, message: '请选择运费模板', trigger: 'change' }],
+  timeId: [{ required: true, message: '请选择活动时间', trigger: 'change' }],
+  image: [{ required: true, message: '请选择商品', trigger: 'change' }],
+  imagess: [{ required: true, message: '请上传商品轮播图', type: 'array', trigger: 'change' }],
+  specType: [{ required: true, message: '请选择商品规格', trigger: 'change' }],
+  timeVal: [{ required: true, message: '请选择活动日期', trigger: 'change', type: 'array' }],
+  bargainNum: [{ required: true, message: '请输入帮砍次数', trigger: 'blur' }],
+  peopleNum: [{ required: true, message: '请输入砍价人数', trigger: 'blur' }],
+  price: [{ required: true, message: '333333', trigger: 'blur' }],
 };
+const manyTabDate = ref({});
+const manyTabTit = ref({});
+const attrInfo = ref({});
+const tempRoute = ref({});
+const multipleSelection = ref([]);
+const productId = ref(0);
+const radio = ref('');
+const ManyAttrValue = ref([Object.assign({}, defaultObj.attrValue[0])]); // 多规格
+const dragging = ref(null);
+const tempData = ref({});
+const formValidateRef = ref(null);
+const multipleTableRef = ref(null);
+const addTemplatesRef = ref(null);
+const pageHeaderRef = ref(null);
+
+const attrValue = computed(() => {
+  const obj = Object.assign({}, defaultObj.attrValue[0]);
+  delete obj.image;
+  return obj;
+});
+// 限量最小值
+const minQuota = computed(() => {
+  return (data) => {
+    if (data.stock) {
+      return 1;
+    } else {
+      return 0;
+    }
+  };
+});
+
+const tabsHandleClick = (tab, event) => {
+  currentTab.value = tab.name;
+  // if (!this.$route.params.id && tab.index == 1) this.getProdect(this.productId);
+};
+const changeType = (row, index) => {
+  row.checked = true;
+  multipleSelection.value = [row];
+};
+const watCh = (val) => {
+  const tmp = {};
+  const tmpTab = {};
+  formValidate.value.attr.forEach((o, i) => {
+    // tmp['value' + i] = { title: o.attrName }
+    // tmpTab['value' + i] = ''
+    tmp[o.attrName] = { title: o.attrName };
+    tmpTab[o.attrName] = '';
+  });
+  manyTabTit.value = tmp;
+  manyTabDate.value = tmpTab;
+  formThead.value = Object.assign({}, formThead.value, tmp);
+};
+const handleRemove = (i) => {
+  formValidate.value.imagess.splice(i, 1);
+};
+// 点击商品图
+const modalPicTap = (tit, num, i) => {
+  if (route.params.type) return;
+  proxy.$modalUpload(
+    function (img) {
+      if (tit === '1' && !num) {
+        formValidate.value.image = img[0].sattDir;
+        ManyAttrValue.value[0].image = img[0].sattDir;
+      }
+      if (tit === '2' && !num) {
+        if (img.length > 10) return ElMessage.warning('最多选择10张图片！');
+        if (img.length + formValidate.value.imagess.length > 10) return ElMessage.warning('最多选择10张图片！');
+        img.map((item) => {
+          formValidate.value.imagess.push(item.sattDir);
+        });
+      }
+      if (tit === '1' && num === 'duo') {
+        ManyAttrValue.value[i].image = img[0].sattDir;
+      }
+    },
+    tit,
+    'content',
+  );
+};
+// 具体日期
+const onchangeTime = (e) => {
+  formValidate.value.timeVal = e;
+  formValidate.value.startTime = e ? e[0] : '';
+  formValidate.value.stopTime = e ? e[1] : '';
+};
+const changeGood = () => {
+  proxy.$modalGoodList(function (row) {
+    formValidate.value.image = row.image;
+    productId.value = row.id;
+    if (!route.params.id) getProdect(row.id);
+  });
+};
+const handleSubmitNest1 = () => {
+  if (!formValidate.value.image) {
+    ElMessage.warning('请选择商品！');
+    return;
+  } else {
+    currentTab.value++;
+    currentTab.value = currentTab.value.toString();
+    if (!route.params.id) getProdect(productId.value);
+  }
+};
+// 商品分类；
+const getCategorySelect = () => {
+  categoryApi({ status: -1, type: 1 }).then((res) => {
+    merCateList.value = filerMerCateList(res);
+  });
+};
+const filerMerCateList = (treeData) => {
+  return treeData.map((item) => {
+    if (!item.child) {
+      item.disabled = true;
+    }
+    item.label = item.name;
+    return item;
+  });
+};
+// 运费模板；
+const getShippingList = () => {
+  shippingTemplatesList(tempData.value).then((res) => {
+    shippingList.value = res.list;
+  });
+};
+// 运费模板
+const addTem = () => {
+  addTemplatesRef.value.dialogVisible = true;
+  addTemplatesRef.value.getCityList();
+};
+// 商品详情
+const getInfo = () => {
+  if (!route.params.id) {
+    getProdect(productId.value);
+  } else {
+    getSekllProdect(route.params.id);
+  }
+};
+const getProdect = (id) => {
+  fullscreenLoading.value = true;
+  productDetailApi(id)
+    .then(async (res) => {
+      formValidate.value = {
+        image: proxy.$selfUtil.setDomain(res.image),
+        imagess: JSON.parse(res.sliderImage),
+        title: res.storeName,
+        storeName: res.storeName,
+        unitName: res.unitName,
+        sort: res.sort,
+        tempId: res.tempId,
+        attr: res.attr,
+        attrValue: res.attrValue,
+        selectRule: res.selectRule,
+        content: res.content,
+        specType: res.specType,
+        productId: res.id,
+        giveIntegral: res.giveIntegral,
+        ficti: res.ficti,
+        startTime: res.startTime || '',
+        stopTime: res.stopTime || '',
+        timeVal: [],
+        status: 0,
+        num: 1,
+        bargainNum: 2,
+        peopleNum: 1,
+      };
+      if (res.specType) {
+        res.attrValue.forEach((row) => {
+          row.quota = row.stock;
+          row.attrValue = JSON.parse(row.attrValue);
+          for (let attrValueKey in row.attrValue) {
+            row[attrValueKey] = row.attrValue[attrValueKey];
+          }
+          row.image = proxy.$selfUtil.setDomain(row.image);
+        });
+        ManyAttrValue.value = res.attrValue;
+        multipleSelection.value = res.attrValue;
+      } else {
+        res.attrValue.forEach((row) => {
+          row.quota = row.stock;
+          row.image = proxy.$selfUtil.setDomain(row.image);
+        });
+        ManyAttrValue.value = res.attrValue;
+        radio.value = res.attrValue[0];
+        // this.formValidate.attr = []
+      }
+      fullscreenLoading.value = false;
+    })
+    .catch((res) => {
+      fullscreenLoading.value = false;
+    });
+};
+const getSekllProdect = (id) => {
+  fullscreenLoading.value = true;
+  bargainInfoApi({ id: id })
+    .then(async (res) => {
+      formValidate.value = {
+        image: proxy.$selfUtil.setDomain(res.image),
+        imagess: JSON.parse(res.sliderImage),
+        title: res.title,
+        storeName: res.storeName,
+        unitName: res.unitName,
+        sort: res.sort,
+        tempId: res.tempId,
+        attr: res.attr,
+        selectRule: res.selectRule,
+        content: res.content,
+        specType: res.specType,
+        productId: res.productId,
+        giveIntegral: res.giveIntegral,
+        ficti: res.ficti,
+        startTime: res.startTime || '',
+        stopTime: res.stopTime || '',
+        timeVal:
+          res.startTime && res.stopTime
+            ? [
+                formatDates(new Date(res.startTime), 'yyyy-MM-dd'),
+                formatDates(new Date(res.stopTime), 'yyyy-MM-dd'),
+              ]
+            : [],
+        status: res.status,
+        num: res.num,
+        bargainNum: res.bargainNum,
+        peopleNum: res.peopleNum,
+        id: res.id,
+      };
+      if (res.specType) {
+        ManyAttrValue.value = res.attrValue;
+        nextTick(() => {
+          ManyAttrValue.value.forEach((item, index) => {
+            item.attrValue = JSON.parse(item.attrValue);
+            for (let attrValueKey in item.attrValue) {
+              item[attrValueKey] = item.attrValue[attrValueKey];
+            }
+            item.image = proxy.$selfUtil.setDomain(item.image);
+            if (item.id) {
+              radio.value = item;
+            }
+          });
+        });
+      } else {
+        ManyAttrValue.value = res.attrValue;
+        ManyAttrValue.value.forEach((item, index) => {
+          item.image = proxy.$selfUtil.setDomain(item.image);
+        });
+        // this.formValidate.attr = [];
+        radio.value = res.attrValue[0];
+      }
+
+      fullscreenLoading.value = false;
+    })
+    .catch((res) => {
+      fullscreenLoading.value = false;
+    });
+};
+const handleSubmitNest2 = (name) => {
+  formValidateRef.value.validate((valid) => {
+    if (valid) {
+      if (!radio.value) {
+        return ElMessage.warning('请选择一个商品属性！');
+      } else {
+        if (!radio.value.price) return ElMessage.warning('请填写砍价起始金额！');
+        if (!radio.value.minPrice && radio.value.minPrice != 0) return ElMessage.warning('请填写砍价最低价！');
+        if (!radio.value.quota) return ElMessage.warning('请填写限量！');
+        // 砍价起始金额 >= 砍价人数*0.01 + 砍价最低价
+        let nums = formValidate.value.peopleNum * 0.01 + radio.value.minPrice;
+        if (radio.value.price < nums) return ElMessage.warning(`砍价起始金额不能小于${nums}！`);
+      }
+      currentTab.value++;
+      currentTab.value = currentTab.value.toString();
+    } else {
+      return false;
+    }
+  });
+};
+// 提交
+const handleSubmit = Debounce(function (name) {
+  if (!radio.value) {
+    return ElMessage.warning('请选择一个商品属性！');
+  }
+  if (!formValidate.value.specType) {
+    // this.formValidate.attr = []
+    formValidate.value.attrValue = ManyAttrValue.value;
+  } else {
+    if (typeof radio.value.attrValue == 'object') {
+      radio.value.attrValue = JSON.stringify(radio.value.attrValue);
+    }
+    formValidate.value.attrValue = [radio.value];
+  }
+  formValidate.value.startTime = formValidate.value.timeVal[0];
+  formValidate.value.stopTime = formValidate.value.timeVal[1];
+  formValidate.value.images = JSON.stringify(formValidate.value.imagess);
+  formValidateRef.value.validate((valid) => {
+    if (valid) {
+      fullscreenLoading.value = true;
+      loading.value = true;
+      route.params.id
+        ? bargainUpdateApi({ id: route.params.id }, formValidate.value)
+            .then(async () => {
+              fullscreenLoading.value = false;
+              ElMessage.success('编辑成功');
+              router.push({
+                path: '/marketing/bargain/bargainGoods',
+              });
+              formValidateRef.value.resetFields();
+              formValidate.value.images = [];
+              loading.value = false;
+            })
+            .catch(() => {
+              fullscreenLoading.value = false;
+              loading.value = false;
+            })
+        : bargainSaveApi(formValidate.value)
+            .then(async (res) => {
+              fullscreenLoading.value = false;
+              ElMessage.success('新增成功');
+              router.push({
+                path: '/marketing/bargain/bargainGoods',
+              });
+              formValidateRef.value.resetFields();
+              formValidate.value.images = [];
+              loading.value = false;
+            })
+            .catch(() => {
+              fullscreenLoading.value = false;
+              loading.value = false;
+            });
+    } else {
+      if (
+        !formValidate.value.storeName ||
+        !formValidate.value.unitName ||
+        !formValidate.value.store_info ||
+        !formValidate.value.image ||
+        !formValidate.value.images
+      ) {
+        ElMessage.warning('请填写完整商品信息！');
+      }
+    }
+  });
+});
+const handleSubmitUp = () => {
+  if (currentTab.value-- < 0) currentTab.value = 0;
+  currentTab.value = currentTab.value.toString();
+};
+const setTagsViewTitle = () => {
+  const title = '编辑砍价商品';
+  const r = Object.assign({}, tempRoute.value, { title: `${title}-${route.params.id}` });
+  tagsViewStore.updateVisitedView(r);
+};
+// 移动
+const handleDragStart = (e, item) => {
+  dragging.value = item;
+};
+const handleDragEnd = (e, item) => {
+  dragging.value = null;
+};
+const handleDragOver = (e) => {
+  e.dataTransfer.dropEffect = 'move';
+};
+const handleDragEnter = (e, item) => {
+  e.dataTransfer.effectAllowed = 'move';
+  if (item === dragging.value) {
+    return;
+  }
+  const newItems = [...formValidate.value.imagess];
+  const src = newItems.indexOf(dragging.value);
+  const dst = newItems.indexOf(item);
+  newItems.splice(dst, 0, ...newItems.splice(src, 1));
+  formValidate.value.imagess = newItems;
+};
+
+// created
+watch(() => formValidate.value.attr, watCh);
+tempRoute.value = Object.assign({}, route);
+
+onMounted(() => {
+  getSeckillList(1).then((res) => {
+    seckillTime.value = res.list;
+  });
+  formValidate.value.imagess = [];
+  if (route.params.id) {
+    setTagsViewTitle();
+    getInfo();
+    currentTab.value = '1';
+  }
+  getShippingList();
+  getCategorySelect();
+});
 </script>
 
 <style scoped lang="scss">
 .inpBox {
-  ::v-deepel-form-item__error {
+  :deep(.el-form-item__error ){
     color: #ff4949;
     font-size: 12px;
     line-height: 20px;
@@ -853,14 +858,19 @@ export default {
   }
 }
 .labeltop {
-  ::v-deepel-input-number--small {
-    /*width: 172px !important;*/
-    min-width: 132px !important;
+  :deep(.el-input-number) {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  :deep(.el-input-number.is-without-controls .el-input__wrapper) {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
   }
 }
 
 .proCoupon {
-  ::v-deepel-form-item__content {
+  :deep(.el-form-item__content ){
     margin-top: 5px;
   }
 }
@@ -873,30 +883,30 @@ export default {
   }
 }
 .noLeft {
-  ::v-deepel-form-item__content {
+  :deep(.el-form-item__content ){
     margin-left: 0 !important;
   }
 }
 .tabNumWidth {
-  ::v-deepel-input-number--medium {
+  :deep(.el-input-number--medium ){
     width: 121px !important;
   }
-  ::v-deepel-input-number__increase {
+  :deep(.el-input-number__increase ){
     width: 20px !important;
     font-size: 12px !important;
   }
-  ::v-deepel-input-number__decrease {
+  :deep(.el-input-number__decrease ){
     width: 20px !important;
     font-size: 12px !important;
   }
-  ::v-deepel-input-number--medium .el-input__inner {
+  :deep(.el-input-number--medium .el-input__inner ){
     padding-left: 25px !important;
     padding-right: 25px !important;
   }
-  ::v-deep thead {
+  :deep(.thead) {
     line-height: normal !important;
   }
-  ::v-deep .el-table .cell {
+  :deep(.el-table .cell) {
     line-height: normal !important;
   }
 }
@@ -937,13 +947,13 @@ export default {
   left: 43px;
   top: 1px;
 }
-::v-deep .el-tabs__nav-scroll {
+:deep(.el-tabs__nav-scroll) {
   margin-top: -20px;
 }
 .onePrimary {
   margin-left: 0 !important;
 }
-::v-deep .el-table .cell {
+:deep(.el-table .cell) {
   padding-right: 0 !important;
 }
 </style>

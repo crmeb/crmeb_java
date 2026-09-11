@@ -2,8 +2,6 @@
   <div>优惠券模板</div>
 </template>
 
-<script>
-export default {};
-</script>
+<script setup></script>
 
 <style lang="sass" scoped></style>

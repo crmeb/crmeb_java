@@ -4,18 +4,17 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import configList from '@/components/FormGenerator/index/Home.vue';
-export default {
-  components: { configList },
-  // name: "configList",
-  props: {
-    prentData: {
-      type: Object,
-      default: {},
-    },
+
+defineOptions({});
+
+const props = defineProps({
+  prentData: {
+    type: Object,
+    default: () => ({}),
   },
-};
+});
 </script>
 
 <style scoped></style>

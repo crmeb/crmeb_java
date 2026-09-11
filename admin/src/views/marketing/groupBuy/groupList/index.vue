@@ -2,14 +2,14 @@
   <div class="divBox">
     <el-card :bordered="false" shadow="never" class="ivu-mt" :body-style="{ padding: 0 }">
       <div class="padding-add">
-        <el-form inline size="small" label-width="75px">
+        <el-form inline label-width="75px">
           <el-form-item label="时间选择：">
             <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
             <!-- <el-date-picker
               v-model="timeVal"
-              value-format="yyyy-MM-dd"
-              format="yyyy-MM-dd"
-              size="small"
+              value-format="YYYY-MM-DD"
+              format="YYYY-MM-DD"
+
               type="daterange"
               placement="bottom-end"
               placeholder="自定义时间"
@@ -26,8 +26,8 @@
             <UserSearchInput ref="userSearchInput" v-model="tableFrom" />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" size="small" @click="getList(1)">搜索</el-button>
-            <el-button size="small" @click="handleReset">重置</el-button>
+            <el-button type="primary" @click="getList(1)">搜索</el-button>
+            <el-button @click="handleReset">重置</el-button>
           </el-form-item>
           <!-- <el-form-item label="拼团状态：">
             <el-select
@@ -49,15 +49,15 @@
       <!-- <cards-data :cardLists="cardLists" v-if="checkPermi(['admin:combination:statistics'])"></cards-data> -->
     </div>
     <el-card class="box-card">
-      <el-tabs v-model="tableFrom.status" @tab-click="getList(1)">
+      <el-tabs v-model="tableFrom.status" @tab-change="getList(1)">
         <el-tab-pane name="2">
-          <span slot="label">已成功({{successNum}})</span>
+          <template #label>已成功({{successNum}})</template>
         </el-tab-pane>
         <el-tab-pane name="1">
-          <span slot="label">进行中({{ingNum}})</span>
+          <template #label>进行中({{ingNum}})</template>
         </el-tab-pane>
         <el-tab-pane name="3">
-          <span slot="label">未完成({{failNum}})</span>
+          <template #label>未完成({{failNum}})</template>
         </el-tab-pane>
       </el-tabs>
       <el-table
@@ -65,18 +65,18 @@
         v-loading="listLoading"
         :data="tableData.data"
         style="width: 100%"
-        size="mini"
-        ref="multipleTable"
+
+        ref="multipleTableRef"
         highlight-current-row
       >
         <el-table-column prop="id" label="ID" min-width="50" />
         <el-table-column label="头像" min-width="80">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div class="demo-image__preview">
               <el-image
                 style="width: 36px; height: 36px"
                 :src="scope.row.avatar"
-                :preview-src-list="[scope.row.avatar]"
+                :preview-src-list="[scope.row.avatar]" preview-teleported
               />
             </div>
           </template>
@@ -88,17 +88,17 @@
         <el-table-column label="几人参加" prop="countPeople" min-width="100" />
         <el-table-column prop="stopTime" label="结束时间" min-width="130" />
         <el-table-column label="拼团状态" min-width="150">
-          <template slot-scope="scope">
+          <template #default="scope">
             <!-- <el-tag :type="scope.row.status | groupColorFilter">{{ scope.row.status | groupStatusFilter }}</el-tag> -->
             <span
               class="tag-background tag-padding"
               :class="scope.row.status == 1 ? 'doingTag' : scope.row.status == 2 ? 'endTag' : 'notStartTag'"
-              >{{ scope.row.status | groupStatusFilter }}</span
+              >{{ $filters.groupStatusFilter(scope.row.status) }}</span
             >
           </template>
         </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
-          <template slot-scope="scope">
+          <template #default="scope">
             <a @click="handleLook(scope.row.id)" class="mr10">查看详情</a>
           </template>
         </el-table-column>
@@ -117,22 +117,22 @@
       </div>
     </el-card>
 
-    <el-dialog title="查看详情" :visible.sync="dialogVisible" width="650px" :before-close="handleClose">
+    <el-dialog title="查看详情" v-model="dialogVisible" width="650px" :before-close="handleClose">
       <el-table
         v-loading="listLoadingPink"
         :data="tableDataPink.data"
         style="width: 100%"
-        size="mini"
-        ref="multipleTable"
+
+        ref="multipleTablePinkRef"
       >
         <el-table-column prop="id" label="ID" min-width="50" />
         <el-table-column label="头像" min-width="80">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div class="demo-image__preview">
               <el-image
                 style="width: 36px; height: 36px"
                 :src="scope.row.avatar"
-                :preview-src-list="[scope.row.avatar]"
+                :preview-src-list="[scope.row.avatar]" preview-teleported
               />
             </div>
           </template>
@@ -141,9 +141,9 @@
         <el-table-column label="订单编号" prop="orderId" min-width="180" />
         <el-table-column label="金额" prop="totalPrice" min-width="100" />
         <el-table-column label="订单状态" min-width="100">
-          <template slot-scope="scope">
-            <span v-if="scope.row.refundStatus == 0">{{ scope.row.orderStatus | orderStatusFilter }}</span>
-            <span v-else>{{ scope.row.refundStatus | refundStatusFilter }}</span>
+          <template #default="scope">
+            <span v-if="scope.row.refundStatus == 0">{{ $filters.orderStatusFilter(scope.row.orderStatus) }}</span>
+            <span v-else>{{ $filters.refundStatusFilter(scope.row.refundStatus) }}</span>
           </template>
         </el-table-column>
       </el-table>
@@ -151,148 +151,146 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, onMounted, getCurrentInstance } from 'vue';
 import { combineListApi, combineListCountApi, combineOrderPinkApi } from '@/api/marketing';
 import cardsData from '@/components/cards/index';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
-export default {
-  name: 'groupList',
-  components: {
-    cardsData,
-  },
-  data() {
-    return {
-      listLoadingPink: false,
-      dialogVisible: false,
-      failNum: 0,
-      ingNum: 0,
-      successNum: 0,
-      tableDataPink: {
-        data: [],
-      },
-      tableData: {
-        data: [],
-        total: 0,
-      },
-      listLoading: false,
-      tableFrom: {
-        dateLimit: '',
-        status: '2',
-        content: '',
-        searchType: 'all',
-        productName: '',
-        page: 1,
-        limit: 20,
-      },
-      fromList: this.$constants.fromList,
-      timeVal: [],
-      cardLists: [],
-    };
-  },
-  mounted() {
-    // this.getStatistics();
-    this.getList();
-  },
-  methods: {
-    checkPermi,
-    handleClose() {
-      this.dialogVisible = false;
-    },
-    handleLook(id) {
-      this.dialogVisible = true;
-      this.getPink(id);
-    },
-    getPink(id) {
-      this.listLoadingPink = true;
-      combineOrderPinkApi(id)
-        .then((res) => {
-          this.tableDataPink.data = res;
-          this.listLoadingPink = false;
-        })
-        .catch(() => {
-          this.listLoadingPink = false;
-        });
-    },
-    selectChange(tab) {
-      this.tableFrom.dateLimit = tab;
-      this.tableFrom.page = 1;
-      this.timeVal = [];
-      this.getList();
-    },
-    // 具体日期
-    onchangeTime(e) {
-      this.timeVal = e;
-      this.tableFrom.dateLimit = e ? this.timeVal.join(',') : '';
-      this.tableFrom.page = 1;
-      this.getList();
-    },
-    // 列表
-    getList(num) {
-      this.listLoading = true;
-      this.tableFrom.page = num ? num : this.tableFrom.page;
-      combineListApi(this.tableFrom)
-      .then((res) => {
-          this.getListCount();
-          this.tableData.data = res.list;
-          this.tableData.total = res.total;
-          this.listLoading = false;
-        })
-        .catch(() => {
-          this.listLoading = false;
-        });
-    },
-    // 列表统计
-    getListCount() {
-      combineListCountApi(this.tableFrom).then((res) => {
-        this.failNum = res.failNum;
-        this.ingNum = res.ingNum;
-        this.successNum = res.successNum;
-      });
-    },
-    pageChange(page) {
-      this.tableFrom.page = page;
-      this.getList();
-    },
-    handleSizeChange(val) {
-      this.tableFrom.limit = val;
-      this.getList();
-    },
-    // 统计
-    getStatistics() {
-      combineStatisticsApi()
-        .then((res) => {
-          this.cardLists = [
-            {
-              name: '参与人数(人)',
-              count: res.countPeople,
-              color: '#1890FF',
-              class: 'one',
-              icon: 'iconleijiyonghushu',
-            },
-            { name: '成团数量(个)', count: res.countTeam, color: '#A277FF', class: 'two', icon: 'iconxinzengyonghu' },
-          ];
-        })
-        .catch(() => {
-          this.listLoading = false;
-        });
-    },
-    //重置
-    handleReset() {
-      this.timeVal = []
-      this.tableFrom.dateLimit = '';
-      this.tableFrom.keywords = '';
-      this.tableFrom.content = '';
-      this.tableFrom.searchType = 'all';
-      this.tableFrom.productName = '';
-      this.getList();
-    },
-    // 搜索
-    seachList() {
-      this.tableFrom.page = 1;
-      this.getList();
-    },
-  },
+
+defineOptions({ name: 'groupList' });
+
+const { proxy } = getCurrentInstance();
+
+const listLoadingPink = ref(false);
+const dialogVisible = ref(false);
+const failNum = ref(0);
+const ingNum = ref(0);
+const successNum = ref(0);
+const tableDataPink = reactive({
+  data: [],
+});
+const tableData = reactive({
+  data: [],
+  total: 0,
+});
+const listLoading = ref(false);
+const tableFrom = reactive({
+  dateLimit: '',
+  status: '2',
+  content: '',
+  searchType: 'all',
+  productName: '',
+  page: 1,
+  limit: 20,
+});
+const fromList = proxy.$constants.fromList;
+const timeVal = ref([]);
+const cardLists = ref([]);
+const multipleTableRef = ref(null);
+const multipleTablePinkRef = ref(null);
+const userSearchInput = ref(null);
+
+const handleClose = () => {
+  dialogVisible.value = false;
 };
+const handleLook = (id) => {
+  dialogVisible.value = true;
+  getPink(id);
+};
+const getPink = (id) => {
+  listLoadingPink.value = true;
+  combineOrderPinkApi(id)
+    .then((res) => {
+      tableDataPink.data = res;
+      listLoadingPink.value = false;
+    })
+    .catch(() => {
+      listLoadingPink.value = false;
+    });
+};
+const selectChange = (tab) => {
+  tableFrom.dateLimit = tab;
+  tableFrom.page = 1;
+  timeVal.value = [];
+  getList();
+};
+// 具体日期
+const onchangeTime = (e) => {
+  timeVal.value = e;
+  tableFrom.dateLimit = e ? timeVal.value.join(',') : '';
+  tableFrom.page = 1;
+  getList();
+};
+// 列表
+const getList = (num) => {
+  listLoading.value = true;
+  tableFrom.page = num ? num : tableFrom.page;
+  combineListApi(tableFrom)
+    .then((res) => {
+      getListCount();
+      tableData.data = res.list;
+      tableData.total = res.total;
+      listLoading.value = false;
+    })
+    .catch(() => {
+      listLoading.value = false;
+    });
+};
+// 列表统计
+const getListCount = () => {
+  combineListCountApi(tableFrom).then((res) => {
+    failNum.value = res.failNum;
+    ingNum.value = res.ingNum;
+    successNum.value = res.successNum;
+  });
+};
+const pageChange = (page) => {
+  tableFrom.page = page;
+  getList();
+};
+const handleSizeChange = (val) => {
+  tableFrom.limit = val;
+  getList();
+};
+// 统计
+const getStatistics = () => {
+  combineStatisticsApi()
+    .then((res) => {
+      cardLists.value = [
+        {
+          name: '参与人数(人)',
+          count: res.countPeople,
+          color: '#1890FF',
+          class: 'one',
+          icon: 'iconleijiyonghushu',
+        },
+        { name: '成团数量(个)', count: res.countTeam, color: '#A277FF', class: 'two', icon: 'iconxinzengyonghu' },
+      ];
+    })
+    .catch(() => {
+      listLoading.value = false;
+    });
+};
+//重置
+const handleReset = () => {
+  timeVal.value = [];
+  tableFrom.dateLimit = '';
+  tableFrom.keywords = '';
+  tableFrom.content = '';
+  tableFrom.searchType = 'all';
+  tableFrom.productName = '';
+  getList();
+};
+// 搜索
+const seachList = () => {
+  tableFrom.page = 1;
+  getList();
+};
+
+onMounted(() => {
+  // this.getStatistics();
+  getList();
+});
 </script>
 
 <style scoped>
@@ -300,24 +298,10 @@ export default {
   width: 100%;
   table-layout: fixed !important;
 }
-.text_overflow {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 400px;
-}
-.pup_card {
-  width: 200px;
-  border-radius: 5px;
-  padding: 5px;
-  box-sizing: border-box;
-  font-size: 12px;
-  line-height: 16px;
-}
 .mt10 {
   margin-top: 10px;
 }
-::v-deep .el-dialog__body {
+:deep(.el-dialog__body) {
   padding-bottom: 20px;
 }
 .mt14 {

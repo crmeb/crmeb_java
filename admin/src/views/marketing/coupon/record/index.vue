@@ -40,7 +40,7 @@
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="seachList">搜索</el-button>
-            <el-button size="small" @click="handleReset">重置</el-button>
+            <el-button @click="handleReset">重置</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -55,19 +55,19 @@
         <el-table-column prop="startTime" label="开始使用时间" min-width="150" />
         <el-table-column prop="endTime" label="结束使用时间" min-width="150" />
         <el-table-column label="获取方式" min-width="150">
-          <template slot-scope="scope">
-            <span>{{ scope.row.type | failFilter }}</span>
+          <template #default="scope">
+            <span>{{ failFilter(scope.row.type) }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="is_fail" label="是否可用" min-width="100">
-          <template slot-scope="scope">
+          <template #default="scope">
             <i v-if="scope.row.status === 0" class="el-icon-check" style="font-size: 14px; color: #0092dc" />
             <i v-else class="el-icon-close" style="font-size: 14px; color: #ed5565" />
           </template>
         </el-table-column>
         <el-table-column label="使用状态" min-width="100">
-          <template slot-scope="scope">
-            <span>{{ scope.row.status | statusFilter }}</span>
+          <template #default="scope">
+            <span>{{ statusFilter(scope.row.status) }}</span>
           </template>
         </el-table-column>
       </el-table>
@@ -87,111 +87,111 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { couponUserListApi } from '@/api/marketing';
 import { roterPre } from '@/settings';
 import { userListApi } from '@/api/user';
-export default {
-  name: 'CouponUser',
-  filters: {
-    failFilter(status) {
-      const statusMap = {
-        receive: '自己领取',
-        send: '后台发送',
-        give: '满赠',
-        new: '新人',
-        buy: '买赠送',
-      };
-      return statusMap[status];
-    },
-    statusFilter(status) {
-      const statusMap = {
-        0: '未使用',
-        1: '已使用',
-        2: '已过期',
-      };
-      return statusMap[status];
-    },
-  },
-  data() {
-    return {
-      Loading: false,
-      roterPre: roterPre,
-      imgList: [],
-      tableFromIssue: {
-        page: 1,
-        limit: 20,
-        uid: '',
-        name: '',
-        status: '',
-        content: '',
-        searchType: 'all',
-      },
-      issueData: {
-        data: [],
-        total: 0,
-      },
-      loading: false,
-      options: [],
-    };
-  },
-  mounted() {
-    this.getIssueList();
-  },
-  methods: {
-    //重置
-    handleReset() {
-      this.tableFromIssue.status = '';
-      this.tableFromIssue.name = '';
-      this.tableFromIssue.uid = '';
-      this.tableFromIssue.content = '';
-      this.tableFromIssue.searchType = 'all';
-      this.getIssueList();
-    },
-    remoteMethod(query) {
-      if (query !== '') {
-        this.loading = true;
-        setTimeout(() => {
-          this.loading = false;
-          userListApi({ keywords: query, page: 1, limit: 10 }).then((res) => {
-            this.options = res.list;
-          });
-        }, 200);
-      } else {
-        this.options = [];
-      }
-    },
-    seachList() {
-      this.tableFromIssue.page = 1;
-      this.getIssueList();
-    },
-    // 列表
-    getIssueList() {
-      this.Loading = true;
-      couponUserListApi(this.tableFromIssue)
-        .then((res) => {
-          this.issueData.data = res.list;
-          this.issueData.total = res.total;
-          // this.issueData.data.map((item) => {
-          //   this.imgList.push(item.user.avatar)
-          // })
-          this.Loading = false;
-        })
-        .catch((res) => {
-          this.Loading = false;
-          this.$message.error(res.message);
-        });
-    },
-    pageChangeIssue(page) {
-      this.tableFromIssue.page = page;
-      this.getIssueList();
-    },
-    handleSizeChangeIssue(val) {
-      this.tableFromIssue.limit = val;
-      this.getIssueList();
-    },
-  },
+
+defineOptions({ name: 'CouponUser' });
+
+const { proxy } = getCurrentInstance();
+
+const failFilter = (status) => {
+  const statusMap = {
+    receive: '自己领取',
+    send: '后台发送',
+    give: '满赠',
+    new: '新人',
+    buy: '买赠送',
+  };
+  return statusMap[status];
 };
+const statusFilter = (status) => {
+  const statusMap = {
+    0: '未使用',
+    1: '已使用',
+    2: '已过期',
+  };
+  return statusMap[status];
+};
+
+const Loading = ref(false);
+const roterPreRef = roterPre;
+const imgList = ref([]);
+const tableFromIssue = reactive({
+  page: 1,
+  limit: 20,
+  uid: '',
+  name: '',
+  status: '',
+  content: '',
+  searchType: 'all',
+});
+const issueData = reactive({
+  data: [],
+  total: 0,
+});
+const loading = ref(false);
+const options = ref([]);
+const userSearchInput = ref(null);
+
+//重置
+const handleReset = () => {
+  tableFromIssue.status = '';
+  tableFromIssue.name = '';
+  tableFromIssue.uid = '';
+  tableFromIssue.content = '';
+  tableFromIssue.searchType = 'all';
+  getIssueList();
+};
+const remoteMethod = (query) => {
+  if (query !== '') {
+    loading.value = true;
+    setTimeout(() => {
+      loading.value = false;
+      userListApi({ keywords: query, page: 1, limit: 10 }).then((res) => {
+        options.value = res.list;
+      });
+    }, 200);
+  } else {
+    options.value = [];
+  }
+};
+const seachList = () => {
+  tableFromIssue.page = 1;
+  getIssueList();
+};
+// 列表
+const getIssueList = () => {
+  Loading.value = true;
+  couponUserListApi(tableFromIssue)
+    .then((res) => {
+      issueData.data = res.list;
+      issueData.total = res.total;
+      // this.issueData.data.map((item) => {
+      //   this.imgList.push(item.user.avatar)
+      // })
+      Loading.value = false;
+    })
+    .catch((res) => {
+      Loading.value = false;
+      ElMessage.error(res.message);
+    });
+};
+const pageChangeIssue = (page) => {
+  tableFromIssue.page = page;
+  getIssueList();
+};
+const handleSizeChangeIssue = (val) => {
+  tableFromIssue.limit = val;
+  getIssueList();
+};
+
+onMounted(() => {
+  getIssueList();
+});
 </script>
 
 <style scoped lang="scss">

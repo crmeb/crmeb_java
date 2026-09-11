@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-form ref="pram" :model="pram" label-width="100px" @submit.native.prevent>
+    <el-form ref="pramRef" :model="pram" label-width="100px" @submit.prevent>
       <el-form-item
         label="角色名称："
         prop="roleName"
@@ -9,7 +9,13 @@
         <el-input v-model="pram.roleName" placeholder="身份名称" />
       </el-form-item>
       <el-form-item label="状态：">
-        <el-switch v-model="pram.status" :active-value="true" :inactive-value="false" />
+        <el-switch
+          v-model="pram.status"
+          :active-value="true"
+          :inactive-value="false"
+          active-text="开启"
+          inactive-text="关闭"
+        />
       </el-form-item>
       <el-form-item label="菜单权限：">
         <el-checkbox v-model="menuExpand" @change="handleCheckedTreeExpand($event, 'menu')">展开/折叠</el-checkbox>
@@ -21,7 +27,7 @@
           class="tree-border"
           :data="menuOptions"
           show-checkbox
-          ref="menu"
+          ref="menuRef"
           node-key="id"
           :check-strictly="!menuCheckStrictly"
           empty-text="加载中，请稍候"
@@ -41,182 +47,186 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { reactive, ref, onMounted, nextTick, getCurrentInstance } from 'vue';
+import { ElMessage, ElLoading } from '@/utils/elementPlusFeedback';
 import * as roleApi from '@/api/role.js';
 import { Debounce } from '@/utils/validate';
-export default {
-  name: 'roleEdit',
-  props: {
-    isCreate: {
-      type: Number,
-      required: true,
-    },
-    editData: {
-      type: Object,
-      default: null,
-    },
+
+defineOptions({ name: 'roleEdit' });
+
+const props = defineProps({
+  isCreate: {
+    type: Number,
+    required: true,
   },
-  data() {
-    return {
-      pram: {
-        roleName: null,
-        rules: '',
-        status: null,
-        id: null,
-      },
-      menuExpand: false,
-      menuNodeAll: false,
-      menuOptions: [],
-      menuCheckStrictly: true,
-      currentNodeId: [],
-      defaultProps: {
-        children: 'childList',
-        label: 'name',
-      },
-      menuIds: [],
-    };
+  editData: {
+    type: Object,
+    default: null,
   },
-  mounted() {
-    this.initEditData();
-    this.getCacheMenu();
-  },
-  methods: {
-    close() {
-      this.$emit('hideEditDialog');
-    },
-    initEditData() {
-      if (this.isCreate !== 1) return;
-      const { roleName, status, id } = this.editData;
-      this.pram.roleName = roleName;
-      this.pram.status = status;
-      this.pram.id = id;
-      const loading = this.$loading({
-        lock: true,
-        text: 'Loading',
+});
+
+const emit = defineEmits(['hideEditDialog']);
+
+const pram = reactive({
+  roleName: null,
+  rules: '',
+  status: null,
+  id: null,
+});
+const menuExpand = ref(false);
+const menuNodeAll = ref(false);
+const menuOptions = ref([]);
+const menuCheckStrictly = ref(true);
+const currentNodeId = ref([]);
+const defaultProps = reactive({
+  children: 'childList',
+  label: 'name',
+});
+const menuIds = ref([]);
+
+const pramRef = ref(null);
+const menuRef = ref(null);
+
+function close() {
+  emit('hideEditDialog');
+}
+function initEditData() {
+  if (props.isCreate !== 1) return;
+  const { roleName, status, id } = props.editData;
+  pram.roleName = roleName;
+  pram.status = status;
+  pram.id = id;
+  const loading = ElLoading.service({
+    lock: true,
+    text: 'Loading',
+  });
+  roleApi.getInfo(id).then((res) => {
+    menuOptions.value = res.menuList;
+    checkDisabled(menuOptions.value);
+    loading.close();
+    getTreeId(res.menuList);
+    nextTick(() => {
+      menuIds.value.forEach((i, n) => {
+        var node = menuRef.value.getNode(i);
+        if (node.isLeaf) {
+          menuRef.value.setChecked(node, true);
+        }
       });
-      roleApi.getInfo(id).then((res) => {
-        this.menuOptions = res.menuList;
-        this.checkDisabled(this.menuOptions);
-        loading.close();
-        this.getTreeId(res.menuList);
-        this.$nextTick(() => {
-          this.menuIds.forEach((i, n) => {
-            var node = this.$refs.menu.getNode(i);
-            if (node.isLeaf) {
-              this.$refs.menu.setChecked(node, true);
-            }
-          });
+    });
+  });
+}
+const handlerSubmit = Debounce(function (form) {
+  pramRef.value.validate((valid) => {
+    if (!valid) return;
+    let roles = getMenuAllCheckedKeys().toString();
+    pram.rules = roles;
+    if (props.isCreate === 0) {
+      handlerSave();
+    } else {
+      handlerEdit();
+    }
+  });
+});
+function handlerSave() {
+  roleApi.addRole(pram).then((data) => {
+    ElMessage.success('创建身份成功');
+    emit('hideEditDialog');
+  });
+}
+function handlerEdit() {
+  roleApi.updateRole(pram).then((data) => {
+    ElMessage.success('更新身份成功');
+    emit('hideEditDialog');
+  });
+}
+function rulesSelect(selectKeys) {
+  pram.rules = selectKeys;
+}
+// 树权限（展开/折叠）
+function handleCheckedTreeExpand(value, type) {
+  if (type == 'menu') {
+    let treeList = menuOptions.value;
+    for (let i = 0; i < treeList.length; i++) {
+      menuRef.value.store.nodesMap[treeList[i].id].expanded = value;
+    }
+  }
+}
+// 树权限（全选/全不选）
+function handleCheckedTreeNodeAll(value, type) {
+  if (type == 'menu') {
+    menuRef.value.setCheckedNodes(value ? menuOptions.value : []);
+  }
+}
+// 树权限（父子联动）
+function handleCheckedTreeConnect(value, type) {
+  if (type == 'menu') {
+    menuCheckStrictly.value = value ? true : false;
+  }
+}
+// 所有菜单节点数据
+function getMenuAllCheckedKeys() {
+  // 目前被选中的菜单节点
+  let checkedKeys = menuRef.value.getCheckedKeys();
+  // 半选中的菜单节点
+  let halfCheckedKeys = menuRef.value.getHalfCheckedKeys();
+  checkedKeys.unshift.apply(checkedKeys, halfCheckedKeys);
+  return checkedKeys;
+}
+function getCacheMenu() {
+  if (props.isCreate !== 0) return;
+  const loading = ElLoading.service({
+    lock: true,
+    text: 'Loading',
+  });
+  roleApi.menuCacheList().then((res) => {
+    menuOptions.value = res;
+    checkDisabled(menuOptions.value);
+    loading.close();
+  });
+}
+function getTreeId(datas) {
+  for (var i in datas) {
+    if (datas[i].checked) menuIds.value.push(datas[i].id);
+    if (datas[i].childList) {
+      getTreeId(datas[i].childList);
+    }
+  }
+}
+function checkDisabled(data) {
+  //设置公共权限默认勾选且不可操作
+  data.forEach((item) => {
+    if (item.id === 280 || item.id === 294 || item.id === 344 || item.id === 1) {
+      item.disabled = true;
+      item.childList.forEach((item1) => {
+        item1.disabled = true;
+        nextTick(() => {
+          var node = menuRef.value.getNode(item1.id);
+          if (node.isLeaf) {
+            menuRef.value.setChecked(node, true);
+          }
         });
-      });
-    },
-    handlerSubmit: Debounce(function (form) {
-      this.$refs[form].validate((valid) => {
-        if (!valid) return;
-        let roles = this.getMenuAllCheckedKeys().toString();
-        this.pram.rules = roles;
-        if (this.isCreate === 0) {
-          this.handlerSave();
-        } else {
-          this.handlerEdit();
-        }
-      });
-    }),
-    handlerSave() {
-      roleApi.addRole(this.pram).then((data) => {
-        this.$message.success('创建身份成功');
-        this.$emit('hideEditDialog');
-      });
-    },
-    handlerEdit() {
-      roleApi.updateRole(this.pram).then((data) => {
-        this.$message.success('更新身份成功');
-        this.$emit('hideEditDialog');
-      });
-    },
-    rulesSelect(selectKeys) {
-      this.pram.rules = selectKeys;
-    },
-    // 树权限（展开/折叠）
-    handleCheckedTreeExpand(value, type) {
-      if (type == 'menu') {
-        let treeList = this.menuOptions;
-        for (let i = 0; i < treeList.length; i++) {
-          this.$refs.menu.store.nodesMap[treeList[i].id].expanded = value;
-        }
-      }
-    },
-    // 树权限（全选/全不选）
-    handleCheckedTreeNodeAll(value, type) {
-      if (type == 'menu') {
-        this.$refs.menu.setCheckedNodes(value ? this.menuOptions : []);
-      }
-    },
-    // 树权限（父子联动）
-    handleCheckedTreeConnect(value, type) {
-      if (type == 'menu') {
-        this.menuCheckStrictly = value ? true : false;
-      }
-    },
-    // 所有菜单节点数据
-    getMenuAllCheckedKeys() {
-      // 目前被选中的菜单节点
-      let checkedKeys = this.$refs.menu.getCheckedKeys();
-      // 半选中的菜单节点
-      let halfCheckedKeys = this.$refs.menu.getHalfCheckedKeys();
-      checkedKeys.unshift.apply(checkedKeys, halfCheckedKeys);
-      return checkedKeys;
-    },
-    getCacheMenu() {
-      if (this.isCreate !== 0) return;
-      const loading = this.$loading({
-        lock: true,
-        text: 'Loading',
-      });
-      roleApi.menuCacheList().then((res) => {
-        this.menuOptions = res;
-        this.checkDisabled(this.menuOptions);
-        loading.close();
-      });
-    },
-    getTreeId(datas) {
-      for (var i in datas) {
-        if (datas[i].checked) this.menuIds.push(datas[i].id);
-        if (datas[i].childList) {
-          this.getTreeId(datas[i].childList);
-        }
-      }
-    },
-    checkDisabled(data) {
-      //设置公共权限默认勾选且不可操作
-      data.forEach((item) => {
-        if (item.id === 280 || item.id === 294 || item.id === 344 || item.id === 1) {
-          item.disabled = true;
-          item.childList.forEach((item1) => {
-            item1.disabled = true;
-            this.$nextTick(() => {
-              var node = this.$refs.menu.getNode(item1.id);
+        //控制台
+        if (item.id === 1) {
+          item1.childList.forEach((item2) => {
+            item2.disabled = true;
+            nextTick(() => {
+              var node = menuRef.value.getNode(item2.id);
               if (node.isLeaf) {
-                this.$refs.menu.setChecked(node, true);
+                menuRef.value.setChecked(node, true);
               }
             });
-            //控制台
-            if (item.id === 1) {
-              item1.childList.forEach((item2) => {
-                item2.disabled = true;
-                this.$nextTick(() => {
-                  var node = this.$refs.menu.getNode(item2.id);
-                  if (node.isLeaf) {
-                    this.$refs.menu.setChecked(node, true);
-                  }
-                });
-              });
-            }
           });
         }
       });
-    },
-  },
-};
+    }
+  });
+}
+
+onMounted(() => {
+  initEditData();
+  getCacheMenu();
+});
 </script>
 
 <style scoped>

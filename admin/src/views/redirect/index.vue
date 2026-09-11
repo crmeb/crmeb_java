@@ -1,12 +1,17 @@
-<script>
-export default {
-  created() {
-    const { params, query } = this.$route;
-    const { path } = params;
-    this.$router.replace({ path: '/' + path, query });
-  },
-  render: function (h) {
-    return h(); // avoid warning message
-  },
-};
+<script setup>
+import { useRoute, useRouter } from 'vue-router';
+
+defineOptions({ name: 'Redirect' });
+
+const route = useRoute();
+const router = useRouter();
+
+// created 时机（setup 顶层）
+const { params, query } = route;
+const { path } = params;
+router.replace({ path: '/' + path, query });
 </script>
+
+<template>
+  <div></div>
+</template>

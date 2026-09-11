@@ -67,13 +67,13 @@ export const GoodsTableHead = [
 // 佣金
 export const commissionTableHead = [
   {
-    title: '一级返佣(%)',
+    title: '一级返佣',
     slot: 'brokerage',
     align: 'center',
     minWidth: 100,
   },
   {
-    title: '二级返佣(%)',
+    title: '二级返佣',
     slot: 'brokerageTwo',
     align: 'center',
     minWidth: 100,

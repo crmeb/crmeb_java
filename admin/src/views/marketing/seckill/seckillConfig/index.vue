@@ -20,34 +20,42 @@
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="getList(1)">搜索</el-button>
-            <el-button size="small" @click="handleReset">重置</el-button>
+            <el-button @click="handleReset">重置</el-button>
           </el-form-item>
         </el-form>
       </div>
     </el-card>
     <el-card class="box-card mt14">
-      <div slot="header" class="clearfix">
-        <el-button type="primary" @click="add" v-hasPermi="['admin:seckill:manger:save']">添加秒杀配置</el-button>
-      </div>
-      <el-table v-loading="listLoading" :data="tableData.data" style="width: 100%" size="mini" ref="multipleTable">
+      <template #header>
+        <div class="clearfix">
+          <el-button type="primary" @click="add" v-hasPermi="['admin:seckill:manger:save']">添加秒杀配置</el-button>
+        </div>
+      </template>
+      <el-table v-loading="listLoading" :data="tableData.data" style="width: 100%" ref="multipleTableRef">
         <el-table-column prop="id" label="ID" min-width="50" />
-        <el-table-column label="秒杀名称" min-width="100">
-          <template slot-scope="scope">
-            <router-link :to="{ path: '/marketing/seckill/list/' + scope.row.id }">
-              <el-button type="text" size="small">{{ scope.row.name }}</el-button>
+        <el-table-column
+          label="秒杀名称"
+          min-width="100"
+          align="left"
+          header-align="left"
+          class-name="seckill-name-column"
+        >
+          <template #default="scope">
+            <router-link class="seckill-name-link" :to="{ path: '/marketing/seckill/list/' + scope.row.id }">
+              {{ scope.row.name }}
             </router-link>
           </template>
         </el-table-column>
         <el-table-column prop="name" label="秒杀时段" min-width="100">
-          <template slot-scope="scope">
+          <template #default="scope">
             {{ scope.row.time.split(',').join(' - ') }}
           </template>
         </el-table-column>
         <el-table-column label="轮播图" min-width="200">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div class="acea-row" v-if="scope.row.silderImgs">
               <div class="demo-image__preview mr5" v-for="item in JSON.parse(scope.row.silderImgs)" :key="item.attId">
-                <el-image style="width: 36px; height: 36px" :src="item.sattDir" :preview-src-list="[item.sattDir]" />
+                <el-image style="width: 36px; height: 36px" :src="item.sattDir" :preview-src-list="[item.sattDir]" preview-teleported />
               </div>
             </div>
             <span v-else>无</span>
@@ -55,7 +63,7 @@
         </el-table-column>
 
         <el-table-column label="状态" min-width="150">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-switch
               v-if="checkPermi(['admin:seckill:manger:update:status'])"
               v-model="scope.row.status"
@@ -70,7 +78,7 @@
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" min-width="130" />
         <el-table-column label="操作" width="170" fixed="right">
-          <template slot-scope="scope">
+          <template #default="scope">
             <a
               @click="handleEdit(scope.row.id)"
               v-hasPermi="['admin:seckill:manger:info', 'admin:seckill:manger:update']"
@@ -101,7 +109,7 @@
 
     <el-dialog
       :title="isCreate === 0 ? '添加数据' : '编辑数据'"
-      :visible.sync="dialogVisible"
+      v-model="dialogVisible"
       width="700px"
       :before-close="handleClose"
     >
@@ -110,6 +118,7 @@
           :form-id="formId"
           :is-create="isCreate"
           :edit-data="editData"
+          :format-form-conf="formatSeckillFormConf"
           @submit="handlerSubmit"
           @resetForm="resetForm"
           @closeDialog="dialogVisible = false"
@@ -120,7 +129,9 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import zbParser from '@/components/FormGenerator/components/parser/ZBParser';
 import { configSaveForm, configInfo } from '@/api/systemConfig.js';
 import {
@@ -133,158 +144,176 @@ import {
 } from '@/api/marketing';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
 import { Debounce } from '@/utils/validate';
-export default {
-  name: 'SeckillConfig',
-  components: { zbParser },
-  data() {
-    return {
-      dialogVisible: false,
-      isShow: true,
-      isCreate: 0,
-      editData: {},
-      formId: 123,
-      listLoading: true,
-      tableData: {
-        data: [],
-        total: 0,
-      },
-      tableFrom: {
-        page: 1,
-        limit: 20,
-        name: '',
-        isDel: false,
-        status: '',
-      },
-      seckillId: '',
-      loading: false,
-    };
-  },
-  mounted() {
-    this.getList();
-  },
-  methods: {
-    checkPermi,
-    //重置
-    handleReset() {
-      this.tableFrom.status = '';
-      this.tableFrom.name = '';
-      this.getList();
-    },
-    resetForm(formValue) {
-      this.dialogVisible = false;
-    },
-    // 删除
-    handleDelete(id, idx) {
-      this.$modalSure('永久删除该配置').then(() => {
-        seckillDeleteApi({ id: id }).then(() => {
-          this.$message.success('删除成功');
-          if (this.tableData.data.length === 1 && this.tableFrom.page > 1)
-            this.tableFrom.page = this.tableFrom.page - 1;
-          this.getList();
-        });
-      });
-    },
-    onchangeIsShow(row) {
-      seckillConfigStatusApi(row.id, { status: row.status })
-        .then(async () => {
-          this.$message.success('修改成功');
-          this.getList();
-        })
-        .catch(() => {
-          row.status = !row.status;
-        });
-    },
-    onEditSort(row) {
-      this.$set(row, 'isEdit', true);
-    },
-    onBlur(row) {
-      this.$set(row, 'isEdit', false);
-      this.onEdit(row.id, row);
-    },
-    // 获取表单详情
-    getFormInfo(id) {
-      this.loading = true;
-      seckillInfoApi({ id: id })
-        .then((res) => {
-          this.editData = res;
-          this.dialogVisible = true;
-          this.loading = false;
-        })
-        .catch(() => {
-          this.loading = false;
-        });
-    },
-    // 编辑
-    handleEdit(id) {
-      this.seckillId = id;
-      this.getFormInfo(id);
-      this.isCreate = 1;
-    },
-    // 编辑
-    onEdit(id, obj) {
-      const data = obj ? obj : this.editData;
-      seckillUpdateApi({ id }, data)
-        .then((res) => {
-          this.isSuccess();
-        })
-        .catch((res) => {
-          this.listLoading = false;
-        });
-    },
-    // 提交
-    handlerSubmit: Debounce(function (formValue) {
-      if (formValue.time.split(',')[0].split(':')[0] > formValue.time.split(',')[1].split(':')[0])
-        return this.$message.error('请填写正确的时间范围');
-      this.isCreate === 0
-        ? seckillSaveApi(formValue).then((res) => {
-            this.isSuccess();
-          })
-        : seckillUpdateApi({ id: this.seckillId }, formValue).then((res) => {
-            this.isSuccess();
-          });
-    }),
-    isSuccess() {
-      this.$message.success('操作成功');
-      this.dialogVisible = false;
-      this.getList();
-    },
-    // 列表
-    getList(num) {
-      this.listLoading = true;
-      this.tableFrom.page = num ? num : this.tableFrom.page;
-      seckillListApi(this.tableFrom)
-        .then((res) => {
-          this.tableData.data = res.list;
-          this.tableData.total = res.total;
-          this.tableData.data.map((item) => this.$set(item, 'isEdit', false));
-          this.listLoading = false;
-        })
-        .catch((res) => {
-          this.listLoading = false;
-        });
-    },
-    pageChange(page) {
-      this.tableFrom.page = page;
-      this.getList();
-    },
-    handleSizeChange(val) {
-      this.tableFrom.limit = val;
-      this.getList();
-    },
-    add() {
-      this.isCreate = 0;
-      this.dialogVisible = true;
-    },
-    handleClose() {
-      this.dialogVisible = false;
-      this.editData = {};
-    },
-  },
+
+defineOptions({ name: 'SeckillConfig' });
+
+const { proxy } = getCurrentInstance();
+
+const dialogVisible = ref(false);
+const isShow = ref(true);
+const isCreate = ref(0);
+const editData = ref({});
+const formId = ref(123);
+const listLoading = ref(true);
+const tableData = reactive({
+  data: [],
+  total: 0,
+});
+const tableFrom = reactive({
+  page: 1,
+  limit: 20,
+  name: '',
+  isDel: false,
+  status: '',
+});
+const seckillId = ref('');
+const loading = ref(false);
+const multipleTableRef = ref(null);
+
+//重置
+const handleReset = () => {
+  tableFrom.status = '';
+  tableFrom.name = '';
+  getList();
 };
+const resetForm = (formValue) => {
+  dialogVisible.value = false;
+};
+const formatSeckillFormConf = (formConf) => {
+  if (!Array.isArray(formConf.fields)) return formConf;
+  formConf.fields.forEach((field) => {
+    if (field.__vModel__ === 'name') {
+      field.placeholder = '请输入秒杀名称';
+    }
+    if (field.__vModel__ === 'status') {
+      field['active-text'] = '开启';
+      field['inactive-text'] = '关闭';
+    }
+  });
+  return formConf;
+};
+// 删除
+const handleDelete = (id, idx) => {
+  proxy.$modalSure('永久删除该配置').then(() => {
+    seckillDeleteApi({ id: id }).then(() => {
+      ElMessage.success('删除成功');
+      if (tableData.data.length === 1 && tableFrom.page > 1) tableFrom.page = tableFrom.page - 1;
+      getList();
+    });
+  });
+};
+const onchangeIsShow = (row) => {
+  seckillConfigStatusApi(row.id, { status: row.status })
+    .then(async () => {
+      ElMessage.success('修改成功');
+      getList();
+    })
+    .catch(() => {
+      row.status = !row.status;
+    });
+};
+const onEditSort = (row) => {
+  row.isEdit = true;
+};
+const onBlur = (row) => {
+  row.isEdit = false;
+  onEdit(row.id, row);
+};
+// 获取表单详情
+const getFormInfo = (id) => {
+  loading.value = true;
+  seckillInfoApi({ id: id })
+    .then((res) => {
+      editData.value = res;
+      dialogVisible.value = true;
+      loading.value = false;
+    })
+    .catch(() => {
+      loading.value = false;
+    });
+};
+// 编辑
+const handleEdit = (id) => {
+  seckillId.value = id;
+  getFormInfo(id);
+  isCreate.value = 1;
+};
+// 编辑
+const onEdit = (id, obj) => {
+  const data = obj ? obj : editData.value;
+  seckillUpdateApi({ id }, data)
+    .then((res) => {
+      isSuccess();
+    })
+    .catch((res) => {
+      listLoading.value = false;
+    });
+};
+// 提交
+const handlerSubmit = Debounce(function (formValue) {
+  if (formValue.time.split(',')[0].split(':')[0] > formValue.time.split(',')[1].split(':')[0])
+    return ElMessage.error('请填写正确的时间范围');
+  isCreate.value === 0
+    ? seckillSaveApi(formValue).then((res) => {
+        isSuccess();
+      })
+    : seckillUpdateApi({ id: seckillId.value }, formValue).then((res) => {
+        isSuccess();
+      });
+});
+const isSuccess = () => {
+  ElMessage.success('操作成功');
+  dialogVisible.value = false;
+  getList();
+};
+// 列表
+const getList = (num) => {
+  listLoading.value = true;
+  tableFrom.page = num ? num : tableFrom.page;
+  seckillListApi(tableFrom)
+    .then((res) => {
+      tableData.data = res.list;
+      tableData.total = res.total;
+      tableData.data.map((item) => (item.isEdit = false));
+      listLoading.value = false;
+    })
+    .catch((res) => {
+      listLoading.value = false;
+    });
+};
+const pageChange = (page) => {
+  tableFrom.page = page;
+  getList();
+};
+const handleSizeChange = (val) => {
+  tableFrom.limit = val;
+  getList();
+};
+const add = () => {
+  isCreate.value = 0;
+  dialogVisible.value = true;
+};
+const handleClose = () => {
+  dialogVisible.value = false;
+  editData.value = {};
+};
+
+onMounted(() => {
+  getList();
+});
 </script>
 
 <style lang="scss" scoped>
-::v-deep .el-form-item__content .el-date-editor:nth-of-type(2) {
+:deep(.el-form-item__content .el-date-editor:nth-of-type(2)) {
   margin-left: 8px;
+}
+
+:deep(.seckill-name-link) {
+  display: block;
+  text-align: left;
+}
+
+:deep(.seckill-name-column .cell) {
+  text-align: left;
 }
 </style>

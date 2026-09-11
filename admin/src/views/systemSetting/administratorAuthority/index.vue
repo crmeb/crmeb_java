@@ -4,8 +4,8 @@
   </div>
 </template>
 
-<script>
-export default {};
+<script setup>
+defineOptions({ name: 'AdministratorAuthority' });
 </script>
 
 <style lang="sass" scoped></style>

@@ -2,14 +2,14 @@
   <div class="divBox">
     <el-card :bordered="false" shadow="never" class="ivu-mt" :body-style="{ padding: 0 }">
       <div class="padding-add">
-        <el-form inline size="small" label-width="75px">
+        <el-form inline label-width="75px">
           <el-form-item label="时间选择：">
             <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
             <!-- <el-date-picker
               v-model="timeVal"
-              value-format="yyyy-MM-dd"
-              format="yyyy-MM-dd"
-              size="small"
+              value-format="YYYY-MM-DD"
+              format="YYYY-MM-DD"
+
               type="daterange"
               placement="bottom-end"
               placeholder="自定义时间"
@@ -27,18 +27,18 @@
               v-model="tableFrom.keywords"
               placeholder="请输入用户昵称"
               class="selWidth"
-              size="small"
+
             ></el-input>
           </el-form-item> -->
           <el-form-item>
-            <el-button type="primary" size="small" @click="getList(1)">搜索</el-button>
-            <el-button size="small" @click="handleReset">重置</el-button>
+            <el-button type="primary" @click="getList(1)">搜索</el-button>
+            <el-button @click="handleReset">重置</el-button>
           </el-form-item>
         </el-form>
       </div>
     </el-card>
     <el-card class="box-card mt14">
-      <el-table v-loading="listLoading" :data="tableData.data" size="mini" class="table" highlight-current-row>
+      <el-table v-loading="listLoading" :data="tableData.data" class="table" highlight-current-row>
         <el-table-column prop="id" label="ID" width="60" />
         <el-table-column prop="title" label="标题" min-width="130" />
         <el-table-column
@@ -83,89 +83,87 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, onMounted, getCurrentInstance } from 'vue';
 import { integralListApi } from '@/api/marketing';
 import cardsData from '@/components/cards/index';
-export default {
-  components: { cardsData },
-  data() {
-    return {
-      loading: false,
-      options: [],
-      fromList: this.$constants.fromList,
-      listLoading: false,
-      tableData: {
-        data: [],
-        total: 0,
-      },
-      tableFrom: {
-        page: 1,
-        limit: 20,
-        dateLimit: '',
-        content: '',
-        searchType: 'all',
-      },
-      userIdList: [],
-      userList: [],
-      timeVal: [],
-      values: [],
-    };
-  },
-  mounted() {
-    this.getList();
-    // this.getUserList()
-  },
-  methods: {
-    //重置
-    handleReset() {
-      this.timeVal = [];
-      this.tableFrom.dateLimit = '';
-      this.tableFrom.keywords = '';
-      this.tableFrom.content = '';
-      this.tableFrom.searchType = 'all';
-      this.getList();
-    },
-    seachList() {
-      this.tableFrom.page = 1;
-      this.getList();
-    },
-    // 选择时间
-    selectChange(tab) {
-      this.tableFrom.dateLimit = tab;
-      this.tableFrom.page = 1;
-      this.timeVal = [];
-      this.getList();
-    },
-    // 具体日期
-    onchangeTime(e) {
-      this.timeVal = e;
-      this.tableFrom.dateLimit = e ? this.timeVal.join(',') : '';
-      this.tableFrom.page = 1;
-      this.getList();
-    },
-    // 列表
-    getList() {
-      this.listLoading = true;
-      integralListApi(this.tableFrom)
-        .then((res) => {
-          this.tableData.data = res.list;
-          this.tableData.total = res.total;
-          this.listLoading = false;
-        })
-        .catch((res) => {
-          this.listLoading = false;
-        });
-    },
-    pageChange(page) {
-      this.tableFrom.page = page;
-      this.getList();
-    },
-    handleSizeChange(val) {
-      this.tableFrom.limit = val;
-      this.getList();
-    },
-  },
+
+const { proxy } = getCurrentInstance();
+
+const loading = ref(false);
+const options = ref([]);
+const fromList = proxy.$constants.fromList;
+const listLoading = ref(false);
+const tableData = reactive({
+  data: [],
+  total: 0,
+});
+const tableFrom = reactive({
+  page: 1,
+  limit: 20,
+  dateLimit: '',
+  content: '',
+  searchType: 'all',
+});
+const userIdList = ref([]);
+const userList = ref([]);
+const timeVal = ref([]);
+const values = ref([]);
+const userSearchInput = ref(null);
+
+//重置
+const handleReset = () => {
+  timeVal.value = [];
+  tableFrom.dateLimit = '';
+  tableFrom.keywords = '';
+  tableFrom.content = '';
+  tableFrom.searchType = 'all';
+  getList();
 };
+const seachList = () => {
+  tableFrom.page = 1;
+  getList();
+};
+// 选择时间
+const selectChange = (tab) => {
+  tableFrom.dateLimit = tab;
+  tableFrom.page = 1;
+  timeVal.value = [];
+  getList();
+};
+// 具体日期
+const onchangeTime = (e) => {
+  timeVal.value = e;
+  tableFrom.dateLimit = e ? timeVal.value.join(',') : '';
+  tableFrom.page = 1;
+  getList();
+};
+// 列表
+const getList = () => {
+  listLoading.value = true;
+  integralListApi(tableFrom)
+    .then((res) => {
+      tableData.data = res.list;
+      tableData.total = res.total;
+      listLoading.value = false;
+    })
+    .catch((res) => {
+      listLoading.value = false;
+    });
+};
+const pageChange = (page) => {
+  tableFrom.page = page;
+  getList();
+};
+const handleSizeChange = (val) => {
+  tableFrom.limit = val;
+  getList();
+};
+
+onMounted(() => {
+  getList();
+  // this.getUserList()
+});
 </script>
 
 <style lang="sass" scoped></style>

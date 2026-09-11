@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-drawer :visible.sync="dialogVisible" :direction="direction" size="1000px" :before-close="handleClose">
+    <el-drawer v-model="dialogVisible" :direction="direction" size="1000px" :before-close="handleClose">
       <div v-if="orderDatalist" v-loading="loading">
         <div class="detailHead">
           <div class="full">
@@ -25,7 +25,7 @@
             </li>
             <li class="item">
               <div class="title">支付方式</div>
-              <div>{{ orderDatalist.payType | payTypeFilter }}</div>
+              <div>{{ $filters.payTypeFilter(orderDatalist.payType) }}</div>
             </li>
             <li class="item">
               <div class="title">创建时间</div>
@@ -71,23 +71,6 @@
                 </li>
               </ul>
             </div>
-            <div v-if="orderDatalist.shippingType === 2" class="detailSection">
-              <div class="title">核销信息</div>
-              <ul class="list">
-                <li class="item">
-                  <div class="lang">核销姓名：</div>
-                  <div class="value">
-                    {{ orderDatalist.realName }}
-                  </div>
-                </li>
-                <li class="item">
-                  <div class="lang">核销电话：</div>
-                  <div class="value">
-                    {{ orderDatalist.userPhone }}
-                  </div>
-                </li>
-              </ul>
-            </div>
             <div class="detailSection">
               <div class="title">订单信息</div>
               <ul class="list">
@@ -108,10 +91,6 @@
                   <div class="value">{{ orderDatalist.payPrice || '0.0' }}</div>
                 </li>
                 <li class="item">
-                  <div class="lang">抵扣金额：</div>
-                  <div class="value">{{ orderDatalist.deductionPrice || '0.0' }}</div>
-                </li>
-                <li class="item">
                   <div class="lang">退款金额：</div>
                   <div class="value">{{ orderDatalist.refundPrice || '0.0' }}</div>
                 </li>
@@ -121,15 +100,15 @@
                 </li>
                 <li class="item">
                   <div class="lang">支付方式：</div>
-                  <div class="value">{{ orderDatalist.payType | payTypeFilter }}</div>
+                  <div class="value">{{ $filters.payTypeFilter(orderDatalist.payType) }}</div>
                 </li>
                 <li class="item">
                   <div class="lang">创建时间：</div>
-                  <div class="value">{{ orderDatalist.createTime | filterEmpty }}</div>
+                  <div class="value">{{ $filters.filterEmpty(orderDatalist.createTime) }}</div>
                 </li>
                 <li class="item">
                   <div class="lang">推广人：</div>
-                  <div class="value">{{ orderDatalist.spreadName | filterEmpty }}</div>
+                  <div class="value">{{ $filters.filterEmpty(orderDatalist.spreadName) }}</div>
                 </li>
               </ul>
             </div>
@@ -137,7 +116,7 @@
               <div class="title">买家留言</div>
               <ul class="list">
                 <li class="item">
-                  <div>{{ orderDatalist.mark | filterEmpty }}</div>
+                  <div>{{ $filters.filterEmpty(orderDatalist.mark) }}</div>
                 </li>
               </ul>
             </div>
@@ -145,7 +124,7 @@
               <div class="title">商家备注</div>
               <ul class="list">
                 <li class="item">
-                  <div>{{ orderDatalist.remark | filterEmpty }}</div>
+                  <div>{{ $filters.filterEmpty(orderDatalist.remark) }}</div>
                 </li>
               </ul>
             </div>
@@ -155,11 +134,11 @@
                 <li class="item" v-for="(item, index) in orderExtend" :key="index">
                   <div class="lang" :title="item.title">{{ item.title }}</div>
                   <div>{{ item.title.includes(':') ? '' : '：' }}</div>
-                  <div v-if="!Array.isArray(item.value)" class="value">{{ item.value | filterEmpty }}</div>
+                  <div v-if="!Array.isArray(item.value)" class="value">{{ $filters.filterEmpty(item.value) }}</div>
                   <div v-else class="flex conter">
                     <template v-if="item.value">
                       <div v-for="(pic, idx) in item.value" :key="idx">
-                        <el-image v-if="pic.includes('http')" class="pictrue" :src="pic" :preview-src-list="[pic]" />
+                        <el-image v-if="pic.includes('http')" class="pictrue" :src="pic" :preview-src-list="[pic]" preview-teleported />
                         <div v-else class="text-14px fontColor333 ml-5px acea-row row-middle mr5">
                           {{ pic }}
                           <div style="margin-left: 6px" v-show="idx < item.value.length - 1">-</div>
@@ -173,12 +152,12 @@
             </div>
           </el-tab-pane>
           <el-tab-pane label="商品信息" name="goods" class="tabBox">
-            <el-table class="mt20 orderDetailList" :data="orderDatalist.orderInfo" size="small">
+            <el-table class="mt20 orderDetailList" :data="orderDatalist.orderInfo">
               <el-table-column label="商品信息" min-width="400" :show-overflow-tooltip="true">
-                <template slot-scope="scope">
+                <template #default="scope">
                   <div class="acea-row row-middle">
                     <div class="demo-image__preview mr15">
-                      <el-image :src="scope.row.info.image" :preview-src-list="[scope.row.info.image]" />
+                      <el-image :src="scope.row.info.image" :preview-src-list="[scope.row.info.image]" preview-teleported />
                     </div>
                     <div style="width: 408px">
                       <div class="line1 mb10">{{ scope.row.info.productName }}</div>
@@ -188,7 +167,7 @@
                 </template>
               </el-table-column>
               <el-table-column label="商品售价" min-width="90">
-                <template slot-scope="scope">
+                <template #default="scope">
                   <div class="acea-row row-middle">
                     <div class="line1">
                       {{ scope.row.info.price }}
@@ -197,7 +176,7 @@
                 </template>
               </el-table-column>
               <el-table-column label="购买数量" min-width="90">
-                <template slot-scope="scope">
+                <template #default="scope">
                   <div class="acea-row row-middle">
                     <div class="line1">
                       {{ scope.row.info.payNum }}
@@ -207,92 +186,31 @@
               </el-table-column>
             </el-table>
           </el-tab-pane>
-          <el-tab-pane v-if="orderDatalist.status > 0" label="发货记录" name="delivery" class="tabBox">
-            <template>
-              <div>
-                <el-table class="mt20" size="small" :data="orderDatalist.orderInfo">
-                  <el-table-column min-width="400">
-                    <template slot="header" slot-scope="scope">
-                      <template v-if="orderDatalist.deliveryType === 'express'">
-                        <span class="font-color">【快递配送】</span>
-                        <span>{{ orderDatalist.deliveryName + '：' + orderDatalist.deliveryId }}</span>
-                        <span class="ml30">{{ orderDatalist.createTime }}</span>
-                      </template>
-                      <template v-else-if="orderDatalist.deliveryType === 'send'">
-                        <span class="font-color">【商家送货】</span>
-                        <span>{{ orderDatalist.deliveryName + '：' + orderDatalist.deliveryId }}</span>
-                        <span class="ml30">{{ orderDatalist.createTime }}</span>
-                      </template>
-                      <template v-else>
-                        <span class="font-color">【虚拟发货】</span>
-                        <span class="ml30">{{ orderDatalist.createTime }}</span>
-                      </template>
-                    </template>
-                    <template slot-scope="scope">
-                      <div class="acea-row row-middle">
-                        <div class="demo-image__preview mr15">
-                          <el-image :src="scope.row.info.image" :preview-src-list="[scope.row.info.image]" />
-                        </div>
-                        <div style="width: 408px">
-                          <div class="line1 mb10 line-heightOne">{{ scope.row.info.productName }}</div>
-                          <div class="line1 color-909399 line-heightOne">规格：{{ scope.row.info.sku }}</div>
-                        </div>
-                        <div class="acea-row row-middle ml30">
-                          <div class="line1 font12 color-text">X {{ scope.row.info.payNum }}</div>
-                        </div>
-                      </div>
-                    </template>
-                  </el-table-column>
-                  <el-table-column width="400" fixed="right">
-                    <template slot="header" slot-scope="scope">
-                      <div class="flex mr10" style="justify-content: flex-end">
-                        <a
-                          v-if="orderDatalist.deliveryType === 'express'"
-                          @click="openLogistics(orderDatalist.orderId, orderDatalist.deliveryName)"
-                          >查看物流
-                        </a>
-                      </div>
-                    </template>
-                    <template v-if="orderDatalist.deliveryType === 'noNeed'" slot-scope="scope">
-                      <div class="acea-row row-middle">
-                        <div class="font12 color-text">发货备注：{{ orderDatalist.deliveryMark }}</div>
-                      </div>
-                    </template>
-                  </el-table-column>
-                </el-table>
-              </div>
-            </template>
+          <el-tab-pane v-if="checkPermi(['admin:order:status:list'])" label="订单记录" name="orderLog" class="tabBox">
+            <el-table v-loading="orderLogLoading" class="mt20" border :data="orderLogData.data" style="width: 100%">
+              <el-table-column prop="oid" label="ID" min-width="90" />
+              <el-table-column prop="changeMessage" label="订单记录" min-width="360" />
+              <el-table-column prop="createTime" label="记录时间" min-width="180" />
+            </el-table>
+            <div class="block">
+              <el-pagination
+                :page-sizes="[10, 20, 30, 40]"
+                :page-size="orderLogParams.limit"
+                :current-page="orderLogParams.page"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="orderLogData.total"
+                @size-change="handleOrderLogSizeChange"
+                @current-change="handleOrderLogPageChange"
+              />
+            </div>
           </el-tab-pane>
         </el-tabs>
       </div>
     </el-drawer>
-    <el-dialog v-if="orderDatalist" title="提示" :visible.sync="modal2" width="30%">
-      <div class="logistics acea-row row-top">
-        <div class="logistics_img"><img src="@/assets/imgs/expressi.jpg" /></div>
-        <div class="logistics_cent">
-          <span class="mb10">物流公司：{{ orderDatalist.deliveryName }}</span>
-          <span>物流单号：{{ orderDatalist.deliveryId }}</span>
-        </div>
-      </div>
-      <div class="acea-row row-column-around trees-coadd">
-        <div class="scollhide">
-          <el-timeline :reverse="reverse">
-            <el-timeline-item v-for="(item, i) in result" :key="i">
-              <p class="time" v-text="item.time"></p>
-              <p class="content" v-text="item.status"></p>
-            </el-timeline-item>
-          </el-timeline>
-        </div>
-      </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="modal2 = false">取消</el-button>
-        <el-button type="primary" @click="modal2 = false">关闭</el-button>
-      </span>
-    </el-dialog>
   </div>
 </template>
 
-<script>
+<script setup>
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
@@ -303,101 +221,98 @@
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
 
-import { getLogisticsInfoApi, orderInvoiceListApi, orderDetailApi, refundOrderDetailApi } from '@/api/order';
+import { ref, reactive } from 'vue';
+import { orderDetailApi, orderLogApi } from '@/api/order';
 import { checkPermi } from '@/utils/permission';
-export default {
-  name: 'OrderDetail',
-  props: {
-    orderId: {
-      default: 0,
-    },
+
+defineOptions({ name: 'OrderDetail' });
+
+defineProps({
+  orderId: {
+    default: 0,
   },
-  data() {
-    return {
-      activeName: 'detail',
-      direction: 'rtl',
-      reverse: true,
-      dialogVisible: false,
-      orderDatalist: {},
-      loading: false,
-      modal2: false,
-      result: [],
-      resultInfo: {},
-      InvoiceList: [],
-      refundInfo: {},
-      editDeliveryDialogVisible: false,
-      editData: {},
-      orderExtend: [], //系统表单数据
-      expressName: '', //快递名称
-    };
-  },
-  methods: {
-    checkPermi,
-    //修改物流信息
-    handleEditLogistics(row) {
-      this.editDeliveryDialogVisible = true;
-      this.editData = row;
-    },
-    //关闭配送信息
-    onCloseVisible() {
-      this.editDeliveryDialogVisible = false;
-    },
-    handleClose() {
-      this.dialogVisible = false;
-    },
-    // 获取订单退款信息
-    getRefundOrderDetail(id) {
-      refundOrderDetailApi(id).then(async (res) => {
-        this.refundInfo = res;
-      });
-    },
-    openLogistics() {
-      this.getOrderData();
-      this.modal2 = true;
-    },
-    // 获取订单物流信息
-    getOrderData() {
-      getLogisticsInfoApi({ orderNo: this.orderId }).then(async (res) => {
-        this.result = res.list;
-      });
-    },
-    getDetail(id) {
-      this.loading = true;
-      orderDetailApi({ orderNo: id })
-        .then((res) => {
-          this.orderDatalist = res;
-          this.orderExtend = res.orderExtend ? JSON.parse(res.orderExtend) : [];
-          this.activeName = 'detail';
-          this.loading = false;
-        })
-        .catch(() => {
-          this.orderDatalist = null;
-          this.loading = false;
-        });
-    },
-  },
-};
+});
+
+const activeName = ref('detail');
+const direction = ref('rtl');
+const dialogVisible = ref(false);
+const orderDatalist = ref({});
+const loading = ref(false);
+const orderExtend = ref([]); //系统表单数据
+const orderLogLoading = ref(false);
+const orderLogData = reactive({
+  data: [],
+  total: 0,
+});
+const orderLogParams = reactive({
+  page: 1,
+  limit: 10,
+  orderNo: 0,
+});
+
+function handleClose() {
+  dialogVisible.value = false;
+}
+function getDetail(id) {
+  loading.value = true;
+  resetOrderLog(id);
+  orderDetailApi({ orderNo: id })
+    .then((res) => {
+      orderDatalist.value = res;
+      orderExtend.value = res.orderExtend ? JSON.parse(res.orderExtend) : [];
+      activeName.value = 'detail';
+      loading.value = false;
+      if (checkPermi(['admin:order:status:list'])) getOrderLogList(id);
+    })
+    .catch(() => {
+      orderDatalist.value = null;
+      loading.value = false;
+    });
+}
+function resetOrderLog(id) {
+  orderLogParams.page = 1;
+  orderLogParams.limit = 10;
+  orderLogParams.orderNo = id;
+  orderLogData.data = [];
+  orderLogData.total = 0;
+}
+function getOrderLogList(id) {
+  orderLogLoading.value = true;
+  orderLogParams.orderNo = id;
+  orderLogApi(orderLogParams)
+    .then((res) => {
+      orderLogData.data = res.list;
+      orderLogData.total = res.total;
+      orderLogLoading.value = false;
+    })
+    .catch(() => {
+      orderLogLoading.value = false;
+    });
+}
+function handleOrderLogPageChange(page) {
+  orderLogParams.page = page;
+  getOrderLogList(orderLogParams.orderNo);
+}
+function handleOrderLogSizeChange(val) {
+  orderLogParams.limit = val;
+  getOrderLogList(orderLogParams.orderNo);
+}
+
+defineExpose({ getDetail, dialogVisible });
 </script>
 
 <style scoped lang="scss">
-::v-deep .el-tabs__content {
+:deep(.el-tabs__content) {
   padding: 0 20px !important;
 }
 .detailSection {
   padding: 25px 15px !important;
 }
-::v-deep .el-table th.el-table__cell > .cell,
-::v-deep.el-table .cell,
+:deep(.el-table th.el-table__cell > .cell),
+:deep(.el-table .cell),
 .el-table--border .el-table__cell:first-child .cell {
   padding-left: 15px;
 }
-.InvoiceList {
-  ::v-deep.el-collapse-item__header {
-    font-size: 12px;
-    color: #606266;
-  }
-}
-
 .wrapper {
   background-color: #fff;
   margin-top: 7px;
@@ -447,49 +362,6 @@ export default {
   }
 }
 
-.logistics {
-  align-items: center;
-  padding: 10px 0px;
-  .logistics_img {
-    width: 45px;
-    height: 45px;
-    margin-right: 12px;
-    img {
-      width: 100%;
-      height: 100%;
-    }
-  }
-  .logistics_cent {
-    span {
-      display: block;
-      font-size: 12px;
-    }
-  }
-}
-
-.trees-coadd {
-  width: 100%;
-  height: 400px;
-  border-radius: 4px;
-  overflow: hidden;
-  .scollhide {
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    margin-left: 18px;
-    padding: 10px 0 10px 0;
-    box-sizing: border-box;
-    .content {
-      font-size: 12px;
-    }
-
-    .time {
-      font-size: 12px;
-      color: #2d8cf0;
-    }
-  }
-}
-
 .title {
   margin-bottom: 14px;
   color: #303133;
@@ -506,25 +378,25 @@ export default {
     font-size: 12px;
     color: #606266;
   }
-  ::v-deep .el-divider--horizontal {
+  :deep(.el-divider--horizontal) {
     margin: 12px 0 !important;
   }
 }
-::v-deep .el-tabs__item:focus.is-active.is-focus:not(:active) {
+:deep(.el-tabs__item:focus.is-active.is-focus:not(:active)) {
   -webkit-box-shadow: none;
   box-shadow: none;
 }
-::v-deep .el-drawer__header {
+:deep(.el-drawer__header) {
   display: block !important;
   margin-bottom: 0 !important;
   padding: 0 !important;
 }
-::v-deep .el-drawer__close-btn {
+:deep(.el-drawer__close-btn) {
   position: absolute;
   right: 20px;
   top: 30px;
 }
-::v-deep .el-tabs__nav .el-tabs__item:nth-of-type(1) {
+:deep(.el-tabs__nav .el-tabs__item:nth-of-type(1)) {
   padding-left: 20px !important;
 }
 </style>

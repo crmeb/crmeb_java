@@ -2,10 +2,10 @@
   <div class="wscn-http404-container">
     <div class="wscn-http404">
       <div class="pic-404">
-        <img class="pic-404__parent" src="@/assets/404_images/404.png" alt="404" />
-        <img class="pic-404__child left" src="@/assets/404_images/404_cloud.png" alt="404" />
-        <img class="pic-404__child mid" src="@/assets/404_images/404_cloud.png" alt="404" />
-        <img class="pic-404__child right" src="@/assets/404_images/404_cloud.png" alt="404" />
+        <img class="pic-404__parent" :src="img404" alt="404" />
+        <img class="pic-404__child left" :src="img404Cloud" alt="404" />
+        <img class="pic-404__child mid" :src="img404Cloud" alt="404" />
+        <img class="pic-404__child right" :src="img404Cloud" alt="404" />
       </div>
       <div class="bullshit">
         <div class="bullshit__oops">OOPS!</div>
@@ -22,20 +22,14 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'Page404',
+<script setup>
+import { computed } from 'vue';
+import img404 from '@/assets/404_images/404.png';
+import img404Cloud from '@/assets/404_images/404_cloud.png';
 
-  data() {
-    return {};
-  },
-  computed: {
-    message() {
-      return '你不能进入这个页面...';
-    },
-  },
-  methods: {},
-};
+defineOptions({ name: 'Page404' });
+
+const message = computed(() => '你不能进入这个页面...');
 </script>
 
 <style lang="scss" scoped>

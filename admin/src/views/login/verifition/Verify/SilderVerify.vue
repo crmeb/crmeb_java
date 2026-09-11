@@ -4,83 +4,83 @@
     {{ rangeStatus ? successText : startText }}
   </div>
 </template>
-<script>
-export default {
-  props: {
-    //成功图标
-    successIcon: {
-      type: String,
-      default: 'el-icon-success',
-    },
-    //成功文字
-    // successText: {
-    //   type: String,
-    //   default: "验证成功"
-    // },
-    //开始的图标
-    startIcon: {
-      type: String,
-      default: 'el-icon-d-arrow-right',
-    },
-    //开始的文字
-    startText: {
-      type: String,
-      default: '拖动滑块到最右侧',
-    },
-  },
-  name: 'SilderVerify',
-  data() {
-    return {
-      rangeStatus: '',
-      startMoveTime: '', //移动开始的时间
-      endMovetime: '', //移动结束的时间
-      successText: '',
-    };
-  },
-  methods: {
-    rangeMove(e) {
-      let ele = e.target;
-      let startX = e.clientX;
-      let eleWidth = ele.offsetWidth;
-      let parentWidth = ele.parentElement.offsetWidth;
-      let MaxX = parentWidth - eleWidth;
-      if (this.rangeStatus) {
-        //不运行
-        return false;
-      }
-      document.onmousemove = (e) => {
-        let endX = e.clientX;
-        this.disX = endX - startX;
-        if (this.disX <= 0) {
-          this.disX = 0;
-        }
-        if (this.disX >= MaxX - eleWidth) {
-          //减去滑块的宽度,体验效果更好
-          this.disX = MaxX;
-        }
-        ele.style.transition = '.1s all';
-        ele.style.transform = 'translateX(' + this.disX + 'px)';
-        e.preventDefault();
-        this.startMoveTime = new Date().getTime();
-      };
-      document.onmouseup = () => {
-        if (this.disX !== MaxX) {
-          ele.style.transition = '.5s all';
-          ele.style.transform = 'translateX(0)';
+<script setup>
+import { ref } from 'vue';
 
-          this.$emit('failed', this.rangeStatus);
-        } else {
-          this.endMovetime = new Date().getTime();
-          this.rangeStatus = true;
-          this.successText = `${((this.endMovetime - this.startMoveTime) / 1000).toFixed(2)}s验证成功`;
-          this.$emit('success', this.rangeStatus);
-        }
-        document.onmousemove = null;
-        document.onmouseup = null;
-      };
-    },
+defineOptions({ name: 'SilderVerify' });
+
+defineProps({
+  //成功图标
+  successIcon: {
+    type: String,
+    default: 'el-icon-success',
   },
-};
+  //成功文字
+  // successText: {
+  //   type: String,
+  //   default: "验证成功"
+  // },
+  //开始的图标
+  startIcon: {
+    type: String,
+    default: 'el-icon-d-arrow-right',
+  },
+  //开始的文字
+  startText: {
+    type: String,
+    default: '拖动滑块到最右侧',
+  },
+});
+
+const emit = defineEmits(['failed', 'success']);
+
+const rangeStatus = ref('');
+const startMoveTime = ref(''); //移动开始的时间
+const endMovetime = ref(''); //移动结束的时间
+const successText = ref('');
+let disX = 0;
+
+function rangeMove(e) {
+  let ele = e.target;
+  let startX = e.clientX;
+  let eleWidth = ele.offsetWidth;
+  let parentWidth = ele.parentElement.offsetWidth;
+  let MaxX = parentWidth - eleWidth;
+  if (rangeStatus.value) {
+    //不运行
+    return false;
+  }
+  document.onmousemove = (e) => {
+    let endX = e.clientX;
+    disX = endX - startX;
+    if (disX <= 0) {
+      disX = 0;
+    }
+    if (disX >= MaxX - eleWidth) {
+      //减去滑块的宽度,体验效果更好
+      disX = MaxX;
+    }
+    ele.style.transition = '.1s all';
+    ele.style.transform = 'translateX(' + disX + 'px)';
+    e.preventDefault();
+    startMoveTime.value = new Date().getTime();
+  };
+  document.onmouseup = () => {
+    if (disX !== MaxX) {
+      ele.style.transition = '.5s all';
+      ele.style.transform = 'translateX(0)';
+
+      emit('failed', rangeStatus.value);
+    } else {
+      endMovetime.value = new Date().getTime();
+      rangeStatus.value = true;
+      successText.value = `${((endMovetime.value - startMoveTime.value) / 1000).toFixed(2)}s验证成功`;
+      emit('success', rangeStatus.value);
+    }
+    document.onmousemove = null;
+    document.onmouseup = null;
+  };
+}
 </script>
 <style scoped>
 .silder-range {

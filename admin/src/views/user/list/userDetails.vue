@@ -1,38 +1,36 @@
 <template>
   <div>
-    <el-drawer ref="userDetailFrom" :visible.sync="dialogUserDetail" size="1100px" @close="handleClose">
-      <div slot="title" class="demo-drawer_title">
-        <div class="con-head">
-          <img :src="userDetailData.avatar" alt="" />
-          <span class="nickname">{{ userDetailData.nickname }}</span>
-        </div>
-        <div class="acea-row info-row">
-          <div class="info-row-item">
-            <div class="info-row-item-title">余额</div>
-            <div>{{ userDetailData.nowMoney }}</div>
+    <el-drawer ref="userDetailFrom" v-model="dialogUserDetail" size="1100px" @close="handleClose">
+      <template #header>
+        <div class="demo-drawer_title">
+          <div class="con-head">
+            <img :src="userDetailData.avatar" alt="" />
+            <span class="nickname">{{ userDetailData.nickname }}</span>
           </div>
-          <div class="info-row-item">
-            <div class="info-row-item-title">积分</div>
-            <div>{{ userDetailData.integral }}</div>
-          </div>
-          <div class="info-row-item">
-            <div class="info-row-item-title">经验</div>
-            <div>{{ userDetailData.experience }}</div>
-          </div>
-          <div class="info-row-item">
-            <div class="info-row-item-title">佣金</div>
-            <div>{{ userDetailData.brokeragePrice }}</div>
-          </div>
-          <div class="info-row-item">
-            <div class="info-row-item-title">消费次数</div>
-            <div>{{ userDetailData.payCount }}</div>
-          </div>
-          <div class="info-row-item">
-            <div class="info-row-item-title">连续签到</div>
-            <div>{{ userDetailData.signNum }}</div>
+          <div class="acea-row info-row">
+            <div class="info-row-item">
+              <div class="info-row-item-title">余额</div>
+              <div>{{ userDetailData.nowMoney }}</div>
+            </div>
+            <div class="info-row-item">
+              <div class="info-row-item-title">积分</div>
+              <div>{{ userDetailData.integral }}</div>
+            </div>
+            <div class="info-row-item">
+              <div class="info-row-item-title">佣金</div>
+              <div>{{ userDetailData.brokeragePrice }}</div>
+            </div>
+            <div class="info-row-item">
+              <div class="info-row-item-title">消费次数</div>
+              <div>{{ userDetailData.payCount }}</div>
+            </div>
+            <div class="info-row-item">
+              <div class="info-row-item-title">连续签到</div>
+              <div>{{ userDetailData.signNum }}</div>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
       <div class="demo-drawer__content">
         <div class="description" v-if="userDetailData">
           <!-- Tabs -->
@@ -176,7 +174,7 @@
             </el-tab-pane>
             <!-- 消费记录 -->
             <el-tab-pane name="1" label="消费记录">
-              <el-table :data="tableData" size="small" class="mt20">
+              <el-table :data="tableData" class="mt20">
                 <el-table-column prop="orderId" label="订单ID" min-width="100" />
                 <el-table-column prop="realName" label="收货人" />
                 <el-table-column prop="totalNum" label="商品数量" />
@@ -187,7 +185,7 @@
             </el-tab-pane>
             <!-- 积分明细 -->
             <el-tab-pane name="2" label="积分明细">
-              <el-table :data="tableData" size="small" class="mt20">
+              <el-table :data="tableData" class="mt20">
                 <el-table-column prop="title" label="来源/用途" min-width="100" />
                 <el-table-column prop="integral" label="积分变化" />
                 <el-table-column prop="balance" label="变化后积分" />
@@ -197,7 +195,7 @@
             </el-tab-pane>
             <!-- 签到记录 -->
             <el-tab-pane name="3" label="签到记录">
-              <el-table :data="tableData" size="small" class="mt20">
+              <el-table :data="tableData" class="mt20">
                 <el-table-column prop="title" label="动作" min-width="100" />
                 <el-table-column prop="number" label="获得积分" min-width="120" />
                 <el-table-column prop="createTime" label="签到时间" />
@@ -205,7 +203,7 @@
             </el-tab-pane>
             <!-- 持有优惠券 -->
             <el-tab-pane name="4" label="持有优惠券">
-              <el-table :data="tableData" size="small" class="mt20">
+              <el-table :data="tableData" class="mt20">
                 <el-table-column prop="name" label="优惠券名称" />
                 <el-table-column prop="money" label="面值" />
                 <el-table-column prop="endTime" label="有效期" />
@@ -215,7 +213,7 @@
             </el-tab-pane>
             <!-- 余额变动 -->
             <el-tab-pane name="5" label="余额变动">
-              <el-table :data="tableData" size="small" class="mt20">
+              <el-table :data="tableData" class="mt20">
                 <el-table-column prop="number" label="变动金额" />
                 <el-table-column prop="balance" label="变动后" />
                 <el-table-column prop="title" label="类型" />
@@ -225,10 +223,9 @@
             </el-tab-pane>
             <!-- 好有关系 -->
             <el-tab-pane name="6" label="好友关系">
-              <el-table :data="tableData" size="small" class="mt20">
+              <el-table :data="tableData" class="mt20">
                 <el-table-column prop="uid" label="ID" />
                 <el-table-column prop="nickname" label="昵称" />
-                <el-table-column prop="level" label="等级" />
                 <el-table-column prop="createTime" label="加入时间" />
               </el-table>
             </el-tab-pane>
@@ -251,7 +248,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 // +----------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +----------------------------------------------------------------------
@@ -261,105 +258,103 @@
 // +----------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +----------------------------------------------------------------------
+import { ref, reactive, watch } from 'vue';
 import { infobyconditionApi, topdetailApi } from '@/api/user';
 import { integralListApi } from '@/api/marketing';
-export default {
-  name: 'detailUser',
-  props: {
-    userNo: {
-      type: Number,
-      default: 0,
-    },
+
+defineOptions({ name: 'detailUser' });
+
+const props = defineProps({
+  userNo: {
+    type: Number,
+    default: 0,
   },
-  data() {
-    return {
-      tableData: [],
-      dialogUserDetail: false,
-      userDetailData: {},
-      tabsVal: '0',
-      paginationData: {
-        page: 1,
-        limit: 10,
-        type: 0,
-        userId: '',
-        total: 10,
-      },
-    };
-  },
-  watch: {
-    tabsVal(val) {
-      this.paginationData.userId = this.userNo;
-      this.paginationData.page = 1;
-      this.paginationData.type = val - 1;
-      if (val != 0) {
-        this.getListData();
-        // if (this.paginationData.type == '1') {
-        //   this.getIntergralList();
-        // } else {
-        //   this.getListData();
-        // }
-      }
-    },
-  },
-  methods: {
-    getNewList() {
-      if (this.paginationData.type == '1') {
-        this.getIntergralList();
-      } else {
-        this.getListData();
-      }
-    },
-    handleSizeChange(val) {
-      this.paginationData.limit = val;
-      this.getNewList();
-    },
-    pageChange(val) {
-      this.paginationData.page = val;
-      this.getNewList();
-    },
-    handleClose() {
-      this.dialogUserDetail = false;
-      this.tabsVal = '0';
-    },
-    getIntergralList() {
-      integralListApi(
-        { limit: this.paginationData.limit, page: this.paginationData.page },
-        { uid: this.paginationData.uid },
-      ).then((res) => {
-        this.tableData = res.list;
-        this.paginationData.total = res.total;
-      });
-    },
-    getListData() {
-      infobyconditionApi(this.paginationData).then((res) => {
-        this.tableData = res.list;
-        this.paginationData.total = res.total;
-      });
-    },
-    getUserDetail(id) {
-      topdetailApi({ userId: id }).then((res) => {
-        this.userDetailData = res.user;
-      });
-    },
-  },
-};
+});
+
+const tableData = ref([]);
+const dialogUserDetail = ref(false);
+const userDetailData = ref({});
+const tabsVal = ref('0');
+const paginationData = reactive({
+  page: 1,
+  limit: 10,
+  type: 0,
+  userId: '',
+  total: 10,
+});
+
+watch(tabsVal, (val) => {
+  paginationData.userId = props.userNo;
+  paginationData.page = 1;
+  paginationData.type = val - 1;
+  if (val != 0) {
+    getListData();
+    // if (paginationData.type == '1') {
+    //   getIntergralList();
+    // } else {
+    //   getListData();
+    // }
+  }
+});
+
+function getNewList() {
+  if (paginationData.type == '1') {
+    getIntergralList();
+  } else {
+    getListData();
+  }
+}
+function handleSizeChange(val) {
+  paginationData.limit = val;
+  getNewList();
+}
+function pageChange(val) {
+  paginationData.page = val;
+  getNewList();
+}
+function handleClose() {
+  dialogUserDetail.value = false;
+  tabsVal.value = '0';
+}
+function getIntergralList() {
+  integralListApi(
+    { limit: paginationData.limit, page: paginationData.page },
+    { uid: paginationData.uid },
+  ).then((res) => {
+    tableData.value = res.list;
+    paginationData.total = res.total;
+  });
+}
+function getListData() {
+  infobyconditionApi(paginationData).then((res) => {
+    tableData.value = res.list;
+    paginationData.total = res.total;
+  });
+}
+function getUserDetail(id) {
+  topdetailApi({ userId: id }).then((res) => {
+    userDetailData.value = res.user;
+  });
+}
+
+defineExpose({ getUserDetail, dialogUserDetail });
 </script>
 
 <style scoped lang="scss">
-::v-deep .el-drawer__header {
+:deep(.el-drawer__header) {
   display: flex !important;
   align-items: flex-start !important;
   margin: 0 !important;
   padding: 30px 15px 0 5px !important;
 }
-::v-deep .demo-drawer_title {
+:deep(.demo-drawer_title) {
   width: 90%;
 }
-::v-deep .el-drawer__body {
+:deep(.el-drawer__body) {
   padding: 0 0 30px 0 !important;
 }
 .InvoiceList {
-  ::v-deep.el-collapse-item__header {
+  :deep(.el-collapse-item__header ){
     font-size: 12px;
     color: #606266;
   }
@@ -474,7 +469,7 @@ export default {
     font-size: 12px;
     color: #606266;
   }
-  ::v-deep .el-divider--horizontal {
+  :deep(.el-divider--horizontal) {
     margin: 12px 0 !important;
   }
 }
@@ -577,7 +572,7 @@ export default {
   line-height: 16px;
   color: #303133;
 }
-::v-deep .el-tabs__nav .el-tabs__item:nth-of-type(1) {
+:deep(.el-tabs__nav .el-tabs__item:nth-of-type(1)) {
   padding-left: 20px !important;
 }
 .block {

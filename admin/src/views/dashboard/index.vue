@@ -1,67 +1,55 @@
 <template>
   <div>
-    <!--头部-->
-    <base-info ref="baseInfo" v-if="checkPermi(['admin:statistics:home:index'])" />
-    <!--小方块-->
+    <!--欢迎信息-->
+    <div class="divBox" style="padding-bottom: 0">
+      <el-card class="box-card welcome-card" shadow="never">
+        <div class="welcome">
+          <div class="welcome-title">{{ greeting }}，{{ userName || '管理员' }}</div>
+          <div class="welcome-desc">欢迎使用 CRMEB 商城管理后台，祝您工作愉快！</div>
+        </div>
+      </el-card>
+    </div>
+    <!--快捷入口 / 待办事项-->
     <grid-menu class="mb14" />
-    <!-- 用户概览 -->
-    <user-overview></user-overview>
-    <!--订单统计-->
-    <visit-chart ref="visitChart" />
-    <!--用户-->
-    <user-chart ref="userChart" class="mb20" v-if="checkPermi(['admin:statistics:home:chart:user'])" />
   </div>
 </template>
 
-<script>
-import baseInfo from './components/baseInfo';
+<script setup>
+import { computed } from 'vue';
 import gridMenu from './components/gridMenu';
-import visitChart from './components/visitChart';
-import userChart from './components/userChart';
-import userOverview from './components/userOverview';
-import { checkPermi } from '@/utils/permission'; // 权限判断函数
-import { authCertQuery } from '@/api/authInformation';
-import Cache from '@/plugins/cache';
-export default {
-  name: 'Dashboard',
-  components: { baseInfo, gridMenu, visitChart, userChart, userOverview },
-  data() {
-    return {
-      authStatus: null,
-      authHost: '',
-      authQueryStatus: false,
-      notInformation: null,
-    };
-  },
-  mounted() {
-    if (window.location.host.indexOf('localhost') == -1) {
-      this.authStatus = Cache.local.has('auth-information') ? Cache.local.getJSON('auth-information') : null;
-      this.notInformation = Cache.local.has('not-information') ? Cache.local.getJSON('not-information') : null;
-    }
-  },
-  methods: {
-    checkPermi,
-    authInformationQuery() {
-      authCertQuery({ host: this.authHost }).then((res) => {
-        let oneDay = 24 * 3600 * 1000;
-        if (res.data.status == -1 || res.data.status == 2) {
-          Cache.local.setItem({ name: 'not-information', value: true, expires: oneDay });
-          if (!notInformation) {
-            this.$modal
-              .confirm(res.data.msg)
-              .then(() => {
-                this.$modal.msg(res.data.msg);
-              })
-              .catch(() => {});
-          }
-        } else if (res.data.status == 1) {
-          this.$modal.msgSuccess(res.data.msg);
-          Cache.local.setItem({ name: 'auth-information', value: true, expires: oneDay * 7 });
-        } else if (res.data.status == 3 || res.data.status == 0) {
-          this.$modal.msg(res.data.msg);
-        }
-      });
-    },
-  },
-};
+import { useUserStore } from '@/store/modules/user';
+
+defineOptions({ name: 'Dashboard' });
+
+const userStore = useUserStore();
+const userName = computed(() => userStore.name);
+
+const greeting = computed(() => {
+  const hour = new Date().getHours();
+  if (hour < 6) return '凌晨好';
+  if (hour < 12) return '上午好';
+  if (hour < 14) return '中午好';
+  if (hour < 18) return '下午好';
+  return '晚上好';
+});
 </script>
+
+<style lang="scss" scoped>
+.welcome-card {
+  :deep(.el-card__body) {
+    padding: 24px 20px;
+  }
+}
+.welcome {
+  &-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #303133;
+  }
+  &-desc {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #909399;
+  }
+}
+</style>

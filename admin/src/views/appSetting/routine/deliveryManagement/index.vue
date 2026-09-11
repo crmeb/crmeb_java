@@ -14,11 +14,11 @@
           4. 小程序内经营预售商品。<br />
           <br />
           在小程序mp后台菜单出现一个发货信息管理菜单
-          <el-link :underline="false" type="primary"
+          <el-link underline="never" type="primary"
             >（图例）<el-image
               class="images"
-              :src="require('@/assets/imgs/wxtu.png')"
-              :preview-src-list="[require('@/assets/imgs/wxtu.png')]"
+              :src="wxtuImg"
+              :preview-src-list="[wxtuImg]" preview-teleported
             ></el-image>
           </el-link>
           <span class="textE93323"
@@ -28,14 +28,14 @@
           自提/同城配送/虚拟发货：资金将于订单发货后的第2天，系统自动确认收货后结算；<br />
           <div class="acea-row color">
             详情见<el-link
-              :underline="false"
+              underline="never"
               type="primary"
               target="_blank"
               href="https://developers.weixin.qq.com/miniprogram/dev/platform-capabilities/business-capabilities/order-shipping/order-shipping.html#一、发货信息录入接口"
               >《小程序发货信息管理服务》</el-link
             >
             <el-link
-              :underline="false"
+              underline="never"
               type="primary"
               target="_blank"
               href="https://developers.weixin.qq.com/miniprogram/product/jiaoyilei/yunyingguifan.html#_1-2-商品规范"
@@ -61,37 +61,35 @@
     </el-card>
   </div>
 </template>
-<script>
+<script setup>
+import { ref, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage, ElLoading } from '@/utils/elementPlusFeedback';
 import { checkPermi } from '@/utils/permission';
 import { Debounce } from '@/utils/validate';
 import { wechatGetShippingSwitchApi, wechatUpdateShippingSwitchApi } from '@/api/wxApi'; // 权限判断函数
-export default {
-  name: 'deliveryManagement',
-  data() {
-    return {
-      delivery: false,
-      shippingSwitch: '0',
-    };
-  },
-  mounted() {
-    if (checkPermi(['admin:wechat:mini:shipping:switch:get'])) this.getWechatShippingSwitch();
-  },
-  methods: {
-    checkPermi,
-    getWechatShippingSwitch() {
-      wechatGetShippingSwitchApi().then(async (res) => {
-        this.shippingSwitch = res.value;
-      });
-    },
-    //修改状态
-    handleStatusChange: Debounce(function () {
-      wechatUpdateShippingSwitchApi({ value: this.shippingSwitch }).then((res) => {
-        this.$message.success('更新状态成功');
-        this.getWechatShippingSwitch();
-      });
-    }),
-  },
+import wxtuImg from '@/assets/imgs/wxtu.png';
+
+defineOptions({ name: 'deliveryManagement' });
+
+const delivery = ref(false);
+const shippingSwitch = ref('0');
+
+const getWechatShippingSwitch = () => {
+  wechatGetShippingSwitchApi().then(async (res) => {
+    shippingSwitch.value = res.value;
+  });
 };
+//修改状态
+const handleStatusChange = Debounce(function () {
+  wechatUpdateShippingSwitchApi({ value: shippingSwitch.value }).then((res) => {
+    ElMessage.success('更新状态成功');
+    getWechatShippingSwitch();
+  });
+});
+
+onMounted(() => {
+  if (checkPermi(['admin:wechat:mini:shipping:switch:get'])) getWechatShippingSwitch();
+});
 </script>
 
 <style scoped lang="scss">
@@ -101,7 +99,7 @@ export default {
   height: 27px;
   left: 3px;
 }
-::v-deep .el-image__inner {
+:deep(.el-image__inner) {
   opacity: 0;
 }
 .detail-centent {
@@ -116,7 +114,7 @@ export default {
 .detail-title {
   font-size: 16px;
 }
-::v-deep .el-icon-circle-close {
+:deep(.el-icon-circle-close) {
   color: #999;
 }
 </style>

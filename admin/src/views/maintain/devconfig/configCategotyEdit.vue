@@ -1,6 +1,6 @@
 <template>
   <div class="components-container">
-    <el-form ref="editPram" :model="editPram" label-width="75px">
+    <el-form ref="editPramRef" :model="editPram" label-width="75px">
       <el-form-item label="父级：">
         <!--          <span>{{ prent.name}}</span>-->
         <el-cascader
@@ -40,7 +40,7 @@
       <!--        </el-form-item>-->
       <!--      <el-form-item label="类型">-->
       <!--        <el-radio-group v-model="editPram.extra">-->
-      <!--          <el-radio v-for="item,index in constants.configCategory" :label="item.value">-->
+      <!--          <el-radio v-for="item,index in constants.configCategory" :label="item.value" :value="item.value">-->
       <!--            {{ item.label }}-->
       <!--          </el-radio>-->
       <!--        </el-radio-group>-->
@@ -48,106 +48,111 @@
       <!--      </el-form-item>-->
       <el-form-item class="dialog-footer-inner">
         <el-button @click="close">取消</el-button>
-        <el-button type="primary" @click="handlerSubmit('editPram')">确定</el-button>
+        <el-button type="primary" @click="handlerSubmit('editPramRef')">确定</el-button>
       </el-form-item>
     </el-form>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import * as categoryApi from '@/api/categoryApi.js';
 import * as selfUtil from '@/utils/ZBKJIutil.js';
 import { Debounce } from '@/utils/validate';
-export default {
-  // name: "configCategotyEdit"
-  props: {
-    prent: {
-      type: Object,
-      default: 0,
-    },
-    isCreate: {
-      type: Number,
-      default: 0,
-    },
-    editData: {
-      type: Object,
-    },
-    allTreeList: {
-      type: Array,
-    },
+
+defineOptions({});
+
+const props = defineProps({
+  prent: {
+    type: Object,
+    default: () => 0,
   },
-  data() {
-    return {
-      constants: this.$constants,
-      editPram: {
-        extra: null, // 关联表单id
-        name: null,
-        pid: null,
-        sort: 0,
-        status: true,
-        type: this.$constants.categoryType[5].value,
-        url: null,
-        id: 0,
-      },
-      categoryProps: {
-        value: 'id',
-        label: 'name',
-        children: 'child',
-        expandTrigger: 'hover',
-        checkStrictly: true,
-        emitPath: false,
-      },
-      parentOptions: [],
-    };
+  isCreate: {
+    type: Number,
+    default: 0,
   },
-  mounted() {
-    this.initEditData();
+  editData: {
+    type: Object,
   },
-  methods: {
-    close() {
-      this.$emit('hideEditDialog');
-    },
-    initEditData() {
-      this.parentOptions = selfUtil.addTreeListLabelForCasCard(this.allTreeList);
-      if (this.isCreate !== 1) {
-        const { id } = this.prent;
-        this.editPram.pid = id;
-      } else {
-        const { extra, name, pid, sort, status, type, url, id } = this.editData;
-        // this.editPram.extra = extra
-        this.editPram.name = name;
-        this.editPram.pid = pid;
-        this.editPram.sort = sort;
-        this.editPram.status = status;
-        this.editPram.type = type;
-        this.editPram.url = url;
-        this.editPram.id = id;
-        this.editPram.extra = extra;
-      }
-    },
-    handlerSubmit: Debounce(function (formName) {
-      this.$refs[formName].validate((valid) => {
-        if (!valid) return;
-        this.handlerSaveOrUpdate(this.isCreate === 0);
-      });
-    }),
-    handlerSaveOrUpdate(isSave) {
-      if (isSave) {
-        this.editPram.pid = this.prent.id;
-        categoryApi.addCategroy(this.editPram).then((data) => {
-          this.$emit('hideEditDialog');
-          this.$message.success('创建分类成功');
-        });
-      } else {
-        this.editPram.pid = Array.isArray(this.editPram.pid) ? this.editPram.pid[0] : this.editPram.pid;
-        categoryApi.updateCategroy(this.editPram).then((data) => {
-          this.$emit('hideEditDialog');
-          this.$message.success('更新分类成功');
-        });
-      }
-    },
+  allTreeList: {
+    type: Array,
   },
-};
+});
+
+const emit = defineEmits(['hideEditDialog']);
+
+const { proxy } = getCurrentInstance();
+const constants = proxy.$constants;
+
+const editPram = reactive({
+  extra: null, // 关联表单id
+  name: null,
+  pid: null,
+  sort: 0,
+  status: true,
+  type: constants.categoryType[5].value,
+  url: null,
+  id: 0,
+});
+const categoryProps = reactive({
+  value: 'id',
+  label: 'name',
+  children: 'child',
+  expandTrigger: 'hover',
+  checkStrictly: true,
+  emitPath: false,
+});
+const parentOptions = ref([]);
+
+const editPramRef = ref(null);
+
+function close() {
+  emit('hideEditDialog');
+}
+function initEditData() {
+  parentOptions.value = selfUtil.addTreeListLabelForCasCard(props.allTreeList);
+  if (props.isCreate !== 1) {
+    const { id } = props.prent;
+    editPram.pid = id;
+  } else {
+    const { extra, name, pid, sort, status, type, url, id } = props.editData;
+    // editPram.extra = extra
+    editPram.name = name;
+    editPram.pid = pid;
+    editPram.sort = sort;
+    editPram.status = status;
+    editPram.type = type;
+    editPram.url = url;
+    editPram.id = id;
+    editPram.extra = extra;
+  }
+}
+const handlerSubmit = Debounce(function (formName) {
+  proxy.$refs[formName].validate((valid) => {
+    if (!valid) return;
+    handlerSaveOrUpdate(props.isCreate === 0);
+  });
+});
+function handlerSaveOrUpdate(isSave) {
+  if (isSave) {
+    editPram.pid = props.prent.id;
+    categoryApi.addCategroy(editPram).then((data) => {
+      emit('hideEditDialog');
+      ElMessage.success('创建分类成功');
+    });
+  } else {
+    editPram.pid = Array.isArray(editPram.pid) ? editPram.pid[0] : editPram.pid;
+    categoryApi.updateCategroy(editPram).then((data) => {
+      emit('hideEditDialog');
+      ElMessage.success('更新分类成功');
+    });
+  }
+}
+
+onMounted(() => {
+  initEditData();
+});
 </script>
 
 <style scoped></style>

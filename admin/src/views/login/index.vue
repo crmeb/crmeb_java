@@ -9,11 +9,16 @@
   >
     <div class="container" :class="[fullWidth > 768 ? 'containerSamll' : 'containerBig']">
       <template v-if="fullWidth > 768">
-        <swiper :options="swiperOption" class="swiperPross">
+        <swiper
+          :modules="swiperModules"
+          :pagination="{ clickable: true }"
+          :autoplay="{ delay: 3000, disableOnInteraction: false }"
+          class="swiperPross"
+        >
           <swiper-slide v-for="(item, index) in swiperList" :key="index" class="swiperPic">
             <img :src="item.pic" />
           </swiper-slide>
-          <div slot="pagination" class="swiper-pagination" />
+          <div class="swiper-pagination" />
         </swiper>
       </template>
       <div class="index_from page-account-container">
@@ -23,7 +28,7 @@
           </div>
         </div>
         <el-form
-          ref="loginForm"
+          ref="loginFormRef"
           :model="loginForm"
           :rules="loginRules"
           class="login-form"
@@ -33,9 +38,9 @@
         >
           <el-form-item prop="account">
             <el-input
-              ref="account"
+              ref="accountRef"
               v-model="loginForm.account"
-              prefix-icon="el-icon-user"
+              :prefix-icon="User"
               placeholder="用户名"
               name="username"
               type="text"
@@ -48,14 +53,14 @@
           <el-form-item prop="pwd">
             <el-input
               :key="passwordType"
-              ref="pwd"
+              ref="pwdRef"
               v-model="loginForm.pwd"
-              prefix-icon="el-icon-lock"
+              :prefix-icon="Lock"
               :type="passwordType"
               placeholder="密码"
               name="pwd"
               tabindex="2"
-              auto-complete="on"
+              autocomplete="on"
             />
             <span class="show-pwd" @click="showPwd">
               <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
@@ -67,7 +72,7 @@
               :loading="loading"
               type="primary"
               style="width: 100%; margin-bottom: 30px"
-              @click.native.prevent="handleLogin"
+              @click.prevent="handleLogin"
               :disabled="disabled"
               >登录
             </el-button>
@@ -76,252 +81,262 @@
         <verifition-verify ref="verifyRef" @success="handlerOnVerSuccess"></verifition-verify>
       </div>
     </div>
+    <div class="footer" v-if="companyName">
+      <div class="pull-right">{{ companyName }}</div>
+    </div>
   </div>
 </template>
 
-<script>
-import Cookies from 'js-cookie';
-import { validUsername } from '@/utils/validate';
-import '@/assets/js/canvas-nest.min.js';
-import { getLoginPicApi } from '@/api/user';
-import { getStoreStaff } from '@/libs/public';
-import VerifitionVerify from './verifition/Verify.vue';
-import { accountDetectionApi } from '@/api/authInformation';
-import { frontDomainApi, mediaDomainApi, getSiteLogoApi } from '@/api/systemConfig';
-export default {
-  name: 'Login',
-  data() {
-    const validateUsername = (rule, value, callback) => {
-      if (!validUsername(value)) {
-        callback(new Error('Please enter the correct user name'));
-      } else {
-        callback();
-      }
-    };
-    const validatePassword = (rule, value, callback) => {
-      if (value.length < 6 || value.length > 12) {
-        callback(new Error('密码位数为6-12位'));
-      } else {
-        callback();
-      }
-    };
-    return {
-      captchatOn: true, // 是否开启行为验证码
-      swiperList: [],
-      loginLogo: '',
-      backgroundImages: '',
-      backgroundImageMo: require('@/assets/imgs/bg.jpg'),
-      fullWidth: document.body.clientWidth,
-      swiperOption: {
-        pagination: {
-          el: '.pagination',
-        },
-        autoplay: {
-          enabled: true,
-          disableOnInteraction: false,
-          delay: 3000,
-        },
-      },
-      loginForm: {
-        account: 'demo',
-        pwd: 'crmeb.com',
-        captchaVO: {},
-      },
-      loginRules: {
-        account: [{ required: true, trigger: 'blur', message: '请输入用户名' }], // validator: validateUsername
-        pwd: [{ required: true, trigger: 'blur', message: '请输入密码' }],
-      },
-      passwordType: 'password',
-      capsTooltip: false,
-      loading: false,
-      showDialog: false,
-      redirect: undefined,
-      otherQuery: {},
-      disabled: false,
-      //账号密码输入错误次数
-      errorsNumber: 0,
-    };
+<script setup>
+import { ref, reactive, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { User, Lock } from '@element-plus/icons-vue'
+import { Swiper, SwiperSlide } from 'swiper/vue'
+import { Pagination, Autoplay } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/pagination'
+import Cookies from 'js-cookie'
+import { validUsername } from '@/utils/validate'
+import '@/assets/js/canvas-nest.min.js'
+import { getLoginPicApi } from '@/api/user'
+import VerifitionVerify from './verifition/Verify.vue'
+import { accountDetectionApi } from '@/api/authInformation'
+import { frontDomainApi, mediaDomainApi, getSiteLogoApi } from '@/api/systemConfig'
+import { useUserStore } from '@/store/modules/user'
+import { useSettingsStore } from '@/store/modules/settings'
+import { ElLoading } from 'element-plus'
+import bgImage from '@/assets/imgs/bg.jpg'
+
+defineOptions({ name: 'Login' })
+
+const route = useRoute()
+const router = useRouter()
+const userStore = useUserStore()
+const settingsStore = useSettingsStore()
+
+const swiperModules = [Pagination, Autoplay]
+
+const loginFormRef = ref(null)
+const accountRef = ref(null)
+const pwdRef = ref(null)
+const verifyRef = ref(null)
+
+const captchatOn = ref(true) // 是否开启行为验证码
+const swiperList = ref([])
+const loginLogo = ref('')
+const backgroundImages = ref('')
+const companyName = ref('Copyright © 2026 西安众邦网络科技有限公司')
+const version = ref('CRMEB')
+const backgroundImageMo = bgImage // 由 import 提供，替代 require
+const fullWidth = ref(document.body.clientWidth)
+const swiperOption = reactive({
+  pagination: {
+    el: '.pagination'
   },
-  components: {
-    VerifitionVerify,
-  },
-  watch: {
-    fullWidth(val) {
-      // 为了避免频繁触发resize函数导致页面卡顿，使用定时器
-      if (!this.timer) {
-        // 一旦监听到的screenWidth值改变，就将其重新赋给data里的screenWidth
-        this.screenWidth = val;
-        this.timer = true;
-        const that = this;
-        setTimeout(function () {
-          // 打印screenWidth变化的值
-          that.timer = false;
-        }, 400);
-      }
-    },
-    $route: {
-      handler: function (route) {
-        const query = route.query;
-        if (query) {
-          this.redirect = query.redirect;
-          this.otherQuery = this.getOtherQuery(query);
-        }
-      },
-      immediate: true,
-    },
-  },
-  created() {
-    const _this = this;
-    document.onkeydown = function (e) {
-      if (_this.$route.path.indexOf('login') !== -1) {
-        const key = window.event.keyCode;
-        if (key === 13) {
-          _this.handleLogin();
-        }
-      }
-    };
-    window.addEventListener('resize', this.handleResize);
-  },
-  mounted() {
-    this.getInfo();
-    this.onBlurAccount();
-    this.$nextTick(() => {
-      if (this.screenWidth < 768) {
-        document.getElementsByTagName('canvas')[0].removeAttribute('class', 'index_bg');
-      } else {
-        document.getElementsByTagName('canvas')[0].className = 'index_bg';
-      }
-    });
-    if (this.loginForm.account === '') {
-      this.$refs.account.focus();
-    } else if (this.loginForm.pwd === '') {
-      this.$refs.pwd.focus();
+  autoplay: {
+    enabled: true,
+    disableOnInteraction: false,
+    delay: 3000
+  }
+})
+const loginForm = reactive({
+  account: '',
+  pwd: '',
+  captchaVO: {}
+})
+const loginRules = reactive({
+  account: [{ required: true, trigger: 'blur', message: '请输入用户名' }],
+  pwd: [{ required: true, trigger: 'blur', message: '请输入密码' }]
+})
+const passwordType = ref('password')
+const capsTooltip = ref(false)
+const loading = ref(false)
+const showDialog = ref(false)
+const redirect = ref(undefined)
+const otherQuery = ref({})
+const disabled = ref(false)
+//账号密码输入错误次数
+const errorsNumber = ref(0)
+let timer = false
+let screenWidth = fullWidth.value
+
+watch(fullWidth, (val) => {
+  if (!timer) {
+    screenWidth = val
+    timer = true
+    setTimeout(function () {
+      timer = false
+    }, 400)
+  }
+})
+
+watch(
+  route,
+  (route) => {
+    const query = route.query
+    if (query) {
+      redirect.value = query.redirect
+      otherQuery.value = getOtherQuery(query)
     }
   },
-  beforeCreate() {
-    if (this.fullWidth < 768) {
-      document.getElementsByTagName('canvas')[0].removeAttribute('class', 'index_bg');
+  { immediate: true }
+)
+
+// created 时机（setup 顶层）
+{
+  document.onkeydown = function (e) {
+    if (route.path.indexOf('login') !== -1) {
+      const key = window.event.keyCode
+      if (key === 13) {
+        handleLogin()
+      }
+    }
+  }
+  window.addEventListener('resize', handleResize)
+}
+
+onMounted(() => {
+  getInfo()
+  onBlurAccount()
+  nextTick(() => {
+    const canvas = document.getElementsByTagName('canvas')[0]
+    if (canvas) {
+      if (screenWidth < 768) {
+        canvas.removeAttribute('class', 'index_bg')
+      } else {
+        canvas.className = 'index_bg'
+      }
+    }
+  })
+  if (loginForm.account === '') {
+    accountRef.value && accountRef.value.focus()
+  } else if (loginForm.pwd === '') {
+    pwdRef.value && pwdRef.value.focus()
+  }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize)
+  const canvas = document.getElementsByTagName('canvas')[0]
+  if (canvas) canvas.removeAttribute('class', 'index_bg')
+})
+
+//校验成功之后
+function handlerOnVerSuccess(repData) {
+  loginForm.captchaVO = repData
+  success(null, true)
+}
+
+//账号失去焦点
+async function onBlurAccount() {
+  if (loginForm.account) {
+    errorsNumber.value = await accountDetectionApi({ account: loginForm.account })
+  }
+}
+
+// 获取移动端域名-图片域名
+async function getUrl() {
+  let res = await getSiteLogoApi()
+  Cookies.set('logoInfo', JSON.stringify(res))
+  frontDomainApi().then((res) => {
+    settingsStore.SET_FrontDomain(res)
+  })
+  mediaDomainApi().then((res) => {
+    settingsStore.SET_mediaDomain(res)
+  })
+}
+
+function handleResize(event) {
+  fullWidth.value = document.body.clientWidth
+  const canvas = document.getElementsByTagName('canvas')[0]
+  if (canvas) {
+    if (fullWidth.value < 768) {
+      canvas.removeAttribute('class', 'index_bg')
     } else {
-      document.getElementsByTagName('canvas')[0].className = 'index_bg';
+      canvas.className = 'index_bg'
     }
-  },
-  destroyed() {
-    // window.removeEventListener('storage', this.afterQRScan)
-  },
-  beforeDestroy: function () {
-    window.removeEventListener('resize', this.handleResize);
-    document.getElementsByTagName('canvas')[0].removeAttribute('class', 'index_bg');
-  },
-  methods: {
-    //校验成功之后
-    handlerOnVerSuccess(repData) {
-      this.loginForm.captchaVO = repData;
-      this.success(null, true);
-    },
-    //账号失去焦点
-    async onBlurAccount() {
-      if(this.loginForm.account){
-        this.errorsNumber = await accountDetectionApi({ account: this.loginForm.account });
-      }
-    },
-    // 获取移动端域名-图片域名
-    async getUrl() {
-      let res = await getSiteLogoApi();
-      Cookies.set('logoInfo', JSON.stringify(res));
-      frontDomainApi().then((res) => {
-        this.$store.commit('settings/SET_FrontDomain', res);
-      });
-      mediaDomainApi().then((res) => {
-        this.$store.commit('settings/SET_mediaDomain', res);
-      });
-    },
-    handleResize(event) {
-      this.fullWidth = document.body.clientWidth;
-      if (this.fullWidth < 768) {
-        document.getElementsByTagName('canvas')[0].removeAttribute('class', 'index_bg');
+  }
+}
+
+function getInfo() {
+  getLoginPicApi().then((res) => {
+    swiperList.value = res.banner
+    loginLogo.value = res.loginLogo
+    backgroundImages.value = res.backgroundImage
+    localStorage.setItem('singleAdminSiteName', res.siteName)
+    companyName.value = res.companyName || ''
+    version.value = res.version || 'CRMEB'
+  })
+}
+
+function checkCapslock(e) {
+  const { key } = e
+  capsTooltip.value = key && key.length === 1 && key >= 'A' && key <= 'Z'
+}
+
+function showPwd() {
+  if (passwordType.value === 'password') {
+    passwordType.value = ''
+  } else {
+    passwordType.value = 'password'
+  }
+  nextTick(() => {
+    pwdRef.value && pwdRef.value.focus()
+  })
+}
+
+function handleLogin() {
+  loginFormRef.value.validate((valid) => {
+    if (valid) {
+      if (Number(errorsNumber.value) > 2) {
+        verifyRef.value.show()
       } else {
-        document.getElementsByTagName('canvas')[0].className = 'index_bg';
+        success(null)
       }
-    },
-    getInfo() {
-      getLoginPicApi().then((res) => {
-        this.swiperList = res.banner;
-        this.loginLogo = res.loginLogo;
-        this.backgroundImages = res.backgroundImage;
-        localStorage.setItem('singleAdminSiteName', res.siteName);
-      });
-    },
-    checkCapslock(e) {
-      const { key } = e;
-      this.capsTooltip = key && key.length === 1 && key >= 'A' && key <= 'Z';
-    },
-    showPwd() {
-      if (this.passwordType === 'password') {
-        this.passwordType = '';
-      } else {
-        this.passwordType = 'password';
-      }
-      this.$nextTick(() => {
-        this.$refs.pwd.focus();
-      });
-    },
-    handleLogin() {
-      this.$refs.loginForm.validate((valid) => {
-        if (valid) {
-          if (Number(this.errorsNumber) > 3) {
-            this.$refs.verifyRef.show();
-          } else {
-            this.success(null);
-          }
-        } else {
-          return false;
-        }
-      });
-    },
-    success(params, type) {
-      // this.loginForm.captcha = this.$store.state.user.captcha;
-      // this.loginForm.captcha.captchaVerification = params ? params.captchaVerification : '';
-      const loading = this.$loading({
-        lock: true,
-        text: '正在登录中.',
-      });
-      this.$store
-        .dispatch('user/login', this.loginForm)
-        .then(() => {
-          this.$router.push({
-            path: this.redirect || '/',
-            query: this.otherQuery,
-          });
-          getStoreStaff();
-          loading.close();
-          this.disabled = true;
-          this.getUrl();
-          this.$store
-            .dispatch('user/getMenus', {
-              that: this,
-            })
-            .then((res) => {
-              this.$router.push({ path: this.redirect || '/dashboard', query: this.otherQuery });
-              //location.reload();
-            });
-        })
-        .catch(async (err) => {
-          await this.onBlurAccount();
-          if (Number(this.errorsNumber) > 3 && !type) await this.$refs.verifyRef.show();
-          loading.close();
-          this.disabled = false;
-        });
-    },
-    getOtherQuery(query) {
-      return Object.keys(query).reduce((acc, cur) => {
-        if (cur !== 'redirect') {
-          acc[cur] = query[cur];
-        }
-        return acc;
-      }, {});
-    },
-  },
-};
+    } else {
+      return false
+    }
+  })
+}
+
+function success(params, type) {
+  const loadingInstance = ElLoading.service({
+    lock: true,
+    text: '正在登录中.'
+  })
+  userStore
+    .login(loginForm)
+    .then(() => {
+      router.push({
+        path: redirect.value || '/',
+        query: otherQuery.value
+      })
+      loadingInstance.close()
+      disabled.value = true
+      getUrl()
+      userStore.getMenus({ that: null }).then((res) => {
+        router.push({ path: redirect.value || '/dashboard', query: otherQuery.value })
+      })
+    })
+    .catch(async (err) => {
+      await onBlurAccount()
+      if (Number(errorsNumber.value) > 2 && !type) await verifyRef.value.show()
+      loadingInstance.close()
+      disabled.value = false
+    })
+}
+
+function getOtherQuery(query) {
+  return Object.keys(query).reduce((acc, cur) => {
+    if (cur !== 'redirect') {
+      acc[cur] = query[cur]
+    }
+    return acc
+  }, {})
+}
+
+// 暴露给模板（swiper 组件需作为标签使用）
+defineExpose({ handleLogin })
 </script>
 
 <style lang="scss" scoped>
@@ -334,11 +349,28 @@ $ease-in-out: ease-in-out;
 $subsidiary-color: #808695;
 
 .footer {
-  align-items: center;
-  justify-content: center;
-  width: 50%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  background: rgba(255, 255, 255, 0.8);
+  border-top: 1px solid #e7eaec;
+  overflow: hidden;
+  padding-right: 20px;
   height: 36px;
-  cursor: pointer;
+  line-height: 36px;
+  z-index: 999;
+}
+
+.pull-right {
+  float: right !important;
+  color: #666;
+
+  a {
+    margin-left: 0;
+    color: #666;
+  }
 }
 
 .wechat {
@@ -372,21 +404,6 @@ $subsidiary-color: #808695;
     }
   }
 
-  &-tabs {
-    .ivu-tabs-bar {
-      border-bottom: none;
-    }
-
-    .ivu-tabs-nav-scroll {
-      text-align: center;
-    }
-
-    .ivu-tabs-nav {
-      display: inline-block;
-      float: none;
-    }
-  }
-
   &-top {
     padding: 32px 0;
 
@@ -399,15 +416,6 @@ $subsidiary-color: #808695;
     &-desc {
       font-size: $font-size-base;
       color: $subsidiary-color;
-    }
-  }
-
-  &-auto-login {
-    margin-bottom: 24px;
-    text-align: left;
-
-    a {
-      float: right;
     }
   }
 
@@ -433,27 +441,8 @@ $subsidiary-color: #808695;
     }
   }
 
-  .ivu-poptip,
-  .ivu-poptip-rel {
-    display: block;
-  }
-
   &-register {
     float: right;
-
-    &-tip {
-      text-align: left;
-
-      &-title {
-        font-size: $font-size-base;
-      }
-
-      &-desc {
-        white-space: initial;
-        font-size: $font-size-base;
-        margin-top: 6px;
-      }
-    }
   }
 
   &-to-login {
@@ -627,7 +616,7 @@ $light_gray: #eee;
   cursor: pointer;
   user-select: none;
 
-  ::v-deepsvg-icon {
+  :deep(svg-icon) {
     vertical-align: 0.3em;
   }
 }

@@ -1,4 +1,5 @@
-import { ElMessage, ElMessageBox, ElNotification, ElLoading, type ElMessageBoxOptions } from 'element-plus';
+import { ElMessage, ElMessageBox, ElNotification, ElLoading } from '@/utils/elementPlusFeedback';
+import type { ElMessageBoxOptions } from 'element-plus';
 import type { LoadingInstance } from 'element-plus/es/components/loading/src/loading';
 
 export class Tips {

@@ -2,13 +2,19 @@
   <div class="divBox">
     <el-card :bordered="false" shadow="never" class="ivu-mt" :body-style="{ padding: 0 }">
       <div class="padding-add">
-        <el-form size="small" :inline="true">
+        <el-form :inline="true">
           <el-form-item label="回复类型：">
-            <el-select v-model="tableFrom.type" placeholder="请选择类型" @change="seachList" class="selWidth" clearable>
+            <el-select
+              v-model="tableFrom.type"
+              placeholder="请选择类型"
+              @change="seachList"
+              class="selWidth"
+              clearable
+            >
               <el-option label="文本消息" value="text"></el-option>
               <el-option label="图片消息" value="image"></el-option>
               <el-option label="图文消息" value="news"></el-option>
-              <el-option label="音频消息" value="voice"></el-option>
+              <el-option label="声音消息" value="voice"></el-option>
             </el-select>
           </el-form-item>
           <el-form-item label="关键字：">
@@ -16,7 +22,7 @@
               v-model="tableFrom.keywords"
               placeholder="请输入关键字"
               class="selWidth"
-              size="small"
+
               clearable
             ></el-input>
           </el-form-item>
@@ -24,29 +30,31 @@
             <el-button type="primary" @click="seachList" v-hasPermi="['admin:wechat:keywords:reply:info:keywords']"
               >搜索</el-button
             >
-            <el-button size="small" @click="handleReset">重置</el-button>
+            <el-button @click="handleReset">重置</el-button>
           </el-form-item>
         </el-form>
       </div>
     </el-card>
     <el-card class="box-card mt14">
-      <div slot="header" class="clearfix">
-        <div class="container">
-          <router-link :to="{ path: '/appSetting/publicAccount/wxReply/keyword/save' }">
-            <el-button type="primary" v-hasPermi="['admin:wechat:keywords:reply:save']">添加关键字</el-button>
-          </router-link>
+      <template #header>
+        <div class="clearfix">
+          <div class="container">
+            <router-link :to="{ path: '/appSetting/publicAccount/wxReply/keyword/save' }">
+              <el-button type="primary" v-hasPermi="['admin:wechat:keywords:reply:save']">添加关键字</el-button>
+            </router-link>
+          </div>
         </div>
-      </div>
-      <el-table v-loading="listLoading" :data="tableData.data" style="width: 100%" size="small" highlight-current-row>
+      </template>
+      <el-table v-loading="listLoading" :data="tableData.data" style="width: 100%" highlight-current-row>
         <el-table-column prop="id" label="ID" width="60" />
         <el-table-column prop="keywords" label="关键字" min-width="150" />
         <el-table-column label="回复类型" min-width="100">
-          <template slot-scope="scope">
-            <span>{{ scope.row.type | keywordStatusFilter }}</span>
+          <template #default="scope">
+            <span>{{ $filters.keywordStatusFilter(scope.row.type) }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="是否显示" min-width="100">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-switch
               v-if="checkPermi(['admin:wechat:keywords:reply:status'])"
               v-model="scope.row.status"
@@ -60,12 +68,12 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" width="100">
-          <template slot-scope="scope">
+          <template #default="scope">
             <router-link :to="{ path: '/appSetting/publicAccount/wxReply/keyword/save/' + scope.row.id }">
               <el-button
                 class="list-btn"
-                type="text"
-                size="small"
+                link
+
                 :disabled="scope.row.keywords === 'subscribe' || scope.row.keywords === 'default'"
                 v-hasPermi="['admin:wechat:keywords:reply:info']"
                 >编辑</el-button
@@ -75,8 +83,8 @@
             <el-button
               class="list-btn"
               :disabled="scope.row.keywords === 'subscribe' || scope.row.keywords === 'default'"
-              type="text"
-              size="small"
+              link
+
               @click="handleDelete(scope.row.id, scope.$index)"
               v-hasPermi="['admin:wechat:keywords:reply:delete']"
               >删除</el-button
@@ -100,84 +108,82 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { replyListApi, replyDeleteApi, replyUpdateApi, replyStatusApi } from '@/api/wxApi';
 import { getToken } from '@/utils/auth';
 import { checkPermi } from '@/utils/permission';
-export default {
-  name: 'WechatKeyword',
-  data() {
-    return {
-      tableData: {
-        data: [],
-        total: 0,
-      },
-      tableFrom: {
-        page: 1,
-        limit: 20,
-        keywords: '',
-        type: '',
-      },
-      listLoading: true,
-    };
-  },
-  created() {
-    this.getList();
-  },
-  methods: {
-    checkPermi,
-    //重置
-    handleReset() {
-      this.tableFrom.type = '';
-      this.tableFrom.keywords = '';
-      this.getList();
-    },
-    seachList() {
-      this.tableFrom.page = 1;
-      this.getList();
-    },
-    onchangeIsShow(row) {
-      replyStatusApi({ id: row.id, status: row.status })
-        .then(() => {
-          this.$message.success('修改成功');
-          this.getList();
-        })
-        .catch(() => {
-          row.status = !row.status;
-        });
-    },
-    // 列表
-    getList() {
-      this.listLoading = true;
-      replyListApi(this.tableFrom)
-        .then((res) => {
-          this.tableData.data = res.list;
-          this.tableData.total = res.total;
-          this.listLoading = false;
-        })
-        .catch((res) => {
-          this.listLoading = false;
-        });
-    },
-    pageChange(page) {
-      this.tableFrom.page = page;
-      this.getList();
-    },
-    handleSizeChange(val) {
-      this.tableFrom.limit = val;
-      this.getList();
-    },
-    // 删除
-    handleDelete(id, idx) {
-      this.$modalSure().then(() => {
-        replyDeleteApi({ id: id }).then(() => {
-          this.$message.success('删除成功');
-          this.getList();
-        });
-      });
-    },
-  },
+
+defineOptions({ name: 'WechatKeyword' });
+
+const { proxy } = getCurrentInstance();
+
+const tableData = reactive({
+  data: [],
+  total: 0,
+});
+const tableFrom = reactive({
+  page: 1,
+  limit: 20,
+  keywords: '',
+  type: '',
+});
+const listLoading = ref(true);
+
+//重置
+const handleReset = () => {
+  tableFrom.type = '';
+  tableFrom.keywords = '';
+  getList();
 };
+const seachList = () => {
+  tableFrom.page = 1;
+  getList();
+};
+const onchangeIsShow = (row) => {
+  replyStatusApi({ id: row.id, status: row.status })
+    .then(() => {
+      ElMessage.success('修改成功');
+      getList();
+    })
+    .catch(() => {
+      row.status = !row.status;
+    });
+};
+// 列表
+const getList = () => {
+  listLoading.value = true;
+  replyListApi(tableFrom)
+    .then((res) => {
+      tableData.data = res.list;
+      tableData.total = res.total;
+      listLoading.value = false;
+    })
+    .catch((res) => {
+      listLoading.value = false;
+    });
+};
+const pageChange = (page) => {
+  tableFrom.page = page;
+  getList();
+};
+const handleSizeChange = (val) => {
+  tableFrom.limit = val;
+  getList();
+};
+// 删除
+const handleDelete = (id, idx) => {
+  proxy.$modalSure().then(() => {
+    replyDeleteApi({ id: id }).then(() => {
+      ElMessage.success('删除成功');
+      getList();
+    });
+  });
+};
+
+// created
+getList();
 </script>
 
 <style scoped>

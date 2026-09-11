@@ -6,18 +6,13 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
 import UploadIndex from '@/components/uploadPicture/index.vue';
 
-export default {
-  name: 'index',
-  data() {
-    return {
-      pictureType: 'maintain',
-    };
-  },
-  components: { UploadIndex },
-};
+defineOptions({ name: 'index' });
+
+const pictureType = ref('maintain');
 </script>
 
 <style scoped></style>

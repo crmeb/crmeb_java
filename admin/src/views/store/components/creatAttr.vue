@@ -8,8 +8,8 @@
             @change="onChangetype(formValidate.isSub)"
             :disabled="isDisabled"
           >
-            <el-radio :label="true" class="radio">单独设置</el-radio>
-            <el-radio :label="false">默认设置</el-radio>
+            <el-radio :label="true" :value="true" class="radio">单独设置</el-radio>
+            <el-radio :label="false" :value="false">默认设置</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="规格类型：" props="specType">
@@ -18,8 +18,8 @@
             @change="onChangeSpec(formValidate.specType)"
             :disabled="isDisabled"
           >
-            <el-radio :label="false" class="radio">单规格</el-radio>
-            <el-radio :label="true">多规格</el-radio>
+            <el-radio :label="false" :value="false" class="radio">单规格</el-radio>
+            <el-radio :label="true" :value="true">多规格</el-radio>
           </el-radio-group>
           <el-dropdown
             :disabled="isDisabled"
@@ -29,11 +29,13 @@
             @command="confirmAttrTemp"
           >
             <span class="el-dropdown-link"> 选择规格模板<i class="el-icon-arrow-down el-icon--right"></i> </span>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item v-for="(item, index) in ruleList" :key="index" :command="item.ruleName">
-                {{ item.ruleName }}
-              </el-dropdown-item>
-            </el-dropdown-menu>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-for="(item, index) in ruleList" :key="index" :command="item.ruleName">
+                  {{ item.ruleName }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
           </el-dropdown>
         </el-form-item>
       </el-col>
@@ -48,115 +50,128 @@
               group="specifications"
               :disabled="formValidate.attr.length < 2"
               :list="formValidate.attr"
+              :item-key="getDraggableItemKey"
               handle=".attr-move-icon"
               @end="onMoveSpec($event, 'attr')"
               animation="300"
             >
-              <div
-                class="specifications-item active"
-                v-for="(item, index) in formValidate.attr"
-                :key="index"
-                @click="changeCurrentIndex(index)"
-              >
-                <div class="attr-move-icon">
-                  <span class="iconfont icondrag2"></span>
-                </div>
-                <i class="del el-icon-error" @click="handleRemoveAttr(index)"></i>
-                <div class="specifications-item-box">
-                  <div class="lineBox"></div>
-                  <div class="specifications-item-name mb18">
-                    <el-input
-                      size="small"
-                      v-model="item.attrName"
-                      placeholder="规格名称"
-                      @input="changeAttr(index, item.attrName)"
-                      @focus="handleFocus(item.attrName)"
-                      class="specifications-item-name-input attr-input w-240"
-                      maxlength="30"
-                      show-word-limit
-                    ></el-input>
-                    <el-checkbox
-                      class="ml20"
-                      v-model="item.isShowImage"
-                      :disabled="!item.isShowImage && !canSel"
-                      :true-label="1"
-                      :false-label="0"
-                      @change="(e) => addPic(e, index)"
-                      >添加规格图</el-checkbox
-                    >
-                    <el-tooltip
-                      class="item"
-                      effect="dark"
-                      content="添加规格图片, 仅支持打开一个(建议尺寸:800*800),勾选后,当前规格图片必须上传"
-                      placement="right"
-                    >
-                      <i class="el-icon-info"></i>
-                    </el-tooltip>
+              <template #item="{ element: item, index }">
+                <div class="specifications-item active" @click="changeCurrentIndex(index)">
+                  <div class="attr-move-icon">
+                    <span class="iconfont icondrag2"></span>
                   </div>
-                  <div class="rulesBox ml30">
-                    <draggable
-                      class="item"
-                      :list="item.optionList"
-                      :disabled="item.optionList.length < 2"
-                      handle=".value-move-icon"
-                      @end="onMoveSpec($event, index, 'value')"
-                    >
-                      <div v-for="(det, indexn) in item.optionList" :key="indexn" class="mr10 spec">
-                        <i class="el-icon-error" @click="handleRemoveValue(item, indexn, det.value)"></i>
-                        <el-input
-                          class="attr-input w-240"
-                          size="small"
-                          v-model="det.value"
-                          placeholder="规格值"
-                          @input="changeValue(det.value, index, indexn)"
-                          @focus="handleFocus(det.value)"
-                          maxlength="30"
-                          show-word-limit
-                          @blur="handleBlur()"
-                        >
-                          <template slot="prefix">
-                            <span class="iconfont icondrag2 value-move-icon"></span>
-                          </template>
-                        </el-input>
-                        <div class="img-popover" v-if="item.isShowImage">
-                          <div class="popper-arrow"></div>
-                          <div class="popper" @click="handleSelImg(det, indexn)">
-                            <el-image class="image" v-if="det.image" :src="det.image" fit="cover"></el-image>
-                            <i v-else class="el-icon-plus"></i>
+                  <i class="del el-icon-error" @click="handleRemoveAttr(index)"></i>
+                  <div class="specifications-item-box">
+                    <div class="lineBox"></div>
+                    <div class="specifications-item-name mb18">
+                      <el-input
+
+                        v-model="item.attrName"
+                        placeholder="规格名称"
+                        @input="changeAttr(index, item.attrName)"
+                        @focus="handleFocus(item.attrName)"
+                        class="specifications-item-name-input attr-input w-240"
+                        maxlength="30"
+                        show-word-limit
+                      ></el-input>
+                      <el-checkbox
+                        class="ml20"
+                        v-model="item.isShowImage"
+                        :disabled="!item.isShowImage && !canSel"
+                        :true-value="1"
+                        :false-value="0"
+                        @change="(e) => addPic(e, index)"
+                        >添加规格图</el-checkbox
+                      >
+                      <el-tooltip
+                        class="item"
+                        effect="dark"
+                        content="添加规格图片, 仅支持打开一个(建议尺寸:800*800),勾选后,当前规格图片必须上传"
+                        placement="right"
+                      >
+                        <i class="el-icon-info"></i>
+                      </el-tooltip>
+                    </div>
+                    <div class="rulesBox ml30">
+                      <draggable
+                        class="item"
+                        :list="item.optionList"
+                        :item-key="getDraggableItemKey"
+                        :disabled="item.optionList.length < 2"
+                        handle=".value-move-icon"
+                        @end="onMoveSpec($event, index, 'value')"
+                      >
+                        <template #item="{ element: det, index: indexn }">
+                          <div class="mr10 spec">
+                            <i class="el-icon-error" @click="handleRemoveValue(item, indexn, det.value)"></i>
+                            <el-input
+                              class="attr-input w-240"
+
+                              v-model="det.value"
+                              placeholder="规格值"
+                              @input="changeValue(det.value, index, indexn)"
+                              @focus="handleFocus(det.value)"
+                              maxlength="30"
+                              show-word-limit
+                              @blur="handleBlur()"
+                            >
+                              <template #prefix>
+                                <span class="iconfont icondrag2 value-move-icon"></span>
+                              </template>
+                            </el-input>
+                            <div class="img-popover" v-if="item.isShowImage">
+                              <div class="popper-arrow"></div>
+                              <div class="popper" @click="handleSelImg(det, indexn)">
+                                <el-image class="image" v-if="det.image" :src="det.image" fit="cover"></el-image>
+                                <i v-else class="el-icon-plus"></i>
+                              </div>
+                              <i v-if="det.image" class="img-del el-icon-error" @click="handleRemoveImg(det)"></i>
+                            </div>
                           </div>
-                          <i v-if="det.image" class="img-del el-icon-error" @click="handleRemoveImg(det)"></i>
-                        </div>
-                      </div>
-                      <div>
-                        <el-popover
-                          :ref="'popoverRef_' + index"
-                          placement=""
-                          width="240"
-                          trigger="click"
-                          @after-enter="handleShowPop(index)"
-                        >
-                          <el-input
-                            :ref="'inputRef_' + index"
-                            size="small"
-                            class="attr-input w-240"
-                            placeholder="请输入规格值"
-                            v-model="formDynamic.attrsVal"
-                            @keyup.enter.native="createAttr(formDynamic.attrsVal, index)"
-                            @blur="createAttr(formDynamic.attrsVal, index)"
-                            maxlength="30"
-                            show-word-limit
-                          >
-                          </el-input>
-                          <div class="addfont" slot="reference">
-                            <span slot="reference">添加规格值</span>
+                        </template>
+                        <template #footer>
+                          <div>
+                            <el-popover
+                              :ref="
+                                (el) => {
+                                  if (el) popoverRefs[index] = el
+                                }
+                              "
+                              placement="bottom"
+                              width="240"
+                              trigger="click"
+                              @after-enter="handleShowPop(index)"
+                            >
+                              <el-input
+                                :ref="
+                                  (el) => {
+                                    if (el) inputRefs[index] = el
+                                  }
+                                "
+
+                                class="attr-input w-240"
+                                placeholder="请输入规格值"
+                                v-model="formDynamic.attrsVal"
+                                @keyup.enter="createAttr(formDynamic.attrsVal, index)"
+                                @blur="createAttr(formDynamic.attrsVal, index)"
+                                maxlength="30"
+                                show-word-limit
+                              >
+                              </el-input>
+                              <template #reference>
+                                <div class="addfont">
+                                  <span>添加规格值</span>
+                                </div>
+                                <div class="empty-box"></div>
+                              </template>
+                            </el-popover>
                           </div>
-                          <div class="empty-box" slot="reference"></div>
-                        </el-popover>
-                      </div>
-                    </draggable>
+                        </template>
+                      </draggable>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </template>
             </draggable>
           </div>
           <div class="flex">
@@ -168,12 +183,12 @@
       <el-col :xl="24" :lg="24" :md="24" :sm="24" :xs="24">
         <!-- 单规格表格-->
         <el-form-item v-if="formValidate.specType === false">
-          <el-table :data="OneattrValue" border class="tabNumWidth" size="mini">
+          <el-table :data="OneattrValue" border class="tabNumWidth">
             <el-table-column label="图片" min-width="60">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <div class="upLoadPicBox" @click="modalPicTap('1', 'dan')">
                   <div v-if="formValidate.image" class="pictrue tabPic">
-                    <el-image :preview-src-list="isDisabled ? [scope.row.image] : []" :src="OneattrValue[0].image" />
+                    <el-image :preview-src-list="isDisabled ? [scope.row.image] : []" preview-teleported :src="OneattrValue[0].image" />
                   </div>
                   <div v-else class="upLoad tabPic">
                     <i class="el-icon-camera cameraIconfont" />
@@ -182,11 +197,15 @@
               </template>
             </el-table-column>
             <template v-if="formValidate.isSub">
-              <el-table-column label="一级返佣(%)" min-width="100">
-                <el-input v-model="OneattrValue[0].brokerage" :disabled="isDisabled"></el-input>
+              <el-table-column label="一级返佣" min-width="100">
+                <template #default="scope">
+                  <el-input v-model="scope.row.brokerage" :disabled="isDisabled" class="priceBox"></el-input>
+                </template>
               </el-table-column>
-              <el-table-column label="二级返佣(%)" min-width="100">
-                <el-input v-model="OneattrValue[0].brokerageTwo"  :disabled="isDisabled"></el-input>
+              <el-table-column label="二级返佣" min-width="100">
+                <template #default="scope">
+                  <el-input v-model="scope.row.brokerageTwo" :disabled="isDisabled" class="priceBox"></el-input>
+                </template>
               </el-table-column>
             </template>
             <el-table-column
@@ -195,7 +214,7 @@
               :label="item.title"
               :min-width="item.minWidth || '200'"
             >
-              <template slot-scope="scope" v-if="item.slot != 'isDefault' && item.slot != 'action'">
+              <template #default="scope" v-if="item.slot != 'isDefault' && item.slot != 'action'">
                 <el-input
                   :disabled="isDisabled"
                   v-model="OneattrValue[0][item.slot]"
@@ -218,7 +237,7 @@
             :data="ManyAttrValue"
             border
             class="tabNumWidth"
-            size="small"
+
             :span-method="objectSpanMethod"
             :cell-class-name="tableCellClassName"
             :key="tableKey"
@@ -230,7 +249,7 @@
                 :label="item.title"
                 :min-width="item.minWidth || '200'"
               >
-                <template slot-scope="scope">
+                <template #default="scope">
                   <!-- 批量设置 -->
                   <template v-if="scope.$index == 0">
                     <!-- 自定义规格属性 -->
@@ -253,7 +272,7 @@
                         <div v-if="oneFormBatch[0].image" class="pictrue tabPic">
                           <el-image
                             class="preview-src"
-                            :preview-src-list="isDisabled ? [scope.row.image] : []"
+                            :preview-src-list="isDisabled ? [scope.row.image] : []" preview-teleported
                             :src="oneFormBatch[0].image"
                           />
                         </div>
@@ -309,7 +328,12 @@
                     </template>
                     <!-- 商品编号 -->
                     <template v-else-if="item.slot === 'barCode'">
-                      <el-input v-model="oneFormBatch[0].barCode" maxlength="40" class="priceBox" :disabled="isDisabled"></el-input>
+                      <el-input
+                        v-model="oneFormBatch[0].barCode"
+                        maxlength="40"
+                        class="priceBox"
+                        :disabled="isDisabled"
+                      ></el-input>
                     </template>
                     <!-- 一级佣金 -->
                     <template v-else-if="item.slot === 'brokerage' && formValidate.isSub">
@@ -346,8 +370,8 @@
                     <template v-else-if="item.slot === 'isDefault'"> -- </template>
                     <!-- 操作 -->
                     <template v-else-if="item.slot === 'action'">
-                      <a type="text" size="mini" @click="batchAdd">批量修改</a>
-                      <a type="text" size="mini" @click="batchDel" class="ml10">清空</a>
+                      <a type="text" @click="batchAdd">批量修改</a>
+                      <a type="text" @click="batchDel" class="ml10">清空</a>
                     </template>
                   </template>
                   <!-- 规格数据 -->
@@ -364,7 +388,7 @@
                         <div v-if="scope.row.image" class="pictrue tabPic">
                           <el-image
                             class="preview-src"
-                            :preview-src-list="isDisabled ? [scope.row.image] : []"
+                            :preview-src-list="isDisabled ? [scope.row.image] : []" preview-teleported
                             :src="scope.row.image"
                           />
                         </div>
@@ -493,720 +517,730 @@
   </div>
 </template>
 
-<script>
-import { templateListApi, attrCreatApi } from '@/api/store';
-import { GoodsTableHead, imageTableHead, commissionTableHead } from '../creatStore/TableHeadList';
-import { defaultObj } from '../creatStore/default';
-import { arraysEqual } from '@/utils';
-import vuedraggable from 'vuedraggable';
-export default {
-  name: 'creatAttr',
-  components: {
-    draggable: vuedraggable,
-  },
-  props: {
-    // 商品数据
-    value: {
-      type: Object,
-      default: function () {
-        return {};
-      },
-    },
-    // 单规格
-    OneattrValue: {
-      type: Array,
-      default: function () {
-        return [];
-      },
-    },
-    // 多规格
-    ManyAttrValue: {
-      type: Array,
-      default: function () {
-        return [];
-      },
-    },
-    //批量添加规格
-    oneFormBatch: {
-      type: Array,
-      default: function () {
-        return [];
-      },
-    },
-    isDisabled: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  data() {
-    return {
-      tableKey: 0,
-      formValidate: this.value, // 商品数据
-      isAttr: false, // 是否需要显示sku
-      ruleList: [], // 商品属性模板列表
-      currentIndex: 0, // 当前规格索引
-      changeAttrValue: '', // 当前要修改的规格值
-      canSel: true, // 规格图片添加判断
-      // 规格数据
-      formDynamic: {
-        attrsName: '',
-        attrsVal: '',
-      },
-      attrs: [], // 规格列表
-    };
-  },
-  computed: {
-    // 单规格表头
-    oneAttrTableTitle() {
-      const arr = GoodsTableHead.slice(0, -2);
-      return arr;
-    },
-    attrValue() {
-      const obj = Object.assign({}, defaultObj.attrValue[0]);
-      delete obj.image;
-      return obj;
-    },
-  },
-  watch: {
-    formValidate: {
-      handler(newVal) {
-        this.formValidate = newVal;
-        // this.$emit('input', newVal);
-      },
-      // deep: true,
-    },
-  },
-  mounted() {
-    if (this.formValidate.specType) {
-      this.productGetRule(); //加载商品规格选项
-      // 添加 optionList 字段
-      this.createOptionList(this.formValidate.attr);
-      // 生成规格属性数据
-      this.generateAttr(this.formValidate.attr);
+<script setup lang="jsx">
+import { ref, reactive, computed, watch, onMounted, nextTick, getCurrentInstance } from 'vue'
+import { ElMessage, ElMessageBox } from '@/utils/elementPlusFeedback'
+import { templateListApi, attrCreatApi } from '@/api/store'
+import { GoodsTableHead, imageTableHead, commissionTableHead } from '../creatStore/TableHeadList'
+import { defaultObj } from '../creatStore/default'
+import { arraysEqual } from '@/utils'
+import { getDraggableItemKey } from '@/utils/draggableKey'
+import vuedraggable from 'vuedraggable'
+const draggable = vuedraggable // 模板中使用 <draggable>
+
+defineOptions({ name: 'creatAttr' })
+
+const props = defineProps({
+  // 商品数据
+  modelValue: {
+    type: Object,
+    default: function () {
+      return {}
     }
   },
-  methods: {
-    // 合并单元格
-    objectSpanMethod({ row, column, rowIndex, columnIndex }) {
-      if (columnIndex === 0 && rowIndex > 0) {
-        let lable = column.label;
-        //这里判断第几列需要合并
-        const tagFamily = this.ManyAttrValue[rowIndex].attrValue[lable];
-        const index = this.ManyAttrValue.findIndex((item, index) => {
-          if (index > 0) return item.attrValue[lable] == tagFamily;
-        });
-        if (rowIndex == index) {
-          let len = 1;
-          for (let i = index + 1; i < this.ManyAttrValue.length; i++) {
-            if (this.ManyAttrValue[i].attrValue[lable] !== tagFamily) {
-              break;
-            }
-            len++;
-          }
-          return {
-            rowspan: len,
-            colspan: 1,
-          };
-        } else {
-          return {
-            rowspan: 0,
-            colspan: 0,
-          };
-        }
-      }
-    },
-    // 生成列表 行 列 数据
-    tableCellClassName({ row, column, rowIndex, columnIndex }) {
-      //注意这里是解构
-      //利用单元格的 className 的回调方法，给行列索引赋值
-      row.index = rowIndex || '';
-      column.index = columnIndex;
-    },
-    // 获取商品属性模板
-    productGetRule() {
-      templateListApi(this.tableFrom).then((res) => {
-        const list = res.list;
-        for (var i = 0; i < list.length; i++) {
-          list[i].ruleValue = JSON.parse(list[i].ruleValue);
-        }
-        this.ruleList = list;
-      });
-    },
-    // 修改佣金是否为默认设置
-    onChangetype(item) {
-      if (item === 1) {
-        this.OneattrValue.map((item) => {
-          this.$set(item, 'brokerage', null);
-          this.$set(item, 'brokerageTwo', null);
-        });
-        this.ManyAttrValue.map((item) => {
-          this.$set(item, 'brokerage', null);
-          this.$set(item, 'brokerageTwo', null);
-        });
-      } else {
-        this.OneattrValue.map((item) => {
-          // delete item.brokerage;
-          // delete item.brokerageTwo;
-          this.$set(item, 'brokerage', 0);
-          this.$set(item, 'brokerageTwo', 0);
-        });
-        this.ManyAttrValue.map((item) => {
-          // delete item.brokerage;
-          // delete item.brokerageTwo;
-          this.$set(item, 'brokerage', 0);
-          this.$set(item, 'brokerageTwo', 0);
-        });
-      }
-      this.generateHeader(this.formValidate.attr);
-    },
-    // 修改规格类型
-    onChangeSpec(num) {
-      this.isAttr = true;
-      if (num) this.productGetRule();
-    },
-    // 选择规格模板
-    confirmAttrTemp(name) {
-      this.canSel = true;
-      this.formValidate.selectRule = name;
-      if (!this.formValidate.selectRule) {
-        return this.$message.warning('请选择属性');
-      }
-      const dataAttrs = [];
-      this.ruleList.forEach((item) => {
-        if (item.ruleName === this.formValidate.selectRule) {
-          item.ruleValue.forEach((i) => {
-            dataAttrs.push({
-              attrName: i.value,
-              optionList: i.detail.map((val) => ({ value: val, image: '', sort: 0  })),
-              id: 0,
-              isShowImage: 0,
-              sort: i + 1,
-            });
-          });
-        }
-        this.formValidate.attr = dataAttrs;
-      });
-      this.generateAttr(this.formValidate.attr);
-    },
-    // 添加 optionList 字段
-    createOptionList(attr) {
-      // 如果 optionList 字段无内容
-      if (attr[0].optionList.length == 0) {
-        // 添加 optionList 内容
-        this.attrs = attr.map((item) => {
-          const attrValueList = item.attrValues.split(',');
-          item.optionList = attrValueList.map((val) => {
-            return {
-              value: val,
-              image: '',
-            };
-          });
-        });
-      }
-    },
-    // 生成商品规格表头
-    generateHeader(attr) {
-      let specificationsColumns = attr.map((item) => ({
-        title: item.attrName,
-        key: item.attrName,
-        minWidth: 200,
-        fixed: 'left',
-      }));
-      let arr;
-      // 开启佣金设置
-      if (this.formValidate.isSub) {
-        arr = [...specificationsColumns, ...imageTableHead, ...commissionTableHead, ...GoodsTableHead];
-      } else {
-        arr = [...specificationsColumns, ...imageTableHead, ...GoodsTableHead];
-      }
-      this.$set(this.formValidate, 'header', arr);
-      this.tableKey += 1;
-    },
-    // 生成规格组合
-    generateCombinations(attr, prefix = []) {
-      if (attr.length === 0) {
-        return [prefix];
-      }
-      const [first, ...rest] = attr;
-      return first.optionList.flatMap((detail) => this.generateCombinations(rest, [...prefix, detail.value]));
-    },
-    // 生成规格属性数据
-    generateAttr(attr, val) {
-      // 生成商品规格表头
-      this.generateHeader(attr);
-      // 生成规格值组合
-      const combinations = this.generateCombinations(attr);
-      let rows = combinations.map((combination) => {
-        const row = {
-          attrArr: combination,
-          attrValueShow: {},
-          attrValue: {},
-          image: '',
-          price: 0,
-          cost: 0,
-          otPrice: 0,
-          stock: 0,
-          barCode: '',
-          weight: 0,
-          volume: 0,
-          brokerage: 0,
-          isShow: true,
-          brokerageTwo: 0,
-        };
-        for (let i = 0; i < combination.length; i++) {
-          const value = combination[i];
-          this.$set(row, attr[i].attrName, value);
-          this.$set(row, 'title', attr[i].attrName);
-          this.$set(row, 'key', attr[i].attrName);
-          this.$set(row.attrValueShow, attr[i].attrName, value);
-          row.attrValue = row.attrValueShow;
-          // 如果ManyAttrValue中存在该属性值，则赋值
-          for (let k = 0; k < this.ManyAttrValue.length; k++) {
-            const manyItem = this.ManyAttrValue[k];
-            // 对比两个数组是否完全相等
-            if (k > 0 && manyItem.attrArr.length && arraysEqual(manyItem.attrArr, combination)) {
-              Object.assign(row, {
-                // attrArr: manyItem.attrArr,
-                // attrValue: manyItem.attrValue,
-                price: manyItem.price || 0,
-                cost: manyItem.cost || 0,
-                otPrice: manyItem.otPrice || 0,
-                stock: manyItem.stock || 0,
-                image: manyItem.image || '',
-                sku: manyItem.sku || '',
-                weight: manyItem.weight || 0,
-                isDefault: manyItem.isDefault || 0,
-                volume: manyItem.volume || 0,
-                barCode: manyItem.barCode || '',
-                brokerage: manyItem.brokerage || 0,
-                brokerageTwo: manyItem.brokerageTwo || 0,
-                isShow: manyItem.isShow,
-              });
-            } else if (k > 0 && manyItem.attrArr.length && attr[i].isShowImage && combination.includes(val)) {
-              // data[i].detail中的value是规格值 存在与 manyItem.attr_arr 中的某一项
-              attr[i].optionList.map((e, ii) => {
-                combination.includes(e.value) && this.$set(row, 'image', e.image);
-              });
-            }
-          }
-        }
-        return row;
-      });
-      this.$nextTick(() => {
-        // rows数组第一项 新增默认数据 oneFormBatch
-        this.$emit('changeManyAttrValue', [...this.oneFormBatch, ...rows]);
-      });
-    },
-    // 新增规格
-    handleAddRole() {
-      let data = {
-        attrValues: this.formDynamic.attrsName,
-        attrValue: [],
-        isShowImage: 0,
-        optionList: [],
-      };
-      //  let attr = []
-      //  attr.push(data);
-      // this.$set(this.formValidate, 'attrs',attr)
-
-      this.$nextTick(() => {
-        this.formValidate.attr.push(data);
-        this.$emit('changeManyAttrValue', [...this.ManyAttrValue]);
-        this.$emit('input', this.formValidate);
-      });
-    },
-    // 另存为模板
-    handleSaveAsTemplate() {
-      this.$prompt('', '请输入模板名称', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        inputValidator: (value) => {
-          if (value === null) {
-            return '输入不能为空';
-          }
-          if (value.length > 30) return '输入限制30字以内';
-        },
-      })
-        .then(({ value }) => {
-          let spec = this.formValidate.attr.map((item) => {
-            return {
-              value: item.attrName,
-              detail: item.optionList.map((e) => e.value),
-            };
-          });
-          const data = {
-            id: 0,
-            ruleName: value,
-            ruleValue: JSON.stringify(spec),
-          };
-          attrCreatApi(data)
-            .then((res) => {
-              this.$message.success('提交成功');
-              this.productGetRule();
-              this.clear();
-              this.loading = false;
-              this.loadingBtn = false;
-            })
-            .catch(() => {
-              this.loading = false;
-              this.loadingBtn = false;
-            });
-        })
-        .catch(() => {});
-    },
-    // 规格拖拽排序后
-    onMoveSpec(event, index = -1, type) {
-      const oldIndex = event.oldIndex,
-        newIndex = event.newIndex;
-      // if (type == 'value') {
-      //   const [movedItem] = this.formValidate.attr[index].attrValue.splice(oldIndex, 1);
-      //   this.formValidate.attr[index].attrValue.splice(newIndex, 0, movedItem);
-      // }
-      this.generateAttr(this.formValidate.attr);
-    },
-    // 修改当前选中的规格索引
-    changeCurrentIndex(i) {
-      this.currentIndex = i;
-    },
-    // 聚焦后更新当前要修改的的规格值
-    handleFocus(val) {
-      this.changeAttrValue = val;
-    },
-    // 失去焦点后重置当前要修改的规格值
-    handleBlur() {
-      this.changeAttrValue = '';
-    },
-    // 规格图片添加开关
-    addPic(e, i) {
-      if (e) {
-        this.formValidate.attr.map((item, ii) => {
-          if (ii !== i) {
-            this.$set(item, 'isShowImage', 0);
-          }
-        });
-        this.canSel = false;
-      } else {
-        this.canSel = true;
-      }
-    },
-    // 删除属性
-    handleRemoveValue(item, index, val) {
-      item.optionList.splice(index, 1);
-      this.generateAttr(this.formValidate.attr);
-    },
-    // 删除表格中的属性
-    delAttrTable(val) {
-      for (let i = 0; i < this.ManyAttrValue.length; i++) {
-        let item = this.ManyAttrValue[i];
-        if (item.attrArr && item.attrArr.includes(val)) {
-          this.ManyAttrValue.splice(i, 1);
-          i--;
-        }
-      }
-    },
-    // 在规格中选择规格图片
-    handleSelImg(item) {
-      const _this = this;
-      this.$modalUpload(
-        function (img) {
-          if (!img) return;
-          item.image = img[0].sattDir;
-          _this.changeSpecImg([item.value], img[0].sattDir);
-        },
-        '1',
-        'content',
-      );
-    },
-    // 修改规格图片
-    changeSpecImg(arr, img) {
-      // 判断是否存在规格图
-      let isHas = false;
-      for (let i = 1; i < this.ManyAttrValue.length; i++) {
-        let item = this.ManyAttrValue[i];
-        if (item.image && this.isSubset(item.attrArr, arr)) {
-          isHas = true;
-          break;
-        }
-      }
-      if (isHas) {
-        this.$confirm('可以同步修改下方该规格图片，确定要替换吗？', '提示', {
-          confirmButtonText: '替换',
-          cancelButtonText: '暂不',
-          type: 'warning',
-        })
-          .then(() => {
-            for (let val of this.ManyAttrValue) {
-              if (this.isSubset(val.attrArr, arr)) {
-                this.$set(val, 'image', img);
-              }
-            }
-          })
-          .catch(() => {});
-      } else {
-        for (let val of this.ManyAttrValue) {
-          if (this.isSubset(val.attrArr, arr)) {
-            this.$set(val, 'image', img);
-          }
-        }
-      }
-    },
-    // 检查元素是否存在
-    isSubset(arr1, arr2) {
-      // 将数组转换为 Set，以便进行高效的包含检查
-      const set1 = new Set(arr1);
-      const set2 = new Set(arr2);
-
-      // 检查 set2 中的每个元素是否都在 set1 中
-      for (let elem of set2) {
-        if (!set1.has(elem)) {
-          return false;
-        }
-      }
-      return true;
-    },
-    // 删除规格图片
-    handleRemoveImg(item) {
-      item.image = '';
-    },
-    // 点击添加规格值按钮聚焦输入框
-    handleShowPop(index) {
-      this.$refs['inputRef_' + index][0].focus();
-    },
-    // 添加属性
-    createAttr(value, idx) {
-      if (value) {
-        // 判断是否存在同样数据
-        var isExist = this.formValidate.attr[idx].optionList.some((item) => item.value === value);
-        if (isExist) {
-          this.$message.error('规格值已存在');
-          return;
-        }
-        this.formValidate.attr[idx].optionList.push({
-          value: value,
-          image: '',
-        });
-        if (this.ManyAttrValue.length) {
-          this.generateAttr(this.formValidate.attr, value);
-          // this.addOneAttr(this.formValidate.attr[idx].attrName, value);
-        } else {
-          this.generateAttr(this.formValidate.attr);
-        }
-        this.$refs['popoverRef_' + idx][0].doClose(); //关闭的
-        this.clearAttr();
-        setTimeout(() => {
-          if (this.$refs['popoverRef_' + idx]) {
-            //重点是以下两句
-            this.$refs['popoverRef_' + idx][0].doShow(); //打开的
-            //重点是以上两句
-          }
-        }, 20);
-      } else {
-        this.$refs['popoverRef_' + idx][0].doClose(); //关闭的
-      }
-    },
-    // 新增一条属性
-    addOneAttr(val, val2) {
-      this.generateAttr(this.formValidate.attr, val2);
-    },
-    clearAttr() {
-      this.formDynamic.attrsName = '';
-      this.formDynamic.attrsVal = '';
-    },
-    // 删除规格
-    handleRemoveAttr(index) {
-      this.formValidate.attr.splice(index, 1);
-      if (!this.formValidate.attr.length) {
-        this.formValidate.header = [];
-        this.ManyAttrValue = [];
-      } else {
-        this.generateAttr(this.formValidate.attr);
-      }
-      this.canSel = true;
-    },
-    // 修改规格名称
-    changeAttr(index, val) {
-      if (val.trim().length && this.formValidate.attr[index].optionList.length) {
-        this.generateHeader(this.formValidate.attr);
-        if (this.ManyAttrValue.length) {
-          this.formValidate.attr[index].attrName = val;
-          this.generateAttr(this.formValidate.attr);
-          // this.ManyAttrValue.map((item, i) => {
-          //   if (i > 0) {
-          //     if (Object.keys(item.attrValueShow).includes(this.changeAttrValue)) {
-          //       item.attrValueShow[val] = item.attrValueShow[this.changeAttrValue];
-          //       item[val] = item[this.changeAttrValue];
-          //       delete item.attrValueShow[this.changeAttrValue];
-          //       delete item[this.changeAttrValue];
-          //     }
-          //   }
-          // });
-          this.changeAttrValue = val;
-        }
-      } else {
-        this.generateAttr(this.formValidate.attr);
-      }
-      // 触发父组件数据同步
-      this.$emit('input', this.formValidate);
-    },
-    // 规格值改变
-    changeValue(val, index, indexn) {
-      if (this.ManyAttrValue.length) {
-        let key = this.formValidate.attr[index].attrName;
-        this.ManyAttrValue.map((item, i) => {
-          if (i > 0) {
-            if (Object.keys(item).includes(key) && item[key] === this.changeAttrValue) {
-              item[key] = val;
-              item.attrValue[key] = val;
-              let idx = item.attrArr.findIndex((item) => item === this.changeAttrValue);
-              item.attrArr[idx] = val;
-            }
-          }
-        });
-        this.changeAttrValue = val;
-      } else {
-        this.generateAttr(this.formValidate.attr, 1);
-      }
-      this.$nextTick(() => {
-        this.$emit('changeManyAttrValue', [...this.ManyAttrValue]);
-        this.$emit('input', this.formValidate);
-      });
-    },
-    keyupEvent(key, val, index, num) {
-      var re = /([0-9]+.[0-9]{2})[0-9]*/;
-      switch (num) {
-        case 1:
-          this.oneFormBatch[index][key] =
-            key === 'stock' ? parseInt(val) : this.$set(this.oneFormBatch[index], key, String(val).replace(re, '$1'));
-          break;
-        case 2:
-          this.OneattrValue[index][key] =
-            key === 'stock' ? parseInt(val) : this.$set(this.OneattrValue[index], key, String(val).replace(re, '$1'));
-          break;
-        default:
-          this.ManyAttrValue[index][key] =
-            key === 'stock' ? parseInt(val) : this.$set(this.ManyAttrValue[index], key, String(val).replace(re, '$1'));
-          break;
-      }
-    },
-    //返佣输入
-    keyupEventBrokerage(val, index, num) {
-      switch (num) {
-        case 1:
-          this.oneFormBatch[index][val] =
-            this.oneFormBatch[index][val] > 0 ? parseInt(this.oneFormBatch[index][val]) : 0;
-          break;
-        case 2:
-          this.OneattrValue[index][val] =
-            this.OneattrValue[index][val] > 0 ? parseInt(this.OneattrValue[index][val]) : 0;
-          break;
-        default:
-          this.ManyAttrValue[index][val] =
-            this.ManyAttrValue[index][val] > 0 ? parseInt(this.ManyAttrValue[index][val]) : 0;
-      }
-    },
-    // 批量添加
-    batchAdd() {
-      let arr = [];
-      if (this.isDisabled) return;
-      for (let val of this.formValidate.attr) {
-        if (this.oneFormBatch[0][val.attrName]) {
-          arr.push(this.oneFormBatch[0][val.attrName]);
-        }
-      }
-      this.ManyAttrValue.forEach((val) => {
-        if (arr.length && val.attrArr) {
-          let attrVal = val.attrArr;
-          if (this.isSubset(Object.values(attrVal), arr)) {
-            this.batchData(val);
-          }
-        } else {
-          this.batchData(val);
-        }
-      });
-    },
-    // 批量数据
-    batchData(val) {
-      if (this.oneFormBatch[0].image) this.$set(val, 'image', this.oneFormBatch[0].image);
-      if (this.oneFormBatch[0].price > 0) this.$set(val, 'price', this.oneFormBatch[0].price);
-      if (this.oneFormBatch[0].cost > 0) this.$set(val, 'cost', this.oneFormBatch[0].cost);
-      if (this.oneFormBatch[0].otPrice > 0) this.$set(val, 'otPrice', this.oneFormBatch[0].otPrice);
-      if (this.oneFormBatch[0].barCode) this.$set(val, 'barCode', this.oneFormBatch[0].barCode);
-      if (this.oneFormBatch[0].stock >= 0) this.$set(val, 'stock', this.oneFormBatch[0].stock);
-      if (this.oneFormBatch[0].weight >= 0) this.$set(val, 'weight', this.oneFormBatch[0].weight);
-      if (this.oneFormBatch[0].volume >= 0) this.$set(val, 'volume', this.oneFormBatch[0].volume);
-      if (this.oneFormBatch[0].brokerage > 0) this.$set(val, 'brokerage', this.oneFormBatch[0].brokerage);
-      if (this.oneFormBatch[0].brokerageTwo > 0) this.$set(val, 'brokerageTwo', this.oneFormBatch[0].brokerageTwo);
-    },
-    // 清空批量规格信息
-    batchDel() {
-      this.$emit('handleBatchDel');
-    },
-    // 点击商品图
-    modalPicTap(tit, num, i, status) {
-      const _this = this;
-      if (_this.isDisabled) return;
-      this.$modalUpload(
-        function (img) {
-          if (tit === '1' && !num) {
-            _this.formValidate.image = img[0].sattDir;
-            _this.OneattrValue[0].image = img[0].sattDir;
-          }
-          if (tit === '2' && !num) {
-            if (img.length > 10) return this.$message.warning('最多选择10张图片！');
-            if (img.length + _this.formValidate.sliderImages.length > 10)
-              return this.$message.warning('最多选择10张图片！');
-            img.map((item) => {
-              _this.formValidate.sliderImages.push(item.sattDir);
-            });
-          }
-          if (tit === '3' && status === 'video') {
-            let videoInfo = img[0];
-            if (videoInfo.attType !== 'video/mp4') {
-              this.$message.warning('请重新选择视频！');
-            } else {
-              _this.$set(_this.formValidate, 'videoLink', videoInfo.sattDir);
-            }
-          }
-          if (tit === '1' && num === 'dan') {
-            _this.OneattrValue[0].image = img[0].sattDir;
-          }
-          if (tit === '1' && num === 'duo') {
-            _this.ManyAttrValue[i].image = img[0].sattDir;
-          }
-          if (tit === '1' && num === 'pi') {
-            _this.oneFormBatch[0].image = img[0].sattDir;
-          }
-        },
-        tit,
-        'content',
-      );
-    },
-    // 切换默认选中规格
-    changeDefaultSelect(e, index) {
-      const ManyAttrValues = [...this.ManyAttrValue]
-      ManyAttrValues.map((item, i) => {
-        if (i !== index) {
-          item.isDefault = false;
-        }
-      });
-      if (e) ManyAttrValues[index].isShow = true;
-      this.$emit('changeManyAttrValue', [...ManyAttrValues]);
-    },
-    // 改变是否显示
-    changeDefaultShow(index) {
-      // 如果默认选中开启 则不可隐藏
-      if (this.ManyAttrValue[index].isDefault === true) {
-        this.ManyAttrValue[index].isShow = true;
-        return this.$message.error('默认规格不可隐藏');
-      }
-      // 至少显示一个规格
-      if (!this.ManyAttrValue.some((item) => item.isShow)) {
-        this.ManyAttrValue[index].isShow = true;
-        this.$message.error('至少显示一个规格');
-      }
-    },
+  // 单规格
+  OneattrValue: {
+    type: Array,
+    default: function () {
+      return []
+    }
   },
-};
+  // 多规格
+  ManyAttrValue: {
+    type: Array,
+    default: function () {
+      return []
+    }
+  },
+  //批量添加规格
+  oneFormBatch: {
+    type: Array,
+    default: function () {
+      return []
+    }
+  },
+  isDisabled: {
+    type: Boolean,
+    default: false
+  }
+})
+const emit = defineEmits(['update:modelValue', 'changeManyAttrValue', 'handleBatchDel'])
+
+const { proxy } = getCurrentInstance()
+
+const tableKey = ref(0)
+// formValidate 直接引用父组件传入的 modelValue 对象（保留原 this.value 行为）
+const formValidate = computed({
+  get() {
+    return props.modelValue
+  },
+  set(val) {
+    emit('update:modelValue', val)
+  }
+})
+const isAttr = ref(false) // 是否需要显示sku
+const ruleList = ref([]) // 商品属性模板列表
+const currentIndex = ref(0) // 当前规格索引
+const changeAttrValue = ref('') // 当前要修改的规格值
+const canSel = ref(true) // 规格图片添加判断
+// 规格数据
+const formDynamic = reactive({
+  attrsName: '',
+  attrsVal: ''
+})
+const attrs = ref([]) // 规格列表
+// 动态 ref 映射（原 this.$refs['popoverRef_' + index] / ['inputRef_' + index]）
+const popoverRefs = reactive({})
+const inputRefs = reactive({})
+// 原方法中引用但未在 data 中声明（保留原逻辑）
+const tableFrom = reactive({ page: 1, limit: 9999 })
+const loading = ref(false)
+const loadingBtn = ref(false)
+
+// 单规格表头
+const oneAttrTableTitle = computed(() => {
+  const arr = GoodsTableHead.slice(0, -2)
+  return arr
+})
+const attrValue = computed(() => {
+  const obj = Object.assign({}, defaultObj.attrValue[0])
+  delete obj.image
+  return obj
+})
+
+// 合并单元格
+function objectSpanMethod({ row, column, rowIndex, columnIndex }) {
+  if (columnIndex === 0 && rowIndex > 0) {
+    let lable = column.label
+    //这里判断第几列需要合并
+    const tagFamily = props.ManyAttrValue[rowIndex].attrValue[lable]
+    const index = props.ManyAttrValue.findIndex((item, index) => {
+      if (index > 0) return item.attrValue[lable] == tagFamily
+    })
+    if (rowIndex == index) {
+      let len = 1
+      for (let i = index + 1; i < props.ManyAttrValue.length; i++) {
+        if (props.ManyAttrValue[i].attrValue[lable] !== tagFamily) {
+          break
+        }
+        len++
+      }
+      return {
+        rowspan: len,
+        colspan: 1
+      }
+    } else {
+      return {
+        rowspan: 0,
+        colspan: 0
+      }
+    }
+  }
+}
+// 生成列表 行 列 数据
+function tableCellClassName({ row, column, rowIndex, columnIndex }) {
+  //注意这里是解构
+  //利用单元格的 className 的回调方法，给行列索引赋值
+  row.index = rowIndex || ''
+  column.index = columnIndex
+}
+// 获取商品属性模板
+function productGetRule() {
+  templateListApi(tableFrom).then((res) => {
+    const list = res.list
+    for (var i = 0; i < list.length; i++) {
+      list[i].ruleValue = JSON.parse(list[i].ruleValue)
+    }
+    ruleList.value = list
+  })
+}
+// 修改佣金是否为默认设置
+function onChangetype(item) {
+  if (item === 1) {
+    props.OneattrValue.map((item) => {
+      item.brokerage = null
+      item.brokerageTwo = null
+    })
+    props.ManyAttrValue.map((item) => {
+      item.brokerage = null
+      item.brokerageTwo = null
+    })
+  } else {
+    props.OneattrValue.map((item) => {
+      // delete item.brokerage;
+      // delete item.brokerageTwo;
+      item.brokerage = 0
+      item.brokerageTwo = 0
+    })
+    props.ManyAttrValue.map((item) => {
+      // delete item.brokerage;
+      // delete item.brokerageTwo;
+      item.brokerage = 0
+      item.brokerageTwo = 0
+    })
+  }
+  generateHeader(formValidate.value.attr)
+}
+// 修改规格类型
+function onChangeSpec(num) {
+  isAttr.value = true
+  if (num) productGetRule()
+}
+// 选择规格模板
+function confirmAttrTemp(name) {
+  canSel.value = true
+  formValidate.value.selectRule = name
+  if (!formValidate.value.selectRule) {
+    return ElMessage.warning('请选择属性')
+  }
+  const rule = ruleList.value.find((item) => item.ruleName === formValidate.value.selectRule)
+  if (!rule) {
+    return ElMessage.warning('规格模板不存在')
+  }
+  const dataAttrs = (rule.ruleValue || []).map((item, index) => {
+    const detail = Array.isArray(item.detail) ? item.detail : []
+    return {
+      attrName: item.value,
+      optionList: detail.map((val, sort) => ({ value: val, image: '', sort })),
+      id: 0,
+      isShowImage: 0,
+      sort: index + 1
+    }
+  })
+  formValidate.value.attr = dataAttrs
+  generateAttr(formValidate.value.attr)
+}
+// 添加 optionList 字段
+function createOptionList(attr) {
+  if (!attr.length) return
+  // 如果 optionList 字段无内容
+  if (!Array.isArray(attr[0].optionList) || attr[0].optionList.length == 0) {
+    // 添加 optionList 内容
+    attr.forEach((item) => {
+      const attrValueList = typeof item.attrValues === 'string' ? item.attrValues.split(',') : []
+      item.optionList = attrValueList.map((val) => {
+        return {
+          value: val,
+          image: ''
+        }
+      })
+    })
+  }
+}
+// 生成商品规格表头
+function generateHeader(attr) {
+  let specificationsColumns = attr.map((item) => ({
+    title: item.attrName,
+    key: item.attrName,
+    minWidth: 200,
+    fixed: 'left'
+  }))
+  let arr
+  // 开启佣金设置
+  if (formValidate.value.isSub) {
+    arr = [...specificationsColumns, ...imageTableHead, ...commissionTableHead, ...GoodsTableHead]
+  } else {
+    arr = [...specificationsColumns, ...imageTableHead, ...GoodsTableHead]
+  }
+  formValidate.value.header = arr
+  tableKey.value += 1
+}
+// 生成规格组合
+function generateCombinations(attr, prefix = []) {
+  if (attr.length === 0) {
+    return [prefix]
+  }
+  const [first, ...rest] = attr
+  return first.optionList.flatMap((detail) => generateCombinations(rest, [...prefix, detail.value]))
+}
+// 生成规格属性数据
+function generateAttr(attr, val) {
+  // 生成商品规格表头
+  generateHeader(attr)
+  // 生成规格值组合
+  const combinations = generateCombinations(attr)
+  let rows = combinations.map((combination) => {
+    const row = {
+      attrArr: combination,
+      attrValueShow: {},
+      attrValue: {},
+      image: '',
+      price: 0,
+      cost: 0,
+      otPrice: 0,
+      stock: 0,
+      barCode: '',
+      weight: 0,
+      volume: 0,
+      brokerage: 0,
+      isShow: true,
+      brokerageTwo: 0
+    }
+    for (let i = 0; i < combination.length; i++) {
+      const value = combination[i]
+      row[attr[i].attrName] = value
+      row.title = attr[i].attrName
+      row.key = attr[i].attrName
+      row.attrValueShow[attr[i].attrName] = value
+      row.attrValue = row.attrValueShow
+      // 如果ManyAttrValue中存在该属性值，则赋值
+      for (let k = 0; k < props.ManyAttrValue.length; k++) {
+        const manyItem = props.ManyAttrValue[k]
+        // 对比两个数组是否完全相等
+        if (k > 0 && manyItem.attrArr.length && arraysEqual(manyItem.attrArr, combination)) {
+          Object.assign(row, {
+            // attrArr: manyItem.attrArr,
+            // attrValue: manyItem.attrValue,
+            price: manyItem.price || 0,
+            cost: manyItem.cost || 0,
+            otPrice: manyItem.otPrice || 0,
+            stock: manyItem.stock || 0,
+            image: manyItem.image || '',
+            sku: manyItem.sku || '',
+            weight: manyItem.weight || 0,
+            isDefault: manyItem.isDefault || 0,
+            volume: manyItem.volume || 0,
+            barCode: manyItem.barCode || '',
+            brokerage: manyItem.brokerage || 0,
+            brokerageTwo: manyItem.brokerageTwo || 0,
+            isShow: manyItem.isShow
+          })
+        } else if (k > 0 && manyItem.attrArr.length && attr[i].isShowImage && combination.includes(val)) {
+          // data[i].detail中的value是规格值 存在与 manyItem.attr_arr 中的某一项
+          attr[i].optionList.map((e, ii) => {
+            combination.includes(e.value) && (row.image = e.image)
+          })
+        }
+      }
+    }
+    return row
+  })
+  nextTick(() => {
+    // rows数组第一项 新增默认数据 oneFormBatch
+    emit('changeManyAttrValue', [...props.oneFormBatch, ...rows])
+  })
+}
+// 新增规格
+function handleAddRole() {
+  let data = {
+    attrValues: formDynamic.attrsName,
+    attrValue: [],
+    isShowImage: 0,
+    optionList: []
+  }
+  //  let attr = []
+  //  attr.push(data);
+  // this.$set(this.formValidate, 'attrs',attr)
+
+  nextTick(() => {
+    formValidate.value.attr.push(data)
+    emit('changeManyAttrValue', [...props.ManyAttrValue])
+    emit('update:modelValue', formValidate.value)
+  })
+}
+// 另存为模板
+function handleSaveAsTemplate() {
+  ElMessageBox.prompt('', '请输入模板名称', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputValidator: (value) => {
+      if (value === null) {
+        return '输入不能为空'
+      }
+      if (value.length > 30) return '输入限制30字以内'
+    }
+  })
+    .then(({ value }) => {
+      let spec = formValidate.value.attr.map((item) => {
+        return {
+          value: item.attrName,
+          detail: item.optionList.map((e) => e.value)
+        }
+      })
+      const data = {
+        id: 0,
+        ruleName: value,
+        ruleValue: JSON.stringify(spec)
+      }
+      attrCreatApi(data)
+        .then((res) => {
+          ElMessage.success('提交成功')
+          productGetRule()
+          clear()
+          loading.value = false
+          loadingBtn.value = false
+        })
+        .catch(() => {
+          loading.value = false
+          loadingBtn.value = false
+        })
+    })
+    .catch(() => {})
+}
+// 规格拖拽排序后
+function onMoveSpec(event, index = -1, type) {
+  const oldIndex = event.oldIndex,
+    newIndex = event.newIndex
+  // if (type == 'value') {
+  //   const [movedItem] = this.formValidate.attr[index].attrValue.splice(oldIndex, 1);
+  //   this.formValidate.attr[index].attrValue.splice(newIndex, 0, movedItem);
+  // }
+  generateAttr(formValidate.value.attr)
+}
+// 修改当前选中的规格索引
+function changeCurrentIndex(i) {
+  currentIndex.value = i
+}
+// 聚焦后更新当前要修改的的规格值
+function handleFocus(val) {
+  changeAttrValue.value = val
+}
+// 失去焦点后重置当前要修改的规格值
+function handleBlur() {
+  changeAttrValue.value = ''
+}
+// 规格图片添加开关
+function addPic(e, i) {
+  if (e) {
+    formValidate.value.attr.map((item, ii) => {
+      if (ii !== i) {
+        item.isShowImage = 0
+      }
+    })
+    canSel.value = false
+  } else {
+    canSel.value = true
+  }
+}
+// 删除属性
+function handleRemoveValue(item, index, val) {
+  item.optionList.splice(index, 1)
+  generateAttr(formValidate.value.attr)
+}
+// 删除表格中的属性
+function delAttrTable(val) {
+  for (let i = 0; i < props.ManyAttrValue.length; i++) {
+    let item = props.ManyAttrValue[i]
+    if (item.attrArr && item.attrArr.includes(val)) {
+      props.ManyAttrValue.splice(i, 1)
+      i--
+    }
+  }
+}
+// 在规格中选择规格图片
+function handleSelImg(item) {
+  proxy.$modalUpload(
+    function (img) {
+      if (!img) return
+      item.image = img[0].sattDir
+      changeSpecImg([item.value], img[0].sattDir)
+    },
+    '1',
+    'content'
+  )
+}
+// 修改规格图片
+function changeSpecImg(arr, img) {
+  // 判断是否存在规格图
+  let isHas = false
+  for (let i = 1; i < props.ManyAttrValue.length; i++) {
+    let item = props.ManyAttrValue[i]
+    if (item.image && isSubset(item.attrArr, arr)) {
+      isHas = true
+      break
+    }
+  }
+  if (isHas) {
+    ElMessageBox.confirm('可以同步修改下方该规格图片，确定要替换吗？', '提示', {
+      confirmButtonText: '替换',
+      cancelButtonText: '暂不',
+      type: 'warning'
+    })
+      .then(() => {
+        for (let val of props.ManyAttrValue) {
+          if (isSubset(val.attrArr, arr)) {
+            val.image = img
+          }
+        }
+      })
+      .catch(() => {})
+  } else {
+    for (let val of props.ManyAttrValue) {
+      if (isSubset(val.attrArr, arr)) {
+        val.image = img
+      }
+    }
+  }
+}
+// 检查元素是否存在
+function isSubset(arr1, arr2) {
+  // 将数组转换为 Set，以便进行高效的包含检查
+  const set1 = new Set(arr1)
+  const set2 = new Set(arr2)
+
+  // 检查 set2 中的每个元素是否都在 set1 中
+  for (let elem of set2) {
+    if (!set1.has(elem)) {
+      return false
+    }
+  }
+  return true
+}
+// 删除规格图片
+function handleRemoveImg(item) {
+  item.image = ''
+}
+// 点击添加规格值按钮聚焦输入框
+function handleShowPop(index) {
+  inputRefs[index]?.focus?.()
+}
+// 添加属性
+function createAttr(value, idx) {
+  if (value) {
+    // 判断是否存在同样数据
+    var isExist = formValidate.value.attr[idx].optionList.some((item) => item.value === value)
+    if (isExist) {
+      ElMessage.error('规格值已存在')
+      return
+    }
+    formValidate.value.attr[idx].optionList.push({
+      value: value,
+      image: ''
+    })
+    if (props.ManyAttrValue.length) {
+      generateAttr(formValidate.value.attr, value)
+      // this.addOneAttr(this.formValidate.attr[idx].attrName, value);
+    } else {
+      generateAttr(formValidate.value.attr)
+    }
+    popoverRefs[idx]?.doClose?.() //关闭的
+    clearAttr()
+    setTimeout(() => {
+      if (popoverRefs[idx]) {
+        //重点是以下两句
+        popoverRefs[idx]?.doShow?.() //打开的
+        //重点是以上两句
+      }
+    }, 20)
+  } else {
+    popoverRefs[idx]?.doClose?.() //关闭的
+  }
+}
+// 新增一条属性
+function addOneAttr(val, val2) {
+  generateAttr(formValidate.value.attr, val2)
+}
+function clearAttr() {
+  formDynamic.attrsName = ''
+  formDynamic.attrsVal = ''
+}
+// 删除规格
+function handleRemoveAttr(index) {
+  formValidate.value.attr.splice(index, 1)
+  if (!formValidate.value.attr.length) {
+    formValidate.value.header = []
+    props.ManyAttrValue.length = 0
+  } else {
+    generateAttr(formValidate.value.attr)
+  }
+  canSel.value = true
+}
+// 修改规格名称
+function changeAttr(index, val) {
+  if (val.trim().length && formValidate.value.attr[index].optionList.length) {
+    generateHeader(formValidate.value.attr)
+    if (props.ManyAttrValue.length) {
+      formValidate.value.attr[index].attrName = val
+      generateAttr(formValidate.value.attr)
+      // this.ManyAttrValue.map((item, i) => {
+      //   if (i > 0) {
+      //     if (Object.keys(item.attrValueShow).includes(this.changeAttrValue)) {
+      //       item.attrValueShow[val] = item.attrValueShow[this.changeAttrValue];
+      //       item[val] = item[this.changeAttrValue];
+      //       delete item.attrValueShow[this.changeAttrValue];
+      //       delete item[this.changeAttrValue];
+      //     }
+      //   }
+      // });
+      changeAttrValue.value = val
+    }
+  } else {
+    generateAttr(formValidate.value.attr)
+  }
+  // 触发父组件数据同步
+  emit('update:modelValue', formValidate.value)
+}
+// 规格值改变
+function changeValue(val, index, indexn) {
+  if (props.ManyAttrValue.length) {
+    let key = formValidate.value.attr[index].attrName
+    props.ManyAttrValue.map((item, i) => {
+      if (i > 0) {
+        if (Object.keys(item).includes(key) && item[key] === changeAttrValue.value) {
+          item[key] = val
+          item.attrValue[key] = val
+          let idx = item.attrArr.findIndex((item) => item === changeAttrValue.value)
+          item.attrArr[idx] = val
+        }
+      }
+    })
+    changeAttrValue.value = val
+  } else {
+    generateAttr(formValidate.value.attr, 1)
+  }
+  nextTick(() => {
+    emit('changeManyAttrValue', [...props.ManyAttrValue])
+    emit('update:modelValue', formValidate.value)
+  })
+}
+function keyupEvent(key, val, index, num) {
+  var re = /([0-9]+.[0-9]{2})[0-9]*/
+  switch (num) {
+    case 1:
+      props.oneFormBatch[index][key] =
+        key === 'stock' ? parseInt(val) : (props.oneFormBatch[index][key] = String(val).replace(re, '$1'))
+      break
+    case 2:
+      props.OneattrValue[index][key] =
+        key === 'stock' ? parseInt(val) : (props.OneattrValue[index][key] = String(val).replace(re, '$1'))
+      break
+    default:
+      props.ManyAttrValue[index][key] =
+        key === 'stock' ? parseInt(val) : (props.ManyAttrValue[index][key] = String(val).replace(re, '$1'))
+      break
+  }
+}
+//返佣输入
+function keyupEventBrokerage(val, index, num) {
+  switch (num) {
+    case 1:
+      props.oneFormBatch[index][val] = props.oneFormBatch[index][val] > 0 ? parseInt(props.oneFormBatch[index][val]) : 0
+      break
+    case 2:
+      props.OneattrValue[index][val] = props.OneattrValue[index][val] > 0 ? parseInt(props.OneattrValue[index][val]) : 0
+      break
+    default:
+      props.ManyAttrValue[index][val] =
+        props.ManyAttrValue[index][val] > 0 ? parseInt(props.ManyAttrValue[index][val]) : 0
+  }
+}
+// 批量添加
+function batchAdd() {
+  let arr = []
+  if (props.isDisabled) return
+  for (let val of formValidate.value.attr) {
+    if (props.oneFormBatch[0][val.attrName]) {
+      arr.push(props.oneFormBatch[0][val.attrName])
+    }
+  }
+  props.ManyAttrValue.forEach((val) => {
+    if (arr.length && val.attrArr) {
+      let attrVal = val.attrArr
+      if (isSubset(Object.values(attrVal), arr)) {
+        batchData(val)
+      }
+    } else {
+      batchData(val)
+    }
+  })
+}
+// 批量数据
+function batchData(val) {
+  if (props.oneFormBatch[0].image) val.image = props.oneFormBatch[0].image
+  if (props.oneFormBatch[0].price > 0) val.price = props.oneFormBatch[0].price
+  if (props.oneFormBatch[0].cost > 0) val.cost = props.oneFormBatch[0].cost
+  if (props.oneFormBatch[0].otPrice > 0) val.otPrice = props.oneFormBatch[0].otPrice
+  if (props.oneFormBatch[0].barCode) val.barCode = props.oneFormBatch[0].barCode
+  if (props.oneFormBatch[0].stock >= 0) val.stock = props.oneFormBatch[0].stock
+  if (props.oneFormBatch[0].weight >= 0) val.weight = props.oneFormBatch[0].weight
+  if (props.oneFormBatch[0].volume >= 0) val.volume = props.oneFormBatch[0].volume
+  if (props.oneFormBatch[0].brokerage > 0) val.brokerage = props.oneFormBatch[0].brokerage
+  if (props.oneFormBatch[0].brokerageTwo > 0) val.brokerageTwo = props.oneFormBatch[0].brokerageTwo
+}
+// 清空批量规格信息
+function batchDel() {
+  emit('handleBatchDel')
+}
+// 点击商品图
+function modalPicTap(tit, num, i, status) {
+  if (props.isDisabled) return
+  proxy.$modalUpload(
+    function (img) {
+      if (tit === '1' && !num) {
+        formValidate.value.image = img[0].sattDir
+        props.OneattrValue[0].image = img[0].sattDir
+      }
+      if (tit === '2' && !num) {
+        if (img.length > 10) return ElMessage.warning('最多选择10张图片！')
+        if (img.length + formValidate.value.sliderImages.length > 10) return ElMessage.warning('最多选择10张图片！')
+        img.map((item) => {
+          formValidate.value.sliderImages.push(item.sattDir)
+        })
+      }
+      if (tit === '3' && status === 'video') {
+        let videoInfo = img[0]
+        if (videoInfo.attType !== 'video/mp4') {
+          ElMessage.warning('请重新选择视频！')
+        } else {
+          formValidate.value.videoLink = videoInfo.sattDir
+        }
+      }
+      if (tit === '1' && num === 'dan') {
+        props.OneattrValue[0].image = img[0].sattDir
+      }
+      if (tit === '1' && num === 'duo') {
+        props.ManyAttrValue[i].image = img[0].sattDir
+      }
+      if (tit === '1' && num === 'pi') {
+        props.oneFormBatch[0].image = img[0].sattDir
+      }
+    },
+    tit,
+    'content'
+  )
+}
+// 切换默认选中规格
+function changeDefaultSelect(e, index) {
+  const ManyAttrValues = [...props.ManyAttrValue]
+  ManyAttrValues.map((item, i) => {
+    if (i !== index) {
+      item.isDefault = false
+    }
+  })
+  if (e) ManyAttrValues[index].isShow = true
+  emit('changeManyAttrValue', [...ManyAttrValues])
+}
+// 改变是否显示
+function changeDefaultShow(index) {
+  // 如果默认选中开启 则不可隐藏
+  if (props.ManyAttrValue[index].isDefault === true) {
+    props.ManyAttrValue[index].isShow = true
+    return ElMessage.error('默认规格不可隐藏')
+  }
+  // 至少显示一个规格
+  if (!props.ManyAttrValue.some((item) => item.isShow)) {
+    props.ManyAttrValue[index].isShow = true
+    ElMessage.error('至少显示一个规格')
+  }
+}
+
+// 原 watch formValidate：仅同步赋值（保留）
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    // this.formValidate = newVal; (computed 已处理)
+  }
+)
+
+onMounted(() => {
+  if (formValidate.value.specType) {
+    productGetRule() //加载商品规格选项
+    // 添加 optionList 字段
+    createOptionList(formValidate.value.attr)
+    // 生成规格属性数据
+    generateAttr(formValidate.value.attr)
+  }
+})
 </script>
 
 <style scoped lang="scss">
@@ -1254,19 +1288,23 @@ export default {
   background-color: #fafafa;
   border-radius: 10px;
 
-  ::v-deep(.el-checkbox__label) {
+  :deep(.el-checkbox__label) {
     font-size: 12px;
   }
 }
 .el-dropdown-menu {
   border-color: #ebeef5;
-  max-height: 650px !important;
-  overflow-y: scroll !important;
+  max-height: 650px;
+  overflow-y: auto;
+}
+.dropdown-menu-box {
+  height: 34px;
+  align-items: center;
 }
 
 .priceBox {
   width: 100%;
-  ::v-deep.el-input__inner {
+  :deep(.el-input__inner) {
     text-align: center;
   }
 }
@@ -1348,7 +1386,7 @@ export default {
     margin-top: 5px;
     margin-left: 0px;
   }
-  ::v-deep .el-popover {
+  :deep(.el-popover) {
     border: none;
     box-shadow: none;
     padding: 0;
@@ -1474,7 +1512,7 @@ export default {
   cursor: move;
 }
 .w-240 {
-  width: 240px!important;
+  width: 240px !important;
 }
 .empty-box {
   width: 240px;
@@ -1482,8 +1520,11 @@ export default {
   background-color: #fafafa;
 }
 .attr-input {
-  ::v-deep .el-input__inner {
+  :deep(.el-input__inner) {
     padding-right: 45px;
   }
+}
+:deep(.el-form-item__content)  {
+  display: block;
 }
 </style>

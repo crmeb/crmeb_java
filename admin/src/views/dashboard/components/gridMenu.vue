@@ -16,7 +16,7 @@
       </el-col>
       <el-col :xs="24" :sm="24" :md="24" :lg="12">
         <el-card class="box-card">
-          <div class="header_title">经营数据</div>
+          <div class="header_title">待办事项</div>
           <div class="nav_grid">
             <div
               class="nav_grid_item"
@@ -33,139 +33,120 @@
     </el-row>
   </div>
 </template>
-<script>
-import echartsNew from '@/components/echartsNew/index';
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { businessData } from '@/api/dashboard';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
-export default {
-  components: {
-    echartsNew,
+
+const router = useRouter();
+
+const grid = ref({
+  xl: 3,
+  lg: 3,
+  md: 6,
+  sm: 8,
+  xs: 8,
+});
+const nav_list = ref([
+  {
+    bgColor: '#1890FF',
+    icon: 'iconhuiyuanguanli',
+    title: '用户管理',
+    url: '/user/index',
+    perms: ['admin:user:list'],
   },
-  data() {
-    return {
-      grid: {
-        xl: 3,
-        lg: 3,
-        md: 6,
-        sm: 8,
-        xs: 8,
-      },
-      nav_list: [
-        {
-          bgColor: '#1890FF',
-          icon: 'iconhuiyuanguanli',
-          title: '用户管理',
-          url: '/user/index',
-          perms: ['admin:user:list'],
-        },
-        {
-          bgColor: '#1BBE6B',
-          icon: 'iconxitongshezhi',
-          title: '系统设置',
-          url: '/operation/setting',
-          perms: ['admin:system:config:info'],
-        },
-        {
-          bgColor: '#EF9C20',
-          icon: 'iconshangpinguanli',
-          title: '商品管理',
-          url: '/store/index',
-          perms: ['admin:product:list'],
-        },
-        {
-          bgColor: '#F56C6C',
-          icon: 'icondingdanguanli',
-          title: '订单管理',
-          url: '/order/index',
-          perms: ['admin:order:list'],
-        },
-        {
-          bgColor: '#A277FF',
-          icon: 'iconduanxinpeizhi',
-          title: '一号通',
-          url: '/operation/onePass',
-          perms: ['admin:pass:login'],
-        },
-        {
-          bgColor: '#E8B600',
-          icon: 'iconwenzhangguanli',
-          title: '文章管理',
-          url: '/content/articleManager',
-          perms: ['admin:article:list'],
-        },
-        {
-          bgColor: '#4BCAD5',
-          icon: 'iconfenxiaoguanli',
-          title: '分销管理',
-          url: '/distribution/index',
-          perms: ['admin:retail:list'],
-        },
-        {
-          bgColor: '#1890FF',
-          icon: 'iconyouhuiquan',
-          title: '优惠券',
-          url: '/marketing/coupon/list',
-          perms: ['admin:coupon:list'],
-        },
-      ],
-      statisticData: [
-        { title: '待发货订单', num: 0, path: '/order/index', perms: ['admin:order:list'] },
-        { title: '退款中订单', num: 0, path: '/order/index', perms: ['admin:order:list'] },
-        { title: '待核销订单', num: 0, path: '/order/index', perms: ['admin:order:list'] },
-        { title: '库存预警', num: 0, path: '/store/index', perms: ['admin:product:list'] },
-        { title: '上架商品', num: 0, path: '/store/index', perms: ['admin:product:list'] },
-        { title: '仓库商品', num: 0, path: '/store/index', perms: ['admin:product:list'] },
-        { title: '提现待审核', num: 0, path: '/financial/commission/template', perms: ['admin:finance:apply:list'] },
-        { title: '账户充值', num: 0, path: '/financial/record/charge', perms: ['admin:recharge:list'] },
-      ],
-      optionData: {},
-      applyNum: 0,
-      style: { height: '250px' },
-    };
+  {
+    bgColor: '#1BBE6B',
+    icon: 'iconxitongshezhi',
+    title: '系统设置',
+    url: '/operation/setting',
+    perms: ['admin:system:config:info'],
   },
-  computed: {
-    //鉴权处理
-    permList: function () {
-      let arr = [];
-      this.nav_list.forEach((item) => {
-        if (this.checkPermi(item.perms)) {
-          arr.push(item);
-        }
-      });
-      return arr;
-    },
-    businessList: function () {
-      let arr = [];
-      this.statisticData.forEach((item) => {
-        if (this.checkPermi(item.perms)) {
-          arr.push(item);
-        }
-      });
-      return arr;
-    },
+  {
+    bgColor: '#EF9C20',
+    icon: 'iconshangpinguanli',
+    title: '商品管理',
+    url: '/store/index',
+    perms: ['admin:product:list'],
   },
-  mounted() {
-    this.getbusinessData();
+  {
+    bgColor: '#F56C6C',
+    icon: 'icondingdanguanli',
+    title: '订单管理',
+    url: '/order/index',
+    perms: ['admin:order:list'],
   },
-  methods: {
-    checkPermi,
-    navigatorTo(path) {
-      this.$router.push(path);
-    },
-    getbusinessData() {
-      businessData().then((res) => {
-        this.statisticData[0].num = res.notShippingOrderNum; //待发货订单
-        this.statisticData[1].num = res.refundingOrderNum; //退款中订单
-        this.statisticData[2].num = res.notWriteOffOrderNum; //待核销订单
-        this.statisticData[3].num = res.vigilanceInventoryNum; //库存预警
-        this.statisticData[4].num = res.onSaleProductNum; //上架商品
-        this.statisticData[5].num = res.notSaleProductNum; //仓库商品
-        this.statisticData[6].num = res.notAuditNum; //提现待审核
-        this.statisticData[7].num = res.totalRechargeAmount; //账户充值
-      });
-    },
+  {
+    bgColor: '#E8B600',
+    icon: 'iconwenzhangguanli',
+    title: '文章管理',
+    url: '/content/articleManager',
+    perms: ['admin:article:list'],
   },
-};
+  {
+    bgColor: '#4BCAD5',
+    icon: 'iconfenxiaoguanli',
+    title: '分销管理',
+    url: '/distribution/index',
+    perms: ['admin:retail:list'],
+  },
+  {
+    bgColor: '#1890FF',
+    icon: 'iconyouhuiquan',
+    title: '优惠券',
+    url: '/marketing/coupon/list',
+    perms: ['admin:coupon:list'],
+  },
+]);
+const statisticData = ref([
+  { title: '待发货订单', num: 0, path: '/order/index', perms: ['admin:order:list'] },
+  { title: '退款中订单', num: 0, path: '/order/index', perms: ['admin:order:list'] },
+  { title: '库存预警', num: 0, path: '/store/index', perms: ['admin:product:list'] },
+  { title: '上架商品', num: 0, path: '/store/index', perms: ['admin:product:list'] },
+  { title: '仓库商品', num: 0, path: '/store/index', perms: ['admin:product:list'] },
+  { title: '提现待审核', num: 0, path: '/financial/commission/template', perms: ['admin:finance:apply:list'] },
+  { title: '账户充值', num: 0, path: '/financial/record/charge', perms: ['admin:recharge:list'] },
+]);
+
+//鉴权处理
+const permList = computed(() => {
+  let arr = [];
+  nav_list.value.forEach((item) => {
+    if (checkPermi(item.perms)) {
+      arr.push(item);
+    }
+  });
+  return arr;
+});
+const businessList = computed(() => {
+  let arr = [];
+  statisticData.value.forEach((item) => {
+    if (checkPermi(item.perms)) {
+      arr.push(item);
+    }
+  });
+  return arr;
+});
+
+function navigatorTo(path) {
+  router.push(path);
+}
+function getbusinessData() {
+  businessData().then((res) => {
+    statisticData.value[0].num = res.notShippingOrderNum; //待发货订单
+    statisticData.value[1].num = res.refundingOrderNum; //退款中订单
+    statisticData.value[2].num = res.vigilanceInventoryNum; //库存预警
+    statisticData.value[3].num = res.onSaleProductNum; //上架商品
+    statisticData.value[4].num = res.notSaleProductNum; //仓库商品
+    statisticData.value[5].num = res.notAuditNum; //提现待审核
+    statisticData.value[6].num = res.totalRechargeAmount; //账户充值
+  });
+}
+
+onMounted(() => {
+  getbusinessData();
+});
 </script>
 <style lang="scss" scoped>
 .ivu-mb {

@@ -2,11 +2,11 @@
   <el-dialog
     width="540px"
     title="定时任务"
-    :visible.sync="dialogVisible"
+    v-model="dialogVisibleModel"
     :before-close="handleClose"
     :closeOnClickModal="false"
   >
-    <el-form ref="dataForm" :model="dataForm" label-width="100px" :rules="rules" v-loading="loadingFrom">
+    <el-form ref="dataFormRef" :model="dataForm" label-width="100px" :rules="rules" v-loading="loadingFrom">
       <el-form-item required label="定时任务类名：" prop="beanName">
         <el-input v-model.trim="dataForm.beanName" placeholder="请输入定时任务名称" />
       </el-form-item>
@@ -23,14 +23,16 @@
         <el-input v-model.trim="dataForm.remark" placeholder="请输入备注" />
       </el-form-item>
     </el-form>
-    <span slot="footer" class="dialog-footer">
-      <el-button @click="handleClose('dataForm')">取消</el-button>
-      <el-button type="primary" :loading="loading" @click="onsubmit('dataForm')">确定</el-button>
-    </span>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="handleClose('dataFormRef')">取消</el-button>
+        <el-button type="primary" :loading="loading" @click="onsubmit('dataFormRef')">确定</el-button>
+      </span>
+    </template>
   </el-dialog>
 </template>
 
-<script>
+<script setup>
 // +---------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +---------------------------------------------------------------------
@@ -40,90 +42,96 @@
 // +---------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
+import { ref, reactive, computed, watch, nextTick, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import * as schedule from '@/api/schedule';
-export default {
-  name: 'creatClassify',
-  props: {
-    editData: {
-      type: Object,
-      default: () => {
-        return {};
-      },
-    },
-    dialogVisible: {
-      type: Boolean,
-      default: false,
+
+defineOptions({ name: 'creatClassify' });
+
+const props = defineProps({
+  editData: {
+    type: Object,
+    default: () => {
+      return {};
     },
   },
-  // computed: {
-  //   ...mapGetters(['adminProductClassify']),
-  // },
-  data() {
-    return {
-      loading: false,
-      loadingFrom: false,
-      rules: {},
-      dataForm: { ...this.editData },
-    };
+  dialogVisible: {
+    type: Boolean,
+    default: false,
   },
-  watch: {
-    editData: {
-      handler: function (val) {
-        this.dataForm = { ...val };
-      },
-      deep: true,
-    },
+});
+
+const emit = defineEmits(['closeModel', 'getList', 'update:dialogVisible']);
+
+// dialogVisible 是 prop，Vue3 中 prop 不可直接 v-model，用 computed 转 emit update:dialogVisible
+const dialogVisibleModel = computed({
+  get: () => props.dialogVisible,
+  set: (val) => emit('update:dialogVisible', val),
+});
+
+const { proxy } = getCurrentInstance();
+
+const loading = ref(false);
+const loadingFrom = ref(false);
+const rules = ref({});
+const dataForm = reactive({ ...props.editData });
+
+const dataFormRef = ref(null);
+
+watch(
+  () => props.editData,
+  (val) => {
+    Object.assign(dataForm, { ...val });
   },
-  methods: {
-    handleClose() {
-      this.$nextTick(() => {
-        this.$emit('closeModel');
-        this.$refs['dataForm'].resetFields();
-      });
-    },
-    onClose() {
-      this.$refs['dataForm'].resetFields();
-      this.$emit('closeModel');
-      this.loading = false;
-      this.$emit('getList');
-      this.dialogVisible = false;
-    },
-    onsubmit(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          this.loading = true;
-          !this.dataForm.jobId
-            ? schedule
-                .scheduleJobAdd(this.dataForm)
-                .then((res) => {
-                  this.$message.success('操作成功');
-                  this.onClose();
-                })
-                .catch(() => {
-                  this.loading = false;
-                })
-            : schedule
-                .scheduleJobUpdate(this.dataForm)
-                .then((res) => {
-                  this.$message.success('操作成功');
-                  this.onClose();
-                })
-                .catch(() => {
-                  this.loading = false;
-                });
-        } else {
-          return false;
-        }
-      });
-    },
-  },
-};
+  { deep: true }
+);
+
+function handleClose() {
+  nextTick(() => {
+    emit('closeModel');
+    dataFormRef.value.resetFields();
+  });
+}
+function onClose() {
+  dataFormRef.value.resetFields();
+  emit('closeModel');
+  loading.value = false;
+  emit('getList');
+}
+function onsubmit(formName) {
+  proxy.$refs[formName].validate((valid) => {
+    if (valid) {
+      loading.value = true;
+      !dataForm.jobId
+        ? schedule
+            .scheduleJobAdd(dataForm)
+            .then((res) => {
+              ElMessage.success('操作成功');
+              onClose();
+            })
+            .catch(() => {
+              loading.value = false;
+            })
+        : schedule
+            .scheduleJobUpdate(dataForm)
+            .then((res) => {
+              ElMessage.success('操作成功');
+              onClose();
+            })
+            .catch(() => {
+              loading.value = false;
+            });
+    } else {
+      return false;
+    }
+  });
+}
 </script>
 
 <style scoped lang="scss">
 .lang {
   width: 100%;
-  ::v-deep.el-form-item__content {
+  :deep(.el-form-item__content ){
     width: 79%;
   }
 }

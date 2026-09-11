@@ -3,14 +3,14 @@
     <el-card class="box-card">
       <div class="clearfix">
         <div class="container">
-          <el-form size="small" label-width="70px" inline>
+          <el-form label-width="70px" inline>
             <el-form-item label="时间选择：">
               <optionDatePicker v-model="timeVal" @changeOptTime="onchangeTime"></optionDatePicker>
               <!-- <el-date-picker
                 v-model="timeVal"
-                value-format="yyyy-MM-dd"
-                format="yyyy-MM-dd"
-                size="small"
+                value-format="YYYY-MM-DD"
+                format="YYYY-MM-DD"
+
                 type="daterange"
                 placement="bottom-end"
                 placeholder="自定义时间"
@@ -24,12 +24,12 @@
               <UserSearchInput v-model="tableFrom" />
             </el-form-item>
             <el-form-item label="订单号：">
-              <el-input v-model="tableFrom.keywords" placeholder="订单号" class="selWidth" size="small" clearable>
+              <el-input v-model="tableFrom.keywords" placeholder="订单号" class="selWidth" clearable>
               </el-input>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" size="small" @click="getList(1)">搜索</el-button>
-              <el-button size="small" @click="handleReset">重置</el-button>
+              <el-button type="primary" @click="getList(1)">搜索</el-button>
+              <el-button @click="handleReset">重置</el-button>
             </el-form-item>
           </el-form>
         </div>
@@ -43,15 +43,15 @@
         v-loading="listLoading"
         :data="tableData.data"
         style="width: 100%"
-        size="mini"
+
         class="table"
         highlight-current-row
       >
         <el-table-column prop="uid" label="UID" width="60" />
         <el-table-column label="头像" min-width="80">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div class="demo-image__preview">
-              <el-image :src="scope.row.avatar" :preview-src-list="[scope.row.avatar]" />
+              <el-image :src="scope.row.avatar" :preview-src-list="[scope.row.avatar]" preview-teleported />
             </div>
           </template>
         </el-table-column>
@@ -80,13 +80,39 @@
           "
         />
         <el-table-column label="充值类型" min-width="80">
-          <template slot-scope="scope">
-            <span>{{ scope.row.rechargeType | rechargeTypeFilter }}</span>
+          <template #default="scope">
+            <span>{{ $filters.rechargeTypeFilter(scope.row.rechargeType) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="支付时间" width="170">
-          <template slot-scope="scope">
+          <template #default="scope">
             <span class="spBlock">{{ scope.row.payTime || '无' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="已退金额" min-width="120">
+          <template #default="scope">
+            <span>{{ scope.row.refundPrice || 0 }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-if="checkPermi(['admin:recharge:refund'])"
+          label="操作"
+          width="90"
+          fixed="right"
+          align="left"
+          header-align="left"
+          class-name="recharge-operation-column"
+          label-class-name="recharge-operation-column"
+        >
+          <template #default="scope">
+            <el-button
+              type="primary"
+              link
+              :disabled="!isRechargeRefundable(scope.row)"
+              @click="handleRefund(scope.row)"
+            >
+              退款
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -104,7 +130,7 @@
       </div>
     </el-card>
     <!--退款-->
-    <el-dialog title="退款" :visible.sync="dialogVisible" width="500px" :before-close="handleClose">
+    <el-dialog title="退款" v-model="dialogVisible" width="500px" :before-close="handleClose">
       <zb-parser
         v-if="dialogVisible"
         :form-id="130"
@@ -117,143 +143,158 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import { topUpLogListApi, balanceApi, topUpLogDeleteApi, refundApi } from '@/api/financial';
 import cardsData from '@/components/cards/index';
 import zbParser from '@/components/FormGenerator/components/parser/ZBParser';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
-export default {
-  name: 'AccountsBill',
-  components: { cardsData, zbParser },
-  data() {
-    return {
-      editData: {},
-      isCreate: 1,
-      cardLists: [],
-      timeVal: [],
-      tableData: {
-        data: [],
-        total: 0,
-      },
-      listLoading: true,
-      tableFrom: {
-        searchType: 'all',
-        content: '',
-        // paid: '',
-        dateLimit: '',
-        keywords: '',
-        page: 1,
-        limit: 20,
-      },
-      fromList: this.$constants.fromList,
-      dialogVisible: false,
-    };
-  },
-  mounted() {
-    this.getList();
-    // this.getStatistics();
-  },
-  methods: {
-    checkPermi,
-    //重置
-    handleReset() {
-      this.tableFrom.uid = '';
-      this.tableFrom.dateLimit = '';
-      this.tableFrom.keywords = '';
-      this.tableFrom.searchType = 'all',
-      this.tableFrom.content = '',
-      this.timeVal = [];
-      this.getList();
-    },
-    resetForm(formValue) {
-      this.handleClose();
-    },
-    handlerSubmit(formValue) {
-      refundApi(formValue).then((data) => {
-        this.$message.success('操作成功');
-        this.dialogVisible = false;
-        this.editData = {};
-        this.getList();
-      });
-    },
-    handleClose() {
-      this.dialogVisible = false;
-      this.editData = {};
-    },
-    handleRefund(row) {
-      if (row.price == row.refundPrice) return this.$message.waiting('已退完支付金额！不能再退款了 ！');
-      if (row.rechargeType === 'balance') return this.$message.waiting('佣金转入余额，不能退款 ！');
-      this.editData.orderId = row.orderId;
-      this.editData.id = row.id;
-      this.dialogVisible = true;
-    },
-    handleDelete(row, idx) {
-      this.$modalSure().then(() => {
-        topUpLogDeleteApi({ id: row.id }).then(() => {
-          this.$message.success('删除成功');
-          this.getList(this.tableFrom.page);
-        });
-      });
-    },
-    // 选择时间
-    selectChange(tab) {
-      this.tableFrom.dateLimit = tab;
-      this.timeVal = [];
-      this.tableFrom.page = 1;
-      this.getList();
-    },
-    // 具体日期
-    onchangeTime(e) {
-      this.timeVal = e;
-      this.tableFrom.dateLimit = e ? this.timeVal.join(',') : '';
-      this.tableFrom.page = 1;
-      this.getList();
-    },
-    // 列表
-    getList(num) {
-      this.listLoading = true;
-      this.tableFrom.page = num ? num : this.tableFrom.page;
-      topUpLogListApi(this.tableFrom)
-        .then((res) => {
-          this.tableData.data = res.list;
-          this.tableData.total = res.total;
-          this.listLoading = false;
-        })
-        .catch(() => {
-          this.listLoading = false;
-        });
-    },
-    pageChange(page) {
-      this.tableFrom.page = page;
-      this.getList();
-    },
-    handleSizeChange(val) {
-      this.tableFrom.limit = val;
-      this.getList();
-    },
-    // 统计
-    getStatistics() {
-      balanceApi().then((res) => {
-        const stat = res;
-        this.cardLists = [
-          { name: '充值总金额', count: stat.total, color: '#1890FF', class: 'one', icon: 'iconchongzhijine' },
-          { name: '小程序充值金额', count: stat.routine, color: '#A277FF', class: 'two', icon: 'iconweixinzhifujine' },
-          { name: '公众号充值金额', count: stat.weChat, color: '#EF9C20', class: 'three', icon: 'iconyuezhifujine1' },
-        ];
-      });
-    },
-  },
-};
+
+defineOptions({ name: 'AccountsBill' });
+
+const { proxy } = getCurrentInstance();
+const constants = proxy.$constants;
+
+const editData = reactive({});
+const isCreate = ref(1);
+const cardLists = ref([]);
+const timeVal = ref([]);
+const tableData = reactive({
+  data: [],
+  total: 0,
+});
+const listLoading = ref(true);
+const tableFrom = reactive({
+  searchType: 'all',
+  content: '',
+  // paid: '',
+  dateLimit: '',
+  keywords: '',
+  page: 1,
+  limit: 20,
+});
+const fromList = constants.fromList;
+const dialogVisible = ref(false);
+
+//重置
+function handleReset() {
+  tableFrom.uid = '';
+  tableFrom.dateLimit = '';
+  tableFrom.keywords = '';
+  tableFrom.searchType = 'all';
+  tableFrom.content = '';
+  timeVal.value = [];
+  getList();
+}
+function resetForm(formValue) {
+  handleClose();
+}
+function handlerSubmit(formValue) {
+  refundApi(formValue).then((data) => {
+    ElMessage.success('操作成功');
+    dialogVisible.value = false;
+    Object.keys(editData).forEach((k) => delete editData[k]);
+    getList();
+  });
+}
+function handleClose() {
+  dialogVisible.value = false;
+  Object.keys(editData).forEach((k) => delete editData[k]);
+}
+function isRechargeRefundable(row) {
+  const price = Number(row.price || 0);
+  const refundPrice = Number(row.refundPrice || 0);
+  return row.rechargeType !== 'balance' && price > 0 && refundPrice < price;
+}
+function handleRefund(row) {
+  if (Number(row.refundPrice || 0) >= Number(row.price || 0)) return ElMessage.warning('已退完支付金额，不能再退款');
+  if (row.rechargeType === 'balance') return ElMessage.warning('佣金转入余额，不能退款');
+  editData.orderId = row.orderId;
+  editData.id = row.id;
+  editData.type = 2;
+  dialogVisible.value = true;
+}
+function handleDelete(row, idx) {
+  proxy.$modalSure().then(() => {
+    topUpLogDeleteApi({ id: row.id }).then(() => {
+      ElMessage.success('删除成功');
+      getList(tableFrom.page);
+    });
+  });
+}
+// 选择时间
+function selectChange(tab) {
+  tableFrom.dateLimit = tab;
+  timeVal.value = [];
+  tableFrom.page = 1;
+  getList();
+}
+// 具体日期
+function onchangeTime(e) {
+  timeVal.value = e;
+  tableFrom.dateLimit = e ? timeVal.value.join(',') : '';
+  tableFrom.page = 1;
+  getList();
+}
+// 列表
+function getList(num) {
+  listLoading.value = true;
+  tableFrom.page = num ? num : tableFrom.page;
+  topUpLogListApi(tableFrom)
+    .then((res) => {
+      tableData.data = res.list;
+      tableData.total = res.total;
+      listLoading.value = false;
+    })
+    .catch(() => {
+      listLoading.value = false;
+    });
+}
+function pageChange(page) {
+  tableFrom.page = page;
+  getList();
+}
+function handleSizeChange(val) {
+  tableFrom.limit = val;
+  getList();
+}
+// 统计
+function getStatistics() {
+  balanceApi().then((res) => {
+    const stat = res;
+    cardLists.value = [
+      { name: '充值总金额', count: stat.total, color: '#1890FF', class: 'one', icon: 'iconchongzhijine' },
+      { name: '小程序充值金额', count: stat.routine, color: '#A277FF', class: 'two', icon: 'iconweixinzhifujine' },
+      { name: '公众号充值金额', count: stat.weChat, color: '#EF9C20', class: 'three', icon: 'iconyuezhifujine1' },
+    ];
+  });
+}
+
+onMounted(() => {
+  getList();
+  // getStatistics();
+});
 </script>
 
 <style scoped>
 .selWidth {
   width: 300px;
 }
-::v-deep .el-card__body {
+:deep(.el-card__body) {
   padding: 20px 20px 0;
 }
 .block {
   padding-bottom: 20px;
+}
+:deep(.recharge-operation-column .cell) {
+  text-align: left;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+:deep(.recharge-operation-column .el-button) {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 </style>

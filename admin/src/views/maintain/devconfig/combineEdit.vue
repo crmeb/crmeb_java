@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-form ref="selfForm" :model="selfForm" label-width="120px">
+    <el-form ref="selfFormRef" :model="selfForm" label-width="120px">
       <el-form-item
         label="排序："
         prop="sort"
@@ -28,96 +28,100 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import parser from '@/components/FormGenerator/components/parser/Parser';
 import * as systemGroupDataApi from '@/api/systemGroupData.js';
 import * as systemFormConfigApi from '@/api/systemFormConfig.js';
 import { Debounce } from '@/utils/validate';
-export default {
-  // name: "combineEdit"
-  components: { parser },
-  props: {
-    formData: {
-      type: Object,
-      required: true,
-    },
-    isCreate: {
-      type: Number,
-      default: 0, // 0=create 1=edit
-    },
-    editData: {
-      type: Object,
-    },
+
+defineOptions({});
+
+const props = defineProps({
+  formData: {
+    type: Object,
+    required: true,
   },
-  data() {
-    return {
-      formConf: { fields: [] },
-      selfForm: {
-        sort: 1,
-        status: 0,
-      },
-    };
+  isCreate: {
+    type: Number,
+    default: 0, // 0=create 1=edit
   },
-  mounted() {
-    this.handlerGetFormConfig();
-    this.handlerInitEditData();
+  editData: {
+    type: Object,
   },
-  methods: {
-    closeDialog() {
-      this.$emit('closeDialog');
+});
+
+const emit = defineEmits(['closeDialog', 'hideDialog']);
+
+const { proxy } = getCurrentInstance();
+
+const formConf = ref({ fields: [] });
+const selfForm = reactive({
+  sort: 1,
+  status: 0,
+});
+
+const selfFormRef = ref(null);
+
+function closeDialog() {
+  emit('closeDialog');
+}
+function handlerInitEditData() {
+  const { sort, status } = props.editData || {};
+  props.isCreate && (selfForm.sort = sort);
+  selfForm.status = status;
+}
+function handlerGetFormConfig() {
+  // 获取表单配置后生成table列
+  const _pram = { id: props.formData.formId };
+  systemFormConfigApi.getFormConfigInfo(_pram).then((data) => {
+    formConf.value = JSON.parse(data.content);
+  });
+}
+const handlerSubmit = Debounce(function (formValue) {
+  props.isCreate === 0 ? handlerSave(formValue) : handlerEdit(formValue);
+});
+function handlerSave(formValue) {
+  const _pram = buildFormPram(formValue);
+  systemGroupDataApi.groupDataSave(_pram).then((data) => {
+    ElMessage.success('添加数据成功');
+    emit('hideDialog');
+  });
+}
+function handlerEdit(formValue) {
+  const _pram = buildFormPram(formValue);
+  systemGroupDataApi.groupDataEdit(_pram, props.editData.id).then((data) => {
+    ElMessage.success('编辑数据成功');
+    emit('hideDialog');
+  });
+}
+function buildFormPram(formValue) {
+  const _pram = {
+    gid: props.formData.id,
+    form: {
+      fields: [],
+      id: props.formData.formId,
+      sort: selfForm.sort,
+      status: selfForm.status,
     },
-    handlerInitEditData() {
-      const { sort, status } = this.editData;
-      this.isCreate && (this.selfForm.sort = sort);
-      this.selfForm.status = status;
-    },
-    handlerGetFormConfig() {
-      // 获取表单配置后生成table列
-      const _pram = { id: this.formData.formId };
-      systemFormConfigApi.getFormConfigInfo(_pram).then((data) => {
-        this.formConf = JSON.parse(data.content);
-      });
-    },
-    handlerSubmit: Debounce(function (formValue) {
-      this.isCreate === 0 ? this.handlerSave(formValue) : this.handlerEdit(formValue);
-    }),
-    handlerSave(formValue) {
-      const _pram = this.buildFormPram(formValue);
-      systemGroupDataApi.groupDataSave(_pram).then((data) => {
-        this.$message.success('添加数据成功');
-        this.$emit('hideDialog');
-      });
-    },
-    handlerEdit(formValue) {
-      const _pram = this.buildFormPram(formValue);
-      systemGroupDataApi.groupDataEdit(_pram, this.editData.id).then((data) => {
-        this.$message.success('编辑数据成功');
-        this.$emit('hideDialog');
-      });
-    },
-    buildFormPram(formValue) {
-      const _pram = {
-        gid: this.formData.id,
-        form: {
-          fields: [],
-          id: this.formData.formId,
-          sort: this.selfForm.sort,
-          status: this.selfForm.status,
-        },
-      };
-      const _fields = [];
-      Object.keys(formValue).forEach((key) => {
-        _fields.push({
-          name: key,
-          title: key,
-          value: formValue[key],
-        });
-      });
-      _pram.form.fields = _fields;
-      return _pram;
-    },
-  },
-};
+  };
+  const _fields = [];
+  Object.keys(formValue).forEach((key) => {
+    _fields.push({
+      name: key,
+      title: key,
+      value: formValue[key],
+    });
+  });
+  _pram.form.fields = _fields;
+  return _pram;
+}
+
+onMounted(() => {
+  handlerGetFormConfig();
+  handlerInitEditData();
+});
 </script>
 
 <style scoped></style>

@@ -1,14 +1,14 @@
 <template>
   <div class="divBox relative">
     <el-card class="box-card">
-      <el-tabs v-model="tableFrom.type" @tab-click="onChangeType" class="mb20">
+      <el-tabs v-model="tableFrom.type" @tab-change="onChangeType" class="mb20">
         <el-tab-pane label="短信" name="sms"></el-tab-pane>
         <el-tab-pane label="商品采集" name="copy"></el-tab-pane>
         <el-tab-pane label="物流查询" name="expr_query"></el-tab-pane>
         <el-tab-pane label="电子面单打印" name="expr_dump"></el-tab-pane>
       </el-tabs>
-      <router-link :to="{ path: '/operation/onePass' }">
-        <el-button class="link_abs"  icon="el-icon-arrow-left">返回</el-button>
+      <router-link :to="{ path: '/operation/onePassConfig' }">
+        <el-button class="link_abs"  :icon="ArrowLeft">返回</el-button>
       </router-link>
       <el-row v-loading="fullscreenLoading" :gutter="16">
         <el-col :span="24" class="ivu-text-left mb20">
@@ -43,7 +43,7 @@
                     ¥ <i>{{ item.price }}</i>
                   </div>
                   <div class="list-goods-list-item-price" :class="{ active: index === current }">
-                    <span>{{ tableFrom.type | onePassTypeFilter }}条数: {{ item.num }}</span>
+                    <span>{{ $filters.onePassTypeFilter(tableFrom.type) }}条数: {{ item.num }}</span>
                   </div>
                 </div>
               </el-col>
@@ -90,140 +90,141 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, computed, onMounted } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
+import { useRoute, useRouter } from 'vue-router';
+import { useUserStore } from '@/store/modules/user';
+import { ArrowLeft } from '@element-plus/icons-vue';
 import { smsNumberApi, smsPriceApi, payCodeApi, smsInfoApi } from '@/api/sms';
-import { isLogin } from '@/libs/public';
-import { mapGetters } from 'vuex';
 import QRcode from 'qrcodejs2';
-export default {
-  name: 'SmsPay',
-  data() {
-    return {
-      numbers: '',
-      account: '',
-      list: [],
-      current: 0,
-      checkList: {},
-      fullscreenLoading: false,
-      code: {},
-      tableFrom: {
-        type: 'sms',
-      },
-    };
-  },
-  computed: {
-    ...mapGetters(['isLogin']),
-  },
-  created() {
-    this.tableFrom.type = this.$route.query.type;
-    this.onIsLogin();
-  },
-  mounted() {
-    if (!this.isLogin) {
-      // this.$router.push('/operation/onePass?url=' + this.$route.path)
-    } else {
-      this.getNumber();
-      this.getPrice();
+
+defineOptions({ name: 'SmsPay' });
+
+const route = useRoute();
+const router = useRouter();
+const userStore = useUserStore();
+
+const isLogin = computed(() => userStore.isLogin);
+
+const numbers = ref('');
+const account = ref('');
+const list = ref([]);
+const current = ref(0);
+const checkList = ref({});
+const fullscreenLoading = ref(false);
+const code = ref({});
+const tableFrom = reactive({
+  type: 'sms',
+});
+
+tableFrom.type = route.query.type;
+onIsLogin();
+
+function onChangeType(val) {
+  current.value = 0;
+  getPrice();
+  getNumber();
+}
+// 查看是否登录
+function onIsLogin() {
+  fullscreenLoading.value = true;
+  userStore
+    .checkIsLogin()
+    .then(async (res) => {
+      const data = res;
+      if (!data.status) {
+        ElMessage.warning('请先登录');
+        router.push('/operation/onePassConfig?url=' + route.path);
+      } else {
+        getNumber();
+        getPrice();
+      }
+      fullscreenLoading.value = false;
+    })
+    .catch((res) => {
+      router.push('/operation/onePassConfig?url=' + route.path);
+      fullscreenLoading.value = false;
+    });
+}
+// 剩余条数
+function getNumber() {
+  smsInfoApi().then(async (res) => {
+    let data = res;
+    account.value = data.account;
+    switch (tableFrom.type) {
+      case 'sms':
+        numbers.value = data.sms.num;
+        break;
+      case 'copy':
+        numbers.value = data.copy.num;
+        break;
+      case 'expr_dump':
+        numbers.value = data.dump.num;
+        break;
+      default:
+        numbers.value = data.query.num;
+        break;
     }
-  },
-  methods: {
-    onChangeType(val) {
-      this.current = 0;
-      this.getPrice();
-      this.getNumber();
-    },
-    // 查看是否登录
-    onIsLogin() {
-      this.fullscreenLoading = true;
-      this.$store
-        .dispatch('user/isLogin')
-        .then(async (res) => {
-          const data = res;
-          if (!data.status) {
-            this.$message.warning('请先登录');
-            this.$router.push('/operation/onePass?url=' + this.$route.path);
-          } else {
-            this.getNumber();
-            this.getPrice();
-          }
-          this.fullscreenLoading = false;
-        })
-        .catch((res) => {
-          this.$router.push('/operation/onePass?url=' + this.$route.path);
-          this.fullscreenLoading = false;
-        });
-    },
-    // 剩余条数
-    getNumber() {
-      smsInfoApi().then(async (res) => {
-        let data = res;
-        this.account = data.account;
-        switch (this.tableFrom.type) {
-          case 'sms':
-            this.numbers = data.sms.num;
-            break;
-          case 'copy':
-            this.numbers = data.copy.num;
-            break;
-          case 'expr_dump':
-            this.numbers = data.dump.num;
-            break;
-          default:
-            this.numbers = data.query.num;
-            break;
-        }
-      });
-    },
-    // 支付套餐
-    getPrice() {
-      this.fullscreenLoading = true;
-      smsPriceApi(this.tableFrom)
-        .then(async (res) => {
-          setTimeout(() => {
-            this.fullscreenLoading = false;
-          }, 800);
-          const data = res;
-          this.list = data.data;
-          this.checkList = this.list[0];
-          this.getCode(this.checkList);
-        })
-        .catch(() => {
-          this.fullscreenLoading = false;
-        });
-    },
-    // 选中
-    check(item, index) {
-      this.fullscreenLoading = true;
-      this.current = index;
+  });
+}
+// 支付套餐
+function getPrice() {
+  fullscreenLoading.value = true;
+  smsPriceApi(tableFrom)
+    .then(async (res) => {
       setTimeout(() => {
-        this.getCode(item);
-        this.checkList = item;
-        this.fullscreenLoading = false;
+        fullscreenLoading.value = false;
       }, 800);
-    },
-    // 支付码
-    getCode(item) {
-      const data = {
-        payType: 'weixin',
-        mealId: item.id,
-        price: item.price,
-        num: item.num,
-        type: this.tableFrom.type,
-      };
-      payCodeApi(data)
-        .then(async (res) => {
-          this.code = res;
-          document.getElementById('payQrcode').innerHTML = '';
-          new QRcode('payQrcode', { width: 135, height: 135, text: res.qr_code });
-        })
-        .catch((err) => {
-          this.$router.push({ path: '/operation/onePass', query: { type: this.tableFrom.type } });
-          this.code = {};
-          document.getElementById('payQrcode').innerHTML = '';
-        });
-    },
-  },
-};
+      const data = res;
+      list.value = data.data;
+      checkList.value = list.value[0];
+      getCode(checkList.value);
+    })
+    .catch(() => {
+      fullscreenLoading.value = false;
+    });
+}
+// 选中
+function check(item, index) {
+  fullscreenLoading.value = true;
+  current.value = index;
+  setTimeout(() => {
+    getCode(item);
+    checkList.value = item;
+    fullscreenLoading.value = false;
+  }, 800);
+}
+// 支付码
+function getCode(item) {
+  const data = {
+    payType: 'weixin',
+    mealId: item.id,
+    price: item.price,
+    num: item.num,
+    type: tableFrom.type,
+  };
+  payCodeApi(data)
+    .then(async (res) => {
+      code.value = res;
+      document.getElementById('payQrcode').innerHTML = '';
+      new QRcode('payQrcode', { width: 135, height: 135, text: res.qr_code });
+    })
+    .catch((err) => {
+      router.push({ path: '/operation/onePassConfig', query: { type: tableFrom.type } });
+      code.value = {};
+      document.getElementById('payQrcode').innerHTML = '';
+    });
+}
+
+onMounted(() => {
+  if (!isLogin.value) {
+    // router.push('/operation/onePassConfig?url=' + route.path)
+  } else {
+    getNumber();
+    getPrice();
+  }
+});
 </script>
 
 <style lang="scss" scoped>

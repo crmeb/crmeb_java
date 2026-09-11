@@ -25,46 +25,35 @@
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="getList(1)">搜索</el-button>
-            <el-button size="small" @click="handleReset">重置</el-button>
+            <el-button @click="handleReset">重置</el-button>
           </el-form-item>
         </el-form>
       </div>
     </el-card>
     <el-card class="box-card mt14">
-      <div slot="header" class="clearfix">
-        <router-link :to="{ path: '/marketing/groupBuy/creatGroup' }">
-          <el-button type="primary" class="mr14" v-hasPermi="['admin:combination:save']">添加拼团商品</el-button>
-        </router-link>
-        <el-button class="mr10" @click="exportList" v-hasPermi="['admin:export:excel:combiantion']">导出</el-button>
-      </div>
-      <el-table
-        v-loading="listLoading"
-        :data="tableData.data"
-        style="width: 100%"
-        size="mini"
-        ref="multipleTable"
-        class="table"
-      >
+      <template #header>
+        <div class="clearfix">
+          <router-link :to="{ path: '/marketing/groupBuy/creatGroup' }">
+            <el-button type="primary" class="mr14" v-hasPermi="['admin:combination:save']">添加拼团商品</el-button>
+          </router-link>
+          <el-button class="mr10" @click="exportList" v-hasPermi="['admin:export:excel:combiantion']">导出</el-button>
+        </div>
+      </template>
+      <el-table v-loading="listLoading" :data="tableData.data" style="width: 100%" ref="multipleTableRef" class="table">
         <el-table-column prop="id" label="ID" min-width="50" />
         <el-table-column label="拼团图片" min-width="80">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div class="demo-image__preview">
               <el-image
                 style="width: 36px; height: 36px"
                 :src="scope.row.image"
                 :preview-src-list="[scope.row.image]"
+                preview-teleported
               />
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="拼团名称" prop="title" min-width="300">
-          <template slot-scope="scope">
-            <el-popover trigger="hover" placement="right" :open-delay="800">
-              <div class="text_overflow" slot="reference">{{ scope.row.title }}</div>
-              <div class="pup_card">{{ scope.row.title }}</div>
-            </el-popover>
-          </template>
-        </el-table-column>
+        <el-table-column label="拼团名称" prop="title" min-width="300" :show-overflow-tooltip="true"> </el-table-column>
         <el-table-column label="原价" prop="otPrice" min-width="100" />
         <el-table-column label="拼团价" prop="price" min-width="100" />
         <el-table-column label="拼团人数" prop="countPeople" min-width="100" />
@@ -73,12 +62,12 @@
         <el-table-column label="限量" min-width="100" prop="quotaShow" />
         <el-table-column label="限量剩余" prop="remainingQuota" min-width="100" />
         <el-table-column prop="stopTime" label="结束时间" min-width="130">
-          <template slot-scope="scope">
-            <span>{{ scope.row.stopTime | formatDate }}</span>
+          <template #default="scope">
+            <span>{{ scope.row.stopTimeStr }}</span>
           </template>
         </el-table-column>
         <el-table-column label="拼团状态" min-width="80" fixed="right">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-switch
               v-if="checkPermi(['admin:combination:update:status'])"
               v-model="scope.row.isShow"
@@ -92,12 +81,12 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" width="130" fixed="right">
-          <template slot-scope="scope">
+          <template #default="scope">
             <router-link
               :to="{
                 path: scope.row.isShow
                   ? '/marketing/groupBuy/creatGroup/' + scope.row.id + '/info'
-                  : '/marketing/groupBuy/creatGroup/' + scope.row.id,
+                  : '/marketing/groupBuy/creatGroup/' + scope.row.id
               }"
             >
               <a v-hasPermi="['admin:combination:info']">{{ scope.row.isShow ? '详情' : '编辑' }}</a>
@@ -123,97 +112,95 @@
   </div>
 </template>
 
-<script>
-import { combinationListApi, combinationDeleteApi, combinationStatusApi, exportcombiantionApi } from '@/api/marketing';
-import { formatDates } from '@/utils/index';
-import { checkPermi } from '@/utils/permission'; // 权限判断函数
-export default {
-  name: 'index',
-  filters: {
-    formatDate(time) {
-      if (time !== 0) {
-        const date = new Date(time);
-        return formatDates(date, 'yyyy-MM-dd hh:mm');
-      }
-    },
-  },
-  data() {
-    return {
-      tableFrom: {
-        page: 1,
-        limit: 20,
-        keywords: '',
-        isShow: '',
-      },
-      listLoading: true,
-      tableData: {
-        data: [],
-        total: 0,
-      },
-    };
-  },
-  mounted() {
-    this.getList();
-  },
-  methods: {
-    checkPermi,
-    //重置
-    handleReset() {
-      this.tableFrom.isShow = '';
-      this.tableFrom.keywords = '';
-      this.getList();
-    },
-    //导出
-    exportList() {
-      exportcombiantionApi({ keywords: this.tableFrom.keywords, isShow: this.tableFrom.isShow }).then((res) => {
-        window.open(res.fileName);
-      });
-    },
-    // 删除
-    handleDelete(id, idx) {
-      this.$modalSure('永久删除该商品').then(() => {
-        combinationDeleteApi({ id: id }).then(() => {
-          this.$message.success('删除成功');
-          if (this.tableData.data.length === 1 && this.tableFrom.page > 1)
-            this.tableFrom.page = this.tableFrom.page - 1;
-          this.getList();
-        });
-      });
-    },
-    onchangeIsShow(row) {
-      combinationStatusApi({ id: row.id, isShow: row.isShow })
-        .then(async () => {
-          this.$message.success('修改成功');
-          this.getList();
-        })
-        .catch(() => {
-          row.isShow = !row.isShow;
-        });
-    },
-    // 列表
-    getList(num) {
-      this.listLoading = true;
-      this.tableFrom.page = num ? num : this.tableFrom.page;
-      combinationListApi(this.tableFrom)
-        .then((res) => {
-          this.tableData.data = res.list;
-          this.tableData.total = res.total;
-          this.listLoading = false;
-        })
-        .catch((res) => {
-          this.listLoading = false;
-        });
-    },
-    pageChange(page) {
-      this.tableFrom.page = page;
-      this.getList();
-    },
-    handleSizeChange(val) {
-      this.tableFrom.limit = val;
-      this.getList();
-    },
-  },
-};
+<script setup>
+import { ref, reactive, onMounted, getCurrentInstance } from 'vue'
+import { ElMessage } from '@/utils/elementPlusFeedback'
+import { combinationListApi, combinationDeleteApi, combinationStatusApi, exportcombiantionApi } from '@/api/marketing'
+import { formatDates } from '@/utils/index'
+import { checkPermi } from '@/utils/permission' // 权限判断函数
+
+defineOptions({ name: 'index' })
+
+const { proxy } = getCurrentInstance()
+
+const formatDate = (time) => {
+  if (time !== 0) {
+    const date = new Date(time)
+    return formatDates(date, 'YYYY-MM-DD hh:mm')
+  }
+}
+
+const tableFrom = reactive({
+  page: 1,
+  limit: 20,
+  keywords: '',
+  isShow: ''
+})
+const listLoading = ref(true)
+const tableData = reactive({
+  data: [],
+  total: 0
+})
+const multipleTableRef = ref(null)
+
+//重置
+const handleReset = () => {
+  tableFrom.isShow = ''
+  tableFrom.keywords = ''
+  getList()
+}
+//导出
+const exportList = () => {
+  exportcombiantionApi({ keywords: tableFrom.keywords, isShow: tableFrom.isShow }).then((res) => {
+    window.open(res.fileName)
+  })
+}
+// 删除
+const handleDelete = (id, idx) => {
+  proxy.$modalSure('永久删除该商品').then(() => {
+    combinationDeleteApi({ id: id }).then(() => {
+      ElMessage.success('删除成功')
+      if (tableData.data.length === 1 && tableFrom.page > 1) tableFrom.page = tableFrom.page - 1
+      getList()
+    })
+  })
+}
+const onchangeIsShow = (row) => {
+  combinationStatusApi({ id: row.id, isShow: row.isShow })
+    .then(async () => {
+      ElMessage.success('修改成功')
+      getList()
+    })
+    .catch(() => {
+      row.isShow = !row.isShow
+    })
+}
+// 列表
+const getList = (num) => {
+  listLoading.value = true
+  tableFrom.page = num ? num : tableFrom.page
+  combinationListApi(tableFrom)
+    .then((res) => {
+      tableData.data = res.list
+      tableData.total = res.total
+      listLoading.value = false
+    })
+    .catch((res) => {
+      listLoading.value = false
+    })
+}
+const pageChange = (page) => {
+  tableFrom.page = page
+  getList()
+}
+const handleSizeChange = (val) => {
+  tableFrom.limit = val
+  getList()
+}
+
+onMounted(() => {
+  getList()
+})
 </script>
 
 <style scoped>
@@ -222,19 +209,4 @@ export default {
   table-layout: fixed !important;
 }
 
-.text_overflow {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 400px;
-}
-
-.pup_card {
-  width: 200px;
-  border-radius: 5px;
-  padding: 5px;
-  box-sizing: border-box;
-  font-size: 12px;
-  line-height: 16px;
-}
 </style>

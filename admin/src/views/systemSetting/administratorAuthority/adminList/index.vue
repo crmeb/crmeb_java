@@ -2,7 +2,7 @@
   <div class="divBox">
     <el-card :bordered="false" shadow="never" class="ivu-mt" :body-style="{ padding: 0 }">
       <div class="padding-add">
-        <el-form inline size="small" @submit.native.prevent>
+        <el-form inline @submit.prevent>
           <el-form-item label="身份搜索：">
             <el-select v-model="listPram.roles" placeholder="身份" clearable class="selWidth">
               <el-option v-for="item in roleList.list" :key="item.id" :label="item.roleName" :value="item.id" />
@@ -23,52 +23,54 @@
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="handleSearch">搜索</el-button>
-            <el-button size="small" @click="handleReset">重置</el-button>
+            <el-button @click="handleReset">重置</el-button>
           </el-form-item>
         </el-form>
       </div>
     </el-card>
     <el-card class="box-card mt14">
-      <el-form inline @submit.native.prevent>
+      <el-form inline @submit.prevent>
         <el-form-item>
           <el-button type="primary" @click="handlerOpenEdit(0)" v-hasPermi="['admin:system:admin:save']"
             >添加管理员</el-button
           >
         </el-form-item>
       </el-form>
-      <el-table :data="listData.list" size="mini">
+      <el-table :data="listData.list">
         <el-table-column prop="id" label="ID" width="50" />
         <el-table-column label="姓名" prop="realName" min-width="120" />
         <el-table-column label="账号" prop="account" min-width="120" />
         <el-table-column label="手机号" prop="lastTime" min-width="120">
-          <template slot-scope="scope">
-            <span>{{ scope.row.phone | filterEmpty }}</span>
+          <template #default="scope">
+            <span>{{ $filters.filterEmpty(scope.row.phone) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="身份" prop="realName" min-width="230">
-          <template slot-scope="scope" v-if="scope.row.roleNames">
-            <el-tag
-              size="small"
-              type="info"
-              v-for="(item, index) in scope.row.roleNames.split(',')"
-              :key="index"
-              class="mr5"
-              >{{ item }}</el-tag
-            >
+          <template #default="scope">
+            <template v-if="scope.row.roleNames">
+              <el-tag
+
+                type="info"
+                v-for="(item, index) in scope.row.roleNames.split(',')"
+                :key="index"
+                class="mr5"
+                >{{ item }}</el-tag
+              >
+            </template>
           </template>
         </el-table-column>
         <el-table-column label="最后登录时间" prop="lastTime" min-width="180">
-          <template slot-scope="scope">
-            <span>{{ scope.row.lastTime | filterEmpty }}</span>
+          <template #default="scope">
+            <span>{{ $filters.filterEmpty(scope.row.lastTime) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="最后登录IP" prop="lastIp" min-width="150">
-          <template slot-scope="scope">
-            <span>{{ scope.row.lastIp | filterEmpty }}</span>
+          <template #default="scope">
+            <span>{{ $filters.filterEmpty(scope.row.lastIp) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="状态" min-width="100">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-switch
               v-if="checkPermi(['admin:system:admin:update:status'])"
               v-model="scope.row.status"
@@ -82,7 +84,7 @@
           </template>
         </el-table-column>
         <el-table-column label="是否接收短信" min-width="100">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-switch
               v-if="checkPermi(['admin:system:admin:update:sms'])"
               v-model="scope.row.isSms"
@@ -91,18 +93,18 @@
               active-text="开启"
               inactive-text="关闭"
               :disabled="!scope.row.phone"
-              @click.native="onchangeIsSms(scope.row)"
+              @click="onchangeIsSms(scope.row)"
             />
             <span v-else>{{ scope.row.isSms ? '开启' : '关闭' }}</span>
           </template>
         </el-table-column>
         <el-table-column label="删除标记" prop="status" min-width="100">
-          <template slot-scope="scope">
-            <span>{{ scope.row.isDel | filterYesOrNo }}</span>
+          <template #default="scope">
+            <span>{{ $filters.filterYesOrNo(scope.row.isDel) }}</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="130" fixed="right">
-          <template slot-scope="scope">
+          <template #default="scope">
             <template v-if="scope.row.isDel">
               <span>-</span>
             </template>
@@ -116,6 +118,7 @@
       </el-table>
       <el-pagination
         :current-page="listPram.page"
+        :page-size="listPram.limit"
         :page-sizes="constants.page.limit"
         :layout="constants.page.layout"
         :total="listData.total"
@@ -125,8 +128,8 @@
       />
     </el-card>
     <el-dialog
-      :visible.sync="editDialogConfig.visible"
-      :title="editDialogConfig.isCreate === 0 ? '创建身份' : '编辑身份'"
+      v-model="editDialogConfig.visible"
+      :title="editDialogConfig.isCreate === 0 ? '添加管理员' : '编辑管理员'"
       destroy-on-close
       :close-on-click-modal="false"
       width="540px"
@@ -141,158 +144,157 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { reactive, ref, onMounted, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import * as systemAdminApi from '@/api/systemadmin.js';
 import * as roleApi from '@/api/role.js';
 import edit from './edit';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
-export default {
-  // name: "index"
-  components: { edit },
-  data() {
-    return {
-      constants: this.$constants,
-      listData: { list: [] },
-      listPram: {
-        account: null,
-        addTime: null,
-        lastIp: null,
-        lastTime: null,
-        level: null,
-        loginCount: null,
-        realName: null,
-        roles: null,
-        status: null,
-        page: 1,
-        limit: this.$constants.page.limit[0],
-      },
-      roleList: [],
-      menuList: [],
-      editDialogConfig: {
-        visible: false,
-        isCreate: 0, // 0=创建，1=编辑
-        editData: {},
-      },
-    };
-  },
-  mounted() {
-    this.handleGetAdminList();
-    this.handleGetRoleList();
-  },
-  methods: {
-    checkPermi,
-    //重置
-    handleReset() {
-      this.listPram.roles = null;
-      this.listPram.status = null;
-      this.listPram.realName = null;
-      this.handleGetAdminList();
-    },
-    onchangeIsShow(row) {
-      systemAdminApi
-        .updateStatusApi({ id: row.id, status: row.status })
-        .then(async () => {
-          this.$message.success('修改成功');
-          this.handleGetAdminList();
-        })
-        .catch(() => {
-          row.status = !row.status;
-        });
-    },
-    onchangeIsSms(row) {
-      // this.$confirm(`此操作将${!row.isSms ? '开启' : '关闭'}验证, 是否继续？`, "提示", {
-      //   confirmButtonText: "确定",
-      //   cancelButtonText: "取消",
-      //   type: "warning"
-      // }).then(async () => {
-      //   row.isSms = !row.isSms
-      // }).catch(() => {
-      //   this.$message.error('取消操作')
-      // })
 
-      if (!row.phone)
-        return this.$message({
-          message: '请先为管理员添加手机号!',
-          type: 'warning',
+// name: "index"
+defineOptions({ name: 'adminList' });
+
+const { proxy } = getCurrentInstance();
+const constants = proxy.$constants;
+
+const listData = ref({ list: [], total: 0 });
+const listPram = reactive({
+  account: null,
+  addTime: null,
+  lastIp: null,
+  lastTime: null,
+  level: null,
+  loginCount: null,
+  realName: null,
+  roles: null,
+  status: null,
+  page: 1,
+  limit: constants.page.limit[0],
+});
+const roleList = ref([]);
+const menuList = ref([]);
+const editDialogConfig = reactive({
+  visible: false,
+  isCreate: 0, // 0=创建，1=编辑
+  editData: {},
+});
+
+//重置
+function handleReset() {
+  listPram.roles = null;
+  listPram.status = null;
+  listPram.realName = null;
+  handleGetAdminList();
+}
+function onchangeIsShow(row) {
+  systemAdminApi
+    .updateStatusApi({ id: row.id, status: row.status })
+    .then(async () => {
+      ElMessage.success('修改成功');
+      handleGetAdminList();
+    })
+    .catch(() => {
+      row.status = !row.status;
+    });
+}
+function onchangeIsSms(row) {
+  // this.$confirm(`此操作将${!row.isSms ? '开启' : '关闭'}验证, 是否继续？`, "提示", {
+  //   confirmButtonText: "确定",
+  //   cancelButtonText: "取消",
+  //   type: "warning"
+  // }).then(async () => {
+  //   row.isSms = !row.isSms
+  // }).catch(() => {
+  //   this.$message.error('取消操作')
+  // })
+
+  if (!row.phone)
+    return ElMessage({
+      message: '请先为管理员添加手机号!',
+      type: 'warning',
+    });
+  systemAdminApi
+    .updateIsSmsApi({ id: row.id })
+    .then(async () => {
+      ElMessage.success('修改成功');
+      handleGetAdminList();
+    })
+    .catch(() => {
+      row.isSms = !row.isSms;
+    });
+}
+function handleSearch() {
+  listPram.page = 1;
+  handleGetAdminList();
+}
+function handleSizeChange(val) {
+  listPram.limit = val;
+  handleGetAdminList();
+  handleGetRoleList(listPram);
+}
+function handleCurrentChange(val) {
+  listPram.page = val;
+  handleGetAdminList();
+  handleGetRoleList(listPram);
+}
+function handleGetRoleList() {
+  const _pram = {
+    page: 1,
+    limit: constants.page.limit[4],
+  };
+  roleApi.getRoleList(_pram).then((data) => {
+    roleList.value = data;
+  });
+}
+function handlerOpenDel(rowData) {
+  proxy.$modalSure('删除当前数据').then(() => {
+    const _pram = { id: rowData.id };
+    systemAdminApi.adminDel(_pram).then((data) => {
+      ElMessage.success('删除数据成功');
+      handleGetAdminList();
+    });
+  });
+}
+function handleGetAdminList() {
+  systemAdminApi.adminList(listPram).then((data) => {
+    listData.value = data;
+    // this.handlerGetMenuList()
+  });
+}
+function handlerOpenEdit(isCreate, editDate) {
+  editDialogConfig.editData = editDate;
+  editDialogConfig.isCreate = isCreate;
+  editDialogConfig.visible = true;
+}
+function handlerGetMenuList() {
+  // 获取菜单全部数据后做menu翻译使用
+  systemAdminApi.listCategroy({ page: 1, limit: 999, type: 5 }).then((data) => {
+    menuList.value = data.list;
+    listData.value.list.forEach((item) => {
+      const _muneText = [];
+      const menuids = item.rules.split(',');
+      menuids.map((muid) => {
+        menuList.value.filter((menu) => {
+          if (menu.id == muid) {
+            _muneText.push(menu.name);
+          }
         });
-      systemAdminApi
-        .updateIsSmsApi({ id: row.id })
-        .then(async () => {
-          this.$message.success('修改成功');
-          this.handleGetAdminList();
-        })
-        .catch(() => {
-          row.isSms = !row.isSms;
-        });
-    },
-    handleSearch() {
-      this.listPram.page = 1;
-      this.handleGetAdminList();
-    },
-    handleSizeChange(val) {
-      this.listPram.limit = val;
-      this.handleGetAdminList();
-      this.handleGetRoleList(this.listPram);
-    },
-    handleCurrentChange(val) {
-      this.listPram.page = val;
-      this.handleGetAdminList();
-      this.handleGetRoleList(this.listPram);
-    },
-    handleGetRoleList() {
-      const _pram = {
-        page: 1,
-        limit: this.constants.page.limit[4],
-      };
-      roleApi.getRoleList(_pram).then((data) => {
-        this.roleList = data;
       });
-    },
-    handlerOpenDel(rowData) {
-      this.$modalSure('删除当前数据').then(() => {
-        const _pram = { id: rowData.id };
-        systemAdminApi.adminDel(_pram).then((data) => {
-          this.$message.success('删除数据成功');
-          this.handleGetAdminList();
-        });
-      });
-    },
-    handleGetAdminList() {
-      systemAdminApi.adminList(this.listPram).then((data) => {
-        this.listData = data;
-        // this.handlerGetMenuList()
-      });
-    },
-    handlerOpenEdit(isCreate, editDate) {
-      this.editDialogConfig.editData = editDate;
-      this.editDialogConfig.isCreate = isCreate;
-      this.editDialogConfig.visible = true;
-    },
-    handlerGetMenuList() {
-      // 获取菜单全部数据后做menu翻译使用
-      systemAdminApi.listCategroy({ page: 1, limit: 999, type: 5 }).then((data) => {
-        this.menuList = data.list;
-        this.listData.list.forEach((item) => {
-          const _muneText = [];
-          const menuids = item.rules.split(',');
-          menuids.map((muid) => {
-            this.menuList.filter((menu) => {
-              if (menu.id == muid) {
-                _muneText.push(menu.name);
-              }
-            });
-          });
-          item.rulesView = _muneText.join(',');
-          this.$set(item, 'rulesViews', item.rulesView);
-        });
-      });
-    },
-    hideEditDialog() {
-      this.editDialogConfig.visible = false;
-      this.handleGetAdminList();
-    },
-  },
-};
+      item.rulesView = _muneText.join(',');
+      item.rulesViews = item.rulesView;
+    });
+  });
+}
+function hideEditDialog() {
+  editDialogConfig.visible = false;
+  handleGetAdminList();
+}
+
+onMounted(() => {
+  handleGetAdminList();
+  handleGetRoleList();
+});
 </script>
 
 <style scoped></style>

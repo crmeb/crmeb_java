@@ -1,13 +1,15 @@
 <template>
   <div class="divBox">
     <el-card class="box-card">
-      <div slot="header" style="font-size: 16px">
-        <div class="page_title">小程序下载</div>
-      </div>
+      <template #header>
+        <div style="font-size: 16px">
+          <div class="page_title">小程序下载</div>
+        </div>
+      </template>
       <div>
         <div class="flex">
           <div class="relative">
-            <iframe class="iframe-box" :src="iframeUrl" frameborder="0" ref="iframe"></iframe>
+            <iframe class="iframe-box" :src="iframeUrl" frameborder="0" ref="iframeRef"></iframe>
             <div class="mask"></div>
           </div>
           <div class="ml-100 flex-1">
@@ -26,33 +28,29 @@
     </el-card>
   </div>
 </template>
-<script>
+<script setup>
+import { ref, onMounted } from 'vue';
 import { wechatCodeDownload } from '@/api/wxApi';
 import { getMiniDownloadUrlApi } from '@/api/systemConfig';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
-export default {
-  data() {
-    return {
-      iframeUrl: '',
-    };
-  },
-  mounted() {
-    this.getUrl();
-  },
-  methods: {
-    downCode() {
-      wechatCodeDownload().then((res) => {
-        window.open(res);
-      });
-    },
-    // 获取小程序下载地址
-    getUrl() {
-      getMiniDownloadUrlApi().then((res) => {
-        this.iframeUrl = res.value;
-      });
-    },
-  },
+
+const iframeUrl = ref('');
+
+const downCode = () => {
+  wechatCodeDownload().then((res) => {
+    window.open(res);
+  });
 };
+// 获取小程序下载地址
+const getUrl = () => {
+  getMiniDownloadUrlApi().then((res) => {
+    iframeUrl.value = res.value;
+  });
+};
+
+onMounted(() => {
+  getUrl();
+});
 </script>
 <style lang="scss">
 .flex {

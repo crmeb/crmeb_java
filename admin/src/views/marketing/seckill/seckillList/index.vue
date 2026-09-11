@@ -36,27 +36,29 @@
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="getList(1)">搜索</el-button>
-            <el-button size="small" @click="handleReset">重置</el-button>
+            <el-button @click="handleReset">重置</el-button>
           </el-form-item>
         </el-form>
       </div>
     </el-card>
     <el-card class="box-card mt14">
-      <div slot="header" class="clearfix">
-        <router-link :to="{ path: '/marketing/seckill/creatSeckill/creat' }">
-          <el-button type="primary" class="mr10" v-hasPermi="['admin:seckill:save']">添加秒杀商品</el-button>
-        </router-link>
-      </div>
-      <el-table v-loading="listLoading" :data="tableData.data" style="width: 100%" size="mini" ref="multipleTable">
+      <template #header>
+        <div class="clearfix">
+          <router-link :to="{ path: '/marketing/seckill/creatSeckill/creat' }">
+            <el-button type="primary" class="mr10" v-hasPermi="['admin:seckill:save']">添加秒杀商品</el-button>
+          </router-link>
+        </div>
+      </template>
+      <el-table v-loading="listLoading" :data="tableData.data" style="width: 100%" ref="multipleTableRef">
         <el-table-column prop="id" label="ID" min-width="50" />
         <el-table-column label="配置" min-width="160">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div>{{ scope.row.storeSeckillManagerResponse ? scope.row.storeSeckillManagerResponse.name : '-' }}</div>
             <div>{{ scope.row.startTime + ' - ' + scope.row.stopTime }}</div>
           </template>
         </el-table-column>
         <el-table-column prop="name" label="秒杀时段" min-width="130">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div>
               {{
                 scope.row.storeSeckillManagerResponse
@@ -67,12 +69,12 @@
           </template>
         </el-table-column>
         <el-table-column label="商品图片" min-width="80">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div class="demo-image__preview">
               <el-image
                 style="width: 36px; height: 36px"
                 :src="scope.row.image"
-                :preview-src-list="[scope.row.image]"
+                :preview-src-list="[scope.row.image]" preview-teleported
               />
             </div>
           </template>
@@ -85,7 +87,7 @@
         <el-table-column label="秒杀状态" min-width="100" prop="statusName" />
         <el-table-column label="创建时间" prop="createTime" min-width="150" />
         <el-table-column label="状态" min-width="80" fixed="right">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-switch
               v-if="checkPermi(['admin:seckill:update:status'])"
               v-model="scope.row.status"
@@ -99,7 +101,7 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" width="120" fixed="right">
-          <template slot-scope="scope">
+          <template #default="scope">
             <router-link
               :to="{
                 path: scope.row.status
@@ -139,7 +141,10 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, onMounted, getCurrentInstance } from 'vue';
+import { useRoute } from 'vue-router';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import {
   seckillStoreListApi,
   seckillStoreDeleteApi,
@@ -148,86 +153,84 @@ import {
 } from '@/api/marketing';
 import { getSeckillList } from '@/libs/public';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
-export default {
-  name: 'SeckillList',
-  data() {
-    return {
-      listLoading: true,
-      tableData: {
-        data: [],
-        total: 0,
-      },
-      tableFrom: {
-        page: 1,
-        limit: 20,
-        timeId: '',
-        status: '',
-        keywords: '',
-      },
-      seckillTime: [],
-    };
-  },
-  mounted() {
-    getSeckillList().then((res) => {
-      this.seckillTime = res.list;
-    });
-    this.tableFrom.timeId = Number(this.$route.params.timeId) || '';
-    this.getList();
-  },
-  methods: {
-    checkPermi,
-    //重置
-    handleReset() {
-      this.tableFrom.status = '';
-      this.tableFrom.timeId = '';
-      this.tableFrom.keywords = '';
-      this.getList();
-    },
-    // 订单删除
-    handleDelete(id, idx) {
-      this.$modalSure('永久删除该商品').then(() => {
-        seckillStoreDeleteApi({ id: id }).then(() => {
-          this.$message.success('删除成功');
-          if (this.tableData.data.length === 1 && this.tableFrom.page > 1)
-            this.tableFrom.page = this.tableFrom.page - 1;
-          this.getList();
-        });
-      });
-    },
-    // 列表
-    getList(num) {
-      this.listLoading = true;
-      this.tableFrom.page = num ? num : this.tableFrom.page;
-      seckillStoreListApi(this.tableFrom)
-        .then((res) => {
-          this.tableData.data = res.list;
-          this.tableData.total = res.total;
-          this.listLoading = false;
-        })
-        .catch((res) => {
-          this.listLoading = false;
-        });
-    },
-    pageChange(page) {
-      this.tableFrom.page = page;
-      this.getList();
-    },
-    handleSizeChange(val) {
-      this.tableFrom.limit = val;
-      this.getList();
-    },
-    onchangeIsShow(row) {
-      seckillStoreStatusApi({ id: row.id, status: row.status })
-        .then(async () => {
-          this.$message.success('修改成功');
-          this.getList();
-        })
-        .catch(() => {
-          row.status = !row.status;
-        });
-    },
-  },
+
+defineOptions({ name: 'SeckillList' });
+
+const route = useRoute();
+const { proxy } = getCurrentInstance();
+
+const listLoading = ref(true);
+const tableData = reactive({
+  data: [],
+  total: 0,
+});
+const tableFrom = reactive({
+  page: 1,
+  limit: 20,
+  timeId: '',
+  status: '',
+  keywords: '',
+});
+const seckillTime = ref([]);
+const multipleTableRef = ref(null);
+
+//重置
+const handleReset = () => {
+  tableFrom.status = '';
+  tableFrom.timeId = '';
+  tableFrom.keywords = '';
+  getList();
 };
+// 订单删除
+const handleDelete = (id, idx) => {
+  proxy.$modalSure('永久删除该商品').then(() => {
+    seckillStoreDeleteApi({ id: id }).then(() => {
+      ElMessage.success('删除成功');
+      if (tableData.data.length === 1 && tableFrom.page > 1) tableFrom.page = tableFrom.page - 1;
+      getList();
+    });
+  });
+};
+// 列表
+const getList = (num) => {
+  listLoading.value = true;
+  tableFrom.page = num ? num : tableFrom.page;
+  seckillStoreListApi(tableFrom)
+    .then((res) => {
+      tableData.data = res.list;
+      tableData.total = res.total;
+      listLoading.value = false;
+    })
+    .catch((res) => {
+      listLoading.value = false;
+    });
+};
+const pageChange = (page) => {
+  tableFrom.page = page;
+  getList();
+};
+const handleSizeChange = (val) => {
+  tableFrom.limit = val;
+  getList();
+};
+const onchangeIsShow = (row) => {
+  seckillStoreStatusApi({ id: row.id, status: row.status })
+    .then(async () => {
+      ElMessage.success('修改成功');
+      getList();
+    })
+    .catch(() => {
+      row.status = !row.status;
+    });
+};
+
+onMounted(() => {
+  getSeckillList().then((res) => {
+    seckillTime.value = res.list;
+  });
+  tableFrom.timeId = Number(route.params.timeId) || '';
+  getList();
+});
 </script>
 
 <style scoped>

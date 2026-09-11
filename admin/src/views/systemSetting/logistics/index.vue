@@ -4,8 +4,8 @@
   </div>
 </template>
 
-<script>
-export default {};
+<script setup>
+defineOptions({ name: 'Logistics' });
 </script>
 
 <style scoped></style>

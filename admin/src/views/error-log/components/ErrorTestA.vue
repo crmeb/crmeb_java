@@ -6,8 +6,6 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ErrorTestA',
-};
+<script setup>
+defineOptions({ name: 'ErrorTestA' });
 </script>

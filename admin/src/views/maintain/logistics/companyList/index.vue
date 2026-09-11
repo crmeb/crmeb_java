@@ -2,30 +2,34 @@
   <div class="divBox">
     <el-card :bordered="false" shadow="never" class="ivu-mt" :body-style="{ padding: 0 }">
       <div class="padding-add">
-        <el-form ref="form" inline :model="form">
+        <el-form ref="formRef" inline :model="form">
           <el-form-item label="关键字：">
-            <el-input v-model="form.keywords" placeholder="请输入关键字" class="selWidth" size="small" clearable>
+            <el-input v-model="form.keywords" placeholder="请输入关键字" class="selWidth" clearable>
             </el-input>
           </el-form-item>
-          <el-button type="primary" size="small" @click="handlerSearch" v-hasPermi="['admin:express:list']"
-            >搜索</el-button
-          >
+          <el-form-item>
+            <el-button type="primary" @click="handlerSearch" v-hasPermi="['admin:express:list']"
+              >搜索</el-button
+            >
+          </el-form-item>
         </el-form>
       </div>
     </el-card>
     <el-card class="box-card mt14">
-      <div slot="header" class="clearfix">
-        <el-button type="primary" size="small" @click="addExpress" v-hasPermi="['admin:express:sync']"
-          >同步物流公司</el-button
-        >
-      </div>
-      <el-table v-loading="loading" :data="tableData.list" size="mini">
+      <template #header>
+        <div class="clearfix">
+          <el-button type="primary" @click="addExpress" v-hasPermi="['admin:express:sync']"
+            >同步物流公司</el-button
+          >
+        </div>
+      </template>
+      <el-table v-loading="loading" :data="tableData.list">
         <el-table-column prop="id" label="ID" min-width="180" />
         <el-table-column label="物流公司名称" min-width="150" prop="name" />
         <el-table-column min-width="200" label="编码" prop="code" />
         <el-table-column min-width="100" label="排序" prop="sort" sortable />
         <el-table-column label="是否显示" min-width="100">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-switch
               v-model="scope.row.isShow"
               class="demo"
@@ -39,12 +43,12 @@
           </template>
         </el-table-column>
         <el-table-column prop="address" fixed="right" width="120" label="操作">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-button
               class="list-btn"
               v-if="scope.row.net"
-              type="text"
-              size="small"
+              link
+
               @click="bindEdit(scope.row)"
               v-hasPermi="['admin:express:info']"
               >收件网点名称编辑</el-button
@@ -52,8 +56,8 @@
             <el-button
               class="list-btn"
               v-else-if="scope.row.partnerId"
-              type="text"
-              size="small"
+              link
+
               @click="bindEdit(scope.row)"
               v-hasPermi="['admin:express:info']"
               >月结账号编辑</el-button
@@ -61,15 +65,15 @@
             <el-button
               class="list-btn"
               v-else
-              type="text"
-              size="small"
+              link
+
               @click="bindEdit(scope.row)"
               v-hasPermi="['admin:express:info']"
               >编辑</el-button
             >
           </template>
-        </el-table-column> </el-table
-      >`
+        </el-table-column>
+      </el-table>
       <div class="block-pagination">
         <el-pagination
           :page-sizes="[20, 40, 60, 80]"
@@ -83,8 +87,8 @@
         />
       </div>
     </el-card>
-    <el-dialog title="编辑物流公司" :visible.sync="dialogVisible" width="540px" :before-close="handleClose">
-      <el-form :model="formData" :rules="rules" ref="formData" label-width="75px" class="demo-ruleForm">
+    <el-dialog title="编辑物流公司" v-model="dialogVisible" width="540px" :before-close="handleClose">
+      <el-form :model="formData" :rules="rules" ref="formDataRef" label-width="75px" class="demo-ruleForm">
         <el-form-item label="月结账号：" prop="account" v-if="formData.partnerId">
           <el-input v-model="formData.account" placeholder="请输入月结账号"></el-input>
         </el-form-item>
@@ -105,160 +109,166 @@
         </el-form-item>
         <el-form-item label="是否启用：" prop="status">
           <el-radio-group v-model="formData.status">
-            <el-radio :label="false">关闭</el-radio>
-            <el-radio :label="true">开启</el-radio>
+            <el-radio :label="false" :value="false">关闭</el-radio>
+            <el-radio :label="true" :value="true">开启</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submit('formData')" v-hasPermi="['admin:express:update']">确定</el-button>
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submit('formDataRef')" v-hasPermi="['admin:express:update']">确定</el-button>
+        </span>
+      </template>
       <!--<parser v-if="formShow" ref="formBox" class="formBox" :form-conf="formConf" :form-edit-data="formData" :is-edit="isCreate === 1" @submit="submit" />-->
     </el-dialog>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import parser from '@/components/FormGenerator/components/parser/Parser';
 import * as systemFormConfigApi from '@/api/systemFormConfig.js';
 import * as logistics from '@/api/logistics.js';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
 import { Debounce } from '@/utils/validate';
-export default {
-  name: 'CompanyList',
-  components: { parser },
-  data() {
-    return {
-      constants: this.$constants,
-      // 表单
-      formConf: { fields: [] },
-      form: {
-        keywords: '',
-      },
-      tableData: {},
-      page: 1,
-      limit: 20,
-      loading: false,
-      dialogVisible: false,
-      fromType: 'add',
-      formData: {
-        status: false,
-      },
-      isCreate: 0,
-      formShow: false,
-      editId: 0,
-      rules: {
-        sort: [{ required: true, message: '请输入排序', trigger: 'blur' }],
-        account: [{ required: true, message: '请输入月结账号', trigger: 'blur' }],
-        password: [{ required: true, message: '请输入月结密码', trigger: 'blur' }],
-        netName: [{ required: true, message: '请输入网点名称', trigger: 'blur' }],
-      },
-    };
-  },
-  created() {
-    this.getExpressList();
-  },
-  methods: {
-    checkPermi,
-    handlerSearch() {
-      this.page = 1;
-      this.getExpressList();
-    },
-    //  获取物流公司列表
-    getExpressList() {
-      this.loading = true;
-      logistics
-        .expressList({
-          page: this.page,
-          limit: this.limit,
-          keywords: this.form.keywords,
-        })
-        .then((res) => {
-          this.loading = false;
-          this.tableData = res;
-        })
-        .catch(() => {
-          this.loading = false;
-        });
-    },
-    // 物流开关
-    bindStatus(item) {
-      logistics
-        .expressUpdateShow({
-          account: item.account,
-          code: item.code,
-          id: item.id,
-          isShow: item.isShow,
-          name: item.name,
-          sort: item.sort,
-        })
-        .then((res) => {
-          this.$message.success('操作成功');
-          // this.getExpressList()
-        })
-        .catch(() => {
-          item.isShow = !item.isShow;
-        });
-    },
-    // 分页
-    pageChange(e) {
-      this.page = e;
-      this.getExpressList();
-    },
-    handleSizeChange(e) {
-      this.limit = e;
-      this.getExpressList();
-    },
-    // 添加物流公司
-    addExpress() {
-      logistics.expressSyncApi().then((res) => {
-        this.$message.success('同步成功');
-        this.page = 1;
-        this.getExpressList();
+
+defineOptions({ name: 'CompanyList' });
+
+const { proxy } = getCurrentInstance();
+const constants = proxy.$constants;
+
+// 表单
+const formConf = ref({ fields: [] });
+const form = reactive({
+  keywords: '',
+});
+const tableData = ref({
+  list: [],
+  page: 1,
+  limit: 20,
+  total: 0,
+});
+const page = ref(1);
+const limit = ref(20);
+const loading = ref(false);
+const dialogVisible = ref(false);
+const fromType = ref('add');
+const formData = reactive({
+  status: false,
+});
+const isCreate = ref(0);
+const formShow = ref(false);
+const editId = ref(0);
+const rules = reactive({
+  sort: [{ required: true, message: '请输入排序', trigger: 'blur' }],
+  account: [{ required: true, message: '请输入月结账号', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入月结密码', trigger: 'blur' }],
+  netName: [{ required: true, message: '请输入网点名称', trigger: 'blur' }],
+});
+
+const formDataRef = ref(null);
+
+function handlerSearch() {
+  page.value = 1;
+  getExpressList();
+}
+//  获取物流公司列表
+function getExpressList() {
+  loading.value = true;
+  logistics
+    .expressList({
+      page: page.value,
+      limit: limit.value,
+      keywords: form.keywords,
+    })
+    .then((res) => {
+      loading.value = false;
+      tableData.value = res;
+    })
+    .catch(() => {
+      loading.value = false;
+    });
+}
+// 物流开关
+function bindStatus(item) {
+  logistics
+    .expressUpdateShow({
+      account: item.account,
+      code: item.code,
+      id: item.id,
+      isShow: item.isShow,
+      name: item.name,
+      sort: item.sort,
+    })
+    .then((res) => {
+      ElMessage.success('操作成功');
+      // this.getExpressList()
+    })
+    .catch(() => {
+      item.isShow = !item.isShow;
+    });
+}
+// 分页
+function pageChange(e) {
+  page.value = e;
+  getExpressList();
+}
+function handleSizeChange(e) {
+  limit.value = e;
+  getExpressList();
+}
+// 添加物流公司
+function addExpress() {
+  logistics.expressSyncApi().then((res) => {
+    ElMessage.success('同步成功');
+    page.value = 1;
+    getExpressList();
+  });
+}
+// 删除物流公司
+function bindDelete(item) {
+  proxy.$modalSure().then(() => {
+    logistics.expressDelete({ id: item.id }).then((res) => {
+      ElMessage.success('删除成功');
+      getExpressList();
+    });
+  });
+}
+// 表单提交
+const submit = Debounce(function (formName) {
+  proxy.$refs[formName].validate((valid) => {
+    if (valid) {
+      logistics.expressUpdate(formData).then((res) => {
+        ElMessage.success('操作成功');
+        handleClose();
+        getExpressList();
       });
-    },
-    // 删除物流公司
-    bindDelete(item) {
-      this.$modalSure().then(() => {
-        logistics.expressDelete({ id: item.id }).then((res) => {
-          this.$message.success('删除成功');
-          this.getExpressList();
-        });
-      });
-    },
-    // 表单提交
-    submit: Debounce(function (formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          logistics.expressUpdate(this.formData).then((res) => {
-            this.$message.success('操作成功');
-            this.handleClose();
-            this.getExpressList();
-          });
-        } else {
-          return false;
-        }
-      });
-    }),
-    //  关闭模态框
-    handleClose(done) {
-      this.formShow = false;
-      // this.formData = {}
-      this.formConf.fields = [];
-      this.dialogVisible = false;
-      this.isCreate = 0;
-    },
-    // 编辑
-    bindEdit(item) {
-      this.dialogVisible = true;
-      this.editId = item.id;
-      logistics.expressInfo({ id: item.id }).then((res) => {
-        this.formData = res;
-      });
-    },
-  },
-};
+    } else {
+      return false;
+    }
+  });
+});
+//  关闭模态框
+function handleClose(done) {
+  formShow.value = false;
+  // this.formData = {}
+  formConf.value.fields = [];
+  dialogVisible.value = false;
+  isCreate.value = 0;
+}
+// 编辑
+function bindEdit(item) {
+  dialogVisible.value = true;
+  editId.value = item.id;
+  logistics.expressInfo({ id: item.id }).then((res) => {
+    Object.assign(formData, res);
+  });
+}
+
+// created
+getExpressList();
 </script>
 
 <style lang="scss" scoped>

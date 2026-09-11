@@ -1,19 +1,21 @@
 <template>
   <div class="divBox">
     <el-card class="box-card">
-      <div slot="header" class="clearfix">
-        <el-button type="primary" size="small" @click="handleAddJob" v-hasPermi="['admin:schedule:job:add']"
-          >添加定时任务</el-button
-        >
-      </div>
-      <el-table v-loading="listLoading" :data="tableData" size="mini" class="table">
+      <template #header>
+        <div class="clearfix">
+          <el-button type="primary" @click="handleAddJob" v-hasPermi="['admin:schedule:job:add']"
+            >添加定时任务</el-button
+          >
+        </div>
+      </template>
+      <el-table v-loading="listLoading" :data="tableData" class="table">
         <el-table-column prop="jobId" label="任务id" min-width="60" />
         <el-table-column prop="beanName" label="定时任务类名" min-width="150" />
         <el-table-column prop="methodName" label="方法名" min-width="150" />
         <el-table-column prop="cronExpression" min-width="120" label="cron表达式" />
         <el-table-column prop="params" label="参数" min-width="100" />
         <el-table-column label="状态" min-width="80">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-switch
               v-if="checkPermi(['admin:schedule:job:start', 'admin:schedule:job:suspend'])"
               v-model="scope.row.status"
@@ -29,12 +31,12 @@
         <el-table-column prop="remark" label="备注" min-width="150" />
         <el-table-column prop="createTime" label="创建时间" min-width="120" />
         <el-table-column fixed="right" width="150" label="操作">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-button
               class="list-btn"
               :disabled="scope.row.status == 0"
-              type="text"
-              size="small"
+              link
+
               @click="onEdit(scope.row)"
               v-hasPermi="['admin:schedule:job:update']"
               >编辑</el-button
@@ -42,8 +44,8 @@
             <el-divider direction="vertical"></el-divider>
             <el-button
               class="list-btn"
-              type="text"
-              size="small"
+              link
+
               @click="onTrig(scope.row)"
               v-hasPermi="['admin:schedule:job:trig']"
               >触发</el-button
@@ -52,8 +54,8 @@
             <el-button
               class="list-btn"
               :disabled="scope.row.status == 0"
-              type="text"
-              size="small"
+              link
+
               @click="handleDelete(scope.row.jobId, scope.$index)"
               v-hasPermi="['admin:schedule:job:delete']"
               >删除</el-button
@@ -63,7 +65,7 @@
       </el-table>
     </el-card>
     <creat-Job
-      ref="creatJobs"
+      ref="creatJobsRef"
       :editData="editData"
       :dialogVisible="dialogVisible"
       @getList="getjobList"
@@ -72,7 +74,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 // +---------------------------------------------------------------------
 // | CRMEB [ CRMEB赋能开发者，助力企业发展 ]
 // +---------------------------------------------------------------------
@@ -82,108 +84,108 @@
 // +---------------------------------------------------------------------
 // | Author: CRMEB Team <admin@crmeb.com>
 // +---------------------------------------------------------------------
+import { ref, reactive, getCurrentInstance } from 'vue';
+import { ElMessage } from '@/utils/elementPlusFeedback';
 import * as schedule from '@/api/schedule.js';
 import creatJob from './creatJob';
 import { Debounce } from '@/utils/validate';
 import { checkPermi } from '@/utils/permission';
 import { param } from '@/utils';
-export default {
-  name: 'list',
-  components: { creatJob },
-  data() {
-    return {
-      tableData: [],
-      listLoading: false,
-      dialogVisible: false,
-      status: 0,
-      jobId: 0,
-      editData: {
-        jobId: 0,
-        beanName: '',
-        cronExpression: '',
-        methodName: '',
-        remark: '',
-        param: '',
-      },
-    };
-  },
-  created() {
-    if (checkPermi(['admin:schedule:job:list'])) this.getjobList();
-  },
-  methods: {
-    checkPermi, //权限控制
-    // 获取定时任务列表
-    getjobList() {
-      this.listLoading = true;
-      schedule
-        .jobList()
-        .then((data) => {
-          this.listLoading = false;
-          this.tableData = data;
-        })
-        .catch(() => {
-          this.listLoading = false;
-        });
-    },
-    submit: Debounce(function (data) {}),
-    //  关闭模态框
-    handleClose(done) {
-      this.formConf.fields = [];
-      this.dialogVisible = false;
-    },
-    onchangeIsShow(row) {
-      if (row.status == 1) {
-        schedule
-          .scheduleJobSuspend(row.jobId)
-          .then(() => {
-            this.$message.success('修改成功');
-            this.getjobList();
-          })
-          .catch(() => {
-            row.status = !row.status;
-          });
-      } else {
-        schedule
-          .scheduleJobStart(row.jobId)
-          .then(() => {
-            this.$message.success('修改成功');
-            this.getjobList();
-          })
-          .catch(() => {
-            row.status = !row.status;
-          });
-      }
-    },
-    // 添加定时任务
-    handleAddJob() {
-      this.editData = {};
-      this.dialogVisible = true;
-    },
-    // 修改定时任务
-    onEdit(row) {
-      this.editData = row;
-      this.dialogVisible = true;
-    },
-    onTrig(row) {
-      schedule.scheduleJobTrig(row.jobId).then((res) => {
-        this.$message.success('触发成功');
-        this.getjobList();
+
+defineOptions({ name: 'list' });
+
+const { proxy } = getCurrentInstance();
+
+const tableData = ref([]);
+const listLoading = ref(false);
+const dialogVisible = ref(false);
+const status = ref(0);
+const jobId = ref(0);
+const editData = ref({
+  jobId: 0,
+  beanName: '',
+  cronExpression: '',
+  methodName: '',
+  remark: '',
+  param: '',
+});
+
+const creatJobsRef = ref(null);
+
+//权限控制
+// 获取定时任务列表
+function getjobList() {
+  listLoading.value = true;
+  schedule
+    .jobList()
+    .then((data) => {
+      listLoading.value = false;
+      tableData.value = data;
+    })
+    .catch(() => {
+      listLoading.value = false;
+    });
+}
+const submit = Debounce(function (data) {});
+//  关闭模态框
+function handleClose(done) {
+  formConf.value.fields = [];
+  dialogVisible.value = false;
+}
+function onchangeIsShow(row) {
+  if (row.status == 1) {
+    schedule
+      .scheduleJobSuspend(row.jobId)
+      .then(() => {
+        ElMessage.success('修改成功');
+        getjobList();
+      })
+      .catch(() => {
+        row.status = !row.status;
       });
-    },
-    closeModel() {
-      this.dialogVisible = false;
-    },
-    // 删除定时任务
-    handleDelete(id, idx) {
-      this.$modalSure().then(() => {
-        schedule.scheduleJobDelete(id).then((res) => {
-          this.$message.success('删除成功');
-          this.getjobList();
-        });
+  } else {
+    schedule
+      .scheduleJobStart(row.jobId)
+      .then(() => {
+        ElMessage.success('修改成功');
+        getjobList();
+      })
+      .catch(() => {
+        row.status = !row.status;
       });
-    },
-  },
-};
+  }
+}
+// 添加定时任务
+function handleAddJob() {
+  editData.value = {};
+  dialogVisible.value = true;
+}
+// 修改定时任务
+function onEdit(row) {
+  editData.value = row;
+  dialogVisible.value = true;
+}
+function onTrig(row) {
+  schedule.scheduleJobTrig(row.jobId).then((res) => {
+    ElMessage.success('触发成功');
+    getjobList();
+  });
+}
+function closeModel() {
+  dialogVisible.value = false;
+}
+// 删除定时任务
+function handleDelete(id, idx) {
+  proxy.$modalSure().then(() => {
+    schedule.scheduleJobDelete(id).then((res) => {
+      ElMessage.success('删除成功');
+      getjobList();
+    });
+  });
+}
+
+// created
+if (checkPermi(['admin:schedule:job:list'])) getjobList();
 </script>
 
 <style lang="scss" scoped>

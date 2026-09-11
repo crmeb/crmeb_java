@@ -4,9 +4,9 @@
       <div class="padding-add">
         <el-form
           inline
-          size="small"
+
           :model="userFrom"
-          ref="userFrom"
+          ref="userFromRef"
           :label-position="labelPosition"
           label-width="75px"
         >
@@ -14,7 +14,7 @@
             <div class="acea-row search-form">
               <div class="search-form-box">
                 <el-form-item label="用户搜索：">
-                  <UserSearchInput ref="userSearchInput" v-model="userFrom" @searchList="userSearchs" />
+                  <UserSearchInput ref="userSearchInputRef" v-model="userFrom" @searchList="userSearchs" />
                 </el-form-item>
                 <el-form-item label="用户标签：">
                   <el-select
@@ -122,9 +122,9 @@
                   v-model="timeVal"
                   align="right"
                   unlink-panels
-                  value-format="yyyy-MM-dd"
-                  format="yyyy-MM-dd"
-                  size="small"
+                  value-format="YYYY-MM-DD"
+                  format="YYYY-MM-DD"
+
                   type="daterange"
                   placement="bottom-end"
                   placeholder="自定义时间"
@@ -164,8 +164,8 @@
             </div>
             <div class="search-btn-group-box">
               <el-form-item class="search-form-sub">
-                <el-button type="primary" icon="ios-search" label="default" @click="userSearchs">搜索</el-button>
-                <el-button class="ResetSearch mr14" @click="reset('userFrom')" size="small">重置</el-button>
+                <el-button type="primary" :icon="Search" label="default" @click="userSearchs">搜索</el-button>
+                <el-button class="ResetSearch mr14" @click="reset('userFrom')">重置</el-button>
                 <a class="ivu-ml-8" @click="collapse = !collapse">
                   <template v-if="!collapse"> 展开 <i class="el-icon-arrow-down"></i> </template>
                   <template v-else> 收起 <i class="el-icon-arrow-up"></i> </template>
@@ -177,52 +177,55 @@
       </div>
     </el-card>
     <el-card class="box-card mt14">
-      <div slot="header" class="clearfix">
-        <el-tabs v-model="loginType" @tab-click="getList(1)">
-          <el-tab-pane :label="item.name" :name="item.type.toString()" v-for="(item, index) in headeNum" :key="index" />
-        </el-tabs>
-        <div>
-          <el-button @click="onSend" type="primary" v-hasPermi="['admin:coupon:user:receive']">发送优惠券</el-button>
-          <el-button :disabled="!selectionList.length" @click="setBatch('group')" v-hasPermi="['admin:user:group']"
-            >批量设置分组</el-button
-          >
-          <el-button :disabled="!selectionList.length" @click="setBatch('label')" v-hasPermi="['admin:user:tag']"
-            >批量设置标签</el-button
-          >
+      <template #header>
+        <div class="clearfix">
+          <el-tabs v-model="loginType" @tab-change="getList(1)">
+            <el-tab-pane :label="item.name" :name="item.type.toString()" v-for="(item, index) in headeNum" :key="index" />
+          </el-tabs>
+          <div>
+            <el-button @click="showCreateUser" type="primary" v-hasPermi="['admin:user:save']">新增用户</el-button>
+            <el-button @click="onSend" type="primary" v-hasPermi="['admin:coupon:user:receive']">发送优惠券</el-button>
+            <el-button :disabled="!selectionList.length" @click="setBatch('group')" v-hasPermi="['admin:user:group']"
+              >批量设置分组</el-button
+            >
+            <el-button :disabled="!selectionList.length" @click="setBatch('label')" v-hasPermi="['admin:user:tag']"
+              >批量设置标签</el-button
+            >
+          </div>
         </div>
-      </div>
+      </template>
       <el-table
-        ref="table"
+        ref="tableRef"
         v-loading="listLoading"
         :data="tableData.data"
         style="width: 100%"
-        size="mini"
+
         @selection-change="onSelectTab"
         highlight-current-row
       >
         <el-table-column type="expand">
-          <template slot-scope="props">
+          <template #default="props">
             <el-form label-position="left" inline class="demo-table-expand">
               <el-form-item label="身份：">
-                <span>{{ props.row.isPromoter | filterIsPromoter }}</span>
+                <span>{{ $filters.filterIsPromoter(props.row.isPromoter) }}</span>
               </el-form-item>
               <el-form-item label="首次访问：">
-                <span>{{ props.row.createTime | filterEmpty }}</span>
+                <span>{{ $filters.filterEmpty(props.row.createTime) }}</span>
               </el-form-item>
               <el-form-item label="近次访问：">
-                <span>{{ props.row.lastLoginTime | filterEmpty }}</span>
+                <span>{{ $filters.filterEmpty(props.row.lastLoginTime) }}</span>
               </el-form-item>
               <el-form-item label="手机号：">
-                <span>{{ props.row.phone | filterEmpty }}</span>
+                <span>{{ $filters.filterEmpty(props.row.phone) }}</span>
               </el-form-item>
               <el-form-item label="标签：">
-                <span>{{ props.row.tagName | filterEmpty }}</span>
+                <span>{{ $filters.filterEmpty(props.row.tagName) }}</span>
               </el-form-item>
               <el-form-item label="地址：">
-                <span>{{ props.row.addres | filterEmpty }}</span>
+                <span>{{ $filters.filterEmpty(props.row.addres) }}</span>
               </el-form-item>
               <el-form-item label="备注：" style="width: 100%; display: flex; margin-right: 10px">
-                <span>{{ props.row.mark | filterEmpty }}</span>
+                <span>{{ $filters.filterEmpty(props.row.mark) }}</span>
               </el-form-item>
             </el-form>
           </template>
@@ -230,71 +233,105 @@
         <el-table-column type="selection" width="55"> </el-table-column>
         <el-table-column prop="uid" label="ID" min-width="80" v-if="checkedCities.includes('ID')" />
         <el-table-column label="头像" min-width="80" v-if="checkedCities.includes('头像')">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div class="demo-image__preview">
               <el-image
                 style="width: 36px; height: 36px"
                 :src="scope.row.avatar"
-                :preview-src-list="[scope.row.avatar]"
+                :preview-src-list="[scope.row.avatar]" preview-teleported
               />
             </div>
           </template>
         </el-table-column>
         <el-table-column label="姓名" min-width="160" v-if="checkedCities.includes('姓名')">
-          <template slot-scope="scope">
+          <template #default="scope">
             <span :class="isRedFont(scope.row)"
-              >{{ scope.row.nickname | filterEmpty }} | {{ scope.row.sex | sexFilter }}
+              >{{ $filters.filterEmpty(scope.row.nickname) }} | {{ sexFilter(scope.row.sex) }}
               {{ scope.row.isLogoff ? '| (已注销)' : '' }}</span
             >
           </template>
         </el-table-column>
         <el-table-column prop="groupName" label="分组" min-width="100" v-if="checkedCities.includes('分组')">
-          <template slot-scope="scope">
+          <template #default="scope">
             <span>{{ scope.row.groupName || '-' }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="spreadNickname" label="推荐人" min-width="130" v-if="checkedCities.includes('推荐人')" />
         <el-table-column label="手机号" min-width="100" v-if="checkedCities.includes('手机号')">
-          <template slot-scope="scope">
-            <span>{{ scope.row.phone | filterEmpty }}</span>
+          <template #default="scope">
+            <span>{{ $filters.filterEmpty(scope.row.phone) }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="nowMoney" label="余额" min-width="100" v-if="checkedCities.includes('余额')" />
         <el-table-column prop="integral" label="积分" min-width="100" v-if="checkedCities.includes('积分')" />
-        <el-table-column label="操作" width="160" fixed="right" :render-header="renderHeader">
-          <template slot-scope="scope">
+        <el-table-column label="操作" width="160" fixed="right">
+          <template #header>
+            <div class="col-setting-header">
+              <span style="padding-right: 5px">操作</span>
+              <el-popover
+                placement="bottom-end"
+                :width="200"
+                trigger="click"
+                v-model:visible="card_select_show"
+                popper-class="col-setting-popover"
+              >
+                <template #reference>
+                  <i class="el-icon-setting" style="cursor: pointer"></i>
+                </template>
+                <div class="cell_ht">
+                  <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
+                  <el-button link @click="checkSave()">保存</el-button>
+                </div>
+                <el-checkbox-group
+                  v-model="checkedCities"
+                  class="column-checkbox-group"
+                  @change="handleCheckedCitiesChange"
+                >
+                  <el-checkbox v-for="item in columnData" :label="item" :value="item" :key="item" class="check_cell">{{ item }}</el-checkbox>
+                </el-checkbox-group>
+              </el-popover>
+            </div>
+          </template>
+          <template #default="scope">
             <a @click="onDetails(scope.row.uid)" v-hasPermi="['admin:user:topdetail']">详情</a>
             <el-divider direction="vertical"></el-divider>
             <a @click="editUser(scope.row.uid)" v-hasPermi="['admin:user:infobycondition']">编辑</a>
             <el-divider direction="vertical"></el-divider>
             <el-dropdown trigger="click">
               <span class="el-dropdown-link"> 更多<i class="el-icon-arrow-down el-icon--right" /> </span>
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item
-                  @click.native="editPoint(scope.row.uid)"
-                  v-if="checkPermi(['admin:user:operate:founds'])"
-                  >积分余额</el-dropdown-item
-                >
-                <el-dropdown-item @click.native="setBatch('group', scope.row)" v-if="checkPermi(['admin:user:group'])"
-                  >设置分组</el-dropdown-item
-                >
-                <el-dropdown-item @click.native="setBatch('label', scope.row)" v-if="checkPermi(['admin:user:tag'])"
-                  >设置标签</el-dropdown-item
-                >
-                <el-dropdown-item @click.native="setPhone(scope.row)" v-if="checkPermi(['admin:user:update:phone'])"
-                  >修改手机号</el-dropdown-item
-                >
-                <el-dropdown-item
-                  @click.native="setExtension(scope.row)"
-                  v-if="checkPermi(['admin:user:update:spread'])"
-                  >修改上级推广人</el-dropdown-item
-                >
-                <el-dropdown-item
-                  @click.native="clearSpread(scope.row)"
-                  v-if="scope.row.spreadUid && scope.row.spreadUid > 0 && checkPermi(['admin:retail:spread:clean'])"
-                  >清除上级推广人</el-dropdown-item
-                >
-              </el-dropdown-menu>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item
+                    @click="editPoint(scope.row.uid)"
+                    v-if="checkPermi(['admin:user:operate:founds'])"
+                    >积分余额</el-dropdown-item
+                  >
+                  <el-dropdown-item @click="setBatch('group', scope.row)" v-if="checkPermi(['admin:user:group'])"
+                    >设置分组</el-dropdown-item
+                  >
+                  <el-dropdown-item @click="setBatch('label', scope.row)" v-if="checkPermi(['admin:user:tag'])"
+                    >设置标签</el-dropdown-item
+                  >
+                  <el-dropdown-item
+                    @click="setPassword(scope.row)"
+                    v-if="checkPermi(['admin:user:update:password'])"
+                    >修改密码</el-dropdown-item
+                  >
+                  <el-dropdown-item @click="setPhone(scope.row)" v-if="checkPermi(['admin:user:update:phone'])"
+                    >修改手机号</el-dropdown-item
+                  >
+                  <el-dropdown-item
+                    @click="setExtension(scope.row)"
+                    v-if="checkPermi(['admin:user:update:spread'])"
+                    >修改上级推广人</el-dropdown-item
+                  >
+                  <el-dropdown-item
+                    @click="clearSpread(scope.row)"
+                    v-if="scope.row.spreadUid && scope.row.spreadUid > 0 && checkPermi(['admin:retail:spread:clean'])"
+                    >清除上级推广人</el-dropdown-item
+                  >
+                </el-dropdown-menu>
+              </template>
             </el-dropdown>
           </template>
         </el-table-column>
@@ -312,28 +349,15 @@
         />
       </div>
     </el-card>
-    <div class="card_abs" v-show="card_select_show" :style="{ top: collapse ? 570 + 'px' : 270 + 'px' }">
-      <template>
-        <div class="cell_ht">
-          <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange"
-            >全选</el-checkbox
-          >
-          <el-button type="text" @click="checkSave()">保存</el-button>
-        </div>
-        <el-checkbox-group v-model="checkedCities" @change="handleCheckedCitiesChange">
-          <el-checkbox v-for="item in columnData" :label="item" :key="item" class="check_cell">{{ item }}</el-checkbox>
-        </el-checkbox-group>
-      </template>
-    </div>
     <!--修改推广人-->
-    <el-dialog title="修改推广人" :visible.sync="extensionVisible" width="540px" :before-close="handleCloseExtension">
+    <el-dialog title="修改推广人" v-model="extensionVisible" width="540px" :before-close="handleCloseExtension">
       <el-form
         class="formExtension"
-        ref="formExtension"
+        ref="formExtensionRef"
         :model="formExtension"
         :rules="ruleInline"
         label-width="75px"
-        @submit.native.prevent
+        @submit.prevent
         v-loading="loading"
       >
         <el-form-item label="用户头像：" prop="image">
@@ -345,20 +369,22 @@
           </div>
         </el-form-item>
       </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="extensionVisible = false">取消</el-button>
-        <el-button type="primary" @click="onSubExtension('formExtension')">确定</el-button>
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="extensionVisible = false">取消</el-button>
+          <el-button type="primary" @click="onSubExtension('formExtension')">确定</el-button>
+        </span>
+      </template>
     </el-dialog>
     <!--用户列表-->
-    <el-dialog class="user-dialog" title="用户列表" :visible.sync="userVisible" width="900px">
+    <el-dialog class="user-dialog" title="用户列表" v-model="userVisible" width="900px">
       <user-list @closeDialog="userVisible = false" v-if="userVisible" @getTemplateRow="getTemplateRow"></user-list>
     </el-dialog>
     <!--批量设置-->
-    <el-dialog title="设置" :visible.sync="dialogVisible" width="540px" :before-close="handleClose">
+    <el-dialog title="设置" v-model="dialogVisible" width="540px" :before-close="handleClose">
       <el-form
         :model="dynamicValidateForm"
-        ref="dynamicValidateForm"
+        ref="dynamicValidateFormRef"
         label-width="75px"
         class="demo-dynamic"
         v-loading="loading"
@@ -396,34 +422,36 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="handleClose">取消</el-button>
-        <el-button type="primary" @click="submitForm('dynamicValidateForm')">确定</el-button>
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="handleClose">取消</el-button>
+          <el-button type="primary" @click="submitForm('dynamicValidateForm')">确定</el-button>
+        </span>
+      </template>
     </el-dialog>
     <!--编辑-->
-    <el-dialog title="编辑" :visible.sync="visible" width="900px">
-      <edit-from v-if="visible" :uid="uid" @resetForm="resetForm"></edit-from>
+    <el-dialog title="编辑" v-model="visible" width="900px">
+      <edit-from v-if="visible" :uid="uid" @resetForm="resetForm" @success="handleEditSuccess"></edit-from>
     </el-dialog>
     <!--积分余额-->
     <el-dialog
       title="积分余额"
-      :visible.sync="VisiblePoint"
+      v-model="VisiblePoint"
       width="540px"
       :close-on-click-modal="false"
       :before-close="handlePointClose"
     >
       <el-form
         :model="PointValidateForm"
-        ref="PointValidateForm"
+        ref="PointValidateFormRef"
         label-width="80px"
         class="demo-dynamic"
         v-loading="loadingPoint"
       >
         <el-form-item label="修改余额：" required>
           <el-radio-group v-model="PointValidateForm.moneyType">
-            <el-radio :label="1">增加</el-radio>
-            <el-radio :label="2">减少</el-radio>
+            <el-radio :label="1" :value="1">增加</el-radio>
+            <el-radio :label="2" :value="2">减少</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="余额：" required>
@@ -439,8 +467,8 @@
         </el-form-item>
         <el-form-item label="修改积分：" required>
           <el-radio-group v-model="PointValidateForm.integralType">
-            <el-radio :label="1">增加</el-radio>
-            <el-radio :label="2">减少</el-radio>
+            <el-radio :label="1" :value="1">增加</el-radio>
+            <el-radio :label="2" :value="2">减少</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="积分：" required>
@@ -454,17 +482,107 @@
           ></el-input-number>
         </el-form-item>
       </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="handlePointClose">取消</el-button>
-        <el-button type="primary" :loading="loadingBtn" @click="submitPointForm('PointValidateForm')">确定</el-button>
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="handlePointClose">取消</el-button>
+          <el-button type="primary" :loading="loadingBtn" @click="submitPointForm('PointValidateForm')">确定</el-button>
+        </span>
+      </template>
     </el-dialog>
     <!--账户详情-->
-    <user-details ref="userDetailFrom" :userNo="uid"></user-details>
+    <user-details ref="userDetailFromRef" :userNo="uid"></user-details>
+    <!--修改密码-->
+    <el-dialog
+      title="修改密码"
+      v-model="passwordVisible"
+      width="540px"
+      :close-on-click-modal="false"
+      :before-close="handlePasswordClose"
+    >
+      <el-form
+        :model="passwordForm"
+        ref="passwordFormRef"
+        :rules="passwordRules"
+        label-width="100px"
+        v-loading="passwordLoading"
+      >
+        <el-form-item label="新密码：" prop="password">
+          <el-input
+            v-model="passwordForm.password"
+            placeholder="请输入6~18位新密码"
+            maxlength="18"
+            show-password
+            autocomplete="new-password"
+          />
+        </el-form-item>
+        <el-form-item label="确认密码：" prop="confirmPassword">
+          <el-input
+            v-model="passwordForm.confirmPassword"
+            placeholder="请再次输入新密码"
+            maxlength="18"
+            show-password
+            autocomplete="new-password"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="handlePasswordClose">取消</el-button>
+          <el-button type="primary" :loading="passwordLoading" @click="submitPassword">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+    <!--新增用户-->
+    <el-dialog title="新增H5用户" v-model="createUserVisible" width="540px" :before-close="handleCreateUserClose">
+      <el-form
+        :model="createForm"
+        ref="createFormRef"
+        :rules="createRules"
+        label-width="100px"
+        v-loading="createLoading"
+      >
+        <el-form-item label="手机号：" prop="phone">
+          <el-input v-model="createForm.phone" placeholder="请输入手机号" maxlength="11" />
+        </el-form-item>
+        <el-form-item label="用户昵称：" prop="nickname">
+          <el-input v-model="createForm.nickname" placeholder="不填则自动生成" />
+        </el-form-item>
+        <el-form-item label="真实姓名：" prop="realName">
+          <el-input v-model="createForm.realName" placeholder="请输入真实姓名（选填）" />
+        </el-form-item>
+        <el-form-item label="密码：" prop="pwd">
+          <el-input v-model="createForm.pwd" placeholder="请输入密码" show-password />
+        </el-form-item>
+        <el-form-item label="确认密码：" prop="confirmPwd">
+          <el-input v-model="createForm.confirmPwd" placeholder="请再次输入密码" show-password />
+        </el-form-item>
+        <el-form-item label="是否推广员：" prop="isPromoter">
+          <el-radio-group v-model="createForm.isPromoter">
+            <el-radio :label="true" :value="true">是</el-radio>
+            <el-radio :label="false" :value="false">否</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="状态：" prop="status">
+          <el-radio-group v-model="createForm.status">
+            <el-radio :label="true" :value="true">开启</el-radio>
+            <el-radio :label="false" :value="false">禁止</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="handleCreateUserClose">取消</el-button>
+          <el-button type="primary" :loading="createLoading" @click="submitCreateUser">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
-<script>
+<script setup lang="jsx">
+import { ref, reactive, computed, nextTick, onMounted, onActivated, getCurrentInstance } from 'vue';
+import { ElMessage, ElMessageBox } from '@/utils/elementPlusFeedback';
+import { Search } from '@element-plus/icons-vue'
 import {
   userListApi,
   groupListApi,
@@ -474,6 +592,8 @@ import {
   foundsApi,
   updateSpreadApi,
   updatePhoneApi,
+  userUpdatePasswordApi,
+  userCreateApi,
 } from '@/api/user';
 import { spreadClearApi } from '@/api/distribution';
 import editFrom from './edit';
@@ -483,587 +603,711 @@ import * as logistics from '@/api/logistics.js';
 import Cookies from 'js-cookie';
 import { checkPermi } from '@/utils/permission'; // 权限判断函数
 import { Debounce } from '@/utils/validate';
-export default {
-  name: 'UserIndex',
-  components: { editFrom, userDetails, userList },
-  filters: {
-    sexFilter(status) {
-      const statusMap = {
-        0: '未知',
-        1: '男',
-        2: '女',
-        3: '保密',
-      };
-      return statusMap[status];
-    },
-  },
-  data() {
-    return {
-      formExtension: {
-        image: '',
-        spreadUid: '',
-        userId: '',
-      },
-      ruleInline: {},
-      extensionVisible: false,
-      userVisible: false,
-      pickerOptions: this.$timeOptions,
-      loadingBtn: false,
-      PointValidateForm: {
-        integralType: 2,
-        integralValue: 0,
-        moneyType: 2,
-        moneyValue: 0,
-        uid: '',
-      },
-      loadingPoint: false,
-      VisiblePoint: false,
-      visible: false,
-      userIds: '',
-      dialogVisible: false,
-      groupData: [],
-      labelData: [],
-      selData: [],
-      labelPosition: 'right',
-      collapse: false,
-      props: {
-        children: 'child',
-        label: 'name',
-        value: 'name',
-        emitPath: false,
-      },
-      propsCity: {
-        children: 'child',
-        label: 'name',
-        value: 'name',
-      },
-      headeNum: [
-        { type: '', name: '全部用户' },
-        { type: 'wechat', name: '微信公众号用户' },
-        { type: 'routine', name: '微信小程序用户' },
-        { type: 'h5', name: 'H5用户' },
-      ],
-      listLoading: true,
-      tableData: {
-        data: [],
-        total: 0,
-      },
-      loginType: '0',
-      userFrom: {
-        searchType: 'all',
-        content: '',
-        labelId: '',
-        userType: '',
-        sex: '',
-        isPromoter: '',
-        country: '',
-        payCount: '',
-        accessType: '',
-        dateLimit: '',
-        keywords: '',
-        province: '',
-        city: '',
-        page: 1,
-        limit: 20,
-        groupId: '',
-      },
-      grid: {
-        xl: 8,
-        lg: 12,
-        md: 12,
-        sm: 24,
-        xs: 24,
-      },
-      labelLists: [],
-      groupList: [],
-      selectedData: [],
-      timeVal: [],
-      addresData: [],
-      dynamicValidateForm: {
-        groupId: [],
-      },
-      loading: false,
-      groupIdFrom: [],
-      selectionList: [],
-      batchName: '',
-      uid: 0,
-      keyNum: 0,
-      address: [],
-      multipleSelectionAll: [],
-      idKey: 'uid',
-      card_select_show: false,
-      checkAll: false,
-      checkedCities: ['ID', '头像', '姓名', '分组', '推荐人', '手机号', '余额', '积分'],
-      columnData: ['ID', '头像', '姓名', '分组', '推荐人', '手机号', '余额', '积分'],
-      isIndeterminate: true,
-    };
-  },
-  computed: {
-    // 是否注销
-    isRedFont() {
-      return (info) => {
-        if (info.isLogoff) {
-          return 'red-fonts';
-        } else {
-          return '';
-        }
-      };
-    },
-  },
-  activated() {
-    this.userFrom.keywords = '';
-    this.loginType = '0';
-    this.getList(1);
-  },
-  mounted() {
-    this.getList();
-    this.groupLists();
-    this.getTagList();
-    if (checkPermi(['admin:system:city:list:tree'])) this.getCityList();
-  },
-  methods: {
-    checkPermi,
-    setPhone(row) {
-      this.$prompt('', '修改手机号', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        inputErrorMessage: '请输入修改手机号',
-        inputType: 'text',
-        inputValue: row.phone,
-        inputPlaceholder: '请输入手机号',
-        closeOnClickModal: false,
-        inputValidator: (value) => {
-          if (!value) return '请填写手机号';
-        },
-      })
-        .then(({ value }) => {
-          updatePhoneApi({ id: row.uid, phone: value }).then(() => {
-            this.$message.success('编辑成功');
-            this.getList();
-          });
-        })
-        .catch(() => {
-          this.$message.info('取消输入');
-        });
-    },
-    // 清除
-    clearSpread(row) {
-      this.$modalSure('解除【' + row.nickname + '】的上级推广人吗').then(() => {
-        spreadClearApi(row.uid).then((res) => {
-          this.$message.success('清除成功');
-          this.getList();
-        });
-      });
-    },
-    onSubExtension(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          updateSpreadApi(this.formExtension).then((res) => {
-            this.$message.success('设置成功');
-            this.extensionVisible = false;
-            this.getList();
-          });
-        } else {
-          return false;
-        }
-      });
-    },
-    getTemplateRow(row) {
-      this.formExtension.image = row.avatar;
-      this.formExtension.spreadUid = row.uid;
-    },
-    setExtension(row) {
-      this.formExtension = {
-        image: '',
-        spreadUid: '',
-        userId: row.uid,
-      };
-      this.extensionVisible = true;
-    },
-    handleCloseExtension() {
-      this.extensionVisible = false;
-    },
-    modalPicTap() {
-      this.userVisible = true;
-    },
-    resetForm() {
-      this.visible = false;
-    },
-    reset(formName) {
-      this.userFrom = {
-        searchType: 'all',
-        content: '',
-        labelId: '',
-        userType: '',
-        sex: '',
-        isPromoter: '',
-        country: '',
-        payCount: '',
-        accessType: '',
-        dateLimit: '',
-        keywords: '',
-        province: '',
-        city: '',
-        page: 1,
-        limit: 20,
-        groupId: '',
-      };
-      this.address = [];
-      this.groupData = [];
-      this.labelData = [];
-      this.timeVal = [];
-      this.$refs.userSearchInput.clearInput(); // 清空用户搜索输入框
-      this.getList();
-    },
-    // 列表
-    async getCityList() {
-      let res = await logistics.cityListTree();
-      //res.forEach((el, index) => {
-      //     el.child.forEach((cel, j) => {
-      //       delete cel.child
-      //     })
-      //   })
-      this.addresData = res;
-      // })
-    },
-    // 发送文章
-    sendNews() {
-      if (this.selectionList.length === 0) return this.$message.warning('请先选择用户');
-      const _this = this;
-      this.$modalArticle(function (row) {}, 'send');
-    },
-    // 发送优惠劵
-    onSend() {
-      if (this.selectionList.length === 0) return this.$message.warning('请选择要设置的用户');
-      const _this = this;
-      this.$modalCoupon(
-        'send',
-        (this.keyNum += 1),
-        [],
-        function (row) {
-          _this.formValidate.give_coupon_ids = [];
-          _this.couponData = [];
-          row.map((item) => {
-            _this.formValidate.give_coupon_ids.push(item.coupon_id);
-            _this.couponData.push(item.title);
-          });
-          _this.selectionList = [];
-        },
-        this.userIds,
-        'user',
-      );
-    },
-    // 账户详情
-    onDetails(id) {
-      this.uid = id;
-      this.$refs.userDetailFrom.getUserDetail(id);
-      this.$refs.userDetailFrom.dialogUserDetail = true;
-    },
-    // 积分余额
-    editPoint(id) {
-      this.uid = id;
-      this.VisiblePoint = true;
-    },
-    // 积分余额
-    submitPointForm: Debounce(function (formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          this.PointValidateForm.uid = this.uid;
-          this.loadingBtn = true;
-          foundsApi(this.PointValidateForm)
-            .then((res) => {
-              this.$message.success('设置成功');
-              this.loadingBtn = false;
-              this.handlePointClose();
-              this.getList();
-            })
-            .catch(() => {
-              this.loadingBtn = false;
-            });
-        } else {
-          return false;
-        }
-      });
-    }),
-    // 积分余额
-    handlePointClose() {
-      this.VisiblePoint = false;
-      this.PointValidateForm = {
-        integralType: 2,
-        integralValue: 0,
-        moneyType: 2,
-        moneyValue: 0,
-        uid: '',
-      };
-    },
-    editUser(id) {
-      this.uid = id;
-      this.visible = true;
-    },
-    submitForm(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          this.loading = true;
-          this.batchName === 'group'
-            ? groupPiApi({ groupId: this.dynamicValidateForm.groupId, id: this.userIds })
-                .then((res) => {
-                  this.$message.success('设置成功');
-                  this.loading = false;
-                  this.handleClose();
-                  this.getList();
-                })
-                .catch(() => {
-                  this.loading = false;
-                })
-            : tagPiApi({ tagId: this.dynamicValidateForm.groupId.join(','), id: this.userIds })
-                .then((res) => {
-                  this.$message.success('设置成功');
-                  this.loading = false;
-                  this.handleClose();
-                  this.getList();
-                })
-                .catch(() => {
-                  this.loading = false;
-                });
-        } else {
-          return false;
-        }
-      });
-    },
-    setBatch(name, row) {
-      this.batchName = name;
-      if (row) {
-        this.userIds = row.uid;
-        if (this.batchName === 'group') {
-          this.dynamicValidateForm.groupId = row.groupId ? Number(row.groupId) : '';
-        } else {
-          this.dynamicValidateForm.groupId = row.tagId ? row.tagId.split(',').map(Number) : [];
-        }
-      } else {
-        this.dynamicValidateForm.groupId = '';
-      }
-      if (this.multipleSelectionAll.length === 0 && !row) return this.$message.warning('请选择要设置的用户');
-      this.dialogVisible = true;
-    },
-    handleClose() {
-      this.dialogVisible = false;
-      this.$refs['dynamicValidateForm'].resetFields();
-    },
-    // 全选
-    onSelectTab(selection) {
-      this.selectionList = selection;
-      setTimeout(() => {
-        this.changePageCoreRecordData();
-        let data = [];
-        if (this.multipleSelectionAll.length) {
-          this.multipleSelectionAll.map((item) => {
-            data.push(item.uid);
-          });
-          this.userIds = data.join(',');
-        }
-      }, 50);
-    },
-    // 搜索
-    userSearchs() {
-      this.userFrom.page = 1;
-      this.getList();
-    },
-    // 选择国家
-    changeCountry() {
-      if (this.userFrom.country === 'OTHER' || !this.userFrom.country) {
-        this.selectedData = [];
-        this.userFrom.province = '';
-        this.userFrom.city = '';
-        this.address = [];
-      }
-    },
-    // 选择地址
-    handleChange(value) {
-      this.userFrom.province = value[0];
-      this.userFrom.city = value[1];
-      this.userSearchs();
-    },
-    // 具体日期
-    onchangeTime(e) {
-      this.timeVal = e;
-      this.userFrom.dateLimit = e ? this.timeVal.join(',') : '';
-      this.userSearchs();
-    },
-    // 分组列表
-    groupLists() {
-      groupListApi({ page: 1, limit: 9999 }).then(async (res) => {
-        this.groupList = res.list;
-      });
-    },
-    //标签列表
-    getTagList() {
-      tagListApi({ page: 1, limit: 9999 }).then((res) => {
-        this.labelLists = res.list;
-      });
-    },
-    // 列表
-    getList(num) {
-      this.listLoading = true;
-      this.userFrom.page = num ? num : this.userFrom.page;
-      this.userFrom.userType = this.loginType;
-      if (this.loginType == 0) this.userFrom.userType = '';
-      this.userFrom.groupId = this.groupData.join(',');
-      this.userFrom.labelId = this.labelData.join(',');
-      userListApi(this.userFrom)
-        .then((res) => {
-          this.tableData.data = res.list;
-          this.tableData.total = res.total;
-          this.$nextTick(function () {
-            this.setSelectRow(); // 调用跨页选中方法
-          });
-          this.listLoading = false;
-        })
-        .catch(() => {
-          this.listLoading = false;
-        });
-      this.checkedCities = this.$cache.local.has('user_stroge')
-        ? this.$cache.local.getJSON('user_stroge')
-        : this.checkedCities;
-      this.$set(this, 'card_select_show', false);
-    },
-    // 设置选中的方法
-    setSelectRow() {
-      if (!this.multipleSelectionAll || this.multipleSelectionAll.length <= 0) {
-        return;
-      }
-      // 标识当前行的唯一键的名称
-      const idKey = this.idKey;
-      const selectAllIds = [];
-      this.multipleSelectionAll.forEach((row) => {
-        selectAllIds.push(row[idKey]);
-      });
-      this.$refs.table.clearSelection();
-      for (var i = 0; i < this.tableData.data.length; i++) {
-        if (selectAllIds.indexOf(this.tableData.data[i][idKey]) >= 0) {
-          // 设置选中，记住table组件需要使用ref="table"
-          this.$refs.table.toggleRowSelection(this.tableData.data[i], true);
-        }
-      }
-    },
-    // 记忆选择核心方法
-    changePageCoreRecordData() {
-      // 标识当前行的唯一键的名称
-      const idKey = this.idKey;
-      const that = this;
-      // 如果总记忆中还没有选择的数据，那么就直接取当前页选中的数据，不需要后面一系列计算
-      if (this.multipleSelectionAll.length <= 0) {
-        this.multipleSelectionAll = this.selectionList;
-        return;
-      }
-      // 总选择里面的key集合
-      const selectAllIds = [];
-      this.multipleSelectionAll.forEach((row) => {
-        selectAllIds.push(row[idKey]);
-      });
-      const selectIds = [];
-      // 获取当前页选中的id
-      this.selectionList.forEach((row) => {
-        selectIds.push(row[idKey]);
-        // 如果总选择里面不包含当前页选中的数据，那么就加入到总选择集合里
-        if (selectAllIds.indexOf(row[idKey]) < 0) {
-          that.multipleSelectionAll.push(row);
-        }
-      });
-      const noSelectIds = [];
-      // 得到当前页没有选中的id
-      this.tableData.data.forEach((row) => {
-        if (selectIds.indexOf(row[idKey]) < 0) {
-          noSelectIds.push(row[idKey]);
-        }
-      });
-      noSelectIds.forEach((uid) => {
-        if (selectAllIds.indexOf(uid) >= 0) {
-          for (let i = 0; i < that.multipleSelectionAll.length; i++) {
-            if (that.multipleSelectionAll[i][idKey] == uid) {
-              // 如果总选择中有未被选中的，那么就删除这条
-              that.multipleSelectionAll.splice(i, 1);
-              break;
-            }
-          }
-        }
-      });
-    },
-    pageChange(page) {
-      this.changePageCoreRecordData();
-      this.userFrom.page = page;
-      this.getList();
-    },
-    handleSizeChange(val) {
-      this.changePageCoreRecordData();
-      this.userFrom.limit = val;
-      this.getList();
-    },
-    // 删除
-    handleDelete(id, idx) {
-      this.$modalSure().then(() => {
-        productDeleteApi(id).then(() => {
-          this.$message.success('删除成功');
-          this.getList();
-        });
-      });
-    },
-    onchangeIsShow(row) {
-      row.isShow
-        ? putOnShellApi(row.id)
-            .then(() => {
-              this.$message.success('上架成功');
-              this.getList();
-            })
-            .catch(() => {
-              row.isShow = !row.isShow;
-            })
-        : offShellApi(row.id)
-            .then(() => {
-              this.$message.success('下架成功');
-              this.getList();
-            })
-            .catch(() => {
-              row.isShow = !row.isShow;
-            });
-    },
-    renderHeader(h) {
-      return (
-        <p>
-          <span style="padding-right:5px;">操作</span>
-          <i class="el-icon-setting" onClick={() => this.handleAddItem()}></i>
-        </p>
-      );
-    },
-    handleAddItem() {
-      if (this.card_select_show) {
-        this.$set(this, 'card_select_show', false);
-      } else if (!this.card_select_show) {
-        this.$set(this, 'card_select_show', true);
-      }
-    },
-    handleCheckAllChange(val) {
-      this.checkedCities = val ? this.columnData : [];
-      this.isIndeterminate = false;
-    },
-    handleCheckedCitiesChange(value) {
-      let checkedCount = value.length;
-      this.checkAll = checkedCount === this.columnData.length;
-      this.isIndeterminate = checkedCount > 0 && checkedCount < this.columnData.length;
-    },
-    checkSave() {
-      this.card_select_show = false;
-      this.$modal.loading('正在保存到本地，请稍候...');
-      this.$cache.local.setJSON('user_stroge', this.checkedCities);
-      setTimeout(this.$modal.closeLoading(), 1000);
-    },
-  },
+
+defineOptions({ name: 'UserIndex' });
+
+const { proxy } = getCurrentInstance();
+
+const formExtension = reactive({
+  image: '',
+  spreadUid: '',
+  userId: '',
+});
+const ruleInline = ref({});
+const extensionVisible = ref(false);
+const userVisible = ref(false);
+const pickerOptions = proxy.$timeOptions;
+const loadingBtn = ref(false);
+const PointValidateForm = reactive({
+  integralType: 1,
+  integralValue: 0,
+  moneyType: 1,
+  moneyValue: 0,
+  uid: '',
+});
+const loadingPoint = ref(false);
+const VisiblePoint = ref(false);
+const visible = ref(false);
+const userIds = ref('');
+const dialogVisible = ref(false);
+const groupData = ref([]);
+const labelData = ref([]);
+const selData = ref([]);
+const labelPosition = ref('right');
+const collapse = ref(false);
+const props = {
+  children: 'child',
+  label: 'name',
+  value: 'name',
+  emitPath: false,
 };
+const propsCity = {
+  children: 'child',
+  label: 'name',
+  value: 'name',
+};
+const headeNum = [
+  { type: '', name: '全部用户' },
+  { type: 'wechat', name: '微信公众号用户' },
+  { type: 'routine', name: '微信小程序用户' },
+  { type: 'h5', name: 'H5用户' },
+];
+const listLoading = ref(true);
+const tableData = reactive({
+  data: [],
+  total: 0,
+});
+const loginType = ref('');
+const userFrom = reactive({
+  searchType: 'all',
+  content: '',
+  labelId: '',
+  userType: '',
+  sex: '',
+  isPromoter: '',
+  country: '',
+  payCount: '',
+  accessType: '',
+  dateLimit: '',
+  keywords: '',
+  province: '',
+  city: '',
+  page: 1,
+  limit: 20,
+  groupId: '',
+});
+const grid = {
+  xl: 8,
+  lg: 12,
+  md: 12,
+  sm: 24,
+  xs: 24,
+};
+const labelLists = ref([]);
+const groupList = ref([]);
+const selectedData = ref([]);
+const timeVal = ref([]);
+const addresData = ref([]);
+const dynamicValidateForm = reactive({
+  groupId: [],
+});
+const loading = ref(false);
+const groupIdFrom = ref([]);
+const selectionList = ref([]);
+const batchName = ref('');
+const uid = ref(0);
+const keyNum = ref(0);
+const address = ref([]);
+const multipleSelectionAll = ref([]);
+const idKey = 'uid';
+const card_select_show = ref(false);
+const checkAll = ref(false);
+const checkedCities = ref(['ID', '头像', '姓名', '分组', '推荐人', '手机号', '余额', '积分']);
+const columnData = ['ID', '头像', '姓名', '分组', '推荐人', '手机号', '余额', '积分'];
+const isIndeterminate = ref(true);
+const createUserVisible = ref(false);
+const createLoading = ref(false);
+const passwordVisible = ref(false);
+const passwordLoading = ref(false);
+const passwordForm = reactive({
+  id: null,
+  password: '',
+  confirmPassword: '',
+});
+const validatePasswordConfirm = (rule, value, callback) => {
+  if (!value) {
+    callback(new Error('请再次输入新密码'));
+  } else if (value !== passwordForm.password) {
+    callback(new Error('两次输入的密码不一致'));
+  } else {
+    callback();
+  }
+};
+const passwordRules = {
+  password: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, max: 18, message: '密码长度必须为6~18位', trigger: 'blur' },
+  ],
+  confirmPassword: [{ validator: validatePasswordConfirm, trigger: 'blur' }],
+};
+const createForm = reactive({
+  phone: '',
+  nickname: '',
+  realName: '',
+  pwd: '',
+  confirmPwd: '',
+  isPromoter: false,
+  status: true,
+});
+const createRules = {
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1\d{10}$/, message: '请输入正确的手机号', trigger: 'blur' },
+  ],
+  pwd: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' },
+  ],
+  confirmPwd: [
+    { required: true, message: '请再次输入密码', trigger: 'blur' },
+  ],
+  isPromoter: [
+    { required: true, message: '请选择是否推广员', trigger: 'change' },
+  ],
+  status: [
+    { required: true, message: '请选择状态', trigger: 'change' },
+  ],
+};
+
+const tableRef = ref(null);
+const userFromRef = ref(null);
+const userSearchInputRef = ref(null);
+const formExtensionRef = ref(null);
+const dynamicValidateFormRef = ref(null);
+const PointValidateFormRef = ref(null);
+const createFormRef = ref(null);
+const passwordFormRef = ref(null);
+const userDetailFromRef = ref(null);
+
+// 局部过滤器
+function sexFilter(status) {
+  const statusMap = {
+    0: '未知',
+    1: '男',
+    2: '女',
+    3: '保密',
+  };
+  return statusMap[status];
+}
+
+// 是否注销
+const isRedFont = computed(() => {
+  return (info) => {
+    if (info.isLogoff) {
+      return 'red-fonts';
+    } else {
+      return '';
+    }
+  };
+});
+
+function setPhone(row) {
+  ElMessageBox.prompt('', '修改手机号', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputErrorMessage: '请输入修改手机号',
+    inputType: 'text',
+    inputValue: row.phone,
+    inputPlaceholder: '请输入手机号',
+    closeOnClickModal: false,
+    inputValidator: (value) => {
+      if (!value) return '请填写手机号';
+    },
+  })
+    .then(({ value }) => {
+      updatePhoneApi({ id: row.uid, phone: value }).then(() => {
+        ElMessage.success('编辑成功');
+        getList();
+      });
+    })
+    .catch(() => {
+      ElMessage.info('取消输入');
+    });
+}
+function setPassword(row) {
+  Object.assign(passwordForm, {
+    id: row.uid,
+    password: '',
+    confirmPassword: '',
+  });
+  passwordVisible.value = true;
+  nextTick(() => {
+    passwordFormRef.value?.clearValidate();
+  });
+}
+function handlePasswordClose(done) {
+  passwordLoading.value = false;
+  Object.assign(passwordForm, {
+    id: null,
+    password: '',
+    confirmPassword: '',
+  });
+  passwordFormRef.value?.clearValidate();
+  if (typeof done === 'function') {
+    done();
+  } else {
+    passwordVisible.value = false;
+  }
+}
+function submitPassword() {
+  passwordFormRef.value.validate((valid) => {
+    if (!valid) return;
+
+    passwordLoading.value = true;
+    userUpdatePasswordApi({
+      id: passwordForm.id,
+      password: passwordForm.password,
+    })
+      .then(() => {
+        ElMessage.success('密码修改成功');
+        handlePasswordClose();
+      })
+      .catch(() => {
+        passwordLoading.value = false;
+      });
+  });
+}
+// 清除
+function clearSpread(row) {
+  proxy.$modalSure('解除【' + row.nickname + '】的上级推广人吗').then(() => {
+    spreadClearApi(row.uid).then((res) => {
+      ElMessage.success('清除成功');
+      getList();
+    });
+  });
+}
+function onSubExtension(formName) {
+  formExtensionRef.value.validate((valid) => {
+    if (valid) {
+      updateSpreadApi(formExtension).then((res) => {
+        ElMessage.success('设置成功');
+        extensionVisible.value = false;
+        getList();
+      });
+    } else {
+      return false;
+    }
+  });
+}
+function getTemplateRow(row) {
+  formExtension.image = row.avatar;
+  formExtension.spreadUid = row.uid;
+}
+function setExtension(row) {
+  Object.assign(formExtension, {
+    image: '',
+    spreadUid: '',
+    userId: row.uid,
+  });
+  extensionVisible.value = true;
+}
+function handleCloseExtension() {
+  extensionVisible.value = false;
+}
+function modalPicTap() {
+  userVisible.value = true;
+}
+function resetForm() {
+  visible.value = false;
+}
+// 编辑完成：关闭弹窗并刷新列表
+function handleEditSuccess() {
+  visible.value = false;
+  getList();
+}
+function reset(formName) {
+  Object.assign(userFrom, {
+    searchType: 'all',
+    content: '',
+    labelId: '',
+    userType: '',
+    sex: '',
+    isPromoter: '',
+    country: '',
+    payCount: '',
+    accessType: '',
+    dateLimit: '',
+    keywords: '',
+    province: '',
+    city: '',
+    page: 1,
+    limit: 20,
+    groupId: '',
+  });
+  address.value = [];
+  groupData.value = [];
+  labelData.value = [];
+  timeVal.value = [];
+  userSearchInputRef.value.clearInput(); // 清空用户搜索输入框
+  getList();
+}
+// 列表
+async function getCityList() {
+  let res = await logistics.cityListTree();
+  //res.forEach((el, index) => {
+  //     el.child.forEach((cel, j) => {
+  //       delete cel.child
+  //     })
+  //   })
+  addresData.value = res;
+  // })
+}
+// 发送文章
+function sendNews() {
+  if (selectionList.value.length === 0) return ElMessage.warning('请先选择用户');
+  proxy.$modalArticle(function (row) {}, 'send');
+}
+// 发送优惠劵
+function onSend() {
+  if (selectionList.value.length === 0) return ElMessage.warning('请选择要设置的用户');
+  // 注意：以下回调中引用的 formValidate / couponData 在原组件中即未定义，属历史遗留逻辑，保持原样
+  const _this = { formValidate: {}, couponData: [], selectionList: [] };
+  proxy.$modalCoupon(
+    'send',
+    (keyNum.value += 1),
+    [],
+    function (row) {
+      _this.formValidate.give_coupon_ids = [];
+      _this.couponData = [];
+      row.map((item) => {
+        _this.formValidate.give_coupon_ids.push(item.coupon_id);
+        _this.couponData.push(item.title);
+      });
+      _this.selectionList = [];
+    },
+    userIds.value,
+    'user',
+  );
+}
+// 账户详情
+function onDetails(id) {
+  uid.value = id;
+  userDetailFromRef.value.getUserDetail(id);
+  userDetailFromRef.value.dialogUserDetail = true;
+}
+// 积分余额
+function editPoint(id) {
+  uid.value = id;
+  VisiblePoint.value = true;
+}
+// 积分余额
+const submitPointForm = Debounce(function (formName) {
+  PointValidateFormRef.value.validate((valid) => {
+    if (valid) {
+      PointValidateForm.uid = uid.value;
+      loadingBtn.value = true;
+      foundsApi(PointValidateForm)
+        .then((res) => {
+          ElMessage.success('设置成功');
+          loadingBtn.value = false;
+          handlePointClose();
+          getList();
+        })
+        .catch(() => {
+          loadingBtn.value = false;
+        });
+    } else {
+      return false;
+    }
+  });
+});
+// 积分余额
+function handlePointClose() {
+  VisiblePoint.value = false;
+  Object.assign(PointValidateForm, {
+    integralType: 1,
+    integralValue: 0,
+    moneyType: 1,
+    moneyValue: 0,
+    uid: '',
+  });
+}
+function editUser(id) {
+  uid.value = id;
+  visible.value = true;
+}
+function submitForm(formName) {
+  dynamicValidateFormRef.value.validate((valid) => {
+    if (valid) {
+      loading.value = true;
+      batchName.value === 'group'
+        ? groupPiApi({ groupId: dynamicValidateForm.groupId, id: userIds.value })
+            .then((res) => {
+              ElMessage.success('设置成功');
+              loading.value = false;
+              handleClose();
+              getList();
+            })
+            .catch(() => {
+              loading.value = false;
+            })
+        : tagPiApi({ tagId: dynamicValidateForm.groupId.join(','), id: userIds.value })
+            .then((res) => {
+              ElMessage.success('设置成功');
+              loading.value = false;
+              handleClose();
+              getList();
+            })
+            .catch(() => {
+              loading.value = false;
+            });
+    } else {
+      return false;
+    }
+  });
+}
+function setBatch(name, row) {
+  batchName.value = name;
+  if (row) {
+    userIds.value = row.uid;
+    if (batchName.value === 'group') {
+      dynamicValidateForm.groupId = row.groupId ? Number(row.groupId) : '';
+    } else {
+      dynamicValidateForm.groupId = row.tagId ? row.tagId.split(',').map(Number) : [];
+    }
+  } else {
+    dynamicValidateForm.groupId = '';
+  }
+  if (multipleSelectionAll.value.length === 0 && !row) return ElMessage.warning('请选择要设置的用户');
+  dialogVisible.value = true;
+}
+function handleClose() {
+  dialogVisible.value = false;
+  dynamicValidateFormRef.value.resetFields();
+}
+// 全选
+function onSelectTab(selection) {
+  selectionList.value = selection;
+  setTimeout(() => {
+    changePageCoreRecordData();
+    let data = [];
+    if (multipleSelectionAll.value.length) {
+      multipleSelectionAll.value.map((item) => {
+        data.push(item.uid);
+      });
+      userIds.value = data.join(',');
+    }
+  }, 50);
+}
+// 搜索
+function userSearchs() {
+  userFrom.page = 1;
+  getList();
+}
+// 选择国家
+function changeCountry() {
+  if (userFrom.country === 'OTHER' || !userFrom.country) {
+    selectedData.value = [];
+    userFrom.province = '';
+    userFrom.city = '';
+    address.value = [];
+  }
+}
+// 选择地址
+function handleChange(value) {
+  userFrom.province = value[0];
+  userFrom.city = value[1];
+  userSearchs();
+}
+// 具体日期
+function onchangeTime(e) {
+  timeVal.value = e;
+  userFrom.dateLimit = e ? timeVal.value.join(',') : '';
+  userSearchs();
+}
+// 分组列表
+function groupLists() {
+  groupListApi({ page: 1, limit: 9999 }).then(async (res) => {
+    groupList.value = res.list;
+  });
+}
+//标签列表
+function getTagList() {
+  tagListApi({ page: 1, limit: 9999 }).then((res) => {
+    labelLists.value = res.list;
+  });
+}
+// 列表
+function getList(num) {
+  listLoading.value = true;
+  userFrom.page = num ? num : userFrom.page;
+  userFrom.userType = loginType.value;
+  if (loginType.value == 0) userFrom.userType = '';
+  userFrom.groupId = groupData.value.join(',');
+  userFrom.labelId = labelData.value.join(',');
+  userListApi(userFrom)
+    .then((res) => {
+      tableData.data = res.list;
+      tableData.total = res.total;
+      nextTick(function () {
+        setSelectRow(); // 调用跨页选中方法
+      });
+      listLoading.value = false;
+    })
+    .catch(() => {
+      listLoading.value = false;
+    });
+  checkedCities.value = proxy.$cache.local.has('user_stroge')
+    ? proxy.$cache.local.getJSON('user_stroge')
+    : checkedCities.value;
+  card_select_show.value = false;
+}
+// 设置选中的方法
+function setSelectRow() {
+  if (!multipleSelectionAll.value || multipleSelectionAll.value.length <= 0) {
+    return;
+  }
+  // 标识当前行的唯一键的名称
+  const idKey_ = idKey;
+  const selectAllIds = [];
+  multipleSelectionAll.value.forEach((row) => {
+    selectAllIds.push(row[idKey_]);
+  });
+  tableRef.value.clearSelection();
+  for (var i = 0; i < tableData.data.length; i++) {
+    if (selectAllIds.indexOf(tableData.data[i][idKey_]) >= 0) {
+      // 设置选中，记住table组件需要使用ref="table"
+      tableRef.value.toggleRowSelection(tableData.data[i], true);
+    }
+  }
+}
+// 记忆选择核心方法
+function changePageCoreRecordData() {
+  // 标识当前行的唯一键的名称
+  const idKey_ = idKey;
+  // 如果总记忆中还没有选择的数据，那么就直接取当前页选中的数据，不需要后面一系列计算
+  if (multipleSelectionAll.value.length <= 0) {
+    multipleSelectionAll.value = selectionList.value;
+    return;
+  }
+  // 总选择里面的key集合
+  const selectAllIds = [];
+  multipleSelectionAll.value.forEach((row) => {
+    selectAllIds.push(row[idKey_]);
+  });
+  const selectIds = [];
+  // 获取当前页选中的id
+  selectionList.value.forEach((row) => {
+    selectIds.push(row[idKey_]);
+    // 如果总选择里面不包含当前页选中的数据，那么就加入到总选择集合里
+    if (selectAllIds.indexOf(row[idKey_]) < 0) {
+      multipleSelectionAll.value.push(row);
+    }
+  });
+  const noSelectIds = [];
+  // 得到当前页没有选中的id
+  tableData.data.forEach((row) => {
+    if (selectIds.indexOf(row[idKey_]) < 0) {
+      noSelectIds.push(row[idKey_]);
+    }
+  });
+  noSelectIds.forEach((uid_) => {
+    if (selectAllIds.indexOf(uid_) >= 0) {
+      for (let i = 0; i < multipleSelectionAll.value.length; i++) {
+        if (multipleSelectionAll.value[i][idKey_] == uid_) {
+          // 如果总选择中有未被选中的，那么就删除这条
+          multipleSelectionAll.value.splice(i, 1);
+          break;
+        }
+      }
+    }
+  });
+}
+function pageChange(page) {
+  changePageCoreRecordData();
+  userFrom.page = page;
+  getList();
+}
+function handleSizeChange(val) {
+  changePageCoreRecordData();
+  userFrom.limit = val;
+  getList();
+}
+// 删除
+function handleDelete(id, idx) {
+  proxy.$modalSure().then(() => {
+    productDeleteApi(id).then(() => {
+      ElMessage.success('删除成功');
+      getList();
+    });
+  });
+}
+function onchangeIsShow(row) {
+  row.isShow
+    ? putOnShellApi(row.id)
+        .then(() => {
+          ElMessage.success('上架成功');
+          getList();
+        })
+        .catch(() => {
+          row.isShow = !row.isShow;
+        })
+    : offShellApi(row.id)
+        .then(() => {
+          ElMessage.success('下架成功');
+          getList();
+        })
+        .catch(() => {
+          row.isShow = !row.isShow;
+        });
+}
+function handleCheckAllChange(val) {
+  checkedCities.value = val ? columnData : [];
+  isIndeterminate.value = false;
+}
+function handleCheckedCitiesChange(value) {
+  let checkedCount = value.length;
+  checkAll.value = checkedCount === columnData.length;
+  isIndeterminate.value = checkedCount > 0 && checkedCount < columnData.length;
+}
+function checkSave() {
+  card_select_show.value = false;
+  proxy.$modal.loading('正在保存到本地，请稍候...');
+  proxy.$cache.local.setJSON('user_stroge', checkedCities.value);
+  setTimeout(proxy.$modal.closeLoading(), 1000);
+}
+// 新增用户
+function showCreateUser() {
+  createUserVisible.value = true;
+}
+function handleCreateUserClose() {
+  createUserVisible.value = false;
+  Object.assign(createForm, { phone: '', nickname: '', realName: '', pwd: '', confirmPwd: '', isPromoter: false, status: true });
+  if (createFormRef.value) {
+    createFormRef.value.resetFields();
+  }
+}
+function submitCreateUser() {
+  createFormRef.value.validate((valid) => {
+    if (valid) {
+      if (createForm.pwd !== createForm.confirmPwd) {
+        ElMessage.warning('两次输入的密码不一致');
+        return;
+      }
+      createLoading.value = true;
+      const { confirmPwd, ...params } = createForm;
+      userCreateApi(params)
+        .then((res) => {
+          ElMessage.success('新增成功');
+          createLoading.value = false;
+          handleCreateUserClose();
+          getList(1);
+        })
+        .catch(() => {
+          createLoading.value = false;
+        });
+    }
+  });
+}
+
+onMounted(() => {
+  getList();
+  groupLists();
+  getTagList();
+  if (checkPermi(['admin:system:city:list:tree'])) getCityList();
+});
+
+onActivated(() => {
+  userFrom.keywords = '';
+  loginType.value = '';
+  getList(1);
+});
 </script>
 
 <style scoped lang="scss">
 /*.timeBox{*/
 /*width: 100%;*/
-/*::v-deep.el-form-item__content{*/
+/*:deep(.el-form-item__content){*/
 /*width: 87% !important;*/
 /*}*/
 /*}*/
@@ -1090,11 +1334,6 @@ export default {
   color: #99a9bf;
 }
 
-.demo-table-expand .el-form-item {
-  margin-right: 0;
-  margin-bottom: 0;
-  width: 33.33%;
-}
 
 .seachTiele {
   line-height: 30px;
@@ -1103,11 +1342,11 @@ export default {
 .container {
   min-width: 821px;
 
-  ::v-deepel-form-item {
+  :deep(.el-form-item ){
     width: 100%;
   }
 
-  ::v-deepel-form-item__content {
+  :deep(.el-form-item__content ){
     width: 72%;
   }
 }
@@ -1121,14 +1360,10 @@ export default {
   position: relative;
 }
 
-.card_abs {
-  position: absolute;
-  padding-bottom: 15px;
-  right: 40px;
-  width: 200px;
-  background: #fff;
-  z-index: 99999;
-  box-shadow: 0px 0px 14px 0px rgba(0, 0, 0, 0.1);
+/* 操作列表头：让“操作”文字与设置图标垂直居中对齐 */
+.col-setting-header {
+  display: inline-flex;
+  align-items: center;
 }
 
 .cell_ht {
@@ -1146,10 +1381,14 @@ export default {
   padding: 15px 20px 0;
 }
 
-::v-deep .el-checkbox__input.is-checked + .el-checkbox__label {
+.column-checkbox-group {
+  padding-bottom: 15px;
+}
+
+:deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
   color: #606266;
 }
-::v-deep .user-dialog .el-dialog__body {
+:deep(.user-dialog .el-dialog__body) {
   padding: 0;
   height: 600px;
 }
@@ -1161,7 +1400,7 @@ export default {
     flex-shrink: 0;
   }
 }
-::v-deep .search-form {
+:deep(.search-form) {
   position: relative;
 }
 .search-form-sub-bottom {
@@ -1174,5 +1413,12 @@ export default {
 }
 .flex-between {
   justify-content: space-between;
+}
+</style>
+
+<style lang="scss">
+/* el-popover 渲染在 body 下，需用全局样式覆盖内边距 */
+.col-setting-popover.el-popover.el-popper {
+  padding: 0 !important;
 }
 </style>
