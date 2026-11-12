@@ -58,7 +58,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(frontTokenInterceptor()).
                 addPathPatterns("/api/front/**").
                 excludePathPatterns("/api/front/index/**").
-                excludePathPatterns("/api/front/qrcode/**").
+                // qrcode/base64 需登录，避免未鉴权 SSRF；不再整段排除 /api/front/qrcode/**
                 excludePathPatterns("/api/front/login/mobile").
                 excludePathPatterns("/api/front/login").
                 excludePathPatterns("/api/front/sendCode").
