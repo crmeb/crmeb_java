@@ -109,11 +109,16 @@ public class OrderTaskServiceImpl implements OrderTaskService {
             try {
 //                StoreOrder storeOrder = getJavaBeanStoreOrder(data);
                 StoreOrder storeOrder = storeOrderService.getById(Integer.valueOf(data.toString()));
+                if (storeOrder == null) {
+                    logger.warn("OrderTaskServiceImpl.cancelByUser | order missing, drop id={}", data);
+                    continue;
+                }
                 boolean result = storeOrderTaskService.cancelByUser(storeOrder);
                 if (!result) {
                     redisUtil.lPush(redisKey, data);
                 }
             } catch (Exception e) {
+                logger.error("OrderTaskServiceImpl.cancelByUser | fail id=" + data, e);
                 redisUtil.lPush(redisKey, data);
             }
         }
