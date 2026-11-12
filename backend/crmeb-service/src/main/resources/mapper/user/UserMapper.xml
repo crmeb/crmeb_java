@@ -61,11 +61,11 @@
                 and u.pay_count = 0
             </if>
             <if test="payCount > 0">
-                and u.pay_count >= ${payCount}
+                and u.pay_count >= #{payCount}
             </if>
         </if>
         <if test="status != null and status !='' or status == 0 ">
-            and u.`status` = ${status}
+            and u.`status` = #{status}
         </if>
         <if test="startTime != null and startTime != '' and accessType != null and accessType != ''">
             <choose>

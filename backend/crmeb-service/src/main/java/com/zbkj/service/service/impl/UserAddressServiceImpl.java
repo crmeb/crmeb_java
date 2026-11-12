@@ -4,6 +4,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.pagehelper.PageHelper;
@@ -115,14 +116,20 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressDao, UserAddr
      */
     @Override
     public Boolean def(Integer id) {
+        Integer uid = userService.getUserIdException();
+        // 仅允许操作本人地址，避免 updateById 按主键改写他人地址
+        LambdaQueryWrapper<UserAddress> owned = Wrappers.lambdaQuery();
+        owned.eq(UserAddress::getId, id).eq(UserAddress::getUid, uid);
+        if (dao.selectCount(owned) < 1) {
+            throw new CrmebException("地址不存在");
+        }
         //把当前用户其他默认地址取消
-        cancelDefault(userService.getUserIdException());
-        UserAddress userAddress = new UserAddress();
-        userAddress.setId(id);
-        userAddress.setUid(userService.getUserIdException());
-        userAddress.setIsDefault(true);
-        userAddress.setUpdateTime(DateUtil.date());
-        return updateById(userAddress);
+        cancelDefault(uid);
+        LambdaUpdateWrapper<UserAddress> uw = Wrappers.lambdaUpdate();
+        uw.set(UserAddress::getIsDefault, true);
+        uw.set(UserAddress::getUpdateTime, DateUtil.date());
+        uw.eq(UserAddress::getId, id).eq(UserAddress::getUid, uid);
+        return update(uw);
     }
 
     /**

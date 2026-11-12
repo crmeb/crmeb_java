@@ -324,6 +324,10 @@ public class OrderServiceImpl implements OrderService {
         storeOrderPram.setPaid(true);
         StoreOrder existStoreOrder = storeOrderService.getByEntityOne(storeOrderPram);
         if (null == existStoreOrder) throw new CrmebException("支付订单不存在");
+        Integer userId = userService.getUserIdException();
+        if (!userId.equals(existStoreOrder.getUid())) {
+            throw new CrmebException("支付订单不存在");
+        }
         if (existStoreOrder.getRefundStatus() == 1) {
             throw new CrmebException("正在申请退款中");
         }

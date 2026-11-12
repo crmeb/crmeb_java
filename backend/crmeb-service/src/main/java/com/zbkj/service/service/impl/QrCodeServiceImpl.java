@@ -1,23 +1,29 @@
 package com.zbkj.service.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSONObject;
+import com.zbkj.common.constants.SysConfigConstants;
 import com.zbkj.common.exception.CrmebException;
 import com.zbkj.common.result.CommonResultCode;
 import com.zbkj.common.utils.CrmebUtil;
 import com.zbkj.common.utils.QRCodeUtil;
 import com.zbkj.common.utils.RestTemplateUtil;
+import com.zbkj.common.utils.UrlFetchGuard;
 import com.zbkj.common.vo.QrCodeVo;
 import com.zbkj.service.service.QrCodeService;
+import com.zbkj.service.service.SystemConfigService;
 import com.zbkj.service.service.WechatNewService;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
 *  QrCodeServiceImpl 接口实现
@@ -37,6 +43,8 @@ public class QrCodeServiceImpl implements QrCodeService {
     private RestTemplateUtil restTemplateUtil;
     @Autowired
     private WechatNewService wechatNewService;
+    @Autowired
+    private SystemConfigService systemConfigService;
 
     /**
      * 二维码
@@ -146,11 +154,28 @@ public class QrCodeServiceImpl implements QrCodeService {
 
     @Override
     public Map<String, Object> base64(String url) {
+        UrlFetchGuard.validate(url, buildAllowedImageHosts());
         byte[] bytes = restTemplateUtil.getBuffer(url);
+        UrlFetchGuard.validateResponseSize(bytes);
         String base64Image = CrmebUtil.getBase64Image(Base64.encodeBase64String(bytes));
         Map<String, Object> map = new HashMap<>();
         map.put("code", base64Image);
         return map;
+    }
+
+    private Set<String> buildAllowedImageHosts() {
+        Set<String> hosts = new HashSet<>();
+        addHost(hosts, systemConfigService.getValueByKey(SysConfigConstants.CONFIG_KEY_SITE_URL));
+        addHost(hosts, systemConfigService.getValueByKey(SysConfigConstants.CONFIG_LOCAL_UPLOAD_URL));
+        addHost(hosts, systemConfigService.getValueByKey(SysConfigConstants.CONFIG_QN_UPLOAD_URL));
+        return hosts;
+    }
+
+    private static void addHost(Set<String> hosts, String hostOrUrl) {
+        String host = UrlFetchGuard.normalizeHost(hostOrUrl);
+        if (StrUtil.isNotBlank(host)) {
+            hosts.add(host);
+        }
     }
 
     /**
