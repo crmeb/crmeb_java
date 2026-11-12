@@ -1140,7 +1140,8 @@ public class StoreProductServiceImpl extends ServiceImpl<StoreProductDao, StoreP
         }
         if (type.equals("add")) {
             updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
-            updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
+            // sales 为 UNSIGNED，重复回滚时防下溢；幂等取消应避免走到这里
+            updateWrapper.setSql(StrUtil.format("sales = IF(sales >= {}, sales - {}, 0)", num, num));
         }
         if (type.equals("sub")) {
             updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));

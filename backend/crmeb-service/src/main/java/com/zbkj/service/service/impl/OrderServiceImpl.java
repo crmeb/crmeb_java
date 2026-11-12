@@ -300,6 +300,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Boolean cancel(Integer id) {
         StoreOrder storeOrder = orderUtils.getInfoById(id);
+        // 已取消过则不再入队，避免重复回滚库存
+        if (Boolean.TRUE.equals(storeOrder.getIsDel()) || Boolean.TRUE.equals(storeOrder.getIsSystemDel())) {
+            return Boolean.TRUE;
+        }
         //已收货，待评价
         storeOrder.setIsDel(true);
         storeOrder.setIsSystemDel(true);

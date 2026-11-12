@@ -24,6 +24,7 @@ import com.zbkj.common.model.wechat.video.PayComponentProductSku;
 import com.zbkj.common.model.seckill.StoreSeckill;
 import com.zbkj.common.model.order.StoreOrder;
 import com.zbkj.common.model.order.StoreOrderInfo;
+import com.zbkj.common.model.order.StoreOrderStatus;
 import com.zbkj.common.model.product.StoreProductAttrValue;
 import com.zbkj.common.model.system.SystemAdmin;
 import com.zbkj.common.utils.RedisUtil;
@@ -173,6 +174,15 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             * 4、回滚优惠券
             * 5、回滚积分
             * */
+            if (storeOrder == null || storeOrder.getId() == null) {
+                logger.warn("cancelByUser skip, order missing");
+                return Boolean.TRUE;
+            }
+            // 幂等：已写过取消日志则不再回滚，避免 Redis 重复投递把后续真实扣库存冲掉
+            if (hasCancelOrderLog(storeOrder.getId())) {
+                logger.info("cancelByUser skip idempotent oid={}", storeOrder.getId());
+                return Boolean.TRUE;
+            }
 
             Boolean execute = transactionTemplate.execute(e -> {
                 //写订单日志
@@ -192,8 +202,16 @@ public class StoreOrderTaskServiceImpl implements StoreOrderTaskService {
             });
             return execute;
         }catch (Exception e){
+            logger.error("cancelByUser fail oid=" + (storeOrder == null ? null : storeOrder.getId()), e);
             return false;
         }
+    }
+
+    private boolean hasCancelOrderLog(Integer orderId) {
+        StoreOrderStatus probe = new StoreOrderStatus();
+        probe.setOid(orderId);
+        probe.setChangeType("cancel_order");
+        return CollUtil.isNotEmpty(storeOrderStatusService.getByEntity(probe));
     }
 
     /**
