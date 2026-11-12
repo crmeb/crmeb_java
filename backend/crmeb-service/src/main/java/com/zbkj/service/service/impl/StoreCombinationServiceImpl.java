@@ -851,6 +851,10 @@ public class StoreCombinationServiceImpl extends ServiceImpl<StoreCombinationDao
     public Boolean removePink(StorePinkRequest storePinkRequest) {
         StorePink userPink = storePinkService.getById(storePinkRequest.getId());
         if (ObjectUtil.isNull(userPink)) throw new CrmebException("未查到拼团信息，无法取消");
+        Integer userId = userService.getUserIdException();
+        if (!userId.equals(userPink.getUid())) {
+            throw new CrmebException("未查到拼团信息，无法取消");
+        }
         if (userPink.getIsRefund()) throw new CrmebException("拼团订单已退款");
         // 获取是否拼团成功
         if (userPink.getStatus() == 2) {
