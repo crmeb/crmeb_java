@@ -738,14 +738,9 @@ public class UserServiceImpl extends ServiceImpl<UserDao, User> implements UserS
         if (StringUtils.isNotBlank(keywords)) {
             map.put("keywords", "%" + keywords + "%");
         }
-        map.put("sortKey", "create_time");
-        if (StringUtils.isNotBlank(sortKey)) {
-            map.put("sortKey", sortKey);
-        }
-        map.put("sortValue", Constants.SORT_DESC);
-        if (isAsc.toLowerCase().equals(Constants.SORT_ASC)) {
-            map.put("sortValue", Constants.SORT_ASC);
-        }
+        // ORDER BY 列名/方向白名单，防止 ${sortKey} 注入
+        map.put("sortKey", UrlFetchGuard.sanitizeSpreadSortKey(sortKey));
+        map.put("sortValue", UrlFetchGuard.sanitizeSortDirection(isAsc));
 
         return userDao.getSpreadPeopleList(map);
     }
