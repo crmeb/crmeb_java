@@ -132,7 +132,7 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
         }
         if (operationType.equals("add")) {
             updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
-            updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = IF(sales >= {}, sales - {}, 0)", num, num));
             if (type > 0) {
                 updateWrapper.setSql(StrUtil.format("quota = quota + {}", num));
             }
@@ -168,7 +168,7 @@ public class StoreProductAttrValueServiceImpl extends ServiceImpl<StoreProductAt
         }
         if (operationType.equals("add")) {
             updateWrapper.setSql(StrUtil.format("stock = stock + {}", num));
-            updateWrapper.setSql(StrUtil.format("sales = sales - {}", num));
+            updateWrapper.setSql(StrUtil.format("sales = IF(sales >= {}, sales - {}, 0)", num, num));
         }
         if (operationType.equals("sub")) {
             updateWrapper.setSql(StrUtil.format("stock = stock - {}", num));
